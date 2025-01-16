@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "juscraper"
+version = "0.0.1"
+description = "Raspador (sempre incompleto) de tribunais do sistema judiciário."
+authors = ["Julio Trecenti"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+requests = "^2.32.3"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
