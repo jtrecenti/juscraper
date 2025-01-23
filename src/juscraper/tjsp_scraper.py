@@ -10,8 +10,10 @@ import pdb
 import pandas as pd
 from urllib.parse import parse_qs, urlparse
 import glob
-
-
+import re
+from datetime import datetime
+import shutil
+from tqdm import tqdm
 
 warnings.filterwarnings('ignore', category=urllib3.exceptions.InsecureRequestWarning)
 
@@ -29,28 +31,12 @@ class TJSP_Scraper(BaseScraper):
         self.set_download_path(download_path)
         if (login is not None) and (password is not None):
             self.auth(login, password)
-
-    def set_verbose(self, verbose: int):
-        self.verbose = verbose
     
     def set_method(self, method: str):
         # raise exception if method is not html nor api
         if method not in ['html', 'api']:
             raise Exception(f"Método {method} nao suportado. Os métodos suportados são 'html' e 'api'.")
         self.method = method
-    
-    def set_download_path(self, path: str):
-        # if path is None, define a default path in the temp directory
-        if path is None:
-            path = tempfile.mkdtemp()
-        # check if path is a valid directory. If it is not, create it
-        if not os.path.isdir(path):
-            if self.verbose:
-                print(f"O caminho de download '{path}' nao é um diretório. Criando esse diretório...")
-            os.makedirs(path)
-        self.download_path = path
-        if self.verbose:
-            print(f"Caminho de download definido como '{path}'.")
     
     def cpopg(self, id_cnj: str, method = 'html'):
         self.set_method(method)
@@ -171,7 +157,6 @@ class TJSP_Scraper(BaseScraper):
             print(f"[TJSP] Processo {id_clean} baixado com sucesso.")
         return path
 
-
     def _get_cpopg_download_links(self, request):
         text = request.text
         bsoup = BeautifulSoup(text, 'html.parser')
@@ -217,12 +202,11 @@ class TJSP_Scraper(BaseScraper):
             result = self._cpopg_parse_single_json(path)
         return result
         
-    
     def _cpopg_parse_single_html(self, path: str):
         from bs4 import BeautifulSoup
         with open(path, 'r', encoding='utf-8') as f:
-                html = f.read()
-                soup = BeautifulSoup(html, 'html.parser')
+            html = f.read()
+            soup = BeautifulSoup(html, 'html.parser')
 
         # 1) Dicionário-base para os dados coletados
         dados = {
@@ -417,7 +401,161 @@ class TJSP_Scraper(BaseScraper):
     def cjsg(self, pesquisa: str):
         print(f"[TJSP] Consultando jurisprudência: {pesquisa}")
         # Implementação real da busca aqui
+    
+    def cjpg(
+        self,
+        pesquisa: str,
+        classe: str | None = None,
+        assunto: str | None = None,
+        comarca: str | None = None,
+        id_processo: str | None = None,
+        data_inicio: str | None = None,
+        data_fim: str | None = None,
+        pag_inicio: int = 1,
+        pagina_fim: int | None = None,
+    ):
+        # baixa os processos
+        path_result = self.cjpg_download(pesquisa, classe, assunto, comarca, id_processo, data_inicio, data_fim, pag_inicio, pagina_fim)
+        data_parsed = self.cjpg_parse(path_result)
+        # delete folder
+        shutil.rmtree(path_result)
+        return data_parsed
+    
+    def cjpg_download(
+        self, 
+        pesquisa: str,
+        classe: str | None = None,
+        assunto: str | None = None,
+        comarca: str | None = None,
+        id_processo: str | None = None,
+        data_inicio: str | None = None,
+        data_fim: str | None = None,
+        pag_inicio: int = 1,
+        pagina_fim: int | None = None,
+    ):
+        # preparando os parametros
+        if assunto is not None:
+            assunto = ','.join(assunto)
+        if comarca is not None:
+            comarca = ','.join(comarca)
+        if classe is not None:
+            classe = ','.join(classe)
+        if id_processo is not None:
+            id_processo = clean_cnj(id_processo)
+        else:
+            id_processo = ''
 
+        # query de busca
+        query = {
+            'conversationId': '',
+            'dadosConsulta.pesquisaLivre': pesquisa,
+            'tipoNumero': 'UNIFICADO',
+            'numeroDigitoAnoUnificado': id_processo[:15],
+            'foroNumeroUnificado': id_processo[-4:],
+            'dadosConsulta.nuProcesso': id_processo,
+            'classeTreeSelection.values': classe,
+            'assuntoTreeSelection.values': assunto,
+            'dadosConsulta.dtInicio': data_inicio,
+            'dadosConsulta.dtFim': data_fim,
+            'varasTreeSelection.values': comarca,
+            'dadosConsulta.ordenacao': 'DESC'
+        }
+
+        # fazendo a busca
+        r0 = self.session.get(
+            f"{self.u_base}cjpg/pesquisar.do",
+            params=query
+        )
+
+        # calcula total de páginas
+        n_pags = self._cjpg_n_pags(r0)
+
+        if pagina_fim is None or pagina_fim > n_pags:
+            pagina_fim = n_pags
+
+        if self.verbose:
+            print(f"Total de páginas: {n_pags}")
+            print(f"Pagina inicial: {pag_inicio}")
+            print(f"Pagina final: {pagina_fim}")
+
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        path = f"{self.download_path}/cjpg/{timestamp}"
+        if not os.path.isdir(path):
+            os.makedirs(path)
+
+        for pag in tqdm(range(pag_inicio, n_pags + 1), desc="Baixando documentos"):
+            u = f"{self.u_base}cjpg/trocarDePagina.do?pagina={pag}&conversationId="
+            r = self.session.get(u)
+            file_name = f"{path}/cjpg_{pag:05d}.html"
+            with open(file_name, 'w', encoding='utf-8') as f:
+                f.write(r.text)
+        
+        return path
+    
+    def _cjpg_n_pags(self, r0):
+        soup = BeautifulSoup(r0.content, "html.parser")
+        page_element = soup.find(attrs={'bgcolor': '#EEEEEE'})
+        if page_element:
+            match = re.search(r'\d+$', page_element.get_text().strip())
+            results = int(match.group()) if match else 0
+            pags = results // 10 + 1
+            return pags
+        return 0
+    
+    def cjpg_parse(self, path: str):
+        if os.path.isfile(path):
+            result = [self._cjpg_parse_single(path)]
+        else:
+            result = []
+            arquivos = glob.glob(f"{path}/**/*.ht*", recursive=True)
+            arquivos = [f for f in arquivos if os.path.isfile(f)]
+            for file in tqdm(arquivos, desc="Processando documentos"):
+                if os.path.isfile(file):
+                    single_result = self._cjpg_parse_single(file)
+                    result.append(single_result)
+        result = pd.concat(result, ignore_index=True)
+        return result
+    
+    def _cjpg_parse_single(self, path: str):
+        with open(path, 'r', encoding='utf-8') as f:
+            soup = BeautifulSoup(f, 'html.parser')
+        processos = []
+        div_dados_resultado = soup.find('div', {'id': 'divDadosResultado'})
+        if div_dados_resultado:
+            tr_processos = div_dados_resultado.find_all('tr', class_='fundocinza1')
+            for tr_processo in tr_processos:
+                dados_processo = {}
+                tabela_dados = tr_processo.find('table')
+                # id_processo
+                link_inteiro_teor = tabela_dados.find('a', {'style': 'vertical-align: top'})
+                if link_inteiro_teor:
+                    dados_processo['cd_processo'] = link_inteiro_teor.get('name').split('-')[0] if link_inteiro_teor.get('name') else None
+                    dados_processo['id_processo'] = link_inteiro_teor.find('span', class_='fonteNegrito').text.strip() if link_inteiro_teor.find('span', class_='fonteNegrito') else None
+
+                # Outros campos
+                linhas_detalhes = tabela_dados.find_all('tr', class_='fonte')
+                for linha in linhas_detalhes:
+                    strong = linha.find('strong')
+                    if strong:
+                        texto = linha.text.strip()
+                        chave, valor = texto.split(':', 1)
+                        chave = chave.strip().lower().replace(' ', '_').replace('-','')
+                        valor = valor.strip()
+                        if chave == 'data_de_disponibilização':
+                            chave = 'data_disponibilizacao'                        
+                        dados_processo[chave] = valor
+
+                # Decisão
+                div_decisao = tabela_dados.find('div', {'align': 'justify'})
+                if div_decisao:
+                    spans = div_decisao.find_all('span')
+                    if spans:
+                        decisao_text = spans[-1].get_text(separator=" ", strip=True)
+                    dados_processo['decisao'] = decisao_text
+                processos.append(dados_processo)
+
+        return pd.DataFrame(processos)
+    
     def is_authenticated(self):
         u = f"{self.u_base}sajcas/verificarLogin.js"
         r = self.session.get(u)
@@ -469,3 +607,6 @@ class TJSP_Scraper(BaseScraper):
             else:
                 print("Autenticação falhou!")
         return auth
+
+
+
