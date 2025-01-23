@@ -14,13 +14,15 @@ import re
 from datetime import datetime
 import shutil
 from tqdm import tqdm
+from typing import Union, List
+import time
 
 warnings.filterwarnings('ignore', category=urllib3.exceptions.InsecureRequestWarning)
 
 class TJSP_Scraper(BaseScraper):
     """Raspador para o Tribunal de Justiça de São Paulo."""
 
-    def __init__(self, login = None, password = None, verbose = 1, download_path = None, **kwargs):
+    def __init__(self, login = None, password = None, verbose = 1, download_path = None, sleep_time = 0.5, **kwargs):
         super().__init__("TJSP")
         self.session = requests.Session()
         self.u_base = 'https://esaj.tjsp.jus.br/'
@@ -29,6 +31,7 @@ class TJSP_Scraper(BaseScraper):
         self.password = password
         self.set_verbose(verbose)
         self.set_download_path(download_path)
+        self.sleep_time = sleep_time
         if (login is not None) and (password is not None):
             self.auth(login, password)
     
@@ -38,21 +41,34 @@ class TJSP_Scraper(BaseScraper):
             raise Exception(f"Método {method} nao suportado. Os métodos suportados são 'html' e 'api'.")
         self.method = method
     
-    def cpopg(self, id_cnj: str, method = 'html'):
+    def cpopg(self, id_cnj: Union[str, List[str]], method = 'html'):
         self.set_method(method)
-        if self.verbose:
-            print(f"[TJSP] Consultando processo de primeiro grau: {id_cnj}")
-        id = clean_cnj(id_cnj)
-        print("oioi")
+        path = f"{self.download_path}/cpopg/"
+        self.cpopg_download(id_cnj, method)
+        result = self.cpopg_parse(path)
+        shutil.rmtree(path)
+        return result
     
-    def cpopg_download(self, id_cnj: str, method = 'html'):
+    def cpopg_download(self, id_cnj: Union[str, List[str]], method = 'html'):
         self.set_method(method)
+        if isinstance(id_cnj, str):
+            id_cnj = [id_cnj]
         if self.method == 'html':
             return self._cpopg_download_html(id_cnj)
         elif self.method == 'api':
             return self._cpopg_download_api(id_cnj)
     
-    def _cpopg_download_api(self, id_cnj: str):
+    def _cpopg_download_api(self, id_cnj: list[str]):
+        n_items = len(id_cnj)
+        for idp in tqdm(id_cnj, total=n_items, desc="Baixando processos"):
+            try:
+                self._cpopg_download_api_single(idp)
+                time.sleep(self.sleep_time)
+            except Exception as e:
+                print(f"Erro ao baixar o processo {idp}: {e}")
+                continue
+
+    def _cpopg_download_api_single(self, id_cnj: str):
         endpoint = 'processo/cpopg/search/numproc/'
         id_clean = clean_cnj(id_cnj)
         u = f"{self.api_base}{endpoint}{id_clean}"
@@ -72,37 +88,50 @@ class TJSP_Scraper(BaseScraper):
             print(f"Nenhum dado encontrado para o processo {id_clean}.")
             return ''
 
-        cd_processo = json_response[0]['cdProcesso']
 
-        # Endpoint para dados básicos
-        endpoint_basicos = 'processo/cpopg/dadosbasicos/'
-        u_basicos = f"{self.api_base}{endpoint_basicos}{cd_processo}"
-        r0 = self.session.get(u_basicos)
-        
-        # Requisição para dados básicos
-        r_basicos = self.session.post(u_basicos, json={'cdProcesso': cd_processo})
-        if r_basicos.status_code != 200:
-            raise Exception(f"A consulta à API falhou. Status code {r_basicos.status_code}.")
-        else:
-            with open(f"{path}/{cd_processo}_basicos.json", 'w', encoding='utf-8') as f:
-                f.write(r_basicos.text)
+        for processo in json_response:
+            cd_processo = processo['cdProcesso']
 
-        # Componentes adicionais para buscar informações detalhadas
-        componentes = ['partes', 'movimentacao', 'incidente', 'audiencia']
-
-        for comp in componentes:
-            endpoint_comp = f"processo/cpopg/{comp}/{cd_processo}"
-            r_comp = self.session.get(f"{self.api_base}{endpoint_comp}")
-            if r_comp.status_code == 200:
-                with open(f"{path}/{cd_processo}_{comp}.json", 'w', encoding='utf-8') as f:
-                    f.write(r_comp.text)
+            # Endpoint para dados básicos
+            endpoint_basicos = 'processo/cpopg/dadosbasicos/'
+            u_basicos = f"{self.api_base}{endpoint_basicos}{cd_processo}"
+            r0 = self.session.get(u_basicos)
+            
+            # Requisição para dados básicos
+            r_basicos = self.session.post(u_basicos, json={'cdProcesso': cd_processo})
+            if r_basicos.status_code != 200:
+                raise Exception(f"A consulta à API falhou. Status code {r_basicos.status_code}.")
             else:
-                raise Exception(f"Erro ao buscar {comp} para o processo {cd_processo}. Status: {r_comp.status_code}")
-        
+                with open(f"{path}/{cd_processo}_basicos.json", 'w', encoding='utf-8') as f:
+                    f.write(r_basicos.text)
+
+            # Componentes adicionais para buscar informações detalhadas
+            componentes = ['partes', 'movimentacao', 'incidente', 'audiencia']
+
+            for comp in componentes:
+                endpoint_comp = f"processo/cpopg/{comp}/{cd_processo}"
+                r_comp = self.session.get(f"{self.api_base}{endpoint_comp}")
+                if r_comp.status_code == 200:
+                    with open(f"{path}/{cd_processo}_{comp}.json", 'w', encoding='utf-8') as f:
+                        f.write(r_comp.text)
+                else:
+                    raise Exception(f"Erro ao buscar {comp} para o processo {cd_processo}. Status: {r_comp.status_code}")
+            
         return path
 
-    def _cpopg_download_html(self, id_cnj: str):
+    def _cpopg_download_html(self, id_cnj: list[str]):
+        n_items = len(id_cnj)
+        for idp in tqdm(id_cnj, total=n_items, desc="Baixando processos"):
+            try:
+                self._cpopg_download_html_single(idp)
+                time.sleep(self.sleep_time)
+            except Exception as e:
+                print(f"Erro ao baixar o processo {idp}: {e}")
+                continue
+
+    def _cpopg_download_html_single(self, id_cnj: str):
         # TODO lidar com segredo de justiça
+
         auth = self.is_authenticated()
         if not auth:
             if self.verbose:
@@ -153,8 +182,6 @@ class TJSP_Scraper(BaseScraper):
                 with open(file_name, 'w', encoding='utf-8') as f:
                     f.write(r.text)
 
-        if r.status_code == 200 and self.verbose:
-            print(f"[TJSP] Processo {id_clean} baixado com sucesso.")
         return path
 
     def _get_cpopg_download_links(self, request):
@@ -182,9 +209,16 @@ class TJSP_Scraper(BaseScraper):
             result = []
             arquivos = glob.glob(f"{path}/**/*.[hj][st]*", recursive=True)
             arquivos = [f for f in arquivos if os.path.isfile(f)]
-            for file in arquivos:
+            # remover arquivos json cujo nome nao acaba com um número
+            arquivos = [f for f in arquivos if not f.endswith('.json') or f[-6:-5].isnumeric()]
+            for file in tqdm(arquivos, desc="Processando documentos"):
                 if os.path.isfile(file):
-                    single_result = self._cpopg_parse_single(file)
+                    try:
+                        single_result = self._cpopg_parse_single(file)
+                    except Exception as e:
+                        print(f"Erro ao processar o arquivo {file}: {e}")
+                        single_result = None
+                        continue
                     if single_result:
                         result.append(single_result)
             keys = result[0].keys()
@@ -192,7 +226,7 @@ class TJSP_Scraper(BaseScraper):
                 key: pd.concat([dic[key] for dic in result], ignore_index=True)
                 for key in keys
             }
-        return result
+        return lista_empilhada
     
     def _cpopg_parse_single(self, path: str):
         # if file extension is html
@@ -391,8 +425,33 @@ class TJSP_Scraper(BaseScraper):
         return result
     
     def _cpopg_parse_single_json(self, path: str):
-        print(f"[TJSP] Consultando processo: {path}")
-        # Implementação real da busca aqui
+        # primeiro, vamos listar todos os arquivos que estão na mesma pasta que o arquivo que está em path
+        lista_arquivos = glob.glob(f"{os.path.dirname(path)}/*.json")
+        lista_processo = [f for f in lista_arquivos if f[-6:-5].isnumeric()][0]
+        lista_arquivos = [f for f in lista_arquivos if f not in lista_processo]
+
+        # agora, fazemos a leitura de cada arquivo e transformamos em um dataframe
+        dfs = {}
+        for arquivo in lista_arquivos:
+            nome = os.path.basename(arquivo)
+            # split name in two variables separating by _
+            cd_processo, tipo = nome.split("_", 1)
+            tipo = tipo.split(".", 1)[0]
+            if 'basicos' in arquivo:
+                df = pd.read_json(arquivo, orient='index').transpose()
+            else:
+                df = pd.read_json(arquivo, orient='records')
+            df['cdProcesso'] = cd_processo
+            if tipo not in dfs:
+                dfs[tipo] = df
+            else:
+                dfs[tipo] = pd.concat([dfs[tipo], df], ignore_index=True)
+            
+        df_processo = pd.read_json(lista_processo, orient='records')
+        df_processo = df_processo.merge(dfs['basicos'], how='left', on='cdProcesso')
+        dfs['basicos'] = df_processo
+        
+        return dfs
 
     def cposg(self, id_cnj: str):
         print(f"[TJSP] Consultando processo: {id_cnj}")
@@ -484,6 +543,7 @@ class TJSP_Scraper(BaseScraper):
             os.makedirs(path)
 
         for pag in tqdm(range(pag_inicio, n_pags + 1), desc="Baixando documentos"):
+            time.sleep(self.sleep_time)
             u = f"{self.u_base}cjpg/trocarDePagina.do?pagina={pag}&conversationId="
             r = self.session.get(u)
             file_name = f"{path}/cjpg_{pag:05d}.html"
@@ -511,8 +571,14 @@ class TJSP_Scraper(BaseScraper):
             arquivos = [f for f in arquivos if os.path.isfile(f)]
             for file in tqdm(arquivos, desc="Processando documentos"):
                 if os.path.isfile(file):
-                    single_result = self._cjpg_parse_single(file)
-                    result.append(single_result)
+                    try:
+                        single_result = self._cjpg_parse_single(file)
+                    except Exception as e:
+                        print(f"Error processing {file}: {e}")
+                        single_result = None
+                        continue
+                    if single_result:
+                        result.append(single_result)
         result = pd.concat(result, ignore_index=True)
         return result
     
