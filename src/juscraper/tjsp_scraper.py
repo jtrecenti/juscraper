@@ -36,11 +36,31 @@ class TJSP_Scraper(BaseScraper):
     
     def set_method(self, method: str):
         # raise exception if method is not html nor api
+        """Define o método para acesso aos dados do TJSP.
+
+        Args:
+            method: string com o nome do método. Os métodos suportados são 'html' e 'api'.
+
+        Raises:
+            Exception: Se o método passado como parâmetro não for 'html' nem 'api'.
+        """
         if method not in ['html', 'api']:
             raise Exception(f"Método {method} nao suportado. Os métodos suportados são 'html' e 'api'.")
         self.method = method
     
     def cpopg(self, id_cnj: Union[str, List[str]], method = 'html'):
+        """Busca um processo na consulta de processos originários do primeiro grau.
+
+        Args:
+            id_cnj: string com o CNJ do processo, ou lista de strings com vários CNJs.
+            method: string com o nome do método. Os métodos suportados são 'html' e 'api'. O padrão é 'html'.
+
+        Returns:
+            Um dicionário com os dados do processo. A chave é o CNJ do processo e o valor é outro dicionário com as informações do processo.
+
+        Raises:
+            Exception: Se o método passado como parâmetro não for 'html' nem 'api'.
+        """
         self.set_method(method)
         path = f"{self.download_path}/cpopg/"
         self.cpopg_download(id_cnj, method)
@@ -49,6 +69,18 @@ class TJSP_Scraper(BaseScraper):
         return result
     
     def cpopg_download(self, id_cnj: Union[str, List[str]], method = 'html'):
+        """Baixa um processo na consulta de processos originários do primeiro grau.
+
+        Args:
+            id_cnj: string com o CNJ do processo, ou lista de strings com vários CNJs.
+            method: string com o nome do método. Os métodos suportados são 'html' e 'api'. O padrão é 'html'.
+
+        Returns:
+            None
+
+        Raises:
+            Exception: Se o método passado como parâmetro não for 'html' nem 'api'.
+        """
         self.set_method(method)
         if isinstance(id_cnj, str):
             id_cnj = [id_cnj]
@@ -472,6 +504,24 @@ class TJSP_Scraper(BaseScraper):
         paginas: range | None = None,
     ):
         # baixa os processos
+        """
+        Realiza uma busca por jurisprud ncia com base nos par metros fornecidos, baixa os resultados,
+        os analisa e retorna os dados analisados.
+
+        Args:
+            pesquisa (str): A consulta para a jurisprud ncia.
+            classe (str, opcional): A classe do processo. Padr o None.
+            assunto (str, opcional): O assunto do processo. Padr o None.
+            comarca (str, opcional): A comarca do processo. Padr o None.
+            id_processo (str, opcional): O ID do processo. Padr o None.
+            data_inicio (str, opcional): A data de in cio para a busca. Padr o None.
+            data_fim (str, opcional): A data de fim para a busca. Padr o None.
+            paginas (range, opcional): A faixa de p ginas a serem buscadas. Padr o None.
+
+        Retorna:
+            pd.DataFrame: Os dados analisados da jurisprud ncia baixada.
+        """
+
         path_result = self.cjpg_download(pesquisa, classe, assunto, comarca, id_processo, data_inicio, data_fim, paginas)
         data_parsed = self.cjpg_parse(path_result)
         # delete folder
@@ -563,6 +613,20 @@ class TJSP_Scraper(BaseScraper):
         return 0
     
     def cjpg_parse(self, path: str):
+        """
+        Parseia os arquivos baixados com a função cjpg e retorna um DataFrame com
+        as informações dos processos.
+
+        Parameters
+        ----------
+        path : str
+            Caminho do arquivo ou da pasta que contém os arquivos baixados.
+
+        Returns
+        -------
+        result : pd.DataFrame
+            Dataframe com as informações dos processos.
+        """
         if os.path.isfile(path):
             result = [self._cjpg_parse_single(path)]
         else:
@@ -623,11 +687,39 @@ class TJSP_Scraper(BaseScraper):
         return pd.DataFrame(processos)
     
     def is_authenticated(self):
+        # Verifica se o usuário está autenticado no site do TJSP.
+        #
+        # Returns
+        # -------
+        # bool
+        #     True se o usuário estiver autenticado, False caso contrário.
         u = f"{self.u_base}sajcas/verificarLogin.js"
         r = self.session.get(u)
         return 'true' in r.text
 
     def auth(self, login=None, password=None):
+        """
+        Realiza autenticação no site do TJSP.
+
+        Parameters
+        ----------
+        login : str, optional
+            Login do usuário no e-SAJ. Se não for informado, o método solicitará
+            ao usuário.
+        password : str, optional
+            Senha do usuário no e-SAJ. Se não for informado, o método solicitará
+            ao usuário.
+
+        Returns
+        -------
+        bool
+            True se a autenticação for bem sucedida, False caso contrário.
+
+        Notes
+        -----
+        O método armazena o login e a senha informados como atributos da classe,
+        para que possam ser reutilizados em outras chamadas.
+        """
         print('Autenticando...')
         
         if self.is_authenticated():
