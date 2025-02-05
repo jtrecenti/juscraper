@@ -6,7 +6,6 @@ from bs4 import BeautifulSoup
 import urllib3
 import warnings
 import os
-import pdb
 import pandas as pd
 from urllib.parse import parse_qs, urlparse
 import glob
@@ -470,11 +469,10 @@ class TJSP_Scraper(BaseScraper):
         id_processo: str | None = None,
         data_inicio: str | None = None,
         data_fim: str | None = None,
-        pag_inicio: int = 1,
-        pagina_fim: int | None = None,
+        paginas: range | None = None,
     ):
         # baixa os processos
-        path_result = self.cjpg_download(pesquisa, classe, assunto, comarca, id_processo, data_inicio, data_fim, pag_inicio, pagina_fim)
+        path_result = self.cjpg_download(pesquisa, classe, assunto, comarca, id_processo, data_inicio, data_fim, paginas)
         data_parsed = self.cjpg_parse(path_result)
         # delete folder
         shutil.rmtree(path_result)
@@ -489,8 +487,7 @@ class TJSP_Scraper(BaseScraper):
         id_processo: str | None = None,
         data_inicio: str | None = None,
         data_fim: str | None = None,
-        pag_inicio: int = 1,
-        pagina_fim: int | None = None,
+        paginas: range | None = None,
     ):
         # preparando os parametros
         if assunto is not None:
@@ -529,20 +526,23 @@ class TJSP_Scraper(BaseScraper):
         # calcula total de páginas
         n_pags = self._cjpg_n_pags(r0)
 
-        if pagina_fim is None or pagina_fim > n_pags:
-            pagina_fim = n_pags
+        # Se paginas for None, definir range para todas as páginas
+        if paginas is None:
+            paginas = range(1, n_pags + 1)
+        else:
+            start, stop, step = paginas.start, min(paginas.stop, n_pags + 1), paginas.step
+            paginas = range(start, stop, step)
 
         if self.verbose:
             print(f"Total de páginas: {n_pags}")
-            print(f"Pagina inicial: {pag_inicio}")
-            print(f"Pagina final: {pagina_fim}")
+            print(f"Paginas a serem baixadas: {list(paginas)}")
 
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         path = f"{self.download_path}/cjpg/{timestamp}"
         if not os.path.isdir(path):
             os.makedirs(path)
 
-        for pag in tqdm(range(pag_inicio, n_pags + 1), desc="Baixando documentos"):
+        for pag in tqdm(paginas, desc="Baixando documentos"):
             time.sleep(self.sleep_time)
             u = f"{self.u_base}cjpg/trocarDePagina.do?pagina={pag}&conversationId="
             r = self.session.get(u)
@@ -551,7 +551,7 @@ class TJSP_Scraper(BaseScraper):
                 f.write(r.text)
         
         return path
-    
+   
     def _cjpg_n_pags(self, r0):
         soup = BeautifulSoup(r0.content, "html.parser")
         page_element = soup.find(attrs={'bgcolor': '#EEEEEE'})
@@ -577,7 +577,7 @@ class TJSP_Scraper(BaseScraper):
                         print(f"Error processing {file}: {e}")
                         single_result = None
                         continue
-                    if single_result:
+                    if single_result is not None:
                         result.append(single_result)
         result = pd.concat(result, ignore_index=True)
         return result
@@ -612,7 +612,7 @@ class TJSP_Scraper(BaseScraper):
                         dados_processo[chave] = valor
 
                 # Decisão
-                div_decisao = tabela_dados.find('div', {'align': 'justify'})
+                div_decisao = tabela_dados.find('div', {'align': 'justify', 'style': 'display: none;'})
                 if div_decisao:
                     spans = div_decisao.find_all('span')
                     if spans:
