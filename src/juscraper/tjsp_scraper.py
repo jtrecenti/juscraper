@@ -34,6 +34,11 @@ class TJSP_Scraper(BaseScraper):
         if (login is not None) and (password is not None):
             self.auth(login, password)
     
+    def set_download_path(self, path: str | None = None):
+        if path is None:
+            path = tempfile.mkdtemp()
+        self.download_path = path
+
     def set_method(self, method: str):
         # raise exception if method is not html nor api
         """Define o método para acesso aos dados do TJSP.
