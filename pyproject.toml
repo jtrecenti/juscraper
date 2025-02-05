@@ -9,6 +9,10 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.9"
 requests = "^2.32.3"
+tdqm = "^0.0.1"
+beautifulsoup4 = "^4.13.0"
+pandas = "^2.2.3"
+urllib3 = "^2.3.0"
 
 [tool.poetry.dev-dependencies]
 
