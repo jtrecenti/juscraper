@@ -13,8 +13,12 @@ import re
 from datetime import datetime
 import shutil
 from tqdm import tqdm
-from typing import Union, List
+from typing import Union, List, Literal
 import time
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+import unidecode
 
 warnings.filterwarnings('ignore', category=urllib3.exceptions.InsecureRequestWarning)
 
@@ -239,6 +243,21 @@ class TJSP_Scraper(BaseScraper):
         return links
 
     def cpopg_parse(self, path: str):
+        """
+        Parses downloaded files from the first-degree procedural query and returns a dictionary
+        with tables containing case elements.
+
+        Parameters
+        ----------
+        path : str
+            The file path or directory containing the downloaded files.
+
+        Returns
+        -------
+        dict
+            A dictionary where the keys are table names and the values are DataFrames
+            with the parsed data from the case files.
+        """
         if os.path.isfile(path):
             result = [self._cpopg_parse_single(path)]
         else:
@@ -493,9 +512,145 @@ class TJSP_Scraper(BaseScraper):
         print(f"[TJSP] Consultando processo: {id_cnj}")
         # Implementação real da busca aqui
 
-    def cjsg(self, pesquisa: str):
-        print(f"[TJSP] Consultando jurisprudência: {pesquisa}")
-        # Implementação real da busca aqui
+    def cjsg(
+        self, 
+        pesquisa: str,
+        ementa: str | None = None,
+        classe: str | None = None,
+        assunto: str | None = None,
+        comarca: str | None = None,
+        orgao_julgador: str | None = None,
+        data_inicio: str | None = None,
+        data_fim: str | None = None,
+        baixar_sg: bool = True,
+        tipo_decisao: str | Literal['acordao', 'monocratica'] = 'acordao',
+        paginas: range | None = None,
+    ):
+        path_result = self.cjsg_download(
+            pesquisa, ementa, classe, assunto, comarca, orgao_julgador, 
+            data_inicio, data_fim, baixar_sg, tipo_decisao, paginas
+        )
+        data_parsed = self.cjsg_parse(path_result)
+        # delete folder
+        shutil.rmtree(path_result)
+        return data_parsed
+    
+    def cjsg_download(
+        self,
+        pesquisa: str,
+        ementa: str | None = None,
+        classe: str | None = None,
+        assunto: str | None = None,
+        comarca: str | None = None,
+        orgao_julgador: str | None = None,
+        data_inicio: str | None = None,
+        data_fim: str | None = None,
+        baixar_sg: bool = True,
+        tipo_decisao: str | Literal['acordao', 'monocratica'] = 'acordao',
+        paginas: range | None = None,
+    ):
+        # Configurar o driver do Chrome
+        options = webdriver.ChromeOptions()
+        options.add_argument('--headless')
+        driver = webdriver.Chrome(options=options)
+        wait = WebDriverWait(driver, 10)
+
+        # Acessar o site
+        driver.get("https://esaj.tjsp.jus.br/cjsg/consultaCompleta.do")
+
+        # Inserir parâmetros de busca
+        driver.find_element(By.NAME, 'dados.buscaInteiroTeor').send_keys(pesquisa)
+        time.sleep(0.5)
+
+        if ementa:
+            driver.find_element(By.NAME, 'dados.ementa').send_keys(ementa)
+            time.sleep(0.5)
+
+        if classe:
+            driver.find_element(By.NAME, 'dados.classe').send_keys(classe)
+            time.sleep(0.5)
+
+        if assunto:
+            driver.find_element(By.NAME, 'dados.assunto').send_keys(assunto)
+            time.sleep(0.5)
+
+        if comarca:
+            driver.find_element(By.NAME, 'dados.comarca').send_keys(comarca)
+            time.sleep(0.5)
+
+        if orgao_julgador:
+            driver.find_element(By.NAME, 'dados.orgaoJulgador').send_keys(orgao_julgador)
+            time.sleep(0.5)
+
+        if data_inicio:
+            driver.find_element(By.NAME, 'dados.dtJulgamentoInicio').send_keys(data_inicio)
+            time.sleep(0.5)
+
+        if data_fim:
+            driver.find_element(By.NAME, 'dados.dtJulgamentoFim').send_keys(data_fim)
+            time.sleep(0.5)
+        
+        if not baixar_sg:
+            driver.find_element(By.ID, 'origem2grau').click()
+            time.sleep(0.25)
+            driver.find_element(By.ID, 'origemRecursal').click()
+            time.sleep(0.25)
+
+        # Submeter o formulário de busca
+        driver.find_element(By.ID, 'pbSubmit').click()
+        time.sleep(1)
+        
+        n_pags = self._cjsg_n_pags(driver.page_source)
+
+        # Se paginas for None, definir range para todas as páginas
+        if paginas is None:
+            paginas = range(1, n_pags + 1)
+        if max(paginas) > n_pags:
+            pag_min = min(paginas)
+            paginas = range(pag_min, n_pags + 1)
+        
+        if self.verbose > 0:
+            print(f"Total de páginas: {n_pags}")
+            print(f"Paginas a serem baixadas: {list(paginas)}")
+
+        # pega os cookies para usar requests nas próximas requisições
+        cookies = driver.get_cookies()
+        session = requests.Session()
+        for cookie in cookies:
+            session.cookies.set(cookie['name'], cookie['value'])
+
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        path = f"{self.download_path}/cjsg/{timestamp}"
+        if not os.path.isdir(path):
+            os.makedirs(path)
+
+        for pag in tqdm(paginas, desc="Baixando documentos"):
+            time.sleep(self.sleep_time)
+            query = {
+                'tipoDeDecisao': 'A' if tipo_decisao == 'acordao' else 'D',
+                'pagina': pag,
+                'conversationId': ''
+            }
+            u = f"{self.u_base}cjsg/trocaDePagina.do"
+            r = session.get(u, params=query)
+            file_name = f"{path}/cjsg_{pag:05d}.html"
+            with open(file_name, 'w', encoding='utf-8') as f:
+                f.write(r.text)
+
+        # fechar a sessão do Selenium
+        driver.quit()
+
+        # Retornar os caminhos dos arquivos salvos
+        return path
+
+    def _cjsg_n_pags(self, txt):
+        soup = BeautifulSoup(txt, "html.parser")
+        td_npags = soup.find("td", bgcolor='#EEEEEE')
+        txt_pag = td_npags.text
+        rx = re.compile(r'(?<=de )[0-9]+')
+        n_results = int(rx.findall(txt_pag)[0])
+        n_pags = n_results // 20 + 1
+        return n_pags
     
     def cjpg(
         self,
@@ -508,23 +663,22 @@ class TJSP_Scraper(BaseScraper):
         data_fim: str | None = None,
         paginas: range | None = None,
     ):
-        # baixa os processos
         """
-        Realiza uma busca por jurisprud ncia com base nos par metros fornecidos, baixa os resultados,
+        Realiza uma busca por jurisprudencia com base nos parametros fornecidos, baixa os resultados,
         os analisa e retorna os dados analisados.
 
         Args:
-            pesquisa (str): A consulta para a jurisprud ncia.
-            classe (str, opcional): A classe do processo. Padr o None.
-            assunto (str, opcional): O assunto do processo. Padr o None.
-            comarca (str, opcional): A comarca do processo. Padr o None.
-            id_processo (str, opcional): O ID do processo. Padr o None.
-            data_inicio (str, opcional): A data de in cio para a busca. Padr o None.
-            data_fim (str, opcional): A data de fim para a busca. Padr o None.
-            paginas (range, opcional): A faixa de p ginas a serem buscadas. Padr o None.
+            pesquisa (str): A consulta para a jurisprudencia.
+            classe (str, opcional): A classe do processo. Padrao None.
+            assunto (str, opcional): O assunto do processo. Padrao None.
+            comarca (str, opcional): A comarca do processo. Padrao None.
+            id_processo (str, opcional): O ID do processo. Padrao None.
+            data_inicio (str, opcional): A data de inicio para a busca. Padrao None.
+            data_fim (str, opcional): A data de fim para a busca. Padrao None.
+            paginas (range, opcional): A faixa de paginas a serem buscadas. Padrao None.
 
         Retorna:
-            pd.DataFrame: Os dados analisados da jurisprud ncia baixada.
+            pd.DataFrame: Os dados analisados da jurisprudencia baixada.
         """
 
         path_result = self.cjpg_download(pesquisa, classe, assunto, comarca, id_processo, data_inicio, data_fim, paginas)
@@ -544,7 +698,22 @@ class TJSP_Scraper(BaseScraper):
         data_fim: str | None = None,
         paginas: range | None = None,
     ):
-        # preparando os parametros
+        """
+        Baixa os processos da jurisprud ncia do TJSP
+
+        Args:
+            pesquisa (str): A consulta para a jurisprud ncia.
+            classe (str, opcional): A classe do processo. Padr o None.
+            assunto (str, opcional): O assunto do processo. Padr o None.
+            comarca (str, opcional): A comarca do processo. Padr o None.
+            id_processo (str, opcional): O ID do processo. Padr o None.
+            data_inicio (str, opcional): A data de in cio para a busca. Padr o None.
+            data_fim (str, opcional): A data de fim para a busca. Padr o None.
+            paginas (range, opcional): A faixa de p ginas a serem buscadas. Padr o None.
+
+        Retorna:
+            str: O caminho da pasta onde os processos foram baixados.
+        """
         if assunto is not None:
             assunto = ','.join(assunto)
         if comarca is not None:
@@ -690,7 +859,99 @@ class TJSP_Scraper(BaseScraper):
                 processos.append(dados_processo)
 
         return pd.DataFrame(processos)
-    
+
+    def cjsg_parse(self, path: str):
+        """
+        Parseia os arquivos baixados da segunda instância (cjsg) e retorna um DataFrame com
+        as informações dos processos.
+
+        Parameters
+        ----------
+        path : str
+            Caminho do arquivo ou da pasta que contém os arquivos HTML baixados.
+
+        Returns
+        -------
+        result : pd.DataFrame
+            DataFrame com as informações extraídas dos processos.
+        """
+        if os.path.isfile(path):
+            result = [self._cjsg_parse_single(path)]
+        else:
+            result = []
+            arquivos = glob.glob(f"{path}/**/*.ht*", recursive=True)
+            arquivos = [f for f in arquivos if os.path.isfile(f)]
+            for file in tqdm(arquivos, desc="Processando documentos"):
+                try:
+                    single_result = self._cjsg_parse_single(file)
+                except Exception as e:
+                    print(f"Error processing {file}: {e}")
+                    continue
+                if single_result is not None:
+                    result.append(single_result)
+        return pd.concat(result, ignore_index=True)
+
+
+    def _cjsg_parse_single(self, path: str):
+        with open(path, 'r', encoding='utf-8') as f:
+            soup = BeautifulSoup(f, 'html.parser')
+
+        processos = []
+        # Itera sobre cada registro de processo (cada <tr> com classe "fundocinza1")
+        for tr in soup.find_all('tr', class_='fundocinza1'):
+            tds = tr.find_all('td')
+            if len(tds) < 2:
+                continue
+            # O segundo <td> contém os detalhes do processo
+            details_td = tds[1]
+            details_table = details_td.find('table')
+            if not details_table:
+                continue
+
+            dados_processo = {}
+            # Extrai o número do processo (texto do <a> com classes "esajLinkLogin downloadEmenta")
+            proc_a = details_table.find('a', class_='esajLinkLogin downloadEmenta')
+            if proc_a:
+                dados_processo['processo'] = proc_a.get_text(strip=True)
+                dados_processo['cd_acordao'] = proc_a.get('cdacordao')
+                dados_processo['cd_foro'] = proc_a.get('cdforo')
+
+            # Itera pelas linhas de detalhes (tr com classe "ementaClass2")
+            for tr_detail in details_table.find_all('tr', class_='ementaClass2'):
+                strong = tr_detail.find('strong')
+                if not strong:
+                    continue
+                label = strong.get_text(strip=True)
+                # remover acentos
+                label = unidecode.unidecode(label)
+                # Se for a linha da ementa, trata de forma especial
+                if "Ementa:" in label:
+                    visible_div = None
+                    # Procura pela div invisível (aquela que possui "display: none" no atributo style)
+                    for div in tr_detail.find_all('div', align="justify"):
+                        style = div.get('style', 'display: none;')
+                        if 'display: none' not in style:
+                            visible_div = div
+                            break
+                    if visible_div:
+                        ementa_text = visible_div.get_text(" ", strip=True)
+                        ementa_text = ementa_text.replace("Ementa:", "").strip()
+                        dados_processo['ementa'] = ementa_text
+                else:
+                    # Para as demais linhas, extrai o rótulo e o valor
+                    full_text = tr_detail.get_text(" ", strip=True)
+                    value = full_text.replace(label, "", 1).strip().lstrip(':').strip()
+                    key = label.replace(":", "").strip().lower()
+                    # Normaliza a chave (substitui espaços e caracteres especiais)
+                    key = key.replace(" ", "_").replace("(", "").replace(")", "").replace("/", "_")
+                    key = key.replace("_de_", "_").replace("_do_", "_")
+                    if key != 'outros_numeros':
+                        dados_processo[key] = value
+
+            processos.append(dados_processo)
+
+        return pd.DataFrame(processos)
+
     def is_authenticated(self):
         # Verifica se o usuário está autenticado no site do TJSP.
         #
