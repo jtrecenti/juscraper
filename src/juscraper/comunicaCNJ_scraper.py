@@ -23,10 +23,10 @@ warnings.filterwarnings('ignore', category=urllib3.exceptions.InsecureRequestWar
 class comunicaCNJ_Scraper(BaseScraper):
     """Raspador para o site de Comunicações Processuais do Conselho Nacional de Justiça."""
 
-    def __init__(self, verbose = 1, download_path = None, sleep_time = 0.5, **kwargs):
+    def __init__(self, verbose = 1, download_path = None, sleep_time = 2, **kwargs): # sleep_time = 0.5 causa aviso de "Too Many Requests"
         super().__init__("ComunicaCNJ")
         self.session = requests.Session()
-        self.u_base = 'https://comunica.pje.jus.br/'
+        #self.u_base = 'https://comunica.pje.jus.br/'
         self.api_base = 'https://comunicaapi.pje.jus.br/api/v1/comunicacao'
         self.set_verbose(verbose)
         self.set_download_path(download_path)
@@ -65,10 +65,9 @@ class comunicaCNJ_Scraper(BaseScraper):
         Retorna:
             pd.DataFrame: Os dados analisados da jurisprudencia baixada.
         """
-
+        print(self.sleep_time)
         path_result = self.cjpg_download(pesquisa, data_inicio, data_fim, paginas) # , classe, assunto, comarca, id_processo,
         data_parsed = self.cjpg_parse(path_result)
-        # delete folder
         shutil.rmtree(path_result)
         return data_parsed
     
@@ -102,23 +101,20 @@ class comunicaCNJ_Scraper(BaseScraper):
 
         # query de busca
         query = {
-            'texto': pesquisa,
-            'dataDisponibilizacaoInicio': data_inicio,
-            'dataDisponibilizacaoFim': data_fim
-        }
+                'itensPorPagina': 5,
+                'texto': pesquisa,
+                'dataDisponibilizacaoInicio': data_inicio
+            }
 
         # fazendo a busca
         r0 = self.session.get(
-            f"{self.u_base}consulta",
+            self.api_base,
             params=query
         )
-        print(r0.content)
-
+        
         # calcula total de páginas
-        # ****************************************************************************************************************
         n_pags = self._cjpg_n_pags(r0)
-        # ****************************************************************************************************************
-
+        
         # Se paginas for None, definir range para todas as páginas
         if paginas is None:
             paginas = range(1, n_pags + 1)
@@ -156,14 +152,8 @@ class comunicaCNJ_Scraper(BaseScraper):
         return path
    
     def _cjpg_n_pags(self, r0):
-        soup = BeautifulSoup(r0.content, "html.parser")
-        page_element = soup.find(attrs={'bgcolor': '#EEEEEE'})
-        if page_element:
-            match = re.search(r'\d+$', page_element.get_text().strip())
-            results = int(match.group()) if match else 0
-            pags = results // 10 + 1
-            return pags
-        return 0
+        contagem = r0.json()['count']
+        return contagem // 5 + 1
     
     def cjpg_parse(self, path: str):
         """
@@ -212,28 +202,12 @@ class comunicaCNJ_Scraper(BaseScraper):
         return pd.DataFrame(lista_infos)
     
     def cpopg(self, id_cnj: Union[str, List[str]], method = 'html'):
-        """Busca um processo na consulta de processos originários do primeiro grau.
-
-        Args:
-            id_cnj: string com o CNJ do processo, ou lista de strings com vários CNJs.
-            method: string com o nome do método. Os métodos suportados são 'html' e 'api'. O padrão é 'html'.
-
-        Returns:
-            Um dicionário com os dados do processo. A chave é o CNJ do processo e o valor é outro dicionário com as informações do processo.
-
-        Raises:
-            Exception: Se o método passado como parâmetro não for 'html' nem 'api'.
-        """
-        self.set_method(method)
-        path = f"{self.download_path}/cpopg/"
-        self.cpopg_download(id_cnj, method)
-        result = self.cpopg_parse(path)
-        shutil.rmtree(path)
-        return result
+        """Método não aplicável ao CNJ"""
+        pass
     
     def cposg(self, id_cnj: str):
-        print(f"[TJSP] Consultando processo: {id_cnj}")
-        # Implementação real da busca aqui
+        """Método não aplicável ao CNJ"""
+        pass
 
     def cjsg(
         self, 
@@ -249,12 +223,6 @@ class comunicaCNJ_Scraper(BaseScraper):
         tipo_decisao: str | Literal['acordao', 'monocratica'] = 'acordao',
         paginas: range | None = None,
     ):
-        path_result = self.cjsg_download(
-            pesquisa, ementa, classe, assunto, comarca, orgao_julgador, 
-            data_inicio, data_fim, baixar_sg, tipo_decisao, paginas
-        )
-        data_parsed = self.cjsg_parse(path_result)
-        # delete folder
-        shutil.rmtree(path_result)
-        return data_parsed
+        """Método não aplicável ao CNJ"""
+        pass
     
