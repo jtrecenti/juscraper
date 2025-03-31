@@ -1,14 +1,38 @@
 # juscraper
 
-Raspador (sempre incompleto) de tribunais do sistema judiciário.
+Raspador de tribunais e outros sistemas relacionados ao poder judiciário.
 
 ## Installation
 
 ```bash
-$ pip install juscraper
+$ pip install git+https://github.com/jtrecenti/juscraper
 ```
 
 ## Usando o pacote
+
+
+Uso básico do pacote:
+
+```python
+import juscraper as jus
+tjsp = jus.scraper('tjsp')
+dados_cjpg = tjsp.cjpg('league of legends', paginas=range(1,3))
+
+dados_cjpg.head(3)
+```
+
+```md
+Total de páginas: 6
+Paginas a serem baixadas: [1, 2]
+Baixando documentos: 100%|██████████| 2/2 [00:01<00:00,  1.38it/s]
+Processando documentos: 100%|██████████| 2/2 [00:00<00:00, 29.39it/s]
+```
+
+        cd_processo	id_processo	classe	assunto	magistrado	comarca	foro	vara	data_disponibilizacao	decisao
+        0	2P000BYIO0000	1001296-06.2024.8.26.0097	Procedimento Comum Cível	Práticas Abusivas	ANDRÉ FREDERICO DE SENA HORTA	Buritama	Foro de Buritama	1ª Vara	17/03/2025	SENTENÇA\n\n\n\nProcesso Digital nº:\t1001296-...
+        1	2S001UFAG0000	1059728-09.2024.8.26.0100	Procedimento Comum Cível	Práticas Abusivas	Ricardo Augusto Ramos	SÃO PAULO	Foro Central Cível	7ª Vara Cível	25/11/2024	SENTENÇA\n\n\n\nProcesso Digital nº:\t1059728-...
+        2	2S001TWI60000	1041014-98.2024.8.26.0100	Procedimento Comum Cível	Práticas Abusivas	LUCIANA BIAGIO LAQUIMIA	SÃO PAULO	Foro Central Cível	17ª Vara Cível	28/10/2024	SENTENÇA\n\n\n\nProcesso Digital nº:\t1041014-...
+
 
 ### Uso básico
 
