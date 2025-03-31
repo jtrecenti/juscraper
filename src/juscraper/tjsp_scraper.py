@@ -812,6 +812,28 @@ class TJSP_Scraper(BaseScraper):
         n_pags = n_results // 20 + 1
         return n_pags
     
+    def download_acordao(self, cd_acordao):
+        u = f"{self.u_base}/cjsg/getArquivo.do"
+        query = {
+            'cdAcordao': cd_acordao,
+            'cdForo': 0
+        }
+        ses = self.session
+        r = ses.get(u, params=query)
+        if r.status_code != 200:
+            raise Exception(f"Erro ao baixar o acordão {cd_acordao}: {r.status_code}")
+        
+        if not os.path.isdir(self.download_path):
+            return r
+        else:
+            path = f"{self.download_path}/cjsg/{cd_acordao}.pdf"
+            # create folder if it doesn't exist
+            if not os.path.isdir(os.path.dirname(path)):
+                os.makedirs(os.path.dirname(path))
+            with open(path, 'wb') as f:
+                f.write(r.content)
+            return r
+
     # cjpg ----------------------------------------------------------------------
     def cjpg(
         self,
