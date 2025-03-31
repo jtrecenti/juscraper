@@ -166,7 +166,6 @@ class TJSP_Scraper(BaseScraper):
         n_items = len(id_cnj)
         for idp in tqdm(id_cnj, total=n_items, desc="Baixando processos"):
             try:
-                time.sleep(self.sleep_time)
                 self._cpopg_download_html_single(idp)
             except Exception as e:
                 print(f"Erro ao baixar o processo {idp}: {e}")
@@ -188,7 +187,15 @@ class TJSP_Scraper(BaseScraper):
         print(f"Salvando em {path}")
         if not os.path.isdir(path):
             os.makedirs(path)
-
+        
+        if os.path.isdir(path):
+            # se o arquivo já existe, não faz o download
+            if self.verbose > 0:
+                print(f"O processo {id_clean} ja foi baixado.")
+            return path
+        
+        time.sleep(self.sleep_time)
+        
         id_format = format_cnj(id_clean)
         p = split_cnj(id_clean)
         u = f"{self.u_base}cpopg/search.do"
