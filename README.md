@@ -78,6 +78,43 @@ O pacote `juscraper` foi criado em python inicialmente com o propósito de ser u
 
 Já existem soluções usando o R para esses raspadores, como os pacotes `tjsp` e `stj`, mas a comunidade convergiu para soluções em python, que atualmente são mais populares.
 
+### Observação sobre o parâmetro `paginas`
+
+Ao utilizar as funções de download `cjsg_download` e `cjpg_download`, o parâmetro `paginas` deve ser um objeto `range`. Por padrão, `range(0, n)` fará o download das páginas 1 até n (inclusive), ou seja, `range(0, 3)` baixa as páginas 1, 2 e 3. Isso torna o comportamento mais intuitivo para o usuário.
+
+Exemplo de uso:
+
+```python
+scraper.cjsg_download(pesquisa="dano moral", paginas=range(0, 5))  # Baixa as páginas 1 a 5
+scraper.cjpg_download(pesquisa="contrato", paginas=range(0, 2))    # Baixa as páginas 1 e 2
+```
+
+## Instalação em desenvolvimento
+
+Para instalar o pacote em modo desenvolvimento, siga os passos abaixo (necessário Python >= 3.12):
+
+```bash
+# Clone o repositório (caso ainda não tenha feito)
+$ git clone https://github.com/jtrecenti/juscraper.git
+$ cd juscraper
+
+# Instale as dependências e o pacote em modo editável
+$ uv pip install -e .
+```
+
+Saída esperada:
+
+```
+(juscraper) PS C:\Users\julio\OneDrive\Documentos\insper\juscraper> uv pip install -e .
+>>
+Resolved 56 packages in 255ms
+      Built juscraper @ file:///C:/Users/julio/OneDrive/Documentos/insper/juscraper
+Prepared 1 package in 7.26s
+Installed 1 package in 39ms
+ + juscraper==0.1.0 (from file:///C:/Users/julio/OneDrive/Documentos/insper/juscraper)
+(juscraper) PS C:\Users\julio\OneDrive\Documentos\insper\juscraper>
+```
+
 ## Pacotes relacionados
 
 Também estamos desenvolvendo o pacote `datajud`, com um propósito um pouco menor, que fornece uma interface para acesso à API do DataJud, uma ferramenta do CNJ para acesso a dados dos processos judiciais.
