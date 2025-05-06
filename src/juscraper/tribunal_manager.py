@@ -1,6 +1,5 @@
 from .tjsp_scraper import TJSP_Scraper
 from .tjrs_scraper import TJRS_Scraper
-from .tjpr_scraper import TJPR_Scraper
 from .jusbr_scraper import JUSBR_Scraper
 
 def scraper(tribunal_name: str, **kwargs):
