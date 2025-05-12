@@ -56,6 +56,9 @@ class TJSP_Scraper(BaseScraper):
         if method not in ['html', 'api']:
             raise Exception(f"Método {method} nao suportado. Os métodos suportados são 'html' e 'api'.")
         self.method = method
+
+    
+    # cpopg ------------------------------------------------------------------
     
     def cpopg(self, id_cnj: Union[str, List[str]], method = 'html'):
         """Busca um processo na consulta de processos originários do primeiro grau.
@@ -164,7 +167,6 @@ class TJSP_Scraper(BaseScraper):
         for idp in tqdm(id_cnj, total=n_items, desc="Baixando processos"):
             try:
                 self._cpopg_download_html_single(idp)
-                time.sleep(self.sleep_time)
             except Exception as e:
                 print(f"Erro ao baixar o processo {idp}: {e}")
                 continue
@@ -182,9 +184,18 @@ class TJSP_Scraper(BaseScraper):
 
         id_clean = clean_cnj(id_cnj)
         path = f"{self.download_path}/cpopg/{id_clean}"
+        print(f"Salvando em {path}")
         if not os.path.isdir(path):
             os.makedirs(path)
-
+        
+        if os.path.isdir(path):
+            # se o arquivo já existe, não faz o download
+            if self.verbose > 0:
+                print(f"O processo {id_clean} ja foi baixado.")
+            return path
+        
+        time.sleep(self.sleep_time)
+        
         id_format = format_cnj(id_clean)
         p = split_cnj(id_clean)
         u = f"{self.u_base}cpopg/search.do"
@@ -200,27 +211,37 @@ class TJSP_Scraper(BaseScraper):
             'gateway': 'true',
             'uuidCaptcha': ''
         }
-        r = self.session.get(u, params=parms)
-        links = self._get_cpopg_download_links(r)
-        cd_processo = []
-        for link in links:
-            query_params = parse_qs(urlparse(link).query)
-            codigo = query_params.get('processo.codigo', [None])[0]
-            cd_processo.append(codigo)
-
-        if (len(links) == 1):
-            file_name = f"{path}/{id_clean}_{cd_processo[0]}.html"
-            with open(file_name, 'w', encoding='utf-8') as f:
-                f.write(r.text)
-        else:
-            for index, link in enumerate(links):
-                u = f"{self.u_base}{link}"
-                r = self.session.get(u)
-                if r.status_code != 200:
-                    raise Exception(f"A consulta à API falhou. Processo: {id_clean}; Código: {cd_processo[index]}, Status code {r.status_code}.")
-                file_name = f"{path}/{id_clean}_{cd_processo[index]}.html"
-                with open(file_name, 'w', encoding='utf-8') as f:
-                    f.write(r.text)
+        for _ in range(5):
+            try:
+                r = self.session.get(u, params=parms)
+                links = self._get_cpopg_download_links(r)
+                cd_processo = []
+                for link in links:
+                    query_params = parse_qs(urlparse(link).query)
+                    codigo = query_params.get('processo.codigo', [None])[0]
+                    cd_processo.append(codigo)
+                if (len(links) == 0):
+                    print(f"Nenhum link encontrado para o processo {id_clean}.")
+                    raise Exception
+                elif (len(links) == 1):
+                    file_name = f"{path}/{id_clean}_{cd_processo[0]}.html"
+                    print(f"Salvando em {file_name}")
+                    with open(file_name, 'w', encoding='utf-8') as f:
+                        f.write(r.text)
+                else:
+                    for index, link in enumerate(links):
+                        u = f"{self.u_base}{link}"
+                        r = self.session.get(u)
+                        if r.status_code != 200:
+                            raise Exception(f"A consulta ao site falhou. Processo: {id_clean}; Código: {cd_processo[index]}, Status code {r.status_code}.")
+                        file_name = f"{path}/{id_clean}_{cd_processo[index]}.html"
+                        print(f"Salvando em {file_name}")
+                        with open(file_name, 'w', encoding='utf-8') as f:
+                            f.write(r.text)
+                break
+            except Exception as e:
+                print(f"Erro ao conectar ao site (processo {id_cnj}). Tentando novamente em {self.sleep_time} segundos.")
+                time.sleep(self.sleep_time)
 
         return path
 
@@ -231,11 +252,15 @@ class TJSP_Scraper(BaseScraper):
         links = []
         if lista is None:
             id_tag = bsoup.find('form', {'id': 'popupSenha'})
+            if id_tag is None:
+                return links
             href = id_tag.get('action')
             if 'show.do' in href:
                 links.append(href)
         else:
             processos = lista.findAll('a')
+            if processos is None:
+                return links
             for link in processos:
                 href = link.get('href')
                 if 'show.do' in href:
@@ -508,10 +533,146 @@ class TJSP_Scraper(BaseScraper):
         
         return dfs
 
-    def cposg(self, id_cnj: str):
-        print(f"[TJSP] Consultando processo: {id_cnj}")
-        # Implementação real da busca aqui
+    # cposg ------------------------------------------------------------------
 
+    def cposg(self, id_cnj: str, method = 'html'):
+        self.set_method(method)
+        path = f"{self.download_path}/cposg/"
+        self.cposg_download(id_cnj, method)
+        result = self.cposg_parse(path)
+        shutil.rmtree(path)
+        return result
+    
+    def cposg_download(self, id_cnj: Union[str, List[str]], method = 'html'):
+        self.set_method(method)
+        if isinstance(id_cnj, str):
+            id_cnj = [id_cnj]
+        if self.method == 'html':
+            return self._cposg_download_html(id_cnj)
+        elif self.method == 'api':
+            return self._cposg_download_api(id_cnj)
+
+    def _cposg_download_html(self, id_cnj: Union[str, List[str]]):
+        print(f"[TJSP] Baixando processo: {id_cnj}")
+        # Implementação real da busca aqui
+        params = {
+            'conversationId': '', 
+            'paginaConsulta': '0',
+            'cbPesquisa': 'NUMPROC',
+            'numeroDigitoAnoUnificado': '1175249-36.2023',
+            'foroNumeroUnificado': '0100',
+            'dePesquisaNuUnificado': '1175249-36.2023.8.26.0100',
+            'dePesquisaNuUnificado': 'UNIFICADO',
+            'dePesquisa': '',
+            'tipoNuProcesso': 'UNIFICADO'
+        }
+        u = f"{self.u_base}cposg/search.do"
+        r = self.session.get(params=params)
+        return ''
+    
+    def _cposg_download_api(self, id_cnj: Union[str, List[str]]):
+        n_items = len(id_cnj)
+        for idp in tqdm(id_cnj, total=n_items, desc="Baixando processos"):
+            try:
+                self._cposg_download_api_single(idp)
+                time.sleep(self.sleep_time)
+            except Exception as e:
+                print(f"Erro ao baixar o processo {idp}: {e}")
+                continue
+
+    def _cposg_download_api_single(self, id_cnj: str):
+        endpoint = 'processo/cposg/search/numproc/'
+        id_clean = clean_cnj(id_cnj)
+        u = f"{self.api_base}{endpoint}{id_clean}"
+        path = f"{self.download_path}/cposg/{id_clean}"
+        if not os.path.isdir(path):
+            os.makedirs(path)
+        r = self.session.get(u)
+        if r.status_code != 200:
+            raise Exception(f"A consulta à API falhou. Status code {r.status_code}.")
+        else:
+            with open(f"{path}/{id_clean}.json", 'w', encoding='utf-8') as f:
+                f.write(r.text)
+        json_response = r.json()
+        if not json_response:
+            print(f"Nenhum dado encontrado para o processo {id_clean}.")
+            return ''
+
+    def _cposg_download_html_single(self, id_cnj: str):
+        # TODO lidar com segredo de justiça
+
+        auth = self.is_authenticated()
+        if not auth:
+            if self.verbose:
+                print("Esse método precisa de autenticação para funcionar.")
+            auth = self.auth(self.login, self.password)
+            if not auth:
+                raise Exception("Não foi possivel autenticar no TJSP.")
+
+        id_clean = clean_cnj(id_cnj)
+        path = f"{self.download_path}/cposg/{id_clean}"
+        if not os.path.isdir(path):
+            os.makedirs(path)
+
+        id_format = format_cnj(id_clean)
+        p = split_cnj(id_clean)
+        u = f"{self.u_base}cposg/search.do"
+        parms = {
+            'conversationId': '',
+            'cbPesquisa': 'NUMPROC',
+            'paginaConsulta': '0',
+            'numeroDigitoAnoUnificado': f"{p['num']}-{p['dv']}.{p['ano']}",
+            'foroNumeroUnificado': p['orgao'],
+            'dePesquisaNuUnificado': id_format,
+            'dePesquisaNuUnificado': 'UNIFICADO',
+            'dePesquisa': '',
+            'tipoNuProcesso': 'UNIFICADO'
+        }
+        r = self.session.get(u, params=parms)
+        links = self._get_cpopg_download_links(r)
+        cd_processo = []
+        for link in links:
+            query_params = parse_qs(urlparse(link).query)
+            codigo = query_params.get('processo.codigo', [None])[0]
+            cd_processo.append(codigo)
+
+        if (len(links) == 1):
+            file_name = f"{path}/{id_clean}_{cd_processo[0]}.html"
+            with open(file_name, 'w', encoding='utf-8') as f:
+                f.write(r.text)
+        else:
+            for index, link in enumerate(links):
+                u = f"{self.u_base}{link}"
+                r = self.session.get(u)
+                if r.status_code != 200:
+                    raise Exception(f"A consulta falhou. Processo: {id_clean}; Código: {cd_processo[index]}, Status code {r.status_code}.")
+                file_name = f"{path}/{id_clean}_{cd_processo[index]}.html"
+                with open(file_name, 'w', encoding='utf-8') as f:
+                    f.write(r.text)
+
+        return path
+    
+    def cposg_parse(self, path: str):
+        print(f"[TJSP] Parsing processo: {path}")
+        # Implementação real da busca aqui
+        return ''
+    
+    def _cposg_parse_single(self, path: str):
+        print(f"[TJSP] Parsing processo: {path}")
+        # Implementação real da busca aqui
+        return ''
+    
+    def _cposg_parse_single_json(self, path: str):
+        print(f"[TJSP] Parsing processo: {path}")
+        # Implementação real da busca aqui
+        return ''
+    
+    def _cposg_parse_single_html(self, path: str):
+        print(f"[TJSP] Parsing processo: {path}")
+        # Implementação real da busca aqui
+        return ''
+
+    # cjsg ----------------------------------------------------------------------
     def cjsg(
         self, 
         pesquisa: str,
@@ -549,6 +710,17 @@ class TJSP_Scraper(BaseScraper):
         tipo_decisao: str | Literal['acordao', 'monocratica'] = 'acordao',
         paginas: range | None = None,
     ):
+        """
+        Baixa os arquivos HTML das páginas de resultados da Consulta de Julgados do Segundo Grau (CJSG).
+
+        Args:
+            pesquisa (str): Termo de busca.
+            ementa (str, opcional): Filtro por texto da ementa.
+            classe, assunto, comarca, orgao_julgador, data_inicio, data_fim: Filtros adicionais.
+            baixar_sg (bool): Se True, baixa também do segundo grau.
+            tipo_decisao (str): 'acordao' ou 'monocratica'.
+            paginas (range, opcional): Intervalo de páginas a baixar. ATENÇÃO: range(0, n) baixa as páginas 1 até n (inclusive), seguindo a expectativa do usuário (exemplo: range(0,3) baixa as páginas 1, 2 e 3).
+        """
         # Configurar o driver do Chrome
         options = webdriver.ChromeOptions()
         options.add_argument('--headless')
@@ -628,12 +800,12 @@ class TJSP_Scraper(BaseScraper):
             time.sleep(self.sleep_time)
             query = {
                 'tipoDeDecisao': 'A' if tipo_decisao == 'acordao' else 'D',
-                'pagina': pag,
+                'pagina': pag + 1,  # Ajuste: usuário espera que range(0,3) baixe pág 1,2,3
                 'conversationId': ''
             }
             u = f"{self.u_base}cjsg/trocaDePagina.do"
             r = session.get(u, params=query)
-            file_name = f"{path}/cjsg_{pag:05d}.html"
+            file_name = f"{path}/cjsg_{pag + 1:05d}.html"
             with open(file_name, 'w', encoding='utf-8') as f:
                 f.write(r.text)
 
@@ -646,18 +818,46 @@ class TJSP_Scraper(BaseScraper):
     def _cjsg_n_pags(self, txt):
         soup = BeautifulSoup(txt, "html.parser")
         td_npags = soup.find("td", bgcolor='#EEEEEE')
+        if td_npags is None:
+            raise ValueError("Não foi possível encontrar o seletor de número de páginas na resposta HTML. Verifique se a busca retornou resultados ou se a estrutura da página mudou.")
         txt_pag = td_npags.text
         rx = re.compile(r'(?<=de )[0-9]+')
-        n_results = int(rx.findall(txt_pag)[0])
+        encontrados = rx.findall(txt_pag)
+        if not encontrados:
+            raise ValueError(f"Não foi possível extrair o número de resultados da string: {txt_pag}")
+        n_results = int(encontrados[0])
         n_pags = n_results // 20 + 1
         return n_pags
     
+    def download_acordao(self, cd_acordao):
+        u = f"{self.u_base}/cjsg/getArquivo.do"
+        query = {
+            'cdAcordao': cd_acordao,
+            'cdForo': 0
+        }
+        ses = self.session
+        r = ses.get(u, params=query)
+        if r.status_code != 200:
+            raise Exception(f"Erro ao baixar o acordão {cd_acordao}: {r.status_code}")
+        
+        if not os.path.isdir(self.download_path):
+            return r
+        else:
+            path = f"{self.download_path}/cjsg/{cd_acordao}.pdf"
+            # create folder if it doesn't exist
+            if not os.path.isdir(os.path.dirname(path)):
+                os.makedirs(os.path.dirname(path))
+            with open(path, 'wb') as f:
+                f.write(r.content)
+            return r
+
+    # cjpg ----------------------------------------------------------------------
     def cjpg(
-        self,
-        pesquisa: str,
-        classe: str | None = None,
-        assunto: str | None = None,
-        comarca: str | None = None,
+        self, 
+        pesquisa: str = '',
+        classes: list[str] | None = None,
+        assuntos: list[str] | None = None,
+        varas: list[str] | None = None,
         id_processo: str | None = None,
         data_inicio: str | None = None,
         data_fim: str | None = None,
@@ -668,10 +868,10 @@ class TJSP_Scraper(BaseScraper):
         os analisa e retorna os dados analisados.
 
         Args:
-            pesquisa (str): A consulta para a jurisprudencia.
-            classe (str, opcional): A classe do processo. Padrao None.
-            assunto (str, opcional): O assunto do processo. Padrao None.
-            comarca (str, opcional): A comarca do processo. Padrao None.
+            pesquisa (str): A consulta para a jurisprudencia. Padrão "" (string vazia)
+            classes (list[str], opcional): Lista de classes do processo. Padrao None.
+            assuntos (list[str], opcional): Lista de assuntos do processo. Padrao None.
+            varas (list[str], opcional): Lista de varas do processo. Padrao None.
             id_processo (str, opcional): O ID do processo. Padrao None.
             data_inicio (str, opcional): A data de inicio para a busca. Padrao None.
             data_fim (str, opcional): A data de fim para a busca. Padrao None.
@@ -680,8 +880,7 @@ class TJSP_Scraper(BaseScraper):
         Retorna:
             pd.DataFrame: Os dados analisados da jurisprudencia baixada.
         """
-
-        path_result = self.cjpg_download(pesquisa, classe, assunto, comarca, id_processo, data_inicio, data_fim, paginas)
+        path_result = self.cjpg_download(pesquisa, classes, assuntos, varas, id_processo, data_inicio, data_fim, paginas)
         data_parsed = self.cjpg_parse(path_result)
         # delete folder
         shutil.rmtree(path_result)
@@ -690,36 +889,36 @@ class TJSP_Scraper(BaseScraper):
     def cjpg_download(
         self, 
         pesquisa: str,
-        classe: str | None = None,
-        assunto: str | None = None,
-        comarca: str | None = None,
+        classes: list[str] | None = None,
+        assuntos: list[str] | None = None,
+        varas: list[str] | None = None,
         id_processo: str | None = None,
         data_inicio: str | None = None,
         data_fim: str | None = None,
         paginas: range | None = None,
     ):
         """
-        Baixa os processos da jurisprud ncia do TJSP
+        Baixa os processos da jurisprudência do TJSP.
 
         Args:
-            pesquisa (str): A consulta para a jurisprud ncia.
-            classe (str, opcional): A classe do processo. Padr o None.
-            assunto (str, opcional): O assunto do processo. Padr o None.
-            comarca (str, opcional): A comarca do processo. Padr o None.
-            id_processo (str, opcional): O ID do processo. Padr o None.
-            data_inicio (str, opcional): A data de in cio para a busca. Padr o None.
-            data_fim (str, opcional): A data de fim para a busca. Padr o None.
-            paginas (range, opcional): A faixa de p ginas a serem buscadas. Padr o None.
+            pesquisa (str): A consulta para a jurisprudência.
+            classes (list[str], opcional): Lista de classes do processo. Padrão None.
+            assuntos (list[str], opcional): Lista de assuntos do processo. Padrão None.
+            varas (list[str], opcional): Lista de varas do processo. Padrão None.
+            id_processo (str, opcional): O ID do processo. Padrão None.
+            data_inicio (str, opcional): A data de início para a busca. Padrão None.
+            data_fim (str, opcional): A data de fim para a busca. Padrão None.
+            paginas (range, opcional): A faixa de páginas a serem buscadas. Padrão None.
 
         Retorna:
             str: O caminho da pasta onde os processos foram baixados.
         """
-        if assunto is not None:
-            assunto = ','.join(assunto)
-        if comarca is not None:
-            comarca = ','.join(comarca)
-        if classe is not None:
-            classe = ','.join(classe)
+        if assuntos is not None:
+            assuntos = ','.join(assuntos)
+        if varas is not None:
+            varas = ','.join(varas)
+        if classes is not None:
+            classes = ','.join(classes)
         if id_processo is not None:
             id_processo = clean_cnj(id_processo)
         else:
@@ -733,11 +932,11 @@ class TJSP_Scraper(BaseScraper):
             'numeroDigitoAnoUnificado': id_processo[:15],
             'foroNumeroUnificado': id_processo[-4:],
             'dadosConsulta.nuProcesso': id_processo,
-            'classeTreeSelection.values': classe,
-            'assuntoTreeSelection.values': assunto,
+            'classeTreeSelection.values': classes,
+            'assuntoTreeSelection.values': assuntos,
             'dadosConsulta.dtInicio': data_inicio,
             'dadosConsulta.dtFim': data_fim,
-            'varasTreeSelection.values': comarca,
+            'varasTreeSelection.values': varas,
             'dadosConsulta.ordenacao': 'DESC'
         }
 
@@ -757,20 +956,16 @@ class TJSP_Scraper(BaseScraper):
             start, stop, step = paginas.start, min(paginas.stop, n_pags + 1), paginas.step
             paginas = range(start, stop, step)
 
-        if self.verbose:
-            print(f"Total de páginas: {n_pags}")
-            print(f"Paginas a serem baixadas: {list(paginas)}")
-
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         path = f"{self.download_path}/cjpg/{timestamp}"
         if not os.path.isdir(path):
             os.makedirs(path)
 
         for pag in tqdm(paginas, desc="Baixando documentos"):
             time.sleep(self.sleep_time)
-            u = f"{self.u_base}cjpg/trocarDePagina.do?pagina={pag}&conversationId="
+            u = f"{self.u_base}cjpg/trocarDePagina.do?pagina={pag + 1}&conversationId="
             r = self.session.get(u)
-            file_name = f"{path}/cjpg_{pag:05d}.html"
+            file_name = f"{path}/cjpg_{pag + 1:05d}.html"
             with open(file_name, 'w', encoding='utf-8') as f:
                 f.write(r.text)
         
@@ -779,12 +974,14 @@ class TJSP_Scraper(BaseScraper):
     def _cjpg_n_pags(self, r0):
         soup = BeautifulSoup(r0.content, "html.parser")
         page_element = soup.find(attrs={'bgcolor': '#EEEEEE'})
-        if page_element:
-            match = re.search(r'\d+$', page_element.get_text().strip())
-            results = int(match.group()) if match else 0
-            pags = results // 10 + 1
-            return pags
-        return 0
+        if page_element is None:
+            raise ValueError("Não foi possível encontrar o seletor de número de páginas na resposta HTML. Verifique se a busca retornou resultados ou se a estrutura da página mudou.")
+        match = re.search(r'\d+$', page_element.get_text().strip())
+        if match is None:
+            raise ValueError(f"Não foi possível extrair o número de resultados da string: {page_element.get_text().strip()}")
+        results = int(match.group())
+        pags = results // 10 + 1
+        return pags
     
     def cjpg_parse(self, path: str):
         """
@@ -909,6 +1106,8 @@ class TJSP_Scraper(BaseScraper):
                 continue
 
             dados_processo = {}
+            # Inicializa ementa como string vazia
+            dados_processo['ementa'] = ''
             # Extrai o número do processo (texto do <a> com classes "esajLinkLogin downloadEmenta")
             proc_a = details_table.find('a', class_='esajLinkLogin downloadEmenta')
             if proc_a:
@@ -937,6 +1136,11 @@ class TJSP_Scraper(BaseScraper):
                         ementa_text = visible_div.get_text(" ", strip=True)
                         ementa_text = ementa_text.replace("Ementa:", "").strip()
                         dados_processo['ementa'] = ementa_text
+                    else:
+                        # Caso não haja div visível, tenta pegar o texto após 'Ementa:'
+                        full_text = tr_detail.get_text(" ", strip=True)
+                        ementa_text = full_text.replace("Ementa:", "").strip()
+                        dados_processo['ementa'] = ementa_text
                 else:
                     # Para as demais linhas, extrai o rótulo e o valor
                     full_text = tr_detail.get_text(" ", strip=True)
@@ -946,11 +1150,21 @@ class TJSP_Scraper(BaseScraper):
                     key = key.replace(" ", "_").replace("(", "").replace(")", "").replace("/", "_")
                     key = key.replace("_de_", "_").replace("_do_", "_")
                     if key != 'outros_numeros':
+                        # Corrige data_publicacao: remove prefixo se existir
+                        if key == 'data_publicacao':
+                            value = value.replace('Data de publicação:', '').replace('Data de Publicação:', '').strip()
                         dados_processo[key] = value
 
             processos.append(dados_processo)
 
-        return pd.DataFrame(processos)
+        df = pd.DataFrame(processos)
+        # Garante que 'ementa' seja a última coluna
+        if 'ementa' in df.columns:
+            cols = [col for col in df.columns if col != 'ementa'] + ['ementa']
+            df = df[cols]
+        return df
+    
+    # extra - tjsp ------------------------------------------------------------------
 
     def is_authenticated(self):
         # Verifica se o usuário está autenticado no site do TJSP.
@@ -1031,6 +1245,3 @@ class TJSP_Scraper(BaseScraper):
             else:
                 print("Autenticação falhou!")
         return auth
-
-
-

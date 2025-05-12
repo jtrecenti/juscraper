@@ -1,14 +1,38 @@
 # juscraper
 
-Raspador (sempre incompleto) de tribunais do sistema judiciário.
+Raspador de tribunais e outros sistemas relacionados ao poder judiciário.
 
 ## Installation
 
 ```bash
-$ pip install juscraper
+$ pip install git+https://github.com/jtrecenti/juscraper
 ```
 
 ## Usando o pacote
+
+
+Uso básico do pacote:
+
+```python
+import juscraper as jus
+tjsp = jus.scraper('tjsp')
+dados_cjpg = tjsp.cjpg('league of legends', paginas=range(1,3))
+
+dados_cjpg.head(3)
+```
+
+```md
+Total de páginas: 6
+Paginas a serem baixadas: [1, 2]
+Baixando documentos: 100%|██████████| 2/2 [00:01<00:00,  1.38it/s]
+Processando documentos: 100%|██████████| 2/2 [00:00<00:00, 29.39it/s]
+```
+
+        cd_processo	id_processo	classe	assunto	magistrado	comarca	foro	vara	data_disponibilizacao	decisao
+        0	2P000BYIO0000	1001296-06.2024.8.26.0097	Procedimento Comum Cível	Práticas Abusivas	ANDRÉ FREDERICO DE SENA HORTA	Buritama	Foro de Buritama	1ª Vara	17/03/2025	SENTENÇA\n\n\n\nProcesso Digital nº:\t1001296-...
+        1	2S001UFAG0000	1059728-09.2024.8.26.0100	Procedimento Comum Cível	Práticas Abusivas	Ricardo Augusto Ramos	SÃO PAULO	Foro Central Cível	7ª Vara Cível	25/11/2024	SENTENÇA\n\n\n\nProcesso Digital nº:\t1059728-...
+        2	2S001TWI60000	1041014-98.2024.8.26.0100	Procedimento Comum Cível	Práticas Abusivas	LUCIANA BIAGIO LAQUIMIA	SÃO PAULO	Foro Central Cível	17ª Vara Cível	28/10/2024	SENTENÇA\n\n\n\nProcesso Digital nº:\t1041014-...
+
 
 ### Uso básico
 
@@ -53,6 +77,43 @@ Por ser um pacote bastante complexo e também nichado, adotamos algumas restriç
 O pacote `juscraper` foi criado em python inicialmente com o propósito de ser usado em aulas de Ciência de Dados no Direito do Insper. Portanto, não houve incentivo nem fôlego para criar uma alternativa em R.
 
 Já existem soluções usando o R para esses raspadores, como os pacotes `tjsp` e `stj`, mas a comunidade convergiu para soluções em python, que atualmente são mais populares.
+
+### Observação sobre o parâmetro `paginas`
+
+Ao utilizar as funções de download `cjsg_download` e `cjpg_download`, o parâmetro `paginas` deve ser um objeto `range`. Por padrão, `range(0, n)` fará o download das páginas 1 até n (inclusive), ou seja, `range(0, 3)` baixa as páginas 1, 2 e 3. Isso torna o comportamento mais intuitivo para o usuário.
+
+Exemplo de uso:
+
+```python
+scraper.cjsg_download(pesquisa="dano moral", paginas=range(0, 5))  # Baixa as páginas 1 a 5
+scraper.cjpg_download(pesquisa="contrato", paginas=range(0, 2))    # Baixa as páginas 1 e 2
+```
+
+## Instalação em desenvolvimento
+
+Para instalar o pacote em modo desenvolvimento, siga os passos abaixo (necessário Python >= 3.12):
+
+```bash
+# Clone o repositório (caso ainda não tenha feito)
+$ git clone https://github.com/jtrecenti/juscraper.git
+$ cd juscraper
+
+# Instale as dependências e o pacote em modo editável
+$ uv pip install -e .
+```
+
+Saída esperada:
+
+```
+(juscraper) PS C:\Users\julio\OneDrive\Documentos\insper\juscraper> uv pip install -e .
+>>
+Resolved 56 packages in 255ms
+      Built juscraper @ file:///C:/Users/julio/OneDrive/Documentos/insper/juscraper
+Prepared 1 package in 7.26s
+Installed 1 package in 39ms
+ + juscraper==0.1.0 (from file:///C:/Users/julio/OneDrive/Documentos/insper/juscraper)
+(juscraper) PS C:\Users\julio\OneDrive\Documentos\insper\juscraper>
+```
 
 ## Pacotes relacionados
 
