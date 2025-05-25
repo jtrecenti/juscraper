@@ -22,7 +22,7 @@ import unidecode
 
 warnings.filterwarnings('ignore', category=urllib3.exceptions.InsecureRequestWarning)
 
-class TJSP_Scraper(BaseScraper):
+class TJSPScraper(BaseScraper):
     """Raspador para o Tribunal de Justiça de São Paulo."""
 
     def __init__(self, login = None, password = None, verbose = 1, download_path = None, sleep_time = 0.5, **kwargs):
@@ -35,6 +35,8 @@ class TJSP_Scraper(BaseScraper):
         self.set_verbose(verbose)
         self.set_download_path(download_path)
         self.sleep_time = sleep_time
+        self.args = kwargs
+        self.method = None  # Ensure method is always defined
         if (login is not None) and (password is not None):
             self.auth(login, password)
     
@@ -54,7 +56,7 @@ class TJSP_Scraper(BaseScraper):
             Exception: Se o método passado como parâmetro não for 'html' nem 'api'.
         """
         if method not in ['html', 'api']:
-            raise Exception(f"Método {method} nao suportado. Os métodos suportados são 'html' e 'api'.")
+            raise ValueError(f"Método {method} nao suportado. Os métodos suportados são 'html' e 'api'.")
         self.method = method
 
     
@@ -131,19 +133,16 @@ class TJSP_Scraper(BaseScraper):
             print(f"Nenhum dado encontrado para o processo {id_clean}.")
             return ''
 
-
         for processo in json_response:
             cd_processo = processo['cdProcesso']
 
             # Endpoint para dados básicos
             endpoint_basicos = 'processo/cpopg/dadosbasicos/'
             u_basicos = f"{self.api_base}{endpoint_basicos}{cd_processo}"
-            r0 = self.session.get(u_basicos)
-            
             # Requisição para dados básicos
             r_basicos = self.session.post(u_basicos, json={'cdProcesso': cd_processo})
             if r_basicos.status_code != 200:
-                raise Exception(f"A consulta à API falhou. Status code {r_basicos.status_code}.")
+                raise requests.HTTPError(f"A consulta à API falhou. Status code {r_basicos.status_code}.")
             else:
                 with open(f"{path}/{cd_processo}_basicos.json", 'w', encoding='utf-8') as f:
                     f.write(r_basicos.text)
@@ -283,6 +282,7 @@ class TJSP_Scraper(BaseScraper):
             A dictionary where the keys are table names and the values are DataFrames
             with the parsed data from the case files.
         """
+        lista_empilhada = {}
         if os.path.isfile(path):
             result = [self._cpopg_parse_single(path)]
         else:
@@ -306,6 +306,9 @@ class TJSP_Scraper(BaseScraper):
                 key: pd.concat([dic[key] for dic in result], ignore_index=True)
                 for key in keys
             }
+        # Defensive: if result is empty, return an empty dict or suitable structure
+        if not result:
+            return lista_empilhada
         return lista_empilhada
     
     def _cpopg_parse_single(self, path: str):
@@ -314,6 +317,8 @@ class TJSP_Scraper(BaseScraper):
             result = self._cpopg_parse_single_html(path)
         elif path.endswith('.json'):
             result = self._cpopg_parse_single_json(path)
+        else:
+            raise ValueError(f"Unknown file extension for path: {path}")
         return result
         
     def _cpopg_parse_single_html(self, path: str):
@@ -540,7 +545,10 @@ class TJSP_Scraper(BaseScraper):
         path = f"{self.download_path}/cposg/"
         self.cposg_download(id_cnj, method)
         result = self.cposg_parse(path)
-        shutil.rmtree(path)
+        if os.path.exists(path):
+            shutil.rmtree(path)
+        else:
+            print(f"[TJSP] Aviso: diretório {path} não existe e não pôde ser removido.")
         return result
     
     def cposg_download(self, id_cnj: Union[str, List[str]], method = 'html'):
@@ -549,31 +557,91 @@ class TJSP_Scraper(BaseScraper):
             id_cnj = [id_cnj]
         if self.method == 'html':
             return self._cposg_download_html(id_cnj)
-        elif self.method == 'api':
+        elif self.method == 'json':
             return self._cposg_download_api(id_cnj)
+        else:
+            raise ValueError(f"Método '{self.method}' não é suportado.")
 
     def _cposg_download_html(self, id_cnj: Union[str, List[str]]):
-        print(f"[TJSP] Baixando processo: {id_cnj}")
-        # Implementação real da busca aqui
-        params = {
-            'conversationId': '', 
-            'paginaConsulta': '0',
-            'cbPesquisa': 'NUMPROC',
-            'numeroDigitoAnoUnificado': '1175249-36.2023',
-            'foroNumeroUnificado': '0100',
-            'dePesquisaNuUnificado': '1175249-36.2023.8.26.0100',
-            'dePesquisaNuUnificado': 'UNIFICADO',
-            'dePesquisa': '',
-            'tipoNuProcesso': 'UNIFICADO'
-        }
+        """
+        Baixa o HTML de um ou vários processos, chamando _cposg_download_html_single para cada CNJ.
+        Retorna lista de paths se lista, ou path único se string.
+        """
+        if isinstance(id_cnj, str):
+            return self._cposg_download_html_single(id_cnj)
+        else:
+            return [self._cposg_download_html_single(cnj) for cnj in tqdm(id_cnj, desc="Baixando processos")]
+
+    def _cposg_download_html_single(self, id_cnj: str):
+        from bs4 import BeautifulSoup
+        import time
+        from urllib.parse import urlparse, parse_qs
+        import os
+        id_clean = clean_cnj(id_cnj)
+        p = split_cnj(id_clean)
+        id_format = format_cnj(id_clean)
         u = f"{self.u_base}cposg/search.do"
-        r = self.session.get(params=params)
-        return ''
-    
+        # 1. Acessar página inicial para garantir cookies válidos
+        open_url = f"{self.u_base}cposg/open.do?gateway=true"
+        self.session.get(open_url)
+        # 2. Montar parâmetros corretos
+        params = {
+            'conversationId': '',
+            'paginaConsulta': '1',
+            'localPesquisa.cdLocal': '-1',
+            'cbPesquisa': 'NUMPROC',
+            'tipoNuProcesso': 'UNIFICADO',
+            'numeroDigitoAnoUnificado': f"{p['num']}-{p['dv']}.{p['ano']}",
+            'foroNumeroUnificado': p['orgao'],
+            'dePesquisaNuUnificado': id_format,
+            'dePesquisa': '',
+            'uuidCaptcha': '',
+            'pbEnviar': 'Pesquisar'
+        }
+        r = self.session.get(u, params=params)
+        soup = BeautifulSoup(r.text, 'html.parser')
+        path = f"{self.download_path}/cposg/{id_clean}"
+        if not os.path.isdir(path):
+            os.makedirs(path)
+        # 3. Tratar tipos de resposta
+        # Caso 1: listagem de processos
+        if soup.find('div', id='listagemDeProcessos'):
+            links = [a['href'] for a in soup.select('a.linkProcesso')]
+            for idx, link in enumerate(links):
+                codigo = parse_qs(urlparse(link).query).get('processo.codigo', [None])[0]
+                show_url = f"{self.u_base}cposg/show.do?processo.codigo={codigo}"
+                r_show = self.session.get(show_url)
+                file_name = f"{path}/{id_clean}_cd_processo_{codigo}.html"
+                with open(file_name, 'w', encoding='utf-8') as f:
+                    f.write(r_show.text)
+        # Caso 2: incidentes/modal
+        elif soup.find('div', id='modalIncidentes'):
+            codigos = [i['value'] for i in soup.select('input#processoSelecionado')]
+            for codigo in codigos:
+                show_url = f"{self.u_base}cposg/show.do?processo.codigo={codigo}"
+                r_show = self.session.get(show_url)
+                file_name = f"{path}/{id_clean}_cd_processo_{codigo}.html"
+                with open(file_name, 'w', encoding='utf-8') as f:
+                    f.write(r_show.text)
+        # Caso 3: resposta simples
+        else:
+            codigo = None
+            input_cd = soup.find('input', {'name': 'cdProcesso'})
+            if input_cd:
+                codigo = input_cd.get('value')
+            file_name = f"{path}/{id_clean}_cd_processo_{codigo or 'simples'}.html"
+            with open(file_name, 'w', encoding='utf-8') as f:
+                f.write(r.text)
+        return path
+
     def _cposg_download_api(self, id_cnj: Union[str, List[str]]):
         n_items = len(id_cnj)
+        # if string, convert to list
+        if isinstance(id_cnj, str):
+            id_cnj = [id_cnj]
         for idp in tqdm(id_cnj, total=n_items, desc="Baixando processos"):
             try:
+                # Corrected method name if typo
                 self._cposg_download_api_single(idp)
                 time.sleep(self.sleep_time)
             except Exception as e:
@@ -595,82 +663,364 @@ class TJSP_Scraper(BaseScraper):
                 f.write(r.text)
         json_response = r.json()
         if not json_response:
-            print(f"Nenhum dado encontrado para o processo {id_clean}.")
             return ''
-
-    def _cposg_download_html_single(self, id_cnj: str):
-        # TODO lidar com segredo de justiça
-
-        auth = self.is_authenticated()
-        if not auth:
-            if self.verbose:
-                print("Esse método precisa de autenticação para funcionar.")
-            auth = self.auth(self.login, self.password)
-            if not auth:
-                raise Exception("Não foi possivel autenticar no TJSP.")
-
-        id_clean = clean_cnj(id_cnj)
-        path = f"{self.download_path}/cposg/{id_clean}"
-        if not os.path.isdir(path):
-            os.makedirs(path)
-
-        id_format = format_cnj(id_clean)
-        p = split_cnj(id_clean)
-        u = f"{self.u_base}cposg/search.do"
-        parms = {
-            'conversationId': '',
-            'cbPesquisa': 'NUMPROC',
-            'paginaConsulta': '0',
-            'numeroDigitoAnoUnificado': f"{p['num']}-{p['dv']}.{p['ano']}",
-            'foroNumeroUnificado': p['orgao'],
-            'dePesquisaNuUnificado': id_format,
-            'dePesquisaNuUnificado': 'UNIFICADO',
-            'dePesquisa': '',
-            'tipoNuProcesso': 'UNIFICADO'
-        }
-        r = self.session.get(u, params=parms)
-        links = self._get_cpopg_download_links(r)
-        cd_processo = []
-        for link in links:
-            query_params = parse_qs(urlparse(link).query)
-            codigo = query_params.get('processo.codigo', [None])[0]
-            cd_processo.append(codigo)
-
-        if (len(links) == 1):
-            file_name = f"{path}/{id_clean}_{cd_processo[0]}.html"
-            with open(file_name, 'w', encoding='utf-8') as f:
-                f.write(r.text)
-        else:
-            for index, link in enumerate(links):
-                u = f"{self.u_base}{link}"
-                r = self.session.get(u)
-                if r.status_code != 200:
-                    raise Exception(f"A consulta falhou. Processo: {id_clean}; Código: {cd_processo[index]}, Status code {r.status_code}.")
-                file_name = f"{path}/{id_clean}_{cd_processo[index]}.html"
-                with open(file_name, 'w', encoding='utf-8') as f:
-                    f.write(r.text)
-
-        return path
     
     def cposg_parse(self, path: str):
-        print(f"[TJSP] Parsing processo: {path}")
-        # Implementação real da busca aqui
-        return ''
+        import pandas as pd
+        import glob, os
+        arquivos = glob.glob(os.path.join(path, '**/*.html'), recursive=True)
+        dados = []
+        for arq in tqdm(arquivos, total=len(arquivos), desc="Processando arquivos"):
+            try:
+                linhas = self._cposg_parse_single_html(arq)
+                dados.extend(linhas)
+            except Exception as e:
+                print(f"Erro ao processar {arq}: {e}")
+        if not dados:
+            return pd.DataFrame()
+        df = pd.DataFrame(dados)
+        return df
+
+    def _cposg_parse_single_html(self, html_path):
+        """Parse a single HTML document from CPOSG to match R implementation.
+        
+        Returns a single dictionary (row) with all extracted information,
+        similar to the output of tjsp_cposg_parse in the R implementation.
+        """
+        from bs4 import BeautifulSoup
+        import re
+        
+        with open(html_path, 'r', encoding='utf-8') as f:
+            html_content = f.read()
+        soup = BeautifulSoup(html_content, 'html.parser')
+        
+        # Validate if the HTML contains expected content
+        # Check if it's a double process - equivalent to R's line 10-13
+        if soup.select('.linkProcesso'):
+            return []
+        
+        # Check if it has movement table - equivalent to R's line 14-17
+        if not soup.find(id='tabelaTodasMovimentacoes'):
+            return []
+        
+        # Initialize result object (will be converted to a single row)
+        result = {}
+        
+        # Extract ID original (process number from URL)
+        id_link = soup.select_one("a[href*='processo.codigo']")
+        if id_link:
+            result['id_original'] = id_link.get_text(strip=True)
+        
+        # Extract main process number and status
+        # Process number
+        processo_tag = soup.select_one('span.unj-larger')
+        if processo_tag:
+            result['processo'] = processo_tag.get_text(strip=True)
+        
+        # Status from tags
+        status_tags = soup.select('span.unj-tag')
+        if status_tags:
+            status_text = ' / '.join([tag.get_text(strip=True) for tag in status_tags])
+            result['status'] = status_text
+        
+        # Map of label texts to field names in the result
+        field_mapping = {
+            'classe': 'classe',
+            'assunto': 'assunto',
+            'seção': 'secao',
+            'órgão julgador': 'orgao_julgador',
+            'área': 'area',
+            'relator': 'relator',
+            'valor da ação': 'valor_da_acao',
+            'origem': 'origem',
+            'volumes / apensos': 'volume_apenso'
+        }
+        
+        # Direct extraction from labels - this is more reliable than using CSS selectors
+        for div in soup.find_all('div'):
+            # Find label spans
+            label_span = div.find('span', class_='unj-label')
+            if not label_span:
+                continue
+                
+            label_text = label_span.get_text(strip=True).lower()
+            
+            # Get the value that follows the label
+            value_div = div.find('div')
+            if not value_div:
+                continue
+                
+            value = value_div.get_text(strip=True)
+            
+            # Map to the correct field name if it exists in our mapping
+            for key, field_name in field_mapping.items():
+                if key in label_text:
+                    result[field_name] = value
+                    break
+        
+        # Extract movements - equivalent to R's line 62-78
+        movs = []
+        movs_table = soup.find(id='tabelaTodasMovimentacoes')
+        if movs_table:
+            for row in movs_table.find_all('tr'):
+                cells = row.find_all('td')
+                if len(cells) >= 2 and cells[0].get_text(strip=True):  # Skip empty rows
+                    data = cells[0].get_text(strip=True)
+                    movimento_text = cells[1].get_text(strip=True)
+                    # Split movimento into movimento and descricao like R does
+                    parts = movimento_text.split('\n', 1)
+                    movimento = parts[0].strip() if parts else ""
+                    descricao = parts[1].strip() if len(parts) > 1 else ""
+                    
+                    movs.append({
+                        'data': data,
+                        'movimento': movimento,
+                        'descricao': descricao
+                    })
+        result['movimentacoes'] = movs
+        
+        # Extract parties - equivalent to R's line 80-108
+        partes = []
+        partes_table = soup.find(id='tableTodasPartes') or soup.find(id='tablePartesPrincipais')
+        if partes_table and not soup.find(string=re.compile("Não há Partes")):
+            for i, row in enumerate(partes_table.find_all('tr')):
+                cells = row.find_all('td')
+                if len(cells) >= 2:
+                    parte = cells[0].get_text(strip=True)
+                    papeis_text = cells[1].get_text(strip=True)
+                    
+                    # Clean parte similar to R's implementation
+                    parte_clean = re.sub(r'[^a-zA-Z]', '', parte)
+                    
+                    # Split and process papeis like R does
+                    papeis = papeis_text.split('\t')
+                    for papel in papeis:
+                        papel = papel.strip()
+                        if not papel:
+                            continue
+                            
+                        papel_clean = papel.replace('&nbsp', ' ')
+                        nome_match = re.search(r'(?<=:)\s*([^:]+)$', papel_clean)
+                        papel_match = re.search(r'^([^:]+)(?=:)', papel_clean)
+                        
+                        nome = nome_match.group(1).strip() if nome_match else None
+                        papel_tipo = papel_match.group(1).strip() if papel_match else parte_clean
+                        
+                        if nome:
+                            partes.append({
+                                'id_parte': i + 1,
+                                'nome': nome,
+                                'parte': parte_clean,
+                                'papel': papel_tipo
+                            })
+        result['partes'] = partes
+        
+        # Extract history - equivalent to R's line 110-114
+        hist = []
+        hist_table = soup.find(id='tdHistoricoDeClasses')
+        if hist_table:
+            for row in hist_table.find_all('tr'):
+                cells = row.find_all('td')
+                if cells:
+                    row_data = [cell.get_text(strip=True) for cell in cells]
+                    hist.append(row_data)
+        result['historico'] = hist
+        
+        # Extract decisions and composition - equivalent to R's line 117-167
+        tables = soup.select("table[style='margin-left:15px; margin-top:1px;']")
+        
+        # Judgments - equivalent to R's line 120-143
+        decisoes = []
+        judgment_table_idx = -1
+        for i, table in enumerate(tables):
+            if "Situação do julgamento" in table.get_text():
+                judgment_table_idx = i
+                break
+                
+        if judgment_table_idx >= 0 and judgment_table_idx + 1 < len(tables):
+            for table in tables[judgment_table_idx + 1:]:
+                for row in table.find_all('tr'):
+                    cells = row.find_all('td')
+                    if len(cells) >= 3:
+                        # Try to parse date - this is a simplified version
+                        data = cells[0].get_text(strip=True)
+                        situacao = cells[1].get_text(strip=True)
+                        decisao = cells[2].get_text(strip=True)
+                        
+                        # Skip rows without valid data
+                        if data and not data.isalpha():
+                            decisoes.append({
+                                'data': data,
+                                'situacao': situacao,
+                                'decisao': decisao
+                            })
+        result['decisoes'] = decisoes
+        
+        # Composition - equivalent to R's line 145-167
+        composicao = []
+        composition_table_idx = -1
+        for i, table in enumerate(tables):
+            if table.get_text().strip().startswith("Relator"):
+                composition_table_idx = i
+                break
+                
+        if composition_table_idx >= 0:
+            for row in tables[composition_table_idx].find_all('tr'):
+                cells = row.find_all('td')
+                if len(cells) >= 2:
+                    participacao = cells[0].get_text(strip=True)
+                    magistrado = cells[1].get_text(strip=True)
+                    
+                    if participacao:
+                        composicao.append({
+                            'participacao': participacao,
+                            'magistrado': magistrado
+                        })
+                        # Also use this to populate the relator field if it's empty
+                        if participacao == "Relator" and not result.get('relator'):
+                            result['relator'] = magistrado
+        result['composicao'] = composicao
+        
+        # First instance - equivalent to R's line 169-189
+        primeira_inst = []
+        first_instance_table_idx = -1
+        for i, table in enumerate(tables):
+            if "Nº de 1ª instância" in table.get_text():
+                first_instance_table_idx = i
+                break
+                
+        if first_instance_table_idx >= 0 and first_instance_table_idx + 1 < len(tables):
+            # If we have the data table
+            data_table = tables[first_instance_table_idx + 1]
+            for row in data_table.find_all('tr'):
+                cells = row.find_all('td')
+                if len(cells) >= 5:
+                    primeira_inst.append({
+                        'id_1a_inst': cells[0].get_text(strip=True),
+                        'foro': cells[1].get_text(strip=True),
+                        'vara': cells[2].get_text(strip=True),
+                        'juiz': cells[3].get_text(strip=True),
+                        'obs': cells[4].get_text(strip=True)
+                    })
+        result['primeira_inst'] = primeira_inst
+        
+        # Ensure all required fields are present
+        required_fields = [
+            'processo', 'status', 'classe', 'assunto', 'secao', 'orgao_julgador',
+            'area', 'relator', 'valor_da_acao', 'origem', 'volume_apenso',
+            'id_original', 'movimentacoes', 'partes', 'historico', 'decisoes',
+            'composicao', 'primeira_inst'
+        ]
+        
+        for field in required_fields:
+            if field not in result:
+                result[field] = None
+        
+        # Attempt to extract values from the full HTML if any are still missing
+        if not result.get('classe'):
+            classe_match = re.search(r'Classe:\s*([^<]+)', html_content)
+            if classe_match:
+                result['classe'] = classe_match.group(1).strip()
+                
+        if not result.get('assunto'):
+            assunto_match = re.search(r'Assunto:\s*([^<]+)', html_content)
+            if assunto_match:
+                result['assunto'] = assunto_match.group(1).strip()
+        
+        # Try a more aggressive approach for all fields
+        for label, field in field_mapping.items():
+            if not result.get(field):
+                # Try to find it in text
+                pattern = f"{label.capitalize()}:\s*([^<\n]+)"
+                match = re.search(pattern, html_content, re.IGNORECASE)
+                if match:
+                    result[field] = match.group(1).strip()
+        
+        # Return a single row (dictionary) matching the structure of the R output
+        return [result]
+
     
-    def _cposg_parse_single(self, path: str):
-        print(f"[TJSP] Parsing processo: {path}")
-        # Implementação real da busca aqui
-        return ''
-    
-    def _cposg_parse_single_json(self, path: str):
-        print(f"[TJSP] Parsing processo: {path}")
-        # Implementação real da busca aqui
-        return ''
-    
-    def _cposg_parse_single_html(self, path: str):
-        print(f"[TJSP] Parsing processo: {path}")
-        # Implementação real da busca aqui
-        return ''
+    # extra - tjsp ------------------------------------------------------------------
+
+    def is_authenticated(self):
+        # Verifica se o usuário está autenticado no site do TJSP.
+        #
+        # Returns
+        # -------
+        # bool
+        #     True se o usuário estiver autenticado, False caso contrário.
+        u = f"{self.u_base}sajcas/verificarLogin.js"
+        r = self.session.get(u)
+        return 'true' in r.text
+
+    def auth(self, login=None, password=None):
+        """
+        Realiza autenticação no site do TJSP.
+
+        Parameters
+        ----------
+        login : str, optional
+            Login do usuário no e-SAJ. Se não for informado, o método solicitará
+            ao usuário.
+        password : str, optional
+            Senha do usuário no e-SAJ. Se não for informado, o método solicitará
+            ao usuário.
+
+        Returns
+        -------
+        bool
+            True se a autenticação for bem sucedida, False caso contrário.
+
+        Notes
+        -----
+        O método armazena o login e a senha informados como atributos da classe,
+        para que possam ser reutilizados em outras chamadas.
+        """
+        print('Autenticando...')
+        
+        if self.is_authenticated():
+            return True
+        
+        if (login is not None) and (password is not None):
+            self.login = login
+            self.password = password
+        elif (self.login is not None) and (self.password is not None):
+            pass
+        else:
+            self.login = input("Login e-SAJ: ")
+            self.password = input("senha e-SAJ: ")        
+
+        self.session.get(f"{self.u_base}esaj/portal.do?servico=740000", verify=False)
+
+        # Obter página de login
+        u_login = f"{self.u_base}sajcas/login?service={self.u_base}esaj/j_spring_cas_security_check"
+        f_login = self.session.get(u_login, verify=False)
+
+        # Obter parâmetros para POST
+        soup = BeautifulSoup(f_login.content, "html.parser")
+        lt = soup.find("input", {"name": "lt"})["value"]
+        e2 = soup.find("input", {"name": "execution"})["value"]
+
+        # Criar query POST
+        query_post = {
+            "username": self.login,
+            "password": self.password,
+            "lt": lt,
+            "execution": e2,
+            "_eventId": "submit",
+            "pbEntrar": "Entrar",
+            "signature": "",
+            "certificadoSelecionado": "",
+            "certificado": ""
+        }
+        self.session.post(u_login, data=query_post, verify=False)
+        auth = self.is_authenticated()
+        if self.verbose:
+            if auth:
+                print("Autenticação bem sucedida!")
+            else:
+                print("Autenticação falhou!")
+        return auth
 
     # cjsg ----------------------------------------------------------------------
     def cjsg(
@@ -1052,6 +1402,8 @@ class TJSP_Scraper(BaseScraper):
                     spans = div_decisao.find_all('span')
                     if spans:
                         decisao_text = spans[-1].get_text(separator=" ", strip=True)
+                    else:
+                        decisao_text = ''
                     dados_processo['decisao'] = decisao_text
                 processos.append(dados_processo)
 
@@ -1163,85 +1515,3 @@ class TJSP_Scraper(BaseScraper):
             cols = [col for col in df.columns if col != 'ementa'] + ['ementa']
             df = df[cols]
         return df
-    
-    # extra - tjsp ------------------------------------------------------------------
-
-    def is_authenticated(self):
-        # Verifica se o usuário está autenticado no site do TJSP.
-        #
-        # Returns
-        # -------
-        # bool
-        #     True se o usuário estiver autenticado, False caso contrário.
-        u = f"{self.u_base}sajcas/verificarLogin.js"
-        r = self.session.get(u)
-        return 'true' in r.text
-
-    def auth(self, login=None, password=None):
-        """
-        Realiza autenticação no site do TJSP.
-
-        Parameters
-        ----------
-        login : str, optional
-            Login do usuário no e-SAJ. Se não for informado, o método solicitará
-            ao usuário.
-        password : str, optional
-            Senha do usuário no e-SAJ. Se não for informado, o método solicitará
-            ao usuário.
-
-        Returns
-        -------
-        bool
-            True se a autenticação for bem sucedida, False caso contrário.
-
-        Notes
-        -----
-        O método armazena o login e a senha informados como atributos da classe,
-        para que possam ser reutilizados em outras chamadas.
-        """
-        print('Autenticando...')
-        
-        if self.is_authenticated():
-            return True
-        
-        if (login is not None) and (password is not None):
-            self.login = login
-            self.password = password
-        elif (self.login is not None) and (self.password is not None):
-            pass
-        else:
-            self.login = input("Login e-SAJ: ")
-            self.password = input("senha e-SAJ: ")        
-
-        self.session.get(f"{self.u_base}esaj/portal.do?servico=740000", verify=False)
-
-        # Obter página de login
-        u_login = f"{self.u_base}sajcas/login?service={self.u_base}esaj/j_spring_cas_security_check"
-        f_login = self.session.get(u_login, verify=False)
-
-        # Obter parâmetros para POST
-        soup = BeautifulSoup(f_login.content, "html.parser")
-        lt = soup.find("input", {"name": "lt"})["value"]
-        e2 = soup.find("input", {"name": "execution"})["value"]
-
-        # Criar query POST
-        query_post = {
-            "username": self.login,
-            "password": self.password,
-            "lt": lt,
-            "execution": e2,
-            "_eventId": "submit",
-            "pbEntrar": "Entrar",
-            "signature": "",
-            "certificadoSelecionado": "",
-            "certificado": ""
-        }
-        self.session.post(u_login, data=query_post, verify=False)
-        auth = self.is_authenticated()
-        if self.verbose:
-            if auth:
-                print("Autenticação bem sucedida!")
-            else:
-                print("Autenticação falhou!")
-        return auth
