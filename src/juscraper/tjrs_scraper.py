@@ -1,11 +1,14 @@
-from .base_scraper import BaseScraper
-import requests
-from bs4 import BeautifulSoup
-from typing import Optional, List, Dict, Any, Union
+"""
+Raspador para o Tribunal de Justiça do Rio Grande do Sul (TJRS).
+"""
+from typing import Union, List
 from urllib.parse import urlencode
+import requests
 import pandas as pd
+from tqdm import tqdm
+from .base_scraper import BaseScraper
 
-class TJRS_Scraper(BaseScraper):
+class TJRSScraper(BaseScraper):
     """Raspador para o Tribunal de Justiça do Rio Grande do Sul."""
 
     BASE_URL = "https://www.tjrs.jus.br/buscas/jurisprudencia/ajax.php"
@@ -33,12 +36,12 @@ class TJRS_Scraper(BaseScraper):
         super().__init__("TJRS")
         self.session = requests.Session()
 
-    def cpopg(self, process_number: str):
-        print(f"[TJRS] Consultando processo: {process_number}")
+    def cpopg(self, id_cnj: Union[str, List[str]]):
+        print(f"[TJRS] Consultando processo: {id_cnj}")
         # Implementação real da busca aqui
 
-    def cposg(self, process_number: str):
-        print(f"[TJRS] Consultando processo: {process_number}")
+    def cposg(self, id_cnj: Union[str, List[str]]):
+        print(f"[TJRS] Consultando processo: {id_cnj}")
         # Implementação real da busca aqui
 
     def cjsg_download(
@@ -68,7 +71,7 @@ class TJRS_Scraper(BaseScraper):
             # Permitir range(0, N), lista ou qualquer iterável, sempre converter para página correta
             paginas_iter = [p+1 for p in paginas]
         resultados = []
-        for pagina_atual in paginas_iter:
+        for pagina_atual in tqdm(paginas_iter, desc='Baixando páginas TJRS'):
             payload = {
                 'aba': 'jurisprudencia',
                 'realizando_pesquisa': '1',
@@ -110,7 +113,6 @@ class TJRS_Scraper(BaseScraper):
                 valor = secao_map.get(secao.lower())
                 if valor:
                     payload["filtroSecao"] = valor
-            from urllib.parse import urlencode
             parametros_str = urlencode(payload, doseq=True)
             data = {
                 'action': 'consultas_solr_ajax',
@@ -123,7 +125,10 @@ class TJRS_Scraper(BaseScraper):
         return resultados
 
     def cjsg_parse(self, resultados_brutos: list) -> 'pd.DataFrame':
-        import pandas as pd
+        """
+        Extrai os dados relevantes dos resultados brutos retornados pelo TJRS.
+        Retorna um DataFrame com as decisões.
+        """
         def clean_value(val):
             if isinstance(val, list):
                 return val[0] if val else None
@@ -138,7 +143,10 @@ class TJRS_Scraper(BaseScraper):
                     clean_value(doc.get('url'))
                 )
                 if not url and doc.get('numero_processo'):
-                    url = f"https://www.tjrs.jus.br/buscas/jurisprudencia/?numero_processo={clean_value(doc.get('numero_processo'))}"
+                    url = (
+                        f"https://www.tjrs.jus.br/buscas/jurisprudencia/?numero_processo="
+                        f"{clean_value(doc.get('numero_processo'))}"
+                    )
                 # Coletar todos os campos relevantes
                 resultado = {
                     'processo': clean_value(doc.get('numero_processo')),
@@ -187,13 +195,15 @@ class TJRS_Scraper(BaseScraper):
             'classe_cnj', 'assunto_cnj', 'tribunal', 'tipo_processo', 'url', 'ementa',
             'documento_text'
         ]
-        cols = [c for c in principais if c in df.columns] + [c for c in df.columns if c not in principais]
+        cols_principais = [c for c in principais if c in df.columns]
+        cols_nao_principais = [c for c in df.columns if c not in principais]
+        cols = cols_principais + cols_nao_principais
         df = df[cols]
         return df
 
     def cjsg(
         self,
-        termo: str,
+        query: str,
         paginas: Union[int, list, range] = 1,
         classe: str = None,
         assunto: str = None,
@@ -213,7 +223,7 @@ class TJRS_Scraper(BaseScraper):
         Retorna um DataFrame pronto para análise.
         """
         brutos = self.cjsg_download(
-            termo=termo,
+            termo=query,
             paginas=paginas,
             classe=classe,
             assunto=assunto,
