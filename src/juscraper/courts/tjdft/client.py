@@ -3,8 +3,9 @@ Raspador para o Tribunal de Justiça do Distrito Federal e Territórios (TJDFT).
 """
 from typing import Union, List
 import pandas as pd
-import requests
-from .base_scraper import BaseScraper
+from juscraper.core.base import BaseScraper
+from .download import cjsg_download
+from .parse import cjsg_parse
 
 class TJDFTScraper(BaseScraper):
     """Raspador para o Tribunal de Justiça do Distrito Federal e Territórios (TJDFT)."""
@@ -34,38 +35,22 @@ class TJDFTScraper(BaseScraper):
         Baixa resultados brutos da pesquisa de jurisprudência do TJDFT (usando requests).
         Retorna lista de resultados brutos (JSON).
         """
-        resultados = []
-        if isinstance(paginas, int):
-            paginas_iter = range(1, paginas+1)
-        else:
-            paginas_iter = paginas
-        for pagina in paginas_iter:
-            payload = {
-                "query": query,
-                "termosAcessorios": [],
-                "pagina": pagina,  # começa do zero
-                "tamanho": quantidade_por_pagina,
-                "sinonimos": sinonimos,
-                "espelho": espelho,
-                "inteiroTeor": inteiro_teor,
-                "retornaInteiroTeor": False,
-                "retornaTotalizacao": True
-            }
-            headers = {
-                "Content-Type": "application/json",
-            }
-            resp = requests.post(self.BASE_URL, json=payload, headers=headers, timeout=10)
-            resp.raise_for_status()
-            data = resp.json()
-            resultados.extend(data.get("registros", []))
-        return resultados
+        return cjsg_download(
+            query=query,
+            paginas=paginas,
+            sinonimos=sinonimos,
+            espelho=espelho,
+            inteiro_teor=inteiro_teor,
+            quantidade_por_pagina=quantidade_por_pagina,
+            base_url=self.BASE_URL
+        )
 
     def cjsg_parse(self, resultados_brutos: list) -> list:
         """
         Extrai informações estruturadas dos resultados brutos do TJDFT.
         Retorna todos os campos presentes em cada item.
         """
-        return [dict(item) for item in resultados_brutos]
+        return cjsg_parse(resultados_brutos)
 
     def cjsg(self, query: str, paginas: Union[int, list, range] = 0) -> pd.DataFrame:
         """
