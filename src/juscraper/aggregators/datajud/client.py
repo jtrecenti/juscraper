@@ -13,9 +13,8 @@ from tqdm.auto import tqdm
 
 from ...core.base import BaseScraper
 from ...utils.cnj import clean_cnj # Assuming this utility exists and is relevant
-# We'll need to decide where ID_JUSTICA_TRIBUNAL_TO_ALIAS and TRIBUNAL_TO_ALIAS live.
-# For now, let's assume they might be part of this module or imported.
-from .mappings import ID_JUSTICA_TRIBUNAL_TO_ALIAS, TRIBUNAL_TO_ALIAS # Placeholder for mappings
+# Import mappings for tribunal and justice aliases.
+from .mappings import ID_JUSTICA_TRIBUNAL_TO_ALIAS, TRIBUNAL_TO_ALIAS
 
 from .download import call_datajud_api # To be created for API calls
 from .parse import parse_datajud_api_response # To be created for API response parsing
