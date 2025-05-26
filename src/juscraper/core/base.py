@@ -1,7 +1,12 @@
-"""Base scraper class for court data extraction."""
+"""
+Base scraper class for court data extraction.
+"""
 from abc import ABC
 import os
 import tempfile
+import logging
+
+logger = logging.getLogger("juscraper.core.base")
 
 class BaseScraper(ABC):
     """Classe base para raspadores de tribunais."""
@@ -27,10 +32,14 @@ class BaseScraper(ABC):
         # check if path is a valid directory. If it is not, create it
         if not os.path.isdir(path):
             if self.verbose:
-                print(
-                    f"O caminho de download '{path}' nao é um diretório. Criando esse diretório..."
+                logger.info(
+                    "O caminho de download '%s' não é um diretório. Criando esse diretório...",
+                    path
                 )
             os.makedirs(path)
         self.download_path = path
         if self.verbose:
-            print(f"Caminho de download definido como '{path}'.")
+            logger.info(
+                "Caminho de download definido como '%s'.",
+                path
+            )
