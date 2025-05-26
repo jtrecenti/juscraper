@@ -1,7 +1,7 @@
 [project]
 name = "juscraper"
 version = "0.1.0"
-description = "Add your description here"
+description = "Raspador de tribunais e outros sistemas relacionados ao poder judiciário."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
