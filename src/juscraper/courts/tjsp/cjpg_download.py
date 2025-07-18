@@ -1,5 +1,5 @@
 """
-Download de processos da jurisprudência do TJSP (Cjpg).
+Downloads cases from the TJSP jurisprudence search.
 """
 import logging
 import os
@@ -28,22 +28,22 @@ def cjpg_download(
     get_n_pags_callback=None
 ):
     """
-    Baixa os processos da jurisprudência do TJSP.
+    Downloads cases from the TJSP jurisprudence search.
 
     Args:
-        pesquisa (str): A consulta para a jurisprudência.
-        session (requests.Session): Sessão autenticada.
-        u_base (str): URL base do ESAJ.
-        download_path (str): Diretório base para salvar arquivos.
-        sleep_time (float): Tempo de espera entre requisições.
-        classes (list[str], opcional): Filtros de classes.
-        assuntos (list[str], opcional): Filtros de assuntos.
-        varas (list[str], opcional): Filtros de varas.
-        id_processo (str, opcional): O ID do processo.
-        data_inicio (str, opcional): Data de início de filtro.
-        data_fim (str, opcional): Data de fim de filtro.
-        paginas (range, opcional): Faixa de páginas.
-        get_n_pags_callback (callable): Função para extrair número de páginas.
+        pesquisa (str): The search query for the jurisprudence.
+        session (requests.Session): Authenticated session.
+        u_base (str): Base URL of the ESAJ.
+        download_path (str): Base directory for saving files.
+        sleep_time (float): Time to wait between requests.
+        classes (list[str], optional): Filters for classes.
+        assuntos (list[str], optional): Filters for subjects.
+        varas (list[str], optional): Filters for courts.
+        id_processo (str, optional): Process ID.
+        data_inicio (str, optional): Start date for filtering.
+        data_fim (str, optional): End date for filtering.
+        paginas (range, optional): Page range.
+        get_n_pags_callback (callable): Callback function to extract number of pages.
     """
     if assuntos is not None:
         assuntos = ','.join(assuntos)

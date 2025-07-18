@@ -1,6 +1,5 @@
 """
-Download de processos da consulta de processos
-originários do primeiro grau (CPOSG) do TJSP.
+Downloads processes from the TJSP Consulta de Processos Originarios do Primeiro Grau (CPOSG).
 """
 import logging
 import os
@@ -14,8 +13,8 @@ logger = logging.getLogger('juscraper.cposg_download')
 
 def cposg_download_html(id_cnj_list, session, u_base, download_path, sleep_time=0.5):
     """
-    Baixa o HTML de um ou vários processos do CPOSG.
-    Retorna lista de paths se lista, ou path único se string.
+    Downloads the HTML of one or more processes from the CPOSG.
+    Returns a list of paths if list, or a single path if string.
     """
     if isinstance(id_cnj_list, str):
         id_cnj_list = [id_cnj_list]
@@ -82,7 +81,7 @@ def cposg_download_html(id_cnj_list, session, u_base, download_path, sleep_time=
 
 def cposg_download_api(id_cnj_list, session, api_base, download_path, sleep_time=0.5):
     """
-    Baixa o JSON de um ou vários processos do CPOSG via API.
+    Downloads the JSON of one or more processes from the CPOSG via API.
     """
     if isinstance(id_cnj_list, str):
         id_cnj_list = [id_cnj_list]

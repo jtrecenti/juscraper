@@ -1,6 +1,5 @@
 """
-Download de processos da consulta de processos
-originários do primeiro grau (CPOSG) do TJSP.
+Parses downloaded files from the TJSP Consulta de Processos Originarios do Primeiro Grau (CPOSG).
 """
 import glob
 import os
@@ -14,7 +13,7 @@ logger = logging.getLogger('juscraper.cposg_parse')
 
 def cposg_parse(path: str):
     """
-    Parse all HTML files in the given directory.
+    Parses all HTML files in the given directory.
     """
     arquivos = glob.glob(os.path.join(path, '**/*.html'), recursive=True)
     dados = []
@@ -47,12 +46,12 @@ def cposg_parse_manager(path: str):
     return df
 
 def cposg_parse_single_json(path: str):
-    """Stub para evitar erro de importação."""
-    raise NotImplementedError("cposg_parse_single_json ainda não implementado.")
+    """Stub to avoid import error."""
+    raise NotImplementedError("cposg_parse_single_json not implemented yet.")
 
 def cposg_parse_single_html(html_path):
     """
-    Parse a single HTML document from CPOSG.
+    Parses a single HTML document from CPOSG.
     """
     with open(html_path, 'r', encoding='utf-8') as f:
         html_content = f.read()

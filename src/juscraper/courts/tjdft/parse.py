@@ -1,10 +1,10 @@
 """
-Funções de parse específicas para TJDFT
+Functions for parsing specific to TJDFT
 """
 
 def cjsg_parse(resultados_brutos):
     """
-    Extrai informações estruturadas dos resultados brutos do TJDFT.
-    Retorna todos os campos presentes em cada item (lista de dicionários).
+    Extracts structured information from the raw TJDFT search results.
+    Returns all fields present in each item (list of dictionaries).
     """
     return [dict(item) for item in resultados_brutos]

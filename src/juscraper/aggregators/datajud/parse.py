@@ -1,5 +1,6 @@
-# Funções de parse específicas para DATAJUD API responses
-
+"""
+Functions for parsing DATAJUD API responses
+"""
 import pandas as pd
 from typing import Dict, Any, Optional
 import logging
@@ -44,23 +45,22 @@ def parse_datajud_api_response(
             # Handle 'movimentacoes' based on mostrar_movs flag
             if not mostrar_movs:
                 # Create a new dict excluding movimentacoes to avoid modifying original
-                processo_data_filtered = { 
-                    key: value for key, value in processo_data.items() 
+                processo_data_filtered = {
+                    key: value for key, value in processo_data.items()
                     if key not in ["movimentacoes", "movimentos"] # Check for both common keys
                 }
                 processos.append(processo_data_filtered)
             else:
                 processos.append(processo_data) # Include all fields
-        
+
         if not processos:
             logger.info("No process data extracted from hits.")
             return pd.DataFrame()
-            
+
         df = pd.DataFrame(processos)
-        # logger.info(f"Successfully parsed {len(df)} processes from API response.") # Handled by client
         return df
 
     except Exception as e:
-        logger.error(f"Error parsing Datajud API JSON response: {e}")
-        logger.debug(f"Problematic JSON (or part of it): {str(api_response_json)[:500]}") # Log snippet
+        logger.error("Error parsing Datajud API JSON response: %s", e)
+        logger.debug("Problematic JSON (or part of it): %s", str(api_response_json)[:500])
         return pd.DataFrame()

@@ -1,5 +1,5 @@
 """
-Raspador para o Tribunal de Justiça do Distrito Federal e Territórios (TJDFT).
+Module for the scraper of the Court of Justice of the Federal District and Territories (TJDFT).
 """
 from typing import Union, List
 import pandas as pd
@@ -8,19 +8,19 @@ from .download import cjsg_download
 from .parse import cjsg_parse
 
 class TJDFTScraper(BaseScraper):
-    """Raspador para o Tribunal de Justiça do Distrito Federal e Territórios (TJDFT)."""
+    """Scraper for the Court of Justice of the Federal District and Territories (TJDFT)."""
     BASE_URL = "https://jurisdf.tjdft.jus.br/api/v1/pesquisa"
 
     def __init__(self):
         super().__init__("TJDFT")
 
     def cpopg(self, id_cnj: Union[str, List[str]]):
-        """Stub para compatibilidade com BaseScraper."""
-        raise NotImplementedError("TJDFT não implementa cpopg.")
+        """Stub for compatibility with BaseScraper."""
+        raise NotImplementedError("TJDFT does not implement cpopg.")
 
     def cposg(self, id_cnj: Union[str, List[str]]):
-        """Stub para compatibilidade com BaseScraper."""
-        raise NotImplementedError("TJDFT não implementa cposg.")
+        """Stub for compatibility with BaseScraper."""
+        raise NotImplementedError("TJDFT does not implement cposg.")
 
     def cjsg_download(
         self,
@@ -32,8 +32,8 @@ class TJDFTScraper(BaseScraper):
         quantidade_por_pagina: int = 10,
     ) -> list:
         """
-        Baixa resultados brutos da pesquisa de jurisprudência do TJDFT (usando requests).
-        Retorna lista de resultados brutos (JSON).
+        Downloads raw search results from the TJDFT jurisprudence search (using requests).
+        Returns a list of raw results (JSON).
         """
         return cjsg_download(
             query=query,
@@ -47,15 +47,15 @@ class TJDFTScraper(BaseScraper):
 
     def cjsg_parse(self, resultados_brutos: list) -> list:
         """
-        Extrai informações estruturadas dos resultados brutos do TJDFT.
-        Retorna todos os campos presentes em cada item.
+        Extracts structured information from the raw TJDFT search results.
+        Returns all fields present in each item.
         """
         return cjsg_parse(resultados_brutos)
 
     def cjsg(self, query: str, paginas: Union[int, list, range] = 0) -> pd.DataFrame:
         """
-        Busca jurisprudência do TJDFT de forma simplificada (download + parse).
-        Retorna um DataFrame pronto para análise.
+        Searches for TJDFT jurisprudence in a simplified way (download + parse).
+        Returns a ready-to-analyze DataFrame.
         """
         brutos = self.cjsg_download(query=query, paginas=paginas)
         dados = self.cjsg_parse(brutos)

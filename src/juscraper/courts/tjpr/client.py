@@ -1,5 +1,5 @@
 """
-Raspador para o Tribunal de Justica do Paraná (TJPR).
+Scraper for the Court of Justice of Paraná (TJPR).
 """
 from typing import Optional, Union, List
 import requests
@@ -9,7 +9,7 @@ from .download import cjsg_download, get_initial_tokens
 from .parse import cjsg_parse
 
 class TJPRScraper(BaseScraper):
-    """Raspador para o Tribunal de Justica do Paraná."""
+    """Scraper for the Court of Justice of Paraná."""
 
     BASE_URL = "https://portal.tjpr.jus.br/jurisprudencia/publico/pesquisa.do?actionType=pesquisar"
     HOME_URL = "https://portal.tjpr.jus.br/jurisprudencia/"
@@ -28,8 +28,8 @@ class TJPRScraper(BaseScraper):
                       data_julgamento_de: str = None, data_julgamento_ate: str = None,
                       data_publicacao_de: str = None, data_publicacao_ate: str = None) -> list:
         """
-        Baixa resultados brutos da pesquisa de jurisprudência do TJPR (várias páginas).
-        Retorna lista de HTMLs (um por página).
+        Downloads raw results from the TJPR jurisprudence search (multiple pages).
+        Returns a list of HTMLs (one per page).
         """
         return cjsg_download(
             self.session, self.USER_AGENT, self.HOME_URL, termo, paginas,
@@ -38,10 +38,10 @@ class TJPRScraper(BaseScraper):
 
     def cjsg_parse(self, resultados_brutos: list, criterio: str = None) -> pd.DataFrame:
         """
-        Extrai os dados relevantes dos HTMLs retornados pelo TJPR.
-        Retorna um DataFrame com as decisões.
+        Extracts relevant data from the HTMLs returned by TJPR.
+        Returns a DataFrame with the decisions.
         """
-        # Para ementa completa, precisa passar session, jsessionid, user_agent
+        # For complete minutes, you need to pass session, jsessionid, user_agent
         jsessionid, _ = get_initial_tokens(self.session, self.HOME_URL)
         return cjsg_parse(resultados_brutos, criterio, self.session, jsessionid, self.USER_AGENT)
 
@@ -49,8 +49,8 @@ class TJPRScraper(BaseScraper):
              data_julgamento_de: str = None, data_julgamento_ate: str = None,
              data_publicacao_de: str = None, data_publicacao_ate: str = None, **kwargs) -> pd.DataFrame:
         """
-        Busca jurisprudência do TJPR de forma simplificada (download + parse).
-        Retorna um DataFrame pronto para análise.
+        Searches for TJPR jurisprudence in a simplified way (download + parse).
+        Returns a ready-to-analyze DataFrame.
         """
         brutos = self.cjsg_download(
             termo=query,
@@ -64,9 +64,9 @@ class TJPRScraper(BaseScraper):
         return self.cjsg_parse(brutos, query)
 
     def cpopg(self, id_cnj: Union[str, List[str]]):
-        """Stub: Consulta de processos de 1º grau não implementada para TJPR."""
+        """Stub: Primeiro grau case consultation not implemented for TJPR."""
         raise NotImplementedError("Consulta de processos de 1º grau não implementada para TJPR.")
 
     def cposg(self, id_cnj: Union[str, List[str]]):
-        """Stub: Consulta de processos de 2º grau não implementada para TJPR."""
+        """Stub: Segundo grau case consultation not implemented for TJPR."""
         raise NotImplementedError("Consulta de processos de 2º grau não implementada para TJPR.")

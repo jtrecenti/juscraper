@@ -9,7 +9,7 @@ import logging
 logger = logging.getLogger("juscraper.core.base")
 
 class BaseScraper(ABC):
-    """Classe base para raspadores de tribunais."""
+    """Base scraper class for court data extraction."""
 
     def __init__(self, tribunal_name: str):
         self.tribunal_name = tribunal_name
@@ -17,7 +17,7 @@ class BaseScraper(ABC):
         self.download_path = None
 
     def set_verbose(self, verbose: int):
-        """Seta o nível de verbosidade do scraper.
+        """Set the verbosity level of the scraper.
 
         Args:
             verbose (int): Verbosity level.
@@ -25,7 +25,7 @@ class BaseScraper(ABC):
         self.verbose = verbose
 
     def set_download_path(self, path: str):
-        """Define o caminho de download. Se None, cria um diretório temporário."""
+        """Set the download path. If None, creates a temporary directory."""
         # if path is None, define a default path in the temp directory
         if path is None:
             path = tempfile.mkdtemp()

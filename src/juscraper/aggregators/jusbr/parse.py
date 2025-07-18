@@ -1,9 +1,9 @@
 """
-Módulo parse.py: Funções de parsing e limpeza para resultados e documentos do JUSBR.
-Inclui utilitários para processar respostas de API e limpar textos de documentos.
+Module parse.py: Functions for parsing and cleaning results and documents from JUSBR.
+Includes utilities for processing API responses and cleaning document texts.
 """
 
-# Funções de parse específicas para JUSBR
+# Functions for parsing and cleaning results and documents from JUSBR
 
 import logging
 from typing import Optional, Dict, Any, List, Union
