@@ -40,8 +40,10 @@ jobs:
     - name: 🐍 Set up Python ${{ env.PYTHON_VERSION }}
       run: uv python install ${{ env.PYTHON_VERSION }}
 
-    - name: 📦 Install chatlas and dependencies
-      run: uv sync --python ${{ env.PYTHON_VERSION }} --all-extras
+    - name: 📦 Install juscraper and dependencies
+      run: |
+        uv sync --python ${{ env.PYTHON_VERSION }} --all-extras
+        uv pip install -e .
 
     - name: 🔌 Activate venv
       run: |
