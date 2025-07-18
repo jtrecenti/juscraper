@@ -1,5 +1,5 @@
 """
-Parse de processos da consulta de julgados do primeiro grau.
+Parse of cases from the TJSP jurisprudence search.
 """
 import os
 import re
@@ -13,7 +13,7 @@ logger = logging.getLogger("juscraper.cjpg_parse")
 
 def cjpg_n_pags(page_source):
     """
-    Extrai o número de páginas da consulta Cjpg a partir do HTML.
+    Extracts the number of pages from the Cjpg search results HTML.
     """
     soup = BeautifulSoup(page_source, "html.parser")
     page_element = soup.find(attrs={'bgcolor': '#EEEEEE'})
@@ -35,7 +35,7 @@ def cjpg_n_pags(page_source):
 
 def cjpg_parse_single(path):
     """
-    Parseia um arquivo HTML baixado com a função cjpg_download.
+    Parses a downloaded HTML file from the cjpg_download function.
     """
     with open(path, 'r', encoding='utf-8') as f:
         soup = BeautifulSoup(f, 'html.parser')
@@ -85,8 +85,8 @@ def cjpg_parse_single(path):
 
 def cjpg_parse_manager(path):
     """
-    Parseia os arquivos baixados com a função cjpg e
-    retorna um DataFrame com as informações dos processos.
+    Parses the downloaded files from the cjpg_download function.
+    Returns a DataFrame with the information of the processes.
     """
     if os.path.isfile(path):
         result = [cjpg_parse_single(path)]

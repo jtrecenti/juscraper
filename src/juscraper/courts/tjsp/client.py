@@ -1,5 +1,5 @@
 """
-Modulo client.py: Scraper principal para o Tribunal de Justiça de São Paulo (TJSP).
+Main scraper for Tribunal de Justica de Sao Paulo (TJSP).
 """
 import os
 import tempfile
@@ -29,7 +29,7 @@ logger = logging.getLogger('juscraper.tjsp')
 warnings.filterwarnings('ignore', category=urllib3.exceptions.InsecureRequestWarning)
 
 class TJSPScraper(BaseScraper):
-    """Raspador para o Tribunal de Justiça de São Paulo."""
+    """Main scraper for Tribunal de Justica de Sao Paulo."""
 
     def __init__(
         self,
@@ -39,12 +39,12 @@ class TJSPScraper(BaseScraper):
         **kwargs
     ):
         """
-        Inicializa o scraper para o TJSP.
+        Initializes the scraper for TJSP.
 
         Args:
-            verbose (int, opcional): Nível de verbosidade. Padrão é 0 (nenhum log).
-            download_path (str, opcional): Caminho para salvar os arquivos baixados. Padrão é None (usa temporário).
-            sleep_time (float, opcional): Tempo de espera entre requisições. Padrão é 0.5 segundos.
+            verbose (int, optional): Verbosity level. Default is 0 (no logging).
+            download_path (str, optional): Path to save downloaded files. Default is None (uses temporary directory).
+            sleep_time (float, optional): Time to wait between requests. Default is 0.5 seconds.
             **kwargs: Argumentos adicionais.
         """
         super().__init__("TJSP")
@@ -59,23 +59,24 @@ class TJSPScraper(BaseScraper):
 
     def set_download_path(self, path: str | None = None):
         """
-        Define o diretório base para salvar os arquivos baixados.
+        Sets the base directory for saving downloaded files.
 
         Args:
-            path (str, opcional): Caminho para salvar os arquivos baixados. Padrão é None (usa temporário).
+            path (str, optional): Path to save downloaded files. Default is None (uses temporary directory).
         """
         if path is None:
             path = tempfile.mkdtemp()
         self.download_path = path
 
     def set_method(self, method: Literal['html', 'api']):
-        """Define o método para acesso aos dados do TJSP.
+        """
+        Sets the method for accessing TJSP data.
 
         Args:
-            method: Literal['html', 'api']. Os métodos suportados são 'html' e 'api'.
+            method: Literal['html', 'api']. The methods supported are 'html' and 'api'.
 
         Raises:
-            Exception: Se o método passado como parâmetro não for 'html' nem 'api'.
+            Exception: If the method is not 'html' or 'api'.
         """
         if method not in ['html', 'api']:
             raise ValueError(
@@ -87,7 +88,7 @@ class TJSPScraper(BaseScraper):
     # cpopg ------------------------------------------------------------------
     def cpopg(self, id_cnj: Union[str, List[str]], method: Literal['html', 'api'] = 'html'):
         """
-        Busca um processo na consulta de processos originários do primeiro grau.
+        Scrapes a process from Primeiro Grau (CPOPG).
         """
         self.set_method(method)
         self.cpopg_download(id_cnj, method)
@@ -100,14 +101,14 @@ class TJSPScraper(BaseScraper):
         id_cnj: Union[str, List[str]],
         method: Literal['html', 'api'] = 'html'
     ):
-        """Baixa um processo na consulta de processos originários do primeiro grau.
+        """Downloads a process from Primeiro Grau (CPOPG).
 
         Args:
-            id_cnj: string com o CNJ do processo, ou lista de strings com vários CNJs.
-            method: Literal['html', 'api']. Os métodos suportados são 'html' e 'api'. O padrão é 'html'.
+            id_cnj: string with the CNJ of the process, or list of strings with CNJs.
+            method: Literal['html', 'api']. The methods supported are 'html' and 'api'. The default is 'html'.
 
         Raises:
-            Exception: Se o método passado como parâmetro não for 'html' nem 'api'.
+            Exception: If the method passed as parameter is not 'html' or 'api'.
         """
         self.set_method(method)
         path = self.download_path
@@ -136,7 +137,7 @@ class TJSPScraper(BaseScraper):
 
     def cpopg_parse(self, path: str):
         """
-        Wrapper para parsing de arquivos baixados do CPOPG.
+        Wrapper for parsing downloaded files from CPOPG.
         """
         return cpopg_parse_manager(path)
 
@@ -144,7 +145,7 @@ class TJSPScraper(BaseScraper):
 
     def cposg(self, id_cnj: str, method: Literal['html', 'api'] = 'html'):
         """
-        Orquestra o download e parsing de processos do CPOSG.
+        Orchestrates the download and parsing of processes from Segundo Grau (CPOSG).
         """
         self.set_method(method)
         path = self.download_path
@@ -158,7 +159,7 @@ class TJSPScraper(BaseScraper):
 
     def cposg_download(self, id_cnj: Union[str, list], method: Literal['html', 'api'] = 'html'):
         """
-        Baixa processos do CPOSG, via HTML ou API, utilizando funções modularizadas.
+        Downloads processes from Segundo Grau (CPOSG), via HTML or API, using modularized functions.
         """
         self.set_method(method)
         if isinstance(id_cnj, str):
@@ -184,7 +185,7 @@ class TJSPScraper(BaseScraper):
 
     def cposg_parse(self, path: str):
         """
-        Wrapper para parsing de arquivos baixados do CPOSG.
+        Wrapper for parsing downloaded files from CPOSG.
         """
         return cposg_parse_manager(path)
 
@@ -204,7 +205,7 @@ class TJSPScraper(BaseScraper):
         paginas: range | None = None,
     ):
         """
-        Orquestra o download e parsing de processos do CJSG.
+        Orchestrates the download and parsing of processes from CJSG.
         """
         path_result = self.cjsg_download(
             pesquisa=pesquisa,
@@ -239,24 +240,24 @@ class TJSPScraper(BaseScraper):
         paginas: range | None = None,
     ):
         """
-        Baixa os arquivos HTML das páginas de resultados da
-        Consulta de Julgados do Segundo Grau (CJSG).
+        Downloads the HTML files of the pages of results of the
+        Second Stage Judgment Consultation (CJSG).
 
         Args:
-            pesquisa (str): Termo de busca.
-            ementa (str, opcional): Filtro por texto da ementa.
-            classe: Classe do processo.
-            assunto: Assunto do processo.
-            comarca: Comarca do processo.
-            orgao_julgador: Orgão julgador do processo.
-            data_inicio: Data de início do processo.
-            data_fim: Data de fim do processo.
-            baixar_sg (bool): Se True, baixa também do segundo grau.
-            tipo_decisao (str): 'acordao' ou 'monocratica'.
-            paginas (range, opcional): Intervalo de páginas a baixar.
+            pesquisa (str): Search term.
+            ementa (str, optional): Filter by text of the ementa.
+            classe: Class of the process.
+            assunto: Subject of the process.
+            comarca: Court of the process.
+            orgao_julgador: Court of appeal of the process.
+            data_inicio: Start date of the process.
+            data_fim: End date of the process.
+            baixar_sg (bool): If True, also downloads from Second Stage.
+            tipo_decisao (str): 'acordao' or 'monocratica'.
+            paginas (range, optional): Range of pages to download.
         
-        ATENÇÃO: range(0, n) baixa as páginas 1 até n (inclusive), seguindo
-        a expectativa do usuário (exemplo: range(0,3) baixa as páginas 1, 2 e 3).
+        NOTE: range(0, n) downloads pages 1 to n (inclusive), following
+        the user's expectation (example: range(0,3) downloads pages 1, 2 and 3).
         """
         return cjsg_download_mod(
             pesquisa=pesquisa,
@@ -290,21 +291,20 @@ class TJSPScraper(BaseScraper):
         paginas: range | None = None,
     ):
         """
-        Realiza uma busca por jurisprudencia com base nos parametros fornecidos,
-        baixa os resultados, os analisa e retorna os dados analisados.
+        Orchestrates the download and parsing of processes from CJPG.
 
         Args:
-            pesquisa (str): A consulta para a jurisprudencia. Padrão "" (string vazia)
-            classes (list[str], opcional): Lista de classes do processo. Padrao None.
-            assuntos (list[str], opcional): Lista de assuntos do processo. Padrao None.
-            varas (list[str], opcional): Lista de varas do processo. Padrao None.
-            id_processo (str, opcional): O ID do processo. Padrao None.
-            data_inicio (str, opcional): A data de inicio para a busca. Padrao None.
-            data_fim (str, opcional): A data de fim para a busca. Padrao None.
-            paginas (range, opcional): A faixa de paginas a serem buscadas. Padrao None.
+            pesquisa (str): The search term. Default is "" (empty string).
+            classes (list[str], optional): List of classes of the process. Default is None.
+            assuntos (list[str], optional): List of subjects of the process. Default is None.
+            varas (list[str], optional): List of varas of the process. Default is None.
+            id_processo (str, optional): ID of the process. Default is None.
+            data_inicio (str, optional): Start date of the search. Default is None.
+            data_fim (str, optional): End date of the search. Default is None.
+            paginas (range, optional): Range of pages to download. Default is None.
 
-        Retorna:
-            pd.DataFrame: Os dados analisados da jurisprudencia baixada.
+        Returns:
+            pd.DataFrame: The parsed data from the downloaded jurisprudence.
         """
         path_result = self.cjpg_download(
             pesquisa=pesquisa,
@@ -333,17 +333,17 @@ class TJSPScraper(BaseScraper):
         paginas: range | None = None,
     ):
         """
-        Baixa os processos da jurisprudência do TJSP.
+        Downloads the processes from the TJSP jurisprudence.
 
         Args:
-            pesquisa (str): A consulta para a jurisprudência.
-            classes (list[str], opcional): Lista de classes do processo. Padrão None.
-            assuntos (list[str], opcional): Lista de assuntos do processo. Padrão None.
-            varas (list[str], opcional): Lista de varas do processo. Padrão None.
-            id_processo (str, opcional): ID do processo. Padrão None.
-            data_inicio (str, opcional): Data inicial da busca. Padrão None.
-            data_fim (str, opcional): Data final da busca. Padrão None.
-            paginas (range, opcional): Páginas a baixar. Padrão None.
+            pesquisa (str): The search term.
+            classes (list[str], optional): List of classes of the process. Default is None.
+            assuntos (list[str], optional): List of subjects of the process. Default is None.
+            varas (list[str], optional): List of varas of the process. Default is None.
+            id_processo (str, optional): ID of the process. Default is None.
+            data_inicio (str, optional): Start date of the search. Default is None.
+            data_fim (str, optional): End date of the search. Default is None.
+            paginas (range, optional): Pages to download. Default is None.
         """
         def get_n_pags_callback(r0):
             # r0 pode ser requests.Response ou HTML string
@@ -367,13 +367,12 @@ class TJSPScraper(BaseScraper):
 
     def cjpg_parse(self, path: str):
         """
-        Wrapper para parsing dos arquivos baixados da Cjpg.
+        Wrapper for parsing downloaded files from CJPG.
         """
         return cjpg_parse_manager(path)
 
     def cjsg_parse(self, path: str):
         """
-        Parseia os arquivos baixados da segunda instância (cjsg) e retorna um DataFrame com
-        as informações dos processos.
+        Wrapper for parsing downloaded files from CJSG.
         """
         return cjsg_parse_manager(path)

@@ -1,5 +1,5 @@
 """
-Download de resultados da Consulta de Julgados do Segundo Grau (CJSG) do TJSP.
+Download of results from the TJSP Consulta de Julgados de Segundo Grau (CJSG).
 """
 import os
 import time
@@ -32,19 +32,19 @@ def cjsg_download(
     get_n_pags_callback=None
 ):
     """
-    Baixa os arquivos HTML das páginas de resultados da Consulta de Julgados do Segundo Grau (CJSG).
+    Downloads HTML files from the CJSG search results pages.
 
     Args:
-        pesquisa (str): Termo de busca.
-        download_path (str): Diretório base para salvar arquivos.
-        u_base (str): URL base do ESAJ.
-        sleep_time (float): Tempo de espera entre requisições.
-        verbose (int): Nível de log.
-        ementa, classe, assunto, comarca, orgao_julgador, data_inicio, data_fim: Filtros opcionais.
-        baixar_sg (bool): Se True, baixa também do segundo grau.
-        tipo_decisao (str): 'acordao' ou 'monocratica'.
-        paginas (range): Intervalo de páginas a baixar.
-        get_n_pags_callback (callable): Função para extrair número de páginas do HTML.
+        pesquisa (str): Search term.
+        download_path (str): Base directory for saving files.
+        u_base (str): ESAJ base URL.
+        sleep_time (float): Time to wait between requests.
+        verbose (int): Logging level.
+        ementa, classe, assunto, comarca, orgao_julgador, data_inicio, data_fim: Optional filters.
+        baixar_sg (bool): If True, also downloads from the second stage.
+        tipo_decisao (str): 'acordao' or 'monocratica'.
+        paginas (range): Page range to download.
+        get_n_pags_callback (callable): Callback function to extract number of pages from HTML.
     """
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')

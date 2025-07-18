@@ -1,5 +1,5 @@
 """
-Parse arquivos da consulta de processos do primeiro grau.
+Parses downloaded files from the first-degree procedural query.
 """
 import os
 import glob
@@ -54,7 +54,7 @@ def cpopg_parse_manager(path: str):
 
 def cpopg_parse_single(path: str):
     """
-    Parseia um arquivo HTML baixado com a função cpopg_download.
+    Parses a downloaded file from the TJSP Consulta de Processos Originarios do Primeiro Grau (CPOPG).
     """
     # if file extension is html
     if path.endswith('.html'):
@@ -67,7 +67,7 @@ def cpopg_parse_single(path: str):
 
 def cpopg_parse_single_html(path: str):
     """
-    Parseia um arquivo HTML baixado com a função cpopg_download.
+    Parses a downloaded HTML file from the TJSP Consulta de Processos Originarios do Primeiro Grau (CPOPG).
     """
     with open(path, 'r', encoding='utf-8') as f:
         html = f.read()

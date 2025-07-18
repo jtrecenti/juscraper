@@ -1,5 +1,5 @@
 """
-Funções de download específicas para TJPR
+Functions for downloading specific to TJPR
 """
 import re
 from bs4 import BeautifulSoup
@@ -7,7 +7,7 @@ from tqdm.auto import tqdm
 
 def get_initial_tokens(session, home_url):
     """
-    Extrai o JSESSIONID e o token da página inicial do TJPR.
+    Extracts the JSESSIONID and the token from the TJPR initial page.
     """
     resp = session.get(home_url)
     resp.raise_for_status()
@@ -25,7 +25,7 @@ def get_initial_tokens(session, home_url):
 
 def get_ementa_completa(session, jsessionid, user_agent, id_processo, criterio):
     """
-    Busca a ementa completa de um processo do TJPR.
+    Fetches the complete minute of a process from TJPR.
     """
     url = (
         "https://portal.tjpr.jus.br/jurisprudencia/publico/pesquisa.do?"
@@ -61,8 +61,8 @@ def cjsg_download(
     data_publicacao_ate=None,
 ):
     """
-    Baixa resultados brutos da pesquisa de jurisprudência do TJPR (várias páginas).
-    Retorna lista de HTMLs (um por página).
+    Downloads raw results from the TJPR 'jurisprudence search' (multiple pages).
+    Returns a list of HTMLs (one per page).
     """
     jsessionid, _ = get_initial_tokens(session, home_url)
     url = "https://portal.tjpr.jus.br/jurisprudencia/publico/pesquisa.do?actionType=pesquisar"

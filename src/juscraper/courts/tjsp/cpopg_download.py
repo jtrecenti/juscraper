@@ -1,5 +1,5 @@
 """
-Download de processos da consulta de processos originários do primeiro grau (CPOPG) do TJSP.
+Downloads of processes from the TJSP Consulta de Processos Originarios do Primeiro Grau (CPOPG).
 """
 import os
 import time
@@ -20,13 +20,13 @@ def cpopg_download_html(
     get_links_callback=None
 ):
     """
-    Baixa processos em HTML da consulta de 1o grau do TJSP.
-    id_cnj_list: lista de CNJs
-    session: requests.Session autenticada
-    u_base: base URL do ESAJ
-    download_path: diretório base para salvar
-    sleep_time: intervalo entre tentativas
-    get_links_callback: função para extrair links do HTML
+    Downloads processes in HTML from the TJSP Consulta de Processos Originários do Primeiro Grau (CPOPG).
+    id_cnj_list: list of CNJs
+    session: requests.Session authenticated
+    u_base: base URL of ESAJ
+    download_path: base directory to save
+    sleep_time: interval between attempts
+    get_links_callback: function to extract links from HTML
     """
     n_items = len(id_cnj_list)
     for idp in tqdm(id_cnj_list, total=n_items, desc="Baixando processos"):
@@ -57,13 +57,13 @@ def cpopg_download_html_single(
     get_links_callback=None
 ):
     """
-    Baixa um processo em HTML da consulta de 1o grau do TJSP.
-    id_cnj: CNJ do processo
-    session: requests.Session autenticada
-    u_base: base URL do ESAJ
-    download_path: diretório base para salvar
-    sleep_time: intervalo entre tentativas
-    get_links_callback: função para extrair links do HTML
+    Downloads a process in HTML from the TJSP Consulta de Processos Originarios do Primeiro Grau (CPOPG).
+    id_cnj: CNJ of the process
+    session: requests.Session authenticated
+    u_base: base URL of ESAJ
+    download_path: base directory to save
+    sleep_time: interval between attempts
+    get_links_callback: function to extract links from HTML
     """
     id_clean = clean_cnj(id_cnj)
     path = f"{download_path}/cpopg/{id_clean}"
@@ -145,11 +145,11 @@ def cpopg_download_api(
     download_path
 ):
     """
-    Baixa processos em JSON da consulta de 1o grau do TJSP.
-    id_cnj_list: lista de CNJs
-    session: requests.Session autenticada
-    api_base: base URL da API do ESAJ
-    download_path: diretório base para salvar
+    Downloads processes in JSON from the TJSP Consulta de Processos Originarios do Primeiro Grau (CPOPG).
+    id_cnj_list: list of CNJs
+    session: requests.Session authenticated
+    api_base: base URL of ESAJ API
+    download_path: base directory to save
     """
     n_items = len(id_cnj_list)
     for idp in tqdm(id_cnj_list, total=n_items, desc="Baixando processos"):
@@ -171,11 +171,11 @@ def cpopg_download_api_single(
     download_path
 ):
     """
-    Baixa um processo em JSON da consulta de 1o grau do TJSP.
-    id_cnj: CNJ do processo
-    session: requests.Session autenticada
-    api_base: base URL da API do ESAJ
-    download_path: diretório base para salvar
+    Downloads a process in JSON from the TJSP Consulta de Processos Originarios do Primeiro Grau (CPOPG).
+    id_cnj: CNJ of the process
+    session: requests.Session authenticated
+    api_base: base URL of ESAJ API
+    download_path: base directory to save
     """
     endpoint = 'processo/cpopg/search/numproc/'
     id_clean = clean_cnj(id_cnj)

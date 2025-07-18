@@ -1,5 +1,5 @@
 """
-Funções de parse específicas para TJPR
+Functions for parsing specific to TJPR
 """
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -13,8 +13,8 @@ def cjsg_parse(
     user_agent=None,
 ):
     """
-    Extrai os dados relevantes dos HTMLs retornados pelo TJPR.
-    Retorna um DataFrame com as decisões.
+    Extracts relevant data from the HTMLs returned by TJPR.
+    Returns a DataFrame with the decisions.
     """
     resultados = []
     for html in htmls:
@@ -101,7 +101,7 @@ def get_ementa_completa(
     criterio,
 ):
     """
-    Busca a ementa completa de um processo do TJPR.
+    Fetches the complete minute of a process from TJPR.
     """
     url = (
         "https://portal.tjpr.jus.br/jurisprudencia/publico/pesquisa.do?"

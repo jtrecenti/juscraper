@@ -1,5 +1,5 @@
 """
-Funções de download específicas para TJDFT
+Functions for downloading specific to TJDFT
 """
 import requests
 
@@ -13,8 +13,8 @@ def cjsg_download(
     base_url="https://jurisdf.tjdft.jus.br/api/v1/pesquisa",
 ):
     """
-    Baixa resultados brutos da pesquisa de jurisprudência do TJDFT (usando requests).
-    Retorna lista de resultados brutos (JSON).
+    Downloads raw results from the TJDFT jurisprudence search (using requests).
+    Returns a list of raw results (JSON).
     """
     resultados = []
     if isinstance(paginas, int):

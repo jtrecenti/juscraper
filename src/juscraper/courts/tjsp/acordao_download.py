@@ -1,10 +1,10 @@
 """
-Download de acordões do CJSG.
+Downloads decisions from the TJSP CJSG.
 """
 import os
 
 class AcordaoDownloadError(Exception):
-    """Erro ao baixar o acordão do TJSP CJSG."""
+    """Error downloading decision from TJSP CJSG."""
 
 def download_acordao(
     cd_acordao,
@@ -13,7 +13,7 @@ def download_acordao(
     download_path,
 ):
     """
-    Baixa um acordão do CJSG.
+    Downloads a decision from the TJSP CJSG.
     """
     u = f"{u_base}/cjsg/getArquivo.do"
     query = {

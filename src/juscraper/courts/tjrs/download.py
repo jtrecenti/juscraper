@@ -1,5 +1,5 @@
 """
-Download de resultados brutos da pesquisa de jurisprudência do TJRS.
+Downloads raw files from the TJRS jurisprudence search.
 """
 from urllib.parse import urlencode
 import requests
@@ -22,9 +22,9 @@ def cjsg_download_manager(
     **kwargs
 ) -> list:
     """
-    Baixa resultados brutos da pesquisa de jurisprudência do TJRS (várias páginas).
-    Retorna lista de resultados brutos (JSON).
-    Parâmetro novo: secao ('civel', 'crime', ou None)
+    Downloads raw files from the TJRS jurisprudence search (multiple pages).
+    Returns a list of raw files (JSON).
+    New parameter: secao ('civel', 'crime', or None)
     """
     base_url = "https://www.tjrs.jus.br/buscas/jurisprudencia/ajax.php"
     if session is None:

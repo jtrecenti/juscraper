@@ -1,5 +1,5 @@
 """
-Orquestra o fluxo para DATAJUD (ponto de entrada p/ usuário) - API BASED
+Orchestrates the flow for DATAJUD (user entry point) - API BASED
 """
 import os
 import tempfile
@@ -62,7 +62,7 @@ class DatajudScraper(BaseScraper):
         tamanho_pagina: int = 1000 # Max allowed by API is often 1000 or 10000
     ) -> pd.DataFrame:
         """
-        Lista processos do Datajud via API, com suporte a múltiplos filtros e paginação.
+        Lists processes from Datajud via API, with support for multiple filters and pagination.
         """
         all_dfs = []
         # Determine target aliases

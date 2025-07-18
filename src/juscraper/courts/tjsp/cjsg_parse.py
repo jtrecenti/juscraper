@@ -1,5 +1,5 @@
 """
-Parse de processos da consulta de julgados do segundo grau.
+Parse of cases from the TJSP Consulta de Julgados de Segundo Grau (CJSG).
 """
 import os
 import glob
@@ -14,7 +14,7 @@ logger = logging.getLogger("juscraper.cjsg_parse")
 
 def cjsg_n_pags(html_source):
     """
-    Extrai o número de páginas da consulta CJSG a partir do HTML.
+    Extracts the number of pages from the CJSG search results HTML.
     """
     soup = BeautifulSoup(html_source, "html.parser")
     td_npags = soup.find("td", bgcolor='#EEEEEE')
@@ -116,18 +116,18 @@ def _cjsg_parse_single_page(path: str):
 
 def cjsg_parse_manager(path: str):
     """
-    Parseia os arquivos baixados da segunda instância (cjsg) e
-    retorna um DataFrame com as informações dos processos.
+    Parses the downloaded files from the CJSG search results.
+    Returns a DataFrame with the information of the processes.
 
     Parameters
     ----------
     path : str
-        Caminho do arquivo ou da pasta que contém os arquivos HTML baixados.
+        Path to the file or directory containing the downloaded HTML files.
 
     Returns
     -------
     result : pd.DataFrame
-        DataFrame com as informações extraídas dos processos.
+        DataFrame with the extracted information of the processes.
     """
     if os.path.isfile(path):
         result = [_cjsg_parse_single_page(path)]

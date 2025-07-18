@@ -1,9 +1,9 @@
 """
-Módulo client.py: Orquestra o fluxo para JUSBR (ponto de entrada para o usuário).
-Contém a classe JusbrScraper para interação com a API
-da Plataforma Digital do Poder Judiciário (PDPJ).
+Module client.py: Orchestrates the flow for JUSBR (user entry point).
+Contains the JusbrScraper class for interaction with the API
+from Platforma Digital do Poder Judiciario (PDPJ).
 """
-# Orquestra o fluxo para JUSBR (ponto de entrada p/ usuário)
+# Orchestrates the flow for JUSBR (user entry point)
 # Will contain JusbrScraper class
 
 import logging
@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 class JusbrScraper(BaseScraper):
     """
     Raspador para o JusBR (consulta unificada da PDPJ-CNJ).
-    Este scraper interage com a API da Plataforma Digital do Poder Judiciário (PDPJ).
+    Este scraper interage com a API da Plataforma Digital do Poder Judiciario (PDPJ).
     """
     BASE_API_URL_V2 = "https://portaldeservicos.pdpj.jus.br/api/v2/processos/"
     BASE_API_URL_V1_DOCS = (
@@ -62,7 +62,7 @@ class JusbrScraper(BaseScraper):
 
     def auth(self, token: str) -> bool:
         """
-        Define o token JWT para autenticação e o decodifica para verificação.
+        Define o token JWT para autenticacao e o decodifica para verificacao.
         """
         try:
             decoded = jwt.decode(token,
@@ -86,7 +86,7 @@ class JusbrScraper(BaseScraper):
 
     def auth_firefox(self):
         """
-        Autenticação via Firefox.
+        Authentication via Firefox.
         """
         # url de autenticação
         u = (
@@ -125,10 +125,10 @@ class JusbrScraper(BaseScraper):
 
     def cpopg(self, id_cnj: Union[str, List[str]]) -> pd.DataFrame:
         """
-        Consulta processos pelo número CNJ (ou lista de números CNJ) via API nacional.
+        Consulta processos pelo numero CNJ (ou lista de numeros CNJ) via API nacional.
         """
         if not self.token:
-            raise RuntimeError("Autenticação necessária. Chame o método auth(token) primeiro.")
+            raise RuntimeError("Autenticacao necessaria. Chame o metodo auth(token) primeiro.")
 
         id_cnj_list = [id_cnj] if isinstance(id_cnj, str) else id_cnj
         all_process_data = []
@@ -193,7 +193,7 @@ class JusbrScraper(BaseScraper):
                            base_df: pd.DataFrame,
                            max_docs_per_process: Optional[int] = None) -> pd.DataFrame:
         """
-        Baixa os textos dos documentos para os processos em base_df.
+        Downloads document texts for processes in base_df.
         Iterates through processes in base_df, extracts document metadata from the
         'detalhes' column, fetches, and cleans document texts.
         Returns a DataFrame where each row is a document.
