@@ -1,0 +1,94 @@
+# courts.tjrs.client.TJRSScraper { #juscraper.courts.tjrs.client.TJRSScraper }
+
+```python
+courts.tjrs.client.TJRSScraper()
+```
+
+Raspador para o Tribunal de Justiça do Rio Grande do Sul.
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [cjsg](#juscraper.courts.tjrs.client.TJRSScraper.cjsg) | Busca jurisprudência do TJRS de forma simplificada (download + parse). |
+| [cjsg_download](#juscraper.courts.tjrs.client.TJRSScraper.cjsg_download) | Baixa resultados brutos da pesquisa de jurisprudência do TJRS (várias páginas). |
+| [cjsg_parse](#juscraper.courts.tjrs.client.TJRSScraper.cjsg_parse) | Extrai os dados relevantes dos resultados brutos retornados pelo TJRS. |
+| [cpopg](#juscraper.courts.tjrs.client.TJRSScraper.cpopg) | Busca jurisprudência do TJRS de forma simplificada (download + parse). |
+| [cposg](#juscraper.courts.tjrs.client.TJRSScraper.cposg) | Busca jurisprudência do TJRS de forma simplificada (download + parse). |
+
+### cjsg { #juscraper.courts.tjrs.client.TJRSScraper.cjsg }
+
+```python
+courts.tjrs.client.TJRSScraper.cjsg(
+    query,
+    paginas=1,
+    classe=None,
+    assunto=None,
+    orgao_julgador=None,
+    relator=None,
+    data_julgamento_de=None,
+    data_julgamento_ate=None,
+    data_publicacao_de=None,
+    data_publicacao_ate=None,
+    tipo_processo=None,
+    secao=None,
+    session=None,
+    **kwargs,
+)
+```
+
+Busca jurisprudência do TJRS de forma simplificada (download + parse).
+Parâmetro novo: secao ('civel', 'crime', ou None)
+Retorna um DataFrame pronto para análise.
+
+### cjsg_download { #juscraper.courts.tjrs.client.TJRSScraper.cjsg_download }
+
+```python
+courts.tjrs.client.TJRSScraper.cjsg_download(
+    termo,
+    paginas=1,
+    classe=None,
+    assunto=None,
+    orgao_julgador=None,
+    relator=None,
+    data_julgamento_de=None,
+    data_julgamento_ate=None,
+    data_publicacao_de=None,
+    data_publicacao_ate=None,
+    tipo_processo=None,
+    secao=None,
+    session=None,
+    **kwargs,
+)
+```
+
+Baixa resultados brutos da pesquisa de jurisprudência do TJRS (várias páginas).
+Retorna lista de resultados brutos (JSON).
+Parâmetro novo: secao ('civel', 'crime', ou None)
+
+### cjsg_parse { #juscraper.courts.tjrs.client.TJRSScraper.cjsg_parse }
+
+```python
+courts.tjrs.client.TJRSScraper.cjsg_parse(resultados_brutos)
+```
+
+Extrai os dados relevantes dos resultados brutos retornados pelo TJRS.
+Retorna um DataFrame com as decisões.
+
+### cpopg { #juscraper.courts.tjrs.client.TJRSScraper.cpopg }
+
+```python
+courts.tjrs.client.TJRSScraper.cpopg(id_cnj)
+```
+
+Busca jurisprudência do TJRS de forma simplificada (download + parse).
+Retorna um DataFrame pronto para análise.
+
+### cposg { #juscraper.courts.tjrs.client.TJRSScraper.cposg }
+
+```python
+courts.tjrs.client.TJRSScraper.cposg(id_cnj)
+```
+
+Busca jurisprudência do TJRS de forma simplificada (download + parse).
+Retorna um DataFrame pronto para análise.

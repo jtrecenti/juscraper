@@ -2,19 +2,38 @@
 
 Raspador de tribunais e outros sistemas relacionados ao poder judiciário.
 
-## Installation
+## Implementações
 
-```bash
-$ pip install git+https://github.com/jtrecenti/juscraper
-```
+### Tribunais Disponíveis
 
-## Usando o pacote
+| Tribunal | Funcionalidades Disponíveis       |
+|----------|-----------------------------------|
+| TJSP     | cpopg, cposg, cjsg, cjpg, acordao |
+| TJRS     | cjsg                              |
+| TJPR     | cjsg                              |
+| TJDFT    | cjsg                              |
 
+### Agregadores Disponíveis
 
-Uso básico do pacote:
+| Nome      | Funcionalidades                   |
+|-----------|-----------------------------------|
+| Datajud   | listar_processos                  |
+| Jusbr     | cpopg, download_documents         |
+
+### Notebooks de Exemplo
+
+- [Exemplo TJSP](notebooks/tjsp.ipynb)
+- [Exemplo TJRS](notebooks/tjrs.ipynb)
+- [Exemplo TJPR](notebooks/tjpr.ipynb)
+- [Exemplo TJDFT](notebooks/tjdft.ipynb)
+- [Exemplo Datajud](notebooks/datajud.ipynb)
+- [Exemplo Jusbr](notebooks/jusbr.ipynb)
+
+## Como usar
 
 ```python
 import juscraper as jus
+
 tjsp = jus.scraper('tjsp')
 dados_cjpg = tjsp.cjpg('league of legends', paginas=range(1,3))
 
@@ -33,12 +52,9 @@ Processando documentos: 100%|██████████| 2/2 [00:00<00:00, 2
         1	2S001UFAG0000	1059728-09.2024.8.26.0100	Procedimento Comum Cível	Práticas Abusivas	Ricardo Augusto Ramos	SÃO PAULO	Foro Central Cível	7ª Vara Cível	25/11/2024	SENTENÇA\n\n\n\nProcesso Digital nº:\t1059728-...
         2	2S001TWI60000	1041014-98.2024.8.26.0100	Procedimento Comum Cível	Práticas Abusivas	LUCIANA BIAGIO LAQUIMIA	SÃO PAULO	Foro Central Cível	17ª Vara Cível	28/10/2024	SENTENÇA\n\n\n\nProcesso Digital nº:\t1041014-...
 
-
-### Uso básico
-
 O pacote foi pensado para atender a requisitos básicos de consulta de dados de processos judiciais em alguns tribunais.
 
-Todo tribunal implementado apresenta (sempre que possível) os seguintes métodos:
+Os tribunais implementados vão apresentar os seguintes métodos:
 
 - `.cpopg()`: consulta de processos originários do primeiro grau
 - `.cposg()`: consulta de processos originários do segundo grau
@@ -114,10 +130,6 @@ Installed 1 package in 39ms
  + juscraper==0.1.0 (from file:///C:/Users/julio/OneDrive/Documentos/insper/juscraper)
 (juscraper) PS C:\Users\julio\OneDrive\Documentos\insper\juscraper>
 ```
-
-## Pacotes relacionados
-
-Também estamos desenvolvendo o pacote `datajud`, com um propósito um pouco menor, que fornece uma interface para acesso à API do DataJud, uma ferramenta do CNJ para acesso a dados dos processos judiciais.
 
 ## Contributing
 

@@ -1,0 +1,60 @@
+# aggregators.jusbr.client.JusbrScraper { #juscraper.aggregators.jusbr.client.JusbrScraper }
+
+```python
+aggregators.jusbr.client.JusbrScraper(
+    verbose=0,
+    download_path=None,
+    sleep_time=0.5,
+    token=None,
+)
+```
+
+Raspador para o JusBR (consulta unificada da PDPJ-CNJ).
+Este scraper interage com a API da Plataforma Digital do Poder Judiciário (PDPJ).
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [auth](#juscraper.aggregators.jusbr.client.JusbrScraper.auth) | Define o token JWT para autenticação e o decodifica para verificação. |
+| [auth_firefox](#juscraper.aggregators.jusbr.client.JusbrScraper.auth_firefox) | Autenticação via Firefox. |
+| [cpopg](#juscraper.aggregators.jusbr.client.JusbrScraper.cpopg) | Consulta processos pelo número CNJ (ou lista de números CNJ) via API nacional. |
+| [download_documents](#juscraper.aggregators.jusbr.client.JusbrScraper.download_documents) | Baixa os textos dos documentos para os processos em base_df. |
+
+### auth { #juscraper.aggregators.jusbr.client.JusbrScraper.auth }
+
+```python
+aggregators.jusbr.client.JusbrScraper.auth(token)
+```
+
+Define o token JWT para autenticação e o decodifica para verificação.
+
+### auth_firefox { #juscraper.aggregators.jusbr.client.JusbrScraper.auth_firefox }
+
+```python
+aggregators.jusbr.client.JusbrScraper.auth_firefox()
+```
+
+Autenticação via Firefox.
+
+### cpopg { #juscraper.aggregators.jusbr.client.JusbrScraper.cpopg }
+
+```python
+aggregators.jusbr.client.JusbrScraper.cpopg(id_cnj)
+```
+
+Consulta processos pelo número CNJ (ou lista de números CNJ) via API nacional.
+
+### download_documents { #juscraper.aggregators.jusbr.client.JusbrScraper.download_documents }
+
+```python
+aggregators.jusbr.client.JusbrScraper.download_documents(
+    base_df,
+    max_docs_per_process=None,
+)
+```
+
+Baixa os textos dos documentos para os processos em base_df.
+Iterates through processes in base_df, extracts document metadata from the
+'detalhes' column, fetches, and cleans document texts.
+Returns a DataFrame where each row is a document.

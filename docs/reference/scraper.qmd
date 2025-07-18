@@ -1,0 +1,15 @@
+# scraper { #juscraper.scraper }
+
+```python
+scraper(sigla, *args, **kwargs)
+```
+
+Factory que devolve o scraper correto.
+
+
+
+## Exemplos {.doc-section .doc-section-exemplos}
+
+>>> import juscraper as jus
+>>> tjsp = jus.scraper("tjsp")
+>>> jusbr = jus.scraper("jusbr")

@@ -1,0 +1,93 @@
+project:
+  type: website
+  output-dir: _site
+
+encoding: utf8
+
+lang: pt
+
+website:
+  title: "juscraper"
+  page-navigation: true
+  site-url: https://jtrecenti.github.io/juscraper/
+  description: "Raspador de tribunais e outros sistemas relacionados ao poder judiciário."
+
+  repo-url: https://github.com/jtrecenti/juscraper/
+  repo-actions: [issue, edit]
+  repo-subdir: docs
+
+  navbar:
+    background: "#005f73"
+    search: true
+    left:
+      - text: "Home"
+        href: index.qmd
+      - text: "Referência da API"
+        href: reference/index.qmd
+    right:
+      - icon: github
+        href: https://github.com/jtrecenti/juscraper
+        aria-label: GitHub repository
+
+  page-footer:
+    left: |
+      Copyright 2025, Julio Trecenti
+
+  sidebar:
+    - id: "juscraper"
+      title: "Documentação"
+      style: "floating"
+      contents:
+        - href: index.qmd
+          text: "Home"
+        - href: reference/index.qmd
+          text: "Referência da API"
+        - section: "Exemplos"
+          contents:
+            - section: "Tribunais"
+              contents:
+                - href: notebooks/tjdft.ipynb
+                  text: "TJDFT"
+                - href: notebooks/tjpr.ipynb
+                  text: "TJPR"
+                - href: notebooks/tjrs.ipynb
+                  text: "TJRS"
+                - href: notebooks/tjsp.ipynb
+                  text: "TJSP"
+            - section: "Agregadores"
+              contents:
+                - href: notebooks/datajud.ipynb
+                  text: "Datajud"
+                - href: notebooks/jusbr.ipynb
+                  text: "Jus.br"
+
+format:
+  html:
+    theme: cosmo
+    css: reference/_styles-quartodoc.css
+    toc: true
+    toc-depth: 3
+
+quartodoc:
+  package: juscraper
+  title: "Referência da API"
+  sidebar: reference/_sidebar.yml
+  parser: google
+  render_interlinks: true
+  sections:
+    - title: Função Principal
+      desc: "Interface pública para acessar os scrapers."
+      contents:
+        - scraper
+    - title: Scrapers de Agregadores
+      desc: "Classes para coletar dados de agregadores de jurisprudência."
+      contents:
+        - aggregators.datajud.client.DatajudScraper
+        - aggregators.jusbr.client.JusbrScraper
+    - title: Scrapers de Tribunais
+      desc: "Classes para coletar dados de tribunais específicos."
+      contents:
+        - courts.tjsp.client.TJSPScraper
+        - courts.tjdft.client.TJDFTScraper
+        - courts.tjrs.client.TJRSScraper
+        - courts.tjpr.client.TJPRScraper

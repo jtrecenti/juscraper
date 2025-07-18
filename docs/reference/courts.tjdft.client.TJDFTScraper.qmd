@@ -1,0 +1,67 @@
+# courts.tjdft.client.TJDFTScraper { #juscraper.courts.tjdft.client.TJDFTScraper }
+
+```python
+courts.tjdft.client.TJDFTScraper()
+```
+
+Raspador para o Tribunal de Justiça do Distrito Federal e Territórios (TJDFT).
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [cjsg](#juscraper.courts.tjdft.client.TJDFTScraper.cjsg) | Busca jurisprudência do TJDFT de forma simplificada (download + parse). |
+| [cjsg_download](#juscraper.courts.tjdft.client.TJDFTScraper.cjsg_download) | Baixa resultados brutos da pesquisa de jurisprudência do TJDFT (usando requests). |
+| [cjsg_parse](#juscraper.courts.tjdft.client.TJDFTScraper.cjsg_parse) | Extrai informações estruturadas dos resultados brutos do TJDFT. |
+| [cpopg](#juscraper.courts.tjdft.client.TJDFTScraper.cpopg) | Stub para compatibilidade com BaseScraper. |
+| [cposg](#juscraper.courts.tjdft.client.TJDFTScraper.cposg) | Stub para compatibilidade com BaseScraper. |
+
+### cjsg { #juscraper.courts.tjdft.client.TJDFTScraper.cjsg }
+
+```python
+courts.tjdft.client.TJDFTScraper.cjsg(query, paginas=0)
+```
+
+Busca jurisprudência do TJDFT de forma simplificada (download + parse).
+Retorna um DataFrame pronto para análise.
+
+### cjsg_download { #juscraper.courts.tjdft.client.TJDFTScraper.cjsg_download }
+
+```python
+courts.tjdft.client.TJDFTScraper.cjsg_download(
+    query,
+    paginas=0,
+    sinonimos=True,
+    espelho=True,
+    inteiro_teor=False,
+    quantidade_por_pagina=10,
+)
+```
+
+Baixa resultados brutos da pesquisa de jurisprudência do TJDFT (usando requests).
+Retorna lista de resultados brutos (JSON).
+
+### cjsg_parse { #juscraper.courts.tjdft.client.TJDFTScraper.cjsg_parse }
+
+```python
+courts.tjdft.client.TJDFTScraper.cjsg_parse(resultados_brutos)
+```
+
+Extrai informações estruturadas dos resultados brutos do TJDFT.
+Retorna todos os campos presentes em cada item.
+
+### cpopg { #juscraper.courts.tjdft.client.TJDFTScraper.cpopg }
+
+```python
+courts.tjdft.client.TJDFTScraper.cpopg(id_cnj)
+```
+
+Stub para compatibilidade com BaseScraper.
+
+### cposg { #juscraper.courts.tjdft.client.TJDFTScraper.cposg }
+
+```python
+courts.tjdft.client.TJDFTScraper.cposg(id_cnj)
+```
+
+Stub para compatibilidade com BaseScraper.

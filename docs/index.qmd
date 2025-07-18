@@ -1,0 +1,76 @@
+---
+title: "juscraper"
+---
+
+Raspador de tribunais e outros sistemas relacionados ao poder judiciário.
+
+## Como usar
+
+```python
+import juscraper as jus
+
+tjsp = jus.scraper('tjsp')
+dados_cjpg = tjsp.cjpg('league of legends', paginas=range(1,3))
+
+dados_cjpg.head(3)
+```
+
+O pacote foi pensado para atender a requisitos básicos de consulta de dados de processos judiciais em alguns tribunais.
+
+Os tribunais implementados vão apresentar os seguintes métodos:
+
+- `.cpopg()`: consulta de processos originários do primeiro grau
+- `.cposg()`: consulta de processos originários do segundo grau
+- `.cjsg()`: consulta de jurisprudência
+
+Os métodos `.cpopg()` e `.cposg()` recebem como *input* um número de processo no padrão CNJ (NNNNNNN-DD.AAAA.J.TT.OOOO), com ou sem separadores, e retorna um `dict` com tabelas dos elementos do processo (dados básicos, partes, movimentações, entre outros específicos por tribunal).
+
+O método `.cjsg()` recebe como *input* parâmetros de busca de jurisprudência (que variam por tribunal) e retorna uma tabela com os resultados da consulta. Boa parte dos tribunais apresentam limites de paginação ao realizar buscas muito gerais (i.e. que retornam muitos resultados). Nesses casos, o método dará um aviso ao usuário com o número total de resultados, confirmando se deseja mesmo baixar todos os resultados.
+
+## Implementações
+
+### Tribunais Disponíveis
+
+| Tribunal | Funcionalidades Disponíveis       |
+|----------|-----------------------------------|
+| TJSP     | cpopg, cposg, cjsg, cjpg, acordao |
+| TJRS     | cjsg                              |
+| TJPR     | cjsg                              |
+| TJDFT    | cjsg                              |
+
+### Agregadores Disponíveis
+
+| Nome      | Funcionalidades                   |
+|-----------|-----------------------------------|
+| Datajud   | listar_processos                  |
+| Jusbr     | cpopg, download_documents         |
+
+### Notebooks de Exemplo
+
+- [Exemplo TJSP](notebooks/tjsp.ipynb)
+- [Exemplo TJRS](notebooks/tjrs.ipynb)
+- [Exemplo TJPR](notebooks/tjpr.ipynb)
+- [Exemplo TJDFT](notebooks/tjdft.ipynb)
+- [Exemplo Datajud](notebooks/datajud.ipynb)
+- [Exemplo Jusbr](notebooks/jusbr.ipynb)
+
+## Informações adicionais
+
+### Diferenciais do `juscraper`:
+
+- Controle sobre arquivos brutos: o pacote fornece uma interface para baixar e armazenar arquivos brutos (HTML e JSON, por exemplo) dos processos. Por padrão, no entanto, esses arquivos brutos são descartados assim que os dados são processados, com exceção dos arquivos que apresentaram algum problema na leitura.
+
+### Restrições:
+
+Por ser um pacote bastante complexo e também nichado, adotamos algumas restrições sobre o escopo do pacote para que seja simples de usar.
+
+- O pacote não utiliza paralelização, ou seja, se o usuário tiver interesse em realizar requisições em paralelo, deverá desenvolver as adaptações necessárias.
+- O pacote não possui absolutamente todas as funcionalidades que os tribunais permitem. Se o usuário tiver interesse em consultar processos em mais tribunais, deverá desenvolver os raspadores.
+
+## Contribuição
+
+Interessado em contribuir? Verifique as diretrizes de contribuição no arquivo [CONTRIBUTING.md](CONTRIBUTING.md). Por favor, note que este projeto é lançado com um Código de Conduta. Ao contribuir para este projeto, você concorda em obedecer às suas termos.
+
+## Licença
+
+`juscraper` foi criado por Julio Trecenti. Está licenciado sob os termos da licença MIT.
