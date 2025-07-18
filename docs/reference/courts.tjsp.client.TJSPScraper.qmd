@@ -1,0 +1,268 @@
+# courts.tjsp.client.TJSPScraper { #juscraper.courts.tjsp.client.TJSPScraper }
+
+```python
+courts.tjsp.client.TJSPScraper(
+    verbose=0,
+    download_path=None,
+    sleep_time=0.5,
+    **kwargs,
+)
+```
+
+Raspador para o Tribunal de Justiça de São Paulo.
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [cjpg](#juscraper.courts.tjsp.client.TJSPScraper.cjpg) | Realiza uma busca por jurisprudencia com base nos parametros fornecidos, |
+| [cjpg_download](#juscraper.courts.tjsp.client.TJSPScraper.cjpg_download) | Baixa os processos da jurisprudência do TJSP. |
+| [cjpg_parse](#juscraper.courts.tjsp.client.TJSPScraper.cjpg_parse) | Wrapper para parsing dos arquivos baixados da Cjpg. |
+| [cjsg](#juscraper.courts.tjsp.client.TJSPScraper.cjsg) | Orquestra o download e parsing de processos do CJSG. |
+| [cjsg_download](#juscraper.courts.tjsp.client.TJSPScraper.cjsg_download) | Baixa os arquivos HTML das páginas de resultados da |
+| [cjsg_parse](#juscraper.courts.tjsp.client.TJSPScraper.cjsg_parse) | Parseia os arquivos baixados da segunda instância (cjsg) e retorna um DataFrame com |
+| [cpopg](#juscraper.courts.tjsp.client.TJSPScraper.cpopg) | Busca um processo na consulta de processos originários do primeiro grau. |
+| [cpopg_download](#juscraper.courts.tjsp.client.TJSPScraper.cpopg_download) | Baixa um processo na consulta de processos originários do primeiro grau. |
+| [cpopg_parse](#juscraper.courts.tjsp.client.TJSPScraper.cpopg_parse) | Wrapper para parsing de arquivos baixados do CPOPG. |
+| [cposg](#juscraper.courts.tjsp.client.TJSPScraper.cposg) | Orquestra o download e parsing de processos do CPOSG. |
+| [cposg_download](#juscraper.courts.tjsp.client.TJSPScraper.cposg_download) | Baixa processos do CPOSG, via HTML ou API, utilizando funções modularizadas. |
+| [cposg_parse](#juscraper.courts.tjsp.client.TJSPScraper.cposg_parse) | Wrapper para parsing de arquivos baixados do CPOSG. |
+| [set_download_path](#juscraper.courts.tjsp.client.TJSPScraper.set_download_path) | Define o diretório base para salvar os arquivos baixados. |
+| [set_method](#juscraper.courts.tjsp.client.TJSPScraper.set_method) | Define o método para acesso aos dados do TJSP. |
+
+### cjpg { #juscraper.courts.tjsp.client.TJSPScraper.cjpg }
+
+```python
+courts.tjsp.client.TJSPScraper.cjpg(
+    pesquisa='',
+    classes=None,
+    assuntos=None,
+    varas=None,
+    id_processo=None,
+    data_inicio=None,
+    data_fim=None,
+    paginas=None,
+)
+```
+
+Realiza uma busca por jurisprudencia com base nos parametros fornecidos,
+baixa os resultados, os analisa e retorna os dados analisados.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name        | Type                                                     | Description                                                | Default   |
+|-------------|----------------------------------------------------------|------------------------------------------------------------|-----------|
+| pesquisa    | [str](`str`)                                             | A consulta para a jurisprudencia. Padrão "" (string vazia) | `''`      |
+| classes     | ([list](`list`)\[[str](`str`)\], [opcional](`opcional`)) | Lista de classes do processo. Padrao None.                 | `None`    |
+| assuntos    | ([list](`list`)\[[str](`str`)\], [opcional](`opcional`)) | Lista de assuntos do processo. Padrao None.                | `None`    |
+| varas       | ([list](`list`)\[[str](`str`)\], [opcional](`opcional`)) | Lista de varas do processo. Padrao None.                   | `None`    |
+| id_processo | ([str](`str`), [opcional](`opcional`))                   | O ID do processo. Padrao None.                             | `None`    |
+| data_inicio | ([str](`str`), [opcional](`opcional`))                   | A data de inicio para a busca. Padrao None.                | `None`    |
+| data_fim    | ([str](`str`), [opcional](`opcional`))                   | A data de fim para a busca. Padrao None.                   | `None`    |
+| paginas     | ([range](`range`), [opcional](`opcional`))               | A faixa de paginas a serem buscadas. Padrao None.          | `None`    |
+
+#### Retorna {.doc-section .doc-section-retorna}
+
+pd.DataFrame: Os dados analisados da jurisprudencia baixada.
+
+### cjpg_download { #juscraper.courts.tjsp.client.TJSPScraper.cjpg_download }
+
+```python
+courts.tjsp.client.TJSPScraper.cjpg_download(
+    pesquisa,
+    classes=None,
+    assuntos=None,
+    varas=None,
+    id_processo=None,
+    data_inicio=None,
+    data_fim=None,
+    paginas=None,
+)
+```
+
+Baixa os processos da jurisprudência do TJSP.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name        | Type                                                     | Description                                 | Default    |
+|-------------|----------------------------------------------------------|---------------------------------------------|------------|
+| pesquisa    | [str](`str`)                                             | A consulta para a jurisprudência.           | _required_ |
+| classes     | ([list](`list`)\[[str](`str`)\], [opcional](`opcional`)) | Lista de classes do processo. Padrão None.  | `None`     |
+| assuntos    | ([list](`list`)\[[str](`str`)\], [opcional](`opcional`)) | Lista de assuntos do processo. Padrão None. | `None`     |
+| varas       | ([list](`list`)\[[str](`str`)\], [opcional](`opcional`)) | Lista de varas do processo. Padrão None.    | `None`     |
+| id_processo | ([str](`str`), [opcional](`opcional`))                   | ID do processo. Padrão None.                | `None`     |
+| data_inicio | ([str](`str`), [opcional](`opcional`))                   | Data inicial da busca. Padrão None.         | `None`     |
+| data_fim    | ([str](`str`), [opcional](`opcional`))                   | Data final da busca. Padrão None.           | `None`     |
+| paginas     | ([range](`range`), [opcional](`opcional`))               | Páginas a baixar. Padrão None.              | `None`     |
+
+### cjpg_parse { #juscraper.courts.tjsp.client.TJSPScraper.cjpg_parse }
+
+```python
+courts.tjsp.client.TJSPScraper.cjpg_parse(path)
+```
+
+Wrapper para parsing dos arquivos baixados da Cjpg.
+
+### cjsg { #juscraper.courts.tjsp.client.TJSPScraper.cjsg }
+
+```python
+courts.tjsp.client.TJSPScraper.cjsg(
+    pesquisa,
+    ementa=None,
+    classe=None,
+    assunto=None,
+    comarca=None,
+    orgao_julgador=None,
+    data_inicio=None,
+    data_fim=None,
+    baixar_sg=True,
+    tipo_decisao='acordao',
+    paginas=None,
+)
+```
+
+Orquestra o download e parsing de processos do CJSG.
+
+### cjsg_download { #juscraper.courts.tjsp.client.TJSPScraper.cjsg_download }
+
+```python
+courts.tjsp.client.TJSPScraper.cjsg_download(
+    pesquisa,
+    ementa=None,
+    classe=None,
+    assunto=None,
+    comarca=None,
+    orgao_julgador=None,
+    data_inicio=None,
+    data_fim=None,
+    baixar_sg=True,
+    tipo_decisao='acordao',
+    paginas=None,
+)
+```
+
+Baixa os arquivos HTML das páginas de resultados da
+Consulta de Julgados do Segundo Grau (CJSG).
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name           | Type                                       | Description                            | Default     |
+|----------------|--------------------------------------------|----------------------------------------|-------------|
+| pesquisa       | [str](`str`)                               | Termo de busca.                        | _required_  |
+| ementa         | ([str](`str`), [opcional](`opcional`))     | Filtro por texto da ementa.            | `None`      |
+| classe         | [str](`str`) \| None                       | Classe do processo.                    | `None`      |
+| assunto        | [str](`str`) \| None                       | Assunto do processo.                   | `None`      |
+| comarca        | [str](`str`) \| None                       | Comarca do processo.                   | `None`      |
+| orgao_julgador | [str](`str`) \| None                       | Orgão julgador do processo.            | `None`      |
+| data_inicio    | [str](`str`) \| None                       | Data de início do processo.            | `None`      |
+| data_fim       | [str](`str`) \| None                       | Data de fim do processo.               | `None`      |
+| baixar_sg      | [bool](`bool`)                             | Se True, baixa também do segundo grau. | `True`      |
+| tipo_decisao   | [str](`str`)                               | 'acordao' ou 'monocratica'.            | `'acordao'` |
+| paginas        | ([range](`range`), [opcional](`opcional`)) | Intervalo de páginas a baixar.         | `None`      |
+
+ATENÇÃO: range(0, n) baixa as páginas 1 até n (inclusive), seguindo
+a expectativa do usuário (exemplo: range(0,3) baixa as páginas 1, 2 e 3).
+
+### cjsg_parse { #juscraper.courts.tjsp.client.TJSPScraper.cjsg_parse }
+
+```python
+courts.tjsp.client.TJSPScraper.cjsg_parse(path)
+```
+
+Parseia os arquivos baixados da segunda instância (cjsg) e retorna um DataFrame com
+as informações dos processos.
+
+### cpopg { #juscraper.courts.tjsp.client.TJSPScraper.cpopg }
+
+```python
+courts.tjsp.client.TJSPScraper.cpopg(id_cnj, method='html')
+```
+
+Busca um processo na consulta de processos originários do primeiro grau.
+
+### cpopg_download { #juscraper.courts.tjsp.client.TJSPScraper.cpopg_download }
+
+```python
+courts.tjsp.client.TJSPScraper.cpopg_download(id_cnj, method='html')
+```
+
+Baixa um processo na consulta de processos originários do primeiro grau.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                                           | Description                                                                          | Default    |
+|--------|--------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|------------|
+| id_cnj | [Union](`typing.Union`)\[[str](`str`), [List](`typing.List`)\[[str](`str`)\]\] | string com o CNJ do processo, ou lista de strings com vários CNJs.                   | _required_ |
+| method | [Literal](`typing.Literal`)\[\'html\', \'api\'\]                               | Literal['html', 'api']. Os métodos suportados são 'html' e 'api'. O padrão é 'html'. | `'html'`   |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                     | Description                                                  |
+|--------|--------------------------|--------------------------------------------------------------|
+|        | [Exception](`Exception`) | Se o método passado como parâmetro não for 'html' nem 'api'. |
+
+### cpopg_parse { #juscraper.courts.tjsp.client.TJSPScraper.cpopg_parse }
+
+```python
+courts.tjsp.client.TJSPScraper.cpopg_parse(path)
+```
+
+Wrapper para parsing de arquivos baixados do CPOPG.
+
+### cposg { #juscraper.courts.tjsp.client.TJSPScraper.cposg }
+
+```python
+courts.tjsp.client.TJSPScraper.cposg(id_cnj, method='html')
+```
+
+Orquestra o download e parsing de processos do CPOSG.
+
+### cposg_download { #juscraper.courts.tjsp.client.TJSPScraper.cposg_download }
+
+```python
+courts.tjsp.client.TJSPScraper.cposg_download(id_cnj, method='html')
+```
+
+Baixa processos do CPOSG, via HTML ou API, utilizando funções modularizadas.
+
+### cposg_parse { #juscraper.courts.tjsp.client.TJSPScraper.cposg_parse }
+
+```python
+courts.tjsp.client.TJSPScraper.cposg_parse(path)
+```
+
+Wrapper para parsing de arquivos baixados do CPOSG.
+
+### set_download_path { #juscraper.courts.tjsp.client.TJSPScraper.set_download_path }
+
+```python
+courts.tjsp.client.TJSPScraper.set_download_path(path=None)
+```
+
+Define o diretório base para salvar os arquivos baixados.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                   | Description                                                               | Default   |
+|--------|----------------------------------------|---------------------------------------------------------------------------|-----------|
+| path   | ([str](`str`), [opcional](`opcional`)) | Caminho para salvar os arquivos baixados. Padrão é None (usa temporário). | `None`    |
+
+### set_method { #juscraper.courts.tjsp.client.TJSPScraper.set_method }
+
+```python
+courts.tjsp.client.TJSPScraper.set_method(method)
+```
+
+Define o método para acesso aos dados do TJSP.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                             | Description                                                       | Default    |
+|--------|--------------------------------------------------|-------------------------------------------------------------------|------------|
+| method | [Literal](`typing.Literal`)\[\'html\', \'api\'\] | Literal['html', 'api']. Os métodos suportados são 'html' e 'api'. | _required_ |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                     | Description                                                  |
+|--------|--------------------------|--------------------------------------------------------------|
+|        | [Exception](`Exception`) | Se o método passado como parâmetro não for 'html' nem 'api'. |

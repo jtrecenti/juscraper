@@ -42,12 +42,9 @@ class TJSPScraper(BaseScraper):
         Inicializa o scraper para o TJSP.
 
         Args:
-            verbose (int, opcional): Nível de verbosidade. Padrão é 0
-            (nenhum log).
-            download_path (str, opcional): Caminho para salvar os arquivos
-            baixados. Padrão é None (usa temporário).
-            sleep_time (float, opcional): Tempo de espera entre requisições.
-            Padrão é 0.5 segundos.
+            verbose (int, opcional): Nível de verbosidade. Padrão é 0 (nenhum log).
+            download_path (str, opcional): Caminho para salvar os arquivos baixados. Padrão é None (usa temporário).
+            sleep_time (float, opcional): Tempo de espera entre requisições. Padrão é 0.5 segundos.
             **kwargs: Argumentos adicionais.
         """
         super().__init__("TJSP")
@@ -65,8 +62,7 @@ class TJSPScraper(BaseScraper):
         Define o diretório base para salvar os arquivos baixados.
 
         Args:
-            path (str, opcional): Caminho para salvar os arquivos
-            baixados. Padrão é None (usa temporário).
+            path (str, opcional): Caminho para salvar os arquivos baixados. Padrão é None (usa temporário).
         """
         if path is None:
             path = tempfile.mkdtemp()
@@ -108,11 +104,7 @@ class TJSPScraper(BaseScraper):
 
         Args:
             id_cnj: string com o CNJ do processo, ou lista de strings com vários CNJs.
-            method: Literal['html', 'api']. Os métodos suportados são 'html' e 'api'. 
-            O padrão é 'html'.
-
-        Returns:
-            None
+            method: Literal['html', 'api']. Os métodos suportados são 'html' e 'api'. O padrão é 'html'.
 
         Raises:
             Exception: Se o método passado como parâmetro não for 'html' nem 'api'.
@@ -253,13 +245,18 @@ class TJSPScraper(BaseScraper):
         Args:
             pesquisa (str): Termo de busca.
             ementa (str, opcional): Filtro por texto da ementa.
-            classe, assunto, comarca, orgao_julgador, data_inicio, data_fim:
-            Filtros adicionais.
+            classe: Classe do processo.
+            assunto: Assunto do processo.
+            comarca: Comarca do processo.
+            orgao_julgador: Orgão julgador do processo.
+            data_inicio: Data de início do processo.
+            data_fim: Data de fim do processo.
             baixar_sg (bool): Se True, baixa também do segundo grau.
             tipo_decisao (str): 'acordao' ou 'monocratica'.
             paginas (range, opcional): Intervalo de páginas a baixar.
-            ATENÇÃO: range(0, n) baixa as páginas 1 até n (inclusive), seguindo
-            a expectativa do usuário (exemplo: range(0,3) baixa as páginas 1, 2 e 3).
+        
+        ATENÇÃO: range(0, n) baixa as páginas 1 até n (inclusive), seguindo
+        a expectativa do usuário (exemplo: range(0,3) baixa as páginas 1, 2 e 3).
         """
         return cjsg_download_mod(
             pesquisa=pesquisa,

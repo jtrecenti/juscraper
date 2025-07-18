@@ -15,7 +15,6 @@ from importlib.metadata import version
 _SCRAPERS: dict[str, str] = {
     # Courts
     "tjsp":  "juscraper.courts.tjsp.client:TJSPScraper",
-    "trf3": "juscraper.courts.trf3.client:TRF3Scraper",
     "tjdft": "juscraper.courts.tjdft.client:TJDFTScraper",
     "tjrs":  "juscraper.courts.tjrs.client:TJRSScraper",
     "tjpr":  "juscraper.courts.tjpr.client:TJPRScraper",

@@ -1,0 +1,19 @@
+website:
+  sidebar:
+  - contents:
+    - reference/index.qmd
+    - contents:
+      - reference/scraper.qmd
+      section: "Fun\xC3\xA7\xC3\xA3o Principal"
+    - contents:
+      - reference/courts.tjsp.client.TJSPScraper.qmd
+      - reference/courts.tjdft.client.TJDFTScraper.qmd
+      - reference/courts.tjrs.client.TJRSScraper.qmd
+      - reference/courts.tjpr.client.TJPRScraper.qmd
+      section: Scrapers de Tribunais
+    - contents:
+      - reference/aggregators.datajud.client.DatajudScraper.qmd
+      - reference/aggregators.jusbr.client.JusbrScraper.qmd
+      section: Scrapers de Agregadores
+    id: reference
+  - id: dummy-sidebar
