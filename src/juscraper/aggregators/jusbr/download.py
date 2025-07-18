@@ -3,11 +3,41 @@ Funções de download específicas para JUSBR
 """
 
 import logging
+import time
 from typing import Optional, Dict, Any
 import requests
 from ...utils.cnj import clean_cnj
 
 logger = logging.getLogger(__name__)
+
+def request_with_retry(session, url, *, headers=None, timeout=15, max_retries=5, backoff_factor=1.0, **kwargs):
+    """
+    Faz uma requisição GET com retry exponencial para status 429 (Too Many Requests).
+    """
+    attempt = 0
+    wait = backoff_factor
+    while attempt <= max_retries:
+        try:
+            response = session.get(url, headers=headers, timeout=timeout, **kwargs)
+            if response.status_code == 429:
+                logger.warning(f"[429] Too Many Requests para {url}. Tentativa {attempt+1}/{max_retries}. Aguardando {wait}s...")
+                time.sleep(wait)
+                attempt += 1
+                wait = min(wait * 2, 32)  # Limite de 32 segundos
+                continue
+            response.raise_for_status()
+            return response
+        except requests.Timeout:
+            logger.error(f"Timeout ao acessar {url} (tentativa {attempt+1}/{max_retries})")
+            time.sleep(wait)
+            attempt += 1
+            wait = min(wait * 2, 32)
+        except requests.RequestException as e:
+            logger.error(f"Erro de requisição em {url}: {e} (tentativa {attempt+1}/{max_retries})")
+            # Só faz retry se for 429, outros erros retornam direto
+            break
+    logger.error(f"Falha após {max_retries} tentativas para {url}")
+    return None
 
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -27,8 +57,9 @@ def fetch_process_list(
     url = f"{base_api_url}?numeroProcesso={cnj_cleaned}"
     logger.debug("Fetching process list from: %s", url)
     try:
-        response = session.get(url, timeout=15)
-        response.raise_for_status()
+        response = request_with_retry(session, url, timeout=15)
+        if response is None:
+            return None
         return response.json()
     except requests.Timeout:
         logger.error(
@@ -61,8 +92,9 @@ def fetch_process_details(
     url = f"{base_api_url}{numero_processo_oficial}"
     logger.debug("Fetching process details from: %s", url)
     try:
-        response = session.get(url, timeout=15)
-        response.raise_for_status()
+        response = request_with_retry(session, url, timeout=15)
+        if response is None:
+            return None
         return response.json()
     except requests.Timeout:
         logger.error(
@@ -112,8 +144,9 @@ def fetch_document_text(
     logger.debug("[JUSBR DEBUG] Headers: %s", request_headers)
 
     try:
-        response = session.get(doc_url, headers=request_headers, timeout=30)
-        response.raise_for_status()  # Check for HTTP errors
+        response = request_with_retry(session, doc_url, headers=request_headers, timeout=30)
+        if response is None:
+            return None
         try:
             return response.content.decode('utf-8')
         except UnicodeDecodeError:

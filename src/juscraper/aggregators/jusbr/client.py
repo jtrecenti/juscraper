@@ -15,6 +15,7 @@ import browser_cookie3
 import jwt
 import pandas as pd
 import requests
+import numpy as np
 
 from ...core.base import BaseScraper
 from ...utils.cnj import clean_cnj
@@ -237,11 +238,13 @@ class JusbrScraper(BaseScraper):
                 'tramitacaoAtual' in detalhes and
                 isinstance(detalhes['tramitacaoAtual'], dict)):
                 document_metadata_list = detalhes['tramitacaoAtual'].get('documentos', [])
+                if isinstance(document_metadata_list, np.ndarray):
+                    document_metadata_list = document_metadata_list.tolist()
 
             # Ensure it's a list
             if not isinstance(document_metadata_list, list):
                 logger.warning(
-                    "Lista de metadados de documentos não encontrada ou não é uma lista"
+                    "Lista de metadados de documentos não encontrada ou não é uma lista "
                     "para o processo %s. Conteúdo de 'detalhes' (início): %s",
                     numero_processo_api, str(detalhes)[:200]
                 )
