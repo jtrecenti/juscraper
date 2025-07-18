@@ -1,5 +1,5 @@
 """
-Raspador para o Tribunal de Justica do Paran\u00e1 (TJPR).
+Raspador para o Tribunal de Justica do Paraná (TJPR).
 """
 from typing import Optional, Union, List
 import requests
@@ -9,7 +9,7 @@ from .download import cjsg_download, get_initial_tokens
 from .parse import cjsg_parse
 
 class TJPRScraper(BaseScraper):
-    """Raspador para o Tribunal de Justica do Paran\u00e1."""
+    """Raspador para o Tribunal de Justica do Paraná."""
 
     BASE_URL = "https://portal.tjpr.jus.br/jurisprudencia/publico/pesquisa.do?actionType=pesquisar"
     HOME_URL = "https://portal.tjpr.jus.br/jurisprudencia/"
