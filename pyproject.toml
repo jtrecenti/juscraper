@@ -1,30 +1,181 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "juscraper"
 version = "0.1.0"
 description = "Raspador de tribunais e outros sistemas relacionados ao poder judiciário."
 readme = "README.md"
 requires-python = ">=3.11"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Julio Trecenti", email = "jtrecenti@gmail.com"},
+]
+maintainers = [
+    {name = "Julio Trecenti", email = "jtrecenti@gmail.com"},
+]
+keywords = [
+    "web-scraping",
+    "legal-data",
+    "courts",
+    "judiciary",
+    "brasil",
+    "tribunais",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Legal Industry",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Internet :: WWW/HTTP :: Browsers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Text Processing :: Markup :: HTML",
+]
 dependencies = [
-    "asyncio>=3.4.3",
     "beautifulsoup4>=4.13.4",
     "browser-cookie3>=0.20.1",
-    "flask>=3.1.1",
-    "ipykernel>=6.29.5",
-    "ipywidgets>=8.1.7",
-    "joblib>=1.5.0",
     "nest-asyncio>=1.6.0",
     "pandas>=2.2.3",
-    "pip>=25.1",
     "playwright>=1.46.0",
     "pyarrow>=19.0.1",
     "pyjwt>=2.10.1",
     "pyppeteer>=2.0.0",
-    "pytest>=8.3.5",
     "python-dotenv>=1.1.0",
-    "quartodoc>=0.11.1",
     "requests>=2.32.3",
     "selenium>=4.31.0",
     "tqdm>=4.67.1",
     "unidecode>=1.3.8",
     "webdriver-manager>=4.0.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.5",
+    "pytest-cov>=4.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pylint>=3.0.0",
+    "isort>=5.12.0",
+    "flake8>=6.0.0",
+    "mypy>=1.0.0",
+    "pre-commit>=3.0.0",
+]
+docs = [
+    "quartodoc>=0.11.1",
+    "jupyter>=1.0.0",
+    "ipykernel>=6.29.5",
+    "ipywidgets>=8.1.7",
+]
+web = [
+    "flask>=3.1.1",
+    "joblib>=1.5.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/jtrecenti/juscraper"
+Documentation = "https://jtrecenti.github.io/juscraper/"
+Repository = "https://github.com/jtrecenti/juscraper.git"
+"Bug Tracker" = "https://github.com/jtrecenti/juscraper/issues"
+Changelog = "https://github.com/jtrecenti/juscraper/blob/main/CHANGELOG.md"
+
+# Tool configurations
+[tool.pylint.main]
+load-plugins = ["pylint.extensions.docparams"]
+
+[tool.pylint.format]
+max-line-length = 120
+
+[tool.pylint.messages_control]
+disable = [
+    "missing-module-docstring",
+    "missing-class-docstring",
+    "missing-function-docstring",
+    "too-few-public-methods",
+    "too-many-arguments",
+    "too-many-locals",
+    "too-many-branches",
+    "too-many-statements",
+    "import-error",
+]
+
+[tool.isort]
+line_length = 120
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+known_first_party = ["juscraper"]
+known_third_party = [
+    "pandas",
+    "requests",
+    "beautifulsoup4",
+    "selenium",
+    "playwright",
+]
+
+[tool.flake8]
+max-line-length = 120
+extend-ignore = ["E203", "W503"]
+exclude = [
+    ".git",
+    "__pycache__",
+    ".venv",
+    "build",
+    "dist",
+    "*.egg-info",
+]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = true
+disallow_untyped_decorators = false
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --strict-markers --strict-config"
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
 ]

@@ -1,13 +1,44 @@
 # Changelog
 
-<!--next-version-placeholder-->
+Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
-## v0.1.0 (26/05/2025)
+O formato é baseado em [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added
+
+-
+
+### Changed
+
+-
+
+### Fixed
+
+-
+
+## [0.1.0] - 2025-01-19
+
+### Added
 
 - Modularização do TJSP
 - Tribunais adicionados: TJRS, TJPR, TJDFT (apenas CJSG)
 - Agregadores adicionados: Datajud, Jusbr
+- Configuração completa para publicação no PyPI
+- Workflows do GitHub Actions para CI/CD
+- Configuração de ferramentas de qualidade de código (black, isort, flake8, mypy)
+- Pre-commit hooks
+- Script automatizado de release
 
-## v0.0.1 (17/12/2024)
+### Changed
+
+- Reorganização das dependências em grupos opcionais
+- Melhoria na estrutura do projeto
+
+## [0.0.1] - 2024-12-17
+
+### Added
 
 - First release of `juscraper`!
