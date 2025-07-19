@@ -129,7 +129,17 @@
     "href": "index.html",
     "title": "juscraper",
     "section": "",
-    "text": "Raspador de tribunais e outros sistemas relacionados ao poder judiciário.",
+    "text": "Raspador de tribunais e outros sistemas relacionados ao poder judiciário brasileiro.",
+    "crumbs": [
+      "Home"
+    ]
+  },
+  {
+    "objectID": "index.html#instalação",
+    "href": "index.html#instalação",
+    "title": "juscraper",
+    "section": "Instalação",
+    "text": "Instalação\n\nVia PyPI (Recomendado)\npip install juscraper\n\n\nCom uv\nuv add juscraper\n\n\nVersão de Desenvolvimento\nPara instalar a versão mais recente do repositório:\npip install git+https://github.com/jtrecenti/juscraper.git",
     "crumbs": [
       "Home"
     ]

@@ -252,7 +252,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Nesta página</h2>
    
   <ul>
-  <li><a href="#como-usar" id="toc-como-usar" class="nav-link active" data-scroll-target="#como-usar">Como usar</a></li>
+  <li><a href="#instalação" id="toc-instalação" class="nav-link active" data-scroll-target="#instalação">Instalação</a>
+  <ul class="collapse">
+  <li><a href="#via-pypi-recomendado" id="toc-via-pypi-recomendado" class="nav-link" data-scroll-target="#via-pypi-recomendado">Via PyPI (Recomendado)</a></li>
+  <li><a href="#com-uv" id="toc-com-uv" class="nav-link" data-scroll-target="#com-uv">Com uv</a></li>
+  <li><a href="#versão-de-desenvolvimento" id="toc-versão-de-desenvolvimento" class="nav-link" data-scroll-target="#versão-de-desenvolvimento">Versão de Desenvolvimento</a></li>
+  </ul></li>
+  <li><a href="#como-usar" id="toc-como-usar" class="nav-link" data-scroll-target="#como-usar">Como usar</a></li>
   <li><a href="#implementações" id="toc-implementações" class="nav-link" data-scroll-target="#implementações">Implementações</a>
   <ul class="collapse">
   <li><a href="#tribunais-disponíveis" id="toc-tribunais-disponíveis" class="nav-link" data-scroll-target="#tribunais-disponíveis">Tribunais Disponíveis</a></li>
@@ -291,15 +297,31 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>Raspador de tribunais e outros sistemas relacionados ao poder judiciário.</p>
+<p>Raspador de tribunais e outros sistemas relacionados ao poder judiciário brasileiro.</p>
+<section id="instalação" class="level2">
+<h2 class="anchored" data-anchor-id="instalação">Instalação</h2>
+<section id="via-pypi-recomendado" class="level3">
+<h3 class="anchored" data-anchor-id="via-pypi-recomendado">Via PyPI (Recomendado)</h3>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install juscraper</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="com-uv" class="level3">
+<h3 class="anchored" data-anchor-id="com-uv">Com uv</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> add juscraper</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="versão-de-desenvolvimento" class="level3">
+<h3 class="anchored" data-anchor-id="versão-de-desenvolvimento">Versão de Desenvolvimento</h3>
+<p>Para instalar a versão mais recente do repositório:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install git+https://github.com/jtrecenti/juscraper.git</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+</section>
 <section id="como-usar" class="level2">
 <h2 class="anchored" data-anchor-id="como-usar">Como usar</h2>
-<div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>tjsp <span class="op">=</span> jus.scraper(<span class="st">'tjsp'</span>)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>dados_cjpg <span class="op">=</span> tjsp.cjpg(<span class="st">'league of legends'</span>, paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">1</span>,<span class="dv">3</span>))</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>dados_cjpg.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>tjsp <span class="op">=</span> jus.scraper(<span class="st">'tjsp'</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>dados_cjpg <span class="op">=</span> tjsp.cjpg(<span class="st">'league of legends'</span>, paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">1</span>,<span class="dv">3</span>))</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>dados_cjpg.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>O pacote foi pensado para atender a requisitos básicos de consulta de dados de processos judiciais em alguns tribunais.</p>
 <p>Os tribunais implementados vão apresentar os seguintes métodos:</p>
 <ul>
