@@ -2,6 +2,14 @@
 
 Raspador de tribunais e outros sistemas relacionados ao poder judiciário.
 
+## 🚧 Em desenvolvimento 🚧
+
+O pacote ainda não está disponível no PyPI. Instale a versão em desenvolvimento com:
+
+```bash
+pip install git+https://github.com/jtrecenti/juscraper.git
+```
+
 ## Implementações
 
 ### Tribunais Disponíveis
