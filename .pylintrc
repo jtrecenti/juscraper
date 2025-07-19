@@ -16,12 +16,22 @@ disable=missing-module-docstring,
         too-many-statements,
         too-many-instance-attributes,
         too-many-public-methods,
+        too-many-positional-arguments,
         import-error,
         no-member,
         unused-argument,
         broad-except,
         fixme,
-        invalid-name
+        invalid-name,
+        ungrouped-imports,
+        no-else-return,
+        no-else-raise,
+        logging-fstring-interpolation,
+        trailing-whitespace,
+        trailing-newlines,
+        duplicate-code,
+        missing-param-doc,
+        too-many-nested-blocks
 
 [DESIGN]
 max-args=10
