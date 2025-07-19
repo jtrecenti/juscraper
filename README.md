@@ -1,16 +1,51 @@
 # juscraper
 
-Raspador de tribunais e outros sistemas relacionados ao poder judiciário.
+[![PyPI version](https://badge.fury.io/py/juscraper.svg)](https://badge.fury.io/py/juscraper)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Documentation](https://img.shields.io/badge/docs-available-brightgreen.svg)](https://jtrecenti.github.io/juscraper/)
 
-## 🚧 Em desenvolvimento 🚧
+Raspador de tribunais e outros sistemas relacionados ao poder judiciário brasileiro.
 
-O pacote ainda não está disponível no PyPI. Instale a versão em desenvolvimento com:
+## 📦 Instalação
+
+### Via PyPI (Recomendado)
+
+```bash
+pip install juscraper
+```
+
+### Com uv
+
+```bash
+uv add juscraper
+```
+
+### Versão de Desenvolvimento
+
+Para instalar a versão mais recente do repositório:
 
 ```bash
 pip install git+https://github.com/jtrecenti/juscraper.git
 ```
 
-## Implementações
+## 🚀 Exemplo Rápido
+
+```python
+import juscraper as jus
+
+# Criar scraper para o TJSP
+tjsp = jus.scraper('tjsp')
+
+# Buscar jurisprudência
+dados = tjsp.cjsg('direito digital', paginas=range(1, 3))
+print(f"Encontrados {len(dados)} resultados")
+
+# Visualizar primeiros resultados
+dados.head()
+```
+
+## 📊 Implementações
 
 ### Tribunais Disponíveis
 
@@ -37,22 +72,36 @@ pip install git+https://github.com/jtrecenti/juscraper.git
 - [Exemplo Datajud](docs/notebooks/datajud.ipynb)
 - [Exemplo Jusbr](docs/notebooks/jusbr.ipynb)
 
-## Como usar
+## 📚 Como Usar
+
+### Exemplo Completo - TJSP
 
 ```python
 import juscraper as jus
 
+# Criar scraper para o TJSP
 tjsp = jus.scraper('tjsp')
-dados_cjpg = tjsp.cjpg('league of legends', paginas=range(1,3))
 
-dados_cjpg.head(3)
+# Buscar jurisprudência (CJSG)
+dados_cjsg = tjsp.cjsg('inteligência artificial', paginas=range(1, 3))
+print(f"CJSG: {len(dados_cjsg)} resultados encontrados")
+
+# Buscar processos (CJPG)
+dados_cjpg = tjsp.cjpg('direito digital', paginas=range(1, 2))
+print(f"CJPG: {len(dados_cjpg)} resultados encontrados")
+
+# Visualizar dados
+dados_cjsg.head()
 ```
 
-```md
+### Saída Esperada
+
+```text
 Total de páginas: 6
-Paginas a serem baixadas: [1, 2]
+Páginas a serem baixadas: [1, 2]
 Baixando documentos: 100%|██████████| 2/2 [00:01<00:00,  1.38it/s]
 Processando documentos: 100%|██████████| 2/2 [00:00<00:00, 29.39it/s]
+CJSG: 40 resultados encontrados
 ```
 
         cd_processo	id_processo	classe	assunto	magistrado	comarca	foro	vara	data_disponibilizacao	decisao
@@ -85,11 +134,11 @@ Observação: Em alguns tribunais ou situações específicas, a consulta a um p
 
 Para a função `.cjsg()`, uma consulta pode resultar
 
-### Diferenciais do `juscraper`:
+### Diferenciais do `juscraper`
 
 - Controle sobre arquivos brutos: o pacote fornece uma interface para baixar e armazenar arquivos brutos (HTML e JSON, por exemplo) dos processos. Por padrão, no entanto, esses arquivos brutos são descartados assim que os dados são processados, com exceção dos arquivos que apresentaram algum problema na leitura.
 
-### Restrições:
+### Restrições
 
 Por ser um pacote bastante complexo e também nichado, adotamos algumas restrições sobre o escopo do pacote para que seja simples de usar.
 
@@ -115,7 +164,7 @@ scraper.cjpg_download(pesquisa="contrato", paginas=range(0, 2))    # Baixa as p�
 
 ## Instalação em desenvolvimento
 
-Para instalar o pacote em modo desenvolvimento, siga os passos abaixo (necessário Python >= 3.12):
+Para instalar o pacote em modo desenvolvimento, siga os passos abaixo:
 
 ```bash
 # Clone o repositório (caso ainda não tenha feito)
@@ -126,27 +175,14 @@ $ cd juscraper
 $ uv pip install -e .
 ```
 
-Saída esperada:
+## Contribuição
 
-```
-(juscraper) PS C:\Users\julio\OneDrive\Documentos\insper\juscraper> uv pip install -e .
->>
-Resolved 56 packages in 255ms
-      Built juscraper @ file:///C:/Users/julio/OneDrive/Documentos/insper/juscraper
-Prepared 1 package in 7.26s
-Installed 1 package in 39ms
- + juscraper==0.1.0 (from file:///C:/Users/julio/OneDrive/Documentos/insper/juscraper)
-(juscraper) PS C:\Users\julio\OneDrive\Documentos\insper\juscraper>
-```
+Interessado em contribuir? Verifique as diretrizes de contribuição. Por favor, note que este projeto é lançado com um Código de Conduta. Ao contribuir para este projeto, você concorda em obedecer às suas termos.
 
-## Contributing
+## Licença
 
-Interested in contributing? Check out the contributing guidelines. Please note that this project is released with a Code of Conduct. By contributing to this project, you agree to abide by its terms.
+`juscraper` foi criado por Julio Trecenti. Está licenciado sob os termos da licença MIT.
 
-## License
+## Créditos
 
-`juscraper` was created by Julio Trecenti. It is licensed under the terms of the MIT license.
-
-## Credits
-
-`juscraper` was created with [`cookiecutter`](https://cookiecutter.readthedocs.io/en/latest/) and the `py-pkgs-cookiecutter` [template](https://github.com/py-pkgs/py-pkgs-cookiecutter).
+`juscraper` foi criado com [`cookiecutter`](https://cookiecutter.readthedocs.io/en/latest/) e o [template](https://github.com/py-pkgs/py-pkgs-cookiecutter) `py-pkgs-cookiecutter`.
