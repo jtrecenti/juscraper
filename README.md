@@ -38,7 +38,7 @@ import juscraper as jus
 tjsp = jus.scraper('tjsp')
 
 # Buscar jurisprudência
-dados = tjsp.cjsg('direito digital', paginas=range(1, 3))
+dados = tjsp.cjpg('golpe do pix', paginas=range(1, 3))
 print(f"Encontrados {len(dados)} resultados")
 
 # Visualizar primeiros resultados
@@ -72,42 +72,7 @@ dados.head()
 - [Exemplo Datajud](docs/notebooks/datajud.ipynb)
 - [Exemplo Jusbr](docs/notebooks/jusbr.ipynb)
 
-## 📚 Como Usar
-
-### Exemplo Completo - TJSP
-
-```python
-import juscraper as jus
-
-# Criar scraper para o TJSP
-tjsp = jus.scraper('tjsp')
-
-# Buscar jurisprudência (CJSG)
-dados_cjsg = tjsp.cjsg('inteligência artificial', paginas=range(1, 3))
-print(f"CJSG: {len(dados_cjsg)} resultados encontrados")
-
-# Buscar processos (CJPG)
-dados_cjpg = tjsp.cjpg('direito digital', paginas=range(1, 2))
-print(f"CJPG: {len(dados_cjpg)} resultados encontrados")
-
-# Visualizar dados
-dados_cjsg.head()
-```
-
-### Saída Esperada
-
-```text
-Total de páginas: 6
-Páginas a serem baixadas: [1, 2]
-Baixando documentos: 100%|██████████| 2/2 [00:01<00:00,  1.38it/s]
-Processando documentos: 100%|██████████| 2/2 [00:00<00:00, 29.39it/s]
-CJSG: 40 resultados encontrados
-```
-
-        cd_processo	id_processo	classe	assunto	magistrado	comarca	foro	vara	data_disponibilizacao	decisao
-        0	2P000BYIO0000	1001296-06.2024.8.26.0097	Procedimento Comum Cível	Práticas Abusivas	ANDRÉ FREDERICO DE SENA HORTA	Buritama	Foro de Buritama	1ª Vara	17/03/2025	SENTENÇA\n\n\n\nProcesso Digital nº:\t1001296-...
-        1	2S001UFAG0000	1059728-09.2024.8.26.0100	Procedimento Comum Cível	Práticas Abusivas	Ricardo Augusto Ramos	SÃO PAULO	Foro Central Cível	7ª Vara Cível	25/11/2024	SENTENÇA\n\n\n\nProcesso Digital nº:\t1059728-...
-        2	2S001TWI60000	1041014-98.2024.8.26.0100	Procedimento Comum Cível	Práticas Abusivas	LUCIANA BIAGIO LAQUIMIA	SÃO PAULO	Foro Central Cível	17ª Vara Cível	28/10/2024	SENTENÇA\n\n\n\nProcesso Digital nº:\t1041014-...
+## Detalhes
 
 O pacote foi pensado para atender a requisitos básicos de consulta de dados de processos judiciais em alguns tribunais.
 

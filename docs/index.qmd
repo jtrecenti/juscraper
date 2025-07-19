@@ -2,7 +2,29 @@
 title: "juscraper"
 ---
 
-Raspador de tribunais e outros sistemas relacionados ao poder judiciário.
+Raspador de tribunais e outros sistemas relacionados ao poder judiciário brasileiro.
+
+## Instalação
+
+### Via PyPI (Recomendado)
+
+```bash
+pip install juscraper
+```
+
+### Com uv
+
+```bash
+uv add juscraper
+```
+
+### Versão de Desenvolvimento
+
+Para instalar a versão mais recente do repositório:
+
+```bash
+pip install git+https://github.com/jtrecenti/juscraper.git
+```
 
 ## Como usar
 
