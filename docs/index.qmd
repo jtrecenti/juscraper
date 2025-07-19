@@ -69,7 +69,7 @@ Por ser um pacote bastante complexo e também nichado, adotamos algumas restriç
 
 ## Contribuição
 
-Interessado em contribuir? Verifique as diretrizes de contribuição no arquivo [CONTRIBUTING.md](CONTRIBUTING.md). Por favor, note que este projeto é lançado com um Código de Conduta. Ao contribuir para este projeto, você concorda em obedecer às suas termos.
+Interessado em contribuir? Verifique as diretrizes de contribuição no arquivo [CONTRIBUTING.md](https://github.com/jtrecenti/juscraper/blob/main/CONTRIBUTING.md). Por favor, note que este projeto é lançado com um Código de Conduta. Ao contribuir para este projeto, você concorda em obedecer às suas termos.
 
 ## Licença
 

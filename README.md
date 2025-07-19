@@ -22,12 +22,12 @@ Raspador de tribunais e outros sistemas relacionados ao poder judiciário.
 
 ### Notebooks de Exemplo
 
-- [Exemplo TJSP](notebooks/tjsp.ipynb)
-- [Exemplo TJRS](notebooks/tjrs.ipynb)
-- [Exemplo TJPR](notebooks/tjpr.ipynb)
-- [Exemplo TJDFT](notebooks/tjdft.ipynb)
-- [Exemplo Datajud](notebooks/datajud.ipynb)
-- [Exemplo Jusbr](notebooks/jusbr.ipynb)
+- [Exemplo TJSP](docs/notebooks/tjsp.ipynb)
+- [Exemplo TJRS](docs/notebooks/tjrs.ipynb)
+- [Exemplo TJPR](docs/notebooks/tjpr.ipynb)
+- [Exemplo TJDFT](docs/notebooks/tjdft.ipynb)
+- [Exemplo Datajud](docs/notebooks/datajud.ipynb)
+- [Exemplo Jusbr](docs/notebooks/jusbr.ipynb)
 
 ## Como usar
 

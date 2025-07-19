@@ -302,9 +302,6 @@ class TJSPScraper(BaseScraper):
             data_inicio (str, optional): Start date of the search. Default is None.
             data_fim (str, optional): End date of the search. Default is None.
             paginas (range, optional): Range of pages to download. Default is None.
-
-        Returns:
-            pd.DataFrame: The parsed data from the downloaded jurisprudence.
         """
         path_result = self.cjpg_download(
             pesquisa=pesquisa,
