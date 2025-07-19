@@ -1,5 +1,5 @@
 """
-Funções de download específicas para DATAJUD API
+Functions for downloading specific data from the Datajud API.
 """
 from typing import Optional, Dict, Any
 import logging

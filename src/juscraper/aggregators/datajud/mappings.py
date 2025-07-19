@@ -1,6 +1,7 @@
-# Description: Mappings for Datajud API aliases.
+"""
+Maps (id_justica, id_tribunal) from CNJ to Datajud API alias.
+"""
 
-# Maps (id_justica, id_tribunal) from CNJ to Datajud API alias
 ID_JUSTICA_TRIBUNAL_TO_ALIAS = {
     # Justiça Estadual (id_justica="8")
     ("8", "01"): "api_publica_tjac",  # TJAC
