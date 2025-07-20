@@ -23,6 +23,7 @@ from .download import (
     fetch_process_list,
     fetch_process_details,
     fetch_document_text,
+    fetch_document_binary,
     USER_AGENT
 )
 from .parse import (
@@ -287,9 +288,28 @@ class JusbrScraper(BaseScraper):
                             href_texto,
                             numero_processo_api
                         )
+                href_binario = doc_meta.get('hrefBinario')
+                id_doc_uuid_binario = None
+                if href_binario and isinstance(href_binario, str) and '/documentos/' in href_binario:
+                    try:
+                        id_doc_uuid_binario = href_binario.split('/documentos/')[1].split('/')[0]
+                    except IndexError:
+                        logger.warning(
+                            "Não foi possível extrair UUID do hrefBinario: %s"
+                            " para processo %s", 
+                            href_binario,
+                            numero_processo_api
+                        )
                 if not id_doc_uuid:
                     logger.warning(
                         "Documento sem UUID extraível de 'hrefTexto'"
+                        "para o processo %s. Metadados: %s",
+                        numero_processo_api, str(doc_meta)[:200]
+                    )
+                    continue
+                if not id_doc_uuid_binario:
+                    logger.warning(
+                        "Documento sem UUID extraível de 'hrefBinario'"
                         "para o processo %s. Metadados: %s",
                         numero_processo_api, str(doc_meta)[:200]
                     )
@@ -311,6 +331,12 @@ class JusbrScraper(BaseScraper):
                     self.BASE_API_URL_V1_DOCS
                 )
                 cleaned_text = clean_document_text(raw_text)
+                raw_binary = fetch_document_binary(
+                    self.session,
+                    numero_processo_api_clean,
+                    str(id_doc_uuid_binario),
+                    self.BASE_API_URL_V2
+                )
 
                 if cleaned_text:
                     logger.debug(
@@ -340,7 +366,8 @@ class JusbrScraper(BaseScraper):
                 doc_data_row = {
                     'numero_processo': numero_processo_api,
                     'texto': cleaned_text,
-                    '_raw_text_api': raw_text  # Store raw text for inspection if needed
+                    '_raw_text_api': raw_text,
+                    '_raw_binary_api': raw_binary
                 }
                 doc_data_row.update(doc_meta)  # Add all metadata from the document item
                 all_docs_data.append(doc_data_row)
@@ -358,7 +385,7 @@ class JusbrScraper(BaseScraper):
         preferred_columns = [
             'numero_processo', 'idDocumento', 'idCodex', 'sequencia', 'descricao', 'nome',
             'tipoDocumento', 'tipo', 'dataHoraJuntada', 'dataJuntada', 'nivelSigilo',
-            'hrefTexto', 'hrefBinario', 'texto', '_raw_text_api'
+            'hrefTexto', 'hrefBinario', 'texto', '_raw_text_api', '_raw_binary_api'
         ]
         # Ensure preferred columns are present and in order, add others at the end
         final_cols = []

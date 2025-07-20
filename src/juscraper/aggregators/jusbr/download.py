@@ -176,3 +176,32 @@ def fetch_document_text(
             id_documento, numero_processo, doc_url, e
         )
     return None
+
+def fetch_document_binary(
+    session: requests.Session,
+    numero_processo: str,
+    id_documento: str,
+    base_api_url_docs: str
+) -> Optional[str]:
+    numero_processo_param = numero_processo  # original, pode estar com máscara
+    doc_url = (
+        f"{base_api_url_docs.rstrip('/')}/{numero_processo_param}/documentos/{id_documento}/binario"
+    )
+    logger.debug("Fetching document binary from: %s", doc_url)
+    try:
+        response = request_with_retry(session, doc_url, timeout=15)
+        if response is None:
+            return None
+        return response.content
+    except requests.Timeout:
+        logger.error(
+            "Timeout ao buscar binário do documento %s para processo %s em %s",
+            id_documento, numero_processo, doc_url
+        )
+        return None
+    except requests.RequestException as e:
+        logger.error(
+            "Erro ao buscar binário do documento %s para processo %s em %s: %s",
+            id_documento, numero_processo, doc_url, e
+        )
+        return None
