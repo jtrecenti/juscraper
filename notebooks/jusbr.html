@@ -326,13 +326,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="baixando-metadados-dos-processos" class="level2">
 <h2 class="anchored" data-anchor-id="baixando-metadados-dos-processos">Baixando metadados dos processos</h2>
 <p>Baixando uma lista de casos:</p>
-<div id="cell-8" class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>processos <span class="op">=</span> [<span class="st">'15006452620228260536'</span>]</span>
+<div id="cell-8" class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>processos <span class="op">=</span> [<span class="st">'3005317-12.2025.8.06.0000'</span>]</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>resultados <span class="op">=</span> jusbr.cpopg(processos)</span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>resultados</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="4">
+<div class="cell-output cell-output-display" data-execution_count="7">
 <div>
 
 
@@ -349,10 +349,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">0</td>
-<td>15006452620228260536</td>
-<td>1500645-26.2022.8.26.0536</td>
+<td>30053171220258060000</td>
+<td>3005317-12.2025.8.06.0000</td>
 <td>None</td>
-<td>{'nivelSigilo': 0, 'siglaTribunal': 'TJSP', 'n...</td>
+<td>{'nivelSigilo': 0, 'siglaTribunal': 'TJCE', 'n...</td>
 </tr>
 </tbody>
 </table>
@@ -360,15 +360,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<div id="cell-9" class="cell" data-execution_count="5">
+<div id="cell-9" class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>result_list <span class="op">=</span> resultados[<span class="st">'detalhes'</span>].iloc[<span class="dv">0</span>]</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(json.dumps(result_list[<span class="st">'tramitacaoAtual'</span>][<span class="st">'grau'</span>], indent<span class="op">=</span><span class="dv">2</span>, ensure_ascii<span class="op">=</span><span class="va">False</span>))</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>{
-  "sigla": "G1",
-  "nome": "1° Grau",
-  "numero": 1
+  "sigla": "G2",
+  "nome": "2° Grau",
+  "numero": 2
 }</code></pre>
 </div>
 </div>
@@ -376,15 +376,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="baixando-autos-dos-processos" class="level2">
 <h2 class="anchored" data-anchor-id="baixando-autos-dos-processos">Baixando autos dos processos</h2>
-<div id="cell-12" class="cell" data-execution_count="6">
+<div id="cell-12" class="cell" data-execution_count="9">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>df_docs <span class="op">=</span> jusbr.download_documents(resultados)</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_docs.shape)</span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>df_docs.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>(16, 17)</code></pre>
+<pre><code>(1, 18)</code></pre>
 </div>
-<div class="cell-output cell-output-display" data-execution_count="6">
+<div class="cell-output cell-output-display" data-execution_count="9">
 <div>
 
 
@@ -403,6 +403,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <th data-quarto-table-cell-role="th">hrefBinario</th>
 <th data-quarto-table-cell-role="th">texto</th>
 <th data-quarto-table-cell-role="th">_raw_text_api</th>
+<th data-quarto-table-cell-role="th">_raw_binary_api</th>
 <th data-quarto-table-cell-role="th">arquivo</th>
 <th data-quarto-table-cell-role="th">idOrigem</th>
 <th data-quarto-table-cell-role="th">idDocumento</th>
@@ -414,59 +415,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">0</td>
-<td>1500645-26.2022.8.26.0536</td>
-<td>25517068555</td>
-<td>219</td>
-<td>Ato_Ordinatrio.pdf</td>
-<td>{'codigo': 14575, 'nome': 'Ato Ordinatório', '...</td>
-<td>2025-06-02T12:18:44</td>
-<td>PUBLICO</td>
-<td>/processos/1500645-26.2022.8.26.0536/documento...</td>
-<td>/processos/1500645-26.2022.8.26.0536/documento...</td>
-<td>TRIBUNAL DE JUSTIÇA DO ESTADO DE SÃO PAULO\nCO...</td>
-<td>\nTRIBUNAL DE JUSTIÇA DO ESTADO DE SÃO PAULO\n...</td>
-<td>NaN</td>
-<td>PG5SANT_221099183_0</td>
-<td>None</td>
-<td>None</td>
-<td>None</td>
-<td>None</td>
-</tr>
-<tr class="even">
-<td data-quarto-table-cell-role="th">1</td>
-<td>1500645-26.2022.8.26.0536</td>
-<td>25240498715</td>
-<td>206</td>
-<td>Deciso.pdf</td>
+<td>3005317-12.2025.8.06.0000</td>
+<td>25491324303</td>
+<td>4</td>
+<td>Decisão.html</td>
 <td>{'codigo': 404, 'nome': 'Decisão', 'idCodex': ...</td>
-<td>2025-05-06T17:42:26</td>
+<td>2025-05-29T18:02:53.803</td>
 <td>PUBLICO</td>
-<td>/processos/1500645-26.2022.8.26.0536/documento...</td>
-<td>/processos/1500645-26.2022.8.26.0536/documento...</td>
-<td>TRIBUNAL DE JUSTIÇA DO ESTADO DE SÃO PAULO\nCO...</td>
-<td>\nTRIBUNAL DE JUSTIÇA DO ESTADO DE SÃO PAULO\n...</td>
-<td>{'tipo': 'text/richtext', 'quantidadePaginas':...</td>
-<td>PG5SANT_218747833_0</td>
-<td>None</td>
-<td>None</td>
-<td>None</td>
-<td>None</td>
-</tr>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">2</td>
-<td>1500645-26.2022.8.26.0536</td>
-<td>24373093626</td>
-<td>196</td>
-<td>Ato_Ordinatrio.pdf</td>
-<td>{'codigo': 14575, 'nome': 'Ato Ordinatório', '...</td>
-<td>2025-03-11T12:39:13</td>
-<td>PUBLICO</td>
-<td>/processos/1500645-26.2022.8.26.0536/documento...</td>
-<td>/processos/1500645-26.2022.8.26.0536/documento...</td>
-<td>TRIBUNAL DE JUSTIÇA DO ESTADO DE SÃO PAULO\nCO...</td>
-<td>\nTRIBUNAL DE JUSTIÇA DO ESTADO DE SÃO PAULO\n...</td>
-<td>{'tipo': 'text/richtext', 'quantidadePaginas':...</td>
-<td>PG5SANT_214809578_0</td>
+<td>/processos/3005317-12.2025.8.06.0000/documento...</td>
+<td>/processos/3005317-12.2025.8.06.0000/documento...</td>
+<td>ESTADO DO CEARÁ\n \n PODER JUDICIÁRIO\n \n T...</td>
+<td>\nESTADO DO CEARÁ\n \n PODER JUDICIÁRIO\n \n ...</td>
+<td>b'&lt;p&gt;&lt;span style="font-family: arial, helvetic...</td>
+<td>{'tipo': 'text/html', 'quantidadePaginas': 0, ...</td>
+<td>21009045</td>
 <td>None</td>
 <td>None</td>
 <td>None</td>
@@ -478,9 +440,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<div id="cell-13" class="cell" data-execution_count="7">
+<div id="cell-13" class="cell" data-execution_count="10">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>df_docs.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="7">
+<div class="cell-output cell-output-display" data-execution_count="10">
 <div>
 
 
@@ -499,6 +461,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <th data-quarto-table-cell-role="th">hrefBinario</th>
 <th data-quarto-table-cell-role="th">texto</th>
 <th data-quarto-table-cell-role="th">_raw_text_api</th>
+<th data-quarto-table-cell-role="th">_raw_binary_api</th>
 <th data-quarto-table-cell-role="th">arquivo</th>
 <th data-quarto-table-cell-role="th">idOrigem</th>
 <th data-quarto-table-cell-role="th">idDocumento</th>
@@ -510,59 +473,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">0</td>
-<td>1500645-26.2022.8.26.0536</td>
-<td>25517068555</td>
-<td>219</td>
-<td>Ato_Ordinatrio.pdf</td>
-<td>{'codigo': 14575, 'nome': 'Ato Ordinatório', '...</td>
-<td>2025-06-02T12:18:44</td>
-<td>PUBLICO</td>
-<td>/processos/1500645-26.2022.8.26.0536/documento...</td>
-<td>/processos/1500645-26.2022.8.26.0536/documento...</td>
-<td>TRIBUNAL DE JUSTIÇA DO ESTADO DE SÃO PAULO\nCO...</td>
-<td>\nTRIBUNAL DE JUSTIÇA DO ESTADO DE SÃO PAULO\n...</td>
-<td>NaN</td>
-<td>PG5SANT_221099183_0</td>
-<td>None</td>
-<td>None</td>
-<td>None</td>
-<td>None</td>
-</tr>
-<tr class="even">
-<td data-quarto-table-cell-role="th">1</td>
-<td>1500645-26.2022.8.26.0536</td>
-<td>25240498715</td>
-<td>206</td>
-<td>Deciso.pdf</td>
+<td>3005317-12.2025.8.06.0000</td>
+<td>25491324303</td>
+<td>4</td>
+<td>Decisão.html</td>
 <td>{'codigo': 404, 'nome': 'Decisão', 'idCodex': ...</td>
-<td>2025-05-06T17:42:26</td>
+<td>2025-05-29T18:02:53.803</td>
 <td>PUBLICO</td>
-<td>/processos/1500645-26.2022.8.26.0536/documento...</td>
-<td>/processos/1500645-26.2022.8.26.0536/documento...</td>
-<td>TRIBUNAL DE JUSTIÇA DO ESTADO DE SÃO PAULO\nCO...</td>
-<td>\nTRIBUNAL DE JUSTIÇA DO ESTADO DE SÃO PAULO\n...</td>
-<td>{'tipo': 'text/richtext', 'quantidadePaginas':...</td>
-<td>PG5SANT_218747833_0</td>
-<td>None</td>
-<td>None</td>
-<td>None</td>
-<td>None</td>
-</tr>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">2</td>
-<td>1500645-26.2022.8.26.0536</td>
-<td>24373093626</td>
-<td>196</td>
-<td>Ato_Ordinatrio.pdf</td>
-<td>{'codigo': 14575, 'nome': 'Ato Ordinatório', '...</td>
-<td>2025-03-11T12:39:13</td>
-<td>PUBLICO</td>
-<td>/processos/1500645-26.2022.8.26.0536/documento...</td>
-<td>/processos/1500645-26.2022.8.26.0536/documento...</td>
-<td>TRIBUNAL DE JUSTIÇA DO ESTADO DE SÃO PAULO\nCO...</td>
-<td>\nTRIBUNAL DE JUSTIÇA DO ESTADO DE SÃO PAULO\n...</td>
-<td>{'tipo': 'text/richtext', 'quantidadePaginas':...</td>
-<td>PG5SANT_214809578_0</td>
+<td>/processos/3005317-12.2025.8.06.0000/documento...</td>
+<td>/processos/3005317-12.2025.8.06.0000/documento...</td>
+<td>ESTADO DO CEARÁ\n \n PODER JUDICIÁRIO\n \n T...</td>
+<td>\nESTADO DO CEARÁ\n \n PODER JUDICIÁRIO\n \n ...</td>
+<td>b'&lt;p&gt;&lt;span style="font-family: arial, helvetic...</td>
+<td>{'tipo': 'text/html', 'quantidadePaginas': 0, ...</td>
+<td>21009045</td>
 <td>None</td>
 <td>None</td>
 <td>None</td>
