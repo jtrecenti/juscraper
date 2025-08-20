@@ -72,7 +72,18 @@ def cjpg_download(
     }
 
     # Busca a primeira página
-    r0 = session.get(f"{u_base}cjpg/pesquisar.do", params=query)
+    url_primeira_pagina = f"{u_base}cjpg/pesquisar.do"
+    logger = logging.getLogger("juscraper.cjpg_download")
+    logger.debug("DEBUG: Fazendo requisição inicial para: %s", url_primeira_pagina)
+    logger.debug("DEBUG: Parâmetros da consulta: %s", query)
+    
+    try:
+        r0 = session.get(url_primeira_pagina, params=query, timeout=30)
+        logger.debug("DEBUG: Requisição inicial concluída. Status: %d, Tamanho: %d bytes", 
+                    r0.status_code, len(r0.content))
+    except Exception as e:
+        logger.error("DEBUG: Falha na requisição inicial: %s", str(e))
+        raise
     try:
         if get_n_pags_callback is None:
             raise ValueError(
@@ -129,7 +140,14 @@ def cjpg_download(
         if pag <= 5 or pag % 100 == 0:
             logger.debug("DEBUG: Baixando página %d de %d. URL: %s", pag, len(paginas), u)
         
-        r = session.get(u)
+        try:
+            logger.debug("DEBUG: Fazendo requisição para página %d...", pag)
+            r = session.get(u, timeout=30)
+            logger.debug("DEBUG: Página %d baixada. Status: %d, Tamanho: %d bytes", 
+                        pag, r.status_code, len(r.content))
+        except Exception as e:
+            logger.error("DEBUG: Falha ao baixar página %d: %s", pag, str(e))
+            raise
         file_name = f"{path}/cjpg_{pag + 1:05d}.html"
         with open(file_name, 'w', encoding='utf-8') as f:
             f.write(r.text)
