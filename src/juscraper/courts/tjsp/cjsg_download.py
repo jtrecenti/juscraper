@@ -1,15 +1,16 @@
 """
 Download of results from the TJSP Consulta de Julgados de Segundo Grau (CJSG).
 """
+import logging
 import os
 import time
 from datetime import datetime
-import logging
+
 import requests
-from tqdm import tqdm
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
+from tqdm import tqdm
 
 logger = logging.getLogger("juscraper.cjsg_download")
 
@@ -19,16 +20,16 @@ def cjsg_download(
     u_base: str,
     sleep_time: float = 0.5,
     verbose: int = 1,
-    ementa: str = None,
-    classe: str = None,
-    assunto: str = None,
-    comarca: str = None,
-    orgao_julgador: str = None,
-    data_inicio: str = None,
-    data_fim: str = None,
+    ementa: str | None = None,
+    classe: str | None = None,
+    assunto: str | None = None,
+    comarca: str | None = None,
+    orgao_julgador: str | None = None,
+    data_inicio: str | None = None,
+    data_fim: str | None = None,
     baixar_sg: bool = True,
     tipo_decisao: str = 'acordao',
-    paginas: range = None,
+    paginas: range | None = None,
     get_n_pags_callback=None
 ):
     """

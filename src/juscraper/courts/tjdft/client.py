@@ -1,11 +1,13 @@
 """
 Module for the scraper of the Court of Justice of the Federal District and Territories (TJDFT).
 """
-from typing import Union, List
 import pandas as pd
+
 from juscraper.core.base import BaseScraper
+
 from .download import cjsg_download
 from .parse import cjsg_parse
+
 
 class TJDFTScraper(BaseScraper):
     """Scraper for the Court of Justice of the Federal District and Territories (TJDFT)."""
@@ -14,18 +16,18 @@ class TJDFTScraper(BaseScraper):
     def __init__(self):
         super().__init__("TJDFT")
 
-    def cpopg(self, id_cnj: Union[str, List[str]]):
+    def cpopg(self, id_cnj: str | list[str]):
         """Stub for compatibility with BaseScraper."""
         raise NotImplementedError("TJDFT does not implement cpopg.")
 
-    def cposg(self, id_cnj: Union[str, List[str]]):
+    def cposg(self, id_cnj: str | list[str]):
         """Stub for compatibility with BaseScraper."""
         raise NotImplementedError("TJDFT does not implement cposg.")
 
     def cjsg_download(
         self,
         query: str,
-        paginas: Union[int, list, range] = 0,
+        paginas: int | list | range = 0,
         sinonimos: bool = True,
         espelho: bool = True,
         inteiro_teor: bool = False,
@@ -52,7 +54,7 @@ class TJDFTScraper(BaseScraper):
         """
         return cjsg_parse(resultados_brutos)
 
-    def cjsg(self, query: str, paginas: Union[int, list, range] = 0) -> pd.DataFrame:
+    def cjsg(self, query: str, paginas: int | list | range = 0) -> pd.DataFrame:
         """
         Searches for TJDFT jurisprudence in a simplified way (download + parse).
         Returns a ready-to-analyze DataFrame.

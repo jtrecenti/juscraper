@@ -18,13 +18,13 @@ def cjpg_download(
     u_base: str,
     download_path: str,
     sleep_time: float = 0.5,
-    classes: list[str] = None,
-    assuntos: list[str] = None,
-    varas: list[str] = None,
-    id_processo: str = None,
-    data_inicio: str = None,
-    data_fim: str = None,
-    paginas: range = None,
+    classes: list[str] | None = None,
+    assuntos: list[str] | None = None,
+    varas: list[str] | None = None,
+    id_processo: str | None = None,
+    data_inicio: str | None = None,
+    data_fim: str | None = None,
+    paginas: range | None = None,
     get_n_pags_callback=None
 ):
     """
@@ -45,12 +45,9 @@ def cjpg_download(
         paginas (range, optional): Page range.
         get_n_pags_callback (callable): Callback function to extract number of pages.
     """
-    if assuntos is not None:
-        assuntos = ','.join(assuntos)
-    if varas is not None:
-        varas = ','.join(varas)
-    if classes is not None:
-        classes = ','.join(classes)
+    assuntos_str = ','.join(assuntos) if assuntos is not None else None
+    varas_str = ','.join(varas) if varas is not None else None
+    classes_str = ','.join(classes) if classes is not None else None
     if id_processo is not None:
         id_processo = clean_cnj(id_processo)
     else:
@@ -63,11 +60,11 @@ def cjpg_download(
         'numeroDigitoAnoUnificado': id_processo[:15],
         'foroNumeroUnificado': id_processo[-4:],
         'dadosConsulta.nuProcesso': id_processo,
-        'classeTreeSelection.values': classes,
-        'assuntoTreeSelection.values': assuntos,
+        'classeTreeSelection.values': classes_str,
+        'assuntoTreeSelection.values': assuntos_str,
         'dadosConsulta.dtInicio': data_inicio,
         'dadosConsulta.dtFim': data_fim,
-        'varasTreeSelection.values': varas,
+        'varasTreeSelection.values': varas_str,
         'dadosConsulta.ordenacao': 'DESC'
     }
 
@@ -114,7 +111,7 @@ def cjpg_download(
         time.sleep(sleep_time)
         u = f"{u_base}cjpg/trocarDePagina.do?pagina={pag + 1}&conversationId="
         r = session.get(u)
-        file_name = f"{path}/cjpg_{pag + 1:05d}.html"
+        file_name = f"{path}/cjpg_{pag + 1: 05d}.html"
         with open(file_name, 'w', encoding='utf-8') as f:
             f.write(r.text)
     return path
