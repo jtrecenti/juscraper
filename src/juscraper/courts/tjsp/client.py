@@ -303,6 +303,8 @@ class TJSPScraper(BaseScraper):
             data_fim (str, optional): End date of the search. Default is None.
             paginas (range, optional): Range of pages to download. Default is None.
         """
+        logger.debug("DEBUG: Iniciando processo CJPG com pesquisa: '%s'", pesquisa)
+        
         path_result = self.cjpg_download(
             pesquisa=pesquisa,
             classes=classes,
@@ -313,7 +315,17 @@ class TJSPScraper(BaseScraper):
             data_fim=data_fim,
             paginas=paginas
         )
+        
+        # Log antes do parsing: contagem de arquivos baixados
+        html_files = len([f for f in os.listdir(path_result) if f.endswith('.html')])
+        logger.debug("DEBUG: Antes do parsing - Arquivos HTML baixados: %d", html_files)
+        
         data_parsed = self.cjpg_parse(path_result)
+        
+        # Log final antes de excluir a pasta
+        logger.debug("DEBUG: Parsing concluído. Documentos no DataFrame final: %d", len(data_parsed))
+        logger.debug("DEBUG: Excluindo pasta temporária: %s", path_result)
+        
         # delete folder
         shutil.rmtree(path_result)
         return data_parsed

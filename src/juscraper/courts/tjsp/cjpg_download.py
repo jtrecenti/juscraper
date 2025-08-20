@@ -79,6 +79,10 @@ def cjpg_download(
                 "É necessário fornecer get_n_pags_callback para extrair o número de páginas."
             )
         n_pags = get_n_pags_callback(r0)
+        
+        # Log de debug: número de páginas identificado
+        logger = logging.getLogger("juscraper.cjpg_download")
+        logger.debug("DEBUG: Número de páginas identificado pelo callback: %d", n_pags)
     except Exception as e:
         # Salvar HTML bruto para debug
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
@@ -101,20 +105,39 @@ def cjpg_download(
     # Se paginas for None, definir range para todas as páginas
     if paginas is None:
         paginas = range(1, n_pags + 1)
+        logger.debug("DEBUG: Range de páginas definido automaticamente: %d até %d (total: %d páginas)", 
+                    1, n_pags, n_pags)
     else:
         start, stop, step = paginas.start, min(paginas.stop, n_pags + 1), paginas.step
         paginas = range(start, stop, step)
+        logger.debug("DEBUG: Range de páginas fornecido pelo usuário: %d até %d (step: %d, total: %d páginas)", 
+                    start, stop-1, step, len(paginas))
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     path = f"{download_path}/cjpg/{timestamp}"
     if not os.path.isdir(path):
         os.makedirs(path)
 
+    logger.debug("DEBUG: Iniciando download das páginas. Diretório: %s", path)
+    
+    pages_downloaded = 0
     for pag in tqdm(paginas, desc="Baixando documentos"):
         time.sleep(sleep_time)
         u = f"{u_base}cjpg/trocarDePagina.do?pagina={pag + 1}&conversationId="
+        
+        # Log detalhado a cada 100 páginas ou para as primeiras 5 páginas
+        if pag <= 5 or pag % 100 == 0:
+            logger.debug("DEBUG: Baixando página %d de %d. URL: %s", pag, len(paginas), u)
+        
         r = session.get(u)
         file_name = f"{path}/cjpg_{pag + 1:05d}.html"
         with open(file_name, 'w', encoding='utf-8') as f:
             f.write(r.text)
+        pages_downloaded += 1
+    
+    # Log final: contagem de arquivos salvos
+    files_saved = len([f for f in os.listdir(path) if f.endswith('.html')])
+    logger.debug("DEBUG: Download concluído. Páginas processadas: %d, Arquivos salvos: %d", 
+                pages_downloaded, files_saved)
+    
     return path
