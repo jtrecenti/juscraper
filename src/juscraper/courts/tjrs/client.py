@@ -1,12 +1,14 @@
 """
 Scraper for the Tribunal de Justiça do Rio Grande do Sul (TJRS).
 """
-from typing import Union, List
-import requests
 import pandas as pd
+import requests
+
 from juscraper.core.base import BaseScraper
+
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
+
 
 class TJRSScraper(BaseScraper):
     """Scraper for the Tribunal de Justiça do Rio Grande do Sul."""
@@ -36,7 +38,7 @@ class TJRSScraper(BaseScraper):
         super().__init__("TJRS")
         self.session = requests.Session()
 
-    def cpopg(self, id_cnj: Union[str, List[str]]):
+    def cpopg(self, id_cnj: str | list[str]):
         """
         Fetches jurisprudence from TJRS in a simplified way (download + parse).
         Returns a DataFrame ready for analysis.
@@ -44,7 +46,7 @@ class TJRSScraper(BaseScraper):
         print(f"[TJRS] Consulting process: {id_cnj}")
         # Real implementation of the search here
 
-    def cposg(self, id_cnj: Union[str, List[str]]):
+    def cposg(self, id_cnj: str | list[str]):
         """
         Fetches jurisprudence from TJRS in a simplified way (download + parse).
         Returns a DataFrame ready for analysis.
@@ -55,18 +57,18 @@ class TJRSScraper(BaseScraper):
     def cjsg_download(
         self,
         termo: str,
-        paginas: Union[int, list, range] = 1,
-        classe: str = None,
-        assunto: str = None,
-        orgao_julgador: str = None,
-        relator: str = None,
-        data_julgamento_de: str = None,
-        data_julgamento_ate: str = None,
-        data_publicacao_de: str = None,
-        data_publicacao_ate: str = None,
-        tipo_processo: str = None,
-        secao: str = None,
-        session: 'requests.Session' = None,
+        paginas: int | list | range = 1,
+        classe: str | None = None,
+        assunto: str | None = None,
+        orgao_julgador: str | None = None,
+        relator: str | None = None,
+        data_julgamento_de: str | None = None,
+        data_julgamento_ate: str | None = None,
+        data_publicacao_de: str | None = None,
+        data_publicacao_ate: str | None = None,
+        tipo_processo: str | None = None,
+        secao: str | None = None,
+        session: requests.Session | None = None,
         **kwargs
     ) -> list:
         """
@@ -103,18 +105,18 @@ class TJRSScraper(BaseScraper):
     def cjsg(
         self,
         query: str,
-        paginas: Union[int, list, range] = 1,
-        classe: str = None,
-        assunto: str = None,
-        orgao_julgador: str = None,
-        relator: str = None,
-        data_julgamento_de: str = None,
-        data_julgamento_ate: str = None,
-        data_publicacao_de: str = None,
-        data_publicacao_ate: str = None,
-        tipo_processo: str = None,
-        secao: str = None,
-        session: 'requests.Session' = None,
+        paginas: int | list | range = 1,
+        classe: str | None = None,
+        assunto: str | None = None,
+        orgao_julgador: str | None = None,
+        relator: str | None = None,
+        data_julgamento_de: str | None = None,
+        data_julgamento_ate: str | None = None,
+        data_publicacao_de: str | None = None,
+        data_publicacao_ate: str | None = None,
+        tipo_processo: str | None = None,
+        secao: str | None = None,
+        session: requests.Session | None = None,
         **kwargs
     ) -> 'pd.DataFrame':
         """
