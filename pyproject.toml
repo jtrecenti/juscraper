@@ -42,9 +42,9 @@ dependencies = [
     "browser-cookie3>=0.20.1",
     "comm>=0.2.2",
     "nest-asyncio>=1.6.0",
-    "pandas>=2.2.3",
+    "pandas>=2.0.0,<2.2.4",
     "playwright>=1.46.0",
-    "pyarrow>=19.0.1",
+    "pyarrow>=14.0.0,<20.0.0",
     "pyjwt>=2.10.1",
     "pyppeteer>=2.0.0",
     "python-dotenv>=1.1.0",
@@ -76,6 +76,7 @@ web = [
     "flask>=3.1.1",
     "joblib>=1.5.0",
 ]
+
 
 [project.urls]
 Homepage = "https://github.com/jtrecenti/juscraper"
