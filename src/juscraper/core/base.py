@@ -24,7 +24,7 @@ class BaseScraper(ABC):
         """
         self.verbose = verbose
 
-    def set_download_path(self, path: str):
+    def set_download_path(self, path: str | None):
         """Set the download path. If None, creates a temporary directory."""
         # if path is None, define a default path in the temp directory
         if path is None:
