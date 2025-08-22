@@ -12,6 +12,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from tqdm import tqdm
 
+from .cjsg_parse import RecaptchaDetectedError
+
 logger = logging.getLogger("juscraper.cjsg_download")
 
 
@@ -102,6 +104,17 @@ def cjsg_download(
     # Checagem de erro/filtro/ausência de resultados
     try:
         n_pags = get_n_pags_callback(driver.page_source)
+    except RecaptchaDetectedError as e:
+        # reCAPTCHA detected - provide specific guidance
+        driver.quit()
+        logger.error('reCAPTCHA detectado: %s', str(e))
+        raise RecaptchaDetectedError(
+            f"{str(e)} Sugestões: "
+            "1) Aguarde 5-10 minutos antes de tentar novamente; "
+            "2) Aumente o sleep_time (ex: 2-5 segundos); "
+            "3) Use menos queries simultâneas; "
+            "4) Considere fazer a consulta manual primeiro para 'aquecer' a sessão."
+        ) from e
     except Exception as e:
         # Salvar HTML bruto para debug
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")

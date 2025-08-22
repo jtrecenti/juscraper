@@ -1,27 +1,48 @@
 """
 Parse of cases from the TJSP Consulta de Julgados de Segundo Grau (CJSG).
 """
-import os
 import glob
-import re
 import logging
+import os
+import re
+
 import pandas as pd
-from tqdm import tqdm
 import unidecode
 from bs4 import BeautifulSoup
+from tqdm import tqdm
 
 logger = logging.getLogger("juscraper.cjsg_parse")
+
+
+class RecaptchaDetectedError(Exception):
+    """Raised when reCAPTCHA protection is detected on TJSP page."""
 
 def cjsg_n_pags(html_source):
     """
     Extracts the number of pages from the CJSG search results HTML.
+
+    Raises:
+        RecaptchaDetectedError: If reCAPTCHA protection is detected.
+        ValueError: If page structure is unexpected or no results found.
     """
     soup = BeautifulSoup(html_source, "html.parser")
+
+    # Check for reCAPTCHA detection message
+    recaptcha_message = soup.find("td", id="mensagemRetorno")
+    if recaptcha_message:
+        message_text = recaptcha_message.get_text(strip=True)
+        if "reCAPTCHA" in message_text and "robô" in message_text:
+            raise RecaptchaDetectedError(
+                f"reCAPTCHA detectado pelo TJSP: {message_text}. "
+                "O site identificou acesso automatizado. Aguarde alguns minutos "
+                "antes de tentar novamente ou considere usar delays maiores."
+            )
+
     td_npags = soup.find("td", bgcolor='#EEEEEE')
     if td_npags is None:
         raise ValueError(
-            "Não foi possível encontrar o seletor de número de páginas"
-            "na resposta HTML. Verifique se a busca retornou resultados"
+            "Não foi possível encontrar o seletor de número de páginas "
+            "na resposta HTML. Verifique se a busca retornou resultados "
             "ou se a estrutura da página mudou."
         )
     txt_pag = td_npags.text
