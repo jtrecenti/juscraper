@@ -1,10 +1,10 @@
 """
 Base scraper class for court data extraction.
 """
-from abc import ABC
+import logging
 import os
 import tempfile
-import logging
+from abc import ABC
 
 logger = logging.getLogger("juscraper.core.base")
 
@@ -24,7 +24,7 @@ class BaseScraper(ABC):
         """
         self.verbose = verbose
 
-    def set_download_path(self, path: str):
+    def set_download_path(self, path: str | None):
         """Set the download path. If None, creates a temporary directory."""
         # if path is None, define a default path in the temp directory
         if path is None:

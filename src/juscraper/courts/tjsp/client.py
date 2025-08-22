@@ -1,28 +1,25 @@
 """
 Main scraper for Tribunal de Justica de Sao Paulo (TJSP).
 """
-import os
-import tempfile
-from typing import Union, List, Literal
 import logging
+import os
 import shutil
+import tempfile
 import warnings
-import urllib3
+from typing import Literal
+
 import requests
+import urllib3
 
 from ...core.base import BaseScraper
-
-from .cpopg_download import cpopg_download_html, cpopg_download_api
-from .cpopg_parse import get_cpopg_download_links, cpopg_parse_manager
-
-from .cposg_download import cposg_download_html, cposg_download_api
-from .cposg_parse import cposg_parse_manager
-
-from .cjsg_download import cjsg_download as cjsg_download_mod
-from .cjsg_parse import cjsg_n_pags, cjsg_parse_manager
-
 from .cjpg_download import cjpg_download as cjpg_download_mod
 from .cjpg_parse import cjpg_n_pags, cjpg_parse_manager
+from .cjsg_download import cjsg_download as cjsg_download_mod
+from .cjsg_parse import cjsg_n_pags, cjsg_parse_manager
+from .cpopg_download import cpopg_download_api, cpopg_download_html
+from .cpopg_parse import cpopg_parse_manager, get_cpopg_download_links
+from .cposg_download import cposg_download_api, cposg_download_html
+from .cposg_parse import cposg_parse_manager
 
 logger = logging.getLogger('juscraper.tjsp')
 
@@ -86,7 +83,7 @@ class TJSPScraper(BaseScraper):
         self.method = method
 
     # cpopg ------------------------------------------------------------------
-    def cpopg(self, id_cnj: Union[str, List[str]], method: Literal['html', 'api'] = 'html'):
+    def cpopg(self, id_cnj: str | list[str], method: Literal['html', 'api'] = 'html'):
         """
         Scrapes a process from Primeiro Grau (CPOPG).
         """
@@ -98,7 +95,7 @@ class TJSPScraper(BaseScraper):
 
     def cpopg_download(
         self,
-        id_cnj: Union[str, List[str]],
+        id_cnj: str | list[str],
         method: Literal['html', 'api'] = 'html'
     ):
         """Downloads a process from Primeiro Grau (CPOPG).
@@ -157,7 +154,7 @@ class TJSPScraper(BaseScraper):
             logger.warning("[TJSP] Aviso: diretório %s não existe e não pôde ser removido.", path)
         return result
 
-    def cposg_download(self, id_cnj: Union[str, list], method: Literal['html', 'api'] = 'html'):
+    def cposg_download(self, id_cnj: str | list, method: Literal['html', 'api'] = 'html'):
         """
         Downloads processes from Segundo Grau (CPOSG), via HTML or API, using modularized functions.
         """
@@ -255,7 +252,7 @@ class TJSPScraper(BaseScraper):
             baixar_sg (bool): If True, also downloads from Second Stage.
             tipo_decisao (str): 'acordao' or 'monocratica'.
             paginas (range, optional): Range of pages to download.
-        
+
         NOTE: range(0, n) downloads pages 1 to n (inclusive), following
         the user's expectation (example: range(0,3) downloads pages 1, 2 and 3).
         """
