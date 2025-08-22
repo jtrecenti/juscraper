@@ -12,6 +12,10 @@ from tqdm import tqdm
 from ...utils.cnj import clean_cnj
 
 
+class QueryTooLongError(ValueError):
+    """Raised when the search query exceeds the maximum allowed length."""
+
+
 def cjpg_download(
     pesquisa: str,
     session: requests.Session,
@@ -44,7 +48,16 @@ def cjpg_download(
         data_fim (str, optional): End date for filtering.
         paginas (range, optional): Page range.
         get_n_pags_callback (callable): Callback function to extract number of pages.
+        
+    Raises:
+        QueryTooLongError: If the search query exceeds 120 characters.
     """
+    # Validate query length
+    if len(pesquisa) > 120:
+        raise QueryTooLongError(
+            f"A consulta excede o limite de 120 caracteres suportado pela plataforma TJSP. "
+            f"Query atual: {len(pesquisa)} caracteres. Por favor, reduza o tamanho da consulta."
+        )
     assuntos_str = ','.join(assuntos) if assuntos is not None else None
     varas_str = ','.join(varas) if varas is not None else None
     classes_str = ','.join(classes) if classes is not None else None

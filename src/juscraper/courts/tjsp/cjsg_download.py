@@ -14,6 +14,10 @@ from tqdm import tqdm
 
 logger = logging.getLogger("juscraper.cjsg_download")
 
+
+class QueryTooLongError(ValueError):
+    """Raised when the search query exceeds the maximum allowed length."""
+
 def cjsg_download(
     pesquisa: str,
     download_path: str,
@@ -46,7 +50,16 @@ def cjsg_download(
         tipo_decisao (str): 'acordao' or 'monocratica'.
         paginas (range): Page range to download.
         get_n_pags_callback (callable): Callback function to extract number of pages from HTML.
+        
+    Raises:
+        QueryTooLongError: If the search query exceeds 120 characters.
     """
+    # Validate query length
+    if len(pesquisa) > 120:
+        raise QueryTooLongError(
+            f"A consulta excede o limite de 120 caracteres suportado pela plataforma TJSP. "
+            f"Query atual: {len(pesquisa)} caracteres. Por favor, reduza o tamanho da consulta."
+        )
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')
     driver = webdriver.Chrome(options=options)
