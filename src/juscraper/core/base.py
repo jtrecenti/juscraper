@@ -1,10 +1,10 @@
 """
 Base scraper class for court data extraction.
 """
-from abc import ABC
+import logging
 import os
 import tempfile
-import logging
+from abc import ABC
 
 logger = logging.getLogger("juscraper.core.base")
 
