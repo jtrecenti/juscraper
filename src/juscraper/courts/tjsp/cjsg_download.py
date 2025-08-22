@@ -109,11 +109,11 @@ def cjsg_download(
         driver.quit()
         logger.error('reCAPTCHA detectado: %s', str(e))
         raise RecaptchaDetectedError(
-            f"{str(e)} Sugestões: "
-            "1) Aguarde 5-10 minutos antes de tentar novamente; "
-            "2) Aumente o sleep_time (ex: 2-5 segundos); "
-            "3) Use menos queries simultâneas; "
-            "4) Considere fazer a consulta manual primeiro para 'aquecer' a sessão."
+            f"{str(e)}\n\n"
+            "⚠️  Dicas adicionais:\n"
+            "• Tente novamente mais tarde - o bloqueio é temporário\n"
+            "• Use sleep_time maior em futuras consultas para evitar este problema\n"
+            "• Evite fazer muitas consultas em sequência rápida"
         ) from e
     except Exception as e:
         # Salvar HTML bruto para debug

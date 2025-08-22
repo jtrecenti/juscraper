@@ -33,9 +33,14 @@ def cjsg_n_pags(html_source):
         message_text = recaptcha_message.get_text(strip=True)
         if "reCAPTCHA" in message_text and "robô" in message_text:
             raise RecaptchaDetectedError(
-                f"reCAPTCHA detectado pelo TJSP: {message_text}. "
-                "O site identificou acesso automatizado. Aguarde alguns minutos "
-                "antes de tentar novamente ou considere usar delays maiores."
+                f"reCAPTCHA detectado pelo TJSP: {message_text}\n\n"
+                "💡 O site identificou acesso automatizado. Como resolver:\n"
+                "1️⃣ Aguarde 5-10 minutos antes de tentar novamente\n"
+                "2️⃣ Aumente o sleep_time no seu código:\n"
+                "   - tjsp.cjsg('sua busca', sleep_time=3.0)  # 3 segundos entre requests\n"
+                "   - ou tjsp.cjsg('sua busca', sleep_time=5.0)  # 5 segundos (mais seguro)\n"
+                "3️⃣ Faça menos consultas simultâneas\n"
+                "4️⃣ Considere fazer uma consulta manual no site primeiro para 'aquecer' a sessão"
             )
 
     td_npags = soup.find("td", bgcolor='#EEEEEE')
