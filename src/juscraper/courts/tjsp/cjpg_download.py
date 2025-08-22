@@ -48,7 +48,7 @@ def cjpg_download(
         data_fim (str, optional): End date for filtering.
         paginas (range, optional): Page range.
         get_n_pags_callback (callable): Callback function to extract number of pages.
-        
+
     Raises:
         QueryTooLongError: If the search query exceeds 120 characters.
     """

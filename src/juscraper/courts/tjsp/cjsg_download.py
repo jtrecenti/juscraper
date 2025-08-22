@@ -50,7 +50,7 @@ def cjsg_download(
         tipo_decisao (str): 'acordao' or 'monocratica'.
         paginas (range): Page range to download.
         get_n_pags_callback (callable): Callback function to extract number of pages from HTML.
-        
+
     Raises:
         QueryTooLongError: If the search query exceeds 120 characters.
     """
