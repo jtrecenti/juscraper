@@ -2,23 +2,25 @@
 Downloads raw files from the TJRS jurisprudence search.
 """
 from urllib.parse import urlencode
+
 import requests
 from tqdm import tqdm
 
+
 def cjsg_download_manager(
     termo: str,
-    paginas: 'Union[int, list, range]' = 1,
-    classe: str = None,
-    assunto: str = None,
-    orgao_julgador: str = None,
-    relator: str = None,
-    data_julgamento_de: str = None,
-    data_julgamento_ate: str = None,
-    data_publicacao_de: str = None,
-    data_publicacao_ate: str = None,
-    tipo_processo: str = None,
-    secao: str = None,
-    session: requests.Session = None,
+    paginas: int | list | range = 1,
+    classe: str | None = None,
+    assunto: str | None = None,
+    orgao_julgador: str | None = None,
+    relator: str | None = None,
+    data_julgamento_de: str | None = None,
+    data_julgamento_ate: str | None = None,
+    data_publicacao_de: str | None = None,
+    data_publicacao_ate: str | None = None,
+    tipo_processo: str | None = None,
+    secao: str | None = None,
+    session: requests.Session | None = None,
     **kwargs
 ) -> list:
     """
