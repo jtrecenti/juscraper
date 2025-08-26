@@ -110,11 +110,20 @@ def cjpg_download(
     if not os.path.isdir(path):
         os.makedirs(path)
 
-    for pag in tqdm(paginas, desc="Baixando documentos"):
+    # Save the first page (already fetched) before pagination loop
+    # This fixes the bug where the first page results were lost
+    first_page_file = f"{path}/cjpg_00001.html"
+    with open(first_page_file, 'w', encoding='utf-8') as f:
+        f.write(r0.text)
+
+    # Skip page 1 in the loop since it's already saved above
+    remaining_pages = [pag for pag in paginas if pag > 1]
+
+    for pag in tqdm(remaining_pages, desc="Baixando documentos"):
         time.sleep(sleep_time)
-        u = f"{u_base}cjpg/trocarDePagina.do?pagina={pag + 1}&conversationId="
+        u = f"{u_base}cjpg/trocarDePagina.do?pagina={pag}&conversationId="
         r = session.get(u)
-        file_name = f"{path}/cjpg_{pag + 1:05d}.html"
+        file_name = f"{path}/cjpg_{pag:05d}.html"
         with open(file_name, 'w', encoding='utf-8') as f:
             f.write(r.text)
     return path
