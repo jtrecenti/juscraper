@@ -16,7 +16,6 @@ disable=missing-module-docstring,
         too-many-statements,
         too-many-instance-attributes,
         too-many-public-methods,
-        too-many-positional-arguments,
         import-error,
         no-member,
         unused-argument,
@@ -31,7 +30,8 @@ disable=missing-module-docstring,
         trailing-newlines,
         duplicate-code,
         missing-param-doc,
-        too-many-nested-blocks
+        too-many-nested-blocks,
+        too-many-return-statements
 
 [DESIGN]
 max-args=10
