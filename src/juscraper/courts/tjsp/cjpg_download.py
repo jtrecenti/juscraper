@@ -110,11 +110,22 @@ def cjpg_download(
     if not os.path.isdir(path):
         os.makedirs(path)
 
-    for pag in tqdm(paginas, desc="Baixando documentos"):
-        time.sleep(sleep_time)
-        u = f"{u_base}cjpg/trocarDePagina.do?pagina={pag + 1}&conversationId="
-        r = session.get(u)
-        file_name = f"{path}/cjpg_{pag + 1:05d}.html"
+    # If no pages to download (n_pags == 0), save the first page for inspection
+    if n_pags == 0:
+        file_name = f"{path}/cjpg_00001.html"
         with open(file_name, 'w', encoding='utf-8') as f:
-            f.write(r.text)
+            f.write(r0.text)
+        logger = logging.getLogger("juscraper.cjpg_download")
+        logger.info(
+            "Nenhuma página de resultados para baixar. "
+            "A primeira página foi salva em: %s", file_name
+        )
+    else:
+        for pag in tqdm(paginas, desc="Baixando documentos"):
+            time.sleep(sleep_time)
+            u = f"{u_base}cjpg/trocarDePagina.do?pagina={pag + 1}&conversationId="
+            r = session.get(u)
+            file_name = f"{path}/cjpg_{pag + 1:05d}.html"
+            with open(file_name, 'w', encoding='utf-8') as f:
+                f.write(r.text)
     return path
