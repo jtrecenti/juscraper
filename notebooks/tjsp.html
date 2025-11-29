@@ -74,7 +74,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-c6aa101985f7cb5a792abdb0dcb9282b.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-6fba9491ca47b5207d99b2cd0a474235.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -365,15 +365,15 @@ Processando documentos: 100%|██████████| 3/3 [00:00&lt;00:00
 </div>
 </div>
 </div>
-<div id="cell-4" class="cell" data-execution_count="3">
+<div id="cell-4" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># baixa dados da [c]onsulta de [j]ulgados de [s]egundo [g]rau - cjsg</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>dados_cjsg <span class="op">=</span> tjsp.cjsg(<span class="st">'golpe do pix'</span>, paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">0</span>,<span class="dv">3</span>))</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_cjsg.shape)</span>
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>dados_cjsg.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando documentos: 100%|██████████| 3/3 [00:02&lt;00:00,  1.47it/s]
-Processando documentos: 100%|██████████| 3/3 [00:00&lt;00:00, 15.13it/s]</code></pre>
+<pre><code>Baixando documentos: 100%|██████████| 3/3 [00:02&lt;00:00,  1.08it/s]
+Processando documentos: 100%|██████████| 3/3 [00:00&lt;00:00,  7.46it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(60, 10)</code></pre>
@@ -381,7 +381,7 @@ Processando documentos: 100%|██████████| 3/3 [00:00&lt;00:00
 <div class="cell-output cell-output-stderr">
 <pre><code></code></pre>
 </div>
-<div class="cell-output cell-output-display" data-execution_count="3">
+<div class="cell-output cell-output-display" data-execution_count="2">
 <div>
 
 
@@ -404,42 +404,42 @@ Processando documentos: 100%|██████████| 3/3 [00:00&lt;00:00
 <tbody>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">0</td>
-<td>1022627-98.2024.8.26.0564</td>
-<td>19256246</td>
+<td>1000596-33.2024.8.26.0484</td>
+<td>20015805</td>
 <td>0</td>
 <td>Apelação Cível / Bancários</td>
-<td>Luis Carlos de Barros</td>
-<td>São Bernardo do Campo</td>
-<td>Órgão julgador: 20ª Câmara de Direito Privado</td>
-<td>24/05/2025</td>
-<td>24/05/2025</td>
-<td>Ação declaratória c.c. e indenizatória. Emprés...</td>
+<td>Eduardo Velho</td>
+<td>Promissão</td>
+<td>Órgão julgador: 17ª Câmara de Direito Privado</td>
+<td>29/11/2025</td>
+<td>29/11/2025</td>
+<td>APELAÇÃO – AÇÃO REPARATÓRIA DE DANOS MATERIAI...</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">1</td>
-<td>1000149-71.2024.8.26.0346</td>
-<td>19256173</td>
+<td>1008237-56.2024.8.26.0554</td>
+<td>20015808</td>
 <td>0</td>
 <td>Apelação Cível / Bancários</td>
-<td>PAULO SERGIO MANGERONA</td>
-<td>Martinópolis</td>
-<td>Órgão julgador: Núcleo de Justiça 4.0 em Segun...</td>
-<td>24/05/2025</td>
-<td>24/05/2025</td>
-<td>APELAÇÃO. Ação indenizatória. Golpe da falsa c...</td>
+<td>Eduardo Velho</td>
+<td>Santo André</td>
+<td>Órgão julgador: 17ª Câmara de Direito Privado</td>
+<td>29/11/2025</td>
+<td>29/11/2025</td>
+<td>APELAÇÃO. CONTRATOS BANCÁRIOS. DECLARATÓRIA. I...</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">2</td>
-<td>1030211-78.2023.8.26.0007</td>
-<td>19254413</td>
+<td>1015946-86.2023.8.26.0002</td>
+<td>20015687</td>
 <td>0</td>
-<td>Apelação Cível / Bancários</td>
-<td>Domingos de Siqueira Frascino</td>
+<td>Apelação Cível / Compra e Venda</td>
+<td>João Casali</td>
 <td>São Paulo</td>
-<td>Órgão julgador: Núcleo de Justiça 4.0 em Segun...</td>
-<td>23/05/2025</td>
-<td>23/05/2025</td>
-<td>DIREITO DO CONSUMIDOR E CIVIL. APELAÇÃO CÍVEL....</td>
+<td>Órgão julgador: 26ª Câmara de Direito Privado</td>
+<td>29/11/2025</td>
+<td>29/11/2025</td>
+<td>APELAÇÃO CÍVEL. AÇÃO (NOMINADA DE) DECLARATÓRI...</td>
 </tr>
 </tbody>
 </table>
@@ -566,14 +566,14 @@ Processando documentos: 100%|██████████| 1/1 [00:00&lt;00:00
  21      Contrarrazões de Apelação  }</code></pre>
 </div>
 </div>
-<div id="cell-6" class="cell" data-execution_count="5">
+<div id="cell-6" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> tjsp.cposg([<span class="st">'00221752420038260344'</span>, <span class="st">'10001497120248260346'</span>, <span class="st">'00039417120248260048'</span>])</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>res</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando processos: 100%|██████████| 3/3 [00:02&lt;00:00,  1.24it/s]
-Processando arquivos: 100%|██████████| 4/4 [00:00&lt;00:00,  4.12it/s]</code></pre>
+<pre><code>Baixando processos: 100%|██████████| 3/3 [00:02&lt;00:00,  1.22it/s]
+Processando arquivos: 100%|██████████| 4/4 [00:00&lt;00:00,  6.72it/s]</code></pre>
 </div>
-<div class="cell-output cell-output-display" data-execution_count="5">
+<div class="cell-output cell-output-display" data-execution_count="7">
 <div>
 
 
@@ -613,7 +613,7 @@ Processando arquivos: 100%|██████████| 4/4 [00:00&lt;00:00, 
 <td>Criminal</td>
 <td>BORGES PEREIRA</td>
 <td>Comarca de Marília / Foro de Marília / 3ª. Var...</td>
-<td>[{'data': '25/03/2015', 'movimento': '', 'desc...</td>
+<td>[{'data': '25/03/2015', 'movimento': 'Decisão ...</td>
 <td>[{'id_parte': 1, 'nome': 'Jose Roberto dos Rei...</td>
 <td>[]</td>
 <td>[{'data': '20/03/2012', 'situacao': 'Julgado',...</td>
@@ -634,7 +634,7 @@ Processando arquivos: 100%|██████████| 4/4 [00:00&lt;00:00, 
 <td>Criminal</td>
 <td>MACHADO DE ANDRADE</td>
 <td>Comarca de Marília / Foro de Marília / 1ª Vara...</td>
-<td>[{'data': '25/07/2022', 'movimento': '', 'desc...</td>
+<td>[{'data': '25/07/2022', 'movimento': 'Informaç...</td>
 <td>[{'id_parte': 1, 'nome': 'Rubens Neres Santana...</td>
 <td>[]</td>
 <td>[{'data': '01/08/2019', 'situacao': 'Julgado',...</td>
@@ -647,7 +647,7 @@ Processando arquivos: 100%|██████████| 4/4 [00:00&lt;00:00, 
 <tr class="odd">
 <td data-quarto-table-cell-role="th">2</td>
 <td>1000149-71.2024.8.26.0346</td>
-<td>Julgado</td>
+<td>Encerrado</td>
 <td>Apelação Cível</td>
 <td>DIREITO DO CONSUMIDOR - Contratos de Consumo -...</td>
 <td>Direito Privado 2</td>
@@ -655,7 +655,7 @@ Processando arquivos: 100%|██████████| 4/4 [00:00&lt;00:00, 
 <td>Cível</td>
 <td>PAULO SERGIO MANGERONA</td>
 <td>Comarca de Martinópolis / Foro de Martinópolis...</td>
-<td>[{'data': '24/05/2025', 'movimento': '', 'desc...</td>
+<td>[{'data': '25/06/2025', 'movimento': 'Expedido...</td>
 <td>[{'id_parte': 1, 'nome': 'Fabio Cabral Silva d...</td>
 <td>[]</td>
 <td>[{'data': '24/05/2025', 'situacao': 'Julgado',...</td>
@@ -664,6 +664,59 @@ Processando arquivos: 100%|██████████| 4/4 [00:00&lt;00:00, 
 <td>None</td>
 <td>72.896,87</td>
 <td>None</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="cell-7" class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>pd.DataFrame(res[<span class="st">'movimentacoes'</span>].iloc[<span class="dv">0</span>]).head()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="8">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">data</th>
+<th data-quarto-table-cell-role="th">movimento</th>
+<th data-quarto-table-cell-role="th">descricao</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>25/03/2015</td>
+<td>Decisão Monocrática - Não Provida</td>
+<td>ofício remetido à v.o.</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>08/11/2013</td>
+<td>Remetidos os Autos para Vara de Origem</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>08/11/2013</td>
+<td>Recebidos os Autos do STJ pelo Processamento d...</td>
+<td></td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>08/11/2013</td>
+<td>Remetidos os Autos para Processamento de Recur...</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>21/10/2013</td>
+<td>Publicado em</td>
+<td>Disponibilizado em 18/10/2013\n\nTipo de publi...</td>
 </tr>
 </tbody>
 </table>
