@@ -110,17 +110,50 @@ def cposg_parse_single_html(html_path):
                 break
     # Extract movements
     movs = []
+    # The table can be either a tbody or table element with id 'tabelaTodasMovimentacoes'
     movs_table = soup.find(id='tabelaTodasMovimentacoes')
     if movs_table:
-        for row in movs_table.find_all('tr'):
+        # Find all rows - they may have class 'movimentacaoProcesso'
+        for row in movs_table.find_all('tr', class_='movimentacaoProcesso'):
             cells = row.find_all('td')
-            if len(cells) >= 2 and cells[0].get_text(strip=True):  # Skip empty rows
+            if len(cells) >= 3 and cells[0].get_text(strip=True):  # Need at least 3 cells
+                # First cell contains the date
                 data = cells[0].get_text(strip=True)
-                movimento_text = cells[1].get_text(strip=True)
-                # Split movimento into movimento and descricao like R does
-                parts = movimento_text.split('\n', 1)
-                movimento = parts[0].strip() if parts else ""
-                descricao = parts[1].strip() if len(parts) > 1 else ""
+                
+                # Third cell (index 2) contains the description with movimento and descricao
+                desc_cell = cells[2]
+                
+                # Extract movimento - it's usually in an <a> tag or direct text before <br/>
+                movimento = ""
+                movimento_link = desc_cell.find('a', class_='linkMovVincProc')
+                if movimento_link:
+                    movimento = movimento_link.get_text(strip=True)
+                else:
+                    # If no link, get text before <br/> tag
+                    # Clone the cell to avoid modifying original, remove italic span
+                    temp_cell = BeautifulSoup(str(desc_cell), 'html.parser')
+                    for span in temp_cell.find_all('span', style=lambda x: x and 'italic' in x):
+                        span.decompose()
+                    # Find <br/> tag to split content
+                    br_tag = temp_cell.find('br')
+                    if br_tag:
+                        # Get all text before <br/>
+                        movimento = ''.join(
+                            str(s) for s in br_tag.previous_siblings 
+                            if isinstance(s, str) or (hasattr(s, 'get_text') and s.name != 'br')
+                        ).strip()
+                        if not movimento:
+                            # Fallback: get text from all elements before br
+                            movimento = temp_cell.get_text(separator=' ', strip=True).split('\n')[0].strip()
+                    else:
+                        # No <br/> tag, get all text
+                        movimento = temp_cell.get_text(strip=True)
+                
+                # Extract descricao - it's usually in a <span style="font-style: italic;">
+                descricao = ""
+                descricao_span = desc_cell.find('span', style=lambda x: x and 'italic' in x)
+                if descricao_span:
+                    descricao = descricao_span.get_text(strip=True)
 
                 movs.append({
                     'data': data,
