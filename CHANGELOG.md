@@ -19,6 +19,13 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 -
 
+## [0.1.4] - 2025-01-XX
+
+### Fixed
+
+- Correção na extração de movimentações e descrições no parser do CPOSG (TJSP)
+- Movimentações agora são extraídas corretamente da tabela HTML, incluindo movimento e descrição
+
 ## [0.1.3] - 2025-07-19
 
 ### Added
