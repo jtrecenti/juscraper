@@ -8,9 +8,11 @@ from datetime import datetime
 
 import requests
 from tqdm import tqdm
+from bs4 import BeautifulSoup
 
 from ...utils.cnj import clean_cnj
 
+logger = logging.getLogger('juscraper.tjsp.cjpg_download')
 
 def cjpg_download(
     pesquisa: str,
@@ -46,11 +48,11 @@ def cjpg_download(
         get_n_pags_callback (callable): Callback function to extract number of pages.
     """
     if assuntos is not None:
-        assuntos = ','.join(assuntos)
+        assuntos = get_tree_values(assuntos, session, "assunto")
     if varas is not None:
         varas = ','.join(varas)
     if classes is not None:
-        classes = ','.join(classes)
+        classes = get_tree_values(classes, session, "classe")
     if id_processo is not None:
         id_processo = clean_cnj(id_processo)
     else:
@@ -118,3 +120,73 @@ def cjpg_download(
         with open(file_name, 'w', encoding='utf-8') as f:
             f.write(r.text)
     return path
+
+
+def get_tree_values(items: list[str], session: requests.Session, tree_type: str = "classe") -> str | None:
+    """
+    Generic function to extract values from TJSP tree selectors.
+    
+    Args:
+        items: List of text items to search for
+        session: Requests session object
+        tree_type: Type of tree - "classe" or "assunto"
+    
+    Returns:
+        str: URL-encoded comma-separated values, or None if not all found
+    """
+    # Determine URL and field names based on tree type
+    if tree_type == "classe":
+        url = 'https://esaj.tjsp.jus.br/cjpg/classeTreeSelect.do?campoId=classe&mostrarBotoesSelecaoRapida=true&conversationId='
+        value_field = 'classe_value'
+        item_name = "classes"
+    elif tree_type == "assunto":
+        url = 'https://esaj.tjsp.jus.br/cjpg/assuntoTreeSelect.do?campoId=assunto&mostrarBotoesSelecaoRapida=true&conversationId='
+        value_field = 'assunto_value'
+        item_name = "assuntos"
+    else:
+        raise ValueError(f"Invalid tree_type: {tree_type}. Must be 'classe' or 'assunto'")
+    
+    response = session.get(url)
+    response.raise_for_status()
+    
+    soup = BeautifulSoup(response.text, 'html.parser')
+    leaf_items = soup.find_all('li', class_='leafItem')
+    
+    mapped_items = []
+    
+    for item in leaf_items:
+        # Find span element with searchid attribute inside the li
+        span = item.find('span', attrs={'searchid': True})
+        if span:
+            search_id = span.get('searchid', '')
+            text = span.get_text(strip=True)
+            
+            mapped_items.append({
+                value_field: search_id,
+                'text': text
+            })
+    
+    try:
+        text_to_value = {item['text']: item[value_field] for item in mapped_items}
+        
+        found_values = []
+        not_found = []
+        
+        for input_item in items:
+            if input_item in text_to_value:
+                found_values.append(text_to_value[input_item])
+            else:
+                not_found.append(input_item)
+        
+        if not_found:
+            print(f"Warning: The following {item_name} were not found: {not_found}")
+            return None
+            
+        result_string = "%2C".join(found_values)
+        return result_string
+        
+    except Exception as e:
+        logger.error(f"Erro ao extrair {item_name}: %s", str(e))
+        raise
+
+# TODO: A função get_magistrados possui uma estrutura diferente das demais. Precisa de mais tempo para investigar.
