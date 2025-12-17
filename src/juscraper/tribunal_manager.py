@@ -1,12 +1,12 @@
-"""
-Gerencia e retorna o scraper apropriado para cada tribunal suportado.
-"""
-from .tjsp_scraper import TJSPScraper
-from .tjrs_scraper import TJRSScraper
-from .jusbr_scraper import JusbrScraper
+"""Gerencia e retorna o scraper apropriado para cada tribunal suportado."""
+from .courts.cnj.client import ComunicaCNJ
 from .datajud_scraper import DatajudScraper
-from .tjpr_scraper import TJPRScraper
+from .jusbr_scraper import JusbrScraper
 from .tjdft_scraper import TJDFTScraper
+from .tjpr_scraper import TJPRScraper
+from .tjrs_scraper import TJRSScraper
+from .tjsp_scraper import TJSPScraper
+
 
 def scraper(tribunal_name: str, **kwargs):
     """Retorna o raspador correspondente ao tribunal solicitado."""
@@ -24,5 +24,7 @@ def scraper(tribunal_name: str, **kwargs):
         return DatajudScraper(**kwargs)
     elif tribunal_name == "TJDFT":
         return TJDFTScraper()
+    elif tribunal_name == "CNJ":
+        return ComunicaCNJ()
     else:
         raise ValueError(f"Tribunal '{tribunal_name}' ainda não é suportado.")
