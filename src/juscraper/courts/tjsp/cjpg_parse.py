@@ -14,19 +14,55 @@ logger = logging.getLogger("juscraper.cjpg_parse")
 def cjpg_n_pags(page_source):
     """
     Extracts the number of pages from the Cjpg search results HTML.
+    Returns 0 if no results are found.
     """
     soup = BeautifulSoup(page_source, "html.parser")
+    
+    # First, check for common "no results" scenarios
+    # Check for divDadosResultado - if it exists but is empty, no results
+    div_dados = soup.find('div', {'id': 'divDadosResultado'})
+    if div_dados:
+        # If the div exists, check if it has any process entries
+        tr_processos = div_dados.find_all('tr', class_='fundocinza1')
+        if not tr_processos:
+            # No processes found, return 0 pages
+            logger.info("Nenhum resultado encontrado na busca.")
+            return 0
+    
+    # Try to find the pagination element
     page_element = soup.find(attrs={'bgcolor': '#EEEEEE'})
     if page_element is None:
+        # Check for error or warning messages
+        error_msgs = soup.find_all('div', class_='mensagemRetorno')
+        error_msgs.extend(soup.find_all('div', class_='alert'))
+        error_msgs.extend(soup.find_all('span', class_='mensagemAlerta'))
+        
+        if error_msgs:
+            # Extract error message
+            msg = ' '.join([e.get_text().strip() for e in error_msgs])
+            raise ValueError(
+                f"A busca retornou uma mensagem de erro: {msg}"
+            )
+        
+        # No pagination element and no error messages - might be no results
+        # Check if there's a message about no results
+        page_text = soup.get_text()
+        if 'nenhum resultado' in page_text.lower() or 'sem resultados' in page_text.lower():
+            logger.info("Nenhum resultado encontrado na busca (mensagem na página).")
+            return 0
+            
+        # If we still can't determine, raise an informative error
         raise ValueError(
-            "Não foi possível encontrar o seletor de número de páginas"
-            "na resposta HTML. Verifique se a busca retornou resultados"
+            "Não foi possível encontrar o seletor de número de páginas "
+            "na resposta HTML. Verifique se a busca retornou resultados "
             "ou se a estrutura da página mudou."
         )
+    
+    # Extract the number from the pagination element
     match = re.search(r'\d+$', page_element.get_text().strip())
     if match is None:
         raise ValueError(
-            "Não foi possível extrair o número de resultados"
+            "Não foi possível extrair o número de resultados "
             f"da string: {page_element.get_text().strip()}"
         )
     results = int(match.group())
