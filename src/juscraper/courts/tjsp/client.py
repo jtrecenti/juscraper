@@ -218,7 +218,7 @@ class TJSPScraper(BaseScraper):
             data_fim=data_fim,
             baixar_sg=baixar_sg,
             tipo_decisao=tipo_decisao,
-            paginas=paginas
+            paginas=paginas,
         )
         data_parsed = self.cjsg_parse(path_result)
         # delete folder
@@ -275,7 +275,7 @@ class TJSPScraper(BaseScraper):
             baixar_sg=baixar_sg,
             tipo_decisao=tipo_decisao,
             paginas=paginas,
-            get_n_pags_callback=cjsg_n_pags
+            get_n_pags_callback=cjsg_n_pags,
         )
 
     # cjpg ----------------------------------------------------------------------
