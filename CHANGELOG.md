@@ -19,6 +19,22 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 -
 
+## [0.1.5] - 2025-12-28
+
+### Changed
+
+- Refatoração completa do módulo CJSG (TJSP) para usar apenas `requests` em vez de Playwright
+- Removida dependência de automação de navegador para downloads do CJSG, seguindo a mesma abordagem do script R de referência
+- Melhorada a documentação do notebook TJSP com explicações detalhadas sobre todas as funções
+
+### Fixed
+
+- Correção do encoding: arquivos HTML agora são salvos e lidos corretamente em latin1, preservando caracteres especiais
+- Correção da barra de progresso para incluir a primeira página na contagem total
+- Correção dos nomes de colunas: `argapso_julgador` → `orgao_julgador` e `data_publicaassapso` → `data_publicacao`
+- Melhorada a extração do número de páginas seguindo a mesma lógica do código R de referência
+- Removido parâmetro `headless` que não é mais necessário após remoção do Playwright
+
 ## [0.1.4] - 2025-01-XX
 
 ### Fixed

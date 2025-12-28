@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "juscraper"
-version = "0.1.4"
+version = "0.1.5"
 description = "Raspador de tribunais e outros sistemas relacionados ao poder judiciário."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -37,8 +37,10 @@ classifiers = [
     "Topic :: Text Processing :: Markup :: HTML",
 ]
 dependencies = [
+    "asttokens>=3.0.0",
     "beautifulsoup4>=4.13.4",
     "browser-cookie3>=0.20.1",
+    "comm>=0.2.2",
     "nest-asyncio>=1.6.0",
     "pandas>=2.2.3",
     "playwright>=1.46.0",
