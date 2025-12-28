@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Exemplo de uso – juscraper</title>
+<title>JusScraper - Tribunal de Justiça de São Paulo (TJSP) – juscraper</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -251,15 +251,55 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Nesta página</h2>
+   
+  <ul>
+  <li><a href="#funcionalidades-disponíveis" id="toc-funcionalidades-disponíveis" class="nav-link active" data-scroll-target="#funcionalidades-disponíveis">Funcionalidades Disponíveis</a></li>
+  <li><a href="#instalação-e-importação" id="toc-instalação-e-importação" class="nav-link" data-scroll-target="#instalação-e-importação">Instalação e Importação</a></li>
+  <li><a href="#criando-o-scraper" id="toc-criando-o-scraper" class="nav-link" data-scroll-target="#criando-o-scraper">Criando o Scraper</a></li>
+  <li><a href="#cjpg---consulta-de-julgados-de-primeiro-grau" id="toc-cjpg---consulta-de-julgados-de-primeiro-grau" class="nav-link" data-scroll-target="#cjpg---consulta-de-julgados-de-primeiro-grau">CJPG - Consulta de Julgados de Primeiro Grau</a>
+  <ul class="collapse">
+  <li><a href="#parâmetros-principais" id="toc-parâmetros-principais" class="nav-link" data-scroll-target="#parâmetros-principais">Parâmetros Principais</a></li>
+  <li><a href="#retorno" id="toc-retorno" class="nav-link" data-scroll-target="#retorno">Retorno</a></li>
+  <li><a href="#exemplo-de-uso" id="toc-exemplo-de-uso" class="nav-link" data-scroll-target="#exemplo-de-uso">Exemplo de Uso</a></li>
+  </ul></li>
+  <li><a href="#cjsg---consulta-de-julgados-de-segundo-grau" id="toc-cjsg---consulta-de-julgados-de-segundo-grau" class="nav-link" data-scroll-target="#cjsg---consulta-de-julgados-de-segundo-grau">CJSG - Consulta de Julgados de Segundo Grau</a>
+  <ul class="collapse">
+  <li><a href="#parâmetros-principais-1" id="toc-parâmetros-principais-1" class="nav-link" data-scroll-target="#parâmetros-principais-1">Parâmetros Principais</a></li>
+  <li><a href="#retorno-1" id="toc-retorno-1" class="nav-link" data-scroll-target="#retorno-1">Retorno</a></li>
+  <li><a href="#exemplo-de-uso-1" id="toc-exemplo-de-uso-1" class="nav-link" data-scroll-target="#exemplo-de-uso-1">Exemplo de Uso</a></li>
+  </ul></li>
+  <li><a href="#cpopg---consulta-processual-de-primeiro-grau" id="toc-cpopg---consulta-processual-de-primeiro-grau" class="nav-link" data-scroll-target="#cpopg---consulta-processual-de-primeiro-grau">CPOPG - Consulta Processual de Primeiro Grau</a>
+  <ul class="collapse">
+  <li><a href="#parâmetros-principais-2" id="toc-parâmetros-principais-2" class="nav-link" data-scroll-target="#parâmetros-principais-2">Parâmetros Principais</a></li>
+  <li><a href="#retorno-2" id="toc-retorno-2" class="nav-link" data-scroll-target="#retorno-2">Retorno</a></li>
+  <li><a href="#exemplo-de-uso-2" id="toc-exemplo-de-uso-2" class="nav-link" data-scroll-target="#exemplo-de-uso-2">Exemplo de Uso</a></li>
+  </ul></li>
+  <li><a href="#cposg---consulta-processual-de-segundo-grau" id="toc-cposg---consulta-processual-de-segundo-grau" class="nav-link" data-scroll-target="#cposg---consulta-processual-de-segundo-grau">CPOSG - Consulta Processual de Segundo Grau</a>
+  <ul class="collapse">
+  <li><a href="#parâmetros-principais-3" id="toc-parâmetros-principais-3" class="nav-link" data-scroll-target="#parâmetros-principais-3">Parâmetros Principais</a></li>
+  <li><a href="#retorno-3" id="toc-retorno-3" class="nav-link" data-scroll-target="#retorno-3">Retorno</a></li>
+  <li><a href="#exemplo-de-uso-3" id="toc-exemplo-de-uso-3" class="nav-link" data-scroll-target="#exemplo-de-uso-3">Exemplo de Uso</a></li>
+  <li><a href="#trabalhando-com-dados-estruturados" id="toc-trabalhando-com-dados-estruturados" class="nav-link" data-scroll-target="#trabalhando-com-dados-estruturados">Trabalhando com Dados Estruturados</a></li>
+  </ul></li>
+  <li><a href="#dicas-e-observações-importantes" id="toc-dicas-e-observações-importantes" class="nav-link" data-scroll-target="#dicas-e-observações-importantes">Dicas e Observações Importantes</a>
+  <ul class="collapse">
+  <li><a href="#performance-e-limites" id="toc-performance-e-limites" class="nav-link" data-scroll-target="#performance-e-limites">Performance e Limites</a></li>
+  <li><a href="#formato-de-datas" id="toc-formato-de-datas" class="nav-link" data-scroll-target="#formato-de-datas">Formato de Datas</a></li>
+  <li><a href="#formato-de-processos" id="toc-formato-de-processos" class="nav-link" data-scroll-target="#formato-de-processos">Formato de Processos</a></li>
+  <li><a href="#tratamento-de-erros" id="toc-tratamento-de-erros" class="nav-link" data-scroll-target="#tratamento-de-erros">Tratamento de Erros</a></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.dev/jtrecenti/juscraper/blob/main/docs/notebooks/tjsp.ipynb" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Exemplos</li><li class="breadcrumb-item"><a href="../notebooks/tjdft.html">Tribunais</a></li><li class="breadcrumb-item"><a href="../notebooks/tjsp.html">TJSP</a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title">Exemplo de uso</h1>
+<h1 class="title">JusScraper - Tribunal de Justiça de São Paulo (TJSP)</h1>
 </div>
 
 
@@ -276,22 +316,60 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>Para usar o juscraper, rode algo assim:</p>
-<div id="cell-2" class="cell" data-execution_count="1">
+<p>Este notebook demonstra como usar o <code>juscraper</code> para extrair dados do Tribunal de Justiça de São Paulo (TJSP). O pacote oferece acesso programático a várias consultas disponíveis no sistema ESAJ do TJSP.</p>
+<section id="funcionalidades-disponíveis" class="level2">
+<h2 class="anchored" data-anchor-id="funcionalidades-disponíveis">Funcionalidades Disponíveis</h2>
+<p>O <code>juscraper</code> para TJSP oferece acesso a:</p>
+<ul>
+<li><strong>CJPG</strong>: Consulta de Julgados de Primeiro Grau</li>
+<li><strong>CJSG</strong>: Consulta de Julgados de Segundo Grau<br>
+</li>
+<li><strong>CPOPG</strong>: Consulta Processual de Primeiro Grau</li>
+<li><strong>CPOSG</strong>: Consulta Processual de Segundo Grau</li>
+</ul>
+</section>
+<section id="instalação-e-importação" class="level2">
+<h2 class="anchored" data-anchor-id="instalação-e-importação">Instalação e Importação</h2>
+<p>Primeiro, vamos importar o pacote e criar um objeto scraper para o TJSP:</p>
+<div id="cell-2" class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># cria um objeto tjsp</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>tjsp <span class="op">=</span> jus.scraper(<span class="st">'tjsp'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="cell-3" class="cell" data-execution_count="2">
+</section>
+<section id="criando-o-scraper" class="level2">
+<h2 class="anchored" data-anchor-id="criando-o-scraper">Criando o Scraper</h2>
+<p>Para começar a usar o <code>juscraper</code> com o TJSP, você precisa criar uma instância do scraper passando <code>'tjsp'</code> como argumento. Este objeto será usado para todas as consultas subsequentes.</p>
+</section>
+<section id="cjpg---consulta-de-julgados-de-primeiro-grau" class="level2">
+<h2 class="anchored" data-anchor-id="cjpg---consulta-de-julgados-de-primeiro-grau">CJPG - Consulta de Julgados de Primeiro Grau</h2>
+<p>A função <code>cjpg()</code> permite buscar decisões e sentenças proferidas em primeiro grau de jurisdição. É útil para encontrar precedentes, entender padrões de julgamento ou coletar dados para análise jurídica.</p>
+<section id="parâmetros-principais" class="level3">
+<h3 class="anchored" data-anchor-id="parâmetros-principais">Parâmetros Principais</h3>
+<ul>
+<li><code>pesquisa</code> (str): Termo de busca que será pesquisado no conteúdo das decisões</li>
+<li><code>paginas</code> (range): Intervalo de páginas a serem baixadas. Use <code>range(0, n)</code> para baixar as primeiras <code>n</code> páginas (ex: <code>range(0, 3)</code> baixa páginas 1, 2 e 3)</li>
+<li><code>classes</code> (list, opcional): Lista de códigos de classes processuais para filtrar</li>
+<li><code>assuntos</code> (list, opcional): Lista de códigos de assuntos para filtrar</li>
+<li><code>varas</code> (list, opcional): Lista de códigos de varas para filtrar</li>
+</ul>
+</section>
+<section id="retorno" class="level3">
+<h3 class="anchored" data-anchor-id="retorno">Retorno</h3>
+<p>A função retorna um <code>pandas.DataFrame</code> com as seguintes colunas principais: - <code>cd_processo</code>: Código interno do processo - <code>id_processo</code>: Número do processo (formato CNJ) - <code>classe</code>: Classe processual - <code>assunto</code>: Assunto do processo - <code>magistrado</code>: Nome do magistrado que proferiu a decisão - <code>comarca</code>: Comarca onde o processo tramitou - <code>foro</code>: Foro onde o processo tramitou - <code>vara</code>: Vara onde o processo tramitou - <code>data_disponibilizacao</code>: Data em que a decisão foi disponibilizada - <code>decisao</code>: Texto completo da decisão/sentença</p>
+</section>
+<section id="exemplo-de-uso" class="level3">
+<h3 class="anchored" data-anchor-id="exemplo-de-uso">Exemplo de Uso</h3>
+<div id="cell-5" class="cell" data-execution_count="9">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># baixa dados da [c]onsulta de [j]ulgados de [p]rimeiro [g]rau - cjpg</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>dados_cjpg <span class="op">=</span> tjsp.cjpg(<span class="st">'golpe do pix'</span>, paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">0</span>,<span class="dv">3</span>))</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_cjpg.shape)</span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>dados_cjpg.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando documentos: 100%|██████████| 3/3 [00:01&lt;00:00,  1.76it/s]
-Processando documentos: 100%|██████████| 3/3 [00:00&lt;00:00, 16.12it/s]</code></pre>
+<pre><code>Baixando documentos: 100%|██████████| 3/3 [00:02&lt;00:00,  1.42it/s]
+Processando documentos: 100%|██████████| 3/3 [00:00&lt;00:00, 43.91it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(30, 10)</code></pre>
@@ -299,7 +377,7 @@ Processando documentos: 100%|██████████| 3/3 [00:00&lt;00:00
 <div class="cell-output cell-output-stderr">
 <pre><code></code></pre>
 </div>
-<div class="cell-output cell-output-display" data-execution_count="2">
+<div class="cell-output cell-output-display" data-execution_count="9">
 <div>
 
 
@@ -322,42 +400,42 @@ Processando documentos: 100%|██████████| 3/3 [00:00&lt;00:00
 <tbody>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">0</td>
-<td>2S001Z0WK0000</td>
-<td>1015606-71.2025.8.26.0100</td>
-<td>Procedimento Comum Cível</td>
-<td>Bancários</td>
-<td>FABIO DE SOUZA PIMENTA</td>
-<td>SÃO PAULO</td>
-<td>Foro Central Cível</td>
-<td>32ª Vara Cível</td>
-<td>25/05/2025</td>
-<td>SENTENÇA\n\n\n\nProcesso nº:\t1015606-71.2025....</td>
+<td>JF0004W7G0000</td>
+<td>1001796-12.2024.8.26.0699</td>
+<td>Procedimento do Juizado Especial Cível</td>
+<td>Perdas e Danos</td>
+<td>Renata Fanin Pupo Dos Santos</td>
+<td>Salto de Pirapora</td>
+<td>Foro de Salto de Pirapora</td>
+<td>Juizado Especial Cível e Criminal</td>
+<td>28/12/2025</td>
+<td>SENTENÇA\n\n\n\nProcesso Digital nº:\t1001796-...</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">1</td>
-<td>07001NDXN0000</td>
-<td>1027253-85.2024.8.26.0007</td>
-<td>Procedimento do Juizado Especial Cível</td>
+<td>07001MXIF0000</td>
+<td>1015175-59.2024.8.26.0007</td>
+<td>Procedimento Comum Cível</td>
 <td>Indenização por Dano Moral</td>
-<td>ANA LUCIA SCHMIDT RIZZON</td>
+<td>Fabiana Pereira Ragazzi</td>
 <td>SÃO PAULO</td>
-<td>Foro Regional VII - Itaquera</td>
-<td>Vara do Juizado Especial Cível</td>
-<td>25/05/2025</td>
-<td>SENTENÇA\n\n\n\nProcesso Digital nº:\t1027253-...</td>
+<td>Foro Regional IX - Vila Prudente</td>
+<td>1ª Vara Cível</td>
+<td>28/12/2025</td>
+<td>SENTENÇA\n\n\n\nProcesso Digital nº:\t1015175-...</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">2</td>
-<td>250005YE10000</td>
-<td>0003662-95.2024.8.26.0077</td>
+<td>05001J2230000</td>
+<td>0004257-82.2025.8.26.0005</td>
 <td>Procedimento do Juizado Especial Cível</td>
-<td>Obrigações</td>
-<td>ERIC DOUGLAS SOARES GOMES</td>
-<td>Birigui</td>
-<td>Foro de Birigui</td>
-<td>Vara do Juizado Especial Cível e Criminal</td>
-<td>24/05/2025</td>
-<td>SENTENÇA\n\n\n\nProcesso Digital nº:\t0003662-...</td>
+<td>Defeito, nulidade ou anulação</td>
+<td>CAIO FAGUNDES LAMPA</td>
+<td>SÃO PAULO</td>
+<td>Foro Regional V - São Miguel Paulista</td>
+<td>Juizado Especial Cível - CIC Zona Leste</td>
+<td>28/12/2025</td>
+<td>SENTENÇA\n\n\n\nProcesso Digital nº:\t0004257-...</td>
 </tr>
 </tbody>
 </table>
@@ -365,15 +443,42 @@ Processando documentos: 100%|██████████| 3/3 [00:00&lt;00:00
 </div>
 </div>
 </div>
-<div id="cell-4" class="cell" data-execution_count="2">
+</section>
+</section>
+<section id="cjsg---consulta-de-julgados-de-segundo-grau" class="level2">
+<h2 class="anchored" data-anchor-id="cjsg---consulta-de-julgados-de-segundo-grau">CJSG - Consulta de Julgados de Segundo Grau</h2>
+<p>A função <code>cjsg()</code> permite buscar acórdãos e decisões monocráticas proferidas pelos tribunais de segundo grau. Esta é uma das consultas mais utilizadas para pesquisa jurisprudencial.</p>
+<section id="parâmetros-principais-1" class="level3">
+<h3 class="anchored" data-anchor-id="parâmetros-principais-1">Parâmetros Principais</h3>
+<ul>
+<li><code>pesquisa</code> (str): Termo de busca que será pesquisado no conteúdo das decisões e ementas</li>
+<li><code>paginas</code> (range): Intervalo de páginas a serem baixadas. Use <code>range(0, n)</code> para baixar as primeiras <code>n</code> páginas</li>
+<li><code>ementa</code> (str, opcional): Termo adicional para buscar especificamente nas ementas</li>
+<li><code>classe</code> (str, opcional): Código da classe processual</li>
+<li><code>assunto</code> (str, opcional): Código do assunto</li>
+<li><code>comarca</code> (str, opcional): Código da comarca</li>
+<li><code>orgao_julgador</code> (str, opcional): Código do órgão julgador</li>
+<li><code>data_inicio</code> (str, opcional): Data inicial de julgamento (formato: DD/MM/AAAA)</li>
+<li><code>data_fim</code> (str, opcional): Data final de julgamento (formato: DD/MM/AAAA)</li>
+<li><code>baixar_sg</code> (bool, opcional): Se <code>True</code> (padrão), busca em segundo grau. Se <code>False</code>, busca em colégio recursal</li>
+<li><code>tipo_decisao</code> (str, opcional): Tipo de decisão - <code>'acordao'</code> (padrão) ou <code>'monocratica'</code></li>
+</ul>
+</section>
+<section id="retorno-1" class="level3">
+<h3 class="anchored" data-anchor-id="retorno-1">Retorno</h3>
+<p>A função retorna um <code>pandas.DataFrame</code> com as seguintes colunas principais: - <code>processo</code>: Número do processo (formato CNJ) - <code>cd_acordao</code>: Código interno do acórdão - <code>cd_foro</code>: Código do foro - <code>classe_assunto</code>: Classe processual e assunto combinados - <code>relatora</code>: Nome do relator - <code>comarca</code>: Comarca de origem - <code>orgao_julgador</code>: Órgão julgador (ex: “13ª Câmara de Direito Privado”) - <code>data_julgamento</code>: Data do julgamento - <code>data_publicacao</code>: Data de publicação - <code>ementa</code>: Texto da ementa do acórdão</p>
+</section>
+<section id="exemplo-de-uso-1" class="level3">
+<h3 class="anchored" data-anchor-id="exemplo-de-uso-1">Exemplo de Uso</h3>
+<div id="cell-7" class="cell" data-execution_count="11">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># baixa dados da [c]onsulta de [j]ulgados de [s]egundo [g]rau - cjsg</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>dados_cjsg <span class="op">=</span> tjsp.cjsg(<span class="st">'golpe do pix'</span>, paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">0</span>,<span class="dv">3</span>))</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_cjsg.shape)</span>
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>dados_cjsg.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando documentos: 100%|██████████| 3/3 [00:02&lt;00:00,  1.08it/s]
-Processando documentos: 100%|██████████| 3/3 [00:00&lt;00:00,  7.46it/s]</code></pre>
+<pre><code>Baixando documentos: 100%|██████████| 3/3 [00:21&lt;00:00, 10.75s/it]
+Processando documentos: 100%|██████████| 3/3 [00:00&lt;00:00, 21.60it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(60, 10)</code></pre>
@@ -381,7 +486,7 @@ Processando documentos: 100%|██████████| 3/3 [00:00&lt;00:00
 <div class="cell-output cell-output-stderr">
 <pre><code></code></pre>
 </div>
-<div class="cell-output cell-output-display" data-execution_count="2">
+<div class="cell-output cell-output-display" data-execution_count="11">
 <div>
 
 
@@ -404,42 +509,42 @@ Processando documentos: 100%|██████████| 3/3 [00:00&lt;00:00
 <tbody>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">0</td>
-<td>1000596-33.2024.8.26.0484</td>
-<td>20015805</td>
+<td>1005387-58.2024.8.26.0318</td>
+<td>20062433</td>
 <td>0</td>
 <td>Apelação Cível / Bancários</td>
-<td>Eduardo Velho</td>
-<td>Promissão</td>
-<td>Órgão julgador: 17ª Câmara de Direito Privado</td>
-<td>29/11/2025</td>
-<td>29/11/2025</td>
-<td>APELAÇÃO – AÇÃO REPARATÓRIA DE DANOS MATERIAI...</td>
+<td>Nelson Jorge Júnior</td>
+<td>Leme</td>
+<td>13ª Câmara de Direito Privado</td>
+<td>26/12/2025</td>
+<td>26/12/2025</td>
+<td>APELAÇÃO – AÇÃO DECLARATÓRIA C.C. INDENIZATÓR...</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">1</td>
-<td>1008237-56.2024.8.26.0554</td>
-<td>20015808</td>
+<td>1029533-10.2025.8.26.0002</td>
+<td>20062162</td>
 <td>0</td>
-<td>Apelação Cível / Bancários</td>
-<td>Eduardo Velho</td>
-<td>Santo André</td>
-<td>Órgão julgador: 17ª Câmara de Direito Privado</td>
-<td>29/11/2025</td>
-<td>29/11/2025</td>
-<td>APELAÇÃO. CONTRATOS BANCÁRIOS. DECLARATÓRIA. I...</td>
+<td>Apelação Cível / Prestação de Serviços</td>
+<td>Paulo Ayrosa</td>
+<td>São Paulo</td>
+<td>31ª Câmara de Direito Privado</td>
+<td>22/12/2025</td>
+<td>22/12/2025</td>
+<td>PRESTAÇÃO DE SERVIÇOS – AÇÃO DE OBRIGAÇÃO DE F...</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">2</td>
-<td>1015946-86.2023.8.26.0002</td>
-<td>20015687</td>
+<td>1000340-02.2025.8.26.0114</td>
+<td>20061944</td>
 <td>0</td>
-<td>Apelação Cível / Compra e Venda</td>
-<td>João Casali</td>
-<td>São Paulo</td>
-<td>Órgão julgador: 26ª Câmara de Direito Privado</td>
-<td>29/11/2025</td>
-<td>29/11/2025</td>
-<td>APELAÇÃO CÍVEL. AÇÃO (NOMINADA DE) DECLARATÓRI...</td>
+<td>Apelação Cível / Bancários</td>
+<td>Carlos Abrão</td>
+<td>Campinas</td>
+<td>14ª Câmara de Direito Privado</td>
+<td>17/12/2025</td>
+<td>22/12/2025</td>
+<td>APELAÇÃO - AÇÃO DECLARATÓRIA CUMULADA COM INDE...</td>
 </tr>
 </tbody>
 </table>
@@ -447,133 +552,204 @@ Processando documentos: 100%|██████████| 3/3 [00:00&lt;00:00
 </div>
 </div>
 </div>
-<div id="cell-5" class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> tjsp.cpopg([<span class="st">'1000149-71.2024.8.26.0346'</span>])</span>
+</section>
+</section>
+<section id="cpopg---consulta-processual-de-primeiro-grau" class="level2">
+<h2 class="anchored" data-anchor-id="cpopg---consulta-processual-de-primeiro-grau">CPOPG - Consulta Processual de Primeiro Grau</h2>
+<p>A função <code>cpopg()</code> permite consultar informações detalhadas sobre processos em primeiro grau de jurisdição. Diferente das consultas de julgados, esta função retorna informações processuais completas, incluindo partes, movimentações, petições e documentos.</p>
+<section id="parâmetros-principais-2" class="level3">
+<h3 class="anchored" data-anchor-id="parâmetros-principais-2">Parâmetros Principais</h3>
+<ul>
+<li><code>id_processo</code> (str): Número do processo no formato CNJ (ex: “1000149-71.2024.8.26.0346”)</li>
+</ul>
+</section>
+<section id="retorno-2" class="level3">
+<h3 class="anchored" data-anchor-id="retorno-2">Retorno</h3>
+<p>A função retorna um dicionário Python com as seguintes chaves:</p>
+<ul>
+<li><code>basicos</code>: DataFrame com informações básicas do processo (classe, assunto, foro, vara, juiz, data de distribuição, valor da ação)</li>
+<li><code>partes</code>: DataFrame com informações das partes (requerente, requerido, advogados)</li>
+<li><code>movimentacoes</code>: DataFrame com histórico de movimentações do processo (data, movimento, observação)</li>
+<li><code>peticoes_diversas</code>: DataFrame com informações sobre petições e documentos protocolados</li>
+</ul>
+</section>
+<section id="exemplo-de-uso-2" class="level3">
+<h3 class="anchored" data-anchor-id="exemplo-de-uso-2">Exemplo de Uso</h3>
+<div id="cell-9" class="cell" data-execution_count="12">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> tjsp.cpopg(<span class="st">'1000149-71.2024.8.26.0346'</span>)</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>res</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando processos: 100%|██████████| 1/1 [00:00&lt;00:00,  1.48it/s]
-Processando documentos: 100%|██████████| 1/1 [00:00&lt;00:00,  4.62it/s]</code></pre>
+<pre><code>Baixando processos: 100%|██████████| 1/1 [00:00&lt;00:00,  1.53it/s]
+Processando documentos: 100%|██████████| 2/2 [00:00&lt;00:00, 51.78it/s]</code></pre>
 </div>
-<div class="cell-output cell-output-display" data-execution_count="4">
+<div class="cell-output cell-output-display" data-execution_count="12">
 <pre><code>{'basicos':                                            file_path  \
- 0  C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...   
+ 0  C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...   
+ 1  C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...   
  
                   id_processo                    classe  \
- 0  1000149-71.2024.8.26.0346  Procedimento Comum Cível   
+ 0                       None                      None   
+ 1  1000149-71.2024.8.26.0346  Procedimento Comum Cível   
  
                            assunto                  foro               vara  \
- 0  Responsabilidade do Fornecedor  Foro de Martinópolis  2ª  Vara Judicial   
+ 0                            None                  None               None   
+ 1  Responsabilidade do Fornecedor  Foro de Martinópolis  2ª  Vara Judicial   
  
                      juiz            data_distribuicao            valor_acao  
- 0  RENATA ESSER DE SOUZA  06/02/2024 às 13:47 - Livre  R$         81.439,78  ,
+ 0                   None                         None                  None  
+ 1  RENATA ESSER DE SOUZA  06/02/2024 às 13:47 - Livre  R$         81.439,78  ,
  'partes':                                            file_path   tipo  \
- 0  C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...  Reqte   
- 1  C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...  Reqda   
+ 0  C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  Reqte   
+ 1  C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  Reqda   
  
                                                  nome  \
  0  Aparecida Stuani Advogada: Carina Akemi Rezend...   
  1                                BANCO BRADESCO S.A.   
  
                                     advogados  
- 0                                         []  
+ 0  [Fabio Cabral Silva de Oliveira Monteiro]  
  1  [Fabio Cabral Silva de Oliveira Monteiro]  ,
  'movimentacoes':                                             file_path        data  \
- 0   C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...  05/02/2025   
- 1   C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...  05/02/2025   
- 2   C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...  06/12/2024   
- 3   C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...  04/12/2024   
- 4   C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...  08/11/2024   
+ 0   C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  31/10/2025   
+ 1   C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  30/10/2025   
+ 2   C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  30/10/2025   
+ 3   C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  30/10/2025   
+ 4   C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  30/10/2025   
  ..                                                ...         ...   
- 71  C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...  09/02/2024   
- 72  C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...  09/02/2024   
- 73  C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...  08/02/2024   
- 74  C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...  07/02/2024   
- 75  C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...  06/02/2024   
+ 92  C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  09/02/2024   
+ 93  C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  09/02/2024   
+ 94  C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  08/02/2024   
+ 95  C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  07/02/2024   
+ 96  C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  06/02/2024   
  
                                              movimento  \
- 0   Remetidos os Autos para o Tribunal de Justiça/...   
- 1                                                       
+ 0                     Certidão de Publicação Expedida   
+ 1                                     Remetido ao DJE   
  2                                                       
- 3                               Contrarrazões Juntada   
- 4                     Certidão de Publicação Expedida   
+ 3                             Conclusos para Despacho   
+ 4   Pedido de Expedição de Mandado de Levantamento...   
  ..                                                ...   
- 71                    Certidão de Publicação Expedida   
- 72                                    Remetido ao DJE   
- 73                                                      
- 74                             Conclusos para Decisão   
- 75  Distribuído Livremente (por Sorteio) (moviment...   
+ 92                    Certidão de Publicação Expedida   
+ 93                                    Remetido ao DJE   
+ 94                                                      
+ 95                             Conclusos para Decisão   
+ 96  Distribuído Livremente (por Sorteio) (moviment...   
  
                                             observacao  
- 0                                                      
- 1        Processo Digital - Certidão Genérica - Cível  
- 2        Ato - remessa TJ - COM ATOS - NÃO PUBLICÁVEL  
- 3   Nº Protocolo: WMPO.24.70021232-2\n\nTipo da Pe...  
- 4   Relação: 0670/2024\n\nData da Publicação: 11/1...  
+ 0   Relação: 1039/2025\n\nData da Publicação: 03/1...  
+ 1   Relação: 1039/2025\n\nTeor do ato: Ante a ausê...  
+ 2   Ante a ausência de impugnação pelos requeridos...  
+ 3                                                      
+ 4   Nº Protocolo: WMPO.25.70021100-9\n\nTipo da Pe...  
  ..                                                ...  
- 71  Relação: 0055/2024\n\nData da Publicação: 15/0...  
- 72  Relação: 0055/2024\n\nTeor do ato: Vistos. O a...  
- 73  Vistos. O artigo 5º, LXXIV, da Constituição Fe...  
- 74                                                     
- 75                                                     
+ 92  Relação: 0055/2024\n\nData da Publicação: 15/0...  
+ 93  Relação: 0055/2024\n\nTeor do ato: Vistos. O a...  
+ 94  Vistos. O artigo 5º, LXXIV, da Constituição Fe...  
+ 95                                                     
+ 96                                                     
  
- [76 rows x 4 columns],
+ [97 rows x 4 columns],
  'peticoes_diversas':                                             file_path        data  \
- 0   C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...               
- 1   C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...  14/02/2024   
- 2   C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...  19/03/2024   
- 3   C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...  21/03/2024   
- 4   C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...  10/04/2024   
- 5   C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...  23/04/2024   
- 6   C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...  25/04/2024   
- 7   C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...  25/04/2024   
- 8   C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...  29/04/2024   
- 9   C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...  03/05/2024   
- 10  C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...  10/06/2024   
- 11  C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...  23/07/2024   
- 12  C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...  13/08/2024   
- 13  C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...  14/08/2024   
- 14  C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...  28/08/2024   
- 15  C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...  29/08/2024   
- 16  C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...  02/09/2024   
- 17  C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...  04/09/2024   
- 18  C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...  07/10/2024   
- 19  C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...  16/10/2024   
- 20  C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...  22/10/2024   
- 21  C:\Users\julio\AppData\Local\Temp\tmp2pp741rt\...  04/12/2024   
+ 0   C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...               
+ 1   C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  14/02/2024   
+ 2   C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  19/03/2024   
+ 3   C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  21/03/2024   
+ 4   C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  10/04/2024   
+ 5   C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  23/04/2024   
+ 6   C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  25/04/2024   
+ 7   C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  25/04/2024   
+ 8   C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  29/04/2024   
+ 9   C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  03/05/2024   
+ 10  C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  10/06/2024   
+ 11  C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  23/07/2024   
+ 12  C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  13/08/2024   
+ 13  C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  14/08/2024   
+ 14  C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  28/08/2024   
+ 15  C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  29/08/2024   
+ 16  C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  02/09/2024   
+ 17  C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  04/09/2024   
+ 18  C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  07/10/2024   
+ 19  C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  16/10/2024   
+ 20  C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  22/10/2024   
+ 21  C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  04/12/2024   
+ 22  C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  14/10/2025   
+ 23  C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  23/10/2025   
+ 24  C:\Users\jtrec\AppData\Local\Temp\tmpbmja5wt9\...  29/10/2025   
  
-                              tipo  
- 0                                  
- 1                Emenda à Inicial  
- 2                     Contestação  
- 3   Pedido de Expedição de Ofício  
- 4           Petição Intermediária  
- 5                     Contestação  
- 6               Petições Diversas  
- 7                     Contestação  
- 8                     Contestação  
- 9                     Contestação  
- 10          Pedido de Habilitação  
- 11              Petições Diversas  
- 12          Petição Intermediária  
- 13            Indicação de Provas  
- 14              Petições Diversas  
- 15            Indicação de Provas  
- 16              Petições Diversas  
- 17              Petições Diversas  
- 18          Petição Intermediária  
- 19          Pedido de Habilitação  
- 20             Razões de Apelação  
- 21      Contrarrazões de Apelação  }</code></pre>
+                                               tipo  
+ 0                                                   
+ 1                                 Emenda à Inicial  
+ 2                                      Contestação  
+ 3                    Pedido de Expedição de Ofício  
+ 4                            Petição Intermediária  
+ 5                                      Contestação  
+ 6                                Petições Diversas  
+ 7                                      Contestação  
+ 8                                      Contestação  
+ 9                                      Contestação  
+ 10                           Pedido de Habilitação  
+ 11                               Petições Diversas  
+ 12                           Petição Intermediária  
+ 13                             Indicação de Provas  
+ 14                               Petições Diversas  
+ 15                             Indicação de Provas  
+ 16                               Petições Diversas  
+ 17                               Petições Diversas  
+ 18                           Petição Intermediária  
+ 19                           Pedido de Habilitação  
+ 20                              Razões de Apelação  
+ 21                       Contrarrazões de Apelação  
+ 22                  Pedido de Extinção do Processo  
+ 23                           Petição Intermediária  
+ 24  Pedido de Expedição de Mandado de Levantamento  }</code></pre>
 </div>
 </div>
-<div id="cell-6" class="cell" data-execution_count="7">
+</section>
+</section>
+<section id="cposg---consulta-processual-de-segundo-grau" class="level2">
+<h2 class="anchored" data-anchor-id="cposg---consulta-processual-de-segundo-grau">CPOSG - Consulta Processual de Segundo Grau</h2>
+<p>A função <code>cposg()</code> permite consultar informações detalhadas sobre processos em segundo grau de jurisdição (recursos). Esta função retorna informações completas sobre o processo em segundo grau, incluindo composição do colegiado, decisões, movimentações e histórico.</p>
+<section id="parâmetros-principais-3" class="level3">
+<h3 class="anchored" data-anchor-id="parâmetros-principais-3">Parâmetros Principais</h3>
+<ul>
+<li><code>id_processo</code> (str ou list): Número(s) do processo no formato CNJ. Pode ser uma string única ou uma lista de strings para consultar múltiplos processos de uma vez.</li>
+</ul>
+</section>
+<section id="retorno-3" class="level3">
+<h3 class="anchored" data-anchor-id="retorno-3">Retorno</h3>
+<p>A função retorna um <code>pandas.DataFrame</code> onde cada linha representa um processo consultado. As colunas principais incluem:</p>
+<ul>
+<li><code>id_original</code>: ID original do processo</li>
+<li><code>status</code>: Status atual do processo (ex: “Encerrado”, “Em andamento”)</li>
+<li><code>classe</code>: Classe processual</li>
+<li><code>assunto</code>: Assunto do processo</li>
+<li><code>secao</code>: Seção do tribunal</li>
+<li><code>orgao_julgador</code>: Órgão julgador responsável</li>
+<li><code>area</code>: Área do direito (Cível, Criminal, etc.)</li>
+<li><code>relator</code>: Nome do relator</li>
+<li><code>origem</code>: Informações sobre a origem (comarca, foro, vara de primeiro grau)</li>
+<li><code>movimentacoes</code>: Lista de dicionários com movimentações do processo</li>
+<li><code>partes</code>: Lista de dicionários com informações das partes</li>
+<li><code>historico</code>: Histórico do processo</li>
+<li><code>decisoes</code>: Lista de decisões proferidas</li>
+<li><code>composicao</code>: Informações sobre a composição do colegiado</li>
+<li><code>primeira_inst</code>: Informações sobre o processo de primeira instância</li>
+<li><code>processo</code>: Número do processo</li>
+<li><code>valor_da_acao</code>: Valor da ação (se aplicável)</li>
+<li><code>volume_apenso</code>: Informações sobre volumes apensos</li>
+</ul>
+</section>
+<section id="exemplo-de-uso-3" class="level3">
+<h3 class="anchored" data-anchor-id="exemplo-de-uso-3">Exemplo de Uso</h3>
+<p>Você pode consultar um único processo ou múltiplos processos de uma vez:</p>
+<div id="cell-11" class="cell">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> tjsp.cposg([<span class="st">'00221752420038260344'</span>, <span class="st">'10001497120248260346'</span>, <span class="st">'00039417120248260048'</span>])</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>res</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando processos: 100%|██████████| 3/3 [00:02&lt;00:00,  1.22it/s]
-Processando arquivos: 100%|██████████| 4/4 [00:00&lt;00:00,  6.72it/s]</code></pre>
+<pre><code>Baixando processos: 100%|██████████| 3/3 [00:02&lt;00:00,  1.39it/s]
+Processando arquivos: 100%|██████████| 4/4 [00:00&lt;00:00, 22.22it/s]</code></pre>
 </div>
-<div class="cell-output cell-output-display" data-execution_count="7">
+<div class="cell-output cell-output-display">
 <div>
 
 
@@ -671,10 +847,10 @@ Processando arquivos: 100%|██████████| 4/4 [00:00&lt;00:00, 
 </div>
 </div>
 </div>
-<div id="cell-7" class="cell" data-execution_count="8">
+<div id="cell-12" class="cell">
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>pd.DataFrame(res[<span class="st">'movimentacoes'</span>].iloc[<span class="dv">0</span>]).head()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="8">
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>pd.DataFrame(res[<span class="st">'movimentacoes'</span>].iloc[<span class="dv">2</span>]).head()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="7">
 <div>
 
 
@@ -690,33 +866,33 @@ Processando arquivos: 100%|██████████| 4/4 [00:00&lt;00:00, 
 <tbody>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">0</td>
-<td>25/03/2015</td>
-<td>Decisão Monocrática - Não Provida</td>
-<td>ofício remetido à v.o.</td>
+<td>25/06/2025</td>
+<td>Expedido Certidão de Baixa de Recurso</td>
+<td>Certidão de Baixa de Recurso - [Digital]</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">1</td>
-<td>08/11/2013</td>
-<td>Remetidos os Autos para Vara de Origem</td>
+<td>25/06/2025</td>
+<td>Baixa Definitiva</td>
 <td></td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">2</td>
-<td>08/11/2013</td>
-<td>Recebidos os Autos do STJ pelo Processamento d...</td>
-<td></td>
+<td>25/06/2025</td>
+<td>Expedido Certidão</td>
+<td>Certifico que o v. acórdão transitou em julgad...</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">3</td>
-<td>08/11/2013</td>
-<td>Remetidos os Autos para Processamento de Recur...</td>
-<td></td>
+<td>29/05/2025</td>
+<td>Publicado em</td>
+<td>Disponibilizado em 28/05/2025\n\nTipo de publi...</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">4</td>
-<td>21/10/2013</td>
-<td>Publicado em</td>
-<td>Disponibilizado em 18/10/2013\n\nTipo de publi...</td>
+<td>28/05/2025</td>
+<td>Prazo</td>
+<td></td>
 </tr>
 </tbody>
 </table>
@@ -724,8 +900,42 @@ Processando arquivos: 100%|██████████| 4/4 [00:00&lt;00:00, 
 </div>
 </div>
 </div>
+</section>
+<section id="trabalhando-com-dados-estruturados" class="level3">
+<h3 class="anchored" data-anchor-id="trabalhando-com-dados-estruturados">Trabalhando com Dados Estruturados</h3>
+<p>Os dados retornados por <code>cposg()</code> contêm informações aninhadas (listas de dicionários) em algumas colunas. Você pode facilmente converter essas informações em DataFrames separados para análise mais detalhada.</p>
+<p>Por exemplo, para trabalhar com as movimentações de um processo específico:</p>
+</section>
+</section>
+<section id="dicas-e-observações-importantes" class="level2">
+<h2 class="anchored" data-anchor-id="dicas-e-observações-importantes">Dicas e Observações Importantes</h2>
+<section id="performance-e-limites" class="level3">
+<h3 class="anchored" data-anchor-id="performance-e-limites">Performance e Limites</h3>
+<ul>
+<li><strong>Rate Limiting</strong>: O sistema ESAJ pode ter limites de requisições. Use <code>sleep_time</code> no construtor do scraper para adicionar delays entre requisições se necessário.</li>
+<li><strong>Páginas</strong>: Use o parâmetro <code>paginas</code> com cuidado. Baixar muitas páginas pode levar muito tempo e sobrecarregar o servidor.</li>
+<li><strong>Dados Temporários</strong>: Por padrão, os arquivos HTML baixados são salvos em um diretório temporário e removidos após o parse. Para manter os arquivos, use <code>cjsg_download()</code> ou <code>cjpg_download()</code> separadamente.</li>
+</ul>
+</section>
+<section id="formato-de-datas" class="level3">
+<h3 class="anchored" data-anchor-id="formato-de-datas">Formato de Datas</h3>
+<p>Todas as datas retornadas estão no formato brasileiro: <strong>DD/MM/AAAA</strong>.</p>
+</section>
+<section id="formato-de-processos" class="level3">
+<h3 class="anchored" data-anchor-id="formato-de-processos">Formato de Processos</h3>
+<p>Os números de processo devem estar no formato CNJ completo: <strong>NNNNNNN-DD.AAAA.J.TR.OOOO</strong> (ex: “1000149-71.2024.8.26.0346”).</p>
+</section>
+<section id="tratamento-de-erros" class="level3">
+<h3 class="anchored" data-anchor-id="tratamento-de-erros">Tratamento de Erros</h3>
+<ul>
+<li>Se uma busca não retornar resultados, a função retornará um DataFrame vazio.</li>
+<li>Se houver problemas de conexão ou o servidor estiver indisponível, uma exceção será levantada.</li>
+<li>Para consultas processuais (<code>cpopg</code> e <code>cposg</code>), processos não encontrados podem retornar dados parciais ou vazios.</li>
+</ul>
 
 
+</section>
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
@@ -1168,7 +1378,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.dev/jtrecenti/juscraper/blob/main/docs/notebooks/tjsp.ipynb" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.dev/jtrecenti/juscraper/blob/main/docs/notebooks/tjsp.ipynb" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></div>
     <div class="nav-footer-right">
       &nbsp;
     </div>
