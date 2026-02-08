@@ -34,3 +34,14 @@ juscraper e uma biblioteca Python para raspagem de dados de tribunais brasileiro
 - Nunca tentar aprovar o proprio PR (`gh pr review --approve` falha para o autor do PR)
 - Usar `gh pr review --comment` para deixar notas de revisao nos proprios PRs
 - Sempre fazer push para uma branch de feature e abrir PR — nunca fazer push direto na main
+
+## Changelog
+
+- Seguimos o padrao [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
+- Toda mudanca relevante deve ser registrada em `CHANGELOG.md` sob `[Unreleased]`
+- Categorias: Added, Changed, Deprecated, Removed, Fixed, Security
+
+## Documentacao
+
+- Documentacao do projeto (em `docs/`) deve ser escrita em ingles
+- Portugues causa problemas de encoding no build do site (Quarto + GitHub Actions)
