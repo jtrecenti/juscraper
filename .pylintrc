@@ -59,4 +59,4 @@ valid-classmethod-first-arg=cls
 valid-metaclass-classmethod-first-arg=mcs
 
 [IMPORTS]
-known-third-party=pandas,requests,beautifulsoup4,selenium,playwright,tqdm,unidecode
+known-third-party=pandas,requests,beautifulsoup4,tqdm,unidecode
