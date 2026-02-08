@@ -14,8 +14,6 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Ajustado constraint de `pandas` para `>=2.0.0,<3.0.0` para compatibilidade com Google Colab (#25)
 - Adicionado `uv.lock` ao `.gitignore` (lockfile não deve ser versionado em bibliotecas)
 
-## [0.1.6] - 2026-02-08
-
 ### Fixed
 
 - Filtro `ano_ajuizamento` no Datajud agora aceita ambos os formatos de data (ISO `2020-01-01` e compacto `20200101103323`), corrigindo perda silenciosa de até 100% dos processos em TRF1, TRF3, TRF4 e TRF5 (#51)
