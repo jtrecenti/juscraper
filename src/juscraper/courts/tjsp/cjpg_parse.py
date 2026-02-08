@@ -23,14 +23,23 @@ def cjpg_n_pags(page_source):
             "na resposta HTML. Verifique se a busca retornou resultados"
             "ou se a estrutura da página mudou."
         )
-    match = re.search(r'\d+$', page_element.get_text().strip())
+    
+    element_text = page_element.get_text().strip()
+    match = re.search(r'\d+$', element_text)
     if match is None:
         raise ValueError(
             "Não foi possível extrair o número de resultados"
-            f"da string: {page_element.get_text().strip()}"
+            f"da string: {element_text}"
         )
+    
     results = int(match.group())
     pags = results // 10 + 1
+    
+    # Log de debug: informações sobre a extração
+    logger.debug("DEBUG: Elemento HTML encontrado: '%s'", element_text)
+    logger.debug("DEBUG: Número extraído da regex: %d", results)
+    logger.debug("DEBUG: Cálculo de páginas: %d // 10 + 1 = %d", results, pags)
+    
     return pags
 
 def cjpg_parse_single(path):
@@ -88,21 +97,38 @@ def cjpg_parse_manager(path):
     Parses the downloaded files from the cjpg_download function.
     Returns a DataFrame with the information of the processes.
     """
+    logger.debug("DEBUG: Iniciando parsing dos arquivos em: %s", path)
+    
     if os.path.isfile(path):
         result = [cjpg_parse_single(path)]
+        logger.debug("DEBUG: Processando arquivo único: %s", path)
     else:
         result = []
         arquivos = glob.glob(f"{path}/**/*.ht*", recursive=True)
         arquivos = [f for f in arquivos if os.path.isfile(f)]
+        logger.debug("DEBUG: Encontrados %d arquivos HTML para processar", len(arquivos))
+        
+        total_docs_found = 0
         for file in tqdm(arquivos, desc="Processando documentos"):
             if os.path.isfile(file):
                 try:
                     single_result = cjpg_parse_single(file)
+                    if single_result is not None and not single_result.empty:
+                        docs_in_file = len(single_result)
+                        total_docs_found += docs_in_file
+                        # Log detalhado para as primeiras páginas
+                        if len(result) < 5:
+                            logger.debug("DEBUG: Arquivo %s contém %d documentos", 
+                                       os.path.basename(file), docs_in_file)
                 except (ValueError, OSError) as e:
                     logger.error('Error processing %s: %s', file, e)
                     single_result = None
                     continue
                 if single_result is not None:
                     result.append(single_result)
+        
+        logger.debug("DEBUG: Total de documentos encontrados em todos os arquivos: %d", total_docs_found)
+    
     result = pd.concat(result, ignore_index=True)
+    logger.debug("DEBUG: DataFrame final criado com %d linhas", len(result))
     return result
