@@ -127,6 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# uv lockfile (biblioteca, não aplicação)
+uv.lock
 **__pycache__
 
 # PyCharm
