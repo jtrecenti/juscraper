@@ -178,11 +178,12 @@ class DatajudScraper(BaseScraper):
                     })
                 if ano_ajuizamento:
                     must_conditions.append({
-                        "range": {
-                            "dataAjuizamento": {
-                                "gte": f"{ano_ajuizamento}-01-01", 
-                                "lte": f"{ano_ajuizamento}-12-31"
-                            }
+                        "bool": {
+                            "should": [
+                                {"range": {"dataAjuizamento": {"gte": f"{ano_ajuizamento}-01-01", "lte": f"{ano_ajuizamento}-12-31"}}},
+                                {"range": {"dataAjuizamento": {"gte": f"{ano_ajuizamento}0101000000", "lte": f"{ano_ajuizamento}1231235959"}}},
+                            ],
+                            "minimum_should_match": 1
                         }
                     })
                 if classe:
@@ -205,7 +206,8 @@ class DatajudScraper(BaseScraper):
 
                 query_payload: Dict[str, Any] = {
                     "query": query_values,
-                    "size": tamanho_pagina
+                    "size": tamanho_pagina,
+                    "track_total_hits": True
                 }
 
                 # Handle pagination: search_after is preferred for deep pagination
@@ -237,11 +239,17 @@ class DatajudScraper(BaseScraper):
                 if api_response_json is None:
                     logger.error(
                         "Failed to get API response for alias %s, page %d."
-                        "Stopping.", 
+                        "Stopping.",
                         alias,
                         current_page
                     )
                     break
+
+                if current_page == (paginas_range.start if paginas_range else 1):
+                    total_info = api_response_json.get("hits", {}).get("total", {})
+                    total_value = total_info.get("value", "?")
+                    total_relation = total_info.get("relation", "eq")
+                    logger.info("Total de processos encontrados para %s: %s (%s)", alias, total_value, total_relation)
 
                 df_page = parse_datajud_api_response(api_response_json, mostrar_movs)
                 if df_page.empty:
