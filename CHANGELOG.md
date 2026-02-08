@@ -7,17 +7,11 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
-### Added
-
--
-
 ### Changed
 
--
-
-### Fixed
-
--
+- Removidas dependências não utilizadas: `pyppeteer`, `playwright`, `selenium`, `webdriver-manager` (#25)
+- Removida constraint de `websockets` que era necessária apenas por causa do pyppeteer
+- Ajustado constraint de `pandas` para `>=2.0.0,<3.0.0` para compatibilidade com Google Colab (#25)
 
 ## [0.1.6] - 2026-02-08
 
