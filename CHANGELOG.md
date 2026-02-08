@@ -19,6 +19,14 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 -
 
+## [0.1.6] - 2026-02-08
+
+### Fixed
+
+- Filtro `ano_ajuizamento` no Datajud agora aceita ambos os formatos de data (ISO `2020-01-01` e compacto `20200101103323`), corrigindo perda silenciosa de até 100% dos processos em TRF1, TRF3, TRF4 e TRF5 (#51)
+- Adicionado `track_total_hits: true` nas queries do Datajud para retornar contagem total exata em vez de truncar em 10.000
+- Adicionado log com total de processos encontrados na primeira página para visibilidade
+
 ## [0.1.5] - 2025-12-28
 
 ### Changed
