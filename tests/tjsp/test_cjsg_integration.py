@@ -2,20 +2,10 @@
 Integration tests for TJSP CJSG functionality.
 These tests actually hit the TJSP website and may be slow.
 """
-import sys
-import os
 import pytest
 import pandas as pd
 
-# Add project root to path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
-
-try:
-    import juscraper
-except ImportError:
-    # Try alternative import
-    from src.juscraper import scraper as juscraper_scraper
-    juscraper = type('Module', (), {'scraper': juscraper_scraper})()
+import juscraper
 
 
 @pytest.mark.integration
@@ -32,7 +22,7 @@ class TestCJSGIntegration:
     def test_cjsg_basic_search(self):
         """Test basic CJSG search functionality."""
         # Use a common search term that should return results
-        results = self.scraper.cjsg('direito civil', paginas=range(0, 1))
+        results = self.scraper.cjsg('direito civil', paginas=range(1, 2))
         
         assert isinstance(results, pd.DataFrame)
         assert len(results) >= 0  # May have 0 or more results
@@ -43,7 +33,7 @@ class TestCJSGIntegration:
         results = self.scraper.cjsg(
             pesquisa='contrato',
             ementa='consumidor',
-            paginas=range(0, 1)
+            paginas=range(1, 2)
         )
         
         assert isinstance(results, pd.DataFrame)
@@ -51,7 +41,7 @@ class TestCJSGIntegration:
     def test_cjsg_pagination(self):
         """Test CJSG pagination handling."""
         # Test downloading multiple pages
-        results = self.scraper.cjsg('direito', paginas=range(0, 2))
+        results = self.scraper.cjsg('direito', paginas=range(1, 3))
         
         assert isinstance(results, pd.DataFrame)
         # Should have results from multiple pages if available
@@ -60,7 +50,7 @@ class TestCJSGIntegration:
     def test_cjsg_multiple_pages(self):
         """Test CJSG with multiple pages to ensure pagination works correctly."""
         # Test downloading 3 pages
-        results = self.scraper.cjsg('direito civil', paginas=range(0, 3))
+        results = self.scraper.cjsg('direito civil', paginas=range(1, 4))
         
         assert isinstance(results, pd.DataFrame)
         # Should have results from multiple pages
@@ -75,7 +65,7 @@ class TestCJSGIntegration:
         results_acordao = self.scraper.cjsg(
             'direito',
             tipo_decisao='acordao',
-            paginas=range(0, 1)
+            paginas=range(1, 2)
         )
         assert isinstance(results_acordao, pd.DataFrame)
         
@@ -83,18 +73,18 @@ class TestCJSGIntegration:
         results_monocratica = self.scraper.cjsg(
             'direito',
             tipo_decisao='monocratica',
-            paginas=range(0, 1)
+            paginas=range(1, 2)
         )
         assert isinstance(results_monocratica, pd.DataFrame)
     
     def test_cjsg_baixar_sg_option(self):
         """Test CJSG with baixar_sg option."""
         # Test with baixar_sg=True (default)
-        results_sg = self.scraper.cjsg('direito', baixar_sg=True, paginas=range(0, 1))
+        results_sg = self.scraper.cjsg('direito', baixar_sg=True, paginas=range(1, 2))
         assert isinstance(results_sg, pd.DataFrame)
         
         # Test with baixar_sg=False
-        results_no_sg = self.scraper.cjsg('direito', baixar_sg=False, paginas=range(0, 1))
+        results_no_sg = self.scraper.cjsg('direito', baixar_sg=False, paginas=range(1, 2))
         assert isinstance(results_no_sg, pd.DataFrame)
     
     def test_cjsg_date_filters(self):
@@ -104,7 +94,7 @@ class TestCJSGIntegration:
             'direito',
             data_inicio='01/01/2023',
             data_fim='31/12/2023',
-            paginas=range(0, 1)
+            paginas=range(1, 2)
         )
         assert isinstance(results, pd.DataFrame)
     
@@ -114,14 +104,14 @@ class TestCJSGIntegration:
         # Use a very specific search that likely returns no results
         results = self.scraper.cjsg(
             'xyzabc123nonexistentsearchterm456',
-            paginas=range(0, 1)
+            paginas=range(1, 2)
         )
         # Should return empty DataFrame, not raise exception
         assert isinstance(results, pd.DataFrame)
     
     def test_cjsg_result_structure(self):
         """Test that CJSG results have expected structure."""
-        results = self.scraper.cjsg('direito', paginas=range(0, 1))
+        results = self.scraper.cjsg('direito', paginas=range(1, 2))
         
         assert isinstance(results, pd.DataFrame)
         
