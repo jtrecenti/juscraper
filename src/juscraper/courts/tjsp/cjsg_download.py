@@ -46,7 +46,7 @@ def cjsg_download(
         ementa, classe, assunto, comarca, orgao_julgador, data_inicio, data_fim: Optional filters.
         baixar_sg (bool): If True, downloads from second stage (sg="T"), otherwise from recursal (cr="R").
         tipo_decisao (str): 'acordao' or 'monocratica'.
-        paginas (range): Page range to download (0-based, e.g., range(0, 3) downloads pages 1-3).
+        paginas (range): Page range to download (1-based, e.g., range(1, 4) downloads pages 1-3).
         get_n_pags_callback (callable): Callback function to extract number of pages from HTML.
     """
     if get_n_pags_callback is None:
@@ -228,27 +228,14 @@ def cjsg_download(
             logger.info("Nenhum resultado encontrado. Retornando apenas a primeira página.")
         return path
     
-    # Determine which pages to download
-    # Note: We already downloaded page 1, so we need to handle paginas accordingly
-    # User passes range(0, n) which means pages 1 to n (0-based indexing)
+    # Determine which pages to download (1-based)
+    # Page 1 is already downloaded above, so we only need pages > 1
     if paginas is None:
-        # Download all pages (page 1 already downloaded, so start from page 2)
         paginas_list = list(range(2, n_pags + 1))
     else:
-        # Convert 0-based range to 1-based page numbers
-        # range(0, 3) means pages 1, 2, 3
-        # Page 1 is already downloaded, so we need pages 2, 3
-        pag_min = paginas.start if paginas.start is not None else 0
-        pag_max = paginas.stop if paginas.stop is not None else n_pags
-        if pag_max > n_pags:
-            pag_max = n_pags
-        
-        pages_to_download = []
-        for p in range(pag_min, pag_max):
-            page_num = p + 1  # Convert to 1-based
-            if page_num > 1:  # Skip page 1 as it's already downloaded
-                pages_to_download.append(page_num)
-        paginas_list = pages_to_download
+        pag_min = paginas.start if paginas.start is not None else 1
+        pag_max = min(paginas.stop, n_pags + 1) if paginas.stop is not None else n_pags + 1
+        paginas_list = [p for p in range(pag_min, pag_max) if p > 1]
     
     if verbose > 0:
         logger.info("Total de páginas: %s", n_pags)
@@ -256,9 +243,12 @@ def cjsg_download(
     
     # Download remaining pages using requests
     if paginas_list:
-        # Include page 1 in the total count for progress bar
-        total_pages = len(paginas_list) + 1  # +1 for page 1 already downloaded
-        for pag in tqdm(paginas_list, desc="Baixando documentos", total=total_pages, initial=1):
+        # Include page 1 in the total count for progress bar if it's in the requested range
+        pag_min_for_bar = (paginas.start if paginas and paginas.start is not None else 1)
+        page1_in_range = paginas is None or pag_min_for_bar <= 1
+        total_pages = len(paginas_list) + (1 if page1_in_range else 0)
+        initial_count = 1 if page1_in_range else 0
+        for pag in tqdm(paginas_list, desc="Baixando documentos", total=total_pages, initial=initial_count):
             time.sleep(sleep_time)
             query = {
                 'tipoDeDecisao': 'A' if tipo_decisao == 'acordao' else 'D',

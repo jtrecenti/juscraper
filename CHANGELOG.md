@@ -13,6 +13,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- **BREAKING:** Padronizado parâmetro `paginas` como 1-based em todos os scrapers: `range(1, 4)` baixa páginas 1, 2 e 3. Usuários que passavam `range(0, N)` devem atualizar para `range(1, N+1)`
 - Removidas dependências não utilizadas: `pyppeteer`, `playwright`, `selenium`, `webdriver-manager` (#25)
 - Removida constraint de `websockets` que era necessária apenas por causa do pyppeteer
 - Ajustado constraint de `pandas` para `>=2.0.0,<3.0.0` para compatibilidade com Google Colab (#25)
@@ -20,6 +21,10 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- CJPG (TJSP): primeira página (r0) agora é salva corretamente — antes era perdida devido a offset duplo no loop
+- CJSG (TJSP): paginação corrigida de 0-based para 1-based
+- TJRS: corrigida inconsistência na conversão de paginação (range era convertido incorretamente)
+- TJDFT: corrigido default `paginas=0` que resultava em range vazio (agora `paginas=1`)
 - Filtro `ano_ajuizamento` no Datajud agora aceita ambos os formatos de data (ISO `2020-01-01` e compacto `20200101103323`), corrigindo perda silenciosa de até 100% dos processos em TRF1, TRF3, TRF4 e TRF5 (#51)
 - Adicionado `track_total_hits: true` nas queries do Datajud para retornar contagem total exata em vez de truncar em 10.000
 - Adicionado log com total de processos encontrados na primeira página para visibilidade

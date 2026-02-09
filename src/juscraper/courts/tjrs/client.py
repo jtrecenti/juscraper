@@ -72,7 +72,12 @@ class TJRSScraper(BaseScraper):
         """
         Downloads raw results from the TJRS 'jurisprudence search' (multiple pages).
         Returns a list of raw results (JSON).
-        New parameter: secao ('civel', 'crime', or None)
+
+        Args:
+            paginas (int, list, or range): Pages to download (1-based).
+                int: paginas=3 downloads pages 1-3.
+                range: range(1, 4) downloads pages 1-3.
+            secao: 'civel', 'crime', or None.
         """
         if session is None:
             session = self.session

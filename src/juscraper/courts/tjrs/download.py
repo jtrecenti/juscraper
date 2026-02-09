@@ -24,21 +24,26 @@ def cjsg_download_manager(
     """
     Downloads raw files from the TJRS jurisprudence search (multiple pages).
     Returns a list of raw files (JSON).
-    New parameter: secao ('civel', 'crime', or None)
+
+    Args:
+        paginas (int, list, or range): Pages to download (1-based).
+            int: paginas=3 downloads pages 1-3.
+            range: range(1, 4) downloads pages 1-3.
+        secao: 'civel', 'crime', or None.
     """
     base_url = "https://www.tjrs.jus.br/buscas/jurisprudencia/ajax.php"
     if session is None:
         session = requests.Session()
     if isinstance(paginas, int):
-        paginas_iter = range(0, paginas)
+        paginas_iter = range(1, paginas + 1)  # 1-based: paginas=3 → [1, 2, 3]
     else:
-        paginas_iter = [p+1 for p in paginas]
+        paginas_iter = list(paginas)           # user passes 1-based: range(1, 4) → [1, 2, 3]
     resultados = []
-    for pagina_atual in tqdm(paginas_iter, desc='Baixando páginas TJRS'):
+    for pagina_1based in tqdm(paginas_iter, desc='Baixando páginas TJRS'):
         payload = {
             'aba': 'jurisprudencia',
             'realizando_pesquisa': '1',
-            'pagina_atual': str(pagina_atual),
+            'pagina_atual': str(pagina_1based - 1),  # API is 0-based
             'start': '0',  # sempre zero!
             'q_palavra_chave': termo,
             'conteudo_busca': kwargs.get('conteudo_busca', 'ementa_completa'),

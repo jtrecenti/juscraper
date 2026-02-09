@@ -29,6 +29,14 @@ juscraper e uma biblioteca Python para raspagem de dados de tribunais brasileiro
 - Rodar todos os testes: `pytest`
 - `--strict-markers` esta ativo — todo marker deve ser registrado no `pyproject.toml`
 
+## Convencao de paginacao
+
+- O parametro `paginas` e sempre 1-based em todos os scrapers
+- range(1, 4) baixa paginas 1, 2 e 3
+- Onde suportado, paginas=3 (int) e equivalente a range(1, 4)
+- paginas=None baixa todas as paginas disponiveis
+
+
 ## Regras de workflow no GitHub
 
 - Nunca tentar aprovar o proprio PR (`gh pr review --approve` falha para o autor do PR)

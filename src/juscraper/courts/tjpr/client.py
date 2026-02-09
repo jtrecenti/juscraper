@@ -30,6 +30,11 @@ class TJPRScraper(BaseScraper):
         """
         Downloads raw results from the TJPR jurisprudence search (multiple pages).
         Returns a list of HTMLs (one per page).
+
+        Args:
+            paginas (int, list, or range): Pages to download (1-based).
+                int: paginas=3 downloads pages 1-3.
+                range: range(1, 4) downloads pages 1-3.
         """
         return cjsg_download(
             self.session, self.USER_AGENT, self.HOME_URL, termo, paginas,
