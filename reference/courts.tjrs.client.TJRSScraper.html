@@ -247,7 +247,34 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    session<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Downloads raw results from the TJRS ‘jurisprudence search’ (multiple pages). Returns a list of raw results (JSON). New parameter: secao (‘civel’, ‘crime’, or None)</p>
+<p>Downloads raw results from the TJRS ‘jurisprudence search’ (multiple pages). Returns a list of raw results (JSON).</p>
+<section id="parameters" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>paginas</td>
+<td>int, list, or range</td>
+<td>Pages to download (1-based). int: paginas=3 downloads pages 1-3. range: range(1, 4) downloads pages 1-3.</td>
+<td><code>1</code></td>
+</tr>
+<tr class="even">
+<td>secao</td>
+<td><a href="`str`">str</a></td>
+<td>‘civel’, ‘crime’, or None.</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="juscraper.courts.tjrs.client.TJRSScraper.cjsg_parse" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjrs.client.TJRSScraper.cjsg_parse">cjsg_parse</h3>

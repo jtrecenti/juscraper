@@ -211,20 +211,47 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <section id="juscraper.courts.tjdft.client.TJDFTScraper.cjsg" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjdft.client.TJDFTScraper.cjsg">cjsg</h3>
-<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>courts.tjdft.client.TJDFTScraper.cjsg(query, paginas<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>courts.tjdft.client.TJDFTScraper.cjsg(query, paginas<span class="op">=</span><span class="dv">1</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Searches for TJDFT jurisprudence in a simplified way (download + parse). Returns a ready-to-analyze DataFrame.</p>
 </section>
 <section id="juscraper.courts.tjdft.client.TJDFTScraper.cjsg_download" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjdft.client.TJDFTScraper.cjsg_download">cjsg_download</h3>
 <div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>courts.tjdft.client.TJDFTScraper.cjsg_download(</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    query,</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">0</span>,</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">1</span>,</span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    sinonimos<span class="op">=</span><span class="va">True</span>,</span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    espelho<span class="op">=</span><span class="va">True</span>,</span>
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    inteiro_teor<span class="op">=</span><span class="va">False</span>,</span>
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    quantidade_por_pagina<span class="op">=</span><span class="dv">10</span>,</span>
 <span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Downloads raw search results from the TJDFT jurisprudence search (using requests). Returns a list of raw results (JSON).</p>
+<section id="parameters" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 6%">
+<col style="width: 14%">
+<col style="width: 72%">
+<col style="width: 7%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>paginas</td>
+<td>int, list, or range</td>
+<td>Pages to download (1-based). int: paginas=3 downloads pages 1-3. range: range(1, 4) downloads pages 1-3.</td>
+<td><code>1</code></td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="juscraper.courts.tjdft.client.TJDFTScraper.cjsg_parse" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjdft.client.TJDFTScraper.cjsg_parse">cjsg_parse</h3>
