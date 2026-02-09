@@ -36,6 +36,7 @@ juscraper e uma biblioteca Python para raspagem de dados de tribunais brasileiro
 - Onde suportado, paginas=3 (int) e equivalente a range(1, 4)
 - paginas=None baixa todas as paginas disponiveis
 
+
 ## Regras de workflow no GitHub
 
 - Nunca tentar aprovar o proprio PR (`gh pr review --approve` falha para o autor do PR)
