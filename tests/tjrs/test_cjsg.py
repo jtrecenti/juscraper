@@ -45,7 +45,7 @@ def test_cjsg_dataframe():
 @pytest.mark.integration
 def test_cjsg_paginas_range():
     scraper = TJRSScraper()
-    df = scraper.cjsg("acórdão", paginas=range(0, 3))
+    df = scraper.cjsg("acórdão", paginas=range(1, 4))
     assert isinstance(df, pd.DataFrame)
     assert not df.empty
     assert len(df) > 10
@@ -69,7 +69,7 @@ def test_cjsg_paginas_int():
 @pytest.mark.integration
 def test_cjsg_paginas_range_exact_count():
     scraper = TJRSScraper()
-    df = scraper.cjsg("acórdão", paginas=range(0, 3))
+    df = scraper.cjsg("acórdão", paginas=range(1, 4))
     print(f"Número de linhas retornadas: {len(df)}")
     duplicados = df.duplicated().sum()
     print(f"Duplicatas: {duplicados}")

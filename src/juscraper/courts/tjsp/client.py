@@ -254,10 +254,7 @@ class TJSPScraper(BaseScraper):
             data_fim: End date of the process.
             baixar_sg (bool): If True, also downloads from Second Stage.
             tipo_decisao (str): 'acordao' or 'monocratica'.
-            paginas (range, optional): Range of pages to download.
-        
-        NOTE: range(0, n) downloads pages 1 to n (inclusive), following
-        the user's expectation (example: range(0,3) downloads pages 1, 2 and 3).
+            paginas (range, optional): Page range (1-based). range(1, 4) downloads pages 1-3.
         """
         return cjsg_download_mod(
             pesquisa=pesquisa,
@@ -301,7 +298,7 @@ class TJSPScraper(BaseScraper):
             id_processo (str, optional): ID of the process. Default is None.
             data_inicio (str, optional): Start date of the search. Default is None.
             data_fim (str, optional): End date of the search. Default is None.
-            paginas (range, optional): Range of pages to download. Default is None.
+            paginas (range, optional): Page range (1-based). range(1, 4) downloads pages 1-3. Default is None.
         """
         path_result = self.cjpg_download(
             pesquisa=pesquisa,
@@ -340,7 +337,7 @@ class TJSPScraper(BaseScraper):
             id_processo (str, optional): ID of the process. Default is None.
             data_inicio (str, optional): Start date of the search. Default is None.
             data_fim (str, optional): End date of the search. Default is None.
-            paginas (range, optional): Pages to download. Default is None.
+            paginas (range, optional): Page range (1-based). range(1, 4) downloads pages 1-3. Default is None.
         """
         def get_n_pags_callback(r0):
             # r0 pode ser requests.Response ou HTML string

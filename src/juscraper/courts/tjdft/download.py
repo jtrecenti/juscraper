@@ -5,7 +5,7 @@ import requests
 
 def cjsg_download(
     query,
-    paginas=0,
+    paginas=1,
     sinonimos=True,
     espelho=True,
     inteiro_teor=False,
@@ -15,6 +15,11 @@ def cjsg_download(
     """
     Downloads raw results from the TJDFT jurisprudence search (using requests).
     Returns a list of raw results (JSON).
+
+    Args:
+        paginas (int or range): Pages to download (1-based).
+            int: paginas=3 downloads pages 1-3.
+            range: range(1, 4) downloads pages 1-3.
     """
     resultados = []
     if isinstance(paginas, int):

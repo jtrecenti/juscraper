@@ -25,7 +25,7 @@ class TJDFTScraper(BaseScraper):
     def cjsg_download(
         self,
         query: str,
-        paginas: Union[int, list, range] = 0,
+        paginas: Union[int, list, range] = 1,
         sinonimos: bool = True,
         espelho: bool = True,
         inteiro_teor: bool = False,
@@ -34,6 +34,11 @@ class TJDFTScraper(BaseScraper):
         """
         Downloads raw search results from the TJDFT jurisprudence search (using requests).
         Returns a list of raw results (JSON).
+
+        Args:
+            paginas (int, list, or range): Pages to download (1-based).
+                int: paginas=3 downloads pages 1-3.
+                range: range(1, 4) downloads pages 1-3.
         """
         return cjsg_download(
             query=query,
@@ -52,7 +57,7 @@ class TJDFTScraper(BaseScraper):
         """
         return cjsg_parse(resultados_brutos)
 
-    def cjsg(self, query: str, paginas: Union[int, list, range] = 0) -> pd.DataFrame:
+    def cjsg(self, query: str, paginas: Union[int, list, range] = 1) -> pd.DataFrame:
         """
         Searches for TJDFT jurisprudence in a simplified way (download + parse).
         Returns a ready-to-analyze DataFrame.

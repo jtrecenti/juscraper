@@ -42,7 +42,7 @@ def cjpg_download(
         id_processo (str, optional): Process ID.
         data_inicio (str, optional): Start date for filtering.
         data_fim (str, optional): End date for filtering.
-        paginas (range, optional): Page range.
+        paginas (range, optional): Page range (1-based, e.g., range(1, 4) downloads pages 1-3).
         get_n_pags_callback (callable): Callback function to extract number of pages.
     """
     if assuntos is not None:
@@ -98,11 +98,13 @@ def cjpg_download(
             f"Erro ao extrair número de páginas: {e}. HTML salvo em: {debug_file}"
         ) from e
 
-    # Se paginas for None, definir range para todas as páginas
+    # Se paginas for None, definir range para todas as páginas (1-based)
     if paginas is None:
         paginas = range(1, n_pags + 1)
     else:
-        start, stop, step = paginas.start, min(paginas.stop, n_pags + 1), paginas.step
+        start = paginas.start if paginas.start is not None else 1
+        stop = min(paginas.stop, n_pags + 1) if paginas.stop is not None else n_pags + 1
+        step = paginas.step if paginas.step is not None else 1
         paginas = range(start, stop, step)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -110,11 +112,21 @@ def cjpg_download(
     if not os.path.isdir(path):
         os.makedirs(path)
 
-    for pag in tqdm(paginas, desc="Baixando documentos"):
+    # Save page 1 from the initial request (r0) if it's in the requested range
+    first_page_in_range = 1 in paginas
+    if first_page_in_range:
+        with open(f"{path}/cjpg_00001.html", 'w', encoding='utf-8') as f:
+            f.write(r0.text)
+
+    # Download remaining pages (> 1) via trocarDePagina.do
+    remaining = [p for p in paginas if p > 1]
+    total = len(remaining) + (1 if first_page_in_range else 0)
+    initial = 1 if first_page_in_range else 0
+
+    for page in tqdm(remaining, desc="Baixando documentos", total=total, initial=initial):
         time.sleep(sleep_time)
-        u = f"{u_base}cjpg/trocarDePagina.do?pagina={pag + 1}&conversationId="
+        u = f"{u_base}cjpg/trocarDePagina.do?pagina={page}&conversationId="
         r = session.get(u)
-        file_name = f"{path}/cjpg_{pag + 1:05d}.html"
-        with open(file_name, 'w', encoding='utf-8') as f:
+        with open(f"{path}/cjpg_{page:05d}.html", 'w', encoding='utf-8') as f:
             f.write(r.text)
     return path

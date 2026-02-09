@@ -38,7 +38,7 @@ import juscraper as jus
 tjsp = jus.scraper('tjsp')
 
 # Buscar jurisprudência
-dados = tjsp.cjpg('golpe do pix', paginas=range(1, 3))
+dados = tjsp.cjpg('golpe do pix', paginas=range(1, 4))
 print(f"Encontrados {len(dados)} resultados")
 
 # Visualizar primeiros resultados
@@ -118,13 +118,13 @@ Já existem soluções usando o R para esses raspadores, como os pacotes `tjsp` 
 
 ### Observação sobre o parâmetro `paginas`
 
-Ao utilizar as funções de download `cjsg_download` e `cjpg_download`, o parâmetro `paginas` deve ser um objeto `range`. Por padrão, `range(0, n)` fará o download das páginas 1 até n (inclusive), ou seja, `range(0, 3)` baixa as páginas 1, 2 e 3. Isso torna o comportamento mais intuitivo para o usuário.
+O parâmetro `paginas` é **1-based** em todos os scrapers. Ao utilizar as funções de download, `range(1, n+1)` faz o download das páginas 1 até n, ou seja, `range(1, 4)` baixa as páginas 1, 2 e 3. Onde suportado, passar um inteiro (ex: `paginas=3`) é equivalente a `range(1, 4)`.
 
 Exemplo de uso:
 
 ```python
-scraper.cjsg_download(pesquisa="dano moral", paginas=range(0, 5))  # Baixa as páginas 1 a 5
-scraper.cjpg_download(pesquisa="contrato", paginas=range(0, 2))    # Baixa as páginas 1 e 2
+scraper.cjsg_download(pesquisa="dano moral", paginas=range(1, 6))  # Baixa as páginas 1 a 5
+scraper.cjpg_download(pesquisa="contrato", paginas=range(1, 3))    # Baixa as páginas 1 e 2
 ```
 
 ## Instalação em desenvolvimento

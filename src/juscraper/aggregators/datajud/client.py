@@ -63,6 +63,10 @@ class DatajudScraper(BaseScraper):
     ) -> pd.DataFrame:
         """
         Lists processes from Datajud via API, with support for multiple filters and pagination.
+
+        Args:
+            paginas (range, optional): Page range (1-based, e.g., range(1, 4) fetches pages 1-3).
+                None fetches all available pages.
         """
         all_dfs = []
         # Determine target aliases
