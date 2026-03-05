@@ -39,18 +39,12 @@ class TJRSScraper(BaseScraper):
         self.session = requests.Session()
 
     def cpopg(self, id_cnj: Union[str, List[str]]):
-        """
-        Fetches jurisprudence from TJRS in a simplified way (download + parse).
-        Returns a DataFrame ready for analysis.
-        """
-        print(f"[TJRS] Consulting process: {id_cnj}")
+        """Stub: Primeiro grau case consultation not implemented for TJRS."""
+        raise NotImplementedError("Consulta de processos de 1º grau não implementada para TJRS.")
 
     def cposg(self, id_cnj: Union[str, List[str]]):
-        """
-        Fetches jurisprudence from TJRS in a simplified way (download + parse).
-        Returns a DataFrame ready for analysis.
-        """
-        print(f"[TJRS] Consulting process: {id_cnj}")
+        """Stub: Segundo grau case consultation not implemented for TJRS."""
+        raise NotImplementedError("Consulta de processos de 2º grau não implementada para TJRS.")
 
     def cjsg_download(
         self,
@@ -88,6 +82,7 @@ class TJRSScraper(BaseScraper):
             data_julgamento_fim=data_julgamento_fim,
             data_publicacao_inicio=data_publicacao_inicio,
             data_publicacao_fim=data_publicacao_fim,
+            **kwargs,
         )
         if session is None:
             session = self.session
@@ -105,6 +100,7 @@ class TJRSScraper(BaseScraper):
             tipo_processo=tipo_processo,
             secao=secao,
             session=session,
+            **kwargs,
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> 'pd.DataFrame':
@@ -150,5 +146,6 @@ class TJRSScraper(BaseScraper):
             tipo_processo=tipo_processo,
             secao=secao,
             session=session,
+            **kwargs,
         )
         return self.cjsg_parse(brutos)

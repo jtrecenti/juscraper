@@ -28,7 +28,7 @@ def cjsg_download(
     data_fim: str = None,
     baixar_sg: bool = True,
     tipo_decisao: str = 'acordao',
-    paginas: range = None,
+    paginas: 'int | list | range | None' = None,
     get_n_pags_callback=None,
 ):
     """

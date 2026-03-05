@@ -92,6 +92,7 @@ class TJPRScraper(BaseScraper):
             data_julgamento_fim=data_julgamento_fim,
             data_publicacao_inicio=data_publicacao_inicio,
             data_publicacao_fim=data_publicacao_fim,
+            **kwargs,
         )
         return self.cjsg_parse(brutos, pesquisa_val)
 

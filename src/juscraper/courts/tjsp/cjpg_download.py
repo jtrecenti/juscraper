@@ -24,7 +24,7 @@ def cjpg_download(
     id_processo: str = None,
     data_inicio: str = None,
     data_fim: str = None,
-    paginas: range = None,
+    paginas: 'int | list | range | None' = None,
     get_n_pags_callback=None
 ):
     """
