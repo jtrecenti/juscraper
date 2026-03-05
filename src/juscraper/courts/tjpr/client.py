@@ -5,8 +5,10 @@ from typing import Optional, Union, List
 import requests
 import pandas as pd
 from juscraper.core.base import BaseScraper
+from juscraper.utils.params import normalize_paginas, normalize_pesquisa, normalize_datas
 from .download import cjsg_download, get_initial_tokens
 from .parse import cjsg_parse
+
 
 class TJPRScraper(BaseScraper):
     """Scraper for the Court of Justice of Paraná."""
@@ -24,21 +26,40 @@ class TJPRScraper(BaseScraper):
         self.token: Optional[str] = None
         self.jsessionid: Optional[str] = None
 
-    def cjsg_download(self, termo: str, paginas: Union[int, list, range] = 1,
-                      data_julgamento_de: str = None, data_julgamento_ate: str = None,
-                      data_publicacao_de: str = None, data_publicacao_ate: str = None) -> list:
+    def cjsg_download(
+        self,
+        pesquisa: str = None,
+        paginas: Union[int, list, range, None] = None,
+        data_julgamento_inicio: str = None,
+        data_julgamento_fim: str = None,
+        data_publicacao_inicio: str = None,
+        data_publicacao_fim: str = None,
+        **kwargs,
+    ) -> list:
         """
         Downloads raw results from the TJPR jurisprudence search (multiple pages).
         Returns a list of HTMLs (one per page).
 
         Args:
-            paginas (int, list, or range): Pages to download (1-based).
+            pesquisa: Search term. ``termo`` is accepted as deprecated alias.
+            paginas (int, list, range, or None): Pages to download (1-based).
                 int: paginas=3 downloads pages 1-3.
                 range: range(1, 4) downloads pages 1-3.
+                None: downloads all available pages.
         """
+        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
+        paginas = normalize_paginas(paginas)
+        datas = normalize_datas(
+            data_julgamento_inicio=data_julgamento_inicio,
+            data_julgamento_fim=data_julgamento_fim,
+            data_publicacao_inicio=data_publicacao_inicio,
+            data_publicacao_fim=data_publicacao_fim,
+            **kwargs,
+        )
         return cjsg_download(
-            self.session, self.USER_AGENT, self.HOME_URL, termo, paginas,
-            data_julgamento_de, data_julgamento_ate, data_publicacao_de, data_publicacao_ate
+            self.session, self.USER_AGENT, self.HOME_URL, pesquisa, paginas,
+            datas["data_julgamento_inicio"], datas["data_julgamento_fim"],
+            datas["data_publicacao_inicio"], datas["data_publicacao_fim"],
         )
 
     def cjsg_parse(self, resultados_brutos: list, criterio: str = None) -> pd.DataFrame:
@@ -46,27 +67,33 @@ class TJPRScraper(BaseScraper):
         Extracts relevant data from the HTMLs returned by TJPR.
         Returns a DataFrame with the decisions.
         """
-        # For complete minutes, you need to pass session, jsessionid, user_agent
         jsessionid, _ = get_initial_tokens(self.session, self.HOME_URL)
         return cjsg_parse(resultados_brutos, criterio, self.session, jsessionid, self.USER_AGENT)
 
-    def cjsg(self, query: str, paginas: Union[int, list, range] = 1,
-             data_julgamento_de: str = None, data_julgamento_ate: str = None,
-             data_publicacao_de: str = None, data_publicacao_ate: str = None, **kwargs) -> pd.DataFrame:
+    def cjsg(
+        self,
+        pesquisa: str = None,
+        paginas: Union[int, list, range, None] = None,
+        data_julgamento_inicio: str = None,
+        data_julgamento_fim: str = None,
+        data_publicacao_inicio: str = None,
+        data_publicacao_fim: str = None,
+        **kwargs,
+    ) -> pd.DataFrame:
         """
         Searches for TJPR jurisprudence in a simplified way (download + parse).
         Returns a ready-to-analyze DataFrame.
         """
+        pesquisa_val = normalize_pesquisa(pesquisa, **kwargs)
         brutos = self.cjsg_download(
-            termo=query,
+            pesquisa=pesquisa_val,
             paginas=paginas,
-            data_julgamento_de=data_julgamento_de,
-            data_julgamento_ate=data_julgamento_ate,
-            data_publicacao_de=data_publicacao_de,
-            data_publicacao_ate=data_publicacao_ate,
-            **kwargs
+            data_julgamento_inicio=data_julgamento_inicio,
+            data_julgamento_fim=data_julgamento_fim,
+            data_publicacao_inicio=data_publicacao_inicio,
+            data_publicacao_fim=data_publicacao_fim,
         )
-        return self.cjsg_parse(brutos, query)
+        return self.cjsg_parse(brutos, pesquisa_val)
 
     def cpopg(self, id_cnj: Union[str, List[str]]):
         """Stub: Primeiro grau case consultation not implemented for TJPR."""

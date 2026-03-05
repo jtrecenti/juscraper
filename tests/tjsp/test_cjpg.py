@@ -61,9 +61,9 @@ class TestCJPGIntegration:
         """Test CJPG with date filters."""
         results = self.scraper.cjpg(
             'direito',
-            data_inicio='01/01/2023',
-            data_fim='31/12/2023',
-            paginas=range(1, 2)
+            data_julgamento_inicio='01/01/2023',
+            data_julgamento_fim='31/12/2023',
+            paginas=range(1, 2),
         )
         assert isinstance(results, pd.DataFrame)
     

@@ -4,8 +4,10 @@ Module for the scraper of the Court of Justice of the Federal District and Terri
 from typing import Union, List
 import pandas as pd
 from juscraper.core.base import BaseScraper
+from juscraper.utils.params import normalize_paginas, normalize_pesquisa, normalize_datas, warn_unsupported
 from .download import cjsg_download
 from .parse import cjsg_parse
+
 
 class TJDFTScraper(BaseScraper):
     """Scraper for the Court of Justice of the Federal District and Territories (TJDFT)."""
@@ -24,30 +26,39 @@ class TJDFTScraper(BaseScraper):
 
     def cjsg_download(
         self,
-        query: str,
-        paginas: Union[int, list, range] = 1,
+        pesquisa: str = None,
+        paginas: Union[int, list, range, None] = None,
         sinonimos: bool = True,
         espelho: bool = True,
         inteiro_teor: bool = False,
         quantidade_por_pagina: int = 10,
+        **kwargs,
     ) -> list:
         """
         Downloads raw search results from the TJDFT jurisprudence search (using requests).
         Returns a list of raw results (JSON).
 
         Args:
-            paginas (int, list, or range): Pages to download (1-based).
+            pesquisa: Search term. ``query`` is accepted as deprecated alias.
+            paginas (int, list, range, or None): Pages to download (1-based).
                 int: paginas=3 downloads pages 1-3.
                 range: range(1, 4) downloads pages 1-3.
+                None: downloads all available pages.
         """
+        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
+        paginas = normalize_paginas(paginas)
+        datas = normalize_datas(**kwargs)
+        for key, value in datas.items():
+            if value is not None:
+                warn_unsupported(key, "TJDFT")
         return cjsg_download(
-            query=query,
+            query=pesquisa,
             paginas=paginas,
             sinonimos=sinonimos,
             espelho=espelho,
             inteiro_teor=inteiro_teor,
             quantidade_por_pagina=quantidade_por_pagina,
-            base_url=self.BASE_URL
+            base_url=self.BASE_URL,
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> list:
@@ -57,12 +68,17 @@ class TJDFTScraper(BaseScraper):
         """
         return cjsg_parse(resultados_brutos)
 
-    def cjsg(self, query: str, paginas: Union[int, list, range] = 1) -> pd.DataFrame:
+    def cjsg(
+        self,
+        pesquisa: str = None,
+        paginas: Union[int, list, range, None] = None,
+        **kwargs,
+    ) -> pd.DataFrame:
         """
         Searches for TJDFT jurisprudence in a simplified way (download + parse).
         Returns a ready-to-analyze DataFrame.
         """
-        brutos = self.cjsg_download(query=query, paginas=paginas)
+        brutos = self.cjsg_download(pesquisa=pesquisa, paginas=paginas, **kwargs)
         dados = self.cjsg_parse(brutos)
         df = pd.DataFrame(dados)
         for col in ["data_julgamento", "data_publicacao"]:

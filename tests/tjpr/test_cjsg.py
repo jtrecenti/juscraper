@@ -7,7 +7,7 @@ from juscraper.courts.tjpr.client import TJPRScraper
 @pytest.mark.integration
 def test_cjsg_download_and_parse():
     scraper = TJPRScraper()
-    htmls = scraper.cjsg_download(termo="direito civil", paginas=1)
+    htmls = scraper.cjsg_download(pesquisa="direito civil", paginas=1)
     assert isinstance(htmls, list)
     assert len(htmls) == 1
     html = htmls[0]
@@ -33,7 +33,7 @@ def test_cjsg_download_and_parse():
 @pytest.mark.integration
 def test_cjsg_interface():
     scraper = TJPRScraper()
-    df = scraper.cjsg(query="direito civil", paginas=1)
+    df = scraper.cjsg(pesquisa="direito civil", paginas=1)
     if df.empty:
         print("\n==== DataFrame vazio na interface. ====")
     assert isinstance(df, pd.DataFrame)

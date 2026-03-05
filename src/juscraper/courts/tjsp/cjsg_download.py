@@ -232,20 +232,28 @@ def cjsg_download(
     # Page 1 is already downloaded above, so we only need pages > 1
     if paginas is None:
         paginas_list = list(range(2, n_pags + 1))
-    else:
+    elif isinstance(paginas, range):
         pag_min = paginas.start if paginas.start is not None else 1
         pag_max = min(paginas.stop, n_pags + 1) if paginas.stop is not None else n_pags + 1
         paginas_list = [p for p in range(pag_min, pag_max) if p > 1]
-    
+    else:
+        # list
+        paginas_list = [p for p in paginas if 1 < p <= n_pags]
+
     if verbose > 0:
         logger.info("Total de páginas: %s", n_pags)
         logger.info("Paginas a serem baixadas: %s", paginas_list)
-    
+
     # Download remaining pages using requests
     if paginas_list:
         # Include page 1 in the total count for progress bar if it's in the requested range
-        pag_min_for_bar = (paginas.start if paginas and paginas.start is not None else 1)
-        page1_in_range = paginas is None or pag_min_for_bar <= 1
+        if paginas is None:
+            page1_in_range = True
+        elif isinstance(paginas, range):
+            pag_min_for_bar = paginas.start if paginas.start is not None else 1
+            page1_in_range = pag_min_for_bar <= 1
+        else:
+            page1_in_range = 1 in paginas
         total_pages = len(paginas_list) + (1 if page1_in_range else 0)
         initial_count = 1 if page1_in_range else 0
         for pag in tqdm(paginas_list, desc="Baixando documentos", total=total_pages, initial=initial_count):

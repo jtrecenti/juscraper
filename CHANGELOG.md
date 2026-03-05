@@ -13,6 +13,12 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- **BREAKING:** Padronizados nomes dos parâmetros da API pública (#63):
+  - Busca: todos os scrapers usam `pesquisa` (antes `query`/`termo` em TJDFT/TJPR/TJRS)
+  - Datas: sufixo `_de/_ate` renomeado para `_inicio/_fim` em TJPR/TJRS; TJSP `data_inicio/fim` renomeado para `data_julgamento_inicio/fim`
+  - Paginação: tipo expandido para `int | list | range | None` em todos os scrapers; default alterado de `1` para `None` (todas as páginas) em TJDFT/TJPR/TJRS
+- Nomes antigos (`query`, `termo`, `data_*_de/_ate`, `data_inicio/fim`) ainda aceitos com `DeprecationWarning`; serão removidos em v1.0
+- Adicionado módulo `juscraper.utils.params` com funções de normalização de parâmetros
 - **BREAKING:** Padronizado parâmetro `paginas` como 1-based em todos os scrapers: `range(1, 4)` baixa páginas 1, 2 e 3. Usuários que passavam `range(0, N)` devem atualizar para `range(1, N+1)`
 - Removidas dependências não utilizadas: `pyppeteer`, `playwright`, `selenium`, `webdriver-manager` (#25)
 - Removida constraint de `websockets` que era necessária apenas por causa do pyppeteer

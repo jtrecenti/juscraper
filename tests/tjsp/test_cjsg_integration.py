@@ -89,12 +89,12 @@ class TestCJSGIntegration:
     
     def test_cjsg_date_filters(self):
         """Test CJSG with date filters."""
-        # Test with date range
+        # Test with date range (canonical names)
         results = self.scraper.cjsg(
             'direito',
-            data_inicio='01/01/2023',
-            data_fim='31/12/2023',
-            paginas=range(1, 2)
+            data_julgamento_inicio='01/01/2023',
+            data_julgamento_fim='31/12/2023',
+            paginas=range(1, 2),
         )
         assert isinstance(results, pd.DataFrame)
     
