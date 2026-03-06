@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-6fba9491ca47b5207d99b2cd0a474235.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-fdf3774ab1655dfc158ed893cda16b19.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -212,12 +212,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="juscraper.courts.tjpr.client.TJPRScraper.cjsg" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjpr.client.TJPRScraper.cjsg">cjsg</h3>
 <div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>courts.tjpr.client.TJPRScraper.cjsg(</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    query,</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">1</span>,</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    data_julgamento_de<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    data_julgamento_ate<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    data_publicacao_de<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    data_publicacao_ate<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    data_publicacao_inicio<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    data_publicacao_fim<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Searches for TJPR jurisprudence in a simplified way (download + parse). Returns a ready-to-analyze DataFrame.</p>
@@ -225,23 +225,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="juscraper.courts.tjpr.client.TJPRScraper.cjsg_download" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjpr.client.TJPRScraper.cjsg_download">cjsg_download</h3>
 <div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>courts.tjpr.client.TJPRScraper.cjsg_download(</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    termo,</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">1</span>,</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    data_julgamento_de<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    data_julgamento_ate<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    data_publicacao_de<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    data_publicacao_ate<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    data_publicacao_inicio<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    data_publicacao_fim<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Downloads raw results from the TJPR jurisprudence search (multiple pages). Returns a list of HTMLs (one per page).</p>
 <section id="parameters" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
 <table class="caption-top table">
-<colgroup>
-<col style="width: 6%">
-<col style="width: 14%">
-<col style="width: 72%">
-<col style="width: 7%">
-</colgroup>
 <thead>
 <tr class="header">
 <th>Name</th>
@@ -252,10 +247,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
+<td>pesquisa</td>
+<td><a href="`str`">str</a></td>
+<td>Search term. <code>termo</code> is accepted as deprecated alias.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
 <td>paginas</td>
-<td>int, list, or range</td>
-<td>Pages to download (1-based). int: paginas=3 downloads pages 1-3. range: range(1, 4) downloads pages 1-3.</td>
-<td><code>1</code></td>
+<td>int, list, range, or None</td>
+<td>Pages to download (1-based). int: paginas=3 downloads pages 1-3. range: range(1, 4) downloads pages 1-3. None: downloads all available pages.</td>
+<td><code>None</code></td>
 </tr>
 </tbody>
 </table>
