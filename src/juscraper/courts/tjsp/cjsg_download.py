@@ -232,6 +232,9 @@ def cjsg_download(
     # Page 1 is already downloaded above, so we only need pages > 1
     if paginas is None:
         paginas_list = list(range(2, n_pags + 1))
+    elif isinstance(paginas, int):
+        pag_max = min(paginas, n_pags)
+        paginas_list = [p for p in range(2, pag_max + 1)]
     elif isinstance(paginas, range):
         pag_min = paginas.start if paginas.start is not None else 1
         pag_max = min(paginas.stop, n_pags + 1) if paginas.stop is not None else n_pags + 1
@@ -249,6 +252,8 @@ def cjsg_download(
         # Include page 1 in the total count for progress bar if it's in the requested range
         if paginas is None:
             page1_in_range = True
+        elif isinstance(paginas, int):
+            page1_in_range = paginas >= 1
         elif isinstance(paginas, range):
             pag_min_for_bar = paginas.start if paginas.start is not None else 1
             page1_in_range = pag_min_for_bar <= 1
