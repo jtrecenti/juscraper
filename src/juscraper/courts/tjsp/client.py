@@ -11,6 +11,7 @@ import urllib3
 import requests
 
 from ...core.base import BaseScraper
+from ...utils.params import normalize_paginas, normalize_datas
 
 from .cpopg_download import cpopg_download_html, cpopg_download_api
 from .cpopg_parse import get_cpopg_download_links, cpopg_parse_manager
@@ -198,11 +199,12 @@ class TJSPScraper(BaseScraper):
         assunto: str | None = None,
         comarca: str | None = None,
         orgao_julgador: str | None = None,
-        data_inicio: str | None = None,
-        data_fim: str | None = None,
+        data_julgamento_inicio: str | None = None,
+        data_julgamento_fim: str | None = None,
         baixar_sg: bool = True,
         tipo_decisao: str | Literal['acordao', 'monocratica'] = 'acordao',
-        paginas: range | None = None,
+        paginas: int | list | range | None = None,
+        **kwargs,
     ):
         """
         Orchestrates the download and parsing of processes from CJSG.
@@ -214,14 +216,14 @@ class TJSPScraper(BaseScraper):
             assunto=assunto,
             comarca=comarca,
             orgao_julgador=orgao_julgador,
-            data_inicio=data_inicio,
-            data_fim=data_fim,
+            data_julgamento_inicio=data_julgamento_inicio,
+            data_julgamento_fim=data_julgamento_fim,
             baixar_sg=baixar_sg,
             tipo_decisao=tipo_decisao,
             paginas=paginas,
+            **kwargs,
         )
         data_parsed = self.cjsg_parse(path_result)
-        # delete folder
         shutil.rmtree(path_result)
         return data_parsed
 
@@ -233,11 +235,12 @@ class TJSPScraper(BaseScraper):
         assunto: str | None = None,
         comarca: str | None = None,
         orgao_julgador: str | None = None,
-        data_inicio: str | None = None,
-        data_fim: str | None = None,
+        data_julgamento_inicio: str | None = None,
+        data_julgamento_fim: str | None = None,
         baixar_sg: bool = True,
         tipo_decisao: str | Literal['acordao', 'monocratica'] = 'acordao',
-        paginas: range | None = None,
+        paginas: int | list | range | None = None,
+        **kwargs,
     ):
         """
         Downloads the HTML files of the pages of results of the
@@ -250,12 +253,18 @@ class TJSPScraper(BaseScraper):
             assunto: Subject of the process.
             comarca: Court of the process.
             orgao_julgador: Court of appeal of the process.
-            data_inicio: Start date of the process.
-            data_fim: End date of the process.
+            data_julgamento_inicio: Start date (judgment). ``data_inicio`` accepted as alias.
+            data_julgamento_fim: End date (judgment). ``data_fim`` accepted as alias.
             baixar_sg (bool): If True, also downloads from Second Stage.
             tipo_decisao (str): 'acordao' or 'monocratica'.
-            paginas (range, optional): Page range (1-based). range(1, 4) downloads pages 1-3.
+            paginas (int, list, range, or None): Pages (1-based). None downloads all.
         """
+        paginas = normalize_paginas(paginas)
+        datas = normalize_datas(
+            data_julgamento_inicio=data_julgamento_inicio,
+            data_julgamento_fim=data_julgamento_fim,
+            **kwargs,
+        )
         return cjsg_download_mod(
             pesquisa=pesquisa,
             download_path=self.download_path,
@@ -267,8 +276,8 @@ class TJSPScraper(BaseScraper):
             assunto=assunto,
             comarca=comarca,
             orgao_julgador=orgao_julgador,
-            data_inicio=data_inicio,
-            data_fim=data_fim,
+            data_inicio=datas["data_julgamento_inicio"],
+            data_fim=datas["data_julgamento_fim"],
             baixar_sg=baixar_sg,
             tipo_decisao=tipo_decisao,
             paginas=paginas,
@@ -283,9 +292,10 @@ class TJSPScraper(BaseScraper):
         assuntos: list[str] | None = None,
         varas: list[str] | None = None,
         id_processo: str | None = None,
-        data_inicio: str | None = None,
-        data_fim: str | None = None,
-        paginas: range | None = None,
+        data_julgamento_inicio: str | None = None,
+        data_julgamento_fim: str | None = None,
+        paginas: int | list | range | None = None,
+        **kwargs,
     ):
         """
         Orchestrates the download and parsing of processes from CJPG.
@@ -296,9 +306,9 @@ class TJSPScraper(BaseScraper):
             assuntos (list[str], optional): List of subjects of the process. Default is None.
             varas (list[str], optional): List of varas of the process. Default is None.
             id_processo (str, optional): ID of the process. Default is None.
-            data_inicio (str, optional): Start date of the search. Default is None.
-            data_fim (str, optional): End date of the search. Default is None.
-            paginas (range, optional): Page range (1-based). range(1, 4) downloads pages 1-3. Default is None.
+            data_julgamento_inicio: Start date. ``data_inicio`` accepted as alias.
+            data_julgamento_fim: End date. ``data_fim`` accepted as alias.
+            paginas (int, list, range, or None): Pages (1-based). None downloads all.
         """
         path_result = self.cjpg_download(
             pesquisa=pesquisa,
@@ -306,12 +316,12 @@ class TJSPScraper(BaseScraper):
             assuntos=assuntos,
             varas=varas,
             id_processo=id_processo,
-            data_inicio=data_inicio,
-            data_fim=data_fim,
-            paginas=paginas
+            data_julgamento_inicio=data_julgamento_inicio,
+            data_julgamento_fim=data_julgamento_fim,
+            paginas=paginas,
+            **kwargs,
         )
         data_parsed = self.cjpg_parse(path_result)
-        # delete folder
         shutil.rmtree(path_result)
         return data_parsed
 
@@ -322,9 +332,10 @@ class TJSPScraper(BaseScraper):
         assuntos: list[str] | None = None,
         varas: list[str] | None = None,
         id_processo: str | None = None,
-        data_inicio: str | None = None,
-        data_fim: str | None = None,
-        paginas: range | None = None,
+        data_julgamento_inicio: str | None = None,
+        data_julgamento_fim: str | None = None,
+        paginas: int | list | range | None = None,
+        **kwargs,
     ):
         """
         Downloads the processes from the TJSP jurisprudence.
@@ -335,14 +346,21 @@ class TJSPScraper(BaseScraper):
             assuntos (list[str], optional): List of subjects of the process. Default is None.
             varas (list[str], optional): List of varas of the process. Default is None.
             id_processo (str, optional): ID of the process. Default is None.
-            data_inicio (str, optional): Start date of the search. Default is None.
-            data_fim (str, optional): End date of the search. Default is None.
-            paginas (range, optional): Page range (1-based). range(1, 4) downloads pages 1-3. Default is None.
+            data_julgamento_inicio: Start date. ``data_inicio`` accepted as alias.
+            data_julgamento_fim: End date. ``data_fim`` accepted as alias.
+            paginas (int, list, range, or None): Pages (1-based). None downloads all.
         """
+        paginas = normalize_paginas(paginas)
+        datas = normalize_datas(
+            data_julgamento_inicio=data_julgamento_inicio,
+            data_julgamento_fim=data_julgamento_fim,
+            **kwargs,
+        )
+
         def get_n_pags_callback(r0):
-            # r0 pode ser requests.Response ou HTML string
             html = r0.content if hasattr(r0, 'content') else r0
             return cjpg_n_pags(html)
+
         return cjpg_download_mod(
             pesquisa=pesquisa,
             session=self.session,
@@ -353,10 +371,10 @@ class TJSPScraper(BaseScraper):
             assuntos=assuntos,
             varas=varas,
             id_processo=id_processo,
-            data_inicio=data_inicio,
-            data_fim=data_fim,
+            data_inicio=datas["data_julgamento_inicio"],
+            data_fim=datas["data_julgamento_fim"],
             paginas=paginas,
-            get_n_pags_callback=get_n_pags_callback
+            get_n_pags_callback=get_n_pags_callback,
         )
 
     def cjpg_parse(self, path: str):

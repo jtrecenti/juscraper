@@ -1,50 +1,49 @@
 """
 Downloads raw files from the TJRS jurisprudence search.
 """
+import math
 from urllib.parse import urlencode
+
 import requests
 from tqdm import tqdm
 
+
 def cjsg_download_manager(
     termo: str,
-    paginas: 'Union[int, list, range]' = 1,
+    paginas=None,
     classe: str = None,
     assunto: str = None,
     orgao_julgador: str = None,
     relator: str = None,
-    data_julgamento_de: str = None,
-    data_julgamento_ate: str = None,
-    data_publicacao_de: str = None,
-    data_publicacao_ate: str = None,
+    data_julgamento_inicio: str = None,
+    data_julgamento_fim: str = None,
+    data_publicacao_inicio: str = None,
+    data_publicacao_fim: str = None,
     tipo_processo: str = None,
     secao: str = None,
     session: requests.Session = None,
-    **kwargs
+    **kwargs,
 ) -> list:
     """
     Downloads raw files from the TJRS jurisprudence search (multiple pages).
     Returns a list of raw files (JSON).
 
     Args:
-        paginas (int, list, or range): Pages to download (1-based).
-            int: paginas=3 downloads pages 1-3.
-            range: range(1, 4) downloads pages 1-3.
+        paginas (list, range, or None): Pages to download (1-based).
+            None: downloads all available pages.
         secao: 'civel', 'crime', or None.
     """
     base_url = "https://www.tjrs.jus.br/buscas/jurisprudencia/ajax.php"
     if session is None:
         session = requests.Session()
-    if isinstance(paginas, int):
-        paginas_iter = range(1, paginas + 1)  # 1-based: paginas=3 → [1, 2, 3]
-    else:
-        paginas_iter = list(paginas)           # user passes 1-based: range(1, 4) → [1, 2, 3]
-    resultados = []
-    for pagina_1based in tqdm(paginas_iter, desc='Baixando páginas TJRS'):
+    results_per_page = 10
+
+    def _fetch_page(pagina_1based):
         payload = {
             'aba': 'jurisprudencia',
             'realizando_pesquisa': '1',
             'pagina_atual': str(pagina_1based - 1),  # API is 0-based
-            'start': '0',  # sempre zero!
+            'start': '0',
             'q_palavra_chave': termo,
             'conteudo_busca': kwargs.get('conteudo_busca', 'ementa_completa'),
             'filtroComAExpressao': kwargs.get('filtroComAExpressao', ''),
@@ -56,11 +55,11 @@ def cjsg_download_manager(
             'filtroTipoProcesso': tipo_processo or '-1',
             'filtroClasseCnj': classe or '-1',
             'assuntoCnj': assunto or '-1',
-            'data_julgamento_de': data_julgamento_de or '',
-            'data_julgamento_ate': data_julgamento_ate or '',
+            'data_julgamento_de': data_julgamento_inicio or '',
+            'data_julgamento_ate': data_julgamento_fim or '',
             'filtroNumeroProcesso': kwargs.get('filtroNumeroProcesso', ''),
-            'data_publicacao_de': data_publicacao_de or '',
-            'data_publicacao_ate': data_publicacao_ate or '',
+            'data_publicacao_de': data_publicacao_inicio or '',
+            'data_publicacao_ate': data_publicacao_fim or '',
             'facet': 'on',
             'facet.sort': 'index',
             'facet.limit': 'index',
@@ -74,7 +73,7 @@ def cjsg_download_manager(
             'facet_nome_assunto_cnj': '',
             'facet_nome_tribunal': '',
             'facet_tipo_processo': '',
-            'facet_mes_ano_publicacao': ''
+            'facet_mes_ano_publicacao': '',
         }
         if secao:
             secao_map = {"civel": "C", "crime": "P"}
@@ -85,9 +84,25 @@ def cjsg_download_manager(
         data = {
             'action': 'consultas_solr_ajax',
             'metodo': 'buscar_resultados',
-            'parametros': parametros_str
+            'parametros': parametros_str,
         }
         resp = session.post(base_url, data=data)
         resp.raise_for_status()
-        resultados.append(resp.json())
+        return resp.json()
+
+    if paginas is None:
+        # Download all pages: fetch first to get numFound, then the rest
+        first = _fetch_page(1)
+        resultados = [first]
+        num_found = first.get('response', {}).get('numFound', 0)
+        n_pags = math.ceil(num_found / results_per_page) if num_found else 1
+        if n_pags > 1:
+            for pagina in tqdm(range(2, n_pags + 1), desc='Baixando páginas TJRS'):
+                resultados.append(_fetch_page(pagina))
+        return resultados
+
+    paginas_iter = list(paginas)
+    resultados = []
+    for pagina_1based in tqdm(paginas_iter, desc='Baixando páginas TJRS'):
+        resultados.append(_fetch_page(pagina_1based))
     return resultados

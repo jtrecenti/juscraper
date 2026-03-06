@@ -29,13 +29,15 @@ juscraper e uma biblioteca Python para raspagem de dados de tribunais brasileiro
 - Rodar todos os testes: `pytest`
 - `--strict-markers` esta ativo — todo marker deve ser registrado no `pyproject.toml`
 
-## Convencao de paginacao
+## Convencao de API para raspadores
 
-- O parametro `paginas` e sempre 1-based em todos os scrapers
-- range(1, 4) baixa paginas 1, 2 e 3
-- Onde suportado, paginas=3 (int) e equivalente a range(1, 4)
-- paginas=None baixa todas as paginas disponiveis
-
+- Busca: `pesquisa` como nome padrao em todos os scrapers
+- Datas: `data_julgamento_inicio/fim`, `data_publicacao_inicio/fim`
+- Alias generico: `data_inicio/fim` mapeia para `data_julgamento_inicio/fim`
+- Nomes antigos (`query`, `termo`, `_de/_ate`) aceitos com DeprecationWarning
+- Paginacao: `paginas: int | list | range | None`, default `None` (todas as paginas)
+- `paginas` e sempre 1-based: range(1, 4) baixa paginas 1, 2 e 3; paginas=3 e equivalente a range(1, 4)
+- Normalizacao centralizada em `src/juscraper/utils/params.py`
 
 ## Regras de workflow no GitHub
 

@@ -1,11 +1,14 @@
 """
 Functions for downloading specific to TJDFT
 """
+import math
+
 import requests
+
 
 def cjsg_download(
     query,
-    paginas=1,
+    paginas=None,
     sinonimos=True,
     espelho=True,
     inteiro_teor=False,
@@ -17,16 +20,12 @@ def cjsg_download(
     Returns a list of raw results (JSON).
 
     Args:
-        paginas (int or range): Pages to download (1-based).
-            int: paginas=3 downloads pages 1-3.
-            range: range(1, 4) downloads pages 1-3.
+        paginas (list, range, or None): Pages to download (1-based).
+            None: downloads all available pages.
     """
-    resultados = []
-    if isinstance(paginas, int):
-        paginas_iter = range(1, paginas+1)
-    else:
-        paginas_iter = paginas
-    for pagina in paginas_iter:
+    headers = {"Content-Type": "application/json"}
+
+    def _fetch_page(pagina):
         payload = {
             "query": query,
             "termosAcessorios": [],
@@ -36,13 +35,26 @@ def cjsg_download(
             "espelho": espelho,
             "inteiroTeor": inteiro_teor,
             "retornaInteiroTeor": False,
-            "retornaTotalizacao": True
-        }
-        headers = {
-            "Content-Type": "application/json",
+            "retornaTotalizacao": True,
         }
         resp = requests.post(base_url, json=payload, headers=headers, timeout=10)
         resp.raise_for_status()
-        data = resp.json()
+        return resp.json()
+
+    if paginas is None:
+        resultados = []
+        data = _fetch_page(1)
+        registros = data.get("registros", [])
+        resultados.extend(registros)
+        total = data.get("total", len(registros))
+        n_pags = math.ceil(total / quantidade_por_pagina) if total else 1
+        for pagina in range(2, n_pags + 1):
+            data = _fetch_page(pagina)
+            resultados.extend(data.get("registros", []))
+        return resultados
+
+    resultados = []
+    for pagina in paginas:
+        data = _fetch_page(pagina)
         resultados.extend(data.get("registros", []))
     return resultados

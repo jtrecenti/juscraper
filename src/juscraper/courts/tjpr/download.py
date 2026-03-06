@@ -49,16 +49,37 @@ def get_ementa_completa(session, jsessionid, user_agent, id_processo, criterio):
     resp.raise_for_status()
     return BeautifulSoup(resp.text, 'html.parser').get_text("\n", strip=True)
 
+def _extract_total_pages(html):
+    """Extract total number of pages from TJPR pagination HTML."""
+    soup = BeautifulSoup(html, "html.parser")
+    # Look for the pagination info: "Página X de Y"
+    pag_text = soup.find(string=re.compile(r'Página\s+\d+\s+de\s+\d+'))
+    if pag_text:
+        m = re.search(r'Página\s+\d+\s+de\s+(\d+)', pag_text)
+        if m:
+            return int(m.group(1))
+    # Fallback: look for last page link
+    page_links = soup.find_all('a', href=re.compile(r'pageNumber=\d+'))
+    if page_links:
+        max_page = 1
+        for link in page_links:
+            m = re.search(r'pageNumber=(\d+)', link['href'])
+            if m:
+                max_page = max(max_page, int(m.group(1)))
+        return max_page
+    return 1
+
+
 def cjsg_download(
     session,
     user_agent,
     home_url,
     termo,
-    paginas=1,
-    data_julgamento_de=None,
-    data_julgamento_ate=None,
-    data_publicacao_de=None,
-    data_publicacao_ate=None,
+    paginas=None,
+    data_julgamento_inicio=None,
+    data_julgamento_fim=None,
+    data_publicacao_inicio=None,
+    data_publicacao_fim=None,
 ):
     """
     Downloads raw results from the TJPR 'jurisprudence search' (multiple pages).
@@ -76,21 +97,17 @@ def cjsg_download(
         'user-agent': user_agent,
     }
     cookies = {'JSESSIONID': jsessionid}
-    if isinstance(paginas, int):
-        paginas_iter = range(1, paginas+1)
-    else:
-        paginas_iter = list(paginas)
-    resultados = []
-    for pagina_atual in tqdm(paginas_iter, desc='Baixando páginas TJPR'):
+
+    def _fetch_page(pagina_atual):
         data = {
             'usuarioCienteSegredoJustica': 'false',
             'segredoJustica': 'pesquisar com',
             'id': '',
             'chave': '',
-            'dataJulgamentoInicio': data_julgamento_de or '',
-            'dataJulgamentoFim': data_julgamento_ate or '',
-            'dataPublicacaoInicio': data_publicacao_de or '',
-            'dataPublicacaoFim': data_publicacao_ate or '',
+            'dataJulgamentoInicio': data_julgamento_inicio or '',
+            'dataJulgamentoFim': data_julgamento_fim or '',
+            'dataPublicacaoInicio': data_publicacao_inicio or '',
+            'dataPublicacaoFim': data_publicacao_fim or '',
             'processo': '',
             'acordao': '',
             'idComarca': '',
@@ -120,5 +137,20 @@ def cjsg_download(
         }
         resp = session.post(url, data=data, headers=headers, cookies=cookies)
         resp.raise_for_status()
-        resultados.append(resp.text)
+        return resp.text
+
+    if paginas is None:
+        # Download all: fetch first page, extract total, then fetch the rest
+        first_html = _fetch_page(1)
+        n_pags = _extract_total_pages(first_html)
+        resultados = [first_html]
+        if n_pags > 1:
+            for pagina_atual in tqdm(range(2, n_pags + 1), desc='Baixando páginas TJPR'):
+                resultados.append(_fetch_page(pagina_atual))
+        return resultados
+
+    paginas_iter = list(paginas)
+    resultados = []
+    for pagina_atual in tqdm(paginas_iter, desc='Baixando páginas TJPR'):
+        resultados.append(_fetch_page(pagina_atual))
     return resultados

@@ -6,7 +6,7 @@ from juscraper.courts.tjdft.client import TJDFTScraper
 def test_cjsg_basico():
     scraper = TJDFTScraper()
     df = scraper.cjsg(
-        query="direito penal",
+        pesquisa="direito penal",
         paginas=1,
     )
     print(df.head())

@@ -1,0 +1,109 @@
+---
+title: "API Conventions"
+---
+
+## Standard Parameter Names
+
+All scrapers in juscraper follow a unified API convention for parameter names.
+
+### Search
+
+| Parameter | Description |
+|-----------|-------------|
+| `pesquisa` | The search query string (canonical name) |
+
+**Deprecated aliases:** `query`, `termo` — accepted with `DeprecationWarning`, will be removed in v1.0.
+
+### Date Filters
+
+| Parameter | Description |
+|-----------|-------------|
+| `data_julgamento_inicio` | Start date for judgment filtering |
+| `data_julgamento_fim` | End date for judgment filtering |
+| `data_publicacao_inicio` | Start date for publication filtering |
+| `data_publicacao_fim` | End date for publication filtering |
+
+**Generic aliases:** `data_inicio` / `data_fim` map to `data_julgamento_inicio` / `data_julgamento_fim`.
+Cannot be used together with the specific names — raises `ValueError`.
+
+**Deprecated aliases:** `data_julgamento_de` / `data_julgamento_ate`, `data_publicacao_de` / `data_publicacao_ate` — accepted with `DeprecationWarning`.
+
+### Pagination
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `paginas` | `int \| list \| range \| None` | Pages to download (1-based) |
+
+- `None` (default): downloads **all** available pages
+- `int`: shorthand — `paginas=3` is equivalent to `range(1, 4)`
+- `range`: e.g., `range(1, 4)` downloads pages 1, 2, 3
+- `list`: e.g., `[1, 3, 5]` downloads specific pages
+
+## Parameter Support by Tribunal
+
+| Parameter | TJSP (cjsg/cjpg) | TJDFT | TJPR | TJRS |
+|-----------|-------------------|-------|------|------|
+| `pesquisa` | Yes | Yes | Yes | Yes |
+| `data_julgamento_inicio/fim` | Yes | Warned | Yes | Yes |
+| `data_publicacao_inicio/fim` | No | Warned | Yes | Yes |
+| `paginas` (all types) | Yes | Yes | Yes | Yes |
+| `paginas=None` (all pages) | Yes | Yes | Yes | Yes |
+
+## Migration Guide
+
+### From `query` / `termo` to `pesquisa`
+
+```python
+# Before
+scraper.cjsg(query="direito civil")
+scraper.cjsg_download(termo="direito civil")
+
+# After
+scraper.cjsg(pesquisa="direito civil")
+scraper.cjsg_download(pesquisa="direito civil")
+```
+
+### From `_de/_ate` to `_inicio/_fim`
+
+```python
+# Before
+scraper.cjsg(query="teste", data_julgamento_de="01/01/2023", data_julgamento_ate="31/12/2023")
+
+# After
+scraper.cjsg(pesquisa="teste", data_julgamento_inicio="01/01/2023", data_julgamento_fim="31/12/2023")
+```
+
+### From `data_inicio/fim` to `data_julgamento_inicio/fim` (TJSP)
+
+```python
+# Before
+scraper.cjsg("teste", data_inicio="01/01/2023", data_fim="31/12/2023")
+
+# After (canonical)
+scraper.cjsg("teste", data_julgamento_inicio="01/01/2023", data_julgamento_fim="31/12/2023")
+
+# Or (generic alias still works with DeprecationWarning)
+scraper.cjsg("teste", data_inicio="01/01/2023", data_fim="31/12/2023")
+```
+
+### Pagination default change
+
+```python
+# Before: default was paginas=1 (only first page)
+scraper.cjsg(pesquisa="teste")           # downloaded 1 page
+scraper.cjsg(pesquisa="teste", paginas=3) # downloaded pages 1-3
+
+# After: default is paginas=None (all pages)
+scraper.cjsg(pesquisa="teste")            # downloads ALL pages
+scraper.cjsg(pesquisa="teste", paginas=1) # downloads page 1 only
+scraper.cjsg(pesquisa="teste", paginas=3) # downloads pages 1-3
+```
+
+## Normalization Utilities
+
+The `juscraper.utils.params` module provides normalization functions used internally by all scrapers:
+
+- `normalize_paginas(paginas)` — normalizes `int | list | range | None`
+- `normalize_pesquisa(pesquisa, **kwargs)` — handles deprecated aliases
+- `normalize_datas(**kwargs)` — handles deprecated and generic date aliases
+- `warn_unsupported(param_name, tribunal)` — warns about unsupported parameters

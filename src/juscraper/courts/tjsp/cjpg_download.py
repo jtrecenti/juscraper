@@ -24,7 +24,7 @@ def cjpg_download(
     id_processo: str = None,
     data_inicio: str = None,
     data_fim: str = None,
-    paginas: range = None,
+    paginas: 'int | list | range | None' = None,
     get_n_pags_callback=None
 ):
     """
@@ -101,11 +101,14 @@ def cjpg_download(
     # Se paginas for None, definir range para todas as páginas (1-based)
     if paginas is None:
         paginas = range(1, n_pags + 1)
-    else:
+    elif isinstance(paginas, range):
         start = paginas.start if paginas.start is not None else 1
         stop = min(paginas.stop, n_pags + 1) if paginas.stop is not None else n_pags + 1
         step = paginas.step if paginas.step is not None else 1
         paginas = range(start, stop, step)
+    else:
+        # list — cap to available pages
+        paginas = [p for p in paginas if p <= n_pags]
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     path = f"{download_path}/cjpg/{timestamp}"
