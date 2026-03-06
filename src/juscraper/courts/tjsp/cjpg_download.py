@@ -101,6 +101,8 @@ def cjpg_download(
     # Se paginas for None, definir range para todas as páginas (1-based)
     if paginas is None:
         paginas = range(1, n_pags + 1)
+    elif isinstance(paginas, int):
+        paginas = range(1, min(paginas, n_pags) + 1)
     elif isinstance(paginas, range):
         start = paginas.start if paginas.start is not None else 1
         stop = min(paginas.stop, n_pags + 1) if paginas.stop is not None else n_pags + 1

@@ -74,7 +74,7 @@ def cjsg_download(
     session,
     user_agent,
     home_url,
-    termo,
+    pesquisa,
     paginas=None,
     data_julgamento_inicio=None,
     data_julgamento_fim=None,
@@ -126,7 +126,7 @@ def cjsg_download(
             'idTipoDecisaoAcordao': '',
             'idTipoDecisaoMonocratica': '',
             'idTipoDecisaoDuvidaCompetencia': '',
-            'criterioPesquisa': termo,
+            'criterioPesquisa': pesquisa,
             'pesquisaLivre': '',
             'pageSize': 10,
             'pageNumber': pagina_atual,
@@ -149,6 +149,8 @@ def cjsg_download(
                 resultados.append(_fetch_page(pagina_atual))
         return resultados
 
+    if isinstance(paginas, int):
+        paginas = range(1, paginas + 1)
     paginas_iter = list(paginas)
     resultados = []
     for pagina_atual in tqdm(paginas_iter, desc='Baixando páginas TJPR'):

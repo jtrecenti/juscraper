@@ -101,6 +101,8 @@ def cjsg_download_manager(
                 resultados.append(_fetch_page(pagina))
         return resultados
 
+    if isinstance(paginas, int):
+        paginas = range(1, paginas + 1)
     paginas_iter = list(paginas)
     resultados = []
     for pagina_1based in tqdm(paginas_iter, desc='Baixando páginas TJRS'):
