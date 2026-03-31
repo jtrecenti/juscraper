@@ -7,6 +7,8 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-03-31
+
 ### Added
 
 - Adicionado `CLAUDE.md` com convencoes do projeto para orientar agentes de IA
