@@ -2,10 +2,48 @@
 Parses downloaded files from the first-degree procedural query.
 """
 import os
+import re
 import glob
 from tqdm import tqdm
 from bs4 import BeautifulSoup
 import pandas as pd
+
+
+# Mapping from normalized dt/dd labels to canonical dados keys
+_CANONICAL_KEYS = {
+    'assunto': 'assunto',
+    'foro': 'foro',
+    'vara': 'vara',
+    'juiz': 'juiz',
+    'classe': 'classe',
+    'valor_da_acao': 'valor_acao',
+    'distribuicao': 'data_distribuicao',
+    'data_de_distribuicao': 'data_distribuicao',
+    'recebido_em': 'data_distribuicao',
+}
+
+# Regex for CNJ process number format: NNNNNNN-DD.YYYY.J.TR.OOOO
+_CNJ_PATTERN = re.compile(r'\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}')
+
+
+def _normalize_field_name(label: str) -> str:
+    """Convert a Portuguese label like 'Processo principal' to 'processo_principal'."""
+    text = label.strip().rstrip(":")
+    text = text.lower()
+    # remove accents (simple approach for common Portuguese chars)
+    replacements = {
+        'á': 'a', 'à': 'a', 'ã': 'a', 'â': 'a',
+        'é': 'e', 'ê': 'e',
+        'í': 'i',
+        'ó': 'o', 'ô': 'o', 'õ': 'o',
+        'ú': 'u', 'ü': 'u',
+        'ç': 'c',
+    }
+    for src, dst in replacements.items():
+        text = text.replace(src, dst)
+    text = re.sub(r'[^a-z0-9\s]', '', text)
+    text = re.sub(r'\s+', '_', text.strip())
+    return text
 
 def cpopg_parse_manager(path: str):
     """
@@ -133,6 +171,57 @@ def cpopg_parse_single_html(path: str):
     valor_acao_tag = soup.find("div", id="valorAcaoProcesso")
     if valor_acao_tag:
         dados['valor_acao'] = valor_acao_tag.get_text(strip=True)
+
+    # 2b) Fallback: incidente template (span.unj-larger contains class + CNJ)
+    # Some processes (e.g. Execução de Sentença / Cumprimento de Sentença) don't have
+    # id="numeroProcesso" or id="classeProcesso". Instead, the class is inside
+    # <span class="unj-larger"> and the CNJ is in parentheses within that span.
+    if dados['id_processo'] is None:
+        larger_tag = soup.find("span", class_="unj-larger")
+        if larger_tag:
+            text = larger_tag.get_text(strip=True)
+            match = _CNJ_PATTERN.search(text)
+            if match:
+                dados['id_processo'] = match.group(0)
+            # The class is the text before the parenthesized CNJ
+            if dados['classe'] is None:
+                classe_text = re.sub(r'\s*\(.*$', '', text).replace('\xa0', ' ').strip()
+                if classe_text:
+                    dados['classe'] = classe_text
+
+    # 2c) Extract extra fields from unj-label spans (Processo principal, Controle, Área, etc.)
+    # Both templates use <span class="unj-label">Label</span> followed by a sibling <div>
+    # containing the value. We skip labels that map to already-populated canonical fields.
+    container = soup.find("div", id="containerDadosPrincipaisProcesso")
+    mais_detalhes = soup.find("div", id="maisDetalhes")
+    sections = [s for s in [container, mais_detalhes] if s is not None]
+    for section in sections:
+        for label_span in section.find_all("span", class_="unj-label"):
+            label_text = label_span.get_text(strip=True)
+            key = _normalize_field_name(label_text)
+            if not key:
+                continue
+            # Skip pure section labels like "Classe", "Assunto" etc. that are already handled by IDs
+            canonical = _CANONICAL_KEYS.get(key, key)
+            if canonical in dados and dados[canonical] is not None:
+                continue
+            # Find the value: next sibling <div> in the same parent col-* div
+            parent_col = label_span.find_parent("div", class_=re.compile(r'^col-'))
+            if parent_col is None:
+                continue
+            value_div = parent_col.find("div")
+            if value_div is None:
+                continue
+            # Skip category labels whose value div contains the unj-larger class header
+            if value_div.find("span", class_="unj-larger"):
+                continue
+            value = value_div.get_text(strip=True)
+            if not value:
+                continue
+            if canonical in dados:
+                dados[canonical] = value
+            else:
+                dados[canonical] = value
 
     # 3) Extrair Partes e Advogados
     # -----------------------------

@@ -242,6 +242,244 @@ class TestCPOPGUnit:
             os.unlink(temp_path)
 
 
+    def test_parse_alternative_template(self):
+        """Test parsing incidente template (unj-larger with CNJ, no id=numeroProcesso)."""
+        html = '''
+        <html><body>
+        <div class="unj-entity-header__summary__barra">
+            <div id="containerDadosPrincipaisProcesso" class="container">
+                <div class="row">
+                    <div class="col-lg-12 col-xl-13">
+                        <span class="unj-label">Execução de Sentença</span>
+                        <div>
+                            <span class="unj-larger">
+                                Cumprimento de Sentença contra a Fazenda Pública&nbsp;(0015615-74.2025.8.26.0577)
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-2 col-xl-3 mb-3">
+                        <span class="unj-label">Assunto</span>
+                        <div><span id="assuntoProcesso">Reajuste de Prestações</span></div>
+                    </div>
+                    <div class="col-lg-2 col-xl-2 mb-2">
+                        <span class="unj-label">Foro</span>
+                        <div><span id="foroProcesso">Foro de São José dos Campos</span></div>
+                    </div>
+                    <div class="col-lg-3 col-xl-2 mb-2">
+                        <span class="unj-label">Vara</span>
+                        <div><span id="varaProcesso">Anexo do Juizado Especial</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </body></html>
+        '''
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
+            f.write(html)
+            temp_path = f.name
+
+        try:
+            result = cpopg_parse_single_html(temp_path)
+            basicos = result['basicos'].iloc[0]
+
+            assert basicos['id_processo'] == '0015615-74.2025.8.26.0577'
+            assert basicos['classe'] == 'Cumprimento de Sentença contra a Fazenda Pública'
+            assert basicos['assunto'] == 'Reajuste de Prestações'
+            assert basicos['foro'] == 'Foro de São José dos Campos'
+            assert basicos['vara'] == 'Anexo do Juizado Especial'
+        finally:
+            os.unlink(temp_path)
+
+    def test_parse_extra_fields_standard_template(self):
+        """Test extra fields (Outros assuntos, Controle) are captured in standard template."""
+        html = '''
+        <html><body>
+        <div class="unj-entity-header__summary__barra">
+            <div id="containerDadosPrincipaisProcesso" class="container">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <span id="numeroProcesso" class="unj-larger-1">1009367-76.2017.8.26.0344</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-3">
+                        <span class="unj-label">Classe</span>
+                        <div><span id="classeProcesso">Procedimento Comum Cível</span></div>
+                    </div>
+                    <div class="col-lg-2">
+                        <span class="unj-label">Foro</span>
+                        <div><span id="foroProcesso">Foro de Marília</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="maisDetalhes" class="collapse">
+            <div class="row">
+                <div class="col-lg-3 mb-2">
+                    <span class="unj-label">Controle</span>
+                    <div id="numeroControleProcesso">2017/006364</div>
+                </div>
+                <div class="col-lg-2 mb-2">
+                    <span class="unj-label">Área</span>
+                    <div id="areaProcesso"><span>Cível</span></div>
+                </div>
+                <div class="col-lg-2 mb-2">
+                    <span class="unj-label">Outros assuntos</span>
+                    <div><span>ICMS/ Imposto sobre Circulação de Mercadorias</span></div>
+                </div>
+            </div>
+        </div>
+        </body></html>
+        '''
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
+            f.write(html)
+            temp_path = f.name
+
+        try:
+            result = cpopg_parse_single_html(temp_path)
+            basicos = result['basicos'].iloc[0]
+
+            assert basicos['id_processo'] == '1009367-76.2017.8.26.0344'
+            assert basicos['classe'] == 'Procedimento Comum Cível'
+            assert basicos['foro'] == 'Foro de Marília'
+            assert basicos['controle'] == '2017/006364'
+            assert basicos['area'] == 'Cível'
+            assert basicos['outros_assuntos'] == 'ICMS/ Imposto sobre Circulação de Mercadorias'
+        finally:
+            os.unlink(temp_path)
+
+    def test_parse_alternative_template_with_processo_principal(self):
+        """Test incidente template captures Processo principal field."""
+        html = '''
+        <html><body>
+        <div class="unj-entity-header__summary__barra">
+            <div id="containerDadosPrincipaisProcesso" class="container">
+                <div class="row">
+                    <div class="col-lg-12 col-xl-13">
+                        <span class="unj-label">Execução de Sentença</span>
+                        <div>
+                            <span class="unj-larger">
+                                Cumprimento de Sentença contra a Fazenda Pública&nbsp;(0000384-69.2025.8.26.0136)
+                            </span>
+                            <span class="unj-tag">Extinto</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-2 col-xl-3 mb-3">
+                        <span class="unj-label">Assunto</span>
+                        <div><span id="assuntoProcesso">Gratificações e Adicionais</span></div>
+                    </div>
+                    <div class="col-lg-2 col-xl-2 mb-2">
+                        <span class="unj-label">Foro</span>
+                        <div><span id="foroProcesso">Foro de Cerqueira César</span></div>
+                    </div>
+                    <div class="col-lg-3 col-xl-2 mb-2">
+                        <span class="unj-label">Vara</span>
+                        <div><span id="varaProcesso">Juizado Especial Cível e Criminal</span></div>
+                    </div>
+                    <div class="col-lg-4 col-xl-3 mb-2">
+                        <span class="unj-label">Processo principal</span>
+                        <div><a class="processoPrinc" href="#">1002742-24.2024.8.26.0136</a></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="maisDetalhes" class="collapse">
+            <div class="row">
+                <div class="col-lg-3 mb-2">
+                    <span class="unj-label">Recebido em </span>
+                    <div id="dataHoraDistribuicaoProcesso">28/02/2025 às 12:15</div>
+                </div>
+                <div class="col-lg-3 mb-2">
+                    <span class="unj-label">Controle</span>
+                    <div id="numeroControleProcesso">2024/001363</div>
+                </div>
+                <div class="col-lg-2 mb-2">
+                    <span class="unj-label">Área</span>
+                    <div id="areaProcesso"><span>Cível</span></div>
+                </div>
+            </div>
+        </div>
+        </body></html>
+        '''
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
+            f.write(html)
+            temp_path = f.name
+
+        try:
+            result = cpopg_parse_single_html(temp_path)
+            basicos = result['basicos'].iloc[0]
+
+            assert basicos['id_processo'] == '0000384-69.2025.8.26.0136'
+            assert basicos['classe'] == 'Cumprimento de Sentença contra a Fazenda Pública'
+            assert basicos['assunto'] == 'Gratificações e Adicionais'
+            assert basicos['foro'] == 'Foro de Cerqueira César'
+            assert basicos['vara'] == 'Juizado Especial Cível e Criminal'
+            assert basicos['processo_principal'] == '1002742-24.2024.8.26.0136'
+            assert basicos['data_distribuicao'] == '28/02/2025 às 12:15'
+            assert basicos['controle'] == '2024/001363'
+            assert basicos['area'] == 'Cível'
+        finally:
+            os.unlink(temp_path)
+
+    def test_parse_alternative_template_from_sample(self):
+        """Test parsing the alternative template sample HTML file."""
+        html = load_sample_html('cpopg_alternative.html')
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
+            f.write(html)
+            temp_path = f.name
+
+        try:
+            result = cpopg_parse_single_html(temp_path)
+            basicos = result['basicos'].iloc[0]
+
+            assert basicos['id_processo'] == '0015615-74.2025.8.26.0577'
+            assert basicos['classe'] == 'Cumprimento de Sentença contra a Fazenda Pública'
+            assert basicos['assunto'] == 'Reajuste de Prestações'
+            assert basicos['foro'] == 'Foro de São José dos Campos'
+            assert basicos['processo_principal'] == '1010658-13.2025.8.26.0577'
+            assert basicos['area'] == 'Cível'
+            assert basicos['data_distribuicao'] == '28/02/2025 às 12:15'
+
+            # Partes and movimentacoes should also be parsed
+            assert len(result['partes']) == 1
+            assert len(result['movimentacoes']) == 1
+        finally:
+            os.unlink(temp_path)
+
+    def test_parse_standard_template_from_sample(self):
+        """Test parsing the standard template sample HTML file with extra fields."""
+        html = load_sample_html('cpopg_standard.html')
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
+            f.write(html)
+            temp_path = f.name
+
+        try:
+            result = cpopg_parse_single_html(temp_path)
+            basicos = result['basicos'].iloc[0]
+
+            # Standard ID-based fields
+            assert basicos['id_processo'] == '1009367-76.2017.8.26.0344'
+            assert basicos['classe'] == 'Procedimento Comum Cível'
+            assert basicos['valor_acao'] == 'R$         10.000,00'
+            assert basicos['juiz'] == 'WALMIR IDALENCIO DOS SANTOS CRUZ'
+
+            # Extra fields from maisDetalhes
+            assert basicos['controle'] == '2017/006364'
+            assert basicos['area'] == 'Cível'
+            assert basicos['outros_assuntos'] == 'ICMS/ Imposto sobre Circulação de Mercadorias'
+        finally:
+            os.unlink(temp_path)
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
 
