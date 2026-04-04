@@ -52,6 +52,8 @@ website:
                   text: "TJBA"
                 - href: notebooks/tjdft.ipynb
                   text: "TJDFT"
+                - href: notebooks/tjpa.ipynb
+                  text: "TJPA"
                 - href: notebooks/tjpe.ipynb
                   text: "TJPE"
                 - href: notebooks/tjmt.ipynb
@@ -102,6 +104,7 @@ quartodoc:
         - courts.tjsp.client.TJSPScraper
         - courts.tjdft.client.TJDFTScraper
         - courts.tjrs.client.TJRSScraper
+        - courts.tjpa.client.TJPAScraper
         - courts.tjpr.client.TJPRScraper
         - courts.tjpe.client.TJPEScraper
         - courts.tjmt.client.TJMTScraper
