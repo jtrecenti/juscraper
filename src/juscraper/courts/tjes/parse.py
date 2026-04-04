@@ -70,11 +70,6 @@ def cjsg_parse(resultados_brutos: list) -> pd.DataFrame:
     if "dt_juntada" in df.columns:
         df["dt_juntada"] = pd.to_datetime(df["dt_juntada"], errors="coerce").dt.date
 
-    # Drop HTML-heavy columns that are rarely useful in a DataFrame
-    for col in ("acordao_html", "ementa_html"):
-        if col in df.columns:
-            df = df.drop(columns=[col])
-
     # Reorder: main fields first
     present_main = [c for c in _MAIN_FIELDS if c in df.columns]
     present_extra = [c for c in df.columns if c not in _MAIN_FIELDS]
