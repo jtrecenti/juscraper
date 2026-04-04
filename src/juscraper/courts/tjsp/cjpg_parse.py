@@ -23,13 +23,14 @@ def cjpg_n_pags(page_source):
             "na resposta HTML. Verifique se a busca retornou resultados"
             "ou se a estrutura da página mudou."
         )
-    match = re.search(r'\d+$', page_element.get_text().strip())
+    texto = page_element.get_text().strip()
+    match = re.search(r'de\s+(\d+)\s+resultado', texto)
     if match is None:
         raise ValueError(
-            "Não foi possível extrair o número de resultados"
-            f"da string: {page_element.get_text().strip()}"
+            "Não foi possível extrair o número de resultados "
+            f"da string: {texto}"
         )
-    results = int(match.group())
+    results = int(match.group(1))
     pags = results // 10 + 1
     return pags
 
