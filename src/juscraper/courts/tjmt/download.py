@@ -39,6 +39,11 @@ def _build_params(
     thesaurus: bool,
 ) -> dict:
     """Build the query-string parameters for the Consulta endpoint."""
+    if classe:
+        raise NotImplementedError(
+            "O filtro 'classe' foi recebido, mas não é suportado por esta "
+            "implementação do endpoint de consulta do TJMT."
+        )
     return {
         "filtro.isBasica": "true",
         "filtro.indicePagina": pagina,
