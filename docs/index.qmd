@@ -60,6 +60,7 @@ O método `.cjsg()` recebe como *input* parâmetros de busca de jurisprudência 
 | TJPR     | cjsg                              |
 | TJES     | cjsg, cjpg                        |
 | TJDFT    | cjsg                              |
+| TJMT     | cjsg                              |
 
 ### Agregadores Disponíveis
 
@@ -75,6 +76,7 @@ O método `.cjsg()` recebe como *input* parâmetros de busca de jurisprudência 
 - [Exemplo TJPR](notebooks/tjpr.ipynb)
 - [Exemplo TJES](notebooks/tjes.ipynb)
 - [Exemplo TJDFT](notebooks/tjdft.ipynb)
+- [Exemplo TJMT](notebooks/tjmt.ipynb)
 - [Exemplo Datajud](notebooks/datajud.ipynb)
 - [Exemplo Jusbr](notebooks/jusbr.ipynb)
 
