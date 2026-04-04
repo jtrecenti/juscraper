@@ -50,10 +50,14 @@ website:
                   text: "TJBA"
                 - href: notebooks/tjdft.ipynb
                   text: "TJDFT"
+                - href: notebooks/tjmt.ipynb
+                  text: "TJMT"
                 - href: notebooks/tjpr.ipynb
                   text: "TJPR"
                 - href: notebooks/tjrs.ipynb
                   text: "TJRS"
+                - href: notebooks/tjes.ipynb
+                  text: "TJES"
                 - href: notebooks/tjsp.ipynb
                   text: "TJSP"
             - section: "Agregadores"
@@ -94,3 +98,5 @@ quartodoc:
         - courts.tjdft.client.TJDFTScraper
         - courts.tjrs.client.TJRSScraper
         - courts.tjpr.client.TJPRScraper
+        - courts.tjmt.client.TJMTScraper
+        - courts.tjes.client.TJESScraper
