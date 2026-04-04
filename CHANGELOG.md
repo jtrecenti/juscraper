@@ -7,6 +7,13 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- Novo scraper para o TJES (Tribunal de Justica do Espirito Santo)
+  - `cjsg`: jurisprudencia de 2o grau (cores: `pje2g`, `pje2g_mono`, `legado`, `turma_recursal_legado`)
+  - `cjpg`: jurisprudencia de 1o grau (core: `pje1g`)
+  - Filtros: magistrado, orgao julgador, classe judicial, jurisdicao, assunto, datas, busca exata, ordenacao
+
 ## [0.1.7] - 2026-03-31
 
 ### Fixed

@@ -52,6 +52,8 @@ website:
                   text: "TJPR"
                 - href: notebooks/tjrs.ipynb
                   text: "TJRS"
+                - href: notebooks/tjes.ipynb
+                  text: "TJES"
                 - href: notebooks/tjsp.ipynb
                   text: "TJSP"
             - section: "Agregadores"
@@ -91,3 +93,4 @@ quartodoc:
         - courts.tjdft.client.TJDFTScraper
         - courts.tjrs.client.TJRSScraper
         - courts.tjpr.client.TJPRScraper
+        - courts.tjes.client.TJESScraper
