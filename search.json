@@ -56,174 +56,253 @@
     "text": "Name\nDescription\n\n\n\n\nlistar_processos\nLists processes from Datajud via API, with support for multiple filters and pagination.\n\n\n\n\n\naggregators.datajud.client.DatajudScraper.listar_processos(\n    numero_processo=None,\n    tribunal=None,\n    ano_ajuizamento=None,\n    classe=None,\n    assuntos=None,\n    mostrar_movs=False,\n    paginas=None,\n    tamanho_pagina=1000,\n)\nLists processes from Datajud via API, with support for multiple filters and pagination.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npaginas\nrange\nPage range (1-based, e.g., range(1, 4) fetches pages 1-3). None fetches all available pages.\nNone"
   },
   {
-    "objectID": "reference/courts.tjpr.client.TJPRScraper.html",
-    "href": "reference/courts.tjpr.client.TJPRScraper.html",
-    "title": "courts.tjpr.client.TJPRScraper",
+    "objectID": "reference/courts.tjmt.client.TJMTScraper.html",
+    "href": "reference/courts.tjmt.client.TJMTScraper.html",
+    "title": "courts.tjmt.client.TJMTScraper",
     "section": "",
-    "text": "courts.tjpr.client.TJPRScraper()\nScraper for the Court of Justice of Paraná.\n\n\n\n\n\nName\nDescription\n\n\n\n\ncjsg\nSearches for TJPR jurisprudence in a simplified way (download + parse).\n\n\ncjsg_download\nDownloads raw results from the TJPR jurisprudence search (multiple pages).\n\n\ncjsg_parse\nExtracts relevant data from the HTMLs returned by TJPR.\n\n\ncpopg\nStub: Primeiro grau case consultation not implemented for TJPR.\n\n\ncposg\nStub: Segundo grau case consultation not implemented for TJPR.\n\n\n\n\n\ncourts.tjpr.client.TJPRScraper.cjsg(\n    pesquisa=None,\n    paginas=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    **kwargs,\n)\nSearches for TJPR jurisprudence in a simplified way (download + parse). Returns a ready-to-analyze DataFrame.\n\n\n\ncourts.tjpr.client.TJPRScraper.cjsg_download(\n    pesquisa=None,\n    paginas=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    **kwargs,\n)\nDownloads raw results from the TJPR jurisprudence search (multiple pages). Returns a list of HTMLs (one per page).\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npesquisa\nstr\nSearch term. termo is accepted as deprecated alias.\nNone\n\n\npaginas\nint, list, range, or None\nPages to download (1-based). int: paginas=3 downloads pages 1-3. range: range(1, 4) downloads pages 1-3. None: downloads all available pages.\nNone\n\n\n\n\n\n\n\ncourts.tjpr.client.TJPRScraper.cjsg_parse(resultados_brutos, criterio=None)\nExtracts relevant data from the HTMLs returned by TJPR. Returns a DataFrame with the decisions.\n\n\n\ncourts.tjpr.client.TJPRScraper.cpopg(id_cnj)\nStub: Primeiro grau case consultation not implemented for TJPR.\n\n\n\ncourts.tjpr.client.TJPRScraper.cposg(id_cnj)\nStub: Segundo grau case consultation not implemented for TJPR."
+    "text": "courts.tjmt.client.TJMTScraper()\nScraper for the Tribunal de Justica do Estado de Mato Grosso (TJMT).\n\n\n\n\n\nName\nDescription\n\n\n\n\ncjsg\nSearch TJMT jurisprudence (download + parse).\n\n\ncjsg_download\nDownload raw JSON results from the TJMT jurisprudence API.\n\n\ncjsg_parse\nParse raw JSON results into structured records.\n\n\ncpopg\nStub: first instance case consultation not implemented for TJMT.\n\n\ncposg\nStub: second instance case consultation not implemented for TJMT.\n\n\n\n\n\ncourts.tjmt.client.TJMTScraper.cjsg(\n    pesquisa=None,\n    paginas=None,\n    tipo_consulta='Acordao',\n    relator=None,\n    orgao_julgador=None,\n    classe=None,\n    tipo_processo=None,\n    thesaurus=False,\n    quantidade_por_pagina=10,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    **kwargs,\n)\nSearch TJMT jurisprudence (download + parse).\nReturns a ready-to-analyze DataFrame.\n\n\n\ncourts.tjmt.client.TJMTScraper.cjsg_download(\n    pesquisa=None,\n    paginas=None,\n    tipo_consulta='Acordao',\n    relator=None,\n    orgao_julgador=None,\n    classe=None,\n    tipo_processo=None,\n    thesaurus=False,\n    quantidade_por_pagina=10,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    **kwargs,\n)\nDownload raw JSON results from the TJMT jurisprudence API.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npesquisa\nstr\nSearch term. query and termo are accepted as deprecated aliases.\nNone\n\n\npaginas\nUnion[int, list, range, None]\nPages to download (1-based). int: paginas=3 downloads pages 1-3. range: range(1, 4) downloads pages 1-3. None: downloads all available pages.\nNone\n\n\ntipo_consulta\nstr\n\"Acordao\" or \"DecisaoMonocratica\".\n'Acordao'\n\n\nrelator\nstr\nFilter by judge name.\nNone\n\n\norgao_julgador\nstr\nFilter by court chamber.\nNone\n\n\nclasse\nstr\nFilter by case class.\nNone\n\n\ntipo_processo\nstr\n\"Civel\" or \"Criminal\".\nNone\n\n\nthesaurus\nbool\nWhether to use synonym search.\nFalse\n\n\nquantidade_por_pagina\nint\nItems per page (default 10).\n10\n\n\ndata_julgamento_inicio\nstr\nStart date for filtering (yyyy-mm-dd).\nNone\n\n\ndata_julgamento_fim\nstr\nEnd date for filtering (yyyy-mm-dd).\nNone\n\n\n\n\n\n\n\ncourts.tjmt.client.TJMTScraper.cjsg_parse(\n    resultados_brutos,\n    tipo_consulta='Acordao',\n)\nParse raw JSON results into structured records.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nresultados_brutos\nlist\nList of raw JSON dicts (one per page).\nrequired\n\n\ntipo_consulta\nstr\n\"Acordao\" or \"DecisaoMonocratica\".\n'Acordao'\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[dict]\nList of flat dicts.\n\n\n\n\n\n\n\ncourts.tjmt.client.TJMTScraper.cpopg(id_cnj)\nStub: first instance case consultation not implemented for TJMT.\n\n\n\ncourts.tjmt.client.TJMTScraper.cposg(id_cnj)\nStub: second instance case consultation not implemented for TJMT."
   },
   {
-    "objectID": "reference/courts.tjpr.client.TJPRScraper.html#methods",
-    "href": "reference/courts.tjpr.client.TJPRScraper.html#methods",
-    "title": "courts.tjpr.client.TJPRScraper",
+    "objectID": "reference/courts.tjmt.client.TJMTScraper.html#methods",
+    "href": "reference/courts.tjmt.client.TJMTScraper.html#methods",
+    "title": "courts.tjmt.client.TJMTScraper",
     "section": "",
-    "text": "Name\nDescription\n\n\n\n\ncjsg\nSearches for TJPR jurisprudence in a simplified way (download + parse).\n\n\ncjsg_download\nDownloads raw results from the TJPR jurisprudence search (multiple pages).\n\n\ncjsg_parse\nExtracts relevant data from the HTMLs returned by TJPR.\n\n\ncpopg\nStub: Primeiro grau case consultation not implemented for TJPR.\n\n\ncposg\nStub: Segundo grau case consultation not implemented for TJPR.\n\n\n\n\n\ncourts.tjpr.client.TJPRScraper.cjsg(\n    pesquisa=None,\n    paginas=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    **kwargs,\n)\nSearches for TJPR jurisprudence in a simplified way (download + parse). Returns a ready-to-analyze DataFrame.\n\n\n\ncourts.tjpr.client.TJPRScraper.cjsg_download(\n    pesquisa=None,\n    paginas=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    **kwargs,\n)\nDownloads raw results from the TJPR jurisprudence search (multiple pages). Returns a list of HTMLs (one per page).\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npesquisa\nstr\nSearch term. termo is accepted as deprecated alias.\nNone\n\n\npaginas\nint, list, range, or None\nPages to download (1-based). int: paginas=3 downloads pages 1-3. range: range(1, 4) downloads pages 1-3. None: downloads all available pages.\nNone\n\n\n\n\n\n\n\ncourts.tjpr.client.TJPRScraper.cjsg_parse(resultados_brutos, criterio=None)\nExtracts relevant data from the HTMLs returned by TJPR. Returns a DataFrame with the decisions.\n\n\n\ncourts.tjpr.client.TJPRScraper.cpopg(id_cnj)\nStub: Primeiro grau case consultation not implemented for TJPR.\n\n\n\ncourts.tjpr.client.TJPRScraper.cposg(id_cnj)\nStub: Segundo grau case consultation not implemented for TJPR."
+    "text": "Name\nDescription\n\n\n\n\ncjsg\nSearch TJMT jurisprudence (download + parse).\n\n\ncjsg_download\nDownload raw JSON results from the TJMT jurisprudence API.\n\n\ncjsg_parse\nParse raw JSON results into structured records.\n\n\ncpopg\nStub: first instance case consultation not implemented for TJMT.\n\n\ncposg\nStub: second instance case consultation not implemented for TJMT.\n\n\n\n\n\ncourts.tjmt.client.TJMTScraper.cjsg(\n    pesquisa=None,\n    paginas=None,\n    tipo_consulta='Acordao',\n    relator=None,\n    orgao_julgador=None,\n    classe=None,\n    tipo_processo=None,\n    thesaurus=False,\n    quantidade_por_pagina=10,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    **kwargs,\n)\nSearch TJMT jurisprudence (download + parse).\nReturns a ready-to-analyze DataFrame.\n\n\n\ncourts.tjmt.client.TJMTScraper.cjsg_download(\n    pesquisa=None,\n    paginas=None,\n    tipo_consulta='Acordao',\n    relator=None,\n    orgao_julgador=None,\n    classe=None,\n    tipo_processo=None,\n    thesaurus=False,\n    quantidade_por_pagina=10,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    **kwargs,\n)\nDownload raw JSON results from the TJMT jurisprudence API.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npesquisa\nstr\nSearch term. query and termo are accepted as deprecated aliases.\nNone\n\n\npaginas\nUnion[int, list, range, None]\nPages to download (1-based). int: paginas=3 downloads pages 1-3. range: range(1, 4) downloads pages 1-3. None: downloads all available pages.\nNone\n\n\ntipo_consulta\nstr\n\"Acordao\" or \"DecisaoMonocratica\".\n'Acordao'\n\n\nrelator\nstr\nFilter by judge name.\nNone\n\n\norgao_julgador\nstr\nFilter by court chamber.\nNone\n\n\nclasse\nstr\nFilter by case class.\nNone\n\n\ntipo_processo\nstr\n\"Civel\" or \"Criminal\".\nNone\n\n\nthesaurus\nbool\nWhether to use synonym search.\nFalse\n\n\nquantidade_por_pagina\nint\nItems per page (default 10).\n10\n\n\ndata_julgamento_inicio\nstr\nStart date for filtering (yyyy-mm-dd).\nNone\n\n\ndata_julgamento_fim\nstr\nEnd date for filtering (yyyy-mm-dd).\nNone\n\n\n\n\n\n\n\ncourts.tjmt.client.TJMTScraper.cjsg_parse(\n    resultados_brutos,\n    tipo_consulta='Acordao',\n)\nParse raw JSON results into structured records.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nresultados_brutos\nlist\nList of raw JSON dicts (one per page).\nrequired\n\n\ntipo_consulta\nstr\n\"Acordao\" or \"DecisaoMonocratica\".\n'Acordao'\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[dict]\nList of flat dicts.\n\n\n\n\n\n\n\ncourts.tjmt.client.TJMTScraper.cpopg(id_cnj)\nStub: first instance case consultation not implemented for TJMT.\n\n\n\ncourts.tjmt.client.TJMTScraper.cposg(id_cnj)\nStub: second instance case consultation not implemented for TJMT."
   },
   {
-    "objectID": "notebooks/tjes.html",
-    "href": "notebooks/tjes.html",
-    "title": "TJES - Tribunal de Justica do Espirito Santo",
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "juscraper",
     "section": "",
-    "text": "Example notebook for the TJES jurisprudence scraper (cjsg).\nThe TJES scraper queries the public API at sistemas.tjes.jus.br/consulta-jurisprudencia/ and supports five Solr cores:",
+    "text": "Raspador de tribunais e outros sistemas relacionados ao poder judiciário brasileiro.",
+    "crumbs": [
+      "Home"
+    ]
+  },
+  {
+    "objectID": "index.html#instalação",
+    "href": "index.html#instalação",
+    "title": "juscraper",
+    "section": "Instalação",
+    "text": "Instalação\n\nVia PyPI (Recomendado)\npip install juscraper\n\n\nCom uv\nuv add juscraper\n\n\nVersão de Desenvolvimento\nPara instalar a versão mais recente do repositório:\npip install git+https://github.com/jtrecenti/juscraper.git",
+    "crumbs": [
+      "Home"
+    ]
+  },
+  {
+    "objectID": "index.html#como-usar",
+    "href": "index.html#como-usar",
+    "title": "juscraper",
+    "section": "Como usar",
+    "text": "Como usar\nimport juscraper as jus\n\ntjsp = jus.scraper('tjsp')\ndados_cjpg = tjsp.cjpg('league of legends', paginas=range(1, 4))\n\ndados_cjpg.head(3)\nO pacote foi pensado para atender a requisitos básicos de consulta de dados de processos judiciais em alguns tribunais.\nOs tribunais implementados vão apresentar os seguintes métodos:\n\n.cpopg(): consulta de processos originários do primeiro grau\n.cposg(): consulta de processos originários do segundo grau\n.cjsg(): consulta de jurisprudência\n\nOs métodos .cpopg() e .cposg() recebem como input um número de processo no padrão CNJ (NNNNNNN-DD.AAAA.J.TT.OOOO), com ou sem separadores, e retorna um dict com tabelas dos elementos do processo (dados básicos, partes, movimentações, entre outros específicos por tribunal).\nO método .cjsg() recebe como input parâmetros de busca de jurisprudência (que variam por tribunal) e retorna uma tabela com os resultados da consulta. Boa parte dos tribunais apresentam limites de paginação ao realizar buscas muito gerais (i.e. que retornam muitos resultados). Nesses casos, o método dará um aviso ao usuário com o número total de resultados, confirmando se deseja mesmo baixar todos os resultados.",
+    "crumbs": [
+      "Home"
+    ]
+  },
+  {
+    "objectID": "index.html#implementações",
+    "href": "index.html#implementações",
+    "title": "juscraper",
+    "section": "Implementações",
+    "text": "Implementações\n\nTribunais Disponíveis\n\n\n\nTribunal\nFuncionalidades Disponíveis\n\n\n\n\nTJSP\ncpopg, cposg, cjsg, cjpg, acordao\n\n\nTJRS\ncjsg\n\n\nTJPR\ncjsg\n\n\nTJES\ncjsg, cjpg\n\n\nTJDFT\ncjsg\n\n\nTJMT\ncjsg\n\n\n\n\n\nAgregadores Disponíveis\n\n\n\nNome\nFuncionalidades\n\n\n\n\nDatajud\nlistar_processos\n\n\nJusbr\ncpopg, download_documents\n\n\n\n\n\nNotebooks de Exemplo\n\nExemplo TJSP\nExemplo TJRS\nExemplo TJPR\nExemplo TJES\nExemplo TJDFT\nExemplo TJMT\nExemplo Datajud\nExemplo Jusbr",
+    "crumbs": [
+      "Home"
+    ]
+  },
+  {
+    "objectID": "index.html#informações-adicionais",
+    "href": "index.html#informações-adicionais",
+    "title": "juscraper",
+    "section": "Informações adicionais",
+    "text": "Informações adicionais\n\nDiferenciais do juscraper:\n\nControle sobre arquivos brutos: o pacote fornece uma interface para baixar e armazenar arquivos brutos (HTML e JSON, por exemplo) dos processos. Por padrão, no entanto, esses arquivos brutos são descartados assim que os dados são processados, com exceção dos arquivos que apresentaram algum problema na leitura.\n\n\n\nRestrições:\nPor ser um pacote bastante complexo e também nichado, adotamos algumas restrições sobre o escopo do pacote para que seja simples de usar.\n\nO pacote não utiliza paralelização, ou seja, se o usuário tiver interesse em realizar requisições em paralelo, deverá desenvolver as adaptações necessárias.\nO pacote não possui absolutamente todas as funcionalidades que os tribunais permitem. Se o usuário tiver interesse em consultar processos em mais tribunais, deverá desenvolver os raspadores.",
+    "crumbs": [
+      "Home"
+    ]
+  },
+  {
+    "objectID": "index.html#contribuição",
+    "href": "index.html#contribuição",
+    "title": "juscraper",
+    "section": "Contribuição",
+    "text": "Contribuição\nInteressado em contribuir? Verifique as diretrizes de contribuição no arquivo CONTRIBUTING.md. Por favor, note que este projeto é lançado com um Código de Conduta. Ao contribuir para este projeto, você concorda em obedecer às suas termos.",
+    "crumbs": [
+      "Home"
+    ]
+  },
+  {
+    "objectID": "index.html#licença",
+    "href": "index.html#licença",
+    "title": "juscraper",
+    "section": "Licença",
+    "text": "Licença\njuscraper foi criado por Julio Trecenti. Está licenciado sob os termos da licença MIT.",
+    "crumbs": [
+      "Home"
+    ]
+  },
+  {
+    "objectID": "notebooks/tjrs.html",
+    "href": "notebooks/tjrs.html",
+    "title": "juscraper",
+    "section": "",
+    "text": "import juscraper as jus\n\n# cria um objeto tjrs\ntjrs = jus.scraper('tjrs')\n\n\n# baixa dados da jurisprudência\ndados_cjsg = tjrs.cjsg('golpe do pix', paginas=range(0,3))\n\nprint(dados_cjsg.shape)\ndados_cjsg.head(3)\n\nBaixando páginas TJRS: 100%|██████████| 3/3 [00:05&lt;00:00,  1.90s/it]\n\n\n(30, 33)\n\n\n\n\n\n\n\n\n\n\n\n\nprocesso\nrelator\norgao_julgador\ndata_julgamento\ndata_publicacao\nclasse_cnj\nassunto_cnj\ntribunal\ntipo_processo\nurl\n...\ncod_org_julg\ncod_redator\ncod_tipo_documento\ncod_tribunal\ncod_assunto_cnj\ncod_relator\ncod_recurso\ntipo_documento\ndthr_criacao\n_version_\n\n\n\n\n0\n52627181720248217000\nDeborah Coleto Assumpção de Moraes\nDécima Sexta Câmara Cível\n2025-05-08\n2025-05-08\nAgravo de Instrumento\nGestão de Negócios\nTribunal de Justiça do RS\nAgravo de Instrumento\nhttps://www.tjrs.jus.br/buscas/jurisprudencia/...\n...\n16\n652\n1\n3\n7713.0\n652\n296\nAcordao\n2025-05-12 08:31:24.0\n1831916254777049088\n\n\n1\n50134755820238210005\nCarmem Maria Azambuja Farias\nDécima Quinta Câmara Cível\n2025-05-07\n2025-05-14\nApelação\nBancários\nTribunal de Justiça do RS\nApelação Cível\nhttps://www.tjrs.jus.br/buscas/jurisprudencia/...\n...\n15\n697\n1\n3\n7752.0\n697\n224\nAcordao\nTue May 20 08:30:59 GMT-03:00 2025\n1832640764786507776\n\n\n2\n50018309020248210008\nClovis Moacyr Mattana Ramos\nDécima Quinta Câmara Cível\n2025-05-07\n2025-05-15\nApelação\nNone\nTribunal de Justiça do RS\nApelação Cível\nhttps://www.tjrs.jus.br/buscas/jurisprudencia/...\n...\n15\n439\n1\n3\nNaN\n439\n224\nAcordao\nTue May 20 08:32:06 GMT-03:00 2025\n1832640861230333952\n\n\n\n\n3 rows × 33 columns\n\n\n\n\nimport base64\nfrom IPython.display import display, HTML\n\ntxt = dados_cjsg['documento_text'].iloc[0]\ndecoded_bytes = base64.b64decode(txt)\ndecoded_str = decoded_bytes.decode('latin1', errors='replace')\n\n#display(HTML(decoded_str))\n\n\ndados_cjsg.columns\n\nIndex(['processo', 'relator', 'orgao_julgador', 'data_julgamento',\n       'data_publicacao', 'classe_cnj', 'assunto_cnj', 'tribunal',\n       'tipo_processo', 'url', 'ementa', 'documento_text', 'documento_tiff',\n       'ementa_text', 'mes_ano_publicacao', 'origem', 'secao',\n       'ano_julgamento', 'nome_relator', 'ind_segredo_justica',\n       'ementa_referencia', 'cod_ementa', 'cod_classe_cnj', 'cod_org_julg',\n       'cod_redator', 'cod_tipo_documento', 'cod_tribunal', 'cod_assunto_cnj',\n       'cod_relator', 'cod_recurso', 'tipo_documento', 'dthr_criacao',\n       '_version_'],\n      dtype='object')\n\n\n\ndados_cjsg['url'].iloc[0]\n\n'https://www.tjrs.jus.br/buscas/jurisprudencia/?numero_processo=52627181720248217000'",
     "crumbs": [
       "Home",
       "Exemplos",
       "Tribunais",
-      "TJES"
+      "TJRS"
     ]
   },
   {
-    "objectID": "notebooks/tjes.html#basic-search",
-    "href": "notebooks/tjes.html#basic-search",
-    "title": "TJES - Tribunal de Justica do Espirito Santo",
+    "objectID": "notebooks/tjpr.html",
+    "href": "notebooks/tjpr.html",
+    "title": "juscraper",
+    "section": "",
+    "text": "import juscraper as jus\n\n# cria um objeto tjpr\ntjpr = jus.scraper('tjpr')\n\n\n# baixa dados da jurisprudência\ndados_cjsg = tjpr.cjsg('direito penal', paginas=range(0,3))\n\nprint(dados_cjsg.shape)\ndados_cjsg.head(3)\n\nBaixando páginas TJPR: 100%|██████████| 3/3 [00:00&lt;00:00, 12.50it/s]\n\n\n(30, 5)\n\n\n\n\n\n\n\n\n\nprocesso\norgao_julgador\nrelator\ndata_julgamento\nementa\n\n\n\n\n0\n0000919-43.2023.8.16.0169\n1ª Câmara Criminal - Núcleo de Atuação (Lei Ma...\nsubstituta fernanda karam de chueiri sanches\n2025-05-24\nConteúdo pendente de análise e liberação para ...\n\n\n1\n0001986-62.2017.8.16.0069\n1ª Câmara Criminal - Núcleo de Atuação (Lei Ma...\nsubstituta fernanda karam de chueiri sanches\n2025-05-24\nConteúdo pendente de análise e liberação para ...\n\n\n2\n0002335-56.2023.8.16.0101\n1ª Câmara Criminal - Núcleo de Atuação (Lei Ma...\nsubstituta fernanda karam de chueiri sanches\n2025-05-24\nConteúdo pendente de análise e liberação para ...\n\n\n\n\n\n\n\n\nprint(dados_cjsg['ementa'].iloc[23][:200])\n\nDIREITO\nPENAL\n. APELAÇÃO CRIMINAL. CRIME DE AMEAÇA NO ÂMBITO DE VIOLÊNCIA DOMÉSTICA. RECURSO DEFENSIVO. ALEGAÇÃO DE EXCLUDENTE DE ILICITUDE E PEDIDO SUBSIDIÁRIO DE DESCLASSIFICAÇÃO PARA CONTRAVENÇÃO\nP",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Tribunais",
+      "TJPR"
+    ]
+  },
+  {
+    "objectID": "notebooks/tjdft.html",
+    "href": "notebooks/tjdft.html",
+    "title": "juscraper",
+    "section": "",
+    "text": "import juscraper as jus\n\n# cria um objeto tjdft\ntjdft = jus.scraper('tjdft')\n\n\n# baixa dados da jurisprudência\ndados_cjsg = tjdft.cjsg('direito penal', paginas=range(0,3))\n\nprint(dados_cjsg.shape)\ndados_cjsg.head(3)\n\n(30, 23)\n\n\n\n\n\n\n\n\n\nsequencial\nbase\nsubbase\nuuid\nidentificador\ndataJulgamento\ndataPublicacao\ndecisao\nementa\nlocalDePublicacao\n...\nuf\nsegredoJustica\nturmaRecursal\ndescricaoOrgaoJulgador\nversao\ncodigoClasseCnj\ncodigoSistjOrgaoJulgador\ninteiroTeorHtml\nmarcadores\npossuiInteiroTeor\n\n\n\n\n0\n1\nacordaos\nacordaos\n23362ccf-ffc5-4caf-b878-de1f671250f5\n1998487\n2025-05-15T03:00:00.000Z\n2025-05-24T23:26:53.000Z\nNEGAR PROVIMENTO AO RECURSO. UNÂNIME\nEMENTA: DIREITO PENAL. EMBARGOS DE DECLARAÇÃO....\nPJe\n...\nDF\nFalse\nFalse\n1ª TURMA CRIMINAL\n01\n420\n51\nInteiro Teor indisponível.\n{'ementa': ['EMENTA: &lt;mark&gt;DIREITO&lt;/mark&gt; &lt;mar...\nTrue\n\n\n1\n2\nacordaos\nacordaos\n298272b3-1dd9-41c0-8f93-f29edd0d8cef\n1999112\n2025-05-15T03:00:00.000Z\n2025-05-24T23:22:29.000Z\nNEGAR PROVIMENTO. UNÂNIME.\nEmenta: direito penal. Apelação criminal. Injú...\nPJe\n...\nDF\nFalse\nFalse\n2ª TURMA CRIMINAL\n01\n417\n52\nInteiro Teor indisponível.\n{'ementa': ['Ementa: &lt;mark&gt;direito&lt;/mark&gt; &lt;mar...\nTrue\n\n\n2\n3\nacordaos\nacordaos\nee320b08-c91f-489f-8dba-1dc80b63fff7\n1998988\n2025-05-15T03:00:00.000Z\n2025-05-24T20:52:42.000Z\nNEGAR PROVIMENTO. UNÂNIME.\nEmenta: DIREITO PENAL. APELAÇÃO CRIMINAL. RECE...\nPJe\n...\nDF\nFalse\nFalse\n2ª TURMA CRIMINAL\n01\n417\n52\nInteiro Teor indisponível.\n{'ementa': ['Ementa: &lt;mark&gt;DIREITO&lt;/mark&gt; &lt;mar...\nTrue\n\n\n\n\n3 rows × 23 columns\n\n\n\n\nprint(dados_cjsg['ementa'].iloc[0][:300])\n\nEMENTA: DIREITO PENAL. EMBARGOS DE DECLARAÇÃO. PRETENSÃO DE REDISCUSSÃO DA MATÉRIA. INOVAÇÃO RECURSAL. IMPOSSIBILIDADE. VÍCIO. AUSENTE. MEIO PROCESSUAL INADEQUADO. PREQUESTIONAMENTO. EMBARGOS REJEITADOS.\n\nI. CASO EM EXAME\n\n1. Embargos de declaração opostos contra acórdão que negou provimento ao recu\n\n\n\ndados_cjsg['processo'].iloc[0]\n\n'0722443-83.2024.8.07.0003'",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Tribunais",
+      "TJDFT"
+    ]
+  },
+  {
+    "objectID": "notebooks/tjmt.html",
+    "href": "notebooks/tjmt.html",
+    "title": "TJMT - Tribunal de Justica do Estado de Mato Grosso",
+    "section": "",
+    "text": "Scraper for the jurisprudence search of TJMT.",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Tribunais",
+      "TJMT"
+    ]
+  },
+  {
+    "objectID": "notebooks/tjmt.html#basic-search",
+    "href": "notebooks/tjmt.html#basic-search",
+    "title": "TJMT - Tribunal de Justica do Estado de Mato Grosso",
     "section": "Basic search",
-    "text": "Basic search\n\nimport juscraper as jus\n\n# Create a TJES scraper\ntjes = jus.scraper('tjes')\n\n\n# Search jurisprudence (default core: pje2g)\ndados_cjsg = tjes.cjsg('dano moral', paginas=range(1, 3))\n\nprint(dados_cjsg.shape)\ndados_cjsg.head(3)\n\nBaixando paginas TJES: 100%|██████████| 2/2 [00:01&lt;00:00,  1.32it/s]\n\n\n(40, 23)\n\n\n\n\n\n\n\n\n\n\n\n\nnr_processo\nementa\nmagistrado\norgao_julgador\nclasse_judicial\nclasse_judicial_sigla\nassunto_principal\njurisdicao\ncompetencia\ndt_juntada\n...\nlocalizacao\ncargo_julgador\ncd_assunto_principal\ncd_classe_judicial\nid_assunto_principal\nid_classe_judicial\nid_jurisdicao\nid_localizacao\nid_cargo_julgador\nid_bin\n\n\n\n\n0\n5000333-79.2017.8.08.0030\n\\nVoto servindo como ementa.\\n\nGRACIENE PEREIRA PINTO\nTurma Recursal - 4ª Turma\nRecurso Inominado Cível\nRecInoCiv\nIndenização por Dano Moral\nTurma Recursal\nTurmas Recursais\n2020-03-12\n...\n4ª TURMA RECURSAL GABINETE 3\nJuiz Membro\n7779\n460\n622\n321\n2\n66.0\n57\n393003\n\n\n1\n5002610-68.2017.8.08.0030\n\\nVoto servindo como ementa.\\n\nMARCELO MATTAR COUTINHO\nTurma Recursal - 4ª Turma\nRecurso Inominado Cível\nRecInoCiv\nFornecimento de Energia Elétrica\nTurma Recursal\nTurmas Recursais\n2020-06-16\n...\n4ª TURMA RECURSAL GABINETE 1\nJuiz Membro\n7760\n460\n602\n321\n2\n63.0\n69\n474881\n\n\n2\n5011718-32.2023.8.08.0024\n\\n \\n\\n\\nEMENTA: RECURSO INOMINADO. AÇÃO DE IN...\nPAULO ABIGUENEM ABIB\nTurma Recursal - 1ª Turma\nRECURSO INOMINADO CÍVEL\nRecInoCiv\nIndenização por Dano Moral\nTurma Recursal\nTurmas Recursais - Cível\n2025-08-29\n...\n1ª TURMA RECURSAL GABINETE 2\nJuiz Membro\n10433\n460\n588\n321\n2\n52.0\n67\n14355858\n\n\n\n\n3 rows × 23 columns\n\n\n\n\n# Available columns\ndados_cjsg.columns.tolist()\n\n['nr_processo',\n 'ementa',\n 'magistrado',\n 'orgao_julgador',\n 'classe_judicial',\n 'classe_judicial_sigla',\n 'assunto_principal',\n 'jurisdicao',\n 'competencia',\n 'dt_juntada',\n 'id',\n 'acordao',\n 'lista_assunto',\n 'localizacao',\n 'cargo_julgador',\n 'cd_assunto_principal',\n 'cd_classe_judicial',\n 'id_assunto_principal',\n 'id_classe_judicial',\n 'id_jurisdicao',\n 'id_localizacao',\n 'id_cargo_julgador',\n 'id_bin']\n\n\n\n# Preview ementa\nprint(dados_cjsg['ementa'].iloc[0][:300])\n\n\nVoto servindo como ementa.",
+    "text": "Basic search\n\nimport juscraper as jus\n\ntjmt = jus.scraper('tjmt')\n\ndados_cjsg = tjmt.cjsg('dano moral', paginas=1)\nprint(dados_cjsg.shape)\ndados_cjsg.head(3)\n\nBaixando páginas TJMT: 100%|██████████| 1/1 [00:01&lt;00:00,  1.34s/it]\n\n\n(10, 18)\n\n\n\n\n\n\n\n\n\n\n\n\nid\ntipo\nementa\nobservacao\nnumero_unico\nclasse\nassunto\ntipo_acao\ntipo_processo\nrelator\nredator_designado\norgao_julgador\nsigla_classe_feito\ndata_julgamento\ndata_publicacao\ninstancia\norigem\njulgamento\n\n\n\n\n0\n358068885\nAcordao\nEMENTA: DIREITO PROCESSUAL CIVIL E DIREITO DO ...\n(N.U 1045934-10.2025.8.11.0000, CÂMARAS ISOLAD...\n1045934-10.2025.8.11.0000\nEMBARGOS DE DECLARAÇÃO CÍVEL\nSubstituição do Produto\nDIREITO DO CONSUMIDOR (1156) \\ Responsabilidad...\nCível\nRUBENS DE OLIVEIRA SANTOS FILHO\nNone\nQuarta Câmara de Direito Privado\nCÂMARAS ISOLADAS CÍVEIS DE DIREITO PRIVADO\n2026-04-01\n2026-04-01\nSegunda\nPJe\nNÃO INFORMADO\n\n\n1\n358103897\nAcordao\nEMENTA DIREITO PROCESSUAL CIVIL. AGRAVO DE INS...\n(N.U 1007056-79.2026.8.11.0000, CÂMARAS ISOLAD...\n1007056-79.2026.8.11.0000\nAGRAVO DE INSTRUMENTO\nObrigação de Fazer / Não Fazer\nDIREITO PROCESSUAL CIVIL E DO TRABALHO (8826) ...\nCível\nSERLY MARCONDES ALVES\nNone\nQuarta Câmara de Direito Privado\nCÂMARAS ISOLADAS CÍVEIS DE DIREITO PRIVADO\n2026-04-01\n2026-04-01\nSegunda\nPJe\nNÃO INFORMADO\n\n\n2\n358020366\nAcordao\nDIREITO PROCESSUAL CIVIL. EMBARGOS DE DECLARAÇ...\n(N.U 0002028-90.2017.8.11.0024, CÂMARAS ISOLAD...\n0002028-90.2017.8.11.0024\nEMBARGOS DE DECLARAÇÃO CÍVEL\nPrestação de Serviços\nDIREITO CIVIL (899) \\ Obrigações (7681) \\ Espé...\nCível\nANGLIZEY SOLIVAN DE OLIVEIRA\nNone\nQuarta Câmara de Direito Privado\nCÂMARAS ISOLADAS CÍVEIS DE DIREITO PRIVADO\n2026-04-01\n2026-04-01\nSegunda\nPJe\nNÃO INFORMADO",
     "crumbs": [
       "Home",
       "Exemplos",
       "Tribunais",
-      "TJES"
+      "TJMT"
     ]
   },
   {
-    "objectID": "notebooks/tjes.html#using-filters",
-    "href": "notebooks/tjes.html#using-filters",
-    "title": "TJES - Tribunal de Justica do Espirito Santo",
+    "objectID": "notebooks/tjmt.html#available-columns",
+    "href": "notebooks/tjmt.html#available-columns",
+    "title": "TJMT - Tribunal de Justica do Estado de Mato Grosso",
+    "section": "Available columns",
+    "text": "Available columns\n\ndados_cjsg.columns.tolist()\n\n['id',\n 'tipo',\n 'ementa',\n 'observacao',\n 'numero_unico',\n 'classe',\n 'assunto',\n 'tipo_acao',\n 'tipo_processo',\n 'relator',\n 'redator_designado',\n 'orgao_julgador',\n 'sigla_classe_feito',\n 'data_julgamento',\n 'data_publicacao',\n 'instancia',\n 'origem',\n 'julgamento']",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Tribunais",
+      "TJMT"
+    ]
+  },
+  {
+    "objectID": "notebooks/tjmt.html#preview-ementa",
+    "href": "notebooks/tjmt.html#preview-ementa",
+    "title": "TJMT - Tribunal de Justica do Estado de Mato Grosso",
+    "section": "Preview ementa",
+    "text": "Preview ementa\n\nprint(dados_cjsg['ementa'].iloc[0][:300])\n\nEMENTA: DIREITO PROCESSUAL CIVIL E DIREITO DO CONSUMIDOR. EMBARGOS DE DECLARAÇÃO. AGRAVO DE INSTRUMENTO. JULGAMENTO ANTECIPADO PARCIAL DO MÉRITO. ALEGAÇÃO DE ERRO DE FATO, CONTRADIÇÃO E OMISSÃO. INEXISTÊNCIA DE VÍCIOS. ARGUMENTAÇÃO SUBSIDIÁRIA NÃO CONFIGURA RECONHECIMENTO DO PEDIDO. EMBARGOS REJEITA",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Tribunais",
+      "TJMT"
+    ]
+  },
+  {
+    "objectID": "notebooks/tjmt.html#using-filters",
+    "href": "notebooks/tjmt.html#using-filters",
+    "title": "TJMT - Tribunal de Justica do Estado de Mato Grosso",
     "section": "Using filters",
-    "text": "Using filters\nThe TJES scraper supports several filters: magistrado, orgao_julgador, classe_judicial, jurisdicao, assunto, date range (data_julgamento_inicio / data_julgamento_fim), busca_exata, and ordenacao.\n\n# Filter by date range and magistrado\ndados_filtrados = tjes.cjsg(\n    'direito',\n    data_julgamento_inicio='2024-01-01',\n    data_julgamento_fim='2024-06-30',\n    magistrado='HELIMAR PINTO',\n    paginas=1,\n)\n\nprint(dados_filtrados.shape)\ndados_filtrados[['nr_processo', 'magistrado', 'classe_judicial', 'dt_juntada']].head(5)\n\nBaixando paginas TJES: 100%|██████████| 1/1 [00:00&lt;00:00, 10.22it/s]\n\n\n(20, 23)\n\n\n\n\n\n\n\n\n\n\n\n\nnr_processo\nmagistrado\nclasse_judicial\ndt_juntada\n\n\n\n\n0\n5005361-74.2024.8.08.0000\nHELIMAR PINTO\nAGRAVO DE EXECUÇÃO PENAL\n2024-06-25\n\n\n1\n0001362-38.2023.8.08.0000\nHELIMAR PINTO\nMANDADO DE SEGURANÇA CÍVEL\n2024-02-29\n\n\n2\n5003125-52.2024.8.08.0000\nHELIMAR PINTO\nHABEAS CORPUS CRIMINAL\n2024-04-18\n\n\n3\n0026004-72.2016.8.08.0048\nHELIMAR PINTO\nAPELAÇÃO CRIMINAL\n2024-04-25\n\n\n4\n5005989-63.2024.8.08.0000\nHELIMAR PINTO\nHABEAS CORPUS CRIMINAL\n2024-06-25",
+    "text": "Using filters\nYou can filter by date range, judge (relator), court chamber (orgao_julgador), and case type (tipo_processo).\n\ndados_filtrados = tjmt.cjsg(\n    'direito',\n    paginas=1,\n    data_julgamento_inicio='2025-01-01',\n    data_julgamento_fim='2025-06-30',\n    tipo_processo='Criminal',\n)\nprint(dados_filtrados.shape)\ndados_filtrados.head(3)\n\nBaixando páginas TJMT: 100%|██████████| 1/1 [00:00&lt;00:00,  1.18it/s]\n\n\n(10, 18)\n\n\n\n\n\n\n\n\n\n\n\n\nid\ntipo\nementa\nobservacao\nnumero_unico\nclasse\nassunto\ntipo_acao\ntipo_processo\nrelator\nredator_designado\norgao_julgador\nsigla_classe_feito\ndata_julgamento\ndata_publicacao\ninstancia\norigem\njulgamento\n\n\n\n\n0\n357998889\nAcordao\nPRIMEIRA CÂMARA CRIMINALAPELAÇÃO CRIMINAL (417...\n(N.U 1001710-20.2021.8.11.0002, CÂMARAS ISOLAD...\n1001710-20.2021.8.11.0002\nAPELAÇÃO CRIMINAL\nHomicídio Qualificado\nDIREITO PENAL (287) \\ Crimes contra a vida (33...\nCriminal\nORLANDO DE ALMEIDA PERRI\nNone\nPrimeira Câmara Criminal\nCÂMARAS ISOLADAS CRIMINAIS\n2026-04-01\n2026-04-01\nSegunda\nPJe\nNÃO INFORMADO\n\n\n1\n358024367\nAcordao\nEmenta: Direito penal e processual penal. Agra...\n(N.U 1043828-75.2025.8.11.0000, CÂMARAS ISOLAD...\n1043828-75.2025.8.11.0000\nAGRAVO DE EXECUÇÃO PENAL\nPena Privativa de Liberdade\nDIREITO PROCESSUAL PENAL (1209) \\ Execução Pen...\nCriminal\nMARCOS MACHADO\nNone\nPrimeira Câmara Criminal\nCÂMARAS ISOLADAS CRIMINAIS\n2026-04-01\n2026-04-01\nSegunda\nPJe\nNÃO INFORMADO\n\n\n2\n358024398\nAcordao\nEmenta: Direito penal e processual penal. Apel...\n(N.U 0000017-28.2019.8.11.0086, CÂMARAS ISOLAD...\n0000017-28.2019.8.11.0086\nAPELAÇÃO CRIMINAL\nHomicídio Qualificado\nDIREITO PENAL (287) \\ Crimes contra a vida (33...\nCriminal\nMARCOS MACHADO\nNone\nPrimeira Câmara Criminal\nCÂMARAS ISOLADAS CRIMINAIS\n2026-04-01\n2026-04-01\nSegunda\nPJe\nNÃO INFORMADO",
     "crumbs": [
       "Home",
       "Exemplos",
       "Tribunais",
-      "TJES"
+      "TJMT"
     ]
   },
   {
-    "objectID": "notebooks/tjes.html#querying-different-cores",
-    "href": "notebooks/tjes.html#querying-different-cores",
-    "title": "TJES - Tribunal de Justica do Espirito Santo",
-    "section": "Querying different cores",
-    "text": "Querying different cores\nBy default, the scraper queries pje2g (second instance). You can switch cores with the core parameter.\n\n# Search monocratic decisions (2nd instance)\ndados_mono = tjes.cjsg('dano moral', core='pje2g_mono', paginas=1)\n\nprint(f\"Monocratic results: {len(dados_mono)} rows\")\ndados_mono[['nr_processo', 'magistrado', 'classe_judicial']].head(3)\n\nBaixando paginas TJES: 100%|██████████| 1/1 [00:00&lt;00:00, 10.46it/s]\n\n\nMonocratic results: 20 rows\n\n\n\n\n\n\n\n\n\n\n\n\nnr_processo\nmagistrado\nclasse_judicial\n\n\n\n\n0\n5001274-40.2022.8.08.0002\nGRECIO NOGUEIRA GREGIO\nRecurso Inominado Cível\n\n\n1\n5023551-77.2024.8.08.0035\nDOUGLAS DEMONER FIGUEIREDO\nRECURSO INOMINADO CÍVEL\n\n\n2\n5001473-59.2023.8.08.0024\nSALOMAO AKHNATON ZOROASTRO SPENCER ELESBON\nRecurso Inominado Cível",
+    "objectID": "notebooks/tjmt.html#querying-different-types",
+    "href": "notebooks/tjmt.html#querying-different-types",
+    "title": "TJMT - Tribunal de Justica do Estado de Mato Grosso",
+    "section": "Querying different types",
+    "text": "Querying different types\nBesides Acordao (default), you can also query DecisaoMonocratica.\n\ndados_decisao = tjmt.cjsg('direito', paginas=1, tipo_consulta='DecisaoMonocratica')\nprint(dados_decisao.shape)\ndados_decisao.head(3)\n\nBaixando páginas TJMT: 100%|██████████| 1/1 [00:00&lt;00:00,  1.96it/s]\n\n\n(10, 18)\n\n\n\n\n\n\n\n\n\nid\ntipo\nementa\nobservacao\nnumero_unico\nclasse\nassunto\ntipo_acao\ntipo_processo\nrelator\nredator_designado\norgao_julgador\nsigla_classe_feito\ndata_julgamento\ndata_publicacao\ninstancia\norigem\njulgamento\n\n\n\n\n0\n358297875\nDecisaoMonocratica\nESTADO DE MATO GROSSOPODER JUDICIÁRIOTRIBUNAL ...\n(N.U 1014565-61.2026.8.11.0000, CÂMARAS ISOLAD...\n1014565-61.2026.8.11.0000\nAGRAVO DE INSTRUMENTO\nAnálise de Crédito\nDIREITO DO CONSUMIDOR (1156) \\ Responsabilidad...\nCível\nWALTER PEREIRA DE SOUZA\nNone\nSecretaria de Plantão das Turmas Recursais\nCÂMARAS ISOLADAS CÍVEIS DE DIREITO PÚBLICO\n2026-04-03\nNaT\nSegunda\nPJe\nNÃO INFORMADO\n\n\n1\n358298358\nDecisaoMonocratica\nESTADO DE MATO GROSSOPODER JUDICIÁRIOTRIBUNAL ...\n(N.U 1014565-61.2026.8.11.0000, CÂMARAS ISOLAD...\n1014565-61.2026.8.11.0000\nAGRAVO DE INSTRUMENTO\nAnálise de Crédito\nDIREITO DO CONSUMIDOR (1156) \\ Responsabilidad...\nCível\nWALTER PEREIRA DE SOUZA\nNone\nSecretaria de Plantão das Turmas Recursais\nCÂMARAS ISOLADAS CÍVEIS DE DIREITO PÚBLICO\n2026-04-03\nNaT\nSegunda\nPJe\nNÃO INFORMADO\n\n\n2\n357978363\nDecisaoMonocratica\nESTADO DE MATO GROSSOPODER JUDICIÁRIOTRIBUNAL ...\n(N.U 1038264-89.2025.8.11.0041, CÂMARAS ISOLAD...\n1038264-89.2025.8.11.0041\nAPELAÇÃO CÍVEL\nEmpréstimo consignado\nDIREITO DO CONSUMIDOR (1156) \\ Contratos de Co...\nCível\nHELIO NISHIYAMA\nNone\nSegunda Câmara de Direito Privado\nCÂMARAS ISOLADAS CÍVEIS DE DIREITO PRIVADO\n2026-04-02\n2026-04-02\nSegunda\nPJe\nNÃO INFORMADO",
     "crumbs": [
       "Home",
       "Exemplos",
       "Tribunais",
-      "TJES"
+      "TJMT"
     ]
   },
   {
-    "objectID": "notebooks/tjes.html#first-instance-cjpg",
-    "href": "notebooks/tjes.html#first-instance-cjpg",
-    "title": "TJES - Tribunal de Justica do Espirito Santo",
-    "section": "First instance (cjpg)",
-    "text": "First instance (cjpg)\nUse cjpg() to query first-instance decisions (core pje1g). It accepts the same filters as cjsg (except core).\nNote: cjsg() does not accept core=\"pje1g\" — use cjpg() instead.\n\n# Search first-instance decisions\ndados_1g = tjes.cjpg('dano moral', paginas=1)\n\nprint(f\"First instance results: {len(dados_1g)} rows\")\ndados_1g[['nr_processo', 'magistrado', 'classe_judicial', 'dt_juntada']].head(5)\n\nBaixando paginas TJES: 100%|██████████| 1/1 [00:00&lt;00:00,  5.04it/s]\n\n\nFirst instance results: 20 rows\n\n\n\n\n\n\n\n\n\n\n\n\nnr_processo\nmagistrado\nclasse_judicial\ndt_juntada\n\n\n\n\n0\n5000704-46.2022.8.08.0037\nMARCELO MATTAR COUTINHO\nProcedimento do Juizado Especial Cível\n2023-09-28\n\n\n1\n5000057-89.2018.8.08.0005\nEVANDRO COELHO DE LIMA\nProcedimento do Juizado Especial Cível\n2019-12-17\n\n\n2\n5004066-91.2024.8.08.0035\nINES VELLO CORREA\nProcedimento do Juizado Especial Cível\n2024-11-08\n\n\n3\n5000045-13.2017.8.08.0037\nMARCELO MATTAR COUTINHO\nProcedimento do Juizado Especial Cível\n2020-01-04\n\n\n4\n5005643-41.2022.8.08.0014\nSALOMAO AKHNATON ZOROASTRO SPENCER ELESBON\nProcedimento do Juizado Especial Cível\n2022-11-01",
-    "crumbs": [
-      "Home",
-      "Exemplos",
-      "Tribunais",
-      "TJES"
-    ]
-  },
-  {
-    "objectID": "notebooks/tjes.html#download-and-parse-separately",
-    "href": "notebooks/tjes.html#download-and-parse-separately",
-    "title": "TJES - Tribunal de Justica do Espirito Santo",
+    "objectID": "notebooks/tjmt.html#download-and-parse-separately",
+    "href": "notebooks/tjmt.html#download-and-parse-separately",
+    "title": "TJMT - Tribunal de Justica do Estado de Mato Grosso",
     "section": "Download and parse separately",
-    "text": "Download and parse separately\nFor more control, you can use cjsg_download and cjsg_parse separately. This is useful when you want to cache the raw responses or inspect them before parsing.\n\n# Download raw JSON responses\nbrutos = tjes.cjsg_download('direito', paginas=1)\n\n# Inspect raw response structure\nprint(f\"Pages downloaded: {len(brutos)}\")\nprint(f\"Keys in response: {list(brutos[0].keys())}\")\nprint(f\"Total results available: {brutos[0]['total']}\")\nprint(f\"Docs in this page: {len(brutos[0]['docs'])}\")\n\nBaixando paginas TJES: 100%|██████████| 1/1 [00:00&lt;00:00,  6.54it/s]\n\n\nPages downloaded: 1\nKeys in response: ['core_used', 'docs', 'facets', 'page', 'per_page', 'total', 'total_pages']\nTotal results available: 167559\nDocs in this page: 20\n\n\n\n\n\n\n# Parse into DataFrame\ndf = tjes.cjsg_parse(brutos)\ndf.head(3)\n\n\n\n\n\n\n\n\nnr_processo\nementa\nmagistrado\norgao_julgador\nclasse_judicial\nclasse_judicial_sigla\nassunto_principal\njurisdicao\ncompetencia\ndt_juntada\n...\nlocalizacao\ncargo_julgador\ncd_assunto_principal\ncd_classe_judicial\nid_assunto_principal\nid_classe_judicial\nid_jurisdicao\nid_localizacao\nid_cargo_julgador\nid_bin\n\n\n\n\n0\n5002933-85.2025.8.08.0000\n\\nEmenta: DIREITO DAS SUCESSÕES. AGRAVO DE INS...\nARTHUR JOSE NEIVA DE ALMEIDA\n4ª Câmara Cível\nAGRAVO DE INSTRUMENTO\nAI\nInventário e Partilha\nTribunal de Justiça\nCível Isolada\n2025-06-13\n...\n016 - Gabinete Des. ARTHUR JOSÉ NEIVA DE ALMEIDA\nDesembargador(a)\n7687\n202\n1636\n238\n1\n36\n117\n13176473\n\n\n1\n5007013-97.2022.8.08.0000\n\\nDIREITO PROCESSUAL CIVIL. AGRAVO DE INSTRUME...\nJOSE PAULO CALMON NOGUEIRA DA GAMA\n2ª Câmara Cível\nAGRAVO DE INSTRUMENTO\nAI\nPromessa de Compra e Venda\nTribunal de Justiça\nCível Isolada\n2023-08-24\n...\n005 - Gabinete Des. JOSÉ PAULO CALMON NOGUEIRA...\nDesembargador(a)\n10496\n202\n2087\n238\n1\n21\n149\n5253374\n\n\n2\n5002710-35.2025.8.08.0000\n\\nEmenta: DIREITO CIVIL E PROCESSUAL CIVIL. AG...\nARTHUR JOSE NEIVA DE ALMEIDA\n4ª Câmara Cível\nAGRAVO DE INSTRUMENTO\nAI\nInventário e Partilha\nTribunal de Justiça\nCível Isolada\n2025-10-03\n...\nGabinete Des. ARTHUR JOSÉ NEIVA DE ALMEIDA\nDesembargador(a)\n7687\n202\n1636\n238\n1\n36\n117\n14653808\n\n\n\n\n3 rows × 23 columns",
+    "text": "Download and parse separately\nYou can also download the raw data first and parse it later.\n\nbrutos = tjmt.cjsg_download('direito', paginas=1)\nprint(f\"Pages downloaded: {len(brutos)}\")\nprint(f\"Keys in response: {list(brutos[0].keys())}\")\n\ndados = tjmt.cjsg_parse(brutos)\nimport pandas as pd\ndf = pd.DataFrame(dados)\nprint(f\"\\nParsed shape: {df.shape}\")\ndf.head(3)\n\nBaixando páginas TJMT: 100%|██████████| 1/1 [00:00&lt;00:00,  1.26it/s]\n\n\nPages downloaded: 1\nKeys in response: ['AcordaoCollection', 'DecisaoMonocraticaCollection', 'ResumoProcessoCollection', 'RecursalEletronicoCollection', 'ThesaurusTermosCollection', 'CountAcordaoDocumento', 'CountDecisaoMonocratica', 'CountResumoProcesso', 'CountRecursalEletronico', 'CountTotal', 'FacetRedatorDesignado', 'FacetCamara', 'FacetTipoProcesso', 'FacetRelator', 'FacetAssunto', 'FacetJulgamento']\n\nParsed shape: (10, 18)\n\n\n\n\n\n\n\n\n\n\n\n\nid\ntipo\nementa\nobservacao\nnumero_unico\nclasse\nassunto\ntipo_acao\ntipo_processo\nrelator\nredator_designado\norgao_julgador\nsigla_classe_feito\ndata_julgamento\ndata_publicacao\ninstancia\norigem\njulgamento\n\n\n\n\n0\n358287882\nAcordao\nEMENTA DIREITO CIVIL E PROCESSUAL CIVIL. EMBAR...\n(N.U 1042706-27.2025.8.11.0000, CÂMARAS ISOLAD...\n1042706-27.2025.8.11.0000\nEMBARGOS DE DECLARAÇÃO CÍVEL\nInventário e Partilha\nDIREITO CIVIL (899) \\ Sucessões (7673) \\ Inven...\nCível\nSERLY MARCONDES ALVES\nNone\nQuarta Câmara de Direito Privado\nCÂMARAS ISOLADAS CÍVEIS DE DIREITO PRIVADO\n2026-04-01T00:00:00\n2026-04-02T00:00:00\nSegunda\nPJe\nNÃO INFORMADO\n\n\n1\n358074862\nAcordao\nTERCEIRA CÂMARA DE DIREITO PRIVADOAPELAÇÃO CÍV...\n(N.U 1017072-57.2020.8.11.0015, CÂMARAS ISOLAD...\n1017072-57.2020.8.11.0015\nAPELAÇÃO CÍVEL\nEsbulho / Turbação / Ameaça\nDIREITO CIVIL (899) \\ Coisas (10432) \\ Posse (...\nCível\nANTONIA SIQUEIRA GONCALVES\nNone\nTerceira Câmara de Direito Privado\nCÂMARAS ISOLADAS CÍVEIS DE DIREITO PRIVADO\n2026-04-01T00:00:00\n2026-04-01T00:00:00\nSegunda\nPJe\nNÃO INFORMADO\n\n\n2\n358289370\nAcordao\nEMENTA DIREITO PROCESSUAL CIVIL. AGRAVO DE INS...\n(N.U 1004943-55.2026.8.11.0000, CÂMARAS ISOLAD...\n1004943-55.2026.8.11.0000\nAGRAVO DE INSTRUMENTO\nCompra e Venda\nDIREITO CIVIL (899) \\ Obrigações (7681) \\ Espé...\nCível\nSERLY MARCONDES ALVES\nNone\nQuarta Câmara de Direito Privado\nCÂMARAS ISOLADAS CÍVEIS DE DIREITO PRIVADO\n2026-04-01T00:00:00\n2026-04-02T00:00:00\nSegunda\nPJe\nNÃO INFORMADO",
     "crumbs": [
       "Home",
       "Exemplos",
       "Tribunais",
-      "TJES"
+      "TJMT"
     ]
   },
   {
-    "objectID": "notebooks/datajud.html",
-    "href": "notebooks/datajud.html",
-    "title": "Exemplo de uso",
+    "objectID": "api-conventions.html",
+    "href": "api-conventions.html",
+    "title": "API Conventions",
     "section": "",
-    "text": "Para usar o juscraper, rode algo assim:\n\nimport juscraper as jus\n\n# cria um objeto datajud\ndatajud = jus.scraper('datajud', verbose=False)\n\n\n\n# lista os processos\nprocessos = ['10092161720238260016', '00665754820248190000']\nlistagem = datajud.listar_processos(numero_processo=processos, mostrar_movs=True)\n\nprint(listagem.shape)\nlistagem.head(3)\n\n\n\n\n\n\n\n(2, 14)\n\n\n\n\n\n\n\n\n\nclasse\nnumeroProcesso\nsistema\nformato\ntribunal\ndataHoraUltimaAtualizacao\ngrau\n@timestamp\ndataAjuizamento\nmovimentos\nid\nnivelSigilo\norgaoJulgador\nassuntos\n\n\n\n\n0\n{'codigo': 241, 'nome': 'Petição Cível'}\n10092161720238260016\n{'codigo': 3, 'nome': 'SAJ'}\n{'codigo': 1, 'nome': 'Eletrônico'}\nTJSP\n2025-01-10T17:30:41.793Z\nJE\n2025-02-07T17:38:06.012900843Z\n2023-04-26T11:27:34.000Z\n[{'complementosTabelados': [{'codigo': 2, 'val...\nTJSP_JE_10092161720238260016\n0\n{'codigo': 10608, 'nome': '02 VARA JUIZADO ESP...\n[{'codigo': 8893, 'nome': 'Atos Processuais'}]\n\n\n1\n{'codigo': 202, 'nome': 'Agravo de Instrumento'}\n00665754820248190000\n{'codigo': 8, 'nome': 'Outros'}\n{'codigo': 1, 'nome': 'Eletrônico'}\nTJRJ\n2025-05-08T14:03:27.957Z\nG2\n2025-05-29T22:14:11.517670660Z\n2024-08-16T15:07:06.000Z\n[{'complementosTabelados': [{'codigo': 4, 'val...\nTJRJ_G2_00665754820248190000\n0\n{'codigoMunicipioIBGE': 3304557, 'codigo': 856...\n[{'codigo': 10499, 'nome': 'Programa de Comput...\n\n\n\n\n\n\n\n\nlistagem = datajud.listar_processos(numero_processo=processos)\nlistagem\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nclasse\nnumeroProcesso\nsistema\nformato\ntribunal\ndataHoraUltimaAtualizacao\ngrau\n@timestamp\ndataAjuizamento\nid\nnivelSigilo\norgaoJulgador\nassuntos\n\n\n\n\n0\n{'codigo': 241, 'nome': 'Petição Cível'}\n10092161720238260016\n{'codigo': 3, 'nome': 'SAJ'}\n{'codigo': 1, 'nome': 'Eletrônico'}\nTJSP\n2025-01-10T17:30:41.793Z\nJE\n2025-02-07T17:38:06.012900843Z\n2023-04-26T11:27:34.000Z\nTJSP_JE_10092161720238260016\n0\n{'codigo': 10608, 'nome': '02 VARA JUIZADO ESP...\n[{'codigo': 8893, 'nome': 'Atos Processuais'}]\n\n\n1\n{'codigo': 202, 'nome': 'Agravo de Instrumento'}\n00665754820248190000\n{'codigo': 8, 'nome': 'Outros'}\n{'codigo': 1, 'nome': 'Eletrônico'}\nTJRJ\n2025-05-08T14:03:27.957Z\nG2\n2025-05-29T22:14:11.517670660Z\n2024-08-16T15:07:06.000Z\nTJRJ_G2_00665754820248190000\n0\n{'codigoMunicipioIBGE': 3304557, 'codigo': 856...\n[{'codigo': 10499, 'nome': 'Programa de Comput...\n\n\n\n\n\n\n\n\nlistagem = datajud.listar_processos(classe = '282', tribunal = 'TJRJ', mostrar_movs=False, paginas=range(1, 16))print(listagem.shape)listagem.head(3)\n\n\nlistagem = datajud.listar_processos(\n    assuntos = [12503], \n    mostrar_movs=False, \n    tribunal = 'TJMG'\n)\n\nlistagem.head(3)\n\n\n\n\n\n\n\n\n\n\n\nnumeroProcesso\nclasse\nsistema\nformato\ntribunal\ndataHoraUltimaAtualizacao\ngrau\n@timestamp\ndataAjuizamento\nid\nnivelSigilo\norgaoJulgador\nassuntos\n\n\n\n\n0\n08269787520228130000\n{'codigo': 1032, 'nome': 'Recurso Especial'}\n{'codigo': 8, 'nome': 'Outros'}\n{'codigo': 1, 'nome': 'Eletrônico'}\nTJMG\n2023-07-30T01:26:23.606Z\nG2\n2025-06-16T01:29:32.570005493Z\n2023-06-14T17:54:25.000Z\nTJMG_1032_G2_45131_08269787520228130000\n0\n{'codigoMunicipioIBGE': 3148004, 'codigo': 451...\n[{'codigo': 12503, 'nome': 'Urgência'}]\n\n\n1\n19624280720218130000\n{'codigo': 1032, 'nome': 'Recurso Especial'}\n{'codigo': 8, 'nome': 'Outros'}\n{'codigo': 1, 'nome': 'Eletrônico'}\nTJMG\n2023-07-30T01:23:45.279Z\nG2\n2025-06-16T01:29:02.987771094Z\n2022-01-13T11:17:11.000Z\nTJMG_1032_G2_45131_19624280720218130000\n0\n{'codigoMunicipioIBGE': 3123908, 'codigo': 451...\n[{'codigo': 12501, 'nome': 'Cirurgia'}, {'codi...\n\n\n2\n23863698120228130000\n{'codigo': 1032, 'nome': 'Recurso Especial'}\n{'codigo': 8, 'nome': 'Outros'}\n{'codigo': 1, 'nome': 'Eletrônico'}\nTJMG\n2024-02-11T17:29:59.828Z\nG2\n2025-06-16T05:53:30.201277270Z\n2023-09-05T15:13:20.000Z\nTJMG_1032_G2_45131_23863698120228130000\n0\n{'codigoMunicipioIBGE': 3147006, 'codigo': 451...\n[{'codigo': 12501, 'nome': 'Cirurgia'}, {'codi...",
-    "crumbs": [
-      "Home",
-      "Exemplos",
-      "Agregadores",
-      "Datajud"
-    ]
+    "text": "All scrapers in juscraper follow a unified API convention for parameter names.\n\n\n\n\n\nParameter\nDescription\n\n\n\n\npesquisa\nThe search query string (canonical name)\n\n\n\nDeprecated aliases: query, termo — accepted with DeprecationWarning, will be removed in v1.0.\n\n\n\n\n\n\nParameter\nDescription\n\n\n\n\ndata_julgamento_inicio\nStart date for judgment filtering\n\n\ndata_julgamento_fim\nEnd date for judgment filtering\n\n\ndata_publicacao_inicio\nStart date for publication filtering\n\n\ndata_publicacao_fim\nEnd date for publication filtering\n\n\n\nGeneric aliases: data_inicio / data_fim map to data_julgamento_inicio / data_julgamento_fim. Cannot be used together with the specific names — raises ValueError.\nDeprecated aliases: data_julgamento_de / data_julgamento_ate, data_publicacao_de / data_publicacao_ate — accepted with DeprecationWarning.\n\n\n\n\n\n\n\n\n\n\n\nParameter\nType\nDescription\n\n\n\n\npaginas\nint \\| list \\| range \\| None\nPages to download (1-based)\n\n\n\n\nNone (default): downloads all available pages\nint: shorthand — paginas=3 is equivalent to range(1, 4)\nrange: e.g., range(1, 4) downloads pages 1, 2, 3\nlist: e.g., [1, 3, 5] downloads specific pages"
   },
   {
-    "objectID": "notebooks/jusbr.html",
-    "href": "notebooks/jusbr.html",
-    "title": "Baixando dados e documentos com o Jus.br",
+    "objectID": "api-conventions.html#standard-parameter-names",
+    "href": "api-conventions.html#standard-parameter-names",
+    "title": "API Conventions",
     "section": "",
-    "text": "Este notebook demonstra como autenticar e obter um token de acesso para o portal JUSBR usando a classe JUSBR_Scraper.\nimport juscraper as jus\nimport json\n\njusbr = jus.scraper(\"jusbr\")",
-    "crumbs": [
-      "Home",
-      "Exemplos",
-      "Agregadores",
-      "Jus.br"
-    ]
+    "text": "All scrapers in juscraper follow a unified API convention for parameter names.\n\n\n\n\n\nParameter\nDescription\n\n\n\n\npesquisa\nThe search query string (canonical name)\n\n\n\nDeprecated aliases: query, termo — accepted with DeprecationWarning, will be removed in v1.0.\n\n\n\n\n\n\nParameter\nDescription\n\n\n\n\ndata_julgamento_inicio\nStart date for judgment filtering\n\n\ndata_julgamento_fim\nEnd date for judgment filtering\n\n\ndata_publicacao_inicio\nStart date for publication filtering\n\n\ndata_publicacao_fim\nEnd date for publication filtering\n\n\n\nGeneric aliases: data_inicio / data_fim map to data_julgamento_inicio / data_julgamento_fim. Cannot be used together with the specific names — raises ValueError.\nDeprecated aliases: data_julgamento_de / data_julgamento_ate, data_publicacao_de / data_publicacao_ate — accepted with DeprecationWarning.\n\n\n\n\n\n\n\n\n\n\n\nParameter\nType\nDescription\n\n\n\n\npaginas\nint \\| list \\| range \\| None\nPages to download (1-based)\n\n\n\n\nNone (default): downloads all available pages\nint: shorthand — paginas=3 is equivalent to range(1, 4)\nrange: e.g., range(1, 4) downloads pages 1, 2, 3\nlist: e.g., [1, 3, 5] downloads specific pages"
   },
   {
-    "objectID": "notebooks/jusbr.html#autenticação-manual-via-gov.br",
-    "href": "notebooks/jusbr.html#autenticação-manual-via-gov.br",
-    "title": "Baixando dados e documentos com o Jus.br",
-    "section": "Autenticação manual via gov.br",
-    "text": "Autenticação manual via gov.br\n\nAcesse https://www.jus.br\nFaça login usando o gov.br\nEntre na página https://portaldeservicos.pdpj.jus.br/consulta (ou clique no botão ‘Consultar processo’, que aparece após o login)\nNa nova página, abra a aba Network do navegador (F12 ou ‘Inspecionar elemento’)\nAtualize a página (F5 ou ctrl+R ou no botão atualizar)\nNas requisições que vão aparecer, procure a requisição que tem nome ‘token’. Clique nela.\nNa tela ao lado, clique em ‘Resposta’.\nSelecione e copie o campo ‘access_token’ que aparece lá.\n\n\nimport os\nfrom dotenv import load_dotenv\nfrom getpass import getpass\n\nload_dotenv()\n\naccess_token = os.environ.get(\"JUSBR_ACCESS_TOKEN\")\nif access_token is None:\n    # input como senha oculta\n    access_token = getpass(\"Digite o token JWT: \")\n\n\n\njusbr.auth(token=access_token)\n\nTrue",
-    "crumbs": [
-      "Home",
-      "Exemplos",
-      "Agregadores",
-      "Jus.br"
-    ]
+    "objectID": "api-conventions.html#parameter-support-by-tribunal",
+    "href": "api-conventions.html#parameter-support-by-tribunal",
+    "title": "API Conventions",
+    "section": "Parameter Support by Tribunal",
+    "text": "Parameter Support by Tribunal\n\n\n\nParameter\nTJSP (cjsg/cjpg)\nTJDFT\nTJPR\nTJRS\n\n\n\n\npesquisa\nYes\nYes\nYes\nYes\n\n\ndata_julgamento_inicio/fim\nYes\nWarned\nYes\nYes\n\n\ndata_publicacao_inicio/fim\nNo\nWarned\nYes\nYes\n\n\npaginas (all types)\nYes\nYes\nYes\nYes\n\n\npaginas=None (all pages)\nYes\nYes\nYes\nYes"
   },
   {
-    "objectID": "notebooks/jusbr.html#baixando-metadados-dos-processos",
-    "href": "notebooks/jusbr.html#baixando-metadados-dos-processos",
-    "title": "Baixando dados e documentos com o Jus.br",
-    "section": "Baixando metadados dos processos",
-    "text": "Baixando metadados dos processos\nBaixando uma lista de casos:\n\nprocessos = ['3005317-12.2025.8.06.0000']\n\nresultados = jusbr.cpopg(processos)\n\nresultados\n\n\n\n\n\n\n\n\nprocesso\nnumeroProcesso\nidCodexTribunal\ndetalhes\n\n\n\n\n0\n30053171220258060000\n3005317-12.2025.8.06.0000\nNone\n{'nivelSigilo': 0, 'siglaTribunal': 'TJCE', 'n...\n\n\n\n\n\n\n\n\nresult_list = resultados['detalhes'].iloc[0]\n\nprint(json.dumps(result_list['tramitacaoAtual']['grau'], indent=2, ensure_ascii=False))\n\n{\n  \"sigla\": \"G2\",\n  \"nome\": \"2° Grau\",\n  \"numero\": 2\n}\n\n\nSe quiser visualizar o texto do caso:",
-    "crumbs": [
-      "Home",
-      "Exemplos",
-      "Agregadores",
-      "Jus.br"
-    ]
+    "objectID": "api-conventions.html#migration-guide",
+    "href": "api-conventions.html#migration-guide",
+    "title": "API Conventions",
+    "section": "Migration Guide",
+    "text": "Migration Guide\n\nFrom query / termo to pesquisa\n# Before\nscraper.cjsg(query=\"direito civil\")\nscraper.cjsg_download(termo=\"direito civil\")\n\n# After\nscraper.cjsg(pesquisa=\"direito civil\")\nscraper.cjsg_download(pesquisa=\"direito civil\")\n\n\nFrom _de/_ate to _inicio/_fim\n# Before\nscraper.cjsg(query=\"teste\", data_julgamento_de=\"01/01/2023\", data_julgamento_ate=\"31/12/2023\")\n\n# After\nscraper.cjsg(pesquisa=\"teste\", data_julgamento_inicio=\"01/01/2023\", data_julgamento_fim=\"31/12/2023\")\n\n\nFrom data_inicio/fim to data_julgamento_inicio/fim (TJSP)\n# Before\nscraper.cjsg(\"teste\", data_inicio=\"01/01/2023\", data_fim=\"31/12/2023\")\n\n# After (canonical)\nscraper.cjsg(\"teste\", data_julgamento_inicio=\"01/01/2023\", data_julgamento_fim=\"31/12/2023\")\n\n# Or (generic alias still works with DeprecationWarning)\nscraper.cjsg(\"teste\", data_inicio=\"01/01/2023\", data_fim=\"31/12/2023\")\n\n\nPagination default change\n# Before: default was paginas=1 (only first page)\nscraper.cjsg(pesquisa=\"teste\")           # downloaded 1 page\nscraper.cjsg(pesquisa=\"teste\", paginas=3) # downloaded pages 1-3\n\n# After: default is paginas=None (all pages)\nscraper.cjsg(pesquisa=\"teste\")            # downloads ALL pages\nscraper.cjsg(pesquisa=\"teste\", paginas=1) # downloads page 1 only\nscraper.cjsg(pesquisa=\"teste\", paginas=3) # downloads pages 1-3"
   },
   {
-    "objectID": "notebooks/jusbr.html#baixando-autos-dos-processos",
-    "href": "notebooks/jusbr.html#baixando-autos-dos-processos",
-    "title": "Baixando dados e documentos com o Jus.br",
-    "section": "Baixando autos dos processos",
-    "text": "Baixando autos dos processos\n\ndf_docs = jusbr.download_documents(resultados)\n\nprint(df_docs.shape)\ndf_docs.head(3)\n\n(1, 18)\n\n\n\n\n\n\n\n\n\nnumero_processo\nidCodex\nsequencia\nnome\ntipo\ndataHoraJuntada\nnivelSigilo\nhrefTexto\nhrefBinario\ntexto\n_raw_text_api\n_raw_binary_api\narquivo\nidOrigem\nidDocumento\ndescricao\ntipoDocumento\ndataJuntada\n\n\n\n\n0\n3005317-12.2025.8.06.0000\n25491324303\n4\nDecisão.html\n{'codigo': 404, 'nome': 'Decisão', 'idCodex': ...\n2025-05-29T18:02:53.803\nPUBLICO\n/processos/3005317-12.2025.8.06.0000/documento...\n/processos/3005317-12.2025.8.06.0000/documento...\nESTADO DO CEARÁ\\n \\n PODER JUDICIÁRIO\\n \\n T...\n\\nESTADO DO CEARÁ\\n \\n PODER JUDICIÁRIO\\n \\n ...\nb'&lt;p&gt;&lt;span style=\"font-family: arial, helvetic...\n{'tipo': 'text/html', 'quantidadePaginas': 0, ...\n21009045\nNone\nNone\nNone\nNone\n\n\n\n\n\n\n\n\ndf_docs.head(3)\n\n\n\n\n\n\n\n\nnumero_processo\nidCodex\nsequencia\nnome\ntipo\ndataHoraJuntada\nnivelSigilo\nhrefTexto\nhrefBinario\ntexto\n_raw_text_api\n_raw_binary_api\narquivo\nidOrigem\nidDocumento\ndescricao\ntipoDocumento\ndataJuntada\n\n\n\n\n0\n3005317-12.2025.8.06.0000\n25491324303\n4\nDecisão.html\n{'codigo': 404, 'nome': 'Decisão', 'idCodex': ...\n2025-05-29T18:02:53.803\nPUBLICO\n/processos/3005317-12.2025.8.06.0000/documento...\n/processos/3005317-12.2025.8.06.0000/documento...\nESTADO DO CEARÁ\\n \\n PODER JUDICIÁRIO\\n \\n T...\n\\nESTADO DO CEARÁ\\n \\n PODER JUDICIÁRIO\\n \\n ...\nb'&lt;p&gt;&lt;span style=\"font-family: arial, helvetic...\n{'tipo': 'text/html', 'quantidadePaginas': 0, ...\n21009045\nNone\nNone\nNone\nNone\n\n\n\n\n\n\n\n\nprint(df_docs['texto'][0][:200])\n\nTRIBUNAL DE JUSTIÇA DO ESTADO DE SÃO PAULO\nCOMARCA de São Vicente\nForo de São Vicente\n1ª Vara Criminal\nRua Jacob Emmerich, 1367, Sala 13, Parque Bitarú - CEP 11310-906, Fone: (13) 2102-6454, São Vicen",
-    "crumbs": [
-      "Home",
-      "Exemplos",
-      "Agregadores",
-      "Jus.br"
-    ]
-  },
-  {
-    "objectID": "notebooks/jusbr.html#baixando-uma-lista-grande-de-processos",
-    "href": "notebooks/jusbr.html#baixando-uma-lista-grande-de-processos",
-    "title": "Baixando dados e documentos com o Jus.br",
-    "section": "Baixando uma lista grande de processos",
-    "text": "Baixando uma lista grande de processos\nSe a lista de processos é muito grande, pode ser uma boa prática baixar um processo por vez e salvar os resultados em um arquivo parquet, por exemplo.\nNo script abaixo, criamos uma pasta dentro da pasta atual, chamada jusbr/cpopg/. Ali dentro, para cada processo, criamos uma pasta com o número do processo e salvamos 2 arquivos: 1 com os metadados daquele processo e 1 com os textos dos documentos. A chave para juntar as duas bases é o número do processo.\n\nimport os\nimport pandas as pd\nfrom tqdm import tqdm\nfrom joblib import Parallel, delayed\n\nprocessos = ['15006452620228260536']\n\nresultados = jusbr.cpopg(processos)\n\n\n\ndef download_document(proc_no, jusbr, verbose=True):\n    if verbose:\n        print(f\"Baixando documentos do processo {proc_no}\\n\")\n    \n    resultado = jusbr.cpopg([proc_no])\n    row = resultado.iloc[0]\n    processo = row['processo']\n    row_df = pd.DataFrame([row])\n    # cria a pasta\n    process_path = os.path.join('jusbr/cpopg', processo)\n    os.makedirs(process_path, exist_ok=True)\n    \n    # baixa documentos do processo\n    if verbose:\n        print(f\"Baixando autos do processo {proc_no}\\n\")\n    \n    df_docs = jusbr.download_documents(row_df)\n    #df_docs = pd.DataFrame()\n    # salva documentos\n    df_docs.to_parquet(os.path.join(process_path, 'documents.parquet'), index=False)\n    # salva metadata\n    row_df.to_parquet(os.path.join(process_path, 'metadata.parquet'), index=False)\n\nfor proc_no in processos:\n    download_document(proc_no, jusbr)\n\nBaixando documentos do processo 15006452620228260536\n\nBaixando autos do processo 15006452620228260536",
-    "crumbs": [
-      "Home",
-      "Exemplos",
-      "Agregadores",
-      "Jus.br"
-    ]
+    "objectID": "api-conventions.html#normalization-utilities",
+    "href": "api-conventions.html#normalization-utilities",
+    "title": "API Conventions",
+    "section": "Normalization Utilities",
+    "text": "Normalization Utilities\nThe juscraper.utils.params module provides normalization functions used internally by all scrapers:\n\nnormalize_paginas(paginas) — normalizes int | list | range | None\nnormalize_pesquisa(pesquisa, **kwargs) — handles deprecated aliases\nnormalize_datas(**kwargs) — handles deprecated and generic date aliases\nwarn_unsupported(param_name, tribunal) — warns about unsupported parameters"
   },
   {
     "objectID": "notebooks/tjsp.html",
@@ -343,148 +422,174 @@
     ]
   },
   {
-    "objectID": "api-conventions.html",
-    "href": "api-conventions.html",
-    "title": "API Conventions",
+    "objectID": "notebooks/jusbr.html",
+    "href": "notebooks/jusbr.html",
+    "title": "Baixando dados e documentos com o Jus.br",
     "section": "",
-    "text": "All scrapers in juscraper follow a unified API convention for parameter names.\n\n\n\n\n\nParameter\nDescription\n\n\n\n\npesquisa\nThe search query string (canonical name)\n\n\n\nDeprecated aliases: query, termo — accepted with DeprecationWarning, will be removed in v1.0.\n\n\n\n\n\n\nParameter\nDescription\n\n\n\n\ndata_julgamento_inicio\nStart date for judgment filtering\n\n\ndata_julgamento_fim\nEnd date for judgment filtering\n\n\ndata_publicacao_inicio\nStart date for publication filtering\n\n\ndata_publicacao_fim\nEnd date for publication filtering\n\n\n\nGeneric aliases: data_inicio / data_fim map to data_julgamento_inicio / data_julgamento_fim. Cannot be used together with the specific names — raises ValueError.\nDeprecated aliases: data_julgamento_de / data_julgamento_ate, data_publicacao_de / data_publicacao_ate — accepted with DeprecationWarning.\n\n\n\n\n\n\n\n\n\n\n\nParameter\nType\nDescription\n\n\n\n\npaginas\nint \\| list \\| range \\| None\nPages to download (1-based)\n\n\n\n\nNone (default): downloads all available pages\nint: shorthand — paginas=3 is equivalent to range(1, 4)\nrange: e.g., range(1, 4) downloads pages 1, 2, 3\nlist: e.g., [1, 3, 5] downloads specific pages"
+    "text": "Este notebook demonstra como autenticar e obter um token de acesso para o portal JUSBR usando a classe JUSBR_Scraper.\nimport juscraper as jus\nimport json\n\njusbr = jus.scraper(\"jusbr\")",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Agregadores",
+      "Jus.br"
+    ]
   },
   {
-    "objectID": "api-conventions.html#standard-parameter-names",
-    "href": "api-conventions.html#standard-parameter-names",
-    "title": "API Conventions",
+    "objectID": "notebooks/jusbr.html#autenticação-manual-via-gov.br",
+    "href": "notebooks/jusbr.html#autenticação-manual-via-gov.br",
+    "title": "Baixando dados e documentos com o Jus.br",
+    "section": "Autenticação manual via gov.br",
+    "text": "Autenticação manual via gov.br\n\nAcesse https://www.jus.br\nFaça login usando o gov.br\nEntre na página https://portaldeservicos.pdpj.jus.br/consulta (ou clique no botão ‘Consultar processo’, que aparece após o login)\nNa nova página, abra a aba Network do navegador (F12 ou ‘Inspecionar elemento’)\nAtualize a página (F5 ou ctrl+R ou no botão atualizar)\nNas requisições que vão aparecer, procure a requisição que tem nome ‘token’. Clique nela.\nNa tela ao lado, clique em ‘Resposta’.\nSelecione e copie o campo ‘access_token’ que aparece lá.\n\n\nimport os\nfrom dotenv import load_dotenv\nfrom getpass import getpass\n\nload_dotenv()\n\naccess_token = os.environ.get(\"JUSBR_ACCESS_TOKEN\")\nif access_token is None:\n    # input como senha oculta\n    access_token = getpass(\"Digite o token JWT: \")\n\n\n\njusbr.auth(token=access_token)\n\nTrue",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Agregadores",
+      "Jus.br"
+    ]
+  },
+  {
+    "objectID": "notebooks/jusbr.html#baixando-metadados-dos-processos",
+    "href": "notebooks/jusbr.html#baixando-metadados-dos-processos",
+    "title": "Baixando dados e documentos com o Jus.br",
+    "section": "Baixando metadados dos processos",
+    "text": "Baixando metadados dos processos\nBaixando uma lista de casos:\n\nprocessos = ['3005317-12.2025.8.06.0000']\n\nresultados = jusbr.cpopg(processos)\n\nresultados\n\n\n\n\n\n\n\n\nprocesso\nnumeroProcesso\nidCodexTribunal\ndetalhes\n\n\n\n\n0\n30053171220258060000\n3005317-12.2025.8.06.0000\nNone\n{'nivelSigilo': 0, 'siglaTribunal': 'TJCE', 'n...\n\n\n\n\n\n\n\n\nresult_list = resultados['detalhes'].iloc[0]\n\nprint(json.dumps(result_list['tramitacaoAtual']['grau'], indent=2, ensure_ascii=False))\n\n{\n  \"sigla\": \"G2\",\n  \"nome\": \"2° Grau\",\n  \"numero\": 2\n}\n\n\nSe quiser visualizar o texto do caso:",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Agregadores",
+      "Jus.br"
+    ]
+  },
+  {
+    "objectID": "notebooks/jusbr.html#baixando-autos-dos-processos",
+    "href": "notebooks/jusbr.html#baixando-autos-dos-processos",
+    "title": "Baixando dados e documentos com o Jus.br",
+    "section": "Baixando autos dos processos",
+    "text": "Baixando autos dos processos\n\ndf_docs = jusbr.download_documents(resultados)\n\nprint(df_docs.shape)\ndf_docs.head(3)\n\n(1, 18)\n\n\n\n\n\n\n\n\n\nnumero_processo\nidCodex\nsequencia\nnome\ntipo\ndataHoraJuntada\nnivelSigilo\nhrefTexto\nhrefBinario\ntexto\n_raw_text_api\n_raw_binary_api\narquivo\nidOrigem\nidDocumento\ndescricao\ntipoDocumento\ndataJuntada\n\n\n\n\n0\n3005317-12.2025.8.06.0000\n25491324303\n4\nDecisão.html\n{'codigo': 404, 'nome': 'Decisão', 'idCodex': ...\n2025-05-29T18:02:53.803\nPUBLICO\n/processos/3005317-12.2025.8.06.0000/documento...\n/processos/3005317-12.2025.8.06.0000/documento...\nESTADO DO CEARÁ\\n \\n PODER JUDICIÁRIO\\n \\n T...\n\\nESTADO DO CEARÁ\\n \\n PODER JUDICIÁRIO\\n \\n ...\nb'&lt;p&gt;&lt;span style=\"font-family: arial, helvetic...\n{'tipo': 'text/html', 'quantidadePaginas': 0, ...\n21009045\nNone\nNone\nNone\nNone\n\n\n\n\n\n\n\n\ndf_docs.head(3)\n\n\n\n\n\n\n\n\nnumero_processo\nidCodex\nsequencia\nnome\ntipo\ndataHoraJuntada\nnivelSigilo\nhrefTexto\nhrefBinario\ntexto\n_raw_text_api\n_raw_binary_api\narquivo\nidOrigem\nidDocumento\ndescricao\ntipoDocumento\ndataJuntada\n\n\n\n\n0\n3005317-12.2025.8.06.0000\n25491324303\n4\nDecisão.html\n{'codigo': 404, 'nome': 'Decisão', 'idCodex': ...\n2025-05-29T18:02:53.803\nPUBLICO\n/processos/3005317-12.2025.8.06.0000/documento...\n/processos/3005317-12.2025.8.06.0000/documento...\nESTADO DO CEARÁ\\n \\n PODER JUDICIÁRIO\\n \\n T...\n\\nESTADO DO CEARÁ\\n \\n PODER JUDICIÁRIO\\n \\n ...\nb'&lt;p&gt;&lt;span style=\"font-family: arial, helvetic...\n{'tipo': 'text/html', 'quantidadePaginas': 0, ...\n21009045\nNone\nNone\nNone\nNone\n\n\n\n\n\n\n\n\nprint(df_docs['texto'][0][:200])\n\nTRIBUNAL DE JUSTIÇA DO ESTADO DE SÃO PAULO\nCOMARCA de São Vicente\nForo de São Vicente\n1ª Vara Criminal\nRua Jacob Emmerich, 1367, Sala 13, Parque Bitarú - CEP 11310-906, Fone: (13) 2102-6454, São Vicen",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Agregadores",
+      "Jus.br"
+    ]
+  },
+  {
+    "objectID": "notebooks/jusbr.html#baixando-uma-lista-grande-de-processos",
+    "href": "notebooks/jusbr.html#baixando-uma-lista-grande-de-processos",
+    "title": "Baixando dados e documentos com o Jus.br",
+    "section": "Baixando uma lista grande de processos",
+    "text": "Baixando uma lista grande de processos\nSe a lista de processos é muito grande, pode ser uma boa prática baixar um processo por vez e salvar os resultados em um arquivo parquet, por exemplo.\nNo script abaixo, criamos uma pasta dentro da pasta atual, chamada jusbr/cpopg/. Ali dentro, para cada processo, criamos uma pasta com o número do processo e salvamos 2 arquivos: 1 com os metadados daquele processo e 1 com os textos dos documentos. A chave para juntar as duas bases é o número do processo.\n\nimport os\nimport pandas as pd\nfrom tqdm import tqdm\nfrom joblib import Parallel, delayed\n\nprocessos = ['15006452620228260536']\n\nresultados = jusbr.cpopg(processos)\n\n\n\ndef download_document(proc_no, jusbr, verbose=True):\n    if verbose:\n        print(f\"Baixando documentos do processo {proc_no}\\n\")\n    \n    resultado = jusbr.cpopg([proc_no])\n    row = resultado.iloc[0]\n    processo = row['processo']\n    row_df = pd.DataFrame([row])\n    # cria a pasta\n    process_path = os.path.join('jusbr/cpopg', processo)\n    os.makedirs(process_path, exist_ok=True)\n    \n    # baixa documentos do processo\n    if verbose:\n        print(f\"Baixando autos do processo {proc_no}\\n\")\n    \n    df_docs = jusbr.download_documents(row_df)\n    #df_docs = pd.DataFrame()\n    # salva documentos\n    df_docs.to_parquet(os.path.join(process_path, 'documents.parquet'), index=False)\n    # salva metadata\n    row_df.to_parquet(os.path.join(process_path, 'metadata.parquet'), index=False)\n\nfor proc_no in processos:\n    download_document(proc_no, jusbr)\n\nBaixando documentos do processo 15006452620228260536\n\nBaixando autos do processo 15006452620228260536",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Agregadores",
+      "Jus.br"
+    ]
+  },
+  {
+    "objectID": "notebooks/datajud.html",
+    "href": "notebooks/datajud.html",
+    "title": "Exemplo de uso",
     "section": "",
-    "text": "All scrapers in juscraper follow a unified API convention for parameter names.\n\n\n\n\n\nParameter\nDescription\n\n\n\n\npesquisa\nThe search query string (canonical name)\n\n\n\nDeprecated aliases: query, termo — accepted with DeprecationWarning, will be removed in v1.0.\n\n\n\n\n\n\nParameter\nDescription\n\n\n\n\ndata_julgamento_inicio\nStart date for judgment filtering\n\n\ndata_julgamento_fim\nEnd date for judgment filtering\n\n\ndata_publicacao_inicio\nStart date for publication filtering\n\n\ndata_publicacao_fim\nEnd date for publication filtering\n\n\n\nGeneric aliases: data_inicio / data_fim map to data_julgamento_inicio / data_julgamento_fim. Cannot be used together with the specific names — raises ValueError.\nDeprecated aliases: data_julgamento_de / data_julgamento_ate, data_publicacao_de / data_publicacao_ate — accepted with DeprecationWarning.\n\n\n\n\n\n\n\n\n\n\n\nParameter\nType\nDescription\n\n\n\n\npaginas\nint \\| list \\| range \\| None\nPages to download (1-based)\n\n\n\n\nNone (default): downloads all available pages\nint: shorthand — paginas=3 is equivalent to range(1, 4)\nrange: e.g., range(1, 4) downloads pages 1, 2, 3\nlist: e.g., [1, 3, 5] downloads specific pages"
+    "text": "Para usar o juscraper, rode algo assim:\n\nimport juscraper as jus\n\n# cria um objeto datajud\ndatajud = jus.scraper('datajud', verbose=False)\n\n\n\n# lista os processos\nprocessos = ['10092161720238260016', '00665754820248190000']\nlistagem = datajud.listar_processos(numero_processo=processos, mostrar_movs=True)\n\nprint(listagem.shape)\nlistagem.head(3)\n\n\n\n\n\n\n\n(2, 14)\n\n\n\n\n\n\n\n\n\nclasse\nnumeroProcesso\nsistema\nformato\ntribunal\ndataHoraUltimaAtualizacao\ngrau\n@timestamp\ndataAjuizamento\nmovimentos\nid\nnivelSigilo\norgaoJulgador\nassuntos\n\n\n\n\n0\n{'codigo': 241, 'nome': 'Petição Cível'}\n10092161720238260016\n{'codigo': 3, 'nome': 'SAJ'}\n{'codigo': 1, 'nome': 'Eletrônico'}\nTJSP\n2025-01-10T17:30:41.793Z\nJE\n2025-02-07T17:38:06.012900843Z\n2023-04-26T11:27:34.000Z\n[{'complementosTabelados': [{'codigo': 2, 'val...\nTJSP_JE_10092161720238260016\n0\n{'codigo': 10608, 'nome': '02 VARA JUIZADO ESP...\n[{'codigo': 8893, 'nome': 'Atos Processuais'}]\n\n\n1\n{'codigo': 202, 'nome': 'Agravo de Instrumento'}\n00665754820248190000\n{'codigo': 8, 'nome': 'Outros'}\n{'codigo': 1, 'nome': 'Eletrônico'}\nTJRJ\n2025-05-08T14:03:27.957Z\nG2\n2025-05-29T22:14:11.517670660Z\n2024-08-16T15:07:06.000Z\n[{'complementosTabelados': [{'codigo': 4, 'val...\nTJRJ_G2_00665754820248190000\n0\n{'codigoMunicipioIBGE': 3304557, 'codigo': 856...\n[{'codigo': 10499, 'nome': 'Programa de Comput...\n\n\n\n\n\n\n\n\nlistagem = datajud.listar_processos(numero_processo=processos)\nlistagem\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nclasse\nnumeroProcesso\nsistema\nformato\ntribunal\ndataHoraUltimaAtualizacao\ngrau\n@timestamp\ndataAjuizamento\nid\nnivelSigilo\norgaoJulgador\nassuntos\n\n\n\n\n0\n{'codigo': 241, 'nome': 'Petição Cível'}\n10092161720238260016\n{'codigo': 3, 'nome': 'SAJ'}\n{'codigo': 1, 'nome': 'Eletrônico'}\nTJSP\n2025-01-10T17:30:41.793Z\nJE\n2025-02-07T17:38:06.012900843Z\n2023-04-26T11:27:34.000Z\nTJSP_JE_10092161720238260016\n0\n{'codigo': 10608, 'nome': '02 VARA JUIZADO ESP...\n[{'codigo': 8893, 'nome': 'Atos Processuais'}]\n\n\n1\n{'codigo': 202, 'nome': 'Agravo de Instrumento'}\n00665754820248190000\n{'codigo': 8, 'nome': 'Outros'}\n{'codigo': 1, 'nome': 'Eletrônico'}\nTJRJ\n2025-05-08T14:03:27.957Z\nG2\n2025-05-29T22:14:11.517670660Z\n2024-08-16T15:07:06.000Z\nTJRJ_G2_00665754820248190000\n0\n{'codigoMunicipioIBGE': 3304557, 'codigo': 856...\n[{'codigo': 10499, 'nome': 'Programa de Comput...\n\n\n\n\n\n\n\n\nlistagem = datajud.listar_processos(classe = '282', tribunal = 'TJRJ', mostrar_movs=False, paginas=range(1, 16))print(listagem.shape)listagem.head(3)\n\n\nlistagem = datajud.listar_processos(\n    assuntos = [12503], \n    mostrar_movs=False, \n    tribunal = 'TJMG'\n)\n\nlistagem.head(3)\n\n\n\n\n\n\n\n\n\n\n\nnumeroProcesso\nclasse\nsistema\nformato\ntribunal\ndataHoraUltimaAtualizacao\ngrau\n@timestamp\ndataAjuizamento\nid\nnivelSigilo\norgaoJulgador\nassuntos\n\n\n\n\n0\n08269787520228130000\n{'codigo': 1032, 'nome': 'Recurso Especial'}\n{'codigo': 8, 'nome': 'Outros'}\n{'codigo': 1, 'nome': 'Eletrônico'}\nTJMG\n2023-07-30T01:26:23.606Z\nG2\n2025-06-16T01:29:32.570005493Z\n2023-06-14T17:54:25.000Z\nTJMG_1032_G2_45131_08269787520228130000\n0\n{'codigoMunicipioIBGE': 3148004, 'codigo': 451...\n[{'codigo': 12503, 'nome': 'Urgência'}]\n\n\n1\n19624280720218130000\n{'codigo': 1032, 'nome': 'Recurso Especial'}\n{'codigo': 8, 'nome': 'Outros'}\n{'codigo': 1, 'nome': 'Eletrônico'}\nTJMG\n2023-07-30T01:23:45.279Z\nG2\n2025-06-16T01:29:02.987771094Z\n2022-01-13T11:17:11.000Z\nTJMG_1032_G2_45131_19624280720218130000\n0\n{'codigoMunicipioIBGE': 3123908, 'codigo': 451...\n[{'codigo': 12501, 'nome': 'Cirurgia'}, {'codi...\n\n\n2\n23863698120228130000\n{'codigo': 1032, 'nome': 'Recurso Especial'}\n{'codigo': 8, 'nome': 'Outros'}\n{'codigo': 1, 'nome': 'Eletrônico'}\nTJMG\n2024-02-11T17:29:59.828Z\nG2\n2025-06-16T05:53:30.201277270Z\n2023-09-05T15:13:20.000Z\nTJMG_1032_G2_45131_23863698120228130000\n0\n{'codigoMunicipioIBGE': 3147006, 'codigo': 451...\n[{'codigo': 12501, 'nome': 'Cirurgia'}, {'codi...",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Agregadores",
+      "Datajud"
+    ]
   },
   {
-    "objectID": "api-conventions.html#parameter-support-by-tribunal",
-    "href": "api-conventions.html#parameter-support-by-tribunal",
-    "title": "API Conventions",
-    "section": "Parameter Support by Tribunal",
-    "text": "Parameter Support by Tribunal\n\n\n\nParameter\nTJSP (cjsg/cjpg)\nTJDFT\nTJPR\nTJRS\n\n\n\n\npesquisa\nYes\nYes\nYes\nYes\n\n\ndata_julgamento_inicio/fim\nYes\nWarned\nYes\nYes\n\n\ndata_publicacao_inicio/fim\nNo\nWarned\nYes\nYes\n\n\npaginas (all types)\nYes\nYes\nYes\nYes\n\n\npaginas=None (all pages)\nYes\nYes\nYes\nYes"
-  },
-  {
-    "objectID": "api-conventions.html#migration-guide",
-    "href": "api-conventions.html#migration-guide",
-    "title": "API Conventions",
-    "section": "Migration Guide",
-    "text": "Migration Guide\n\nFrom query / termo to pesquisa\n# Before\nscraper.cjsg(query=\"direito civil\")\nscraper.cjsg_download(termo=\"direito civil\")\n\n# After\nscraper.cjsg(pesquisa=\"direito civil\")\nscraper.cjsg_download(pesquisa=\"direito civil\")\n\n\nFrom _de/_ate to _inicio/_fim\n# Before\nscraper.cjsg(query=\"teste\", data_julgamento_de=\"01/01/2023\", data_julgamento_ate=\"31/12/2023\")\n\n# After\nscraper.cjsg(pesquisa=\"teste\", data_julgamento_inicio=\"01/01/2023\", data_julgamento_fim=\"31/12/2023\")\n\n\nFrom data_inicio/fim to data_julgamento_inicio/fim (TJSP)\n# Before\nscraper.cjsg(\"teste\", data_inicio=\"01/01/2023\", data_fim=\"31/12/2023\")\n\n# After (canonical)\nscraper.cjsg(\"teste\", data_julgamento_inicio=\"01/01/2023\", data_julgamento_fim=\"31/12/2023\")\n\n# Or (generic alias still works with DeprecationWarning)\nscraper.cjsg(\"teste\", data_inicio=\"01/01/2023\", data_fim=\"31/12/2023\")\n\n\nPagination default change\n# Before: default was paginas=1 (only first page)\nscraper.cjsg(pesquisa=\"teste\")           # downloaded 1 page\nscraper.cjsg(pesquisa=\"teste\", paginas=3) # downloaded pages 1-3\n\n# After: default is paginas=None (all pages)\nscraper.cjsg(pesquisa=\"teste\")            # downloads ALL pages\nscraper.cjsg(pesquisa=\"teste\", paginas=1) # downloads page 1 only\nscraper.cjsg(pesquisa=\"teste\", paginas=3) # downloads pages 1-3"
-  },
-  {
-    "objectID": "api-conventions.html#normalization-utilities",
-    "href": "api-conventions.html#normalization-utilities",
-    "title": "API Conventions",
-    "section": "Normalization Utilities",
-    "text": "Normalization Utilities\nThe juscraper.utils.params module provides normalization functions used internally by all scrapers:\n\nnormalize_paginas(paginas) — normalizes int | list | range | None\nnormalize_pesquisa(pesquisa, **kwargs) — handles deprecated aliases\nnormalize_datas(**kwargs) — handles deprecated and generic date aliases\nwarn_unsupported(param_name, tribunal) — warns about unsupported parameters"
-  },
-  {
-    "objectID": "notebooks/tjdft.html",
-    "href": "notebooks/tjdft.html",
-    "title": "juscraper",
+    "objectID": "notebooks/tjes.html",
+    "href": "notebooks/tjes.html",
+    "title": "TJES - Tribunal de Justica do Espirito Santo",
     "section": "",
-    "text": "import juscraper as jus\n\n# cria um objeto tjdft\ntjdft = jus.scraper('tjdft')\n\n\n# baixa dados da jurisprudência\ndados_cjsg = tjdft.cjsg('direito penal', paginas=range(0,3))\n\nprint(dados_cjsg.shape)\ndados_cjsg.head(3)\n\n(30, 23)\n\n\n\n\n\n\n\n\n\nsequencial\nbase\nsubbase\nuuid\nidentificador\ndataJulgamento\ndataPublicacao\ndecisao\nementa\nlocalDePublicacao\n...\nuf\nsegredoJustica\nturmaRecursal\ndescricaoOrgaoJulgador\nversao\ncodigoClasseCnj\ncodigoSistjOrgaoJulgador\ninteiroTeorHtml\nmarcadores\npossuiInteiroTeor\n\n\n\n\n0\n1\nacordaos\nacordaos\n23362ccf-ffc5-4caf-b878-de1f671250f5\n1998487\n2025-05-15T03:00:00.000Z\n2025-05-24T23:26:53.000Z\nNEGAR PROVIMENTO AO RECURSO. UNÂNIME\nEMENTA: DIREITO PENAL. EMBARGOS DE DECLARAÇÃO....\nPJe\n...\nDF\nFalse\nFalse\n1ª TURMA CRIMINAL\n01\n420\n51\nInteiro Teor indisponível.\n{'ementa': ['EMENTA: &lt;mark&gt;DIREITO&lt;/mark&gt; &lt;mar...\nTrue\n\n\n1\n2\nacordaos\nacordaos\n298272b3-1dd9-41c0-8f93-f29edd0d8cef\n1999112\n2025-05-15T03:00:00.000Z\n2025-05-24T23:22:29.000Z\nNEGAR PROVIMENTO. UNÂNIME.\nEmenta: direito penal. Apelação criminal. Injú...\nPJe\n...\nDF\nFalse\nFalse\n2ª TURMA CRIMINAL\n01\n417\n52\nInteiro Teor indisponível.\n{'ementa': ['Ementa: &lt;mark&gt;direito&lt;/mark&gt; &lt;mar...\nTrue\n\n\n2\n3\nacordaos\nacordaos\nee320b08-c91f-489f-8dba-1dc80b63fff7\n1998988\n2025-05-15T03:00:00.000Z\n2025-05-24T20:52:42.000Z\nNEGAR PROVIMENTO. UNÂNIME.\nEmenta: DIREITO PENAL. APELAÇÃO CRIMINAL. RECE...\nPJe\n...\nDF\nFalse\nFalse\n2ª TURMA CRIMINAL\n01\n417\n52\nInteiro Teor indisponível.\n{'ementa': ['Ementa: &lt;mark&gt;DIREITO&lt;/mark&gt; &lt;mar...\nTrue\n\n\n\n\n3 rows × 23 columns\n\n\n\n\nprint(dados_cjsg['ementa'].iloc[0][:300])\n\nEMENTA: DIREITO PENAL. EMBARGOS DE DECLARAÇÃO. PRETENSÃO DE REDISCUSSÃO DA MATÉRIA. INOVAÇÃO RECURSAL. IMPOSSIBILIDADE. VÍCIO. AUSENTE. MEIO PROCESSUAL INADEQUADO. PREQUESTIONAMENTO. EMBARGOS REJEITADOS.\n\nI. CASO EM EXAME\n\n1. Embargos de declaração opostos contra acórdão que negou provimento ao recu\n\n\n\ndados_cjsg['processo'].iloc[0]\n\n'0722443-83.2024.8.07.0003'",
+    "text": "Example notebook for the TJES jurisprudence scraper (cjsg).\nThe TJES scraper queries the public API at sistemas.tjes.jus.br/consulta-jurisprudencia/ and supports five Solr cores:",
     "crumbs": [
       "Home",
       "Exemplos",
       "Tribunais",
-      "TJDFT"
+      "TJES"
     ]
   },
   {
-    "objectID": "notebooks/tjpr.html",
-    "href": "notebooks/tjpr.html",
-    "title": "juscraper",
-    "section": "",
-    "text": "import juscraper as jus\n\n# cria um objeto tjpr\ntjpr = jus.scraper('tjpr')\n\n\n# baixa dados da jurisprudência\ndados_cjsg = tjpr.cjsg('direito penal', paginas=range(0,3))\n\nprint(dados_cjsg.shape)\ndados_cjsg.head(3)\n\nBaixando páginas TJPR: 100%|██████████| 3/3 [00:00&lt;00:00, 12.50it/s]\n\n\n(30, 5)\n\n\n\n\n\n\n\n\n\nprocesso\norgao_julgador\nrelator\ndata_julgamento\nementa\n\n\n\n\n0\n0000919-43.2023.8.16.0169\n1ª Câmara Criminal - Núcleo de Atuação (Lei Ma...\nsubstituta fernanda karam de chueiri sanches\n2025-05-24\nConteúdo pendente de análise e liberação para ...\n\n\n1\n0001986-62.2017.8.16.0069\n1ª Câmara Criminal - Núcleo de Atuação (Lei Ma...\nsubstituta fernanda karam de chueiri sanches\n2025-05-24\nConteúdo pendente de análise e liberação para ...\n\n\n2\n0002335-56.2023.8.16.0101\n1ª Câmara Criminal - Núcleo de Atuação (Lei Ma...\nsubstituta fernanda karam de chueiri sanches\n2025-05-24\nConteúdo pendente de análise e liberação para ...\n\n\n\n\n\n\n\n\nprint(dados_cjsg['ementa'].iloc[23][:200])\n\nDIREITO\nPENAL\n. APELAÇÃO CRIMINAL. CRIME DE AMEAÇA NO ÂMBITO DE VIOLÊNCIA DOMÉSTICA. RECURSO DEFENSIVO. ALEGAÇÃO DE EXCLUDENTE DE ILICITUDE E PEDIDO SUBSIDIÁRIO DE DESCLASSIFICAÇÃO PARA CONTRAVENÇÃO\nP",
+    "objectID": "notebooks/tjes.html#basic-search",
+    "href": "notebooks/tjes.html#basic-search",
+    "title": "TJES - Tribunal de Justica do Espirito Santo",
+    "section": "Basic search",
+    "text": "Basic search\n\nimport juscraper as jus\n\n# Create a TJES scraper\ntjes = jus.scraper('tjes')\n\n\n# Search jurisprudence (default core: pje2g)\ndados_cjsg = tjes.cjsg('dano moral', paginas=range(1, 3))\n\nprint(dados_cjsg.shape)\ndados_cjsg.head(3)\n\nBaixando paginas TJES: 100%|██████████| 2/2 [00:01&lt;00:00,  1.32it/s]\n\n\n(40, 23)\n\n\n\n\n\n\n\n\n\n\n\n\nnr_processo\nementa\nmagistrado\norgao_julgador\nclasse_judicial\nclasse_judicial_sigla\nassunto_principal\njurisdicao\ncompetencia\ndt_juntada\n...\nlocalizacao\ncargo_julgador\ncd_assunto_principal\ncd_classe_judicial\nid_assunto_principal\nid_classe_judicial\nid_jurisdicao\nid_localizacao\nid_cargo_julgador\nid_bin\n\n\n\n\n0\n5000333-79.2017.8.08.0030\n\\nVoto servindo como ementa.\\n\nGRACIENE PEREIRA PINTO\nTurma Recursal - 4ª Turma\nRecurso Inominado Cível\nRecInoCiv\nIndenização por Dano Moral\nTurma Recursal\nTurmas Recursais\n2020-03-12\n...\n4ª TURMA RECURSAL GABINETE 3\nJuiz Membro\n7779\n460\n622\n321\n2\n66.0\n57\n393003\n\n\n1\n5002610-68.2017.8.08.0030\n\\nVoto servindo como ementa.\\n\nMARCELO MATTAR COUTINHO\nTurma Recursal - 4ª Turma\nRecurso Inominado Cível\nRecInoCiv\nFornecimento de Energia Elétrica\nTurma Recursal\nTurmas Recursais\n2020-06-16\n...\n4ª TURMA RECURSAL GABINETE 1\nJuiz Membro\n7760\n460\n602\n321\n2\n63.0\n69\n474881\n\n\n2\n5011718-32.2023.8.08.0024\n\\n \\n\\n\\nEMENTA: RECURSO INOMINADO. AÇÃO DE IN...\nPAULO ABIGUENEM ABIB\nTurma Recursal - 1ª Turma\nRECURSO INOMINADO CÍVEL\nRecInoCiv\nIndenização por Dano Moral\nTurma Recursal\nTurmas Recursais - Cível\n2025-08-29\n...\n1ª TURMA RECURSAL GABINETE 2\nJuiz Membro\n10433\n460\n588\n321\n2\n52.0\n67\n14355858\n\n\n\n\n3 rows × 23 columns\n\n\n\n\n# Available columns\ndados_cjsg.columns.tolist()\n\n['nr_processo',\n 'ementa',\n 'magistrado',\n 'orgao_julgador',\n 'classe_judicial',\n 'classe_judicial_sigla',\n 'assunto_principal',\n 'jurisdicao',\n 'competencia',\n 'dt_juntada',\n 'id',\n 'acordao',\n 'lista_assunto',\n 'localizacao',\n 'cargo_julgador',\n 'cd_assunto_principal',\n 'cd_classe_judicial',\n 'id_assunto_principal',\n 'id_classe_judicial',\n 'id_jurisdicao',\n 'id_localizacao',\n 'id_cargo_julgador',\n 'id_bin']\n\n\n\n# Preview ementa\nprint(dados_cjsg['ementa'].iloc[0][:300])\n\n\nVoto servindo como ementa.",
     "crumbs": [
       "Home",
       "Exemplos",
       "Tribunais",
-      "TJPR"
+      "TJES"
     ]
   },
   {
-    "objectID": "notebooks/tjrs.html",
-    "href": "notebooks/tjrs.html",
-    "title": "juscraper",
-    "section": "",
-    "text": "import juscraper as jus\n\n# cria um objeto tjrs\ntjrs = jus.scraper('tjrs')\n\n\n# baixa dados da jurisprudência\ndados_cjsg = tjrs.cjsg('golpe do pix', paginas=range(0,3))\n\nprint(dados_cjsg.shape)\ndados_cjsg.head(3)\n\nBaixando páginas TJRS: 100%|██████████| 3/3 [00:05&lt;00:00,  1.90s/it]\n\n\n(30, 33)\n\n\n\n\n\n\n\n\n\n\n\n\nprocesso\nrelator\norgao_julgador\ndata_julgamento\ndata_publicacao\nclasse_cnj\nassunto_cnj\ntribunal\ntipo_processo\nurl\n...\ncod_org_julg\ncod_redator\ncod_tipo_documento\ncod_tribunal\ncod_assunto_cnj\ncod_relator\ncod_recurso\ntipo_documento\ndthr_criacao\n_version_\n\n\n\n\n0\n52627181720248217000\nDeborah Coleto Assumpção de Moraes\nDécima Sexta Câmara Cível\n2025-05-08\n2025-05-08\nAgravo de Instrumento\nGestão de Negócios\nTribunal de Justiça do RS\nAgravo de Instrumento\nhttps://www.tjrs.jus.br/buscas/jurisprudencia/...\n...\n16\n652\n1\n3\n7713.0\n652\n296\nAcordao\n2025-05-12 08:31:24.0\n1831916254777049088\n\n\n1\n50134755820238210005\nCarmem Maria Azambuja Farias\nDécima Quinta Câmara Cível\n2025-05-07\n2025-05-14\nApelação\nBancários\nTribunal de Justiça do RS\nApelação Cível\nhttps://www.tjrs.jus.br/buscas/jurisprudencia/...\n...\n15\n697\n1\n3\n7752.0\n697\n224\nAcordao\nTue May 20 08:30:59 GMT-03:00 2025\n1832640764786507776\n\n\n2\n50018309020248210008\nClovis Moacyr Mattana Ramos\nDécima Quinta Câmara Cível\n2025-05-07\n2025-05-15\nApelação\nNone\nTribunal de Justiça do RS\nApelação Cível\nhttps://www.tjrs.jus.br/buscas/jurisprudencia/...\n...\n15\n439\n1\n3\nNaN\n439\n224\nAcordao\nTue May 20 08:32:06 GMT-03:00 2025\n1832640861230333952\n\n\n\n\n3 rows × 33 columns\n\n\n\n\nimport base64\nfrom IPython.display import display, HTML\n\ntxt = dados_cjsg['documento_text'].iloc[0]\ndecoded_bytes = base64.b64decode(txt)\ndecoded_str = decoded_bytes.decode('latin1', errors='replace')\n\n#display(HTML(decoded_str))\n\n\ndados_cjsg.columns\n\nIndex(['processo', 'relator', 'orgao_julgador', 'data_julgamento',\n       'data_publicacao', 'classe_cnj', 'assunto_cnj', 'tribunal',\n       'tipo_processo', 'url', 'ementa', 'documento_text', 'documento_tiff',\n       'ementa_text', 'mes_ano_publicacao', 'origem', 'secao',\n       'ano_julgamento', 'nome_relator', 'ind_segredo_justica',\n       'ementa_referencia', 'cod_ementa', 'cod_classe_cnj', 'cod_org_julg',\n       'cod_redator', 'cod_tipo_documento', 'cod_tribunal', 'cod_assunto_cnj',\n       'cod_relator', 'cod_recurso', 'tipo_documento', 'dthr_criacao',\n       '_version_'],\n      dtype='object')\n\n\n\ndados_cjsg['url'].iloc[0]\n\n'https://www.tjrs.jus.br/buscas/jurisprudencia/?numero_processo=52627181720248217000'",
+    "objectID": "notebooks/tjes.html#using-filters",
+    "href": "notebooks/tjes.html#using-filters",
+    "title": "TJES - Tribunal de Justica do Espirito Santo",
+    "section": "Using filters",
+    "text": "Using filters\nThe TJES scraper supports several filters: magistrado, orgao_julgador, classe_judicial, jurisdicao, assunto, date range (data_julgamento_inicio / data_julgamento_fim), busca_exata, and ordenacao.\n\n# Filter by date range and magistrado\ndados_filtrados = tjes.cjsg(\n    'direito',\n    data_julgamento_inicio='2024-01-01',\n    data_julgamento_fim='2024-06-30',\n    magistrado='HELIMAR PINTO',\n    paginas=1,\n)\n\nprint(dados_filtrados.shape)\ndados_filtrados[['nr_processo', 'magistrado', 'classe_judicial', 'dt_juntada']].head(5)\n\nBaixando paginas TJES: 100%|██████████| 1/1 [00:00&lt;00:00, 10.22it/s]\n\n\n(20, 23)\n\n\n\n\n\n\n\n\n\n\n\n\nnr_processo\nmagistrado\nclasse_judicial\ndt_juntada\n\n\n\n\n0\n5005361-74.2024.8.08.0000\nHELIMAR PINTO\nAGRAVO DE EXECUÇÃO PENAL\n2024-06-25\n\n\n1\n0001362-38.2023.8.08.0000\nHELIMAR PINTO\nMANDADO DE SEGURANÇA CÍVEL\n2024-02-29\n\n\n2\n5003125-52.2024.8.08.0000\nHELIMAR PINTO\nHABEAS CORPUS CRIMINAL\n2024-04-18\n\n\n3\n0026004-72.2016.8.08.0048\nHELIMAR PINTO\nAPELAÇÃO CRIMINAL\n2024-04-25\n\n\n4\n5005989-63.2024.8.08.0000\nHELIMAR PINTO\nHABEAS CORPUS CRIMINAL\n2024-06-25",
     "crumbs": [
       "Home",
       "Exemplos",
       "Tribunais",
-      "TJRS"
+      "TJES"
     ]
   },
   {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "juscraper",
+    "objectID": "notebooks/tjes.html#querying-different-cores",
+    "href": "notebooks/tjes.html#querying-different-cores",
+    "title": "TJES - Tribunal de Justica do Espirito Santo",
+    "section": "Querying different cores",
+    "text": "Querying different cores\nBy default, the scraper queries pje2g (second instance). You can switch cores with the core parameter.\n\n# Search monocratic decisions (2nd instance)\ndados_mono = tjes.cjsg('dano moral', core='pje2g_mono', paginas=1)\n\nprint(f\"Monocratic results: {len(dados_mono)} rows\")\ndados_mono[['nr_processo', 'magistrado', 'classe_judicial']].head(3)\n\nBaixando paginas TJES: 100%|██████████| 1/1 [00:00&lt;00:00, 10.46it/s]\n\n\nMonocratic results: 20 rows\n\n\n\n\n\n\n\n\n\n\n\n\nnr_processo\nmagistrado\nclasse_judicial\n\n\n\n\n0\n5001274-40.2022.8.08.0002\nGRECIO NOGUEIRA GREGIO\nRecurso Inominado Cível\n\n\n1\n5023551-77.2024.8.08.0035\nDOUGLAS DEMONER FIGUEIREDO\nRECURSO INOMINADO CÍVEL\n\n\n2\n5001473-59.2023.8.08.0024\nSALOMAO AKHNATON ZOROASTRO SPENCER ELESBON\nRecurso Inominado Cível",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Tribunais",
+      "TJES"
+    ]
+  },
+  {
+    "objectID": "notebooks/tjes.html#first-instance-cjpg",
+    "href": "notebooks/tjes.html#first-instance-cjpg",
+    "title": "TJES - Tribunal de Justica do Espirito Santo",
+    "section": "First instance (cjpg)",
+    "text": "First instance (cjpg)\nUse cjpg() to query first-instance decisions (core pje1g). It accepts the same filters as cjsg (except core).\nNote: cjsg() does not accept core=\"pje1g\" — use cjpg() instead.\n\n# Search first-instance decisions\ndados_1g = tjes.cjpg('dano moral', paginas=1)\n\nprint(f\"First instance results: {len(dados_1g)} rows\")\ndados_1g[['nr_processo', 'magistrado', 'classe_judicial', 'dt_juntada']].head(5)\n\nBaixando paginas TJES: 100%|██████████| 1/1 [00:00&lt;00:00,  5.04it/s]\n\n\nFirst instance results: 20 rows\n\n\n\n\n\n\n\n\n\n\n\n\nnr_processo\nmagistrado\nclasse_judicial\ndt_juntada\n\n\n\n\n0\n5000704-46.2022.8.08.0037\nMARCELO MATTAR COUTINHO\nProcedimento do Juizado Especial Cível\n2023-09-28\n\n\n1\n5000057-89.2018.8.08.0005\nEVANDRO COELHO DE LIMA\nProcedimento do Juizado Especial Cível\n2019-12-17\n\n\n2\n5004066-91.2024.8.08.0035\nINES VELLO CORREA\nProcedimento do Juizado Especial Cível\n2024-11-08\n\n\n3\n5000045-13.2017.8.08.0037\nMARCELO MATTAR COUTINHO\nProcedimento do Juizado Especial Cível\n2020-01-04\n\n\n4\n5005643-41.2022.8.08.0014\nSALOMAO AKHNATON ZOROASTRO SPENCER ELESBON\nProcedimento do Juizado Especial Cível\n2022-11-01",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Tribunais",
+      "TJES"
+    ]
+  },
+  {
+    "objectID": "notebooks/tjes.html#download-and-parse-separately",
+    "href": "notebooks/tjes.html#download-and-parse-separately",
+    "title": "TJES - Tribunal de Justica do Espirito Santo",
+    "section": "Download and parse separately",
+    "text": "Download and parse separately\nFor more control, you can use cjsg_download and cjsg_parse separately. This is useful when you want to cache the raw responses or inspect them before parsing.\n\n# Download raw JSON responses\nbrutos = tjes.cjsg_download('direito', paginas=1)\n\n# Inspect raw response structure\nprint(f\"Pages downloaded: {len(brutos)}\")\nprint(f\"Keys in response: {list(brutos[0].keys())}\")\nprint(f\"Total results available: {brutos[0]['total']}\")\nprint(f\"Docs in this page: {len(brutos[0]['docs'])}\")\n\nBaixando paginas TJES: 100%|██████████| 1/1 [00:00&lt;00:00,  6.54it/s]\n\n\nPages downloaded: 1\nKeys in response: ['core_used', 'docs', 'facets', 'page', 'per_page', 'total', 'total_pages']\nTotal results available: 167559\nDocs in this page: 20\n\n\n\n\n\n\n# Parse into DataFrame\ndf = tjes.cjsg_parse(brutos)\ndf.head(3)\n\n\n\n\n\n\n\n\nnr_processo\nementa\nmagistrado\norgao_julgador\nclasse_judicial\nclasse_judicial_sigla\nassunto_principal\njurisdicao\ncompetencia\ndt_juntada\n...\nlocalizacao\ncargo_julgador\ncd_assunto_principal\ncd_classe_judicial\nid_assunto_principal\nid_classe_judicial\nid_jurisdicao\nid_localizacao\nid_cargo_julgador\nid_bin\n\n\n\n\n0\n5002933-85.2025.8.08.0000\n\\nEmenta: DIREITO DAS SUCESSÕES. AGRAVO DE INS...\nARTHUR JOSE NEIVA DE ALMEIDA\n4ª Câmara Cível\nAGRAVO DE INSTRUMENTO\nAI\nInventário e Partilha\nTribunal de Justiça\nCível Isolada\n2025-06-13\n...\n016 - Gabinete Des. ARTHUR JOSÉ NEIVA DE ALMEIDA\nDesembargador(a)\n7687\n202\n1636\n238\n1\n36\n117\n13176473\n\n\n1\n5007013-97.2022.8.08.0000\n\\nDIREITO PROCESSUAL CIVIL. AGRAVO DE INSTRUME...\nJOSE PAULO CALMON NOGUEIRA DA GAMA\n2ª Câmara Cível\nAGRAVO DE INSTRUMENTO\nAI\nPromessa de Compra e Venda\nTribunal de Justiça\nCível Isolada\n2023-08-24\n...\n005 - Gabinete Des. JOSÉ PAULO CALMON NOGUEIRA...\nDesembargador(a)\n10496\n202\n2087\n238\n1\n21\n149\n5253374\n\n\n2\n5002710-35.2025.8.08.0000\n\\nEmenta: DIREITO CIVIL E PROCESSUAL CIVIL. AG...\nARTHUR JOSE NEIVA DE ALMEIDA\n4ª Câmara Cível\nAGRAVO DE INSTRUMENTO\nAI\nInventário e Partilha\nTribunal de Justiça\nCível Isolada\n2025-10-03\n...\nGabinete Des. ARTHUR JOSÉ NEIVA DE ALMEIDA\nDesembargador(a)\n7687\n202\n1636\n238\n1\n36\n117\n14653808\n\n\n\n\n3 rows × 23 columns",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Tribunais",
+      "TJES"
+    ]
+  },
+  {
+    "objectID": "reference/courts.tjpr.client.TJPRScraper.html",
+    "href": "reference/courts.tjpr.client.TJPRScraper.html",
+    "title": "courts.tjpr.client.TJPRScraper",
     "section": "",
-    "text": "Raspador de tribunais e outros sistemas relacionados ao poder judiciário brasileiro.",
-    "crumbs": [
-      "Home"
-    ]
+    "text": "courts.tjpr.client.TJPRScraper()\nScraper for the Court of Justice of Paraná.\n\n\n\n\n\nName\nDescription\n\n\n\n\ncjsg\nSearches for TJPR jurisprudence in a simplified way (download + parse).\n\n\ncjsg_download\nDownloads raw results from the TJPR jurisprudence search (multiple pages).\n\n\ncjsg_parse\nExtracts relevant data from the HTMLs returned by TJPR.\n\n\ncpopg\nStub: Primeiro grau case consultation not implemented for TJPR.\n\n\ncposg\nStub: Segundo grau case consultation not implemented for TJPR.\n\n\n\n\n\ncourts.tjpr.client.TJPRScraper.cjsg(\n    pesquisa=None,\n    paginas=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    **kwargs,\n)\nSearches for TJPR jurisprudence in a simplified way (download + parse). Returns a ready-to-analyze DataFrame.\n\n\n\ncourts.tjpr.client.TJPRScraper.cjsg_download(\n    pesquisa=None,\n    paginas=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    **kwargs,\n)\nDownloads raw results from the TJPR jurisprudence search (multiple pages). Returns a list of HTMLs (one per page).\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npesquisa\nstr\nSearch term. termo is accepted as deprecated alias.\nNone\n\n\npaginas\nint, list, range, or None\nPages to download (1-based). int: paginas=3 downloads pages 1-3. range: range(1, 4) downloads pages 1-3. None: downloads all available pages.\nNone\n\n\n\n\n\n\n\ncourts.tjpr.client.TJPRScraper.cjsg_parse(resultados_brutos, criterio=None)\nExtracts relevant data from the HTMLs returned by TJPR. Returns a DataFrame with the decisions.\n\n\n\ncourts.tjpr.client.TJPRScraper.cpopg(id_cnj)\nStub: Primeiro grau case consultation not implemented for TJPR.\n\n\n\ncourts.tjpr.client.TJPRScraper.cposg(id_cnj)\nStub: Segundo grau case consultation not implemented for TJPR."
   },
   {
-    "objectID": "index.html#instalação",
-    "href": "index.html#instalação",
-    "title": "juscraper",
-    "section": "Instalação",
-    "text": "Instalação\n\nVia PyPI (Recomendado)\npip install juscraper\n\n\nCom uv\nuv add juscraper\n\n\nVersão de Desenvolvimento\nPara instalar a versão mais recente do repositório:\npip install git+https://github.com/jtrecenti/juscraper.git",
-    "crumbs": [
-      "Home"
-    ]
-  },
-  {
-    "objectID": "index.html#como-usar",
-    "href": "index.html#como-usar",
-    "title": "juscraper",
-    "section": "Como usar",
-    "text": "Como usar\nimport juscraper as jus\n\ntjsp = jus.scraper('tjsp')\ndados_cjpg = tjsp.cjpg('league of legends', paginas=range(1, 4))\n\ndados_cjpg.head(3)\nO pacote foi pensado para atender a requisitos básicos de consulta de dados de processos judiciais em alguns tribunais.\nOs tribunais implementados vão apresentar os seguintes métodos:\n\n.cpopg(): consulta de processos originários do primeiro grau\n.cposg(): consulta de processos originários do segundo grau\n.cjsg(): consulta de jurisprudência\n\nOs métodos .cpopg() e .cposg() recebem como input um número de processo no padrão CNJ (NNNNNNN-DD.AAAA.J.TT.OOOO), com ou sem separadores, e retorna um dict com tabelas dos elementos do processo (dados básicos, partes, movimentações, entre outros específicos por tribunal).\nO método .cjsg() recebe como input parâmetros de busca de jurisprudência (que variam por tribunal) e retorna uma tabela com os resultados da consulta. Boa parte dos tribunais apresentam limites de paginação ao realizar buscas muito gerais (i.e. que retornam muitos resultados). Nesses casos, o método dará um aviso ao usuário com o número total de resultados, confirmando se deseja mesmo baixar todos os resultados.",
-    "crumbs": [
-      "Home"
-    ]
-  },
-  {
-    "objectID": "index.html#implementações",
-    "href": "index.html#implementações",
-    "title": "juscraper",
-    "section": "Implementações",
-    "text": "Implementações\n\nTribunais Disponíveis\n\n\n\nTribunal\nFuncionalidades Disponíveis\n\n\n\n\nTJSP\ncpopg, cposg, cjsg, cjpg, acordao\n\n\nTJRS\ncjsg\n\n\nTJPR\ncjsg\n\n\nTJES\ncjsg, cjpg\n\n\nTJDFT\ncjsg\n\n\n\n\n\nAgregadores Disponíveis\n\n\n\nNome\nFuncionalidades\n\n\n\n\nDatajud\nlistar_processos\n\n\nJusbr\ncpopg, download_documents\n\n\n\n\n\nNotebooks de Exemplo\n\nExemplo TJSP\nExemplo TJRS\nExemplo TJPR\nExemplo TJES\nExemplo TJDFT\nExemplo Datajud\nExemplo Jusbr",
-    "crumbs": [
-      "Home"
-    ]
-  },
-  {
-    "objectID": "index.html#informações-adicionais",
-    "href": "index.html#informações-adicionais",
-    "title": "juscraper",
-    "section": "Informações adicionais",
-    "text": "Informações adicionais\n\nDiferenciais do juscraper:\n\nControle sobre arquivos brutos: o pacote fornece uma interface para baixar e armazenar arquivos brutos (HTML e JSON, por exemplo) dos processos. Por padrão, no entanto, esses arquivos brutos são descartados assim que os dados são processados, com exceção dos arquivos que apresentaram algum problema na leitura.\n\n\n\nRestrições:\nPor ser um pacote bastante complexo e também nichado, adotamos algumas restrições sobre o escopo do pacote para que seja simples de usar.\n\nO pacote não utiliza paralelização, ou seja, se o usuário tiver interesse em realizar requisições em paralelo, deverá desenvolver as adaptações necessárias.\nO pacote não possui absolutamente todas as funcionalidades que os tribunais permitem. Se o usuário tiver interesse em consultar processos em mais tribunais, deverá desenvolver os raspadores.",
-    "crumbs": [
-      "Home"
-    ]
-  },
-  {
-    "objectID": "index.html#contribuição",
-    "href": "index.html#contribuição",
-    "title": "juscraper",
-    "section": "Contribuição",
-    "text": "Contribuição\nInteressado em contribuir? Verifique as diretrizes de contribuição no arquivo CONTRIBUTING.md. Por favor, note que este projeto é lançado com um Código de Conduta. Ao contribuir para este projeto, você concorda em obedecer às suas termos.",
-    "crumbs": [
-      "Home"
-    ]
-  },
-  {
-    "objectID": "index.html#licença",
-    "href": "index.html#licença",
-    "title": "juscraper",
-    "section": "Licença",
-    "text": "Licença\njuscraper foi criado por Julio Trecenti. Está licenciado sob os termos da licença MIT.",
-    "crumbs": [
-      "Home"
-    ]
+    "objectID": "reference/courts.tjpr.client.TJPRScraper.html#methods",
+    "href": "reference/courts.tjpr.client.TJPRScraper.html#methods",
+    "title": "courts.tjpr.client.TJPRScraper",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\ncjsg\nSearches for TJPR jurisprudence in a simplified way (download + parse).\n\n\ncjsg_download\nDownloads raw results from the TJPR jurisprudence search (multiple pages).\n\n\ncjsg_parse\nExtracts relevant data from the HTMLs returned by TJPR.\n\n\ncpopg\nStub: Primeiro grau case consultation not implemented for TJPR.\n\n\ncposg\nStub: Segundo grau case consultation not implemented for TJPR.\n\n\n\n\n\ncourts.tjpr.client.TJPRScraper.cjsg(\n    pesquisa=None,\n    paginas=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    **kwargs,\n)\nSearches for TJPR jurisprudence in a simplified way (download + parse). Returns a ready-to-analyze DataFrame.\n\n\n\ncourts.tjpr.client.TJPRScraper.cjsg_download(\n    pesquisa=None,\n    paginas=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    **kwargs,\n)\nDownloads raw results from the TJPR jurisprudence search (multiple pages). Returns a list of HTMLs (one per page).\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npesquisa\nstr\nSearch term. termo is accepted as deprecated alias.\nNone\n\n\npaginas\nint, list, range, or None\nPages to download (1-based). int: paginas=3 downloads pages 1-3. range: range(1, 4) downloads pages 1-3. None: downloads all available pages.\nNone\n\n\n\n\n\n\n\ncourts.tjpr.client.TJPRScraper.cjsg_parse(resultados_brutos, criterio=None)\nExtracts relevant data from the HTMLs returned by TJPR. Returns a DataFrame with the decisions.\n\n\n\ncourts.tjpr.client.TJPRScraper.cpopg(id_cnj)\nStub: Primeiro grau case consultation not implemented for TJPR.\n\n\n\ncourts.tjpr.client.TJPRScraper.cposg(id_cnj)\nStub: Segundo grau case consultation not implemented for TJPR."
   },
   {
     "objectID": "reference/aggregators.jusbr.client.JusbrScraper.html",
@@ -505,7 +610,7 @@
     "href": "reference/index.html",
     "title": "Referência da API",
     "section": "",
-    "text": "Interface pública para acessar os scrapers.\n\n\n\nscraper\nFactory that returns the correct scraper.\n\n\n\n\n\n\nClasses para coletar dados de agregadores de jurisprudência.\n\n\n\naggregators.datajud.client.DatajudScraper\nScraper for CNJ’s Datajud API.\n\n\naggregators.jusbr.client.JusbrScraper\nRaspador para o JusBR (consulta unificada da PDPJ-CNJ).\n\n\n\n\n\n\nClasses para coletar dados de tribunais específicos.\n\n\n\ncourts.tjsp.client.TJSPScraper\nMain scraper for Tribunal de Justica de Sao Paulo.\n\n\ncourts.tjdft.client.TJDFTScraper\nScraper for the Court of Justice of the Federal District and Territories (TJDFT).\n\n\ncourts.tjrs.client.TJRSScraper\nScraper for the Tribunal de Justiça do Rio Grande do Sul.\n\n\ncourts.tjpr.client.TJPRScraper\nScraper for the Court of Justice of Paraná.\n\n\ncourts.tjes.client.TJESScraper\nScraper for the Tribunal de Justica do Espirito Santo.",
+    "text": "Interface pública para acessar os scrapers.\n\n\n\nscraper\nFactory that returns the correct scraper.\n\n\n\n\n\n\nClasses para coletar dados de agregadores de jurisprudência.\n\n\n\naggregators.datajud.client.DatajudScraper\nScraper for CNJ’s Datajud API.\n\n\naggregators.jusbr.client.JusbrScraper\nRaspador para o JusBR (consulta unificada da PDPJ-CNJ).\n\n\n\n\n\n\nClasses para coletar dados de tribunais específicos.\n\n\n\ncourts.tjsp.client.TJSPScraper\nMain scraper for Tribunal de Justica de Sao Paulo.\n\n\ncourts.tjdft.client.TJDFTScraper\nScraper for the Court of Justice of the Federal District and Territories (TJDFT).\n\n\ncourts.tjrs.client.TJRSScraper\nScraper for the Tribunal de Justiça do Rio Grande do Sul.\n\n\ncourts.tjpr.client.TJPRScraper\nScraper for the Court of Justice of Paraná.\n\n\ncourts.tjmt.client.TJMTScraper\nScraper for the Tribunal de Justica do Estado de Mato Grosso (TJMT).\n\n\ncourts.tjes.client.TJESScraper\nScraper for the Tribunal de Justica do Espirito Santo.",
     "crumbs": [
       "Home",
       "Referência da API"
@@ -538,7 +643,7 @@
     "href": "reference/index.html#scrapers-de-tribunais",
     "title": "Referência da API",
     "section": "",
-    "text": "Classes para coletar dados de tribunais específicos.\n\n\n\ncourts.tjsp.client.TJSPScraper\nMain scraper for Tribunal de Justica de Sao Paulo.\n\n\ncourts.tjdft.client.TJDFTScraper\nScraper for the Court of Justice of the Federal District and Territories (TJDFT).\n\n\ncourts.tjrs.client.TJRSScraper\nScraper for the Tribunal de Justiça do Rio Grande do Sul.\n\n\ncourts.tjpr.client.TJPRScraper\nScraper for the Court of Justice of Paraná.\n\n\ncourts.tjes.client.TJESScraper\nScraper for the Tribunal de Justica do Espirito Santo.",
+    "text": "Classes para coletar dados de tribunais específicos.\n\n\n\ncourts.tjsp.client.TJSPScraper\nMain scraper for Tribunal de Justica de Sao Paulo.\n\n\ncourts.tjdft.client.TJDFTScraper\nScraper for the Court of Justice of the Federal District and Territories (TJDFT).\n\n\ncourts.tjrs.client.TJRSScraper\nScraper for the Tribunal de Justiça do Rio Grande do Sul.\n\n\ncourts.tjpr.client.TJPRScraper\nScraper for the Court of Justice of Paraná.\n\n\ncourts.tjmt.client.TJMTScraper\nScraper for the Tribunal de Justica do Estado de Mato Grosso (TJMT).\n\n\ncourts.tjes.client.TJESScraper\nScraper for the Tribunal de Justica do Espirito Santo.",
     "crumbs": [
       "Home",
       "Referência da API"
