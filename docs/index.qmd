@@ -55,6 +55,7 @@ O método `.cjsg()` recebe como *input* parâmetros de busca de jurisprudência 
 
 | Tribunal | Funcionalidades Disponíveis       |
 |----------|-----------------------------------|
+| TJCE     | cjsg                              |
 | TJBA     | cjsg                              |
 | TJSP     | cpopg, cposg, cjsg, cjpg, acordao |
 | TJRS     | cjsg                              |
@@ -73,6 +74,7 @@ O método `.cjsg()` recebe como *input* parâmetros de busca de jurisprudência 
 
 ### Notebooks de Exemplo
 
+- [Exemplo TJCE](notebooks/tjce.ipynb)
 - [Exemplo TJBA](notebooks/tjba.ipynb)
 - [Exemplo TJSP](notebooks/tjsp.ipynb)
 - [Exemplo TJRS](notebooks/tjrs.ipynb)
