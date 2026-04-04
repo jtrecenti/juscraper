@@ -27,11 +27,11 @@ class TJPEScraper(BaseScraper):
 
     def cpopg(self, id_cnj: Union[str, List[str]]):
         """Stub: first instance case consultation not implemented for TJPE."""
-        raise NotImplementedError("Consulta de processos de 1 grau nao implementada para TJPE.")
+        raise NotImplementedError("Consulta de processos de 1 grau não implementada para TJPE.")
 
     def cposg(self, id_cnj: Union[str, List[str]]):
         """Stub: second instance case consultation not implemented for TJPE."""
-        raise NotImplementedError("Consulta de processos de 2 grau nao implementada para TJPE.")
+        raise NotImplementedError("Consulta de processos de 2 grau não implementada para TJPE.")
 
     def cjsg_download(
         self,
