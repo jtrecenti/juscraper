@@ -57,7 +57,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </style>
 
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
 <script src="../site_libs/quarto-nav/headroom.min.js"></script>
 <script src="../site_libs/clipboard/clipboard.min.js"></script>
 <script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
@@ -102,9 +102,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "Procurar"
   }
 }</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
-
-<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
 
 
 <link rel="stylesheet" href="reference/_styles-quartodoc.css">
@@ -302,144 +299,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># cria um objeto tjrs</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>tjrs <span class="op">=</span> jus.scraper(<span class="st">'tjrs'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="cell-1" class="cell" data-execution_count="2">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># baixa dados da jurisprudência</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>dados_cjsg <span class="op">=</span> tjrs.cjsg(<span class="st">'golpe do pix'</span>, paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">0</span>,<span class="dv">3</span>))</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_cjsg.shape)</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>dados_cjsg.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Baixando páginas TJRS: 100%|██████████| 3/3 [00:05&lt;00:00,  1.90s/it]</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>(30, 33)</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code></code></pre>
-</div>
-<div class="cell-output cell-output-display" data-execution_count="2">
-<div>
-
-
-<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
-<thead>
-<tr class="header">
-<th data-quarto-table-cell-role="th"></th>
-<th data-quarto-table-cell-role="th">processo</th>
-<th data-quarto-table-cell-role="th">relator</th>
-<th data-quarto-table-cell-role="th">orgao_julgador</th>
-<th data-quarto-table-cell-role="th">data_julgamento</th>
-<th data-quarto-table-cell-role="th">data_publicacao</th>
-<th data-quarto-table-cell-role="th">classe_cnj</th>
-<th data-quarto-table-cell-role="th">assunto_cnj</th>
-<th data-quarto-table-cell-role="th">tribunal</th>
-<th data-quarto-table-cell-role="th">tipo_processo</th>
-<th data-quarto-table-cell-role="th">url</th>
-<th data-quarto-table-cell-role="th">...</th>
-<th data-quarto-table-cell-role="th">cod_org_julg</th>
-<th data-quarto-table-cell-role="th">cod_redator</th>
-<th data-quarto-table-cell-role="th">cod_tipo_documento</th>
-<th data-quarto-table-cell-role="th">cod_tribunal</th>
-<th data-quarto-table-cell-role="th">cod_assunto_cnj</th>
-<th data-quarto-table-cell-role="th">cod_relator</th>
-<th data-quarto-table-cell-role="th">cod_recurso</th>
-<th data-quarto-table-cell-role="th">tipo_documento</th>
-<th data-quarto-table-cell-role="th">dthr_criacao</th>
-<th data-quarto-table-cell-role="th">_version_</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">0</td>
-<td>52627181720248217000</td>
-<td>Deborah Coleto Assumpção de Moraes</td>
-<td>Décima Sexta Câmara Cível</td>
-<td>2025-05-08</td>
-<td>2025-05-08</td>
-<td>Agravo de Instrumento</td>
-<td>Gestão de Negócios</td>
-<td>Tribunal de Justiça do RS</td>
-<td>Agravo de Instrumento</td>
-<td>https://www.tjrs.jus.br/buscas/jurisprudencia/...</td>
-<td>...</td>
-<td>16</td>
-<td>652</td>
-<td>1</td>
-<td>3</td>
-<td>7713.0</td>
-<td>652</td>
-<td>296</td>
-<td>Acordao</td>
-<td>2025-05-12 08:31:24.0</td>
-<td>1831916254777049088</td>
-</tr>
-<tr class="even">
-<td data-quarto-table-cell-role="th">1</td>
-<td>50134755820238210005</td>
-<td>Carmem Maria Azambuja Farias</td>
-<td>Décima Quinta Câmara Cível</td>
-<td>2025-05-07</td>
-<td>2025-05-14</td>
-<td>Apelação</td>
-<td>Bancários</td>
-<td>Tribunal de Justiça do RS</td>
-<td>Apelação Cível</td>
-<td>https://www.tjrs.jus.br/buscas/jurisprudencia/...</td>
-<td>...</td>
-<td>15</td>
-<td>697</td>
-<td>1</td>
-<td>3</td>
-<td>7752.0</td>
-<td>697</td>
-<td>224</td>
-<td>Acordao</td>
-<td>Tue May 20 08:30:59 GMT-03:00 2025</td>
-<td>1832640764786507776</td>
-</tr>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">2</td>
-<td>50018309020248210008</td>
-<td>Clovis Moacyr Mattana Ramos</td>
-<td>Décima Quinta Câmara Cível</td>
-<td>2025-05-07</td>
-<td>2025-05-15</td>
-<td>Apelação</td>
-<td>None</td>
-<td>Tribunal de Justiça do RS</td>
-<td>Apelação Cível</td>
-<td>https://www.tjrs.jus.br/buscas/jurisprudencia/...</td>
-<td>...</td>
-<td>15</td>
-<td>439</td>
-<td>1</td>
-<td>3</td>
-<td>NaN</td>
-<td>439</td>
-<td>224</td>
-<td>Acordao</td>
-<td>Tue May 20 08:32:06 GMT-03:00 2025</td>
-<td>1832640861230333952</td>
-</tr>
-</tbody>
-</table>
-
-<p>3 rows × 33 columns</p>
-</div>
-</div>
+<div id="cell-1" class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># baixa dados da jurisprudênciadados_cjsg = tjrs.cjsg('golpe do pix', paginas=range(1,3))print(dados_cjsg.shape)dados_cjsg.head(3)</span></span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div id="cell-2" class="cell" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> base64</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> IPython.display <span class="im">import</span> display, HTML</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>txt <span class="op">=</span> dados_cjsg[<span class="st">'documento_text'</span>].iloc[<span class="dv">0</span>]</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>decoded_bytes <span class="op">=</span> base64.b64decode(txt)</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>decoded_str <span class="op">=</span> decoded_bytes.decode(<span class="st">'latin1'</span>, errors<span class="op">=</span><span class="st">'replace'</span>)</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co">#display(HTML(decoded_str))</span></span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> base64</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> IPython.display <span class="im">import</span> display, HTML</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>txt <span class="op">=</span> dados_cjsg[<span class="st">'documento_text'</span>].iloc[<span class="dv">0</span>]</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>decoded_bytes <span class="op">=</span> base64.b64decode(txt)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>decoded_str <span class="op">=</span> decoded_bytes.decode(<span class="st">'latin1'</span>, errors<span class="op">=</span><span class="st">'replace'</span>)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co">#display(HTML(decoded_str))</span></span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div id="cell-3" class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>dados_cjsg.columns</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>dados_cjsg.columns</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="4">
 <pre><code>Index(['processo', 'relator', 'orgao_julgador', 'data_julgamento',
        'data_publicacao', 'classe_cnj', 'assunto_cnj', 'tribunal',
@@ -454,7 +328,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <div id="cell-4" class="cell" data-execution_count="5">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>dados_cjsg[<span class="st">'url'</span>].iloc[<span class="dv">0</span>]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>dados_cjsg[<span class="st">'url'</span>].iloc[<span class="dv">0</span>]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="5">
 <pre><code>'https://www.tjrs.jus.br/buscas/jurisprudencia/?numero_processo=52627181720248217000'</code></pre>
 </div>

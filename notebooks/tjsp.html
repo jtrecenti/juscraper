@@ -295,29 +295,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#funcionalidades-disponíveis" id="toc-funcionalidades-disponíveis" class="nav-link active" data-scroll-target="#funcionalidades-disponíveis">Funcionalidades Disponíveis</a></li>
   <li><a href="#instalação-e-importação" id="toc-instalação-e-importação" class="nav-link" data-scroll-target="#instalação-e-importação">Instalação e Importação</a></li>
   <li><a href="#criando-o-scraper" id="toc-criando-o-scraper" class="nav-link" data-scroll-target="#criando-o-scraper">Criando o Scraper</a></li>
-  <li><a href="#cjpg---consulta-de-julgados-de-primeiro-grau" id="toc-cjpg---consulta-de-julgados-de-primeiro-grau" class="nav-link" data-scroll-target="#cjpg---consulta-de-julgados-de-primeiro-grau">CJPG - Consulta de Julgados de Primeiro Grau</a>
+  <li><a href="#cjpg---consulta-de-julgados-de-primeiro-graua-função-cjpg-permite-buscar-decisões-e-sentenças-proferidas-em-primeiro-grau-de-jurisdição.-é-útil-para-encontrar-precedentes-entender-padrões-de-julgamento-ou-coletar-dados-para-análise-jurídica.-parâmetros-principais--pesquisa-str-termo-de-busca-que-será-pesquisado-no-conteúdo-das-decisões--paginas-range-intervalo-de-páginas-a-serem-baixadas.-use-range1-n-para-baixar-as-primeiras-n-1-páginas-ex-range1-4-baixa-páginas-1-2-e-3--classes-list-opcional-lista-de-códigos-de-classes-processuais-para-filtrar--assuntos-list-opcional-lista-de-códigos-de-assuntos-para-filtrar--varas-list-opcional-lista-de-códigos-de-varas-para-filtrar-retornoa-função-retorna-um-pandas.dataframe-com-as-seguintes-colunas-principais--cd_processo-código-interno-do-processo--id_processo-número-do-processo-formato-cnj--classe-classe-processual--assunto-assunto-do-processo--magistrado-nome-do-magistrado-que-proferiu-a-decisão--comarca-comarca-onde-o-processo-tramitou--foro-foro-onde-o-processo-tramitou--vara-vara-onde-o-processo-tramitou--data_disponibilizacao-data-em-que-a-decisão-foi-disponibilizada--decisao-texto-completo-da-decisãosentença-exemplo-de-uso" id="toc-cjpg---consulta-de-julgados-de-primeiro-graua-função-cjpg-permite-buscar-decisões-e-sentenças-proferidas-em-primeiro-grau-de-jurisdição.-é-útil-para-encontrar-precedentes-entender-padrões-de-julgamento-ou-coletar-dados-para-análise-jurídica.-parâmetros-principais--pesquisa-str-termo-de-busca-que-será-pesquisado-no-conteúdo-das-decisões--paginas-range-intervalo-de-páginas-a-serem-baixadas.-use-range1-n-para-baixar-as-primeiras-n-1-páginas-ex-range1-4-baixa-páginas-1-2-e-3--classes-list-opcional-lista-de-códigos-de-classes-processuais-para-filtrar--assuntos-list-opcional-lista-de-códigos-de-assuntos-para-filtrar--varas-list-opcional-lista-de-códigos-de-varas-para-filtrar-retornoa-função-retorna-um-pandas.dataframe-com-as-seguintes-colunas-principais--cd_processo-código-interno-do-processo--id_processo-número-do-processo-formato-cnj--classe-classe-processual--assunto-assunto-do-processo--magistrado-nome-do-magistrado-que-proferiu-a-decisão--comarca-comarca-onde-o-processo-tramitou--foro-foro-onde-o-processo-tramitou--vara-vara-onde-o-processo-tramitou--data_disponibilizacao-data-em-que-a-decisão-foi-disponibilizada--decisao-texto-completo-da-decisãosentença-exemplo-de-uso" class="nav-link" data-scroll-target="#cjpg---consulta-de-julgados-de-primeiro-graua-função-cjpg-permite-buscar-decisões-e-sentenças-proferidas-em-primeiro-grau-de-jurisdição.-é-útil-para-encontrar-precedentes-entender-padrões-de-julgamento-ou-coletar-dados-para-análise-jurídica.-parâmetros-principais--pesquisa-str-termo-de-busca-que-será-pesquisado-no-conteúdo-das-decisões--paginas-range-intervalo-de-páginas-a-serem-baixadas.-use-range1-n-para-baixar-as-primeiras-n-1-páginas-ex-range1-4-baixa-páginas-1-2-e-3--classes-list-opcional-lista-de-códigos-de-classes-processuais-para-filtrar--assuntos-list-opcional-lista-de-códigos-de-assuntos-para-filtrar--varas-list-opcional-lista-de-códigos-de-varas-para-filtrar-retornoa-função-retorna-um-pandas.dataframe-com-as-seguintes-colunas-principais--cd_processo-código-interno-do-processo--id_processo-número-do-processo-formato-cnj--classe-classe-processual--assunto-assunto-do-processo--magistrado-nome-do-magistrado-que-proferiu-a-decisão--comarca-comarca-onde-o-processo-tramitou--foro-foro-onde-o-processo-tramitou--vara-vara-onde-o-processo-tramitou--data_disponibilizacao-data-em-que-a-decisão-foi-disponibilizada--decisao-texto-completo-da-decisãosentença-exemplo-de-uso">CJPG - Consulta de Julgados de Primeiro GrauA função <code>cjpg()</code> permite buscar decisões e sentenças proferidas em primeiro grau de jurisdição. É útil para encontrar precedentes, entender padrões de julgamento ou coletar dados para análise jurídica.### Parâmetros Principais- <code>pesquisa</code> (str): Termo de busca que será pesquisado no conteúdo das decisões- <code>paginas</code> (range): Intervalo de páginas a serem baixadas. Use <code>range(1, n)</code> para baixar as primeiras <code>n-1</code> páginas (ex: <code>range(1, 4)</code> baixa páginas 1, 2 e 3)- <code>classes</code> (list, opcional): Lista de códigos de classes processuais para filtrar- <code>assuntos</code> (list, opcional): Lista de códigos de assuntos para filtrar- <code>varas</code> (list, opcional): Lista de códigos de varas para filtrar### RetornoA função retorna um <code>pandas.DataFrame</code> com as seguintes colunas principais:- <code>cd_processo</code>: Código interno do processo- <code>id_processo</code>: Número do processo (formato CNJ)- <code>classe</code>: Classe processual- <code>assunto</code>: Assunto do processo- <code>magistrado</code>: Nome do magistrado que proferiu a decisão- <code>comarca</code>: Comarca onde o processo tramitou- <code>foro</code>: Foro onde o processo tramitou- <code>vara</code>: Vara onde o processo tramitou- <code>data_disponibilizacao</code>: Data em que a decisão foi disponibilizada- <code>decisao</code>: Texto completo da decisão/sentença### Exemplo de Uso</a></li>
+  <li><a href="#cjsg---consulta-de-julgados-de-segundo-graua-função-cjsg-permite-buscar-acórdãos-e-decisões-monocráticas-proferidas-pelos-tribunais-de-segundo-grau.-esta-é-uma-das-consultas-mais-utilizadas-para-pesquisa-jurisprudencial.-parâmetros-principais--pesquisa-str-termo-de-busca-que-será-pesquisado-no-conteúdo-das-decisões-e-ementas--paginas-range-intervalo-de-páginas-a-serem-baixadas.-use-range1-n-para-baixar-as-primeiras-n-1-páginas--ementa-str-opcional-termo-adicional-para-buscar-especificamente-nas-ementas--classe-str-opcional-código-da-classe-processual--assunto-str-opcional-código-do-assunto--comarca-str-opcional-código-da-comarca--orgao_julgador-str-opcional-código-do-órgão-julgador--data_inicio-str-opcional-data-inicial-de-julgamento-formato-ddmmaaaa--data_fim-str-opcional-data-final-de-julgamento-formato-ddmmaaaa--baixar_sg-bool-opcional-se-true-padrão-busca-em-segundo-grau.-se-false-busca-em-colégio-recursal--tipo_decisao-str-opcional-tipo-de-decisão---acordao-padrão-ou-monocratica-retornoa-função-retorna-um-pandas.dataframe-com-as-seguintes-colunas-principais--processo-número-do-processo-formato-cnj--cd_acordao-código-interno-do-acórdão--cd_foro-código-do-foro--classe_assunto-classe-processual-e-assunto-combinados--relatora-nome-do-relator--comarca-comarca-de-origem--orgao_julgador-órgão-julgador-ex-13ª-câmara-de-direito-privado--data_julgamento-data-do-julgamento--data_publicacao-data-de-publicação--ementa-texto-da-ementa-do-acórdão-exemplo-de-uso" id="toc-cjsg---consulta-de-julgados-de-segundo-graua-função-cjsg-permite-buscar-acórdãos-e-decisões-monocráticas-proferidas-pelos-tribunais-de-segundo-grau.-esta-é-uma-das-consultas-mais-utilizadas-para-pesquisa-jurisprudencial.-parâmetros-principais--pesquisa-str-termo-de-busca-que-será-pesquisado-no-conteúdo-das-decisões-e-ementas--paginas-range-intervalo-de-páginas-a-serem-baixadas.-use-range1-n-para-baixar-as-primeiras-n-1-páginas--ementa-str-opcional-termo-adicional-para-buscar-especificamente-nas-ementas--classe-str-opcional-código-da-classe-processual--assunto-str-opcional-código-do-assunto--comarca-str-opcional-código-da-comarca--orgao_julgador-str-opcional-código-do-órgão-julgador--data_inicio-str-opcional-data-inicial-de-julgamento-formato-ddmmaaaa--data_fim-str-opcional-data-final-de-julgamento-formato-ddmmaaaa--baixar_sg-bool-opcional-se-true-padrão-busca-em-segundo-grau.-se-false-busca-em-colégio-recursal--tipo_decisao-str-opcional-tipo-de-decisão---acordao-padrão-ou-monocratica-retornoa-função-retorna-um-pandas.dataframe-com-as-seguintes-colunas-principais--processo-número-do-processo-formato-cnj--cd_acordao-código-interno-do-acórdão--cd_foro-código-do-foro--classe_assunto-classe-processual-e-assunto-combinados--relatora-nome-do-relator--comarca-comarca-de-origem--orgao_julgador-órgão-julgador-ex-13ª-câmara-de-direito-privado--data_julgamento-data-do-julgamento--data_publicacao-data-de-publicação--ementa-texto-da-ementa-do-acórdão-exemplo-de-uso" class="nav-link" data-scroll-target="#cjsg---consulta-de-julgados-de-segundo-graua-função-cjsg-permite-buscar-acórdãos-e-decisões-monocráticas-proferidas-pelos-tribunais-de-segundo-grau.-esta-é-uma-das-consultas-mais-utilizadas-para-pesquisa-jurisprudencial.-parâmetros-principais--pesquisa-str-termo-de-busca-que-será-pesquisado-no-conteúdo-das-decisões-e-ementas--paginas-range-intervalo-de-páginas-a-serem-baixadas.-use-range1-n-para-baixar-as-primeiras-n-1-páginas--ementa-str-opcional-termo-adicional-para-buscar-especificamente-nas-ementas--classe-str-opcional-código-da-classe-processual--assunto-str-opcional-código-do-assunto--comarca-str-opcional-código-da-comarca--orgao_julgador-str-opcional-código-do-órgão-julgador--data_inicio-str-opcional-data-inicial-de-julgamento-formato-ddmmaaaa--data_fim-str-opcional-data-final-de-julgamento-formato-ddmmaaaa--baixar_sg-bool-opcional-se-true-padrão-busca-em-segundo-grau.-se-false-busca-em-colégio-recursal--tipo_decisao-str-opcional-tipo-de-decisão---acordao-padrão-ou-monocratica-retornoa-função-retorna-um-pandas.dataframe-com-as-seguintes-colunas-principais--processo-número-do-processo-formato-cnj--cd_acordao-código-interno-do-acórdão--cd_foro-código-do-foro--classe_assunto-classe-processual-e-assunto-combinados--relatora-nome-do-relator--comarca-comarca-de-origem--orgao_julgador-órgão-julgador-ex-13ª-câmara-de-direito-privado--data_julgamento-data-do-julgamento--data_publicacao-data-de-publicação--ementa-texto-da-ementa-do-acórdão-exemplo-de-uso">CJSG - Consulta de Julgados de Segundo GrauA função <code>cjsg()</code> permite buscar acórdãos e decisões monocráticas proferidas pelos tribunais de segundo grau. Esta é uma das consultas mais utilizadas para pesquisa jurisprudencial.### Parâmetros Principais- <code>pesquisa</code> (str): Termo de busca que será pesquisado no conteúdo das decisões e ementas- <code>paginas</code> (range): Intervalo de páginas a serem baixadas. Use <code>range(1, n)</code> para baixar as primeiras <code>n-1</code> páginas- <code>ementa</code> (str, opcional): Termo adicional para buscar especificamente nas ementas- <code>classe</code> (str, opcional): Código da classe processual- <code>assunto</code> (str, opcional): Código do assunto- <code>comarca</code> (str, opcional): Código da comarca- <code>orgao_julgador</code> (str, opcional): Código do órgão julgador- <code>data_inicio</code> (str, opcional): Data inicial de julgamento (formato: DD/MM/AAAA)- <code>data_fim</code> (str, opcional): Data final de julgamento (formato: DD/MM/AAAA)- <code>baixar_sg</code> (bool, opcional): Se <code>True</code> (padrão), busca em segundo grau. Se <code>False</code>, busca em colégio recursal- <code>tipo_decisao</code> (str, opcional): Tipo de decisão - <code>'acordao'</code> (padrão) ou <code>'monocratica'</code>### RetornoA função retorna um <code>pandas.DataFrame</code> com as seguintes colunas principais:- <code>processo</code>: Número do processo (formato CNJ)- <code>cd_acordao</code>: Código interno do acórdão- <code>cd_foro</code>: Código do foro- <code>classe_assunto</code>: Classe processual e assunto combinados- <code>relatora</code>: Nome do relator- <code>comarca</code>: Comarca de origem- <code>orgao_julgador</code>: Órgão julgador (ex: “13ª Câmara de Direito Privado”)- <code>data_julgamento</code>: Data do julgamento- <code>data_publicacao</code>: Data de publicação- <code>ementa</code>: Texto da ementa do acórdão### Exemplo de Uso</a></li>
+  <li><a href="#cpopg---consulta-processual-de-primeiro-grau" id="toc-cpopg---consulta-processual-de-primeiro-grau" class="nav-link" data-scroll-target="#cpopg---consulta-processual-de-primeiro-grau">CPOPG - Consulta Processual de Primeiro Grau</a>
   <ul class="collapse">
   <li><a href="#parâmetros-principais" id="toc-parâmetros-principais" class="nav-link" data-scroll-target="#parâmetros-principais">Parâmetros Principais</a></li>
   <li><a href="#retorno" id="toc-retorno" class="nav-link" data-scroll-target="#retorno">Retorno</a></li>
   <li><a href="#exemplo-de-uso" id="toc-exemplo-de-uso" class="nav-link" data-scroll-target="#exemplo-de-uso">Exemplo de Uso</a></li>
   </ul></li>
-  <li><a href="#cjsg---consulta-de-julgados-de-segundo-grau" id="toc-cjsg---consulta-de-julgados-de-segundo-grau" class="nav-link" data-scroll-target="#cjsg---consulta-de-julgados-de-segundo-grau">CJSG - Consulta de Julgados de Segundo Grau</a>
+  <li><a href="#cposg---consulta-processual-de-segundo-grau" id="toc-cposg---consulta-processual-de-segundo-grau" class="nav-link" data-scroll-target="#cposg---consulta-processual-de-segundo-grau">CPOSG - Consulta Processual de Segundo Grau</a>
   <ul class="collapse">
   <li><a href="#parâmetros-principais-1" id="toc-parâmetros-principais-1" class="nav-link" data-scroll-target="#parâmetros-principais-1">Parâmetros Principais</a></li>
   <li><a href="#retorno-1" id="toc-retorno-1" class="nav-link" data-scroll-target="#retorno-1">Retorno</a></li>
   <li><a href="#exemplo-de-uso-1" id="toc-exemplo-de-uso-1" class="nav-link" data-scroll-target="#exemplo-de-uso-1">Exemplo de Uso</a></li>
-  </ul></li>
-  <li><a href="#cpopg---consulta-processual-de-primeiro-grau" id="toc-cpopg---consulta-processual-de-primeiro-grau" class="nav-link" data-scroll-target="#cpopg---consulta-processual-de-primeiro-grau">CPOPG - Consulta Processual de Primeiro Grau</a>
-  <ul class="collapse">
-  <li><a href="#parâmetros-principais-2" id="toc-parâmetros-principais-2" class="nav-link" data-scroll-target="#parâmetros-principais-2">Parâmetros Principais</a></li>
-  <li><a href="#retorno-2" id="toc-retorno-2" class="nav-link" data-scroll-target="#retorno-2">Retorno</a></li>
-  <li><a href="#exemplo-de-uso-2" id="toc-exemplo-de-uso-2" class="nav-link" data-scroll-target="#exemplo-de-uso-2">Exemplo de Uso</a></li>
-  </ul></li>
-  <li><a href="#cposg---consulta-processual-de-segundo-grau" id="toc-cposg---consulta-processual-de-segundo-grau" class="nav-link" data-scroll-target="#cposg---consulta-processual-de-segundo-grau">CPOSG - Consulta Processual de Segundo Grau</a>
-  <ul class="collapse">
-  <li><a href="#parâmetros-principais-3" id="toc-parâmetros-principais-3" class="nav-link" data-scroll-target="#parâmetros-principais-3">Parâmetros Principais</a></li>
-  <li><a href="#retorno-3" id="toc-retorno-3" class="nav-link" data-scroll-target="#retorno-3">Retorno</a></li>
-  <li><a href="#exemplo-de-uso-3" id="toc-exemplo-de-uso-3" class="nav-link" data-scroll-target="#exemplo-de-uso-3">Exemplo de Uso</a></li>
   <li><a href="#trabalhando-com-dados-estruturados" id="toc-trabalhando-com-dados-estruturados" class="nav-link" data-scroll-target="#trabalhando-com-dados-estruturados">Trabalhando com Dados Estruturados</a></li>
   </ul></li>
   <li><a href="#dicas-e-observações-importantes" id="toc-dicas-e-observações-importantes" class="nav-link" data-scroll-target="#dicas-e-observações-importantes">Dicas e Observações Importantes</a>
@@ -378,229 +368,29 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="criando-o-scraper">Criando o Scraper</h2>
 <p>Para começar a usar o <code>juscraper</code> com o TJSP, você precisa criar uma instância do scraper passando <code>'tjsp'</code> como argumento. Este objeto será usado para todas as consultas subsequentes.</p>
 </section>
-<section id="cjpg---consulta-de-julgados-de-primeiro-grau" class="level2">
-<h2 class="anchored" data-anchor-id="cjpg---consulta-de-julgados-de-primeiro-grau">CJPG - Consulta de Julgados de Primeiro Grau</h2>
-<p>A função <code>cjpg()</code> permite buscar decisões e sentenças proferidas em primeiro grau de jurisdição. É útil para encontrar precedentes, entender padrões de julgamento ou coletar dados para análise jurídica.</p>
-<section id="parâmetros-principais" class="level3">
-<h3 class="anchored" data-anchor-id="parâmetros-principais">Parâmetros Principais</h3>
-<ul>
-<li><code>pesquisa</code> (str): Termo de busca que será pesquisado no conteúdo das decisões</li>
-<li><code>paginas</code> (range): Intervalo de páginas a serem baixadas. Use <code>range(0, n)</code> para baixar as primeiras <code>n</code> páginas (ex: <code>range(0, 3)</code> baixa páginas 1, 2 e 3)</li>
-<li><code>classes</code> (list, opcional): Lista de códigos de classes processuais para filtrar</li>
-<li><code>assuntos</code> (list, opcional): Lista de códigos de assuntos para filtrar</li>
-<li><code>varas</code> (list, opcional): Lista de códigos de varas para filtrar</li>
-</ul>
-</section>
-<section id="retorno" class="level3">
-<h3 class="anchored" data-anchor-id="retorno">Retorno</h3>
-<p>A função retorna um <code>pandas.DataFrame</code> com as seguintes colunas principais: - <code>cd_processo</code>: Código interno do processo - <code>id_processo</code>: Número do processo (formato CNJ) - <code>classe</code>: Classe processual - <code>assunto</code>: Assunto do processo - <code>magistrado</code>: Nome do magistrado que proferiu a decisão - <code>comarca</code>: Comarca onde o processo tramitou - <code>foro</code>: Foro onde o processo tramitou - <code>vara</code>: Vara onde o processo tramitou - <code>data_disponibilizacao</code>: Data em que a decisão foi disponibilizada - <code>decisao</code>: Texto completo da decisão/sentença</p>
-</section>
-<section id="exemplo-de-uso" class="level3">
-<h3 class="anchored" data-anchor-id="exemplo-de-uso">Exemplo de Uso</h3>
-<div id="cell-5" class="cell" data-execution_count="9">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># baixa dados da [c]onsulta de [j]ulgados de [p]rimeiro [g]rau - cjpg</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>dados_cjpg <span class="op">=</span> tjsp.cjpg(<span class="st">'golpe do pix'</span>, paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">0</span>,<span class="dv">3</span>))</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_cjpg.shape)</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>dados_cjpg.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Baixando documentos: 100%|██████████| 3/3 [00:02&lt;00:00,  1.42it/s]
-Processando documentos: 100%|██████████| 3/3 [00:00&lt;00:00, 43.91it/s]</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>(30, 10)</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code></code></pre>
-</div>
-<div class="cell-output cell-output-display" data-execution_count="9">
-<div>
-
-
-<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
-<thead>
-<tr class="header">
-<th data-quarto-table-cell-role="th"></th>
-<th data-quarto-table-cell-role="th">cd_processo</th>
-<th data-quarto-table-cell-role="th">id_processo</th>
-<th data-quarto-table-cell-role="th">classe</th>
-<th data-quarto-table-cell-role="th">assunto</th>
-<th data-quarto-table-cell-role="th">magistrado</th>
-<th data-quarto-table-cell-role="th">comarca</th>
-<th data-quarto-table-cell-role="th">foro</th>
-<th data-quarto-table-cell-role="th">vara</th>
-<th data-quarto-table-cell-role="th">data_disponibilizacao</th>
-<th data-quarto-table-cell-role="th">decisao</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">0</td>
-<td>JF0004W7G0000</td>
-<td>1001796-12.2024.8.26.0699</td>
-<td>Procedimento do Juizado Especial Cível</td>
-<td>Perdas e Danos</td>
-<td>Renata Fanin Pupo Dos Santos</td>
-<td>Salto de Pirapora</td>
-<td>Foro de Salto de Pirapora</td>
-<td>Juizado Especial Cível e Criminal</td>
-<td>28/12/2025</td>
-<td>SENTENÇA\n\n\n\nProcesso Digital nº:\t1001796-...</td>
-</tr>
-<tr class="even">
-<td data-quarto-table-cell-role="th">1</td>
-<td>07001MXIF0000</td>
-<td>1015175-59.2024.8.26.0007</td>
-<td>Procedimento Comum Cível</td>
-<td>Indenização por Dano Moral</td>
-<td>Fabiana Pereira Ragazzi</td>
-<td>SÃO PAULO</td>
-<td>Foro Regional IX - Vila Prudente</td>
-<td>1ª Vara Cível</td>
-<td>28/12/2025</td>
-<td>SENTENÇA\n\n\n\nProcesso Digital nº:\t1015175-...</td>
-</tr>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">2</td>
-<td>05001J2230000</td>
-<td>0004257-82.2025.8.26.0005</td>
-<td>Procedimento do Juizado Especial Cível</td>
-<td>Defeito, nulidade ou anulação</td>
-<td>CAIO FAGUNDES LAMPA</td>
-<td>SÃO PAULO</td>
-<td>Foro Regional V - São Miguel Paulista</td>
-<td>Juizado Especial Cível - CIC Zona Leste</td>
-<td>28/12/2025</td>
-<td>SENTENÇA\n\n\n\nProcesso Digital nº:\t0004257-...</td>
-</tr>
-</tbody>
-</table>
-
-</div>
-</div>
+<section id="cjpg---consulta-de-julgados-de-primeiro-graua-função-cjpg-permite-buscar-decisões-e-sentenças-proferidas-em-primeiro-grau-de-jurisdição.-é-útil-para-encontrar-precedentes-entender-padrões-de-julgamento-ou-coletar-dados-para-análise-jurídica.-parâmetros-principais--pesquisa-str-termo-de-busca-que-será-pesquisado-no-conteúdo-das-decisões--paginas-range-intervalo-de-páginas-a-serem-baixadas.-use-range1-n-para-baixar-as-primeiras-n-1-páginas-ex-range1-4-baixa-páginas-1-2-e-3--classes-list-opcional-lista-de-códigos-de-classes-processuais-para-filtrar--assuntos-list-opcional-lista-de-códigos-de-assuntos-para-filtrar--varas-list-opcional-lista-de-códigos-de-varas-para-filtrar-retornoa-função-retorna-um-pandas.dataframe-com-as-seguintes-colunas-principais--cd_processo-código-interno-do-processo--id_processo-número-do-processo-formato-cnj--classe-classe-processual--assunto-assunto-do-processo--magistrado-nome-do-magistrado-que-proferiu-a-decisão--comarca-comarca-onde-o-processo-tramitou--foro-foro-onde-o-processo-tramitou--vara-vara-onde-o-processo-tramitou--data_disponibilizacao-data-em-que-a-decisão-foi-disponibilizada--decisao-texto-completo-da-decisãosentença-exemplo-de-uso" class="level2">
+<h2 class="anchored" data-anchor-id="cjpg---consulta-de-julgados-de-primeiro-graua-função-cjpg-permite-buscar-decisões-e-sentenças-proferidas-em-primeiro-grau-de-jurisdição.-é-útil-para-encontrar-precedentes-entender-padrões-de-julgamento-ou-coletar-dados-para-análise-jurídica.-parâmetros-principais--pesquisa-str-termo-de-busca-que-será-pesquisado-no-conteúdo-das-decisões--paginas-range-intervalo-de-páginas-a-serem-baixadas.-use-range1-n-para-baixar-as-primeiras-n-1-páginas-ex-range1-4-baixa-páginas-1-2-e-3--classes-list-opcional-lista-de-códigos-de-classes-processuais-para-filtrar--assuntos-list-opcional-lista-de-códigos-de-assuntos-para-filtrar--varas-list-opcional-lista-de-códigos-de-varas-para-filtrar-retornoa-função-retorna-um-pandas.dataframe-com-as-seguintes-colunas-principais--cd_processo-código-interno-do-processo--id_processo-número-do-processo-formato-cnj--classe-classe-processual--assunto-assunto-do-processo--magistrado-nome-do-magistrado-que-proferiu-a-decisão--comarca-comarca-onde-o-processo-tramitou--foro-foro-onde-o-processo-tramitou--vara-vara-onde-o-processo-tramitou--data_disponibilizacao-data-em-que-a-decisão-foi-disponibilizada--decisao-texto-completo-da-decisãosentença-exemplo-de-uso">CJPG - Consulta de Julgados de Primeiro GrauA função <code>cjpg()</code> permite buscar decisões e sentenças proferidas em primeiro grau de jurisdição. É útil para encontrar precedentes, entender padrões de julgamento ou coletar dados para análise jurídica.### Parâmetros Principais- <code>pesquisa</code> (str): Termo de busca que será pesquisado no conteúdo das decisões- <code>paginas</code> (range): Intervalo de páginas a serem baixadas. Use <code>range(1, n)</code> para baixar as primeiras <code>n-1</code> páginas (ex: <code>range(1, 4)</code> baixa páginas 1, 2 e 3)- <code>classes</code> (list, opcional): Lista de códigos de classes processuais para filtrar- <code>assuntos</code> (list, opcional): Lista de códigos de assuntos para filtrar- <code>varas</code> (list, opcional): Lista de códigos de varas para filtrar### RetornoA função retorna um <code>pandas.DataFrame</code> com as seguintes colunas principais:- <code>cd_processo</code>: Código interno do processo- <code>id_processo</code>: Número do processo (formato CNJ)- <code>classe</code>: Classe processual- <code>assunto</code>: Assunto do processo- <code>magistrado</code>: Nome do magistrado que proferiu a decisão- <code>comarca</code>: Comarca onde o processo tramitou- <code>foro</code>: Foro onde o processo tramitou- <code>vara</code>: Vara onde o processo tramitou- <code>data_disponibilizacao</code>: Data em que a decisão foi disponibilizada- <code>decisao</code>: Texto completo da decisão/sentença### Exemplo de Uso</h2>
+<div id="cell-5" class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># baixa dados da [c]onsulta de [j]ulgados de [p]rimeiro [g]rau - cjpgdados_cjpg = tjsp.cjpg('golpe do pix', paginas=range(1,3))print(dados_cjpg.shape)dados_cjpg.head(3)</span></span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-</section>
-<section id="cjsg---consulta-de-julgados-de-segundo-grau" class="level2">
-<h2 class="anchored" data-anchor-id="cjsg---consulta-de-julgados-de-segundo-grau">CJSG - Consulta de Julgados de Segundo Grau</h2>
-<p>A função <code>cjsg()</code> permite buscar acórdãos e decisões monocráticas proferidas pelos tribunais de segundo grau. Esta é uma das consultas mais utilizadas para pesquisa jurisprudencial.</p>
-<section id="parâmetros-principais-1" class="level3">
-<h3 class="anchored" data-anchor-id="parâmetros-principais-1">Parâmetros Principais</h3>
-<ul>
-<li><code>pesquisa</code> (str): Termo de busca que será pesquisado no conteúdo das decisões e ementas</li>
-<li><code>paginas</code> (range): Intervalo de páginas a serem baixadas. Use <code>range(0, n)</code> para baixar as primeiras <code>n</code> páginas</li>
-<li><code>ementa</code> (str, opcional): Termo adicional para buscar especificamente nas ementas</li>
-<li><code>classe</code> (str, opcional): Código da classe processual</li>
-<li><code>assunto</code> (str, opcional): Código do assunto</li>
-<li><code>comarca</code> (str, opcional): Código da comarca</li>
-<li><code>orgao_julgador</code> (str, opcional): Código do órgão julgador</li>
-<li><code>data_inicio</code> (str, opcional): Data inicial de julgamento (formato: DD/MM/AAAA)</li>
-<li><code>data_fim</code> (str, opcional): Data final de julgamento (formato: DD/MM/AAAA)</li>
-<li><code>baixar_sg</code> (bool, opcional): Se <code>True</code> (padrão), busca em segundo grau. Se <code>False</code>, busca em colégio recursal</li>
-<li><code>tipo_decisao</code> (str, opcional): Tipo de decisão - <code>'acordao'</code> (padrão) ou <code>'monocratica'</code></li>
-</ul>
-</section>
-<section id="retorno-1" class="level3">
-<h3 class="anchored" data-anchor-id="retorno-1">Retorno</h3>
-<p>A função retorna um <code>pandas.DataFrame</code> com as seguintes colunas principais: - <code>processo</code>: Número do processo (formato CNJ) - <code>cd_acordao</code>: Código interno do acórdão - <code>cd_foro</code>: Código do foro - <code>classe_assunto</code>: Classe processual e assunto combinados - <code>relatora</code>: Nome do relator - <code>comarca</code>: Comarca de origem - <code>orgao_julgador</code>: Órgão julgador (ex: “13ª Câmara de Direito Privado”) - <code>data_julgamento</code>: Data do julgamento - <code>data_publicacao</code>: Data de publicação - <code>ementa</code>: Texto da ementa do acórdão</p>
-</section>
-<section id="exemplo-de-uso-1" class="level3">
-<h3 class="anchored" data-anchor-id="exemplo-de-uso-1">Exemplo de Uso</h3>
-<div id="cell-7" class="cell" data-execution_count="11">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># baixa dados da [c]onsulta de [j]ulgados de [s]egundo [g]rau - cjsg</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>dados_cjsg <span class="op">=</span> tjsp.cjsg(<span class="st">'golpe do pix'</span>, paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">0</span>,<span class="dv">3</span>))</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_cjsg.shape)</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>dados_cjsg.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Baixando documentos: 100%|██████████| 3/3 [00:21&lt;00:00, 10.75s/it]
-Processando documentos: 100%|██████████| 3/3 [00:00&lt;00:00, 21.60it/s]</code></pre>
+<section id="cjsg---consulta-de-julgados-de-segundo-graua-função-cjsg-permite-buscar-acórdãos-e-decisões-monocráticas-proferidas-pelos-tribunais-de-segundo-grau.-esta-é-uma-das-consultas-mais-utilizadas-para-pesquisa-jurisprudencial.-parâmetros-principais--pesquisa-str-termo-de-busca-que-será-pesquisado-no-conteúdo-das-decisões-e-ementas--paginas-range-intervalo-de-páginas-a-serem-baixadas.-use-range1-n-para-baixar-as-primeiras-n-1-páginas--ementa-str-opcional-termo-adicional-para-buscar-especificamente-nas-ementas--classe-str-opcional-código-da-classe-processual--assunto-str-opcional-código-do-assunto--comarca-str-opcional-código-da-comarca--orgao_julgador-str-opcional-código-do-órgão-julgador--data_inicio-str-opcional-data-inicial-de-julgamento-formato-ddmmaaaa--data_fim-str-opcional-data-final-de-julgamento-formato-ddmmaaaa--baixar_sg-bool-opcional-se-true-padrão-busca-em-segundo-grau.-se-false-busca-em-colégio-recursal--tipo_decisao-str-opcional-tipo-de-decisão---acordao-padrão-ou-monocratica-retornoa-função-retorna-um-pandas.dataframe-com-as-seguintes-colunas-principais--processo-número-do-processo-formato-cnj--cd_acordao-código-interno-do-acórdão--cd_foro-código-do-foro--classe_assunto-classe-processual-e-assunto-combinados--relatora-nome-do-relator--comarca-comarca-de-origem--orgao_julgador-órgão-julgador-ex-13ª-câmara-de-direito-privado--data_julgamento-data-do-julgamento--data_publicacao-data-de-publicação--ementa-texto-da-ementa-do-acórdão-exemplo-de-uso" class="level2">
+<h2 class="anchored" data-anchor-id="cjsg---consulta-de-julgados-de-segundo-graua-função-cjsg-permite-buscar-acórdãos-e-decisões-monocráticas-proferidas-pelos-tribunais-de-segundo-grau.-esta-é-uma-das-consultas-mais-utilizadas-para-pesquisa-jurisprudencial.-parâmetros-principais--pesquisa-str-termo-de-busca-que-será-pesquisado-no-conteúdo-das-decisões-e-ementas--paginas-range-intervalo-de-páginas-a-serem-baixadas.-use-range1-n-para-baixar-as-primeiras-n-1-páginas--ementa-str-opcional-termo-adicional-para-buscar-especificamente-nas-ementas--classe-str-opcional-código-da-classe-processual--assunto-str-opcional-código-do-assunto--comarca-str-opcional-código-da-comarca--orgao_julgador-str-opcional-código-do-órgão-julgador--data_inicio-str-opcional-data-inicial-de-julgamento-formato-ddmmaaaa--data_fim-str-opcional-data-final-de-julgamento-formato-ddmmaaaa--baixar_sg-bool-opcional-se-true-padrão-busca-em-segundo-grau.-se-false-busca-em-colégio-recursal--tipo_decisao-str-opcional-tipo-de-decisão---acordao-padrão-ou-monocratica-retornoa-função-retorna-um-pandas.dataframe-com-as-seguintes-colunas-principais--processo-número-do-processo-formato-cnj--cd_acordao-código-interno-do-acórdão--cd_foro-código-do-foro--classe_assunto-classe-processual-e-assunto-combinados--relatora-nome-do-relator--comarca-comarca-de-origem--orgao_julgador-órgão-julgador-ex-13ª-câmara-de-direito-privado--data_julgamento-data-do-julgamento--data_publicacao-data-de-publicação--ementa-texto-da-ementa-do-acórdão-exemplo-de-uso">CJSG - Consulta de Julgados de Segundo GrauA função <code>cjsg()</code> permite buscar acórdãos e decisões monocráticas proferidas pelos tribunais de segundo grau. Esta é uma das consultas mais utilizadas para pesquisa jurisprudencial.### Parâmetros Principais- <code>pesquisa</code> (str): Termo de busca que será pesquisado no conteúdo das decisões e ementas- <code>paginas</code> (range): Intervalo de páginas a serem baixadas. Use <code>range(1, n)</code> para baixar as primeiras <code>n-1</code> páginas- <code>ementa</code> (str, opcional): Termo adicional para buscar especificamente nas ementas- <code>classe</code> (str, opcional): Código da classe processual- <code>assunto</code> (str, opcional): Código do assunto- <code>comarca</code> (str, opcional): Código da comarca- <code>orgao_julgador</code> (str, opcional): Código do órgão julgador- <code>data_inicio</code> (str, opcional): Data inicial de julgamento (formato: DD/MM/AAAA)- <code>data_fim</code> (str, opcional): Data final de julgamento (formato: DD/MM/AAAA)- <code>baixar_sg</code> (bool, opcional): Se <code>True</code> (padrão), busca em segundo grau. Se <code>False</code>, busca em colégio recursal- <code>tipo_decisao</code> (str, opcional): Tipo de decisão - <code>'acordao'</code> (padrão) ou <code>'monocratica'</code>### RetornoA função retorna um <code>pandas.DataFrame</code> com as seguintes colunas principais:- <code>processo</code>: Número do processo (formato CNJ)- <code>cd_acordao</code>: Código interno do acórdão- <code>cd_foro</code>: Código do foro- <code>classe_assunto</code>: Classe processual e assunto combinados- <code>relatora</code>: Nome do relator- <code>comarca</code>: Comarca de origem- <code>orgao_julgador</code>: Órgão julgador (ex: “13ª Câmara de Direito Privado”)- <code>data_julgamento</code>: Data do julgamento- <code>data_publicacao</code>: Data de publicação- <code>ementa</code>: Texto da ementa do acórdão### Exemplo de Uso</h2>
+<div id="cell-7" class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># baixa dados da [c]onsulta de [j]ulgados de [s]egundo [g]rau - cjsgdados_cjsg = tjsp.cjsg('golpe do pix', paginas=range(1,3))print(dados_cjsg.shape)dados_cjsg.head(3)</span></span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="cell-output cell-output-stdout">
-<pre><code>(60, 10)</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code></code></pre>
-</div>
-<div class="cell-output cell-output-display" data-execution_count="11">
-<div>
-
-
-<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
-<thead>
-<tr class="header">
-<th data-quarto-table-cell-role="th"></th>
-<th data-quarto-table-cell-role="th">processo</th>
-<th data-quarto-table-cell-role="th">cd_acordao</th>
-<th data-quarto-table-cell-role="th">cd_foro</th>
-<th data-quarto-table-cell-role="th">classe_assunto</th>
-<th data-quarto-table-cell-role="th">relatora</th>
-<th data-quarto-table-cell-role="th">comarca</th>
-<th data-quarto-table-cell-role="th">orgao_julgador</th>
-<th data-quarto-table-cell-role="th">data_julgamento</th>
-<th data-quarto-table-cell-role="th">data_publicacao</th>
-<th data-quarto-table-cell-role="th">ementa</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">0</td>
-<td>1005387-58.2024.8.26.0318</td>
-<td>20062433</td>
-<td>0</td>
-<td>Apelação Cível / Bancários</td>
-<td>Nelson Jorge Júnior</td>
-<td>Leme</td>
-<td>13ª Câmara de Direito Privado</td>
-<td>26/12/2025</td>
-<td>26/12/2025</td>
-<td>APELAÇÃO – AÇÃO DECLARATÓRIA C.C. INDENIZATÓR...</td>
-</tr>
-<tr class="even">
-<td data-quarto-table-cell-role="th">1</td>
-<td>1029533-10.2025.8.26.0002</td>
-<td>20062162</td>
-<td>0</td>
-<td>Apelação Cível / Prestação de Serviços</td>
-<td>Paulo Ayrosa</td>
-<td>São Paulo</td>
-<td>31ª Câmara de Direito Privado</td>
-<td>22/12/2025</td>
-<td>22/12/2025</td>
-<td>PRESTAÇÃO DE SERVIÇOS – AÇÃO DE OBRIGAÇÃO DE F...</td>
-</tr>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">2</td>
-<td>1000340-02.2025.8.26.0114</td>
-<td>20061944</td>
-<td>0</td>
-<td>Apelação Cível / Bancários</td>
-<td>Carlos Abrão</td>
-<td>Campinas</td>
-<td>14ª Câmara de Direito Privado</td>
-<td>17/12/2025</td>
-<td>22/12/2025</td>
-<td>APELAÇÃO - AÇÃO DECLARATÓRIA CUMULADA COM INDE...</td>
-</tr>
-</tbody>
-</table>
-
-</div>
-</div>
-</div>
-</section>
 </section>
 <section id="cpopg---consulta-processual-de-primeiro-grau" class="level2">
 <h2 class="anchored" data-anchor-id="cpopg---consulta-processual-de-primeiro-grau">CPOPG - Consulta Processual de Primeiro Grau</h2>
 <p>A função <code>cpopg()</code> permite consultar informações detalhadas sobre processos em primeiro grau de jurisdição. Diferente das consultas de julgados, esta função retorna informações processuais completas, incluindo partes, movimentações, petições e documentos.</p>
-<section id="parâmetros-principais-2" class="level3">
-<h3 class="anchored" data-anchor-id="parâmetros-principais-2">Parâmetros Principais</h3>
+<section id="parâmetros-principais" class="level3">
+<h3 class="anchored" data-anchor-id="parâmetros-principais">Parâmetros Principais</h3>
 <ul>
 <li><code>id_processo</code> (str): Número do processo no formato CNJ (ex: “1000149-71.2024.8.26.0346”)</li>
 </ul>
 </section>
-<section id="retorno-2" class="level3">
-<h3 class="anchored" data-anchor-id="retorno-2">Retorno</h3>
+<section id="retorno" class="level3">
+<h3 class="anchored" data-anchor-id="retorno">Retorno</h3>
 <p>A função retorna um dicionário Python com as seguintes chaves:</p>
 <ul>
 <li><code>basicos</code>: DataFrame com informações básicas do processo (classe, assunto, foro, vara, juiz, data de distribuição, valor da ação)</li>
@@ -609,11 +399,11 @@ Processando documentos: 100%|██████████| 3/3 [00:00&lt;00:00
 <li><code>peticoes_diversas</code>: DataFrame com informações sobre petições e documentos protocolados</li>
 </ul>
 </section>
-<section id="exemplo-de-uso-2" class="level3">
-<h3 class="anchored" data-anchor-id="exemplo-de-uso-2">Exemplo de Uso</h3>
+<section id="exemplo-de-uso" class="level3">
+<h3 class="anchored" data-anchor-id="exemplo-de-uso">Exemplo de Uso</h3>
 <div id="cell-9" class="cell" data-execution_count="12">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> tjsp.cpopg(<span class="st">'1000149-71.2024.8.26.0346'</span>)</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>res</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> tjsp.cpopg(<span class="st">'1000149-71.2024.8.26.0346'</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>res</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Baixando processos: 100%|██████████| 1/1 [00:00&lt;00:00,  1.53it/s]
 Processando documentos: 100%|██████████| 2/2 [00:00&lt;00:00, 51.78it/s]</code></pre>
@@ -745,14 +535,14 @@ Processando documentos: 100%|██████████| 2/2 [00:00&lt;00:00
 <section id="cposg---consulta-processual-de-segundo-grau" class="level2">
 <h2 class="anchored" data-anchor-id="cposg---consulta-processual-de-segundo-grau">CPOSG - Consulta Processual de Segundo Grau</h2>
 <p>A função <code>cposg()</code> permite consultar informações detalhadas sobre processos em segundo grau de jurisdição (recursos). Esta função retorna informações completas sobre o processo em segundo grau, incluindo composição do colegiado, decisões, movimentações e histórico.</p>
-<section id="parâmetros-principais-3" class="level3">
-<h3 class="anchored" data-anchor-id="parâmetros-principais-3">Parâmetros Principais</h3>
+<section id="parâmetros-principais-1" class="level3">
+<h3 class="anchored" data-anchor-id="parâmetros-principais-1">Parâmetros Principais</h3>
 <ul>
 <li><code>id_processo</code> (str ou list): Número(s) do processo no formato CNJ. Pode ser uma string única ou uma lista de strings para consultar múltiplos processos de uma vez.</li>
 </ul>
 </section>
-<section id="retorno-3" class="level3">
-<h3 class="anchored" data-anchor-id="retorno-3">Retorno</h3>
+<section id="retorno-1" class="level3">
+<h3 class="anchored" data-anchor-id="retorno-1">Retorno</h3>
 <p>A função retorna um <code>pandas.DataFrame</code> onde cada linha representa um processo consultado. As colunas principais incluem:</p>
 <ul>
 <li><code>id_original</code>: ID original do processo</li>
@@ -775,12 +565,12 @@ Processando documentos: 100%|██████████| 2/2 [00:00&lt;00:00
 <li><code>volume_apenso</code>: Informações sobre volumes apensos</li>
 </ul>
 </section>
-<section id="exemplo-de-uso-3" class="level3">
-<h3 class="anchored" data-anchor-id="exemplo-de-uso-3">Exemplo de Uso</h3>
+<section id="exemplo-de-uso-1" class="level3">
+<h3 class="anchored" data-anchor-id="exemplo-de-uso-1">Exemplo de Uso</h3>
 <p>Você pode consultar um único processo ou múltiplos processos de uma vez:</p>
 <div id="cell-11" class="cell">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> tjsp.cposg([<span class="st">'00221752420038260344'</span>, <span class="st">'10001497120248260346'</span>, <span class="st">'00039417120248260048'</span>])</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>res</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> tjsp.cposg([<span class="st">'00221752420038260344'</span>, <span class="st">'10001497120248260346'</span>, <span class="st">'00039417120248260048'</span>])</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>res</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Baixando processos: 100%|██████████| 3/3 [00:02&lt;00:00,  1.39it/s]
 Processando arquivos: 100%|██████████| 4/4 [00:00&lt;00:00, 22.22it/s]</code></pre>
@@ -884,8 +674,8 @@ Processando arquivos: 100%|██████████| 4/4 [00:00&lt;00:00, 
 </div>
 </div>
 <div id="cell-12" class="cell">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>pd.DataFrame(res[<span class="st">'movimentacoes'</span>].iloc[<span class="dv">2</span>]).head()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>pd.DataFrame(res[<span class="st">'movimentacoes'</span>].iloc[<span class="dv">2</span>]).head()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="7">
 <div>
 

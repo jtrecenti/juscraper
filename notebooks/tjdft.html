@@ -57,7 +57,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </style>
 
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
 <script src="../site_libs/quarto-nav/headroom.min.js"></script>
 <script src="../site_libs/clipboard/clipboard.min.js"></script>
 <script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
@@ -102,9 +102,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "Procurar"
   }
 }</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
-
-<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
 
 
 <link rel="stylesheet" href="reference/_styles-quartodoc.css">
@@ -302,128 +299,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># cria um objeto tjdft</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>tjdft <span class="op">=</span> jus.scraper(<span class="st">'tjdft'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="cell-1" class="cell" data-execution_count="2">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># baixa dados da jurisprudência</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>dados_cjsg <span class="op">=</span> tjdft.cjsg(<span class="st">'direito penal'</span>, paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">0</span>,<span class="dv">3</span>))</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_cjsg.shape)</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>dados_cjsg.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>(30, 23)</code></pre>
-</div>
-<div class="cell-output cell-output-display" data-execution_count="2">
-<div>
-
-
-<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
-<thead>
-<tr class="header">
-<th data-quarto-table-cell-role="th"></th>
-<th data-quarto-table-cell-role="th">sequencial</th>
-<th data-quarto-table-cell-role="th">base</th>
-<th data-quarto-table-cell-role="th">subbase</th>
-<th data-quarto-table-cell-role="th">uuid</th>
-<th data-quarto-table-cell-role="th">identificador</th>
-<th data-quarto-table-cell-role="th">dataJulgamento</th>
-<th data-quarto-table-cell-role="th">dataPublicacao</th>
-<th data-quarto-table-cell-role="th">decisao</th>
-<th data-quarto-table-cell-role="th">ementa</th>
-<th data-quarto-table-cell-role="th">localDePublicacao</th>
-<th data-quarto-table-cell-role="th">...</th>
-<th data-quarto-table-cell-role="th">uf</th>
-<th data-quarto-table-cell-role="th">segredoJustica</th>
-<th data-quarto-table-cell-role="th">turmaRecursal</th>
-<th data-quarto-table-cell-role="th">descricaoOrgaoJulgador</th>
-<th data-quarto-table-cell-role="th">versao</th>
-<th data-quarto-table-cell-role="th">codigoClasseCnj</th>
-<th data-quarto-table-cell-role="th">codigoSistjOrgaoJulgador</th>
-<th data-quarto-table-cell-role="th">inteiroTeorHtml</th>
-<th data-quarto-table-cell-role="th">marcadores</th>
-<th data-quarto-table-cell-role="th">possuiInteiroTeor</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">0</td>
-<td>1</td>
-<td>acordaos</td>
-<td>acordaos</td>
-<td>23362ccf-ffc5-4caf-b878-de1f671250f5</td>
-<td>1998487</td>
-<td>2025-05-15T03:00:00.000Z</td>
-<td>2025-05-24T23:26:53.000Z</td>
-<td>NEGAR PROVIMENTO AO RECURSO. UNÂNIME</td>
-<td>EMENTA: DIREITO PENAL. EMBARGOS DE DECLARAÇÃO....</td>
-<td>PJe</td>
-<td>...</td>
-<td>DF</td>
-<td>False</td>
-<td>False</td>
-<td>1ª TURMA CRIMINAL</td>
-<td>01</td>
-<td>420</td>
-<td>51</td>
-<td>Inteiro Teor indisponível.</td>
-<td>{'ementa': ['EMENTA: &lt;mark&gt;DIREITO&lt;/mark&gt; &lt;mar...</td>
-<td>True</td>
-</tr>
-<tr class="even">
-<td data-quarto-table-cell-role="th">1</td>
-<td>2</td>
-<td>acordaos</td>
-<td>acordaos</td>
-<td>298272b3-1dd9-41c0-8f93-f29edd0d8cef</td>
-<td>1999112</td>
-<td>2025-05-15T03:00:00.000Z</td>
-<td>2025-05-24T23:22:29.000Z</td>
-<td>NEGAR PROVIMENTO. UNÂNIME.</td>
-<td>Ementa: direito penal. Apelação criminal. Injú...</td>
-<td>PJe</td>
-<td>...</td>
-<td>DF</td>
-<td>False</td>
-<td>False</td>
-<td>2ª TURMA CRIMINAL</td>
-<td>01</td>
-<td>417</td>
-<td>52</td>
-<td>Inteiro Teor indisponível.</td>
-<td>{'ementa': ['Ementa: &lt;mark&gt;direito&lt;/mark&gt; &lt;mar...</td>
-<td>True</td>
-</tr>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">2</td>
-<td>3</td>
-<td>acordaos</td>
-<td>acordaos</td>
-<td>ee320b08-c91f-489f-8dba-1dc80b63fff7</td>
-<td>1998988</td>
-<td>2025-05-15T03:00:00.000Z</td>
-<td>2025-05-24T20:52:42.000Z</td>
-<td>NEGAR PROVIMENTO. UNÂNIME.</td>
-<td>Ementa: DIREITO PENAL. APELAÇÃO CRIMINAL. RECE...</td>
-<td>PJe</td>
-<td>...</td>
-<td>DF</td>
-<td>False</td>
-<td>False</td>
-<td>2ª TURMA CRIMINAL</td>
-<td>01</td>
-<td>417</td>
-<td>52</td>
-<td>Inteiro Teor indisponível.</td>
-<td>{'ementa': ['Ementa: &lt;mark&gt;DIREITO&lt;/mark&gt; &lt;mar...</td>
-<td>True</td>
-</tr>
-</tbody>
-</table>
-
-<p>3 rows × 23 columns</p>
-</div>
-</div>
+<div id="cell-1" class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># baixa dados da jurisprudênciadados_cjsg = tjdft.cjsg('direito penal', paginas=range(1,3))print(dados_cjsg.shape)dados_cjsg.head(3)</span></span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div id="cell-2" class="cell" data-execution_count="3">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_cjsg[<span class="st">'ementa'</span>].iloc[<span class="dv">0</span>][:<span class="dv">300</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_cjsg[<span class="st">'ementa'</span>].iloc[<span class="dv">0</span>][:<span class="dv">300</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>EMENTA: DIREITO PENAL. EMBARGOS DE DECLARAÇÃO. PRETENSÃO DE REDISCUSSÃO DA MATÉRIA. INOVAÇÃO RECURSAL. IMPOSSIBILIDADE. VÍCIO. AUSENTE. MEIO PROCESSUAL INADEQUADO. PREQUESTIONAMENTO. EMBARGOS REJEITADOS.
 
@@ -433,7 +313,7 @@ I. CASO EM EXAME
 </div>
 </div>
 <div id="cell-3" class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>dados_cjsg[<span class="st">'processo'</span>].iloc[<span class="dv">0</span>]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>dados_cjsg[<span class="st">'processo'</span>].iloc[<span class="dv">0</span>]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="4">
 <pre><code>'0722443-83.2024.8.07.0003'</code></pre>
 </div>
