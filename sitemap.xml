@@ -2,82 +2,90 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://jtrecenti.github.io/juscraper/reference/courts.tjdft.client.TJDFTScraper.html</loc>
-    <lastmod>2026-04-04T20:13:46.059Z</lastmod>
+    <lastmod>2026-04-04T20:14:43.937Z</lastmod>
   </url>
   <url>
     <loc>https://jtrecenti.github.io/juscraper/reference/scraper.html</loc>
-    <lastmod>2026-04-04T20:13:45.974Z</lastmod>
+    <lastmod>2026-04-04T20:14:43.822Z</lastmod>
   </url>
   <url>
     <loc>https://jtrecenti.github.io/juscraper/reference/courts.tjsp.client.TJSPScraper.html</loc>
-    <lastmod>2026-04-04T20:13:46.045Z</lastmod>
+    <lastmod>2026-04-04T20:14:43.921Z</lastmod>
   </url>
   <url>
     <loc>https://jtrecenti.github.io/juscraper/reference/aggregators.datajud.client.DatajudScraper.html</loc>
-    <lastmod>2026-04-04T20:13:45.983Z</lastmod>
+    <lastmod>2026-04-04T20:14:43.832Z</lastmod>
   </url>
   <url>
     <loc>https://jtrecenti.github.io/juscraper/reference/courts.tjmt.client.TJMTScraper.html</loc>
-    <lastmod>2026-04-04T20:13:46.115Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jtrecenti.github.io/juscraper/index.html</loc>
-    <lastmod>2026-04-04T20:13:18.713Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jtrecenti.github.io/juscraper/notebooks/tjrs.html</loc>
-    <lastmod>2026-04-04T20:13:18.713Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jtrecenti.github.io/juscraper/notebooks/tjpr.html</loc>
-    <lastmod>2026-04-04T20:13:18.713Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jtrecenti.github.io/juscraper/notebooks/tjdft.html</loc>
-    <lastmod>2026-04-04T20:13:18.713Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jtrecenti.github.io/juscraper/notebooks/tjmt.html</loc>
-    <lastmod>2026-04-04T20:13:18.713Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jtrecenti.github.io/juscraper/api-conventions.html</loc>
-    <lastmod>2026-04-04T20:13:18.713Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jtrecenti.github.io/juscraper/notebooks/tjsp.html</loc>
-    <lastmod>2026-04-04T20:13:18.713Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jtrecenti.github.io/juscraper/notebooks/jusbr.html</loc>
-    <lastmod>2026-04-04T20:13:18.713Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jtrecenti.github.io/juscraper/notebooks/datajud.html</loc>
-    <lastmod>2026-04-04T20:13:18.713Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jtrecenti.github.io/juscraper/notebooks/tjes.html</loc>
-    <lastmod>2026-04-04T20:13:18.713Z</lastmod>
+    <lastmod>2026-04-04T20:14:43.998Z</lastmod>
   </url>
   <url>
     <loc>https://jtrecenti.github.io/juscraper/reference/courts.tjpr.client.TJPRScraper.html</loc>
-    <lastmod>2026-04-04T20:13:46.092Z</lastmod>
+    <lastmod>2026-04-04T20:14:43.974Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jtrecenti.github.io/juscraper/notebooks/tjes.html</loc>
+    <lastmod>2026-04-04T20:14:10.339Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jtrecenti.github.io/juscraper/notebooks/datajud.html</loc>
+    <lastmod>2026-04-04T20:14:10.339Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jtrecenti.github.io/juscraper/notebooks/tjpr.html</loc>
+    <lastmod>2026-04-04T20:14:10.340Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jtrecenti.github.io/juscraper/notebooks/tjdft.html</loc>
+    <lastmod>2026-04-04T20:14:10.339Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jtrecenti.github.io/juscraper/notebooks/tjmt.html</loc>
+    <lastmod>2026-04-04T20:14:10.340Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jtrecenti.github.io/juscraper/api-conventions.html</loc>
+    <lastmod>2026-04-04T20:14:10.339Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jtrecenti.github.io/juscraper/notebooks/tjsp.html</loc>
+    <lastmod>2026-04-04T20:14:10.340Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jtrecenti.github.io/juscraper/notebooks/jusbr.html</loc>
+    <lastmod>2026-04-04T20:14:10.339Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jtrecenti.github.io/juscraper/notebooks/tjba.html</loc>
+    <lastmod>2026-04-04T20:14:10.339Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jtrecenti.github.io/juscraper/notebooks/tjrs.html</loc>
+    <lastmod>2026-04-04T20:14:10.340Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jtrecenti.github.io/juscraper/index.html</loc>
+    <lastmod>2026-04-04T20:14:10.339Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jtrecenti.github.io/juscraper/reference/courts.tjba.client.TJBAScraper.html</loc>
+    <lastmod>2026-04-04T20:14:43.864Z</lastmod>
   </url>
   <url>
     <loc>https://jtrecenti.github.io/juscraper/reference/aggregators.jusbr.client.JusbrScraper.html</loc>
-    <lastmod>2026-04-04T20:13:45.993Z</lastmod>
+    <lastmod>2026-04-04T20:14:43.843Z</lastmod>
   </url>
   <url>
     <loc>https://jtrecenti.github.io/juscraper/reference/index.html</loc>
-    <lastmod>2026-04-04T20:13:45.954Z</lastmod>
+    <lastmod>2026-04-04T20:14:43.801Z</lastmod>
   </url>
   <url>
     <loc>https://jtrecenti.github.io/juscraper/reference/courts.tjes.client.TJESScraper.html</loc>
-    <lastmod>2026-04-04T20:13:46.142Z</lastmod>
+    <lastmod>2026-04-04T20:14:44.027Z</lastmod>
   </url>
   <url>
     <loc>https://jtrecenti.github.io/juscraper/reference/courts.tjrs.client.TJRSScraper.html</loc>
-    <lastmod>2026-04-04T20:13:46.077Z</lastmod>
+    <lastmod>2026-04-04T20:14:43.957Z</lastmod>
   </url>
 </urlset>
