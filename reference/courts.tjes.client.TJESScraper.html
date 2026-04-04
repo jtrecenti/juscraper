@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>aggregators.datajud.client.datajudscraper – juscraper</title>
+<title>courts.tjes.client.tjesscraper – juscraper</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -153,15 +153,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Nesta página</h2>
    
   <ul>
-  <li><a href="#juscraper.aggregators.datajud.client.DatajudScraper" id="toc-juscraper.aggregators.datajud.client.DatajudScraper" class="nav-link active" data-scroll-target="#juscraper.aggregators.datajud.client.DatajudScraper">aggregators.datajud.client.DatajudScraper</a>
+  <li><a href="#juscraper.courts.tjes.client.TJESScraper" id="toc-juscraper.courts.tjes.client.TJESScraper" class="nav-link active" data-scroll-target="#juscraper.courts.tjes.client.TJESScraper">courts.tjes.client.TJESScraper</a>
   <ul class="collapse">
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
   <ul class="collapse">
-  <li><a href="#juscraper.aggregators.datajud.client.DatajudScraper.listar_processos" id="toc-juscraper.aggregators.datajud.client.DatajudScraper.listar_processos" class="nav-link" data-scroll-target="#juscraper.aggregators.datajud.client.DatajudScraper.listar_processos">listar_processos</a></li>
+  <li><a href="#juscraper.courts.tjes.client.TJESScraper.cjpg" id="toc-juscraper.courts.tjes.client.TJESScraper.cjpg" class="nav-link" data-scroll-target="#juscraper.courts.tjes.client.TJESScraper.cjpg">cjpg</a></li>
+  <li><a href="#juscraper.courts.tjes.client.TJESScraper.cjpg_download" id="toc-juscraper.courts.tjes.client.TJESScraper.cjpg_download" class="nav-link" data-scroll-target="#juscraper.courts.tjes.client.TJESScraper.cjpg_download">cjpg_download</a></li>
+  <li><a href="#juscraper.courts.tjes.client.TJESScraper.cjpg_parse" id="toc-juscraper.courts.tjes.client.TJESScraper.cjpg_parse" class="nav-link" data-scroll-target="#juscraper.courts.tjes.client.TJESScraper.cjpg_parse">cjpg_parse</a></li>
+  <li><a href="#juscraper.courts.tjes.client.TJESScraper.cjsg" id="toc-juscraper.courts.tjes.client.TJESScraper.cjsg" class="nav-link" data-scroll-target="#juscraper.courts.tjes.client.TJESScraper.cjsg">cjsg</a></li>
+  <li><a href="#juscraper.courts.tjes.client.TJESScraper.cjsg_download" id="toc-juscraper.courts.tjes.client.TJESScraper.cjsg_download" class="nav-link" data-scroll-target="#juscraper.courts.tjes.client.TJESScraper.cjsg_download">cjsg_download</a></li>
+  <li><a href="#juscraper.courts.tjes.client.TJESScraper.cjsg_parse" id="toc-juscraper.courts.tjes.client.TJESScraper.cjsg_parse" class="nav-link" data-scroll-target="#juscraper.courts.tjes.client.TJESScraper.cjsg_parse">cjsg_parse</a></li>
+  <li><a href="#juscraper.courts.tjes.client.TJESScraper.cpopg" id="toc-juscraper.courts.tjes.client.TJESScraper.cpopg" class="nav-link" data-scroll-target="#juscraper.courts.tjes.client.TJESScraper.cpopg">cpopg</a></li>
+  <li><a href="#juscraper.courts.tjes.client.TJESScraper.cposg" id="toc-juscraper.courts.tjes.client.TJESScraper.cposg" class="nav-link" data-scroll-target="#juscraper.courts.tjes.client.TJESScraper.cposg">cposg</a></li>
   </ul></li>
   </ul></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.com/jtrecenti/juscraper/edit/main/docs/reference/aggregators.datajud.client.DatajudScraper.qmd" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.com/jtrecenti/juscraper/edit/main/docs/reference/courts.tjes.client.TJESScraper.qmd" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -169,15 +176,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 
-<section id="juscraper.aggregators.datajud.client.DatajudScraper" class="level1">
-<h1>aggregators.datajud.client.DatajudScraper</h1>
-<div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>aggregators.datajud.client.DatajudScraper(</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    api_key<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    verbose<span class="op">=</span><span class="dv">1</span>,</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    download_path<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    sleep_time<span class="op">=</span><span class="fl">0.5</span>,</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Scraper for CNJ’s Datajud API.</p>
+<section id="juscraper.courts.tjes.client.TJESScraper" class="level1">
+<h1>courts.tjes.client.TJESScraper</h1>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>courts.tjes.client.TJESScraper()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Scraper for the Tribunal de Justica do Espirito Santo.</p>
 <section id="methods" class="level2">
 <h2 class="anchored" data-anchor-id="methods">Methods</h2>
 <table class="caption-top table">
@@ -189,47 +191,153 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td><a href="#juscraper.aggregators.datajud.client.DatajudScraper.listar_processos">listar_processos</a></td>
-<td>Lists processes from Datajud via API, with support for multiple filters and pagination.</td>
+<td><a href="#juscraper.courts.tjes.client.TJESScraper.cjpg">cjpg</a></td>
+<td>Search TJES first-instance jurisprudence (download + parse).</td>
+</tr>
+<tr class="even">
+<td><a href="#juscraper.courts.tjes.client.TJESScraper.cjpg_download">cjpg_download</a></td>
+<td>Download raw JSON results from the TJES first-instance search (core <code>pje1g</code>).</td>
+</tr>
+<tr class="odd">
+<td><a href="#juscraper.courts.tjes.client.TJESScraper.cjpg_parse">cjpg_parse</a></td>
+<td>Parse raw TJES first-instance results into a DataFrame.</td>
+</tr>
+<tr class="even">
+<td><a href="#juscraper.courts.tjes.client.TJESScraper.cjsg">cjsg</a></td>
+<td>Search TJES jurisprudence (download + parse).</td>
+</tr>
+<tr class="odd">
+<td><a href="#juscraper.courts.tjes.client.TJESScraper.cjsg_download">cjsg_download</a></td>
+<td>Download raw JSON results from the TJES jurisprudence search.</td>
+</tr>
+<tr class="even">
+<td><a href="#juscraper.courts.tjes.client.TJESScraper.cjsg_parse">cjsg_parse</a></td>
+<td>Parse raw TJES search results into a DataFrame.</td>
+</tr>
+<tr class="odd">
+<td><a href="#juscraper.courts.tjes.client.TJESScraper.cpopg">cpopg</a></td>
+<td>Stub: first-instance case lookup not implemented for TJES.</td>
+</tr>
+<tr class="even">
+<td><a href="#juscraper.courts.tjes.client.TJESScraper.cposg">cposg</a></td>
+<td>Stub: second-instance case lookup not implemented for TJES.</td>
 </tr>
 </tbody>
 </table>
-<section id="juscraper.aggregators.datajud.client.DatajudScraper.listar_processos" class="level3">
-<h3 class="anchored" data-anchor-id="juscraper.aggregators.datajud.client.DatajudScraper.listar_processos">listar_processos</h3>
-<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>aggregators.datajud.client.DatajudScraper.listar_processos(</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    numero_processo<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    tribunal<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    ano_ajuizamento<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    classe<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    assuntos<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    mostrar_movs<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    tamanho_pagina<span class="op">=</span><span class="dv">1000</span>,</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Lists processes from Datajud via API, with support for multiple filters and pagination.</p>
+<section id="juscraper.courts.tjes.client.TJESScraper.cjpg" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.tjes.client.TJESScraper.cjpg">cjpg</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>courts.tjes.client.TJESScraper.cjpg(pesquisa<span class="op">=</span><span class="va">None</span>, paginas<span class="op">=</span><span class="va">None</span>, <span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Search TJES first-instance jurisprudence (download + parse).</p>
+<p>Shortcut for :meth:<code>cjpg_download</code> + :meth:<code>cjpg_parse</code>. Queries the <code>pje1g</code> core. Accepts the same filter parameters as :meth:<code>cjsg</code> (except <code>core</code>).</p>
+<section id="returns" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
+<p>pd.DataFrame</p>
+</section>
+</section>
+<section id="juscraper.courts.tjes.client.TJESScraper.cjpg_download" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.tjes.client.TJESScraper.cjpg_download">cjpg_download</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>courts.tjes.client.TJESScraper.cjpg_download(</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Download raw JSON results from the TJES first-instance search (core <code>pje1g</code>).</p>
+<p>Accepts the same filter parameters as :meth:<code>cjsg_download</code> (except <code>core</code>).</p>
+<section id="returns-1" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
+<p>list Raw JSON responses, one per page.</p>
+</section>
+</section>
+<section id="juscraper.courts.tjes.client.TJESScraper.cjpg_parse" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.tjes.client.TJESScraper.cjpg_parse">cjpg_parse</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>courts.tjes.client.TJESScraper.cjpg_parse(resultados_brutos)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Parse raw TJES first-instance results into a DataFrame.</p>
 <section id="parameters" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>paginas</td>
-<td><a href="`range`">range</a></td>
-<td>Page range (1-based, e.g., range(1, 4) fetches pages 1-3). None fetches all available pages.</td>
-<td><code>None</code></td>
-</tr>
-</tbody>
-</table>
-
-
+<p>resultados_brutos : list Raw JSON responses returned by :meth:<code>cjpg_download</code>.</p>
 </section>
+<section id="returns-2" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-2">Returns</h4>
+<p>pd.DataFrame</p>
+</section>
+</section>
+<section id="juscraper.courts.tjes.client.TJESScraper.cjsg" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.tjes.client.TJESScraper.cjsg">cjsg</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>courts.tjes.client.TJESScraper.cjsg(</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    core<span class="op">=</span>DEFAULT_CORE,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    busca_exata<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    magistrado<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    orgao_julgador<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    classe_judicial<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    jurisdicao<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    assunto<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    ordenacao<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    per_page<span class="op">=</span>DEFAULT_PER_PAGE,</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    data_publicacao_inicio<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    data_publicacao_fim<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Search TJES jurisprudence (download + parse).</p>
+<p>Returns a ready-to-analyze DataFrame. Accepts all the same parameters as :meth:<code>cjsg_download</code>.</p>
+</section>
+<section id="juscraper.courts.tjes.client.TJESScraper.cjsg_download" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.tjes.client.TJESScraper.cjsg_download">cjsg_download</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>courts.tjes.client.TJESScraper.cjsg_download(</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    core<span class="op">=</span>DEFAULT_CORE,</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    busca_exata<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    magistrado<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    orgao_julgador<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    classe_judicial<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    jurisdicao<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    assunto<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    ordenacao<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    per_page<span class="op">=</span>DEFAULT_PER_PAGE,</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    data_publicacao_inicio<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    data_publicacao_fim<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Download raw JSON results from the TJES jurisprudence search.</p>
+<section id="parameters-1" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
+<p>pesquisa : str, optional Search term. <code>query</code> and <code>termo</code> are accepted as deprecated aliases. paginas : int, list, range, or None Pages to download (1-based). <code>int</code> n means pages 1..n. <code>None</code> downloads all available pages. core : str Solr core to query: <code>pje2g</code> (default), <code>pje2g_mono</code>, <code>legado</code>, <code>turma_recursal_legado</code>. For first instance (<code>pje1g</code>), use :meth:<code>cjpg</code> instead. busca_exata : bool If True, perform exact-match search. magistrado : str Filter by judge name (exact, uppercase). orgao_julgador : str Filter by court division. classe_judicial : str Filter by judicial class. jurisdicao : str Filter by jurisdiction. assunto : str Filter by subject. ordenacao : str Sort expression (e.g.&nbsp;<code>dt_juntada desc</code>). per_page : int Results per page (default 20). data_julgamento_inicio / data_julgamento_fim : str Date range filter (YYYY-MM-DD). TJES uses <code>dataIni</code>/<code>dataFim</code> which filters on <code>dt_juntada</code>.</p>
+</section>
+<section id="returns-3" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-3">Returns</h4>
+<p>list Raw JSON responses, one per page.</p>
+</section>
+</section>
+<section id="juscraper.courts.tjes.client.TJESScraper.cjsg_parse" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.tjes.client.TJESScraper.cjsg_parse">cjsg_parse</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>courts.tjes.client.TJESScraper.cjsg_parse(resultados_brutos)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Parse raw TJES search results into a DataFrame.</p>
+<section id="parameters-2" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-2">Parameters</h4>
+<p>resultados_brutos : list Raw JSON responses returned by :meth:<code>cjsg_download</code>.</p>
+</section>
+<section id="returns-4" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-4">Returns</h4>
+<p>pd.DataFrame</p>
+</section>
+</section>
+<section id="juscraper.courts.tjes.client.TJESScraper.cpopg" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.tjes.client.TJESScraper.cpopg">cpopg</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>courts.tjes.client.TJESScraper.cpopg(id_cnj)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Stub: first-instance case lookup not implemented for TJES.</p>
+</section>
+<section id="juscraper.courts.tjes.client.TJESScraper.cposg" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.tjes.client.TJESScraper.cposg">cposg</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>courts.tjes.client.TJESScraper.cposg(id_cnj)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Stub: second-instance case lookup not implemented for TJES.</p>
+
+
 </section>
 </section>
 </section>
@@ -663,7 +771,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.com/jtrecenti/juscraper/edit/main/docs/reference/aggregators.datajud.client.DatajudScraper.qmd" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.com/jtrecenti/juscraper/edit/main/docs/reference/courts.tjes.client.TJESScraper.qmd" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></div>
     <div class="nav-footer-right">
       &nbsp;
     </div>

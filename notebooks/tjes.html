@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>tjdft – juscraper</title>
+<title>TJES - Tribunal de Justica do Espirito Santo – juscraper</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -64,8 +64,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../notebooks/tjpr.html" rel="next">
-<link href="../reference/index.html" rel="prev">
+<link href="../notebooks/tjsp.html" rel="next">
+<link href="../notebooks/tjrs.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js"></script>
 <script src="../site_libs/quarto-html/popper.min.js"></script>
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
@@ -153,7 +153,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Exemplos</li><li class="breadcrumb-item"><a href="../notebooks/tjdft.html">Tribunais</a></li><li class="breadcrumb-item"><a href="../notebooks/tjdft.html">TJDFT</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Exemplos</li><li class="breadcrumb-item"><a href="../notebooks/tjdft.html">Tribunais</a></li><li class="breadcrumb-item"><a href="../notebooks/tjes.html">TJES</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -197,7 +197,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth2 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../notebooks/tjdft.html" class="sidebar-item-text sidebar-link active">
+  <a href="../notebooks/tjdft.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">TJDFT</span></a>
   </div>
 </li>
@@ -215,7 +215,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../notebooks/tjes.html" class="sidebar-item-text sidebar-link">
+  <a href="../notebooks/tjes.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">TJES</span></a>
   </div>
 </li>
@@ -257,29 +257,95 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Nesta página</h2>
+   
+  <ul>
+  <li><a href="#basic-search" id="toc-basic-search" class="nav-link active" data-scroll-target="#basic-search">Basic search</a></li>
+  <li><a href="#using-filters" id="toc-using-filters" class="nav-link" data-scroll-target="#using-filters">Using filters</a></li>
+  <li><a href="#querying-different-cores" id="toc-querying-different-cores" class="nav-link" data-scroll-target="#querying-different-cores">Querying different cores</a></li>
+  <li><a href="#first-instance-cjpg" id="toc-first-instance-cjpg" class="nav-link" data-scroll-target="#first-instance-cjpg">First instance (cjpg)</a></li>
+  <li><a href="#download-and-parse-separately" id="toc-download-and-parse-separately" class="nav-link" data-scroll-target="#download-and-parse-separately">Download and parse separately</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.dev/jtrecenti/juscraper/blob/main/docs/notebooks/tjes.ipynb" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Exemplos</li><li class="breadcrumb-item"><a href="../notebooks/tjdft.html">Tribunais</a></li><li class="breadcrumb-item"><a href="../notebooks/tjes.html">TJES</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">TJES - Tribunal de Justica do Espirito Santo</h1>
+</div>
 
 
 
-<div id="cell-0" class="cell" data-execution_count="1">
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Example notebook for the TJES jurisprudence scraper (<code>cjsg</code>).</p>
+<p>The TJES scraper queries the public API at <code>sistemas.tjes.jus.br/consulta-jurisprudencia/</code> and supports five Solr cores:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Core</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>pje1g</code></td>
+<td>First instance (PJe)</td>
+</tr>
+<tr class="even">
+<td><code>pje2g</code></td>
+<td>Second instance (PJe) — <strong>default</strong></td>
+</tr>
+<tr class="odd">
+<td><code>pje2g_mono</code></td>
+<td>Second instance monocratic decisions (PJe)</td>
+</tr>
+<tr class="even">
+<td><code>legado</code></td>
+<td>Legacy second instance</td>
+</tr>
+<tr class="odd">
+<td><code>turma_recursal_legado</code></td>
+<td>Legacy appellate panels (Projudi)</td>
+</tr>
+</tbody>
+</table>
+<section id="basic-search" class="level2">
+<h2 class="anchored" data-anchor-id="basic-search">Basic search</h2>
+<div id="16ed8b94" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># cria um objeto tjdft</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>tjdft <span class="op">=</span> jus.scraper(<span class="st">'tjdft'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a TJES scraper</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>tjes <span class="op">=</span> jus.scraper(<span class="st">'tjes'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="cell-1" class="cell" data-execution_count="2">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># baixa dados da jurisprudência</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>dados_cjsg <span class="op">=</span> tjdft.cjsg(<span class="st">'direito penal'</span>, paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">0</span>,<span class="dv">3</span>))</span>
+<div id="5c872afc" class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Search jurisprudence (default core: pje2g)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>dados_cjsg <span class="op">=</span> tjes.cjsg(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">3</span>))</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_cjsg.shape)</span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>dados_cjsg.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Baixando paginas TJES: 100%|██████████| 2/2 [00:01&lt;00:00,  1.32it/s]</code></pre>
+</div>
 <div class="cell-output cell-output-stdout">
-<pre><code>(30, 23)</code></pre>
+<pre><code>(40, 23)</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code></code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="2">
 <div>
@@ -289,101 +355,101 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <thead>
 <tr class="header">
 <th data-quarto-table-cell-role="th"></th>
-<th data-quarto-table-cell-role="th">sequencial</th>
-<th data-quarto-table-cell-role="th">base</th>
-<th data-quarto-table-cell-role="th">subbase</th>
-<th data-quarto-table-cell-role="th">uuid</th>
-<th data-quarto-table-cell-role="th">identificador</th>
-<th data-quarto-table-cell-role="th">dataJulgamento</th>
-<th data-quarto-table-cell-role="th">dataPublicacao</th>
-<th data-quarto-table-cell-role="th">decisao</th>
+<th data-quarto-table-cell-role="th">nr_processo</th>
 <th data-quarto-table-cell-role="th">ementa</th>
-<th data-quarto-table-cell-role="th">localDePublicacao</th>
+<th data-quarto-table-cell-role="th">magistrado</th>
+<th data-quarto-table-cell-role="th">orgao_julgador</th>
+<th data-quarto-table-cell-role="th">classe_judicial</th>
+<th data-quarto-table-cell-role="th">classe_judicial_sigla</th>
+<th data-quarto-table-cell-role="th">assunto_principal</th>
+<th data-quarto-table-cell-role="th">jurisdicao</th>
+<th data-quarto-table-cell-role="th">competencia</th>
+<th data-quarto-table-cell-role="th">dt_juntada</th>
 <th data-quarto-table-cell-role="th">...</th>
-<th data-quarto-table-cell-role="th">uf</th>
-<th data-quarto-table-cell-role="th">segredoJustica</th>
-<th data-quarto-table-cell-role="th">turmaRecursal</th>
-<th data-quarto-table-cell-role="th">descricaoOrgaoJulgador</th>
-<th data-quarto-table-cell-role="th">versao</th>
-<th data-quarto-table-cell-role="th">codigoClasseCnj</th>
-<th data-quarto-table-cell-role="th">codigoSistjOrgaoJulgador</th>
-<th data-quarto-table-cell-role="th">inteiroTeorHtml</th>
-<th data-quarto-table-cell-role="th">marcadores</th>
-<th data-quarto-table-cell-role="th">possuiInteiroTeor</th>
+<th data-quarto-table-cell-role="th">localizacao</th>
+<th data-quarto-table-cell-role="th">cargo_julgador</th>
+<th data-quarto-table-cell-role="th">cd_assunto_principal</th>
+<th data-quarto-table-cell-role="th">cd_classe_judicial</th>
+<th data-quarto-table-cell-role="th">id_assunto_principal</th>
+<th data-quarto-table-cell-role="th">id_classe_judicial</th>
+<th data-quarto-table-cell-role="th">id_jurisdicao</th>
+<th data-quarto-table-cell-role="th">id_localizacao</th>
+<th data-quarto-table-cell-role="th">id_cargo_julgador</th>
+<th data-quarto-table-cell-role="th">id_bin</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">0</td>
-<td>1</td>
-<td>acordaos</td>
-<td>acordaos</td>
-<td>23362ccf-ffc5-4caf-b878-de1f671250f5</td>
-<td>1998487</td>
-<td>2025-05-15T03:00:00.000Z</td>
-<td>2025-05-24T23:26:53.000Z</td>
-<td>NEGAR PROVIMENTO AO RECURSO. UNÂNIME</td>
-<td>EMENTA: DIREITO PENAL. EMBARGOS DE DECLARAÇÃO....</td>
-<td>PJe</td>
+<td>5000333-79.2017.8.08.0030</td>
+<td>\nVoto servindo como ementa.\n</td>
+<td>GRACIENE PEREIRA PINTO</td>
+<td>Turma Recursal - 4ª Turma</td>
+<td>Recurso Inominado Cível</td>
+<td>RecInoCiv</td>
+<td>Indenização por Dano Moral</td>
+<td>Turma Recursal</td>
+<td>Turmas Recursais</td>
+<td>2020-03-12</td>
 <td>...</td>
-<td>DF</td>
-<td>False</td>
-<td>False</td>
-<td>1ª TURMA CRIMINAL</td>
-<td>01</td>
-<td>420</td>
-<td>51</td>
-<td>Inteiro Teor indisponível.</td>
-<td>{'ementa': ['EMENTA: &lt;mark&gt;DIREITO&lt;/mark&gt; &lt;mar...</td>
-<td>True</td>
+<td>4ª TURMA RECURSAL GABINETE 3</td>
+<td>Juiz Membro</td>
+<td>7779</td>
+<td>460</td>
+<td>622</td>
+<td>321</td>
+<td>2</td>
+<td>66.0</td>
+<td>57</td>
+<td>393003</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">1</td>
-<td>2</td>
-<td>acordaos</td>
-<td>acordaos</td>
-<td>298272b3-1dd9-41c0-8f93-f29edd0d8cef</td>
-<td>1999112</td>
-<td>2025-05-15T03:00:00.000Z</td>
-<td>2025-05-24T23:22:29.000Z</td>
-<td>NEGAR PROVIMENTO. UNÂNIME.</td>
-<td>Ementa: direito penal. Apelação criminal. Injú...</td>
-<td>PJe</td>
+<td>5002610-68.2017.8.08.0030</td>
+<td>\nVoto servindo como ementa.\n</td>
+<td>MARCELO MATTAR COUTINHO</td>
+<td>Turma Recursal - 4ª Turma</td>
+<td>Recurso Inominado Cível</td>
+<td>RecInoCiv</td>
+<td>Fornecimento de Energia Elétrica</td>
+<td>Turma Recursal</td>
+<td>Turmas Recursais</td>
+<td>2020-06-16</td>
 <td>...</td>
-<td>DF</td>
-<td>False</td>
-<td>False</td>
-<td>2ª TURMA CRIMINAL</td>
-<td>01</td>
-<td>417</td>
-<td>52</td>
-<td>Inteiro Teor indisponível.</td>
-<td>{'ementa': ['Ementa: &lt;mark&gt;direito&lt;/mark&gt; &lt;mar...</td>
-<td>True</td>
+<td>4ª TURMA RECURSAL GABINETE 1</td>
+<td>Juiz Membro</td>
+<td>7760</td>
+<td>460</td>
+<td>602</td>
+<td>321</td>
+<td>2</td>
+<td>63.0</td>
+<td>69</td>
+<td>474881</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">2</td>
-<td>3</td>
-<td>acordaos</td>
-<td>acordaos</td>
-<td>ee320b08-c91f-489f-8dba-1dc80b63fff7</td>
-<td>1998988</td>
-<td>2025-05-15T03:00:00.000Z</td>
-<td>2025-05-24T20:52:42.000Z</td>
-<td>NEGAR PROVIMENTO. UNÂNIME.</td>
-<td>Ementa: DIREITO PENAL. APELAÇÃO CRIMINAL. RECE...</td>
-<td>PJe</td>
+<td>5011718-32.2023.8.08.0024</td>
+<td>\n \n\n\nEMENTA: RECURSO INOMINADO. AÇÃO DE IN...</td>
+<td>PAULO ABIGUENEM ABIB</td>
+<td>Turma Recursal - 1ª Turma</td>
+<td>RECURSO INOMINADO CÍVEL</td>
+<td>RecInoCiv</td>
+<td>Indenização por Dano Moral</td>
+<td>Turma Recursal</td>
+<td>Turmas Recursais - Cível</td>
+<td>2025-08-29</td>
 <td>...</td>
-<td>DF</td>
-<td>False</td>
-<td>False</td>
-<td>2ª TURMA CRIMINAL</td>
-<td>01</td>
-<td>417</td>
-<td>52</td>
-<td>Inteiro Teor indisponível.</td>
-<td>{'ementa': ['Ementa: &lt;mark&gt;DIREITO&lt;/mark&gt; &lt;mar...</td>
-<td>True</td>
+<td>1ª TURMA RECURSAL GABINETE 2</td>
+<td>Juiz Membro</td>
+<td>10433</td>
+<td>460</td>
+<td>588</td>
+<td>321</td>
+<td>2</td>
+<td>52.0</td>
+<td>67</td>
+<td>14355858</td>
 </tr>
 </tbody>
 </table>
@@ -392,24 +458,402 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<div id="cell-2" class="cell" data-execution_count="3">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_cjsg[<span class="st">'ementa'</span>].iloc[<span class="dv">0</span>][:<span class="dv">300</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="e17160a0" class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Available columns</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>dados_cjsg.columns.tolist()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="3">
+<pre><code>['nr_processo',
+ 'ementa',
+ 'magistrado',
+ 'orgao_julgador',
+ 'classe_judicial',
+ 'classe_judicial_sigla',
+ 'assunto_principal',
+ 'jurisdicao',
+ 'competencia',
+ 'dt_juntada',
+ 'id',
+ 'acordao',
+ 'lista_assunto',
+ 'localizacao',
+ 'cargo_julgador',
+ 'cd_assunto_principal',
+ 'cd_classe_judicial',
+ 'id_assunto_principal',
+ 'id_classe_judicial',
+ 'id_jurisdicao',
+ 'id_localizacao',
+ 'id_cargo_julgador',
+ 'id_bin']</code></pre>
+</div>
+</div>
+<div id="9668cfd9" class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Preview ementa</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_cjsg[<span class="st">'ementa'</span>].iloc[<span class="dv">0</span>][:<span class="dv">300</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>EMENTA: DIREITO PENAL. EMBARGOS DE DECLARAÇÃO. PRETENSÃO DE REDISCUSSÃO DA MATÉRIA. INOVAÇÃO RECURSAL. IMPOSSIBILIDADE. VÍCIO. AUSENTE. MEIO PROCESSUAL INADEQUADO. PREQUESTIONAMENTO. EMBARGOS REJEITADOS.
-
-I. CASO EM EXAME
-
-1. Embargos de declaração opostos contra acórdão que negou provimento ao recu</code></pre>
+<pre><code>
+Voto servindo como ementa.
+</code></pre>
 </div>
 </div>
-<div id="cell-3" class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>dados_cjsg[<span class="st">'processo'</span>].iloc[<span class="dv">0</span>]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="4">
-<pre><code>'0722443-83.2024.8.07.0003'</code></pre>
+</section>
+<section id="using-filters" class="level2">
+<h2 class="anchored" data-anchor-id="using-filters">Using filters</h2>
+<p>The TJES scraper supports several filters: <code>magistrado</code>, <code>orgao_julgador</code>, <code>classe_judicial</code>, <code>jurisdicao</code>, <code>assunto</code>, date range (<code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code>), <code>busca_exata</code>, and <code>ordenacao</code>.</p>
+<div id="34a75d9d" class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter by date range and magistrado</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>dados_filtrados <span class="op">=</span> tjes.cjsg(</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'direito'</span>,</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">'2024-01-01'</span>,</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">'2024-06-30'</span>,</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    magistrado<span class="op">=</span><span class="st">'HELIMAR PINTO'</span>,</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_filtrados.shape)</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>dados_filtrados[[<span class="st">'nr_processo'</span>, <span class="st">'magistrado'</span>, <span class="st">'classe_judicial'</span>, <span class="st">'dt_juntada'</span>]].head(<span class="dv">5</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Baixando paginas TJES: 100%|██████████| 1/1 [00:00&lt;00:00, 10.22it/s]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>(20, 23)</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code></code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="5">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">nr_processo</th>
+<th data-quarto-table-cell-role="th">magistrado</th>
+<th data-quarto-table-cell-role="th">classe_judicial</th>
+<th data-quarto-table-cell-role="th">dt_juntada</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>5005361-74.2024.8.08.0000</td>
+<td>HELIMAR PINTO</td>
+<td>AGRAVO DE EXECUÇÃO PENAL</td>
+<td>2024-06-25</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>0001362-38.2023.8.08.0000</td>
+<td>HELIMAR PINTO</td>
+<td>MANDADO DE SEGURANÇA CÍVEL</td>
+<td>2024-02-29</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>5003125-52.2024.8.08.0000</td>
+<td>HELIMAR PINTO</td>
+<td>HABEAS CORPUS CRIMINAL</td>
+<td>2024-04-18</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>0026004-72.2016.8.08.0048</td>
+<td>HELIMAR PINTO</td>
+<td>APELAÇÃO CRIMINAL</td>
+<td>2024-04-25</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>5005989-63.2024.8.08.0000</td>
+<td>HELIMAR PINTO</td>
+<td>HABEAS CORPUS CRIMINAL</td>
+<td>2024-06-25</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="querying-different-cores" class="level2">
+<h2 class="anchored" data-anchor-id="querying-different-cores">Querying different cores</h2>
+<p>By default, the scraper queries <code>pje2g</code> (second instance). You can switch cores with the <code>core</code> parameter.</p>
+<div id="66f3ceb5" class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Search monocratic decisions (2nd instance)</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>dados_mono <span class="op">=</span> tjes.cjsg(<span class="st">'dano moral'</span>, core<span class="op">=</span><span class="st">'pje2g_mono'</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Monocratic results: </span><span class="sc">{</span><span class="bu">len</span>(dados_mono)<span class="sc">}</span><span class="ss"> rows"</span>)</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>dados_mono[[<span class="st">'nr_processo'</span>, <span class="st">'magistrado'</span>, <span class="st">'classe_judicial'</span>]].head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Baixando paginas TJES: 100%|██████████| 1/1 [00:00&lt;00:00, 10.46it/s]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Monocratic results: 20 rows</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code></code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="6">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">nr_processo</th>
+<th data-quarto-table-cell-role="th">magistrado</th>
+<th data-quarto-table-cell-role="th">classe_judicial</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>5001274-40.2022.8.08.0002</td>
+<td>GRECIO NOGUEIRA GREGIO</td>
+<td>Recurso Inominado Cível</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>5023551-77.2024.8.08.0035</td>
+<td>DOUGLAS DEMONER FIGUEIREDO</td>
+<td>RECURSO INOMINADO CÍVEL</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>5001473-59.2023.8.08.0024</td>
+<td>SALOMAO AKHNATON ZOROASTRO SPENCER ELESBON</td>
+<td>Recurso Inominado Cível</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="first-instance-cjpg" class="level2">
+<h2 class="anchored" data-anchor-id="first-instance-cjpg">First instance (cjpg)</h2>
+<p>Use <code>cjpg()</code> to query first-instance decisions (core <code>pje1g</code>). It accepts the same filters as <code>cjsg</code> (except <code>core</code>).</p>
+<p>Note: <code>cjsg()</code> does <strong>not</strong> accept <code>core="pje1g"</code> — use <code>cjpg()</code> instead.</p>
+<div id="116996c0" class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Search first-instance decisions</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>dados_1g <span class="op">=</span> tjes.cjpg(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"First instance results: </span><span class="sc">{</span><span class="bu">len</span>(dados_1g)<span class="sc">}</span><span class="ss"> rows"</span>)</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>dados_1g[[<span class="st">'nr_processo'</span>, <span class="st">'magistrado'</span>, <span class="st">'classe_judicial'</span>, <span class="st">'dt_juntada'</span>]].head(<span class="dv">5</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Baixando paginas TJES: 100%|██████████| 1/1 [00:00&lt;00:00,  5.04it/s]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>First instance results: 20 rows</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code></code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="7">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">nr_processo</th>
+<th data-quarto-table-cell-role="th">magistrado</th>
+<th data-quarto-table-cell-role="th">classe_judicial</th>
+<th data-quarto-table-cell-role="th">dt_juntada</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>5000704-46.2022.8.08.0037</td>
+<td>MARCELO MATTAR COUTINHO</td>
+<td>Procedimento do Juizado Especial Cível</td>
+<td>2023-09-28</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>5000057-89.2018.8.08.0005</td>
+<td>EVANDRO COELHO DE LIMA</td>
+<td>Procedimento do Juizado Especial Cível</td>
+<td>2019-12-17</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>5004066-91.2024.8.08.0035</td>
+<td>INES VELLO CORREA</td>
+<td>Procedimento do Juizado Especial Cível</td>
+<td>2024-11-08</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>5000045-13.2017.8.08.0037</td>
+<td>MARCELO MATTAR COUTINHO</td>
+<td>Procedimento do Juizado Especial Cível</td>
+<td>2020-01-04</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>5005643-41.2022.8.08.0014</td>
+<td>SALOMAO AKHNATON ZOROASTRO SPENCER ELESBON</td>
+<td>Procedimento do Juizado Especial Cível</td>
+<td>2022-11-01</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="download-and-parse-separately" class="level2">
+<h2 class="anchored" data-anchor-id="download-and-parse-separately">Download and parse separately</h2>
+<p>For more control, you can use <code>cjsg_download</code> and <code>cjsg_parse</code> separately. This is useful when you want to cache the raw responses or inspect them before parsing.</p>
+<div id="f3cfc1d9" class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Download raw JSON responses</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>brutos <span class="op">=</span> tjes.cjsg_download(<span class="st">'direito'</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Inspect raw response structure</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Pages downloaded: </span><span class="sc">{</span><span class="bu">len</span>(brutos)<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Keys in response: </span><span class="sc">{</span><span class="bu">list</span>(brutos[<span class="dv">0</span>].keys())<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Total results available: </span><span class="sc">{</span>brutos[<span class="dv">0</span>][<span class="st">'total'</span>]<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Docs in this page: </span><span class="sc">{</span><span class="bu">len</span>(brutos[<span class="dv">0</span>][<span class="st">'docs'</span>])<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Baixando paginas TJES: 100%|██████████| 1/1 [00:00&lt;00:00,  6.54it/s]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Pages downloaded: 1
+Keys in response: ['core_used', 'docs', 'facets', 'page', 'per_page', 'total', 'total_pages']
+Total results available: 167559
+Docs in this page: 20</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code></code></pre>
+</div>
+</div>
+<div id="bc18f7ad" class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Parse into DataFrame</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjes.cjsg_parse(brutos)</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>df.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="9">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">nr_processo</th>
+<th data-quarto-table-cell-role="th">ementa</th>
+<th data-quarto-table-cell-role="th">magistrado</th>
+<th data-quarto-table-cell-role="th">orgao_julgador</th>
+<th data-quarto-table-cell-role="th">classe_judicial</th>
+<th data-quarto-table-cell-role="th">classe_judicial_sigla</th>
+<th data-quarto-table-cell-role="th">assunto_principal</th>
+<th data-quarto-table-cell-role="th">jurisdicao</th>
+<th data-quarto-table-cell-role="th">competencia</th>
+<th data-quarto-table-cell-role="th">dt_juntada</th>
+<th data-quarto-table-cell-role="th">...</th>
+<th data-quarto-table-cell-role="th">localizacao</th>
+<th data-quarto-table-cell-role="th">cargo_julgador</th>
+<th data-quarto-table-cell-role="th">cd_assunto_principal</th>
+<th data-quarto-table-cell-role="th">cd_classe_judicial</th>
+<th data-quarto-table-cell-role="th">id_assunto_principal</th>
+<th data-quarto-table-cell-role="th">id_classe_judicial</th>
+<th data-quarto-table-cell-role="th">id_jurisdicao</th>
+<th data-quarto-table-cell-role="th">id_localizacao</th>
+<th data-quarto-table-cell-role="th">id_cargo_julgador</th>
+<th data-quarto-table-cell-role="th">id_bin</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>5002933-85.2025.8.08.0000</td>
+<td>\nEmenta: DIREITO DAS SUCESSÕES. AGRAVO DE INS...</td>
+<td>ARTHUR JOSE NEIVA DE ALMEIDA</td>
+<td>4ª Câmara Cível</td>
+<td>AGRAVO DE INSTRUMENTO</td>
+<td>AI</td>
+<td>Inventário e Partilha</td>
+<td>Tribunal de Justiça</td>
+<td>Cível Isolada</td>
+<td>2025-06-13</td>
+<td>...</td>
+<td>016 - Gabinete Des. ARTHUR JOSÉ NEIVA DE ALMEIDA</td>
+<td>Desembargador(a)</td>
+<td>7687</td>
+<td>202</td>
+<td>1636</td>
+<td>238</td>
+<td>1</td>
+<td>36</td>
+<td>117</td>
+<td>13176473</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>5007013-97.2022.8.08.0000</td>
+<td>\nDIREITO PROCESSUAL CIVIL. AGRAVO DE INSTRUME...</td>
+<td>JOSE PAULO CALMON NOGUEIRA DA GAMA</td>
+<td>2ª Câmara Cível</td>
+<td>AGRAVO DE INSTRUMENTO</td>
+<td>AI</td>
+<td>Promessa de Compra e Venda</td>
+<td>Tribunal de Justiça</td>
+<td>Cível Isolada</td>
+<td>2023-08-24</td>
+<td>...</td>
+<td>005 - Gabinete Des. JOSÉ PAULO CALMON NOGUEIRA...</td>
+<td>Desembargador(a)</td>
+<td>10496</td>
+<td>202</td>
+<td>2087</td>
+<td>238</td>
+<td>1</td>
+<td>21</td>
+<td>149</td>
+<td>5253374</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>5002710-35.2025.8.08.0000</td>
+<td>\nEmenta: DIREITO CIVIL E PROCESSUAL CIVIL. AG...</td>
+<td>ARTHUR JOSE NEIVA DE ALMEIDA</td>
+<td>4ª Câmara Cível</td>
+<td>AGRAVO DE INSTRUMENTO</td>
+<td>AI</td>
+<td>Inventário e Partilha</td>
+<td>Tribunal de Justiça</td>
+<td>Cível Isolada</td>
+<td>2025-10-03</td>
+<td>...</td>
+<td>Gabinete Des. ARTHUR JOSÉ NEIVA DE ALMEIDA</td>
+<td>Desembargador(a)</td>
+<td>7687</td>
+<td>202</td>
+<td>1636</td>
+<td>238</td>
+<td>1</td>
+<td>36</td>
+<td>117</td>
+<td>14653808</td>
+</tr>
+</tbody>
+</table>
+
+<p>3 rows × 23 columns</p>
+</div>
 </div>
 </div>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
@@ -834,13 +1278,13 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="../reference/index.html" class="pagination-link" aria-label="Referência da API">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Referência da API</span>
+      <a href="../notebooks/tjrs.html" class="pagination-link" aria-label="TJRS">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">TJRS</span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../notebooks/tjpr.html" class="pagination-link" aria-label="TJPR">
-        <span class="nav-page-text">TJPR</span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../notebooks/tjsp.html" class="pagination-link" aria-label="TJSP">
+        <span class="nav-page-text">TJSP</span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
@@ -852,7 +1296,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.dev/jtrecenti/juscraper/blob/main/docs/notebooks/tjdft.ipynb" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.dev/jtrecenti/juscraper/blob/main/docs/notebooks/tjes.ipynb" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></div>
     <div class="nav-footer-right">
       &nbsp;
     </div>
