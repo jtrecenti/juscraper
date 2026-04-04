@@ -2,7 +2,6 @@
 Downloads raw results from the TJES jurisprudence search.
 """
 import logging
-import math
 import time
 
 import requests
