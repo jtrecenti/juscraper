@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>tjrs – juscraper</title>
+<title>courts.tjce.client.tjcescraper – juscraper</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -57,15 +57,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </style>
 
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
 <script src="../site_libs/quarto-nav/headroom.min.js"></script>
 <script src="../site_libs/clipboard/clipboard.min.js"></script>
 <script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../notebooks/tjes.html" rel="next">
-<link href="../notebooks/tjpr.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js"></script>
 <script src="../site_libs/quarto-html/popper.min.js"></script>
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
@@ -102,15 +100,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "Procurar"
   }
 }</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
-
-<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
 
 
 <link rel="stylesheet" href="reference/_styles-quartodoc.css">
 </head>
 
-<body class="nav-sidebar floating nav-fixed">
+<body class="nav-fixed">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
@@ -128,7 +123,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link active" href="../index.html" aria-current="page"> 
+    <a class="nav-link" href="../index.html"> 
 <span class="menu-text">Home</span></a>
   </li>  
   <li class="nav-item">
@@ -148,141 +143,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
       </div> <!-- /container-fluid -->
     </nav>
-  <nav class="quarto-secondary-nav">
-    <div class="container-fluid d-flex">
-      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
-        <i class="bi bi-layout-text-sidebar-reverse"></i>
-      </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Exemplos</li><li class="breadcrumb-item"><a href="../notebooks/tjce.html">Tribunais</a></li><li class="breadcrumb-item"><a href="../notebooks/tjrs.html">TJRS</a></li></ol></nav>
-        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
-        </a>
-    </div>
-  </nav>
 </header>
 <!-- content -->
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
-  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
-    <div class="sidebar-menu-container"> 
-    <ul class="list-unstyled mt-1">
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../index.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Home</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../reference/index.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Referência da API</span></a>
-  </div>
-</li>
-        <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
- <span class="menu-text">Exemplos</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Alternar seção">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
-          <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
- <span class="menu-text">Tribunais</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Alternar seção">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth2 show">  
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../notebooks/tjce.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">TJCE</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../notebooks/tjba.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">TJBA</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../notebooks/tjdft.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">TJDFT</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../notebooks/tjpe.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">TJPE</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../notebooks/tjmt.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">TJMT</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../notebooks/tjpr.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">TJPR</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../notebooks/tjrs.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">TJRS</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../notebooks/tjes.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">TJES</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../notebooks/tjsp.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">TJSP</span></a>
-  </div>
-</li>
-      </ul>
-  </li>
-          <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false">
- <span class="menu-text">Agregadores</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Alternar seção">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth2 ">  
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../notebooks/datajud.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Datajud</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../notebooks/jusbr.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Jus.br</span></a>
-  </div>
-</li>
-      </ul>
-  </li>
-      </ul>
-  </li>
-    </ul>
-    </div>
-</nav>
-<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Nesta página</h2>
+   
+  <ul>
+  <li><a href="#juscraper.courts.tjce.client.TJCEScraper" id="toc-juscraper.courts.tjce.client.TJCEScraper" class="nav-link active" data-scroll-target="#juscraper.courts.tjce.client.TJCEScraper">courts.tjce.client.TJCEScraper</a>
+  <ul class="collapse">
+  <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
+  <ul class="collapse">
+  <li><a href="#juscraper.courts.tjce.client.TJCEScraper.cjsg" id="toc-juscraper.courts.tjce.client.TJCEScraper.cjsg" class="nav-link" data-scroll-target="#juscraper.courts.tjce.client.TJCEScraper.cjsg">cjsg</a></li>
+  <li><a href="#juscraper.courts.tjce.client.TJCEScraper.cjsg_download" id="toc-juscraper.courts.tjce.client.TJCEScraper.cjsg_download" class="nav-link" data-scroll-target="#juscraper.courts.tjce.client.TJCEScraper.cjsg_download">cjsg_download</a></li>
+  <li><a href="#juscraper.courts.tjce.client.TJCEScraper.cjsg_parse" id="toc-juscraper.courts.tjce.client.TJCEScraper.cjsg_parse" class="nav-link" data-scroll-target="#juscraper.courts.tjce.client.TJCEScraper.cjsg_parse">cjsg_parse</a></li>
+  </ul></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.com/jtrecenti/juscraper/edit/main/docs/reference/courts.tjce.client.TJCEScraper.qmd" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -290,171 +171,117 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 
-<div id="cell-0" class="cell" data-execution_count="1">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># cria um objeto tjrs</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>tjrs <span class="op">=</span> jus.scraper(<span class="st">'tjrs'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div id="cell-1" class="cell" data-execution_count="2">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># baixa dados da jurisprudência</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>dados_cjsg <span class="op">=</span> tjrs.cjsg(<span class="st">'golpe do pix'</span>, paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">0</span>,<span class="dv">3</span>))</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_cjsg.shape)</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>dados_cjsg.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Baixando páginas TJRS: 100%|██████████| 3/3 [00:05&lt;00:00,  1.90s/it]</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>(30, 33)</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code></code></pre>
-</div>
-<div class="cell-output cell-output-display" data-execution_count="2">
-<div>
-
-
-<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<section id="juscraper.courts.tjce.client.TJCEScraper" class="level1">
+<h1>courts.tjce.client.TJCEScraper</h1>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>courts.tjce.client.TJCEScraper(</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    verbose<span class="op">=</span><span class="dv">0</span>,</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    download_path<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    sleep_time<span class="op">=</span><span class="fl">1.0</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Scraper for the Tribunal de Justica do Ceara (TJCE).</p>
+<p>The TJCE uses the eSAJ platform (same as TJSP). Currently supports jurisprudence search (CJSG).</p>
+<section id="methods" class="level2">
+<h2 class="anchored" data-anchor-id="methods">Methods</h2>
+<table class="caption-top table">
 <thead>
 <tr class="header">
-<th data-quarto-table-cell-role="th"></th>
-<th data-quarto-table-cell-role="th">processo</th>
-<th data-quarto-table-cell-role="th">relator</th>
-<th data-quarto-table-cell-role="th">orgao_julgador</th>
-<th data-quarto-table-cell-role="th">data_julgamento</th>
-<th data-quarto-table-cell-role="th">data_publicacao</th>
-<th data-quarto-table-cell-role="th">classe_cnj</th>
-<th data-quarto-table-cell-role="th">assunto_cnj</th>
-<th data-quarto-table-cell-role="th">tribunal</th>
-<th data-quarto-table-cell-role="th">tipo_processo</th>
-<th data-quarto-table-cell-role="th">url</th>
-<th data-quarto-table-cell-role="th">...</th>
-<th data-quarto-table-cell-role="th">cod_org_julg</th>
-<th data-quarto-table-cell-role="th">cod_redator</th>
-<th data-quarto-table-cell-role="th">cod_tipo_documento</th>
-<th data-quarto-table-cell-role="th">cod_tribunal</th>
-<th data-quarto-table-cell-role="th">cod_assunto_cnj</th>
-<th data-quarto-table-cell-role="th">cod_relator</th>
-<th data-quarto-table-cell-role="th">cod_recurso</th>
-<th data-quarto-table-cell-role="th">tipo_documento</th>
-<th data-quarto-table-cell-role="th">dthr_criacao</th>
-<th data-quarto-table-cell-role="th">_version_</th>
+<th>Name</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td data-quarto-table-cell-role="th">0</td>
-<td>52627181720248217000</td>
-<td>Deborah Coleto Assumpção de Moraes</td>
-<td>Décima Sexta Câmara Cível</td>
-<td>2025-05-08</td>
-<td>2025-05-08</td>
-<td>Agravo de Instrumento</td>
-<td>Gestão de Negócios</td>
-<td>Tribunal de Justiça do RS</td>
-<td>Agravo de Instrumento</td>
-<td>https://www.tjrs.jus.br/buscas/jurisprudencia/...</td>
-<td>...</td>
-<td>16</td>
-<td>652</td>
-<td>1</td>
-<td>3</td>
-<td>7713.0</td>
-<td>652</td>
-<td>296</td>
-<td>Acordao</td>
-<td>2025-05-12 08:31:24.0</td>
-<td>1831916254777049088</td>
+<td><a href="#juscraper.courts.tjce.client.TJCEScraper.cjsg">cjsg</a></td>
+<td>Search TJCE jurisprudence (2nd degree).</td>
 </tr>
 <tr class="even">
-<td data-quarto-table-cell-role="th">1</td>
-<td>50134755820238210005</td>
-<td>Carmem Maria Azambuja Farias</td>
-<td>Décima Quinta Câmara Cível</td>
-<td>2025-05-07</td>
-<td>2025-05-14</td>
-<td>Apelação</td>
-<td>Bancários</td>
-<td>Tribunal de Justiça do RS</td>
-<td>Apelação Cível</td>
-<td>https://www.tjrs.jus.br/buscas/jurisprudencia/...</td>
-<td>...</td>
-<td>15</td>
-<td>697</td>
-<td>1</td>
-<td>3</td>
-<td>7752.0</td>
-<td>697</td>
-<td>224</td>
-<td>Acordao</td>
-<td>Tue May 20 08:30:59 GMT-03:00 2025</td>
-<td>1832640764786507776</td>
+<td><a href="#juscraper.courts.tjce.client.TJCEScraper.cjsg_download">cjsg_download</a></td>
+<td>Download raw CJSG HTML result pages.</td>
 </tr>
 <tr class="odd">
-<td data-quarto-table-cell-role="th">2</td>
-<td>50018309020248210008</td>
-<td>Clovis Moacyr Mattana Ramos</td>
-<td>Décima Quinta Câmara Cível</td>
-<td>2025-05-07</td>
-<td>2025-05-15</td>
-<td>Apelação</td>
-<td>None</td>
-<td>Tribunal de Justiça do RS</td>
-<td>Apelação Cível</td>
-<td>https://www.tjrs.jus.br/buscas/jurisprudencia/...</td>
-<td>...</td>
-<td>15</td>
-<td>439</td>
-<td>1</td>
-<td>3</td>
-<td>NaN</td>
-<td>439</td>
-<td>224</td>
-<td>Acordao</td>
-<td>Tue May 20 08:32:06 GMT-03:00 2025</td>
-<td>1832640861230333952</td>
+<td><a href="#juscraper.courts.tjce.client.TJCEScraper.cjsg_parse">cjsg_parse</a></td>
+<td>Parse downloaded CJSG HTML files.</td>
 </tr>
 </tbody>
 </table>
+<section id="juscraper.courts.tjce.client.TJCEScraper.cjsg" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.tjce.client.TJCEScraper.cjsg">cjsg</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>courts.tjce.client.TJCEScraper.cjsg(</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    pesquisa,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    ementa<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    numero_recurso<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    classe<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    assunto<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    comarca<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    orgao_julgador<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    data_publicacao_inicio<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    data_publicacao_fim<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    origem<span class="op">=</span><span class="st">'T'</span>,</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    tipo_decisao<span class="op">=</span><span class="st">'acordao'</span>,</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Search TJCE jurisprudence (2nd degree).</p>
+<section id="parameters" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
+<p>pesquisa : str Free-text search term. paginas : int, list, range, or None Pages to download (1-based). None downloads all. ementa : str, optional Filter by ementa text. numero_recurso : str, optional Appeal number filter. classe : str, optional Procedural class (tree selection value). assunto : str, optional Subject (tree selection value). comarca : str, optional District. orgao_julgador : str, optional Judging body (tree selection value). data_julgamento_inicio, data_julgamento_fim : str, optional Judgment date range (dd/mm/yyyy). Aliases: <code>data_inicio</code>/<code>data_fim</code>. data_publicacao_inicio, data_publicacao_fim : str, optional Publication date range (dd/mm/yyyy). origem : str <code>"T"</code> for 2nd degree (default), <code>"R"</code> for recursal courts. tipo_decisao : str <code>"acordao"</code> or <code>"monocratica"</code>.</p>
+</section>
+<section id="returns" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
+<p>pd.DataFrame</p>
+</section>
+</section>
+<section id="juscraper.courts.tjce.client.TJCEScraper.cjsg_download" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.tjce.client.TJCEScraper.cjsg_download">cjsg_download</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>courts.tjce.client.TJCEScraper.cjsg_download(</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    pesquisa,</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    ementa<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    numero_recurso<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    classe<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    assunto<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    comarca<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    orgao_julgador<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    data_publicacao_inicio<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    data_publicacao_fim<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    origem<span class="op">=</span><span class="st">'T'</span>,</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    tipo_decisao<span class="op">=</span><span class="st">'acordao'</span>,</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    diretorio<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Download raw CJSG HTML result pages.</p>
+<p>Parameters are the same as :meth:<code>cjsg</code>, plus:</p>
+<section id="str-optional" class="level4 doc-section doc-section-str-optional">
+<h4 class="doc-section doc-section-str-optional anchored" data-anchor-id="str-optional">str, optional</h4>
+<p>Directory to save files. Defaults to the scraper’s download_path.</p>
+</section>
+<section id="returns-1" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
+<p>str Path to the directory containing HTML files.</p>
+</section>
+</section>
+<section id="juscraper.courts.tjce.client.TJCEScraper.cjsg_parse" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.tjce.client.TJCEScraper.cjsg_parse">cjsg_parse</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>courts.tjce.client.TJCEScraper.cjsg_parse(diretorio)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Parse downloaded CJSG HTML files.</p>
+<section id="parameters-1" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
+<p>diretorio : str or Path Directory containing downloaded HTML files.</p>
+</section>
+<section id="returns-2" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-2">Returns</h4>
+<p>pd.DataFrame</p>
 
-<p>3 rows × 33 columns</p>
-</div>
-</div>
-</div>
-<div id="cell-2" class="cell" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> base64</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> IPython.display <span class="im">import</span> display, HTML</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>txt <span class="op">=</span> dados_cjsg[<span class="st">'documento_text'</span>].iloc[<span class="dv">0</span>]</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>decoded_bytes <span class="op">=</span> base64.b64decode(txt)</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>decoded_str <span class="op">=</span> decoded_bytes.decode(<span class="st">'latin1'</span>, errors<span class="op">=</span><span class="st">'replace'</span>)</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co">#display(HTML(decoded_str))</span></span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div id="cell-3" class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>dados_cjsg.columns</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="4">
-<pre><code>Index(['processo', 'relator', 'orgao_julgador', 'data_julgamento',
-       'data_publicacao', 'classe_cnj', 'assunto_cnj', 'tribunal',
-       'tipo_processo', 'url', 'ementa', 'documento_text', 'documento_tiff',
-       'ementa_text', 'mes_ano_publicacao', 'origem', 'secao',
-       'ano_julgamento', 'nome_relator', 'ind_segredo_justica',
-       'ementa_referencia', 'cod_ementa', 'cod_classe_cnj', 'cod_org_julg',
-       'cod_redator', 'cod_tipo_documento', 'cod_tribunal', 'cod_assunto_cnj',
-       'cod_relator', 'cod_recurso', 'tipo_documento', 'dthr_criacao',
-       '_version_'],
-      dtype='object')</code></pre>
-</div>
-</div>
-<div id="cell-4" class="cell" data-execution_count="5">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>dados_cjsg[<span class="st">'url'</span>].iloc[<span class="dv">0</span>]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="5">
-<pre><code>'https://www.tjrs.jus.br/buscas/jurisprudencia/?numero_processo=52627181720248217000'</code></pre>
-</div>
-</div>
 
-
+</section>
+</section>
+</section>
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
@@ -877,18 +704,6 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
 });
 </script>
-<nav class="page-navigation">
-  <div class="nav-page nav-page-previous">
-      <a href="../notebooks/tjpr.html" class="pagination-link" aria-label="TJPR">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">TJPR</span>
-      </a>          
-  </div>
-  <div class="nav-page nav-page-next">
-      <a href="../notebooks/tjes.html" class="pagination-link" aria-label="TJES">
-        <span class="nav-page-text">TJES</span> <i class="bi bi-arrow-right-short"></i>
-      </a>
-  </div>
-</nav>
 </div> <!-- /content -->
 <footer class="footer">
   <div class="nav-footer">
@@ -897,7 +712,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.dev/jtrecenti/juscraper/blob/main/docs/notebooks/tjrs.ipynb" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.com/jtrecenti/juscraper/edit/main/docs/reference/courts.tjce.client.TJCEScraper.qmd" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></div>
     <div class="nav-footer-right">
       &nbsp;
     </div>
