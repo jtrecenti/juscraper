@@ -294,7 +294,7 @@ def cpopg_parse_single_html(path: str):
                 # A "descrição" pode estar dividida em um texto principal e um <span> em itálico
                 # Ex.: <span style="font-style: italic;">Some text</span>
                 # Vamos concatenar
-                descricao_principal = descricao_html.find(text=True, recursive=False) or ""
+                descricao_principal = descricao_html.find(string=True, recursive=False) or ""
                 descricao_principal = descricao_principal.strip()
 
                 span_it = descricao_html.find("span", style="font-style: italic;")
@@ -313,10 +313,10 @@ def cpopg_parse_single_html(path: str):
     # Tabela logo abaixo de "<h2 class="subtitle tituloDoBloco">Petições diversas</h2>"
     # No HTML, as datas ficam na primeira <td>, e o tipo no segundo <td>
     # Normalmente: <table> ... <tr class="fundoClaro"> <td>24/05/2024</td> <td>Contestação</td> ...
-    peticoes_div = soup.find("h2", text="Petições diversas")
+    peticoes_div = soup.find("h2", string="Petições diversas")
     if peticoes_div:
         # Pegar a tabela que vem a seguir
-        tabela_peticoes = peticoes_div.find_parent().find_next_sibling("table")
+        tabela_peticoes = peticoes_div.find_next("table")
         if tabela_peticoes:
             for tr in tabela_peticoes.find_all("tr"):
                 tds = tr.find_all("td")
@@ -391,7 +391,7 @@ def get_cpopg_download_links(request):
         if 'show.do' in href:
             links.append(href)
     else:
-        processos = lista.findAll('a')
+        processos = lista.find_all('a')
         if processos is None:
             return links
     return links
