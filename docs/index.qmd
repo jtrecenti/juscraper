@@ -65,7 +65,7 @@ O método `.cjsg()` recebe como *input* parâmetros de busca de jurisprudência 
 | TJDFT    | cjsg                              |
 | TJPA     | cjsg                              |
 | TJMT     | cjsg                              |
-| TJTO     | cjsg                              |
+| TJTO     | cjsg, cjpg                        |
 
 ### Agregadores Disponíveis
 

@@ -40,12 +40,12 @@ class TJTOScraper(BaseScraper):
         """Stub: second instance case consultation not implemented for TJTO."""
         raise NotImplementedError("Consulta de processos de 2 grau nao implementada para TJTO.")
 
-    def cjsg_download(
+    def _download_internal(
         self,
-        pesquisa: str = None,
-        paginas: Union[int, list, range, None] = None,
+        pesquisa,
+        paginas,
+        instancia: str,
         tipo_documento: str = "acordaos",
-        instancia: str = "",
         ordenacao: str = "DESC",
         numero_processo: str = "",
         data_julgamento_inicio: str = None,
@@ -54,22 +54,7 @@ class TJTOScraper(BaseScraper):
         session: "requests.Session" = None,
         **kwargs,
     ) -> list:
-        """Download raw HTML pages from the TJTO jurisprudence search.
-
-        Args:
-            pesquisa: Search term.
-            paginas: Pages to download (1-based). int, list, range, or None (all).
-            tipo_documento: 'acordaos', 'decisoes', or 'sentencas'.
-            instancia: '' (all), '1' (first instance), '2' (second instance).
-            ordenacao: 'DESC' (most recent), 'ASC' (oldest), 'RELEV' (most relevant).
-            numero_processo: Filter by process number.
-            data_julgamento_inicio: Start date for judgment filter (DD/MM/YYYY).
-            data_julgamento_fim: End date for judgment filter (DD/MM/YYYY).
-            soementa: If True, restrict search to ementa text only.
-
-        Returns:
-            List of raw HTML strings.
-        """
+        """Shared download logic for cjsg and cjpg."""
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
         paginas = normalize_paginas(paginas)
         datas = normalize_datas(
@@ -96,6 +81,50 @@ class TJTOScraper(BaseScraper):
             session=session,
         )
 
+    # --- cjsg (2o grau) ---
+
+    def cjsg_download(
+        self,
+        pesquisa: str = None,
+        paginas: Union[int, list, range, None] = None,
+        tipo_documento: str = "acordaos",
+        ordenacao: str = "DESC",
+        numero_processo: str = "",
+        data_julgamento_inicio: str = None,
+        data_julgamento_fim: str = None,
+        soementa: bool = False,
+        session: "requests.Session" = None,
+        **kwargs,
+    ) -> list:
+        """Download raw HTML pages from the TJTO second-instance jurisprudence search.
+
+        Args:
+            pesquisa: Search term.
+            paginas: Pages to download (1-based). int, list, range, or None (all).
+            tipo_documento: 'acordaos', 'decisoes', or 'sentencas'.
+            ordenacao: 'DESC' (most recent), 'ASC' (oldest), 'RELEV' (most relevant).
+            numero_processo: Filter by process number.
+            data_julgamento_inicio: Start date for judgment filter (DD/MM/YYYY).
+            data_julgamento_fim: End date for judgment filter (DD/MM/YYYY).
+            soementa: If True, restrict search to ementa text only.
+
+        Returns:
+            List of raw HTML strings.
+        """
+        return self._download_internal(
+            pesquisa=pesquisa,
+            paginas=paginas,
+            instancia="2",
+            tipo_documento=tipo_documento,
+            ordenacao=ordenacao,
+            numero_processo=numero_processo,
+            data_julgamento_inicio=data_julgamento_inicio,
+            data_julgamento_fim=data_julgamento_fim,
+            soementa=soementa,
+            session=session,
+            **kwargs,
+        )
+
     def cjsg_parse(self, resultados_brutos: list) -> pd.DataFrame:
         """Parse raw HTML pages downloaded by cjsg_download.
 
@@ -112,7 +141,6 @@ class TJTOScraper(BaseScraper):
         pesquisa: str = None,
         paginas: Union[int, list, range, None] = None,
         tipo_documento: str = "acordaos",
-        instancia: str = "",
         ordenacao: str = "DESC",
         numero_processo: str = "",
         data_julgamento_inicio: str = None,
@@ -121,13 +149,12 @@ class TJTOScraper(BaseScraper):
         session: "requests.Session" = None,
         **kwargs,
     ) -> pd.DataFrame:
-        """Fetch jurisprudence from TJTO (download + parse).
+        """Fetch second-instance jurisprudence from TJTO (download + parse).
 
         Args:
             pesquisa: Search term.
             paginas: Pages to download (1-based). int, list, range, or None (all).
             tipo_documento: 'acordaos', 'decisoes', or 'sentencas'.
-            instancia: '' (all), '1' (first instance), '2' (second instance).
             ordenacao: 'DESC' (most recent), 'ASC' (oldest), 'RELEV' (most relevant).
             numero_processo: Filter by process number.
             data_julgamento_inicio: Start date (DD/MM/YYYY).
@@ -141,7 +168,6 @@ class TJTOScraper(BaseScraper):
             pesquisa=pesquisa,
             paginas=paginas,
             tipo_documento=tipo_documento,
-            instancia=instancia,
             ordenacao=ordenacao,
             numero_processo=numero_processo,
             data_julgamento_inicio=data_julgamento_inicio,
@@ -152,11 +178,97 @@ class TJTOScraper(BaseScraper):
         )
         return self.cjsg_parse(brutos)
 
+    # --- cjpg (1o grau) ---
+
+    def cjpg_download(
+        self,
+        pesquisa: str = None,
+        paginas: Union[int, list, range, None] = None,
+        tipo_documento: str = "acordaos",
+        ordenacao: str = "DESC",
+        numero_processo: str = "",
+        data_julgamento_inicio: str = None,
+        data_julgamento_fim: str = None,
+        soementa: bool = False,
+        session: "requests.Session" = None,
+        **kwargs,
+    ) -> list:
+        """Download raw HTML pages from the TJTO first-instance jurisprudence search.
+
+        Shortcut for the download with ``instancia='1'``.
+        Accepts the same parameters as :meth:`cjsg_download`.
+
+        Returns:
+            List of raw HTML strings.
+        """
+        return self._download_internal(
+            pesquisa=pesquisa,
+            paginas=paginas,
+            instancia="1",
+            tipo_documento=tipo_documento,
+            ordenacao=ordenacao,
+            numero_processo=numero_processo,
+            data_julgamento_inicio=data_julgamento_inicio,
+            data_julgamento_fim=data_julgamento_fim,
+            soementa=soementa,
+            session=session,
+            **kwargs,
+        )
+
+    def cjpg_parse(self, resultados_brutos: list) -> pd.DataFrame:
+        """Parse raw HTML pages downloaded by cjpg_download.
+
+        Args:
+            resultados_brutos: List of raw HTML strings.
+
+        Returns:
+            DataFrame with parsed results.
+        """
+        return cjsg_parse_manager(resultados_brutos)
+
+    def cjpg(
+        self,
+        pesquisa: str = None,
+        paginas: Union[int, list, range, None] = None,
+        tipo_documento: str = "acordaos",
+        ordenacao: str = "DESC",
+        numero_processo: str = "",
+        data_julgamento_inicio: str = None,
+        data_julgamento_fim: str = None,
+        soementa: bool = False,
+        session: "requests.Session" = None,
+        **kwargs,
+    ) -> pd.DataFrame:
+        """Fetch first-instance jurisprudence from TJTO (download + parse).
+
+        Shortcut for :meth:`cjpg_download` + :meth:`cjpg_parse`.
+        Queries only first-instance results (``instancia='1'``).
+        Accepts the same parameters as :meth:`cjsg`.
+
+        Returns:
+            DataFrame with jurisprudence results.
+        """
+        brutos = self.cjpg_download(
+            pesquisa=pesquisa,
+            paginas=paginas,
+            tipo_documento=tipo_documento,
+            ordenacao=ordenacao,
+            numero_processo=numero_processo,
+            data_julgamento_inicio=data_julgamento_inicio,
+            data_julgamento_fim=data_julgamento_fim,
+            soementa=soementa,
+            session=session,
+            **kwargs,
+        )
+        return self.cjpg_parse(brutos)
+
+    # --- ementa ---
+
     def cjsg_ementa(self, uuid: str) -> dict:
         """Fetch the ementa for a specific document by UUID.
 
         Args:
-            uuid: The document UUID (from the 'uuid' column in cjsg results).
+            uuid: The document UUID (from the 'uuid' column in cjsg/cjpg results).
 
         Returns:
             Dict with ementa text and process number.

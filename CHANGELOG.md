@@ -9,8 +9,10 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- TJTO: scraper de jurisprudencia (cjsg) do Tribunal de Justica do Tocantins, com suporte a acordaos, decisoes monocraticas e sentencas
-- Filtros disponiveis: pesquisa livre, datas de julgamento, numero do processo, instancia, ordenacao, restricao a ementa
+- TJTO: scraper de jurisprudencia do Tribunal de Justica do Tocantins
+  - `cjsg`: jurisprudencia de 2o grau (acordaos, decisoes monocraticas, sentencas)
+  - `cjpg`: jurisprudencia de 1o grau (acordaos, decisoes monocraticas, sentencas)
+  - Filtros: pesquisa livre, datas de julgamento, numero do processo, ordenacao, restricao a ementa
 - TJPA: scraper de jurisprudencia (cjsg) do Tribunal de Justica do Estado do Para, com suporte a filtros por relator, orgao julgador colegiado, classe, assunto, datas de julgamento e publicacao
 - Adicionado scraper de jurisprudência (CJSG) para o TJCE (Tribunal de Justiça do Ceará), baseado na plataforma eSAJ
 - Suporte a filtros: pesquisa livre, ementa, classe, assunto, órgão julgador, datas de julgamento e publicação, origem e tipo de decisão
