@@ -144,6 +144,9 @@ uv.lock
 # MacOS
 .DS_Store
 
+# Playwright MCP
+.playwright-mcp/
+
 # drafts
 drafts/
 docs/_site

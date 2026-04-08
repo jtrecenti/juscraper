@@ -12,6 +12,7 @@ from typing import Any
 from importlib.metadata import version
 
 _SCRAPERS: dict[str, str] = {
+    "tjap":  "juscraper.courts.tjap.client:TJAPScraper",
     "tjce":  "juscraper.courts.tjce.client:TJCEScraper",
     "tjsp":  "juscraper.courts.tjsp.client:TJSPScraper",
     "tjdft": "juscraper.courts.tjdft.client:TJDFTScraper",

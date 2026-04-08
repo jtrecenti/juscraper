@@ -9,6 +9,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- TJAP: scraper de jurisprudencia (cjsg) do Tribunal de Justica do Amapa, via API REST do Tucujuris. Filtros disponiveis: orgao julgador, relator, secretaria, classe, origem, votacao, numero CNJ, numero do acordao, palavras exatas
 - TJTO: scraper de jurisprudencia do Tribunal de Justica do Tocantins
   - `cjsg`: jurisprudencia de 2o grau (acordaos, decisoes monocraticas, sentencas)
   - `cjpg`: jurisprudencia de 1o grau (acordaos, decisoes monocraticas, sentencas)
