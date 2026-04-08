@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>aggregators.datajud.client.datajudscraper – juscraper</title>
+<title>courts.tjap.client.tjapscraper – juscraper</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -153,15 +153,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Nesta página</h2>
    
   <ul>
-  <li><a href="#juscraper.aggregators.datajud.client.DatajudScraper" id="toc-juscraper.aggregators.datajud.client.DatajudScraper" class="nav-link active" data-scroll-target="#juscraper.aggregators.datajud.client.DatajudScraper">aggregators.datajud.client.DatajudScraper</a>
+  <li><a href="#juscraper.courts.tjap.client.TJAPScraper" id="toc-juscraper.courts.tjap.client.TJAPScraper" class="nav-link active" data-scroll-target="#juscraper.courts.tjap.client.TJAPScraper">courts.tjap.client.TJAPScraper</a>
   <ul class="collapse">
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
   <ul class="collapse">
-  <li><a href="#juscraper.aggregators.datajud.client.DatajudScraper.listar_processos" id="toc-juscraper.aggregators.datajud.client.DatajudScraper.listar_processos" class="nav-link" data-scroll-target="#juscraper.aggregators.datajud.client.DatajudScraper.listar_processos">listar_processos</a></li>
+  <li><a href="#juscraper.courts.tjap.client.TJAPScraper.cjsg" id="toc-juscraper.courts.tjap.client.TJAPScraper.cjsg" class="nav-link" data-scroll-target="#juscraper.courts.tjap.client.TJAPScraper.cjsg">cjsg</a></li>
+  <li><a href="#juscraper.courts.tjap.client.TJAPScraper.cjsg_download" id="toc-juscraper.courts.tjap.client.TJAPScraper.cjsg_download" class="nav-link" data-scroll-target="#juscraper.courts.tjap.client.TJAPScraper.cjsg_download">cjsg_download</a></li>
+  <li><a href="#juscraper.courts.tjap.client.TJAPScraper.cjsg_parse" id="toc-juscraper.courts.tjap.client.TJAPScraper.cjsg_parse" class="nav-link" data-scroll-target="#juscraper.courts.tjap.client.TJAPScraper.cjsg_parse">cjsg_parse</a></li>
+  <li><a href="#juscraper.courts.tjap.client.TJAPScraper.cpopg" id="toc-juscraper.courts.tjap.client.TJAPScraper.cpopg" class="nav-link" data-scroll-target="#juscraper.courts.tjap.client.TJAPScraper.cpopg">cpopg</a></li>
+  <li><a href="#juscraper.courts.tjap.client.TJAPScraper.cposg" id="toc-juscraper.courts.tjap.client.TJAPScraper.cposg" class="nav-link" data-scroll-target="#juscraper.courts.tjap.client.TJAPScraper.cposg">cposg</a></li>
   </ul></li>
   </ul></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.com/jtrecenti/juscraper/edit/main/docs/reference/aggregators.datajud.client.DatajudScraper.qmd" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.com/jtrecenti/juscraper/edit/main/docs/reference/courts.tjap.client.TJAPScraper.qmd" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -169,15 +173,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 
-<section id="juscraper.aggregators.datajud.client.DatajudScraper" class="level1">
-<h1>aggregators.datajud.client.DatajudScraper</h1>
-<div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>aggregators.datajud.client.DatajudScraper(</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    api_key<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    verbose<span class="op">=</span><span class="dv">1</span>,</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    download_path<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    sleep_time<span class="op">=</span><span class="fl">0.5</span>,</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Scraper for CNJ’s Datajud API.</p>
+<section id="juscraper.courts.tjap.client.TJAPScraper" class="level1">
+<h1>courts.tjap.client.TJAPScraper</h1>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>courts.tjap.client.TJAPScraper()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Scraper for the Tribunal de Justica do Amapa (TJAP).</p>
+<p>The TJAP uses the Tucujuris platform with a JSON REST API. Currently supports jurisprudence search (CJSG).</p>
 <section id="methods" class="level2">
 <h2 class="anchored" data-anchor-id="methods">Methods</h2>
 <table class="caption-top table">
@@ -189,47 +189,102 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td><a href="#juscraper.aggregators.datajud.client.DatajudScraper.listar_processos">listar_processos</a></td>
-<td>Lists processes from Datajud via API, with support for multiple filters and pagination.</td>
+<td><a href="#juscraper.courts.tjap.client.TJAPScraper.cjsg">cjsg</a></td>
+<td>Search TJAP jurisprudence.</td>
+</tr>
+<tr class="even">
+<td><a href="#juscraper.courts.tjap.client.TJAPScraper.cjsg_download">cjsg_download</a></td>
+<td>Download raw CJSG JSON responses from TJAP.</td>
+</tr>
+<tr class="odd">
+<td><a href="#juscraper.courts.tjap.client.TJAPScraper.cjsg_parse">cjsg_parse</a></td>
+<td>Parse downloaded CJSG JSON responses.</td>
+</tr>
+<tr class="even">
+<td><a href="#juscraper.courts.tjap.client.TJAPScraper.cpopg">cpopg</a></td>
+<td>Stub: first instance case consultation not implemented for TJAP.</td>
+</tr>
+<tr class="odd">
+<td><a href="#juscraper.courts.tjap.client.TJAPScraper.cposg">cposg</a></td>
+<td>Stub: second instance case consultation not implemented for TJAP.</td>
 </tr>
 </tbody>
 </table>
-<section id="juscraper.aggregators.datajud.client.DatajudScraper.listar_processos" class="level3">
-<h3 class="anchored" data-anchor-id="juscraper.aggregators.datajud.client.DatajudScraper.listar_processos">listar_processos</h3>
-<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>aggregators.datajud.client.DatajudScraper.listar_processos(</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    numero_processo<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    tribunal<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    ano_ajuizamento<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    classe<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    assuntos<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    mostrar_movs<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    tamanho_pagina<span class="op">=</span><span class="dv">1000</span>,</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Lists processes from Datajud via API, with support for multiple filters and pagination.</p>
+<section id="juscraper.courts.tjap.client.TJAPScraper.cjsg" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.tjap.client.TJAPScraper.cjsg">cjsg</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>courts.tjap.client.TJAPScraper.cjsg(</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    orgao<span class="op">=</span><span class="st">'0'</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    numero_cnj<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    numero_acordao<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    numero_ano<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    palavras_exatas<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    relator<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    secretaria<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    classe<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    votacao<span class="op">=</span><span class="st">'0'</span>,</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    origem<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Search TJAP jurisprudence.</p>
 <section id="parameters" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>paginas</td>
-<td><a href="`range`">range</a></td>
-<td>Page range (1-based, e.g., range(1, 4) fetches pages 1-3). None fetches all available pages.</td>
-<td><code>None</code></td>
-</tr>
-</tbody>
-</table>
-
-
+<p>pesquisa : str Free-text search term. paginas : int, list, range, or None Pages to download (1-based). None downloads all. orgao : str <code>"0"</code> for all (default), <code>"tj"</code> for Tribunal, <code>"recursal"</code> for Turma Recursal. numero_cnj : str, optional CNJ unique case number. numero_acordao : str, optional Decision number. numero_ano : str, optional Number/year (e.g.&nbsp;<code>"001858/1999"</code>). palavras_exatas : bool If True, search for exact words. relator : str, optional Reporting judge name. secretaria : str, optional Court division. classe : str, optional Procedural class. votacao : str <code>"0"</code> for all (default), <code>"Unanime"</code>, <code>"Maioria"</code>. origem : str, optional Origin (comarca).</p>
 </section>
+<section id="returns" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
+<p>pd.DataFrame</p>
+</section>
+</section>
+<section id="juscraper.courts.tjap.client.TJAPScraper.cjsg_download" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.tjap.client.TJAPScraper.cjsg_download">cjsg_download</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>courts.tjap.client.TJAPScraper.cjsg_download(</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    orgao<span class="op">=</span><span class="st">'0'</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    numero_cnj<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    numero_acordao<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    numero_ano<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    palavras_exatas<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    relator<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    secretaria<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    classe<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    votacao<span class="op">=</span><span class="st">'0'</span>,</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    origem<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Download raw CJSG JSON responses from TJAP.</p>
+<p>Parameters are the same as :meth:<code>cjsg</code>.</p>
+<section id="returns-1" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
+<p>list List of raw JSON responses (one per page).</p>
+</section>
+</section>
+<section id="juscraper.courts.tjap.client.TJAPScraper.cjsg_parse" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.tjap.client.TJAPScraper.cjsg_parse">cjsg_parse</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>courts.tjap.client.TJAPScraper.cjsg_parse(resultados_brutos)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Parse downloaded CJSG JSON responses.</p>
+<section id="parameters-1" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
+<p>resultados_brutos : list List of raw JSON responses from the TJAP API.</p>
+</section>
+<section id="returns-2" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-2">Returns</h4>
+<p>pd.DataFrame</p>
+</section>
+</section>
+<section id="juscraper.courts.tjap.client.TJAPScraper.cpopg" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.tjap.client.TJAPScraper.cpopg">cpopg</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>courts.tjap.client.TJAPScraper.cpopg(id_cnj)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Stub: first instance case consultation not implemented for TJAP.</p>
+</section>
+<section id="juscraper.courts.tjap.client.TJAPScraper.cposg" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.tjap.client.TJAPScraper.cposg">cposg</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>courts.tjap.client.TJAPScraper.cposg(id_cnj)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Stub: second instance case consultation not implemented for TJAP.</p>
+
+
 </section>
 </section>
 </section>
@@ -663,7 +718,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.com/jtrecenti/juscraper/edit/main/docs/reference/aggregators.datajud.client.DatajudScraper.qmd" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.com/jtrecenti/juscraper/edit/main/docs/reference/courts.tjap.client.TJAPScraper.qmd" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></div>
     <div class="nav-footer-right">
       &nbsp;
     </div>
