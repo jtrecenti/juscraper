@@ -22,6 +22,7 @@ _SCRAPERS: dict[str, str] = {
     "tjpe":  "juscraper.courts.tjpe.client:TJPEScraper",
     "tjmt":  "juscraper.courts.tjmt.client:TJMTScraper",
     "tjes":  "juscraper.courts.tjes.client:TJESScraper",
+    "tjto":  "juscraper.courts.tjto.client:TJTOScraper",
     "datajud": "juscraper.aggregators.datajud.client:DatajudScraper",
     "jusbr": "juscraper.aggregators.jusbr.client:JusbrScraper",
 }
