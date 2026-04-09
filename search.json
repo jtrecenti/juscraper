@@ -56,32 +56,76 @@
     "text": "Name\nDescription\n\n\n\n\ncjsg\nSearch TJPE jurisprudence (download + parse).\n\n\ncjsg_download\nDownload raw HTML pages from the TJPE jurisprudence search.\n\n\ncjsg_parse\nParse raw HTML pages from cjsg_download into a DataFrame.\n\n\ncpopg\nStub: first instance case consultation not implemented for TJPE.\n\n\ncposg\nStub: second instance case consultation not implemented for TJPE.\n\n\n\n\n\ncourts.tjpe.client.TJPEScraper.cjsg(\n    pesquisa=None,\n    paginas=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    relator=None,\n    classe_cnj=None,\n    assunto_cnj=None,\n    meio_tramitacao=None,\n    tipo_decisao='acordaos',\n    session=None,\n    **kwargs,\n)\nSearch TJPE jurisprudence (download + parse).\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npesquisa\nstr\nSearch term.\nNone\n\n\npaginas\nUnion[int, list, range, None]\nPages to download (1-based). int, list, range, or None (all).\nNone\n\n\ndata_julgamento_inicio\nstr\nStart date (DD/MM/YYYY).\nNone\n\n\ndata_julgamento_fim\nstr\nEnd date (DD/MM/YYYY).\nNone\n\n\nrelator\nstr\nRelator name.\nNone\n\n\nclasse_cnj\nstr\nCNJ class code.\nNone\n\n\nassunto_cnj\nstr\nCNJ subject code.\nNone\n\n\nmeio_tramitacao\nstr\nTramitation medium.\nNone\n\n\ntipo_decisao\nstr\n‘acordaos’, ‘monocraticas’, or ‘todos’.\n'acordaos'\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\npd.DataFrame\nDataFrame with jurisprudence results.\n\n\n\n\n\n\n\ncourts.tjpe.client.TJPEScraper.cjsg_download(\n    pesquisa=None,\n    paginas=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    relator=None,\n    classe_cnj=None,\n    assunto_cnj=None,\n    meio_tramitacao=None,\n    tipo_decisao='acordaos',\n    session=None,\n    **kwargs,\n)\nDownload raw HTML pages from the TJPE jurisprudence search.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npesquisa\nstr\nSearch term.\nNone\n\n\npaginas\nUnion[int, list, range, None]\nPages to download (1-based). int, list, range, or None (all).\nNone\n\n\ndata_julgamento_inicio\nstr\nStart date for judgment filter (DD/MM/YYYY).\nNone\n\n\ndata_julgamento_fim\nstr\nEnd date for judgment filter (DD/MM/YYYY).\nNone\n\n\nrelator\nstr\nRelator name (must match dropdown value exactly).\nNone\n\n\nclasse_cnj\nstr\nCNJ class code.\nNone\n\n\nassunto_cnj\nstr\nCNJ subject code.\nNone\n\n\nmeio_tramitacao\nstr\nTramitation medium filter.\nNone\n\n\ntipo_decisao\nstr\n‘acordaos’, ‘monocraticas’, or ‘todos’.\n'acordaos'\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist\nList of raw HTML strings, one per page.\n\n\n\n\n\n\n\ncourts.tjpe.client.TJPEScraper.cjsg_parse(raw_pages)\nParse raw HTML pages from cjsg_download into a DataFrame.\n\n\n\ncourts.tjpe.client.TJPEScraper.cpopg(id_cnj)\nStub: first instance case consultation not implemented for TJPE.\n\n\n\ncourts.tjpe.client.TJPEScraper.cposg(id_cnj)\nStub: second instance case consultation not implemented for TJPE."
   },
   {
-    "objectID": "reference/courts.tjsp.client.TJSPScraper.html",
-    "href": "reference/courts.tjsp.client.TJSPScraper.html",
-    "title": "courts.tjsp.client.TJSPScraper",
+    "objectID": "reference/courts.tjac.client.TJACScraper.html",
+    "href": "reference/courts.tjac.client.TJACScraper.html",
+    "title": "courts.tjac.client.TJACScraper",
     "section": "",
-    "text": "courts.tjsp.client.TJSPScraper(\n    verbose=0,\n    download_path=None,\n    sleep_time=0.5,\n    **kwargs,\n)\nMain scraper for Tribunal de Justica de Sao Paulo.\n\n\n\n\n\nName\nDescription\n\n\n\n\ncjpg\nOrchestrates the download and parsing of processes from CJPG.\n\n\ncjpg_download\nDownloads the processes from the TJSP jurisprudence.\n\n\ncjpg_parse\nWrapper for parsing downloaded files from CJPG.\n\n\ncjsg\nOrchestrates the download and parsing of processes from CJSG.\n\n\ncjsg_download\nDownloads the HTML files of the pages of results of the\n\n\ncjsg_parse\nWrapper for parsing downloaded files from CJSG.\n\n\ncpopg\nScrapes a process from Primeiro Grau (CPOPG).\n\n\ncpopg_download\nDownloads a process from Primeiro Grau (CPOPG).\n\n\ncpopg_parse\nWrapper for parsing downloaded files from CPOPG.\n\n\ncposg\nOrchestrates the download and parsing of processes from Segundo Grau (CPOSG).\n\n\ncposg_download\nDownloads processes from Segundo Grau (CPOSG), via HTML or API, using modularized functions.\n\n\ncposg_parse\nWrapper for parsing downloaded files from CPOSG.\n\n\nset_download_path\nSets the base directory for saving downloaded files.\n\n\nset_method\nSets the method for accessing TJSP data.\n\n\n\n\n\ncourts.tjsp.client.TJSPScraper.cjpg(\n    pesquisa='',\n    classes=None,\n    assuntos=None,\n    varas=None,\n    id_processo=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    paginas=None,\n    **kwargs,\n)\nOrchestrates the download and parsing of processes from CJPG.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npesquisa\nstr\nThe search term. Default is “” (empty string).\n''\n\n\nclasses\nlist[str]\nList of classes of the process. Default is None.\nNone\n\n\nassuntos\nlist[str]\nList of subjects of the process. Default is None.\nNone\n\n\nvaras\nlist[str]\nList of varas of the process. Default is None.\nNone\n\n\nid_processo\nstr\nID of the process. Default is None.\nNone\n\n\ndata_julgamento_inicio\nstr | None\nStart date. data_inicio accepted as alias.\nNone\n\n\ndata_julgamento_fim\nstr | None\nEnd date. data_fim accepted as alias.\nNone\n\n\npaginas\nint, list, range, or None\nPages (1-based). None downloads all.\nNone\n\n\n\n\n\n\n\ncourts.tjsp.client.TJSPScraper.cjpg_download(\n    pesquisa,\n    classes=None,\n    assuntos=None,\n    varas=None,\n    id_processo=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    paginas=None,\n    **kwargs,\n)\nDownloads the processes from the TJSP jurisprudence.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npesquisa\nstr\nThe search term.\nrequired\n\n\nclasses\nlist[str]\nList of classes of the process. Default is None.\nNone\n\n\nassuntos\nlist[str]\nList of subjects of the process. Default is None.\nNone\n\n\nvaras\nlist[str]\nList of varas of the process. Default is None.\nNone\n\n\nid_processo\nstr\nID of the process. Default is None.\nNone\n\n\ndata_julgamento_inicio\nstr | None\nStart date. data_inicio accepted as alias.\nNone\n\n\ndata_julgamento_fim\nstr | None\nEnd date. data_fim accepted as alias.\nNone\n\n\npaginas\nint, list, range, or None\nPages (1-based). None downloads all.\nNone\n\n\n\n\n\n\n\ncourts.tjsp.client.TJSPScraper.cjpg_parse(path)\nWrapper for parsing downloaded files from CJPG.\n\n\n\ncourts.tjsp.client.TJSPScraper.cjsg(\n    pesquisa,\n    ementa=None,\n    classe=None,\n    assunto=None,\n    comarca=None,\n    orgao_julgador=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    baixar_sg=True,\n    tipo_decisao='acordao',\n    paginas=None,\n    **kwargs,\n)\nOrchestrates the download and parsing of processes from CJSG.\n\n\n\ncourts.tjsp.client.TJSPScraper.cjsg_download(\n    pesquisa,\n    ementa=None,\n    classe=None,\n    assunto=None,\n    comarca=None,\n    orgao_julgador=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    baixar_sg=True,\n    tipo_decisao='acordao',\n    paginas=None,\n    **kwargs,\n)\nDownloads the HTML files of the pages of results of the Second Stage Judgment Consultation (CJSG).\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npesquisa\nstr\nSearch term.\nrequired\n\n\nementa\nstr\nFilter by text of the ementa.\nNone\n\n\nclasse\nstr | None\nClass of the process.\nNone\n\n\nassunto\nstr | None\nSubject of the process.\nNone\n\n\ncomarca\nstr | None\nCourt of the process.\nNone\n\n\norgao_julgador\nstr | None\nCourt of appeal of the process.\nNone\n\n\ndata_julgamento_inicio\nstr | None\nStart date (judgment). data_inicio accepted as alias.\nNone\n\n\ndata_julgamento_fim\nstr | None\nEnd date (judgment). data_fim accepted as alias.\nNone\n\n\nbaixar_sg\nbool\nIf True, also downloads from Second Stage.\nTrue\n\n\ntipo_decisao\nstr\n‘acordao’ or ‘monocratica’.\n'acordao'\n\n\npaginas\nint, list, range, or None\nPages (1-based). None downloads all.\nNone\n\n\n\n\n\n\n\ncourts.tjsp.client.TJSPScraper.cjsg_parse(path)\nWrapper for parsing downloaded files from CJSG.\n\n\n\ncourts.tjsp.client.TJSPScraper.cpopg(id_cnj, method='html')\nScrapes a process from Primeiro Grau (CPOPG).\n\n\n\ncourts.tjsp.client.TJSPScraper.cpopg_download(id_cnj, method='html')\nDownloads a process from Primeiro Grau (CPOPG).\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nid_cnj\nUnion[str, List[str]]\nstring with the CNJ of the process, or list of strings with CNJs.\nrequired\n\n\nmethod\nLiteral['html', 'api']\nLiteral[‘html’, ‘api’]. The methods supported are ‘html’ and ‘api’. The default is ‘html’.\n'html'\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nException\nIf the method passed as parameter is not ‘html’ or ‘api’.\n\n\n\n\n\n\n\ncourts.tjsp.client.TJSPScraper.cpopg_parse(path)\nWrapper for parsing downloaded files from CPOPG.\n\n\n\ncourts.tjsp.client.TJSPScraper.cposg(id_cnj, method='html')\nOrchestrates the download and parsing of processes from Segundo Grau (CPOSG).\n\n\n\ncourts.tjsp.client.TJSPScraper.cposg_download(id_cnj, method='html')\nDownloads processes from Segundo Grau (CPOSG), via HTML or API, using modularized functions.\n\n\n\ncourts.tjsp.client.TJSPScraper.cposg_parse(path)\nWrapper for parsing downloaded files from CPOSG.\n\n\n\ncourts.tjsp.client.TJSPScraper.set_download_path(path=None)\nSets the base directory for saving downloaded files.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npath\nstr\nPath to save downloaded files. Default is None (uses temporary directory).\nNone\n\n\n\n\n\n\n\ncourts.tjsp.client.TJSPScraper.set_method(method)\nSets the method for accessing TJSP data.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nmethod\nLiteral['html', 'api']\nLiteral[‘html’, ‘api’]. The methods supported are ‘html’ and ‘api’.\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nException\nIf the method is not ‘html’ or ‘api’."
+    "text": "courts.tjac.client.TJACScraper(\n    verbose=0,\n    download_path=None,\n    sleep_time=1.0,\n    **kwargs,\n)\nScraper for the Tribunal de Justica do Acre (TJAC).\nThe TJAC uses the eSAJ platform (same as TJSP). Currently supports jurisprudence search (CJSG).\n\n\n\n\n\nName\nDescription\n\n\n\n\ncjsg\nSearch TJAC jurisprudence (2nd degree).\n\n\ncjsg_download\nDownload raw CJSG HTML result pages.\n\n\ncjsg_parse\nParse downloaded CJSG HTML files.\n\n\n\n\n\ncourts.tjac.client.TJACScraper.cjsg(\n    pesquisa,\n    paginas=None,\n    ementa=None,\n    numero_recurso=None,\n    classe=None,\n    assunto=None,\n    comarca=None,\n    orgao_julgador=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    origem='T',\n    tipo_decisao='acordao',\n    **kwargs,\n)\nSearch TJAC jurisprudence (2nd degree).\n\n\npesquisa : str Free-text search term. paginas : int, list, range, or None Pages to download (1-based). None downloads all. ementa : str, optional Filter by ementa text. numero_recurso : str, optional Appeal number filter. classe : str, optional Procedural class (tree selection value). assunto : str, optional Subject (tree selection value). comarca : str, optional District. orgao_julgador : str, optional Judging body (tree selection value). data_julgamento_inicio, data_julgamento_fim : str, optional Judgment date range (dd/mm/yyyy). Aliases: data_inicio/data_fim. data_publicacao_inicio, data_publicacao_fim : str, optional Publication date range (dd/mm/yyyy). origem : str \"T\" for 2nd degree (default), \"R\" for recursal courts. tipo_decisao : str \"acordao\" or \"monocratica\".\n\n\n\npd.DataFrame\n\n\n\n\ncourts.tjac.client.TJACScraper.cjsg_download(\n    pesquisa,\n    paginas=None,\n    ementa=None,\n    numero_recurso=None,\n    classe=None,\n    assunto=None,\n    comarca=None,\n    orgao_julgador=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    origem='T',\n    tipo_decisao='acordao',\n    diretorio=None,\n    **kwargs,\n)\nDownload raw CJSG HTML result pages.\nParameters are the same as :meth:cjsg, plus:\n\n\nDirectory to save files. Defaults to the scraper’s download_path.\n\n\n\nstr Path to the directory containing HTML files.\n\n\n\n\ncourts.tjac.client.TJACScraper.cjsg_parse(diretorio)\nParse downloaded CJSG HTML files.\n\n\ndiretorio : str or Path Directory containing downloaded HTML files.\n\n\n\npd.DataFrame"
   },
   {
-    "objectID": "reference/courts.tjsp.client.TJSPScraper.html#methods",
-    "href": "reference/courts.tjsp.client.TJSPScraper.html#methods",
-    "title": "courts.tjsp.client.TJSPScraper",
+    "objectID": "reference/courts.tjac.client.TJACScraper.html#methods",
+    "href": "reference/courts.tjac.client.TJACScraper.html#methods",
+    "title": "courts.tjac.client.TJACScraper",
     "section": "",
-    "text": "Name\nDescription\n\n\n\n\ncjpg\nOrchestrates the download and parsing of processes from CJPG.\n\n\ncjpg_download\nDownloads the processes from the TJSP jurisprudence.\n\n\ncjpg_parse\nWrapper for parsing downloaded files from CJPG.\n\n\ncjsg\nOrchestrates the download and parsing of processes from CJSG.\n\n\ncjsg_download\nDownloads the HTML files of the pages of results of the\n\n\ncjsg_parse\nWrapper for parsing downloaded files from CJSG.\n\n\ncpopg\nScrapes a process from Primeiro Grau (CPOPG).\n\n\ncpopg_download\nDownloads a process from Primeiro Grau (CPOPG).\n\n\ncpopg_parse\nWrapper for parsing downloaded files from CPOPG.\n\n\ncposg\nOrchestrates the download and parsing of processes from Segundo Grau (CPOSG).\n\n\ncposg_download\nDownloads processes from Segundo Grau (CPOSG), via HTML or API, using modularized functions.\n\n\ncposg_parse\nWrapper for parsing downloaded files from CPOSG.\n\n\nset_download_path\nSets the base directory for saving downloaded files.\n\n\nset_method\nSets the method for accessing TJSP data.\n\n\n\n\n\ncourts.tjsp.client.TJSPScraper.cjpg(\n    pesquisa='',\n    classes=None,\n    assuntos=None,\n    varas=None,\n    id_processo=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    paginas=None,\n    **kwargs,\n)\nOrchestrates the download and parsing of processes from CJPG.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npesquisa\nstr\nThe search term. Default is “” (empty string).\n''\n\n\nclasses\nlist[str]\nList of classes of the process. Default is None.\nNone\n\n\nassuntos\nlist[str]\nList of subjects of the process. Default is None.\nNone\n\n\nvaras\nlist[str]\nList of varas of the process. Default is None.\nNone\n\n\nid_processo\nstr\nID of the process. Default is None.\nNone\n\n\ndata_julgamento_inicio\nstr | None\nStart date. data_inicio accepted as alias.\nNone\n\n\ndata_julgamento_fim\nstr | None\nEnd date. data_fim accepted as alias.\nNone\n\n\npaginas\nint, list, range, or None\nPages (1-based). None downloads all.\nNone\n\n\n\n\n\n\n\ncourts.tjsp.client.TJSPScraper.cjpg_download(\n    pesquisa,\n    classes=None,\n    assuntos=None,\n    varas=None,\n    id_processo=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    paginas=None,\n    **kwargs,\n)\nDownloads the processes from the TJSP jurisprudence.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npesquisa\nstr\nThe search term.\nrequired\n\n\nclasses\nlist[str]\nList of classes of the process. Default is None.\nNone\n\n\nassuntos\nlist[str]\nList of subjects of the process. Default is None.\nNone\n\n\nvaras\nlist[str]\nList of varas of the process. Default is None.\nNone\n\n\nid_processo\nstr\nID of the process. Default is None.\nNone\n\n\ndata_julgamento_inicio\nstr | None\nStart date. data_inicio accepted as alias.\nNone\n\n\ndata_julgamento_fim\nstr | None\nEnd date. data_fim accepted as alias.\nNone\n\n\npaginas\nint, list, range, or None\nPages (1-based). None downloads all.\nNone\n\n\n\n\n\n\n\ncourts.tjsp.client.TJSPScraper.cjpg_parse(path)\nWrapper for parsing downloaded files from CJPG.\n\n\n\ncourts.tjsp.client.TJSPScraper.cjsg(\n    pesquisa,\n    ementa=None,\n    classe=None,\n    assunto=None,\n    comarca=None,\n    orgao_julgador=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    baixar_sg=True,\n    tipo_decisao='acordao',\n    paginas=None,\n    **kwargs,\n)\nOrchestrates the download and parsing of processes from CJSG.\n\n\n\ncourts.tjsp.client.TJSPScraper.cjsg_download(\n    pesquisa,\n    ementa=None,\n    classe=None,\n    assunto=None,\n    comarca=None,\n    orgao_julgador=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    baixar_sg=True,\n    tipo_decisao='acordao',\n    paginas=None,\n    **kwargs,\n)\nDownloads the HTML files of the pages of results of the Second Stage Judgment Consultation (CJSG).\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npesquisa\nstr\nSearch term.\nrequired\n\n\nementa\nstr\nFilter by text of the ementa.\nNone\n\n\nclasse\nstr | None\nClass of the process.\nNone\n\n\nassunto\nstr | None\nSubject of the process.\nNone\n\n\ncomarca\nstr | None\nCourt of the process.\nNone\n\n\norgao_julgador\nstr | None\nCourt of appeal of the process.\nNone\n\n\ndata_julgamento_inicio\nstr | None\nStart date (judgment). data_inicio accepted as alias.\nNone\n\n\ndata_julgamento_fim\nstr | None\nEnd date (judgment). data_fim accepted as alias.\nNone\n\n\nbaixar_sg\nbool\nIf True, also downloads from Second Stage.\nTrue\n\n\ntipo_decisao\nstr\n‘acordao’ or ‘monocratica’.\n'acordao'\n\n\npaginas\nint, list, range, or None\nPages (1-based). None downloads all.\nNone\n\n\n\n\n\n\n\ncourts.tjsp.client.TJSPScraper.cjsg_parse(path)\nWrapper for parsing downloaded files from CJSG.\n\n\n\ncourts.tjsp.client.TJSPScraper.cpopg(id_cnj, method='html')\nScrapes a process from Primeiro Grau (CPOPG).\n\n\n\ncourts.tjsp.client.TJSPScraper.cpopg_download(id_cnj, method='html')\nDownloads a process from Primeiro Grau (CPOPG).\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nid_cnj\nUnion[str, List[str]]\nstring with the CNJ of the process, or list of strings with CNJs.\nrequired\n\n\nmethod\nLiteral['html', 'api']\nLiteral[‘html’, ‘api’]. The methods supported are ‘html’ and ‘api’. The default is ‘html’.\n'html'\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nException\nIf the method passed as parameter is not ‘html’ or ‘api’.\n\n\n\n\n\n\n\ncourts.tjsp.client.TJSPScraper.cpopg_parse(path)\nWrapper for parsing downloaded files from CPOPG.\n\n\n\ncourts.tjsp.client.TJSPScraper.cposg(id_cnj, method='html')\nOrchestrates the download and parsing of processes from Segundo Grau (CPOSG).\n\n\n\ncourts.tjsp.client.TJSPScraper.cposg_download(id_cnj, method='html')\nDownloads processes from Segundo Grau (CPOSG), via HTML or API, using modularized functions.\n\n\n\ncourts.tjsp.client.TJSPScraper.cposg_parse(path)\nWrapper for parsing downloaded files from CPOSG.\n\n\n\ncourts.tjsp.client.TJSPScraper.set_download_path(path=None)\nSets the base directory for saving downloaded files.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npath\nstr\nPath to save downloaded files. Default is None (uses temporary directory).\nNone\n\n\n\n\n\n\n\ncourts.tjsp.client.TJSPScraper.set_method(method)\nSets the method for accessing TJSP data.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nmethod\nLiteral['html', 'api']\nLiteral[‘html’, ‘api’]. The methods supported are ‘html’ and ‘api’.\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nException\nIf the method is not ‘html’ or ‘api’."
+    "text": "Name\nDescription\n\n\n\n\ncjsg\nSearch TJAC jurisprudence (2nd degree).\n\n\ncjsg_download\nDownload raw CJSG HTML result pages.\n\n\ncjsg_parse\nParse downloaded CJSG HTML files.\n\n\n\n\n\ncourts.tjac.client.TJACScraper.cjsg(\n    pesquisa,\n    paginas=None,\n    ementa=None,\n    numero_recurso=None,\n    classe=None,\n    assunto=None,\n    comarca=None,\n    orgao_julgador=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    origem='T',\n    tipo_decisao='acordao',\n    **kwargs,\n)\nSearch TJAC jurisprudence (2nd degree).\n\n\npesquisa : str Free-text search term. paginas : int, list, range, or None Pages to download (1-based). None downloads all. ementa : str, optional Filter by ementa text. numero_recurso : str, optional Appeal number filter. classe : str, optional Procedural class (tree selection value). assunto : str, optional Subject (tree selection value). comarca : str, optional District. orgao_julgador : str, optional Judging body (tree selection value). data_julgamento_inicio, data_julgamento_fim : str, optional Judgment date range (dd/mm/yyyy). Aliases: data_inicio/data_fim. data_publicacao_inicio, data_publicacao_fim : str, optional Publication date range (dd/mm/yyyy). origem : str \"T\" for 2nd degree (default), \"R\" for recursal courts. tipo_decisao : str \"acordao\" or \"monocratica\".\n\n\n\npd.DataFrame\n\n\n\n\ncourts.tjac.client.TJACScraper.cjsg_download(\n    pesquisa,\n    paginas=None,\n    ementa=None,\n    numero_recurso=None,\n    classe=None,\n    assunto=None,\n    comarca=None,\n    orgao_julgador=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    origem='T',\n    tipo_decisao='acordao',\n    diretorio=None,\n    **kwargs,\n)\nDownload raw CJSG HTML result pages.\nParameters are the same as :meth:cjsg, plus:\n\n\nDirectory to save files. Defaults to the scraper’s download_path.\n\n\n\nstr Path to the directory containing HTML files.\n\n\n\n\ncourts.tjac.client.TJACScraper.cjsg_parse(diretorio)\nParse downloaded CJSG HTML files.\n\n\ndiretorio : str or Path Directory containing downloaded HTML files.\n\n\n\npd.DataFrame"
   },
   {
-    "objectID": "reference/courts.tjrr.client.TJRRScraper.html",
-    "href": "reference/courts.tjrr.client.TJRRScraper.html",
-    "title": "courts.tjrr.client.TJRRScraper",
+    "objectID": "reference/index.html",
+    "href": "reference/index.html",
+    "title": "Referência da API",
     "section": "",
-    "text": "courts.tjrr.client.TJRRScraper()\nScraper for the Tribunal de Justica de Roraima (TJRR).\nUses the JSF/PrimeFaces-based jurisprudence search at jurisprudencia.tjrr.jus.br.\n\n\n\n\n\nName\nDescription\n\n\n\n\ncjsg\nSearch TJRR jurisprudence.\n\n\ncjsg_download\nDownload raw HTML pages from TJRR.\n\n\ncjsg_parse\nParse downloaded HTML pages.\n\n\ncpopg\nStub: first instance case consultation not implemented for TJRR.\n\n\ncposg\nStub: second instance case consultation not implemented for TJRR.\n\n\n\n\n\ncourts.tjrr.client.TJRRScraper.cjsg(\n    pesquisa=None,\n    paginas=None,\n    relator='',\n    orgao_julgador=None,\n    especie=None,\n    **kwargs,\n)\nSearch TJRR jurisprudence.\n\n\npesquisa : str Free-text search term. paginas : int, list, range, or None Pages to download (1-based). None downloads all. relator : str, optional Reporter judge name. orgao_julgador : list, optional Judging body codes (e.g. [\"PRIMEIRA_TURMA_CIVEL\", \"CAMARA_CRIMINAL\"]). especie : list, optional Decision type codes.\n\n\n\npd.DataFrame\n\n\n\n\ncourts.tjrr.client.TJRRScraper.cjsg_download(\n    pesquisa=None,\n    paginas=None,\n    **kwargs,\n)\nDownload raw HTML pages from TJRR.\n\n\nlist List of raw HTML strings (one per page).\n\n\n\n\ncourts.tjrr.client.TJRRScraper.cjsg_parse(resultados_brutos)\nParse downloaded HTML pages.\n\n\npd.DataFrame\n\n\n\n\ncourts.tjrr.client.TJRRScraper.cpopg(id_cnj)\nStub: first instance case consultation not implemented for TJRR.\n\n\n\ncourts.tjrr.client.TJRRScraper.cposg(id_cnj)\nStub: second instance case consultation not implemented for TJRR."
+    "text": "Interface pública para acessar os scrapers.\n\n\n\nscraper\nFactory that returns the correct scraper.\n\n\n\n\n\n\nClasses para coletar dados de agregadores de jurisprudência.\n\n\n\naggregators.datajud.client.DatajudScraper\nScraper for CNJ’s Datajud API.\n\n\naggregators.jusbr.client.JusbrScraper\nRaspador para o JusBR (consulta unificada da PDPJ-CNJ).\n\n\n\n\n\n\nClasses para coletar dados de tribunais específicos.\n\n\n\ncourts.tjac.client.TJACScraper\nScraper for the Tribunal de Justica do Acre (TJAC).\n\n\ncourts.tjal.client.TJALScraper\nScraper for the Tribunal de Justica de Alagoas (TJAL).\n\n\ncourts.tjam.client.TJAMScraper\nScraper for the Tribunal de Justica do Amazonas (TJAM).\n\n\ncourts.tjap.client.TJAPScraper\nScraper for the Tribunal de Justica do Amapa (TJAP).\n\n\ncourts.tjce.client.TJCEScraper\nScraper for the Tribunal de Justica do Ceara (TJCE).\n\n\ncourts.tjba.client.TJBAScraper\nScraper for the Tribunal de Justica do Estado da Bahia.\n\n\ncourts.tjsp.client.TJSPScraper\nMain scraper for Tribunal de Justica de Sao Paulo.\n\n\ncourts.tjdft.client.TJDFTScraper\nScraper for the Court of Justice of the Federal District and Territories (TJDFT).\n\n\ncourts.tjrs.client.TJRSScraper\nScraper for the Tribunal de Justiça do Rio Grande do Sul.\n\n\ncourts.tjpa.client.TJPAScraper\nScraper for the Tribunal de Justica do Estado do Para.\n\n\ncourts.tjpr.client.TJPRScraper\nScraper for the Court of Justice of Paraná.\n\n\ncourts.tjpe.client.TJPEScraper\nScraper for the Tribunal de Justica de Pernambuco.\n\n\ncourts.tjmt.client.TJMTScraper\nScraper for the Tribunal de Justica do Estado de Mato Grosso (TJMT).\n\n\ncourts.tjes.client.TJESScraper\nScraper for the Tribunal de Justica do Espirito Santo.\n\n\ncourts.tjms.client.TJMSScraper\nScraper for the Tribunal de Justica de Mato Grosso do Sul (TJMS).\n\n\ncourts.tjto.client.TJTOScraper\nScraper for the Tribunal de Justica do Tocantins.\n\n\ncourts.tjpb.client.TJPBScraper\nScraper for the Tribunal de Justica da Paraiba (TJPB).\n\n\ncourts.tjpi.client.TJPIScraper\nScraper for the Tribunal de Justica do Piaui (TJPI).\n\n\ncourts.tjrn.client.TJRNScraper\nScraper for the Tribunal de Justica do Rio Grande do Norte (TJRN).\n\n\ncourts.tjro.client.TJROScraper\nScraper for the Tribunal de Justica de Rondonia (TJRO).\n\n\ncourts.tjrr.client.TJRRScraper\nScraper for the Tribunal de Justica de Roraima (TJRR).\n\n\ncourts.tjsc.client.TJSCScraper\nScraper for the Tribunal de Justica de Santa Catarina (TJSC).",
+    "crumbs": [
+      "Home",
+      "Referência da API"
+    ]
   },
   {
-    "objectID": "reference/courts.tjrr.client.TJRRScraper.html#methods",
-    "href": "reference/courts.tjrr.client.TJRRScraper.html#methods",
-    "title": "courts.tjrr.client.TJRRScraper",
+    "objectID": "reference/index.html#função-principal",
+    "href": "reference/index.html#função-principal",
+    "title": "Referência da API",
     "section": "",
-    "text": "Name\nDescription\n\n\n\n\ncjsg\nSearch TJRR jurisprudence.\n\n\ncjsg_download\nDownload raw HTML pages from TJRR.\n\n\ncjsg_parse\nParse downloaded HTML pages.\n\n\ncpopg\nStub: first instance case consultation not implemented for TJRR.\n\n\ncposg\nStub: second instance case consultation not implemented for TJRR.\n\n\n\n\n\ncourts.tjrr.client.TJRRScraper.cjsg(\n    pesquisa=None,\n    paginas=None,\n    relator='',\n    orgao_julgador=None,\n    especie=None,\n    **kwargs,\n)\nSearch TJRR jurisprudence.\n\n\npesquisa : str Free-text search term. paginas : int, list, range, or None Pages to download (1-based). None downloads all. relator : str, optional Reporter judge name. orgao_julgador : list, optional Judging body codes (e.g. [\"PRIMEIRA_TURMA_CIVEL\", \"CAMARA_CRIMINAL\"]). especie : list, optional Decision type codes.\n\n\n\npd.DataFrame\n\n\n\n\ncourts.tjrr.client.TJRRScraper.cjsg_download(\n    pesquisa=None,\n    paginas=None,\n    **kwargs,\n)\nDownload raw HTML pages from TJRR.\n\n\nlist List of raw HTML strings (one per page).\n\n\n\n\ncourts.tjrr.client.TJRRScraper.cjsg_parse(resultados_brutos)\nParse downloaded HTML pages.\n\n\npd.DataFrame\n\n\n\n\ncourts.tjrr.client.TJRRScraper.cpopg(id_cnj)\nStub: first instance case consultation not implemented for TJRR.\n\n\n\ncourts.tjrr.client.TJRRScraper.cposg(id_cnj)\nStub: second instance case consultation not implemented for TJRR."
+    "text": "Interface pública para acessar os scrapers.\n\n\n\nscraper\nFactory that returns the correct scraper.",
+    "crumbs": [
+      "Home",
+      "Referência da API"
+    ]
+  },
+  {
+    "objectID": "reference/index.html#scrapers-de-agregadores",
+    "href": "reference/index.html#scrapers-de-agregadores",
+    "title": "Referência da API",
+    "section": "",
+    "text": "Classes para coletar dados de agregadores de jurisprudência.\n\n\n\naggregators.datajud.client.DatajudScraper\nScraper for CNJ’s Datajud API.\n\n\naggregators.jusbr.client.JusbrScraper\nRaspador para o JusBR (consulta unificada da PDPJ-CNJ).",
+    "crumbs": [
+      "Home",
+      "Referência da API"
+    ]
+  },
+  {
+    "objectID": "reference/index.html#scrapers-de-tribunais",
+    "href": "reference/index.html#scrapers-de-tribunais",
+    "title": "Referência da API",
+    "section": "",
+    "text": "Classes para coletar dados de tribunais específicos.\n\n\n\ncourts.tjac.client.TJACScraper\nScraper for the Tribunal de Justica do Acre (TJAC).\n\n\ncourts.tjal.client.TJALScraper\nScraper for the Tribunal de Justica de Alagoas (TJAL).\n\n\ncourts.tjam.client.TJAMScraper\nScraper for the Tribunal de Justica do Amazonas (TJAM).\n\n\ncourts.tjap.client.TJAPScraper\nScraper for the Tribunal de Justica do Amapa (TJAP).\n\n\ncourts.tjce.client.TJCEScraper\nScraper for the Tribunal de Justica do Ceara (TJCE).\n\n\ncourts.tjba.client.TJBAScraper\nScraper for the Tribunal de Justica do Estado da Bahia.\n\n\ncourts.tjsp.client.TJSPScraper\nMain scraper for Tribunal de Justica de Sao Paulo.\n\n\ncourts.tjdft.client.TJDFTScraper\nScraper for the Court of Justice of the Federal District and Territories (TJDFT).\n\n\ncourts.tjrs.client.TJRSScraper\nScraper for the Tribunal de Justiça do Rio Grande do Sul.\n\n\ncourts.tjpa.client.TJPAScraper\nScraper for the Tribunal de Justica do Estado do Para.\n\n\ncourts.tjpr.client.TJPRScraper\nScraper for the Court of Justice of Paraná.\n\n\ncourts.tjpe.client.TJPEScraper\nScraper for the Tribunal de Justica de Pernambuco.\n\n\ncourts.tjmt.client.TJMTScraper\nScraper for the Tribunal de Justica do Estado de Mato Grosso (TJMT).\n\n\ncourts.tjes.client.TJESScraper\nScraper for the Tribunal de Justica do Espirito Santo.\n\n\ncourts.tjms.client.TJMSScraper\nScraper for the Tribunal de Justica de Mato Grosso do Sul (TJMS).\n\n\ncourts.tjto.client.TJTOScraper\nScraper for the Tribunal de Justica do Tocantins.\n\n\ncourts.tjpb.client.TJPBScraper\nScraper for the Tribunal de Justica da Paraiba (TJPB).\n\n\ncourts.tjpi.client.TJPIScraper\nScraper for the Tribunal de Justica do Piaui (TJPI).\n\n\ncourts.tjrn.client.TJRNScraper\nScraper for the Tribunal de Justica do Rio Grande do Norte (TJRN).\n\n\ncourts.tjro.client.TJROScraper\nScraper for the Tribunal de Justica de Rondonia (TJRO).\n\n\ncourts.tjrr.client.TJRRScraper\nScraper for the Tribunal de Justica de Roraima (TJRR).\n\n\ncourts.tjsc.client.TJSCScraper\nScraper for the Tribunal de Justica de Santa Catarina (TJSC).",
+    "crumbs": [
+      "Home",
+      "Referência da API"
+    ]
+  },
+  {
+    "objectID": "reference/courts.tjms.client.TJMSScraper.html",
+    "href": "reference/courts.tjms.client.TJMSScraper.html",
+    "title": "courts.tjms.client.TJMSScraper",
+    "section": "",
+    "text": "courts.tjms.client.TJMSScraper(\n    verbose=0,\n    download_path=None,\n    sleep_time=1.0,\n    **kwargs,\n)\nScraper for the Tribunal de Justica de Mato Grosso do Sul (TJMS).\nThe TJMS uses the eSAJ platform (same as TJSP). Currently supports jurisprudence search (CJSG).\n\n\n\n\n\nName\nDescription\n\n\n\n\ncjsg\nSearch TJMS jurisprudence (2nd degree).\n\n\ncjsg_download\nDownload raw CJSG HTML result pages.\n\n\ncjsg_parse\nParse downloaded CJSG HTML files.\n\n\n\n\n\ncourts.tjms.client.TJMSScraper.cjsg(\n    pesquisa,\n    paginas=None,\n    ementa=None,\n    numero_recurso=None,\n    classe=None,\n    assunto=None,\n    comarca=None,\n    orgao_julgador=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    origem='T',\n    tipo_decisao='acordao',\n    **kwargs,\n)\nSearch TJMS jurisprudence (2nd degree).\n\n\npesquisa : str Free-text search term. paginas : int, list, range, or None Pages to download (1-based). None downloads all. ementa : str, optional Filter by ementa text. numero_recurso : str, optional Appeal number filter. classe : str, optional Procedural class (tree selection value). assunto : str, optional Subject (tree selection value). comarca : str, optional District. orgao_julgador : str, optional Judging body (tree selection value). data_julgamento_inicio, data_julgamento_fim : str, optional Judgment date range (dd/mm/yyyy). Aliases: data_inicio/data_fim. data_publicacao_inicio, data_publicacao_fim : str, optional Publication date range (dd/mm/yyyy). origem : str \"T\" for 2nd degree (default), \"R\" for recursal courts. tipo_decisao : str \"acordao\" or \"monocratica\".\n\n\n\npd.DataFrame\n\n\n\n\ncourts.tjms.client.TJMSScraper.cjsg_download(\n    pesquisa,\n    paginas=None,\n    ementa=None,\n    numero_recurso=None,\n    classe=None,\n    assunto=None,\n    comarca=None,\n    orgao_julgador=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    origem='T',\n    tipo_decisao='acordao',\n    diretorio=None,\n    **kwargs,\n)\nDownload raw CJSG HTML result pages.\nParameters are the same as :meth:cjsg, plus:\n\n\nDirectory to save files. Defaults to the scraper’s download_path.\n\n\n\nstr Path to the directory containing HTML files.\n\n\n\n\ncourts.tjms.client.TJMSScraper.cjsg_parse(diretorio)\nParse downloaded CJSG HTML files.\n\n\ndiretorio : str or Path Directory containing downloaded HTML files.\n\n\n\npd.DataFrame"
+  },
+  {
+    "objectID": "reference/courts.tjms.client.TJMSScraper.html#methods",
+    "href": "reference/courts.tjms.client.TJMSScraper.html#methods",
+    "title": "courts.tjms.client.TJMSScraper",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\ncjsg\nSearch TJMS jurisprudence (2nd degree).\n\n\ncjsg_download\nDownload raw CJSG HTML result pages.\n\n\ncjsg_parse\nParse downloaded CJSG HTML files.\n\n\n\n\n\ncourts.tjms.client.TJMSScraper.cjsg(\n    pesquisa,\n    paginas=None,\n    ementa=None,\n    numero_recurso=None,\n    classe=None,\n    assunto=None,\n    comarca=None,\n    orgao_julgador=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    origem='T',\n    tipo_decisao='acordao',\n    **kwargs,\n)\nSearch TJMS jurisprudence (2nd degree).\n\n\npesquisa : str Free-text search term. paginas : int, list, range, or None Pages to download (1-based). None downloads all. ementa : str, optional Filter by ementa text. numero_recurso : str, optional Appeal number filter. classe : str, optional Procedural class (tree selection value). assunto : str, optional Subject (tree selection value). comarca : str, optional District. orgao_julgador : str, optional Judging body (tree selection value). data_julgamento_inicio, data_julgamento_fim : str, optional Judgment date range (dd/mm/yyyy). Aliases: data_inicio/data_fim. data_publicacao_inicio, data_publicacao_fim : str, optional Publication date range (dd/mm/yyyy). origem : str \"T\" for 2nd degree (default), \"R\" for recursal courts. tipo_decisao : str \"acordao\" or \"monocratica\".\n\n\n\npd.DataFrame\n\n\n\n\ncourts.tjms.client.TJMSScraper.cjsg_download(\n    pesquisa,\n    paginas=None,\n    ementa=None,\n    numero_recurso=None,\n    classe=None,\n    assunto=None,\n    comarca=None,\n    orgao_julgador=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    origem='T',\n    tipo_decisao='acordao',\n    diretorio=None,\n    **kwargs,\n)\nDownload raw CJSG HTML result pages.\nParameters are the same as :meth:cjsg, plus:\n\n\nDirectory to save files. Defaults to the scraper’s download_path.\n\n\n\nstr Path to the directory containing HTML files.\n\n\n\n\ncourts.tjms.client.TJMSScraper.cjsg_parse(diretorio)\nParse downloaded CJSG HTML files.\n\n\ndiretorio : str or Path Directory containing downloaded HTML files.\n\n\n\npd.DataFrame"
   },
   {
     "objectID": "reference/aggregators.datajud.client.DatajudScraper.html",
@@ -140,6 +184,20 @@
     "text": "Name\nDescription\n\n\n\n\ncjpg\nFetch first-instance jurisprudence from TJTO (download + parse).\n\n\ncjpg_download\nDownload raw HTML pages from the TJTO first-instance jurisprudence search.\n\n\ncjpg_parse\nParse raw HTML pages downloaded by cjpg_download.\n\n\ncjsg\nFetch second-instance jurisprudence from TJTO (download + parse).\n\n\ncjsg_download\nDownload raw HTML pages from the TJTO second-instance jurisprudence search.\n\n\ncjsg_ementa\nFetch the ementa for a specific document by UUID.\n\n\ncjsg_parse\nParse raw HTML pages downloaded by cjsg_download.\n\n\ncpopg\nStub: first instance case consultation not implemented for TJTO.\n\n\ncposg\nStub: second instance case consultation not implemented for TJTO.\n\n\n\n\n\ncourts.tjto.client.TJTOScraper.cjpg(\n    pesquisa=None,\n    paginas=None,\n    tipo_documento='acordaos',\n    ordenacao='DESC',\n    numero_processo='',\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    soementa=False,\n    session=None,\n    **kwargs,\n)\nFetch first-instance jurisprudence from TJTO (download + parse).\nShortcut for :meth:cjpg_download + :meth:cjpg_parse. Queries only first-instance results (instancia='1'). Accepts the same parameters as :meth:cjsg.\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\npd.DataFrame\nDataFrame with jurisprudence results.\n\n\n\n\n\n\n\ncourts.tjto.client.TJTOScraper.cjpg_download(\n    pesquisa=None,\n    paginas=None,\n    tipo_documento='acordaos',\n    ordenacao='DESC',\n    numero_processo='',\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    soementa=False,\n    session=None,\n    **kwargs,\n)\nDownload raw HTML pages from the TJTO first-instance jurisprudence search.\nShortcut for the download with instancia='1'. Accepts the same parameters as :meth:cjsg_download.\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist\nList of raw HTML strings.\n\n\n\n\n\n\n\ncourts.tjto.client.TJTOScraper.cjpg_parse(resultados_brutos)\nParse raw HTML pages downloaded by cjpg_download.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nresultados_brutos\nlist\nList of raw HTML strings.\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\npd.DataFrame\nDataFrame with parsed results.\n\n\n\n\n\n\n\ncourts.tjto.client.TJTOScraper.cjsg(\n    pesquisa=None,\n    paginas=None,\n    tipo_documento='acordaos',\n    ordenacao='DESC',\n    numero_processo='',\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    soementa=False,\n    session=None,\n    **kwargs,\n)\nFetch second-instance jurisprudence from TJTO (download + parse).\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npesquisa\nstr\nSearch term.\nNone\n\n\npaginas\nUnion[int, list, range, None]\nPages to download (1-based). int, list, range, or None (all).\nNone\n\n\ntipo_documento\nstr\n‘acordaos’, ‘decisoes’, or ‘sentencas’.\n'acordaos'\n\n\nordenacao\nstr\n‘DESC’ (most recent), ‘ASC’ (oldest), ‘RELEV’ (most relevant).\n'DESC'\n\n\nnumero_processo\nstr\nFilter by process number.\n''\n\n\ndata_julgamento_inicio\nstr\nStart date (DD/MM/YYYY).\nNone\n\n\ndata_julgamento_fim\nstr\nEnd date (DD/MM/YYYY).\nNone\n\n\nsoementa\nbool\nIf True, restrict search to ementa text only.\nFalse\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\npd.DataFrame\nDataFrame with jurisprudence results.\n\n\n\n\n\n\n\ncourts.tjto.client.TJTOScraper.cjsg_download(\n    pesquisa=None,\n    paginas=None,\n    tipo_documento='acordaos',\n    ordenacao='DESC',\n    numero_processo='',\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    soementa=False,\n    session=None,\n    **kwargs,\n)\nDownload raw HTML pages from the TJTO second-instance jurisprudence search.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npesquisa\nstr\nSearch term.\nNone\n\n\npaginas\nUnion[int, list, range, None]\nPages to download (1-based). int, list, range, or None (all).\nNone\n\n\ntipo_documento\nstr\n‘acordaos’, ‘decisoes’, or ‘sentencas’.\n'acordaos'\n\n\nordenacao\nstr\n‘DESC’ (most recent), ‘ASC’ (oldest), ‘RELEV’ (most relevant).\n'DESC'\n\n\nnumero_processo\nstr\nFilter by process number.\n''\n\n\ndata_julgamento_inicio\nstr\nStart date for judgment filter (DD/MM/YYYY).\nNone\n\n\ndata_julgamento_fim\nstr\nEnd date for judgment filter (DD/MM/YYYY).\nNone\n\n\nsoementa\nbool\nIf True, restrict search to ementa text only.\nFalse\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist\nList of raw HTML strings.\n\n\n\n\n\n\n\ncourts.tjto.client.TJTOScraper.cjsg_ementa(uuid)\nFetch the ementa for a specific document by UUID.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nuuid\nstr\nThe document UUID (from the ‘uuid’ column in cjsg/cjpg results).\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ndict\nDict with ementa text and process number.\n\n\n\n\n\n\n\ncourts.tjto.client.TJTOScraper.cjsg_parse(resultados_brutos)\nParse raw HTML pages downloaded by cjsg_download.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nresultados_brutos\nlist\nList of raw HTML strings.\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\npd.DataFrame\nDataFrame with parsed results.\n\n\n\n\n\n\n\ncourts.tjto.client.TJTOScraper.cpopg(id_cnj)\nStub: first instance case consultation not implemented for TJTO.\n\n\n\ncourts.tjto.client.TJTOScraper.cposg(id_cnj)\nStub: second instance case consultation not implemented for TJTO."
   },
   {
+    "objectID": "reference/courts.tjba.client.TJBAScraper.html",
+    "href": "reference/courts.tjba.client.TJBAScraper.html",
+    "title": "courts.tjba.client.TJBAScraper",
+    "section": "",
+    "text": "courts.tjba.client.TJBAScraper()\nScraper for the Tribunal de Justica do Estado da Bahia.\n\n\n\n\n\nName\nDescription\n\n\n\n\ncjsg\nSearch TJBA jurisprudence (download + parse).\n\n\ncjsg_download\nDownload raw results from the TJBA jurisprudence search.\n\n\ncjsg_parse\nParse raw results from TJBA into a DataFrame.\n\n\ncpopg\nStub: first-instance case consultation not implemented for TJBA.\n\n\ncposg\nStub: second-instance case consultation not implemented for TJBA.\n\n\n\n\n\ncourts.tjba.client.TJBAScraper.cjsg(\n    pesquisa=None,\n    paginas=None,\n    numero_recurso=None,\n    orgaos=None,\n    relatores=None,\n    classes=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    segundo_grau=True,\n    turmas_recursais=True,\n    tipo_acordaos=True,\n    tipo_decisoes_monocraticas=True,\n    ordenado_por='dataPublicacao',\n    items_per_page=10,\n    session=None,\n    **kwargs,\n)\nSearch TJBA jurisprudence (download + parse).\nReturns a ready-to-analyze DataFrame.\n\n\npesquisa : str Search term. query and termo are accepted as deprecated aliases. paginas : int, list, range, or None Pages to download (1-based). None = all pages. data_publicacao_inicio : str, optional Start date (YYYY-MM-DD). data_publicacao_fim : str, optional End date (YYYY-MM-DD).\n\n\n\npd.DataFrame Jurisprudence results.\n\n\n\n\ncourts.tjba.client.TJBAScraper.cjsg_download(\n    pesquisa=None,\n    paginas=None,\n    numero_recurso=None,\n    orgaos=None,\n    relatores=None,\n    classes=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    segundo_grau=True,\n    turmas_recursais=True,\n    tipo_acordaos=True,\n    tipo_decisoes_monocraticas=True,\n    ordenado_por='dataPublicacao',\n    items_per_page=10,\n    session=None,\n    **kwargs,\n)\nDownload raw results from the TJBA jurisprudence search.\n\n\npesquisa : str Search term. query and termo are accepted as deprecated aliases. paginas : int, list, range, or None Pages to download (1-based). int: paginas=3 downloads pages 1-3. range: range(1, 4) downloads pages 1-3. None: downloads all. numero_recurso : str, optional Case/appeal number filter. orgaos : list, optional List of orgao julgador IDs to filter. relatores : list, optional List of relator IDs to filter. classes : list, optional List of class IDs to filter. data_publicacao_inicio : str, optional Start date for publication filter (YYYY-MM-DD). data_publicacao_fim : str, optional End date for publication filter (YYYY-MM-DD). segundo_grau : bool Include second-instance results (default True). turmas_recursais : bool Include turmas recursais results (default True). tipo_acordaos : bool Include acordaos (default True). tipo_decisoes_monocraticas : bool Include monocratic decisions (default True). items_per_page : int Results per page (default 10).\n\n\n\nlist List of raw GraphQL response dicts (one per page).\n\n\n\n\ncourts.tjba.client.TJBAScraper.cjsg_parse(resultados_brutos)\nParse raw results from TJBA into a DataFrame.\n\n\nresultados_brutos : list Raw response dicts as returned by cjsg_download.\n\n\n\npd.DataFrame DataFrame with one row per decision.\n\n\n\n\ncourts.tjba.client.TJBAScraper.cpopg(id_cnj)\nStub: first-instance case consultation not implemented for TJBA.\n\n\n\ncourts.tjba.client.TJBAScraper.cposg(id_cnj)\nStub: second-instance case consultation not implemented for TJBA."
+  },
+  {
+    "objectID": "reference/courts.tjba.client.TJBAScraper.html#methods",
+    "href": "reference/courts.tjba.client.TJBAScraper.html#methods",
+    "title": "courts.tjba.client.TJBAScraper",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\ncjsg\nSearch TJBA jurisprudence (download + parse).\n\n\ncjsg_download\nDownload raw results from the TJBA jurisprudence search.\n\n\ncjsg_parse\nParse raw results from TJBA into a DataFrame.\n\n\ncpopg\nStub: first-instance case consultation not implemented for TJBA.\n\n\ncposg\nStub: second-instance case consultation not implemented for TJBA.\n\n\n\n\n\ncourts.tjba.client.TJBAScraper.cjsg(\n    pesquisa=None,\n    paginas=None,\n    numero_recurso=None,\n    orgaos=None,\n    relatores=None,\n    classes=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    segundo_grau=True,\n    turmas_recursais=True,\n    tipo_acordaos=True,\n    tipo_decisoes_monocraticas=True,\n    ordenado_por='dataPublicacao',\n    items_per_page=10,\n    session=None,\n    **kwargs,\n)\nSearch TJBA jurisprudence (download + parse).\nReturns a ready-to-analyze DataFrame.\n\n\npesquisa : str Search term. query and termo are accepted as deprecated aliases. paginas : int, list, range, or None Pages to download (1-based). None = all pages. data_publicacao_inicio : str, optional Start date (YYYY-MM-DD). data_publicacao_fim : str, optional End date (YYYY-MM-DD).\n\n\n\npd.DataFrame Jurisprudence results.\n\n\n\n\ncourts.tjba.client.TJBAScraper.cjsg_download(\n    pesquisa=None,\n    paginas=None,\n    numero_recurso=None,\n    orgaos=None,\n    relatores=None,\n    classes=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    segundo_grau=True,\n    turmas_recursais=True,\n    tipo_acordaos=True,\n    tipo_decisoes_monocraticas=True,\n    ordenado_por='dataPublicacao',\n    items_per_page=10,\n    session=None,\n    **kwargs,\n)\nDownload raw results from the TJBA jurisprudence search.\n\n\npesquisa : str Search term. query and termo are accepted as deprecated aliases. paginas : int, list, range, or None Pages to download (1-based). int: paginas=3 downloads pages 1-3. range: range(1, 4) downloads pages 1-3. None: downloads all. numero_recurso : str, optional Case/appeal number filter. orgaos : list, optional List of orgao julgador IDs to filter. relatores : list, optional List of relator IDs to filter. classes : list, optional List of class IDs to filter. data_publicacao_inicio : str, optional Start date for publication filter (YYYY-MM-DD). data_publicacao_fim : str, optional End date for publication filter (YYYY-MM-DD). segundo_grau : bool Include second-instance results (default True). turmas_recursais : bool Include turmas recursais results (default True). tipo_acordaos : bool Include acordaos (default True). tipo_decisoes_monocraticas : bool Include monocratic decisions (default True). items_per_page : int Results per page (default 10).\n\n\n\nlist List of raw GraphQL response dicts (one per page).\n\n\n\n\ncourts.tjba.client.TJBAScraper.cjsg_parse(resultados_brutos)\nParse raw results from TJBA into a DataFrame.\n\n\nresultados_brutos : list Raw response dicts as returned by cjsg_download.\n\n\n\npd.DataFrame DataFrame with one row per decision.\n\n\n\n\ncourts.tjba.client.TJBAScraper.cpopg(id_cnj)\nStub: first-instance case consultation not implemented for TJBA.\n\n\n\ncourts.tjba.client.TJBAScraper.cposg(id_cnj)\nStub: second-instance case consultation not implemented for TJBA."
+  },
+  {
     "objectID": "reference/courts.tjsc.client.TJSCScraper.html",
     "href": "reference/courts.tjsc.client.TJSCScraper.html",
     "title": "courts.tjsc.client.TJSCScraper",
@@ -188,7 +246,7 @@
     "href": "index.html#implementações",
     "title": "juscraper",
     "section": "Implementações",
-    "text": "Implementações\n\nTribunais Disponíveis\n\n\n\nTribunal\nFuncionalidades Disponíveis\n\n\n\n\nTJAP\ncjsg\n\n\nTJCE\ncjsg\n\n\nTJBA\ncjsg\n\n\nTJSP\ncpopg, cposg, cjsg, cjpg, acordao\n\n\nTJRS\ncjsg\n\n\nTJPR\ncjsg\n\n\nTJPE\ncjsg\n\n\nTJES\ncjsg, cjpg\n\n\nTJDFT\ncjsg\n\n\nTJPA\ncjsg\n\n\nTJMT\ncjsg\n\n\nTJTO\ncjsg, cjpg\n\n\nTJPB\ncjsg\n\n\nTJPI\ncjsg\n\n\nTJRN\ncjsg\n\n\nTJRO\ncjsg\n\n\nTJRR\ncjsg\n\n\nTJSC\ncjsg\n\n\n\n\n\nAgregadores Disponíveis\n\n\n\nNome\nFuncionalidades\n\n\n\n\nDatajud\nlistar_processos\n\n\nJusbr\ncpopg, download_documents\n\n\n\n\n\nNotebooks de Exemplo\n\nExemplo TJAP\nExemplo TJCE\nExemplo TJBA\nExemplo TJSP\nExemplo TJRS\nExemplo TJPR\nExemplo TJPA\nExemplo TJPE\nExemplo TJES\nExemplo TJDFT\nExemplo TJMT\nExemplo TJTO\nExemplo TJPB\nExemplo TJPI\nExemplo TJRN\nExemplo TJRO\nExemplo TJRR\nExemplo TJSC\nExemplo Datajud\nExemplo Jusbr",
+    "text": "Implementações\n\nTribunais Disponíveis\n\n\n\nTribunal\nFuncionalidades Disponíveis\n\n\n\n\nTJAC\ncjsg\n\n\nTJAL\ncjsg\n\n\nTJAM\ncjsg\n\n\nTJAP\ncjsg\n\n\nTJCE\ncjsg\n\n\nTJBA\ncjsg\n\n\nTJSP\ncpopg, cposg, cjsg, cjpg, acordao\n\n\nTJRS\ncjsg\n\n\nTJPR\ncjsg\n\n\nTJPE\ncjsg\n\n\nTJES\ncjsg, cjpg\n\n\nTJMS\ncjsg\n\n\nTJDFT\ncjsg\n\n\nTJPA\ncjsg\n\n\nTJMT\ncjsg\n\n\nTJTO\ncjsg, cjpg\n\n\nTJPB\ncjsg\n\n\nTJPI\ncjsg\n\n\nTJRN\ncjsg\n\n\nTJRO\ncjsg\n\n\nTJRR\ncjsg\n\n\nTJSC\ncjsg\n\n\n\n\n\nAgregadores Disponíveis\n\n\n\nNome\nFuncionalidades\n\n\n\n\nDatajud\nlistar_processos\n\n\nJusbr\ncpopg, download_documents\n\n\n\n\n\nNotebooks de Exemplo\n\nExemplo TJAC\nExemplo TJAL\nExemplo TJAM\nExemplo TJAP\nExemplo TJCE\nExemplo TJBA\nExemplo TJSP\nExemplo TJRS\nExemplo TJPR\nExemplo TJPA\nExemplo TJPE\nExemplo TJES\nExemplo TJMS\nExemplo TJDFT\nExemplo TJMT\nExemplo TJTO\nExemplo TJPB\nExemplo TJPI\nExemplo TJRN\nExemplo TJRO\nExemplo TJRR\nExemplo TJSC\nExemplo Datajud\nExemplo Jusbr",
     "crumbs": [
       "Home"
     ]
@@ -536,68 +594,146 @@
     ]
   },
   {
-    "objectID": "notebooks/tjsc.html",
-    "href": "notebooks/tjsc.html",
-    "title": "TJSC - Tribunal de Justica de Santa Catarina",
+    "objectID": "notebooks/tjam.html",
+    "href": "notebooks/tjam.html",
+    "title": "TJAM - Tribunal de Justica do Amazonas",
     "section": "",
-    "text": "Jurisprudence scraper for TJSC, via the eproc PHP system.\nimport juscraper as jus\n\ntjsc = jus.scraper('tjsc')",
+    "text": "Scraper for the jurisprudence search (CJSG) of the Tribunal de Justica do Amazonas.",
     "crumbs": [
       "Home",
       "Exemplos",
       "Tribunais",
-      "TJSC"
+      "TJAM"
     ]
   },
   {
-    "objectID": "notebooks/tjsc.html#basic-search",
-    "href": "notebooks/tjsc.html#basic-search",
-    "title": "TJSC - Tribunal de Justica de Santa Catarina",
+    "objectID": "notebooks/tjam.html#basic-search",
+    "href": "notebooks/tjam.html#basic-search",
+    "title": "TJAM - Tribunal de Justica do Amazonas",
     "section": "Basic search",
-    "text": "Basic search\n\ndf = tjsc.cjsg('dano moral', paginas=range(1, 3))\n\nprint(df.shape)\ndf.head(3)\n\nBaixando CJSG TJSC: 100%|██████████| 2/2 [00:03&lt;00:00,  1.71s/it]\n\n\n(20, 8)\n\n\n\n\n\n\n\n\n\n\n\n\nprocesso\nclasse\norgao_julgador\nrelator\ndata_julgamento\ndata_publicacao\nementa\nuf\n\n\n\n\n0\n5042483-02.2020.8.24.0038/TJSC\nNaN\n1ª Câmara Especial de Enfrentamento de Acervos\nPATRÍCIA NOLLI\n2026-04-08\n2026-04-08\nDIREITO DO CONSUMIDOR. APELAÇÕES CÍVEIS. AÇÃO ...\nSC\n\n\n1\n5003931-18.2023.8.24.0052/TJSC\nNaN\n6ª Câmara de Direito Civil\nQUITERIA TAMANINI VIEIRA\n2026-04-08\n2026-04-08\nDIREITO CIVIL E DO CONSUMIDOR. AÇÃO DECLARATÓR...\nSC\n\n\n2\n5048640-54.2021.8.24.0038/TJSC\nNaN\n6ª Câmara de Direito Civil\nQUITERIA TAMANINI VIEIRA\n2026-04-08\n2026-04-08\nDIREITO CIVIL E PROCESSUAL CIVIL. EMBARGOS DE ...\nSC",
+    "text": "Basic search\n\nimport juscraper as jus\n\ntjam = jus.scraper('tjam')\n\n\ndf = tjam.cjsg('dano moral', paginas=range(1, 3))\nprint(df.shape)\ndf.head(3)\n\nBaixando CJSG TJAM: 100%|██████████| 2/2 [00:01&lt;00:00,  1.29s/it]\nProcessando CJSG TJAM: 100%|██████████| 2/2 [00:00&lt;00:00, 38.67it/s]\n\n\n(20, 10)\n\n\n\n\n\n\n\n\n\n\n\n\nprocesso\ncd_acordao\ncd_foro\nclasse_assunto\nrelatora\ncomarca\norgao_julgador\ndata_julgamento\ndata_publicacao\nementa\n\n\n\n\n0\n0708349-62.2020.8.04.0001\n3363939\n0\nApelação Cível / Indenização por Dano Material\nDélcio Luís Santos\nManaus\nSegunda Câmara Cível\n25/11/2024\n18/09/2025\nAPELAÇÕES CÍVEIS. DIREITO CIVIL. DIREITO CONSU...\n\n\n1\n0515824-48.2023.8.04.0001\n3363938\n0\nApelação Cível / Limitação de Juros\nDomingos Jorge Chalub Pereira\nManaus\nTerceira Câmara Cível\n29/07/2025\n29/07/2025\nDIREITO DO CONSUMIDOR E PROCESSUAL CIVIL – TAX...\n\n\n2\n0006912-88.2024.8.04.0000\n3363937\n0\nAgravo Interno Cível / Cartão de Crédito\nSocorro Guedes Moura\nManaus\nSegunda Câmara Cível\n01/06/2004\n16/07/2025\nDIREITO DO CONSUMIDOR. AGRAVO INTERNO. CONTRAT...",
     "crumbs": [
       "Home",
       "Exemplos",
       "Tribunais",
-      "TJSC"
+      "TJAM"
     ]
   },
   {
-    "objectID": "notebooks/tjsc.html#available-columns",
-    "href": "notebooks/tjsc.html#available-columns",
-    "title": "TJSC - Tribunal de Justica de Santa Catarina",
+    "objectID": "notebooks/tjam.html#available-columns",
+    "href": "notebooks/tjam.html#available-columns",
+    "title": "TJAM - Tribunal de Justica do Amazonas",
     "section": "Available columns",
-    "text": "Available columns\n\nbrutos = tjsc.cjsg_download('dano moral', paginas=1)\ndf_parsed = tjsc.cjsg_parse(brutos)\n\nprint(df_parsed.shape)\ndf_parsed.head(3)\n\nBaixando CJSG TJSC: 100%|██████████| 1/1 [00:01&lt;00:00,  1.50s/it]\n\n\n(10, 8)\n\n\n\n\n\n\n\n\n\nprocesso\nclasse\norgao_julgador\nrelator\ndata_julgamento\ndata_publicacao\nementa\nuf\n\n\n\n\n0\n0302139-45.2014.8.24.0282/TJSC\nNaN\n3ª Câmara de Direito Civil\nANTONIO AUGUSTO BAGGIO E UBALDO\n2026-04-08\n2026-04-08\nAPELAÇÃO CÍVEL. AÇÃO INDENIZATÓRIA POR SUPOSTA...\nSC\n\n\n1\n5000076-73.2024.8.24.0059/TJSC\nNaN\n3ª Câmara de Direito Civil\nANTONIO AUGUSTO BAGGIO E UBALDO\n2026-04-08\n2026-04-08\nAPELAÇÃO CÍVEL. AÇÃO DECLARATÓRIA DE NULIDADE ...\nSC\n\n\n2\n5029071-60.2021.8.24.0008/TJSC\nNaN\n3ª Câmara de Direito Civil\nANTONIO AUGUSTO BAGGIO E UBALDO\n2026-04-08\n2026-04-08\nAPELAÇÃO CÍVEL. AÇÃO DECLARATÓRIA DE NULIDADE ...\nSC",
+    "text": "Available columns\n\ndf.columns.tolist()\n\n['processo',\n 'cd_acordao',\n 'cd_foro',\n 'classe_assunto',\n 'relatora',\n 'comarca',\n 'orgao_julgador',\n 'data_julgamento',\n 'data_publicacao',\n 'ementa']",
     "crumbs": [
       "Home",
       "Exemplos",
       "Tribunais",
-      "TJSC"
+      "TJAM"
     ]
   },
   {
-    "objectID": "notebooks/tjsc.html#preview-ementa",
-    "href": "notebooks/tjsc.html#preview-ementa",
-    "title": "TJSC - Tribunal de Justica de Santa Catarina",
+    "objectID": "notebooks/tjam.html#preview-ementa",
+    "href": "notebooks/tjam.html#preview-ementa",
+    "title": "TJAM - Tribunal de Justica do Amazonas",
     "section": "Preview ementa",
-    "text": "Preview ementa\n\nif 'ementa' in df.columns and len(df) &gt; 0:\n    print(df['ementa'].iloc[0][:300])\n\nDIREITO DO CONSUMIDOR. APELAÇÕES CÍVEIS. AÇÃO DE INDENIZAÇÃO POR DANOS MATERIAIS E MORAIS. VEÍCULO AUTOMOTOR SUBMETIDO A REPAROS APÓS SINISTRO. DEMORA NA CONCLUSÃO DO SERVIÇO E FALHA NO DEVER DE INFORMAÇÃO.DANOMORALCONFIGURADO. SENTENÇA DE PARCIAL PROCEDÊNCIA. INTEMPESTIVIDADE DO APELO DO AUTOR. NÃO",
+    "text": "Preview ementa\n\nprint(df['ementa'].iloc[0][:300])\n\nAPELAÇÕES CÍVEIS. DIREITO CIVIL. DIREITO CONSUMERISTA. PLANO DE SAÚDE. RECUSA DE ATENDIMENTO NA REDE CREDENCIADA. FALHA NA PRESTAÇÃO DO SERVIÇO. DANO MORAL ARBITRADO EM FAVOR DO MENOR AUTOR-APELANTE E DE SUA GENITORA. RECURSO DE APELAÇÃO MANEJADO APENAS PELO MENOR. MAJORAÇÃO. POSSIBILIDADE. PRIMEIRO",
     "crumbs": [
       "Home",
       "Exemplos",
       "Tribunais",
-      "TJSC"
+      "TJAM"
     ]
   },
   {
-    "objectID": "notebooks/tjsc.html#using-filters",
-    "href": "notebooks/tjsc.html#using-filters",
-    "title": "TJSC - Tribunal de Justica de Santa Catarina",
+    "objectID": "notebooks/tjam.html#using-filters",
+    "href": "notebooks/tjam.html#using-filters",
+    "title": "TJAM - Tribunal de Justica do Amazonas",
     "section": "Using filters",
-    "text": "Using filters\nAvailable filters: campo (E=ementa, I=inteiro teor), processo, data_decisao_inicio/fim, data_publicacao_inicio/fim.\n\ndf_filtered = tjsc.cjsg(\n    'direito',\n    campo='E',\n    paginas=1,\n)\n\nprint(df_filtered.shape)\ndf_filtered.head(3)\n\nBaixando CJSG TJSC: 100%|██████████| 1/1 [00:01&lt;00:00,  1.67s/it]\n\n\n(10, 8)\n\n\n\n\n\n\n\n\n\nprocesso\nclasse\norgao_julgador\nrelator\ndata_julgamento\ndata_publicacao\nementa\nuf\n\n\n\n\n0\n5042483-02.2020.8.24.0038/TJSC\nNaN\n1ª Câmara Especial de Enfrentamento de Acervos\nPATRÍCIA NOLLI\n2026-04-08\n2026-04-08\nDIREITODO CONSUMIDOR. APELAÇÕES CÍVEIS. AÇÃO D...\nSC\n\n\n1\n5005007-27.2023.8.24.0004/TJSC\nNaN\n1ª Câmara Especial de Enfrentamento de Acervos\nPATRÍCIA NOLLI\n2026-04-08\n2026-04-08\nDIREITOCIVIL. APELAÇÕES CÍVEIS. AÇÃO DE COBRAN...\nSC\n\n\n2\n5002184-70.2023.8.24.0072/TJSC\nNaN\n1ª Câmara Especial de Enfrentamento de Acervos\nPATRÍCIA NOLLI\n2026-04-08\n2026-04-08\nDIREITOPROCESSUAL CIVIL E CIVIL. EMBARGOS DE D...\nSC",
+    "text": "Using filters\nYou can filter by judgment date, publication date, decision type, and other fields.\n\ndf_filtered = tjam.cjsg(\n    'direito',\n    data_julgamento_inicio='01/01/2024',\n    data_julgamento_fim='30/06/2024',\n    paginas=1,\n)\nprint(df_filtered.shape)\ndf_filtered.head(3)\n\nProcessando CJSG TJAM: 100%|██████████| 1/1 [00:00&lt;00:00, 42.78it/s]\n\n\n(10, 10)\n\n\n\n\n\n\n\n\n\n\n\n\nprocesso\ncd_acordao\ncd_foro\nclasse_assunto\nrelatora\ncomarca\norgao_julgador\ndata_julgamento\ndata_publicacao\nementa\n\n\n\n\n0\n4000873-41.2023.8.04.0000\n3320189\n0\nAgravo de Instrumento / Posse e Exercício\nCláudio César Ramalheira Roessing\nManaus\nPrimeira Câmara Cível\n20/05/2024\n31/07/2024\nAGRAVO DE INSTRUMENTO. DEFERIMENTO DE TUTELA D...\n\n\n1\n0002831-96.2024.8.04.0000\n3308902\n0\nEmbargos de Declaração Cível / Indenização por...\nDomingos Jorge Chalub Pereira\nManaus\nTerceira Câmara Cível\n17/06/2024\n12/07/2024\nEMBARGOS DE DECLARAÇÃO – AUSÊNCIA DE OMISSÃO –...\n\n\n2\n0746976-04.2021.8.04.0001\n3307812\n0\nApelação Cível / Revisão\nDélcio Luís Santos\nManaus\nSegunda Câmara Cível\n24/06/2024\n08/07/2024\nAPELAÇÃO CÍVEL. AÇÃO DE REVISÃO CONTRATUAL CUM...",
     "crumbs": [
       "Home",
       "Exemplos",
       "Tribunais",
-      "TJSC"
+      "TJAM"
+    ]
+  },
+  {
+    "objectID": "notebooks/tjam.html#download-and-parse-separately",
+    "href": "notebooks/tjam.html#download-and-parse-separately",
+    "title": "TJAM - Tribunal de Justica do Amazonas",
+    "section": "Download and parse separately",
+    "text": "Download and parse separately\nYou can also download the raw HTML files and parse them in a separate step.\n\nimport tempfile, os\n\ntmp = tempfile.mkdtemp()\npasta = tjam.cjsg_download('direito', paginas=1, diretorio=tmp)\nprint('Downloaded to:', pasta)\nprint('Files:', os.listdir(pasta))\n\nDownloaded to: C:\\Users\\jtrec\\AppData\\Local\\Temp\\tmps2ze6xni\\cjsg\\20260409100832\nFiles: ['cjsg_00001.html']\n\n\n\ndf_parsed = tjam.cjsg_parse(pasta)\nprint(df_parsed.shape)\ndf_parsed.head(3)\n\nProcessando CJSG TJAM: 100%|██████████| 1/1 [00:00&lt;00:00, 28.65it/s]\n\n\n(10, 10)\n\n\n\n\n\n\n\n\n\n\n\n\nprocesso\ncd_acordao\ncd_foro\nclasse_assunto\nrelatora\ncomarca\norgao_julgador\ndata_julgamento\ndata_publicacao\nementa\n\n\n\n\n0\n0708349-62.2020.8.04.0001\n3363939\n0\nApelação Cível / Indenização por Dano Material\nDélcio Luís Santos\nManaus\nSegunda Câmara Cível\n25/11/2024\n18/09/2025\nAPELAÇÕES CÍVEIS. DIREITO CIVIL. DIREITO CONSU...\n\n\n1\n0515824-48.2023.8.04.0001\n3363938\n0\nApelação Cível / Limitação de Juros\nDomingos Jorge Chalub Pereira\nManaus\nTerceira Câmara Cível\n29/07/2025\n29/07/2025\nem&gt;DIREITO DO CONSUMIDOR E PROCESSUAL CIVIL – ...\n\n\n2\n0006912-88.2024.8.04.0000\n3363937\n0\nAgravo Interno Cível / Cartão de Crédito\nSocorro Guedes Moura\nManaus\nSegunda Câmara Cível\n01/06/2004\n16/07/2025\nDIREITO DO CONSUMIDOR. AGRAVO INTERNO. CONTRAT...",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Tribunais",
+      "TJAM"
+    ]
+  },
+  {
+    "objectID": "notebooks/tjpb.html",
+    "href": "notebooks/tjpb.html",
+    "title": "TJPB - Tribunal de Justica da Paraiba",
+    "section": "",
+    "text": "Jurisprudence scraper for TJPB, using the PJe/TJRN JSON API.\nimport juscraper as jus\n\ntjpb = jus.scraper('tjpb')",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Tribunais",
+      "TJPB"
+    ]
+  },
+  {
+    "objectID": "notebooks/tjpb.html#basic-search",
+    "href": "notebooks/tjpb.html#basic-search",
+    "title": "TJPB - Tribunal de Justica da Paraiba",
+    "section": "Basic search",
+    "text": "Basic search\n\ndf = tjpb.cjsg('dano moral', paginas=1)\n\nprint(df.shape)\ndf.head(3)\n\nBaixando CJSG TJPB: 100%|██████████| 1/1 [00:01&lt;00:00,  1.55s/it]\n\n\n(10, 3)\n\n\n\n\n\n\n\n\n\n\n\n\nprocesso\nementa\ndata_julgamento\n\n\n\n\n0\n0802057-88.2013.8.15.0751\nProcesso nº: 0802057-88.2013.8.15.0751 Class...\n2017-07-07\n\n\n1\n0801625-33.2012.8.15.2003\nRECURSO INOMINADO. Dano moral. Inscrição devid...\n2017-03-30\n\n\n2\n0817132-35.2015.8.15.2001\nRECURSO INOMINADO – AÇÃO DE INDENIZAÇÃO POR DA...\n2017-01-11",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Tribunais",
+      "TJPB"
+    ]
+  },
+  {
+    "objectID": "notebooks/tjpb.html#available-columns",
+    "href": "notebooks/tjpb.html#available-columns",
+    "title": "TJPB - Tribunal de Justica da Paraiba",
+    "section": "Available columns",
+    "text": "Available columns\n\nbrutos = tjpb.cjsg_download('dano moral', paginas=1)\ndf_parsed = tjpb.cjsg_parse(brutos)\n\nprint(df_parsed.shape)\ndf_parsed.head(3)\n\nBaixando CJSG TJPB: 100%|██████████| 1/1 [00:01&lt;00:00,  1.17s/it]\n\n\n(10, 3)\n\n\n\n\n\n\n\n\n\n\n\n\nprocesso\nementa\ndata_julgamento\n\n\n\n\n0\n0802057-88.2013.8.15.0751\nProcesso nº: 0802057-88.2013.8.15.0751 Class...\n2017-07-07\n\n\n1\n0801625-33.2012.8.15.2003\nRECURSO INOMINADO. Dano moral. Inscrição devid...\n2017-03-30\n\n\n2\n0817132-35.2015.8.15.2001\nRECURSO INOMINADO – AÇÃO DE INDENIZAÇÃO POR DA...\n2017-01-11",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Tribunais",
+      "TJPB"
+    ]
+  },
+  {
+    "objectID": "notebooks/tjpb.html#preview-ementa",
+    "href": "notebooks/tjpb.html#preview-ementa",
+    "title": "TJPB - Tribunal de Justica da Paraiba",
+    "section": "Preview ementa",
+    "text": "Preview ementa\n\nprint(df['ementa'].iloc[0][:300])\n\n  Processo nº: 0802057-88.2013.8.15.0751 Classe: RECURSO INOMINADO (460) Assuntos: [Indenização por Dano Moral, Indenização por Dano Moral] RECORRENTE: TNL PCS S/A RECORRIDO: CLAUDIA DE FATIMA DA SILVA",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Tribunais",
+      "TJPB"
+    ]
+  },
+  {
+    "objectID": "notebooks/tjpb.html#using-filters",
+    "href": "notebooks/tjpb.html#using-filters",
+    "title": "TJPB - Tribunal de Justica da Paraiba",
+    "section": "Using filters",
+    "text": "Using filters\nAvailable filters: nr_processo, id_classe_judicial, id_orgao_julgador, id_relator, id_origem, decisoes.\n\ndf_filtered = tjpb.cjsg(\n    'direito',\n    data_inicio='01/01/2024',\n    data_fim='30/06/2024',\n    paginas=range(1,3),\n)\n\nprint(df_filtered.shape)\ndf_filtered.head(3)\n\nBaixando CJSG TJPB: 100%|██████████| 2/2 [00:02&lt;00:00,  1.18s/it]\n\n\n(20, 3)\n\n\n\n\n\n\n\n\n\n\n\n\nprocesso\nementa\ndata_julgamento\n\n\n\n\n0\n0844756-88.2017.8.15.2001\nPoder Judiciário Tribunal de Justiça da Paraíb...\n2024-06-20\n\n\n1\n0800097-69.2021.8.15.0411\nPODER JUDICIÁRIO TRIBUNAL DE JUSTIÇA DO ESTADO...\n2024-05-29\n\n\n2\n0800310-59.2023.8.15.7701\nPoder Judiciário Tribunal de Justiça da Paraíb...\n2024-04-23",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Tribunais",
+      "TJPB"
     ]
   },
   {
@@ -666,133 +802,172 @@
     ]
   },
   {
-    "objectID": "notebooks/tjpi.html",
-    "href": "notebooks/tjpi.html",
-    "title": "TJPI - Tribunal de Justica do Piaui",
+    "objectID": "notebooks/tjal.html",
+    "href": "notebooks/tjal.html",
+    "title": "TJAL - Tribunal de Justica de Alagoas",
     "section": "",
-    "text": "Jurisprudence scraper for TJPI, via HTML parsing from the JusPI platform.\nimport juscraper as jus\n\ntjpi = jus.scraper('tjpi')",
+    "text": "Scraper for the jurisprudence search (CJSG) of the Tribunal de Justica de Alagoas.",
     "crumbs": [
       "Home",
       "Exemplos",
       "Tribunais",
-      "TJPI"
+      "TJAL"
     ]
   },
   {
-    "objectID": "notebooks/tjpi.html#basic-search",
-    "href": "notebooks/tjpi.html#basic-search",
-    "title": "TJPI - Tribunal de Justica do Piaui",
+    "objectID": "notebooks/tjal.html#basic-search",
+    "href": "notebooks/tjal.html#basic-search",
+    "title": "TJAL - Tribunal de Justica de Alagoas",
     "section": "Basic search",
-    "text": "Basic search\n\ndf = tjpi.cjsg('dano moral', paginas=range(1, 3))\n\nprint(df.shape)\ndf.head(3)\n\nBaixando CJSG TJPI: 100%|██████████| 2/2 [00:04&lt;00:00,  2.39s/it]\n\n\n(50, 8)\n\n\n\n\n\n\n\n\n\n\n\n\nprocesso\ntipo\nclasse\nassunto\ndata_publicacao\nementa\nresumo\ninteiro_teor\n\n\n\n\n0\n0800002-98.2022.8.18.0062\nDecisão Terminativa de 2º Grau\nAPELAÇÃO CÍVEL\nRepetição de indébito, Direito de Imagem, Dire...\n2025-09-02\nAÇÃO DE INDENIZAÇÃO PORDANOSMORAISC/C REPETIÇÃ...\nAÇÃO DE INDENIZAÇÃO POR\npoder judiciário tribunal de justiça do estado...\n\n\n1\n0800942-44.2024.8.18.0078\nDecisão Terminativa de 2º Grau\nAPELAÇÃO CÍVEL\nInclusão Indevida em Cadastro de Inadimplentes...\n2025-09-02\npoder judiciário tribunal de justiça do estado...\npoder judiciário tribunal de justiça do estado...\npoder judiciário tribunal de justiça do estado...\n\n\n2\n0011481-65.2013.8.18.0021\nDecisão Terminativa de 2º Grau\nRECURSO INOMINADO CÍVEL\nDireito de Imagem\n2025-09-02\nAGRAVO DE INSTRUMENTO. CUMPRIMENTO SENTENÇA. A...\npoder judiciário tribunal de justiça do estado...\npoder judiciário tribunal de justiça do estado...",
+    "text": "Basic search\n\nimport juscraper as jus\n\ntjal = jus.scraper('tjal')\n\n\ndf = tjal.cjsg('dano moral', paginas=range(1, 3))\nprint(df.shape)\ndf.head(3)\n\nBaixando CJSG TJAL: 100%|██████████| 2/2 [00:01&lt;00:00,  1.71s/it]\nProcessando CJSG TJAL: 100%|██████████| 2/2 [00:00&lt;00:00, 22.77it/s]\n\n\n(40, 10)\n\n\n\n\n\n\n\n\n\n\n\n\nprocesso\ncd_acordao\ncd_foro\nclasse_assunto\nrelatora\ncomarca\norgao_julgador\ndata_julgamento\ndata_publicacao\nementa\n\n\n\n\n0\n0747976-88.2024.8.02.0001\n807334\n0\nApelação Cível / Inclusão Indevida em Cadastro...\nDes. Otávio Leão Praxedes\nMaceió\n2ª Câmara Cível\n30/03/2026\n30/03/2026\nDIREITO CIVIL E DO CONSUMIDOR. APELAÇÃO CÍVEL....\n\n\n1\n0743913-54.2023.8.02.0001\n807323\n0\nApelação Cível / Irredutibilidade de Vencimentos\nDes. Otávio Leão Praxedes\nMaceió\n2ª Câmara Cível\n30/03/2026\n30/03/2026\nDIREITO ADMINISTRATIVO E PROCESSUAL CIVIL. APE...\n\n\n2\n0746985-49.2023.8.02.0001\n807329\n0\nApelação Cível / Alteração de Coisa Comum\nDes. Otávio Leão Praxedes\nMaceió\n2ª Câmara Cível\n30/03/2026\n30/03/2026\nDIREITO ADMINISTRATIVO E TRIBUTÁRIO. APELAÇÃO ...",
     "crumbs": [
       "Home",
       "Exemplos",
       "Tribunais",
-      "TJPI"
+      "TJAL"
     ]
   },
   {
-    "objectID": "notebooks/tjpi.html#available-columns",
-    "href": "notebooks/tjpi.html#available-columns",
-    "title": "TJPI - Tribunal de Justica do Piaui",
+    "objectID": "notebooks/tjal.html#available-columns",
+    "href": "notebooks/tjal.html#available-columns",
+    "title": "TJAL - Tribunal de Justica de Alagoas",
     "section": "Available columns",
-    "text": "Available columns\n\nbrutos = tjpi.cjsg_download('dano moral', paginas=1)\ndf_parsed = tjpi.cjsg_parse(brutos)\n\nprint(df_parsed.shape)\ndf_parsed.head(3)\n\nBaixando CJSG TJPI: 100%|██████████| 1/1 [00:02&lt;00:00,  2.29s/it]\n\n\n(25, 8)\n\n\n\n\n\n\n\n\n\n\n\n\nprocesso\ntipo\nclasse\nassunto\ndata_publicacao\nementa\nresumo\ninteiro_teor\n\n\n\n\n0\n0800002-98.2022.8.18.0062\nDecisão Terminativa de 2º Grau\nAPELAÇÃO CÍVEL\nRepetição de indébito, Direito de Imagem, Dire...\n2025-09-02\nAÇÃO DE INDENIZAÇÃO PORDANOSMORAISC/C REPETIÇÃ...\nAÇÃO DE INDENIZAÇÃO POR\npoder judiciário tribunal de justiça do estado...\n\n\n1\n0800942-44.2024.8.18.0078\nDecisão Terminativa de 2º Grau\nAPELAÇÃO CÍVEL\nInclusão Indevida em Cadastro de Inadimplentes...\n2025-09-02\npoder judiciário tribunal de justiça do estado...\npoder judiciário tribunal de justiça do estado...\npoder judiciário tribunal de justiça do estado...\n\n\n2\n0011481-65.2013.8.18.0021\nDecisão Terminativa de 2º Grau\nRECURSO INOMINADO CÍVEL\nDireito de Imagem\n2025-09-02\nAGRAVO DE INSTRUMENTO. CUMPRIMENTO SENTENÇA. A...\npoder judiciário tribunal de justiça do estado...\npoder judiciário tribunal de justiça do estado...",
+    "text": "Available columns\n\ndf.columns.tolist()\n\n['processo',\n 'cd_acordao',\n 'cd_foro',\n 'classe_assunto',\n 'relatora',\n 'comarca',\n 'orgao_julgador',\n 'data_julgamento',\n 'data_publicacao',\n 'ementa']",
     "crumbs": [
       "Home",
       "Exemplos",
       "Tribunais",
-      "TJPI"
+      "TJAL"
     ]
   },
   {
-    "objectID": "notebooks/tjpi.html#preview-ementa",
-    "href": "notebooks/tjpi.html#preview-ementa",
-    "title": "TJPI - Tribunal de Justica do Piaui",
+    "objectID": "notebooks/tjal.html#preview-ementa",
+    "href": "notebooks/tjal.html#preview-ementa",
+    "title": "TJAL - Tribunal de Justica de Alagoas",
     "section": "Preview ementa",
-    "text": "Preview ementa\n\nprint(df['ementa'].iloc[0][:300])\n\nAÇÃO DE INDENIZAÇÃO PORDANOSMORAISC/C REPETIÇÃO DE INDÉBITO. JUNTADA DE CONTRATO. NÃO COMPROVAÇÃO DE TRANSFERÊNCIA. APLICAÇÃO DA SÚMULA Nº 18 DO TJ/PI.DANOMORALCONFIGURADO. DEVOLUÇÃO DE VALORES. MÁ-FÉ CONFIGURADA.DANOMORALDEVIDO. RECURSO CONHECIDO E IMPROVIDO.   Vistos etc. Cuida-se de APELAÇÃO CÍVE",
+    "text": "Preview ementa\n\nprint(df['ementa'].iloc[0][:300])\n\nDIREITO CIVIL E DO CONSUMIDOR. APELAÇÃO CÍVEL. SISTEMA DE INFORMAÇÕES DE CRÉDITO DO BANCO CENTRAL (SCR/SISBACEN). INCLUSÃO DE DADOS DE OPERAÇÃO DE CRÉDITO. NATUREZA INFORMATIVA DO CADASTRO. DISTINÇÃO EM RELAÇÃO AOS CADASTROS RESTRITIVOS DE CRÉDITO. AUSÊNCIA DE PROVA DE RECUSA DE CRÉDITO OU PREJUÍZO",
     "crumbs": [
       "Home",
       "Exemplos",
       "Tribunais",
-      "TJPI"
+      "TJAL"
     ]
   },
   {
-    "objectID": "notebooks/tjpi.html#using-filters",
-    "href": "notebooks/tjpi.html#using-filters",
-    "title": "TJPI - Tribunal de Justica do Piaui",
+    "objectID": "notebooks/tjal.html#using-filters",
+    "href": "notebooks/tjal.html#using-filters",
+    "title": "TJAL - Tribunal de Justica de Alagoas",
     "section": "Using filters",
-    "text": "Using filters\nAvailable filters: tipo (acordao, decisao_terminativa, sumula), relator, classe, orgao.\n\ndf_filtered = tjpi.cjsg('direito', tipo='acordao', paginas=1)\n\nprint(df_filtered.shape)\ndf_filtered.head(3)\n\nBaixando CJSG TJPI: 100%|██████████| 1/1 [00:01&lt;00:00,  1.90s/it]\n\n\n(0, 0)",
+    "text": "Using filters\nYou can filter by judgment date, publication date, decision type, and other fields.\n\ndf_filtered = tjal.cjsg(\n    'direito',\n    data_julgamento_inicio='01/01/2024',\n    data_julgamento_fim='30/06/2024',\n    paginas=1,\n)\nprint(df_filtered.shape)\ndf_filtered.head(3)\n\nProcessando CJSG TJAL: 100%|██████████| 1/1 [00:00&lt;00:00, 13.02it/s]\n\n\n(20, 10)\n\n\n\n\n\n\n\n\n\n\n\n\nprocesso\ncd_acordao\ncd_foro\nclasse_assunto\nrelatora\ncomarca\norgao_julgador\ndata_julgamento\ndata_publicacao\nementa\n\n\n\n\n0\n0806617-43.2022.8.02.0000\n743582\n0\nAgravo de Instrumento / Auxílio-Doença Acident...\nDes. Paulo Zacarias da Silva\nComarcar não Econtrada\n3ª Câmara Cível\n13/06/2024\n16/10/2025\nAGRAVO DE INSTRUMENTO. PROCESSUAL CIVIL. PREVI...\n\n\n1\n0700333-82.2021.8.02.0020\n740034\n0\nApelação Cível / Rescisão\nJuiz Convocado Manoel Cavalcante de Lima Neto\nMaravilha\n1ª Câmara Cível\n13/06/2024\n08/10/2025\nAPELAÇÃO CÍVEL. DIREITO ADMINISTRATIVO E CONST...\n\n\n2\n0807502-91.2021.8.02.0000\n676103\n0\nAção Rescisória / Suspensão do Processo\nDes. Tutmés Airan de Albuquerque Melo\nMaceió\nSeção Especializada Cível\n01/04/2024\n30/04/2025\nem&gt;DIREITO PROCESSUAL CIVIL. AÇÃO RESCISÓRIA. ...",
     "crumbs": [
       "Home",
       "Exemplos",
       "Tribunais",
-      "TJPI"
+      "TJAL"
     ]
   },
   {
-    "objectID": "notebooks/tjrr.html",
-    "href": "notebooks/tjrr.html",
-    "title": "TJRR - Tribunal de Justica de Roraima",
+    "objectID": "notebooks/tjal.html#download-and-parse-separately",
+    "href": "notebooks/tjal.html#download-and-parse-separately",
+    "title": "TJAL - Tribunal de Justica de Alagoas",
+    "section": "Download and parse separately",
+    "text": "Download and parse separately\nYou can also download the raw HTML files and parse them in a separate step.\n\nimport tempfile, os\n\ntmp = tempfile.mkdtemp()\npasta = tjal.cjsg_download('direito', paginas=1, diretorio=tmp)\nprint('Downloaded to:', pasta)\nprint('Files:', os.listdir(pasta))\n\nDownloaded to: C:\\Users\\jtrec\\AppData\\Local\\Temp\\tmpth5xctlc\\cjsg\\20260409100830\nFiles: ['cjsg_00001.html']\n\n\n\ndf_parsed = tjal.cjsg_parse(pasta)\nprint(df_parsed.shape)\ndf_parsed.head(3)\n\nProcessando CJSG TJAL: 100%|██████████| 1/1 [00:00&lt;00:00, 29.97it/s]\n\n\n(20, 10)\n\n\n\n\n\n\n\n\n\n\n\n\nprocesso\ncd_acordao\ncd_foro\nclasse_assunto\nrelatora\ncomarca\norgao_julgador\ndata_julgamento\ndata_publicacao\nementa\n\n\n\n\n0\n0701016-24.2024.8.02.0050\n807619\n0\nAgravo Interno Criminal / Crimes de Trânsito\nPresidente do Tribunal de Justiça de Alagoas\nPorto Calvo\nTribunal Pleno\n31/03/2026\n31/03/2026\nem&gt;DIREITO PROCESSUAL CIVIL. AGRAVO INTERNO. R...\n\n\n1\n0808946-23.2025.8.02.0000\n807620\n0\nEmbargos de Declaração Criminal / Homicídio Qu...\nPresidente do Tribunal de Justiça de Alagoas\nTraipu\nTribunal Pleno\n31/03/2026\n31/03/2026\nEMBARGOS DE DECLARAÇÃO EM MANDADO DE SEGURANÇA...\n\n\n2\n0701748-42.2023.8.02.0049\n807617\n0\nAgravo Interno Cível / Tratamento da Própria S...\nPresidente do Tribunal de Justiça de Alagoas\nPenedo\nTribunal Pleno\n31/03/2026\n31/03/2026\nem&gt;DIREITO PROCESSUAL CIVIL. AGRAVO INTERNO. D...",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Tribunais",
+      "TJAL"
+    ]
+  },
+  {
+    "objectID": "notebooks/tjdft.html",
+    "href": "notebooks/tjdft.html",
+    "title": "juscraper",
     "section": "",
-    "text": "Jurisprudence scraper for TJRR, via JSF/PrimeFaces with ViewState management.\nimport juscraper as jus\n\ntjrr = jus.scraper('tjrr')",
+    "text": "import juscraper as jus\n\n# cria um objeto tjdft\ntjdft = jus.scraper('tjdft')\n\n\n# baixa dados da jurisprudênciadados_cjsg = tjdft.cjsg('direito penal', paginas=range(1,3))print(dados_cjsg.shape)dados_cjsg.head(3)\n\n\nprint(dados_cjsg['ementa'].iloc[0][:300])\n\nEMENTA: DIREITO PENAL. EMBARGOS DE DECLARAÇÃO. PRETENSÃO DE REDISCUSSÃO DA MATÉRIA. INOVAÇÃO RECURSAL. IMPOSSIBILIDADE. VÍCIO. AUSENTE. MEIO PROCESSUAL INADEQUADO. PREQUESTIONAMENTO. EMBARGOS REJEITADOS.\n\nI. CASO EM EXAME\n\n1. Embargos de declaração opostos contra acórdão que negou provimento ao recu\n\n\n\ndados_cjsg['processo'].iloc[0]\n\n'0722443-83.2024.8.07.0003'",
     "crumbs": [
       "Home",
       "Exemplos",
       "Tribunais",
-      "TJRR"
+      "TJDFT"
     ]
   },
   {
-    "objectID": "notebooks/tjrr.html#basic-search",
-    "href": "notebooks/tjrr.html#basic-search",
-    "title": "TJRR - Tribunal de Justica de Roraima",
+    "objectID": "notebooks/tjac.html",
+    "href": "notebooks/tjac.html",
+    "title": "TJAC - Tribunal de Justica do Acre",
+    "section": "",
+    "text": "Scraper for the jurisprudence search (CJSG) of the Tribunal de Justica do Acre.",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Tribunais",
+      "TJAC"
+    ]
+  },
+  {
+    "objectID": "notebooks/tjac.html#basic-search",
+    "href": "notebooks/tjac.html#basic-search",
+    "title": "TJAC - Tribunal de Justica do Acre",
     "section": "Basic search",
-    "text": "Basic search\n\ndf = tjrr.cjsg('dano moral', paginas=range(1,3))\n\nprint(df.shape)\ndf.head(3)\n\nBaixando CJSG TJRR: 100%|██████████| 2/2 [00:06&lt;00:00,  3.02s/it]\n\n\n(30, 7)\n\n\n\n\n\n\n\n\n\n\n\n\nprocesso\nclasse\nrelator\norgao_julgador\ndata_julgamento\ndata_publicacao\nementa\n\n\n\n\n0\n0827862-90.2025.8.23.0010\nRI - Recurso Inominado\nBRUNO FERNANDO ALVES COSTA\nTurma Recursal\n2026-03-30\n2026-04-07\nDIREITO DO CONSUMIDOR. RECURSO INOMINADO. SIST...\n\n\n1\n0817102-82.2025.8.23.0010\nRI - Recurso Inominado\nBRUNO FERNANDO ALVES COSTA\nTurma Recursal\n2026-03-30\n2026-04-07\nDIREITO CIVIL E DO CONSUMIDOR. RECURSO INOMINA...\n\n\n2\n0833332-15.2019.8.23.0010\nACr - Apelação Criminal\nLUIZ FERNANDO MALLET\nCâmara Criminal\n2026-03-27\n2026-04-06\nDIREITO PENAL E PROCESSUAL PENAL. APELAÇÃO CRI...",
+    "text": "Basic search\n\nimport juscraper as jus\n\ntjac = jus.scraper('tjac')\n\n\ndf = tjac.cjsg('dano moral', paginas=range(1, 3))\nprint(df.shape)\ndf.head(3)\n\nBaixando CJSG TJAC: 100%|██████████| 2/2 [00:01&lt;00:00,  1.48s/it]\nProcessando CJSG TJAC: 100%|██████████| 2/2 [00:00&lt;00:00, 19.34it/s]\n\n\n(40, 10)\n\n\n\n\n\n\n\n\n\n\n\n\nprocesso\ncd_acordao\ncd_foro\nclasse_assunto\nrelatora\ncomarca\norgao_julgador\ndata_julgamento\ndata_publicacao\nementa\n\n\n\n\n0\n0712323-18.2025.8.01.0001\n2502928\n0\nApelação Cível / Alienação Fiduciária\nDesª. Waldirene Cordeiro\nRio Branco\nSegunda Câmara Cível\n08/04/2026\n08/04/2026\nCIVIL. PROCESSO CIVIL. APELAÇÃO CÍVEL. BUSCA E...\n\n\n1\n0100293-66.2026.8.01.0000\n2502948\n0\nConflito de competência cível / Competência da...\nDes. Júnior Alberto\nRio Branco\nSegunda Câmara Cível\n07/04/2026\n08/04/2026\nDIREITO PROCESSUAL CIVIL. CONFLITO NEGATIVO DE...\n\n\n2\n0721736-89.2024.8.01.0001\n2502950\n0\nApelação Cível / Tratamento médico-hospitalar\nDesª. Waldirene Cordeiro\nRio Branco\nSegunda Câmara Cível\n07/04/2026\n08/04/2026\nCONSUMIDOR. PROCESSUAL CIVIL. DIREITO À SAÚDE....",
     "crumbs": [
       "Home",
       "Exemplos",
       "Tribunais",
-      "TJRR"
+      "TJAC"
     ]
   },
   {
-    "objectID": "notebooks/tjrr.html#available-columns",
-    "href": "notebooks/tjrr.html#available-columns",
-    "title": "TJRR - Tribunal de Justica de Roraima",
+    "objectID": "notebooks/tjac.html#available-columns",
+    "href": "notebooks/tjac.html#available-columns",
+    "title": "TJAC - Tribunal de Justica do Acre",
     "section": "Available columns",
-    "text": "Available columns\n\nbrutos = tjrr.cjsg_download('dano moral', paginas=1)\ndf_parsed = tjrr.cjsg_parse(brutos)\n\nprint(df_parsed.shape)\ndf_parsed.head(3)\n\nBaixando CJSG TJRR: 100%|██████████| 1/1 [00:00&lt;?, ?it/s]\n\n\n(20, 7)\n\n\n\n\n\n\n\n\n\n\n\n\nprocesso\nclasse\nrelator\norgao_julgador\ndata_julgamento\ndata_publicacao\nementa\n\n\n\n\n0\n0827862-90.2025.8.23.0010\nRI - Recurso Inominado\nBRUNO FERNANDO ALVES COSTA\nTurma Recursal\n2026-03-30\n2026-04-07\nDIREITO DO CONSUMIDOR. RECURSO INOMINADO. SIST...\n\n\n1\n0817102-82.2025.8.23.0010\nRI - Recurso Inominado\nBRUNO FERNANDO ALVES COSTA\nTurma Recursal\n2026-03-30\n2026-04-07\nDIREITO CIVIL E DO CONSUMIDOR. RECURSO INOMINA...\n\n\n2\n0833332-15.2019.8.23.0010\nACr - Apelação Criminal\nLUIZ FERNANDO MALLET\nCâmara Criminal\n2026-03-27\n2026-04-06\nDIREITO PENAL E PROCESSUAL PENAL. APELAÇÃO CRI...",
+    "text": "Available columns\n\ndf.columns.tolist()\n\n['processo',\n 'cd_acordao',\n 'cd_foro',\n 'classe_assunto',\n 'relatora',\n 'comarca',\n 'orgao_julgador',\n 'data_julgamento',\n 'data_publicacao',\n 'ementa']",
     "crumbs": [
       "Home",
       "Exemplos",
       "Tribunais",
-      "TJRR"
+      "TJAC"
     ]
   },
   {
-    "objectID": "notebooks/tjrr.html#preview-ementa",
-    "href": "notebooks/tjrr.html#preview-ementa",
-    "title": "TJRR - Tribunal de Justica de Roraima",
+    "objectID": "notebooks/tjac.html#preview-ementa",
+    "href": "notebooks/tjac.html#preview-ementa",
+    "title": "TJAC - Tribunal de Justica do Acre",
     "section": "Preview ementa",
-    "text": "Preview ementa\n\nprint(df['ementa'].iloc[0][:300])\n\nDIREITO DO CONSUMIDOR. RECURSO INOMINADO. SISTEMA DE INFORMAÇÕES DE CRÉDITO – SCR/SISBACEN. REGISTRO DE OPERAÇÃO BAIXADA COMO PREJUÍZO. DÍVIDA QUITADA POR ACORDO COM DESÁGIO. NATUREZA TÉCNICO-REGULATÓRIA DO SCR. DEVER DE REPORTE DA INSTITUIÇÃO FINANCEIRA. AUSÊNCIA DE ATO ILÍCITO. INEXISTÊNCIA DEDANO",
+    "text": "Preview ementa\n\nprint(df['ementa'].iloc[0][:300])\n\nCIVIL. PROCESSO CIVIL. APELAÇÃO CÍVEL. BUSCA E APREENSÃO. ALIENAÇÃO FIDUCIÁRIA EM GARANTIA. INADIMPLEMENTO CONTRATUAL. NOTIFICAÇÃO EXTRAJUDICIAL. PURGAÇÃO DA MORA. PAGAMENTO INTEGRAL DA DÍVIDA. DECRETO-LEI Nº 911/69, ARTS. 2º, §2º, E 3º, §§1º E 2º. ALEGAÇÃO DE ABUSO DE DIREITO E VIOLAÇÃO À BOA-FÉ OB",
     "crumbs": [
       "Home",
       "Exemplos",
       "Tribunais",
-      "TJRR"
+      "TJAC"
     ]
   },
   {
-    "objectID": "notebooks/tjrr.html#using-filters",
-    "href": "notebooks/tjrr.html#using-filters",
-    "title": "TJRR - Tribunal de Justica de Roraima",
+    "objectID": "notebooks/tjac.html#using-filters",
+    "href": "notebooks/tjac.html#using-filters",
+    "title": "TJAC - Tribunal de Justica do Acre",
     "section": "Using filters",
-    "text": "Using filters\nAvailable filters: relator, orgao_julgador (list of codes), especie (list of resource types).\n\ndf_filtered = tjrr.cjsg(\n    'direito',\n    data_inicio='2024-01-01',\n    data_fim='2024-06-30',\n    paginas=1,\n)\n\nprint(df_filtered.shape)\ndf_filtered.head(3)\n\nBaixando CJSG TJRR: 100%|██████████| 1/1 [00:00&lt;?, ?it/s]\n\n\n(20, 7)\n\n\n\n\n\n\n\n\n\n\n\n\nprocesso\nclasse\nrelator\norgao_julgador\ndata_julgamento\ndata_publicacao\nementa\n\n\n\n\n0\n0827862-90.2025.8.23.0010\nRI - Recurso Inominado\nBRUNO FERNANDO ALVES COSTA\nTurma Recursal\n2026-03-30\n2026-04-07\nDIREITO DO CONSUMIDOR. RECURSO INOMINADO. SIST...\n\n\n1\n0817102-82.2025.8.23.0010\nRI - Recurso Inominado\nBRUNO FERNANDO ALVES COSTA\nTurma Recursal\n2026-03-30\n2026-04-07\nDIREITO CIVIL E DO CONSUMIDOR. RECURSO INOMINA...\n\n\n2\n0833332-15.2019.8.23.0010\nACr - Apelação Criminal\nLUIZ FERNANDO MALLET\nCâmara Criminal\n2026-03-27\n2026-04-06\nDIREITO PENAL E PROCESSUAL PENAL. APELAÇÃO CRI...",
+    "text": "Using filters\nYou can filter by judgment date, publication date, decision type, and other fields.\n\ndf_filtered = tjac.cjsg(\n    'direito',\n    data_julgamento_inicio='01/01/2024',\n    data_julgamento_fim='30/06/2024',\n    paginas=1,\n)\nprint(df_filtered.shape)\ndf_filtered.head(3)\n\nProcessando CJSG TJAC: 100%|██████████| 1/1 [00:00&lt;00:00, 13.16it/s]\n\n\n(20, 10)\n\n\n\n\n\n\n\n\n\n\n\n\nprocesso\ncd_acordao\ncd_foro\nclasse_assunto\nrelatora\ncomarca\norgao_julgador\ndata_julgamento\ndata_publicacao\nementa\n\n\n\n\n0\n0006503-64.2022.8.01.0001\n2471902\n0\nApelação Criminal / Roubo Majorado\nDesª. Denise Bonfim\nRio Branco\nCâmara Criminal\n27/06/2024\n29/08/2024\nPENAL. PROCESSUAL PENAL. APELAÇÕES CRIMINAIS D...\n\n\n1\n0802195-83.2021.8.01.0001\n2469395\n0\nApelação Criminal / Crimes de Tortura\nDesª. Denise Bonfim\nRio Branco\nCâmara Criminal\n21/05/2024\n09/07/2024\nVV. APELAÇÃO CRIMINAL - LESÃO CORPORAL. TORTUR...\n\n\n2\n0006536-20.2023.8.01.0001\n2469403\n0\nApelação Criminal / Tráfico de Drogas e Condut...\nDes. Francisco Djalma\nRio Branco\nCâmara Criminal\n27/06/2024\n09/07/2024\nDIREITO PENAL. PROCESSO PENAL. TRÁFICO DE DROG...",
     "crumbs": [
       "Home",
       "Exemplos",
       "Tribunais",
-      "TJRR"
+      "TJAC"
+    ]
+  },
+  {
+    "objectID": "notebooks/tjac.html#download-and-parse-separately",
+    "href": "notebooks/tjac.html#download-and-parse-separately",
+    "title": "TJAC - Tribunal de Justica do Acre",
+    "section": "Download and parse separately",
+    "text": "Download and parse separately\nYou can also download the raw HTML files and parse them in a separate step.\n\nimport tempfile, os\n\ntmp = tempfile.mkdtemp()\npasta = tjac.cjsg_download('direito', paginas=1, diretorio=tmp)\nprint('Downloaded to:', pasta)\nprint('Files:', os.listdir(pasta))\n\nDownloaded to: C:\\Users\\jtrec\\AppData\\Local\\Temp\\tmpez3zkxep\\cjsg\\20260409100826\nFiles: ['cjsg_00001.html']\n\n\n\ndf_parsed = tjac.cjsg_parse(pasta)\nprint(df_parsed.shape)\ndf_parsed.head(3)\n\nProcessando CJSG TJAC: 100%|██████████| 1/1 [00:00&lt;00:00, 24.95it/s]\n\n\n(20, 10)\n\n\n\n\n\n\n\n\n\n\n\n\nprocesso\ncd_acordao\ncd_foro\nclasse_assunto\nrelatora\ncomarca\norgao_julgador\ndata_julgamento\ndata_publicacao\nementa\n\n\n\n\n0\n0800015-29.2023.8.01.0000\n2502957\n0\nProcedimento Investigatório Criminal (PIC-MP) ...\nDes. Samoel Evangelista\nRio Branco\nTribunal Pleno Jurisdicional\n08/04/2026\n09/04/2026\nDIREITO PENAL E PROCESSUAL PENAL. INQUÉRITO. C...\n\n\n1\n0000541-18.2022.8.01.0015\n2502938\n0\nApelação Criminal / Homicídio Qualificado\nDes. Samoel Evangelista\nMâncio Lima\nCâmara Criminal\n09/04/2026\n09/04/2026\nDIREITO PENAL E PROCESSUAL PENAL. APELAÇÃO CRI...\n\n\n2\n0000445-09.2022.8.01.0013\n2502940\n0\nApelação Criminal / Homicídio Qualificado\nDes. Samoel Evangelista\nFeijó\nCâmara Criminal\n09/04/2026\n09/04/2026\nDireito Penal e Processual Penal. Apelação Cri...",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Tribunais",
+      "TJAC"
     ]
   },
   {
@@ -1039,16 +1214,133 @@
     ]
   },
   {
-    "objectID": "notebooks/tjdft.html",
-    "href": "notebooks/tjdft.html",
-    "title": "juscraper",
+    "objectID": "notebooks/tjrr.html",
+    "href": "notebooks/tjrr.html",
+    "title": "TJRR - Tribunal de Justica de Roraima",
     "section": "",
-    "text": "import juscraper as jus\n\n# cria um objeto tjdft\ntjdft = jus.scraper('tjdft')\n\n\n# baixa dados da jurisprudênciadados_cjsg = tjdft.cjsg('direito penal', paginas=range(1,3))print(dados_cjsg.shape)dados_cjsg.head(3)\n\n\nprint(dados_cjsg['ementa'].iloc[0][:300])\n\nEMENTA: DIREITO PENAL. EMBARGOS DE DECLARAÇÃO. PRETENSÃO DE REDISCUSSÃO DA MATÉRIA. INOVAÇÃO RECURSAL. IMPOSSIBILIDADE. VÍCIO. AUSENTE. MEIO PROCESSUAL INADEQUADO. PREQUESTIONAMENTO. EMBARGOS REJEITADOS.\n\nI. CASO EM EXAME\n\n1. Embargos de declaração opostos contra acórdão que negou provimento ao recu\n\n\n\ndados_cjsg['processo'].iloc[0]\n\n'0722443-83.2024.8.07.0003'",
+    "text": "Jurisprudence scraper for TJRR, via JSF/PrimeFaces with ViewState management.\nimport juscraper as jus\n\ntjrr = jus.scraper('tjrr')",
     "crumbs": [
       "Home",
       "Exemplos",
       "Tribunais",
-      "TJDFT"
+      "TJRR"
+    ]
+  },
+  {
+    "objectID": "notebooks/tjrr.html#basic-search",
+    "href": "notebooks/tjrr.html#basic-search",
+    "title": "TJRR - Tribunal de Justica de Roraima",
+    "section": "Basic search",
+    "text": "Basic search\n\ndf = tjrr.cjsg('dano moral', paginas=range(1,3))\n\nprint(df.shape)\ndf.head(3)\n\nBaixando CJSG TJRR: 100%|██████████| 2/2 [00:06&lt;00:00,  3.02s/it]\n\n\n(30, 7)\n\n\n\n\n\n\n\n\n\n\n\n\nprocesso\nclasse\nrelator\norgao_julgador\ndata_julgamento\ndata_publicacao\nementa\n\n\n\n\n0\n0827862-90.2025.8.23.0010\nRI - Recurso Inominado\nBRUNO FERNANDO ALVES COSTA\nTurma Recursal\n2026-03-30\n2026-04-07\nDIREITO DO CONSUMIDOR. RECURSO INOMINADO. SIST...\n\n\n1\n0817102-82.2025.8.23.0010\nRI - Recurso Inominado\nBRUNO FERNANDO ALVES COSTA\nTurma Recursal\n2026-03-30\n2026-04-07\nDIREITO CIVIL E DO CONSUMIDOR. RECURSO INOMINA...\n\n\n2\n0833332-15.2019.8.23.0010\nACr - Apelação Criminal\nLUIZ FERNANDO MALLET\nCâmara Criminal\n2026-03-27\n2026-04-06\nDIREITO PENAL E PROCESSUAL PENAL. APELAÇÃO CRI...",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Tribunais",
+      "TJRR"
+    ]
+  },
+  {
+    "objectID": "notebooks/tjrr.html#available-columns",
+    "href": "notebooks/tjrr.html#available-columns",
+    "title": "TJRR - Tribunal de Justica de Roraima",
+    "section": "Available columns",
+    "text": "Available columns\n\nbrutos = tjrr.cjsg_download('dano moral', paginas=1)\ndf_parsed = tjrr.cjsg_parse(brutos)\n\nprint(df_parsed.shape)\ndf_parsed.head(3)\n\nBaixando CJSG TJRR: 100%|██████████| 1/1 [00:00&lt;?, ?it/s]\n\n\n(20, 7)\n\n\n\n\n\n\n\n\n\n\n\n\nprocesso\nclasse\nrelator\norgao_julgador\ndata_julgamento\ndata_publicacao\nementa\n\n\n\n\n0\n0827862-90.2025.8.23.0010\nRI - Recurso Inominado\nBRUNO FERNANDO ALVES COSTA\nTurma Recursal\n2026-03-30\n2026-04-07\nDIREITO DO CONSUMIDOR. RECURSO INOMINADO. SIST...\n\n\n1\n0817102-82.2025.8.23.0010\nRI - Recurso Inominado\nBRUNO FERNANDO ALVES COSTA\nTurma Recursal\n2026-03-30\n2026-04-07\nDIREITO CIVIL E DO CONSUMIDOR. RECURSO INOMINA...\n\n\n2\n0833332-15.2019.8.23.0010\nACr - Apelação Criminal\nLUIZ FERNANDO MALLET\nCâmara Criminal\n2026-03-27\n2026-04-06\nDIREITO PENAL E PROCESSUAL PENAL. APELAÇÃO CRI...",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Tribunais",
+      "TJRR"
+    ]
+  },
+  {
+    "objectID": "notebooks/tjrr.html#preview-ementa",
+    "href": "notebooks/tjrr.html#preview-ementa",
+    "title": "TJRR - Tribunal de Justica de Roraima",
+    "section": "Preview ementa",
+    "text": "Preview ementa\n\nprint(df['ementa'].iloc[0][:300])\n\nDIREITO DO CONSUMIDOR. RECURSO INOMINADO. SISTEMA DE INFORMAÇÕES DE CRÉDITO – SCR/SISBACEN. REGISTRO DE OPERAÇÃO BAIXADA COMO PREJUÍZO. DÍVIDA QUITADA POR ACORDO COM DESÁGIO. NATUREZA TÉCNICO-REGULATÓRIA DO SCR. DEVER DE REPORTE DA INSTITUIÇÃO FINANCEIRA. AUSÊNCIA DE ATO ILÍCITO. INEXISTÊNCIA DEDANO",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Tribunais",
+      "TJRR"
+    ]
+  },
+  {
+    "objectID": "notebooks/tjrr.html#using-filters",
+    "href": "notebooks/tjrr.html#using-filters",
+    "title": "TJRR - Tribunal de Justica de Roraima",
+    "section": "Using filters",
+    "text": "Using filters\nAvailable filters: relator, orgao_julgador (list of codes), especie (list of resource types).\n\ndf_filtered = tjrr.cjsg(\n    'direito',\n    data_inicio='2024-01-01',\n    data_fim='2024-06-30',\n    paginas=1,\n)\n\nprint(df_filtered.shape)\ndf_filtered.head(3)\n\nBaixando CJSG TJRR: 100%|██████████| 1/1 [00:00&lt;?, ?it/s]\n\n\n(20, 7)\n\n\n\n\n\n\n\n\n\n\n\n\nprocesso\nclasse\nrelator\norgao_julgador\ndata_julgamento\ndata_publicacao\nementa\n\n\n\n\n0\n0827862-90.2025.8.23.0010\nRI - Recurso Inominado\nBRUNO FERNANDO ALVES COSTA\nTurma Recursal\n2026-03-30\n2026-04-07\nDIREITO DO CONSUMIDOR. RECURSO INOMINADO. SIST...\n\n\n1\n0817102-82.2025.8.23.0010\nRI - Recurso Inominado\nBRUNO FERNANDO ALVES COSTA\nTurma Recursal\n2026-03-30\n2026-04-07\nDIREITO CIVIL E DO CONSUMIDOR. RECURSO INOMINA...\n\n\n2\n0833332-15.2019.8.23.0010\nACr - Apelação Criminal\nLUIZ FERNANDO MALLET\nCâmara Criminal\n2026-03-27\n2026-04-06\nDIREITO PENAL E PROCESSUAL PENAL. APELAÇÃO CRI...",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Tribunais",
+      "TJRR"
+    ]
+  },
+  {
+    "objectID": "notebooks/tjpi.html",
+    "href": "notebooks/tjpi.html",
+    "title": "TJPI - Tribunal de Justica do Piaui",
+    "section": "",
+    "text": "Jurisprudence scraper for TJPI, via HTML parsing from the JusPI platform.\nimport juscraper as jus\n\ntjpi = jus.scraper('tjpi')",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Tribunais",
+      "TJPI"
+    ]
+  },
+  {
+    "objectID": "notebooks/tjpi.html#basic-search",
+    "href": "notebooks/tjpi.html#basic-search",
+    "title": "TJPI - Tribunal de Justica do Piaui",
+    "section": "Basic search",
+    "text": "Basic search\n\ndf = tjpi.cjsg('dano moral', paginas=range(1, 3))\n\nprint(df.shape)\ndf.head(3)\n\nBaixando CJSG TJPI: 100%|██████████| 2/2 [00:04&lt;00:00,  2.39s/it]\n\n\n(50, 8)\n\n\n\n\n\n\n\n\n\n\n\n\nprocesso\ntipo\nclasse\nassunto\ndata_publicacao\nementa\nresumo\ninteiro_teor\n\n\n\n\n0\n0800002-98.2022.8.18.0062\nDecisão Terminativa de 2º Grau\nAPELAÇÃO CÍVEL\nRepetição de indébito, Direito de Imagem, Dire...\n2025-09-02\nAÇÃO DE INDENIZAÇÃO PORDANOSMORAISC/C REPETIÇÃ...\nAÇÃO DE INDENIZAÇÃO POR\npoder judiciário tribunal de justiça do estado...\n\n\n1\n0800942-44.2024.8.18.0078\nDecisão Terminativa de 2º Grau\nAPELAÇÃO CÍVEL\nInclusão Indevida em Cadastro de Inadimplentes...\n2025-09-02\npoder judiciário tribunal de justiça do estado...\npoder judiciário tribunal de justiça do estado...\npoder judiciário tribunal de justiça do estado...\n\n\n2\n0011481-65.2013.8.18.0021\nDecisão Terminativa de 2º Grau\nRECURSO INOMINADO CÍVEL\nDireito de Imagem\n2025-09-02\nAGRAVO DE INSTRUMENTO. CUMPRIMENTO SENTENÇA. A...\npoder judiciário tribunal de justiça do estado...\npoder judiciário tribunal de justiça do estado...",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Tribunais",
+      "TJPI"
+    ]
+  },
+  {
+    "objectID": "notebooks/tjpi.html#available-columns",
+    "href": "notebooks/tjpi.html#available-columns",
+    "title": "TJPI - Tribunal de Justica do Piaui",
+    "section": "Available columns",
+    "text": "Available columns\n\nbrutos = tjpi.cjsg_download('dano moral', paginas=1)\ndf_parsed = tjpi.cjsg_parse(brutos)\n\nprint(df_parsed.shape)\ndf_parsed.head(3)\n\nBaixando CJSG TJPI: 100%|██████████| 1/1 [00:02&lt;00:00,  2.29s/it]\n\n\n(25, 8)\n\n\n\n\n\n\n\n\n\n\n\n\nprocesso\ntipo\nclasse\nassunto\ndata_publicacao\nementa\nresumo\ninteiro_teor\n\n\n\n\n0\n0800002-98.2022.8.18.0062\nDecisão Terminativa de 2º Grau\nAPELAÇÃO CÍVEL\nRepetição de indébito, Direito de Imagem, Dire...\n2025-09-02\nAÇÃO DE INDENIZAÇÃO PORDANOSMORAISC/C REPETIÇÃ...\nAÇÃO DE INDENIZAÇÃO POR\npoder judiciário tribunal de justiça do estado...\n\n\n1\n0800942-44.2024.8.18.0078\nDecisão Terminativa de 2º Grau\nAPELAÇÃO CÍVEL\nInclusão Indevida em Cadastro de Inadimplentes...\n2025-09-02\npoder judiciário tribunal de justiça do estado...\npoder judiciário tribunal de justiça do estado...\npoder judiciário tribunal de justiça do estado...\n\n\n2\n0011481-65.2013.8.18.0021\nDecisão Terminativa de 2º Grau\nRECURSO INOMINADO CÍVEL\nDireito de Imagem\n2025-09-02\nAGRAVO DE INSTRUMENTO. CUMPRIMENTO SENTENÇA. A...\npoder judiciário tribunal de justiça do estado...\npoder judiciário tribunal de justiça do estado...",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Tribunais",
+      "TJPI"
+    ]
+  },
+  {
+    "objectID": "notebooks/tjpi.html#preview-ementa",
+    "href": "notebooks/tjpi.html#preview-ementa",
+    "title": "TJPI - Tribunal de Justica do Piaui",
+    "section": "Preview ementa",
+    "text": "Preview ementa\n\nprint(df['ementa'].iloc[0][:300])\n\nAÇÃO DE INDENIZAÇÃO PORDANOSMORAISC/C REPETIÇÃO DE INDÉBITO. JUNTADA DE CONTRATO. NÃO COMPROVAÇÃO DE TRANSFERÊNCIA. APLICAÇÃO DA SÚMULA Nº 18 DO TJ/PI.DANOMORALCONFIGURADO. DEVOLUÇÃO DE VALORES. MÁ-FÉ CONFIGURADA.DANOMORALDEVIDO. RECURSO CONHECIDO E IMPROVIDO.   Vistos etc. Cuida-se de APELAÇÃO CÍVE",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Tribunais",
+      "TJPI"
+    ]
+  },
+  {
+    "objectID": "notebooks/tjpi.html#using-filters",
+    "href": "notebooks/tjpi.html#using-filters",
+    "title": "TJPI - Tribunal de Justica do Piaui",
+    "section": "Using filters",
+    "text": "Using filters\nAvailable filters: tipo (acordao, decisao_terminativa, sumula), relator, classe, orgao.\n\ndf_filtered = tjpi.cjsg('direito', tipo='acordao', paginas=1)\n\nprint(df_filtered.shape)\ndf_filtered.head(3)\n\nBaixando CJSG TJPI: 100%|██████████| 1/1 [00:01&lt;00:00,  1.90s/it]\n\n\n(0, 0)",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Tribunais",
+      "TJPI"
     ]
   },
   {
@@ -1117,68 +1409,146 @@
     ]
   },
   {
-    "objectID": "notebooks/tjpb.html",
-    "href": "notebooks/tjpb.html",
-    "title": "TJPB - Tribunal de Justica da Paraiba",
+    "objectID": "notebooks/tjms.html",
+    "href": "notebooks/tjms.html",
+    "title": "TJMS - Tribunal de Justica de Mato Grosso do Sul",
     "section": "",
-    "text": "Jurisprudence scraper for TJPB, using the PJe/TJRN JSON API.\nimport juscraper as jus\n\ntjpb = jus.scraper('tjpb')",
+    "text": "Scraper for the jurisprudence search (CJSG) of the Tribunal de Justica de Mato Grosso do Sul.",
     "crumbs": [
       "Home",
       "Exemplos",
       "Tribunais",
-      "TJPB"
+      "TJMS"
     ]
   },
   {
-    "objectID": "notebooks/tjpb.html#basic-search",
-    "href": "notebooks/tjpb.html#basic-search",
-    "title": "TJPB - Tribunal de Justica da Paraiba",
+    "objectID": "notebooks/tjms.html#basic-search",
+    "href": "notebooks/tjms.html#basic-search",
+    "title": "TJMS - Tribunal de Justica de Mato Grosso do Sul",
     "section": "Basic search",
-    "text": "Basic search\n\ndf = tjpb.cjsg('dano moral', paginas=1)\n\nprint(df.shape)\ndf.head(3)\n\nBaixando CJSG TJPB: 100%|██████████| 1/1 [00:01&lt;00:00,  1.55s/it]\n\n\n(10, 3)\n\n\n\n\n\n\n\n\n\n\n\n\nprocesso\nementa\ndata_julgamento\n\n\n\n\n0\n0802057-88.2013.8.15.0751\nProcesso nº: 0802057-88.2013.8.15.0751 Class...\n2017-07-07\n\n\n1\n0801625-33.2012.8.15.2003\nRECURSO INOMINADO. Dano moral. Inscrição devid...\n2017-03-30\n\n\n2\n0817132-35.2015.8.15.2001\nRECURSO INOMINADO – AÇÃO DE INDENIZAÇÃO POR DA...\n2017-01-11",
+    "text": "Basic search\n\nimport juscraper as jus\n\ntjms = jus.scraper('tjms')\n\n\ndf = tjms.cjsg('dano moral', paginas=range(1, 3))\nprint(df.shape)\ndf.head(3)\n\nBaixando CJSG TJMS: 100%|██████████| 2/2 [00:01&lt;00:00,  1.62s/it]\nProcessando CJSG TJMS: 100%|██████████| 2/2 [00:00&lt;00:00,  6.27it/s]\n\n\n(200, 10)\n\n\n\n\n\n\n\n\n\n\n\n\nprocesso\ncd_acordao\ncd_foro\nclasse_assunto\nrelatora\ncomarca\norgao_julgador\ndata_julgamento\ndata_publicacao\nementa\n\n\n\n\n0\n0800633-13.2024.8.12.0006\n1873656\n0\nApelação Cível / Obrigação de Fazer / Não Fazer\nDes. Marcelo Câmara Rasslan\nCamapuã\n1ª Câmara Cível\n07/04/2026\n09/04/2026\nAPELAÇÃO CÍVEL – AÇÃO DE OBRIGAÇÃO DE FAZER CU...\n\n\n1\n0816158-21.2022.8.12.0001\n1873658\n0\nEmbargos de Declaração Cível / Rescisão / Reso...\nJuiz Fábio Possik Salamene\nCampo Grande\n3ª Câmara Cível\n07/04/2026\n09/04/2026\nEMBARGOS DE DECLARAÇÃO EM APELAÇÃO CÍVEL – AÇÃ...\n\n\n2\n0800410-78.2025.8.12.0021\n1873674\n0\nEmbargos de Declaração Cível / Obrigação de Fa...\nJuiz Fábio Possik Salamene\nTrês Lagoas\n3ª Câmara Cível\n07/04/2026\n09/04/2026\nEMBARGOS DE DECLARAÇÃO APELAÇÃO CÍVEL. INEXIS...",
     "crumbs": [
       "Home",
       "Exemplos",
       "Tribunais",
-      "TJPB"
+      "TJMS"
     ]
   },
   {
-    "objectID": "notebooks/tjpb.html#available-columns",
-    "href": "notebooks/tjpb.html#available-columns",
-    "title": "TJPB - Tribunal de Justica da Paraiba",
+    "objectID": "notebooks/tjms.html#available-columns",
+    "href": "notebooks/tjms.html#available-columns",
+    "title": "TJMS - Tribunal de Justica de Mato Grosso do Sul",
     "section": "Available columns",
-    "text": "Available columns\n\nbrutos = tjpb.cjsg_download('dano moral', paginas=1)\ndf_parsed = tjpb.cjsg_parse(brutos)\n\nprint(df_parsed.shape)\ndf_parsed.head(3)\n\nBaixando CJSG TJPB: 100%|██████████| 1/1 [00:01&lt;00:00,  1.17s/it]\n\n\n(10, 3)\n\n\n\n\n\n\n\n\n\n\n\n\nprocesso\nementa\ndata_julgamento\n\n\n\n\n0\n0802057-88.2013.8.15.0751\nProcesso nº: 0802057-88.2013.8.15.0751 Class...\n2017-07-07\n\n\n1\n0801625-33.2012.8.15.2003\nRECURSO INOMINADO. Dano moral. Inscrição devid...\n2017-03-30\n\n\n2\n0817132-35.2015.8.15.2001\nRECURSO INOMINADO – AÇÃO DE INDENIZAÇÃO POR DA...\n2017-01-11",
+    "text": "Available columns\n\ndf.columns.tolist()\n\n['processo',\n 'cd_acordao',\n 'cd_foro',\n 'classe_assunto',\n 'relatora',\n 'comarca',\n 'orgao_julgador',\n 'data_julgamento',\n 'data_publicacao',\n 'ementa']",
     "crumbs": [
       "Home",
       "Exemplos",
       "Tribunais",
-      "TJPB"
+      "TJMS"
     ]
   },
   {
-    "objectID": "notebooks/tjpb.html#preview-ementa",
-    "href": "notebooks/tjpb.html#preview-ementa",
-    "title": "TJPB - Tribunal de Justica da Paraiba",
+    "objectID": "notebooks/tjms.html#preview-ementa",
+    "href": "notebooks/tjms.html#preview-ementa",
+    "title": "TJMS - Tribunal de Justica de Mato Grosso do Sul",
     "section": "Preview ementa",
-    "text": "Preview ementa\n\nprint(df['ementa'].iloc[0][:300])\n\n  Processo nº: 0802057-88.2013.8.15.0751 Classe: RECURSO INOMINADO (460) Assuntos: [Indenização por Dano Moral, Indenização por Dano Moral] RECORRENTE: TNL PCS S/A RECORRIDO: CLAUDIA DE FATIMA DA SILVA",
+    "text": "Preview ementa\n\nprint(df['ementa'].iloc[0][:300])\n\nAPELAÇÃO CÍVEL – AÇÃO DE OBRIGAÇÃO DE FAZER CUMULADA COM INDENIZAÇÃO – ACORDO DE DISSOLUÇÃO DE UNIÃO ESTÁVEL – TRANSFERÊNCIA DE VEÍCULO – CLÁUSULA COM TERMO INICIAL, SEM TERMO FINAL – ATRASO NA FORMALIZAÇÃO – POSSE ANTECIPADA DO BEM – LUCROS CESSANTES E DANOS MORAIS – SENTENÇA CONFIRMADA – RECURSO C",
     "crumbs": [
       "Home",
       "Exemplos",
       "Tribunais",
-      "TJPB"
+      "TJMS"
     ]
   },
   {
-    "objectID": "notebooks/tjpb.html#using-filters",
-    "href": "notebooks/tjpb.html#using-filters",
-    "title": "TJPB - Tribunal de Justica da Paraiba",
+    "objectID": "notebooks/tjms.html#using-filters",
+    "href": "notebooks/tjms.html#using-filters",
+    "title": "TJMS - Tribunal de Justica de Mato Grosso do Sul",
     "section": "Using filters",
-    "text": "Using filters\nAvailable filters: nr_processo, id_classe_judicial, id_orgao_julgador, id_relator, id_origem, decisoes.\n\ndf_filtered = tjpb.cjsg(\n    'direito',\n    data_inicio='01/01/2024',\n    data_fim='30/06/2024',\n    paginas=range(1,3),\n)\n\nprint(df_filtered.shape)\ndf_filtered.head(3)\n\nBaixando CJSG TJPB: 100%|██████████| 2/2 [00:02&lt;00:00,  1.18s/it]\n\n\n(20, 3)\n\n\n\n\n\n\n\n\n\n\n\n\nprocesso\nementa\ndata_julgamento\n\n\n\n\n0\n0844756-88.2017.8.15.2001\nPoder Judiciário Tribunal de Justiça da Paraíb...\n2024-06-20\n\n\n1\n0800097-69.2021.8.15.0411\nPODER JUDICIÁRIO TRIBUNAL DE JUSTIÇA DO ESTADO...\n2024-05-29\n\n\n2\n0800310-59.2023.8.15.7701\nPoder Judiciário Tribunal de Justiça da Paraíb...\n2024-04-23",
+    "text": "Using filters\nYou can filter by judgment date, publication date, decision type, and other fields.\n\ndf_filtered = tjms.cjsg(\n    'direito',\n    data_julgamento_inicio='01/01/2024',\n    data_julgamento_fim='30/06/2024',\n    paginas=1,\n)\nprint(df_filtered.shape)\ndf_filtered.head(3)\n\nProcessando CJSG TJMS: 100%|██████████| 1/1 [00:00&lt;00:00,  7.51it/s]\n\n\n(100, 10)\n\n\n\n\n\n\n\n\n\n\n\n\nprocesso\ncd_acordao\ncd_foro\nclasse_assunto\nrelatora\ncomarca\norgao_julgador\ndata_julgamento\ndata_publicacao\nementa\n\n\n\n\n0\n0801606-23.2019.8.12.0012\n1692937\n0\nEmbargos de Declaração Cível / Fornecimento de...\nJuiz Vitor Luis de Oliveira Guibo\nIvinhema\n2ª Câmara Cível\n31/01/2024\n13/03/2025\nEMBARGOS DE DECLARAÇÃO – APELAÇÃO CÍVEL – AÇÃO...\n\n\n1\n1407238-41.2024.8.12.0000\n1580279\n0\nAgravo de Instrumento / Efeito Suspensivo / Im...\nDes. Marcelo Câmara Rasslan\nCamapuã\n1ª Câmara Cível\n18/06/2024\n04/07/2024\nAGRAVO DE INSTRUMENTO – CUMPRIMENTO DE SENTENÇ...\n\n\n2\n0047680-51.2012.8.12.0001\n1578759\n0\nEmbargos de Declaração Cível / Prestação de Se...\nDes. Odemilson Roberto Castro Fassa\nCampo Grande\n3ª Câmara Cível\n28/06/2024\n02/07/2024\nE M E N T A - EMBARGOS de DECLARAÇÃO DE USINA ...",
     "crumbs": [
       "Home",
       "Exemplos",
       "Tribunais",
-      "TJPB"
+      "TJMS"
+    ]
+  },
+  {
+    "objectID": "notebooks/tjms.html#download-and-parse-separately",
+    "href": "notebooks/tjms.html#download-and-parse-separately",
+    "title": "TJMS - Tribunal de Justica de Mato Grosso do Sul",
+    "section": "Download and parse separately",
+    "text": "Download and parse separately\nYou can also download the raw HTML files and parse them in a separate step.\n\nimport tempfile, os\n\ntmp = tempfile.mkdtemp()\npasta = tjms.cjsg_download('direito', paginas=1, diretorio=tmp)\nprint('Downloaded to:', pasta)\nprint('Files:', os.listdir(pasta))\n\nDownloaded to: C:\\Users\\jtrec\\AppData\\Local\\Temp\\tmpzp9zc7ph\\cjsg\\20260409100838\nFiles: ['cjsg_00001.html']\n\n\n\ndf_parsed = tjms.cjsg_parse(pasta)\nprint(df_parsed.shape)\ndf_parsed.head(3)\n\nProcessando CJSG TJMS: 100%|██████████| 1/1 [00:00&lt;00:00,  6.91it/s]\n\n\n(100, 10)\n\n\n\n\n\n\n\n\n\n\n\n\nprocesso\ncd_acordao\ncd_foro\nclasse_assunto\nrelatora\ncomarca\norgao_julgador\ndata_julgamento\ndata_publicacao\nementa\n\n\n\n\n0\n0802534-30.2022.8.12.0024\n1873642\n0\nAgravo Interno Cível / Pagamento\nVice-Presidente\nAparecida do Taboado\nVice-Presidência\n08/04/2026\n09/04/2026\nem&gt;DIREITO ADMINISTRATIVO E PROCESSUAL CIVIL. ...\n\n\n1\n1414822-28.2025.8.12.0000\n1873646\n0\nAgravo de Instrumento / Nulidade - Ausência de...\nDes. Marcelo Câmara Rasslan\nPonta Porã\n1ª Câmara Cível\n07/04/2026\n09/04/2026\nAGRAVO DE INSTRUMENTO - AÇÃO CIVIL PÚBLICA POR...\n\n\n2\n0803111-31.2024.8.12.0026\n1873649\n0\nApelação Criminal / Tráfico de Drogas e Condut...\nDes. José Ale Ahmad Netto\nBataguassu\n2ª Câmara Criminal\n07/04/2026\n09/04/2026\nem&gt;DIREITO PENAL E PROCESSUAL PENAL. APELAÇÃO ...",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Tribunais",
+      "TJMS"
+    ]
+  },
+  {
+    "objectID": "notebooks/tjsc.html",
+    "href": "notebooks/tjsc.html",
+    "title": "TJSC - Tribunal de Justica de Santa Catarina",
+    "section": "",
+    "text": "Jurisprudence scraper for TJSC, via the eproc PHP system.\nimport juscraper as jus\n\ntjsc = jus.scraper('tjsc')",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Tribunais",
+      "TJSC"
+    ]
+  },
+  {
+    "objectID": "notebooks/tjsc.html#basic-search",
+    "href": "notebooks/tjsc.html#basic-search",
+    "title": "TJSC - Tribunal de Justica de Santa Catarina",
+    "section": "Basic search",
+    "text": "Basic search\n\ndf = tjsc.cjsg('dano moral', paginas=range(1, 3))\n\nprint(df.shape)\ndf.head(3)\n\nBaixando CJSG TJSC: 100%|██████████| 2/2 [00:03&lt;00:00,  1.71s/it]\n\n\n(20, 8)\n\n\n\n\n\n\n\n\n\n\n\n\nprocesso\nclasse\norgao_julgador\nrelator\ndata_julgamento\ndata_publicacao\nementa\nuf\n\n\n\n\n0\n5042483-02.2020.8.24.0038/TJSC\nNaN\n1ª Câmara Especial de Enfrentamento de Acervos\nPATRÍCIA NOLLI\n2026-04-08\n2026-04-08\nDIREITO DO CONSUMIDOR. APELAÇÕES CÍVEIS. AÇÃO ...\nSC\n\n\n1\n5003931-18.2023.8.24.0052/TJSC\nNaN\n6ª Câmara de Direito Civil\nQUITERIA TAMANINI VIEIRA\n2026-04-08\n2026-04-08\nDIREITO CIVIL E DO CONSUMIDOR. AÇÃO DECLARATÓR...\nSC\n\n\n2\n5048640-54.2021.8.24.0038/TJSC\nNaN\n6ª Câmara de Direito Civil\nQUITERIA TAMANINI VIEIRA\n2026-04-08\n2026-04-08\nDIREITO CIVIL E PROCESSUAL CIVIL. EMBARGOS DE ...\nSC",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Tribunais",
+      "TJSC"
+    ]
+  },
+  {
+    "objectID": "notebooks/tjsc.html#available-columns",
+    "href": "notebooks/tjsc.html#available-columns",
+    "title": "TJSC - Tribunal de Justica de Santa Catarina",
+    "section": "Available columns",
+    "text": "Available columns\n\nbrutos = tjsc.cjsg_download('dano moral', paginas=1)\ndf_parsed = tjsc.cjsg_parse(brutos)\n\nprint(df_parsed.shape)\ndf_parsed.head(3)\n\nBaixando CJSG TJSC: 100%|██████████| 1/1 [00:01&lt;00:00,  1.50s/it]\n\n\n(10, 8)\n\n\n\n\n\n\n\n\n\nprocesso\nclasse\norgao_julgador\nrelator\ndata_julgamento\ndata_publicacao\nementa\nuf\n\n\n\n\n0\n0302139-45.2014.8.24.0282/TJSC\nNaN\n3ª Câmara de Direito Civil\nANTONIO AUGUSTO BAGGIO E UBALDO\n2026-04-08\n2026-04-08\nAPELAÇÃO CÍVEL. AÇÃO INDENIZATÓRIA POR SUPOSTA...\nSC\n\n\n1\n5000076-73.2024.8.24.0059/TJSC\nNaN\n3ª Câmara de Direito Civil\nANTONIO AUGUSTO BAGGIO E UBALDO\n2026-04-08\n2026-04-08\nAPELAÇÃO CÍVEL. AÇÃO DECLARATÓRIA DE NULIDADE ...\nSC\n\n\n2\n5029071-60.2021.8.24.0008/TJSC\nNaN\n3ª Câmara de Direito Civil\nANTONIO AUGUSTO BAGGIO E UBALDO\n2026-04-08\n2026-04-08\nAPELAÇÃO CÍVEL. AÇÃO DECLARATÓRIA DE NULIDADE ...\nSC",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Tribunais",
+      "TJSC"
+    ]
+  },
+  {
+    "objectID": "notebooks/tjsc.html#preview-ementa",
+    "href": "notebooks/tjsc.html#preview-ementa",
+    "title": "TJSC - Tribunal de Justica de Santa Catarina",
+    "section": "Preview ementa",
+    "text": "Preview ementa\n\nif 'ementa' in df.columns and len(df) &gt; 0:\n    print(df['ementa'].iloc[0][:300])\n\nDIREITO DO CONSUMIDOR. APELAÇÕES CÍVEIS. AÇÃO DE INDENIZAÇÃO POR DANOS MATERIAIS E MORAIS. VEÍCULO AUTOMOTOR SUBMETIDO A REPAROS APÓS SINISTRO. DEMORA NA CONCLUSÃO DO SERVIÇO E FALHA NO DEVER DE INFORMAÇÃO.DANOMORALCONFIGURADO. SENTENÇA DE PARCIAL PROCEDÊNCIA. INTEMPESTIVIDADE DO APELO DO AUTOR. NÃO",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Tribunais",
+      "TJSC"
+    ]
+  },
+  {
+    "objectID": "notebooks/tjsc.html#using-filters",
+    "href": "notebooks/tjsc.html#using-filters",
+    "title": "TJSC - Tribunal de Justica de Santa Catarina",
+    "section": "Using filters",
+    "text": "Using filters\nAvailable filters: campo (E=ementa, I=inteiro teor), processo, data_decisao_inicio/fim, data_publicacao_inicio/fim.\n\ndf_filtered = tjsc.cjsg(\n    'direito',\n    campo='E',\n    paginas=1,\n)\n\nprint(df_filtered.shape)\ndf_filtered.head(3)\n\nBaixando CJSG TJSC: 100%|██████████| 1/1 [00:01&lt;00:00,  1.67s/it]\n\n\n(10, 8)\n\n\n\n\n\n\n\n\n\nprocesso\nclasse\norgao_julgador\nrelator\ndata_julgamento\ndata_publicacao\nementa\nuf\n\n\n\n\n0\n5042483-02.2020.8.24.0038/TJSC\nNaN\n1ª Câmara Especial de Enfrentamento de Acervos\nPATRÍCIA NOLLI\n2026-04-08\n2026-04-08\nDIREITODO CONSUMIDOR. APELAÇÕES CÍVEIS. AÇÃO D...\nSC\n\n\n1\n5005007-27.2023.8.24.0004/TJSC\nNaN\n1ª Câmara Especial de Enfrentamento de Acervos\nPATRÍCIA NOLLI\n2026-04-08\n2026-04-08\nDIREITOCIVIL. APELAÇÕES CÍVEIS. AÇÃO DE COBRAN...\nSC\n\n\n2\n5002184-70.2023.8.24.0072/TJSC\nNaN\n1ª Câmara Especial de Enfrentamento de Acervos\nPATRÍCIA NOLLI\n2026-04-08\n2026-04-08\nDIREITOPROCESSUAL CIVIL E CIVIL. EMBARGOS DE D...\nSC",
+    "crumbs": [
+      "Home",
+      "Exemplos",
+      "Tribunais",
+      "TJSC"
     ]
   },
   {
@@ -1573,18 +1943,32 @@
     "text": "Name\nDescription\n\n\n\n\ncjsg\nSearches for TJPR jurisprudence in a simplified way (download + parse).\n\n\ncjsg_download\nDownloads raw results from the TJPR jurisprudence search (multiple pages).\n\n\ncjsg_parse\nExtracts relevant data from the HTMLs returned by TJPR.\n\n\ncpopg\nStub: Primeiro grau case consultation not implemented for TJPR.\n\n\ncposg\nStub: Segundo grau case consultation not implemented for TJPR.\n\n\n\n\n\ncourts.tjpr.client.TJPRScraper.cjsg(\n    pesquisa=None,\n    paginas=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    **kwargs,\n)\nSearches for TJPR jurisprudence in a simplified way (download + parse). Returns a ready-to-analyze DataFrame.\n\n\n\ncourts.tjpr.client.TJPRScraper.cjsg_download(\n    pesquisa=None,\n    paginas=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    **kwargs,\n)\nDownloads raw results from the TJPR jurisprudence search (multiple pages). Returns a list of HTMLs (one per page).\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npesquisa\nstr\nSearch term. termo is accepted as deprecated alias.\nNone\n\n\npaginas\nint, list, range, or None\nPages to download (1-based). int: paginas=3 downloads pages 1-3. range: range(1, 4) downloads pages 1-3. None: downloads all available pages.\nNone\n\n\n\n\n\n\n\ncourts.tjpr.client.TJPRScraper.cjsg_parse(resultados_brutos, criterio=None)\nExtracts relevant data from the HTMLs returned by TJPR. Returns a DataFrame with the decisions.\n\n\n\ncourts.tjpr.client.TJPRScraper.cpopg(id_cnj)\nStub: Primeiro grau case consultation not implemented for TJPR.\n\n\n\ncourts.tjpr.client.TJPRScraper.cposg(id_cnj)\nStub: Segundo grau case consultation not implemented for TJPR."
   },
   {
-    "objectID": "reference/courts.tjba.client.TJBAScraper.html",
-    "href": "reference/courts.tjba.client.TJBAScraper.html",
-    "title": "courts.tjba.client.TJBAScraper",
+    "objectID": "reference/courts.tjal.client.TJALScraper.html",
+    "href": "reference/courts.tjal.client.TJALScraper.html",
+    "title": "courts.tjal.client.TJALScraper",
     "section": "",
-    "text": "courts.tjba.client.TJBAScraper()\nScraper for the Tribunal de Justica do Estado da Bahia.\n\n\n\n\n\nName\nDescription\n\n\n\n\ncjsg\nSearch TJBA jurisprudence (download + parse).\n\n\ncjsg_download\nDownload raw results from the TJBA jurisprudence search.\n\n\ncjsg_parse\nParse raw results from TJBA into a DataFrame.\n\n\ncpopg\nStub: first-instance case consultation not implemented for TJBA.\n\n\ncposg\nStub: second-instance case consultation not implemented for TJBA.\n\n\n\n\n\ncourts.tjba.client.TJBAScraper.cjsg(\n    pesquisa=None,\n    paginas=None,\n    numero_recurso=None,\n    orgaos=None,\n    relatores=None,\n    classes=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    segundo_grau=True,\n    turmas_recursais=True,\n    tipo_acordaos=True,\n    tipo_decisoes_monocraticas=True,\n    ordenado_por='dataPublicacao',\n    items_per_page=10,\n    session=None,\n    **kwargs,\n)\nSearch TJBA jurisprudence (download + parse).\nReturns a ready-to-analyze DataFrame.\n\n\npesquisa : str Search term. query and termo are accepted as deprecated aliases. paginas : int, list, range, or None Pages to download (1-based). None = all pages. data_publicacao_inicio : str, optional Start date (YYYY-MM-DD). data_publicacao_fim : str, optional End date (YYYY-MM-DD).\n\n\n\npd.DataFrame Jurisprudence results.\n\n\n\n\ncourts.tjba.client.TJBAScraper.cjsg_download(\n    pesquisa=None,\n    paginas=None,\n    numero_recurso=None,\n    orgaos=None,\n    relatores=None,\n    classes=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    segundo_grau=True,\n    turmas_recursais=True,\n    tipo_acordaos=True,\n    tipo_decisoes_monocraticas=True,\n    ordenado_por='dataPublicacao',\n    items_per_page=10,\n    session=None,\n    **kwargs,\n)\nDownload raw results from the TJBA jurisprudence search.\n\n\npesquisa : str Search term. query and termo are accepted as deprecated aliases. paginas : int, list, range, or None Pages to download (1-based). int: paginas=3 downloads pages 1-3. range: range(1, 4) downloads pages 1-3. None: downloads all. numero_recurso : str, optional Case/appeal number filter. orgaos : list, optional List of orgao julgador IDs to filter. relatores : list, optional List of relator IDs to filter. classes : list, optional List of class IDs to filter. data_publicacao_inicio : str, optional Start date for publication filter (YYYY-MM-DD). data_publicacao_fim : str, optional End date for publication filter (YYYY-MM-DD). segundo_grau : bool Include second-instance results (default True). turmas_recursais : bool Include turmas recursais results (default True). tipo_acordaos : bool Include acordaos (default True). tipo_decisoes_monocraticas : bool Include monocratic decisions (default True). items_per_page : int Results per page (default 10).\n\n\n\nlist List of raw GraphQL response dicts (one per page).\n\n\n\n\ncourts.tjba.client.TJBAScraper.cjsg_parse(resultados_brutos)\nParse raw results from TJBA into a DataFrame.\n\n\nresultados_brutos : list Raw response dicts as returned by cjsg_download.\n\n\n\npd.DataFrame DataFrame with one row per decision.\n\n\n\n\ncourts.tjba.client.TJBAScraper.cpopg(id_cnj)\nStub: first-instance case consultation not implemented for TJBA.\n\n\n\ncourts.tjba.client.TJBAScraper.cposg(id_cnj)\nStub: second-instance case consultation not implemented for TJBA."
+    "text": "courts.tjal.client.TJALScraper(\n    verbose=0,\n    download_path=None,\n    sleep_time=1.0,\n    **kwargs,\n)\nScraper for the Tribunal de Justica de Alagoas (TJAL).\nThe TJAL uses the eSAJ platform (same as TJSP). Currently supports jurisprudence search (CJSG).\n\n\n\n\n\nName\nDescription\n\n\n\n\ncjsg\nSearch TJAL jurisprudence (2nd degree).\n\n\ncjsg_download\nDownload raw CJSG HTML result pages.\n\n\ncjsg_parse\nParse downloaded CJSG HTML files.\n\n\n\n\n\ncourts.tjal.client.TJALScraper.cjsg(\n    pesquisa,\n    paginas=None,\n    ementa=None,\n    numero_recurso=None,\n    classe=None,\n    assunto=None,\n    comarca=None,\n    orgao_julgador=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    origem='T',\n    tipo_decisao='acordao',\n    **kwargs,\n)\nSearch TJAL jurisprudence (2nd degree).\n\n\npesquisa : str Free-text search term. paginas : int, list, range, or None Pages to download (1-based). None downloads all. ementa : str, optional Filter by ementa text. numero_recurso : str, optional Appeal number filter. classe : str, optional Procedural class (tree selection value). assunto : str, optional Subject (tree selection value). comarca : str, optional District. orgao_julgador : str, optional Judging body (tree selection value). data_julgamento_inicio, data_julgamento_fim : str, optional Judgment date range (dd/mm/yyyy). Aliases: data_inicio/data_fim. data_publicacao_inicio, data_publicacao_fim : str, optional Publication date range (dd/mm/yyyy). origem : str \"T\" for 2nd degree (default), \"R\" for recursal courts. tipo_decisao : str \"acordao\" or \"monocratica\".\n\n\n\npd.DataFrame\n\n\n\n\ncourts.tjal.client.TJALScraper.cjsg_download(\n    pesquisa,\n    paginas=None,\n    ementa=None,\n    numero_recurso=None,\n    classe=None,\n    assunto=None,\n    comarca=None,\n    orgao_julgador=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    origem='T',\n    tipo_decisao='acordao',\n    diretorio=None,\n    **kwargs,\n)\nDownload raw CJSG HTML result pages.\nParameters are the same as :meth:cjsg, plus:\n\n\nDirectory to save files. Defaults to the scraper’s download_path.\n\n\n\nstr Path to the directory containing HTML files.\n\n\n\n\ncourts.tjal.client.TJALScraper.cjsg_parse(diretorio)\nParse downloaded CJSG HTML files.\n\n\ndiretorio : str or Path Directory containing downloaded HTML files.\n\n\n\npd.DataFrame"
   },
   {
-    "objectID": "reference/courts.tjba.client.TJBAScraper.html#methods",
-    "href": "reference/courts.tjba.client.TJBAScraper.html#methods",
-    "title": "courts.tjba.client.TJBAScraper",
+    "objectID": "reference/courts.tjal.client.TJALScraper.html#methods",
+    "href": "reference/courts.tjal.client.TJALScraper.html#methods",
+    "title": "courts.tjal.client.TJALScraper",
     "section": "",
-    "text": "Name\nDescription\n\n\n\n\ncjsg\nSearch TJBA jurisprudence (download + parse).\n\n\ncjsg_download\nDownload raw results from the TJBA jurisprudence search.\n\n\ncjsg_parse\nParse raw results from TJBA into a DataFrame.\n\n\ncpopg\nStub: first-instance case consultation not implemented for TJBA.\n\n\ncposg\nStub: second-instance case consultation not implemented for TJBA.\n\n\n\n\n\ncourts.tjba.client.TJBAScraper.cjsg(\n    pesquisa=None,\n    paginas=None,\n    numero_recurso=None,\n    orgaos=None,\n    relatores=None,\n    classes=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    segundo_grau=True,\n    turmas_recursais=True,\n    tipo_acordaos=True,\n    tipo_decisoes_monocraticas=True,\n    ordenado_por='dataPublicacao',\n    items_per_page=10,\n    session=None,\n    **kwargs,\n)\nSearch TJBA jurisprudence (download + parse).\nReturns a ready-to-analyze DataFrame.\n\n\npesquisa : str Search term. query and termo are accepted as deprecated aliases. paginas : int, list, range, or None Pages to download (1-based). None = all pages. data_publicacao_inicio : str, optional Start date (YYYY-MM-DD). data_publicacao_fim : str, optional End date (YYYY-MM-DD).\n\n\n\npd.DataFrame Jurisprudence results.\n\n\n\n\ncourts.tjba.client.TJBAScraper.cjsg_download(\n    pesquisa=None,\n    paginas=None,\n    numero_recurso=None,\n    orgaos=None,\n    relatores=None,\n    classes=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    segundo_grau=True,\n    turmas_recursais=True,\n    tipo_acordaos=True,\n    tipo_decisoes_monocraticas=True,\n    ordenado_por='dataPublicacao',\n    items_per_page=10,\n    session=None,\n    **kwargs,\n)\nDownload raw results from the TJBA jurisprudence search.\n\n\npesquisa : str Search term. query and termo are accepted as deprecated aliases. paginas : int, list, range, or None Pages to download (1-based). int: paginas=3 downloads pages 1-3. range: range(1, 4) downloads pages 1-3. None: downloads all. numero_recurso : str, optional Case/appeal number filter. orgaos : list, optional List of orgao julgador IDs to filter. relatores : list, optional List of relator IDs to filter. classes : list, optional List of class IDs to filter. data_publicacao_inicio : str, optional Start date for publication filter (YYYY-MM-DD). data_publicacao_fim : str, optional End date for publication filter (YYYY-MM-DD). segundo_grau : bool Include second-instance results (default True). turmas_recursais : bool Include turmas recursais results (default True). tipo_acordaos : bool Include acordaos (default True). tipo_decisoes_monocraticas : bool Include monocratic decisions (default True). items_per_page : int Results per page (default 10).\n\n\n\nlist List of raw GraphQL response dicts (one per page).\n\n\n\n\ncourts.tjba.client.TJBAScraper.cjsg_parse(resultados_brutos)\nParse raw results from TJBA into a DataFrame.\n\n\nresultados_brutos : list Raw response dicts as returned by cjsg_download.\n\n\n\npd.DataFrame DataFrame with one row per decision.\n\n\n\n\ncourts.tjba.client.TJBAScraper.cpopg(id_cnj)\nStub: first-instance case consultation not implemented for TJBA.\n\n\n\ncourts.tjba.client.TJBAScraper.cposg(id_cnj)\nStub: second-instance case consultation not implemented for TJBA."
+    "text": "Name\nDescription\n\n\n\n\ncjsg\nSearch TJAL jurisprudence (2nd degree).\n\n\ncjsg_download\nDownload raw CJSG HTML result pages.\n\n\ncjsg_parse\nParse downloaded CJSG HTML files.\n\n\n\n\n\ncourts.tjal.client.TJALScraper.cjsg(\n    pesquisa,\n    paginas=None,\n    ementa=None,\n    numero_recurso=None,\n    classe=None,\n    assunto=None,\n    comarca=None,\n    orgao_julgador=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    origem='T',\n    tipo_decisao='acordao',\n    **kwargs,\n)\nSearch TJAL jurisprudence (2nd degree).\n\n\npesquisa : str Free-text search term. paginas : int, list, range, or None Pages to download (1-based). None downloads all. ementa : str, optional Filter by ementa text. numero_recurso : str, optional Appeal number filter. classe : str, optional Procedural class (tree selection value). assunto : str, optional Subject (tree selection value). comarca : str, optional District. orgao_julgador : str, optional Judging body (tree selection value). data_julgamento_inicio, data_julgamento_fim : str, optional Judgment date range (dd/mm/yyyy). Aliases: data_inicio/data_fim. data_publicacao_inicio, data_publicacao_fim : str, optional Publication date range (dd/mm/yyyy). origem : str \"T\" for 2nd degree (default), \"R\" for recursal courts. tipo_decisao : str \"acordao\" or \"monocratica\".\n\n\n\npd.DataFrame\n\n\n\n\ncourts.tjal.client.TJALScraper.cjsg_download(\n    pesquisa,\n    paginas=None,\n    ementa=None,\n    numero_recurso=None,\n    classe=None,\n    assunto=None,\n    comarca=None,\n    orgao_julgador=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    origem='T',\n    tipo_decisao='acordao',\n    diretorio=None,\n    **kwargs,\n)\nDownload raw CJSG HTML result pages.\nParameters are the same as :meth:cjsg, plus:\n\n\nDirectory to save files. Defaults to the scraper’s download_path.\n\n\n\nstr Path to the directory containing HTML files.\n\n\n\n\ncourts.tjal.client.TJALScraper.cjsg_parse(diretorio)\nParse downloaded CJSG HTML files.\n\n\ndiretorio : str or Path Directory containing downloaded HTML files.\n\n\n\npd.DataFrame"
+  },
+  {
+    "objectID": "reference/courts.tjam.client.TJAMScraper.html",
+    "href": "reference/courts.tjam.client.TJAMScraper.html",
+    "title": "courts.tjam.client.TJAMScraper",
+    "section": "",
+    "text": "courts.tjam.client.TJAMScraper(\n    verbose=0,\n    download_path=None,\n    sleep_time=1.0,\n    **kwargs,\n)\nScraper for the Tribunal de Justica do Amazonas (TJAM).\nThe TJAM uses the eSAJ platform (same as TJSP). Currently supports jurisprudence search (CJSG).\n\n\n\n\n\nName\nDescription\n\n\n\n\ncjsg\nSearch TJAM jurisprudence (2nd degree).\n\n\ncjsg_download\nDownload raw CJSG HTML result pages.\n\n\ncjsg_parse\nParse downloaded CJSG HTML files.\n\n\n\n\n\ncourts.tjam.client.TJAMScraper.cjsg(\n    pesquisa,\n    paginas=None,\n    ementa=None,\n    numero_recurso=None,\n    classe=None,\n    assunto=None,\n    comarca=None,\n    orgao_julgador=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    origem='T',\n    tipo_decisao='acordao',\n    **kwargs,\n)\nSearch TJAM jurisprudence (2nd degree).\n\n\npesquisa : str Free-text search term. paginas : int, list, range, or None Pages to download (1-based). None downloads all. ementa : str, optional Filter by ementa text. numero_recurso : str, optional Appeal number filter. classe : str, optional Procedural class (tree selection value). assunto : str, optional Subject (tree selection value). comarca : str, optional District. orgao_julgador : str, optional Judging body (tree selection value). data_julgamento_inicio, data_julgamento_fim : str, optional Judgment date range (dd/mm/yyyy). Aliases: data_inicio/data_fim. data_publicacao_inicio, data_publicacao_fim : str, optional Publication date range (dd/mm/yyyy). origem : str \"T\" for 2nd degree (default), \"R\" for recursal courts. tipo_decisao : str \"acordao\" or \"monocratica\".\n\n\n\npd.DataFrame\n\n\n\n\ncourts.tjam.client.TJAMScraper.cjsg_download(\n    pesquisa,\n    paginas=None,\n    ementa=None,\n    numero_recurso=None,\n    classe=None,\n    assunto=None,\n    comarca=None,\n    orgao_julgador=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    origem='T',\n    tipo_decisao='acordao',\n    diretorio=None,\n    **kwargs,\n)\nDownload raw CJSG HTML result pages.\nParameters are the same as :meth:cjsg, plus:\n\n\nDirectory to save files. Defaults to the scraper’s download_path.\n\n\n\nstr Path to the directory containing HTML files.\n\n\n\n\ncourts.tjam.client.TJAMScraper.cjsg_parse(diretorio)\nParse downloaded CJSG HTML files.\n\n\ndiretorio : str or Path Directory containing downloaded HTML files.\n\n\n\npd.DataFrame"
+  },
+  {
+    "objectID": "reference/courts.tjam.client.TJAMScraper.html#methods",
+    "href": "reference/courts.tjam.client.TJAMScraper.html#methods",
+    "title": "courts.tjam.client.TJAMScraper",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\ncjsg\nSearch TJAM jurisprudence (2nd degree).\n\n\ncjsg_download\nDownload raw CJSG HTML result pages.\n\n\ncjsg_parse\nParse downloaded CJSG HTML files.\n\n\n\n\n\ncourts.tjam.client.TJAMScraper.cjsg(\n    pesquisa,\n    paginas=None,\n    ementa=None,\n    numero_recurso=None,\n    classe=None,\n    assunto=None,\n    comarca=None,\n    orgao_julgador=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    origem='T',\n    tipo_decisao='acordao',\n    **kwargs,\n)\nSearch TJAM jurisprudence (2nd degree).\n\n\npesquisa : str Free-text search term. paginas : int, list, range, or None Pages to download (1-based). None downloads all. ementa : str, optional Filter by ementa text. numero_recurso : str, optional Appeal number filter. classe : str, optional Procedural class (tree selection value). assunto : str, optional Subject (tree selection value). comarca : str, optional District. orgao_julgador : str, optional Judging body (tree selection value). data_julgamento_inicio, data_julgamento_fim : str, optional Judgment date range (dd/mm/yyyy). Aliases: data_inicio/data_fim. data_publicacao_inicio, data_publicacao_fim : str, optional Publication date range (dd/mm/yyyy). origem : str \"T\" for 2nd degree (default), \"R\" for recursal courts. tipo_decisao : str \"acordao\" or \"monocratica\".\n\n\n\npd.DataFrame\n\n\n\n\ncourts.tjam.client.TJAMScraper.cjsg_download(\n    pesquisa,\n    paginas=None,\n    ementa=None,\n    numero_recurso=None,\n    classe=None,\n    assunto=None,\n    comarca=None,\n    orgao_julgador=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    data_publicacao_inicio=None,\n    data_publicacao_fim=None,\n    origem='T',\n    tipo_decisao='acordao',\n    diretorio=None,\n    **kwargs,\n)\nDownload raw CJSG HTML result pages.\nParameters are the same as :meth:cjsg, plus:\n\n\nDirectory to save files. Defaults to the scraper’s download_path.\n\n\n\nstr Path to the directory containing HTML files.\n\n\n\n\ncourts.tjam.client.TJAMScraper.cjsg_parse(diretorio)\nParse downloaded CJSG HTML files.\n\n\ndiretorio : str or Path Directory containing downloaded HTML files.\n\n\n\npd.DataFrame"
   },
   {
     "objectID": "reference/courts.tjmt.client.TJMTScraper.html",
@@ -1643,48 +2027,32 @@
     "text": "Name\nDescription\n\n\n\n\ncjsg\nSearch TJRN jurisprudence.\n\n\ncjsg_download\nDownload raw CJSG JSON responses from TJRN.\n\n\ncjsg_parse\nParse downloaded CJSG JSON responses.\n\n\ncpopg\nStub: first instance case consultation not implemented for TJRN.\n\n\ncposg\nStub: second instance case consultation not implemented for TJRN.\n\n\n\n\n\ncourts.tjrn.client.TJRNScraper.cjsg(\n    pesquisa=None,\n    paginas=None,\n    nr_processo='',\n    id_classe_judicial='',\n    id_orgao_julgador='',\n    id_relator='',\n    id_colegiado='',\n    sistema='',\n    decisoes='',\n    jurisdicoes='',\n    grau='',\n    **kwargs,\n)\nSearch TJRN jurisprudence.\n\n\npesquisa : str Free-text search term (searched in ementa). paginas : int, list, range, or None Pages to download (1-based). None downloads all. nr_processo : str, optional Process number filter. id_classe_judicial : str, optional Judicial class ID. id_orgao_julgador : str, optional Judging body ID. id_relator : str, optional Reporter judge ID. id_colegiado : str, optional Collegiate body ID. sistema : str, optional \"PJE\", \"SAJ\", or empty for all. decisoes : str, optional \"Monocraticas\", \"Colegiadas\", \"Sentencas\", or empty for all. jurisdicoes : str, optional \"Tribunal de Justica\", \"Turmas Recursais\", or empty for all. grau : str, optional \"1\" (first), \"2\" (second), or empty for all.\n\n\n\npd.DataFrame\n\n\n\n\ncourts.tjrn.client.TJRNScraper.cjsg_download(\n    pesquisa=None,\n    paginas=None,\n    **kwargs,\n)\nDownload raw CJSG JSON responses from TJRN.\nParameters are the same as :meth:cjsg.\n\n\nlist List of raw JSON responses (one per page).\n\n\n\n\ncourts.tjrn.client.TJRNScraper.cjsg_parse(resultados_brutos)\nParse downloaded CJSG JSON responses.\n\n\nresultados_brutos : list List of raw JSON responses from the TJRN API.\n\n\n\npd.DataFrame\n\n\n\n\ncourts.tjrn.client.TJRNScraper.cpopg(id_cnj)\nStub: first instance case consultation not implemented for TJRN.\n\n\n\ncourts.tjrn.client.TJRNScraper.cposg(id_cnj)\nStub: second instance case consultation not implemented for TJRN."
   },
   {
-    "objectID": "reference/index.html",
-    "href": "reference/index.html",
-    "title": "Referência da API",
+    "objectID": "reference/courts.tjrr.client.TJRRScraper.html",
+    "href": "reference/courts.tjrr.client.TJRRScraper.html",
+    "title": "courts.tjrr.client.TJRRScraper",
     "section": "",
-    "text": "Interface pública para acessar os scrapers.\n\n\n\nscraper\nFactory that returns the correct scraper.\n\n\n\n\n\n\nClasses para coletar dados de agregadores de jurisprudência.\n\n\n\naggregators.datajud.client.DatajudScraper\nScraper for CNJ’s Datajud API.\n\n\naggregators.jusbr.client.JusbrScraper\nRaspador para o JusBR (consulta unificada da PDPJ-CNJ).\n\n\n\n\n\n\nClasses para coletar dados de tribunais específicos.\n\n\n\ncourts.tjap.client.TJAPScraper\nScraper for the Tribunal de Justica do Amapa (TJAP).\n\n\ncourts.tjce.client.TJCEScraper\nScraper for the Tribunal de Justica do Ceara (TJCE).\n\n\ncourts.tjba.client.TJBAScraper\nScraper for the Tribunal de Justica do Estado da Bahia.\n\n\ncourts.tjsp.client.TJSPScraper\nMain scraper for Tribunal de Justica de Sao Paulo.\n\n\ncourts.tjdft.client.TJDFTScraper\nScraper for the Court of Justice of the Federal District and Territories (TJDFT).\n\n\ncourts.tjrs.client.TJRSScraper\nScraper for the Tribunal de Justiça do Rio Grande do Sul.\n\n\ncourts.tjpa.client.TJPAScraper\nScraper for the Tribunal de Justica do Estado do Para.\n\n\ncourts.tjpr.client.TJPRScraper\nScraper for the Court of Justice of Paraná.\n\n\ncourts.tjpe.client.TJPEScraper\nScraper for the Tribunal de Justica de Pernambuco.\n\n\ncourts.tjmt.client.TJMTScraper\nScraper for the Tribunal de Justica do Estado de Mato Grosso (TJMT).\n\n\ncourts.tjes.client.TJESScraper\nScraper for the Tribunal de Justica do Espirito Santo.\n\n\ncourts.tjto.client.TJTOScraper\nScraper for the Tribunal de Justica do Tocantins.\n\n\ncourts.tjpb.client.TJPBScraper\nScraper for the Tribunal de Justica da Paraiba (TJPB).\n\n\ncourts.tjpi.client.TJPIScraper\nScraper for the Tribunal de Justica do Piaui (TJPI).\n\n\ncourts.tjrn.client.TJRNScraper\nScraper for the Tribunal de Justica do Rio Grande do Norte (TJRN).\n\n\ncourts.tjro.client.TJROScraper\nScraper for the Tribunal de Justica de Rondonia (TJRO).\n\n\ncourts.tjrr.client.TJRRScraper\nScraper for the Tribunal de Justica de Roraima (TJRR).\n\n\ncourts.tjsc.client.TJSCScraper\nScraper for the Tribunal de Justica de Santa Catarina (TJSC).",
-    "crumbs": [
-      "Home",
-      "Referência da API"
-    ]
+    "text": "courts.tjrr.client.TJRRScraper()\nScraper for the Tribunal de Justica de Roraima (TJRR).\nUses the JSF/PrimeFaces-based jurisprudence search at jurisprudencia.tjrr.jus.br.\n\n\n\n\n\nName\nDescription\n\n\n\n\ncjsg\nSearch TJRR jurisprudence.\n\n\ncjsg_download\nDownload raw HTML pages from TJRR.\n\n\ncjsg_parse\nParse downloaded HTML pages.\n\n\ncpopg\nStub: first instance case consultation not implemented for TJRR.\n\n\ncposg\nStub: second instance case consultation not implemented for TJRR.\n\n\n\n\n\ncourts.tjrr.client.TJRRScraper.cjsg(\n    pesquisa=None,\n    paginas=None,\n    relator='',\n    orgao_julgador=None,\n    especie=None,\n    **kwargs,\n)\nSearch TJRR jurisprudence.\n\n\npesquisa : str Free-text search term. paginas : int, list, range, or None Pages to download (1-based). None downloads all. relator : str, optional Reporter judge name. orgao_julgador : list, optional Judging body codes (e.g. [\"PRIMEIRA_TURMA_CIVEL\", \"CAMARA_CRIMINAL\"]). especie : list, optional Decision type codes.\n\n\n\npd.DataFrame\n\n\n\n\ncourts.tjrr.client.TJRRScraper.cjsg_download(\n    pesquisa=None,\n    paginas=None,\n    **kwargs,\n)\nDownload raw HTML pages from TJRR.\n\n\nlist List of raw HTML strings (one per page).\n\n\n\n\ncourts.tjrr.client.TJRRScraper.cjsg_parse(resultados_brutos)\nParse downloaded HTML pages.\n\n\npd.DataFrame\n\n\n\n\ncourts.tjrr.client.TJRRScraper.cpopg(id_cnj)\nStub: first instance case consultation not implemented for TJRR.\n\n\n\ncourts.tjrr.client.TJRRScraper.cposg(id_cnj)\nStub: second instance case consultation not implemented for TJRR."
   },
   {
-    "objectID": "reference/index.html#função-principal",
-    "href": "reference/index.html#função-principal",
-    "title": "Referência da API",
+    "objectID": "reference/courts.tjrr.client.TJRRScraper.html#methods",
+    "href": "reference/courts.tjrr.client.TJRRScraper.html#methods",
+    "title": "courts.tjrr.client.TJRRScraper",
     "section": "",
-    "text": "Interface pública para acessar os scrapers.\n\n\n\nscraper\nFactory that returns the correct scraper.",
-    "crumbs": [
-      "Home",
-      "Referência da API"
-    ]
+    "text": "Name\nDescription\n\n\n\n\ncjsg\nSearch TJRR jurisprudence.\n\n\ncjsg_download\nDownload raw HTML pages from TJRR.\n\n\ncjsg_parse\nParse downloaded HTML pages.\n\n\ncpopg\nStub: first instance case consultation not implemented for TJRR.\n\n\ncposg\nStub: second instance case consultation not implemented for TJRR.\n\n\n\n\n\ncourts.tjrr.client.TJRRScraper.cjsg(\n    pesquisa=None,\n    paginas=None,\n    relator='',\n    orgao_julgador=None,\n    especie=None,\n    **kwargs,\n)\nSearch TJRR jurisprudence.\n\n\npesquisa : str Free-text search term. paginas : int, list, range, or None Pages to download (1-based). None downloads all. relator : str, optional Reporter judge name. orgao_julgador : list, optional Judging body codes (e.g. [\"PRIMEIRA_TURMA_CIVEL\", \"CAMARA_CRIMINAL\"]). especie : list, optional Decision type codes.\n\n\n\npd.DataFrame\n\n\n\n\ncourts.tjrr.client.TJRRScraper.cjsg_download(\n    pesquisa=None,\n    paginas=None,\n    **kwargs,\n)\nDownload raw HTML pages from TJRR.\n\n\nlist List of raw HTML strings (one per page).\n\n\n\n\ncourts.tjrr.client.TJRRScraper.cjsg_parse(resultados_brutos)\nParse downloaded HTML pages.\n\n\npd.DataFrame\n\n\n\n\ncourts.tjrr.client.TJRRScraper.cpopg(id_cnj)\nStub: first instance case consultation not implemented for TJRR.\n\n\n\ncourts.tjrr.client.TJRRScraper.cposg(id_cnj)\nStub: second instance case consultation not implemented for TJRR."
   },
   {
-    "objectID": "reference/index.html#scrapers-de-agregadores",
-    "href": "reference/index.html#scrapers-de-agregadores",
-    "title": "Referência da API",
+    "objectID": "reference/courts.tjsp.client.TJSPScraper.html",
+    "href": "reference/courts.tjsp.client.TJSPScraper.html",
+    "title": "courts.tjsp.client.TJSPScraper",
     "section": "",
-    "text": "Classes para coletar dados de agregadores de jurisprudência.\n\n\n\naggregators.datajud.client.DatajudScraper\nScraper for CNJ’s Datajud API.\n\n\naggregators.jusbr.client.JusbrScraper\nRaspador para o JusBR (consulta unificada da PDPJ-CNJ).",
-    "crumbs": [
-      "Home",
-      "Referência da API"
-    ]
+    "text": "courts.tjsp.client.TJSPScraper(\n    verbose=0,\n    download_path=None,\n    sleep_time=0.5,\n    **kwargs,\n)\nMain scraper for Tribunal de Justica de Sao Paulo.\n\n\n\n\n\nName\nDescription\n\n\n\n\ncjpg\nOrchestrates the download and parsing of processes from CJPG.\n\n\ncjpg_download\nDownloads the processes from the TJSP jurisprudence.\n\n\ncjpg_parse\nWrapper for parsing downloaded files from CJPG.\n\n\ncjsg\nOrchestrates the download and parsing of processes from CJSG.\n\n\ncjsg_download\nDownloads the HTML files of the pages of results of the\n\n\ncjsg_parse\nWrapper for parsing downloaded files from CJSG.\n\n\ncpopg\nScrapes a process from Primeiro Grau (CPOPG).\n\n\ncpopg_download\nDownloads a process from Primeiro Grau (CPOPG).\n\n\ncpopg_parse\nWrapper for parsing downloaded files from CPOPG.\n\n\ncposg\nOrchestrates the download and parsing of processes from Segundo Grau (CPOSG).\n\n\ncposg_download\nDownloads processes from Segundo Grau (CPOSG), via HTML or API, using modularized functions.\n\n\ncposg_parse\nWrapper for parsing downloaded files from CPOSG.\n\n\nset_download_path\nSets the base directory for saving downloaded files.\n\n\nset_method\nSets the method for accessing TJSP data.\n\n\n\n\n\ncourts.tjsp.client.TJSPScraper.cjpg(\n    pesquisa='',\n    classes=None,\n    assuntos=None,\n    varas=None,\n    id_processo=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    paginas=None,\n    **kwargs,\n)\nOrchestrates the download and parsing of processes from CJPG.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npesquisa\nstr\nThe search term. Default is “” (empty string).\n''\n\n\nclasses\nlist[str]\nList of classes of the process. Default is None.\nNone\n\n\nassuntos\nlist[str]\nList of subjects of the process. Default is None.\nNone\n\n\nvaras\nlist[str]\nList of varas of the process. Default is None.\nNone\n\n\nid_processo\nstr\nID of the process. Default is None.\nNone\n\n\ndata_julgamento_inicio\nstr | None\nStart date. data_inicio accepted as alias.\nNone\n\n\ndata_julgamento_fim\nstr | None\nEnd date. data_fim accepted as alias.\nNone\n\n\npaginas\nint, list, range, or None\nPages (1-based). None downloads all.\nNone\n\n\n\n\n\n\n\ncourts.tjsp.client.TJSPScraper.cjpg_download(\n    pesquisa,\n    classes=None,\n    assuntos=None,\n    varas=None,\n    id_processo=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    paginas=None,\n    **kwargs,\n)\nDownloads the processes from the TJSP jurisprudence.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npesquisa\nstr\nThe search term.\nrequired\n\n\nclasses\nlist[str]\nList of classes of the process. Default is None.\nNone\n\n\nassuntos\nlist[str]\nList of subjects of the process. Default is None.\nNone\n\n\nvaras\nlist[str]\nList of varas of the process. Default is None.\nNone\n\n\nid_processo\nstr\nID of the process. Default is None.\nNone\n\n\ndata_julgamento_inicio\nstr | None\nStart date. data_inicio accepted as alias.\nNone\n\n\ndata_julgamento_fim\nstr | None\nEnd date. data_fim accepted as alias.\nNone\n\n\npaginas\nint, list, range, or None\nPages (1-based). None downloads all.\nNone\n\n\n\n\n\n\n\ncourts.tjsp.client.TJSPScraper.cjpg_parse(path)\nWrapper for parsing downloaded files from CJPG.\n\n\n\ncourts.tjsp.client.TJSPScraper.cjsg(\n    pesquisa,\n    ementa=None,\n    classe=None,\n    assunto=None,\n    comarca=None,\n    orgao_julgador=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    baixar_sg=True,\n    tipo_decisao='acordao',\n    paginas=None,\n    **kwargs,\n)\nOrchestrates the download and parsing of processes from CJSG.\n\n\n\ncourts.tjsp.client.TJSPScraper.cjsg_download(\n    pesquisa,\n    ementa=None,\n    classe=None,\n    assunto=None,\n    comarca=None,\n    orgao_julgador=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    baixar_sg=True,\n    tipo_decisao='acordao',\n    paginas=None,\n    **kwargs,\n)\nDownloads the HTML files of the pages of results of the Second Stage Judgment Consultation (CJSG).\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npesquisa\nstr\nSearch term.\nrequired\n\n\nementa\nstr\nFilter by text of the ementa.\nNone\n\n\nclasse\nstr | None\nClass of the process.\nNone\n\n\nassunto\nstr | None\nSubject of the process.\nNone\n\n\ncomarca\nstr | None\nCourt of the process.\nNone\n\n\norgao_julgador\nstr | None\nCourt of appeal of the process.\nNone\n\n\ndata_julgamento_inicio\nstr | None\nStart date (judgment). data_inicio accepted as alias.\nNone\n\n\ndata_julgamento_fim\nstr | None\nEnd date (judgment). data_fim accepted as alias.\nNone\n\n\nbaixar_sg\nbool\nIf True, also downloads from Second Stage.\nTrue\n\n\ntipo_decisao\nstr\n‘acordao’ or ‘monocratica’.\n'acordao'\n\n\npaginas\nint, list, range, or None\nPages (1-based). None downloads all.\nNone\n\n\n\n\n\n\n\ncourts.tjsp.client.TJSPScraper.cjsg_parse(path)\nWrapper for parsing downloaded files from CJSG.\n\n\n\ncourts.tjsp.client.TJSPScraper.cpopg(id_cnj, method='html')\nScrapes a process from Primeiro Grau (CPOPG).\n\n\n\ncourts.tjsp.client.TJSPScraper.cpopg_download(id_cnj, method='html')\nDownloads a process from Primeiro Grau (CPOPG).\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nid_cnj\nUnion[str, List[str]]\nstring with the CNJ of the process, or list of strings with CNJs.\nrequired\n\n\nmethod\nLiteral['html', 'api']\nLiteral[‘html’, ‘api’]. The methods supported are ‘html’ and ‘api’. The default is ‘html’.\n'html'\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nException\nIf the method passed as parameter is not ‘html’ or ‘api’.\n\n\n\n\n\n\n\ncourts.tjsp.client.TJSPScraper.cpopg_parse(path)\nWrapper for parsing downloaded files from CPOPG.\n\n\n\ncourts.tjsp.client.TJSPScraper.cposg(id_cnj, method='html')\nOrchestrates the download and parsing of processes from Segundo Grau (CPOSG).\n\n\n\ncourts.tjsp.client.TJSPScraper.cposg_download(id_cnj, method='html')\nDownloads processes from Segundo Grau (CPOSG), via HTML or API, using modularized functions.\n\n\n\ncourts.tjsp.client.TJSPScraper.cposg_parse(path)\nWrapper for parsing downloaded files from CPOSG.\n\n\n\ncourts.tjsp.client.TJSPScraper.set_download_path(path=None)\nSets the base directory for saving downloaded files.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npath\nstr\nPath to save downloaded files. Default is None (uses temporary directory).\nNone\n\n\n\n\n\n\n\ncourts.tjsp.client.TJSPScraper.set_method(method)\nSets the method for accessing TJSP data.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nmethod\nLiteral['html', 'api']\nLiteral[‘html’, ‘api’]. The methods supported are ‘html’ and ‘api’.\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nException\nIf the method is not ‘html’ or ‘api’."
   },
   {
-    "objectID": "reference/index.html#scrapers-de-tribunais",
-    "href": "reference/index.html#scrapers-de-tribunais",
-    "title": "Referência da API",
+    "objectID": "reference/courts.tjsp.client.TJSPScraper.html#methods",
+    "href": "reference/courts.tjsp.client.TJSPScraper.html#methods",
+    "title": "courts.tjsp.client.TJSPScraper",
     "section": "",
-    "text": "Classes para coletar dados de tribunais específicos.\n\n\n\ncourts.tjap.client.TJAPScraper\nScraper for the Tribunal de Justica do Amapa (TJAP).\n\n\ncourts.tjce.client.TJCEScraper\nScraper for the Tribunal de Justica do Ceara (TJCE).\n\n\ncourts.tjba.client.TJBAScraper\nScraper for the Tribunal de Justica do Estado da Bahia.\n\n\ncourts.tjsp.client.TJSPScraper\nMain scraper for Tribunal de Justica de Sao Paulo.\n\n\ncourts.tjdft.client.TJDFTScraper\nScraper for the Court of Justice of the Federal District and Territories (TJDFT).\n\n\ncourts.tjrs.client.TJRSScraper\nScraper for the Tribunal de Justiça do Rio Grande do Sul.\n\n\ncourts.tjpa.client.TJPAScraper\nScraper for the Tribunal de Justica do Estado do Para.\n\n\ncourts.tjpr.client.TJPRScraper\nScraper for the Court of Justice of Paraná.\n\n\ncourts.tjpe.client.TJPEScraper\nScraper for the Tribunal de Justica de Pernambuco.\n\n\ncourts.tjmt.client.TJMTScraper\nScraper for the Tribunal de Justica do Estado de Mato Grosso (TJMT).\n\n\ncourts.tjes.client.TJESScraper\nScraper for the Tribunal de Justica do Espirito Santo.\n\n\ncourts.tjto.client.TJTOScraper\nScraper for the Tribunal de Justica do Tocantins.\n\n\ncourts.tjpb.client.TJPBScraper\nScraper for the Tribunal de Justica da Paraiba (TJPB).\n\n\ncourts.tjpi.client.TJPIScraper\nScraper for the Tribunal de Justica do Piaui (TJPI).\n\n\ncourts.tjrn.client.TJRNScraper\nScraper for the Tribunal de Justica do Rio Grande do Norte (TJRN).\n\n\ncourts.tjro.client.TJROScraper\nScraper for the Tribunal de Justica de Rondonia (TJRO).\n\n\ncourts.tjrr.client.TJRRScraper\nScraper for the Tribunal de Justica de Roraima (TJRR).\n\n\ncourts.tjsc.client.TJSCScraper\nScraper for the Tribunal de Justica de Santa Catarina (TJSC).",
-    "crumbs": [
-      "Home",
-      "Referência da API"
-    ]
+    "text": "Name\nDescription\n\n\n\n\ncjpg\nOrchestrates the download and parsing of processes from CJPG.\n\n\ncjpg_download\nDownloads the processes from the TJSP jurisprudence.\n\n\ncjpg_parse\nWrapper for parsing downloaded files from CJPG.\n\n\ncjsg\nOrchestrates the download and parsing of processes from CJSG.\n\n\ncjsg_download\nDownloads the HTML files of the pages of results of the\n\n\ncjsg_parse\nWrapper for parsing downloaded files from CJSG.\n\n\ncpopg\nScrapes a process from Primeiro Grau (CPOPG).\n\n\ncpopg_download\nDownloads a process from Primeiro Grau (CPOPG).\n\n\ncpopg_parse\nWrapper for parsing downloaded files from CPOPG.\n\n\ncposg\nOrchestrates the download and parsing of processes from Segundo Grau (CPOSG).\n\n\ncposg_download\nDownloads processes from Segundo Grau (CPOSG), via HTML or API, using modularized functions.\n\n\ncposg_parse\nWrapper for parsing downloaded files from CPOSG.\n\n\nset_download_path\nSets the base directory for saving downloaded files.\n\n\nset_method\nSets the method for accessing TJSP data.\n\n\n\n\n\ncourts.tjsp.client.TJSPScraper.cjpg(\n    pesquisa='',\n    classes=None,\n    assuntos=None,\n    varas=None,\n    id_processo=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    paginas=None,\n    **kwargs,\n)\nOrchestrates the download and parsing of processes from CJPG.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npesquisa\nstr\nThe search term. Default is “” (empty string).\n''\n\n\nclasses\nlist[str]\nList of classes of the process. Default is None.\nNone\n\n\nassuntos\nlist[str]\nList of subjects of the process. Default is None.\nNone\n\n\nvaras\nlist[str]\nList of varas of the process. Default is None.\nNone\n\n\nid_processo\nstr\nID of the process. Default is None.\nNone\n\n\ndata_julgamento_inicio\nstr | None\nStart date. data_inicio accepted as alias.\nNone\n\n\ndata_julgamento_fim\nstr | None\nEnd date. data_fim accepted as alias.\nNone\n\n\npaginas\nint, list, range, or None\nPages (1-based). None downloads all.\nNone\n\n\n\n\n\n\n\ncourts.tjsp.client.TJSPScraper.cjpg_download(\n    pesquisa,\n    classes=None,\n    assuntos=None,\n    varas=None,\n    id_processo=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    paginas=None,\n    **kwargs,\n)\nDownloads the processes from the TJSP jurisprudence.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npesquisa\nstr\nThe search term.\nrequired\n\n\nclasses\nlist[str]\nList of classes of the process. Default is None.\nNone\n\n\nassuntos\nlist[str]\nList of subjects of the process. Default is None.\nNone\n\n\nvaras\nlist[str]\nList of varas of the process. Default is None.\nNone\n\n\nid_processo\nstr\nID of the process. Default is None.\nNone\n\n\ndata_julgamento_inicio\nstr | None\nStart date. data_inicio accepted as alias.\nNone\n\n\ndata_julgamento_fim\nstr | None\nEnd date. data_fim accepted as alias.\nNone\n\n\npaginas\nint, list, range, or None\nPages (1-based). None downloads all.\nNone\n\n\n\n\n\n\n\ncourts.tjsp.client.TJSPScraper.cjpg_parse(path)\nWrapper for parsing downloaded files from CJPG.\n\n\n\ncourts.tjsp.client.TJSPScraper.cjsg(\n    pesquisa,\n    ementa=None,\n    classe=None,\n    assunto=None,\n    comarca=None,\n    orgao_julgador=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    baixar_sg=True,\n    tipo_decisao='acordao',\n    paginas=None,\n    **kwargs,\n)\nOrchestrates the download and parsing of processes from CJSG.\n\n\n\ncourts.tjsp.client.TJSPScraper.cjsg_download(\n    pesquisa,\n    ementa=None,\n    classe=None,\n    assunto=None,\n    comarca=None,\n    orgao_julgador=None,\n    data_julgamento_inicio=None,\n    data_julgamento_fim=None,\n    baixar_sg=True,\n    tipo_decisao='acordao',\n    paginas=None,\n    **kwargs,\n)\nDownloads the HTML files of the pages of results of the Second Stage Judgment Consultation (CJSG).\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npesquisa\nstr\nSearch term.\nrequired\n\n\nementa\nstr\nFilter by text of the ementa.\nNone\n\n\nclasse\nstr | None\nClass of the process.\nNone\n\n\nassunto\nstr | None\nSubject of the process.\nNone\n\n\ncomarca\nstr | None\nCourt of the process.\nNone\n\n\norgao_julgador\nstr | None\nCourt of appeal of the process.\nNone\n\n\ndata_julgamento_inicio\nstr | None\nStart date (judgment). data_inicio accepted as alias.\nNone\n\n\ndata_julgamento_fim\nstr | None\nEnd date (judgment). data_fim accepted as alias.\nNone\n\n\nbaixar_sg\nbool\nIf True, also downloads from Second Stage.\nTrue\n\n\ntipo_decisao\nstr\n‘acordao’ or ‘monocratica’.\n'acordao'\n\n\npaginas\nint, list, range, or None\nPages (1-based). None downloads all.\nNone\n\n\n\n\n\n\n\ncourts.tjsp.client.TJSPScraper.cjsg_parse(path)\nWrapper for parsing downloaded files from CJSG.\n\n\n\ncourts.tjsp.client.TJSPScraper.cpopg(id_cnj, method='html')\nScrapes a process from Primeiro Grau (CPOPG).\n\n\n\ncourts.tjsp.client.TJSPScraper.cpopg_download(id_cnj, method='html')\nDownloads a process from Primeiro Grau (CPOPG).\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nid_cnj\nUnion[str, List[str]]\nstring with the CNJ of the process, or list of strings with CNJs.\nrequired\n\n\nmethod\nLiteral['html', 'api']\nLiteral[‘html’, ‘api’]. The methods supported are ‘html’ and ‘api’. The default is ‘html’.\n'html'\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nException\nIf the method passed as parameter is not ‘html’ or ‘api’.\n\n\n\n\n\n\n\ncourts.tjsp.client.TJSPScraper.cpopg_parse(path)\nWrapper for parsing downloaded files from CPOPG.\n\n\n\ncourts.tjsp.client.TJSPScraper.cposg(id_cnj, method='html')\nOrchestrates the download and parsing of processes from Segundo Grau (CPOSG).\n\n\n\ncourts.tjsp.client.TJSPScraper.cposg_download(id_cnj, method='html')\nDownloads processes from Segundo Grau (CPOSG), via HTML or API, using modularized functions.\n\n\n\ncourts.tjsp.client.TJSPScraper.cposg_parse(path)\nWrapper for parsing downloaded files from CPOSG.\n\n\n\ncourts.tjsp.client.TJSPScraper.set_download_path(path=None)\nSets the base directory for saving downloaded files.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npath\nstr\nPath to save downloaded files. Default is None (uses temporary directory).\nNone\n\n\n\n\n\n\n\ncourts.tjsp.client.TJSPScraper.set_method(method)\nSets the method for accessing TJSP data.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nmethod\nLiteral['html', 'api']\nLiteral[‘html’, ‘api’]. The methods supported are ‘html’ and ‘api’.\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nException\nIf the method is not ‘html’ or ‘api’."
   },
   {
     "objectID": "reference/courts.tjes.client.TJESScraper.html",
