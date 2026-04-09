@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>tjdft – juscraper</title>
+<title>TJSC - Tribunal de Justica de Santa Catarina – juscraper</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -57,15 +57,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </style>
 
 
-<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="../site_libs/quarto-nav/quarto-nav.js"></script>
 <script src="../site_libs/quarto-nav/headroom.min.js"></script>
 <script src="../site_libs/clipboard/clipboard.min.js"></script>
 <script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../notebooks/tjmt.html" rel="next">
-<link href="../notebooks/tjba.html" rel="prev">
+<link href="../notebooks/tjes.html" rel="next">
+<link href="../notebooks/tjrs.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js"></script>
 <script src="../site_libs/quarto-html/popper.min.js"></script>
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
@@ -102,6 +102,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "Procurar"
   }
 }</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
 
 
 <link rel="stylesheet" href="reference/_styles-quartodoc.css">
@@ -150,7 +153,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Exemplos</li><li class="breadcrumb-item"><a href="../notebooks/tjap.html">Tribunais</a></li><li class="breadcrumb-item"><a href="../notebooks/tjdft.html">TJDFT</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Exemplos</li><li class="breadcrumb-item"><a href="../notebooks/tjap.html">Tribunais</a></li><li class="breadcrumb-item"><a href="../notebooks/tjsc.html">TJSC</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -212,7 +215,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../notebooks/tjdft.html" class="sidebar-item-text sidebar-link active">
+  <a href="../notebooks/tjdft.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">TJDFT</span></a>
   </div>
 </li>
@@ -278,7 +281,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../notebooks/tjsc.html" class="sidebar-item-text sidebar-link">
+  <a href="../notebooks/tjsc.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">TJSC</span></a>
   </div>
 </li>
@@ -332,42 +335,297 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Nesta página</h2>
+   
+  <ul>
+  <li><a href="#basic-search" id="toc-basic-search" class="nav-link active" data-scroll-target="#basic-search">Basic search</a></li>
+  <li><a href="#available-columns" id="toc-available-columns" class="nav-link" data-scroll-target="#available-columns">Available columns</a></li>
+  <li><a href="#preview-ementa" id="toc-preview-ementa" class="nav-link" data-scroll-target="#preview-ementa">Preview ementa</a></li>
+  <li><a href="#using-filters" id="toc-using-filters" class="nav-link" data-scroll-target="#using-filters">Using filters</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.dev/jtrecenti/juscraper/blob/main/docs/notebooks/tjsc.ipynb" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Exemplos</li><li class="breadcrumb-item"><a href="../notebooks/tjap.html">Tribunais</a></li><li class="breadcrumb-item"><a href="../notebooks/tjsc.html">TJSC</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">TJSC - Tribunal de Justica de Santa Catarina</h1>
+</div>
 
 
 
-<div id="cell-0" class="cell" data-execution_count="1">
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Jurisprudence scraper for TJSC, via the eproc PHP system.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th>Available</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>cjsg</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<div id="cell-2" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># cria um objeto tjdft</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>tjdft <span class="op">=</span> jus.scraper(<span class="st">'tjdft'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>tjsc <span class="op">=</span> jus.scraper(<span class="st">'tjsc'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="cell-1" class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># baixa dados da jurisprudênciadados_cjsg = tjdft.cjsg('direito penal', paginas=range(1,3))print(dados_cjsg.shape)dados_cjsg.head(3)</span></span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="basic-search" class="level2">
+<h2 class="anchored" data-anchor-id="basic-search">Basic search</h2>
+<div id="cell-4" class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjsc.cjsg(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">3</span>))</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df.shape)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>df.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Baixando CJSG TJSC: 100%|██████████| 2/2 [00:03&lt;00:00,  1.71s/it]</code></pre>
 </div>
-<div id="cell-2" class="cell" data-execution_count="3">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_cjsg[<span class="st">'ementa'</span>].iloc[<span class="dv">0</span>][:<span class="dv">300</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>EMENTA: DIREITO PENAL. EMBARGOS DE DECLARAÇÃO. PRETENSÃO DE REDISCUSSÃO DA MATÉRIA. INOVAÇÃO RECURSAL. IMPOSSIBILIDADE. VÍCIO. AUSENTE. MEIO PROCESSUAL INADEQUADO. PREQUESTIONAMENTO. EMBARGOS REJEITADOS.
-
-I. CASO EM EXAME
-
-1. Embargos de declaração opostos contra acórdão que negou provimento ao recu</code></pre>
+<pre><code>(20, 8)</code></pre>
 </div>
+<div class="cell-output cell-output-stderr">
+<pre><code></code></pre>
 </div>
-<div id="cell-3" class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>dados_cjsg[<span class="st">'processo'</span>].iloc[<span class="dv">0</span>]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="4">
-<pre><code>'0722443-83.2024.8.07.0003'</code></pre>
-</div>
-</div>
+<div class="cell-output cell-output-display" data-execution_count="7">
+<div>
 
 
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">processo</th>
+<th data-quarto-table-cell-role="th">classe</th>
+<th data-quarto-table-cell-role="th">orgao_julgador</th>
+<th data-quarto-table-cell-role="th">relator</th>
+<th data-quarto-table-cell-role="th">data_julgamento</th>
+<th data-quarto-table-cell-role="th">data_publicacao</th>
+<th data-quarto-table-cell-role="th">ementa</th>
+<th data-quarto-table-cell-role="th">uf</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>5042483-02.2020.8.24.0038/TJSC</td>
+<td>NaN</td>
+<td>1ª Câmara Especial de Enfrentamento de Acervos</td>
+<td>PATRÍCIA NOLLI</td>
+<td>2026-04-08</td>
+<td>2026-04-08</td>
+<td>DIREITO DO CONSUMIDOR. APELAÇÕES CÍVEIS. AÇÃO ...</td>
+<td>SC</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>5003931-18.2023.8.24.0052/TJSC</td>
+<td>NaN</td>
+<td>6ª Câmara de Direito Civil</td>
+<td>QUITERIA TAMANINI VIEIRA</td>
+<td>2026-04-08</td>
+<td>2026-04-08</td>
+<td>DIREITO CIVIL E DO CONSUMIDOR. AÇÃO DECLARATÓR...</td>
+<td>SC</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>5048640-54.2021.8.24.0038/TJSC</td>
+<td>NaN</td>
+<td>6ª Câmara de Direito Civil</td>
+<td>QUITERIA TAMANINI VIEIRA</td>
+<td>2026-04-08</td>
+<td>2026-04-08</td>
+<td>DIREITO CIVIL E PROCESSUAL CIVIL. EMBARGOS DE ...</td>
+<td>SC</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="available-columns" class="level2">
+<h2 class="anchored" data-anchor-id="available-columns">Available columns</h2>
+<div id="cell-6" class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>brutos <span class="op">=</span> tjsc.cjsg_download(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>df_parsed <span class="op">=</span> tjsc.cjsg_parse(brutos)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_parsed.shape)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>df_parsed.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Baixando CJSG TJSC: 100%|██████████| 1/1 [00:01&lt;00:00,  1.50s/it]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>(10, 8)</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="8">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">processo</th>
+<th data-quarto-table-cell-role="th">classe</th>
+<th data-quarto-table-cell-role="th">orgao_julgador</th>
+<th data-quarto-table-cell-role="th">relator</th>
+<th data-quarto-table-cell-role="th">data_julgamento</th>
+<th data-quarto-table-cell-role="th">data_publicacao</th>
+<th data-quarto-table-cell-role="th">ementa</th>
+<th data-quarto-table-cell-role="th">uf</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>0302139-45.2014.8.24.0282/TJSC</td>
+<td>NaN</td>
+<td>3ª Câmara de Direito Civil</td>
+<td>ANTONIO AUGUSTO BAGGIO E UBALDO</td>
+<td>2026-04-08</td>
+<td>2026-04-08</td>
+<td>APELAÇÃO CÍVEL. AÇÃO INDENIZATÓRIA POR SUPOSTA...</td>
+<td>SC</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>5000076-73.2024.8.24.0059/TJSC</td>
+<td>NaN</td>
+<td>3ª Câmara de Direito Civil</td>
+<td>ANTONIO AUGUSTO BAGGIO E UBALDO</td>
+<td>2026-04-08</td>
+<td>2026-04-08</td>
+<td>APELAÇÃO CÍVEL. AÇÃO DECLARATÓRIA DE NULIDADE ...</td>
+<td>SC</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>5029071-60.2021.8.24.0008/TJSC</td>
+<td>NaN</td>
+<td>3ª Câmara de Direito Civil</td>
+<td>ANTONIO AUGUSTO BAGGIO E UBALDO</td>
+<td>2026-04-08</td>
+<td>2026-04-08</td>
+<td>APELAÇÃO CÍVEL. AÇÃO DECLARATÓRIA DE NULIDADE ...</td>
+<td>SC</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="preview-ementa" class="level2">
+<h2 class="anchored" data-anchor-id="preview-ementa">Preview ementa</h2>
+<div id="cell-8" class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="st">'ementa'</span> <span class="kw">in</span> df.columns <span class="kw">and</span> <span class="bu">len</span>(df) <span class="op">&gt;</span> <span class="dv">0</span>:</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(df[<span class="st">'ementa'</span>].iloc[<span class="dv">0</span>][:<span class="dv">300</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>DIREITO DO CONSUMIDOR. APELAÇÕES CÍVEIS. AÇÃO DE INDENIZAÇÃO POR DANOS MATERIAIS E MORAIS. VEÍCULO AUTOMOTOR SUBMETIDO A REPAROS APÓS SINISTRO. DEMORA NA CONCLUSÃO DO SERVIÇO E FALHA NO DEVER DE INFORMAÇÃO.DANOMORALCONFIGURADO. SENTENÇA DE PARCIAL PROCEDÊNCIA. INTEMPESTIVIDADE DO APELO DO AUTOR. NÃO</code></pre>
+</div>
+</div>
+</section>
+<section id="using-filters" class="level2">
+<h2 class="anchored" data-anchor-id="using-filters">Using filters</h2>
+<p>Available filters: <code>campo</code> (E=ementa, I=inteiro teor), <code>processo</code>, <code>data_decisao_inicio/fim</code>, <code>data_publicacao_inicio/fim</code>.</p>
+<div id="cell-10" class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>df_filtered <span class="op">=</span> tjsc.cjsg(</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'direito'</span>,</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    campo<span class="op">=</span><span class="st">'E'</span>,</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_filtered.shape)</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>df_filtered.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Baixando CJSG TJSC: 100%|██████████| 1/1 [00:01&lt;00:00,  1.67s/it]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>(10, 8)</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="10">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">processo</th>
+<th data-quarto-table-cell-role="th">classe</th>
+<th data-quarto-table-cell-role="th">orgao_julgador</th>
+<th data-quarto-table-cell-role="th">relator</th>
+<th data-quarto-table-cell-role="th">data_julgamento</th>
+<th data-quarto-table-cell-role="th">data_publicacao</th>
+<th data-quarto-table-cell-role="th">ementa</th>
+<th data-quarto-table-cell-role="th">uf</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>5042483-02.2020.8.24.0038/TJSC</td>
+<td>NaN</td>
+<td>1ª Câmara Especial de Enfrentamento de Acervos</td>
+<td>PATRÍCIA NOLLI</td>
+<td>2026-04-08</td>
+<td>2026-04-08</td>
+<td>DIREITODO CONSUMIDOR. APELAÇÕES CÍVEIS. AÇÃO D...</td>
+<td>SC</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>5005007-27.2023.8.24.0004/TJSC</td>
+<td>NaN</td>
+<td>1ª Câmara Especial de Enfrentamento de Acervos</td>
+<td>PATRÍCIA NOLLI</td>
+<td>2026-04-08</td>
+<td>2026-04-08</td>
+<td>DIREITOCIVIL. APELAÇÕES CÍVEIS. AÇÃO DE COBRAN...</td>
+<td>SC</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>5002184-70.2023.8.24.0072/TJSC</td>
+<td>NaN</td>
+<td>1ª Câmara Especial de Enfrentamento de Acervos</td>
+<td>PATRÍCIA NOLLI</td>
+<td>2026-04-08</td>
+<td>2026-04-08</td>
+<td>DIREITOPROCESSUAL CIVIL E CIVIL. EMBARGOS DE D...</td>
+<td>SC</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+
+
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
@@ -792,13 +1050,13 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="../notebooks/tjba.html" class="pagination-link" aria-label="TJBA">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">TJBA</span>
+      <a href="../notebooks/tjrs.html" class="pagination-link" aria-label="TJRS">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">TJRS</span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../notebooks/tjmt.html" class="pagination-link" aria-label="TJMT">
-        <span class="nav-page-text">TJMT</span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../notebooks/tjes.html" class="pagination-link" aria-label="TJES">
+        <span class="nav-page-text">TJES</span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
@@ -810,7 +1068,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.dev/jtrecenti/juscraper/blob/main/docs/notebooks/tjdft.ipynb" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.dev/jtrecenti/juscraper/blob/main/docs/notebooks/tjsc.ipynb" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></div>
     <div class="nav-footer-right">
       &nbsp;
     </div>
