@@ -46,6 +46,12 @@ website:
           contents:
             - section: "Tribunais"
               contents:
+                - href: notebooks/tjac.ipynb
+                  text: "TJAC"
+                - href: notebooks/tjal.ipynb
+                  text: "TJAL"
+                - href: notebooks/tjam.ipynb
+                  text: "TJAM"
                 - href: notebooks/tjap.ipynb
                   text: "TJAP"
                 - href: notebooks/tjce.ipynb
@@ -80,6 +86,8 @@ website:
                   text: "TJES"
                 - href: notebooks/tjto.ipynb
                   text: "TJTO"
+                - href: notebooks/tjms.ipynb
+                  text: "TJMS"
                 - href: notebooks/tjsp.ipynb
                   text: "TJSP"
             - section: "Agregadores"
@@ -115,6 +123,9 @@ quartodoc:
     - title: Scrapers de Tribunais
       desc: "Classes para coletar dados de tribunais específicos."
       contents:
+        - courts.tjac.client.TJACScraper
+        - courts.tjal.client.TJALScraper
+        - courts.tjam.client.TJAMScraper
         - courts.tjap.client.TJAPScraper
         - courts.tjce.client.TJCEScraper
         - courts.tjba.client.TJBAScraper
@@ -126,6 +137,7 @@ quartodoc:
         - courts.tjpe.client.TJPEScraper
         - courts.tjmt.client.TJMTScraper
         - courts.tjes.client.TJESScraper
+        - courts.tjms.client.TJMSScraper
         - courts.tjto.client.TJTOScraper
         - courts.tjpb.client.TJPBScraper
         - courts.tjpi.client.TJPIScraper
