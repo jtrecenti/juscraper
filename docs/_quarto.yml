@@ -54,16 +54,28 @@ website:
                   text: "TJBA"
                 - href: notebooks/tjdft.ipynb
                   text: "TJDFT"
-                - href: notebooks/tjpa.ipynb
-                  text: "TJPA"
-                - href: notebooks/tjpe.ipynb
-                  text: "TJPE"
                 - href: notebooks/tjmt.ipynb
                   text: "TJMT"
+                - href: notebooks/tjpa.ipynb
+                  text: "TJPA"
+                - href: notebooks/tjpb.ipynb
+                  text: "TJPB"
+                - href: notebooks/tjpe.ipynb
+                  text: "TJPE"
+                - href: notebooks/tjpi.ipynb
+                  text: "TJPI"
                 - href: notebooks/tjpr.ipynb
                   text: "TJPR"
+                - href: notebooks/tjrn.ipynb
+                  text: "TJRN"
+                - href: notebooks/tjro.ipynb
+                  text: "TJRO"
+                - href: notebooks/tjrr.ipynb
+                  text: "TJRR"
                 - href: notebooks/tjrs.ipynb
                   text: "TJRS"
+                - href: notebooks/tjsc.ipynb
+                  text: "TJSC"
                 - href: notebooks/tjes.ipynb
                   text: "TJES"
                 - href: notebooks/tjto.ipynb
@@ -115,3 +127,9 @@ quartodoc:
         - courts.tjmt.client.TJMTScraper
         - courts.tjes.client.TJESScraper
         - courts.tjto.client.TJTOScraper
+        - courts.tjpb.client.TJPBScraper
+        - courts.tjpi.client.TJPIScraper
+        - courts.tjrn.client.TJRNScraper
+        - courts.tjro.client.TJROScraper
+        - courts.tjrr.client.TJRRScraper
+        - courts.tjsc.client.TJSCScraper
