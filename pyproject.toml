@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "juscraper"
-version = "0.1.7.9000"
+version = "0.2.0"
 description = "Raspador de tribunais e outros sistemas relacionados ao poder judiciário."
 readme = "README.md"
 requires-python = ">=3.11"
