@@ -51,10 +51,24 @@ dados.head()
 
 | Tribunal | Funcionalidades Disponíveis       |
 |----------|-----------------------------------|
-| TJSP     | cpopg, cposg, cjsg, cjpg, acordao |
-| TJRS     | cjsg                              |
-| TJPR     | cjsg                              |
+| TJSP     | cpopg, cposg, cjsg, cjpg          |
+| TJES     | cjsg, cjpg                        |
+| TJTO     | cjsg, cjpg                        |
+| TJAP     | cjsg                              |
+| TJBA     | cjsg                              |
+| TJCE     | cjsg                              |
 | TJDFT    | cjsg                              |
+| TJMT     | cjsg                              |
+| TJPA     | cjsg                              |
+| TJPB     | cjsg                              |
+| TJPE     | cjsg                              |
+| TJPI     | cjsg                              |
+| TJPR     | cjsg                              |
+| TJRN     | cjsg                              |
+| TJRO     | cjsg                              |
+| TJRR     | cjsg                              |
+| TJRS     | cjsg                              |
+| TJSC     | cjsg                              |
 
 ### Agregadores Disponíveis
 
@@ -69,6 +83,20 @@ dados.head()
 - [Exemplo TJRS](docs/notebooks/tjrs.ipynb)
 - [Exemplo TJPR](docs/notebooks/tjpr.ipynb)
 - [Exemplo TJDFT](docs/notebooks/tjdft.ipynb)
+- [Exemplo TJAP](docs/notebooks/tjap.ipynb)
+- [Exemplo TJBA](docs/notebooks/tjba.ipynb)
+- [Exemplo TJCE](docs/notebooks/tjce.ipynb)
+- [Exemplo TJES](docs/notebooks/tjes.ipynb)
+- [Exemplo TJMT](docs/notebooks/tjmt.ipynb)
+- [Exemplo TJPA](docs/notebooks/tjpa.ipynb)
+- [Exemplo TJPB](docs/notebooks/tjpb.ipynb)
+- [Exemplo TJPE](docs/notebooks/tjpe.ipynb)
+- [Exemplo TJPI](docs/notebooks/tjpi.ipynb)
+- [Exemplo TJRN](docs/notebooks/tjrn.ipynb)
+- [Exemplo TJRO](docs/notebooks/tjro.ipynb)
+- [Exemplo TJRR](docs/notebooks/tjrr.ipynb)
+- [Exemplo TJSC](docs/notebooks/tjsc.ipynb)
+- [Exemplo TJTO](docs/notebooks/tjto.ipynb)
 - [Exemplo Datajud](docs/notebooks/datajud.ipynb)
 - [Exemplo Jusbr](docs/notebooks/jusbr.ipynb)
 
