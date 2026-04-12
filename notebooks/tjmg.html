@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>TJAL - Tribunal de Justica de Alagoas – juscraper</title>
+<title>TJMG — Court of Justice of Minas Gerais – juscraper</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -64,8 +64,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../notebooks/tjam.html" rel="next">
-<link href="../notebooks/tjac.html" rel="prev">
+<link href="../notebooks/tjms.html" rel="next">
+<link href="../notebooks/tjto.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js"></script>
 <script src="../site_libs/quarto-html/popper.min.js"></script>
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
@@ -153,7 +153,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Exemplos</li><li class="breadcrumb-item"><a href="../notebooks/tjac.html">Tribunais</a></li><li class="breadcrumb-item"><a href="../notebooks/tjal.html">TJAL</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Exemplos</li><li class="breadcrumb-item"><a href="../notebooks/tjac.html">Tribunais</a></li><li class="breadcrumb-item"><a href="../notebooks/tjmg.html">TJMG</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -203,7 +203,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../notebooks/tjal.html" class="sidebar-item-text sidebar-link active">
+  <a href="../notebooks/tjal.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">TJAL</span></a>
   </div>
 </li>
@@ -329,7 +329,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../notebooks/tjmg.html" class="sidebar-item-text sidebar-link">
+  <a href="../notebooks/tjmg.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">TJMG</span></a>
   </div>
 </li>
@@ -384,18 +384,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#basic-search" id="toc-basic-search" class="nav-link active" data-scroll-target="#basic-search">Basic search</a></li>
   <li><a href="#available-columns" id="toc-available-columns" class="nav-link" data-scroll-target="#available-columns">Available columns</a></li>
-  <li><a href="#preview-ementa" id="toc-preview-ementa" class="nav-link" data-scroll-target="#preview-ementa">Preview ementa</a></li>
-  <li><a href="#using-filters" id="toc-using-filters" class="nav-link" data-scroll-target="#using-filters">Using filters</a></li>
+  <li><a href="#ementa-preview" id="toc-ementa-preview" class="nav-link" data-scroll-target="#ementa-preview">Ementa preview</a></li>
+  <li><a href="#search-options" id="toc-search-options" class="nav-link" data-scroll-target="#search-options">Search options</a></li>
   <li><a href="#download-and-parse-separately" id="toc-download-and-parse-separately" class="nav-link" data-scroll-target="#download-and-parse-separately">Download and parse separately</a></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.dev/jtrecenti/juscraper/blob/main/docs/notebooks/tjal.ipynb" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.dev/jtrecenti/juscraper/blob/main/docs/notebooks/tjmg.ipynb" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Exemplos</li><li class="breadcrumb-item"><a href="../notebooks/tjac.html">Tribunais</a></li><li class="breadcrumb-item"><a href="../notebooks/tjal.html">TJAL</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Exemplos</li><li class="breadcrumb-item"><a href="../notebooks/tjac.html">Tribunais</a></li><li class="breadcrumb-item"><a href="../notebooks/tjmg.html">TJMG</a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title">TJAL - Tribunal de Justica de Alagoas</h1>
+<h1 class="title">TJMG — Court of Justice of Minas Gerais</h1>
 </div>
 
 
@@ -412,49 +412,48 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>Scraper for the jurisprudence search (CJSG) of the Tribunal de Justica de Alagoas.</p>
+<p>Scraper for the TJMG jurisprudence search at <code>www5.tjmg.jus.br/jurisprudencia</code>. The page uses a 5-digit numeric image captcha that is decoded automatically with <a href="https://github.com/jtrecenti/txtcaptcha">txtcaptcha</a>.</p>
 <table class="caption-top table">
 <thead>
 <tr class="header">
 <th>Feature</th>
-<th>Available</th>
+<th>Supported</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>cjsg</td>
+<td><code>cjsg</code> (acórdãos)</td>
 <td>Yes</td>
 </tr>
 <tr class="even">
-<td>cpopg</td>
-<td>No</td>
+<td>Date filters</td>
+<td>Yes (julgamento and publicação)</td>
 </tr>
 <tr class="odd">
-<td>cposg</td>
-<td>No</td>
+<td>Captcha</td>
+<td>Auto-solved (txtcaptcha)</td>
 </tr>
 </tbody>
 </table>
-<section id="basic-search" class="level2">
-<h2 class="anchored" data-anchor-id="basic-search">Basic search</h2>
-<div id="cell-3" class="cell" data-execution_count="1">
+<div id="cell-1" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>tjal <span class="op">=</span> jus.scraper(<span class="st">'tjal'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>tjmg <span class="op">=</span> jus.scraper(<span class="st">'tjmg'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="cell-4" class="cell" data-execution_count="2">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjal.cjsg(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">3</span>))</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df.shape)</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>df.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Baixando CJSG TJAL: 100%|██████████| 2/2 [00:01&lt;00:00,  1.71s/it]
-Processando CJSG TJAL: 100%|██████████| 2/2 [00:00&lt;00:00, 22.77it/s]</code></pre>
-</div>
+<section id="basic-search" class="level2">
+<h2 class="anchored" data-anchor-id="basic-search">Basic search</h2>
+<p>Download two pages of results to verify pagination works. TJMG requires a date range for broad queries to avoid the “muitos resultados” error.</p>
+<div id="cell-3" class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjmg.cjsg(</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'dano moral presumido'</span>,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">3</span>),</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">'2025-01-01'</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">'2025-03-31'</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df.shape)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>df.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>(40, 10)</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code></code></pre>
+<pre><code>(20, 9)</code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="2">
 <div>
@@ -465,56 +464,52 @@ Processando CJSG TJAL: 100%|██████████| 2/2 [00:00&lt;00:00,
 <tr class="header">
 <th data-quarto-table-cell-role="th"></th>
 <th data-quarto-table-cell-role="th">processo</th>
-<th data-quarto-table-cell-role="th">cd_acordao</th>
-<th data-quarto-table-cell-role="th">cd_foro</th>
-<th data-quarto-table-cell-role="th">classe_assunto</th>
-<th data-quarto-table-cell-role="th">relatora</th>
-<th data-quarto-table-cell-role="th">comarca</th>
-<th data-quarto-table-cell-role="th">orgao_julgador</th>
+<th data-quarto-table-cell-role="th">processo_interno</th>
+<th data-quarto-table-cell-role="th">tipo_ato</th>
+<th data-quarto-table-cell-role="th">relator</th>
 <th data-quarto-table-cell-role="th">data_julgamento</th>
 <th data-quarto-table-cell-role="th">data_publicacao</th>
 <th data-quarto-table-cell-role="th">ementa</th>
+<th data-quarto-table-cell-role="th">proc_ano</th>
+<th data-quarto-table-cell-role="th">proc_numero</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">0</td>
-<td>0747976-88.2024.8.02.0001</td>
-<td>807334</td>
-<td>0</td>
-<td>Apelação Cível / Inclusão Indevida em Cadastro...</td>
-<td>Des. Otávio Leão Praxedes</td>
-<td>Maceió</td>
-<td>2ª Câmara Cível</td>
-<td>30/03/2026</td>
-<td>30/03/2026</td>
-<td>DIREITO CIVIL E DO CONSUMIDOR. APELAÇÃO CÍVEL....</td>
+<td>5002746-88.2023.8.13.0556</td>
+<td>1.0000.24.466814-1/001</td>
+<td>Apelação Cível</td>
+<td>Des.(a) Fernando Lins</td>
+<td>2025-03-31</td>
+<td>2025-04-01</td>
+<td>APELAÇÃO CÍVEL - AÇÃO DECLARATÓRIA E INDENIZAT...</td>
+<td>24</td>
+<td>466814</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">1</td>
-<td>0743913-54.2023.8.02.0001</td>
-<td>807323</td>
-<td>0</td>
-<td>Apelação Cível / Irredutibilidade de Vencimentos</td>
-<td>Des. Otávio Leão Praxedes</td>
-<td>Maceió</td>
-<td>2ª Câmara Cível</td>
-<td>30/03/2026</td>
-<td>30/03/2026</td>
-<td>DIREITO ADMINISTRATIVO E PROCESSUAL CIVIL. APE...</td>
+<td>5006195-84.2023.8.13.0352</td>
+<td>1.0000.25.035103-8/001</td>
+<td>Apelação Cível</td>
+<td>Des.(a) José Maurício Cantarino Villela (JD 2G)</td>
+<td>2025-03-31</td>
+<td>2025-04-02</td>
+<td>APELAÇÃO CÍVEL. DIREITO CIVIL E PROCESSUAL CIV...</td>
+<td>25</td>
+<td>35103</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">2</td>
-<td>0746985-49.2023.8.02.0001</td>
-<td>807329</td>
-<td>0</td>
-<td>Apelação Cível / Alteração de Coisa Comum</td>
-<td>Des. Otávio Leão Praxedes</td>
-<td>Maceió</td>
-<td>2ª Câmara Cível</td>
-<td>30/03/2026</td>
-<td>30/03/2026</td>
-<td>DIREITO ADMINISTRATIVO E TRIBUTÁRIO. APELAÇÃO ...</td>
+<td>5069812-35.2023.8.13.0702</td>
+<td>1.0000.24.455545-4/001</td>
+<td>Apelação Cível</td>
+<td>Des.(a) Fernando Lins</td>
+<td>2025-03-31</td>
+<td>2025-04-01</td>
+<td>APELAÇÃO CÍVEL - AÇÃO DECLARATÓRIA E INDENIZAT...</td>
+<td>24</td>
+<td>455545</td>
 </tr>
 </tbody>
 </table>
@@ -525,52 +520,46 @@ Processando CJSG TJAL: 100%|██████████| 2/2 [00:00&lt;00:00,
 </section>
 <section id="available-columns" class="level2">
 <h2 class="anchored" data-anchor-id="available-columns">Available columns</h2>
-<div id="cell-6" class="cell" data-execution_count="3">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>df.columns.tolist()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="cell-5" class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>df.columns.tolist()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="3">
 <pre><code>['processo',
- 'cd_acordao',
- 'cd_foro',
- 'classe_assunto',
- 'relatora',
- 'comarca',
- 'orgao_julgador',
+ 'processo_interno',
+ 'tipo_ato',
+ 'relator',
  'data_julgamento',
  'data_publicacao',
- 'ementa']</code></pre>
+ 'ementa',
+ 'proc_ano',
+ 'proc_numero']</code></pre>
 </div>
 </div>
 </section>
-<section id="preview-ementa" class="level2">
-<h2 class="anchored" data-anchor-id="preview-ementa">Preview ementa</h2>
-<div id="cell-8" class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df[<span class="st">'ementa'</span>].iloc[<span class="dv">0</span>][:<span class="dv">300</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="ementa-preview" class="level2">
+<h2 class="anchored" data-anchor-id="ementa-preview">Ementa preview</h2>
+<div id="cell-7" class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df[<span class="st">'ementa'</span>].iloc[<span class="dv">0</span>][:<span class="dv">300</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>DIREITO CIVIL E DO CONSUMIDOR. APELAÇÃO CÍVEL. SISTEMA DE INFORMAÇÕES DE CRÉDITO DO BANCO CENTRAL (SCR/SISBACEN). INCLUSÃO DE DADOS DE OPERAÇÃO DE CRÉDITO. NATUREZA INFORMATIVA DO CADASTRO. DISTINÇÃO EM RELAÇÃO AOS CADASTROS RESTRITIVOS DE CRÉDITO. AUSÊNCIA DE PROVA DE RECUSA DE CRÉDITO OU PREJUÍZO </code></pre>
+<pre><code>APELAÇÃO CÍVEL - AÇÃO DECLARATÓRIA E INDENIZATÓRIA - COBRANÇA DE CONTRIBUIÇÃO PARA ASSOCIAÇÃO CIVIL - AUSÊNCIA DE VÍNCULO JURÍDICO - DANOS MORAIS - VALORES DIMINUTOS - DEVER DE INDENIZAR - NÃO CONFIGURAÇÃO - Impugnada a legitimidade de descontos em folha de pagamento de parcelas de contribuição à as</code></pre>
 </div>
 </div>
 </section>
-<section id="using-filters" class="level2">
-<h2 class="anchored" data-anchor-id="using-filters">Using filters</h2>
-<p>You can filter by judgment date, publication date, decision type, and other fields.</p>
-<div id="cell-10" class="cell" data-execution_count="5">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>df_filtered <span class="op">=</span> tjal.cjsg(</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'direito'</span>,</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">'01/01/2024'</span>,</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">'30/06/2024'</span>,</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">1</span>,</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_filtered.shape)</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>df_filtered.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Processando CJSG TJAL: 100%|██████████| 1/1 [00:00&lt;00:00, 13.02it/s]</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>(20, 10)</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code></code></pre>
-</div>
+<section id="search-options" class="level2">
+<h2 class="anchored" data-anchor-id="search-options">Search options</h2>
+<p>The scraper supports additional parameters:</p>
+<ul>
+<li><code>pesquisar_por</code>: <code>"ementa"</code> (default) or <code>"acordao"</code> (full text)</li>
+<li><code>order_by</code>: <code>2</code> data julgamento, <code>1</code> data publicação, <code>0</code> prec.</li>
+<li><code>data_publicacao_inicio</code> / <code>data_publicacao_fim</code></li>
+</ul>
+<div id="cell-9" class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>df_pub <span class="op">=</span> tjmg.cjsg(</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'dano moral presumido'</span>,</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    data_publicacao_inicio<span class="op">=</span><span class="st">'2025-01-01'</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    data_publicacao_fim<span class="op">=</span><span class="st">'2025-01-31'</span>,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>df_pub[[<span class="st">'processo'</span>, <span class="st">'relator'</span>, <span class="st">'data_publicacao'</span>]].head()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="5">
 <div>
 
@@ -580,56 +569,40 @@ Processando CJSG TJAL: 100%|██████████| 2/2 [00:00&lt;00:00,
 <tr class="header">
 <th data-quarto-table-cell-role="th"></th>
 <th data-quarto-table-cell-role="th">processo</th>
-<th data-quarto-table-cell-role="th">cd_acordao</th>
-<th data-quarto-table-cell-role="th">cd_foro</th>
-<th data-quarto-table-cell-role="th">classe_assunto</th>
-<th data-quarto-table-cell-role="th">relatora</th>
-<th data-quarto-table-cell-role="th">comarca</th>
-<th data-quarto-table-cell-role="th">orgao_julgador</th>
-<th data-quarto-table-cell-role="th">data_julgamento</th>
+<th data-quarto-table-cell-role="th">relator</th>
 <th data-quarto-table-cell-role="th">data_publicacao</th>
-<th data-quarto-table-cell-role="th">ementa</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">0</td>
-<td>0806617-43.2022.8.02.0000</td>
-<td>743582</td>
-<td>0</td>
-<td>Agravo de Instrumento / Auxílio-Doença Acident...</td>
-<td>Des. Paulo Zacarias da Silva</td>
-<td>Comarcar não Econtrada</td>
-<td>3ª Câmara Cível</td>
-<td>13/06/2024</td>
-<td>16/10/2025</td>
-<td>AGRAVO DE INSTRUMENTO. PROCESSUAL CIVIL. PREVI...</td>
+<td>0008945-96.2023.8.13.0271</td>
+<td>Des.(a) Valeria Rodrigues</td>
+<td>2025-01-29</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">1</td>
-<td>0700333-82.2021.8.02.0020</td>
-<td>740034</td>
-<td>0</td>
-<td>Apelação Cível / Rescisão</td>
-<td>Juiz Convocado Manoel Cavalcante de Lima Neto</td>
-<td>Maravilha</td>
-<td>1ª Câmara Cível</td>
-<td>13/06/2024</td>
-<td>08/10/2025</td>
-<td>APELAÇÃO CÍVEL. DIREITO ADMINISTRATIVO E CONST...</td>
+<td>0026974-91.2021.8.13.0134</td>
+<td>Des.(a) Valeria Rodrigues</td>
+<td>2025-01-29</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">2</td>
-<td>0807502-91.2021.8.02.0000</td>
-<td>676103</td>
-<td>0</td>
-<td>Ação Rescisória / Suspensão do Processo</td>
-<td>Des. Tutmés Airan de Albuquerque Melo</td>
-<td>Maceió</td>
-<td>Seção Especializada Cível</td>
-<td>01/04/2024</td>
-<td>30/04/2025</td>
-<td>em&gt;DIREITO PROCESSUAL CIVIL. AÇÃO RESCISÓRIA. ...</td>
+<td>5006545-05.2023.8.13.0245</td>
+<td>Des.(a) Wauner Batista Ferreira Machado (JD 2G)</td>
+<td>2025-01-31</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>5000580-37.2024.8.13.0172</td>
+<td>Des.(a) José Maurício Cantarino Villela (JD 2G)</td>
+<td>2025-01-30</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>5002143-94.2022.8.13.0153</td>
+<td>Des.(a) Magid Nauef Láuar</td>
+<td>2025-01-30</td>
 </tr>
 </tbody>
 </table>
@@ -640,33 +613,21 @@ Processando CJSG TJAL: 100%|██████████| 2/2 [00:00&lt;00:00,
 </section>
 <section id="download-and-parse-separately" class="level2">
 <h2 class="anchored" data-anchor-id="download-and-parse-separately">Download and parse separately</h2>
-<p>You can also download the raw HTML files and parse them in a separate step.</p>
-<div id="cell-12" class="cell" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tempfile, os</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>tmp <span class="op">=</span> tempfile.mkdtemp()</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>pasta <span class="op">=</span> tjal.cjsg_download(<span class="st">'direito'</span>, paginas<span class="op">=</span><span class="dv">1</span>, diretorio<span class="op">=</span>tmp)</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'Downloaded to:'</span>, pasta)</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'Files:'</span>, os.listdir(pasta))</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><code>cjsg_download</code> returns the raw HTML responses, which is useful when you want to keep the original payloads.</p>
+<div id="cell-11" class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>raw <span class="op">=</span> tjmg.cjsg_download(</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'dano moral presumido'</span>,</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">'2025-01-01'</span>,</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">'2025-03-31'</span>,</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="bu">type</span>(raw), <span class="bu">len</span>(raw), <span class="st">'chars in page 1:'</span>, <span class="bu">len</span>(raw[<span class="dv">0</span>]))</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>df_raw <span class="op">=</span> tjmg.cjsg_parse(raw)</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>df_raw.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Downloaded to: C:\Users\jtrec\AppData\Local\Temp\tmpth5xctlc\cjsg\20260409100830
-Files: ['cjsg_00001.html']</code></pre>
+<pre><code>&lt;class 'list'&gt; 1 chars in page 1: 59219</code></pre>
 </div>
-</div>
-<div id="cell-13" class="cell" data-execution_count="7">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>df_parsed <span class="op">=</span> tjal.cjsg_parse(pasta)</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_parsed.shape)</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>df_parsed.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Processando CJSG TJAL: 100%|██████████| 1/1 [00:00&lt;00:00, 29.97it/s]</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>(20, 10)</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code></code></pre>
-</div>
-<div class="cell-output cell-output-display" data-execution_count="7">
+<div class="cell-output cell-output-display" data-execution_count="6">
 <div>
 
 
@@ -675,56 +636,52 @@ Files: ['cjsg_00001.html']</code></pre>
 <tr class="header">
 <th data-quarto-table-cell-role="th"></th>
 <th data-quarto-table-cell-role="th">processo</th>
-<th data-quarto-table-cell-role="th">cd_acordao</th>
-<th data-quarto-table-cell-role="th">cd_foro</th>
-<th data-quarto-table-cell-role="th">classe_assunto</th>
-<th data-quarto-table-cell-role="th">relatora</th>
-<th data-quarto-table-cell-role="th">comarca</th>
-<th data-quarto-table-cell-role="th">orgao_julgador</th>
+<th data-quarto-table-cell-role="th">processo_interno</th>
+<th data-quarto-table-cell-role="th">tipo_ato</th>
+<th data-quarto-table-cell-role="th">relator</th>
 <th data-quarto-table-cell-role="th">data_julgamento</th>
 <th data-quarto-table-cell-role="th">data_publicacao</th>
 <th data-quarto-table-cell-role="th">ementa</th>
+<th data-quarto-table-cell-role="th">proc_ano</th>
+<th data-quarto-table-cell-role="th">proc_numero</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">0</td>
-<td>0701016-24.2024.8.02.0050</td>
-<td>807619</td>
-<td>0</td>
-<td>Agravo Interno Criminal / Crimes de Trânsito</td>
-<td>Presidente do Tribunal de Justiça de Alagoas</td>
-<td>Porto Calvo</td>
-<td>Tribunal Pleno</td>
-<td>31/03/2026</td>
-<td>31/03/2026</td>
-<td>em&gt;DIREITO PROCESSUAL CIVIL. AGRAVO INTERNO. R...</td>
+<td>5002746-88.2023.8.13.0556</td>
+<td>1.0000.24.466814-1/001</td>
+<td>Apelação Cível</td>
+<td>Des.(a) Fernando Lins</td>
+<td>2025-03-31</td>
+<td>2025-04-01</td>
+<td>APELAÇÃO CÍVEL - AÇÃO DECLARATÓRIA E INDENIZAT...</td>
+<td>24</td>
+<td>466814</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">1</td>
-<td>0808946-23.2025.8.02.0000</td>
-<td>807620</td>
-<td>0</td>
-<td>Embargos de Declaração Criminal / Homicídio Qu...</td>
-<td>Presidente do Tribunal de Justiça de Alagoas</td>
-<td>Traipu</td>
-<td>Tribunal Pleno</td>
-<td>31/03/2026</td>
-<td>31/03/2026</td>
-<td>EMBARGOS DE DECLARAÇÃO EM MANDADO DE SEGURANÇA...</td>
+<td>5006195-84.2023.8.13.0352</td>
+<td>1.0000.25.035103-8/001</td>
+<td>Apelação Cível</td>
+<td>Des.(a) José Maurício Cantarino Villela (JD 2G)</td>
+<td>2025-03-31</td>
+<td>2025-04-02</td>
+<td>APELAÇÃO CÍVEL. DIREITO CIVIL E PROCESSUAL CIV...</td>
+<td>25</td>
+<td>35103</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">2</td>
-<td>0701748-42.2023.8.02.0049</td>
-<td>807617</td>
-<td>0</td>
-<td>Agravo Interno Cível / Tratamento da Própria S...</td>
-<td>Presidente do Tribunal de Justiça de Alagoas</td>
-<td>Penedo</td>
-<td>Tribunal Pleno</td>
-<td>31/03/2026</td>
-<td>31/03/2026</td>
-<td>em&gt;DIREITO PROCESSUAL CIVIL. AGRAVO INTERNO. D...</td>
+<td>5069812-35.2023.8.13.0702</td>
+<td>1.0000.24.455545-4/001</td>
+<td>Apelação Cível</td>
+<td>Des.(a) Fernando Lins</td>
+<td>2025-03-31</td>
+<td>2025-04-01</td>
+<td>APELAÇÃO CÍVEL - AÇÃO DECLARATÓRIA E INDENIZAT...</td>
+<td>24</td>
+<td>455545</td>
 </tr>
 </tbody>
 </table>
@@ -1159,13 +1116,13 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="../notebooks/tjac.html" class="pagination-link" aria-label="TJAC">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">TJAC</span>
+      <a href="../notebooks/tjto.html" class="pagination-link" aria-label="TJTO">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">TJTO</span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../notebooks/tjam.html" class="pagination-link" aria-label="TJAM">
-        <span class="nav-page-text">TJAM</span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../notebooks/tjms.html" class="pagination-link" aria-label="TJMS">
+        <span class="nav-page-text">TJMS</span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
@@ -1177,7 +1134,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.dev/jtrecenti/juscraper/blob/main/docs/notebooks/tjal.ipynb" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.dev/jtrecenti/juscraper/blob/main/docs/notebooks/tjmg.ipynb" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></div>
     <div class="nav-footer-right">
       &nbsp;
     </div>

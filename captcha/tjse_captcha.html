@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>courts.tjro.client.tjroscraper – juscraper</title>
+<title>TJSE — Cloudflare Turnstile – juscraper</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -153,122 +153,87 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Nesta página</h2>
    
   <ul>
-  <li><a href="#juscraper.courts.tjro.client.TJROScraper" id="toc-juscraper.courts.tjro.client.TJROScraper" class="nav-link active" data-scroll-target="#juscraper.courts.tjro.client.TJROScraper">courts.tjro.client.TJROScraper</a>
+  <li><a href="#tjse-jurisprudence-search" id="toc-tjse-jurisprudence-search" class="nav-link active" data-scroll-target="#tjse-jurisprudence-search">TJSE Jurisprudence Search</a>
   <ul class="collapse">
-  <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
-  <ul class="collapse">
-  <li><a href="#juscraper.courts.tjro.client.TJROScraper.cjsg" id="toc-juscraper.courts.tjro.client.TJROScraper.cjsg" class="nav-link" data-scroll-target="#juscraper.courts.tjro.client.TJROScraper.cjsg">cjsg</a></li>
-  <li><a href="#juscraper.courts.tjro.client.TJROScraper.cjsg_download" id="toc-juscraper.courts.tjro.client.TJROScraper.cjsg_download" class="nav-link" data-scroll-target="#juscraper.courts.tjro.client.TJROScraper.cjsg_download">cjsg_download</a></li>
-  <li><a href="#juscraper.courts.tjro.client.TJROScraper.cjsg_parse" id="toc-juscraper.courts.tjro.client.TJROScraper.cjsg_parse" class="nav-link" data-scroll-target="#juscraper.courts.tjro.client.TJROScraper.cjsg_parse">cjsg_parse</a></li>
-  <li><a href="#juscraper.courts.tjro.client.TJROScraper.cpopg" id="toc-juscraper.courts.tjro.client.TJROScraper.cpopg" class="nav-link" data-scroll-target="#juscraper.courts.tjro.client.TJROScraper.cpopg">cpopg</a></li>
-  <li><a href="#juscraper.courts.tjro.client.TJROScraper.cposg" id="toc-juscraper.courts.tjro.client.TJROScraper.cposg" class="nav-link" data-scroll-target="#juscraper.courts.tjro.client.TJROScraper.cposg">cposg</a></li>
-  </ul></li>
+  <li><a href="#why-juscraper-cannot-automate-this-site" id="toc-why-juscraper-cannot-automate-this-site" class="nav-link" data-scroll-target="#why-juscraper-cannot-automate-this-site">Why juscraper cannot automate this site</a></li>
+  <li><a href="#reproduction" id="toc-reproduction" class="nav-link" data-scroll-target="#reproduction">Reproduction</a></li>
+  <li><a href="#status" id="toc-status" class="nav-link" data-scroll-target="#status">Status</a></li>
   </ul></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.com/jtrecenti/juscraper/edit/main/docs/reference/courts.tjro.client.TJROScraper.qmd" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.com/jtrecenti/juscraper/edit/main/docs/captcha/tjse_captcha.md" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">TJSE — Cloudflare Turnstile</h1>
+</div>
 
 
 
-<section id="juscraper.courts.tjro.client.TJROScraper" class="level1">
-<h1>courts.tjro.client.TJROScraper</h1>
-<div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>courts.tjro.client.TJROScraper()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Scraper for the Tribunal de Justica de Rondonia (TJRO).</p>
-<p>Uses the JURIS Elasticsearch backend at juris-back.tjro.jus.br.</p>
-<section id="methods" class="level2">
-<h2 class="anchored" data-anchor-id="methods">Methods</h2>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Name</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><a href="#juscraper.courts.tjro.client.TJROScraper.cjsg">cjsg</a></td>
-<td>Search TJRO jurisprudence.</td>
-</tr>
-<tr class="even">
-<td><a href="#juscraper.courts.tjro.client.TJROScraper.cjsg_download">cjsg_download</a></td>
-<td>Download raw CJSG JSON responses from TJRO.</td>
-</tr>
-<tr class="odd">
-<td><a href="#juscraper.courts.tjro.client.TJROScraper.cjsg_parse">cjsg_parse</a></td>
-<td>Parse downloaded CJSG JSON responses.</td>
-</tr>
-<tr class="even">
-<td><a href="#juscraper.courts.tjro.client.TJROScraper.cpopg">cpopg</a></td>
-<td>Stub: first instance case consultation not implemented for TJRO.</td>
-</tr>
-<tr class="odd">
-<td><a href="#juscraper.courts.tjro.client.TJROScraper.cposg">cposg</a></td>
-<td>Stub: second instance case consultation not implemented for TJRO.</td>
-</tr>
-</tbody>
-</table>
-<section id="juscraper.courts.tjro.client.TJROScraper.cjsg" class="level3">
-<h3 class="anchored" data-anchor-id="juscraper.courts.tjro.client.TJROScraper.cjsg">cjsg</h3>
-<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>courts.tjro.client.TJROScraper.cjsg(</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    tipo<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    nr_processo<span class="op">=</span><span class="st">''</span>,</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    magistrado<span class="op">=</span><span class="st">''</span>,</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    orgao_julgador<span class="op">=</span><span class="st">''</span>,</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    orgao_julgador_colegiado<span class="op">=</span><span class="st">''</span>,</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    classe_judicial<span class="op">=</span><span class="st">''</span>,</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    instancia<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    termo_exato<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Search TJRO jurisprudence.</p>
-<section id="parameters" class="level4 doc-section doc-section-parameters">
-<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
-<p>pesquisa : str Free-text search term. paginas : int, list, range, or None Pages to download (1-based). None downloads all. tipo : list, optional Document types. Default <code>["EMENTA"]</code>. Options include <code>"ACORDAO"</code>, <code>"DECISAO"</code>, <code>"SENTENCA"</code>, <code>"VOTO"</code>, etc. nr_processo : str, optional Process number filter. magistrado : str, optional Judge/magistrate name. orgao_julgador : int or str, optional Judging body ID. orgao_julgador_colegiado : int or str, optional Collegiate judging body ID. classe_judicial : str, optional Judicial class name. instancia : list, optional Jurisdiction grades (e.g.&nbsp;<code>[1]</code>, <code>[2]</code>, <code>[1, 2]</code>). termo_exato : bool If True, search for exact term.</p>
-</section>
-<section id="returns" class="level4 doc-section doc-section-returns">
-<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
-<p>pd.DataFrame</p>
-</section>
-</section>
-<section id="juscraper.courts.tjro.client.TJROScraper.cjsg_download" class="level3">
-<h3 class="anchored" data-anchor-id="juscraper.courts.tjro.client.TJROScraper.cjsg_download">cjsg_download</h3>
-<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>courts.tjro.client.TJROScraper.cjsg_download(</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Download raw CJSG JSON responses from TJRO.</p>
-<section id="returns-1" class="level4 doc-section doc-section-returns">
-<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
-<p>list List of raw JSON responses (one per page).</p>
-</section>
-</section>
-<section id="juscraper.courts.tjro.client.TJROScraper.cjsg_parse" class="level3">
-<h3 class="anchored" data-anchor-id="juscraper.courts.tjro.client.TJROScraper.cjsg_parse">cjsg_parse</h3>
-<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>courts.tjro.client.TJROScraper.cjsg_parse(resultados_brutos)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Parse downloaded CJSG JSON responses.</p>
-<section id="returns-2" class="level4 doc-section doc-section-returns">
-<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-2">Returns</h4>
-<p>pd.DataFrame</p>
-</section>
-</section>
-<section id="juscraper.courts.tjro.client.TJROScraper.cpopg" class="level3">
-<h3 class="anchored" data-anchor-id="juscraper.courts.tjro.client.TJROScraper.cpopg">cpopg</h3>
-<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>courts.tjro.client.TJROScraper.cpopg(id_cnj)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Stub: first instance case consultation not implemented for TJRO.</p>
-</section>
-<section id="juscraper.courts.tjro.client.TJROScraper.cposg" class="level3">
-<h3 class="anchored" data-anchor-id="juscraper.courts.tjro.client.TJROScraper.cposg">cposg</h3>
-<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>courts.tjro.client.TJROScraper.cposg(id_cnj)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Stub: second instance case consultation not implemented for TJRO.</p>
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
 
 
+</header>
+
+
+<section id="tjse-jurisprudence-search" class="level1">
+<h1>TJSE Jurisprudence Search</h1>
+<p>The TJSE jurisprudence search at <a href="https://www.tjse.jus.br/Dgorg/paginas/jurisprudencia/consultarJurisprudencia.tjse" class="uri">https://www.tjse.jus.br/Dgorg/paginas/jurisprudencia/consultarJurisprudencia.tjse</a> uses <strong>Cloudflare Turnstile</strong>, an interactive captcha, and the backend <strong>does validate the token</strong>. A POST without a valid <code>cf-turnstile-response</code> field returns an HTTP 200 page with the error message:</p>
+<pre><code>&lt;span class="ui-messages-error-summary"&gt;Captcha inválido&lt;/span&gt;</code></pre>
+<section id="why-juscraper-cannot-automate-this-site" class="level2">
+<h2 class="anchored" data-anchor-id="why-juscraper-cannot-automate-this-site">Why juscraper cannot automate this site</h2>
+<p>Cloudflare Turnstile is an interactive captcha — it relies on browser fingerprinting, JavaScript execution, and Cloudflare challenge flows to issue tokens. The juscraper project only supports:</p>
+<ol type="1">
+<li>Sites whose captcha is decorative (backend does not validate the token). TJRJ and TJGO fall in this group.</li>
+<li>Sites with text-based image captchas that can be decoded by <a href="https://github.com/jtrecenti/txtcaptcha"><code>txtcaptcha</code></a>.</li>
+</ol>
+<p>Interactive captchas such as Turnstile, reCAPTCHA v2/v3 and hCaptcha are explicitly out of scope. We do not use paid anti-captcha services and do not ship browser-automation-based scrapers.</p>
 </section>
+<section id="reproduction" class="level2">
+<h2 class="anchored" data-anchor-id="reproduction">Reproduction</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> requests, re</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>s <span class="op">=</span> requests.Session()</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>s.headers.update({<span class="st">"User-Agent"</span>: <span class="st">"Mozilla/5.0"</span>})</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> s.get(</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"https://www.tjse.jus.br/Dgorg/paginas/jurisprudencia/"</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"consultarJurisprudencia.tjse"</span>,</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    timeout<span class="op">=</span><span class="dv">60</span>,</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>vs <span class="op">=</span> re.search(</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="vs">r'name="javax\.faces\.ViewState"[^&gt;]*value="([^"]+)"'</span>, r.text</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>).group(<span class="dv">1</span>)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>data <span class="op">=</span> {</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">"frmPrincipal"</span>: <span class="st">"frmPrincipal"</span>,</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">"itTermos"</span>: <span class="st">"dano moral"</span>,</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">"sorTipoDocumento"</span>: <span class="st">"AC"</span>,</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">"sorCompetencia"</span>: <span class="st">"SG"</span>,</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">"sorTipoPeriodo"</span>: <span class="st">"DI"</span>,</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="st">"cf-turnstile-response"</span>: <span class="st">""</span>,</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    <span class="st">"btPesquisar"</span>: <span class="st">""</span>,</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    <span class="st">"javax.faces.ViewState"</span>: vs,</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>r2 <span class="op">=</span> s.post(r.url, data<span class="op">=</span>data, timeout<span class="op">=</span><span class="dv">60</span>)</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="st">"Captcha inv"</span> <span class="kw">in</span> r2.text  <span class="co"># server-side validation</span></span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="status" class="level2">
+<h2 class="anchored" data-anchor-id="status">Status</h2>
+<ul>
+<li><strong>Date checked:</strong> 2026-04-11</li>
+<li><strong>Type:</strong> Cloudflare Turnstile (interactive)</li>
+<li><strong>Backend validates token:</strong> yes</li>
+<li><strong>Decision:</strong> not supported</li>
+</ul>
+
+
 </section>
 </section>
 
@@ -701,7 +666,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.com/jtrecenti/juscraper/edit/main/docs/reference/courts.tjro.client.TJROScraper.qmd" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.com/jtrecenti/juscraper/edit/main/docs/captcha/tjse_captcha.md" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></div>
     <div class="nav-footer-right">
       &nbsp;
     </div>
