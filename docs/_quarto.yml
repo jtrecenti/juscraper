@@ -60,6 +60,8 @@ website:
                   text: "TJBA"
                 - href: notebooks/tjdft.ipynb
                   text: "TJDFT"
+                - href: notebooks/tjgo.ipynb
+                  text: "TJGO"
                 - href: notebooks/tjmt.ipynb
                   text: "TJMT"
                 - href: notebooks/tjpa.ipynb
@@ -78,6 +80,8 @@ website:
                   text: "TJRO"
                 - href: notebooks/tjrr.ipynb
                   text: "TJRR"
+                - href: notebooks/tjrj.ipynb
+                  text: "TJRJ"
                 - href: notebooks/tjrs.ipynb
                   text: "TJRS"
                 - href: notebooks/tjsc.ipynb
@@ -86,6 +90,8 @@ website:
                   text: "TJES"
                 - href: notebooks/tjto.ipynb
                   text: "TJTO"
+                - href: notebooks/tjmg.ipynb
+                  text: "TJMG"
                 - href: notebooks/tjms.ipynb
                   text: "TJMS"
                 - href: notebooks/tjsp.ipynb
@@ -129,6 +135,7 @@ quartodoc:
         - courts.tjap.client.TJAPScraper
         - courts.tjce.client.TJCEScraper
         - courts.tjba.client.TJBAScraper
+        - courts.tjgo.client.TJGOScraper
         - courts.tjsp.client.TJSPScraper
         - courts.tjdft.client.TJDFTScraper
         - courts.tjrs.client.TJRSScraper
@@ -137,10 +144,12 @@ quartodoc:
         - courts.tjpe.client.TJPEScraper
         - courts.tjmt.client.TJMTScraper
         - courts.tjes.client.TJESScraper
+        - courts.tjmg.client.TJMGScraper
         - courts.tjms.client.TJMSScraper
         - courts.tjto.client.TJTOScraper
         - courts.tjpb.client.TJPBScraper
         - courts.tjpi.client.TJPIScraper
+        - courts.tjrj.client.TJRJScraper
         - courts.tjrn.client.TJRNScraper
         - courts.tjro.client.TJROScraper
         - courts.tjrr.client.TJRRScraper

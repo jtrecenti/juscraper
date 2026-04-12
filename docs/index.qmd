@@ -61,6 +61,8 @@ O método `.cjsg()` recebe como *input* parâmetros de busca de jurisprudência 
 | TJAP     | cjsg                              |
 | TJCE     | cjsg                              |
 | TJBA     | cjsg                              |
+| TJGO     | cjsg                              |
+| TJMG     | cjsg                              |
 | TJSP     | cpopg, cposg, cjsg, cjpg, acordao |
 | TJRS     | cjsg                              |
 | TJPR     | cjsg                              |
@@ -73,6 +75,7 @@ O método `.cjsg()` recebe como *input* parâmetros de busca de jurisprudência 
 | TJTO     | cjsg, cjpg                        |
 | TJPB     | cjsg                              |
 | TJPI     | cjsg                              |
+| TJRJ     | cjsg                              |
 | TJRN     | cjsg                              |
 | TJRO     | cjsg                              |
 | TJRR     | cjsg                              |
@@ -101,10 +104,13 @@ O método `.cjsg()` recebe como *input* parâmetros de busca de jurisprudência 
 - [Exemplo TJES](notebooks/tjes.ipynb)
 - [Exemplo TJMS](notebooks/tjms.ipynb)
 - [Exemplo TJDFT](notebooks/tjdft.ipynb)
+- [Exemplo TJGO](notebooks/tjgo.ipynb)
+- [Exemplo TJMG](notebooks/tjmg.ipynb)
 - [Exemplo TJMT](notebooks/tjmt.ipynb)
 - [Exemplo TJTO](notebooks/tjto.ipynb)
 - [Exemplo TJPB](notebooks/tjpb.ipynb)
 - [Exemplo TJPI](notebooks/tjpi.ipynb)
+- [Exemplo TJRJ](notebooks/tjrj.ipynb)
 - [Exemplo TJRN](notebooks/tjrn.ipynb)
 - [Exemplo TJRO](notebooks/tjro.ipynb)
 - [Exemplo TJRR](notebooks/tjrr.ipynb)
