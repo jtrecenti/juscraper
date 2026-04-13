@@ -13,25 +13,73 @@ logger = logging.getLogger("juscraper.cjpg_parse")
 
 def cjpg_n_pags(page_source):
     """
-    Extracts the number of pages from the Cjpg search results HTML.
+    Extracts the number of pages from the CJPG search results HTML.
+
+    Uses cascading selector + regex strategy to tolerate TJSP layout changes.
+    Mirrors the approach in ``cjsg_n_pags`` (CJSG uses 20 results/page; CJPG uses 10).
     """
     soup = BeautifulSoup(page_source, "html.parser")
-    page_element = soup.find(attrs={'bgcolor': '#EEEEEE'})
+
+    # --- Selector cascade ---
+    page_element = None
+
+    # 1) <td> containing "Resultados" / "resultados" (current TJSP format,
+    #    e.g. "Resultados 1 a 10 de 39764")
+    for td in soup.find_all("td"):
+        if 'resultado' in td.get_text().lower():
+            page_element = td
+            break
+
+    # 2) Original selector: bgcolor='#EEEEEE' (legacy format)
     if page_element is None:
+        page_element = soup.find(attrs={'bgcolor': '#EEEEEE'})
+
+    # 3) Any <td> that mentions "página" plus "de" or "total"
+    if page_element is None:
+        for td in soup.find_all("td"):
+            txt = td.get_text().lower()
+            if 'página' in txt and ('de' in txt or 'total' in txt):
+                page_element = td
+                break
+
+    # 4) If results table exists but no pagination element, assume 1 page
+    if page_element is None:
+        div_dados = soup.find('div', {'id': 'divDadosResultado'})
+        if div_dados is not None and div_dados.find('tr', class_='fundocinza1'):
+            return 1
         raise ValueError(
-            "Não foi possível encontrar o seletor de número de páginas"
-            "na resposta HTML. Verifique se a busca retornou resultados"
+            "Não foi possível encontrar o seletor de número de páginas "
+            "na resposta HTML. Verifique se a busca retornou resultados "
             "ou se a estrutura da página mudou."
         )
+
     texto = page_element.get_text().strip()
-    match = re.search(r'de\s+(\d+)\s+resultado', texto)
+
+    # --- Regex cascade ---
+    # 1) Number at end of text (covers "Resultados 1 a 10 de 39764")
+    match = re.search(r'(\d+)\s*$', texto)
     if match is None:
-        raise ValueError(
-            "Não foi possível extrair o número de resultados "
-            f"da string: {texto}"
-        )
-    results = int(match.group(1))
-    pags = results // 10 + 1
+        # 2) Number after "de "
+        m2 = re.search(r'(?<=de )([0-9]+)', texto)
+        match = m2
+    if match is None:
+        # 3) Number followed by descriptor
+        m3 = re.search(r'([0-9]+)(?=\s*(?:resultado|registro|página))', texto, re.I)
+        match = m3
+    if match is None:
+        # 4) Last resort: pick the largest number found in the text
+        nums = re.findall(r'\d+', texto)
+        if nums:
+            results = max(int(n) for n in nums)
+        else:
+            raise ValueError(
+                "Não foi possível extrair o número de resultados "
+                f"da string: {texto}"
+            )
+    else:
+        results = int(match.group(1))
+
+    pags = (results + 9) // 10  # math.ceil(results / 10)
     return pags
 
 def cjpg_parse_single(path):

@@ -82,12 +82,42 @@ class TestCJPGUnit:
     """Unit tests for CJPG parsing functions."""
     
     def test_cjpg_n_pags_extraction(self):
-        """Test extracting page count from CJPG HTML."""
+        """Test extracting page count from CJPG HTML (legacy format)."""
         html = load_sample_html('cjpg_results.html')
         n_pags = cjpg_n_pags(html)
-        # 25 results / 10 per page = 3 pages (rounded up)
+        # "Mostrando 1 a 10 de 25 resultados" → 25/10 = 3 pages (ceil)
         assert n_pags == 3
-    
+
+    def test_cjpg_n_pags_novo_formato(self):
+        """Test extracting page count from current TJSP CJPG HTML.
+
+        Regression for the bug where TJSP changed the pagination text from
+        "Mostrando 1 a 10 de N resultados" to "Resultados 1 a 10 de N",
+        breaking the original regex (which required "resultado" after the
+        number).
+        """
+        html = load_sample_html('cjpg_results_novo_formato.html')
+        n_pags = cjpg_n_pags(html)
+        # "Resultados 1 a 10 de 39764" → ceil(39764/10) = 3977
+        assert n_pags == 3977
+
+    @pytest.mark.parametrize("n_results,expected_pags", [
+        (1, 1),       # 1 result -> 1 page
+        (10, 1),      # exact multiple: 1 page (was incorrectly 2 in old code)
+        (11, 2),      # 2 pages
+        (20, 2),      # exact multiple
+        (25, 3),      # legacy fixture value
+        (39764, 3977),  # current TJSP real value
+    ])
+    def test_cjpg_n_pags_ceiling(self, n_results, expected_pags):
+        """Ceiling division: results / 10 rounded up. Covers exact multiples."""
+        html = (
+            '<html><body><table><tr><td>'
+            f'Resultados 1 a 10 de {n_results}'
+            '</td></tr></table></body></html>'
+        )
+        assert cjpg_n_pags(html) == expected_pags
+
     def test_cjpg_n_pags_missing_selector(self):
         """Test that missing pagination selector raises ValueError."""
         html = "<html><body><p>No pagination</p></body></html>"
