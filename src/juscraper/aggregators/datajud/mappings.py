@@ -1,5 +1,8 @@
-"""
-Maps (id_justica, id_tribunal) from CNJ to Datajud API alias.
+"""Maps (id_justica, id_tribunal) from CNJ to Datajud API alias.
+
+Fonte de verdade dos aliases: http://datajud-wiki.cnj.jus.br/api-publica/endpoints/.
+Ao adicionar/alterar um alias, conferir contra a wiki — em particular notar que
+o DF nao segue o padrao "tre-df": o alias oficial e `api_publica_tre-dft`.
 """
 
 ID_JUSTICA_TRIBUNAL_TO_ALIAS = {
@@ -10,7 +13,7 @@ ID_JUSTICA_TRIBUNAL_TO_ALIAS = {
     ("8", "04"): "api_publica_tjam",  # TJAM
     ("8", "05"): "api_publica_tjba",  # TJBA
     ("8", "06"): "api_publica_tjce",  # TJCE
-    ("8", "07"): "api_publica_tjdft", # TJDFT
+    ("8", "07"): "api_publica_tjdft",  # TJDFT
     ("8", "08"): "api_publica_tjes",  # TJES
     ("8", "09"): "api_publica_tjgo",  # TJGO
     ("8", "10"): "api_publica_tjma",  # TJMA
@@ -39,7 +42,7 @@ ID_JUSTICA_TRIBUNAL_TO_ALIAS = {
     ("4", "05"): "api_publica_trf5",  # TRF5
     ("4", "06"): "api_publica_trf6",  # TRF6
     # Justiça do Trabalho (id_justica="5")
-    ("5", "00"): "api_publica_tst",   # TST
+    ("5", "00"): "api_publica_tst",  # TST
     ("5", "01"): "api_publica_trt1",  # TRT1 (RJ)
     ("5", "02"): "api_publica_trt2",  # TRT2 (SP capital + Grande SP)
     ("5", "03"): "api_publica_trt3",  # TRT3 (MG)
@@ -49,32 +52,32 @@ ID_JUSTICA_TRIBUNAL_TO_ALIAS = {
     ("5", "07"): "api_publica_trt7",  # TRT7 (CE)
     ("5", "08"): "api_publica_trt8",  # TRT8 (PA/AP)
     ("5", "09"): "api_publica_trt9",  # TRT9 (PR)
-    ("5", "10"): "api_publica_trt10", # TRT10 (DF/TO)
-    ("5", "11"): "api_publica_trt11", # TRT11 (AM/RR)
-    ("5", "12"): "api_publica_trt12", # TRT12 (SC)
-    ("5", "13"): "api_publica_trt13", # TRT13 (PB)
-    ("5", "14"): "api_publica_trt14", # TRT14 (RO/AC)
-    ("5", "15"): "api_publica_trt15", # TRT15 (Campinas/SP interior)
-    ("5", "16"): "api_publica_trt16", # TRT16 (MA)
-    ("5", "17"): "api_publica_trt17", # TRT17 (ES)
-    ("5", "18"): "api_publica_trt18", # TRT18 (GO)
-    ("5", "19"): "api_publica_trt19", # TRT19 (AL)
-    ("5", "20"): "api_publica_trt20", # TRT20 (SE)
-    ("5", "21"): "api_publica_trt21", # TRT21 (RN)
-    ("5", "22"): "api_publica_trt22", # TRT22 (PI)
-    ("5", "23"): "api_publica_trt23", # TRT23 (MT)
-    ("5", "24"): "api_publica_trt24", # TRT24 (MS)
+    ("5", "10"): "api_publica_trt10",  # TRT10 (DF/TO)
+    ("5", "11"): "api_publica_trt11",  # TRT11 (AM/RR)
+    ("5", "12"): "api_publica_trt12",  # TRT12 (SC)
+    ("5", "13"): "api_publica_trt13",  # TRT13 (PB)
+    ("5", "14"): "api_publica_trt14",  # TRT14 (RO/AC)
+    ("5", "15"): "api_publica_trt15",  # TRT15 (Campinas/SP interior)
+    ("5", "16"): "api_publica_trt16",  # TRT16 (MA)
+    ("5", "17"): "api_publica_trt17",  # TRT17 (ES)
+    ("5", "18"): "api_publica_trt18",  # TRT18 (GO)
+    ("5", "19"): "api_publica_trt19",  # TRT19 (AL)
+    ("5", "20"): "api_publica_trt20",  # TRT20 (SE)
+    ("5", "21"): "api_publica_trt21",  # TRT21 (RN)
+    ("5", "22"): "api_publica_trt22",  # TRT22 (PI)
+    ("5", "23"): "api_publica_trt23",  # TRT23 (MT)
+    ("5", "24"): "api_publica_trt24",  # TRT24 (MS)
     # Justiça Eleitoral (id_justica="6")
     # Os IDs CNJ 01..27 seguem a mesma ordem alfabética usada na Justiça
     # Estadual (id_justica="8"), conforme Resolução CNJ 65/2008.
-    ("6", "00"): "api_publica_tse",     # TSE
+    ("6", "00"): "api_publica_tse",  # TSE
     ("6", "01"): "api_publica_tre-ac",  # TRE-AC
     ("6", "02"): "api_publica_tre-al",  # TRE-AL
     ("6", "03"): "api_publica_tre-ap",  # TRE-AP
     ("6", "04"): "api_publica_tre-am",  # TRE-AM
     ("6", "05"): "api_publica_tre-ba",  # TRE-BA
     ("6", "06"): "api_publica_tre-ce",  # TRE-CE
-    ("6", "07"): "api_publica_tre-dft", # TRE-DFT (alias oficial DataJud)
+    ("6", "07"): "api_publica_tre-dft",  # TRE-DFT (alias oficial DataJud)
     ("6", "08"): "api_publica_tre-es",  # TRE-ES
     ("6", "09"): "api_publica_tre-go",  # TRE-GO
     ("6", "10"): "api_publica_tre-ma",  # TRE-MA
@@ -96,16 +99,16 @@ ID_JUSTICA_TRIBUNAL_TO_ALIAS = {
     ("6", "26"): "api_publica_tre-sp",  # TRE-SP
     ("6", "27"): "api_publica_tre-to",  # TRE-TO
     # Justiça Militar da União (id_justica="7")
-    ("7", "00"): "api_publica_stm",   # STM
+    ("7", "00"): "api_publica_stm",  # STM
     # Justiça Militar Estadual (id_justica="9")
-    ("9", "11"): "api_publica_tjmmg", # TJMMG (MG)
-    ("9", "21"): "api_publica_tjmrs", # TJMRS (RS)
-    ("9", "25"): "api_publica_tjmsp", # TJMSP (SP)
+    ("9", "11"): "api_publica_tjmmg",  # TJMMG (MG)
+    ("9", "21"): "api_publica_tjmrs",  # TJMRS (RS)
+    ("9", "25"): "api_publica_tjmsp",  # TJMSP (SP)
     # Conselhos (id_justica="3")
-    ("3", "00"): "api_publica_cnj",   # CNJ
+    ("3", "00"): "api_publica_cnj",  # CNJ
     # Tribunais Superiores (id_justica="1", "2")
-    ("1", "00"): "api_publica_stf",   # STF
-    ("2", "00"): "api_publica_stj",   # STJ
+    ("1", "00"): "api_publica_stf",  # STF
+    ("2", "00"): "api_publica_stj",  # STJ
 }
 
 # Maps Tribunal Acronym to Datajud API alias
@@ -186,6 +189,9 @@ TRIBUNAL_TO_ALIAS = {
     "TRE-BA": "api_publica_tre-ba",
     "TRE-CE": "api_publica_tre-ce",
     "TRE-DFT": "api_publica_tre-dft",
+    # Alias de conveniência: usuários tipicamente escrevem "TRE-DF"
+    # mesmo a sigla oficial DataJud sendo "tre-dft".
+    "TRE-DF": "api_publica_tre-dft",
     "TRE-ES": "api_publica_tre-es",
     "TRE-GO": "api_publica_tre-go",
     "TRE-MA": "api_publica_tre-ma",

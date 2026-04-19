@@ -35,6 +35,15 @@ class TestIdJusticaTribunalToAlias:
         assert ID_JUSTICA_TRIBUNAL_TO_ALIAS[("6", "07")] == "api_publica_tre-dft"
 
 
+class TestTreDfAliasConveniencia:
+    def test_tre_df_resolve_para_dft(self):
+        # Sigla popular TRE-DF deve resolver para o alias oficial tre-dft
+        assert TRIBUNAL_TO_ALIAS["TRE-DF"] == "api_publica_tre-dft"
+
+    def test_tre_df_e_tre_dft_apontam_pro_mesmo_alias(self):
+        assert TRIBUNAL_TO_ALIAS["TRE-DF"] == TRIBUNAL_TO_ALIAS["TRE-DFT"]
+
+
 class TestTribunalToAlias:
     def test_todos_trts(self):
         assert "TST" in TRIBUNAL_TO_ALIAS
@@ -59,4 +68,15 @@ class TestTribunalToAlias:
         for sigla, alias in TRIBUNAL_TO_ALIAS.items():
             assert alias in aliases_por_id, (
                 f"Alias {alias!r} de {sigla!r} não aparece em ID_JUSTICA_TRIBUNAL_TO_ALIAS"
+            )
+
+    def test_aliases_id_justica_tem_sigla(self):
+        # Roundtrip inverso: todo alias em ID_JUSTICA_TRIBUNAL_TO_ALIAS tem
+        # ao menos uma sigla apontando para ele em TRIBUNAL_TO_ALIAS.
+        # Protege contra esquecer de adicionar a sigla quando um novo
+        # (id_justica, id_tribunal) for inserido.
+        siglas_por_alias = set(TRIBUNAL_TO_ALIAS.values())
+        for chave, alias in ID_JUSTICA_TRIBUNAL_TO_ALIAS.items():
+            assert alias in siglas_por_alias, (
+                f"Alias {alias!r} (chave {chave}) nao tem sigla correspondente em TRIBUNAL_TO_ALIAS"
             )
