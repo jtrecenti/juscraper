@@ -17,6 +17,8 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - eSAJ (TJSP cjpg/cjsg, TJAC/TJCE/TJMS/TJAM cjsg): validacao antecipada do intervalo entre `data_*_inicio` e `data_*_fim`. O eSAJ rejeita janelas maiores que 1 ano, mas antes o erro aparecia como "Nao foi possivel encontrar o seletor de numero de paginas" apos a requisicao ser feita. Agora um `ValueError` acionavel e lancado antes de qualquer HTTP, explicando o limite e orientando dividir a consulta em janelas menores (novo helper `juscraper.utils.params.validate_intervalo_datas`). Refs #91.
 - `juscraper.utils.cnj.clean_cnj`: agora remove qualquer caractere nao-digito (espacos, tabs, quebras de linha), nao apenas `.` e `-`. Numeros CNJ vindos de CSV/Excel com whitespace deixam de ser silenciosamente descartados pelo DataJud (refs #59).
 - `sanitize_filename`: removido `isinstance` redundante que conflitava com a anotacao de tipo e quebrava o pre-commit do mypy (refs #33).
+- DataJud: ao buscar por `numero_processo`, a query Elasticsearch agora envia o CNJ ja limpo (apenas digitos) em vez do original com pontos e tracos, em todos os caminhos de entrada (com ou sem `tribunal=`, string ou lista). Antes, numeros formatados retornavam zero hits silenciosamente porque o campo `numeroProcesso` no indice e armazenado sem formatacao (refs #60).
+- DataJud: completados os mapeamentos de TRTs (24) e TREs (27), incluindo TST e TSE, em `ID_JUSTICA_TRIBUNAL_TO_ALIAS` e `TRIBUNAL_TO_ALIAS`. Antes, processos das Justicas do Trabalho e Eleitoral consultados via `numero_processo` eram descartados silenciosamente porque o alias nao podia ser resolvido. Aliases conferidos com a wiki oficial em datajud-wiki.cnj.jus.br (refs #56).
 
 ## [0.2.1] - 2026-04-13
 
