@@ -61,7 +61,6 @@ KNOWN_FILTRO_FAILURES = {
     "tjpb": "backend ignores dt_inicio/dt_fim (returns 2025-05+ results)",
     "tjpi": "backend ignores date filter (returns 2025-09 results)",
     "tjrj": "legacy ASP.NET endpoint returns HTTP 500; scraper does not wire date filter",
-    "tjrn": "date column comes through as NaT (parse issue or filter ignored)",
     "tjro": "backend returns HTTP 500 on our payload",
     "tjrr": "backend returns HTTP 502 (transient or payload issue)",
     "tjrs": "Solr payload returns zero results for the reference week",

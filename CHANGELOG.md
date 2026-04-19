@@ -23,10 +23,11 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Helper de teste `_call_cjsg_with_fallback`: fallback para `"direito"` agora dispara tambem quando `pesquisa=""` retorna DataFrame vazio (antes so pegava excecoes).
 - TJDFT CJSG: filtro de datas de julgamento e publicacao agora e enviado ao backend via `termosAcessorios` (formato `"entre YYYY-MM-DD e YYYY-MM-DD"`, descoberto na reversao dos chunks Angular do frontend). Antes o scraper emitia um `UserWarning` dizendo que os parametros nao eram suportados e devolvia resultados sem filtro.
 - TJTO CJSG: `tempo_julgados` passa a ser enviado como `"pers"` quando `data_julgamento_inicio`/`fim` sao fornecidos. Sem isso o backend ignorava silenciosamente `dat_jul_ini`/`dat_jul_fim` e devolvia os julgamentos mais recentes (a UI so ativa o intervalo customizado quando o radio "Intervalo personalizado" e selecionado, e o backend espelha essa logica).
+- TJRN CJSG: filtro de datas e coluna `data_julgamento` consertados. O backend do TJRN espera `dt_inicio`/`dt_fim` no formato `DD-MM-YYYY` (tracos, nao barras — slashes sao silenciosamente ignoradas). O parser passa a ler `dt_assinatura_teor` como `data_julgamento` (o campo `dt_julgamento` que o codigo esperava nao existe no indice Elasticsearch) e expoe `data_publicacao` a partir de `dt_publicacao`.
 
 ### Known Issues
 
-- Onze tribunais tem o teste de filtro de datas marcado como `xfail` estrito (lista `KNOWN_FILTRO_FAILURES` em `test_release_date_filter.py`): tjam, tjap, tjmt, tjpa, tjpb, tjpi, tjrj, tjrn, tjro, tjrr, tjrs. Causas variam entre backends que ignoram o filtro, endpoints que devolvem 4xx/5xx, scrapers que marcam o parametro como nao suportado, e casos onde o PJe/Solr devolve zero resultados. Cada fix deve remover o tribunal da lista — `strict=True` sinaliza quando o bug se resolve sozinho.
+- Dez tribunais tem o teste de filtro de datas marcado como `xfail` estrito (lista `KNOWN_FILTRO_FAILURES` em `test_release_date_filter.py`): tjam, tjap, tjmt, tjpa, tjpb, tjpi, tjrj, tjro, tjrr, tjrs. Causas variam entre backends que ignoram o filtro, endpoints que devolvem 4xx/5xx, scrapers que marcam o parametro como nao suportado, e casos onde o PJe/Solr devolve zero resultados. Cada fix deve remover o tribunal da lista — `strict=True` sinaliza quando o bug se resolve sozinho.
 
 ## [0.2.1] - 2026-04-13
 

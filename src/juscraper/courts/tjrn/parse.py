@@ -33,7 +33,11 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
                 "colegiado": source.get("colegiado"),
                 "relator": source.get("relator"),
                 "tipo_decisao": source.get("tipo_decisao"),
-                "data_julgamento": source.get("dt_julgamento"),
+                "data_julgamento": (
+                    source.get("dt_assinatura_teor")
+                    or source.get("dt_assinatura_ementa")
+                ),
+                "data_publicacao": source.get("dt_publicacao"),
                 "sistema": source.get("sistema"),
                 "sigiloso": source.get("sigiloso"),
                 "ementa": _clean_html(source.get("ementa")),
@@ -43,9 +47,9 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
     if df.empty:
         return df
 
-    for col in ["data_julgamento"]:
+    for col in ["data_julgamento", "data_publicacao"]:
         if col in df.columns:
-            df[col] = pd.to_datetime(df[col], format="%d/%m/%Y", errors="coerce").dt.date
+            df[col] = pd.to_datetime(df[col], errors="coerce").dt.date
 
     # Format processo as CNJ pattern
     if "processo" in df.columns:
@@ -53,7 +57,8 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
 
     principais = [
         "processo", "classe_judicial", "orgao_julgador", "colegiado",
-        "relator", "tipo_decisao", "data_julgamento", "ementa",
+        "relator", "tipo_decisao", "data_julgamento", "data_publicacao",
+        "ementa",
     ]
     cols_principais = [c for c in principais if c in df.columns]
     cols_restantes = [c for c in df.columns if c not in principais]

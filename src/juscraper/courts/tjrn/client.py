@@ -4,9 +4,22 @@ from typing import Union, List
 import pandas as pd
 import requests
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_paginas, normalize_pesquisa, normalize_datas
+from juscraper.utils.params import normalize_paginas, normalize_pesquisa, normalize_datas, to_br_date
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
+
+
+def _to_tjrn_date(date_str):
+    """Convert BR or ISO dates to TJRN's DD-MM-YYYY format.
+
+    The UI at jurisprudencia.tjrn.jus.br sends ``dt_inicio``/``dt_fim`` as
+    ``DD-MM-YYYY`` (dashes, not slashes); slashes are silently ignored and
+    the backend returns unfiltered results.
+    """
+    if not date_str:
+        return ""
+    br = to_br_date(date_str)
+    return br.replace("/", "-") if br else ""
 
 
 class TJRNScraper(BaseScraper):
@@ -89,8 +102,8 @@ class TJRNScraper(BaseScraper):
             id_orgao_julgador=id_orgao_julgador,
             id_relator=id_relator,
             id_colegiado=id_colegiado,
-            dt_inicio=datas["data_julgamento_inicio"] or "",
-            dt_fim=datas["data_julgamento_fim"] or "",
+            dt_inicio=_to_tjrn_date(datas["data_julgamento_inicio"]),
+            dt_fim=_to_tjrn_date(datas["data_julgamento_fim"]),
             sistema=sistema,
             decisoes=decisoes,
             jurisdicoes=jurisdicoes,
