@@ -8,6 +8,8 @@ import time
 import requests
 from tqdm import tqdm
 
+from juscraper.utils.params import to_iso_date
+
 logger = logging.getLogger(__name__)
 
 GRAPHQL_URL = "https://jurisprudenciaws.tjba.jus.br/graphql"
@@ -79,12 +81,13 @@ def _build_filter(
 
 
 def _to_iso(date_str: str | None) -> str | None:
-    """Convert ``YYYY-MM-DD`` to ISO 8601 with timezone offset."""
+    """Convert ``DD/MM/YYYY`` or ``YYYY-MM-DD`` to ISO 8601 with timezone offset."""
     if not date_str:
         return None
     if "T" in date_str:
         return date_str
-    return f"{date_str}T03:00:00.000Z"
+    iso = to_iso_date(date_str)
+    return f"{iso}T03:00:00.000Z"
 
 
 def _fetch_page(

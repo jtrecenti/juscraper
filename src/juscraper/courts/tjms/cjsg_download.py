@@ -11,6 +11,8 @@ import requests
 import urllib3
 from tqdm import tqdm
 
+from juscraper.utils.params import to_br_date
+
 logger = logging.getLogger("juscraper.tjms.cjsg_download")
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -127,12 +129,12 @@ def cjsg_download(
         "nmComarca": "",
         "secoesTreeSelection.values": orgao_julgador or "",
         "secoesTreeSelection.text": "",
-        "dados.dtJulgamentoInicio": data_julgamento_inicio or "",
-        "dados.dtJulgamentoFim": data_julgamento_fim or "",
+        "dados.dtJulgamentoInicio": to_br_date(data_julgamento_inicio) or "",
+        "dados.dtJulgamentoFim": to_br_date(data_julgamento_fim) or "",
         "dados.dtRegistroInicio": "",
         "dados.dtRegistroFim": "",
-        "dados.dtPublicacaoInicio": data_publicacao_inicio or "",
-        "dados.dtPublicacaoFim": data_publicacao_fim or "",
+        "dados.dtPublicacaoInicio": to_br_date(data_publicacao_inicio) or "",
+        "dados.dtPublicacaoFim": to_br_date(data_publicacao_fim) or "",
         "dados.origensSelecionadas": origem,
         "tipoDecisaoSelecionados": tipo_param,
         "dados.ordenacao": "dtPublicacao",

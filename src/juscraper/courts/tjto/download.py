@@ -9,6 +9,8 @@ import time
 import requests
 from tqdm import tqdm
 
+from juscraper.utils.params import to_br_date
+
 logger = logging.getLogger(__name__)
 
 BASE_URL = "https://jurisprudencia.tjto.jus.br/consulta.php"
@@ -57,8 +59,8 @@ def _fetch_page(
         "tip_criterio_data": tip_criterio_data,
         "numero_processo": numero_processo,
         "tempo_julgados": "",
-        "dat_jul_ini": dat_jul_ini,
-        "dat_jul_fim": dat_jul_fim,
+        "dat_jul_ini": to_br_date(dat_jul_ini) or "",
+        "dat_jul_fim": to_br_date(dat_jul_fim) or "",
     }
     if soementa:
         payload["soementa"] = "on"

@@ -10,6 +10,8 @@ import requests
 import urllib3
 from tqdm import tqdm
 
+from juscraper.utils.params import to_br_date
+
 logger = logging.getLogger("juscraper.cjsg_download")
 
 
@@ -109,8 +111,8 @@ def cjsg_download(
         'nmComarca': '',
         'secoesTreeSelection.values': orgao_julgador or '',
         'secoesTreeSelection.text': '',
-        'dados.dtJulgamentoInicio': data_inicio or '',
-        'dados.dtJulgamentoFim': data_fim or '',
+        'dados.dtJulgamentoInicio': to_br_date(data_inicio) or '',
+        'dados.dtJulgamentoFim': to_br_date(data_fim) or '',
         'dados.dtRegistroInicio': '',
         'dados.dtRegistroFim': '',
         'dados.ordenacao': 'dtPublicacao',

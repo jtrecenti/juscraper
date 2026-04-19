@@ -7,6 +7,25 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- Suite de testes release-tier (`tests/test_release_date_filter.py`) que exercita o filtro de janela de datas (10/03/2025 – 14/03/2025) em todos os 25 tribunais registrados. Marker `release` registrado no `pyproject.toml` para separar CI rapido (`-m "integration and not release"`) de regressao completa antes de releases maiores (`-m "integration and release"`).
+- `tests/helpers.py` e `tests/conftest.py` com fixtures (`data_alvo_br`, `data_alvo_fim_br`, etc.) e helpers compartilhados (`run_filtro_data_unica`, `run_paginacao_data_unica`, `assert_date_matches`) que usam busca vazia e fallback automatico para `"direito"` quando o tribunal rejeita `pesquisa=""`.
+- `juscraper.utils.params.to_iso_date`: contraparte de `to_br_date` para scrapers cujo backend espera ISO-8601.
+
+### Changed
+
+- `pyproject.toml`: adicionado `pythonpath = ["tests"]` para permitir `from helpers import ...` sem hacks de `sys.path`.
+
+### Fixed
+
+- TJBA CJSG: `_to_iso` aceita datas em formato brasileiro (DD/MM/YYYY) alem de ISO, usando `to_iso_date`. Antes produzia strings invalidas como `"12/03/2025T03:00:00.000Z"` quando o usuario passava no formato canonico do projeto.
+- Helper de teste `_call_cjsg_with_fallback`: fallback para `"direito"` agora dispara tambem quando `pesquisa=""` retorna DataFrame vazio (antes so pegava excecoes).
+
+### Known Issues
+
+- Treze tribunais tem o teste de filtro de datas marcado como `xfail` estrito (lista `KNOWN_FILTRO_FAILURES` em `test_release_date_filter.py`): tjam, tjap, tjdft, tjmt, tjpa, tjpb, tjpi, tjrj, tjrn, tjro, tjrr, tjrs, tjto. Causas variam entre backends que ignoram o filtro, endpoints que devolvem 4xx/5xx, scrapers que marcam o parametro como nao suportado, e casos onde o PJe/Solr devolve zero resultados. Cada fix deve remover o tribunal da lista — `strict=True` sinaliza quando o bug se resolve sozinho.
+
 ## [0.2.1] - 2026-04-13
 
 ### Fixed

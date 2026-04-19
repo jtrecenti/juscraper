@@ -158,6 +158,34 @@ def normalize_datas(**kwargs):
     return result
 
 
+def to_br_date(date_str):
+    """Convert ``YYYY-MM-DD`` to ``DD/MM/YYYY``. Passthrough for other formats/None.
+
+    Most Brazilian court search forms (eSAJ, PJe) reject ISO dates silently and
+    fall back to an unfiltered query, so normalize at the scraper boundary.
+    """
+    if not date_str:
+        return date_str
+    parts = date_str.split("-")
+    if len(parts) == 3 and len(parts[0]) == 4:
+        return f"{parts[2]}/{parts[1]}/{parts[0]}"
+    return date_str
+
+
+def to_iso_date(date_str):
+    """Convert ``DD/MM/YYYY`` to ``YYYY-MM-DD``. Passthrough for other formats/None.
+
+    Counterpart to :func:`to_br_date` — used by scrapers whose backends speak
+    JSON/GraphQL and expect ISO-8601 dates (TJBA, some PJe APIs).
+    """
+    if not date_str:
+        return date_str
+    parts = date_str.split("/")
+    if len(parts) == 3 and len(parts[2]) == 4:
+        return f"{parts[2]}-{parts[1]}-{parts[0]}"
+    return date_str
+
+
 def warn_unsupported(param_name, tribunal):
     """Emit a ``UserWarning`` for an unsupported parameter.
 

@@ -146,12 +146,14 @@ ignore_missing_imports = true
 minversion = "6.0"
 addopts = "-ra -q --strict-markers --strict-config"
 testpaths = ["tests"]
+pythonpath = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "integration: marks tests as integration tests",
+    "release: comprehensive tests run before major releases (deselect with '-m \"not release\"')",
 ]
 
 [tool.coverage.run]
