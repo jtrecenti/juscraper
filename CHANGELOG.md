@@ -10,10 +10,12 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 
 - eSAJ: `juscraper.utils.params.validate_intervalo_datas` aceita parametro `origem` (default `"O eSAJ"`) para reuso em tribunais nao-eSAJ com mensagem de erro correta. Janela maxima default aumentada de 365 para 366 dias para nao rejeitar cliente-side uma janela de 1 ano calendario que atravesse 29/02 (ex: `01/01/2024` -> `01/01/2025`).
+- **BREAKING:** DataJud `listar_processos` agora levanta `ValueError` em vez de retornar DataFrame vazio quando a sigla do tribunal nao existe nos mappings ou quando nem `tribunal` nem `numero_processo` sao fornecidos. Erros de input do chamador deixam de falhar silenciosamente. Refs #57.
 
 ### Fixed
 
 - eSAJ (TJSP cjpg/cjsg, TJAC/TJCE/TJMS/TJAM cjsg): validacao antecipada do intervalo entre `data_*_inicio` e `data_*_fim`. O eSAJ rejeita janelas maiores que 1 ano, mas antes o erro aparecia como "Nao foi possivel encontrar o seletor de numero de paginas" apos a requisicao ser feita. Agora um `ValueError` acionavel e lancado antes de qualquer HTTP, explicando o limite e orientando dividir a consulta em janelas menores (novo helper `juscraper.utils.params.validate_intervalo_datas`). Refs #91.
+- DataJud: problemas de runtime (CNJ invalido ou de tribunal nao mapeado, falha de API, timeout, JSON corrompido, erro de parse) agora emitem `warnings.warn(UserWarning)` alem do `logger.error/warning`. Em uso tipico via Jupyter Notebook, sem handler de logging configurado, esses problemas eram completamente invisiveis e processos sumiam do resultado sem aviso. `UserWarning` e visivel por padrao em notebooks. Refs #57.
 
 ## [0.2.1] - 2026-04-13
 

@@ -1,6 +1,7 @@
 """
 Functions for downloading specific data from the Datajud API.
 """
+import warnings
 from typing import Optional, Dict, Any
 import logging
 import requests
@@ -59,6 +60,11 @@ def call_datajud_api(
         return response.json()
 
     except requests.exceptions.HTTPError as e:
+        warnings.warn(
+            f"DataJud: HTTP error em {api_url}: {e}",
+            UserWarning,
+            stacklevel=2,
+        )
         logger.error("HTTP Error calling Datajud API (%s): %s", api_url, e)
         if e.response is not None:
             logger.error("Response status: %s", e.response.status_code)
@@ -70,12 +76,27 @@ def call_datajud_api(
             logger.error("No response object available in HTTPError.")
         return None
     except requests.exceptions.Timeout:
+        warnings.warn(
+            f"DataJud: timeout em {api_url} após {timeout}s.",
+            UserWarning,
+            stacklevel=2,
+        )
         logger.error("Timeout calling Datajud API (%s) after %d seconds.", api_url, timeout)
         return None
     except requests.exceptions.RequestException as e:
+        warnings.warn(
+            f"DataJud: falha na requisição a {api_url}: {e}",
+            UserWarning,
+            stacklevel=2,
+        )
         logger.error("Request failed for Datajud API (%s): %s", api_url, e)
         return None
     except ValueError as e: # Includes JSONDecodeError if response is not valid JSON
+        warnings.warn(
+            f"DataJud: resposta inválida (não-JSON) de {api_url}: {e}",
+            UserWarning,
+            stacklevel=2,
+        )
         logger.error("Failed to decode JSON response from Datajud API (%s): %s", api_url, e)
         # Try to log part of the response text if available and decoding failed
         response_text_snippet = 'N/A'
@@ -84,5 +105,10 @@ def call_datajud_api(
         logger.error("Response text (first 500 chars): %s", response_text_snippet)
         return None
     except Exception as e:
+        warnings.warn(
+            f"DataJud: erro inesperado em {api_url}: {e}",
+            UserWarning,
+            stacklevel=2,
+        )
         logger.error("An unexpected error occurred calling Datajud API (%s): %s", api_url, e)
         return None
