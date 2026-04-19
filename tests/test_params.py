@@ -152,14 +152,19 @@ class TestValidateIntervaloDatas:
         assert validate_intervalo_datas(None, "31/12/2023") is None
 
     def test_one_year_exact_ok(self):
-        # 365-day window passes with default max_dias=365.
+        # 365-day window passes with default max_dias=366.
         assert validate_intervalo_datas("01/01/2023", "01/01/2024") is None
+
+    def test_one_year_across_leap_day_ok(self):
+        # 2024 is a leap year — 01/01/2024 -> 01/01/2025 spans 366 days, still
+        # a calendar year. Must not be rejected client-side.
+        assert validate_intervalo_datas("01/01/2024", "01/01/2025") is None
 
     def test_same_day_ok(self):
         assert validate_intervalo_datas("15/06/2023", "15/06/2023") is None
 
     def test_over_one_year_raises(self):
-        with pytest.raises(ValueError, match="no máximo 365 dias"):
+        with pytest.raises(ValueError, match="no máximo 366 dias"):
             validate_intervalo_datas("01/01/2020", "31/12/2021")
 
     def test_rotulo_in_message(self):
@@ -190,6 +195,16 @@ class TestValidateIntervaloDatas:
         with pytest.raises(ValueError, match="no máximo 31 dias"):
             validate_intervalo_datas(
                 "01/01/2023", "02/02/2023", max_dias=31
+            )
+
+    def test_default_origem_esaj(self):
+        with pytest.raises(ValueError, match="O eSAJ aceita no máximo"):
+            validate_intervalo_datas("01/01/2020", "31/12/2021")
+
+    def test_custom_origem(self):
+        with pytest.raises(ValueError, match="O TJRS aceita no máximo"):
+            validate_intervalo_datas(
+                "01/01/2020", "31/12/2021", origem="O TJRS"
             )
 
 

@@ -163,27 +163,32 @@ def validate_intervalo_datas(
     data_inicio,
     data_fim,
     *,
-    max_dias=365,
+    max_dias=366,
     formato="%d/%m/%Y",
     rotulo="data",
+    origem="O eSAJ",
 ):
     """Validate a date interval before firing an HTTP request.
 
-    The eSAJ jurisprudence endpoints (cjpg/cjsg) reject ranges greater than one
-    year with a server message ("A faixa entre data de início e data de fim
-    deve ser de no máximo 1 ano."). Checking the interval client-side turns a
-    cryptic downstream failure (missing paginator, truncated HTML) into an
-    actionable error raised before the request.
+    Several tribunal search endpoints reject date ranges wider than a
+    platform-specific window. The eSAJ jurisprudence endpoints (cjpg/cjsg),
+    for example, cap the range at one year ("A faixa entre data de início e
+    data de fim deve ser de no máximo 1 ano."). Checking the interval
+    client-side turns a cryptic downstream failure (missing paginator,
+    truncated HTML) into an actionable error raised before the request.
 
     Args:
         data_inicio: Start date as a string (``DD/MM/YYYY`` by default) or
-            ``None``. ``None`` skips validation — eSAJ allows single-bound
-            searches.
+            ``None``. ``None`` skips validation — single-bound searches are
+            left to the server.
         data_fim: End date as a string or ``None``.
-        max_dias: Maximum allowed interval in days (default: 365).
+        max_dias: Maximum allowed interval in days (default: 366 to admit a
+            full calendar year even across a leap day).
         formato: ``strptime`` format of the input strings.
         rotulo: Human-readable label for the parameter pair in error messages
             (e.g. ``"data_julgamento"``).
+        origem: Subject of the over-limit error message (e.g. ``"O eSAJ"``,
+            ``"O TJRS"``). Appears as ``"{origem} aceita no máximo N dias..."``.
 
     Raises:
         ValueError: If either string does not match ``formato``, if
@@ -215,7 +220,7 @@ def validate_intervalo_datas(
     dias = (dt_fim - dt_inicio).days
     if dias > max_dias:
         raise ValueError(
-            f"O eSAJ aceita no máximo {max_dias} dias entre '{rotulo}_inicio' "
+            f"{origem} aceita no máximo {max_dias} dias entre '{rotulo}_inicio' "
             f"e '{rotulo}_fim' (recebido: {dias} dias, de {data_inicio} a "
             f"{data_fim}). Divida a consulta em janelas menores."
         )

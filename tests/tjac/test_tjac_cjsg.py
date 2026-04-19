@@ -1,4 +1,6 @@
 """Integration tests for the TJAC CJSG scraper."""
+from unittest.mock import MagicMock
+
 import pandas as pd
 import pytest
 
@@ -56,3 +58,34 @@ class TestCJSGTJAC:
         df_int = self.scraper.cjsg("direito", paginas=2)
         df_range = self.scraper.cjsg("direito", paginas=range(1, 3))
         assert len(df_int) == len(df_range)
+
+
+class TestCJSGTJACDateRangeValidation:
+    """Pre-request date-range validation (#91). Unit-level, no network."""
+
+    def _make_scraper(self):
+        scraper = jus.scraper("tjac")
+        scraper.session = MagicMock()
+        return scraper
+
+    def test_julgamento_over_limit_raises_before_request(self):
+        scraper = self._make_scraper()
+        with pytest.raises(ValueError, match="data_julgamento"):
+            scraper.cjsg_download(
+                pesquisa="direito",
+                data_julgamento_inicio="01/01/2020",
+                data_julgamento_fim="31/12/2021",
+            )
+        scraper.session.get.assert_not_called()
+        scraper.session.post.assert_not_called()
+
+    def test_publicacao_over_limit_raises_before_request(self):
+        scraper = self._make_scraper()
+        with pytest.raises(ValueError, match="data_publicacao"):
+            scraper.cjsg_download(
+                pesquisa="direito",
+                data_publicacao_inicio="01/01/2020",
+                data_publicacao_fim="31/12/2021",
+            )
+        scraper.session.get.assert_not_called()
+        scraper.session.post.assert_not_called()
