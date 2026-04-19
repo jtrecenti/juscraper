@@ -10,6 +10,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Fixed
 
 - TJSP CJPG: extracao do numero de paginas voltou a funcionar apos mudanca no HTML do tribunal. O texto da paginacao mudou de "Mostrando 1 a 10 de N resultados" para "Resultados 1 a 10 de N", e o regex antigo exigia a palavra "resultado" depois do numero. `cjpg_n_pags` agora usa estrategia robusta de seletor + regex em cascata (mesmo padrao de `cjsg_n_pags`), suportando ambos os formatos.
+- eSAJ (TJSP cjpg/cjsg, TJAC/TJCE/TJMS/TJAM cjsg): validacao antecipada do intervalo entre `data_*_inicio` e `data_*_fim`. O eSAJ rejeita janelas maiores que 1 ano, mas antes o erro aparecia como "Nao foi possivel encontrar o seletor de numero de paginas" apos a requisicao ser feita. Agora um `ValueError` acionavel e lancado antes de qualquer HTTP, explicando o limite e orientando dividir a consulta em janelas menores (novo helper `juscraper.utils.params.validate_intervalo_datas`). Refs #91.
 
 ### Added
 
