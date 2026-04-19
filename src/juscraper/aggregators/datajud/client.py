@@ -1,23 +1,24 @@
 """
 Orchestrates the flow for DATAJUD (user entry point) - API BASED
 """
+import logging
 import os
 import tempfile
-from typing import Optional, Dict, List, Union, Any
-from collections import defaultdict
-import logging
 import time
-import requests
+from collections import defaultdict
+from typing import Any, Dict, List, Optional, Union
+
 import pandas as pd
+import requests
 from tqdm.auto import tqdm
 
 from ...core.base import BaseScraper
-from ...utils.cnj import clean_cnj # Assuming this utility exists and is relevant
+from ...utils.cnj import clean_cnj  # Assuming this utility exists and is relevant
+from .download import call_datajud_api  # To be created for API calls
+
 # Import mappings for tribunal and justice aliases.
 from .mappings import ID_JUSTICA_TRIBUNAL_TO_ALIAS, TRIBUNAL_TO_ALIAS
-
-from .download import call_datajud_api # To be created for API calls
-from .parse import parse_datajud_api_response # To be created for API response parsing
+from .parse import parse_datajud_api_response  # To be created for API response parsing
 
 logger = logging.getLogger(__name__)
 
@@ -174,7 +175,11 @@ class DatajudScraper(BaseScraper):
                     if isinstance(numero_processo, str):
                         nproc = [numero_processo]
                     else:
-                        nproc = numero_processo
+                        nproc = list(numero_processo)
+                    # O índice DataJud armazena `numeroProcesso` apenas com dígitos.
+                    # Garantir a limpeza aqui cobre todos os caminhos de entrada
+                    # (numero_processo sozinho, lista, ou junto com `tribunal=`).
+                    nproc = [clean_cnj(n) for n in nproc]
                     must_conditions.append({
                         "terms": {
                             "numeroProcesso": nproc
@@ -258,7 +263,7 @@ class DatajudScraper(BaseScraper):
                 df_page = parse_datajud_api_response(api_response_json, mostrar_movs)
                 if df_page.empty:
                     logger.info(
-                        "No more results for alias %s on page %d (or parsing failed).", 
+                        "No more results for alias %s on page %d (or parsing failed).",
                         alias,
                         current_page
                     )
