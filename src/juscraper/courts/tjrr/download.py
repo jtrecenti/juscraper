@@ -28,22 +28,45 @@ def _extract_cdata(xml_text: str) -> str:
     return xml_text
 
 
-def _get_viewstate(session: requests.Session) -> str:
-    """Fetch the initial page and extract the JSF ViewState."""
+def _get_form_fields(session: requests.Session) -> dict:
+    """Fetch the initial page and discover JSF field names.
+
+    JSF auto-generates component IDs like ``menuinicial:j_idt28`` that
+    shift whenever components are added or reordered server-side. We
+    look the fields up by their stable attributes (``id=consultaAtual``
+    for the search input, the button text ``Pesquisar`` for the submit)
+    so the scraper keeps working across JSF renumberings.
+    """
     resp = session.get(BASE_URL, timeout=30)
     resp.raise_for_status()
     soup = BeautifulSoup(resp.text, "html.parser")
     vs_input = soup.find("input", {"name": "javax.faces.ViewState"})
     if not vs_input:
         raise RuntimeError("Could not find ViewState on TJRR page.")
-    return vs_input["value"]
+    pesq = soup.find(id="consultaAtual")
+    if not pesq or not pesq.get("name"):
+        raise RuntimeError("Could not find TJRR pesquisa input (id=consultaAtual).")
+    # Locate the submit button inside the main form (first type=submit
+    # whose name starts with menuinicial:j_idt — the button text is not
+    # rendered reliably, so fall back to positional discovery).
+    submit_name = None
+    for btn in soup.find_all("button"):
+        name = btn.get("name", "") or ""
+        if name.startswith("menuinicial:j_idt") and not name.startswith("menuinicial:btn_"):
+            submit_name = name
+            break
+    return {
+        "viewstate": vs_input["value"],
+        "pesquisa_name": pesq["name"],
+        "submit_name": submit_name,
+    }
 
 
 def _search(
     session: requests.Session,
-    viewstate: str,
+    form_fields: dict,
     pesquisa: str,
-    relator: str = "",
+    relator: str = "",  # noqa: ARG001 - accepted for API compat; no longer a text input in TJRR
     data_inicio: str = "",
     data_fim: str = "",
     orgao_julgador: list | None = None,
@@ -53,14 +76,14 @@ def _search(
     """Submit the search form and return the HTML response."""
     data = {
         "menuinicial": "menuinicial",
-        "menuinicial:j_idt28": pesquisa,
+        form_fields["pesquisa_name"]: pesquisa,
         "menuinicial:numProcesso": "",
         "menuinicial:datainicial_input": data_inicio,
         "menuinicial:datafinal_input": data_fim,
-        "menuinicial:j_idt67": relator,
-        "javax.faces.ViewState": viewstate,
-        "menuinicial:j_idt30": "",
+        "javax.faces.ViewState": form_fields["viewstate"],
     }
+    if form_fields.get("submit_name"):
+        data[form_fields["submit_name"]] = ""
     if orgao_julgador:
         for oj in orgao_julgador:
             data.setdefault("menuinicial:tipoOrgaoList", []).append(oj)
@@ -162,8 +185,8 @@ def cjsg_download_manager(
             "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
         })
 
-    viewstate = _get_viewstate(session)
-    first_html = _search(session, viewstate, pesquisa, **kwargs)
+    form_fields = _get_form_fields(session)
+    first_html = _search(session, form_fields, pesquisa, **kwargs)
     time.sleep(1)
 
     if paginas is None:
