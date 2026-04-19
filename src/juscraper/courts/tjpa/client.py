@@ -6,7 +6,7 @@ from typing import Union, List
 import pandas as pd
 import requests
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_paginas, normalize_pesquisa, normalize_datas
+from juscraper.utils.params import normalize_paginas, normalize_pesquisa, normalize_datas, to_iso_date
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
 
@@ -95,10 +95,10 @@ class TJPAScraper(BaseScraper):
             assunto=assunto,
             origem=origem,
             tipo=tipo,
-            data_julgamento_inicio=datas["data_julgamento_inicio"],
-            data_julgamento_fim=datas["data_julgamento_fim"],
-            data_publicacao_inicio=datas["data_publicacao_inicio"],
-            data_publicacao_fim=datas["data_publicacao_fim"],
+            data_julgamento_inicio=to_iso_date(datas["data_julgamento_inicio"]),
+            data_julgamento_fim=to_iso_date(datas["data_julgamento_fim"]),
+            data_publicacao_inicio=to_iso_date(datas["data_publicacao_inicio"]),
+            data_publicacao_fim=to_iso_date(datas["data_publicacao_fim"]),
             sort_by=sort_by,
             sort_order=sort_order,
             query_type=query_type,

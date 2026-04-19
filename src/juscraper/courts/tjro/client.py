@@ -4,7 +4,7 @@ from typing import Union, List
 import pandas as pd
 import requests
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_paginas, normalize_pesquisa, normalize_datas
+from juscraper.utils.params import normalize_paginas, normalize_pesquisa, normalize_datas, to_iso_date
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
 
@@ -88,8 +88,8 @@ class TJROScraper(BaseScraper):
             orgao_julgador=orgao_julgador,
             orgao_julgador_colegiado=orgao_julgador_colegiado,
             classe_judicial=classe_judicial,
-            data_julgamento_inicio=datas["data_julgamento_inicio"] or "",
-            data_julgamento_fim=datas["data_julgamento_fim"] or "",
+            data_julgamento_inicio=to_iso_date(datas["data_julgamento_inicio"]) or "",
+            data_julgamento_fim=to_iso_date(datas["data_julgamento_fim"]) or "",
             instancia=instancia,
             termo_exato=termo_exato,
         )

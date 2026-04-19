@@ -8,6 +8,8 @@ import time
 import requests
 from tqdm import tqdm
 
+from juscraper.utils.params import to_iso_date
+
 logger = logging.getLogger(__name__)
 
 CONFIG_URL = "https://jurisprudencia.tjmt.jus.br/assets/config/config.json"
@@ -74,13 +76,13 @@ def _build_params(
 
 
 def _to_tjmt_date(date_str: str | None) -> str | None:
-    """Convert a date string from yyyy-mm-dd to dd/mm/yyyy (TJMT format)."""
-    if not date_str:
-        return None
-    parts = date_str.split("-")
-    if len(parts) == 3 and len(parts[0]) == 4:
-        return f"{parts[2]}/{parts[1]}/{parts[0]}"
-    return date_str
+    """Normalize to YYYY-MM-DD (what the Hellsgate API expects).
+
+    The TJMT Angular frontend parses the user-facing DD/MM/YYYY and
+    reformats to YYYY-MM-DD before sending as `filtro.periodoDataDe/Ate`.
+    The backend silently ignores dates in any other format.
+    """
+    return to_iso_date(date_str) or None
 
 
 def cjsg_download(

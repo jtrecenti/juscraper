@@ -119,20 +119,36 @@ def run_filtro_data_unica(scraper, **extra_kwargs) -> pd.DataFrame:
     3. If the output has a date column, assert every row falls inside the
        reference window (10/03/2025 – 14/03/2025).
     """
-    # Pass julgamento tight and publicação widened. Scrapers that AND both
-    # (e.g. eSAJ-based TJAM) still match because publicação trails julgamento;
-    # scrapers that only filter by publicação (e.g. TJBA, TJGO) get a window
-    # wide enough to include rows judged in the target week.
-    kwargs = {
+    # First pass: julgamento tight + publicação widened. Scrapers that AND
+    # both (e.g. eSAJ-based TJAM) still match because publicação trails
+    # julgamento; scrapers that only filter by publicação (e.g. TJBA, TJGO)
+    # get a window wide enough to include rows judged in the target week.
+    # If this returns empty (e.g. TJPA's publicação index is empty), fall
+    # back to julgamento-only and then publicação-only.
+    both = {
         "data_julgamento_inicio": DATA_ALVO_BR,
         "data_julgamento_fim": DATA_ALVO_FIM_BR,
         "data_publicacao_inicio": DATA_ALVO_BR,
         "data_publicacao_fim": DATA_PUB_FIM_BR,
         "paginas": 1,
     }
-    kwargs.update(extra_kwargs)
+    jul_only = {
+        "data_julgamento_inicio": DATA_ALVO_BR,
+        "data_julgamento_fim": DATA_ALVO_FIM_BR,
+        "paginas": 1,
+    }
+    pub_only = {
+        "data_publicacao_inicio": DATA_ALVO_BR,
+        "data_publicacao_fim": DATA_PUB_FIM_BR,
+        "paginas": 1,
+    }
 
-    df = _call_cjsg_with_fallback(scraper, kwargs)
+    df = None
+    for attempt in (both, jul_only, pub_only):
+        kwargs = {**attempt, **extra_kwargs}
+        df = _call_cjsg_with_fallback(scraper, kwargs)
+        if df is not None and len(df) > 0:
+            break
 
     assert isinstance(df, pd.DataFrame), "cjsg deve retornar DataFrame"
     assert len(df) > 0, (
