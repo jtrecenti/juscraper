@@ -247,5 +247,64 @@ class TestCJPGDownload1Based:
         assert len(urls) == 2
 
 
+class TestCJPGDateRangeValidation:
+    """Pre-request date-range validation for the eSAJ 1-year limit (#91)."""
+
+    def _patched_scraper(self):
+        """Build a TJSPScraper whose session.get would fail the test if called."""
+        scraper = juscraper.scraper('tjsp')
+        # Replace session with a MagicMock that records calls — if validation
+        # fails to short-circuit, .get() would be invoked and we can detect it.
+        scraper.session = MagicMock()
+        return scraper
+
+    def test_range_over_one_year_raises_before_request(self):
+        scraper = self._patched_scraper()
+        with pytest.raises(ValueError, match="no máximo 366 dias"):
+            scraper.cjpg_download(
+                pesquisa="direito",
+                data_julgamento_inicio="01/01/2020",
+                data_julgamento_fim="31/12/2021",
+            )
+        # Crucially, nothing hit the network.
+        scraper.session.get.assert_not_called()
+        scraper.session.post.assert_not_called()
+
+    def test_invalid_format_raises_before_request(self):
+        scraper = self._patched_scraper()
+        with pytest.raises(ValueError, match="Formato esperado"):
+            scraper.cjpg_download(
+                pesquisa="direito",
+                data_julgamento_inicio="2020-01-01",
+                data_julgamento_fim="31/12/2020",
+            )
+        scraper.session.get.assert_not_called()
+
+    def test_inicio_after_fim_raises_before_request(self):
+        scraper = self._patched_scraper()
+        with pytest.raises(ValueError, match="posterior"):
+            scraper.cjpg_download(
+                pesquisa="direito",
+                data_julgamento_inicio="31/12/2023",
+                data_julgamento_fim="01/01/2023",
+            )
+        scraper.session.get.assert_not_called()
+
+    def test_valid_one_year_window_proceeds_to_request(self):
+        """A valid 1-year window should NOT short-circuit; the download
+        proceeds and the mocked session receives the first GET."""
+        scraper = self._patched_scraper()
+        # Make the mock raise after the first .get() so we don't actually
+        # exercise the parsing flow — we only care that validation passed.
+        scraper.session.get.side_effect = RuntimeError("short-circuit after validate")
+        with pytest.raises(RuntimeError, match="short-circuit"):
+            scraper.cjpg_download(
+                pesquisa="direito",
+                data_julgamento_inicio="01/01/2023",
+                data_julgamento_fim="31/12/2023",
+            )
+        assert scraper.session.get.called
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

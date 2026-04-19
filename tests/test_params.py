@@ -5,6 +5,7 @@ from juscraper.utils.params import (
     normalize_paginas,
     normalize_pesquisa,
     normalize_datas,
+    validate_intervalo_datas,
     warn_unsupported,
 )
 
@@ -136,6 +137,75 @@ class TestNormalizeDatas:
         )
         assert result["data_publicacao_inicio"] == "01/01/2023"
         assert result["data_publicacao_fim"] == "31/12/2023"
+
+
+# --- validate_intervalo_datas ---
+
+class TestValidateIntervaloDatas:
+
+    def test_both_none_skips(self):
+        # No exception; returns None
+        assert validate_intervalo_datas(None, None) is None
+
+    def test_one_none_skips(self):
+        assert validate_intervalo_datas("01/01/2023", None) is None
+        assert validate_intervalo_datas(None, "31/12/2023") is None
+
+    def test_one_year_exact_ok(self):
+        # 365-day window passes with default max_dias=366.
+        assert validate_intervalo_datas("01/01/2023", "01/01/2024") is None
+
+    def test_one_year_across_leap_day_ok(self):
+        # 2024 is a leap year — 01/01/2024 -> 01/01/2025 spans 366 days, still
+        # a calendar year. Must not be rejected client-side.
+        assert validate_intervalo_datas("01/01/2024", "01/01/2025") is None
+
+    def test_same_day_ok(self):
+        assert validate_intervalo_datas("15/06/2023", "15/06/2023") is None
+
+    def test_over_one_year_raises(self):
+        with pytest.raises(ValueError, match="no máximo 366 dias"):
+            validate_intervalo_datas("01/01/2020", "31/12/2021")
+
+    def test_rotulo_in_message(self):
+        with pytest.raises(ValueError, match="data_julgamento_inicio"):
+            validate_intervalo_datas(
+                "01/01/2020",
+                "31/12/2021",
+                rotulo="data_julgamento",
+            )
+
+    def test_inicio_after_fim_raises(self):
+        with pytest.raises(ValueError, match="posterior"):
+            validate_intervalo_datas("31/12/2023", "01/01/2023")
+
+    def test_invalid_format_raises(self):
+        with pytest.raises(ValueError, match="Formato esperado"):
+            validate_intervalo_datas("2020-01-01", "31/12/2020")
+
+    def test_invalid_fim_format_raises(self):
+        with pytest.raises(ValueError, match="data_fim"):
+            validate_intervalo_datas("01/01/2020", "2020-12-31", rotulo="data")
+
+    def test_custom_max_dias(self):
+        # 31 days allowed, 32 not.
+        assert validate_intervalo_datas(
+            "01/01/2023", "01/02/2023", max_dias=31
+        ) is None
+        with pytest.raises(ValueError, match="no máximo 31 dias"):
+            validate_intervalo_datas(
+                "01/01/2023", "02/02/2023", max_dias=31
+            )
+
+    def test_default_origem_esaj(self):
+        with pytest.raises(ValueError, match="O eSAJ aceita no máximo"):
+            validate_intervalo_datas("01/01/2020", "31/12/2021")
+
+    def test_custom_origem(self):
+        with pytest.raises(ValueError, match="O TJRS aceita no máximo"):
+            validate_intervalo_datas(
+                "01/01/2020", "31/12/2021", origem="O TJRS"
+            )
 
 
 # --- warn_unsupported ---

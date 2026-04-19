@@ -11,7 +11,7 @@ import urllib3
 import requests
 
 from ...core.base import BaseScraper
-from ...utils.params import normalize_paginas, normalize_datas
+from ...utils.params import normalize_paginas, normalize_datas, validate_intervalo_datas
 
 from .cpopg_download import cpopg_download_html, cpopg_download_api
 from .cpopg_parse import get_cpopg_download_links, cpopg_parse_manager
@@ -258,12 +258,21 @@ class TJSPScraper(BaseScraper):
             baixar_sg (bool): If True, also downloads from Second Stage.
             tipo_decisao (str): 'acordao' or 'monocratica'.
             paginas (int, list, range, or None): Pages (1-based). None downloads all.
+
+        Note:
+            The eSAJ accepts at most 1 year between ``data_julgamento_inicio``
+            and ``data_julgamento_fim``. Split longer ranges on the caller side.
         """
         paginas = normalize_paginas(paginas)
         datas = normalize_datas(
             data_julgamento_inicio=data_julgamento_inicio,
             data_julgamento_fim=data_julgamento_fim,
             **kwargs,
+        )
+        validate_intervalo_datas(
+            datas["data_julgamento_inicio"],
+            datas["data_julgamento_fim"],
+            rotulo="data_julgamento",
         )
         return cjsg_download_mod(
             pesquisa=pesquisa,
@@ -309,6 +318,11 @@ class TJSPScraper(BaseScraper):
             data_julgamento_inicio: Start date. ``data_inicio`` accepted as alias.
             data_julgamento_fim: End date. ``data_fim`` accepted as alias.
             paginas (int, list, range, or None): Pages (1-based). None downloads all.
+
+        Note:
+            The eSAJ accepts at most 1 year between ``data_julgamento_inicio``
+            and ``data_julgamento_fim``. Split longer ranges into yearly
+            windows on the caller side.
         """
         path_result = self.cjpg_download(
             pesquisa=pesquisa,
@@ -349,12 +363,21 @@ class TJSPScraper(BaseScraper):
             data_julgamento_inicio: Start date. ``data_inicio`` accepted as alias.
             data_julgamento_fim: End date. ``data_fim`` accepted as alias.
             paginas (int, list, range, or None): Pages (1-based). None downloads all.
+
+        Note:
+            The eSAJ accepts at most 1 year between ``data_julgamento_inicio``
+            and ``data_julgamento_fim``. Split longer ranges on the caller side.
         """
         paginas = normalize_paginas(paginas)
         datas = normalize_datas(
             data_julgamento_inicio=data_julgamento_inicio,
             data_julgamento_fim=data_julgamento_fim,
             **kwargs,
+        )
+        validate_intervalo_datas(
+            datas["data_julgamento_inicio"],
+            datas["data_julgamento_fim"],
+            rotulo="data_julgamento",
         )
 
         def get_n_pags_callback(r0):

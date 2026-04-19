@@ -4,7 +4,7 @@ import shutil
 
 import requests
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_paginas, normalize_datas
+from juscraper.utils.params import normalize_paginas, normalize_datas, validate_intervalo_datas
 
 from .cjsg_download import cjsg_download as _cjsg_download
 from .cjsg_parse import cjsg_n_pags, cjsg_parse_manager
@@ -146,6 +146,16 @@ class TJMSScraper(BaseScraper):
             data_publicacao_inicio=data_publicacao_inicio,
             data_publicacao_fim=data_publicacao_fim,
             **kwargs,
+        )
+        validate_intervalo_datas(
+            datas["data_julgamento_inicio"],
+            datas["data_julgamento_fim"],
+            rotulo="data_julgamento",
+        )
+        validate_intervalo_datas(
+            datas["data_publicacao_inicio"],
+            datas["data_publicacao_fim"],
+            rotulo="data_publicacao",
         )
         download_dir = diretorio or self.download_path
         return _cjsg_download(
