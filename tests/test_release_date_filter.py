@@ -57,7 +57,6 @@ KNOWN_FILTRO_FAILURES = {
     "tjap": "Tucujuris UI/backend does not expose date filtering (no date input exists)",
     "tjpb": "backend filter reduces the total but the returned dt_ementa can fall outside the window (backend filters on a different internal date)",
     "tjrj": "legacy ASP.NET endpoint returns HTTP 500; scraper does not wire date filter",
-    "tjrs": "TJRS Solr cluster intermittent: observed 'CoreContainer is either not initialized or shutting down' and 'no servers hosting shard: shard6' (HTTP 503 wrapped in 200). Backend outage, not a scraper bug.",
 }
 
 # Tribunals where pagination specifically is broken (usually HTTP errors
