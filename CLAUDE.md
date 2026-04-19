@@ -59,6 +59,9 @@ Paginas de tribunais mudam estrutura sem aviso. Ao escrever logica que extrai co
 - Seguimos o padrao [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 - Toda mudanca relevante deve ser registrada em `CHANGELOG.md` sob `[Unreleased]`
 - Categorias: Added, Changed, Deprecated, Removed, Fixed, Security
+- **Secoes de versoes ja lancadas (`## [0.2.1]`, `## [0.2.0]`, ...) sao imutaveis.** Nunca adicionar, editar ou remover linhas dentro delas — elas descrevem o que foi publicado naquela tag. Toda entrada nova vai em `[Unreleased]`, mesmo que corrija algo introduzido na ultima versao.
+- **Antes de inserir uma entrada, confirme que ela cai *acima* do primeiro heading `## [x.y.z]` do arquivo** (ou seja, dentro de `[Unreleased]`). Se `[Unreleased]` estiver sem subsecoes (`### Added/Changed/Fixed/...`), crie a subsecao necessaria.
+- **Todo commit de `feat:`, `fix:`, `refactor:` ou `deprecated:` com efeito observavel pelo usuario deve incluir a entrada em `[Unreleased]` no mesmo commit** — nao em commit posterior. Mudancas puramente internas (testes, tipagem, rename de simbolo privado, docs) nao precisam.
 
 ## Documentacao
 
