@@ -55,7 +55,6 @@ TRIBUNAIS = [
 # Tribunals where the date filter itself is broken. Remove once fixed.
 KNOWN_FILTRO_FAILURES = {
     "tjap": "Tucujuris UI/backend does not expose date filtering (no date input exists)",
-    "tjpb": "backend filter reduces the total but the returned dt_ementa can fall outside the window (backend filters on a different internal date)",
     "tjrj": "legacy ASP.NET endpoint returns HTTP 500; scraper does not wire date filter",
 }
 
