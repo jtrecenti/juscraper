@@ -29,6 +29,13 @@ DATA_ALVO_FIM_ISO = "2025-03-14"
 _ALVO_START = date(2025, 3, 10)
 _ALVO_END = date(2025, 3, 14)
 
+# Publicação usually trails julgamento. When a scraper filters on publicação
+# instead of (or in addition to) julgamento, allow a wider publicação window
+# so that rows judged in the target week have time to be published.
+DATA_PUB_FIM_BR = "30/04/2025"
+DATA_PUB_FIM_ISO = "2025-04-30"
+_PUB_END = date(2025, 4, 30)
+
 
 def _find_date_column(df: pd.DataFrame) -> str | None:
     """Return the first column that looks like a judgment or publication date.
@@ -74,7 +81,12 @@ def _parse_row_date(raw: str) -> date | None:
 
 
 def assert_date_matches(df: pd.DataFrame) -> str | None:
-    """Check that every row falls inside the reference work week.
+    """Check that every row falls inside the reference window.
+
+    Julgamento columns are validated against the narrow work-week window
+    (10/03 – 14/03). Publicação columns are validated against a widened
+    window (10/03 – 30/04) because publicação typically trails julgamento
+    by days or weeks.
 
     Returns the date column name used for validation, or ``None`` if the
     scraper does not expose one (caller accepts count-only validation).
@@ -82,15 +94,18 @@ def assert_date_matches(df: pd.DataFrame) -> str | None:
     col = _find_date_column(df)
     if col is None:
         return None
+    is_pub = "publicacao" in col.lower() or "public" in col.lower()
+    end = _PUB_END if is_pub else _ALVO_END
+    fim_br = DATA_PUB_FIM_BR if is_pub else DATA_ALVO_FIM_BR
     raw = df[col].astype(str).str.strip()
     parsed = [_parse_row_date(r) for r in raw]
     bad = [
         (r, p) for r, p in zip(raw, parsed)
-        if p is None or not (_ALVO_START <= p <= _ALVO_END)
+        if p is None or not (_ALVO_START <= p <= end)
     ]
     assert not bad, (
         f"Coluna {col!r} possui datas fora do intervalo "
-        f"{DATA_ALVO_BR}–{DATA_ALVO_FIM_BR}: "
+        f"{DATA_ALVO_BR}–{fim_br}: "
         f"{[b[0] for b in bad[:5]]}"
     )
     return col
@@ -104,14 +119,15 @@ def run_filtro_data_unica(scraper, **extra_kwargs) -> pd.DataFrame:
     3. If the output has a date column, assert every row falls inside the
        reference window (10/03/2025 – 14/03/2025).
     """
-    # Tribunais divergem na dimensão temporal suportada: alguns filtram por
-    # data de julgamento, outros por data de publicação.  Passamos ambas para
-    # cobrir os dois casos — o scraper usa a que implementa e ignora a outra.
+    # Pass julgamento tight and publicação widened. Scrapers that AND both
+    # (e.g. eSAJ-based TJAM) still match because publicação trails julgamento;
+    # scrapers that only filter by publicação (e.g. TJBA, TJGO) get a window
+    # wide enough to include rows judged in the target week.
     kwargs = {
         "data_julgamento_inicio": DATA_ALVO_BR,
         "data_julgamento_fim": DATA_ALVO_FIM_BR,
         "data_publicacao_inicio": DATA_ALVO_BR,
-        "data_publicacao_fim": DATA_ALVO_FIM_BR,
+        "data_publicacao_fim": DATA_PUB_FIM_BR,
         "paginas": 1,
     }
     kwargs.update(extra_kwargs)
@@ -156,7 +172,7 @@ def run_paginacao_data_unica(scraper, **extra_kwargs) -> tuple[pd.DataFrame, pd.
         "data_julgamento_inicio": DATA_ALVO_BR,
         "data_julgamento_fim": DATA_ALVO_FIM_BR,
         "data_publicacao_inicio": DATA_ALVO_BR,
-        "data_publicacao_fim": DATA_ALVO_FIM_BR,
+        "data_publicacao_fim": DATA_PUB_FIM_BR,
     }
     base.update(extra_kwargs)
 

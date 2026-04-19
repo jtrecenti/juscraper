@@ -54,12 +54,10 @@ TRIBUNAIS = [
 
 # Tribunals where the date filter itself is broken. Remove once fixed.
 KNOWN_FILTRO_FAILURES = {
-    "tjam": "cjsg returns no results for reasonable work weeks (filter/payload issue)",
     "tjap": "backend ignores date filter (returns current-date results)",
     "tjmt": "backend ignores filtro.periodoDataDe/Ate (returns current-date results)",
     "tjpa": "backend returns HTTP 400 on our payload",
-    "tjpb": "backend ignores dt_inicio/dt_fim (returns 2025-05+ results)",
-    "tjpi": "backend ignores date filter (returns 2025-09 results)",
+    "tjpb": "backend filter reduces the total but the returned dt_ementa can fall outside the window (backend filters on a different internal date)",
     "tjrj": "legacy ASP.NET endpoint returns HTTP 500; scraper does not wire date filter",
     "tjro": "backend returns HTTP 500 on our payload",
     "tjrr": "backend returns HTTP 502 (transient or payload issue)",
@@ -72,6 +70,7 @@ KNOWN_PAGINACAO_FAILURES = {
     "tjpa": "backend returns HTTP 400 on our payload",
     "tjrj": "legacy endpoint returns HTTP 500",
     "tjro": "backend returns HTTP 500 on our payload",
+    "tjrr": "backend returns HTTP 502 (transient or payload issue)",
 }
 
 

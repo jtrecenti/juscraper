@@ -4,7 +4,12 @@ from typing import Union, List
 import pandas as pd
 import requests
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_paginas, normalize_pesquisa
+from juscraper.utils.params import (
+    normalize_datas,
+    normalize_paginas,
+    normalize_pesquisa,
+    to_iso_date,
+)
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
 
@@ -66,6 +71,7 @@ class TJPIScraper(BaseScraper):
         """
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
         paginas = normalize_paginas(paginas)
+        datas = normalize_datas(**kwargs)
         brutos = self.cjsg_download(
             pesquisa=pesquisa,
             paginas=paginas,
@@ -73,6 +79,8 @@ class TJPIScraper(BaseScraper):
             relator=relator,
             classe=classe,
             orgao=orgao,
+            data_min=to_iso_date(datas["data_julgamento_inicio"]) or "",
+            data_max=to_iso_date(datas["data_julgamento_fim"]) or "",
         )
         return self.cjsg_parse(brutos)
 
