@@ -92,7 +92,7 @@ class DatajudScraper(BaseScraper):
                     id_tribunal_cnj = num_limpo[14:16]
                     alias = ID_JUSTICA_TRIBUNAL_TO_ALIAS.get((id_justica_cnj, id_tribunal_cnj))
                     if alias:
-                        processos_por_alias[alias].append(num_cnj)
+                        processos_por_alias[alias].append(num_limpo)
                     else:
                         logger.warning("Não foi possível determinar alias para CNJ: %s", num_cnj)
                 else:
