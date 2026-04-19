@@ -4,7 +4,7 @@ Module for the scraper of the Court of Justice of the Federal District and Terri
 from typing import Union, List
 import pandas as pd
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_paginas, normalize_pesquisa, normalize_datas, warn_unsupported
+from juscraper.utils.params import normalize_paginas, normalize_pesquisa, normalize_datas
 from .download import cjsg_download
 from .parse import cjsg_parse
 
@@ -48,9 +48,6 @@ class TJDFTScraper(BaseScraper):
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
         paginas = normalize_paginas(paginas)
         datas = normalize_datas(**kwargs)
-        for key, value in datas.items():
-            if value is not None:
-                warn_unsupported(key, "TJDFT")
         return cjsg_download(
             query=pesquisa,
             paginas=paginas,
@@ -59,6 +56,7 @@ class TJDFTScraper(BaseScraper):
             inteiro_teor=inteiro_teor,
             quantidade_por_pagina=quantidade_por_pagina,
             base_url=self.BASE_URL,
+            **datas,
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> list:

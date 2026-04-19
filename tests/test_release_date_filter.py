@@ -56,7 +56,6 @@ TRIBUNAIS = [
 KNOWN_FILTRO_FAILURES = {
     "tjam": "cjsg returns no results for reasonable work weeks (filter/payload issue)",
     "tjap": "backend ignores date filter (returns current-date results)",
-    "tjdft": "API does not expose a date filter; scraper warns and ignores the param",
     "tjmt": "backend ignores filtro.periodoDataDe/Ate (returns current-date results)",
     "tjpa": "backend returns HTTP 400 on our payload",
     "tjpb": "backend ignores dt_inicio/dt_fim (returns 2025-05+ results)",
@@ -66,7 +65,6 @@ KNOWN_FILTRO_FAILURES = {
     "tjro": "backend returns HTTP 500 on our payload",
     "tjrr": "backend returns HTTP 502 (transient or payload issue)",
     "tjrs": "Solr payload returns zero results for the reference week",
-    "tjto": "backend ignores dat_jul_ini/dat_jul_fim (returns current-date results)",
 }
 
 # Tribunals where pagination specifically is broken (usually HTTP errors

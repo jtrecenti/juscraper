@@ -50,6 +50,12 @@ def _fetch_page(
     max_retries: int = 3,
 ) -> str:
     """Fetch a single page of results from the TJTO jurisprudence search."""
+    dat_ini_br = to_br_date(dat_jul_ini) or ""
+    dat_fim_br = to_br_date(dat_jul_fim) or ""
+    # The backend only applies dat_jul_ini/dat_jul_fim when tempo_julgados="pers"
+    # (the "Intervalo personalizado" option in the UI); an empty value makes
+    # it fall back to "all dates" and silently ignores the custom range.
+    tempo_julgados = "pers" if (dat_ini_br or dat_fim_br) else ""
     payload = {
         "start": str(start),
         "rows": str(RESULTS_PER_PAGE),
@@ -58,9 +64,9 @@ def _fetch_page(
         "tip_criterio_inst": tip_criterio_inst,
         "tip_criterio_data": tip_criterio_data,
         "numero_processo": numero_processo,
-        "tempo_julgados": "",
-        "dat_jul_ini": to_br_date(dat_jul_ini) or "",
-        "dat_jul_fim": to_br_date(dat_jul_fim) or "",
+        "tempo_julgados": tempo_julgados,
+        "dat_jul_ini": dat_ini_br,
+        "dat_jul_fim": dat_fim_br,
     }
     if soementa:
         payload["soementa"] = "on"

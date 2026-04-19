@@ -5,6 +5,8 @@ import math
 
 import requests
 
+from juscraper.utils.params import to_iso_date
+
 
 def cjsg_download(
     query,
@@ -14,6 +16,10 @@ def cjsg_download(
     inteiro_teor=False,
     quantidade_por_pagina=10,
     base_url="https://jurisdf.tjdft.jus.br/api/v1/pesquisa",
+    data_julgamento_inicio=None,
+    data_julgamento_fim=None,
+    data_publicacao_inicio=None,
+    data_publicacao_fim=None,
 ):
     """
     Downloads raw results from the TJDFT jurisprudence search (using requests).
@@ -25,10 +31,24 @@ def cjsg_download(
     """
     headers = {"Content-Type": "application/json"}
 
+    termos_acessorios = []
+    jul_ini = to_iso_date(data_julgamento_inicio)
+    jul_fim = to_iso_date(data_julgamento_fim)
+    if jul_ini and jul_fim:
+        termos_acessorios.append(
+            {"campo": "dataJulgamento", "valor": f"entre {jul_ini} e {jul_fim}"}
+        )
+    pub_ini = to_iso_date(data_publicacao_inicio)
+    pub_fim = to_iso_date(data_publicacao_fim)
+    if pub_ini and pub_fim:
+        termos_acessorios.append(
+            {"campo": "dataPublicacao", "valor": f"entre {pub_ini} e {pub_fim}"}
+        )
+
     def _fetch_page(pagina):
         payload = {
             "query": query,
-            "termosAcessorios": [],
+            "termosAcessorios": termos_acessorios,
             "pagina": pagina,
             "tamanho": quantidade_por_pagina,
             "sinonimos": sinonimos,
