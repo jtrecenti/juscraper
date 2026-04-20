@@ -152,7 +152,7 @@ def _cjsg_parse_single_page(path: str):
         if not details_table:
             continue
 
-        dados_processo = {}
+        dados_processo: dict = {}
         # Inicializa ementa como string vazia
         dados_processo['ementa'] = ''
         # Extrai o número do processo (texto do <a> com classes "esajLinkLogin downloadEmenta")
@@ -174,7 +174,7 @@ def _cjsg_parse_single_page(path: str):
                 visible_div = None
                 # Procura pela div invisível (aquela que possui "display: none" no atributo style)
                 for div in tr_detail.find_all('div', align="justify"):
-                    style = div.get('style', 'display: none;')
+                    style = str(div.get('style', 'display: none;'))
                     if 'display: none' not in style:
                         visible_div = div
                         break

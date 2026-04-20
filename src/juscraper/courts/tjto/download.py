@@ -8,6 +8,7 @@ import time
 
 import requests
 from tqdm import tqdm
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +100,7 @@ def cjsg_download_manager(
     dat_jul_ini: str = "",
     dat_jul_fim: str = "",
     soementa: bool = False,
-    session: requests.Session = None,
+    session: Optional[requests.Session] = None,
     **kwargs,
 ) -> list:
     """Download raw HTML pages from TJTO jurisprudence search.
@@ -115,15 +116,15 @@ def cjsg_download_manager(
     if session is None:
         session = requests.Session()
 
-    fetch_kwargs = dict(
-        type_minuta=type_minuta,
-        tip_criterio_inst=tip_criterio_inst,
-        tip_criterio_data=tip_criterio_data,
-        numero_processo=numero_processo,
-        dat_jul_ini=dat_jul_ini,
-        dat_jul_fim=dat_jul_fim,
-        soementa=soementa,
-    )
+    fetch_kwargs: Dict[str, Any] = {
+        "type_minuta": type_minuta,
+        "tip_criterio_inst": tip_criterio_inst,
+        "tip_criterio_data": tip_criterio_data,
+        "numero_processo": numero_processo,
+        "dat_jul_ini": dat_jul_ini,
+        "dat_jul_fim": dat_jul_fim,
+        "soementa": soementa,
+    }
 
     if paginas is None:
         first_html = _fetch_page(session, termo, start=0, **fetch_kwargs)

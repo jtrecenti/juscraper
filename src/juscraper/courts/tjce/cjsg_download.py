@@ -3,20 +3,17 @@ Download of results from the TJCE Consulta de Julgados de Segundo Grau (CJSG).
 Uses requests library only (no browser automation needed).
 """
 import os
-import ssl
 import time
 from datetime import datetime
 import logging
 
 import requests
 from requests.adapters import HTTPAdapter
-import urllib3
 from urllib3.util.ssl_ import create_urllib3_context
 from tqdm import tqdm
+from typing import Optional
 
 logger = logging.getLogger("juscraper.tjce.cjsg_download")
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 BASE_URL = "https://esaj.tjce.jus.br/"
 
@@ -27,8 +24,6 @@ class _TJCETLSAdapter(HTTPAdapter):
     def init_poolmanager(self, *args, **kwargs):
         ctx = create_urllib3_context()
         ctx.set_ciphers("DEFAULT:@SECLEVEL=1")
-        ctx.check_hostname = False
-        ctx.verify_mode = ssl.CERT_NONE
         kwargs["ssl_context"] = ctx
         return super().init_poolmanager(*args, **kwargs)
 
@@ -49,7 +44,7 @@ def cjsg_download(
     data_publicacao_fim: str | None = None,
     origem: str = "T",
     tipo_decisao: str = "acordao",
-    paginas: 'int | list | range | None' = None,
+    paginas: Optional['list | range | None'] = None,
     get_n_pags_callback=None,
 ) -> str:
     """Downloads HTML files from the TJCE CJSG search results pages.
@@ -109,7 +104,6 @@ def cjsg_download(
         "Upgrade-Insecure-Requests": "1",
         "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
     })
-    session.verify = False
 
     tipo_param = "A" if tipo_decisao == "acordao" else "D"
 

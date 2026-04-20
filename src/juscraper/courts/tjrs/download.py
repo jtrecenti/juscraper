@@ -6,22 +6,23 @@ from urllib.parse import urlencode
 
 import requests
 from tqdm import tqdm
+from typing import Optional
 
 
 def cjsg_download_manager(
     termo: str,
     paginas=None,
-    classe: str = None,
-    assunto: str = None,
-    orgao_julgador: str = None,
-    relator: str = None,
-    data_julgamento_inicio: str = None,
-    data_julgamento_fim: str = None,
-    data_publicacao_inicio: str = None,
-    data_publicacao_fim: str = None,
-    tipo_processo: str = None,
-    secao: str = None,
-    session: requests.Session = None,
+    classe: Optional[str] = None,
+    assunto: Optional[str] = None,
+    orgao_julgador: Optional[str] = None,
+    relator: Optional[str] = None,
+    data_julgamento_inicio: Optional[str] = None,
+    data_julgamento_fim: Optional[str] = None,
+    data_publicacao_inicio: Optional[str] = None,
+    data_publicacao_fim: Optional[str] = None,
+    tipo_processo: Optional[str] = None,
+    secao: Optional[str] = None,
+    session: Optional[requests.Session] = None,
     **kwargs,
 ) -> list:
     """

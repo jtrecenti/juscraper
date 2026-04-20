@@ -56,10 +56,12 @@ dev = [
     "pytest>=8.3.5",
     "pytest-cov>=4.0.0",
     "pytest-asyncio>=0.21.0",
+    "pytest-mock>=3.12.0",
     "pylint>=3.0.0",
     "isort>=5.12.0",
     "flake8>=6.0.0",
     "mypy>=1.0.0",
+    "types-requests>=2.32.0",
     "pre-commit>=3.0.0",
 ]
 docs = [
@@ -153,6 +155,7 @@ markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "integration: marks tests as integration tests",
 ]
+filterwarnings = ["error"]
 
 [tool.coverage.run]
 source = ["src"]

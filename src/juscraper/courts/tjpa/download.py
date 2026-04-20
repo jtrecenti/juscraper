@@ -7,6 +7,7 @@ import time
 
 import requests
 from tqdm import tqdm
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -19,16 +20,16 @@ def _build_payload(
     pesquisa: str,
     pagina_0based: int,
     size: int = RESULTS_PER_PAGE,
-    origem: list = None,
-    tipo: list = None,
-    relator: str = None,
-    orgao_julgador_colegiado: str = None,
-    classe: str = None,
-    assunto: str = None,
-    data_julgamento_inicio: str = None,
-    data_julgamento_fim: str = None,
-    data_publicacao_inicio: str = None,
-    data_publicacao_fim: str = None,
+    origem: Optional[list] = None,
+    tipo: Optional[list] = None,
+    relator: Optional[str] = None,
+    orgao_julgador_colegiado: Optional[str] = None,
+    classe: Optional[str] = None,
+    assunto: Optional[str] = None,
+    data_julgamento_inicio: Optional[str] = None,
+    data_julgamento_fim: Optional[str] = None,
+    data_publicacao_inicio: Optional[str] = None,
+    data_publicacao_fim: Optional[str] = None,
     sort_by: str = "datajulgamento",
     sort_order: str = "desc",
     query_type: str = "free",
@@ -86,7 +87,8 @@ def _fetch_page(session: requests.Session, payload: dict, max_retries: int = 3) 
             resp = session.post(BASE_URL, data=body, headers=headers, timeout=30)
             resp.raise_for_status()
             resp.encoding = "utf-8"
-            return resp.json()
+            data: dict = resp.json()
+            return data
         except (requests.RequestException, ValueError) as exc:
             if attempt == max_retries:
                 raise
@@ -100,7 +102,7 @@ def _fetch_page(session: requests.Session, payload: dict, max_retries: int = 3) 
 def cjsg_download_manager(
     pesquisa: str,
     paginas=None,
-    session: requests.Session = None,
+    session: Optional[requests.Session] = None,
     **kwargs,
 ) -> list:
     """

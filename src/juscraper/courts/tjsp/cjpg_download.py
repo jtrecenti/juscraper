@@ -1,20 +1,22 @@
-"""
-Downloads cases from the TJSP jurisprudence search.
-"""
+"""Downloads cases from the TJSP jurisprudence search."""
 import logging
 import os
 import time
 from datetime import datetime
+from typing import Optional
 
 import requests
 from tqdm import tqdm
 
 from ...utils.cnj import clean_cnj
 
-
 # Limite imposto pelo backend do eSAJ no campo "pesquisaLivre" do CJPG.
 # Strings maiores são truncadas silenciosamente pelo TJSP.
 _TJSP_PESQUISA_MAX_CHARS = 120
+
+
+class QueryTooLongError(ValueError):
+    """Raised when the search query exceeds the TJSP backend maximum length."""
 
 
 def cjpg_download(
@@ -23,17 +25,16 @@ def cjpg_download(
     u_base: str,
     download_path: str,
     sleep_time: float = 0.5,
-    classes: 'list[str] | None' = None,
-    assuntos: 'list[str] | None' = None,
-    varas: 'list[str] | None' = None,
-    id_processo: 'str | None' = None,
-    data_inicio: 'str | None' = None,
-    data_fim: 'str | None' = None,
-    paginas: 'int | list | range | None' = None,
+    classes: Optional['list[str] | None'] = None,
+    assuntos: Optional['list[str] | None'] = None,
+    varas: Optional['list[str] | None'] = None,
+    id_processo: Optional['str | None'] = None,
+    data_inicio: Optional['str | None'] = None,
+    data_fim: Optional['str | None'] = None,
+    paginas: Optional['list | range | None'] = None,
     get_n_pags_callback=None
 ):
-    """
-    Downloads cases from the TJSP jurisprudence search.
+    """Download cases from the TJSP jurisprudence search.
 
     Args:
         pesquisa (str): The search query for the jurisprudence. Maximum 120 characters
@@ -52,34 +53,29 @@ def cjpg_download(
         get_n_pags_callback (callable): Callback function to extract number of pages.
     """
     if pesquisa is not None and len(pesquisa) > _TJSP_PESQUISA_MAX_CHARS:
-        raise ValueError(
+        raise QueryTooLongError(
             f"O campo 'pesquisa' do CJPG do TJSP aceita no máximo "
-            f"{_TJSP_PESQUISA_MAX_CHARS} caracteres (recebido: {len(pesquisa)}). "
+            f"{_TJSP_PESQUISA_MAX_CHARS} caracteres "
+            f"(recebido: {len(pesquisa)} caracteres). "
             "Reduza a busca ou divida em consultas menores."
         )
-    if assuntos is not None:
-        assuntos = ','.join(assuntos)
-    if varas is not None:
-        varas = ','.join(varas)
-    if classes is not None:
-        classes = ','.join(classes)
-    if id_processo is not None:
-        id_processo = clean_cnj(id_processo)
-    else:
-        id_processo = ''
+    assuntos_str = ','.join(assuntos) if assuntos is not None else None
+    varas_str = ','.join(varas) if varas is not None else None
+    classes_str = ','.join(classes) if classes is not None else None
+    id_processo_str = clean_cnj(id_processo) if id_processo is not None else ''
 
     query = {
         'conversationId': '',
         'dadosConsulta.pesquisaLivre': pesquisa,
         'tipoNumero': 'UNIFICADO',
-        'numeroDigitoAnoUnificado': id_processo[:15],
-        'foroNumeroUnificado': id_processo[-4:],
-        'dadosConsulta.nuProcesso': id_processo,
-        'classeTreeSelection.values': classes,
-        'assuntoTreeSelection.values': assuntos,
+        'numeroDigitoAnoUnificado': id_processo_str[:15],
+        'foroNumeroUnificado': id_processo_str[-4:],
+        'dadosConsulta.nuProcesso': id_processo_str,
+        'classeTreeSelection.values': classes_str,
+        'assuntoTreeSelection.values': assuntos_str,
         'dadosConsulta.dtInicio': data_inicio,
         'dadosConsulta.dtFim': data_fim,
-        'varasTreeSelection.values': varas,
+        'varasTreeSelection.values': varas_str,
         'dadosConsulta.ordenacao': 'DESC'
     }
 
@@ -142,6 +138,6 @@ def cjpg_download(
         time.sleep(sleep_time)
         u = f"{u_base}cjpg/trocarDePagina.do?pagina={page}&conversationId="
         r = session.get(u)
-        with open(f"{path}/cjpg_{page:05d}.html", 'w', encoding='utf-8') as f:
+        with open(f"{path}/cjpg_{page:05d}.html", 'w', encoding='utf-8') as f:  # noqa: E231
             f.write(r.text)
     return path

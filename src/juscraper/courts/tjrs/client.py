@@ -1,7 +1,7 @@
 """
 Scraper for the Tribunal de Justiça do Rio Grande do Sul (TJRS).
 """
-from typing import Union, List
+from typing import Optional, Union, List
 import requests
 import pandas as pd
 from juscraper.core.base import BaseScraper
@@ -48,19 +48,19 @@ class TJRSScraper(BaseScraper):
 
     def cjsg_download(
         self,
-        pesquisa: str = None,
+        pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
-        classe: str = None,
-        assunto: str = None,
-        orgao_julgador: str = None,
-        relator: str = None,
-        data_julgamento_inicio: str = None,
-        data_julgamento_fim: str = None,
-        data_publicacao_inicio: str = None,
-        data_publicacao_fim: str = None,
-        tipo_processo: str = None,
-        secao: str = None,
-        session: 'requests.Session' = None,
+        classe: Optional[str] = None,
+        assunto: Optional[str] = None,
+        orgao_julgador: Optional[str] = None,
+        relator: Optional[str] = None,
+        data_julgamento_inicio: Optional[str] = None,
+        data_julgamento_fim: Optional[str] = None,
+        data_publicacao_inicio: Optional[str] = None,
+        data_publicacao_fim: Optional[str] = None,
+        tipo_processo: Optional[str] = None,
+        secao: Optional[str] = None,
+        session: Optional['requests.Session'] = None,
         **kwargs,
     ) -> list:
         """
@@ -112,19 +112,19 @@ class TJRSScraper(BaseScraper):
 
     def cjsg(
         self,
-        pesquisa: str = None,
+        pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
-        classe: str = None,
-        assunto: str = None,
-        orgao_julgador: str = None,
-        relator: str = None,
-        data_julgamento_inicio: str = None,
-        data_julgamento_fim: str = None,
-        data_publicacao_inicio: str = None,
-        data_publicacao_fim: str = None,
-        tipo_processo: str = None,
-        secao: str = None,
-        session: 'requests.Session' = None,
+        classe: Optional[str] = None,
+        assunto: Optional[str] = None,
+        orgao_julgador: Optional[str] = None,
+        relator: Optional[str] = None,
+        data_julgamento_inicio: Optional[str] = None,
+        data_julgamento_fim: Optional[str] = None,
+        data_publicacao_inicio: Optional[str] = None,
+        data_publicacao_fim: Optional[str] = None,
+        tipo_processo: Optional[str] = None,
+        secao: Optional[str] = None,
+        session: Optional['requests.Session'] = None,
         **kwargs,
     ) -> 'pd.DataFrame':
         """

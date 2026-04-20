@@ -37,7 +37,7 @@ class TestEmitsWarnings:
             datajud.listar_processos(numero_processo=cnj)
 
     def test_no_valid_cnj_emits_warning_and_returns_empty(self, datajud):
-        with pytest.warns(UserWarning):
+        with pytest.warns(UserWarning, match="CNJ inválido"):
             df = datajud.listar_processos(numero_processo="123")
         assert isinstance(df, pd.DataFrame)
         assert df.empty

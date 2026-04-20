@@ -115,11 +115,9 @@ class DatajudScraper(BaseScraper):
                     )
                     logger.warning("CNJ inválido: %s", num_cnj)
             if not processos_por_alias:
-                warnings.warn(
-                    "Nenhum CNJ válido foi reconhecido — DataFrame vazio retornado.",
-                    UserWarning,
-                    stacklevel=2,
-                )
+                # Os warnings por CNJ (CNJ inválido / tribunal não mapeado) já
+                # comunicam o problema. O `logger.error` mantém o registro de
+                # que nenhum alias foi determinado sem duplicar o warning.
                 logger.error("Nenhum CNJ válido para determinar tribunal/alias.")
                 return pd.DataFrame()
             target_aliases = list(processos_por_alias.keys())
@@ -131,6 +129,7 @@ class DatajudScraper(BaseScraper):
         for alias_idx, alias_name in enumerate(target_aliases):
             logger.info("Consultando: %s (%d/%d)", alias_name, alias_idx+1, len(target_aliases))
             # If CNJs were grouped, use only the CNJs for this specific alias
+            current_cnjs_for_alias: Optional[Union[str, List[str]]]
             if numero_processo and not tribunal:
                 current_cnjs_for_alias = processos_por_alias[alias_name]
             else:
@@ -189,7 +188,7 @@ class DatajudScraper(BaseScraper):
             while current_page < end_page:
                 logger.info("Fetching page %d for alias %s...", current_page, alias)
                 # Construct query payload (Elasticsearch DSL)
-                must_conditions = []
+                must_conditions: List[Dict[str, Any]] = []
                 if numero_processo:
                     if isinstance(numero_processo, str):
                         nproc = [numero_processo]

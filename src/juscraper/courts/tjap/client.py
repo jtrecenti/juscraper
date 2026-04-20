@@ -1,5 +1,5 @@
 """Scraper for the Tribunal de Justica do Amapa (TJAP)."""
-from typing import Union, List
+from typing import Optional, Union, List
 
 import pandas as pd
 import requests
@@ -35,7 +35,7 @@ class TJAPScraper(BaseScraper):
 
     def cjsg(
         self,
-        pesquisa: str = None,
+        pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
         orgao: str = "0",
         numero_cnj: str | None = None,
@@ -102,7 +102,7 @@ class TJAPScraper(BaseScraper):
 
     def cjsg_download(
         self,
-        pesquisa: str = None,
+        pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
         orgao: str = "0",
         numero_cnj: str | None = None,

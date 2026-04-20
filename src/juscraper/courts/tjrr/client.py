@@ -1,5 +1,5 @@
 """Scraper for the Tribunal de Justica de Roraima (TJRR)."""
-from typing import Union, List
+from typing import Optional, Union, List
 
 import pandas as pd
 import requests
@@ -34,7 +34,7 @@ class TJRRScraper(BaseScraper):
 
     def cjsg(
         self,
-        pesquisa: str = None,
+        pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
         relator: str = "",
         orgao_julgador: list | None = None,
@@ -76,7 +76,7 @@ class TJRRScraper(BaseScraper):
 
     def cjsg_download(
         self,
-        pesquisa: str = None,
+        pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
         **kwargs,
     ) -> list:

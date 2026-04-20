@@ -3,11 +3,9 @@ Main scraper for Tribunal de Justica de Sao Paulo (TJSP).
 """
 import os
 import tempfile
-from typing import Union, List, Literal
+from typing import Union, List, Literal, Optional
 import logging
 import shutil
-import warnings
-import urllib3
 import requests
 
 from ...core.base import BaseScraper
@@ -27,7 +25,6 @@ from .cjpg_parse import cjpg_n_pags, cjpg_parse_manager
 
 logger = logging.getLogger('juscraper.tjsp')
 
-warnings.filterwarnings('ignore', category=urllib3.exceptions.InsecureRequestWarning)
 
 class TJSPScraper(BaseScraper):
     """Main scraper for Tribunal de Justica de Sao Paulo."""
@@ -56,7 +53,7 @@ class TJSPScraper(BaseScraper):
         self.set_download_path(download_path)
         self.sleep_time = sleep_time
         self.args = kwargs
-        self.method = None
+        self.method: Optional[Literal['html', 'api']] = None
 
     def set_download_path(self, path: str | None = None):
         """
@@ -173,7 +170,7 @@ class TJSPScraper(BaseScraper):
                 download_path=self.download_path,
                 sleep_time=self.sleep_time
             )
-        elif self.method == 'json':
+        elif self.method == 'api':
             cposg_download_api(
                 id_cnj_list=id_cnj,
                 session=self.session,

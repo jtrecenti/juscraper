@@ -7,6 +7,7 @@ import xml.etree.ElementTree as ET
 import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,7 @@ def _extract_cdata(xml_text: str) -> str:
     """Extract HTML content from a PrimeFaces AJAX XML response."""
     if not xml_text.startswith("<?xml"):
         return xml_text
-    cdata_matches = re.findall(r"<!\[CDATA\[(.*?)\]\]>", xml_text, re.DOTALL)
+    cdata_matches: list[str] = re.findall(r"<!\[CDATA\[(.*?)\]\]>", xml_text, re.DOTALL)
     for cdata in cdata_matches:
         if "resultados" in cdata:
             return cdata
@@ -36,7 +37,7 @@ def _get_viewstate(session: requests.Session) -> str:
     vs_input = soup.find("input", {"name": "javax.faces.ViewState"})
     if not vs_input:
         raise RuntimeError("Could not find ViewState on TJRR page.")
-    return vs_input["value"]
+    return str(vs_input["value"])
 
 
 def _search(
@@ -51,7 +52,7 @@ def _search(
     max_retries: int = 3,
 ) -> str:
     """Submit the search form and return the HTML response."""
-    data = {
+    data: dict = {
         "menuinicial": "menuinicial",
         "menuinicial:j_idt28": pesquisa,
         "menuinicial:numProcesso": "",
@@ -143,7 +144,7 @@ def _paginate(
 def cjsg_download_manager(
     pesquisa: str,
     paginas=None,
-    session: requests.Session = None,
+    session: Optional[requests.Session] = None,
     **kwargs,
 ) -> list:
     """Download raw HTML results from the TJRR jurisprudence search.

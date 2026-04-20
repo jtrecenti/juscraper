@@ -7,6 +7,7 @@ import time
 
 import requests
 from tqdm import tqdm
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -46,12 +47,12 @@ query filter(
 
 def _build_filter(
     pesquisa: str = "",
-    numero_recurso: str = None,
-    orgaos: list = None,
-    relatores: list = None,
-    classes: list = None,
-    data_publicacao_inicio: str = None,
-    data_publicacao_fim: str = None,
+    numero_recurso: Optional[str] = None,
+    orgaos: Optional[list] = None,
+    relatores: Optional[list] = None,
+    classes: Optional[list] = None,
+    data_publicacao_inicio: Optional[str] = None,
+    data_publicacao_fim: Optional[str] = None,
     segundo_grau: bool = True,
     turmas_recursais: bool = True,
     tipo_acordaos: bool = True,
@@ -108,7 +109,7 @@ def _fetch_page(
         try:
             resp = session.post(GRAPHQL_URL, json=payload, timeout=60)
             resp.raise_for_status()
-            data = resp.json()
+            data: dict = resp.json()
             if "errors" in data:
                 raise ValueError(f"GraphQL errors: {data['errors']}")
             return data
@@ -125,19 +126,19 @@ def _fetch_page(
 def cjsg_download(
     pesquisa: str = "",
     paginas=None,
-    numero_recurso: str = None,
-    orgaos: list = None,
-    relatores: list = None,
-    classes: list = None,
-    data_publicacao_inicio: str = None,
-    data_publicacao_fim: str = None,
+    numero_recurso: Optional[str] = None,
+    orgaos: Optional[list] = None,
+    relatores: Optional[list] = None,
+    classes: Optional[list] = None,
+    data_publicacao_inicio: Optional[str] = None,
+    data_publicacao_fim: Optional[str] = None,
     segundo_grau: bool = True,
     turmas_recursais: bool = True,
     tipo_acordaos: bool = True,
     tipo_decisoes_monocraticas: bool = True,
     ordenado_por: str = "dataPublicacao",
     items_per_page: int = 10,
-    session: requests.Session = None,
+    session: Optional[requests.Session] = None,
 ) -> list:
     """
     Download raw results from TJBA jurisprudence search (multiple pages).

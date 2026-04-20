@@ -36,8 +36,8 @@ class TestCJSGTJES:
         """Date filter works."""
         df = self.scraper.cjsg(
             "direito",
-            data_inicio="2024-01-01",
-            data_fim="2024-06-30",
+            data_julgamento_inicio="2024-01-01",
+            data_julgamento_fim="2024-06-30",
             paginas=1,
         )
         assert isinstance(df, pd.DataFrame)

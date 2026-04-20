@@ -1,13 +1,15 @@
-"""
-Download of results from the TJSP Consulta de Julgados de Segundo Grau (CJSG).
+"""Download results from the TJSP Consulta de Julgados de Segundo Grau (CJSG).
+
 Uses requests library only (no browser automation needed).
 """
+import logging
 import os
 import time
 from datetime import datetime
-import logging
+from typing import Optional
+
 import requests
-import urllib3
+from bs4 import BeautifulSoup
 from tqdm import tqdm
 
 logger = logging.getLogger("juscraper.cjsg_download")
@@ -19,26 +21,29 @@ logger = logging.getLogger("juscraper.cjsg_download")
 _TJSP_PESQUISA_MAX_CHARS = 120
 
 
+class QueryTooLongError(ValueError):
+    """Raised when the search query exceeds the TJSP backend maximum length."""
+
+
 def cjsg_download(
     pesquisa: str,
     download_path: str,
     u_base: str,
     sleep_time: float = 0.5,
     verbose: int = 1,
-    ementa: 'str | None' = None,
-    classe: 'str | None' = None,
-    assunto: 'str | None' = None,
-    comarca: 'str | None' = None,
-    orgao_julgador: 'str | None' = None,
-    data_inicio: 'str | None' = None,
-    data_fim: 'str | None' = None,
+    ementa: Optional['str | None'] = None,
+    classe: Optional['str | None'] = None,
+    assunto: Optional['str | None'] = None,
+    comarca: Optional['str | None'] = None,
+    orgao_julgador: Optional['str | None'] = None,
+    data_inicio: Optional['str | None'] = None,
+    data_fim: Optional['str | None'] = None,
     baixar_sg: bool = True,
     tipo_decisao: str = 'acordao',
-    paginas: 'int | list | range | None' = None,
+    paginas: Optional['list | range | None'] = None,
     get_n_pags_callback=None,
 ):
-    """
-    Downloads HTML files from the CJSG search results pages.
+    """Download HTML files from the CJSG search results pages.
 
     Uses requests library only, following the same approach as the R implementation.
     No browser automation is needed.
@@ -56,24 +61,25 @@ def cjsg_download(
         get_n_pags_callback (callable): Callback function to extract number of pages from HTML.
     """
     if pesquisa is not None and len(pesquisa) > _TJSP_PESQUISA_MAX_CHARS:
-        raise ValueError(
+        raise QueryTooLongError(
             f"O campo 'pesquisa' do CJSG do TJSP aceita no máximo "
-            f"{_TJSP_PESQUISA_MAX_CHARS} caracteres (recebido: {len(pesquisa)}). "
+            f"{_TJSP_PESQUISA_MAX_CHARS} caracteres "
+            f"(recebido: {len(pesquisa)} caracteres). "
             "Reduza a busca ou divida em consultas menores."
         )
     if get_n_pags_callback is None:
         raise ValueError(
             'É necessário fornecer get_n_pags_callback para extrair o número de páginas.'
         )
-    
+
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     path = f"{download_path}/cjsg/{timestamp}"
     if not os.path.isdir(path):
         os.makedirs(path)
-    
+
     # Create a session to maintain cookies
     session = requests.Session()
-    
+
     # Set headers to match browser request
     session.headers.update({
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
@@ -81,15 +87,12 @@ def cjsg_download(
         'Accept-Encoding': 'gzip, deflate, br',
         'Connection': 'keep-alive',
         'Upgrade-Insecure-Requests': '1',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36',
+        'User-Agent': (
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+            '(KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36'
+        ),
     })
-    
-    # Disable SSL verification (as in R code)
-    # Note: This suppresses SSL warnings but is needed for TJSP website
-    import urllib3
-    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    session.verify = False
-    
+
     # Build the POST body for the search form
     # Following the structure from the R code
     body = {
@@ -127,24 +130,24 @@ def cjsg_download(
         'dados.dtRegistroFim': '',
         'dados.ordenacao': 'dtPublicacao',
     }
-    
+
     # Set origem based on baixar_sg parameter
     # sg="T" for second stage, cr="R" for recursal
     if baixar_sg:
         body['dados.origensSelecionadas'] = 'T'
     else:
         body['dados.origensSelecionadas'] = 'R'
-    
+
     # Set tipo de decisão: "A" for acordao, "D" for monocratica
     body['tipoDecisaoSelecionados'] = 'A' if tipo_decisao == 'acordao' else 'D'
-    
+
     # POST to resultadoCompleta.do
     link_cjsg = f"{u_base}cjsg/resultadoCompleta.do"
-    
+
     try:
         if verbose > 0:
             logger.info("Submetendo formulário de busca...")
-        
+
         response = session.post(
             link_cjsg,
             data=body,
@@ -152,15 +155,15 @@ def cjsg_download(
             allow_redirects=True
         )
         response.raise_for_status()
-        
+
         # Get the first page using trocaDePagina.do
         # This is what the R code does: GET trocaDePagina.do?tipoDeDecisao=A&pagina=1
         tipo_decisao_param = 'A' if tipo_decisao == 'acordao' else 'D'
         first_page_url = f"{u_base}cjsg/trocaDePagina.do?tipoDeDecisao={tipo_decisao_param}&pagina=1"
-        
+
         if verbose > 0:
             logger.info("Baixando primeira página...")
-        
+
         time.sleep(sleep_time)
         first_page_response = session.get(
             first_page_url,
@@ -171,11 +174,11 @@ def cjsg_download(
             }
         )
         first_page_response.raise_for_status()
-        
+
         # Set encoding to latin1 (as in R code)
         first_page_response.encoding = 'latin1'
         first_page_html = first_page_response.text
-        
+
         # Extract number of pages
         try:
             n_pags = get_n_pags_callback(first_page_html)
@@ -196,24 +199,23 @@ def cjsg_download(
             raise ValueError(
                 f"Erro ao extrair número de páginas: {e}. HTML salvo em: {debug_file}"
             ) from e
-        
+
         # Save first page
         # Save in latin1 encoding (as received from server) for proper character preservation
         file_name = f"{path}/cjsg_00001.html"
         with open(file_name, 'w', encoding='latin1') as f:
             f.write(first_page_html)
-        
+
         # Extract conversationId from the page if available
         conversation_id = ''
         try:
-            from bs4 import BeautifulSoup
             soup = BeautifulSoup(first_page_html, 'html.parser')
             conversation_id_elem = soup.find('input', {'name': 'conversationId'})
             if conversation_id_elem:
-                conversation_id = conversation_id_elem.get('value', '') or ''
+                conversation_id = str(conversation_id_elem.get('value', '') or '')
         except Exception:
             pass
-        
+
     except requests.RequestException as e:
         debug_dir = os.path.join(download_path, "cjsg_debug")
         if not os.path.isdir(debug_dir):
@@ -233,13 +235,13 @@ def cjsg_download(
         raise ValueError(
             f"Erro ao submeter formulário: {e}. HTML salvo em: {debug_file}"
         ) from e
-    
+
     # If no results, return early
     if n_pags == 0:
         if verbose > 0:
             logger.info("Nenhum resultado encontrado. Retornando apenas a primeira página.")
         return path
-    
+
     # Determine which pages to download (1-based)
     # Page 1 is already downloaded above, so we only need pages > 1
     if paginas is None:
@@ -277,7 +279,7 @@ def cjsg_download(
             # Add conversationId if available
             if conversation_id:
                 query['conversationId'] = conversation_id
-            
+
             u = f"{u_base}cjsg/trocaDePagina.do"
             try:
                 r = session.get(
@@ -291,12 +293,12 @@ def cjsg_download(
                 )
                 r.encoding = 'latin1'
                 r.raise_for_status()
-                file_name = f"{path}/cjsg_{pag:05d}.html"
+                file_name = f"{path}/cjsg_{pag:05d}.html"  # noqa: E231
                 # Save in latin1 encoding (as received from server) for proper character preservation
                 with open(file_name, 'w', encoding='latin1') as f:
                     f.write(r.text)
             except requests.RequestException as e:
                 logger.error('Erro ao baixar página %s: %s', pag, str(e))
                 raise
-    
+
     return path
