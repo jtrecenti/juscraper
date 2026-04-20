@@ -1,21 +1,22 @@
-"""
-Downloads cases from the TJSP jurisprudence search.
-"""
+"""Downloads cases from the TJSP jurisprudence search."""
 import logging
 import os
 import time
 from datetime import datetime
+from typing import Optional
 
 import requests
 from tqdm import tqdm
 
 from ...utils.cnj import clean_cnj
-from typing import Optional
-
 
 # Limite imposto pelo backend do eSAJ no campo "pesquisaLivre" do CJPG.
 # Strings maiores são truncadas silenciosamente pelo TJSP.
 _TJSP_PESQUISA_MAX_CHARS = 120
+
+
+class QueryTooLongError(ValueError):
+    """Raised when the search query exceeds the TJSP backend maximum length."""
 
 
 def cjpg_download(
@@ -33,8 +34,7 @@ def cjpg_download(
     paginas: Optional['list | range | None'] = None,
     get_n_pags_callback=None
 ):
-    """
-    Downloads cases from the TJSP jurisprudence search.
+    """Download cases from the TJSP jurisprudence search.
 
     Args:
         pesquisa (str): The search query for the jurisprudence. Maximum 120 characters
@@ -53,9 +53,10 @@ def cjpg_download(
         get_n_pags_callback (callable): Callback function to extract number of pages.
     """
     if pesquisa is not None and len(pesquisa) > _TJSP_PESQUISA_MAX_CHARS:
-        raise ValueError(
+        raise QueryTooLongError(
             f"O campo 'pesquisa' do CJPG do TJSP aceita no máximo "
-            f"{_TJSP_PESQUISA_MAX_CHARS} caracteres (recebido: {len(pesquisa)}). "
+            f"{_TJSP_PESQUISA_MAX_CHARS} caracteres "
+            f"(recebido: {len(pesquisa)} caracteres). "
             "Reduza a busca ou divida em consultas menores."
         )
     assuntos_str = ','.join(assuntos) if assuntos is not None else None
@@ -137,6 +138,6 @@ def cjpg_download(
         time.sleep(sleep_time)
         u = f"{u_base}cjpg/trocarDePagina.do?pagina={page}&conversationId="
         r = session.get(u)
-        with open(f"{path}/cjpg_{page:05d}.html", 'w', encoding='utf-8') as f:
+        with open(f"{path}/cjpg_{page:05d}.html", 'w', encoding='utf-8') as f:  # noqa: E231
             f.write(r.text)
     return path
