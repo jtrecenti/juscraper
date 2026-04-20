@@ -12,8 +12,6 @@ logger = logging.getLogger("juscraper.core.base")
 class BaseScraper(ABC):
     """Base scraper class for court data extraction."""
 
-    # Subclasses devem chamar `set_download_path` (ou atribuir diretamente)
-    # em `__init__`; por isso o atributo é tipado como `str`, sem default.
     download_path: str
 
     def __init__(self, tribunal_name: str):

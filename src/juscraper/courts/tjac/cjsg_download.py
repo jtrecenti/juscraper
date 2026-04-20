@@ -8,13 +8,10 @@ from datetime import datetime
 import logging
 
 import requests
-import urllib3
 from tqdm import tqdm
 from typing import Optional
 
 logger = logging.getLogger("juscraper.tjac.cjsg_download")
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 BASE_URL = "https://esaj.tjac.jus.br/"
 
@@ -94,7 +91,6 @@ def cjsg_download(
         "Upgrade-Insecure-Requests": "1",
         "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
     })
-    session.verify = False
 
     tipo_param = "A" if tipo_decisao == "acordao" else "D"
 

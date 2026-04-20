@@ -7,7 +7,6 @@ import time
 from datetime import datetime
 import logging
 import requests
-import urllib3
 from tqdm import tqdm
 from typing import Optional
 
@@ -84,13 +83,7 @@ def cjsg_download(
         'Upgrade-Insecure-Requests': '1',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36',
     })
-    
-    # Disable SSL verification (as in R code)
-    # Note: This suppresses SSL warnings but is needed for TJSP website
-    import urllib3
-    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    session.verify = False
-    
+
     # Build the POST body for the search form
     # Following the structure from the R code
     body = {

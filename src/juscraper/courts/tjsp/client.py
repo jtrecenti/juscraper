@@ -6,8 +6,6 @@ import tempfile
 from typing import Union, List, Literal, Optional
 import logging
 import shutil
-import warnings
-import urllib3
 import requests
 
 from ...core.base import BaseScraper
@@ -27,7 +25,6 @@ from .cjpg_parse import cjpg_n_pags, cjpg_parse_manager
 
 logger = logging.getLogger('juscraper.tjsp')
 
-warnings.filterwarnings('ignore', category=urllib3.exceptions.InsecureRequestWarning)
 
 class TJSPScraper(BaseScraper):
     """Main scraper for Tribunal de Justica de Sao Paulo."""
