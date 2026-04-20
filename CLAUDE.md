@@ -47,7 +47,7 @@ juscraper e uma biblioteca Python para raspagem de dados de tribunais brasileiro
 
 ### Comandos
 
-- `pytest` — roda contrato + granular (offline, ~30s). **Default exclui integracao.**
+- `pytest` — roda contrato + granular (offline, ~0.5s). **Default exclui integracao.**
 - `pytest -m integration` — roda so integracao (lento, hit live).
 - `pytest -m ""` — roda tudo (offline + integracao).
 - `pytest tests/tjsp` — escopo a um tribunal.

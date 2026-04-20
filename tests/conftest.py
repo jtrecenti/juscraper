@@ -5,6 +5,9 @@ import pytest
 
 
 @pytest.fixture
-def samples_dir() -> Path:
-    """Root of test fixtures."""
+def tests_dir() -> Path:
+    """Path to ``tests/``. Compose with ``tribunal`` and ``samples`` to reach fixtures.
+
+    Most tests should prefer ``tests._helpers.load_sample`` instead.
+    """
     return Path(__file__).parent
