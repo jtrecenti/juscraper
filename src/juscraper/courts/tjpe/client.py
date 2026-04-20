@@ -2,7 +2,7 @@
 Scraper for the Tribunal de Justica de Pernambuco (TJPE).
 """
 
-from typing import Union, List
+from typing import Optional, Union, List
 
 import pandas as pd
 import requests
@@ -35,16 +35,16 @@ class TJPEScraper(BaseScraper):
 
     def cjsg_download(
         self,
-        pesquisa: str = None,
+        pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
-        data_julgamento_inicio: str = None,
-        data_julgamento_fim: str = None,
-        relator: str = None,
-        classe_cnj: str = None,
-        assunto_cnj: str = None,
-        meio_tramitacao: str = None,
+        data_julgamento_inicio: Optional[str] = None,
+        data_julgamento_fim: Optional[str] = None,
+        relator: Optional[str] = None,
+        classe_cnj: Optional[str] = None,
+        assunto_cnj: Optional[str] = None,
+        meio_tramitacao: Optional[str] = None,
         tipo_decisao: str = "acordaos",
-        session: requests.Session = None,
+        session: Optional[requests.Session] = None,
         **kwargs,
     ) -> list:
         """
@@ -94,16 +94,16 @@ class TJPEScraper(BaseScraper):
 
     def cjsg(
         self,
-        pesquisa: str = None,
+        pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
-        data_julgamento_inicio: str = None,
-        data_julgamento_fim: str = None,
-        relator: str = None,
-        classe_cnj: str = None,
-        assunto_cnj: str = None,
-        meio_tramitacao: str = None,
+        data_julgamento_inicio: Optional[str] = None,
+        data_julgamento_fim: Optional[str] = None,
+        relator: Optional[str] = None,
+        classe_cnj: Optional[str] = None,
+        assunto_cnj: Optional[str] = None,
+        meio_tramitacao: Optional[str] = None,
         tipo_decisao: str = "acordaos",
-        session: requests.Session = None,
+        session: Optional[requests.Session] = None,
         **kwargs,
     ) -> pd.DataFrame:
         """

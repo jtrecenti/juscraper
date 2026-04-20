@@ -1,7 +1,7 @@
 """
 Scraper for the Tribunal de Justica do Estado da Bahia (TJBA).
 """
-from typing import Union, List
+from typing import Optional, Union, List
 import pandas as pd
 import requests
 from juscraper.core.base import BaseScraper
@@ -33,21 +33,21 @@ class TJBAScraper(BaseScraper):
 
     def cjsg_download(
         self,
-        pesquisa: str = None,
+        pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
-        numero_recurso: str = None,
-        orgaos: list = None,
-        relatores: list = None,
-        classes: list = None,
-        data_publicacao_inicio: str = None,
-        data_publicacao_fim: str = None,
+        numero_recurso: Optional[str] = None,
+        orgaos: Optional[list] = None,
+        relatores: Optional[list] = None,
+        classes: Optional[list] = None,
+        data_publicacao_inicio: Optional[str] = None,
+        data_publicacao_fim: Optional[str] = None,
         segundo_grau: bool = True,
         turmas_recursais: bool = True,
         tipo_acordaos: bool = True,
         tipo_decisoes_monocraticas: bool = True,
         ordenado_por: str = "dataPublicacao",
         items_per_page: int = 10,
-        session: requests.Session = None,
+        session: Optional[requests.Session] = None,
         **kwargs,
     ) -> list:
         """
@@ -131,21 +131,21 @@ class TJBAScraper(BaseScraper):
 
     def cjsg(
         self,
-        pesquisa: str = None,
+        pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
-        numero_recurso: str = None,
-        orgaos: list = None,
-        relatores: list = None,
-        classes: list = None,
-        data_publicacao_inicio: str = None,
-        data_publicacao_fim: str = None,
+        numero_recurso: Optional[str] = None,
+        orgaos: Optional[list] = None,
+        relatores: Optional[list] = None,
+        classes: Optional[list] = None,
+        data_publicacao_inicio: Optional[str] = None,
+        data_publicacao_fim: Optional[str] = None,
         segundo_grau: bool = True,
         turmas_recursais: bool = True,
         tipo_acordaos: bool = True,
         tipo_decisoes_monocraticas: bool = True,
         ordenado_por: str = "dataPublicacao",
         items_per_page: int = 10,
-        session: requests.Session = None,
+        session: Optional[requests.Session] = None,
         **kwargs,
     ) -> pd.DataFrame:
         """

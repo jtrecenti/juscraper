@@ -3,7 +3,7 @@ Main scraper for Tribunal de Justica de Sao Paulo (TJSP).
 """
 import os
 import tempfile
-from typing import Union, List, Literal
+from typing import Union, List, Literal, Optional
 import logging
 import shutil
 import warnings
@@ -56,7 +56,7 @@ class TJSPScraper(BaseScraper):
         self.set_download_path(download_path)
         self.sleep_time = sleep_time
         self.args = kwargs
-        self.method = None
+        self.method: Optional[Literal['html', 'api']] = None
 
     def set_download_path(self, path: str | None = None):
         """
@@ -173,7 +173,7 @@ class TJSPScraper(BaseScraper):
                 download_path=self.download_path,
                 sleep_time=self.sleep_time
             )
-        elif self.method == 'json':
+        elif self.method == 'api':
             cposg_download_api(
                 id_cnj_list=id_cnj,
                 session=self.session,

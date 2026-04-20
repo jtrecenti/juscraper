@@ -9,6 +9,7 @@ import logging
 import requests
 import urllib3
 from tqdm import tqdm
+from typing import Optional
 
 logger = logging.getLogger("juscraper.cjsg_download")
 
@@ -25,16 +26,16 @@ def cjsg_download(
     u_base: str,
     sleep_time: float = 0.5,
     verbose: int = 1,
-    ementa: 'str | None' = None,
-    classe: 'str | None' = None,
-    assunto: 'str | None' = None,
-    comarca: 'str | None' = None,
-    orgao_julgador: 'str | None' = None,
-    data_inicio: 'str | None' = None,
-    data_fim: 'str | None' = None,
+    ementa: Optional['str | None'] = None,
+    classe: Optional['str | None'] = None,
+    assunto: Optional['str | None'] = None,
+    comarca: Optional['str | None'] = None,
+    orgao_julgador: Optional['str | None'] = None,
+    data_inicio: Optional['str | None'] = None,
+    data_fim: Optional['str | None'] = None,
     baixar_sg: bool = True,
     tipo_decisao: str = 'acordao',
-    paginas: 'int | list | range | None' = None,
+    paginas: Optional['list | range | None'] = None,
     get_n_pags_callback=None,
 ):
     """
@@ -210,7 +211,7 @@ def cjsg_download(
             soup = BeautifulSoup(first_page_html, 'html.parser')
             conversation_id_elem = soup.find('input', {'name': 'conversationId'})
             if conversation_id_elem:
-                conversation_id = conversation_id_elem.get('value', '') or ''
+                conversation_id = str(conversation_id_elem.get('value', '') or '')
         except Exception:
             pass
         

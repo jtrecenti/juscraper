@@ -10,6 +10,7 @@ import logging
 import requests
 import urllib3
 from tqdm import tqdm
+from typing import Optional
 
 logger = logging.getLogger("juscraper.tjam.cjsg_download")
 
@@ -34,7 +35,7 @@ def cjsg_download(
     data_publicacao_fim: str | None = None,
     origem: str = "T",
     tipo_decisao: str = "acordao",
-    paginas: 'int | list | range | None' = None,
+    paginas: Optional['list | range | None'] = None,
     get_n_pags_callback=None,
 ) -> str:
     """Downloads HTML files from the TJAM CJSG search results pages.

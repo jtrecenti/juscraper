@@ -10,6 +10,7 @@ import requests
 from tqdm import tqdm
 
 from ...utils.cnj import clean_cnj
+from typing import Optional
 
 
 # Limite imposto pelo backend do eSAJ no campo "pesquisaLivre" do CJPG.
@@ -23,13 +24,13 @@ def cjpg_download(
     u_base: str,
     download_path: str,
     sleep_time: float = 0.5,
-    classes: 'list[str] | None' = None,
-    assuntos: 'list[str] | None' = None,
-    varas: 'list[str] | None' = None,
-    id_processo: 'str | None' = None,
-    data_inicio: 'str | None' = None,
-    data_fim: 'str | None' = None,
-    paginas: 'int | list | range | None' = None,
+    classes: Optional['list[str] | None'] = None,
+    assuntos: Optional['list[str] | None'] = None,
+    varas: Optional['list[str] | None'] = None,
+    id_processo: Optional['str | None'] = None,
+    data_inicio: Optional['str | None'] = None,
+    data_fim: Optional['str | None'] = None,
+    paginas: Optional['list | range | None'] = None,
     get_n_pags_callback=None
 ):
     """
@@ -57,29 +58,23 @@ def cjpg_download(
             f"{_TJSP_PESQUISA_MAX_CHARS} caracteres (recebido: {len(pesquisa)}). "
             "Reduza a busca ou divida em consultas menores."
         )
-    if assuntos is not None:
-        assuntos = ','.join(assuntos)
-    if varas is not None:
-        varas = ','.join(varas)
-    if classes is not None:
-        classes = ','.join(classes)
-    if id_processo is not None:
-        id_processo = clean_cnj(id_processo)
-    else:
-        id_processo = ''
+    assuntos_str = ','.join(assuntos) if assuntos is not None else None
+    varas_str = ','.join(varas) if varas is not None else None
+    classes_str = ','.join(classes) if classes is not None else None
+    id_processo_str = clean_cnj(id_processo) if id_processo is not None else ''
 
     query = {
         'conversationId': '',
         'dadosConsulta.pesquisaLivre': pesquisa,
         'tipoNumero': 'UNIFICADO',
-        'numeroDigitoAnoUnificado': id_processo[:15],
-        'foroNumeroUnificado': id_processo[-4:],
-        'dadosConsulta.nuProcesso': id_processo,
-        'classeTreeSelection.values': classes,
-        'assuntoTreeSelection.values': assuntos,
+        'numeroDigitoAnoUnificado': id_processo_str[:15],
+        'foroNumeroUnificado': id_processo_str[-4:],
+        'dadosConsulta.nuProcesso': id_processo_str,
+        'classeTreeSelection.values': classes_str,
+        'assuntoTreeSelection.values': assuntos_str,
         'dadosConsulta.dtInicio': data_inicio,
         'dadosConsulta.dtFim': data_fim,
-        'varasTreeSelection.values': varas,
+        'varasTreeSelection.values': varas_str,
         'dadosConsulta.ordenacao': 'DESC'
     }
 

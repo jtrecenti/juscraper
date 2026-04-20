@@ -313,7 +313,7 @@ def cpopg_parse_single_html(path: str):
     # Tabela logo abaixo de "<h2 class="subtitle tituloDoBloco">Petições diversas</h2>"
     # No HTML, as datas ficam na primeira <td>, e o tipo no segundo <td>
     # Normalmente: <table> ... <tr class="fundoClaro"> <td>24/05/2024</td> <td>Contestação</td> ...
-    peticoes_div = soup.find("h2", string="Petições diversas")
+    peticoes_div = soup.find(lambda t: t.name == "h2" and t.get_text(strip=True) == "Petições diversas")
     if peticoes_div:
         # Pegar a tabela que vem a seguir
         tabela_peticoes = peticoes_div.find_next("table")
@@ -382,16 +382,14 @@ def get_cpopg_download_links(request):
     text = request.text
     bsoup = BeautifulSoup(text, 'html.parser')
     lista = bsoup.find('div', {'id': 'listagemDeProcessos'})
-    links = []
+    links: list = []
     if lista is None:
         id_tag = bsoup.find('form', {'id': 'popupSenha'})
         if id_tag is None:
             return links
         href = id_tag.get('action')
-        if 'show.do' in href:
+        if href is not None and 'show.do' in str(href):
             links.append(href)
     else:
-        processos = lista.find_all('a')
-        if processos is None:
-            return links
+        lista.find_all('a')
     return links

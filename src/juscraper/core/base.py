@@ -5,16 +5,21 @@ from abc import ABC
 import os
 import tempfile
 import logging
+from typing import Optional
 
 logger = logging.getLogger("juscraper.core.base")
 
 class BaseScraper(ABC):
     """Base scraper class for court data extraction."""
 
+    # Subclasses devem chamar `set_download_path` (ou atribuir diretamente)
+    # em `__init__`; por isso o atributo é tipado como `str`, sem default.
+    download_path: str
+
     def __init__(self, tribunal_name: str):
         self.tribunal_name = tribunal_name
         self.verbose = 0
-        self.download_path = None
+        self.download_path = ""
 
     def set_verbose(self, verbose: int):
         """Set the verbosity level of the scraper.
@@ -24,12 +29,10 @@ class BaseScraper(ABC):
         """
         self.verbose = verbose
 
-    def set_download_path(self, path: str):
+    def set_download_path(self, path: Optional[str]) -> None:
         """Set the download path. If None, creates a temporary directory."""
-        # if path is None, define a default path in the temp directory
         if path is None:
             path = tempfile.mkdtemp()
-        # check if path is a valid directory. If it is not, create it
         if not os.path.isdir(path):
             if self.verbose:
                 logger.info(

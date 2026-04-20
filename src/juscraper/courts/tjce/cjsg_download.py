@@ -13,6 +13,7 @@ from requests.adapters import HTTPAdapter
 import urllib3
 from urllib3.util.ssl_ import create_urllib3_context
 from tqdm import tqdm
+from typing import Optional
 
 logger = logging.getLogger("juscraper.tjce.cjsg_download")
 
@@ -49,7 +50,7 @@ def cjsg_download(
     data_publicacao_fim: str | None = None,
     origem: str = "T",
     tipo_decisao: str = "acordao",
-    paginas: 'int | list | range | None' = None,
+    paginas: Optional['list | range | None'] = None,
     get_n_pags_callback=None,
 ) -> str:
     """Downloads HTML files from the TJCE CJSG search results pages.

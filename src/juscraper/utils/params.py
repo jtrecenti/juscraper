@@ -3,9 +3,10 @@ Utility functions for normalizing public API parameters across all scrapers.
 """
 import warnings
 from datetime import datetime
+from typing import Optional, Union
 
 
-def normalize_paginas(paginas):
+def normalize_paginas(paginas) -> Optional[Union[list, range]]:
     """Normalize the ``paginas`` parameter to a consistent type.
 
     Args:

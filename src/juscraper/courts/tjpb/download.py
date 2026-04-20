@@ -6,6 +6,7 @@ import time
 
 import requests
 from tqdm import tqdm
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +65,8 @@ def _fetch_page(session: requests.Session, payload: dict, max_retries: int = 3) 
         try:
             resp = session.post(SEARCH_URL, json=payload, headers=headers, timeout=30)
             resp.raise_for_status()
-            return resp.json()
+            data: dict = resp.json()
+            return data
         except (requests.RequestException, ValueError) as exc:
             if attempt == max_retries:
                 raise
@@ -80,7 +82,7 @@ def _fetch_page(session: requests.Session, payload: dict, max_retries: int = 3) 
 def cjsg_download_manager(
     pesquisa: str,
     paginas=None,
-    session: requests.Session = None,
+    session: Optional[requests.Session] = None,
     **kwargs,
 ) -> list:
     """Download raw results from the TJPB jurisprudence search.

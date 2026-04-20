@@ -62,7 +62,8 @@ def call_datajud_api(
             # logger.debug(f"Response Content (first 500 chars): {response.text[:500]}")
 
         response.raise_for_status()  # Raises HTTPError for bad responses (4XX or 5XX)
-        return response.json()
+        data: Dict[str, Any] = response.json()
+        return data
 
     except requests.exceptions.HTTPError as e:
         logger.error("HTTP Error calling Datajud API (%s): %s", api_url, e)

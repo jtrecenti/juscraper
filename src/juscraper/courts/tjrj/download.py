@@ -123,7 +123,8 @@ def _fetch_page(session: requests.Session, num_pagina_0: int) -> dict:
     )
     resp.raise_for_status()
     resp.encoding = "utf-8"
-    return resp.json().get("d", {})
+    data: dict = resp.json().get("d", {})
+    return data
 
 
 def cjsg_download(

@@ -93,19 +93,21 @@ def cjpg_parse_single(path):
     if div_dados_resultado:
         tr_processos = div_dados_resultado.find_all('tr', class_='fundocinza1')
         for tr_processo in tr_processos:
-            dados_processo = {}
+            dados_processo: dict = {}
             tabela_dados = tr_processo.find('table')
+            if tabela_dados is None:
+                continue
             # id_processo
             link_inteiro_teor = tabela_dados.find('a', {'style': 'vertical-align: top'})
             if link_inteiro_teor:
-                if link_inteiro_teor.get('name'):
-                    dados_processo['cd_processo'] = link_inteiro_teor.get('name').split('-')[0]
+                name_attr = link_inteiro_teor.get('name')
+                if name_attr:
+                    dados_processo['cd_processo'] = str(name_attr).split('-')[0]
                 else:
                     dados_processo['cd_processo'] = None
-                if link_inteiro_teor.find('span', class_='fonteNegrito'):
-                    dados_processo['id_processo'] = link_inteiro_teor.find(
-                        'span', class_='fonteNegrito'
-                    ).text.strip()
+                span_negrito = link_inteiro_teor.find('span', class_='fonteNegrito')
+                if span_negrito is not None:
+                    dados_processo['id_processo'] = span_negrito.text.strip()
                 else:
                     dados_processo['id_processo'] = None
             # Outros campos

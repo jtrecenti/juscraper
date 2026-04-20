@@ -45,10 +45,10 @@ def cjsg_parse(
             relator_label = dados_td.find(string=lambda t: t and 'Relator:' in t)
             if relator_label:
                 relator = relator_label.split('Relator:')[-1].strip()
-                if not relator:
-                    next_sib = relator_label.parent.find_next_sibling(text=True)
+                if not relator and relator_label.parent is not None:
+                    next_sib = relator_label.parent.find_next_sibling(string=True)
                     if next_sib:
-                        relator = next_sib.strip()
+                        relator = str(next_sib).strip()
             # Órgão julgador
             orgao_julgador = ''
             orgao_label = dados_td.find(string=lambda t: t and 'Órgão Julgador:' in t)
@@ -59,10 +59,10 @@ def cjsg_parse(
             data_label = dados_td.find(string=lambda t: t and 'Data Julgamento:' in t)
             if data_label:
                 data_julgamento = data_label.split('Data Julgamento:')[-1].strip()
-                if not data_julgamento:
-                    next_sib = data_label.parent.find_next_sibling(text=True)
+                if not data_julgamento and data_label.parent is not None:
+                    next_sib = data_label.parent.find_next_sibling(string=True)
                     if next_sib:
-                        data_julgamento = next_sib.strip()
+                        data_julgamento = str(next_sib).strip()
             # Ementa
             ementa = ementa_td.get_text("\n", strip=True)
             # Detecta "Leia mais..." e busca a ementa completa

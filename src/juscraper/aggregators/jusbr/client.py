@@ -8,7 +8,7 @@ from Platforma Digital do Poder Judiciario (PDPJ).
 
 import logging
 import time
-from typing import List, Optional, Union
+from typing import Any, List, Optional, Union
 import urllib
 import browser_cookie3
 
@@ -83,7 +83,6 @@ class JusbrScraper(BaseScraper):
         except jwt.InvalidTokenError as exc:
             logger.error("Token JWT inválido: %s", exc)
             raise ValueError(f"Token JWT inválido: {exc}") from exc
-        return False
 
     def auth_firefox(self):
         """
@@ -106,6 +105,8 @@ class JusbrScraper(BaseScraper):
         # faz request para obter o token
         resp = session.get(u, allow_redirects=False)
         location_url = resp.headers.get("Location")
+        if location_url is None:
+            raise RuntimeError("JusBR: cabeçalho 'Location' ausente na resposta de auth.")
         fragment = urllib.parse.urlparse(location_url).fragment
         params = urllib.parse.parse_qs(fragment)
         code = params.get("code", [None])[0]
@@ -225,7 +226,7 @@ class JusbrScraper(BaseScraper):
                 )
                 continue
 
-            document_metadata_list = []
+            document_metadata_list: Any = []
             # Try common paths for document metadata list within 'detalhes'
             if 'dadosBasicos' in detalhes and isinstance(detalhes['dadosBasicos'], dict):
                 document_metadata_list = detalhes['dadosBasicos'].get('documentos', [])
