@@ -12,18 +12,23 @@ from tqdm import tqdm
 from ...utils.cnj import clean_cnj
 
 
+# Limite imposto pelo backend do eSAJ no campo "pesquisaLivre" do CJPG.
+# Strings maiores são truncadas silenciosamente pelo TJSP.
+_TJSP_PESQUISA_MAX_CHARS = 120
+
+
 def cjpg_download(
     pesquisa: str,
     session: requests.Session,
     u_base: str,
     download_path: str,
     sleep_time: float = 0.5,
-    classes: list[str] = None,
-    assuntos: list[str] = None,
-    varas: list[str] = None,
-    id_processo: str = None,
-    data_inicio: str = None,
-    data_fim: str = None,
+    classes: 'list[str] | None' = None,
+    assuntos: 'list[str] | None' = None,
+    varas: 'list[str] | None' = None,
+    id_processo: 'str | None' = None,
+    data_inicio: 'str | None' = None,
+    data_fim: 'str | None' = None,
     paginas: 'int | list | range | None' = None,
     get_n_pags_callback=None
 ):
@@ -31,7 +36,8 @@ def cjpg_download(
     Downloads cases from the TJSP jurisprudence search.
 
     Args:
-        pesquisa (str): The search query for the jurisprudence.
+        pesquisa (str): The search query for the jurisprudence. Maximum 120 characters
+            (TJSP backend limit).
         session (requests.Session): Authenticated session.
         u_base (str): Base URL of the ESAJ.
         download_path (str): Base directory for saving files.
@@ -45,6 +51,12 @@ def cjpg_download(
         paginas (range, optional): Page range (1-based, e.g., range(1, 4) downloads pages 1-3).
         get_n_pags_callback (callable): Callback function to extract number of pages.
     """
+    if pesquisa is not None and len(pesquisa) > _TJSP_PESQUISA_MAX_CHARS:
+        raise ValueError(
+            f"O campo 'pesquisa' do CJPG do TJSP aceita no máximo "
+            f"{_TJSP_PESQUISA_MAX_CHARS} caracteres (recebido: {len(pesquisa)}). "
+            "Reduza a busca ou divida em consultas menores."
+        )
     if assuntos is not None:
         assuntos = ','.join(assuntos)
     if varas is not None:

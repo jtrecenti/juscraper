@@ -7,6 +7,7 @@ Contém funções auxiliares diversas.
 
 import re
 
+
 def sanitize_filename(filename: str) -> str:
     """
     Remove ou substitui caracteres de uma string que não são adequados para nomes de arquivo.
@@ -14,8 +15,6 @@ def sanitize_filename(filename: str) -> str:
     Substitui sequências de caracteres inválidos por um único underscore.
     Remove underscores no início ou fim do nome.
     """
-    if not isinstance(filename, str):
-        filename = str(filename) # Tenta converter para string se não for
     # Remove caracteres inválidos, substituindo por underscore
     # Permite letras (incluindo acentuadas), números, espaços, hífens, underscores, pontos.
     # Caracteres como / \ : * ? " < > | são problemáticos

@@ -13,19 +13,25 @@ from tqdm import tqdm
 logger = logging.getLogger("juscraper.cjsg_download")
 
 
+# Limite imposto pelo backend do eSAJ no campo "buscaInteiroTeor" do CJSG.
+# Strings maiores são truncadas silenciosamente pelo TJSP, levando a
+# resultados inesperados — preferimos abortar na origem.
+_TJSP_PESQUISA_MAX_CHARS = 120
+
+
 def cjsg_download(
     pesquisa: str,
     download_path: str,
     u_base: str,
     sleep_time: float = 0.5,
     verbose: int = 1,
-    ementa: str = None,
-    classe: str = None,
-    assunto: str = None,
-    comarca: str = None,
-    orgao_julgador: str = None,
-    data_inicio: str = None,
-    data_fim: str = None,
+    ementa: 'str | None' = None,
+    classe: 'str | None' = None,
+    assunto: 'str | None' = None,
+    comarca: 'str | None' = None,
+    orgao_julgador: 'str | None' = None,
+    data_inicio: 'str | None' = None,
+    data_fim: 'str | None' = None,
     baixar_sg: bool = True,
     tipo_decisao: str = 'acordao',
     paginas: 'int | list | range | None' = None,
@@ -33,12 +39,12 @@ def cjsg_download(
 ):
     """
     Downloads HTML files from the CJSG search results pages.
-    
+
     Uses requests library only, following the same approach as the R implementation.
     No browser automation is needed.
 
     Args:
-        pesquisa (str): Search term.
+        pesquisa (str): Search term. Maximum 120 characters (TJSP backend limit).
         download_path (str): Base directory for saving files.
         u_base (str): ESAJ base URL.
         sleep_time (float): Time to wait between requests.
@@ -49,6 +55,12 @@ def cjsg_download(
         paginas (range): Page range to download (1-based, e.g., range(1, 4) downloads pages 1-3).
         get_n_pags_callback (callable): Callback function to extract number of pages from HTML.
     """
+    if pesquisa is not None and len(pesquisa) > _TJSP_PESQUISA_MAX_CHARS:
+        raise ValueError(
+            f"O campo 'pesquisa' do CJSG do TJSP aceita no máximo "
+            f"{_TJSP_PESQUISA_MAX_CHARS} caracteres (recebido: {len(pesquisa)}). "
+            "Reduza a busca ou divida em consultas menores."
+        )
     if get_n_pags_callback is None:
         raise ValueError(
             'É necessário fornecer get_n_pags_callback para extrair o número de páginas.'
