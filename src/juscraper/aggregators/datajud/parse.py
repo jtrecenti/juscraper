@@ -1,6 +1,7 @@
 """
 Functions for parsing DATAJUD API responses
 """
+import warnings
 import pandas as pd
 from typing import Dict, Any, Optional
 import logging
@@ -61,6 +62,11 @@ def parse_datajud_api_response(
         return df
 
     except Exception as e:
+        warnings.warn(
+            f"DataJud: erro ao parsear resposta JSON: {e}. DataFrame vazio retornado.",
+            UserWarning,
+            stacklevel=2,
+        )
         logger.error("Error parsing Datajud API JSON response: %s", e)
         logger.debug("Problematic JSON (or part of it): %s", str(api_response_json)[:500])
         return pd.DataFrame()
