@@ -18,6 +18,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - **BREAKING:** DataJud `listar_processos` agora levanta `ValueError` em vez de retornar DataFrame vazio quando a sigla do tribunal nao existe nos mappings ou quando nem `tribunal` nem `numero_processo` sao fornecidos. Erros de input do chamador deixam de falhar silenciosamente. Refs #57.
 - Dev-tooling: `pyproject.toml` agora inclui `types-requests` e `pytest-mock` nas dev extras e `filterwarnings = ["error"]` na config do pytest. Contribuidores que rodem `pytest`/`mypy` localmente veem o mesmo resultado que o `pre-commit`, sem falsos positivos de stubs ausentes e sem warnings silenciosos.
 - `BaseScraper.download_path` passou a ser anotado como `str` (inicializado com `""` e preenchido por `set_download_path` ou pela assinatura da subclasse). `set_download_path` aceita `Optional[str]` explicitamente. Zero impacto em runtime; remove ~15 erros `Optional` em cascata nos clients.
+- Politica de testes (Fase 0): `pytest` por default executa apenas testes offline via `addopts = -m 'not integration'`. Para integracao usar `pytest -m integration`; para tudo, `pytest -m ""`. Adicionado `responses` em dev deps (o `pytest-mock` ja havia entrado pelo PR #103); novo marker `vcr` para `pytest-recording`. Criados `tests/conftest.py` (fixture `tests_dir`) e `tests/_helpers.py` (`load_sample`, `load_sample_bytes`). Nova secao "Testes" no `CLAUDE.md` documenta a piramide de testes (contrato/granular/cassete/integracao). Refs #19, #84, #101.
 
 ### Fixed
 
