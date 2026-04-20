@@ -1,13 +1,11 @@
-"""
-Parses downloaded files from the first-degree procedural query.
-"""
+"""Parses downloaded files from the first-degree procedural query."""
+import glob
 import os
 import re
-import glob
-from tqdm import tqdm
-from bs4 import BeautifulSoup
-import pandas as pd
 
+import pandas as pd
+from bs4 import BeautifulSoup
+from tqdm import tqdm
 
 # Mapping from normalized dt/dd labels to canonical dados keys
 _CANONICAL_KEYS = {
@@ -45,10 +43,9 @@ def _normalize_field_name(label: str) -> str:
     text = re.sub(r'\s+', '_', text.strip())
     return text
 
+
 def cpopg_parse_manager(path: str):
-    """
-    Parses downloaded files from the first-degree procedural query and returns a dictionary
-    with tables containing case elements.
+    """Parse downloaded files from the first-degree procedural query and return a dict of DataFrames.
 
     Parameters
     ----------
@@ -90,10 +87,9 @@ def cpopg_parse_manager(path: str):
         return lista_empilhada
     return lista_empilhada
 
+
 def cpopg_parse_single(path: str):
-    """
-    Parses a downloaded file from the TJSP Consulta de Processos Originarios do Primeiro Grau (CPOPG).
-    """
+    """Parse a downloaded file from the TJSP CPOPG consultation."""
     # if file extension is html
     if path.endswith('.html'):
         result = cpopg_parse_single_html(path)
@@ -103,10 +99,9 @@ def cpopg_parse_single(path: str):
         raise ValueError(f"Unknown file extension for path: {path}")
     return result
 
+
 def cpopg_parse_single_html(path: str):
-    """
-    Parses a downloaded HTML file from the TJSP Consulta de Processos Originarios do Primeiro Grau (CPOPG).
-    """
+    """Parse a downloaded HTML file from the TJSP CPOPG consultation."""
     with open(path, 'r', encoding='utf-8') as f:
         html = f.read()
         soup = BeautifulSoup(html, 'html.parser')
@@ -344,10 +339,9 @@ def cpopg_parse_single_html(path: str):
 
     return result
 
+
 def cpopg_parse_single_json(path: str):
-    """
-    Parseia um arquivo JSON baixado com a função cpopg_download.
-    """
+    """Parse a JSON file downloaded by cpopg_download."""
     # primeiro, vamos listar todos os arquivos que estão na
     # mesma pasta que o arquivo que está em path
     lista_arquivos = glob.glob(f"{os.path.dirname(path)}/*.json")
@@ -375,10 +369,9 @@ def cpopg_parse_single_json(path: str):
     dfs['basicos'] = df_processo
     return dfs
 
+
 def get_cpopg_download_links(request):
-    """
-    Retorna os links para download de processos.
-    """
+    """Return the download links for the listed processes."""
     text = request.text
     bsoup = BeautifulSoup(text, 'html.parser')
     lista = bsoup.find('div', {'id': 'listagemDeProcessos'})
@@ -391,5 +384,6 @@ def get_cpopg_download_links(request):
         if href is not None and 'show.do' in str(href):
             links.append(href)
     else:
-        lista.find_all('a')
+        for a in lista.find_all('a', href=True):
+            links.append(str(a['href']))
     return links
