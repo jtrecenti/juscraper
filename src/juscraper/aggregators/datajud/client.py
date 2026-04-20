@@ -264,7 +264,7 @@ class DatajudScraper(BaseScraper):
                         f"DataJud: falha ao consultar alias {alias!r} na página "
                         f"{current_page}. Resultados parciais retornados.",
                         UserWarning,
-                        stacklevel=2,
+                        stacklevel=3,
                     )
                     logger.error(
                         "Failed to get API response for alias %s, page %d."

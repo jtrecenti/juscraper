@@ -1,10 +1,9 @@
 """Avisos visíveis e validação de input no DataJud (refs #57)."""
-from unittest.mock import MagicMock, patch
-
 import pandas as pd
 import pytest
 
 import juscraper as jus
+from juscraper.aggregators.datajud.parse import parse_datajud_api_response
 
 
 @pytest.fixture()
@@ -45,11 +44,23 @@ class TestEmitsWarnings:
 
 
 class TestApiFailureEmitsWarning:
-    def test_http_error_emits_warning(self, datajud):
+    def test_http_error_emits_warning(self, datajud, mocker):
         # Forca call_datajud_api a retornar None simulando uma falha HTTP
-        with patch(
+        mocker.patch(
             "juscraper.aggregators.datajud.client.call_datajud_api",
             return_value=None,
-        ), pytest.warns(UserWarning, match="falha ao consultar"):
+        )
+        with pytest.warns(UserWarning, match="falha ao consultar"):
             df = datajud.listar_processos(tribunal="TJSP")
+        assert df.empty
+
+
+class TestParseErrorEmitsWarning:
+    def test_malformed_hits_emits_warning(self):
+        # hits deveria ser lista de dicts; passando string, o .get() sobre cada
+        # "hit" levanta AttributeError e dispara o handler de exceção do parse.
+        malformed = {"hits": {"hits": ["not-a-dict"]}}
+        with pytest.warns(UserWarning, match="erro ao parsear"):
+            df = parse_datajud_api_response(malformed)
+        assert isinstance(df, pd.DataFrame)
         assert df.empty
