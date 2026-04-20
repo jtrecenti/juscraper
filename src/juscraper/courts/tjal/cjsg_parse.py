@@ -82,7 +82,7 @@ def _parse_single_page(path: str) -> pd.DataFrame:
         if not details_table:
             continue
 
-        dados = {"ementa": ""}
+        dados: dict = {"ementa": ""}
 
         proc_a = details_table.find("a", class_="esajLinkLogin downloadEmenta")
         if proc_a:
@@ -99,7 +99,7 @@ def _parse_single_page(path: str) -> pd.DataFrame:
             if "ementa:" in label.lower():
                 visible_div = None
                 for div in tr_detail.find_all("div", align="justify"):
-                    style = div.get("style", "display: none;")
+                    style = str(div.get("style", "display: none;"))
                     if "display: none" not in style:
                         visible_div = div
                         break

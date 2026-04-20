@@ -60,7 +60,8 @@ def fetch_process_list(
         response = request_with_retry(session, url, timeout=15)
         if response is None:
             return None
-        return response.json()
+        data: Dict[str, Any] = response.json()
+        return data
     except requests.Timeout:
         logger.error(
             "Timeout ao buscar lista de processos para %s em %s",
@@ -95,7 +96,8 @@ def fetch_process_details(
         response = request_with_retry(session, url, timeout=15)
         if response is None:
             return None
-        return response.json()
+        data: Dict[str, Any] = response.json()
+        return data
     except requests.Timeout:
         logger.error(
             "Timeout ao buscar detalhes do processo %s em %s",
@@ -148,14 +150,16 @@ def fetch_document_text(
         if response is None:
             return None
         try:
-            return response.content.decode('utf-8')
+            content_str: str = response.content.decode('utf-8')
+            return content_str
         except UnicodeDecodeError:
             logger.warning(
                 "UTF-8 decoding failed for document %s of process %s."
                 "Falling back to response.text (detected encoding: %s)",
                 id_documento, numero_processo, response.encoding
             )
-            return response.text  # Fallback to requests' auto-detected encoding
+            fallback: str = response.text  # Fallback to requests' auto-detected encoding
+            return fallback
     except requests.exceptions.HTTPError as e:
         logger.error(
             "HTTP Error fetching document %s for process %s (URL: %s): %s. Response: %s",
@@ -182,7 +186,7 @@ def fetch_document_binary(
     numero_processo: str,
     id_documento: str,
     base_api_url_docs: str
-) -> Optional[str]:
+) -> Optional[bytes]:
     numero_processo_param = numero_processo  # original, pode estar com máscara
     doc_url = (
         f"{base_api_url_docs.rstrip('/')}/{numero_processo_param}/documentos/{id_documento}/binario"
@@ -192,7 +196,8 @@ def fetch_document_binary(
         response = request_with_retry(session, doc_url, timeout=15)
         if response is None:
             return None
-        return response.content
+        content: bytes = response.content
+        return content
     except requests.Timeout:
         logger.error(
             "Timeout ao buscar binário do documento %s para processo %s em %s",

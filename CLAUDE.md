@@ -22,12 +22,47 @@ juscraper e uma biblioteca Python para raspagem de dados de tribunais brasileiro
 
 ## Testes
 
-- Testes ficam em `tests/` com subdiretorios por tribunal (`tests/tjdft/`, `tests/tjpr/`, etc.)
-- Cada subdiretorio de testes precisa ter um `__init__.py` para o pytest descobrir os testes
-- Testes que acessam servidores externos devem ser marcados com `@pytest.mark.integration`
-- Rodar apenas testes rapidos: `pytest -m "not integration"`
-- Rodar todos os testes: `pytest`
-- `--strict-markers` esta ativo — todo marker deve ser registrado no `pyproject.toml`
+### Estrutura
+
+- Testes ficam em `tests/` com subdiretorios por tribunal (`tests/tjdft/`, `tests/tjpr/`, etc.). Cada subdiretorio precisa ter um `__init__.py` para o pytest descobrir os testes.
+- Fixtures HTML/JSON ficam em `tests/<tribunal>/samples/<endpoint>/<cenario>.html` (ex.: `tests/tjsp/samples/cjsg/results_normal.html`).
+- Helper compartilhado: `tests/_helpers.py::load_sample(tribunal, relative_path)` retorna o sample como string. Use `load_sample_bytes` quando o parser precisa lidar com encoding sozinho (ex.: eSAJ em latin-1).
+- Cassetes do `pytest-recording` (quando usados): `tests/<tribunal>/cassettes/`.
+
+### Piramide de testes
+
+| Camada | Sufixo do arquivo | Marker | Quando construir |
+|---|---|---|---|
+| **Contrato** — API publica via `responses` + samples | `test_*_contract.py` | nenhum | Antes da refatoracao #84 |
+| **Granular** — funcao pura testada direto | `test_*_granular.py` | nenhum | Apos cada fase da #84 |
+| **Cassete** — fluxo multi-step com `pytest-recording` | `test_*_cassette.py` | `vcr` | Caso a caso (TJPE, TJRR, JusBR) |
+| **Integracao** — scraper contra tribunal real | `test_*_integration.py` | `integration` | Sob demanda |
+
+### Ferramentas
+
+- **`responses`** (getsentry) — padrao para mockar `requests.Session` em testes de contrato. Usar `@responses.activate` ou context manager. Validar payload enviado com matchers (`urlencoded_params_matcher`, `json_params_matcher`).
+- **`pytest-mock`** — para mockar `time.sleep`, file I/O, `datetime` etc. via fixture `mocker`. Em testes novos, prefira `mocker.patch(...)` em vez de `from unittest.mock import patch`.
+- **`pytest-recording`** (vcr.py) — para fluxos multi-step com estado (ViewState, JWT, sessao crypto). Adocao **caso a caso**, nao universal. Medir peso agregado dos cassetes.
+- **`unittest.mock`** — continua disponivel; helpers existentes (`tests/tjsp/test_utils.py`) seguem funcionando ate migrarem oportunisticamente.
+
+### Comandos
+
+- `pytest` — roda contrato + granular (offline, ~0.5s). **Default exclui integracao.**
+- `pytest -m integration` — roda so integracao (lento, hit live).
+- `pytest -m ""` — roda tudo (offline + integracao).
+- `pytest tests/tjsp` — escopo a um tribunal.
+- `--strict-markers` esta ativo — todo marker deve ser registrado no `pyproject.toml`.
+
+### Regras para autor de teste
+
+- Toda mudanca em parser HTML/JSON deve incluir/atualizar sample em `tests/<tribunal>/samples/<endpoint>/`.
+- Testes de contrato afirmam **schema do DataFrame** (colunas obrigatorias) e, quando relevante, **payload enviado** (matchers do `responses`). Isso protege durante refatoracoes.
+- Testes que tocam rede ficam marcados com `@pytest.mark.integration`.
+- Cassetes (`pytest-recording`) sao adotados caso a caso; medir peso agregado antes de generalizar (limite indicativo: ~20 MB no repo).
+
+### Convergencia com a refatoracao #84
+
+Antes de refatorar um tribunal pela #84, ele precisa ter contratos passando. A camada de contrato valida so a API publica e sobrevive a mudanca estrutural; serve como rede de seguranca da refatoracao. Granulares vem depois, na estrutura ja refatorada. **TJSP refatora por ultimo** (mais usado, mais complexo).
 
 ## Convencao de API para raspadores
 
@@ -59,6 +94,9 @@ Paginas de tribunais mudam estrutura sem aviso. Ao escrever logica que extrai co
 - Seguimos o padrao [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 - Toda mudanca relevante deve ser registrada em `CHANGELOG.md` sob `[Unreleased]`
 - Categorias: Added, Changed, Deprecated, Removed, Fixed, Security
+- **Secoes de versoes ja lancadas (`## [0.2.1]`, `## [0.2.0]`, ...) sao imutaveis.** Nunca adicionar, editar ou remover linhas dentro delas — elas descrevem o que foi publicado naquela tag. Toda entrada nova vai em `[Unreleased]`, mesmo que corrija algo introduzido na ultima versao.
+- **Antes de inserir uma entrada, confirme que ela cai *acima* do primeiro heading `## [x.y.z]` do arquivo** (ou seja, dentro de `[Unreleased]`). Se `[Unreleased]` estiver sem subsecoes (`### Added/Changed/Fixed/...`), crie a subsecao necessaria.
+- **Todo commit de `feat:`, `fix:`, `refactor:` ou `deprecated:` com efeito observavel pelo usuario deve incluir a entrada em `[Unreleased]` no mesmo commit** — nao em commit posterior. Mudancas puramente internas (testes, tipagem, rename de simbolo privado, docs) nao precisam.
 
 ## Documentacao
 

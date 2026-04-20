@@ -1,23 +1,25 @@
 """
 Orchestrates the flow for DATAJUD (user entry point) - API BASED
 """
+import logging
 import os
 import tempfile
-from typing import Optional, Dict, List, Union, Any
-from collections import defaultdict
-import logging
 import time
-import requests
+import warnings
+from collections import defaultdict
+from typing import Any, Dict, List, Optional, Union
+
 import pandas as pd
+import requests
 from tqdm.auto import tqdm
 
 from ...core.base import BaseScraper
-from ...utils.cnj import clean_cnj # Assuming this utility exists and is relevant
+from ...utils.cnj import clean_cnj  # Assuming this utility exists and is relevant
+from .download import call_datajud_api  # To be created for API calls
+
 # Import mappings for tribunal and justice aliases.
 from .mappings import ID_JUSTICA_TRIBUNAL_TO_ALIAS, TRIBUNAL_TO_ALIAS
-
-from .download import call_datajud_api # To be created for API calls
-from .parse import parse_datajud_api_response # To be created for API response parsing
+from .parse import parse_datajud_api_response  # To be created for API response parsing
 
 logger = logging.getLogger(__name__)
 
@@ -76,8 +78,10 @@ class DatajudScraper(BaseScraper):
             if alias:
                 target_aliases.append(alias)
             else:
-                logger.error("Tribunal %s não encontrado nos mappings.", tribunal)
-                return pd.DataFrame()
+                raise ValueError(
+                    f"Tribunal {tribunal!r} não encontrado nos mappings do DataJud. "
+                    f"Verifique a sigla (ex: TJSP, TRT2, TRE-SP)."
+                )
         elif numero_processo:
             # Group by alias if multiple CNJs from different tribunals are provided
             processos_por_alias = defaultdict(list)
@@ -92,25 +96,40 @@ class DatajudScraper(BaseScraper):
                     id_tribunal_cnj = num_limpo[14:16]
                     alias = ID_JUSTICA_TRIBUNAL_TO_ALIAS.get((id_justica_cnj, id_tribunal_cnj))
                     if alias:
-                        processos_por_alias[alias].append(num_cnj)
+                        processos_por_alias[alias].append(num_limpo)
                     else:
+                        warnings.warn(
+                            f"CNJ {num_cnj!r}: tribunal não mapeado no DataJud "
+                            f"(id_justica={id_justica_cnj}, id_tribunal={id_tribunal_cnj}). "
+                            f"Processo será ignorado.",
+                            UserWarning,
+                            stacklevel=2,
+                        )
                         logger.warning("Não foi possível determinar alias para CNJ: %s", num_cnj)
                 else:
+                    warnings.warn(
+                        f"CNJ inválido: {num_cnj!r} (após limpeza tem {len(num_limpo)} "
+                        f"dígitos, deveria ter 20). Processo será ignorado.",
+                        UserWarning,
+                        stacklevel=2,
+                    )
                     logger.warning("CNJ inválido: %s", num_cnj)
             if not processos_por_alias:
+                # Os warnings por CNJ (CNJ inválido / tribunal não mapeado) já
+                # comunicam o problema. O `logger.error` mantém o registro de
+                # que nenhum alias foi determinado sem duplicar o warning.
                 logger.error("Nenhum CNJ válido para determinar tribunal/alias.")
                 return pd.DataFrame()
             target_aliases = list(processos_por_alias.keys())
         else:
-            # Potentially iterate all known aliases if no tribunal/CNJ specified - very broad!
-            # For now, require tribunal or numero_processo if not querying all.
-            # Or, could default to a list of all aliases from TRIBUNAL_TO_ALIAS.values()
-            logger.error("É necessário especificar 'tribunal' ou 'numero_processo'.")
-            return pd.DataFrame()
+            raise ValueError(
+                "É necessário especificar 'tribunal' (sigla) ou 'numero_processo' (CNJ)."
+            )
 
         for alias_idx, alias_name in enumerate(target_aliases):
             logger.info("Consultando: %s (%d/%d)", alias_name, alias_idx+1, len(target_aliases))
             # If CNJs were grouped, use only the CNJs for this specific alias
+            current_cnjs_for_alias: Optional[Union[str, List[str]]]
             if numero_processo and not tribunal:
                 current_cnjs_for_alias = processos_por_alias[alias_name]
             else:
@@ -169,12 +188,16 @@ class DatajudScraper(BaseScraper):
             while current_page < end_page:
                 logger.info("Fetching page %d for alias %s...", current_page, alias)
                 # Construct query payload (Elasticsearch DSL)
-                must_conditions = []
+                must_conditions: List[Dict[str, Any]] = []
                 if numero_processo:
                     if isinstance(numero_processo, str):
                         nproc = [numero_processo]
                     else:
-                        nproc = numero_processo
+                        nproc = list(numero_processo)
+                    # O índice DataJud armazena `numeroProcesso` apenas com dígitos.
+                    # Garantir a limpeza aqui cobre todos os caminhos de entrada
+                    # (numero_processo sozinho, lista, ou junto com `tribunal=`).
+                    nproc = [clean_cnj(n) for n in nproc]
                     must_conditions.append({
                         "terms": {
                             "numeroProcesso": nproc
@@ -241,6 +264,12 @@ class DatajudScraper(BaseScraper):
                 )
 
                 if api_response_json is None:
+                    warnings.warn(
+                        f"DataJud: falha ao consultar alias {alias!r} na página "
+                        f"{current_page}. Resultados parciais retornados.",
+                        UserWarning,
+                        stacklevel=3,
+                    )
                     logger.error(
                         "Failed to get API response for alias %s, page %d."
                         "Stopping.",
@@ -258,7 +287,7 @@ class DatajudScraper(BaseScraper):
                 df_page = parse_datajud_api_response(api_response_json, mostrar_movs)
                 if df_page.empty:
                     logger.info(
-                        "No more results for alias %s on page %d (or parsing failed).", 
+                        "No more results for alias %s on page %d (or parsing failed).",
                         alias,
                         current_page
                     )

@@ -1,5 +1,5 @@
 """Scraper for the Tribunal de Justica do Piaui (TJPI)."""
-from typing import Union, List
+from typing import Optional, Union, List
 
 import pandas as pd
 import requests
@@ -40,7 +40,7 @@ class TJPIScraper(BaseScraper):
 
     def cjsg(
         self,
-        pesquisa: str = None,
+        pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
         tipo: str = "",
         relator: str = "",
@@ -86,7 +86,7 @@ class TJPIScraper(BaseScraper):
 
     def cjsg_download(
         self,
-        pesquisa: str = None,
+        pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
         **kwargs,
     ) -> list:

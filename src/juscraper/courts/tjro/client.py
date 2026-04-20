@@ -1,5 +1,5 @@
 """Scraper for the Tribunal de Justica de Rondonia (TJRO)."""
-from typing import Union, List
+from typing import Optional, Union, List
 
 import pandas as pd
 import requests
@@ -34,7 +34,7 @@ class TJROScraper(BaseScraper):
 
     def cjsg(
         self,
-        pesquisa: str = None,
+        pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
         tipo: list | None = None,
         nr_processo: str = "",
@@ -97,7 +97,7 @@ class TJROScraper(BaseScraper):
 
     def cjsg_download(
         self,
-        pesquisa: str = None,
+        pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
         **kwargs,
     ) -> list:

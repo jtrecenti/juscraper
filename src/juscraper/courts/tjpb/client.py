@@ -1,6 +1,6 @@
 """Scraper for the Tribunal de Justica da Paraiba (TJPB)."""
 from datetime import date
-from typing import Union, List
+from typing import Optional, Union, List
 
 import pandas as pd
 import requests
@@ -47,7 +47,7 @@ class TJPBScraper(BaseScraper):
 
     def cjsg(
         self,
-        pesquisa: str = None,
+        pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
         nr_processo: str = "",
         id_classe_judicial: str = "",
@@ -114,7 +114,7 @@ class TJPBScraper(BaseScraper):
 
     def cjsg_download(
         self,
-        pesquisa: str = None,
+        pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
         **kwargs,
     ) -> list:

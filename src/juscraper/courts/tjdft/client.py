@@ -1,7 +1,7 @@
 """
 Module for the scraper of the Court of Justice of the Federal District and Territories (TJDFT).
 """
-from typing import Union, List
+from typing import Optional, Union, List
 import pandas as pd
 from juscraper.core.base import BaseScraper
 from juscraper.utils.params import normalize_paginas, normalize_pesquisa, normalize_datas
@@ -26,7 +26,7 @@ class TJDFTScraper(BaseScraper):
 
     def cjsg_download(
         self,
-        pesquisa: str = None,
+        pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
         sinonimos: bool = True,
         espelho: bool = True,
@@ -48,7 +48,7 @@ class TJDFTScraper(BaseScraper):
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
         paginas = normalize_paginas(paginas)
         datas = normalize_datas(**kwargs)
-        return cjsg_download(
+        brutos: list = cjsg_download(
             query=pesquisa,
             paginas=paginas,
             sinonimos=sinonimos,
@@ -58,17 +58,19 @@ class TJDFTScraper(BaseScraper):
             base_url=self.BASE_URL,
             **datas,
         )
+        return brutos
 
     def cjsg_parse(self, resultados_brutos: list) -> list:
         """
         Extracts structured information from the raw TJDFT search results.
         Returns all fields present in each item.
         """
-        return cjsg_parse(resultados_brutos)
+        parsed: list = cjsg_parse(resultados_brutos)
+        return parsed
 
     def cjsg(
         self,
-        pesquisa: str = None,
+        pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
         **kwargs,
     ) -> pd.DataFrame:

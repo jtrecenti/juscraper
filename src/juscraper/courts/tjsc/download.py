@@ -5,6 +5,7 @@ import time
 
 import requests
 from tqdm import tqdm
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +77,7 @@ def _get_total_pages(html: str, per_page: int = RESULTS_PER_PAGE) -> int:
 def cjsg_download_manager(
     pesquisa: str,
     paginas=None,
-    session: requests.Session = None,
+    session: Optional[requests.Session] = None,
     **kwargs,
 ) -> list:
     """Download raw HTML results from the TJSC jurisprudence search.

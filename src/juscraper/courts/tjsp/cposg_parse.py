@@ -64,7 +64,7 @@ def cposg_parse_single_html(html_path):
     if not soup.find(id='tabelaTodasMovimentacoes'):
         return []
     # Initialize result object (will be converted to a single row)
-    result = {}
+    result: dict = {}
     # Extract ID original (process number from URL)
     id_link = soup.select_one("a[href*='processo.codigo']")
     if id_link:
@@ -139,8 +139,8 @@ def cposg_parse_single_html(html_path):
                     if br_tag:
                         # Get all text before <br/>
                         movimento = ''.join(
-                            str(s) for s in br_tag.previous_siblings 
-                            if isinstance(s, str) or (hasattr(s, 'get_text') and s.name != 'br')
+                            str(s) for s in br_tag.previous_siblings
+                            if isinstance(s, str) or (hasattr(s, 'get_text') and getattr(s, 'name', None) != 'br')
                         ).strip()
                         if not movimento:
                             # Fallback: get text from all elements before br

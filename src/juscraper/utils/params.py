@@ -2,9 +2,11 @@
 Utility functions for normalizing public API parameters across all scrapers.
 """
 import warnings
+from datetime import datetime
+from typing import Optional, Union
 
 
-def normalize_paginas(paginas):
+def normalize_paginas(paginas) -> Optional[Union[list, range]]:
     """Normalize the ``paginas`` parameter to a consistent type.
 
     Args:
@@ -184,6 +186,73 @@ def to_iso_date(date_str):
     if len(parts) == 3 and len(parts[2]) == 4:
         return f"{parts[2]}-{parts[1]}-{parts[0]}"
     return date_str
+
+
+def validate_intervalo_datas(
+    data_inicio,
+    data_fim,
+    *,
+    max_dias=366,
+    formato="%d/%m/%Y",
+    rotulo="data",
+    origem="O eSAJ",
+):
+    """Validate a date interval before firing an HTTP request.
+
+    Several tribunal search endpoints reject date ranges wider than a
+    platform-specific window. The eSAJ jurisprudence endpoints (cjpg/cjsg),
+    for example, cap the range at one year ("A faixa entre data de início e
+    data de fim deve ser de no máximo 1 ano."). Checking the interval
+    client-side turns a cryptic downstream failure (missing paginator,
+    truncated HTML) into an actionable error raised before the request.
+
+    Args:
+        data_inicio: Start date as a string (``DD/MM/YYYY`` by default) or
+            ``None``. ``None`` skips validation — single-bound searches are
+            left to the server.
+        data_fim: End date as a string or ``None``.
+        max_dias: Maximum allowed interval in days (default: 366 to admit a
+            full calendar year even across a leap day).
+        formato: ``strptime`` format of the input strings.
+        rotulo: Human-readable label for the parameter pair in error messages
+            (e.g. ``"data_julgamento"``).
+        origem: Subject of the over-limit error message (e.g. ``"O eSAJ"``,
+            ``"O TJRS"``). Appears as ``"{origem} aceita no máximo N dias..."``.
+
+    Raises:
+        ValueError: If either string does not match ``formato``, if
+            ``data_inicio > data_fim``, or if the interval exceeds
+            ``max_dias``.
+    """
+    if data_inicio is None or data_fim is None:
+        return
+
+    try:
+        dt_inicio = datetime.strptime(data_inicio, formato)
+    except ValueError as exc:
+        raise ValueError(
+            f"'{rotulo}_inicio' inválida: {data_inicio!r}. Formato esperado: {formato}."
+        ) from exc
+    try:
+        dt_fim = datetime.strptime(data_fim, formato)
+    except ValueError as exc:
+        raise ValueError(
+            f"'{rotulo}_fim' inválida: {data_fim!r}. Formato esperado: {formato}."
+        ) from exc
+
+    if dt_inicio > dt_fim:
+        raise ValueError(
+            f"'{rotulo}_inicio' ({data_inicio}) é posterior a "
+            f"'{rotulo}_fim' ({data_fim})."
+        )
+
+    dias = (dt_fim - dt_inicio).days
+    if dias > max_dias:
+        raise ValueError(
+            f"{origem} aceita no máximo {max_dias} dias entre '{rotulo}_inicio' "
+            f"e '{rotulo}_fim' (recebido: {dias} dias, de {data_inicio} a "
+            f"{data_fim}). Divida a consulta em janelas menores."
+        )
 
 
 def warn_unsupported(param_name, tribunal):

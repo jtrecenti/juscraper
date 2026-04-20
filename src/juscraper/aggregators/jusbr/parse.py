@@ -53,7 +53,8 @@ def parse_process_details_response(json_data: Optional[Union[Dict[str, Any], Lis
                         len(json_data), cnj_searched
                     )
             else:
-                logger.error(
+                # Defensivo: em produção a API pode contrariar o type hint.
+                logger.error(  # type: ignore[unreachable]
                     "Process details API returned a list, but the first item"
                     "is not a dictionary for CNJ %s. Data: %s",
                     cnj_searched, str(json_data[0])[:200] # Log snippet of problematic data

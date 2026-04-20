@@ -2,44 +2,37 @@
 Tests for TJSP CJPG functionality.
 Includes both integration and unit tests.
 """
-import sys
 import os
 import tempfile
-from unittest.mock import MagicMock, patch, call
-import pytest
+from unittest.mock import MagicMock, call, patch
+
 import pandas as pd
+import pytest
 
-# Add project root to path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+import juscraper
+from juscraper.courts.tjsp.cjpg_download import cjpg_download
+from juscraper.courts.tjsp.cjpg_parse import cjpg_n_pags, cjpg_parse_manager, cjpg_parse_single
 
-try:
-    import juscraper
-except ImportError:
-    from src.juscraper import scraper as juscraper_scraper
-    juscraper = type('Module', (), {'scraper': juscraper_scraper})()
-
-from src.juscraper.courts.tjsp.cjpg_parse import cjpg_n_pags, cjpg_parse_single, cjpg_parse_manager
-from src.juscraper.courts.tjsp.cjpg_download import cjpg_download
-from tests.tjsp.test_utils import load_sample_html
+from .test_utils import load_sample_html
 
 
 @pytest.mark.integration
 class TestCJPGIntegration:
     """Integration tests for CJPG that hit the real website."""
-    
+
     @pytest.fixture(autouse=True)
     def setup(self):
         """Set up test fixtures."""
         self.scraper = juscraper.scraper('tjsp')
         yield
-    
+
     def test_cjpg_basic_search(self):
         """Test basic CJPG search functionality."""
         results = self.scraper.cjpg('golpe do pix', paginas=range(1, 2))
-        
+
         assert isinstance(results, pd.DataFrame)
         assert len(results) >= 0
-    
+
     def test_cjpg_with_filters(self):
         """Test CJPG search with filters."""
         results = self.scraper.cjpg(
@@ -47,16 +40,16 @@ class TestCJPGIntegration:
             classes=['Procedimento Comum Cível'],
             paginas=range(1, 2)
         )
-        
+
         assert isinstance(results, pd.DataFrame)
-    
+
     def test_cjpg_pagination(self):
         """Test CJPG pagination."""
         results = self.scraper.cjpg('direito', paginas=range(1, 3))
-        
+
         assert isinstance(results, pd.DataFrame)
         assert len(results) >= 0
-    
+
     def test_cjpg_date_filters(self):
         """Test CJPG with date filters."""
         results = self.scraper.cjpg(
@@ -66,13 +59,13 @@ class TestCJPGIntegration:
             paginas=range(1, 2),
         )
         assert isinstance(results, pd.DataFrame)
-    
+
     def test_cjpg_result_structure(self):
         """Test that CJPG results have expected structure."""
         results = self.scraper.cjpg('direito', paginas=range(1, 2))
-        
+
         assert isinstance(results, pd.DataFrame)
-        
+
         if len(results) > 0:
             # Check for expected columns
             assert len(results.columns) > 0
@@ -80,7 +73,7 @@ class TestCJPGIntegration:
 
 class TestCJPGUnit:
     """Unit tests for CJPG parsing functions."""
-    
+
     def test_cjpg_n_pags_extraction(self):
         """Test extracting page count from CJPG HTML (legacy format)."""
         html = load_sample_html('cjpg_results.html')
@@ -123,21 +116,21 @@ class TestCJPGUnit:
         html = "<html><body><p>No pagination</p></body></html>"
         with pytest.raises(ValueError, match="Não foi possível encontrar"):
             cjpg_n_pags(html)
-    
+
     def test_cjpg_parse_single(self):
         """Test parsing a single CJPG results page."""
         html = load_sample_html('cjpg_results.html')
-        
+
         with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
             f.write(html)
             temp_path = f.name
-        
+
         try:
             df = cjpg_parse_single(temp_path)
-            
+
             assert isinstance(df, pd.DataFrame)
             assert len(df) == 2  # Two processes in sample
-            
+
             # Check first process
             assert df.iloc[0]['id_processo'] == '1001796-12.2024.8.26.0699'
             assert df.iloc[0]['cd_processo'] == 'JF0004W7G0000'
@@ -145,34 +138,34 @@ class TestCJPGUnit:
             assert 'decisao' in df.columns
         finally:
             os.unlink(temp_path)
-    
+
     def test_cjpg_parse_manager_directory(self):
         """Test parsing multiple CJPG files from directory."""
         html = load_sample_html('cjpg_results.html')
-        
+
         with tempfile.TemporaryDirectory() as temp_dir:
             file1 = os.path.join(temp_dir, 'page1.html')
             file2 = os.path.join(temp_dir, 'page2.html')
-            
+
             with open(file1, 'w', encoding='utf-8') as f:
                 f.write(html)
             with open(file2, 'w', encoding='utf-8') as f:
                 f.write(html)
-            
+
             df = cjpg_parse_manager(temp_dir)
-            
+
             assert isinstance(df, pd.DataFrame)
             # 2 processes per file * 2 files = 4 total
             assert len(df) == 4
-    
+
     def test_cjpg_parse_empty_page(self):
         """Test parsing an empty CJPG page."""
         html = '<html><body><div id="divDadosResultado"></div></body></html>'
-        
+
         with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
             f.write(html)
             temp_path = f.name
-        
+
         try:
             df = cjpg_parse_single(temp_path)
             assert isinstance(df, pd.DataFrame)
@@ -245,6 +238,65 @@ class TestCJPGDownload1Based:
         files, urls = self._run_download(n_pags=3, paginas=range(1, 101))
         assert files == ["cjpg_00001.html", "cjpg_00002.html", "cjpg_00003.html"]
         assert len(urls) == 2
+
+
+class TestCJPGDateRangeValidation:
+    """Pre-request date-range validation for the eSAJ 1-year limit (#91)."""
+
+    def _patched_scraper(self):
+        """Build a TJSPScraper whose session.get would fail the test if called."""
+        scraper = juscraper.scraper('tjsp')
+        # Replace session with a MagicMock that records calls — if validation
+        # fails to short-circuit, .get() would be invoked and we can detect it.
+        scraper.session = MagicMock()
+        return scraper
+
+    def test_range_over_one_year_raises_before_request(self):
+        scraper = self._patched_scraper()
+        with pytest.raises(ValueError, match="no máximo 366 dias"):
+            scraper.cjpg_download(
+                pesquisa="direito",
+                data_julgamento_inicio="01/01/2020",
+                data_julgamento_fim="31/12/2021",
+            )
+        # Crucially, nothing hit the network.
+        scraper.session.get.assert_not_called()
+        scraper.session.post.assert_not_called()
+
+    def test_invalid_format_raises_before_request(self):
+        scraper = self._patched_scraper()
+        with pytest.raises(ValueError, match="Formato esperado"):
+            scraper.cjpg_download(
+                pesquisa="direito",
+                data_julgamento_inicio="2020-01-01",
+                data_julgamento_fim="31/12/2020",
+            )
+        scraper.session.get.assert_not_called()
+
+    def test_inicio_after_fim_raises_before_request(self):
+        scraper = self._patched_scraper()
+        with pytest.raises(ValueError, match="posterior"):
+            scraper.cjpg_download(
+                pesquisa="direito",
+                data_julgamento_inicio="31/12/2023",
+                data_julgamento_fim="01/01/2023",
+            )
+        scraper.session.get.assert_not_called()
+
+    def test_valid_one_year_window_proceeds_to_request(self):
+        """A valid 1-year window should NOT short-circuit; the download
+        proceeds and the mocked session receives the first GET."""
+        scraper = self._patched_scraper()
+        # Make the mock raise after the first .get() so we don't actually
+        # exercise the parsing flow — we only care that validation passed.
+        scraper.session.get.side_effect = RuntimeError("short-circuit after validate")
+        with pytest.raises(RuntimeError, match="short-circuit"):
+            scraper.cjpg_download(
+                pesquisa="direito",
+                data_julgamento_inicio="01/01/2023",
+                data_julgamento_fim="31/12/2023",
+            )
+        assert scraper.session.get.called
 
 
 if __name__ == "__main__":

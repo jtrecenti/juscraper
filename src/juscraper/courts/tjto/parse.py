@@ -31,7 +31,7 @@ def _extract_processo_link(container) -> str:
 
 def _extract_table_fields(container) -> dict:
     """Extract key-value pairs from the result table."""
-    fields = {}
+    fields: dict = {}
     table = container.select_one("table")
     if not table:
         return fields

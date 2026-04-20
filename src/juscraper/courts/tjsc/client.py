@@ -1,5 +1,5 @@
 """Scraper for the Tribunal de Justica de Santa Catarina (TJSC)."""
-from typing import Union, List
+from typing import Optional, Union, List
 
 import pandas as pd
 import requests
@@ -34,7 +34,7 @@ class TJSCScraper(BaseScraper):
 
     def cjsg(
         self,
-        pesquisa: str = None,
+        pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
         campo: str = "E",
         processo: str = "",
@@ -74,7 +74,7 @@ class TJSCScraper(BaseScraper):
 
     def cjsg_download(
         self,
-        pesquisa: str = None,
+        pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
         **kwargs,
     ) -> list:

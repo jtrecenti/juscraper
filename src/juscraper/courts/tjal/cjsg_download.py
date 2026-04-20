@@ -8,14 +8,12 @@ from datetime import datetime
 import logging
 
 import requests
-import urllib3
 from tqdm import tqdm
+from typing import Optional
 
 from juscraper.utils.params import to_br_date
 
 logger = logging.getLogger("juscraper.tjal.cjsg_download")
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 BASE_URL = "https://www2.tjal.jus.br/"
 
@@ -36,7 +34,7 @@ def cjsg_download(
     data_publicacao_fim: str | None = None,
     origem: str = "T",
     tipo_decisao: str = "acordao",
-    paginas: 'int | list | range | None' = None,
+    paginas: Optional['list | range | None'] = None,
     get_n_pags_callback=None,
 ) -> str:
     """Downloads HTML files from the TJAL CJSG search results pages.
@@ -95,7 +93,6 @@ def cjsg_download(
         "Upgrade-Insecure-Requests": "1",
         "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
     })
-    session.verify = False
 
     tipo_param = "A" if tipo_decisao == "acordao" else "D"
 

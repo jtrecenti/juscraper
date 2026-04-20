@@ -15,7 +15,7 @@ def get_initial_tokens(session, home_url):
     token = None
     soup = BeautifulSoup(resp.text, "html.parser")
     for a in soup.find_all('a', href=True):
-        m = re.search(r'tjpr\.url\.crypto=([a-f0-9]+)', a['href'])
+        m = re.search(r'tjpr\.url\.crypto=([a-f0-9]+)', str(a['href']))
         if m:
             token = m.group(1)
             break
@@ -63,7 +63,7 @@ def _extract_total_pages(html):
     if page_links:
         max_page = 1
         for link in page_links:
-            m = re.search(r'pageNumber=(\d+)', link['href'])
+            m = re.search(r'pageNumber=(\d+)', str(link['href']))
             if m:
                 max_page = max(max_page, int(m.group(1)))
         return max_page

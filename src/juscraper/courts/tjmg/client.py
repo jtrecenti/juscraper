@@ -118,7 +118,8 @@ def _br_date(value) -> str:
     if value is None:
         return ""
     if hasattr(value, "strftime"):
-        return value.strftime("%d/%m/%Y")
+        formatted: str = value.strftime("%d/%m/%Y")
+        return formatted
     text = str(value).strip()
     if not text:
         return ""

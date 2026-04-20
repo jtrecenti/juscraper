@@ -17,6 +17,7 @@ import time
 import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -80,7 +81,7 @@ def _extract_escolha_button_id(html: str, tipo: str = "Acórdãos") -> str:
                     label_el = label_cell.find("label") if label_cell else None
                     label_text = label_el.get_text(strip=True) if label_el else ""
                     if label_text == tipo:
-                        onclick = link["onclick"]
+                        onclick = str(link["onclick"])
                         match = re.search(r"'([^']+)':'[^']+'", onclick)
                         if match:
                             return match.group(1)
@@ -120,14 +121,14 @@ def _step2_post_search(
     session: requests.Session,
     viewstate: str,
     pesquisa: str,
-    data_julgamento_inicio: str = None,
-    data_julgamento_fim: str = None,
-    relator: str = None,
-    classe_cnj: str = None,
-    assunto_cnj: str = None,
-    meio_tramitacao: str = None,
+    data_julgamento_inicio: Optional[str] = None,
+    data_julgamento_fim: Optional[str] = None,
+    relator: Optional[str] = None,
+    classe_cnj: Optional[str] = None,
+    assunto_cnj: Optional[str] = None,
+    meio_tramitacao: Optional[str] = None,
     tipo_decisao: str = "acordaos",
-    search_html: str = None,
+    search_html: Optional[str] = None,
 ) -> tuple[str, str]:
     """POST the search form; return (response HTML, ViewState).
 
@@ -237,14 +238,14 @@ def _step4_paginate(
 def cjsg_download(
     pesquisa: str,
     paginas=None,
-    data_julgamento_inicio: str = None,
-    data_julgamento_fim: str = None,
-    relator: str = None,
-    classe_cnj: str = None,
-    assunto_cnj: str = None,
-    meio_tramitacao: str = None,
+    data_julgamento_inicio: Optional[str] = None,
+    data_julgamento_fim: Optional[str] = None,
+    relator: Optional[str] = None,
+    classe_cnj: Optional[str] = None,
+    assunto_cnj: Optional[str] = None,
+    meio_tramitacao: Optional[str] = None,
     tipo_decisao: str = "acordaos",
-    session: requests.Session = None,
+    session: Optional[requests.Session] = None,
 ) -> list[str]:
     """
     Download raw HTML pages from the TJPE jurisprudence search.
@@ -302,10 +303,9 @@ def cjsg_download(
     form_id, scroller_id = _extract_pagination_ids(results_html)
 
     # Determine pages to download
-    if paginas is None:
-        pages_iter = range(1, total_pages + 1)
-    else:
-        pages_iter = list(paginas)
+    pages_iter: list = (
+        list(range(1, total_pages + 1)) if paginas is None else list(paginas)
+    )
 
     results = []
 

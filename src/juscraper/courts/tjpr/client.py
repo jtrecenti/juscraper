@@ -28,12 +28,12 @@ class TJPRScraper(BaseScraper):
 
     def cjsg_download(
         self,
-        pesquisa: str = None,
+        pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
-        data_julgamento_inicio: str = None,
-        data_julgamento_fim: str = None,
-        data_publicacao_inicio: str = None,
-        data_publicacao_fim: str = None,
+        data_julgamento_inicio: Optional[str] = None,
+        data_julgamento_fim: Optional[str] = None,
+        data_publicacao_inicio: Optional[str] = None,
+        data_publicacao_fim: Optional[str] = None,
         **kwargs,
     ) -> list:
         """
@@ -56,13 +56,14 @@ class TJPRScraper(BaseScraper):
             data_publicacao_fim=data_publicacao_fim,
             **kwargs,
         )
-        return cjsg_download(
+        brutos: list = cjsg_download(
             self.session, self.USER_AGENT, self.HOME_URL, pesquisa, paginas,
             datas["data_julgamento_inicio"], datas["data_julgamento_fim"],
             datas["data_publicacao_inicio"], datas["data_publicacao_fim"],
         )
+        return brutos
 
-    def cjsg_parse(self, resultados_brutos: list, criterio: str = None) -> pd.DataFrame:
+    def cjsg_parse(self, resultados_brutos: list, criterio: Optional[str] = None) -> pd.DataFrame:
         """
         Extracts relevant data from the HTMLs returned by TJPR.
         Returns a DataFrame with the decisions.
@@ -72,12 +73,12 @@ class TJPRScraper(BaseScraper):
 
     def cjsg(
         self,
-        pesquisa: str = None,
+        pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
-        data_julgamento_inicio: str = None,
-        data_julgamento_fim: str = None,
-        data_publicacao_inicio: str = None,
-        data_publicacao_fim: str = None,
+        data_julgamento_inicio: Optional[str] = None,
+        data_julgamento_fim: Optional[str] = None,
+        data_publicacao_inicio: Optional[str] = None,
+        data_publicacao_fim: Optional[str] = None,
         **kwargs,
     ) -> pd.DataFrame:
         """

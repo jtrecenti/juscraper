@@ -6,6 +6,8 @@ module). Fixtures are kept here so pytest picks them up automatically.
 """
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from helpers import (
@@ -14,6 +16,15 @@ from helpers import (
     DATA_ALVO_FIM_ISO,
     DATA_ALVO_ISO,
 )
+
+
+@pytest.fixture
+def tests_dir() -> Path:
+    """Path to ``tests/``. Compose with ``tribunal`` and ``samples`` to reach fixtures.
+
+    Most tests should prefer ``tests._helpers.load_sample`` instead.
+    """
+    return Path(__file__).parent
 
 
 @pytest.fixture

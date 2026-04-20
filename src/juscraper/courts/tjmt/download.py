@@ -156,13 +156,15 @@ def cjsg_download(
             try:
                 resp = session.get(f"{api_url}/api/Consulta", params=params, timeout=60)
                 resp.raise_for_status()
-                return resp.json()
+                data: dict = resp.json()
+                return data
             except requests.RequestException:
                 if attempt == max_retries - 1:
                     raise
                 wait = 2 ** (attempt + 1)
                 logger.warning("Request failed (attempt %d/%d), retrying in %ds...", attempt + 1, max_retries, wait)
                 time.sleep(wait)
+        raise RuntimeError("unreachable")  # satisfaz o mypy; loop acima sempre retorna ou levanta
 
     collection_key = "AcordaoCollection" if tipo_consulta == "Acordao" else "DecisaoMonocraticaCollection"
     count_key = "CountAcordaoDocumento" if tipo_consulta == "Acordao" else "CountDecisaoMonocratica"

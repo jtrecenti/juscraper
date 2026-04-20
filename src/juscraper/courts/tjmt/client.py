@@ -1,7 +1,7 @@
 """
 Scraper for the Tribunal de Justica do Estado de Mato Grosso (TJMT).
 """
-from typing import Union, List
+from typing import Optional, Union, List
 
 import pandas as pd
 import requests
@@ -34,19 +34,19 @@ class TJMTScraper(BaseScraper):
 
     def cjsg_download(
         self,
-        pesquisa: str = None,
+        pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
         tipo_consulta: str = "Acordao",
-        relator: str = None,
-        orgao_julgador: str = None,
-        classe: str = None,
-        tipo_processo: str = None,
+        relator: Optional[str] = None,
+        orgao_julgador: Optional[str] = None,
+        classe: Optional[str] = None,
+        tipo_processo: Optional[str] = None,
         thesaurus: bool = False,
         quantidade_por_pagina: int = 10,
-        data_julgamento_inicio: str = None,
-        data_julgamento_fim: str = None,
-        data_publicacao_inicio: str = None,
-        data_publicacao_fim: str = None,
+        data_julgamento_inicio: Optional[str] = None,
+        data_julgamento_fim: Optional[str] = None,
+        data_publicacao_inicio: Optional[str] = None,
+        data_publicacao_fim: Optional[str] = None,
         **kwargs,
     ) -> list:
         """Download raw JSON results from the TJMT jurisprudence API.
@@ -105,19 +105,19 @@ class TJMTScraper(BaseScraper):
 
     def cjsg(
         self,
-        pesquisa: str = None,
+        pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
         tipo_consulta: str = "Acordao",
-        relator: str = None,
-        orgao_julgador: str = None,
-        classe: str = None,
-        tipo_processo: str = None,
+        relator: Optional[str] = None,
+        orgao_julgador: Optional[str] = None,
+        classe: Optional[str] = None,
+        tipo_processo: Optional[str] = None,
         thesaurus: bool = False,
         quantidade_por_pagina: int = 10,
-        data_julgamento_inicio: str = None,
-        data_julgamento_fim: str = None,
-        data_publicacao_inicio: str = None,
-        data_publicacao_fim: str = None,
+        data_julgamento_inicio: Optional[str] = None,
+        data_julgamento_fim: Optional[str] = None,
+        data_publicacao_inicio: Optional[str] = None,
+        data_publicacao_fim: Optional[str] = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Search TJMT jurisprudence (download + parse).

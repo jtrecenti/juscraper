@@ -1,12 +1,21 @@
 """
 Funções utilitárias para manipulação de números CNJ (Conselho Nacional de Justiça).
 """
+import re
+
+_NON_DIGIT_RE = re.compile(r"\D")
+
 
 def clean_cnj(numero: str) -> str:
-    """Limpa o número do processo, removendo pontos e traços.
-    Exemplo: 0000000-00.0000.0.00.0000 -> 00000000000000000000
+    """Limpa o número do processo, mantendo apenas dígitos.
+
+    Remove pontos, traços, espaços, quebras de linha e qualquer outro
+    caractere não-numérico — útil para entradas vindas de CSV/Excel onde
+    sobra whitespace.
+
+    Exemplo: ``"0000000-00.0000.0.00.0000 "`` -> ``"00000000000000000000"``
     """
-    return numero.replace(".", "").replace("-", "")
+    return _NON_DIGIT_RE.sub("", numero)
 
 def split_cnj(numero: str) -> dict:
     """Divide um número de processo CNJ (limpo ou formatado) em suas partes.
@@ -18,7 +27,7 @@ def split_cnj(numero: str) -> dict:
         raise ValueError(
             f"Número CNJ '{numero}' inválido. Após limpeza, deve ter 20 dígitos, mas tem {len(numero_limpo)}."
         )
-    
+
     return {
         "num": numero_limpo[:7],
         "dv": numero_limpo[7:9],

@@ -3,15 +3,13 @@ Main scraper for Tribunal de Justica de Sao Paulo (TJSP).
 """
 import os
 import tempfile
-from typing import Union, List, Literal
+from typing import Union, List, Literal, Optional
 import logging
 import shutil
-import warnings
-import urllib3
 import requests
 
 from ...core.base import BaseScraper
-from ...utils.params import normalize_paginas, normalize_datas
+from ...utils.params import normalize_paginas, normalize_datas, validate_intervalo_datas
 
 from .cpopg_download import cpopg_download_html, cpopg_download_api
 from .cpopg_parse import get_cpopg_download_links, cpopg_parse_manager
@@ -27,7 +25,6 @@ from .cjpg_parse import cjpg_n_pags, cjpg_parse_manager
 
 logger = logging.getLogger('juscraper.tjsp')
 
-warnings.filterwarnings('ignore', category=urllib3.exceptions.InsecureRequestWarning)
 
 class TJSPScraper(BaseScraper):
     """Main scraper for Tribunal de Justica de Sao Paulo."""
@@ -56,7 +53,7 @@ class TJSPScraper(BaseScraper):
         self.set_download_path(download_path)
         self.sleep_time = sleep_time
         self.args = kwargs
-        self.method = None
+        self.method: Optional[Literal['html', 'api']] = None
 
     def set_download_path(self, path: str | None = None):
         """
@@ -173,7 +170,7 @@ class TJSPScraper(BaseScraper):
                 download_path=self.download_path,
                 sleep_time=self.sleep_time
             )
-        elif self.method == 'json':
+        elif self.method == 'api':
             cposg_download_api(
                 id_cnj_list=id_cnj,
                 session=self.session,
@@ -258,12 +255,21 @@ class TJSPScraper(BaseScraper):
             baixar_sg (bool): If True, also downloads from Second Stage.
             tipo_decisao (str): 'acordao' or 'monocratica'.
             paginas (int, list, range, or None): Pages (1-based). None downloads all.
+
+        Note:
+            The eSAJ accepts at most 1 year between ``data_julgamento_inicio``
+            and ``data_julgamento_fim``. Split longer ranges on the caller side.
         """
         paginas = normalize_paginas(paginas)
         datas = normalize_datas(
             data_julgamento_inicio=data_julgamento_inicio,
             data_julgamento_fim=data_julgamento_fim,
             **kwargs,
+        )
+        validate_intervalo_datas(
+            datas["data_julgamento_inicio"],
+            datas["data_julgamento_fim"],
+            rotulo="data_julgamento",
         )
         return cjsg_download_mod(
             pesquisa=pesquisa,
@@ -309,6 +315,11 @@ class TJSPScraper(BaseScraper):
             data_julgamento_inicio: Start date. ``data_inicio`` accepted as alias.
             data_julgamento_fim: End date. ``data_fim`` accepted as alias.
             paginas (int, list, range, or None): Pages (1-based). None downloads all.
+
+        Note:
+            The eSAJ accepts at most 1 year between ``data_julgamento_inicio``
+            and ``data_julgamento_fim``. Split longer ranges into yearly
+            windows on the caller side.
         """
         path_result = self.cjpg_download(
             pesquisa=pesquisa,
@@ -349,12 +360,21 @@ class TJSPScraper(BaseScraper):
             data_julgamento_inicio: Start date. ``data_inicio`` accepted as alias.
             data_julgamento_fim: End date. ``data_fim`` accepted as alias.
             paginas (int, list, range, or None): Pages (1-based). None downloads all.
+
+        Note:
+            The eSAJ accepts at most 1 year between ``data_julgamento_inicio``
+            and ``data_julgamento_fim``. Split longer ranges on the caller side.
         """
         paginas = normalize_paginas(paginas)
         datas = normalize_datas(
             data_julgamento_inicio=data_julgamento_inicio,
             data_julgamento_fim=data_julgamento_fim,
             **kwargs,
+        )
+        validate_intervalo_datas(
+            datas["data_julgamento_inicio"],
+            datas["data_julgamento_fim"],
+            rotulo="data_julgamento",
         )
 
         def get_n_pags_callback(r0):

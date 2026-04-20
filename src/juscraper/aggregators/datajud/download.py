@@ -29,8 +29,14 @@ def call_datajud_api(
         timeout (int): Request timeout in seconds.
 
     Returns:
-        Optional[Dict[str, Any]]: The JSON response from the API as a dictionary, 
+        Optional[Dict[str, Any]]: The JSON response from the API as a dictionary,
                                    or None if the request fails or returns an error.
+
+    Note:
+        Em caso de falha, retorna None e loga o erro via logger.error. O caller
+        (`_listar_processos_por_alias` em client.py) emite um unico
+        `warnings.warn(UserWarning)` agregado por alias quando detecta None,
+        evitando spam de warnings em paginacao longa com API instavel.
     """
     api_url = f"{base_url}/{alias}/_search"
     headers = {
@@ -56,7 +62,8 @@ def call_datajud_api(
             # logger.debug(f"Response Content (first 500 chars): {response.text[:500]}")
 
         response.raise_for_status()  # Raises HTTPError for bad responses (4XX or 5XX)
-        return response.json()
+        data: Dict[str, Any] = response.json()
+        return data
 
     except requests.exceptions.HTTPError as e:
         logger.error("HTTP Error calling Datajud API (%s): %s", api_url, e)

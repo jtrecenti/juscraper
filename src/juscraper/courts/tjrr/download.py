@@ -7,6 +7,7 @@ import xml.etree.ElementTree as ET
 import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,7 @@ def _extract_cdata(xml_text: str) -> str:
     """Extract HTML content from a PrimeFaces AJAX XML response."""
     if not xml_text.startswith("<?xml"):
         return xml_text
-    cdata_matches = re.findall(r"<!\[CDATA\[(.*?)\]\]>", xml_text, re.DOTALL)
+    cdata_matches: list[str] = re.findall(r"<!\[CDATA\[(.*?)\]\]>", xml_text, re.DOTALL)
     for cdata in cdata_matches:
         if "resultados" in cdata:
             return cdata
@@ -87,7 +88,7 @@ def _get_form_fields(session: requests.Session) -> dict:
             submit_name = name
             break
     return {
-        "viewstate": vs_input["value"],
+        "viewstate": str(vs_input["value"]),
         "pesquisa_name": pesq["name"],
         "submit_name": submit_name,
         "defaults": _collect_form_defaults(soup),
@@ -200,7 +201,7 @@ def _paginate(
 def cjsg_download_manager(
     pesquisa: str,
     paginas=None,
-    session: requests.Session = None,
+    session: Optional[requests.Session] = None,
     **kwargs,
 ) -> list:
     """Download raw HTML results from the TJRR jurisprudence search.

@@ -1,7 +1,7 @@
 """
 Scraper for the Tribunal de Justica do Estado do Para (TJPA).
 """
-from typing import Union, List
+from typing import Optional, Union, List
 
 import pandas as pd
 import requests
@@ -33,18 +33,18 @@ class TJPAScraper(BaseScraper):
 
     def cjsg_download(
         self,
-        pesquisa: str = None,
+        pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
-        relator: str = None,
-        orgao_julgador_colegiado: str = None,
-        classe: str = None,
-        assunto: str = None,
-        origem: list = None,
-        tipo: list = None,
-        data_julgamento_inicio: str = None,
-        data_julgamento_fim: str = None,
-        data_publicacao_inicio: str = None,
-        data_publicacao_fim: str = None,
+        relator: Optional[str] = None,
+        orgao_julgador_colegiado: Optional[str] = None,
+        classe: Optional[str] = None,
+        assunto: Optional[str] = None,
+        origem: Optional[list] = None,
+        tipo: Optional[list] = None,
+        data_julgamento_inicio: Optional[str] = None,
+        data_julgamento_fim: Optional[str] = None,
+        data_publicacao_inicio: Optional[str] = None,
+        data_publicacao_fim: Optional[str] = None,
         sort_by: str = "datajulgamento",
         sort_order: str = "desc",
         query_type: str = "free",
@@ -114,18 +114,18 @@ class TJPAScraper(BaseScraper):
 
     def cjsg(
         self,
-        pesquisa: str = None,
+        pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
-        relator: str = None,
-        orgao_julgador_colegiado: str = None,
-        classe: str = None,
-        assunto: str = None,
-        origem: list = None,
-        tipo: list = None,
-        data_julgamento_inicio: str = None,
-        data_julgamento_fim: str = None,
-        data_publicacao_inicio: str = None,
-        data_publicacao_fim: str = None,
+        relator: Optional[str] = None,
+        orgao_julgador_colegiado: Optional[str] = None,
+        classe: Optional[str] = None,
+        assunto: Optional[str] = None,
+        origem: Optional[list] = None,
+        tipo: Optional[list] = None,
+        data_julgamento_inicio: Optional[str] = None,
+        data_julgamento_fim: Optional[str] = None,
+        data_publicacao_inicio: Optional[str] = None,
+        data_publicacao_fim: Optional[str] = None,
         sort_by: str = "datajulgamento",
         sort_order: str = "desc",
         query_type: str = "free",
