@@ -1,6 +1,4 @@
-"""
-Utility functions for normalizing public API parameters across all scrapers.
-"""
+"""Utility functions for normalizing public API parameters across all scrapers."""
 import warnings
 from datetime import datetime
 from typing import Optional, Union
@@ -30,14 +28,14 @@ def normalize_paginas(paginas) -> Optional[Union[list, range]]:
     )
 
 
-def normalize_pesquisa(pesquisa=None, **kwargs):
+def normalize_pesquisa(pesquisa: Optional[str] = None, **kwargs) -> str:
     """Normalize the search-term parameter.
 
     Canonical name is ``pesquisa``.  ``query`` and ``termo`` are accepted
     with a ``DeprecationWarning`` and are popped from *kwargs*.
 
     Returns:
-        The search string.
+        The search string (never ``None``: missing input raises ``TypeError``).
 
     Raises:
         ValueError: If both ``pesquisa`` and a deprecated alias are given.
@@ -68,7 +66,7 @@ def normalize_pesquisa(pesquisa=None, **kwargs):
             DeprecationWarning,
             stacklevel=3,
         )
-        return deprecated_value
+        return str(deprecated_value)
 
     if pesquisa is not None:
         return pesquisa

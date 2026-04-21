@@ -1,7 +1,7 @@
 """
 Scraper for the Tribunal de Justica do Espirito Santo (TJES).
 """
-from typing import Optional, List, Union
+from typing import List, Optional, Union
 
 import pandas as pd
 import requests

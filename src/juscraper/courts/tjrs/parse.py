@@ -3,6 +3,7 @@ Parse de resultados brutos da pesquisa de jurisprudência do TJRS.
 """
 import pandas as pd
 
+
 def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
     """
     Extrai os dados relevantes dos resultados brutos retornados pelo TJRS.

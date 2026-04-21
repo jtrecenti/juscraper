@@ -5,12 +5,15 @@ import logging
 import os
 import time
 from typing import Optional
-from urllib.parse import urlparse, parse_qs
-from tqdm import tqdm
+from urllib.parse import parse_qs, urlparse
+
 from bs4 import BeautifulSoup
-from ...utils.cnj import clean_cnj, split_cnj, format_cnj
+from tqdm import tqdm
+
+from ...utils.cnj import clean_cnj, format_cnj, split_cnj
 
 logger = logging.getLogger('juscraper.cposg_download')
+
 
 def cposg_download_html(id_cnj_list, session, u_base, download_path, sleep_time=0.5):
     """
@@ -52,7 +55,7 @@ def cposg_download_html(id_cnj_list, session, u_base, download_path, sleep_time=
         if soup.find('div', id='listagemDeProcessos'):
             links = [str(a['href']) for a in soup.select('a.linkProcesso')]
             for link in links:
-                codigo = parse_qs(urlparse(link).query).get('processo.codigo', [None])[0]
+                codigo = parse_qs(urlparse(link).query).get('processo.codigo', [""])[0]
                 show_url = f"{u_base}cposg/show.do?processo.codigo={codigo}"
                 r_show = session.get(show_url)
                 file_name = f"{path}/{id_clean}_cd_processo_{codigo}.html"
@@ -80,6 +83,7 @@ def cposg_download_html(id_cnj_list, session, u_base, download_path, sleep_time=
         paths.append(path)
         time.sleep(sleep_time)
     return paths if len(paths) > 1 else paths[0]
+
 
 def cposg_download_api(id_cnj_list, session, api_base, download_path, sleep_time=0.5):
     """

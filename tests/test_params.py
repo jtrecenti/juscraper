@@ -1,14 +1,15 @@
 """Tests for the parameter normalization utilities."""
 import warnings
+
 import pytest
+
 from juscraper.utils.params import (
+    normalize_datas,
     normalize_paginas,
     normalize_pesquisa,
-    normalize_datas,
     validate_intervalo_datas,
     warn_unsupported,
 )
-
 
 # --- normalize_paginas ---
 

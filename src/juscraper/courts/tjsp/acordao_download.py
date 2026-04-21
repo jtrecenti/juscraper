@@ -3,8 +3,10 @@ Downloads decisions from the TJSP CJSG.
 """
 import os
 
+
 class AcordaoDownloadError(Exception):
     """Error downloading decision from TJSP CJSG."""
+
 
 def download_acordao(
     cd_acordao,

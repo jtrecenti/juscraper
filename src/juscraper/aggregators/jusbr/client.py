@@ -8,37 +8,29 @@ from Platforma Digital do Poder Judiciario (PDPJ).
 
 import logging
 import time
-from typing import Any, List, Optional, Union
 import urllib
-import browser_cookie3
+from typing import Any, List, Optional, Union
 
+import browser_cookie3
 import jwt
+import numpy as np
 import pandas as pd
 import requests
-import numpy as np
 
 from ...core.base import BaseScraper
 from ...utils.cnj import clean_cnj
-from .download import (
-    fetch_process_list,
-    fetch_process_details,
-    fetch_document_text,
-    fetch_document_binary,
-    USER_AGENT
-)
-from .parse import (
-    parse_process_list_response,
-    parse_process_details_response,
-    clean_document_text
-)
+from .download import USER_AGENT, fetch_document_binary, fetch_document_text, fetch_process_details, fetch_process_list
+from .parse import clean_document_text, parse_process_details_response, parse_process_list_response
 
 logger = logging.getLogger(__name__)
 
+
 class JusbrScraper(BaseScraper):
-    """
-    Raspador para o JusBR (consulta unificada da PDPJ-CNJ).
+    """Raspador para o JusBR (consulta unificada da PDPJ-CNJ).
+
     Este scraper interage com a API da Plataforma Digital do Poder Judiciario (PDPJ).
     """
+
     BASE_API_URL_V2 = "https://portaldeservicos.pdpj.jus.br/api/v2/processos/"
     BASE_API_URL_V1_DOCS = (
         "https://api-processo.data-lake.pdpj.jus.br/processo-api/api/v1/processos/"
@@ -109,7 +101,7 @@ class JusbrScraper(BaseScraper):
             raise RuntimeError("JusBR: cabeçalho 'Location' ausente na resposta de auth.")
         fragment = urllib.parse.urlparse(location_url).fragment
         params = urllib.parse.parse_qs(fragment)
-        code = params.get("code", [None])[0]
+        code = params.get("code", [""])[0]
         token_url = "https://sso.cloud.pje.jus.br/auth/realms/pje/protocol/openid-connect/token"
         data = {
             "grant_type": "authorization_code",
@@ -207,8 +199,8 @@ class JusbrScraper(BaseScraper):
         logger.info("Iniciando download de documentos para %d processos...", len(base_df))
 
         for index, row in base_df.iterrows():
-            numero_processo_api = row.get('numeroProcesso') # Official CNJ for API calls
-            cnj_original_pesquisa = row.get('processo') # User's search term
+            numero_processo_api = row.get('numeroProcesso')  # Official CNJ for API calls
+            cnj_original_pesquisa = row.get('processo')  # User's search term
 
             if not numero_processo_api:
                 logger.warning(
@@ -231,14 +223,14 @@ class JusbrScraper(BaseScraper):
             if 'dadosBasicos' in detalhes and isinstance(detalhes['dadosBasicos'], dict):
                 document_metadata_list = detalhes['dadosBasicos'].get('documentos', [])
 
-            if (not document_metadata_list and
-                'documentos' in detalhes and
-                isinstance(detalhes['documentos'], list)):
+            if (not document_metadata_list
+                    and 'documentos' in detalhes
+                    and isinstance(detalhes['documentos'], list)):
                 document_metadata_list = detalhes['documentos']
 
-            if (not document_metadata_list and
-                'tramitacaoAtual' in detalhes and
-                isinstance(detalhes['tramitacaoAtual'], dict)):
+            if (not document_metadata_list
+                    and 'tramitacaoAtual' in detalhes
+                    and isinstance(detalhes['tramitacaoAtual'], dict)):
                 document_metadata_list = detalhes['tramitacaoAtual'].get('documentos', [])
                 if isinstance(document_metadata_list, np.ndarray):
                     document_metadata_list = document_metadata_list.tolist()
@@ -267,8 +259,8 @@ class JusbrScraper(BaseScraper):
                     )
                     continue
 
-                if (max_docs_per_process is not None and
-                    docs_processed_count >= max_docs_per_process):
+                if (max_docs_per_process is not None
+                        and docs_processed_count >= max_docs_per_process):
                     logger.info(
                         "Limite de %d documentos atingido para o processo %s.",
                         max_docs_per_process, numero_processo_api
@@ -285,7 +277,7 @@ class JusbrScraper(BaseScraper):
                     except IndexError:
                         logger.warning(
                             "Não foi possível extrair UUID do hrefTexto: %s"
-                            " para processo %s", 
+                            " para processo %s",
                             href_texto,
                             numero_processo_api
                         )
@@ -297,7 +289,7 @@ class JusbrScraper(BaseScraper):
                     except IndexError:
                         logger.warning(
                             "Não foi possível extrair UUID do hrefBinario: %s"
-                            " para processo %s", 
+                            " para processo %s",
                             href_binario,
                             numero_processo_api
                         )
@@ -316,7 +308,7 @@ class JusbrScraper(BaseScraper):
                     )
                     continue
                 logger.debug(
-                    "[JUSBR DEBUG] doc_meta para processo %s: %r", 
+                    "[JUSBR DEBUG] doc_meta para processo %s: %r",
                     numero_processo_api, doc_meta
                 )
                 logger.debug(

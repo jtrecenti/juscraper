@@ -13,11 +13,11 @@ import logging
 import math
 import re
 import time
+from typing import Optional
 
 import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 

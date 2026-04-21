@@ -1,11 +1,13 @@
 """
 Functions for downloading specific data from the Datajud API.
 """
-from typing import Optional, Dict, Any
 import logging
+from typing import Any, Dict, Optional
+
 import requests
 
 logger = logging.getLogger(__name__)
+
 
 def call_datajud_api(
     base_url: str,
@@ -82,7 +84,7 @@ def call_datajud_api(
     except requests.exceptions.RequestException as e:
         logger.error("Request failed for Datajud API (%s): %s", api_url, e)
         return None
-    except ValueError as e: # Includes JSONDecodeError if response is not valid JSON
+    except ValueError as e:  # Includes JSONDecodeError if response is not valid JSON
         logger.error("Failed to decode JSON response from Datajud API (%s): %s", api_url, e)
         # Try to log part of the response text if available and decoding failed
         response_text_snippet = 'N/A'

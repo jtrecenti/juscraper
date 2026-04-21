@@ -2,12 +2,11 @@
 import logging
 import re
 import time
-import xml.etree.ElementTree as ET
+from typing import Optional
 
 import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 

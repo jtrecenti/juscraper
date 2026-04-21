@@ -4,11 +4,14 @@ Funções de download específicas para JUSBR
 
 import logging
 import time
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
+
 import requests
+
 from ...utils.cnj import clean_cnj
 
 logger = logging.getLogger(__name__)
+
 
 def request_with_retry(session, url, *, headers=None, timeout=15, max_retries=5, backoff_factor=1.0, **kwargs):
     """
@@ -20,7 +23,10 @@ def request_with_retry(session, url, *, headers=None, timeout=15, max_retries=5,
         try:
             response = session.get(url, headers=headers, timeout=timeout, **kwargs)
             if response.status_code == 429:
-                logger.warning(f"[429] Too Many Requests para {url}. Tentativa {attempt+1}/{max_retries}. Aguardando {wait}s...")
+                logger.warning(
+                    "[429] Too Many Requests para %s. Tentativa %d/%d. Aguardando %ss...",
+                    url, attempt + 1, max_retries, wait,
+                )
                 time.sleep(wait)
                 attempt += 1
                 wait = min(wait * 2, 32)  # Limite de 32 segundos
@@ -39,11 +45,13 @@ def request_with_retry(session, url, *, headers=None, timeout=15, max_retries=5,
     logger.error(f"Falha após {max_retries} tentativas para {url}")
     return None
 
+
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
     "AppleWebKit/537.36 (KHTML, like Gecko) "
     "Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0"
 )
+
 
 def fetch_process_list(
     session: requests.Session,
@@ -81,6 +89,7 @@ def fetch_process_list(
         )
         return None
 
+
 def fetch_process_details(
     session: requests.Session,
     numero_processo_oficial: str,
@@ -112,10 +121,11 @@ def fetch_process_details(
         return None
     except ValueError as e:  # JSONDecodeError
         logger.error(
-            "Erro ao decodificar JSON dos detalhes do processo %s em %s: %s", 
+            "Erro ao decodificar JSON dos detalhes do processo %s em %s: %s",
             numero_processo_oficial, url, e
         )
         return None
+
 
 def fetch_document_text(
     session: requests.Session,
@@ -181,12 +191,14 @@ def fetch_document_text(
         )
     return None
 
+
 def fetch_document_binary(
     session: requests.Session,
     numero_processo: str,
     id_documento: str,
     base_api_url_docs: str
 ) -> Optional[bytes]:
+    """Fetch the binary payload of a document from the JusBR API."""
     numero_processo_param = numero_processo  # original, pode estar com máscara
     doc_url = (
         f"{base_api_url_docs.rstrip('/')}/{numero_processo_param}/documentos/{id_documento}/binario"

@@ -2,13 +2,14 @@
 Scraper for the Tribunal de Justica de Pernambuco (TJPE).
 """
 
-from typing import Optional, Union, List
+from typing import List, Optional, Union
 
 import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_paginas, normalize_pesquisa, normalize_datas
+from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa
+
 from .download import cjsg_download
 from .parse import cjsg_parse
 

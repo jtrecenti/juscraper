@@ -2,12 +2,11 @@
 Downloads raw results from the TJBA jurisprudence search (GraphQL API).
 """
 import logging
-import math
 import time
+from typing import Optional
 
 import requests
 from tqdm import tqdm
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 

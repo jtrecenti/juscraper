@@ -2,8 +2,10 @@
 Functions for downloading specific to TJPR
 """
 import re
+
 from bs4 import BeautifulSoup
 from tqdm.auto import tqdm
+
 
 def get_initial_tokens(session, home_url):
     """
@@ -22,6 +24,7 @@ def get_initial_tokens(session, home_url):
     if not token:
         raise RuntimeError("Não foi possível extrair o token da página inicial.")
     return jsessionid, token
+
 
 def get_ementa_completa(session, jsessionid, user_agent, id_processo, criterio):
     """
@@ -48,6 +51,7 @@ def get_ementa_completa(session, jsessionid, user_agent, id_processo, criterio):
     resp = session.get(url, headers=headers, cookies=cookies)
     resp.raise_for_status()
     return BeautifulSoup(resp.text, 'html.parser').get_text("\n", strip=True)
+
 
 def _extract_total_pages(html):
     """Extract total number of pages from TJPR pagination HTML."""

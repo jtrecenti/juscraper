@@ -8,7 +8,6 @@ import warnings
 import pandas as pd
 from bs4 import BeautifulSoup, XMLParsedAsHTMLWarning
 
-
 FIELD_MAP = {
     "Processo": "processo",
     "Classe CNJ": "classe_cnj",

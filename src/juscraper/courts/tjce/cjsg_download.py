@@ -2,16 +2,16 @@
 Download of results from the TJCE Consulta de Julgados de Segundo Grau (CJSG).
 Uses requests library only (no browser automation needed).
 """
+import logging
 import os
 import time
 from datetime import datetime
-import logging
+from typing import Optional
 
 import requests
 from requests.adapters import HTTPAdapter
-from urllib3.util.ssl_ import create_urllib3_context
 from tqdm import tqdm
-from typing import Optional
+from urllib3.util.ssl_ import create_urllib3_context
 
 logger = logging.getLogger("juscraper.tjce.cjsg_download")
 

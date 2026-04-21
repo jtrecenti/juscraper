@@ -3,19 +3,19 @@
 ## 🚀 What's New
 
 ### ✨ New Features
-- 
+-
 
 ### 🔧 Improvements
-- 
+-
 
 ### 🐛 Bug Fixes
-- 
+-
 
 ### 📚 Documentation
-- 
+-
 
 ### 🔧 Internal Changes
-- 
+-
 
 ## 📦 Installation
 

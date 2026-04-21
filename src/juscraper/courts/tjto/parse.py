@@ -10,23 +10,23 @@ from bs4 import BeautifulSoup
 def _extract_uuid(container) -> str:
     """Extract the document UUID from a result container."""
     btn = container.select_one("[data-id]")
-    return btn["data-id"] if btn else ""
+    return str(btn["data-id"]) if btn else ""
 
 
 def _extract_processo(container) -> str:
     """Extract the formatted process number."""
     btn = container.select_one(".label-processo")
     if btn:
-        text = btn.get_text(strip=True)
+        text: str = btn.get_text(strip=True)
         match = re.search(r"[\d.-]+", text)
-        return match.group(0) if match else text
+        return str(match.group(0)) if match else text
     return ""
 
 
 def _extract_processo_link(container) -> str:
     """Extract the link to the process page."""
     link = container.select_one('a[href*="eproc"]')
-    return link["href"] if link else ""
+    return str(link["href"]) if link else ""
 
 
 def _extract_table_fields(container) -> dict:

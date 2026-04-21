@@ -2,8 +2,9 @@
 Functions for parsing specific to TJPR
 """
 import pandas as pd
-from bs4 import BeautifulSoup
 import requests
+from bs4 import BeautifulSoup
+
 
 def cjsg_parse(
     htmls,
@@ -92,6 +93,7 @@ def cjsg_parse(
             df['data_julgamento'], errors='coerce', dayfirst=True
         ).dt.date
     return df
+
 
 def get_ementa_completa(
     session,
