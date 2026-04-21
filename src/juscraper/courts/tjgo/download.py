@@ -5,7 +5,6 @@ import logging
 import math
 import re
 import time
-from typing import Optional
 
 import requests
 

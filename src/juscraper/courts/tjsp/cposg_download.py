@@ -55,7 +55,10 @@ def cposg_download_html(id_cnj_list, session, u_base, download_path, sleep_time=
         if soup.find('div', id='listagemDeProcessos'):
             links = [str(a['href']) for a in soup.select('a.linkProcesso')]
             for link in links:
-                codigo = parse_qs(urlparse(link).query).get('processo.codigo', [""])[0]
+                codigos = parse_qs(urlparse(link).query).get('processo.codigo', [])
+                if not codigos:
+                    raise RuntimeError(f"Link sem 'processo.codigo': {link}")
+                codigo = codigos[0]
                 show_url = f"{u_base}cposg/show.do?processo.codigo={codigo}"
                 r_show = session.get(show_url)
                 file_name = f"{path}/{id_clean}_cd_processo_{codigo}.html"

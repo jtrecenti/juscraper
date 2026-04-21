@@ -14,7 +14,7 @@ from pathlib import Path
 def run_command(cmd: str, check: bool = True) -> subprocess.CompletedProcess:
     """Execute um comando shell."""
     print(f"Executando: {cmd}")
-    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=False)
     if check and result.returncode != 0:
         print(f"Erro ao executar comando: {cmd}")
         print(f"Stdout: {result.stdout}")

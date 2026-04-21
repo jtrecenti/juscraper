@@ -101,7 +101,10 @@ class JusbrScraper(BaseScraper):
             raise RuntimeError("JusBR: cabeçalho 'Location' ausente na resposta de auth.")
         fragment = urllib.parse.urlparse(location_url).fragment
         params = urllib.parse.parse_qs(fragment)
-        code = params.get("code", [""])[0]
+        codes = params.get("code", [])
+        if not codes:
+            raise RuntimeError("JusBR: parâmetro 'code' ausente no fragmento de auth.")
+        code = codes[0]
         token_url = "https://sso.cloud.pje.jus.br/auth/realms/pje/protocol/openid-connect/token"
         data = {
             "grant_type": "authorization_code",

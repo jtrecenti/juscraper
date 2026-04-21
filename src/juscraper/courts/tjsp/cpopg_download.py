@@ -103,8 +103,10 @@ def cpopg_download_html_single(
             cd_processo = []
             for link in links:
                 query_params = parse_qs(urlparse(link).query)
-                codigo = query_params.get('processo.codigo', [""])[0]
-                cd_processo.append(codigo)
+                codigos = query_params.get('processo.codigo', [])
+                if not codigos:
+                    raise RuntimeError(f"Link sem 'processo.codigo': {link}")
+                cd_processo.append(codigos[0])
             if len(links) == 0:
                 logger.error("Nenhum link encontrado para o processo %s.", id_clean)
                 raise RuntimeError(
