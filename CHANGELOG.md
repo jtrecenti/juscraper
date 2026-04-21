@@ -9,6 +9,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- Contratos de teste offline para TJAC, TJAL, TJAM, TJCE e TJMS (`cjsg`). Cada tribunal ganhou `tests/<sigla>/test_cjsg_contract.py` cobrindo 3 cenarios (typical com paginacao, pagina unica, sem resultados), alimentados por samples HTML versionados em `tests/<sigla>/samples/cjsg/` e capturados via scripts em `tests/fixtures/capture/<sigla>.py`. Inclui teste de regressao para o adapter TLS `SECLEVEL=1` do TJCE. Primeira fatia da Fase 1 da politica de testes (refs #19, #104).
 - TJSP CJPG/CJSG: validacao de tamanho do campo `pesquisa` antes da requisicao. O backend do eSAJ trunca strings com mais de 120 caracteres silenciosamente; agora `cjpg_download` e `cjsg_download` levantam `QueryTooLongError` (subclasse de `ValueError`) quando o limite e excedido. Refs #35.
 
 ### Changed
