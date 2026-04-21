@@ -8,8 +8,8 @@ The real implementation of each scraper is in:
 - juscraper.aggregators.<sigla_agregador>.client.<Nome>Scraper
 """
 from importlib import import_module
-from typing import Any
 from importlib.metadata import version
+from typing import Any
 
 _SCRAPERS: dict[str, str] = {
     "tjac":  "juscraper.courts.tjac.client:TJACScraper",
@@ -41,6 +41,7 @@ _SCRAPERS: dict[str, str] = {
     "jusbr": "juscraper.aggregators.jusbr.client:JusbrScraper",
 }
 
+
 def scraper(sigla: str, *args: Any, **kwargs: Any):
     """
     Factory that returns the correct scraper.
@@ -60,6 +61,7 @@ def scraper(sigla: str, *args: Any, **kwargs: Any):
     mod = import_module(path)
     cls = getattr(mod, cls_name)
     return cls(*args, **kwargs)
+
 
 __version__ = version("juscraper")
 __all__ = ["scraper"]

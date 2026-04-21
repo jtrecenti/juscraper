@@ -1,15 +1,17 @@
 """
 Parse of cases from the TJSP jurisprudence search.
 """
-import os
-import re
 import glob
 import logging
+import os
+import re
+
 import pandas as pd
-from tqdm import tqdm
 from bs4 import BeautifulSoup
+from tqdm import tqdm
 
 logger = logging.getLogger("juscraper.cjpg_parse")
+
 
 def cjpg_n_pags(page_source):
     """
@@ -82,6 +84,7 @@ def cjpg_n_pags(page_source):
     pags = (results + 9) // 10  # math.ceil(results / 10)
     return pags
 
+
 def cjpg_parse_single(path):
     """
     Parses a downloaded HTML file from the cjpg_download function.
@@ -117,7 +120,7 @@ def cjpg_parse_single(path):
                 if strong:
                     texto = linha.text.strip()
                     chave, valor = texto.split(':', 1)
-                    chave = chave.strip().lower().replace(' ', '_').replace('-','')
+                    chave = chave.strip().lower().replace(' ', '_').replace('-', '')
                     valor = valor.strip()
                     if chave == 'data_de_disponibilização':
                         chave = 'data_disponibilizacao'
@@ -133,6 +136,7 @@ def cjpg_parse_single(path):
                 dados_processo['decisao'] = decisao_text
             processos.append(dados_processo)
     return pd.DataFrame(processos)
+
 
 def cjpg_parse_manager(path):
     """

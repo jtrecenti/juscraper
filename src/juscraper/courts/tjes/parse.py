@@ -3,7 +3,6 @@ Parse raw results from the TJES jurisprudence search.
 """
 import pandas as pd
 
-
 # Fields to keep from each doc, in order of importance
 _MAIN_FIELDS = [
     "nr_processo",

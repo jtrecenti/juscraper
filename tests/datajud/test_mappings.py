@@ -1,8 +1,5 @@
 """Testes de cobertura dos mapeamentos do DataJud (refs #56)."""
-from juscraper.aggregators.datajud.mappings import (
-    ID_JUSTICA_TRIBUNAL_TO_ALIAS,
-    TRIBUNAL_TO_ALIAS,
-)
+from juscraper.aggregators.datajud.mappings import ID_JUSTICA_TRIBUNAL_TO_ALIAS, TRIBUNAL_TO_ALIAS
 
 
 class TestIdJusticaTribunalToAlias:

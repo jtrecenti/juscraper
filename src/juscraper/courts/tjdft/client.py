@@ -1,16 +1,20 @@
 """
 Module for the scraper of the Court of Justice of the Federal District and Territories (TJDFT).
 """
-from typing import Optional, Union, List
+from typing import List, Optional, Union
+
 import pandas as pd
+
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_paginas, normalize_pesquisa, normalize_datas, warn_unsupported
+from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa, warn_unsupported
+
 from .download import cjsg_download
 from .parse import cjsg_parse
 
 
 class TJDFTScraper(BaseScraper):
     """Scraper for the Court of Justice of the Federal District and Territories (TJDFT)."""
+
     BASE_URL = "https://jurisdf.tjdft.jus.br/api/v1/pesquisa"
 
     def __init__(self):

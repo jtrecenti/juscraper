@@ -8,12 +8,7 @@ import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import (
-    normalize_datas,
-    normalize_paginas,
-    normalize_pesquisa,
-    warn_unsupported,
-)
+from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa, warn_unsupported
 
 from .download import cjsg_download as _cjsg_download
 from .parse import cjsg_parse as _cjsg_parse

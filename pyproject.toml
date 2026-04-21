@@ -90,6 +90,34 @@ load-plugins = ["pylint.extensions.docparams"]
 [tool.pylint.format]
 max-line-length = 120
 
+[tool.pylint.design]
+max-args = 10
+max-locals = 20
+max-returns = 6
+max-branches = 15
+max-statements = 50
+max-parents = 7
+max-attributes = 10
+min-public-methods = 1
+max-public-methods = 25
+
+[tool.pylint.similarities]
+min-similarity-lines = 4
+ignore-comments = true
+ignore-docstrings = true
+ignore-imports = false
+
+[tool.pylint.variables]
+init-import = false
+dummy-variables-rgx = "_+$|(_[a-zA-Z0-9_]*[a-zA-Z0-9]+?$)|dummy|^ignored_|^unused_"
+
+[tool.pylint.classes]
+valid-classmethod-first-arg = "cls"
+valid-metaclass-classmethod-first-arg = "mcs"
+
+[tool.pylint.imports]
+known-third-party = ["pandas", "requests", "beautifulsoup4", "tqdm", "unidecode"]
+
 [tool.pylint.messages_control]
 disable = [
     "missing-module-docstring",
@@ -100,7 +128,37 @@ disable = [
     "too-many-locals",
     "too-many-branches",
     "too-many-statements",
+    "too-many-instance-attributes",
+    "too-many-public-methods",
+    "too-many-nested-blocks",
+    "too-many-positional-arguments",
     "import-error",
+    "no-member",
+    "unused-argument",
+    "broad-except",
+    "fixme",
+    "invalid-name",
+    "ungrouped-imports",
+    "no-else-return",
+    "no-else-raise",
+    "logging-fstring-interpolation",
+    "logging-not-lazy",
+    "trailing-whitespace",
+    "trailing-newlines",
+    "duplicate-code",
+    "missing-param-doc",
+    "missing-type-doc",
+    "missing-return-doc",
+    "missing-return-type-doc",
+    "line-too-long",
+    "import-outside-toplevel",
+    "redefined-outer-name",
+    "reimported",
+    "attribute-defined-outside-init",
+    "use-maxsplit-arg",
+    "f-string-without-interpolation",
+    "consider-using-f-string",
+    "use-dict-literal",
 ]
 
 [tool.isort]

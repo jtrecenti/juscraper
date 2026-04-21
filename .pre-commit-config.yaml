@@ -6,6 +6,7 @@ repos:
       - id: end-of-file-fixer
       - id: check-yaml
       - id: check-added-large-files
+        exclude: ^tests/.*/samples/
       - id: check-merge-conflict
       - id: debug-statements
 
@@ -20,13 +21,17 @@ repos:
     hooks:
       - id: pylint
         args: ["--max-line-length=120"]
+        files: ^(src|scripts)/.*\.py$
 
   - repo: https://github.com/pycqa/flake8
     rev: 6.0.0
     hooks:
       - id: flake8
         additional_dependencies: [flake8-docstrings]
-        args: ['--max-line-length=120', '--extend-ignore=E203,W503']
+        args:
+          - '--max-line-length=120'
+          - '--extend-ignore=E203,W503,D100,D104,D107,D200,D205,D209,D400,D401,D403,E231'
+          - '--per-file-ignores=tests/*:D100,D101,D102,D103,D104,E302,E303,F401'
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.5.1

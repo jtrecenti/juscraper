@@ -2,11 +2,11 @@
 Downloads raw files from the TJRS jurisprudence search.
 """
 import math
+from typing import Optional
 from urllib.parse import urlencode
 
 import requests
 from tqdm import tqdm
-from typing import Optional
 
 
 def cjsg_download_manager(

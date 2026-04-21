@@ -3,8 +3,9 @@ import logging
 import shutil
 
 import requests
+
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_paginas, normalize_datas, validate_intervalo_datas
+from juscraper.utils.params import normalize_datas, normalize_paginas, validate_intervalo_datas
 
 from .cjsg_download import cjsg_download as _cjsg_download
 from .cjsg_parse import cjsg_n_pags, cjsg_parse_manager

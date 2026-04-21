@@ -1,28 +1,30 @@
 """
 Functions for parsing DATAJUD API responses
 """
-import warnings
-import pandas as pd
-from typing import Dict, Any, Optional
 import logging
+import warnings
+from typing import Any, Dict, Optional
+
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
+
 def parse_datajud_api_response(
-    api_response_json: Optional[Dict[str, Any]], 
+    api_response_json: Optional[Dict[str, Any]],
     mostrar_movs: bool = True
 ) -> pd.DataFrame:
     """
     Parses the JSON response from the Datajud API into a pandas DataFrame.
 
     Args:
-        api_response_json (Optional[Dict[str, Any]]): The parsed JSON response from the API 
+        api_response_json (Optional[Dict[str, Any]]): The parsed JSON response from the API
                                                        (output of call_datajud_api).
-        mostrar_movs (bool): If True, includes 'movimentacoes' in the DataFrame. 
+        mostrar_movs (bool): If True, includes 'movimentacoes' in the DataFrame.
                              Otherwise, they are excluded.
 
     Returns:
-        pd.DataFrame: A DataFrame containing the process data. Returns an empty 
+        pd.DataFrame: A DataFrame containing the process data. Returns an empty
                       DataFrame if parsing fails or no data is found.
     """
     if api_response_json is None:
@@ -48,11 +50,11 @@ def parse_datajud_api_response(
                 # Create a new dict excluding movimentacoes to avoid modifying original
                 processo_data_filtered = {
                     key: value for key, value in processo_data.items()
-                    if key not in ["movimentacoes", "movimentos"] # Check for both common keys
+                    if key not in ["movimentacoes", "movimentos"]  # Check for both common keys
                 }
                 processos.append(processo_data_filtered)
             else:
-                processos.append(processo_data) # Include all fields
+                processos.append(processo_data)  # Include all fields
 
         if not processos:
             logger.info("No process data extracted from hits.")

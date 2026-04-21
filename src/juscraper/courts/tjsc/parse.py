@@ -53,8 +53,7 @@ def _parse_result_item(item) -> dict:
                 result["processo"] = link.get_text(strip=True).rstrip("/T")
             # Extract class from remaining text
             classe_text = value.get_text(separator="\n", strip=True)
-            classe_match = re.search(r"(?:\d+\s*-\s*)?([A-Z][\w\s]+(?:de\s+\w+)*)", classe_text)
-            lines = [l.strip() for l in classe_text.split("\n") if l.strip()]
+            lines = [ln.strip() for ln in classe_text.split("\n") if ln.strip()]
             for line in lines:
                 if re.match(r"^[A-Z]{2,}", line) and "-" in line:
                     # e.g. "AI - Agravo de Instrumento"

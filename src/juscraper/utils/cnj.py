@@ -1,6 +1,4 @@
-"""
-Funções utilitárias para manipulação de números CNJ (Conselho Nacional de Justiça).
-"""
+"""Funções utilitárias para manipulação de números CNJ (Conselho Nacional de Justiça)."""
 import re
 
 _NON_DIGIT_RE = re.compile(r"\D")
@@ -17,9 +15,11 @@ def clean_cnj(numero: str) -> str:
     """
     return _NON_DIGIT_RE.sub("", numero)
 
+
 def split_cnj(numero: str) -> dict:
     """Divide um número de processo CNJ (limpo ou formatado) em suas partes.
-    Espera um número com 20 dígitos (após limpeza) ou no formato NNNNNNN-DD.AAAA.J.TR.OOOO
+
+    Espera um número com 20 dígitos (após limpeza) ou no formato NNNNNNN-DD.AAAA.J.TR.OOOO.
     Retorna um dicionário com as partes: num, dv, ano, justica, tribunal, orgao.
     """
     numero_limpo = clean_cnj(numero)
@@ -37,8 +37,8 @@ def split_cnj(numero: str) -> dict:
         "orgao": numero_limpo[16:]
     }
 
+
 def format_cnj(numero: str) -> str:
-    """Formata um número de processo CNJ (limpo ou já formatado) para o padrão NNNNNNN-DD.AAAA.J.TR.OOOO.
-    """
-    partes = split_cnj(numero) # split_cnj lida com a limpeza interna
+    """Formata um número de processo CNJ para o padrão NNNNNNN-DD.AAAA.J.TR.OOOO."""
+    partes = split_cnj(numero)  # split_cnj lida com a limpeza interna
     return f"{partes['num']}-{partes['dv']}.{partes['ano']}.{partes['justica']}.{partes['tribunal']}.{partes['orgao']}"

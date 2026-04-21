@@ -6,9 +6,10 @@ Includes utilities for processing API responses and cleaning document texts.
 # Functions for parsing and cleaning results and documents from JUSBR
 
 import logging
-from typing import Optional, Dict, Any, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 logger = logging.getLogger(__name__)
+
 
 def parse_process_list_response(json_data: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
@@ -21,11 +22,12 @@ def parse_process_list_response(json_data: Optional[Dict[str, Any]]) -> List[Dic
     if not isinstance(processos_content, list):
         logger.warning(
             "Chave 'content' não é uma lista ou está ausente"
-            "na resposta da lista de processos: %s", 
+            "na resposta da lista de processos: %s",
             json_data
         )
         return []
     return processos_content
+
 
 def parse_process_details_response(json_data: Optional[Union[Dict[str, Any], List[Dict[str, Any]]]],
                                    cnj_searched: str) -> Optional[Dict[str, Any]]:
@@ -57,7 +59,7 @@ def parse_process_details_response(json_data: Optional[Union[Dict[str, Any], Lis
                 logger.error(  # type: ignore[unreachable]
                     "Process details API returned a list, but the first item"
                     "is not a dictionary for CNJ %s. Data: %s",
-                    cnj_searched, str(json_data[0])[:200] # Log snippet of problematic data
+                    cnj_searched, str(json_data[0])[:200]  # Log snippet of problematic data
                 )
                 return None
         else:
@@ -69,12 +71,13 @@ def parse_process_details_response(json_data: Optional[Union[Dict[str, Any], Lis
     # Can add more sophisticated parsing here if needed, e.g., flattening nested structures
     # For now, it mostly returns the JSON data, augmented with the searched CNJ.
     parsed_data = {
-        'processo': cnj_searched, # Matches screenshot column 'processo'
-        'numeroProcesso': details_dict.get('numeroProcesso'), # Matches screenshot
-        'idCodexTribunal': details_dict.get('idCodexTribunal'), # Matches screenshot
-        'detalhes': details_dict # Full details dictionary as per screenshot
+        'processo': cnj_searched,  # Matches screenshot column 'processo'
+        'numeroProcesso': details_dict.get('numeroProcesso'),  # Matches screenshot
+        'idCodexTribunal': details_dict.get('idCodexTribunal'),  # Matches screenshot
+        'detalhes': details_dict  # Full details dictionary as per screenshot
     }
     return parsed_data
+
 
 def clean_document_text(text_content: Optional[str]) -> Optional[str]:
     """
@@ -86,11 +89,11 @@ def clean_document_text(text_content: Optional[str]) -> Optional[str]:
         # Comprehensive cleaning based on original code and common issues
         cleaned_text = text_content.replace('\x00', '')  # Remove null characters
         cleaned_text = cleaned_text.replace('\x1a', '')  # Remove SUB character
-        cleaned_text = cleaned_text.replace('\r\n', '\n').replace('\r', '\n') # Normalize newlines
+        cleaned_text = cleaned_text.replace('\r\n', '\n').replace('\r', '\n')  # Normalize newlines
         cleaned_text = cleaned_text.replace('\xa0', ' ')    # non-breaking space to regular space
-        cleaned_text = cleaned_text.replace('\u2028', '\n') # Line separator to newline
-        cleaned_text = cleaned_text.replace('\u2029', '\n') # Paragraph separator to nl
-        cleaned_text = cleaned_text.strip() # Strip leading/trailing whitespace
+        cleaned_text = cleaned_text.replace('\u2028', '\n')  # Line separator to newline
+        cleaned_text = cleaned_text.replace('\u2029', '\n')  # Paragraph separator to nl
+        cleaned_text = cleaned_text.strip()  # Strip leading/trailing whitespace
         # Potentially add more specific cleaning if other problematic characters are found
         return cleaned_text
     except Exception as e:

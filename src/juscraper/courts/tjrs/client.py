@@ -1,11 +1,14 @@
 """
 Scraper for the Tribunal de Justiça do Rio Grande do Sul (TJRS).
 """
-from typing import Optional, Union, List
-import requests
+from typing import List, Optional, Union
+
 import pandas as pd
+import requests
+
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_paginas, normalize_pesquisa, normalize_datas
+from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa
+
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
 

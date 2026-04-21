@@ -2,10 +2,10 @@
 Parse of cases from the TJAL Consulta de Julgados de Segundo Grau (CJSG).
 TJAL uses the same eSAJ platform as TJSP, so the HTML structure is identical.
 """
-import os
 import glob
-import re
 import logging
+import os
+import re
 
 import pandas as pd
 import unidecode

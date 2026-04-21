@@ -2,14 +2,14 @@
 Download of results from the TJAM Consulta de Julgados de Segundo Grau (CJSG).
 TJAM uses the eSAJ platform (same as TJSP).
 """
+import logging
 import os
 import time
 from datetime import datetime
-import logging
+from typing import Optional
 
 import requests
 from tqdm import tqdm
-from typing import Optional
 
 logger = logging.getLogger("juscraper.tjam.cjsg_download")
 

@@ -1,28 +1,30 @@
 """
 Parse of cases from the TJSP Consulta de Julgados de Segundo Grau (CJSG).
 """
-import os
 import glob
-import re
 import logging
+import os
+import re
+
 import pandas as pd
-from tqdm import tqdm
 import unidecode
 from bs4 import BeautifulSoup
+from tqdm import tqdm
 
 logger = logging.getLogger("juscraper.cjsg_parse")
+
 
 def cjsg_n_pags(html_source):
     """
     Extracts the number of pages from the CJSG search results HTML.
     """
     soup = BeautifulSoup(html_source, "html.parser")
-    
+
     # Check if there are no results
     page_text = soup.get_text().lower()
     if 'nenhum resultado' in page_text or 'não foram encontrados' in page_text or 'sem resultados' in page_text:
         return 0
-    
+
     # Check for error messages or captcha issues
     # Only check for specific error elements, not just the word "erro" in the text
     # (which could be part of a decision content)
@@ -40,12 +42,12 @@ def cjsg_n_pags(html_source):
             raise ValueError(
                 f"Erro detectado na página: {error_msg[:200]}"
             )
-    
+
     # Try to find pagination element following R code logic
     # R code: xml_find_all(xpath = "//td[contains(., 'Resultados')]")
     # Then extract number from end: str_extract("\\d+$")
     td_npags = None
-    
+
     # First try: look for td containing "Resultados" (as in R code)
     all_tds = soup.find_all("td")
     for td in all_tds:
@@ -53,15 +55,15 @@ def cjsg_n_pags(html_source):
         if 'Resultados' in td_text or 'resultados' in td_text.lower():
             td_npags = td
             break
-    
+
     # Second try: look for td with bgcolor='#EEEEEE' (original approach)
     if td_npags is None:
         td_npags = soup.find("td", bgcolor='#EEEEEE')
-    
+
     # Third try: look for pagination text
     if td_npags is None:
         td_npags = soup.find("td", class_=re.compile(r'.*pag.*', re.I))
-    
+
     # Fourth try: find by text content
     if td_npags is None:
         for td in all_tds:
@@ -69,7 +71,7 @@ def cjsg_n_pags(html_source):
             if 'página' in td_text and ('de' in td_text or 'total' in td_text):
                 td_npags = td
                 break
-    
+
     if td_npags is None:
         # Check if results table exists
         results_table = soup.find("table", class_=re.compile(r'fundocinza|resultado', re.I))
@@ -86,23 +88,23 @@ def cjsg_n_pags(html_source):
             )
         # If table exists but no pagination, assume 1 page
         return 1
-    
+
     txt_pag = td_npags.get_text()
-    
+
     # Try R code approach: extract number from end of text (\\d+$)
     rx_end = re.compile(r'\d+$')
     encontrados = rx_end.findall(txt_pag.strip())
-    
+
     if not encontrados:
         # Try original approach: (?<=de )[0-9]+
         rx = re.compile(r'(?<=de )[0-9]+')
         encontrados = rx.findall(txt_pag)
-    
+
     if not encontrados:
         # Try alternative regex patterns
         rx2 = re.compile(r'[0-9]+(?=\s*(?:resultado|registro|página))', re.I)
         encontrados = rx2.findall(txt_pag)
-    
+
     if not encontrados:
         # Try to find any number in the text
         rx3 = re.compile(r'\d+')
@@ -110,23 +112,24 @@ def cjsg_n_pags(html_source):
         # Take the largest number (likely the total)
         if encontrados:
             encontrados = [max(encontrados, key=int)]
-    
+
     if not encontrados:
         raise ValueError(
             "Não foi possível extrair o número de resultados da paginação. "
             f"Formato inesperado encontrado. Texto: {txt_pag[:100]}"
         )
-    
+
     n_results = int(encontrados[0])
     # R code: divide_by(20) then ceiling()
     n_pags = (n_results + 19) // 20  # Equivalent to math.ceil(n_results / 20)
     return n_pags
 
+
 def _cjsg_parse_single_page(path: str):
     # Read file - try both encodings to handle both test files (utf-8) and real downloads (latin1)
     with open(path, 'rb') as f:
         raw_content = f.read()
-    
+
     # Try utf-8 first (for test files), then latin1 (for real downloads)
     try:
         content = raw_content.decode('utf-8')
@@ -137,7 +140,7 @@ def _cjsg_parse_single_page(path: str):
         except UnicodeDecodeError:
             # Last resort: decode with errors='replace'
             content = raw_content.decode('utf-8', errors='replace')
-    
+
     soup = BeautifulSoup(content, 'html.parser')
 
     processos = []
@@ -204,7 +207,7 @@ def _cjsg_parse_single_page(path: str):
                 import re
                 key_normalized = re.sub(r'_+', '_', key_normalized)
                 key_normalized = key_normalized.strip('_')
-                
+
                 if key_normalized != 'outros_numeros':
                     # Corrige nomes específicos de colunas
                     if 'data_publicacao' in key_normalized or 'data_publicassapso' in key_normalized:
@@ -219,7 +222,7 @@ def _cjsg_parse_single_page(path: str):
                         value = value.replace('Orgão julgador:', '')
                         value = value.replace('argapso julgador:', '')
                         value = value.strip()
-                    
+
                     dados_processo[key_normalized] = value
 
         processos.append(dados_processo)

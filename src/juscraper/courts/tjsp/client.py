@@ -1,27 +1,24 @@
 """
 Main scraper for Tribunal de Justica de Sao Paulo (TJSP).
 """
-import os
-import tempfile
-from typing import Union, List, Literal, Optional
 import logging
+import os
 import shutil
+import tempfile
+from typing import List, Literal, Optional, Union
+
 import requests
 
 from ...core.base import BaseScraper
-from ...utils.params import normalize_paginas, normalize_datas, validate_intervalo_datas
-
-from .cpopg_download import cpopg_download_html, cpopg_download_api
-from .cpopg_parse import get_cpopg_download_links, cpopg_parse_manager
-
-from .cposg_download import cposg_download_html, cposg_download_api
-from .cposg_parse import cposg_parse_manager
-
-from .cjsg_download import cjsg_download as cjsg_download_mod
-from .cjsg_parse import cjsg_n_pags, cjsg_parse_manager
-
+from ...utils.params import normalize_datas, normalize_paginas, validate_intervalo_datas
 from .cjpg_download import cjpg_download as cjpg_download_mod
 from .cjpg_parse import cjpg_n_pags, cjpg_parse_manager
+from .cjsg_download import cjsg_download as cjsg_download_mod
+from .cjsg_parse import cjsg_n_pags, cjsg_parse_manager
+from .cpopg_download import cpopg_download_api, cpopg_download_html
+from .cpopg_parse import cpopg_parse_manager, get_cpopg_download_links
+from .cposg_download import cposg_download_api, cposg_download_html
+from .cposg_parse import cposg_parse_manager
 
 logger = logging.getLogger('juscraper.tjsp')
 

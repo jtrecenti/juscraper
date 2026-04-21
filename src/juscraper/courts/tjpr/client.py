@@ -1,11 +1,14 @@
 """
 Scraper for the Court of Justice of Paraná (TJPR).
 """
-from typing import Optional, Union, List
-import requests
+from typing import List, Optional, Union
+
 import pandas as pd
+import requests
+
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_paginas, normalize_pesquisa, normalize_datas
+from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa
+
 from .download import cjsg_download, get_initial_tokens
 from .parse import cjsg_parse
 

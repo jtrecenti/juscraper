@@ -1,1 +1,1 @@
-# Logging configuration
+"""Logging configuration for juscraper."""
