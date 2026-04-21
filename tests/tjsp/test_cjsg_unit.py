@@ -8,8 +8,7 @@ import pandas as pd
 import pytest
 
 from juscraper.courts.tjsp.cjsg_parse import _cjsg_parse_single_page, cjsg_n_pags, cjsg_parse_manager
-
-from .test_utils import load_sample_html
+from tests._helpers import load_sample
 
 
 class TestCJSGNPages:
@@ -17,14 +16,14 @@ class TestCJSGNPages:
 
     def test_extract_pages_from_results(self):
         """Test extracting page count from results HTML."""
-        html = load_sample_html('cjsg_results.html')
+        html = load_sample('tjsp', 'cjsg/results_normal.html')
         n_pags = cjsg_n_pags(html)
         # 45 results / 20 per page = 3 pages (rounded up)
         assert n_pags == 3
 
     def test_extract_pages_from_single_result(self):
         """Test extracting page count from single result HTML."""
-        html = load_sample_html('cjsg_single_result.html')
+        html = load_sample('tjsp', 'cjsg/single_result.html')
         n_pags = cjsg_n_pags(html)
         # 1 result / 20 per page = 1 page
         assert n_pags == 1
@@ -47,7 +46,7 @@ class TestCJSGParseSinglePage:
 
     def test_parse_results_page(self):
         """Test parsing a results page with multiple processes."""
-        html = load_sample_html('cjsg_results.html')
+        html = load_sample('tjsp', 'cjsg/results_normal.html')
 
         with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
             f.write(html)
@@ -75,7 +74,7 @@ class TestCJSGParseSinglePage:
 
     def test_parse_single_result(self):
         """Test parsing a page with a single result."""
-        html = load_sample_html('cjsg_single_result.html')
+        html = load_sample('tjsp', 'cjsg/single_result.html')
 
         with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
             f.write(html)
@@ -148,8 +147,8 @@ class TestCJSGParseManager:
 
     def test_parse_directory(self):
         """Test parsing multiple files from a directory."""
-        html1 = load_sample_html('cjsg_results.html')
-        html2 = load_sample_html('cjsg_single_result.html')
+        html1 = load_sample('tjsp', 'cjsg/results_normal.html')
+        html2 = load_sample('tjsp', 'cjsg/single_result.html')
 
         with tempfile.TemporaryDirectory() as temp_dir:
             file1 = os.path.join(temp_dir, 'page1.html')
@@ -168,7 +167,7 @@ class TestCJSGParseManager:
 
     def test_parse_single_file(self):
         """Test parsing a single file."""
-        html = load_sample_html('cjsg_results.html')
+        html = load_sample('tjsp', 'cjsg/results_normal.html')
 
         with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
             f.write(html)
@@ -190,7 +189,7 @@ class TestCJSGParseManager:
 
     def test_parse_with_invalid_file(self):
         """Test parsing directory with invalid file (should skip it)."""
-        html = load_sample_html('cjsg_results.html')
+        html = load_sample('tjsp', 'cjsg/results_normal.html')
 
         with tempfile.TemporaryDirectory() as temp_dir:
             valid_file = os.path.join(temp_dir, 'valid.html')

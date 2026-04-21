@@ -64,6 +64,30 @@ juscraper e uma biblioteca Python para raspagem de dados de tribunais brasileiro
 
 Antes de refatorar um tribunal pela #84, ele precisa ter contratos passando. A camada de contrato valida so a API publica e sobrevive a mudanca estrutural; serve como rede de seguranca da refatoracao. Granulares vem depois, na estrutura ja refatorada. **TJSP refatora por ultimo** (mais usado, mais complexo).
 
+### Contrato ao adicionar um novo raspador
+
+Todo raspador novo em `src/juscraper/courts/<xx>/` ou `src/juscraper/aggregators/<xx>/` deve entrar acompanhado de **pelo menos um teste de contrato** por metodo publico (`cjsg`, `cjpg`, `cpopg`, `cposg`, `listar_processos`, etc.). O PR fica bloqueado sem isso.
+
+Checklist obrigatoria para o PR que adiciona o raspador:
+
+1. **Script de captura** em `tests/fixtures/capture/<xx>.py` que exercita o scraper real e salva as respostas cruas em `tests/<xx>/samples/<endpoint>/<cenario>.<ext>`. Minimo de 3 cenarios por endpoint: typical, sem resultados, pagina unica.
+2. **Samples commitados** em `tests/<xx>/samples/<endpoint>/`. Convencao: `results_normal.html`, `single_page.html`, `no_results.html`, `results_normal_page_NN.html` para multi-pagina.
+3. **Teste de contrato** em `tests/<xx>/test_<endpoint>_contract.py` seguindo o padrao:
+   - `@responses.activate` decorator.
+   - `mocker.patch("time.sleep")` em toda funcao/classe com paginacao.
+   - `responses.add(..., body=load_sample_bytes("<xx>", "<endpoint>/<cenario>.<ext>"))` para cada request esperado.
+   - Matcher de payload sempre que possivel:
+     - `urlencoded_params_matcher(..., allow_blank=True)` para POST form (eSAJ manda campos vazios).
+     - `json_params_matcher(...)` para POST JSON/GraphQL.
+     - `query_param_matcher(...)` para GETs. Filtrar `None` antes de passar (requests remove Nones do URL).
+   - Assertiva de schema via **subset**: `{"col_a", "col_b"} <= set(df.columns)`. Nunca igualdade.
+   - Pelo menos 3 cenarios: typical, empty (quando o parser aceita), edge (paginacao).
+4. **Sem `@pytest.mark.integration`** no contrato.
+5. **Sem dependencia de rede, relogio ou TLS real**. Adapter TLS custom: testar so montagem (`isinstance`).
+6. **Fluxos multi-step com ordem obrigatoria** usam `responses.registries.OrderedRegistry`.
+7. **Captchas, tokens dinamicos e libs externas** (`txtcaptcha`, `browser_cookie3`) sao **mockados** — nunca invocados. Injetar fakes via `mocker.patch.dict(sys.modules, ...)` para lazy imports ausentes das deps.
+8. **Entry no CHANGELOG** em `[Unreleased]/Added`.
+
 ## Convencao de API para raspadores
 
 - Busca: `pesquisa` como nome padrao em todos os scrapers

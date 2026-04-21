@@ -1,0 +1,3760 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html>
+
+
+
+
+
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+	<script>
+	window.saj = window.saj || {};
+	window.saj.env = window.saj.env || {};
+	window.saj.env.root = '/cjpg';
+	window.saj.env.css = '/cjpg/css';
+	window.saj.env.js = '/cjpg/js';
+	window.saj.env.imagens = '/cjpg/imagens';
+</script>
+
+ 	<script type="text/Javascript" src="/cjpg/js/jquery/jquery-1.3.2.js?n=4277120003"></script>
+ 	<script type="text/Javascript" src="/cjpg/js/jquery/jquery.blockUI.js?n=224043528"></script>
+ 	<script type="text/JavaScript" src="/cjpg/js/spw/spwConcatenado-4.3.3-14.js?n=2760002609"></script>
+	<script type="text/JavaScript" src="/cjpg/js/saj/saj-popup.js?n=2538966893"></script>
+
+	<!--
+	<script type="text/JavaScript" src="/cjpg/js/saj/saj-tooltip.js?n=3753729220"></script>
+	 -->
+	<script type="text/JavaScript" src="/cjpg/js/toolTipSaj.js?n=1673314448"></script>
+
+
+ 	<link rel="stylesheet" type="text/css" href="/cjpg/css/spw/spwConcatenado-4.3.3-14.css" />
+	<link rel="stylesheet" type="text/css" href="/cjpg/css/toolTipSaj.css" />
+	<link rel="stylesheet" type="text/css" href="/cjpg/css/saj/saj-popup-modal.css" />
+
+	<title>Consulta de Julgados do Primeiro Grau</title>
+
+
+		<link rel="stylesheet" type="text/css" href="/cjpg/css/cjpg.css" />
+		<link rel="stylesheet" type="text/css" href="/cjpg/css/saj/saj-tree.css" />
+		<script type="text/JavaScript" src="/cjpg/js/saj/saj-popup.js?n=2538966893"></script>
+		<script type="text/JavaScript" src="/cjpg/js/saj/saj-tree-2.2.43-2.js?n=716072279"></script>
+		<script type="text/JavaScript" src="/cjpg/js/saj/saj-web-2.2.41-4.js?n=3542479983"></script>
+		<script type="text/JavaScript" src="/cjpg/js/saj/saj-numeroProcesso.js?n=725367609"></script>
+		<script type="text/JavaScript" src="/cjpg/js/saj/saj-mascara-input.js?n=3017414384"></script>
+		<script type="text/JavaScript" src="/cjpg/js/saj/saj-browser.js?n=500187587"></script>
+		<script type="text/JavaScript" src="/cjpg/js/saj/saj-popup-modal-1.0.0-1.js?n=2003682593"></script>
+
+		<script type="text/javascript" src="/cjpg/jsp/consulta.js?n=1983409050" ></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
+<meta http-equiv="pragma" content="no-cache"/>
+<meta http-equiv="cache-control" content="no-cache"/>
+<meta http-equiv="expires" content="0"/>
+
+<link href="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/css/esajComum.css" rel="stylesheet" type="text/css" />
+<link href="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/css/esajLayout.css" rel="stylesheet" type="text/css" />
+<link href="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/clientes/SP/css/esajLayoutSP.css" rel="stylesheet" type="text/css" />
+
+<style type="text/css">
+<!--
+/* botao default means o mais claro, que seria o "botï¿½o principal" */
+.spwBotaoDefault, .spwBotaoDefault-o {
+	background-image: url(https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/clientes/SP/imagens/layout/fundoBotaoDefault.gif);
+}
+/* o botao secundario, menos provavel de ser clicado, mais escuro */
+.spwBotao, .spwBotao-o {
+	background-image: url(https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/imagens/layout/fundoBotao.gif);
+}
+-->
+</style>
+
+
+<script language="javascript" type="text/JavaScript" src="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/js/menu.js?n=2553626853"></script>
+
+<link rel="shortcut icon" href="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/clientes/SP/imagens/favicon.ico" type="image/x-icon" />
+
+
+	<script type="text/javascript">
+
+	  var _gaq = _gaq || [];
+	  _gaq.push(['_setAccount', 'UA-23111004-1']);
+	  _gaq.push(['_trackPageview']);
+
+	  (function() {
+	    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+	    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+	    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+	  })();
+
+	</script>
+
+
+
+<script>
+    var dict = {
+        'certificado.tituloCertificadoDigital': 'Certificado digital',
+        'certificado.msgCarregandoCertificado': 'Carregando certificados...',
+        'certificado.msgNenhumCertificadoEncontrado': 'Nenhum certificado encontrado',
+        'certificado.msgErroCarregarCertificado': 'Erro ao carregar certificados',
+        'certificado.msgCertificadoExpirado': '[Expirado]',
+        'certificado.msgCertificadoNaoValido': '[Ainda não válido]',
+        'certificado.msgCertificadoNaoIcpBrasil': '[Não ICP-Brasil]',
+        'certificado.tituloProblemasAoAssinar': 'Falha de comunicação com o dispositivo de assinatura digital',
+
+        'label.contato': 'Contato',
+        'label.identificarSe': 'Identificar-se ',
+
+        'mensagem.aguarde': 'Por favor, aguarde.',
+        'mensagem.paginaNaoCarregada': 'Não foi possível carregar a página.',
+        'mensagem.marcarLido': 'Marcar como lido',
+        'mensagem.registrosSelecionados': 'Registros selecionados',
+        'mensagem.registroJaSelecionado': 'Este registro já está selecionado',
+
+        'mensagem.data.invalida': 'A data digitada é inválida.',
+        'mensagem.data.anoInvalido': 'O ano informado deve ser maior que',
+        'mensagem.data.mesInvalido': 'O mês não pode ser maior que 12.',
+        'mensagem.data.mes': 'O mês',
+        'mensagem.data.mesMaior29dias': 'não pode ter mais que 29 dias.',
+        'mensagem.data.mesMaior28dias': 'não pode ter mais que 28 dias.',
+        'mensagem.data.mesMaior31dias': 'não pode ter mais que 31 dias.',
+        'mensagem.data.mesMaior30dias': 'não pode ter mais que 30 dias.',
+
+        'mensagem.email.invalido': 'O formato do endereço de e-mail não é válido. Verifique se ele tem o formato "usuario@dominio".',
+        'mensagem.email.caracteresInvalidos': 'O endereço de e-mail possui caracteres inválidos',
+        'mensagem.email.usuarioInvalido': 'O formato do usuário informado no endereço de e-mail não é válido.',
+        'mensagem.email.ipInvalido': 'O endereço IP informado no endereço de e-mail não é válido.',
+        'mensagem.email.dominioInvalido': 'O formato do domínio informado no endereço de e-mail não é válido.',
+        'mensagem.email.dominioIncompleto': 'O domínio informado no endereço de e-mail deve possuir pelo menos duas partes. Por exemplo: "usuario@empresa.com.br".',
+
+        'mensagem.texto.tamanhoInvalido': 'O tamanho do texto digitado é maior do que o tamanho permitido. Tamanho permitido:',
+        'mensagem.texto.caracter': 'O caracter',
+        'mensagem.texto.caracterPosicaoInvalida': 'não está permitido na posição',
+
+        'mensagem.numero.numeroInvalido': 'O valor digitado não é um número válido.',
+        'mensagem.numero.numeroNaoPodeCasasDecimais': 'O número não pode conter casas decimais',
+        'mensagem.numero.numeroCasaDecimaisInvalidas': 'O número de casas decimais é inválido. O número pode conter apenas',
+        'mensagem.numero.casaDecimais': 'casas decimais',
+        'mensagem.numero.numeroInteiroInvalido': 'O número de dígitos inteiros é inválido. O número pode conter apenas',
+        'mensagem.numero.digitosInteiros': 'dígitos inteiros',
+        'mensagem.numero.numeroTamanhoInvalido': 'O número digitado não pode ser maior que',
+        'mensagem.numero.numeroZeroInvalido': 'O número digitado deve ser diferente de zero.'
+    }
+</script>
+
+
+
+
+
+
+
+</head>
+
+
+
+
+
+
+
+
+
+
+
+    <script language="javascript" type="text/JavaScript"
+            src="https://esaj.tjsp.jus.br/sajcas/verificarLogin.js?script=1776775590198"></script>
+
+    <script language="javascript">
+        if (window.sajcas && window.sajcas.usuarioLogadoNoCasServer) {
+            var GATEWAY_TRUE = 'gateway=true', GATEWAY_FALSE = 'gateway=false';
+            var urlRetornoSistema = '';
+            if (urlRetornoSistema === '') {
+                urlRetornoSistema = window.location.href;
+            }
+
+            if (urlRetornoSistema.indexOf(GATEWAY_FALSE) !== -1) {
+                urlRetornoSistema = urlRetornoSistema.replace(GATEWAY_FALSE, GATEWAY_TRUE);
+            } else {
+                urlRetornoSistema.lastIndexOf('?') !== -1 ? urlRetornoSistema += '&' : urlRetornoSistema += '?';
+                urlRetornoSistema += GATEWAY_TRUE;
+            }
+
+            window.location.href = urlRetornoSistema;
+        }
+    </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            <div class="esajBarraAcessibilidade">
+                <a target="_blank" href="https://www.tjsp.jus.br/Acessibilidade/Orientacoes"><span>Acessibilidade</span></a>
+                <a target="_blank" href="https://www.tjsp.jus.br/Acessibilidade/Orientacoes">
+                    <img height="20" width="20" border="0" onmouseover="exibirLibras()" onmouseleave="ocultarLibras()" alt="MAO" src="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/imagens/layout/mao.png"/>
+                </a>
+            </div>
+            <img id="gifLibras" class="esajBarraAcessibilidadeLibras" style="display: none" height="100" width="100" border="0" alt="LIBRAS" src="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/imagens/layout/libras.gif"/>
+
+
+
+
+<table width="100%" border="0" cellpadding="0" cellspacing="0" class="esajTabelaCabecalhoCliente" summary=" " role="presentation">
+	<tr>
+		<td><a href="http://www.tjsp.jus.br"><img src="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/clientes/SP/imagens/layout/cabecalhoLogo.jpg" width="425" height="58" alt="Tribunal de Justi&ccedil;a do Estado de S&atilde;o Paulo" /></a></td>
+		<td align="right" valign="top"><img src="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/clientes/SP/imagens/layout/cabecalhoImagem.jpg" width="353" height="58" /></td>
+	</tr>
+</table>
+<script language="javascript" type="text/JavaScript" src="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/js/libras.js?n=369456521"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- cabecalho e-Saj -->
+<table width="100%" cellpadding="0" cellspacing="0" class="esajTabelaCabecalhoServico" summary=" " role="presentation">
+	<tr>
+		<td class="esajCelulaCabecalhoServicoLogo">
+
+
+
+
+<a href="https://esaj.tjsp.jus.br/esaj-layout/redirecionarNovoEsaj.do"><img src="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/imagens/layout/eSajServico.gif" title="Voltar para página inicial do e-SAJ" alt="Voltar para página inicial do e-SAJ" width="255" height="53" border="0" /></a><img src="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/imagens/layout/eSajServicoInf.gif" alt=" " width="255" height="28" border="0" />
+</td>
+		<td class="esajCelulaCabecalhoServicoMenu">
+		    <table width="100%" border="0" cellpadding="0" cellspacing="0" summary=" " role="presentation">
+				<tr>
+					<td align="right">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <div id="divopupContato" style="display: none;">
+                <div class="quadroContato"><h2>Suporte Técnico de Sistemas</h2>         <div style="text-align: left; padding: 0 20px;">             <p class="locaisContato">Cadastro de Advogados, Peticionamento Eletrônico e Processos de Primeira Instância Sistemas de 1ª Instância, Sistemas de 2ª Instância, Colégio Recursal, Consulta de Acórdão, Decisões Monocráticas, Homologações de Acordo e Jurisprudência  e Sistema Pushing.</p>             <p class="telefonesLocal"> Abra sua solicitação através do portal de atendimento: <a target="_blank" href="https://www.suportesistemastjsp.com.br/">https://www.suportesistemastjsp.com.br/</a></p>         </div>     </div>
+        </div>
+
+
+<!-- Devido ao alinhamento inline das imagens, elas nÃ£o podem ter nenhum tipo de espaÃ§amento entre elas, portanto Ã© necessÃ¡rio finalizar a linha iniciando um comentÃ¡rio e fechar o comentÃ¡rio imediatamente antes da abertura da nova tag-->
+<img height="24" width="47" alt=" " src="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/imagens/layout/inicioMenuSup.jpg"/><a href="https://esaj.tjsp.jus.br/caixapostal"><!--
+
+    --><img height="24" width="83" border="0" alt="Caixa Postal" src="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/imagens/layout/caixaPostal.gif"/></a><!--
+    --><img height="24" width="4" alt=" " src="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/imagens/layout/menuSeparador.jpg"/><a href="https://esaj.tjsp.jus.br/esaj/cadastro.do"><!--
+
+--><img src="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/imagens/layout/cadastro.gif" alt="Cadastro" width="81" height="24" border="0" /></a><!--
+
+    --><img height="24" width="4" alt=" " src="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/imagens/layout/menuSeparador.jpg"/><a id="linkContato" href="#"><!--
+    --><img height="24" width="68" border="0" alt="Contato" src="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/imagens/layout/contato.gif"/></a><!--
+
+
+    --><img height="24" width="4" alt=" " src="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/imagens/layout/menuSeparador.jpg"/><a target="blank" href="https://esaj.tjsp.jus.br/WebHelp/"><!--
+    --><img height="24" width="61" border="0" alt="Ajuda do e-Saj" src="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/imagens/layout/ajuda.gif"/></a><!--
+
+
+-->
+</td>
+				</tr>
+				<tr>
+					<td class="esajCelulaIdentificacaoServico" >
+
+
+
+
+<style>
+
+    td.esajCelulaIdentificacao, td.esajCelulaIdentificacaoServico {
+        position: relative;
+    }
+
+    button.escolhaBeta {
+        border: 0;
+        background: #0078D7;
+        color: #fff;
+        margin-right: 5px;
+        font-family: verdana;
+        font-size: 12px;
+        height: 27px;
+        line-height: 14px;
+        border-radius: 0;
+        text-shadow: 1px 1px 1px #797979;
+        position: absolute;
+        top: 30px;
+        right: 3px;
+        padding: 7px 12px;
+        cursor: pointer;
+    }
+
+    button.escolhaBeta:hover {
+        background-color: #0b5c9c;
+    }
+</style>
+
+<span id="identificacao"></span>
+
+<button style="display: none" class="escolhaBeta"></button>
+
+
+
+
+
+
+        <script language="javascript" type="text/JavaScript" src="https://esaj.tjsp.jus.br/sajcas/conteudoIdentificacao?script=1776756838896"></script>
+
+
+</td>
+				</tr>
+				<tr>
+					<td class="esajCelulaCabecalhoServicoCaminho" >
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<a href="" class="esajCaminhoLink"></a>
+
+ &gt;
+
+
+<a href="https://esaj.tjsp.jus.br/esaj?servico=740000" class="esajCaminhoLink">Bem-vindo</a>
+
+ &gt;
+
+
+
+Consulta de Julgados de 1º Grau
+</td>
+				</tr>
+			</table>
+		</td>
+	</tr>
+</table>
+<!-- CONTEUDO -->
+<table width="100%" border="0" cellpadding="0" cellspacing="0" class="esajTabelaTitulo" role="presentation">
+	<tr>
+		<td class="esajCelulaMenuSuspenso">
+		<a href="#" onclick="return showMenuSuspenso()"><img src="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/imagens/layout/menuSuspenso.gif" alt="Menu de servi&ccedil;os" width="243" height="21" style="display:block" /></a>
+		<div id="layerMenu" style="display:none">
+
+
+<!-- MENU -->
+<ul id="esajMenuArea">
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Consultas Processuais</a>
+<ul>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/cpopg/open.do">Consulta de Processos do 1ºGrau</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/cposg/open.do">Consulta de Processos do 2ºGrau</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/cposgcr/open.do">Colégio Recursal/Turma de Uniformização</a></li>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Consulta de Ordem de Processos</a>
+<ul>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/cop/abrirConsultaDeOrdemDeJulgamentoPg.do">Consulta de processos de Ordem de julgamento do 1º Grau</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/cop/abrirConsultaDeOrdemDeAtoPg.do">Consulta de Ordem de Publicação e Cumprimento de Atos</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/cop/abrirConsultaDeOrdemDeAtoSgTj.do">Consulta de Ordem de Publicação de Cumprimento de Atos do 2º Grau</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/cop/abrirConsultaDeOrdemDeJulgamentoMagistradoSg.do">Consulta de Ordem de Julgamento do 2º Grau</a></li>
+</ul>
+  </li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/pauta-julgamento-virtual">Pauta de Julgamento Virtual do Segundo Grau</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/pauta-julgamento-virtual-cr">Pauta de Julgamento Virtual do Colégio Recursal</a></li>
+</ul>
+  </li>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Solicitações e Pedidos</a>
+<ul>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/petpg-conciliacao/abrirPedidoMedicamentos.do">Pedido de Medicamentos</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/petpg-conciliacao/abrirConciliacaoSuperendividamento.do">Conciliação no Superendividamento</a></li>
+</ul>
+  </li>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Requisitórios</a>
+<ul>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Portal do Devedor</a>
+<ul>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/cpopg/abrirConsultaDeRequisitorios.do">Consulta de Requisitórios</a></li>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Notificação de Requisitórios</a>
+<ul>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/portalDevedor/abrirConsultaNotificacoesRequisitoriosNaoRecebidas.do">Requisitórios Pendentes de Recebimento</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/portalDevedor/abrirConsultaNotificacoesRequisitoriosRecebidas.do">Requisitórios Recebidos</a></li>
+</ul>
+  </li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/portalDevedor/abrirConsultaDeProcessos.do">Consulta de Processos</a></li>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Notificação de Mapas Orçamentários</a>
+<ul>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/portalDevedor/abrirConsultaNotificacoesMapasOrcamentariosNaoRecebidas.do">Mapas Pendentes de Recebimento</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/portalDevedor/abrirConsultaNotificacoesMapasOrcamentariosRecebidas.do">Mapas Recebidos</a></li>
+</ul>
+  </li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/portalDevedor/abrirPeticionamentoIntermediario.do">Peticionamento de Intermediária</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/portalDevedor/abrirConsultaNotificacoesDocumentos.do">Notificação de Documentos</a></li>
+</ul>
+  </li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/portalDevedor/abrirConsultaListaPagamentos.do">Listas de Precatórios Pendentes de Pagamento e Pagamentos Disponibilizados</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/portalDevedor/abrirConsultaListaDepositos.do">Lista de Depósitos Efetuados</a></li>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Portal dos outros Tribunais</a>
+<ul>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/portalDevedor/abrirConsultaDeProcessos.do">Consulta de processos</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/portalDevedor/abrirConsultaNotificacoesDocumentosOutrosTribunais.do">Notificação de Documentos</a></li>
+</ul>
+  </li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/securitycasapireq/api/cas/authenticate?serviceurl=https://esaj.tjsp.jus.br/petpgdivreq">Petição intermediária de 1º Grau no Precatório</a></li>
+</ul>
+  </li>
+  <li class="esajMenuFechado"><a href="https://esaj.tjsp.jus.br/portal-cto-frontend/transparencia/consulta">Contratos</a></li>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Consultas de Jurisprudência</a>
+<ul>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/cjsg/consultaSimples.do">Consulta Simples</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/cjsg/consultaCompleta.do">Consulta Completa</a></li>
+</ul>
+  </li>
+  <li class="esajMenuFechado"><a href="https://esaj.tjsp.jus.br/cdje">Diário da Justiça Eletrônico</a></li>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Biblioteca</a>
+<ul>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Consultas</a>
+<ul>
+  <li class="esajMenuItem"><a href="http://esaj.tjsp.jus.br/gecon/obra/consulta/obras/periodico/artigos">Consulta de Obras, Periódicos e Artigos</a></li>
+  <li class="esajMenuItem"><a href="http://esaj.tjsp.jus.br/gecon/jurisprudencia/consulta">Jurisprudência Selecionada </a></li>
+  <li class="esajMenuItem"><a href="http://esaj.tjsp.jus.br/gecon/legislacao/consulta">Consulta de Legislação e Normas</a></li>
+</ul>
+  </li>
+  <li class="esajMenuItem"><a href="http://esaj.tjsp.jus.br/gecon/boletim/consulta">Boletins</a></li>
+</ul>
+  </li>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Push - Acompanhar Processo Judicial</a>
+<ul>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/push/index.do">1º Grau e 2° Grau</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/pushcr/index.do">2º Grau Colégio Recursal</a></li>
+</ul>
+  </li>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Certidões</a>
+<ul>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Certidões de 1º Grau</a>
+<ul>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/sco/abrirCadastro.do">Cadastro de Pedido de Certidão</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/sco/abrirConferencia.do">Conferência de Certidão</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/sco/abrirDownload.do">Visualizar Certidão</a></li>
+</ul>
+  </li>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Certidões de 2º Grau</a>
+<ul>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/scosg/abrirCadastro.do">Cadastro de Pedido de Certidão de 2º Grau</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/scosg/abrirConferencia.do">Conferência de Certidão de 2º Grau</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/scosg/abrirDownload.do">Download de Certidão de 2º Grau</a></li>
+</ul>
+  </li>
+</ul>
+  </li>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Corregedoria</a>
+<ul>
+  <li class="esajMenuItem"><a href="http://esaj.tjsp.jus.br/gecon/publico/parecer/consulta">Consulta de Pareceres e Decisões da Corregedoria</a></li>
+</ul>
+  </li>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Conferência de Documento Digital</a>
+<ul>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/pastadigital/pg/abrirConferenciaDocumento.do">Conferência de Documento Digital do 1ºGrau</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/pastadigital/sg/abrirConferenciaDocumento.do">Conferência de Documento Digital do 2ºGrau</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/pastadigital/sgcr/abrirConferenciaDocumento.do">Conferência de Documento Digital do Colégio Recursal </a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/atendimento/abrirConferenciaDocOriginal.do">Conferência de Documento Digital de Expediente Administrativo </a></li>
+</ul>
+  </li>
+  <li class="esajMenuFechado"><a href="https://esaj.tjsp.jus.br/cjpg">Consulta de Julgados de 1º Grau</a></li>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Peticionamento Eletrônico</a>
+<ul>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Peticionamento Eletrônico de 1º Grau</a>
+<ul>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/petpg/abrirNovaPeticaoInicial.do?instancia=PG">Petição Inicial de 1° Grau</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/petpg/abrirNovaPeticaoIntermediaria.do?instancia=PG">Petição Intermediária de 1° Grau</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/petpg/abrirConsultaPeticoes.do">Consulta de Petições de 1º Grau</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/securitycasapireq/api/cas/authenticate?serviceurl=https://esaj.tjsp.jus.br/petpgreq">Peticionamento de intermediaria de 1º Grau Requisitórios</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/petpg-complemento/abrirNovoComplementoProcesso.do">Complemento de Cadastro de 1º Grau</a></li>
+</ul>
+  </li>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Peticionamento Eletrônico de 2º Grau</a>
+<ul>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/petsg/abrirNovaPeticaoInicial.do?instancia=SG">Peticionamento Inicial de 2º Grau</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/petsg/abrirNovaPeticaoIntermediaria.do?instancia=SG">Peticionamento Intermediário de 2º Grau</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/petsg/abrirConsultaPeticoes.do">Consulta de Petições de 2º Grau</a></li>
+</ul>
+  </li>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Peticionamento Eletrônico do Colégio Recursal</a>
+<ul>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/petcr/abrirNovaPeticaoInicial.do?instancia=CR">Peticionamento Inicial - Colégio Recursal</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/petcr/abrirNovaPeticaoIntermediaria.do?instancia=CR">Peticionamento Intermediário - Colégio Recursal</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/petcr/abrirConsultaPeticoes.do">Consulta de Petições - Colégio Recursal</a></li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+
+		</div>
+		</td>
+		<td class="esajCelulaTituloServico"><h1 class="esajTituloPagina">Consulta de Julgados de 1º Grau</h1></td>
+	</tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0" summary=" " role="presentation">
+	<tr>
+		<td class="esajCelulaConteudoServico" >
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <span class="esajTituloOrientacoes">Orientações</span>
+
+
+
+
+            <ul class="esajUlOrientacoes" id="">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	<li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Para detalhes sobre cada campo de busca, selecione o campo específico
+
+
+
+	</li>
+
+
+
+
+            </ul>
+
+
+
+
+    <br>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<form name="consultaDecisaoForm" method="" action="/cjpg/pesquisar.do;jsessionid=742473ACC8EE7B02B98DB292CA8C5928.cjpg3" autocomplete="off" enctype="" onsubmit="return applySubmit(this, eval('function spwSubmit(t, e){decodificaInputMulSelOnSubmit();if (!IS_enableSubmit) return false; return BENV_isCamposValidos(t); } spwSubmit(this, event);'));" id="" target="">
+	<input type="hidden" name="conversationId" value="">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<style>
+	/* remove borda vermelha de elementos required */
+	input:invalid {
+		box-shadow:none;
+	}
+</style>
+
+<script type="text/javascript">
+	(function($){
+		$(function() {
+			var saj = $.saj;
+			var id = 'id';
+			var idObjetoReferencia = '#' + id;
+			if ('' !== '' && !false) {
+				$(idObjetoReferencia).registrarTooltip({
+					conteudoTooltip: '',
+					posicaoTooltip: 'direita',
+					objReferenciaPosicaoTooltip:$(idObjetoReferencia)
+				});
+			}
+			//remove comportamento de exibir mensagem de erro típica do html5
+			$('form:visible').attr('novalidate','');
+			if (''){
+				$(idObjetoReferencia).attr('aria-required','true').attr('required','');
+			}
+		});
+	})(jQuery);
+
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	<div class="">
+
+			<br/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+	<tr valign="top">
+		<td height="21" valign="top" nowrap background="/cjpg/imagens/spw/fundo_subtitulo.gif">
+
+
+
+					<h2 class="subtitle">
+						Parâmetros de Consulta
+
+					</h2>
+
+
+		</td>
+		<td background="/cjpg/imagens/spw/fundo_subtitulo2.gif" width="90%" aria-hidden="true">
+			<img src="/cjpg/imagens/spw/final_subtitulo.gif" width="16" height="20" tabindex="-1">
+		</td>
+	</tr>
+</table>
+
+
+
+			<br/>
+
+		<table id="" class="secaoFormBody" width="100%" style="" cellpadding="2" cellspacing="0" border="0">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+				<tr class="">
+
+
+
+
+
+		  <td id="" width="150" valign="top">
+
+
+
+
+				<label for="buscaInteiroTeor" class="" style="float:left;font-weight:bold;margin-top:3px;">Pesquisa Livre</label><div style="text-align:right;font-weight:bold;margin-top:3px;">: </div>
+
+
+
+		  </td>
+
+
+
+
+
+		    <td valign="top">
+
+
+
+
+
+
+
+
+	<table cellpadding="0" cellspacing="0" border="0" width="">
+		<tr>
+			<td>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<style>
+	/* remove borda vermelha de elementos required */
+	input:invalid {
+		box-shadow:none;
+	}
+</style>
+
+<script type="text/javascript">
+	(function($){
+		$(function() {
+			var saj = $.saj;
+			var id = 'iddadosConsulta.pesquisaLivre';
+			var idObjetoReferencia = '#' + id;
+			if ('' !== '' && !false) {
+				$(idObjetoReferencia).registrarTooltip({
+					conteudoTooltip: '',
+					posicaoTooltip: 'direita',
+					objReferenciaPosicaoTooltip:$(idObjetoReferencia)
+				});
+			}
+			//remove comportamento de exibir mensagem de erro típica do html5
+			$('form:visible').attr('novalidate','');
+			if (''){
+				$(idObjetoReferencia).attr('aria-required','true').attr('required','');
+			}
+		});
+	})(jQuery);
+
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		<span id="">
+
+
+
+	<input type="text" name="dadosConsulta.pesquisaLivre" maxlength="" size="100" value="juscraper_probe_zero_hits_xyzqwe" formatType="TEXT" formato="120" obrigatorio="" rotulo="Pesquisa Livre" onkeypress="CT_KPS(this, event);" onblur="CT_BLR(this);" onkeydown="CT_KDN(this, event);" onmousemove="CT_MMOV(this, event);" onmouseout="CT_MOUT(this, event);" onmouseover="CT_MOV(this, event);" onfocus="C_OFC(this, event);" style="" class="spwCampoTexto " id="iddadosConsulta.pesquisaLivre" title="" alt="">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		</span>
+
+
+
+
+
+
+
+						<div class="botoesOperadores" style="margin-top: 1px;">
+							<input class="botaoOperadores" type="button" value=" E " name="E" />
+							<input class="botaoOperadores" type="button" value=" OU " name="OU" />
+							<input class="botaoOperadores" type="button" value=" N&Atilde;O " name="NAO" />
+							<input class="botaoOperadores" type="button" value=" ? " name="INT"/>
+							<input class="botaoOperadores" type="button" value=" * " name="AST" />
+							<input class="botaoOperadores" type="button" value='"&nbsp;&nbsp;"' name="ASP" />
+							&nbsp;&nbsp;&nbsp;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<span id="checkBoxSinonimos">
+	<label for="id_cjpg.consulta.label.pesquisarSinonimos">
+		<input type="checkbox" name="dadosConsulta.sinonimos" value="true" style="vertical-align:middle;" id="id_cjpg.consulta.label.pesquisarSinonimos">
+		Pesquisar por sinônimos
+	</label>
+</span>
+
+
+							&nbsp;&nbsp;&nbsp;
+						</div>
+
+
+			</td>
+		</tr>
+	  </table>
+
+
+
+
+
+
+
+		</td>
+
+			</tr>
+
+
+
+
+
+
+
+
+		</table>
+	</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	<div class="">
+
+		<table id="" class="secaoFormBody" width="100%" style="" cellpadding="2" cellspacing="0" border="0">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		<script>$.saj.numeroProcesso.desabilitarNumeroOculto = false;</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script type="text/javascript">
+	(function($){
+		$(function() {
+			if($.browser.msie){
+				$('.grupoRadio').find('input:radio:visible:enabled').attr('aria-required','');
+				return;
+			}
+			$('.grupoRadio').attr('aria-required','').attr('required','');
+		});
+	})(jQuery);
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+				<tr class="">
+
+
+
+
+
+		  <td id="" width="150" valign="">
+
+
+
+
+				<label for="radioNumeroUnificado_agrupador" class="" style="float:left;font-weight:bold;">Tipo do número</label><div style="text-align:right;font-weight:bold;">: </div>
+
+
+
+		  </td>
+
+
+
+
+
+		    <td valign="">
+
+
+
+
+
+
+
+
+	<table cellspacing="0" border="0" width="">
+		<tr>
+			<td>
+
+				<fieldset class="grupoRadio" style="margin:0;padding:0;border:none" >
+					<legend style="display:block;font-size:0;">
+						Tipo do número
+					</legend>
+
+			   <input type="radio" name="tipoNumero" value="UNIFICADO" checked="checked" id="radioNumeroUnificado"><label for="radioNumeroUnificado">Número do processo</label>
+			   <input type="radio" name="tipoNumero" value="SAJ" id="radioNumeroAntigo"><label for="radioNumeroAntigo">Outros</label>
+
+				</fieldset>
+
+			</td>
+		</tr>
+	  </table>
+
+
+
+
+
+
+
+		</td>
+
+			</tr>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+				<tr class="">
+
+
+
+
+
+		  <td id="" width="150" valign="">
+
+
+
+
+				<label for="" class="" style="float:left;font-weight:bold;">Número do processo</label><div style="text-align:right;font-weight:bold;">: </div>
+
+
+
+		  </td>
+
+
+
+
+
+		    <td valign="">
+
+
+
+
+
+
+
+
+	<table cellpadding="0" cellspacing="0" border="0" width="">
+		<tr>
+			<td>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		<span id="linhaProcessoUnificado">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<input type="text" name="numeroDigitoAnoUnificado" maxlength="25" size="20" value="" formatType="TEXT" onkeypress="CT_KPS(this, event);" onblur="CT_BLR(this);" onkeydown="CT_KDN(this, event);" onmousemove="CT_MMOV(this, event);" onmouseout="CT_MOUT(this, event);" onmouseover="CT_MOV(this, event);" onfocus="C_OFC(this, event);" id="numeroDigitoAnoUnificado">
+<input type="text" id="JTRNumeroUnificado" size="3" disabled="disabled" value="826"/>
+<input type="text" name="foroNumeroUnificado" maxlength="4" size="3" value="" formatType="TEXT" onkeypress="CT_KPS(this, event);" onblur="CT_BLR(this);" onkeydown="CT_KDN(this, event);" onmousemove="CT_MMOV(this, event);" onmouseout="CT_MOUT(this, event);" onmouseover="CT_MOV(this, event);" onfocus="C_OFC(this, event);" id="foroNumeroUnificado">
+<input type="hidden" name="dadosConsulta.nuProcesso" value="" id="nuProcessoUnificadoFormatado">
+
+
+<script>
+	(function($){
+		$(function() {
+			var saj = $.saj;
+			var mascaraNumeroUnificado = saj.mascaraNumeroUnificado;
+			var $campoNumeroDigitoAnoUnificado = $('#numeroDigitoAnoUnificado');
+			var $campoForoNumeroUnificado = $('#foroNumeroUnificado');
+			var $campoJTRNumeroUnificado = $('#JTRNumeroUnificado');
+			saj.configurarMascaraInput($campoForoNumeroUnificado, '0000');
+			saj.configurarMascaraInput($campoNumeroDigitoAnoUnificado, mascaraNumeroUnificado, $campoForoNumeroUnificado,{
+				afterPaste: afterPaste
+			});
+			saj.bindCamposNumeroProcesso('');
+
+		});
+
+		var afterPaste = function(textoOriginal) {
+			var texto = getDigits(textoOriginal);
+			if (!texto || texto.length < 16) {
+				return;
+			}
+
+			var jtr = $('#JTRNumeroUnificado').val();
+			jtr = getDigits(jtr);
+			var jtrDigitado = texto.substring(13,16);
+			var foroUnificado;
+			//pega os 4 ultimos digitos, e caso o jtr colado for o mesmo, coloca os 4 no campo de foro unificado
+			//se o jtr for diferente nao coloca nada no campo de foro unificado
+			if (jtr == jtrDigitado) {
+				foroUnificado = texto.substring(16,texto.length);
+			} else {
+				foroUnificado = '';
+			}
+
+			var numeroDigitoAno = texto.substring(0,13);
+			var $numeroDigitoAno = $('#numeroDigitoAnoUnificado');
+			$numeroDigitoAno.val(numeroDigitoAno);
+
+			var $foroNumeroUnificado = $('#foroNumeroUnificado');
+			$foroNumeroUnificado.val(foroUnificado);
+			$foroNumeroUnificado.trigger('blur');
+			$foroNumeroUnificado.focus();
+		};
+
+		var getDigits = function(texto) {
+			return texto.replace(/[^0-9]/g, '');
+		};
+		$('#numeroDigitoAnoUnificado').attr('aria-label','Número do processo. Informe os treze primeiros dígitos do número do processo.');
+		$('#foroNumeroUnificado').attr('aria-label','Informe os quatro últimos dígitos do número do processo.');
+	})(jQuery);
+
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+		</span>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<style>
+	/* remove borda vermelha de elementos required */
+	input:invalid {
+		box-shadow:none;
+	}
+</style>
+
+<script type="text/javascript">
+	(function($){
+		$(function() {
+			var saj = $.saj;
+			var id = 'nuProcessoAntigoFormatado';
+			var idObjetoReferencia = '#' + id;
+			if ('' !== '' && !false) {
+				$(idObjetoReferencia).registrarTooltip({
+					conteudoTooltip: '',
+					posicaoTooltip: 'direita',
+					objReferenciaPosicaoTooltip:$(idObjetoReferencia)
+				});
+			}
+			//remove comportamento de exibir mensagem de erro típica do html5
+			$('form:visible').attr('novalidate','');
+			if (''){
+				$(idObjetoReferencia).attr('aria-required','true').attr('required','');
+			}
+		});
+	})(jQuery);
+
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		<span id="linhaProcessoAntigo">
+
+
+
+	<input type="text" name="dadosConsulta.nuProcessoAntigo" maxlength="" size="" value="" formatType="TEXT" formato="25" obrigatorio="" rotulo="" onkeypress="CT_KPS(this, event);" onblur="CT_BLR(this);" onkeydown="CT_KDN(this, event);" onmousemove="CT_MMOV(this, event);" onmouseout="CT_MOUT(this, event);" onmouseover="CT_MOV(this, event);" onfocus="C_OFC(this, event);" disabled="disabled" style="" class="spwCampoTexto disabled " id="nuProcessoAntigoFormatado" title="" alt="">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		</span>
+
+
+
+
+
+
+
+
+
+					    		<span id="msgStatusProcesso" class="esajKeyMsgErro" style="padding-left: 5px;" >&nbsp;</span>
+
+
+
+			</td>
+		</tr>
+	  </table>
+
+
+
+
+
+
+
+		</td>
+
+			</tr>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+				<tr class="">
+
+
+
+
+
+		  <td id="" width="150" valign="">
+
+
+
+
+				<label for="classe_selectionText" class="" style="float:left;font-weight:bold;">Classe</label><div style="text-align:right;font-weight:bold;">: </div>
+
+
+
+		  </td>
+
+
+
+
+
+		    <td valign="">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table id="treeSelectClasse" cellspacing="0" cellpadding="0" width="515" class="treeSelect">
+	<tr>
+		<td width="*">
+			<table cellspacing="0" cellpadding="0" width="100%">
+				<tr>
+					<td>
+						<input type="hidden" name="classeTreeSelection.values" value="" id="classe">
+						<span id="classe_action" value="/cjpg/classeTreeSelect.do" />
+
+						<input type="text" name="classeTreeSelection.text" value="" formatType="TEXT" onkeypress="CT_KPS(this, event);" onblur="CT_BLR(this);" onkeydown="CT_KDN(this, event);" onmousemove="CT_MMOV(this, event);" onmouseout="CT_MOUT(this, event);" onmouseover="CT_MOV(this, event);" onfocus="C_OFC(this, event);" onchange="$.saj.tree.onTextPropertyChangeEvent({data:{ campoId: 'classe',
+								treeSelectId: 'treeSelectClasse',
+								url: '/cjpg/classeTreeSelect.do',
+								processandoImgUrl: '/cjpg/imagens/spw/processandoNovo.gif',
+								width: 600,
+								expectedHeight: 400,
+								reload: 'false' }}, event);" style="width:100%;" id="classe_selectionText">
+
+					</td>
+					<td align="center" width="20">
+						<img id="botaoProcurar_classe"
+						src="/cjpg/imagens/spw/botProcurar.gif" class="treeSelect_botaoHabilitado" height="17" border="0" width="16" title="Abre a consulta" style="cursor: pointer; margin-left: 4px;" onmouseout="IH_mOut(this)" onmouseover="IH_mOver(this)" /><img
+						src="/cjpg/imagens/spw/botProcurar-d.gif" class="treeSelect_botaoDesabilitado" height="17" border="0" width="16" style="display:none; margin-left: 8px;" />
+					</td>
+				</tr>
+			</table>
+        </td>
+		<td width="16" valign="middle">
+			<img id="botaoLimpar_classe"
+			src="/cjpg/imagens/spw/botLimpar.gif" class="treeSelect_botaoHabilitado" height="17" width="16" border="0" title="Limpa campo" onmouseout="IH_mOut(this)" onmouseover="IH_mOver(this)" /><img
+			src="/cjpg/imagens/spw/botLimpar-d.gif" class="treeSelect_botaoDesabilitado" height="17" width="16" border="0" style="display:none" />
+		</td>
+
+
+    </tr>
+</table>
+<script>
+	(function($) {
+
+		var bindTreeSelect = function() {
+			var options = {
+				campoId: 'classe',
+				treeSelectId: 'treeSelectClasse',
+				url: '/cjpg/classeTreeSelect.do',
+				processandoImgUrl: '/cjpg/imagens/spw/processandoNovo.gif',
+				width: 600,
+				expectedHeight: 400,
+				reload: 'false',
+				mostrarBotoesSelecaoRapida: true,
+				titulo: 'Classe'
+			};
+
+			$.saj.tree.updateSelectionText(options);
+
+			$('#botaoProcurar_classe').bind('click', options, $.saj.tree.onPopupEvent);
+			$('#botaoLimpar_classe').bind('click', options, $.saj.tree.onClearSelection);
+
+
+		};
+
+		bindTreeSelect();
+
+
+
+	})(jQuery);
+</script>
+
+
+
+
+
+
+
+
+
+		</td>
+
+			</tr>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+				<tr class="">
+
+
+
+
+
+		  <td id="" width="150" valign="">
+
+
+
+
+				<label for="assunto_selectionText" class="" style="float:left;font-weight:bold;">Assunto</label><div style="text-align:right;font-weight:bold;">: </div>
+
+
+
+		  </td>
+
+
+
+
+
+		    <td valign="">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table id="treeSelectAssunto" cellspacing="0" cellpadding="0" width="515" class="treeSelect">
+	<tr>
+		<td width="*">
+			<table cellspacing="0" cellpadding="0" width="100%">
+				<tr>
+					<td>
+						<input type="hidden" name="assuntoTreeSelection.values" value="" id="assunto">
+						<span id="assunto_action" value="/cjpg/assuntoTreeSelect.do" />
+
+						<input type="text" name="assuntoTreeSelection.text" value="" formatType="TEXT" onkeypress="CT_KPS(this, event);" onblur="CT_BLR(this);" onkeydown="CT_KDN(this, event);" onmousemove="CT_MMOV(this, event);" onmouseout="CT_MOUT(this, event);" onmouseover="CT_MOV(this, event);" onfocus="C_OFC(this, event);" onchange="$.saj.tree.onTextPropertyChangeEvent({data:{ campoId: 'assunto',
+								treeSelectId: 'treeSelectAssunto',
+								url: '/cjpg/assuntoTreeSelect.do',
+								processandoImgUrl: '/cjpg/imagens/spw/processandoNovo.gif',
+								width: 600,
+								expectedHeight: 400,
+								reload: 'false' }}, event);" style="width:100%;" id="assunto_selectionText">
+
+					</td>
+					<td align="center" width="20">
+						<img id="botaoProcurar_assunto"
+						src="/cjpg/imagens/spw/botProcurar.gif" class="treeSelect_botaoHabilitado" height="17" border="0" width="16" title="Abre a consulta" style="cursor: pointer; margin-left: 4px;" onmouseout="IH_mOut(this)" onmouseover="IH_mOver(this)" /><img
+						src="/cjpg/imagens/spw/botProcurar-d.gif" class="treeSelect_botaoDesabilitado" height="17" border="0" width="16" style="display:none; margin-left: 8px;" />
+					</td>
+				</tr>
+			</table>
+        </td>
+		<td width="16" valign="middle">
+			<img id="botaoLimpar_assunto"
+			src="/cjpg/imagens/spw/botLimpar.gif" class="treeSelect_botaoHabilitado" height="17" width="16" border="0" title="Limpa campo" onmouseout="IH_mOut(this)" onmouseover="IH_mOver(this)" /><img
+			src="/cjpg/imagens/spw/botLimpar-d.gif" class="treeSelect_botaoDesabilitado" height="17" width="16" border="0" style="display:none" />
+		</td>
+
+
+    </tr>
+</table>
+<script>
+	(function($) {
+
+		var bindTreeSelect = function() {
+			var options = {
+				campoId: 'assunto',
+				treeSelectId: 'treeSelectAssunto',
+				url: '/cjpg/assuntoTreeSelect.do',
+				processandoImgUrl: '/cjpg/imagens/spw/processandoNovo.gif',
+				width: 600,
+				expectedHeight: 400,
+				reload: 'false',
+				mostrarBotoesSelecaoRapida: true,
+				titulo: 'Assunto'
+			};
+
+			$.saj.tree.updateSelectionText(options);
+
+			$('#botaoProcurar_assunto').bind('click', options, $.saj.tree.onPopupEvent);
+			$('#botaoLimpar_assunto').bind('click', options, $.saj.tree.onClearSelection);
+
+
+		};
+
+		bindTreeSelect();
+
+
+
+	})(jQuery);
+</script>
+
+
+
+
+
+
+
+
+
+		</td>
+
+			</tr>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+				<tr class="">
+
+
+
+
+
+		  <td id="" width="150" valign="">
+
+
+
+
+				<label for="juiz" class="" style="float:left;font-weight:bold;">Magistrado</label><div style="text-align:right;font-weight:bold;">: </div>
+
+
+
+		  </td>
+
+
+
+
+
+		    <td valign="">
+
+
+
+
+
+
+
+
+	<table cellpadding="0" cellspacing="0" border="0" width="515">
+		<tr>
+			<td>
+
+
+
+
+
+
+
+
+
+<table width="100%" cellspacing="0" cellpadding="0">
+	<tr>
+		<td width="*">
+
+
+
+
+							<script>
+
+var agenteNomeCamposArray = new Array();
+ agenteNomeCamposArray[0] = 'cdAgente';
+ agenteNomeCamposArray[1] = 'nmAgente';
+ var cdAgenteNomeCamposArray = agenteNomeCamposArray;
+ var nmAgenteNomeCamposArray = agenteNomeCamposArray;</script>
+
+<table class="spwInputSelect" width="100%" border="0" cellspacing="0" cellpadding="0" id="agente" idPai="null" filtroPai="null" url="jsp/search/searchAgente.jsp" input-select="agente" property="dadosConsulta.agentes" name="cdAgente" title="Magistrados" ctxPath="/cjpg" multiplaSelecao="true"  useAction="false" bindings="&bind_cdAgente=cdAgente&bind_nmAgente=nmAgente"  entityPKClass="agentePK" idIframe="" altura="300" largura="500" useModulo="true" desabilitarSelecionados="false" carregaFilho="false"><tbody>
+<input type="hidden" name="agenteSelectedEntitiesList"  value="" id="agenteSelectedEntitiesList" />
+<input type="hidden" name="contadoragente"  value="0" id="contadoragente" />
+<input type="hidden" name="contadorMaioragente"  value="0" id="contadorMaioragente" />
+    <tr>
+								<td width="0%">
+            <input type="text" name="cdAgente" size="0%" id="cdAgente" bindingReference="cdAgente" value="" formatType="TEXT" pk="true" onkeypress="CT_KPS(this, event);" onblur="CT_BLR(this);" onkeydown="CT_KDN(this, event);" onmousemove="CT_MMOV(this, event);" onmouseout="CT_MOUT(this, event);" onmouseover="CT_MOV(this, event);" onfocus="C_OFC(this, event);" onchange="IS_request('agente','/AjaxServlet.ajax', 'agente', 'cdAgente', this.value,'/cjpg','jsp/search/searchAgente.jsp', 'true', 'Magistrados','300','500', '&bind_cdAgente=cdAgente&bind_nmAgente=nmAgente', 'false', event, 'InputSelectAutoComplete', '','false'); " style="width: 100%" class="hidden" input-select="agente" idIframe=""></td>
+								<td width="497">
+            <input type="text" name="nmAgente" size="497" id="nmAgente" bindingReference="nmAgente" value="" formatType="TEXT" obrigatorio="false" onkeypress="CT_KPS(this, event);" onblur="CT_BLR(this);" onkeydown="CT_KDN(this, event);" onmousemove="CT_MMOV(this, event);" onmouseout="CT_MOUT(this, event);" onmouseover="CT_MOV(this, event);" onfocus="C_OFC(this, event);" onchange="IS_request('agente','/AjaxServlet.ajax', 'agente', 'nmAgente', this.value,'/cjpg','jsp/search/searchAgente.jsp', 'true', 'Magistrados','300','500', '&bind_cdAgente=cdAgente&bind_nmAgente=nmAgente', 'false', event, 'InputSelectAutoComplete', '','false'); " style="width: 475px;" input-select="agente" idIframe=""></td>
+
+        <td width="20" align="center"><img src="/cjpg/imagens/spw/botProcurar.gif" width="16" height="17" border="0" title="Abre a consulta" onmouseover="IH_mOver(this)" onmouseout="IH_mOut(this)" onclick="IS_request('agente','/AjaxServlet.ajax', 'agente', 'cdAgente','','/cjpg','jsp/search/searchAgente.jsp', 'true', 'Magistrados','300','500', '&bind_cdAgente=cdAgente&bind_nmAgente=nmAgente', 'true', event, 'InputSelectSearchGrid','','false')" ><img src="/cjpg/imagens/spw/botProcurar-d.gif" width="16" height="17" border="0" style="display:none" >
+        </td>
+    </tr>
+</tbody>
+</table>
+<script>
+
+</script>
+
+
+		</td>
+		<td width="16" valign="middle">
+			<img src="/cjpg/imagens/spw/botLimpar.gif" width="16" height="17" border="0" title="Limpa campo"
+				onclick="jQuery.saj.limparInputSelect('agente');"
+				onmouseout="IH_mOut(this)" onmouseover="IH_mOver(this)"
+				style="cursor:pointer;" />
+		</td>
+	</tr>
+</table>
+
+
+
+			</td>
+		</tr>
+	  </table>
+
+
+
+
+
+
+
+		</td>
+
+			</tr>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+				<tr class="">
+
+
+
+
+
+		  <td id="" width="150" valign="">
+
+
+
+
+				<label for="data" class="" style="float:left;font-weight:bold;">Data</label><div style="text-align:right;font-weight:bold;">: </div>
+
+
+
+		  </td>
+
+
+
+
+
+		    <td valign="">
+
+
+
+
+
+
+
+
+	<table cellpadding="0" cellspacing="0" border="0" width="600">
+		<tr>
+			<td>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<style>
+	/* remove borda vermelha de elementos required */
+	input:invalid {
+		box-shadow:none;
+	}
+</style>
+
+<script type="text/javascript">
+	(function($){
+		$(function() {
+			var saj = $.saj;
+			var id = 'iddadosConsulta.dtInicio';
+			var idObjetoReferencia = '#' + id;
+			if ('' !== '' && !false) {
+				$(idObjetoReferencia).registrarTooltip({
+					conteudoTooltip: '',
+					posicaoTooltip: 'direita',
+					objReferenciaPosicaoTooltip:$(idObjetoReferencia)
+				});
+			}
+			//remove comportamento de exibir mensagem de erro típica do html5
+			$('form:visible').attr('novalidate','');
+			if (''){
+				$(idObjetoReferencia).attr('aria-required','true').attr('required','');
+			}
+		});
+	})(jQuery);
+
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		<span id="">
+
+
+
+	<input type="text" name="dadosConsulta.dtInicio" maxlength="" size="" value="" formatType="DATE" formato="" obrigatorio="" rotulo="(dd/mm/aaaa)" onkeypress="CD_KPS(this, event);" onblur="CD_BLR(this);" onkeydown="CD_KDN(this, event);" onmousemove="CD_MMOV(this, event);" onmouseout="CD_MOUT(this, event);" onmouseover="CD_MOV(this, event);" onfocus="CD_OFC(this, event);" style="" class="spwCampoTexto " id="iddadosConsulta.dtInicio" title="" alt="">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		</span>
+
+
+
+
+
+
+							até
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<style>
+	/* remove borda vermelha de elementos required */
+	input:invalid {
+		box-shadow:none;
+	}
+</style>
+
+<script type="text/javascript">
+	(function($){
+		$(function() {
+			var saj = $.saj;
+			var id = 'iddadosConsulta.dtFim';
+			var idObjetoReferencia = '#' + id;
+			if ('' !== '' && !false) {
+				$(idObjetoReferencia).registrarTooltip({
+					conteudoTooltip: '',
+					posicaoTooltip: 'direita',
+					objReferenciaPosicaoTooltip:$(idObjetoReferencia)
+				});
+			}
+			//remove comportamento de exibir mensagem de erro típica do html5
+			$('form:visible').attr('novalidate','');
+			if (''){
+				$(idObjetoReferencia).attr('aria-required','true').attr('required','');
+			}
+		});
+	})(jQuery);
+
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		<span id="dtFim">
+
+
+
+	<input type="text" name="dadosConsulta.dtFim" maxlength="" size="" value="21/04/2026" formatType="DATE" formato="" obrigatorio="" rotulo="(dd/mm/aaaa)" onkeypress="CD_KPS(this, event);" onblur="CD_BLR(this);" onkeydown="CD_KDN(this, event);" onmousemove="CD_MMOV(this, event);" onmouseout="CD_MOUT(this, event);" onmouseover="CD_MOV(this, event);" onfocus="CD_OFC(this, event);" style="" class="spwCampoTexto " id="iddadosConsulta.dtFim" title="" alt="">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		</span>
+
+
+
+
+
+
+						(dd/mm/aaaa)
+
+
+			</td>
+		</tr>
+	  </table>
+
+
+
+
+
+
+
+		</td>
+
+			</tr>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+				<tr class="">
+
+
+
+
+
+		  <td id="" width="150" valign="">
+
+
+
+
+				<label for="varas_selectionText" class="" style="float:left;font-weight:bold;">Vara</label><div style="text-align:right;font-weight:bold;">: </div>
+
+
+
+		  </td>
+
+
+
+
+
+		    <td valign="">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table id="treeSelectVaras" cellspacing="0" cellpadding="0" width="515" class="treeSelect">
+	<tr>
+		<td width="*">
+			<table cellspacing="0" cellpadding="0" width="100%">
+				<tr>
+					<td>
+						<input type="hidden" name="varasTreeSelection.values" value="" id="varas">
+						<span id="varas_action" value="/cjpg/varasTreeSelect.do" />
+
+						<input type="text" name="varasTreeSelection.text" value="" formatType="TEXT" onkeypress="CT_KPS(this, event);" onblur="CT_BLR(this);" onkeydown="CT_KDN(this, event);" onmousemove="CT_MMOV(this, event);" onmouseout="CT_MOUT(this, event);" onmouseover="CT_MOV(this, event);" onfocus="C_OFC(this, event);" onchange="$.saj.tree.onTextPropertyChangeEvent({data:{ campoId: 'varas',
+								treeSelectId: 'treeSelectVaras',
+								url: '/cjpg/varasTreeSelect.do',
+								processandoImgUrl: '/cjpg/imagens/spw/processandoNovo.gif',
+								width: 600,
+								expectedHeight: 400,
+								reload: 'false' }}, event);" style="width:100%;" id="varas_selectionText">
+
+					</td>
+					<td align="center" width="20">
+						<img id="botaoProcurar_varas"
+						src="/cjpg/imagens/spw/botProcurar.gif" class="treeSelect_botaoHabilitado" height="17" border="0" width="16" title="Abre a consulta" style="cursor: pointer; margin-left: 4px;" onmouseout="IH_mOut(this)" onmouseover="IH_mOver(this)" /><img
+						src="/cjpg/imagens/spw/botProcurar-d.gif" class="treeSelect_botaoDesabilitado" height="17" border="0" width="16" style="display:none; margin-left: 8px;" />
+					</td>
+				</tr>
+			</table>
+        </td>
+		<td width="16" valign="middle">
+			<img id="botaoLimpar_varas"
+			src="/cjpg/imagens/spw/botLimpar.gif" class="treeSelect_botaoHabilitado" height="17" width="16" border="0" title="Limpa campo" onmouseout="IH_mOut(this)" onmouseover="IH_mOver(this)" /><img
+			src="/cjpg/imagens/spw/botLimpar-d.gif" class="treeSelect_botaoDesabilitado" height="17" width="16" border="0" style="display:none" />
+		</td>
+
+
+    </tr>
+</table>
+<script>
+	(function($) {
+
+		var bindTreeSelect = function() {
+			var options = {
+				campoId: 'varas',
+				treeSelectId: 'treeSelectVaras',
+				url: '/cjpg/varasTreeSelect.do',
+				processandoImgUrl: '/cjpg/imagens/spw/processandoNovo.gif',
+				width: 600,
+				expectedHeight: 400,
+				reload: 'false',
+				mostrarBotoesSelecaoRapida: true,
+				titulo: 'Vara'
+			};
+
+			$.saj.tree.updateSelectionText(options);
+
+			$('#botaoProcurar_varas').bind('click', options, $.saj.tree.onPopupEvent);
+			$('#botaoLimpar_varas').bind('click', options, $.saj.tree.onClearSelection);
+
+
+		};
+
+		bindTreeSelect();
+
+
+
+	})(jQuery);
+</script>
+
+
+
+
+
+
+
+
+
+		</td>
+
+			</tr>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+				<tr class="">
+
+
+
+
+
+		  <td id="" width="150" valign="">
+
+
+
+
+				<label for="ordenar" class="" style="float:left;font-weight:bold;">Ordenar por</label><div style="text-align:right;font-weight:bold;">: </div>
+
+
+
+		  </td>
+
+
+
+
+
+		    <td valign="">
+
+
+
+
+
+
+
+
+	<table cellpadding="0" cellspacing="0" border="0" width="600">
+		<tr>
+			<td>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	<span id="">
+		<label for="id_cjpg.consulta.label.ordenarDecrescente">
+			<input type="radio" name="dadosConsulta.ordenacao" id="id_cjpg.consulta.label.ordenarDecrescente" value="DESC" style="vertical-align:middle;" onclick="" class="" title=""  checked/>
+			Data decrescente
+		</label>
+
+	</span>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	<span id="">
+		<label for="id_cjpg.consulta.label.ordenarCrescente">
+			<input type="radio" name="dadosConsulta.ordenacao" id="id_cjpg.consulta.label.ordenarCrescente" value="ASC" style="vertical-align:middle;" onclick="" class="" title=""  />
+			Data crescente
+		</label>
+
+	</span>
+
+
+
+
+			</td>
+		</tr>
+	  </table>
+
+
+
+
+
+
+
+		</td>
+
+			</tr>
+
+
+
+
+
+
+
+
+		</table>
+	</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	<table id="" class="secaoBotoesBody" width="100%" style="" cellpadding="2" cellspacing="0" border="0">
+		<tr>
+
+ 				<td width="150">&nbsp;</td>
+
+			<td align="">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	<input type="submit" name="pbSubmit" value="Consultar" onclick="" onmouseover="B_mOver(this);" onmouseout="B_mOut(this);" onmouseover="B_mOver(this);" onmouseout="B_mOut(this);" class="spwBotaoDefault " id="pbSubmit">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	<input type="button" name="pbLimpar" value="Limpar" onclick="" onmouseover="B_mOver(this);" onmouseout="B_mOut(this);" class="spwBotao " id="pbLimpar">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			</td>
+		</tr>
+	</table>
+
+
+
+
+
+
+
+
+
+
+						<div class="aviso espacamentoCimaBaixo centralizado fonteNegrito">
+							Não foi encontrado nenhum resultado correspondente à busca realizada.
+						</div>
+
+
+
+
+
+
+
+</form>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</td>
+</tr>
+</table>
+<table width="100%" border="0" cellpadding="0" cellspacing="0" class="esajTabelaRodape" summary=" " role="presentation">
+    <tr>
+        <td class="esajCelulaRodapeCentro">
+            Desenvolvido pela Softplan em parceria com a Secretaria de Tecnologia da Informação - STI
+
+        </td>
+    </tr>
+</table>
+<link href="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/css/saj-popup-modal.css" rel="stylesheet" type="text/css">
+<link href="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/css/popup-beta.css" rel="stylesheet" type="text/css">
+
+
+<script>
+    var appEsajLayout = appEsajLayout || {};
+    appEsajLayout.tituloCertificadoDigital = 'Certificado digital';
+    appEsajLayout.cliente = 'SP';
+    appEsajLayout.emailParaContato = 'esajtjsp@softplan.com.br';
+    appEsajLayout.utilizarBotaoContato = 'true';
+    appEsajLayout.contexto = 'https://esaj.tjsp.jus.br/esaj-layout';
+    appEsajLayout.webSignerParametro = 'https://cdn.lacunasoftware.com/libs/web-pki/lacuna-web-pki-2.14.8.min.js';
+
+    if(window.jQuery) {
+        jQuery.saj = jQuery.saj || {};
+        jQuery.saj.certificado = jQuery.saj.certificado || {};
+        jQuery.saj.certificado.cliente = 'SP';
+        jQuery.saj.certificado.urlConteudoAjudaWebSigner = appEsajLayout.contexto + '/ajudaWebSigner.do';
+        jQuery.saj.certificado.licenca = 'ARkEKi50anNwLmp1cy5iciwxMC4zMy4xOTIuMTAxLDEwLjMzLjE5Mi4xMDUsMTAuMzMuMTkyLjE0NiwxMC4zMy4xOTIuMjQxLDEwLjMzLjE5Mi45MCwxMC4zMy4xOTIuOTEsMTAuMzMuMTkyLjkyLDEwLjMzLjE5Mi45NCwxMC4zMy4xOTMuMTg1LDEwLjMzLjE5My4xODYsMTAuMzMuMTkzLjE4NywxMC4zMy4xOTMuMTg4LDEwLjMzLjE5NC4yMjQsMTAuMzMuMTk0LjIyNSwxMC4zMy4xOTQuMjU1LDEwLjMzLjE5NC43NCwxMC4zMy4xOTQuNzUsMTAuMzMuMTk0Ljc2LDEwLjMzLjE5NC43NywxMC4zMy4xOTQuNzksMTAuMzMuMTk1LjEwMiwxMC4zMy4xOTUuMTAyLDEwLjMzLjE5NS4xMTksMTAuMzMuMTk1LjEyMSwxMC4zMy4xOTUuMTIyLDEwLjMzLjE5NS4xMjMsMTAuMzMuMTk1LjEyNCwxMC4zMy4xOTUuMTI1LDEwLjMzLjE5NS4xMjYsMTAuMzMuMTk1LjEyNywxMC4zMy4xOTUuMTI4LDEwLjMzLjE5NS4xMjksMTAuMzMuMTk1LjEzMCwxMC4zMy4xOTUuMTMxLDEwLjMzLjE5NS4xMzIsMTAuMzMuMTk1LjE4MywxMC4zMy4xOTUuMTg0LDEwLjMzLjE5NS4xODUsMTAuMzMuMTk1LjE4NiwxMC4zMy4xOTUuMTg3LDEwLjMzLjE5NS4xODgsMTAuMzMuMTk1LjE4OSwxMC4zMy4xOTUuMTkxLDEwLjMzLjE5NS4xOTIsMTAuMzMuMTk1LjE5MywxMC4zMy4xOTUuMTk0LDEwLjMzLjE5NS4xOTUsMTAuMzMuMTk1LjE5NSwxMC4zMy4xOTUuMTk3LDEwLjMzLjE5NS4xOTgsMTAuMzMuMTk1LjIzNCwxMC4zMy4xOTUuMjM3LDEwLjk4LjE5Mi4xMTMsMTAuOTguMTkyLjExNCwxMC45OC4xOTIuMTE3LDEwLjk4LjE5Mi4yNTAsMTAuOTguMTkyLjQyLDEwLjk4LjE5Mi43MCwxMC45OC4xOTIuNzEsMTAuOTguMTkzLjEyMSwxMC45OC4xOTMuMTIyLDEwLjk4LjE5My4xOTksMTAuOTguMTkzLjIwMCwxMC45OC4xOTMuMjAxLDEwLjk4LjE5My4yMDIsMTAuOTguMTkzLjIyNSwxMC45OC4xOTQuMTIxLDEwLjk4LjE5NC4xMjIsMTAuOTguMTk0LjE0MSwxMC45OC4xOTQuMTQyLDEwLjk4LjE5NC4xNDMsMTAuOTguMTk0LjE0NCwxMC45OC4xOTQuMTQ1LDEwLjk4LjE5NC4xNDcsMTAuOTguMzIuNzYAAAABt8T6Ov8g0lWHnOe7bekYQC1kjn/SgVPWGteqlpMDF8qEOKOxdWahBlk0uh9nfmPiUY9MXcXchlgu6V/zygYGgSfZG11odlUkrXZCAYX/pB3ArsqmrqgvMK0mxuTVOThs/flGWltXnCFEFEU1Pp6RSdlhtCOEuGx5XWov3lux8DcnB+DxL2zauU4GfGJmoXCZDMWT2g7MXIu7VjrJJEkCH/nZ0hkhUsw/k0ORu7/kXJyBufrFZYbsQ/Nadjp9CgYhlsjKXmSPSn8GU8xUetHXGX3FzFJriyk8iqcH72p4z0/Msif4S+VNz0JV3+xffRvdmKuG28jHHDUqBxIrhjs+XA==';
+        jQuery.saj.certificado.webSignerParametro = 'https://cdn.lacunasoftware.com/libs/web-pki/lacuna-web-pki-2.14.8.min.js';
+        jQuery.saj.certificado.cofreDigital = jQuery.saj.certificado.cofreDigital || {};
+        jQuery.saj.certificado.cofreDigital.habilitado = 'false' === 'true';
+        jQuery.saj.certificado.cofreDigital.enderecoBase = 'https://esaj.tjsp.jus.br/esaj-layout';
+    }
+
+</script>
+<script src="https://esaj.tjsp.jus.br/esaj-layout/js/app-bundle.js?n=2978165087"></script>
+<script src="https://esaj.tjsp.jus.br/esaj-layout/seletorVersaoBeta.js?n=32db3647-04d8-4058-8c7b-79513d6c2143&versao=1"></script>
+<script language="javascript" type="text/JavaScript" src="https://esaj.tjsp.jus.br/esaj-layout/js/softplan-websigner-2.5.1.js?n=736057767"></script>
+<script language="javascript" type="text/JavaScript" src="https://cdn.lacunasoftware.com/libs/web-pki/lacuna-web-pki-2.14.8.min.js"></script>
+
+<script language="javascript" type="text/JavaScript" src="https://esaj.tjsp.jus.br/esaj-layout/js/saj-certificado.js?n=47741893"></script>
+
+
+
+<div id="webSignerNaoInstalado" style="display: none;">
+    <p>Para utilização do certificado digital no Portal e-SAJ é necessário a instalação do plug-in Web Signer. Por favor, realize a instalação antes de continuar.</p>
+    <div class="footer_certificado">
+        <button id="redirecionarParaPaginaInstalacao" class="actionPrincipal spwBotaoDefault">Instalar</button>
+        <button class="fecharModalInstalacao spwBotao">Cancelar</button>
+        <button class="spwBotao" onclick="window.open('https://esaj.tjsp.jus.br/WebHelp//#id_instalacao_lacuna.htm','_blank')">Ajuda</button>
+    </div>
+</div>
+
+<div id="webSignerNaoSuportado" style="display: none;">
+    <p>O navegador utilizado não é compatível com a tecnologia (Web Signer) necessária para utilização do certificado digital. Por favor, utilize um dos navegadores homologados. Em caso de dúvidas, efetue a validação de requisitos <a href="https://esaj.tjsp.jus.br/petpg-verificacao/abrirVerificacaoRequisitosPet.do" target="_blank">aqui</a>.</p>
+    <div class="footer_certificado">
+        <button class="fecharModalInstalacao spwBotaoDefault actionPrincipal">OK</button>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+</html>

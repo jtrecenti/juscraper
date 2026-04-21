@@ -12,8 +12,7 @@ import pytest
 import juscraper
 from juscraper.courts.tjsp.cjpg_download import cjpg_download
 from juscraper.courts.tjsp.cjpg_parse import cjpg_n_pags, cjpg_parse_manager, cjpg_parse_single
-
-from .test_utils import load_sample_html
+from tests._helpers import load_sample
 
 
 @pytest.mark.integration
@@ -76,7 +75,7 @@ class TestCJPGUnit:
 
     def test_cjpg_n_pags_extraction(self):
         """Test extracting page count from CJPG HTML (legacy format)."""
-        html = load_sample_html('cjpg_results.html')
+        html = load_sample('tjsp', 'cjpg/results_legacy.html')
         n_pags = cjpg_n_pags(html)
         # "Mostrando 1 a 10 de 25 resultados" → 25/10 = 3 pages (ceil)
         assert n_pags == 3
@@ -89,7 +88,7 @@ class TestCJPGUnit:
         breaking the original regex (which required "resultado" after the
         number).
         """
-        html = load_sample_html('cjpg_results_novo_formato.html')
+        html = load_sample('tjsp', 'cjpg/results_novo_formato.html')
         n_pags = cjpg_n_pags(html)
         # "Resultados 1 a 10 de 39764" → ceil(39764/10) = 3977
         assert n_pags == 3977
@@ -119,7 +118,7 @@ class TestCJPGUnit:
 
     def test_cjpg_parse_single(self):
         """Test parsing a single CJPG results page."""
-        html = load_sample_html('cjpg_results.html')
+        html = load_sample('tjsp', 'cjpg/results_legacy.html')
 
         with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
             f.write(html)
@@ -141,7 +140,7 @@ class TestCJPGUnit:
 
     def test_cjpg_parse_manager_directory(self):
         """Test parsing multiple CJPG files from directory."""
-        html = load_sample_html('cjpg_results.html')
+        html = load_sample('tjsp', 'cjpg/results_legacy.html')
 
         with tempfile.TemporaryDirectory() as temp_dir:
             file1 = os.path.join(temp_dir, 'page1.html')
