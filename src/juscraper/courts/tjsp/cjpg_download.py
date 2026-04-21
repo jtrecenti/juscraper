@@ -106,6 +106,18 @@ def cjpg_download(
             f"Erro ao extrair número de páginas: {e}. HTML salvo em: {debug_file}"
         ) from e
 
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    path = f"{download_path}/cjpg/{timestamp}"
+    if not os.path.isdir(path):
+        os.makedirs(path)
+
+    # Zero-results short-circuit: save the form page so ``cjpg_parse_manager``
+    # has at least one file to process (returns an empty DataFrame). Refs #109.
+    if n_pags == 0:
+        with open(f"{path}/cjpg_00001.html", 'w', encoding='utf-8') as f:
+            f.write(r0.text)
+        return path
+
     # Se paginas for None, definir range para todas as páginas (1-based)
     if paginas is None:
         paginas = range(1, n_pags + 1)
@@ -117,11 +129,6 @@ def cjpg_download(
     else:
         # list — cap to available pages
         paginas = [p for p in paginas if p <= n_pags]
-
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    path = f"{download_path}/cjpg/{timestamp}"
-    if not os.path.isdir(path):
-        os.makedirs(path)
 
     # Save page 1 from the initial request (r0) if it's in the requested range
     first_page_in_range = 1 in paginas

@@ -15,8 +15,9 @@ from juscraper.courts.tjsp.cpopg_parse import (
     cpopg_parse_single_html,
     get_cpopg_download_links,
 )
+from tests._helpers import load_sample
 
-from .test_utils import create_mock_response, load_sample_html
+from .test_utils import create_mock_response
 
 
 @pytest.mark.integration
@@ -423,7 +424,7 @@ class TestCPOPGUnit:
 
     def test_parse_alternative_template_from_sample(self):
         """Test parsing the alternative template sample HTML file."""
-        html = load_sample_html('cpopg_alternative.html')
+        html = load_sample('tjsp', 'cpopg/show_alternative.html')
 
         with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
             f.write(html)
@@ -449,7 +450,7 @@ class TestCPOPGUnit:
 
     def test_parse_standard_template_from_sample(self):
         """Test parsing the standard template sample HTML file with extra fields."""
-        html = load_sample_html('cpopg_standard.html')
+        html = load_sample('tjsp', 'cpopg/show_standard.html')
 
         with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
             f.write(html)

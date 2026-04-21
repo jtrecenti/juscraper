@@ -1,53 +1,20 @@
 """
 Test utilities for TJSP tests.
+
+Sample loading lives in ``tests._helpers`` (``load_sample``/``load_sample_bytes``).
+This module keeps only the mock helpers that have no equivalent there.
 """
-import os
-from pathlib import Path
 from unittest.mock import Mock
 
 import requests
 
 
-def get_test_samples_dir():
-    """Get the path to the test samples directory."""
-    test_dir = Path(__file__).parent
-    samples_dir = test_dir / "samples"
-    return samples_dir
-
-
-def load_sample_html(filename: str) -> str:
-    """
-    Load a sample HTML file from the samples directory.
-
-    Args:
-        filename: Name of the HTML file to load
-
-    Returns:
-        Contents of the HTML file as a string
-
-    Raises:
-        FileNotFoundError: If the file doesn't exist
-    """
-    samples_dir = get_test_samples_dir()
-    file_path = samples_dir / filename
-
-    if not file_path.exists():
-        raise FileNotFoundError(f"Sample HTML file not found: {file_path}")
-
-    with open(file_path, 'r', encoding='utf-8') as f:
-        return f.read()
-
-
 def create_mock_response(html_content: str, status_code: int = 200) -> Mock:
-    """
-    Create a mock requests.Response object with the given HTML content.
+    """Return a ``Mock`` that quacks like a ``requests.Response``.
 
     Args:
-        html_content: HTML content to return
-        status_code: HTTP status code (default: 200)
-
-    Returns:
-        Mock Response object
+        html_content: HTML body the mock should return via ``.text``/``.content``.
+        status_code: HTTP status code (default: 200).
     """
     mock_response = Mock(spec=requests.Response)
     mock_response.text = html_content
@@ -58,28 +25,21 @@ def create_mock_response(html_content: str, status_code: int = 200) -> Mock:
 
 
 def create_mock_session_with_responses(responses: dict[str, Mock]) -> Mock:
-    """
-    Create a mock requests.Session that returns predefined responses.
+    """Return a ``Mock`` session that dispatches by URL match.
 
     Args:
-        responses: Dictionary mapping URLs or URL patterns to Mock Response objects
-
-    Returns:
-        Mock Session object
+        responses: Dict mapping URL substrings to mocked ``Response`` objects.
+            Exact match wins over substring match; absent matches yield 404.
     """
     mock_session = Mock(spec=requests.Session)
 
     def get_side_effect(url, **kwargs):
-        # Try exact match first
         if url in responses:
             return responses[url]
-        # Try pattern match
         for pattern, response in responses.items():
             if pattern in url:
                 return response
-        # Default response
-        default_response = create_mock_response("", status_code=404)
-        return default_response
+        return create_mock_response("", status_code=404)
 
     mock_session.get = Mock(side_effect=get_side_effect)
     mock_session.post = Mock(side_effect=get_side_effect)

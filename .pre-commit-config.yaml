@@ -3,7 +3,9 @@ repos:
     rev: v4.4.0
     hooks:
       - id: trailing-whitespace
+        exclude: ^tests/.*/samples/
       - id: end-of-file-fixer
+        exclude: ^tests/.*/samples/
       - id: check-yaml
       - id: check-added-large-files
         exclude: ^tests/.*/samples/
