@@ -22,6 +22,18 @@ def cjpg_n_pags(page_source):
     """
     soup = BeautifulSoup(page_source, "html.parser")
 
+    # Zero-results guard: eSAJ returns the search form (without
+    # ``divDadosResultado``) when nothing matches. Mirror the pattern in
+    # ``cjsg_n_pags`` so ``cjpg_download`` can short-circuit and the public
+    # call returns an empty DataFrame instead of raising. Refs #109.
+    page_text = soup.get_text().lower()
+    if (
+        'nenhum resultado' in page_text
+        or 'não foram encontrados' in page_text
+        or 'sem resultados' in page_text
+    ):
+        return 0
+
     # --- Selector cascade ---
     page_element = None
 

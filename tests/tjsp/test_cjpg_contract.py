@@ -13,10 +13,8 @@ Samples exercised:
   "Mostrando …" legacy wording.
 - ``cjpg/results_novo_formato.html`` — current TJSP wording,
   "Resultados N a M de X".
-
-One gap remains: zero-result DataFrame path — tracked in #109
-(``cjpg_n_pags`` raises ``ValueError`` on the "Não foi encontrado
-nenhum resultado" page instead of returning an empty DataFrame).
+- ``cjpg/no_results.html`` — eSAJ form page returned when the query
+  matches zero acórdãos. Guards the fix for #109.
 """
 import pandas as pd
 import pytest
@@ -108,6 +106,20 @@ def test_cjpg_novo_formato(tmp_path, mocker):
     # pagination marker; the contract validates the public call doesn't
     # raise and the DataFrame shape is correct.
     assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
+def test_cjpg_no_results(tmp_path, mocker):
+    """Zero-result query returns an empty DataFrame instead of raising."""
+    mocker.patch("time.sleep")
+    _add_pesquisar("juscraper_probe_zero_hits_xyzqwe", "cjpg/no_results.html")
+
+    df = jus.scraper("tjsp", download_path=str(tmp_path)).cjpg(
+        "juscraper_probe_zero_hits_xyzqwe", paginas=1
+    )
+
+    assert isinstance(df, pd.DataFrame)
+    assert df.empty
 
 
 def test_cjpg_query_too_long_raises(tmp_path):
