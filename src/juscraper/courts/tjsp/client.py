@@ -1,90 +1,188 @@
-"""
-Main scraper for Tribunal de Justica de Sao Paulo (TJSP).
-"""
+"""Main scraper for Tribunal de Justiça de São Paulo (TJSP)."""
+from __future__ import annotations
+
 import logging
 import os
 import shutil
 import tempfile
-from typing import List, Literal, Optional, Union
+from typing import Any, List, Literal, Optional, Union
 
-import requests
+from pydantic import BaseModel, ValidationError
 
-from ...core.base import BaseScraper
 from ...utils.params import normalize_datas, normalize_paginas, validate_intervalo_datas
+from .._esaj.base import EsajSearchScraper, _raise_on_extra
 from .cjpg_download import cjpg_download as cjpg_download_mod
 from .cjpg_parse import cjpg_n_pags, cjpg_parse_manager
-from .cjsg_download import cjsg_download as cjsg_download_mod
-from .cjsg_parse import cjsg_n_pags, cjsg_parse_manager
 from .cpopg_download import cpopg_download_api, cpopg_download_html
 from .cpopg_parse import cpopg_parse_manager, get_cpopg_download_links
 from .cposg_download import cposg_download_api, cposg_download_html
 from .cposg_parse import cposg_parse_manager
+from .exceptions import QueryTooLongError, validate_pesquisa_length
+from .forms import build_tjsp_cjsg_body
+from .schemas import InputCJPGTJSP, InputCJSGTJSP
 
-logger = logging.getLogger('juscraper.tjsp')
+logger = logging.getLogger("juscraper.tjsp")
 
 
-class TJSPScraper(BaseScraper):
-    """Main scraper for Tribunal de Justica de Sao Paulo."""
+class TJSPScraper(EsajSearchScraper):
+    """Main scraper for TJSP — eSAJ web + api.tjsp.jus.br."""
+
+    BASE_URL = "https://esaj.tjsp.jus.br/"
+    TRIBUNAL_NAME = "TJSP"
+    INPUT_CJSG = InputCJSGTJSP
+    CJSG_CHROME_UA = True
+    CJSG_EXTRACT_CONVERSATION_ID = True
 
     def __init__(
         self,
         verbose: int = 0,
         download_path: str | None = None,
         sleep_time: float = 0.5,
-        **kwargs
+        **kwargs: Any,
     ):
-        """
-        Initializes the scraper for TJSP.
-
-        Args:
-            verbose (int, optional): Verbosity level. Default is 0 (no logging).
-            download_path (str, optional): Path to save downloaded files. Default is None (uses temporary directory).
-            sleep_time (float, optional): Time to wait between requests. Default is 0.5 seconds.
-            **kwargs: Argumentos adicionais.
-        """
-        super().__init__("TJSP")
-        self.session = requests.Session()
-        self.u_base = 'https://esaj.tjsp.jus.br/'
-        self.api_base = 'https://api.tjsp.jus.br/'
-        self.set_verbose(verbose)
-        self.set_download_path(download_path)
-        self.sleep_time = sleep_time
-        self.args = kwargs
-        self.method: Optional[Literal['html', 'api']] = None
+        super().__init__(
+            verbose=verbose,
+            download_path=download_path,
+            sleep_time=sleep_time,
+            **kwargs,
+        )
+        self.u_base = self.BASE_URL
+        self.api_base = "https://api.tjsp.jus.br/"
+        self.method: Optional[Literal["html", "api"]] = None
 
     def set_download_path(self, path: str | None = None):
-        """
-        Sets the base directory for saving downloaded files.
-
-        Args:
-            path (str, optional): Path to save downloaded files. Default is None (uses temporary directory).
-        """
+        """Set download base dir; creates a tempdir when ``path`` is ``None``."""
         if path is None:
             path = tempfile.mkdtemp()
         self.download_path = path
 
-    def set_method(self, method: Literal['html', 'api']):
-        """
-        Sets the method for accessing TJSP data.
-
-        Args:
-            method: Literal['html', 'api']. The methods supported are 'html' and 'api'.
-
-        Raises:
-            Exception: If the method is not 'html' or 'api'.
-        """
-        if method not in ['html', 'api']:
+    def set_method(self, method: Literal["html", "api"]):
+        """Validate and store the access method (``'html'`` or ``'api'``) for cpopg/cposg."""
+        if method not in ("html", "api"):
             raise ValueError(
-                f"Método {method} nao suportado."
-                "Os métodos suportados são 'html' e 'api'."
+                f"Método {method} nao suportado. Os métodos suportados são 'html' e 'api'."
             )
         self.method = method
 
-    # cpopg ------------------------------------------------------------------
-    def cpopg(self, id_cnj: Union[str, List[str]], method: Literal['html', 'api'] = 'html'):
+    # --- cjsg -----------------------------------------------------------
+
+    def cjsg_download(
+        self,
+        pesquisa: str,
+        paginas: int | list | range | None = None,
+        diretorio: str | None = None,
+        **kwargs: Any,
+    ) -> str:
+        """Download TJSP cjsg pages. Length check happens before pydantic
+        so ``QueryTooLongError`` propagates cleanly.
         """
-        Scrapes a process from Primeiro Grau (CPOPG).
-        """
+        validate_pesquisa_length(pesquisa, endpoint="CJSG")
+        return super().cjsg_download(
+            pesquisa=pesquisa, paginas=paginas, diretorio=diretorio, **kwargs,
+        )
+
+    def _build_cjsg_body(self, inp: BaseModel) -> dict:
+        data = inp.model_dump()
+        body: dict = build_tjsp_cjsg_body(
+            pesquisa=data["pesquisa"],
+            ementa=data.get("ementa"),
+            classe=data.get("classe"),
+            assunto=data.get("assunto"),
+            comarca=data.get("comarca"),
+            orgao_julgador=data.get("orgao_julgador"),
+            data_julgamento_inicio=data.get("data_julgamento_inicio"),
+            data_julgamento_fim=data.get("data_julgamento_fim"),
+            baixar_sg=data.get("baixar_sg", True),
+            tipo_decisao=data.get("tipo_decisao", "acordao"),
+        )
+        return body
+
+    # --- cjpg -----------------------------------------------------------
+    # Internals (``cjpg_download.py`` + ``cjpg_parse.py``) are unique to
+    # TJSP, so they're kept as-is. The public entry point still routes
+    # through pydantic (``InputCJPGTJSP``) for documentation + rejection
+    # of unknown kwargs.
+
+    def cjpg(
+        self,
+        pesquisa: str = "",
+        paginas: int | list | range | None = None,
+        **kwargs: Any,
+    ):
+        """Search TJSP first-degree jurisprudence (CJPG) and return a DataFrame."""
+        path = self.cjpg_download(pesquisa=pesquisa, paginas=paginas, **kwargs)
+        try:
+            return self.cjpg_parse(path)
+        finally:
+            shutil.rmtree(path, ignore_errors=True)
+
+    def cjpg_download(
+        self,
+        pesquisa: str = "",
+        paginas: int | list | range | None = None,
+        **kwargs: Any,
+    ) -> str:
+        """Download raw CJPG HTML result pages. Returns the output directory path."""
+        validate_pesquisa_length(pesquisa, endpoint="CJPG")
+
+        paginas_norm = normalize_paginas(paginas)
+        datas = normalize_datas(**kwargs)
+        for alias in (
+            "data_julgamento_inicio", "data_julgamento_fim",
+            "data_publicacao_inicio", "data_publicacao_fim",
+            "data_julgamento_de", "data_julgamento_ate",
+            "data_publicacao_de", "data_publicacao_ate",
+            "data_inicio", "data_fim",
+        ):
+            kwargs.pop(alias, None)
+
+        validate_intervalo_datas(
+            datas["data_julgamento_inicio"],
+            datas["data_julgamento_fim"],
+            rotulo="data_julgamento",
+        )
+
+        try:
+            inp = InputCJPGTJSP(
+                pesquisa=pesquisa,
+                paginas=paginas_norm,
+                **{k: v for k, v in datas.items() if v is not None},
+                **kwargs,
+            )
+        except ValidationError as exc:
+            _raise_on_extra(exc, f"{type(self).__name__}.cjpg_download()")
+            raise
+
+        def _get_n_pags(r0):
+            html = r0.content if hasattr(r0, "content") else r0
+            return cjpg_n_pags(html)
+
+        path: str = cjpg_download_mod(
+            pesquisa=inp.pesquisa,
+            session=self.session,
+            u_base=self.u_base,
+            download_path=self.download_path,
+            sleep_time=self.sleep_time,
+            classes=inp.classes,
+            assuntos=inp.assuntos,
+            varas=inp.varas,
+            id_processo=inp.id_processo,
+            data_inicio=inp.data_julgamento_inicio,
+            data_fim=inp.data_julgamento_fim,
+            paginas=inp.paginas,
+            get_n_pags_callback=_get_n_pags,
+        )
+        return path
+
+    def cjpg_parse(self, path: str):
+        """Parse downloaded CJPG HTML files into a DataFrame."""
+        return cjpg_parse_manager(path)
+
+    # --- cpopg ----------------------------------------------------------
+    # Kept as-is — unique to TJSP, not eSAJ-search-shaped.
+
+    def cpopg(self, id_cnj: Union[str, List[str]], method: Literal["html", "api"] = "html"):
+        """Fetch a first-degree process by CNJ and return a DataFrame."""
         self.set_method(method)
         self.cpopg_download(id_cnj, method)
         result = self.cpopg_parse(self.download_path)
@@ -94,54 +192,41 @@ class TJSPScraper(BaseScraper):
     def cpopg_download(
         self,
         id_cnj: Union[str, List[str]],
-        method: Literal['html', 'api'] = 'html'
+        method: Literal["html", "api"] = "html",
     ):
-        """Downloads a process from Primeiro Grau (CPOPG).
-
-        Args:
-            id_cnj: string with the CNJ of the process, or list of strings with CNJs.
-            method: Literal['html', 'api']. The methods supported are 'html' and 'api'. The default is 'html'.
-
-        Raises:
-            Exception: If the method passed as parameter is not 'html' or 'api'.
-        """
+        """Download raw CPOPG files for one or many CNJs via ``'html'`` or ``'api'``."""
         self.set_method(method)
-        path = self.download_path
         if isinstance(id_cnj, str):
             id_cnj = [id_cnj]
-        if self.method == 'html':
+        if self.method == "html":
             def get_links_callback(response):
                 return get_cpopg_download_links(response)
             cpopg_download_html(
                 id_cnj_list=id_cnj,
                 session=self.session,
                 u_base=self.u_base,
-                download_path=path,
+                download_path=self.download_path,
                 sleep_time=self.sleep_time,
-                get_links_callback=get_links_callback
+                get_links_callback=get_links_callback,
             )
-        elif self.method == 'api':
+        elif self.method == "api":
             cpopg_download_api(
                 id_cnj_list=id_cnj,
                 session=self.session,
                 api_base=self.api_base,
-                download_path=path
+                download_path=self.download_path,
             )
         else:
             raise ValueError(f"Método '{method}' não é suportado.")
 
     def cpopg_parse(self, path: str):
-        """
-        Wrapper for parsing downloaded files from CPOPG.
-        """
+        """Parse downloaded CPOPG files into a DataFrame."""
         return cpopg_parse_manager(path)
 
-    # cposg ------------------------------------------------------------------
+    # --- cposg ----------------------------------------------------------
 
-    def cposg(self, id_cnj: str, method: Literal['html', 'api'] = 'html'):
-        """
-        Orchestrates the download and parsing of processes from Segundo Grau (CPOSG).
-        """
+    def cposg(self, id_cnj: str, method: Literal["html", "api"] = "html"):
+        """Fetch a second-degree process by CNJ and return a DataFrame."""
         self.set_method(method)
         path = self.download_path
         self.cposg_download(id_cnj, method)
@@ -152,256 +237,33 @@ class TJSPScraper(BaseScraper):
             logger.warning("[TJSP] Aviso: diretório %s não existe e não pôde ser removido.", path)
         return result
 
-    def cposg_download(self, id_cnj: Union[str, list], method: Literal['html', 'api'] = 'html'):
-        """
-        Downloads processes from Segundo Grau (CPOSG), via HTML or API, using modularized functions.
-        """
+    def cposg_download(self, id_cnj: Union[str, list], method: Literal["html", "api"] = "html"):
+        """Download raw CPOSG files for one or many CNJs via ``'html'`` or ``'api'``."""
         self.set_method(method)
         if isinstance(id_cnj, str):
             id_cnj = [id_cnj]
-        if self.method == 'html':
+        if self.method == "html":
             cposg_download_html(
                 id_cnj_list=id_cnj,
                 session=self.session,
                 u_base=self.u_base,
                 download_path=self.download_path,
-                sleep_time=self.sleep_time
+                sleep_time=self.sleep_time,
             )
-        elif self.method == 'api':
+        elif self.method == "api":
             cposg_download_api(
                 id_cnj_list=id_cnj,
                 session=self.session,
                 api_base=self.api_base,
                 download_path=self.download_path,
-                sleep_time=self.sleep_time
+                sleep_time=self.sleep_time,
             )
         else:
             raise ValueError(f"Método '{method}' não é suportado.")
 
     def cposg_parse(self, path: str):
-        """
-        Wrapper for parsing downloaded files from CPOSG.
-        """
+        """Parse downloaded CPOSG files into a DataFrame."""
         return cposg_parse_manager(path)
 
-    # cjsg ----------------------------------------------------------------------
-    def cjsg(
-        self,
-        pesquisa: str,
-        ementa: str | None = None,
-        classe: str | None = None,
-        assunto: str | None = None,
-        comarca: str | None = None,
-        orgao_julgador: str | None = None,
-        data_julgamento_inicio: str | None = None,
-        data_julgamento_fim: str | None = None,
-        baixar_sg: bool = True,
-        tipo_decisao: str | Literal['acordao', 'monocratica'] = 'acordao',
-        paginas: int | list | range | None = None,
-        **kwargs,
-    ):
-        """
-        Orchestrates the download and parsing of processes from CJSG.
-        """
-        path_result = self.cjsg_download(
-            pesquisa=pesquisa,
-            ementa=ementa,
-            classe=classe,
-            assunto=assunto,
-            comarca=comarca,
-            orgao_julgador=orgao_julgador,
-            data_julgamento_inicio=data_julgamento_inicio,
-            data_julgamento_fim=data_julgamento_fim,
-            baixar_sg=baixar_sg,
-            tipo_decisao=tipo_decisao,
-            paginas=paginas,
-            **kwargs,
-        )
-        data_parsed = self.cjsg_parse(path_result)
-        shutil.rmtree(path_result)
-        return data_parsed
 
-    def cjsg_download(
-        self,
-        pesquisa: str,
-        ementa: str | None = None,
-        classe: str | None = None,
-        assunto: str | None = None,
-        comarca: str | None = None,
-        orgao_julgador: str | None = None,
-        data_julgamento_inicio: str | None = None,
-        data_julgamento_fim: str | None = None,
-        baixar_sg: bool = True,
-        tipo_decisao: str | Literal['acordao', 'monocratica'] = 'acordao',
-        paginas: int | list | range | None = None,
-        **kwargs,
-    ):
-        """
-        Downloads the HTML files of the pages of results of the
-        Second Stage Judgment Consultation (CJSG).
-
-        Args:
-            pesquisa (str): Search term.
-            ementa (str, optional): Filter by text of the ementa.
-            classe: Class of the process.
-            assunto: Subject of the process.
-            comarca: Court of the process.
-            orgao_julgador: Court of appeal of the process.
-            data_julgamento_inicio: Start date (judgment). ``data_inicio`` accepted as alias.
-            data_julgamento_fim: End date (judgment). ``data_fim`` accepted as alias.
-            baixar_sg (bool): If True, also downloads from Second Stage.
-            tipo_decisao (str): 'acordao' or 'monocratica'.
-            paginas (int, list, range, or None): Pages (1-based). None downloads all.
-
-        Note:
-            The eSAJ accepts at most 1 year between ``data_julgamento_inicio``
-            and ``data_julgamento_fim``. Split longer ranges on the caller side.
-        """
-        paginas = normalize_paginas(paginas)
-        datas = normalize_datas(
-            data_julgamento_inicio=data_julgamento_inicio,
-            data_julgamento_fim=data_julgamento_fim,
-            **kwargs,
-        )
-        validate_intervalo_datas(
-            datas["data_julgamento_inicio"],
-            datas["data_julgamento_fim"],
-            rotulo="data_julgamento",
-        )
-        return cjsg_download_mod(
-            pesquisa=pesquisa,
-            download_path=self.download_path,
-            u_base=self.u_base,
-            sleep_time=self.sleep_time,
-            verbose=self.verbose,
-            ementa=ementa,
-            classe=classe,
-            assunto=assunto,
-            comarca=comarca,
-            orgao_julgador=orgao_julgador,
-            data_inicio=datas["data_julgamento_inicio"],
-            data_fim=datas["data_julgamento_fim"],
-            baixar_sg=baixar_sg,
-            tipo_decisao=tipo_decisao,
-            paginas=paginas,
-            get_n_pags_callback=cjsg_n_pags,
-        )
-
-    # cjpg ----------------------------------------------------------------------
-    def cjpg(
-        self,
-        pesquisa: str = '',
-        classes: list[str] | None = None,
-        assuntos: list[str] | None = None,
-        varas: list[str] | None = None,
-        id_processo: str | None = None,
-        data_julgamento_inicio: str | None = None,
-        data_julgamento_fim: str | None = None,
-        paginas: int | list | range | None = None,
-        **kwargs,
-    ):
-        """
-        Orchestrates the download and parsing of processes from CJPG.
-
-        Args:
-            pesquisa (str): The search term. Default is "" (empty string).
-            classes (list[str], optional): List of classes of the process. Default is None.
-            assuntos (list[str], optional): List of subjects of the process. Default is None.
-            varas (list[str], optional): List of varas of the process. Default is None.
-            id_processo (str, optional): ID of the process. Default is None.
-            data_julgamento_inicio: Start date. ``data_inicio`` accepted as alias.
-            data_julgamento_fim: End date. ``data_fim`` accepted as alias.
-            paginas (int, list, range, or None): Pages (1-based). None downloads all.
-
-        Note:
-            The eSAJ accepts at most 1 year between ``data_julgamento_inicio``
-            and ``data_julgamento_fim``. Split longer ranges into yearly
-            windows on the caller side.
-        """
-        path_result = self.cjpg_download(
-            pesquisa=pesquisa,
-            classes=classes,
-            assuntos=assuntos,
-            varas=varas,
-            id_processo=id_processo,
-            data_julgamento_inicio=data_julgamento_inicio,
-            data_julgamento_fim=data_julgamento_fim,
-            paginas=paginas,
-            **kwargs,
-        )
-        data_parsed = self.cjpg_parse(path_result)
-        shutil.rmtree(path_result)
-        return data_parsed
-
-    def cjpg_download(
-        self,
-        pesquisa: str,
-        classes: list[str] | None = None,
-        assuntos: list[str] | None = None,
-        varas: list[str] | None = None,
-        id_processo: str | None = None,
-        data_julgamento_inicio: str | None = None,
-        data_julgamento_fim: str | None = None,
-        paginas: int | list | range | None = None,
-        **kwargs,
-    ):
-        """
-        Downloads the processes from the TJSP jurisprudence.
-
-        Args:
-            pesquisa (str): The search term.
-            classes (list[str], optional): List of classes of the process. Default is None.
-            assuntos (list[str], optional): List of subjects of the process. Default is None.
-            varas (list[str], optional): List of varas of the process. Default is None.
-            id_processo (str, optional): ID of the process. Default is None.
-            data_julgamento_inicio: Start date. ``data_inicio`` accepted as alias.
-            data_julgamento_fim: End date. ``data_fim`` accepted as alias.
-            paginas (int, list, range, or None): Pages (1-based). None downloads all.
-
-        Note:
-            The eSAJ accepts at most 1 year between ``data_julgamento_inicio``
-            and ``data_julgamento_fim``. Split longer ranges on the caller side.
-        """
-        paginas = normalize_paginas(paginas)
-        datas = normalize_datas(
-            data_julgamento_inicio=data_julgamento_inicio,
-            data_julgamento_fim=data_julgamento_fim,
-            **kwargs,
-        )
-        validate_intervalo_datas(
-            datas["data_julgamento_inicio"],
-            datas["data_julgamento_fim"],
-            rotulo="data_julgamento",
-        )
-
-        def get_n_pags_callback(r0):
-            html = r0.content if hasattr(r0, 'content') else r0
-            return cjpg_n_pags(html)
-
-        return cjpg_download_mod(
-            pesquisa=pesquisa,
-            session=self.session,
-            u_base=self.u_base,
-            download_path=self.download_path,
-            sleep_time=self.sleep_time,
-            classes=classes,
-            assuntos=assuntos,
-            varas=varas,
-            id_processo=id_processo,
-            data_inicio=datas["data_julgamento_inicio"],
-            data_fim=datas["data_julgamento_fim"],
-            paginas=paginas,
-            get_n_pags_callback=get_n_pags_callback,
-        )
-
-    def cjpg_parse(self, path: str):
-        """
-        Wrapper for parsing downloaded files from CJPG.
-        """
-        return cjpg_parse_manager(path)
-
-    def cjsg_parse(self, path: str):
-        """
-        Wrapper for parsing downloaded files from CJSG.
-        """
-        return cjsg_parse_manager(path)
+__all__ = ["TJSPScraper", "QueryTooLongError"]
