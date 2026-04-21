@@ -43,7 +43,7 @@ def cpopg_download_html(
                 get_links_callback
             )
         except (OSError, UnicodeDecodeError, ValueError,
-                AttributeError, requests.RequestException) as e:
+                AttributeError, RuntimeError, requests.RequestException) as e:
             logger.error(
                 "Erro ao baixar o processo %s: %s",
                 idp,

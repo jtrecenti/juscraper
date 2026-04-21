@@ -6,6 +6,7 @@ repos:
       - id: end-of-file-fixer
       - id: check-yaml
       - id: check-added-large-files
+        exclude: ^tests/.*/samples/
       - id: check-merge-conflict
       - id: debug-statements
 
