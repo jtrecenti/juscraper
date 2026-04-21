@@ -1,0 +1,5847 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+
+
+<html>
+	
+
+
+
+
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+	<script>
+	window.saj = window.saj || {};
+	window.saj.env = window.saj.env || {};
+	window.saj.env.root = '/cjpg';
+	window.saj.env.css = '/cjpg/css';
+	window.saj.env.js = '/cjpg/js';
+	window.saj.env.imagens = '/cjpg/imagens';
+</script>
+ 	
+ 	<script type="text/Javascript" src="/cjpg/js/jquery/jquery-1.3.2.js?n=4277120003"></script>
+ 	<script type="text/Javascript" src="/cjpg/js/jquery/jquery.blockUI.js?n=224043528"></script>
+ 	<script type="text/JavaScript" src="/cjpg/js/spw/spwConcatenado-4.3.3-14.js?n=2760002609"></script>
+	<script type="text/JavaScript" src="/cjpg/js/saj/saj-popup.js?n=2538966893"></script>
+	
+	<!-- 
+	<script type="text/JavaScript" src="/cjpg/js/saj/saj-tooltip.js?n=3753729220"></script>
+	 -->  
+	<script type="text/JavaScript" src="/cjpg/js/toolTipSaj.js?n=1673314448"></script>
+	
+	
+ 	<link rel="stylesheet" type="text/css" href="/cjpg/css/spw/spwConcatenado-4.3.3-14.css" />
+	<link rel="stylesheet" type="text/css" href="/cjpg/css/toolTipSaj.css" />
+	<link rel="stylesheet" type="text/css" href="/cjpg/css/saj/saj-popup-modal.css" />
+	 	
+	<title>Consulta de Julgados do Primeiro Grau</title>
+
+	
+		<link rel="stylesheet" type="text/css" href="/cjpg/css/cjpg.css" />
+		<link rel="stylesheet" type="text/css" href="/cjpg/css/saj/saj-tree.css" />
+		<script type="text/JavaScript" src="/cjpg/js/saj/saj-popup.js?n=2538966893"></script>
+		<script type="text/JavaScript" src="/cjpg/js/saj/saj-tree-2.2.43-2.js?n=716072279"></script>
+		<script type="text/JavaScript" src="/cjpg/js/saj/saj-web-2.2.41-4.js?n=3542479983"></script>
+		<script type="text/JavaScript" src="/cjpg/js/saj/saj-numeroProcesso.js?n=725367609"></script>
+		<script type="text/JavaScript" src="/cjpg/js/saj/saj-mascara-input.js?n=3017414384"></script>
+		<script type="text/JavaScript" src="/cjpg/js/saj/saj-browser.js?n=500187587"></script>
+		<script type="text/JavaScript" src="/cjpg/js/saj/saj-popup-modal-1.0.0-1.js?n=2003682593"></script>
+		
+		<script type="text/javascript" src="/cjpg/jsp/consulta.js?n=1983409050" ></script>
+	
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+		
+
+
+
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
+<meta http-equiv="pragma" content="no-cache"/>
+<meta http-equiv="cache-control" content="no-cache"/>
+<meta http-equiv="expires" content="0"/>
+
+<link href="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/css/esajComum.css" rel="stylesheet" type="text/css" />
+<link href="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/css/esajLayout.css" rel="stylesheet" type="text/css" />
+<link href="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/clientes/SP/css/esajLayoutSP.css" rel="stylesheet" type="text/css" />
+
+<style type="text/css">
+<!--
+/* botao default means o mais claro, que seria o "botï¿½o principal" */
+.spwBotaoDefault, .spwBotaoDefault-o {
+	background-image: url(https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/clientes/SP/imagens/layout/fundoBotaoDefault.gif);
+}
+/* o botao secundario, menos provavel de ser clicado, mais escuro */
+.spwBotao, .spwBotao-o {
+	background-image: url(https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/imagens/layout/fundoBotao.gif);
+}
+-->
+</style>
+
+
+<script language="javascript" type="text/JavaScript" src="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/js/menu.js?n=2553626853"></script>
+
+<link rel="shortcut icon" href="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/clientes/SP/imagens/favicon.ico" type="image/x-icon" />
+
+
+	<script type="text/javascript">
+
+	  var _gaq = _gaq || [];
+	  _gaq.push(['_setAccount', 'UA-23111004-1']);
+	  _gaq.push(['_trackPageview']);
+
+	  (function() {
+	    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+	    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+	    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+	  })();
+
+	</script>
+
+
+
+<script>
+    var dict = {
+        'certificado.tituloCertificadoDigital': 'Certificado digital',
+        'certificado.msgCarregandoCertificado': 'Carregando certificados...',
+        'certificado.msgNenhumCertificadoEncontrado': 'Nenhum certificado encontrado',
+        'certificado.msgErroCarregarCertificado': 'Erro ao carregar certificados',
+        'certificado.msgCertificadoExpirado': '[Expirado]',
+        'certificado.msgCertificadoNaoValido': '[Ainda não válido]',
+        'certificado.msgCertificadoNaoIcpBrasil': '[Não ICP-Brasil]',
+        'certificado.tituloProblemasAoAssinar': 'Falha de comunicação com o dispositivo de assinatura digital',
+
+        'label.contato': 'Contato',
+        'label.identificarSe': 'Identificar-se ',
+
+        'mensagem.aguarde': 'Por favor, aguarde.',
+        'mensagem.paginaNaoCarregada': 'Não foi possível carregar a página.',
+        'mensagem.marcarLido': 'Marcar como lido',
+        'mensagem.registrosSelecionados': 'Registros selecionados',
+        'mensagem.registroJaSelecionado': 'Este registro já está selecionado',
+
+        'mensagem.data.invalida': 'A data digitada é inválida.',
+        'mensagem.data.anoInvalido': 'O ano informado deve ser maior que',
+        'mensagem.data.mesInvalido': 'O mês não pode ser maior que 12.',
+        'mensagem.data.mes': 'O mês',
+        'mensagem.data.mesMaior29dias': 'não pode ter mais que 29 dias.',
+        'mensagem.data.mesMaior28dias': 'não pode ter mais que 28 dias.',
+        'mensagem.data.mesMaior31dias': 'não pode ter mais que 31 dias.',
+        'mensagem.data.mesMaior30dias': 'não pode ter mais que 30 dias.',
+
+        'mensagem.email.invalido': 'O formato do endereço de e-mail não é válido. Verifique se ele tem o formato "usuario@dominio".',
+        'mensagem.email.caracteresInvalidos': 'O endereço de e-mail possui caracteres inválidos',
+        'mensagem.email.usuarioInvalido': 'O formato do usuário informado no endereço de e-mail não é válido.',
+        'mensagem.email.ipInvalido': 'O endereço IP informado no endereço de e-mail não é válido.',
+        'mensagem.email.dominioInvalido': 'O formato do domínio informado no endereço de e-mail não é válido.',
+        'mensagem.email.dominioIncompleto': 'O domínio informado no endereço de e-mail deve possuir pelo menos duas partes. Por exemplo: "usuario@empresa.com.br".',
+
+        'mensagem.texto.tamanhoInvalido': 'O tamanho do texto digitado é maior do que o tamanho permitido. Tamanho permitido:',
+        'mensagem.texto.caracter': 'O caracter',
+        'mensagem.texto.caracterPosicaoInvalida': 'não está permitido na posição',
+
+        'mensagem.numero.numeroInvalido': 'O valor digitado não é um número válido.',
+        'mensagem.numero.numeroNaoPodeCasasDecimais': 'O número não pode conter casas decimais',
+        'mensagem.numero.numeroCasaDecimaisInvalidas': 'O número de casas decimais é inválido. O número pode conter apenas',
+        'mensagem.numero.casaDecimais': 'casas decimais',
+        'mensagem.numero.numeroInteiroInvalido': 'O número de dígitos inteiros é inválido. O número pode conter apenas',
+        'mensagem.numero.digitosInteiros': 'dígitos inteiros',
+        'mensagem.numero.numeroTamanhoInvalido': 'O número digitado não pode ser maior que',
+        'mensagem.numero.numeroZeroInvalido': 'O número digitado deve ser diferente de zero.'
+    }
+</script>
+
+
+	
+
+
+  
+
+</head>
+
+
+	
+
+
+
+
+
+
+
+
+    <script language="javascript" type="text/JavaScript"
+            src="https://esaj.tjsp.jus.br/sajcas/verificarLogin.js?script=1776777565385"></script>
+
+    <script language="javascript">
+        if (window.sajcas && window.sajcas.usuarioLogadoNoCasServer) {
+            var GATEWAY_TRUE = 'gateway=true', GATEWAY_FALSE = 'gateway=false';
+            var urlRetornoSistema = '';
+            if (urlRetornoSistema === '') {
+                urlRetornoSistema = window.location.href;
+            }
+
+            if (urlRetornoSistema.indexOf(GATEWAY_FALSE) !== -1) {
+                urlRetornoSistema = urlRetornoSistema.replace(GATEWAY_FALSE, GATEWAY_TRUE);
+            } else {
+                urlRetornoSistema.lastIndexOf('?') !== -1 ? urlRetornoSistema += '&' : urlRetornoSistema += '?';
+                urlRetornoSistema += GATEWAY_TRUE;
+            }
+
+            window.location.href = urlRetornoSistema;
+        }
+    </script>
+
+
+	
+
+
+
+
+
+
+
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+		
+
+
+    
+        
+        
+            <div class="esajBarraAcessibilidade">
+                <a target="_blank" href="https://www.tjsp.jus.br/Acessibilidade/Orientacoes"><span>Acessibilidade</span></a>
+                <a target="_blank" href="https://www.tjsp.jus.br/Acessibilidade/Orientacoes">
+                    <img height="20" width="20" border="0" onmouseover="exibirLibras()" onmouseleave="ocultarLibras()" alt="MAO" src="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/imagens/layout/mao.png"/>
+                </a>
+            </div>
+            <img id="gifLibras" class="esajBarraAcessibilidadeLibras" style="display: none" height="100" width="100" border="0" alt="LIBRAS" src="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/imagens/layout/libras.gif"/>
+        
+    
+
+
+<table width="100%" border="0" cellpadding="0" cellspacing="0" class="esajTabelaCabecalhoCliente" summary=" " role="presentation">
+	<tr>
+		<td><a href="http://www.tjsp.jus.br"><img src="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/clientes/SP/imagens/layout/cabecalhoLogo.jpg" width="425" height="58" alt="Tribunal de Justi&ccedil;a do Estado de S&atilde;o Paulo" /></a></td>
+		<td align="right" valign="top"><img src="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/clientes/SP/imagens/layout/cabecalhoImagem.jpg" width="353" height="58" /></td>
+	</tr>
+</table>
+<script language="javascript" type="text/JavaScript" src="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/js/libras.js?n=369456521"></script>
+
+	
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+		
+
+
+<!-- cabecalho e-Saj -->
+<table width="100%" cellpadding="0" cellspacing="0" class="esajTabelaCabecalhoServico" summary=" " role="presentation">
+	<tr>
+		<td class="esajCelulaCabecalhoServicoLogo">
+
+
+
+
+<a href="https://esaj.tjsp.jus.br/esaj-layout/redirecionarNovoEsaj.do"><img src="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/imagens/layout/eSajServico.gif" title="Voltar para página inicial do e-SAJ" alt="Voltar para página inicial do e-SAJ" width="255" height="53" border="0" /></a><img src="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/imagens/layout/eSajServicoInf.gif" alt=" " width="255" height="28" border="0" />
+</td>
+		<td class="esajCelulaCabecalhoServicoMenu">
+		    <table width="100%" border="0" cellpadding="0" cellspacing="0" summary=" " role="presentation">
+				<tr>
+					<td align="right">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+    
+        <div id="divopupContato" style="display: none;">
+                <div class="quadroContato"><h2>Suporte Técnico de Sistemas</h2>         <div style="text-align: left; padding: 0 20px;">             <p class="locaisContato">Cadastro de Advogados, Peticionamento Eletrônico e Processos de Primeira Instância Sistemas de 1ª Instância, Sistemas de 2ª Instância, Colégio Recursal, Consulta de Acórdão, Decisões Monocráticas, Homologações de Acordo e Jurisprudência  e Sistema Pushing.</p>             <p class="telefonesLocal"> Abra sua solicitação através do portal de atendimento: <a target="_blank" href="https://www.suportesistemastjsp.com.br/">https://www.suportesistemastjsp.com.br/</a></p>         </div>     </div>
+        </div>
+    
+
+<!-- Devido ao alinhamento inline das imagens, elas nÃ£o podem ter nenhum tipo de espaÃ§amento entre elas, portanto Ã© necessÃ¡rio finalizar a linha iniciando um comentÃ¡rio e fechar o comentÃ¡rio imediatamente antes da abertura da nova tag-->
+<img height="24" width="47" alt=" " src="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/imagens/layout/inicioMenuSup.jpg"/><a href="https://esaj.tjsp.jus.br/caixapostal"><!--
+
+    --><img height="24" width="83" border="0" alt="Caixa Postal" src="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/imagens/layout/caixaPostal.gif"/></a><!--
+    --><img height="24" width="4" alt=" " src="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/imagens/layout/menuSeparador.jpg"/><a href="https://esaj.tjsp.jus.br/esaj/cadastro.do"><!--
+
+--><img src="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/imagens/layout/cadastro.gif" alt="Cadastro" width="81" height="24" border="0" /></a><!--
+
+    --><img height="24" width="4" alt=" " src="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/imagens/layout/menuSeparador.jpg"/><a id="linkContato" href="#"><!--
+    --><img height="24" width="68" border="0" alt="Contato" src="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/imagens/layout/contato.gif"/></a><!--
+
+
+    --><img height="24" width="4" alt=" " src="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/imagens/layout/menuSeparador.jpg"/><a target="blank" href="https://esaj.tjsp.jus.br/WebHelp/"><!--
+    --><img height="24" width="61" border="0" alt="Ajuda do e-Saj" src="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/imagens/layout/ajuda.gif"/></a><!--
+
+
+-->
+</td>
+				</tr>
+				<tr>
+					<td class="esajCelulaIdentificacaoServico" >
+
+
+
+
+<style>
+
+    td.esajCelulaIdentificacao, td.esajCelulaIdentificacaoServico {
+        position: relative;
+    }
+
+    button.escolhaBeta {
+        border: 0;
+        background: #0078D7;
+        color: #fff;
+        margin-right: 5px;
+        font-family: verdana;
+        font-size: 12px;
+        height: 27px;
+        line-height: 14px;
+        border-radius: 0;
+        text-shadow: 1px 1px 1px #797979;
+        position: absolute;
+        top: 30px;
+        right: 3px;
+        padding: 7px 12px;
+        cursor: pointer;
+    }
+
+    button.escolhaBeta:hover {
+        background-color: #0b5c9c;
+    }
+</style>
+
+<span id="identificacao"></span>
+
+<button style="display: none" class="escolhaBeta"></button>
+
+
+
+
+    
+    
+        <script language="javascript" type="text/JavaScript" src="https://esaj.tjsp.jus.br/sajcas/conteudoIdentificacao?script=1776756821274"></script>
+    
+
+</td>
+				</tr>
+				<tr>
+					<td class="esajCelulaCabecalhoServicoCaminho" >
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+<a href="" class="esajCaminhoLink"></a>
+
+ &gt;
+
+
+<a href="https://esaj.tjsp.jus.br/esaj?servico=740000" class="esajCaminhoLink">Bem-vindo</a>
+
+ &gt;
+
+
+
+Consulta de Julgados de 1º Grau
+</td>
+				</tr>
+			</table>
+		</td>
+	</tr>
+</table>
+<!-- CONTEUDO -->
+<table width="100%" border="0" cellpadding="0" cellspacing="0" class="esajTabelaTitulo" role="presentation">
+	<tr>
+		<td class="esajCelulaMenuSuspenso">
+		<a href="#" onclick="return showMenuSuspenso()"><img src="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/imagens/layout/menuSuspenso.gif" alt="Menu de servi&ccedil;os" width="243" height="21" style="display:block" /></a>
+		<div id="layerMenu" style="display:none">
+			
+
+<!-- MENU -->
+<ul id="esajMenuArea">
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Consultas Processuais</a>
+<ul>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/cpopg/open.do">Consulta de Processos do 1ºGrau</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/cposg/open.do">Consulta de Processos do 2ºGrau</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/cposgcr/open.do">Colégio Recursal/Turma de Uniformização</a></li>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Consulta de Ordem de Processos</a>
+<ul>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/cop/abrirConsultaDeOrdemDeJulgamentoPg.do">Consulta de processos de Ordem de julgamento do 1º Grau</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/cop/abrirConsultaDeOrdemDeAtoPg.do">Consulta de Ordem de Publicação e Cumprimento de Atos</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/cop/abrirConsultaDeOrdemDeAtoSgTj.do">Consulta de Ordem de Publicação de Cumprimento de Atos do 2º Grau</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/cop/abrirConsultaDeOrdemDeJulgamentoMagistradoSg.do">Consulta de Ordem de Julgamento do 2º Grau</a></li>
+</ul>
+  </li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/pauta-julgamento-virtual">Pauta de Julgamento Virtual do Segundo Grau</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/pauta-julgamento-virtual-cr">Pauta de Julgamento Virtual do Colégio Recursal</a></li>
+</ul>
+  </li>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Solicitações e Pedidos</a>
+<ul>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/petpg-conciliacao/abrirPedidoMedicamentos.do">Pedido de Medicamentos</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/petpg-conciliacao/abrirConciliacaoSuperendividamento.do">Conciliação no Superendividamento</a></li>
+</ul>
+  </li>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Requisitórios</a>
+<ul>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Portal do Devedor</a>
+<ul>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/cpopg/abrirConsultaDeRequisitorios.do">Consulta de Requisitórios</a></li>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Notificação de Requisitórios</a>
+<ul>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/portalDevedor/abrirConsultaNotificacoesRequisitoriosNaoRecebidas.do">Requisitórios Pendentes de Recebimento</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/portalDevedor/abrirConsultaNotificacoesRequisitoriosRecebidas.do">Requisitórios Recebidos</a></li>
+</ul>
+  </li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/portalDevedor/abrirConsultaDeProcessos.do">Consulta de Processos</a></li>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Notificação de Mapas Orçamentários</a>
+<ul>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/portalDevedor/abrirConsultaNotificacoesMapasOrcamentariosNaoRecebidas.do">Mapas Pendentes de Recebimento</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/portalDevedor/abrirConsultaNotificacoesMapasOrcamentariosRecebidas.do">Mapas Recebidos</a></li>
+</ul>
+  </li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/portalDevedor/abrirPeticionamentoIntermediario.do">Peticionamento de Intermediária</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/portalDevedor/abrirConsultaNotificacoesDocumentos.do">Notificação de Documentos</a></li>
+</ul>
+  </li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/portalDevedor/abrirConsultaListaPagamentos.do">Listas de Precatórios Pendentes de Pagamento e Pagamentos Disponibilizados</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/portalDevedor/abrirConsultaListaDepositos.do">Lista de Depósitos Efetuados</a></li>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Portal dos outros Tribunais</a>
+<ul>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/portalDevedor/abrirConsultaDeProcessos.do">Consulta de processos</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/portalDevedor/abrirConsultaNotificacoesDocumentosOutrosTribunais.do">Notificação de Documentos</a></li>
+</ul>
+  </li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/securitycasapireq/api/cas/authenticate?serviceurl=https://esaj.tjsp.jus.br/petpgdivreq">Petição intermediária de 1º Grau no Precatório</a></li>
+</ul>
+  </li>
+  <li class="esajMenuFechado"><a href="https://esaj.tjsp.jus.br/portal-cto-frontend/transparencia/consulta">Contratos</a></li>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Consultas de Jurisprudência</a>
+<ul>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/cjsg/consultaSimples.do">Consulta Simples</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/cjsg/consultaCompleta.do">Consulta Completa</a></li>
+</ul>
+  </li>
+  <li class="esajMenuFechado"><a href="https://esaj.tjsp.jus.br/cdje">Diário da Justiça Eletrônico</a></li>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Biblioteca</a>
+<ul>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Consultas</a>
+<ul>
+  <li class="esajMenuItem"><a href="http://esaj.tjsp.jus.br/gecon/obra/consulta/obras/periodico/artigos">Consulta de Obras, Periódicos e Artigos</a></li>
+  <li class="esajMenuItem"><a href="http://esaj.tjsp.jus.br/gecon/jurisprudencia/consulta">Jurisprudência Selecionada </a></li>
+  <li class="esajMenuItem"><a href="http://esaj.tjsp.jus.br/gecon/legislacao/consulta">Consulta de Legislação e Normas</a></li>
+</ul>
+  </li>
+  <li class="esajMenuItem"><a href="http://esaj.tjsp.jus.br/gecon/boletim/consulta">Boletins</a></li>
+</ul>
+  </li>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Push - Acompanhar Processo Judicial</a>
+<ul>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/push/index.do">1º Grau e 2° Grau</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/pushcr/index.do">2º Grau Colégio Recursal</a></li>
+</ul>
+  </li>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Certidões</a>
+<ul>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Certidões de 1º Grau</a>
+<ul>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/sco/abrirCadastro.do">Cadastro de Pedido de Certidão</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/sco/abrirConferencia.do">Conferência de Certidão</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/sco/abrirDownload.do">Visualizar Certidão</a></li>
+</ul>
+  </li>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Certidões de 2º Grau</a>
+<ul>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/scosg/abrirCadastro.do">Cadastro de Pedido de Certidão de 2º Grau</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/scosg/abrirConferencia.do">Conferência de Certidão de 2º Grau</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/scosg/abrirDownload.do">Download de Certidão de 2º Grau</a></li>
+</ul>
+  </li>
+</ul>
+  </li>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Corregedoria</a>
+<ul>
+  <li class="esajMenuItem"><a href="http://esaj.tjsp.jus.br/gecon/publico/parecer/consulta">Consulta de Pareceres e Decisões da Corregedoria</a></li>
+</ul>
+  </li>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Conferência de Documento Digital</a>
+<ul>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/pastadigital/pg/abrirConferenciaDocumento.do">Conferência de Documento Digital do 1ºGrau</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/pastadigital/sg/abrirConferenciaDocumento.do">Conferência de Documento Digital do 2ºGrau</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/pastadigital/sgcr/abrirConferenciaDocumento.do">Conferência de Documento Digital do Colégio Recursal </a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/atendimento/abrirConferenciaDocOriginal.do">Conferência de Documento Digital de Expediente Administrativo </a></li>
+</ul>
+  </li>
+  <li class="esajMenuFechado"><a href="https://esaj.tjsp.jus.br/cjpg">Consulta de Julgados de 1º Grau</a></li>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Peticionamento Eletrônico</a>
+<ul>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Peticionamento Eletrônico de 1º Grau</a>
+<ul>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/petpg/abrirNovaPeticaoInicial.do?instancia=PG">Petição Inicial de 1° Grau</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/petpg/abrirNovaPeticaoIntermediaria.do?instancia=PG">Petição Intermediária de 1° Grau</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/petpg/abrirConsultaPeticoes.do">Consulta de Petições de 1º Grau</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/securitycasapireq/api/cas/authenticate?serviceurl=https://esaj.tjsp.jus.br/petpgreq">Peticionamento de intermediaria de 1º Grau Requisitórios</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/petpg-complemento/abrirNovoComplementoProcesso.do">Complemento de Cadastro de 1º Grau</a></li>
+</ul>
+  </li>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Peticionamento Eletrônico de 2º Grau</a>
+<ul>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/petsg/abrirNovaPeticaoInicial.do?instancia=SG">Peticionamento Inicial de 2º Grau</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/petsg/abrirNovaPeticaoIntermediaria.do?instancia=SG">Peticionamento Intermediário de 2º Grau</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/petsg/abrirConsultaPeticoes.do">Consulta de Petições de 2º Grau</a></li>
+</ul>
+  </li>
+	<li class="esajMenuFechado"><a href="#" onclick="return esajMenu(this)">Peticionamento Eletrônico do Colégio Recursal</a>
+<ul>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/petcr/abrirNovaPeticaoInicial.do?instancia=CR">Peticionamento Inicial - Colégio Recursal</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/petcr/abrirNovaPeticaoIntermediaria.do?instancia=CR">Peticionamento Intermediário - Colégio Recursal</a></li>
+  <li class="esajMenuItem"><a href="https://esaj.tjsp.jus.br/petcr/abrirConsultaPeticoes.do">Consulta de Petições - Colégio Recursal</a></li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+
+		</div>
+		</td>
+		<td class="esajCelulaTituloServico"><h1 class="esajTituloPagina">Consulta de Julgados de 1º Grau</h1></td>
+	</tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0" summary=" " role="presentation">
+	<tr>
+		<td class="esajCelulaConteudoServico" >
+		
+	
+
+
+  
+
+
+
+	
+		
+
+
+
+
+
+			
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <span class="esajTituloOrientacoes">Orientações</span>
+
+    
+        
+        
+            <ul class="esajUlOrientacoes" id="">
+                
+				
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	<li>
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		
+
+
+Para detalhes sobre cada campo de busca, selecione o campo específico
+
+
+		
+	</li>
+
+
+
+			
+            </ul>
+        
+    
+
+    
+    <br>
+
+
+		
+			
+			
+
+
+
+
+
+
+
+
+
+<form name="consultaDecisaoForm" method="" action="/cjpg/pesquisar.do" autocomplete="off" enctype="" onsubmit="return applySubmit(this, eval('function spwSubmit(t, e){decodificaInputMulSelOnSubmit();if (!IS_enableSubmit) return false; return BENV_isCamposValidos(t); } spwSubmit(this, event);'));" id="" target="">
+	<input type="hidden" name="conversationId" value="">
+
+
+				
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+
+
+
+	
+
+
+
+	
+
+
+<style>
+	/* remove borda vermelha de elementos required */
+	input:invalid {
+		box-shadow:none;
+	}
+</style>
+
+<script type="text/javascript">
+	(function($){
+		$(function() {
+			var saj = $.saj;
+			var id = 'id';
+			var idObjetoReferencia = '#' + id;
+			if ('' !== '' && !false) {
+				$(idObjetoReferencia).registrarTooltip({
+					conteudoTooltip: '',
+					posicaoTooltip: 'direita',
+					objReferenciaPosicaoTooltip:$(idObjetoReferencia)
+				});
+			}
+			//remove comportamento de exibir mensagem de erro típica do html5
+			$('form:visible').attr('novalidate','');
+			if (''){
+				$(idObjetoReferencia).attr('aria-required','true').attr('required','');
+			}
+		});		
+	})(jQuery);
+	
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+
+
+
+
+
+
+
+
+
+
+				
+				
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+	
+	
+		
+			
+		
+		
+	
+	
+	<div class="">
+		
+			<br/>
+			
+			
+				
+				
+					
+
+
+
+
+
+
+
+
+
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+	<tr valign="top">
+		<td height="21" valign="top" nowrap background="/cjpg/imagens/spw/fundo_subtitulo.gif"> 
+			
+				
+				
+					<h2 class="subtitle">
+						Parâmetros de Consulta
+						
+					</h2>
+				
+			
+		</td>
+		<td background="/cjpg/imagens/spw/fundo_subtitulo2.gif" width="90%" aria-hidden="true">
+			<img src="/cjpg/imagens/spw/final_subtitulo.gif" width="16" height="20" tabindex="-1">
+		</td>
+	</tr>
+</table>
+
+				
+			
+			<br/>
+		
+		<table id="" class="secaoFormBody" width="100%" style="" cellpadding="2" cellspacing="0" border="0">
+			
+				
+					
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+		
+		
+	
+
+
+
+
+
+
+	
+	
+		
+		
+			
+				<tr class="">
+				
+			
+		
+		
+		
+		  <td id="" width="150" valign="top">
+			
+			  
+		  	  
+				
+				<label for="buscaInteiroTeor" class="" style="float:left;font-weight:bold;margin-top:3px;">Pesquisa Livre</label><div style="text-align:right;font-weight:bold;margin-top:3px;">: </div>
+			  
+		      
+		    
+		  </td>
+		
+		
+		
+		  
+		  
+		    <td valign="top">
+		  
+		
+			
+	
+	
+	
+	
+	
+	<table cellpadding="0" cellspacing="0" border="0" width="">
+		<tr>
+			<td>
+				
+				
+				
+						
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+
+
+
+	
+
+
+
+	
+
+
+<style>
+	/* remove borda vermelha de elementos required */
+	input:invalid {
+		box-shadow:none;
+	}
+</style>
+
+<script type="text/javascript">
+	(function($){
+		$(function() {
+			var saj = $.saj;
+			var id = 'iddadosConsulta.pesquisaLivre';
+			var idObjetoReferencia = '#' + id;
+			if ('' !== '' && !false) {
+				$(idObjetoReferencia).registrarTooltip({
+					conteudoTooltip: '',
+					posicaoTooltip: 'direita',
+					objReferenciaPosicaoTooltip:$(idObjetoReferencia)
+				});
+			}
+			//remove comportamento de exibir mensagem de erro típica do html5
+			$('form:visible').attr('novalidate','');
+			if (''){
+				$(idObjetoReferencia).attr('aria-required','true').attr('required','');
+			}
+		});		
+	})(jQuery);
+	
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+		
+		
+	
+
+
+
+
+
+
+	
+	
+	
+	
+	
+		<span id="">
+		
+	
+	
+	<input type="text" name="dadosConsulta.pesquisaLivre" maxlength="" size="100" value="dano moral" formatType="TEXT" formato="120" obrigatorio="" rotulo="Pesquisa Livre" onkeypress="CT_KPS(this, event);" onblur="CT_BLR(this);" onkeydown="CT_KDN(this, event);" onmousemove="CT_MMOV(this, event);" onmouseout="CT_MOUT(this, event);" onmouseover="CT_MOV(this, event);" onfocus="C_OFC(this, event);" style="" class="spwCampoTexto " id="iddadosConsulta.pesquisaLivre" title="" alt="">
+		
+	
+	
+	
+		
+	    
+    
+	
+	
+	
+		
+	
+	
+	
+	
+		</span>
+	
+
+
+
+
+
+		
+						<div class="botoesOperadores" style="margin-top: 1px;">
+							<input class="botaoOperadores" type="button" value=" E " name="E" />
+							<input class="botaoOperadores" type="button" value=" OU " name="OU" />
+							<input class="botaoOperadores" type="button" value=" N&Atilde;O " name="NAO" />
+							<input class="botaoOperadores" type="button" value=" ? " name="INT"/>
+							<input class="botaoOperadores" type="button" value=" * " name="AST" />
+							<input class="botaoOperadores" type="button" value='"&nbsp;&nbsp;"' name="ASP" />
+							&nbsp;&nbsp;&nbsp;
+							
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+
+
+
+<span id="checkBoxSinonimos">
+	<label for="id_cjpg.consulta.label.pesquisarSinonimos">
+		<input type="checkbox" name="dadosConsulta.sinonimos" value="true" style="vertical-align:middle;" id="id_cjpg.consulta.label.pesquisarSinonimos">
+		Pesquisar por sinônimos
+	</label>
+</span>
+
+
+							&nbsp;&nbsp;&nbsp;
+						</div>
+					
+				
+			</td>
+		</tr>
+	  </table>
+	
+	
+	
+	
+	
+	
+		
+		</td>
+		
+			</tr>
+		
+	
+	
+
+
+
+					
+				
+		</table>
+	</div>
+	
+	
+	
+
+
+				
+				
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+	
+	
+		
+			
+		
+		
+	
+	
+	<div class="">
+		
+		<table id="" class="secaoFormBody" width="100%" style="" cellpadding="2" cellspacing="0" border="0">
+			
+					
+					
+					
+						
+					    	
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+	
+	
+	
+	
+	
+
+	
+		
+	
+	 
+		
+	
+	
+	
+	
+		
+	
+	
+	
+	
+		<script>$.saj.numeroProcesso.desabilitarNumeroOculto = false;</script>	
+	
+	
+		
+	
+
+	
+		
+		
+			
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script type="text/javascript">
+	(function($){
+		$(function() {
+			if($.browser.msie){
+				$('.grupoRadio').find('input:radio:visible:enabled').attr('aria-required','');
+				return;
+			}
+			$('.grupoRadio').attr('aria-required','').attr('required','');
+		});
+	})(jQuery);
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+		
+		
+	
+
+
+
+
+
+
+	
+	
+		
+		
+			
+				<tr class="">
+				
+			
+		
+		
+		
+		  <td id="" width="150" valign="">
+			
+			  
+		  	  
+				
+				<label for="radioNumeroUnificado_agrupador" class="" style="float:left;font-weight:bold;">Tipo do número</label><div style="text-align:right;font-weight:bold;">: </div>
+			  
+		      
+		    
+		  </td>
+		
+		
+		
+		  
+		  
+		    <td valign="">
+		  
+		
+			
+	
+	
+	
+	
+	
+	<table cellspacing="0" border="0" width="">
+		<tr>
+			<td>
+				
+				<fieldset class="grupoRadio" style="margin:0;padding:0;border:none" >
+					<legend style="display:block;font-size:0;">
+						Tipo do número
+					</legend>
+					
+			   <input type="radio" name="tipoNumero" value="UNIFICADO" checked="checked" id="radioNumeroUnificado"><label for="radioNumeroUnificado">Número do processo</label>
+			   <input type="radio" name="tipoNumero" value="SAJ" id="radioNumeroAntigo"><label for="radioNumeroAntigo">Outros</label>
+			
+				</fieldset>				
+				
+			</td>
+		</tr>
+	  </table>
+	
+	
+	
+	
+	
+	
+		
+		</td>
+		
+			</tr>
+		
+	
+	
+
+
+
+			
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+		
+		
+	
+
+
+
+
+
+
+	
+	
+		
+		
+			
+				<tr class="">
+				
+			
+		
+		
+		
+		  <td id="" width="150" valign="">
+			
+			  
+		  	  
+				
+				<label for="" class="" style="float:left;font-weight:bold;">Número do processo</label><div style="text-align:right;font-weight:bold;">: </div>
+			  
+		      
+		    
+		  </td>
+		
+		
+		
+		  
+		  
+		    <td valign="">
+		  
+		
+			
+	
+	
+	
+	
+	
+	<table cellpadding="0" cellspacing="0" border="0" width="">
+		<tr>
+			<td>
+				
+				
+				
+				
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+	
+	
+	
+	
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+
+
+
+
+
+
+	
+	
+	
+	
+	
+		<span id="linhaProcessoUnificado">
+		
+	
+	
+	
+
+
+
+
+
+
+
+
+	
+
+
+	
+	
+	
+	
+	
+	
+
+
+
+
+
+ 
+<input type="text" name="numeroDigitoAnoUnificado" maxlength="25" size="20" value="" formatType="TEXT" onkeypress="CT_KPS(this, event);" onblur="CT_BLR(this);" onkeydown="CT_KDN(this, event);" onmousemove="CT_MMOV(this, event);" onmouseout="CT_MOUT(this, event);" onmouseover="CT_MOV(this, event);" onfocus="C_OFC(this, event);" id="numeroDigitoAnoUnificado">
+<input type="text" id="JTRNumeroUnificado" size="3" disabled="disabled" value="826"/>
+<input type="text" name="foroNumeroUnificado" maxlength="4" size="3" value="" formatType="TEXT" onkeypress="CT_KPS(this, event);" onblur="CT_BLR(this);" onkeydown="CT_KDN(this, event);" onmousemove="CT_MMOV(this, event);" onmouseout="CT_MOUT(this, event);" onmouseover="CT_MOV(this, event);" onfocus="C_OFC(this, event);" id="foroNumeroUnificado">
+<input type="hidden" name="dadosConsulta.nuProcesso" value="" id="nuProcessoUnificadoFormatado">
+
+
+<script>
+	(function($){
+		$(function() {
+			var saj = $.saj;
+			var mascaraNumeroUnificado = saj.mascaraNumeroUnificado;
+			var $campoNumeroDigitoAnoUnificado = $('#numeroDigitoAnoUnificado');
+			var $campoForoNumeroUnificado = $('#foroNumeroUnificado');
+			var $campoJTRNumeroUnificado = $('#JTRNumeroUnificado');
+			saj.configurarMascaraInput($campoForoNumeroUnificado, '0000');
+			saj.configurarMascaraInput($campoNumeroDigitoAnoUnificado, mascaraNumeroUnificado, $campoForoNumeroUnificado,{
+				afterPaste: afterPaste			
+			});
+			saj.bindCamposNumeroProcesso('');
+			
+		});		
+		
+		var afterPaste = function(textoOriginal) {
+			var texto = getDigits(textoOriginal);
+			if (!texto || texto.length < 16) {
+				return;
+			}
+			
+			var jtr = $('#JTRNumeroUnificado').val();
+			jtr = getDigits(jtr);
+			var jtrDigitado = texto.substring(13,16);
+			var foroUnificado;
+			//pega os 4 ultimos digitos, e caso o jtr colado for o mesmo, coloca os 4 no campo de foro unificado
+			//se o jtr for diferente nao coloca nada no campo de foro unificado
+			if (jtr == jtrDigitado) {
+				foroUnificado = texto.substring(16,texto.length);
+			} else {
+				foroUnificado = '';
+			}
+			
+			var numeroDigitoAno = texto.substring(0,13);
+			var $numeroDigitoAno = $('#numeroDigitoAnoUnificado');
+			$numeroDigitoAno.val(numeroDigitoAno);
+			
+			var $foroNumeroUnificado = $('#foroNumeroUnificado');
+			$foroNumeroUnificado.val(foroUnificado);
+			$foroNumeroUnificado.trigger('blur');
+			$foroNumeroUnificado.focus();
+		};
+		
+		var getDigits = function(texto) {
+			return texto.replace(/[^0-9]/g, '');
+		};
+		$('#numeroDigitoAnoUnificado').attr('aria-label','Número do processo. Informe os treze primeiros dígitos do número do processo.');
+		$('#foroNumeroUnificado').attr('aria-label','Informe os quatro últimos dígitos do número do processo.');
+	})(jQuery);
+	
+</script>
+
+	
+	
+	
+	    
+    
+	
+	
+		
+	
+	
+	
+	
+		</span>
+	
+
+
+
+				
+					
+					
+						
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+
+
+
+	
+
+
+<style>
+	/* remove borda vermelha de elementos required */
+	input:invalid {
+		box-shadow:none;
+	}
+</style>
+
+<script type="text/javascript">
+	(function($){
+		$(function() {
+			var saj = $.saj;
+			var id = 'nuProcessoAntigoFormatado';
+			var idObjetoReferencia = '#' + id;
+			if ('' !== '' && !false) {
+				$(idObjetoReferencia).registrarTooltip({
+					conteudoTooltip: '',
+					posicaoTooltip: 'direita',
+					objReferenciaPosicaoTooltip:$(idObjetoReferencia)
+				});
+			}
+			//remove comportamento de exibir mensagem de erro típica do html5
+			$('form:visible').attr('novalidate','');
+			if (''){
+				$(idObjetoReferencia).attr('aria-required','true').attr('required','');
+			}
+		});		
+	})(jQuery);
+	
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+
+
+
+
+
+
+	
+	
+	
+	
+	
+		<span id="linhaProcessoAntigo">
+		
+	
+	
+	<input type="text" name="dadosConsulta.nuProcessoAntigo" maxlength="" size="" value="" formatType="TEXT" formato="25" obrigatorio="" rotulo="" onkeypress="CT_KPS(this, event);" onblur="CT_BLR(this);" onkeydown="CT_KDN(this, event);" onmousemove="CT_MMOV(this, event);" onmouseout="CT_MOUT(this, event);" onmouseover="CT_MOV(this, event);" onfocus="C_OFC(this, event);" disabled="disabled" style="" class="spwCampoTexto disabled " id="nuProcessoAntigoFormatado" title="" alt="">
+		
+	
+	
+	
+		
+	    
+    
+	
+	
+	
+		
+	
+	
+	
+	
+		</span>
+	
+
+
+
+
+
+					
+				
+				
+					    		<span id="msgStatusProcesso" class="esajKeyMsgErro" style="padding-left: 5px;" >&nbsp;</span>
+					    	
+			
+				
+			</td>
+		</tr>
+	  </table>
+	
+	
+	
+	
+	
+	
+		
+		</td>
+		
+			</tr>
+		
+	
+	
+
+
+
+		
+	
+
+					    
+					    
+					
+					
+					
+					
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+		
+		
+	
+
+
+
+
+
+
+	
+	
+		
+		
+			
+				<tr class="">
+				
+			
+		
+		
+		
+		  <td id="" width="150" valign="">
+			
+			  
+		  	  
+				
+				<label for="classe_selectionText" class="" style="float:left;font-weight:bold;">Classe</label><div style="text-align:right;font-weight:bold;">: </div>
+			  
+		      
+		    
+		  </td>
+		
+		
+		
+		  
+		  
+		    <td valign="">
+		  
+		
+			
+	
+	
+	
+	
+	
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table id="treeSelectClasse" cellspacing="0" cellpadding="0" width="515" class="treeSelect">
+	<tr>
+		<td width="*">
+			<table cellspacing="0" cellpadding="0" width="100%">
+				<tr>
+					<td>
+						<input type="hidden" name="classeTreeSelection.values" value="" id="classe">
+						<span id="classe_action" value="/cjpg/classeTreeSelect.do" />
+						
+						<input type="text" name="classeTreeSelection.text" value="" formatType="TEXT" onkeypress="CT_KPS(this, event);" onblur="CT_BLR(this);" onkeydown="CT_KDN(this, event);" onmousemove="CT_MMOV(this, event);" onmouseout="CT_MOUT(this, event);" onmouseover="CT_MOV(this, event);" onfocus="C_OFC(this, event);" onchange="$.saj.tree.onTextPropertyChangeEvent({data:{ campoId: 'classe', 
+								treeSelectId: 'treeSelectClasse',
+								url: '/cjpg/classeTreeSelect.do', 
+								processandoImgUrl: '/cjpg/imagens/spw/processandoNovo.gif', 
+								width: 600,
+								expectedHeight: 400, 
+								reload: 'false' }}, event);" style="width:100%;" id="classe_selectionText">
+					     
+					</td>
+					<td align="center" width="20">
+						<img id="botaoProcurar_classe"
+						src="/cjpg/imagens/spw/botProcurar.gif" class="treeSelect_botaoHabilitado" height="17" border="0" width="16" title="Abre a consulta" style="cursor: pointer; margin-left: 4px;" onmouseout="IH_mOut(this)" onmouseover="IH_mOver(this)" /><img
+						src="/cjpg/imagens/spw/botProcurar-d.gif" class="treeSelect_botaoDesabilitado" height="17" border="0" width="16" style="display:none; margin-left: 8px;" />
+					</td>
+				</tr>
+			</table>
+        </td>
+		<td width="16" valign="middle">
+			<img id="botaoLimpar_classe" 
+			src="/cjpg/imagens/spw/botLimpar.gif" class="treeSelect_botaoHabilitado" height="17" width="16" border="0" title="Limpa campo" onmouseout="IH_mOut(this)" onmouseover="IH_mOver(this)" /><img
+			src="/cjpg/imagens/spw/botLimpar-d.gif" class="treeSelect_botaoDesabilitado" height="17" width="16" border="0" style="display:none" />
+		</td>
+		
+		
+    </tr>
+</table>
+<script>
+	(function($) {
+				
+		var bindTreeSelect = function() {
+			var options = {
+				campoId: 'classe',
+				treeSelectId: 'treeSelectClasse',
+				url: '/cjpg/classeTreeSelect.do',
+				processandoImgUrl: '/cjpg/imagens/spw/processandoNovo.gif',
+				width: 600,
+				expectedHeight: 400,
+				reload: 'false',
+				mostrarBotoesSelecaoRapida: true,
+				titulo: 'Classe'
+			};
+
+			$.saj.tree.updateSelectionText(options);
+			
+			$('#botaoProcurar_classe').bind('click', options, $.saj.tree.onPopupEvent);
+			$('#botaoLimpar_classe').bind('click', options, $.saj.tree.onClearSelection);
+			
+			
+		};
+
+		bindTreeSelect();
+
+		
+		
+	})(jQuery);
+</script>
+	
+
+	
+	
+	
+	
+	
+	
+		
+		</td>
+		
+			</tr>
+		
+	
+	
+
+
+
+										
+					
+					
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+		
+		
+	
+
+
+
+
+
+
+	
+	
+		
+		
+			
+				<tr class="">
+				
+			
+		
+		
+		
+		  <td id="" width="150" valign="">
+			
+			  
+		  	  
+				
+				<label for="assunto_selectionText" class="" style="float:left;font-weight:bold;">Assunto</label><div style="text-align:right;font-weight:bold;">: </div>
+			  
+		      
+		    
+		  </td>
+		
+		
+		
+		  
+		  
+		    <td valign="">
+		  
+		
+			
+	
+	
+	
+	
+	
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table id="treeSelectAssunto" cellspacing="0" cellpadding="0" width="515" class="treeSelect">
+	<tr>
+		<td width="*">
+			<table cellspacing="0" cellpadding="0" width="100%">
+				<tr>
+					<td>
+						<input type="hidden" name="assuntoTreeSelection.values" value="" id="assunto">
+						<span id="assunto_action" value="/cjpg/assuntoTreeSelect.do" />
+						
+						<input type="text" name="assuntoTreeSelection.text" value="" formatType="TEXT" onkeypress="CT_KPS(this, event);" onblur="CT_BLR(this);" onkeydown="CT_KDN(this, event);" onmousemove="CT_MMOV(this, event);" onmouseout="CT_MOUT(this, event);" onmouseover="CT_MOV(this, event);" onfocus="C_OFC(this, event);" onchange="$.saj.tree.onTextPropertyChangeEvent({data:{ campoId: 'assunto', 
+								treeSelectId: 'treeSelectAssunto',
+								url: '/cjpg/assuntoTreeSelect.do', 
+								processandoImgUrl: '/cjpg/imagens/spw/processandoNovo.gif', 
+								width: 600,
+								expectedHeight: 400, 
+								reload: 'false' }}, event);" style="width:100%;" id="assunto_selectionText">
+					     
+					</td>
+					<td align="center" width="20">
+						<img id="botaoProcurar_assunto"
+						src="/cjpg/imagens/spw/botProcurar.gif" class="treeSelect_botaoHabilitado" height="17" border="0" width="16" title="Abre a consulta" style="cursor: pointer; margin-left: 4px;" onmouseout="IH_mOut(this)" onmouseover="IH_mOver(this)" /><img
+						src="/cjpg/imagens/spw/botProcurar-d.gif" class="treeSelect_botaoDesabilitado" height="17" border="0" width="16" style="display:none; margin-left: 8px;" />
+					</td>
+				</tr>
+			</table>
+        </td>
+		<td width="16" valign="middle">
+			<img id="botaoLimpar_assunto" 
+			src="/cjpg/imagens/spw/botLimpar.gif" class="treeSelect_botaoHabilitado" height="17" width="16" border="0" title="Limpa campo" onmouseout="IH_mOut(this)" onmouseover="IH_mOver(this)" /><img
+			src="/cjpg/imagens/spw/botLimpar-d.gif" class="treeSelect_botaoDesabilitado" height="17" width="16" border="0" style="display:none" />
+		</td>
+		
+		
+    </tr>
+</table>
+<script>
+	(function($) {
+				
+		var bindTreeSelect = function() {
+			var options = {
+				campoId: 'assunto',
+				treeSelectId: 'treeSelectAssunto',
+				url: '/cjpg/assuntoTreeSelect.do',
+				processandoImgUrl: '/cjpg/imagens/spw/processandoNovo.gif',
+				width: 600,
+				expectedHeight: 400,
+				reload: 'false',
+				mostrarBotoesSelecaoRapida: true,
+				titulo: 'Assunto'
+			};
+
+			$.saj.tree.updateSelectionText(options);
+			
+			$('#botaoProcurar_assunto').bind('click', options, $.saj.tree.onPopupEvent);
+			$('#botaoLimpar_assunto').bind('click', options, $.saj.tree.onClearSelection);
+			
+			
+		};
+
+		bindTreeSelect();
+
+		
+		
+	})(jQuery);
+</script>
+	
+
+	
+	
+	
+	
+	
+	
+		
+		</td>
+		
+			</tr>
+		
+	
+	
+
+
+
+					
+					
+					
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+		
+		
+	
+
+
+
+
+
+
+	
+	
+		
+		
+			
+				<tr class="">
+				
+			
+		
+		
+		
+		  <td id="" width="150" valign="">
+			
+			  
+		  	  
+				
+				<label for="juiz" class="" style="float:left;font-weight:bold;">Magistrado</label><div style="text-align:right;font-weight:bold;">: </div>
+			  
+		      
+		    
+		  </td>
+		
+		
+		
+		  
+		  
+		    <td valign="">
+		  
+		
+			
+	
+	
+	
+	
+	
+	<table cellpadding="0" cellspacing="0" border="0" width="515">
+		<tr>
+			<td>
+				
+				
+				
+						
+
+
+
+
+
+<table width="100%" cellspacing="0" cellpadding="0">
+	<tr>
+		<td width="*">
+			
+							
+								
+								
+							<script>
+
+var agenteNomeCamposArray = new Array();
+ agenteNomeCamposArray[0] = 'cdAgente';
+ agenteNomeCamposArray[1] = 'nmAgente';
+ var cdAgenteNomeCamposArray = agenteNomeCamposArray;
+ var nmAgenteNomeCamposArray = agenteNomeCamposArray;</script>
+
+<table class="spwInputSelect" width="100%" border="0" cellspacing="0" cellpadding="0" id="agente" idPai="null" filtroPai="null" url="jsp/search/searchAgente.jsp" input-select="agente" property="dadosConsulta.agentes" name="cdAgente" title="Magistrados" ctxPath="/cjpg" multiplaSelecao="true"  useAction="false" bindings="&bind_cdAgente=cdAgente&bind_nmAgente=nmAgente"  entityPKClass="agentePK" idIframe="" altura="300" largura="500" useModulo="true" desabilitarSelecionados="false" carregaFilho="false"><tbody>
+<input type="hidden" name="agenteSelectedEntitiesList"  value="" id="agenteSelectedEntitiesList" />
+<input type="hidden" name="contadoragente"  value="0" id="contadoragente" />
+<input type="hidden" name="contadorMaioragente"  value="0" id="contadorMaioragente" />
+    <tr>
+								<td width="0%">
+            <input type="text" name="cdAgente" size="0%" id="cdAgente" bindingReference="cdAgente" value="" formatType="TEXT" pk="true" onkeypress="CT_KPS(this, event);" onblur="CT_BLR(this);" onkeydown="CT_KDN(this, event);" onmousemove="CT_MMOV(this, event);" onmouseout="CT_MOUT(this, event);" onmouseover="CT_MOV(this, event);" onfocus="C_OFC(this, event);" onchange="IS_request('agente','/AjaxServlet.ajax', 'agente', 'cdAgente', this.value,'/cjpg','jsp/search/searchAgente.jsp', 'true', 'Magistrados','300','500', '&bind_cdAgente=cdAgente&bind_nmAgente=nmAgente', 'false', event, 'InputSelectAutoComplete', '','false'); " style="width: 100%" class="hidden" input-select="agente" idIframe=""></td>
+								<td width="497">
+            <input type="text" name="nmAgente" size="497" id="nmAgente" bindingReference="nmAgente" value="" formatType="TEXT" obrigatorio="false" onkeypress="CT_KPS(this, event);" onblur="CT_BLR(this);" onkeydown="CT_KDN(this, event);" onmousemove="CT_MMOV(this, event);" onmouseout="CT_MOUT(this, event);" onmouseover="CT_MOV(this, event);" onfocus="C_OFC(this, event);" onchange="IS_request('agente','/AjaxServlet.ajax', 'agente', 'nmAgente', this.value,'/cjpg','jsp/search/searchAgente.jsp', 'true', 'Magistrados','300','500', '&bind_cdAgente=cdAgente&bind_nmAgente=nmAgente', 'false', event, 'InputSelectAutoComplete', '','false'); " style="width: 475px;" input-select="agente" idIframe=""></td>
+							
+        <td width="20" align="center"><img src="/cjpg/imagens/spw/botProcurar.gif" width="16" height="17" border="0" title="Abre a consulta" onmouseover="IH_mOver(this)" onmouseout="IH_mOut(this)" onclick="IS_request('agente','/AjaxServlet.ajax', 'agente', 'cdAgente','','/cjpg','jsp/search/searchAgente.jsp', 'true', 'Magistrados','300','500', '&bind_cdAgente=cdAgente&bind_nmAgente=nmAgente', 'true', event, 'InputSelectSearchGrid','','false')" ><img src="/cjpg/imagens/spw/botProcurar-d.gif" width="16" height="17" border="0" style="display:none" >
+        </td>
+    </tr>
+</tbody>
+</table>
+<script>
+
+</script>
+
+						
+		</td>
+		<td width="16" valign="middle">
+			<img src="/cjpg/imagens/spw/botLimpar.gif" width="16" height="17" border="0" title="Limpa campo"
+				onclick="jQuery.saj.limparInputSelect('agente');"
+				onmouseout="IH_mOut(this)" onmouseover="IH_mOver(this)"
+				style="cursor:pointer;" />
+		</td>
+	</tr>
+</table>
+
+					
+				
+			</td>
+		</tr>
+	  </table>
+	
+	
+	
+	
+	
+	
+		
+		</td>
+		
+			</tr>
+		
+	
+	
+
+
+
+					
+
+					
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+		
+		
+	
+
+
+
+
+
+
+	
+	
+		
+		
+			
+				<tr class="">
+				
+			
+		
+		
+		
+		  <td id="" width="150" valign="">
+			
+			  
+		  	  
+				
+				<label for="data" class="" style="float:left;font-weight:bold;">Data</label><div style="text-align:right;font-weight:bold;">: </div>
+			  
+		      
+		    
+		  </td>
+		
+		
+		
+		  
+		  
+		    <td valign="">
+		  
+		
+			
+	
+	
+	
+	
+	
+	<table cellpadding="0" cellspacing="0" border="0" width="600">
+		<tr>
+			<td>
+				
+				
+				
+						
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+
+
+
+	
+
+
+<style>
+	/* remove borda vermelha de elementos required */
+	input:invalid {
+		box-shadow:none;
+	}
+</style>
+
+<script type="text/javascript">
+	(function($){
+		$(function() {
+			var saj = $.saj;
+			var id = 'iddadosConsulta.dtInicio';
+			var idObjetoReferencia = '#' + id;
+			if ('' !== '' && !false) {
+				$(idObjetoReferencia).registrarTooltip({
+					conteudoTooltip: '',
+					posicaoTooltip: 'direita',
+					objReferenciaPosicaoTooltip:$(idObjetoReferencia)
+				});
+			}
+			//remove comportamento de exibir mensagem de erro típica do html5
+			$('form:visible').attr('novalidate','');
+			if (''){
+				$(idObjetoReferencia).attr('aria-required','true').attr('required','');
+			}
+		});		
+	})(jQuery);
+	
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+		
+		
+	
+
+
+
+
+
+
+	
+	
+	
+	
+	
+		<span id="">
+		
+	
+	
+	<input type="text" name="dadosConsulta.dtInicio" maxlength="" size="" value="" formatType="DATE" formato="" obrigatorio="" rotulo="(dd/mm/aaaa)" onkeypress="CD_KPS(this, event);" onblur="CD_BLR(this);" onkeydown="CD_KDN(this, event);" onmousemove="CD_MMOV(this, event);" onmouseout="CD_MOUT(this, event);" onmouseover="CD_MOV(this, event);" onfocus="CD_OFC(this, event);" style="" class="spwCampoTexto " id="iddadosConsulta.dtInicio" title="" alt="">
+		
+	
+	
+	
+		
+	    
+    
+	
+	
+	
+		
+	
+	
+	
+	
+		</span>
+	
+
+
+
+
+
+							até
+							
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+
+
+
+	
+
+
+<style>
+	/* remove borda vermelha de elementos required */
+	input:invalid {
+		box-shadow:none;
+	}
+</style>
+
+<script type="text/javascript">
+	(function($){
+		$(function() {
+			var saj = $.saj;
+			var id = 'iddadosConsulta.dtFim';
+			var idObjetoReferencia = '#' + id;
+			if ('' !== '' && !false) {
+				$(idObjetoReferencia).registrarTooltip({
+					conteudoTooltip: '',
+					posicaoTooltip: 'direita',
+					objReferenciaPosicaoTooltip:$(idObjetoReferencia)
+				});
+			}
+			//remove comportamento de exibir mensagem de erro típica do html5
+			$('form:visible').attr('novalidate','');
+			if (''){
+				$(idObjetoReferencia).attr('aria-required','true').attr('required','');
+			}
+		});		
+	})(jQuery);
+	
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+		
+		
+	
+
+
+
+
+
+
+	
+	
+	
+	
+	
+		<span id="dtFim">
+		
+	
+	
+	<input type="text" name="dadosConsulta.dtFim" maxlength="" size="" value="21/04/2026" formatType="DATE" formato="" obrigatorio="" rotulo="(dd/mm/aaaa)" onkeypress="CD_KPS(this, event);" onblur="CD_BLR(this);" onkeydown="CD_KDN(this, event);" onmousemove="CD_MMOV(this, event);" onmouseout="CD_MOUT(this, event);" onmouseover="CD_MOV(this, event);" onfocus="CD_OFC(this, event);" style="" class="spwCampoTexto " id="iddadosConsulta.dtFim" title="" alt="">
+		
+	
+	
+	
+		
+	    
+    
+	
+	
+	
+		
+	
+	
+	
+	
+		</span>
+	
+
+
+
+
+
+						(dd/mm/aaaa)
+					
+				
+			</td>
+		</tr>
+	  </table>
+	
+	
+	
+	
+	
+	
+		
+		</td>
+		
+			</tr>
+		
+	
+	
+
+
+
+
+					
+					
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+		
+		
+	
+
+
+
+
+
+
+	
+	
+		
+		
+			
+				<tr class="">
+				
+			
+		
+		
+		
+		  <td id="" width="150" valign="">
+			
+			  
+		  	  
+				
+				<label for="varas_selectionText" class="" style="float:left;font-weight:bold;">Vara</label><div style="text-align:right;font-weight:bold;">: </div>
+			  
+		      
+		    
+		  </td>
+		
+		
+		
+		  
+		  
+		    <td valign="">
+		  
+		
+			
+	
+	
+	
+	
+	
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table id="treeSelectVaras" cellspacing="0" cellpadding="0" width="515" class="treeSelect">
+	<tr>
+		<td width="*">
+			<table cellspacing="0" cellpadding="0" width="100%">
+				<tr>
+					<td>
+						<input type="hidden" name="varasTreeSelection.values" value="" id="varas">
+						<span id="varas_action" value="/cjpg/varasTreeSelect.do" />
+						
+						<input type="text" name="varasTreeSelection.text" value="" formatType="TEXT" onkeypress="CT_KPS(this, event);" onblur="CT_BLR(this);" onkeydown="CT_KDN(this, event);" onmousemove="CT_MMOV(this, event);" onmouseout="CT_MOUT(this, event);" onmouseover="CT_MOV(this, event);" onfocus="C_OFC(this, event);" onchange="$.saj.tree.onTextPropertyChangeEvent({data:{ campoId: 'varas', 
+								treeSelectId: 'treeSelectVaras',
+								url: '/cjpg/varasTreeSelect.do', 
+								processandoImgUrl: '/cjpg/imagens/spw/processandoNovo.gif', 
+								width: 600,
+								expectedHeight: 400, 
+								reload: 'false' }}, event);" style="width:100%;" id="varas_selectionText">
+					     
+					</td>
+					<td align="center" width="20">
+						<img id="botaoProcurar_varas"
+						src="/cjpg/imagens/spw/botProcurar.gif" class="treeSelect_botaoHabilitado" height="17" border="0" width="16" title="Abre a consulta" style="cursor: pointer; margin-left: 4px;" onmouseout="IH_mOut(this)" onmouseover="IH_mOver(this)" /><img
+						src="/cjpg/imagens/spw/botProcurar-d.gif" class="treeSelect_botaoDesabilitado" height="17" border="0" width="16" style="display:none; margin-left: 8px;" />
+					</td>
+				</tr>
+			</table>
+        </td>
+		<td width="16" valign="middle">
+			<img id="botaoLimpar_varas" 
+			src="/cjpg/imagens/spw/botLimpar.gif" class="treeSelect_botaoHabilitado" height="17" width="16" border="0" title="Limpa campo" onmouseout="IH_mOut(this)" onmouseover="IH_mOver(this)" /><img
+			src="/cjpg/imagens/spw/botLimpar-d.gif" class="treeSelect_botaoDesabilitado" height="17" width="16" border="0" style="display:none" />
+		</td>
+		
+		
+    </tr>
+</table>
+<script>
+	(function($) {
+				
+		var bindTreeSelect = function() {
+			var options = {
+				campoId: 'varas',
+				treeSelectId: 'treeSelectVaras',
+				url: '/cjpg/varasTreeSelect.do',
+				processandoImgUrl: '/cjpg/imagens/spw/processandoNovo.gif',
+				width: 600,
+				expectedHeight: 400,
+				reload: 'false',
+				mostrarBotoesSelecaoRapida: true,
+				titulo: 'Vara'
+			};
+
+			$.saj.tree.updateSelectionText(options);
+			
+			$('#botaoProcurar_varas').bind('click', options, $.saj.tree.onPopupEvent);
+			$('#botaoLimpar_varas').bind('click', options, $.saj.tree.onClearSelection);
+			
+			
+		};
+
+		bindTreeSelect();
+
+		
+		
+	})(jQuery);
+</script>
+	
+
+	
+	
+	
+	
+	
+	
+		
+		</td>
+		
+			</tr>
+		
+	
+	
+
+
+
+					
+					
+					
+					
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+		
+		
+	
+
+
+
+
+
+
+	
+	
+		
+		
+			
+				<tr class="">
+				
+			
+		
+		
+		
+		  <td id="" width="150" valign="">
+			
+			  
+		  	  
+				
+				<label for="ordenar" class="" style="float:left;font-weight:bold;">Ordenar por</label><div style="text-align:right;font-weight:bold;">: </div>
+			  
+		      
+		    
+		  </td>
+		
+		
+		
+		  
+		  
+		    <td valign="">
+		  
+		
+			
+	
+	
+	
+	
+	
+	<table cellpadding="0" cellspacing="0" border="0" width="600">
+		<tr>
+			<td>
+				
+				
+				
+						
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+
+	
+
+
+
+	
+
+
+
+	
+
+
+
+
+
+	<span id="">
+		<label for="id_cjpg.consulta.label.ordenarDecrescente">
+			<input type="radio" name="dadosConsulta.ordenacao" id="id_cjpg.consulta.label.ordenarDecrescente" value="DESC" style="vertical-align:middle;" onclick="" class="" title=""  checked/>
+			Data decrescente
+		</label>
+		
+	</span>
+
+
+						
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+
+	
+
+
+
+	
+
+
+
+
+
+
+
+	<span id="">
+		<label for="id_cjpg.consulta.label.ordenarCrescente">
+			<input type="radio" name="dadosConsulta.ordenacao" id="id_cjpg.consulta.label.ordenarCrescente" value="ASC" style="vertical-align:middle;" onclick="" class="" title=""  />
+			Data crescente
+		</label>
+		
+	</span>
+
+
+					
+				
+			</td>
+		</tr>
+	  </table>
+	
+	
+	
+	
+	
+	
+		
+		</td>
+		
+			</tr>
+		
+	
+	
+
+
+
+				
+				
+		</table>
+	</div>
+	
+	
+	
+
+			
+			
+				
+				
+
+
+
+
+
+
+
+
+
+
+
+	<table id="" class="secaoBotoesBody" width="100%" style="" cellpadding="2" cellspacing="0" border="0">
+		<tr>
+ 			
+ 				<td width="150">&nbsp;</td>
+ 			
+			<td align="">
+			
+			    	
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+		
+	
+	<input type="submit" name="pbSubmit" value="Consultar" onclick="" onmouseover="B_mOver(this);" onmouseout="B_mOut(this);" onmouseover="B_mOver(this);" onmouseout="B_mOut(this);" class="spwBotaoDefault " id="pbSubmit">
+
+
+					
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+		
+	
+	
+	    
+	<input type="button" name="pbLimpar" value="Limpar" onclick="" onmouseover="B_mOver(this);" onmouseout="B_mOut(this);" class="spwBotao " id="pbLimpar">
+
+
+					
+
+
+
+
+
+
+
+
+
+
+
+				
+			</td>
+		</tr>
+	</table>
+
+
+				
+			
+
+			
+			
+				
+					
+						<div id="resultados" class="espacamentoCimaBaixo">
+							
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table width="100%" border="0" cellspacing="0" cellpadding="0" >
+	<tr height="20">
+		<td bgcolor="#EEEEEE">
+			Resultados
+
+			<strong>
+				1 a 10
+			</strong>
+			de 3565472
+		</td>
+			
+		<td bgcolor="#EEEEEE" align="right">
+
+		<div class="trocaDePagina">
+		
+
+		
+		
+
+		
+		
+		
+			
+				
+					<span style="font-weight:bold;" >
+						1
+					</span>
+				
+				
+			
+		
+			
+				
+				
+					<a href="#" name="2" style="padding-left:4px" >
+						2
+					</a>
+				
+			
+		
+			
+				
+				
+					<a href="#" name="3" style="padding-left:4px" >
+						3
+					</a>
+				
+			
+		
+			
+				
+				
+					<a href="#" name="4" style="padding-left:4px" >
+						4
+					</a>
+				
+			
+		
+			
+				
+				
+					<a href="#" name="5" style="padding-left:4px" >
+						5
+					</a>
+				
+			
+		
+
+		
+			<a name="2" title="Próxima página">
+				&gt;
+			</a>
+		
+
+		</div>
+
+		</td>
+	</tr>
+
+	<tr>
+		<td height="1" bgcolor="#999999" colspan="2"></td>
+	</tr>
+</table>
+&nbsp;
+
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+	<tr>
+		<td height="1" valign="top" id="tdResultados" width="*" >							
+			
+
+ 
+
+
+
+
+<div id="divDadosResultado" >
+	<table cellspacing="0" cellpadding="0" class="" width="100%">
+		
+			<tr class="fundocinza1">
+				<td width="40" align="left" valign="top" class="fonte">
+					<strong>1&nbsp;-</strong>
+				</td>
+				<td valign="top">
+					<table cellspacing="0" cellpadding="0" width="100%"  >				
+						
+						<tr class="fonte">
+							<td colspan="2" align="left">
+								<a style="vertical-align: top" title="Visualizar Inteiro Teor"
+									name="3I0006RUY0000-126--167379827" >
+									<span class="fonteNegrito"> 1005225-23.2025.8.26.0126 </span>
+								</a>
+								<a name="3I0006RUY0000-126--167379827" >
+									<img src="/cjpg/imagens/saj/ico_pdf.gif" border="0" title="Visualizar Inteiro Teor" /> 
+								</a>
+							</td>
+						</tr>		
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Classe:
+									</strong> Procedimento Comum Cível
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Assunto:
+									</strong> Rescisão do contrato e devolução do dinheiro
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Magistrado:
+									</strong> GILBERTO ALABY SOUBIHE FILHO
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Comarca:
+									</strong> Caraguatatuba
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Foro:
+									</strong> Foro de Caraguatatuba
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Vara:
+									</strong> 2ª Vara Cível
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Data de Disponibilização:
+									</strong> 21/04/2026
+								</td>
+							</tr>
+						
+						
+						
+													
+														
+									<tr class="fonte">
+										<td colspan="2" align="left">
+											<div align="justify">
+												<span>
+													... consentimento, e de indenização por <em>dano</em> <em>moral</em>. II. Questão em Discussão A questão em discussão consiste em determinar se houve vício de consentimento na celebração do contrato de consórcio, justificando a sua nulidade e a restituição imediata dos valores pagos, além de indenização por <em>dano</em> <em>moral</em>. III. Razões de Decidir Não há verossimilhança nas alegações ...
+												</span><img class="mostrarOcultarConteudo" src="/cjpg/imagens/saj/icoMais.png" height="12" width="12" border="0" title="Visualizar Inteiro Teor Completo"/>
+											</div>		
+											<div align="justify" style="display: none;">
+												<span>
+													SENTENÇA
+
+Processo Digital nº:	1005225-23.2025.8.26.0126
+Classe - Assunto	Procedimento Comum Cível - Rescisão do contrato e devolução do dinheiro
+Requerente:	Creuza Maria Leite Moreira
+Requerido:	Luiza Admistradora de Consórcios Ltda.
+
+Prioridade Idoso
+Tramitação prioritária
+Justiça Gratuita
+
+Juiz(a) de Direito: Dr(a). GILBERTO ALABY SOUBIHE FILHO
+
+Vistos.
+Creuza Maria Leite Moreira propôs ação de rescisão contratual cumulada com restituição de valores em face de Luiza Administradora de Consórcios Ltda., requerendo, em síntese, a declaração de rescisão do contrato de consórcio firmado entre as partes e a restituição imediata das parcelas pagas, no montante de R$ 5.050,06 (cinco mil e cinquenta reais e seis centavos). Alegou, em síntese, ter um preposto da requerida assegurado, verbalmente e de forma reiterada, que a contemplação com a carta de crédito ocorreria após doze meses de adimplência; que, confiando nessa promessa, pagou doze parcelas mensais e, não cumprida a promessa, deixou de efetuar os pagamentos subsequentes. 
+Concedidos os benefícios da justiça gratuita à parte autora (fls. 50).
+Citada, a requerida apresentou contestação (fls. 55/70). Confirmou os termos da contratação, descrevendo a cota 821-01, grupo 6033, com crédito de R$ 100.000,00 no prazo de 200 meses. Negou a existência de qualquer promessa de contemplação em prazo determinado, sustentando que a sistemática do sorteio e do lance está expressa no contrato e que a autora foi informada de que não há garantia de contemplação em prazo certo. Informou que a inadimplência superveniente à décima segunda parcela acarretou a exclusão da autora do grupo e que o contrato já se encontra rescindido de fato. No tocante à restituição, sustentou a aplicação da Lei nº 11.795/2008, com devolução dos valores exclusivamente quando da contemplação da autora no sorteio dos excluídos ou, subsidiariamente, ao encerramento do grupo (previsto para 27/10/2040), com deduções da taxa de administração, fundo de reserva, seguro (se contratado) e multa contratual de 15%.
+A autora apresentou réplica (fls. 127/133), insistindo na configuração de propaganda enganosa. Transcreveu trecho de ligação telefônica e sustentou que o atendente confirmou a contratação com "lance embutido" sem corrigir a expectativa da autora de contemplação em prazo reduzido. Argui vício de consentimento, violação da boa-fé objetiva e inaplicabilidade do regime do consorciado excluído ao seu caso.
+Determinada a especificação de provas, a autora manifestou que não pretende produzir novas provas (fls. 139). A requerida não se manifestou no prazo assinalado.
+É o relatório. 
+Fundamento e decido.
+Ambas as partes não pretendem produzir outras provas além das documentais já acostadas, mostrando-se a lide madura para julgamento nos termos do art. 355, inciso I, do Código de Processo Civil.
+No mérito, a demanda é improcedente.
+A requerida confirmou que a autora, após o pagamento de doze parcelas, deixou de honrar as obrigações contratuais e passou, por força da cláusula 6ª do Regulamento, à condição de consorciada excluída. Nessa circunstância, o vínculo contratual já se encontra desfeito de fato, de modo que a declaração de rescisão teria caráter meramente recognitivo.
+A  questão central da controvérsia, contudo, diz respeito à existência ou não de promessa de contemplação em prazo determinado.
+A autora sustentou que preposto da requerida teria garantido, verbalmente, a contemplação após doze meses de adimplência. Não há, contudo, qualquer evidência documental dessa alegação: nenhum escrito, mensagem eletrônica ou outro registro a corrobora. O Regulamento e o contrato de adesão são inequívocos ao dispor que a contemplação se opera exclusivamente por sorteio ou por lance, condicionada à disponibilidade de recursos no fundo comum do grupo (cláusulas 19 e 20; fls. 96), sem previsão de qualquer garantia de prazo.
+Na réplica, a autora transcreveu trecho da ligação telefônica realizada pela requerida, no qual o atendente confirmou que o plano contratado previa "lance embutido". Esse diálogo, todavia, não ampara a conclusão de propaganda enganosa. A confirmação da existência do lance embutido constitui mera descrição de modalidade prevista no contrato, a qual, de fato, é uma forma de elevar a probabilidade de contemplação mas não assegura qualquer prazo. Em verdade, o atendente não fez qualquer afirmação sobre o momento em que a contemplação ocorreria. O trecho transcrito não revela promessa, implícita ou explícita, de contemplação em doze meses.
+Ressalto que a inversão do ônus da prova prevista no art. 6º, inciso VIII, do Código de Defesa do Consumidor não tem o condão de suprir, por completo, a ausência de qualquer indício mínimo que torne plausível a afirmação de uma promessa verbal específica de contemplação em prazo determinado. A alegação isolada de compromisso oral, contraditada pelo instrumento contratual escrito e sem apoio em qualquer vestígio que lhe confira aparência de verdade, não atende ao pressuposto de verossimilhança exigido.
+Não configurada a propaganda enganosa, afasta-se o direito à restituição imediata das parcelas pagas, visto que esse direito, na hipótese, derivaria exclusivamente do reconhecimento de oferta vinculante não cumprida, previsto no art. 35, inciso III, do Código de Defesa do Consumidor:
+Art. 35. Se o fornecedor de produtos ou serviços recusar cumprimento à oferta, apresentação ou publicidade, o consumidor poderá, alternativamente e à sua livre escolha:
+ I - exigir o cumprimento forçado da obrigação, nos termos da oferta, apresentação ou publicidade;
+II - aceitar outro produto ou prestação de serviço equivalente;
+III - rescindir o contrato, com direito à restituição de quantia eventualmente antecipada, monetariamente atualizada, e a perdas e danos.
+
+Em verdade, reconhecida a condição de consorciada excluída por inadimplência, a restituição rege-se pela Lei nº 11.795/2008. Nos termos do art. 22 e do art. 30 da referida lei, o consorciado excluído participa dos sorteios mensais para fins de devolução dos valores, recebendo, quando contemplado, crédito correspondente ao percentual amortizado do valor do bem na data da assembleia de contemplação. Caso não seja contemplado durante a vigência do grupo, a restituição se opera em até trinta dias após o encerramento deste.
+Essa sistemática não constitui enriquecimento sem causa da requerida: os valores permanecem no fundo comum do grupo, disponíveis para atribuição de créditos aos demais consorciados ativos e, oportunamente, para a restituição à própria autora. O interesse coletivo do grupo prevalece sobre o interesse individual do consorciado excluído, conforme expressamente dispõe o art. 3º , §2º, da Lei  nº 11.795/2008.
+Nesse sentido:
+DIREITO CIVIL. APELAÇÃO. CONTRATOS. RECURSO DESPROVIDO. I. Caso em Exame Sentença de primeiro grau julgou improcedentes pedidos de imediata e integral restituição de valores pagos, por vício de consentimento, e de indenização por <em>dano</em> <em>moral</em>. II. Questão em Discussão A questão em discussão consiste em determinar se houve vício de consentimento na celebração do contrato de consórcio, justificando a sua nulidade e a restituição imediata dos valores pagos, além de indenização por <em>dano</em> <em>moral</em>. III. Razões de Decidir Não há verossimilhança nas alegações do autor para inversão do ônus da prova. O áudio apresentado pela ré confirma que o autor estava ciente das condições do consórcio, sem promessa de contemplação imediata ou em prazo determinado. Documentos assinados pelo autor indicam ciência sobre a natureza do consórcio e suas regras, fragilizando a alegação de vício de consentimento. IV. Dispositivo e Tese Recurso desprovido. Tese de julgamento: 1. Não há vício de consentimento na adesão ao consórcio. 2. Restituição das parcelas pagas deve seguir as regras de desistência do consórcio. Legislação Citada: Lei nº 11.795/08, art. 22. Jurisprudência Citada: TJSP, Apelação Cível 1008909-16.2019.8.26.0562, Rel. Heraldo de Oliveira, 13ª Câmara de Direito Privado, j. 25.07.2020. TJSP, Apelação Cível 1039301-80.2019.8.26.0224, Rel. Marco Fábio Morsello, 11ª Câmara de Direito Privado, j. 19.06.2020. TJSP, Apelação Cível 1085811-38.2019.8.26.0100, Rel. Melo Colombi, 14ª Câmara de Direito Privado, j. 02.06.2020. TJSP, Apelação Cível 1006376-15.2019.8.26.0003, Rel. Décio Rodrigues, 21ª Câmara de Direito Privado, j. 24.01.2020. (TJSP;  Apelação Cível 1002408-95.2023.8.26.0080; Relator (a): Ana de Lourdes Coutinho Silva da Fonseca; Órgão Julgador: 13ª Câmara de Direito Privado; Foro de Cabreúva - Vara Única; Data do Julgamento: 16/04/2026; Data de Registro: 16/04/2026)
+
+Essa sistemática não constitui enriquecimento sem causa da requerida: os valores permanecem no fundo comum do grupo, disponíveis para atribuição de créditos aos demais consorciados ativos e, oportunamente, para a restituição à própria autora. O interesse coletivo do grupo prevalece sobre o interesse individual do consorciado excluído, conforme expressamente dispõe o art. 3º , §2º, da Lei  nº 11.795/2008.
+Destaca-se ainda o julgamento do tema em sede de recurso repetitivo:
+RECURSO ESPECIAL REPETITIVO. JULGAMENTO NOS MOLDES DO ART. 543-C DO CÓDIGO DE PROCESSO CIVIL. CONSÓRCIO. DESISTÊNCIA. DEVOLUÇÃO DAS PARCELAS PAGAS PELO CONSORCIADO. PRAZO. TRINTA DIAS APÓS O ENCERRAMENTO DO GRUPO.
+1. Para efeitos do art. 543-C do Código de Processo Civil: é devida a restituição de valores vertidos por consorciado desistente ao grupo de consórcio, mas não de imediato, e sim em até trinta dias a contar do prazo previsto contratualmente para o encerramento do plano.
+2. Recurso especial conhecido e parcialmente provido.
+(REsp n. 1.119.300/RS, relator Ministro Luis Felipe Salomão, Segunda Seção, julgado em 14/4/2010, DJe de 27/8/2010.)
+
+Ante o exposto, JULGO IMPROCEDENTE o pedido formulado por Creuza Maria Leite Moreira em face de Luiza Administradora de Consórcios Ltda., com resolução do mérito, nos termos do art. 487, inciso I, do Código de Processo Civil.
+Condeno a autora ao pagamento das custas e despesas processuais, bem como de honorários advocatícios que fixo em 10% (dez por cento) sobre o valor atribuído à causa, nos termos do art. 85, § 2º, do Código de Processo Civil, ficando a exigibilidade de todas as verbas de sucumbência suspensa, nos termos do art. 98, § 3º, do Código de Processo Civil, por ser a autora beneficiária da gratuidade da justiça (fls. 50).
+Em caso de apelação, intime-se a parte adversa para contrarrazões em 15 (quinze) dias e, após, remetam-se os autos ao e. TJSP.
+Com o trânsito em julgado, nada mais sendo requerido, arquivem-se os autos.
+Int.
+Caraguatatuba, 17 de abril de 2026.
+
+
+DOCUMENTO ASSINADO DIGITALMENTE NOS TERMOS DA LEI 11.419/2006, CONFORME IMPRESSÃO À MARGEM DIREITA
+												</span><img class="mostrarOcultarConteudo" src="/cjpg/imagens/saj/icoMenos.png" height="12" width="12" border="0" />
+											</div>					
+										</td>
+									</tr>						
+								
+															
+								
+							
+						
+						
+					</table>
+					<br /> <br />
+				</td>
+			</tr>
+		
+			<tr class="fundocinza1">
+				<td width="40" align="left" valign="top" class="fonte">
+					<strong>2&nbsp;-</strong>
+				</td>
+				<td valign="top">
+					<table cellspacing="0" cellpadding="0" width="100%"  >				
+						
+						<tr class="fonte">
+							<td colspan="2" align="left">
+								<a style="vertical-align: top" title="Visualizar Inteiro Teor"
+									name="01001TKCT0000-1--194684092" >
+									<span class="fonteNegrito"> 1033041-98.2024.8.26.0001 </span>
+								</a>
+								<a name="01001TKCT0000-1--194684092" >
+									<img src="/cjpg/imagens/saj/ico_pdf.gif" border="0" title="Visualizar Inteiro Teor" /> 
+								</a>
+							</td>
+						</tr>		
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Classe:
+									</strong> Procedimento Comum Cível
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Assunto:
+									</strong> Enriquecimento sem Causa
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Magistrado:
+									</strong> Juliana Crespo Dias
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Comarca:
+									</strong> SÃO PAULO
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Foro:
+									</strong> Foro Regional I - Santana
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Vara:
+									</strong> 5ª Vara Cível
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Data de Disponibilização:
+									</strong> 21/04/2026
+								</td>
+							</tr>
+						
+						
+						
+													
+														
+									<tr class="fonte">
+										<td colspan="2" align="left">
+											<div align="justify">
+												<span>
+													... autos denota que não caracterizado <em>dano</em> <em>moral</em> indenizável. Anote-se que não postulada devolução em dobro.
+O descompasso na restituição dos aludidos R$ 125,00, na forma supra, gera frustração e aborrecimento, mas não dá ensejo a indenização por <em>dano</em> <em>moral</em>, posto que não revela ofensa ao direito de personalidade. 
+
+Observado, ainda, que, apesar das ...
+												</span><img class="mostrarOcultarConteudo" src="/cjpg/imagens/saj/icoMais.png" height="12" width="12" border="0" title="Visualizar Inteiro Teor Completo"/>
+											</div>		
+											<div align="justify" style="display: none;">
+												<span>
+													SENTENÇA
+
+Processo Digital nº:	1033041-98.2024.8.26.0001
+Classe - Assunto	Procedimento Comum Cível - Enriquecimento sem Causa
+Requerente:	Nágela Sampaio da Silva
+Requerido:	Vanda Cecilia Rodrigues Soares
+
+
+
+
+Juiz(a) de Direito: Dr(a). Juliana Crespo Dias
+
+
+
+
+Vistos.
+
+
+Nágela Sampaio da Silva ajuizou a presente demanda em face de IVanda Cecilia Rodrigues Soares. Relata que no dia 29/08/2024, ao tentar realizar uma transferência bancária via PIX ao seu marido, com chave PIX número (11) 98518-0318, por erro realizou a transferência para a chave PIX da ré, com número (11) 98218-0318, no valor de R$ 125,00, afirma que tentou ser ressarcida pelo valor transferido por engano de forma amigável, porém a ré seu recusou a devolver os valores, postula então pela restituição do valor transferido incorretamente, no montante de R$ 125,00 e a condenação da ré em indenização por danos morais no valor de R$ 2.000,00.
+
+Regularmente citada, a parte ré apresentou contestação (fls. 45/52), alegando que, o depósito efetuado permanece em conta, afirma que somente não retornou o pix a autora por medo de cair em um golpe. Postula "a desconsideração do pedido atinente aos danos morais, vez que a Requerente não tomou nenhuma extrajudicial cabível para solucionar o caso". Aponta ofensas proferidas pela autora em face de pessoa idosa. Nestes termos, postula seja julgado improcedente o pedido formulado nesta ação.
+
+Justiça Gratuita deferida à parte ré (fls. 1176).
+
+Houve réplica (fls. 57/65), impugnada a Justiça Gratuita concedida à parte requerida. Salienta a autora que "fez um B.O (Boletim de Ocorrência) e entrou em contato com o banco, através do qual o gerente tentou entrar em contato com a requerida, conforme ela mesmo afirma às fls. 46". Aduz que "não foram efetuadas ameaças, apenas avisos de que a autora iria procurar seus direitos, como ocorrido no registro do boletim de ocorrência e por meio do presente processo, em exercício regular de seus direitos".
+
+Em fase de especificação de provas, foi postulado o julgamento antecipado do feito.
+
+É o relatório. Decido.
+
+ Passo ao julgamento antecipado do feito, nos termos do artigo 355, I, do CPC, visto que não há necessidade de produção de provas em audiência para o deslinde da questão.
+Rejeito a impugnação à gratuidade. A parte requerida não declara IR (fls. 1.176) e a parte autora não apresenta elementos aptos a afastar a noticiada situação de pobreza. Os aludidos rendimentos de aposentadoria não abalam a gratuidade concedida (fls. 57). 
+Pretende a autora a restituição do valor de R$ 125,00, que foi transferido erroneamente a ré via pix.
+Em réplica, salienta a parte autora que "houve sim a recusa na devolução de valores, tendo em vista que a autora tentou de todas as formas possíveis conseguir essa devolução, mas era completamente ignorada pela requerida. Nesse sentido, a conduta da ré incidiu no enriquecimento sem causa previsto no artigo 884 do Código Civil". 
+A requerida, por sua vez, aponta: "conversas via WhatsApp a Ré manifestou se favorável a devolução da quantia depositada em sua conta, autorizando o Gerente que a Autora colocou em foto pelo Zap , o que a assustou, e, muito deixando a idosa com medo de golpes, por isso não agiu por si só. O documento juntado pela ré no corpo de sua réplica tem por escrito a autorização para o estorno do depósito." (fls. 1.180).
+É incontroverso nos autos que houve a transferência pix errônea (comprovante fls. 24 - R$125,00). Neste sentido, também conversas de fls. 28/32, onde a requerida se negava em devolver o dinheiro.
+A fls. 1.181 a requerida salienta que "o objeto da demanda já foi solucionado com a devolução do numerário, conforme documento acostado nos autos" – depósito de fls. 56.
+No mais, o panorama dos autos denota que não caracterizado <em>dano</em> <em>moral</em> indenizável. Anote-se que não postulada devolução em dobro.
+O descompasso na restituição dos aludidos R$ 125,00, na forma supra, gera frustração e aborrecimento, mas não dá ensejo a indenização por <em>dano</em> <em>moral</em>, posto que não revela ofensa ao direito de personalidade. 
+
+Observado, ainda, que, apesar das conversas via whatsapp, a parte autora não chegou a promover notificação extrajudicial da parte requerida antes do ajuizamento desta demanda.
+
+Diante do exposto, nos termos do art. 487, I, do Código de Processo Civil, JULGO PARCIALMENTE PROCEDENTE o pedido formulado nesta demanda por Nágela Sampaio da Silva, para verificar a obrigação de devolução pela requerida, a favor da parte autora, da quantia de R$ 125,00, acrescida de correção monetária pela tabela TJSP  desde o desembolso (fls. 24), mais juros legais simples de mora de 1% ao mês a contar da data da citação.
+
+Depósito da parte requerida a fls. 56 (R$ 125,00).
+
+Diante da sucumbência recíproca, devem ser rateadas custas e despesas processuais entre as partes e cada parte arcará com honorários de sucumbência para o patrono da parte contrária, no equivalente a:
+- R$ 200,00 (duzentos reais), por equidade, honorários de sucumbência estes devidos pela parte requerida ao patrono da parte autora, no total;
+- 10% (dez por cento) do valor atualizado do pedido de indenização por <em>dano</em> <em>moral</em>, devido pela parte autora para o patrono da parte requerida (por equidade).
+Contudo, fica suspensa em face da parte autora e da parte requerida a exigibilidade de tais verbas de sucumbência por serem elas beneficiárias da JUSTIÇA GRATUITA.
+Após o trânsito em julgado, arquivem-se com as cautelas e anotações de praxe.
+
+P.I.C.
+São Paulo, 21 de abril de 2026.
+
+DOCUMENTO ASSINADO DIGITALMENTE NOS TERMOS DA LEI 11.419/2006, CONFORME IMPRESSÃO À MARGEM DIREITA
+
+												</span><img class="mostrarOcultarConteudo" src="/cjpg/imagens/saj/icoMenos.png" height="12" width="12" border="0" />
+											</div>					
+										</td>
+									</tr>						
+								
+															
+								
+							
+						
+						
+					</table>
+					<br /> <br />
+				</td>
+			</tr>
+		
+			<tr class="fundocinza1">
+				<td width="40" align="left" valign="top" class="fonte">
+					<strong>3&nbsp;-</strong>
+				</td>
+				<td valign="top">
+					<table cellspacing="0" cellpadding="0" width="100%"  >				
+						
+						<tr class="fonte">
+							<td colspan="2" align="left">
+								<a style="vertical-align: top" title="Visualizar Inteiro Teor"
+									name="5H0007BUQ0000-197--196360208" >
+									<span class="fonteNegrito"> 1001624-24.2024.8.26.0197 </span>
+								</a>
+								<a name="5H0007BUQ0000-197--196360208" >
+									<img src="/cjpg/imagens/saj/ico_pdf.gif" border="0" title="Visualizar Inteiro Teor" /> 
+								</a>
+							</td>
+						</tr>		
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Classe:
+									</strong> Procedimento Comum Cível
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Assunto:
+									</strong> DIREITO PROCESSUAL CIVIL E DO TRABALHO
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Magistrado:
+									</strong> Adler Batista Oliveira Nobre
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Comarca:
+									</strong> Francisco Morato
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Foro:
+									</strong> Foro de Francisco Morato
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Vara:
+									</strong> 2ª Vara
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Data de Disponibilização:
+									</strong> 21/04/2026
+								</td>
+							</tr>
+						
+						
+						
+													
+														
+									<tr class="fonte">
+										<td colspan="2" align="left">
+											<div align="justify">
+												<span>
+													... de Valores e Indenização por <em>Dano</em> <em>Moral</em>.
+No curso do processo, as partes se compuseram e houve a satisfação integral do débito por parte da executada nos termos da transação.
+Vieram os autos conclusos.
+2. Ante o exposto, declaro EXTINTA a presente execução, com fundamento nos artigos 924, inciso III, e 925, ambos do Código de Processo Civil.
+Em havendo penhoras, ...
+												</span><img class="mostrarOcultarConteudo" src="/cjpg/imagens/saj/icoMais.png" height="12" width="12" border="0" title="Visualizar Inteiro Teor Completo"/>
+											</div>		
+											<div align="justify" style="display: none;">
+												<span>
+													SENTENÇA
+
+Processo Digital nº:	1001624-24.2024.8.26.0197
+Classe - Assunto	Procedimento Comum Cível - DIREITO PROCESSUAL CIVIL E DO TRABALHO
+Requerente:	Ione Correa e Castilho
+Requerido:	Banco Agibank S.A.
+
+Prioridade Idoso
+Tramitação prioritária
+Justiça Gratuita
+
+Juiz(a) de Direito: Dr(a). Adler Batista Oliveira Nobre
+
+Vistos.
+
+1. Trata-se de Ação de Declaração de Inexistência de Débito c/c Compensação de Valores e Indenização por <em>Dano</em> <em>Moral</em>.
+No curso do processo, as partes se compuseram e houve a satisfação integral do débito por parte da executada nos termos da transação.
+Vieram os autos conclusos.
+2. Ante o exposto, declaro EXTINTA a presente execução, com fundamento nos artigos 924, inciso III, e 925, ambos do Código de Processo Civil.
+Em havendo penhoras, bloqueios ou restrições ativas vinculadas a estes autos (Sisbajud, Renajud, Infojud, ARISP, etc.), determino o imediato levantamento, providenciando a Serventia o necessário via sistemas informatizados, independentemente do trânsito em julgado.
+Custas e despesas processuais eventuais remanescentes/finais dispensadas (art. 90, §3º, do CPC).
+Publique-se. Intimem-se.
+Cumpram-se, no mais, as disposições das Normas de Serviço do Eg. TJSP.
+
+Francisco Morato, 17 de abril de 2026.
+
+
+DOCUMENTO ASSINADO DIGITALMENTE NOS TERMOS DA LEI 11.419/2006, CONFORME IMPRESSÃO À MARGEM DIREITA
+
+												</span><img class="mostrarOcultarConteudo" src="/cjpg/imagens/saj/icoMenos.png" height="12" width="12" border="0" />
+											</div>					
+										</td>
+									</tr>						
+								
+															
+								
+							
+						
+						
+					</table>
+					<br /> <br />
+				</td>
+			</tr>
+		
+			<tr class="fundocinza1">
+				<td width="40" align="left" valign="top" class="fonte">
+					<strong>4&nbsp;-</strong>
+				</td>
+				<td valign="top">
+					<table cellspacing="0" cellpadding="0" width="100%"  >				
+						
+						<tr class="fonte">
+							<td colspan="2" align="left">
+								<a style="vertical-align: top" title="Visualizar Inteiro Teor"
+									name="1W001C6LR0000-68--196135161" >
+									<span class="fonteNegrito"> 1006457-21.2023.8.26.0068 </span>
+								</a>
+								<a name="1W001C6LR0000-68--196135161" >
+									<img src="/cjpg/imagens/saj/ico_pdf.gif" border="0" title="Visualizar Inteiro Teor" /> 
+								</a>
+							</td>
+						</tr>		
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Classe:
+									</strong> Procedimento Comum Cível
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Assunto:
+									</strong> Cessão de Direitos
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Magistrado:
+									</strong> DANIELA NUDELIMAN GUIGUET LEAL
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Comarca:
+									</strong> Barueri
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Foro:
+									</strong> Foro de Barueri
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Vara:
+									</strong> 2ª Vara Cível
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Data de Disponibilização:
+									</strong> 21/04/2026
+								</td>
+							</tr>
+						
+						
+						
+													
+														
+									<tr class="fonte">
+										<td colspan="2" align="left">
+											<div align="justify">
+												<span>
+													... é causa, por si só, de indenização por danos morais, quando se trata de única inscrição; e, de forma excepcional, quando houver outras inscrições”.
+
+Mesmo que assim não fosse, tratando-se de <em>dano</em> <em>moral</em> é apenas necessária à confirmação da atitude que causou o <em>dano</em> o que está devidamente comprovado nos autos.
+
+ Assim, evidenciados os danos morais, a conduta ...
+												</span><img class="mostrarOcultarConteudo" src="/cjpg/imagens/saj/icoMais.png" height="12" width="12" border="0" title="Visualizar Inteiro Teor Completo"/>
+											</div>		
+											<div align="justify" style="display: none;">
+												<span>
+													SENTENÇA
+
+Processo nº:	1006457-21.2023.8.26.0068
+Classe - Assunto	Procedimento Comum Cível - Cessão de Direitos
+Requerente:	Geraldo dos Santos Filho
+Requerido:	Acreditti Administracao e Comercio Ltda
+
+
+
+
+Juiz(a) de Direito: Dr(a). DANIELA NUDELIMAN GUIGUET LEAL
+
+Vistos.
+
+Geraldo dos Santos Filho, qualificado na inicial, ajuizou ação de Procedimento Comum Cível em face de Acreditti Administracao e Comercio Ltda, alegando, em síntese, que firmou “Contrato de Compra e Cessão de Direito e Transferência de bem móvel alienado” com a ré no dia 10 de setembro de 2021 de seu veículo financiado Marca/Modelo: Hyundai, HB20 1.0 UNIQUE, NA Cor: branca, ano 2019/2019, placa BYY4J11. Destacou que o veículo supracitado à data da realização do negócio jurídico estava alienado junto ao Banco Votorantim S/A. e tinham em abertos 43 parcelas junto à instituição, e o total do débito atualizado a data perfaziam o valor de R$ 48.816,00, valor este informado na cláusula 1.3 do contrato. Afirmou, que a ré no § único da clausula 3.2 se comprometeu pela quitação do bem no período de 06 meses. Ocorre que, a ré não cumpriu o estabelecido em contrato, ainda houve multa, em data posterior a entrega do bem, sendo de responsabilidade conforme clausula contratual de 3.3. Ademais o nome do autor ficou com restrição nos órgãos de proteção de crédito SPC/SERASA e o veículo teve multas posteriores à data da entrega do bem móvel, conforme prints anexos dos aplicativos DETRAN e SERASA EXPERIAN. Alegou, que compete a ré realizar a transferência das infrações de trânsito para seus prepostos responsáveis, bem como efetuar a transferência do veículo para o seu nome, mediante quitação do contrato de financiamento perante o BANCO VOTORANTIM S/A. Requereu a procedência do pedido, condenando a requerida ao pagamento de R$ 39.052,80, referente ao pagamento da multa contratual, bem como seja deferido o requerimento de transferência imediata do bem móvel para o nome da requerida, além disso, a condenação ao pagamento de R$ 10.000,00 a título de indenização de danos morais. Juntou documentos a fls. 13/39.
+
+O pedido liminar foi indeferido (fls. 40/41), bem como a decisão de fls. 101, deferiu a gratuidade.	
+
+Devidamente citada por edital (fls. 187), a requerida, por seu Curador Especial, apresentou contestação por negativa geral dos fatos, conforme facultado em lei (fls. 199/200). Juntou documentos (fls. 201).
+
+Réplica (fls. 202/213). Reiterou os pedidos iniciais.
+
+É a síntese do necessário.
+
+DECIDO.
+
+O processo comporta julgamento antecipado, vez que desnecessária a produção de prova oral em audiência, estando os fatos devidamente comprovados nos autos através de documentos.
+
+Indefiro o pedido de gratuidade processual pelo réu, uma vez ausentes elementos suficientes a comprovar a impossibilidade de arcar com o recolhimento das custas e despesas processuais, anotando-se que a circunstância de estar representada por Curador Especial, por si só, não configura a necessidade da concessão do benefício. 
+
+Dito isso, cuida-se de ação em que pleiteia o autor a condenação da ré na transferência dos encargos do veículo para o nome da ré, bem como a condenação ao pagamento de R$ 10.000,00 a título de indenização de danos morais, além da multa prevista no contrato.
+
+Cabe inicialmente ressaltar, que é incontroverso que houve a cessão do automóvel e consequentemente a transferência do uso do bem à "Acreditti", bem como que a ré não transferiu o veículo para o seu nome, em que pese constar que a ré deveria fazê-lo no prazo mínimo de 6 meses.
+
+Certo é, que na cláusula 3.2, no parágrafo único (fls. 25), consta que a ré faria a quitação do contrato no prazo mínimo de 6 meses, todavia, até a presente data, não realizou a transferência.
+
+Assim, tendo ocorrido o inadimplemento contratual, de rigor o reconhecimento da obrigação da ré de pagamento da multa prevista no contrato.
+
+No mais, no que pertine à multa moratória, prevalece, no caso, a vontade dos contratantes estabelecida na cláusula 4ª do contrato (fls. 25). Mesmo porque, o percentual fixado não se faz abusivo, descabendo qualquer reparo por parte do julgador.
+
+Assim, comprovado o inadimplemento e a mora da ré, que deixou de dar cumprimento às obrigações contratualmente assumidas, é de rigor, a condenação dela ao pagamento da multa de 80% do valor da quitação do veículo na quantia de R$39.052,80.
+
+Ressalto, que o autor pleiteou a transferência do veículo para a ré, com expedição de ofício ao Detran.
+
+Ocorre, que sem o pagamento das parcelas, não é possível a transferência do veículo ao nome da ré.
+
+Desta forma, a ré deverá ser condenada também no pagamento das parcelas.
+
+No mesmo sentido, indefiro o pedido de expedição de ofício ao DETRAN para transferência do veículo ao nome da empresa requerida, vez que há necessidade de quitação do financiamento junto ao Banco Votorantim.
+
+Por fim, de rigor a indenização por danos morais. 
+
+Ora, o autor teve o nome incluso nos órgãos de proteção ao crédito, vez que a ré não realizou o pagamento do débito. 
+
+Tal fato, certamente, lhe causou vexame e humilhação passíveis de indenização por danos morais. 
+
+Até porque, conforme firme entendimento jurisprudencial: “O cadastramento indevido em órgãos de restrição ao crédito é causa, por si só, de indenização por danos morais, quando se trata de única inscrição; e, de forma excepcional, quando houver outras inscrições”.
+
+Mesmo que assim não fosse, tratando-se de <em>dano</em> <em>moral</em> é apenas necessária à confirmação da atitude que causou o <em>dano</em> o que está devidamente comprovado nos autos.
+
+ Assim, evidenciados os danos morais, a conduta culposa da ré e o nexo causal, a indenização é medida de rigor. 
+
+Feitas tais considerações, passo à fixação do montante devido.  
+
+O arbitramento da condenação a título de <em>dano</em> <em>moral</em> deve operar-se com moderação, proporcionalmente ao grau de culpa, ao porte empresarial/pessoal das partes, suas atividades comerciais e, ainda, o valor do negócio, orientando-se o juiz pelos critérios sugeridos pela doutrina e jurisprudência, com razoabilidade, valendo-se da experiência e do bom senso, atento à realidade da vida, notadamente, à situação econômica atual e às peculiaridades do caso concreto. 
+
+Considerando os elementos acima discriminados, estipulo a indenização devida pela ré em R$ 10.000,00. 
+
+A conduta lesiva da empresa-ré decorreu de sua responsabilidade, pois não tomou todos os cuidados devidos ao deixar de quitar o financiamento e transferir o veículo do nome do autor. Além disso, o autor se encontra com multas no seu prontuário, inclusive, com os débitos da ação de busca e apreensão em face do autor.
+
+Contudo, valor inferior certamente em nada puniria a conduta lesiva, dada a situação econômica da empresa-ré, sempre com vistas à denominada “Teoria do Desestímulo”. 
+
+Neste sentido: “INDENIZAÇÃO. <em>DANO</em> <em>MORAL</em>. ARBITRAMENTO. CRITÉRIO. JUÍZO PRUDENCIAL. A indenização por <em>dano</em> <em>moral</em> é arbitrável, mediante estimativa jurisprudencial que leva em conta a necessidade de, com a quantia, satisfazer a dor da vítima e dissuadir, de igual e novo atentado, o autor da ofensa” (Apelação Cível nº 198.945-!, 2ª Câmara do E. TJSP, rel. Des. César Peluzo, j. 21.12.93, JTJ 156/96). 
+
+O Magistrado, para a avaliação do <em>dano</em> <em>moral</em>, deve ser, a um só tempo, razoável e severo, a fim de atender a finalidade de compensar e dar satisfação ao lesado, assim como desestimular a reiteração da prática abusiva da ré. 
+
+A importância ora estipulada, como enfatizado, não servirá para apagar o dissabor do autor, mas para aplacar o prejuízo de ordem <em>moral</em> (constrangimento  aborrecimento  desconforto), que lhe foi imposto pelo agir irresponsável da requerida, assim como para inibir que fatos semelhantes venham a se repetir. 
+
+Uma vez que nenhuma possibilidade há de medir pelo dinheiro um sofrimento puramente <em>moral</em>, CAIO MÁRIO DA SILVA PEREIRA recomenda que faça um jogo duplo de noções: "a) de um lado, a ideia de punição do infrator, que não pode ofender em vão a esfera jurídica alheia; b) de outro lado, proporcionar à vítima uma compensação pelo <em>dano</em> suportado, pondo-lhe o ofensor nas mãos uma soma que não é o pretium doloris" (Instituições de Direito Civil, 8ª ed., Rio, Forense, 1986, vol. II, nº 176, pág. 235). 
+
+Feitas todas estas considerações e parâmetros, entendo ser justo entre as partes a fixação do <em>dano</em> <em>moral</em> sofrido pelo autor em R$ 10.000,00.
+
+Ante o exposto e considerando tudo o mais que dos autos consta, JULGO PARCIALMENTE PROCEDENTE o pedido de inicial para DETERMINAR a transferência de multas por infrações de trânsito, bem como demais encargos incidentes sobre o automóvel para o nome da ré. No mais, CONDENO a ré ao pagamento de 80% do valor do débito do veículo, no valor de R$ 39.052,80, corrigida monetariamente pela Tabela Prática do Tribunal de Justiça desde a data do ajuizamento da ação em abril de 2023, até 29/08/2024, após essa data devidamente corrigidos pelo IPCA e acrescida de juros pela SELIC desde a citação, deduzido o índice de correção monetária, em conformidade com os arts. 389 e 406 do C.C., introduzidos pela Lei 14.905/24. Por fim, CONDENO a requerida a pagar ao requerente a importância de R$ 10.000,00, a título de danos morais, devidamente corrigidos pelo IPCA e acrescidos de juros pela SELIC deduzido o índice de correção monetária, desde a prolação da sentença, em conformidade com os arts. 389 e 406 do C.C., introduzidos pela Lei 14.905/24. Assim, ponho fim ao processo com julgamento do mérito, nos termos do artigo 487, I, do Código de Processo Civil.
+
+Condeno a ré no pagamento das despesas, custas processuais e honorários advocatícios, que fixo em 10% do valor da condenação, nos termos do artigo 85 parágrafo único, do Código de Processo Civil. Tal valor mostra-se suficiente, considerando-se o trabalho desenvolvido.
+
+Valerá a presente como ofício ao Detran para que proceda a transferência de todos os débitos e pontuações de multas do veículo Marca/Modelo: Hyundai, HB20 1.0 UNIQUE, NA Cor: branca, ano 2019/2019, placa BYY4J11, RENAVAM 01184022604, chassi: 9BHBG51CAKP0120333, para ACREDITTI ADMINISTRAÇÃO E COMERCIO LTDA, CNPJ n° 31.106.797/0001-30, com sede na Avenida Copacabana, 190, Edifício Lazulli Corporate, 4° Andar, Sala A, Dezoito do Forte Empresarial, Alphaville, em Barueri-SP, CEP: 06472-0001, eximindo o autor GERALDO DOS SANTOS FILHO, brasileiro, união estável, carpinteiro, portador do RG sob o nº 45.373.347-5 e CPF: 037.632.725-18, residente e domiciliado na Av. Sarah Veloso nº 1451, AP. 13, boco 04, Veloso, Osasco/SP CEP: 06150-000, de qualquer obrigação pelo veículo.
+
+Servirá o presente, por cópia digitada, como ofício, ficando o autor intimado a imprimi-lo, via site do TJ de SP, devendo providenciar o protocolo junto ao órgão competente. 
+
+P.I.C.
+
+Barueri, 21 de abril de 2026.
+
+DANIELA NUDELIMAN GUIGUET LEAL
+JUÍZA DE DIREITO
+
+DOCUMENTO ASSINADO DIGITALMENTE NOS TERMOS DA LEI 11.419/2006, CONFORME IMPRESSÃO À MARGEM DIREITA
+
+												</span><img class="mostrarOcultarConteudo" src="/cjpg/imagens/saj/icoMenos.png" height="12" width="12" border="0" />
+											</div>					
+										</td>
+									</tr>						
+								
+															
+								
+							
+						
+						
+					</table>
+					<br /> <br />
+				</td>
+			</tr>
+		
+			<tr class="fundocinza1">
+				<td width="40" align="left" valign="top" class="fonte">
+					<strong>5&nbsp;-</strong>
+				</td>
+				<td valign="top">
+					<table cellspacing="0" cellpadding="0" width="100%"  >				
+						
+						<tr class="fonte">
+							<td colspan="2" align="left">
+								<a style="vertical-align: top" title="Visualizar Inteiro Teor"
+									name="1W001A64W0000-68--196062184" >
+									<span class="fonteNegrito"> 1000195-26.2021.8.26.0068 </span>
+								</a>
+								<a name="1W001A64W0000-68--196062184" >
+									<img src="/cjpg/imagens/saj/ico_pdf.gif" border="0" title="Visualizar Inteiro Teor" /> 
+								</a>
+							</td>
+						</tr>		
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Classe:
+									</strong> Procedimento Comum Cível
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Assunto:
+									</strong> Tratamento médico-hospitalar
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Magistrado:
+									</strong> DANIELA NUDELIMAN GUIGUET LEAL
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Comarca:
+									</strong> Barueri
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Foro:
+									</strong> Foro de Barueri
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Vara:
+									</strong> 2ª Vara Cível
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Data de Disponibilização:
+									</strong> 21/04/2026
+								</td>
+							</tr>
+						
+						
+						
+													
+														
+									<tr class="fonte">
+										<td colspan="2" align="left">
+											<div align="justify">
+												<span>
+													... que tange ao pedido de indenização por danos morais, este não merece acolhimento.
+
+Com efeito, embora a recusa da operadora tenha se revelado indevida no que diz respeito aos procedimentos amparados pelo laudo pericial, não se vislumbra, nas circunstâncias dos autos, a ocorrência de <em>dano</em> <em>moral</em> indenizável. 
+
+A negativa foi pautada em interpretação plausível e razoável do ...
+												</span><img class="mostrarOcultarConteudo" src="/cjpg/imagens/saj/icoMais.png" height="12" width="12" border="0" title="Visualizar Inteiro Teor Completo"/>
+											</div>		
+											<div align="justify" style="display: none;">
+												<span>
+													SENTENÇA
+
+Processo nº:	1000195-26.2021.8.26.0068
+Classe - Assunto	Procedimento Comum Cível - Tratamento médico-hospitalar
+Requerente:	Bruna da Rocha Salles Camargo
+Requerido:	Care Plus Medicina Assistencial Ltda
+
+
+
+
+Juiz(a) de Direito: Dr(a). DANIELA NUDELIMAN GUIGUET LEAL
+
+Vistos.
+
+Bruna da Rocha Salles Camargo, qualificada na inicial, ajuizou ação de Procedimento Comum Cível em face de Care Plus Medicina Assistencial Ltda. Relatou, em síntese, que apresentava quadro médico de obesidade mórbida, sendo indicado o tratamento com a realização de cirurgia bariátrica. Contudo, após o procedimento cirúrgico, passou a apresentar flacidez de pele em diversas regiões do corpo e, assim, para o tratamento, foi indicada a cirurgia reparadora. Relata que possui plano de saúde com a requerida e está em dia com os pagamentos. Todavia, após solicitar a referida cirurgia, foi surpreendida com a recusa dos procedimentos, sob o argumento de que o mesmo não está previsto no rol da ANS. Desta forma, pleiteia a condenação da ré a custear as cirurgias requeridas no relatório médico anexo, devendo ainda fornecer todo e qualquer material requisitado pelo médico, bem como todo e qualquer medicamento necessário ao procedimento, em rede credenciada, indicando ainda, ao menos 3 médicos de sua rede especialista em cirurgia reparadora, sob pena de, não o fazendo, ter que arcar com os honorários de profissional de confiança da autora. Requereu ainda, seja condenada ao pagamento de indenização por danos morais à autora, no valor de, no mínimo, R$10.000,00. Juntou documentos (fls. 20/61). 
+
+Por meio da decisão de fls. 62, foram deferidos a autora os benefícios da justiça gratuita, todavia, foi indeferido o pedido liminar.
+
+Citada, a ré apresentou contestação, às fls. 66/104. Preliminarmente, impugnou a gratuidade. No mérito, sustentou, que consoante Rol da ANS, os procedimentos solicitados pela autora não constam no rol de procedimentos e eventos de cobertura obrigatória da ANS, não sendo, portanto, obrigatório o seu custeio ante o contrato avençado entre as partes. Assim, se o tratamento médico não estava inserido no rol de procedimentos obrigatórios da ANS, deve ser afastada a obrigatoriedade de a operadora de plano de saúde o custear, ficando, assim, reconhecida a licitude da recusa da operadora. Requereu a improcedência do pedido. Juntou documentos (fls. 105/197).
+
+Réplica (fls. 203/222), reiterando os pedidos iniciais.
+
+Saneado o feito (fls. 225), foi determinada realização de prova pericial.
+
+Por meio da decisão de fls. 238/239, o feito foi suspenso.
+
+A autora informou às fls. 267/269, que havendo tese firmada pelo Superior Tribunal de Justiça e ausência de observância dos pressupostos legais para suplantar a negativa fornecida pelo plano de saúde, é de rigor que seja determinada a retomada do andamento do presente processo.
+
+A decisão de fls. 314, determinou a intimação do perito para início dos trabalhos.
+
+Vieram aos autos o laudo pericial (fls. 351/366), com esclarecimentos (fls. 396/401), concluindo às fls. 362 e 399, que há justificativa clínica para realização de DERMOLIPECTOMIA BRAQUIAL (bilateral) - 30101190 e DERMOLIPECTOMIA CRURAL (bilateral) - 30101190. Todos os outros pedidos médicos da autora não justificam a realização de cirurgia reparadora, ou então, já foram realizados.
+
+As partes se manifestaram quanto ao laudo (fls. 372/374, 375/378, 405 e 406/409).
+
+É a síntese do necessário.
+
+DECIDO.
+
+Cuida-se de ação de obrigação de fazer e indenização por danos morais, decorrente da negativa da ré na solicitação da requerente quanto a realização de procedimentos cirúrgicos indispensáveis para sua recuperação.
+ 
+O pedido é parcialmente procedente.
+
+Primeiramente, importante ressaltar que a relação jurídica objeto desta lide é qualificada como de consumo. O que se constata é que a autora se adequa perfeitamente ao artigo 2º do Código de Defesa do Consumidor, ao passo que a ré se adequa ao artigo 3º do referido diploma, de forma que são caracterizadas, respectivamente, como consumidora e fornecedora.
+
+Portanto, tratando-se de relação de consumo e estando presentes os requisitos do art. 6º, inc. VIII, da Lei 8078/90, quais sejam: a verossimilhança das alegações da requerente e a hipossuficiência da mesma, inverto o ônus probatório.
+
+Incontroverso nos autos que a autora submeteu-se à realização de cirurgia bariátrica. Ainda, certo que o custeio das cirurgias reparadoras foram negadas pela requerida.
+
+Importante ressaltar que as cirurgias em tela foram prescritas por profissional, o qual, se a indicou, certamente o fez porque são necessárias (fl. 53/55) mesmo porque até pra leigos na ciência médica se extrai evidente ligação entre os reparos buscados pelos procedimentos e a cirurgia bariátrica anterior.
+
+Mesmo que assim não fosse, foi elaborada prova pericial, a qual é suficiente para o julgamento do feito.
+
+Isso porque, o perito foi claro e objetivo, não havendo motivos para não dar credibilidade a perícia realizada.
+
+Assim, levando em consideração todas as alegações das partes, concluiu o perito às fls. 362 e 399, que há justificativa clínica para realização de DERMOLIPECTOMIA BRAQUIAL (bilateral) - 30101190 e DERMOLIPECTOMIA CRURAL (bilateral) - 30101190. Todos os outros pedidos médicos da autora não justificam a realização de cirurgia reparadora, ou então, já foram realizados.
+
+Ademais, conforme já mencionado o contrato celebrado entre as partes está sujeito às disposições do Código de Defesa do Consumidor. 
+
+No caso dos autos, as alegações da ré de que a parte autora não preenche os requisitos autorizadores para a realização da cirurgia perseguida não prosperam. Foi a requerente submetida à realização da cirurgia bariátrica, havendo informação de haver obesidade da autora. 
+
+É cediço que cirurgia desse jaez apenas é autorizada quando, de fato, necessária à vida do paciente, quando os riscos da sua realização são menores do que a manutenção do paciente no estado em que se encontra.
+
+Ademais, é evidente que em tal situação, estando o paciente com notável obesidade, há grande distensão da pele, com comprometimento de sua elasticidade, de modo que se faz necessária a realização de cirurgia reparadora, a qual a ré tem negado cobertura.
+
+No caso concreto, o laudo pericial produzido nestes autos, com o due processo da prova técnica e os devidos esclarecimentos, concluiu de forma categórica pela existência de justificativa clínica para a realização da dermolipectomia braquial bilateral e da dermolipectomia crural bilateral, ambas decorrentes da perda de peso obtida mediante cirurgia bariátrica previamente autorizada e custeada pela própria requerida.
+
+A conclusão pericial é clara: os procedimentos identificados têm natureza reparadora e decorrem diretamente do quadro clínico gerado pela intervenção bariátrica, constituindo, portanto, continuidade do tratamento já iniciado. A flacidez cutânea resultante de perda de peso acentuada não pode ser classificada como mera questão estética, na medida em que compromete a integridade física e a qualidade de vida da paciente.
+
+Nesse contexto, a negativa da operadora revela-se indevida, porquanto o contrato de plano de saúde deve ser interpretado em favor do consumidor, nos termos do artigo 47 do Código de Defesa do Consumidor, e à luz do princípio da continuidade do tratamento. 
+
+Ademais, a obrigação deve ser cumprida desde pronto, vez que os procedimentos mostram-se urgentes e necessários para o bem estar e saúde da autora.
+
+A recusa, amparada exclusivamente na ausência dos procedimentos no rol da ANS, sem a devida consideração da necessidade clínica atestada por laudo pericial, configura prática abusiva.
+
+Todavia, quanto aos demais procedimentos pleiteados na inicial, o laudo pericial foi claro ao concluir que não há justificativa clínica para a realização de cirurgia reparadora, ou que tais procedimentos já foram realizados. 
+
+Não havendo amparo técnico-científico para os demais pedidos, impõe-se a improcedência quanto a eles.
+
+No que tange ao pedido de indenização por danos morais, este não merece acolhimento.
+
+Com efeito, embora a recusa da operadora tenha se revelado indevida no que diz respeito aos procedimentos amparados pelo laudo pericial, não se vislumbra, nas circunstâncias dos autos, a ocorrência de <em>dano</em> <em>moral</em> indenizável. 
+
+A negativa foi pautada em interpretação plausível e razoável do contrato e das normas regulatórias editadas pela ANS, inexistindo, portanto, conduta dolosa ou gravemente culposa capaz de ensejar lesão à dignidade ou à honra da autora em magnitude que ultrapasse o mero aborrecimento ou dissabor decorrente de desacordo contratual. 
+
+O <em>dano</em> <em>moral</em> não se presume de forma automática pelo simples inadimplemento contratual, sendo necessária a demonstração de efetivo abalo psíquico ou <em>moral</em>, o que não restou evidenciado nos autos.
+
+Ante o exposto JULGO PARCIALMENTE PROCEDENTE o pedido, para condenar a requerida a autorizar e custear integralmente as cirurgias de reparadoras, indicadas no laudo pericial: dermolipectomia braquial bilateral (código 30101190) e dermolipectomia crural bilateral (código 30101190), devendo fornecer todo o material e medicamentos necessários à realização dos procedimentos, indicando ao menos três médicos de sua rede credenciada especializados em cirurgia reparadora, no prazo de quinze dias a contar da intimação da presente decisão, sob pena de multa diária de R$ 3.000,00 até o limite de R$ 200.000,00. Ainda, após o pedido médico, a cirurgia deverá ser autorizada e agendada no prazo máximo de 30 dias, a contar do dia do encaminhamento do pedido a operadora ré, sob pena de multa diária de R$ 3.000,00 até o limite de R$ 200.000,00. Assim, julgo o processo extinto com apreciação do mérito, na forma do art. 487, inc. I, do CPC.
+
+Sucumbindo a autora em parte menor do pedido arcará com 20% das custas e despesas processuais e honorários advocatícios que arbitro em 5% do valor da causa, cuja execução ficará suspensa por ser beneficiária da justiça gratuita. A ré, por sua vez, arcará com o pagamento de 80% das despesas, custas processuais e honorários advocatícios que fixo em 15% do valor da causa, nos termos do artigo 85 do Código de Processo Civil. Tal valor mostra-se suficiente, considerando-se o valor da condenação e o trabalho desenvolvido pelos patronos, sendo vedada a compensação dos honorários advocatícios.
+
+P.I.C.
+
+Barueri, 21 de abril de 2026.
+
+DANIELA NUDELIMAN GUIGUET LEAL
+JUÍZA DE DIREITO
+DOCUMENTO ASSINADO DIGITALMENTE NOS TERMOS DA LEI 11.419/2006, CONFORME IMPRESSÃO À MARGEM DIREITA
+
+												</span><img class="mostrarOcultarConteudo" src="/cjpg/imagens/saj/icoMenos.png" height="12" width="12" border="0" />
+											</div>					
+										</td>
+									</tr>						
+								
+															
+								
+							
+						
+						
+					</table>
+					<br /> <br />
+				</td>
+			</tr>
+		
+			<tr class="fundocinza1">
+				<td width="40" align="left" valign="top" class="fonte">
+					<strong>6&nbsp;-</strong>
+				</td>
+				<td valign="top">
+					<table cellspacing="0" cellpadding="0" width="100%"  >				
+						
+						<tr class="fonte">
+							<td colspan="2" align="left">
+								<a style="vertical-align: top" title="Visualizar Inteiro Teor"
+									name="EA00038VR0000-514--118410141" >
+									<span class="fonteNegrito"> 1003292-20.2022.8.26.0514 </span>
+								</a>
+								<a name="EA00038VR0000-514--118410141" >
+									<img src="/cjpg/imagens/saj/ico_pdf.gif" border="0" title="Visualizar Inteiro Teor" /> 
+								</a>
+							</td>
+						</tr>		
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Classe:
+									</strong> Procedimento Comum Cível
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Assunto:
+									</strong> Indenização por Dano Material
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Magistrado:
+									</strong> André Menezes Del Mastro
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Comarca:
+									</strong> Itupeva
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Foro:
+									</strong> Foro de Itupeva
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Vara:
+									</strong> Vara Única
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Data de Disponibilização:
+									</strong> 21/04/2026
+								</td>
+							</tr>
+						
+						
+						
+													
+														
+									<tr class="fonte">
+										<td colspan="2" align="left">
+											<div align="justify">
+												<span>
+													... a condenação da ré ao pagamento dos danos materiais (portão de entrada da casa e capa de proteção da moto) no montante de R$1.050,00 e de indenização por <em>dano</em> <em>moral</em> (R$10.000,00). Ademais, solicitou a gratuidade processual.
+Recebida a inicial, deferiu-se a gratuidade processual e determinou-se a citação da ré (fl. 46).
+A requerida ofereceu contestação (fls. 58/67), ...
+												</span><img class="mostrarOcultarConteudo" src="/cjpg/imagens/saj/icoMais.png" height="12" width="12" border="0" title="Visualizar Inteiro Teor Completo"/>
+											</div>		
+											<div align="justify" style="display: none;">
+												<span>
+													SENTENÇA
+
+Processo Digital nº:	1003292-20.2022.8.26.0514
+Classe - Assunto	Procedimento Comum Cível - Indenização por <em>Dano</em> Material
+Requerente:	Edneusa de Araujo Marinho
+Requerido:	Ana Carolina de Farias
+
+
+
+Justiça Gratuita
+
+Juiz(a) de Direito: Dr(a). André Menezes Del Mastro
+Vistos.
+Edneusa de Araújo Marinho, qualificada nos autos, ajuizou ação de indenização por danos materiais e morais em face de Ana Carolina de Farias, outrossim, qualificada.
+Narra que, no dia 24.07.2022, a autora estava em uma festa junina com seus familiares no bairro que reside. Comenta que o pai da requerida começou a “perturbar a filha da autora” (fl. 2), o que motivou o marido da autora a conversar com o pai da ré, a fim de que ele parasse com o comportamento. Afirma que o genitor da requerida “debochou e, em tom de ameaça, insinuou que mataria o marido da demandante” (fl. 2).
+Na mesma data, durante a madrugada, a autora e seus familiares notaram que alguém teria incendiado a residência. O marido da autora controlou as chamas. Segundo a gravação de câmeras de segurança, a requerida foi responsável pelo incêndio, que causou danos na pintura e na grade instalada no portão.
+No dia seguinte, a requerida e seu pai se aproximaram e afirmaram que não tinham envolvimento com o incêndio. O marido da autora respondeu que a requerida foi identificada na filmagem e, em seguida, o pai da ré sacou uma arma de fogo e matou o cônjuge da requerente. O homicídio é objeto da ação penal autuada sob o nº 1501888-78.2022.8.26.0544 e o pai da requerida está preso preventivamente.
+Dessa forma, requer a condenação da ré ao pagamento dos danos materiais (portão de entrada da casa e capa de proteção da moto) no montante de R$1.050,00 e de indenização por <em>dano</em> <em>moral</em> (R$10.000,00). Ademais, solicitou a gratuidade processual.
+Recebida a inicial, deferiu-se a gratuidade processual e determinou-se a citação da ré (fl. 46).
+A requerida ofereceu contestação (fls. 58/67), alegando, em síntese, que seu genitor não perturbou a filha da autora, pois ela não estava presente no local. Argumenta que não é possível identificar a pessoa que ateou fogo no portão. Ademais, impugnou os pedidos indenizatórios e requereu a improcedência dos pedidos.
+A autora reiterou sua argumentação em réplica (fls. 90/93).
+A requerida solicitou a prova oral (depoimento pessoal e oitiva de testemunhas) e produção de prova documental (fls. 97/99).
+Em seguida, concedeu-se prazo para a requerida juntar documentos sobre o pedido de gratuidade processual e rejeitou-se o pedido de produção de prova oral (fls. 100/102).
+A requerida juntou documentos (fls. 107/108).
+É o relatório. Fundamento e decido.
+O julgamento antecipado do feito é incontornável, por se tratar de matéria estritamente de direito, uma vez que a prova documental apresentada é suficiente para examinar eventual participação da ré no incêndio provocado na residência da autora (art. 355, I, do Código de Processo Civil), sem a necessidade de dilação probatória.   
+Com efeito, à luz do art. 370, parágrafo único, do Código de Processo Civil, o juiz deve indeferir providências inúteis, desnecessárias e protelatórias, a fim de contribuir com a razoável duração do processo. 
+Defiro a gratuidade processual à requerida, pois ela se encontra desempregada e os extratos bancários possuem movimentação inexpressiva (fls. 118/127).
+Quanto ao mérito, os pedidos indenizatórios não comportam acolhimento.
+A controvérsia envolve a responsabilidade pelo incêndio na residência da autora supostamente provocado pela pessoa filmada pelas câmeras de segurança instaladas no imóvel.
+A autora apresentou apenas fotos da filmagem, sem juntar link com a gravação completa. Embora tenha mencionado que juntaria integralmente se fosse deferido pelo juízo, após a intimação para especificação de prova (fl. 94), a requerente permaneceu inerte e não juntou o vídeo nem solicitou a apresentação, denotando a preclusão temporal. 
+Dessa forma, considerando somente as fotos de fls. 4/5, não é possível identificar a pessoa, sendo, pois, inadmissível o reconhecimento da participação da requerida no incêndio. Como não foi demonstrada qualquer conduta da ré (art. 373, I, do CPC), reputo prejudicada a apreciação dos pedidos indenizatórios.
+Ante o exposto, julgo improcedentes os pedidos, extinguindo o processo com resolução do mérito (art. 487, I, do CPC). Condeno a autora ao pagamento das despesas processuais e dos honorários advocatícios, no montante de 15% do valor atualizado da causa, considerando o tempo de tramitação do processo e a baixa complexidade da demanda, ressalvado o benefício da gratuidade processual (art. 98, §3º, do CPC).
+Proceda a Serventia à anotação da gratuidade processual concedida à ré.
+Na hipótese de recurso de apelação, intime-se a parte contrária para o oferecimento de contrarrazões, no prazo de 15 (quinze) dias. Decorrido o prazo, com ou sem manifestação, remetam-se os autos à Segunda Instância.   
+Oportunamente, certifique-se o trânsito em julgado e arquivem-se os autos.   
+Publique-se e intimem-se.
+Itupeva, 21 de abril de 2026.
+
+
+DOCUMENTO ASSINADO DIGITALMENTE NOS TERMOS DA LEI 11.419/2006, CONFORME IMPRESSÃO À MARGEM DIREITA
+
+												</span><img class="mostrarOcultarConteudo" src="/cjpg/imagens/saj/icoMenos.png" height="12" width="12" border="0" />
+											</div>					
+										</td>
+									</tr>						
+								
+															
+								
+							
+						
+						
+					</table>
+					<br /> <br />
+				</td>
+			</tr>
+		
+			<tr class="fundocinza1">
+				<td width="40" align="left" valign="top" class="fonte">
+					<strong>7&nbsp;-</strong>
+				</td>
+				<td valign="top">
+					<table cellspacing="0" cellpadding="0" width="100%"  >				
+						
+						<tr class="fonte">
+							<td colspan="2" align="left">
+								<a style="vertical-align: top" title="Visualizar Inteiro Teor"
+									name="EA0003DJE0000-514--118409878" >
+									<span class="fonteNegrito"> 1001708-78.2023.8.26.0514 </span>
+								</a>
+								<a name="EA0003DJE0000-514--118409878" >
+									<img src="/cjpg/imagens/saj/ico_pdf.gif" border="0" title="Visualizar Inteiro Teor" /> 
+								</a>
+							</td>
+						</tr>		
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Classe:
+									</strong> Procedimento Comum Cível
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Assunto:
+									</strong> Indenização por Dano Moral
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Magistrado:
+									</strong> André Menezes Del Mastro
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Comarca:
+									</strong> Itupeva
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Foro:
+									</strong> Foro de Itupeva
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Vara:
+									</strong> Vara Única
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Data de Disponibilização:
+									</strong> 20/04/2026
+								</td>
+							</tr>
+						
+						
+						
+													
+														
+									<tr class="fonte">
+										<td colspan="2" align="left">
+											<div align="justify">
+												<span>
+													... Comum Cível - Indenização por <em>Dano</em> <em>Moral</em>
+Requerente:	André Gavioli
+Requerido:	Cartão de Todos de Jundiai Ltda - ME e outro
+
+
+
+Justiça Gratuita
+
+Juiz(a) de Direito: Dr(a). André Menezes Del Mastro
+Vistos.
+André Gavioli, qualificado nos autos, ajuizou ação de obrigação de fazer cumulada com pedido de indenização por <em>dano</em> <em>moral</em> em face de Cartão de ...
+												</span><img class="mostrarOcultarConteudo" src="/cjpg/imagens/saj/icoMais.png" height="12" width="12" border="0" title="Visualizar Inteiro Teor Completo"/>
+											</div>		
+											<div align="justify" style="display: none;">
+												<span>
+													SENTENÇA
+
+Processo Digital nº:	1001708-78.2023.8.26.0514
+Classe - Assunto	Procedimento Comum Cível - Indenização por <em>Dano</em> <em>Moral</em>
+Requerente:	André Gavioli
+Requerido:	Cartão de Todos de Jundiai Ltda - ME e outro
+
+
+
+Justiça Gratuita
+
+Juiz(a) de Direito: Dr(a). André Menezes Del Mastro
+Vistos.
+André Gavioli, qualificado nos autos, ajuizou ação de obrigação de fazer cumulada com pedido de indenização por <em>dano</em> <em>moral</em> em face de Cartão de Todos de Jundiaí Ltda.  ME e Banco Bradesco S/A, outrossim, qualificados.
+Narra que celebrou contrato com a empresa Cartão de Todos de Jundiaí para a prestação de serviços de consultas médicas, em que a contraprestação compreenderia as quantias de R$55,00 e R$29,00 em descontos mensais no cartão de crédito.
+Afirma que, em 05.10.2021, o autor solicitou a rescisão do contrato. Entretanto, o Banco Bradesco continuou cobrando os valores de R$55,00 e R$29,00. O Banco Bradesco teria esclarecido ao autor que as cobranças decorreram de ordens feitas pela empresa Cartão de Todos. 
+Dessa forma, requer a suspensão dos descontos e a devolução do valor pago e a condenação dos réus ao pagamento de indenização por <em>dano</em> <em>moral</em> (R$5.000,00). Ademais, solicitou a gratuidade processual e a suspensão das cobranças em tutela de urgência.
+Recebida a inicial, deferiu-se a gratuidade processual e concedeu-se a tutela de urgência para que o Banco Bradesco suspendesse as cobranças mensais de R$55,00 e de R$29,00, sob pena de multa de R$3.000,00 (fls. 27/28).
+O réu Banco Bradesco noticiou a interposição de agravo de instrumento (fl. 49) e o autor alterou o valor da causa e apresentou planilha sobre os valores descontados (fl. 62).
+O Banco Bradesco ofereceu contestação (fls. 79/89), aduzindo, em síntese, que não tem legitimidade passiva porque apenas administra o cartão de crédito utilizado como forma de pagamento. Impugnou a gratuidade processual e apontou a ausência de interesse de agir por não esgotamento da via administrativa. Quanto ao mérito, sustentou que não houve falha na prestação do serviço e propugnou pela improcedência dos pedidos.
+O autor reiterou sua argumentação em réplica (fls. 117/125).
+No acórdão do agravo de instrumento, manteve-se a ordem de suspensão dos descontos com redução do valor da multa (fls. 148/154).
+O réu Banco Bradesco solicitou o depoimento pessoal do autor (fl. 168), que juntou documentos sobre as cobranças (fls. 168/170).
+A empresa-ré ofereceu contestação intempestiva (fls. 189/218), alegando, em síntese, que o cartão contratado não é um plano de saúde, mas sim uma forma de o consumidor obter desconto em empresas conveniadas. Explica que o réu contratou o serviço em 22.03.2018, com desconto em seu cartão (fl. 195). Comenta que o requerido não promoveu o cancelamento do contrato pelos canais oficias da empresa, ensejando a incidência de multa. Entretanto, após ter ciência da demanda, a requerida cancelou o contrato. Após, teceu considerações sobre a regularidade do contrato e pleiteou a rejeição dos pedidos (fls. 189/218).
+É o relatório. Fundamento e decido.
+O julgamento antecipado do feito é incontornável, por se tratar de matéria estritamente de direito, uma vez que a prova documental apresentada é suficiente para examinar eventual falha na prestação dos serviços pelos réus (art. 355, I, do Código de Processo Civil), sem a necessidade de dilação probatória.   
+Com efeito, à luz do art. 370, parágrafo único, do Código de Processo Civil, o juiz deve indeferir providências inúteis, desnecessárias e protelatórias, a fim de contribuir com a razoável duração do processo. 
+Inicialmente, rejeito a impugnação à gratuidade processual porque o réu Banco Bradesco não apresentou elemento que pudesse denotar que o autor tem capacidade para o pagamento das despesas processuais.
+Outrossim, reconheço a ilegitimidade passiva do Banco Bradesco porque a instituição financeira não integrou o contrato celebrado entre o autor e a empresa Cartão de Todos de Jundiaí Ltda.  ME.
+O contrato tinha a “finalidade [de] oferecer ao aderente, convênio com empresas de prestação de serviços nas áreas de saúde (consultas médicas, exames clínicos e tratamentos odontológicos), educação (cursos profissionalizantes e educação escolar) e lazer (hotéis e clubes), a custos reduzidos (fl. 19, art. 1º).
+Depreende-se que o autor efetuava o pagamento das prestações por meio do seu cartão de crédito, de modo que o Banco Bradesco participava apenas na intermediação da cobrança no cartão do autor em consonância com a empresa-ré.
+Feito este esclarecimento, os pedidos comportam parcial acolhimento em relação ao réu Cartão de Todos.
+Aplica-se o Código de Defesa do Consumidor porque o autor era destinatário final e econômico do serviço fornecido pela empresa no mercado de consumo, em consonância com os arts. 2º e 3º do CDC.
+O autor comprovou que solicitou a rescisão do contrato no dia 05.10.2021 e inexiste qualquer documento que evidencie a existência de débito remanescente ou de multa contratual.
+Portanto, é incontornável a condenação da empresa-ré à devolução dos valores cobrados a partir de 05.10.2021, com correção monetária e juros moratórios desde o vencimento, por se tratar de responsabilidade civil extracontratual (súmula nº 54 do E. STJ), na forma dos arts. 389, parágrafo único, e 406, §1º, ambos do CC.
+A devolução deve ser em dobro, em razão do inequívoco descumprimento do princípio da boa-fé objetiva. Isso porque a requerida agiu com deslealdade ao continuar cobrando as prestações do contrato após a rescisão promovida pelo autor em 05.10.2021 (fl. 19).
+O entendimento está em consonância a tese de que “A repetição em dobro, prevista no parágrafo único do art. 42 do CDC, é cabível quando a cobrança indevida consubstanciar conduta contrária à boa-fé objetiva, ou seja, deve ocorrer independentemente da natureza do elemento volitivo” (EREsp. nº 1.413.542, Corte Especial, Rel. Min. Maria Thereza Assis Moura, j. 21-10-2020, DJe 30-03-2021).  
+Por fim, o pedido de indenização por <em>dano</em> <em>moral</em> não comporta acolhimento. A fundamentação contida na petição inicial (fl. 7) é genérica e não contém de forma pormenorizada as supostas consequências decorrentes da manutenção dos descontos que pudesse configurar constrangimento que desborda do mero dissabor. Assim, como o autor não se desincumbiu do seu ônus probatório (art. 373, I, do CPC), rejeito o pedido de indenização por <em>dano</em> <em>moral</em>.
+Ante o exposto, julgo extinto o processo sem resolução do mérito em relação ao Banco Bradesco por ilegitimidade passiva (art. 485, VI, do CPC) e parcialmente procedentes os pedidos em face da empresa Cartão de Todos de Jundiaí Ltda.  ME, extinguindo o processo com resolução do mérito neste aspecto (art. 487, I, do CPC) para declarar a inexigibilidade dos descontos efetuados a partir de 05.10.2021 e condenar a empresa-ré à restituição em dobro dos valores descontados a partir de 05.10.2021, com correção monetária e juros moratórios desde o vencimento, por se tratar de responsabilidade civil extracontratual (súmula nº 54 do E. STJ), na forma dos arts. 389, parágrafo único, e 406, §1º, ambos do CC.
+Condeno o autor ao pagamento das despesas processuais em relação ao Banco Bradesco S/A e fixo os honorários advocatícios dos patronos da instituição financeira em 20% do valor atualizado da causa, ressalvado o benefício da gratuidade processual.
+Por sua vez, a empresa-ré Cartão de Todos arcará com as despesas processuais do autor e com os honorários advocatícios dos patronos do requerente, no montante de R$4.000,00, considerando que a incidência do percentual do art. 85, §2º, do CPC sobre a soma dos valores descontados implicaria verba honorária ínfima. O montante de R$4.000,00 se justifica em razão do tempo de tramitação do processo e da baixa complexidade da demanda.
+Anoto que a tabela de honorários da OAB é mera referência, conforme jurisprudência recente do E. STJ (AgInt no REsp. nº 2.194.144/SP, 1ª Turma, Rel. Min. Sérgio Kukina, j. 12-08-2025, DJEN 15-08-2025).
+Na hipótese de recurso de apelação, intime-se a parte contrária para o oferecimento de contrarrazões, no prazo de 15 (quinze) dias. Decorrido o prazo, com ou sem manifestação, remetam-se os autos à Segunda Instância.   
+Oportunamente, certifique-se o trânsito em julgado e arquivem-se os autos.   
+Publique-se e intimem-se.
+Itupeva, 20 de abril de 2026.
+
+
+DOCUMENTO ASSINADO DIGITALMENTE NOS TERMOS DA LEI 11.419/2006, CONFORME IMPRESSÃO À MARGEM DIREITA
+
+												</span><img class="mostrarOcultarConteudo" src="/cjpg/imagens/saj/icoMenos.png" height="12" width="12" border="0" />
+											</div>					
+										</td>
+									</tr>						
+								
+															
+								
+							
+						
+						
+					</table>
+					<br /> <br />
+				</td>
+			</tr>
+		
+			<tr class="fundocinza1">
+				<td width="40" align="left" valign="top" class="fonte">
+					<strong>8&nbsp;-</strong>
+				</td>
+				<td valign="top">
+					<table cellspacing="0" cellpadding="0" width="100%"  >				
+						
+						<tr class="fonte">
+							<td colspan="2" align="left">
+								<a style="vertical-align: top" title="Visualizar Inteiro Teor"
+									name="05001J9320000-5--192525066" >
+									<span class="fonteNegrito"> 1014149-95.2025.8.26.0005 </span>
+								</a>
+								<a name="05001J9320000-5--192525066" >
+									<img src="/cjpg/imagens/saj/ico_pdf.gif" border="0" title="Visualizar Inteiro Teor" /> 
+								</a>
+							</td>
+						</tr>		
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Classe:
+									</strong> Procedimento Comum Cível
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Assunto:
+									</strong> Inclusão Indevida em Cadastro de Inadimplentes
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Magistrado:
+									</strong> Luciana Antoni Pagano
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Comarca:
+									</strong> SÃO PAULO
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Foro:
+									</strong> Foro Regional V - São Miguel Paulista
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Vara:
+									</strong> 4ª Vara Cível
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Data de Disponibilização:
+									</strong> 20/04/2026
+								</td>
+							</tr>
+						
+						
+						
+													
+														
+									<tr class="fonte">
+										<td colspan="2" align="left">
+											<div align="justify">
+												<span>
+													... vexatória, impede o reconhecimento de <em>dano</em> <em>moral</em>, não sendo aplicável a presunção de <em>dano</em>. A autora não produziu prova de abalo de crédito ou redução de score em decorrência da anotação da dívida, tampouco de negativa de concessão de crédito. A responsabilidade civil exige a presença simultânea de conduta ilícita, <em>dano</em> e nexo causal, elementos ausentes no ...
+												</span><img class="mostrarOcultarConteudo" src="/cjpg/imagens/saj/icoMais.png" height="12" width="12" border="0" title="Visualizar Inteiro Teor Completo"/>
+											</div>		
+											<div align="justify" style="display: none;">
+												<span>
+													CONCLUSÃO
+                            Aos   de janeiro de 2026, faço estes autos conclusos ao(à) MM(a).Juiz(a) de Direito,  Exmo(a). Sr(a). Dr(a). Luciana Antoni Pagano.  NADA MAIS. Eu, ( GABRIELA MARINHO TRIDENTE), Assistente Judiciário
+  
+SENTENÇA
+      
+Processo nº:	1014149-95.2025.8.26.0005 - Procedimento Comum Cível
+Requerente:	Adriano Cristalino
+Requerido:	Itaú Unibanco S.A.
+
+
+
+
+
+Vistos.  
+
+ADRIANO CRISTALINO ajuizou a presente ação em face de ITAÚ UNIBANCO S/A., alegando, em breve síntese, ter verificado a existência de cadastro de dívida que não reconhece perante órgão de proteção ao crédito. Postulou, então, a declaração de inexistência do débito e exclusão do apontamento, bem como condenação da parte requerida ao pagamento de indenização por danos morais.
+
+Houve determinação de suspensão do feito, em razão do tema repetitivo nº 51 do Eg. TJ/SP e tema nº 1.264 do C. STJ, tendo sido dado provimento ao recurso interposto pelo requerente, tendo o v. Acórdão determinado o seguimento do feito.
+
+O pedido de tutela de urgência (baixa imediata das inscrições) foi indeferido (fl. 78).
+
+Regularmente citado, o banco requerido apresentou contestação, pugnando pela suspensão do feito. Suscitou preliminar de falta de interesse de agir. Sustentou não ter havido negativação do débito, mas apenas proposta de negociação, sem publicidade a terceiros e impacto no score. Impugnou o pedido indenizatório.
+
+Houve réplica e oportunidade para especificação de provas a produzir.
+
+É o sucinto relatório.
+
+Passo a fundamentar e decidir.
+
+O feito comporta pronto julgamento no estado em que se encontra, nos termos do inciso I do art. 355 do CPC, tratando-se de matéria exclusivamente de direito e de prova documental, bem como considerando o conteúdo da contestação e réplica apresentadas. 
+
+De início, importa observar que o prosseguimento do feito foi determinado em segunda instância, de modo que fica prejudicado eventual pedido de suspensão do feito.
+
+Rejeito a preliminar de falta de interesse de agir, já que nítido o interesse processual da parte requerente em buscar a declaração de inexistência de dívida que não reconhece e reparação por eventuais prejuízos sofridos, sendo desnecessária a prévia tentativa de solução administrativa/extrajudicial antes do ajuizamento de ação.
+
+No mérito, a ação é parcialmente procedente. 
+
+Tratando-se de relação equiparada à de consumo e diante da verossimilhança das alegações iniciais e da hipossuficiência da parte autora com relação à empresa ré, inverto o ônus da prova, conforme permite o art. 6º, inciso VIII, da Lei 8.078/90.
+
+Nesse passo, a instituição financeira não logrou demonstrar nos autos a origem e a regularidade do débito em questão – ônus que lhe incumbia. 
+
+Com efeito, embora tenha alegado que os débitos decorreram de operações de empréstimo pessoal, contraídos em outubro/2010 e novembro/2010 (fl. 93), não apresentou nos autos contratos assinados pelo autor.
+
+E os valores creditados em conta corrente (fls. 205 e 208) por si só não comprovam a legitimidade das cobranças, mesmo porque sequer foi juntado contrato de abertura da conta bancária para confirmação de sua titularidade.
+
+Diante desse quadro e considerando a impugnação em réplica, merece acolhida a versão exposta na inicial, devendo ser declarados inexistentes os débitos impugnados.
+
+Por outro lado, padece de amparo o pedido de <em>dano</em> <em>moral</em>, uma vez que, ao que tudo indica, não houve efetiva 'negativação' publicada para terceiros, mas somente 'proposta de acordo/conta atrasada' – inclusão em plataforma de negociação 'Acordo Certo' (fl. 21/26).
+
+Também não há evidência de compartilhamento indevido de dados pessoais do autor, mas ainda que assim não fosse, não restou demonstrado nos autos eventual prejuízo suportado em razão do suposto vazamento.
+
+Sobre o tema, precedentes do Eg. TJ/SP:
+
+DIREITO DO CONSUMIDOR. AÇÃO DECLARATÓRIA DE INEXIGIBILIDADE DE DÉBITO CUMULADA COM PEDIDO DE INDENIZAÇÃO POR DANOS MORAIS. INEXISTÊNCIA DO DÉBITO RECONHECIDA EM PRIMEIRO GRAU. INSCRIÇÃO EM PLATAFORMA DE RENEGOCIAÇÃO DE DÍVIDAS SEM PUBLICIDADE. INEXISTÊNCIA DE <em>DANO</em> <em>MORAL</em> IN RE IPSA. MANUTENÇÃO DO VALOR DOS HONORÁRIOS POR EQUIDADE. RECURSO DESPROVIDO. I. CASO EM EXAME Apelação interposta por Sthefany Santana Vieira contra sentença que julgou parcialmente procedente ação declaratória de inexigibilidade de débito cumulada com indenização por danos morais, proposta em face de M3 Securitizadora de Créditos S.A. O juízo reconheceu a inexigibilidade da dívida e determinou a exclusão da autora dos cadastros restritivos, mas rejeitou o pedido de indenização por danos morais, além de fixar os honorários advocatícios em R$ 800,00, por equidade. A autora alega, em síntese, que a inclusão indevida de seu nome na plataforma "Serasa Limpa Nome" configuraria violação à Lei Geral de Proteção de Dados e ensejaria reparação por danos morais, pleiteando, ainda, a majoração da verba honorária. II. QUESTÃO EM DISCUSSÃO Há duas questões em discussão: (i) definir se a inclusão do nome da autora em plataforma de renegociação de dívidas sem existência de relação jurídica e sem efetiva negativação configura <em>dano</em> <em>moral</em> indenizável; (ii) estabelecer se é devida a majoração dos honorários advocatícios fixados com base na equidade. III. RAZÕES DE DECIDIR Não se aplica ao caso a suspensão determinada no Tema Repetitivo 1.264/STJ, pois a discussão refere-se à inexistência da dívida, e não à cobrança de dívida prescrita. A inscrição de dívida em plataforma restrita de renegociação, como o "Serasa Limpa Nome", não se equipara à negativação em cadastros restritivos de crédito, pois não possui publicidade a terceiros, não sendo suficiente para caracterizar lesão à honra ou imagem. A ausência de demonstração de prejuízo concreto, como recusa de crédito ou exposição vexatória, impede o reconhecimento de <em>dano</em> <em>moral</em>, não sendo aplicável a presunção de <em>dano</em>. A autora não produziu prova de abalo de crédito ou redução de score em decorrência da anotação da dívida, tampouco de negativa de concessão de crédito. A responsabilidade civil exige a presença simultânea de conduta ilícita, <em>dano</em> e nexo causal, elementos ausentes no caso concreto. A utilização da plataforma de renegociação de débitos com acesso exclusivo pelo titular dos dados não viola os princípios da Lei Geral de Proteção de Dados (LGPD). O art. 42 da LGPD exige a comprovação de <em>dano</em> para fins de responsabilização civil, não admitindo presunção de lesão por simples exposição de dados não sensíveis, o que sequer ocorreu na hipótese. A fixação dos honorários advocatícios em R$ 800,00 respeita o critério de equidade previsto no art. 85, § 8º do CPC, considerando a baixa complexidade da demanda, o valor irrisório do benefício econômico e a ausência de contestação. A tabela da OAB tem caráter orientativo e não vincula o juízo, que deve ponderar as peculiaridades do caso concreto. Sentença mantida. IV. DISPOSITIVO E TESE Recurso desprovido. Tese de julgamento: "1. A inserção de dívida inexistente em plataforma de renegociação de débitos, sem efetiva negativação ou publicidade a terceiros, não configura, por si só, <em>dano</em> <em>moral</em> indenizável. 2. A fixação de honorários advocatícios com base na equidade é válida quando o proveito econômico é irrisório e a causa de baixa complexidade, não sendo vinculante a tabela de honorários da OAB. 3. A divulgação restrita ao próprio consumidor em plataforma de renegociação de débitos não viola a Lei Geral de Proteção de Dados Pessoais". Legislação e Jurisprudência relevantes citadas. Legislação: CF, art. 5º, V e X; CC, art. 186; CPC, arts. 85, §§ 2º, 8º e 8º-A, 98, §3º, 487, I, 1.012; LGPD (Lei nº 13.709/2018), arts. 6º, IX; 42, caput. Jurisprudência: STJ, AREsp 2.130.619/SP, Rel. Min. Francisco Falcão, 2ª Turma, j. 07/03/2023, DJe 10/03/2023. (TJSP;  Apelação Cível 1005691-26.2024.8.26.0005; Relator (a): Lidia Regina Rodrigues Monteiro Cabrini; Órgão Julgador: 20ª Câmara de Direito Privado; Foro Regional V - São Miguel Paulista - 3ª Vara Cível; Data do Julgamento: 02/04/2025; Data de Registro: 02/04/2025)
+
+"APELAÇÃO CÍVEL - AÇÃO DECLARATÓRIA E INDENIZATÓRIA DE DANOS MORAIS - ALEGAÇÃO DE DESCUMPRIMENTO DA LGPD - Débitos não prescritos inscritos na plataforma ACORDO CERTO - Autora que nega a celebração de negócios jurídicos com o réu, cessionário, sem impugnar a contratação com o credor original expressamente identificado na plataforma de cobrança - Revelia - Cessão de crédito, porém, admitida na inicial - Aplicação do art. 345, inciso IV, do CPC - Não demonstrado compartilhamento indevido de dados pessoais e nem afronta à Lei Geral de Proteção de Dados - Dados pessoais do consumidor devedor, não sensíveis, compartilhados no contexto de cessão de crédito - Exercício regular de um direito, nos termos do art. 7º, X da LGPD - Indenização que, ainda que compartilhamento indevido de dados houvesse, de todo modo, requereria prova do efetivo <em>dano</em>, ausente na hipótese, nos termos do art. 42, caput, da LGPD - Crédito inscrito em plataforma sem publicidade e que não se confunde com órgão de proteção ao crédito e/ou cadastro de inadimplentes - Inexistência de negativação ou prova de qualquer outra consequência das cobranças - Danos morais não configurados - Sentença de improcedência mantida. Nega-se provimento ao recurso." (TJSP; Apelação Cível nº 1001951-15.2024.8.26.0020; Relator(a) Sidney Braga; 19ª Câmara de Direito Privado; Data de julgamento: 03/06/2025; Data de publicação: 03/06/2025)
+
+Ante o exposto, JULGO PARCIALMENTE PROCEDENTE a ação para o fim de declarar a inexistência dos débitos impugnados na inicial (R$ 2.800,00 e R$ 4.150,00 – fls. 25/26). Indeferido o pedido de indenização por danos morais. Por consequência, encerro o processo com resolução do mérito, nos termos do art. 487, inciso I, do Código de Processo Civil.
+
+Após o trânsito em julgado, expeça-se ofício à plataforma 'Acordo Certo' para que promova a exclusão definitiva dos débitos declarados inexistentes. 
+
+Tendo ambas partes sucumbido, cada uma arcará com metade das custas e despesas processuais, além de honorários advocatícios da parte adversa que fixo em R$ 1.000,00 (considerando o baixo benefício econômico obtido – montante do débito declarado inexigível), devendo ser observada eventual gratuidade deferida à parte autora.
+
+Na hipótese de interposição de recurso de apelação, intime-se a parte contrária para oferecer resposta, no prazo de 15 dias. Após, remetam-se os autos à Superior Instância, para apreciação do recurso de apelação.
+
+P. I.
+
+São Paulo, 16 de abril de 2026. 
+
+
+  Luciana Antoni Pagano
+      Juiz(a) de Direito
+
+
+												</span><img class="mostrarOcultarConteudo" src="/cjpg/imagens/saj/icoMenos.png" height="12" width="12" border="0" />
+											</div>					
+										</td>
+									</tr>						
+								
+															
+								
+							
+						
+						
+					</table>
+					<br /> <br />
+				</td>
+			</tr>
+		
+			<tr class="fundocinza1">
+				<td width="40" align="left" valign="top" class="fonte">
+					<strong>9&nbsp;-</strong>
+				</td>
+				<td valign="top">
+					<table cellspacing="0" cellpadding="0" width="100%"  >				
+						
+						<tr class="fonte">
+							<td colspan="2" align="left">
+								<a style="vertical-align: top" title="Visualizar Inteiro Teor"
+									name="EA0003I9M0000-514--118409640" >
+									<span class="fonteNegrito"> 1001152-42.2024.8.26.0514 </span>
+								</a>
+								<a name="EA0003I9M0000-514--118409640" >
+									<img src="/cjpg/imagens/saj/ico_pdf.gif" border="0" title="Visualizar Inteiro Teor" /> 
+								</a>
+							</td>
+						</tr>		
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Classe:
+									</strong> Despejo
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Assunto:
+									</strong> Locação de Imóvel
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Magistrado:
+									</strong> André Menezes Del Mastro
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Comarca:
+									</strong> Itupeva
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Foro:
+									</strong> Foro de Itupeva
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Vara:
+									</strong> Vara Única
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Data de Disponibilização:
+									</strong> 20/04/2026
+								</td>
+							</tr>
+						
+						
+						
+													
+														
+									<tr class="fonte">
+										<td colspan="2" align="left">
+											<div align="justify">
+												<span>
+													... infrações e pela indenização por <em>dano</em> <em>moral</em> no montante de R$5.000,00.
+A audiência de conciliação foi infrutífera (fl. 146).
+O autor apresentou réplica, sustentando que os réus obstam a realização dos serviços de manutenção da jacuzzi e pagam os aluguéis após o vencimento. Sustenta que o contrato permite a rescisão antes do prazo contratual. Sobre a pintura, comentam que o ...
+												</span><img class="mostrarOcultarConteudo" src="/cjpg/imagens/saj/icoMais.png" height="12" width="12" border="0" title="Visualizar Inteiro Teor Completo"/>
+											</div>		
+											<div align="justify" style="display: none;">
+												<span>
+													SENTENÇA
+
+Processo Digital nº:	1001152-42.2024.8.26.0514
+Classe - Assunto	Despejo - Locação de Imóvel
+Requerente e Reconvinte:	Mauro Schuster e outros
+Requerido e Reconvindo:	Henrique Figueiredo Paes e outros
+
+
+
+
+
+Juiz(a) de Direito: Dr(a). André Menezes Del Mastro
+
+Vistos.
+Mauro Schuster e Iara Regina de Oliveira Schuster, qualificados nos autos, ajuizaram ação de despejo por falta de pagamento em face de Henrique Figueiredo Paes e Daniela Rodrigues Paes, outrossim, qualificados.
+Narram que alugaram o imóvel da Alameda Oliveira, 140, Residencial Phytus, Itupeva-SP, CEP 13296-672 com finalidade residencial, no prazo de doze meses, sem incidência de multa em caso de rescisão, mediante o aluguel de R$4.800,00.
+Sustentam que os réus não efetuaram o pagamento dos aluguéis dos meses de abril e maio de 2024. Acrescentam que os réus não pagaram o aluguel em razão de ausência de pintura no interior do bem; vazamento no sistema de aquecimento e reforma da jacuzzi (fl. 2, item 7).
+Os autores explicam que apenas o interior do imóvel foi pintado. A parte externa não foi pintada porque o imóvel seria novo. Comentam que o sistema de aquecimento foi corrigido em uma semana. Quanto à jacuzzi, observam que a reforma tem sido obstaculizada pela ausência de mão de obra e que os requeridos concederam prazo diminuto para a reforma. 
+Argumentam que a pendência da jacuzzi não justifica o inadimplemento do aluguel. Dessa forma, como já houve o esgotamento do prazo contratual de doze meses, pretendem a rescisão do contrato, com a desocupação do imóvel.
+Na emenda de fls. 30/31, os autores emendaram a petição inicial, desistindo do pedido de condenação ao pagamento do débito, porque foi descoberto o pagamento do débito de abril de 2024 (fls. 30/31).
+Recebida a inicial, determinou-se a remessa dos autos para realização de audiência de conciliação (fls. 33/34). Os autores manifestaram o desinteresse na audiência.
+Os réus apresentaram contestação, aduzindo que o contrato de locação tinha prazo de trinta meses, com início em 29.04.2023 e término em 28.10.2025 e que não descumpriram o pagamento dos aluguéis. Afirmam que a jacuzzi possui problemas que obstam seu uso desde novembro de 2023, com danos na estrutura de madeira. Afirmam que buscaram profissionais, os quais esclareceram sobre a necessidade de refazimento da estrutura de madeira (fl. 66). Destacam que os profissionais dos autores apenas compareceu em abril de 2024 e desmontou a jacuzzi, deixando a fiação exposta. Nesse contexto, formularam pedido reconvencional para dedução do percentual de 10% sobre o aluguel durante o período de inutilização da jacuzzi, dado que ela foi considerada na mensuração do aluguel. Destacam, ainda, que os autores não efetuaram a pintura das paredes externas, conforme definido no item 19 do termo de vistoria (fl. 78). Outrossim, requereram a condenação dos autores ao pagamento de multa no montante de três aluguéis pelas infrações e pela indenização por <em>dano</em> <em>moral</em> no montante de R$5.000,00.
+A audiência de conciliação foi infrutífera (fl. 146).
+O autor apresentou réplica, sustentando que os réus obstam a realização dos serviços de manutenção da jacuzzi e pagam os aluguéis após o vencimento. Sustenta que o contrato permite a rescisão antes do prazo contratual. Sobre a pintura, comentam que o profissional indicou a desnecessidade da pintura externa. Quanto à jacuzzi, argumentam que os réus não aceitam a substituição do deck de madeira por um de alvenaria e esclarecem que a demora foi em razão da escassez de mão de obra. No que concerne ao pedido revisional, apontaram a inadequação da via eleita. Por fim, propugnou pela rejeição do pedido indenizatório (fls. 151/162).
+Em seguida, as partes solicitaram a produção de prova oral (fls. 192 e 193/194).
+O pedido de prova foi rejeitado (fls. 202/203) e as partes se manifestaram posteriormente.
+É o relatório. Fundamento e decido.
+O julgamento antecipado do feito é incontornável, por se tratar de matéria estritamente de direito, de modo que a prova documental é suficiente para analisar o cabimento da rescisão do contrato de locação e eventual inadimplemento contratual das partes (art. 355, I, do Código de Processo Civil), sem a necessidade de dilação probatória.  
+Com efeito, à luz do art. 370, parágrafo único, do Código de Processo Civil, o juiz deve indeferir providências inúteis, desnecessárias e protelatórias, a fim de contribuir com a razoável duração do processo.  
+Emerge como fato incontroverso que as partes celebraram contrato de locação do imóvel da Alameda Oliveira, 140, Vila Victória, Residencial Phytus, Itupeva-SP pelo período de 30 meses, com início em 29.04.2023 e término em 28.10.2025 (cláusula 01, fl. 6). O aluguel foi definido em R$4.800,00 (cláusula 02, fl. 6).
+A cláusula 15 previu multa no montante de três aluguéis, na hipótese de descumprimento de cláusula ou condição do contrato (fl. 9).
+No que concerne à rescisão do contrato antes dos doze meses de locação, a cláusula 01, parágrafo único, estabelece: “Antes do 12º mês desta locação, no caso do(s) LOCADORES(ES) ou o(s) LOCATÁRIOS(S) rescindirem o contrato, pagarão multa equivalente até 03 (TRÊS) aluguéis no valor vigente à época do evento, cobrados de forma proporcional ao tempo restante do contrato que não for cumprido, nos termos legais” (fl. 6).
+O art. 46 da Lei nº 8.245/91 prevê a resolução do contrato ocorrerá com o término do prazo da locação se for pactuada por escrito e com prazo igual ou superior a trinta meses, como no caso em testilha.
+O parágrafo único da cláusula 01 não autoriza os requerentes a desfazerem da locação livremente mediante o pagamento da multa. O desfazimento do contrato apenas ocorre nas hipóteses previstas no art. 9º da Lei nº 8.245/91:
+Art. 9º A locação também poderá ser desfeita:
+I - por mútuo acordo;
+II - em decorrência da prática de infração legal ou contratual;
+III - em decorrência da falta de pagamento do aluguel e demais encargos;
+IV - para a realização de reparações urgentes determinadas pelo Poder Público, que não possam ser normalmente executadas com a permanência do locatário no imóvel ou, podendo, ele se recuse a consenti-las.
+Feito este esclarecimento, a análise dos autos revela que os autores descumpriram o contrato porque não entregaram o imóvel “em estado de servir ao uso a que se destina” (art. 22, I, da Lei nº 8.245/91).
+Com efeito, os autores reconheceram que a pintura externa não foi realizada, em inobservância ao item 19 do termo de vistoria: “Pintura interno e externo  parte interna totalmente com pintura nova, parte externa com pintura antiga. (Será repintado a parte externa)” (sic, fl. 94).
+Conforme reconhecido no termo de vistoria, os locadores deveriam ter feito a pintura, independentemente de ser imóvel novo. Acrescente-se que os autores não comprovaram a alegação de que profissional teria recomendado a não realização da pintura da área externa do imóvel.
+Quanto à jacuzzi, é incontroverso que o imóvel foi entregue com o espaço da jacuzzi impróprio para uso, obstando o uso pleno do imóvel pelos locatários, em descumprimento dos deveres previstos no art. 22, I e IV, da Lei nº 8.245/91.
+Na petição inicial, o pedido de rescisão do contrato teve fundamento no decurso do prazo de doze meses da locação e na suposta “impaciência dos locatários” (fl. 3) em relação à jacuzz, além do inadimplemento do pagamento dos aluguéis, que foi afastado em emenda posterior (fls. 30/31).
+Entretanto, os autores sequer descreveram de forma pormenorizada os atos praticados tendentes à resolução do problema da jacuzzi e os supostos obstáculos colocados pelos locatários para a reforma do imóvel.
+Na ata notarial de fl. 210, o pedreiro Ednelson afirma que foi impedido pelos locatários de realizar o reparo da jacuzzi em março de 2024. O relato evidencia que houve uma demora de doze meses, aproximadamente, para a realização da reforma, configurando descumprimento contratual. 
+Não obstante o depoimento escrito do pedreiro, cabe destacar que a ação foi proposta em maio de 2024 e os autores não teceram considerações sobre os supostos empecilhos criados pelos réus. A justificativa para a ausência da pintura externa foi porque o imóvel é novo (fl. 3, item 8) e que a “reforma da jacuzzi tem esbarrado na mão de obra escassa” (fl. 3, item 11).
+Em razão do inadimplemento contratual dos autores, é incontornável a condenação dos autores ao pagamento de multa no montante de três aluguéis.
+Quanto ao valor do aluguel, os requeridos não comprovaram a relação do preço do aluguel com a existência da jacuzzi e do impacto econômico na mensuração do aluguel, ou seja, inexiste prova de que a ausência da jacuzzi implicaria a incidência de um aluguel de valor inferior àquele definido no contrato. A prova oral e documental solicitada pelos réus (fl. 150) era inadequada para a comprovação dessa circunstância (art. 373, I, do CPC).
+Por fim, entendo que a ausência da pintura externa, a delonga para a reforma da jacuzzi que permanece inadequada, a frustração dos inquilinos quanto à expectativa do imóvel no momento da locação são transtornos que desbordam do mero dissabor e configuram <em>dano</em> <em>moral</em>. O inadimplemento contratual contribuiu para a redução da qualidade de vida dos inquilinos por tempo expressivo sem perspectiva de resolução.
+No que concerne ao montante da indenização, reputo adequada a indenização no montante de R$3.000,00, com correção monetária desde o arbitramento e com juros moratórios desde a intimação para a apresentação de réplica (arts. 389, parágrafo único, e 406, §1º, do CC).
+Ante o exposto, julgo improcedente o pedido dos autores e parcialmente procedentes os pedidos reconvencionais, extinguindo o processo com resolução do mérito (art. 487, I, do CPC), para condenar os autores ao pagamento da multa de três aluguéis, com correção monetária e juros moratórios desde a intimação dos autores para a apresentação de réplica (arts. 389, parágrafo único, e 406, §1º, do CC), bem como ao pagamento de indenização por <em>dano</em> <em>moral</em>, no montante de $3.000,00, com correção monetária desde o arbitramento e com juros moratórios desde a intimação para a apresentação de réplica (arts. 389, parágrafo único, e 406, §1º, do CC).
+Tendo em vista a sucumbência em maior parte dos requerentes quanto aos pedidos principal e reconvencionais, condeno os autores ao pagamento das despesas processuais e fixo os honorários advocatícios no montante de 10% sobre a quantia correspondente à soma do valor atualizado da ação principal com o montante da condenação.
+Na hipótese de recurso de apelação, intime-se a parte contrária para o oferecimento de contrarrazões, no prazo de 15 (quinze) dias. Após, decorrido o prazo, com ou sem resposta, remetam-se os autos à Segunda Instância. 
+Publique-se e intimem-se.
+Itupeva, 20 de abril de 2026.
+
+
+DOCUMENTO ASSINADO DIGITALMENTE NOS TERMOS DA LEI 11.419/2006, CONFORME IMPRESSÃO À MARGEM DIREITA
+
+												</span><img class="mostrarOcultarConteudo" src="/cjpg/imagens/saj/icoMenos.png" height="12" width="12" border="0" />
+											</div>					
+										</td>
+									</tr>						
+								
+															
+								
+							
+						
+						
+					</table>
+					<br /> <br />
+				</td>
+			</tr>
+		
+			<tr class="fundocinza1">
+				<td width="40" align="left" valign="top" class="fonte">
+					<strong>10&nbsp;-</strong>
+				</td>
+				<td valign="top">
+					<table cellspacing="0" cellpadding="0" width="100%"  >				
+						
+						<tr class="fonte">
+							<td colspan="2" align="left">
+								<a style="vertical-align: top" title="Visualizar Inteiro Teor"
+									name="1R00028VJ0000-63--145316083" >
+									<span class="fonteNegrito"> 1001833-07.2024.8.26.0063 </span>
+								</a>
+								<a name="1R00028VJ0000-63--145316083" >
+									<img src="/cjpg/imagens/saj/ico_pdf.gif" border="0" title="Visualizar Inteiro Teor" /> 
+								</a>
+							</td>
+						</tr>		
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Classe:
+									</strong> Procedimento Comum Cível
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Assunto:
+									</strong> Vícios de Construção
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Magistrado:
+									</strong> ANNA SYLVIA RODRIGUES E SILVA
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Comarca:
+									</strong> Barra Bonita
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Foro:
+									</strong> Foro de Barra Bonita
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Vara:
+									</strong> 2ª Vara
+								</td>
+							</tr>
+						
+						
+						
+							<tr class="fonte">
+								<td align="left">
+									<strong>
+										Data de Disponibilização:
+									</strong> 20/04/2026
+								</td>
+							</tr>
+						
+						
+						
+													
+														
+									<tr class="fonte">
+										<td colspan="2" align="left">
+											<div align="justify">
+												<span>
+													... da indenização correspondente, o <em>dano</em> <em>moral</em> não precisa representar a medida nem o preço da dor, mas uma compensação pela ofensa injustamente causada a outrem.
+Para a fixação dos danos morais, além do <em>dano</em>, também se deve levar em conta a situação econômica das partes, a fim de não dar causa ao enriquecimento ilícito, mas gerar um efeito preventivo, com o condão de ...
+												</span><img class="mostrarOcultarConteudo" src="/cjpg/imagens/saj/icoMais.png" height="12" width="12" border="0" title="Visualizar Inteiro Teor Completo"/>
+											</div>		
+											<div align="justify" style="display: none;">
+												<span>
+													SENTENÇA
+
+Processo Digital nº:	1001833-07.2024.8.26.0063
+Classe - Assunto	Procedimento Comum Cível - Vícios de Construção
+Requerente:	Marlene Aparecida Costa
+Requerido:	Companhia de Desenvolvimento Habitacional e Urbano do Estado de São Paulo - CDHU
+
+Juiz(a) de Direito: Dr(a). ANNA SYLVIA RODRIGUES E SILVA
+
+
+
+
+Vistos.
+Trata-se de AÇÃO DE OBRIGAÇÃO DE FAZER CC INDENIZAÇÃO POR DANOS MATERIAIS E MORAIS ajuizada por MARLENE APARECIDA COSTA, qualificada nos autos, em face de COMPANHIA DE DESENVOLVIMENTO HABITACIONAL E URBANO DO ESTADO DE SÃO PAULO, igualmente já qualificada, alegando, em síntese, ter sido contemplada com uma unidade do Conjunto Habitacional em questão e que logo após a entrega das chaves passou a notar a existência de problemas estruturais como trincas e fissuras nas paredes, falta de impermeabilização da alvenaria, buracos nas paredes, caixa d´água sem cobertura, inadequada fundação do imóvel, problemas no forro e na rede de esgoto, etc. Discorre sobre a responsabilidade da ré em relação ao dever de reparar tais vicios e requer a procedência da ação para que ela seja obrigada a isso, bem como ao pagamento de indenização por <em>dano</em> material e <em>moral</em>.
+Gratuidade judiciária deferida, mesma oportunidade em que indeferida a produção antecipada da prova pericial (fls.104).
+Citada, a CDHU apresentou contestação à fls.110/133 para alegar litigância predatória, indevida concessão da gratuidade judiciária à parte autora, prescrição, ilegitimidade passiva e necessidade de instauração de litisconsórcio ativo e passivo necessário. Efetuou denunciação da lide. No mérito, defende a ausência de responsabilidade imputável à ré, que não participou da construção, mas apenas se limitou a financiar a produção nos moldes da cláusula oitava do contrato. Afirma que a elaboração e execução do projeto construtivo é da construtora e do município. Sustenta o afastamento do Código de Defesa do Consumidor na espécie, além da inocorrência de <em>dano</em> <em>moral</em> indenizável. Finalmente, alega não ter sido comprovado qualquer <em>dano</em> material passível de reparação. Pugna pela improcedência da demanda.
+Houve réplica (fls.235/255).
+O feito foi saneado, afastando-se as preliminares suscitadas e determinando-se a produção de prova pericial (fls.256/258).
+Laudo pericial às fls. 352/364, seguido de manifestação das partes.
+É o relatório.
+DECIDO.
+As preliminares já foram afastadas na decisão de saneamento. Assim, presentes os demais pressupostos processuais e as condições da ação, passo à análise do mérito.
+A ação é parcialmente procedente.
+Visa a parte autora seja a requerida condenada na obrigação de reparar vícios construtivos decorrentes de sua desídia na fase de construção do imóvel. A ré, por seu turno, nega a existência dos vícios e rebate qualquer responsabilidade na hipótese.
+A relação jurídica entre as partes deve ser disciplinada pelo Código de Defesa do Consumidor, porque presentes os elementos subjetivos e objetivos previstos nos artigos. 2º e 3º da lei consumerista.
+A parte autora qualifica-se como destinatário final do produto - a unidade habitacional - fornecido pela ré, CDHU, a qual, embora seja uma empresa pública com finalidade social, enquadra-se perfeitamente no conceito de fornecedora ao desenvolver atividade de construção e comercialização de imóveis no mercado de consumo, ainda que de forma subsidiada. A natureza da entidade não descaracteriza a relação consumerista, sendo, portanto, aplicáveis as normas protetivas do CDC.
+Cinge-se a controvérsia a identificar se o imóvel apresenta vícios de construção decorrentes da execução inadequada das obras e/ou emprego de materiais de baixa qualidade, bem como a discutir a responsabilidade da requerida a respeito.
+É incontroverso que as partes pactuaram contrato de cessão de posse e promessa de compra e venda de imóvel e outras avenças, pelo qual a parte autora adquiriu o imóvel objeto do litígio e se comprometeu a pagar prestações mensais. Tem-se aqui típico contrato bilateral ou sinalagmático, gerador de direitos e deveres recíprocos aos contratantes.
+Ao autor cabia pagar à vendedora/requerida no prazo, forma e condições convencionadas as prestações mensais devidas pela aquisição do imóvel, enquanto a requerida tinha a obrigação de entregar o aludido bem àquele, em perfeitas condições de uso e habitabilidade.
+Não se olvida que incumbe à parte ré responder pela solidez do imóvel, porque tinha a obrigação de fiscalizar as obras, sendo que foi a pessoa jurídica com quem o autor celebrou o contrato de financiamento habitacional. Não se pode perder de vista que o contrato em questão é dotado de finalidade social a proporcionar moradia própria às pessoas com menor poder aquisitivo, revelando-se incoerente com tais premissas a entrega de um imóvel com vícios e riscos que comprometam a sua habitabilidade e solidez.
+Em relação à responsabilidade pela perfeição da obra, assim pontuou CARLOS ROBERTO GONÇALVES: "A responsabilidade pela perfeição da obra, embora não consignada ao contrato, é de presumir-se em todo ajuste de construção como encargo ético-profissional do construtor. Isto porque a construção civil é, modernamente, mais que um empreendimento leigo, um processo técnico artístico de composição e coordenação de materiais e de ordenação de espaços para atender às múltiplas necessidades do homem". (GONÇALVES, Carlos Roberto. Direito civil brasileiro: responsabilidade civil. 4. ed. São Paulo: Saraiva, 2009, v.4, p. 272).
+Logo, se o imóvel foi entregue com vícios, não há dúvida de que a construtor, vendedor e o responsável pela fiscalização da obra são responsáveis pela correção das falhas ou pelo ressarcimento dos valores necessários para que eles sejam repostos à sua condição de habitabilidade e solidez, nos termos do art. 14 do CDC.
+A fim de elucidar a existência e origem dos problemas alegados, foi determinada a realização de prova pericial. E, de acordo com o laudo pericial, restou inequivocadamente demonstrada a existência de vícios construtivos no imóvel em questão, motivados por processos de execução inadequados.
+Concluiu o expert que as manifestações patológicas causadoras dos danos no imóvel de propriedade do autor foram causados por ausência de impermeabilização nas três primeiras fiadas de tijolos e fundação, falha de assentamento, falha na execução e falta de reparo, todos serviços de responsabilidade da construtora/executora do projeto.
+Consigne-se que o exame pericial está bem fundamentado e foi produzido por profissional habilitado e equidistante das partes, o que permite concluir pelo acerto das conclusões ali lançadas, sendo que inexistem elementos nos autos capazes de infirmá-las.
+No mais, são desnecessários maiores esclarecimentos, anotando-se que o perito judicial incluiu expressamente na planilha de cálculo o valor referente à contratação de acompanhamento técnico por engenheiro, o que contempla o BDI.
+Assim, diante da conclusão do trabalho pericial, não há como deixar de reconhecer a responsabilidade da ré pela reparação dos danos, nos termos do artigo 618 do Código Civil.
+Comprovado o vício construtivo, de rigor o acolhimento do pedido de obrigação de fazer, devendo a requerida sanar todos os problemas apontados no laudo pericial, para restituir o imóvel às plenas condições de uso e gozo.
+O perito judicial elaborou uma planilha orçamentária detalhada, estimando o custo total para a recuperação do imóvel, valor este que deve ser utilizado como parâmetro para a eventual conversão da obrigação em perdas e danos, caso a ré não cumpra a determinação judicial no prazo oportunamente assinalado (fls.358).
+De outro lado, não há que se falar em indenização por <em>dano</em> material em decorrência de gastos e reformas realizados pela própria parte anteriormente à perícia, uma vez que não houve qualquer prova nesse sentido.
+Finalmente, o <em>dano</em> <em>moral</em> é conceituado como ofensa aos direitos da personalidade e, em sentido mais amplo, à própria dignidade da pessoa humana. A consequência, os efeitos de mencionada ofensa podem ser constituídos pela dor, sofrimento ou vexame.
+A descrição dos fatos expostos nos autos revela que a autora não experimentou apenas mero dissabor. Ela viu o aparecimento de danos em sua residência durante anos, que segundo a prova produzida comprometeram a habitabilidade do imóvel e a expôs à ambiente insalubre.
+Quanto aos critérios de fixação do valor da indenização correspondente, o <em>dano</em> <em>moral</em> não precisa representar a medida nem o preço da dor, mas uma compensação pela ofensa injustamente causada a outrem.
+Para a fixação dos danos morais, além do <em>dano</em>, também se deve levar em conta a situação econômica das partes, a fim de não dar causa ao enriquecimento ilícito, mas gerar um efeito preventivo, com o condão de evitar que novas situações desse tipo ocorram, e também considerando o porte financeiro daquele que indenizará, não se podendo fixar o valor de indenização em quantia irrisória, sob pena de não vir a surtir o efeito repressivo que se pretende, qual seja, fazer com que o agente perceba, eficazmente, as consequências de seu ato ilícito.
+Adotados os critérios acima explicitados e considerando os aspectos do caso, entendo suficiente a fixação do quantum da indenização em R$ 5.000,00, corrigidos monetariamente a partir da sentença (Súmula n. 362 do STJ) e com incidência de juros de mora desde a citação (pois se trata de responsabilidade contratual  arts. 397 e 405 do Código Civil).
+Diante do exposto, JULGO PARCIALMENTE PROCEDENTE ação, com julgamento do mérito, nos termos do art. 487, inciso I, do CPC, para a) CONDENAR a requerida a promover ao integral reparar dos vícios construtivos constatados no laudo pericial, no prazo de 60 (sessenta) dias a contar da intimação para cumprimento desta sentença, sob pena de conversão da obrigação de fazer em perdas e danos no valor calculado pelo perito, que deverá ser acrescido de juros de mora legais a partir da citação e correção monetária desde a data do laudo; bem como b) CONDENAR a requerida ao pagamento de R$ 5.000,00 a título de indenização por danos morais, acrescido de juros legais a partir da citação e correção monetária desde a data da sentença.
+Havendo sucumbência recíproca, as partes deverão suportar o pagamento das custas, despesas processuais e honorários advocatícios, fixados em 10% sobre o valor da causa atualizado, de maneira proporcional (art.86 do CPC), na seguinte forma: autor em 30% (trinta por cento) e réu em 70% (setenta por cento), observada a gratuidade judiciária deferida ao autor (art. 98, §§2º e 3º, do CPC).
+Na hipótese de interposição de apelação, tendo em vista a nova sistemática estabelecida pelo CPC  que extinguiu o juízo de admissibilidade a ser exercido pelo Juízo "a quo" (art. 1.010 do CPC) , sem nova conclusão, intime-se a parte contrária para que ofereça resposta no prazo de 15 (quinze) dias. Havendo recurso adesivo, também deve ser intimada a parte contrária para oferecer contrarrazões. Após, remetam-se os autos à superior instância.
+Transitada em julgado, diante da sucumbência do réu que não é beneficiário da justiça gratuita, ao contrário do autor (que estava isento do recolhimento das custas e despesas processuais), nos termos do artigo 1.098, §5º, das NSCGJ, deverá a serventia intimar o requerido (pessoalmente por carta AR ou por meio de seu defensor constituído) a proceder ao recolhimento da a) taxa judiciária (de petição inicial e de preparo recursal); b) dos honorários devidos aos órgãos públicos ou entidades conveniadas (incluindo-se o FAJ e o IMESC); e c) de eventual multa prevista no artigo 77, §2º, do CPC, sob pena de inscrição na dívida ativa. Oportunamente, comprovado o recolhimento ou expedida a certidão da dívida ativa, arquivem-se os autos, observando-se o disposto no artigo 1.286 das NSCGJ.
+P.I.C.
+Barra Bonita, 20 de abril de 2026.
+
+DOCUMENTO ASSINADO DIGITALMENTE NOS TERMOS DA LEI 11.419/2006, CONFORME IMPRESSÃO À MARGEM DIREITA
+												</span><img class="mostrarOcultarConteudo" src="/cjpg/imagens/saj/icoMenos.png" height="12" width="12" border="0" />
+											</div>					
+										</td>
+									</tr>						
+								
+															
+								
+							
+						
+						
+					</table>
+					<br /> <br />
+				</td>
+			</tr>
+		
+	</table>
+</div>
+
+
+		</td>
+		<td width="20px">
+			&nbsp;
+		</td>
+		<td valign="top" width="230px">
+			
+
+
+
+
+
+<table id="abaAdicionar" width="100%" border="0" cellpadding="0" cellspacing="1" align="center" bgcolor="#CCCCCC" >
+	<tr>
+		<td width="*" height="20" bgcolor="#CCCCCC">
+			<span id="spanTermosRelacionados" >
+				<strong>
+					Termos mais freqüentes
+				</strong>
+			</span>
+		</td>
+		<td width="50px" align="center">
+			<img id="imgAdicionar" src="imagens/saj/fecharFiltro.gif" border="0"
+				align="middle">
+		</td>
+	</tr>
+</table>
+
+<div id="adicionarPesquisa">
+	<table width="100%" border="0" cellpadding="0" cellspacing="1" align="center" bgcolor="#CCCCCC">
+		<tr>
+			<td bgcolor="#EEEEEE">
+								
+					<table width="100%" cellpadding="0" cellspacing="0" class="termosRelacionados">
+						
+						
+							<tr>
+								<td align="center" height="20px">
+									Nenhum termo relacionado
+								</td>
+							</tr>
+						
+					</table>
+	
+			</td>
+		</tr>
+		<tr>
+			<td height="20" bgcolor="#DDDDDD">
+				<table width="100%" cellpadding="0" cellspacing="0">
+					<tr>
+						<td align="center" style="padding-left: 10px;">
+							<input type="button" class="botaoTermosRelacionados"
+								value="Adicionar à pesquisa" >
+						</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+	</table>
+
+</div>
+
+
+
+			
+			
+		</td>
+	</tr>
+</table>	
+
+
+
+
+
+
+
+
+
+
+<table width="100%" border="0" cellspacing="0" cellpadding="0" >
+	<tr height="20">
+		<td bgcolor="#EEEEEE">
+			Resultados
+
+			<strong>
+				1 a 10
+			</strong>
+			de 3565472
+		</td>
+			
+		<td bgcolor="#EEEEEE" align="right">
+
+		<div class="trocaDePagina">
+		
+
+		
+		
+
+		
+		
+		
+			
+				
+					<span style="font-weight:bold;" >
+						1
+					</span>
+				
+				
+			
+		
+			
+				
+				
+					<a href="#" name="2" style="padding-left:4px" >
+						2
+					</a>
+				
+			
+		
+			
+				
+				
+					<a href="#" name="3" style="padding-left:4px" >
+						3
+					</a>
+				
+			
+		
+			
+				
+				
+					<a href="#" name="4" style="padding-left:4px" >
+						4
+					</a>
+				
+			
+		
+			
+				
+				
+					<a href="#" name="5" style="padding-left:4px" >
+						5
+					</a>
+				
+			
+		
+
+		
+			<a name="2" title="Próxima página">
+				&gt;
+			</a>
+		
+
+		</div>
+
+		</td>
+	</tr>
+
+	<tr>
+		<td height="1" bgcolor="#999999" colspan="2"></td>
+	</tr>
+</table>
+&nbsp;
+
+						</div>
+					
+					
+				
+				
+			
+			
+			
+			
+</form>
+
+		
+		
+
+	
+	
+
+
+
+
+
+
+
+
+
+
+	
+		
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+		
+
+
+
+</td>
+</tr>
+</table>
+<table width="100%" border="0" cellpadding="0" cellspacing="0" class="esajTabelaRodape" summary=" " role="presentation">
+    <tr>
+        <td class="esajCelulaRodapeCentro">
+            Desenvolvido pela Softplan em parceria com a Secretaria de Tecnologia da Informação - STI
+            
+        </td>
+    </tr>
+</table>
+<link href="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/css/saj-popup-modal.css" rel="stylesheet" type="text/css">
+<link href="https://esaj.tjsp.jus.br/esaj-layout/tema/padrao/css/popup-beta.css" rel="stylesheet" type="text/css">
+
+
+<script>
+    var appEsajLayout = appEsajLayout || {};
+    appEsajLayout.tituloCertificadoDigital = 'Certificado digital';
+    appEsajLayout.cliente = 'SP';
+    appEsajLayout.emailParaContato = 'esajtjsp@softplan.com.br';
+    appEsajLayout.utilizarBotaoContato = 'true';
+    appEsajLayout.contexto = 'https://esaj.tjsp.jus.br/esaj-layout';
+    appEsajLayout.webSignerParametro = 'https://cdn.lacunasoftware.com/libs/web-pki/lacuna-web-pki-2.14.8.min.js';
+
+    if(window.jQuery) {
+        jQuery.saj = jQuery.saj || {};
+        jQuery.saj.certificado = jQuery.saj.certificado || {};
+        jQuery.saj.certificado.cliente = 'SP';
+        jQuery.saj.certificado.urlConteudoAjudaWebSigner = appEsajLayout.contexto + '/ajudaWebSigner.do';
+        jQuery.saj.certificado.licenca = 'ARkEKi50anNwLmp1cy5iciwxMC4zMy4xOTIuMTAxLDEwLjMzLjE5Mi4xMDUsMTAuMzMuMTkyLjE0NiwxMC4zMy4xOTIuMjQxLDEwLjMzLjE5Mi45MCwxMC4zMy4xOTIuOTEsMTAuMzMuMTkyLjkyLDEwLjMzLjE5Mi45NCwxMC4zMy4xOTMuMTg1LDEwLjMzLjE5My4xODYsMTAuMzMuMTkzLjE4NywxMC4zMy4xOTMuMTg4LDEwLjMzLjE5NC4yMjQsMTAuMzMuMTk0LjIyNSwxMC4zMy4xOTQuMjU1LDEwLjMzLjE5NC43NCwxMC4zMy4xOTQuNzUsMTAuMzMuMTk0Ljc2LDEwLjMzLjE5NC43NywxMC4zMy4xOTQuNzksMTAuMzMuMTk1LjEwMiwxMC4zMy4xOTUuMTAyLDEwLjMzLjE5NS4xMTksMTAuMzMuMTk1LjEyMSwxMC4zMy4xOTUuMTIyLDEwLjMzLjE5NS4xMjMsMTAuMzMuMTk1LjEyNCwxMC4zMy4xOTUuMTI1LDEwLjMzLjE5NS4xMjYsMTAuMzMuMTk1LjEyNywxMC4zMy4xOTUuMTI4LDEwLjMzLjE5NS4xMjksMTAuMzMuMTk1LjEzMCwxMC4zMy4xOTUuMTMxLDEwLjMzLjE5NS4xMzIsMTAuMzMuMTk1LjE4MywxMC4zMy4xOTUuMTg0LDEwLjMzLjE5NS4xODUsMTAuMzMuMTk1LjE4NiwxMC4zMy4xOTUuMTg3LDEwLjMzLjE5NS4xODgsMTAuMzMuMTk1LjE4OSwxMC4zMy4xOTUuMTkxLDEwLjMzLjE5NS4xOTIsMTAuMzMuMTk1LjE5MywxMC4zMy4xOTUuMTk0LDEwLjMzLjE5NS4xOTUsMTAuMzMuMTk1LjE5NSwxMC4zMy4xOTUuMTk3LDEwLjMzLjE5NS4xOTgsMTAuMzMuMTk1LjIzNCwxMC4zMy4xOTUuMjM3LDEwLjk4LjE5Mi4xMTMsMTAuOTguMTkyLjExNCwxMC45OC4xOTIuMTE3LDEwLjk4LjE5Mi4yNTAsMTAuOTguMTkyLjQyLDEwLjk4LjE5Mi43MCwxMC45OC4xOTIuNzEsMTAuOTguMTkzLjEyMSwxMC45OC4xOTMuMTIyLDEwLjk4LjE5My4xOTksMTAuOTguMTkzLjIwMCwxMC45OC4xOTMuMjAxLDEwLjk4LjE5My4yMDIsMTAuOTguMTkzLjIyNSwxMC45OC4xOTQuMTIxLDEwLjk4LjE5NC4xMjIsMTAuOTguMTk0LjE0MSwxMC45OC4xOTQuMTQyLDEwLjk4LjE5NC4xNDMsMTAuOTguMTk0LjE0NCwxMC45OC4xOTQuMTQ1LDEwLjk4LjE5NC4xNDcsMTAuOTguMzIuNzYAAAABt8T6Ov8g0lWHnOe7bekYQC1kjn/SgVPWGteqlpMDF8qEOKOxdWahBlk0uh9nfmPiUY9MXcXchlgu6V/zygYGgSfZG11odlUkrXZCAYX/pB3ArsqmrqgvMK0mxuTVOThs/flGWltXnCFEFEU1Pp6RSdlhtCOEuGx5XWov3lux8DcnB+DxL2zauU4GfGJmoXCZDMWT2g7MXIu7VjrJJEkCH/nZ0hkhUsw/k0ORu7/kXJyBufrFZYbsQ/Nadjp9CgYhlsjKXmSPSn8GU8xUetHXGX3FzFJriyk8iqcH72p4z0/Msif4S+VNz0JV3+xffRvdmKuG28jHHDUqBxIrhjs+XA==';
+        jQuery.saj.certificado.webSignerParametro = 'https://cdn.lacunasoftware.com/libs/web-pki/lacuna-web-pki-2.14.8.min.js';
+        jQuery.saj.certificado.cofreDigital = jQuery.saj.certificado.cofreDigital || {};
+        jQuery.saj.certificado.cofreDigital.habilitado = 'false' === 'true';
+        jQuery.saj.certificado.cofreDigital.enderecoBase = 'https://esaj.tjsp.jus.br/esaj-layout';
+    }
+
+</script>
+<script src="https://esaj.tjsp.jus.br/esaj-layout/js/app-bundle.js?n=2978165087"></script>
+<script src="https://esaj.tjsp.jus.br/esaj-layout/seletorVersaoBeta.js?n=32db3647-04d8-4058-8c7b-79513d6c2143&versao=1"></script>
+<script language="javascript" type="text/JavaScript" src="https://esaj.tjsp.jus.br/esaj-layout/js/softplan-websigner-2.5.1.js?n=736057767"></script>
+<script language="javascript" type="text/JavaScript" src="https://cdn.lacunasoftware.com/libs/web-pki/lacuna-web-pki-2.14.8.min.js"></script>
+
+<script language="javascript" type="text/JavaScript" src="https://esaj.tjsp.jus.br/esaj-layout/js/saj-certificado.js?n=47741893"></script>
+
+
+
+<div id="webSignerNaoInstalado" style="display: none;">
+    <p>Para utilização do certificado digital no Portal e-SAJ é necessário a instalação do plug-in Web Signer. Por favor, realize a instalação antes de continuar.</p>
+    <div class="footer_certificado">
+        <button id="redirecionarParaPaginaInstalacao" class="actionPrincipal spwBotaoDefault">Instalar</button>
+        <button class="fecharModalInstalacao spwBotao">Cancelar</button>
+        <button class="spwBotao" onclick="window.open('https://esaj.tjsp.jus.br/WebHelp//#id_instalacao_lacuna.htm','_blank')">Ajuda</button>
+    </div>
+</div>
+
+<div id="webSignerNaoSuportado" style="display: none;">
+    <p>O navegador utilizado não é compatível com a tecnologia (Web Signer) necessária para utilização do certificado digital. Por favor, utilize um dos navegadores homologados. Em caso de dúvidas, efetue a validação de requisitos <a href="https://esaj.tjsp.jus.br/petpg-verificacao/abrirVerificacaoRequisitosPet.do" target="_blank">aqui</a>.</p>
+    <div class="footer_certificado">
+        <button class="fecharModalInstalacao spwBotaoDefault actionPrincipal">OK</button>
+    </div>
+</div>
+
+
+	
+
+
+  
+	
+	
+
+
+
+	
+</html>

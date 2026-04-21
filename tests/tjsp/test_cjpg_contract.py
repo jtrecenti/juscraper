@@ -1,28 +1,28 @@
 """Offline contract tests for TJSP cjpg.
 
-Mocks ``cjpg/pesquisar.do`` (GET for page 1) with the hand-crafted samples
-kept from the unit-test suite. Validates the public DataFrame contract and
-the query-string payload.
+Mocks ``cjpg/pesquisar.do`` (page 1) and ``cjpg/trocarDePagina.do`` (page
+2+) with live-captured samples, plus synthetic samples kept from the
+unit-test suite for legacy-format coverage. Validates the public
+DataFrame contract and the query-string payload.
 
-Sample strategy: the live eSAJ cjpg is currently returning "no results" for
-anonymous queries regardless of search term, and the paginator itself
-returns 500 on page 2 — see #108. Until #108 is resolved, the contract
-reuses the synthetic samples kept for ``test_cjpg.py::TestCJPGUnit``:
+Samples exercised:
 
-- ``cjpg/results_legacy.html`` — 2 real processes, 25 total hits, "Mostrando …" wording.
-- ``cjpg/results_novo_formato.html`` — current TJSP wording, "Resultados N a M de X".
+- ``cjpg/results_normal_page_01.html`` / ``_02.html`` — live capture
+  (``dano moral``), used for multi-page coverage.
+- ``cjpg/results_legacy.html`` — 2 real processes, 25 total hits,
+  "Mostrando …" legacy wording.
+- ``cjpg/results_novo_formato.html`` — current TJSP wording,
+  "Resultados N a M de X".
 
-Two gaps, each tracked by a separate issue:
-
-- Multi-page coverage (``paginas=range(1, N)`` for ``N > 1``) — #108.
-- Zero-result DataFrame path — #109 (cjpg_n_pags raises ValueError on the
-  "Não foi encontrado nenhum resultado" page instead of returning an
-  empty DataFrame).
+One gap remains: zero-result DataFrame path — tracked in #109
+(``cjpg_n_pags`` raises ``ValueError`` on the "Não foi encontrado
+nenhum resultado" page instead of returning an empty DataFrame).
 """
 import pandas as pd
 import pytest
 import responses
 from responses.matchers import query_param_matcher
+from responses.registries import OrderedRegistry
 
 import juscraper as jus
 from juscraper.courts.tjsp.cjpg_download import QueryTooLongError
@@ -47,12 +47,23 @@ def _add_pesquisar(pesquisa: str, sample_path: str) -> None:
     )
 
 
+def _add_trocar_de_pagina(pagina: int, sample_path: str) -> None:
+    # cjpg_download.py:139 builds the URL as a literal f-string with an
+    # empty conversationId (``?pagina=N&conversationId=``). The matcher
+    # mirrors that — conversationId="" is sent as ``conversationId=``.
+    responses.add(
+        responses.GET,
+        f"{BASE}/trocarDePagina.do",
+        body=load_sample_bytes("tjsp", sample_path),
+        status=200,
+        content_type="text/html; charset=utf-8",
+        match=[query_param_matcher({"pagina": str(pagina), "conversationId": ""})],
+    )
+
+
 @responses.activate
 def test_cjpg_typical_legacy_format(tmp_path, mocker):
-    """Typical query (legacy 'Mostrando N a M de X' wording) — DataFrame with schema.
-
-    Multi-page coverage blocked by #108; exercises ``paginas=1`` only.
-    """
+    """Typical query (legacy 'Mostrando N a M de X' wording) — DataFrame with schema."""
     mocker.patch("time.sleep")
     _add_pesquisar("direito", "cjpg/results_legacy.html")
 
@@ -63,6 +74,24 @@ def test_cjpg_typical_legacy_format(tmp_path, mocker):
     assert isinstance(df, pd.DataFrame)
     assert CJPG_MIN_COLUMNS <= set(df.columns)
     assert len(df) > 0
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjpg_multi_page(tmp_path, mocker):
+    """Multi-page: GET pesquisar.do (page 1) + GET trocarDePagina.do (page 2)."""
+    mocker.patch("time.sleep")
+    _add_pesquisar("dano moral", "cjpg/results_normal_page_01.html")
+    _add_trocar_de_pagina(2, "cjpg/results_normal_page_02.html")
+
+    df = jus.scraper("tjsp", download_path=str(tmp_path)).cjpg(
+        "dano moral", paginas=range(1, 3)
+    )
+
+    assert isinstance(df, pd.DataFrame)
+    assert CJPG_MIN_COLUMNS <= set(df.columns)
+    # 10 rows per page; cjpg_download.py:114 clamps range.stop to n_pags+1
+    # which is large here, so both pages are fetched.
+    assert len(df) == 20
 
 
 @responses.activate
