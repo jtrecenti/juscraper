@@ -7,7 +7,9 @@ empty filters; this file guards the refactor in #84 against silently
 breaking filter propagation.
 """
 import pandas as pd
+import pytest
 import responses
+from pydantic import ValidationError
 from responses.matchers import query_param_matcher, urlencoded_params_matcher
 
 import juscraper as jus
@@ -67,8 +69,84 @@ def test_cjsg_all_filters_land_in_post_body(tmp_path, mocker):
 
 def test_cjsg_unknown_kwarg_raises(tmp_path):
     """Kwargs that are not in InputCJSGEsajPuro must raise, not be silently ignored."""
-    import pytest
-    from pydantic import ValidationError
     scraper = jus.scraper("tjac", download_path=str(tmp_path))
     with pytest.raises((ValidationError, TypeError)):
         scraper.cjsg("dano moral", paginas=1, parametro_bobo="xyz")
+
+
+@responses.activate
+def test_cjsg_query_alias_emits_deprecation_warning(tmp_path, mocker):
+    """Exercita `normalize_pesquisa` no caminho compartilhado de
+    `EsajSearchScraper.cjsg_download`. O override do TJSP popa os aliases
+    antes de chamar `super()`, entao nenhum teste do TJSP cobre este
+    caminho. Se alguem quebrar a chamada no `_esaj/base.py` (deixando o
+    alias chegar no pydantic, que tem `extra='forbid'`), este teste falha
+    com `TypeError`/`ValidationError` em vez do `DeprecationWarning` esperado.
+    """
+    mocker.patch("time.sleep")
+    expected_body = make_esaj_body(pesquisa="dano moral")
+    responses.add(
+        responses.POST,
+        f"{BASE}/resultadoCompleta.do",
+        body=load_sample_bytes("tjac", "cjsg/no_results.html"),
+        status=200,
+        content_type="text/html; charset=latin-1",
+        match=[urlencoded_params_matcher(expected_body, allow_blank=True)],
+    )
+    responses.add(
+        responses.GET,
+        f"{BASE}/trocaDePagina.do",
+        body=load_sample_bytes("tjac", "cjsg/no_results.html"),
+        status=200,
+        content_type="text/html; charset=latin-1",
+        match=[query_param_matcher({"tipoDeDecisao": "A", "pagina": "1"})],
+    )
+
+    scraper = jus.scraper("tjac", download_path=str(tmp_path))
+    with pytest.warns(DeprecationWarning, match="query.*deprecado"):
+        df = scraper.cjsg(pesquisa=None, query="dano moral", paginas=1)
+    assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
+def test_cjsg_data_inicio_alias_maps_to_data_julgamento(tmp_path, mocker):
+    """Aliases genericos `data_inicio`/`data_fim` devem ser mapeados para
+    `data_julgamento_inicio`/`data_julgamento_fim` pelo `normalize_datas`
+    antes do pydantic. O matcher confirma que o body enviado usa os nomes
+    canonicos; `pytest.warns` confirma que o DeprecationWarning foi emitido.
+    """
+    mocker.patch("time.sleep")
+    expected_body = make_esaj_body(
+        pesquisa="dano moral",
+        data_julgamento_inicio="01/01/2024",
+        data_julgamento_fim="31/03/2024",
+    )
+    responses.add(
+        responses.POST,
+        f"{BASE}/resultadoCompleta.do",
+        body=load_sample_bytes("tjac", "cjsg/no_results.html"),
+        status=200,
+        content_type="text/html; charset=latin-1",
+        match=[urlencoded_params_matcher(expected_body, allow_blank=True)],
+    )
+    responses.add(
+        responses.GET,
+        f"{BASE}/trocaDePagina.do",
+        body=load_sample_bytes("tjac", "cjsg/no_results.html"),
+        status=200,
+        content_type="text/html; charset=latin-1",
+        match=[query_param_matcher({"tipoDeDecisao": "A", "pagina": "1"})],
+    )
+
+    scraper = jus.scraper("tjac", download_path=str(tmp_path))
+    with pytest.warns(DeprecationWarning) as warning_list:
+        df = scraper.cjsg(
+            "dano moral",
+            paginas=1,
+            data_inicio="01/01/2024",
+            data_fim="31/03/2024",
+        )
+    assert isinstance(df, pd.DataFrame)
+    messages = [str(w.message) for w in warning_list]
+    assert any("data_inicio" in m and "deprecado" in m for m in messages)
+    assert any("data_fim" in m and "deprecado" in m for m in messages)
