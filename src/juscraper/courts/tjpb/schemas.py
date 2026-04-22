@@ -1,0 +1,38 @@
+"""Pydantic schemas for TJPB scraper endpoints.
+
+Ainda nao wired em :mod:`juscraper.courts.tjpb.client` — este arquivo e
+documentacao executavel da API publica ate o TJPB ser refatorado para o
+pipeline canonico da #93. A lista de campos bate byte-a-byte com a
+assinatura publica de :meth:`TJPBScraper.cjsg`.
+"""
+from __future__ import annotations
+
+from ...schemas import DataJulgamentoMixin, OutputCJSGBase, SearchBase
+
+
+class InputCJSGTJPB(SearchBase, DataJulgamentoMixin):
+    """Accepted input for TJPB ``cjsg``.
+
+    Endpoint PJe-jurisprudencia (Laravel + Elasticsearch). ``pesquisa``
+    aceita os aliases deprecados ``query`` / ``termo`` via
+    :func:`juscraper.utils.params.normalize_pesquisa`, que roda *antes*
+    deste modelo. Datas de julgamento aceitam os aliases
+    ``data_inicio``/``data_fim`` via
+    :func:`juscraper.utils.params.normalize_datas` (``data_publicacao_*``
+    nao e suportado pelo backend e fica fora do schema). Filtro de data
+    de julgamento herdado de :class:`DataJulgamentoMixin`.
+    """
+
+    nr_processo: str = ""
+    id_classe_judicial: str = ""
+    id_orgao_julgador: str = ""
+    id_relator: str = ""
+    id_origem: str = "8,2"
+    decisoes: bool = False
+
+
+class OutputCJSGTJPB(OutputCJSGBase):
+    """Colunas observaveis em uma linha do DataFrame de :meth:`TJPBScraper.cjsg`.
+
+    Provisorio — revisar quando samples forem capturados (refs #113).
+    """
