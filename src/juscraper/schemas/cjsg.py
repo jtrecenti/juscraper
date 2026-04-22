@@ -7,16 +7,19 @@ from pydantic import BaseModel, ConfigDict
 class SearchBase(BaseModel):
     """Minimum input accepted by any jurisprudence search (cjsg/cjpg).
 
-    ``paginas`` is typed ``list[int] | range | None`` because the
-    scraper normalizes ``int`` to ``range`` via
-    :func:`juscraper.utils.params.normalize_paginas` **before** building
-    this model. The public method signature still accepts ``int``.
+    ``paginas`` aceita ``int`` / ``list[int]`` / ``range`` / ``None``. Em
+    scrapers ja refatorados (wired), :func:`juscraper.utils.params.normalize_paginas`
+    converte ``int`` em ``range`` *antes* do pydantic — mas o schema aceita
+    ``int`` para refletir a API publica.
+
+    **Nao inclui filtros de data** propositalmente — nem todo tribunal
+    suporta ``data_julgamento_*`` ou ``data_publicacao_*``. Quem suporta
+    compoe os mixins :class:`DataJulgamentoMixin` /
+    :class:`DataPublicacaoMixin` em :mod:`juscraper.schemas.mixins`.
     """
 
     pesquisa: str
-    paginas: list[int] | range | None = None
-    data_julgamento_inicio: str | None = None
-    data_julgamento_fim: str | None = None
+    paginas: int | list[int] | range | None = None
 
     model_config = ConfigDict(
         extra="forbid",
