@@ -82,11 +82,14 @@ Checklist obrigatoria para o PR que adiciona o raspador:
      - `query_param_matcher(...)` para GETs. Filtrar `None` antes de passar (requests remove Nones do URL).
    - Assertiva de schema via **subset**: `{"col_a", "col_b"} <= set(df.columns)`. Nunca igualdade.
    - Pelo menos 3 cenarios: typical, empty (quando o parser aceita), edge (paginacao).
-4. **Sem `@pytest.mark.integration`** no contrato.
-5. **Sem dependencia de rede, relogio ou TLS real**. Adapter TLS custom: testar so montagem (`isinstance`).
-6. **Fluxos multi-step com ordem obrigatoria** usam `responses.registries.OrderedRegistry`.
-7. **Captchas, tokens dinamicos e libs externas** (`txtcaptcha`, `browser_cookie3`) sao **mockados** — nunca invocados. Injetar fakes via `mocker.patch.dict(sys.modules, ...)` para lazy imports ausentes das deps.
-8. **Entry no CHANGELOG** em `[Unreleased]/Added`.
+4. **Pydantic schema** em `src/juscraper/courts/<xx>/schemas.py` (ou no diretorio compartilhado `src/juscraper/courts/_<familia>/schemas.py`) com `model_config = ConfigDict(extra="forbid")`. Um modelo por endpoint (`InputCJSG<TRIB>`, `InputCJPG<TRIB>`, etc.), herdando de `juscraper.schemas.cjsg.SearchBase`. O modelo **e a fonte unica da verdade da API publica** — params listados no scraper tem que bater com campos do modelo.
+5. **Teste de schema** em `tests/<xx>/test_<endpoint>_schema_contract.py` (ou consolidado em `tests/test_cjsg_schemas.py` para modelos compartilhados): valida (a) todos os params documentados aceitos, (b) kwargs desconhecidos levantam `ValidationError`, (c) defaults corretos, (d) validators/Literals rejeitam valores fora do dominio.
+6. **Teste de propagacao de filtros** em `tests/<xx>/test_<endpoint>_filters_contract.py`: chama o metodo publico passando **todos** os filtros simultaneamente e o matcher (`urlencoded_params_matcher`/`json_params_matcher`/`query_param_matcher`) confirma que cada filtro chegou no body/params. Fecha o gap onde o happy-path com filtros vazios nao detecta uma quebra de propagacao.
+7. **Sem `@pytest.mark.integration`** no contrato.
+8. **Sem dependencia de rede, relogio ou TLS real**. Adapter TLS custom: testar so montagem (`isinstance`).
+9. **Fluxos multi-step com ordem obrigatoria** usam `responses.registries.OrderedRegistry`.
+10. **Captchas, tokens dinamicos e libs externas** (`txtcaptcha`, `browser_cookie3`) sao **mockados** — nunca invocados. Injetar fakes via `mocker.patch.dict(sys.modules, ...)` para lazy imports ausentes das deps.
+11. **Entry no CHANGELOG** em `[Unreleased]/Added`.
 
 ## Convencao de API para raspadores
 
@@ -97,6 +100,97 @@ Checklist obrigatoria para o PR que adiciona o raspador:
 - Paginacao: `paginas: int | list | range | None`, default `None` (todas as paginas)
 - `paginas` e sempre 1-based: range(1, 4) baixa paginas 1, 2 e 3; paginas=3 e equivalente a range(1, 4)
 - Normalizacao centralizada em `src/juscraper/utils/params.py`
+- **Validacao da API publica via pydantic com `extra="forbid"`** (ver secao "Schemas pydantic" abaixo). Kwargs desconhecidos levantam `ValidationError` em vez de serem silenciosamente ignorados.
+
+## Schemas pydantic (refs #93)
+
+Todo endpoint publico de raspador (`cjsg`, `cjpg`, `cpopg`, `cposg`, `listar_processos`, ...) e validado por um modelo pydantic antes de chegar nos internals. Isso:
+
+- Documenta a API publica de forma executavel (`InputCJSGTJSP.model_json_schema()` gera o schema JSON).
+- Rejeita kwargs desconhecidos (`extra="forbid"`), que antes eram silenciosamente ignorados.
+- Resolve automaticamente a #68 (singular/plural): o nome do campo na classe pydantic e a decisao unica.
+- Substitui `validate_*` espalhados pelos scrapers por um so ponto de verdade.
+
+### Onde ficam os modelos
+
+- `src/juscraper/schemas/cjsg.py` — modelos compartilhados: `SearchBase` (pesquisa + paginas + datas, com `extra="forbid"` e `arbitrary_types_allowed=True` para `range`), `OutputCJSGBase` (colunas minimas de todo cjsg).
+- `src/juscraper/courts/_<familia>/schemas.py` — modelos compartilhados pela familia (ex.: `InputCJSGEsajPuro` para 5 tribunais eSAJ-puros).
+- `src/juscraper/courts/<xx>/schemas.py` — modelo especifico do tribunal quando diverge da familia (ex.: `InputCJSGTJSP` usa `baixar_sg: bool` em vez de `origem: Literal["T","R"]`).
+
+### Regras de desenho
+
+- Modelos de endpoints diferentes sao **irmaos** de `SearchBase`, nao herdam entre si (ex.: `InputCJSGEsajPuro` e `InputCJSGTJSP` nao compartilham herdanca porque a API publica divergiu historicamente).
+- Campos listados **tem que bater byte-a-byte** com a assinatura do metodo publico. Adicionar um filtro novo no pydantic sem adicionar no metodo (e vice-versa) e bug.
+- Validators que levantam excecoes custom (ex.: `QueryTooLongError`) **rodam no scraper antes do pydantic**, nao no validator pydantic — senao a excecao vira wrapped em `ValidationError`. Padrao: `validate_pesquisa_length(pesquisa, endpoint="CJSG")` logo no topo do metodo publico.
+- Retrocompat com aliases deprecados (`query`/`termo`, `data_inicio`/`data_fim`, `data_*_de`/`_ate`) e tratada **antes** do pydantic via `normalize_pesquisa`/`normalize_datas` em `src/juscraper/utils/params.py`, que popam os aliases emitindo `DeprecationWarning`. O que sobrar em `kwargs` cai no pydantic e e rejeitado.
+- `_raise_on_extra(exc, method_name)` em `juscraper.courts._esaj.base` converte `ValidationError` de `extra_forbidden` em `TypeError` amigavel (`"got unexpected keyword argument"`).
+
+## Raspadores eSAJ: como adicionar um novo tribunal
+
+A familia eSAJ (TJAC/TJAL/TJAM/TJCE/TJMS/TJSP) compartilha a infra em `src/juscraper/courts/_esaj/`. Para adicionar um novo tribunal eSAJ:
+
+### 1. Caso tipico (5 eSAJ-puros) — ~8 linhas
+
+```python
+# src/juscraper/courts/tjXX/client.py
+from .._esaj.base import EsajSearchScraper
+
+class TJXXScraper(EsajSearchScraper):
+    BASE_URL = "https://esaj.tjXX.jus.br/"
+    TRIBUNAL_NAME = "TJXX"
+```
+
+O scraper herda `cjsg`, `cjsg_download`, `cjsg_parse`, validacao via `InputCJSGEsajPuro`, retry/paginacao/latin-1, e `OutputCJSGEsaj`.
+
+### 2. Customizacao pontual (TJCE — TLS)
+
+```python
+class TJXXScraper(EsajSearchScraper):
+    BASE_URL = "..."
+    TRIBUNAL_NAME = "..."
+
+    def _configure_session(self, session: requests.Session) -> None:
+        session.mount("https://", CustomTLSAdapter())
+```
+
+### 3. API divergente (TJSP)
+
+```python
+class TJXXScraper(EsajSearchScraper):
+    BASE_URL = "..."
+    TRIBUNAL_NAME = "..."
+    INPUT_CJSG = InputCJSGTJXX        # pydantic proprio quando a API diverge
+    CJSG_CHROME_UA = True              # quando o eSAJ precisa de UA browser
+    CJSG_EXTRACT_CONVERSATION_ID = True  # quando precisa propagar conversationId entre paginas
+
+    def _build_cjsg_body(self, inp: BaseModel) -> dict:
+        # sobrescrever quando o form body tem shape diferente
+        ...
+```
+
+### 4. Hooks disponiveis
+
+- `_configure_session(session)` — montar adapters HTTP customizados (TLS, cookies, etc.)
+- Atributos de classe `CJSG_CHROME_UA`, `CJSG_EXTRACT_CONVERSATION_ID` (defaults `False`)
+- `_build_cjsg_body(inp)` — trocar o builder do form body quando diverge do default `build_cjsg_form_body`
+
+**Nao adicionar `if tribunal == "X"` no codigo compartilhado.** Se a particularidade nao encaixar via hook/atributo, prefira um scraper proprio fora da familia em vez de vazar a diferenca na base.
+
+### 5. Quando generalizar algo para `_esaj/` (regra de promocao sob demanda)
+
+Particularidades de tribunal (validators, excecoes, helpers de form, limites constantes) ficam em `src/juscraper/courts/<xx>/` **enquanto so um tribunal da familia precisar delas**. Generalizar para `_esaj/` (ou equivalente da familia) so quando o **segundo** caso concreto aparecer — nao preemptivamente. Exemplo: `QueryTooLongError` e `validate_pesquisa_length(pesquisa, endpoint)` vivem em `src/juscraper/courts/tjsp/exceptions.py` porque so TJSP tem limite de 120 chars; quando o segundo tribunal eSAJ precisar de validator analogo (com seu proprio `max_chars`), mover para `src/juscraper/courts/_esaj/exceptions.py` parametrizando o que diverge (`max_chars=120` default ou sem default), e atualizar todos os imports.
+
+Motivos:
+
+- Duplicacao de 1 tribunal e baixo custo; abstracao errada e alto custo (forca refactor em cascata quando o segundo caso nao se encaixa).
+- A forma certa da abstracao so fica clara **depois** de ver o segundo caso — generalizar com 1 exemplo so chuta o desenho.
+- Mantem `_esaj/` enxuto e focado no que e de fato compartilhado.
+
+Vale para qualquer nova particularidade ao longo do refactor #84 nas familias 1B/1C/1D.
+
+### 6. O que nao e eSAJ
+
+Familias 1B (APIs JSON/GraphQL), 1C (HTML/Session), 1D (agregadores) nao reusam `EsajSearchScraper`. A analogia, se aplicada: cada familia ganha sua propria infra compartilhada (`_api/`, `_session/`, ...) seguindo o mesmo padrao (base class + pydantic schemas compartilhados + hooks para casos de borda).
 
 ## Extracao de numero de paginas/resultados em raspadores HTML
 
