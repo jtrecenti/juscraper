@@ -134,8 +134,8 @@ def make_tjsp_cjsg_body(
 ) -> dict:
     """Build the form body sent by the TJSP cjsg scraper.
 
-    Mirrors ``src/juscraper/courts/tjsp/cjsg_download.py::cjsg_download`` byte-for-byte
-    so contract matchers can assert payload equality. Differences from the
+    Mirrors ``src/juscraper/courts/tjsp/forms.py::build_tjsp_cjsg_body`` so
+    contract matchers can assert payload equality. Differences from the
     eSAJ-puros body: no ``conversationId``/``dtPublicacao*``; the
     ``*TreeSelection`` fields carry filter values rather than empty strings;
     ``origem`` is ``'T'`` when ``baixar_sg`` is ``True``, else ``'R'``.

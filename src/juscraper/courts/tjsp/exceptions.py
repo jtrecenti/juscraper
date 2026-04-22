@@ -1,14 +1,8 @@
-"""Canonical TJSP-specific exceptions."""
+"""TJSP-specific exceptions."""
 
 
 class QueryTooLongError(ValueError):
-    """Raised when a search query exceeds the TJSP backend maximum length (120 chars).
-
-    Historically lived in ``tjsp/cjsg_download.py`` and ``tjsp/cjpg_download.py``.
-    Those modules now re-export from here for backwards compatibility with
-    legacy unit tests (``tests/tjsp/test_query_validation.py``,
-    ``tests/tjsp/test_search_limit.py``) and the offline contract tests.
-    """
+    """Raised when a search query exceeds the TJSP backend maximum length (120 chars)."""
 
 
 _TJSP_PESQUISA_MAX_CHARS = 120

@@ -1,8 +1,23 @@
 """Form body builder for TJSP cjsg.
 
-Mirrors the exact body sent by the original ``tjsp/cjsg_download.py``
-byte-for-byte so offline contract matchers (``make_tjsp_cjsg_body``)
-continue to accept the request.
+Constrói o payload que o TJSP de fato aceita em
+``https://esaj.tjsp.jus.br/cjsg/resultadoCompleta.do``. Diverge do builder
+eSAJ-puro (`juscraper.courts._esaj.forms.build_cjsg_form_body`) em três
+pontos funcionais:
+
+- Não envia ``conversationId`` (TJSP não propaga esse campo no POST
+  inicial; o ID é extraído da resposta e colado só nas requests de
+  paginação subsequentes via ``CJSG_EXTRACT_CONVERSATION_ID``).
+- Não envia ``dados.dtPublicacaoInicio/Fim`` (o form do TJSP não tem o
+  par de campos de publicação; só filtra por julgamento).
+- Mapeia ``baixar_sg: bool`` em ``dados.origensSelecionadas``
+  (``"T"`` quando ``True``, ``"R"`` quando ``False``) em vez de aceitar
+  ``origem: Literal["T","R"]`` direto — a API pública do TJSP sempre
+  expôs o toggle booleano.
+
+O helper de teste ``tests/fixtures/capture/_util.py::make_tjsp_cjsg_body``
+espelha a saída desta função para permitir que os contratos offline
+verifiquem o payload via ``urlencoded_params_matcher``.
 """
 from __future__ import annotations
 
