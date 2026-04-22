@@ -104,26 +104,108 @@ Checklist obrigatoria para o PR que adiciona o raspador:
 
 ## Schemas pydantic (refs #93)
 
-Todo endpoint publico de raspador (`cjsg`, `cjpg`, `cpopg`, `cposg`, `listar_processos`, ...) e validado por um modelo pydantic antes de chegar nos internals. Isso:
+**Todo endpoint publico de todo scraper** (`cjsg`, `cjpg`, `cpopg`, `cposg`, `listar_processos`, `auth`, `download_documents`, ...) tem schema pydantic `Input<Endpoint><Tribunal>` correspondente em `courts/<xx>/schemas.py` ou `aggregators/<yy>/schemas.py`. Isso vale **inclusive para tribunais ainda nao refatorados** — o schema-arquivo existe como documentacao executavel da API publica ate que o wiring (chamada explicita no metodo publico) aconteca junto com a refatoracao. Ganhos:
 
 - Documenta a API publica de forma executavel (`InputCJSGTJSP.model_json_schema()` gera o schema JSON).
-- Rejeita kwargs desconhecidos (`extra="forbid"`), que antes eram silenciosamente ignorados.
+- Rejeita kwargs desconhecidos (`extra="forbid"`), que antes eram silenciosamente ignorados (quando wired).
 - Resolve automaticamente a #68 (singular/plural): o nome do campo na classe pydantic e a decisao unica.
 - Substitui `validate_*` espalhados pelos scrapers por um so ponto de verdade.
 
+### Wiring em duas fases
+
+1. **Schema-arquivo (todos os tribunais)**: o modelo existe em `courts/<xx>/schemas.py` e bate com a assinatura publica do metodo. Nao e chamado em tempo de execucao — ainda nao protege contra kwargs desconhecidos. Objetivo: documentacao + paridade + ponto de encaixe.
+2. **Wired (tribunais refatorados)**: o metodo publico invoca o schema via o pipeline canonico (ver abaixo). Kwargs desconhecidos viram `TypeError` amigavel. Hoje: TJAC/TJAL/TJAM/TJCE/TJMS (familia eSAJ-puro) + TJSP (cjsg, cjpg). Nos demais, o schema existe mas o metodo ainda aceita kwargs desconhecidos silenciosamente — sera plugado junto com o refactor arquitetural do #84.
+
+Ao refatorar um tribunal novo, **sempre** seguir o pipeline canonico abaixo e conectar o schema existente ao metodo publico. Se o schema precisar de mudanca para refletir filtros que foram descobertos durante o refactor, atualizar ao mesmo tempo.
+
 ### Onde ficam os modelos
 
-- `src/juscraper/schemas/cjsg.py` — modelos compartilhados: `SearchBase` (pesquisa + paginas + datas, com `extra="forbid"` e `arbitrary_types_allowed=True` para `range`), `OutputCJSGBase` (colunas minimas de todo cjsg).
-- `src/juscraper/courts/_<familia>/schemas.py` — modelos compartilhados pela familia (ex.: `InputCJSGEsajPuro` para 5 tribunais eSAJ-puros).
-- `src/juscraper/courts/<xx>/schemas.py` — modelo especifico do tribunal quando diverge da familia (ex.: `InputCJSGTJSP` usa `baixar_sg: bool` em vez de `origem: Literal["T","R"]`).
+- `src/juscraper/schemas/cjsg.py` — `SearchBase` (pesquisa + paginas, com `extra="forbid"` e `arbitrary_types_allowed=True`) e `OutputCJSGBase`. **Nao** inclui filtros de data — a maioria dos tribunais suporta, mas alguns nao; os filtros vivem em mixins opcionais.
+- `src/juscraper/schemas/mixins.py` — `DataJulgamentoMixin` (data_julgamento_inicio/fim), `DataPublicacaoMixin` (data_publicacao_inicio/fim). Tribunal que suporta o filtro herda o mixin; quem nao suporta deixa `extra="forbid"` rejeitar.
+- `src/juscraper/schemas/consulta.py` — `CnjInputBase` (`id_cnj: str | list[str]`) e `OutputCnjConsultaBase` para endpoints de consulta processual (cpopg/cposg/JusBR).
+- `src/juscraper/courts/_<familia>/schemas.py` — modelos compartilhados pela familia (ex.: `InputCJSGEsajPuro` para 5 tribunais eSAJ-puros). Criar apenas quando a **segunda** ocorrencia concreta pedir (Regra 1 do #84).
+- `src/juscraper/courts/<xx>/schemas.py` — modelo especifico do tribunal. Um arquivo por tribunal com Input/Output de todos os endpoints.
+- `src/juscraper/aggregators/<yy>/schemas.py` — idem para agregadores.
+
+### Pipeline canonico (ao wirar um tribunal)
+
+```python
+def <metodo_publico>(self, pesquisa: str, paginas=None, **kwargs):
+    # 1. Aliases deprecados viram canonico + DeprecationWarning
+    pesquisa = normalize_pesquisa(pesquisa, **kwargs)
+    for alias in ("query", "termo"):
+        kwargs.pop(alias, None)
+    datas = normalize_datas(**kwargs)
+    for alias in (
+        "data_julgamento_inicio", "data_julgamento_fim",
+        "data_publicacao_inicio", "data_publicacao_fim",
+        "data_julgamento_de", "data_julgamento_ate",
+        "data_publicacao_de", "data_publicacao_ate",
+        "data_inicio", "data_fim",
+    ):
+        kwargs.pop(alias, None)
+
+    # 2. Validators user-facing (excecoes proprias)
+    validate_pesquisa_length(pesquisa, endpoint="CJSG")  # QueryTooLongError
+    validate_intervalo_datas(datas["data_julgamento_inicio"],
+                              datas["data_julgamento_fim"],
+                              rotulo="data_julgamento")
+
+    # 3. Pydantic(extra="forbid") sela a API publica
+    try:
+        inp = InputCJSG<TRIB>(
+            pesquisa=pesquisa,
+            paginas=normalize_paginas(paginas),
+            **{k: v for k, v in datas.items() if v is not None},
+            **kwargs,
+        )
+    except ValidationError as exc:
+        _raise_on_extra(exc, f"{type(self).__name__}.{metodo}()")
+        raise
+
+    # 4. Build body/params a partir do modelo, nao dos kwargs soltos
+    body = self._build_cjsg_body(inp)
+    ...
+```
+
+Motivos para a ordem: aliases antes do pydantic para nao virar `TypeError` generico; validators custom antes do pydantic para nao serem embrulhados em `ValidationError`; `_raise_on_extra` depois porque so kwargs desconhecidos viram `TypeError` — erro de tipo real sobe como `ValidationError` natural. Ver #93 para os 3 gotchas documentados (alias docstring mentirosa, validator user-facing wrapped, validacao duplicada em helper interno).
+
+### OOP dirigida por evidencia
+
+Hierarquia de schemas e **consequencia de evidencia concreta**, nao de palpite. Campo presente em >= 2 classes Input/Output concretas sobe para base/mixin compartilhado; caso contrario fica repetido no tribunal dono. Variacoes atuais (apos Fase 1+2 do #93):
+
+- `pesquisa`, `paginas` → `SearchBase` (25 tribunais).
+- `data_julgamento_*` → `DataJulgamentoMixin` (13 tribunais).
+- `data_publicacao_*` → `DataPublicacaoMixin` (11 tribunais).
+- `id_cnj` → `CnjInputBase` (TJSP cpopg/cposg + JusBR cpopg).
+
+Campos abaixo de 2 ocorrencias ficam **inline** no schema do tribunal. Isso casa com a Regra 1 do #84 — generalizar so com 2+ casos concretos — e o fato de termos criado os schemas para todos de uma vez **nao** quebra essa regra: a extracao continua sendo baseada em evidencia, apenas a evidencia foi produzida antes da extracao, nao depois.
 
 ### Regras de desenho
 
-- Modelos de endpoints diferentes sao **irmaos** de `SearchBase`, nao herdam entre si (ex.: `InputCJSGEsajPuro` e `InputCJSGTJSP` nao compartilham herdanca porque a API publica divergiu historicamente).
-- Campos listados **tem que bater byte-a-byte** com a assinatura do metodo publico. Adicionar um filtro novo no pydantic sem adicionar no metodo (e vice-versa) e bug.
+- Modelos de endpoints diferentes sao **irmaos** de `SearchBase`, nao herdam entre si (ex.: `InputCJSGEsajPuro` e `InputCJSGTJSP` nao compartilham heranca porque a API publica divergiu historicamente).
+- Campos listados **tem que bater byte-a-byte** com a assinatura do metodo publico. Adicionar um filtro novo no pydantic sem adicionar no metodo (e vice-versa) e bug — o `tests/schemas/test_signature_parity.py` quebra quando isso acontece.
+- `Output*` sempre usa `extra="allow"`. Enquanto nao tivermos samples HTML/JSON capturados para cada tribunal (trabalho #113), o docstring do Output marca `"Provisorio — revisar quando samples forem capturados (refs #113)."`. Revisitar tribunal a tribunal conforme samples entrarem.
 - Validators que levantam excecoes custom (ex.: `QueryTooLongError`) **rodam no scraper antes do pydantic**, nao no validator pydantic — senao a excecao vira wrapped em `ValidationError`. Padrao: `validate_pesquisa_length(pesquisa, endpoint="CJSG")` logo no topo do metodo publico.
 - Retrocompat com aliases deprecados (`query`/`termo`, `data_inicio`/`data_fim`, `data_*_de`/`_ate`) e tratada **antes** do pydantic via `normalize_pesquisa`/`normalize_datas` em `src/juscraper/utils/params.py`, que popam os aliases emitindo `DeprecationWarning`. O que sobrar em `kwargs` cai no pydantic e e rejeitado.
-- `_raise_on_extra(exc, method_name)` em `juscraper.courts._esaj.base` converte `ValidationError` de `extra_forbidden` em `TypeError` amigavel (`"got unexpected keyword argument"`).
+- `_raise_on_extra(exc, method_name)` em `juscraper.courts._esaj.base` converte `ValidationError` de `extra_forbidden` em `TypeError` amigavel (`"got unexpected keyword argument"`). Se um segundo tribunal fora da familia eSAJ precisar, promover para `src/juscraper/schemas/__init__.py` (Regra 1 do #84).
+
+### Proibicoes explicitas
+
+- **Nao adicionar campo em Input** que nao esteja na assinatura do metodo publico (bug — o teste de paridade quebra).
+- **Nao remover campo do Input** ao deprecar um parametro; usar `normalize_*` para popar antes do pydantic (mantem retrocompat com `DeprecationWarning`).
+- **Nao usar Output com `extra="forbid"`** enquanto a estrutura das paginas dos tribunais puder mudar (sempre `extra="allow"` ate a refatoracao declarar estabilidade).
+- **Nao criar schema para metodos stub `NotImplementedError`** — nao ha API publica estavel para documentar. Quando o metodo for implementado, criar schema junto.
+- **Nao criar mixin/base compartilhada com 1 unica ocorrencia concreta** — espera o 2o caso aparecer (Regra 1 do #84).
+
+### Checklist ao adicionar um tribunal novo
+
+1. Criar `src/juscraper/courts/<xx>/schemas.py` com `Input<Endpoint><TRIB>` e `Output<Endpoint><TRIB>` para **cada metodo implementado** (nao stub).
+2. Herdar de `SearchBase` + mixins aplicaveis (`DataJulgamentoMixin`, `DataPublicacaoMixin`) quando a assinatura do metodo suportar esses filtros.
+3. Output herda de `OutputCJSGBase` quando so lista colunas minimas (`processo`, `ementa`); de `OutputCnjConsultaBase` para cpopg/cposg.
+4. Registrar o mapping em `tests/schemas/test_schema_coverage.py::EXPECTED_COURT_SCHEMAS`. Se faltar, o teste `test_every_court_endpoint_has_schema` quebra.
+5. Rodar `pytest tests/schemas/` — o teste generico exercita `extra_forbidden` + instanciacao minima + paridade com a assinatura.
+6. Se o scraper ja foi refatorado: seguir o pipeline canonico acima para wirar o schema no metodo publico.
 
 ## Raspadores eSAJ: como adicionar um novo tribunal
 
