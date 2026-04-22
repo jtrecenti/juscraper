@@ -207,6 +207,7 @@ Paginas de tribunais mudam estrutura sem aviso. Ao escrever logica que extrai co
 - Usar `gh pr review --comment` para deixar notas de revisao nos proprios PRs
 - Sempre fazer push para uma branch de feature e abrir PR — nunca fazer push direto na main
 - **Merge de PRs: sempre usar commit de merge (`gh pr merge <n> --merge --delete-branch`)**, nunca squash nem rebase. O commit de merge preserva cada commit individual da branch *e* adiciona um commit `Merge pull request #<n> from <branch>` que marca o limite do PR — ou seja, `git log --all --graph` continua mostrando o que entrou em cada PR. Squash perde a granularidade dos commits; rebase perde o limite do PR. Deletar a branch remota no merge mantem a lista de branches do repo enxuta (a branch continua acessivel via `gh pr checkout <n>`).
+- **Comentarios em PRs, issues e revisoes de codigo neste repo devem ser sempre em portugues.** Vale tambem para mensagens de commit (corpo pode ser bilingue quando convir, mas o assunto e a explicacao do "porque" ficam em portugues). Excecao unica: arquivos em `docs/` continuam em ingles por causa do build do Quarto (ver secao "Documentacao" abaixo).
 
 ## Changelog
 

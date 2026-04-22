@@ -43,13 +43,30 @@ def cjsg_n_pags(html_source: str) -> int:
     eSAJ courts.
 
     Raises:
-        ValueError: If the HTML still looks like the search form (POST did
-            not submit) or if no pagination marker can be found.
+        ValueError: If the HTML contains a captcha/error marker, if it still
+            looks like the search form (POST did not submit), or if no
+            pagination marker can be found.
 
     Returns:
         Number of pages (0 when the search returned no hits, >=1 otherwise).
     """
     soup = BeautifulSoup(html_source, "html.parser")
+
+    # eSAJ returns an HTTP 200 page with error divs when the captcha expires
+    # or validation fails. Surface a specific error instead of letting the
+    # cascade below raise a confusing "seletor não encontrado".
+    error_divs = soup.find_all(
+        ["div", "span", "p"], class_=re.compile(r"error|erro|mensagem.*erro", re.I)
+    )
+    if error_divs:
+        error_text = " ".join(elem.get_text().lower() for elem in error_divs[:3])
+        if "captcha" in error_text or "verificação" in error_text:
+            raise ValueError(
+                "Captcha não foi resolvido. A página pode requerer verificação manual."
+            )
+        error_msg = " ".join(elem.get_text() for elem in error_divs[:3]).strip()
+        if error_msg:
+            raise ValueError(f"Erro detectado na página: {error_msg[:200]}")
 
     page_text = soup.get_text().lower()
     if any(marker in page_text for marker in _ZERO_RESULT_MARKERS):

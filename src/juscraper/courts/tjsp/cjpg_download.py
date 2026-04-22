@@ -17,7 +17,7 @@ import requests
 from tqdm import tqdm
 
 from ...utils.cnj import clean_cnj
-from .exceptions import QueryTooLongError, validate_pesquisa_length
+from .exceptions import QueryTooLongError
 
 __all__ = ["QueryTooLongError", "cjpg_download"]
 
@@ -39,12 +39,15 @@ def cjpg_download(
 ):
     """Download cases from the TJSP jurisprudence search.
 
+    Internal helper — the public scraper entry point
+    (:meth:`TJSPScraper.cjpg_download`) runs ``validate_pesquisa_length``
+    and pydantic validation before calling this function. Direct callers
+    must validate ``pesquisa`` upstream.
+
     Raises:
-        QueryTooLongError: If ``pesquisa`` > 120 characters.
         ValueError: If ``get_n_pags_callback`` is missing or fails to
             extract the page count from the first-page HTML.
     """
-    validate_pesquisa_length(pesquisa, endpoint="CJPG")
     assuntos_str = ','.join(assuntos) if assuntos is not None else None
     varas_str = ','.join(varas) if varas is not None else None
     classes_str = ','.join(classes) if classes is not None else None

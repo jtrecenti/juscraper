@@ -9,7 +9,7 @@ from typing import Any, List, Literal, Optional, Union
 
 from pydantic import BaseModel, ValidationError
 
-from ...utils.params import normalize_datas, normalize_paginas, validate_intervalo_datas
+from ...utils.params import normalize_datas, normalize_paginas, normalize_pesquisa, validate_intervalo_datas
 from .._esaj.base import EsajSearchScraper, _raise_on_extra
 from .cjpg_download import cjpg_download as cjpg_download_mod
 from .cjpg_parse import cjpg_n_pags, cjpg_parse_manager
@@ -76,6 +76,9 @@ class TJSPScraper(EsajSearchScraper):
         """Download TJSP cjsg pages. Length check happens before pydantic
         so ``QueryTooLongError`` propagates cleanly.
         """
+        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
+        for alias in ("query", "termo"):
+            kwargs.pop(alias, None)
         validate_pesquisa_length(pesquisa, endpoint="CJSG")
         return super().cjsg_download(
             pesquisa=pesquisa, paginas=paginas, diretorio=diretorio, **kwargs,
@@ -123,6 +126,16 @@ class TJSPScraper(EsajSearchScraper):
         **kwargs: Any,
     ) -> str:
         """Download raw CJPG HTML result pages. Returns the output directory path."""
+        # CJPG allows pesquisa="" (default) — only call normalize_pesquisa
+        # when pesquisa was explicitly passed OR a deprecated alias is in
+        # kwargs. normalize_pesquisa refuses to reconcile pesquisa="" with
+        # an alias, so we pass None when pesquisa is empty to let the alias
+        # take precedence.
+        has_alias = "query" in kwargs or "termo" in kwargs
+        if pesquisa or has_alias:
+            pesquisa = normalize_pesquisa(pesquisa or None, **kwargs)
+        for alias in ("query", "termo"):
+            kwargs.pop(alias, None)
         validate_pesquisa_length(pesquisa, endpoint="CJPG")
 
         paginas_norm = normalize_paginas(paginas)

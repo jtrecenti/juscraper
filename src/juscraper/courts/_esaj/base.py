@@ -21,7 +21,7 @@ import requests
 from pydantic import BaseModel, ValidationError
 
 from ...core.base import BaseScraper
-from ...utils.params import normalize_datas, normalize_paginas, validate_intervalo_datas
+from ...utils.params import normalize_datas, normalize_paginas, normalize_pesquisa, validate_intervalo_datas
 from .download import download_cjsg_pages
 from .forms import build_cjsg_form_body
 from .parse import cjsg_n_pags, cjsg_parse_manager
@@ -127,6 +127,9 @@ class EsajSearchScraper(BaseScraper):
         are popped from ``kwargs`` with a ``DeprecationWarning`` before
         pydantic validation.
         """
+        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
+        for alias in ("query", "termo"):
+            kwargs.pop(alias, None)
         paginas_norm = normalize_paginas(paginas)
         datas = normalize_datas(**kwargs)
         for alias in (
