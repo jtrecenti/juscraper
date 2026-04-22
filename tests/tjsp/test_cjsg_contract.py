@@ -14,7 +14,7 @@ import responses
 from responses.matchers import query_param_matcher, urlencoded_params_matcher
 
 import juscraper as jus
-from juscraper.courts.tjsp.cjsg_download import QueryTooLongError
+from juscraper.courts.tjsp.exceptions import QueryTooLongError
 from tests._helpers import load_sample_bytes
 from tests.fixtures.capture._util import make_tjsp_cjsg_body
 

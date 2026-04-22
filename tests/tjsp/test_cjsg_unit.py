@@ -40,6 +40,26 @@ class TestCJSGNPages:
         with pytest.raises(ValueError, match="Não foi possível extrair o número"):
             cjsg_n_pags(html)
 
+    def test_captcha_error_raises_specific_message(self):
+        """Captcha/erro divs devem levantar ValueError com mensagem explicita."""
+        html = (
+            '<html><body>'
+            '<div class="mensagemErro">Falha na verificação do captcha.</div>'
+            '</body></html>'
+        )
+        with pytest.raises(ValueError, match="Captcha"):
+            cjsg_n_pags(html)
+
+    def test_generic_error_div_raises_specific_message(self):
+        """Divs de erro sem captcha devem levantar ValueError com o texto do erro."""
+        html = (
+            '<html><body>'
+            '<div class="error">Sessão expirada. Faça login novamente.</div>'
+            '</body></html>'
+        )
+        with pytest.raises(ValueError, match="Erro detectado"):
+            cjsg_n_pags(html)
+
 
 class TestCJSGParseSinglePage:
     """Test the _cjsg_parse_single_page function."""

@@ -57,20 +57,32 @@ def make_esaj_body(
     *,
     tipo_decisao: str = "acordao",
     origem: str = "T",
+    ementa: str = "",
+    numero_recurso: str = "",
+    classe: str = "",
+    assunto: str = "",
+    comarca: str = "",
+    orgao_julgador: str = "",
+    data_julgamento_inicio: str = "",
+    data_julgamento_fim: str = "",
+    data_publicacao_inicio: str = "",
+    data_publicacao_fim: str = "",
 ) -> dict:
     """Build the form body expected by ``cjsg/resultadoCompleta.do`` (eSAJ-puros).
 
-    Mirrors the body built by ``src/juscraper/courts/<tribunal>/cjsg_download.py``
-    for TJAC/TJAL/TJAM/TJCE/TJMS. TJSP has an extra set of fields — use
-    ``make_tjsp_cjsg_body`` instead.
+    Mirrors the body built by the 5 eSAJ-puros scrapers
+    (TJAC/TJAL/TJAM/TJCE/TJMS) byte-for-byte. All filter parameters are
+    optional and default to the same empty-string values the scraper
+    sends when the caller doesn't supply them. TJSP has a different
+    body shape — use :func:`make_tjsp_cjsg_body` there.
     """
     tipo_param = "A" if tipo_decisao == "acordao" else "D"
     return {
         "conversationId": "",
         "dados.buscaInteiroTeor": pesquisa,
         "dados.pesquisarComSinonimos": "S",
-        "dados.buscaEmenta": "",
-        "dados.nuProcOrigem": "",
+        "dados.buscaEmenta": ementa,
+        "dados.nuProcOrigem": numero_recurso,
         "dados.nuRegistro": "",
         "agenteSelectedEntitiesList": "",
         "contadoragente": "0",
@@ -84,23 +96,23 @@ def make_esaj_body(
         "codigoJuizCr": "",
         "codigoJuizTr": "",
         "nmJuiz": "",
-        "classesTreeSelection.values": "",
+        "classesTreeSelection.values": classe,
         "classesTreeSelection.text": "",
-        "assuntosTreeSelection.values": "",
+        "assuntosTreeSelection.values": assunto,
         "assuntosTreeSelection.text": "",
         "comarcaSelectedEntitiesList": "",
         "contadorcomarca": "1",
         "contadorMaiorcomarca": "1",
-        "cdComarca": "",
+        "cdComarca": comarca,
         "nmComarca": "",
-        "secoesTreeSelection.values": "",
+        "secoesTreeSelection.values": orgao_julgador,
         "secoesTreeSelection.text": "",
-        "dados.dtJulgamentoInicio": "",
-        "dados.dtJulgamentoFim": "",
+        "dados.dtJulgamentoInicio": data_julgamento_inicio,
+        "dados.dtJulgamentoFim": data_julgamento_fim,
         "dados.dtRegistroInicio": "",
         "dados.dtRegistroFim": "",
-        "dados.dtPublicacaoInicio": "",
-        "dados.dtPublicacaoFim": "",
+        "dados.dtPublicacaoInicio": data_publicacao_inicio,
+        "dados.dtPublicacaoFim": data_publicacao_fim,
         "dados.origensSelecionadas": origem,
         "tipoDecisaoSelecionados": tipo_param,
         "dados.ordenacao": "dtPublicacao",
@@ -122,8 +134,8 @@ def make_tjsp_cjsg_body(
 ) -> dict:
     """Build the form body sent by the TJSP cjsg scraper.
 
-    Mirrors ``src/juscraper/courts/tjsp/cjsg_download.py::cjsg_download`` byte-for-byte
-    so contract matchers can assert payload equality. Differences from the
+    Mirrors ``src/juscraper/courts/tjsp/forms.py::build_tjsp_cjsg_body`` so
+    contract matchers can assert payload equality. Differences from the
     eSAJ-puros body: no ``conversationId``/``dtPublicacao*``; the
     ``*TreeSelection`` fields carry filter values rather than empty strings;
     ``origem`` is ``'T'`` when ``baixar_sg`` is ``True``, else ``'R'``.
