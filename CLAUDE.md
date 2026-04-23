@@ -112,32 +112,52 @@ Pipeline canonico implementado em `src/juscraper/courts/_esaj/base.py` e exercit
 
 ### Onde ficam os modelos
 
-- `src/juscraper/schemas/cjsg.py` — `SearchBase` (pesquisa, paginas) e `OutputCJSGBase` (processo, ementa, data_julgamento?). Sem filtros de data na base.
-- `src/juscraper/schemas/mixins.py` — `DataJulgamentoMixin`, `DataPublicacaoMixin`. Tribunal herda se suportar; quem nao suporta deixa `extra="forbid"` rejeitar.
+- `src/juscraper/schemas/cjsg.py` — `SearchBase` (pesquisa, paginas: **1-based, contrato unico**) e `OutputCJSGBase` (processo, ementa?, data_julgamento?). Sem filtros de data na base.
+- `src/juscraper/schemas/mixins.py` — Input: `DataJulgamentoMixin`, `DataPublicacaoMixin`. Output: `OutputRelatoriaMixin` (relator, orgao_julgador), `OutputDataPublicacaoMixin` (data_publicacao). Tribunal herda se aplicavel; quem nao suporta deixa `extra="forbid"` rejeitar.
 - `src/juscraper/schemas/consulta.py` — `CnjInputBase` (`id_cnj: str | list[str]`), `OutputCnjConsultaBase` para cpopg/cposg/JusBR.
-- `src/juscraper/courts/_<familia>/schemas.py` — compartilhado pela familia (ex.: `InputCJSGEsajPuro`). Criar so com 2+ ocorrencias (Regra 1 do #84).
+- `src/juscraper/courts/_<familia>/schemas.py` — compartilhado pela familia (ex.: `InputCJSGEsajPuro`, `OutputCJSGEsaj`). Criar so com 2+ ocorrencias (Regra 1 do #84).
 - `src/juscraper/courts/<xx>/schemas.py` / `aggregators/<yy>/schemas.py` — um arquivo por tribunal/agregador com Input/Output de todos os endpoints.
 
 ### OOP dirigida por evidencia
 
-Campo em >= 2 Inputs/Outputs concretos sobe para base/mixin; abaixo disso fica inline no tribunal. Compartilhados atuais: `pesquisa`/`paginas` (25 tribunais), `data_julgamento_*` (13), `data_publicacao_*` (11), `id_cnj` (3). A disciplina (Regra 1 do #84) evita refactor em cascata quando o desenho inicial nao encaixa; criar os schemas de todos de uma vez **nao** quebra essa regra — a evidencia foi produzida antes da extracao, nao depois.
+Campo em >= 2 Inputs/Outputs concretos sobe para base/mixin; abaixo disso fica inline no tribunal. Compartilhados atuais: **Input** — `pesquisa`/`paginas` (25 tribunais), `data_julgamento_*` (13), `data_publicacao_*` (11), `id_cnj` (3); **Output** — `processo`/`ementa`/`data_julgamento` (base), `relator`/`orgao_julgador` (>=10 parsers), `data_publicacao` (>=9 parsers). A disciplina (Regra 1 do #84) evita refactor em cascata quando o desenho inicial nao encaixa.
+
+### Nomes canonicos de coluna
+
+Conceitos equivalentes tem o mesmo nome em todos os tribunais. Divergencias de Output sao corrigidas no parser com renomeacao (breaking change declarado em CHANGELOG) + Output batendo o nome canonico; divergencias de Input viram deprecacao do alias antigo via `pop_deprecated_alias` (`src/juscraper/utils/params.py`). Canonicos atuais:
+
+- `processo` (nao `nr_processo`, `numero_unico`, `numero_cnj`)
+- `classe` (nao `classe_cnj`, `classe_judicial`)
+- `assunto` (nao `assunto_cnj`, `assunto_principal`)
+- `relator` (nao `magistrado`)
+- `numero_processo` (no Input; o campo de saida e `processo`)
+
+Excecoes documentadas caso a caso: `texto` (TJGO — documento inteiro, nao ementa); `dt_juntada` (TJES — data da juntada, distinta de `data_julgamento`); `tipo_*` (nao unificado — `tipo_ato`/`tipo_julgamento`/`tipo_decisao` sao conceitos sobrepostos mas distintos).
+
+### `paginas` e contrato unico
+
+`SearchBase.paginas: int | list[int] | range | None = None` e **1-based em todos os raspadores**. Schemas concretos **nao redeclaram** (redeclaracao cosmetica e drift; `SearchBase` e fonte unica). Normalizacao runtime acontece em `normalize_paginas` antes do pydantic. Tribunais que nao aceitam alguma forma (ex.: DataJud so aceita `range`) viram xfail em `tests/schemas/test_paginas_acceptance.py` e correcao em PR proprio.
 
 ### Regras (qualquer violacao quebra `tests/schemas/`)
 
 - Modelos de endpoints diferentes sao **irmaos** de `SearchBase`, nao herdam entre si (ex.: `InputCJSGEsajPuro` e `InputCJSGTJSP` divergem por historico da API).
 - Campos do Input batem **byte-a-byte** com a assinatura do metodo publico. `test_signature_parity.py` exclui so infra (`session`, `diretorio`, `download_path`, `base_url`) via allowlist.
-- `Output*` usa `extra="allow"` ate a estabilizacao pos-#113. Quando o parser **nao** produz um campo herdado da base (ex.: TJGO entrega `texto` em vez de `ementa`), sobrescrever como Optional na subclasse — nunca deixar required um campo que o parser nao entrega.
+- **Nao redeclarar `paginas`** em schema concreto — `SearchBase.paginas` e a fonte unica (contrato 1-based, 4 formas aceitas).
+- Output reflete shape real do parser — sem `"Provisorio"`. `test_output_parity.py` valida que campos nao-herdados do Output aparecem como string literal no source do parser; parsers dinamicos (label-based) e passthrough sao skip com razao explicita.
+- `Output*` usa `extra="allow"` para campos auxiliares (`cod_*`, `id_*`, hashes) que o parser entrega mas nao cabem no contrato explicito.
+- Colunas de saida semanticamente equivalentes tem o **mesmo nome** em todos os tribunais (ver "Nomes canonicos de coluna" acima). Parsers renomeiam chaves brutas do backend (`classe_cnj` -> `classe`) antes de construir o DataFrame.
 - Validators que levantam excecoes custom (ex.: `QueryTooLongError`) rodam no scraper **antes** do pydantic. Padrao: `validate_pesquisa_length(pesquisa, endpoint="CJSG")` no topo do metodo.
-- Aliases deprecados (`query`/`termo`, `data_inicio`/`data_fim`, `data_*_de`/`_ate`) sao popados em `normalize_pesquisa`/`normalize_datas` (`src/juscraper/utils/params.py`) antes do pydantic, emitindo `DeprecationWarning`. Nao remover o campo canonico do Input ao deprecar um alias.
+- Aliases deprecados (`query`/`termo`, `data_inicio`/`data_fim`, `data_*_de`/`_ate`, `nr_processo`, `numero_cnj`, `magistrado`, `classe_judicial`, `classe_cnj`, `assunto_cnj`) sao popados em `normalize_pesquisa`/`normalize_datas`/`pop_deprecated_alias` (`src/juscraper/utils/params.py`) antes do pydantic, emitindo `DeprecationWarning`. Nao remover o campo canonico do Input ao deprecar um alias.
 - Nao criar schema para metodo stub `NotImplementedError` — sem API estavel para documentar. Criar junto quando o metodo for implementado.
 - Nao criar mixin/base com 1 ocorrencia concreta — esperar o 2o caso.
 
 ### Checklist ao adicionar um tribunal novo
 
 1. Criar `courts/<xx>/schemas.py` com Input+Output para cada metodo **implementado**.
-2. Herdar `SearchBase` + mixins aplicaveis; Output herda `OutputCJSGBase` ou `OutputCnjConsultaBase`. Sobrescrever como Optional qualquer campo required da base que o parser nao entregue.
-3. Registrar em `tests/schemas/test_schema_coverage.py::EXPECTED_COURT_SCHEMAS` e rodar `pytest tests/schemas/`.
-4. Se ja refatorado, wirar o schema no metodo publico seguindo o pipeline canonico de `_esaj/base.py`.
+2. Herdar `SearchBase` + mixins aplicaveis; Output herda `OutputCJSGBase` + `OutputRelatoriaMixin`/`OutputDataPublicacaoMixin` conforme o parser entregue. Campos nao-herdados do Output sao declarados Optional.
+3. Se o parser usa nomes divergentes do canonico (`classe_cnj`, `magistrado`, `nr_processo`, ...), renomear no parser antes de commitar — Output fica com o nome canonico.
+4. Registrar em `tests/schemas/test_schema_coverage.py::EXPECTED_COURT_SCHEMAS` **e** `tests/schemas/test_output_parity.py::EXPECTED_COURT_OUTPUT_SCHEMAS`, rodar `pytest tests/schemas/`.
+5. Se ja refatorado, wirar o schema no metodo publico seguindo o pipeline canonico de `_esaj/base.py`.
 
 ## Raspadores eSAJ: como adicionar um novo tribunal
 
