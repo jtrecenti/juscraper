@@ -23,7 +23,7 @@ class InputCJSGTJPB(SearchBase, DataJulgamentoMixin):
     de julgamento herdado de :class:`DataJulgamentoMixin`.
     """
 
-    nr_processo: str = ""
+    numero_processo: str = ""
     id_classe_judicial: str = ""
     id_orgao_julgador: str = ""
     id_relator: str = ""
@@ -34,5 +34,8 @@ class InputCJSGTJPB(SearchBase, DataJulgamentoMixin):
 class OutputCJSGTJPB(OutputCJSGBase):
     """Colunas observaveis em uma linha do DataFrame de :meth:`TJPBScraper.cjsg`.
 
-    Provisorio — revisar quando samples forem capturados (refs #113).
+    Reflete ``tjpb.parse.cjsg_parse_manager`` — o endpoint hoje entrega
+    apenas ``processo``, ``ementa`` e ``data_julgamento`` (demais filtros
+    nao viram colunas na resposta). Todos herdados de
+    :class:`OutputCJSGBase`.
     """

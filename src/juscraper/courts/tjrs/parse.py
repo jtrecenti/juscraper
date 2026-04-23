@@ -33,8 +33,8 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
                 'orgao_julgador': clean_value(doc.get('orgao_julgador')),
                 'data_julgamento': clean_value(doc.get('data_julgamento')),
                 'data_publicacao': clean_value(doc.get('data_publicacao')),
-                'classe_cnj': clean_value(doc.get('nome_classe_cnj')),
-                'assunto_cnj': clean_value(doc.get('nome_assunto_cnj')),
+                'classe': clean_value(doc.get('nome_classe_cnj')),
+                'assunto': clean_value(doc.get('nome_assunto_cnj')),
                 'tribunal': clean_value(doc.get('nome_tribunal')),
                 'tipo_processo': clean_value(doc.get('tipo_processo')),
                 'url': url,
@@ -70,7 +70,7 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
             df[col] = pd.to_datetime(df[col], errors='coerce').dt.date
     principais = [
         'processo', 'relator', 'orgao_julgador', 'data_julgamento', 'data_publicacao',
-        'classe_cnj', 'assunto_cnj', 'tribunal', 'tipo_processo', 'url', 'ementa',
+        'classe', 'assunto', 'tribunal', 'tipo_processo', 'url', 'ementa',
         'documento_text'
     ]
     cols_principais = [c for c in principais if c in df.columns]

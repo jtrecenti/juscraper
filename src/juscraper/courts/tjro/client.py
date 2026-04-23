@@ -5,7 +5,7 @@ import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa
+from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa, pop_deprecated_alias
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
@@ -39,7 +39,7 @@ class TJROScraper(BaseScraper):
         pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
         tipo: list | None = None,
-        nr_processo: str = "",
+        numero_processo: str = "",
         magistrado: str = "",
         orgao_julgador: int | str = "",
         orgao_julgador_colegiado: int | str = "",
@@ -59,8 +59,8 @@ class TJROScraper(BaseScraper):
         tipo : list, optional
             Document types. Default ``["EMENTA"]``. Options include
             ``"ACORDAO"``, ``"DECISAO"``, ``"SENTENCA"``, ``"VOTO"``, etc.
-        nr_processo : str, optional
-            Process number filter.
+        numero_processo : str, optional
+            Process number filter. Accepts the deprecated alias ``nr_processo``.
         magistrado : str, optional
             Judge/magistrate name.
         orgao_julgador : int or str, optional
@@ -78,6 +78,13 @@ class TJROScraper(BaseScraper):
         -------
         pd.DataFrame
         """
+        old_nr = pop_deprecated_alias(kwargs, "nr_processo", "numero_processo")
+        if old_nr is not None:
+            if numero_processo:
+                raise ValueError(
+                    "Nao e possivel passar 'numero_processo' e 'nr_processo' simultaneamente."
+                )
+            numero_processo = old_nr
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
         paginas = normalize_paginas(paginas)
         datas = normalize_datas(**kwargs)
@@ -85,7 +92,7 @@ class TJROScraper(BaseScraper):
             pesquisa=pesquisa,
             paginas=paginas,
             tipo=tipo,
-            nr_processo=nr_processo,
+            nr_processo=numero_processo,
             magistrado=magistrado,
             orgao_julgador=orgao_julgador,
             orgao_julgador_colegiado=orgao_julgador_colegiado,

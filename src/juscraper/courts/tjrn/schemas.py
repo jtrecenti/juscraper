@@ -7,7 +7,7 @@ assinatura publica de :meth:`TJRNScraper.cjsg`.
 """
 from __future__ import annotations
 
-from ...schemas import DataJulgamentoMixin, OutputCJSGBase, SearchBase
+from ...schemas import DataJulgamentoMixin, OutputCJSGBase, OutputRelatoriaMixin, SearchBase
 
 
 class InputCJSGTJRN(SearchBase, DataJulgamentoMixin):
@@ -23,7 +23,7 @@ class InputCJSGTJRN(SearchBase, DataJulgamentoMixin):
     de julgamento herdado de :class:`DataJulgamentoMixin`.
     """
 
-    nr_processo: str = ""
+    numero_processo: str = ""
     id_classe_judicial: str = ""
     id_orgao_julgador: str = ""
     id_relator: str = ""
@@ -34,8 +34,16 @@ class InputCJSGTJRN(SearchBase, DataJulgamentoMixin):
     grau: str = ""
 
 
-class OutputCJSGTJRN(OutputCJSGBase):
+class OutputCJSGTJRN(OutputCJSGBase, OutputRelatoriaMixin):
     """Colunas observaveis em uma linha do DataFrame de :meth:`TJRNScraper.cjsg`.
 
-    Provisorio — revisar quando samples forem capturados (refs #113).
+    Reflete ``tjrn.parse.cjsg_parse_manager`` apos renomeacao canonica
+    (``classe_judicial`` -> ``classe``). ``data_publicacao`` nao e
+    entregue pelo backend Elasticsearch.
     """
+
+    classe: str | None = None
+    colegiado: str | None = None
+    tipo_decisao: str | None = None
+    sistema: str | None = None
+    sigiloso: bool | str | None = None

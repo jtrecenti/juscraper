@@ -30,5 +30,13 @@ class InputCJSGTJPI(SearchBase):
 class OutputCJSGTJPI(OutputCJSGBase):
     """Colunas observaveis em uma linha do DataFrame de :meth:`TJPIScraper.cjsg`.
 
-    Provisorio — revisar quando samples forem capturados (refs #113).
+    Reflete ``tjpi.parse.cjsg_parse_manager`` — parser HTML do JusPI.
+    ``data_julgamento`` nao e extraido (apenas ``data_publicacao``).
     """
+
+    tipo: str | None = None
+    data_publicacao: str | None = None
+    resumo: str | None = None
+    inteiro_teor: str | None = None
+    classe: str | None = None
+    assunto: str | None = None

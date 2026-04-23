@@ -8,7 +8,13 @@ from __future__ import annotations
 
 from typing import Literal
 
-from ...schemas import DataJulgamentoMixin, DataPublicacaoMixin, SearchBase
+from ...schemas import (
+    DataJulgamentoMixin,
+    DataPublicacaoMixin,
+    OutputDataPublicacaoMixin,
+    OutputRelatoriaMixin,
+    SearchBase,
+)
 from ...schemas.cjsg import OutputCJSGBase
 
 
@@ -31,16 +37,16 @@ class InputCJSGEsajPuro(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     tipo_decisao: Literal["acordao", "monocratica"] = "acordao"
 
 
-class OutputCJSGEsaj(OutputCJSGBase):
+class OutputCJSGEsaj(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):
     """Columns observable in eSAJ cjsg DataFrames.
 
     Minimum: ``processo``, ``ementa`` (inherited from :class:`OutputCJSGBase`).
-    Added here: canonical eSAJ columns. ``extra='allow'`` is inherited so
-    tribunal-specific extras (e.g., ``classe_assunto``) don't break
+    ``relator`` / ``orgao_julgador`` via :class:`OutputRelatoriaMixin`;
+    ``data_publicacao`` via :class:`OutputDataPublicacaoMixin` (eSAJ
+    entrega a data quando esta presente). ``extra='allow'`` is inherited
+    so tribunal-specific extras (e.g., ``classe_assunto``) don't break
     validation.
     """
 
     cd_acordao: str | None = None
     cd_foro: str | None = None
-    relator: str | None = None
-    orgao_julgador: str | None = None

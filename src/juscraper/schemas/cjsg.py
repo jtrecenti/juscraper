@@ -1,6 +1,8 @@
 """Base pydantic schemas for jurisprudence search endpoints."""
 from __future__ import annotations
 
+from datetime import date
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -45,6 +47,6 @@ class OutputCJSGBase(BaseModel):
 
     processo: str
     ementa: str | None = None
-    data_julgamento: str | None = None
+    data_julgamento: date | str | None = None
 
     model_config = ConfigDict(extra="allow")

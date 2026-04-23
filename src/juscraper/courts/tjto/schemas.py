@@ -10,9 +10,11 @@ atual — por isso nao ganham schemas de Input/Output aqui.
 """
 from __future__ import annotations
 
+from datetime import date
+
 from pydantic import BaseModel, ConfigDict
 
-from ...schemas import DataJulgamentoMixin, OutputCJSGBase, SearchBase
+from ...schemas import DataJulgamentoMixin, OutputCJSGBase, OutputRelatoriaMixin, SearchBase
 
 
 class InputCJSGTJTO(SearchBase, DataJulgamentoMixin):
@@ -32,11 +34,25 @@ class InputCJSGTJTO(SearchBase, DataJulgamentoMixin):
     soementa: bool = False
 
 
-class OutputCJSGTJTO(OutputCJSGBase):
-    """Colunas observaveis em uma linha do DataFrame de :meth:`TJTOScraper.cjsg`.
+class _OutputCJSGTJTOBase(OutputCJSGBase, OutputRelatoriaMixin):
+    """Colunas compartilhadas entre ``cjsg`` e ``cjpg`` do TJTO.
 
-    Provisorio — revisar quando samples forem capturados (refs #113).
+    Reflete ``tjto.parse.cjsg_parse_manager``. O parser nao extrai ementa
+    na listagem — usa-se :meth:`TJTOScraper.cjsg_ementa` com ``uuid`` para
+    buscar a ementa de cada acordao individualmente.
     """
+
+    uuid: str | None = None
+    classe: str | None = None
+    tipo_julgamento: str | None = None
+    assunto: str | None = None
+    competencia: str | None = None
+    data_autuacao: date | str | None = None
+    processo_link: str | None = None
+
+
+class OutputCJSGTJTO(_OutputCJSGTJTOBase):
+    """Output do cjsg (2o grau) do TJTO."""
 
 
 class InputCJPGTJTO(SearchBase, DataJulgamentoMixin):
@@ -53,11 +69,8 @@ class InputCJPGTJTO(SearchBase, DataJulgamentoMixin):
     soementa: bool = False
 
 
-class OutputCJPGTJTO(OutputCJSGBase):
-    """Colunas observaveis em uma linha do DataFrame de :meth:`TJTOScraper.cjpg`.
-
-    Provisorio — revisar quando samples forem capturados (refs #113).
-    """
+class OutputCJPGTJTO(_OutputCJSGTJTOBase):
+    """Output do cjpg (1o grau) do TJTO. Mesmas colunas do cjsg — so muda ``instancia=1``."""
 
 
 class InputCjsgEmentaTJTO(BaseModel):

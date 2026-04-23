@@ -7,7 +7,9 @@ assinatura publica de :meth:`TJAPScraper.cjsg` / :meth:`TJAPScraper.cjsg_downloa
 """
 from __future__ import annotations
 
-from ...schemas import OutputCJSGBase, SearchBase
+from datetime import date
+
+from ...schemas import OutputCJSGBase, OutputDataPublicacaoMixin, OutputRelatoriaMixin, SearchBase
 
 
 class InputCJSGTJAP(SearchBase):
@@ -20,9 +22,8 @@ class InputCJSGTJAP(SearchBase):
     sao rejeitados por ``extra="forbid"`` herdado de :class:`SearchBase`.
     """
 
-    paginas: list[int] | range | None = None
     orgao: str = "0"
-    numero_cnj: str | None = None
+    numero_processo: str | None = None
     numero_acordao: str | None = None
     numero_ano: str | None = None
     palavras_exatas: bool = False
@@ -33,8 +34,18 @@ class InputCJSGTJAP(SearchBase):
     origem: str | None = None
 
 
-class OutputCJSGTJAP(OutputCJSGBase):
+class OutputCJSGTJAP(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):
     """Colunas observaveis em uma linha do DataFrame de :meth:`TJAPScraper.cjsg`.
 
-    Provisorio — revisar quando samples forem capturados (refs #113).
+    Reflete o parser Tucujuris em ``tjap.parse.cjsg_parse_manager`` —
+    ``orgao_julgador`` nao e entregue (herdado do mixin como Optional).
     """
+
+    id: int | str | None = None
+    identificador: str | None = None
+    numero_acordao: str | None = None
+    classe: str | None = None
+    lotacao: str | None = None
+    comarca: str | None = None
+    votacao: str | None = None
+    data_registro: date | str | None = None

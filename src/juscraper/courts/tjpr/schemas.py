@@ -7,7 +7,7 @@ assinatura publica de :meth:`TJPRScraper.cjsg` / :meth:`TJPRScraper.cjsg_downloa
 """
 from __future__ import annotations
 
-from ...schemas import DataJulgamentoMixin, DataPublicacaoMixin, OutputCJSGBase, SearchBase
+from ...schemas import DataJulgamentoMixin, DataPublicacaoMixin, OutputCJSGBase, OutputRelatoriaMixin, SearchBase
 
 
 class InputCJSGTJPR(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
@@ -19,13 +19,16 @@ class InputCJSGTJPR(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     deste modelo. Apos a normalizacao, os kwargs que sobram caem aqui e
     sao rejeitados por ``extra="forbid"`` herdado de :class:`SearchBase`.
     Filtros de data herdados dos mixins.
+
+    O TJPR nao expoe filtros estruturados alem de ``pesquisa``/``paginas``
+    e datas — os demais filtros do portal sao parametros internos do
+    fluxo JSP (session, jsessionid, etc.), nao parte da API publica.
     """
 
-    paginas: list[int] | range | None = None
 
-
-class OutputCJSGTJPR(OutputCJSGBase):
+class OutputCJSGTJPR(OutputCJSGBase, OutputRelatoriaMixin):
     """Colunas observaveis em uma linha do DataFrame de :meth:`TJPRScraper.cjsg`.
 
-    Provisorio — revisar quando samples forem capturados (refs #113).
+    Reflete ``tjpr.parse.cjsg_parse`` — parser HTML do portal do TJPR.
+    ``data_publicacao`` nao e extraida (apenas ``data_julgamento``).
     """

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from ...schemas import DataJulgamentoMixin, OutputCJSGBase, SearchBase
+from ...schemas import DataJulgamentoMixin, OutputCJSGBase, OutputDataPublicacaoMixin, OutputRelatoriaMixin, SearchBase
 
 
 class InputCJSGTJPE(SearchBase, DataJulgamentoMixin):
@@ -25,16 +25,22 @@ class InputCJSGTJPE(SearchBase, DataJulgamentoMixin):
     de runtime, nao da API).
     """
 
-    paginas: list[int] | range | None = None
     relator: str | None = None
-    classe_cnj: str | None = None
-    assunto_cnj: str | None = None
+    classe: str | None = None
+    assunto: str | None = None
     meio_tramitacao: str | None = None
     tipo_decisao: Literal["acordaos", "monocraticas", "todos"] = "acordaos"
 
 
-class OutputCJSGTJPE(OutputCJSGBase):
+class OutputCJSGTJPE(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):
     """Colunas observaveis em uma linha do DataFrame de :meth:`TJPEScraper.cjsg`.
 
-    Provisorio — revisar quando samples forem capturados (refs #113).
+    Reflete ``tjpe.parse.cjsg_parse`` apos renomeacao canonica
+    (``classe_cnj`` -> ``classe``, ``assunto_cnj`` -> ``assunto``).
     """
+
+    classe: str | None = None
+    assunto: str | None = None
+    acordao: str | None = None
+    meio_tramitacao: str | None = None
+    url_inteiro_teor: str | None = None

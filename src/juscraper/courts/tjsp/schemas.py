@@ -46,8 +46,6 @@ class OutputCJSGTJSP(OutputCJSGBase):
     Herda ``processo``, ``ementa`` e ``data_julgamento`` de
     :class:`OutputCJSGBase` e acrescenta colunas canonicas do parser
     eSAJ compartilhado (``cd_acordao``, ``relator``, ``orgao_julgador``).
-
-    Provisorio — revisar quando samples forem capturados (refs #113).
     """
 
     cd_acordao: str | None = None
@@ -72,7 +70,10 @@ class InputCJPGTJSP(SearchBase, DataJulgamentoMixin):
 class OutputCJPGTJSP(BaseModel):
     """Colunas observaveis em uma linha do DataFrame de :meth:`TJSPScraper.cjpg`.
 
-    Provisorio — revisar quando samples forem capturados (refs #113).
+    Reflete ``tjsp.cjpg_parse``. Diferente do ``cjsg``, ``cjpg`` nao
+    entrega ementa nem ``processo`` formatado em CNJ — so o par de IDs
+    internos (``id_processo`` / ``cd_processo``) que permitem seguir para
+    a consulta de 1o grau.
     """
 
     id_processo: str
@@ -95,7 +96,10 @@ class InputCPOPGTJSP(CnjInputBase):
 class OutputCPOPGTJSP(OutputCnjConsultaBase):
     """Colunas observaveis em uma linha do DataFrame de :meth:`TJSPScraper.cpopg`.
 
-    Provisorio — revisar quando samples forem capturados (refs #113).
+    ``cpopg`` retorna uma tupla de 4 DataFrames (movimentacoes, partes,
+    peticoes diversas, dados basicos) — este schema captura a coluna
+    minima compartilhada (``id_cnj``, herdada). Campos especificos de
+    cada frame fluem via ``extra='allow'``.
     """
 
 
@@ -111,5 +115,7 @@ class InputCPOSGTJSP(CnjInputBase):
 class OutputCPOSGTJSP(OutputCnjConsultaBase):
     """Colunas observaveis em uma linha do DataFrame de :meth:`TJSPScraper.cposg`.
 
-    Provisorio — revisar quando samples forem capturados (refs #113).
+    Como em :class:`OutputCPOPGTJSP`, retorna uma composicao de 4 frames;
+    a coluna pivot ``id_cnj`` e herdada e os demais campos fluem via
+    ``extra='allow'``.
     """

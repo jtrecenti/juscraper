@@ -7,7 +7,14 @@ assinatura publica de :meth:`TJMTScraper.cjsg` / :meth:`TJMTScraper.cjsg_downloa
 """
 from __future__ import annotations
 
-from ...schemas import DataJulgamentoMixin, DataPublicacaoMixin, OutputCJSGBase, SearchBase
+from ...schemas import (
+    DataJulgamentoMixin,
+    DataPublicacaoMixin,
+    OutputCJSGBase,
+    OutputDataPublicacaoMixin,
+    OutputRelatoriaMixin,
+    SearchBase,
+)
 
 
 class InputCJSGTJMT(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
@@ -30,8 +37,22 @@ class InputCJSGTJMT(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     quantidade_por_pagina: int = 10
 
 
-class OutputCJSGTJMT(OutputCJSGBase):
+class OutputCJSGTJMT(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):
     """Colunas observaveis em uma linha do DataFrame de :meth:`TJMTScraper.cjsg`.
 
-    Provisorio — revisar quando samples forem capturados (refs #113).
+    Reflete ``tjmt.parse.cjsg_parse``. ``numero_unico`` (formato antigo)
+    ja foi renomeado para ``processo`` no parser.
     """
+
+    id: int | str | None = None
+    tipo: str | None = None
+    observacao: str | None = None
+    classe: str | None = None
+    assunto: str | None = None
+    tipo_acao: str | None = None
+    tipo_processo: str | None = None
+    redator_designado: str | None = None
+    sigla_classe_feito: str | None = None
+    instancia: str | None = None
+    origem: str | None = None
+    julgamento: str | None = None

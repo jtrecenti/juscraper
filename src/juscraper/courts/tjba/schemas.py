@@ -7,7 +7,7 @@ assinatura publica de :meth:`TJBAScraper.cjsg` / :meth:`TJBAScraper.cjsg_downloa
 """
 from __future__ import annotations
 
-from ...schemas import DataPublicacaoMixin, OutputCJSGBase, SearchBase
+from ...schemas import DataPublicacaoMixin, OutputCJSGBase, OutputDataPublicacaoMixin, OutputRelatoriaMixin, SearchBase
 
 
 class InputCJSGTJBA(SearchBase, DataPublicacaoMixin):
@@ -33,8 +33,16 @@ class InputCJSGTJBA(SearchBase, DataPublicacaoMixin):
     items_per_page: int = 10
 
 
-class OutputCJSGTJBA(OutputCJSGBase):
+class OutputCJSGTJBA(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):
     """Colunas observaveis em uma linha do DataFrame de :meth:`TJBAScraper.cjsg`.
 
-    Provisorio — revisar quando samples forem capturados (refs #113).
+    Reflete ``tjba.parse.cjsg_parse`` — API GraphQL entrega ids separados
+    (``relator_id``, ``orgao_julgador_id``, ``classe_id``).
     """
+
+    relator_id: str | int | None = None
+    orgao_julgador_id: str | int | None = None
+    classe: str | None = None
+    classe_id: str | int | None = None
+    tipo_decisao: str | None = None
+    hash: str | None = None

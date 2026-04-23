@@ -32,11 +32,13 @@ class OutputCJSGTJGO(OutputCJSGBase):
 
     O parser do TJGO (``src/juscraper/courts/tjgo/parse.py``) entrega o
     conteudo do documento na coluna ``texto``, nao em ``ementa`` — diferente
-    dos demais cjsg. Por isso ``ementa`` fica opcional aqui, sobrescrevendo
-    o default ``str`` required de :class:`OutputCJSGBase`.
-
-    Provisorio — revisar quando samples forem capturados (refs #113).
+    dos demais cjsg. ``OutputCJSGBase.ementa`` ja e Optional, entao o TJGO
+    apenas nao preenche ``ementa``.
     """
 
-    ementa: str | None = None  # type: ignore[assignment]
+    id_arquivo: str | None = None
+    serventia: str | None = None
+    relator: str | None = None
+    tipo_ato: str | None = None
+    data_publicacao: str | None = None
     texto: str | None = None

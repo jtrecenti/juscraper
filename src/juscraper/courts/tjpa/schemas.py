@@ -7,7 +7,16 @@ assinatura publica de :meth:`TJPAScraper.cjsg` / :meth:`TJPAScraper.cjsg_downloa
 """
 from __future__ import annotations
 
-from ...schemas import DataJulgamentoMixin, DataPublicacaoMixin, OutputCJSGBase, SearchBase
+from datetime import date
+
+from ...schemas import (
+    DataJulgamentoMixin,
+    DataPublicacaoMixin,
+    OutputCJSGBase,
+    OutputDataPublicacaoMixin,
+    OutputRelatoriaMixin,
+    SearchBase,
+)
 
 
 class InputCJSGTJPA(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
@@ -32,8 +41,25 @@ class InputCJSGTJPA(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     query_scope: str = "ementa"
 
 
-class OutputCJSGTJPA(OutputCJSGBase):
+class OutputCJSGTJPA(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):
     """Colunas observaveis em uma linha do DataFrame de :meth:`TJPAScraper.cjsg`.
 
-    Provisorio — revisar quando samples forem capturados (refs #113).
+    Reflete ``tjpa.parse.cjsg_parse_manager``. ``assunto`` vem como string
+    com multiplas entradas separadas por ``"; "`` (parser concatena dicts).
     """
+
+    id: int | str | None = None
+    tipo: str | None = None
+    area: str | None = None
+    origem: str | None = None
+    classe: str | None = None
+    id_classe: str | int | None = None
+    assunto: str | None = None
+    id_assunto: str | int | None = None
+    orgao_julgador_colegiado: str | None = None
+    competencia: str | None = None
+    data_documento: date | str | None = None
+    sentido_decisao: str | None = None
+    especie: str | None = None
+    sistema_origem: str | None = None
+    hash_storage: str | None = None

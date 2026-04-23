@@ -29,5 +29,8 @@ class InputCJSGTJDFT(SearchBase):
 class OutputCJSGTJDFT(OutputCJSGBase):
     """Colunas observaveis em uma linha do DataFrame de :meth:`TJDFTScraper.cjsg`.
 
-    Provisorio — revisar quando samples forem capturados (refs #113).
+    O parser do TJDFT (``tjdft.parse.cjsg_parse``) e passthrough do JSON
+    da API: as chaves do DataFrame vem direto do backend. A base
+    :class:`OutputCJSGBase` garante ``processo`` / ``ementa`` /
+    ``data_julgamento``; demais campos fluem via ``extra='allow'``.
     """

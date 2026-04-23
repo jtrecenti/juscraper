@@ -7,7 +7,7 @@ assinatura publica de :meth:`TJRRScraper.cjsg` / :meth:`TJRRScraper.cjsg_downloa
 """
 from __future__ import annotations
 
-from ...schemas import DataJulgamentoMixin, OutputCJSGBase, SearchBase
+from ...schemas import DataJulgamentoMixin, OutputCJSGBase, OutputDataPublicacaoMixin, OutputRelatoriaMixin, SearchBase
 
 
 class InputCJSGTJRR(SearchBase, DataJulgamentoMixin):
@@ -21,14 +21,15 @@ class InputCJSGTJRR(SearchBase, DataJulgamentoMixin):
     Filtro de data de julgamento herdado de :class:`DataJulgamentoMixin`.
     """
 
-    paginas: list[int] | range | None = None
     relator: str = ""
     orgao_julgador: list | None = None
     especie: list | None = None
 
 
-class OutputCJSGTJRR(OutputCJSGBase):
+class OutputCJSGTJRR(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):
     """Colunas observaveis em uma linha do DataFrame de :meth:`TJRRScraper.cjsg`.
 
-    Provisorio — revisar quando samples forem capturados (refs #113).
+    Reflete ``tjrr.parse.cjsg_parse_manager`` — parser HTML JSF/PrimeFaces.
     """
+
+    classe: str | None = None

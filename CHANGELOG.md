@@ -7,9 +7,21 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
-### Fixed
+### Changed
 
-- `OutputCJSGTJGO` sobrescreve `ementa` como `Optional[str]` e adiciona `texto: Optional[str]`. O parser do TJGO (`src/juscraper/courts/tjgo/parse.py`) entrega o conteudo do documento em `texto`, nao em `ementa`; herdar `OutputCJSGBase` sem ajuste exigiria `ementa: str` e quebraria a validacao se o schema fosse wired para validar cada linha. Teste dedicado em `tests/schemas/test_schema_contract.py::test_tjgo_output_accepts_parser_shape`. Documentada em `CLAUDE.md` a regra: quando o parser nao produz um campo herdado da base, sobrescrever como Optional em vez de deixar required. Refs #93, #117.
+- **BREAKING (colunas de saida padronizadas):** DataFrames de `cjsg` dos tribunais TJES, TJMT, TJRS, TJRN, TJPE e TJRO passam a usar nomes canonicos uniformes para colunas semanticamente equivalentes. Renomeacoes: `nr_processo`/`numero_unico` -> `processo` (TJES, TJMT); `classe_cnj`/`classe_judicial` -> `classe` (TJRS, TJRN, TJES, TJPE, TJRO); `assunto_cnj`/`assunto_principal` -> `assunto` (TJRS, TJPE, TJES); `magistrado` -> `relator` (TJES). Codigo que acessa colunas pelo nome antigo (ex.: `df["classe_cnj"]`) precisa ser atualizado. Refs #93, #117.
+- `OutputCJSGBase.ementa` relaxado para `Optional[str]` (TJGO entrega o texto completo em `texto`, nao em `ementa`). `OutputCJSGBase.data_julgamento` aceita agora `date | str | None` para refletir os parsers que ja convertem para `datetime.date`. Redeclaracoes cosmeticas de `paginas` em schemas concretos (TJAP, TJES, TJMG, TJPE, TJPR, TJRO, TJRR, TJRS) removidas — `SearchBase` e a fonte unica. Dois mixins de Output novos (`OutputRelatoriaMixin`, `OutputDataPublicacaoMixin`) promovidos por evidencia (>= 10 e >= 9 parsers concretos). Refs #93, #117.
+- Outputs pydantic dos 22 tribunais nao wired (+ agregadores DataJud/JusBR) deixam de ser "Provisorio": agora declaram os campos observaveis diretamente do parser (lidos no codigo-fonte, sem depender de samples HTTP capturados). `extra="allow"` continua cobrindo campos auxiliares dinamicos (`cod_*`, `id_*`). Refs #93, #117.
+
+### Deprecated
+
+- Parametros de Input renomeados para canonicos; os nomes antigos continuam aceitos com `DeprecationWarning` por um ciclo:
+  - `nr_processo` -> `numero_processo` em TJPB, TJRN, TJRO.
+  - `numero_cnj` -> `numero_processo` em TJAP.
+  - `magistrado` -> `relator`, `classe_judicial` -> `classe` em TJES (`cjsg` e `cjpg`).
+  - `classe_cnj` -> `classe`, `assunto_cnj` -> `assunto` em TJPE.
+
+  Novo helper `juscraper.utils.params.pop_deprecated_alias` centraliza a emissao do warning. Refs #93, #117.
 
 ### Changed
 

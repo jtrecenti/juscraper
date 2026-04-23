@@ -9,7 +9,14 @@ from __future__ import annotations
 
 from typing import Literal
 
-from ...schemas import DataJulgamentoMixin, DataPublicacaoMixin, OutputCJSGBase, SearchBase
+from ...schemas import (
+    DataJulgamentoMixin,
+    DataPublicacaoMixin,
+    OutputCJSGBase,
+    OutputDataPublicacaoMixin,
+    OutputRelatoriaMixin,
+    SearchBase,
+)
 
 
 class InputCJSGTJSC(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
@@ -27,8 +34,14 @@ class InputCJSGTJSC(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     processo: str = ""
 
 
-class OutputCJSGTJSC(OutputCJSGBase):
+class OutputCJSGTJSC(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):
     """Colunas observaveis em uma linha do DataFrame de :meth:`TJSCScraper.cjsg`.
 
-    Provisorio — revisar quando samples forem capturados (refs #113).
+    Reflete ``tjsc.parse.cjsg_parse_manager`` — parser HTML do eproc.
+    Quando o item traz apenas a ``decisao`` (e nao a ``ementa``), o parser
+    usa o texto de ``decisao`` como ``ementa``.
     """
+
+    classe: str | None = None
+    uf: str | None = None
+    decisao: str | None = None

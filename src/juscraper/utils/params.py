@@ -237,3 +237,21 @@ def warn_unsupported(param_name, tribunal):
         UserWarning,
         stacklevel=2,
     )
+
+
+def pop_deprecated_alias(kwargs: dict, old: str, new: str):
+    """Pop ``old`` from ``kwargs``, emit ``DeprecationWarning``, return the value.
+
+    Returns ``None`` when the alias is absent. Used by scraper clients to
+    accept legacy parameter names for one release cycle after a canonical
+    rename (refs #93 output/input name unification).
+    """
+    if old not in kwargs:
+        return None
+    value = kwargs.pop(old)
+    warnings.warn(
+        f"O parâmetro '{old}' está deprecado. Use '{new}' em vez disso.",
+        DeprecationWarning,
+        stacklevel=3,
+    )
+    return value

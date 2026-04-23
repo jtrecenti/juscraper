@@ -47,9 +47,9 @@ class OutputListarProcessosDataJud(BaseModel):
     O DataJud devolve documentos do Elasticsearch com muitos campos
     aninhados (``classe``, ``assuntos``, ``movimentos``, ...); a coluna
     minima garantida e ``numeroProcesso``. ``extra='allow'`` mantem o
-    resto do payload sem precisar enumerar campo a campo.
-
-    Provisorio — revisar quando samples forem capturados (refs #113).
+    resto do payload sem precisar enumerar campo a campo — as chaves
+    do Elasticsearch do CNJ sao camelCase e estaveis, entao o proprio
+    ``_source`` vira o DataFrame.
     """
 
     numeroProcesso: str

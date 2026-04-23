@@ -61,9 +61,9 @@ class OutputCPOPGJusBR(BaseModel):
 
     ``processo_pesquisado`` aparece em todo fluxo — tanto no happy path
     (processo encontrado) quanto nos fallbacks de CNJ invalido ou
-    processo nao encontrado.
-
-    Provisorio — revisar quando samples forem capturados (refs #113).
+    processo nao encontrado. O JusBR retorna uma estrutura rica do
+    PDPJ-CNJ com dezenas de campos por processo; a coluna pivot e
+    suficiente como contrato minimo e o restante flui via ``extra='allow'``.
     """
 
     processo_pesquisado: str
@@ -94,9 +94,8 @@ class OutputDownloadDocumentsJusBR(BaseModel):
     :meth:`JusbrScraper.download_documents`.
 
     Cada linha representa um documento de um processo. ``numero_processo``
-    e a coluna pivot que liga de volta ao DataFrame de processos.
-
-    Provisorio — revisar quando samples forem capturados (refs #113).
+    e a coluna pivot que liga de volta ao DataFrame de processos; demais
+    metadados do documento (id, tipo, data, URL) fluem via ``extra='allow'``.
     """
 
     numero_processo: str

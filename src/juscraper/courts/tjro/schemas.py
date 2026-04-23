@@ -7,7 +7,7 @@ assinatura publica de :meth:`TJROScraper.cjsg` / :meth:`TJROScraper.cjsg_downloa
 """
 from __future__ import annotations
 
-from ...schemas import DataJulgamentoMixin, OutputCJSGBase, SearchBase
+from ...schemas import DataJulgamentoMixin, OutputCJSGBase, OutputDataPublicacaoMixin, OutputRelatoriaMixin, SearchBase
 
 
 class InputCJSGTJRO(SearchBase, DataJulgamentoMixin):
@@ -22,9 +22,8 @@ class InputCJSGTJRO(SearchBase, DataJulgamentoMixin):
     :class:`DataJulgamentoMixin`.
     """
 
-    paginas: list[int] | range | None = None
     tipo: list | None = None
-    nr_processo: str = ""
+    numero_processo: str = ""
     magistrado: str = ""
     orgao_julgador: int | str = ""
     orgao_julgador_colegiado: int | str = ""
@@ -33,8 +32,16 @@ class InputCJSGTJRO(SearchBase, DataJulgamentoMixin):
     termo_exato: bool = False
 
 
-class OutputCJSGTJRO(OutputCJSGBase):
+class OutputCJSGTJRO(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):
     """Colunas observaveis em uma linha do DataFrame de :meth:`TJROScraper.cjsg`.
 
-    Provisorio — revisar quando samples forem capturados (refs #113).
+    Reflete ``tjro.parse.cjsg_parse_manager`` apos renomeacao canonica
+    (``classe_judicial`` -> ``classe``).
     """
+
+    tipo: str | None = None
+    classe: str | None = None
+    orgao_julgador_colegiado: str | None = None
+    assunto: str | None = None
+    grau_jurisdicao: str | None = None
+    sistema_origem: str | None = None

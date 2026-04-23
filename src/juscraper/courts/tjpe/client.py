@@ -8,10 +8,29 @@ import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa
+from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa, pop_deprecated_alias
 
 from .download import cjsg_download
 from .parse import cjsg_parse
+
+
+def _resolve_tjpe_aliases(kwargs: dict, classe, assunto):
+    """Pop deprecated 'classe_cnj' / 'assunto_cnj' kwargs and merge."""
+    old_classe = pop_deprecated_alias(kwargs, "classe_cnj", "classe")
+    old_assunto = pop_deprecated_alias(kwargs, "assunto_cnj", "assunto")
+    if old_classe is not None:
+        if classe is not None:
+            raise ValueError(
+                "Nao e possivel passar 'classe' e 'classe_cnj' simultaneamente."
+            )
+        classe = old_classe
+    if old_assunto is not None:
+        if assunto is not None:
+            raise ValueError(
+                "Nao e possivel passar 'assunto' e 'assunto_cnj' simultaneamente."
+            )
+        assunto = old_assunto
+    return classe, assunto
 
 
 class TJPEScraper(BaseScraper):
@@ -41,8 +60,8 @@ class TJPEScraper(BaseScraper):
         data_julgamento_inicio: Optional[str] = None,
         data_julgamento_fim: Optional[str] = None,
         relator: Optional[str] = None,
-        classe_cnj: Optional[str] = None,
-        assunto_cnj: Optional[str] = None,
+        classe: Optional[str] = None,
+        assunto: Optional[str] = None,
         meio_tramitacao: Optional[str] = None,
         tipo_decisao: str = "acordaos",
         session: Optional[requests.Session] = None,
@@ -57,14 +76,15 @@ class TJPEScraper(BaseScraper):
             data_julgamento_inicio: Start date for judgment filter (DD/MM/YYYY).
             data_julgamento_fim: End date for judgment filter (DD/MM/YYYY).
             relator: Relator name (must match dropdown value exactly).
-            classe_cnj: CNJ class code.
-            assunto_cnj: CNJ subject code.
+            classe: CNJ class code. Accepts the deprecated alias ``classe_cnj``.
+            assunto: CNJ subject code. Accepts the deprecated alias ``assunto_cnj``.
             meio_tramitacao: Tramitation medium filter.
             tipo_decisao: 'acordaos', 'monocraticas', or 'todos'.
 
         Returns:
             List of raw HTML strings, one per page.
         """
+        classe, assunto = _resolve_tjpe_aliases(kwargs, classe, assunto)
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
         paginas = normalize_paginas(paginas)
         datas = normalize_datas(
@@ -80,8 +100,8 @@ class TJPEScraper(BaseScraper):
             data_julgamento_inicio=datas["data_julgamento_inicio"],
             data_julgamento_fim=datas["data_julgamento_fim"],
             relator=relator,
-            classe_cnj=classe_cnj,
-            assunto_cnj=assunto_cnj,
+            classe_cnj=classe,
+            assunto_cnj=assunto,
             meio_tramitacao=meio_tramitacao,
             tipo_decisao=tipo_decisao,
             session=session,
@@ -100,8 +120,8 @@ class TJPEScraper(BaseScraper):
         data_julgamento_inicio: Optional[str] = None,
         data_julgamento_fim: Optional[str] = None,
         relator: Optional[str] = None,
-        classe_cnj: Optional[str] = None,
-        assunto_cnj: Optional[str] = None,
+        classe: Optional[str] = None,
+        assunto: Optional[str] = None,
         meio_tramitacao: Optional[str] = None,
         tipo_decisao: str = "acordaos",
         session: Optional[requests.Session] = None,
@@ -116,8 +136,8 @@ class TJPEScraper(BaseScraper):
             data_julgamento_inicio: Start date (DD/MM/YYYY).
             data_julgamento_fim: End date (DD/MM/YYYY).
             relator: Relator name.
-            classe_cnj: CNJ class code.
-            assunto_cnj: CNJ subject code.
+            classe: CNJ class code. Accepts the deprecated alias ``classe_cnj``.
+            assunto: CNJ subject code. Accepts the deprecated alias ``assunto_cnj``.
             meio_tramitacao: Tramitation medium.
             tipo_decisao: 'acordaos', 'monocraticas', or 'todos'.
 
@@ -130,8 +150,8 @@ class TJPEScraper(BaseScraper):
             data_julgamento_inicio=data_julgamento_inicio,
             data_julgamento_fim=data_julgamento_fim,
             relator=relator,
-            classe_cnj=classe_cnj,
-            assunto_cnj=assunto_cnj,
+            classe=classe,
+            assunto=assunto,
             meio_tramitacao=meio_tramitacao,
             tipo_decisao=tipo_decisao,
             session=session,

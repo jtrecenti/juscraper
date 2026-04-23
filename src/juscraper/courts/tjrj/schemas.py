@@ -7,7 +7,7 @@ assinatura publica de :meth:`TJRJScraper.cjsg` / :meth:`TJRJScraper.cjsg_downloa
 """
 from __future__ import annotations
 
-from ...schemas import OutputCJSGBase, SearchBase
+from ...schemas import OutputCJSGBase, OutputDataPublicacaoMixin, OutputRelatoriaMixin, SearchBase
 
 
 class InputCJSGTJRJ(SearchBase):
@@ -31,8 +31,14 @@ class InputCJSGTJRJ(SearchBase):
     orgao_codigo: str | None = None
 
 
-class OutputCJSGTJRJ(OutputCJSGBase):
+class OutputCJSGTJRJ(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):
     """Colunas observaveis em uma linha do DataFrame de :meth:`TJRJScraper.cjsg`.
 
-    Provisorio — revisar quando samples forem capturados (refs #113).
+    Reflete ``tjrj.parse.cjsg_parse`` — backend ASPX (ejuris) com datas no
+    formato ``/Date(millis)/`` ja convertidas.
     """
+
+    cod_documento: str | int | None = None
+    numero_antigo: str | None = None
+    classe: str | None = None
+    tipo_documento: str | None = None

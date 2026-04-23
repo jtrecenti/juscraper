@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from ...schemas import DataJulgamentoMixin, DataPublicacaoMixin, OutputCJSGBase, SearchBase
+from ...schemas import DataJulgamentoMixin, DataPublicacaoMixin, OutputCJSGBase, OutputDataPublicacaoMixin, SearchBase
 
 
 class InputCJSGTJMG(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
@@ -23,14 +23,21 @@ class InputCJSGTJMG(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     :class:`SearchBase`. Filtros de data herdados dos mixins.
     """
 
-    paginas: list[int] | range | None = None
     pesquisar_por: Literal["ementa", "acordao"] = "ementa"
     order_by: str | int = 2
     linhas_por_pagina: int = 10
 
 
-class OutputCJSGTJMG(OutputCJSGBase):
+class OutputCJSGTJMG(OutputCJSGBase, OutputDataPublicacaoMixin):
     """Colunas observaveis em uma linha do DataFrame de :meth:`TJMGScraper.cjsg`.
 
-    Provisorio — revisar quando samples forem capturados (refs #113).
+    Reflete ``tjmg.parse.cjsg_parse``. TJMG nao entrega ``orgao_julgador``
+    no HTML; extensoes internas (``processo_interno``, ``proc_ano``,
+    ``proc_numero``) sao IDs do sistema interno do TJ.
     """
+
+    processo_interno: str | None = None
+    tipo_ato: str | None = None
+    relator: str | None = None
+    proc_ano: str | None = None
+    proc_numero: str | None = None
