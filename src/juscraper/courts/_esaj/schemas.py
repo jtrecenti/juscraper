@@ -46,7 +46,26 @@ class OutputCJSGEsaj(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoM
     entrega a data quando esta presente). ``extra='allow'`` is inherited
     so tribunal-specific extras (e.g., ``classe_assunto``) don't break
     validation.
+
+    TODO (revisar com calma em PR dedicado): o parser eSAJ em
+    :func:`juscraper.courts._esaj.parse._normalize_key` transforma a label
+    HTML ``"Relator(a):"`` em chave ``relatora`` (remove ``(`` e ``)``,
+    colando o sufixo ``a`` do desdobramento masculino/feminino). Resultado:
+    o DataFrame emitido tem coluna ``relatora``, nao ``relator`` — a mesma
+    divergencia canonica que o PR #117 eliminou em TJES/TJRN/TJRS/TJPE/
+    TJRO/TJMT. ``relatora`` abaixo e explicito para manter o Output honesto
+    sobre o que o parser hoje entrega; o ``relator`` herdado do mixin e
+    o contrato canonico forward-looking. A correcao estrutural e
+    normalizar ``relatora -> relator`` em ``_normalize_key`` (e remover
+    este campo), o que e breaking para quem usa ``df["relatora"]`` em
+    6 tribunais eSAJ (TJAC/TJAL/TJAM/TJCE/TJMS/TJSP). Deve ser feito em
+    PR proprio com entrada no CHANGELOG na mesma tabela de "nomes
+    canonicos de coluna", sem misturar com o escopo do #117.
     """
 
     cd_acordao: str | None = None
     cd_foro: str | None = None
+    # Ver TODO no docstring — ``relatora`` e o nome real que o parser emite
+    # hoje; canonico ``relator`` ja vem do OutputRelatoriaMixin e sera
+    # unificado em PR dedicado.
+    relatora: str | None = None

@@ -8,29 +8,10 @@ import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa, pop_deprecated_alias
+from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa, resolve_deprecated_alias
 
 from .download import cjsg_download
 from .parse import cjsg_parse
-
-
-def _resolve_tjpe_aliases(kwargs: dict, classe, assunto):
-    """Pop deprecated 'classe_cnj' / 'assunto_cnj' kwargs and merge."""
-    old_classe = pop_deprecated_alias(kwargs, "classe_cnj", "classe")
-    old_assunto = pop_deprecated_alias(kwargs, "assunto_cnj", "assunto")
-    if old_classe is not None:
-        if classe is not None:
-            raise ValueError(
-                "Nao e possivel passar 'classe' e 'classe_cnj' simultaneamente."
-            )
-        classe = old_classe
-    if old_assunto is not None:
-        if assunto is not None:
-            raise ValueError(
-                "Nao e possivel passar 'assunto' e 'assunto_cnj' simultaneamente."
-            )
-        assunto = old_assunto
-    return classe, assunto
 
 
 class TJPEScraper(BaseScraper):
@@ -84,7 +65,8 @@ class TJPEScraper(BaseScraper):
         Returns:
             List of raw HTML strings, one per page.
         """
-        classe, assunto = _resolve_tjpe_aliases(kwargs, classe, assunto)
+        classe = resolve_deprecated_alias(kwargs, "classe_cnj", "classe", classe)
+        assunto = resolve_deprecated_alias(kwargs, "assunto_cnj", "assunto", assunto)
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
         paginas = normalize_paginas(paginas)
         datas = normalize_datas(

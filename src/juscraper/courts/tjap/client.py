@@ -5,7 +5,7 @@ import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_paginas, normalize_pesquisa, pop_deprecated_alias
+from juscraper.utils.params import normalize_paginas, normalize_pesquisa, resolve_deprecated_alias
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
@@ -84,13 +84,9 @@ class TJAPScraper(BaseScraper):
         -------
         pd.DataFrame
         """
-        old_cnj = pop_deprecated_alias(kwargs, "numero_cnj", "numero_processo")
-        if old_cnj is not None:
-            if numero_processo is not None:
-                raise ValueError(
-                    "Nao e possivel passar 'numero_processo' e 'numero_cnj' simultaneamente."
-                )
-            numero_processo = old_cnj
+        numero_processo = resolve_deprecated_alias(
+            kwargs, "numero_cnj", "numero_processo", numero_processo
+        )
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
         paginas = normalize_paginas(paginas)
         brutos = self.cjsg_download(
@@ -135,13 +131,9 @@ class TJAPScraper(BaseScraper):
         list
             List of raw JSON responses (one per page).
         """
-        old_cnj = pop_deprecated_alias(kwargs, "numero_cnj", "numero_processo")
-        if old_cnj is not None:
-            if numero_processo is not None:
-                raise ValueError(
-                    "Nao e possivel passar 'numero_processo' e 'numero_cnj' simultaneamente."
-                )
-            numero_processo = old_cnj
+        numero_processo = resolve_deprecated_alias(
+            kwargs, "numero_cnj", "numero_processo", numero_processo
+        )
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
         paginas = normalize_paginas(paginas)
         return cjsg_download_manager(

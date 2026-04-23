@@ -12,6 +12,8 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - **BREAKING (colunas de saida padronizadas):** DataFrames de `cjsg` dos tribunais TJES, TJMT, TJRS, TJRN, TJPE e TJRO passam a usar nomes canonicos uniformes para colunas semanticamente equivalentes. Renomeacoes: `nr_processo`/`numero_unico` -> `processo` (TJES, TJMT); `classe_cnj`/`classe_judicial` -> `classe` (TJRS, TJRN, TJES, TJPE, TJRO); `assunto_cnj`/`assunto_principal` -> `assunto` (TJRS, TJPE, TJES); `magistrado` -> `relator` (TJES). Codigo que acessa colunas pelo nome antigo (ex.: `df["classe_cnj"]`) precisa ser atualizado. Refs #93, #117.
 - `OutputCJSGBase.ementa` relaxado para `Optional[str]` (TJGO entrega o texto completo em `texto`, nao em `ementa`). `OutputCJSGBase.data_julgamento` aceita agora `date | str | None` para refletir os parsers que ja convertem para `datetime.date`. Redeclaracoes cosmeticas de `paginas` em schemas concretos (TJAP, TJES, TJMG, TJPE, TJPR, TJRO, TJRR, TJRS) removidas — `SearchBase` e a fonte unica. Dois mixins de Output novos (`OutputRelatoriaMixin`, `OutputDataPublicacaoMixin`) promovidos por evidencia (>= 10 e >= 9 parsers concretos). Refs #93, #117.
 - Outputs pydantic dos 22 tribunais nao wired (+ agregadores DataJud/JusBR) deixam de ser "Provisorio": agora declaram os campos observaveis diretamente do parser (lidos no codigo-fonte, sem depender de samples HTTP capturados). `extra="allow"` continua cobrindo campos auxiliares dinamicos (`cod_*`, `id_*`). Refs #93, #117.
+- Consolidada a checagem de alias deprecado em `juscraper.utils.params.resolve_deprecated_alias`. Clients que deprecaram parametros (TJAP, TJPB, TJRN, TJRO, TJES, TJPE) perdem blocos inline de 6 linhas + 2 helpers locais (`_resolve_aliases`/`_resolve_tjpe_aliases`); comportamento identico (emite `DeprecationWarning` quando so o alias e passado, `ValueError` quando canonico + alias colidem). Refs #93, #117.
+- `OutputCJSGEsaj` (compartilhado por TJAC/TJAL/TJAM/TJCE/TJMS/TJSP) declara explicitamente `relatora: str | None = None` para refletir o que o parser eSAJ (`_normalize_key` sobre a label HTML "Relator(a):") hoje emite. TODO no docstring aponta o PR dedicado que deve normalizar `relatora -> relator` no parser — correcao estrutural e breaking (breaking change identica as renomeacoes canonicas ja feitas em outros tribunais) e merece PR proprio para manter o CHANGELOG claro. Refs #93, #117.
 
 ### Deprecated
 
@@ -21,7 +23,11 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   - `magistrado` -> `relator`, `classe_judicial` -> `classe` em TJES (`cjsg` e `cjpg`).
   - `classe_cnj` -> `classe`, `assunto_cnj` -> `assunto` em TJPE.
 
-  Novo helper `juscraper.utils.params.pop_deprecated_alias` centraliza a emissao do warning. Refs #93, #117.
+  Novos helpers `juscraper.utils.params.pop_deprecated_alias` (pop + warning) e `juscraper.utils.params.resolve_deprecated_alias` (pop + checagem de colisao + reatribuicao) centralizam o padrao. Refs #93, #117.
+
+### Added
+
+- `tests/schemas/test_canonical_types.py` — rede de seguranca contra drift de nomes canonicos. Dois enforcamentos: (1) campos com nome canonico (palettes Input/Output derivadas automaticamente de `SearchBase`/bases/mixins) tem que usar o tipo declarado na base; (2) sinonimos deprecados (`magistrado`, `nr_processo`, `numero_unico`, `classe_cnj`, `classe_judicial`, `assunto_cnj`, `assunto_principal`, `numero_cnj`) nao podem aparecer em schemas concretos. Excecoes conhecidas ficam em `TYPE_GRACE_PERIOD` / `SYNONYM_GRACE_PERIOD` com razao + PR pendente; um teste meta valida que excecoes orfas sao removidas quando o PR de correcao entra. Previne o cenario "novo tribunal adicionado com `classes` em vez de `classe`" e "novo tribunal declarou `relator: int` quebrando o contrato canonico `str | None`". Refs #93, #117.
 
 ### Changed
 

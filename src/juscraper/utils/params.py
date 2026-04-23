@@ -255,3 +255,37 @@ def pop_deprecated_alias(kwargs: dict, old: str, new: str):
         stacklevel=3,
     )
     return value
+
+
+def resolve_deprecated_alias(
+    kwargs: dict,
+    old: str,
+    new: str,
+    current_value,
+    *,
+    sentinel=None,
+):
+    """Pop ``old`` alias from ``kwargs`` and merge with ``current_value``.
+
+    Centraliza o padrao repetido em cada raspador que deprecou um
+    parametro (refs #93): ``pop_deprecated_alias`` + checagem de colisao
+    + reatribuicao.
+
+    - Alias ausente em ``kwargs``: retorna ``current_value`` inalterado.
+    - Alias presente e ``current_value == sentinel`` (canonico nao
+      setado pelo usuario): emite ``DeprecationWarning`` e retorna o
+      valor do alias.
+    - Ambos setados: levanta ``ValueError`` explicando a colisao.
+
+    ``sentinel`` descreve o "nao setado" do parametro canonico:
+    ``None`` para ``Optional[...]``, ``""`` para ``str = ""``. Kw-only
+    pra forcar o autor a pensar sobre o default do seu metodo.
+    """
+    old_value = pop_deprecated_alias(kwargs, old, new)
+    if old_value is None:
+        return current_value
+    if current_value != sentinel:
+        raise ValueError(
+            f"Não é possível passar '{new}' e '{old}' simultaneamente."
+        )
+    return old_value

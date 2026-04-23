@@ -5,7 +5,7 @@ import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa, pop_deprecated_alias
+from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa, resolve_deprecated_alias
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
@@ -80,13 +80,9 @@ class TJRNScraper(BaseScraper):
         -------
         pd.DataFrame
         """
-        old_nr = pop_deprecated_alias(kwargs, "nr_processo", "numero_processo")
-        if old_nr is not None:
-            if numero_processo:
-                raise ValueError(
-                    "Nao e possivel passar 'numero_processo' e 'nr_processo' simultaneamente."
-                )
-            numero_processo = old_nr
+        numero_processo = resolve_deprecated_alias(
+            kwargs, "nr_processo", "numero_processo", numero_processo, sentinel=""
+        )
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
         paginas = normalize_paginas(paginas)
         datas = normalize_datas(**kwargs)

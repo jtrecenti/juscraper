@@ -7,29 +7,10 @@ import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa, pop_deprecated_alias
+from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa, resolve_deprecated_alias
 
 from .download import CJPG_CORE, CJSG_CORES, DEFAULT_CORE, DEFAULT_PER_PAGE, cjsg_download
 from .parse import cjsg_parse
-
-
-def _resolve_aliases(kwargs: dict, relator, classe):
-    """Pop deprecated 'magistrado' / 'classe_judicial' kwargs and merge."""
-    old_relator = pop_deprecated_alias(kwargs, "magistrado", "relator")
-    old_classe = pop_deprecated_alias(kwargs, "classe_judicial", "classe")
-    if old_relator is not None:
-        if relator is not None:
-            raise ValueError(
-                "Nao e possivel passar 'relator' e 'magistrado' simultaneamente."
-            )
-        relator = old_relator
-    if old_classe is not None:
-        if classe is not None:
-            raise ValueError(
-                "Nao e possivel passar 'classe' e 'classe_judicial' simultaneamente."
-            )
-        classe = old_classe
-    return relator, classe
 
 
 class TJESScraper(BaseScraper):
@@ -117,7 +98,8 @@ class TJESScraper(BaseScraper):
                 f"cjsg nao suporta core='{core}'. Use um de: {', '.join(sorted(CJSG_CORES))}. "
                 "Para primeiro grau (pje1g), use cjpg()."
             )
-        relator, classe = _resolve_aliases(kwargs, relator, classe)
+        relator = resolve_deprecated_alias(kwargs, "magistrado", "relator", relator)
+        classe = resolve_deprecated_alias(kwargs, "classe_judicial", "classe", classe)
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
         paginas = normalize_paginas(paginas)
         datas = normalize_datas(
@@ -214,7 +196,12 @@ class TJESScraper(BaseScraper):
 
     def _cjpg_download_internal(self, pesquisa, paginas, kwargs):
         """Shared logic for cjpg_download — delegates to cjsg_download with core=pje1g."""
-        relator, classe = _resolve_aliases(kwargs, kwargs.pop("relator", None), kwargs.pop("classe", None))
+        relator = resolve_deprecated_alias(
+            kwargs, "magistrado", "relator", kwargs.pop("relator", None)
+        )
+        classe = resolve_deprecated_alias(
+            kwargs, "classe_judicial", "classe", kwargs.pop("classe", None)
+        )
         pesquisa_val = normalize_pesquisa(pesquisa, **kwargs)
         paginas = normalize_paginas(paginas)
         datas = normalize_datas(**kwargs)
