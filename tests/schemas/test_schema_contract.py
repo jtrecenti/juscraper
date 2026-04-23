@@ -181,3 +181,27 @@ def test_output_allows_extras(key, module_path, class_name):
     assert hasattr(model, "coluna_especifica_do_tribunal_x") or (
         getattr(model, "model_extra", {}) or {}
     ).get("coluna_especifica_do_tribunal_x") == "foo"
+
+
+def test_tjgo_output_accepts_parser_shape():
+    """OutputCJSGTJGO aceita o shape real do parser (sem ``ementa``, com ``texto``).
+
+    O parser do TJGO (``src/juscraper/courts/tjgo/parse.py``) entrega
+    o conteudo do documento em ``texto`` e nao produz coluna ``ementa``,
+    ao contrario dos demais cjsg. O schema tem que refletir isso em vez
+    de herdar ``ementa: str`` required de :class:`OutputCJSGBase`.
+    """
+    from juscraper.courts.tjgo.schemas import OutputCJSGTJGO
+
+    row = {
+        "processo": "0000000-00.2024.8.09.0001",
+        "id_arquivo": "abc",
+        "serventia": "1a Vara",
+        "relator": "Fulano",
+        "tipo_ato": "Decisao",
+        "data_publicacao": "2024-01-15",
+        "texto": "Conteudo do documento ...",
+    }
+    model = OutputCJSGTJGO(**row)
+    assert model.processo == row["processo"]
+    assert model.ementa is None

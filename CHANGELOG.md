@@ -7,6 +7,14 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- `OutputCJSGTJGO` sobrescreve `ementa` como `Optional[str]` e adiciona `texto: Optional[str]`. O parser do TJGO (`src/juscraper/courts/tjgo/parse.py`) entrega o conteudo do documento em `texto`, nao em `ementa`; herdar `OutputCJSGBase` sem ajuste exigiria `ementa: str` e quebraria a validacao se o schema fosse wired para validar cada linha. Teste dedicado em `tests/schemas/test_schema_contract.py::test_tjgo_output_accepts_parser_shape`. Documentada em `CLAUDE.md` a regra: quando o parser nao produz um campo herdado da base, sobrescrever como Optional em vez de deixar required. Refs #93, #117.
+
+### Changed
+
+- Secao "Schemas pydantic (refs #93)" do `CLAUDE.md` enxugada de 118 para ~45 linhas de conteudo denso. Removido o snippet Python de 42 linhas do pipeline canonico (substituido por ponteiro para `src/juscraper/courts/_esaj/base.py` + contratos de teste); fundidas "Regras de desenho" + "Proibicoes explicitas" em uma unica lista; enxugado o checklist. Mantida toda a orientacao load-bearing (wiring em duas fases, diretorios, OOP dirigida por evidencia, regras byte-a-byte, pipeline canonico por referencia). Refs #93, #117.
+
 ### Added
 
 - Schemas pydantic de Input e Output para **todos** os endpoints publicos implementados (nao stubs) nos 25 tribunais e 2 agregadores do juscraper (refs #93). Tribunais ainda nao refatorados recebem schema-arquivo sem wiring — servem como documentacao executavel da API publica e ponto de encaixe para a refatoracao futura (#84). Bases compartilhadas extraidas por evidencia concreta: `SearchBase` (25 ocorrencias de `pesquisa`/`paginas`), `DataJulgamentoMixin` (13 tribunais), `DataPublicacaoMixin` (11), `CnjInputBase`/`OutputCnjConsultaBase` para endpoints de consulta processual (`cpopg`/`cposg`/JusBR). Testes de cobertura (`tests/schemas/test_schema_coverage.py`) garantem que todo metodo publico nao-stub tem schema mapeado; teste de paridade (`tests/schemas/test_signature_parity.py`) garante que os campos do schema batem com a assinatura do metodo mesmo sem wiring. Politica de manutencao documentada em `CLAUDE.md` ("Schemas pydantic (refs #93)"). Outputs marcados como `"Provisorio — revisar quando samples forem capturados (refs #113)"` onde nao ha sample HTML/JSON capturado ainda.

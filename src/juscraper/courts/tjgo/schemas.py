@@ -30,5 +30,13 @@ class InputCJSGTJGO(SearchBase, DataPublicacaoMixin):
 class OutputCJSGTJGO(OutputCJSGBase):
     """Colunas observaveis em uma linha do DataFrame de :meth:`TJGOScraper.cjsg`.
 
+    O parser do TJGO (``src/juscraper/courts/tjgo/parse.py``) entrega o
+    conteudo do documento na coluna ``texto``, nao em ``ementa`` — diferente
+    dos demais cjsg. Por isso ``ementa`` fica opcional aqui, sobrescrevendo
+    o default ``str`` required de :class:`OutputCJSGBase`.
+
     Provisorio — revisar quando samples forem capturados (refs #113).
     """
+
+    ementa: str | None = None  # type: ignore[assignment]
+    texto: str | None = None
