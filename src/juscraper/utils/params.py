@@ -237,3 +237,55 @@ def warn_unsupported(param_name, tribunal):
         UserWarning,
         stacklevel=2,
     )
+
+
+def pop_deprecated_alias(kwargs: dict, old: str, new: str):
+    """Pop ``old`` from ``kwargs``, emit ``DeprecationWarning``, return the value.
+
+    Returns ``None`` when the alias is absent. Used by scraper clients to
+    accept legacy parameter names for one release cycle after a canonical
+    rename (refs #93 output/input name unification).
+    """
+    if old not in kwargs:
+        return None
+    value = kwargs.pop(old)
+    warnings.warn(
+        f"O parâmetro '{old}' está deprecado. Use '{new}' em vez disso.",
+        DeprecationWarning,
+        stacklevel=3,
+    )
+    return value
+
+
+def resolve_deprecated_alias(
+    kwargs: dict,
+    old: str,
+    new: str,
+    current_value,
+    *,
+    sentinel=None,
+):
+    """Pop ``old`` alias from ``kwargs`` and merge with ``current_value``.
+
+    Centraliza o padrao repetido em cada raspador que deprecou um
+    parametro (refs #93): ``pop_deprecated_alias`` + checagem de colisao
+    + reatribuicao.
+
+    - Alias ausente em ``kwargs``: retorna ``current_value`` inalterado.
+    - Alias presente e ``current_value == sentinel`` (canonico nao
+      setado pelo usuario): emite ``DeprecationWarning`` e retorna o
+      valor do alias.
+    - Ambos setados: levanta ``ValueError`` explicando a colisao.
+
+    ``sentinel`` descreve o "nao setado" do parametro canonico:
+    ``None`` para ``Optional[...]``, ``""`` para ``str = ""``. Kw-only
+    pra forcar o autor a pensar sobre o default do seu metodo.
+    """
+    old_value = pop_deprecated_alias(kwargs, old, new)
+    if old_value is None:
+        return current_value
+    if current_value != sentinel:
+        raise ValueError(
+            f"Não é possível passar '{new}' e '{old}' simultaneamente."
+        )
+    return old_value

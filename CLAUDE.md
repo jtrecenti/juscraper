@@ -104,26 +104,60 @@ Checklist obrigatoria para o PR que adiciona o raspador:
 
 ## Schemas pydantic (refs #93)
 
-Todo endpoint publico de raspador (`cjsg`, `cjpg`, `cpopg`, `cposg`, `listar_processos`, ...) e validado por um modelo pydantic antes de chegar nos internals. Isso:
+Todo endpoint publico de scraper (`cjsg`, `cjpg`, `cpopg`, `cposg`, `listar_processos`, `auth`, `download_documents`, ...) tem schema `Input<Endpoint><Tribunal>` em `courts/<xx>/schemas.py` ou `aggregators/<yy>/schemas.py`, **inclusive para tribunais ainda nao refatorados** — o schema vive como documentacao executavel da API publica ate o wiring (chamada explicita no metodo publico). Ganhos: rejeita kwargs desconhecidos via `extra="forbid"` (quando wired), nome do campo pydantic fixa singular/plural (#68), substitui validators espalhados.
 
-- Documenta a API publica de forma executavel (`InputCJSGTJSP.model_json_schema()` gera o schema JSON).
-- Rejeita kwargs desconhecidos (`extra="forbid"`), que antes eram silenciosamente ignorados.
-- Resolve automaticamente a #68 (singular/plural): o nome do campo na classe pydantic e a decisao unica.
-- Substitui `validate_*` espalhados pelos scrapers por um so ponto de verdade.
+Wiring tem duas fases: **schema-arquivo** (todos — existe e bate com a assinatura, protegido contra drift por `tests/schemas/test_signature_parity.py`) e **wired** (hoje: TJAC/TJAL/TJAM/TJCE/TJMS + TJSP `cjsg`/`cjpg` — metodo publico invoca o schema; kwargs desconhecidos viram `TypeError` amigavel via `_raise_on_extra` em `juscraper.courts._esaj.base`).
+
+Pipeline canonico implementado em `src/juscraper/courts/_esaj/base.py` e exercitado em `tests/tj{ac,al,am,ce,ms,sp}/test_cjsg_filters_contract.py`. Ao wirar tribunal novo, copiar a ordem de la: aliases (via `normalize_pesquisa`/`normalize_datas`) → validators custom → pydantic → build body a partir do modelo. Motivos: aliases antes do pydantic (senao viram `TypeError` generico); validators custom antes (senao viram wrapped em `ValidationError`); `_raise_on_extra` depois (so `extra_forbidden` deve virar `TypeError` — erro de tipo real sobe natural).
 
 ### Onde ficam os modelos
 
-- `src/juscraper/schemas/cjsg.py` — modelos compartilhados: `SearchBase` (pesquisa + paginas + datas, com `extra="forbid"` e `arbitrary_types_allowed=True` para `range`), `OutputCJSGBase` (colunas minimas de todo cjsg).
-- `src/juscraper/courts/_<familia>/schemas.py` — modelos compartilhados pela familia (ex.: `InputCJSGEsajPuro` para 5 tribunais eSAJ-puros).
-- `src/juscraper/courts/<xx>/schemas.py` — modelo especifico do tribunal quando diverge da familia (ex.: `InputCJSGTJSP` usa `baixar_sg: bool` em vez de `origem: Literal["T","R"]`).
+- `src/juscraper/schemas/cjsg.py` — `SearchBase` (pesquisa, paginas: **1-based, contrato unico**) e `OutputCJSGBase` (processo, ementa?, data_julgamento?). Sem filtros de data na base.
+- `src/juscraper/schemas/mixins.py` — Input: `DataJulgamentoMixin`, `DataPublicacaoMixin`. Output: `OutputRelatoriaMixin` (relator, orgao_julgador), `OutputDataPublicacaoMixin` (data_publicacao). Tribunal herda se aplicavel; quem nao suporta deixa `extra="forbid"` rejeitar.
+- `src/juscraper/schemas/consulta.py` — `CnjInputBase` (`id_cnj: str | list[str]`), `OutputCnjConsultaBase` para cpopg/cposg/JusBR.
+- `src/juscraper/courts/_<familia>/schemas.py` — compartilhado pela familia (ex.: `InputCJSGEsajPuro`, `OutputCJSGEsaj`). Criar so com 2+ ocorrencias (Regra 1 do #84).
+- `src/juscraper/courts/<xx>/schemas.py` / `aggregators/<yy>/schemas.py` — um arquivo por tribunal/agregador com Input/Output de todos os endpoints.
 
-### Regras de desenho
+### OOP dirigida por evidencia
 
-- Modelos de endpoints diferentes sao **irmaos** de `SearchBase`, nao herdam entre si (ex.: `InputCJSGEsajPuro` e `InputCJSGTJSP` nao compartilham herdanca porque a API publica divergiu historicamente).
-- Campos listados **tem que bater byte-a-byte** com a assinatura do metodo publico. Adicionar um filtro novo no pydantic sem adicionar no metodo (e vice-versa) e bug.
-- Validators que levantam excecoes custom (ex.: `QueryTooLongError`) **rodam no scraper antes do pydantic**, nao no validator pydantic — senao a excecao vira wrapped em `ValidationError`. Padrao: `validate_pesquisa_length(pesquisa, endpoint="CJSG")` logo no topo do metodo publico.
-- Retrocompat com aliases deprecados (`query`/`termo`, `data_inicio`/`data_fim`, `data_*_de`/`_ate`) e tratada **antes** do pydantic via `normalize_pesquisa`/`normalize_datas` em `src/juscraper/utils/params.py`, que popam os aliases emitindo `DeprecationWarning`. O que sobrar em `kwargs` cai no pydantic e e rejeitado.
-- `_raise_on_extra(exc, method_name)` em `juscraper.courts._esaj.base` converte `ValidationError` de `extra_forbidden` em `TypeError` amigavel (`"got unexpected keyword argument"`).
+Campo em >= 2 Inputs/Outputs concretos sobe para base/mixin; abaixo disso fica inline no tribunal. Compartilhados atuais: **Input** — `pesquisa`/`paginas` (25 tribunais), `data_julgamento_*` (13), `data_publicacao_*` (11), `id_cnj` (3); **Output** — `processo`/`ementa`/`data_julgamento` (base), `relator`/`orgao_julgador` (>=10 parsers), `data_publicacao` (>=9 parsers). A disciplina (Regra 1 do #84) evita refactor em cascata quando o desenho inicial nao encaixa.
+
+### Nomes canonicos de coluna
+
+Conceitos equivalentes tem o mesmo nome em todos os tribunais. Divergencias de Output sao corrigidas no parser com renomeacao (breaking change declarado em CHANGELOG) + Output batendo o nome canonico; divergencias de Input viram deprecacao do alias antigo via `pop_deprecated_alias` (`src/juscraper/utils/params.py`). Canonicos atuais:
+
+- `processo` (nao `nr_processo`, `numero_unico`, `numero_cnj`)
+- `classe` (nao `classe_cnj`, `classe_judicial`)
+- `assunto` (nao `assunto_cnj`, `assunto_principal`)
+- `relator` (nao `magistrado`)
+- `numero_processo` (no Input; o campo de saida e `processo`)
+
+Excecoes documentadas caso a caso: `texto` (TJGO — documento inteiro, nao ementa); `dt_juntada` (TJES — data da juntada, distinta de `data_julgamento`); `tipo_*` (nao unificado — `tipo_ato`/`tipo_julgamento`/`tipo_decisao` sao conceitos sobrepostos mas distintos).
+
+### `paginas` e contrato unico
+
+`SearchBase.paginas: int | list[int] | range | None = None` e **1-based em todos os raspadores**. Schemas concretos **nao redeclaram** (redeclaracao cosmetica e drift; `SearchBase` e fonte unica). Normalizacao runtime acontece em `normalize_paginas` antes do pydantic. Tribunais que nao aceitam alguma forma (ex.: DataJud so aceita `range`) viram xfail em `tests/schemas/test_paginas_acceptance.py` e correcao em PR proprio.
+
+### Regras (qualquer violacao quebra `tests/schemas/`)
+
+- Modelos de endpoints diferentes sao **irmaos** de `SearchBase`, nao herdam entre si (ex.: `InputCJSGEsajPuro` e `InputCJSGTJSP` divergem por historico da API).
+- Campos do Input batem **byte-a-byte** com a assinatura do metodo publico. `test_signature_parity.py` exclui so infra (`session`, `diretorio`, `download_path`, `base_url`) via allowlist.
+- **Nao redeclarar `paginas`** em schema concreto — `SearchBase.paginas` e a fonte unica (contrato 1-based, 4 formas aceitas).
+- Output reflete shape real do parser — sem `"Provisorio"`. `test_output_parity.py` valida que campos nao-herdados do Output aparecem como string literal no source do parser; parsers dinamicos (label-based) e passthrough sao skip com razao explicita.
+- `Output*` usa `extra="allow"` para campos auxiliares (`cod_*`, `id_*`, hashes) que o parser entrega mas nao cabem no contrato explicito.
+- Colunas de saida semanticamente equivalentes tem o **mesmo nome** em todos os tribunais (ver "Nomes canonicos de coluna" acima). Parsers renomeiam chaves brutas do backend (`classe_cnj` -> `classe`) antes de construir o DataFrame.
+- Validators que levantam excecoes custom (ex.: `QueryTooLongError`) rodam no scraper **antes** do pydantic. Padrao: `validate_pesquisa_length(pesquisa, endpoint="CJSG")` no topo do metodo.
+- Aliases deprecados (`query`/`termo`, `data_inicio`/`data_fim`, `data_*_de`/`_ate`, `nr_processo`, `numero_cnj`, `magistrado`, `classe_judicial`, `classe_cnj`, `assunto_cnj`) sao popados em `normalize_pesquisa`/`normalize_datas`/`pop_deprecated_alias` (`src/juscraper/utils/params.py`) antes do pydantic, emitindo `DeprecationWarning`. Nao remover o campo canonico do Input ao deprecar um alias.
+- Nao criar schema para metodo stub `NotImplementedError` — sem API estavel para documentar. Criar junto quando o metodo for implementado.
+- Nao criar mixin/base com 1 ocorrencia concreta — esperar o 2o caso.
+
+### Checklist ao adicionar um tribunal novo
+
+1. Criar `courts/<xx>/schemas.py` com Input+Output para cada metodo **implementado**.
+2. Herdar `SearchBase` + mixins aplicaveis; Output herda `OutputCJSGBase` + `OutputRelatoriaMixin`/`OutputDataPublicacaoMixin` conforme o parser entregue. Campos nao-herdados do Output sao declarados Optional.
+3. Se o parser usa nomes divergentes do canonico (`classe_cnj`, `magistrado`, `nr_processo`, ...), renomear no parser antes de commitar — Output fica com o nome canonico.
+4. Registrar em `tests/schemas/test_schema_coverage.py::EXPECTED_COURT_SCHEMAS` **e** `tests/schemas/test_output_parity.py::EXPECTED_COURT_OUTPUT_SCHEMAS`, rodar `pytest tests/schemas/`.
+5. Se ja refatorado, wirar o schema no metodo publico seguindo o pipeline canonico de `_esaj/base.py`.
 
 ## Raspadores eSAJ: como adicionar um novo tribunal
 

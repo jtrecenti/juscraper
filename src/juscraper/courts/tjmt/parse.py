@@ -33,7 +33,7 @@ def cjsg_parse(resultados_brutos: list, tipo_consulta: str = "Acordao") -> list[
                 "tipo": item.get("Tipo"),
                 "ementa": _strip_html(item.get("Conteudo", "")),
                 "observacao": item.get("Observacao"),
-                "numero_unico": proc.get("NumeroUnicoFormatado"),
+                "processo": proc.get("NumeroUnicoFormatado"),
                 "classe": proc.get("NomeClasseEsferaProcessual"),
                 "assunto": proc.get("Assunto"),
                 "tipo_acao": proc.get("TipoAcao"),

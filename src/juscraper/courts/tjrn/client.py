@@ -5,7 +5,7 @@ import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa
+from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa, resolve_deprecated_alias
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
@@ -38,7 +38,7 @@ class TJRNScraper(BaseScraper):
         self,
         pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
-        nr_processo: str = "",
+        numero_processo: str = "",
         id_classe_judicial: str = "",
         id_orgao_julgador: str = "",
         id_relator: str = "",
@@ -57,8 +57,8 @@ class TJRNScraper(BaseScraper):
             Free-text search term (searched in ementa).
         paginas : int, list, range, or None
             Pages to download (1-based). None downloads all.
-        nr_processo : str, optional
-            Process number filter.
+        numero_processo : str, optional
+            Process number filter. Accepts the deprecated alias ``nr_processo``.
         id_classe_judicial : str, optional
             Judicial class ID.
         id_orgao_julgador : str, optional
@@ -80,13 +80,16 @@ class TJRNScraper(BaseScraper):
         -------
         pd.DataFrame
         """
+        numero_processo = resolve_deprecated_alias(
+            kwargs, "nr_processo", "numero_processo", numero_processo, sentinel=""
+        )
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
         paginas = normalize_paginas(paginas)
         datas = normalize_datas(**kwargs)
         brutos = self.cjsg_download(
             pesquisa=pesquisa,
             paginas=paginas,
-            nr_processo=nr_processo,
+            nr_processo=numero_processo,
             id_classe_judicial=id_classe_judicial,
             id_orgao_julgador=id_orgao_julgador,
             id_relator=id_relator,
