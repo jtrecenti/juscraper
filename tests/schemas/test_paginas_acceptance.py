@@ -51,11 +51,11 @@ XFAIL_CASES: dict[tuple[str, str, str], str] = {
     ("datajud", "listar_processos", "int"): (
         "DataJud listar_processos aceita apenas ``range`` na assinatura "
         "do client. Contrato de SearchBase exige int/list/None tambem. "
-        "Corrigir em PR proprio."
+        "Correcao em #118."
     ),
     ("datajud", "listar_processos", "list"): (
         "DataJud listar_processos aceita apenas ``range`` na assinatura "
-        "do client. Corrigir em PR proprio."
+        "do client. Correcao em #118."
     ),
 }
 
