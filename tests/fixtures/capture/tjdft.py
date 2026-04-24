@@ -6,27 +6,13 @@ Run from repo root::
 """
 import requests
 
+from juscraper.courts.tjdft.download import BASE_URL, build_cjsg_payload
+
 from ._util import dump, samples_dir_for
-
-BASE_URL = "https://jurisdf.tjdft.jus.br/api/v1/pesquisa"
-
-
-def _payload(pesquisa: str, pagina: int, tamanho: int = 10) -> dict:
-    return {
-        "query": pesquisa,
-        "termosAcessorios": [],
-        "pagina": pagina,
-        "tamanho": tamanho,
-        "sinonimos": True,
-        "espelho": True,
-        "inteiroTeor": False,
-        "retornaInteiroTeor": False,
-        "retornaTotalizacao": True,
-    }
 
 
 def _capture(session: requests.Session, dest, pesquisa: str, pagina: int, filename: str) -> None:
-    response = session.post(BASE_URL, json=_payload(pesquisa, pagina), timeout=30)
+    response = session.post(BASE_URL, json=build_cjsg_payload(pesquisa, pagina), timeout=30)
     response.raise_for_status()
     dump(dest / filename, response.content)
     print(f"[tjdft] wrote {filename}")
