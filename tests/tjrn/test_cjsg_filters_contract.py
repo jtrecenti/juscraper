@@ -117,3 +117,38 @@ def test_cjsg_nr_processo_alias_emits_deprecation_warning(mocker):
         )
 
     assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
+def test_cjsg_data_inicio_alias_maps_to_data_julgamento(mocker):
+    """``data_inicio``/``data_fim`` generic aliases map to
+    ``data_julgamento_inicio``/``data_julgamento_fim`` via ``normalize_datas``
+    and reach the BFF payload as ``dt_inicio``/``dt_fim``.
+    """
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.POST,
+        BASE_URL,
+        body=load_sample("tjrn", "cjsg/no_results.json"),
+        status=200,
+        content_type="application/json",
+        match=[json_params_matcher(build_cjsg_payload(
+            "dano moral",
+            page=1,
+            dt_inicio="2024-01-01",
+            dt_fim="2024-03-31",
+        ))],
+    )
+
+    with pytest.warns(DeprecationWarning) as warning_list:
+        df = jus.scraper("tjrn").cjsg(
+            "dano moral",
+            paginas=1,
+            data_inicio="2024-01-01",
+            data_fim="2024-03-31",
+        )
+
+    assert isinstance(df, pd.DataFrame)
+    messages = [str(w.message) for w in warning_list]
+    assert any("data_inicio" in m and "deprecado" in m for m in messages)
+    assert any("data_fim" in m and "deprecado" in m for m in messages)
