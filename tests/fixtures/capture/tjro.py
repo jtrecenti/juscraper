@@ -52,7 +52,6 @@ def main() -> None:
     dest = samples_dir_for("tjro", "cjsg")
     session = requests.Session()
     session.headers.update({
-        "Content-Type": "application/json",
         "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
     })
 

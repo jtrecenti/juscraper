@@ -7,9 +7,10 @@ Run from repo root::
 Saves raw JSON responses (BFF) under ``tests/tjpa/samples/cjsg/``.
 The BFF paginates 0-based server-side — passing user-facing page 1
 means we send ``page=0`` in the body. Post-processes each response
-to drop ``facets``/``consultaUtilizada`` at the top level and the
-heavy ``textooriginal``/``textopuro``/``*Highlight`` fields per hit
-(parser only reads ``ementatextopuro``). Keeps samples under ~200 KB.
+to drop ``facets``/``highlighting``/``consultaUtilizada`` at the top
+level and the heavy ``textooriginal``/``textopuro``/``*Highlight``
+fields per hit (parser only reads ``ementatextopuro``). Keeps samples
+under ~200 KB.
 """
 import json
 
@@ -20,7 +21,9 @@ from juscraper.courts.tjpa.download import BASE_URL, CJSG_HEADERS, build_cjsg_pa
 from ._util import dump, samples_dir_for
 
 # Top-level keys the parser ignores under ``data``; drop from samples.
-_DATA_DROP = {"facets", "consultaUtilizada"}
+# ``highlighting`` is a defensive entry — not present in current captures,
+# but the Elasticsearch BFF may include it if highlight config changes.
+_DATA_DROP = {"facets", "highlighting", "consultaUtilizada"}
 
 # Per-hit heavy fields: drop entirely (parser reads only ``ementatextopuro``
 # and a handful of metadata fields documented in ``tjpa/parse.py``).

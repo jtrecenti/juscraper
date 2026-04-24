@@ -1,4 +1,11 @@
-"""Filter-propagation contract for TJRO cjsg."""
+"""Filter-propagation contract for TJRO cjsg.
+
+``magistrado`` and ``classe_judicial`` are still canonical kwargs in
+``TJROScraper.cjsg`` today (no ``DeprecationWarning``). The repo-wide
+canonical names defined in ``CLAUDE.md`` > "Nomes canonicos de coluna"
+are ``relator`` and ``classe`` — alignment here is tracked as part of
+the family 1C refactor (#84), not within this contract PR.
+"""
 import pandas as pd
 import pytest
 import responses
@@ -11,7 +18,11 @@ from tests._helpers import load_sample
 
 @responses.activate
 def test_cjsg_all_filters_land_in_json_body(mocker):
-    """Every public filter must reach the POST JSON payload via ``build_cjsg_payload``."""
+    """Every public filter must reach the POST JSON payload via ``build_cjsg_payload``.
+
+    ``magistrado`` / ``classe_judicial`` are passed as-is (canonical in TJRO today —
+    see module docstring).
+    """
     mocker.patch("time.sleep")
     responses.add(
         responses.POST,

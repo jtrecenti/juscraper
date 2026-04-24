@@ -20,7 +20,6 @@ def _capture(session: requests.Session, dest, pesquisa: str, pagina_1based: int,
     url = cjsg_url_for_page(pagina_1based)
     response = session.post(url, data=body, timeout=60)
     response.raise_for_status()
-    response.encoding = response.apparent_encoding
     # eproc serves latin-1 pages — persist raw bytes so tests can load via
     # ``load_sample_bytes`` and the parser decodes with its own encoding rule.
     dump(dest / filename, response.content)
