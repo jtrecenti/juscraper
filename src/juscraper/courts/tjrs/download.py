@@ -43,7 +43,7 @@ def cjsg_download_manager(
         payload = {
             'aba': 'jurisprudencia',
             'realizando_pesquisa': '1',
-            'pagina_atual': str(pagina_1based - 1),  # API is 0-based
+            'pagina_atual': str(pagina_1based),
             'start': '0',
             'q_palavra_chave': termo,
             'conteudo_busca': kwargs.get('conteudo_busca', 'ementa_completa'),
