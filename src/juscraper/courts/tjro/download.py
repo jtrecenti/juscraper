@@ -13,7 +13,7 @@ BASE_URL = "https://juris-back.tjro.jus.br/search/varios_parametros/"
 RESULTS_PER_PAGE = 10
 
 
-def _build_payload(
+def build_cjsg_payload(
     pesquisa: str,
     offset: int = 0,
     size: int = RESULTS_PER_PAGE,
@@ -28,7 +28,7 @@ def _build_payload(
     instancia: list | None = None,
     termo_exato: bool = False,
 ) -> dict:
-    """Build the JSON payload for the TJRO search API."""
+    """Build the JSON payload for the TJRO CJSG search API."""
     if tipo is None:
         tipo = ["EMENTA"]
 
@@ -104,7 +104,7 @@ def cjsg_download_manager(
         pesquisa: Search term.
         paginas (list, range, or None): Pages to download (1-based).
         session: Optional requests.Session to reuse.
-        **kwargs: Additional filter parameters forwarded to ``_build_payload``.
+        **kwargs: Additional filter parameters forwarded to ``build_cjsg_payload``.
     """
     if session is None:
         session = requests.Session()
@@ -114,7 +114,7 @@ def cjsg_download_manager(
 
     def _get_page(pagina_1based):
         offset = (pagina_1based - 1) * RESULTS_PER_PAGE
-        payload = _build_payload(pesquisa, offset=offset, **kwargs)
+        payload = build_cjsg_payload(pesquisa, offset=offset, **kwargs)
         data = _fetch_page(session, payload)
         time.sleep(1)
         return data
