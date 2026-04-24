@@ -3,6 +3,51 @@ import warnings
 from datetime import datetime
 from typing import Optional, Union
 
+# Deprecated aliases consumed by ``normalize_pesquisa``. Keep in sync with the
+# loop inside that function.
+SEARCH_ALIASES: tuple[str, ...] = ("query", "termo")
+
+# Canonical date keys produced by ``normalize_datas``. Callers that route dates
+# through ``**kwargs`` (instead of naming them explicitly) must pop these too
+# so the normalized values materialized via ``normalize_datas`` are the only
+# ones propagated downstream.
+DATE_CANONICAL: tuple[str, ...] = (
+    "data_julgamento_inicio", "data_julgamento_fim",
+    "data_publicacao_inicio", "data_publicacao_fim",
+)
+
+# Deprecated date aliases consumed by ``normalize_datas``. Keep in sync with
+# the ``deprecated_map``/``generic_map`` dicts inside that function.
+DATE_ALIASES: tuple[str, ...] = (
+    "data_julgamento_de", "data_julgamento_ate",
+    "data_publicacao_de", "data_publicacao_ate",
+    "data_inicio", "data_fim",
+)
+
+
+def pop_normalize_aliases(kwargs: dict, *, include_canonical: bool = False) -> None:
+    """Drop from ``kwargs`` all keys consumed by ``normalize_pesquisa``/``normalize_datas``.
+
+    Background: ``normalize_pesquisa(..., **kwargs)`` and ``normalize_datas(**kwargs)``
+    pop from their *own* local ``kwargs`` parameter — a copy built by Python when
+    the caller unpacks with ``**``. The caller's dict is not mutated, so the
+    deprecated aliases and canonical date keys survive and would be re-propagated
+    into downstream ``**kwargs`` calls, clashing with the canonical keyword
+    arguments the caller already materialized.
+
+    Args:
+        kwargs: The caller's local ``kwargs`` dict (mutated in place).
+        include_canonical: When ``True``, also pop the canonical date keys
+            (``data_julgamento_inicio``, ...). Use this when the caller receives
+            dates through ``**kwargs`` rather than naming them explicitly in the
+            function signature (e.g. ``_esaj/base.py``, ``tjsp/client.py`` cjpg).
+    """
+    for alias in SEARCH_ALIASES + DATE_ALIASES:
+        kwargs.pop(alias, None)
+    if include_canonical:
+        for key in DATE_CANONICAL:
+            kwargs.pop(key, None)
+
 
 def normalize_paginas(paginas) -> Optional[Union[list, range]]:
     """Normalize the ``paginas`` parameter to a consistent type.

@@ -1,8 +1,9 @@
 # Scripts de captura de samples
 
-Scripts manuais que rodam contra os tribunais reais e salvam HTMLs crus em
+Scripts manuais que rodam contra os tribunais reais e salvam HTMLs/JSONs crus em
 `tests/<tribunal>/samples/<endpoint>/`. Os samples alimentam os testes de
-contrato offline (`test_*_contract.py`) via `responses` + `load_sample_bytes`.
+contrato offline (`test_*_contract.py`) via `responses` + `load_sample` ou
+`load_sample_bytes`.
 
 Estes scripts **não são rodados pelo pytest**. São ferramentas de manutenção.
 
@@ -23,9 +24,15 @@ python -m tests.fixtures.capture.tjal
 python -m tests.fixtures.capture.tjam
 python -m tests.fixtures.capture.tjce
 python -m tests.fixtures.capture.tjms
+python -m tests.fixtures.capture.tjdft
+python -m tests.fixtures.capture.tjba
+python -m tests.fixtures.capture.tjmt
+python -m tests.fixtures.capture.tjap
+python -m tests.fixtures.capture.tjes
+python -m tests.fixtures.capture.tjrs
 ```
 
-Cada script:
+Cada script eSAJ:
 
 1. Faz 3 consultas contra o eSAJ do tribunal (typical com paginação, um
    resultado, zero resultados).
@@ -60,3 +67,20 @@ Ao mudar a convenção, atualizar este README e os contratos em conjunto.
    de layout legítimo, não ruído.
 4. Ajuste o parser ou o teste conforme necessário e commite sample + fix
    juntos.
+
+## Familia 1B (APIs JSON/GraphQL)
+
+Os scripts `tjdft.py`, `tjba.py`, `tjmt.py`, `tjap.py`, `tjes.py` e `tjrs.py`
+capturam samples JSON para os contratos da familia 1B. A mesma convencao de
+cenarios vale para os endpoints JSON:
+
+| Arquivo | Conteudo |
+|---|---|
+| `cjsg/results_normal_page_01.json` | primeira pagina de uma busca typical |
+| `cjsg/results_normal_page_02.json` | segunda pagina da mesma busca |
+| `cjsg/single_page.json` | busca que cabe em uma pagina |
+| `cjsg/no_results.json` | busca sem resultados |
+
+Excecoes: TJMT tambem salva `cjsg/config.json` porque o scraper consulta
+`config.json` antes da API; TJES tambem salva samples em `cjpg/` porque expoe
+`cjpg` alem de `cjsg`.

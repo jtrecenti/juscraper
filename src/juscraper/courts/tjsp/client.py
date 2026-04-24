@@ -9,7 +9,14 @@ from typing import Any, List, Literal, Optional, Union
 
 from pydantic import BaseModel, ValidationError
 
-from ...utils.params import normalize_datas, normalize_paginas, normalize_pesquisa, validate_intervalo_datas
+from ...utils.params import (
+    SEARCH_ALIASES,
+    normalize_datas,
+    normalize_paginas,
+    normalize_pesquisa,
+    pop_normalize_aliases,
+    validate_intervalo_datas,
+)
 from .._esaj.base import EsajSearchScraper, _raise_on_extra
 from .cjpg_download import cjpg_download as cjpg_download_mod
 from .cjpg_parse import cjpg_n_pags, cjpg_parse_manager
@@ -77,7 +84,10 @@ class TJSPScraper(EsajSearchScraper):
         so ``QueryTooLongError`` propagates cleanly.
         """
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-        for alias in ("query", "termo"):
+        # Only the search aliases get popped here; the base class will run
+        # normalize_datas on the date aliases before popping them, preserving
+        # the DeprecationWarning they emit.
+        for alias in SEARCH_ALIASES:
             kwargs.pop(alias, None)
         validate_pesquisa_length(pesquisa, endpoint="CJSG")
         return super().cjsg_download(
@@ -134,20 +144,11 @@ class TJSPScraper(EsajSearchScraper):
         has_alias = "query" in kwargs or "termo" in kwargs
         if pesquisa or has_alias:
             pesquisa = normalize_pesquisa(pesquisa or None, **kwargs)
-        for alias in ("query", "termo"):
-            kwargs.pop(alias, None)
         validate_pesquisa_length(pesquisa, endpoint="CJPG")
 
         paginas_norm = normalize_paginas(paginas)
         datas = normalize_datas(**kwargs)
-        for alias in (
-            "data_julgamento_inicio", "data_julgamento_fim",
-            "data_publicacao_inicio", "data_publicacao_fim",
-            "data_julgamento_de", "data_julgamento_ate",
-            "data_publicacao_de", "data_publicacao_ate",
-            "data_inicio", "data_fim",
-        ):
-            kwargs.pop(alias, None)
+        pop_normalize_aliases(kwargs, include_canonical=True)
 
         validate_intervalo_datas(
             datas["data_julgamento_inicio"],
@@ -182,7 +183,7 @@ class TJSPScraper(EsajSearchScraper):
             id_processo=inp.id_processo,
             data_inicio=inp.data_julgamento_inicio,
             data_fim=inp.data_julgamento_fim,
-            paginas=inp.paginas,
+            paginas=paginas_norm,
             get_n_pags_callback=_get_n_pags,
         )
         return path
