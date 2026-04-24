@@ -13,6 +13,27 @@ BASE_URL = "https://jurisprudencia.tjpi.jus.br/jurisprudences/search"
 RESULTS_PER_PAGE = 25
 
 
+def build_cjsg_params(
+    pesquisa: str,
+    page: int = 1,
+    tipo: str = "",
+    relator: str = "",
+    classe: str = "",
+    orgao: str = "",
+) -> dict:
+    """Build the query-string params dict for the TJPI CJSG search endpoint."""
+    params = {"q": pesquisa, "page": str(page)}
+    if tipo:
+        params["tipo"] = tipo
+    if relator:
+        params["relator"] = relator
+    if classe:
+        params["classe"] = classe
+    if orgao:
+        params["orgao"] = orgao
+    return params
+
+
 def _fetch_page(
     session: requests.Session,
     pesquisa: str,
@@ -24,15 +45,10 @@ def _fetch_page(
     max_retries: int = 3,
 ) -> str:
     """Fetch a single page of HTML results from the TJPI search."""
-    params = {"q": pesquisa, "page": str(page)}
-    if tipo:
-        params["tipo"] = tipo
-    if relator:
-        params["relator"] = relator
-    if classe:
-        params["classe"] = classe
-    if orgao:
-        params["orgao"] = orgao
+    params = build_cjsg_params(
+        pesquisa=pesquisa, page=page,
+        tipo=tipo, relator=relator, classe=classe, orgao=orgao,
+    )
 
     for attempt in range(1, max_retries + 1):
         try:

@@ -70,7 +70,7 @@ Todo raspador novo em `src/juscraper/courts/<xx>/` ou `src/juscraper/aggregators
 
 Checklist obrigatoria para o PR que adiciona o raspador:
 
-1. **Script de captura** em `tests/fixtures/capture/<xx>.py` que exercita o scraper real e salva as respostas cruas em `tests/<xx>/samples/<endpoint>/<cenario>.<ext>`. Minimo de 3 cenarios por endpoint: typical, sem resultados, pagina unica.
+1. **Script de captura** em `tests/fixtures/capture/<xx>.py` que **sempre** exercita o scraper contra o backend real do tribunal e salva as respostas cruas em `tests/<xx>/samples/<endpoint>/<cenario>.<ext>`. Nunca sintetizar samples a mao — o shape do backend e a fonte da verdade do contrato, nao adivinhacao. Se o backend estiver indisponivel no momento, documentar e abrir issue separada em vez de mockar campos. Minimo de 3 cenarios por endpoint: typical, sem resultados, pagina unica. Saneamento pos-captura (truncar Base64, remover highlights de Elasticsearch, etc.) e OK e fica dentro do proprio script — ver `tests/fixtures/capture/tjrs.py` como referencia.
 2. **Samples commitados** em `tests/<xx>/samples/<endpoint>/`. Convencao: `results_normal.html`, `single_page.html`, `no_results.html`, `results_normal_page_NN.html` para multi-pagina.
 3. **Teste de contrato** em `tests/<xx>/test_<endpoint>_contract.py` seguindo o padrao:
    - `@responses.activate` decorator.
@@ -109,6 +109,8 @@ Checklist obrigatoria para o PR que adiciona o raspador:
 Todo endpoint publico de scraper (`cjsg`, `cjpg`, `cpopg`, `cposg`, `listar_processos`, `auth`, `download_documents`, ...) tem schema `Input<Endpoint><Tribunal>` em `courts/<xx>/schemas.py` ou `aggregators/<yy>/schemas.py`, **inclusive para tribunais ainda nao refatorados** — o schema vive como documentacao executavel da API publica ate o wiring (chamada explicita no metodo publico). Ganhos: rejeita kwargs desconhecidos via `extra="forbid"` (quando wired), nome do campo pydantic fixa singular/plural (#68), substitui validators espalhados.
 
 Wiring tem duas fases: **schema-arquivo** (todos — existe e bate com a assinatura, protegido contra drift por `tests/schemas/test_signature_parity.py`) e **wired** (hoje: TJAC/TJAL/TJAM/TJCE/TJMS + TJSP `cjsg`/`cjpg` — metodo publico invoca o schema; kwargs desconhecidos viram `TypeError` amigavel via `_raise_on_extra` em `juscraper.courts._esaj.base`).
+
+**Wiring segue o refactor #84, nao o PR de contratos.** Contratos de teste offline (padrao #119 / #120) sao *rede de seguranca anterior* a refatoracao e nao devem incluir wiring de schema no mesmo PR. Wiring entra junto com a refatoracao estrutural da familia (ou em PR dedicado imediatamente apos a refatoracao), nunca antes. Misturar os dois escopos viola a regra 1 do #84 (uma mudanca estrutural por vez) e torna o PR de contrato dificil de revisar. Se uma issue de contratos "deixa em aberto" se faz wiring, o default e NAO wirar — abrir follow-up se necessario.
 
 Pipeline canonico implementado em `src/juscraper/courts/_esaj/base.py` e exercitado em `tests/tj{ac,al,am,ce,ms,sp}/test_cjsg_filters_contract.py`. Ao wirar tribunal novo, copiar a ordem de la: aliases (via `normalize_pesquisa`/`normalize_datas`) → validators custom → pydantic → build body a partir do modelo. Motivos: aliases antes do pydantic (senao viram `TypeError` generico); validators custom antes (senao viram wrapped em `ValidationError`); `_raise_on_extra` depois (so `extra_forbidden` deve virar `TypeError` — erro de tipo real sobe natural).
 

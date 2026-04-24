@@ -13,7 +13,7 @@ BASE_URL = "https://jurisprudencia.tjrn.jus.br/api/pesquisar"
 RESULTS_PER_PAGE = 10
 
 
-def _build_payload(
+def build_cjsg_payload(
     pesquisa: str,
     page: int = 1,
     inteiro_teor: str = "",
@@ -32,7 +32,7 @@ def _build_payload(
     jurisdicoes: str = "",
     grau: str = "",
 ) -> dict:
-    """Build the JSON payload for the TJRN search API."""
+    """Build the JSON payload for the TJRN CJSG search API."""
     return {
         "jurisprudencia": {
             "ementa": pesquisa,
@@ -100,7 +100,7 @@ def cjsg_download_manager(
         })
 
     def _get_page(pagina_1based):
-        payload = _build_payload(pesquisa, page=pagina_1based, **kwargs)
+        payload = build_cjsg_payload(pesquisa, page=pagina_1based, **kwargs)
         data = _fetch_page(session, payload)
         time.sleep(1)
         return data

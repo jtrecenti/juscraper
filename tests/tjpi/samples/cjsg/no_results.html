@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-bs-theme="light">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#90040a" />
+    <title>JusPI - Pesquisa de Jurisprudências do TJPI</title>
+    <meta name="csrf-param" content="authenticity_token" />
+<meta name="csrf-token" content="RfJK2IF6P81hZVbRawjqY2IC88QFaRxVglFL0SNPz06_hJtt7jgyU37vogKinfSm-3RygCkSY6jNcygFW-7-kg" />
+    <!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+    <!--[if lt IE 9]>
+      <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.6.1/html5shiv.js" type="text/javascript"></script>
+    <![endif]-->
+    <!-- For all other devices -->
+    <!-- Size should be 32 x 32 pixels -->
+    <!-- Google Font -->
+    <link rel="stylesheet" href="/assets/app-40335b3025991a52fda2156e55ff20599913385207623362216241743acd7f65.css" data-turbo-track="reload" />
+    <script src="/assets/application-ad9042b54ce7ea7d2a5be6d664d6f2933b8f039ddb86f363584dad59e25f3ed9.js" data-turbo-track="reload" defer="defer"></script>
+  </head>
+  <body class="layout-top-nav layout-navbar-fixed", style='height: auto;' data-controller='application'>
+    <div class="wrapper">
+      <nav class="main-header navbar navbar-expand-md navbar-danger">
+        <div class="container fullw-100">
+          <a class="navbar-brand text-white" href="/jurisprudences/search">
+            <img alt="TJ-PI" class="brand-image img-square" src="/assets/Logo-TJPI-d73627a0d1b640c1d426cea38eb2c5af738c6f95d5757fa1d4ce394f51b4f496.png" />
+            <strong>Jurisprudências - TJPI</strong>
+</a>          <button class="navbar-toggler order-1" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse order-3" id="navbarCollapse">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                  <a class="nav-link text-white" href="/u/sign_in">
+                    <i class="fa fa-right-to-bracket"></i>  ACESSO
+</a>                </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+      <div class="content-wrapper" style="min-height: 573px;">
+        <div class="content pt-3 pb-3 d-flex" style="min-height: 80vh;">
+          <div class="container fullw-100 ">
+            <div id="flash_messages">
+              
+            </div>
+            <form action="/jurisprudences/search" accept-charset="UTF-8" method="get">
+  <div class="row align-items-center ">
+      <div class="col-3 col-md-1 display-6 text-right">
+        JusPI
+      </div>
+    <div class="col-9">
+      <div class="input-group">
+        <input type="text" name="q" id="q" value="juscraper_probe_zero_hits_xyzqwe" placeholder="Pesquisa por Acórdãos, Decisões Terminativas, Súmulas, Ementas, Processos, etc" class="form-control form-control-lg" />
+        <div class="input-group-append">
+          <button type="submit" class="btn btn-lg btn-default">
+            <i class="fa fa-search"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2 text-center text-sm-left ">
+      <a target="_blank" href="/jurisprudences/conectives">Conheça os conectivos</a>
+    </div>
+  </div>
+    <div class="row">
+      <div class="col-12 col-md-3 offset-sm-1 mt-2" style="max-width: -webkit-fill-available;">
+        <select name="tipo" id="tipo" class="form-control form-control-lg" data-controller="tom-select"><option value="">Tipos [Todos]</option><option value="Acórdão">Acórdão</option>
+<option value="Decisão Terminativa">Decisão Terminativa</option>
+<option value="Súmula">Súmula</option></select>
+      </div>
+      <div class="col-12 col-md-6 offset-sm-1 offset-md-0 mt-2" style="max-width: -webkit-fill-available;">
+        <select name="relator" id="relator" class="form-control form-control-lg" data-controller="tom-select"><option value="">Relator [Todos]</option><option value="ADERSON ANTONIO BRITO NOGUEIRA">ADERSON ANTONIO BRITO NOGUEIRA</option>
+<option value="AGRIMAR RODRIGUES DE ARAUJO">AGRIMAR RODRIGUES DE ARAUJO</option>
+<option value="ANTONIO LOPES DE OLIVEIRA">ANTONIO LOPES DE OLIVEIRA</option>
+<option value="ANTONIO REIS DE JESUS NOLLETO">ANTONIO REIS DE JESUS NOLLETO</option>
+<option value="ANTONIO SOARES DOS SANTOS">ANTONIO SOARES DOS SANTOS</option>
+<option value="CARLOS HAMILTON BEZERRA LIMA">CARLOS HAMILTON BEZERRA LIMA</option>
+<option value="CYNARA VALERIA CAVALCANTE CHAVES">CYNARA VALERIA CAVALCANTE CHAVES</option>
+<option value="DIOCLECIO SOUSA DA SILVA">DIOCLECIO SOUSA DA SILVA</option>
+<option value="EDISON ROGERIO LEITAO RODRIGUES">EDISON ROGERIO LEITAO RODRIGUES</option>
+<option value="EDSON ALVES DA SILVA">EDSON ALVES DA SILVA</option>
+<option value="EDVALDO DE SOUSA REBOUCAS NETO">EDVALDO DE SOUSA REBOUCAS NETO</option>
+<option value="EDVALDO PEREIRA DE MOURA">EDVALDO PEREIRA DE MOURA</option>
+<option value="ELIANA MARCIA NUNES DE CARVALHO">ELIANA MARCIA NUNES DE CARVALHO</option>
+<option value="ELIAS RIBEIRO DE MOURA JUNIOR">ELIAS RIBEIRO DE MOURA JUNIOR</option>
+<option value="ELVANICE PEREIRA DE SOUSA">ELVANICE PEREIRA DE SOUSA</option>
+<option value="ELVANICE PEREIRA DE SOUSA FROTA GOMES">ELVANICE PEREIRA DE SOUSA FROTA GOMES</option>
+<option value="ERIVAN JOSE DA SILVA LOPES">ERIVAN JOSE DA SILVA LOPES</option>
+<option value="EUCASSIO GONCALVES LIMA JUNIOR">EUCASSIO GONCALVES LIMA JUNIOR</option>
+<option value="EULALIA MARIA RIBEIRO GONCALVES NASCIMENTO PINHEIRO">EULALIA MARIA RIBEIRO GONCALVES NASCIMENTO PINHEIRO</option>
+<option value="FABRICIO PAULO CYSNE DE NOVAES">FABRICIO PAULO CYSNE DE NOVAES</option>
+<option value="FERNANDO CARVALHO MENDES">FERNANDO CARVALHO MENDES</option>
+<option value="FERNANDO LOPES E SILVA NETO">FERNANDO LOPES E SILVA NETO</option>
+<option value="FRANCISCO ANTONIO PAES LANDIM FILHO">FRANCISCO ANTONIO PAES LANDIM FILHO</option>
+<option value="FRANCISCO GOMES DA COSTA NETO">FRANCISCO GOMES DA COSTA NETO</option>
+<option value="FRANCISCO JOAO DAMASCENO">FRANCISCO JOAO DAMASCENO</option>
+<option value="GLAUCIA MENDES DE MACEDO">GLAUCIA MENDES DE MACEDO</option>
+<option value="HAROLDO OLIVEIRA REHEM">HAROLDO OLIVEIRA REHEM</option>
+<option value="HAYDEE LIMA DE CASTELO BRANCO">HAYDEE LIMA DE CASTELO BRANCO</option>
+<option value="HILO DE ALMEIDA SOUSA">HILO DE ALMEIDA SOUSA</option>
+<option value="IGOR RAFAEL CARVALHO DE ALENCAR">IGOR RAFAEL CARVALHO DE ALENCAR</option>
+<option value="IGOR TIAGO DE LIMA">IGOR TIAGO DE LIMA</option>
+<option value="JOAO ANTONIO BITTENCOURT BRAGA NETO">JOAO ANTONIO BITTENCOURT BRAGA NETO</option>
+<option value="JOAO GABRIEL FURTADO BAPTISTA">JOAO GABRIEL FURTADO BAPTISTA</option>
+<option value="JOAO HENRIQUE SOUSA GOMES">JOAO HENRIQUE SOUSA GOMES</option>
+<option value="JOAQUIM DIAS DE SANTANA FILHO">JOAQUIM DIAS DE SANTANA FILHO</option>
+<option value="JOSE FRANCISCO DO NASCIMENTO">JOSE FRANCISCO DO NASCIMENTO</option>
+<option value="JOSE JAMES GOMES PEREIRA">JOSE JAMES GOMES PEREIRA</option>
+<option value="JOSE OLINDO GIL BARBOSA">JOSE OLINDO GIL BARBOSA</option>
+<option value="JOSE RIBAMAR OLIVEIRA">JOSE RIBAMAR OLIVEIRA</option>
+<option value="JOSE VIDAL DE FREITAS FILHO">JOSE VIDAL DE FREITAS FILHO</option>
+<option value="JOSE WILSON FERREIRA DE ARAUJO JUNIOR">JOSE WILSON FERREIRA DE ARAUJO JUNIOR</option>
+<option value="JULIO CESAR MENEZES GARCEZ">JULIO CESAR MENEZES GARCEZ</option>
+<option value="KARITIANA LIMA LUSTOSA">KARITIANA LIMA LUSTOSA</option>
+<option value="KELSON CARVALHO LOPES DA SILVA">KELSON CARVALHO LOPES DA SILVA</option>
+<option value="LEANDRO RODRIGUES SAMPAIO">LEANDRO RODRIGUES SAMPAIO</option>
+<option value="LEONARDO LUCIO FREIRE TRIGUEIRO">LEONARDO LUCIO FREIRE TRIGUEIRO</option>
+<option value="LIRTON NOGUEIRA SANTOS">LIRTON NOGUEIRA SANTOS</option>
+<option value="LISABETE MARIA MARCHETTI">LISABETE MARIA MARCHETTI</option>
+<option value="LITELTON VIEIRA DE OLIVEIRA">LITELTON VIEIRA DE OLIVEIRA</option>
+<option value="LUCICLEIDE PEREIRA BELO">LUCICLEIDE PEREIRA BELO</option>
+<option value="LUIZ DE MOURA CORREIA">LUIZ DE MOURA CORREIA</option>
+<option value="LUIZ GONZAGA BRANDAO DE CARVALHO">LUIZ GONZAGA BRANDAO DE CARVALHO</option>
+<option value="MANOEL DE SOUSA DOURADO">MANOEL DE SOUSA DOURADO</option>
+<option value="MARCELO MESQUITA SILVA">MARCELO MESQUITA SILVA</option>
+<option value="MARCUS KLINGER MADEIRA DE VASCONCELOS">MARCUS KLINGER MADEIRA DE VASCONCELOS</option>
+<option value="MARIA CELIA LIMA LUCIO">MARIA CELIA LIMA LUCIO</option>
+<option value="MARIA DALVA DE CARVALHO LOPES SILVA">MARIA DALVA DE CARVALHO LOPES SILVA</option>
+<option value="MARIA DAS NEVES RAMALHO BARBOSA LIMA">MARIA DAS NEVES RAMALHO BARBOSA LIMA</option>
+<option value="MARIA DO ROSARIO DE FATIMA MARTINS L DIAS">MARIA DO ROSARIO DE FATIMA MARTINS L DIAS</option>
+<option value="MARIA DO ROSARIO DE FATIMA MARTINS LEITE DIAS">MARIA DO ROSARIO DE FATIMA MARTINS LEITE DIAS</option>
+<option value="MARIA DO SOCORRO ROCHA CIPRIANO">MARIA DO SOCORRO ROCHA CIPRIANO</option>
+<option value="MARIA LUIZA DE MOURA MELLO E FREITAS">MARIA LUIZA DE MOURA MELLO E FREITAS</option>
+<option value="MARIA ZILNAR COUTINHO LEAL">MARIA ZILNAR COUTINHO LEAL</option>
+<option value="OLIMPIO JOSE PASSOS GALVAO">OLIMPIO JOSE PASSOS GALVAO</option>
+<option value="OTON MARIO JOSE LUSTOSA TORRES">OTON MARIO JOSE LUSTOSA TORRES</option>
+<option value="PATRICIA COIMBRA SANTOS">PATRICIA COIMBRA SANTOS</option>
+<option value="PAULO ROBERTO DE ARAUJO BARROS">PAULO ROBERTO DE ARAUJO BARROS</option>
+<option value="PEDRO DE ALCANTARA DA SILVA MACEDO">PEDRO DE ALCANTARA DA SILVA MACEDO</option>
+<option value="RAFAEL DE FREITAS GOMES">RAFAEL DE FREITAS GOMES</option>
+<option value="RAIMUNDO EUFRASIO ALVES FILHO">RAIMUNDO EUFRASIO ALVES FILHO</option>
+<option value="RAIMUNDO HOLLAND MOURA DE QUEIROZ">RAIMUNDO HOLLAND MOURA DE QUEIROZ</option>
+<option value="RAIMUNDO JOSE DE MACAU FURTADO">RAIMUNDO JOSE DE MACAU FURTADO</option>
+<option value="RAIMUNDO NONATO DA COSTA ALENCAR">RAIMUNDO NONATO DA COSTA ALENCAR</option>
+<option value="REGINALDO PEREIRA LIMA DE ALENCAR">REGINALDO PEREIRA LIMA DE ALENCAR</option>
+<option value="RICARDO GENTIL EULALIO DANTAS">RICARDO GENTIL EULALIO DANTAS</option>
+<option value="SEBASTIAO FIRMINO LIMA FILHO">SEBASTIAO FIRMINO LIMA FILHO</option>
+<option value="SEBASTIAO RIBEIRO MARTINS">SEBASTIAO RIBEIRO MARTINS</option>
+<option value="THIAGO BRANDAO DE ALMEIDA">THIAGO BRANDAO DE ALMEIDA</option>
+<option value="TRIBUNAL DE JUSTICA DO ESTADO DO PIAUI">TRIBUNAL DE JUSTICA DO ESTADO DO PIAUI</option>
+<option value="Tribunal Pleno">Tribunal Pleno</option>
+<option value="VALDENIA MOURA MARQUES DE SA">VALDENIA MOURA MARQUES DE SA</option>
+<option value="VIRGILIO MADEIRA MARTINS FILHO">VIRGILIO MADEIRA MARTINS FILHO</option></select>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-12 col-md-9 offset-sm-1" style="max-width: -webkit-fill-available;">
+        <div class="row">
+          <div class="col-12 col-md-4 mt-2">
+            <select name="classe" id="classe" class="form-control form-control-lg" data-controller="tom-select"><option value="">Classe [Todos]</option><option value="ACORDO DE NÃO PERSECUÇÃO CÍVEL">ACORDO DE NÃO PERSECUÇÃO CÍVEL</option>
+<option value="AGRAVO DE EXECUÇÃO PENAL">AGRAVO DE EXECUÇÃO PENAL</option>
+<option value="AGRAVO DE INSTRUMENTO">AGRAVO DE INSTRUMENTO</option>
+<option value="AGRAVO DE INSTRUMENTO EM RECURSO EXTRAORDINÁRIO">AGRAVO DE INSTRUMENTO EM RECURSO EXTRAORDINÁRIO</option>
+<option value="AGRAVO INTERNO CRIMINAL">AGRAVO INTERNO CRIMINAL</option>
+<option value="AGRAVO INTERNO CÍVEL">AGRAVO INTERNO CÍVEL</option>
+<option value="APELAÇÃO / REMESSA NECESSÁRIA">APELAÇÃO / REMESSA NECESSÁRIA</option>
+<option value="APELAÇÃO CRIMINAL">APELAÇÃO CRIMINAL</option>
+<option value="APELAÇÃO CÍVEL">APELAÇÃO CÍVEL</option>
+<option value="AUTO DE PRISÃO EM FLAGRANTE">AUTO DE PRISÃO EM FLAGRANTE</option>
+<option value="AÇÃO PENAL - PROCEDIMENTO ORDINÁRIO">AÇÃO PENAL - PROCEDIMENTO ORDINÁRIO</option>
+<option value="AÇÃO PENAL - PROCEDIMENTO SUMARÍSSIMO">AÇÃO PENAL - PROCEDIMENTO SUMARÍSSIMO</option>
+<option value="AÇÃO PENAL - PROCEDIMENTO SUMÁRIO">AÇÃO PENAL - PROCEDIMENTO SUMÁRIO</option>
+<option value="AÇÃO POPULAR">AÇÃO POPULAR</option>
+<option value="AÇÃO RESCISÓRIA">AÇÃO RESCISÓRIA</option>
+<option value="CARTA DE ORDEM CÍVEL">CARTA DE ORDEM CÍVEL</option>
+<option value="CARTA PRECATÓRIA CRIMINAL">CARTA PRECATÓRIA CRIMINAL</option>
+<option value="CARTA TESTEMUNHÁVEL">CARTA TESTEMUNHÁVEL</option>
+<option value="CAUTELAR INOMINADA CRIMINAL">CAUTELAR INOMINADA CRIMINAL</option>
+<option value="CONFLITO DE COMPETÊNCIA CÍVEL">CONFLITO DE COMPETÊNCIA CÍVEL</option>
+<option value="CONFLITO DE COMPETÊNCIA INFÂNCIA E JUVENTUDE">CONFLITO DE COMPETÊNCIA INFÂNCIA E JUVENTUDE</option>
+<option value="CONFLITO DE JURISDIÇÃO">CONFLITO DE JURISDIÇÃO</option>
+<option value="CORREIÇÃO PARCIAL CRIMINAL">CORREIÇÃO PARCIAL CRIMINAL</option>
+<option value="CORREIÇÃO PARCIAL CÍVEL">CORREIÇÃO PARCIAL CÍVEL</option>
+<option value="CUMPRIMENTO DE SENTENÇA">CUMPRIMENTO DE SENTENÇA</option>
+<option value="CUMPRIMENTO DE SENTENÇA CONTRA A FAZENDA PÚBLICA">CUMPRIMENTO DE SENTENÇA CONTRA A FAZENDA PÚBLICA</option>
+<option value="CUMPRIMENTO PROVISÓRIO DE DECISÃO">CUMPRIMENTO PROVISÓRIO DE DECISÃO</option>
+<option value="CUMPRIMENTO PROVISÓRIO DE SENTENÇA">CUMPRIMENTO PROVISÓRIO DE SENTENÇA</option>
+<option value="DECLARATÓRIA DE CONSTITUCIONALIDADE">DECLARATÓRIA DE CONSTITUCIONALIDADE</option>
+<option value="DESAFORAMENTO DE JULGAMENTO">DESAFORAMENTO DE JULGAMENTO</option>
+<option value="DIRETA DE INCONSTITUCIONALIDADE">DIRETA DE INCONSTITUCIONALIDADE</option>
+<option value="DISSÍDIO COLETIVO DE GREVE">DISSÍDIO COLETIVO DE GREVE</option>
+<option value="EMBARGOS DE DECLARAÇÃO CRIMINAL">EMBARGOS DE DECLARAÇÃO CRIMINAL</option>
+<option value="EMBARGOS DE DECLARAÇÃO CÍVEL">EMBARGOS DE DECLARAÇÃO CÍVEL</option>
+<option value="EMBARGOS DE TERCEIRO CÍVEL">EMBARGOS DE TERCEIRO CÍVEL</option>
+<option value="EMBARGOS INFRINGENTES E DE NULIDADE">EMBARGOS INFRINGENTES E DE NULIDADE</option>
+<option value="EMBARGOS À EXECUÇÃO">EMBARGOS À EXECUÇÃO</option>
+<option value="EXCEÇÃO DE IMPEDIMENTO">EXCEÇÃO DE IMPEDIMENTO</option>
+<option value="EXCEÇÃO DE INCOMPETÊNCIA DE JUÍZO">EXCEÇÃO DE INCOMPETÊNCIA DE JUÍZO</option>
+<option value="EXCEÇÃO DE SUSPEIÇÃO">EXCEÇÃO DE SUSPEIÇÃO</option>
+<option value="HABEAS CORPUS CRIMINAL">HABEAS CORPUS CRIMINAL</option>
+<option value="HABEAS CORPUS CÍVEL">HABEAS CORPUS CÍVEL</option>
+<option value="HABEAS DATA CRIMINAL">HABEAS DATA CRIMINAL</option>
+<option value="HABEAS DATA CÍVEL">HABEAS DATA CÍVEL</option>
+<option value="HABILITAÇÃO">HABILITAÇÃO</option>
+<option value="INCIDENTE DE ARGUIÇÃO DE INCONSTITUCIONALIDADE CÍVEL">INCIDENTE DE ARGUIÇÃO DE INCONSTITUCIONALIDADE CÍVEL</option>
+<option value="INCIDENTE DE ASSUNÇÃO DE COMPETÊNCIA">INCIDENTE DE ASSUNÇÃO DE COMPETÊNCIA</option>
+<option value="INCIDENTE DE DESCONSIDERAÇÃO DE PERSONALIDADE JURÍDICA">INCIDENTE DE DESCONSIDERAÇÃO DE PERSONALIDADE JURÍDICA</option>
+<option value="INCIDENTE DE IMPEDIMENTO CÍVEL">INCIDENTE DE IMPEDIMENTO CÍVEL</option>
+<option value="INCIDENTE DE RESOLUÇÃO DE DEMANDAS REPETITIVAS">INCIDENTE DE RESOLUÇÃO DE DEMANDAS REPETITIVAS</option>
+<option value="INCIDENTE DE SUSPEIÇÃO CÍVEL">INCIDENTE DE SUSPEIÇÃO CÍVEL</option>
+<option value="INQUÉRITO POLICIAL">INQUÉRITO POLICIAL</option>
+<option value="INSANIDADE MENTAL DO ACUSADO">INSANIDADE MENTAL DO ACUSADO</option>
+<option value="INTERPELAÇÃO">INTERPELAÇÃO</option>
+<option value="LIQUIDAÇÃO POR ARBITRAMENTO">LIQUIDAÇÃO POR ARBITRAMENTO</option>
+<option value="MANDADO DE INJUNÇÃO">MANDADO DE INJUNÇÃO</option>
+<option value="MANDADO DE SEGURANÇA COLETIVO">MANDADO DE SEGURANÇA COLETIVO</option>
+<option value="MANDADO DE SEGURANÇA CRIMINAL">MANDADO DE SEGURANÇA CRIMINAL</option>
+<option value="MANDADO DE SEGURANÇA CÍVEL">MANDADO DE SEGURANÇA CÍVEL</option>
+<option value="PEDIDO DE BUSCA E APREENSÃO CRIMINAL">PEDIDO DE BUSCA E APREENSÃO CRIMINAL</option>
+<option value="PEDIDO DE EFEITO SUSPENSIVO À APELAÇÃO">PEDIDO DE EFEITO SUSPENSIVO À APELAÇÃO</option>
+<option value="PEDIDO DE QUEBRA DE SIGILO DE DADOS E/OU TELEFÔNICO">PEDIDO DE QUEBRA DE SIGILO DE DADOS E/OU TELEFÔNICO</option>
+<option value="PETIÇÃO CRIMINAL">PETIÇÃO CRIMINAL</option>
+<option value="PETIÇÃO CÍVEL">PETIÇÃO CÍVEL</option>
+<option value="PRECATÓRIO">PRECATÓRIO</option>
+<option value="PROCEDIMENTO COMUM CÍVEL">PROCEDIMENTO COMUM CÍVEL</option>
+<option value="PROCEDIMENTO INVESTIGATÓRIO CRIMINAL (PIC-MP)">PROCEDIMENTO INVESTIGATÓRIO CRIMINAL (PIC-MP)</option>
+<option value="PROCESSO ADMINISTRATIVO">PROCESSO ADMINISTRATIVO</option>
+<option value="PROCESSO ADMINISTRATIVO DISCIPLINAR EM FACE DE MAGISTRADO">PROCESSO ADMINISTRATIVO DISCIPLINAR EM FACE DE MAGISTRADO</option>
+<option value="REABILITAÇÃO">REABILITAÇÃO</option>
+<option value="RECLAMAÇÃO">RECLAMAÇÃO</option>
+<option value="RECURSO DE MEDIDA CAUTELAR CÍVEL">RECURSO DE MEDIDA CAUTELAR CÍVEL</option>
+<option value="RECURSO EM SENTIDO ESTRITO">RECURSO EM SENTIDO ESTRITO</option>
+<option value="RECURSO EM SENTIDO ESTRITO/RECURSO EX OFFICIO">RECURSO EM SENTIDO ESTRITO/RECURSO EX OFFICIO</option>
+<option value="RECURSO INOMINADO CÍVEL">RECURSO INOMINADO CÍVEL</option>
+<option value="REMESSA NECESSÁRIA CRIMINAL">REMESSA NECESSÁRIA CRIMINAL</option>
+<option value="REMESSA NECESSÁRIA CÍVEL">REMESSA NECESSÁRIA CÍVEL</option>
+<option value="REPRESENTAÇÃO CRIMINAL/NOTÍCIA DE CRIME">REPRESENTAÇÃO CRIMINAL/NOTÍCIA DE CRIME</option>
+<option value="REPRESENTAÇÃO P/ PERDA DA GRADUAÇÃO">REPRESENTAÇÃO P/ PERDA DA GRADUAÇÃO</option>
+<option value="RESTAURAÇÃO DE AUTOS CRIMINAL">RESTAURAÇÃO DE AUTOS CRIMINAL</option>
+<option value="RESTAURAÇÃO DE AUTOS CÍVEL">RESTAURAÇÃO DE AUTOS CÍVEL</option>
+<option value="REVISÃO CRIMINAL">REVISÃO CRIMINAL</option>
+<option value="SUSPENSÃO DE EXECUÇÃO DE SENTENÇA">SUSPENSÃO DE EXECUÇÃO DE SENTENÇA</option>
+<option value="SUSPENSÃO DE LIMINAR E DE SENTENÇA">SUSPENSÃO DE LIMINAR E DE SENTENÇA</option>
+<option value="SUSPENSÃO DE LIMINAR OU ANTECIPAÇÃO DE TUTELA">SUSPENSÃO DE LIMINAR OU ANTECIPAÇÃO DE TUTELA</option>
+<option value="SUSPENSÃO DE SEGURANÇA CÍVEL">SUSPENSÃO DE SEGURANÇA CÍVEL</option>
+<option value="SÚMULA">SÚMULA</option>
+<option value="TERMO CIRCUNSTANCIADO">TERMO CIRCUNSTANCIADO</option>
+<option value="TUTELA ANTECIPADA ANTECEDENTE">TUTELA ANTECIPADA ANTECEDENTE</option>
+<option value="TUTELA CAUTELAR ANTECEDENTE">TUTELA CAUTELAR ANTECEDENTE</option></select>
+          </div>
+          <div class="col-12 col-md mt-2" style="max-width: -webkit-fill-available;">
+            <select name="orgao" id="orgao" class="form-control form-control-lg" data-controller="tom-select"><option value="">Órgão Colegiado [Todos]</option><option value="1ª Câmara Especializada Criminal">1ª Câmara Especializada Criminal</option>
+<option value="1ª Câmara Especializada Cível">1ª Câmara Especializada Cível</option>
+<option value="1ª Câmara de Direito Público">1ª Câmara de Direito Público</option>
+<option value="1ª Turma Recursal">1ª Turma Recursal</option>
+<option value="2ª Câmara Especializada Criminal">2ª Câmara Especializada Criminal</option>
+<option value="2ª Câmara Especializada Cível">2ª Câmara Especializada Cível</option>
+<option value="2ª Câmara de Direito Público">2ª Câmara de Direito Público</option>
+<option value="2ª Turma Recursal">2ª Turma Recursal</option>
+<option value="3ª Câmara Especializada Cível">3ª Câmara Especializada Cível</option>
+<option value="3ª Câmara de Direito Público">3ª Câmara de Direito Público</option>
+<option value="3ª Turma Recursal">3ª Turma Recursal</option>
+<option value="4ª Câmara Especializada Cível">4ª Câmara Especializada Cível</option>
+<option value="4ª Câmara de Direito Público">4ª Câmara de Direito Público</option>
+<option value="5ª Câmara de Direito Público">5ª Câmara de Direito Público</option>
+<option value="6ª Câmara de Direito Público">6ª Câmara de Direito Público</option>
+<option value="Câmaras Criminais (Plantão)">Câmaras Criminais (Plantão)</option>
+<option value="Câmaras Cíveis (Plantão)">Câmaras Cíveis (Plantão)</option>
+<option value="Câmaras Reunidas Criminais">Câmaras Reunidas Criminais</option>
+<option value="Câmaras Reunidas Cíveis">Câmaras Reunidas Cíveis</option>
+<option value="Câmaras de Direito Público (Plantão)">Câmaras de Direito Público (Plantão)</option>
+<option value="Precatório">Precatório</option>
+<option value="Presidência do Tribunal de Justiça">Presidência do Tribunal de Justiça</option>
+<option value="STIC">STIC</option>
+<option value="Tribunal Pleno">Tribunal Pleno</option>
+<option value="Vice-Presidência do Tribunal de Justiça">Vice-Presidência do Tribunal de Justiça</option></select>
+          </div>
+          <div class="col-12 col-md-auto mt-2" data-controller="daterange">
+            <button type="button" class="btn btn-default form-control form-control-lg bg-white" data-daterange-target="input">
+              <i class="fa fa-calendar"></i>&nbsp; Data
+              <span></span> <i class="fa fa-caret-down"></i>
+            </button>
+            <div class="d-none">
+              <input type="date" name="data_min" id="data_min" data-daterange-target="dataMin" />
+              <input type="date" name="data_max" id="data_max" data-daterange-target="dataMax" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="p-4">
+      <div class="row align-items-center">
+        <div class="col-12 col-md-6">
+          Sem resultados para:
+          <div class="fw-bold">
+            juscraper_probe_zero_hits_xyzqwe
+          </div>
+        </div>
+      </div>
+    </div>
+</form>
+          </div>
+        </div>
+      </div>
+      <!-- Main Footer -->
+<footer class="main-footer">
+  <!-- To the right -->
+  <div class="float-right">
+    <a target="_blank" href="http://www.tjpi.jus.br" class="text-black"><b>TJPI</b></a><img alt="TJ-PI Rodapé" class="logotjfooter" src="/assets/tjpit2-983799c8de98fe0296831e94a5d89c9011a8eee4d6fb00e0313e508aa8110fe3.png" />
+  </div>
+  <!-- Default to the left -->
+  <strong class='d-none d-sm-inline'>Secretaria de Tecnologia da Informação e Comunicação</strong>
+  <strong class='d-block-inline d-sm-none'>STIC</strong>
+  -
+  2026
+</footer>
+
+    </div>
+  </body>
+</html>
