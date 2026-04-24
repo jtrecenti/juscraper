@@ -20,9 +20,13 @@ def cjsg_parse(resultados_brutos: list) -> pd.DataFrame:
     """
     rows = []
     for page_data in resultados_brutos:
-        decisoes = (
-            page_data.get("data", {}).get("filter", {}).get("decisoes", [])
-        )
+        # Defensive chain: TJBA's GraphQL can legitimately return ``null`` for
+        # any intermediate container when a search hits zero results, mirroring
+        # what TJMT does with ``AcordaoCollection: null``. ``.get(key, {})`` only
+        # covers the missing-key case; ``or {}`` also normalizes explicit nulls.
+        data = page_data.get("data") or {}
+        filter_ = data.get("filter") or {}
+        decisoes = filter_.get("decisoes") or []
         for d in decisoes:
             relator = d.get("relator") or {}
             orgao = d.get("orgaoJulgador") or {}
