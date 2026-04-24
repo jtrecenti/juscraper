@@ -7,6 +7,30 @@ from tests.tjes.test_cjsg_contract import CJSG_MIN_COLUMNS, _add_page
 
 
 @responses.activate
+def test_cjpg_typical_com_paginacao(mocker):
+    """Multi-page first-instance query exercises the pje1g paginator."""
+    mocker.patch("time.sleep")
+    _add_page(
+        "obrigacao de fazer",
+        1,
+        "cjpg/results_normal_page_01.json",
+        core="pje1g",
+    )
+    _add_page(
+        "obrigacao de fazer",
+        2,
+        "cjpg/results_normal_page_02.json",
+        core="pje1g",
+    )
+
+    df = jus.scraper("tjes").cjpg("obrigacao de fazer", paginas=range(1, 3))
+
+    assert isinstance(df, pd.DataFrame)
+    assert CJSG_MIN_COLUMNS <= set(df.columns)
+    assert len(df) > 0
+
+
+@responses.activate
 def test_cjpg_single_page(mocker):
     """First-instance search uses the pje1g core and returns a DataFrame."""
     mocker.patch("time.sleep")
