@@ -21,7 +21,13 @@ import requests
 from pydantic import BaseModel, ValidationError
 
 from ...core.base import BaseScraper
-from ...utils.params import normalize_datas, normalize_paginas, normalize_pesquisa, validate_intervalo_datas
+from ...utils.params import (
+    normalize_datas,
+    normalize_paginas,
+    normalize_pesquisa,
+    pop_normalize_aliases,
+    validate_intervalo_datas,
+)
 from .download import download_cjsg_pages
 from .forms import build_cjsg_form_body
 from .parse import cjsg_n_pags, cjsg_parse_manager
@@ -128,18 +134,9 @@ class EsajSearchScraper(BaseScraper):
         pydantic validation.
         """
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-        for alias in ("query", "termo"):
-            kwargs.pop(alias, None)
         paginas_norm = normalize_paginas(paginas)
         datas = normalize_datas(**kwargs)
-        for alias in (
-            "data_julgamento_inicio", "data_julgamento_fim",
-            "data_publicacao_inicio", "data_publicacao_fim",
-            "data_julgamento_de", "data_julgamento_ate",
-            "data_publicacao_de", "data_publicacao_ate",
-            "data_inicio", "data_fim",
-        ):
-            kwargs.pop(alias, None)
+        pop_normalize_aliases(kwargs, include_canonical=True)
 
         validate_intervalo_datas(
             datas["data_julgamento_inicio"],
@@ -171,7 +168,7 @@ class EsajSearchScraper(BaseScraper):
             download_path=diretorio or self.download_path,
             body=body,
             tipo_decisao=getattr(input_model, "tipo_decisao", "acordao"),
-            paginas=input_model.paginas,
+            paginas=paginas_norm,
             get_n_pags_callback=cjsg_n_pags,
             sleep_time=self.sleep_time,
             chrome_ua=self.CJSG_CHROME_UA,

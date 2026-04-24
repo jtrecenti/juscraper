@@ -7,7 +7,7 @@ import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa
+from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa, pop_normalize_aliases
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
@@ -90,11 +90,7 @@ class TJRSScraper(BaseScraper):
         # Drop deprecated aliases from local kwargs so they are not re-propagated
         # into cjsg_download_manager via **kwargs (would collide with the canonical
         # keyword arguments that normalize_* already materialized above).
-        for alias in ("query", "termo",
-                      "data_julgamento_de", "data_julgamento_ate",
-                      "data_publicacao_de", "data_publicacao_ate",
-                      "data_inicio", "data_fim"):
-            kwargs.pop(alias, None)
+        pop_normalize_aliases(kwargs)
         if session is None:
             session = self.session
         return cjsg_download_manager(
