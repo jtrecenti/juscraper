@@ -98,3 +98,9 @@ def test_cjsg_data_inicio_alias_emits_deprecation_warning(mocker):
     deprecation_messages = [str(w.message) for w in caught if issubclass(w.category, DeprecationWarning)]
     assert any("data_inicio" in m and "deprecado" in m for m in deprecation_messages)
     assert any("data_fim" in m and "deprecado" in m for m in deprecation_messages)
+    # The second guarantee: ``warn_unsupported`` must also fire so the user
+    # learns that TJDFT silently drops the date filters. If this ever stops
+    # firing we want the test to catch it.
+    user_warning_messages = [str(w.message) for w in caught if w.category is UserWarning]
+    assert any("data_julgamento_inicio" in m and "TJDFT" in m for m in user_warning_messages)
+    assert any("data_julgamento_fim" in m and "TJDFT" in m for m in user_warning_messages)
