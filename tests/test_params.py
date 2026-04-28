@@ -1,14 +1,17 @@
 """Tests for the parameter normalization utilities."""
 import warnings
+
 import pytest
+
 from juscraper.utils.params import (
+    normalize_datas,
     normalize_paginas,
     normalize_pesquisa,
-    normalize_datas,
+    pop_deprecated_alias,
+    resolve_deprecated_alias,
     validate_intervalo_datas,
     warn_unsupported,
 )
-
 
 # --- normalize_paginas ---
 
@@ -220,3 +223,86 @@ class TestWarnUnsupported:
         assert issubclass(w[0].category, UserWarning)
         assert "TJDFT" in str(w[0].message)
         assert "data_julgamento_inicio" in str(w[0].message)
+
+
+# --- pop_deprecated_alias ---
+
+class TestPopDeprecatedAlias:
+
+    def test_absent_returns_none(self):
+        kwargs = {"outro": "x"}
+        assert pop_deprecated_alias(kwargs, "magistrado", "relator") is None
+        assert kwargs == {"outro": "x"}
+
+    def test_present_pops_and_warns(self):
+        kwargs = {"magistrado": "Fulano"}
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            result = pop_deprecated_alias(kwargs, "magistrado", "relator")
+        assert result == "Fulano"
+        assert "magistrado" not in kwargs
+        assert len(w) == 1
+        assert issubclass(w[0].category, DeprecationWarning)
+        assert "magistrado" in str(w[0].message)
+        assert "relator" in str(w[0].message)
+
+
+# --- resolve_deprecated_alias ---
+
+class TestResolveDeprecatedAlias:
+
+    def test_alias_absent_returns_current(self):
+        kwargs: dict = {}
+        result = resolve_deprecated_alias(kwargs, "magistrado", "relator", "Beltrana")
+        assert result == "Beltrana"
+
+    def test_alias_absent_with_none_current(self):
+        kwargs: dict = {}
+        result = resolve_deprecated_alias(kwargs, "magistrado", "relator", None)
+        assert result is None
+
+    def test_alias_present_canonical_unset_returns_alias(self):
+        kwargs = {"magistrado": "Fulano"}
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            result = resolve_deprecated_alias(kwargs, "magistrado", "relator", None)
+        assert result == "Fulano"
+        assert "magistrado" not in kwargs
+        assert len(w) == 1
+        assert issubclass(w[0].category, DeprecationWarning)
+
+    def test_collision_raises(self):
+        kwargs = {"magistrado": "Fulano"}
+        with warnings.catch_warnings():
+            warnings.simplefilter("always")
+            with pytest.raises(ValueError, match="relator.*magistrado"):
+                resolve_deprecated_alias(kwargs, "magistrado", "relator", "Beltrana")
+
+    def test_custom_sentinel_empty_string(self):
+        """Para clients que usam ``str = ""`` como default (TJPB/TJRN/TJRO)."""
+        kwargs = {"nr_processo": "0000000-00.2024.8.15.0001"}
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("always")
+            result = resolve_deprecated_alias(
+                kwargs, "nr_processo", "numero_processo", "", sentinel=""
+            )
+        assert result == "0000000-00.2024.8.15.0001"
+
+    def test_custom_sentinel_collision(self):
+        kwargs = {"nr_processo": "A"}
+        with warnings.catch_warnings():
+            warnings.simplefilter("always")
+            with pytest.raises(ValueError, match="numero_processo.*nr_processo"):
+                resolve_deprecated_alias(
+                    kwargs, "nr_processo", "numero_processo", "B", sentinel=""
+                )
+
+    def test_custom_sentinel_empty_current_not_collision(self):
+        """``current_value=""`` com sentinel=="" nao colide — trata como nao setado."""
+        kwargs = {"nr_processo": "X"}
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("always")
+            result = resolve_deprecated_alias(
+                kwargs, "nr_processo", "numero_processo", "", sentinel=""
+            )
+        assert result == "X"

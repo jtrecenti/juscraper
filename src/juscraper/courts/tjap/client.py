@@ -1,10 +1,12 @@
 """Scraper for the Tribunal de Justica do Amapa (TJAP)."""
-from typing import Optional, Union, List
+from typing import List, Optional, Union
 
 import pandas as pd
 import requests
+
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_paginas, normalize_pesquisa
+from juscraper.utils.params import normalize_paginas, normalize_pesquisa, resolve_deprecated_alias
+
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
 
@@ -38,7 +40,7 @@ class TJAPScraper(BaseScraper):
         pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
         orgao: str = "0",
-        numero_cnj: str | None = None,
+        numero_processo: str | None = None,
         numero_acordao: str | None = None,
         numero_ano: str | None = None,
         palavras_exatas: bool = False,
@@ -59,8 +61,8 @@ class TJAPScraper(BaseScraper):
             Pages to download (1-based). None downloads all.
         orgao : str
             ``"0"`` for all (default), ``"tj"`` for Tribunal, ``"recursal"`` for Turma Recursal.
-        numero_cnj : str, optional
-            CNJ unique case number.
+        numero_processo : str, optional
+            CNJ unique case number. Accepts the deprecated alias ``numero_cnj``.
         numero_acordao : str, optional
             Decision number.
         numero_ano : str, optional
@@ -82,13 +84,16 @@ class TJAPScraper(BaseScraper):
         -------
         pd.DataFrame
         """
+        numero_processo = resolve_deprecated_alias(
+            kwargs, "numero_cnj", "numero_processo", numero_processo
+        )
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
         paginas = normalize_paginas(paginas)
         brutos = self.cjsg_download(
             pesquisa=pesquisa,
             paginas=paginas,
             orgao=orgao,
-            numero_cnj=numero_cnj,
+            numero_processo=numero_processo,
             numero_acordao=numero_acordao,
             numero_ano=numero_ano,
             palavras_exatas=palavras_exatas,
@@ -105,7 +110,7 @@ class TJAPScraper(BaseScraper):
         pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
         orgao: str = "0",
-        numero_cnj: str | None = None,
+        numero_processo: str | None = None,
         numero_acordao: str | None = None,
         numero_ano: str | None = None,
         palavras_exatas: bool = False,
@@ -118,13 +123,17 @@ class TJAPScraper(BaseScraper):
     ) -> list:
         """Download raw CJSG JSON responses from TJAP.
 
-        Parameters are the same as :meth:`cjsg`.
+        Parameters are the same as :meth:`cjsg`. ``numero_cnj`` is accepted
+        as a deprecated alias for ``numero_processo``.
 
         Returns
         -------
         list
             List of raw JSON responses (one per page).
         """
+        numero_processo = resolve_deprecated_alias(
+            kwargs, "numero_cnj", "numero_processo", numero_processo
+        )
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
         paginas = normalize_paginas(paginas)
         return cjsg_download_manager(
@@ -132,7 +141,7 @@ class TJAPScraper(BaseScraper):
             paginas=paginas,
             session=self.session,
             orgao=orgao,
-            numero_cnj=numero_cnj,
+            numero_cnj=numero_processo,
             numero_acordao=numero_acordao,
             numero_ano=numero_ano,
             palavras_exatas=palavras_exatas,

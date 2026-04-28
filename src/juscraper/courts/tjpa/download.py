@@ -4,10 +4,10 @@ Downloads raw results from the TJPA jurisprudence search.
 import json
 import logging
 import time
+from typing import Optional
 
 import requests
 from tqdm import tqdm
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 

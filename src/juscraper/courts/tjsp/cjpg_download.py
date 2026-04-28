@@ -1,4 +1,12 @@
-"""Downloads cases from the TJSP jurisprudence search."""
+"""Downloads cases from the TJSP jurisprudence search (CJPG).
+
+CJPG internals are TJSP-specific and not refactored by #84 (no duplication
+across tribunals to absorb). ``QueryTooLongError`` is re-exported from the
+canonical location :mod:`juscraper.courts.tjsp.exceptions` so legacy tests
+can continue importing it from here.
+"""
+from __future__ import annotations
+
 import logging
 import os
 import time
@@ -9,14 +17,9 @@ import requests
 from tqdm import tqdm
 
 from ...utils.cnj import clean_cnj
+from .exceptions import QueryTooLongError
 
-# Limite imposto pelo backend do eSAJ no campo "pesquisaLivre" do CJPG.
-# Strings maiores são truncadas silenciosamente pelo TJSP.
-_TJSP_PESQUISA_MAX_CHARS = 120
-
-
-class QueryTooLongError(ValueError):
-    """Raised when the search query exceeds the TJSP backend maximum length."""
+__all__ = ["QueryTooLongError", "cjpg_download"]
 
 
 def cjpg_download(
@@ -32,33 +35,19 @@ def cjpg_download(
     data_inicio: Optional['str | None'] = None,
     data_fim: Optional['str | None'] = None,
     paginas: Optional['list | range | None'] = None,
-    get_n_pags_callback=None
+    get_n_pags_callback=None,
 ):
     """Download cases from the TJSP jurisprudence search.
 
-    Args:
-        pesquisa (str): The search query for the jurisprudence. Maximum 120 characters
-            (TJSP backend limit).
-        session (requests.Session): Authenticated session.
-        u_base (str): Base URL of the ESAJ.
-        download_path (str): Base directory for saving files.
-        sleep_time (float): Time to wait between requests.
-        classes (list[str], optional): Filters for classes.
-        assuntos (list[str], optional): Filters for subjects.
-        varas (list[str], optional): Filters for courts.
-        id_processo (str, optional): Process ID.
-        data_inicio (str, optional): Start date for filtering.
-        data_fim (str, optional): End date for filtering.
-        paginas (range, optional): Page range (1-based, e.g., range(1, 4) downloads pages 1-3).
-        get_n_pags_callback (callable): Callback function to extract number of pages.
+    Internal helper — the public scraper entry point
+    (:meth:`TJSPScraper.cjpg_download`) runs ``validate_pesquisa_length``
+    and pydantic validation before calling this function. Direct callers
+    must validate ``pesquisa`` upstream.
+
+    Raises:
+        ValueError: If ``get_n_pags_callback`` is missing or fails to
+            extract the page count from the first-page HTML.
     """
-    if pesquisa is not None and len(pesquisa) > _TJSP_PESQUISA_MAX_CHARS:
-        raise QueryTooLongError(
-            f"O campo 'pesquisa' do CJPG do TJSP aceita no máximo "
-            f"{_TJSP_PESQUISA_MAX_CHARS} caracteres "
-            f"(recebido: {len(pesquisa)} caracteres). "
-            "Reduza a busca ou divida em consultas menores."
-        )
     assuntos_str = ','.join(assuntos) if assuntos is not None else None
     varas_str = ','.join(varas) if varas is not None else None
     classes_str = ','.join(classes) if classes is not None else None
@@ -79,7 +68,6 @@ def cjpg_download(
         'dadosConsulta.ordenacao': 'DESC'
     }
 
-    # Busca a primeira página
     r0 = session.get(f"{u_base}cjpg/pesquisar.do", params=query)
     try:
         if get_n_pags_callback is None:
@@ -88,7 +76,6 @@ def cjpg_download(
             )
         n_pags = get_n_pags_callback(r0)
     except Exception as e:
-        # Salvar HTML bruto para debug
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         debug_dir = os.path.join(download_path, "cjpg_debug")
         if not os.path.isdir(debug_dir):
@@ -106,7 +93,16 @@ def cjpg_download(
             f"Erro ao extrair número de páginas: {e}. HTML salvo em: {debug_file}"
         ) from e
 
-    # Se paginas for None, definir range para todas as páginas (1-based)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    path = f"{download_path}/cjpg/{timestamp}"
+    if not os.path.isdir(path):
+        os.makedirs(path)
+
+    if n_pags == 0:
+        with open(f"{path}/cjpg_00001.html", 'w', encoding='utf-8') as f:
+            f.write(r0.text)
+        return path
+
     if paginas is None:
         paginas = range(1, n_pags + 1)
     elif isinstance(paginas, range):
@@ -115,21 +111,13 @@ def cjpg_download(
         step = paginas.step if paginas.step is not None else 1
         paginas = range(start, stop, step)
     else:
-        # list — cap to available pages
         paginas = [p for p in paginas if p <= n_pags]
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    path = f"{download_path}/cjpg/{timestamp}"
-    if not os.path.isdir(path):
-        os.makedirs(path)
-
-    # Save page 1 from the initial request (r0) if it's in the requested range
     first_page_in_range = 1 in paginas
     if first_page_in_range:
         with open(f"{path}/cjpg_00001.html", 'w', encoding='utf-8') as f:
             f.write(r0.text)
 
-    # Download remaining pages (> 1) via trocarDePagina.do
     remaining = [p for p in paginas if p > 1]
     total = len(remaining) + (1 if first_page_in_range else 0)
     initial = 1 if first_page_in_range else 0

@@ -1,0 +1,43 @@
+"""Pydantic schemas for TJMG scraper endpoints.
+
+Ainda nao wired em :mod:`juscraper.courts.tjmg.client` — este arquivo e
+documentacao executavel da API publica ate o TJMG ser refatorado para o
+pipeline canonico da #93. A lista de campos bate byte-a-byte com a
+assinatura publica de :meth:`TJMGScraper.cjsg` / :meth:`TJMGScraper.cjsg_download`.
+"""
+from __future__ import annotations
+
+from typing import Literal
+
+from ...schemas import DataJulgamentoMixin, DataPublicacaoMixin, OutputCJSGBase, OutputDataPublicacaoMixin, SearchBase
+
+
+class InputCJSGTJMG(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
+    """Accepted input for TJMG ``cjsg`` / ``cjsg_download``.
+
+    Endpoint HTML com captcha numerico de 5 digitos decodificado via
+    ``txtcaptcha``. ``pesquisa`` aceita os aliases deprecados ``query`` /
+    ``termo`` via :func:`juscraper.utils.params.normalize_pesquisa`, que
+    roda *antes* deste modelo. Apos a normalizacao, os kwargs que sobram
+    caem aqui e sao rejeitados por ``extra="forbid"`` herdado de
+    :class:`SearchBase`. Filtros de data herdados dos mixins.
+    """
+
+    pesquisar_por: Literal["ementa", "acordao"] = "ementa"
+    order_by: str | int = 2
+    linhas_por_pagina: int = 10
+
+
+class OutputCJSGTJMG(OutputCJSGBase, OutputDataPublicacaoMixin):
+    """Colunas observaveis em uma linha do DataFrame de :meth:`TJMGScraper.cjsg`.
+
+    Reflete ``tjmg.parse.cjsg_parse``. TJMG nao entrega ``orgao_julgador``
+    no HTML; extensoes internas (``processo_interno``, ``proc_ano``,
+    ``proc_numero``) sao IDs do sistema interno do TJ.
+    """
+
+    processo_interno: str | None = None
+    tipo_ato: str | None = None
+    relator: str | None = None
+    proc_ano: str | None = None
+    proc_numero: str | None = None

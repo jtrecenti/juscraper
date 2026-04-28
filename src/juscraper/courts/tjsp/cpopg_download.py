@@ -1,15 +1,18 @@
 """
 Downloads of processes from the TJSP Consulta de Processos Originarios do Primeiro Grau (CPOPG).
 """
+import logging
 import os
 import time
-from urllib.parse import urlparse, parse_qs
-import logging
+from urllib.parse import parse_qs, urlparse
+
 import requests
 from tqdm import tqdm
-from ...utils.cnj import clean_cnj, split_cnj, format_cnj
+
+from ...utils.cnj import clean_cnj, format_cnj, split_cnj
 
 logger = logging.getLogger('juscraper.cpopg_download')
+
 
 def cpopg_download_html(
     id_cnj_list,
@@ -40,13 +43,14 @@ def cpopg_download_html(
                 get_links_callback
             )
         except (OSError, UnicodeDecodeError, ValueError,
-                AttributeError, requests.RequestException) as e:
+                AttributeError, RuntimeError, requests.RequestException) as e:
             logger.error(
                 "Erro ao baixar o processo %s: %s",
                 idp,
                 e
             )
             continue
+
 
 def cpopg_download_html_single(
     id_cnj,
@@ -99,8 +103,10 @@ def cpopg_download_html_single(
             cd_processo = []
             for link in links:
                 query_params = parse_qs(urlparse(link).query)
-                codigo = query_params.get('processo.codigo', [None])[0]
-                cd_processo.append(codigo)
+                codigos = query_params.get('processo.codigo', [])
+                if not codigos:
+                    raise RuntimeError(f"Link sem 'processo.codigo': {link}")
+                cd_processo.append(codigos[0])
             if len(links) == 0:
                 logger.error("Nenhum link encontrado para o processo %s.", id_clean)
                 raise RuntimeError(
@@ -118,7 +124,7 @@ def cpopg_download_html_single(
                     if r2.status_code != 200:
                         raise requests.HTTPError(
                             f"A consulta ao site falhou."
-                            f"Processo: {id_clean}; Código: {cd_processo[index]},"
+                            f"Processo: {id_clean}; Código: {cd_processo[index]},"  # noqa: E702
                             f"Status code {r2.status_code}."
                         )
                     file_name = f"{path}/{id_clean}_{cd_processo[index]}.html"
@@ -137,6 +143,7 @@ def cpopg_download_html_single(
             )
             time.sleep(sleep_time)
     return path
+
 
 def cpopg_download_api(
     id_cnj_list,
@@ -163,6 +170,7 @@ def cpopg_download_api(
                 e
             )
             continue
+
 
 def cpopg_download_api_single(
     id_cnj,

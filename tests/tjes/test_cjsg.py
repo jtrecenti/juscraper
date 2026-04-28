@@ -23,7 +23,7 @@ class TestCJSGTJES:
     def test_colunas_esperadas(self):
         """Result contains expected minimum columns."""
         df = self.scraper.cjsg("direito", paginas=1)
-        colunas_minimas = {"nr_processo", "ementa", "magistrado", "orgao_julgador"}
+        colunas_minimas = {"processo", "ementa", "relator", "orgao_julgador"}
         assert colunas_minimas.issubset(set(df.columns))
 
     def test_paginacao(self):
@@ -43,15 +43,15 @@ class TestCJSGTJES:
         assert isinstance(df, pd.DataFrame)
         assert len(df) > 0
 
-    def test_filtro_magistrado(self):
-        """Magistrado filter works."""
+    def test_filtro_relator(self):
+        """Relator filter works."""
         df = self.scraper.cjsg(
             "direito",
-            magistrado="HELIMAR PINTO",
+            relator="HELIMAR PINTO",
             paginas=1,
         )
         assert len(df) > 0
-        assert all(df["magistrado"] == "HELIMAR PINTO")
+        assert all(df["relator"] == "HELIMAR PINTO")
 
     def test_download_e_parse(self):
         """Download + parse produces same result as cjsg."""
@@ -95,7 +95,7 @@ class TestCJPGTJES:
     def test_colunas_esperadas(self):
         """cjpg result contains expected minimum columns."""
         df = self.scraper.cjpg("direito", paginas=1)
-        colunas_minimas = {"nr_processo", "ementa", "magistrado"}
+        colunas_minimas = {"processo", "ementa", "relator"}
         assert colunas_minimas.issubset(set(df.columns))
 
     def test_download_e_parse(self):

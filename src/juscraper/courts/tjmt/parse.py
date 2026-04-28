@@ -25,7 +25,7 @@ def cjsg_parse(resultados_brutos: list, tipo_consulta: str = "Acordao") -> list[
 
     registros = []
     for page_data in resultados_brutos:
-        items = page_data.get(collection_key, [])
+        items = page_data.get(collection_key) or []
         for item in items:
             proc = item.get("Processo", {})
             registros.append({
@@ -33,7 +33,7 @@ def cjsg_parse(resultados_brutos: list, tipo_consulta: str = "Acordao") -> list[
                 "tipo": item.get("Tipo"),
                 "ementa": _strip_html(item.get("Conteudo", "")),
                 "observacao": item.get("Observacao"),
-                "numero_unico": proc.get("NumeroUnicoFormatado"),
+                "processo": proc.get("NumeroUnicoFormatado"),
                 "classe": proc.get("NomeClasseEsferaProcessual"),
                 "assunto": proc.get("Assunto"),
                 "tipo_acao": proc.get("TipoAcao"),

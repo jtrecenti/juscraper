@@ -28,7 +28,7 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
             source = hit.get("_source", {})
             registros.append({
                 "processo": source.get("numero_processo"),
-                "classe_judicial": source.get("classe_judicial"),
+                "classe": source.get("classe_judicial"),
                 "orgao_julgador": source.get("orgao_julgador"),
                 "colegiado": source.get("colegiado"),
                 "relator": source.get("relator"),
@@ -56,7 +56,7 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
         df["processo"] = df["processo"].apply(_format_cnj)
 
     principais = [
-        "processo", "classe_judicial", "orgao_julgador", "colegiado",
+        "processo", "classe", "orgao_julgador", "colegiado",
         "relator", "tipo_decisao", "data_julgamento", "data_publicacao",
         "ementa",
     ]

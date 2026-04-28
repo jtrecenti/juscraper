@@ -1,4 +1,5 @@
 import pytest
+
 from juscraper.courts.tjdft.client import TJDFTScraper
 
 

@@ -3,16 +3,22 @@ Parse raw results from the TJES jurisprudence search.
 """
 import pandas as pd
 
+# Source field name in the Solr response -> canonical output column name.
+_FIELD_RENAMES = {
+    "nr_processo": "processo",
+    "magistrado": "relator",
+    "classe_judicial": "classe",
+    "assunto_principal": "assunto",
+}
 
-# Fields to keep from each doc, in order of importance
 _MAIN_FIELDS = [
-    "nr_processo",
+    "processo",
     "ementa",
-    "magistrado",
+    "relator",
     "orgao_julgador",
-    "classe_judicial",
+    "classe",
     "classe_judicial_sigla",
-    "assunto_principal",
+    "assunto",
     "jurisdicao",
     "competencia",
     "dt_juntada",
@@ -48,17 +54,20 @@ def cjsg_parse(resultados_brutos: list) -> pd.DataFrame:
     -------
     pd.DataFrame
     """
+    source_fields = list(_FIELD_RENAMES) + [
+        f for f in _MAIN_FIELDS + _EXTRA_FIELDS if f not in _FIELD_RENAMES.values()
+    ]
     rows = []
     for page_data in resultados_brutos:
         docs = page_data.get("docs", [])
         for doc in docs:
             row = {}
-            for field in _MAIN_FIELDS + _EXTRA_FIELDS:
+            for field in source_fields:
                 val = doc.get(field)
                 # Flatten single-element lists (e.g. lista_assunto, localizacao)
                 if isinstance(val, list):
                     val = "; ".join(str(v) for v in val) if val else None
-                row[field] = val
+                row[_FIELD_RENAMES.get(field, field)] = val
             rows.append(row)
 
     if not rows:

@@ -8,11 +8,10 @@ import warnings
 import pandas as pd
 from bs4 import BeautifulSoup, XMLParsedAsHTMLWarning
 
-
 FIELD_MAP = {
     "Processo": "processo",
-    "Classe CNJ": "classe_cnj",
-    "Assunto CNJ": "assunto_cnj",
+    "Classe CNJ": "classe",
+    "Assunto CNJ": "assunto",
     "Relator(a)": "relator",
     "Órgão Julgador": "orgao_julgador",
     "Data de Julgamento": "data_julgamento",
@@ -101,7 +100,7 @@ def cjsg_parse(raw_pages: list[str]) -> pd.DataFrame:
 
     # Order columns
     preferred = [
-        "processo", "classe_cnj", "assunto_cnj", "relator",
+        "processo", "classe", "assunto", "relator",
         "orgao_julgador", "data_julgamento", "data_publicacao",
         "ementa", "acordao", "meio_tramitacao", "url_inteiro_teor",
     ]

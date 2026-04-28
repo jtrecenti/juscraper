@@ -1,11 +1,14 @@
 """
 Scraper for the Tribunal de Justiça do Rio Grande do Sul (TJRS).
 """
-from typing import Optional, Union, List
-import requests
+from typing import List, Optional, Union
+
 import pandas as pd
+import requests
+
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_paginas, normalize_pesquisa, normalize_datas
+from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa, pop_normalize_aliases
+
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
 
@@ -84,6 +87,10 @@ class TJRSScraper(BaseScraper):
             data_publicacao_fim=data_publicacao_fim,
             **kwargs,
         )
+        # Drop deprecated aliases from local kwargs so they are not re-propagated
+        # into cjsg_download_manager via **kwargs (would collide with the canonical
+        # keyword arguments that normalize_* already materialized above).
+        pop_normalize_aliases(kwargs)
         if session is None:
             session = self.session
         return cjsg_download_manager(
@@ -131,9 +138,8 @@ class TJRSScraper(BaseScraper):
         Fetches jurisprudence from TJRS in a simplified way (download + parse).
         Returns a ready-to-analyze DataFrame.
         """
-        pesquisa_val = normalize_pesquisa(pesquisa, **kwargs)
         brutos = self.cjsg_download(
-            pesquisa=pesquisa_val,
+            pesquisa=pesquisa,
             paginas=paginas,
             classe=classe,
             assunto=assunto,

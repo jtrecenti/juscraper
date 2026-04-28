@@ -5,10 +5,10 @@ import logging
 import math
 import re
 import time
+from typing import Any, Dict, Optional
 
 import requests
 from tqdm import tqdm
-from typing import Any, Dict, Optional
 
 from juscraper.utils.params import to_br_date
 
@@ -89,13 +89,14 @@ def _fetch_page(
     return ""  # unreachable
 
 
-def _fetch_ementa(session: requests.Session, uuid: str) -> dict:
+def _fetch_ementa(session: requests.Session, uuid: str) -> Dict[Any, Any]:
     """Fetch ementa JSON for a given document UUID."""
     resp = session.get(EMENTA_URL, params={"id": uuid}, timeout=30)
     resp.raise_for_status()
     data = resp.json()
     docs = data.get("response", {}).get("docs", [])
-    return docs[0] if docs else {}
+    doc: Dict[Any, Any] = docs[0] if docs else {}
+    return doc
 
 
 def cjsg_download_manager(

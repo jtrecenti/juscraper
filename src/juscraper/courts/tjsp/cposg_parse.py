@@ -2,14 +2,16 @@
 Parses downloaded files from the TJSP Consulta de Processos Originarios do Primeiro Grau (CPOSG).
 """
 import glob
+import logging
 import os
 import re
-import logging
+
+import pandas as pd
 from bs4 import BeautifulSoup
 from tqdm import tqdm
-import pandas as pd
 
 logger = logging.getLogger('juscraper.cposg_parse')
+
 
 def cposg_parse(path: str):
     """
@@ -28,6 +30,7 @@ def cposg_parse(path: str):
     df = pd.DataFrame(dados)
     return df
 
+
 def cposg_parse_manager(path: str):
     """
     Standalone parse manager for CPOSG HTML files. Returns a DataFrame with parsed data.
@@ -45,9 +48,11 @@ def cposg_parse_manager(path: str):
     df = pd.DataFrame(dados)
     return df
 
+
 def cposg_parse_single_json(path: str):
     """Stub to avoid import error."""
     raise NotImplementedError("cposg_parse_single_json not implemented yet.")
+
 
 def cposg_parse_single_html(html_path):
     """
@@ -119,10 +124,10 @@ def cposg_parse_single_html(html_path):
             if len(cells) >= 3 and cells[0].get_text(strip=True):  # Need at least 3 cells
                 # First cell contains the date
                 data = cells[0].get_text(strip=True)
-                
+
                 # Third cell (index 2) contains the description with movimento and descricao
                 desc_cell = cells[2]
-                
+
                 # Extract movimento - it's usually in an <a> tag or direct text before <br/>
                 movimento = ""
                 movimento_link = desc_cell.find('a', class_='linkMovVincProc')
@@ -148,7 +153,7 @@ def cposg_parse_single_html(html_path):
                     else:
                         # No <br/> tag, get all text
                         movimento = temp_cell.get_text(strip=True)
-                
+
                 # Extract descricao - it's usually in a <span style="font-style: italic;">
                 descricao = ""
                 descricao_span = desc_cell.find('span', style=lambda x: x and 'italic' in x)

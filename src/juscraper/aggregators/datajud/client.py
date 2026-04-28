@@ -23,8 +23,10 @@ from .parse import parse_datajud_api_response  # To be created for API response 
 
 logger = logging.getLogger(__name__)
 
+
 class DatajudScraper(BaseScraper):
     """Scraper for CNJ's Datajud API."""
+
     DEFAULT_API_KEY = "cDZHYzlZa0JadVREZDJCendQbXY6SkJlTzNjLV9TRENyQk1RdnFKZGRQdw=="
     BASE_API_URL = "https://api-publica.datajud.cnj.jus.br"
 
@@ -32,7 +34,7 @@ class DatajudScraper(BaseScraper):
         self,
         api_key: Optional[str] = None,
         verbose: int = 1,
-        download_path: Optional[str] = None, # For temporary files if needed
+        download_path: Optional[str] = None,  # For temporary files if needed
         sleep_time: float = 0.5,
     ):
         super().__init__("DatajudAPI")
@@ -54,14 +56,14 @@ class DatajudScraper(BaseScraper):
     def listar_processos(
         self,
         numero_processo: Optional[Union[str, List[str]]] = None,
-        tribunal: Optional[str] = None, # Sigla, e.g., TJSP, TRF1
+        tribunal: Optional[str] = None,  # Sigla, e.g., TJSP, TRF1
         # justica: Optional[str] = "8", # This was in original, but tribunal alias seems more direct
         ano_ajuizamento: Optional[int] = None,
-        classe: Optional[str] = None, # Codigo da classe
-        assuntos: Optional[List[str]] = None, # Lista de códigos de assuntos
+        classe: Optional[str] = None,  # Codigo da classe
+        assuntos: Optional[List[str]] = None,  # Lista de códigos de assuntos
         mostrar_movs: bool = False,
-        paginas: Optional[range] = None, # For specific page range, else fetch all
-        tamanho_pagina: int = 1000 # Max allowed by API is often 1000 or 10000
+        paginas: Optional[range] = None,  # For specific page range, else fetch all
+        tamanho_pagina: int = 1000  # Max allowed by API is often 1000 or 10000
     ) -> pd.DataFrame:
         """
         Lists processes from Datajud via API, with support for multiple filters and pagination.
@@ -166,8 +168,8 @@ class DatajudScraper(BaseScraper):
         dfs_alias = []
         current_page = paginas_range.start if paginas_range else 1
         end_page = paginas_range.stop if paginas_range else float('inf')
-        search_after_params = None # For deep pagination
-        sort_field = "id.keyword" # Use .keyword for sorting text fields
+        search_after_params: Optional[List[Any]] = None  # For deep pagination
+        sort_field = "id.keyword"  # Use .keyword for sorting text fields
 
         # Initialize tqdm progress bar
         if paginas_range:
@@ -204,11 +206,19 @@ class DatajudScraper(BaseScraper):
                         }
                     })
                 if ano_ajuizamento:
+                    date_range_iso = {
+                        "gte": f"{ano_ajuizamento}-01-01",
+                        "lte": f"{ano_ajuizamento}-12-31",
+                    }
+                    date_range_compact = {
+                        "gte": f"{ano_ajuizamento}0101000000",
+                        "lte": f"{ano_ajuizamento}1231235959",
+                    }
                     must_conditions.append({
                         "bool": {
                             "should": [
-                                {"range": {"dataAjuizamento": {"gte": f"{ano_ajuizamento}-01-01", "lte": f"{ano_ajuizamento}-12-31"}}},
-                                {"range": {"dataAjuizamento": {"gte": f"{ano_ajuizamento}0101000000", "lte": f"{ano_ajuizamento}1231235959"}}},
+                                {"range": {"dataAjuizamento": date_range_iso}},
+                                {"range": {"dataAjuizamento": date_range_compact}},
                             ],
                             "minimum_should_match": 1
                         }
@@ -240,7 +250,7 @@ class DatajudScraper(BaseScraper):
                 # Handle pagination: search_after is preferred for deep pagination
                 # The original _download_datajud used 'from', which is inefficient for deep pages
                 # DataJud API supports search_after. Requires a sort field.
-                query_payload["sort"] = [{sort_field: "asc"}] # Example sort
+                query_payload["sort"] = [{sort_field: "asc"}]  # Example sort
                 if search_after_params:
                     query_payload["search_after"] = search_after_params
                 else:
@@ -248,7 +258,7 @@ class DatajudScraper(BaseScraper):
                     # or if API doesn't fully support it
                     # query_payload["from"] = (current_page - 1) * tamanho_pagina
                     # However, if we commit to search_after, 'from' is not used.
-                    pass # First page, no search_after yet unless seeded
+                    pass  # First page, no search_after yet unless seeded
 
                 if not mostrar_movs:
                     query_payload["_source"] = {"excludes": ["movimentacoes", "movimentos"]}
@@ -260,7 +270,7 @@ class DatajudScraper(BaseScraper):
                     api_key=self.api_key,
                     session=self.session,
                     query_payload=query_payload,
-                    verbose=self.verbose > 1 # Pass verbose flag for more detailed logging
+                    verbose=self.verbose > 1  # Pass verbose flag for more detailed logging
                 )
 
                 if api_response_json is None:
@@ -293,7 +303,7 @@ class DatajudScraper(BaseScraper):
                     )
                     break
                 dfs_alias.append(df_page)
-                pbar.update(1) # Update progress bar
+                pbar.update(1)  # Update progress bar
 
                 # For search_after pagination: extract the sort values of the last hit
                 # This part depends on the exact structure of api_response_json
@@ -313,17 +323,17 @@ class DatajudScraper(BaseScraper):
                         "Sort parameters for 'search_after' not found in last hit."
                         "Cannot continue deep pagination."
                     )
-                    break # Fallback or stop if search_after cannot be determined
+                    break  # Fallback or stop if search_after cannot be determined
 
-                if paginas_range is None: # if fetching all, continue
+                if paginas_range is None:  # if fetching all, continue
                     current_page += 1
-                elif current_page < paginas_range.stop -1: # if in specified range, continue
-                    current_page +=1
-                else: # reached end of specified range
+                elif current_page < paginas_range.stop - 1:  # if in specified range, continue
+                    current_page += 1
+                else:  # reached end of specified range
                     break
-                time.sleep(self.sleep_time) # Respect sleep time
+                time.sleep(self.sleep_time)  # Respect sleep time
         finally:
-            pbar.close() # Ensure progress bar is closed
+            pbar.close()  # Ensure progress bar is closed
 
         if not dfs_alias:
             return pd.DataFrame()

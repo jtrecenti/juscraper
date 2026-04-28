@@ -2,7 +2,7 @@
 Scraper for the Tribunal de Justica do Tocantins (TJTO).
 """
 import logging
-from typing import Optional, List, Union
+from typing import List, Optional, Union
 
 import pandas as pd
 import requests
@@ -10,11 +10,7 @@ import requests
 from juscraper.core.base import BaseScraper
 from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa
 
-from .download import (
-    TYPE_MINUTA_MAP,
-    _fetch_ementa,
-    cjsg_download_manager,
-)
+from .download import TYPE_MINUTA_MAP, _fetch_ementa, cjsg_download_manager
 from .parse import cjsg_parse_manager
 
 logger = logging.getLogger(__name__)

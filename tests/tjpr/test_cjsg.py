@@ -1,6 +1,7 @@
-import pytest
 import pandas as pd
+import pytest
 from bs4 import BeautifulSoup
+
 from juscraper.courts.tjpr.client import TJPRScraper
 
 

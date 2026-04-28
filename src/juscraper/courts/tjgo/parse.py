@@ -76,7 +76,11 @@ def _parse_block(block: str) -> dict:
     # <p><b><i>Publicado em ...</i></b></p>
     # <p class="conteudoTexto">texto</p>
     paragraphs = re.findall(r"<p([^>]*)>(.*?)</p>", block, re.DOTALL)
-    serventia = relator = tipo = publicacao_raw = texto = None
+    serventia: str | None = None
+    relator: str | None = None
+    tipo: str | None = None
+    publicacao_raw: str | None = None
+    texto: str | None = None
     for attrs, content in paragraphs:
         cleaned = _clean(content)
         if "conteudoTexto" in attrs:

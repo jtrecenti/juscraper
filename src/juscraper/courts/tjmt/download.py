@@ -166,7 +166,6 @@ def cjsg_download(
                 time.sleep(wait)
         raise RuntimeError("unreachable")  # satisfaz o mypy; loop acima sempre retorna ou levanta
 
-    collection_key = "AcordaoCollection" if tipo_consulta == "Acordao" else "DecisaoMonocraticaCollection"
     count_key = "CountAcordaoDocumento" if tipo_consulta == "Acordao" else "CountDecisaoMonocratica"
 
     if paginas is None:

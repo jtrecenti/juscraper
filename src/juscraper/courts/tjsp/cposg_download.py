@@ -5,12 +5,16 @@ import logging
 import os
 import time
 from typing import Optional
-from urllib.parse import urlparse, parse_qs
-from tqdm import tqdm
+from urllib.parse import parse_qs, urlparse
+
+import requests
 from bs4 import BeautifulSoup
-from ...utils.cnj import clean_cnj, split_cnj, format_cnj
+from tqdm import tqdm
+
+from ...utils.cnj import clean_cnj, format_cnj, split_cnj
 
 logger = logging.getLogger('juscraper.cposg_download')
+
 
 def cposg_download_html(id_cnj_list, session, u_base, download_path, sleep_time=0.5):
     """
@@ -21,65 +25,81 @@ def cposg_download_html(id_cnj_list, session, u_base, download_path, sleep_time=
         id_cnj_list = [id_cnj_list]
     paths = []
     for id_cnj in tqdm(id_cnj_list, desc="Baixando processos"):
-        id_clean = clean_cnj(id_cnj)
-        p = split_cnj(id_clean)
-        id_format = format_cnj(id_clean)
-        u = f"{u_base}cposg/search.do"
-        # 1. Acessar página inicial para garantir cookies válidos
-        open_url = f"{u_base}cposg/open.do?gateway=true"
-        session.get(open_url)
-        # 2. Montar parâmetros corretos
-        params = {
-            'conversationId': '',
-            'paginaConsulta': '1',
-            'localPesquisa.cdLocal': '-1',
-            'cbPesquisa': 'NUMPROC',
-            'tipoNuProcesso': 'UNIFICADO',
-            'numeroDigitoAnoUnificado': f"{p['num']}-{p['dv']}.{p['ano']}",
-            'foroNumeroUnificado': p['orgao'],
-            'dePesquisaNuUnificado': id_format,
-            'dePesquisa': '',
-            'uuidCaptcha': '',
-            'pbEnviar': 'Pesquisar'
-        }
-        r = session.get(u, params=params)
-        soup = BeautifulSoup(r.text, 'html.parser')
-        path = f"{download_path}/cposg/{id_clean}"
-        if not os.path.isdir(path):
-            os.makedirs(path)
-        # 3. Tratar tipos de resposta
-        # Caso 1: listagem de processos
-        if soup.find('div', id='listagemDeProcessos'):
-            links = [str(a['href']) for a in soup.select('a.linkProcesso')]
-            for link in links:
-                codigo = parse_qs(urlparse(link).query).get('processo.codigo', [None])[0]
-                show_url = f"{u_base}cposg/show.do?processo.codigo={codigo}"
-                r_show = session.get(show_url)
-                file_name = f"{path}/{id_clean}_cd_processo_{codigo}.html"
-                with open(file_name, 'w', encoding='utf-8') as f:
-                    f.write(r_show.text)
-        # Caso 2: incidentes/modal
-        elif soup.find('div', id='modalIncidentes'):
-            codigos = [str(i['value']) for i in soup.select('input#processoSelecionado')]
-            for codigo in codigos:
-                show_url = f"{u_base}cposg/show.do?processo.codigo={codigo}"
-                r_show = session.get(show_url)
-                file_name = f"{path}/{id_clean}_cd_processo_{codigo}.html"
-                with open(file_name, 'w', encoding='utf-8') as f:
-                    f.write(r_show.text)
-        # Caso 3: resposta simples
-        else:
-            codigo_simples: Optional[str] = None
-            input_cd = soup.find('input', {'name': 'cdProcesso'})
-            if input_cd:
-                value = input_cd.get('value')
-                codigo_simples = str(value) if value is not None else None
-            file_name = f"{path}/{id_clean}_cd_processo_{codigo_simples or 'simples'}.html"
-            with open(file_name, 'w', encoding='utf-8') as f:
-                f.write(r.text)
+        try:
+            path = _cposg_download_html_single(id_cnj, session, u_base, download_path)
+        except (OSError, UnicodeDecodeError, ValueError,
+                AttributeError, RuntimeError, requests.RequestException) as e:
+            logger.error("Erro ao baixar o processo %s: %s", id_cnj, e)
+            continue
         paths.append(path)
         time.sleep(sleep_time)
+    if not paths:
+        raise RuntimeError("Nenhum processo foi baixado com sucesso.")
     return paths if len(paths) > 1 else paths[0]
+
+
+def _cposg_download_html_single(id_cnj, session, u_base, download_path):
+    id_clean = clean_cnj(id_cnj)
+    p = split_cnj(id_clean)
+    id_format = format_cnj(id_clean)
+    u = f"{u_base}cposg/search.do"
+    # 1. Acessar página inicial para garantir cookies válidos
+    open_url = f"{u_base}cposg/open.do?gateway=true"
+    session.get(open_url)
+    # 2. Montar parâmetros corretos
+    params = {
+        'conversationId': '',
+        'paginaConsulta': '1',
+        'localPesquisa.cdLocal': '-1',
+        'cbPesquisa': 'NUMPROC',
+        'tipoNuProcesso': 'UNIFICADO',
+        'numeroDigitoAnoUnificado': f"{p['num']}-{p['dv']}.{p['ano']}",
+        'foroNumeroUnificado': p['orgao'],
+        'dePesquisaNuUnificado': id_format,
+        'dePesquisa': '',
+        'uuidCaptcha': '',
+        'pbEnviar': 'Pesquisar'
+    }
+    r = session.get(u, params=params)
+    soup = BeautifulSoup(r.text, 'html.parser')
+    path = f"{download_path}/cposg/{id_clean}"
+    if not os.path.isdir(path):
+        os.makedirs(path)
+    # 3. Tratar tipos de resposta
+    # Caso 1: listagem de processos
+    if soup.find('div', id='listagemDeProcessos'):
+        links = [str(a['href']) for a in soup.select('a.linkProcesso')]
+        for link in links:
+            codigos = parse_qs(urlparse(link).query).get('processo.codigo', [])
+            if not codigos:
+                raise RuntimeError(f"Link sem 'processo.codigo': {link}")
+            codigo = codigos[0]
+            show_url = f"{u_base}cposg/show.do?processo.codigo={codigo}"
+            r_show = session.get(show_url)
+            file_name = f"{path}/{id_clean}_cd_processo_{codigo}.html"
+            with open(file_name, 'w', encoding='utf-8') as f:
+                f.write(r_show.text)
+    # Caso 2: incidentes/modal
+    elif soup.find('div', id='modalIncidentes'):
+        codigos = [str(i['value']) for i in soup.select('input#processoSelecionado')]
+        for codigo in codigos:
+            show_url = f"{u_base}cposg/show.do?processo.codigo={codigo}"
+            r_show = session.get(show_url)
+            file_name = f"{path}/{id_clean}_cd_processo_{codigo}.html"
+            with open(file_name, 'w', encoding='utf-8') as f:
+                f.write(r_show.text)
+    # Caso 3: resposta simples
+    else:
+        codigo_simples: Optional[str] = None
+        input_cd = soup.find('input', {'name': 'cdProcesso'})
+        if input_cd:
+            value = input_cd.get('value')
+            codigo_simples = str(value) if value is not None else None
+        file_name = f"{path}/{id_clean}_cd_processo_{codigo_simples or 'simples'}.html"
+        with open(file_name, 'w', encoding='utf-8') as f:
+            f.write(r.text)
+    return path
+
 
 def cposg_download_api(id_cnj_list, session, api_base, download_path, sleep_time=0.5):
     """

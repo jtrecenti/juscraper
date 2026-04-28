@@ -1,8 +1,9 @@
 """Scraper for the Tribunal de Justica do Piaui (TJPI)."""
-from typing import Optional, Union, List
+from typing import List, Optional, Union
 
 import pandas as pd
 import requests
+
 from juscraper.core.base import BaseScraper
 from juscraper.utils.params import (
     normalize_datas,
@@ -10,6 +11,7 @@ from juscraper.utils.params import (
     normalize_pesquisa,
     to_iso_date,
 )
+
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
 

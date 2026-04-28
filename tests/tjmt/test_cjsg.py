@@ -1,5 +1,6 @@
-import pytest
 import pandas as pd
+import pytest
+
 from juscraper.courts.tjmt.client import TJMTScraper
 
 
@@ -9,7 +10,7 @@ def test_cjsg_basic_dataframe():
     df = scraper.cjsg("direito", paginas=1)
     assert isinstance(df, pd.DataFrame)
     assert not df.empty
-    assert {"ementa", "numero_unico", "relator"}.issubset(set(df.columns))
+    assert {"ementa", "processo", "relator"}.issubset(set(df.columns))
     assert df["ementa"].notnull().all()
 
 
@@ -18,7 +19,7 @@ def test_cjsg_colunas_esperadas():
     scraper = TJMTScraper()
     df = scraper.cjsg("direito", paginas=1)
     colunas_minimas = {
-        "id", "tipo", "ementa", "numero_unico", "classe",
+        "id", "tipo", "ementa", "processo", "classe",
         "assunto", "relator", "orgao_julgador",
         "data_julgamento", "data_publicacao",
     }

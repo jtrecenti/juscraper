@@ -1,0 +1,13 @@
+{
+  "production": "true",
+  "api_url": "https://hellsgate-preview.tjmt.jus.br/jurisprudencia",
+  "api_hellsgate_token": "3u35s547H0twxVuT",
+  "recaptcha": {
+    "url_api": "https://verificador-recaptcha-api.tjmt.jus.br",
+    "site_key": "6LfeZK4eAAAAADj3QctVKlE13CFcCEWY89idBauV",
+    "sistema_id": "2353"
+  },
+  "api_administrativo_url": "https://jurisprudencia-admin-api.tjmt.jus.br",
+  "api_url_site": "https://old.tjmt.jus.br/webapi/api",
+  "consulta_publica_cia": "https://cia.tjmt.jus.br/publico/consultapublica/Index.aspx?numero="
+}
