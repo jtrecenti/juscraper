@@ -6,7 +6,7 @@ from typing import List, Optional, Union
 import pandas as pd
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa, warn_unsupported
+from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa
 
 from .download import cjsg_download
 from .parse import cjsg_parse
@@ -52,9 +52,6 @@ class TJDFTScraper(BaseScraper):
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
         paginas = normalize_paginas(paginas)
         datas = normalize_datas(**kwargs)
-        for key, value in datas.items():
-            if value is not None:
-                warn_unsupported(key, "TJDFT")
         brutos: list = cjsg_download(
             query=pesquisa,
             paginas=paginas,
@@ -63,6 +60,7 @@ class TJDFTScraper(BaseScraper):
             inteiro_teor=inteiro_teor,
             quantidade_por_pagina=quantidade_por_pagina,
             base_url=self.BASE_URL,
+            **datas,
         )
         return brutos
 

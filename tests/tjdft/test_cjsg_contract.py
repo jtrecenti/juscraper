@@ -18,10 +18,11 @@ def _payload(
     espelho: bool = True,
     inteiro_teor: bool = False,
     quantidade_por_pagina: int = 10,
+    termos_acessorios: list | None = None,
 ) -> dict:
     return {
         "query": pesquisa,
-        "termosAcessorios": [],
+        "termosAcessorios": list(termos_acessorios) if termos_acessorios else [],
         "pagina": pagina,
         "tamanho": quantidade_por_pagina,
         "sinonimos": sinonimos,

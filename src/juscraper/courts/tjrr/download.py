@@ -28,22 +28,77 @@ def _extract_cdata(xml_text: str) -> str:
     return xml_text
 
 
-def _get_viewstate(session: requests.Session) -> str:
-    """Fetch the initial page and extract the JSF ViewState."""
+def _collect_form_defaults(soup: BeautifulSoup) -> dict:
+    """Collect every default field on the ``menuinicial`` form.
+
+    A browser submit includes every form input (with its default value),
+    including hidden panel-collapsed flags like
+    ``menuinicial:j_idt44_collapsed=true`` and ``menuinicial:tipoClasseList=0``.
+    Dropping them makes the backend return zero results when searching
+    with an empty ``pesquisa`` — the empty-term path only works when the
+    full form context is preserved.
+    """
+    defaults: dict[str, list] = {}
+    form = soup.find("form", {"id": "menuinicial"}) or soup
+    for tag in form.find_all(["input", "select", "textarea"]):
+        name = tag.get("name")
+        if not name or not name.startswith("menuinicial"):
+            continue
+        ttype = (tag.get("type") or "").lower()
+        if ttype in ("submit", "button", "image", "reset"):
+            continue
+        if ttype in ("checkbox", "radio"):
+            if not tag.has_attr("checked"):
+                continue
+            value = tag.get("value", "on")
+        elif tag.name == "select":
+            opt = tag.find("option", selected=True) or tag.find("option")
+            value = opt.get("value", "") if opt else ""
+        else:
+            value = tag.get("value", "")
+        defaults.setdefault(name, []).append(value)
+    # Collapse single-value lists to scalars so urlencode emits one
+    # entry per field (matches what a browser POST produces).
+    return {k: (v[0] if len(v) == 1 else v) for k, v in defaults.items()}
+
+
+def _get_form_fields(session: requests.Session) -> dict:
+    """Fetch the initial page and discover JSF field names and defaults.
+
+    JSF auto-generates component IDs like ``menuinicial:j_idt28`` that
+    shift whenever components are added or reordered server-side. We
+    look dynamic fields up by their stable attributes
+    (``id=consultaAtual`` for the search input) and snapshot every form
+    default so the POST matches what a browser would send.
+    """
     resp = session.get(BASE_URL, timeout=30)
     resp.raise_for_status()
     soup = BeautifulSoup(resp.text, "html.parser")
     vs_input = soup.find("input", {"name": "javax.faces.ViewState"})
     if not vs_input:
         raise RuntimeError("Could not find ViewState on TJRR page.")
-    return str(vs_input["value"])
+    pesq = soup.find(id="consultaAtual")
+    if not pesq or not pesq.get("name"):
+        raise RuntimeError("Could not find TJRR pesquisa input (id=consultaAtual).")
+    submit_name = None
+    for btn in soup.find_all("button"):
+        name = btn.get("name", "") or ""
+        if name.startswith("menuinicial:j_idt") and not name.startswith("menuinicial:btn_"):
+            submit_name = name
+            break
+    return {
+        "viewstate": str(vs_input["value"]),
+        "pesquisa_name": pesq["name"],
+        "submit_name": submit_name,
+        "defaults": _collect_form_defaults(soup),
+    }
 
 
 def _search(
     session: requests.Session,
-    viewstate: str,
+    form_fields: dict,
     pesquisa: str,
-    relator: str = "",
+    relator: str = "",  # noqa: ARG001 - accepted for API compat; no longer a text input in TJRR
     data_inicio: str = "",
     data_fim: str = "",
     orgao_julgador: list | None = None,
@@ -51,26 +106,28 @@ def _search(
     max_retries: int = 3,
 ) -> str:
     """Submit the search form and return the HTML response."""
-    data: dict = {
-        "menuinicial": "menuinicial",
-        "menuinicial:j_idt28": pesquisa,
-        "menuinicial:numProcesso": "",
-        "menuinicial:datainicial_input": data_inicio,
-        "menuinicial:datafinal_input": data_fim,
-        "menuinicial:j_idt67": relator,
-        "javax.faces.ViewState": viewstate,
-        "menuinicial:j_idt30": "",
-    }
+    data: dict = dict(form_fields.get("defaults", {}))
+    data["menuinicial"] = "menuinicial"
+    data[form_fields["pesquisa_name"]] = pesquisa
+    data["menuinicial:numProcesso"] = ""
+    data["menuinicial:datainicial_input"] = data_inicio
+    data["menuinicial:datafinal_input"] = data_fim
+    data["javax.faces.ViewState"] = form_fields["viewstate"]
+    if form_fields.get("submit_name"):
+        data[form_fields["submit_name"]] = ""
     if orgao_julgador:
-        for oj in orgao_julgador:
-            data.setdefault("menuinicial:tipoOrgaoList", []).append(oj)
+        data["menuinicial:tipoOrgaoList"] = list(orgao_julgador)
     if especie:
-        for esp in especie:
-            data.setdefault("menuinicial:tipoEspecieList", []).append(esp)
+        data["menuinicial:tipoEspecieList"] = list(especie)
 
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Origin": "https://jurisprudencia.tjrr.jus.br",
+        "Referer": "https://jurisprudencia.tjrr.jus.br/",
+    }
     for attempt in range(1, max_retries + 1):
         try:
-            resp = session.post(BASE_URL, data=data, timeout=60)
+            resp = session.post(BASE_URL, data=data, headers=headers, timeout=60)
             resp.raise_for_status()
             resp.encoding = "utf-8"
             return resp.text
@@ -162,8 +219,8 @@ def cjsg_download_manager(
             "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
         })
 
-    viewstate = _get_viewstate(session)
-    first_html = _search(session, viewstate, pesquisa, **kwargs)
+    form_fields = _get_form_fields(session)
+    first_html = _search(session, form_fields, pesquisa, **kwargs)
     time.sleep(1)
 
     if paginas is None:

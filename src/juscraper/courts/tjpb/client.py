@@ -1,4 +1,5 @@
 """Scraper for the Tribunal de Justica da Paraiba (TJPB)."""
+from datetime import date
 from typing import List, Optional, Union
 
 import pandas as pd
@@ -9,6 +10,17 @@ from juscraper.utils.params import normalize_datas, normalize_paginas, normalize
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
+
+
+def _parse_br(d: str) -> date | None:
+    """Parse DD/MM/YYYY → date, tolerant to empty/None."""
+    if not d:
+        return None
+    try:
+        dd, mm, yy = d.split("/")
+        return date(int(yy), int(mm), int(dd))
+    except (ValueError, AttributeError):
+        return None
 
 
 class TJPBScraper(BaseScraper):
@@ -91,7 +103,19 @@ class TJPBScraper(BaseScraper):
             id_origem=id_origem,
             decisoes=decisoes,
         )
-        return self.cjsg_parse(brutos)
+        df = self.cjsg_parse(brutos)
+
+        # The TJPB backend filter on dt_inicio/dt_fim acts on an internal
+        # disponibilização date, not on dt_ementa. Rows returned can have
+        # dt_ementa far outside the requested window. Post-filter so the
+        # returned data_julgamento (= dt_ementa) matches user intent.
+        if not df.empty and "data_julgamento" in df.columns:
+            start = _parse_br(datas["data_julgamento_inicio"])
+            end = _parse_br(datas["data_julgamento_fim"])
+            if start is not None and end is not None:
+                mask = df["data_julgamento"].between(start, end)
+                df = df[mask].reset_index(drop=True)
+        return df
 
     def cjsg_download(
         self,

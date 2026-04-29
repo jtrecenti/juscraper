@@ -46,7 +46,7 @@ def _extract_table_fields(container) -> dict:
 
 def _parse_single_page(html: str) -> list[dict]:
     """Parse a single page of TJTO results into a list of dicts."""
-    soup = BeautifulSoup(html, "lxml")
+    soup = BeautifulSoup(html, "html.parser")
     panel = soup.select_one(".panel-document")
     if not panel:
         return []

@@ -21,6 +21,8 @@ def _fetch_page(
     relator: str = "",
     classe: str = "",
     orgao: str = "",
+    data_min: str = "",
+    data_max: str = "",
     max_retries: int = 3,
 ) -> str:
     """Fetch a single page of HTML results from the TJPI search."""
@@ -33,6 +35,10 @@ def _fetch_page(
         params["classe"] = classe
     if orgao:
         params["orgao"] = orgao
+    if data_min:
+        params["data_min"] = data_min
+    if data_max:
+        params["data_max"] = data_max
 
     for attempt in range(1, max_retries + 1):
         try:

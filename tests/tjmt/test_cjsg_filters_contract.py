@@ -19,8 +19,8 @@ def test_cjsg_all_supported_filters_land_in_query_params(mocker):
         "cjsg/filters_all.json",
         quantidade_por_pagina=5,
         tipo_consulta="Acordao",
-        data_julgamento_inicio="01/01/2024",
-        data_julgamento_fim="31/03/2024",
+        data_julgamento_inicio="2024-01-01",
+        data_julgamento_fim="2024-03-31",
         relator="306",
         orgao_julgador="30",
         tipo_processo="942",
@@ -90,8 +90,8 @@ def test_cjsg_data_inicio_alias_maps_to_data_julgamento(mocker):
         "dano moral",
         1,
         "cjsg/no_results.json",
-        data_julgamento_inicio="01/01/2024",
-        data_julgamento_fim="31/03/2024",
+        data_julgamento_inicio="2024-01-01",
+        data_julgamento_fim="2024-03-31",
     )
 
     with pytest.warns(DeprecationWarning) as warning_list:
