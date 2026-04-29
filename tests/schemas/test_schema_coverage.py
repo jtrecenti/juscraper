@@ -73,6 +73,9 @@ EXPECTED_COURT_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
         "juscraper.courts.tjto.schemas",
         "InputCjsgEmentaTJTO",
     ),
+    # PJe consulta pública (TRF3, TRF5) — wired via PJeConsultaScraper.INPUT_CPOPG.
+    ("trf3", "cpopg"): ("juscraper.courts.trf3.schemas", "InputCpopgTRF3"),
+    ("trf5", "cpopg"): ("juscraper.courts.trf5.schemas", "InputCpopgTRF5"),
 }
 
 # Agregadores sao mapeados separadamente porque os endpoints fogem do

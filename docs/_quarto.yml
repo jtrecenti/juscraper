@@ -96,6 +96,10 @@ website:
                   text: "TJMS"
                 - href: notebooks/tjsp.ipynb
                   text: "TJSP"
+                - href: notebooks/trf3.ipynb
+                  text: "TRF3"
+                - href: notebooks/trf5.ipynb
+                  text: "TRF5"
             - section: "Agregadores"
               contents:
                 - href: notebooks/datajud.ipynb
@@ -154,3 +158,5 @@ quartodoc:
         - courts.tjro.client.TJROScraper
         - courts.tjrr.client.TJRRScraper
         - courts.tjsc.client.TJSCScraper
+        - courts.trf3.client.TRF3Scraper
+        - courts.trf5.client.TRF5Scraper
