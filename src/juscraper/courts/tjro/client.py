@@ -47,10 +47,10 @@ class TJROScraper(BaseScraper):
         paginas: Union[int, list, range, None] = None,
         tipo: list | None = None,
         numero_processo: str = "",
-        magistrado: str = "",
+        relator: str = "",
         orgao_julgador: int | str = "",
         orgao_julgador_colegiado: int | str = "",
-        classe_judicial: str = "",
+        classe: str = "",
         instancia: list | None = None,
         termo_exato: bool = False,
         **kwargs,
@@ -68,14 +68,16 @@ class TJROScraper(BaseScraper):
             ``"ACORDAO"``, ``"DECISAO"``, ``"SENTENCA"``, ``"VOTO"``, etc.
         numero_processo : str, optional
             Process number filter. Accepts the deprecated alias ``nr_processo``.
-        magistrado : str, optional
-            Judge/magistrate name.
+        relator : str, optional
+            Reporter judge name. Accepts the deprecated alias ``magistrado``
+            (refs #129).
         orgao_julgador : int or str, optional
             Judging body ID.
         orgao_julgador_colegiado : int or str, optional
             Collegiate judging body ID.
-        classe_judicial : str, optional
-            Judicial class name.
+        classe : str, optional
+            Judicial class name. Accepts the deprecated alias
+            ``classe_judicial`` (refs #129).
         instancia : list, optional
             Jurisdiction grades (e.g. ``[1]``, ``[2]``, ``[1, 2]``).
         termo_exato : bool
@@ -93,6 +95,22 @@ class TJROScraper(BaseScraper):
                 )
             numero_processo = alias_value or ""
 
+        if "magistrado" in kwargs:
+            alias_value = pop_deprecated_alias(kwargs, "magistrado", "relator")
+            if relator:
+                raise ValueError(
+                    "Não é possível passar 'relator' e 'magistrado' simultaneamente."
+                )
+            relator = alias_value or ""
+
+        if "classe_judicial" in kwargs:
+            alias_value = pop_deprecated_alias(kwargs, "classe_judicial", "classe")
+            if classe:
+                raise ValueError(
+                    "Não é possível passar 'classe' e 'classe_judicial' simultaneamente."
+                )
+            classe = alias_value or ""
+
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
 
         inp = apply_input_pipeline_cjsg(
@@ -104,10 +122,10 @@ class TJROScraper(BaseScraper):
             date_format="%Y-%m-%d",
             tipo=tipo,
             numero_processo=numero_processo,
-            magistrado=magistrado,
+            relator=relator,
             orgao_julgador=orgao_julgador,
             orgao_julgador_colegiado=orgao_julgador_colegiado,
-            classe_judicial=classe_judicial,
+            classe=classe,
             instancia=instancia,
             termo_exato=termo_exato,
         )
@@ -117,10 +135,10 @@ class TJROScraper(BaseScraper):
             paginas=inp.paginas,
             tipo=inp.tipo,
             nr_processo=inp.numero_processo,
-            magistrado=inp.magistrado,
+            relator=inp.relator,
             orgao_julgador=inp.orgao_julgador,
             orgao_julgador_colegiado=inp.orgao_julgador_colegiado,
-            classe_judicial=inp.classe_judicial,
+            classe=inp.classe,
             data_julgamento_inicio=to_iso_date(inp.data_julgamento_inicio) or "",
             data_julgamento_fim=to_iso_date(inp.data_julgamento_fim) or "",
             instancia=inp.instancia,

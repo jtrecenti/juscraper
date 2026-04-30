@@ -9,6 +9,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- Testes de `DeprecationWarning` (regra 6a) para os novos aliases canonicos: `tests/tjro/test_cjsg_filters_contract.py` ganha `test_cjsg_magistrado_alias_emits_deprecation_warning` (assertando que `cjsg(magistrado=...)` mapeia para `relator` e o body do backend continua recebendo `ds_nome=...`) e `test_cjsg_classe_judicial_alias_emits_deprecation_warning` (idem para `classe`/`ds_classe_judicial`); `tests/tjrn/test_cjsg_filters_contract.py` ganha `test_cjsg_id_classe_judicial_alias_emits_deprecation_warning` (mapeia para `id_classe`, body envia `id_classe_judicial`). Refs #129.
 - Schema pydantic de `cjsg` wired no metodo publico em TJRN, TJPA, TJRO, TJSC e TJPI: kwargs desconhecidos passam a levantar `TypeError` com a mensagem `<scraper>.cjsg() got unexpected keyword argument(s): '<nome>'` em vez de serem silenciosamente ignorados. O pipeline canonico (`apply_input_pipeline_cjsg`) executa em sequencia: `normalize_paginas` -> `normalize_datas` -> `pop_normalize_aliases` -> `validate_intervalo_datas` -> `Schema(...)` com `extra="forbid"`. Aliases tribunal-especificos (`nr_processo` em TJRN/TJRO) sao popados via `pop_deprecated_alias` antes do helper. Refs #84, #93, #120.
 - TJPI (`cjsg`): `InputCJSGTJPI` agora herda `DataJulgamentoMixin` para refletir a API publica real apos o PR #94 — backend aceita filtro de data via `data_min`/`data_max` no GET, mapeado a partir de `data_julgamento_inicio`/`fim`. `data_publicacao_*` continua rejeitado como `extra_forbidden` (backend nao expoe esse filtro). Refs #94, #125.
 - Novos testes `test_cjsg_unknown_kwarg_raises` em `tests/{tjrn,tjpa,tjro,tjsc,tjpi}/test_cjsg_filters_contract.py`. TJPI ganha tambem `test_cjsg_data_publicacao_kwarg_raises` para travar o contrato de que o backend nao expoe filtro de publicacao.
@@ -40,6 +41,8 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- **API publica `cjsg` no TJRO**: assinatura renomeia `magistrado` -> `relator` e `classe_judicial` -> `classe` para alinhar com os nomes canonicos do projeto fixados em `CLAUDE.md` > "Nomes canonicos de coluna". Os antigos continuam aceitos por uma versao via `pop_deprecated_alias` (`DeprecationWarning`). O JSON enviado ao backend Elasticsearch continua usando `ds_nome`/`ds_classe_judicial` (nomes do backend). Refs #129.
+- **API publica `cjsg` no TJRN**: assinatura renomeia `id_classe_judicial` -> `id_classe` para alinhar com a simetria dos demais filtros `id_*` da familia (`id_relator`, `id_orgao_julgador`, `id_colegiado`). Alias antigo aceito por uma versao via `pop_deprecated_alias`. O JSON enviado ao backend PJe continua usando `id_classe_judicial`. Refs #129.
 - `pyproject.toml`: adicionado `pythonpath = ["tests"]` para permitir `from helpers import ...` sem hacks de `sys.path`.
 - **BREAKING (colunas de saida padronizadas):** DataFrames de `cjsg` dos tribunais TJES, TJMT, TJRS, TJRN, TJPE e TJRO passam a usar nomes canonicos uniformes para colunas semanticamente equivalentes. Renomeacoes: `nr_processo`/`numero_unico` -> `processo` (TJES, TJMT); `classe_cnj`/`classe_judicial` -> `classe` (TJRS, TJRN, TJES, TJPE, TJRO); `assunto_cnj`/`assunto_principal` -> `assunto` (TJRS, TJPE, TJES); `magistrado` -> `relator` (TJES). Codigo que acessa colunas pelo nome antigo (ex.: `df["classe_cnj"]`) precisa ser atualizado. Refs #93, #117.
 - `OutputCJSGBase.ementa` relaxado para `Optional[str]` (TJGO entrega o texto completo em `texto`, nao em `ementa`). `OutputCJSGBase.data_julgamento` aceita agora `date | str | None` para refletir os parsers que ja convertem para `datetime.date`. Redeclaracoes cosmeticas de `paginas` em schemas concretos (TJAP, TJES, TJMG, TJPE, TJPR, TJRO, TJRR, TJRS) removidas — `SearchBase` e a fonte unica. Refs #93, #117.
@@ -57,6 +60,9 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Deprecated
 
+- `cjsg(magistrado=...)` no TJRO deprecado em favor de `cjsg(relator=...)` (refs #129).
+- `cjsg(classe_judicial=...)` no TJRO deprecado em favor de `cjsg(classe=...)` (refs #129).
+- `cjsg(id_classe_judicial=...)` no TJRN deprecado em favor de `cjsg(id_classe=...)` (refs #129).
 - Parametros de Input renomeados para canonicos; os nomes antigos continuam aceitos com `DeprecationWarning` por um ciclo:
   - `nr_processo` -> `numero_processo` em TJPB, TJRN, TJRO.
   - `numero_cnj` -> `numero_processo` em TJAP.

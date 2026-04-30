@@ -1,10 +1,4 @@
-"""Pydantic schemas for TJRN scraper endpoints.
-
-Ainda nao wired em :mod:`juscraper.courts.tjrn.client` — este arquivo e
-documentacao executavel da API publica ate o TJRN ser refatorado para o
-pipeline canonico da #93. A lista de campos bate byte-a-byte com a
-assinatura publica de :meth:`TJRNScraper.cjsg`.
-"""
+"""Pydantic schemas for TJRN scraper endpoints."""
 from __future__ import annotations
 
 from ...schemas import DataJulgamentoMixin, OutputCJSGBase, OutputRelatoriaMixin, SearchBase
@@ -19,12 +13,13 @@ class InputCJSGTJRN(SearchBase, DataJulgamentoMixin):
     deste modelo. Datas de julgamento aceitam os aliases
     ``data_inicio``/``data_fim`` via
     :func:`juscraper.utils.params.normalize_datas` (``data_publicacao_*``
-    nao e suportado pelo backend e fica fora do schema). Filtro de data
-    de julgamento herdado de :class:`DataJulgamentoMixin`.
+    nao e suportado pelo backend e fica fora do schema). Alias
+    ``id_classe_judicial`` -> ``id_classe`` popado em ``client.cjsg``
+    via :func:`pop_deprecated_alias` (refs #129).
     """
 
     numero_processo: str = ""
-    id_classe_judicial: str = ""
+    id_classe: str = ""
     id_orgao_julgador: str = ""
     id_relator: str = ""
     id_colegiado: str = ""

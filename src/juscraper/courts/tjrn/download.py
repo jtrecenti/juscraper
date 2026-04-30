@@ -18,7 +18,7 @@ def build_cjsg_payload(
     page: int = 1,
     inteiro_teor: str = "",
     nr_processo: str = "",
-    id_classe_judicial: str = "",
+    id_classe: str = "",
     id_orgao_julgador: str = "",
     id_relator: str = "",
     id_colegiado: str = "",
@@ -32,13 +32,18 @@ def build_cjsg_payload(
     jurisdicoes: str = "",
     grau: str = "",
 ) -> dict:
-    """Build the JSON payload for the TJRN CJSG search API."""
+    """Build the JSON payload for the TJRN CJSG search API.
+
+    O parametro publico ``id_classe`` mapeia para ``id_classe_judicial``
+    no JSON do backend (nome do PJe). Renomeado pela #129 para alinhar
+    com a convencao de simetria dos demais ``id_*`` filtros do projeto.
+    """
     return {
         "jurisprudencia": {
             "ementa": pesquisa,
             "inteiro_teor": inteiro_teor,
             "nr_processo": nr_processo,
-            "id_classe_judicial": id_classe_judicial,
+            "id_classe_judicial": id_classe,
             "id_orgao_julgador": id_orgao_julgador,
             "id_relator": id_relator,
             "id_colegiado": id_colegiado,

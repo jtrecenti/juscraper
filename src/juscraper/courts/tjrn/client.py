@@ -59,7 +59,7 @@ class TJRNScraper(BaseScraper):
         pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
         numero_processo: str = "",
-        id_classe_judicial: str = "",
+        id_classe: str = "",
         id_orgao_julgador: str = "",
         id_relator: str = "",
         id_colegiado: str = "",
@@ -79,8 +79,9 @@ class TJRNScraper(BaseScraper):
             Pages to download (1-based). None downloads all.
         numero_processo : str, optional
             Process number filter. Accepts the deprecated alias ``nr_processo``.
-        id_classe_judicial : str, optional
-            Judicial class ID.
+        id_classe : str, optional
+            Judicial class ID. Accepts the deprecated alias
+            ``id_classe_judicial`` (refs #129).
         id_orgao_julgador : str, optional
             Judging body ID.
         id_relator : str, optional
@@ -108,6 +109,14 @@ class TJRNScraper(BaseScraper):
                 )
             numero_processo = alias_value or ""
 
+        if "id_classe_judicial" in kwargs:
+            alias_value = pop_deprecated_alias(kwargs, "id_classe_judicial", "id_classe")
+            if id_classe:
+                raise ValueError(
+                    "Não é possível passar 'id_classe' e 'id_classe_judicial' simultaneamente."
+                )
+            id_classe = alias_value or ""
+
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
 
         inp = apply_input_pipeline_cjsg(
@@ -118,7 +127,7 @@ class TJRNScraper(BaseScraper):
             kwargs=kwargs,
             date_format="%Y-%m-%d",
             numero_processo=numero_processo,
-            id_classe_judicial=id_classe_judicial,
+            id_classe=id_classe,
             id_orgao_julgador=id_orgao_julgador,
             id_relator=id_relator,
             id_colegiado=id_colegiado,
@@ -132,7 +141,7 @@ class TJRNScraper(BaseScraper):
             pesquisa=inp.pesquisa,
             paginas=inp.paginas,
             nr_processo=inp.numero_processo,
-            id_classe_judicial=inp.id_classe_judicial,
+            id_classe=inp.id_classe,
             id_orgao_julgador=inp.id_orgao_julgador,
             id_relator=inp.id_relator,
             id_colegiado=inp.id_colegiado,

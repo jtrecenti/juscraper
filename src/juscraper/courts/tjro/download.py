@@ -19,30 +19,35 @@ def build_cjsg_payload(
     size: int = RESULTS_PER_PAGE,
     tipo: list | None = None,
     nr_processo: str = "",
-    magistrado: str = "",
+    relator: str = "",
     orgao_julgador: int | str = "",
     orgao_julgador_colegiado: int | str = "",
-    classe_judicial: str = "",
+    classe: str = "",
     data_julgamento_inicio: str = "",
     data_julgamento_fim: str = "",
     instancia: list | None = None,
     termo_exato: bool = False,
 ) -> dict:
-    """Build the JSON payload for the TJRO CJSG search API."""
+    """Build the JSON payload for the TJRO CJSG search API.
+
+    Os parametros do helper usam os nomes canonicos do projeto
+    (``relator``, ``classe``); o backend Elasticsearch continua recebendo
+    seus proprios nomes (``ds_nome``, ``ds_classe_judicial``) no JSON.
+    """
     if tipo is None:
         tipo = ["EMENTA"]
 
     fields: dict = {"tipo": tipo, "query": pesquisa}
     if nr_processo:
         fields["nr_processo"] = nr_processo
-    if magistrado:
-        fields["ds_nome"] = magistrado
+    if relator:
+        fields["ds_nome"] = relator
     if orgao_julgador:
         fields["id_orgao_julgador"] = str(orgao_julgador)
     if orgao_julgador_colegiado:
         fields["id_orgao_julgador_colegiado"] = str(orgao_julgador_colegiado)
-    if classe_judicial:
-        fields["ds_classe_judicial"] = classe_judicial
+    if classe:
+        fields["ds_classe_judicial"] = classe
     if data_julgamento_inicio:
         fields["dtjulgamento_inicio"] = data_julgamento_inicio
     if data_julgamento_fim:

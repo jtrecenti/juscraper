@@ -33,7 +33,7 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
             "dano moral",
             page=1,
             nr_processo="00000000000000000000",
-            id_classe_judicial="123",
+            id_classe="123",
             id_orgao_julgador="456",
             id_relator="789",
             id_colegiado="10",
@@ -50,7 +50,7 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
         "dano moral",
         paginas=1,
         numero_processo="00000000000000000000",
-        id_classe_judicial="123",
+        id_classe="123",
         id_orgao_julgador="456",
         id_relator="789",
         id_colegiado="10",
@@ -171,3 +171,28 @@ def test_cjsg_unknown_kwarg_raises():
     the field name, instead of being silently dropped (refs #84, #93)."""
     with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
         jus.scraper("tjrn").cjsg("dano moral", paginas=1, kwarg_inventado="x")
+
+
+@responses.activate
+def test_cjsg_id_classe_judicial_alias_emits_deprecation_warning(mocker):
+    """The deprecated ``id_classe_judicial`` alias maps to ``id_classe`` and
+    lands in the payload as ``id_classe_judicial`` (nome do backend PJe).
+    Regra 6a, refs #129."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.POST,
+        BASE_URL,
+        body=load_sample("tjrn", "cjsg/no_results.json"),
+        status=200,
+        content_type="application/json",
+        match=[json_params_matcher(build_cjsg_payload(
+            "dano moral", page=1, id_classe="123",
+        ))],
+    )
+
+    with pytest.warns(DeprecationWarning, match="id_classe_judicial.*id_classe"):
+        df = jus.scraper("tjrn").cjsg(
+            "dano moral", paginas=1, id_classe_judicial="123",
+        )
+
+    assert isinstance(df, pd.DataFrame)
