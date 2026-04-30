@@ -64,6 +64,7 @@ def test_cjsg_all_filters_land_in_body(mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
+    assert df.empty
 
 
 @responses.activate
