@@ -5,6 +5,7 @@ import logging
 import math
 import re
 import time
+from typing import Union
 
 import requests
 
@@ -15,25 +16,33 @@ RESULTS_PER_PAGE = 10
 _TOTAL_RE = re.compile(r"(\d[\d\.]*)\s*resultados?", re.IGNORECASE)
 
 
-def _build_payload(
+def build_cjsg_payload(
     pesquisa: str,
-    pagina_idx: int,
-    id_instancia: str,
-    id_area: str,
-    id_serventia_subtipo: str,
-    data_publicacao_inicio: str,
-    data_publicacao_fim: str,
-    numero_processo: str,
-    qtde_itens_pagina: int,
+    page: int = 1,
+    *,
+    id_instancia: Union[str, int] = "0",
+    id_area: Union[str, int] = "0",
+    id_serventia_subtipo: Union[str, int] = "0",
+    numero_processo: str = "",
+    data_publicacao_inicio: str = "",
+    data_publicacao_fim: str = "",
+    qtde_itens_pagina: int = RESULTS_PER_PAGE,
 ) -> dict:
+    """Build the form-encoded body for the TJGO Projudi search endpoint.
+
+    ``page`` is 1-based; the backend uses a 0-based ``PosicaoPaginaAtual``
+    offset, which this helper computes. ``cf-turnstile-response`` is sent
+    empty: the widget exists on the page but the backend does not validate
+    the token.
+    """
     return {
         "PaginaAtual": "2",
-        "PosicaoPaginaAtual": str(pagina_idx),
+        "PosicaoPaginaAtual": str(page - 1),
         "Viewstate": "",
         "Texto": pesquisa,
-        "Id_Instancia": id_instancia,
-        "Id_Area": id_area,
-        "Id_ServentiaSubTipo": id_serventia_subtipo,
+        "Id_Instancia": str(id_instancia),
+        "Id_Area": str(id_area),
+        "Id_ServentiaSubTipo": str(id_serventia_subtipo),
         "Serventia": "",
         "Id_Serventia": "",
         "Usuario": "",
@@ -43,8 +52,6 @@ def _build_payload(
         "ProcessoNumero": numero_processo,
         "DataInicial": data_publicacao_inicio,
         "DataFinal": data_publicacao_fim,
-        # Cloudflare Turnstile is present on the form but the backend does
-        # not validate the token. Leaving it empty works.
         "cf-turnstile-response": "",
         "g-recaptcha-response": "",
         "Localizar": "Consultar",
@@ -66,7 +73,7 @@ def _extract_total(html: str) -> int:
 def _fetch_page(
     session: requests.Session,
     pesquisa: str,
-    pagina_idx: int,
+    page: int,
     id_instancia: str,
     id_area: str,
     id_serventia_subtipo: str,
@@ -75,9 +82,9 @@ def _fetch_page(
     numero_processo: str,
     qtde_itens_pagina: int,
 ) -> str:
-    payload = _build_payload(
+    payload = build_cjsg_payload(
         pesquisa=pesquisa,
-        pagina_idx=pagina_idx,
+        page=page,
         id_instancia=id_instancia,
         id_area=id_area,
         id_serventia_subtipo=id_serventia_subtipo,
@@ -112,7 +119,7 @@ def cjsg_download(
     first = _fetch_page(
         session=session,
         pesquisa=pesquisa,
-        pagina_idx=0,
+        page=1,
         id_instancia=id_instancia,
         id_area=id_area,
         id_serventia_subtipo=id_serventia_subtipo,
@@ -139,7 +146,7 @@ def cjsg_download(
         html = _fetch_page(
             session=session,
             pesquisa=pesquisa,
-            pagina_idx=pagina - 1,
+            page=pagina,
             id_instancia=id_instancia,
             id_area=id_area,
             id_serventia_subtipo=id_serventia_subtipo,

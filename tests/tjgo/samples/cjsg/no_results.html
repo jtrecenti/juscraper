@@ -1,0 +1,831 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta content="text/html; charset=ISO-8859-1" http-equiv="CONTENT-TYPE" />
+	<title>Jurisprudência</title>
+	<style type="text/css">
+		@import url("./css/Principal.css?v=20231017");		
+		
+		p { margin: 0 0 10px; }		
+		.hr-dashed-line { border:1px dashed lightgray; color: #ffffff; background-color: #ffffff;}
+		.hr-dashed-white-line { border:2px solid white; color: white; }
+		.search-result { padding: 5px; margin-top: 10px;}
+		.search-result h4 { margin-bottom: 0; color: #3181c3; }		
+		.search-result p { font-size: 12px; margin-top: 5px; }
+		.hlt1 { background-color: yellow;}
+		.tooltip {display: none;}
+		.tooltip-head { color:red;}		
+	</style>
+	<link rel="shortcut icon" href="./imagens/favicon.svg" />	
+	<link rel="stylesheet" type="text/css" href="./css/jquery.powertip-light.min.css" />
+	<script type='text/javascript' src='./js/jquery.js'></script>
+	<script type='text/javascript' src='./js/jquery.mask.min.js'></script>
+	<script type='text/javascript' src='./js/ui/jquery-ui.min.js'></script>		
+	<script type="text/javascript" src="./js/jquery.powertip.min.js"></script>
+	<script type='text/javascript' src='./js/Funcoes.js'></script>
+	<script type='text/javascript' src='./js/Digitacao/AutoTab.js'></script>
+	<script type="text/javascript" src="./js/Digitacao/DigitarSoNumero.js" ></script>
+	<script type="text/javascript" src="./js/Digitacao/DigitarData.js" ></script>
+
+	<script>
+		
+		const areas = [					
+			{"codigo": "1", "descricao": "Cível"},
+			{"codigo": "2", "descricao": "Criminal"}
+		];
+	
+		const tipos = [					
+			{"areaId": "3", "servTipoId": "151", "codigo": "6", "descricao": "Turma Recursal Cível e Criminal"},
+			{"areaId": "3", "servTipoId": "151", "codigo": "66", "descricao": "UPJ Turma Recursal"},
+			{"areaId": "1", "servTipoId": "15", "codigo": "14", "descricao": "Câmaras Cíveis"},
+			{"areaId": "2", "servTipoId": "15", "codigo": "20", "descricao": "Câmaras Criminais"},
+			{"areaId": "1", "servTipoId": "15", "codigo": "21", "descricao": "Seções Cíveis"},
+			{"areaId": "2", "servTipoId": "15", "codigo": "46", "descricao": "Seção Criminal"},
+			{"areaId": "1", "servTipoId": "15", "codigo": "22", "descricao": "Órgão Especial"},
+			{"areaId": "2", "servTipoId": "15", "codigo": "22", "descricao": "Órgão Especial"},
+			{"areaId": "1", "servTipoId": "15", "codigo": "41", "descricao": "Conselho Superior de Magistratura"},
+			{"areaId": "1", "servTipoId": "15", "codigo": "10", "descricao": "Plantão 2º Grau - Órgão Especial"},
+			{"areaId": "2", "servTipoId": "15", "codigo": "10", "descricao": "Plantão 2º Grau - Órgão Especial"},
+			{"areaId": "1", "servTipoId": "15", "codigo": "70", "descricao": "Plantão 2º Grau - Câmaras Cíveis"},
+			{"areaId": "2", "servTipoId": "15", "codigo": "71", "descricao": "Plantão 2º Grau - Câmaras Criminais"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "1", "descricao": "Juizado Especial Cível"},			
+			{"areaId": "2", "servTipoId": "16", "codigo": "2", "descricao": "Juizado Especial Criminal"},			
+			{"areaId": "1", "servTipoId": "16", "codigo": "3", "descricao": "Juizado Especial Cível e Criminal"},
+			{"areaId": "2", "servTipoId": "16", "codigo": "3", "descricao": "Juizado Especial Cível e Criminal"},			
+			{"areaId": "1", "servTipoId": "16", "codigo": "26", "descricao": "Juizado Especial Fazenda Pública"},
+			{"areaId": "2", "servTipoId": "16", "codigo": "39", "descricao": "Juizado de Violência Doméstica"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "27", "descricao": "Varas Cíveis"},
+			{"areaId": "2", "servTipoId": "16", "codigo": "47", "descricao": "Varas Criminais"},			
+			{"areaId": "1", "servTipoId": "16", "codigo": "9", "descricao": "Família"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "43", "descricao": "Infância e Juventude Cível"},			
+			{"areaId": "2", "servTipoId": "16", "codigo": "44", "descricao": "Infância e Juventude Infracional"},
+			{"areaId": "2", "servTipoId": "16", "codigo": "11", "descricao": "Execução Penal"},
+			{"areaId": "2", "servTipoId": "16", "codigo": "63", "descricao": "Execução de Pena Alternativa"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "45", "descricao": "Auditoria Militar Cível"},
+			{"areaId": "2", "servTipoId": "16", "codigo": "60", "descricao": "Auditoria Militar Criminal"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "34", "descricao": "Fazenda Pública Estadual"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "8", "descricao": "Fazenda Pública Estadual - Execução Fiscal"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "35", "descricao": "Fazenda Pública Estadual Interior"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "36", "descricao": "Fazenda Pública Municipal"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "7", "descricao": "Fazenda Pública Municipal - Execução Fiscal"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "37", "descricao": "Fazenda Pública Municipal Interior"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "12", "descricao": "Fazenda Pública Mista"},			
+			{"areaId": "1", "servTipoId": "16", "codigo": "69", "descricao": "Fazenda Pública Mista - Execução Fiscal"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "42", "descricao": "Plantão 1º Grau"},
+			{"areaId": "2", "servTipoId": "16", "codigo": "42", "descricao": "Plantão 1º Grau"},			
+			{"areaId": "1", "servTipoId": "16", "codigo": "72", "descricao": "UPJ Cível"},
+			{"areaId": "2", "servTipoId": "16", "codigo": "61", "descricao": "UPJ Criminal"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "49", "descricao": "UPJ Sucessões"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "58", "descricao": "UPJ Família"},
+			{"areaId": "2", "servTipoId": "16", "codigo": "67", "descricao": "UPJ de Violência Doméstica"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "68", "descricao": "UPJ Família Interior"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "81", "descricao": "UPJ Fazenda Pública Estadual"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "82", "descricao": "UPJ Fazenda Pública Municipal"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "83", "descricao": "UPJ dos Juizados Especiais Cíveis"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "64", "descricao": "UPJ Juizado Especial da Fazenda Pública"}			
+		];
+	
+		function submitForm(pos){
+			AlterarValue('PaginaAtual','2');
+			AlterarValue('PosicaoPaginaAtual', pos);
+			FormSubmit('Formulario');
+		}
+		function IrParaOnClick(){
+			submitForm($('#CaixaTextoPosicionar').val()-1);
+		}
+		function abrirArquivo(action, id){
+			var token = $('#g-recaptcha-response').val();
+			$('<form action="'+ encodeURI(action + '?PaginaAtual=1&Id_Arquivo=' + id + '&g-recaptcha-response=' + token) +'" method="post"></form>').appendTo('body').submit().remove();
+		}		
+		function inicializarAreas(){
+			$("#Id_Area").find("option[value != '0']").remove();
+			var areaFiltrada = ($("#Id_Instancia").val() == "151") ? areas.filter(e => e.codigo == "0") : areas;			
+			areaFiltrada.forEach((e) => $('#Id_Area').append('<option value="' + e.codigo + '">' + e.descricao + '</option>'));			
+		}		
+		function atualizarAreas (servTipoId){
+			$("#Id_Area").find("option[value != '0']").remove(); // limpa todas as opções diferente de TODOS
+			if (servTipoId != "151"){
+				areas.forEach((e) => $('#Id_Area').append('<option value="' + e.codigo + '">' + e.descricao + '</option>'));				
+			}
+		}			
+		function filtrarOpcoes (areaId, servTipoId){
+			var tiposFiltrados = [];
+			if (servTipoId == "0" && areaId =="0"){
+				tiposFiltrados = tipos;
+			} else {
+				if (servTipoId != "0"){ // se escolheu uma opção válida
+					tiposFiltrados = tipos.filter(e => e.servTipoId == servTipoId);
+				} 
+				if (areaId != "0"){
+					if (servTipoId != "0"){
+						tiposFiltrados = tiposFiltrados.filter(e => e.areaId == areaId);
+					} else {
+						tiposFiltrados = tipos.filter(e => e.areaId == areaId);
+					}				
+				}
+			}
+			// Filtra o array para tirar os elementos repetidos
+			const tiposDistintos = [...new Map(tiposFiltrados.map(item => [item['codigo'], item])).values()];			
+			$("#Id_ServentiaSubTipo").find("option[value != '0']").remove();
+			tiposDistintos.forEach((e) => $('#Id_ServentiaSubTipo').append('<option value="' + e.codigo + '">' + e.descricao + '</option>'));			
+		}
+
+		function copiarConteudoTexto(nodePai, seletor, footer) {
+			var elementoTexto = $(nodePai).find(seletor);
+			if (elementoTexto) {
+				var range = document.createRange();
+				range.selectNodeContents(elementoTexto[0]);
+				window.getSelection().addRange(range);
+				if (typeof footer === 'string' && footer.length !==0) {
+					footer = '\n' + footer;
+				} else {
+					footer = '';
+				}
+				navigator.clipboard.writeText(elementoTexto.text() + footer);
+			}
+		}
+
+		$(document).ready(function(){
+			$('#Texto').focus();			
+			$('#ProcessoNumero').mask('9999999-99.9999.9.99.9999');
+			$("#Texto").keypress(function(e){
+			 	if (e.which == 13){
+			        e.preventDefault();
+			        AlterarValue('PaginaAtual','2');
+			        document.forms[0].submit();
+			    }
+			});			
+			$("#Id_Instancia").change(function(){				
+				atualizarAreas($(this).val());
+				filtrarOpcoes($("#Id_Area").val(), $(this).val());
+			});
+			$("#Id_Area").change(function(){
+				filtrarOpcoes($(this).val(), $("#Id_Instancia").val());
+			});
+			$("#Id_Instancia").val();			
+			inicializarAreas();
+			$("#Id_Area").val();
+			$("#qtdeItensPagina").val(10);			
+			filtrarOpcoes ($("#Id_Area").val(), $("#Id_Instancia").val());
+			$("#Id_ServentiaSubTipo").val();
+		});
+		
+
+	</script>
+</head>
+<body class="fundo_scroll" onload="configurarData()">
+	
+  	<script type="text/javascript">
+	$(document).ready(function() {
+			
+		var msn_servidor;
+		msn_servidor = window.location.origin;
+		if(msn_servidor != 'https://projudi.tjgo.jus.br'){
+			$('#servidor').html("&nbsp;<i class='fa fa-quote-left'></i> Servidor de Homologação <i class='fa fa-quote-right'></i> ");
+		}
+		
+		const logon = document.getElementById("img_logotj");
+
+		logon.addEventListener("dblclick", (e) => {
+		  alert('ISO-8859-1');
+		});
+		
+	});
+	</script>
+
+	<div id="pgn_cabecalho" class="pgn_cabecalho"> 
+        <div class="logoTJ" id="img_logotj" title='Vers&atilde;o 3.86.0 - 30/04/2026|cp10:server-cp10-2]'><h1>Processo Judicial</h1><div id="servidor"></div></div>
+	
+<div style="float: right;">
+
+           <div id="cssmenu" >
+				<ul>					
+					<li><i id='ContrasteAlterar' title="Alto Contraste"  onclick="window.toggle()" aria-label="AAlto Contraste" data-original-title="Alto Contraste" accesskey="ctrl+alt+c" class="fa-solid fa-circle-half-stroke"></i>  </li>
+	    			<li><i id='FonteAumentar' title="Aumentar Fonte"  onclick="fonte('a')" aria-label="Aumentar Fonte" data-original-title="Aumentar Fonte" accesskey="ctrl+alt++" style="display:block;cursor: pointer;">A+</i>    </li>
+	    			<li><i id='FonteDiminuir' title="Diminuir Fonte"  onclick="fonte('d')" aria-label="Diminuir Fonte" data-original-title="Diminuir Fonte" accesskey="ctrl+alt+-" style="display:block;cursor: pointer;"> A- </i>   </li>
+					<li class="has-sub">
+	<a href="#" title="Consulta"><span><i class="fa fa-search"></i></span></a>
+	<ul>
+		<li><a href="./BuscaProcesso?PaginaAtual=4&TipoConsultaProcesso=24" title="Consultar Processos de 1&ordm e 2&ordm grau"> P&uacute;blica processual &nbsp;<i class="fa fa-search"></i></a></li>
+<li><a href="./ConsultaPublicacao" title="Consultar Publica&ccedil;&otilde;es">Publica&ccedil;&otilde;es &nbsp;<i class="fa fa-search"></i></a></li>	
+		<li><a href="./ConsultaJurisprudencia" title="Consultar Jurisprud&ecirc;ncia">Jurisprud&ecirc;ncia &nbsp;<i class="fa fa-search"></i></a></li>
+		<li><a href="./BuscaProcesso?PaginaAtual=4&TipoConsultaProcesso=1" title="Consultar Processos por Advogado"> Processo por Advogado &nbsp;<i class="fa fa-search"></i></a></li>		
+     	<li><a href="./BuscaProcesso?PaginaAtual=4&TipoConsultaProcesso=23" title="Consultar Processos por Código de Acesso"> Processo por Código &nbsp;<i class="fa fa-search"></i></a></li>
+		<li><a href="ListaJuizados" title="Lista das Serventias com Processo Judicial implantado" > Serventias Implantadas &nbsp;<i class="fa fa-search"></i></a></li>			
+		<li><a href="./RelatorioInterrupcoes?PaginaAtual=4"&Sistema=1 title="Relat&oacute;rio de Interrup&ccedil;&otilde;es"> Relat&oacute;rio de Interrup&ccedil;&otilde;es &nbsp;<i class="fa fa-search"></i></a></li>
+		<li><a href="./PendenciaPublica" title="Localizador de Documentos"> Localizador de Documentos &nbsp;<i class="fa fa-search"></i></a></li>		
+		<li><a href="./PendenciaPublica?PaginaAtual=2" title="Intimações do Dia Anterior">Intima&ccedil;&otilde;es do Dia Anterior&nbsp;<i class="fa fa-search"></i></a></li>				
+		<li><a href="./Audiencia?PaginaAtual=4" title="Consultar Audiências/Sessões">Consulta Audiências/Sessões &nbsp;<i class="fa fa-search"></i></a></li>
+		<li><a href="./ConsultaPublicaGuia" title="Consultar Guias">Consulta Guias &nbsp;<i class="fa fa-search"></i></a></li>
+	</ul>
+</li>
+<li class="has-sub">
+	<a href="#" title="Emitir e Localizar Certidões"><span><i class="fa fa-file-text"></i></span></a> 
+	<ul>
+    	<li class="has-sub">
+        	<a href="#" title="Certidões de 1º Grau"><span> Certidões - 1º Grau &nbsp;<i class="fa fa-file-text"></i></span></a>
+            <ul>
+            	<li><a href="./CertidaoNegativaPositivaPublica?PaginaAtual=1&TipoArea=1&InteressePessoal=&Territorio=&Finalidade=" title="Emiss&atilde;o de Certid&otilde;es Pessoa F&iacute;sica - Cível"> Pessoa F&iacute;sica - C&iacute;vel &nbsp;<i class="fa fa-file-text"></i></a></li>
+            	<li><a href="./CertidaoNegativaPositivaPublica?PaginaAtual=1&TipoArea=2&InteressePessoal=S" title="Emiss&atilde;o de Certid&otilde;es Pessoa F&iacute;sica - Criminal"> Pessoa F&iacute;sica - Criminal &nbsp;<i class="fa fa-file-text"></i></a></li>
+            </ul>
+        </li>
+        <li class="has-sub">
+        	<a href="#" title="Certidões de 2º Grau"><span> Certidões - 2º Grau &nbsp;<i class="fa fa-file-text"></i></span></a>
+            <ul>
+            	<li><a href="./CertidaoSegundoGrauNegativaPositivaPublica?PaginaAtual=1" title="Emiss&atilde;o de Certid&otilde;es Pessoa F&iacute;sica">Pessoa F&iacute;sica &nbsp;<i class="fa fa-file-text"></i> </a></li>
+				<li><a href="./CertidaoSegundoGrauNegativaPositivaPublicaPJ?PaginaAtual=1" title="Emiss&atilde;o de Certid&otilde;es Pessoa Jur&iacute;dica">Pessoa Jur&iacute;dica &nbsp;<i class="fa fa-file-text"></i></a></li>
+            </ul>
+        </li>
+        <li><a href="./CertidaoGuia" title="Emitir Certid&otilde;es com Guia">Emitir Certidões com Guia&nbsp;<i class="fa fa-file-text"></i></a></li>
+        <li><a href="./CertidaoPublica" title="Localizador Certid&otilde;es">Localizador de Certidões &nbsp;<i class="fa fa-file-text"></i></a></li>
+	</ul>
+</li>
+<li class="has-sub">
+	<a href="#" title="Emitir Guias"><span><i class="fa fa-usd"></i></span></a> 
+    <ul>
+<!--     	<li><a href="./GerarBoleto?PaginaAtual=4" title="Gerar Boleto">Gerar Boleto Caixa&nbsp;<i class="fa fa-usd"></i></a></li> -->
+    	<li><a href="./GerarBoleto?PaginaAtual=4" title="Gerar Boleto">Gerar Boleto&nbsp;<i class="fa fa-usd"></i></a></li>
+    	<li><a href="./GuiaLocomocaoPublica?PaginaAtual=9" title="Guia Locomo&ccedil;&atilde;o"> Guia Locomo&ccedil;&atilde;o &nbsp;<i class="fa fa-usd"></i></a></li>
+		<li><a href="./GuiaLocomocaoComplementarPublica?PaginaAtual=9" title="Guia Locomo&ccedil;&atilde;o Complementar"> Guia Locomo&ccedil;&atilde;o Complementar &nbsp;<i class="fa fa-usd"></i></a></li>
+		<li><a href="./GuiaInicial1GrauPublica?PaginaAtual=4" title="Guia Inicial para o 1º e 2º Grau"> Guia Inicial 1º e 2º Grau &nbsp;<i class="fa fa-usd"></i></a></li>
+		<li><a href="./GuiaInicialComplementarPublica?PaginaAtual=4" title="Guia Complementar da Inicial"> Guia Complementar da Inicial &nbsp;<i class="fa fa-usd"></i></a></li>
+<!-- 		<li><a href="./GuiaPostagemPublica?PaginaAtual=9" title="Guia Postagem"> Guia Postagem &nbsp;<i class="fa fa-usd"></i></a></li> -->
+		<li><a href="./GuiaRepasseFundespPublica?PaginaAtual=9" title="Guia Repasse ao Fundesp - Decisão Judicial"> Guia Repasse ao Fundesp - Decisão Judicial &nbsp;<i class="fa fa-usd"></i></a></li>
+		<li><a href="./GuiaRecursoInominadoPublica?PaginaAtual=9" title="Guia Recurso Inominado"> Guia Recurso Inominado &nbsp;<i class="fa fa-usd"></i></a></li>
+<li><a href="./GuiaEmissaoPrevia?PaginaAtual=3&passo=guias_certidao" title="Guia de Certidão">Guia de Certidão &nbsp;<i class="fa fa-usd"></i></a></li>
+		<li><a href="./GuiaEmissaoPrevia?PaginaAtual=3" title="Emissão Outras Guias">Outras Guias&nbsp;<i class="fa fa-usd"></i></a></li>
+		<li><a href="./GuiaFinal_FinalZeroPublica?PaginaAtual=9" title="Guia Final e Final Zero"> Guia Final e Final Zero &nbsp;<i class="fa fa-usd"></i></a></li>
+    </ul>
+</li>
+<li class="has-sub">
+	<a href="#" title="Estatística Pública"><span><i class="fa fa-bar-chart"></i></span></a> 
+    <ul>
+    	<li><a onclick="buscaEstatistica(1)" href="#" > Quantitativo de Processos &nbsp;<i class="fa fa-bar-chart"></i></a></li>
+		<!--<li><a  onclick="buscaEstatistica(2)" href="#" >Quantitativo de Tipos de Processos<i class="fa fa-bar-chart"></i></a></li>-->
+		<li><a onclick="buscaEstatistica(3)" href="#">Quantitativo de Serventias &nbsp;<i class="fa fa-bar-chart"></i></a></li>
+	</ul>
+</li>
+
+<script type="text/javascript">
+
+	function buscaEstatistica(_consulta){
+
+		var reCaptcha = $("#g-recaptcha-response").val();		
+		//window.location = '/EstatisticaPublica?PassoBusca=2&EstatisticaPublicaTipoConsulta='+_consulta+'&g-recaptcha-response='+ reCaptcha;
+		window.open('./EstatisticaPublica?PassoBusca=2&EstatisticaPublicaTipoConsulta='+_consulta+'&g-recaptcha-response='+ reCaptcha, "_self");
+		
+	}
+</script><li class="has-sub">
+	<a href="#" title="Ajuda"><span><i class="fa fa-question-circle"></i></span></a> 
+    <ul>    	
+    	<li><a href="./videos.html" title="Vídeos para aprender a trabalhar com o Processo Judicial" target="_blank" id="videos"> V&iacute;deos &nbsp;<i class="fa fa-question-circle"></i></a></li>									
+ 		<li><a href="./Pdfvideos.html" title="PDF dos Vídeos para aprender a trabalhar com o Processo Judicial" target="_blank" id="Pdfvideos"> Manuais &nbsp;<i class="fa fa-question-circle"></i></a></li> 		 		
+ 		<li class="has-sub">  
+			<a href="#" title="Legislação"> Legislação &nbsp;<i class="fa fa-balance-scale"></i></a>
+            <ul>
+            <!-- Não é para colocar dentro do war, arquivos estaticos use o servidor http://docs.tjgo.jus.br/projudi/pdf/
+            	veja com o massa como ter acesso.
+            	máquina 10.0.10.27\pubinternet\Sistemas_de_Informacao\legislacao
+             -->
+            	<li><a href="http://www.planalto.gov.br/ccivil_03/_ato2004-2006/2006/lei/l11419.htm" target="_blank" title="Lei 11.419"> Lei n.&ordm; 11.419 de 19/12/2006 &nbsp;<i class="fa fa-balance-scale"></i></a></li>			
+				<li><a href="http://docs.tjgo.jus.br/projudi/legislacao/Resolucao0207.pdf" target="_blank" title="Resolução nº 02 de 14/03/2007 TJ-GO"> Resolu&ccedil;&atilde;o n.&ordm; 02 de 14/03/2007 TJ-GO &nbsp;<i class="fa fa-balance-scale"></i></a></li>			
+				<li><a href="http://docs.tjgo.jus.br/projudi/legislacao/Resolucao0210.pdf" target="_blank" title="Resolução nº 02 de 24/03/2010 TJ-GO"> Resolu&ccedil;&atilde;o n.&ordm; 02 de 24/03/2010 TJ-GO &nbsp;<i class="fa fa-balance-scale"></i></a></li>
+				<li><a href="http://docs.tjgo.jus.br/projudi/legislacao/Resolução_59_2016_ProcessoDigital.pdf" target="_blank" title="Resolução nº 59 de 04/07/2016 TJ-GO"> Resolu&ccedil;&atilde;o n.&ordm; 59 de 04/07/2016 TJ-GO &nbsp;<i class="fa fa-balance-scale"></i></a></li>
+				<li><a href="http://docs.tjgo.jus.br/projudi/legislacao/Resolução_61_2016.pdf" target="_blank" title="Resolução nº 61 de 27/07/2016 TJ-GO"> Resolu&ccedil;&atilde;o n.&ordm; 61 de 27/07/2016 TJ-GO &nbsp;<i class="fa fa-balance-scale"></i></a></li>
+				<li><a href="http://docs.tjgo.jus.br/projudi/legislacao/portaria_046_2016.pdf" target="_blank" title="Portaria nº 46 de 29/11/2016 TJ-GO"> Portaria n.&ordm; 46 de 29/11/2016 TJ-GO &nbsp;<i class="fa fa-balance-scale"></i></a></li>
+				<li><a href="http://docs.tjgo.jus.br/projudi/legislacao/portaria_844_2017.pdf" target="_blank" title="Portaria nº 844 de 07/12/2017 TJ-GO"> Portaria n.&ordm; 844 de 07/12/2017 TJ-GO &nbsp;<i class="fa fa-balance-scale"></i></a></li>
+	    		<li><a href="./decretos.html" title="Decretos" target="_blank" id="Decretos"> Decretos &nbsp;<i class="fa fa-balance-scale"></i></a></li>                
+			</ul>
+		</li>
+		<li><a href="./ajudaSuporteAdvogado.html" title="Suporte ao Advogado" target="_blank" id="ajd_SuporteAdvogado"> Suporte ao Advogado &nbsp;<i class="fa fa-comment"></i></a></li>
+		<li><a href="http://www.cnj.jus.br/tecnologia-da-informacao/comite-nacional-da-tecnologia-da-informacao-e-comunicacao-do-poder-judiciario/modelo-nacional-de-interoperabilidade" title="Compatível com o Modelo Nacional de Interoperabilidade do CNJ" target="_blank" id="MNI CNJ"> MNI CNJ &nbsp;<i class="fa fa-balance-scale"></i></a></li>
+		<li><a href="https://projudi.tjgo.jus.br/IntercomunicacaoService?WSDL" title="Modelo Nacional de Interoperabilidade do TJGO" target="_blank" id="MNITJGO"> MNI TJGO &nbsp;<i class="fa fa-balance-scale"></i></a></li>
+	</ul>
+</li><li class="has-sub">  
+	<a href="#" title="Download"><i class="fa fa-download"></i> </a>
+    <ul>
+    	<li><a href="https://docs.tjgo.jus.br/projudi/jar/VisualizadoReciboProjudi.jar" target="_blank" title="Programa para visualizar o recibo do Projudi e retirar o arquivo assinado e o conte&uacute;do">Leitor de Recibo &nbsp;<i class="fa fa-download"></i> </a></li>
+    	<li><a href="https://docs.tjgo.jus.br/projudi/jar/AssinadorExterno.jar" target="_blank" title="Programa para fazer assinatura digital dos arquivos no seu computador e-TCESP">(e-TCESP) Assinador Externo &nbsp;<i class="fa fa-download"></i></a></li>
+    	<li><a href="https://www.registradores.org.br/assinador/AssinadorDigital-ARISP-Instalador-1.7.0.exe" target="_blank" title="Programa para fazer assinatura digital dos arquivos no seu computador Arisp">(Arisp) Assinador Externo (.exe - Windows)&nbsp;<i class="fa fa-download"></i></a><a href="https://www.registradores.org.br/AssinadorDigital/" target="_blank" title="Site Registradores">Site Registradores</a>a</li>
+		<li><a href="https://docs.tjgo.jus.br/projudi/jar/sai.jar" target="_blank" title="Programa para fazer assinatura digital dos arquivos no seu computador">(NOVO) Assinador Externo &nbsp;<i class="fa fa-download"></i></a></li>		
+		<li class="has-sub">  
+			<a href="#" title="Download">Mozilla Firefox<i class="fa fa-download"></i> </a>
+		    <ul>
+		    	<li><a href="https://releases.mozilla.org/pub/firefox/releases/50.0.2/linux-i686/pt-BR/firefox-50.0.2.tar.bz2" target="_blank" title="Versão para Windows">Linux &nbsp;<i class="fa fa-download"></i> </a></li>
+		    	<li><a href="https://releases.mozilla.org/pub/firefox/releases/51.0.1/mac/pt-BR/Firefox%2051.0.1.dmg" target="_blank" title="Versão para Windows">Mac OS X &nbsp;<i class="fa fa-download"></i> </a></li>
+		    	<li><a href="https://releases.mozilla.org/pub/firefox/releases/51.0.1/win32/pt-BR/Firefox%20Setup%2051.0.1.exe" target="_blank" title="Versão para Windows">Windows 32bits &nbsp;<i class="fa fa-download"></i> </a></li>
+			</ul>
+		</li>
+		<li><a href="http://www.java.com/pt_BR/download/" target="_blank" title="Clique aqui para baixar o JAVA"> JAVA - Download &nbsp;<i class="fa fa-download"></i></a></li>
+	</ul>
+</li> <li>  
+	<a id="linkSair" href="LogOn?PaginaAtual=-200" title="Sair" target="_self"><i class="fa fa-sign-out"></i> </a>  
+</li></ul>
+			</div>
+        </div>    
+    </div>
+	<div style="clear:both;width:1450px;height:28px;background-color:#ccc; margin: 0 auto;"></div>
+<div id="divCorpo" class="divCorpo" style="margin-bottom:20px;"/>
+		<div class="area"><h2> &raquo; Novo Módulo de Pesquisa de Jurisprudência</h2></div>	
+		<div id="divLocalizar" class="divLocalizar">			
+			<form id="Formulario" method="post" action="ConsultaJurisprudencia"/>				
+				<input type="hidden" id="PaginaAtual" name="PaginaAtual" value="2" />
+				<input type="hidden" id="PosicaoPaginaAtual" name="PosicaoPaginaAtual" value="0" />
+				<input type="hidden" id="Viewstate" name="Viewstate" value="" />				
+				<div id="divEditar" class="divEditar">
+					<!-- Pesquisa por campos de filtro -->
+					<fieldset class="formEdicao">
+						<div id="filtro-campo">
+						
+							<div class="col100 float_label_fixo clear">
+				    			<input class="formEdicaoInput" id="Texto" name="Texto" type="text" title="Texto para consulta de jurisprudência" placeholder='Utilize aspas duplas para realizar uma busca exata. Exemplo: "indenização por erro médico".' value="juscraper_probe_zero_hits_xyzqwe"/>
+				    			<label class="formEdicaoLabel" for="Texto">Digite um termo para a pesquisa</label>
+				    		</div>
+				    		<br /><br />	
+				    									    		    					    						    		
+				    		<div class="col35 clear">
+					    		<label for="Id_Instancia">Instância</label>
+						    	<select id="Id_Instancia" name="Id_Instancia">
+						    		<option value="0">Todas as instâncias</option>
+						    		<option value="16">1o Grau</option>
+						    		<option value="151">Turma de Uniformização / Turmas Recursais</option>
+						    		<option value="15">Tribunal</option>
+						    	</select>					    						    	
+					    	</div>
+					    	
+					    	<div class="col25">
+					    		<label for="Id_Area">Área</label>
+						    	<select id="Id_Area" name="Id_Area">	
+						    		<option value="0">Todas as áreas</option>						    		
+						    		<!--						    								    	
+						    		<option value="1">Cível</option>
+						    		<option value="2">Criminal</option>						    		
+						    		-->
+						    	</select>
+					    	</div>
+					    	
+					    	<div class="col35">
+					    		<label for="Id_ServentiaSubTipo">Órgão / Matéria</label>
+						    	<select id="Id_ServentiaSubTipo" name="Id_ServentiaSubTipo">	
+						    		<option value="0">Todas as opções</option>
+						    	</select>
+					    	</div>	
+					    	<br /><br /> 
+					    	 
+				    		<div class="col35 float_label_fixo clear">
+						    	<input class="formEdicaoInput AutoComplete" name="Serventia" id="Serventia" placeholder="Digite a Unidade Específica" type="text" size="60" maxlength="255" value=""
+						    	onkeyup="BuscaPadraoCombo(event, 'divEditar', 'ConsultaJurisprudencia', 'Id_Serventia', 'Serventia', ['Tipo','UF'], '1682');"/>
+						    	<label class="formEdicaoLabel" for="Serventia">Unidade Específica
+						    		<button class="imgIcons" id="imaLocalizarUnidade" title="Localizar" type="submit" name="imaLocalizarUnidade" 
+						    		onclick="MostrarBuscaPadrao('divEditar','ConsultaJurisprudencia','Consulta de Serventia', 'Digite a Serventia e clique em consultar.', 'Id_Serventia', 'Serventia', ['Serventia'], ['Tipo','UF'], '1682', '15');LimparChaveEstrangeira('Id_Usuario','Usuario'); return false;"><i class="fa-solid fa-magnifying-glass"></i></button> 
+						    		<button class="imgIcons" name="imaLimparPrioridade" onclick="LimparChaveEstrangeira('Id_Serventia','Serventia'); return false;" title="Limpar Serventia"><i class="fa-regular fa-circle-xmark"></i></button>						    			
+						    	</label>
+						    	<input type="hidden" id="Id_Serventia" name="Id_Serventia" value="" />
+					    	</div>
+					    					    		
+				    		<div class="col30 float_label_fixo">
+						    	<input class="formEdicaoInput AutoComplete" name="Usuario" id="Usuario" placeholder="Digite o nome do Magistrado(a)" type="text" size="60" maxlength="255" value="" 
+						    	onkeyup="BuscaPadraoCombo(event, 'divEditar', 'ConsultaJurisprudencia', 'Id_Usuario', 'Usuario', ['Grupo'], '1582');"/>
+						    	<label class="formEdicaoLabel" for="Serventia">Por Magistrada ou Magistrado
+						    		<button class="imgIcons" id="imaLocalizarJuiz" title="Localizar" type="submit" name="imaLocalizarJuiz"  						    		
+						    		onclick="MostrarBuscaPadrao('divEditar','ConsultaJurisprudencia','Consulta de Magistrado', 'Digite o nome e clique em consultar.', 'Id_Usuario', 'Usuario', ['Magistrado'], ['Grupo'], '1582', '15','Id_Serventia'); return false;"><i class="fa-solid fa-magnifying-glass"></i></button> 
+						    		<button class="imgIcons" name="imaLimparPrioridade" onclick="LimparChaveEstrangeira('Id_Usuario','Usuario'); return false;" title="Limpar Magistrado"> <i class="fa-regular fa-circle-xmark"></i></button> 
+						    	</label>
+						    	<input type="hidden" id="Id_Usuario" name="Id_Usuario" value="" />
+					    	</div>
+					    	
+					    	<div class="col30 float_label_fixo">
+						    	<input class="formEdicaoInput AutoComplete" name="ArquivoTipo" id="ArquivoTipo" placeholder="Digite o Tipo de Ato" type="text" size="60" maxlength="255" value=""
+						    	onkeyup="BuscaPadraoCombo(event, 'divEditar', 'ConsultaJurisprudencia', 'Id_ArquivoTipo', 'ArquivoTipo', [], '1802');"/>					    						    	
+					    		<label class="formEdicaoLabel" for="ArquivoTipo">Tipo de Ato
+						    		<button class="imgIcons" id="imaLocalizarArquivoTipo" title="Localizar" type="submit"  name="imaLocalizarArquivoTipo" 
+						    		onclick="MostrarBuscaPadrao('divEditar','ConsultaJurisprudencia','Consulta de Tipo de Ato', 'Digite o Tipo de Arquivo e clique em consultar.', 'Id_ArquivoTipo', 'ArquivoTipo', ['Tipo de Arquivo'], [], '1802', '15'); return false;"><i class="fa-solid fa-magnifying-glass"></i></button> 
+						    		<button class="imgIcons" name="imaLimparPrioridade" onclick="LimparChaveEstrangeira('Id_ArquivoTipo','ArquivoTipo'); return false;" title="Limpar Tipo de Ato"> <i class="fa-regular fa-circle-xmark"></i></button> 
+						    	</label>
+						    	<input type="hidden" id="Id_ArquivoTipo" name="Id_ArquivoTipo" value="" />
+					    	</div>
+					    	<br/><br/>	
+					    					    	
+					    	<div class="col35 float_label_fixo clear">
+							    <input class="formEdicaoInput" name="ProcessoNumero" id="ProcessoNumero"  type="text" size="30" maxlength="25" onkeyup="autoTab(this,25);" placeholder="Ex: 5000280-28.2010.8.09.0059" value=""/>
+				    			<label class="formEdicaoLabel" for="ProcessoNumero">Número do Processo </label> 
+				    		</div>
+				    		<br><br>
+				    		
+					    	<fieldset>
+								<legend>Data de Publicação </legend>
+								
+								<div class="col10 float_label_fixo datepicker">
+							    	<label class="formEdicaoLabel" for="DataInicial">Data Inicial
+							    	<button type="button" class="imgIcons" id="calendarioDataInicial"title="Calendário" > <i class="fa-solid fa-calendar-days"></i> </button>
+					    			</label>
+					    			<input class="formEdicaoInput"  placeholder="Data Inicial"   name="DataInicial" id="DataInicial"  type="text" size="10" maxlength="10" value=""  onkeyup="mascara_data(this); autoTab(this,10)" onkeypress="return DigitarSoNumero(this, event)" onblur="verifica_data(this)"  />					    								    			
+						    	</div>
+						    	
+						    	<div class="col10 float_label_fixo datepicker">
+							    	<label class="formEdicaoLabel" for="DataFinal">Data Final 
+							    	<button type="button" class="imgIcons" id="calendarioDataFinal" title="Calendário" > <i class="fa-solid fa-calendar-days"></i> </button>
+							    	</label>
+					    			<input class="formEdicaoInput"   placeholder="Data Final"  name="DataFinal" id="DataFinal"  type="text" size="10" maxlength="10" value="" onkeyup="mascara_data(this); autoTab(this,10)" onkeypress="return DigitarSoNumero(this, event)" onblur="verifica_data(this)"  />					    			
+						    	</div>
+					    	</fieldset>
+					    </div>
+					</fieldset>
+				</div>
+				
+				<!-- Barra de botões -->
+				<div style="margin:10px;">
+					<div class="Centralizado">
+						<!-- inclua esse arquivo dentro do form que será submetido
+	utilize o RecaptchaService para validar do lado do servidor
+ -->
+<script
+  src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoad"
+  defer
+></script>
+<div id="widget-container"></div>
+<input id="g-recaptcha-response" type="hidden" name="g-recaptcha-response" value=""/>
+<script>
+  function onTurnstileLoad() {
+    turnstile.render("#widget-container", {
+      sitekey: "0x4AAAAAABeYdOewv6AT0dzB",
+      theme: "light",
+      callback: function (token) {
+        console.log("Challenge completed:", token);
+        $("#g-recaptcha-response").attr("value",token);
+        const btnBuscarElement = document.querySelector('#btnBuscar');
+        if (btnBuscarElement) {
+          btnBuscarElement.disabled = false;
+        }
+      },
+    });
+  }
+</script><input id="formLocalizarBotao" class="formLocalizarBotao" type="submit" name="Localizar" value="Consultar" onclick="javascript:submitForm(0);"/>						
+						<input name="imgInserir" type="submit" value="Limpar" title= "Limpa os campos da tela" onclick="javascript:limparForm('Formulario');AlterarValue('PaginaAtual','4');"/>
+					</div>
+				</div>
+								
+				<!-- Painel de resultados -->
+				</form>			
+		</div>
+	</div>
+	<div id="dialog" style="display:none">&nbsp;</div>
+	
+<div id="busca_padrao" class="modalBusca">
+	<div id='modalBusca-content' class="modalBusca-content1 ___Movimentavel">
+		<div id='modalBusca-content-titulo' class="modalTitulo"><p id='modalTitulo'></p><span class="modal_close" onclick='fecharBuscaPadrao()'>&times;</span></div> 
+		<div class="modalBusca-content2">
+			<fieldset id="formLocalizar" > 
+				<legend id="legenda" ></legend>
+				<div class='float_label_form' id='busca_padrao_campos'></div>
+				<br />
+				<div class="Centralizado">
+					<input type="submit" id="busca_padraoLocalizar" name="busca_padraoLocalizar" value="Consultar" onclick="javascript:buscaDadosModal(_stTempRetorno, _paginaAtual, _numeroFiltros , '0', _tamanho, _id, _descricao, _colunasTabela, _fieldName,_filtro,_filtro2); return false;"/>
+				</div>
+			</fieldset>	
+			<div id='divTabelaBuscaPadrao' class="divTabela"></div>
+			<div id="PaginacaoBuscaPadrao" class="Paginacao"></div>
+		</div>
+	</div> 
+</div>
+
+<div id="infoPasso" style="display:none" class="modalBusca">
+	<div class="modalBusca-content1 ___Movimentavel">
+		<div class="modalTitulo"><p id='modalTitulo'></p><span class="modal_close" onclick='$("#infoPasso").hide();'>&times;</span></div> 
+		<div class="modalBusca-content2">
+			<div id="divInfoPasso" class="divEditar"> 
+				
+			</div>
+		</div>
+	</div> 
+</div>
+
+<div id="infoFoto" style="display:none" class="modalBusca">
+	<div class="modalBusca-content1 ___Movimentavel">
+		<div class="modalTitulo"><p id='modalTitulo'></p><span class="modal_close" onclick='$("#infoFoto").hide();'>&times;</span></div> 
+		<div class="modalBusca-content2">
+			<div id="divInfoPasso" class="divEditar Centralizado"> 
+				<img id='img_infoFoto'>
+			</div>
+		</div>
+	</div> 
+</div>
+
+<div id="infoFormulario" style="display:none" class="modalBusca">
+	<div class="modalBusca-content1 ___Movimentavel">
+		<div class="modalTitulo"><p id='modalTitulo'></p><span class="modal_close" onclick='$("#infoFormulario").hide();'>&times;</span></div> 
+		<div class="modalBusca-content2">
+			<div id="divinfoFormulario" class="divEditar Centralizado"> 				
+			</div>
+		</div>
+	</div> 
+</div>
+
+<div id="divPortaTabela" style="display:none" class="divPortaTabela ___Movimentavel">
+	<div class="divPortaTabelaTitulo"><p id='divPortaTabelaTitulo'></p><span class="modal_close" onclick='$("#divPortaTabela").hide();'>&times;</span></div>
+	<div class='tableview'> 
+		<div id="divPortaTabelaConteudo" class="Centralizado divPortaTabelaConteudo tableview-holder"> 
+		
+		</div>
+	</div>
+</div> 
+
+<input type="text" style="display:none">
+<input type="password" style="display:none">
+<div id='divLerSenha'  class='divFundoEscuro' style = "display:none">
+	<div id='divPortaSenha' class='divCentroTela' >
+		<h1>Digite a senha do certificado digital</h1>
+		<hr/>
+		<input type='password' name='senhaCertificado' id='senhaCertificado' autocomplete='off' ><br />
+		<div  style="text-align: left;">
+			<input type="checkbox" name='salvarSenhaCertificado' id='salvarSenhaCertificado' >Memorizar a senha do certificado
+		</div>
+		<hr/>
+		<div id="divBotoesCentralizadosAssinador" style="text-align: right; margin-top: 8px;">
+			<button id='but_senhaDigita' type="button">
+				Assinar
+	 		</button>
+	 		<button id='but_cancelar' type="button" onclick="javascript:$('#divLerSenha').hide(); $('#senhaCertificado').val(''); return false;">
+				Cancelar
+	 		</button>
+	 	</div>		
+	</div>
+</div>
+ 
+<script type="text/javascript" src="./js/fonte_contraste.js"></script>    
+<script type="text/javascript" >
+  
+	var _stTempRetorno;
+	var _boMostrarExcluir;
+	var _paginaAtual;
+	var _nomeBusca;
+	var _tamanhoRetornoConsulta;	
+	var _numeroFiltros;
+	var _tamanho;
+	var _id;
+	var _descricao;
+	var _colunasTabela;
+	var _fieldName;
+	var _filtro;
+	var _filtro2;
+	
+	var mousePosition;
+	var offset = [0,0];	
+	var isDown = false;
+	
+		
+	function acionarBotao(event,id_botao){
+		if (event.keyCode==13){
+			$("#" + id_botao ).trigger('click');
+		}
+	}
+
+	function fecharBuscaPadrao() {
+		$("#busca_padrao").hide();
+		$("#busca_padrao_campos").html('');
+	}
+	
+	function MostrarBuscaPadrao(field, ct, titulo, legenda, id, descricao, campos, colunasTabela, paginaAtual, tamanhoConsulta, filtro, filtro2, params){
+
+		_paginaAtual = paginaAtual;
+		_numeroFiltros = campos.length;
+		_tamanho = tamanhoConsulta;
+		_stTempRetorno = ct;
+		_descricao = descricao;
+		_colunasTabela=colunasTabela;
+		_filtro=$("#" + field + " #"+ filtro).val();
+		_filtro2=$("#" + field + " #"+ filtro2).val();
+
+        _filtro = ['null', 'undefined', '', null, undefined].includes(_filtro) ? '' : _filtro;
+        _filtro2 = ['null', 'undefined', '', null, undefined].includes(_filtro2) ? '' : _filtro2;
+
+		$("#modalTitulo").html(titulo) ;
+		$("#legenda").html(legenda);		
+		
+		var descricaoCabecalho = _descricao;
+		var st_campos ="";
+		var stTabela = "";		
+
+		if (params) {
+			if (params['cabecalhoDescricao']) {
+				descricaoCabecalho = params['cabecalhoDescricao'];
+			}
+		}
+		
+		for (var i = 0; i < campos.length; i++) {
+			st_campos += '<div class="col90 float_label">';			
+			st_campos += '<input id="nomeBusca'+(i+1)+'" class="float_label_input" onkeypress="acionarBotao(event,\'busca_padraoLocalizar\');" placeholder="'+campos[i]+'" name="nomeBusca'+(i+1)+'" value="" type="text">';
+			st_campos += '<label for="nomeBusca'+(i+1)+'">'+campos[i]+'</label>'; 
+			st_campos += '</div>';
+		}
+		
+		if (_id!=id || field!=_fieldName){
+			_id = id;
+			_fieldName= field;
+			stTabela += '	<table id="tabelaLocalizar" class="Tabela">';
+			stTabela += '		<thead>';
+			stTabela += '			<tr>';
+			stTabela += '				<th align="Center" style="width: 50px;"></th>';
+			if (descricaoCabecalho === 'FontePagadora') {
+				stTabela += '				<th align="Center" style="width: 120px;">CNPJ</th>';
+				stTabela += '				<th align="left">Fonte Pagadora</th>';
+			} else {
+				stTabela += '				<th align="Center" style="width: 120px;">Id</th>';
+				stTabela += '				<th align="left">'+descricaoCabecalho+'</th>';
+			}
+			for (var i = 0; i < colunasTabela.length; i++) {
+				stTabela += '			<th align="left">'+ colunasTabela[i] +'</th>';
+			}
+			//stTabela += '				<th class="colunaMinima" title="Seleciona o registro para edição">Selecionar</th>';	
+			stTabela += '			</tr>';
+			stTabela += '		</thead>';
+			stTabela += '		<tbody id="CorpoTabela">&nbsp;</tbody>';
+			stTabela += '	</table>';	  		
+			$("#divTabelaBuscaPadrao").html(stTabela) ;
+			$("#PaginacaoBuscaPadrao").html("") ;
+		}
+		
+		$("#busca_padrao_campos").html(st_campos) ;
+		$("#busca_padrao").show();
+		/*$("#busca_padrao").css({'visibility':'visible','opacity':'1'});*/
+		//var doc = document.documentElement.clientHeight ? document.documentElement : document.body;
+// 		var posicao   = ((this.height() - $("#modalBusca-content1").outerHeight()) / 2) + "px";
+// 		alert(posicao);
+// 		alert(this.top + " " + this.left);
+		
+		//posição do objeto na tela
+// 		event = event || window.event;
+// 		var source = event.target || event.srcElement;
+		 				
+// 		var topRelativo = (($(document).height() - $("#modalBusca-content").height() )/2) - ($("#modalBusca-content").height() /3);
+		
+// 		//$("#modalBusca-content").css({'top':topRelativo});
+// 		var posicaoY = source.y || source.offsetTop; 														
+// 		//var posicaoX = source.x || source.offsetLeft;
+		
+//  		if(posicaoY>120){
+//  			$("#modalBusca-content").css({'top':posicaoY-100}); 			
+//  		}else{
+//  			$("#modalBusca-content").css({'top':posicaoY});
+//  		}
+		//var leftRelativo = ($(document).width() - $("#modalBusca-content").width() )/2;
+		
+		//$("#modalBusca-content").css({'left':leftRelativo});
+		
+	}
+		
+	
+	//window.toggleContrast=function(){Contrast.toogle()};
+	
+	window.addEventListener("keydown", function(event ){parent.postMessage({'origem':'corpo','comando':'keydown','key':event.key,'keycode':event.keyCode}); });
+	window.addEventListener("keyup", function(event ){parent.postMessage({'origem':'corpo','comando':'keyup','key':event.key,'keycode':event.keyCode}); });
+		
+	//guardo aqui as teclas apertadas e não soltadas
+	var mapTeclas = new Map();
+	
+	function teclaApertada ( codigo){
+		mapTeclas.set(codigo, true);
+		//console.log(codigo + '  1');
+		//ativar menu quando apertar ctrl+alt+m
+		// ctrl =17    alt = 18    m = 77  shift = 16 173 = menos  61 = mais 67 = c  89 = y
+		if(mapTeclas.get(17) && mapTeclas.get(18) && mapTeclas.get(77) ){
+			
+			//console.log($('#menu > #0'));
+			$('#0').show();
+			$('#0').focus();
+		}else if(mapTeclas.get(17) && mapTeclas.get(18) && mapTeclas.get(173) ){
+			$("#FonteDiminuir").trigger('click');
+			//fonte('d');
+		}else if(mapTeclas.get(17) && mapTeclas.get(18) && mapTeclas.get(61) ){
+			$("#FonteAumentar").trigger('click');
+			//fonte('a');
+		}else if(mapTeclas.get(17) && mapTeclas.get(18) && mapTeclas.get(89) ){
+			$("#ContrasteAlterar").trigger('click');
+			//window.toggle();
+		}
+	}
+	
+	function teclaLiberada (codigo){
+		//mapTeclas.clear();
+		mapTeclas.delete(codigo);
+	}
+	
+	var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+	var eventer = window[eventMethod];
+	var messageEvent = eventMethod == "attachEvent" ? "onmessage" : "message";
+	
+	// Listen to message from child window
+	eventer(messageEvent,function(event) {
+		 if (!event.origin.includes( "localhost:8080") && !event.origin.includes("projudi.tjgo.jus.br") && !event.origin.includes("projudi-teste.tjgo.jus.br") ){
+			  return;
+		  }
+		  
+		  var origem = event.data.origem;
+		  if(origem=='corpo'){				
+				if(event.data.comando){
+					//console.log("header " + event.data.comando + " " + event.data.key + " " +  event.data.keycode  );										
+				    									    
+					if ( event.data.comando=="keydown"){						
+						teclaApertada(event.data.keycode);
+					}else if (event.data.comando=="keyup"){
+						teclaLiberada(event.data.keycode);
+					}					
+				}
+		  }else if(origem=='menu'){
+			 //var stComando = ; 
+			 //alert(stComando);
+			 
+			 //alert(window[toogle];
+			  var comando = window[event.data.comando];
+			  //alert(comando);
+			  if(comando){
+			  	//console.log("body " + event.data.comando);
+			    comando();
+			   	//window.Contrast[event.data.comando]();
+			  }
+		  }				  
+	});	
+  
+	function infoPasso( id_form, id, titulo){
+		var campos = $('table#tb_'+id_form+ ' tr#tr_'+ id ).attr("campos");
+		var obJson = JSON.parse(campos);
+		//console.log(campos);
+		var ids = Object.keys(obJson);
+		var valores = Object.values(obJson);
+		var stFormulario ='<fieldset class="formEdicao">'
+		stFormulario+='<legend class="formEdicaoLegenda">'+titulo+'</legend>';
+		for(var i=0; i<ids.length;i++){
+			if (Array.isArray(valores[i])){
+				var stValor = JSON.stringify(valores[i]);
+				stFormulario+='<div class="col100"><label class="formEdicaoLabel">' + ids[i] + '</label> <Text rows="6" cols="150" class="formEdicaoInputSomenteLeitura" readonly="true">' + stValor + '</Text></div>';
+			}else{
+				var tamanhoColuna= 15;
+				var qtdCaracteresColl = ids[i].length;
+				if (valores[i].length>ids[i].length){
+					qtdCaracteresColl= valores[i].length;
+				}
+				if( qtdCaracteresColl<=10){									tamanhoColuna = 10;}
+				else if( qtdCaracteresColl>10 && qtdCaracteresColl<=20){	tamanhoColuna = 15; }
+				else if( qtdCaracteresColl>20 && qtdCaracteresColl<=30){	tamanhoColuna = 20; }
+				else if( qtdCaracteresColl>30 && qtdCaracteresColl<=40){	tamanhoColuna = 25; }
+				else if( qtdCaracteresColl>40 && qtdCaracteresColl<=50){	tamanhoColuna = 30; }
+				else if( qtdCaracteresColl>50 && qtdCaracteresColl<=60){	tamanhoColuna = 35; }
+				else if( qtdCaracteresColl>60 && qtdCaracteresColl<=70){	tamanhoColuna = 40; }
+				else if( qtdCaracteresColl>70 && qtdCaracteresColl<=80){	tamanhoColuna = 45; }
+				else if( qtdCaracteresColl>80 && qtdCaracteresColl<=90){	tamanhoColuna = 50 }
+				else if( qtdCaracteresColl>90 && qtdCaracteresColl<=100){	tamanhoColuna = 55; }
+				else if( qtdCaracteresColl>100 && qtdCaracteresColl<=110){	tamanhoColuna = 60; }
+				else if( qtdCaracteresColl>110 && qtdCaracteresColl<=120){	tamanhoColuna = 65; }
+				else if( qtdCaracteresColl>120 && qtdCaracteresColl<=130){	tamanhoColuna = 70; }
+				else if( qtdCaracteresColl>130 && qtdCaracteresColl<=140){	tamanhoColuna = 75; }
+				else if( qtdCaracteresColl>140 && qtdCaracteresColl<=150){	tamanhoColuna = 80; }
+				else if( qtdCaracteresColl>150 && qtdCaracteresColl<=160){	tamanhoColuna = 85; }
+				else if( qtdCaracteresColl>160 && qtdCaracteresColl<=170){	tamanhoColuna = 90; }
+				else if( qtdCaracteresColl>170){							tamanhoColuna = 100; }
+				
+				stFormulario+='<div class="col' + tamanhoColuna + '"><label>' + ids[i] + '</label> <input class="formEdicaoInputSomenteLeitura" type="text" readonly="true" size="' + valores[i].length + '" value="' + valores[i] + '"/></div>';
+			}
+		}
+		$('div#divInfoPasso').html(stFormulario);
+		$("#infoPasso").show();
+	}
+	function infoFoto(id){		
+		$('img#img_infoFoto').attr('src', $('img#foto'+id).attr('src'));
+		$("#infoFoto").show();
+	}
+	
+	$(document).ready(function() {
+		
+		var mensagemErro = '';		 
+		var mensagemOk = '';
+		var titulo ='Processo Judicial';						
+		var availableTags;
+		
+// 		$( function() {
+// 		   $( ".___Movimentavel" ).draggable();
+// 		});
+		  
+		if (((mensagemErro!='') && (mensagemErro!='null')) || ((mensagemOk!='') && (mensagemOk!='null'))){
+			
+			if ((mensagemErro!='') && (mensagemErro!='null')) {
+				//titulo+=" Erro";
+				mostrarMensagemErro(titulo, mensagemErro);												
+			}else{
+				//titulo+=" Ok";					
+				mostrarMensagemOk(titulo, mensagemOk);
+			}
+			
+			$('#divCorpo').focus();	
+						
+			$('html, body',window.parent.document).animate({scrollTop:0}, 'slow');
+		}
+		
+		
+		
+		window.Contrast.check();
+		
+    }); 
+</script>
+
+	</body>
+</html>

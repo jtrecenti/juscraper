@@ -37,6 +37,45 @@ def _get_total_results(html: str) -> int:
     return 0
 
 
+def build_cjsg_payload(
+    termo: str,
+    start: int = 0,
+    *,
+    type_minuta: str = "1",
+    tip_criterio_inst: str = "",
+    tip_criterio_data: str = "DESC",
+    numero_processo: str = "",
+    dat_jul_ini: str = "",
+    dat_jul_fim: str = "",
+    soementa: bool = False,
+) -> dict:
+    """Build the form-encoded body for the TJTO jurisprudence search.
+
+    ``start`` is a 0-based Solr offset (page = ``start // RESULTS_PER_PAGE + 1``).
+    The backend only applies ``dat_jul_ini``/``dat_jul_fim`` when
+    ``tempo_julgados="pers"`` (the "Intervalo personalizado" option in the UI);
+    an empty value silently falls back to "all dates".
+    """
+    dat_ini_br = to_br_date(dat_jul_ini) or ""
+    dat_fim_br = to_br_date(dat_jul_fim) or ""
+    tempo_julgados = "pers" if (dat_ini_br or dat_fim_br) else ""
+    payload: Dict[str, str] = {
+        "start": str(start),
+        "rows": str(RESULTS_PER_PAGE),
+        "type_minuta_selected": type_minuta,
+        "q": termo,
+        "tip_criterio_inst": tip_criterio_inst,
+        "tip_criterio_data": tip_criterio_data,
+        "numero_processo": numero_processo,
+        "tempo_julgados": tempo_julgados,
+        "dat_jul_ini": dat_ini_br,
+        "dat_jul_fim": dat_fim_br,
+    }
+    if soementa:
+        payload["soementa"] = "on"
+    return payload
+
+
 def _fetch_page(
     session: requests.Session,
     termo: str,
@@ -51,26 +90,17 @@ def _fetch_page(
     max_retries: int = 3,
 ) -> str:
     """Fetch a single page of results from the TJTO jurisprudence search."""
-    dat_ini_br = to_br_date(dat_jul_ini) or ""
-    dat_fim_br = to_br_date(dat_jul_fim) or ""
-    # The backend only applies dat_jul_ini/dat_jul_fim when tempo_julgados="pers"
-    # (the "Intervalo personalizado" option in the UI); an empty value makes
-    # it fall back to "all dates" and silently ignores the custom range.
-    tempo_julgados = "pers" if (dat_ini_br or dat_fim_br) else ""
-    payload = {
-        "start": str(start),
-        "rows": str(RESULTS_PER_PAGE),
-        "type_minuta_selected": type_minuta,
-        "q": termo,
-        "tip_criterio_inst": tip_criterio_inst,
-        "tip_criterio_data": tip_criterio_data,
-        "numero_processo": numero_processo,
-        "tempo_julgados": tempo_julgados,
-        "dat_jul_ini": dat_ini_br,
-        "dat_jul_fim": dat_fim_br,
-    }
-    if soementa:
-        payload["soementa"] = "on"
+    payload = build_cjsg_payload(
+        termo=termo,
+        start=start,
+        type_minuta=type_minuta,
+        tip_criterio_inst=tip_criterio_inst,
+        tip_criterio_data=tip_criterio_data,
+        numero_processo=numero_processo,
+        dat_jul_ini=dat_jul_ini,
+        dat_jul_fim=dat_jul_fim,
+        soementa=soementa,
+    )
 
     for attempt in range(1, max_retries + 1):
         try:
