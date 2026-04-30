@@ -6,6 +6,10 @@ mesmo conjunto de campos com o mesmo significado.
 
 Atual:
 
+- :class:`PaginasMixin` — contrato unico de ``paginas``
+  (``int | list[int] | range | None``) usado por :class:`SearchBase` (cjsg/cjpg
+  de todos os tribunais) e por :class:`InputListarProcessosDataJud`. DataJud
+  nao tem ``pesquisa``, entao herda direto o mixin em vez de :class:`SearchBase`.
 - :class:`DataJulgamentoMixin` — filtro de Input (~13 tribunais).
 - :class:`DataPublicacaoMixin` — filtro de Input (~11 tribunais).
 - :class:`OutputRelatoriaMixin` — colunas de Output (>= 10 parsers cjsg
@@ -16,7 +20,29 @@ from __future__ import annotations
 
 from datetime import date
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
+
+
+class PaginasMixin(BaseModel):
+    """Contrato unico de ``paginas`` (refs #118).
+
+    ``paginas`` e **1-based em todos os raspadores** — ``paginas=3`` equivale
+    a ``range(1, 4)`` e baixa as paginas 1, 2 e 3. ``paginas=0`` e invalido.
+    ``None`` (default) significa "todas as paginas disponiveis" — o scraper
+    consulta o backend para descobrir o total. Runtime normaliza
+    ``int`` -> ``range`` em :func:`juscraper.utils.params.normalize_paginas`
+    antes do pydantic, mas o schema aceita as 4 formas para refletir a API
+    publica.
+
+    Schemas concretos **nao devem redeclarar** ``paginas`` — qualquer
+    divergencia por tribunal vira bug a ser corrigido, nao particularidade
+    a ser documentada. ``arbitrary_types_allowed=True`` e necessario porque
+    ``range`` nao e um tipo nativo do pydantic.
+    """
+
+    paginas: int | list[int] | range | None = None
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class DataJulgamentoMixin(BaseModel):
