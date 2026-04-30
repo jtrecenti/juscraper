@@ -30,6 +30,7 @@ python -m tests.fixtures.capture.tjmt
 python -m tests.fixtures.capture.tjap
 python -m tests.fixtures.capture.tjes
 python -m tests.fixtures.capture.tjrs
+python -m tests.fixtures.capture.datajud
 ```
 
 Cada script eSAJ:
@@ -84,3 +85,41 @@ cenarios vale para os endpoints JSON:
 Excecoes: TJMT tambem salva `cjsg/config.json` porque o scraper consulta
 `config.json` antes da API; TJES tambem salva samples em `cjpg/` porque expoe
 `cjpg` alem de `cjsg`.
+
+## Agregadores
+
+### DataJud (CNJ)
+
+`tests/fixtures/capture/datajud.py` captura samples para o contrato de
+`DatajudScraper.listar_processos`. O DataJud expoe o indice Elasticsearch
+da CNJ via API publica (`api-publica.datajud.cnj.jus.br`). A
+`DEFAULT_API_KEY` publicada na documentacao oficial fica embutida em
+`aggregators/datajud/client.py` e o script reusa via import — nada de
+env vars.
+
+Diferencas vs. familia 1B:
+
+- Auth: header `Authorization: APIKey <key>`.
+- POST com body JSON (Elasticsearch DSL).
+- Paginacao por **cursor** `search_after` (nao offset). A 2a pagina depende
+  do `sort` do ultimo hit da 1a, exigindo `OrderedRegistry` no contrato.
+
+Saida em `tests/datajud/samples/listar_processos/`:
+
+| Arquivo | Conteudo |
+|---|---|
+| `results_normal_page_01.json` | `tribunal=TJSP` + `tamanho_pagina=2`: exatamente 2 hits, cada um com campo `sort`. |
+| `results_normal_page_02.json` | mesma busca + `search_after` do hit final da p1. |
+| `single_page.json` | `numero_processo=<CNJ_TJSP>` + `tamanho_pagina=1000`: 1 hit (`< tamanho_pagina` forca break). |
+| `no_results.json` | `numero_processo="00000000000000000000"` (estruturalmente valido, inexistente): `hits.hits == []`. |
+
+Saneamento pos-captura: remove `highlight` (defesa) e trunca arrays
+residuais de `movimentos`/`movimentacoes` no `_source` — capturas usam
+`mostrar_movs=False`, mas o trim e rede de seguranca.
+
+NOTA (drift, regra 12 do CLAUDE.md): o script duplica o construtor de
+body Elasticsearch que vive em
+`aggregators/datajud/client.py:_listar_processos_por_alias`. A issue #140
+declara criterio 8 (nao modifica `src/`), o que impediu a extracao de
+`build_listar_processos_payload` em `aggregators/datajud/download.py`.
+Follow-up: extrair o builder e fazer este script + os contratos importarem.

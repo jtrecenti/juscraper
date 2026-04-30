@@ -20,6 +20,7 @@ juscraper e uma biblioteca Python para raspagem de dados de tribunais brasileiro
 - Nunca usar hacks de `sys.path` nos testes — confiar no install editavel
 - Pre-commit hooks configurados (trailing whitespace, isort, pylint, flake8, mypy)
 - Comprimento maximo de linha: 120
+- Preferir trabalhar em worktree com branch específica para a mudança que desejar implementar.
 
 ## Testes
 

@@ -1,7 +1,8 @@
 """Shared helpers for juscraper tests.
 
-Centralizes fixture loading. Used by parser tests (direct call), contract
-tests (via ``responses.add(body=load_sample(...))``) and granular tests.
+Centralizes fixture loading and ``responses`` matchers. Used by parser tests
+(direct call), contract tests (via ``responses.add(body=load_sample(...))``)
+and granular tests.
 
 Examples
 --------
@@ -9,6 +10,7 @@ Examples
 >>> html = load_sample("tjsp", "cjsg/results_normal.html")
 """
 from pathlib import Path
+from urllib.parse import parse_qs, urlparse
 
 _SAMPLES_ROOT = Path(__file__).parent
 
@@ -51,3 +53,42 @@ def load_sample_bytes(tribunal: str, relative_path: str) -> bytes:
     if not path.exists():
         raise FileNotFoundError(f"Sample not found: {path}")
     return path.read_bytes()
+
+
+def urlencoded_body_subset_matcher(expected: dict[str, str]):
+    """``responses`` matcher that checks only a subset of urlencoded body fields.
+
+    ``responses.matchers.urlencoded_params_matcher`` requires the full body;
+    use this when the scraper sends hidden/dynamic fields (CSRF tokens,
+    ViewState, crypto tokens) that the contract should not pin down.
+    """
+    def matcher(request):
+        body = request.body or b""
+        if isinstance(body, bytes):
+            body = body.decode("utf-8")
+        parsed = {k: v[0] if v else "" for k, v in parse_qs(body, keep_blank_values=True).items()}
+        missing = {
+            k: (expected[k], parsed.get(k))
+            for k in expected
+            if parsed.get(k) != expected[k]
+        }
+        if missing:
+            return False, f"body fields mismatch: {missing}"
+        return True, ""
+    return matcher
+
+
+def query_param_subset_matcher(expected: dict[str, str]):
+    """``responses`` matcher that checks only a subset of query-string params."""
+    def matcher(request):
+        qs = parse_qs(urlparse(request.url).query, keep_blank_values=True)
+        flat = {k: v[0] if v else "" for k, v in qs.items()}
+        missing = {
+            k: (expected[k], flat.get(k))
+            for k in expected
+            if flat.get(k) != expected[k]
+        }
+        if missing:
+            return False, f"query params mismatch: {missing}"
+        return True, ""
+    return matcher
