@@ -100,7 +100,7 @@ def test_apply_input_pipeline_invalid_date_interval_raises_valueerror_when_max_d
         apply_input_pipeline_search(
             _SchemaComJulgamento, "Test.cjsg()",
             pesquisa="x", paginas=1, kwargs=kwargs,
-            max_dias=366, origem="O eSAJ",
+            max_dias=366, origem_mensagem="O eSAJ",
         )
 
 
@@ -211,7 +211,7 @@ def test_apply_input_pipeline_single_bound_data_aceita():
     inp = apply_input_pipeline_search(
         _SchemaComJulgamento, "Test.cjsg()",
         pesquisa="x", paginas=1, kwargs=kwargs,
-        max_dias=366, origem="O eSAJ",
+        max_dias=366, origem_mensagem="O eSAJ",
     )
     assert inp.data_julgamento_inicio == "01/01/2024"
     assert inp.data_julgamento_fim is None
@@ -254,7 +254,7 @@ def test_apply_input_pipeline_origem_custom_aparece_na_mensagem():
         apply_input_pipeline_search(
             _SchemaComJulgamento, "Test.cjsg()",
             pesquisa="x", paginas=1, kwargs=kwargs,
-            max_dias=30, origem="O TJRN",
+            max_dias=30, origem_mensagem="O TJRN",
         )
 
 

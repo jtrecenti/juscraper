@@ -194,7 +194,7 @@ class EsajSearchScraper(BaseScraper):
             paginas=paginas,
             kwargs=kwargs,
             max_dias=366,
-            origem="O eSAJ",
+            origem_mensagem="O eSAJ",
         )
 
         body = self._build_cjsg_body(input_model)
