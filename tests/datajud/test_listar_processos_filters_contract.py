@@ -107,14 +107,12 @@ def test_listar_processos_tamanho_pagina_acima_do_cap():
         )
 
 
-def test_listar_processos_tamanho_pagina_zero_ou_negativo():
-    """``tamanho_pagina`` zero/negativo e rejeitado pelo schema
-    (``ge=1``); o cursor ``search_after`` nao funciona com ``size=0``."""
-    with pytest.raises(ValidationError):
-        jus.scraper("datajud").listar_processos(
-            tribunal="TJSP", tamanho_pagina=0
-        )
-    with pytest.raises(ValidationError):
-        jus.scraper("datajud").listar_processos(
-            tribunal="TJSP", tamanho_pagina=-100
-        )
+def test_listar_processos_tamanho_pagina_abaixo_do_minimo():
+    """``tamanho_pagina`` abaixo do minimo documentado da API (10) e
+    rejeitado pelo schema. Cobre os tres regimes: zero, negativo e o
+    intervalo (1..9) deixado de fora pela doc oficial."""
+    for valor in (0, -100, 5):
+        with pytest.raises(ValidationError):
+            jus.scraper("datajud").listar_processos(
+                tribunal="TJSP", tamanho_pagina=valor
+            )

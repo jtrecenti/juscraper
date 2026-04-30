@@ -103,18 +103,20 @@ def main() -> None:
 
     session = requests.Session()
 
-    # 1) Multi-page (page 1): tribunal=TJSP + tamanho_pagina=2 (no filters).
-    #    Pulls the 2 documents with the smallest id.keyword in the TJSP
-    #    index — deterministic by sort order.
-    payload_p1 = build_payload(tamanho_pagina=2)
+    # 1) Multi-page (page 1): tribunal=TJSP + tamanho_pagina=10 (no filters).
+    #    Pulls the 10 documents with the smallest id.keyword in the TJSP
+    #    index — deterministic by sort order. ``tamanho_pagina=10`` e o
+    #    minimo permitido pelo schema (``Field(ge=10)``), alinhado com a
+    #    doc oficial da API publica do CNJ.
+    payload_p1 = build_payload(tamanho_pagina=10)
     body_p1 = _capture(
         session, "api_publica_tjsp", payload_p1, dest, "results_normal_page_01.json"
     )
 
     hits_p1 = body_p1.get("hits", {}).get("hits") or []
-    if len(hits_p1) < 2:
+    if len(hits_p1) < 10:
         raise SystemExit(
-            f"[datajud] page 1 returned {len(hits_p1)} hits, expected 2. "
+            f"[datajud] page 1 returned {len(hits_p1)} hits, expected 10. "
             "Cannot capture page 2 deterministically."
         )
 
@@ -122,17 +124,14 @@ def main() -> None:
     last_sort = hits_p1[-1].get("sort")
     if last_sort is None:
         raise SystemExit("[datajud] last hit on page 1 missing 'sort' field.")
-    payload_p2 = build_payload(tamanho_pagina=2, search_after=last_sort)
+    payload_p2 = build_payload(tamanho_pagina=10, search_after=last_sort)
     _capture(
         session, "api_publica_tjsp", payload_p2, dest, "results_normal_page_02.json"
     )
-    # Note: the capture deliberately does NOT trim page 2 to 1 hit — the
-    # contract only requires len(hits) < tamanho_pagina (2). Two further
-    # documents from TJSP are fine; the break still triggers on the next
-    # iteration. If page 2 happens to be full (2 hits), the contract test
-    # for ``test_typical_multi_page`` will not exercise the early break,
-    # which is acceptable — the break path is also covered by
-    # ``test_single_page`` and ``test_no_results``.
+    # Note: the capture deliberately does NOT trim page 2 — the contract
+    # only requires ``len(hits) < tamanho_pagina (10)`` para encerrar a
+    # paginacao. Even if page 2 fills with 10 hits, the early break is
+    # also covered by ``test_single_page`` and ``test_no_results``.
 
     # 3) Single-page: filter by a specific CNJ from page 1 + tamanho_pagina=1000.
     cnj_p1 = (hits_p1[0].get("_source") or {}).get("numeroProcesso")
