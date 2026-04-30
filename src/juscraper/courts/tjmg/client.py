@@ -2,16 +2,17 @@
 from __future__ import annotations
 
 import logging
-from typing import List, Optional, Union
+from typing import List, Literal, Optional, Union
 
 import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa
+from juscraper.utils.params import apply_input_pipeline_search, normalize_datas, normalize_paginas, normalize_pesquisa
 
 from .download import cjsg_download as _cjsg_download
 from .parse import cjsg_parse as _cjsg_parse
+from .schemas import InputCJSGTJMG
 
 logger = logging.getLogger("juscraper.tjmg")
 
@@ -95,10 +96,71 @@ class TJMGScraper(BaseScraper):
         self,
         pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
+        pesquisar_por: Literal["ementa", "acordao"] = "ementa",
+        order_by: Union[str, int] = 2,
+        linhas_por_pagina: int = 10,
         **kwargs,
     ) -> pd.DataFrame:
-        """Convenience method: download + parse."""
-        raw = self.cjsg_download(pesquisa=pesquisa, paginas=paginas, **kwargs)
+        """Busca jurisprudencia no TJMG (acordaos com captcha numerico).
+
+        Args:
+            pesquisa (str): Termo de busca livre.
+            paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
+                todas. Default ``None`` (cap de 400 resultados, limite do TJMG).
+            pesquisar_por ({"ementa", "acordao"}): Campo onde buscar.
+                ``"acordao"`` busca no inteiro teor. Default ``"ementa"``.
+            order_by (int | str): Ordenacao: ``2`` data julgamento,
+                ``1`` data publicacao, ``0`` precisao. Default ``2``.
+            linhas_por_pagina (int): Resultados por pagina (10, 20 ou 50).
+            **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJMG`.
+                Listados abaixo (todos opcionais; ``None`` = sem filtro):
+
+                * ``data_julgamento_inicio`` / ``data_julgamento_fim`` (str):
+                  ``DD/MM/AAAA``. Backend: ``dataJulgamentoInicial`` /
+                  ``dataJulgamentoFinal``.
+                * ``data_publicacao_inicio`` / ``data_publicacao_fim`` (str):
+                  ``DD/MM/AAAA``. Backend: ``dataPublicacaoInicial`` /
+                  ``dataPublicacaoFinal``.
+
+        Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
+            * ``query`` / ``termo`` -> ``pesquisa``
+            * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``_fim``
+            * ``data_julgamento_de`` / ``_ate`` -> ``data_julgamento_inicio`` / ``_fim``
+            * ``data_publicacao_de`` / ``_ate`` -> ``data_publicacao_inicio`` / ``_fim``
+
+        Raises:
+            TypeError: Quando um kwarg desconhecido e passado.
+            ValidationError: Quando um filtro tem formato invalido.
+
+        Returns:
+            pd.DataFrame: DataFrame com os acordaos.
+
+        See also:
+            :class:`InputCJSGTJMG` — schema pydantic e a fonte da verdade dos
+            filtros aceitos.
+        """
+        pesquisa_val = normalize_pesquisa(pesquisa, **kwargs)
+        inp = apply_input_pipeline_search(
+            InputCJSGTJMG,
+            "TJMGScraper.cjsg()",
+            pesquisa=pesquisa_val,
+            paginas=paginas,
+            kwargs=kwargs,
+            pesquisar_por=pesquisar_por,
+            order_by=order_by,
+            linhas_por_pagina=linhas_por_pagina,
+        )
+        raw = self.cjsg_download(
+            pesquisa=inp.pesquisa,
+            paginas=inp.paginas,
+            pesquisar_por=inp.pesquisar_por,
+            order_by=inp.order_by,
+            linhas_por_pagina=inp.linhas_por_pagina,
+            data_julgamento_inicio=inp.data_julgamento_inicio,
+            data_julgamento_fim=inp.data_julgamento_fim,
+            data_publicacao_inicio=inp.data_publicacao_inicio,
+            data_publicacao_fim=inp.data_publicacao_fim,
+        )
         return self.cjsg_parse(raw)
 
     def cpopg(self, id_cnj: Union[str, List[str]]):
