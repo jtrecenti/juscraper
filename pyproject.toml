@@ -84,6 +84,49 @@ Repository = "https://github.com/jtrecenti/juscraper.git"
 "Bug Tracker" = "https://github.com/jtrecenti/juscraper/issues"
 Changelog = "https://github.com/jtrecenti/juscraper/blob/main/CHANGELOG.md"
 
+# Build configuration (hatchling)
+# Allowlist explicita: o que NAO esta listado fica de fora dos artefatos publicados.
+# Wheel: somente o pacote em src/juscraper/ (tests/, docs/, etc. ficam de fora).
+# Sdist: pacote + arquivos de projeto (README, LICENSE, CHANGELOG, etc.). Tests/samples nao entram.
+# Refs #139.
+[tool.hatch.build.targets.wheel]
+packages = ["src/juscraper"]
+
+[tool.hatch.build.targets.sdist]
+# Patterns ancorados com `/` (sintaxe pathspec) garantem que `README.md` so case com o
+# da raiz e nao com `tests/fixtures/capture/README.md` ou copias dentro de worktrees.
+include = [
+    "/src/juscraper",
+    "/README.md",
+    "/LICENSE",
+    "/CHANGELOG.md",
+    "/CONTRIBUTING.md",
+    "/CONDUCT.md",
+    "/pyproject.toml",
+]
+# Exclude defensivo: se algum dia a allowlist crescer e capturar paths indesejados,
+# estes ficam de fora explicitamente.
+exclude = [
+    "/.claude",
+    "/.codex",
+    "/.github",
+    "/.pytest_cache",
+    "/.mypy_cache",
+    "/.venv",
+    "/dist",
+    "/build",
+    "/issues",
+    "/scripts",
+    "/tests",
+    "/docs",
+    "/uv.lock",
+    "/AGENTS.md",
+    "/PUBLISHING.md",
+    "/.pre-commit-config.yaml",
+    "/.readthedocs.yml",
+    "/.gitignore",
+]
+
 # Tool configurations
 [tool.pylint.main]
 load-plugins = ["pylint.extensions.docparams"]

@@ -1,0 +1,1305 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta content="text/html; charset=ISO-8859-1" http-equiv="CONTENT-TYPE" />
+	<title>Jurisprudência</title>
+	<style type="text/css">
+		@import url("./css/Principal.css?v=20231017");		
+		
+		p { margin: 0 0 10px; }		
+		.hr-dashed-line { border:1px dashed lightgray; color: #ffffff; background-color: #ffffff;}
+		.hr-dashed-white-line { border:2px solid white; color: white; }
+		.search-result { padding: 5px; margin-top: 10px;}
+		.search-result h4 { margin-bottom: 0; color: #3181c3; }		
+		.search-result p { font-size: 12px; margin-top: 5px; }
+		.hlt1 { background-color: yellow;}
+		.tooltip {display: none;}
+		.tooltip-head { color:red;}		
+	</style>
+	<link rel="shortcut icon" href="./imagens/favicon.svg" />	
+	<link rel="stylesheet" type="text/css" href="./css/jquery.powertip-light.min.css" />
+	<script type='text/javascript' src='./js/jquery.js'></script>
+	<script type='text/javascript' src='./js/jquery.mask.min.js'></script>
+	<script type='text/javascript' src='./js/ui/jquery-ui.min.js'></script>		
+	<script type="text/javascript" src="./js/jquery.powertip.min.js"></script>
+	<script type='text/javascript' src='./js/Funcoes.js'></script>
+	<script type='text/javascript' src='./js/Digitacao/AutoTab.js'></script>
+	<script type="text/javascript" src="./js/Digitacao/DigitarSoNumero.js" ></script>
+	<script type="text/javascript" src="./js/Digitacao/DigitarData.js" ></script>
+
+	<script>
+		
+		const areas = [					
+			{"codigo": "1", "descricao": "Cível"},
+			{"codigo": "2", "descricao": "Criminal"}
+		];
+	
+		const tipos = [					
+			{"areaId": "3", "servTipoId": "151", "codigo": "6", "descricao": "Turma Recursal Cível e Criminal"},
+			{"areaId": "3", "servTipoId": "151", "codigo": "66", "descricao": "UPJ Turma Recursal"},
+			{"areaId": "1", "servTipoId": "15", "codigo": "14", "descricao": "Câmaras Cíveis"},
+			{"areaId": "2", "servTipoId": "15", "codigo": "20", "descricao": "Câmaras Criminais"},
+			{"areaId": "1", "servTipoId": "15", "codigo": "21", "descricao": "Seções Cíveis"},
+			{"areaId": "2", "servTipoId": "15", "codigo": "46", "descricao": "Seção Criminal"},
+			{"areaId": "1", "servTipoId": "15", "codigo": "22", "descricao": "Órgão Especial"},
+			{"areaId": "2", "servTipoId": "15", "codigo": "22", "descricao": "Órgão Especial"},
+			{"areaId": "1", "servTipoId": "15", "codigo": "41", "descricao": "Conselho Superior de Magistratura"},
+			{"areaId": "1", "servTipoId": "15", "codigo": "10", "descricao": "Plantão 2º Grau - Órgão Especial"},
+			{"areaId": "2", "servTipoId": "15", "codigo": "10", "descricao": "Plantão 2º Grau - Órgão Especial"},
+			{"areaId": "1", "servTipoId": "15", "codigo": "70", "descricao": "Plantão 2º Grau - Câmaras Cíveis"},
+			{"areaId": "2", "servTipoId": "15", "codigo": "71", "descricao": "Plantão 2º Grau - Câmaras Criminais"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "1", "descricao": "Juizado Especial Cível"},			
+			{"areaId": "2", "servTipoId": "16", "codigo": "2", "descricao": "Juizado Especial Criminal"},			
+			{"areaId": "1", "servTipoId": "16", "codigo": "3", "descricao": "Juizado Especial Cível e Criminal"},
+			{"areaId": "2", "servTipoId": "16", "codigo": "3", "descricao": "Juizado Especial Cível e Criminal"},			
+			{"areaId": "1", "servTipoId": "16", "codigo": "26", "descricao": "Juizado Especial Fazenda Pública"},
+			{"areaId": "2", "servTipoId": "16", "codigo": "39", "descricao": "Juizado de Violência Doméstica"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "27", "descricao": "Varas Cíveis"},
+			{"areaId": "2", "servTipoId": "16", "codigo": "47", "descricao": "Varas Criminais"},			
+			{"areaId": "1", "servTipoId": "16", "codigo": "9", "descricao": "Família"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "43", "descricao": "Infância e Juventude Cível"},			
+			{"areaId": "2", "servTipoId": "16", "codigo": "44", "descricao": "Infância e Juventude Infracional"},
+			{"areaId": "2", "servTipoId": "16", "codigo": "11", "descricao": "Execução Penal"},
+			{"areaId": "2", "servTipoId": "16", "codigo": "63", "descricao": "Execução de Pena Alternativa"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "45", "descricao": "Auditoria Militar Cível"},
+			{"areaId": "2", "servTipoId": "16", "codigo": "60", "descricao": "Auditoria Militar Criminal"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "34", "descricao": "Fazenda Pública Estadual"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "8", "descricao": "Fazenda Pública Estadual - Execução Fiscal"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "35", "descricao": "Fazenda Pública Estadual Interior"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "36", "descricao": "Fazenda Pública Municipal"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "7", "descricao": "Fazenda Pública Municipal - Execução Fiscal"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "37", "descricao": "Fazenda Pública Municipal Interior"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "12", "descricao": "Fazenda Pública Mista"},			
+			{"areaId": "1", "servTipoId": "16", "codigo": "69", "descricao": "Fazenda Pública Mista - Execução Fiscal"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "42", "descricao": "Plantão 1º Grau"},
+			{"areaId": "2", "servTipoId": "16", "codigo": "42", "descricao": "Plantão 1º Grau"},			
+			{"areaId": "1", "servTipoId": "16", "codigo": "72", "descricao": "UPJ Cível"},
+			{"areaId": "2", "servTipoId": "16", "codigo": "61", "descricao": "UPJ Criminal"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "49", "descricao": "UPJ Sucessões"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "58", "descricao": "UPJ Família"},
+			{"areaId": "2", "servTipoId": "16", "codigo": "67", "descricao": "UPJ de Violência Doméstica"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "68", "descricao": "UPJ Família Interior"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "81", "descricao": "UPJ Fazenda Pública Estadual"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "82", "descricao": "UPJ Fazenda Pública Municipal"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "83", "descricao": "UPJ dos Juizados Especiais Cíveis"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "64", "descricao": "UPJ Juizado Especial da Fazenda Pública"}			
+		];
+	
+		function submitForm(pos){
+			AlterarValue('PaginaAtual','2');
+			AlterarValue('PosicaoPaginaAtual', pos);
+			FormSubmit('Formulario');
+		}
+		function IrParaOnClick(){
+			submitForm($('#CaixaTextoPosicionar').val()-1);
+		}
+		function abrirArquivo(action, id){
+			var token = $('#g-recaptcha-response').val();
+			$('<form action="'+ encodeURI(action + '?PaginaAtual=1&Id_Arquivo=' + id + '&g-recaptcha-response=' + token) +'" method="post"></form>').appendTo('body').submit().remove();
+		}		
+		function inicializarAreas(){
+			$("#Id_Area").find("option[value != '0']").remove();
+			var areaFiltrada = ($("#Id_Instancia").val() == "151") ? areas.filter(e => e.codigo == "0") : areas;			
+			areaFiltrada.forEach((e) => $('#Id_Area').append('<option value="' + e.codigo + '">' + e.descricao + '</option>'));			
+		}		
+		function atualizarAreas (servTipoId){
+			$("#Id_Area").find("option[value != '0']").remove(); // limpa todas as opções diferente de TODOS
+			if (servTipoId != "151"){
+				areas.forEach((e) => $('#Id_Area').append('<option value="' + e.codigo + '">' + e.descricao + '</option>'));				
+			}
+		}			
+		function filtrarOpcoes (areaId, servTipoId){
+			var tiposFiltrados = [];
+			if (servTipoId == "0" && areaId =="0"){
+				tiposFiltrados = tipos;
+			} else {
+				if (servTipoId != "0"){ // se escolheu uma opção válida
+					tiposFiltrados = tipos.filter(e => e.servTipoId == servTipoId);
+				} 
+				if (areaId != "0"){
+					if (servTipoId != "0"){
+						tiposFiltrados = tiposFiltrados.filter(e => e.areaId == areaId);
+					} else {
+						tiposFiltrados = tipos.filter(e => e.areaId == areaId);
+					}				
+				}
+			}
+			// Filtra o array para tirar os elementos repetidos
+			const tiposDistintos = [...new Map(tiposFiltrados.map(item => [item['codigo'], item])).values()];			
+			$("#Id_ServentiaSubTipo").find("option[value != '0']").remove();
+			tiposDistintos.forEach((e) => $('#Id_ServentiaSubTipo').append('<option value="' + e.codigo + '">' + e.descricao + '</option>'));			
+		}
+
+		function copiarConteudoTexto(nodePai, seletor, footer) {
+			var elementoTexto = $(nodePai).find(seletor);
+			if (elementoTexto) {
+				var range = document.createRange();
+				range.selectNodeContents(elementoTexto[0]);
+				window.getSelection().addRange(range);
+				if (typeof footer === 'string' && footer.length !==0) {
+					footer = '\n' + footer;
+				} else {
+					footer = '';
+				}
+				navigator.clipboard.writeText(elementoTexto.text() + footer);
+			}
+		}
+
+		$(document).ready(function(){
+			$('#Texto').focus();			
+			$('#ProcessoNumero').mask('9999999-99.9999.9.99.9999');
+			$("#Texto").keypress(function(e){
+			 	if (e.which == 13){
+			        e.preventDefault();
+			        AlterarValue('PaginaAtual','2');
+			        document.forms[0].submit();
+			    }
+			});			
+			$("#Id_Instancia").change(function(){				
+				atualizarAreas($(this).val());
+				filtrarOpcoes($("#Id_Area").val(), $(this).val());
+			});
+			$("#Id_Area").change(function(){
+				filtrarOpcoes($(this).val(), $("#Id_Instancia").val());
+			});
+			$("#Id_Instancia").val();			
+			inicializarAreas();
+			$("#Id_Area").val();
+			$("#qtdeItensPagina").val(10);			
+			filtrarOpcoes ($("#Id_Area").val(), $("#Id_Instancia").val());
+			$("#Id_ServentiaSubTipo").val();
+		});
+		
+
+	</script>
+</head>
+<body class="fundo_scroll" onload="configurarData()">
+	
+  	<script type="text/javascript">
+	$(document).ready(function() {
+			
+		var msn_servidor;
+		msn_servidor = window.location.origin;
+		if(msn_servidor != 'https://projudi.tjgo.jus.br'){
+			$('#servidor').html("&nbsp;<i class='fa fa-quote-left'></i> Servidor de Homologação <i class='fa fa-quote-right'></i> ");
+		}
+		
+		const logon = document.getElementById("img_logotj");
+
+		logon.addEventListener("dblclick", (e) => {
+		  alert('ISO-8859-1');
+		});
+		
+	});
+	</script>
+
+	<div id="pgn_cabecalho" class="pgn_cabecalho"> 
+        <div class="logoTJ" id="img_logotj" title='Vers&atilde;o 3.86.0 - 30/04/2026|cp10:server-cp10-2]'><h1>Processo Judicial</h1><div id="servidor"></div></div>
+	
+<div style="float: right;">
+
+           <div id="cssmenu" >
+				<ul>					
+					<li><i id='ContrasteAlterar' title="Alto Contraste"  onclick="window.toggle()" aria-label="AAlto Contraste" data-original-title="Alto Contraste" accesskey="ctrl+alt+c" class="fa-solid fa-circle-half-stroke"></i>  </li>
+	    			<li><i id='FonteAumentar' title="Aumentar Fonte"  onclick="fonte('a')" aria-label="Aumentar Fonte" data-original-title="Aumentar Fonte" accesskey="ctrl+alt++" style="display:block;cursor: pointer;">A+</i>    </li>
+	    			<li><i id='FonteDiminuir' title="Diminuir Fonte"  onclick="fonte('d')" aria-label="Diminuir Fonte" data-original-title="Diminuir Fonte" accesskey="ctrl+alt+-" style="display:block;cursor: pointer;"> A- </i>   </li>
+					<li class="has-sub">
+	<a href="#" title="Consulta"><span><i class="fa fa-search"></i></span></a>
+	<ul>
+		<li><a href="./BuscaProcesso?PaginaAtual=4&TipoConsultaProcesso=24" title="Consultar Processos de 1&ordm e 2&ordm grau"> P&uacute;blica processual &nbsp;<i class="fa fa-search"></i></a></li>
+<li><a href="./ConsultaPublicacao" title="Consultar Publica&ccedil;&otilde;es">Publica&ccedil;&otilde;es &nbsp;<i class="fa fa-search"></i></a></li>	
+		<li><a href="./ConsultaJurisprudencia" title="Consultar Jurisprud&ecirc;ncia">Jurisprud&ecirc;ncia &nbsp;<i class="fa fa-search"></i></a></li>
+		<li><a href="./BuscaProcesso?PaginaAtual=4&TipoConsultaProcesso=1" title="Consultar Processos por Advogado"> Processo por Advogado &nbsp;<i class="fa fa-search"></i></a></li>		
+     	<li><a href="./BuscaProcesso?PaginaAtual=4&TipoConsultaProcesso=23" title="Consultar Processos por Código de Acesso"> Processo por Código &nbsp;<i class="fa fa-search"></i></a></li>
+		<li><a href="ListaJuizados" title="Lista das Serventias com Processo Judicial implantado" > Serventias Implantadas &nbsp;<i class="fa fa-search"></i></a></li>			
+		<li><a href="./RelatorioInterrupcoes?PaginaAtual=4"&Sistema=1 title="Relat&oacute;rio de Interrup&ccedil;&otilde;es"> Relat&oacute;rio de Interrup&ccedil;&otilde;es &nbsp;<i class="fa fa-search"></i></a></li>
+		<li><a href="./PendenciaPublica" title="Localizador de Documentos"> Localizador de Documentos &nbsp;<i class="fa fa-search"></i></a></li>		
+		<li><a href="./PendenciaPublica?PaginaAtual=2" title="Intimações do Dia Anterior">Intima&ccedil;&otilde;es do Dia Anterior&nbsp;<i class="fa fa-search"></i></a></li>				
+		<li><a href="./Audiencia?PaginaAtual=4" title="Consultar Audiências/Sessões">Consulta Audiências/Sessões &nbsp;<i class="fa fa-search"></i></a></li>
+		<li><a href="./ConsultaPublicaGuia" title="Consultar Guias">Consulta Guias &nbsp;<i class="fa fa-search"></i></a></li>
+	</ul>
+</li>
+<li class="has-sub">
+	<a href="#" title="Emitir e Localizar Certidões"><span><i class="fa fa-file-text"></i></span></a> 
+	<ul>
+    	<li class="has-sub">
+        	<a href="#" title="Certidões de 1º Grau"><span> Certidões - 1º Grau &nbsp;<i class="fa fa-file-text"></i></span></a>
+            <ul>
+            	<li><a href="./CertidaoNegativaPositivaPublica?PaginaAtual=1&TipoArea=1&InteressePessoal=&Territorio=&Finalidade=" title="Emiss&atilde;o de Certid&otilde;es Pessoa F&iacute;sica - Cível"> Pessoa F&iacute;sica - C&iacute;vel &nbsp;<i class="fa fa-file-text"></i></a></li>
+            	<li><a href="./CertidaoNegativaPositivaPublica?PaginaAtual=1&TipoArea=2&InteressePessoal=S" title="Emiss&atilde;o de Certid&otilde;es Pessoa F&iacute;sica - Criminal"> Pessoa F&iacute;sica - Criminal &nbsp;<i class="fa fa-file-text"></i></a></li>
+            </ul>
+        </li>
+        <li class="has-sub">
+        	<a href="#" title="Certidões de 2º Grau"><span> Certidões - 2º Grau &nbsp;<i class="fa fa-file-text"></i></span></a>
+            <ul>
+            	<li><a href="./CertidaoSegundoGrauNegativaPositivaPublica?PaginaAtual=1" title="Emiss&atilde;o de Certid&otilde;es Pessoa F&iacute;sica">Pessoa F&iacute;sica &nbsp;<i class="fa fa-file-text"></i> </a></li>
+				<li><a href="./CertidaoSegundoGrauNegativaPositivaPublicaPJ?PaginaAtual=1" title="Emiss&atilde;o de Certid&otilde;es Pessoa Jur&iacute;dica">Pessoa Jur&iacute;dica &nbsp;<i class="fa fa-file-text"></i></a></li>
+            </ul>
+        </li>
+        <li><a href="./CertidaoGuia" title="Emitir Certid&otilde;es com Guia">Emitir Certidões com Guia&nbsp;<i class="fa fa-file-text"></i></a></li>
+        <li><a href="./CertidaoPublica" title="Localizador Certid&otilde;es">Localizador de Certidões &nbsp;<i class="fa fa-file-text"></i></a></li>
+	</ul>
+</li>
+<li class="has-sub">
+	<a href="#" title="Emitir Guias"><span><i class="fa fa-usd"></i></span></a> 
+    <ul>
+<!--     	<li><a href="./GerarBoleto?PaginaAtual=4" title="Gerar Boleto">Gerar Boleto Caixa&nbsp;<i class="fa fa-usd"></i></a></li> -->
+    	<li><a href="./GerarBoleto?PaginaAtual=4" title="Gerar Boleto">Gerar Boleto&nbsp;<i class="fa fa-usd"></i></a></li>
+    	<li><a href="./GuiaLocomocaoPublica?PaginaAtual=9" title="Guia Locomo&ccedil;&atilde;o"> Guia Locomo&ccedil;&atilde;o &nbsp;<i class="fa fa-usd"></i></a></li>
+		<li><a href="./GuiaLocomocaoComplementarPublica?PaginaAtual=9" title="Guia Locomo&ccedil;&atilde;o Complementar"> Guia Locomo&ccedil;&atilde;o Complementar &nbsp;<i class="fa fa-usd"></i></a></li>
+		<li><a href="./GuiaInicial1GrauPublica?PaginaAtual=4" title="Guia Inicial para o 1º e 2º Grau"> Guia Inicial 1º e 2º Grau &nbsp;<i class="fa fa-usd"></i></a></li>
+		<li><a href="./GuiaInicialComplementarPublica?PaginaAtual=4" title="Guia Complementar da Inicial"> Guia Complementar da Inicial &nbsp;<i class="fa fa-usd"></i></a></li>
+<!-- 		<li><a href="./GuiaPostagemPublica?PaginaAtual=9" title="Guia Postagem"> Guia Postagem &nbsp;<i class="fa fa-usd"></i></a></li> -->
+		<li><a href="./GuiaRepasseFundespPublica?PaginaAtual=9" title="Guia Repasse ao Fundesp - Decisão Judicial"> Guia Repasse ao Fundesp - Decisão Judicial &nbsp;<i class="fa fa-usd"></i></a></li>
+		<li><a href="./GuiaRecursoInominadoPublica?PaginaAtual=9" title="Guia Recurso Inominado"> Guia Recurso Inominado &nbsp;<i class="fa fa-usd"></i></a></li>
+<li><a href="./GuiaEmissaoPrevia?PaginaAtual=3&passo=guias_certidao" title="Guia de Certidão">Guia de Certidão &nbsp;<i class="fa fa-usd"></i></a></li>
+		<li><a href="./GuiaEmissaoPrevia?PaginaAtual=3" title="Emissão Outras Guias">Outras Guias&nbsp;<i class="fa fa-usd"></i></a></li>
+		<li><a href="./GuiaFinal_FinalZeroPublica?PaginaAtual=9" title="Guia Final e Final Zero"> Guia Final e Final Zero &nbsp;<i class="fa fa-usd"></i></a></li>
+    </ul>
+</li>
+<li class="has-sub">
+	<a href="#" title="Estatística Pública"><span><i class="fa fa-bar-chart"></i></span></a> 
+    <ul>
+    	<li><a onclick="buscaEstatistica(1)" href="#" > Quantitativo de Processos &nbsp;<i class="fa fa-bar-chart"></i></a></li>
+		<!--<li><a  onclick="buscaEstatistica(2)" href="#" >Quantitativo de Tipos de Processos<i class="fa fa-bar-chart"></i></a></li>-->
+		<li><a onclick="buscaEstatistica(3)" href="#">Quantitativo de Serventias &nbsp;<i class="fa fa-bar-chart"></i></a></li>
+	</ul>
+</li>
+
+<script type="text/javascript">
+
+	function buscaEstatistica(_consulta){
+
+		var reCaptcha = $("#g-recaptcha-response").val();		
+		//window.location = '/EstatisticaPublica?PassoBusca=2&EstatisticaPublicaTipoConsulta='+_consulta+'&g-recaptcha-response='+ reCaptcha;
+		window.open('./EstatisticaPublica?PassoBusca=2&EstatisticaPublicaTipoConsulta='+_consulta+'&g-recaptcha-response='+ reCaptcha, "_self");
+		
+	}
+</script><li class="has-sub">
+	<a href="#" title="Ajuda"><span><i class="fa fa-question-circle"></i></span></a> 
+    <ul>    	
+    	<li><a href="./videos.html" title="Vídeos para aprender a trabalhar com o Processo Judicial" target="_blank" id="videos"> V&iacute;deos &nbsp;<i class="fa fa-question-circle"></i></a></li>									
+ 		<li><a href="./Pdfvideos.html" title="PDF dos Vídeos para aprender a trabalhar com o Processo Judicial" target="_blank" id="Pdfvideos"> Manuais &nbsp;<i class="fa fa-question-circle"></i></a></li> 		 		
+ 		<li class="has-sub">  
+			<a href="#" title="Legislação"> Legislação &nbsp;<i class="fa fa-balance-scale"></i></a>
+            <ul>
+            <!-- Não é para colocar dentro do war, arquivos estaticos use o servidor http://docs.tjgo.jus.br/projudi/pdf/
+            	veja com o massa como ter acesso.
+            	máquina 10.0.10.27\pubinternet\Sistemas_de_Informacao\legislacao
+             -->
+            	<li><a href="http://www.planalto.gov.br/ccivil_03/_ato2004-2006/2006/lei/l11419.htm" target="_blank" title="Lei 11.419"> Lei n.&ordm; 11.419 de 19/12/2006 &nbsp;<i class="fa fa-balance-scale"></i></a></li>			
+				<li><a href="http://docs.tjgo.jus.br/projudi/legislacao/Resolucao0207.pdf" target="_blank" title="Resolução nº 02 de 14/03/2007 TJ-GO"> Resolu&ccedil;&atilde;o n.&ordm; 02 de 14/03/2007 TJ-GO &nbsp;<i class="fa fa-balance-scale"></i></a></li>			
+				<li><a href="http://docs.tjgo.jus.br/projudi/legislacao/Resolucao0210.pdf" target="_blank" title="Resolução nº 02 de 24/03/2010 TJ-GO"> Resolu&ccedil;&atilde;o n.&ordm; 02 de 24/03/2010 TJ-GO &nbsp;<i class="fa fa-balance-scale"></i></a></li>
+				<li><a href="http://docs.tjgo.jus.br/projudi/legislacao/Resolução_59_2016_ProcessoDigital.pdf" target="_blank" title="Resolução nº 59 de 04/07/2016 TJ-GO"> Resolu&ccedil;&atilde;o n.&ordm; 59 de 04/07/2016 TJ-GO &nbsp;<i class="fa fa-balance-scale"></i></a></li>
+				<li><a href="http://docs.tjgo.jus.br/projudi/legislacao/Resolução_61_2016.pdf" target="_blank" title="Resolução nº 61 de 27/07/2016 TJ-GO"> Resolu&ccedil;&atilde;o n.&ordm; 61 de 27/07/2016 TJ-GO &nbsp;<i class="fa fa-balance-scale"></i></a></li>
+				<li><a href="http://docs.tjgo.jus.br/projudi/legislacao/portaria_046_2016.pdf" target="_blank" title="Portaria nº 46 de 29/11/2016 TJ-GO"> Portaria n.&ordm; 46 de 29/11/2016 TJ-GO &nbsp;<i class="fa fa-balance-scale"></i></a></li>
+				<li><a href="http://docs.tjgo.jus.br/projudi/legislacao/portaria_844_2017.pdf" target="_blank" title="Portaria nº 844 de 07/12/2017 TJ-GO"> Portaria n.&ordm; 844 de 07/12/2017 TJ-GO &nbsp;<i class="fa fa-balance-scale"></i></a></li>
+	    		<li><a href="./decretos.html" title="Decretos" target="_blank" id="Decretos"> Decretos &nbsp;<i class="fa fa-balance-scale"></i></a></li>                
+			</ul>
+		</li>
+		<li><a href="./ajudaSuporteAdvogado.html" title="Suporte ao Advogado" target="_blank" id="ajd_SuporteAdvogado"> Suporte ao Advogado &nbsp;<i class="fa fa-comment"></i></a></li>
+		<li><a href="http://www.cnj.jus.br/tecnologia-da-informacao/comite-nacional-da-tecnologia-da-informacao-e-comunicacao-do-poder-judiciario/modelo-nacional-de-interoperabilidade" title="Compatível com o Modelo Nacional de Interoperabilidade do CNJ" target="_blank" id="MNI CNJ"> MNI CNJ &nbsp;<i class="fa fa-balance-scale"></i></a></li>
+		<li><a href="https://projudi.tjgo.jus.br/IntercomunicacaoService?WSDL" title="Modelo Nacional de Interoperabilidade do TJGO" target="_blank" id="MNITJGO"> MNI TJGO &nbsp;<i class="fa fa-balance-scale"></i></a></li>
+	</ul>
+</li><li class="has-sub">  
+	<a href="#" title="Download"><i class="fa fa-download"></i> </a>
+    <ul>
+    	<li><a href="https://docs.tjgo.jus.br/projudi/jar/VisualizadoReciboProjudi.jar" target="_blank" title="Programa para visualizar o recibo do Projudi e retirar o arquivo assinado e o conte&uacute;do">Leitor de Recibo &nbsp;<i class="fa fa-download"></i> </a></li>
+    	<li><a href="https://docs.tjgo.jus.br/projudi/jar/AssinadorExterno.jar" target="_blank" title="Programa para fazer assinatura digital dos arquivos no seu computador e-TCESP">(e-TCESP) Assinador Externo &nbsp;<i class="fa fa-download"></i></a></li>
+    	<li><a href="https://www.registradores.org.br/assinador/AssinadorDigital-ARISP-Instalador-1.7.0.exe" target="_blank" title="Programa para fazer assinatura digital dos arquivos no seu computador Arisp">(Arisp) Assinador Externo (.exe - Windows)&nbsp;<i class="fa fa-download"></i></a><a href="https://www.registradores.org.br/AssinadorDigital/" target="_blank" title="Site Registradores">Site Registradores</a>a</li>
+		<li><a href="https://docs.tjgo.jus.br/projudi/jar/sai.jar" target="_blank" title="Programa para fazer assinatura digital dos arquivos no seu computador">(NOVO) Assinador Externo &nbsp;<i class="fa fa-download"></i></a></li>		
+		<li class="has-sub">  
+			<a href="#" title="Download">Mozilla Firefox<i class="fa fa-download"></i> </a>
+		    <ul>
+		    	<li><a href="https://releases.mozilla.org/pub/firefox/releases/50.0.2/linux-i686/pt-BR/firefox-50.0.2.tar.bz2" target="_blank" title="Versão para Windows">Linux &nbsp;<i class="fa fa-download"></i> </a></li>
+		    	<li><a href="https://releases.mozilla.org/pub/firefox/releases/51.0.1/mac/pt-BR/Firefox%2051.0.1.dmg" target="_blank" title="Versão para Windows">Mac OS X &nbsp;<i class="fa fa-download"></i> </a></li>
+		    	<li><a href="https://releases.mozilla.org/pub/firefox/releases/51.0.1/win32/pt-BR/Firefox%20Setup%2051.0.1.exe" target="_blank" title="Versão para Windows">Windows 32bits &nbsp;<i class="fa fa-download"></i> </a></li>
+			</ul>
+		</li>
+		<li><a href="http://www.java.com/pt_BR/download/" target="_blank" title="Clique aqui para baixar o JAVA"> JAVA - Download &nbsp;<i class="fa fa-download"></i></a></li>
+	</ul>
+</li> <li>  
+	<a id="linkSair" href="LogOn?PaginaAtual=-200" title="Sair" target="_self"><i class="fa fa-sign-out"></i> </a>  
+</li></ul>
+			</div>
+        </div>    
+    </div>
+	<div style="clear:both;width:1450px;height:28px;background-color:#ccc; margin: 0 auto;"></div>
+<div id="divCorpo" class="divCorpo" style="margin-bottom:20px;"/>
+		<div class="area"><h2> &raquo; Novo Módulo de Pesquisa de Jurisprudência</h2></div>	
+		<div id="divLocalizar" class="divLocalizar">			
+			<form id="Formulario" method="post" action="ConsultaJurisprudencia"/>				
+				<input type="hidden" id="PaginaAtual" name="PaginaAtual" value="2" />
+				<input type="hidden" id="PosicaoPaginaAtual" name="PosicaoPaginaAtual" value="0" />
+				<input type="hidden" id="Viewstate" name="Viewstate" value="" />				
+				<div id="divEditar" class="divEditar">
+					<!-- Pesquisa por campos de filtro -->
+					<fieldset class="formEdicao">
+						<div id="filtro-campo">
+						
+							<div class="col100 float_label_fixo clear">
+				    			<input class="formEdicaoInput" id="Texto" name="Texto" type="text" title="Texto para consulta de jurisprudência" placeholder='Utilize aspas duplas para realizar uma busca exata. Exemplo: "indenização por erro médico".' value="dano moral"/>
+				    			<label class="formEdicaoLabel" for="Texto">Digite um termo para a pesquisa</label>
+				    		</div>
+				    		<br /><br />	
+				    									    		    					    						    		
+				    		<div class="col35 clear">
+					    		<label for="Id_Instancia">Instância</label>
+						    	<select id="Id_Instancia" name="Id_Instancia">
+						    		<option value="0">Todas as instâncias</option>
+						    		<option value="16">1o Grau</option>
+						    		<option value="151">Turma de Uniformização / Turmas Recursais</option>
+						    		<option value="15">Tribunal</option>
+						    	</select>					    						    	
+					    	</div>
+					    	
+					    	<div class="col25">
+					    		<label for="Id_Area">Área</label>
+						    	<select id="Id_Area" name="Id_Area">	
+						    		<option value="0">Todas as áreas</option>						    		
+						    		<!--						    								    	
+						    		<option value="1">Cível</option>
+						    		<option value="2">Criminal</option>						    		
+						    		-->
+						    	</select>
+					    	</div>
+					    	
+					    	<div class="col35">
+					    		<label for="Id_ServentiaSubTipo">Órgão / Matéria</label>
+						    	<select id="Id_ServentiaSubTipo" name="Id_ServentiaSubTipo">	
+						    		<option value="0">Todas as opções</option>
+						    	</select>
+					    	</div>	
+					    	<br /><br /> 
+					    	 
+				    		<div class="col35 float_label_fixo clear">
+						    	<input class="formEdicaoInput AutoComplete" name="Serventia" id="Serventia" placeholder="Digite a Unidade Específica" type="text" size="60" maxlength="255" value=""
+						    	onkeyup="BuscaPadraoCombo(event, 'divEditar', 'ConsultaJurisprudencia', 'Id_Serventia', 'Serventia', ['Tipo','UF'], '1682');"/>
+						    	<label class="formEdicaoLabel" for="Serventia">Unidade Específica
+						    		<button class="imgIcons" id="imaLocalizarUnidade" title="Localizar" type="submit" name="imaLocalizarUnidade" 
+						    		onclick="MostrarBuscaPadrao('divEditar','ConsultaJurisprudencia','Consulta de Serventia', 'Digite a Serventia e clique em consultar.', 'Id_Serventia', 'Serventia', ['Serventia'], ['Tipo','UF'], '1682', '15');LimparChaveEstrangeira('Id_Usuario','Usuario'); return false;"><i class="fa-solid fa-magnifying-glass"></i></button> 
+						    		<button class="imgIcons" name="imaLimparPrioridade" onclick="LimparChaveEstrangeira('Id_Serventia','Serventia'); return false;" title="Limpar Serventia"><i class="fa-regular fa-circle-xmark"></i></button>						    			
+						    	</label>
+						    	<input type="hidden" id="Id_Serventia" name="Id_Serventia" value="" />
+					    	</div>
+					    					    		
+				    		<div class="col30 float_label_fixo">
+						    	<input class="formEdicaoInput AutoComplete" name="Usuario" id="Usuario" placeholder="Digite o nome do Magistrado(a)" type="text" size="60" maxlength="255" value="" 
+						    	onkeyup="BuscaPadraoCombo(event, 'divEditar', 'ConsultaJurisprudencia', 'Id_Usuario', 'Usuario', ['Grupo'], '1582');"/>
+						    	<label class="formEdicaoLabel" for="Serventia">Por Magistrada ou Magistrado
+						    		<button class="imgIcons" id="imaLocalizarJuiz" title="Localizar" type="submit" name="imaLocalizarJuiz"  						    		
+						    		onclick="MostrarBuscaPadrao('divEditar','ConsultaJurisprudencia','Consulta de Magistrado', 'Digite o nome e clique em consultar.', 'Id_Usuario', 'Usuario', ['Magistrado'], ['Grupo'], '1582', '15','Id_Serventia'); return false;"><i class="fa-solid fa-magnifying-glass"></i></button> 
+						    		<button class="imgIcons" name="imaLimparPrioridade" onclick="LimparChaveEstrangeira('Id_Usuario','Usuario'); return false;" title="Limpar Magistrado"> <i class="fa-regular fa-circle-xmark"></i></button> 
+						    	</label>
+						    	<input type="hidden" id="Id_Usuario" name="Id_Usuario" value="" />
+					    	</div>
+					    	
+					    	<div class="col30 float_label_fixo">
+						    	<input class="formEdicaoInput AutoComplete" name="ArquivoTipo" id="ArquivoTipo" placeholder="Digite o Tipo de Ato" type="text" size="60" maxlength="255" value=""
+						    	onkeyup="BuscaPadraoCombo(event, 'divEditar', 'ConsultaJurisprudencia', 'Id_ArquivoTipo', 'ArquivoTipo', [], '1802');"/>					    						    	
+					    		<label class="formEdicaoLabel" for="ArquivoTipo">Tipo de Ato
+						    		<button class="imgIcons" id="imaLocalizarArquivoTipo" title="Localizar" type="submit"  name="imaLocalizarArquivoTipo" 
+						    		onclick="MostrarBuscaPadrao('divEditar','ConsultaJurisprudencia','Consulta de Tipo de Ato', 'Digite o Tipo de Arquivo e clique em consultar.', 'Id_ArquivoTipo', 'ArquivoTipo', ['Tipo de Arquivo'], [], '1802', '15'); return false;"><i class="fa-solid fa-magnifying-glass"></i></button> 
+						    		<button class="imgIcons" name="imaLimparPrioridade" onclick="LimparChaveEstrangeira('Id_ArquivoTipo','ArquivoTipo'); return false;" title="Limpar Tipo de Ato"> <i class="fa-regular fa-circle-xmark"></i></button> 
+						    	</label>
+						    	<input type="hidden" id="Id_ArquivoTipo" name="Id_ArquivoTipo" value="" />
+					    	</div>
+					    	<br/><br/>	
+					    					    	
+					    	<div class="col35 float_label_fixo clear">
+							    <input class="formEdicaoInput" name="ProcessoNumero" id="ProcessoNumero"  type="text" size="30" maxlength="25" onkeyup="autoTab(this,25);" placeholder="Ex: 5000280-28.2010.8.09.0059" value=""/>
+				    			<label class="formEdicaoLabel" for="ProcessoNumero">Número do Processo </label> 
+				    		</div>
+				    		<br><br>
+				    		
+					    	<fieldset>
+								<legend>Data de Publicação </legend>
+								
+								<div class="col10 float_label_fixo datepicker">
+							    	<label class="formEdicaoLabel" for="DataInicial">Data Inicial
+							    	<button type="button" class="imgIcons" id="calendarioDataInicial"title="Calendário" > <i class="fa-solid fa-calendar-days"></i> </button>
+					    			</label>
+					    			<input class="formEdicaoInput"  placeholder="Data Inicial"   name="DataInicial" id="DataInicial"  type="text" size="10" maxlength="10" value=""  onkeyup="mascara_data(this); autoTab(this,10)" onkeypress="return DigitarSoNumero(this, event)" onblur="verifica_data(this)"  />					    								    			
+						    	</div>
+						    	
+						    	<div class="col10 float_label_fixo datepicker">
+							    	<label class="formEdicaoLabel" for="DataFinal">Data Final 
+							    	<button type="button" class="imgIcons" id="calendarioDataFinal" title="Calendário" > <i class="fa-solid fa-calendar-days"></i> </button>
+							    	</label>
+					    			<input class="formEdicaoInput"   placeholder="Data Final"  name="DataFinal" id="DataFinal"  type="text" size="10" maxlength="10" value="" onkeyup="mascara_data(this); autoTab(this,10)" onkeypress="return DigitarSoNumero(this, event)" onblur="verifica_data(this)"  />					    			
+						    	</div>
+					    	</fieldset>
+					    </div>
+					</fieldset>
+				</div>
+				
+				<!-- Barra de botões -->
+				<div style="margin:10px;">
+					<div class="Centralizado">
+						<!-- inclua esse arquivo dentro do form que será submetido
+	utilize o RecaptchaService para validar do lado do servidor
+ -->
+<script
+  src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoad"
+  defer
+></script>
+<div id="widget-container"></div>
+<input id="g-recaptcha-response" type="hidden" name="g-recaptcha-response" value=""/>
+<script>
+  function onTurnstileLoad() {
+    turnstile.render("#widget-container", {
+      sitekey: "0x4AAAAAABeYdOewv6AT0dzB",
+      theme: "light",
+      callback: function (token) {
+        console.log("Challenge completed:", token);
+        $("#g-recaptcha-response").attr("value",token);
+        const btnBuscarElement = document.querySelector('#btnBuscar');
+        if (btnBuscarElement) {
+          btnBuscarElement.disabled = false;
+        }
+      },
+    });
+  }
+</script><input id="formLocalizarBotao" class="formLocalizarBotao" type="submit" name="Localizar" value="Consultar" onclick="javascript:submitForm(0);"/>						
+						<input name="imgInserir" type="submit" value="Limpar" title= "Limpa os campos da tela" onclick="javascript:limparForm('Formulario');AlterarValue('PaginaAtual','4');"/>
+					</div>
+				</div>
+								
+				<!-- Painel de resultados -->
+				<div class="divEditar" id="divEditar">
+						<fieldset id="formLocalizar" class="formLocalizar">							
+							<legend	id="formLocalizarLegenda" class="formLocalizarLegenda">1273234 resultados encontrados para o filtro da pesquisa</legend>							
+							<small>Tempo de resposta: (57 milissegundos)</small>
+							<br /><br />
+							<div >							
+					    		<select id="qtdeItensPagina" name="qtdeItensPagina">
+					    			<option value="10">Mostrar 10 resultados</option>
+					    			<option value="20">Mostrar 20 resultados</option>
+					    			<option value="50">Mostrar 50 resultados</option>
+					    		</select>
+							</div>							
+							<div class="search-result"> <!-- #eaf1fb -->									
+
+										<h4>
+											5952305-30.2025.8.09.0006<span style="margin-left: 10px">												
+												<a href="#" title="Clique aqui para fazer o download do arquivo completo" 
+													onclick="javascript: abrirArquivo('ConsultaJurisprudencia', '522321956'); return false;">
+													<i class="fa fa-download"></i>
+														Baixar Inteiro teor
+												</a>
+											</span>
+											<span style="margin-left: 10px">
+												<a href="#" title="Copiar texto sem formatação" onclick="copiarConteudoTexto(this.parentNode.parentNode.parentNode,'.conteudoTexto','\n(Tribunal de Justiça do Estado de Goiás, PROCESSO CÍVEL E DO TRABALHO -> Recursos -> Apelação Cível, 5952305-30.2025.8.09.0006, JERONYMO PEDRO VILLAS BOAS - (DESEMBARGADOR), 4ª Câmara Cível, julgado em 30/04/2026 11:04:06)'); alert('Texto sem formatação foi copiado para a Área de Transferência.'); return false;">
+													<i class="fa fa-clipboard"></i>
+													Copiar
+												</a>
+											</span>
+										</h4>
+
+									<p>
+										<b>4ª Câmara Cível</b>
+									</p>
+									<p>
+										<b><i>JERONYMO PEDRO VILLAS BOAS - (DESEMBARGADOR)</i></b>
+									</p>
+									<p>
+										<b>Relatório</b>
+									</p>
+									<p>
+										<b><i>Publicado em 30/04/2026 11:04:06</i></b>
+									</p>
+									<p class="conteudoTexto" style="text-align:justify">
+											PODER JUDICIÁRIOTribunal de Justiça do Estado de GoiásGabinete do Desembargador Jeronymo Pedro Villas BoasEste gabinete utiliza as ferramentas Berna e Agaia do TJGO, com apoio de inteligência artificial, na etapa de pré-análise dos processos destinados a julgamento, em conformidade com a Resolução nº 615/2023 do CNJ. APELAÇÃO CÍVEL Nº 5952305-30.2025.8.09.0006COMARCA DE ANÁPOLISAPELANTE: Uber Do Brasil Tecnologia Ltda.APELADA: Claudia Aparecida Leite de CarvalhoRELATOR: Des. Jeronymo Pedro Villas BoasCÂMARA: 4ª Cível RELATÓRIO 1. Trata-se de apelação cível interposta por Uber do Brasil Tecnologia Ltda., contra a sentença proferida pelo Juízo de Direito da 3ª Vara Cível da Comarca de Anápolis, nos autos da ação de obrigação de fazer c/c indenização por danos materiais e morais ajuizada por Claudia Aparecida Leite de Carvalho, ora apelada.2. A autora narrou que atuava como motorista parceira da ré na modalidade Uber Direct desde 04 de fevereiro de 2025. Aduziu que, a partir de 18 de fevereiro de 2025, passou a enfrentar falhas técnicas no sistema de geolocalização da plataforma, que indicava endereços de entrega divergentes dos reais, impedindo a finalização das corridas. Informou que, ao contatar o suporte da ré, foi orientada a devolver os pacotes ao remetente. 3. Contudo, em 09 de março de 2025, foi surpreendida com o bloqueio definitivo de sua conta sob a justificativa genérica de ?atividade irregular?, sem aviso prévio, motivação clara ou oportunidade de defesa. Ponderou que a conduta da ré foi arbitrária e lhe causou prejuízos materiais e morais. Requereu, em tutela de urgência, a reativação da conta e, ao final, a confirmação da medida, com a condenação da ré ao pagamento de lucros cessantes de R$ 1.500,00 mensais e indenização por danos morais de R$ 20.000,00.4. A tutela de urgência foi indeferida (mov. 11). 5. A sentença reconheceu a abusividade da conduta da ré, por ausência de prova da justa causa e por violação à boa-fé objetiva, determinando a reativação da conta e o pagamento de indenizações, nos seguintes termos (mov. 37): ?Ante o exposto, JULGO PARCIALMENTE PROCEDENTE(S) o(s) pedido(s) formulado(s) na petição inicial, com fundamento no artigo 487, inciso I, do Código de Processo Civil, para: a) DETERMINAR que a ré, UBER DO BRASIL TECNOLOGIA LTDA., proceda à reativação da conta da autora CLAUDIA APARECIDA LEITE DE CARVALHO em sua plataforma, no prazo de 5 (cinco) dias, sob pena de multa diária de R$ 200,00 (duzentos reais), limitada a R$ 10.000,00 (dez mil reais);b) CONDENAR a ré ao pagamento de indenização por lucros cessantes, no valor líquido de R$ 454,50 (quatrocentos e cinquenta e quatro reais e cinquenta centavos) por mês, a contar da data do bloqueio (09/03/2025) até a data da efetiva reativação da conta, valor que deverá ser corrigido monetariamente pelo IPCA a partir de cada mês devido e acrescido de juros de mora pela SELIC, deduzido o IPCA, a partir da citação; c) CONDENAR a parte ré ao pagamento do valor de R$ 5.000,00 (cinco mil reais), como forma de reparação do abalo sofrido pela parte autora, acrescido de juros de mora que corresponderá à taxa referencial do Sistema Especial de Liquidação e de Custódia (SELIC), deduzido o IPCA (art. 406, § 1º, do CC), calculados a partir do evento danoso (data da contratação indevida) nos termos da Súmula 54 do STJ, e corrigido monetariamente pelo IPCA, a partir da presente data (Súmula 362 do STJ). Ante a sucumbência mínima, condeno a ré ao pagamento de custas e despesas processuais e honorários advocatícios, que fixo em 10% sobre o proveito econômico obtido, nos termos do artigo 85, §2º, do Código de Processo Civil. (...)FRANCIELLY FARIA MORAISJuíza de Direito? 6. Em suas razões recursais (mov. 53), a apelante alega, preliminarmente, a nulidade da sentença por violação ao art. 1.022 do CPC, por suposta omissão quanto à necessidade de limitação da condenação por lucros cessantes e à ausência de violação ao contraditório. 7. No mérito, defende a inaplicabilidade do Código de Defesa do Consumidor, invocando a natureza comercial e paritária da relação, conforme jurisprudência do STJ.8. Arrazoa que a desativação da conta da apelada se deu por justo motivo, qual seja, a violação dos Termos de Uso da plataforma, consistente na não conclusão de diversas entregas. 9. Assevera que a apelada foi devidamente notificada da decisão e teve a oportunidade de exercer o contraditório e a ampla defesa, solicitando a revisão do ato, que foi mantida. 10. Invoca a autonomia privada e a liberdade contratual, aduzindo que não pode ser compelida a manter vínculo com a motorista.11. Pondera, ainda, a ausência de comprovação dos lucros cessantes, que seriam meramente hipotéticos, e impugna o valor fixado. Subsidiariamente, requer a limitação da condenação ao período de 7 (sete) dias, conforme a cláusula contratual de rescisão imotivada, e a exclusão dos períodos de inércia da autora antes do ajuizamento da ação e de vigência da decisão que indeferiu a liminar. 12. Pugna pela dedução de 40% a título de custos operacionais e dos dias de descanso semanal.13. Por fim, argumenta a inexistência de <em class="hlt1">dano</em> <em class="hlt1">moral</em>, por se tratar de mero descumprimento contratual e exercício regular de direito. Subsidiariamente, pleiteia a redução do valor arbitrado. 14. Requer, ainda, a alteração do termo inicial dos juros de mora para a data da fixação da verba e a aplicação exclusiva da taxa SELIC. 15. Ao final, pugna pelo provimento do recurso para reformar integralmente a sentença ou, alternativamente, para acolher as teses subsidiárias.16. O preparo recursal foi devidamente comprovado (mov. 53).17. Em contrarrazões (mov. 56), a apelada rebate as teses recursais. Defende a inexistência de nulidade na sentença, porquanto o juízo de origem enfrentou todas as questões relevantes.18. Sustenta a aplicabilidade do Código de Defesa do Consumidor, dada sua vulnerabilidade técnica e econômica.19. Alega que a conduta da apelante foi contraditória e violou a boa-fé objetiva, pois o bloqueio ocorreu justamente porque seguiu as orientações do suporte da própria empresa diante de falhas de geolocalização do aplicativo.20. Argumenta que a apelante não produziu prova da justa causa para o bloqueio, limitando-se a apresentar telas sistêmicas unilaterais. Rebate a limitação dos lucros cessantes e a redução dos danos morais, pugnando pelo desprovimento do recurso e majoração dos honorários sucumbenciais.21. É o relatório. 22. Peço a inclusão em pauta para julgamento virtual.Documento datado e assinado digitalmente. Desembargador JERONYMO PEDRO VILLAS BOASR E L A T O R</p>
+									<hr class="hr-dashed-line" />
+										<p style="text-align:justify">
+											<b>1</b><i> resultado(s) encontrado(s) no INTEIRO TEOR.</i>										
+										</p>
+										<p style="text-align:justify">											
+											1)&nbsp;Por fim, argumenta a inexistência de <em class="hlt1">dano</em> <em class="hlt1">moral</em>, por se tratar de mero descumprimento contratual e exercício&nbsp;
+											</p>
+									</div>		
+								<hr class="hr-dashed-white-line" />																				
+							<div class="search-result"> <!-- #eaf1fb -->									
+
+										<h4>
+											5418399-39.2023.8.09.0051<span style="margin-left: 10px">												
+												<a href="#" title="Clique aqui para fazer o download do arquivo completo" 
+													onclick="javascript: abrirArquivo('ConsultaJurisprudencia', '521402042'); return false;">
+													<i class="fa fa-download"></i>
+														Baixar Inteiro teor
+												</a>
+											</span>
+											<span style="margin-left: 10px">
+												<a href="#" title="Copiar texto sem formatação" onclick="copiarConteudoTexto(this.parentNode.parentNode.parentNode,'.conteudoTexto','\n(Tribunal de Justiça do Estado de Goiás, PROCESSO CÍVEL E DO TRABALHO -> Recursos -> Apelação Cível, 5418399-39.2023.8.09.0051, IARA MÁRCIA FRANZONI DE LIMA COSTA - (DESEMBARGADOR), 10ª Câmara Cível, julgado em 30/04/2026 11:03:14)'); alert('Texto sem formatação foi copiado para a Área de Transferência.'); return false;">
+													<i class="fa fa-clipboard"></i>
+													Copiar
+												</a>
+											</span>
+										</h4>
+
+									<p>
+										<b>10ª Câmara Cível</b>
+									</p>
+									<p>
+										<b><i>IARA MÁRCIA FRANZONI DE LIMA COSTA - (DESEMBARGADOR)</i></b>
+									</p>
+									<p>
+										<b>Ementa</b>
+									</p>
+									<p>
+										<b><i>Publicado em 30/04/2026 11:03:14</i></b>
+									</p>
+									<p class="conteudoTexto" style="text-align:justify">
+											EMENTA: DIREITO CIVIL E DO CONSUMIDOR. RECURSO DE APELAÇÃO CÍVEL. PLANO DE SAÚDE. CIRURGIAS PÓS-BARIÁTRICAS. CARÁTER REPARADOR OU ESTÉTICO. <em class="hlt1">DANO</em> <em class="hlt1">MORAL</em>. HONORÁRIOS RECURSAIS. RECURSO CONHECIDO E DESPROVIDO.I. CASO EM EXAME1. Trata-se de recurso de apelação cível interposto contra sentença que julgou improcedentes os pedidos formulados em ação de obrigação de fazer com pedido de tutela de urgência cumulada com indenização por danos morais. A ação visava compelir a operadora de plano de saúde a custear cirurgias pós-bariátricas (abdominoplastia, mamoplastia com prótese e correção de diástase muscular) e a pagar indenização por <em class="hlt1">dano</em> <em class="hlt1">moral</em>. A sentença baseou-se em laudo pericial que concluiu pelo caráter eminentemente estético dos procedimentos pleiteados.II. QUESTÃO EM DISCUSSÃO2. Há duas questões em discussão: (i) saber se os procedimentos cirúrgicos pós-bariátricas indicados à beneficiária possuem caráter reparador ou meramente estético para fins de cobertura obrigatória pelo plano de saúde, à luz do Tema 1.069/STJ; e (ii) verificar se a negativa de cobertura pela operadora configura ato ilícito ensejador de indenização por <em class="hlt1">dano</em> moral.III. RAZÕES DE DECIDIR3. O Superior Tribunal de Justiça, no Tema 1.069 de recursos repetitivos, estabelece a cobertura obrigatória por planos de saúde de cirurgias plásticas pós-bariátricas quando estas possuem caráter reparador ou funcional, sendo parte decorrente do tratamento da obesidade mórbida.4. No caso concreto, prova pericial produzida por médica especialista concluiu que a abdominoplastia (com correção de diástase) e a mastopexia com implante de próteses possuíam finalidade eminentemente estética, não caracterizando abdome em avental, alterações funcionais relevantes, dermatites recorrentes, hérnias ou limitações físicas.5. A mera discordância da parte autora com o laudo pericial, sem elementos técnicos robustos para infirmar suas conclusões, não é suficiente para afastá-lo, devendo prevalecer a prova técnica realizada sob o crivo do contraditório.6. O art. 10, inciso II, da Lei n.º 9.656/98 admite a exclusão de cobertura para procedimentos com finalidade estética, configurando a recusa da operadora exercício regular de direito, e não ato ilícito.7. Ausente ato ilícito na conduta da operadora de plano de saúde, não há dever de indenizar por dano moral.IV. DISPOSITIVO E TESE8. Recurso conhecido e desprovido.Tese de julgamento: ?1. A obrigatoriedade de cobertura de cirurgias plásticas pós-bariátricas está condicionada ao seu caráter reparador ou funcional, conforme Tema 1.069/STJ. 2. O laudo pericial judicial que atesta a natureza exclusivamente estética dos procedimentos, quando robusto e não infirmado por outras provas técnicas, legitima a negativa de cobertura pelo plano de saúde. 3. A negativa de cobertura de procedimento estético, em exercício regular de direito e conforme prova técnica, não configura ato ilícito e afasta o dever de indenizar por dano <em class="hlt1">moral</em>?.Dispositivos relevantes citados: CPC, arts. 85, § 11; Lei n.º 9.656/98, art. 10, II.Jurisprudências relevantes citadas: STJ, Tema 1059; TJGO, Apelação Cível n.º 5380124-19.2023.8.09.0084; TJSP, Apelação Cível n.º 10128281620218260506.</p>
+									<hr class="hr-dashed-line" />
+										<p style="text-align:justify">
+											<b>5</b><i> resultado(s) encontrado(s) no INTEIRO TEOR.</i>										
+										</p>
+										<p style="text-align:justify">											
+											1)&nbsp;<em class="hlt1">DANO</em> <em class="hlt1">MORAL</em>.&nbsp;
+											2)&nbsp;abdominoplastia, mamoplastia com prótese e correção de diástase muscular) e a pagar indenização por <em class="hlt1">dano</em>&nbsp;
+											3)&nbsp;<em class="hlt1">moral</em>.&nbsp;
+											4)&nbsp;verificar se a negativa de cobertura pela operadora configura ato ilícito ensejador de indenização por <em class="hlt1">dano</em>&nbsp;
+											5)&nbsp;<em class="hlt1">moral</em>?.Dispositivos relevantes citados: CPC, arts. 85, § 11; Lei n.º 9.656/98, art. 10, II.Jurisprudências&nbsp;
+											</p>
+									</div>		
+								<hr class="hr-dashed-white-line" />																				
+							<div class="search-result"> <!-- #eaf1fb -->									
+
+										<h4>
+											5869418-48.2025.8.09.0051<span style="margin-left: 10px">												
+												<a href="#" title="Clique aqui para fazer o download do arquivo completo" 
+													onclick="javascript: abrirArquivo('ConsultaJurisprudencia', '521402037'); return false;">
+													<i class="fa fa-download"></i>
+														Baixar Inteiro teor
+												</a>
+											</span>
+											<span style="margin-left: 10px">
+												<a href="#" title="Copiar texto sem formatação" onclick="copiarConteudoTexto(this.parentNode.parentNode.parentNode,'.conteudoTexto','\n(Tribunal de Justiça do Estado de Goiás, PROCESSO CÍVEL E DO TRABALHO -> Recursos -> Apelação Cível, 5869418-48.2025.8.09.0051, IARA MÁRCIA FRANZONI DE LIMA COSTA - (DESEMBARGADOR), 10ª Câmara Cível, julgado em 30/04/2026 11:02:49)'); alert('Texto sem formatação foi copiado para a Área de Transferência.'); return false;">
+													<i class="fa fa-clipboard"></i>
+													Copiar
+												</a>
+											</span>
+										</h4>
+
+									<p>
+										<b>10ª Câmara Cível</b>
+									</p>
+									<p>
+										<b><i>IARA MÁRCIA FRANZONI DE LIMA COSTA - (DESEMBARGADOR)</i></b>
+									</p>
+									<p>
+										<b>Ementa</b>
+									</p>
+									<p>
+										<b><i>Publicado em 30/04/2026 11:02:48</i></b>
+									</p>
+									<p class="conteudoTexto" style="text-align:justify">
+											EMENTA: DIREITO DO CONSUMIDOR. APELAÇÃO CÍVEL. DECLARAÇÃO DE INEXISTÊNCIA DE DÉBITO. NEGATIVAÇÃO INDEVIDA. <em class="hlt1">DANO</em> <em class="hlt1">MORAL</em>. HONORÁRIOS ADVOCATÍCIOS. RECURSO DESPROVIDO.I. CASO EM EXAME1. Recurso de apelação contra sentença que julgou procedentes os pedidos de declaração de inexistência de débito, de exclusão da anotação no órgão protetivo ao crédito e de indenização por danos morais. A apelante sustenta a regularidade da contratação e do cadastro da parte autora como revendedora, a legitimidade da negativação e a inexistência de dano <em class="hlt1">moral</em> ou, subsidiariamente, a redução do valor indenizatório, além de questionar os honorários advocatícios. II. QUESTÃO EM DISCUSSÃO2. A questão em discussão consiste em saber: (i) se a relação jurídica e o débito que originaram a negativação são válidos; (ii) saber se houve ato ilícito que enseje a indenização por danos morais; (iii) se o valor fixado é adequado; e (iv) se os honorários advocatícios sucumbenciais devem ser afastados ou reduzidos. III. RAZÕES DE DECIDIR3. As telas sistêmicas, por serem documentos produzidos unilateralmente, não possuem força probante suficiente para demonstrar a origem da dívida, especialmente quando impugnadas e não corroboradas por nenhuma outra prova.4. A parte recorrente não se desincumbiu do ônus de comprovar a existência da relação contratual e a legitimidade do débito. 5.A inscrição indevida do nome do consumidor em cadastros de inadimplentes configura dano <em class="hlt1">moral</em> presumido (in re ipsa), dispensando comprovação concreta do abalo sofrido.6. O valor da indenização por danos morais em R$ 5.000,00 (cinco mil reais) atende os princípios da proporcionalidade e da razoabilidade, considerando as peculiaridades do caso e a jurisprudência.7. A condenação em honorários advocatícios sucumbenciais é devida pela parte vencida, e o patamar de 10% sobre o valor da condenação está em consonância com o artigo 85, § 2º, do Código de Processo Civil. IV. DISPOSITIVO E TESE8. Recurso de apelação cível conhecido e desprovido.Teses de julgamento: ?1. Em ação declaratória negativa de débito, o ônus da prova da existência e regularidade do contrato e do débito impugnado, incumbe ao fornecedor, não sendo as telas sistêmicas, por si só, prova suficiente. 2. A inscrição indevida em cadastro de inadimplentes configura <em class="hlt1">dano</em> <em class="hlt1">moral</em> presumido (in re ipsa) dispensando comprovação do prejuízo. 3. O montante indenizatório por <em class="hlt1">dano</em> <em class="hlt1">moral</em> deve ser fixado em observância aos princípios da proporcionalidade e razoabilidade, sem configurar enriquecimento ilícito ou penalidade irrisória. 4. Os honorários advocatícios sucumbenciais, em caso de condenação, são devidos nos termos do artigo 85, § 2º, do Código de Processo Civil.?Dispositivos relevantes citados: CPC, arts. 85, §2º e §11, 98, §3º e §4º, 373, II, 1.021, §4º, 1.026, §2º; CC, art. 405; CDC, arts. 2º, 3º, 6º, VIII, 42, p.u.Jurisprudências relevantes citadas: STJ, AgInt nos EDcl no AREsp: 2257643/SC; STJ, REsp Nº 1.746.072 ? PR; STJ, Tema 1059; TJGO, Súmulas 18 e 32; TJGO, AC 5623684-58.2025.8.09.0051; TJGO, Apelação Cível n.º 5000893-16.2024.8.09.0105; TJGO, Apelação Cível n.º 5391289-02.2022.8.09.0051; TJGO, Apelação Cível n.º 5502500-43.2022.8.09.0051; TJGO, Apelação Cível n.º 5525318-23.2021.8.09.0051.</p>
+									<hr class="hr-dashed-line" />
+										<p style="text-align:justify">
+											<b>5</b><i> resultado(s) encontrado(s) no INTEIRO TEOR.</i>										
+										</p>
+										<p style="text-align:justify">											
+											1)&nbsp;<em class="hlt1">DANO</em> <em class="hlt1">MORAL</em>.&nbsp;
+											2)&nbsp;<em class="hlt1">moral</em> ou, subsidiariamente, a redução do valor indenizatório, além de questionar os honorários advocatícios&nbsp;
+											3)&nbsp;<em class="hlt1">moral</em> presumido (in re ipsa), dispensando comprovação concreta do abalo sofrido.6.&nbsp;
+											4)&nbsp;A inscrição indevida em cadastro de inadimplentes configura <em class="hlt1">dano</em> <em class="hlt1">moral</em> presumido (in re ipsa) dispensando&nbsp;
+											5)&nbsp;O montante indenizatório por <em class="hlt1">dano</em> <em class="hlt1">moral</em> deve ser fixado em observância aos princípios da proporcionalidade&nbsp;
+											</p>
+									</div>		
+								<hr class="hr-dashed-white-line" />																				
+							<div class="search-result"> <!-- #eaf1fb -->									
+
+										<h4>
+											5819423-89.2025.8.09.0011<span style="margin-left: 10px">												
+												<a href="#" title="Clique aqui para fazer o download do arquivo completo" 
+													onclick="javascript: abrirArquivo('ConsultaJurisprudencia', '521402034'); return false;">
+													<i class="fa fa-download"></i>
+														Baixar Inteiro teor
+												</a>
+											</span>
+											<span style="margin-left: 10px">
+												<a href="#" title="Copiar texto sem formatação" onclick="copiarConteudoTexto(this.parentNode.parentNode.parentNode,'.conteudoTexto','\n(Tribunal de Justiça do Estado de Goiás, PROCESSO CÍVEL E DO TRABALHO -> Recursos -> Apelação Cível, 5819423-89.2025.8.09.0011, IARA MÁRCIA FRANZONI DE LIMA COSTA - (DESEMBARGADOR), 10ª Câmara Cível, julgado em 30/04/2026 11:02:32)'); alert('Texto sem formatação foi copiado para a Área de Transferência.'); return false;">
+													<i class="fa fa-clipboard"></i>
+													Copiar
+												</a>
+											</span>
+										</h4>
+
+									<p>
+										<b>10ª Câmara Cível</b>
+									</p>
+									<p>
+										<b><i>IARA MÁRCIA FRANZONI DE LIMA COSTA - (DESEMBARGADOR)</i></b>
+									</p>
+									<p>
+										<b>Ementa</b>
+									</p>
+									<p>
+										<b><i>Publicado em 30/04/2026 11:02:32</i></b>
+									</p>
+									<p class="conteudoTexto" style="text-align:justify">
+											EMENTA: DIREITO DO CONSUMIDOR. APELAÇÃO CÍVEL. QUITAÇÃO ANTECIPADA DE EMPRÉSTIMO CONSIGNADO. RECUSA INDEVIDA. FALHA NA PRESTAÇÃO DE SERVIÇO. <em class="hlt1">DANO</em> <em class="hlt1">MORAL</em> CONFIGURADO. ASTREINTES. NECESSIDADE DE INTIMAÇÃO PESSOAL. RECURSO DESPROVIDO.I. CASO EM EXAME1. Trata-se de recurso de apelação interposto pelo Banco Pan S.A. contra sentença que, em ação de obrigação de fazer c/c consignação em pagamento e danos morais, confirmou a tutela de urgência para obrigar o banco a fornecer boleto para quitação antecipada de empréstimo consignado, autorizou a consignação judicial e o condenou ao pagamento de indenização por danos morais no valor de R$ 3.000,00. A apelante arguiu preliminar de irregularidade da procuração, ausência de conduta ilícita, inexistência ou desproporcionalidade do dano moral, e necessidade de afastamento ou minoração da multa diária, bem como a intimação pessoal do devedor para sua cobrança.II. QUESTÃO EM DISCUSSÃO2. Há cinco questões em discussão: (i) saber se a procuração apresentada pela parte apelada é irregular; (ii) saber se a recusa do banco em fornecer o boleto para quitação antecipada configura falha na prestação do serviço e ato ilícito; (iii) saber se há dano <em class="hlt1">moral</em> a ser indenizado e se o valor fixado é proporcional; (iv) saber se a multa diária (astreintes) deve ser afastada ou minorada, e se é necessária a intimação pessoal para sua incidência; e (v) saber se houve litigância de má-fé por parte da apelante.III. RAZÕES DE DECIDIR3. A procuração ad judicia habilita o advogado a praticar todos os atos do processo, não sendo exigida procuração específica para cada demanda, salvo para atos que demandem poderes especiais.4. As contrarrazões recursais não constituem via adequada para pleitear a reforma da sentença, como o pedido de majoração de indenização por dano <em class="hlt1">moral</em>.5. A relação jurídica entre as partes é consumerista, aplicando-se o Código de Defesa do Consumidor, com responsabilidade objetiva do fornecedor de serviços.6. A recusa injustificada do banco em fornecer os meios para a quitação antecipada do contrato de empréstimo consignado, direito assegurado ao consumidor, configura falha na prestação do serviço e conduta abusiva, violando a boa-fé objetiva.7. A manutenção de descontos em benefício previdenciário de natureza alimentar, após a tentativa frustrada de quitação antecipada por consumidora idosa, ultrapassa o mero dissabor, configurando dano <em class="hlt1">moral</em> presumido, aplicável a teoria do desvio produtivo.8. O valor de R$ 3.000,00, arbitrado a título de danos morais, mostra-se razoável e proporcional, considerando a extensão do dano, a condição das partes e o caráter pedagógico da condenação.9. O valor de R$ 200,00 por dia, limitado a R$ 6.000,00, fixado para as astreintes, é proporcional à baixa complexidade da obrigação e à inércia do banco em cumpri-la.10. A incidência da multa coercitiva exige a prévia intimação pessoal do devedor para o cumprimento da obrigação de fazer, conforme a Súmula n. 410 do STJ e o Tema Repetitivo n. 1296 do STJ.11. A mera interposição de recurso cabível, mesmo que desprovido, não configura litigância de má-fé, que exige dolo e subsunção às hipóteses do art. 80 do CPC.IV. DISPOSITIVO E TESE12. Recurso conhecido e desprovido.Teses de julgamento:"1. A procuração ad judicia habilita o advogado a praticar os atos processuais, sendo despicienda a exigência de mandato específico para cada demanda, salvo para atos que demandem poderes especiais. 2. As contrarrazões recursais não constituem via processual adequada para postular a reforma da sentença. 3. A recusa injustificada da instituição financeira em viabilizar a quitação antecipada de contrato de empréstimo consignado, mediante imposição de exigências não razoáveis ou omissão na oferta de meios alternativos, configura falha na prestação do serviço e ato ilícito. 4. A persistência de descontos em benefício previdenciário de natureza alimentar, decorrente da recusa indevida do banco em permitir a quitação antecipada da dívida, gera dano <em class="hlt1">moral</em> indenizável, presumido na hipótese de consumidor idoso e vulnerável. 5. O valor de R$ 3.000,00 (três mil reais) arbitrado a título de danos morais revela-se razoável e proporcional, atendendo aos critérios da extensão do dano, condição das partes e finalidade pedagógica da medida. 6. O valor da multa diária (astreintes) fixado em R$ 200,00 (duzentos reais), limitada a trinta dias-multa, mostra-se proporcional à obrigação de baixa complexidade e à inércia do banco em cumpri-la. 7. A prévia intimação pessoal do devedor é pressuposto para a incidência da multa coercitiva por descumprimento de obrigação de fazer ou não fazer. 8. A interposição de recurso, ainda que sem sucesso, não configura litigância de má-fé, a qual exige prova do dolo ou enquadramento nas hipóteses legais do art. 80 do CPC."Dispositivos relevantes citados: CPC, arts. 105, 373, II, 487, I, 536, 537, 539, 80, 85, §11, 1.007, 1.011, II, 1.021, § 4º, 1.026, § 2º; CC, arts. 394, 395, 422; CDC, arts. 2º, 3º, 14, caput, 52, § 2º; Lei n.º 8.906/94, art. 5º, § 2º; Resolução n.º 02/2015 da OAB, art. 18; Resolução n.º 170, de 12 de dezembro de 2021 (Regimento Interno do TJGO), art. 138, XXXII.Jurisprudências relevantes citadas: STJ, REsp n. 1.709.204; TJGO, PROCESSO CÍVEL E DO TRABALHO -> Recursos -> Apelação Cível 5501052-29.2021.8.09.0129; STJ, AgInt no AREsp 2342723/SP; TJGO, Apelação Cível 0058755-88.2018.8.09.0093; TJGO, Apelação Cível 0381266-70.2017.8.09.0051; STJ, Súmula n.º 297; STJ, Súmula n.º 362; STJ, Súmula n.º 54; STJ, Súmula n. 410; TJGO, Súmula 32; STJ, Tema Repetitivo n. 1296 (REsp n. 2.096.505/SP); STJ, EDcl no AgInt no AREsp n. 2.391.359/SP; STJ, Tema 1.059 (REsp's n.º 1.865.553/PR, n.º 1.865.223/SC e n.º 1.864.533/RS).</p>
+									<hr class="hr-dashed-line" />
+										<p style="text-align:justify">
+											<b>5</b><i> resultado(s) encontrado(s) no INTEIRO TEOR.</i>										
+										</p>
+										<p style="text-align:justify">											
+											1)&nbsp;<em class="hlt1">DANO</em> <em class="hlt1">MORAL</em> CONFIGURADO.&nbsp;
+											2)&nbsp;<em class="hlt1">moral</em> a ser indenizado e se o valor fixado é proporcional; (iv) saber se a multa diária (astreintes)&nbsp;
+											3)&nbsp;<em class="hlt1">moral</em>.5.&nbsp;
+											4)&nbsp;<em class="hlt1">moral</em> presumido, aplicável a teoria do desvio produtivo.8.&nbsp;
+											5)&nbsp;<em class="hlt1">moral</em> indenizável, presumido na hipótese de consumidor idoso e vulnerável. 5.&nbsp;
+											</p>
+									</div>		
+								<hr class="hr-dashed-white-line" />																				
+							<div class="search-result"> <!-- #eaf1fb -->									
+
+										<h4>
+											5069823-83.2026.8.09.0051<span style="margin-left: 10px">												
+												<a href="#" title="Clique aqui para fazer o download do arquivo completo" 
+													onclick="javascript: abrirArquivo('ConsultaJurisprudencia', '522321487'); return false;">
+													<i class="fa fa-download"></i>
+														Baixar Inteiro teor
+												</a>
+											</span>
+											<span style="margin-left: 10px">
+												<a href="#" title="Copiar texto sem formatação" onclick="copiarConteudoTexto(this.parentNode.parentNode.parentNode,'.conteudoTexto','\n(Tribunal de Justiça do Estado de Goiás, PROCESSO CÍVEL E DO TRABALHO -> Processo de Conhecimento -> Procedimento de Conhecimento -> Procedimento do Juizado Especial Cível, 5069823-83.2026.8.09.0051, DANILO FARIAS BATISTA CORDEIRO, Goiânia - 2ª UPJ Juizados Especiais Cíveis: 6º, 7º, 8º, 9º, 10º e 11º, julgado em 30/04/2026 11:02:12)'); alert('Texto sem formatação foi copiado para a Área de Transferência.'); return false;">
+													<i class="fa fa-clipboard"></i>
+													Copiar
+												</a>
+											</span>
+										</h4>
+
+									<p>
+										<b>Goiânia - 2ª UPJ Juizados Especiais Cíveis: 6º, 7º, 8º, 9º, 10º e 11º</b>
+									</p>
+									<p>
+										<b><i>DANILO FARIAS BATISTA CORDEIRO</i></b>
+									</p>
+									<p>
+										<b>Sentença</b>
+									</p>
+									<p>
+										<b><i>Publicado em 30/04/2026 11:02:12</i></b>
+									</p>
+									<p class="conteudoTexto" style="text-align:justify">
+											Estado de GoiásPoder JudiciárioComplexo dos Juizados Especiais Cíveis de Goiânia7º Juizado Especial Cível (2ª UPJ dos Juizados Especiais Cíveis)Autos: 5069823-83.2026.8.09.0051Natureza: PROCESSO CÍVEL E DO TRABALHO -> Processo de Conhecimento -> Procedimento de Conhecimento -> Procedimento do Juizado Especial CívelRequerente: Gyovanna Oliveira De MoraisRequerido: Azul Linhas Aereas Brasileiras S.a.SENTENÇADispensado o relatório, conforme autorizado por lei, mas trata-se de ação de indenização por danos materiais e morais proposta por GYOVANNA OLIVEIRA DE MORAIS em face de AZUL LINHAS AÉREAS BRASILEIRAS S.A., na qual a parte autora alega falha na prestação de serviço de transporte aéreo em razão de atraso de voo, perda de conexão e chegada tardia ao destino final, com consequências que ultrapassaram o mero aborrecimento.A autora sustenta que adquiriu passagens para o trecho Goiânia/GO ? Fortaleza/CE, com conexão em São Paulo/SP, tendo sido surpreendida por atraso no primeiro voo, o que ocasionou a perda da conexão e a necessidade de pernoite em cidade diversa, chegando ao destino final com atraso superior a seis horas.Afirma, ainda, que é portadora de epilepsia e que o estresse e a privação de sono decorrentes do evento desencadearam crise convulsiva, com repercussões físicas comprovadas por documentação médica.A parte ré, por sua vez, atribui o atraso à necessidade de manutenção não programada da aeronave, defendendo tratar-se de fortuito externo, além de alegar ter prestado a devida assistência material e inexistir <em class="hlt1">dano</em> <em class="hlt1">moral</em> indenizável.Passo ao julgamento.No tocante à preliminar de impugnação à gratuidade da justiça, não merece acolhimento. A constituição de advogado particular não afasta, por si só, a presunção de hipossuficiência (art. 99, § 4º, do CPC). Ademais, nos Juizados Especiais, não há custas em primeiro grau (art. 54 da Lei nº 9.099/95), motivo pelo qual eventual análise mais aprofundada deve ser postergada para a fase recursal.No mérito, a relação jurídica estabelecida entre as partes é de consumo, aplicando-se o Código de Defesa do Consumidor, nos termos dos arts. 2º e 3º. A responsabilidade da companhia aérea é objetiva, conforme art. 14 do CDC, respondendo pelos danos causados independentemente de culpa.A alegação de manutenção não programada não afasta a responsabilidade da ré. Trata-se de típico fortuito interno, inerente ao risco da atividade empresarial, não sendo apto a romper o nexo causal. A jurisprudência é pacífica no sentido de que problemas técnicos em aeronaves integram o risco do empreendimento, não configurando excludente de responsabilidade.Restou incontroverso o atraso do voo inicial e a consequente perda da conexão, culminando em realocação apenas no dia seguinte, com atraso superior a seis horas na chegada ao destino final. Tal circunstância configura falha na prestação do serviço.No que se refere ao <em class="hlt1">dano</em> <em class="hlt1">moral</em>, este se mostra configurado. A situação vivenciada ultrapassa o mero dissabor cotidiano, especialmente diante da necessidade de pernoite em local diverso, da frustração da viagem e da quebra da legítima expectativa do consumidor.O caso, contudo, apresenta agravante relevante: a autora comprovou ser portadora de epilepsia e demonstrou, por meio de documentação médica idônea, que o episódio de estresse e privação de sono desencadeou crise convulsiva, resultando em lesões físicas. Tal circunstância amplia significativamente a extensão do <em class="hlt1">dano</em> experimentado, atingindo não apenas o aspecto emocional, mas também a integridade física da consumidora.Diante desse contexto, a indenização deve observar os princípios da razoabilidade e proporcionalidade, considerando a gravidade da falha, a extensão do <em class="hlt1">dano</em>, a condição das partes e o caráter pedagógico da medida. Assim, mostra-se adequado o valor de R$ 10.000,00 (dez mil reais), conforme postulado.Quanto aos danos materiais, a autora não trouxe aos autos comprovação efetiva das despesas alegadas, ônus que lhe incumbia (art. 373, I, do CPC), razão pela qual o pedido deve ser julgado improcedente neste ponto.Ante o exposto, com fundamento no art. 487, inciso I, do Código de Processo Civil, JULGO PARCIALMENTE PROCEDENTES os pedidos para CONDENAR a ré AZUL LINHAS AÉREAS BRASILEIRAS S.A. ao pagamento de indenização por danos morais à autora GYOVANNA OLIVEIRA DE MORAIS, no valor de R$ 10.000,00 (dez mil reais), acrescido de correção monetária pelo IPCA a partir da data desta sentença e juros de mora pela taxa SELIC, a partir da citação;Sem custas e honorários advocatícios nesta fase, nos termos do art. 55 da Lei nº 9.099/95.Publique-se. Registre-se. Intimem-se.GOIÂNIA, datado e assinado digitalmente. DANILO FARIAS BATISTA CORDEIRO- Juiz de Direito -</p>
+									<hr class="hr-dashed-line" />
+										<p style="text-align:justify">
+											<b>5</b><i> resultado(s) encontrado(s) no INTEIRO TEOR.</i>										
+										</p>
+										<p style="text-align:justify">											
+											1)&nbsp;tratar-se de fortuito externo, além de alegar ter prestado a devida assistência material e inexistir <em class="hlt1">dano</em>&nbsp;
+											2)&nbsp;<em class="hlt1">moral</em> indenizável.Passo ao julgamento.No tocante à preliminar de impugnação à gratuidade da justiça,&nbsp;
+											3)&nbsp;Tal circunstância configura falha na prestação do serviço.No que se refere ao <em class="hlt1">dano</em> <em class="hlt1">moral</em>, este se mostra&nbsp;
+											4)&nbsp;Tal circunstância amplia significativamente a extensão do <em class="hlt1">dano</em> experimentado, atingindo não apenas o&nbsp;
+											5)&nbsp;os princípios da razoabilidade e proporcionalidade, considerando a gravidade da falha, a extensão do <em class="hlt1">dano</em>&nbsp;
+											</p>
+									</div>		
+								<hr class="hr-dashed-white-line" />																				
+							<div class="search-result"> <!-- #eaf1fb -->									
+
+										<h4>
+											5078421-26.2026.8.09.0051<span style="margin-left: 10px">												
+												<a href="#" title="Clique aqui para fazer o download do arquivo completo" 
+													onclick="javascript: abrirArquivo('ConsultaJurisprudencia', '522321468'); return false;">
+													<i class="fa fa-download"></i>
+														Baixar Inteiro teor
+												</a>
+											</span>
+											<span style="margin-left: 10px">
+												<a href="#" title="Copiar texto sem formatação" onclick="copiarConteudoTexto(this.parentNode.parentNode.parentNode,'.conteudoTexto','\n(Tribunal de Justiça do Estado de Goiás, PROCESSO CÍVEL E DO TRABALHO -> Processo de Conhecimento -> Procedimento de Conhecimento -> Procedimento do Juizado Especial Cível, 5078421-26.2026.8.09.0051, DANILO FARIAS BATISTA CORDEIRO, Goiânia - 2ª UPJ Juizados Especiais Cíveis: 6º, 7º, 8º, 9º, 10º e 11º, julgado em 30/04/2026 11:02:09)'); alert('Texto sem formatação foi copiado para a Área de Transferência.'); return false;">
+													<i class="fa fa-clipboard"></i>
+													Copiar
+												</a>
+											</span>
+										</h4>
+
+									<p>
+										<b>Goiânia - 2ª UPJ Juizados Especiais Cíveis: 6º, 7º, 8º, 9º, 10º e 11º</b>
+									</p>
+									<p>
+										<b><i>DANILO FARIAS BATISTA CORDEIRO</i></b>
+									</p>
+									<p>
+										<b>Sentença</b>
+									</p>
+									<p>
+										<b><i>Publicado em 30/04/2026 11:02:09</i></b>
+									</p>
+									<p class="conteudoTexto" style="text-align:justify">
+											Estado de GoiásPoder JudiciárioComplexo dos Juizados Especiais Cíveis de Goiânia7º Juizado Especial Cível (2ª UPJ dos Juizados Especiais Cíveis)Autos: 5078421-26.2026.8.09.0051Natureza: PROCESSO CÍVEL E DO TRABALHO -> Processo de Conhecimento -> Procedimento de Conhecimento -> Procedimento do Juizado Especial CívelRequerente: Thifanny Castro MarquesRequerido: Azul Linhas Aereas Brasileiras S.a.SENTENÇADispensado o relatório, conforme autorizado por lei, mas trata-se de ação de indenização por danos morais ajuizada por THIFANNY CASTRO MARQUES e CLEUSA HELENA FONSECA em face de AZUL LINHAS AÉREAS BRASILEIRAS S.A.As autoras alegam, em síntese, falha na prestação do serviço de transporte aéreo em razão de atraso de voo, perda de conexão e ausência de assistência material adequada, circunstâncias que teriam ocasionado atraso superior a 8 (oito) horas na chegada ao destino final, além de transtornos e abalos de ordem moral.Regularmente citada, a parte requerida apresentou contestação, arguindo, preliminarmente, a suspensão do feito com fundamento no Tema 1.417 da repercussão geral do Supremo Tribunal Federal, bem como suscitando questões formais relativas à representação processual e ao comprovante de endereço.No mérito, sustentou a inexistência de ato ilícito, sob o argumento de que o atraso decorreu de manutenção não programada da aeronave, além de afirmar ter prestado a devida assistência às passageiras.Houve impugnação. As partes manifestaram desinteresse na produção de outras provas, requerendo o julgamento antecipado da lide.É o necessário. Decido.Inicialmente, rejeito a preliminar de suspensão do feito com fundamento no Tema 1.417 da repercussão geral. Isso porque a controvérsia dos autos não versa sobre hipótese de fortuito externo, mas sim sobre atraso decorrente de manutenção não programada de aeronave, circunstância que, conforme entendimento consolidado, configura fortuito interno, inerente ao risco da atividade da companhia aérea, não se enquadrando na delimitação do referido tema.Do mesmo modo, não prosperam as alegações de irregularidade de representação processual ou insuficiência de comprovante de endereço, porquanto não evidenciado qualquer prejuízo ao regular andamento do feito.Superadas as questões preliminares, passo ao mérito.A relação jurídica estabelecida entre as partes é de consumo, sendo aplicáveis as normas do Código de Defesa do Consumidor, notadamente a responsabilidade objetiva do fornecedor de serviços, nos termos do artigo 14.No caso, é incontroverso que o voo operado pela requerida sofreu atraso significativo, ocasionando a perda da conexão subsequente e resultando em atraso superior a 8 (oito) horas na chegada das autoras ao destino final.A justificativa apresentada pela requerida ? manutenção não programada da aeronave ? não tem o condão de afastar sua responsabilidade, por se tratar de fortuito interno, inserido no risco da atividade econômica, conforme entendimento pacífico da jurisprudência.Restou, portanto, configurada a falha na prestação do serviço.Além disso, não há prova suficiente de que a requerida tenha prestado integral assistência material às passageiras, conforme exigido pela regulamentação aplicável, o que agrava a situação experimentada pelas autoras.O conjunto fático revela situação que ultrapassa o mero dissabor cotidiano, caracterizando <em class="hlt1">dano</em> <em class="hlt1">moral</em> indenizável, o qual, em hipóteses como a dos autos, é presumido (in re ipsa).No que tange ao quantum indenizatório, este deve ser fixado em observância aos princípios da razoabilidade e proporcionalidade, considerando as circunstâncias do caso concreto, a extensão do <em class="hlt1">dano</em> e o caráter pedagógico da medida.Diante disso, entendo adequado fixar a indenização no valor de R$ 6.000,00 (seis mil reais) para cada autora.Ante o exposto, com resolução de mérito, nos termos do artigo 487, inciso I, do Código de Processo Civil, JULGO PARCIALMENTE PROCEDENTES os pedidos iniciais para CONDENAR a requerida, AZUL LINHAS AÉREAS BRASILEIRAS S.A., ao pagamento de indenização por danos morais no valor de R$ 6.000,00 (seis mil reais) para cada autora.Sobre o valor da condenação incidirá correção monetária pelo IPCA, a partir da data desta sentença, e juros de mora pela taxa SELIC, a contar da citação.Sem custas e honorários advocatícios nesta fase, nos termos do artigo 55 da Lei nº 9.099/95.Publique-se. Registre-se. Intimem-se.GOIÂNIA, datado e assinado digitalmente. DANILO FARIAS BATISTA CORDEIRO- Juiz de Direito -</p>
+									<hr class="hr-dashed-line" />
+										<p style="text-align:justify">
+											<b>3</b><i> resultado(s) encontrado(s) no INTEIRO TEOR.</i>										
+										</p>
+										<p style="text-align:justify">											
+											1)&nbsp;autoras.O conjunto fático revela situação que ultrapassa o mero dissabor cotidiano, caracterizando <em class="hlt1">dano</em>&nbsp;
+											2)&nbsp;<em class="hlt1">moral</em> indenizável, o qual, em hipóteses como a dos autos, é presumido (in re ipsa).No que tange ao quantum&nbsp;
+											3)&nbsp;da razoabilidade e proporcionalidade, considerando as circunstâncias do caso concreto, a extensão do <em class="hlt1">dano</em>&nbsp;
+											</p>
+									</div>		
+								<hr class="hr-dashed-white-line" />																				
+							<div class="search-result"> <!-- #eaf1fb -->									
+
+										<h4>
+											5330719-83.2025.8.09.0006<span style="margin-left: 10px">												
+												<a href="#" title="Clique aqui para fazer o download do arquivo completo" 
+													onclick="javascript: abrirArquivo('ConsultaJurisprudencia', '521371204'); return false;">
+													<i class="fa fa-download"></i>
+														Baixar Inteiro teor
+												</a>
+											</span>
+											<span style="margin-left: 10px">
+												<a href="#" title="Copiar texto sem formatação" onclick="copiarConteudoTexto(this.parentNode.parentNode.parentNode,'.conteudoTexto','\n(Tribunal de Justiça do Estado de Goiás, PROCESSO CÍVEL E DO TRABALHO -> Recursos -> Apelação Cível, 5330719-83.2025.8.09.0006, IARA MÁRCIA FRANZONI DE LIMA COSTA - (DESEMBARGADOR), 10ª Câmara Cível, julgado em 30/04/2026 11:01:42)'); alert('Texto sem formatação foi copiado para a Área de Transferência.'); return false;">
+													<i class="fa fa-clipboard"></i>
+													Copiar
+												</a>
+											</span>
+										</h4>
+
+									<p>
+										<b>10ª Câmara Cível</b>
+									</p>
+									<p>
+										<b><i>IARA MÁRCIA FRANZONI DE LIMA COSTA - (DESEMBARGADOR)</i></b>
+									</p>
+									<p>
+										<b>Ementa</b>
+									</p>
+									<p>
+										<b><i>Publicado em 30/04/2026 11:01:41</i></b>
+									</p>
+									<p class="conteudoTexto" style="text-align:justify">
+											EMENTA: DIREITO DO CONSUMIDOR E CIVIL. DUPLO RECURSO DE APELAÇÃO CÍVEL. PLANO DE SAÚDE COLETIVO. FALECIMENTO DO TITULAR. CANCELAMENTO UNILATERAL. MANUTENÇÃO DO DEPENDENTE IDOSO. REMISSÃO. DANOS MORAIS. RECURSOS DESPROVIDOS.I. CASO EM EXAME1. Duplo recurso de apelação interposto contra sentença que julgou procedentes os pedidos de ação de obrigação de fazer cumulada com indenização por danos morais e tutela de urgência. A autora, dependente idosa, buscou a manutenção de seu plano de saúde após o falecimento do titular, seu cônjuge. A sentença confirmou a tutela para restabelecer o plano, condenou as rés à restituição de R$ 92.975,94 referentes a mensalidades adimplidas no período de remissão, e ao pagamento de R$ 6.000,00 a título de danos morais. II. QUESTÃO EM DISCUSSÃO2. As questões em discussão consistem em: (i) saber se a administradora de benefícios possui legitimidade passiva para a demanda; (ii) verificar a legalidade do cancelamento do plano de saúde coletivo da dependente idosa após o falecimento do titular; (iii) analisar o direito à remissão contratual e à restituição dos valores pagos indevidamente; e (iv) aferir a configuração e a quantificação dos danos morais.III. RAZÕES DE DECIDIR3. A administradora de benefícios integra a cadeia de fornecimento de serviços e possui legitimidade passiva (teoria da asserção) e responsabilidade solidária com a operadora do plano de saúde, nos termos do CDC, art. 7º, p.u., e art. 25, §1º.4. A negativa de continuidade do vínculo contratual, após o óbito do titular, viola os princípios da boa-fé objetiva, segurança jurídica, função social do contrato e dignidade da pessoa humana, especialmente em se tratando de consumidor idoso, que se encontra em situação de hipervulnerabilidade.5. A comprovação de que a dependente comunicou o óbito e foi informada do direito à remissão por um ano, por meio de atendimento oficial, vincula o fornecedor, e a posterior negativa e cancelamento unilateral do plano violam a legítima expectativa do consumidor.5. O cancelamento irregular de plano de saúde para dependente idoso e em luto configura <em class="hlt1">dano</em> <em class="hlt1">moral</em>, pois expõe o consumidor a risco à saúde e à vida, violando sua dignidade e segurança.6. O valor de R$ 6.000,00, fixado a título de danos morais, é razoável e proporcional, considerando a gravidade da conduta, a hipervulnerabilidade da vítima e os precedentes jurisprudenciais, atendendo ao caráter pedagógico e compensatório.7. A cobrança de mensalidades durante o período de remissão contratual, previamente reconhecido pela própria fornecedora, é indevida e enseja a restituição dos valores pagos. IV. DISPOSITIVO E TESE8. Recursos conhecidos e desprovidos. Tese de julgamento: ?1. A administradora de plano de saúde coletivo integra a cadeia de fornecimento e possui responsabilidade solidária, nos termos do Código de Defesa do Consumidor. 2. É assegurado ao dependente idoso o direito à manutenção do plano de saúde coletivo por adesão após o falecimento do titular, com a assunção das obrigações decorrentes, em observância aos princípios da boa-fé objetiva e da dignidade da pessoa humana. 3. A conduta de cancelar indevidamente o plano de saúde e negar a remissão previamente informada gera <em class="hlt1">dano</em> <em class="hlt1">moral</em> indenizável e a obrigação de restituir as mensalidades cobradas no período de remissão.? Dispositivos relevantes citados: CDC, art. 7º, p.u.; art. 14; art. 25, § 1º; Lei nº 9.656/1998, art. 1º, I; art. 13, p.u., II; art. 30, § 3º; Lei nº 14.905/2024. Jurisprudências relevantes citadas: STJ, AgInt no AREsp: 2492092 SP; STJ, EREsp 1692594/SP; STJ, REsp n. 1.780.206; STJ, REsp 1810440/SP; STJ, Súmula 362; STJ, Súmula 608; STJ, Súmula Normativa nº 13 da ANS; STJ, Tema Repetitivo 1.082; STJ, Tema 1.059; TJGO, Súmula 32; TJGO, Agravo de Instrumento 5103026-97.2023.8.09.0000; TJGO, Apelação Cível 01982425420158090097; TJGO, Apelação Cível 5294769-12.2023.8.09.0029; TJGO, Apelação Cível 5384595-84.2022.8.09.0158; TJGO, Apelação Cível 5421601-24.2023.8.09.0051.</p>
+									<hr class="hr-dashed-line" />
+										<p style="text-align:justify">
+											<b>3</b><i> resultado(s) encontrado(s) no INTEIRO TEOR.</i>										
+										</p>
+										<p style="text-align:justify">											
+											1)&nbsp;O cancelamento irregular de plano de saúde para dependente idoso e em luto configura <em class="hlt1">dano</em> <em class="hlt1">moral</em>, pois&nbsp;
+											2)&nbsp;A conduta de cancelar indevidamente o plano de saúde e negar a remissão previamente informada gera <em class="hlt1">dano</em>&nbsp;
+											3)&nbsp;<em class="hlt1">moral</em> indenizável e a obrigação de restituir as mensalidades cobradas no período de remissão.?&nbsp;
+											</p>
+									</div>		
+								<hr class="hr-dashed-white-line" />																				
+							<div class="search-result"> <!-- #eaf1fb -->									
+
+										<h4>
+											6005667-03.2025.8.09.0149<span style="margin-left: 10px">												
+												<a href="#" title="Clique aqui para fazer o download do arquivo completo" 
+													onclick="javascript: abrirArquivo('ConsultaJurisprudencia', '520182330'); return false;">
+													<i class="fa fa-download"></i>
+														Baixar Inteiro teor
+												</a>
+											</span>
+											<span style="margin-left: 10px">
+												<a href="#" title="Copiar texto sem formatação" onclick="copiarConteudoTexto(this.parentNode.parentNode.parentNode,'.conteudoTexto','\n(Tribunal de Justiça do Estado de Goiás, PROCESSO CRIMINAL -> Recursos -> Apelação Criminal, 6005667-03.2025.8.09.0149, DESEMBARGADOR EDISON MIGUEL DA SILVA JUNIOR - (DESEMBARGADOR), 2ª Câmara Criminal, julgado em 30/04/2026 11:00:54)'); alert('Texto sem formatação foi copiado para a Área de Transferência.'); return false;">
+													<i class="fa fa-clipboard"></i>
+													Copiar
+												</a>
+											</span>
+										</h4>
+
+									<p>
+										<b>2ª Câmara Criminal</b>
+									</p>
+									<p>
+										<b><i>DESEMBARGADOR EDISON MIGUEL DA SILVA JUNIOR - (DESEMBARGADOR)</i></b>
+									</p>
+									<p>
+										<b>Ementa</b>
+									</p>
+									<p>
+										<b><i>Publicado em 30/04/2026 11:00:54</i></b>
+									</p>
+									<p class="conteudoTexto" style="text-align:justify">
+											DIREITO PENAL. APELAÇÃO CRIMINAL. LESÃO CORPORAL. VIOLÊNCIA DOMÉSTICA. LEGÍTIMA DEFESA. DOSIMETRIA DA PENA. REGIME PRISIONAL. REPARAÇÃO DE DANOS. PARCIAL PROVIMENTO.I. CASO EM EXAME1. Trata-se de apelação criminal interposta por Sérgio Augusto Mendanha Nunes contra a condenação pela prática do crime de lesão corporal em contexto de violência doméstica (art. 129, § 13º, do Código Penal), à pena de 2 anos e 5 meses de reclusão, em regime inicial fechado, e pagamento de R$ 2.000,00 para reparação de danos. O apelante busca a absolvição por insuficiência de provas ou legítima defesa, o redimensionamento da pena-base, a compensação integral entre a atenuante da confissão e a agravante da reincidência, a alteração do regime para o semiaberto, a exclusão ou redução do valor mínimo para reparação de danos, e o direito de recorrer em liberdade.II. QUESTÃO EM DISCUSSÃO2. A questão em discussão consiste em: (i) saber se há insuficiência de provas ou se aplica a excludente de ilicitude da legítima defesa para absolver o apelante; (ii) verificar se a pena-base deve ser redimensionada; (iii) analisar se é cabível a compensação integral entre a atenuante da confissão e a agravante da reincidência; (iv) aferir a adequação do regime de cumprimento de pena; (v) examinar a manutenção da prisão preventiva para o direito de recorrer em liberdade; e (vi) discutir a exclusão ou redução do valor mínimo fixado para reparação de danos.III. RAZÕES DE DECIDIR3. Em delitos de violência doméstica, a palavra da vítima, quando firme e coerente com os demais elementos probatórios, como laudo médico e depoimentos policiais, possui especial relevo probatório, sendo apta a sustentar a condenação.4. A legítima defesa não se configura quando as lesões causadas revelam manifesta desproporcionalidade entre eventual agressão e a resposta empregada, afastando o requisito da moderação dos meios.5. A fixação da pena-base com aumento de 3 meses para uma circunstância judicial negativa (antecedentes criminais) é proporcional e adequada ao caso.6. A multirreincidência do réu, comprovada por três condenações definitivas anteriores, justifica a preponderância da agravante da reincidência sobre a atenuante da confissão espontânea, permitindo apenas a compensação parcial, conforme entendimento do STJ (Tema Repetitivo 585).7. O regime de cumprimento da pena deve ser alterado para o semiaberto quando a reprimenda definitiva de reclusão for superior a 2 anos e não exceder a 4 anos para réu reincidente, se as circunstâncias judiciais não justificarem regime mais gravoso, nos termos do art. 33, § 2º, 'b' e 'c', do CP.8. A manutenção da prisão preventiva é cabível, mesmo com a fixação de regime inicial semiaberto, quando há justificação pela gravidade concreta do delito em contexto de violência doméstica e pela periculosidade evidenciada pela reincidência do réu, para garantia da ordem pública.9. A fixação de valor mínimo reparatório a título de <em class="hlt1">dano</em> <em class="hlt1">moral</em> é possível em casos de violência doméstica, desde que haja pedido expresso da acusação, pois a prática delitiva implica <em class="hlt1">dano</em> <em class="hlt1">moral</em> in re ipsa, e o valor de R$ 2.000,00 se mostra proporcional e razoável.IV. DISPOSITIVO E TESE10. Recurso parcialmente provido.Tese de julgamento: ?1. A palavra da vítima em crimes de violência doméstica e familiar, corroborada por laudo médico e depoimentos policiais, é prova suficiente para fundamentar a condenação. 2. A legítima defesa não se configura diante da ausência de agressão injusta e da desproporcionalidade na resposta à suposta agressão. 3. Em casos de multirreincidência, a agravante da reincidência prevalece sobre a atenuante da confissão espontânea, autorizando apenas a compensação parcial das circunstâncias. 4. O regime inicial semiaberto é cabível para reincidente condenado à pena de reclusão superior a dois anos e inferior a quatro anos, quando as circunstâncias judiciais não recomendarem regime mais gravoso. 5. A fixação de valor mínimo para reparação por <em class="hlt1">dano</em> <em class="hlt1">moral</em> em violência doméstica é devida, mediante pedido expresso, configurando <em class="hlt1">dano</em> in re ipsa, e o valor arbitrado deve observar a proporcionalidade e razoabilidade. 6. A manutenção da prisão preventiva pode ser justificada pela gravidade concreta do delito e pela periculosidade do réu, mesmo com a fixação de regime prisional semiaberto.Dispositivos relevantes citados: CP, art. 25; CP, art. 33, § 2º, CP, art. 129, § 13º; Lei nº 11.340/2006Jurisprudências relevantes citadas: STJ, AgRg no REsp n. 1.626.962/MS; STJ, HC n. 1.057.887/SP; STJ, Recurso Especial Repetitivo n.º 1.675.874/MS; STJ, Tema Repetitivo 585 (REsp n. 1.931.145/SP).</p>
+									<hr class="hr-dashed-line" />
+										<p style="text-align:justify">
+											<b>4</b><i> resultado(s) encontrado(s) no INTEIRO TEOR.</i>										
+										</p>
+										<p style="text-align:justify">											
+											1)&nbsp;A fixação de valor mínimo reparatório a título de <em class="hlt1">dano</em> <em class="hlt1">moral</em> é possível em casos de violência doméstica&nbsp;
+											2)&nbsp;, desde que haja pedido expresso da acusação, pois a prática delitiva implica <em class="hlt1">dano</em> <em class="hlt1">moral</em> in re ipsa,&nbsp;
+											3)&nbsp;A fixação de valor mínimo para reparação por <em class="hlt1">dano</em> <em class="hlt1">moral</em> em violência doméstica é devida, mediante pedido&nbsp;
+											4)&nbsp;expresso, configurando <em class="hlt1">dano</em> in re ipsa, e o valor arbitrado deve observar a proporcionalidade e razoabilidade&nbsp;
+											</p>
+									</div>		
+								<hr class="hr-dashed-white-line" />																				
+							<div class="search-result"> <!-- #eaf1fb -->									
+
+										<h4>
+											5798117-60.2025.8.09.0174<span style="margin-left: 10px">												
+												<a href="#" title="Clique aqui para fazer o download do arquivo completo" 
+													onclick="javascript: abrirArquivo('ConsultaJurisprudencia', '522321106'); return false;">
+													<i class="fa fa-download"></i>
+														Baixar Inteiro teor
+												</a>
+											</span>
+											<span style="margin-left: 10px">
+												<a href="#" title="Copiar texto sem formatação" onclick="copiarConteudoTexto(this.parentNode.parentNode.parentNode,'.conteudoTexto','\n(Tribunal de Justiça do Estado de Goiás, PROCESSO CÍVEL E DO TRABALHO -> Recursos -> Apelação Cível, 5798117-60.2025.8.09.0174, VICENTE LOPES DA ROCHA JÚNIOR - (DESEMBARGADOR), 2ª Câmara Cível, julgado em 30/04/2026 11:00:46)'); alert('Texto sem formatação foi copiado para a Área de Transferência.'); return false;">
+													<i class="fa fa-clipboard"></i>
+													Copiar
+												</a>
+											</span>
+										</h4>
+
+									<p>
+										<b>2ª Câmara Cível</b>
+									</p>
+									<p>
+										<b><i>VICENTE LOPES DA ROCHA JÚNIOR - (DESEMBARGADOR)</i></b>
+									</p>
+									<p>
+										<b>Relatório</b>
+									</p>
+									<p>
+										<b><i>Publicado em 30/04/2026 11:00:46</i></b>
+									</p>
+									<p class="conteudoTexto" style="text-align:justify">
+											PODER JUDICIÁRIOTribunal de Justiça do Estado de GoiásGabinete do Desembargador Vicente Lopes2° Câmara Cívelgab.vicentelopes@tjgo.jus.br / 3216-2075AGRAVO INTERNO NA APELAÇÃO CÍVEL N. 5798117-60.2025.8.09.01742ª CÂMARA CÍVELCOMARCA DE SENADOR CANEDOAGRAVANTE: DAIANA ALVES MACHADO MONTENEGRO BARBOSAAGRAVADO: PAGUEVELOZ INSTITUIÇÃO DE PAGAMENTO LTDA.RELATOR: DESEMBARGADOR VICENTE LOPES RELATÓRIO Trata-se de Agravo Interno (mov. 68) interposto por DAIANA ALVES MACHADO MONTENEGRO BARBOSA contra decisão monocrática (mov. 63) que deu provimento ao seu recurso de apelação cível, nos autos da ação declaratória de inexistência de relação jurídica c/c indenização por danos morais, ajuizada em desfavor do PAGUEVELOZ INSTITUIÇÃO DE PAGAMENTO LTDA., ora agravado. A decisão agravada (mov. 63) deu provimento ao recurso de apelação do requerido, nos seguintes termos: EMENTA: DIREITO DO CONSUMIDOR. APELAÇÃO CÍVEL. AÇÃO DECLARATÓRIA DE INEXISTÊNCIA DE RELAÇÃO JURÍDICA C/C INDENIZAÇÃO POR DANOS MORAIS. CONTA DE PAGAMENTO PRÉ-PAGA. PLATAFORMA SERASA LIMPA NOME. ACEITE ELETRÔNICO AOS TERMOS DE USO. CONSENTIMENTO VÁLIDO DEMONSTRADO. AUSÊNCIA DE <em class="hlt1">DANO</em> <em class="hlt1">MORAL</em> INDENIZÁVEL. RECURSO CONHECIDO E PROVIDO.(?)Diante do exposto, a sentença recorrida merece reforma integral, por ter concluído pela insuficiência probatória sem considerar adequadamente a natureza da conta de pagamento pré-paga, a regularidade do aceite eletrônico aos Termos de Uso e a ausência de qualquer repercussão negativa concreta sobre os direitos da apelada. Ante o exposto, conheço do recurso e dou-lhe provimento, para reformar a sentença recorrida e julgar improcedentes os pedidos formulados na inicial. Invertendo os ônus sucumbenciais, com a condenação da apelada ao pagamento das custas processuais e dos honorários advocatícios, fixados em 10% (dez por cento) sobre o valor atualizado da causa, nos termos do art. 85, §2º, do CPC, suspensa a exigibilidade em razão da gratuidade deferida. Nas razões recursais (mov. 68), a agravante sustenta, em síntese, que o julgamento monocrático seria inadequado por envolver análise probatória aprofundada e controvérsia não pacificada; que o consentimento eletrônico atribuído à consumidora careceria de elementos técnicos de autenticação, tais como logs de acesso, endereço de IP e mecanismos de identificação segura; que o mero aceite genérico a termos de uso de plataforma de terceiro não autoriza a criação automática de vínculo contratual com a apelada; que houve violação ao dever de informação e à boa-fé objetiva; e que a abertura indevida de conta, ainda que sem negativação, configura <em class="hlt1">dano</em> <em class="hlt1">moral</em> indenizável pela violação à esfera jurídica da consumidora e pela exposição a riscos de fraude. Requer, assim, o conhecimento e provimento do agravo interno, com a reconsideração da decisão monocrática e o restabelecimento da sentença de primeiro grau. Sem preparo, visto o autor litigar com gratuidade da justiça. Contrarrazões do agravado (mov. 75) impugnando os termos do recurso e requerendo o seu desprovimento. É o sucinto relatório. Por fim, solicito inclusão em pauta para julgamento. Goiânia, datado e assinado digitalmente. Desembargador Vicente LopesRelator</p>
+									<hr class="hr-dashed-line" />
+										<p style="text-align:justify">
+											<b>3</b><i> resultado(s) encontrado(s) no INTEIRO TEOR.</i>										
+										</p>
+										<p style="text-align:justify">											
+											1)&nbsp;AUSÊNCIA DE <em class="hlt1">DANO</em> <em class="hlt1">MORAL</em> INDENIZÁVEL.&nbsp;
+											2)&nbsp;informação e à boa-fé objetiva; e que a abertura indevida de conta, ainda que sem negativação, configura <em class="hlt1">dano</em>&nbsp;
+											3)&nbsp;<em class="hlt1">moral</em> indenizável pela violação à esfera jurídica da consumidora e pela exposição a riscos de fraude&nbsp;
+											</p>
+									</div>		
+								<hr class="hr-dashed-white-line" />																				
+							<div class="search-result"> <!-- #eaf1fb -->									
+
+										<h4>
+											5953175-34.2025.8.09.0149<span style="margin-left: 10px">												
+												<a href="#" title="Clique aqui para fazer o download do arquivo completo" 
+													onclick="javascript: abrirArquivo('ConsultaJurisprudencia', '520181530'); return false;">
+													<i class="fa fa-download"></i>
+														Baixar Inteiro teor
+												</a>
+											</span>
+											<span style="margin-left: 10px">
+												<a href="#" title="Copiar texto sem formatação" onclick="copiarConteudoTexto(this.parentNode.parentNode.parentNode,'.conteudoTexto','\n(Tribunal de Justiça do Estado de Goiás, PROCESSO CRIMINAL -> Recursos -> Apelação Criminal, 5953175-34.2025.8.09.0149, DESEMBARGADOR EDISON MIGUEL DA SILVA JUNIOR - (DESEMBARGADOR), 2ª Câmara Criminal, julgado em 30/04/2026 10:59:26)'); alert('Texto sem formatação foi copiado para a Área de Transferência.'); return false;">
+													<i class="fa fa-clipboard"></i>
+													Copiar
+												</a>
+											</span>
+										</h4>
+
+									<p>
+										<b>2ª Câmara Criminal</b>
+									</p>
+									<p>
+										<b><i>DESEMBARGADOR EDISON MIGUEL DA SILVA JUNIOR - (DESEMBARGADOR)</i></b>
+									</p>
+									<p>
+										<b>Ementa</b>
+									</p>
+									<p>
+										<b><i>Publicado em 30/04/2026 10:59:26</i></b>
+									</p>
+									<p class="conteudoTexto" style="text-align:justify">
+											DIREITO PENAL E PROCESSO PENAL. APELAÇÃO CRIMINAL. VIOLÊNCIA DOMÉSTICA. LESÃO CORPORAL. DOSIMETRIA DA PENA. VALOR MÍNIMO PARA REPARAÇÃO DE DANOS. PENA REDUZIDA. RECURSO PROVIDO EM PARTE.I. CASO EM EXAME1. Trata-se de apelação criminal interposta contra sentença que condenou um apelante por violência doméstica, à pena de 3 anos e 2 meses de reclusão, em regime inicial fechado, mais o valor mínimo para reparação de danos de R$ 2.000,00. O apelante requereu redução da pena aplicada, modificação do regime prisional e afastamento ou redução do valor mínimo fixado para reparação de danos.II. QUESTÃO EM DISCUSSÃO2. A questão em discussão consiste em saber se a dosimetria da pena, especificamente a valoração da culpabilidade e dos antecedentes, a compensação da atenuante da confissão com a agravante da reincidência, e a fixação do regime prisional, bem como o valor mínimo para reparação de danos, foram aplicados corretamente.III. RAZÕES DE DECIDIR3. A culpabilidade, para fins do art. 59 do CP, deve ser compreendida como juízo de reprovabilidade da conduta, e sua negativação exige fatos remanescentes de maior reprovabilidade, não bastando a consciência da ilicitude.4. A existência de apenas uma condenação transitada em julgado impede a negativação dos antecedentes na primeira fase da dosimetria, devendo tal condenação ser utilizada na segunda fase (reincidência).5. A agressão na cabeça da vítima justifica a negativação das circunstâncias do crime, evidenciando maior reprovabilidade da conduta.6. Conforme entendimento da jurisprudência superior, a reincidência, não sendo múltiplas condenações transitadas em julgado, deve ser integralmente compensada com a atenuante da confissão, não se aplicando maior desvalor à conduta do réu que ostente outra condenação pelo mesmo delito.7. O regime inicial fechado é adequado para o réu reincidente.8. A prática de violência doméstica contra a mulher implica <em class="hlt1">dano</em> <em class="hlt1">moral</em> in re ipsa, sendo desnecessária a comprovação efetiva do <em class="hlt1">dano</em> para a fixação de valor mínimo indenizatório.9. Pena redimensionada: 2 anos e 3 meses de reclusão, regime inicial fechado (reincidência).IV. DISPOSITIVO E TESE10. Recurso provido em parte.Teses de julgamento: "1. A negativação da culpabilidade e dos antecedentes na primeira fase da dosimetria da pena requer fundamentação concreta que demonstre maior reprovabilidade ou condenações transitadas em julgado além daquela utilizada para reincidência.""2. A reincidência, não sendo multirreincidência, deve ser integralmente compensada com a atenuante da confissão espontânea, conforme o Tema 585 do STJ.""3. O <em class="hlt1">dano</em> <em class="hlt1">moral</em> decorrente de violência doméstica contra a mulher é in re ipsa, justificando a fixação de valor mínimo para reparação de danos nos termos do CPP, art. 387, IV."Dispositivos relevantes citados: CP, art. 129, § 13º; arts. 147, § 1º; 69; 59; 61, I; 33, § 3º, ?b?; CPP, art. 387, IV; L. 11.340/2006.Jurisprudências relevantes citadas: STJ, AgRg no HC 557418 / MS; EDcl no HC 815214 / SP; REsp n. 1.931.145/SP, Tema 585, AgRg no AgRg no HC 696628 / MS.</p>
+									<hr class="hr-dashed-line" />
+										<p style="text-align:justify">
+											<b>3</b><i> resultado(s) encontrado(s) no INTEIRO TEOR.</i>										
+										</p>
+										<p style="text-align:justify">											
+											1)&nbsp;A prática de violência doméstica contra a mulher implica <em class="hlt1">dano</em> <em class="hlt1">moral</em> in re ipsa, sendo desnecessária a&nbsp;
+											2)&nbsp;comprovação efetiva do <em class="hlt1">dano</em> para a fixação de valor mínimo indenizatório.9.&nbsp;
+											3)&nbsp;O <em class="hlt1">dano</em> <em class="hlt1">moral</em> decorrente de violência doméstica contra a mulher é in re ipsa, justificando a fixação de&nbsp;
+											</p>
+									</div>		
+								<hr class="hr-dashed-white-line" />																				
+							</fieldset>
+						<div id="Paginacao" class="Paginacao" style="float: center">
+								<div id="Paginacao" class="Paginacao">
+									<b>Página</b>
+									<b>| 1  |</b>
+										 	<a href="#" onclick="javascript:submitForm(1);">2</a>
+										 	<a href="#" onclick="javascript:submitForm(2);">3</a>
+										 	<a href="#" onclick="javascript:submitForm(3);">4</a>
+										 	<a href="#" onclick="javascript:submitForm(4);">5</a>
+										 	<a href="#" onclick="javascript:submitForm(5);">6</a>
+										 	<a href="#" onclick="javascript:submitForm(6);">7</a>
+										 	<a href="#" onclick="javascript:submitForm(7);">8</a>
+										 	<a href="#" onclick="javascript:submitForm(8);">9</a>
+										 	<a href="#" onclick="javascript:submitForm(9);">10</a>
+										 	<a href="#" onclick="javascript:submitForm(10);">11</a>
+										 	<a href="#" onclick="javascript:submitForm(11);">12</a>
+										 	<a href="#" onclick="javascript:submitForm(12);">13</a>
+										 	<a href="#" onclick="javascript:submitForm(13);">14</a>
+										 	<a href="#" onclick="javascript:submitForm(14);">15</a>
+										 	<a href="#" onclick="javascript:submitForm(127323);">Última</a>
+									<input id="CaixaTextoPosicionar" name="CaixaTextoPosicionar" class="CaixaTextoPosicionar" type="text" size="5" maxlength="10" value="127324"/>
+									<input class="BotaoIr" type="button" value="Ir" onclick="javascript:IrParaOnClick();"/>
+								</div>
+							</div>
+						</div>
+				</form>			
+		</div>
+	</div>
+	<div id="dialog" style="display:none">&nbsp;</div>
+	
+<div id="busca_padrao" class="modalBusca">
+	<div id='modalBusca-content' class="modalBusca-content1 ___Movimentavel">
+		<div id='modalBusca-content-titulo' class="modalTitulo"><p id='modalTitulo'></p><span class="modal_close" onclick='fecharBuscaPadrao()'>&times;</span></div> 
+		<div class="modalBusca-content2">
+			<fieldset id="formLocalizar" > 
+				<legend id="legenda" ></legend>
+				<div class='float_label_form' id='busca_padrao_campos'></div>
+				<br />
+				<div class="Centralizado">
+					<input type="submit" id="busca_padraoLocalizar" name="busca_padraoLocalizar" value="Consultar" onclick="javascript:buscaDadosModal(_stTempRetorno, _paginaAtual, _numeroFiltros , '0', _tamanho, _id, _descricao, _colunasTabela, _fieldName,_filtro,_filtro2); return false;"/>
+				</div>
+			</fieldset>	
+			<div id='divTabelaBuscaPadrao' class="divTabela"></div>
+			<div id="PaginacaoBuscaPadrao" class="Paginacao"></div>
+		</div>
+	</div> 
+</div>
+
+<div id="infoPasso" style="display:none" class="modalBusca">
+	<div class="modalBusca-content1 ___Movimentavel">
+		<div class="modalTitulo"><p id='modalTitulo'></p><span class="modal_close" onclick='$("#infoPasso").hide();'>&times;</span></div> 
+		<div class="modalBusca-content2">
+			<div id="divInfoPasso" class="divEditar"> 
+				
+			</div>
+		</div>
+	</div> 
+</div>
+
+<div id="infoFoto" style="display:none" class="modalBusca">
+	<div class="modalBusca-content1 ___Movimentavel">
+		<div class="modalTitulo"><p id='modalTitulo'></p><span class="modal_close" onclick='$("#infoFoto").hide();'>&times;</span></div> 
+		<div class="modalBusca-content2">
+			<div id="divInfoPasso" class="divEditar Centralizado"> 
+				<img id='img_infoFoto'>
+			</div>
+		</div>
+	</div> 
+</div>
+
+<div id="infoFormulario" style="display:none" class="modalBusca">
+	<div class="modalBusca-content1 ___Movimentavel">
+		<div class="modalTitulo"><p id='modalTitulo'></p><span class="modal_close" onclick='$("#infoFormulario").hide();'>&times;</span></div> 
+		<div class="modalBusca-content2">
+			<div id="divinfoFormulario" class="divEditar Centralizado"> 				
+			</div>
+		</div>
+	</div> 
+</div>
+
+<div id="divPortaTabela" style="display:none" class="divPortaTabela ___Movimentavel">
+	<div class="divPortaTabelaTitulo"><p id='divPortaTabelaTitulo'></p><span class="modal_close" onclick='$("#divPortaTabela").hide();'>&times;</span></div>
+	<div class='tableview'> 
+		<div id="divPortaTabelaConteudo" class="Centralizado divPortaTabelaConteudo tableview-holder"> 
+		
+		</div>
+	</div>
+</div> 
+
+<input type="text" style="display:none">
+<input type="password" style="display:none">
+<div id='divLerSenha'  class='divFundoEscuro' style = "display:none">
+	<div id='divPortaSenha' class='divCentroTela' >
+		<h1>Digite a senha do certificado digital</h1>
+		<hr/>
+		<input type='password' name='senhaCertificado' id='senhaCertificado' autocomplete='off' ><br />
+		<div  style="text-align: left;">
+			<input type="checkbox" name='salvarSenhaCertificado' id='salvarSenhaCertificado' >Memorizar a senha do certificado
+		</div>
+		<hr/>
+		<div id="divBotoesCentralizadosAssinador" style="text-align: right; margin-top: 8px;">
+			<button id='but_senhaDigita' type="button">
+				Assinar
+	 		</button>
+	 		<button id='but_cancelar' type="button" onclick="javascript:$('#divLerSenha').hide(); $('#senhaCertificado').val(''); return false;">
+				Cancelar
+	 		</button>
+	 	</div>		
+	</div>
+</div>
+ 
+<script type="text/javascript" src="./js/fonte_contraste.js"></script>    
+<script type="text/javascript" >
+  
+	var _stTempRetorno;
+	var _boMostrarExcluir;
+	var _paginaAtual;
+	var _nomeBusca;
+	var _tamanhoRetornoConsulta;	
+	var _numeroFiltros;
+	var _tamanho;
+	var _id;
+	var _descricao;
+	var _colunasTabela;
+	var _fieldName;
+	var _filtro;
+	var _filtro2;
+	
+	var mousePosition;
+	var offset = [0,0];	
+	var isDown = false;
+	
+		
+	function acionarBotao(event,id_botao){
+		if (event.keyCode==13){
+			$("#" + id_botao ).trigger('click');
+		}
+	}
+
+	function fecharBuscaPadrao() {
+		$("#busca_padrao").hide();
+		$("#busca_padrao_campos").html('');
+	}
+	
+	function MostrarBuscaPadrao(field, ct, titulo, legenda, id, descricao, campos, colunasTabela, paginaAtual, tamanhoConsulta, filtro, filtro2, params){
+
+		_paginaAtual = paginaAtual;
+		_numeroFiltros = campos.length;
+		_tamanho = tamanhoConsulta;
+		_stTempRetorno = ct;
+		_descricao = descricao;
+		_colunasTabela=colunasTabela;
+		_filtro=$("#" + field + " #"+ filtro).val();
+		_filtro2=$("#" + field + " #"+ filtro2).val();
+
+        _filtro = ['null', 'undefined', '', null, undefined].includes(_filtro) ? '' : _filtro;
+        _filtro2 = ['null', 'undefined', '', null, undefined].includes(_filtro2) ? '' : _filtro2;
+
+		$("#modalTitulo").html(titulo) ;
+		$("#legenda").html(legenda);		
+		
+		var descricaoCabecalho = _descricao;
+		var st_campos ="";
+		var stTabela = "";		
+
+		if (params) {
+			if (params['cabecalhoDescricao']) {
+				descricaoCabecalho = params['cabecalhoDescricao'];
+			}
+		}
+		
+		for (var i = 0; i < campos.length; i++) {
+			st_campos += '<div class="col90 float_label">';			
+			st_campos += '<input id="nomeBusca'+(i+1)+'" class="float_label_input" onkeypress="acionarBotao(event,\'busca_padraoLocalizar\');" placeholder="'+campos[i]+'" name="nomeBusca'+(i+1)+'" value="" type="text">';
+			st_campos += '<label for="nomeBusca'+(i+1)+'">'+campos[i]+'</label>'; 
+			st_campos += '</div>';
+		}
+		
+		if (_id!=id || field!=_fieldName){
+			_id = id;
+			_fieldName= field;
+			stTabela += '	<table id="tabelaLocalizar" class="Tabela">';
+			stTabela += '		<thead>';
+			stTabela += '			<tr>';
+			stTabela += '				<th align="Center" style="width: 50px;"></th>';
+			if (descricaoCabecalho === 'FontePagadora') {
+				stTabela += '				<th align="Center" style="width: 120px;">CNPJ</th>';
+				stTabela += '				<th align="left">Fonte Pagadora</th>';
+			} else {
+				stTabela += '				<th align="Center" style="width: 120px;">Id</th>';
+				stTabela += '				<th align="left">'+descricaoCabecalho+'</th>';
+			}
+			for (var i = 0; i < colunasTabela.length; i++) {
+				stTabela += '			<th align="left">'+ colunasTabela[i] +'</th>';
+			}
+			//stTabela += '				<th class="colunaMinima" title="Seleciona o registro para edição">Selecionar</th>';	
+			stTabela += '			</tr>';
+			stTabela += '		</thead>';
+			stTabela += '		<tbody id="CorpoTabela">&nbsp;</tbody>';
+			stTabela += '	</table>';	  		
+			$("#divTabelaBuscaPadrao").html(stTabela) ;
+			$("#PaginacaoBuscaPadrao").html("") ;
+		}
+		
+		$("#busca_padrao_campos").html(st_campos) ;
+		$("#busca_padrao").show();
+		/*$("#busca_padrao").css({'visibility':'visible','opacity':'1'});*/
+		//var doc = document.documentElement.clientHeight ? document.documentElement : document.body;
+// 		var posicao   = ((this.height() - $("#modalBusca-content1").outerHeight()) / 2) + "px";
+// 		alert(posicao);
+// 		alert(this.top + " " + this.left);
+		
+		//posição do objeto na tela
+// 		event = event || window.event;
+// 		var source = event.target || event.srcElement;
+		 				
+// 		var topRelativo = (($(document).height() - $("#modalBusca-content").height() )/2) - ($("#modalBusca-content").height() /3);
+		
+// 		//$("#modalBusca-content").css({'top':topRelativo});
+// 		var posicaoY = source.y || source.offsetTop; 														
+// 		//var posicaoX = source.x || source.offsetLeft;
+		
+//  		if(posicaoY>120){
+//  			$("#modalBusca-content").css({'top':posicaoY-100}); 			
+//  		}else{
+//  			$("#modalBusca-content").css({'top':posicaoY});
+//  		}
+		//var leftRelativo = ($(document).width() - $("#modalBusca-content").width() )/2;
+		
+		//$("#modalBusca-content").css({'left':leftRelativo});
+		
+	}
+		
+	
+	//window.toggleContrast=function(){Contrast.toogle()};
+	
+	window.addEventListener("keydown", function(event ){parent.postMessage({'origem':'corpo','comando':'keydown','key':event.key,'keycode':event.keyCode}); });
+	window.addEventListener("keyup", function(event ){parent.postMessage({'origem':'corpo','comando':'keyup','key':event.key,'keycode':event.keyCode}); });
+		
+	//guardo aqui as teclas apertadas e não soltadas
+	var mapTeclas = new Map();
+	
+	function teclaApertada ( codigo){
+		mapTeclas.set(codigo, true);
+		//console.log(codigo + '  1');
+		//ativar menu quando apertar ctrl+alt+m
+		// ctrl =17    alt = 18    m = 77  shift = 16 173 = menos  61 = mais 67 = c  89 = y
+		if(mapTeclas.get(17) && mapTeclas.get(18) && mapTeclas.get(77) ){
+			
+			//console.log($('#menu > #0'));
+			$('#0').show();
+			$('#0').focus();
+		}else if(mapTeclas.get(17) && mapTeclas.get(18) && mapTeclas.get(173) ){
+			$("#FonteDiminuir").trigger('click');
+			//fonte('d');
+		}else if(mapTeclas.get(17) && mapTeclas.get(18) && mapTeclas.get(61) ){
+			$("#FonteAumentar").trigger('click');
+			//fonte('a');
+		}else if(mapTeclas.get(17) && mapTeclas.get(18) && mapTeclas.get(89) ){
+			$("#ContrasteAlterar").trigger('click');
+			//window.toggle();
+		}
+	}
+	
+	function teclaLiberada (codigo){
+		//mapTeclas.clear();
+		mapTeclas.delete(codigo);
+	}
+	
+	var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+	var eventer = window[eventMethod];
+	var messageEvent = eventMethod == "attachEvent" ? "onmessage" : "message";
+	
+	// Listen to message from child window
+	eventer(messageEvent,function(event) {
+		 if (!event.origin.includes( "localhost:8080") && !event.origin.includes("projudi.tjgo.jus.br") && !event.origin.includes("projudi-teste.tjgo.jus.br") ){
+			  return;
+		  }
+		  
+		  var origem = event.data.origem;
+		  if(origem=='corpo'){				
+				if(event.data.comando){
+					//console.log("header " + event.data.comando + " " + event.data.key + " " +  event.data.keycode  );										
+				    									    
+					if ( event.data.comando=="keydown"){						
+						teclaApertada(event.data.keycode);
+					}else if (event.data.comando=="keyup"){
+						teclaLiberada(event.data.keycode);
+					}					
+				}
+		  }else if(origem=='menu'){
+			 //var stComando = ; 
+			 //alert(stComando);
+			 
+			 //alert(window[toogle];
+			  var comando = window[event.data.comando];
+			  //alert(comando);
+			  if(comando){
+			  	//console.log("body " + event.data.comando);
+			    comando();
+			   	//window.Contrast[event.data.comando]();
+			  }
+		  }				  
+	});	
+  
+	function infoPasso( id_form, id, titulo){
+		var campos = $('table#tb_'+id_form+ ' tr#tr_'+ id ).attr("campos");
+		var obJson = JSON.parse(campos);
+		//console.log(campos);
+		var ids = Object.keys(obJson);
+		var valores = Object.values(obJson);
+		var stFormulario ='<fieldset class="formEdicao">'
+		stFormulario+='<legend class="formEdicaoLegenda">'+titulo+'</legend>';
+		for(var i=0; i<ids.length;i++){
+			if (Array.isArray(valores[i])){
+				var stValor = JSON.stringify(valores[i]);
+				stFormulario+='<div class="col100"><label class="formEdicaoLabel">' + ids[i] + '</label> <Text rows="6" cols="150" class="formEdicaoInputSomenteLeitura" readonly="true">' + stValor + '</Text></div>';
+			}else{
+				var tamanhoColuna= 15;
+				var qtdCaracteresColl = ids[i].length;
+				if (valores[i].length>ids[i].length){
+					qtdCaracteresColl= valores[i].length;
+				}
+				if( qtdCaracteresColl<=10){									tamanhoColuna = 10;}
+				else if( qtdCaracteresColl>10 && qtdCaracteresColl<=20){	tamanhoColuna = 15; }
+				else if( qtdCaracteresColl>20 && qtdCaracteresColl<=30){	tamanhoColuna = 20; }
+				else if( qtdCaracteresColl>30 && qtdCaracteresColl<=40){	tamanhoColuna = 25; }
+				else if( qtdCaracteresColl>40 && qtdCaracteresColl<=50){	tamanhoColuna = 30; }
+				else if( qtdCaracteresColl>50 && qtdCaracteresColl<=60){	tamanhoColuna = 35; }
+				else if( qtdCaracteresColl>60 && qtdCaracteresColl<=70){	tamanhoColuna = 40; }
+				else if( qtdCaracteresColl>70 && qtdCaracteresColl<=80){	tamanhoColuna = 45; }
+				else if( qtdCaracteresColl>80 && qtdCaracteresColl<=90){	tamanhoColuna = 50 }
+				else if( qtdCaracteresColl>90 && qtdCaracteresColl<=100){	tamanhoColuna = 55; }
+				else if( qtdCaracteresColl>100 && qtdCaracteresColl<=110){	tamanhoColuna = 60; }
+				else if( qtdCaracteresColl>110 && qtdCaracteresColl<=120){	tamanhoColuna = 65; }
+				else if( qtdCaracteresColl>120 && qtdCaracteresColl<=130){	tamanhoColuna = 70; }
+				else if( qtdCaracteresColl>130 && qtdCaracteresColl<=140){	tamanhoColuna = 75; }
+				else if( qtdCaracteresColl>140 && qtdCaracteresColl<=150){	tamanhoColuna = 80; }
+				else if( qtdCaracteresColl>150 && qtdCaracteresColl<=160){	tamanhoColuna = 85; }
+				else if( qtdCaracteresColl>160 && qtdCaracteresColl<=170){	tamanhoColuna = 90; }
+				else if( qtdCaracteresColl>170){							tamanhoColuna = 100; }
+				
+				stFormulario+='<div class="col' + tamanhoColuna + '"><label>' + ids[i] + '</label> <input class="formEdicaoInputSomenteLeitura" type="text" readonly="true" size="' + valores[i].length + '" value="' + valores[i] + '"/></div>';
+			}
+		}
+		$('div#divInfoPasso').html(stFormulario);
+		$("#infoPasso").show();
+	}
+	function infoFoto(id){		
+		$('img#img_infoFoto').attr('src', $('img#foto'+id).attr('src'));
+		$("#infoFoto").show();
+	}
+	
+	$(document).ready(function() {
+		
+		var mensagemErro = '';		 
+		var mensagemOk = '';
+		var titulo ='Processo Judicial';						
+		var availableTags;
+		
+// 		$( function() {
+// 		   $( ".___Movimentavel" ).draggable();
+// 		});
+		  
+		if (((mensagemErro!='') && (mensagemErro!='null')) || ((mensagemOk!='') && (mensagemOk!='null'))){
+			
+			if ((mensagemErro!='') && (mensagemErro!='null')) {
+				//titulo+=" Erro";
+				mostrarMensagemErro(titulo, mensagemErro);												
+			}else{
+				//titulo+=" Ok";					
+				mostrarMensagemOk(titulo, mensagemOk);
+			}
+			
+			$('#divCorpo').focus();	
+						
+			$('html, body',window.parent.document).animate({scrollTop:0}, 'slow');
+		}
+		
+		
+		
+		window.Contrast.check();
+		
+    }); 
+</script>
+
+	</body>
+</html>

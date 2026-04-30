@@ -30,6 +30,28 @@ jobs:
       run: |
         uv build
 
+    - name: Inspecionar artefatos (sem tests/, sdist < 1MB)
+      run: |
+        WHEELS=(dist/juscraper-*.whl)
+        SDISTS=(dist/juscraper-*.tar.gz)
+        if [ ${#WHEELS[@]} -ne 1 ] || [ ${#SDISTS[@]} -ne 1 ]; then
+          echo "ERRO: esperava 1 wheel e 1 sdist em dist/, encontrou ${#WHEELS[@]} wheel(s) e ${#SDISTS[@]} sdist(s)" >&2
+          exit 1
+        fi
+        WHEEL="${WHEELS[0]}"
+        SDIST="${SDISTS[0]}"
+        if unzip -l "$WHEEL" | grep -E '(^| )tests/'; then
+          echo "ERRO: wheel contem tests/" >&2; exit 1
+        fi
+        if tar -tzf "$SDIST" | grep -E '(^|/)tests/'; then
+          echo "ERRO: sdist contem tests/" >&2; exit 1
+        fi
+        SDIST_SIZE=$(stat -c%s "$SDIST")
+        if [ "$SDIST_SIZE" -gt 1048576 ]; then
+          echo "ERRO: sdist excede 1MB ($SDIST_SIZE bytes)" >&2; exit 1
+        fi
+        echo "Artefatos OK (sdist=$SDIST_SIZE bytes)"
+
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:

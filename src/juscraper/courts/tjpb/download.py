@@ -15,20 +15,29 @@ SEARCH_URL = f"{BASE_URL}/api/jurisprudencia/pesquisar"
 RESULTS_PER_PAGE = 10
 
 
-def _get_csrf_token(session: requests.Session) -> str:
-    """Fetch the CSRF token from the TJPB homepage meta tag."""
+TOKEN_RE = re.compile(r'<meta name="_token" content="([^"]+)"')
+
+
+def fetch_csrf_token(session: requests.Session) -> str:
+    """Fetch the ``_token`` CSRF value from the TJPB homepage meta tag.
+
+    The Laravel backend embeds the token in ``<meta name="_token" ...>``.
+    The token is then sent inside the JSON body of every search request
+    (key ``_token``); no ``X-CSRF-TOKEN`` header is used.
+    """
     resp = session.get(BASE_URL, timeout=30)
     resp.raise_for_status()
-    match = re.search(r'<meta name="_token" content="([^"]+)"', resp.text)
+    match = TOKEN_RE.search(resp.text)
     if not match:
         raise RuntimeError("Could not find CSRF token on TJPB page.")
     return match.group(1)
 
 
-def _build_payload(
+def build_cjsg_payload(
     token: str,
     pesquisa: str,
     page: int = 1,
+    *,
     teor: str = "",
     nr_processo: str = "",
     id_classe_judicial: str = "",
@@ -39,7 +48,11 @@ def _build_payload(
     id_origem: str = "8,2",
     decisoes: bool = False,
 ) -> dict:
-    """Build the JSON payload for the TJPB search API."""
+    """Build the JSON payload for the TJPB search API.
+
+    The ``nr_rocesso`` (sic) key matches the backend spelling — do not
+    rename it without confirming the live API still accepts it.
+    """
     return {
         "_token": token,
         "jurisprudencia": {
@@ -101,10 +114,10 @@ def cjsg_download_manager(
             "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
         })
 
-    token = _get_csrf_token(session)
+    token = fetch_csrf_token(session)
 
     def _get_page(pagina_1based):
-        payload = _build_payload(token, pesquisa, page=pagina_1based, **kwargs)
+        payload = build_cjsg_payload(token, pesquisa, page=pagina_1based, **kwargs)
         data = _fetch_page(session, payload)
         time.sleep(1)
         return data

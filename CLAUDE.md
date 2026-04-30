@@ -86,6 +86,79 @@ A familia eSAJ (TJAC/TJAL/TJAM/TJCE/TJMS/TJSP) compartilha a infra em `src/juscr
 
 Tutorial completo com exemplos de codigo (caso tipico, customizacao TLS, API divergente): `CONTRIBUTING.md` > **Adding an eSAJ tribunal**.
 
+## Docstrings de metodos publicos com `**kwargs`
+
+Metodos publicos de scraper que aceitam filtros via `**kwargs` validados por schema pydantic (`cjsg`, `cjsg_download`, `cjpg`, `cjpg_download` da familia eSAJ refatorada e analogos futuros) seguem um padrao comum de docstring. O motivo: o pydantic e a fonte unica da verdade dos filtros, mas `inspect.signature` mostra so `pesquisa`/`paginas`/`**kwargs` — o usuario fica sem visibilidade dos filtros aceitos. A docstring fecha esse buraco.
+
+Idioma: **portugues** (vale para `src/`; `docs/*.qmd` continua em ingles por causa do build do Quarto). Estilo: Google docstring (`Args:`/`Returns:`/`Raises:`).
+
+Estrutura (template):
+
+```
+"""<Resumo em 1 frase, presente do indicativo, terminando em ponto>.
+
+<Paragrafo opcional descrevendo o efeito (delegacao, cleanup, metodo
+HTTP, particularidade) — max. 3 linhas.>
+
+Args:
+    pesquisa (str): <descricao>. <constraint — ex.: "max 120 chars">.
+    paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
+        todas. Default ``None``.
+    diretorio (str | None): Sobrescreve ``download_path`` para esta
+        chamada. Default ``None``.
+    **kwargs: Filtros aceitos pelo schema :class:`<InputXxxYyy>`.
+        Listados abaixo (todos opcionais; ``None`` = sem filtro):
+
+        * ``ementa`` (str): <descricao backend>.
+        * ``classe`` (str | list[str]): <descricao>. Backend:
+          ``classeTreeSelection.values``.
+        * ``varas`` (list[str]): IDs internos de vara (TJSP usa formato
+          ``"X-Y-Z"``). Backend: ``varasTreeSelection.values``.
+        * ``data_julgamento_inicio`` / ``data_julgamento_fim`` (str):
+          ``DD/MM/AAAA``.
+        * <demais filtros do schema>
+
+Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
+    * ``query`` / ``termo`` -> ``pesquisa``
+    * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``_fim``
+    * ``data_julgamento_de`` / ``_ate`` -> ``data_julgamento_inicio`` / ``_fim``
+    * ``data_publicacao_de`` / ``_ate`` -> ``data_publicacao_inicio`` / ``_fim``
+
+Raises:
+    TypeError: Quando um kwarg desconhecido e passado (via
+        ``raise_on_extra_kwargs``).
+    ValidationError: Quando um filtro tem formato invalido.
+    QueryTooLongError: Quando ``pesquisa`` excede o limite do tribunal
+        (apenas TJSP, 120 chars).
+
+Returns:
+    pd.DataFrame: <descricao do shape — colunas principais>.
+    str: Caminho do diretorio de download (apenas em ``*_download``).
+
+Exemplo:
+    >>> import juscraper as jus
+    >>> tjsp = jus.scraper("tjsp")
+    >>> df = tjsp.cjpg("dano moral", paginas=range(1, 3),
+    ...                varas=["1-1-1"], classes=["12728"])
+
+See also:
+    :class:`<InputXxxYyy>` — schema pydantic e a fonte da verdade dos
+    filtros aceitos.
+"""
+```
+
+Regras:
+
+1. **Cada filtro listado na docstring deve existir como campo do schema pydantic correspondente.** Se um campo sai do schema, a docstring muda junto. Se entra, idem. A docstring cita explicitamente o schema (`See also:`) para o usuario seguir a fonte da verdade.
+2. **Aliases deprecados** ficam em secao propria — listar todos os que `normalize_pesquisa`/`normalize_datas`/`pop_deprecated_alias` consomem para esse endpoint. Aliases nao listados na docstring ainda funcionam (o codigo de normalizacao e quem decide), mas a expectativa do projeto e manter a docstring sincronizada.
+3. **Default so listar quando nao-None ou nao-obvio** (ex.: `paginas=None`, `tipo_decisao="acordao"`, `baixar_sg=True`).
+4. **Backend hint** (ex.: `varasTreeSelection.values`) e opcional. Use quando ajuda o usuario a entender por que o filtro e uma lista de IDs e nao um nome amigavel — o usuario precisa saber que tem que descobrir o ID externamente.
+5. **Exemplo so em metodos top-level** (`cjsg`, `cjpg`). Os pares `*_download` ficam mais curtos: descrevem so o que diferencia (retorna path, aceita `diretorio`) e referenciam o metodo top-level via `:meth:` para a lista de filtros. **A referencia via `:meth:` e parte do contrato, nao apenas estilo** — fiscalizada por `tests/schemas/test_docstring_parity.py::test_download_docstring_references_toplevel`. Substituir a referencia por bullets duplicados (regredindo o padrao) faz `*_download` driftar do schema sem alarme; se algum caso futuro precisar mesmo listar bullets, registrar o endpoint em `CASES` e justificar no PR.
+6. **A docstring nao duplica o que o schema ja diz.** Tipos e nomes canonicos vem do schema; a docstring agrega so o que o pydantic nao consegue: semantica do parametro, formato esperado pelo backend, exemplo de uso. Quando der drift, a fonte certa e o schema.
+7. **Cobertura no teste de paridade.** A regra 1 e fiscalizada por `tests/schemas/test_docstring_parity.py::test_docstring_lists_schema_fields`, que so cobre os endpoints listados em `CASES`. Ao adicionar um override de docstring com schema proprio (cenario `INPUT_CJSG = InputCJSGTJXX` em `CONTRIBUTING.md` > **Adding an eSAJ tribunal** > "API divergente"), registrar o caso em `CASES` para nao perder cobertura. O override `TJSPScraper.cjsg` e o exemplo canonico.
+
+Referencia: o metodo `EsajSearchScraper.cjsg` em `src/juscraper/courts/_esaj/base.py` e a docstring "ouro" para a familia eSAJ.
+
 ## Extracao de numero de paginas/resultados em raspadores HTML
 
 Paginas de tribunais mudam estrutura sem aviso. Use **selecao em cascata** (varios seletores tentados em sequencia) e **regex em cascata** (numero no final, depois `(?<=de )[0-9]+`, depois descritores opcionais, ultimo recurso: maior `\d+`). Referencia canonica: `cjsg_n_pags` em `src/juscraper/courts/tjsp/cjsg_parse.py`. Cada formato suportado precisa de sample em `tests/<tribunal>/samples/` + teste unitario.
