@@ -80,12 +80,23 @@ def build_cjsg_payload(
     return payload
 
 
+def post_cjsg(session: requests.Session, payload: dict, *, timeout: int = 30) -> requests.Response:
+    """Send the TJPA CJSG search request and return the raw ``Response``.
+
+    Single source of truth for the request shape (URL + body serialization
+    with ``ensure_ascii=False`` + headers). Both ``_fetch_page`` and the
+    capture script in ``tests/fixtures/capture/tjpa.py`` call this helper
+    so a change to body/headers can't drift silently.
+    """
+    body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    return session.post(BASE_URL, data=body, headers=CJSG_HEADERS, timeout=timeout)
+
+
 def _fetch_page(session: requests.Session, payload: dict, max_retries: int = 3) -> dict:
     """Fetch a single page from the TJPA API with retry logic."""
-    body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
     for attempt in range(1, max_retries + 1):
         try:
-            resp = session.post(BASE_URL, data=body, headers=CJSG_HEADERS, timeout=30)
+            resp = post_cjsg(session, payload)
             resp.raise_for_status()
             resp.encoding = "utf-8"
             data: dict = resp.json()

@@ -119,8 +119,9 @@ def test_cjsg_data_inicio_kwarg_is_silently_dropped(mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
-    # No ``page`` in the query other than ``page=1`` — confirms the date
-    # kwargs were dropped upstream (not just ignored by the backend).
+    # The query-string carries neither ``data_inicio`` nor ``data_fim``,
+    # confirming the kwargs were dropped upstream (before the request was
+    # built) rather than reaching the backend and being ignored there.
     assert len(responses.calls) == 1
     sent_url = responses.calls[0].request.url
     assert "data_inicio" not in sent_url

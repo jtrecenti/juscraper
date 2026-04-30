@@ -54,6 +54,27 @@ def test_cjsg_single_page(mocker):
 
 
 @responses.activate
+def test_cjsg_paginas_none_descobre_via_html(mocker):
+    r"""``paginas=None`` exercises ``_get_total_pages`` against the HTML.
+
+    The ``single_page`` sample has zero pagination links, so the regex
+    ``[?&]page=(\d+)`` finds nothing and ``_get_total_pages`` falls back
+    to 1. Only one request must hit the wire.
+    """
+    mocker.patch("time.sleep")
+    _add_page("mandado de seguranca usucapiao extraordinario", 1, "cjsg/single_page.html")
+
+    df = jus.scraper("tjpi").cjsg(
+        "mandado de seguranca usucapiao extraordinario", paginas=None,
+    )
+
+    assert isinstance(df, pd.DataFrame)
+    assert CJSG_MIN_COLUMNS <= set(df.columns)
+    assert len(df) > 0
+    assert len(responses.calls) == 1
+
+
+@responses.activate
 def test_cjsg_no_results(mocker):
     """Zero-hit query returns an empty DataFrame."""
     mocker.patch("time.sleep")

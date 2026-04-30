@@ -16,7 +16,7 @@ import json
 
 import requests
 
-from juscraper.courts.tjpa.download import BASE_URL, CJSG_HEADERS, build_cjsg_payload
+from juscraper.courts.tjpa.download import build_cjsg_payload, post_cjsg
 
 from ._util import dump, samples_dir_for
 
@@ -51,8 +51,7 @@ def _minify(raw: bytes) -> bytes:
 
 def _capture(session: requests.Session, dest, pesquisa: str, pagina_1based: int, filename: str) -> None:
     payload = build_cjsg_payload(pesquisa, pagina_0based=pagina_1based - 1)
-    body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
-    response = session.post(BASE_URL, data=body, headers=CJSG_HEADERS, timeout=30)
+    response = post_cjsg(session, payload)
     response.raise_for_status()
     response.encoding = "utf-8"
     dump(dest / filename, _minify(response.content))
