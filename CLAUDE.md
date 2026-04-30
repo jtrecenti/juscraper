@@ -46,7 +46,7 @@ juscraper e uma biblioteca Python para raspagem de dados de tribunais brasileiro
 - Cassetes (`pytest-recording`) sao adotados caso a caso; medir peso agregado antes de generalizar (limite indicativo: ~20 MB no repo).
 - Antes de refatorar um tribunal pela #84, ele precisa ter contratos passando.
 
-Piramide de testes (sufixos `*_contract.py` / `*_granular.py` / `*_cassette.py` / `*_integration.py`), ferramentas (`responses`, `pytest-mock`, `pytest-recording`) e checklist de 12 itens para adicionar raspador novo: ver `CONTRIBUTING.md` > **Tests** e **Adding a new tribunal**.
+Piramide de testes (sufixos `*_contract.py` / `*_granular.py` / `*_cassette.py` / `*_integration.py`), ferramentas (`responses`, `pytest-mock`, `pytest-recording`) e checklist de 13 itens para adicionar raspador novo: ver `CONTRIBUTING.md` > **Tests** e **Adding a new tribunal**.
 
 ## Convencao de API para raspadores
 
