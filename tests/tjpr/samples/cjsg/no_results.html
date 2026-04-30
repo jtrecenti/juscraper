@@ -1,0 +1,806 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+
+
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="pt" lang="BR">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+<meta http-equiv="Cache-Control" content="No-Cache" />
+<meta http-equiv="Pragma" content="No-Cache" />
+<meta http-equiv="Expires" content="0" />
+
+<meta name="google-site-verification" content="DxuNw3ZIz5TEYK6wyygtx4Q3g-I2joR-ssXHLI2yNZU" />
+
+
+
+
+
+
+
+
+<link rel="stylesheet" type="text/css" href="/jurisprudencia/css/screen.css?updateIdx=30"/>
+
+<link rel="stylesheet" type="text/css" href="/jurisprudencia/css/window/default.css?updateIdx=30"/>
+<link rel="stylesheet" type="text/css" href="/jurisprudencia/css/window/tjpr.css?updateIdx=30"/>
+
+
+ 
+
+
+
+
+
+
+
+<script type="text/javascript" src="/jurisprudencia/js/prototype.js"></script>
+<script type="text/javascript" src="/jurisprudencia/js/window/window.js"></script>
+<script type="text/javascript" src="/jurisprudencia/js/window/effects.js"></script>
+
+
+<script type="text/javascript" src="/jurisprudencia/js/overlibmws/overlibmws.js?updateIdx=30"></script>
+<script type="text/javascript" src="/jurisprudencia/js/overlibmws/overlibmws_crossframe.js?updateIdx=30"></script>
+<script type="text/javascript" src="/jurisprudencia/js/overlibmws/overlibmws_iframe.js?updateIdx=30"></script>
+<script type="text/javascript" src="/jurisprudencia/js/overlibmws/overlibmws_hide.js?updateIdx=30"></script>
+<script type="text/javascript" src="/jurisprudencia/js/overlibmws/overlibmws_shadow.js?updateIdx=30"></script>
+<script type="text/javascript" src="/jurisprudencia/js/scriptaculous/scriptaculous.js"></script>
+<script type="text/javascript" src="/jurisprudencia/js/ajax/ajaxtags.js"></script>
+<script type="text/javascript" src="/jurisprudencia/js/ajax/ajaxtags_controls.js"></script>
+<script type="text/javascript" src="/jurisprudencia/js/ajax/ajaxtags_parser.js"></script>
+
+<script type="text/javascript" src="/jurisprudencia/js/calendar.js"></script>
+
+<script type="text/javascript" src="/jurisprudencia/js/html-form-input-mask.js"></script>
+
+
+<script type="text/javascript" src="/jurisprudencia/js/tjpr.js?updateIdx=30"></script>
+<script type="text/javascript" src="/jurisprudencia/js/projudi.js?updateIdx=30"></script>
+<script type="text/javascript" src="/jurisprudencia/js/jurishighlight.js?updateIdx=30"></script>
+<script type="text/javascript">
+  // Application root path for JavaScript functions
+  var appRootPath = "/jurisprudencia/";
+  
+  // Multiple onload function created by: Simon Willison
+  // http://simonwillison.net/2004/May/26/addLoadEvent/
+  function addLoadEvent(func) {
+    var oldonload = window.onload;
+    if (typeof window.onload != 'function') {
+      window.onload = func;
+    } else {
+      window.onload = function() {
+        if (oldonload) {
+          oldonload();
+        }
+        func();
+      }
+    }
+  }
+  // adds fields masks javascript listener
+  addLoadEvent(function() {
+    Xaprb.InputMask.setupElementMasks();
+  });
+  function seguro() {
+	  openDialog("/jurisprudencia/privado/autorizacao.do?actionType=autenticar", "Login", 700, 600);
+  }
+  function recarregar() {
+	  if (document.forms && document.forms.length>0) {
+		  document.forms[0].submit();
+	  } else {
+		  location.reload();
+	  }
+	  return true;
+  }
+</script>
+<script type="text/javascript" src="/jurisprudencia/js/jurisprudencia.js?updateIdx=30"></script>
+
+<title>jurisprudencia</title>
+</head>
+<body>
+	<div id="container">
+		
+
+
+
+
+
+
+<div id="header">
+  <div id="logo"><h1>Intranet - Tribunal de Justiça do Paraná</h1></div>
+  <h2>Jurisprudência</h2>
+  
+
+
+
+
+
+
+
+<script>
+	function handleeVoltar(url) {
+		event.preventDefault();
+
+		if (window !== window.top) {
+			// Está dentro de iframe
+			window.top.location.href = url;
+		} else {
+			// Página normal
+			window.location.href = url;
+		}
+	}
+</script>
+<div id="menuPublico" class="pos-acao">
+	
+
+	
+	<a href="/jurisprudencia/" onclick="handleeVoltar('/jurisprudencia/')">
+		INÍCIO
+		 |			
+	</a> 			
+	
+		
+															
+			<a href="/jurisprudencia/privado/autorizacao.do?actionType=autenticar">
+				ACESSO RESTRITO
+			</a>
+					
+			
+</div>
+
+</div>
+
+		
+		
+			
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div id="menu">
+<ul id="menubar" >
+<li class="menubar" id="menu_random_name_816384607" onmouseover="menu(&quot;_random_name_816384607&quot;,&quot;over&quot;)" onmouseout="menu(&quot;_random_name_816384607&quot;,&quot;out&quot;)">
+Usuários<br />
+<div id="sub_random_name_816384607" class="menubox" onmouseover="menu(&quot;_random_name_816384607&quot;,&quot;over&quot;)" onmouseout="menu(&quot;_random_name_816384607&quot;,&quot;out&quot;)">
+<div class="menuline"><ul>
+<li class="submenu" style="width:49%">
+Autorização
+<ul class="menuitem">
+<li>
+<a href="/jurisprudencia/privado/gerenciamento/usuarioAutorizacao.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff7826b4c776d71316d3a6b758b3d398283" target="_self">Buscar usuário para autorizar</a>
+</li>
+<li>
+<a href="/jurisprudencia/privado/gerenciamento/usuarioAutorizacao.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff77c58d6b2daa5d801b39f7bcb4c27b19c" target="_self">Pesquisar autorizações</a>
+</li>
+</ul>
+</li>
+</ul></div>
+</div>
+</li>
+<li class="menubar" id="menu_random_name_520935032" onmouseover="menu(&quot;_random_name_520935032&quot;,&quot;over&quot;)" onmouseout="menu(&quot;_random_name_520935032&quot;,&quot;out&quot;)">
+cedoc<br />
+<div id="sub_random_name_520935032" class="menubox" onmouseover="menu(&quot;_random_name_520935032&quot;,&quot;over&quot;)" onmouseout="menu(&quot;_random_name_520935032&quot;,&quot;out&quot;)">
+<div class="menuline"><ul>
+<li class="submenu" style="width:49%">
+Análise de Ementas
+<ul class="menuitem">
+<li>
+<a href="/jurisprudencia/privado/cedoc/busca.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff77c58d6b2daa5d801b39f7bcb4c27b19c" target="_self">Análise</a>
+</li>
+<li>
+<a href="/jurisprudencia/privado/cedoc/relatorioAnalisesEmenta.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff7d88bd1d17bac0727df8ab941b113325a" target="_self">Relatórios</a>
+</li>
+</ul>
+</li>
+</ul></div>
+</div>
+</li>
+<li class="menubar" id="menu_random_name_141260661" onmouseover="menu(&quot;_random_name_141260661&quot;,&quot;over&quot;)" onmouseout="menu(&quot;_random_name_141260661&quot;,&quot;out&quot;)">
+Administração<br />
+<div id="sub_random_name_141260661" class="menubox" onmouseover="menu(&quot;_random_name_141260661&quot;,&quot;over&quot;)" onmouseout="menu(&quot;_random_name_141260661&quot;,&quot;out&quot;)">
+<div class="menuline"><ul>
+<li class="submenu" style="width:49%">
+Indexador
+<ul class="menuitem">
+<li>
+<a href="/jurisprudencia/privado/admin/indexacao.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff7826b4c776d71316d2fcc9c9d2d08203551532b44bce15593" target="_self">Gerenciar indexação</a>
+</li>
+</ul>
+</li>
+<li class="submenu" style="width:49%">
+Indexador
+<ul class="menuitem">
+<li>
+<a href="/jurisprudencia/privado/admin/indexacao.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff7826b4c776d71316d035ab90e01858508f11c7a95d30473ab" target="_self">Efetuar consultas dentro do índice (miniluke).</a>
+</li>
+</ul>
+</li>
+</ul></div>
+<div class="menuline"><ul>
+<li class="submenu" style="width:49%">
+Unificação
+<ul class="menuitem">
+<li>
+<a href="/jurisprudencia/privado/admin/indexacao.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff7826b4c776d71316d16734d9de72ed6bad02a3b8a5858a11e" target="_self">Unificar índices de comarcas, orgao julgador ou magistrados.</a>
+</li>
+</ul>
+</li>
+<li class="submenu" style="width:49%">
+Segredo de justiça
+<ul class="menuitem">
+<li>
+<a href="/jurisprudencia/privado/admin/indexacao.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff7e170724a2dd036cd3b15bd960fd1ad7e052cddbda416b6a9" target="_self">Colocar em segredo de justiça</a>
+</li>
+</ul>
+</li>
+</ul></div>
+<div class="menuline"><ul>
+<li class="submenu" style="width:49%">
+Atualizar processo
+<ul class="menuitem">
+<li>
+<a href="/jurisprudencia/privado/admin/indexacao.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff7ac35bde6d0359b3db0f4886d2e0f262cd20932c37dd1bd45" target="_self">Modificar arquivo</a>
+</li>
+<li>
+<a href="/jurisprudencia/privado/admin/indexacao.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff7ac35bde6d0359b3d434de34544bf55a345c5cbdc7f079d69" target="_self">Modificar ementa</a>
+</li>
+<li>
+<a href="/jurisprudencia/privado/admin/indexacao.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff7ac35bde6d0359b3d0aa1da2ef7a779aacb8cc3122d58e21c" target="_self">Modificar acórdão</a>
+</li>
+</ul>
+</li>
+<li class="submenu" style="width:49%">
+Jurisprudência
+<ul class="menuitem">
+<li>
+<a href="/jurisprudencia/privado/admin/indexacao.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff79f3a6e926fdc6548211b6b8048462cd21abd21b531d794c5dc121d5369904ae7" target="_self">Editar item</a>
+</li>
+</ul>
+</li>
+</ul></div>
+</div>
+</li>
+<li class="menubar" id="menu_random_name_576600775" onmouseover="menu(&quot;_random_name_576600775&quot;,&quot;over&quot;)" onmouseout="menu(&quot;_random_name_576600775&quot;,&quot;out&quot;)">
+Corte IDH<br />
+<div id="sub_random_name_576600775" class="menubox" onmouseover="menu(&quot;_random_name_576600775&quot;,&quot;over&quot;)" onmouseout="menu(&quot;_random_name_576600775&quot;,&quot;out&quot;)">
+<div class="menuline"><ul>
+<li class="submenu" style="width:49%">
+A&ccedil;&otilde;es
+<ul class="menuitem">
+<li>
+<a href="/jurisprudencia/privado/cidh/importarPlanilhas.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff798478c9e4b14993ef0e48aed5aeba59b" target="_self">Importar planilhas</a>
+</li>
+<li>
+<a href="/jurisprudencia/privado/cidh/verificarPendentes.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff74bc321c7e44136314434ea57798de5bc8143165ed2e21d378c92a7c72ede65b2" target="_self">Verificar pendentes</a>
+</li>
+<li>
+<a href="/jurisprudencia/privado/cidh/visualizarItens.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff74bc321c7e44136314434ea57798de5bc8143165ed2e21d378c92a7c72ede65b2" target="_self">Visualizar itens</a>
+</li>
+<li>
+<a href="/jurisprudencia/privado/cidh/disponibilizarItens.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff74bc321c7e44136314434ea57798de5bc8143165ed2e21d378c92a7c72ede65b2" target="_self">Disponibilizar itens</a>
+</li>
+</ul>
+</li>
+</ul></div>
+</div>
+</li>
+</ul>
+</div>
+
+
+<span id="confirmarCiencia">
+	
+				
+			
+		
+	
+</span>
+
+
+<script lang="javascript">
+	var urlKeepAlive = '/jurisprudencia/ajax.do?tjpr.url.crypto=8a6c53f8698c7ff7088d3764243ee7b602d64f941ff6399dacd20af854fb5818';
+	setInterval(function(){
+		fetch(urlKeepAlive, { method: 'GET' })
+				.then(response => response.text()) // ou .json()
+				.then(result => {
+				})
+				.catch(err => {
+				});
+	}, 60000);
+</script>
+
+<script lang="javascript">
+		var usuarios = document.getElementById('menubar').children[0].id;
+		var cedoc = document.getElementById('menubar').children[1].id;
+		var admin = document.getElementById('menubar').children[2].id;
+		var cidh = document.getElementById('menubar').children[3].id;
+		var cidh_disponibilizar = document.getElementById(cidh).getElementsByClassName('menuitem')[0].children[3];
+
+		
+			document.getElementById(usuarios).innerHTML='';			
+		
+		
+		
+			document.getElementById(cedoc).innerHTML='';			
+		
+	
+		
+			document.getElementById(admin).innerHTML='';			
+		
+
+		
+			document.getElementById(cidh).innerHTML='';
+		
+		
+			cidh_disponibilizar.innerHTML='';
+		
+</script>
+
+   
+			
+		
+		<div id="content">
+			
+				
+					
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script type="text/javascript">
+
+	/**
+	 * Função para limpar o conteúdo das mensagens
+	 */
+	function clearMessages(){
+		var successMsgs = document.getElementById('successMessages');
+		if(successMsgs != null && "" + successMsgs != "undefined"){
+			successMsgs.style.display="none";
+		}
+		
+		var errorMsgs = document.getElementById('errorMessages');
+		if(errorMsgs != null && "" + errorMsgs != "undefined"){
+			errorMessages.style.display="none";			
+		}
+		
+		
+	}	
+	// chama a função após 7 segundos
+	window.setTimeout("clearMessages()", 7000);
+</script>
+					
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" type="text/css"
+	  href="/jurisprudencia/css/layout-2/popover.css?updateIdx=30"/>
+<script type="text/javascript" language="JavaScript" src="/jurisprudencia/js/layout-2/popover.js?updateIdx=30"></script>
+
+<link rel="stylesheet" type="text/css"
+	  href="/jurisprudencia/css/layout-2/tabs-filtro-2.css?updateIdx=30"/>
+<link rel="stylesheet" type="text/css"
+	  href="/jurisprudencia/css/layout-2/tabs-2.css?updateIdx=30"/>
+<script type="text/javascript"
+	src="/jurisprudencia/js/dragHandler.js"></script>
+<script type="text/javascript" language="JavaScript" src="/jurisprudencia/js/layout-2/tela-filtro-detalhada.js?updateIdx=30"></script>
+<script type="text/javascript">
+
+var urlLimparFiltro = '/jurisprudencia/ajax.do?tjpr.url.crypto=8a6c53f8698c7ff77b177e24640d22d728e2d5dab7825a9208495e0e61e3830a';
+function limpaFiltro() {
+new Ajax.Request(urlLimparFiltro, {
+    method: 'get',
+    onSuccess: function(transport) {
+    } 
+});
+}
+addLoadEvent(limpaFiltro);
+
+function handleVoltar(url) {
+	event.preventDefault();
+
+	if (window !== window.top) {
+		// Está dentro de iframe
+		window.top.location.href = url;
+	} else {
+		// Página normal
+		window.location.href = url;
+	}
+}
+function diminuirDiv() {
+    numero = $('divDiminuir').style.width;
+	numero=numero.substring(0,numero.length-1)*1;
+	if (typeof(numero)!='number') {
+		numero = 90;
+	}
+	numero-=10;
+	if (numero<40) {numero=40;}
+	$('divDiminuir').style.width=numero+"%";
+}
+function aumentarDiv() {
+    numero = $('divDiminuir').style.width;
+	numero=numero.substring(0,numero.length-1)*1;
+	if (typeof(numero)!='number') {
+		numero = 40;
+	}
+	numero+=10;
+	if (numero>100) {numero=100;}
+	$('divDiminuir').style.width=numero+"%";
+}
+function ocultarFiltro() {
+	$('filtroTable').style.display="none";
+	$('filtroLink').style.display="";
+}
+function exibirFiltro() {
+	$('filtroTable').style.display="";
+	$('filtroLink').style.display="none";
+}
+function abrirInfo() {
+	document.getElementById("infoPopup").style.display = "flex";
+}
+function configurarInfoClose() {
+	document.getElementById("infoClosePopup").addEventListener("click", function () {
+		document.getElementById("infoPopup").style.display = "none";
+	});
+}
+addLoadEvent(configurarInfoClose);
+</script>
+
+<!--
+	(  processoEmenta:(juscraper_probe_zero_hits_xyzqwe) OR  (  tags: (juscraper_probe_zero_hits_xyzqwe )   OR tags_tesauros: (juscraper_probe_zero_hits_xyzqwe )   ) )  
+ -->
+<div class="formulario">
+
+
+
+
+<form name="pesquisaForm" id="pesquisaForm" method="post" action="/jurisprudencia/publico/pesquisa.do?actionType=pesquisar" accept-charset="ISO-8859-1">
+	
+	
+	
+		
+	
+	
+	<input type="hidden" name="usuarioCienteSegredoJustica"
+		id="usuarioCienteSegredoJustica"
+		value="false" />
+	<input type="hidden" name="segredoJustica" value="pesquisar com">
+	<input type="hidden" name="id" value="">
+	<input type="hidden" name="chave" value="">
+	<input type="hidden" name="dataJulgamentoInicio" value="">
+	<input type="hidden" name="dataJulgamentoFim" value="">
+	<input type="hidden" name="dataPublicacaoInicio" value="">
+	<input type="hidden" name="dataPublicacaoFim" value="">
+	<input type="hidden" name="processo" value="">
+	<input type="hidden" name="acordao" value="">
+	<input type="hidden" name="idComarca" value="">
+	<input type="hidden" name="idRelator" value="">
+	<input type="hidden" name="idOrgaoJulgador" value="">
+	<input type="hidden" name="idClasseProcessual" value="">
+	<input type="hidden" name="idAssunto" value="">
+	<input type="hidden" name="idsTipoDecisaoSelecionadosString" value="">
+    <input type="hidden" name="idPaisCidh" value="">
+    <input type="hidden" name="idCadernoCidh" value="">
+    <input type="hidden" name="idTemaCidh" value="">
+    <input type="hidden" name="anoPublicacaoCidh" value="">
+    <input type="hidden" name="idJuizCidh" value="">
+    <input type="hidden" name="cargoCidh" value="">
+
+
+	<input type="hidden" name="pageVoltar" value="1">
+	
+	<input type="hidden" name="idLocalPesquisa" value="1">
+	<input type="hidden" name="ambito" value="-1">
+
+	<input type="hidden" name="descricaoAssunto" value="">
+	<input type="hidden" name="descricaoClasseProcessual" value="">
+	<input type="hidden" name="nomeComarca" value="">
+	<input type="hidden" name="nomeOrgaoJulgador" value="">
+	<input type="hidden" name="nomeRelator" value="">
+	<input type="hidden" name="idTipoDecisaoAcordao" value="">
+	<input type="hidden" name="idTipoDecisaoMonocratica" value="">
+	<input type="hidden" name="idTipoDecisaoDuvidaCompetencia" value="">
+
+	
+
+	<div class="secaoFormulario">
+		<span class="titulo">CRITÉRIOS DA PESQUISA</span>
+		<div class="secao-formulario-preambulo-container">
+			<div class="preambulo-criterios">
+				
+					<div align="left" class="juris-parametros">
+						
+							
+							
+							
+								
+								<a href="javascript:removerCriterio('segredo.justica')"><img
+										alt="excluir" src="/jurisprudencia/img/icons/remover.png" align="left" height="15" width="15"
+										title="Remover este critério" /></a>
+							
+						
+
+						
+							<b>Segredo&nbsp;de&nbsp;Justiça:</b>&nbsp;
+							
+								
+									pesquisar com
+								
+								
+							
+						
+					</div>
+
+					
+					
+				
+					<div align="left" class="juris-parametros">
+						
+							
+							
+							
+								
+								<a href="javascript:removerCriterio('local.de.pesquisa')"><img
+										alt="excluir" src="/jurisprudencia/img/icons/remover.png" align="left" height="15" width="15"
+										title="Remover este critério" /></a>
+							
+						
+
+						
+							<b>Ementa/Inteiro teor:</b>&nbsp;
+							
+								
+									EMENTA
+								
+								
+							
+						
+					</div>
+
+					
+					
+				
+					<div align="left" class="juris-parametros">
+						
+							
+							
+								
+								
+							
+							
+						
+
+						
+							<b>Critério&nbsp;de&nbsp;Ordenação:</b>&nbsp;
+							
+								
+									decrescente por data de julgamento
+								
+								
+							
+						
+					</div>
+
+					
+						<br />
+						<div class="juris-inter-parametros juris-parametros-barra">&nbsp;</div>
+					
+					
+				
+			</div>
+			<div class="cabecalho-criterios">
+				<div align="left" class="juris-parametros">
+					
+					
+					
+
+				</div>
+			</div>
+		</div>
+		<div class="secao-formulario-container">
+			<div class="coluna-esquerda">
+				<div class="search-container search-longa">
+					<div class="input-container">
+						<input type="text" name="criterioPesquisa" maxlength="150" size="48" value="juscraper_probe_zero_hits_xyzqwe" id="criterioPesquisa">
+						<input type="hidden" name="siglaEstado" value="" id="siglaEstado">
+						<div class="input-icons">
+							<span class="espacador"></span>
+							<a href="javascript:Form.Element.clear('criterioPesquisa');void(0);" class="icon-button"
+							   title="Limpar campo">
+								<span class="symbol clear-icon"><img alt="limpar" src="/jurisprudencia/img/icons/icon-clear.svg?updateIdx=30"/></span></a>
+							<a  href="#"
+								class="help-trigger icon-button"
+								data-help-url="/jurisprudencia/publico/callout.do?tjpr.url.crypto=8a6c53f8698c7ff7b660ca848b310b16ab98131d4e705109b6e47af7fe0d81bb58775537ad8322f8&pagina=ajudaOperadores.html"
+								title='Clique para exibir a descrição completa.'>
+								<span class="symbol help-icon"><img alt="info" src="/jurisprudencia/img/icons/icon-info.svg?updateIdx=30"/></span></a>
+						</div>
+					</div>
+				</div>
+				<div class="div-termos">
+					<input type="button" id="btE" class="buttonexp btn-ux-acao" value="E"
+						   onClick="javascript:getOperador('E');" title="Ambos os termos: 'indenização E moral'"/>
+					<input type="button" id="btOu" class="buttonexp btn-ux-acao" value="OU"
+						   onClick="javascript:getOperador('OU');" title="Ao menos um termo: 'indenização OU reparação'"/>
+					<input type="button" id="btNao" class="buttonexp btn-ux-acao" value="!NAO"
+						   onClick="javascript:getOperador('!NÃO');" title="Não deve conter o termo: '!NÃO criminal'"/>
+					<input type="button" id="btProx" class="buttonexp btn-ux-acao" value="PROX"
+						   onClick="javascript:getOperador('PROX');" title="Termos próximos: 'indenização PROX3 moral'"/>
+					<input type="button" id="bt$" class="buttonexp btn-ux-acao" value="$"
+						   onClick="javascript:getOperador('$');" title="Termos com radicais: 'indeni$'"/>
+				</div>
+			</div>
+			<div class="btn-icone-container">
+				<button type="button" class="btn-icone btn-icone-pesquisar" onclick="refazer();"
+						title="Pesquisar novamente">
+					<img src="/jurisprudencia/img/icons/pesquisa.png?updateIdx=30" alt="Refazer a pesquisa">
+				</button>
+				<button type="button" class="btn-icone btn-icone-pesquisar-avancada"
+						onclick="handleVoltar('/jurisprudencia/')"
+						title="Voltar à página inicial">
+					<img src="/jurisprudencia/img/icons/pesquisa-voltar.png?updateIdx=30"
+						 alt="Voltar ao início">
+				</button>
+			</div>
+		</div>
+	</div>
+	<div class="secaoFormulario">
+		<span class="titulo">RESULTADO DA PESQUISA</span>
+
+		<div id="divDiminuir">
+			<div align="left">
+				<table width="100%" border="0" class="juris-parametros">
+					<colgroup>
+						<col width="30%" />
+						<col width="70%" />
+					</colgroup>
+					<tr>
+						<td>&nbsp;</td>
+						<td><br />
+						<br />
+						<br /></td>
+					</tr>
+
+					<tr>
+						<td>&nbsp;</td>
+						<td>
+							
+								<script>
+									var urlUseCarregarDadosMensagensInstitucionais = '/jurisprudencia/promo/nenhum-registro/dados-estaticos.html?updateIdx=30';
+								</script>
+								<link rel="stylesheet" type="text/css" href="/jurisprudencia/promo/nenhum-registro/nenhum-registro.css?updateIdx=30"/>
+								<script src="/jurisprudencia/promo/nenhum-registro/nenhum-registro.js?updateIdx=30"></script>
+								<div class="promo-nao-encontrou">
+								Não encontrou os itens que procurava? <span class="abrir-promo">Saiba mais.</span>
+							</div>
+							
+
+							
+								<div id="navigator"><div class="navRight"></div><div class="navLeft">0 registro(s) encontrado(s)</div><div style="clear:both"></div></div>
+							 
+								<div align="right">63ms</div>
+							
+							
+							<div id="contador-especifico-cidh">
+								
+								
+								
+								
+								
+								
+								
+								
+									<script>
+										document.querySelectorAll('.navLeft').forEach(function (el) {
+											el.style.display = 'none';
+										});
+									</script>
+								
+								
+							</div>
+							
+						</td>
+					</tr>
+
+					<tr>
+						
+						
+
+						
+						
+						
+							<td colspan="5">
+						
+
+						
+							
+								<table class="resultTable" cellpadding="0" cellspacing="0"
+									width="100%">
+									<tr>
+										<td>
+										<td align="center"><b>Nenhum registro encontrado!</b></td>
+									</tr>
+								</table>
+							
+							
+						
+						</td>
+						<td>&nbsp;</td>
+					</tr>
+					
+					<tr>
+						<td>&nbsp;</td>
+						<td>
+							<table cellpadding="0" cellspacing="0">
+								<tr>
+									<td width="1%" nowrap="nowrap" align="left"><br />
+									<br /></td>
+								</tr>
+							</table>
+						</td>
+						<td>&nbsp;</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</div>
+</form>
+</div>
+
+<script type="text/javascript">
+//	destacaTexto(0, 1, null, 'muda', null);
+</script>
+<div id="infoPopup" class="info-popup-overlay">
+	<div class="info-popup-box">
+		<p>
+			As datas das decisões da Corte IDH seguem ordem distinta das decisões da
+			Jurisprudência do Tribunal de Justiça do Estado do Paraná.
+		</p>
+		<button id="infoClosePopup">Fechar</button>
+	</div>
+</div>
+
+				
+			
+			
+		</div>
+
+	</div>
+</body>
+</html>

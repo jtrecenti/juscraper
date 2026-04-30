@@ -1,0 +1,432 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="pt" lang="BR">
+  <head>
+    <meta name="google-site-verification" content="DxuNw3ZIz5TEYK6wyygtx4Q3g-I2joR-ssXHLI2yNZU" />
+    <link rel="shortcut icon" href="/jurisprudencia/img/favicon.ico" type="image/x-icon" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta http-equiv="Cache-Control" content="No-Cache"/>
+    <meta http-equiv="Pragma" content="No-Cache"/>
+    <meta http-equiv="Expires" content="0"/>
+    
+
+
+
+
+
+
+<link rel="stylesheet" type="text/css" href="/jurisprudencia/css/screen.css?updateIdx=30"/>
+
+<link rel="stylesheet" type="text/css" href="/jurisprudencia/css/window/default.css?updateIdx=30"/>
+<link rel="stylesheet" type="text/css" href="/jurisprudencia/css/window/tjpr.css?updateIdx=30"/>
+
+
+ 
+
+    
+
+
+
+
+
+<script type="text/javascript" src="/jurisprudencia/js/prototype.js"></script>
+<script type="text/javascript" src="/jurisprudencia/js/window/window.js"></script>
+<script type="text/javascript" src="/jurisprudencia/js/window/effects.js"></script>
+
+
+<script type="text/javascript" src="/jurisprudencia/js/overlibmws/overlibmws.js?updateIdx=30"></script>
+<script type="text/javascript" src="/jurisprudencia/js/overlibmws/overlibmws_crossframe.js?updateIdx=30"></script>
+<script type="text/javascript" src="/jurisprudencia/js/overlibmws/overlibmws_iframe.js?updateIdx=30"></script>
+<script type="text/javascript" src="/jurisprudencia/js/overlibmws/overlibmws_hide.js?updateIdx=30"></script>
+<script type="text/javascript" src="/jurisprudencia/js/overlibmws/overlibmws_shadow.js?updateIdx=30"></script>
+<script type="text/javascript" src="/jurisprudencia/js/scriptaculous/scriptaculous.js"></script>
+<script type="text/javascript" src="/jurisprudencia/js/ajax/ajaxtags.js"></script>
+<script type="text/javascript" src="/jurisprudencia/js/ajax/ajaxtags_controls.js"></script>
+<script type="text/javascript" src="/jurisprudencia/js/ajax/ajaxtags_parser.js"></script>
+
+<script type="text/javascript" src="/jurisprudencia/js/calendar.js"></script>
+
+<script type="text/javascript" src="/jurisprudencia/js/html-form-input-mask.js"></script>
+
+
+<script type="text/javascript" src="/jurisprudencia/js/tjpr.js?updateIdx=30"></script>
+<script type="text/javascript" src="/jurisprudencia/js/projudi.js?updateIdx=30"></script>
+<script type="text/javascript" src="/jurisprudencia/js/jurishighlight.js?updateIdx=30"></script>
+<script type="text/javascript">
+  // Application root path for JavaScript functions
+  var appRootPath = "/jurisprudencia/";
+  
+  // Multiple onload function created by: Simon Willison
+  // http://simonwillison.net/2004/May/26/addLoadEvent/
+  function addLoadEvent(func) {
+    var oldonload = window.onload;
+    if (typeof window.onload != 'function') {
+      window.onload = func;
+    } else {
+      window.onload = function() {
+        if (oldonload) {
+          oldonload();
+        }
+        func();
+      }
+    }
+  }
+  // adds fields masks javascript listener
+  addLoadEvent(function() {
+    Xaprb.InputMask.setupElementMasks();
+  });
+  function seguro() {
+	  openDialog("/jurisprudencia/privado/autorizacao.do?actionType=autenticar", "Login", 700, 600);
+  }
+  function recarregar() {
+	  if (document.forms && document.forms.length>0) {
+		  document.forms[0].submit();
+	  } else {
+		  location.reload();
+	  }
+	  return true;
+  }
+</script>
+<script type="text/javascript" src="/jurisprudencia/js/jurisprudencia.js?updateIdx=30"></script>
+
+    <title>Jurisprud&ecirc;ncia - TJPR</title>
+  </head>
+  <body>
+    <div id="container"> 
+   	 
+
+
+
+
+
+
+<div id="header">
+  <div id="logo"><h1>Intranet - Tribunal de Justiça do Paraná</h1></div>
+  <h2>Jurisprudência</h2>
+  
+
+
+
+
+
+
+
+<script>
+	function handleeVoltar(url) {
+		event.preventDefault();
+
+		if (window !== window.top) {
+			// Está dentro de iframe
+			window.top.location.href = url;
+		} else {
+			// Página normal
+			window.location.href = url;
+		}
+	}
+</script>
+<div id="menuPublico" class="pos-acao">
+	
+
+	
+	<a href="/jurisprudencia/" onclick="handleeVoltar('/jurisprudencia/')">
+		INÍCIO
+		 |			
+	</a> 			
+	
+		
+															
+			<a href="/jurisprudencia/privado/autorizacao.do?actionType=autenticar">
+				ACESSO RESTRITO
+			</a>
+					
+			
+</div>
+
+</div>
+
+
+      
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div id="menu">
+<ul id="menubar" >
+<li class="menubar" id="menu_random_name_816384607" onmouseover="menu(&quot;_random_name_816384607&quot;,&quot;over&quot;)" onmouseout="menu(&quot;_random_name_816384607&quot;,&quot;out&quot;)">
+Usuários<br />
+<div id="sub_random_name_816384607" class="menubox" onmouseover="menu(&quot;_random_name_816384607&quot;,&quot;over&quot;)" onmouseout="menu(&quot;_random_name_816384607&quot;,&quot;out&quot;)">
+<div class="menuline"><ul>
+<li class="submenu" style="width:49%">
+Autorização
+<ul class="menuitem">
+<li>
+<a href="/jurisprudencia/privado/gerenciamento/usuarioAutorizacao.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff7826b4c776d71316d3a6b758b3d398283" target="_self">Buscar usuário para autorizar</a>
+</li>
+<li>
+<a href="/jurisprudencia/privado/gerenciamento/usuarioAutorizacao.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff77c58d6b2daa5d801b39f7bcb4c27b19c" target="_self">Pesquisar autorizações</a>
+</li>
+</ul>
+</li>
+</ul></div>
+</div>
+</li>
+<li class="menubar" id="menu_random_name_520935032" onmouseover="menu(&quot;_random_name_520935032&quot;,&quot;over&quot;)" onmouseout="menu(&quot;_random_name_520935032&quot;,&quot;out&quot;)">
+cedoc<br />
+<div id="sub_random_name_520935032" class="menubox" onmouseover="menu(&quot;_random_name_520935032&quot;,&quot;over&quot;)" onmouseout="menu(&quot;_random_name_520935032&quot;,&quot;out&quot;)">
+<div class="menuline"><ul>
+<li class="submenu" style="width:49%">
+Análise de Ementas
+<ul class="menuitem">
+<li>
+<a href="/jurisprudencia/privado/cedoc/busca.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff77c58d6b2daa5d801b39f7bcb4c27b19c" target="_self">Análise</a>
+</li>
+<li>
+<a href="/jurisprudencia/privado/cedoc/relatorioAnalisesEmenta.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff7d88bd1d17bac0727df8ab941b113325a" target="_self">Relatórios</a>
+</li>
+</ul>
+</li>
+</ul></div>
+</div>
+</li>
+<li class="menubar" id="menu_random_name_141260661" onmouseover="menu(&quot;_random_name_141260661&quot;,&quot;over&quot;)" onmouseout="menu(&quot;_random_name_141260661&quot;,&quot;out&quot;)">
+Administração<br />
+<div id="sub_random_name_141260661" class="menubox" onmouseover="menu(&quot;_random_name_141260661&quot;,&quot;over&quot;)" onmouseout="menu(&quot;_random_name_141260661&quot;,&quot;out&quot;)">
+<div class="menuline"><ul>
+<li class="submenu" style="width:49%">
+Indexador
+<ul class="menuitem">
+<li>
+<a href="/jurisprudencia/privado/admin/indexacao.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff7826b4c776d71316d2fcc9c9d2d08203551532b44bce15593" target="_self">Gerenciar indexação</a>
+</li>
+</ul>
+</li>
+<li class="submenu" style="width:49%">
+Indexador
+<ul class="menuitem">
+<li>
+<a href="/jurisprudencia/privado/admin/indexacao.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff7826b4c776d71316d035ab90e01858508f11c7a95d30473ab" target="_self">Efetuar consultas dentro do índice (miniluke).</a>
+</li>
+</ul>
+</li>
+</ul></div>
+<div class="menuline"><ul>
+<li class="submenu" style="width:49%">
+Unificação
+<ul class="menuitem">
+<li>
+<a href="/jurisprudencia/privado/admin/indexacao.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff7826b4c776d71316d16734d9de72ed6bad02a3b8a5858a11e" target="_self">Unificar índices de comarcas, orgao julgador ou magistrados.</a>
+</li>
+</ul>
+</li>
+<li class="submenu" style="width:49%">
+Segredo de justiça
+<ul class="menuitem">
+<li>
+<a href="/jurisprudencia/privado/admin/indexacao.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff7e170724a2dd036cd3b15bd960fd1ad7e052cddbda416b6a9" target="_self">Colocar em segredo de justiça</a>
+</li>
+</ul>
+</li>
+</ul></div>
+<div class="menuline"><ul>
+<li class="submenu" style="width:49%">
+Atualizar processo
+<ul class="menuitem">
+<li>
+<a href="/jurisprudencia/privado/admin/indexacao.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff7ac35bde6d0359b3db0f4886d2e0f262cd20932c37dd1bd45" target="_self">Modificar arquivo</a>
+</li>
+<li>
+<a href="/jurisprudencia/privado/admin/indexacao.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff7ac35bde6d0359b3d434de34544bf55a345c5cbdc7f079d69" target="_self">Modificar ementa</a>
+</li>
+<li>
+<a href="/jurisprudencia/privado/admin/indexacao.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff7ac35bde6d0359b3d0aa1da2ef7a779aacb8cc3122d58e21c" target="_self">Modificar acórdão</a>
+</li>
+</ul>
+</li>
+<li class="submenu" style="width:49%">
+Jurisprudência
+<ul class="menuitem">
+<li>
+<a href="/jurisprudencia/privado/admin/indexacao.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff79f3a6e926fdc6548211b6b8048462cd21abd21b531d794c5dc121d5369904ae7" target="_self">Editar item</a>
+</li>
+</ul>
+</li>
+</ul></div>
+</div>
+</li>
+<li class="menubar" id="menu_random_name_576600775" onmouseover="menu(&quot;_random_name_576600775&quot;,&quot;over&quot;)" onmouseout="menu(&quot;_random_name_576600775&quot;,&quot;out&quot;)">
+Corte IDH<br />
+<div id="sub_random_name_576600775" class="menubox" onmouseover="menu(&quot;_random_name_576600775&quot;,&quot;over&quot;)" onmouseout="menu(&quot;_random_name_576600775&quot;,&quot;out&quot;)">
+<div class="menuline"><ul>
+<li class="submenu" style="width:49%">
+A&ccedil;&otilde;es
+<ul class="menuitem">
+<li>
+<a href="/jurisprudencia/privado/cidh/importarPlanilhas.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff798478c9e4b14993ef0e48aed5aeba59b" target="_self">Importar planilhas</a>
+</li>
+<li>
+<a href="/jurisprudencia/privado/cidh/verificarPendentes.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff74bc321c7e44136314434ea57798de5bc8143165ed2e21d378c92a7c72ede65b2" target="_self">Verificar pendentes</a>
+</li>
+<li>
+<a href="/jurisprudencia/privado/cidh/visualizarItens.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff74bc321c7e44136314434ea57798de5bc8143165ed2e21d378c92a7c72ede65b2" target="_self">Visualizar itens</a>
+</li>
+<li>
+<a href="/jurisprudencia/privado/cidh/disponibilizarItens.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff74bc321c7e44136314434ea57798de5bc8143165ed2e21d378c92a7c72ede65b2" target="_self">Disponibilizar itens</a>
+</li>
+</ul>
+</li>
+</ul></div>
+</div>
+</li>
+</ul>
+</div>
+
+
+<span id="confirmarCiencia">
+	
+				
+			
+		
+	
+</span>
+
+
+<script lang="javascript">
+	var urlKeepAlive = '/jurisprudencia/ajax.do?tjpr.url.crypto=8a6c53f8698c7ff7088d3764243ee7b602d64f941ff6399dacd20af854fb5818';
+	setInterval(function(){
+		fetch(urlKeepAlive, { method: 'GET' })
+				.then(response => response.text()) // ou .json()
+				.then(result => {
+				})
+				.catch(err => {
+				});
+	}, 60000);
+</script>
+
+<script lang="javascript">
+		var usuarios = document.getElementById('menubar').children[0].id;
+		var cedoc = document.getElementById('menubar').children[1].id;
+		var admin = document.getElementById('menubar').children[2].id;
+		var cidh = document.getElementById('menubar').children[3].id;
+		var cidh_disponibilizar = document.getElementById(cidh).getElementsByClassName('menuitem')[0].children[3];
+
+		
+			document.getElementById(usuarios).innerHTML='';			
+		
+		
+		
+			document.getElementById(cedoc).innerHTML='';			
+		
+	
+		
+			document.getElementById(admin).innerHTML='';			
+		
+
+		
+			document.getElementById(cidh).innerHTML='';
+		
+		
+			cidh_disponibilizar.innerHTML='';
+		
+</script>
+
+   
+
+      
+      <hr/>
+      <div id="content">
+      
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+  
+      
+
+
+
+
+  <div id="errorMessages">
+    <div class="top-left"></div><div class="top-right"></div>
+      <div class="box-content">
+        <div class="spaces"><h4>Alguns erros foram encontrados:</h4>
+  <ul><li>Erro geral</li></ul></div>
+      </div>
+    <div class="bottom-left"></div><div class="bottom-right"></div>
+  </div>
+  
+
+
+
+
+<script type="text/javascript">
+
+	/**
+	 * Função para limpar o conteúdo das mensagens
+	 */
+	function clearMessages(){
+		var successMsgs = document.getElementById('successMessages');
+		if(successMsgs != null && "" + successMsgs != "undefined"){
+			successMsgs.style.display="none";
+		}
+		
+		var errorMsgs = document.getElementById('errorMessages');
+		if(errorMsgs != null && "" + errorMsgs != "undefined"){
+			errorMessages.style.display="none";			
+		}
+		
+		
+	}	
+	// chama a função após 7 segundos
+	window.setTimeout("clearMessages()", 7000);
+</script>
+          
+
+
+
+
+  <h3>Não foi possível realizar a operação devido ao seguinte erro:</h3>
+  
+  
+    <h3 class="errorTitle">java.lang.NoSuchMethodException: Action[/publico/pesquisa] does not contain specified method (check logs)</h3>
+    
+  
+  <div style="text-align: center;">
+    <input type="button" class="button" value="Voltar" onclick="history.back(-1);"/>
+  </div>
+
+
+        
+      
+      
+      </div>
+      <hr/>
+    </div>
+  </body>
+</html>
