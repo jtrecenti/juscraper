@@ -338,11 +338,17 @@ class DatajudScraper(BaseScraper):
                 # This part depends on the exact structure of api_response_json
                 # Assuming api_response_json is a dict parsed from the JSON string
                 hits = api_response_json.get("hits", {}).get("hits", [])
-                if not hits or len(hits) < tamanho_pagina:
+                # Le ``query_payload["size"]`` em vez de ``tamanho_pagina``
+                # porque ``call_datajud_api`` muta o size em place quando
+                # aciona o fallback de 504/timeout — sem isso, a heuristica
+                # encerraria cedo demais ao receber menos hits que o
+                # tamanho_pagina original.
+                effective_size = query_payload.get("size", tamanho_pagina)
+                if not hits or len(hits) < effective_size:
                     logger.info(
                         "Last page reached for alias %s (less than %d results or no hits).",
                         alias,
-                        tamanho_pagina
+                        effective_size,
                     )
                     break
                 last_hit = hits[-1]

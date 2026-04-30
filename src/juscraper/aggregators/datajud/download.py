@@ -2,6 +2,7 @@
 Functions for downloading specific data from the Datajud API.
 """
 import logging
+import warnings
 from typing import Any, Dict, List, Optional, Union
 
 import requests
@@ -9,6 +10,17 @@ import requests
 from ...utils.cnj import clean_cnj
 
 logger = logging.getLogger(__name__)
+
+# Quando a chamada falha com ``HTTP 504`` ou ``Timeout``, ``call_datajud_api``
+# refaz a requisicao 1 unica vez com ``size`` reduzido pelo fator abaixo
+# (``new_size = max(size // FALLBACK_DIVISOR, FALLBACK_MIN_SIZE)``). 504
+# acontece quando o servidor demora mais que o timeout do gateway (~60s);
+# uma reducao agressiva (4x, nao 2x) tem mais chance de passar na segunda
+# tentativa, evitando a custosa cascata "5000 -> 2500 -> 1250" de 3
+# tentativas perdidas.
+FALLBACK_DIVISOR = 4
+FALLBACK_MIN_SIZE = 100
+FALLBACK_RETRY_STATUS = {504}
 
 
 def build_listar_processos_payload(
@@ -82,7 +94,7 @@ def build_listar_processos_payload(
     return payload
 
 
-def call_datajud_api(
+def call_datajud_api(  # pylint: disable=too-many-return-statements
     base_url: str,
     alias: str,
     api_key: str,
@@ -112,6 +124,14 @@ def call_datajud_api(
         (`_listar_processos_por_alias` em client.py) emite um unico
         `warnings.warn(UserWarning)` agregado por alias quando detecta None,
         evitando spam de warnings em paginacao longa com API instavel.
+
+        Em ``HTTP 504``/``Timeout`` (gateway saturado), faz **1 retry**
+        automatico com ``size`` reduzido por ``FALLBACK_DIVISOR`` (default 4),
+        mutando ``query_payload["size"]`` em place — o caller le
+        ``query_payload["size"]`` na heuristica de "ultima pagina"
+        (``len(hits) < query_payload["size"]``) para nao parar antes do tempo
+        quando o fallback rebaixou o size. Emite ``UserWarning`` informando o
+        novo size. Se o retry tambem falhar, segue o fluxo normal (return None).
     """
     api_url = f"{base_url}/{alias}/_search"
     headers = {
@@ -128,43 +148,87 @@ def call_datajud_api(
         )
         logger.debug("Payload: %s", query_payload)
 
-    try:
+    def _do_post() -> Optional[Dict[str, Any]]:
         response = session.post(api_url, json=query_payload, headers=headers, timeout=timeout)
         if verbose:
             logger.debug("Response Status Code: %s", response.status_code)
-            # Optionally log more details, but be mindful of verbosity and sensitive data
-            # logger.debug(f"Response Headers: {response.headers}")
-            # logger.debug(f"Response Content (first 500 chars): {response.text[:500]}")
-
-        response.raise_for_status()  # Raises HTTPError for bad responses (4XX or 5XX)
+        response.raise_for_status()
         data: Dict[str, Any] = response.json()
         return data
 
-    except requests.exceptions.HTTPError as e:
-        logger.error("HTTP Error calling Datajud API (%s): %s", api_url, e)
-        if e.response is not None:
-            logger.error("Response status: %s", e.response.status_code)
-            try:
-                logger.error("Response content: %s", e.response.text[:1000])
-            except Exception:
-                logger.error("Could not retrieve error response content.")
-        else:
-            logger.error("No response object available in HTTPError.")
+    def _is_overload(exc: BaseException) -> bool:
+        if isinstance(exc, requests.exceptions.Timeout):
+            return True
+        if isinstance(exc, requests.exceptions.HTTPError):
+            status = getattr(getattr(exc, "response", None), "status_code", None)
+            return status in FALLBACK_RETRY_STATUS
+        return False
+
+    try:
+        return _do_post()
+    except (requests.exceptions.HTTPError, requests.exceptions.Timeout) as exc:
+        if not _is_overload(exc):
+            _log_http_error(api_url, exc)
+            return None
+        original_size = query_payload.get("size")
+        if not isinstance(original_size, int) or original_size <= FALLBACK_MIN_SIZE:
+            _log_http_error(api_url, exc)
+            return None
+        new_size = max(original_size // FALLBACK_DIVISOR, FALLBACK_MIN_SIZE)
+        if new_size >= original_size:
+            _log_http_error(api_url, exc)
+            return None
+        warnings.warn(
+            f"DataJud: 504/timeout em ``size={original_size}`` no alias "
+            f"{alias!r}. Refazendo com ``size={new_size}`` (1 retry).",
+            UserWarning,
+            stacklevel=3,
+        )
+        logger.warning(
+            "DataJud: 504/timeout em size=%d (alias %s); refazendo com size=%d.",
+            original_size, alias, new_size,
+        )
+        # Muta em place para o caller ver o size efetivo na heuristica
+        # de ultima pagina (``len(hits) < query_payload['size']``).
+        query_payload["size"] = new_size
+        try:
+            return _do_post()
+        except (requests.exceptions.HTTPError, requests.exceptions.Timeout) as retry_exc:
+            _log_http_error(api_url, retry_exc)
+            return None
+        except requests.exceptions.RequestException as retry_exc:
+            logger.error("Request failed for Datajud API (%s): %s", api_url, retry_exc)
+            return None
+        except ValueError as retry_exc:
+            logger.error(
+                "Failed to decode JSON response from Datajud API (%s): %s",
+                api_url, retry_exc,
+            )
+            return None
+    except requests.exceptions.RequestException as exc:
+        logger.error("Request failed for Datajud API (%s): %s", api_url, exc)
         return None
-    except requests.exceptions.Timeout:
-        logger.error("Timeout calling Datajud API (%s) after %d seconds.", api_url, timeout)
+    except ValueError as exc:  # Includes JSONDecodeError if response is not valid JSON
+        logger.error("Failed to decode JSON response from Datajud API (%s): %s", api_url, exc)
         return None
-    except requests.exceptions.RequestException as e:
-        logger.error("Request failed for Datajud API (%s): %s", api_url, e)
+    except Exception as exc:
+        logger.error("An unexpected error occurred calling Datajud API (%s): %s", api_url, exc)
         return None
-    except ValueError as e:  # Includes JSONDecodeError if response is not valid JSON
-        logger.error("Failed to decode JSON response from Datajud API (%s): %s", api_url, e)
-        # Try to log part of the response text if available and decoding failed
-        response_text_snippet = 'N/A'
-        if 'response' in locals() and hasattr(response, 'text'):
-            response_text_snippet = response.text[:500]
-        logger.error("Response text (first 500 chars): %s", response_text_snippet)
-        return None
-    except Exception as e:
-        logger.error("An unexpected error occurred calling Datajud API (%s): %s", api_url, e)
-        return None
+
+
+def _log_http_error(api_url: str, exc: BaseException) -> None:
+    """Log uniforme para HTTPError/Timeout — comportamento da versao
+    anterior preservado para mensagens de erro identicas."""
+    if isinstance(exc, requests.exceptions.Timeout):
+        logger.error("Timeout calling Datajud API (%s): %s", api_url, exc)
+        return
+    logger.error("HTTP Error calling Datajud API (%s): %s", api_url, exc)
+    response = getattr(exc, "response", None)
+    if response is not None:
+        logger.error("Response status: %s", response.status_code)
+        try:
+            logger.error("Response content: %s", response.text[:1000])
+        except Exception:
+            logger.error("Could not retrieve error response content.")
+    else:
+        logger.error("No response object available in HTTPError.")
