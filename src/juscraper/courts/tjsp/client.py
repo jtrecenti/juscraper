@@ -319,7 +319,7 @@ class TJSPScraper(EsajSearchScraper):
             paginas=paginas,
             kwargs=kwargs,
             max_dias=366,
-            origem="O eSAJ",
+            origem_mensagem="O eSAJ",
         )
 
         def _get_n_pags(r0):

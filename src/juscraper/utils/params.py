@@ -371,7 +371,8 @@ def apply_input_pipeline_search(
     paginas,
     kwargs: dict,
     max_dias: Optional[int] = None,
-    origem: Optional[str] = None,
+    origem_mensagem: Optional[str] = None,
+    date_format: str = "%d/%m/%Y",
     **canonical_filters,
 ) -> BaseModel:
     """Run the canonical input-validation pipeline for search endpoints (cjsg/cjpg).
@@ -402,10 +403,17 @@ def apply_input_pipeline_search(
       rejects them as ``extra_forbidden``.
     - Running tribunal-specific validators that should fire before pydantic
       (e.g. ``validate_pesquisa_length`` in TJSP).
-    - Passing ``max_dias`` and ``origem`` when the backend has a documented
-      window limit (e.g. eSAJ: ``max_dias=366, origem="O eSAJ"``). The
-      defaults disable the window check, since most non-eSAJ backends accept
-      arbitrarily wide ranges (audited under #128).
+    - Passing ``max_dias`` and ``origem_mensagem`` when the backend has a
+      documented window limit (e.g. eSAJ: ``max_dias=366,
+      origem_mensagem="O eSAJ"``). The defaults disable the window check,
+      since most non-eSAJ backends accept arbitrarily wide ranges (audited
+      under #128).
+
+    The parameter is named ``origem_mensagem`` (not ``origem``) on purpose:
+    several tribunal scrapers use ``origem`` as a backend filter (e.g. TJPA's
+    list of jurisdictional origins). Naming the helper parameter ``origem``
+    would silently capture the caller's filter via Python's keyword binding
+    rules, instead of forwarding it to the schema via ``**canonical_filters``.
 
     Args:
         schema_cls: Pydantic model class to instantiate (e.g. :class:`InputCJSGTJRN`).
@@ -422,11 +430,15 @@ def apply_input_pipeline_search(
             documented limit (refs #128). The eSAJ family passes
             ``max_dias=366`` explicitly. Format and ordering of the dates are
             validated regardless of this value.
-        origem: Subject of the over-limit error message (only emitted when
-            ``max_dias`` is set). Examples: ``"O eSAJ"``, ``"O TJRS"``. When
-            ``max_dias`` is set but ``origem`` is ``None``, falls back to
-            ``"O backend"`` so the helper can be invoked by non-eSAJ
-            tribunals without leaking "eSAJ" into their error messages.
+        origem_mensagem: Subject of the over-limit error message (only emitted
+            when ``max_dias`` is set). Examples: ``"O eSAJ"``, ``"O TJRS"``.
+            ``None`` (default) falls back to ``"O backend"`` so non-eSAJ
+            tribunals invoking the helper without an explicit subject don't
+            leak ``"eSAJ"`` into their error messages.
+        date_format: ``strptime`` format used by :func:`validate_intervalo_datas`
+            to parse ``data_julgamento_*``/``data_publicacao_*``. Default
+            ``"%d/%m/%Y"`` matches eSAJ; tribunals whose backend speaks ISO
+            (TJRN, TJPA, TJRO, TJPI, ...) pass ``"%Y-%m-%d"``.
         **canonical_filters: Tribunal-specific filters already extracted from
             the public method signature (e.g. ``numero_processo=...``,
             ``relator=...``). They are forwarded to the schema as-is. **A key
@@ -447,20 +459,22 @@ def apply_input_pipeline_search(
     datas = normalize_datas(**kwargs)
     pop_normalize_aliases(kwargs, include_canonical=True)
 
-    origem_resolvido = origem if origem is not None else "O backend"
+    origem_resolvida = origem_mensagem if origem_mensagem is not None else "O backend"
     validate_intervalo_datas(
         datas["data_julgamento_inicio"],
         datas["data_julgamento_fim"],
         rotulo="data_julgamento",
         max_dias=max_dias,
-        origem=origem_resolvido,
+        origem=origem_resolvida,
+        formato=date_format,
     )
     validate_intervalo_datas(
         datas["data_publicacao_inicio"],
         datas["data_publicacao_fim"],
         rotulo="data_publicacao",
         max_dias=max_dias,
-        origem=origem_resolvido,
+        origem=origem_resolvida,
+        formato=date_format,
     )
 
     try:

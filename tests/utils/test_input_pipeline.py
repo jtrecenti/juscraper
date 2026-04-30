@@ -100,7 +100,7 @@ def test_apply_input_pipeline_invalid_date_interval_raises_valueerror_when_max_d
         apply_input_pipeline_search(
             _SchemaComJulgamento, "Test.cjsg()",
             pesquisa="x", paginas=1, kwargs=kwargs,
-            max_dias=366, origem="O eSAJ",
+            max_dias=366, origem_mensagem="O eSAJ",
         )
 
 
@@ -211,7 +211,7 @@ def test_apply_input_pipeline_single_bound_data_aceita():
     inp = apply_input_pipeline_search(
         _SchemaComJulgamento, "Test.cjsg()",
         pesquisa="x", paginas=1, kwargs=kwargs,
-        max_dias=366, origem="O eSAJ",
+        max_dias=366, origem_mensagem="O eSAJ",
     )
     assert inp.data_julgamento_inicio == "01/01/2024"
     assert inp.data_julgamento_fim is None
@@ -254,7 +254,7 @@ def test_apply_input_pipeline_origem_custom_aparece_na_mensagem():
         apply_input_pipeline_search(
             _SchemaComJulgamento, "Test.cjsg()",
             pesquisa="x", paginas=1, kwargs=kwargs,
-            max_dias=30, origem="O TJRN",
+            max_dias=30, origem_mensagem="O TJRN",
         )
 
 
@@ -267,4 +267,50 @@ def test_apply_input_pipeline_canonical_x_kwargs_collision_raises_typeerror():
             pesquisa="x", paginas=1,
             kwargs={"relator": "FROM_KWARGS"},
             relator="FROM_CANONICAL",
+        )
+
+
+# --- Cobertura de date_format (1C-a) ---------------------------------------
+
+
+def test_apply_input_pipeline_date_format_iso_aceito():
+    """Tribunais 1C-a (TJRN/TJPA/TJRO/TJPI) passam date_format='%Y-%m-%d'."""
+    kwargs = {
+        "data_julgamento_inicio": "2024-01-01",
+        "data_julgamento_fim": "2024-03-31",
+    }
+    inp = apply_input_pipeline_search(
+        _SchemaComJulgamento, "Test.cjsg()",
+        pesquisa="x", paginas=1, kwargs=kwargs,
+        date_format="%Y-%m-%d",
+    )
+    assert inp.data_julgamento_inicio == "2024-01-01"
+    assert inp.data_julgamento_fim == "2024-03-31"
+
+
+def test_apply_input_pipeline_date_format_default_rejeita_iso():
+    """Default '%d/%m/%Y' rejeita string ISO no parse de validate_intervalo_datas."""
+    kwargs = {
+        "data_julgamento_inicio": "2024-01-01",   # ISO, nao BR
+        "data_julgamento_fim": "2024-12-31",
+    }
+    with pytest.raises(ValueError, match=r"Formato esperado: %d/%m/%Y"):
+        apply_input_pipeline_search(
+            _SchemaComJulgamento, "Test.cjsg()",
+            pesquisa="x", paginas=1, kwargs=kwargs,
+            # default date_format='%d/%m/%Y'
+        )
+
+
+def test_apply_input_pipeline_date_format_iso_rejeita_data_br():
+    """date_format='%Y-%m-%d' rejeita string BR no parse."""
+    kwargs = {
+        "data_julgamento_inicio": "01/01/2024",   # BR, nao ISO
+        "data_julgamento_fim": "31/03/2024",
+    }
+    with pytest.raises(ValueError, match=r"Formato esperado: %Y-%m-%d"):
+        apply_input_pipeline_search(
+            _SchemaComJulgamento, "Test.cjsg()",
+            pesquisa="x", paginas=1, kwargs=kwargs,
+            date_format="%Y-%m-%d",
         )
