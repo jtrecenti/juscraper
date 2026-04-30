@@ -139,6 +139,28 @@ Checklist obrigatória para o PR que adiciona o raspador:
 - `src/juscraper/courts/_<familia>/schemas.py` — compartilhado pela família (ex.: `InputCJSGEsajPuro`, `OutputCJSGEsaj`). Criar só com 2+ ocorrências (Regra 1 do #84).
 - `src/juscraper/courts/<xx>/schemas.py` / `aggregators/<yy>/schemas.py` — um arquivo por tribunal/agregador com Input/Output de todos os endpoints.
 
+### Wiring em duas fases
+
+- **Schema-arquivo** (todos) — o modelo `Input<Endpoint><Tribunal>` existe em `courts/<xx>/schemas.py` e bate byte-a-byte com a assinatura do método público. Protegido contra drift por `tests/schemas/test_signature_parity.py`. Vale para todos os tribunais, inclusive os ainda não refatorados — funciona como documentação executável.
+- **Wired** (subset) — o método público invoca o schema em runtime; kwargs desconhecidos viram `TypeError` amigável via `_raise_on_extra` em `juscraper.courts._esaj.base`. Hoje: TJAC/TJAL/TJAM/TJCE/TJMS + TJSP `cjsg`/`cjpg`. O wiring entra junto com a refatoração estrutural #84.
+
+### Modelos são irmãos de `SearchBase`
+
+Modelos de endpoints diferentes herdam de `SearchBase`/mixins, **não entre si**. Exemplo: `InputCJSGEsajPuro` e `InputCJSGTJSP` divergem por histórico da API e ficam como irmãos, nunca um herdando do outro. Compartilhamento real só via base/mixin com 2+ ocorrências (Regra 1 do #84).
+
+### OOP dirigida por evidência
+
+Campo presente em ≥ 2 Inputs/Outputs concretos sobe para base/mixin; abaixo disso fica inline no tribunal. Operacionaliza a Regra 1 do #84 para schemas: evita refactor em cascata quando o desenho inicial não encaixa o segundo caso.
+
+### `paginas`: contrato único, redeclaração é drift
+
+`SearchBase.paginas: int | list[int] | range | None = None` é fonte única e 1-based em todos os raspadores. Redeclarar em schema concreto é cosmético — vira drift entre `SearchBase` e a redeclaração. Tribunais que não aceitam alguma forma (ex.: DataJud só aceita `range`) viram `xfail` em `tests/schemas/test_paginas_acceptance.py` e correção em PR próprio.
+
+### Tratamento de divergências de nome
+
+- **Output**: divergências são corrigidas no parser via renomeação. Isso é **breaking change** declarado em `CHANGELOG.md`. Output bate o nome canônico após a renomeação.
+- **Input**: divergências viram **alias deprecado** via `pop_deprecated_alias` (`src/juscraper/utils/params.py`), emitindo `DeprecationWarning`. O campo canônico não é removido do Input ao deprecar um alias.
+
 ### Pipeline canônico (wiring)
 
 Pipeline implementado em `juscraper.utils.params.apply_input_pipeline_search` (chamado por `src/juscraper/courts/_esaj/base.py:cjsg_download` e `tjsp/client.py:cjpg_download`) e exercitado em `tests/tj{ac,al,am,ce,ms,sp}/test_cjsg_filters_contract.py`. Ao wirar tribunal novo, copiar a ordem de lá: aliases (via `normalize_pesquisa`/`normalize_datas`) → validators custom → pydantic → build body a partir do modelo. Motivos: aliases antes do pydantic (senão viram `TypeError` genérico); validators custom antes (senão viram wrapped em `ValidationError`); `raise_on_extra_kwargs` depois (só `extra_forbidden` deve virar `TypeError` — erro de tipo real sobe natural). Tribunais sem limite documentado de janela ficam com `max_dias=None` (default); eSAJ passa `max_dias=366, origem="O eSAJ"` explicitamente.
