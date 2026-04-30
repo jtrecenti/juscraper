@@ -59,14 +59,17 @@ class OutputCPOPGJusBR(BaseModel):
     """Colunas observaveis em uma linha do DataFrame de
     :meth:`JusbrScraper.cpopg`.
 
-    ``processo_pesquisado`` aparece em todo fluxo — tanto no happy path
-    (processo encontrado) quanto nos fallbacks de CNJ invalido ou
-    processo nao encontrado. O JusBR retorna uma estrutura rica do
-    PDPJ-CNJ com dezenas de campos por processo; a coluna pivot e
-    suficiente como contrato minimo e o restante flui via ``extra='allow'``.
+    ``processo`` (canonico do projeto — ver CLAUDE.md > "Schemas pydantic")
+    e a coluna pivot que aparece em todo row, tanto no happy path quanto
+    nos fallbacks de CNJ invalido / nao encontrado / erro de detalhes. O
+    JusBR retorna uma estrutura rica do PDPJ-CNJ com dezenas de campos
+    por processo; a coluna pivot e suficiente como contrato minimo e o
+    restante flui via ``extra='allow'`` (incluindo ``processo_pesquisado``,
+    que existe historicamente em rows de fallback como sinonimo de
+    ``processo``).
     """
 
-    processo_pesquisado: str
+    processo: str
 
     model_config = ConfigDict(extra="allow")
 
