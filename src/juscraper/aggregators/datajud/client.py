@@ -11,15 +11,18 @@ from typing import Any, List, Optional, Union
 
 import pandas as pd
 import requests
+from pydantic import ValidationError
 from tqdm.auto import tqdm
 
 from ...core.base import BaseScraper
 from ...utils.cnj import clean_cnj  # Assuming this utility exists and is relevant
+from ...utils.params import raise_on_extra_kwargs
 from .download import build_listar_processos_payload, call_datajud_api
 
 # Import mappings for tribunal and justice aliases.
 from .mappings import ID_JUSTICA_TRIBUNAL_TO_ALIAS, TRIBUNAL_TO_ALIAS
 from .parse import parse_datajud_api_response  # To be created for API response parsing
+from .schemas import InputListarProcessosDataJud
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +32,9 @@ class DatajudScraper(BaseScraper):
 
     DEFAULT_API_KEY = "cDZHYzlZa0JadVREZDJCendQbXY6SkJlTzNjLV9TRENyQk1RdnFKZGRQdw=="
     BASE_API_URL = "https://api-publica.datajud.cnj.jus.br"
+
+    # Schema pydantic detectado por ``tests/schemas/test_signature_parity._is_wired``.
+    INPUT_LISTAR_PROCESSOS = InputListarProcessosDataJud
 
     def __init__(
         self,
@@ -53,25 +59,78 @@ class DatajudScraper(BaseScraper):
             self.download_path
         )
 
-    def listar_processos(
-        self,
-        numero_processo: Optional[Union[str, List[str]]] = None,
-        tribunal: Optional[str] = None,  # Sigla, e.g., TJSP, TRF1
-        # justica: Optional[str] = "8", # This was in original, but tribunal alias seems more direct
-        ano_ajuizamento: Optional[int] = None,
-        classe: Optional[str] = None,  # Codigo da classe
-        assuntos: Optional[List[str]] = None,  # Lista de códigos de assuntos
-        mostrar_movs: bool = False,
-        paginas: Optional[range] = None,  # For specific page range, else fetch all
-        tamanho_pagina: int = 1000  # Max allowed by API is often 1000 or 10000
-    ) -> pd.DataFrame:
-        """
-        Lists processes from Datajud via API, with support for multiple filters and pagination.
+    def listar_processos(self, paginas: Optional[range] = None, **kwargs) -> pd.DataFrame:
+        """Lista processos do DataJud via API publica do CNJ.
+
+        Filtros sao validados pelo schema :class:`InputListarProcessosDataJud`
+        (``extra="forbid"``); kwargs desconhecidos viram ``TypeError`` com a
+        mensagem ``DatajudScraper.listar_processos() got unexpected keyword
+        argument(s): '<nome>'`` em vez de serem silenciosamente ignorados.
 
         Args:
-            paginas (range, optional): Page range (1-based, e.g., range(1, 4) fetches pages 1-3).
-                None fetches all available pages.
+            **kwargs: Filtros aceitos pelo schema
+                :class:`InputListarProcessosDataJud`. Listados abaixo (todos
+                opcionais; ``None`` = sem filtro):
+
+                * ``numero_processo`` (str | list[str]): CNJ formatado ou
+                  lista de CNJs. Quando informado sem ``tribunal``, o alias-
+                  indice e inferido pelos digitos ``id_justica`` (pos. 14) +
+                  ``id_tribunal`` (pos. 15-16). CNJs invalidos ou nao
+                  mapeados emitem ``UserWarning`` e sao ignorados.
+                * ``tribunal`` (str): Sigla do tribunal (ex.: ``"TJSP"``,
+                  ``"TRT2"``, ``"TRE-SP"``). Mutuamente exclusivo com
+                  inferencia via ``numero_processo``.
+                * ``ano_ajuizamento`` (int): Filtra por ano de ajuizamento.
+                  Backend recebe ``range`` dual em ``dataAjuizamento`` (ISO
+                  ``YYYY-01-01`` + compacto ``YYYYMMDDhhmmss``).
+                * ``classe`` (str): Codigo da classe processual CNJ.
+                * ``assuntos`` (list[str]): Lista de codigos de assuntos CNJ.
+                * ``mostrar_movs`` (bool): Se ``True``, inclui
+                  ``movimentos``/``movimentacoes`` no ``_source``. Default
+                  ``False`` (paginacao mais leve).
+                * ``paginas`` (range): Intervalo 1-based; ``range(1, 4)``
+                  baixa paginas 1, 2 e 3. ``None`` (default) baixa todas.
+                * ``tamanho_pagina`` (int): Hits por pagina (default 1000).
+
+        Raises:
+            TypeError: Quando um kwarg desconhecido e passado (traduzido de
+                ``ValidationError`` por ``raise_on_extra_kwargs``).
+            ValidationError: Quando um filtro tem formato invalido (ex.:
+                ``ano_ajuizamento`` nao-int).
+            ValueError: Quando nem ``tribunal`` nem ``numero_processo`` sao
+                informados, ou quando a sigla nao tem alias mapeado.
+
+        Returns:
+            pd.DataFrame: Um DataFrame com uma linha por processo. ``extra``
+            do parser e passthrough do ``_source`` Elasticsearch — colunas
+            seguem nomenclatura camelCase do CNJ.
+
+        Exemplo:
+            >>> import juscraper as jus
+            >>> dj = jus.scraper("datajud")
+            >>> df = dj.listar_processos(tribunal="TJSP", ano_ajuizamento=2023,
+            ...                          classe="436", assuntos=["1127"],
+            ...                          paginas=range(1, 3))
+
+        See also:
+            :class:`InputListarProcessosDataJud` — fonte da verdade dos
+            filtros aceitos.
         """
+        try:
+            inp = InputListarProcessosDataJud(paginas=paginas, **kwargs)
+        except ValidationError as exc:
+            raise_on_extra_kwargs(exc, "DatajudScraper.listar_processos()")
+            raise
+
+        numero_processo = inp.numero_processo
+        tribunal = inp.tribunal
+        ano_ajuizamento = inp.ano_ajuizamento
+        classe = inp.classe
+        assuntos = inp.assuntos
+        mostrar_movs = inp.mostrar_movs
+        paginas = inp.paginas
+        tamanho_pagina = inp.tamanho_pagina
+
         all_dfs = []
         # Determine target aliases
         target_aliases = []

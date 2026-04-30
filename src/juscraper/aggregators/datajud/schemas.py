@@ -1,10 +1,10 @@
 """Pydantic schemas for the DataJud aggregator.
 
-Ainda nao wired em :mod:`juscraper.aggregators.datajud.client` — este
-arquivo e documentacao executavel da API publica ate o agregador ser
-refatorado para o pipeline canonico da #93. A lista de campos bate
-byte-a-byte com a assinatura publica de
-:meth:`DatajudScraper.listar_processos`.
+Wired em :mod:`juscraper.aggregators.datajud.client` via o atributo de
+classe ``DatajudScraper.INPUT_LISTAR_PROCESSOS``. Kwargs desconhecidos
+em :meth:`DatajudScraper.listar_processos` viram ``TypeError`` traduzido
+por :func:`juscraper.utils.params.raise_on_extra_kwargs`. A lista de
+campos bate byte-a-byte com a assinatura publica do metodo.
 """
 from __future__ import annotations
 
