@@ -22,10 +22,12 @@ from pydantic import BaseModel, ValidationError
 
 from ...core.base import BaseScraper
 from ...utils.params import (
+    iter_date_windows,
     normalize_datas,
     normalize_paginas,
     normalize_pesquisa,
     pop_normalize_aliases,
+    run_chunked_search,
     validate_intervalo_datas,
 )
 from .download import download_cjsg_pages
@@ -138,6 +140,11 @@ class EsajSearchScraper(BaseScraper):
                   (str, ``DD/MM/AAAA``): Intervalo de julgamento.
                 * ``data_publicacao_inicio`` / ``data_publicacao_fim``
                   (str, ``DD/MM/AAAA``): Intervalo de publicacao.
+                * ``auto_chunk`` (bool): Default ``True``. Quando o
+                  intervalo ``data_julgamento_*`` excede 366 dias,
+                  divide internamente em janelas, baixa cada uma e
+                  concatena com dedup por ``cd_acordao``. Veja a secao
+                  "Auto-chunking" abaixo.
 
         Aliases deprecados (popados com ``DeprecationWarning`` antes do
         pydantic):
@@ -168,7 +175,49 @@ class EsajSearchScraper(BaseScraper):
             :class:`InputCJSGEsajPuro` (ou
             :class:`~juscraper.courts.tjsp.schemas.InputCJSGTJSP`) —
             schema pydantic e a fonte da verdade dos filtros aceitos.
+
+        Auto-chunking (issue #130):
+            Se ``auto_chunk=True`` (default herdado de
+            :class:`~juscraper.schemas.AutoChunkMixin`) e o intervalo
+            ``data_julgamento_*`` exceder 366 dias, a busca e dividida em
+            janelas internas, baixadas e concatenadas com dedup por
+            ``cd_acordao``. Falhas por janela viram :class:`UserWarning`
+            (parcial + warning). ``auto_chunk=True`` + ``paginas != None``
+            em janela > 366 dias e :class:`ValueError`. Para o
+            comportamento estrito antigo (``ValueError`` em janelas
+            longas), passe ``auto_chunk=False``.
         """
+        auto_chunk = kwargs.pop("auto_chunk", True)
+
+        if auto_chunk:
+            sniff = normalize_datas(**kwargs)
+            dj_i = sniff["data_julgamento_inicio"]
+            dj_f = sniff["data_julgamento_fim"]
+            windows = list(iter_date_windows(dj_i, dj_f, max_dias=366))
+            if len(windows) > 1:
+                pop_normalize_aliases(kwargs, include_canonical=True)
+
+                def _fetch(win_i, win_f):
+                    return self.cjsg(
+                        pesquisa,
+                        paginas=None,
+                        data_julgamento_inicio=win_i,
+                        data_julgamento_fim=win_f,
+                        auto_chunk=False,
+                        **kwargs,
+                    )
+
+                return run_chunked_search(
+                    _fetch,
+                    data_inicio=dj_i,
+                    data_fim=dj_f,
+                    dedup_key="cd_acordao",
+                    max_dias=366,
+                    paginas=paginas,
+                    rotulo="data_julgamento",
+                )
+
+        kwargs["auto_chunk"] = auto_chunk
         path = self.cjsg_download(pesquisa=pesquisa, paginas=paginas, **kwargs)
         try:
             return self.cjsg_parse(path)

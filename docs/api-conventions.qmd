@@ -99,6 +99,52 @@ scraper.cjsg(pesquisa="teste", paginas=1) # downloads page 1 only
 scraper.cjsg(pesquisa="teste", paginas=3) # downloads pages 1-3
 ```
 
+## Auto-chunking (eSAJ family)
+
+Several eSAJ endpoints (`cjpg`/`cjsg` in TJSP, plus `cjsg` in TJAC, TJAL,
+TJAM, TJCE, TJMS) cap each request at a one-year `data_julgamento_*`
+window. When the user asks for a longer interval, the scraper
+**automatically** splits the request into year-long windows, fetches each
+one, and concatenates the results — deduplicating by `cd_acordao` (cjsg)
+or `id_processo` (cjpg).
+
+```python
+import juscraper as jus
+
+tjsp = jus.scraper("tjsp")
+
+# Six-year span: scraper sends 6 requests under the hood and returns
+# a single deduplicated DataFrame.
+df = tjsp.cjsg(
+    pesquisa="dano moral",
+    data_julgamento_inicio="01/01/2018",
+    data_julgamento_fim="31/12/2024",
+)
+```
+
+The behaviour is controlled by `auto_chunk: bool = True` (default on).
+To restore the strict pre-2026 behaviour (a `ValueError` is raised for
+windows longer than 366 days), set `auto_chunk=False` — useful for
+input validation paths that want to fail before submitting a long job:
+
+```python
+tjsp.cjsg(
+    pesquisa="dano moral",
+    data_julgamento_inicio="01/01/2018",
+    data_julgamento_fim="31/12/2024",
+    auto_chunk=False,  # raises ValueError ("aceita no máximo 366 dias")
+)
+```
+
+Per-window failures (network errors, captchas, 5xx) are captured and
+surfaced as a single `UserWarning` listing the failed windows; the
+returned DataFrame contains whatever was downloaded successfully (parcial
++ warning). Combining `auto_chunk=True` with `paginas` is rejected when
+the interval is long enough to actually trigger chunking: the multi-window
+semantics for `paginas` are ambiguous (each window? aggregated budget?)
+and the design prefers to fail explicitly. For short intervals where
+chunking is a no-op, `paginas` works as usual.
+
 ## Normalization Utilities
 
 The `juscraper.utils.params` module provides normalization functions used internally by all scrapers:
@@ -106,4 +152,6 @@ The `juscraper.utils.params` module provides normalization functions used intern
 - `normalize_paginas(paginas)` — normalizes `int | list | range | None`
 - `normalize_pesquisa(pesquisa, **kwargs)` — handles deprecated aliases
 - `normalize_datas(**kwargs)` — handles deprecated and generic date aliases
+- `iter_date_windows(data_inicio, data_fim, *, max_dias=366)` — splits a date range into non-overlapping windows for auto-chunking
+- `run_chunked_search(fetch_window, *, data_inicio, data_fim, dedup_key, ...)` — drives a search across windows, concatenates and deduplicates
 - `warn_unsupported(param_name, tribunal)` — warns about unsupported parameters

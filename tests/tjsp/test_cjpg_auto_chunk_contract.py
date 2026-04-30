@@ -1,0 +1,99 @@
+"""Offline contract tests for ``auto_chunk`` em TJSP cjpg (issue #130).
+
+Mesma estrutura de ``test_cjsg_auto_chunk_contract.py``, com dedup por
+``id_processo`` (chave canônica do parser cjpg, vide
+``tjsp/cjpg_parse.py``).
+"""
+import pandas as pd
+import pytest
+
+import juscraper as jus
+from juscraper.courts.tjsp.client import TJSPScraper
+
+
+def _patch_pipeline(mocker, parse_side_effect=None, parse_return=None):
+    download = mocker.patch.object(TJSPScraper, "cjpg_download", return_value="/fake/path")
+    if parse_side_effect is not None:
+        parse = mocker.patch.object(TJSPScraper, "cjpg_parse", side_effect=parse_side_effect)
+    else:
+        parse = mocker.patch.object(
+            TJSPScraper,
+            "cjpg_parse",
+            return_value=parse_return if parse_return is not None
+            else pd.DataFrame({"id_processo": ["x"]}),
+        )
+    mocker.patch("juscraper.courts.tjsp.client.shutil.rmtree")
+    return download, parse
+
+
+def test_auto_chunk_false_long_window_raises(tmp_path):
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+    with pytest.raises(ValueError, match="no máximo 366"):
+        scraper.cjpg(
+            "dano moral",
+            data_julgamento_inicio="01/01/2022",
+            data_julgamento_fim="31/12/2024",
+            auto_chunk=False,
+        )
+
+
+def test_auto_chunk_default_short_window_is_noop(tmp_path, mocker):
+    download, _ = _patch_pipeline(mocker)
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+
+    df = scraper.cjpg(
+        "dano moral",
+        data_julgamento_inicio="01/01/2024",
+        data_julgamento_fim="31/12/2024",
+    )
+
+    assert download.call_count == 1
+    assert list(df["id_processo"]) == ["x"]
+
+
+def test_auto_chunk_default_long_window_chunks_and_dedups(tmp_path, mocker):
+    counter = {"i": 0}
+
+    def fake_parse(_path):
+        counter["i"] += 1
+        return pd.DataFrame({"id_processo": [f"proc-{counter['i']}", "shared"]})
+
+    download, _ = _patch_pipeline(mocker, parse_side_effect=fake_parse)
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+
+    df = scraper.cjpg(
+        "dano moral",
+        data_julgamento_inicio="01/01/2022",
+        data_julgamento_fim="31/12/2024",
+    )
+
+    assert download.call_count == 3
+    assert len(df) == 4
+    assert (df["id_processo"] == "shared").sum() == 1
+
+
+def test_auto_chunk_default_long_window_with_paginas_raises(tmp_path):
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+    with pytest.raises(ValueError, match="auto_chunk.*paginas"):
+        scraper.cjpg(
+            "dano moral",
+            paginas=range(1, 3),
+            data_julgamento_inicio="01/01/2022",
+            data_julgamento_fim="31/12/2024",
+        )
+
+
+def test_auto_chunk_default_short_window_with_paginas_ok(tmp_path, mocker):
+    download, _ = _patch_pipeline(mocker)
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+
+    scraper.cjpg(
+        "dano moral",
+        paginas=range(1, 3),
+        data_julgamento_inicio="01/01/2024",
+        data_julgamento_fim="31/12/2024",
+    )
+
+    assert download.call_count == 1
+    _, kwargs = download.call_args
+    assert kwargs["paginas"] == range(1, 3)
