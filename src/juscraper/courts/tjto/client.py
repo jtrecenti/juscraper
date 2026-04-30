@@ -2,16 +2,18 @@
 Scraper for the Tribunal de Justica do Tocantins (TJTO).
 """
 import logging
-from typing import List, Optional, Union
+from typing import List, Optional, Type, Union
 
 import pandas as pd
 import requests
+from pydantic import BaseModel
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa
+from juscraper.utils.params import apply_input_pipeline_search, normalize_paginas, normalize_pesquisa
 
 from .download import TYPE_MINUTA_MAP, _fetch_ementa, cjsg_download_manager
 from .parse import cjsg_parse_manager
+from .schemas import InputCJPGTJTO, InputCJSGTJTO
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +43,8 @@ class TJTOScraper(BaseScraper):
         pesquisa,
         paginas,
         instancia: str,
+        schema_cls: Type[BaseModel],
+        method_name: str,
         tipo_documento: str = "acordaos",
         ordenacao: str = "DESC",
         numero_processo: str = "",
@@ -53,27 +57,41 @@ class TJTOScraper(BaseScraper):
         """Shared download logic for cjsg and cjpg."""
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
         paginas = normalize_paginas(paginas)
-        datas = normalize_datas(
-            data_julgamento_inicio=data_julgamento_inicio,
-            data_julgamento_fim=data_julgamento_fim,
-            **kwargs,
+        # Re-inject explicit date args into kwargs so the pipeline can resolve
+        # aliases (data_inicio/data_fim) and canonical names in a single pass.
+        for _date_key, _date_val in (
+            ("data_julgamento_inicio", data_julgamento_inicio),
+            ("data_julgamento_fim", data_julgamento_fim),
+        ):
+            if _date_val is not None:
+                kwargs[_date_key] = _date_val
+        inp = apply_input_pipeline_search(
+            schema_cls,
+            method_name,
+            pesquisa=pesquisa,
+            paginas=paginas,
+            kwargs=kwargs,
+            tipo_documento=tipo_documento,
+            ordenacao=ordenacao,
+            numero_processo=numero_processo,
+            soementa=soementa,
         )
 
-        type_minuta = TYPE_MINUTA_MAP.get(tipo_documento, "1")
+        type_minuta = TYPE_MINUTA_MAP.get(inp.tipo_documento, "1")
 
         if session is None:
             session = self.session
 
         return cjsg_download_manager(
-            termo=pesquisa,
-            paginas=paginas,
+            termo=inp.pesquisa,
+            paginas=inp.paginas,
             type_minuta=type_minuta,
             tip_criterio_inst=instancia,
-            tip_criterio_data=ordenacao,
-            numero_processo=numero_processo,
-            dat_jul_ini=datas["data_julgamento_inicio"] or "",
-            dat_jul_fim=datas["data_julgamento_fim"] or "",
-            soementa=soementa,
+            tip_criterio_data=inp.ordenacao,
+            numero_processo=inp.numero_processo,
+            dat_jul_ini=inp.data_julgamento_inicio or "",
+            dat_jul_fim=inp.data_julgamento_fim or "",
+            soementa=inp.soementa,
             session=session,
         )
 
@@ -111,6 +129,8 @@ class TJTOScraper(BaseScraper):
             pesquisa=pesquisa,
             paginas=paginas,
             instancia="2",
+            schema_cls=InputCJSGTJTO,
+            method_name="TJTOScraper.cjsg_download()",
             tipo_documento=tipo_documento,
             ordenacao=ordenacao,
             numero_processo=numero_processo,
@@ -201,6 +221,8 @@ class TJTOScraper(BaseScraper):
             pesquisa=pesquisa,
             paginas=paginas,
             instancia="1",
+            schema_cls=InputCJPGTJTO,
+            method_name="TJTOScraper.cjpg_download()",
             tipo_documento=tipo_documento,
             ordenacao=ordenacao,
             numero_processo=numero_processo,

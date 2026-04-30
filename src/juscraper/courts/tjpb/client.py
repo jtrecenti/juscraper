@@ -6,10 +6,16 @@ import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa, resolve_deprecated_alias
+from juscraper.utils.params import (
+    apply_input_pipeline_search,
+    normalize_paginas,
+    normalize_pesquisa,
+    resolve_deprecated_alias,
+)
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
+from .schemas import InputCJSGTJPB
 
 
 def _parse_br(d: str) -> date | None:
@@ -90,18 +96,30 @@ class TJPBScraper(BaseScraper):
         )
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
         paginas = normalize_paginas(paginas)
-        datas = normalize_datas(**kwargs)
-        brutos = self.cjsg_download(
+        inp = apply_input_pipeline_search(
+            InputCJSGTJPB,
+            "TJPBScraper.cjsg()",
             pesquisa=pesquisa,
             paginas=paginas,
-            nr_processo=numero_processo,
+            kwargs=kwargs,
+            numero_processo=numero_processo,
             id_classe_judicial=id_classe_judicial,
             id_orgao_julgador=id_orgao_julgador,
             id_relator=id_relator,
-            dt_inicio=datas["data_julgamento_inicio"] or "",
-            dt_fim=datas["data_julgamento_fim"] or "",
             id_origem=id_origem,
             decisoes=decisoes,
+        )
+        brutos = self.cjsg_download(
+            pesquisa=inp.pesquisa,
+            paginas=inp.paginas,
+            nr_processo=inp.numero_processo,
+            id_classe_judicial=inp.id_classe_judicial,
+            id_orgao_julgador=inp.id_orgao_julgador,
+            id_relator=inp.id_relator,
+            dt_inicio=inp.data_julgamento_inicio or "",
+            dt_fim=inp.data_julgamento_fim or "",
+            id_origem=inp.id_origem,
+            decisoes=inp.decisoes,
         )
         df = self.cjsg_parse(brutos)
 
@@ -110,8 +128,8 @@ class TJPBScraper(BaseScraper):
         # dt_ementa far outside the requested window. Post-filter so the
         # returned data_julgamento (= dt_ementa) matches user intent.
         if not df.empty and "data_julgamento" in df.columns:
-            start = _parse_br(datas["data_julgamento_inicio"])
-            end = _parse_br(datas["data_julgamento_fim"])
+            start = _parse_br(inp.data_julgamento_inicio)
+            end = _parse_br(inp.data_julgamento_fim)
             if start is not None and end is not None:
                 mask = df["data_julgamento"].between(start, end)
                 df = df[mask].reset_index(drop=True)
