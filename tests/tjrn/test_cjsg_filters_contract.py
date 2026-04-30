@@ -11,7 +11,13 @@ from tests._helpers import load_sample
 
 @responses.activate
 def test_cjsg_all_filters_land_in_json_body(mocker):
-    """Every public filter must reach the POST JSON payload via ``build_cjsg_payload``."""
+    """Every public filter must reach the POST JSON payload via ``build_cjsg_payload``.
+
+    ``data_julgamento_inicio``/``fim`` arrive in ISO at the public method but
+    ``TJRNScraper`` rewrites them as ``DD-MM-YYYY`` (with dashes) before
+    passing to ``cjsg_download_manager`` — the backend silently drops any
+    other format. See ``_to_tjrn_date`` in ``courts/tjrn/client.py``.
+    """
     mocker.patch("time.sleep")
     responses.add(
         responses.POST,
@@ -27,8 +33,8 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
             id_orgao_julgador="456",
             id_relator="789",
             id_colegiado="10",
-            dt_inicio="2024-01-01",
-            dt_fim="2024-03-31",
+            dt_inicio="01-01-2024",
+            dt_fim="31-03-2024",
             sistema="PJE",
             decisoes="Colegiadas",
             jurisdicoes="Tribunal de Justica",
@@ -122,8 +128,10 @@ def test_cjsg_nr_processo_alias_emits_deprecation_warning(mocker):
 @responses.activate
 def test_cjsg_data_inicio_alias_maps_to_data_julgamento(mocker):
     """``data_inicio``/``data_fim`` generic aliases map to
-    ``data_julgamento_inicio``/``data_julgamento_fim`` via ``normalize_datas``
-    and reach the BFF payload as ``dt_inicio``/``dt_fim``.
+    ``data_julgamento_inicio``/``data_julgamento_fim`` via ``normalize_datas``,
+    are rewritten as ``DD-MM-YYYY`` by ``_to_tjrn_date`` (TJRN's backend
+    silently ignores other formats) and reach the BFF payload as
+    ``dt_inicio``/``dt_fim``.
     """
     mocker.patch("time.sleep")
     responses.add(
@@ -135,8 +143,8 @@ def test_cjsg_data_inicio_alias_maps_to_data_julgamento(mocker):
         match=[json_params_matcher(build_cjsg_payload(
             "dano moral",
             page=1,
-            dt_inicio="2024-01-01",
-            dt_fim="2024-03-31",
+            dt_inicio="01-01-2024",
+            dt_fim="31-03-2024",
         ))],
     )
 

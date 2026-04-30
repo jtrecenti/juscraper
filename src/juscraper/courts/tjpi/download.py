@@ -20,8 +20,15 @@ def build_cjsg_params(
     relator: str = "",
     classe: str = "",
     orgao: str = "",
+    data_min: str = "",
+    data_max: str = "",
 ) -> dict:
-    """Build the query-string params dict for the TJPI CJSG search endpoint."""
+    """Build the query-string params dict for the TJPI CJSG search endpoint.
+
+    ``data_min``/``data_max`` are the BFF date filter (ISO ``YYYY-MM-DD``);
+    they are wired by ``TJPIScraper.cjsg`` after going through
+    ``normalize_datas`` + ``to_iso_date``.
+    """
     params = {"q": pesquisa, "page": str(page)}
     if tipo:
         params["tipo"] = tipo
@@ -31,6 +38,10 @@ def build_cjsg_params(
         params["classe"] = classe
     if orgao:
         params["orgao"] = orgao
+    if data_min:
+        params["data_min"] = data_min
+    if data_max:
+        params["data_max"] = data_max
     return params
 
 
@@ -42,12 +53,15 @@ def _fetch_page(
     relator: str = "",
     classe: str = "",
     orgao: str = "",
+    data_min: str = "",
+    data_max: str = "",
     max_retries: int = 3,
 ) -> str:
     """Fetch a single page of HTML results from the TJPI search."""
     params = build_cjsg_params(
         pesquisa=pesquisa, page=page,
         tipo=tipo, relator=relator, classe=classe, orgao=orgao,
+        data_min=data_min, data_max=data_max,
     )
 
     for attempt in range(1, max_retries + 1):

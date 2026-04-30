@@ -67,24 +67,25 @@ def test_cjsg_query_alias_emits_deprecation_warning(mocker):
 
 
 @responses.activate
-def test_cjsg_data_inicio_alias_emits_deprecation_warning(mocker):
-    """Generic ``data_inicio``/``data_fim`` aliases emit deprecation warnings
-    even though TJDFT ignores date filters (``warn_unsupported`` is the current
-    behaviour). The request body stays identical to the no-filter baseline.
+def test_cjsg_data_inicio_alias_maps_to_data_julgamento(mocker):
+    """Generic ``data_inicio``/``data_fim`` aliases map to
+    ``data_julgamento_inicio``/``data_julgamento_fim`` via ``normalize_datas``
+    and reach the request body as a ``termosAcessorios`` entry with the
+    canonical ``"entre YYYY-MM-DD e YYYY-MM-DD"`` value.
     """
     mocker.patch("time.sleep")
+    expected_termos = [
+        {"campo": "dataJulgamento", "valor": "entre 2024-01-01 e 2024-03-31"},
+    ]
     responses.add(
         responses.POST,
         BASE,
         body=load_sample("tjdft", "cjsg/no_results.json"),
         status=200,
         content_type="application/json",
-        match=[json_params_matcher(_payload("dano moral", 1))],
+        match=[json_params_matcher(_payload("dano moral", 1, termos_acessorios=expected_termos))],
     )
 
-    # TJDFT also emits ``UserWarning`` via ``warn_unsupported`` because it
-    # doesn't support date filters at all; ignore those so we can assert on
-    # the DeprecationWarning from ``normalize_datas``.
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")
         df = jus.scraper("tjdft").cjsg(
@@ -98,9 +99,3 @@ def test_cjsg_data_inicio_alias_emits_deprecation_warning(mocker):
     deprecation_messages = [str(w.message) for w in caught if issubclass(w.category, DeprecationWarning)]
     assert any("data_inicio" in m and "deprecado" in m for m in deprecation_messages)
     assert any("data_fim" in m and "deprecado" in m for m in deprecation_messages)
-    # The second guarantee: ``warn_unsupported`` must also fire so the user
-    # learns that TJDFT silently drops the date filters. If this ever stops
-    # firing we want the test to catch it.
-    user_warning_messages = [str(w.message) for w in caught if w.category is UserWarning]
-    assert any("data_julgamento_inicio" in m and "TJDFT" in m for m in user_warning_messages)
-    assert any("data_julgamento_fim" in m and "TJDFT" in m for m in user_warning_messages)
