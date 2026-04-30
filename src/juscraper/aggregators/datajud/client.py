@@ -92,6 +92,13 @@ class DatajudScraper(BaseScraper):
                   baixa paginas 1, 2 e 3. ``None`` (default) baixa todas.
                 * ``tamanho_pagina`` (int): Hits por pagina (default 1000).
 
+        Aliases deprecados:
+            Sem aliases nesta API — DataJud nao tem ``pesquisa`` nem
+            filtros de data baseados em ``DD/MM/AAAA``, entao o
+            pipeline canonico ``normalize_pesquisa``/``normalize_datas``
+            nao se aplica. Todos os filtros aceitam apenas o nome
+            canonico listado acima.
+
         Raises:
             TypeError: Quando um kwarg desconhecido e passado (traduzido de
                 ``ValidationError`` por ``raise_on_extra_kwargs``).
