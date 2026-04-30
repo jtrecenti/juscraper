@@ -1,0 +1,101 @@
+{
+  "took": 3121,
+  "timed_out": false,
+  "_shards": {
+    "total": 20,
+    "successful": 20,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 71899024,
+      "relation": "eq"
+    },
+    "max_score": null,
+    "hits": [
+      {
+        "_index": "api_publica_tjsp",
+        "_id": "TJSP_100_G1_10012_10005382420168260415",
+        "_score": null,
+        "_source": {
+          "classe": {
+            "codigo": 100,
+            "nome": "Dúvida"
+          },
+          "numeroProcesso": "10005382420168260415",
+          "sistema": {
+            "codigo": 3,
+            "nome": "SAJ"
+          },
+          "formato": {
+            "codigo": 1,
+            "nome": "Eletrônico"
+          },
+          "tribunal": "TJSP",
+          "dataHoraUltimaAtualizacao": "2023-07-19T17:30:52.120Z",
+          "grau": "G1",
+          "@timestamp": "2025-11-03T15:24:04.539883295Z",
+          "dataAjuizamento": "20160322164243",
+          "id": "TJSP_100_G1_10012_10005382420168260415",
+          "nivelSigilo": 0,
+          "orgaoJulgador": {
+            "codigoMunicipioIBGE": 3535309,
+            "codigo": 10012,
+            "nome": "01 CUMULATIVA DE PALMITAL"
+          },
+          "assuntos": [
+            {
+              "codigo": 7895,
+              "nome": "Registro de Imóveis"
+            }
+          ]
+        },
+        "sort": [
+          "TJSP_100_G1_10012_10005382420168260415"
+        ]
+      },
+      {
+        "_index": "api_publica_tjsp",
+        "_id": "TJSP_100_G1_10012_10008476920218260415",
+        "_score": null,
+        "_source": {
+          "classe": {
+            "codigo": 100,
+            "nome": "Dúvida"
+          },
+          "numeroProcesso": "10008476920218260415",
+          "sistema": {
+            "codigo": 3,
+            "nome": "SAJ"
+          },
+          "formato": {
+            "codigo": 1,
+            "nome": "Eletrônico"
+          },
+          "tribunal": "TJSP",
+          "dataHoraUltimaAtualizacao": "2023-07-19T17:37:00.107Z",
+          "grau": "G1",
+          "@timestamp": "2025-11-03T15:24:41.326001460Z",
+          "dataAjuizamento": "20210525115332",
+          "id": "TJSP_100_G1_10012_10008476920218260415",
+          "nivelSigilo": 0,
+          "orgaoJulgador": {
+            "codigoMunicipioIBGE": 3535309,
+            "codigo": 10012,
+            "nome": "01 CUMULATIVA DE PALMITAL"
+          },
+          "assuntos": [
+            {
+              "codigo": 7895,
+              "nome": "Registro de Imóveis"
+            }
+          ]
+        },
+        "sort": [
+          "TJSP_100_G1_10012_10008476920218260415"
+        ]
+      }
+    ]
+  }
+}

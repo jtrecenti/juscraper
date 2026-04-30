@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from typing import Any, Callable, Iterator, Optional, Union
 
 import pandas as pd
+from pydantic import BaseModel, ValidationError
 
 # Deprecated aliases consumed by ``normalize_pesquisa``. Keep in sync with the
 # loop inside that function.
@@ -257,10 +258,12 @@ def validate_intervalo_datas(
             left to the server.
         data_fim: End date as a string or ``None``.
         max_dias: Maximum allowed interval in days (default: 366 to admit a
-            full calendar year even across a leap day). ``None`` disables
-            the window check while still validating ``formato`` and
-            ``data_inicio <= data_fim`` — used by :func:`run_chunked_search`
-            to validate format/ordering without enforcing a cap.
+            full calendar year even across a leap day). ``None`` disables the
+            window check while still validating ``formato`` and
+            ``data_inicio <= data_fim`` — used both by tribunals whose backend
+            has no documented limit (audited under #128) and por
+            :func:`run_chunked_search` para validar formato/ordem sem aplicar
+            cap (#130).
         formato: ``strptime`` format of the input strings.
         rotulo: Human-readable label for the parameter pair in error messages
             (e.g. ``"data_julgamento"``).
@@ -504,6 +507,158 @@ def pop_deprecated_alias(kwargs: dict, old: str, new: str):
         stacklevel=3,
     )
     return value
+
+
+def raise_on_extra_kwargs(exc: ValidationError, method: str) -> None:
+    """Convert pydantic ``extra_forbidden`` errors into a friendly ``TypeError``.
+
+    Regular users expect ``TypeError: got unexpected keyword argument`` when
+    they mistype a param name. Raising pydantic's ``ValidationError`` for that
+    case is accurate but unfriendly. Other validation errors (bad date format,
+    wrong literal, etc.) surface as-is so the caller can see them.
+
+    Args:
+        exc: The :class:`pydantic.ValidationError` raised by ``Schema(...)``.
+        method: Human-readable method identifier for the error message
+            (e.g. ``"TJRNScraper.cjsg()"``).
+
+    Raises:
+        TypeError: When *all* errors in ``exc`` are ``extra_forbidden``. The
+            offending field names are included in the message. When the error
+            mix is not pure ``extra_forbidden`` the function returns ``None``
+            and the caller is expected to ``raise`` the original exception.
+    """
+    extras = [err for err in exc.errors() if err["type"] == "extra_forbidden"]
+    if extras and len(extras) == len(exc.errors()):
+        names = ", ".join(repr(err["loc"][-1]) for err in extras)
+        raise TypeError(f"{method} got unexpected keyword argument(s): {names}") from exc
+
+
+def apply_input_pipeline_search(
+    schema_cls: type[BaseModel],
+    method_name: str,
+    *,
+    pesquisa: str,
+    paginas,
+    kwargs: dict,
+    max_dias: Optional[int] = None,
+    origem_mensagem: Optional[str] = None,
+    date_format: str = "%d/%m/%Y",
+    **canonical_filters,
+) -> BaseModel:
+    """Run the canonical input-validation pipeline for search endpoints (cjsg/cjpg).
+
+    Order:
+
+    1. :func:`normalize_paginas` — int → ``range(1, n+1)``; list/range/None passthrough.
+    2. :func:`normalize_datas` — pop date aliases (``_de``/``_ate``,
+       ``data_inicio``/``data_fim``) emitting :class:`DeprecationWarning` and
+       returning canonical names.
+    3. :func:`pop_normalize_aliases` — strip from ``kwargs`` everything already
+       consumed (search aliases, date aliases, canonical date keys), so the
+       same value isn't propagated twice into the schema.
+    4. :func:`validate_intervalo_datas` for julgamento *and* publicação. Format
+       and ``inicio <= fim`` are always validated; the window cap is applied
+       only when ``max_dias`` is set.
+    5. ``schema_cls(pesquisa, paginas, **datas, **canonical_filters, **kwargs)``
+       — pydantic validation with ``extra="forbid"``.
+    6. :func:`raise_on_extra_kwargs` translates ``extra_forbidden`` errors into
+       a :class:`TypeError`. Other validation errors propagate as-is.
+
+    The caller is responsible for:
+
+    - Calling :func:`normalize_pesquisa` (or skipping it when the endpoint
+      accepts ``pesquisa=""``, e.g. TJSP cjpg).
+    - Popping tribunal-specific deprecated aliases (``nr_processo``,
+      ``magistrado``) **before** invoking this helper, otherwise pydantic
+      rejects them as ``extra_forbidden``.
+    - Running tribunal-specific validators that should fire before pydantic
+      (e.g. ``validate_pesquisa_length`` in TJSP).
+    - Passing ``max_dias`` and ``origem_mensagem`` when the backend has a
+      documented window limit (e.g. eSAJ: ``max_dias=366,
+      origem_mensagem="O eSAJ"``). The defaults disable the window check,
+      since most non-eSAJ backends accept arbitrarily wide ranges (audited
+      under #128).
+
+    The parameter is named ``origem_mensagem`` (not ``origem``) on purpose:
+    several tribunal scrapers use ``origem`` as a backend filter (e.g. TJPA's
+    list of jurisdictional origins). Naming the helper parameter ``origem``
+    would silently capture the caller's filter via Python's keyword binding
+    rules, instead of forwarding it to the schema via ``**canonical_filters``.
+
+    Args:
+        schema_cls: Pydantic model class to instantiate (e.g. :class:`InputCJSGTJRN`).
+        method_name: Human-readable identifier used in the ``TypeError`` message
+            when ``extra_forbidden`` triggers (e.g. ``"TJRNScraper.cjsg()"``).
+        pesquisa: Already-normalized search term (or ``""`` for endpoints that
+            allow open searches).
+        paginas: Pages parameter as accepted by the public method (``int``,
+            ``list``, ``range``, or ``None``).
+        kwargs: The caller's local ``kwargs`` dict. Mutated in place by
+            :func:`pop_normalize_aliases` and consumed by ``schema_cls``.
+        max_dias: Window cap for date intervals, in days. ``None`` (default)
+            disables the cap — used by tribunals whose backend has no
+            documented limit (refs #128). The eSAJ family passes
+            ``max_dias=366`` explicitly. Format and ordering of the dates are
+            validated regardless of this value.
+        origem_mensagem: Subject of the over-limit error message (only emitted
+            when ``max_dias`` is set). Examples: ``"O eSAJ"``, ``"O TJRS"``.
+            ``None`` (default) falls back to ``"O backend"`` so non-eSAJ
+            tribunals invoking the helper without an explicit subject don't
+            leak ``"eSAJ"`` into their error messages.
+        date_format: ``strptime`` format used by :func:`validate_intervalo_datas`
+            to parse ``data_julgamento_*``/``data_publicacao_*``. Default
+            ``"%d/%m/%Y"`` matches eSAJ; tribunals whose backend speaks ISO
+            (TJRN, TJPA, TJRO, TJPI, ...) pass ``"%Y-%m-%d"``.
+        **canonical_filters: Tribunal-specific filters already extracted from
+            the public method signature (e.g. ``numero_processo=...``,
+            ``relator=...``). They are forwarded to the schema as-is. **A key
+            present in both ``canonical_filters`` and ``kwargs`` raises
+            :class:`TypeError` (Python's ``schema_cls(**a, **b)`` semantics) —
+            the caller is expected to pop conflicting kwargs beforehand.**
+
+    Returns:
+        Instantiated pydantic model with all fields validated.
+
+    Raises:
+        TypeError: When ``kwargs`` contains keys not declared in the schema.
+        ValidationError: For other validation failures (bad type, format,
+            literal mismatch).
+        ValueError: When :func:`validate_intervalo_datas` rejects an interval.
+    """
+    paginas_norm = normalize_paginas(paginas)
+    datas = normalize_datas(**kwargs)
+    pop_normalize_aliases(kwargs, include_canonical=True)
+
+    origem_resolvida = origem_mensagem if origem_mensagem is not None else "O backend"
+    validate_intervalo_datas(
+        datas["data_julgamento_inicio"],
+        datas["data_julgamento_fim"],
+        rotulo="data_julgamento",
+        max_dias=max_dias,
+        origem=origem_resolvida,
+        formato=date_format,
+    )
+    validate_intervalo_datas(
+        datas["data_publicacao_inicio"],
+        datas["data_publicacao_fim"],
+        rotulo="data_publicacao",
+        max_dias=max_dias,
+        origem=origem_resolvida,
+        formato=date_format,
+    )
+
+    try:
+        return schema_cls(
+            pesquisa=pesquisa,
+            paginas=paginas_norm,
+            **{k: v for k, v in datas.items() if v is not None},
+            **canonical_filters,
+            **kwargs,
+        )
+    except ValidationError as exc:
+        raise_on_extra_kwargs(exc, method_name)
+        raise
 
 
 def resolve_deprecated_alias(

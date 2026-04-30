@@ -7,7 +7,7 @@ import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa
+from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa, pop_normalize_aliases
 
 from .download import cjsg_download, get_initial_tokens
 from .parse import cjsg_parse
@@ -89,13 +89,21 @@ class TJPRScraper(BaseScraper):
         Returns a ready-to-analyze DataFrame.
         """
         pesquisa_val = normalize_pesquisa(pesquisa, **kwargs)
-        brutos = self.cjsg_download(
-            pesquisa=pesquisa_val,
-            paginas=paginas,
+        datas = normalize_datas(
             data_julgamento_inicio=data_julgamento_inicio,
             data_julgamento_fim=data_julgamento_fim,
             data_publicacao_inicio=data_publicacao_inicio,
             data_publicacao_fim=data_publicacao_fim,
+            **kwargs,
+        )
+        pop_normalize_aliases(kwargs, include_canonical=True)
+        brutos = self.cjsg_download(
+            pesquisa=pesquisa_val,
+            paginas=paginas,
+            data_julgamento_inicio=datas["data_julgamento_inicio"],
+            data_julgamento_fim=datas["data_julgamento_fim"],
+            data_publicacao_inicio=datas["data_publicacao_inicio"],
+            data_publicacao_fim=datas["data_publicacao_fim"],
             **kwargs,
         )
         return self.cjsg_parse(brutos, pesquisa_val)
