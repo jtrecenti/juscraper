@@ -15,8 +15,15 @@ BASE_URL = "https://jurisprudencia.tjpa.jus.br/bff/api/decisoes/buscar"
 SITE_URL = "https://jurisprudencia.tjpa.jus.br"
 RESULTS_PER_PAGE = 25
 
+CJSG_HEADERS = {
+    "Content-Type": "application/json",
+    "Accept": "application/json, text/plain, */*",
+    "Referer": SITE_URL + "/",
+    "Origin": SITE_URL,
+}
 
-def _build_payload(
+
+def build_cjsg_payload(
     pesquisa: str,
     pagina_0based: int,
     size: int = RESULTS_PER_PAGE,
@@ -73,18 +80,23 @@ def _build_payload(
     return payload
 
 
+def post_cjsg(session: requests.Session, payload: dict, *, timeout: int = 30) -> requests.Response:
+    """Send the TJPA CJSG search request and return the raw ``Response``.
+
+    Single source of truth for the request shape (URL + body serialization
+    with ``ensure_ascii=False`` + headers). Both ``_fetch_page`` and the
+    capture script in ``tests/fixtures/capture/tjpa.py`` call this helper
+    so a change to body/headers can't drift silently.
+    """
+    body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    return session.post(BASE_URL, data=body, headers=CJSG_HEADERS, timeout=timeout)
+
+
 def _fetch_page(session: requests.Session, payload: dict, max_retries: int = 3) -> dict:
     """Fetch a single page from the TJPA API with retry logic."""
-    headers = {
-        "Content-Type": "application/json",
-        "Accept": "application/json, text/plain, */*",
-        "Referer": SITE_URL + "/",
-        "Origin": SITE_URL,
-    }
-    body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
     for attempt in range(1, max_retries + 1):
         try:
-            resp = session.post(BASE_URL, data=body, headers=headers, timeout=30)
+            resp = post_cjsg(session, payload)
             resp.raise_for_status()
             resp.encoding = "utf-8"
             data: dict = resp.json()
@@ -114,7 +126,7 @@ def cjsg_download_manager(
         paginas (list, range, or None): Pages to download (1-based).
             None: downloads all available pages.
         session: Optional requests.Session to reuse.
-        **kwargs: Additional parameters forwarded to ``_build_payload``.
+        **kwargs: Additional parameters forwarded to ``build_cjsg_payload``.
     """
     if session is None:
         session = requests.Session()
@@ -123,7 +135,7 @@ def cjsg_download_manager(
         })
 
     def _get_page(pagina_1based):
-        payload = _build_payload(pesquisa, pagina_0based=pagina_1based - 1, **kwargs)
+        payload = build_cjsg_payload(pesquisa, pagina_0based=pagina_1based - 1, **kwargs)
         data = _fetch_page(session, payload)
         time.sleep(1)
         return data

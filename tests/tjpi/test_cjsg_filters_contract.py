@@ -1,0 +1,131 @@
+"""Filter-propagation contract for TJPI cjsg.
+
+After PR #94, ``TJPIScraper.cjsg`` wires ``data_julgamento_inicio``/``fim``
+through ``normalize_datas`` + ``to_iso_date`` + ``data_min``/``data_max``
+on the GET query-string. Generic aliases ``data_inicio``/``data_fim`` ride
+the same path with a ``DeprecationWarning``.
+"""
+import pandas as pd
+import pytest
+import responses
+from responses.matchers import query_param_matcher
+
+import juscraper as jus
+from juscraper.courts.tjpi.download import BASE_URL, build_cjsg_params
+from tests._helpers import load_sample
+
+
+@responses.activate
+def test_cjsg_all_filters_land_in_query_params(mocker):
+    """Every TJPI public filter must reach the GET query-string.
+
+    Note: ``TJPIScraper.cjsg`` exposes only ``data_julgamento_inicio``/``fim``
+    (wired to ``data_min``/``data_max`` after ``to_iso_date``); ``data_publicacao_*``
+    is not in the public signature, so the publication date filter does not
+    enter the matcher.
+    """
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.GET,
+        BASE_URL,
+        body=load_sample("tjpi", "cjsg/no_results.html"),
+        status=200,
+        content_type="text/html; charset=utf-8",
+        match=[query_param_matcher(build_cjsg_params(
+            "dano moral",
+            page=1,
+            tipo="Acordao",
+            relator="FULANO DE TAL",
+            classe="Apelacao",
+            orgao="1a Camara Civel",
+            data_min="2024-01-01",
+            data_max="2024-03-31",
+        ))],
+    )
+
+    df = jus.scraper("tjpi").cjsg(
+        "dano moral",
+        paginas=1,
+        tipo="Acordao",
+        relator="FULANO DE TAL",
+        classe="Apelacao",
+        orgao="1a Camara Civel",
+        data_julgamento_inicio="2024-01-01",
+        data_julgamento_fim="2024-03-31",
+    )
+
+    assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
+def test_cjsg_query_alias_emits_deprecation_warning(mocker):
+    """The deprecated ``query`` alias is normalized before the request is built."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.GET,
+        BASE_URL,
+        body=load_sample("tjpi", "cjsg/no_results.html"),
+        status=200,
+        content_type="text/html; charset=utf-8",
+        match=[query_param_matcher(build_cjsg_params("dano moral", page=1))],
+    )
+
+    with pytest.warns(DeprecationWarning, match="query.*deprecado"):
+        df = jus.scraper("tjpi").cjsg(pesquisa=None, query="dano moral", paginas=1)
+
+    assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
+def test_cjsg_termo_alias_emits_deprecation_warning(mocker):
+    """The deprecated ``termo`` alias is also normalized before the request is built."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.GET,
+        BASE_URL,
+        body=load_sample("tjpi", "cjsg/no_results.html"),
+        status=200,
+        content_type="text/html; charset=utf-8",
+        match=[query_param_matcher(build_cjsg_params("dano moral", page=1))],
+    )
+
+    with pytest.warns(DeprecationWarning, match="termo.*deprecado"):
+        df = jus.scraper("tjpi").cjsg(pesquisa=None, termo="dano moral", paginas=1)
+
+    assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
+def test_cjsg_data_inicio_alias_maps_to_data_min(mocker):
+    """``data_inicio``/``data_fim`` generic aliases map to
+    ``data_julgamento_inicio``/``data_julgamento_fim`` via ``normalize_datas``,
+    are converted to ISO by ``to_iso_date``, and reach the GET query-string
+    as ``data_min``/``data_max``.
+    """
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.GET,
+        BASE_URL,
+        body=load_sample("tjpi", "cjsg/no_results.html"),
+        status=200,
+        content_type="text/html; charset=utf-8",
+        match=[query_param_matcher(build_cjsg_params(
+            "dano moral",
+            page=1,
+            data_min="2024-01-01",
+            data_max="2024-03-31",
+        ))],
+    )
+
+    with pytest.warns(DeprecationWarning) as warning_list:
+        df = jus.scraper("tjpi").cjsg(
+            "dano moral",
+            paginas=1,
+            data_inicio="2024-01-01",
+            data_fim="2024-03-31",
+        )
+
+    assert isinstance(df, pd.DataFrame)
+    messages = [str(w.message) for w in warning_list]
+    assert any("data_inicio" in m and "deprecado" in m for m in messages)
+    assert any("data_fim" in m and "deprecado" in m for m in messages)

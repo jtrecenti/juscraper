@@ -20,6 +20,36 @@ AJAX_URL = (
 RESULTS_PER_PAGE = 10
 
 
+def build_cjsg_form_body(
+    pesquisa: str,
+    page: int = 1,
+    campo: str = "E",
+    processo: str = "",
+    dt_decisao_inicio: str = "",
+    dt_decisao_fim: str = "",
+    dt_publicacao_inicio: str = "",
+    dt_publicacao_fim: str = "",
+    num_resultados: int = RESULTS_PER_PAGE,
+) -> dict:
+    """Build the form-encoded body for the TJSC CJSG eproc endpoint."""
+    return {
+        "txtPesquisa": pesquisa,
+        "rdoCampo": campo,
+        "txtProcesso": processo,
+        "dtDecisaoInicio": dt_decisao_inicio,
+        "dtDecisaoFim": dt_decisao_fim,
+        "dtPublicacaoInicio": dt_publicacao_inicio,
+        "dtPublicacaoFim": dt_publicacao_fim,
+        "hdnPaginaAtual": str(page),
+        "numResultadosPorPagina": str(num_resultados),
+    }
+
+
+def cjsg_url_for_page(page: int) -> str:
+    """Return the TJSC CJSG endpoint URL for a given 1-based page number."""
+    return AJAX_URL if page > 1 else SEARCH_URL
+
+
 def _fetch_page(
     session: requests.Session,
     pesquisa: str,
@@ -34,18 +64,18 @@ def _fetch_page(
     max_retries: int = 3,
 ) -> str:
     """Fetch a single page of results from the TJSC eproc system."""
-    data = {
-        "txtPesquisa": pesquisa,
-        "rdoCampo": campo,
-        "txtProcesso": processo,
-        "dtDecisaoInicio": dt_decisao_inicio,
-        "dtDecisaoFim": dt_decisao_fim,
-        "dtPublicacaoInicio": dt_publicacao_inicio,
-        "dtPublicacaoFim": dt_publicacao_fim,
-        "hdnPaginaAtual": str(page),
-        "numResultadosPorPagina": str(num_resultados),
-    }
-    url = AJAX_URL if page > 1 else SEARCH_URL
+    data = build_cjsg_form_body(
+        pesquisa=pesquisa,
+        page=page,
+        campo=campo,
+        processo=processo,
+        dt_decisao_inicio=dt_decisao_inicio,
+        dt_decisao_fim=dt_decisao_fim,
+        dt_publicacao_inicio=dt_publicacao_inicio,
+        dt_publicacao_fim=dt_publicacao_fim,
+        num_resultados=num_resultados,
+    )
+    url = cjsg_url_for_page(page)
 
     for attempt in range(1, max_retries + 1):
         try:

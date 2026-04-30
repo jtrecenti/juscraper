@@ -13,8 +13,7 @@ BASE_URL = "https://jurisprudencia.tjpi.jus.br/jurisprudences/search"
 RESULTS_PER_PAGE = 25
 
 
-def _fetch_page(
-    session: requests.Session,
+def build_cjsg_params(
     pesquisa: str,
     page: int = 1,
     tipo: str = "",
@@ -23,9 +22,13 @@ def _fetch_page(
     orgao: str = "",
     data_min: str = "",
     data_max: str = "",
-    max_retries: int = 3,
-) -> str:
-    """Fetch a single page of HTML results from the TJPI search."""
+) -> dict:
+    """Build the query-string params dict for the TJPI CJSG search endpoint.
+
+    ``data_min``/``data_max`` are the BFF date filter (ISO ``YYYY-MM-DD``);
+    they are wired by ``TJPIScraper.cjsg`` after going through
+    ``normalize_datas`` + ``to_iso_date``.
+    """
     params = {"q": pesquisa, "page": str(page)}
     if tipo:
         params["tipo"] = tipo
@@ -39,6 +42,27 @@ def _fetch_page(
         params["data_min"] = data_min
     if data_max:
         params["data_max"] = data_max
+    return params
+
+
+def _fetch_page(
+    session: requests.Session,
+    pesquisa: str,
+    page: int = 1,
+    tipo: str = "",
+    relator: str = "",
+    classe: str = "",
+    orgao: str = "",
+    data_min: str = "",
+    data_max: str = "",
+    max_retries: int = 3,
+) -> str:
+    """Fetch a single page of HTML results from the TJPI search."""
+    params = build_cjsg_params(
+        pesquisa=pesquisa, page=page,
+        tipo=tipo, relator=relator, classe=classe, orgao=orgao,
+        data_min=data_min, data_max=data_max,
+    )
 
     for attempt in range(1, max_retries + 1):
         try:
