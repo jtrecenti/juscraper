@@ -7,19 +7,22 @@ import tempfile
 import time
 import warnings
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, List, Optional, Union
 
 import pandas as pd
 import requests
+from pydantic import ValidationError
 from tqdm.auto import tqdm
 
 from ...core.base import BaseScraper
 from ...utils.cnj import clean_cnj  # Assuming this utility exists and is relevant
-from .download import call_datajud_api  # To be created for API calls
+from ...utils.params import normalize_paginas, raise_on_extra_kwargs
+from .download import build_listar_processos_payload, call_datajud_api
 
 # Import mappings for tribunal and justice aliases.
 from .mappings import ID_JUSTICA_TRIBUNAL_TO_ALIAS, TRIBUNAL_TO_ALIAS
 from .parse import parse_datajud_api_response  # To be created for API response parsing
+from .schemas import InputListarProcessosDataJud
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +32,9 @@ class DatajudScraper(BaseScraper):
 
     DEFAULT_API_KEY = "cDZHYzlZa0JadVREZDJCendQbXY6SkJlTzNjLV9TRENyQk1RdnFKZGRQdw=="
     BASE_API_URL = "https://api-publica.datajud.cnj.jus.br"
+
+    # Schema pydantic detectado por ``tests/schemas/test_signature_parity._is_wired``.
+    INPUT_LISTAR_PROCESSOS = InputListarProcessosDataJud
 
     def __init__(
         self,
@@ -55,23 +61,108 @@ class DatajudScraper(BaseScraper):
 
     def listar_processos(
         self,
-        numero_processo: Optional[Union[str, List[str]]] = None,
-        tribunal: Optional[str] = None,  # Sigla, e.g., TJSP, TRF1
-        # justica: Optional[str] = "8", # This was in original, but tribunal alias seems more direct
-        ano_ajuizamento: Optional[int] = None,
-        classe: Optional[str] = None,  # Codigo da classe
-        assuntos: Optional[List[str]] = None,  # Lista de códigos de assuntos
-        mostrar_movs: bool = False,
-        paginas: Optional[range] = None,  # For specific page range, else fetch all
-        tamanho_pagina: int = 1000  # Max allowed by API is often 1000 or 10000
+        paginas: Optional[Union[int, List[int], range]] = None,
+        **kwargs,
     ) -> pd.DataFrame:
-        """
-        Lists processes from Datajud via API, with support for multiple filters and pagination.
+        """Lista processos do DataJud via API publica do CNJ.
+
+        Filtros sao validados pelo schema :class:`InputListarProcessosDataJud`
+        (``extra="forbid"``); kwargs desconhecidos viram ``TypeError`` com a
+        mensagem ``DatajudScraper.listar_processos() got unexpected keyword
+        argument(s): '<nome>'`` em vez de serem silenciosamente ignorados.
 
         Args:
-            paginas (range, optional): Page range (1-based, e.g., range(1, 4) fetches pages 1-3).
-                None fetches all available pages.
+            **kwargs: Filtros aceitos pelo schema
+                :class:`InputListarProcessosDataJud`. Listados abaixo (todos
+                opcionais; ``None`` = sem filtro):
+
+                * ``numero_processo`` (str | list[str]): CNJ formatado ou
+                  lista de CNJs. Quando informado sem ``tribunal``, o alias-
+                  indice e inferido pelos digitos ``id_justica`` (pos. 14) +
+                  ``id_tribunal`` (pos. 15-16). CNJs invalidos ou nao
+                  mapeados emitem ``UserWarning`` e sao ignorados.
+                * ``tribunal`` (str): Sigla do tribunal (ex.: ``"TJSP"``,
+                  ``"TRT2"``, ``"TRE-SP"``). Mutuamente exclusivo com
+                  inferencia via ``numero_processo``.
+                * ``ano_ajuizamento`` (int): Filtra por ano de ajuizamento.
+                  Backend recebe ``range`` dual em ``dataAjuizamento`` (ISO
+                  ``YYYY-01-01`` + compacto ``YYYYMMDDhhmmss``).
+                * ``classe`` (str): Codigo da classe processual CNJ.
+                * ``assuntos`` (list[str]): Lista de codigos de assuntos CNJ.
+                * ``mostrar_movs`` (bool): Se ``True``, inclui
+                  ``movimentos``/``movimentacoes`` no ``_source``. Default
+                  ``False`` (paginacao mais leve).
+                * ``paginas`` (int | list[int] | range): Intervalo 1-based.
+                  Aceita as 4 formas do contrato unico (refs #118):
+                  ``int`` (``3`` -> ``range(1, 4)``), ``list``
+                  (``[3, 5]`` -> ``range(3, 6)``, baixa 3-5 contiguamente
+                  porque o cursor ``search_after`` e forwards-only),
+                  ``range`` (passthrough), ``None`` (default, todas).
+                * ``tamanho_pagina`` (int): Hits por requisicao (default
+                  5000, range 10-10000 conforme cap da API publica). Em
+                  caso de ``HTTP 504``/``Timeout``, o client refaz a
+                  chamada com ``size // 4`` automaticamente (1 retry,
+                  ``UserWarning``); ainda assim, valores proximos de
+                  10000 sao instaveis na pratica.
+
+        Aliases deprecados:
+            Sem aliases nesta API — DataJud nao tem ``pesquisa`` nem
+            filtros de data baseados em ``DD/MM/AAAA``, entao o
+            pipeline canonico ``normalize_pesquisa``/``normalize_datas``
+            nao se aplica. Todos os filtros aceitam apenas o nome
+            canonico listado acima.
+
+        Raises:
+            TypeError: Quando um kwarg desconhecido e passado (traduzido de
+                ``ValidationError`` por ``raise_on_extra_kwargs``).
+            ValidationError: Quando um filtro tem formato invalido (ex.:
+                ``ano_ajuizamento`` nao-int).
+            ValueError: Quando nem ``tribunal`` nem ``numero_processo`` sao
+                informados, ou quando a sigla nao tem alias mapeado.
+
+        Returns:
+            pd.DataFrame: Um DataFrame com uma linha por processo. ``extra``
+            do parser e passthrough do ``_source`` Elasticsearch — colunas
+            seguem nomenclatura camelCase do CNJ.
+
+        Exemplo:
+            >>> import juscraper as jus
+            >>> dj = jus.scraper("datajud")
+            >>> df = dj.listar_processos(tribunal="TJSP", ano_ajuizamento=2023,
+            ...                          classe="436", assuntos=["1127"],
+            ...                          paginas=range(1, 3))
+
+        See also:
+            :class:`InputListarProcessosDataJud` — fonte da verdade dos
+            filtros aceitos.
         """
+        # ``paginas`` e int|list|range|None na API publica (contrato de
+        # PaginasMixin). O cursor ``search_after`` da API DataJud e
+        # forwards-only e o client interno consome ``.start``/``.stop``,
+        # entao convertemos ``int``/``list`` para ``range`` contiguo aqui:
+        # ``[3, 5]`` -> ``range(3, 6)`` baixa as paginas 3, 4 e 5.
+        paginas_norm = normalize_paginas(paginas)
+        if isinstance(paginas_norm, list):
+            paginas_norm = (
+                range(min(paginas_norm), max(paginas_norm) + 1)
+                if paginas_norm
+                else None
+            )
+
+        try:
+            inp = InputListarProcessosDataJud(paginas=paginas_norm, **kwargs)
+        except ValidationError as exc:
+            raise_on_extra_kwargs(exc, "DatajudScraper.listar_processos()")
+            raise
+
+        numero_processo = inp.numero_processo
+        tribunal = inp.tribunal
+        ano_ajuizamento = inp.ano_ajuizamento
+        classe = inp.classe
+        assuntos = inp.assuntos
+        mostrar_movs = inp.mostrar_movs
+        tamanho_pagina = inp.tamanho_pagina
+
         all_dfs = []
         # Determine target aliases
         target_aliases = []
@@ -143,7 +234,7 @@ class DatajudScraper(BaseScraper):
                 classe=classe,
                 assuntos=assuntos,
                 mostrar_movs=mostrar_movs,
-                paginas_range=paginas,
+                paginas_range=paginas_norm,
                 tamanho_pagina=tamanho_pagina
             )
             if not df_alias.empty:
@@ -169,7 +260,6 @@ class DatajudScraper(BaseScraper):
         current_page = paginas_range.start if paginas_range else 1
         end_page = paginas_range.stop if paginas_range else float('inf')
         search_after_params: Optional[List[Any]] = None  # For deep pagination
-        sort_field = "id.keyword"  # Use .keyword for sorting text fields
 
         # Initialize tqdm progress bar
         if paginas_range:
@@ -189,81 +279,15 @@ class DatajudScraper(BaseScraper):
         try:
             while current_page < end_page:
                 logger.info("Fetching page %d for alias %s...", current_page, alias)
-                # Construct query payload (Elasticsearch DSL)
-                must_conditions: List[Dict[str, Any]] = []
-                if numero_processo:
-                    if isinstance(numero_processo, str):
-                        nproc = [numero_processo]
-                    else:
-                        nproc = list(numero_processo)
-                    # O índice DataJud armazena `numeroProcesso` apenas com dígitos.
-                    # Garantir a limpeza aqui cobre todos os caminhos de entrada
-                    # (numero_processo sozinho, lista, ou junto com `tribunal=`).
-                    nproc = [clean_cnj(n) for n in nproc]
-                    must_conditions.append({
-                        "terms": {
-                            "numeroProcesso": nproc
-                        }
-                    })
-                if ano_ajuizamento:
-                    date_range_iso = {
-                        "gte": f"{ano_ajuizamento}-01-01",
-                        "lte": f"{ano_ajuizamento}-12-31",
-                    }
-                    date_range_compact = {
-                        "gte": f"{ano_ajuizamento}0101000000",
-                        "lte": f"{ano_ajuizamento}1231235959",
-                    }
-                    must_conditions.append({
-                        "bool": {
-                            "should": [
-                                {"range": {"dataAjuizamento": date_range_iso}},
-                                {"range": {"dataAjuizamento": date_range_compact}},
-                            ],
-                            "minimum_should_match": 1
-                        }
-                    })
-                if classe:
-                    must_conditions.append({
-                        "match": {
-                            "classe.codigo": str(classe)
-                        }
-                    })
-                if assuntos:
-                    must_conditions.append({
-                        "terms": {
-                            "assuntos.codigo": assuntos
-                        }
-                    })
-
-                if must_conditions:
-                    query_values = {"bool": {"must": must_conditions}}
-                else:
-                    query_values = {"match_all": {}}
-
-                query_payload: Dict[str, Any] = {
-                    "query": query_values,
-                    "size": tamanho_pagina,
-                    "track_total_hits": True
-                }
-
-                # Handle pagination: search_after is preferred for deep pagination
-                # The original _download_datajud used 'from', which is inefficient for deep pages
-                # DataJud API supports search_after. Requires a sort field.
-                query_payload["sort"] = [{sort_field: "asc"}]  # Example sort
-                if search_after_params:
-                    query_payload["search_after"] = search_after_params
-                else:
-                    # For the first page if not using search_after from the start,
-                    # or if API doesn't fully support it
-                    # query_payload["from"] = (current_page - 1) * tamanho_pagina
-                    # However, if we commit to search_after, 'from' is not used.
-                    pass  # First page, no search_after yet unless seeded
-
-                if not mostrar_movs:
-                    query_payload["_source"] = {"excludes": ["movimentacoes", "movimentos"]}
-                else:
-                    query_payload["_source"] = True
+                query_payload = build_listar_processos_payload(
+                    numero_processo=numero_processo,
+                    ano_ajuizamento=ano_ajuizamento,
+                    classe=classe,
+                    assuntos=assuntos,
+                    mostrar_movs=mostrar_movs,
+                    tamanho_pagina=tamanho_pagina,
+                    search_after=search_after_params,
+                )
                 api_response_json = call_datajud_api(
                     base_url=self.BASE_API_URL,
                     alias=alias,
@@ -309,11 +333,20 @@ class DatajudScraper(BaseScraper):
                 # This part depends on the exact structure of api_response_json
                 # Assuming api_response_json is a dict parsed from the JSON string
                 hits = api_response_json.get("hits", {}).get("hits", [])
-                if not hits or len(hits) < tamanho_pagina:
+                # Quando ``call_datajud_api`` aciona o fallback de 504/timeout,
+                # ele muta ``query_payload["size"]`` em place. Propagamos o
+                # size efetivo para ``tamanho_pagina`` para que paginas
+                # subsequentes ja partam do size reduzido — em gateway
+                # saturado consistentemente, isso evita pagar ~60s a cada
+                # pagina antes de cair no fallback de novo.
+                effective_size = query_payload.get("size", tamanho_pagina)
+                if effective_size < tamanho_pagina:
+                    tamanho_pagina = effective_size
+                if not hits or len(hits) < effective_size:
                     logger.info(
                         "Last page reached for alias %s (less than %d results or no hits).",
                         alias,
-                        tamanho_pagina
+                        effective_size,
                     )
                     break
                 last_hit = hits[-1]

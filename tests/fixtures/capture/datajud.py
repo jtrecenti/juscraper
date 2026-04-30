@@ -19,17 +19,12 @@ Cenários capturados:
     single_page.json              — busca cujos hits cabem em uma única página.
     no_results.json               — ``hits.hits == []``.
 
-NOTA (drift, regra 12 do CLAUDE.md): este script duplica o construtor
-de body Elasticsearch que vive em
-``src/juscraper/aggregators/datajud/client.py:_listar_processos_por_alias``
-(branch construtor de body Elasticsearch dentro do ``while`` de paginação).
-A issue #140 declara critério 8 (não modifica ``src/``), o que impediu a
-extração de ``build_listar_processos_payload`` em
-``aggregators/datajud/download.py``.
-
-Follow-up: extrair o builder e fazer este script importar em vez de
-redefinir. Enquanto isso, qualquer alteração no body Elasticsearch
-construído pelo client precisa ser refletida em ``build_payload`` aqui.
+O body Elasticsearch e construido por
+``juscraper.aggregators.datajud.download.build_listar_processos_payload`` —
+a mesma funcao que ``client.py:_listar_processos_por_alias`` chama em
+producao. Reexportada como ``build_payload`` aqui apenas pelo nome curto
+e local; capture e contrato compartilham a mesma fonte de verdade
+(regra 12 do CLAUDE.md).
 """
 from __future__ import annotations
 
@@ -41,81 +36,13 @@ from typing import Any
 import requests
 
 from juscraper.aggregators.datajud.client import DatajudScraper
-from juscraper.utils.cnj import clean_cnj
+from juscraper.aggregators.datajud.download import build_listar_processos_payload as build_payload
 from tests.fixtures.capture._util import dump, samples_dir_for
 
 logger = logging.getLogger(__name__)
 
 API_KEY = DatajudScraper.DEFAULT_API_KEY
 BASE_API_URL = DatajudScraper.BASE_API_URL
-
-
-def build_payload(
-    *,
-    numero_processo: str | list[str] | None = None,
-    ano_ajuizamento: int | None = None,
-    classe: str | None = None,
-    assuntos: list[str] | None = None,
-    mostrar_movs: bool = False,
-    tamanho_pagina: int = 1000,
-    search_after: list[Any] | None = None,
-) -> dict[str, Any]:
-    """Replica o branch construtor de body Elasticsearch dentro do ``while`` de
-    paginação em ``client.py:_listar_processos_por_alias``.
-
-    Mantém a ordem de chaves e a lógica condicional idêntica para que o
-    capture e o contrato falhem juntos quando o body real do scraper
-    mudar.
-    """
-    must_conditions: list[dict[str, Any]] = []
-    if numero_processo:
-        if isinstance(numero_processo, str):
-            nproc = [numero_processo]
-        else:
-            nproc = list(numero_processo)
-        nproc = [clean_cnj(n) for n in nproc]
-        must_conditions.append({"terms": {"numeroProcesso": nproc}})
-    if ano_ajuizamento:
-        date_range_iso = {
-            "gte": f"{ano_ajuizamento}-01-01",
-            "lte": f"{ano_ajuizamento}-12-31",
-        }
-        date_range_compact = {
-            "gte": f"{ano_ajuizamento}0101000000",
-            "lte": f"{ano_ajuizamento}1231235959",
-        }
-        must_conditions.append({
-            "bool": {
-                "should": [
-                    {"range": {"dataAjuizamento": date_range_iso}},
-                    {"range": {"dataAjuizamento": date_range_compact}},
-                ],
-                "minimum_should_match": 1,
-            }
-        })
-    if classe:
-        must_conditions.append({"match": {"classe.codigo": str(classe)}})
-    if assuntos:
-        must_conditions.append({"terms": {"assuntos.codigo": assuntos}})
-
-    if must_conditions:
-        query_values: dict[str, Any] = {"bool": {"must": must_conditions}}
-    else:
-        query_values = {"match_all": {}}
-
-    payload: dict[str, Any] = {
-        "query": query_values,
-        "size": tamanho_pagina,
-        "track_total_hits": True,
-        "sort": [{"id.keyword": "asc"}],
-    }
-    if search_after is not None:
-        payload["search_after"] = search_after
-    if mostrar_movs:
-        payload["_source"] = True
-    else:
-        payload["_source"] = {"excludes": ["movimentacoes", "movimentos"]}
-    return payload
 
 
 def _sanitize(body: dict[str, Any]) -> dict[str, Any]:
@@ -176,18 +103,20 @@ def main() -> None:
 
     session = requests.Session()
 
-    # 1) Multi-page (page 1): tribunal=TJSP + tamanho_pagina=2 (no filters).
-    #    Pulls the 2 documents with the smallest id.keyword in the TJSP
-    #    index — deterministic by sort order.
-    payload_p1 = build_payload(tamanho_pagina=2)
+    # 1) Multi-page (page 1): tribunal=TJSP + tamanho_pagina=10 (no filters).
+    #    Pulls the 10 documents with the smallest id.keyword in the TJSP
+    #    index — deterministic by sort order. ``tamanho_pagina=10`` e o
+    #    minimo permitido pelo schema (``Field(ge=10)``), alinhado com a
+    #    doc oficial da API publica do CNJ.
+    payload_p1 = build_payload(tamanho_pagina=10)
     body_p1 = _capture(
         session, "api_publica_tjsp", payload_p1, dest, "results_normal_page_01.json"
     )
 
     hits_p1 = body_p1.get("hits", {}).get("hits") or []
-    if len(hits_p1) < 2:
+    if len(hits_p1) < 10:
         raise SystemExit(
-            f"[datajud] page 1 returned {len(hits_p1)} hits, expected 2. "
+            f"[datajud] page 1 returned {len(hits_p1)} hits, expected 10. "
             "Cannot capture page 2 deterministically."
         )
 
@@ -195,17 +124,14 @@ def main() -> None:
     last_sort = hits_p1[-1].get("sort")
     if last_sort is None:
         raise SystemExit("[datajud] last hit on page 1 missing 'sort' field.")
-    payload_p2 = build_payload(tamanho_pagina=2, search_after=last_sort)
+    payload_p2 = build_payload(tamanho_pagina=10, search_after=last_sort)
     _capture(
         session, "api_publica_tjsp", payload_p2, dest, "results_normal_page_02.json"
     )
-    # Note: the capture deliberately does NOT trim page 2 to 1 hit — the
-    # contract only requires len(hits) < tamanho_pagina (2). Two further
-    # documents from TJSP are fine; the break still triggers on the next
-    # iteration. If page 2 happens to be full (2 hits), the contract test
-    # for ``test_typical_multi_page`` will not exercise the early break,
-    # which is acceptable — the break path is also covered by
-    # ``test_single_page`` and ``test_no_results``.
+    # Note: the capture deliberately does NOT trim page 2 — the contract
+    # only requires ``len(hits) < tamanho_pagina (10)`` para encerrar a
+    # paginacao. Even if page 2 fills with 10 hits, the early break is
+    # also covered by ``test_single_page`` and ``test_no_results``.
 
     # 3) Single-page: filter by a specific CNJ from page 1 + tamanho_pagina=1000.
     cnj_p1 = (hits_p1[0].get("_source") or {}).get("numeroProcesso")

@@ -64,22 +64,22 @@ def test_listar_processos_typical_multi_page(mocker):
     _add_page(
         "api_publica_tjsp",
         "listar_processos/results_normal_page_01.json",
-        tamanho_pagina=2,
+        tamanho_pagina=10,
     )
     _add_page(
         "api_publica_tjsp",
         "listar_processos/results_normal_page_02.json",
-        tamanho_pagina=2,
+        tamanho_pagina=10,
         search_after=last_sort,
     )
 
     df = jus.scraper("datajud").listar_processos(
-        tribunal="TJSP", paginas=range(1, 3), tamanho_pagina=2
+        tribunal="TJSP", paginas=range(1, 3), tamanho_pagina=10
     )
 
     assert isinstance(df, pd.DataFrame)
     assert LISTAR_PROCESSOS_MIN_COLUMNS <= set(df.columns)
-    assert len(df) == 4
+    assert len(df) == 20
 
 
 @responses.activate
@@ -92,7 +92,7 @@ def test_listar_processos_single_page(mocker):
         "api_publica_tjsp",
         "listar_processos/single_page.json",
         numero_processo=CNJ_TJSP_CLEAN,
-        tamanho_pagina=1000,
+        tamanho_pagina=5000,
     )
 
     df = jus.scraper("datajud").listar_processos(
@@ -114,7 +114,7 @@ def test_listar_processos_no_results(mocker):
         "api_publica_tjsp",
         "listar_processos/no_results.json",
         numero_processo="00000000000000000000",
-        tamanho_pagina=1000,
+        tamanho_pagina=5000,
     )
 
     df = jus.scraper("datajud").listar_processos(
@@ -136,7 +136,7 @@ def test_listar_processos_filtro_cnj_alias_inferido(mocker):
         "api_publica_tjsp",
         "listar_processos/single_page.json",
         numero_processo=CNJ_TJSP_CLEAN,
-        tamanho_pagina=1000,
+        tamanho_pagina=5000,
     )
 
     df = jus.scraper("datajud").listar_processos(
@@ -153,16 +153,17 @@ def test_listar_processos_filtro_cnj_alias_inferido(mocker):
 
 @responses.activate
 def test_listar_processos_filtro_tribunal_explicito_size_custom(mocker):
-    """``tamanho_pagina=5`` lands in the body as ``size: 5``."""
+    """``tamanho_pagina=10`` lands in the body as ``size: 10`` (minimum
+    permitted by the schema, aligned with the API doc's recommendation)."""
     mocker.patch("time.sleep")
     _add_page(
         "api_publica_tjsp",
         "listar_processos/single_page.json",
-        tamanho_pagina=5,
+        tamanho_pagina=10,
     )
 
     df = jus.scraper("datajud").listar_processos(
-        tribunal="TJSP", paginas=range(1, 2), tamanho_pagina=5
+        tribunal="TJSP", paginas=range(1, 2), tamanho_pagina=10
     )
 
     assert isinstance(df, pd.DataFrame)
@@ -178,7 +179,7 @@ def test_listar_processos_mostrar_movs_true(mocker):
         "api_publica_tjsp",
         "listar_processos/single_page.json",
         mostrar_movs=True,
-        tamanho_pagina=1000,
+        tamanho_pagina=5000,
     )
 
     df = jus.scraper("datajud").listar_processos(

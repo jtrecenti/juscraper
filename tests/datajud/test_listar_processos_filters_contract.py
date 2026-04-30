@@ -96,3 +96,23 @@ def test_listar_processos_unknown_kwarg_raises():
         jus.scraper("datajud").listar_processos(
             tribunal="TJSP", parametro_inventado="xyz"
         )
+
+
+def test_listar_processos_tamanho_pagina_acima_do_cap():
+    """``tamanho_pagina`` acima do cap documentado da API (10000) e
+    rejeitado pelo schema antes da requisicao."""
+    with pytest.raises(ValidationError):
+        jus.scraper("datajud").listar_processos(
+            tribunal="TJSP", tamanho_pagina=20000
+        )
+
+
+def test_listar_processos_tamanho_pagina_abaixo_do_minimo():
+    """``tamanho_pagina`` abaixo do minimo documentado da API (10) e
+    rejeitado pelo schema. Cobre os tres regimes: zero, negativo e o
+    intervalo (1..9) deixado de fora pela doc oficial."""
+    for valor in (0, -100, 5):
+        with pytest.raises(ValidationError):
+            jus.scraper("datajud").listar_processos(
+                tribunal="TJSP", tamanho_pagina=valor
+            )

@@ -7,12 +7,14 @@ from .mixins import (
     DataPublicacaoMixin,
     OutputDataPublicacaoMixin,
     OutputRelatoriaMixin,
+    PaginasMixin,
 )
 
 __all__ = [
     "SearchBase",
     "OutputCJSGBase",
     "AutoChunkMixin",
+    "PaginasMixin",
     "DataJulgamentoMixin",
     "DataPublicacaoMixin",
     "OutputRelatoriaMixin",

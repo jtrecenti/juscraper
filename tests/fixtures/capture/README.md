@@ -117,9 +117,9 @@ Saneamento pos-captura: remove `highlight` (defesa) e trunca arrays
 residuais de `movimentos`/`movimentacoes` no `_source` — capturas usam
 `mostrar_movs=False`, mas o trim e rede de seguranca.
 
-NOTA (drift, regra 12 do CLAUDE.md): o script duplica o construtor de
-body Elasticsearch que vive em
-`aggregators/datajud/client.py:_listar_processos_por_alias`. A issue #140
-declara criterio 8 (nao modifica `src/`), o que impediu a extracao de
-`build_listar_processos_payload` em `aggregators/datajud/download.py`.
-Follow-up: extrair o builder e fazer este script + os contratos importarem.
+O body Elasticsearch e construido por
+`build_listar_processos_payload` em `aggregators/datajud/download.py` —
+a mesma funcao usada pelo client em producao. O capture e os contratos
+em `tests/datajud/test_listar_processos_*_contract.py` importam dessa
+funcao, atendendo a regra 12 do CLAUDE.md (capture e producao falham
+juntos quando o body real do scraper muda).
