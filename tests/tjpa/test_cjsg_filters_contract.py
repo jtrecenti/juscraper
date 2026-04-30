@@ -132,3 +132,10 @@ def test_cjsg_data_inicio_alias_maps_to_data_julgamento(mocker):
     messages = [str(w.message) for w in warning_list]
     assert any("data_inicio" in m and "deprecado" in m for m in messages)
     assert any("data_fim" in m and "deprecado" in m for m in messages)
+
+
+def test_cjsg_unknown_kwarg_raises():
+    """Kwargs not declared in :class:`InputCJSGTJPA` raise ``TypeError`` with
+    the field name (refs #84, #93)."""
+    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
+        jus.scraper("tjpa").cjsg("dano moral", paginas=1, kwarg_inventado="x")

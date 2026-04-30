@@ -372,6 +372,7 @@ def apply_input_pipeline_search(
     kwargs: dict,
     max_dias: Optional[int] = None,
     origem: Optional[str] = None,
+    date_format: str = "%d/%m/%Y",
     **canonical_filters,
 ) -> BaseModel:
     """Run the canonical input-validation pipeline for search endpoints (cjsg/cjpg).
@@ -427,6 +428,10 @@ def apply_input_pipeline_search(
             ``max_dias`` is set but ``origem`` is ``None``, falls back to
             ``"O backend"`` so the helper can be invoked by non-eSAJ
             tribunals without leaking "eSAJ" into their error messages.
+        date_format: ``strptime`` format used by :func:`validate_intervalo_datas`
+            to parse ``data_julgamento_*``/``data_publicacao_*``. Default
+            ``"%d/%m/%Y"`` matches eSAJ; tribunals whose backend speaks ISO
+            (TJRN, TJPA, TJRO, TJPI, ...) pass ``"%Y-%m-%d"``.
         **canonical_filters: Tribunal-specific filters already extracted from
             the public method signature (e.g. ``numero_processo=...``,
             ``relator=...``). They are forwarded to the schema as-is. **A key
@@ -454,6 +459,7 @@ def apply_input_pipeline_search(
         rotulo="data_julgamento",
         max_dias=max_dias,
         origem=origem_resolvido,
+        formato=date_format,
     )
     validate_intervalo_datas(
         datas["data_publicacao_inicio"],
@@ -461,6 +467,7 @@ def apply_input_pipeline_search(
         rotulo="data_publicacao",
         max_dias=max_dias,
         origem=origem_resolvido,
+        formato=date_format,
     )
 
     try:

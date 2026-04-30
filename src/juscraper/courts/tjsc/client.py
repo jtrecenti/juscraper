@@ -5,10 +5,11 @@ import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa
+from juscraper.utils.params import apply_input_pipeline_search, normalize_paginas, normalize_pesquisa
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
+from .schemas import InputCJSGTJSC
 
 
 class TJSCScraper(BaseScraper):
@@ -60,17 +61,27 @@ class TJSCScraper(BaseScraper):
         pd.DataFrame
         """
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-        paginas = normalize_paginas(paginas)
-        datas = normalize_datas(**kwargs)
-        brutos = self.cjsg_download(
+
+        inp = apply_input_pipeline_search(
+            InputCJSGTJSC,
+            "TJSCScraper.cjsg()",
             pesquisa=pesquisa,
             paginas=paginas,
+            kwargs=kwargs,
+            date_format="%Y-%m-%d",
             campo=campo,
             processo=processo,
-            dt_decisao_inicio=datas["data_julgamento_inicio"] or "",
-            dt_decisao_fim=datas["data_julgamento_fim"] or "",
-            dt_publicacao_inicio=datas["data_publicacao_inicio"] or "",
-            dt_publicacao_fim=datas["data_publicacao_fim"] or "",
+        )
+
+        brutos = self.cjsg_download(
+            pesquisa=inp.pesquisa,
+            paginas=inp.paginas,
+            campo=inp.campo,
+            processo=inp.processo,
+            dt_decisao_inicio=inp.data_julgamento_inicio or "",
+            dt_decisao_fim=inp.data_julgamento_fim or "",
+            dt_publicacao_inicio=inp.data_publicacao_inicio or "",
+            dt_publicacao_fim=inp.data_publicacao_fim or "",
         )
         return self.cjsg_parse(brutos)
 

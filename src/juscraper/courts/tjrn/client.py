@@ -6,15 +6,16 @@ import requests
 
 from juscraper.core.base import BaseScraper
 from juscraper.utils.params import (
-    normalize_datas,
+    apply_input_pipeline_search,
     normalize_paginas,
     normalize_pesquisa,
-    resolve_deprecated_alias,
+    pop_deprecated_alias,
     to_br_date,
 )
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
+from .schemas import InputCJSGTJRN
 
 
 def _to_tjrn_date(date_str):
@@ -99,26 +100,48 @@ class TJRNScraper(BaseScraper):
         -------
         pd.DataFrame
         """
-        numero_processo = resolve_deprecated_alias(
-            kwargs, "nr_processo", "numero_processo", numero_processo, sentinel=""
-        )
+        if "nr_processo" in kwargs:
+            alias_value = pop_deprecated_alias(kwargs, "nr_processo", "numero_processo")
+            if numero_processo:
+                raise ValueError(
+                    "Não é possível passar 'numero_processo' e 'nr_processo' simultaneamente."
+                )
+            numero_processo = alias_value or ""
+
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-        paginas = normalize_paginas(paginas)
-        datas = normalize_datas(**kwargs)
-        brutos = self.cjsg_download(
+
+        inp = apply_input_pipeline_search(
+            InputCJSGTJRN,
+            "TJRNScraper.cjsg()",
             pesquisa=pesquisa,
             paginas=paginas,
-            nr_processo=numero_processo,
+            kwargs=kwargs,
+            date_format="%Y-%m-%d",
+            numero_processo=numero_processo,
             id_classe_judicial=id_classe_judicial,
             id_orgao_julgador=id_orgao_julgador,
             id_relator=id_relator,
             id_colegiado=id_colegiado,
-            dt_inicio=_to_tjrn_date(datas["data_julgamento_inicio"]),
-            dt_fim=_to_tjrn_date(datas["data_julgamento_fim"]),
             sistema=sistema,
             decisoes=decisoes,
             jurisdicoes=jurisdicoes,
             grau=grau,
+        )
+
+        brutos = self.cjsg_download(
+            pesquisa=inp.pesquisa,
+            paginas=inp.paginas,
+            nr_processo=inp.numero_processo,
+            id_classe_judicial=inp.id_classe_judicial,
+            id_orgao_julgador=inp.id_orgao_julgador,
+            id_relator=inp.id_relator,
+            id_colegiado=inp.id_colegiado,
+            dt_inicio=_to_tjrn_date(inp.data_julgamento_inicio),
+            dt_fim=_to_tjrn_date(inp.data_julgamento_fim),
+            sistema=inp.sistema,
+            decisoes=inp.decisoes,
+            jurisdicoes=inp.jurisdicoes,
+            grau=inp.grau,
         )
         return self.cjsg_parse(brutos)
 
