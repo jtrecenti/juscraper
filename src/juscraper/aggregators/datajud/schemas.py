@@ -8,7 +8,7 @@ campos bate byte-a-byte com a assinatura publica do metodo.
 """
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from ...schemas import PaginasMixin
 
@@ -35,7 +35,19 @@ class InputListarProcessosDataJud(PaginasMixin):
     classe: str | None = None
     assuntos: list[str] | None = None
     mostrar_movs: bool = False
-    tamanho_pagina: int = 1000
+    # Limites do parametro ``size`` da API publica do DataJud
+    # (datajud-wiki.cnj.jus.br/api-publica/exemplos/exemplo3/): a doc
+    # "recomenda" de 10 a 10000 hits por requisicao. Default 5000 — testes
+    # empiricos mostraram que 10000 estoura ``HTTP 504`` no gateway
+    # intermitentemente; 5000 e ~2.5x mais rapido que 1000 com margem
+    # confortavel sob o timeout. ``ge=1`` em vez de ``ge=10`` porque o
+    # Elasticsearch sempre aceitou ``size>=1`` e os samples de teste
+    # capturados da API real usam ``size=2``/``=5`` para forcar
+    # paginacao com poucos hits — a doc declara 10 como guidance, nao cap
+    # tecnico. ``le=10000`` e o cap real, observado no gateway.
+    # Em caso de ``HTTP 504``/``Timeout``, ``call_datajud_api`` faz
+    # fallback automatico para ``size // 4``.
+    tamanho_pagina: int = Field(default=5000, ge=1, le=10000)
 
     model_config = ConfigDict(
         extra="forbid",

@@ -98,7 +98,12 @@ class DatajudScraper(BaseScraper):
                   (``[3, 5]`` -> ``range(3, 6)``, baixa 3-5 contiguamente
                   porque o cursor ``search_after`` e forwards-only),
                   ``range`` (passthrough), ``None`` (default, todas).
-                * ``tamanho_pagina`` (int): Hits por pagina (default 1000).
+                * ``tamanho_pagina`` (int): Hits por requisicao (default
+                  5000, range 10-10000 conforme cap da API publica). Em
+                  caso de ``HTTP 504``/``Timeout``, o client refaz a
+                  chamada com ``size // 4`` automaticamente (1 retry,
+                  ``UserWarning``); ainda assim, valores proximos de
+                  10000 sao instaveis na pratica.
 
         Aliases deprecados:
             Sem aliases nesta API — DataJud nao tem ``pesquisa`` nem

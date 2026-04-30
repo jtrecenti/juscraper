@@ -96,3 +96,25 @@ def test_listar_processos_unknown_kwarg_raises():
         jus.scraper("datajud").listar_processos(
             tribunal="TJSP", parametro_inventado="xyz"
         )
+
+
+def test_listar_processos_tamanho_pagina_acima_do_cap():
+    """``tamanho_pagina`` acima do cap documentado da API (10000) e
+    rejeitado pelo schema antes da requisicao."""
+    with pytest.raises(ValidationError):
+        jus.scraper("datajud").listar_processos(
+            tribunal="TJSP", tamanho_pagina=20000
+        )
+
+
+def test_listar_processos_tamanho_pagina_zero_ou_negativo():
+    """``tamanho_pagina`` zero/negativo e rejeitado pelo schema
+    (``ge=1``); o cursor ``search_after`` nao funciona com ``size=0``."""
+    with pytest.raises(ValidationError):
+        jus.scraper("datajud").listar_processos(
+            tribunal="TJSP", tamanho_pagina=0
+        )
+    with pytest.raises(ValidationError):
+        jus.scraper("datajud").listar_processos(
+            tribunal="TJSP", tamanho_pagina=-100
+        )

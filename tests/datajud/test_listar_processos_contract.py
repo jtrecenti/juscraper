@@ -92,7 +92,7 @@ def test_listar_processos_single_page(mocker):
         "api_publica_tjsp",
         "listar_processos/single_page.json",
         numero_processo=CNJ_TJSP_CLEAN,
-        tamanho_pagina=1000,
+        tamanho_pagina=5000,
     )
 
     df = jus.scraper("datajud").listar_processos(
@@ -114,7 +114,7 @@ def test_listar_processos_no_results(mocker):
         "api_publica_tjsp",
         "listar_processos/no_results.json",
         numero_processo="00000000000000000000",
-        tamanho_pagina=1000,
+        tamanho_pagina=5000,
     )
 
     df = jus.scraper("datajud").listar_processos(
@@ -136,7 +136,7 @@ def test_listar_processos_filtro_cnj_alias_inferido(mocker):
         "api_publica_tjsp",
         "listar_processos/single_page.json",
         numero_processo=CNJ_TJSP_CLEAN,
-        tamanho_pagina=1000,
+        tamanho_pagina=5000,
     )
 
     df = jus.scraper("datajud").listar_processos(
@@ -178,7 +178,7 @@ def test_listar_processos_mostrar_movs_true(mocker):
         "api_publica_tjsp",
         "listar_processos/single_page.json",
         mostrar_movs=True,
-        tamanho_pagina=1000,
+        tamanho_pagina=5000,
     )
 
     df = jus.scraper("datajud").listar_processos(

@@ -18,7 +18,7 @@ def build_listar_processos_payload(
     classe: Optional[str] = None,
     assuntos: Optional[List[str]] = None,
     mostrar_movs: bool = False,
-    tamanho_pagina: int = 1000,
+    tamanho_pagina: int = 5000,
     search_after: Optional[List[Any]] = None,
 ) -> Dict[str, Any]:
     """Construir o body Elasticsearch para ``DatajudScraper.listar_processos``.
