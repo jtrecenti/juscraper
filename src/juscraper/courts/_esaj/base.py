@@ -107,10 +107,67 @@ class EsajSearchScraper(BaseScraper):
         paginas: int | list | range | None = None,
         **kwargs: Any,
     ):
-        """Search this tribunal's second-degree jurisprudence (cjsg).
+        """Pesquisa jurisprudencia de segundo grau do tribunal (CJSG).
 
-        Delegates to :meth:`cjsg_download` + :meth:`cjsg_parse`. The
-        downloaded directory is cleaned up before returning.
+        Delega para :meth:`cjsg_download` + :meth:`cjsg_parse` e remove o
+        diretorio temporario antes de retornar.
+
+        Args:
+            pesquisa (str): Termo livre buscado no acordao/ementa.
+            paginas (int | list | range | None): Paginas 1-based;
+                ``None`` baixa todas. Default ``None``.
+            **kwargs: Filtros aceitos pelo schema configurado em
+                :attr:`INPUT_CJSG` (default :class:`InputCJSGEsajPuro`,
+                herdado por TJAC/TJAL/TJAM/TJCE/TJMS). Subclasses podem
+                trocar ``INPUT_CJSG`` e mudar a lista de filtros — TJSP
+                usa :class:`InputCJSGTJSP`. Filtros do schema padrao
+                (todos opcionais; ``None`` = sem filtro):
+
+                * ``ementa`` (str): Termo buscado especificamente na
+                  ementa.
+                * ``numero_recurso`` (str): Numero do recurso.
+                * ``classe`` (str): ID interno da classe processual.
+                * ``assunto`` (str): ID interno do assunto.
+                * ``comarca`` (str): ID interno da comarca.
+                * ``orgao_julgador`` (str): ID interno do orgao julgador.
+                * ``origem`` (Literal["T", "R"]): ``"T"`` (segundo grau,
+                  default) ou ``"R"`` (colegio recursal).
+                * ``tipo_decisao`` (Literal["acordao", "monocratica"]):
+                  Default ``"acordao"``.
+                * ``data_julgamento_inicio`` / ``data_julgamento_fim``
+                  (str, ``DD/MM/AAAA``): Intervalo de julgamento.
+                * ``data_publicacao_inicio`` / ``data_publicacao_fim``
+                  (str, ``DD/MM/AAAA``): Intervalo de publicacao.
+
+        Aliases deprecados (popados com ``DeprecationWarning`` antes do
+        pydantic):
+
+            * ``query`` / ``termo`` -> ``pesquisa``
+            * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``_fim``
+            * ``data_julgamento_de`` / ``_ate`` -> ``data_julgamento_inicio`` / ``_fim``
+            * ``data_publicacao_de`` / ``_ate`` -> ``data_publicacao_inicio`` / ``_fim``
+
+        Raises:
+            TypeError: Quando um kwarg desconhecido e passado (via
+                :func:`_raise_on_extra`).
+            ValidationError: Quando um filtro tem formato invalido.
+
+        Returns:
+            pd.DataFrame: Resultados parseados; colunas conforme
+            :class:`OutputCJSGEsaj` (``processo``, ``ementa``, ``relator``
+            via mixin, ``data_publicacao`` via mixin, ``cd_acordao``,
+            ``cd_foro``).
+
+        Exemplo:
+            >>> import juscraper as jus
+            >>> tjac = jus.scraper("tjac")
+            >>> df = tjac.cjsg("dano moral", paginas=range(1, 3),
+            ...                data_julgamento_inicio="01/01/2024")
+
+        See also:
+            :class:`InputCJSGEsajPuro` (ou
+            :class:`~juscraper.courts.tjsp.schemas.InputCJSGTJSP`) —
+            schema pydantic e a fonte da verdade dos filtros aceitos.
         """
         path = self.cjsg_download(pesquisa=pesquisa, paginas=paginas, **kwargs)
         try:
@@ -125,13 +182,28 @@ class EsajSearchScraper(BaseScraper):
         diretorio: str | None = None,
         **kwargs: Any,
     ) -> str:
-        """Download raw HTML result pages for ``cjsg``.
+        """Baixa as paginas HTML brutas do CJSG (sem parsear).
 
-        ``diretorio`` overrides :attr:`download_path` for this single call.
-        Deprecated aliases (``query``/``termo`` for ``pesquisa``,
-        ``data_inicio``/``data_fim`` and ``_de``/``_ate`` for date fields)
-        are popped from ``kwargs`` with a ``DeprecationWarning`` before
-        pydantic validation.
+        Faz o GET inicial, extrai o numero de paginas, paga o resto e
+        salva todos os HTMLs em disco. Aceita os mesmos filtros de
+        :meth:`cjsg`; consulte la a lista completa.
+
+        Args:
+            pesquisa (str): Termo livre buscado.
+            paginas (int | list | range | None): Paginas 1-based;
+                ``None`` baixa todas. Default ``None``.
+            diretorio (str | None): Sobrescreve :attr:`download_path`
+                para esta unica chamada. Default ``None``.
+            **kwargs: Mesmos filtros aceitos por :meth:`cjsg` (validados
+                por :attr:`INPUT_CJSG`). Veja a docstring de :meth:`cjsg`
+                para a lista detalhada e os aliases deprecados.
+
+        Raises:
+            TypeError: Quando um kwarg desconhecido e passado.
+            ValidationError: Quando um filtro tem formato invalido.
+
+        Returns:
+            str: Caminho do diretorio onde os HTMLs foram salvos.
         """
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
         paginas_norm = normalize_paginas(paginas)
