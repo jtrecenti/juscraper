@@ -16,7 +16,6 @@ Samples are captured by ``python -m tests.fixtures.capture.datajud``.
 import json
 
 import pandas as pd
-import pytest
 import responses
 from responses.matchers import header_matcher, json_params_matcher
 from responses.registries import OrderedRegistry
@@ -85,7 +84,9 @@ def test_listar_processos_typical_multi_page(mocker):
 
 @responses.activate
 def test_listar_processos_single_page(mocker):
-    """Sample with ``len(hits) < tamanho_pagina`` triggers the early break."""
+    """Single page within the requested range — ``parse_datajud_api_response``
+    returns 1 hit and the loop terminates after page 1 because
+    ``current_page < end_page`` no longer holds."""
     mocker.patch("time.sleep")
     _add_page(
         "api_publica_tjsp",

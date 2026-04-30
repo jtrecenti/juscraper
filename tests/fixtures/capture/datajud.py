@@ -22,9 +22,10 @@ Cenários capturados:
 NOTA (drift, regra 12 do CLAUDE.md): este script duplica o construtor
 de body Elasticsearch que vive em
 ``src/juscraper/aggregators/datajud/client.py:_listar_processos_por_alias``
-(linhas 192-266 no momento da escrita). A issue #140 declara critério 8
-(não modifica ``src/``), o que impediu a extração de
-``build_listar_processos_payload`` em ``aggregators/datajud/download.py``.
+(branch construtor de body Elasticsearch dentro do ``while`` de paginação).
+A issue #140 declara critério 8 (não modifica ``src/``), o que impediu a
+extração de ``build_listar_processos_payload`` em
+``aggregators/datajud/download.py``.
 
 Follow-up: extrair o builder e fazer este script importar em vez de
 redefinir. Enquanto isso, qualquer alteração no body Elasticsearch
@@ -59,7 +60,8 @@ def build_payload(
     tamanho_pagina: int = 1000,
     search_after: list[Any] | None = None,
 ) -> dict[str, Any]:
-    """Replica ``client.py:_listar_processos_por_alias`` linhas 192-266.
+    """Replica o branch construtor de body Elasticsearch dentro do ``while`` de
+    paginação em ``client.py:_listar_processos_por_alias``.
 
     Mantém a ordem de chaves e a lógica condicional idêntica para que o
     capture e o contrato falhem juntos quando o body real do scraper
