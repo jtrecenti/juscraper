@@ -85,7 +85,6 @@ class TJSCScraper(BaseScraper):
             pesquisa=pesquisa,
             paginas=paginas,
             kwargs=kwargs,
-            date_format="%Y-%m-%d",
             campo=campo,
             processo=processo,
         )

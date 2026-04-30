@@ -108,7 +108,6 @@ class TJROScraper(BaseScraper):
             pesquisa=pesquisa,
             paginas=paginas,
             kwargs=kwargs,
-            date_format="%Y-%m-%d",
             tipo=tipo,
             numero_processo=numero_processo,
             magistrado=magistrado,

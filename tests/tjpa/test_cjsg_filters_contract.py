@@ -136,6 +136,14 @@ def test_cjsg_data_inicio_alias_maps_to_data_julgamento(mocker):
 
 def test_cjsg_unknown_kwarg_raises():
     """Kwargs not declared in :class:`InputCJSGTJPA` raise ``TypeError`` with
-    the field name (refs #84, #93)."""
-    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
+    the field name and the public method name in the prefix (refs #84, #93).
+
+    The prefix matters: TJPA wires the pipeline em ambos ``cjsg`` e
+    ``cjsg_download`` separadamente, entao o erro reflete o ponto de entrada
+    real (sem confundir o usuario).
+    """
+    with pytest.raises(
+        TypeError,
+        match=r"TJPAScraper\.cjsg\(\) got unexpected keyword argument\(s\): 'kwarg_inventado'",
+    ):
         jus.scraper("tjpa").cjsg("dano moral", paginas=1, kwarg_inventado="x")

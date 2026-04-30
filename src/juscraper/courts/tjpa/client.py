@@ -72,7 +72,6 @@ class TJPAScraper(BaseScraper):
             pesquisa=pesquisa,
             paginas=paginas,
             kwargs=kwargs,
-            date_format="%Y-%m-%d",
             relator=relator,
             orgao_julgador_colegiado=orgao_julgador_colegiado,
             classe=classe,
@@ -171,9 +170,14 @@ class TJPAScraper(BaseScraper):
             :class:`InputCJSGTJPA` — schema pydantic e a fonte da verdade dos
             filtros aceitos.
         """
-        brutos = self.cjsg_download(
+        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
+
+        inp = apply_input_pipeline_search(
+            InputCJSGTJPA,
+            "TJPAScraper.cjsg()",
             pesquisa=pesquisa,
             paginas=paginas,
+            kwargs=kwargs,
             relator=relator,
             orgao_julgador_colegiado=orgao_julgador_colegiado,
             classe=classe,
@@ -184,6 +188,25 @@ class TJPAScraper(BaseScraper):
             sort_order=sort_order,
             query_type=query_type,
             query_scope=query_scope,
-            **kwargs,
+        )
+
+        brutos = cjsg_download_manager(
+            pesquisa=inp.pesquisa,
+            paginas=inp.paginas,
+            session=self.session,
+            relator=inp.relator,
+            orgao_julgador_colegiado=inp.orgao_julgador_colegiado,
+            classe=inp.classe,
+            assunto=inp.assunto,
+            origem=inp.origem,
+            tipo=inp.tipo,
+            data_julgamento_inicio=to_iso_date(inp.data_julgamento_inicio),
+            data_julgamento_fim=to_iso_date(inp.data_julgamento_fim),
+            data_publicacao_inicio=to_iso_date(inp.data_publicacao_inicio),
+            data_publicacao_fim=to_iso_date(inp.data_publicacao_fim),
+            sort_by=inp.sort_by,
+            sort_order=inp.sort_order,
+            query_type=inp.query_type,
+            query_scope=inp.query_scope,
         )
         return self.cjsg_parse(brutos)

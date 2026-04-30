@@ -1,4 +1,5 @@
 """Utility functions for normalizing public API parameters across all scrapers."""
+import difflib
 import warnings
 from datetime import datetime, timedelta
 from typing import Any, Callable, Iterator, Optional, Union
@@ -509,7 +510,12 @@ def pop_deprecated_alias(kwargs: dict, old: str, new: str):
     return value
 
 
-def raise_on_extra_kwargs(exc: ValidationError, method: str) -> None:
+def raise_on_extra_kwargs(
+    exc: ValidationError,
+    method: str,
+    *,
+    schema_cls: Optional[type[BaseModel]] = None,
+) -> None:
     """Convert pydantic ``extra_forbidden`` errors into a friendly ``TypeError``.
 
     Regular users expect ``TypeError: got unexpected keyword argument`` when
@@ -517,21 +523,41 @@ def raise_on_extra_kwargs(exc: ValidationError, method: str) -> None:
     case is accurate but unfriendly. Other validation errors (bad date format,
     wrong literal, etc.) surface as-is so the caller can see them.
 
+    When ``schema_cls`` is provided, each unknown kwarg is matched against the
+    schema's declared fields via :func:`difflib.get_close_matches`; if a close
+    match is found, it is included in the error message as ``(você quis dizer
+    'X'?)``. This catches typos like ``data_juglamento_inicio`` ->
+    ``data_julgamento_inicio``.
+
     Args:
         exc: The :class:`pydantic.ValidationError` raised by ``Schema(...)``.
         method: Human-readable method identifier for the error message
             (e.g. ``"TJRNScraper.cjsg()"``).
+        schema_cls: Optional pydantic model whose fields are used to suggest
+            close matches for unknown kwargs. When ``None``, no suggestion is
+            emitted.
 
     Raises:
         TypeError: When *all* errors in ``exc`` are ``extra_forbidden``. The
-            offending field names are included in the message. When the error
-            mix is not pure ``extra_forbidden`` the function returns ``None``
-            and the caller is expected to ``raise`` the original exception.
+            offending field names (and suggestions, when available) are included
+            in the message. When the error mix is not pure ``extra_forbidden``
+            the function returns ``None`` and the caller is expected to
+            ``raise`` the original exception.
     """
     extras = [err for err in exc.errors() if err["type"] == "extra_forbidden"]
     if extras and len(extras) == len(exc.errors()):
-        names = ", ".join(repr(err["loc"][-1]) for err in extras)
-        raise TypeError(f"{method} got unexpected keyword argument(s): {names}") from exc
+        valid_fields = list(schema_cls.model_fields) if schema_cls is not None else []
+        parts = []
+        for err in extras:
+            name = str(err["loc"][-1])
+            close = difflib.get_close_matches(name, valid_fields, n=1, cutoff=0.7)
+            if close:
+                parts.append(f"'{name}' (você quis dizer '{close[0]}'?)")
+            else:
+                parts.append(repr(name))
+        raise TypeError(
+            f"{method} got unexpected keyword argument(s): {', '.join(parts)}"
+        ) from exc
 
 
 def apply_input_pipeline_search(
@@ -543,7 +569,6 @@ def apply_input_pipeline_search(
     kwargs: dict,
     max_dias: Optional[int] = None,
     origem_mensagem: Optional[str] = None,
-    date_format: str = "%d/%m/%Y",
     **canonical_filters,
 ) -> BaseModel:
     """Run the canonical input-validation pipeline for search endpoints (cjsg/cjpg).
@@ -586,6 +611,13 @@ def apply_input_pipeline_search(
     would silently capture the caller's filter via Python's keyword binding
     rules, instead of forwarding it to the schema via ``**canonical_filters``.
 
+    The date format used by :func:`validate_intervalo_datas` is read from the
+    schema's ``BACKEND_DATE_FORMAT`` :class:`ClassVar`, defaulting to
+    ``"%d/%m/%Y"`` (eSAJ). Tribunals whose backend speaks ISO declare
+    ``BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"`` in their schema. This
+    keeps the format coupled to the schema (where it logically belongs) instead
+    of being passed redundantly by every caller.
+
     Args:
         schema_cls: Pydantic model class to instantiate (e.g. :class:`InputCJSGTJRN`).
         method_name: Human-readable identifier used in the ``TypeError`` message
@@ -606,10 +638,6 @@ def apply_input_pipeline_search(
             ``None`` (default) falls back to ``"O backend"`` so non-eSAJ
             tribunals invoking the helper without an explicit subject don't
             leak ``"eSAJ"`` into their error messages.
-        date_format: ``strptime`` format used by :func:`validate_intervalo_datas`
-            to parse ``data_julgamento_*``/``data_publicacao_*``. Default
-            ``"%d/%m/%Y"`` matches eSAJ; tribunals whose backend speaks ISO
-            (TJRN, TJPA, TJRO, TJPI, ...) pass ``"%Y-%m-%d"``.
         **canonical_filters: Tribunal-specific filters already extracted from
             the public method signature (e.g. ``numero_processo=...``,
             ``relator=...``). They are forwarded to the schema as-is. **A key
@@ -631,6 +659,7 @@ def apply_input_pipeline_search(
     pop_normalize_aliases(kwargs, include_canonical=True)
 
     origem_resolvida = origem_mensagem if origem_mensagem is not None else "O backend"
+    date_format = getattr(schema_cls, "BACKEND_DATE_FORMAT", "%d/%m/%Y")
     validate_intervalo_datas(
         datas["data_julgamento_inicio"],
         datas["data_julgamento_fim"],
@@ -657,7 +686,7 @@ def apply_input_pipeline_search(
             **kwargs,
         )
     except ValidationError as exc:
-        raise_on_extra_kwargs(exc, method_name)
+        raise_on_extra_kwargs(exc, method_name, schema_cls=schema_cls)
         raise
 
 
@@ -679,17 +708,19 @@ def resolve_deprecated_alias(
     - Alias presente e ``current_value == sentinel`` (canonico nao
       setado pelo usuario): emite ``DeprecationWarning`` e retorna o
       valor do alias.
-    - Ambos setados: levanta ``ValueError`` explicando a colisao.
+    - Ambos setados: levanta ``ValueError`` explicando a colisao **sem
+      emitir o ``DeprecationWarning``** — o uso esta errado (conflito), nao
+      e o caso de uso "alias funcionando ainda" que o warning sinaliza.
 
     ``sentinel`` descreve o "nao setado" do parametro canonico:
     ``None`` para ``Optional[...]``, ``""`` para ``str = ""``. Kw-only
     pra forcar o autor a pensar sobre o default do seu metodo.
     """
-    old_value = pop_deprecated_alias(kwargs, old, new)
-    if old_value is None:
+    if old not in kwargs:
         return current_value
     if current_value != sentinel:
+        kwargs.pop(old)
         raise ValueError(
             f"Não é possível passar '{new}' e '{old}' simultaneamente."
         )
-    return old_value
+    return pop_deprecated_alias(kwargs, old, new)
