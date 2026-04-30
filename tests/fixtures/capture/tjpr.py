@@ -47,10 +47,9 @@ def _classify(url: str, kind: str, scenario: str, page_counter: dict[str, int]) 
         return "ementa_completa.html"
 
     if kind == "POST":
-        page_counter[scenario] = page_counter.get(scenario, 0) + 1
-        page = page_counter[scenario]
         if scenario == "typical":
-            return f"results_normal_page_{page:02d}.html"
+            page_counter[scenario] = page_counter.get(scenario, 0) + 1
+            return f"results_normal_page_{page_counter[scenario]:02d}.html"
         return f"{scenario}.html"
 
     return None

@@ -15,59 +15,16 @@ The contract registers a single response for each kind of request;
 ``responses`` reuses registered responses across calls by default,
 so the home GET (×2) and the ementa GETs (×N) all share one fixture.
 """
-from urllib.parse import parse_qs
-
 import pandas as pd
 import responses
 
 import juscraper as jus
-from tests._helpers import load_sample
+from tests._helpers import load_sample, query_param_subset_matcher, urlencoded_body_subset_matcher
 
 HOME_URL = "https://portal.tjpr.jus.br/jurisprudencia/"
 SEARCH_URL = "https://portal.tjpr.jus.br/jurisprudencia/publico/pesquisa.do"
 
 CJSG_MIN_COLUMNS = {"processo", "orgao_julgador", "relator", "data_julgamento", "ementa"}
-
-
-def _post_body_subset_matcher(expected: dict[str, str]):
-    """Custom matcher that only checks the listed urlencoded body fields.
-
-    ``responses.matchers.urlencoded_params_matcher`` requires the full
-    body; we only want to validate that a subset of fields propagates,
-    leaving room for the scraper to add/remove unrelated fields without
-    breaking the contract.
-    """
-    def matcher(request):
-        body = request.body or b""
-        if isinstance(body, bytes):
-            body = body.decode("utf-8")
-        parsed = {k: v[0] if v else "" for k, v in parse_qs(body, keep_blank_values=True).items()}
-        missing = {
-            k: (expected[k], parsed.get(k))
-            for k in expected
-            if parsed.get(k) != expected[k]
-        }
-        if missing:
-            return False, f"body fields mismatch: {missing}"
-        return True, ""
-    return matcher
-
-
-def _query_param_matcher(expected: dict[str, str]):
-    """Subset matcher for query-string parameters."""
-    def matcher(request):
-        from urllib.parse import urlparse
-        qs = parse_qs(urlparse(request.url).query, keep_blank_values=True)
-        flat = {k: v[0] if v else "" for k, v in qs.items()}
-        missing = {
-            k: (expected[k], flat.get(k))
-            for k in expected
-            if flat.get(k) != expected[k]
-        }
-        if missing:
-            return False, f"query params mismatch: {missing}"
-        return True, ""
-    return matcher
 
 
 def _add_home():
@@ -88,8 +45,8 @@ def _add_search_page(pesquisa: str, pagina: int, sample_path: str):
         status=200,
         content_type="text/html; charset=UTF-8",
         match=[
-            _query_param_matcher({"actionType": "pesquisar"}),
-            _post_body_subset_matcher({
+            query_param_subset_matcher({"actionType": "pesquisar"}),
+            urlencoded_body_subset_matcher({
                 "criterioPesquisa": pesquisa,
                 "pageNumber": str(pagina),
             }),
@@ -109,7 +66,7 @@ def _add_ementa_completa():
         body=load_sample("tjpr", "cjsg/ementa_completa.html"),
         status=200,
         content_type="text/html; charset=UTF-8",
-        match=[_query_param_matcher({"actionType": "exibirTextoCompleto"})],
+        match=[query_param_subset_matcher({"actionType": "exibirTextoCompleto"})],
     )
 
 

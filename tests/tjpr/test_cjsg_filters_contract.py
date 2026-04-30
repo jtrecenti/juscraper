@@ -5,41 +5,15 @@ TJPR's ``cjsg`` exposes ``data_julgamento_inicio/fim`` and
 ride ``normalize_datas`` to ``data_julgamento_*`` with a
 ``DeprecationWarning``. Search-term aliases are ``query`` and ``termo``.
 """
-from urllib.parse import parse_qs, urlparse
-
 import pandas as pd
 import pytest
 import responses
 
 import juscraper as jus
-from tests._helpers import load_sample
+from tests._helpers import load_sample, query_param_subset_matcher, urlencoded_body_subset_matcher
 
 HOME_URL = "https://portal.tjpr.jus.br/jurisprudencia/"
 SEARCH_URL = "https://portal.tjpr.jus.br/jurisprudencia/publico/pesquisa.do"
-
-
-def _query_param_matcher(expected: dict[str, str]):
-    def matcher(request):
-        qs = parse_qs(urlparse(request.url).query, keep_blank_values=True)
-        flat = {k: v[0] if v else "" for k, v in qs.items()}
-        missing = {k: (expected[k], flat.get(k)) for k in expected if flat.get(k) != expected[k]}
-        if missing:
-            return False, f"query params mismatch: {missing}"
-        return True, ""
-    return matcher
-
-
-def _post_body_subset_matcher(expected: dict[str, str]):
-    def matcher(request):
-        body = request.body or b""
-        if isinstance(body, bytes):
-            body = body.decode("utf-8")
-        parsed = {k: v[0] if v else "" for k, v in parse_qs(body, keep_blank_values=True).items()}
-        missing = {k: (expected[k], parsed.get(k)) for k in expected if parsed.get(k) != expected[k]}
-        if missing:
-            return False, f"body fields mismatch: {missing}"
-        return True, ""
-    return matcher
 
 
 def _add_home():
@@ -60,8 +34,8 @@ def _add_search(expected_body_subset: dict[str, str]):
         status=200,
         content_type="text/html; charset=UTF-8",
         match=[
-            _query_param_matcher({"actionType": "pesquisar"}),
-            _post_body_subset_matcher(expected_body_subset),
+            query_param_subset_matcher({"actionType": "pesquisar"}),
+            urlencoded_body_subset_matcher(expected_body_subset),
         ],
     )
 
@@ -92,20 +66,6 @@ def test_cjsg_all_filters_land_in_body(mocker):
     assert isinstance(df, pd.DataFrame)
 
 
-# TJPR's ``cjsg`` re-passes ``**kwargs`` to ``cjsg_download`` without
-# filtering the deprecated aliases that ``normalize_pesquisa`` already
-# popped from its own copy. The second invocation of ``normalize_pesquisa``
-# therefore sees both ``pesquisa`` (non-None) and ``query``/``termo``,
-# which raises ``ValueError`` — the alias never reaches the wire.
-# Compare with ``tjpi/client.py:108`` which explicitly drops the aliases
-# before delegating. Tracked as a follow-up bug to fix during refactor #84.
-ALIAS_BUG_REASON = (
-    "TJPR cjsg re-passes deprecated aliases via **kwargs to cjsg_download; "
-    "fixed during refactor #84 (see #144)."
-)
-
-
-@pytest.mark.xfail(strict=True, raises=ValueError, reason=ALIAS_BUG_REASON)
 @responses.activate
 def test_cjsg_query_alias_emits_deprecation_warning(mocker):
     """The deprecated ``query`` alias should normalize to ``pesquisa``."""
@@ -119,7 +79,6 @@ def test_cjsg_query_alias_emits_deprecation_warning(mocker):
     assert isinstance(df, pd.DataFrame)
 
 
-@pytest.mark.xfail(strict=True, raises=ValueError, reason=ALIAS_BUG_REASON)
 @responses.activate
 def test_cjsg_termo_alias_emits_deprecation_warning(mocker):
     """The deprecated ``termo`` alias should normalize to ``pesquisa``."""
