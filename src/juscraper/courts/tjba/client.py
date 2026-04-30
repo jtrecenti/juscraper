@@ -96,12 +96,12 @@ class TJBAScraper(BaseScraper):
         paginas = normalize_paginas(paginas)
         # Re-inject explicit date args into kwargs so the pipeline can resolve
         # aliases and canonical names in a single pass.
-        for _date_key, _date_val in (
+        for key, val in (
             ("data_publicacao_inicio", data_publicacao_inicio),
             ("data_publicacao_fim", data_publicacao_fim),
         ):
-            if _date_val is not None:
-                kwargs[_date_key] = _date_val
+            if val is not None:
+                kwargs[key] = val
         inp = apply_input_pipeline_search(
             InputCJSGTJBA,
             "TJBAScraper.cjsg_download()",

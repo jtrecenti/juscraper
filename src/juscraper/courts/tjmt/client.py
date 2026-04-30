@@ -77,12 +77,12 @@ class TJMTScraper(BaseScraper):
         # aliases (data_inicio/data_fim) and canonical names in a single pass.
         # Passing them as canonical_filters collides with what normalize_datas
         # extracts from kwargs.
-        for _date_key, _date_val in (
+        for key, val in (
             ("data_julgamento_inicio", data_julgamento_inicio),
             ("data_julgamento_fim", data_julgamento_fim),
         ):
-            if _date_val is not None:
-                kwargs[_date_key] = _date_val
+            if val is not None:
+                kwargs[key] = val
         inp = apply_input_pipeline_search(
             InputCJSGTJMT,
             "TJMTScraper.cjsg_download()",
