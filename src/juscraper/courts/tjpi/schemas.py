@@ -1,6 +1,8 @@
 """Pydantic schemas for TJPI scraper endpoints."""
 from __future__ import annotations
 
+from typing import ClassVar
+
 from ...schemas import OutputCJSGBase, SearchBase
 from ...schemas.mixins import DataJulgamentoMixin
 
@@ -17,6 +19,8 @@ class InputCJSGTJPI(SearchBase, DataJulgamentoMixin):
     de publicacao, entao ``DataPublicacaoMixin`` nao e herdado: passar
     ``data_publicacao_*`` levanta ``TypeError`` via ``extra="forbid"``.
     """
+
+    BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
 
     tipo: str = ""
     relator: str = ""

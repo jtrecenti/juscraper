@@ -124,7 +124,6 @@ class TJRNScraper(BaseScraper):
             pesquisa=pesquisa,
             paginas=paginas,
             kwargs=kwargs,
-            date_format="%Y-%m-%d",
             numero_processo=numero_processo,
             id_classe_judicial=id_classe_judicial,
             id_orgao_julgador=id_orgao_julgador,

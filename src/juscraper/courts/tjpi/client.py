@@ -89,7 +89,6 @@ class TJPIScraper(BaseScraper):
             pesquisa=pesquisa,
             paginas=paginas,
             kwargs=kwargs,
-            date_format="%Y-%m-%d",
             tipo=tipo,
             relator=relator,
             classe=classe,

@@ -171,3 +171,12 @@ def test_cjsg_unknown_kwarg_raises():
     the field name, instead of being silently dropped (refs #84, #93)."""
     with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
         jus.scraper("tjrn").cjsg("dano moral", paginas=1, kwarg_inventado="x")
+
+
+def test_cjsg_alias_conflict_raises():
+    """Passar canonical e alias deprecado simultaneamente leva a ``ValueError``."""
+    with pytest.raises(ValueError, match="numero_processo.*nr_processo"):
+        jus.scraper("tjrn").cjsg(
+            "dano moral", paginas=1,
+            numero_processo="X", nr_processo="Y",
+        )
