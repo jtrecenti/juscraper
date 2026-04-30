@@ -5,7 +5,6 @@ import logging
 import math
 import re
 import time
-from typing import Union
 
 import requests
 
@@ -20,9 +19,9 @@ def build_cjsg_payload(
     pesquisa: str,
     page: int = 1,
     *,
-    id_instancia: Union[str, int] = "0",
-    id_area: Union[str, int] = "0",
-    id_serventia_subtipo: Union[str, int] = "0",
+    id_instancia: str | int = "0",
+    id_area: str | int = "0",
+    id_serventia_subtipo: str | int = "0",
     numero_processo: str = "",
     data_publicacao_inicio: str = "",
     data_publicacao_fim: str = "",

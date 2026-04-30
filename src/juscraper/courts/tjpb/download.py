@@ -15,7 +15,7 @@ SEARCH_URL = f"{BASE_URL}/api/jurisprudencia/pesquisar"
 RESULTS_PER_PAGE = 10
 
 
-_TOKEN_RE = re.compile(r'<meta name="_token" content="([^"]+)"')
+TOKEN_RE = re.compile(r'<meta name="_token" content="([^"]+)"')
 
 
 def fetch_csrf_token(session: requests.Session) -> str:
@@ -27,7 +27,7 @@ def fetch_csrf_token(session: requests.Session) -> str:
     """
     resp = session.get(BASE_URL, timeout=30)
     resp.raise_for_status()
-    match = _TOKEN_RE.search(resp.text)
+    match = TOKEN_RE.search(resp.text)
     if not match:
         raise RuntimeError("Could not find CSRF token on TJPB page.")
     return match.group(1)

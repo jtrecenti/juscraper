@@ -57,7 +57,7 @@ def test_cjsg_single_page(mocker):
 
     assert isinstance(df, pd.DataFrame)
     assert CJSG_FIELDS <= set(df.columns)
-    assert len(df) > 0
+    assert len(df) == 9
 
 
 @responses.activate

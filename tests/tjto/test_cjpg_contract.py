@@ -57,7 +57,7 @@ def test_cjpg_single_page(mocker):
 
     assert isinstance(df, pd.DataFrame)
     assert CJPG_FIELDS <= set(df.columns)
-    assert len(df) > 0
+    assert len(df) == 10
 
 
 @responses.activate

@@ -51,10 +51,13 @@ def build_cjsg_payload(
 ) -> dict:
     """Build the form-encoded body for the TJTO jurisprudence search.
 
-    ``start`` is a 0-based Solr offset (page = ``start // RESULTS_PER_PAGE + 1``).
-    The backend only applies ``dat_jul_ini``/``dat_jul_fim`` when
-    ``tempo_julgados="pers"`` (the "Intervalo personalizado" option in the UI);
-    an empty value silently falls back to "all dates".
+    Shared by ``cjsg`` and ``cjpg``: only ``tip_criterio_inst`` differs
+    (``'2'`` for the 2nd-instance shortcut, ``'1'`` for the 1st-instance
+    shortcut). ``start`` is a 0-based Solr offset
+    (page = ``start // RESULTS_PER_PAGE + 1``). The backend only applies
+    ``dat_jul_ini``/``dat_jul_fim`` when ``tempo_julgados="pers"`` (the
+    "Intervalo personalizado" option in the UI); an empty value silently
+    falls back to "all dates".
     """
     dat_ini_br = to_br_date(dat_jul_ini) or ""
     dat_fim_br = to_br_date(dat_jul_fim) or ""
