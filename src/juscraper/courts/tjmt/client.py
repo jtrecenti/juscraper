@@ -7,10 +7,11 @@ import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa
+from juscraper.utils.params import apply_input_pipeline_search, normalize_paginas, normalize_pesquisa
 
 from .download import cjsg_download
 from .parse import cjsg_parse
+from .schemas import InputCJSGTJMT
 
 
 class TJMTScraper(BaseScraper):
@@ -70,25 +71,44 @@ class TJMTScraper(BaseScraper):
         """
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
         paginas = normalize_paginas(paginas)
-        datas = normalize_datas(
-            data_julgamento_inicio=data_julgamento_inicio,
-            data_julgamento_fim=data_julgamento_fim,
-            data_publicacao_inicio=data_publicacao_inicio,
-            data_publicacao_fim=data_publicacao_fim,
-            **kwargs,
-        )
-        return cjsg_download(
+        # Re-inject explicit date args into kwargs so the pipeline can resolve
+        # aliases (data_inicio/data_fim) and canonical names in a single pass.
+        # Passing them as canonical_filters collides with what normalize_datas
+        # extracts from kwargs.
+        for _date_key, _date_val in (
+            ("data_julgamento_inicio", data_julgamento_inicio),
+            ("data_julgamento_fim", data_julgamento_fim),
+            ("data_publicacao_inicio", data_publicacao_inicio),
+            ("data_publicacao_fim", data_publicacao_fim),
+        ):
+            if _date_val is not None:
+                kwargs[_date_key] = _date_val
+        inp = apply_input_pipeline_search(
+            InputCJSGTJMT,
+            "TJMTScraper.cjsg_download()",
             pesquisa=pesquisa,
             paginas=paginas,
+            kwargs=kwargs,
             tipo_consulta=tipo_consulta,
-            data_julgamento_inicio=datas["data_julgamento_inicio"],
-            data_julgamento_fim=datas["data_julgamento_fim"],
             relator=relator,
             orgao_julgador=orgao_julgador,
             classe=classe,
             tipo_processo=tipo_processo,
             thesaurus=thesaurus,
             quantidade_por_pagina=quantidade_por_pagina,
+        )
+        return cjsg_download(
+            pesquisa=inp.pesquisa,
+            paginas=inp.paginas,
+            tipo_consulta=inp.tipo_consulta,
+            data_julgamento_inicio=inp.data_julgamento_inicio,
+            data_julgamento_fim=inp.data_julgamento_fim,
+            relator=inp.relator,
+            orgao_julgador=inp.orgao_julgador,
+            classe=inp.classe,
+            tipo_processo=inp.tipo_processo,
+            thesaurus=inp.thesaurus,
+            quantidade_por_pagina=inp.quantidade_por_pagina,
             session=self.session,
         )
 

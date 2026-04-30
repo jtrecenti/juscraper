@@ -1,11 +1,12 @@
 """Pydantic schemas for TJMT scraper endpoints.
 
-Ainda nao wired em :mod:`juscraper.courts.tjmt.client` — este arquivo e
-documentacao executavel da API publica ate o TJMT ser refatorado para o
-pipeline canonico da #93. A lista de campos bate byte-a-byte com a
-assinatura publica de :meth:`TJMTScraper.cjsg` / :meth:`TJMTScraper.cjsg_download`.
+Wired em :mod:`juscraper.courts.tjmt.client` desde o lote L2 do #165 —
+:meth:`TJMTScraper.cjsg_download` valida kwargs via :class:`InputCJSGTJMT`
+com ``extra="forbid"`` herdado de :class:`SearchBase`.
 """
 from __future__ import annotations
+
+from typing import ClassVar
 
 from ...schemas import (
     DataJulgamentoMixin,
@@ -27,6 +28,8 @@ class InputCJSGTJMT(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     via :func:`juscraper.utils.params.normalize_datas`. Filtros de data
     herdados dos mixins.
     """
+
+    BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
 
     tipo_consulta: str = "Acordao"
     relator: str | None = None

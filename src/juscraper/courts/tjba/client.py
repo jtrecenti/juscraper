@@ -7,10 +7,11 @@ import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa
+from juscraper.utils.params import apply_input_pipeline_search, normalize_paginas, normalize_pesquisa
 
 from .download import cjsg_download
 from .parse import cjsg_parse
+from .schemas import InputCJSGTJBA
 
 
 class TJBAScraper(BaseScraper):
@@ -93,26 +94,46 @@ class TJBAScraper(BaseScraper):
         """
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
         paginas = normalize_paginas(paginas)
-        datas = normalize_datas(
-            data_publicacao_inicio=data_publicacao_inicio,
-            data_publicacao_fim=data_publicacao_fim,
-            **kwargs,
-        )
-        return cjsg_download(
+        # Re-inject explicit date args into kwargs so the pipeline can resolve
+        # aliases and canonical names in a single pass.
+        for _date_key, _date_val in (
+            ("data_publicacao_inicio", data_publicacao_inicio),
+            ("data_publicacao_fim", data_publicacao_fim),
+        ):
+            if _date_val is not None:
+                kwargs[_date_key] = _date_val
+        inp = apply_input_pipeline_search(
+            InputCJSGTJBA,
+            "TJBAScraper.cjsg_download()",
             pesquisa=pesquisa,
             paginas=paginas,
+            kwargs=kwargs,
             numero_recurso=numero_recurso,
             orgaos=orgaos,
             relatores=relatores,
             classes=classes,
-            data_publicacao_inicio=datas["data_publicacao_inicio"],
-            data_publicacao_fim=datas["data_publicacao_fim"],
             segundo_grau=segundo_grau,
             turmas_recursais=turmas_recursais,
             tipo_acordaos=tipo_acordaos,
             tipo_decisoes_monocraticas=tipo_decisoes_monocraticas,
             ordenado_por=ordenado_por,
             items_per_page=items_per_page,
+        )
+        return cjsg_download(
+            pesquisa=inp.pesquisa,
+            paginas=inp.paginas,
+            numero_recurso=inp.numero_recurso,
+            orgaos=inp.orgaos,
+            relatores=inp.relatores,
+            classes=inp.classes,
+            data_publicacao_inicio=inp.data_publicacao_inicio,
+            data_publicacao_fim=inp.data_publicacao_fim,
+            segundo_grau=inp.segundo_grau,
+            turmas_recursais=inp.turmas_recursais,
+            tipo_acordaos=inp.tipo_acordaos,
+            tipo_decisoes_monocraticas=inp.tipo_decisoes_monocraticas,
+            ordenado_por=inp.ordenado_por,
+            items_per_page=inp.items_per_page,
             session=session or self.session,
         )
 
