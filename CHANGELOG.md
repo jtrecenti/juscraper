@@ -14,6 +14,8 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   - Controlado pelo novo flag `auto_chunk: bool = True` (mixin `juscraper.schemas.AutoChunkMixin`).
   - Para o comportamento antigo (`ValueError` em janelas longas), passe `auto_chunk=False`.
   - `auto_chunk=True` combinado com `paginas` quando o intervalo excede 366 dias e `ValueError` por ambiguidade.
+  - Conflito `pesquisa` + alias deprecado (`query`/`termo`) tambem levanta `ValueError` no caminho chunked (paridade com o caminho noop).
+- Orquestracao do auto-chunking consolidada em `juscraper.courts._esaj.base.run_auto_chunk`. Antes, a logica vivia duplicada (~50 linhas) em `EsajSearchScraper.cjsg` e `TJSPScraper.cjpg`, com diferenca sutil no re-injetar de `**extras` (ponto de drift apontado em revisao de PR #155). O helper centraliza o sniff + windows + pop + validacao upfront + `_fetch` + `run_chunked_search`.
 
 ### Added
 

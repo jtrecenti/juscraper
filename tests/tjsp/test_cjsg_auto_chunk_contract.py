@@ -197,3 +197,41 @@ def test_data_publicacao_long_window_raises_typeerror_immediately(tmp_path, mock
         )
 
     download.assert_not_called()
+
+
+def test_pesquisa_plus_query_alias_long_window_raises(tmp_path, mocker):
+    """Conflito ``pesquisa`` + alias ``query`` no caminho chunked = ValueError.
+
+    Sem o gate de ``normalize_pesquisa`` no orquestrador, o
+    ``pop_normalize_aliases`` descartaria silentemente o alias e a busca
+    rodaria so com ``pesquisa`` (regressao em relacao ao caminho noop, que
+    levanta ``ValueError`` via ``cjsg_download``). O fix preserva o erro.
+    """
+    download, _ = _patch_pipeline(mocker)
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+
+    with pytest.raises(ValueError, match="'pesquisa'.*'query'"):
+        scraper.cjsg(
+            "dano moral",
+            query="outra coisa",
+            data_julgamento_inicio="01/01/2022",
+            data_julgamento_fim="31/12/2024",  # > 366 dias -> chunked
+        )
+
+    download.assert_not_called()
+
+
+def test_pesquisa_plus_termo_alias_long_window_raises(tmp_path, mocker):
+    """Mesmo gate, mas com o alias ``termo``."""
+    download, _ = _patch_pipeline(mocker)
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+
+    with pytest.raises(ValueError, match="'pesquisa'.*'termo'"):
+        scraper.cjsg(
+            "dano moral",
+            termo="outra coisa",
+            data_julgamento_inicio="01/01/2022",
+            data_julgamento_fim="31/12/2024",
+        )
+
+    download.assert_not_called()

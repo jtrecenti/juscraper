@@ -5,22 +5,19 @@ import logging
 import os
 import shutil
 import tempfile
-import warnings
 from typing import Any, List, Literal, Optional, Union
 
 from pydantic import BaseModel, ValidationError
 
 from ...utils.params import (
     SEARCH_ALIASES,
-    iter_date_windows,
     normalize_datas,
     normalize_paginas,
     normalize_pesquisa,
     pop_normalize_aliases,
-    run_chunked_search,
     validate_intervalo_datas,
 )
-from .._esaj.base import EsajSearchScraper, _raise_on_extra
+from .._esaj.base import EsajSearchScraper, _raise_on_extra, run_auto_chunk
 from .cjpg_download import cjpg_download as cjpg_download_mod
 from .cjpg_parse import cjpg_n_pags, cjpg_parse_manager
 from .cpopg_download import cpopg_download_api, cpopg_download_html
@@ -143,6 +140,9 @@ class TJSPScraper(EsajSearchScraper):
         See also:
             :class:`~juscraper.courts.tjsp.schemas.InputCJSGTJSP` —
             schema pydantic e a fonte da verdade dos filtros aceitos.
+            :meth:`EsajSearchScraper.cjsg` — descricao detalhada do
+            auto-chunking (issue #130) para janelas
+            ``data_julgamento_*`` > 366 dias.
         """
         return super().cjsg(pesquisa=pesquisa, paginas=paginas, **kwargs)
 
@@ -296,57 +296,17 @@ class TJSPScraper(EsajSearchScraper):
             (parcial + warning). ``auto_chunk=True`` + ``paginas != None``
             em janela > 366 dias e :class:`ValueError`.
         """
-        auto_chunk = kwargs.pop("auto_chunk", True)
-
-        if auto_chunk:
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore", DeprecationWarning)
-                sniff = normalize_datas(**kwargs)
-            dj_i = sniff["data_julgamento_inicio"]
-            dj_f = sniff["data_julgamento_fim"]
-            windows = list(iter_date_windows(dj_i, dj_f, max_dias=366))
-            if len(windows) > 1:
-                pop_normalize_aliases(kwargs, include_canonical=True)
-                # InputCJPGTJSP nao herda DataPublicacaoMixin (TJSP cjpg nao
-                # suporta filtro por publicacao). Valida o schema upfront para
-                # converter extra_forbidden em TypeError imediato — sem isso,
-                # data_publicacao_* viraria N janelas falhando em UserWarning.
-                try:
-                    InputCJPGTJSP(
-                        pesquisa=pesquisa,
-                        paginas=paginas,
-                        data_julgamento_inicio=dj_i,
-                        data_julgamento_fim=dj_f,
-                        **{
-                            k: v for k, v in sniff.items()
-                            if v is not None and not k.startswith("data_julgamento")
-                        },
-                        **kwargs,
-                    )
-                except ValidationError as exc:
-                    _raise_on_extra(exc, "TJSPScraper.cjpg()")
-                    raise
-
-                def _fetch(win_i, win_f):
-                    return self.cjpg(
-                        pesquisa=pesquisa,
-                        paginas=None,
-                        data_julgamento_inicio=win_i,
-                        data_julgamento_fim=win_f,
-                        auto_chunk=False,
-                        **kwargs,
-                    )
-
-                return run_chunked_search(
-                    _fetch,
-                    data_inicio=dj_i,
-                    data_fim=dj_f,
-                    dedup_key="id_processo",
-                    max_dias=366,
-                    paginas=paginas,
-                    rotulo="data_julgamento",
-                    origem="O eSAJ",
-                )
+        chunked = run_auto_chunk(
+            method=self.cjpg,
+            method_label="TJSPScraper.cjpg()",
+            input_cls=InputCJPGTJSP,
+            dedup_key="id_processo",
+            pesquisa=pesquisa,
+            paginas=paginas,
+            kwargs=kwargs,
+        )
+        if chunked is not None:
+            return chunked
 
         path = self.cjpg_download(pesquisa=pesquisa, paginas=paginas, **kwargs)
         try:

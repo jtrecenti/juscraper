@@ -16,7 +16,7 @@ from __future__ import annotations
 import logging
 import shutil
 import warnings
-from typing import Any
+from typing import Any, Callable, Optional
 
 import requests
 from pydantic import BaseModel, ValidationError
@@ -51,6 +51,110 @@ def _raise_on_extra(exc: ValidationError, method: str) -> None:
     if extras and len(extras) == len(exc.errors()):
         names = ", ".join(repr(err["loc"][-1]) for err in extras)
         raise TypeError(f"{method} got unexpected keyword argument(s): {names}") from exc
+
+
+def run_auto_chunk(
+    *,
+    method: Callable[..., Any],
+    method_label: str,
+    input_cls: type[BaseModel],
+    dedup_key: str,
+    pesquisa: str,
+    paginas: Any,
+    kwargs: dict,
+) -> Any:
+    """Orquestra a busca auto-chunked pelo limite de janela do eSAJ (#130).
+
+    Consolida o boilerplate compartilhado entre :meth:`EsajSearchScraper.cjsg`
+    e :meth:`TJSPScraper.cjpg`:
+
+    1. Pop ``auto_chunk`` (default ``True``) — se ``False``, retorna ``None``.
+    2. Sniff de ``normalize_datas`` (com warnings suprimidos para nao
+       duplicar a emissao do caminho ``*_download``).
+    3. Se a janela cabe em ``max_dias=366``, retorna ``None`` (caller cai no
+       caminho noop).
+    4. Detecta conflito ``pesquisa + query/termo`` antes do
+       :func:`pop_normalize_aliases` descartar o alias silentemente.
+    5. Pop aliases + canonicals de data, monta ``extras`` (dates
+       nao-julgamento sniffadas), valida o schema upfront para converter
+       ``extra_forbidden`` em ``TypeError`` cedo.
+    6. Constroi ``_fetch`` que delega de volta para ``method`` com
+       ``auto_chunk=False`` e os ``extras`` re-injetados em cada janela
+       (probe TJAC 2026-04: backend AND'a julgamento + publicacao).
+
+    Returns:
+        ``None`` quando o chunking nao se aplica (auto_chunk=False ou
+        janela curta) — caller deve seguir o caminho noop. Caso contrario,
+        retorna o ``pd.DataFrame`` deduplicado.
+
+    Side effects:
+        Quando o chunking dispara, muta ``kwargs`` removendo aliases/canonicals
+        de data (ja absorvidos no sniff e re-injetados via ``extras``).
+    """
+    auto_chunk = kwargs.pop("auto_chunk", True)
+    if not auto_chunk:
+        return None
+
+    # Suprimir DeprecationWarning aqui evita duplicacao quando o caminho
+    # *_download chamar normalize_datas/normalize_pesquisa de novo.
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        sniff = normalize_datas(**kwargs)
+
+        dj_i = sniff["data_julgamento_inicio"]
+        dj_f = sniff["data_julgamento_fim"]
+        windows = list(iter_date_windows(dj_i, dj_f, max_dias=366))
+        if len(windows) <= 1:
+            return None
+
+        # Detectar conflito pesquisa + alias deprecado ANTES de
+        # pop_normalize_aliases, que descartaria o alias silentemente. cjpg
+        # admite pesquisa="" — passar None para nao bater no falso positivo
+        # de normalize_pesquisa quando so o alias foi fornecido.
+        has_search_alias = "query" in kwargs or "termo" in kwargs
+        if pesquisa or has_search_alias:
+            normalize_pesquisa(pesquisa or None, **kwargs)
+
+    pop_normalize_aliases(kwargs, include_canonical=True)
+    extras = {
+        k: v for k, v in sniff.items()
+        if v is not None and not k.startswith("data_julgamento")
+    }
+
+    try:
+        input_cls(
+            pesquisa=pesquisa,
+            paginas=paginas,
+            data_julgamento_inicio=dj_i,
+            data_julgamento_fim=dj_f,
+            **extras,
+            **kwargs,
+        )
+    except ValidationError as exc:
+        _raise_on_extra(exc, method_label)
+        raise
+
+    def _fetch(win_i: Optional[str], win_f: Optional[str]) -> Any:
+        return method(
+            pesquisa=pesquisa,
+            paginas=None,
+            data_julgamento_inicio=win_i,
+            data_julgamento_fim=win_f,
+            auto_chunk=False,
+            **extras,
+            **kwargs,
+        )
+
+    return run_chunked_search(
+        _fetch,
+        data_inicio=dj_i,
+        data_fim=dj_f,
+        dedup_key=dedup_key,
+        max_dias=366,
+        paginas=paginas,
+        rotulo="data_julgamento",
+        origem="O eSAJ",
+    )
 
 
 class EsajSearchScraper(BaseScraper):
@@ -188,64 +292,17 @@ class EsajSearchScraper(BaseScraper):
             comportamento estrito antigo (``ValueError`` em janelas
             longas), passe ``auto_chunk=False``.
         """
-        auto_chunk = kwargs.pop("auto_chunk", True)
-
-        if auto_chunk:
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore", DeprecationWarning)
-                sniff = normalize_datas(**kwargs)
-            dj_i = sniff["data_julgamento_inicio"]
-            dj_f = sniff["data_julgamento_fim"]
-            windows = list(iter_date_windows(dj_i, dj_f, max_dias=366))
-            if len(windows) > 1:
-                pop_normalize_aliases(kwargs, include_canonical=True)
-                # Backend eSAJ AND'a julgamento + publicacao (probe TJAC
-                # 2026-04: janelas disjuntas → set_jp == ∅). Re-injetar
-                # data_publicacao_* (e qualquer outro canonical não-julgamento)
-                # do sniff para nao perder o filtro no caminho chunked.
-                extras = {
-                    k: v for k, v in sniff.items()
-                    if v is not None and not k.startswith("data_julgamento")
-                }
-
-                # Valida o schema upfront para detectar extra_forbidden cedo
-                # (e.g. data_publicacao_* em InputCJSGTJSP, que nao herda
-                # DataPublicacaoMixin). Sem isso, o erro só aparece como N
-                # janelas falhando silenciosamente em UserWarning.
-                try:
-                    self.INPUT_CJSG(
-                        pesquisa=pesquisa,
-                        paginas=paginas,
-                        data_julgamento_inicio=dj_i,
-                        data_julgamento_fim=dj_f,
-                        **extras,
-                        **kwargs,
-                    )
-                except ValidationError as exc:
-                    _raise_on_extra(exc, f"{type(self).__name__}.cjsg()")
-                    raise
-
-                def _fetch(win_i, win_f):
-                    return self.cjsg(
-                        pesquisa,
-                        paginas=None,
-                        data_julgamento_inicio=win_i,
-                        data_julgamento_fim=win_f,
-                        auto_chunk=False,
-                        **extras,
-                        **kwargs,
-                    )
-
-                return run_chunked_search(
-                    _fetch,
-                    data_inicio=dj_i,
-                    data_fim=dj_f,
-                    dedup_key="cd_acordao",
-                    max_dias=366,
-                    paginas=paginas,
-                    rotulo="data_julgamento",
-                    origem="O eSAJ",
-                )
+        chunked = run_auto_chunk(
+            method=self.cjsg,
+            method_label=f"{type(self).__name__}.cjsg()",
+            input_cls=self.INPUT_CJSG,
+            dedup_key="cd_acordao",
+            pesquisa=pesquisa,
+            paginas=paginas,
+            kwargs=kwargs,
+        )
+        if chunked is not None:
+            return chunked
 
         path = self.cjsg_download(pesquisa=pesquisa, paginas=paginas, **kwargs)
         try:

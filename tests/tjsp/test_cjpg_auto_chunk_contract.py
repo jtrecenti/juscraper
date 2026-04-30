@@ -165,3 +165,53 @@ def test_data_publicacao_long_window_raises_typeerror_immediately(tmp_path, mock
         )
 
     download.assert_not_called()
+
+
+def test_pesquisa_plus_query_alias_long_window_raises(tmp_path, mocker):
+    """Conflito ``pesquisa`` + alias ``query`` no caminho chunked = ValueError.
+
+    Mesmo gate testado em ``test_cjsg_auto_chunk_contract.py``: sem o
+    ``normalize_pesquisa`` no orquestrador, o alias seria descartado
+    silentemente e o caminho chunked divergiria do noop (que levanta
+    ``ValueError`` via ``cjpg_download``).
+    """
+    download, _ = _patch_pipeline(mocker)
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+
+    with pytest.raises(ValueError, match="'pesquisa'.*'query'"):
+        scraper.cjpg(
+            "dano moral",
+            query="outra coisa",
+            data_julgamento_inicio="01/01/2022",
+            data_julgamento_fim="31/12/2024",
+        )
+
+    download.assert_not_called()
+
+
+def test_query_alias_only_long_window_works(tmp_path, mocker):
+    """`cjpg(query="x")` (sem ``pesquisa``) em janela longa: alias funciona.
+
+    cjpg admite ``pesquisa=""`` por default, entao o orquestrador deve
+    chamar ``normalize_pesquisa`` com ``pesquisa or None`` para evitar
+    falso positivo de conflito quando so o alias foi passado.
+    """
+    counter = {"i": 0}
+
+    def fake_parse(_path):
+        counter["i"] += 1
+        return pd.DataFrame({"id_processo": [f"proc-{counter['i']}"]})
+
+    download, _ = _patch_pipeline(mocker, parse_side_effect=fake_parse)
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        df = scraper.cjpg(
+            query="dano moral",
+            data_julgamento_inicio="01/01/2022",
+            data_julgamento_fim="31/12/2024",
+        )
+
+    assert download.call_count == 3
+    assert len(df) == 3
