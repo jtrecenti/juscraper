@@ -6,10 +6,11 @@ from typing import List, Optional, Union
 import pandas as pd
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa
+from juscraper.utils.params import apply_input_pipeline_search, normalize_paginas, normalize_pesquisa
 
 from .download import cjsg_download
 from .parse import cjsg_parse
+from .schemas import InputCJSGTJDFT
 
 
 class TJDFTScraper(BaseScraper):
@@ -51,16 +52,30 @@ class TJDFTScraper(BaseScraper):
         """
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
         paginas = normalize_paginas(paginas)
-        datas = normalize_datas(**kwargs)
-        brutos: list = cjsg_download(
-            query=pesquisa,
+        kwargs_local = dict(kwargs)
+        inp = apply_input_pipeline_search(
+            InputCJSGTJDFT,
+            "TJDFTScraper.cjsg_download()",
+            pesquisa=pesquisa,
             paginas=paginas,
+            kwargs=kwargs_local,
             sinonimos=sinonimos,
             espelho=espelho,
             inteiro_teor=inteiro_teor,
             quantidade_por_pagina=quantidade_por_pagina,
+        )
+        brutos: list = cjsg_download(
+            query=inp.pesquisa,
+            paginas=inp.paginas,
+            sinonimos=inp.sinonimos,
+            espelho=inp.espelho,
+            inteiro_teor=inp.inteiro_teor,
+            quantidade_por_pagina=inp.quantidade_por_pagina,
             base_url=self.BASE_URL,
-            **datas,
+            data_julgamento_inicio=inp.data_julgamento_inicio,
+            data_julgamento_fim=inp.data_julgamento_fim,
+            data_publicacao_inicio=inp.data_publicacao_inicio,
+            data_publicacao_fim=inp.data_publicacao_fim,
         )
         return brutos
 

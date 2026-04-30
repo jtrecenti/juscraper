@@ -7,10 +7,16 @@ import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa, resolve_deprecated_alias
+from juscraper.utils.params import (
+    apply_input_pipeline_search,
+    normalize_paginas,
+    normalize_pesquisa,
+    resolve_deprecated_alias,
+)
 
 from .download import CJPG_CORE, CJSG_CORES, DEFAULT_CORE, DEFAULT_PER_PAGE, cjsg_download
 from .parse import cjsg_parse
+from .schemas import InputCJPGTJES, InputCJSGTJES
 
 
 class TJESScraper(BaseScraper):
@@ -102,31 +108,41 @@ class TJESScraper(BaseScraper):
         classe = resolve_deprecated_alias(kwargs, "classe_judicial", "classe", classe)
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
         paginas = normalize_paginas(paginas)
-        datas = normalize_datas(
-            data_julgamento_inicio=data_julgamento_inicio,
-            data_julgamento_fim=data_julgamento_fim,
-            data_publicacao_inicio=data_publicacao_inicio,
-            data_publicacao_fim=data_publicacao_fim,
-            **kwargs,
-        )
-        # TJES only supports a single date range (dataIni/dataFim mapped to dt_juntada)
-        data_inicio = datas["data_julgamento_inicio"]
-        data_fim = datas["data_julgamento_fim"]
-
-        return cjsg_download(
+        inp = apply_input_pipeline_search(
+            InputCJSGTJES,
+            "TJESScraper.cjsg_download()",
             pesquisa=pesquisa,
             paginas=paginas,
+            kwargs=kwargs,
             core=core,
             busca_exata=busca_exata,
-            data_inicio=data_inicio,
-            data_fim=data_fim,
-            magistrado=relator,
+            relator=relator,
             orgao_julgador=orgao_julgador,
-            classe_judicial=classe,
+            classe=classe,
             jurisdicao=jurisdicao,
             assunto=assunto,
             ordenacao=ordenacao,
             per_page=per_page,
+            data_julgamento_inicio=data_julgamento_inicio,
+            data_julgamento_fim=data_julgamento_fim,
+            data_publicacao_inicio=data_publicacao_inicio,
+            data_publicacao_fim=data_publicacao_fim,
+        )
+        # TJES only supports a single date range (dataIni/dataFim mapped to dt_juntada)
+        return cjsg_download(
+            pesquisa=inp.pesquisa,
+            paginas=inp.paginas,
+            core=inp.core,
+            busca_exata=inp.busca_exata,
+            data_inicio=inp.data_julgamento_inicio,
+            data_fim=inp.data_julgamento_fim,
+            magistrado=inp.relator,
+            orgao_julgador=inp.orgao_julgador,
+            classe_judicial=inp.classe,
+            jurisdicao=inp.jurisdicao,
+            assunto=inp.assunto,
+            ordenacao=inp.ordenacao,
+            per_page=inp.per_page,
             session=self.session,
         )
 
@@ -204,24 +220,36 @@ class TJESScraper(BaseScraper):
         )
         pesquisa_val = normalize_pesquisa(pesquisa, **kwargs)
         paginas = normalize_paginas(paginas)
-        datas = normalize_datas(**kwargs)
-        data_inicio = datas["data_julgamento_inicio"]
-        data_fim = datas["data_julgamento_fim"]
-
-        return cjsg_download(
+        inp = apply_input_pipeline_search(
+            InputCJPGTJES,
+            "TJESScraper.cjpg_download()",
             pesquisa=pesquisa_val,
             paginas=paginas,
+            kwargs=kwargs,
+            busca_exata=kwargs.pop("busca_exata", False),
+            relator=relator,
+            orgao_julgador=kwargs.pop("orgao_julgador", None),
+            classe=classe,
+            jurisdicao=kwargs.pop("jurisdicao", None),
+            assunto=kwargs.pop("assunto", None),
+            ordenacao=kwargs.pop("ordenacao", None),
+            per_page=kwargs.pop("per_page", DEFAULT_PER_PAGE),
+        )
+
+        return cjsg_download(
+            pesquisa=inp.pesquisa,
+            paginas=inp.paginas,
             core=CJPG_CORE,
-            busca_exata=kwargs.get("busca_exata", False),
-            data_inicio=data_inicio,
-            data_fim=data_fim,
-            magistrado=relator,
-            orgao_julgador=kwargs.get("orgao_julgador"),
-            classe_judicial=classe,
-            jurisdicao=kwargs.get("jurisdicao"),
-            assunto=kwargs.get("assunto"),
-            ordenacao=kwargs.get("ordenacao"),
-            per_page=kwargs.get("per_page", DEFAULT_PER_PAGE),
+            busca_exata=inp.busca_exata,
+            data_inicio=inp.data_julgamento_inicio,
+            data_fim=inp.data_julgamento_fim,
+            magistrado=inp.relator,
+            orgao_julgador=inp.orgao_julgador,
+            classe_judicial=inp.classe,
+            jurisdicao=inp.jurisdicao,
+            assunto=inp.assunto,
+            ordenacao=inp.ordenacao,
+            per_page=inp.per_page,
             session=self.session,
         )
 

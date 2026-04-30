@@ -1,15 +1,14 @@
 """Pydantic schemas for TJES scraper endpoints.
 
-Ainda nao wired em :mod:`juscraper.courts.tjes.client` — este arquivo e
-documentacao executavel da API publica ate o TJES ser refatorado para o
-pipeline canonico da #93. A lista de campos bate byte-a-byte com a
-assinatura publica de :meth:`TJESScraper.cjsg` / :meth:`TJESScraper.cjsg_download`
-e :meth:`TJESScraper.cjpg` / :meth:`TJESScraper.cjpg_download`.
+Wired em :mod:`juscraper.courts.tjes.client` desde o lote L1 do #165 —
+:meth:`TJESScraper.cjsg_download` e :meth:`TJESScraper.cjpg_download`
+validam kwargs via :class:`InputCJSGTJES` / :class:`InputCJPGTJES` com
+``extra="forbid"`` herdado de :class:`SearchBase`.
 """
 from __future__ import annotations
 
 from datetime import date
-from typing import Literal
+from typing import ClassVar, Literal
 
 from ...schemas import DataJulgamentoMixin, DataPublicacaoMixin, OutputCJSGBase, OutputRelatoriaMixin, SearchBase
 
@@ -30,6 +29,8 @@ class InputCJSGTJES(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     ``classe_judicial`` (chaves brutas do Solr) sao aceitos com
     ``DeprecationWarning`` e resolvidos pelo client.
     """
+
+    BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
 
     core: Literal["pje2g", "pje2g_mono", "legado", "turma_recursal_legado"] = "pje2g"
     busca_exata: bool = False
@@ -77,6 +78,8 @@ class InputCJPGTJES(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     filtros de :class:`InputCJSGTJES` (exceto ``core``) como kwargs.
     Filtros de data herdados dos mixins.
     """
+
+    BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
 
     busca_exata: bool = False
     relator: str | None = None

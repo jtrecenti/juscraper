@@ -1,24 +1,27 @@
 """Pydantic schemas for TJDFT scraper endpoints.
 
-Ainda nao wired em :mod:`juscraper.courts.tjdft.client` — este arquivo e
-documentacao executavel da API publica ate o TJDFT ser refatorado para o
-pipeline canonico da #93. A lista de campos bate byte-a-byte com a
-assinatura publica de :meth:`TJDFTScraper.cjsg` / :meth:`TJDFTScraper.cjsg_download`.
+Wired em :mod:`juscraper.courts.tjdft.client` desde o lote L1 do #165 —
+:meth:`TJDFTScraper.cjsg_download` valida kwargs via :class:`InputCJSGTJDFT`
+com ``extra="forbid"`` herdado de :class:`SearchBase`.
 """
 from __future__ import annotations
 
-from ...schemas import OutputCJSGBase, SearchBase
+from typing import ClassVar
+
+from ...schemas import DataJulgamentoMixin, DataPublicacaoMixin, OutputCJSGBase, SearchBase
 
 
-class InputCJSGTJDFT(SearchBase):
+class InputCJSGTJDFT(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     """Accepted input for TJDFT ``cjsg`` / ``cjsg_download``.
 
     Endpoint REST JSON. ``pesquisa`` aceita o alias deprecado ``query`` via
     :func:`juscraper.utils.params.normalize_pesquisa` (roda antes deste
-    modelo). O TJDFT nao suporta filtros de data — ao wirar este schema,
-    passar ``data_*`` deve virar ``TypeError`` via ``extra="forbid"`` (hoje
-    o comportamento equivalente e ``warn_unsupported``).
+    modelo). Os filtros de data (``data_julgamento_*`` / ``data_publicacao_*``)
+    sao traduzidos pelo download para entradas do array ``termosAcessorios``
+    no payload JSON da API.
     """
+
+    BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
 
     sinonimos: bool = True
     espelho: bool = True

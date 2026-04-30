@@ -110,3 +110,17 @@ def test_cjsg_deprecated_relator_and_classe_aliases_emit_warnings(mocker):
     messages = [str(w.message) for w in warning_list]
     assert any("magistrado" in m and "deprecado" in m for m in messages)
     assert any("classe_judicial" in m and "deprecado" in m for m in messages)
+
+
+def test_cjsg_unknown_kwarg_raises():
+    """Kwargs not declared in :class:`InputCJSGTJES` raise ``TypeError`` with
+    the field name, instead of being silently dropped (refs #84, #93, #165)."""
+    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
+        jus.scraper("tjes").cjsg("dano moral", paginas=1, kwarg_inventado="x")
+
+
+def test_cjpg_unknown_kwarg_raises():
+    """Same as ``test_cjsg_unknown_kwarg_raises`` for the cjpg endpoint
+    (validates :class:`InputCJPGTJES`)."""
+    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
+        jus.scraper("tjes").cjpg("dano moral", paginas=1, kwarg_inventado="x")
