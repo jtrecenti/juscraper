@@ -216,7 +216,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    orgao<span class="op">=</span><span class="st">'0'</span>,</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    numero_cnj<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    numero_processo<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    numero_acordao<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    numero_ano<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    palavras_exatas<span class="op">=</span><span class="va">False</span>,</span>
@@ -230,7 +230,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Search TJAP jurisprudence.</p>
 <section id="parameters" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
-<p>pesquisa : str Free-text search term. paginas : int, list, range, or None Pages to download (1-based). None downloads all. orgao : str <code>"0"</code> for all (default), <code>"tj"</code> for Tribunal, <code>"recursal"</code> for Turma Recursal. numero_cnj : str, optional CNJ unique case number. numero_acordao : str, optional Decision number. numero_ano : str, optional Number/year (e.g.&nbsp;<code>"001858/1999"</code>). palavras_exatas : bool If True, search for exact words. relator : str, optional Reporting judge name. secretaria : str, optional Court division. classe : str, optional Procedural class. votacao : str <code>"0"</code> for all (default), <code>"Unanime"</code>, <code>"Maioria"</code>. origem : str, optional Origin (comarca).</p>
+<p>pesquisa : str Free-text search term. paginas : int, list, range, or None Pages to download (1-based). None downloads all. orgao : str <code>"0"</code> for all (default), <code>"tj"</code> for Tribunal, <code>"recursal"</code> for Turma Recursal. numero_processo : str, optional CNJ unique case number. Accepts the deprecated alias <code>numero_cnj</code>. numero_acordao : str, optional Decision number. numero_ano : str, optional Number/year (e.g.&nbsp;<code>"001858/1999"</code>). palavras_exatas : bool If True, search for exact words. relator : str, optional Reporting judge name. secretaria : str, optional Court division. classe : str, optional Procedural class. votacao : str <code>"0"</code> for all (default), <code>"Unanime"</code>, <code>"Maioria"</code>. origem : str, optional Origin (comarca).</p>
 </section>
 <section id="returns" class="level4 doc-section doc-section-returns">
 <h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
@@ -243,7 +243,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    orgao<span class="op">=</span><span class="st">'0'</span>,</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    numero_cnj<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    numero_processo<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    numero_acordao<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    numero_ano<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    palavras_exatas<span class="op">=</span><span class="va">False</span>,</span>
@@ -255,7 +255,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Download raw CJSG JSON responses from TJAP.</p>
-<p>Parameters are the same as :meth:<code>cjsg</code>.</p>
+<p>Parameters are the same as :meth:<code>cjsg</code>. <code>numero_cnj</code> is accepted as a deprecated alias for <code>numero_processo</code>.</p>
 <section id="returns-1" class="level4 doc-section doc-section-returns">
 <h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
 <p>list List of raw JSON responses (one per page).</p>

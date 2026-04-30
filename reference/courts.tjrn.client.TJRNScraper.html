@@ -215,7 +215,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>courts.tjrn.client.TJRNScraper.cjsg(</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    nr_processo<span class="op">=</span><span class="st">''</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    numero_processo<span class="op">=</span><span class="st">''</span>,</span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    id_classe_judicial<span class="op">=</span><span class="st">''</span>,</span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    id_orgao_julgador<span class="op">=</span><span class="st">''</span>,</span>
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    id_relator<span class="op">=</span><span class="st">''</span>,</span>
@@ -229,7 +229,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Search TJRN jurisprudence.</p>
 <section id="parameters" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
-<p>pesquisa : str Free-text search term (searched in ementa). paginas : int, list, range, or None Pages to download (1-based). None downloads all. nr_processo : str, optional Process number filter. id_classe_judicial : str, optional Judicial class ID. id_orgao_julgador : str, optional Judging body ID. id_relator : str, optional Reporter judge ID. id_colegiado : str, optional Collegiate body ID. sistema : str, optional <code>"PJE"</code>, <code>"SAJ"</code>, or empty for all. decisoes : str, optional <code>"Monocraticas"</code>, <code>"Colegiadas"</code>, <code>"Sentencas"</code>, or empty for all. jurisdicoes : str, optional <code>"Tribunal de Justica"</code>, <code>"Turmas Recursais"</code>, or empty for all. grau : str, optional <code>"1"</code> (first), <code>"2"</code> (second), or empty for all.</p>
+<p>pesquisa : str Free-text search term (searched in ementa). paginas : int, list, range, or None Pages to download (1-based). None downloads all. numero_processo : str, optional Process number filter. Accepts the deprecated alias <code>nr_processo</code>. id_classe_judicial : str, optional Judicial class ID. id_orgao_julgador : str, optional Judging body ID. id_relator : str, optional Reporter judge ID. id_colegiado : str, optional Collegiate body ID. sistema : str, optional <code>"PJE"</code>, <code>"SAJ"</code>, or empty for all. decisoes : str, optional <code>"Monocraticas"</code>, <code>"Colegiadas"</code>, <code>"Sentencas"</code>, or empty for all. jurisdicoes : str, optional <code>"Tribunal de Justica"</code>, <code>"Turmas Recursais"</code>, or empty for all. grau : str, optional <code>"1"</code> (first), <code>"2"</code> (second), or empty for all.</p>
 </section>
 <section id="returns" class="level4 doc-section doc-section-returns">
 <h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
