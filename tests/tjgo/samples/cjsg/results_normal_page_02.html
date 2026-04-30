@@ -1,0 +1,1308 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta content="text/html; charset=ISO-8859-1" http-equiv="CONTENT-TYPE" />
+	<title>Jurisprudência</title>
+	<style type="text/css">
+		@import url("./css/Principal.css?v=20231017");		
+		
+		p { margin: 0 0 10px; }		
+		.hr-dashed-line { border:1px dashed lightgray; color: #ffffff; background-color: #ffffff;}
+		.hr-dashed-white-line { border:2px solid white; color: white; }
+		.search-result { padding: 5px; margin-top: 10px;}
+		.search-result h4 { margin-bottom: 0; color: #3181c3; }		
+		.search-result p { font-size: 12px; margin-top: 5px; }
+		.hlt1 { background-color: yellow;}
+		.tooltip {display: none;}
+		.tooltip-head { color:red;}		
+	</style>
+	<link rel="shortcut icon" href="./imagens/favicon.svg" />	
+	<link rel="stylesheet" type="text/css" href="./css/jquery.powertip-light.min.css" />
+	<script type='text/javascript' src='./js/jquery.js'></script>
+	<script type='text/javascript' src='./js/jquery.mask.min.js'></script>
+	<script type='text/javascript' src='./js/ui/jquery-ui.min.js'></script>		
+	<script type="text/javascript" src="./js/jquery.powertip.min.js"></script>
+	<script type='text/javascript' src='./js/Funcoes.js'></script>
+	<script type='text/javascript' src='./js/Digitacao/AutoTab.js'></script>
+	<script type="text/javascript" src="./js/Digitacao/DigitarSoNumero.js" ></script>
+	<script type="text/javascript" src="./js/Digitacao/DigitarData.js" ></script>
+
+	<script>
+		
+		const areas = [					
+			{"codigo": "1", "descricao": "Cível"},
+			{"codigo": "2", "descricao": "Criminal"}
+		];
+	
+		const tipos = [					
+			{"areaId": "3", "servTipoId": "151", "codigo": "6", "descricao": "Turma Recursal Cível e Criminal"},
+			{"areaId": "3", "servTipoId": "151", "codigo": "66", "descricao": "UPJ Turma Recursal"},
+			{"areaId": "1", "servTipoId": "15", "codigo": "14", "descricao": "Câmaras Cíveis"},
+			{"areaId": "2", "servTipoId": "15", "codigo": "20", "descricao": "Câmaras Criminais"},
+			{"areaId": "1", "servTipoId": "15", "codigo": "21", "descricao": "Seções Cíveis"},
+			{"areaId": "2", "servTipoId": "15", "codigo": "46", "descricao": "Seção Criminal"},
+			{"areaId": "1", "servTipoId": "15", "codigo": "22", "descricao": "Órgão Especial"},
+			{"areaId": "2", "servTipoId": "15", "codigo": "22", "descricao": "Órgão Especial"},
+			{"areaId": "1", "servTipoId": "15", "codigo": "41", "descricao": "Conselho Superior de Magistratura"},
+			{"areaId": "1", "servTipoId": "15", "codigo": "10", "descricao": "Plantão 2º Grau - Órgão Especial"},
+			{"areaId": "2", "servTipoId": "15", "codigo": "10", "descricao": "Plantão 2º Grau - Órgão Especial"},
+			{"areaId": "1", "servTipoId": "15", "codigo": "70", "descricao": "Plantão 2º Grau - Câmaras Cíveis"},
+			{"areaId": "2", "servTipoId": "15", "codigo": "71", "descricao": "Plantão 2º Grau - Câmaras Criminais"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "1", "descricao": "Juizado Especial Cível"},			
+			{"areaId": "2", "servTipoId": "16", "codigo": "2", "descricao": "Juizado Especial Criminal"},			
+			{"areaId": "1", "servTipoId": "16", "codigo": "3", "descricao": "Juizado Especial Cível e Criminal"},
+			{"areaId": "2", "servTipoId": "16", "codigo": "3", "descricao": "Juizado Especial Cível e Criminal"},			
+			{"areaId": "1", "servTipoId": "16", "codigo": "26", "descricao": "Juizado Especial Fazenda Pública"},
+			{"areaId": "2", "servTipoId": "16", "codigo": "39", "descricao": "Juizado de Violência Doméstica"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "27", "descricao": "Varas Cíveis"},
+			{"areaId": "2", "servTipoId": "16", "codigo": "47", "descricao": "Varas Criminais"},			
+			{"areaId": "1", "servTipoId": "16", "codigo": "9", "descricao": "Família"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "43", "descricao": "Infância e Juventude Cível"},			
+			{"areaId": "2", "servTipoId": "16", "codigo": "44", "descricao": "Infância e Juventude Infracional"},
+			{"areaId": "2", "servTipoId": "16", "codigo": "11", "descricao": "Execução Penal"},
+			{"areaId": "2", "servTipoId": "16", "codigo": "63", "descricao": "Execução de Pena Alternativa"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "45", "descricao": "Auditoria Militar Cível"},
+			{"areaId": "2", "servTipoId": "16", "codigo": "60", "descricao": "Auditoria Militar Criminal"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "34", "descricao": "Fazenda Pública Estadual"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "8", "descricao": "Fazenda Pública Estadual - Execução Fiscal"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "35", "descricao": "Fazenda Pública Estadual Interior"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "36", "descricao": "Fazenda Pública Municipal"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "7", "descricao": "Fazenda Pública Municipal - Execução Fiscal"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "37", "descricao": "Fazenda Pública Municipal Interior"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "12", "descricao": "Fazenda Pública Mista"},			
+			{"areaId": "1", "servTipoId": "16", "codigo": "69", "descricao": "Fazenda Pública Mista - Execução Fiscal"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "42", "descricao": "Plantão 1º Grau"},
+			{"areaId": "2", "servTipoId": "16", "codigo": "42", "descricao": "Plantão 1º Grau"},			
+			{"areaId": "1", "servTipoId": "16", "codigo": "72", "descricao": "UPJ Cível"},
+			{"areaId": "2", "servTipoId": "16", "codigo": "61", "descricao": "UPJ Criminal"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "49", "descricao": "UPJ Sucessões"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "58", "descricao": "UPJ Família"},
+			{"areaId": "2", "servTipoId": "16", "codigo": "67", "descricao": "UPJ de Violência Doméstica"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "68", "descricao": "UPJ Família Interior"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "81", "descricao": "UPJ Fazenda Pública Estadual"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "82", "descricao": "UPJ Fazenda Pública Municipal"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "83", "descricao": "UPJ dos Juizados Especiais Cíveis"},
+			{"areaId": "1", "servTipoId": "16", "codigo": "64", "descricao": "UPJ Juizado Especial da Fazenda Pública"}			
+		];
+	
+		function submitForm(pos){
+			AlterarValue('PaginaAtual','2');
+			AlterarValue('PosicaoPaginaAtual', pos);
+			FormSubmit('Formulario');
+		}
+		function IrParaOnClick(){
+			submitForm($('#CaixaTextoPosicionar').val()-1);
+		}
+		function abrirArquivo(action, id){
+			var token = $('#g-recaptcha-response').val();
+			$('<form action="'+ encodeURI(action + '?PaginaAtual=1&Id_Arquivo=' + id + '&g-recaptcha-response=' + token) +'" method="post"></form>').appendTo('body').submit().remove();
+		}		
+		function inicializarAreas(){
+			$("#Id_Area").find("option[value != '0']").remove();
+			var areaFiltrada = ($("#Id_Instancia").val() == "151") ? areas.filter(e => e.codigo == "0") : areas;			
+			areaFiltrada.forEach((e) => $('#Id_Area').append('<option value="' + e.codigo + '">' + e.descricao + '</option>'));			
+		}		
+		function atualizarAreas (servTipoId){
+			$("#Id_Area").find("option[value != '0']").remove(); // limpa todas as opções diferente de TODOS
+			if (servTipoId != "151"){
+				areas.forEach((e) => $('#Id_Area').append('<option value="' + e.codigo + '">' + e.descricao + '</option>'));				
+			}
+		}			
+		function filtrarOpcoes (areaId, servTipoId){
+			var tiposFiltrados = [];
+			if (servTipoId == "0" && areaId =="0"){
+				tiposFiltrados = tipos;
+			} else {
+				if (servTipoId != "0"){ // se escolheu uma opção válida
+					tiposFiltrados = tipos.filter(e => e.servTipoId == servTipoId);
+				} 
+				if (areaId != "0"){
+					if (servTipoId != "0"){
+						tiposFiltrados = tiposFiltrados.filter(e => e.areaId == areaId);
+					} else {
+						tiposFiltrados = tipos.filter(e => e.areaId == areaId);
+					}				
+				}
+			}
+			// Filtra o array para tirar os elementos repetidos
+			const tiposDistintos = [...new Map(tiposFiltrados.map(item => [item['codigo'], item])).values()];			
+			$("#Id_ServentiaSubTipo").find("option[value != '0']").remove();
+			tiposDistintos.forEach((e) => $('#Id_ServentiaSubTipo').append('<option value="' + e.codigo + '">' + e.descricao + '</option>'));			
+		}
+
+		function copiarConteudoTexto(nodePai, seletor, footer) {
+			var elementoTexto = $(nodePai).find(seletor);
+			if (elementoTexto) {
+				var range = document.createRange();
+				range.selectNodeContents(elementoTexto[0]);
+				window.getSelection().addRange(range);
+				if (typeof footer === 'string' && footer.length !==0) {
+					footer = '\n' + footer;
+				} else {
+					footer = '';
+				}
+				navigator.clipboard.writeText(elementoTexto.text() + footer);
+			}
+		}
+
+		$(document).ready(function(){
+			$('#Texto').focus();			
+			$('#ProcessoNumero').mask('9999999-99.9999.9.99.9999');
+			$("#Texto").keypress(function(e){
+			 	if (e.which == 13){
+			        e.preventDefault();
+			        AlterarValue('PaginaAtual','2');
+			        document.forms[0].submit();
+			    }
+			});			
+			$("#Id_Instancia").change(function(){				
+				atualizarAreas($(this).val());
+				filtrarOpcoes($("#Id_Area").val(), $(this).val());
+			});
+			$("#Id_Area").change(function(){
+				filtrarOpcoes($(this).val(), $("#Id_Instancia").val());
+			});
+			$("#Id_Instancia").val();			
+			inicializarAreas();
+			$("#Id_Area").val();
+			$("#qtdeItensPagina").val(10);			
+			filtrarOpcoes ($("#Id_Area").val(), $("#Id_Instancia").val());
+			$("#Id_ServentiaSubTipo").val();
+		});
+		
+
+	</script>
+</head>
+<body class="fundo_scroll" onload="configurarData()">
+	
+  	<script type="text/javascript">
+	$(document).ready(function() {
+			
+		var msn_servidor;
+		msn_servidor = window.location.origin;
+		if(msn_servidor != 'https://projudi.tjgo.jus.br'){
+			$('#servidor').html("&nbsp;<i class='fa fa-quote-left'></i> Servidor de Homologação <i class='fa fa-quote-right'></i> ");
+		}
+		
+		const logon = document.getElementById("img_logotj");
+
+		logon.addEventListener("dblclick", (e) => {
+		  alert('ISO-8859-1');
+		});
+		
+	});
+	</script>
+
+	<div id="pgn_cabecalho" class="pgn_cabecalho"> 
+        <div class="logoTJ" id="img_logotj" title='Vers&atilde;o 3.86.0 - 30/04/2026|cp10:server-cp10-2]'><h1>Processo Judicial</h1><div id="servidor"></div></div>
+	
+<div style="float: right;">
+
+           <div id="cssmenu" >
+				<ul>					
+					<li><i id='ContrasteAlterar' title="Alto Contraste"  onclick="window.toggle()" aria-label="AAlto Contraste" data-original-title="Alto Contraste" accesskey="ctrl+alt+c" class="fa-solid fa-circle-half-stroke"></i>  </li>
+	    			<li><i id='FonteAumentar' title="Aumentar Fonte"  onclick="fonte('a')" aria-label="Aumentar Fonte" data-original-title="Aumentar Fonte" accesskey="ctrl+alt++" style="display:block;cursor: pointer;">A+</i>    </li>
+	    			<li><i id='FonteDiminuir' title="Diminuir Fonte"  onclick="fonte('d')" aria-label="Diminuir Fonte" data-original-title="Diminuir Fonte" accesskey="ctrl+alt+-" style="display:block;cursor: pointer;"> A- </i>   </li>
+					<li class="has-sub">
+	<a href="#" title="Consulta"><span><i class="fa fa-search"></i></span></a>
+	<ul>
+		<li><a href="./BuscaProcesso?PaginaAtual=4&TipoConsultaProcesso=24" title="Consultar Processos de 1&ordm e 2&ordm grau"> P&uacute;blica processual &nbsp;<i class="fa fa-search"></i></a></li>
+<li><a href="./ConsultaPublicacao" title="Consultar Publica&ccedil;&otilde;es">Publica&ccedil;&otilde;es &nbsp;<i class="fa fa-search"></i></a></li>	
+		<li><a href="./ConsultaJurisprudencia" title="Consultar Jurisprud&ecirc;ncia">Jurisprud&ecirc;ncia &nbsp;<i class="fa fa-search"></i></a></li>
+		<li><a href="./BuscaProcesso?PaginaAtual=4&TipoConsultaProcesso=1" title="Consultar Processos por Advogado"> Processo por Advogado &nbsp;<i class="fa fa-search"></i></a></li>		
+     	<li><a href="./BuscaProcesso?PaginaAtual=4&TipoConsultaProcesso=23" title="Consultar Processos por Código de Acesso"> Processo por Código &nbsp;<i class="fa fa-search"></i></a></li>
+		<li><a href="ListaJuizados" title="Lista das Serventias com Processo Judicial implantado" > Serventias Implantadas &nbsp;<i class="fa fa-search"></i></a></li>			
+		<li><a href="./RelatorioInterrupcoes?PaginaAtual=4"&Sistema=1 title="Relat&oacute;rio de Interrup&ccedil;&otilde;es"> Relat&oacute;rio de Interrup&ccedil;&otilde;es &nbsp;<i class="fa fa-search"></i></a></li>
+		<li><a href="./PendenciaPublica" title="Localizador de Documentos"> Localizador de Documentos &nbsp;<i class="fa fa-search"></i></a></li>		
+		<li><a href="./PendenciaPublica?PaginaAtual=2" title="Intimações do Dia Anterior">Intima&ccedil;&otilde;es do Dia Anterior&nbsp;<i class="fa fa-search"></i></a></li>				
+		<li><a href="./Audiencia?PaginaAtual=4" title="Consultar Audiências/Sessões">Consulta Audiências/Sessões &nbsp;<i class="fa fa-search"></i></a></li>
+		<li><a href="./ConsultaPublicaGuia" title="Consultar Guias">Consulta Guias &nbsp;<i class="fa fa-search"></i></a></li>
+	</ul>
+</li>
+<li class="has-sub">
+	<a href="#" title="Emitir e Localizar Certidões"><span><i class="fa fa-file-text"></i></span></a> 
+	<ul>
+    	<li class="has-sub">
+        	<a href="#" title="Certidões de 1º Grau"><span> Certidões - 1º Grau &nbsp;<i class="fa fa-file-text"></i></span></a>
+            <ul>
+            	<li><a href="./CertidaoNegativaPositivaPublica?PaginaAtual=1&TipoArea=1&InteressePessoal=&Territorio=&Finalidade=" title="Emiss&atilde;o de Certid&otilde;es Pessoa F&iacute;sica - Cível"> Pessoa F&iacute;sica - C&iacute;vel &nbsp;<i class="fa fa-file-text"></i></a></li>
+            	<li><a href="./CertidaoNegativaPositivaPublica?PaginaAtual=1&TipoArea=2&InteressePessoal=S" title="Emiss&atilde;o de Certid&otilde;es Pessoa F&iacute;sica - Criminal"> Pessoa F&iacute;sica - Criminal &nbsp;<i class="fa fa-file-text"></i></a></li>
+            </ul>
+        </li>
+        <li class="has-sub">
+        	<a href="#" title="Certidões de 2º Grau"><span> Certidões - 2º Grau &nbsp;<i class="fa fa-file-text"></i></span></a>
+            <ul>
+            	<li><a href="./CertidaoSegundoGrauNegativaPositivaPublica?PaginaAtual=1" title="Emiss&atilde;o de Certid&otilde;es Pessoa F&iacute;sica">Pessoa F&iacute;sica &nbsp;<i class="fa fa-file-text"></i> </a></li>
+				<li><a href="./CertidaoSegundoGrauNegativaPositivaPublicaPJ?PaginaAtual=1" title="Emiss&atilde;o de Certid&otilde;es Pessoa Jur&iacute;dica">Pessoa Jur&iacute;dica &nbsp;<i class="fa fa-file-text"></i></a></li>
+            </ul>
+        </li>
+        <li><a href="./CertidaoGuia" title="Emitir Certid&otilde;es com Guia">Emitir Certidões com Guia&nbsp;<i class="fa fa-file-text"></i></a></li>
+        <li><a href="./CertidaoPublica" title="Localizador Certid&otilde;es">Localizador de Certidões &nbsp;<i class="fa fa-file-text"></i></a></li>
+	</ul>
+</li>
+<li class="has-sub">
+	<a href="#" title="Emitir Guias"><span><i class="fa fa-usd"></i></span></a> 
+    <ul>
+<!--     	<li><a href="./GerarBoleto?PaginaAtual=4" title="Gerar Boleto">Gerar Boleto Caixa&nbsp;<i class="fa fa-usd"></i></a></li> -->
+    	<li><a href="./GerarBoleto?PaginaAtual=4" title="Gerar Boleto">Gerar Boleto&nbsp;<i class="fa fa-usd"></i></a></li>
+    	<li><a href="./GuiaLocomocaoPublica?PaginaAtual=9" title="Guia Locomo&ccedil;&atilde;o"> Guia Locomo&ccedil;&atilde;o &nbsp;<i class="fa fa-usd"></i></a></li>
+		<li><a href="./GuiaLocomocaoComplementarPublica?PaginaAtual=9" title="Guia Locomo&ccedil;&atilde;o Complementar"> Guia Locomo&ccedil;&atilde;o Complementar &nbsp;<i class="fa fa-usd"></i></a></li>
+		<li><a href="./GuiaInicial1GrauPublica?PaginaAtual=4" title="Guia Inicial para o 1º e 2º Grau"> Guia Inicial 1º e 2º Grau &nbsp;<i class="fa fa-usd"></i></a></li>
+		<li><a href="./GuiaInicialComplementarPublica?PaginaAtual=4" title="Guia Complementar da Inicial"> Guia Complementar da Inicial &nbsp;<i class="fa fa-usd"></i></a></li>
+<!-- 		<li><a href="./GuiaPostagemPublica?PaginaAtual=9" title="Guia Postagem"> Guia Postagem &nbsp;<i class="fa fa-usd"></i></a></li> -->
+		<li><a href="./GuiaRepasseFundespPublica?PaginaAtual=9" title="Guia Repasse ao Fundesp - Decisão Judicial"> Guia Repasse ao Fundesp - Decisão Judicial &nbsp;<i class="fa fa-usd"></i></a></li>
+		<li><a href="./GuiaRecursoInominadoPublica?PaginaAtual=9" title="Guia Recurso Inominado"> Guia Recurso Inominado &nbsp;<i class="fa fa-usd"></i></a></li>
+<li><a href="./GuiaEmissaoPrevia?PaginaAtual=3&passo=guias_certidao" title="Guia de Certidão">Guia de Certidão &nbsp;<i class="fa fa-usd"></i></a></li>
+		<li><a href="./GuiaEmissaoPrevia?PaginaAtual=3" title="Emissão Outras Guias">Outras Guias&nbsp;<i class="fa fa-usd"></i></a></li>
+		<li><a href="./GuiaFinal_FinalZeroPublica?PaginaAtual=9" title="Guia Final e Final Zero"> Guia Final e Final Zero &nbsp;<i class="fa fa-usd"></i></a></li>
+    </ul>
+</li>
+<li class="has-sub">
+	<a href="#" title="Estatística Pública"><span><i class="fa fa-bar-chart"></i></span></a> 
+    <ul>
+    	<li><a onclick="buscaEstatistica(1)" href="#" > Quantitativo de Processos &nbsp;<i class="fa fa-bar-chart"></i></a></li>
+		<!--<li><a  onclick="buscaEstatistica(2)" href="#" >Quantitativo de Tipos de Processos<i class="fa fa-bar-chart"></i></a></li>-->
+		<li><a onclick="buscaEstatistica(3)" href="#">Quantitativo de Serventias &nbsp;<i class="fa fa-bar-chart"></i></a></li>
+	</ul>
+</li>
+
+<script type="text/javascript">
+
+	function buscaEstatistica(_consulta){
+
+		var reCaptcha = $("#g-recaptcha-response").val();		
+		//window.location = '/EstatisticaPublica?PassoBusca=2&EstatisticaPublicaTipoConsulta='+_consulta+'&g-recaptcha-response='+ reCaptcha;
+		window.open('./EstatisticaPublica?PassoBusca=2&EstatisticaPublicaTipoConsulta='+_consulta+'&g-recaptcha-response='+ reCaptcha, "_self");
+		
+	}
+</script><li class="has-sub">
+	<a href="#" title="Ajuda"><span><i class="fa fa-question-circle"></i></span></a> 
+    <ul>    	
+    	<li><a href="./videos.html" title="Vídeos para aprender a trabalhar com o Processo Judicial" target="_blank" id="videos"> V&iacute;deos &nbsp;<i class="fa fa-question-circle"></i></a></li>									
+ 		<li><a href="./Pdfvideos.html" title="PDF dos Vídeos para aprender a trabalhar com o Processo Judicial" target="_blank" id="Pdfvideos"> Manuais &nbsp;<i class="fa fa-question-circle"></i></a></li> 		 		
+ 		<li class="has-sub">  
+			<a href="#" title="Legislação"> Legislação &nbsp;<i class="fa fa-balance-scale"></i></a>
+            <ul>
+            <!-- Não é para colocar dentro do war, arquivos estaticos use o servidor http://docs.tjgo.jus.br/projudi/pdf/
+            	veja com o massa como ter acesso.
+            	máquina 10.0.10.27\pubinternet\Sistemas_de_Informacao\legislacao
+             -->
+            	<li><a href="http://www.planalto.gov.br/ccivil_03/_ato2004-2006/2006/lei/l11419.htm" target="_blank" title="Lei 11.419"> Lei n.&ordm; 11.419 de 19/12/2006 &nbsp;<i class="fa fa-balance-scale"></i></a></li>			
+				<li><a href="http://docs.tjgo.jus.br/projudi/legislacao/Resolucao0207.pdf" target="_blank" title="Resolução nº 02 de 14/03/2007 TJ-GO"> Resolu&ccedil;&atilde;o n.&ordm; 02 de 14/03/2007 TJ-GO &nbsp;<i class="fa fa-balance-scale"></i></a></li>			
+				<li><a href="http://docs.tjgo.jus.br/projudi/legislacao/Resolucao0210.pdf" target="_blank" title="Resolução nº 02 de 24/03/2010 TJ-GO"> Resolu&ccedil;&atilde;o n.&ordm; 02 de 24/03/2010 TJ-GO &nbsp;<i class="fa fa-balance-scale"></i></a></li>
+				<li><a href="http://docs.tjgo.jus.br/projudi/legislacao/Resolução_59_2016_ProcessoDigital.pdf" target="_blank" title="Resolução nº 59 de 04/07/2016 TJ-GO"> Resolu&ccedil;&atilde;o n.&ordm; 59 de 04/07/2016 TJ-GO &nbsp;<i class="fa fa-balance-scale"></i></a></li>
+				<li><a href="http://docs.tjgo.jus.br/projudi/legislacao/Resolução_61_2016.pdf" target="_blank" title="Resolução nº 61 de 27/07/2016 TJ-GO"> Resolu&ccedil;&atilde;o n.&ordm; 61 de 27/07/2016 TJ-GO &nbsp;<i class="fa fa-balance-scale"></i></a></li>
+				<li><a href="http://docs.tjgo.jus.br/projudi/legislacao/portaria_046_2016.pdf" target="_blank" title="Portaria nº 46 de 29/11/2016 TJ-GO"> Portaria n.&ordm; 46 de 29/11/2016 TJ-GO &nbsp;<i class="fa fa-balance-scale"></i></a></li>
+				<li><a href="http://docs.tjgo.jus.br/projudi/legislacao/portaria_844_2017.pdf" target="_blank" title="Portaria nº 844 de 07/12/2017 TJ-GO"> Portaria n.&ordm; 844 de 07/12/2017 TJ-GO &nbsp;<i class="fa fa-balance-scale"></i></a></li>
+	    		<li><a href="./decretos.html" title="Decretos" target="_blank" id="Decretos"> Decretos &nbsp;<i class="fa fa-balance-scale"></i></a></li>                
+			</ul>
+		</li>
+		<li><a href="./ajudaSuporteAdvogado.html" title="Suporte ao Advogado" target="_blank" id="ajd_SuporteAdvogado"> Suporte ao Advogado &nbsp;<i class="fa fa-comment"></i></a></li>
+		<li><a href="http://www.cnj.jus.br/tecnologia-da-informacao/comite-nacional-da-tecnologia-da-informacao-e-comunicacao-do-poder-judiciario/modelo-nacional-de-interoperabilidade" title="Compatível com o Modelo Nacional de Interoperabilidade do CNJ" target="_blank" id="MNI CNJ"> MNI CNJ &nbsp;<i class="fa fa-balance-scale"></i></a></li>
+		<li><a href="https://projudi.tjgo.jus.br/IntercomunicacaoService?WSDL" title="Modelo Nacional de Interoperabilidade do TJGO" target="_blank" id="MNITJGO"> MNI TJGO &nbsp;<i class="fa fa-balance-scale"></i></a></li>
+	</ul>
+</li><li class="has-sub">  
+	<a href="#" title="Download"><i class="fa fa-download"></i> </a>
+    <ul>
+    	<li><a href="https://docs.tjgo.jus.br/projudi/jar/VisualizadoReciboProjudi.jar" target="_blank" title="Programa para visualizar o recibo do Projudi e retirar o arquivo assinado e o conte&uacute;do">Leitor de Recibo &nbsp;<i class="fa fa-download"></i> </a></li>
+    	<li><a href="https://docs.tjgo.jus.br/projudi/jar/AssinadorExterno.jar" target="_blank" title="Programa para fazer assinatura digital dos arquivos no seu computador e-TCESP">(e-TCESP) Assinador Externo &nbsp;<i class="fa fa-download"></i></a></li>
+    	<li><a href="https://www.registradores.org.br/assinador/AssinadorDigital-ARISP-Instalador-1.7.0.exe" target="_blank" title="Programa para fazer assinatura digital dos arquivos no seu computador Arisp">(Arisp) Assinador Externo (.exe - Windows)&nbsp;<i class="fa fa-download"></i></a><a href="https://www.registradores.org.br/AssinadorDigital/" target="_blank" title="Site Registradores">Site Registradores</a>a</li>
+		<li><a href="https://docs.tjgo.jus.br/projudi/jar/sai.jar" target="_blank" title="Programa para fazer assinatura digital dos arquivos no seu computador">(NOVO) Assinador Externo &nbsp;<i class="fa fa-download"></i></a></li>		
+		<li class="has-sub">  
+			<a href="#" title="Download">Mozilla Firefox<i class="fa fa-download"></i> </a>
+		    <ul>
+		    	<li><a href="https://releases.mozilla.org/pub/firefox/releases/50.0.2/linux-i686/pt-BR/firefox-50.0.2.tar.bz2" target="_blank" title="Versão para Windows">Linux &nbsp;<i class="fa fa-download"></i> </a></li>
+		    	<li><a href="https://releases.mozilla.org/pub/firefox/releases/51.0.1/mac/pt-BR/Firefox%2051.0.1.dmg" target="_blank" title="Versão para Windows">Mac OS X &nbsp;<i class="fa fa-download"></i> </a></li>
+		    	<li><a href="https://releases.mozilla.org/pub/firefox/releases/51.0.1/win32/pt-BR/Firefox%20Setup%2051.0.1.exe" target="_blank" title="Versão para Windows">Windows 32bits &nbsp;<i class="fa fa-download"></i> </a></li>
+			</ul>
+		</li>
+		<li><a href="http://www.java.com/pt_BR/download/" target="_blank" title="Clique aqui para baixar o JAVA"> JAVA - Download &nbsp;<i class="fa fa-download"></i></a></li>
+	</ul>
+</li> <li>  
+	<a id="linkSair" href="LogOn?PaginaAtual=-200" title="Sair" target="_self"><i class="fa fa-sign-out"></i> </a>  
+</li></ul>
+			</div>
+        </div>    
+    </div>
+	<div style="clear:both;width:1450px;height:28px;background-color:#ccc; margin: 0 auto;"></div>
+<div id="divCorpo" class="divCorpo" style="margin-bottom:20px;"/>
+		<div class="area"><h2> &raquo; Novo Módulo de Pesquisa de Jurisprudência</h2></div>	
+		<div id="divLocalizar" class="divLocalizar">			
+			<form id="Formulario" method="post" action="ConsultaJurisprudencia"/>				
+				<input type="hidden" id="PaginaAtual" name="PaginaAtual" value="2" />
+				<input type="hidden" id="PosicaoPaginaAtual" name="PosicaoPaginaAtual" value="1" />
+				<input type="hidden" id="Viewstate" name="Viewstate" value="" />				
+				<div id="divEditar" class="divEditar">
+					<!-- Pesquisa por campos de filtro -->
+					<fieldset class="formEdicao">
+						<div id="filtro-campo">
+						
+							<div class="col100 float_label_fixo clear">
+				    			<input class="formEdicaoInput" id="Texto" name="Texto" type="text" title="Texto para consulta de jurisprudência" placeholder='Utilize aspas duplas para realizar uma busca exata. Exemplo: "indenização por erro médico".' value="dano moral"/>
+				    			<label class="formEdicaoLabel" for="Texto">Digite um termo para a pesquisa</label>
+				    		</div>
+				    		<br /><br />	
+				    									    		    					    						    		
+				    		<div class="col35 clear">
+					    		<label for="Id_Instancia">Instância</label>
+						    	<select id="Id_Instancia" name="Id_Instancia">
+						    		<option value="0">Todas as instâncias</option>
+						    		<option value="16">1o Grau</option>
+						    		<option value="151">Turma de Uniformização / Turmas Recursais</option>
+						    		<option value="15">Tribunal</option>
+						    	</select>					    						    	
+					    	</div>
+					    	
+					    	<div class="col25">
+					    		<label for="Id_Area">Área</label>
+						    	<select id="Id_Area" name="Id_Area">	
+						    		<option value="0">Todas as áreas</option>						    		
+						    		<!--						    								    	
+						    		<option value="1">Cível</option>
+						    		<option value="2">Criminal</option>						    		
+						    		-->
+						    	</select>
+					    	</div>
+					    	
+					    	<div class="col35">
+					    		<label for="Id_ServentiaSubTipo">Órgão / Matéria</label>
+						    	<select id="Id_ServentiaSubTipo" name="Id_ServentiaSubTipo">	
+						    		<option value="0">Todas as opções</option>
+						    	</select>
+					    	</div>	
+					    	<br /><br /> 
+					    	 
+				    		<div class="col35 float_label_fixo clear">
+						    	<input class="formEdicaoInput AutoComplete" name="Serventia" id="Serventia" placeholder="Digite a Unidade Específica" type="text" size="60" maxlength="255" value=""
+						    	onkeyup="BuscaPadraoCombo(event, 'divEditar', 'ConsultaJurisprudencia', 'Id_Serventia', 'Serventia', ['Tipo','UF'], '1682');"/>
+						    	<label class="formEdicaoLabel" for="Serventia">Unidade Específica
+						    		<button class="imgIcons" id="imaLocalizarUnidade" title="Localizar" type="submit" name="imaLocalizarUnidade" 
+						    		onclick="MostrarBuscaPadrao('divEditar','ConsultaJurisprudencia','Consulta de Serventia', 'Digite a Serventia e clique em consultar.', 'Id_Serventia', 'Serventia', ['Serventia'], ['Tipo','UF'], '1682', '15');LimparChaveEstrangeira('Id_Usuario','Usuario'); return false;"><i class="fa-solid fa-magnifying-glass"></i></button> 
+						    		<button class="imgIcons" name="imaLimparPrioridade" onclick="LimparChaveEstrangeira('Id_Serventia','Serventia'); return false;" title="Limpar Serventia"><i class="fa-regular fa-circle-xmark"></i></button>						    			
+						    	</label>
+						    	<input type="hidden" id="Id_Serventia" name="Id_Serventia" value="" />
+					    	</div>
+					    					    		
+				    		<div class="col30 float_label_fixo">
+						    	<input class="formEdicaoInput AutoComplete" name="Usuario" id="Usuario" placeholder="Digite o nome do Magistrado(a)" type="text" size="60" maxlength="255" value="" 
+						    	onkeyup="BuscaPadraoCombo(event, 'divEditar', 'ConsultaJurisprudencia', 'Id_Usuario', 'Usuario', ['Grupo'], '1582');"/>
+						    	<label class="formEdicaoLabel" for="Serventia">Por Magistrada ou Magistrado
+						    		<button class="imgIcons" id="imaLocalizarJuiz" title="Localizar" type="submit" name="imaLocalizarJuiz"  						    		
+						    		onclick="MostrarBuscaPadrao('divEditar','ConsultaJurisprudencia','Consulta de Magistrado', 'Digite o nome e clique em consultar.', 'Id_Usuario', 'Usuario', ['Magistrado'], ['Grupo'], '1582', '15','Id_Serventia'); return false;"><i class="fa-solid fa-magnifying-glass"></i></button> 
+						    		<button class="imgIcons" name="imaLimparPrioridade" onclick="LimparChaveEstrangeira('Id_Usuario','Usuario'); return false;" title="Limpar Magistrado"> <i class="fa-regular fa-circle-xmark"></i></button> 
+						    	</label>
+						    	<input type="hidden" id="Id_Usuario" name="Id_Usuario" value="" />
+					    	</div>
+					    	
+					    	<div class="col30 float_label_fixo">
+						    	<input class="formEdicaoInput AutoComplete" name="ArquivoTipo" id="ArquivoTipo" placeholder="Digite o Tipo de Ato" type="text" size="60" maxlength="255" value=""
+						    	onkeyup="BuscaPadraoCombo(event, 'divEditar', 'ConsultaJurisprudencia', 'Id_ArquivoTipo', 'ArquivoTipo', [], '1802');"/>					    						    	
+					    		<label class="formEdicaoLabel" for="ArquivoTipo">Tipo de Ato
+						    		<button class="imgIcons" id="imaLocalizarArquivoTipo" title="Localizar" type="submit"  name="imaLocalizarArquivoTipo" 
+						    		onclick="MostrarBuscaPadrao('divEditar','ConsultaJurisprudencia','Consulta de Tipo de Ato', 'Digite o Tipo de Arquivo e clique em consultar.', 'Id_ArquivoTipo', 'ArquivoTipo', ['Tipo de Arquivo'], [], '1802', '15'); return false;"><i class="fa-solid fa-magnifying-glass"></i></button> 
+						    		<button class="imgIcons" name="imaLimparPrioridade" onclick="LimparChaveEstrangeira('Id_ArquivoTipo','ArquivoTipo'); return false;" title="Limpar Tipo de Ato"> <i class="fa-regular fa-circle-xmark"></i></button> 
+						    	</label>
+						    	<input type="hidden" id="Id_ArquivoTipo" name="Id_ArquivoTipo" value="" />
+					    	</div>
+					    	<br/><br/>	
+					    					    	
+					    	<div class="col35 float_label_fixo clear">
+							    <input class="formEdicaoInput" name="ProcessoNumero" id="ProcessoNumero"  type="text" size="30" maxlength="25" onkeyup="autoTab(this,25);" placeholder="Ex: 5000280-28.2010.8.09.0059" value=""/>
+				    			<label class="formEdicaoLabel" for="ProcessoNumero">Número do Processo </label> 
+				    		</div>
+				    		<br><br>
+				    		
+					    	<fieldset>
+								<legend>Data de Publicação </legend>
+								
+								<div class="col10 float_label_fixo datepicker">
+							    	<label class="formEdicaoLabel" for="DataInicial">Data Inicial
+							    	<button type="button" class="imgIcons" id="calendarioDataInicial"title="Calendário" > <i class="fa-solid fa-calendar-days"></i> </button>
+					    			</label>
+					    			<input class="formEdicaoInput"  placeholder="Data Inicial"   name="DataInicial" id="DataInicial"  type="text" size="10" maxlength="10" value=""  onkeyup="mascara_data(this); autoTab(this,10)" onkeypress="return DigitarSoNumero(this, event)" onblur="verifica_data(this)"  />					    								    			
+						    	</div>
+						    	
+						    	<div class="col10 float_label_fixo datepicker">
+							    	<label class="formEdicaoLabel" for="DataFinal">Data Final 
+							    	<button type="button" class="imgIcons" id="calendarioDataFinal" title="Calendário" > <i class="fa-solid fa-calendar-days"></i> </button>
+							    	</label>
+					    			<input class="formEdicaoInput"   placeholder="Data Final"  name="DataFinal" id="DataFinal"  type="text" size="10" maxlength="10" value="" onkeyup="mascara_data(this); autoTab(this,10)" onkeypress="return DigitarSoNumero(this, event)" onblur="verifica_data(this)"  />					    			
+						    	</div>
+					    	</fieldset>
+					    </div>
+					</fieldset>
+				</div>
+				
+				<!-- Barra de botões -->
+				<div style="margin:10px;">
+					<div class="Centralizado">
+						<!-- inclua esse arquivo dentro do form que será submetido
+	utilize o RecaptchaService para validar do lado do servidor
+ -->
+<script
+  src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoad"
+  defer
+></script>
+<div id="widget-container"></div>
+<input id="g-recaptcha-response" type="hidden" name="g-recaptcha-response" value=""/>
+<script>
+  function onTurnstileLoad() {
+    turnstile.render("#widget-container", {
+      sitekey: "0x4AAAAAABeYdOewv6AT0dzB",
+      theme: "light",
+      callback: function (token) {
+        console.log("Challenge completed:", token);
+        $("#g-recaptcha-response").attr("value",token);
+        const btnBuscarElement = document.querySelector('#btnBuscar');
+        if (btnBuscarElement) {
+          btnBuscarElement.disabled = false;
+        }
+      },
+    });
+  }
+</script><input id="formLocalizarBotao" class="formLocalizarBotao" type="submit" name="Localizar" value="Consultar" onclick="javascript:submitForm(0);"/>						
+						<input name="imgInserir" type="submit" value="Limpar" title= "Limpa os campos da tela" onclick="javascript:limparForm('Formulario');AlterarValue('PaginaAtual','4');"/>
+					</div>
+				</div>
+								
+				<!-- Painel de resultados -->
+				<div class="divEditar" id="divEditar">
+						<fieldset id="formLocalizar" class="formLocalizar">							
+							<legend	id="formLocalizarLegenda" class="formLocalizarLegenda">1273234 resultados encontrados para o filtro da pesquisa</legend>							
+							<small>Tempo de resposta: (55 milissegundos)</small>
+							<br /><br />
+							<div >							
+					    		<select id="qtdeItensPagina" name="qtdeItensPagina">
+					    			<option value="10">Mostrar 10 resultados</option>
+					    			<option value="20">Mostrar 20 resultados</option>
+					    			<option value="50">Mostrar 50 resultados</option>
+					    		</select>
+							</div>							
+							<div class="search-result"> <!-- #eaf1fb -->									
+
+										<h4>
+											5105582-11.2026.8.09.0051<span style="margin-left: 10px">												
+												<a href="#" title="Clique aqui para fazer o download do arquivo completo" 
+													onclick="javascript: abrirArquivo('ConsultaJurisprudencia', '522319481'); return false;">
+													<i class="fa fa-download"></i>
+														Baixar Inteiro teor
+												</a>
+											</span>
+											<span style="margin-left: 10px">
+												<a href="#" title="Copiar texto sem formatação" onclick="copiarConteudoTexto(this.parentNode.parentNode.parentNode,'.conteudoTexto','\n(Tribunal de Justiça do Estado de Goiás, PROCESSO CÍVEL E DO TRABALHO -> Processo de Conhecimento -> Procedimento de Conhecimento -> Procedimento do Juizado Especial Cível, 5105582-11.2026.8.09.0051, ALDO GUILHERME SAAD SABINO DE FREITAS, Goiânia - 1ª UPJ Juizados Especiais Cíveis: 1º, 2º, 3º, 4º e 5º, julgado em 30/04/2026 10:58:01)'); alert('Texto sem formatação foi copiado para a Área de Transferência.'); return false;">
+													<i class="fa fa-clipboard"></i>
+													Copiar
+												</a>
+											</span>
+										</h4>
+
+									<p>
+										<b>Goiânia - 1ª UPJ Juizados Especiais Cíveis: 1º, 2º, 3º, 4º e 5º</b>
+									</p>
+									<p>
+										<b><i>ALDO GUILHERME SAAD SABINO DE FREITAS</i></b>
+									</p>
+									<p>
+										<b>Sentença</b>
+									</p>
+									<p>
+										<b><i>Publicado em 30/04/2026 10:58:01</i></b>
+									</p>
+									<p class="conteudoTexto" style="text-align:justify">
+											Poder Judiciário do Estado de GoiásGoiânia - 1ª UPJ Juizados Especiais Cíveis: 1º, 2º, 3º, 4º e 5ºGoiânia - 2º Juizado Especial Cível Processo: 5105582-11.2026.8.09.0051Requerente: Deuselina Da Silva SousaRequerida: Noverde Tecnologia E Pagamentos S.A. PROJETO DE SENTENÇA Versam os autos sobre reclamação aforada com pretensão de declaração de inexistência de relação jurídica e de débito cumulada com indenização por danos morais, em razão de inscrição em cadastro restritivo de crédito decorrente de contrato de empréstimo (CCB) que a autora afirma jamais ter celebrado com a ré.Ofertou-se contestação (mov. 26) e impugnação à contestação (mov. 30).Relatório dispensado, nos termos do art. 38 da Lei n.º 9.099/95.Por ser desnecessária a designação de audiência de instrução, o julgamento deverá ser antecipado e se operará com base nos documentos apresentados pelas partes, nas suas confissões e na experiência do magistrado (CPC, arts. 355 e 375 e Lei n.º 9.099/1995, arts. 5º e 6º). Passo ao exame de mérito.A autora narra que, em 14/11/2025, foi surpreendida com um crédito desconhecido/imotivado de R$ 300,00 via PIX em sua conta-corrente, e que em 27/01/2026 passou a receber cobranças de parcelas referentes a um suposto empréstimo firmado junto à ré NOVERDE. Afirma se tratar de uma contratação fraudulenta, e que a ré manteve as cobranças e promoveu a inscrição de seu nome no SERASA em janeiro de 2026 (mov. 1, arq. 2, 3, 5 e 8). A ré, em sua defesa, sustenta atuar como mero correspondente bancário, sendo o FIDC NOVERDE o atual titular do crédito. Alega ter cancelado a CCB e que o FIDC promoveu a baixa da inscrição, afirmando ter adotado todas as medidas de segurança na contratação (exigência de RG, prova de vida e selfie), creditando o valor em conta de titularidade da própria autora.Pois bem.A relação é de consumo (arts. 2º e 3º do CDC e Súmula n.º 297 do STJ), e a responsabilidade da ré pela falha na prestação do serviço de concessão de crédito é objetiva, abrangendo o risco da atividade, o que inclui eventuais fraudes praticadas por terceiros mediante uso indevido de dados de consumidores (Súmula n.º 479 do STJ). Cabia, portanto, à ré demonstrar a regularidade da contratação que originou a cobrança e a inscrição (art. 373, II, CPC).Desse ônus, contudo, a ré não se desincumbiu. Embora afirme reiteradamente em contestação que a autora ?leu e assinou a Cédula de Crédito Bancário?, a ré não juntou aos autos um único documento que comprove a contratação: não há cópia da CCB, não há registro de aceite eletrônico, não há gravação de voz, biometria facial ou selfie da solicitante, tampouco qualquer outro elemento capaz de evidenciar manifestação de vontade da consumidora. Com efeito, em ação declaratória negativa, na qual a parte consumidora nega a contratação, essa completa ausência de prova documental é, por si só, suficiente para o reconhecimento da inexistência do vínculo, prescindindo de qualquer prova técnica ou perícia.Ademais, a alegação de atuação como simples correspondente bancário e de cessão do crédito ao FIDC, também não prospera, tendo em vista que a inscrição negativadora juntada com a inicial foi promovida pela própria ré, NOVERDE TECNOLOGIA E PAGAMENTOS S.A. (mov. 1, arq. 5), e é pelo <em class="hlt1">dano</em> dela decorrente que a instituição responde diretamente. Ademais, todos os integrantes da cadeia de fornecimento de crédito respondem solidariamente perante o consumidor (arts. 7º, parágrafo único, e 25, § 1º, CDC), o que afasta a tentativa de transferência de responsabilidade ao FIDC cessionário.Outrossim, a baixa da restrição ocorreu apenas após a propositura da ação e o deferimento da tutela de urgência (mov. 19), constituindo a baixa simples cumprimento de ordem judicial, o que não afasta o interesse processual da autora quanto à declaração de inexistência da relação jurídica e do débito, nem quanto à reparação dos danos já consumados.Não se aplica, por fim, a Súmula n.º 385 do STJ, porquanto o extrato SERASA apresentado pela autora (mov. 1, arq. 5) demonstra que a inscrição promovida pela ré era a única restrição vinculada ao CPF da consumidora, além de o próprio histórico do SCPC apresentado pela ré indicar que as anotações pretéritas em nome de outros credores haviam sido excluídas antes da negativação objeto dos autos (mov. 26, arq. 2, pág. 9).Nesse cenário, reconhecida a inexistência do vínculo, a inscrição em cadastro restritivo de crédito por dívida não contraída configura <em class="hlt1">dano</em> <em class="hlt1">moral</em> in re ipsa, prescindindo de comprovação do prejuízo concreto, sendo que a lesão à honra objetiva e ao crédito da consumidora decorre da própria negativação indevida (STJ - AgInt no AREsp: 2322827 MS, DJe 30/11/23).Quanto ao montante a ser indenizado, em atenção aos princípios da razoabilidade e proporcionalidade, bem como considerando o curto período em que a restrição permaneceu ativa, mas também o caráter pedagógico da reparação e o porte da fornecedora (S.A.), sugiro o arbitramento da indenização no valor de R$ 6.000,00.Por fim, quanto ao depósito judicial de R$ 311,05 (R$ 300,00 + complemento de R$ 11,05) realizado pela autora (mov. 12 e 17), é incontroverso que o valor de R$ 300,00 efetivamente ingressou em sua conta-corrente em 14/11/2025 e que, embora não tenha origem em contratação válida, corresponde a valor oriundo da ré. Assim, para evitar enriquecimento sem causa, o montante consignado deverá ser liberado em favor da ré (art. 884, CC).Conforme o exposto, com fulcro nas motivações acima delineadas, SUGIRO a PROCEDÊNCIA dos pedidos iniciais, nos termos do art. 487, I, do Código de Processo Civil, da seguinte forma:a) SUGIRO DECLARAR a inexistência da relação jurídica entre as partes e dos débitos dela decorrentes, CONFIRMANDO a tutela de urgência deferida (mov. 19);b) SUGIRO CONDENAR a ré ao pagamento do valor de R$ 6.000,00 (seis mil reais) a título de danos morais, acrescidos de atualização monetária pelo IPCA a partir da publicação técnica desta sentença (Súmula n.º 362 do STJ) e juros de mora desde o evento danoso (art. 398 do Código Civil e Súmula n.º 54 do STJ), calculados conforme a taxa legal (SELIC), deduzido o índice de atualização monetária (art. 406 do Código Civil - redação dada pela Lei 14.905/24);c) SUGIRO DETERMINAR, APÓS A PRECLUSÃO DESTA, a expedição de alvará para liberação dos valores consignados (R$ 311,05 - mov. 12 e 17) em favor da ré, NOVERDE TECNOLOGIA E PAGAMENTOS S.A.Sem custas e honorários, conforme arts. 54 e 55 da Lei n.º 9.099/95, cabendo ao interessado reiterar o pedido de gratuidade da justiça por ocasião de eventual recurso, mediante a apresentação de documentação comprobatória da necessidade.Submeto este projeto de sentença ao MM. Juiz de Direito responsável por este Juizado Especial Cível para apreciação e eventual homologação1.JANAÍNA GOMES DA SILVA AFONSOJuíza Leiga 1 ?O juiz leigo que tiver dirigido a instrução proferirá sua decisão e imediatamente a submeterá ao juiz togado, que poderá homologá-la, proferir outra em substituição ou, antes de se manifestar, determinar a realização de atos probatórios indispensáveis?. Poder Judiciário do Estado de GoiásGoiânia - 1ª UPJ Juizados Especiais Cíveis: 1º, 2º, 3º, 4º e 5ºGoiânia - 2º Juizado Especial Cível Processo: 5105582-11.2026.8.09.0051Requerente: Deuselina Da Silva SousaRequerida: Noverde Tecnologia E Pagamentos S.A. HOMOLOGAÇÃO(PROJETO DE SENTENÇA) Examinei os presentes autos, avaliei os fundamentos apresentados acima e aprovo a conclusão externada pelo(a) juiz(a) leigo(a), razão pela qual homologo o projeto de sentença, para que surta seus efeitos jurídicos, nos termos do art. 40 da Lei 9.099/1995, e determino, APÓS O TRÂNSITO EM JULGADO, a expedição do competente alvará de levantamento em favor da PARTE RECLAMADA (do valor consignado em juízo).Sem custas e honorários de advogado, nos termos do art. 55, caput, da Lei 9.099/1995.Publicada e registrada eletronicamente.Após o trânsito em julgado, não havendo manifestação das partes, arquivem-se os autos com as devidas baixas.Intime-se. Aldo Guilherme Saad Sabino de FreitasJuiz de Direito ? datado e assinado digitalmente</p>
+									<hr class="hr-dashed-line" />
+										<p style="text-align:justify">
+											<b>3</b><i> resultado(s) encontrado(s) no INTEIRO TEOR.</i>										
+										</p>
+										<p style="text-align:justify">											
+											1)&nbsp;(mov. 1, arq. 5), e é pelo <em class="hlt1">dano</em> dela decorrente que a instituição responde diretamente.&nbsp;
+											2)&nbsp;inexistência do vínculo, a inscrição em cadastro restritivo de crédito por dívida não contraída configura <em class="hlt1">dano</em>&nbsp;
+											3)&nbsp;<em class="hlt1">moral</em> in re ipsa, prescindindo de comprovação do prejuízo concreto, sendo que a lesão à honra objetiva&nbsp;
+											</p>
+									</div>		
+								<hr class="hr-dashed-white-line" />																				
+							<div class="search-result"> <!-- #eaf1fb -->									
+
+										<h4>
+											5134416-24.2026.8.09.0051<span style="margin-left: 10px">												
+												<a href="#" title="Clique aqui para fazer o download do arquivo completo" 
+													onclick="javascript: abrirArquivo('ConsultaJurisprudencia', '522319468'); return false;">
+													<i class="fa fa-download"></i>
+														Baixar Inteiro teor
+												</a>
+											</span>
+											<span style="margin-left: 10px">
+												<a href="#" title="Copiar texto sem formatação" onclick="copiarConteudoTexto(this.parentNode.parentNode.parentNode,'.conteudoTexto','\n(Tribunal de Justiça do Estado de Goiás, PROCESSO CÍVEL E DO TRABALHO -> Processo de Conhecimento -> Procedimento de Conhecimento -> Procedimento do Juizado Especial Cível, 5134416-24.2026.8.09.0051, ALDO GUILHERME SAAD SABINO DE FREITAS, Goiânia - 1ª UPJ Juizados Especiais Cíveis: 1º, 2º, 3º, 4º e 5º, julgado em 30/04/2026 10:58:00)'); alert('Texto sem formatação foi copiado para a Área de Transferência.'); return false;">
+													<i class="fa fa-clipboard"></i>
+													Copiar
+												</a>
+											</span>
+										</h4>
+
+									<p>
+										<b>Goiânia - 1ª UPJ Juizados Especiais Cíveis: 1º, 2º, 3º, 4º e 5º</b>
+									</p>
+									<p>
+										<b><i>ALDO GUILHERME SAAD SABINO DE FREITAS</i></b>
+									</p>
+									<p>
+										<b>Sentença</b>
+									</p>
+									<p>
+										<b><i>Publicado em 30/04/2026 10:58:00</i></b>
+									</p>
+									<p class="conteudoTexto" style="text-align:justify">
+											Poder Judiciário do Estado de GoiásGoiânia - 1ª UPJ Juizados Especiais Cíveis: 1º, 2º, 3º, 4º e 5ºGoiânia - 2º Juizado Especial Cível Processo: 5134416-24.2026.8.09.0051Requerente:Pedro Henrique Simoes De Lima AssisRequerido(a):Gol Linhas Aereas S.a. PROJETO DE SENTENÇA Versam os autos sobre reclamação com pretensão de indenização em decorrência de avaria em bagagem durante transporte aéreo.Ofertou-se contestação e réplica por escrito, vindo os autos conclusos para o julgamento antecipado. Decido. Inicialmente, deixo de apreciar o requerimento de gratuidade da justiça por se tratar de ac?a?o isenta de taxas e custas no 1º grau, conforme previsto no art. 55 da Lei 9.099/1995.Não havendo questões preliminares (no sentido técnico) ou quaisquer vícios formais, declaro saneado o feito e passo ao exame de mérito.Diante da ausência de acordo, bem como por ser desnecessária a designação de audiência de instrução, o julgamento deverá ser antecipado e se operará com base tão somente nos documentos apresentados pelas partes, nas suas confissões (art. 355, CPC) e na experiência do magistrado (Lei 9.099/1995, arts. 5º e 6º).***A situação narrada e comprovada é de simples compreensão, porém, constrangedora do ponto de vista de nosso sistema tutelar de consumo (Lei 8.078/1990).A parte reclamante comprovou, por meio de fotos e vídeos, que sua bagagem, durante o transporte aéreo (G3 7749), foi entregue danificada, com rompimento do zíper e exposição de seus pertences.Embora a reclamada sustente, em contestação, a inexistência de relação jurídica entre as partes, por inexistência de Registro de Irregularidade de Bagagem (RIB), tal alegação não subsiste, uma vez que o <em class="hlt1">dano</em> se restou comprovado por meios dos documentos juntados no mov. 01-arq.06/10. Dessa forma, a transportadora aérea, ao receber a bagagem do passageiro, assume obrigação de resultado, consistente na restituição do bem no mesmo estado em que foi entregue. A avaria constatada evidencia falha na prestação do serviço, não havendo demonstração de excludente de responsabilidade.****Embora de simples compreensão do ponto de vista objetivo, a circunstância em exame gera no campo psicológico clara sensação de impotência, humilhação e verdadeiro constrangimento à reputação da vítima do acidente de consumo, daí porque acatarei o pedido na forma do art. 14 da Lei 8.078/1990 e arbitrarei indenização pela violação da integridade da bagagem, com exposição dos pertences pessoais do consumidor, gerando constrangimento e insegurança.Todavia, a fixação do quantum indenizatório deve observar os princípios da razoabilidade e proporcionalidade, evitando-se o enriquecimento sem causa. No caso concreto, embora existente o <em class="hlt1">dano</em>, não há notícia de extravio de bens ou prejuízo de maior gravidade, o que recomenda a fixação em patamar reduzido.***Posto isso, SUGIRO a procedência do pedido, nos termos do art. 487, inciso I, do Código de Processo Civil:(a) para condenar a parte reclamada ao pagamento de R$ 1.500,00 (um mil, quinhentos reais), a título de reparação <em class="hlt1">moral</em>, atualizados monetariamente (IPCA) e acrescidos de juros legais, fixados de acordo com a taxa legal (SELIC), deduzido o índice de atualização monetária (CC 406 - redação dada pela Lei 14.905/2024) a partir da publicação técnica desta sentença, nos termos da Súmula 362 do Superior Tribunal de Justiça.Submeto este projeto de sentença ao MM. Juiz de Direito responsável por este Juizado Especial Cível para apreciação e eventual homologação1.DAYANA FRANCIELLE RODRIGUES SEGGERJuíza Leiga 1 ?O juiz leigo que tiver dirigido a instrução proferirá sua decisão e imediatamente a submeterá ao juiz togado, que poderá homologá-la, proferir outra em substituição ou, antes de se manifestar, determinar a realização de atos probatórios indispensáveis?. Poder Judiciário do Estado de GoiásGoiânia - 1ª UPJ Juizados Especiais Cíveis: 1º, 2º, 3º, 4º e 5ºGoiânia - 2º Juizado Especial Cível Processo: 5134416-24.2026.8.09.0051Requerente:Pedro Henrique Simoes De Lima AssisRequerido(a):Gol Linhas Aereas S.a. HOMOLOGAÇÃO(PROJETO DE SENTENÇA) Examinei os presentes autos, avaliei os fundamentos apresentados acima e aprovo a conclusão externada pelo(a) juiz(a) leigo(a), razão pela qual homologo o projeto de sentença, para que surta seus efeitos jurídicos, nos termos do art. 40 da Lei 9.099/1995.Sem custas e honorários de advogado, nos termos do art. 55, caput, da Lei 9.099/1995.Publicada e registrada eletronicamente.Após o trânsito em julgado, não havendo manifestação das partes, arquivem-se os autos com as devidas baixas.Intime-se.Aldo Guilherme Saad Sabino de FreitasJuiz de Direito ? datado e assinado digitalmente</p>
+									<hr class="hr-dashed-line" />
+										<p style="text-align:justify">
+											<b>3</b><i> resultado(s) encontrado(s) no INTEIRO TEOR.</i>										
+										</p>
+										<p style="text-align:justify">											
+											1)&nbsp;inexistência de Registro de Irregularidade de Bagagem (RIB), tal alegação não subsiste, uma vez que o <em class="hlt1">dano</em>&nbsp;
+											2)&nbsp;No caso concreto, embora existente o <em class="hlt1">dano</em>, não há notícia de extravio de bens ou prejuízo de maior gravidade&nbsp;
+											3)&nbsp;condenar a parte reclamada ao pagamento de R$ 1.500,00 (um mil, quinhentos reais), a título de reparação <em class="hlt1">moral</em>&nbsp;
+											</p>
+									</div>		
+								<hr class="hr-dashed-white-line" />																				
+							<div class="search-result"> <!-- #eaf1fb -->									
+
+										<h4>
+											5964447-92.2025.8.09.0159<span style="margin-left: 10px">												
+												<a href="#" title="Clique aqui para fazer o download do arquivo completo" 
+													onclick="javascript: abrirArquivo('ConsultaJurisprudencia', '522317806'); return false;">
+													<i class="fa fa-download"></i>
+														Baixar Inteiro teor
+												</a>
+											</span>
+											<span style="margin-left: 10px">
+												<a href="#" title="Copiar texto sem formatação" onclick="copiarConteudoTexto(this.parentNode.parentNode.parentNode,'.conteudoTexto','\n(Tribunal de Justiça do Estado de Goiás, PROCESSO CÍVEL E DO TRABALHO -> Processo de Conhecimento -> Procedimento de Conhecimento -> Procedimento do Juizado Especial Cível, 5964447-92.2025.8.09.0159, PATRÍCIA PASSOLI GHEDIN, Santo Antônio do Descoberto - Juizado Especial Cível, julgado em 30/04/2026 10:55:03)'); alert('Texto sem formatação foi copiado para a Área de Transferência.'); return false;">
+													<i class="fa fa-clipboard"></i>
+													Copiar
+												</a>
+											</span>
+										</h4>
+
+									<p>
+										<b>Santo Antônio do Descoberto - Juizado Especial Cível</b>
+									</p>
+									<p>
+										<b><i>PATRÍCIA PASSOLI GHEDIN</i></b>
+									</p>
+									<p>
+										<b>Decisão</b>
+									</p>
+									<p>
+										<b><i>Publicado em 30/04/2026 10:55:03</i></b>
+									</p>
+									<p class="conteudoTexto" style="text-align:justify">
+											Poder Judiciário Tribunal de Justiça do Estado de Goiás COMARCA DE SANTO ANTÔNIO DO DESCOBERTOJuizado Especial CívelDra. Patrícia Passoli Ghedin Processo nº 5964447-92.2025.8.09.0159Requerente: Daniel De Farias MaiaRequerido: Ativos S.a. Securitizadora De Creditos Financeiros Dou a presente decisão força de carta de citação/mandado/ofício à teor do disposto no art. 136 do Código de Normas e Procedimentos do Foro Judicial. DECISÃO Trata-se de ação declaratória de inexistência de débito cumulada com indenização por danos morais proposta por Daniel de Farias Maia em face de Ativos S.a. Securitizadora De Créditos Financeiros, ambos qualificados nos autos.Em análise dos autos e em consulta ao sistema Projudi/PJD, denota-se a existência de outra ação movida pelo autor em face de Itapeva XI Multicarteira Fundo de Investimento em Direitos Creditórios Responsabilidade Limitada, nesse mesmo Juizado Especial, sob o n. 5964448-77.2025.8.09.0159.Nota-se, ainda, que em ambas as ações há pedidos de declaração de inexistência de débito e indenização por danos morais em razão de inscrição indevida em cadastros de inadimplentes. Ocorre que a ação mencionada anteriormente ainda não fora julgada, e a definição sobre a validade daquela cobrança influenciará diretamente o resultado deste processo. Isso porque, para a análise do <em class="hlt1">dano</em> <em class="hlt1">moral</em>, é indispensável verificar se a anotação anterior era regular ou não, nos termos da Súmula 385 do Superior Tribunal de Justiça.Configura-se, no caso, a conexão por prejudicialidade, prevista no art. 55, § 3º, do Código de Processo Civil. Decidir tais questões em separado poderia levar à prolação de sentenças conflitantes, em grave prejuízo à segurança jurídica e à efetividade da prestação jurisdicional.Assim, em atenção aos princípios da economia processual, da celeridade e, fundamentalmente, da coerência das decisões judiciais, a análise simultânea do mérito de ambos os processos é a medida que se impõe.Ante as razões expostas, com fundamento no art. 55, § 3º, do Código de Processo Civil, reconheço a existência de prejudicialidade externa entre o presente feito e os autos n. 5964448-77.2025.8.09.0159 e, para tanto, determino a realização de julgamento simultâneo a fim de se evitar decisões conflitantes.Proceda-se o apensamento dos autos em sistema.Intimem-se as partes para que se manifestem, em 10 (dez) dias, requerendo o que entenderem de direito ou o julgamento antecipado do feito.Decorrido o prazo sem manifestação ou solicitado o julgamento do mérito, venham os dois autos conclusos para sentença.Intime-se. Cumpra-se. Santo Antônio do Descoberto, data da assinatura digital.assinado digitalmentePATRÍCIA PASSOLI GHEDINJuíza de Direito ?É um dever de todos, sem exceção, proteger crianças e adolescentes contra a violência infantil. Disque 100?</p>
+									<hr class="hr-dashed-line" />
+										<p style="text-align:justify">
+											<b>1</b><i> resultado(s) encontrado(s) no INTEIRO TEOR.</i>										
+										</p>
+										<p style="text-align:justify">											
+											1)&nbsp;Isso porque, para a análise do <em class="hlt1">dano</em> <em class="hlt1">moral</em>, é indispensável verificar se a anotação anterior era regular&nbsp;
+											</p>
+									</div>		
+								<hr class="hr-dashed-white-line" />																				
+							<div class="search-result"> <!-- #eaf1fb -->									
+
+										<h4>
+											6021883-09.2025.8.09.0159<span style="margin-left: 10px">												
+												<a href="#" title="Clique aqui para fazer o download do arquivo completo" 
+													onclick="javascript: abrirArquivo('ConsultaJurisprudencia', '522318819'); return false;">
+													<i class="fa fa-download"></i>
+														Baixar Inteiro teor
+												</a>
+											</span>
+											<span style="margin-left: 10px">
+												<a href="#" title="Copiar texto sem formatação" onclick="copiarConteudoTexto(this.parentNode.parentNode.parentNode,'.conteudoTexto','\n(Tribunal de Justiça do Estado de Goiás, PROCESSO CÍVEL E DO TRABALHO -> Processo de Conhecimento -> Procedimento de Conhecimento -> Procedimento do Juizado Especial Cível, 6021883-09.2025.8.09.0159, PATRÍCIA PASSOLI GHEDIN, Santo Antônio do Descoberto - Juizado Especial Cível, julgado em 30/04/2026 10:55:02)'); alert('Texto sem formatação foi copiado para a Área de Transferência.'); return false;">
+													<i class="fa fa-clipboard"></i>
+													Copiar
+												</a>
+											</span>
+										</h4>
+
+									<p>
+										<b>Santo Antônio do Descoberto - Juizado Especial Cível</b>
+									</p>
+									<p>
+										<b><i>PATRÍCIA PASSOLI GHEDIN</i></b>
+									</p>
+									<p>
+										<b>Sentença</b>
+									</p>
+									<p>
+										<b><i>Publicado em 30/04/2026 10:55:02</i></b>
+									</p>
+									<p class="conteudoTexto" style="text-align:justify">
+											Poder Judiciário Tribunal de Justiça do Estado de Goiás COMARCA DE SANTO ANTÔNIO DO DESCOBERTOJuizado Especial CívelDra. Patrícia Passoli Ghedin Processo nº 6021883-09.2025.8.09.0159Requerente: Josiel Gomes Da PazRequerido: Client Co Servicos De Rede Nordeste S.a. Dou a presente decisão força de carta de citação/mandado/ofício à teor do disposto no art. 136 do Código de Normas e Procedimentos do Foro Judicial. SENTENÇA 1. RELATÓRIOTrata-se de ação de declaração de inexistência de débito c/c danos morais proposta por Josiel Gomes da Paz em face de Client Co Serviços de Rede Nordeste S.A., ambos qualificados nos autos.DECIDO.2. FUNDAMENTOSPromovo o julgamento antecipado do mérito, nos termos do art. 355, I do diploma processual civil, eis que a questão é meramente de direito, sendo desnecessária a produção de outras provas.Presentes os pressupostos processuais e não havendo preliminares a serem dirimidas e nem irregulares ou nulidades a serem sanadas, passo ao exame do mérito.Cinge-se a presente demanda na existência de suposta negativação indevida em nome da parte autora, realizada pelo réu, bem como a existência de danos morais advindos de tal fato.2.1. Da declaração de inexistência do débitoA matéria discutida trata-se de relação de consumo, sendo o autor detentor da condição de consumidor (art. 2º, CDC), estando no outro polo da relação jurídica material as requeridas, na condição de fornecedoras de produtos e serviços (art. 3º, §2º, CDC).Neste trilhar, verifica-se que já houve a inversão do ônus probatório, conforme extrai-se de decisão proferida em evento n. 4. Sabe-se que a responsabilidade civil nas relações de consumo assenta-se na teoria da qualidade do serviço ou do produto, notadamente em relação à segurança legitimamente esperada. É o que se extrai do artigo 14 do Código de Defesa do Consumidor.Por se tratar de responsabilidade civil objetiva é dispensável a análise do elemento subjetivo. Portanto, o fornecedor responde objetivamente pelos danos causados pela falha na prestação do serviço, bastando ao consumidor comprovar o dano e o nexo causal.Por outro lado, o fornecedor de serviços não será responsabilizado quando provar algumas excludentes de ilicitude previstas no §3º do art. 14 do Código Consumerista.Tecidas tais considerações, do compulso dos autos, denota-se que a instituição requerida não se desincumbiu do ônus de comprovar fato impeditivo, modificativo ou extintivo do direito do autor. Explico.O artigo 487, inciso III, alínea ?a?, do Código de Processo Civil leciona que o juiz julgará o feito, com resolução do mérito, com homologação do reconhecimento da procedência do pedido formulado na ação ou na reconvenção.Contudo, tal alegação não possui amparo fático ou jurídico. Isso porque, em análise aos documentos acostados pelo autor no evento n. 1 (arquivos 5 e 7), verifica-se que a dívida incluída pelo réu na plataforma Serasa corresponde exatamente ao valor do comprovante de pagamento de R$ 119,90 (cento e dezenove reais e noventa centavos). Tem-se, portanto, que, apesar de o autor ter efetuado o pagamento da dívida em 12 de agosto de 2025, a ré anotou, de forma indevida, a cobrança na condição de ?conta atrasada? em órgão de proteção ao crédito.Assim, a procedência do pedido autoral, consistente em declaração de inexistência de débito, é medida que se impõe.2.2. Dos danos moraisLado outro, no que refere-se ao pedido de condenação por danos morais, mostra-se necessária uma breve digressão.Em análise detida dos autos, verifica-se que não houve negativação do nome da parte autora nos órgãos de proteção ao crédito. Em sentido contrário, conforme documento acostado pela própria parte autora, houve tão somente o cadastro de dívida para fins de negociação na plataforma Serasa Limpa Nome ? vide evento n. 1, arq. 5.Têm-se, portanto, que cinge-se a controvérsia em averiguar se as anotações contidas no SERASA LIMPA NOME possuem publicidade e validade perante o mercado financeiro, ocasionando manutenção do nome da autora nos órgãos de proteção ao crédito, lhe causando prejuízos no mercado.A esse respeito, conforme a informação prestada pela própria requerida em evento n. 9, verifica-se que não se constata a existência de negativação em nome do autor pelos débitos em questão, sendo esclarecido que as ofertas de acordo referentes a contas atrasadas não se confundem com as anotações do cadastro de inadimplentes e não são consideradas no cálculo do Score, de modo que as informações constantes na plataforma Serasa Limpa Nome só podem ser acessadas pelo próprio consumidor.Com efeito, por meio do cadastro de inadimplentes, os credores informam a condição de devedor do pessoal (física ou jurídica), podendo implicar na negativa de crédito a ela por outras empresas que consultem o cadastro. Tem-se, com isso, a publicidade da condição de inadimplente da pessoa.Já na plataforma digital ?Serasa Limpa Nome?, as dívidas cadastradas, em sua quase totalidade, são inexigíveis em razão de se encontrarem prescritas, sendo de conhecimento apenas da parte credora e da parte devedora que voluntariamente se cadastrem na plataforma, a qual é utilizada com um instrumento para ofertar acordos de débitos que existem, mas que não podem ser exigidos. Ou seja, apenas a parte devedora tem acesso às dívidas cadastradas na plataforma ?Serasa Limpa Nome?.Como incentivo ao pagamento da dívida cadastrada na plataforma ?Serasa Limpa Nome?, além de considerável desconto concedido ao devedor, é oferecido uma pontuação para aumentar o score de crédito da pessoa, sendo certo que o não pagamento da dívida em nada prejudica ou faz diminuir a pontuação de crédito do score da pessoa.Isso porque a nota do ?score? de crédito decorre de vários fatores, tais como idade da pessoa, profissão, renda, estado civil, pontualidade no pagamento de contas, manutenção de dados cadastrais atualizados, histórico de inadimplência, entre outros.No caso, verifica-se que apesar da anotação de dívida com status ?vencida?, não houve a cobrança judicial ou mesmo a inserção do nome da autora no rol de inadimplentes, mas tão somente a disponibilização da dívida na plataforma ?Serasa Limpa Nome?, conforme restou efetivamente comprovado nos autos.Ainda que este juízo já tenha decidido de forma diversa, é inegável verificar que a jurisprudência do Egrégio Tribunal de Justiça se consolidou no sentido de que inexiste ilegalidade no apontamento de dívida inadimplida na plataforma de negociações SERASA LIMPA NOME, pois a medida não configura negativação do nome do consumidor nos cadastros de inadimplentes, não dá publicidade a terceiros e não configura restrição de crédito, mormente por não haver prova de que as informações desabonem o seu score no mercado de crédito.Em sendo assim, faz-se necessário o alinhamento das decisões emanadas pelos juízos de primeiro grau à jurisprudência sedimentada dos tribunais ao qual estão vinculados.Sobre a temática em comento ? envolvendo anotações de dívidas em Plataforma Serasa Limpa Nome, como é a hipótese destes autos, a Egrégia Corte do Tribunal de Justiça do Estado de Goiás vem decidindo da seguinte forma:?EMENTA: APELAÇÃO CÍVEL ? AÇÃO DECLARATÓRIA DE INEXISTÊNCIA DE RELAÇÃO JURÍDICA CC INDENIZAÇÃO POR DANOS MORAIS E PEDIDO DE TUTELA DE URGÊNCIA ?DÉBITO INSCRITO NA PLATAFORMA SERASA LIMPA NOME ? INEXISTÊNCIA DE INSCRIÇÃO EM CADASTRO DE INADIMPLENTES ? COBRANÇA DE DÉBITO DE TERCEIRO ? MERO ABORRECIMENTO - IMPROCEDÊNCIA DE <em class="hlt1">DANO</em> <em class="hlt1">MORAL</em> MANTIDA. 1- O ?SERASA Limpa Nome? não se trata de cadastro restritivo de crédito, mas de uma plataforma que se permite negociar dívidas atrasadas ou negativadas com desconto. 2- Nos termos da Súmula 81 desta Corte de Justiça, o mero registro na plataforma Serasa Limpa Nome ou similar, não traduz, por si só, abusividade da inscrição e não enseja, por consequência, indenização por danos morais, salvo se comprovada a publicidade das informações ou alteração no sistema de pontuação de créditos (score) do consumidor. 3- Embora a dívida apontada na referida plataforma estivesse atrelada a outro CPF, que não o da autora, o contrato ligado ao débito questionado encontrava-se cancelado desde antes do recebimento da inicial, bem como não há mais a anotação da referida dívida em face à autora na mencionada plataforma. 4-Malgrado o aborrecimento decorrente da cobrança de dívida de terceiro dirigida à apelante, impõe-se a manutenção da improcedência do pedido indenizatório, não sendo qualquer chateação hábil a caracterizar o dano <em class="hlt1">moral</em> passível de indenização, mormente quando inexistente a inscrição em cadastro de inadimplentes. RECURSO CONHECIDO E DESPROVIDO. (TJGO, PROCESSO CÍVEL E DO TRABALHO -> Recursos -> Apelação Cível 5630307-38.2021.8.09.0162, Rel. Des(a). DESEMBARGADORA MARIA DAS GRAÇAS CARNEIRO REQUI, 9ª Câmara Cível, julgado em 03/06/2024, DJe de 03/06/2024)? (destaquei)Destarte, considerando que a mera anotação de dívida vencida ? ainda que inexistente não gera dano <em class="hlt1">moral</em>, aliado ao fato de que não houve, in casu, comprovação de qualquer cobrança abusiva ou humilhante apta a ensejar <em class="hlt1">dano</em> <em class="hlt1">moral</em>, conclui-se pela ausência de ato ilícito e ou falha na prestação de serviço.Por conseguinte, não há que se falar em <em class="hlt1">dano</em> <em class="hlt1">moral</em>, posto que um de seus elementos configuradores ? falha na prestação de serviço ? não se verificou.Assim, a improcedência do pedido de danos morais formulado pelo autor se impõe.3. DISPOSITIVOAnte o exposto, com fundamento no art. 487, inciso I, do Código de Processo Civil, julgo parcialmente procedentes os pedidos formulados na inicial para declarar a inexistência de débito em nome do autor, no valor de R$ 119,90 (cento e dezenove reais e noventa centavos).Lado outro, julgo improcedente o pedido de condenação em danos morais.Sem custas e honorários (art. 55 da LJE).Havendo recurso inominado com pedido de gratuidade de justiça, intime-se a parte (autora ou ré) para comprovar por meios hábeis os requisitos do benefício de isenção de custas.Advirto às partes que a oposição de embargos de declaração fora das hipóteses legais, poderá ser sancionada com multa, conforme previsão na lei processual.Publique-se. Registre-se. Intime-se. Cumpra-se.Santo Antônio do Descoberto, data da assinatura digital.assinado digitalmentePATRÍCIA PASSOLI GHEDINJuíza de Direito ?É um dever de todos, sem exceção, proteger crianças e adolescentes contra a violência infantil. Disque 100?</p>
+									<hr class="hr-dashed-line" />
+										<p style="text-align:justify">
+											<b>5</b><i> resultado(s) encontrado(s) no INTEIRO TEOR.</i>										
+										</p>
+										<p style="text-align:justify">											
+											1)&nbsp;MERO ABORRECIMENTO - IMPROCEDÊNCIA DE <em class="hlt1">DANO</em> <em class="hlt1">MORAL</em> MANTIDA. 1- O ?&nbsp;
+											2)&nbsp;<em class="hlt1">moral</em> passível de indenização, mormente quando inexistente a inscrição em cadastro de inadimplentes.&nbsp;
+											3)&nbsp;<em class="hlt1">moral</em>, aliado ao fato de que não houve, in casu, comprovação de qualquer cobrança abusiva ou humilhante&nbsp;
+											4)&nbsp;apta a ensejar <em class="hlt1">dano</em> <em class="hlt1">moral</em>, conclui-se pela ausência de ato ilícito e ou falha na prestação de serviço.Por&nbsp;
+											5)&nbsp;conseguinte, não há que se falar em <em class="hlt1">dano</em> <em class="hlt1">moral</em>, posto que um de seus elementos configuradores ? falha&nbsp;
+											</p>
+									</div>		
+								<hr class="hr-dashed-white-line" />																				
+							<div class="search-result"> <!-- #eaf1fb -->									
+
+										<h4>
+											5359239-79.2025.8.09.0159<span style="margin-left: 10px">												
+												<a href="#" title="Clique aqui para fazer o download do arquivo completo" 
+													onclick="javascript: abrirArquivo('ConsultaJurisprudencia', '522318826'); return false;">
+													<i class="fa fa-download"></i>
+														Baixar Inteiro teor
+												</a>
+											</span>
+											<span style="margin-left: 10px">
+												<a href="#" title="Copiar texto sem formatação" onclick="copiarConteudoTexto(this.parentNode.parentNode.parentNode,'.conteudoTexto','\n(Tribunal de Justiça do Estado de Goiás, PROCESSO CÍVEL E DO TRABALHO -> Processo de Conhecimento -> Procedimento de Conhecimento -> Procedimento do Juizado Especial Cível, 5359239-79.2025.8.09.0159, PATRÍCIA PASSOLI GHEDIN, Santo Antônio do Descoberto - Juizado Especial Cível, julgado em 30/04/2026 10:55:03)'); alert('Texto sem formatação foi copiado para a Área de Transferência.'); return false;">
+													<i class="fa fa-clipboard"></i>
+													Copiar
+												</a>
+											</span>
+										</h4>
+
+									<p>
+										<b>Santo Antônio do Descoberto - Juizado Especial Cível</b>
+									</p>
+									<p>
+										<b><i>PATRÍCIA PASSOLI GHEDIN</i></b>
+									</p>
+									<p>
+										<b>Sentença</b>
+									</p>
+									<p>
+										<b><i>Publicado em 30/04/2026 10:55:02</i></b>
+									</p>
+									<p class="conteudoTexto" style="text-align:justify">
+											Poder Judiciário Tribunal de Justiça do Estado de Goiás COMARCA DE SANTO ANTÔNIO DO DESCOBERTOJuizado Especial CívelDra. Patrícia Passoli Ghedin Processo nº 5359239-79.2025.8.09.0159Requerente: Thiago Ferreira VicenteRequerido: Rubens Vieira Dou a presente decisão força de carta de citação/mandado/ofício à teor do disposto no art. 136 do Código de Normas e Procedimentos do Foro Judicial. SENTENÇA 1. Trata-se de ação de indenização por danos materiais em decorrência de acidente de trânsito proposta por Thiago Ferreira Vicente em face de Rubens Vieira, ambos qualificados nos autos.Dispensado o relatório, na forma do art. 38 da Lei n. 9.099/1995. DECIDO.2. FUNDAMENTOSPromovo o julgamento antecipado do mérito, nos termos do art. 355, I do diploma processual civil, eis que a questão é meramente de direito, sendo desnecessária a produção de outras provas.2.1. Questões pendentesComo a parte ré, apesar de regularmente citada (evento n. 35), não compareceu em audiência e/ou apresentou defesa aos autos (evento n. 40), decreto sua revelia. Pontuo, no entanto, que a revelia não desobriga a parte autora de comprovar a existência de seu direito e a legitimidade das partes.2.2. Do méritoA controvérsia dos autos cinge-se à apuração de eventual responsabilidade civil em decorrência de acidente de trânsito entre os veículos do autor e réu. O autor alega que, em decorrência do sinistro, suportaram danos materiais consistente no conserto de seu aparelho celular e também da motocicleta conduzida.O autor alega que em 07 de fevereiro de 2025 trafegava pela Avenida Goiás quando o requerido desrespeitou a sinalização de parada obrigatória, invadindo a via preferencial, resultando a colisão entre os veículos. O requerido, por sua vez, deixou transcorrer o prazo sem qualquer manifestação, sendo decretada a sua revelia no presente ato.Conforme fundamentado em item n. 2.1.2, fora decretada a revelia do promovido e, nos termos do art. 344 do CPC, aplica-se o efeito material da revelia, qual seja, a presunção de veracidade dos fatos afirmados pelos autores.No entanto, a responsabilidade do réu não decorre apenas desta presunção, mas da análise concreta das provas produzidas, que são robustas.O Boletim de Ocorrência (RAI n. 40341989, evento 1, arq. 5) o autor narra que com detalhes os fatos. Veja-se:"Relata o comunicante que no dia 07/02/25 se envolveu em um acidente na avenida Goiás em frente ao ATACADÃO REZENDE, com o RUBENS que estava em um carro GOL G3 PLACA: JFQ2169 o comunicante estava em sua moto CG 150 FAN cor VERMELHA Placa: JFO2277. Relata o comunicante que estava indo sentido ao centro e o Rubens saindo do sentido Vila paraíso para o Beira Rio, em um cruzamento o Rubens ultrapassou sem para para o comunicante que diz está certo pela lei de trânsito, e que após ele furar o cruzamento ele Rubens veio a colidir com a moto e o comunicante, fazendo com que o comunicante caísse no chão causando ferimento leves, e danos na moto( entortou guidom, amassou o tanque, entortou estribo, entortou o eslaide, quebrou o protetor da corrente da moto) além de quebrar o celular do comunicante."Sobre o tema, verifica-se que a conduta do réu violou normas expressas do Código de Trânsito Brasileiro (CTB). O art. 28 do referido diploma legal impõe o dever de dirigir com atenção e cuidados indispensáveis, enquanto o art. 34 leciona:?Art. 34. O condutor que queira executar uma manobra deverá certificar-se de que pode executá-la sem perigo para os demais usuários da via que o seguem, precedem ou vão cruzar com ele, considerando sua posição, sua direção e sua velocidade.?O réu falhou exatamente neste dever. Isso porque o vídeo do momento do acidente carreado pelo autor em evento n. 01, arq. 8 demonstra que caberia ao réu se certificar se havia algum veículo na via do cruzamento, devendo, em caso negativo, confirmar se a manobra seria segura. Portanto, tem-se que agiu com imprudência e foi o causador do sinistro.Portanto, os fatos constitutivos do direito dos autores, nos termos do art. 373, inciso I, do CPC, estão comprovados tanto pela presunção decorrente da revelia quanto pela prova documental inequívoca.Constatada a responsabilidade civil do réu, passo à análise dos pedidos específicos.2.2.1. Dos danos materiais. O autor alega que arcou com o conserto do aparelho celular no valor de R$ 220,00 (duzentos e vinte reais), bem como acordou com os danos materiais para conserto de seu veículo no valor de R$1.053,00 (um mil e cinquenta e três reais), totalizando a quantia de R$ 1.273,00 (um mil, duzentos e setenta e três reais).Em análise detida dos autos, verifica-se que o autor logrou êxito de forma parcial em comprovar o fato constitutivo de seu direito, nos termos do art. 373, I, do CPC. Isso porque o autor comprovou os gastos com conserto do aparelho telefônico sob a quantia de R$ 220,00 (duzentos e vinte reais).De outro lado, no que se refere ao conserto da motocicleta, verifica-se que o autor juntou 3 (três) orçamentos, conforme evento n. 01, arquivos 03. Contudo, apenas os orçamentos constantes às fls. 10 e 11 do PDF dizem respeito aos mesmos itens, ao passo que o orçamento de fl. 9 refere-se exclusivamente à pintura do tanque da motocicleta.Assim, conclui-se que, nesse ponto, restou demonstrado que o custo para reparo das avarias da motocicleta perfaz o montante de R$ 833,00 (oitocentos e trinta e três reais).Por fim, consigne-se que os orçamentos foram feitos entre os dias 8 e 10 de fevereiro, o que firma o nexo de causalidade com o sinistro. Destaca-se, ainda, que o réu é revel e não produziu qualquer contraprova que pudesse desconstituir os documentos ou os valores apresentados, ônus que lhe cabia (Art. 373, II, CPC).Assim, a procedência parcial dos pedidos de danos materiais é medida que se impõe para que seja o requerido condenado ao pagamento de R$1.053,00 (um mil e cinquenta e três reais).2.2.2. Dos danos morais. Compulsando os autos, verifica-se que pedido de condenação em danos morais não merece prosperar. Explico.Sabe-se que para a configuração da responsabilidade civil, é necessária a presença do ato ilícito, do <em class="hlt1">dano</em> e do nexo causal, conforme previsão dos artigos 186 e 927, ambos do Código Civil. Neste trilhar, embora o ato ilícito (a conduta culposa do réu no acidente) esteja provado, o <em class="hlt1">dano</em> <em class="hlt1">moral</em> não se presume automaticamente.Outrossim, é cediço que o <em class="hlt1">dano</em> <em class="hlt1">moral</em> indenizável é aquele que transcende o mero aborrecimento, atingindo de forma significativa os direitos da personalidade (Art. 5º, V e X, CF).No caso em tela, embora os fatos centrais (o acidente) tenham sido comprovados, o autor não demonstrar ter sofrido humilhação, constrangimento ou sofrimento que extrapolasse a normalidade. O transtorno decorrente de um acidente de trânsito, a despeito de inconveniente e inoportuno, quando desacompanhado de lesão grave ou ofensa direta à honra, situa-se no limite do dissabor cotidiano.Porquanto, estão ausentes quaisquer provas de que o promovido praticou comportamento humilhante ou ofensivo capaz de influenciar negativamente na personalidade dos autores.Para corroborar com a fundamentação exposta, transcrevo o seguinte julgado proferido pelo Tribunal de Justiça do Estado de Goiás acerca do tema:?APELAÇÃO CÍVEL N. 5535684-76.2022.8.09.0087COMARCA: ITUMBIARAAPELANTE: SÍLVIO ZULIANI ABDO RODRIGUESAPELADO: HEITOR LABORÃO CARNEIRORELATOR: DESEMBARGADOR EDUARDO ABDON MOURA EMENTA APELAÇÃO CÍVEL. AÇÃO DE INDENIZAÇÃO POR DANOS MATERIAIS E MORAIS. ACIDENTE DE TRÂNSITO. DESVALORIZAÇÃO DO VEÍCULO. AUSÊNCIA DE COMPROVAÇÃO. <em class="hlt1">DANO</em> <em class="hlt1">MORAL</em> NÃO CARACTERIZADO. HONORÁRIOS ADVOCATÍCIOS MAJORADOS. SENTENÇA MANTIDA.1.Compete ao autor demonstrar os fatos constitutivos do seu direito (art. 373, I, do CPC) e, ao réu, a existência de fato impeditivo, modificativo ou extintivo do direito do autor (art. 373, II, do CPC).2.O simples envolvimento do automóvel em acidente de trânsito não implica em automático dever de indenização material pela depreciação de veículo, porquanto o conserto serve para restituir a coisa a seu estado anterior, impondo-se a necessidade de prova cabal do decréscimo econômico alegado.3.A ausência de provas da ofensa à honra e outros aspectos da personalidade afasta o dever de indenização por danos morais.4.Ante o desprovimento do apelo, bem como a preexistente condenação em honorários, torna-se impositiva a majoração dos verba honorária sucumbencial, a teor do que dispõe o artigo 85, § 11, do Código de Processo Civil.APELAÇÃO CÍVEL CONHECIDA E DESPROVIDA. (TJGO, PROCESSO CÍVEL E DO TRABALHO -> Recursos -> Apelação Cível 5535684-76.2022.8.09.0087, Rel. Des(a). Eduardo Abdon Moura, 3ª Câmara Cível, julgado em 15/07/2024, DJe de 15/07/2024)? (destaquei)É o quanto basta.3. DISPOSITIVOAnte as razões expostas, com fundamento no art. 487, inciso I, do Código de Processo Civil, JULGO PARCIALMENTE PROCEDENTES os pedidos formulados na inicial tão somente para condenar o promovido a efetuar o pagamento de danos materiais, no valor de R$1.053,00 (um mil e cinquenta e três reais) em favor do autor.Em observância ao disposto pela Lei n. 14.905/2024, a quantia deverá ser corrigida monetariamente pelo Índice Nacional de Preços ao Consumidor Amplo (IPCA), a partir da data do efetivo prejuízo ? (07/02/2025) (Súmula 43, STJ), e acrescida de juros de mora que corresponderá à taxa referencial do Sistema Especial de Liquidação e de Custódia (Selic), deduzida da variação do IPCA no mesmo período (art. 406, §1º, do CC), nos termos do artigo 406 do Código Civil, desde o evento danoso (Súmula 54, STJ), ambos até a data do efetivo pagamento.Sem custas e honorários advocatícios, nos termos do art. 54 da Lei n. 9.099/1995. Havendo recurso inominado com pedido de gratuidade de justiça, intime-se a parte (autora ou ré) para comprovar por meios hábeis os requisitos do benefício de isenção de custas.Advirto às partes que a oposição de embargos de declaração fora das hipóteses legais, poderá ser sancionada com multa, conforme previsão na lei processual.Anote-se na capa dos autos que se trata de réu revel.Certificado o trânsito em julgado, arquivem-se. Publique-se. Registre-se. Intime-se.Cumpra-se. Santo Antônio do Descoberto, data da assinatura digital.assinado digitalmentePATRÍCIA PASSOLI GHEDINJuíza de Direito ?É um dever de todos, sem exceção, proteger crianças e adolescentes contra a violência infantil. Disque 100?</p>
+									<hr class="hr-dashed-line" />
+										<p style="text-align:justify">
+											<b>4</b><i> resultado(s) encontrado(s) no INTEIRO TEOR.</i>										
+										</p>
+										<p style="text-align:justify">											
+											1)&nbsp;Explico.Sabe-se que para a configuração da responsabilidade civil, é necessária a presença do ato ilícito, do <em class="hlt1">dano</em>&nbsp;
+											2)&nbsp;Neste trilhar, embora o ato ilícito (a conduta culposa do réu no acidente) esteja provado, o <em class="hlt1">dano</em> <em class="hlt1">moral</em>&nbsp;
+											3)&nbsp;não se presume automaticamente.Outrossim, é cediço que o <em class="hlt1">dano</em> <em class="hlt1">moral</em> indenizável é aquele que transcende&nbsp;
+											4)&nbsp;<em class="hlt1">DANO</em> <em class="hlt1">MORAL</em> NÃO CARACTERIZADO.&nbsp;
+											</p>
+									</div>		
+								<hr class="hr-dashed-white-line" />																				
+							<div class="search-result"> <!-- #eaf1fb -->									
+
+										<h4>
+											6043416-24.2025.8.09.0159<span style="margin-left: 10px">												
+												<a href="#" title="Clique aqui para fazer o download do arquivo completo" 
+													onclick="javascript: abrirArquivo('ConsultaJurisprudencia', '522317797'); return false;">
+													<i class="fa fa-download"></i>
+														Baixar Inteiro teor
+												</a>
+											</span>
+											<span style="margin-left: 10px">
+												<a href="#" title="Copiar texto sem formatação" onclick="copiarConteudoTexto(this.parentNode.parentNode.parentNode,'.conteudoTexto','\n(Tribunal de Justiça do Estado de Goiás, PROCESSO CÍVEL E DO TRABALHO -> Outros Procedimentos -> Atos e expedientes -> Petição Cível, 6043416-24.2025.8.09.0159, PATRÍCIA PASSOLI GHEDIN, Santo Antônio do Descoberto - Juizado Especial Cível, julgado em 30/04/2026 10:55:01)'); alert('Texto sem formatação foi copiado para a Área de Transferência.'); return false;">
+													<i class="fa fa-clipboard"></i>
+													Copiar
+												</a>
+											</span>
+										</h4>
+
+									<p>
+										<b>Santo Antônio do Descoberto - Juizado Especial Cível</b>
+									</p>
+									<p>
+										<b><i>PATRÍCIA PASSOLI GHEDIN</i></b>
+									</p>
+									<p>
+										<b>Sentença</b>
+									</p>
+									<p>
+										<b><i>Publicado em 30/04/2026 10:55:00</i></b>
+									</p>
+									<p class="conteudoTexto" style="text-align:justify">
+											Poder Judiciário Tribunal de Justiça do Estado de Goiás COMARCA DE SANTO ANTÔNIO DO DESCOBERTOJuizado Especial CívelDra. Patrícia Passoli Ghedin Processo nº 6043416-24.2025.8.09.0159Requerente: Mariana Dos Santos MagalhaesRequerido: Credsystem Instituicao De Pagamento Ltda Dou a presente decisão força de carta de citação/mandado/ofício à teor do disposto no art. 136 do Código de Normas e Procedimentos do Foro Judicial. SENTENÇA 1. Trata-se de ação declaratória de inexistência de débito c/c indenização por danos morais e materiais com pedido liminar proposta por Mariana dos Santos Magalhães em face de Credsystem Instituição de Pagamento Ltda, ambos qualificados nos autos.Dispensado o relatório, na forma do disposto no artigo 38, da Lei 9.099/95.DECIDO.2. FUNDAMENTOSPromovo o julgamento antecipado do mérito, nos termos do art. 355, I do Código de Processo Civil, eis que a questão é meramente de direito, sendo desnecessária a produção de outras provas.Presentes os pressupostos processuais e não havendo preliminares a serem dirimidas e nem irregulares ou nulidades a serem sanadas, passo ao exame do mérito.Antes de qualquer aprofundamento, é importante consignar ser fatos incontroverso a relação existente entre as partes.Cinge-se a controvérsia da demanda acerca da responsabilidade do réu diante do suposto golpe aplicado face à autora, com a utilização dos dados oriundos do cartão de crédito de titularidade da autora e fornecido pela ré para a realização de compra não reconhecida.Não restam nem as mais remotas dúvidas de ser o caso de incidência da legislação consumerista, eis que autora e réu se enquadram, perfeitamente na figura de consumidor e fornecedor.2.1. Da falha na prestação de serviço. A conclusão no sentido da caracterização de relação consumerista traz consigo a responsabilidade civil pelo fato do serviço, registrada no art. 14 do Código de Defesa do Consumidor, segundo o qual o fornecedor de serviços responde, independentemente da existência de culpa, pela reparação dos danos causados aos consumidores por defeitos relativos à prestação de seus serviços. A responsabilidade do fornecedor (a ora ré) ? afastando-se da previsão genérica de responsabilidade subjetiva que consta dos arts. 186 e 927 do diploma civilista ?, é, em suma, objetiva, independe da comprovação de sua culpa, e suas exceções são aquelas delineadas pelo § 3º do art. 12, pelo que o fornecedor de serviços só não será responsabilizado quando provar a) ?que não colocou o produto no mercado?; b) ?que, embora haja colocado o produto no mercado, o defeito inexiste?; ou c) ?a culpa exclusiva do consumidor ou de terceiro?.Ou seja, a verificação da existência de responsabilidade da ré independe de qualquer discussão quanto à presença de culpa da sua parte. Sua responsabilidade, perante o consumidor, ressai da só constatação do evento danoso.Os fornecedores foram ao longo do tempo criando mecanismos para propiciar a contratação e, por conseguinte, o aumento de seus lucros. Com o andar da história, se antes era necessário que o interessado comparecesse a uma loja física para realizar uma compra, hoje tal avença pode ser realizada com um simples clique na tela de um smartphone, havendo em um mesmo site uma quantidade infinita de anunciantes do mesmo produto. Por óbvio, estas novas modalidades maximizam os lucros dos fornecedores, que se beneficiam diretamente da facilidade na contratação.Por serem estes fornecedores os beneficiários diretos dessas facilidades devem, por conseguinte, arcar com os riscos das negociações que assumem e da ausência de informação clara e expressa direcionada ao consumidor, bem como de eventual compartilhamento de informação não autorizada.No caso, a falha na prestação do serviço do réu Credsystem Instituição de Pagamento Ltda resta evidente.Isso porque, da simples leitura das peças processuais verificam-se falhas graves nos sistemas de controle interno, eis que não há explicação da ré para o fato de que terceiros tiveram acesso aos dados da parte autora e a realizaram uma compra não autorizada no valor de R$4.239,43 (quatro mil, duzentos e trinta e nove reais e quarenta e três centavos).Por sua vez, a parte ré limitou-se a sustentar em sua contestação sustenta que ?a compra foi efetuada mediante credential on file, isto é, a autora informou os dados do seu cartão (número, titular, vencimento, CVV), autorizando cobranças.? Aduz, ainda, que "não há como outra pessoa ter acesso a esses dados. As transações efetuadas pela internet/aplicativos com o uso dos dados do cartão são de responsabilidade exclusiva do titular."Ora, a parte autora sustenta que foi contatada por terceiro que se apresentou como colaborador da requerida e, de posse de informações relevantes a seu respeito, induziu-a a fornecer novos dados. Ainda assim, pretende-se imputar à consumidora ? parte reconhecidamente mais vulnerável na relação ? o dever de agir com maior diligência?A parte ré lucra com a atividade realizada, devendo, assim, criar mecanismos de segurança para evitar que terceiros falsários tenham acesso aos dados da compra e deles se utilizem para aplicar golpes, tal qual o ocorrido no presente feito.Além disso, cumpre salientar que a compra cuja inexistência a autora busca ver declarada destoa claramente de seu perfil de consumo, conforme demonstram as faturas juntadas no evento n. 01, arq.05 e também em evento n. 16 arq. 03. Tal circunstância poderia ter sido prontamente identificada pela requerida, que deveria ter adotado diligências adicionais para verificar a efetiva realização da transação pela autora.Não há de se negar, é claro, a possibilidade da exclusão da responsabilidade dos fornecedores em situações semelhantes quando demonstrada a plena adoção de todos os procedimentos de segurança aptos a impedir a ocorrência de fraudes e a exclusiva colaboração do consumidor para sua ocorrência, até porque a responsabilidade da fornecedora, conquanto objetiva, não segue a vertente do risco integral, a admitir a exclusão do nexo de causalidade quando demonstrada a existência de fortuitos externos.Voltando-se os olhos ao caso concreto, contudo, o que se extrai é que a autora foi vítima de uma fraude praticada por terceiros que, valendo-se do nome e da imagem da ré. Segundo restou apurado, o falsário utilizou-se do logo da ré, além de possuir informações bancárias da autora, sendo que todo esse contexto levou a autora ? e poderia levar qualquer pessoa na mesma situação ? a pressupor que prestou informações ao colaborador da empresa ré.Tomadas essas considerações fáticas que particularizam o caso concreto, a fraude praticada em desfavor da autora acaba por se classificar como um fortuito interno, e não externo, já que de alguma maneira, aqui não explicada, terceiros tiveram acesso a informações bancárias, o que possibilitou a fraude.Não se nega, é claro, a existência de meios outros de se certificar da veracidade do contato realizado via WhatsApp, como o próprio símbolo de perfil verificado. Aplicável, contudo, a teoria da aparência em favor da autora, sobretudo quando constatada a eventual colaboração por omissão (possivelmente por uma falha de seus sistemas) por parte da requerida e a impossibilidade de se imputar ao consumidor a verificação de detalhes que impeçam fraudes de tal natureza, como também de saber se era ou não procedimento padrão da ré atender seus clientes por meio de aplicativo de mensagens.Nesses termos, dispensada a apuração de culpa, reputo comprovada à suficiência, portanto, a omissão da ré nos cuidados necessários a evitar que a fraude em questão viesse a ocorrer, bem como o nexo causal, enquanto relação de causalidade entre o ato ilícito e os danos experimentados pela autora, verdadeiro ?liame que une a conduta do agente ao dano? (VENOSA, Sílvio de Salvo. Direito Civil: Responsabilidade Civil. 3. ed. São Paulo: Atlas, 2003, p. 39), uma vez que foi aquela omissão que deu causa ao resultado danoso.Chegando a esta mesma conclusão, colaciono o seguinte julgado:RECURSO INOMINADO. AÇÃO DECLARATÓRIA DE INEXISTÊNCIA DE DÉBITO C/C INDENIZAÇÃO POR DANOS MORAIS. COMPRA EFETUADA EM CARTÃO DE CRÉDITO. OPERAÇÃO NÃO RECONHECIDA PELO CONSUMIDOR. TECNOLOGIA DE CHIP QUE NÃO ESTÁ IMUNE À CLONAGEM. TRANSAÇÃO QUE FOGE DO PERFIL DO CONSUMIDOR. <em class="hlt1">DANO</em> <em class="hlt1">MORAL</em> CONFIGURADO. JUROS DE MORA. CITAÇÃO. SENTENÇA MANTIDA. 1. Recurso inominado interposto por Luizacred S/A em razão de sentença prolatada pelo MM. Juiz de Direito do 1º Juizado Especial Cível da comarca de Anápolis/GO, que julgou parcialmente procedentes os pedidos iniciais para declarar a inexigibilidade do débito (R$ 4.303,60) e condenar a ora Recorrente ao pagamento de indenização por danos morais no importe de R$ 4.000,00 (quatro mil reais). 2. Em linhas pretéritas, a parte Autora relata que, no mês de julho de 2021, ao analisar sua fatura de cartão de crédito, verificou uma compra no valor de R$ 4.303,60 (quatro mil, trezentos e três reais e sessenta centavos), realizada em 08/06/2021. Afirma que, embora tenha contestado a operação junto à Requerida por se tratar de compra não realizada por ela, foi reconhecida a legitimidade do lançamento pela financeira, motivo pelo qual intentou a presente demanda requerendo a inexigibilidade do débito, bem como o pagamento de indenização por danos morais. 3. Inicialmente, é de se assentar que as relações das instituições financeiras com os usuários dos seus serviços são reguladas pelo Código de Defesa do Consumidor (art. 3º, § 2º da Lei 8.078/90). Inteligência da Súmula 297 do STJ. 4. A responsabilidade do prestador de serviço é objetiva (art. 14, caput, do CDC), somente podendo ser afastada quando provar: a) que, tendo prestado o serviço, o defeito inexiste; b) culpa exclusiva do consumidor ou de terceiro (art. 14, § 3º, I e II, do CDC). 5. As faturas colacionadas pela Requerida em sede de contestação demonstram que a operação impugnada foge do perfil da consumidora, uma vez que, na maioria dos meses, sequer foram efetuadas compras em seu cartão de crédito, havendo pagamento mensal tão somente da taxa de anuidade (evento 11 arquivo 02 página 33 a 40). Soma-se a isto, o fato de que houve o bloqueio do cartão e o cancelamento definitivo da conta em 08/06/2021 e 16/08/2021, respectivamente, em razão de Roubo Nacional, conforme se extrai das telas sistêmicas coligida no evento 11 arquivo páginas 48 e 69, o que corrobora a tese autoral. 6. Cumpre mencionar que o fato de o cartão ser dotado de chip e senha pessoal não garante a infalibilidade dos serviços, sendo certo que são corriqueiras as ocorrências de clonagem de cartões, ainda que provido de sistema de segurança. 7. Deveria, o Recorrente, demonstrar que tais compras foram, de fato, efetuadas pelo consumidor ou por terceiro que, por eventual negligência deste, portava os seus cartões e as suas senhas pessoais, ônus do qual não se desincumbiu (art. 373, II, do CPC). Assim, de rigor a manutenção da sentença que declarou a inexigibilidade do débito lançado na fatura de cartão de crédito. 8. A Súmula 479 do STJ Superior Tribunal de Justiça preconiza que as instituições financeiras respondem objetivamente pelos danos gerados por fortuito interno relativo a fraudes e delitos praticados por terceiros no âmbito de operações bancárias, ensejando, no caso em testilha, a reparação pelo dano <em class="hlt1">moral</em> sofrido, o qual existe in re ipsa, visto que decorre do próprio fato e da experiência comum. 9. A fixação do quantum da indenização por danos morais deve ser norteada pelos princípios da razoabilidade e proporcionalidade, considerando as peculiaridades de cada caso específico, evitando-se que tal arbitramento seja elevado, a ponto de ensejar o enriquecimento sem causa da parte moralmente lesada, ou, ainda, que corresponda a um montante exageradamente ínfimo, que resulte em uma reprimenda inócua e desprovida do caráter pedagógico e preventivo dirigido ao causador do dano. 10. Na hipótese dos autos, cuidando-se de instituição financeira de grande porte e notório poderio econômico e considerando as peculiaridades do caso concreto, tem-se que o montante da indenização arbitrado na sentença de primeiro grau, R$ 4.000,00 (quatro mil reais), mostra-se razoável e adequado, sendo impositiva sua manutenção. 11. Por fim, em relação ao termo inicial dos juros moratórios, verifica-se a inutilidade e desnecessidade do recurso, uma vez que a sentença de origem reconheceu que este deverá se dar a partir do arbitramento, conforme requerido pela Recorrente, motivo pelo qual conclui-se pela falta de interesse recursal neste ponto. 12. Entretanto, por se tratarem de acessórios e consectários lógicos da condenação e constituírem matéria de ordem pública, imperiosa sua alteração, de ofício, uma vez que em indenização por danos morais, em caso de responsabilidade contratual, os juros de mora são devidos a partir da citação, nos termos do art. 405 do Código Civil. Precedente do TJGO (1ª Câmara Cível, Apelação Cível n. 0297712-36.2014.8.09.0051, Relatora Des. Maria das Graças Carneiro Requi, DJ de 17/07/2019). 13. Recurso conhecido e desprovido. 14. Parte Recorrente condenada ao pagamento dos honorários advocatícios, estes arbitrados no patamar de R$ 1.000,00 (hum mil reais), nos termos do art. 85, § 8º, do CPC. (TJ-GO ? Recurso Inominado nº 54111261520218090007, Relator: ALICE TELES DE OLIVEIRA, 1ª Turma Recursal dos Juizados Especiais, Data de Publicação: 01/06/2022) Verificada, portanto, a falha na prestação de serviço por parte da ré, razão pela qual a declaração da inexistência do débito é medida que se impõe.2.2. Dos danos morais. Quanto aos danos morais, já foi muitas vezes repetida, na jurisprudência, a afirmação de que o <em class="hlt1">dano</em> <em class="hlt1">moral</em> não é passível de prova, porque não há técnica que permita comprovar e quantificar fenômenos anímicos, como o são a dor, o constrangimento, a tristeza, o sofrimento moral ou físico. A compensação do <em class="hlt1">dano</em> <em class="hlt1">moral</em> visa mitigar o sofrimento, que é de ordem espiritual, íntima e insuscetível de medição ou aferição objetiva. É o preço da dor, na formidável expressão dos clássicos, e a dor não pode ser medida, ou provada.O dano puramente <em class="hlt1">moral</em> alegado na exordial é insuscetível de prova, porque se refere a lesão à personalidade, com ofensa a sentimentos que não podem ser medidos, testemunhados ou provados. Comprovado o ato ilícito, como ocorreu aqui, mediante fraude por vazamento de informações da parte autora, não há dúvidas sobre seus efeitos deletérios sobre sua estima, honra, respeitabilidade, credibilidade, paz de espírito e tranquilidade.No tema quantificação do dano moral, utilizando o método bifásico desenvolvido no âmbito do Superior Tribunal de Justiça e adstrita ao pedido autoral, constata-se ser razoável a fixação da indenização no valor de R$ 5.000,00 (cinco mil reais). 3. DISPOSITIVOFace ao exposto, JULGO PARCIALMENTE PROCEDENTES os pedidos autorais e resolvo o mérito, nos termos do art. 487, I, do Código de Processo Civil para: a) CONFIRMAR a liminar deferida em evento n. 7; b) DECLARAR A INEXISTÊNCIA DO DÉBITO no valor de R$4.239,43 (quatro mil, duzentos e trinta e nove reais e quarenta e três centavos) ançado em seu cartão de crédito final 6212, em nome da parte autora.c) CONDENAR o réu ao pagamento de R$ 5.000,00 (cinco mil reais) a título de indenização por danos morais.Sobre o valor, deverão incidir juros correspondentes à taxa referencial do Sistema Especial de Liquidação e de Custódia (Selic), deduzida da variação do IPCA no mesmo período (art. 406, §1º do CC), desde a data do evento danoso (14/10/2023) e a correção monetária pelo IPCA a contar desta data, na forma das Súmulas nº 54 e 362 do Superior Tribunal de Justiça.Sem custas e honorários advocatícios, nos termos do art. 55 da Lei n. 9.099/1995.Havendo recurso inominado com pedido de gratuidade de justiça, intime-se a parte (autora ou ré) para comprovar por meios hábeis os requisitos do benefício de isenção de custas.Certificado o trânsito em julgado, arquivem-se. Publique-se. Registre-se. Intimem-se.Intime-se. Cumpra-se.Santo Antônio do Descoberto, data da assinatura digital.assinado digitalmentePATRÍCIA PASSOLI GHEDINJuíza de Direito ?É um dever de todos, sem exceção, proteger crianças e adolescentes contra a violência infantil. Disque 100?</p>
+									<hr class="hr-dashed-line" />
+										<p style="text-align:justify">
+											<b>5</b><i> resultado(s) encontrado(s) no INTEIRO TEOR.</i>										
+										</p>
+										<p style="text-align:justify">											
+											1)&nbsp;<em class="hlt1">DANO</em> <em class="hlt1">MORAL</em> CONFIGURADO.&nbsp;
+											2)&nbsp;<em class="hlt1">moral</em> sofrido, o qual existe in re ipsa, visto que decorre do próprio fato e da experiência comum. 9&nbsp;
+											3)&nbsp;Quanto aos danos morais, já foi muitas vezes repetida, na jurisprudência, a afirmação de que o <em class="hlt1">dano</em> <em class="hlt1">moral</em>&nbsp;
+											4)&nbsp;A compensação do <em class="hlt1">dano</em> <em class="hlt1">moral</em> visa mitigar o sofrimento, que é de ordem espiritual, íntima e insuscetível&nbsp;
+											5)&nbsp;puramente <em class="hlt1">moral</em> alegado na exordial é insuscetível de prova, porque se refere a lesão à personalidade&nbsp;
+											</p>
+									</div>		
+								<hr class="hr-dashed-white-line" />																				
+							<div class="search-result"> <!-- #eaf1fb -->									
+
+										<h4>
+											6023161-45.2025.8.09.0159<span style="margin-left: 10px">												
+												<a href="#" title="Clique aqui para fazer o download do arquivo completo" 
+													onclick="javascript: abrirArquivo('ConsultaJurisprudencia', '522317792'); return false;">
+													<i class="fa fa-download"></i>
+														Baixar Inteiro teor
+												</a>
+											</span>
+											<span style="margin-left: 10px">
+												<a href="#" title="Copiar texto sem formatação" onclick="copiarConteudoTexto(this.parentNode.parentNode.parentNode,'.conteudoTexto','\n(Tribunal de Justiça do Estado de Goiás, PROCESSO CÍVEL E DO TRABALHO -> Processo de Conhecimento -> Procedimento de Conhecimento -> Procedimento do Juizado Especial Cível, 6023161-45.2025.8.09.0159, PATRÍCIA PASSOLI GHEDIN, Santo Antônio do Descoberto - Juizado Especial Cível, julgado em 30/04/2026 10:55:00)'); alert('Texto sem formatação foi copiado para a Área de Transferência.'); return false;">
+													<i class="fa fa-clipboard"></i>
+													Copiar
+												</a>
+											</span>
+										</h4>
+
+									<p>
+										<b>Santo Antônio do Descoberto - Juizado Especial Cível</b>
+									</p>
+									<p>
+										<b><i>PATRÍCIA PASSOLI GHEDIN</i></b>
+									</p>
+									<p>
+										<b>Sentença</b>
+									</p>
+									<p>
+										<b><i>Publicado em 30/04/2026 10:55:00</i></b>
+									</p>
+									<p class="conteudoTexto" style="text-align:justify">
+											Poder Judiciário Tribunal de Justiça do Estado de Goiás COMARCA DE SANTO ANTÔNIO DO DESCOBERTOJuizado Especial CívelDra. Patrícia Passoli Ghedin Processo nº 6023161-45.2025.8.09.0159Requerente: Gleyson Correa CostaRequerido: Brb Banco De Brasilia Sa Dou a presente decisão força de carta de citação/mandado/ofício à teor do disposto no art. 136 do Código de Normas e Procedimentos do Foro Judicial. SENTENÇA 1. Trata-se de ação de obrigação de fazer c/c danos morais proposta por Gleyson Correa Costa em face de BRB Banco de Brasília S/A, ambos qualificados nos autos.Dispensado o relatório, na forma do disposto no artigo 38, da Lei 9.099/95. 2. FUNDAMENTOSPromovo o julgamento antecipado do mérito, nos termos do art. 355, I do diploma processual civil, eis que a questão é meramente de direito, sendo desnecessária a produção de outras provas. Não havendo preliminares ou questões pendentes a serem dirimidas, passo à análise do mérito.2.1. DO MÉRITOCinge-se a presente demanda à ocorrência de danos morais decorrentes do desconto integral de salário realizado pela requerida.Em contestação, a parte requerida sustenta, em síntese, a inexistência de dano moral e a ausência de desconto indevido, pugnando pela improcedência da ação.Inquestionável é a aplicabilidade, aos contratos bancários, do microssistema de proteção ao consumidor, capitaneado pelo Código de Defesa do Consumidor. Trata-se, inclusive, de matéria sumulada pelo Superior Tribunal de Justiça: ?STJ Súmula nº 297 ? O Código de Defesa do Consumidor é aplicável às instituições financeiras.?. Aqui, é inegável que estamos diante de típica relação de consumo, já que a ré atuou como fornecedora de serviços, e o autor como destinatário final, tal qual cotejado pelos arts. 2º e 3º do Código de Defesa do Consumidor. Exatamente nesse sentido é que se guiou a decisão interlocutória proferida em evento n. 4, a qual, já no limiar do processo, além de reconhecer a aplicabilidade do diploma consumerista à relação em questão, inverteu também o ônus da prova em favor do autor. A controvérsia cinge-se à legalidade da retenção de verbas salariais pela parte requerida na conta bancária do autor.Conforme se verifica dos autos, a dívida que originou as retenções decorre de cartão de crédito de titularidade do autor (Visa Platinum, nº XXXX.XXXX.XXXX.2019), fornecido pela instituição financeira ré, sendo incontroversa a situação de inadimplência.Consta que, no mês de dezembro de 2025, a instituição financeira realizou o bloqueio integral da verba salarial creditada na conta corrente do autor, conforme demonstram os documentos juntados (evento 1, docs. 5 e 8).Ressalte-se que o saldo devedor atualizado perfazia o montante de R$ 9.055,87 (nove mil e cinquenta e cinco reais e oitenta e sete centavos), conforme informado pela própria requerida.No dia 02/12/2025, ao ser creditado o salário do autor, no valor de R$ 4.101,41 (quatro mil, cento e um reais e quarenta e um centavos), houve a retenção integral da quantia, conforme extrato acostado aos autos.Ainda que exista previsão contratual autorizando descontos, não é lícito à instituição financeira proceder à retenção, especialmente de forma integral, de verbas de natureza salarial para a satisfação de dívidas, devendo valer-se dos meios ordinários de cobrança, inclusive a via judicial.A ilegalidade, no caso, evidencia-se justamente pela retenção integral dos proventos, comprometendo a subsistência do autor. Eventuais descontos poderiam ser admitidos apenas de forma parcial e dentro dos limites legais.Assim, a conduta da requerida revela-se desarrazoada, desproporcional e abusiva, porquanto afetou diretamente o sustento do autor, impondo-se o acolhimento do pedido inicial nesse ponto.No tocante ao dever de indenizar, a responsabilidade do fornecedor é objetiva, nos termos do art. 14 do Código de Defesa do Consumidor. Todavia, a caracterização do <em class="hlt1">dano</em> <em class="hlt1">moral</em> exige a demonstração de efetiva violação a direitos da personalidade, não se restringindo à mera falha na prestação do serviço.No caso concreto, o autor foi privado do uso de seu salário de forma ilegal e arbitrária, circunstância que comprometeu sua subsistência e atingiu sua dignidade. Trata-se de situação que ultrapassa os meros dissabores cotidianos, configurando <em class="hlt1">dano</em> <em class="hlt1">moral</em> indenizável.Diante disso, impõe-se a condenação da parte requerida ao pagamento de indenização pelos danos morais suportados pelo autor.Sobre o tema:EMENTA: RECURSO INOMINADO. AÇÃO DECLARATÓRIA DE RENTENÇÃO INDEVIDA DE SALÁRIO C/C INDENIZAÇÃO POR DANOS MATERIAIS E MORAIS. RETENÇÃO DE VALORES EM CONTA SALÁRIO PARA PAGAMENTO DE DÉBITOS JUNTO A INSTTITUIÇÃO. BLOQUEIO DA INTEGRALIDADO DOS PROVENTOS INADMISSIBILIDADE . NATUREZA ALIMENTAR. DÉBITO EM 30% DOS RENDIMENTOS CREDITADOS EM CONTA CORRENTE. POSSIBILIDADE. RESTITUIÇÃO DEVIDA . <em class="hlt1">DANO</em> <em class="hlt1">MORAL</em> CONFIGURADO. RECURSO CONHECIDO E PROVIDO EM PARTE. 1. ?(...). "Ainda que expressamente ajustada, a retenção integral do salário de correntista com o propósito de honrar débito deste com a instituição bancária enseja a reparação moral" (AgRg nos EDcl no AREsp n. 215.768/RJ, Relator Ministro SIDNEI BENETI, TERCEIRA TURMA, DJe 29/10/2012). 2 . Não há violação do enunciado da Súmula n. 7/STJ quando se realiza simples valoração jurídica dos fatos sobejamente delineados no acórdão recorrido. 3. Agravo regimental a que se nega provimento . (AgRg nos EDcl no AREsp 425.992/RJ, Rel. Ministro ANTONIO CARLOS FERREIRA, QUARTA TURMA, julgado em 03/02/2015, DJe 10/02/2015). No mesmo sentido jurisprudência do TJGO: APELAÇÕES CÍVEIS . AÇÃO DECLARATÓRIA DE ABUSIVIDADE DE CLÁUSULA CONTRATUAL, CUMULADA COM SUSPENSÃO DE BLOQUEIO DE VALORES E INDENIZAÇÃO POR DANOS MORAIS. APLICABILIDADE DO CDC. RESPONSABILIDADE OBJETIVA. CONTRATOS DE EMPRÉSTIMOS . COMPROMISSO DE PAGAMENTO EXTRAJUDICIAL. DESCONTOS DAS PRESTAÇÕES EM CONTA-CORRENTE. RETENÇÃO INTEGRAL DO SALÁRIO. COBRANÇA INDEVIDA . ATO ILÍCITO CONFIGURADO. DEVER DE INDENIZAR. DANOS MORAIS IN RE IPSA. QUANTUM . INADIMPLEMENTO DO ACORDO. CLÁUSULA CONTRATUAL DESCUMPRIDA. CUMPRIMENTO DO CONTRATO PRIMITIVO. GRATUIDADE DA JUSTIÇA SOMENTE PARA RECURSO . CONDENAÇÃO DO AUTOR AO PAGAMENTO DOS ÔNUS SUCUMBENCIAIS. NÃO CABIMENTO. SUCUMBÊNCIA MÍNIMA. SENTENÇA PARCIALMENTE REFORMADA . 1. Como às instituições financeiras aplicam-se as regras contidas no Código de Defesa do Consumidor (Súmula nº 297 do STJ), no caso em apreço deve ser observado as diretrizes da responsabilidade objetiva (art. 14 do CDC). 2 . Nem mesmo a eventual existência de cláusula contratual (o que não se verifica), autorizando os descontos das prestações dos empréstimos contratados pelas partes em conta-corrente em percentual acima de 30% (trinta por cento) dos rendimentos líquidos do devedor ou a retenção integral de salários para o mesmo fim, torna lícita a conduta praticada pela instituição financeira na hipótese em análise, por envolver crédito de natureza alimentar. 3. A retenção integral do salário do autor/2º apelante pelo réu/1º apelante para adimplir prestações dos contratos de empréstimos firmados entre as partes, consoante demonstrado pelo extrato acostado aos autos, configura falha na prestação de serviço pela instituição financeira (ato ilícito), apta a ensejar sua condenação ao pagamento de indenização por danos morais ao devedor. 4 . Desnecessidade de comprovação do <em class="hlt1">dano</em>. No tocante a comprovação do dano, no caso de retenção da integralidade do salário do correntista/devedor pela instituição financeira para a quitação de dívidas por ele contraídas, os danos morais são presumidos (in re ipsa), decorrendo do próprio desconto indevido. 5. O quantum, a título de reparação de danos morais, deve ser fixado com razoabilidade e proporcionalidade, sem constituir enriquecimento indevido da parte requerente/consumidora e, ainda, em observância à tríplice finalidade: satisfativa para a vítima, dissuasório para o ofensor e de exemplaridade para a sociedade . 7. Restou inequívoca a determinação de cumprimento do contrato primitivo, se a nova convenção não fosse cumprida. A cláusula 11 do referido compromisso prevê que, em caso de descumprimento das obrigações do devedor (pagamento de todos os boletos no prazo ajustado), a dívida voltaria a ser cobradas pelo seu valor original e as parcelas pagas constituíram mera amortização do saldo devedor, o que se verifica no caso. Desta forma, não há se falar em retomada dos pagamentos na forma prevista nesta . 7. Gratuidade da justiça deferida tão somente para o presente recurso. 8. No que tange aos ônus sucumbenciais, à vista do provimento do primeiro apelo manejado pelo autor/1º apelante, não há que se falar em condenação do requerente ao pagamento dos ônus sucumbenciais, como pretende o réu/2º apelante . 1ª APELAÇÃO CÍVEL CONHECIDA E NÃO PROVIDA. 2ª APELAÇÃO CÍVEL CONHECIDA E PARCIALMENTE PROVIDA. SENTENÇA REFORMADA EM PARTE. (TJGO, Apelação ( CPC) 5147571-12 .2017.8.09.0051, Rel . MARCUS DA COSTA FERREIRA, 5ª Câmara Cível, julgado em 27/08/2019, DJe de 27/08/2019). 4. Inconteste a retenção da integralidade dos vencimentos do Reclamante para pagamento de dívidas, conforme se vê dos extratos anexados com a inicial, no documento 5. O desconto da integralidade do salário é vedado pelo entendimento jurisprudencial por violar a dignidade da pessoa humana e o direito constitucional de sobrevivência, já que retira do indivíduo sua capacidade de manutenção por todo um mês . Havendo falha na prestação do serviço, deve o fornecedor de serviços responder nos termos do artigo 14 do Código de Defesa do Consumidor, impondo-se a restituição/liberação do valor indevidamente retido de sua conta e o pagamento de indenização quanto ao prejuízo suportado. O MM Juiz na solução da lide deve decidir de forma justa e equânime, nos termos do art. 6º da Lei 9.099/95, de forma a autorizar a retenção de 30% do salário creditado na conta corrente da Reclamante para pagamento das dívidas, devendo o saldo remanescente ser restituído na forma simples, corrigido monetariamente pelo INPC e com juros de mora de 1% ao mês . Não há como manter a sentença no sentido de autorizar a retenção de 30% sobre dos vencimentos líquidos, já que não trata de empréstimo com desconto em folha de pagamento. O STJ tem decido que após o crédito do salário na conta corrente o consumidor está livre para contratar da forma que lhe convier, portanto incabível a limitação dos empréstimos com desconto em conta corrente aos mesmos patamares daqueles para folha de pagamento. Acontece que necessário se faz estabelecer um limite para que não haja extrapolamento como o vivenciado nestes autos, quando a Instituição Financeira retem a integralidade dos vencimentos do cliente. Logo, não andou bem a MM Juíza na origem ao limitar os descontos em conta corrente aos vencimentos líquidos da reclamante, devendo este limite se ater aos valores creditados em conta e como medida de justiça e para não tornar impossível a Instituição Financeiras cobrar dívidas livremente contratadas . Veja os últimos entendimentos do STJ neste sentido: PROCESSUAL CIVIL E ADMINISTRATIVO. SERVIDOR PÚBLICO. OFENSA AO ART. 2º, § 2º, I, DA LEI 10 .820/2003. LIMITAÇÃO DE 30% DOS VENCIMENTOS EM CONSIGNAÇÃO EM FOLHA DE PAGAMENTO. EMPRÉSTIMO FINANCEIRO CELEBRADO COM INSTITUIÇÃO BANCÁRIA. DESCONTO EM CONTA-CORRENTE . HIPÓTESES DISTINTAS. AUTORIZAÇÃO EXPRESSA. LIMITAÇÃO DE DESCONTO NÃO APLICÁVEL. PRECEDENTE DA SEGUNDA SEÇÃO . DIVERGÊNCIA JURISPRUDENCIAL. EXAME PREJUDICADO. (...) 2. A jurisprudência do STJ firmou-se no sentido de que a modalidade de empréstimo com pagamento em débito na conta-corrente mantida pela instituição financeira é distinta do empréstimo mediante consignação em folha de pagamento, não se sujeitando, assim, ao limite de 30% (trinta por cento) previsto na Lei 10.820/2003. O referido entendimento foi pacificado pela Segunda Seção do STJ no AgInt no REsp 1 .500.846/DF, julgado em 12/12/2018. 3. Na hipótese, trata-se de descontos em conta-corrente de empréstimos "comuns" (não consignados em folha de pagamento), de modo que é inviável a aplicação de analogia com o regramento legal que versa acerca dos descontos consignados em folha de pagamento . (...) ? (grifei) (AREsp 1739032 / SP AGRAVO EM RECURSO ESPECIAL 2020/0195918-6, Rel. Ministro HERMAN BENJAMIN, Data do Julgamento 02/02/2021).5. Quanto ao <em class="hlt1">dano</em> <em class="hlt1">moral</em>, a retenção da integralidade do salário comprometeu a renda mensal do reclamante, prejudicando sua subsistência e de sua família, restando evidenciado o dano no caso concreto . 6. O quantum do valor da indenização deverá ser fixado observando a aos princípios da razoabilidade e da proporcionalidade, bem como a gravidade do ato. A Instituição Financeira tem conhecimento do posicionamento da Justiça quanto a retenção da integralidade do salário e assim o procede, o que leva a sobrecarregar o Poder Judiciário com típica demanda predatória. Soma que houve o desvio produtivo, já que a Instituição ao verificar a insatisfação do Consumidor na esfera administrativa, deveria desde logo restituir o valor do salário do Reclamante nos patamares deliberados na Jurisprudência e assim não procedeu, de forma que o valor a ser fixado deverá ser um pouco acima da média para fins de que seja dado solução na esfera administrativa e evitar a demanda predatória . Nestes termos entendo como justo o valor de R$ 5.000,00. O valor dos juros de mora neste caso deverá incidir a partir da data da citação por tratar de inadimplemento contratual. 7 . RECURSO CONHECIDO E PROVIDO EM PARTE para reformar a sentença e determinar a restituição de 70% do valor retido do salário creditado na conta da reclamante, corrigido monetariamente pelo INPC desde a data da retenção e com juros de mora de 1% ao mês a partir da data da citação. Autorizo o direito de retenção mensalmente para pagamento do empréstimo celebrado entre as partes no percentual e 30% dos valores creditados como proventos na conta corrente da reclamante. Mantenho o valor fixado a título de indenização por danos morais. 8 . Sem custas e honorários advocatícios ante ao resultado do julgamento, nos termos do art. 55 da Lei 9.099/95. (TJ-GO 5319706-23.2020.8.09.0181, Relator.: ROZANA FERNANDES CAMAPUM, 2ª Turma Recursal dos Juizados Especiais, Data de Publicação: 05/05/2021).É importante ressaltar que o réu não comprovou a anuência do autor quanto a esse desconto, eis que o contrato juntado na contestação não contém assinatura válida.Assim, considerando a extensão do dano, a falha na prestação do serviço, o porte econômico da ré e a natureza do dano sofrido, fixo o valor de R$ 2.000,00 (dois mil reais) a título de compensação por danos morais.3. DISPOSITIVOAnte o exposto, julgo PARCIALMENTE PROCEDENTES os pedidos iniciais, para:a) DECLARAR a ilegalidade da retenção do salário do requerente junto à conta bancária de número 001.176-6, agência 087 por parte da instituição financeira requerida;b) CONDENAR a ré a restituir o valor de R$ 4.101,41 (quatro mil, cento e um reais e quarenta e um centavos), descontado indevidamente da conta corrente nº 087.001176-6; A importância deverá ser corrigida monetariamente pelo IPCA desde o desembolso e acrescida de juros de mora que corresponderá à taxa referencial do Sistema Especial de Liquidação e de Custódia (Selic), deduzida da variação do IPCA no mesmo período (art. 406, §1º do CC), desde a data da citação.c) CONDENAR a parte ré a pagar o valor de R$2.000,00 (dois mil reais), a título de indenização por danos morais, corrigidos monetariamente a partir desta data (Súmula 362 do STJ) e acrescidos de juros de mora de 1% ao mês desde a citação.Atentando-se ao disposto pela Lei n. 14.905/2024, a importância deverá ser corrigida monetariamente pelo IPCA, a partir do arbitramento (data da publicação dessa sentença - Súmula 362 STJ), e acrescida de juros de mora que corresponderá à taxa referencial do Sistema Especial de Liquidação e de Custódia (Selic), deduzida da variação do IPCA no mesmo período (art. 406, §1º do CC), desde o evento danoso até a data do efetivo pagamento.Consigo, contudo, que a parcial procedência desta demanda não declara a inexistência da dívida e tampou elide o autor do dever de efetuar o pagamento do débito que possui com o réu, inclusive com os encargos contratuais correspondentes ao período de mora, desde a data inadimplemento.Sem custas e honorários, nos termos do art. 55 da Lei 9.099/95.Havendo recurso inominado com pedido de gratuidade de justiça, intime-se a parte (autora ou ré) para comprovar por meios hábeis os requisitos do benefício de isenção de custas.Advirto às partes que a oposição de embargos de declaração fora das hipóteses legais, poderá ser sancionada com multa, conforme previsão na lei processual.Publique-se. Registre-se. Intime-se.Cumpra-se.Santo Antônio do Descoberto, data da assinatura digital.assinado digitalmentePATRÍCIA PASSOLI GHEDINJuíza de Direito ?É um dever de todos, sem exceção, proteger crianças e adolescentes contra a violência infantil. Disque 100?</p>
+									<hr class="hr-dashed-line" />
+										<p style="text-align:justify">
+											<b>5</b><i> resultado(s) encontrado(s) no INTEIRO TEOR.</i>										
+										</p>
+										<p style="text-align:justify">											
+											1)&nbsp;Todavia, a caracterização do <em class="hlt1">dano</em> <em class="hlt1">moral</em> exige a demonstração de efetiva violação a direitos da personalidade&nbsp;
+											2)&nbsp;Trata-se de situação que ultrapassa os meros dissabores cotidianos, configurando <em class="hlt1">dano</em> <em class="hlt1">moral</em> indenizável.Diante&nbsp;
+											3)&nbsp;<em class="hlt1">DANO</em> <em class="hlt1">MORAL</em> CONFIGURADO.&nbsp;
+											4)&nbsp;Desnecessidade de comprovação do <em class="hlt1">dano</em>.&nbsp;
+											5)&nbsp;Quanto ao <em class="hlt1">dano</em> <em class="hlt1">moral</em>, a retenção da integralidade do salário comprometeu a renda mensal do reclamante&nbsp;
+											</p>
+									</div>		
+								<hr class="hr-dashed-white-line" />																				
+							<div class="search-result"> <!-- #eaf1fb -->									
+
+										<h4>
+											5932722-85.2025.8.09.0159<span style="margin-left: 10px">												
+												<a href="#" title="Clique aqui para fazer o download do arquivo completo" 
+													onclick="javascript: abrirArquivo('ConsultaJurisprudencia', '522318721'); return false;">
+													<i class="fa fa-download"></i>
+														Baixar Inteiro teor
+												</a>
+											</span>
+											<span style="margin-left: 10px">
+												<a href="#" title="Copiar texto sem formatação" onclick="copiarConteudoTexto(this.parentNode.parentNode.parentNode,'.conteudoTexto','\n(Tribunal de Justiça do Estado de Goiás, PROCESSO CÍVEL E DO TRABALHO -> Processo de Conhecimento -> Procedimento de Conhecimento -> Procedimento do Juizado Especial Cível, 5932722-85.2025.8.09.0159, PATRÍCIA PASSOLI GHEDIN, Santo Antônio do Descoberto - Juizado Especial Cível, julgado em 30/04/2026 10:54:47)'); alert('Texto sem formatação foi copiado para a Área de Transferência.'); return false;">
+													<i class="fa fa-clipboard"></i>
+													Copiar
+												</a>
+											</span>
+										</h4>
+
+									<p>
+										<b>Santo Antônio do Descoberto - Juizado Especial Cível</b>
+									</p>
+									<p>
+										<b><i>PATRÍCIA PASSOLI GHEDIN</i></b>
+									</p>
+									<p>
+										<b>Sentença</b>
+									</p>
+									<p>
+										<b><i>Publicado em 30/04/2026 10:54:47</i></b>
+									</p>
+									<p class="conteudoTexto" style="text-align:justify">
+											Poder Judiciário Tribunal de Justiça do Estado de Goiás COMARCA DE SANTO ANTÔNIO DO DESCOBERTOJuizado Especial CívelDra. Patrícia Passoli Ghedin Processo nº 5932722-85.2025.8.09.0159Requerente: Miguel Henrique Macedo De MeloRequerido: Supermercado E Panificadora Super Big Ltda Dou a presente decisão força de carta de citação/mandado/ofício à teor do disposto no art. 136 do Código de Normas e Procedimentos do Foro Judicial. SENTENÇA 1. RELATÓRIOTrata-se de ação de indenização por danos morais e materiais proposta por Miguel Henrique Macedo de Melo em face de Supermercado e Panificadora Super Big Ltda, ambos qualificados nos autos.Dispensado o relatório, na forma do disposto no artigo 38, da Lei 9.099/95.DECIDO.2. FUNDAMENTOSPromovo o julgamento antecipado do mérito, nos termos do art. 355, I do diploma processual civil, eis que a questão é meramente de direito, sendo desnecessária a produção de outras provas.2.1. Da (in)ocorrência de reveliaAlmeja a parte autora a decretação de revelia do promovido, com o fundamento de que teria ocorrido o decurso de prazo sem apresentação de defesa. Todavia, a pretensão autoral não possui qualquer amparo.Em análise dos autos, verifica-se que na ocasião de audiência conciliatória fora concedido prazo, de 15 (quinze) dias, após o referido ato para apresentação de defesa pela parte promovida. Nesse sentido, por meio de certidão expedida em evento n. 37 há a menção expressa de que a defesa apresentada aos autos fora feita de forma tempestiva. Porquanto, não há que se falar em decretação de revelia da parte ré.Ante o exposto, indefiro o pedido efetuado em evento n. 21.2.2. Do méritoPresentes os pressupostos processuais e não havendo outras preliminares a serem dirimidas e nem irregulares ou nulidades a serem sanadas, passo ao exame do mérito.Cinge-se a presente demanda na existência de suposta falha na prestação de serviços pela parte requerida, consistente na recusa de cumprimento de oferta anunciada, bem como a existência de danos materiais e morais advindos de tal fato suportados pelo autor.2.2.1. Da falha na prestação de serviços. A matéria discutida trata-se de relação de consumo, sendo o autor detentor da condição de consumidor (art. 2º, CDC), estando no outro polo da relação jurídica material as requeridas, na condição de fornecedoras de produtos e serviços (art. 3º, §2º, CDC).Neste trilhar, verifica-se que já houve a inversão do ônus probatório, conforme extrai-se de decisão proferida em evento n. 5. Sabe-se que a responsabilidade civil nas relações de consumo assenta-se na teoria da qualidade do serviço ou do produto, notadamente em relação à segurança legitimamente esperada. É o que se extrai do artigo 14 do Código de Defesa do Consumidor.Por se tratar de responsabilidade civil objetiva é dispensável a análise do elemento subjetivo. Portanto, o fornecedor responde objetivamente pelos danos causados pela falha na prestação do serviço, bastando ao consumidor comprovar o <em class="hlt1">dano</em> e o nexo causal.Por outro lado, o fornecedor de serviços não será responsabilizado quando provar algumas excludentes de ilicitude previstas no §3º do art. 14 do Código Consumerista.Tecidas tais considerações, do compulso dos autos, denota-se que a instituição requerida não se desincumbiu do ônus de comprovar fato impeditivo, modificativo ou extintivo do direito do autor. Explico.Alega o autor que, no dia 08 de novembro de 2025, avistou uma placa promocional em estabelecimento da parte promovida com a oferta: ?Só HOJE ? Linguiça de frango Sadia ? apenas R$ 15,99 ? 5 kg?. Discorre que confiou na oferta exposta e solicitou ao atendente a quantidade anunciada, totalizando 5kg (cinco quilos) do produto. Afirma, contudo, que ao chegar no caixa para pagamento fora surpreendido com a cobrança do valor de R$ 80,43 (oitenta reais e quarenta e três centavos) em total dissonância com a oferta anunciada. A parte requerida, por sua vez, alega em contestação apresentada no evento n. 22 afirma que a placa mencionada pelo autor constitui anúncio com mero erro material evidente. Afirma que o valor cobrado corretamente, de R$ 15,99 (quinze reais e noventa e nove centavos) o quilo, corresponde ao valor de mercado e fora anunciado por meio de faixa em frente o estabelecimento e panfletos digitais. Reforça que inexiste previsão legal ou jurídica com o fito de compelir o comerciante a cumprir oferta manifestamente equivocada e incompatível com a realidade de mercado.Em análise detida do caderno processual, verifica-se ser fato incontroverso a existência de anúncio com a informação ?Só HOJE ? Linguiça de frango Sadia ? apenas R$ 15,99 ? 5 kg?.Sobre a obrigatoriedade do cumprimento de oferta anunciada, mostra-se necessária uma breve digressão.O Código de Defesa do Consumidor possui, dentre os vários mecanismos de proteção, o princípio da vinculação da publicidade. De acordo com tal princípio, mostra-se necessária a imposição da transparência e da boa fé nos métodos comerciais, na publicidade e nos contratos, de modo que o fornecedor de produtos ou serviços se obriga nos exatos termos da publicidade veiculada. É o que dispõe o artigo 30 do referido Código. Senão, veja-se:?Art. 30. Toda informação ou publicidade, suficientemente precisa, veiculada por qualquer forma ou meio de comunicação com relação a produtos e serviços oferecidos ou apresentados, obriga o fornecedor que a fizer veicular ou dela se utilizar e integra o contrato que vier a ser celebrado.?Em casos análogos, o Superior Tribunal de Justiça possui o entendimento pacificado no sentido de que, para se configurar publicidade enganosa, é imprescindível a análise do caso concreto, a fim de se averiguais quais os dados essenciais deveriam constar da peça publicitária que possam ter sido omitidos ou alterados. Além disso, mostra-se necessário considerar o público-alvo do anúncio, de modo a avaliar adequadamente o potencial enganoso de tal propaganda (STJ - AgInt no REsp: 1877361 SP 2019/0297127-0, Relator.: RICARDO VILLAS BÔAS CUEVA, Data de Julgamento: 26/09/2022, T3 - TERCEIRA TURMA, Data de Publicação: DJe 28/09/2022).Embora a jurisprudência, inclusive do Superior Tribunal de Justiça, admita a flexibilização dessa regra em casos de erro grosseiro ? situações em que o preço é flagrantemente irrisório e o erro é perceptível de imediato pelo consumidor médio ?, tal hipótese não se aplica ao caso em tela.No cartaz apresentado, a redação é dúbia. Ao associar diretamente o valor de R$ 15,99 (quinze reais e noventa e nove centavos) à indicação de "5 kg" sem ressalvas claras de que o preço seria "por quilo", o fornecedor criou uma expectativa legítima de promoção por atacado. Não se trata de um valor impossível ou vil que indique erro óbvio, mas de uma oferta que induz o consumidor ao erro devido à má redação publicitária.Portanto, diante da falha no dever de informar (artigo 6º, inciso III, do Código de Defesa do Consumidor) e da cobrança a maior, a restituição da diferença paga é medida de rigor.2.2.2. Dos danos morais. Almeja o autor o recebimento da quantia de R$ 5.000,00 (cinco mil reais) a título da danos morais suportados. Contudo, sua pretensão não possui qualquer amparo fático ou jurídico.Há de se ter em mente que para a configuração de <em class="hlt1">dano</em> <em class="hlt1">moral</em> é necessário que os abalos psíquicos e morais sofridos pelo indivíduo sejam de tal monta que lhe afetem a dignidade, a personalidade e/ou a honra, objetiva ou subjetiva.É certo que o mero dissabor ocasionado pela recusa do fornecedor no cumprimento de oferta veiculada, não configura, em regra, ato lesivo a ensejar à reparação por danos morais, mormente, por não extrapolar as raias da normalidade.O caso em exame trata-se, na verdade, apenas e tão somente, de falha na prestação do serviço, não repercutindo na esfera íntima da parte autora, e não havendo, pois, que se falar em ofensa à sua honra e dignidade, e nem em transtornos extraordinários, que superem os aborrecimentos cotidiano.Importa destacar exaustivamente que para que haja a configuração de <em class="hlt1">dano</em> <em class="hlt1">moral</em>, imprescindível que a parte comprove efetivamente que houve lesão a bem jurídico de ordem extrapatrimonial, ou seja, lesão a direito da personalidade. Neste sentido, tenho que a parte autora não se desincumbiu do ônus que lhe competia, não trazendo aos autos qualquer prova neste sentido.Assim, as narrativas da parte autora não configuram algo mais que mero aborrecimento, não produzindo dano passível de indenização.É o quanto basta.3. DISPOSITIVOAnte as razões expostas, com fundamento no art. 487, inciso I, do Código de Processo Civil, JULGO PARCIALMENTE PROCEDENTES os pedidos formulados na inicial tão somente para condenar o promovido a efetuar o pagamento de danos materiais, nos valores de R$ 64,44 (sessenta e quatro reais e quarenta e quatro centavos) em favor do autor.Em observância ao disposto pela Lei n. 14.905/2024, a quantia deverá ser corrigida monetariamente pelo Índice Nacional de Preços ao Consumidor Amplo (IPCA), a partir da data do efetivo prejuízo ? (data da compra) (Súmula 43, STJ), e acrescida de juros de mora que corresponderá à taxa referencial do Sistema Especial de Liquidação e de Custódia (Selic), deduzida da variação do IPCA no mesmo período (art. 406, §1º, do CC), nos termos do artigo 406 do Código Civil, desde a citação, ambos até a data do efetivo pagamento.Sem custas e honorários advocatícios, nos termos do art. 54 da Lei n. 9.099/1995. Havendo recurso inominado com pedido de gratuidade de justiça, intime-se a parte (autora ou ré) para comprovar por meios hábeis os requisitos do benefício de isenção de custas.Advirto às partes que a oposição de embargos de declaração fora das hipóteses legais, poderá ser sancionada com multa, conforme previsão na lei processual.Certificado o trânsito em julgado, arquivem-se. Publique-se. Registre-se. Intime-se.Cumpra-se. Santo Antônio do Descoberto, data da assinatura digital.assinado digitalmentePATRÍCIA PASSOLI GHEDINJuíza de Direito ?É um dever de todos, sem exceção, proteger crianças e adolescentes contra a violência infantil. Disque 100?</p>
+									<hr class="hr-dashed-line" />
+										<p style="text-align:justify">
+											<b>5</b><i> resultado(s) encontrado(s) no INTEIRO TEOR.</i>										
+										</p>
+										<p style="text-align:justify">											
+											1)&nbsp;objetivamente pelos danos causados pela falha na prestação do serviço, bastando ao consumidor comprovar o <em class="hlt1">dano</em>&nbsp;
+											2)&nbsp;pretensão não possui qualquer amparo fático ou jurídico.Há de se ter em mente que para a configuração de <em class="hlt1">dano</em>&nbsp;
+											3)&nbsp;<em class="hlt1">moral</em> é necessário que os abalos psíquicos e morais sofridos pelo indivíduo sejam de tal monta que lhe&nbsp;
+											4)&nbsp;superem os aborrecimentos cotidiano.Importa destacar exaustivamente que para que haja a configuração de <em class="hlt1">dano</em>&nbsp;
+											5)&nbsp;<em class="hlt1">moral</em>, imprescindível que a parte comprove efetivamente que houve lesão a bem jurídico de ordem extrapatrimonial&nbsp;
+											</p>
+									</div>		
+								<hr class="hr-dashed-white-line" />																				
+							<div class="search-result"> <!-- #eaf1fb -->									
+
+										<h4>
+											5838837-17.2025.8.09.0159<span style="margin-left: 10px">												
+												<a href="#" title="Clique aqui para fazer o download do arquivo completo" 
+													onclick="javascript: abrirArquivo('ConsultaJurisprudencia', '522318720'); return false;">
+													<i class="fa fa-download"></i>
+														Baixar Inteiro teor
+												</a>
+											</span>
+											<span style="margin-left: 10px">
+												<a href="#" title="Copiar texto sem formatação" onclick="copiarConteudoTexto(this.parentNode.parentNode.parentNode,'.conteudoTexto','\n(Tribunal de Justiça do Estado de Goiás, PROCESSO CÍVEL E DO TRABALHO -> Processo de Conhecimento -> Procedimento de Conhecimento -> Procedimento do Juizado Especial Cível, 5838837-17.2025.8.09.0159, PATRÍCIA PASSOLI GHEDIN, Santo Antônio do Descoberto - Juizado Especial Cível, julgado em 30/04/2026 10:54:47)'); alert('Texto sem formatação foi copiado para a Área de Transferência.'); return false;">
+													<i class="fa fa-clipboard"></i>
+													Copiar
+												</a>
+											</span>
+										</h4>
+
+									<p>
+										<b>Santo Antônio do Descoberto - Juizado Especial Cível</b>
+									</p>
+									<p>
+										<b><i>PATRÍCIA PASSOLI GHEDIN</i></b>
+									</p>
+									<p>
+										<b>Sentença</b>
+									</p>
+									<p>
+										<b><i>Publicado em 30/04/2026 10:54:46</i></b>
+									</p>
+									<p class="conteudoTexto" style="text-align:justify">
+											Poder Judiciário Tribunal de Justiça do Estado de Goiás COMARCA DE SANTO ANTÔNIO DO DESCOBERTOJuizado Especial CívelDra. Patrícia Passoli Ghedin Processo nº 5838837-17.2025.8.09.0159Requerente: Ronaldo Chaves Dos SantosRequerido: Elismar Malta Ribeiro Dou a presente decisão força de carta de citação/mandado/ofício à teor do disposto no art. 136 do Código de Normas e Procedimentos do Foro Judicial. SENTENÇA 1. Trata-se de ação de indenização por danos morais proposta por Ronaldo Chaves Dos Santos em face de Elismar Malta Ribeiro, Wesley Oliveira, Marco Aurélio Pereira da Silva e Marciel Marques da Silva, todos qualificados nos autos.Dispensado o relatório, na forma do art. 38 da Lei n. 9.099/1995. DECIDO. 2. FUNDAMENTOSPromovo o julgamento antecipado do mérito, nos termos do art. 355, I do diploma processual civil, eis que a questão é meramente de direito, sendo desnecessária a produção de outras provas. Não havendo questões pendentes a serem analisadas passo à análise do mérito.2.1. DO MÉRITO2.1.1. Da exclusão do requerido Cícero Fernandes de Oliveira. Em audiência de conciliação, verifica-se que o réu Cícero não fora citado, razão pela qual o autor requereu a sua exclusão do polo passivo da lide.Assim sendo, diante do desinteresse no prosseguimento do feito em relação ao requerido Cícero manifestado pelo autor em audiência, defiro o pedido formulado e homologo a desistência do processo em relação ao referido réu, nos termos do art. 485, VIII, do CPC.Com o trânsito em julgado, proceda-se à exclusão do réu Cícero Fernandes de Oliveira do polo passivo da demanda.Promova as alterações necessárias no sistema.2.1.2. Da reveliaDispõe o art. 20, da Lei 9.099/95 que "não comparecendo o demandado à sessão de conciliação ou à audiência de instrução e julgamento, reputar-se-ão verdadeiros os fatos alegados no pedido inicial, salvo se o contrário resultar da convicção do Juiz".Com efeito, verifica-se que o requerido Marco Aurélio Pereira da Silva não compareceu em audiência, conforme se vê no termo carreado em evento n. 29.Diante disso, decreto a revelia do réu, com fundamento no dispositivo legal acima citado.Como se sabe, a presunção de veracidade dos fatos articulados na inicial é efeito oriundo daquilo que se convencionou denominar revelia, a qual pode e deve ser afastada quando houver, nos autos, elementos que revelem a inverossimilhança dos fatos articulados na inicial.Nos termos do art. 373, incisos I e II, do Código de Processo Civil, a distribuição do ônus da prova é regra fundamental de julgamento. Cabe à parte autora comprovar o fato constitutivo de seu direito e ao réu, quanto ao pedido principal, a existência de fato impeditivo, modificativo ou extintivo do direito da autora. No que se refere à responsabilidade civil imputada ao réu, a doutrina e a jurisprudência pacíficas apontam sua composição quádrupla, elencando como pressupostos: a) a ação ou omissão; b) o dano; c) o nexo de causalidade; e d) a culpa. Nesse sentido:?Para que surja o dever de indenizar, é necessário, primeiramente, que exista ação ou omissão do agente; que essa conduta esteja ligada por relação de causalidade com o prejuízo suportado pela vítima e, por fim, que o agente tenha agido com culpa. Faltando algum desses elementos, desaparece o dever de indenizar.? (VENOSA, Sílvio de Salvo. Direito Civil: Parte Geral. 3. ed. São Paulo: Atlas, 2003, p. 593).Sem se afastar dessa compreensão, contam-se às centenas os precedentes segundo os quais: ?são pressupostos da responsabilidade subjetiva a violação de um dever jurídico mediante conduta voluntária, o dolo ou a culpa e o dano e a respectiva relação de causalidade? (Tribunal de Justiça do Estado do Espírito Santo, Apelação Cível nº 23090002835, Segunda Câmara Cível, Relator Desembargador José Paulo Calmon Nogueira da Gama, julgamento em 14 de fevereiro de 2012, publicação em 01 de março de 2012. No mesmo sentido: Tribunal de Justiça do Estado do Espírito Santo, Apelação Cível nº 24040111619, Segunda Câmara Cível, Relator Desembargador José Paulo Calmon Nogueira da Gama, julgamento em 25 de outubro de 2011, publicação em 10 de novembro de 2011), ou, ainda, de que ?a caracterização da responsabilidade civil subjetiva depende da coexistência do ato ilícito culposo ou doloso, do dano e do nexo causal. À míngua de quaisquer desses requisitos, impõe-se a rejeição do pedido indenizatório? (Tribunal de Justiça do Estado de Santa Catarina, Apelação Cível nº 2004.006144-7, Segunda Câmara de Direito Civil, Relator Desembargador Luiz Carlos Freyesleben, julgamento em 04 de setembro de 2008, publicação em 13 de fevereiro de 2009). Esse mesmo rol de elementos é extraído com precisão do texto da normativa contida ao art. 186 do Código Civil, o qual dispõe, in verbis, que: Art. 186. Aquele que, por ação ou omissão voluntária, negligência ou imprudência, violar direito e causar dano a outrem, ainda que exclusivamente <em class="hlt1">moral</em>, comete ato ilícito. Outrossim, tratando-se de relação jurídica entre particulares, deve-se observar a distribuição do ônus probatório prevista no art. 373 do Código de Processo Civil.Realizado o delineamento da legislação aplicável ao caso, passo à análise das alegações da parte autora em cotejo com o Direito incidente no caso concreto. O autor narra que é jornalista e é responsável pela página "Jornal 14 de Maio". Sustenta que, publicou matéria em sua rede social a qual denunciava irregularidades na gestão de escolas municipais de Santo Antônio do Descoberto. Pouco tempo depois os réus em suas respectivas redes sociais promoveram postagens coordenadas com o print da matéria outrora por ele publicada e com o rótulo "FAKE NEWS" com o nítido propósito de macular sua imagem e abalar sua reputação profissional perante a comunidade. Em contestação apresentada em evento n. 40, os réus sustentam que agiram no exercício regular do direito de crítica e da liberdade de expressão.Isso porque, a notícia veiculada pelo autor acerca da venda de rifas pelas escolas municipais para suprir omissões da Secretaria de Educação não condiz com a realidade, pois, na verdade, as rifas se deram em razão do período de festividades juninas, período o qual é comum a prática de pequenos sorteios e eventos, com prêmios fornecidos pela própria comunidade empresarial local, sendo que isso não configura caráter ilícito ou irregular.Pois bem. O exercício da atividade jornalística, por envolver a exposição de fatos e opiniões, impõe ao profissional o ônus de suportar críticas que extrapolam aquelas direcionadas ao cidadão comum. Tal mitigação dos limites da honra é intrínseca à natureza pública da função, estendendo-se igualmente a políticos e magistrados. No Estado Democrático de Direito, embora a liberdade de expressão deva coexistir com a proteção à honra, a ponderação dos valores no caso concreto demonstra que a conduta da parte ré ? desprovida de intuito ofensivo pessoal ? configura mero exercício do direito de crítica política, e não abuso indenizável.Por conseguinte, da mesma forma que o autor exerce sua liberdade de expressão no jornalismo, terceiros ? como os réus no presente caso ? detêm o direito de divergir e publicar suas opiniões. Pela natureza pública de seu ofício, o jornalista não está imune a contrapontos ou desabafos, ainda que veementes. Críticas formuladas por leitores ou outros profissionais contra veículos de informação devem, portanto, ser analisadas sob um prisma distinto das ofensas dirigidas à vida privada.A liberdade de expressão protege o exercício profissional do autor, mas igualmente abrange o direito de outras pessoas se manifestarem. Sendo tais manifestações proporcionais e inseridas no debate público, como no caso dos autos, inexiste dano moral indenizável.Para corroborar com a fundação exposta, transcrevo os seguintes julgados sobre o tema: ?EMENTA: APELAÇÃO CÍVEL. AÇÃO DE INDENIZAÇÃO POR DANOS MORAIS. CONFLITO ENTRE GARANTIAS CONSTITUCIONAIS: LIBERDADE DE EXPRESSÃO VERSUS DIREITO À HONRA E À IMAGEM. <em class="hlt1">DANO</em> <em class="hlt1">MORAL</em> NÃO CONFIGURADO . SENTENÇA MANTIDA. 1. Críticas ácidas e contundentes, mas que se limitam a expressar interpretações pessoais de jornalista acerca de fatos públicos relativos a altas autoridades públicas, desde que nitidamente não se revelem abuso de direito, são insuscetíveis de indenização. Apelação cível desprovida . Sentença mantida. (TJ-GO 0086259-62.2013.8 .09.0051, Relator.: SIVAL GUERRA PIRES - (DESEMBARGADOR), 2ª Câmara Cível, Data de Publicação: 24/06/2020)? (destaquei) ?APELAÇÃO. AÇÃO DE OBRIGAÇÃO DE FAZER CUMULADA COM INDENIZAÇÃO POR DANOS MORAIS. Alegação de ofensas em rede social. Publicações realizadas por professora da mesma instituição pública municipal em que a autora exerce o cargo de diretora . Comentários críticos sobre a gestão escolar, sem identificação nominal da autora nem divulgação em perfil institucional. Liberdade de expressão e direito de crítica. Ausência de conteúdo difamatório, dolo ou animus ofensivo. Críticas de cunho profissional, ainda que ácidas, que não configuram ato ilícito nem causam <em class="hlt1">dano</em> <em class="hlt1">moral</em> indenizável . Inexistência de prova de repercussão lesiva ou abalo à honra objetiva. Presunção decorrente da revelia que é relativa e não vincula o magistrado à tese jurídica. Sentença mantida. Recurso improvido . (TJ-SP - Apelação Cível: 10065099020248260291 Jaboticabal, Relator.: Luis Fernando Cirillo, Data de Julgamento: 28/10/2025, 9ª Câmara de Direito Privado, Data de Publicação: 28/10/2025)? (destaquei) ?APELAÇÃO CÍVEL ? AÇÃO DE INDENIZAÇÃO POR DANOS MORAIS ? RESPONSABILIDADE CIVIL ? PUBLICAÇÃO DE SUPOSTA OFENSA EM REDE SOCIAL ? CRÍTICA À ATUAÇÃO DE AUTORIDADE PÚBLICA ? CRÍTICA MERAMENTE POLÍTICA ? AUSÊNCIA DE MÁ-FÉ OU ABUSO DE DIREITO ? DIREITO À LIBERDADE DE MANIFESTAÇÃO DE PENSAMENTO E OPINIÃO ? DANO <em class="hlt1">MORAL</em> NÃO CONFIGURADO ? SENTENÇA REFORMADA ? RECURSO PROVIDO. 1. A Constituição Federal tutela o direito à livre manifestação do pensamento, incluindo o direito de externar ideias, opiniões, críticas e juízos de valor, elevando-o à condição de verdadeira pedra de toque do regime democrático e do Estado de Direito. Todavia, assim como qualquer outro direito, a liberdade de manifestação/expressão não é absoluta, estando limitada à condicionante ética do respeito ao próximo e aos direitos da personalidade, pois, de igual forma, a Constituição protege o direito à honra, à imagem e à vida privada dos cidadãos, neste caso proclamando serem ?invioláveis a intimidade, a vida privada, a honra e a imagem das pessoas, assegurado o direito à indenização pelo dano material ou <em class="hlt1">moral</em> decorrente de sua violação? . 2. Nos termos da jurisprudência do STJ, ?a esfera de proteção dos direitos da personalidade de pessoas públicas ou notórias é reduzida. Especialmente com relação aos agentes políticos, a redução da salvaguarda se justifica à medida em que são responsáveis pela gestão da coisa pública. Assim, nos termos da jurisprudência do STF e do STJ, inexiste ato ilícito se os fatos divulgados forem verídicos ou verossímeis, ainda que eivados de opiniões severas, irônicas ou impiedosas, notadamente quando se tratar de figuras públicas que exerçam atividades típicas de estado, gerindo interesses da coletividade, e a notícia e a crítica dizerem respeito a fatos de interesse geral e conexos com a atividade desenvolvida pela pessoa noticiada? (STJ - Terceira Turma - REsp nº 1 .986.323/SP, relatora Ministra Nancy Andrighi, julgado em 6/9/2022, DJe de 13/9/2022). (TJ-MT - AC: 10454175220208110041, Relator.: JOAO FERREIRA FILHO, Data de Julgamento: 14/03/2023, Primeira Câmara de Direito Privado, Data de Publicação: 16/03/2023)? (destaquei) Não se verifica, portanto, o objetivo difamatório dos réus em suas postagens. A menção de sua postagem nas redes sociais dos réus, não configuram ilícito, especialmente quando ausente prova concreta de prejuízo efetivo à honra objetiva, à imagem profissional ou à atividade econômica do autor.Por fim, e não menos importante, faz-se necessário consignar que a notícia veiculada pelo autor não traz elementos mínimos de confiabilidade. Embora conste na petição inicial que teria publicado a matéria fundamentada em um áudio de fonte legítima, não há qualquer menção da fonte, ainda que sigilosa, na reportagem. De mais a mais, há referências a expressões para trazer credibilidade como "afirma um jurista consultado", não havendo qualquer menção, contudo, de quem seria esse justiça. Por fim, também não consta que a Secretaria de Educação foi notificada para se manifestar sobre o caso, o que é dever do jornalista, nos termos do Código de Ética da categoria.É o quanto basta. 3. DISPOSITIVOAnte o exposto, com fundamento no art. 487, inciso I, do Código de Processo Civil, resolvo o mérito e, para tanto, julgo IMPROCEDENTES os pedidos formulados na inicial. Sem custas e honorários (art. 55 da LJE). Havendo recurso inominado com pedido de gratuidade de justiça, intime-se a parte (autora ou ré) para comprovar por meios hábeis os requisitos do benefício de isenção de custas. Advirto às partes que a oposição de embargos de declaração fora das hipóteses legais, poderá ser sancionada com multa, conforme previsão na lei processual. Publique-se. Registre-se. Intime-se. Cumpra-se.Intime-se. Cumpra-se.Santo Antônio do Descoberto, data da assinatura digital.assinado digitalmentePATRÍCIA PASSOLI GHEDINJuíza de Direito ?É um dever de todos, sem exceção, proteger crianças e adolescentes contra a violência infantil. Disque 100?</p>
+									<hr class="hr-dashed-line" />
+										<p style="text-align:justify">
+											<b>5</b><i> resultado(s) encontrado(s) no INTEIRO TEOR.</i>										
+										</p>
+										<p style="text-align:justify">											
+											1)&nbsp;a outrem, ainda que exclusivamente <em class="hlt1">moral</em>, comete ato ilícito.&nbsp;
+											2)&nbsp;<em class="hlt1">DANO</em> <em class="hlt1">MORAL</em> NÃO CONFIGURADO .&nbsp;
+											3)&nbsp;Críticas de cunho profissional, ainda que ácidas, que não configuram ato ilícito nem causam <em class="hlt1">dano</em> <em class="hlt1">moral</em>&nbsp;
+											4)&nbsp;<em class="hlt1">MORAL</em> NÃO CONFIGURADO ? SENTENÇA REFORMADA ? RECURSO PROVIDO. 1.&nbsp;
+											5)&nbsp;material ou <em class="hlt1">moral</em> decorrente de sua violação? . 2.&nbsp;
+											</p>
+									</div>		
+								<hr class="hr-dashed-white-line" />																				
+							<div class="search-result"> <!-- #eaf1fb -->									
+
+										<h4>
+											5157511-50.2026.8.09.0159<span style="margin-left: 10px">												
+												<a href="#" title="Clique aqui para fazer o download do arquivo completo" 
+													onclick="javascript: abrirArquivo('ConsultaJurisprudencia', '522318714'); return false;">
+													<i class="fa fa-download"></i>
+														Baixar Inteiro teor
+												</a>
+											</span>
+											<span style="margin-left: 10px">
+												<a href="#" title="Copiar texto sem formatação" onclick="copiarConteudoTexto(this.parentNode.parentNode.parentNode,'.conteudoTexto','\n(Tribunal de Justiça do Estado de Goiás, PROCESSO CÍVEL E DO TRABALHO -> Processo de Conhecimento -> Procedimento de Conhecimento -> Procedimento do Juizado Especial Cível, 5157511-50.2026.8.09.0159, PATRÍCIA PASSOLI GHEDIN, Santo Antônio do Descoberto - Juizado Especial Cível, julgado em 30/04/2026 10:54:44)'); alert('Texto sem formatação foi copiado para a Área de Transferência.'); return false;">
+													<i class="fa fa-clipboard"></i>
+													Copiar
+												</a>
+											</span>
+										</h4>
+
+									<p>
+										<b>Santo Antônio do Descoberto - Juizado Especial Cível</b>
+									</p>
+									<p>
+										<b><i>PATRÍCIA PASSOLI GHEDIN</i></b>
+									</p>
+									<p>
+										<b>Sentença</b>
+									</p>
+									<p>
+										<b><i>Publicado em 30/04/2026 10:54:44</i></b>
+									</p>
+									<p class="conteudoTexto" style="text-align:justify">
+											Poder Judiciário Tribunal de Justiça do Estado de Goiás COMARCA DE SANTO ANTÔNIO DO DESCOBERTOJuizado Especial CívelDra. Patrícia Passoli Ghedin Processo nº 5157511-50.2026.8.09.0159Requerente: Maria De Lurdes Da SilvaRequerido: Banco Mercantil Do Brasil Sa Dou a presente decisão força de carta de citação/mandado/ofício à teor do disposto no art. 136 do Código de Normas e Procedimentos do Foro Judicial. SENTENÇA 1. Trata-se de ação declaratória de inexistência de relação contratual c/c repetição de indébito em dobro c/c danos morais com pedido liminar proposta por Maria de Lurdes da Silva em face de Banco Mercantil do Brasil S/A., ambos qualificados nos autos.Dispensado o relatório, na forma do disposto no artigo 38, da Lei 9.099/95.É o breve relatório. Decido.Vieram-me os autos conclusos.É o breve relatório. Decido.2. FUNDAMENTOS.Do compulso dos autos, verifica-se que a existem questões processuais a serem sanadas, razão pela qual passo a analisá-las.2.1. Da (in)competência do Juizado Especial. Suscita, preliminarmente, a parte ré a incompetência do Juizado Especial para o processamento do feito por entender que a causa é complexa e demanda prova pericial.Analisando de forma detida o caderno processual, verifica-se que eventual prova pericial é totalmente dispensável para o julgamento da demanda. Não dependendo a resolução do feito de prova pericial, a competência do Juizado se firma e, por conseguinte, afasto a exceção de incompetência.2.2. Da falta de interesse de agir. A requerida suscitou, ainda, a ausência de interesse de agir da parte autora dada a inexistência de tratativas no âmbito extrajudicial e, portanto, falta interesse de agir. Todavia, a preliminar não merece acolhida. O acesso ao Poder Judiciário é garantia constitucional, inexistindo exigência legal de prévia tentativa de solução administrativa para o ajuizamento da ação. A resistência ao direito da parte autora restou evidenciada pela própria contestação apresentada pelo réu, o que afasta a alegada ausência de interesse de agir.Rejeito, portanto, a preliminar arguida.2.3. Da produção de provas. A despeito do pedido de produção de prova oral formulado pela autora, constato ser desnecessária a realização de audiência de instrução e julgamento.Sabe-se que os requerimentos probatórios devem ser justificados, sob pena de ser o pleito indeferido.Compulsando os autos, tenho que desnecessária a produção de outras provas além daquelas já constantes dos autos.Além disso, sabe-se que os requerimentos probatórios devem ser justificados, sob pena de o ser indeferido.No caso, a autora afirmou que acredita que o feito encontra-se devidamente instruído e, caso seja necessário, apresenta o rol de testemunhas a ser ouvido em audiência. Todavia, verifica-se que a produção de prova documental se mostra suficiente e as testemunhas a serem ouvidas não poderão trazer qualquer elucidação ao caso concreto, sendo sua oitiva dispensável para a resolução do mérito.Face ao exposto, diante dos fundamentos acima, fulminado o pedido formulado pela autora, razão pela qual INDEFIRO prova testemunhal requerida.3. Do mérito. Promovo o julgamento antecipado do mérito, nos termos do art. 355, I do diploma processual civil, eis que, conforme dito acima, o feito comporta provas meramente documentais.Presentes os pressupostos processuais e não havendo outras preliminares a serem dirimidas e nem irregulares ou nulidades a serem sanadas, passo ao exame do mérito.3.1. Da inexistência da relação contratual. Cinge-se a presente demanda a definir a (in) existência da relação contratual entre as partes e se instituição financeira requerida tem o dever de restituir os valores descontados em conta em razão de serviços supostamente contraídos, bem como a ocorrência de danos morais a ser indenizado decorrentes de tais fatos.Em contestação, a parte requerida alega que o contrato foi firmado regularmente pelas partes e, portanto, não há que se falar em restituição e indenização pelos danos morais sofridos.Inquestionável é a aplicabilidade, aos contratos bancários, do microssistema de proteção ao consumidor, capitaneado pelo Código de Defesa do Consumidor. Trata-se, inclusive, de matéria sumulada pelo Superior Tribunal de Justiça: ?STJ Súmula nº 297 ? O Código de Defesa do Consumidor é aplicável às instituições financeiras.?.Aqui, é inegável que estamos diante de típica relação de consumo, já que a ré atuou como fornecedora de serviços, e a autora como destinatário final, tal qual cotejado pelos arts. 2º e 3º do Código de Defesa do Consumidor.Exatamente nesse sentido é que se guiou a decisão interlocutória proferida em evento n. 05, a qual, já no limiar do processo, além de reconhecer a aplicabilidade do diploma consumerista à relação em questão, inverteu também o ônus da prova em favor da autora.Em sua peça contestatória a ré alega da regularidade da contratação realizada, apresentando o contrato devidamente assinado, bem como as fotos da autora e de seu documento. A autora, por sua vez, ressalta que por ser uma pessoa analfabeta, desconhece o teor do contrato apresentado e que apenas sabe desenhar a sua assinatura.Nesse trilhar, diferente do que alegou a autora quanto ao desconhecimento da existência do contrato, o requerido comprovou que a parte autora anuiu com a abertura da conta corrente junto a requerida. Não obstante tal constatação, verifica-se que não há clareza quanto a cobrança do serviço descrito como "Débito Combinado".Ora, pela grafia apresentada no contrato e demais documentos carreados, verifica-se se tratar de pessoa idosa, na qual não é possível presumir que a autora teve ciência dos exatos termos do contrato e da cláusula que prevê o desconto. Nesse contexto, verifica-se que a parte autora não teve prévio esclarecimento sobre o negócio jurídico que celebrou, pois se tivesse inteira compreensão dos descontos oriundos do contrato, possivelmente não o firmaria. Ainda, percebe-se a ausência de clareza necessária para completa compreensão de que não se tratava de um contrato exclusivamente para abertura da conta corrente livre de qualquer ônus pela autora.A falta de clareza e dubiedade das cláusulas contratuais impõem ao magistrado a interpretação favorável ao consumidor (art. 47 do CDC), parte hipossuficiente por presunção legal, bem como a declaração de nulidade das cláusulas que atenuem a responsabilidade do fornecedor, ou redundem em renúncia ou disposição de direitos pelo consumidor (art. 51, inciso I, do CDC) ou, ainda, que desvirtuem direitos fundamentais inerentes à natureza do contrato (art. 51, § 1º, inciso II, do CDC).Assim, o réu não se desincumbiu do ônus que lhe cabia de demonstrar que a contratação é regular, inexistindo motivo que extinga, modifique ou impeça o direito do autor (CPC, art. 273, I).Destarte, não há dúvidas de que a declaração da inexistência do débito é medida que se impõe.3.2. Da repetição do indébito. Nos termos do parágrafo único do art. 42 do Código de Defesa do Consumidor, ?o consumidor cobrado em quantia indevida tem direito à repetição do indébito, por valor igual ao dobro do que pagou em excesso, acrescido de correção monetária e juros legais, salvo hipótese de engano justificável.? Por muito tempo a jurisprudência do Superior Tribunal de Justiça interpretou o preceito legal de maneira a exigir a demonstração de má-fé do fornecedor para que a repetição fosse em dobro. Em outubro de 2020, todavia, quando do julgamento dos Embargos de Divergência 1.413.542, a Corte Especial uniformizou o entendimento do tribunal sobre a questão, definindo que a devolução em dobro é cabível "quando a cobrança indevida consubstanciar conduta contrária à boa-fé objetiva" ? ou seja, independentemente da demonstração de má-fé por parte do fornecedor. Em 2021, todavia, o tema foi afetado sob o nº 929, estando, ainda, pendente de julgamento.O que se verifica, portanto, é que o entendimento prevalente é pela desnecessidade de demonstração de má-fé, tanto que a anotação do NUGPNAC é de uma ?possível reafirmação da jurisprudência firmada pela Corte Especial do STJ, em 21/10/2020, nos processos a seguir: EAREsp 664.888/RS, EAREsp 676.608/RS (paradigma), EAREsp 600.663/RS, EAREsp 622.897/RS e EREsp 1.413.542/RS (Relator para acórdão Ministro Herman Benjamin, publicado no DJe de 30/03/2021).?É importante consignar, todavia, que no julgamento dos Embargos de Divergência 1.413.542 houve modulação dos efeitos nos seguintes termos: Impõe-se MODULAR OS EFEITOS da presente decisão para que o entendimento aqui fixado quanto a indébitos não decorrentes de prestação de serviço público ? se aplique somente a cobranças realizadas após a data da publicação do presente acórdão.A data de publicação ocorreu em 30/03/2021, conforme espelho de consulta do Superior Tribunal de Justiça. O suposto contrato, noutro pórtico, fora firmado em março de 2024, portanto, em data ulterior à publicação, aplicando-se o entendimento atual.Assim, a devolução deve ocorrer em dobro, nos termos do parágrafo único do art. 42 do CDC.3.3. Dos danos morais. Em se tratando do <em class="hlt1">dano</em> <em class="hlt1">moral</em>, não há dúvida que a cobrança indevida com desconto compulsório na conta em que a autora recebe o seu benefício previdenciário, verba de natureza alimentar, sujeita a vítima ao abalo de crédito, e a um sem-número de dissabores e inconvenientes injustos, entre os quais está a necessidade de socorrer-se da tutela jurisdicional, com os inevitáveis gastos e trabalhos que isso demanda.O <em class="hlt1">dano</em> puramente <em class="hlt1">moral</em> alegado na exordial é insuscetível de prova, porque se refere a lesão à personalidade, com ofensa a sentimentos que não podem ser medidos, testemunhados, provados, enfim. Comprovado o ato ilícito, como ocorreu aqui, resta apreciar seus efeitos deletérios sobre a estima, a honra, a respeitabilidade, a credibilidade, o crédito, a paz de espírito e a tranquilidade, segundo critérios estimativos, baseados na sensibilidade do homem médio. No tema da quantificação do <em class="hlt1">dano</em> extrapatrimonial, cabe ao magistrado agir com prudência, adotando critérios de razoabilidade e proporcionalidade, levando em consideração as características e circunstâncias de cada caso e a repercussão econômica da indenização, a qual não poderá ser fonte de enriquecimento ilícito, e também, não poderá resultar em valores inexpressivos. Ou seja, o valor a ser arbitrado deve servir, de um lado, para amenizar o abalo psíquico sofrido pela autora, e de outro o escopo pedagógico, levando-se em conta as condições financeiras da parte.Considerando a jurisprudência pátria e as particularidades do caso concreto, entendo ser razoável a fixação da indenização no valor de R$ 3.000,00 (três mil reais). Tal quantia, além de ressaltar o caráter pedagógico da medida, se apresenta suficiente para compensar a autora pelos danos extrapatrimoniais que suportou.4. DISPOSITIVO. Face ao exposto, julgo extinto o processo, com resolução do mérito, na forma do art. 487, I, do Código de Processo Civil, e acolho os pedidos formulados na ação para:a) declarar a inexigibilidade do débito objeto da demanda denominado "DÉBITO COMBINADO";b) condenar o réu a pagar ao autor, em dobro, os valores indevidamente descontados de sua conta referente à cláusula do contrato declarada inexigível, devendo ser com correção monetária, pelo IPCA-E e juros moratórios, na monta de 1% (um por cento) ao mês, contados da data de cada um dos descontos;c) condenar o réu ao pagamento, em favor do autor, da importância de R$ 3.000,00 (três mil reais), com correção monetária, pelo IPCA-E, contada da data da prolação desta sentença, e juros moratórios, na monta de 1% (um por cento) ao mês, contados da data da contratação (março de 2024), a título de reparação pelos danos morais sofridos.Confirmo a tutela provisória anteriormente concedida (mov. 5).Sem custas e honorários advocatícios, nos termos do art. 54 da Lei n. 9.099/1995nHavendo recurso inominado com pedido de gratuidade de justiça, intime-se a parte (autora ou ré) para comprovar por meios hábeis os requisitos do benefício de isenção de custas.Certificado o trânsito em julgado, arquivem-se. Publique-se. Registre-se. Intime-se. Santo Antônio do Descoberto, data da assinatura digital.assinado digitalmentePATRÍCIA PASSOLI GHEDINJuíza de Direito ?É um dever de todos, sem exceção, proteger crianças e adolescentes contra a violência infantil. Disque 100?</p>
+									<hr class="hr-dashed-line" />
+										<p style="text-align:justify">
+											<b>4</b><i> resultado(s) encontrado(s) no INTEIRO TEOR.</i>										
+										</p>
+										<p style="text-align:justify">											
+											1)&nbsp;Em se tratando do <em class="hlt1">dano</em> <em class="hlt1">moral</em>, não há dúvida que a cobrança indevida com desconto compulsório na conta&nbsp;
+											2)&nbsp;necessidade de socorrer-se da tutela jurisdicional, com os inevitáveis gastos e trabalhos que isso demanda.O <em class="hlt1">dano</em>&nbsp;
+											3)&nbsp;puramente <em class="hlt1">moral</em> alegado na exordial é insuscetível de prova, porque se refere a lesão à personalidade&nbsp;
+											4)&nbsp;No tema da quantificação do <em class="hlt1">dano</em> extrapatrimonial, cabe ao magistrado agir com prudência, adotando critérios&nbsp;
+											</p>
+									</div>		
+								<hr class="hr-dashed-white-line" />																				
+							</fieldset>
+						<div id="Paginacao" class="Paginacao" style="float: center">
+								<div id="Paginacao" class="Paginacao">
+									<b>Página</b>
+									<a href="#" onclick="javascript:submitForm(0);">1</a>
+										 	<b>| 2  |</b>
+										 	<a href="#" onclick="javascript:submitForm(2);">3</a>
+										 	<a href="#" onclick="javascript:submitForm(3);">4</a>
+										 	<a href="#" onclick="javascript:submitForm(4);">5</a>
+										 	<a href="#" onclick="javascript:submitForm(5);">6</a>
+										 	<a href="#" onclick="javascript:submitForm(6);">7</a>
+										 	<a href="#" onclick="javascript:submitForm(7);">8</a>
+										 	<a href="#" onclick="javascript:submitForm(8);">9</a>
+										 	<a href="#" onclick="javascript:submitForm(9);">10</a>
+										 	<a href="#" onclick="javascript:submitForm(10);">11</a>
+										 	<a href="#" onclick="javascript:submitForm(11);">12</a>
+										 	<a href="#" onclick="javascript:submitForm(12);">13</a>
+										 	<a href="#" onclick="javascript:submitForm(13);">14</a>
+										 	<a href="#" onclick="javascript:submitForm(14);">15</a>
+										 	<a href="#" onclick="javascript:submitForm(127323);">Última</a>
+									<input id="CaixaTextoPosicionar" name="CaixaTextoPosicionar" class="CaixaTextoPosicionar" type="text" size="5" maxlength="10" value="127324"/>
+									<input class="BotaoIr" type="button" value="Ir" onclick="javascript:IrParaOnClick();"/>
+								</div>
+							</div>
+						</div>
+				</form>			
+		</div>
+	</div>
+	<div id="dialog" style="display:none">&nbsp;</div>
+	
+<div id="busca_padrao" class="modalBusca">
+	<div id='modalBusca-content' class="modalBusca-content1 ___Movimentavel">
+		<div id='modalBusca-content-titulo' class="modalTitulo"><p id='modalTitulo'></p><span class="modal_close" onclick='fecharBuscaPadrao()'>&times;</span></div> 
+		<div class="modalBusca-content2">
+			<fieldset id="formLocalizar" > 
+				<legend id="legenda" ></legend>
+				<div class='float_label_form' id='busca_padrao_campos'></div>
+				<br />
+				<div class="Centralizado">
+					<input type="submit" id="busca_padraoLocalizar" name="busca_padraoLocalizar" value="Consultar" onclick="javascript:buscaDadosModal(_stTempRetorno, _paginaAtual, _numeroFiltros , '0', _tamanho, _id, _descricao, _colunasTabela, _fieldName,_filtro,_filtro2); return false;"/>
+				</div>
+			</fieldset>	
+			<div id='divTabelaBuscaPadrao' class="divTabela"></div>
+			<div id="PaginacaoBuscaPadrao" class="Paginacao"></div>
+		</div>
+	</div> 
+</div>
+
+<div id="infoPasso" style="display:none" class="modalBusca">
+	<div class="modalBusca-content1 ___Movimentavel">
+		<div class="modalTitulo"><p id='modalTitulo'></p><span class="modal_close" onclick='$("#infoPasso").hide();'>&times;</span></div> 
+		<div class="modalBusca-content2">
+			<div id="divInfoPasso" class="divEditar"> 
+				
+			</div>
+		</div>
+	</div> 
+</div>
+
+<div id="infoFoto" style="display:none" class="modalBusca">
+	<div class="modalBusca-content1 ___Movimentavel">
+		<div class="modalTitulo"><p id='modalTitulo'></p><span class="modal_close" onclick='$("#infoFoto").hide();'>&times;</span></div> 
+		<div class="modalBusca-content2">
+			<div id="divInfoPasso" class="divEditar Centralizado"> 
+				<img id='img_infoFoto'>
+			</div>
+		</div>
+	</div> 
+</div>
+
+<div id="infoFormulario" style="display:none" class="modalBusca">
+	<div class="modalBusca-content1 ___Movimentavel">
+		<div class="modalTitulo"><p id='modalTitulo'></p><span class="modal_close" onclick='$("#infoFormulario").hide();'>&times;</span></div> 
+		<div class="modalBusca-content2">
+			<div id="divinfoFormulario" class="divEditar Centralizado"> 				
+			</div>
+		</div>
+	</div> 
+</div>
+
+<div id="divPortaTabela" style="display:none" class="divPortaTabela ___Movimentavel">
+	<div class="divPortaTabelaTitulo"><p id='divPortaTabelaTitulo'></p><span class="modal_close" onclick='$("#divPortaTabela").hide();'>&times;</span></div>
+	<div class='tableview'> 
+		<div id="divPortaTabelaConteudo" class="Centralizado divPortaTabelaConteudo tableview-holder"> 
+		
+		</div>
+	</div>
+</div> 
+
+<input type="text" style="display:none">
+<input type="password" style="display:none">
+<div id='divLerSenha'  class='divFundoEscuro' style = "display:none">
+	<div id='divPortaSenha' class='divCentroTela' >
+		<h1>Digite a senha do certificado digital</h1>
+		<hr/>
+		<input type='password' name='senhaCertificado' id='senhaCertificado' autocomplete='off' ><br />
+		<div  style="text-align: left;">
+			<input type="checkbox" name='salvarSenhaCertificado' id='salvarSenhaCertificado' >Memorizar a senha do certificado
+		</div>
+		<hr/>
+		<div id="divBotoesCentralizadosAssinador" style="text-align: right; margin-top: 8px;">
+			<button id='but_senhaDigita' type="button">
+				Assinar
+	 		</button>
+	 		<button id='but_cancelar' type="button" onclick="javascript:$('#divLerSenha').hide(); $('#senhaCertificado').val(''); return false;">
+				Cancelar
+	 		</button>
+	 	</div>		
+	</div>
+</div>
+ 
+<script type="text/javascript" src="./js/fonte_contraste.js"></script>    
+<script type="text/javascript" >
+  
+	var _stTempRetorno;
+	var _boMostrarExcluir;
+	var _paginaAtual;
+	var _nomeBusca;
+	var _tamanhoRetornoConsulta;	
+	var _numeroFiltros;
+	var _tamanho;
+	var _id;
+	var _descricao;
+	var _colunasTabela;
+	var _fieldName;
+	var _filtro;
+	var _filtro2;
+	
+	var mousePosition;
+	var offset = [0,0];	
+	var isDown = false;
+	
+		
+	function acionarBotao(event,id_botao){
+		if (event.keyCode==13){
+			$("#" + id_botao ).trigger('click');
+		}
+	}
+
+	function fecharBuscaPadrao() {
+		$("#busca_padrao").hide();
+		$("#busca_padrao_campos").html('');
+	}
+	
+	function MostrarBuscaPadrao(field, ct, titulo, legenda, id, descricao, campos, colunasTabela, paginaAtual, tamanhoConsulta, filtro, filtro2, params){
+
+		_paginaAtual = paginaAtual;
+		_numeroFiltros = campos.length;
+		_tamanho = tamanhoConsulta;
+		_stTempRetorno = ct;
+		_descricao = descricao;
+		_colunasTabela=colunasTabela;
+		_filtro=$("#" + field + " #"+ filtro).val();
+		_filtro2=$("#" + field + " #"+ filtro2).val();
+
+        _filtro = ['null', 'undefined', '', null, undefined].includes(_filtro) ? '' : _filtro;
+        _filtro2 = ['null', 'undefined', '', null, undefined].includes(_filtro2) ? '' : _filtro2;
+
+		$("#modalTitulo").html(titulo) ;
+		$("#legenda").html(legenda);		
+		
+		var descricaoCabecalho = _descricao;
+		var st_campos ="";
+		var stTabela = "";		
+
+		if (params) {
+			if (params['cabecalhoDescricao']) {
+				descricaoCabecalho = params['cabecalhoDescricao'];
+			}
+		}
+		
+		for (var i = 0; i < campos.length; i++) {
+			st_campos += '<div class="col90 float_label">';			
+			st_campos += '<input id="nomeBusca'+(i+1)+'" class="float_label_input" onkeypress="acionarBotao(event,\'busca_padraoLocalizar\');" placeholder="'+campos[i]+'" name="nomeBusca'+(i+1)+'" value="" type="text">';
+			st_campos += '<label for="nomeBusca'+(i+1)+'">'+campos[i]+'</label>'; 
+			st_campos += '</div>';
+		}
+		
+		if (_id!=id || field!=_fieldName){
+			_id = id;
+			_fieldName= field;
+			stTabela += '	<table id="tabelaLocalizar" class="Tabela">';
+			stTabela += '		<thead>';
+			stTabela += '			<tr>';
+			stTabela += '				<th align="Center" style="width: 50px;"></th>';
+			if (descricaoCabecalho === 'FontePagadora') {
+				stTabela += '				<th align="Center" style="width: 120px;">CNPJ</th>';
+				stTabela += '				<th align="left">Fonte Pagadora</th>';
+			} else {
+				stTabela += '				<th align="Center" style="width: 120px;">Id</th>';
+				stTabela += '				<th align="left">'+descricaoCabecalho+'</th>';
+			}
+			for (var i = 0; i < colunasTabela.length; i++) {
+				stTabela += '			<th align="left">'+ colunasTabela[i] +'</th>';
+			}
+			//stTabela += '				<th class="colunaMinima" title="Seleciona o registro para edição">Selecionar</th>';	
+			stTabela += '			</tr>';
+			stTabela += '		</thead>';
+			stTabela += '		<tbody id="CorpoTabela">&nbsp;</tbody>';
+			stTabela += '	</table>';	  		
+			$("#divTabelaBuscaPadrao").html(stTabela) ;
+			$("#PaginacaoBuscaPadrao").html("") ;
+		}
+		
+		$("#busca_padrao_campos").html(st_campos) ;
+		$("#busca_padrao").show();
+		/*$("#busca_padrao").css({'visibility':'visible','opacity':'1'});*/
+		//var doc = document.documentElement.clientHeight ? document.documentElement : document.body;
+// 		var posicao   = ((this.height() - $("#modalBusca-content1").outerHeight()) / 2) + "px";
+// 		alert(posicao);
+// 		alert(this.top + " " + this.left);
+		
+		//posição do objeto na tela
+// 		event = event || window.event;
+// 		var source = event.target || event.srcElement;
+		 				
+// 		var topRelativo = (($(document).height() - $("#modalBusca-content").height() )/2) - ($("#modalBusca-content").height() /3);
+		
+// 		//$("#modalBusca-content").css({'top':topRelativo});
+// 		var posicaoY = source.y || source.offsetTop; 														
+// 		//var posicaoX = source.x || source.offsetLeft;
+		
+//  		if(posicaoY>120){
+//  			$("#modalBusca-content").css({'top':posicaoY-100}); 			
+//  		}else{
+//  			$("#modalBusca-content").css({'top':posicaoY});
+//  		}
+		//var leftRelativo = ($(document).width() - $("#modalBusca-content").width() )/2;
+		
+		//$("#modalBusca-content").css({'left':leftRelativo});
+		
+	}
+		
+	
+	//window.toggleContrast=function(){Contrast.toogle()};
+	
+	window.addEventListener("keydown", function(event ){parent.postMessage({'origem':'corpo','comando':'keydown','key':event.key,'keycode':event.keyCode}); });
+	window.addEventListener("keyup", function(event ){parent.postMessage({'origem':'corpo','comando':'keyup','key':event.key,'keycode':event.keyCode}); });
+		
+	//guardo aqui as teclas apertadas e não soltadas
+	var mapTeclas = new Map();
+	
+	function teclaApertada ( codigo){
+		mapTeclas.set(codigo, true);
+		//console.log(codigo + '  1');
+		//ativar menu quando apertar ctrl+alt+m
+		// ctrl =17    alt = 18    m = 77  shift = 16 173 = menos  61 = mais 67 = c  89 = y
+		if(mapTeclas.get(17) && mapTeclas.get(18) && mapTeclas.get(77) ){
+			
+			//console.log($('#menu > #0'));
+			$('#0').show();
+			$('#0').focus();
+		}else if(mapTeclas.get(17) && mapTeclas.get(18) && mapTeclas.get(173) ){
+			$("#FonteDiminuir").trigger('click');
+			//fonte('d');
+		}else if(mapTeclas.get(17) && mapTeclas.get(18) && mapTeclas.get(61) ){
+			$("#FonteAumentar").trigger('click');
+			//fonte('a');
+		}else if(mapTeclas.get(17) && mapTeclas.get(18) && mapTeclas.get(89) ){
+			$("#ContrasteAlterar").trigger('click');
+			//window.toggle();
+		}
+	}
+	
+	function teclaLiberada (codigo){
+		//mapTeclas.clear();
+		mapTeclas.delete(codigo);
+	}
+	
+	var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+	var eventer = window[eventMethod];
+	var messageEvent = eventMethod == "attachEvent" ? "onmessage" : "message";
+	
+	// Listen to message from child window
+	eventer(messageEvent,function(event) {
+		 if (!event.origin.includes( "localhost:8080") && !event.origin.includes("projudi.tjgo.jus.br") && !event.origin.includes("projudi-teste.tjgo.jus.br") ){
+			  return;
+		  }
+		  
+		  var origem = event.data.origem;
+		  if(origem=='corpo'){				
+				if(event.data.comando){
+					//console.log("header " + event.data.comando + " " + event.data.key + " " +  event.data.keycode  );										
+				    									    
+					if ( event.data.comando=="keydown"){						
+						teclaApertada(event.data.keycode);
+					}else if (event.data.comando=="keyup"){
+						teclaLiberada(event.data.keycode);
+					}					
+				}
+		  }else if(origem=='menu'){
+			 //var stComando = ; 
+			 //alert(stComando);
+			 
+			 //alert(window[toogle];
+			  var comando = window[event.data.comando];
+			  //alert(comando);
+			  if(comando){
+			  	//console.log("body " + event.data.comando);
+			    comando();
+			   	//window.Contrast[event.data.comando]();
+			  }
+		  }				  
+	});	
+  
+	function infoPasso( id_form, id, titulo){
+		var campos = $('table#tb_'+id_form+ ' tr#tr_'+ id ).attr("campos");
+		var obJson = JSON.parse(campos);
+		//console.log(campos);
+		var ids = Object.keys(obJson);
+		var valores = Object.values(obJson);
+		var stFormulario ='<fieldset class="formEdicao">'
+		stFormulario+='<legend class="formEdicaoLegenda">'+titulo+'</legend>';
+		for(var i=0; i<ids.length;i++){
+			if (Array.isArray(valores[i])){
+				var stValor = JSON.stringify(valores[i]);
+				stFormulario+='<div class="col100"><label class="formEdicaoLabel">' + ids[i] + '</label> <Text rows="6" cols="150" class="formEdicaoInputSomenteLeitura" readonly="true">' + stValor + '</Text></div>';
+			}else{
+				var tamanhoColuna= 15;
+				var qtdCaracteresColl = ids[i].length;
+				if (valores[i].length>ids[i].length){
+					qtdCaracteresColl= valores[i].length;
+				}
+				if( qtdCaracteresColl<=10){									tamanhoColuna = 10;}
+				else if( qtdCaracteresColl>10 && qtdCaracteresColl<=20){	tamanhoColuna = 15; }
+				else if( qtdCaracteresColl>20 && qtdCaracteresColl<=30){	tamanhoColuna = 20; }
+				else if( qtdCaracteresColl>30 && qtdCaracteresColl<=40){	tamanhoColuna = 25; }
+				else if( qtdCaracteresColl>40 && qtdCaracteresColl<=50){	tamanhoColuna = 30; }
+				else if( qtdCaracteresColl>50 && qtdCaracteresColl<=60){	tamanhoColuna = 35; }
+				else if( qtdCaracteresColl>60 && qtdCaracteresColl<=70){	tamanhoColuna = 40; }
+				else if( qtdCaracteresColl>70 && qtdCaracteresColl<=80){	tamanhoColuna = 45; }
+				else if( qtdCaracteresColl>80 && qtdCaracteresColl<=90){	tamanhoColuna = 50 }
+				else if( qtdCaracteresColl>90 && qtdCaracteresColl<=100){	tamanhoColuna = 55; }
+				else if( qtdCaracteresColl>100 && qtdCaracteresColl<=110){	tamanhoColuna = 60; }
+				else if( qtdCaracteresColl>110 && qtdCaracteresColl<=120){	tamanhoColuna = 65; }
+				else if( qtdCaracteresColl>120 && qtdCaracteresColl<=130){	tamanhoColuna = 70; }
+				else if( qtdCaracteresColl>130 && qtdCaracteresColl<=140){	tamanhoColuna = 75; }
+				else if( qtdCaracteresColl>140 && qtdCaracteresColl<=150){	tamanhoColuna = 80; }
+				else if( qtdCaracteresColl>150 && qtdCaracteresColl<=160){	tamanhoColuna = 85; }
+				else if( qtdCaracteresColl>160 && qtdCaracteresColl<=170){	tamanhoColuna = 90; }
+				else if( qtdCaracteresColl>170){							tamanhoColuna = 100; }
+				
+				stFormulario+='<div class="col' + tamanhoColuna + '"><label>' + ids[i] + '</label> <input class="formEdicaoInputSomenteLeitura" type="text" readonly="true" size="' + valores[i].length + '" value="' + valores[i] + '"/></div>';
+			}
+		}
+		$('div#divInfoPasso').html(stFormulario);
+		$("#infoPasso").show();
+	}
+	function infoFoto(id){		
+		$('img#img_infoFoto').attr('src', $('img#foto'+id).attr('src'));
+		$("#infoFoto").show();
+	}
+	
+	$(document).ready(function() {
+		
+		var mensagemErro = '';		 
+		var mensagemOk = '';
+		var titulo ='Processo Judicial';						
+		var availableTags;
+		
+// 		$( function() {
+// 		   $( ".___Movimentavel" ).draggable();
+// 		});
+		  
+		if (((mensagemErro!='') && (mensagemErro!='null')) || ((mensagemOk!='') && (mensagemOk!='null'))){
+			
+			if ((mensagemErro!='') && (mensagemErro!='null')) {
+				//titulo+=" Erro";
+				mostrarMensagemErro(titulo, mensagemErro);												
+			}else{
+				//titulo+=" Ok";					
+				mostrarMensagemOk(titulo, mensagemOk);
+			}
+			
+			$('#divCorpo').focus();	
+						
+			$('html, body',window.parent.document).animate({scrollTop:0}, 'slow');
+		}
+		
+		
+		
+		window.Contrast.check();
+		
+    }); 
+</script>
+
+	</body>
+</html>
