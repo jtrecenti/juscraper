@@ -3,6 +3,8 @@ import warnings
 from datetime import datetime
 from typing import Optional, Union
 
+from pydantic import BaseModel, ValidationError
+
 # Deprecated aliases consumed by ``normalize_pesquisa``. Keep in sync with the
 # loop inside that function.
 SEARCH_ALIASES: tuple[str, ...] = ("query", "termo")
@@ -328,6 +330,119 @@ def pop_deprecated_alias(kwargs: dict, old: str, new: str):
         stacklevel=3,
     )
     return value
+
+
+def raise_on_extra_kwargs(exc: ValidationError, method: str) -> None:
+    """Convert pydantic ``extra_forbidden`` errors into a friendly ``TypeError``.
+
+    Regular users expect ``TypeError: got unexpected keyword argument`` when
+    they mistype a param name. Raising pydantic's ``ValidationError`` for that
+    case is accurate but unfriendly. Other validation errors (bad date format,
+    wrong literal, etc.) surface as-is so the caller can see them.
+
+    Args:
+        exc: The :class:`pydantic.ValidationError` raised by ``Schema(...)``.
+        method: Human-readable method identifier for the error message
+            (e.g. ``"TJRNScraper.cjsg()"``).
+
+    Raises:
+        TypeError: When *all* errors in ``exc`` are ``extra_forbidden``. The
+            offending field names are included in the message. When the error
+            mix is not pure ``extra_forbidden`` the function returns ``None``
+            and the caller is expected to ``raise`` the original exception.
+    """
+    extras = [err for err in exc.errors() if err["type"] == "extra_forbidden"]
+    if extras and len(extras) == len(exc.errors()):
+        names = ", ".join(repr(err["loc"][-1]) for err in extras)
+        raise TypeError(f"{method} got unexpected keyword argument(s): {names}") from exc
+
+
+def apply_input_pipeline_cjsg(
+    schema_cls: type[BaseModel],
+    method_name: str,
+    *,
+    pesquisa: str,
+    paginas,
+    kwargs: dict,
+    **canonical_filters,
+) -> BaseModel:
+    """Run the canonical input-validation pipeline for cjsg/cjpg endpoints.
+
+    Order:
+
+    1. :func:`normalize_paginas` — int → ``range(1, n+1)``; list/range/None passthrough.
+    2. :func:`normalize_datas` — pop date aliases (``_de``/``_ate``,
+       ``data_inicio``/``data_fim``) emitting :class:`DeprecationWarning` and
+       returning canonical names.
+    3. :func:`pop_normalize_aliases` — strip from ``kwargs`` everything already
+       consumed (search aliases, date aliases, canonical date keys), so the
+       same value isn't propagated twice into the schema.
+    4. :func:`validate_intervalo_datas` for julgamento *and* publicação — no-ops
+       when both bounds are ``None`` (single-bound or no-filter searches).
+    5. ``schema_cls(pesquisa, paginas, **datas, **canonical_filters, **kwargs)``
+       — pydantic validation with ``extra="forbid"``.
+    6. :func:`raise_on_extra_kwargs` translates ``extra_forbidden`` errors into
+       a :class:`TypeError`. Other validation errors propagate as-is.
+
+    The caller is responsible for:
+
+    - Calling :func:`normalize_pesquisa` (or skipping it when the endpoint
+      accepts ``pesquisa=""``, e.g. TJSP cjpg).
+    - Popping tribunal-specific deprecated aliases (``nr_processo``,
+      ``magistrado``) **before** invoking this helper, otherwise pydantic
+      rejects them as ``extra_forbidden``.
+    - Running tribunal-specific validators that should fire before pydantic
+      (e.g. ``validate_pesquisa_length`` in TJSP).
+
+    Args:
+        schema_cls: Pydantic model class to instantiate (e.g. :class:`InputCJSGTJRN`).
+        method_name: Human-readable identifier used in the ``TypeError`` message
+            when ``extra_forbidden`` triggers (e.g. ``"TJRNScraper.cjsg()"``).
+        pesquisa: Already-normalized search term (or ``""`` for endpoints that
+            allow open searches).
+        paginas: Pages parameter as accepted by the public method (``int``,
+            ``list``, ``range``, or ``None``).
+        kwargs: The caller's local ``kwargs`` dict. Mutated in place by
+            :func:`pop_normalize_aliases` and consumed by ``schema_cls``.
+        **canonical_filters: Tribunal-specific filters already extracted from
+            the public method signature (e.g. ``numero_processo=...``,
+            ``relator=...``). They are forwarded to the schema as-is.
+
+    Returns:
+        Instantiated pydantic model with all fields validated.
+
+    Raises:
+        TypeError: When ``kwargs`` contains keys not declared in the schema.
+        ValidationError: For other validation failures (bad type, format,
+            literal mismatch).
+        ValueError: When :func:`validate_intervalo_datas` rejects an interval.
+    """
+    paginas_norm = normalize_paginas(paginas)
+    datas = normalize_datas(**kwargs)
+    pop_normalize_aliases(kwargs, include_canonical=True)
+
+    validate_intervalo_datas(
+        datas["data_julgamento_inicio"],
+        datas["data_julgamento_fim"],
+        rotulo="data_julgamento",
+    )
+    validate_intervalo_datas(
+        datas["data_publicacao_inicio"],
+        datas["data_publicacao_fim"],
+        rotulo="data_publicacao",
+    )
+
+    try:
+        return schema_cls(
+            pesquisa=pesquisa,
+            paginas=paginas_norm,
+            **{k: v for k, v in datas.items() if v is not None},
+            **canonical_filters,
+            **kwargs,
+        )
+    except ValidationError as exc:
+        raise_on_extra_kwargs(exc, method_name)
+        raise
 
 
 def resolve_deprecated_alias(

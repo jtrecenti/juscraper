@@ -7,17 +7,10 @@ import shutil
 import tempfile
 from typing import Any, List, Literal, Optional, Union
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 
-from ...utils.params import (
-    SEARCH_ALIASES,
-    normalize_datas,
-    normalize_paginas,
-    normalize_pesquisa,
-    pop_normalize_aliases,
-    validate_intervalo_datas,
-)
-from .._esaj.base import EsajSearchScraper, _raise_on_extra
+from ...utils.params import SEARCH_ALIASES, apply_input_pipeline_cjsg, normalize_pesquisa
+from .._esaj.base import EsajSearchScraper
 from .cjpg_download import cjpg_download as cjpg_download_mod
 from .cjpg_parse import cjpg_n_pags, cjpg_parse_manager
 from .cpopg_download import cpopg_download_api, cpopg_download_html
@@ -146,26 +139,13 @@ class TJSPScraper(EsajSearchScraper):
             pesquisa = normalize_pesquisa(pesquisa or None, **kwargs)
         validate_pesquisa_length(pesquisa, endpoint="CJPG")
 
-        paginas_norm = normalize_paginas(paginas)
-        datas = normalize_datas(**kwargs)
-        pop_normalize_aliases(kwargs, include_canonical=True)
-
-        validate_intervalo_datas(
-            datas["data_julgamento_inicio"],
-            datas["data_julgamento_fim"],
-            rotulo="data_julgamento",
+        inp = apply_input_pipeline_cjsg(
+            InputCJPGTJSP,
+            f"{type(self).__name__}.cjpg_download()",
+            pesquisa=pesquisa,
+            paginas=paginas,
+            kwargs=kwargs,
         )
-
-        try:
-            inp = InputCJPGTJSP(
-                pesquisa=pesquisa,
-                paginas=paginas_norm,
-                **{k: v for k, v in datas.items() if v is not None},
-                **kwargs,
-            )
-        except ValidationError as exc:
-            _raise_on_extra(exc, f"{type(self).__name__}.cjpg_download()")
-            raise
 
         def _get_n_pags(r0):
             html = r0.content if hasattr(r0, "content") else r0
@@ -183,7 +163,7 @@ class TJSPScraper(EsajSearchScraper):
             id_processo=inp.id_processo,
             data_inicio=inp.data_julgamento_inicio,
             data_fim=inp.data_julgamento_fim,
-            paginas=paginas_norm,
+            paginas=inp.paginas,
             get_n_pags_callback=_get_n_pags,
         )
         return path
