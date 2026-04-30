@@ -9,7 +9,7 @@ from juscraper.utils.params import (
     apply_input_pipeline_search,
     normalize_paginas,
     normalize_pesquisa,
-    pop_deprecated_alias,
+    resolve_deprecated_alias,
     to_br_date,
 )
 
@@ -69,45 +69,53 @@ class TJRNScraper(BaseScraper):
         grau: str = "",
         **kwargs,
     ) -> pd.DataFrame:
-        """Search TJRN jurisprudence.
+        """Busca jurisprudencia no TJRN.
 
-        Parameters
-        ----------
-        pesquisa : str
-            Free-text search term (searched in ementa).
-        paginas : int, list, range, or None
-            Pages to download (1-based). None downloads all.
-        numero_processo : str, optional
-            Process number filter. Accepts the deprecated alias ``nr_processo``.
-        id_classe_judicial : str, optional
-            Judicial class ID.
-        id_orgao_julgador : str, optional
-            Judging body ID.
-        id_relator : str, optional
-            Reporter judge ID.
-        id_colegiado : str, optional
-            Collegiate body ID.
-        sistema : str, optional
-            ``"PJE"``, ``"SAJ"``, or empty for all.
-        decisoes : str, optional
-            ``"Monocraticas"``, ``"Colegiadas"``, ``"Sentencas"``, or empty for all.
-        jurisdicoes : str, optional
-            ``"Tribunal de Justica"``, ``"Turmas Recursais"``, or empty for all.
-        grau : str, optional
-            ``"1"`` (first), ``"2"`` (second), or empty for all.
+        Args:
+            pesquisa (str): Termo de busca livre (busca na ementa).
+            paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
+                todas. Default ``None``.
+            numero_processo (str): Numero CNJ do processo. Aceita o alias
+                deprecado ``nr_processo``.
+            id_classe_judicial (str): ID da classe judicial.
+            id_orgao_julgador (str): ID do orgao julgador.
+            id_relator (str): ID do relator.
+            id_colegiado (str): ID do colegiado.
+            sistema (str): ``"PJE"``, ``"SAJ"`` ou vazio para todos.
+            decisoes (str): ``"Monocraticas"``, ``"Colegiadas"``,
+                ``"Sentencas"`` ou vazio para todos.
+            jurisdicoes (str): ``"Tribunal de Justica"``, ``"Turmas Recursais"``
+                ou vazio para todos.
+            grau (str): ``"1"`` (primeiro), ``"2"`` (segundo) ou vazio para todos.
+            **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJRN`.
+                Listados abaixo (todos opcionais; ``None`` = sem filtro):
 
-        Returns
-        -------
-        pd.DataFrame
+                * ``data_julgamento_inicio`` / ``data_julgamento_fim`` (str):
+                  ``YYYY-MM-DD``. Convertido para ``DD-MM-YYYY`` antes do
+                  envio ao backend.
+
+        Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
+            * ``query`` / ``termo`` -> ``pesquisa``
+            * ``nr_processo`` -> ``numero_processo``
+            * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``_fim``
+            * ``data_julgamento_de`` / ``_ate`` -> ``data_julgamento_inicio`` / ``_fim``
+
+        Raises:
+            TypeError: Quando um kwarg desconhecido e passado.
+            ValueError: Quando ``numero_processo`` e ``nr_processo`` sao
+                passados simultaneamente.
+            ValidationError: Quando um filtro tem formato invalido.
+
+        Returns:
+            pd.DataFrame: DataFrame com as decisoes.
+
+        See also:
+            :class:`InputCJSGTJRN` — schema pydantic e a fonte da verdade dos
+            filtros aceitos.
         """
-        if "nr_processo" in kwargs:
-            alias_value = pop_deprecated_alias(kwargs, "nr_processo", "numero_processo")
-            if numero_processo:
-                raise ValueError(
-                    "Não é possível passar 'numero_processo' e 'nr_processo' simultaneamente."
-                )
-            numero_processo = alias_value or ""
-
+        numero_processo = resolve_deprecated_alias(
+            kwargs, "nr_processo", "numero_processo", numero_processo, sentinel=""
+        )
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
 
         inp = apply_input_pipeline_search(

@@ -43,22 +43,39 @@ class TJSCScraper(BaseScraper):
         processo: str = "",
         **kwargs,
     ) -> pd.DataFrame:
-        """Search TJSC jurisprudence.
+        """Busca jurisprudencia no TJSC.
 
-        Parameters
-        ----------
-        pesquisa : str
-            Free-text search term.
-        paginas : int, list, range, or None
-            Pages to download (1-based). None downloads all.
-        campo : str, optional
-            Search field: ``"E"`` for ementa (default), ``"I"`` for inteiro teor.
-        processo : str, optional
-            Process number filter.
+        Args:
+            pesquisa (str): Termo de busca livre.
+            paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
+                todas. Default ``None``.
+            campo (str): Campo de busca: ``"E"`` para ementa (default),
+                ``"I"`` para inteiro teor.
+            processo (str): Filtro por numero do processo.
+            **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJSC`.
+                Listados abaixo (todos opcionais; ``None`` = sem filtro):
 
-        Returns
-        -------
-        pd.DataFrame
+                * ``data_julgamento_inicio`` / ``data_julgamento_fim`` (str):
+                  ``YYYY-MM-DD``. Mapeado para ``dt_decisao_*`` no backend.
+                * ``data_publicacao_inicio`` / ``data_publicacao_fim`` (str):
+                  ``YYYY-MM-DD``.
+
+        Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
+            * ``query`` / ``termo`` -> ``pesquisa``
+            * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``_fim``
+            * ``data_julgamento_de`` / ``_ate`` -> ``data_julgamento_inicio`` / ``_fim``
+            * ``data_publicacao_de`` / ``_ate`` -> ``data_publicacao_inicio`` / ``_fim``
+
+        Raises:
+            TypeError: Quando um kwarg desconhecido e passado.
+            ValidationError: Quando um filtro tem formato invalido.
+
+        Returns:
+            pd.DataFrame: DataFrame com as decisoes.
+
+        See also:
+            :class:`InputCJSGTJSC` — schema pydantic e a fonte da verdade dos
+            filtros aceitos.
         """
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
 

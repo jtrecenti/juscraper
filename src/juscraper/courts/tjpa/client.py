@@ -44,53 +44,27 @@ class TJPAScraper(BaseScraper):
         assunto: Optional[str] = None,
         origem: Optional[list] = None,
         tipo: Optional[list] = None,
-        data_julgamento_inicio: Optional[str] = None,
-        data_julgamento_fim: Optional[str] = None,
-        data_publicacao_inicio: Optional[str] = None,
-        data_publicacao_fim: Optional[str] = None,
         sort_by: str = "datajulgamento",
         sort_order: str = "desc",
         query_type: str = "free",
         query_scope: str = "ementa",
         **kwargs,
     ) -> list:
-        """
-        Downloads raw results from the TJPA jurisprudence search (multiple pages).
-        Returns a list of raw JSON responses.
+        """Baixa resultados crus da busca de jurisprudencia do TJPA (varias paginas).
 
-        Args:
-            pesquisa: Search term. ``query`` and ``termo`` are accepted as deprecated aliases.
-            paginas (int, list, range, or None): Pages to download (1-based).
-                int: paginas=3 downloads pages 1-3.
-                range: range(1, 4) downloads pages 1-3.
-                None: downloads all available pages.
-            relator: Filter by relator name.
-            orgao_julgador_colegiado: Filter by collegiate judging body.
-            classe: Filter by procedural class.
-            assunto: Filter by subject.
-            origem: List of origins (default: ["tribunal de justica do estado do para"]).
-            tipo: List of decision types (default: ["acordao", "decisao monocratica"]).
-            data_julgamento_inicio: Start date for judgment filter (YYYY-MM-DD).
-            data_julgamento_fim: End date for judgment filter (YYYY-MM-DD).
-            data_publicacao_inicio: Start date for publication filter (YYYY-MM-DD).
-            data_publicacao_fim: End date for publication filter (YYYY-MM-DD).
-            sort_by: Sort field (default: "datajulgamento").
-            sort_order: Sort order, "asc" or "desc" (default: "desc").
-            query_type: Query type, "free" or "any" (default: "free").
-            query_scope: Query scope, "ementa" or "inteiroteor" (default: "ementa").
+        Filtros de data (``data_julgamento_inicio``/``_fim``,
+        ``data_publicacao_inicio``/``_fim``) chegam via ``**kwargs`` e sao
+        validados pelo schema :class:`InputCJSGTJPA`. Aliases deprecados
+        (``data_inicio``/``data_fim``, ``query``/``termo``) sao popados antes
+        da validacao.
+
+        Returns:
+            list: Respostas JSON cruas (uma por pagina).
+
+        See also:
+            :class:`InputCJSGTJPA` — fonte da verdade dos filtros aceitos.
         """
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-
-        # Inject named date params into kwargs so normalize_datas (called by
-        # the helper) sees both canonical and deprecated aliases together.
-        for date_key, date_value in (
-            ("data_julgamento_inicio", data_julgamento_inicio),
-            ("data_julgamento_fim", data_julgamento_fim),
-            ("data_publicacao_inicio", data_publicacao_inicio),
-            ("data_publicacao_fim", data_publicacao_fim),
-        ):
-            if date_value is not None and date_key not in kwargs:
-                kwargs[date_key] = date_value
 
         inp = apply_input_pipeline_search(
             InputCJSGTJPA,
@@ -148,37 +122,54 @@ class TJPAScraper(BaseScraper):
         assunto: Optional[str] = None,
         origem: Optional[list] = None,
         tipo: Optional[list] = None,
-        data_julgamento_inicio: Optional[str] = None,
-        data_julgamento_fim: Optional[str] = None,
-        data_publicacao_inicio: Optional[str] = None,
-        data_publicacao_fim: Optional[str] = None,
         sort_by: str = "datajulgamento",
         sort_order: str = "desc",
         query_type: str = "free",
         query_scope: str = "ementa",
         **kwargs,
     ) -> pd.DataFrame:
-        """
-        Fetches jurisprudence from TJPA in a simplified way (download + parse).
-        Returns a ready-to-analyze DataFrame.
+        """Busca jurisprudencia no TJPA (download + parse).
 
         Args:
-            pesquisa: Search term.
-            paginas (int, list, range, or None): Pages to download (1-based).
-            relator: Filter by relator name.
-            orgao_julgador_colegiado: Filter by collegiate judging body.
-            classe: Filter by procedural class.
-            assunto: Filter by subject.
-            origem: List of origins.
-            tipo: List of decision types.
-            data_julgamento_inicio: Start date for judgment filter (YYYY-MM-DD).
-            data_julgamento_fim: End date for judgment filter (YYYY-MM-DD).
-            data_publicacao_inicio: Start date for publication filter (YYYY-MM-DD).
-            data_publicacao_fim: End date for publication filter (YYYY-MM-DD).
-            sort_by: Sort field (default: "datajulgamento").
-            sort_order: Sort order (default: "desc").
-            query_type: Query type (default: "free").
-            query_scope: Query scope (default: "ementa").
+            pesquisa (str): Termo de busca livre.
+            paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
+                todas. Default ``None``.
+            relator (str | None): Nome do relator.
+            orgao_julgador_colegiado (str | None): Orgao colegiado.
+            classe (str | None): Classe processual.
+            assunto (str | None): Assunto.
+            origem (list | None): Lista de origens (default backend:
+                ``["tribunal de justica do estado do para"]``).
+            tipo (list | None): Lista de tipos de decisao (default backend:
+                ``["acordao", "decisao monocratica"]``).
+            sort_by (str): Campo de ordenacao. Default ``"datajulgamento"``.
+            sort_order (str): ``"asc"`` ou ``"desc"``. Default ``"desc"``.
+            query_type (str): ``"free"`` ou ``"any"``. Default ``"free"``.
+            query_scope (str): ``"ementa"`` ou ``"inteiroteor"``. Default ``"ementa"``.
+            **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJPA`.
+                Listados abaixo (todos opcionais; ``None`` = sem filtro):
+
+                * ``data_julgamento_inicio`` / ``data_julgamento_fim`` (str):
+                  ``YYYY-MM-DD``.
+                * ``data_publicacao_inicio`` / ``data_publicacao_fim`` (str):
+                  ``YYYY-MM-DD``.
+
+        Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
+            * ``query`` / ``termo`` -> ``pesquisa``
+            * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``_fim``
+            * ``data_julgamento_de`` / ``_ate`` -> ``data_julgamento_inicio`` / ``_fim``
+            * ``data_publicacao_de`` / ``_ate`` -> ``data_publicacao_inicio`` / ``_fim``
+
+        Raises:
+            TypeError: Quando um kwarg desconhecido e passado.
+            ValidationError: Quando um filtro tem formato invalido.
+
+        Returns:
+            pd.DataFrame: DataFrame com as decisoes.
+
+        See also:
+            :class:`InputCJSGTJPA` — schema pydantic e a fonte da verdade dos
+            filtros aceitos.
         """
         brutos = self.cjsg_download(
             pesquisa=pesquisa,
@@ -189,10 +180,6 @@ class TJPAScraper(BaseScraper):
             assunto=assunto,
             origem=origem,
             tipo=tipo,
-            data_julgamento_inicio=data_julgamento_inicio,
-            data_julgamento_fim=data_julgamento_fim,
-            data_publicacao_inicio=data_publicacao_inicio,
-            data_publicacao_fim=data_publicacao_fim,
             sort_by=sort_by,
             sort_order=sort_order,
             query_type=query_type,
