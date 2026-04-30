@@ -16,7 +16,7 @@ from tqdm.auto import tqdm
 
 from ...core.base import BaseScraper
 from ...utils.cnj import clean_cnj  # Assuming this utility exists and is relevant
-from ...utils.params import raise_on_extra_kwargs
+from ...utils.params import normalize_paginas, raise_on_extra_kwargs
 from .download import build_listar_processos_payload, call_datajud_api
 
 # Import mappings for tribunal and justice aliases.
@@ -59,7 +59,11 @@ class DatajudScraper(BaseScraper):
             self.download_path
         )
 
-    def listar_processos(self, paginas: Optional[range] = None, **kwargs) -> pd.DataFrame:
+    def listar_processos(
+        self,
+        paginas: Optional[Union[int, List[int], range]] = None,
+        **kwargs,
+    ) -> pd.DataFrame:
         """Lista processos do DataJud via API publica do CNJ.
 
         Filtros sao validados pelo schema :class:`InputListarProcessosDataJud`
@@ -88,8 +92,12 @@ class DatajudScraper(BaseScraper):
                 * ``mostrar_movs`` (bool): Se ``True``, inclui
                   ``movimentos``/``movimentacoes`` no ``_source``. Default
                   ``False`` (paginacao mais leve).
-                * ``paginas`` (range): Intervalo 1-based; ``range(1, 4)``
-                  baixa paginas 1, 2 e 3. ``None`` (default) baixa todas.
+                * ``paginas`` (int | list[int] | range): Intervalo 1-based.
+                  Aceita as 4 formas do contrato unico (refs #118):
+                  ``int`` (``3`` -> ``range(1, 4)``), ``list``
+                  (``[3, 5]`` -> ``range(3, 6)``, baixa 3-5 contiguamente
+                  porque o cursor ``search_after`` e forwards-only),
+                  ``range`` (passthrough), ``None`` (default, todas).
                 * ``tamanho_pagina`` (int): Hits por pagina (default 1000).
 
         Aliases deprecados:
@@ -123,8 +131,21 @@ class DatajudScraper(BaseScraper):
             :class:`InputListarProcessosDataJud` — fonte da verdade dos
             filtros aceitos.
         """
+        # ``paginas`` e int|list|range|None na API publica (contrato de
+        # PaginasMixin). O cursor ``search_after`` da API DataJud e
+        # forwards-only e o client interno consome ``.start``/``.stop``,
+        # entao convertemos ``int``/``list`` para ``range`` contiguo aqui:
+        # ``[3, 5]`` -> ``range(3, 6)`` baixa as paginas 3, 4 e 5.
+        paginas_norm = normalize_paginas(paginas)
+        if isinstance(paginas_norm, list):
+            paginas_norm = (
+                range(min(paginas_norm), max(paginas_norm) + 1)
+                if paginas_norm
+                else None
+            )
+
         try:
-            inp = InputListarProcessosDataJud(paginas=paginas, **kwargs)
+            inp = InputListarProcessosDataJud(paginas=paginas_norm, **kwargs)
         except ValidationError as exc:
             raise_on_extra_kwargs(exc, "DatajudScraper.listar_processos()")
             raise
@@ -135,7 +156,11 @@ class DatajudScraper(BaseScraper):
         classe = inp.classe
         assuntos = inp.assuntos
         mostrar_movs = inp.mostrar_movs
-        paginas = inp.paginas
+        # ``paginas_norm`` ja e ``range | None`` por construcao
+        # (normalize_paginas + conversao list->range acima); usar ele
+        # direto para preservar o tipo estreito esperado por
+        # ``_listar_processos_por_alias``.
+        paginas = paginas_norm
         tamanho_pagina = inp.tamanho_pagina
 
         all_dfs = []

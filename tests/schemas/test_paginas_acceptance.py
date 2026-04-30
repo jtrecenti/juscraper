@@ -18,8 +18,7 @@ que nao e deste teste). Se uma peca aceitou e a outra tambem, o metodo
 publico aceita por composicao.
 
 Casos conhecidos de drift contra o contrato entram como ``xfail`` e
-viram issues separadas a corrigir em PR proprio — e.g. DataJud
-``listar_processos`` so aceita ``range``.
+viram issues separadas a corrigir em PR proprio.
 """
 from __future__ import annotations
 
@@ -47,17 +46,7 @@ PAGINAS_VARIANTS: list[tuple[str, Any]] = [
     ("none", None),
 ]
 
-XFAIL_CASES: dict[tuple[str, str, str], str] = {
-    ("datajud", "listar_processos", "int"): (
-        "DataJud listar_processos aceita apenas ``range`` na assinatura "
-        "do client. Contrato de SearchBase exige int/list/None tambem. "
-        "Correcao em #118."
-    ),
-    ("datajud", "listar_processos", "list"): (
-        "DataJud listar_processos aceita apenas ``range`` na assinatura "
-        "do client. Correcao em #118."
-    ),
-}
+XFAIL_CASES: dict[tuple[str, str, str], str] = {}
 
 
 def _minimal_kwargs_for_schema(schema_cls: type[BaseModel]) -> dict[str, Any]:

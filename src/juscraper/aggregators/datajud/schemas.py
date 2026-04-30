@@ -10,8 +10,10 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict
 
+from ...schemas import PaginasMixin
 
-class InputListarProcessosDataJud(BaseModel):
+
+class InputListarProcessosDataJud(PaginasMixin):
     """Accepted input for :meth:`DatajudScraper.listar_processos`.
 
     A API do DataJud e baseada em Elasticsearch. A escolha do alias-indice
@@ -20,9 +22,11 @@ class InputListarProcessosDataJud(BaseModel):
     dos dois e fornecido, o client atual levanta ``ValueError`` em vez de
     consultar tudo.
 
-    ``paginas`` e tipado como ``range`` porque a API usa
-    ``search_after`` para paginacao profunda; o client corre a cada pagina
-    ate atingir ``paginas.stop`` ou o fim dos resultados.
+    ``paginas`` herda o contrato de :class:`PaginasMixin`
+    (``int | list[int] | range | None``). O cursor ``search_after`` da API
+    e forwards-only, entao o metodo publico converte ``list`` esparsa em
+    ``range(min, max+1)`` antes da iteracao — ``paginas=[3, 5]`` baixa as
+    paginas 3, 4 e 5 e o usuario recebe o DataFrame agregado.
     """
 
     numero_processo: str | list[str] | None = None
@@ -31,7 +35,6 @@ class InputListarProcessosDataJud(BaseModel):
     classe: str | None = None
     assuntos: list[str] | None = None
     mostrar_movs: bool = False
-    paginas: range | None = None
     tamanho_pagina: int = 1000
 
     model_config = ConfigDict(
