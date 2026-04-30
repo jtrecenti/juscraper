@@ -52,13 +52,12 @@ class TJDFTScraper(BaseScraper):
         """
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
         paginas = normalize_paginas(paginas)
-        kwargs_local = dict(kwargs)
         inp = apply_input_pipeline_search(
             InputCJSGTJDFT,
             "TJDFTScraper.cjsg_download()",
             pesquisa=pesquisa,
             paginas=paginas,
-            kwargs=kwargs_local,
+            kwargs=kwargs,
             sinonimos=sinonimos,
             espelho=espelho,
             inteiro_teor=inteiro_teor,

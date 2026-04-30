@@ -54,8 +54,6 @@ class TJESScraper(BaseScraper):
         per_page: int = DEFAULT_PER_PAGE,
         data_julgamento_inicio: Optional[str] = None,
         data_julgamento_fim: Optional[str] = None,
-        data_publicacao_inicio: Optional[str] = None,
-        data_publicacao_fim: Optional[str] = None,
         **kwargs,
     ) -> list:
         """
@@ -92,7 +90,9 @@ class TJESScraper(BaseScraper):
             Results per page (default 20).
         data_julgamento_inicio / data_julgamento_fim : str
             Date range filter (YYYY-MM-DD). TJES uses ``dataIni``/``dataFim`` which
-            filters on ``dt_juntada``.
+            filters on ``dt_juntada``. The backend does not expose a separate
+            data de publicacao filter; passing ``data_publicacao_*`` raises
+            ``TypeError``.
 
         Returns
         -------
@@ -125,15 +125,13 @@ class TJESScraper(BaseScraper):
             per_page=per_page,
             data_julgamento_inicio=data_julgamento_inicio,
             data_julgamento_fim=data_julgamento_fim,
-            data_publicacao_inicio=data_publicacao_inicio,
-            data_publicacao_fim=data_publicacao_fim,
         )
-        # TJES only supports a single date range (dataIni/dataFim mapped to dt_juntada)
         return cjsg_download(
             pesquisa=inp.pesquisa,
             paginas=inp.paginas,
             core=inp.core,
             busca_exata=inp.busca_exata,
+            # TJES only supports a single date range (dataIni/dataFim mapped to dt_juntada)
             data_inicio=inp.data_julgamento_inicio,
             data_fim=inp.data_julgamento_fim,
             magistrado=inp.relator,
@@ -176,8 +174,6 @@ class TJESScraper(BaseScraper):
         per_page: int = DEFAULT_PER_PAGE,
         data_julgamento_inicio: Optional[str] = None,
         data_julgamento_fim: Optional[str] = None,
-        data_publicacao_inicio: Optional[str] = None,
-        data_publicacao_fim: Optional[str] = None,
         **kwargs,
     ) -> pd.DataFrame:
         """
@@ -202,8 +198,6 @@ class TJESScraper(BaseScraper):
             per_page=per_page,
             data_julgamento_inicio=data_julgamento_inicio,
             data_julgamento_fim=data_julgamento_fim,
-            data_publicacao_inicio=data_publicacao_inicio,
-            data_publicacao_fim=data_publicacao_fim,
             **kwargs,
         )
         return self.cjsg_parse(brutos)
@@ -218,6 +212,12 @@ class TJESScraper(BaseScraper):
         classe = resolve_deprecated_alias(
             kwargs, "classe_judicial", "classe", kwargs.pop("classe", None)
         )
+        busca_exata = kwargs.pop("busca_exata", False)
+        orgao_julgador = kwargs.pop("orgao_julgador", None)
+        jurisdicao = kwargs.pop("jurisdicao", None)
+        assunto = kwargs.pop("assunto", None)
+        ordenacao = kwargs.pop("ordenacao", None)
+        per_page = kwargs.pop("per_page", DEFAULT_PER_PAGE)
         pesquisa_val = normalize_pesquisa(pesquisa, **kwargs)
         paginas = normalize_paginas(paginas)
         inp = apply_input_pipeline_search(
@@ -226,14 +226,14 @@ class TJESScraper(BaseScraper):
             pesquisa=pesquisa_val,
             paginas=paginas,
             kwargs=kwargs,
-            busca_exata=kwargs.pop("busca_exata", False),
+            busca_exata=busca_exata,
             relator=relator,
-            orgao_julgador=kwargs.pop("orgao_julgador", None),
+            orgao_julgador=orgao_julgador,
             classe=classe,
-            jurisdicao=kwargs.pop("jurisdicao", None),
-            assunto=kwargs.pop("assunto", None),
-            ordenacao=kwargs.pop("ordenacao", None),
-            per_page=kwargs.pop("per_page", DEFAULT_PER_PAGE),
+            jurisdicao=jurisdicao,
+            assunto=assunto,
+            ordenacao=ordenacao,
+            per_page=per_page,
         )
 
         return cjsg_download(
@@ -241,6 +241,7 @@ class TJESScraper(BaseScraper):
             paginas=inp.paginas,
             core=CJPG_CORE,
             busca_exata=inp.busca_exata,
+            # TJES only supports a single date range (dataIni/dataFim mapped to dt_juntada)
             data_inicio=inp.data_julgamento_inicio,
             data_fim=inp.data_julgamento_fim,
             magistrado=inp.relator,

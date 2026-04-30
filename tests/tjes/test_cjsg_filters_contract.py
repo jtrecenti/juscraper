@@ -124,3 +124,17 @@ def test_cjpg_unknown_kwarg_raises():
     (validates :class:`InputCJPGTJES`)."""
     with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
         jus.scraper("tjes").cjpg("dano moral", paginas=1, kwarg_inventado="x")
+
+
+def test_cjsg_data_publicacao_raises_typeerror():
+    """TJES backend nao expoe filtro de data de publicacao — passar
+    ``data_publicacao_*`` deve levantar ``TypeError`` em vez de silently drop
+    (refs #165, #173)."""
+    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'data_publicacao_inicio'"):
+        jus.scraper("tjes").cjsg("dano moral", paginas=1, data_publicacao_inicio="2024-01-01")
+
+
+def test_cjpg_data_publicacao_raises_typeerror():
+    """Mesmo que ``test_cjsg_data_publicacao_raises_typeerror`` para cjpg."""
+    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'data_publicacao_inicio'"):
+        jus.scraper("tjes").cjpg("dano moral", paginas=1, data_publicacao_inicio="2024-01-01")

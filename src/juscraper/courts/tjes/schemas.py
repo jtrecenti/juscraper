@@ -10,17 +10,22 @@ from __future__ import annotations
 from datetime import date
 from typing import ClassVar, Literal
 
-from ...schemas import DataJulgamentoMixin, DataPublicacaoMixin, OutputCJSGBase, OutputRelatoriaMixin, SearchBase
+from ...schemas import DataJulgamentoMixin, OutputCJSGBase, OutputRelatoriaMixin, SearchBase
 
 
-class InputCJSGTJES(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
+class InputCJSGTJES(SearchBase, DataJulgamentoMixin):
     """Accepted input for TJES ``cjsg`` / ``cjsg_download``.
 
     Endpoint Elasticsearch (Solr) DSL. ``pesquisa`` aceita os aliases
     deprecados ``query`` / ``termo`` via :func:`juscraper.utils.params.normalize_pesquisa`,
     que roda *antes* deste modelo. Apos a normalizacao, os kwargs que
     sobram caem aqui e sao rejeitados por ``extra="forbid"`` herdado de
-    :class:`SearchBase`. Filtros de data herdados dos mixins.
+    :class:`SearchBase`.
+
+    Apenas filtro de ``data_julgamento_*`` — o backend Solr expoe um unico
+    intervalo (``dataIni``/``dataFim``) mapeado para ``dt_juntada``. Nao ha
+    filtro de data de publicacao; ``data_publicacao_*`` levanta
+    ``TypeError`` em vez de ser silenciosamente descartado.
 
     O parametro ``core`` e restrito aos cores de segundo grau; para primeiro
     grau (``pje1g``), use :class:`InputCJPGTJES`.
@@ -70,13 +75,14 @@ class OutputCJSGTJES(_OutputCJSGTJESBase):
     """Output do cjsg (2o grau) do TJES."""
 
 
-class InputCJPGTJES(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
+class InputCJPGTJES(SearchBase, DataJulgamentoMixin):
     """Accepted input for TJES ``cjpg`` / ``cjpg_download``.
 
     Endpoint Elasticsearch (Solr) de primeiro grau — sempre usa o core
     ``pje1g``, por isso o campo ``core`` nao existe aqui. Aceita os mesmos
     filtros de :class:`InputCJSGTJES` (exceto ``core``) como kwargs.
-    Filtros de data herdados dos mixins.
+    Apenas filtro de ``data_julgamento_*`` — mesmo motivo de
+    :class:`InputCJSGTJES`.
     """
 
     BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
