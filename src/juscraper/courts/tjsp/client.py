@@ -9,7 +9,7 @@ from typing import Any, List, Literal, Optional, Union
 
 from pydantic import BaseModel
 
-from ...utils.params import SEARCH_ALIASES, apply_input_pipeline_cjsg, normalize_pesquisa
+from ...utils.params import SEARCH_ALIASES, apply_input_pipeline_search, normalize_pesquisa
 from .._esaj.base import EsajSearchScraper
 from .cjpg_download import cjpg_download as cjpg_download_mod
 from .cjpg_parse import cjpg_n_pags, cjpg_parse_manager
@@ -139,12 +139,14 @@ class TJSPScraper(EsajSearchScraper):
             pesquisa = normalize_pesquisa(pesquisa or None, **kwargs)
         validate_pesquisa_length(pesquisa, endpoint="CJPG")
 
-        inp = apply_input_pipeline_cjsg(
+        inp = apply_input_pipeline_search(
             InputCJPGTJSP,
             f"{type(self).__name__}.cjpg_download()",
             pesquisa=pesquisa,
             paginas=paginas,
             kwargs=kwargs,
+            max_dias=366,
+            origem="O eSAJ",
         )
 
         def _get_n_pags(r0):

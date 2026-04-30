@@ -141,7 +141,7 @@ Checklist obrigatória para o PR que adiciona o raspador:
 
 ### Pipeline canônico (wiring)
 
-Pipeline implementado em `src/juscraper/courts/_esaj/base.py` e exercitado em `tests/tj{ac,al,am,ce,ms,sp}/test_cjsg_filters_contract.py`. Ao wirar tribunal novo, copiar a ordem de lá: aliases (via `normalize_pesquisa`/`normalize_datas`) → validators custom → pydantic → build body a partir do modelo. Motivos: aliases antes do pydantic (senão viram `TypeError` genérico); validators custom antes (senão viram wrapped em `ValidationError`); `_raise_on_extra` depois (só `extra_forbidden` deve virar `TypeError` — erro de tipo real sobe natural).
+Pipeline implementado em `juscraper.utils.params.apply_input_pipeline_search` (chamado por `src/juscraper/courts/_esaj/base.py:cjsg_download` e `tjsp/client.py:cjpg_download`) e exercitado em `tests/tj{ac,al,am,ce,ms,sp}/test_cjsg_filters_contract.py`. Ao wirar tribunal novo, copiar a ordem de lá: aliases (via `normalize_pesquisa`/`normalize_datas`) → validators custom → pydantic → build body a partir do modelo. Motivos: aliases antes do pydantic (senão viram `TypeError` genérico); validators custom antes (senão viram wrapped em `ValidationError`); `raise_on_extra_kwargs` depois (só `extra_forbidden` deve virar `TypeError` — erro de tipo real sobe natural). Tribunais sem limite documentado de janela ficam com `max_dias=None` (default); eSAJ passa `max_dias=366, origem="O eSAJ"` explicitamente.
 
 ### Checklist ao adicionar um tribunal novo
 

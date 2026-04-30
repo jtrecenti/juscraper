@@ -237,7 +237,7 @@ def validate_intervalo_datas(
     data_inicio,
     data_fim,
     *,
-    max_dias=366,
+    max_dias: Optional[int] = 366,
     formato="%d/%m/%Y",
     rotulo="data",
     origem="O eSAJ",
@@ -257,7 +257,10 @@ def validate_intervalo_datas(
             left to the server.
         data_fim: End date as a string or ``None``.
         max_dias: Maximum allowed interval in days (default: 366 to admit a
-            full calendar year even across a leap day).
+            full calendar year even across a leap day). ``None`` disables the
+            window check while still validating ``formato`` and
+            ``data_inicio <= data_fim`` — used by tribunals whose backend has
+            no documented limit (audited under #128).
         formato: ``strptime`` format of the input strings.
         rotulo: Human-readable label for the parameter pair in error messages
             (e.g. ``"data_julgamento"``).
@@ -290,6 +293,9 @@ def validate_intervalo_datas(
             f"'{rotulo}_inicio' ({data_inicio}) é posterior a "
             f"'{rotulo}_fim' ({data_fim})."
         )
+
+    if max_dias is None:
+        return
 
     dias = (dt_fim - dt_inicio).days
     if dias > max_dias:
@@ -357,16 +363,18 @@ def raise_on_extra_kwargs(exc: ValidationError, method: str) -> None:
         raise TypeError(f"{method} got unexpected keyword argument(s): {names}") from exc
 
 
-def apply_input_pipeline_cjsg(
+def apply_input_pipeline_search(
     schema_cls: type[BaseModel],
     method_name: str,
     *,
     pesquisa: str,
     paginas,
     kwargs: dict,
+    max_dias: Optional[int] = None,
+    origem: str = "O eSAJ",
     **canonical_filters,
 ) -> BaseModel:
-    """Run the canonical input-validation pipeline for cjsg/cjpg endpoints.
+    """Run the canonical input-validation pipeline for search endpoints (cjsg/cjpg).
 
     Order:
 
@@ -377,8 +385,9 @@ def apply_input_pipeline_cjsg(
     3. :func:`pop_normalize_aliases` — strip from ``kwargs`` everything already
        consumed (search aliases, date aliases, canonical date keys), so the
        same value isn't propagated twice into the schema.
-    4. :func:`validate_intervalo_datas` for julgamento *and* publicação — no-ops
-       when both bounds are ``None`` (single-bound or no-filter searches).
+    4. :func:`validate_intervalo_datas` for julgamento *and* publicação. Format
+       and ``inicio <= fim`` are always validated; the window cap is applied
+       only when ``max_dias`` is set.
     5. ``schema_cls(pesquisa, paginas, **datas, **canonical_filters, **kwargs)``
        — pydantic validation with ``extra="forbid"``.
     6. :func:`raise_on_extra_kwargs` translates ``extra_forbidden`` errors into
@@ -393,6 +402,10 @@ def apply_input_pipeline_cjsg(
       rejects them as ``extra_forbidden``.
     - Running tribunal-specific validators that should fire before pydantic
       (e.g. ``validate_pesquisa_length`` in TJSP).
+    - Passing ``max_dias`` and ``origem`` when the backend has a documented
+      window limit (e.g. eSAJ: ``max_dias=366, origem="O eSAJ"``). The
+      defaults disable the window check, since most non-eSAJ backends accept
+      arbitrarily wide ranges (audited under #128).
 
     Args:
         schema_cls: Pydantic model class to instantiate (e.g. :class:`InputCJSGTJRN`).
@@ -404,9 +417,19 @@ def apply_input_pipeline_cjsg(
             ``list``, ``range``, or ``None``).
         kwargs: The caller's local ``kwargs`` dict. Mutated in place by
             :func:`pop_normalize_aliases` and consumed by ``schema_cls``.
+        max_dias: Window cap for date intervals, in days. ``None`` (default)
+            disables the cap — used by tribunals whose backend has no
+            documented limit (refs #128). The eSAJ family passes
+            ``max_dias=366`` explicitly. Format and ordering of the dates are
+            validated regardless of this value.
+        origem: Subject of the over-limit error message (only emitted when
+            ``max_dias`` is set). Examples: ``"O eSAJ"``, ``"O TJRS"``.
         **canonical_filters: Tribunal-specific filters already extracted from
             the public method signature (e.g. ``numero_processo=...``,
-            ``relator=...``). They are forwarded to the schema as-is.
+            ``relator=...``). They are forwarded to the schema as-is. **A key
+            present in both ``canonical_filters`` and ``kwargs`` raises
+            :class:`TypeError` (Python's ``schema_cls(**a, **b)`` semantics) —
+            the caller is expected to pop conflicting kwargs beforehand.**
 
     Returns:
         Instantiated pydantic model with all fields validated.
@@ -425,11 +448,15 @@ def apply_input_pipeline_cjsg(
         datas["data_julgamento_inicio"],
         datas["data_julgamento_fim"],
         rotulo="data_julgamento",
+        max_dias=max_dias,
+        origem=origem,
     )
     validate_intervalo_datas(
         datas["data_publicacao_inicio"],
         datas["data_publicacao_fim"],
         rotulo="data_publicacao",
+        max_dias=max_dias,
+        origem=origem,
     )
 
     try:

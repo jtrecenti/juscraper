@@ -21,7 +21,7 @@ import requests
 from pydantic import BaseModel
 
 from ...core.base import BaseScraper
-from ...utils.params import apply_input_pipeline_cjsg, normalize_pesquisa
+from ...utils.params import apply_input_pipeline_search, normalize_pesquisa
 from .download import download_cjsg_pages
 from .forms import build_cjsg_form_body
 from .parse import cjsg_n_pags, cjsg_parse_manager
@@ -115,12 +115,14 @@ class EsajSearchScraper(BaseScraper):
         """
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
 
-        input_model = apply_input_pipeline_cjsg(
+        input_model = apply_input_pipeline_search(
             self.INPUT_CJSG,
             f"{type(self).__name__}.cjsg_download()",
             pesquisa=pesquisa,
             paginas=paginas,
             kwargs=kwargs,
+            max_dias=366,
+            origem="O eSAJ",
         )
 
         body = self._build_cjsg_body(input_model)
