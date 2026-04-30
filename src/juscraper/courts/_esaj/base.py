@@ -18,36 +18,16 @@ import shutil
 from typing import Any
 
 import requests
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 
 from ...core.base import BaseScraper
-from ...utils.params import (
-    normalize_datas,
-    normalize_paginas,
-    normalize_pesquisa,
-    pop_normalize_aliases,
-    validate_intervalo_datas,
-)
+from ...utils.params import apply_input_pipeline_search, normalize_pesquisa
 from .download import download_cjsg_pages
 from .forms import build_cjsg_form_body
 from .parse import cjsg_n_pags, cjsg_parse_manager
 from .schemas import InputCJSGEsajPuro
 
 logger = logging.getLogger("juscraper._esaj.base")
-
-
-def _raise_on_extra(exc: ValidationError, method: str) -> None:
-    """Convert pydantic ``extra_forbidden`` errors into a ``TypeError``.
-
-    Regular users expect ``TypeError: got unexpected keyword argument`` when
-    they mistype a param name. Raising pydantic's ``ValidationError`` for
-    that case is accurate but unfriendly. Other validation errors (e.g.
-    bad date format) surface as-is.
-    """
-    extras = [err for err in exc.errors() if err["type"] == "extra_forbidden"]
-    if extras and len(extras) == len(exc.errors()):
-        names = ", ".join(repr(err["loc"][-1]) for err in extras)
-        raise TypeError(f"{method} got unexpected keyword argument(s): {names}") from exc
 
 
 class EsajSearchScraper(BaseScraper):
@@ -149,7 +129,7 @@ class EsajSearchScraper(BaseScraper):
 
         Raises:
             TypeError: Quando um kwarg desconhecido e passado (via
-                :func:`_raise_on_extra`).
+                :func:`raise_on_extra_kwargs`).
             ValidationError: Quando um filtro tem formato invalido.
 
         Returns:
@@ -206,31 +186,16 @@ class EsajSearchScraper(BaseScraper):
             str: Caminho do diretorio onde os HTMLs foram salvos.
         """
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-        paginas_norm = normalize_paginas(paginas)
-        datas = normalize_datas(**kwargs)
-        pop_normalize_aliases(kwargs, include_canonical=True)
 
-        validate_intervalo_datas(
-            datas["data_julgamento_inicio"],
-            datas["data_julgamento_fim"],
-            rotulo="data_julgamento",
+        input_model = apply_input_pipeline_search(
+            self.INPUT_CJSG,
+            f"{type(self).__name__}.cjsg_download()",
+            pesquisa=pesquisa,
+            paginas=paginas,
+            kwargs=kwargs,
+            max_dias=366,
+            origem="O eSAJ",
         )
-        validate_intervalo_datas(
-            datas["data_publicacao_inicio"],
-            datas["data_publicacao_fim"],
-            rotulo="data_publicacao",
-        )
-
-        try:
-            input_model = self.INPUT_CJSG(
-                pesquisa=pesquisa,
-                paginas=paginas_norm,
-                **{k: v for k, v in datas.items() if v is not None},
-                **kwargs,
-            )
-        except ValidationError as exc:
-            _raise_on_extra(exc, f"{type(self).__name__}.cjsg_download()")
-            raise
 
         body = self._build_cjsg_body(input_model)
 
@@ -240,7 +205,7 @@ class EsajSearchScraper(BaseScraper):
             download_path=diretorio or self.download_path,
             body=body,
             tipo_decisao=getattr(input_model, "tipo_decisao", "acordao"),
-            paginas=paginas_norm,
+            paginas=input_model.paginas,
             get_n_pags_callback=cjsg_n_pags,
             sleep_time=self.sleep_time,
             chrome_ua=self.CJSG_CHROME_UA,
