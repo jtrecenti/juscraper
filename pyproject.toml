@@ -121,7 +121,6 @@ exclude = [
     "/docs",
     "/uv.lock",
     "/AGENTS.md",
-    "/MANIFEST.in",
     "/PUBLISHING.md",
     "/.pre-commit-config.yaml",
     "/.readthedocs.yml",

@@ -32,8 +32,14 @@ jobs:
 
     - name: Inspecionar artefatos (sem tests/, sdist < 1MB)
       run: |
-        WHEEL=$(ls dist/juscraper-*.whl)
-        SDIST=$(ls dist/juscraper-*.tar.gz)
+        WHEELS=(dist/juscraper-*.whl)
+        SDISTS=(dist/juscraper-*.tar.gz)
+        if [ ${#WHEELS[@]} -ne 1 ] || [ ${#SDISTS[@]} -ne 1 ]; then
+          echo "ERRO: esperava 1 wheel e 1 sdist em dist/, encontrou ${#WHEELS[@]} wheel(s) e ${#SDISTS[@]} sdist(s)" >&2
+          exit 1
+        fi
+        WHEEL="${WHEELS[0]}"
+        SDIST="${SDISTS[0]}"
         if unzip -l "$WHEEL" | grep -E '(^| )tests/'; then
           echo "ERRO: wheel contem tests/" >&2; exit 1
         fi
