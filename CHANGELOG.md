@@ -7,6 +7,16 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- `cjpg`/`cjsg` da familia eSAJ (cjsg em TJSP/TJAC/TJAL/TJAM/TJCE/TJMS, cjpg em TJSP) agora dividem internamente intervalos `data_julgamento_*` que excedem 366 dias, baixam cada janela e concatenam o resultado deduplicando por `cd_acordao` (cjsg) ou `id_processo` (cjpg). Refs #130.
+  - Falhas em janelas individuais viram `UserWarning` e o DataFrame retorna parcial (com a coluna de dedup preservada mesmo quando todas falham).
+  - Controlado pelo novo flag `auto_chunk: bool = True` (mixin `juscraper.schemas.AutoChunkMixin`).
+  - Para o comportamento antigo (`ValueError` em janelas longas), passe `auto_chunk=False`.
+  - `auto_chunk=True` combinado com `paginas` quando o intervalo excede 366 dias e `ValueError` por ambiguidade.
+  - Conflito `pesquisa` + alias deprecado (`query`/`termo`) tambem levanta `ValueError` no caminho chunked (paridade com o caminho noop).
+- Orquestracao do auto-chunking consolidada em `juscraper.courts._esaj.base.run_auto_chunk`. Antes, a logica vivia duplicada (~50 linhas) em `EsajSearchScraper.cjsg` e `TJSPScraper.cjpg`, com diferenca sutil no re-injetar de `**extras` (ponto de drift apontado em revisao de PR #155). O helper centraliza o sniff + windows + pop + validacao upfront + `_fetch` + `run_chunked_search`.
+
 ### Fixed
 
 - `TJPRScraper.cjsg` propagava `**kwargs` com aliases deprecados (`query`, `termo`, `data_inicio`, `data_fim`, etc.) para `cjsg_download`, fazendo `normalize_pesquisa` levantar `ValueError` na segunda invocação. Agora pop dos aliases via `pop_normalize_aliases` antes do re-pass — alinhado com `_esaj/base.py` e `tjsp/client.py`. Os testes `test_cjsg_{query,termo}_alias_emits_deprecation_warning` deixam de ser `xfail` e passam diretamente.

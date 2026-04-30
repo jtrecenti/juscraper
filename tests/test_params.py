@@ -1,14 +1,17 @@
 """Tests for the parameter normalization utilities."""
 import warnings
 
+import pandas as pd
 import pytest
 
 from juscraper.utils.params import (
+    iter_date_windows,
     normalize_datas,
     normalize_paginas,
     normalize_pesquisa,
     pop_deprecated_alias,
     resolve_deprecated_alias,
+    run_chunked_search,
     validate_intervalo_datas,
     warn_unsupported,
 )
@@ -306,3 +309,201 @@ class TestResolveDeprecatedAlias:
                 kwargs, "nr_processo", "numero_processo", "", sentinel=""
             )
         assert result == "X"
+
+
+# --- iter_date_windows ---
+
+class TestIterDateWindows:
+
+    def test_none_inicio_passthrough(self):
+        assert list(iter_date_windows(None, "31/12/2024")) == [(None, "31/12/2024")]
+
+    def test_none_fim_passthrough(self):
+        assert list(iter_date_windows("01/01/2024", None)) == [("01/01/2024", None)]
+
+    def test_both_none(self):
+        assert list(iter_date_windows(None, None)) == [(None, None)]
+
+    def test_short_window_noop(self):
+        # Janela cabe em 366 dias — emite o par original.
+        assert list(iter_date_windows("01/01/2024", "31/12/2024")) == [
+            ("01/01/2024", "31/12/2024")
+        ]
+
+    def test_same_day(self):
+        assert list(iter_date_windows("15/06/2024", "15/06/2024")) == [
+            ("15/06/2024", "15/06/2024")
+        ]
+
+    def test_three_year_split(self):
+        windows = list(iter_date_windows("01/01/2022", "31/12/2024"))
+        # 3 anos > 366 dias: divide em 3 janelas de até 366 dias, sem sobreposicao.
+        assert len(windows) == 3
+        # Primeira começa no inicio.
+        assert windows[0][0] == "01/01/2022"
+        # Última termina no fim.
+        assert windows[-1][1] == "31/12/2024"
+        # Janelas não-sobrepostas (cada início > fim anterior).
+        from datetime import datetime
+        for prev, nxt in zip(windows, windows[1:]):
+            assert prev[1] is not None and nxt[0] is not None
+            prev_fim = datetime.strptime(prev[1], "%d/%m/%Y")
+            nxt_ini = datetime.strptime(nxt[0], "%d/%m/%Y")
+            assert (nxt_ini - prev_fim).days == 1
+
+    def test_custom_max_dias(self):
+        # 32 dias > 31 → divide em duas janelas.
+        windows = list(iter_date_windows("01/01/2024", "02/02/2024", max_dias=31))
+        assert len(windows) == 2
+
+    def test_boundary_exactly_max_dias_single_window(self):
+        # Exatamente 366 dias (01/01/2024 → 01/01/2025) deve ser noop.
+        windows = list(iter_date_windows("01/01/2024", "01/01/2025"))
+        assert windows == [("01/01/2024", "01/01/2025")]
+
+    def test_boundary_max_dias_plus_one_splits(self):
+        # 367 dias (01/01/2024 → 02/01/2025) deve dividir em 2 janelas.
+        windows = list(iter_date_windows("01/01/2024", "02/01/2025"))
+        assert len(windows) == 2
+        assert windows[0][0] == "01/01/2024"
+        assert windows[-1][1] == "02/01/2025"
+
+    def test_invalid_format_raises(self):
+        with pytest.raises(ValueError, match="data_inicio inválida"):
+            list(iter_date_windows("2024-01-01", "31/12/2024"))
+
+    def test_inicio_after_fim_raises(self):
+        with pytest.raises(ValueError, match="posterior"):
+            list(iter_date_windows("31/12/2024", "01/01/2024"))
+
+
+# --- run_chunked_search ---
+
+class TestRunChunkedSearch:
+
+    def test_single_window_passthrough(self):
+        # Janela curta: chama fetch_window uma única vez e retorna seu DataFrame
+        # sem dedup nem warning.
+        seen = []
+
+        def fetch(i, f):
+            seen.append((i, f))
+            return pd.DataFrame({"cd_acordao": ["a", "b"]})
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            df = run_chunked_search(
+                fetch,
+                data_inicio="01/01/2024",
+                data_fim="31/12/2024",
+                dedup_key="cd_acordao",
+            )
+        assert seen == [("01/01/2024", "31/12/2024")]
+        assert list(df["cd_acordao"]) == ["a", "b"]
+        assert len(w) == 0
+
+    def test_open_ended_passthrough(self):
+        def fetch(i, f):
+            return pd.DataFrame({"cd_acordao": ["x"]})
+
+        df = run_chunked_search(
+            fetch,
+            data_inicio=None,
+            data_fim="31/12/2024",
+            dedup_key="cd_acordao",
+        )
+        assert list(df["cd_acordao"]) == ["x"]
+
+    def test_multi_window_concat_and_dedup(self):
+        # 3 anos → 3 janelas. Entre elas há um cd_acordao duplicado: dedup mantém o primeiro.
+        def fetch(i, f):
+            # Cada janela retorna 2 linhas; linha "shared" aparece em todas.
+            return pd.DataFrame({"cd_acordao": [f"only-{i}", "shared"]})
+
+        df = run_chunked_search(
+            fetch,
+            data_inicio="01/01/2022",
+            data_fim="31/12/2024",
+            dedup_key="cd_acordao",
+        )
+        # 3 únicos por janela + 1 "shared" = 4 linhas
+        assert len(df) == 4
+        assert (df["cd_acordao"] == "shared").sum() == 1
+
+    def test_multi_window_partial_failure_warns(self):
+        def fetch(i, f):
+            if i == "03/01/2023":
+                raise RuntimeError("boom")
+            return pd.DataFrame({"cd_acordao": [f"a-{i}"]})
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            df = run_chunked_search(
+                fetch,
+                data_inicio="01/01/2022",
+                data_fim="31/12/2024",
+                dedup_key="cd_acordao",
+            )
+        assert len(df) == 2  # 2 sucessos, 1 falha
+        assert len(w) == 1
+        assert issubclass(w[0].category, UserWarning)
+        assert "1 de 3" in str(w[0].message) or "1 de" in str(w[0].message)
+
+    def test_all_windows_fail_returns_empty(self):
+        def fetch(i, f):
+            raise RuntimeError("always fails")
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            df = run_chunked_search(
+                fetch,
+                data_inicio="01/01/2022",
+                data_fim="31/12/2024",
+                dedup_key="cd_acordao",
+            )
+        assert df.empty
+        # DataFrame vazio ainda carrega a coluna de dedup, evitando KeyError
+        # em codigo a jusante que faca df["cd_acordao"].
+        assert "cd_acordao" in df.columns
+        assert len(w) == 1
+
+    def test_multi_window_with_paginas_raises(self):
+        def fetch(i, f):
+            return pd.DataFrame({"cd_acordao": ["a"]})
+
+        with pytest.raises(ValueError, match="auto_chunk.*paginas"):
+            run_chunked_search(
+                fetch,
+                data_inicio="01/01/2022",
+                data_fim="31/12/2024",
+                dedup_key="cd_acordao",
+                paginas=range(1, 3),
+            )
+
+    def test_single_window_with_paginas_ok(self):
+        # Janela curta: paginas pode coexistir (orquestrador é noop).
+        def fetch(i, f):
+            return pd.DataFrame({"cd_acordao": ["a"]})
+
+        df = run_chunked_search(
+            fetch,
+            data_inicio="01/01/2024",
+            data_fim="31/12/2024",
+            dedup_key="cd_acordao",
+            paginas=range(1, 3),
+        )
+        assert len(df) == 1
+
+    def test_dedup_key_missing_skips_dedup(self):
+        # Coluna ausente: parser não emitiu o key (e.g. tipo_decisao=monocratica).
+        # Concatenação ocorre mas dedup é pulado.
+        def fetch(i, f):
+            return pd.DataFrame({"outra": [f"v-{i}"]})
+
+        df = run_chunked_search(
+            fetch,
+            data_inicio="01/01/2022",
+            data_fim="31/12/2024",
+            dedup_key="cd_acordao",
+        )
+        assert len(df) == 3  # 3 janelas, 1 linha cada

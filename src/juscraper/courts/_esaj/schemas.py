@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import Literal
 
 from ...schemas import (
+    AutoChunkMixin,
     DataJulgamentoMixin,
     DataPublicacaoMixin,
     OutputDataPublicacaoMixin,
@@ -18,7 +19,7 @@ from ...schemas import (
 from ...schemas.cjsg import OutputCJSGBase
 
 
-class InputCJSGEsajPuro(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
+class InputCJSGEsajPuro(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin, AutoChunkMixin):
     """Accepted input for TJAC/TJAL/TJAM/TJCE/TJMS ``cjsg``.
 
     Inherits ``extra='forbid'`` from :class:`SearchBase`, so unknown keyword

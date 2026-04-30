@@ -1,8 +1,9 @@
 """Utility functions for normalizing public API parameters across all scrapers."""
 import warnings
-from datetime import datetime
-from typing import Optional, Union
+from datetime import datetime, timedelta
+from typing import Any, Callable, Iterator, Optional, Union
 
+import pandas as pd
 from pydantic import BaseModel, ValidationError
 
 # Deprecated aliases consumed by ``normalize_pesquisa``. Keep in sync with the
@@ -259,8 +260,10 @@ def validate_intervalo_datas(
         max_dias: Maximum allowed interval in days (default: 366 to admit a
             full calendar year even across a leap day). ``None`` disables the
             window check while still validating ``formato`` and
-            ``data_inicio <= data_fim`` — used by tribunals whose backend has
-            no documented limit (audited under #128).
+            ``data_inicio <= data_fim`` — used both by tribunals whose backend
+            has no documented limit (audited under #128) and por
+            :func:`run_chunked_search` para validar formato/ordem sem aplicar
+            cap (#130).
         formato: ``strptime`` format of the input strings.
         rotulo: Human-readable label for the parameter pair in error messages
             (e.g. ``"data_julgamento"``).
@@ -302,8 +305,176 @@ def validate_intervalo_datas(
         raise ValueError(
             f"{origem} aceita no máximo {max_dias} dias entre '{rotulo}_inicio' "
             f"e '{rotulo}_fim' (recebido: {dias} dias, de {data_inicio} a "
-            f"{data_fim}). Divida a consulta em janelas menores."
+            f"{data_fim}). Divida a consulta em janelas menores ou mantenha "
+            "auto_chunk=True (default) para dividir automaticamente."
         )
+
+
+def iter_date_windows(
+    data_inicio: Optional[str],
+    data_fim: Optional[str],
+    *,
+    max_dias: int = 366,
+    formato: str = "%d/%m/%Y",
+) -> Iterator[tuple[Optional[str], Optional[str]]]:
+    """Split a date range into non-overlapping windows of at most ``max_dias`` days.
+
+    Used by :func:`run_chunked_search` to honour platform-specific window
+    caps (eSAJ: 1 year). Each emitted pair carries the same string format as
+    the input. The next window starts the day after the previous one ends.
+
+    Edge cases:
+        * Either side ``None`` → emits the original pair once (open-ended
+          search, the server decides).
+        * Interval ≤ ``max_dias`` → emits the original pair once (noop).
+
+    Raises:
+        ValueError: If a date is malformed or ``data_inicio > data_fim``.
+            Defense in depth — callers usually run
+            :func:`validate_intervalo_datas` first with ``max_dias=None``.
+    """
+    if data_inicio is None or data_fim is None:
+        yield (data_inicio, data_fim)
+        return
+
+    try:
+        dt_inicio = datetime.strptime(data_inicio, formato)
+    except ValueError as exc:
+        raise ValueError(
+            f"data_inicio inválida: {data_inicio!r}. Formato esperado: {formato}."
+        ) from exc
+    try:
+        dt_fim = datetime.strptime(data_fim, formato)
+    except ValueError as exc:
+        raise ValueError(
+            f"data_fim inválida: {data_fim!r}. Formato esperado: {formato}."
+        ) from exc
+
+    if dt_inicio > dt_fim:
+        raise ValueError(
+            f"data_inicio ({data_inicio}) é posterior a data_fim ({data_fim})."
+        )
+
+    if (dt_fim - dt_inicio).days <= max_dias:
+        yield (data_inicio, data_fim)
+        return
+
+    cursor = dt_inicio
+    step = timedelta(days=max_dias)
+    one_day = timedelta(days=1)
+    while cursor <= dt_fim:
+        win_end = min(cursor + step, dt_fim)
+        yield (cursor.strftime(formato), win_end.strftime(formato))
+        cursor = win_end + one_day
+
+
+def run_chunked_search(
+    fetch_window: Callable[[Optional[str], Optional[str]], Any],
+    *,
+    data_inicio: Optional[str],
+    data_fim: Optional[str],
+    dedup_key: str,
+    max_dias: int = 366,
+    paginas=None,
+    rotulo: str = "data_julgamento",
+    origem: str = "O servidor",
+    formato: str = "%d/%m/%Y",
+):
+    """Drive a search method across date windows and return a deduped DataFrame.
+
+    Single-window case (interval ≤ ``max_dias`` or open-ended): forwards to
+    ``fetch_window`` once and returns its result unchanged. No dedup, no
+    warning — auto-chunking is invisible when not needed.
+
+    Multi-window case:
+        * Rejects ``paginas != None`` (semantic ambiguity — see issue #130).
+        * Calls ``fetch_window(win_inicio, win_fim)`` for each window.
+        * Catches :class:`Exception` per window (not :class:`BaseException`
+          — keep KeyboardInterrupt/SystemExit propagating). Failed windows
+          are aggregated and surfaced via :class:`UserWarning`.
+        * Concatenates surviving frames and deduplicates on ``dedup_key``
+          when the column exists in the result (defensive: parsers may
+          omit the key in edge cases like ``tipo_decisao='monocratica'``).
+
+    Args:
+        fetch_window: Callable accepting ``(data_inicio, data_fim)`` strings
+            (same format as the inputs) and returning a ``pd.DataFrame``.
+        data_inicio, data_fim: Search interval in ``DD/MM/YYYY`` (or whatever
+            ``formato`` is configured to). Either may be ``None`` — search is
+            then forwarded to the server with no chunking.
+        dedup_key: Column used to deduplicate concatenated results. When all
+            windows fail, the returned (empty) DataFrame still carries this
+            column so callers indexing ``df[dedup_key]`` don't ``KeyError``.
+        max_dias: Window cap, in days.
+        paginas: The caller's ``paginas`` value. Forbidden in the multi-window
+            path; allowed (passthrough is the caller's responsibility) in the
+            single-window path.
+        rotulo: Forwarded to :func:`validate_intervalo_datas` for error
+            messages (e.g. ``"data_julgamento"``).
+        origem: Forwarded to :func:`validate_intervalo_datas`. Default
+            ``"O servidor"`` is intentionally generic — eSAJ-specific callers
+            override with ``"O eSAJ"`` to keep the legacy error message.
+        formato: Date format used by ``iter_date_windows``.
+
+    Returns:
+        pandas DataFrame. **All-windows-failed case**: returns an empty DF
+        carrying **only** the ``dedup_key`` column (the parser's other columns
+        are not synthesized). Code downstream that indexes ``df["<col>"]`` for
+        a non-dedup column should test ``df.empty`` first.
+
+    Raises:
+        ValueError: For invalid date input or ``paginas != None`` in the
+            multi-window path.
+    """
+    validate_intervalo_datas(
+        data_inicio,
+        data_fim,
+        rotulo=rotulo,
+        max_dias=None,
+        origem=origem,
+        formato=formato,
+    )
+
+    windows = list(iter_date_windows(data_inicio, data_fim, max_dias=max_dias, formato=formato))
+
+    if len(windows) <= 1:
+        win_i, win_f = windows[0] if windows else (data_inicio, data_fim)
+        return fetch_window(win_i, win_f)
+
+    # Multi-window from here. Reject paginas before iterating — multi-window
+    # semantics for paginas are ambiguous (per-window? aggregated budget?).
+    if paginas is not None:
+        raise ValueError(
+            "auto_chunk=True não pode ser combinado com 'paginas' quando o "
+            f"intervalo excede o limite do tribunal (>{max_dias} dias). "
+            "Reduza a janela ou passe auto_chunk=False."
+        )
+
+    frames = []
+    failed: list[tuple[Optional[str], Optional[str], str]] = []
+    for win_i, win_f in windows:
+        try:
+            df = fetch_window(win_i, win_f)
+        except Exception as exc:  # noqa: BLE001 — surface per-window failure
+            failed.append((win_i, win_f, repr(exc)))
+            continue
+        frames.append(df)
+
+    if failed:
+        warnings.warn(
+            f"auto_chunk: {len(failed)} de {len(windows)} janela(s) falharam: "
+            f"{failed}",
+            UserWarning,
+            stacklevel=2,
+        )
+
+    if not frames:
+        return pd.DataFrame(columns=[dedup_key])
+
+    df = pd.concat(frames, ignore_index=True)
+    if dedup_key in df.columns:
+        df = df.drop_duplicates(subset=[dedup_key], keep="first").reset_index(drop=True)
+    return df
 
 
 def warn_unsupported(param_name, tribunal):
