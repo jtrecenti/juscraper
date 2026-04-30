@@ -5,10 +5,11 @@ import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa
+from juscraper.utils.params import apply_input_pipeline_search, normalize_paginas, normalize_pesquisa
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
+from .schemas import InputCJSGTJRR
 
 
 class TJRRScraper(BaseScraper):
@@ -43,36 +44,63 @@ class TJRRScraper(BaseScraper):
         especie: list | None = None,
         **kwargs,
     ) -> pd.DataFrame:
-        """Search TJRR jurisprudence.
+        """Busca jurisprudencia no TJRR.
 
-        Parameters
-        ----------
-        pesquisa : str
-            Free-text search term.
-        paginas : int, list, range, or None
-            Pages to download (1-based). None downloads all.
-        relator : str, optional
-            Reporter judge name.
-        orgao_julgador : list, optional
-            Judging body codes (e.g. ``["PRIMEIRA_TURMA_CIVEL", "CAMARA_CRIMINAL"]``).
-        especie : list, optional
-            Decision type codes.
+        Args:
+            pesquisa (str): Termo de busca livre (busca na ementa).
+            paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
+                todas. Default ``None``.
+            relator (str): Nome do relator. **Aceito por compat de API**, mas
+                hoje o backend nao expoe campo de texto livre para relator
+                (virou multi-select de IDs); o filtro e descartado pelo
+                Projudi/PrimeFaces. Refs #158 (deprecation/remocao planejada).
+            orgao_julgador (list[str] | None): Codigos do orgao julgador
+                (ex.: ``["PRIMEIRA_TURMA_CIVEL"]``). Backend:
+                ``menuinicial:tipoOrgaoList``.
+            especie (list[str] | None): Codigos do tipo de decisao
+                (ex.: ``["ACORDAO"]``). Backend: ``menuinicial:tipoEspecieList``.
+            **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJRR`.
+                Listados abaixo (todos opcionais; ``None`` = sem filtro):
 
-        Returns
-        -------
-        pd.DataFrame
+                * ``data_julgamento_inicio`` / ``data_julgamento_fim`` (str):
+                  ``DD/MM/AAAA``. Backend: ``menuinicial:datainicial_input``
+                  / ``menuinicial:datafinal_input``.
+
+        Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
+            * ``query`` / ``termo`` -> ``pesquisa``
+            * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``_fim``
+            * ``data_julgamento_de`` / ``_ate`` -> ``data_julgamento_inicio`` / ``_fim``
+
+        Raises:
+            TypeError: Quando um kwarg desconhecido e passado.
+            ValidationError: Quando um filtro tem formato invalido.
+
+        Returns:
+            pd.DataFrame: DataFrame com as decisoes.
+
+        See also:
+            :class:`InputCJSGTJRR` — schema pydantic e a fonte da verdade dos
+            filtros aceitos.
         """
-        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-        paginas = normalize_paginas(paginas)
-        datas = normalize_datas(**kwargs)
-        brutos = self.cjsg_download(
-            pesquisa=pesquisa,
+        pesquisa_val = normalize_pesquisa(pesquisa, **kwargs)
+        inp = apply_input_pipeline_search(
+            InputCJSGTJRR,
+            "TJRRScraper.cjsg()",
+            pesquisa=pesquisa_val,
             paginas=paginas,
+            kwargs=kwargs,
             relator=relator,
-            data_inicio=datas["data_julgamento_inicio"] or "",
-            data_fim=datas["data_julgamento_fim"] or "",
             orgao_julgador=orgao_julgador,
             especie=especie,
+        )
+        brutos = self.cjsg_download(
+            pesquisa=inp.pesquisa,
+            paginas=inp.paginas,
+            relator=inp.relator,
+            data_inicio=inp.data_julgamento_inicio or "",
+            data_fim=inp.data_julgamento_fim or "",
+            orgao_julgador=inp.orgao_julgador,
+            especie=inp.especie,
         )
         return self.cjsg_parse(brutos)
 
