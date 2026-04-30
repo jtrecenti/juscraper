@@ -17,6 +17,10 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
     ``TJRNScraper`` rewrites them as ``DD-MM-YYYY`` (with dashes) before
     passing to ``cjsg_download_manager`` — the backend silently drops any
     other format. See ``_to_tjrn_date`` in ``courts/tjrn/client.py``.
+
+    Note: ``TJRNScraper.cjsg`` exposes only ``data_julgamento_inicio``/``fim``;
+    ``data_publicacao_*`` is not in the public signature, so the publication
+    date filter does not enter the matcher.
     """
     mocker.patch("time.sleep")
     responses.add(

@@ -17,7 +17,13 @@ from tests._helpers import load_sample
 
 @responses.activate
 def test_cjsg_all_filters_land_in_query_params(mocker):
-    """Every TJPI public filter must reach the GET query-string."""
+    """Every TJPI public filter must reach the GET query-string.
+
+    Note: ``TJPIScraper.cjsg`` exposes only ``data_julgamento_inicio``/``fim``
+    (wired to ``data_min``/``data_max`` after ``to_iso_date``); ``data_publicacao_*``
+    is not in the public signature, so the publication date filter does not
+    enter the matcher.
+    """
     mocker.patch("time.sleep")
     responses.add(
         responses.GET,
