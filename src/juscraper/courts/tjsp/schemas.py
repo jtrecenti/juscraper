@@ -20,11 +20,11 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
-from ...schemas import CnjInputBase, DataJulgamentoMixin, OutputCnjConsultaBase, SearchBase
+from ...schemas import AutoChunkMixin, CnjInputBase, DataJulgamentoMixin, OutputCnjConsultaBase, SearchBase
 from ...schemas.cjsg import OutputCJSGBase
 
 
-class InputCJSGTJSP(SearchBase, DataJulgamentoMixin):
+class InputCJSGTJSP(SearchBase, DataJulgamentoMixin, AutoChunkMixin):
     """Accepted input for TJSP ``cjsg``. Unknown kwargs raise via ``extra='forbid'``.
 
     Herda filtro de data de julgamento via :class:`DataJulgamentoMixin`.
@@ -53,7 +53,7 @@ class OutputCJSGTJSP(OutputCJSGBase):
     orgao_julgador: str | None = None
 
 
-class InputCJPGTJSP(SearchBase, DataJulgamentoMixin):
+class InputCJPGTJSP(SearchBase, DataJulgamentoMixin, AutoChunkMixin):
     """Accepted input for TJSP ``cjpg``. Unknown kwargs raise via ``extra='forbid'``.
 
     Sobrescreve ``pesquisa`` com default vazio porque o TJSP permite buscar

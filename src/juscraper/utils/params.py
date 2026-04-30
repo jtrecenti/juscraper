@@ -1,8 +1,10 @@
 """Utility functions for normalizing public API parameters across all scrapers."""
+import difflib
 import warnings
-from datetime import datetime
-from typing import Optional, Union
+from datetime import datetime, timedelta
+from typing import Any, Callable, Iterator, Optional, Union
 
+import pandas as pd
 from pydantic import BaseModel, ValidationError
 
 # Deprecated aliases consumed by ``normalize_pesquisa``. Keep in sync with the
@@ -259,8 +261,10 @@ def validate_intervalo_datas(
         max_dias: Maximum allowed interval in days (default: 366 to admit a
             full calendar year even across a leap day). ``None`` disables the
             window check while still validating ``formato`` and
-            ``data_inicio <= data_fim`` — used by tribunals whose backend has
-            no documented limit (audited under #128).
+            ``data_inicio <= data_fim`` — used both by tribunals whose backend
+            has no documented limit (audited under #128) and por
+            :func:`run_chunked_search` para validar formato/ordem sem aplicar
+            cap (#130).
         formato: ``strptime`` format of the input strings.
         rotulo: Human-readable label for the parameter pair in error messages
             (e.g. ``"data_julgamento"``).
@@ -302,8 +306,176 @@ def validate_intervalo_datas(
         raise ValueError(
             f"{origem} aceita no máximo {max_dias} dias entre '{rotulo}_inicio' "
             f"e '{rotulo}_fim' (recebido: {dias} dias, de {data_inicio} a "
-            f"{data_fim}). Divida a consulta em janelas menores."
+            f"{data_fim}). Divida a consulta em janelas menores ou mantenha "
+            "auto_chunk=True (default) para dividir automaticamente."
         )
+
+
+def iter_date_windows(
+    data_inicio: Optional[str],
+    data_fim: Optional[str],
+    *,
+    max_dias: int = 366,
+    formato: str = "%d/%m/%Y",
+) -> Iterator[tuple[Optional[str], Optional[str]]]:
+    """Split a date range into non-overlapping windows of at most ``max_dias`` days.
+
+    Used by :func:`run_chunked_search` to honour platform-specific window
+    caps (eSAJ: 1 year). Each emitted pair carries the same string format as
+    the input. The next window starts the day after the previous one ends.
+
+    Edge cases:
+        * Either side ``None`` → emits the original pair once (open-ended
+          search, the server decides).
+        * Interval ≤ ``max_dias`` → emits the original pair once (noop).
+
+    Raises:
+        ValueError: If a date is malformed or ``data_inicio > data_fim``.
+            Defense in depth — callers usually run
+            :func:`validate_intervalo_datas` first with ``max_dias=None``.
+    """
+    if data_inicio is None or data_fim is None:
+        yield (data_inicio, data_fim)
+        return
+
+    try:
+        dt_inicio = datetime.strptime(data_inicio, formato)
+    except ValueError as exc:
+        raise ValueError(
+            f"data_inicio inválida: {data_inicio!r}. Formato esperado: {formato}."
+        ) from exc
+    try:
+        dt_fim = datetime.strptime(data_fim, formato)
+    except ValueError as exc:
+        raise ValueError(
+            f"data_fim inválida: {data_fim!r}. Formato esperado: {formato}."
+        ) from exc
+
+    if dt_inicio > dt_fim:
+        raise ValueError(
+            f"data_inicio ({data_inicio}) é posterior a data_fim ({data_fim})."
+        )
+
+    if (dt_fim - dt_inicio).days <= max_dias:
+        yield (data_inicio, data_fim)
+        return
+
+    cursor = dt_inicio
+    step = timedelta(days=max_dias)
+    one_day = timedelta(days=1)
+    while cursor <= dt_fim:
+        win_end = min(cursor + step, dt_fim)
+        yield (cursor.strftime(formato), win_end.strftime(formato))
+        cursor = win_end + one_day
+
+
+def run_chunked_search(
+    fetch_window: Callable[[Optional[str], Optional[str]], Any],
+    *,
+    data_inicio: Optional[str],
+    data_fim: Optional[str],
+    dedup_key: str,
+    max_dias: int = 366,
+    paginas=None,
+    rotulo: str = "data_julgamento",
+    origem: str = "O servidor",
+    formato: str = "%d/%m/%Y",
+):
+    """Drive a search method across date windows and return a deduped DataFrame.
+
+    Single-window case (interval ≤ ``max_dias`` or open-ended): forwards to
+    ``fetch_window`` once and returns its result unchanged. No dedup, no
+    warning — auto-chunking is invisible when not needed.
+
+    Multi-window case:
+        * Rejects ``paginas != None`` (semantic ambiguity — see issue #130).
+        * Calls ``fetch_window(win_inicio, win_fim)`` for each window.
+        * Catches :class:`Exception` per window (not :class:`BaseException`
+          — keep KeyboardInterrupt/SystemExit propagating). Failed windows
+          are aggregated and surfaced via :class:`UserWarning`.
+        * Concatenates surviving frames and deduplicates on ``dedup_key``
+          when the column exists in the result (defensive: parsers may
+          omit the key in edge cases like ``tipo_decisao='monocratica'``).
+
+    Args:
+        fetch_window: Callable accepting ``(data_inicio, data_fim)`` strings
+            (same format as the inputs) and returning a ``pd.DataFrame``.
+        data_inicio, data_fim: Search interval in ``DD/MM/YYYY`` (or whatever
+            ``formato`` is configured to). Either may be ``None`` — search is
+            then forwarded to the server with no chunking.
+        dedup_key: Column used to deduplicate concatenated results. When all
+            windows fail, the returned (empty) DataFrame still carries this
+            column so callers indexing ``df[dedup_key]`` don't ``KeyError``.
+        max_dias: Window cap, in days.
+        paginas: The caller's ``paginas`` value. Forbidden in the multi-window
+            path; allowed (passthrough is the caller's responsibility) in the
+            single-window path.
+        rotulo: Forwarded to :func:`validate_intervalo_datas` for error
+            messages (e.g. ``"data_julgamento"``).
+        origem: Forwarded to :func:`validate_intervalo_datas`. Default
+            ``"O servidor"`` is intentionally generic — eSAJ-specific callers
+            override with ``"O eSAJ"`` to keep the legacy error message.
+        formato: Date format used by ``iter_date_windows``.
+
+    Returns:
+        pandas DataFrame. **All-windows-failed case**: returns an empty DF
+        carrying **only** the ``dedup_key`` column (the parser's other columns
+        are not synthesized). Code downstream that indexes ``df["<col>"]`` for
+        a non-dedup column should test ``df.empty`` first.
+
+    Raises:
+        ValueError: For invalid date input or ``paginas != None`` in the
+            multi-window path.
+    """
+    validate_intervalo_datas(
+        data_inicio,
+        data_fim,
+        rotulo=rotulo,
+        max_dias=None,
+        origem=origem,
+        formato=formato,
+    )
+
+    windows = list(iter_date_windows(data_inicio, data_fim, max_dias=max_dias, formato=formato))
+
+    if len(windows) <= 1:
+        win_i, win_f = windows[0] if windows else (data_inicio, data_fim)
+        return fetch_window(win_i, win_f)
+
+    # Multi-window from here. Reject paginas before iterating — multi-window
+    # semantics for paginas are ambiguous (per-window? aggregated budget?).
+    if paginas is not None:
+        raise ValueError(
+            "auto_chunk=True não pode ser combinado com 'paginas' quando o "
+            f"intervalo excede o limite do tribunal (>{max_dias} dias). "
+            "Reduza a janela ou passe auto_chunk=False."
+        )
+
+    frames = []
+    failed: list[tuple[Optional[str], Optional[str], str]] = []
+    for win_i, win_f in windows:
+        try:
+            df = fetch_window(win_i, win_f)
+        except Exception as exc:  # noqa: BLE001 — surface per-window failure
+            failed.append((win_i, win_f, repr(exc)))
+            continue
+        frames.append(df)
+
+    if failed:
+        warnings.warn(
+            f"auto_chunk: {len(failed)} de {len(windows)} janela(s) falharam: "
+            f"{failed}",
+            UserWarning,
+            stacklevel=2,
+        )
+
+    if not frames:
+        return pd.DataFrame(columns=[dedup_key])
+
+    df = pd.concat(frames, ignore_index=True)
+    if dedup_key in df.columns:
+        df = df.drop_duplicates(subset=[dedup_key], keep="first").reset_index(drop=True)
+    return df
 
 
 def warn_unsupported(param_name, tribunal):
@@ -338,7 +510,12 @@ def pop_deprecated_alias(kwargs: dict, old: str, new: str):
     return value
 
 
-def raise_on_extra_kwargs(exc: ValidationError, method: str) -> None:
+def raise_on_extra_kwargs(
+    exc: ValidationError,
+    method: str,
+    *,
+    schema_cls: Optional[type[BaseModel]] = None,
+) -> None:
     """Convert pydantic ``extra_forbidden`` errors into a friendly ``TypeError``.
 
     Regular users expect ``TypeError: got unexpected keyword argument`` when
@@ -346,21 +523,41 @@ def raise_on_extra_kwargs(exc: ValidationError, method: str) -> None:
     case is accurate but unfriendly. Other validation errors (bad date format,
     wrong literal, etc.) surface as-is so the caller can see them.
 
+    When ``schema_cls`` is provided, each unknown kwarg is matched against the
+    schema's declared fields via :func:`difflib.get_close_matches`; if a close
+    match is found, it is included in the error message as ``(você quis dizer
+    'X'?)``. This catches typos like ``data_juglamento_inicio`` ->
+    ``data_julgamento_inicio``.
+
     Args:
         exc: The :class:`pydantic.ValidationError` raised by ``Schema(...)``.
         method: Human-readable method identifier for the error message
             (e.g. ``"TJRNScraper.cjsg()"``).
+        schema_cls: Optional pydantic model whose fields are used to suggest
+            close matches for unknown kwargs. When ``None``, no suggestion is
+            emitted.
 
     Raises:
         TypeError: When *all* errors in ``exc`` are ``extra_forbidden``. The
-            offending field names are included in the message. When the error
-            mix is not pure ``extra_forbidden`` the function returns ``None``
-            and the caller is expected to ``raise`` the original exception.
+            offending field names (and suggestions, when available) are included
+            in the message. When the error mix is not pure ``extra_forbidden``
+            the function returns ``None`` and the caller is expected to
+            ``raise`` the original exception.
     """
     extras = [err for err in exc.errors() if err["type"] == "extra_forbidden"]
     if extras and len(extras) == len(exc.errors()):
-        names = ", ".join(repr(err["loc"][-1]) for err in extras)
-        raise TypeError(f"{method} got unexpected keyword argument(s): {names}") from exc
+        valid_fields = list(schema_cls.model_fields) if schema_cls is not None else []
+        parts = []
+        for err in extras:
+            name = str(err["loc"][-1])
+            close = difflib.get_close_matches(name, valid_fields, n=1, cutoff=0.7)
+            if close:
+                parts.append(f"'{name}' (você quis dizer '{close[0]}'?)")
+            else:
+                parts.append(repr(name))
+        raise TypeError(
+            f"{method} got unexpected keyword argument(s): {', '.join(parts)}"
+        ) from exc
 
 
 def apply_input_pipeline_search(
@@ -371,7 +568,7 @@ def apply_input_pipeline_search(
     paginas,
     kwargs: dict,
     max_dias: Optional[int] = None,
-    origem: Optional[str] = None,
+    origem_mensagem: Optional[str] = None,
     **canonical_filters,
 ) -> BaseModel:
     """Run the canonical input-validation pipeline for search endpoints (cjsg/cjpg).
@@ -402,10 +599,24 @@ def apply_input_pipeline_search(
       rejects them as ``extra_forbidden``.
     - Running tribunal-specific validators that should fire before pydantic
       (e.g. ``validate_pesquisa_length`` in TJSP).
-    - Passing ``max_dias`` and ``origem`` when the backend has a documented
-      window limit (e.g. eSAJ: ``max_dias=366, origem="O eSAJ"``). The
-      defaults disable the window check, since most non-eSAJ backends accept
-      arbitrarily wide ranges (audited under #128).
+    - Passing ``max_dias`` and ``origem_mensagem`` when the backend has a
+      documented window limit (e.g. eSAJ: ``max_dias=366,
+      origem_mensagem="O eSAJ"``). The defaults disable the window check,
+      since most non-eSAJ backends accept arbitrarily wide ranges (audited
+      under #128).
+
+    The parameter is named ``origem_mensagem`` (not ``origem``) on purpose:
+    several tribunal scrapers use ``origem`` as a backend filter (e.g. TJPA's
+    list of jurisdictional origins). Naming the helper parameter ``origem``
+    would silently capture the caller's filter via Python's keyword binding
+    rules, instead of forwarding it to the schema via ``**canonical_filters``.
+
+    The date format used by :func:`validate_intervalo_datas` is read from the
+    schema's ``BACKEND_DATE_FORMAT`` :class:`ClassVar`, defaulting to
+    ``"%d/%m/%Y"`` (eSAJ). Tribunals whose backend speaks ISO declare
+    ``BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"`` in their schema. This
+    keeps the format coupled to the schema (where it logically belongs) instead
+    of being passed redundantly by every caller.
 
     Args:
         schema_cls: Pydantic model class to instantiate (e.g. :class:`InputCJSGTJRN`).
@@ -422,11 +633,11 @@ def apply_input_pipeline_search(
             documented limit (refs #128). The eSAJ family passes
             ``max_dias=366`` explicitly. Format and ordering of the dates are
             validated regardless of this value.
-        origem: Subject of the over-limit error message (only emitted when
-            ``max_dias`` is set). Examples: ``"O eSAJ"``, ``"O TJRS"``. When
-            ``max_dias`` is set but ``origem`` is ``None``, falls back to
-            ``"O backend"`` so the helper can be invoked by non-eSAJ
-            tribunals without leaking "eSAJ" into their error messages.
+        origem_mensagem: Subject of the over-limit error message (only emitted
+            when ``max_dias`` is set). Examples: ``"O eSAJ"``, ``"O TJRS"``.
+            ``None`` (default) falls back to ``"O backend"`` so non-eSAJ
+            tribunals invoking the helper without an explicit subject don't
+            leak ``"eSAJ"`` into their error messages.
         **canonical_filters: Tribunal-specific filters already extracted from
             the public method signature (e.g. ``numero_processo=...``,
             ``relator=...``). They are forwarded to the schema as-is. **A key
@@ -447,20 +658,23 @@ def apply_input_pipeline_search(
     datas = normalize_datas(**kwargs)
     pop_normalize_aliases(kwargs, include_canonical=True)
 
-    origem_resolvido = origem if origem is not None else "O backend"
+    origem_resolvida = origem_mensagem if origem_mensagem is not None else "O backend"
+    date_format = getattr(schema_cls, "BACKEND_DATE_FORMAT", "%d/%m/%Y")
     validate_intervalo_datas(
         datas["data_julgamento_inicio"],
         datas["data_julgamento_fim"],
         rotulo="data_julgamento",
         max_dias=max_dias,
-        origem=origem_resolvido,
+        origem=origem_resolvida,
+        formato=date_format,
     )
     validate_intervalo_datas(
         datas["data_publicacao_inicio"],
         datas["data_publicacao_fim"],
         rotulo="data_publicacao",
         max_dias=max_dias,
-        origem=origem_resolvido,
+        origem=origem_resolvida,
+        formato=date_format,
     )
 
     try:
@@ -472,7 +686,7 @@ def apply_input_pipeline_search(
             **kwargs,
         )
     except ValidationError as exc:
-        raise_on_extra_kwargs(exc, method_name)
+        raise_on_extra_kwargs(exc, method_name, schema_cls=schema_cls)
         raise
 
 
@@ -494,17 +708,19 @@ def resolve_deprecated_alias(
     - Alias presente e ``current_value == sentinel`` (canonico nao
       setado pelo usuario): emite ``DeprecationWarning`` e retorna o
       valor do alias.
-    - Ambos setados: levanta ``ValueError`` explicando a colisao.
+    - Ambos setados: levanta ``ValueError`` explicando a colisao **sem
+      emitir o ``DeprecationWarning``** — o uso esta errado (conflito), nao
+      e o caso de uso "alias funcionando ainda" que o warning sinaliza.
 
     ``sentinel`` descreve o "nao setado" do parametro canonico:
     ``None`` para ``Optional[...]``, ``""`` para ``str = ""``. Kw-only
     pra forcar o autor a pensar sobre o default do seu metodo.
     """
-    old_value = pop_deprecated_alias(kwargs, old, new)
-    if old_value is None:
+    if old not in kwargs:
         return current_value
     if current_value != sentinel:
+        kwargs.pop(old)
         raise ValueError(
             f"Não é possível passar '{new}' e '{old}' simultaneamente."
         )
-    return old_value
+    return pop_deprecated_alias(kwargs, old, new)

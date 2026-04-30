@@ -1,6 +1,8 @@
 """Unit tests for the canonical input-validation pipeline (cjsg/cjpg)."""
 from __future__ import annotations
 
+from typing import ClassVar
+
 import pytest
 from pydantic import ConfigDict, ValidationError
 
@@ -22,6 +24,13 @@ class _SchemaComJulgamento(SearchBase, DataJulgamentoMixin):
 
 class _SchemaComAmbas(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
+
+
+class _SchemaIsoBackend(SearchBase, DataJulgamentoMixin):
+    """Schema com BACKEND_DATE_FORMAT ISO (igual aos tribunais 1C-a)."""
+
+    model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
+    BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
 
 
 def test_apply_input_pipeline_returns_validated_model():
@@ -100,7 +109,7 @@ def test_apply_input_pipeline_invalid_date_interval_raises_valueerror_when_max_d
         apply_input_pipeline_search(
             _SchemaComJulgamento, "Test.cjsg()",
             pesquisa="x", paginas=1, kwargs=kwargs,
-            max_dias=366, origem="O eSAJ",
+            max_dias=366, origem_mensagem="O eSAJ",
         )
 
 
@@ -211,7 +220,7 @@ def test_apply_input_pipeline_single_bound_data_aceita():
     inp = apply_input_pipeline_search(
         _SchemaComJulgamento, "Test.cjsg()",
         pesquisa="x", paginas=1, kwargs=kwargs,
-        max_dias=366, origem="O eSAJ",
+        max_dias=366, origem_mensagem="O eSAJ",
     )
     assert inp.data_julgamento_inicio == "01/01/2024"
     assert inp.data_julgamento_fim is None
@@ -254,7 +263,7 @@ def test_apply_input_pipeline_origem_custom_aparece_na_mensagem():
         apply_input_pipeline_search(
             _SchemaComJulgamento, "Test.cjsg()",
             pesquisa="x", paginas=1, kwargs=kwargs,
-            max_dias=30, origem="O TJRN",
+            max_dias=30, origem_mensagem="O TJRN",
         )
 
 
@@ -267,4 +276,47 @@ def test_apply_input_pipeline_canonical_x_kwargs_collision_raises_typeerror():
             pesquisa="x", paginas=1,
             kwargs={"relator": "FROM_KWARGS"},
             relator="FROM_CANONICAL",
+        )
+
+
+# --- Cobertura de BACKEND_DATE_FORMAT (1C-a) -------------------------------
+
+
+def test_apply_input_pipeline_backend_iso_accepts_iso_date():
+    """Schema com BACKEND_DATE_FORMAT ISO aceita ``YYYY-MM-DD``."""
+    kwargs = {
+        "data_julgamento_inicio": "2024-01-01",
+        "data_julgamento_fim": "2024-03-31",
+    }
+    inp = apply_input_pipeline_search(
+        _SchemaIsoBackend, "Test.cjsg()",
+        pesquisa="x", paginas=1, kwargs=kwargs,
+    )
+    assert inp.data_julgamento_inicio == "2024-01-01"
+    assert inp.data_julgamento_fim == "2024-03-31"
+
+
+def test_apply_input_pipeline_default_br_rejects_iso_date():
+    """Schema sem BACKEND_DATE_FORMAT (default ``%d/%m/%Y``) rejeita ISO."""
+    kwargs = {
+        "data_julgamento_inicio": "2024-01-01",   # ISO, nao BR
+        "data_julgamento_fim": "2024-12-31",
+    }
+    with pytest.raises(ValueError, match=r"Formato esperado: %d/%m/%Y"):
+        apply_input_pipeline_search(
+            _SchemaComJulgamento, "Test.cjsg()",
+            pesquisa="x", paginas=1, kwargs=kwargs,
+        )
+
+
+def test_apply_input_pipeline_backend_iso_rejects_br_date():
+    """Schema com BACKEND_DATE_FORMAT ISO rejeita ``DD/MM/YYYY``."""
+    kwargs = {
+        "data_julgamento_inicio": "01/01/2024",   # BR, nao ISO
+        "data_julgamento_fim": "31/03/2024",
+    }
+    with pytest.raises(ValueError, match=r"Formato esperado: %Y-%m-%d"):
+        apply_input_pipeline_search(
+            _SchemaIsoBackend, "Test.cjsg()",
+            pesquisa="x", paginas=1, kwargs=kwargs,
         )

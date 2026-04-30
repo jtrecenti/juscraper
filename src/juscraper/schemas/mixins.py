@@ -12,6 +12,7 @@ Atual:
   nao tem ``pesquisa``, entao herda direto o mixin em vez de :class:`SearchBase`.
 - :class:`DataJulgamentoMixin` — filtro de Input (~13 tribunais).
 - :class:`DataPublicacaoMixin` — filtro de Input (~11 tribunais).
+- :class:`AutoChunkMixin` — flag de Input (familia eSAJ; cjsg + cjpg).
 - :class:`OutputRelatoriaMixin` — colunas de Output (>= 10 parsers cjsg
   concretos).
 - :class:`OutputDataPublicacaoMixin` — coluna de Output (>= 9 parsers).
@@ -68,6 +69,30 @@ class DataPublicacaoMixin(BaseModel):
 
     data_publicacao_inicio: str | None = None
     data_publicacao_fim: str | None = None
+
+
+class AutoChunkMixin(BaseModel):
+    """Flag opcional ``auto_chunk`` para endpoints com teto de janela (issue #130).
+
+    Default ``True``: quando o intervalo ``data_julgamento_*`` excede o teto
+    do tribunal (eSAJ: 366 dias), o scraper divide internamente em janelas,
+    baixa cada uma, concatena e deduplica. ``auto_chunk=False`` mantem o
+    comportamento estrito (``ValueError`` em janelas longas) — util para
+    validar input antes de submeter um job pesado.
+
+    Tribunais que aceitam intervalos arbitrarios **nao devem herdar** deste
+    mixin — ``extra='forbid'`` da classe concreta rejeita o flag e o usuario
+    entende que a busca nao tem teto a contornar. Hoje so a familia eSAJ
+    (cjsg em TJSP/TJAC/TJAL/TJAM/TJCE/TJMS, cjpg em TJSP) usa.
+
+    Nota: o flag ``auto_chunk`` e popado pelos metodos publicos
+    (``cjsg``/``cjpg``) **antes** da validacao do schema, entao em runtime
+    o mixin nao bloqueia nada — ele serve como **documentacao executavel**
+    (cobertura via ``tests/schemas/test_cjsg_schemas.py::TestAutoChunkMixin``)
+    e como rede de seguranca caso algum chamador interno bypassem o pop.
+    """
+
+    auto_chunk: bool = True
 
 
 class OutputRelatoriaMixin(BaseModel):

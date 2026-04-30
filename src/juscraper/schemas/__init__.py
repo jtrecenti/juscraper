@@ -2,6 +2,7 @@
 from .cjsg import OutputCJSGBase, SearchBase
 from .consulta import CnjInputBase, OutputCnjConsultaBase
 from .mixins import (
+    AutoChunkMixin,
     DataJulgamentoMixin,
     DataPublicacaoMixin,
     OutputDataPublicacaoMixin,
@@ -12,6 +13,7 @@ from .mixins import (
 __all__ = [
     "SearchBase",
     "OutputCJSGBase",
+    "AutoChunkMixin",
     "PaginasMixin",
     "DataJulgamentoMixin",
     "DataPublicacaoMixin",

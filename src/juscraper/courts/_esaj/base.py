@@ -15,19 +15,132 @@ from __future__ import annotations
 
 import logging
 import shutil
-from typing import Any
+import warnings
+from typing import Any, Callable, Optional
 
 import requests
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from ...core.base import BaseScraper
-from ...utils.params import apply_input_pipeline_search, normalize_pesquisa
+from ...utils.params import (
+    apply_input_pipeline_search,
+    iter_date_windows,
+    normalize_datas,
+    normalize_pesquisa,
+    pop_normalize_aliases,
+    raise_on_extra_kwargs,
+    run_chunked_search,
+)
 from .download import download_cjsg_pages
 from .forms import build_cjsg_form_body
 from .parse import cjsg_n_pags, cjsg_parse_manager
 from .schemas import InputCJSGEsajPuro
 
 logger = logging.getLogger("juscraper._esaj.base")
+
+
+def run_auto_chunk(
+    *,
+    method: Callable[..., Any],
+    method_label: str,
+    input_cls: type[BaseModel],
+    dedup_key: str,
+    pesquisa: str,
+    paginas: Any,
+    kwargs: dict,
+) -> Any:
+    """Orquestra a busca auto-chunked pelo limite de janela do eSAJ (#130).
+
+    Consolida o boilerplate compartilhado entre :meth:`EsajSearchScraper.cjsg`
+    e :meth:`TJSPScraper.cjpg`:
+
+    1. Pop ``auto_chunk`` (default ``True``) — se ``False``, retorna ``None``.
+    2. Sniff de ``normalize_datas`` (com warnings suprimidos para nao
+       duplicar a emissao do caminho ``*_download``).
+    3. Se a janela cabe em ``max_dias=366``, retorna ``None`` (caller cai no
+       caminho noop).
+    4. Detecta conflito ``pesquisa + query/termo`` antes do
+       :func:`pop_normalize_aliases` descartar o alias silentemente.
+    5. Pop aliases + canonicals de data, monta ``extras`` (dates
+       nao-julgamento sniffadas), valida o schema upfront para converter
+       ``extra_forbidden`` em ``TypeError`` cedo.
+    6. Constroi ``_fetch`` que delega de volta para ``method`` com
+       ``auto_chunk=False`` e os ``extras`` re-injetados em cada janela
+       (probe TJAC 2026-04: backend AND'a julgamento + publicacao).
+
+    Returns:
+        ``None`` quando o chunking nao se aplica (auto_chunk=False ou
+        janela curta) — caller deve seguir o caminho noop. Caso contrario,
+        retorna o ``pd.DataFrame`` deduplicado.
+
+    Side effects:
+        Quando o chunking dispara, muta ``kwargs`` removendo aliases/canonicals
+        de data (ja absorvidos no sniff e re-injetados via ``extras``).
+    """
+    auto_chunk = kwargs.pop("auto_chunk", True)
+    if not auto_chunk:
+        return None
+
+    # Suprimir DeprecationWarning aqui evita duplicacao quando o caminho
+    # *_download chamar normalize_datas/normalize_pesquisa de novo.
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        sniff = normalize_datas(**kwargs)
+
+        dj_i = sniff["data_julgamento_inicio"]
+        dj_f = sniff["data_julgamento_fim"]
+        windows = list(iter_date_windows(dj_i, dj_f, max_dias=366))
+        if len(windows) <= 1:
+            return None
+
+        # Detectar conflito pesquisa + alias deprecado ANTES de
+        # pop_normalize_aliases, que descartaria o alias silentemente. cjpg
+        # admite pesquisa="" — passar None para nao bater no falso positivo
+        # de normalize_pesquisa quando so o alias foi fornecido.
+        has_search_alias = "query" in kwargs or "termo" in kwargs
+        if pesquisa or has_search_alias:
+            normalize_pesquisa(pesquisa or None, **kwargs)
+
+    pop_normalize_aliases(kwargs, include_canonical=True)
+    extras = {
+        k: v for k, v in sniff.items()
+        if v is not None and not k.startswith("data_julgamento")
+    }
+
+    try:
+        input_cls(
+            pesquisa=pesquisa,
+            paginas=paginas,
+            data_julgamento_inicio=dj_i,
+            data_julgamento_fim=dj_f,
+            **extras,
+            **kwargs,
+        )
+    except ValidationError as exc:
+        raise_on_extra_kwargs(exc, method_label)
+        raise
+
+    def _fetch(win_i: Optional[str], win_f: Optional[str]) -> Any:
+        return method(
+            pesquisa=pesquisa,
+            paginas=None,
+            data_julgamento_inicio=win_i,
+            data_julgamento_fim=win_f,
+            auto_chunk=False,
+            **extras,
+            **kwargs,
+        )
+
+    return run_chunked_search(
+        _fetch,
+        data_inicio=dj_i,
+        data_fim=dj_f,
+        dedup_key=dedup_key,
+        max_dias=366,
+        paginas=paginas,
+        rotulo="data_julgamento",
+        origem="O eSAJ",
+    )
 
 
 class EsajSearchScraper(BaseScraper):
@@ -118,6 +231,11 @@ class EsajSearchScraper(BaseScraper):
                   (str, ``DD/MM/AAAA``): Intervalo de julgamento.
                 * ``data_publicacao_inicio`` / ``data_publicacao_fim``
                   (str, ``DD/MM/AAAA``): Intervalo de publicacao.
+                * ``auto_chunk`` (bool): Default ``True``. Quando o
+                  intervalo ``data_julgamento_*`` excede 366 dias,
+                  divide internamente em janelas, baixa cada uma e
+                  concatena com dedup por ``cd_acordao``. Veja a secao
+                  "Auto-chunking" abaixo.
 
         Aliases deprecados (popados com ``DeprecationWarning`` antes do
         pydantic):
@@ -148,7 +266,30 @@ class EsajSearchScraper(BaseScraper):
             :class:`InputCJSGEsajPuro` (ou
             :class:`~juscraper.courts.tjsp.schemas.InputCJSGTJSP`) —
             schema pydantic e a fonte da verdade dos filtros aceitos.
+
+        Auto-chunking (issue #130):
+            Se ``auto_chunk=True`` (default herdado de
+            :class:`~juscraper.schemas.AutoChunkMixin`) e o intervalo
+            ``data_julgamento_*`` exceder 366 dias, a busca e dividida em
+            janelas internas, baixadas e concatenadas com dedup por
+            ``cd_acordao``. Falhas por janela viram :class:`UserWarning`
+            (parcial + warning). ``auto_chunk=True`` + ``paginas != None``
+            em janela > 366 dias e :class:`ValueError`. Para o
+            comportamento estrito antigo (``ValueError`` em janelas
+            longas), passe ``auto_chunk=False``.
         """
+        chunked = run_auto_chunk(
+            method=self.cjsg,
+            method_label=f"{type(self).__name__}.cjsg()",
+            input_cls=self.INPUT_CJSG,
+            dedup_key="cd_acordao",
+            pesquisa=pesquisa,
+            paginas=paginas,
+            kwargs=kwargs,
+        )
+        if chunked is not None:
+            return chunked
+
         path = self.cjsg_download(pesquisa=pesquisa, paginas=paginas, **kwargs)
         try:
             return self.cjsg_parse(path)
@@ -194,7 +335,7 @@ class EsajSearchScraper(BaseScraper):
             paginas=paginas,
             kwargs=kwargs,
             max_dias=366,
-            origem="O eSAJ",
+            origem_mensagem="O eSAJ",
         )
 
         body = self._build_cjsg_body(input_model)

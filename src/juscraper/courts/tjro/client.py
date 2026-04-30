@@ -6,7 +6,7 @@ import requests
 
 from juscraper.core.base import BaseScraper
 from juscraper.utils.params import (
-    normalize_datas,
+    apply_input_pipeline_search,
     normalize_paginas,
     normalize_pesquisa,
     resolve_deprecated_alias,
@@ -15,6 +15,7 @@ from juscraper.utils.params import (
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
+from .schemas import InputCJSGTJRO
 
 
 class TJROScraper(BaseScraper):
@@ -54,55 +55,82 @@ class TJROScraper(BaseScraper):
         termo_exato: bool = False,
         **kwargs,
     ) -> pd.DataFrame:
-        """Search TJRO jurisprudence.
+        """Busca jurisprudencia no TJRO.
 
-        Parameters
-        ----------
-        pesquisa : str
-            Free-text search term.
-        paginas : int, list, range, or None
-            Pages to download (1-based). None downloads all.
-        tipo : list, optional
-            Document types. Default ``["EMENTA"]``. Options include
-            ``"ACORDAO"``, ``"DECISAO"``, ``"SENTENCA"``, ``"VOTO"``, etc.
-        numero_processo : str, optional
-            Process number filter. Accepts the deprecated alias ``nr_processo``.
-        magistrado : str, optional
-            Judge/magistrate name.
-        orgao_julgador : int or str, optional
-            Judging body ID.
-        orgao_julgador_colegiado : int or str, optional
-            Collegiate judging body ID.
-        classe_judicial : str, optional
-            Judicial class name.
-        instancia : list, optional
-            Jurisdiction grades (e.g. ``[1]``, ``[2]``, ``[1, 2]``).
-        termo_exato : bool
-            If True, search for exact term.
+        Args:
+            pesquisa (str): Termo de busca livre.
+            paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
+                todas. Default ``None``.
+            tipo (list | None): Tipos de documento. Default backend
+                ``["EMENTA"]``. Opcoes incluem ``"ACORDAO"``, ``"DECISAO"``,
+                ``"SENTENCA"``, ``"VOTO"``, etc.
+            numero_processo (str): Numero CNJ. Aceita o alias deprecado
+                ``nr_processo``.
+            magistrado (str): Nome do relator/magistrado.
+            orgao_julgador (int | str): ID do orgao julgador.
+            orgao_julgador_colegiado (int | str): ID do orgao colegiado.
+            classe_judicial (str): Nome da classe judicial.
+            instancia (list | None): Instancias (ex.: ``[1]``, ``[2]``, ``[1, 2]``).
+            termo_exato (bool): Busca por termo exato.
+            **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJRO`.
+                Listados abaixo (todos opcionais; ``None`` = sem filtro):
 
-        Returns
-        -------
-        pd.DataFrame
+                * ``data_julgamento_inicio`` / ``data_julgamento_fim`` (str):
+                  ``YYYY-MM-DD``.
+
+        Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
+            * ``query`` / ``termo`` -> ``pesquisa``
+            * ``nr_processo`` -> ``numero_processo``
+            * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``_fim``
+            * ``data_julgamento_de`` / ``_ate`` -> ``data_julgamento_inicio`` / ``_fim``
+
+        Raises:
+            TypeError: Quando um kwarg desconhecido e passado.
+            ValueError: Quando ``numero_processo`` e ``nr_processo`` sao
+                passados simultaneamente.
+            ValidationError: Quando um filtro tem formato invalido.
+
+        Returns:
+            pd.DataFrame: DataFrame com as decisoes.
+
+        See also:
+            :class:`InputCJSGTJRO` — schema pydantic e a fonte da verdade dos
+            filtros aceitos.
         """
         numero_processo = resolve_deprecated_alias(
             kwargs, "nr_processo", "numero_processo", numero_processo, sentinel=""
         )
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-        paginas = normalize_paginas(paginas)
-        datas = normalize_datas(**kwargs)
-        brutos = self.cjsg_download(
+
+        inp = apply_input_pipeline_search(
+            InputCJSGTJRO,
+            "TJROScraper.cjsg()",
             pesquisa=pesquisa,
             paginas=paginas,
+            kwargs=kwargs,
             tipo=tipo,
-            nr_processo=numero_processo,
+            numero_processo=numero_processo,
             magistrado=magistrado,
             orgao_julgador=orgao_julgador,
             orgao_julgador_colegiado=orgao_julgador_colegiado,
             classe_judicial=classe_judicial,
-            data_julgamento_inicio=to_iso_date(datas["data_julgamento_inicio"]) or "",
-            data_julgamento_fim=to_iso_date(datas["data_julgamento_fim"]) or "",
             instancia=instancia,
             termo_exato=termo_exato,
+        )
+
+        brutos = self.cjsg_download(
+            pesquisa=inp.pesquisa,
+            paginas=inp.paginas,
+            tipo=inp.tipo,
+            nr_processo=inp.numero_processo,
+            magistrado=inp.magistrado,
+            orgao_julgador=inp.orgao_julgador,
+            orgao_julgador_colegiado=inp.orgao_julgador_colegiado,
+            classe_judicial=inp.classe_judicial,
+            data_julgamento_inicio=to_iso_date(inp.data_julgamento_inicio) or "",
+            data_julgamento_fim=to_iso_date(inp.data_julgamento_fim) or "",
+            instancia=inp.instancia,
+            termo_exato=inp.termo_exato,
         )
         return self.cjsg_parse(brutos)
 

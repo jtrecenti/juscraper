@@ -1,0 +1,4 @@
+throw 'allowScriptTagRemoting is false.';
+//#DWR-INSERT
+//#DWR-REPLY
+dwr.engine._remoteHandleCallback('0','0',true);

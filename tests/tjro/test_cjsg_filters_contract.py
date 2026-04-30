@@ -165,3 +165,31 @@ def test_cjsg_data_inicio_alias_maps_to_data_julgamento(mocker):
     messages = [str(w.message) for w in warning_list]
     assert any("data_inicio" in m and "deprecado" in m for m in messages)
     assert any("data_fim" in m and "deprecado" in m for m in messages)
+
+
+def test_cjsg_unknown_kwarg_raises():
+    """Kwargs not declared in :class:`InputCJSGTJRO` raise ``TypeError`` with
+    the field name (refs #84, #93)."""
+    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
+        jus.scraper("tjro").cjsg("dano moral", paginas=1, kwarg_inventado="x")
+
+
+def test_cjsg_unknown_kwarg_suggests_close_match():
+    """Kwarg com typo ganha sugestao 'voce quis dizer X?' via difflib (refs #93)."""
+    with pytest.raises(
+        TypeError,
+        match=r"'data_juglamento_inicio' \(você quis dizer 'data_julgamento_inicio'\?\)",
+    ):
+        jus.scraper("tjro").cjsg(
+            "dano moral", paginas=1,
+            data_juglamento_inicio="2024-01-01",
+        )
+
+
+def test_cjsg_alias_conflict_raises():
+    """Passar canonical e alias deprecado simultaneamente leva a ``ValueError``."""
+    with pytest.raises(ValueError, match="numero_processo.*nr_processo"):
+        jus.scraper("tjro").cjsg(
+            "dano moral", paginas=1,
+            numero_processo="X", nr_processo="Y",
+        )
