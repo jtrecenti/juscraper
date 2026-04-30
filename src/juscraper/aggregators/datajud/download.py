@@ -2,11 +2,84 @@
 Functions for downloading specific data from the Datajud API.
 """
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import requests
 
+from ...utils.cnj import clean_cnj
+
 logger = logging.getLogger(__name__)
+
+
+def build_listar_processos_payload(
+    *,
+    numero_processo: Optional[Union[str, List[str]]] = None,
+    ano_ajuizamento: Optional[int] = None,
+    classe: Optional[str] = None,
+    assuntos: Optional[List[str]] = None,
+    mostrar_movs: bool = False,
+    tamanho_pagina: int = 1000,
+    search_after: Optional[List[Any]] = None,
+) -> Dict[str, Any]:
+    """Construir o body Elasticsearch para ``DatajudScraper.listar_processos``.
+
+    Reune ``must_conditions`` (numero_processo / ano_ajuizamento / classe /
+    assuntos), aplica o sort por ``id.keyword`` exigido pelo ``search_after``
+    e controla o ``_source`` para incluir ou excluir movimentacoes/movimentos.
+    A ordem das chaves e a logica condicional sao consumidas tal qual pelos
+    contratos offline em ``tests/datajud/test_listar_processos_*_contract.py``
+    via ``json_params_matcher`` — qualquer alteracao tem que ser refletida
+    nos samples.
+    """
+    must_conditions: List[Dict[str, Any]] = []
+    if numero_processo:
+        if isinstance(numero_processo, str):
+            nproc = [numero_processo]
+        else:
+            nproc = list(numero_processo)
+        nproc = [clean_cnj(n) for n in nproc]
+        must_conditions.append({"terms": {"numeroProcesso": nproc}})
+    if ano_ajuizamento:
+        date_range_iso = {
+            "gte": f"{ano_ajuizamento}-01-01",
+            "lte": f"{ano_ajuizamento}-12-31",
+        }
+        date_range_compact = {
+            "gte": f"{ano_ajuizamento}0101000000",
+            "lte": f"{ano_ajuizamento}1231235959",
+        }
+        must_conditions.append({
+            "bool": {
+                "should": [
+                    {"range": {"dataAjuizamento": date_range_iso}},
+                    {"range": {"dataAjuizamento": date_range_compact}},
+                ],
+                "minimum_should_match": 1,
+            }
+        })
+    if classe:
+        must_conditions.append({"match": {"classe.codigo": str(classe)}})
+    if assuntos:
+        must_conditions.append({"terms": {"assuntos.codigo": assuntos}})
+
+    if must_conditions:
+        query_values: Dict[str, Any] = {"bool": {"must": must_conditions}}
+    else:
+        query_values = {"match_all": {}}
+
+    payload: Dict[str, Any] = {
+        "query": query_values,
+        "size": tamanho_pagina,
+        "track_total_hits": True,
+        "sort": [{"id.keyword": "asc"}],
+    }
+    if search_after is not None:
+        payload["search_after"] = search_after
+    if mostrar_movs:
+        payload["_source"] = True
+    else:
+        payload["_source"] = {"excludes": ["movimentacoes", "movimentos"]}
+    return payload
 
 
 def call_datajud_api(

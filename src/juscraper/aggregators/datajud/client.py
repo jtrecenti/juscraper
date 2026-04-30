@@ -7,7 +7,7 @@ import tempfile
 import time
 import warnings
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, List, Optional, Union
 
 import pandas as pd
 import requests
@@ -15,7 +15,7 @@ from tqdm.auto import tqdm
 
 from ...core.base import BaseScraper
 from ...utils.cnj import clean_cnj  # Assuming this utility exists and is relevant
-from .download import call_datajud_api  # To be created for API calls
+from .download import build_listar_processos_payload, call_datajud_api
 
 # Import mappings for tribunal and justice aliases.
 from .mappings import ID_JUSTICA_TRIBUNAL_TO_ALIAS, TRIBUNAL_TO_ALIAS
@@ -169,7 +169,6 @@ class DatajudScraper(BaseScraper):
         current_page = paginas_range.start if paginas_range else 1
         end_page = paginas_range.stop if paginas_range else float('inf')
         search_after_params: Optional[List[Any]] = None  # For deep pagination
-        sort_field = "id.keyword"  # Use .keyword for sorting text fields
 
         # Initialize tqdm progress bar
         if paginas_range:
@@ -189,81 +188,15 @@ class DatajudScraper(BaseScraper):
         try:
             while current_page < end_page:
                 logger.info("Fetching page %d for alias %s...", current_page, alias)
-                # Construct query payload (Elasticsearch DSL)
-                must_conditions: List[Dict[str, Any]] = []
-                if numero_processo:
-                    if isinstance(numero_processo, str):
-                        nproc = [numero_processo]
-                    else:
-                        nproc = list(numero_processo)
-                    # O índice DataJud armazena `numeroProcesso` apenas com dígitos.
-                    # Garantir a limpeza aqui cobre todos os caminhos de entrada
-                    # (numero_processo sozinho, lista, ou junto com `tribunal=`).
-                    nproc = [clean_cnj(n) for n in nproc]
-                    must_conditions.append({
-                        "terms": {
-                            "numeroProcesso": nproc
-                        }
-                    })
-                if ano_ajuizamento:
-                    date_range_iso = {
-                        "gte": f"{ano_ajuizamento}-01-01",
-                        "lte": f"{ano_ajuizamento}-12-31",
-                    }
-                    date_range_compact = {
-                        "gte": f"{ano_ajuizamento}0101000000",
-                        "lte": f"{ano_ajuizamento}1231235959",
-                    }
-                    must_conditions.append({
-                        "bool": {
-                            "should": [
-                                {"range": {"dataAjuizamento": date_range_iso}},
-                                {"range": {"dataAjuizamento": date_range_compact}},
-                            ],
-                            "minimum_should_match": 1
-                        }
-                    })
-                if classe:
-                    must_conditions.append({
-                        "match": {
-                            "classe.codigo": str(classe)
-                        }
-                    })
-                if assuntos:
-                    must_conditions.append({
-                        "terms": {
-                            "assuntos.codigo": assuntos
-                        }
-                    })
-
-                if must_conditions:
-                    query_values = {"bool": {"must": must_conditions}}
-                else:
-                    query_values = {"match_all": {}}
-
-                query_payload: Dict[str, Any] = {
-                    "query": query_values,
-                    "size": tamanho_pagina,
-                    "track_total_hits": True
-                }
-
-                # Handle pagination: search_after is preferred for deep pagination
-                # The original _download_datajud used 'from', which is inefficient for deep pages
-                # DataJud API supports search_after. Requires a sort field.
-                query_payload["sort"] = [{sort_field: "asc"}]  # Example sort
-                if search_after_params:
-                    query_payload["search_after"] = search_after_params
-                else:
-                    # For the first page if not using search_after from the start,
-                    # or if API doesn't fully support it
-                    # query_payload["from"] = (current_page - 1) * tamanho_pagina
-                    # However, if we commit to search_after, 'from' is not used.
-                    pass  # First page, no search_after yet unless seeded
-
-                if not mostrar_movs:
-                    query_payload["_source"] = {"excludes": ["movimentacoes", "movimentos"]}
-                else:
-                    query_payload["_source"] = True
+                query_payload = build_listar_processos_payload(
+                    numero_processo=numero_processo,
+                    ano_ajuizamento=ano_ajuizamento,
+                    classe=classe,
+                    assuntos=assuntos,
+                    mostrar_movs=mostrar_movs,
+                    tamanho_pagina=tamanho_pagina,
+                    search_after=search_after_params,
+                )
                 api_response_json = call_datajud_api(
                     base_url=self.BASE_API_URL,
                     alias=alias,
