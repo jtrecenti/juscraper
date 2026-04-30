@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import logging
 import shutil
+import warnings
 from typing import Any
 
 import requests
@@ -190,7 +191,9 @@ class EsajSearchScraper(BaseScraper):
         auto_chunk = kwargs.pop("auto_chunk", True)
 
         if auto_chunk:
-            sniff = normalize_datas(**kwargs)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", DeprecationWarning)
+                sniff = normalize_datas(**kwargs)
             dj_i = sniff["data_julgamento_inicio"]
             dj_f = sniff["data_julgamento_fim"]
             windows = list(iter_date_windows(dj_i, dj_f, max_dias=366))
@@ -215,9 +218,9 @@ class EsajSearchScraper(BaseScraper):
                     max_dias=366,
                     paginas=paginas,
                     rotulo="data_julgamento",
+                    origem="O eSAJ",
                 )
 
-        kwargs["auto_chunk"] = auto_chunk
         path = self.cjsg_download(pesquisa=pesquisa, paginas=paginas, **kwargs)
         try:
             return self.cjsg_parse(path)

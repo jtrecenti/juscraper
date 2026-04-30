@@ -5,6 +5,7 @@ import logging
 import os
 import shutil
 import tempfile
+import warnings
 from typing import Any, List, Literal, Optional, Union
 
 from pydantic import BaseModel, ValidationError
@@ -298,7 +299,9 @@ class TJSPScraper(EsajSearchScraper):
         auto_chunk = kwargs.pop("auto_chunk", True)
 
         if auto_chunk:
-            sniff = normalize_datas(**kwargs)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", DeprecationWarning)
+                sniff = normalize_datas(**kwargs)
             dj_i = sniff["data_julgamento_inicio"]
             dj_f = sniff["data_julgamento_fim"]
             windows = list(iter_date_windows(dj_i, dj_f, max_dias=366))
@@ -323,9 +326,9 @@ class TJSPScraper(EsajSearchScraper):
                     max_dias=366,
                     paginas=paginas,
                     rotulo="data_julgamento",
+                    origem="O eSAJ",
                 )
 
-        kwargs["auto_chunk"] = auto_chunk
         path = self.cjpg_download(pesquisa=pesquisa, paginas=paginas, **kwargs)
         try:
             return self.cjpg_parse(path)

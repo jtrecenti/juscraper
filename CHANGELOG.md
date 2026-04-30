@@ -9,7 +9,11 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
-- `cjpg`/`cjsg` da familia eSAJ (cjsg em TJSP/TJAC/TJAL/TJAM/TJCE/TJMS, cjpg em TJSP) agora dividem internamente intervalos `data_julgamento_*` que excedem 366 dias, baixam cada janela e concatenam o resultado deduplicando por `cd_acordao` (cjsg) ou `id_processo` (cjpg). Falhas em janelas individuais viram `UserWarning` e o DataFrame retorna parcial. O comportamento e controlado pelo novo flag `auto_chunk: bool = True` (mixin `juscraper.schemas.AutoChunkMixin`). Para o comportamento antigo (`ValueError` em janelas longas), passe `auto_chunk=False`. `auto_chunk=True` combinado com `paginas` quando o intervalo excede 366 dias e `ValueError` por ambiguidade. Refs #130.
+- `cjpg`/`cjsg` da familia eSAJ (cjsg em TJSP/TJAC/TJAL/TJAM/TJCE/TJMS, cjpg em TJSP) agora dividem internamente intervalos `data_julgamento_*` que excedem 366 dias, baixam cada janela e concatenam o resultado deduplicando por `cd_acordao` (cjsg) ou `id_processo` (cjpg). Refs #130.
+  - Falhas em janelas individuais viram `UserWarning` e o DataFrame retorna parcial (com a coluna de dedup preservada mesmo quando todas falham).
+  - Controlado pelo novo flag `auto_chunk: bool = True` (mixin `juscraper.schemas.AutoChunkMixin`).
+  - Para o comportamento antigo (`ValueError` em janelas longas), passe `auto_chunk=False`.
+  - `auto_chunk=True` combinado com `paginas` quando o intervalo excede 366 dias e `ValueError` por ambiguidade.
 
 ### Added
 

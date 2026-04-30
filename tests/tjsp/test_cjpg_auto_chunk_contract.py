@@ -4,6 +4,8 @@ Mesma estrutura de ``test_cjsg_auto_chunk_contract.py``, com dedup por
 ``id_processo`` (chave canônica do parser cjpg, vide
 ``tjsp/cjpg_parse.py``).
 """
+import warnings
+
 import pandas as pd
 import pytest
 
@@ -97,3 +99,47 @@ def test_auto_chunk_default_short_window_with_paginas_ok(tmp_path, mocker):
     assert download.call_count == 1
     _, kwargs = download.call_args
     assert kwargs["paginas"] == range(1, 3)
+
+
+def test_sniff_does_not_emit_deprecation_for_aliases(tmp_path, mocker):
+    """O sniff em ``cjpg()`` deve suprimir warnings para nao duplicar.
+
+    Mesmo motivo que ``test_cjsg_auto_chunk_contract.py``: como
+    ``cjpg_download`` esta mockado, qualquer ``DeprecationWarning`` capturado
+    vem **apenas** do sniff. O fix silencia o sniff. Esperamos 0.
+    """
+    _patch_pipeline(mocker)
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        scraper.cjpg(
+            "dano moral",
+            data_inicio="01/01/2024",
+            data_fim="31/12/2024",
+        )
+
+    deprecation_warnings = [
+        warning for warning in w
+        if issubclass(warning.category, DeprecationWarning)
+    ]
+    assert deprecation_warnings == [], (
+        f"Sniff em cjpg() emitiu {len(deprecation_warnings)} "
+        "DeprecationWarning(s); esperado 0 (silenciado por catch_warnings)."
+    )
+
+
+def test_auto_chunk_not_propagated_to_download(tmp_path, mocker):
+    """`auto_chunk` nao deve aparecer nos kwargs propagados ao schema."""
+    download, _ = _patch_pipeline(mocker)
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+
+    scraper.cjpg(
+        "dano moral",
+        data_julgamento_inicio="01/01/2024",
+        data_julgamento_fim="31/12/2024",
+    )
+
+    download.assert_called_once()
+    _, kwargs = download.call_args
+    assert "auto_chunk" not in kwargs

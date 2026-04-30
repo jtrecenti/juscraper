@@ -9,7 +9,12 @@ o roteamento — o caminho HTTP normal já está coberto em
 * Default em janela longa = N requests + dedup por ``cd_acordao``.
 * ``auto_chunk=True`` + ``paginas != None`` em janela longa = ``ValueError``.
 * ``auto_chunk=True`` + ``paginas != None`` em janela curta = ok (noop).
+* Aliases deprecados (``data_inicio``/``data_fim``) emitem ``DeprecationWarning``
+  uma unica vez no caminho noop (sniff suprime).
+* ``auto_chunk`` nao vaza para o schema validator no caminho noop.
 """
+import warnings
+
 import pandas as pd
 import pytest
 
@@ -113,3 +118,60 @@ def test_auto_chunk_default_short_window_with_paginas_ok(tmp_path, mocker):
     download.assert_called_once()
     _, kwargs = download.call_args
     assert kwargs["paginas"] == range(1, 3)
+
+
+def test_sniff_does_not_emit_deprecation_for_aliases(tmp_path, mocker):
+    """O sniff em ``cjsg()`` deve suprimir warnings para nao duplicar.
+
+    Antes do fix, o sniff em ``cjsg()`` chamava ``normalize_datas`` sem
+    suprimir warnings, e depois ``cjsg_download`` chamava ``normalize_datas``
+    de novo — o usuario recebia 2 warnings (um do sniff + um do download)
+    para o **mesmo** alias. Total: ``2 * num_aliases``.
+
+    Como aqui ``cjsg_download`` esta mockado (nao emite), qualquer
+    ``DeprecationWarning`` capturado vem **apenas** do sniff. O fix
+    silencia o sniff via ``warnings.catch_warnings`` — esperamos 0.
+
+    Sem o fix, viriam 2 (um por alias passado).
+    """
+    _patch_pipeline(mocker)
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        scraper.cjsg(
+            "dano moral",
+            data_inicio="01/01/2024",
+            data_fim="31/12/2024",
+        )
+
+    deprecation_warnings = [
+        warning for warning in w
+        if issubclass(warning.category, DeprecationWarning)
+    ]
+    assert deprecation_warnings == [], (
+        f"Sniff em cjsg() emitiu {len(deprecation_warnings)} "
+        "DeprecationWarning(s); esperado 0 (silenciado por catch_warnings). "
+        "Sem o fix, viriam 2 (data_inicio + data_fim)."
+    )
+
+
+def test_auto_chunk_not_propagated_to_download(tmp_path, mocker):
+    """`auto_chunk` nao deve aparecer nos kwargs propagados ao schema.
+
+    No caminho noop, `cjsg_download` valida via pydantic. Mesmo com o
+    `AutoChunkMixin` aceitando o flag, manter a flag fora dos kwargs e
+    preferivel: o flag nao tem semantica downstream.
+    """
+    download, _ = _patch_pipeline(mocker)
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+
+    scraper.cjsg(
+        "dano moral",
+        data_julgamento_inicio="01/01/2024",
+        data_julgamento_fim="31/12/2024",
+    )
+
+    download.assert_called_once()
+    _, kwargs = download.call_args
+    assert "auto_chunk" not in kwargs

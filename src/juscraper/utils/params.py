@@ -3,6 +3,8 @@ import warnings
 from datetime import datetime, timedelta
 from typing import Any, Callable, Iterator, Optional, Union
 
+import pandas as pd
+
 # Deprecated aliases consumed by ``normalize_pesquisa``. Keep in sync with the
 # loop inside that function.
 SEARCH_ALIASES: tuple[str, ...] = ("query", "termo")
@@ -372,7 +374,7 @@ def run_chunked_search(
     max_dias: int = 366,
     paginas=None,
     rotulo: str = "data_julgamento",
-    origem: str = "O eSAJ",
+    origem: str = "O servidor",
     formato: str = "%d/%m/%Y",
 ):
     """Drive a search method across date windows and return a deduped DataFrame.
@@ -397,24 +399,28 @@ def run_chunked_search(
         data_inicio, data_fim: Search interval in ``DD/MM/YYYY`` (or whatever
             ``formato`` is configured to). Either may be ``None`` — search is
             then forwarded to the server with no chunking.
-        dedup_key: Column used to deduplicate concatenated results.
+        dedup_key: Column used to deduplicate concatenated results. When all
+            windows fail, the returned (empty) DataFrame still carries this
+            column so callers indexing ``df[dedup_key]`` don't ``KeyError``.
         max_dias: Window cap, in days.
         paginas: The caller's ``paginas`` value. Forbidden in the multi-window
             path; allowed (passthrough is the caller's responsibility) in the
             single-window path.
-        rotulo, origem: Forwarded to :func:`validate_intervalo_datas` for
-            error messages.
+        rotulo: Forwarded to :func:`validate_intervalo_datas` for error
+            messages (e.g. ``"data_julgamento"``).
+        origem: Forwarded to :func:`validate_intervalo_datas`. Default
+            ``"O servidor"`` is intentionally generic — eSAJ-specific callers
+            override with ``"O eSAJ"`` to keep the legacy error message.
         formato: Date format used by ``iter_date_windows``.
 
     Returns:
-        pandas DataFrame. May be empty if every window failed.
+        pandas DataFrame. May be empty if every window failed (still carries
+        the ``dedup_key`` column).
 
     Raises:
         ValueError: For invalid date input or ``paginas != None`` in the
             multi-window path.
     """
-    import pandas as pd
-
     validate_intervalo_datas(
         data_inicio,
         data_fim,
@@ -456,7 +462,7 @@ def run_chunked_search(
         )
 
     if not frames:
-        return pd.DataFrame()
+        return pd.DataFrame(columns=[dedup_key])
 
     df = pd.concat(frames, ignore_index=True)
     if dedup_key in df.columns:

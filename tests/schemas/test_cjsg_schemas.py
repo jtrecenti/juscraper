@@ -137,3 +137,35 @@ class TestInputCJPGTJSP:
     def test_unknown_kwarg_rejected(self):
         with pytest.raises(ValidationError, match="extra_forbidden"):
             InputCJPGTJSP(parametro_bobo=True)
+
+
+class TestAutoChunkMixin:
+    """`auto_chunk` so deve estar declarado em schemas eSAJ com teto (#130).
+
+    Tribunais sem teto **nao devem herdar** o mixin — ``extra='forbid'`` da
+    classe concreta rejeita o flag e o usuario entende que a busca nao tem
+    teto a contornar (Regra 1 do #84).
+    """
+
+    def test_esaj_puro_accepts_auto_chunk(self):
+        model = InputCJSGEsajPuro(pesquisa="x", auto_chunk=False)
+        assert model.auto_chunk is False
+
+    def test_esaj_puro_default_is_true(self):
+        model = InputCJSGEsajPuro(pesquisa="x")
+        assert model.auto_chunk is True
+
+    def test_tjsp_cjsg_accepts_auto_chunk(self):
+        model = InputCJSGTJSP(pesquisa="x", auto_chunk=False)
+        assert model.auto_chunk is False
+
+    def test_tjsp_cjpg_accepts_auto_chunk(self):
+        model = InputCJPGTJSP(auto_chunk=False)
+        assert model.auto_chunk is False
+
+    def test_non_esaj_schema_rejects_auto_chunk(self):
+        """Schemas sem teto rejeitam o flag (1C-a/1C-b sem o mixin)."""
+        from juscraper.courts.tjpa.schemas import InputCJSGTJPA
+
+        with pytest.raises(ValidationError, match="extra_forbidden"):
+            InputCJSGTJPA(pesquisa="x", auto_chunk=True)

@@ -356,6 +356,18 @@ class TestIterDateWindows:
         windows = list(iter_date_windows("01/01/2024", "02/02/2024", max_dias=31))
         assert len(windows) == 2
 
+    def test_boundary_exactly_max_dias_single_window(self):
+        # Exatamente 366 dias (01/01/2024 → 01/01/2025) deve ser noop.
+        windows = list(iter_date_windows("01/01/2024", "01/01/2025"))
+        assert windows == [("01/01/2024", "01/01/2025")]
+
+    def test_boundary_max_dias_plus_one_splits(self):
+        # 367 dias (01/01/2024 → 02/01/2025) deve dividir em 2 janelas.
+        windows = list(iter_date_windows("01/01/2024", "02/01/2025"))
+        assert len(windows) == 2
+        assert windows[0][0] == "01/01/2024"
+        assert windows[-1][1] == "02/01/2025"
+
     def test_invalid_format_raises(self):
         with pytest.raises(ValueError, match="data_inicio inválida"):
             list(iter_date_windows("2024-01-01", "31/12/2024"))
@@ -450,6 +462,9 @@ class TestRunChunkedSearch:
                 dedup_key="cd_acordao",
             )
         assert df.empty
+        # DataFrame vazio ainda carrega a coluna de dedup, evitando KeyError
+        # em codigo a jusante que faca df["cd_acordao"].
+        assert "cd_acordao" in df.columns
         assert len(w) == 1
 
     def test_multi_window_with_paginas_raises(self):
