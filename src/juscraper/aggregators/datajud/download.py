@@ -3,7 +3,7 @@ Functions for downloading specific data from the Datajud API.
 """
 import logging
 import warnings
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import requests
 
@@ -94,7 +94,7 @@ def build_listar_processos_payload(
     return payload
 
 
-def call_datajud_api(  # pylint: disable=too-many-return-statements
+def call_datajud_api(
     base_url: str,
     alias: str,
     api_key: str,
@@ -167,44 +167,10 @@ def call_datajud_api(  # pylint: disable=too-many-return-statements
     try:
         return _do_post()
     except (requests.exceptions.HTTPError, requests.exceptions.Timeout) as exc:
-        if not _is_overload(exc):
-            _log_http_error(api_url, exc)
-            return None
-        original_size = query_payload.get("size")
-        if not isinstance(original_size, int) or original_size <= FALLBACK_MIN_SIZE:
-            _log_http_error(api_url, exc)
-            return None
-        new_size = max(original_size // FALLBACK_DIVISOR, FALLBACK_MIN_SIZE)
-        if new_size >= original_size:
-            _log_http_error(api_url, exc)
-            return None
-        warnings.warn(
-            f"DataJud: 504/timeout em ``size={original_size}`` no alias "
-            f"{alias!r}. Refazendo com ``size={new_size}`` (1 retry).",
-            UserWarning,
-            stacklevel=3,
-        )
-        logger.warning(
-            "DataJud: 504/timeout em size=%d (alias %s); refazendo com size=%d.",
-            original_size, alias, new_size,
-        )
-        # Muta em place para o caller ver o size efetivo na heuristica
-        # de ultima pagina (``len(hits) < query_payload['size']``).
-        query_payload["size"] = new_size
-        try:
-            return _do_post()
-        except (requests.exceptions.HTTPError, requests.exceptions.Timeout) as retry_exc:
-            _log_http_error(api_url, retry_exc)
-            return None
-        except requests.exceptions.RequestException as retry_exc:
-            logger.error("Request failed for Datajud API (%s): %s", api_url, retry_exc)
-            return None
-        except ValueError as retry_exc:
-            logger.error(
-                "Failed to decode JSON response from Datajud API (%s): %s",
-                api_url, retry_exc,
-            )
-            return None
+        if _is_overload(exc):
+            return _retry_with_reduced_size(api_url, alias, query_payload, _do_post, exc)
+        _log_http_error(api_url, exc)
+        return None
     except requests.exceptions.RequestException as exc:
         logger.error("Request failed for Datajud API (%s): %s", api_url, exc)
         return None
@@ -213,6 +179,55 @@ def call_datajud_api(  # pylint: disable=too-many-return-statements
         return None
     except Exception as exc:
         logger.error("An unexpected error occurred calling Datajud API (%s): %s", api_url, exc)
+        return None
+
+
+def _retry_with_reduced_size(
+    api_url: str,
+    alias: str,
+    query_payload: Dict[str, Any],
+    do_post: Callable[[], Optional[Dict[str, Any]]],
+    original_exc: BaseException,
+) -> Optional[Dict[str, Any]]:
+    """1 retry com ``size`` reduzido por ``FALLBACK_DIVISOR`` apos 504/timeout.
+
+    Muta ``query_payload["size"]`` em place para que o caller leia o size
+    efetivo na heuristica de ultima pagina (``len(hits) < query_payload['size']``)
+    em ``client.py:_listar_processos_por_alias``. Retorna ``None`` em qualquer
+    falha do retry, alinhado ao contrato de ``call_datajud_api``.
+    """
+    original_size = query_payload.get("size")
+    if not isinstance(original_size, int) or original_size <= FALLBACK_MIN_SIZE:
+        _log_http_error(api_url, original_exc)
+        return None
+    new_size = max(original_size // FALLBACK_DIVISOR, FALLBACK_MIN_SIZE)
+    if new_size >= original_size:
+        _log_http_error(api_url, original_exc)
+        return None
+    warnings.warn(
+        f"DataJud: 504/timeout em ``size={original_size}`` no alias "
+        f"{alias!r}. Refazendo com ``size={new_size}`` (1 retry).",
+        UserWarning,
+        stacklevel=4,
+    )
+    logger.warning(
+        "DataJud: 504/timeout em size=%d (alias %s); refazendo com size=%d.",
+        original_size, alias, new_size,
+    )
+    query_payload["size"] = new_size
+    try:
+        return do_post()
+    except (requests.exceptions.HTTPError, requests.exceptions.Timeout) as retry_exc:
+        _log_http_error(api_url, retry_exc)
+        return None
+    except requests.exceptions.RequestException as retry_exc:
+        logger.error("Request failed for Datajud API (%s): %s", api_url, retry_exc)
+        return None
+    except ValueError as retry_exc:
+        logger.error(
+            "Failed to decode JSON response from Datajud API (%s): %s",
+            api_url, retry_exc,
+        )
         return None
 
 

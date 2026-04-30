@@ -161,11 +161,6 @@ class DatajudScraper(BaseScraper):
         classe = inp.classe
         assuntos = inp.assuntos
         mostrar_movs = inp.mostrar_movs
-        # ``paginas_norm`` ja e ``range | None`` por construcao
-        # (normalize_paginas + conversao list->range acima); usar ele
-        # direto para preservar o tipo estreito esperado por
-        # ``_listar_processos_por_alias``.
-        paginas = paginas_norm
         tamanho_pagina = inp.tamanho_pagina
 
         all_dfs = []
@@ -239,7 +234,7 @@ class DatajudScraper(BaseScraper):
                 classe=classe,
                 assuntos=assuntos,
                 mostrar_movs=mostrar_movs,
-                paginas_range=paginas,
+                paginas_range=paginas_norm,
                 tamanho_pagina=tamanho_pagina
             )
             if not df_alias.empty:
@@ -338,12 +333,15 @@ class DatajudScraper(BaseScraper):
                 # This part depends on the exact structure of api_response_json
                 # Assuming api_response_json is a dict parsed from the JSON string
                 hits = api_response_json.get("hits", {}).get("hits", [])
-                # Le ``query_payload["size"]`` em vez de ``tamanho_pagina``
-                # porque ``call_datajud_api`` muta o size em place quando
-                # aciona o fallback de 504/timeout — sem isso, a heuristica
-                # encerraria cedo demais ao receber menos hits que o
-                # tamanho_pagina original.
+                # Quando ``call_datajud_api`` aciona o fallback de 504/timeout,
+                # ele muta ``query_payload["size"]`` em place. Propagamos o
+                # size efetivo para ``tamanho_pagina`` para que paginas
+                # subsequentes ja partam do size reduzido — em gateway
+                # saturado consistentemente, isso evita pagar ~60s a cada
+                # pagina antes de cair no fallback de novo.
                 effective_size = query_payload.get("size", tamanho_pagina)
+                if effective_size < tamanho_pagina:
+                    tamanho_pagina = effective_size
                 if not hits or len(hits) < effective_size:
                     logger.info(
                         "Last page reached for alias %s (less than %d results or no hits).",
