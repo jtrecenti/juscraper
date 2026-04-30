@@ -47,8 +47,6 @@ class TJMTScraper(BaseScraper):
         quantidade_por_pagina: int = 10,
         data_julgamento_inicio: Optional[str] = None,
         data_julgamento_fim: Optional[str] = None,
-        data_publicacao_inicio: Optional[str] = None,
-        data_publicacao_fim: Optional[str] = None,
         **kwargs,
     ) -> list:
         """Download raw JSON results from the TJMT jurisprudence API.
@@ -68,6 +66,10 @@ class TJMTScraper(BaseScraper):
             quantidade_por_pagina: Items per page (default 10).
             data_julgamento_inicio: Start date for filtering (``yyyy-mm-dd``).
             data_julgamento_fim: End date for filtering (``yyyy-mm-dd``).
+
+        The backend exposes only a single date range (``filtro.periodoDataDe``
+        / ``filtro.periodoDataAte``) applied to the judgment date; passing
+        ``data_publicacao_*`` raises ``TypeError``.
         """
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
         paginas = normalize_paginas(paginas)
@@ -78,8 +80,6 @@ class TJMTScraper(BaseScraper):
         for _date_key, _date_val in (
             ("data_julgamento_inicio", data_julgamento_inicio),
             ("data_julgamento_fim", data_julgamento_fim),
-            ("data_publicacao_inicio", data_publicacao_inicio),
-            ("data_publicacao_fim", data_publicacao_fim),
         ):
             if _date_val is not None:
                 kwargs[_date_key] = _date_val
@@ -137,8 +137,6 @@ class TJMTScraper(BaseScraper):
         quantidade_por_pagina: int = 10,
         data_julgamento_inicio: Optional[str] = None,
         data_julgamento_fim: Optional[str] = None,
-        data_publicacao_inicio: Optional[str] = None,
-        data_publicacao_fim: Optional[str] = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Search TJMT jurisprudence (download + parse).
@@ -157,8 +155,6 @@ class TJMTScraper(BaseScraper):
             quantidade_por_pagina=quantidade_por_pagina,
             data_julgamento_inicio=data_julgamento_inicio,
             data_julgamento_fim=data_julgamento_fim,
-            data_publicacao_inicio=data_publicacao_inicio,
-            data_publicacao_fim=data_publicacao_fim,
             **kwargs,
         )
         dados = self.cjsg_parse(brutos, tipo_consulta=tipo_consulta)

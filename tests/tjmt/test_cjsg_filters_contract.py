@@ -113,3 +113,11 @@ def test_cjsg_unknown_kwarg_raises():
     the field name, instead of being silently dropped (refs #84, #93, #165)."""
     with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
         jus.scraper("tjmt").cjsg("dano moral", paginas=1, kwarg_inventado="x")
+
+
+def test_cjsg_data_publicacao_raises_typeerror():
+    """TJMT backend nao expoe filtro de data de publicacao — passar
+    ``data_publicacao_*`` deve levantar ``TypeError`` em vez de silently drop
+    (refs #165, #173)."""
+    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'data_publicacao_inicio'"):
+        jus.scraper("tjmt").cjsg("dano moral", paginas=1, data_publicacao_inicio="2024-01-01")

@@ -8,25 +8,23 @@ from __future__ import annotations
 
 from typing import ClassVar
 
-from ...schemas import (
-    DataJulgamentoMixin,
-    DataPublicacaoMixin,
-    OutputCJSGBase,
-    OutputDataPublicacaoMixin,
-    OutputRelatoriaMixin,
-    SearchBase,
-)
+from ...schemas import DataJulgamentoMixin, OutputCJSGBase, OutputDataPublicacaoMixin, OutputRelatoriaMixin, SearchBase
 
 
-class InputCJSGTJMT(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
+class InputCJSGTJMT(SearchBase, DataJulgamentoMixin):
     """Accepted input for TJMT ``cjsg`` / ``cjsg_download``.
 
     Endpoint REST JSON (hellsgate-preview). ``pesquisa`` aceita os aliases
     deprecados ``query`` / ``termo`` via
     :func:`juscraper.utils.params.normalize_pesquisa`, que roda *antes*
     deste modelo. Datas aceitam os aliases ``data_inicio``/``data_fim``
-    via :func:`juscraper.utils.params.normalize_datas`. Filtros de data
-    herdados dos mixins.
+    via :func:`juscraper.utils.params.normalize_datas`.
+
+    Apenas filtro de ``data_julgamento_*`` — o backend Hellsgate expoe um
+    unico intervalo (``filtro.periodoDataDe``/``filtro.periodoDataAte``)
+    aplicado a data de julgamento. Nao ha filtro de data de publicacao;
+    ``data_publicacao_*`` levanta ``TypeError`` em vez de ser silenciosamente
+    descartado.
     """
 
     BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
