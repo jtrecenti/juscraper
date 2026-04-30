@@ -1,0 +1,1755 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="pt" lang="BR">
+  <head>
+    <meta name="google-site-verification" content="DxuNw3ZIz5TEYK6wyygtx4Q3g-I2joR-ssXHLI2yNZU" />
+    <link rel="shortcut icon" href="/jurisprudencia/img/favicon.ico" type="image/x-icon" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta http-equiv="Cache-Control" content="No-Cache"/>
+    <meta http-equiv="Pragma" content="No-Cache"/>
+    <meta http-equiv="Expires" content="0"/>
+    
+
+
+
+
+
+
+<link rel="stylesheet" type="text/css" href="/jurisprudencia/css/screen.css?updateIdx=30"/>
+
+<link rel="stylesheet" type="text/css" href="/jurisprudencia/css/window/default.css?updateIdx=30"/>
+<link rel="stylesheet" type="text/css" href="/jurisprudencia/css/window/tjpr.css?updateIdx=30"/>
+
+
+ 
+
+    
+
+
+
+
+
+<script type="text/javascript" src="/jurisprudencia/js/prototype.js"></script>
+<script type="text/javascript" src="/jurisprudencia/js/window/window.js"></script>
+<script type="text/javascript" src="/jurisprudencia/js/window/effects.js"></script>
+
+
+<script type="text/javascript" src="/jurisprudencia/js/overlibmws/overlibmws.js?updateIdx=30"></script>
+<script type="text/javascript" src="/jurisprudencia/js/overlibmws/overlibmws_crossframe.js?updateIdx=30"></script>
+<script type="text/javascript" src="/jurisprudencia/js/overlibmws/overlibmws_iframe.js?updateIdx=30"></script>
+<script type="text/javascript" src="/jurisprudencia/js/overlibmws/overlibmws_hide.js?updateIdx=30"></script>
+<script type="text/javascript" src="/jurisprudencia/js/overlibmws/overlibmws_shadow.js?updateIdx=30"></script>
+<script type="text/javascript" src="/jurisprudencia/js/scriptaculous/scriptaculous.js"></script>
+<script type="text/javascript" src="/jurisprudencia/js/ajax/ajaxtags.js"></script>
+<script type="text/javascript" src="/jurisprudencia/js/ajax/ajaxtags_controls.js"></script>
+<script type="text/javascript" src="/jurisprudencia/js/ajax/ajaxtags_parser.js"></script>
+
+<script type="text/javascript" src="/jurisprudencia/js/calendar.js"></script>
+
+<script type="text/javascript" src="/jurisprudencia/js/html-form-input-mask.js"></script>
+
+
+<script type="text/javascript" src="/jurisprudencia/js/tjpr.js?updateIdx=30"></script>
+<script type="text/javascript" src="/jurisprudencia/js/projudi.js?updateIdx=30"></script>
+<script type="text/javascript" src="/jurisprudencia/js/jurishighlight.js?updateIdx=30"></script>
+<script type="text/javascript">
+  // Application root path for JavaScript functions
+  var appRootPath = "/jurisprudencia/";
+  
+  // Multiple onload function created by: Simon Willison
+  // http://simonwillison.net/2004/May/26/addLoadEvent/
+  function addLoadEvent(func) {
+    var oldonload = window.onload;
+    if (typeof window.onload != 'function') {
+      window.onload = func;
+    } else {
+      window.onload = function() {
+        if (oldonload) {
+          oldonload();
+        }
+        func();
+      }
+    }
+  }
+  // adds fields masks javascript listener
+  addLoadEvent(function() {
+    Xaprb.InputMask.setupElementMasks();
+  });
+  function seguro() {
+	  openDialog("/jurisprudencia/privado/autorizacao.do?actionType=autenticar", "Login", 700, 600);
+  }
+  function recarregar() {
+	  if (document.forms && document.forms.length>0) {
+		  document.forms[0].submit();
+	  } else {
+		  location.reload();
+	  }
+	  return true;
+  }
+</script>
+<script type="text/javascript" src="/jurisprudencia/js/jurisprudencia.js?updateIdx=30"></script>
+
+    <title>Jurisprud&ecirc;ncia - TJPR</title>
+  </head>
+  <body>
+    <div id="container"> 
+   	 
+
+
+
+
+
+
+<div id="header">
+  <div id="logo"><h1>Intranet - Tribunal de Justiça do Paraná</h1></div>
+  <h2>Jurisprudência</h2>
+  
+
+
+
+
+
+
+
+<script>
+	function handleeVoltar(url) {
+		event.preventDefault();
+
+		if (window !== window.top) {
+			// Está dentro de iframe
+			window.top.location.href = url;
+		} else {
+			// Página normal
+			window.location.href = url;
+		}
+	}
+</script>
+<div id="menuPublico" class="pos-acao">
+	
+
+	
+	<a href="/jurisprudencia/" onclick="handleeVoltar('/jurisprudencia/')">
+		INÍCIO
+		 |			
+	</a> 			
+	
+		
+															
+			<a href="/jurisprudencia/privado/autorizacao.do?actionType=autenticar">
+				ACESSO RESTRITO
+			</a>
+					
+			
+</div>
+
+</div>
+
+
+      
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div id="menu">
+<ul id="menubar" >
+<li class="menubar" id="menu_random_name_816384607" onmouseover="menu(&quot;_random_name_816384607&quot;,&quot;over&quot;)" onmouseout="menu(&quot;_random_name_816384607&quot;,&quot;out&quot;)">
+Usuários<br />
+<div id="sub_random_name_816384607" class="menubox" onmouseover="menu(&quot;_random_name_816384607&quot;,&quot;over&quot;)" onmouseout="menu(&quot;_random_name_816384607&quot;,&quot;out&quot;)">
+<div class="menuline"><ul>
+<li class="submenu" style="width:49%">
+Autorização
+<ul class="menuitem">
+<li>
+<a href="/jurisprudencia/privado/gerenciamento/usuarioAutorizacao.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff7826b4c776d71316d3a6b758b3d398283" target="_self">Buscar usuário para autorizar</a>
+</li>
+<li>
+<a href="/jurisprudencia/privado/gerenciamento/usuarioAutorizacao.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff77c58d6b2daa5d801b39f7bcb4c27b19c" target="_self">Pesquisar autorizações</a>
+</li>
+</ul>
+</li>
+</ul></div>
+</div>
+</li>
+<li class="menubar" id="menu_random_name_520935032" onmouseover="menu(&quot;_random_name_520935032&quot;,&quot;over&quot;)" onmouseout="menu(&quot;_random_name_520935032&quot;,&quot;out&quot;)">
+cedoc<br />
+<div id="sub_random_name_520935032" class="menubox" onmouseover="menu(&quot;_random_name_520935032&quot;,&quot;over&quot;)" onmouseout="menu(&quot;_random_name_520935032&quot;,&quot;out&quot;)">
+<div class="menuline"><ul>
+<li class="submenu" style="width:49%">
+Análise de Ementas
+<ul class="menuitem">
+<li>
+<a href="/jurisprudencia/privado/cedoc/busca.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff77c58d6b2daa5d801b39f7bcb4c27b19c" target="_self">Análise</a>
+</li>
+<li>
+<a href="/jurisprudencia/privado/cedoc/relatorioAnalisesEmenta.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff7d88bd1d17bac0727df8ab941b113325a" target="_self">Relatórios</a>
+</li>
+</ul>
+</li>
+</ul></div>
+</div>
+</li>
+<li class="menubar" id="menu_random_name_141260661" onmouseover="menu(&quot;_random_name_141260661&quot;,&quot;over&quot;)" onmouseout="menu(&quot;_random_name_141260661&quot;,&quot;out&quot;)">
+Administração<br />
+<div id="sub_random_name_141260661" class="menubox" onmouseover="menu(&quot;_random_name_141260661&quot;,&quot;over&quot;)" onmouseout="menu(&quot;_random_name_141260661&quot;,&quot;out&quot;)">
+<div class="menuline"><ul>
+<li class="submenu" style="width:49%">
+Indexador
+<ul class="menuitem">
+<li>
+<a href="/jurisprudencia/privado/admin/indexacao.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff7826b4c776d71316d2fcc9c9d2d08203551532b44bce15593" target="_self">Gerenciar indexação</a>
+</li>
+</ul>
+</li>
+<li class="submenu" style="width:49%">
+Indexador
+<ul class="menuitem">
+<li>
+<a href="/jurisprudencia/privado/admin/indexacao.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff7826b4c776d71316d035ab90e01858508f11c7a95d30473ab" target="_self">Efetuar consultas dentro do índice (miniluke).</a>
+</li>
+</ul>
+</li>
+</ul></div>
+<div class="menuline"><ul>
+<li class="submenu" style="width:49%">
+Unificação
+<ul class="menuitem">
+<li>
+<a href="/jurisprudencia/privado/admin/indexacao.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff7826b4c776d71316d16734d9de72ed6bad02a3b8a5858a11e" target="_self">Unificar índices de comarcas, orgao julgador ou magistrados.</a>
+</li>
+</ul>
+</li>
+<li class="submenu" style="width:49%">
+Segredo de justiça
+<ul class="menuitem">
+<li>
+<a href="/jurisprudencia/privado/admin/indexacao.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff7e170724a2dd036cd3b15bd960fd1ad7e052cddbda416b6a9" target="_self">Colocar em segredo de justiça</a>
+</li>
+</ul>
+</li>
+</ul></div>
+<div class="menuline"><ul>
+<li class="submenu" style="width:49%">
+Atualizar processo
+<ul class="menuitem">
+<li>
+<a href="/jurisprudencia/privado/admin/indexacao.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff7ac35bde6d0359b3db0f4886d2e0f262cd20932c37dd1bd45" target="_self">Modificar arquivo</a>
+</li>
+<li>
+<a href="/jurisprudencia/privado/admin/indexacao.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff7ac35bde6d0359b3d434de34544bf55a345c5cbdc7f079d69" target="_self">Modificar ementa</a>
+</li>
+<li>
+<a href="/jurisprudencia/privado/admin/indexacao.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff7ac35bde6d0359b3d0aa1da2ef7a779aacb8cc3122d58e21c" target="_self">Modificar acórdão</a>
+</li>
+</ul>
+</li>
+<li class="submenu" style="width:49%">
+Jurisprudência
+<ul class="menuitem">
+<li>
+<a href="/jurisprudencia/privado/admin/indexacao.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff79f3a6e926fdc6548211b6b8048462cd21abd21b531d794c5dc121d5369904ae7" target="_self">Editar item</a>
+</li>
+</ul>
+</li>
+</ul></div>
+</div>
+</li>
+<li class="menubar" id="menu_random_name_576600775" onmouseover="menu(&quot;_random_name_576600775&quot;,&quot;over&quot;)" onmouseout="menu(&quot;_random_name_576600775&quot;,&quot;out&quot;)">
+Corte IDH<br />
+<div id="sub_random_name_576600775" class="menubox" onmouseover="menu(&quot;_random_name_576600775&quot;,&quot;over&quot;)" onmouseout="menu(&quot;_random_name_576600775&quot;,&quot;out&quot;)">
+<div class="menuline"><ul>
+<li class="submenu" style="width:49%">
+A&ccedil;&otilde;es
+<ul class="menuitem">
+<li>
+<a href="/jurisprudencia/privado/cidh/importarPlanilhas.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff798478c9e4b14993ef0e48aed5aeba59b" target="_self">Importar planilhas</a>
+</li>
+<li>
+<a href="/jurisprudencia/privado/cidh/verificarPendentes.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff74bc321c7e44136314434ea57798de5bc8143165ed2e21d378c92a7c72ede65b2" target="_self">Verificar pendentes</a>
+</li>
+<li>
+<a href="/jurisprudencia/privado/cidh/visualizarItens.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff74bc321c7e44136314434ea57798de5bc8143165ed2e21d378c92a7c72ede65b2" target="_self">Visualizar itens</a>
+</li>
+<li>
+<a href="/jurisprudencia/privado/cidh/disponibilizarItens.do;jsessionid=ec64cc8fa6c9ed772f13ae852422?tjpr.url.crypto=8a6c53f8698c7ff74bc321c7e44136314434ea57798de5bc8143165ed2e21d378c92a7c72ede65b2" target="_self">Disponibilizar itens</a>
+</li>
+</ul>
+</li>
+</ul></div>
+</div>
+</li>
+</ul>
+</div>
+
+
+<span id="confirmarCiencia">
+	
+				
+			
+		
+	
+</span>
+
+
+<script lang="javascript">
+	var urlKeepAlive = '/jurisprudencia/ajax.do?tjpr.url.crypto=8a6c53f8698c7ff7088d3764243ee7b602d64f941ff6399dacd20af854fb5818';
+	setInterval(function(){
+		fetch(urlKeepAlive, { method: 'GET' })
+				.then(response => response.text()) // ou .json()
+				.then(result => {
+				})
+				.catch(err => {
+				});
+	}, 60000);
+</script>
+
+<script lang="javascript">
+		var usuarios = document.getElementById('menubar').children[0].id;
+		var cedoc = document.getElementById('menubar').children[1].id;
+		var admin = document.getElementById('menubar').children[2].id;
+		var cidh = document.getElementById('menubar').children[3].id;
+		var cidh_disponibilizar = document.getElementById(cidh).getElementsByClassName('menuitem')[0].children[3];
+
+		
+			document.getElementById(usuarios).innerHTML='';			
+		
+		
+		
+			document.getElementById(cedoc).innerHTML='';			
+		
+	
+		
+			document.getElementById(admin).innerHTML='';			
+		
+
+		
+			document.getElementById(cidh).innerHTML='';
+		
+		
+			cidh_disponibilizar.innerHTML='';
+		
+</script>
+
+   
+
+      
+      <hr/>
+      <div id="content">
+      
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script type="text/javascript">
+
+	/**
+	 * Função para limpar o conteúdo das mensagens
+	 */
+	function clearMessages(){
+		var successMsgs = document.getElementById('successMessages');
+		if(successMsgs != null && "" + successMsgs != "undefined"){
+			successMsgs.style.display="none";
+		}
+		
+		var errorMsgs = document.getElementById('errorMessages');
+		if(errorMsgs != null && "" + errorMsgs != "undefined"){
+			errorMessages.style.display="none";			
+		}
+		
+		
+	}	
+	// chama a função após 7 segundos
+	window.setTimeout("clearMessages()", 7000);
+</script>
+          
+
+
+
+
+
+
+
+
+
+<div id="site-content">
+
+
+    <script>
+        var globoUrl = '/jurisprudencia/promo/logo_cidh2.png?updateIdx=30';
+        var svgUrl = '/jurisprudencia/promo/promo.png?updateIdx=30';
+        var textoCorteHTML = '/jurisprudencia/promo/promo.html?updateIdx=30';
+        var baseCadernoUrl = '/jurisprudencia/promo/caderno/';
+        var buscarDadosVivosUrl = '/jurisprudencia/ajax.do?actionType=buscarDadosVivosCidh';
+    </script>
+    <link rel="stylesheet" type="text/css" href="/jurisprudencia/promo/promo.css?updateIdx=30"/>
+    <link rel="stylesheet" type="text/css" href="/jurisprudencia/promo/mapas.css?updateIdx=30"/>
+    <link rel="stylesheet" type="text/css" href="/jurisprudencia/promo/caderno/caderno/index.css?updateIdx=30"/>
+    <section id="secao-globo" class="secao-globo"></section>
+    <script src="/jurisprudencia/promo/promo.js?updateIdx=30"></script>
+    <script src="/jurisprudencia/promo/caderno/caderno/index.js?updateIdx=30"></script>
+    <script src="/jurisprudencia/promo/caderno/promo.js?updateIdx=30"></script>
+
+<script type="text/javascript" language="JavaScript">
+    var limparURL  = '/jurisprudencia/publico/pesquisa.do?tjpr.url.crypto=8a6c53f8698c7ff7826b4c776d71316d3a6b758b3d398283';
+</script>
+<script type="text/javascript" language="JavaScript" src="/jurisprudencia/js/layout-2/tela-filtro-detalhada.js?updateIdx=30"></script>
+<script type="text/javascript" language="JavaScript" src="/jurisprudencia/js/layout-2/calendario.js?updateIdx=30"></script>
+
+<link rel="stylesheet" type="text/css"
+      href="/jurisprudencia/css/layout-2/popover.css?updateIdx=30"/>
+<script type="text/javascript" language="JavaScript" src="/jurisprudencia/js/layout-2/popover.js?updateIdx=30"></script>
+
+<link rel="stylesheet" type="text/css"
+      href="/jurisprudencia/css/layout-2/tabs-filtro-2.css?updateIdx=30"/>
+<link rel="stylesheet" type="text/css"
+      href="/jurisprudencia/css/layout-2/calendario.css?updateIdx=30"/>
+<div class="formulario">
+    <form name="pesquisaForm" id="pesquisaForm" method="post" action="/jurisprudencia/publico/pesquisa.do?actionType=pesquisar" accept-charset="ISO-8859-1" onsubmit="return loadSubmit();">
+
+        <input type="hidden" id="postCampo" name="postCampo" />
+        <input type="hidden" id="tmp" name="tmp" />
+
+
+        
+
+        
+
+        <div class="secaoFormulario">
+            <span class="titulo">PESQUISA LIVRE</span>
+            <div class="secao-formulario-container pre-carregar" style="display: none;">
+                <div class="coluna-esquerda">
+                    <div class="search-container search-longa">
+                        <div class="input-container">
+                            <input type="text" name="criterioPesquisa" maxlength="150" size="48" value="" id="criterioPesquisa">
+                            <input type="hidden" name="siglaEstado" value="" id="siglaEstado">
+                            <div class="input-icons">
+                                <span class="espacador"></span>
+                                <a href="javascript:Form.Element.clear('criterioPesquisa');void(0);" class="icon-button"
+                                   title="Limpar campo">
+                                    <span class="symbol clear-icon"><img alt="limpar" src="/jurisprudencia/img/icons/icon-clear.svg?updateIdx=30"/></span></a>
+                                <a  href="#"
+                                   class="help-trigger icon-button"
+                                    data-help-url="/jurisprudencia/publico/callout.do?tjpr.url.crypto=8a6c53f8698c7ff7b660ca848b310b16ab98131d4e705109b6e47af7fe0d81bb58775537ad8322f8&pagina=ajudaOperadores.html"
+                                   title='Clique para exibir a descrição completa.'>
+                                    <span class="symbol help-icon"><img alt="info" src="/jurisprudencia/img/icons/icon-info.svg?updateIdx=30"/></span></a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="div-termos">
+                        <input type="button" id="btE" class="buttonexp btn-ux-acao" value="E"
+                               onClick="javascript:getOperador('E');" title="Ambos os termos: 'indenização E moral'"/>
+                        <input type="button" id="btOu" class="buttonexp btn-ux-acao" value="OU"
+                               onClick="javascript:getOperador('OU');" title="Ao menos um termo: 'indenização OU reparação'"/>
+                        <input type="button" id="btNao" class="buttonexp btn-ux-acao" value="!NAO"
+                               onClick="javascript:getOperador('!NÃO');" title="Não deve conter o termo: '!NÃO criminal'"/>
+                        <input type="button" id="btProx" class="buttonexp btn-ux-acao" value="PROX"
+                               onClick="javascript:getOperador('PROX');" title="Termos próximos: 'indenização PROX3 moral'"/>
+                        <input type="button" id="bt$" class="buttonexp btn-ux-acao" value="$"
+                               onClick="javascript:getOperador('$');" title="Termos com radicais: 'indeni$'"/>
+                    </div>
+                </div>
+                <div class="btn-icone-container">
+                    <button type="button" class="btn-icone btn-icone-pesquisar" onclick="selecionarTudo();"
+                            title="Pesquisa completa, incluindo o texto do inteiro teor">
+                        <img src="/jurisprudencia/img/icons/pesquisa.png?updateIdx=30" alt="Pesquisar">
+                    </button>
+                    <button type="button" class="btn-icone btn-icone-pesquisar-ementa" onclick="selecionarEmenta();"
+                            title="Pequisa somente na ementa">
+                        <img src="/jurisprudencia/img/icons/pesquisa-ementa.png?updateIdx=30"
+                             alt="Pesquisar ementa">
+                    </button>
+                    <button type="button" class="btn-icone btn-icone-pesquisar-avancada" onclick="toggleFiltros();"
+                            title="Habilitar a pesquisa avançada">
+                        <img src="/jurisprudencia/img/icons/pesquisa-avancada.png?updateIdx=30"
+                             alt="Pesquisa avançada">
+                    </button>
+                    
+                        <button type="button" class="btn-icone btn-icone-pesquisar-mundo" onclick="toggleGlobo();"
+                                title="Exibir mapa com as decisões da Corte IDH">
+                            <img src="/jurisprudencia/img/icons/pesquisa-mundo.png?updateIdx=30"
+                                 alt="Pesquisa no globo">
+                        </button>
+                    
+                </div>
+            </div>
+        </div>
+
+        <div class="secaoFormulario toggle-avancada oculto pre-carregar" style="display: none;">
+            <span class="titulo">PESQUISA POR CAMPOS ESPECÍFICOS</span>
+            
+            <input type="hidden" name="selectedIcon" value="">
+            
+            
+                
+                
+                    
+
+
+
+
+
+
+  
+  
+
+
+  
+  
+
+
+
+
+  
+  
+
+
+
+
+  
+  
+
+
+
+
+  
+  
+
+
+
+
+<table cellspacing="0" cellpadding="0" border="0" >
+  <tr valign="top">
+    <td width="1%" valign="top" nowrap="nowrap" >
+      <div id="tabHorz" >
+        <ul>
+          
+          
+            
+              
+            
+            
+              
+            
+          
+            
+            
+          
+          
+          
+            <li id="tabItem0" class="currentTab " onclick="setTab('/jurisprudencia/publico/pesquisa.do?actionType=carregar&page=0', 'tabTj', 0)">
+              <div class="tabLeft"></div>
+              <div class="tabCenter">
+              	<a>TRIBUNAL DE JUSTIÇA DO PARANÁ</a>
+              </div>
+              <div class="tabRight"></div>
+            </li>
+            
+          
+            <li id="tabItem1" class="  tab-ultima" onclick="setTab('/jurisprudencia/publico/pesquisa.do?actionType=carregar&page=0', 'tabCidh', 1)">
+              <div class="tabLeft"></div>
+              <div class="tabCenter">
+              	<a>CORTE INTERAMERICANA DE DIREITOS HUMANOS</a>
+              </div>
+              <div class="tabRight"></div>
+            </li>
+            
+              <a  href="#"
+                  class="icon-button icon-right-tab"
+                  onclick="abrirPopup();" title='Clique para saber mais'>
+                <span class="symbol help-icon"><img alt="info" src="/jurisprudencia/img/icons/icon-info.svg?updateIdx="/></span></a>
+            
+          
+        </ul>
+      </div>
+    </td>
+    
+    
+      
+  </tr>
+  
+  
+    <tr><td width="auto" valign="top" class="masterBlockSubInfoHorz">
+      
+
+
+
+
+
+  
+    
+    
+      <div id="tab0" style="display:block;">
+        <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+
+
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="pt" lang="BR">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"/>
+		<meta http-equiv="Cache-Control" content="No-Cache"/>
+		<meta http-equiv="Pragma" content="No-Cache"/>
+		<meta http-equiv="Expires" content="0"/>
+		
+		
+		<title>jurisprudencia</title>
+	</head>
+	
+	<body>
+		<div id="container">
+			
+			
+			
+
+			
+			<hr/>
+
+			<div id="includeContent">
+				<div id="idCalPadrao" style="position:absolute;z-index:1000;float:right;visibility:hidden;background-color:white;layer-background-color:white;">
+				</div>
+
+				
+					
+						
+						
+
+
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" language="JavaScript">
+    var PRIMEIRA_VICE = '7';
+
+    function adicionarOrgao(){
+        var adicionarOrgaoJulgadorURL  = '/jurisprudencia/publico/pesquisa.do?tjpr.url.crypto=8a6c53f8698c7ff7840f127c1f3c841ff121aa6a8270ef2062dcf6370c80db03803d9e2499d0352e';
+        if(document.pesquisaForm.idOrgaoJulgadorSelecao.value != ''){
+            document.pesquisaForm.action = adicionarOrgaoJulgadorURL;
+            document.pesquisaForm.submit();
+        }
+    }
+
+    function removerOrgao(id){
+        var removerClasseProcessualURL  = '/jurisprudencia/publico/pesquisa.do?tjpr.url.crypto=8a6c53f8698c7ff73cb03e0f4a28c9b709afe3d5d816623a79b031d256cce679';
+        document.pesquisaForm.action = removerClasseProcessualURL;
+        document.pesquisaForm.idOrgaoJulgadorSelecao.value=id;
+        document.pesquisaForm.submit();
+    }
+
+    function selecionarAssunto(contextPath, parentForm, parentIdField, parentDescricaoField){
+        var url = contextPath + '/assunto.do?actionType=pesquisar&tipoSelecao=selecaoPrincipal' +
+            '&parentForm=' + parentForm + '&parentIdField=' + parentIdField + '&parentDescricaoField=' + parentDescricaoField;
+
+        openDialog(url,'Seleção de assunto',0,0);
+    }
+
+    function selecionarClasse(contextPath, parentForm, parentIdField, parentDescricaoField){
+        var url = contextPath + '/classeProcessual.do?actionType=pesquisar&tipoSelecao=selecaoPrincipal' +
+            '&parentForm=' + parentForm + '&parentIdField=' + parentIdField + '&parentDescricaoField=' + parentDescricaoField;
+
+        openDialog(url,'Seleção de classe processual',0,0);
+    }
+
+    function selecionarRelator(contextPath, parentForm, parentIdField, parentDescricaoField){
+        var url = contextPath + '/relator.do?actionType=pesquisar' +
+            '&parentForm=' + parentForm + '&parentIdField=' + parentIdField + '&parentDescricaoField=' + parentDescricaoField;
+
+        openDialog(url,'Seleção de Relator(a)',0,0);
+    }
+
+    function selecionarOrgao(contextPath, parentForm, parentIdField, parentDescricaoField){
+        var url = contextPath + '/orgaoJulgador.do?actionType=pesquisar' +
+            '&parentForm=' + parentForm + '&parentIdField=' + parentIdField + '&parentDescricaoField=' + parentDescricaoField;
+
+        openDialog(url,'Seleção de relato(a)',0,0);
+    }
+
+    function selecionarTodasAsBasesConsulta() {
+        const select = document.querySelector('select[name="ambito"]');
+        if (!select) return;
+
+        const options = Array.from(select.options)
+            .filter(opt => opt.text.toUpperCase().includes("TODAS"));
+
+        const option = options.at(0);
+
+        if (option) {
+            select.value = option.value;
+            select.dispatchEvent(new Event("change", {bubbles: true}));
+        }
+    }
+    function sincronizarBaseTj(){
+        if (typeof(tabItem0) !== 'undefined') {
+            tabItem0.addEventListener("click", selecionarTodasAsBasesConsulta);
+        }
+    }
+    addLoadEvent(sincronizarBaseTj);
+</script>
+
+
+<link rel="stylesheet" type="text/css"
+      href="/jurisprudencia/css/tabs/layout-cidh-tabs.css"/>
+<link rel="stylesheet" type="text/css"
+      href="/jurisprudencia/css/layout-2/tabs-2.css?updateIdx=30"/>
+
+
+<table class="form" style="border: none;">
+    <tr  id="linhaProcesso" >
+        <td class="label">
+            NUMERAÇÃO PROCESSUAL:
+        </td>
+        <td colspan="4">
+            <div class="input-container">
+            <input type="text" name="processo" maxlength="25" size="85" value="" onclick="seleciona(this)" onblur="perdefoco(this)" id="processo">
+                <div class="input-icons">
+                    <span class="espacador"></span>
+                    <a href="javascript:Form.Element.clear('processo');void(0);" class="icon-button" title="Limpar campo">
+                        <span class="symbol clear-icon"><img alt="limpar" src="/jurisprudencia/img/icons/icon-clear.svg?updateIdx=30"/></span>
+                    </a>
+                    <a  href="#"
+                        class="help-trigger icon-button"
+                        data-help-url="/jurisprudencia/publico/callout.do?tjpr.url.crypto=8a6c53f8698c7ff7b660ca848b310b16ab98131d4e705109b6e47af7fe0d81bb58775537ad8322f8&pagina=ajaxCalloutNumProcessual.html"
+                        title='Clique para exibir a descrição completa.'>
+                        <span class="symbol help-icon"><img alt="info" src="/jurisprudencia/img/icons/icon-info.svg?updateIdx=30"/></span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Indicadores ocultos mas funcionais -->
+            <img src="/jurisprudencia/img/indicator.gif" width="0" align="top" class="indicatorOn">
+
+            <span id="indicatorProcessoOff" style="display:inline;">
+						<img src="/jurisprudencia/img/indicatorOff.gif" align="top" class="indicatorOff" title="Campo autocompletar: ao digitar, escolha uma das opções sugeridas">
+			    	</span>
+            <span id="indicatorProcesso" style="display:none; margin-left:-20px;">
+						<img src="/jurisprudencia/img/indicator.gif" align="top" class="indicatorOn">
+			    	</span>
+            
+            <script type="text/javascript">
+new AjaxJspTag.Autocomplete(
+"/jurisprudencia/ajax.do?tjpr.url.crypto=8a6c53f8698c7ff7a5b39add9b5ccc562b733aed110b9207ed9ea2a833251b94", {
+indicator: "indicatorProcesso",
+source: "processo",
+target: "processo",
+minimumCharacters: "4",
+className: "autocomplete",
+parameters: "actionType=ajaxSelectProcesso,processo={processo}"
+});
+</script>
+
+
+
+        </td>
+    </tr>
+    <tr  id="linhaAcordao" >
+        <td class="label">
+            NUMERAÇÃO DO ACÓRDÃO:
+        </td>
+        <td colspan="4">
+            <div class="input-container">
+            <input type="text" name="acordao" maxlength="25" size="85" value="" onclick="seleciona(this)" onblur="perdefoco(this)" id="acordao">
+                <div class="input-icons">
+                    <span class="espacador"></span>
+                    <a href="javascript:Form.Element.clear('acordao');void(0);" class="icon-button" title="Limpar campo">
+                        <span class="symbol clear-icon"><img alt="limpar" src="/jurisprudencia/img/icons/icon-clear.svg?updateIdx=30"/></span>
+                    </a>
+                    <a  href="#"
+                        class="help-trigger icon-button"
+                        data-help-url="/jurisprudencia/publico/callout.do?tjpr.url.crypto=8a6c53f8698c7ff7b660ca848b310b16ab98131d4e705109b6e47af7fe0d81bb58775537ad8322f8&pagina=ajaxCalloutNumAcordao.html"
+                        title='Clique para exibir a descrição completa.'>
+                        <span class="symbol help-icon"><img alt="info" src="/jurisprudencia/img/icons/icon-info.svg?updateIdx=30"/></span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Indicadores ocultos mas funcionais -->
+            <img src="/jurisprudencia/img/indicator.gif" width="0" align="top" class="indicatorOn">
+        </td>
+    </tr>
+    <tr  id="linhaRelator" >
+        <td class="label">
+            RELATOR(A):
+        </td>
+        <td colspan="4">
+            <input type="hidden" name="idRelator" value="" id="idRelator">
+            <div class="input-container">
+            <input type="text" name="nomeRelator" maxlength="100" size="85" value="" onclick="seleciona(this)" onblur="limpaHidden('idRelator',this);perdefoco(this);" id="nomeRelator">
+                <div class="input-icons">
+                    <a href="javascript:Form.Element.clear('idRelator');Form.Element.clear('nomeRelator');void(0);" class="icon-button" title="Limpar campo">
+                        <span class="symbol clear-icon"><img alt="limpar" src="/jurisprudencia/img/icons/icon-clear.svg?updateIdx=30"/></span>
+                    </a>
+                    <span class="separador"></span>
+                    <a href="javascript:selecionarRelator('/jurisprudencia', 'pesquisaForm', 'idRelator', 'nomeRelator');" class="icon-button" title="Selecionar relator">
+                        <span class="symbol search-icon"><img alt="search" src="/jurisprudencia/img/icons/icon-magnifier.svg?updateIdx=30"/></span>
+                    </a>
+                    <a  href="#"
+                        class="help-trigger icon-button"
+                        data-help-url="/jurisprudencia/publico/callout.do?tjpr.url.crypto=8a6c53f8698c7ff7b660ca848b310b16ab98131d4e705109b6e47af7fe0d81bb58775537ad8322f8&pagina=ajaxCalloutRelator.html"
+                        title='Clique para exibir a descrição completa.'>
+                        <span class="symbol help-icon"><img alt="info" src="/jurisprudencia/img/icons/icon-info.svg?updateIdx=30"/></span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Indicadores ocultos mas funcionais -->
+            <span id="indicatorRelatorOff" style="display:inline;">
+						<img src="/jurisprudencia/img/indicatorOff.gif" align="top" class="indicatorOff" title="Campo autocompletar: ao digitar, escolha uma das opções sugeridas">
+			    	</span>
+            <span id="indicatorRelator" style="display:none; margin-left:-20px;">
+						<img src="/jurisprudencia/img/indicator.gif" align="top" class="indicatorOn">
+			    	</span>
+            
+            <script type="text/javascript">
+new AjaxJspTag.Autocomplete(
+"/jurisprudencia/ajax.do?tjpr.url.crypto=8a6c53f8698c7ff7a5b39add9b5ccc56662df612165ac49e16b86570fe038707", {
+appendSeparator: ",",
+indicator: "indicatorRelator",
+source: "nomeRelator",
+target: "idRelator",
+minimumCharacters: "4",
+className: "autocomplete",
+parameters: "actionType=ajaxSelectRelator,nomeRelator={nomeRelator}"
+});
+</script>
+
+
+
+        </td>
+    </tr>
+    <tr id="linhaOrgao" >
+        <td class="label">
+            ÓRGAO JULGADOR:
+        </td>
+        <td colspan="4">
+            <input type="hidden" name="idOrgaoJulgadorSelecao" value="" id="idOrgaoJulgadorSelecao">
+            <div class="input-container">
+            <input type="text" name="nomeOrgaoJulgador" maxlength="100" size="85" value="" onclick="seleciona(this)" id="nomeOrgaoJulgador">
+                <div class="input-icons">
+                    <a href="javascript:Form.Element.clear('idOrgaoJulgadorSelecao');Form.Element.clear('nomeOrgaoJulgador');void(0);" class="icon-button" title="Limpar campo">
+                        <span class="symbol clear-icon"><img alt="limpar" src="/jurisprudencia/img/icons/icon-clear.svg?updateIdx=30"/></span>
+                    </a>
+                    <span class="separador"></span>
+                    <a href="javascript:adicionarOrgao();" class="icon-button" title="Adicionar órgão">
+                        <span class="symbol add-icon"><img alt="add" src="/jurisprudencia/img/icons/icon-add.svg?updateIdx=30"/></span>
+                    </a>
+                    <a  href="#"
+                        class="help-trigger icon-button"
+                        data-help-url="/jurisprudencia/publico/callout.do?tjpr.url.crypto=8a6c53f8698c7ff7b660ca848b310b16ab98131d4e705109b6e47af7fe0d81bb58775537ad8322f8&pagina=ajaxCalloutOrgaoJulgador.html"
+                        title='Clique para exibir a descrição completa.'>
+                        <span class="symbol help-icon"><img alt="info" src="/jurisprudencia/img/icons/icon-info.svg?updateIdx=30"/></span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Indicadores ocultos mas funcionais -->
+            <span id="indicatorOrgaoJulgadorOff" style="display:inline;">
+						<img src="/jurisprudencia/img/indicatorOff.gif" align="top" class="indicatorOff" title="Campo autocompletar: ao digitar, escolha uma das opções sugeridas">
+			    	</span>
+            <span id="indicatorOrgaoJulgador" style="display:none; margin-left:-20px;">
+						<img src="/jurisprudencia/img/indicator.gif" align="top" class="indicatorOn">
+			    	</span>
+            
+            <script type="text/javascript">
+new AjaxJspTag.Autocomplete(
+"/jurisprudencia/ajax.do?tjpr.url.crypto=8a6c53f8698c7ff7a5b39add9b5ccc5665f62905a0e5e12cb14deeef0ddd8ece31a3554ba12fb8a1", {
+indicator: "indicatorOrgaoJulgador",
+source: "nomeOrgaoJulgador",
+target: "idOrgaoJulgadorSelecao",
+minimumCharacters: "4",
+className: "autocomplete",
+parameters: "actionType=ajaxSelectOrgaoJulgador,nomeOrgaoJulgador={nomeOrgaoJulgador}"
+});
+</script>
+
+
+
+        </td>
+    </tr>
+
+    <tr  id="linhaOrgao2" >
+        <td colspan="1">&nbsp;</td>
+        <td colspan="4">
+            <table class="resultTable result-tjpr" cellpadding="0" cellspacing="0">
+                
+                <colgroup>
+                    <col width="5%" />
+                    <col width="99%" />
+                </colgroup>
+                
+                <thead>
+                <tr>
+                    <th>&nbsp;&nbsp;&nbsp;</th>
+                    <th>Orgão Julgador</th>
+                </tr>
+                </thead>
+                
+                <tbody>
+                
+                
+                    <tr><td colspan="3"><b>Nenhum registro encontrado!</b></td></tr>
+                
+
+                
+                
+                </tbody>
+            </table>
+        </td>
+
+    </tr>
+
+
+
+    <tr  id="linhaComarca" >
+        <td class="label">
+            COMARCA:
+        </td>
+        <td colspan="4">
+            <input type="hidden" name="idComarca" value="" id="idComarca">
+            <div class="input-container">
+            <input type="text" name="nomeComarca" maxlength="100" size="85" value="" onclick="seleciona(this)" onblur="perdefoco(this)" id="nomeComarca">
+                <div class="input-icons">
+                    <span class="espacador"></span>
+                    <a href="javascript:Form.Element.clear('idComarca');Form.Element.clear('nomeComarca');void(0);" class="icon-button" title="Limpar campo">
+                        <span class="symbol clear-icon"><img alt="limpar" src="/jurisprudencia/img/icons/icon-clear.svg?updateIdx=30"/></span>
+                    </a>
+                    <a  href="#"
+                        class="help-trigger icon-button"
+                        data-help-url="/jurisprudencia/publico/callout.do?tjpr.url.crypto=8a6c53f8698c7ff7b660ca848b310b16ab98131d4e705109b6e47af7fe0d81bb58775537ad8322f8&pagina=ajaxCalloutComarca.html"
+                        title='Clique para exibir a descrição completa.'>
+                        <span class="symbol help-icon"><img alt="info" src="/jurisprudencia/img/icons/icon-info.svg?updateIdx=30"/></span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Indicadores ocultos mas funcionais -->
+            <span id="indicatorComarcaOff" style="display:inline;">
+						<img src="/jurisprudencia/img/indicatorOff.gif" align="top" class="indicatorOff" title="Campo autocompletar: ao digitar, escolha uma das opções sugeridas">
+			    	</span>
+            <span id="indicatorComarca" style="display:none; margin-left:-20px;">
+						<img src="/jurisprudencia/img/indicator.gif" align="top" class="indicatorOn">
+			    	</span>
+            
+            <script type="text/javascript">
+new AjaxJspTag.Autocomplete(
+"/jurisprudencia/ajax.do?tjpr.url.crypto=8a6c53f8698c7ff7a5b39add9b5ccc5686a3cff554472df67f3a5cae6b0b27a0", {
+appendSeparator: ",",
+indicator: "indicatorComarca",
+source: "nomeComarca",
+target: "idComarca",
+minimumCharacters: "4",
+className: "autocomplete",
+parameters: "actionType=ajaxSelectComarca,nomeComarca={nomeComarca}"
+});
+</script>
+
+
+
+        </td>
+    </tr>
+
+    <tr id="linhaClasse" >
+        <td class="label">
+            CLASSE PROCESSUAL:
+        </td>
+        <td colspan="4">
+            <input type="hidden" name="idClasseProcessual" value="" id="idClasseProcessual">
+
+            <!--Solução de contorno: descricaoClasseProcessualHidden.
+            Ao mudar de text para textArea, a fim de visualizar toda descrição, a submissão no popup falha
+            por usar metodo getInputs do prototype que não retorna textAreas
+               -->
+            <input type="hidden" name="descricaoClasseProcessualHidden" value="" id="descricaoClasseProcessualHidden">
+            <div class="input-container">
+            <input type="text" name="descricaoClasseProcessual" size="85" value="" onclick="seleciona(this)" onblur="perdefoco(this)" id="descricaoClasseProcessual">
+                <div class="input-icons">
+                    <a href="javascript:Form.Element.clear('idClasseProcessual');Form.Element.clear('descricaoClasseProcessual');void(0);" class="icon-button" title="Limpar campo">
+                        <span class="symbol clear-icon"><img alt="limpar" src="/jurisprudencia/img/icons/icon-clear.svg?updateIdx=30"/></span>
+                    </a>
+                    <span class="separador"></span>
+                    <a href="javascript:selecionarClasse('/jurisprudencia', 'pesquisaForm', 'idClasseProcessual', 'descricaoClasseProcessualHidden');" class="icon-button" title="Selecionar classe processual">
+                        <span class="symbol search-icon"><img alt="search" src="/jurisprudencia/img/icons/icon-magnifier.svg?updateIdx=30"/></span>
+                    </a>
+                    <a  href="#"
+                        class="help-trigger icon-button"
+                        data-help-url="/jurisprudencia/publico/callout.do?tjpr.url.crypto=8a6c53f8698c7ff7b660ca848b310b16ab98131d4e705109b6e47af7fe0d81bb58775537ad8322f8&pagina=ajaxCalloutClasse.html"
+                        title='Clique para exibir a descrição completa.'>
+                        <span class="symbol help-icon"><img alt="info" src="/jurisprudencia/img/icons/icon-info.svg?updateIdx=30"/></span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Indicadores ocultos mas funcionais -->
+            <span id="indicatorClasseOff" style="display:inline;">
+						<img src="/jurisprudencia/img/indicatorOff.gif" align="top" class="indicatorOff" title="Campo autocompletar: ao digitar, escolha uma das opções sugeridas">
+			    	</span>
+            <span id="indicatorClasse" style="display:none; margin-left:-20px;">
+						<img src="/jurisprudencia/img/indicator.gif" align="top" class="indicatorOn">
+			    	</span>
+
+            
+            <script type="text/javascript">
+new AjaxJspTag.Autocomplete(
+"/jurisprudencia/ajax.do?tjpr.url.crypto=8a6c53f8698c7ff7a5b39add9b5ccc564e01c8bea5e406855d250a07a73acd3d", {
+appendSeparator: ",",
+indicator: "indicatorClasse",
+source: "descricaoClasseProcessual",
+target: "idClasseProcessual",
+minimumCharacters: "4",
+className: "autocomplete",
+parameters: "actionType=ajaxSelectClasse,descricaoClasseProcessual={descricaoClasseProcessual}"
+});
+</script>
+
+
+
+        </td>
+    </tr>
+    <tr id="linhaAssunto" >
+        <td class="label">
+            ASSUNTO:
+        </td>
+        <td colspan="4">
+            <input type="hidden" name="idAssunto" value="" id="idAssunto">
+            <input type="hidden" name="descricaoAssuntoHidden" value="" id="descricaoAssuntoHidden">
+            <div class="input-container">
+            <input type="text" name="descricaoAssunto" size="85" value="" onclick="seleciona(this)" id="descricaoAssunto">
+                <div class="input-icons">
+                    <a href="javascript:Form.Element.clear('idAssunto');Form.Element.clear('descricaoAssunto');void(0);" class="icon-button" title="Limpar campo">
+                        <span class="symbol clear-icon"><img alt="limpar" src="/jurisprudencia/img/icons/icon-clear.svg?updateIdx=30"/></span>
+                    </a>
+                    <span class="separador"></span>
+                    <a href="javascript:selecionarAssunto('/jurisprudencia', 'pesquisaForm', 'idAssunto', 'descricaoAssuntoHidden');" class="icon-button" title="Selecionar assunto">
+                        <span class="symbol search-icon"><img alt="search" src="/jurisprudencia/img/icons/icon-magnifier.svg?updateIdx=30"/></span>
+                    </a>
+                    <a  href="#"
+                        class="help-trigger icon-button"
+                        data-help-url="/jurisprudencia/publico/callout.do?tjpr.url.crypto=8a6c53f8698c7ff7b660ca848b310b16ab98131d4e705109b6e47af7fe0d81bb58775537ad8322f8&pagina=ajaxCalloutAssunto.html"
+                        title='Clique para exibir a descrição completa.'>
+                        <span class="symbol help-icon"><img alt="info" src="/jurisprudencia/img/icons/icon-info.svg?updateIdx=30"/></span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Indicadores ocultos mas funcionais -->
+            <span id="indicatorAssuntoOff" style="display:inline;">
+						<img src="/jurisprudencia/img/indicatorOff.gif" align="top" class="indicatorOff" title="Campo autocompletar: ao digitar, escolha uma das opções sugeridas">
+			    	</span>
+            <span id="indicatorAssunto" style="display:none; margin-left:-20px;">
+						<img src="/jurisprudencia/img/indicator.gif" align="top" class="indicatorOn">
+			    	</span>
+
+            
+            <script type="text/javascript">
+new AjaxJspTag.Autocomplete(
+"/jurisprudencia/ajax.do?tjpr.url.crypto=8a6c53f8698c7ff7a5b39add9b5ccc568cded1a4d1af01e911a8451439e45f95", {
+appendSeparator: ",",
+indicator: "indicatorAssunto",
+source: "descricaoAssunto",
+target: "idAssunto",
+minimumCharacters: "4",
+className: "autocomplete",
+parameters: "actionType=ajaxSelectAssunto,descricaoAssunto={descricaoAssunto}"
+});
+</script>
+
+
+
+        </td>
+    </tr>
+    <tr  id="linhaJulgamento" >
+        <td class="label">
+            JULGAMENTO:
+        </td>
+        <td class="label" style="text-align: left;" colspan="5">
+            <div class="div-datas">
+                <div class="div-datas-esquerda">
+                    <div class="input-container">
+                        <span class="data_titulo">INICIAL:</span>
+                        <input type="text" name="dataJulgamentoInicio" value="" id="dataJulgamentoInicio" class="text input_mask mask_date_br">
+                        <div class="input-icons">
+                            <a href="javascript:Form.Element.clear('dataJulgamentoInicio');void(0);" class="icon-button" />
+                            <span class="symbol clear-icon"><img alt="limpar" src="/jurisprudencia/img/icons/icon-clear.svg?updateIdx=30"/></span>
+                            </a>
+                            <span class="separador"></span>
+                            <a style="padding-left:4px;" href="javascript:openCalendar2($('pesquisaForm').dataJulgamentoInicio);">
+                                <span class="symbol calendar-icon"><img alt="calendario" src="/jurisprudencia/img/icons/icon-calendar.svg?updateIdx=30"/></span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="div-datas-direita">
+                    <div class="input-container">
+                        <span class="data_titulo">FINAL:</span>
+                        <input type="text" name="dataJulgamentoFim" value="" id="dataJulgamentoFim" class="text input_mask mask_date_br">
+                        <div class="input-icons">
+                            <a href="javascript:Form.Element.clear('dataJulgamentoFim');void(0);" class="icon-button" />
+                            <span class="symbol clear-icon"><img alt="limpar" src="/jurisprudencia/img/icons/icon-clear.svg?updateIdx=30"/></span>
+                            </a>
+                            <span class="separador"></span>
+                            <a style="padding-left:4px;" href="javascript:openCalendar2($('pesquisaForm').dataJulgamentoFim);">
+                                <span class="symbol calendar-icon"><img alt="calendario" src="/jurisprudencia/img/icons/icon-calendar.svg?updateIdx=30"/></span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </td>
+
+    </tr>
+
+    <tr  id="linhaPublicacao" colspan="5">
+        <td class="label">PUBLICAÇÃO:</td>
+        <td class="label" style="text-align: left;" colspan="5">
+            <div class="div-datas">
+                <div class="div-datas-esquerda">
+                    <div class="input-container">
+                        <span class="data_titulo">INICIAL:</span>
+                        <input type="text" name="dataPublicacaoInicio" value="" id="dataPublicacaoInicio" class="text input_mask mask_date_br">
+                        <div class="input-icons">
+                            <a href="javascript:Form.Element.clear('dataPublicacaoInicio');void(0);" class="icon-button" />
+                                <span class="symbol clear-icon"><img alt="limpar" src="/jurisprudencia/img/icons/icon-clear.svg?updateIdx=30"/></span>
+                            </a>
+                            <span class="separador"></span>
+                            <a style="padding-left:4px;" href="javascript:openCalendar2($('pesquisaForm').dataPublicacaoInicio);">
+                                <span class="symbol calendar-icon"><img alt="calendario" src="/jurisprudencia/img/icons/icon-calendar.svg?updateIdx=30"/></span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="div-datas-direita">
+                    <div class="input-container">
+                        <span class="data_titulo">FINAL:</span>
+                        <input type="text" name="dataPublicacaoFim" value="" id="dataPublicacaoFim" class="text input_mask mask_date_br">
+                        <div class="input-icons">
+                            <a href="javascript:Form.Element.clear('dataPublicacaoFim');void(0);" class="icon-button" />
+                            <span class="symbol clear-icon"><img alt="limpar" src="/jurisprudencia/img/icons/icon-clear.svg?updateIdx=30"/></span>
+                            </a>
+                            <span class="separador"></span>
+                            <a style="padding-left:4px;" href="javascript:openCalendar2($('pesquisaForm').dataPublicacaoFim);">
+                                <span class="symbol calendar-icon"><img alt="calendario" src="/jurisprudencia/img/icons/icon-calendar.svg?updateIdx=30"/></span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </td>
+    </tr>
+</table>
+<script type="text/javascript" src="/jurisprudencia/js/layout-2/layout-2.js?updateIdx=30"></script>
+
+					
+				
+      
+				
+			</div>
+			<hr/>
+		</div>
+	</body>
+</html>
+      </div>
+    
+    
+  
+
+  
+    
+    
+    
+      
+      
+        
+        <div id="tab1" style="display:none;">
+          <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+
+
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="pt" lang="BR">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"/>
+		<meta http-equiv="Cache-Control" content="No-Cache"/>
+		<meta http-equiv="Pragma" content="No-Cache"/>
+		<meta http-equiv="Expires" content="0"/>
+		
+		
+		<title>jurisprudencia</title>
+	</head>
+	
+	<body>
+		<div id="container">
+			
+			
+			
+
+			
+			<hr/>
+
+			<div id="includeContent">
+				<div id="idCalPadrao" style="position:absolute;z-index:1000;float:right;visibility:hidden;background-color:white;layer-background-color:white;">
+				</div>
+
+				
+					
+						
+						
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" language="JavaScript">
+    function selecionarPais(contextPath, parentForm, parentIdField, parentDescricaoField){
+        var url = contextPath + '/pesquisarPais.do?actionType=pesquisar';
+
+        openDialog(url,'Seleção de País',0,0);
+    }
+
+    function selecionarCaderno(contextPath, parentForm, parentIdField, parentDescricaoField){
+        var url = contextPath + '/pesquisarCaderno.do?actionType=pesquisar';
+
+        openDialog(url,'Seleção de Caderno',0,0);
+    }
+
+    function selecionarJuizCidh(contextPath, parentForm, parentIdField, parentDescricaoField){
+        var url = contextPath + '/pesquisarJuiz.do?actionType=pesquisar&tipoSelecao=selecaoPrincipal';
+        openDialog(url,'Seleção de Juiz',0,0);
+    }
+
+    function selecionarTema(contextPath, parentForm, parentIdField, parentDescricaoField){
+        var url = contextPath + '/pesquisarTema.do?actionType=pesquisar' +
+            '&parentForm=' + parentForm + '&parentIdField=' + parentIdField + '&parentDescricaoField=' + parentDescricaoField;
+
+        openDialog(url,'Seleção de Tema',0,0);
+    }
+    function selecionaCorte() {
+        const select = document.querySelector('select[name="ambito"]');
+        if (!select) return;
+
+        const options = Array.from(select.options)
+            .filter(opt => opt.text.toUpperCase().includes("IDH"));
+
+        const option = options.at(-1);
+
+        if (option) {
+            select.value = option.value;
+            select.dispatchEvent(new Event("change", { bubbles: true }));
+            return true;
+        }
+        return false;
+    }
+    function sincronizarBaseCidh(){
+        tabItem1.addEventListener("click", selecionaCorte);
+    }
+    addLoadEvent(sincronizarBaseCidh);
+</script>
+<script>
+    function glossario() {
+        const abrir = document.getElementById('abrirGlossario');
+        const modal = document.getElementById('modalGlossario');
+        const fechar = document.getElementById('fecharModal');
+        if (!abrir || !modal || !fechar) return;
+
+        abrir.addEventListener('click', function (e) {
+            e.preventDefault();
+            modal.style.display = 'flex';
+            e.stopPropagation();
+        });
+
+        fechar.addEventListener('click', function (e) {
+            modal.style.display = 'none';
+            e.preventDefault();
+            e.stopPropagation();
+        });
+
+        // Fecha ao clicar fora do modal
+        modal.addEventListener('click', function (e) {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+            e.preventDefault();
+            e.stopPropagation();
+        });
+    }
+    addLoadEvent(glossario);
+</script>
+
+
+
+<div class="instrucao-limitacao">
+    A pesquisa é limitada às <strong id="cidh-atualizacao-numero-itens" class="cidh-atualizacao-numero-itens">2</strong> decisões da Corte IDH traduzidas pelo CNJ.
+    [<a href="#" onclick="abrirPopup();">Glossário e abrangência</a>]
+</div>
+
+<!-- Modal -->
+<link rel="stylesheet" type="text/css" href="/jurisprudencia/css/cidh/glossario.css?updateIdx="/>
+<div id="modalGlossario" class="modal-overlay">
+    <div class="modal-conteudo">
+        <div class="glossario-abrangencia">
+
+            <h2>Glossário e Abrangência</h2>
+
+            <div class="glossario-box">
+
+                <p class="glossario-intro">
+                    Esta ferramenta de busca contempla exclusivamente decisões da
+                    Corte Interamericana de Direitos Humanos (Corte IDH)
+                    que possuem <strong>tradução oficial para a língua portuguesa</strong>,
+                    disponibilizadas pelo Conselho Nacional de Justiça (CNJ).
+                </p>
+
+                <div class="glossario-secao">
+                    <h3>O que você encontrará aqui</h3>
+                    <ul>
+                        <li>Sentenças de Mérito</li>
+                        <li>Opiniões Consultivas</li>
+                        <li>Decisões publicadas nos Cadernos de Jurisprudência do CNJ</li>
+                    </ul>
+                </div>
+
+                <div class="glossario-secao glossario-alerta">
+                    <h3>O que não está incluído</h3>
+                    <ul>
+                        <li>Casos sem tradução oficial publicada nos Cadernos de Jurisprudência do CNJ</li>
+                    </ul>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="modal-acoes">
+            <button id="fecharModal">Fechar</button>
+        </div>
+    </div>
+</div>
+<table class="form" style="border: none;">
+    <tr id="linhaPais" >
+        <td class="label">
+            PAÍS:
+        </td>
+        <td colspan="4">
+            <div class="input-container">
+                <input type="hidden" name="idPaisCidh" value="" id="idPaisCidh">
+                <input type="hidden" name="tagsEstadosBrasileiros" value="" id="tagsEstadosBrasileiros">
+            <input type="hidden" name="idPaisCidh" value="" id="idPaisCidh">
+            <input type="text" name="nomePaisCidh" maxlength="100" size="85" value="" onclick="seleciona(this)" id="nomePaisCidh">
+                <div class="input-icons">
+                    <a href="javascript:Form.Element.clear('idPaisCidh');Form.Element.clear('nomePaisCidh');void(0);" class="icon-button" />
+                    <span class="symbol clear-icon"><img alt="limpar" src="/jurisprudencia/img/icons/icon-clear.svg?updateIdx="/></span>
+                    </a>
+                    <span class="separador"></span>
+                    <a href="javascript:selecionarPais('/jurisprudencia', 'pesquisaForm', 'idPaisCidh', 'nomePaisCidh');" class="icon-button" >
+                        <span class="symbol search-icon"><img alt="search" src="/jurisprudencia/img/icons/icon-magnifier.svg?updateIdx="/></span>
+                    </a>
+                    <a  href="#"
+                        class="help-trigger icon-button"
+                        data-help-url="/jurisprudencia/publico/callout.do?tjpr.url.crypto=8a6c53f8698c7ff7b660ca848b310b16ab98131d4e705109b6e47af7fe0d81bb58775537ad8322f8&pagina=ajaxCalloutPaisCidh.html"
+                        title='Clique para exibir a descrição completa.'>
+                        <span class="symbol help-icon"><img alt="info" src="/jurisprudencia/img/icons/icon-info.svg?updateIdx="/></span>
+                    </a>
+                </div>
+            </div>
+            <span id="idPaisCidhOff" style="display:inline;">
+						<img src="/jurisprudencia/img/indicatorOff.gif" align="top" class="indicatorOff" title="Campo autocompletar: ao digitar, escolha uma das opções sugeridas">
+			    	</span>
+            <span id="indicatorPais" style="display:none; margin-left:-20px;">
+						<img src="/jurisprudencia/img/indicator.gif" align="top" class="indicatorOn">
+			    	</span>
+            
+            <script type="text/javascript">
+new AjaxJspTag.Autocomplete(
+"/jurisprudencia/ajax.do?tjpr.url.crypto=8a6c53f8698c7ff7a5b39add9b5ccc56d45fe37095b9952cbd3f26c5abdccc06", {
+indicator: "indicatorPais",
+source: "nomePaisCidh",
+target: "idPaisCidh",
+minimumCharacters: "4",
+className: "autocomplete",
+parameters: "actionType=ajaxSelectPais,nome={nomePaisCidh}"
+});
+</script>
+
+
+
+        </td>
+    </tr>
+
+    <tr id="linhaTema" >
+        <td class="label">
+            TEMA:
+        </td>
+        <td colspan="4">
+            <div class="input-container">
+            <input type="hidden" name="idTemaCidh" value="" id="idTemaCidh">
+            <input type="text" name="nomeTemaCidh" size="85" value="" onclick="seleciona(this)" id="nomeTemaCidh">
+                <div class="input-icons">
+                    <a href="javascript:Form.Element.clear('idTemaCidh');Form.Element.clear('nomeTemaCidh');void(0);" class="icon-button"  />
+                    <span class="symbol clear-icon"><img alt="limpar" src="/jurisprudencia/img/icons/icon-clear.svg?updateIdx="/></span>
+                    </a>
+                    <span class="separador"></span>
+                    <a href="javascript:selecionarTema('/jurisprudencia', 'pesquisaForm', 'idTemaCidh', 'nomeTemaCidh');" class="icon-button" >
+                        <span class="symbol search-icon"><img alt="search" src="/jurisprudencia/img/icons/icon-magnifier.svg?updateIdx="/></span>
+                    </a>
+                    <a  href="#"
+                        class="help-trigger icon-button"
+                        data-help-url="/jurisprudencia/publico/callout.do?tjpr.url.crypto=8a6c53f8698c7ff7b660ca848b310b16ab98131d4e705109b6e47af7fe0d81bb58775537ad8322f8&pagina=ajaxCalloutTemaCidh.html"
+                        title='Clique para exibir a descrição completa.'>
+                        <span class="symbol help-icon"><img alt="info" src="/jurisprudencia/img/icons/icon-info.svg?updateIdx="/></span>
+                    </a>
+                </div>
+            </div>
+
+            <span id="indicatorTemaOff" style="display:inline;">
+						<img src="/jurisprudencia/img/indicatorOff.gif" align="top" class="indicatorOff" title="Campo autocompletar: ao digitar, escolha uma das opções sugeridas">
+			    	</span>
+            <span id="indicatorTema" style="display:none; margin-left:-20px;">
+						<img src="/jurisprudencia/img/indicator.gif" align="top" class="indicatorOn">
+			    	</span>
+
+            
+            <script type="text/javascript">
+new AjaxJspTag.Autocomplete(
+"/jurisprudencia/ajax.do?tjpr.url.crypto=8a6c53f8698c7ff7a5b39add9b5ccc563da22de1d00b01dfeef286ec70184c6e", {
+appendSeparator: ",",
+indicator: "indicatorTema",
+source: "nomeTemaCidh",
+target: "idTemaCidh",
+minimumCharacters: "4",
+className: "autocomplete",
+parameters: "actionType=ajaxSelectTema,nome={nomeTemaCidh}"
+});
+</script>
+
+
+
+        </td>
+    </tr>
+    <tr  id="linhaJuiz" >
+        <td class="label">
+            JUIZ(A):
+        </td>
+        <td colspan="4">
+            <div class="input-container">
+            <input type="hidden" name="idJuizCidh" value="" id="idJuizCidh">
+            <input type="text" name="nomeJuizCidh" maxlength="100" size="85" value="" onclick="seleciona(this)" id="nomeJuizCidh">
+                <div class="input-icons">
+                    <a href="javascript:Form.Element.clear('idJuizCidh');Form.Element.clear('nomeJuizCidh');void(0);" class="icon-button" />
+                    <span class="symbol clear-icon"><img alt="limpar" src="/jurisprudencia/img/icons/icon-clear.svg?updateIdx="/></span>
+                    </a>
+                    <span class="separador"></span>
+                    <a href="javascript:selecionarJuizCidh('/jurisprudencia', 'pesquisaForm', 'idJuizCidh', 'nomeJuizCidh');" class="icon-button">
+                        <span class="symbol search-icon"><img alt="search" src="/jurisprudencia/img/icons/icon-magnifier.svg?updateIdx="/></span>
+                    </a>
+                    <a  href="#"
+                        class="help-trigger icon-button"
+                        data-help-url="/jurisprudencia/publico/callout.do?tjpr.url.crypto=8a6c53f8698c7ff7b660ca848b310b16ab98131d4e705109b6e47af7fe0d81bb58775537ad8322f8&pagina=ajaxCalloutJuizCidh.html"
+                        title='Clique para exibir a descrição completa.'>
+                        <span class="symbol help-icon"><img alt="info" src="/jurisprudencia/img/icons/icon-info.svg?updateIdx="/></span>
+                    </a>
+                </div>
+            </div>
+
+            <span id="indicatorJuizOff" style="display:inline;">
+						<img src="/jurisprudencia/img/indicatorOff.gif" align="top" class="indicatorOff" title="Campo autocompletar: ao digitar, escolha uma das opções sugeridas">
+			    	</span>
+            <span id="indicatorJuizCidh" style="display:none; margin-left:-20px;">
+						<img src="/jurisprudencia/img/indicator.gif" align="top" class="indicatorOn">
+			    	</span>
+            
+            <script type="text/javascript">
+new AjaxJspTag.Autocomplete(
+"/jurisprudencia/ajax.do?tjpr.url.crypto=8a6c53f8698c7ff7a5b39add9b5ccc562dd5cbb013dc3e1b65e4196f3c3e393e", {
+appendSeparator: ",",
+indicator: "indicatorJuizCidh",
+source: "nomeJuizCidh",
+target: "idJuizCidh",
+minimumCharacters: "4",
+className: "autocomplete",
+parameters: "actionType=ajaxSelectJuizCidh,nome={nomeJuizCidh}"
+});
+</script>
+
+
+
+        </td>
+    </tr>
+    <tr id="linhaDataJulgamento" >
+        <td class="label">
+            JULGAMENTO:
+        </td>
+
+        <td class="label" colspan="5" style="text-align: left;">
+            <div class="div-datas">
+                <div class="div-datas-esquerda">
+                    <div class="input-container">
+                        <span class="data_titulo">INICIAL:</span>
+                        <input type="text" name="dataJulgamentoInicioCidh" value="" id="dataJulgamentoInicioCidh" class="text input_mask mask_date_br">
+                        <div class="input-icons">
+                            <a href="javascript:Form.Element.clear('dataJulgamentoInicioCidh');void(0);" class="icon-button" />
+                                <span class="symbol clear-icon"><img alt="limpar" src="/jurisprudencia/img/icons/icon-clear.svg?updateIdx="/></span>
+                            </a>
+                            <span class="separador"></span>
+                            <a style="padding-left:4px;" href="javascript:openCalendar2($('pesquisaForm').dataJulgamentoInicioCidh);">
+                                <span class="symbol calendar-icon"><img alt="calendario" src="/jurisprudencia/img/icons/icon-calendar.svg?updateIdx="/></span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="div-datas-direita">
+                    <div class="input-container">
+                        <span class="data_titulo">FINAL:</span>
+                        <input type="text" name="dataJulgamentoFimCidh" value="" id="dataJulgamentoFimCidh" class="text input_mask mask_date_br">
+                        <div class="input-icons">
+                            <a href="javascript:Form.Element.clear('dataJulgamentoFimCidh');void(0);" class="icon-button" />
+                            <span class="symbol clear-icon"><img alt="limpar" src="/jurisprudencia/img/icons/icon-clear.svg?updateIdx="/></span>
+                            </a>
+                            <span class="separador"></span>
+                            <a style="padding-left:4px;" href="javascript:openCalendar2($('pesquisaForm').dataJulgamentoFimCidh);">
+                                <span class="symbol calendar-icon"><img alt="calendario" src="/jurisprudencia/img/icons/icon-calendar.svg?updateIdx="/></span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </td>
+    </tr>
+</table>
+
+					
+				
+      
+				
+			</div>
+			<hr/>
+		</div>
+	</body>
+</html>
+        </div>
+      
+    
+  
+
+    </td></tr>
+  
+</table>
+                
+            
+        </div>
+
+        
+            <div class="secaoFormulario toggle-globo oculto">
+                <span class="titulo">MAPA DAS DECISÕES DA CORTE IDH</span>
+                <div class="container-mapas">
+                    <div class="mapa-item">
+                        <span class="mapa-titulo">Decisões da Corte IDH por País</span>
+                        <a  href="#"
+                            class="icon-button"
+                            onclick="abrirPopup();" title='Clique para saber mais'>
+                            <span class="symbol help-icon"><img alt="info" src="/jurisprudencia/img/icons/icon-info.svg?updateIdx=30"/></span></a>
+                        
+
+
+
+<script>
+    var urlAjaxCidh ='/jurisprudencia/ajax.do?actionType=pesquisaFacetingPaisCidh';
+    var urlRedirecionar = '/jurisprudencia/ajax.do?actionType=redirecionar';
+    var urlGeoJson = '/jurisprudencia/promo/pais/world.geo.json?updateIdx=30';
+    var codigoSolrPaisBrasil = -1;
+</script>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script type="text/javascript" language="JavaScript" src="/jurisprudencia/promo/pais/pais.js?updateIdx=30"></script>
+<link rel="stylesheet" type="text/css"
+      href="/jurisprudencia/promo/pais/pais.css?updateIdx=30"/>
+
+<div id="mapa" class="div-mapa"></div>
+<div id="mapa-loading">Carregando mapa...</div>
+
+                    </div>
+                    <div class="mapa-item">
+                        <span class="mapa-titulo">Decisões da Corte IDH por Unidade da Federação</span>
+                        <a  href="#"
+                            class="icon-button"
+                            onclick="abrirPopup();" title='Clique para saber mais'>
+                            <span class="symbol help-icon"><img alt="info" src="/jurisprudencia/img/icons/icon-info.svg?updateIdx=30"/></span></a>
+                        
+
+
+
+<script>
+    var urlAjaxCidhEstado ='/jurisprudencia/ajax.do?actionType=pesquisaFacetingEstadosBrasileirosCidh';
+    var urlRedirecionarEstado = '/jurisprudencia/ajax.do?actionType=redirecionar';
+    var urlGeoJsonEstado = '/jurisprudencia/promo/estados/brasil.geo.json';
+</script>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script type="text/javascript" src="/jurisprudencia/promo/estados/estados.js?updateIdx=30"></script>
+<link rel="stylesheet" type="text/css"
+      href="/jurisprudencia/promo/estados/estados.css?updateIdx=30"/>
+
+<div id="mapa-estados" class="div-mapa"></div>
+<div id="mapa-estados-loading">Carregando mapa...</div>
+
+                    </div>
+                </div>
+                <div class="container-legenda">
+                    <script type="text/javascript" language="JavaScript" src="/jurisprudencia/js/cidh/atualiza-dados.js?updateIdx=30"></script>
+                    O mapa representa a quantidade total de sentenças proferidas pela Corte Interamericana
+                    de Direitos Humanos que foram devidamente indexadas neste Sistema de Jurisprudência.
+                    Os valores refletem o estado atual da base de dados em <strong id="cidh-atualizacao-data" class="cidh-atualizacao-data">25/03/2026</strong>.
+                </div>
+            </div>
+        
+
+        <div class="secaoFormulario toggle-avancada oculto">
+            <span class="titulo">FILTROS</span>
+
+            <div align="center">
+                <div class="filtro">
+                    <div class="cabecalho">
+                        EMENTA/INTEIRO TEOR
+                        <a  href="#"
+                            class="help-trigger icon-button"
+                            data-help-url="/jurisprudencia/publico/callout.do?tjpr.url.crypto=8a6c53f8698c7ff7b660ca848b310b16ab98131d4e705109b6e47af7fe0d81bb58775537ad8322f8&pagina=ajaxCalloutEmenta.html"
+                            title='Clique para exibir a descrição completa.'>
+                            <span class="symbol help-icon"><img alt="info" src="/jurisprudencia/img/icons/icon-info.svg?updateIdx=30"/></span>
+                        </a>
+                    </div>
+                    <select name="idLocalPesquisa" id="idLocalPesquisa"><option value="1" selected="selected" id="amb_1">EMENTA</option>
+                        
+                            <option value="2" id="amb_2">INTEIRO TEOR</option>
+                        
+                            <option value="99" id="amb_99">AMBAS</option></select>
+                </div>
+
+                <div class="filtro">
+                    <div class="cabecalho">
+                        BASE DE CONSULTA
+                        <a  href="#"
+                            class="help-trigger icon-button"
+                            data-help-url="/jurisprudencia/publico/callout.do?tjpr.url.crypto=8a6c53f8698c7ff7b660ca848b310b16ab98131d4e705109b6e47af7fe0d81bb58775537ad8322f8&pagina=ajaxCalloutBase.html"
+                            title='Clique para exibir a descrição completa.'>
+                            <span class="symbol help-icon"><img alt="info" src="/jurisprudencia/img/icons/icon-info.svg?updateIdx=30"/></span>
+                        </a>
+                    </div>
+                    <select name="ambito" onchange="marcaAmbito()"><option value="-1" selected="selected">TODAS</option>
+                        
+                            <option value="4" id="amb_4">TURMAS RECURSAIS</option>
+                        
+                            <option value="6" id="amb_6">TRIBUNAL DE JUSTIÇA</option>
+                        
+                            <option value="7" id="amb_7">1ª VICE-PRESIDÊNCIA</option>
+                        
+                            <option value="8" id="amb_8">DECISÕES DA CORTE IDH</option></select>
+                </div>
+
+                <div class="filtro">
+                    <div class="cabecalho">
+                        TIPO DE DECISÃO
+                        <a  href="#"
+                            class="help-trigger icon-button"
+                            data-help-url="/jurisprudencia/publico/callout.do?tjpr.url.crypto=8a6c53f8698c7ff7b660ca848b310b16ab98131d4e705109b6e47af7fe0d81bb58775537ad8322f8&pagina=ajaxCalloutTipo.html"
+                            title='Clique para exibir a descrição completa.'>
+                            <span class="symbol help-icon"><img alt="info" src="/jurisprudencia/img/icons/icon-info.svg?updateIdx=30"/></span>
+                        </a>
+                    </div>
+                    <select name="idsTipoDecisaoSelecionados"><option value="-1" selected="selected">TODAS</option>
+                        
+                            <option value="1" id="amb_1">ACÓRDÃO</option>
+                        
+                            <option value="2" id="amb_2">DECISÃO MONOCRÁTICA</option>
+                        
+                            <option value="3" id="amb_3">DÚVIDA/EXAME DE COMPETÊNCIA</option>
+                        
+                            <option value="4" id="amb_4">SENTENÇA DA CORTE IDH</option>
+                        
+                            <option value="5" id="amb_5">OPINIÃO CONSULTIVA DA CORTE IDH</option></select>
+                </div>
+                <div class="filtro">
+                    <div class="cabecalho">
+                        SEGREDO DE JUSTIÇA
+                        <a  href="#"
+                            class="help-trigger icon-button"
+                            data-help-url="/jurisprudencia/publico/callout.do?tjpr.url.crypto=8a6c53f8698c7ff7b660ca848b310b16ab98131d4e705109b6e47af7fe0d81bb58775537ad8322f8&pagina=ajaxCalloutSegredo.html"
+                            title='Clique para exibir a descrição completa.'>
+                            <span class="symbol help-icon"><img alt="info" src="/jurisprudencia/img/icons/icon-info.svg?updateIdx=30"/></span>
+                        </a>
+                    </div>
+                    <select name="segredoJustica" id="idSegredoJustica"><option value="pesquisar com" id="amb_">INCLUIR</option>
+                        <option value="pesquisar sem" id="amb_">EXCLUIR</option>
+                        <option value="somente" id="amb_">SOMENTE</option></select>
+                </div>
+            </div>
+
+        </div>
+
+        <div style="padding-left:83%" class="toggle-avancada oculto">
+            <b>MOSTRAR ITENS COMPLETOS:</b>	<input type="checkbox" name="mostrarCompleto" value="true" id="mostrarCompleto" />
+        </div>
+
+        <div class="toolbar toggle-avancada oculto">
+            <input type="submit" name="iniciar" value="Pesquisar" id="btnSubmitFormularioCompleto" class="button btn-ux-acao btn-baixo">
+            <input type="button" name="back" value="Limpar" onclick="limpar()" class="button btn-ux-acao btn-baixo">
+        </div>
+
+    </form>
+
+</div>
+</div>
+
+
+        
+      
+      
+      </div>
+      <hr/>
+    </div>
+  </body>
+</html>
