@@ -414,8 +414,10 @@ def run_chunked_search(
         formato: Date format used by ``iter_date_windows``.
 
     Returns:
-        pandas DataFrame. May be empty if every window failed (still carries
-        the ``dedup_key`` column).
+        pandas DataFrame. **All-windows-failed case**: returns an empty DF
+        carrying **only** the ``dedup_key`` column (the parser's other columns
+        are not synthesized). Code downstream that indexes ``df["<col>"]`` for
+        a non-dedup column should test ``df.empty`` first.
 
     Raises:
         ValueError: For invalid date input or ``paginas != None`` in the
@@ -436,6 +438,8 @@ def run_chunked_search(
         win_i, win_f = windows[0] if windows else (data_inicio, data_fim)
         return fetch_window(win_i, win_f)
 
+    # Multi-window from here. Reject paginas before iterating — multi-window
+    # semantics for paginas are ambiguous (per-window? aggregated budget?).
     if paginas is not None:
         raise ValueError(
             "auto_chunk=True não pode ser combinado com 'paginas' quando o "

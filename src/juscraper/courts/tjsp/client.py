@@ -307,6 +307,25 @@ class TJSPScraper(EsajSearchScraper):
             windows = list(iter_date_windows(dj_i, dj_f, max_dias=366))
             if len(windows) > 1:
                 pop_normalize_aliases(kwargs, include_canonical=True)
+                # InputCJPGTJSP nao herda DataPublicacaoMixin (TJSP cjpg nao
+                # suporta filtro por publicacao). Valida o schema upfront para
+                # converter extra_forbidden em TypeError imediato — sem isso,
+                # data_publicacao_* viraria N janelas falhando em UserWarning.
+                try:
+                    InputCJPGTJSP(
+                        pesquisa=pesquisa,
+                        paginas=paginas,
+                        data_julgamento_inicio=dj_i,
+                        data_julgamento_fim=dj_f,
+                        **{
+                            k: v for k, v in sniff.items()
+                            if v is not None and not k.startswith("data_julgamento")
+                        },
+                        **kwargs,
+                    )
+                except ValidationError as exc:
+                    _raise_on_extra(exc, "TJSPScraper.cjpg()")
+                    raise
 
                 def _fetch(win_i, win_f):
                     return self.cjpg(

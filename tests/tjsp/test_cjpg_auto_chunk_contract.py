@@ -143,3 +143,25 @@ def test_auto_chunk_not_propagated_to_download(tmp_path, mocker):
     download.assert_called_once()
     _, kwargs = download.call_args
     assert "auto_chunk" not in kwargs
+
+
+def test_data_publicacao_long_window_raises_typeerror_immediately(tmp_path, mocker):
+    """`data_publicacao_*` em TJSP cjpg + janela longa = TypeError imediato.
+
+    InputCJPGTJSP nao herda DataPublicacaoMixin (TJSP cjpg nao suporta
+    filtro por publicacao). Sem o sniff de schema upfront, o erro viria
+    como N janelas falhando em UserWarning. Com o sniff, vira TypeError
+    limpo antes de qualquer chamada a cjpg_download.
+    """
+    download, _ = _patch_pipeline(mocker)
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+
+    with pytest.raises(TypeError, match="data_publicacao"):
+        scraper.cjpg(
+            "dano moral",
+            data_julgamento_inicio="01/01/2022",
+            data_julgamento_fim="31/12/2024",  # > 366 dias -> chunked
+            data_publicacao_inicio="01/03/2023",
+        )
+
+    download.assert_not_called()

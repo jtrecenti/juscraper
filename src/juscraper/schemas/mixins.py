@@ -58,6 +58,12 @@ class AutoChunkMixin(BaseModel):
     mixin — ``extra='forbid'`` da classe concreta rejeita o flag e o usuario
     entende que a busca nao tem teto a contornar. Hoje so a familia eSAJ
     (cjsg em TJSP/TJAC/TJAL/TJAM/TJCE/TJMS, cjpg em TJSP) usa.
+
+    Nota: o flag ``auto_chunk`` e popado pelos metodos publicos
+    (``cjsg``/``cjpg``) **antes** da validacao do schema, entao em runtime
+    o mixin nao bloqueia nada — ele serve como **documentacao executavel**
+    (cobertura via ``tests/schemas/test_cjsg_schemas.py::TestAutoChunkMixin``)
+    e como rede de seguranca caso algum chamador interno bypassem o pop.
     """
 
     auto_chunk: bool = True

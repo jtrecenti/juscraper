@@ -55,3 +55,32 @@ def test_auto_chunk_false_long_window_raises(tmp_path):
             data_julgamento_fim="31/12/2024",
             auto_chunk=False,
         )
+
+
+def test_data_publicacao_reinjected_in_each_window(tmp_path, mocker):
+    """`data_publicacao_*` deve aparecer nos kwargs de cada janela do chunked.
+
+    Probe empirico (TJAC cjsg, 2026-04) confirmou que o backend AND'a
+    julgamento + publicacao. Sem re-injetar, o filtro de publicacao seria
+    silenciosamente descartado quando o usuario combina janela longa de
+    julgamento com filtro curto de publicacao.
+    """
+    download = mocker.patch.object(TJACScraper, "cjsg_download", return_value="/fake/path")
+    mocker.patch.object(TJACScraper, "cjsg_parse", return_value=pd.DataFrame({"cd_acordao": ["x"]}))
+    mocker.patch("juscraper.courts._esaj.base.shutil.rmtree")
+
+    scraper = jus.scraper("tjac", download_path=str(tmp_path))
+    scraper.cjsg(
+        "dano moral",
+        data_julgamento_inicio="01/01/2022",
+        data_julgamento_fim="31/12/2024",  # ~3 anos -> 3 janelas
+        data_publicacao_inicio="01/03/2023",
+        data_publicacao_fim="30/06/2023",
+    )
+
+    assert download.call_count == 3
+    # As 3 chamadas preservam os filtros de publicacao na integra.
+    for call in download.call_args_list:
+        kwargs = call.kwargs
+        assert kwargs.get("data_publicacao_inicio") == "01/03/2023"
+        assert kwargs.get("data_publicacao_fim") == "30/06/2023"

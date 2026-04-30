@@ -199,6 +199,31 @@ class EsajSearchScraper(BaseScraper):
             windows = list(iter_date_windows(dj_i, dj_f, max_dias=366))
             if len(windows) > 1:
                 pop_normalize_aliases(kwargs, include_canonical=True)
+                # Backend eSAJ AND'a julgamento + publicacao (probe TJAC
+                # 2026-04: janelas disjuntas → set_jp == ∅). Re-injetar
+                # data_publicacao_* (e qualquer outro canonical não-julgamento)
+                # do sniff para nao perder o filtro no caminho chunked.
+                extras = {
+                    k: v for k, v in sniff.items()
+                    if v is not None and not k.startswith("data_julgamento")
+                }
+
+                # Valida o schema upfront para detectar extra_forbidden cedo
+                # (e.g. data_publicacao_* em InputCJSGTJSP, que nao herda
+                # DataPublicacaoMixin). Sem isso, o erro só aparece como N
+                # janelas falhando silenciosamente em UserWarning.
+                try:
+                    self.INPUT_CJSG(
+                        pesquisa=pesquisa,
+                        paginas=paginas,
+                        data_julgamento_inicio=dj_i,
+                        data_julgamento_fim=dj_f,
+                        **extras,
+                        **kwargs,
+                    )
+                except ValidationError as exc:
+                    _raise_on_extra(exc, f"{type(self).__name__}.cjsg()")
+                    raise
 
                 def _fetch(win_i, win_f):
                     return self.cjsg(
@@ -207,6 +232,7 @@ class EsajSearchScraper(BaseScraper):
                         data_julgamento_inicio=win_i,
                         data_julgamento_fim=win_f,
                         auto_chunk=False,
+                        **extras,
                         **kwargs,
                     )
 
