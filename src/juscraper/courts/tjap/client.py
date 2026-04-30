@@ -5,10 +5,16 @@ import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_paginas, normalize_pesquisa, resolve_deprecated_alias
+from juscraper.utils.params import (
+    apply_input_pipeline_search,
+    normalize_paginas,
+    normalize_pesquisa,
+    resolve_deprecated_alias,
+)
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
+from .schemas import InputCJSGTJAP
 
 
 class TJAPScraper(BaseScraper):
@@ -89,9 +95,12 @@ class TJAPScraper(BaseScraper):
         )
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
         paginas = normalize_paginas(paginas)
-        brutos = self.cjsg_download(
+        inp = apply_input_pipeline_search(
+            InputCJSGTJAP,
+            "TJAPScraper.cjsg()",
             pesquisa=pesquisa,
             paginas=paginas,
+            kwargs=kwargs,
             orgao=orgao,
             numero_processo=numero_processo,
             numero_acordao=numero_acordao,
@@ -102,6 +111,20 @@ class TJAPScraper(BaseScraper):
             classe=classe,
             votacao=votacao,
             origem=origem,
+        )
+        brutos = self.cjsg_download(
+            pesquisa=inp.pesquisa,
+            paginas=inp.paginas,
+            orgao=inp.orgao,
+            numero_processo=inp.numero_processo,
+            numero_acordao=inp.numero_acordao,
+            numero_ano=inp.numero_ano,
+            palavras_exatas=inp.palavras_exatas,
+            relator=inp.relator,
+            secretaria=inp.secretaria,
+            classe=inp.classe,
+            votacao=inp.votacao,
+            origem=inp.origem,
         )
         return self.cjsg_parse(brutos)
 

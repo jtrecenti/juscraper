@@ -7,10 +7,11 @@ import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa, pop_normalize_aliases
+from juscraper.utils.params import apply_input_pipeline_search, normalize_paginas, normalize_pesquisa
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
+from .schemas import InputCJSGTJRS
 
 
 class TJRSScraper(BaseScraper):
@@ -80,34 +81,45 @@ class TJRSScraper(BaseScraper):
         """
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
         paginas = normalize_paginas(paginas)
-        datas = normalize_datas(
-            data_julgamento_inicio=data_julgamento_inicio,
-            data_julgamento_fim=data_julgamento_fim,
-            data_publicacao_inicio=data_publicacao_inicio,
-            data_publicacao_fim=data_publicacao_fim,
-            **kwargs,
-        )
-        # Drop deprecated aliases from local kwargs so they are not re-propagated
-        # into cjsg_download_manager via **kwargs (would collide with the canonical
-        # keyword arguments that normalize_* already materialized above).
-        pop_normalize_aliases(kwargs)
-        if session is None:
-            session = self.session
-        return cjsg_download_manager(
-            termo=pesquisa,
+        # Re-inject explicit date args into kwargs so the pipeline can resolve
+        # aliases (data_inicio/data_fim) and canonical names in a single pass.
+        for _date_key, _date_val in (
+            ("data_julgamento_inicio", data_julgamento_inicio),
+            ("data_julgamento_fim", data_julgamento_fim),
+            ("data_publicacao_inicio", data_publicacao_inicio),
+            ("data_publicacao_fim", data_publicacao_fim),
+        ):
+            if _date_val is not None:
+                kwargs[_date_key] = _date_val
+        inp = apply_input_pipeline_search(
+            InputCJSGTJRS,
+            "TJRSScraper.cjsg_download()",
+            pesquisa=pesquisa,
             paginas=paginas,
+            kwargs=kwargs,
             classe=classe,
             assunto=assunto,
             orgao_julgador=orgao_julgador,
             relator=relator,
-            data_julgamento_inicio=datas["data_julgamento_inicio"],
-            data_julgamento_fim=datas["data_julgamento_fim"],
-            data_publicacao_inicio=datas["data_publicacao_inicio"],
-            data_publicacao_fim=datas["data_publicacao_fim"],
             tipo_processo=tipo_processo,
             secao=secao,
+        )
+        if session is None:
+            session = self.session
+        return cjsg_download_manager(
+            termo=inp.pesquisa,
+            paginas=inp.paginas,
+            classe=inp.classe,
+            assunto=inp.assunto,
+            orgao_julgador=inp.orgao_julgador,
+            relator=inp.relator,
+            data_julgamento_inicio=inp.data_julgamento_inicio,
+            data_julgamento_fim=inp.data_julgamento_fim,
+            data_publicacao_inicio=inp.data_publicacao_inicio,
+            data_publicacao_fim=inp.data_publicacao_fim,
+            tipo_processo=inp.tipo_processo,
+            secao=inp.secao,
             session=session,
-            **kwargs,
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> 'pd.DataFrame':

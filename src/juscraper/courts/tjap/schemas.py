@@ -1,9 +1,8 @@
 """Pydantic schemas for TJAP scraper endpoints.
 
-Ainda nao wired em :mod:`juscraper.courts.tjap.client` — este arquivo e
-documentacao executavel da API publica ate o TJAP ser refatorado para o
-pipeline canonico da #93. A lista de campos bate byte-a-byte com a
-assinatura publica de :meth:`TJAPScraper.cjsg` / :meth:`TJAPScraper.cjsg_download`.
+Wired em :meth:`juscraper.courts.tjap.client.TJAPScraper.cjsg` desde o lote
+L3 do #165 — kwargs desconhecidos viram :class:`TypeError`. ``cjsg_download``
+permanece sem pipeline (chamada interna receba so valores ja validados).
 """
 from __future__ import annotations
 

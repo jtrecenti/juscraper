@@ -1,11 +1,12 @@
 """Pydantic schemas for TJRS scraper endpoints.
 
-Ainda nao wired em :mod:`juscraper.courts.tjrs.client` — este arquivo e
-documentacao executavel da API publica ate o TJRS ser refatorado para o
-pipeline canonico da #93. A lista de campos bate byte-a-byte com a
-assinatura publica de :meth:`TJRSScraper.cjsg` / :meth:`TJRSScraper.cjsg_download`.
+Wired em :mod:`juscraper.courts.tjrs.client` desde o lote L3 do #165 —
+:meth:`TJRSScraper.cjsg_download` valida kwargs via :class:`InputCJSGTJRS`
+com ``extra="forbid"`` herdado de :class:`SearchBase`.
 """
 from __future__ import annotations
+
+from typing import ClassVar
 
 from ...schemas import (
     DataJulgamentoMixin,
@@ -28,6 +29,8 @@ class InputCJSGTJRS(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     Filtros de data herdados dos mixins. O parametro ``session`` do
     metodo publico nao aparece aqui (dependencia de runtime, nao da API).
     """
+
+    BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
 
     classe: str | None = None
     assunto: str | None = None
