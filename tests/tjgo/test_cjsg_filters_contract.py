@@ -1,12 +1,11 @@
 """Filter-propagation contract for TJGO cjsg.
 
 TJGO's backend filter is ``data_publicacao_*`` (canonical). The
-``data_julgamento_*`` parameter is accepted by the public method but
-emits ``warn_unsupported`` because the backend does not expose a
-release-date filter — the body's ``DataInicial``/``DataFinal`` carry
-publication dates only. The deprecated generic ``data_inicio``/``data_fim``
-alias maps to ``data_julgamento_*`` via ``normalize_datas``, so it emits
-both a ``DeprecationWarning`` and a ``UserWarning`` here.
+``data_julgamento_*`` parameter is **not** accepted: the Projudi backend
+does not expose a release-date filter and the schema
+:class:`InputCJSGTJGO` rejects it via ``extra="forbid"`` (refs #93,
+#165). Code that previously relied on the silent ``warn_unsupported``
+behaviour now receives a :class:`TypeError`.
 """
 import pandas as pd
 import pytest
@@ -91,50 +90,43 @@ def test_cjsg_termo_alias_emits_deprecation_warning(mocker):
     assert isinstance(df, pd.DataFrame)
 
 
-@responses.activate
-def test_cjsg_data_julgamento_emits_warn_unsupported(mocker):
-    """``data_julgamento_*`` is not supported by TJGO; the client warns and drops it."""
-    mocker.patch("time.sleep")
-    _add_get_prime()
-    # Body must NOT carry the date — backend filter is publicacao-only.
-    _add_post(build_cjsg_payload(pesquisa="dano moral", page=1))
+def test_cjsg_data_julgamento_raises_typeerror():
+    """``data_julgamento_*`` is not supported by TJGO; the schema rejects it.
 
-    with pytest.warns(UserWarning) as warning_list:
-        df = jus.scraper("tjgo").cjsg(
+    Was previously ``warn_unsupported`` (silent drop) — switched to ``TypeError``
+    in refs #93/#165 so callers cannot accidentally believe the filter was
+    applied.
+    """
+    with pytest.raises(TypeError, match=r"data_julgamento_inicio"):
+        jus.scraper("tjgo").cjsg(
             "dano moral",
             paginas=1,
             data_julgamento_inicio="2024-01-01",
             data_julgamento_fim="2024-03-31",
         )
 
-    assert isinstance(df, pd.DataFrame)
+
+def test_cjsg_data_inicio_alias_raises_typeerror():
+    """``data_inicio``/``data_fim`` map to ``data_julgamento_*`` and TJGO
+    rejects that — caller still sees the deprecation warning before the
+    ``TypeError`` from the schema."""
+    with pytest.warns(DeprecationWarning) as warning_list:
+        with pytest.raises(TypeError, match=r"data_julgamento_inicio"):
+            jus.scraper("tjgo").cjsg(
+                "dano moral",
+                paginas=1,
+                data_inicio="2024-01-01",
+                data_fim="2024-03-31",
+            )
     messages = [str(w.message) for w in warning_list]
-    assert any("data_julgamento_inicio" in m and "TJGO" in m for m in messages)
-    assert any("data_julgamento_fim" in m and "TJGO" in m for m in messages)
+    assert any("data_inicio" in m and "deprecado" in m for m in messages)
 
 
-@responses.activate
-def test_cjsg_data_inicio_alias_emits_deprecation_and_unsupported(mocker):
-    """Generic ``data_inicio``/``data_fim`` map to ``data_julgamento_*``,
-    which TJGO emits ``warn_unsupported`` for. The body carries no date.
-    """
-    mocker.patch("time.sleep")
-    _add_get_prime()
-    _add_post(build_cjsg_payload(pesquisa="dano moral", page=1))
-
-    with pytest.warns() as warning_list:
-        df = jus.scraper("tjgo").cjsg(
-            "dano moral",
-            paginas=1,
-            data_inicio="2024-01-01",
-            data_fim="2024-03-31",
-        )
-
-    assert isinstance(df, pd.DataFrame)
-    messages = [(w.category, str(w.message)) for w in warning_list]
-    assert any(c is DeprecationWarning and "data_inicio" in m for c, m in messages)
-    assert any(c is DeprecationWarning and "data_fim" in m for c, m in messages)
-    assert any(c is UserWarning and "data_julgamento" in m for c, m in messages)
+def test_cjsg_unknown_kwarg_raises():
+    """Kwargs not declared in :class:`InputCJSGTJGO` raise ``TypeError`` with
+    the field name, instead of being silently dropped (refs #84, #93, #165)."""
+    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
+        jus.scraper("tjgo").cjsg("dano moral", paginas=1, kwarg_inventado="x")
 
 
 @responses.activate
