@@ -371,7 +371,7 @@ def apply_input_pipeline_search(
     paginas,
     kwargs: dict,
     max_dias: Optional[int] = None,
-    origem: str = "O eSAJ",
+    origem: Optional[str] = None,
     **canonical_filters,
 ) -> BaseModel:
     """Run the canonical input-validation pipeline for search endpoints (cjsg/cjpg).
@@ -423,7 +423,10 @@ def apply_input_pipeline_search(
             ``max_dias=366`` explicitly. Format and ordering of the dates are
             validated regardless of this value.
         origem: Subject of the over-limit error message (only emitted when
-            ``max_dias`` is set). Examples: ``"O eSAJ"``, ``"O TJRS"``.
+            ``max_dias`` is set). Examples: ``"O eSAJ"``, ``"O TJRS"``. When
+            ``max_dias`` is set but ``origem`` is ``None``, falls back to
+            ``"O backend"`` so the helper can be invoked by non-eSAJ
+            tribunals without leaking "eSAJ" into their error messages.
         **canonical_filters: Tribunal-specific filters already extracted from
             the public method signature (e.g. ``numero_processo=...``,
             ``relator=...``). They are forwarded to the schema as-is. **A key
@@ -444,19 +447,20 @@ def apply_input_pipeline_search(
     datas = normalize_datas(**kwargs)
     pop_normalize_aliases(kwargs, include_canonical=True)
 
+    origem_resolvido = origem if origem is not None else "O backend"
     validate_intervalo_datas(
         datas["data_julgamento_inicio"],
         datas["data_julgamento_fim"],
         rotulo="data_julgamento",
         max_dias=max_dias,
-        origem=origem,
+        origem=origem_resolvido,
     )
     validate_intervalo_datas(
         datas["data_publicacao_inicio"],
         datas["data_publicacao_fim"],
         rotulo="data_publicacao",
         max_dias=max_dias,
-        origem=origem,
+        origem=origem_resolvido,
     )
 
     try:

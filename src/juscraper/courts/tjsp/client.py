@@ -242,7 +242,7 @@ class TJSPScraper(EsajSearchScraper):
 
         Raises:
             TypeError: Quando um kwarg desconhecido e passado (via
-                :func:`_raise_on_extra`).
+                :func:`raise_on_extra_kwargs`).
             ValidationError: Quando um filtro tem formato invalido.
             QueryTooLongError: Quando ``pesquisa`` excede 120 chars.
 
