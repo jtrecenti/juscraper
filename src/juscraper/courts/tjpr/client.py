@@ -7,10 +7,11 @@ import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa, pop_normalize_aliases
+from juscraper.utils.params import apply_input_pipeline_search, normalize_datas, normalize_paginas, normalize_pesquisa
 
 from .download import cjsg_download, get_initial_tokens
 from .parse import cjsg_parse
+from .schemas import InputCJSGTJPR
 
 
 class TJPRScraper(BaseScraper):
@@ -89,24 +90,33 @@ class TJPRScraper(BaseScraper):
         Returns a ready-to-analyze DataFrame.
         """
         pesquisa_val = normalize_pesquisa(pesquisa, **kwargs)
-        datas = normalize_datas(
-            data_julgamento_inicio=data_julgamento_inicio,
-            data_julgamento_fim=data_julgamento_fim,
-            data_publicacao_inicio=data_publicacao_inicio,
-            data_publicacao_fim=data_publicacao_fim,
-            **kwargs,
-        )
-        pop_normalize_aliases(kwargs, include_canonical=True)
-        brutos = self.cjsg_download(
+        paginas = normalize_paginas(paginas)
+        # Re-inject explicit date args into kwargs so the pipeline can resolve
+        # aliases (data_inicio/data_fim) and canonical names in a single pass.
+        for _date_key, _date_val in (
+            ("data_julgamento_inicio", data_julgamento_inicio),
+            ("data_julgamento_fim", data_julgamento_fim),
+            ("data_publicacao_inicio", data_publicacao_inicio),
+            ("data_publicacao_fim", data_publicacao_fim),
+        ):
+            if _date_val is not None:
+                kwargs[_date_key] = _date_val
+        inp = apply_input_pipeline_search(
+            InputCJSGTJPR,
+            "TJPRScraper.cjsg()",
             pesquisa=pesquisa_val,
             paginas=paginas,
-            data_julgamento_inicio=datas["data_julgamento_inicio"],
-            data_julgamento_fim=datas["data_julgamento_fim"],
-            data_publicacao_inicio=datas["data_publicacao_inicio"],
-            data_publicacao_fim=datas["data_publicacao_fim"],
-            **kwargs,
+            kwargs=kwargs,
         )
-        return self.cjsg_parse(brutos, pesquisa_val)
+        brutos = self.cjsg_download(
+            pesquisa=inp.pesquisa,
+            paginas=inp.paginas,
+            data_julgamento_inicio=inp.data_julgamento_inicio,
+            data_julgamento_fim=inp.data_julgamento_fim,
+            data_publicacao_inicio=inp.data_publicacao_inicio,
+            data_publicacao_fim=inp.data_publicacao_fim,
+        )
+        return self.cjsg_parse(brutos, inp.pesquisa)
 
     def cpopg(self, id_cnj: Union[str, List[str]]):
         """Stub: Primeiro grau case consultation not implemented for TJPR."""
