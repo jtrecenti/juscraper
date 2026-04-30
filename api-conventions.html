@@ -167,6 +167,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#from-data_iniciofim-to-data_julgamento_iniciofim-tjsp" id="toc-from-data_iniciofim-to-data_julgamento_iniciofim-tjsp" class="nav-link" data-scroll-target="#from-data_iniciofim-to-data_julgamento_iniciofim-tjsp">From <code>data_inicio/fim</code> to <code>data_julgamento_inicio/fim</code> (TJSP)</a></li>
   <li><a href="#pagination-default-change" id="toc-pagination-default-change" class="nav-link" data-scroll-target="#pagination-default-change">Pagination default change</a></li>
   </ul></li>
+  <li><a href="#auto-chunking-esaj-family" id="toc-auto-chunking-esaj-family" class="nav-link" data-scroll-target="#auto-chunking-esaj-family">Auto-chunking (eSAJ family)</a></li>
   <li><a href="#normalization-utilities" id="toc-normalization-utilities" class="nav-link" data-scroll-target="#normalization-utilities">Normalization Utilities</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.com/jtrecenti/juscraper/edit/main/docs/api-conventions.qmd" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></nav>
@@ -370,6 +371,29 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>scraper.cjsg(pesquisa<span class="op">=</span><span class="st">"teste"</span>, paginas<span class="op">=</span><span class="dv">3</span>) <span class="co"># downloads pages 1-3</span></span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 </section>
+<section id="auto-chunking-esaj-family" class="level2">
+<h2 class="anchored" data-anchor-id="auto-chunking-esaj-family">Auto-chunking (eSAJ family)</h2>
+<p>Several eSAJ endpoints (<code>cjpg</code>/<code>cjsg</code> in TJSP, plus <code>cjsg</code> in TJAC, TJAL, TJAM, TJCE, TJMS) cap each request at a one-year <code>data_julgamento_*</code> window. When the user asks for a longer interval, the scraper <strong>automatically</strong> splits the request into year-long windows, fetches each one, and concatenates the results — deduplicating by <code>cd_acordao</code> (cjsg) or <code>id_processo</code> (cjpg).</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>tjsp <span class="op">=</span> jus.scraper(<span class="st">"tjsp"</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Six-year span: scraper sends 6 requests under the hood and returns</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co"># a single deduplicated DataFrame.</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjsp.cjsg(</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="st">"dano moral"</span>,</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">"01/01/2018"</span>,</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">"31/12/2024"</span>,</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The behaviour is controlled by <code>auto_chunk: bool = True</code> (default on). To restore the strict pre-2026 behaviour (a <code>ValueError</code> is raised for windows longer than 366 days), set <code>auto_chunk=False</code> — useful for input validation paths that want to fail before submitting a long job:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>tjsp.cjsg(</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="st">"dano moral"</span>,</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">"01/01/2018"</span>,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">"31/12/2024"</span>,</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    auto_chunk<span class="op">=</span><span class="va">False</span>,  <span class="co"># raises ValueError ("aceita no máximo 366 dias")</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Per-window failures (network errors, captchas, 5xx) are captured and surfaced as a single <code>UserWarning</code> listing the failed windows; the returned DataFrame contains whatever was downloaded successfully (parcial + warning). Combining <code>auto_chunk=True</code> with <code>paginas</code> is rejected when the interval is long enough to actually trigger chunking: the multi-window semantics for <code>paginas</code> are ambiguous (each window? aggregated budget?) and the design prefers to fail explicitly. For short intervals where chunking is a no-op, <code>paginas</code> works as usual.</p>
+</section>
 <section id="normalization-utilities" class="level2">
 <h2 class="anchored" data-anchor-id="normalization-utilities">Normalization Utilities</h2>
 <p>The <code>juscraper.utils.params</code> module provides normalization functions used internally by all scrapers:</p>
@@ -377,6 +401,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>normalize_paginas(paginas)</code> — normalizes <code>int | list | range | None</code></li>
 <li><code>normalize_pesquisa(pesquisa, **kwargs)</code> — handles deprecated aliases</li>
 <li><code>normalize_datas(**kwargs)</code> — handles deprecated and generic date aliases</li>
+<li><code>iter_date_windows(data_inicio, data_fim, *, max_dias=366)</code> — splits a date range into non-overlapping windows for auto-chunking</li>
+<li><code>run_chunked_search(fetch_window, *, data_inicio, data_fim, dedup_key, ...)</code> — drives a search across windows, concatenates and deduplicates</li>
 <li><code>warn_unsupported(param_name, tribunal)</code> — warns about unsupported parameters</li>
 </ul>
 

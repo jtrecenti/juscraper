@@ -190,7 +190,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td><a href="#juscraper.courts.tjpi.client.TJPIScraper.cjsg">cjsg</a></td>
-<td>Search TJPI jurisprudence.</td>
+<td>Busca jurisprudencia no TJPI.</td>
 </tr>
 <tr class="even">
 <td><a href="#juscraper.courts.tjpi.client.TJPIScraper.cjsg_download">cjsg_download</a></td>
@@ -221,14 +221,111 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    orgao<span class="op">=</span><span class="st">''</span>,</span>
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Search TJPI jurisprudence.</p>
+<p>Busca jurisprudencia no TJPI.</p>
 <section id="parameters" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
-<p>pesquisa : str Free-text search term. paginas : int, list, range, or None Pages to download (1-based). None downloads all. tipo : str, optional Decision type. Options: <code>"Acordao"</code>, <code>"Decisao Terminativa"</code>, <code>"Sumula"</code>. relator : str, optional Reporter judge name (must match dropdown value exactly). classe : str, optional Procedural class (must match dropdown value exactly). orgao : str, optional Judging body (must match dropdown value exactly).</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>pesquisa</td>
+<td><a href="`str`">str</a></td>
+<td>Termo de busca livre.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>paginas</td>
+<td><a href="`int`">int</a> | <a href="`list`">list</a> | <a href="`range`">range</a> | None</td>
+<td>Paginas 1-based; <code>None</code> baixa todas. Default <code>None</code>.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>tipo</td>
+<td><a href="`str`">str</a></td>
+<td>Tipo de decisao. Opcoes: <code>"Acordao"</code>, <code>"Decisao Terminativa"</code>, <code>"Sumula"</code>.</td>
+<td><code>''</code></td>
+</tr>
+<tr class="even">
+<td>relator</td>
+<td><a href="`str`">str</a></td>
+<td>Nome do relator (deve bater com o valor do dropdown).</td>
+<td><code>''</code></td>
+</tr>
+<tr class="odd">
+<td>classe</td>
+<td><a href="`str`">str</a></td>
+<td>Classe processual (deve bater com o valor do dropdown).</td>
+<td><code>''</code></td>
+</tr>
+<tr class="even">
+<td>orgao</td>
+<td><a href="`str`">str</a></td>
+<td>Orgao julgador (deve bater com o valor do dropdown).</td>
+<td><code>''</code></td>
+</tr>
+<tr class="odd">
+<td>**kwargs</td>
+<td></td>
+<td>Filtros aceitos pelo schema :class:<code>InputCJSGTJPI</code>. Listados abaixo (todos opcionais; <code>None</code> = sem filtro): * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str): <code>YYYY-MM-DD</code>. Mapeado para <code>data_min</code>/<code>data_max</code> no GET (refs #94).</td>
+<td><code>{}</code></td>
+</tr>
+</tbody>
+</table>
+<p>Aliases deprecados (popados com <code>DeprecationWarning</code> antes do pydantic): * <code>query</code> / <code>termo</code> -&gt; <code>pesquisa</code> * <code>data_inicio</code> / <code>data_fim</code> -&gt; <code>data_julgamento_inicio</code> / <code>_fim</code> * <code>data_julgamento_de</code> / <code>_ate</code> -&gt; <code>data_julgamento_inicio</code> / <code>_fim</code></p>
+</section>
+<section id="raises" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`TypeError`">TypeError</a></td>
+<td>Quando um kwarg desconhecido e passado (inclusive <code>data_publicacao_*</code>, que o backend nao expoe).</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`ValidationError`">ValidationError</a></td>
+<td>Quando um filtro tem formato invalido.</td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="returns" class="level4 doc-section doc-section-returns">
 <h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
-<p>pd.DataFrame</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>pd.DataFrame: DataFrame com as decisoes.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="see-also" class="level4 doc-section doc-section-see-also">
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See also</h4>
+<p><a href=":class:`InputCJSGTJPI`"></a> — schema pydantic e a fonte da verdade dos filtros aceitos.</p>
 </section>
 </section>
 <section id="juscraper.courts.tjpi.client.TJPIScraper.cjsg_download" class="level3">

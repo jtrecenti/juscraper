@@ -190,7 +190,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td><a href="#juscraper.courts.tjsc.client.TJSCScraper.cjsg">cjsg</a></td>
-<td>Search TJSC jurisprudence.</td>
+<td>Busca jurisprudencia no TJSC.</td>
 </tr>
 <tr class="even">
 <td><a href="#juscraper.courts.tjsc.client.TJSCScraper.cjsg_download">cjsg_download</a></td>
@@ -219,14 +219,99 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    processo<span class="op">=</span><span class="st">''</span>,</span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Search TJSC jurisprudence.</p>
+<p>Busca jurisprudencia no TJSC.</p>
 <section id="parameters" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
-<p>pesquisa : str Free-text search term. paginas : int, list, range, or None Pages to download (1-based). None downloads all. campo : str, optional Search field: <code>"E"</code> for ementa (default), <code>"I"</code> for inteiro teor. processo : str, optional Process number filter.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>pesquisa</td>
+<td><a href="`str`">str</a></td>
+<td>Termo de busca livre.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>paginas</td>
+<td><a href="`int`">int</a> | <a href="`list`">list</a> | <a href="`range`">range</a> | None</td>
+<td>Paginas 1-based; <code>None</code> baixa todas. Default <code>None</code>.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>campo</td>
+<td><a href="`str`">str</a></td>
+<td>Campo de busca: <code>"E"</code> para ementa (default), <code>"I"</code> para inteiro teor.</td>
+<td><code>'E'</code></td>
+</tr>
+<tr class="even">
+<td>processo</td>
+<td><a href="`str`">str</a></td>
+<td>Filtro por numero do processo.</td>
+<td><code>''</code></td>
+</tr>
+<tr class="odd">
+<td>**kwargs</td>
+<td></td>
+<td>Filtros aceitos pelo schema :class:<code>InputCJSGTJSC</code>. Listados abaixo (todos opcionais; <code>None</code> = sem filtro): * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str): <code>YYYY-MM-DD</code>. Mapeado para <code>dt_decisao_*</code> no backend. * <code>data_publicacao_inicio</code> / <code>data_publicacao_fim</code> (str): <code>YYYY-MM-DD</code>.</td>
+<td><code>{}</code></td>
+</tr>
+</tbody>
+</table>
+<p>Aliases deprecados (popados com <code>DeprecationWarning</code> antes do pydantic): * <code>query</code> / <code>termo</code> -&gt; <code>pesquisa</code> * <code>data_inicio</code> / <code>data_fim</code> -&gt; <code>data_julgamento_inicio</code> / <code>_fim</code> * <code>data_julgamento_de</code> / <code>_ate</code> -&gt; <code>data_julgamento_inicio</code> / <code>_fim</code> * <code>data_publicacao_de</code> / <code>_ate</code> -&gt; <code>data_publicacao_inicio</code> / <code>_fim</code></p>
+</section>
+<section id="raises" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`TypeError`">TypeError</a></td>
+<td>Quando um kwarg desconhecido e passado.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`ValidationError`">ValidationError</a></td>
+<td>Quando um filtro tem formato invalido.</td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="returns" class="level4 doc-section doc-section-returns">
 <h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
-<p>pd.DataFrame</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>pd.DataFrame: DataFrame com as decisoes.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="see-also" class="level4 doc-section doc-section-see-also">
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See also</h4>
+<p><a href=":class:`InputCJSGTJSC`"></a> — schema pydantic e a fonte da verdade dos filtros aceitos.</p>
 </section>
 </section>
 <section id="juscraper.courts.tjsc.client.TJSCScraper.cjsg_download" class="level3">

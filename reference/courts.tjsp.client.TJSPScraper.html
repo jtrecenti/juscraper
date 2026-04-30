@@ -286,7 +286,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>**kwargs</td>
 <td><a href="`typing.Any`">Any</a></td>
-<td>Filtros aceitos por :class:<code>InputCJPGTJSP</code> (todos opcionais; <code>None</code> = sem filtro): * <code>classes</code> (list[str]): IDs internos de classe processual. Backend: <code>classeTreeSelection.values</code> (CSV). * <code>assuntos</code> (list[str]): IDs internos de assunto. Backend: <code>assuntoTreeSelection.values</code> (CSV). * <code>varas</code> (list[str]): IDs internos de vara, no formato em arvore do TJSP (ex.: <code>"1-1-1"</code>). Backend: <code>varasTreeSelection.values</code> (CSV). * <code>id_processo</code> (str): Numero CNJ formatado para filtrar uma instancia especifica. Normalizado via :func:<code>clean_cnj</code> antes do envio. * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str, <code>DD/MM/AAAA</code>): Intervalo de julgamento.</td>
+<td>Filtros aceitos por :class:<code>InputCJPGTJSP</code> (todos opcionais; <code>None</code> = sem filtro): * <code>classes</code> (list[str]): IDs internos de classe processual. Backend: <code>classeTreeSelection.values</code> (CSV). * <code>assuntos</code> (list[str]): IDs internos de assunto. Backend: <code>assuntoTreeSelection.values</code> (CSV). * <code>varas</code> (list[str]): IDs internos de vara, no formato em arvore do TJSP (ex.: <code>"1-1-1"</code>). Backend: <code>varasTreeSelection.values</code> (CSV). * <code>id_processo</code> (str): Numero CNJ formatado para filtrar uma instancia especifica. Normalizado via :func:<code>clean_cnj</code> antes do envio. * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str, <code>DD/MM/AAAA</code>): Intervalo de julgamento. * <code>auto_chunk</code> (bool): Default <code>True</code>. Quando o intervalo <code>data_julgamento_*</code> excede 366 dias, divide internamente em janelas, baixa cada uma e concatena com dedup por <code>id_processo</code>. Veja a secao “Auto-chunking” abaixo.</td>
 <td><code>{}</code></td>
 </tr>
 </tbody>
@@ -310,11 +310,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><a href="`TypeError`">TypeError</a></td>
-<td>Quando um kwarg desconhecido e passado (via :func:<code>_raise_on_extra</code>).</td>
+<td>Quando um kwarg desconhecido e passado (via :func:<code>raise_on_extra_kwargs</code>).</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`pydantic.ValidationError`">ValidationError</a></td>
+<td><a href="`ValidationError`">ValidationError</a></td>
 <td>Quando um filtro tem formato invalido.</td>
 </tr>
 <tr class="odd">
@@ -382,6 +382,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="see-also" class="level4 doc-section doc-section-see-also">
 <h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See also</h4>
 <p><a href=":class:`~juscraper.courts.tjsp.schemas.InputCJPGTJSP`"></a> — schema pydantic e a fonte da verdade dos filtros aceitos.</p>
+<p>Auto-chunking (issue #130): Se <code>auto_chunk=True</code> (default herdado de :class:<code>~juscraper.schemas.AutoChunkMixin</code>) e o intervalo <code>data_julgamento_*</code> exceder 366 dias, a busca e dividida em janelas internas, baixadas e concatenadas com dedup por <code>id_processo</code>. Falhas por janela viram :class:<code>UserWarning</code> (parcial + warning). <code>auto_chunk=True</code> + <code>paginas != None</code> em janela &gt; 366 dias e :class:<code>ValueError</code>.</p>
 </section>
 </section>
 <section id="juscraper.courts.tjsp.client.TJSPScraper.cjpg_download" class="level3">
@@ -444,7 +445,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`pydantic.ValidationError`">ValidationError</a></td>
+<td><a href="`ValidationError`">ValidationError</a></td>
 <td>Quando um filtro tem formato invalido.</td>
 </tr>
 <tr class="odd">
@@ -512,7 +513,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>**kwargs</td>
 <td><a href="`typing.Any`">Any</a></td>
-<td>Filtros aceitos por :class:<code>InputCJSGTJSP</code> (todos opcionais; <code>None</code> = sem filtro): * <code>ementa</code> (str): Termo buscado especificamente na ementa. * <code>classe</code> (str): ID interno da classe processual. * <code>assunto</code> (str): ID interno do assunto. * <code>comarca</code> (str): ID interno da comarca. * <code>orgao_julgador</code> (str): ID interno do orgao julgador. * <code>baixar_sg</code> (bool): <code>True</code> (default) busca em segundo grau; <code>False</code> busca em colegio recursal. * <code>tipo_decisao</code> (Literal[“acordao”, “monocratica”]): Default <code>"acordao"</code>. * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str, <code>DD/MM/AAAA</code>): Intervalo de julgamento.</td>
+<td>Filtros aceitos por :class:<code>InputCJSGTJSP</code> (todos opcionais; <code>None</code> = sem filtro): * <code>ementa</code> (str): Termo buscado especificamente na ementa. * <code>classe</code> (str): ID interno da classe processual. * <code>assunto</code> (str): ID interno do assunto. * <code>comarca</code> (str): ID interno da comarca. * <code>orgao_julgador</code> (str): ID interno do orgao julgador. * <code>baixar_sg</code> (bool): <code>True</code> (default) busca em segundo grau; <code>False</code> busca em colegio recursal. * <code>tipo_decisao</code> (Literal[“acordao”, “monocratica”]): Default <code>"acordao"</code>. * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str, <code>DD/MM/AAAA</code>): Intervalo de julgamento. * <code>auto_chunk</code> (bool): Default <code>True</code>. Quando o intervalo <code>data_julgamento_*</code> excede 366 dias, divide internamente em janelas, baixa cada uma e concatena com dedup por <code>cd_acordao</code>.</td>
 <td><code>{}</code></td>
 </tr>
 </tbody>
@@ -540,7 +541,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`pydantic.ValidationError`">ValidationError</a></td>
+<td><a href="`ValidationError`">ValidationError</a></td>
 <td>Quando um filtro tem formato invalido.</td>
 </tr>
 <tr class="odd">
@@ -602,7 +603,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="see-also-1" class="level4 doc-section doc-section-see-also">
 <h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-1">See also</h4>
-<p><a href=":class:`~juscraper.courts.tjsp.schemas.InputCJSGTJSP`"></a> — schema pydantic e a fonte da verdade dos filtros aceitos.</p>
+<p><a href=":class:`~juscraper.courts.tjsp.schemas.InputCJSGTJSP`"></a> — schema pydantic e a fonte da verdade dos filtros aceitos. <a href=":meth:`EsajSearchScraper.cjsg`"></a> — descricao detalhada do auto-chunking (issue #130) para janelas <code>data_julgamento_*</code> &gt; 366 dias.</p>
 </section>
 </section>
 <section id="juscraper.courts.tjsp.client.TJSPScraper.cjsg_download" class="level3">
@@ -672,7 +673,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`pydantic.ValidationError`">ValidationError</a></td>
+<td><a href="`ValidationError`">ValidationError</a></td>
 <td>Quando um filtro tem formato invalido.</td>
 </tr>
 <tr class="odd">

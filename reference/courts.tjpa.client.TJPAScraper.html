@@ -189,11 +189,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td><a href="#juscraper.courts.tjpa.client.TJPAScraper.cjsg">cjsg</a></td>
-<td>Fetches jurisprudence from TJPA in a simplified way (download + parse).</td>
+<td>Busca jurisprudencia no TJPA (download + parse).</td>
 </tr>
 <tr class="even">
 <td><a href="#juscraper.courts.tjpa.client.TJPAScraper.cjsg_download">cjsg_download</a></td>
-<td>Downloads raw results from the TJPA jurisprudence search (multiple pages).</td>
+<td>Baixa resultados crus da busca de jurisprudencia do TJPA (varias paginas).</td>
 </tr>
 <tr class="odd">
 <td><a href="#juscraper.courts.tjpa.client.TJPAScraper.cjsg_parse">cjsg_parse</a></td>
@@ -220,17 +220,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    assunto<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    origem<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    tipo<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    data_publicacao_inicio<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    data_publicacao_fim<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    sort_by<span class="op">=</span><span class="st">'datajulgamento'</span>,</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    sort_order<span class="op">=</span><span class="st">'desc'</span>,</span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    query_type<span class="op">=</span><span class="st">'free'</span>,</span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    query_scope<span class="op">=</span><span class="st">'ementa'</span>,</span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Fetches jurisprudence from TJPA in a simplified way (download + parse). Returns a ready-to-analyze DataFrame.</p>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    sort_by<span class="op">=</span><span class="st">'datajulgamento'</span>,</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    sort_order<span class="op">=</span><span class="st">'desc'</span>,</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    query_type<span class="op">=</span><span class="st">'free'</span>,</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    query_scope<span class="op">=</span><span class="st">'ementa'</span>,</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Busca jurisprudencia no TJPA (download + parse).</p>
 <section id="parameters" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
 <table class="caption-top table">
@@ -245,102 +241,132 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>pesquisa</td>
-<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
-<td>Search term.</td>
+<td><a href="`str`">str</a></td>
+<td>Termo de busca livre.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>paginas</td>
-<td>int, list, range, or None</td>
-<td>Pages to download (1-based).</td>
+<td><a href="`int`">int</a> | <a href="`list`">list</a> | <a href="`range`">range</a> | None</td>
+<td>Paginas 1-based; <code>None</code> baixa todas. Default <code>None</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>relator</td>
-<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
-<td>Filter by relator name.</td>
+<td><a href="`str`">str</a> | None</td>
+<td>Nome do relator.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>orgao_julgador_colegiado</td>
-<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
-<td>Filter by collegiate judging body.</td>
+<td><a href="`str`">str</a> | None</td>
+<td>Orgao colegiado.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>classe</td>
-<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
-<td>Filter by procedural class.</td>
+<td><a href="`str`">str</a> | None</td>
+<td>Classe processual.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>assunto</td>
-<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
-<td>Filter by subject.</td>
+<td><a href="`str`">str</a> | None</td>
+<td>Assunto.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>origem</td>
-<td><a href="`typing.Optional`">Optional</a>[<a href="`list`">list</a>]</td>
-<td>List of origins.</td>
+<td><a href="`list`">list</a> | None</td>
+<td>Lista de origens (default backend: <code>["tribunal de justica do estado do para"]</code>).</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>tipo</td>
-<td><a href="`typing.Optional`">Optional</a>[<a href="`list`">list</a>]</td>
-<td>List of decision types.</td>
-<td><code>None</code></td>
-</tr>
-<tr class="odd">
-<td>data_julgamento_inicio</td>
-<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
-<td>Start date for judgment filter (YYYY-MM-DD).</td>
-<td><code>None</code></td>
-</tr>
-<tr class="even">
-<td>data_julgamento_fim</td>
-<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
-<td>End date for judgment filter (YYYY-MM-DD).</td>
-<td><code>None</code></td>
-</tr>
-<tr class="odd">
-<td>data_publicacao_inicio</td>
-<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
-<td>Start date for publication filter (YYYY-MM-DD).</td>
-<td><code>None</code></td>
-</tr>
-<tr class="even">
-<td>data_publicacao_fim</td>
-<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
-<td>End date for publication filter (YYYY-MM-DD).</td>
+<td><a href="`list`">list</a> | None</td>
+<td>Lista de tipos de decisao (default backend: <code>["acordao", "decisao monocratica"]</code>).</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>sort_by</td>
 <td><a href="`str`">str</a></td>
-<td>Sort field (default: “datajulgamento”).</td>
+<td>Campo de ordenacao. Default <code>"datajulgamento"</code>.</td>
 <td><code>'datajulgamento'</code></td>
 </tr>
 <tr class="even">
 <td>sort_order</td>
 <td><a href="`str`">str</a></td>
-<td>Sort order (default: “desc”).</td>
+<td><code>"asc"</code> ou <code>"desc"</code>. Default <code>"desc"</code>.</td>
 <td><code>'desc'</code></td>
 </tr>
 <tr class="odd">
 <td>query_type</td>
 <td><a href="`str`">str</a></td>
-<td>Query type (default: “free”).</td>
+<td><code>"free"</code> ou <code>"any"</code>. Default <code>"free"</code>.</td>
 <td><code>'free'</code></td>
 </tr>
 <tr class="even">
 <td>query_scope</td>
 <td><a href="`str`">str</a></td>
-<td>Query scope (default: “ementa”).</td>
+<td><code>"ementa"</code> ou <code>"inteiroteor"</code>. Default <code>"ementa"</code>.</td>
 <td><code>'ementa'</code></td>
+</tr>
+<tr class="odd">
+<td>**kwargs</td>
+<td></td>
+<td>Filtros aceitos pelo schema :class:<code>InputCJSGTJPA</code>. Listados abaixo (todos opcionais; <code>None</code> = sem filtro): * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str): <code>YYYY-MM-DD</code>. * <code>data_publicacao_inicio</code> / <code>data_publicacao_fim</code> (str): <code>YYYY-MM-DD</code>.</td>
+<td><code>{}</code></td>
 </tr>
 </tbody>
 </table>
+<p>Aliases deprecados (popados com <code>DeprecationWarning</code> antes do pydantic): * <code>query</code> / <code>termo</code> -&gt; <code>pesquisa</code> * <code>data_inicio</code> / <code>data_fim</code> -&gt; <code>data_julgamento_inicio</code> / <code>_fim</code> * <code>data_julgamento_de</code> / <code>_ate</code> -&gt; <code>data_julgamento_inicio</code> / <code>_fim</code> * <code>data_publicacao_de</code> / <code>_ate</code> -&gt; <code>data_publicacao_inicio</code> / <code>_fim</code></p>
+</section>
+<section id="raises" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`TypeError`">TypeError</a></td>
+<td>Quando um kwarg desconhecido e passado.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`ValidationError`">ValidationError</a></td>
+<td>Quando um filtro tem formato invalido.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>pd.DataFrame: DataFrame com as decisoes.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="see-also" class="level4 doc-section doc-section-see-also">
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See also</h4>
+<p><a href=":class:`InputCJSGTJPA`"></a> — schema pydantic e a fonte da verdade dos filtros aceitos.</p>
 </section>
 </section>
 <section id="juscraper.courts.tjpa.client.TJPAScraper.cjsg_download" class="level3">
@@ -354,127 +380,36 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    assunto<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    origem<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    tipo<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    data_publicacao_inicio<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    data_publicacao_fim<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    sort_by<span class="op">=</span><span class="st">'datajulgamento'</span>,</span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    sort_order<span class="op">=</span><span class="st">'desc'</span>,</span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    query_type<span class="op">=</span><span class="st">'free'</span>,</span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    query_scope<span class="op">=</span><span class="st">'ementa'</span>,</span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
-<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Downloads raw results from the TJPA jurisprudence search (multiple pages). Returns a list of raw JSON responses.</p>
-<section id="parameters-1" class="level4 doc-section doc-section-parameters">
-<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    sort_by<span class="op">=</span><span class="st">'datajulgamento'</span>,</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    sort_order<span class="op">=</span><span class="st">'desc'</span>,</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    query_type<span class="op">=</span><span class="st">'free'</span>,</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    query_scope<span class="op">=</span><span class="st">'ementa'</span>,</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Baixa resultados crus da busca de jurisprudencia do TJPA (varias paginas).</p>
+<p>Filtros de data (<code>data_julgamento_inicio</code>/<code>_fim</code>, <code>data_publicacao_inicio</code>/<code>_fim</code>) chegam via <code>**kwargs</code> e sao validados pelo schema :class:<code>InputCJSGTJPA</code>. Aliases deprecados (<code>data_inicio</code>/<code>data_fim</code>, <code>query</code>/<code>termo</code>) sao popados antes da validacao.</p>
+<section id="returns-1" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
 <th>Name</th>
 <th>Type</th>
 <th>Description</th>
-<th>Default</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>pesquisa</td>
-<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
-<td>Search term. <code>query</code> and <code>termo</code> are accepted as deprecated aliases.</td>
-<td><code>None</code></td>
-</tr>
-<tr class="even">
-<td>paginas</td>
-<td>int, list, range, or None</td>
-<td>Pages to download (1-based). int: paginas=3 downloads pages 1-3. range: range(1, 4) downloads pages 1-3. None: downloads all available pages.</td>
-<td><code>None</code></td>
-</tr>
-<tr class="odd">
-<td>relator</td>
-<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
-<td>Filter by relator name.</td>
-<td><code>None</code></td>
-</tr>
-<tr class="even">
-<td>orgao_julgador_colegiado</td>
-<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
-<td>Filter by collegiate judging body.</td>
-<td><code>None</code></td>
-</tr>
-<tr class="odd">
-<td>classe</td>
-<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
-<td>Filter by procedural class.</td>
-<td><code>None</code></td>
-</tr>
-<tr class="even">
-<td>assunto</td>
-<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
-<td>Filter by subject.</td>
-<td><code>None</code></td>
-</tr>
-<tr class="odd">
-<td>origem</td>
-<td><a href="`typing.Optional`">Optional</a>[<a href="`list`">list</a>]</td>
-<td>List of origins (default: [“tribunal de justica do estado do para”]).</td>
-<td><code>None</code></td>
-</tr>
-<tr class="even">
-<td>tipo</td>
-<td><a href="`typing.Optional`">Optional</a>[<a href="`list`">list</a>]</td>
-<td>List of decision types (default: [“acordao”, “decisao monocratica”]).</td>
-<td><code>None</code></td>
-</tr>
-<tr class="odd">
-<td>data_julgamento_inicio</td>
-<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
-<td>Start date for judgment filter (YYYY-MM-DD).</td>
-<td><code>None</code></td>
-</tr>
-<tr class="even">
-<td>data_julgamento_fim</td>
-<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
-<td>End date for judgment filter (YYYY-MM-DD).</td>
-<td><code>None</code></td>
-</tr>
-<tr class="odd">
-<td>data_publicacao_inicio</td>
-<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
-<td>Start date for publication filter (YYYY-MM-DD).</td>
-<td><code>None</code></td>
-</tr>
-<tr class="even">
-<td>data_publicacao_fim</td>
-<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
-<td>End date for publication filter (YYYY-MM-DD).</td>
-<td><code>None</code></td>
-</tr>
-<tr class="odd">
-<td>sort_by</td>
-<td><a href="`str`">str</a></td>
-<td>Sort field (default: “datajulgamento”).</td>
-<td><code>'datajulgamento'</code></td>
-</tr>
-<tr class="even">
-<td>sort_order</td>
-<td><a href="`str`">str</a></td>
-<td>Sort order, “asc” or “desc” (default: “desc”).</td>
-<td><code>'desc'</code></td>
-</tr>
-<tr class="odd">
-<td>query_type</td>
-<td><a href="`str`">str</a></td>
-<td>Query type, “free” or “any” (default: “free”).</td>
-<td><code>'free'</code></td>
-</tr>
-<tr class="even">
-<td>query_scope</td>
-<td><a href="`str`">str</a></td>
-<td>Query scope, “ementa” or “inteiroteor” (default: “ementa”).</td>
-<td><code>'ementa'</code></td>
+<td>list</td>
+<td><a href="`list`">list</a></td>
+<td>Respostas JSON cruas (uma por pagina).</td>
 </tr>
 </tbody>
 </table>
+</section>
+<section id="see-also-1" class="level4 doc-section doc-section-see-also">
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-1">See also</h4>
+<p><a href=":class:`InputCJSGTJPA`"></a> — fonte da verdade dos filtros aceitos.</p>
 </section>
 </section>
 <section id="juscraper.courts.tjpa.client.TJPAScraper.cjsg_parse" class="level3">
