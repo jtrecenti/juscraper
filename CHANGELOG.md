@@ -35,6 +35,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- Sdist (`juscraper-X.Y.Z.tar.gz` no PyPI) passa a incluir somente `src/juscraper/`, README, LICENSE, CHANGELOG, CONTRIBUTING, CONDUCT e `pyproject.toml`. Diretorios `tests/`, `docs/`, `issues/`, `scripts/`, `.claude/`, `.github/` e caches deixam de ser empacotados — sem a configuracao explicita o tarball cresceria proporcionalmente a `tests/<tribunal>/samples/` (~25 MB hoje). Wheel ja excluia `tests/` por default do hatchling com layout `src/`; agora a configuracao esta explicita via `[tool.hatch.build.targets.wheel] packages = ["src/juscraper"]`. Adicionado guard no workflow `publish.yml` que falha o build se o wheel/sdist contiver `tests/` ou se o sdist exceder 1 MB. Refs #139.
 - `pyproject.toml`: adicionado `pythonpath = ["tests"]` para permitir `from helpers import ...` sem hacks de `sys.path`.
 - **BREAKING (colunas de saida padronizadas):** DataFrames de `cjsg` dos tribunais TJES, TJMT, TJRS, TJRN, TJPE e TJRO passam a usar nomes canonicos uniformes para colunas semanticamente equivalentes. Renomeacoes: `nr_processo`/`numero_unico` -> `processo` (TJES, TJMT); `classe_cnj`/`classe_judicial` -> `classe` (TJRS, TJRN, TJES, TJPE, TJRO); `assunto_cnj`/`assunto_principal` -> `assunto` (TJRS, TJPE, TJES); `magistrado` -> `relator` (TJES). Codigo que acessa colunas pelo nome antigo (ex.: `df["classe_cnj"]`) precisa ser atualizado. Refs #93, #117.
 - `OutputCJSGBase.ementa` relaxado para `Optional[str]` (TJGO entrega o texto completo em `texto`, nao em `ementa`). `OutputCJSGBase.data_julgamento` aceita agora `date | str | None` para refletir os parsers que ja convertem para `datetime.date`. Redeclaracoes cosmeticas de `paginas` em schemas concretos (TJAP, TJES, TJMG, TJPE, TJPR, TJRO, TJRR, TJRS) removidas — `SearchBase` e a fonte unica. Refs #93, #117.
@@ -62,6 +63,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Removed
 
+- `MANIFEST.in` na raiz. Era vestigio do tempo do setuptools; o backend de build atual (hatchling) ignora completamente. Politica de empacotamento agora vive em `[tool.hatch.build.targets.*]` no `pyproject.toml`. Refs #139.
 - Shim `src/juscraper/courts/tjsp/cjsg_download.py` (apenas compatibility bridge para testes legados que importavam `cjsg_download`/`QueryTooLongError`). Testes em `tests/tjsp/test_query_validation.py` e `tests/tjsp/test_cjsg_contract.py` atualizados para importar direto de `juscraper.courts.tjsp.exceptions`. A docstring de `src/juscraper/courts/tjsp/forms.py::build_tjsp_cjsg_body` reescrita para documentar as diferencas funcionais reais do body do TJSP vs. eSAJ-puros (sem `conversationId`, sem `dtPublicacao*`, `baixar_sg` mapeia para `origem`).
 - `tests/tjsp/test_search_limit.py`: redundante com `tests/tjsp/test_query_validation.py` depois da consolidacao do guard de 120 chars em `validate_pesquisa_length`. Cobertura integral preservada pelo `test_query_validation.py`.
 

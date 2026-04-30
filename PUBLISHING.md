@@ -136,12 +136,20 @@ Se o nome `juscraper` já existir:
 ### Problemas de Build
 
 ```bash
-# Testar build localmente
+# Testar build localmente (gera dist/juscraper-X.Y.Z-py3-none-any.whl e dist/juscraper-X.Y.Z.tar.gz)
 uv build
 
-# Verificar conteúdo do pacote
-tar -tzf dist/juscraper-0.1.0.tar.gz
+# Wheel nao deve conter tests/
+unzip -l dist/juscraper-*.whl | grep -E '(^| )tests/' && echo "FALHA: wheel contem tests/" || echo "wheel OK"
+
+# Sdist nao deve conter tests/
+tar -tzf dist/juscraper-*.tar.gz | grep -E '(^|/)tests/' && echo "FALHA: sdist contem tests/" || echo "sdist OK"
+
+# Tamanho esperado: wheel ~200 KB, sdist ~200 KB
+ls -lh dist/
 ```
+
+A politica de empacotamento esta em `[tool.hatch.build.targets.wheel]` e `[tool.hatch.build.targets.sdist]` no `pyproject.toml` (allowlist explicita). O workflow `.github/workflows/publish.yml` valida automaticamente os artefatos antes do upload pra PyPI, mas vale rodar a checagem local antes de publicar a release no GitHub. Refs #139.
 
 ## Recursos Adicionais
 
