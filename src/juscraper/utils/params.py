@@ -364,6 +364,7 @@ def apply_input_pipeline_cjsg(
     pesquisa: str,
     paginas,
     kwargs: dict,
+    date_format: str = "%d/%m/%Y",
     **canonical_filters,
 ) -> BaseModel:
     """Run the canonical input-validation pipeline for cjsg/cjpg endpoints.
@@ -404,6 +405,10 @@ def apply_input_pipeline_cjsg(
             ``list``, ``range``, or ``None``).
         kwargs: The caller's local ``kwargs`` dict. Mutated in place by
             :func:`pop_normalize_aliases` and consumed by ``schema_cls``.
+        date_format: ``strptime`` format used by :func:`validate_intervalo_datas`
+            to parse ``data_julgamento_*``/``data_publicacao_*``. Default
+            ``"%d/%m/%Y"`` matches eSAJ; tribunals whose backend speaks ISO
+            (TJRN, TJPA, TJRO, TJPI, ...) pass ``"%Y-%m-%d"``.
         **canonical_filters: Tribunal-specific filters already extracted from
             the public method signature (e.g. ``numero_processo=...``,
             ``relator=...``). They are forwarded to the schema as-is.
@@ -425,11 +430,13 @@ def apply_input_pipeline_cjsg(
         datas["data_julgamento_inicio"],
         datas["data_julgamento_fim"],
         rotulo="data_julgamento",
+        formato=date_format,
     )
     validate_intervalo_datas(
         datas["data_publicacao_inicio"],
         datas["data_publicacao_fim"],
         rotulo="data_publicacao",
+        formato=date_format,
     )
 
     try:

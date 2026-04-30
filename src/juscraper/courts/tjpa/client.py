@@ -7,10 +7,11 @@ import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa, to_iso_date
+from juscraper.utils.params import apply_input_pipeline_cjsg, normalize_pesquisa, to_iso_date
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
+from .schemas import InputCJSGTJPA
 
 
 class TJPAScraper(BaseScraper):
@@ -79,32 +80,55 @@ class TJPAScraper(BaseScraper):
             query_scope: Query scope, "ementa" or "inteiroteor" (default: "ementa").
         """
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-        paginas = normalize_paginas(paginas)
-        datas = normalize_datas(
-            data_julgamento_inicio=data_julgamento_inicio,
-            data_julgamento_fim=data_julgamento_fim,
-            data_publicacao_inicio=data_publicacao_inicio,
-            data_publicacao_fim=data_publicacao_fim,
-            **kwargs,
-        )
-        return cjsg_download_manager(
+
+        # Inject named date params into kwargs so normalize_datas (called by
+        # the helper) sees both canonical and deprecated aliases together.
+        for date_key, date_value in (
+            ("data_julgamento_inicio", data_julgamento_inicio),
+            ("data_julgamento_fim", data_julgamento_fim),
+            ("data_publicacao_inicio", data_publicacao_inicio),
+            ("data_publicacao_fim", data_publicacao_fim),
+        ):
+            if date_value is not None and date_key not in kwargs:
+                kwargs[date_key] = date_value
+
+        inp = apply_input_pipeline_cjsg(
+            InputCJSGTJPA,
+            "TJPAScraper.cjsg_download()",
             pesquisa=pesquisa,
             paginas=paginas,
-            session=self.session,
+            kwargs=kwargs,
+            date_format="%Y-%m-%d",
             relator=relator,
             orgao_julgador_colegiado=orgao_julgador_colegiado,
             classe=classe,
             assunto=assunto,
             origem=origem,
             tipo=tipo,
-            data_julgamento_inicio=to_iso_date(datas["data_julgamento_inicio"]),
-            data_julgamento_fim=to_iso_date(datas["data_julgamento_fim"]),
-            data_publicacao_inicio=to_iso_date(datas["data_publicacao_inicio"]),
-            data_publicacao_fim=to_iso_date(datas["data_publicacao_fim"]),
             sort_by=sort_by,
             sort_order=sort_order,
             query_type=query_type,
             query_scope=query_scope,
+        )
+
+        return cjsg_download_manager(
+            pesquisa=inp.pesquisa,
+            paginas=inp.paginas,
+            session=self.session,
+            relator=inp.relator,
+            orgao_julgador_colegiado=inp.orgao_julgador_colegiado,
+            classe=inp.classe,
+            assunto=inp.assunto,
+            origem=inp.origem,
+            tipo=inp.tipo,
+            data_julgamento_inicio=to_iso_date(inp.data_julgamento_inicio),
+            data_julgamento_fim=to_iso_date(inp.data_julgamento_fim),
+            data_publicacao_inicio=to_iso_date(inp.data_publicacao_inicio),
+            data_publicacao_fim=to_iso_date(inp.data_publicacao_fim),
+            sort_by=inp.sort_by,
+            sort_order=inp.sort_order,
+            query_type=inp.query_type,
+            query_scope=inp.query_scope,
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> pd.DataFrame:
