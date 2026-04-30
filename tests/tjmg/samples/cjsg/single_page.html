@@ -1,0 +1,911 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+ 
+ 
+ 
+ 
+ 
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7; IE=9" >
+        <meta http-equiv="Pragma" content="no-cache"/>
+        <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+        <meta http-equiv="Expires" content="0" />    
+        <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+        <link href="css/sistema_antigo.css" rel="stylesheet" type="text/css" />
+        <title>TJMG - Pesquisa por Jurisprud&ecirc;ncia</title>
+        <script language="JavaScript" src="/js/tjmg_ui.js"></script>
+        <script language="JavaScript" src="/js/tjmg.js"></script>
+        <script language="JavaScript" src="js/valida_dv_nu.js"></script>
+        <script type='text/javascript' src='/jurisprudencia/js/ea_util.js'></script>
+                
+        <link title="geral" rel="stylesheet" type="text/css" href="/portaltjmg/css/screen.css" media="screen" />        
+        <link title="alternativo" rel="stylesheet" type="text/css" href="/portaltjmg/css/alternativo.css" media="screen" />   
+        
+    </head>
+    
+        <style type="text/css" media="screen">
+            a:link.linkListaEspelhoAcordaos {color: #990000;}
+            a:visited.linkListaEspelhoAcordaos {color: #2F2F0F;}
+
+            .cabecalho
+            {
+                width: 99%;                   
+                border: solid #CCCCCC 1px;
+                background-color:#DFDFDF;                
+                color: #880000;
+                height: 18px;                    
+                font-family: Verdana, Arial, Helvetica, sans-serif;
+                font-size: 9pt;
+                font-weight: bold;
+                font-style: normal;                
+            }
+
+            .caixa_processo
+            {
+                    width: 99%;                   
+                    margin-top: 20px;
+                    -webkit-border-radius: 5px;
+                    -moz-border-radius: 5px;
+                    border-radius: 5px;
+                    border: solid #CCCCCC 1px;
+                    background-color:#DFDFDF;
+                    text-indent: 5px;
+                    padding: 5px;
+            }
+
+            .corpo 
+            {
+                color: #333333;
+            }           
+            
+        </style>        
+    
+    <style type="text/css" media="print">        
+        td.leftRight
+        {
+            margin: 0;                
+        }
+
+        span#tabelaEspelho
+        {
+            width: 100%;    
+            margin-right: 0;
+        }
+
+        body
+        {
+            margin: 0;
+        }
+
+        img#logoTJ
+        {
+            visibility: visible;
+        }
+
+        img#imgBotao1
+        {
+            visibility: visible;
+        }
+
+        table#tabelaInformacoesAcordaos
+        {
+            margin-left: 0;
+        }
+
+        td.rightTop
+        {
+            visibility: hidden;
+        }
+
+        img#AWMEL3_4
+        {
+            visibility: hidden;
+        }
+
+        div#menutop
+        {
+            visibility: hidden;
+        }
+
+        img
+        {
+            visibility: hidden;
+        }
+
+        div.tabbar
+        {
+            visibility: hidden;
+        }
+
+        div#caminho
+        {
+            visibility: hidden;
+        }            
+
+        div#botaoImprimirInteiroTeor
+        {
+            visibility: hidden;
+        } 
+
+        div#panel2
+        {
+            visibility: hidden;
+        }   
+
+        div#botoesEspelho
+        {
+            visibility: hidden;
+        }        
+
+        div#cabecalhoMenu
+        {
+            visibility: hidden;
+            display: none;
+        }
+
+        td#curvaBotton
+        {
+            visibility: hidden;
+        }
+
+        div.menuPortal
+        {
+            visibility: hidden;                    
+        }        
+    </style>
+        
+    <script>
+    if (navigator.userAgent.toLowerCase().indexOf("msie 7") != -1)
+    {
+        //Comentado, pois alguns navegadores IE 8 estão emulando o IE 7
+        //alert("ATENÇÃO: A versão do seu navegador é Internet Explorer 7.\nA Consulta à Jurisprudência está homologada para Internet Explorer 8 ou versão superior. Favor atualizar a versão do seu navegador.");
+    }
+    </script>
+        
+        <body onload="if (document.getElementById('panel2').style.display == 'none' && (document.getElementById('siglaLegislativa').value != '' || document.getElementById('observacoes').value != '')) mostrarOcultarPanel(2);" onkeydown="if (capturaCtrlP(event)) { return false;}" onkeyup="if (capturaCtrlP(event)) {imprimirEspelho(); return false;}">        
+        	
+            <div id="cabecalhoMenu"><style type="text/css">
+    header .wrapper-header
+    {
+        background: #7e1819;
+        color: white;
+        padding: 0px 0 0px 0;
+    }
+</style>
+
+<header role="banner">             
+    <div class="wrapper-header">
+        <a target="_blank" title="Link para Portal TJMG" 
+        aria-label="Logo do Tribunal de Justiça do Estado de Minas Gerais" class="brand-logo logo-tjmg" 
+        href="http://www.tjmg.jus.br">
+        <img src="imagens/logo_tjmg.png"/>
+        </a>
+    </div>
+</header>  </div>
+            
+            <br />
+            
+            <div id="sistema">
+                <div class="containerSis" style="width: 1200px">
+    
+                
+                <table align="center" width="90%" border="0" cellspacing="0" cellpadding="0">                       
+                      
+                <tr>
+                    <td colspan="4" align="left" valign="top" class="leftRight" bgcolor="#FFFFFF">
+
+                        
+                        <h1>
+                            Resultado da busca
+                        </h1>
+
+                        <div class="textoUmaColuna" >
+                            <div class="tabbar" align="left">
+  <a href="formEspelhoAcordao.do" class="tabact">Ac&oacute;rd&atilde;os</a>
+  <a href="decisao.do">Decis&otilde;es Monocr&aacute;ticas</a>
+  <a href="decisaoVice.do">Decis&otilde;es da 1&ordf; e 3&ordf; Vice-Presid&ecirc;ncia</a>   
+  <a href="sumulas.do">S&uacute;mulas</a>
+  <a href="decisaoTurmaRecursal.do">Decis&otilde;es de Turma Recursal</a>
+    <a href="decisaoTurmaRecursalPJe.do">Decis&otilde;es de Turma Recursal - PJe</a>
+  <a href="sentenca.do">Senten&ccedil;as</a>
+  <a href="ajuda.do">Ajuda</a>
+</div>
+
+<div class="tabbar" align="left">
+  <a href="" class="tabact">Lista de Resultados</a>
+</div>
+
+                        </div>
+                        <br />
+                        <div align="left"><div class="textoUmaColuna">
+
+
+
+
+
+
+
+
+  <p class="info">
+	
+		Foram encontrados 713 Espelhos de Acórdãos com os critérios utilizados
+		<br>
+	
+		Palavras: homicidio E qualificado E dolo E eventual
+		<br>
+	
+		Utiliza termos relacionados: NÃO
+		<br>
+	
+  </p>
+
+
+
+
+
+
+
+
+<!-- Mensagem de erro geral do Struts (Validate por Ex) -->
+
+
+<!-- Mensagem geral do Struts  -->
+
+
+</div></div>
+
+                        
+
+
+
+
+
+ 
+	
+
+
+
+
+
+
+
+
+
+
+<script type='text/javascript' src='dwr/engine.js'></script>
+<script type='text/javascript' src='dwr/util.js'></script>
+<script type='text/javascript' src='dwr/interface/ValidacaoCaptchaAction.js'></script>
+
+
+<table align="center">
+    <tr><td>
+            <div class="textoUmaColuna">
+
+                
+
+                
+
+                    <div align="center">
+                        <strong>Para acessar mais informa&ccedil;&otilde;es clique no n&uacute;mero do ac&oacute;rd&atilde;o.</strong>
+                    </div>
+
+                    
+
+                    <br>
+                    <div align="right"><input type="button" value="Nova pesquisa" name="novaPesquisa" onclick="document.location.href='formEspelhoAcordao.do'" class="botao_vinho"/></div>
+
+
+                    
+                        
+                            
+                        
+                        
+                    
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=1&totalLinhas=713&paginaNumero=1&linhasPorPagina=1&palavras=homicidio qualificado dolo eventual&pesquisarPor=ementa&orderByData=2&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                1 - Processo: Apelação Criminal <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.25.315138-5/001
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    0000309-41.2023.8.13.0175 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=25&procCodigo=1&procCodigoOrigem=0&procNumero=315138&procSequencial=1&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Agostinho Gomes de Azevedo</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            22/04/2026
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            23/04/2026
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA: APELAÇÃO CRIMINAL - <font color="#FF0000"><b>HOMICÍDIO</b></font> <font color="#FF0000"><b>QUALIFICADO</b></font> - LESÃO CORPORAL - PRELIMINAR MINISTERIAL - NÃO CONHECIMENTO PARCIAL DO RECURSO - PETIÇÃO DE INTERPOSIÇÃO DE RECURSO QUE CONSTA INCISO EQUIVOCADO DO ART. 593 DO CPP - MERA IRREGULARIDADE OU ERRO MATERIAL - RAZÕES RECURSAIS CORRETAMENTE FUNDAMENTADAS - RECURSO CONHECIDO - PRELIMINAR REJEITADA - MÉRITO - CRIME CONEXO AO DOLOSO CONTRA A VIDA - DECISÃO MANIFESTAMENTE CONTRÁRIA À PROVA DOS AUTOS - DESCLASSIFICAÇÃO PARA MODALIDADE CULPOSA - INOCORRÊNCIA - SOBERANIA DO CONSELHO DE SENTENÇA - AUSÊNCIA DE MANIFESTA IMPROCEDÊNCIA - PENA - VALORAÇÃO NEGATIVA DAS CIRCUNSTÂNCIAS E CONSEQUÊNCIAS DO CRIME - DELITO PRATICADO NA PRESENÇA DE CRIANÇA E REPERCUSSÃO FAMILIAR GRAVOSA - FUNDAMENTAÇÃO IDÔNEA - MANUTENÇÃO - SEMI-IMPUTABILIDADE - REDUÇÃO NO PATAMAR MÍNIMO (1/3) - LAUDO PERICIAL QUE ATESTA COMPROMETIMENTO PARCIAL DAS FACULDADES MENTAIS - ADEQUAÇÃO - <font color="#FF0000"><b>HOMICÍDIO</b></font> PRIVILEGIADO - FRAÇÃO MÍNIMA (1/6) - PROPORCIONALIDADE.  <br />- Impõe-se o conhecimento do recurso interposto contra decisão proferida pelo Tribunal do Júri, ainda que a petição de interposição contenha indicação equivocada do inciso do art. 593 do CPP, desde que as razões recursais revelem adequada fundamentação jurídica. Tal desacerto configura mera irregularidade formal ou erro material, incapaz de obstar o exercício do direito de recorrer, em prestígio aos princípios da instrumentalidade das formas e da ampla defesa.<br />- Se o Conselho de Sentença apenas optou por uma das versões apresentadas, com respaldo na prova produzida, é necessário que tal decisão seja respeitada, diante do princípio constitucional da soberania dos veredictos, previsto no art. 5º, inciso XXXVIII, da CF, não podendo a Corte Revisora negar sua vigência. (Súmula nº 28 do TJMG). <br />- Incabível a desclassificação de crime de <font color="#FF0000"><b>homicídio</b></font> para a modalidade culposa, se o agente desferiu golpe de faca de forma súbita contra vítima que portava criança no colo, assumindo o risco de atingir a menor, restando caracterizado o <font color="#FF0000"><b>dolo</b></font> <font color="#FF0000"><b>eventual</b></font>.<br />- A exasperação da pena-base mostra-se legítima quando fundada em elementos concretos, como a prática do delito na presença de descendente da vítima e as consequências extrapenais gravosas decorrentes da conduta.<br />- A redução da pena pela semi-imputabilidade deve observar o grau de comprometimento da capacidade de autodeterminação do agente, sendo adequada a fração mínima quando constatada limitação parcial.<br />- A minorante do <font color="#FF0000"><b>homicídio</b></font> privilegiado deve ser fixada conforme a intensidade da motivação, não sendo obrigatória a aplicação da fração máxima.
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=2&totalLinhas=713&paginaNumero=2&linhasPorPagina=1&palavras=homicidio qualificado dolo eventual&pesquisarPor=ementa&orderByData=2&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                2 - Processo: Rec em Sentido Estrito <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.25.199864-7/001
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    0008614-57.2024.8.13.0699 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=25&procCodigo=1&procCodigoOrigem=0&procNumero=199864&procSequencial=1&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Richardson Xavier Brant (JD 2G)</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            17/04/2026
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            22/04/2026
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA: DIREITO PENAL E PROCESSUAL PENAL. RECURSO EM SENTIDO ESTRITO. PRONÚNCIA. TENTATIVA DE FEMINICÍDIO <font color="#FF0000"><b>QUALIFICADO</b></font>. VIOLÊNCIA DOMÉSTICA. IRRETROATIVIDADE DA LEI PENAL MAIS GRAVOSA. INOCORRÊNCIA DE APLICAÇÃO DA LEI NOVA. PRESENÇA DE MATERIALIDADE E INDÍCIOS DE AUTORIA. INTENÇÃO DE MATAR. "IN DUBIO PRO SOCIETATE" (DÚVIDA EM FAVOR DA SOCIEDADE). MANUTENÇÃO DAS QUALIFICADORAS. RECURSO DESPROVIDO.<br />I. CASO EM EXAME<br />1. Recurso em sentido estrito interposto contra decisão de pronúncia que submeteu o acusado a julgamento pelo Tribunal do Júri pela suposta prática de tentativa de feminicídio <font color="#FF0000"><b>qualificado</b></font>, no contexto de violência doméstica, tendo a Defesa arguido a irretroatividade da Lei n. 14.994/2024 e, no mérito, sustentado a ausência de <font color="#FF0000"><b>dolo</b></font> de matar, com pedido de impronúncia ou desclassificação para lesão corporal, além do afastamento das qualificadoras de motivo fútil e feminicídio. <br />II. QUESTÃO EM DISCUSSÃO<br />2. Há três questões em discussão: (i) definir se houve aplicação retroativa da Lei n. 14.994/2024, mais gravosa; (ii) estabelecer se estão presentes os requisitos para a pronúncia, especialmente quanto ao animus necandi; (iii) determinar se devem ser afastadas as qualificadoras imputadas na denúncia. <br />III. RAZÕES DE DECIDIR<br />3. A Lei n. 14.994/2024, por ser mais gravosa, não retroage, mas não foi aplicada ao caso, pois a pronúncia se baseia na qualificadora do feminicídio prevista no artigo 121, § 2º, VI, do Código Penal, conforme regramento anterior. <br />4. A decisão de pronúncia constitui juízo de admissibilidade da acusação, exigindo apenas prova da materialidade e indícios suficientes de autoria, nos termos do artigo 413 do Código de Processo Penal. <br />5. A materialidade delitiva e os indícios de autoria encontram-se demonstrados por provas documentais e testemunhais, especialmente pelos relatos coerentes da vítima e de testemunha presencial. <br />6. Os elementos probatórios indicam que o acusado iniciou a execução do crime de <font color="#FF0000"><b>homicídio</b></font>, mediante uso de arma branca, não consumado por circunstâncias alheias à sua vontade, evidenciando, em tese, o animus necandi. <br />7. A desclassificação para lesão corporal exige prova inequívoca da ausência de <font color="#FF0000"><b>dolo</b></font> de matar, o que não se verifica, devendo <font color="#FF0000"><b>eventual</b></font> dúvida ser submetida ao Tribunal do Júri, em observância ao princípio do "in dubio pro societate", segundo o qual a dúvida deve prevalecer em favor da sociedade. <br />8. As qualificadoras do motivo fútil e do feminicídio encontram suporte nos elementos dos autos, não se revelando manifestamente improcedentes, razão pela qual devem ser submetidas à apreciação do Conselho de Sentença. <br />9. A exclusão de qualificadoras na fase de pronúncia somente é admitida quando manifestamente infundadas, o que não ocorre no caso concreto. <br />IV. DISPOSITIVO E TESE<br />5. Recurso desprovido. <br />Tese de julgamento: "1. A lei penal mais gravosa não retroage, mas sua não aplicação afasta alegação de nulidade por irretroatividade. 2. A pronúncia exige apenas prova da materialidade e indícios suficientes de autoria, cabendo ao Tribunal do Júri a análise aprofundada do <font color="#FF0000"><b>dolo</b></font> do agente. 3. A desclassificação do delito na fase de pronúncia somente é cabível quando inequívoca a ausência de 'animus necandi' (intenção de matar). 4. As qualificadoras devem ser mantidas na pronúncia quando não forem manifestamente improcedentes, submetendo-se sua análise ao Tribunal do Júri." <br />Dispositivos relevantes citados: CF/1988, art. 5º, XXXVIII, "d", e XL; CPP, artigos 413 e 589; CP,  artigos 121, § 2º, II e VI, § 2º-A, I, 121-A, e 14, II; Lei n. 11.340/06.<br />Jurisprudência relevante citada: STJ (precedentes sobre requisitos da pronúncia e prisão cautelar); TJMG, RSE 1.0271.13.003906-5/001, Rel. Des. Cássio Salomé, j. 30.06.2021; TJMG, RSE 1.0000.25.234573-1/001, Rel. Des. Marco Antônio de Melo, j. 25.11.2025; TJMG, RSE 1.0000.25.258706-8/001, Rel. Des. Wanderley Paiva, j. 11.11.2025; TJMG, RSE 1.0000.25.110782-7/001, Rel. Des.
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=3&totalLinhas=713&paginaNumero=3&linhasPorPagina=1&palavras=homicidio qualificado dolo eventual&pesquisarPor=ementa&orderByData=2&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                3 - Processo: Apelação Criminal <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.26.064345-7/001
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    0008612-05.2024.8.13.0209 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=26&procCodigo=1&procCodigoOrigem=0&procNumero=64345&procSequencial=1&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Élito Batista de Almeida</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            15/04/2026
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            15/04/2026
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA: APELAÇÃO CRIMINAL. TRIBUNAL DO JÚRI. TENTATIVA DE <font color="#FF0000"><b>HOMICÍDIO</b></font> <font color="#FF0000"><b>QUALIFICADO</b></font> (ART.121,§2º, I,III e IV C/C 14,II, CPB) E LESÃO CORPORAL GRAVE (129,§1º, I, CPB) EM CONCURSO MATERIAL. DOSIMETRIA DA PENA. REVISÃO. FRAÇÃO MÍNIMA APLICADA A ATENUANTE DA TENTIVA. MANUTENÇÃO. LESÃO CORPORAL. <font color="#FF0000"><b>DOLO</b></font> <font color="#FF0000"><b>EVENTUAL</b></font>. DEMONSTRADO. DESCLASSIFICAÇÃO. IMPOSSIBILIDADE. JUSTIÇA GRATUITA. COMPETÊNCIA DO JUÍZO DA EXECUÇÃO ANALISAR. RECURSO DESPROVIDO.<br />1. A fração de redução da pena pela tentativa, prevista no artigo 14, inciso II, do Código Penal, deve ser fixada de maneira inversamente proporcional à proximidade da consumação do delito. Tendo a vítima sido efetivamente atingida por disparos de arma de fogo em região sensível, o percurso criminoso se aproximou consideravelmente do resultado fatal, justificando a aplicação da fração mínima de 1/3 (um terço).<br />2. A conduta de efetuar disparos de arma de fogo em via pública, na direção de um grupo de pessoas, mesmo que visando a um alvo específico, configura <font color="#FF0000"><b>dolo</b></font> <font color="#FF0000"><b>eventual</b></font> em relação à outra vítima atingida. Ao prever o resultado como possível e prosseguir com a ação, os agentes assumiram o risco de produzi-lo, o que afasta a tese de crime meramente culposo e impede a desclassificação do delito de lesão corporal.<br />3. A fixação da pena-base acima do mínimo legal encontra-se devidamente fundamentada quando as circunstâncias do crime extrapolam a normalidade do tipo penal. A realização de disparos de arma de fogo em via pública, local de trânsito de pessoas, demonstra acentuado desprezo pela segurança coletiva e justifica a valoração negativa dessa circunstância judicial, nos termos do artigo 59 do Código Penal.<br />4. A existência de desígnios autônomos, caracterizada pela vontade de atingir uma vítima e pela aceitação do risco de atingir outra, configura o concurso material de crimes, nos termos do artigo 69 do Código Penal. A aplicação da regra do concurso formal seria inadequada, pois não se tratou de uma única ação que, por si só, produziu resultados múltiplos de forma acidental, mas de uma conduta que abarcou <font color="#FF0000"><b>dolos</b></font> distintos, ainda que um deles na modalidade <font color="#FF0000"><b>eventual</b></font>.<br />5. O pedido de concessão dos benefícios da justiça gratuita, em sede de processo penal, deve ser analisado pelo juízo da execução, que é o competente para aferir a real condição de hipossuficiência do condenado no momento da cobrança das custas processuais.<br />6. Recurso conhecido e desprovido.
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=4&totalLinhas=713&paginaNumero=4&linhasPorPagina=1&palavras=homicidio qualificado dolo eventual&pesquisarPor=ementa&orderByData=2&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                4 - Processo: Revisão Criminal <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.26.006633-7/000
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    0066337-26.2026.8.13.0000 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=26&procCodigo=1&procCodigoOrigem=0&procNumero=6633&procSequencial=0&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Élito Batista de Almeida</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            13/04/2026
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            15/04/2026
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA:  REVISÃO CRIMINAL. <font color="#FF0000"><b>HOMICÍDIO</b></font> DUPLAMENTE <font color="#FF0000"><b>QUALIFICADO</b></font>, OCULTAÇÃO DE CADÁVER E DANO <font color="#FF0000"><b>QUALIFICADO</b></font>. TRIBUNAL DO JÚRI. PRELIMINAR DE NULIDADE NA QUESITAÇÃO. AUSÊNCIA DE QUESITO SOBRE <font color="#FF0000"><b>DOLO</b></font> <font color="#FF0000"><b>EVENTUAL</b></font>. TESE NÃO ARGUIDA EM PLENÁRIO. PRECLUSÃO CONFIGURADA. MÉRITO. DECISÃO MANIFESTAMENTE CONTRÁRIA À PROVA DOS AUTOS. INOCORRÊNCIA. VEREDICTO QUE OPTA POR UMA DAS VERSÕES RESPALDADAS NO ACERVO PROBATÓRIO. CONFISSÃO DO AGENTE CORROBORADA POR PROVA TESTEMUNHAL E PERICIAL. SOBERANIA DOS VEREDICTOS. MANUTENÇÃO DAS QUALIFICADORAS E DOS CRIMES CONEXOS. DOSIMETRIA DA PENA. MAUS ANTECEDENTES E CULPABILIDADE EXACERBADA. FUNDAMENTAÇÃO CONCRETA. UTILIZAÇÃO DE UMA QUALIFICADORA PARA TIPIFICAR E OUTRA PARA AGRAVAR A REPRIMENDA. POSSIBILIDADE. AUSÊNCIA DE BIS IN IDEM. ERRO TÉCNICO OU INJUSTIÇA NÃO DEMONSTRADOS. PEDIDO JULGADO IMPROCEDENTE.<br />1.Nos termos do art. 571, VIII, do CPP, <font color="#FF0000"><b>eventuais</b></font> nulidades ocorridas no julgamento em plenário devem ser arguidas logo após sua ocorrência, sob pena de preclusão. A ausência de quesito específico sobre o <font color="#FF0000"><b>dolo</b></font> <font color="#FF0000"><b>eventual</b></font> não gera nulidade se a tese não foi articulada pela defesa em plenário e se a quesitação geral permitiu a livre apreciação do elemento subjetivo pelos jurados.<br />2.A rescisão do julgado por manifesta contrariedade à prova dos autos (art. 621, I, CPP) exige que a decisão seja arbitrária e totalmente dissociada do contexto probatório. Havendo suporte em provas lícitas e suficientes, tais como a confissão do réu, depoimentos de policiais e laudos periciais de local e necropsia, deve prevalecer a soberania do veredicto popular.<br />3.As qualificadoras do motivo fútil e do recurso que dificultou a defesa da vítima, bem como os crimes conexos de ocultação de cadáver e dano <font color="#FF0000"><b>qualificado</b></font>, quando amparados em elementos de convicção constantes dos autos, não autorizam o decote ou a absolvição em sede revisional.<br />4.A dosimetria da pena só comporta revisão em caso de erro técnico crasso ou evidente injustiça. A utilização de uma qualificadora para o tipo penal e de outra como circunstância agravante na segunda fase é procedimento legítimo e consolidado na jurisprudência, não configurando bis in idem.<br />5.Revisão criminal julgada improcedente.
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=5&totalLinhas=713&paginaNumero=5&linhasPorPagina=1&palavras=homicidio qualificado dolo eventual&pesquisarPor=ementa&orderByData=2&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                5 - Processo: Rec em Sentido Estrito <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.26.013024-0/001
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    0009798-08.2021.8.13.0520 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=26&procCodigo=1&procCodigoOrigem=0&procNumero=13024&procSequencial=1&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Alexandre Magno Mendes do Valle</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            31/03/2026
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            06/04/2026
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />Ementa: DIREITO PENAL E PROCESSUAL PENAL. RECURSO EM SENTIDO ESTRITO. TENTATIVA DE <font color="#FF0000"><b>HOMICÍDIO</b></font> <font color="#FF0000"><b>QUALIFICADO</b></font>. MOTIVO FÚTIL. FEMINICÍDIO. PRELIMINARES DE INÉPCIA DA DENÚNCIA E DE QUEBRA DA CADEIA DE CUSTÓDIA. REJEIÇÃO. IMPRONÚNCIA OU DESCLASSIFICAÇÃO. EXISTÊNCIA DE MATERIALIDADE E INDÍCIOS DE AUTORIA. ANIMUS NECANDI EM JUÍZO DE ADMISSIBILIDADE. MANUTENÇÃO DA PRONÚNCIA. PRELIMINARES REJEITADAS E, NO MÉRITO, RECURSO DESPROVIDO.<br /><br />I. CASO EM EXAME<br /><br />1. Recurso em sentido estrito interposto contra sentença que o pronunciou o acusado pela suposta prática de tentativa de <font color="#FF0000"><b>homicídio</b></font> <font color="#FF0000"><b>qualificado</b></font>. <br /><br />II. QUESTÃO EM DISCUSSÃO<br /><br />2. Há três questões em discussão: (i) definir se a denúncia é inepta por ausência de descrição adequada das qualificadoras; (ii) estabelecer se houve quebra da cadeia de custódia da arma de fogo apreendida apta a invalidar a prova; e (iii) determinar se estão presentes a materialidade delitiva e os indícios suficientes de autoria e de animus necandi capazes de justificar a manutenção da pronúncia, ou se cabível a impronúncia ou a desclassificação da conduta.<br /><br />III. RAZÕES DE DECIDIR<br /><br />3. A denúncia atende aos requisitos do art. 41 do CPP, pois descreve de forma suficiente os fatos imputados ao acusado, permitindo o exercício do contraditório e da ampla defesa.<br /><br />4. <font color="#FF0000"><b>Eventual</b></font> irregularidade formal relativa à individualização das qualificadoras foi sanada mediante aditamento verbal do Ministério Público em audiência, com registro em ata, sem prejuízo à defesa.<br /><br />5. A superveniência da sentença de pronúncia torna prejudicada a discussão acerca de <font color="#FF0000"><b>eventual</b></font> inépcia da denúncia, conforme entendimento do Superior Tribunal de Justiça.<br /><br />6. A alegação de quebra da cadeia de custódia não se sustenta, pois não há indícios concretos de adulteração ou comprometimento da prova pericial, nem demonstração de prejuízo efetivo à defesa.<br /><br />7. <font color="#FF0000"><b>Eventuais</b></font> falhas formais no procedimento de custódia de vestígios não implicamnulidade automática da prova, quando preservada sua autenticidade e inexistente prejuízo às partes.<br /><br />8. A materialidade delitiva encontra-se comprovada por boletim de ocorrência, auto de prisão em flagrante, auto de apreensão, laudo de eficiência da arma de fogo e demais elementos constantes dos autos.<br /><br />9. Os depoimentos das vítimas, das testemunhas presenciais e dos policiais militares indicam, em juízo de cognição sumária, que o acusado apontou arma de fogo em direção às vítimas e acionou o gatilho, circunstância apta a evidenciar indícios de animus necandi.<br /><br />10. A retratação parcial da vítima em juízo, em contexto de relação afetiva retomada, não afasta os indícios de autoria quando analisada em conjunto com os demais elementos probatórios.<br /><br />11. A decisão de pronúncia constitui mero juízo de admissibilidade da acusação, exigindo apenas prova da materialidade e indícios suficientes de autoria, sendo vedada análise aprofundada do mérito nesta fase processual.<br /><br />12. Havendo dúvida razoável acerca da dinâmica dos fatos ou da presença do <font color="#FF0000"><b>dolo</b></font> de matar, a controvérsia deve ser submetida ao Tribunal do Júri, em observância ao princípio do in dubio pro societate.<br /><br />IV. DISPOSITIVO E TESE<br /><br />13. Preliminares rejeitadas, e no mérito, recurso desprovido.<br /><br />Tese de julgamento:<br /><br />1. A denúncia que descreve de forma suficiente os fatos imputados e permite o exercício da ampla defesa atende ao art. 41 do CPP, sendo <font color="#FF0000"><b>eventual</b></font> irregularidade formal sanável por aditamento, sem prejuízo às partes.<br /><br />2. A ausência de demonstração concreta de adulteração da prova ou de prejuízo à defesa, impede o reconhecimento de nulidade por suposta quebra da cadeia de custódia.<br /><br />3. Na fase de pronúncia, a existência de prova da materialidade e indícios suficientes de autoria, inclusive quanto ao possível animus necandi, impõe a submissão do caso ao Tribunal do Júri.<br /><br />Dispositivos relevantes citados: CP, art. 121, §2º, II e VI, §2º-A, I, e art. 14, II; CPP, arts. 41 e 413, §1º; CF/
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=6&totalLinhas=713&paginaNumero=6&linhasPorPagina=1&palavras=homicidio qualificado dolo eventual&pesquisarPor=ementa&orderByData=2&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                6 - Processo: Apelação Criminal <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.24.533658-1/002
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    0214352-64.2014.8.13.0223 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=24&procCodigo=1&procCodigoOrigem=0&procNumero=533658&procSequencial=2&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Paula Cunha e Silva</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            31/03/2026
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            06/04/2026
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA: DIREITO PENAL E PROCESSUAL PENAL. APELAÇÃO CRIMINAL. TRIBUNAL DO JÚRI. <font color="#FF0000"><b>HOMICÍDIO</b></font> <font color="#FF0000"><b>QUALIFICADO</b></font> NA DIREÇÃO DE VEÍCULO AUTOMOTOR. PRELIMINARES DE NULIDADE. ERRO MATERIAL EM QUESITAÇÃO. CERCEAMENTO DE DEFESA. DEFICIÊNCIA DE QUESITOS. REJEIÇÃO. MÉRITO. <font color="#FF0000"><b>DOLO</b></font> <font color="#FF0000"><b>EVENTUAL</b></font>. DECISÃO DOS JURADOS NÃO MANIFESTAMENTE CONTRÁRIA À PROVA DOS AUTOS. QUALIFICADORA DO RECURSO QUE DIFICULTOU A DEFESA DA VÍTIMA. DOSIMETRIA. ATENUANTE DA CONFISSÃO ESPONTÂNEA. RECONHECIMENTO. PARCIAL PROVIMENTO.<br />I. CASO EM EXAME<br />1. Apelação criminal interposta contra sentença que acolheu o veredicto do Tribunal do Júri e condenou o réu pela prática de <font color="#FF0000"><b>homicídio</b></font> <font color="#FF0000"><b>qualificado</b></font>, reconhecido o <font color="#FF0000"><b>dolo</b></font> <font color="#FF0000"><b>eventual</b></font> na condução de veículo automotor sob influência de álcool e em alta velocidade, com incidência da qualificadora do recurso que dificultou a defesa da vítima, declarando-se extinta a punibilidade quanto ao crime de omissão de socorro em razão da prescrição.<br />II. QUESTÃO EM DISCUSSÃO<br />2. Há cinco questões em discussão: (i) definir se houve cerceamento do direito de defesa em razão do deferimento de prova após a instrução sem reabertura de prazo; (ii) estabelecer se a divergência no termo de votação dos quesitos gera nulidade do julgamento; (iii) determinar se houve deficiência de quesitação quanto à qualificadora do recurso que dificultou a defesa da vítima; (iv) verificar se a decisão do Conselho de Sentença é manifestamente contrária à prova dos autos quanto ao reconhecimento do <font color="#FF0000"><b>dolo</b></font> <font color="#FF0000"><b>eventual</b></font> e da qualificadora; e (v) definir se é cabível o reconhecimento da atenuante da confissão espontânea na dosimetria da pena.<br />III. RAZÕES DE DECIDIR<br />3. O indeferimento de diligências defensivas após a instrução encontra fundamento na preclusão e na condução regular do processo pelo juízo, inexistindo demonstração de prejuízo concreto à defesa, nos termos do art. 563 do Código de Processo Penal.<br />4. A divergência registrada no termo de votação dos quesitos caracterizaerro material prontamente corrigido pela Juíza Presidente, sem qualquer influência na manifestação soberana dos jurados, além de não ter sido arguida oportunamente em Plenário, operando-se a preclusão.<br />5. A quesitação observou os requisitos do art. 482 do Código de Processo Penal, apresentando proposições claras, objetivas e compatíveis com a pronúncia, inexistindo nulidade.<br />6. O conjunto probatório produzido nos autos fornece suporte suficiente para o reconhecimento do <font color="#FF0000"><b>dolo</b></font> <font color="#FF0000"><b>eventual</b></font>, evidenciando que o agente assumiu, conscientemente, o risco do resultado morte, não se configurando decisão manifestamente contrária à prova dos autos.<br />7. A qualificadora do recurso que dificultou a defesa da vítima resta caracterizada quando o atropelamento ocorre de forma repentina, sem possibilidade de reação ou esquiva, sendo compatível com o <font color="#FF0000"><b>dolo</b></font> <font color="#FF0000"><b>eventual</b></font> no caso concreto.<br />8. A confissão do acusado, ainda que parcial, qualificada ou prestada em momento diverso, deve ser valorada como circunstância atenuante, independentemente se utilizada para a formação do convencimento do julgador, nos termos da orientação firmada pelo Superior Tribunal de Justiça no Tema 1.194.<br />IV. DISPOSITIVO E TESE<br />5. Recurso parcialmente provido.<br />Teses de julgamento:<br />1. A correção de erro material no termo de votação dos quesitos do Tribunal do Júri, sem prejuízo à manifestação soberana dos jurados e não arguida oportunamente, não enseja nulidade do julgamento.<br />2. Não há cerceamento de defesa quando o indeferimento de diligências ocorre por preclusão e ausência de demonstração de prejuízo concreto.<br />3. A decisão do Conselho de Sentença que reconhece o <font color="#FF0000"><b>dolo</b></font> <font color="#FF0000"><b>eventual</b></font> em <font color="#FF0000"><b>homicídio</b></font> praticado na direção de veículo automotor deve ser mantida quando amparada por conjunto probatório idôneo.<br />4. A qualificadora do recurso que dificultou a defesa da vítima é compatível com o <font color="#FF0000"><b>dolo</b></font> <font color="#FF0000"><b>eventual</b></font> quando demonstrada a impossibilidade de reação da vítima.<br />5. A confissão espontânea, ainda que parcial ou qualificada, d
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=7&totalLinhas=713&paginaNumero=7&linhasPorPagina=1&palavras=homicidio qualificado dolo eventual&pesquisarPor=ementa&orderByData=2&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                7 - Processo: Rec em Sentido Estrito <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.24.258273-2/001
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    5196638-40.2022.8.13.0024 (2)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=24&procCodigo=1&procCodigoOrigem=0&procNumero=258273&procSequencial=1&procSeqAcordao=1', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Glauco Fernandes</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            26/03/2026
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            27/03/2026
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA: RECURSO EM SENTIDO ESTRITO - TRIBUNAL DO JÚRI - TENTATIVA DE <font color="#FF0000"><b>HOMICÍDIO</b></font> <font color="#FF0000"><b>QUALIFICADO</b></font>, INJÚRIA QUALIFICADA, AMEAÇA, DESOBEDIÊNCIA, DESACATO E EMBRIAGUEZ AO VOLANTE - ABSOLVIÇÃO SUMÁRIA EM RELAÇÃO A UM DOS CRIMES DOLOSOS CONTRA A VIDA - NECESSIDADE - AUSÊNCIA DE ELEMENTOS MÍNIMOS DA OCORRÊNCIA DA INFRAÇÃO PENAL - IMPRONÚNCIA - IMPOSSIBILIDADE - COMPROVAÇÃO DA MATERIALIDADE - INDÍCIOS SUFICIENTES DE AUTORIA - DESCLASSIFICAÇÃO - NÃO RECONHECIMENTO - <font color="#FF0000"><b>EVENTUAL</b></font> PRESENÇA DO <font color="#FF0000"><b>DOLO</b></font> DEVE SER ANALISADA PELO CORPO DE JURADOS - TESES DE CRIME IMPOSSÍVEL, DESISTÊNCIA VOLUNTÁRIA E AUSÊNCIA DE LESIVIDADE - INVIABILIDADE DE ACOLHIMENTO - TESES DEFENSIVAS QUE NÃO SE MOSTRAM POSSÍVEIS DE ACOLHIMENTO NESTE MOMENTO PROCESSUAL - DECOTE DAS QUALIFICADORAS DO MOTIVO FÚTIL E DO PERIGO COMUM - IMPOSSIBILIDADE - MANIFESTA IMPROCEDÊNCIA NÃO VERIFICADA - SÚMULA 64 DESTE TRIBUNAL DE JUSTIÇA - CRIMES CONEXOS - NECESSIDADE DE SUBMISSÃO AO TRIBUNAL DO JÚRI - PRELIMINARES REJEITADAS, RECURSO DEFENSIVO IMPROVIDO E ABSOLVIÇÃO SUMÁRIA DECRETADA DE OFÍCIO. - Inexiste violação aos princípios do contraditório, da ampla defesa e do devido processo legal, em razão da virtualização do processo ou da dificuldade de acesso às mídias constantes nos autos, pois as partes tiveram ciência do conteúdo de todos os documentos juntados, sendo saneadas as irregularidades anteriormente ocorridas, além de não haver comprovação por parte da Defesa de qualquer prejuízo ou cerceamento de defesa, nos termos do artigo 563 do Código de Processo Penal. - Necessária a absolvição sumária em relação a um dos crimes dolosos contra a vida imputados ao recorrente, diante da ausência de elementos mínimos a corroborarem a sua existência. - A decisão de pronúncia não padece de generalidade na fundamentação, quando se constata a utilização de indicadores objetivos para refutar as teses defensivas, em atenção aos limites inerentes ao momento processual, ou seja, prolação da decisão queencerra a primeira fase do procedimento bifásico do Tribunal do Júri e submete o réu a julgamento popular. - Nos termos do artigo 413 do Código de Processo Penal, para o decreto de pronúncia basta que o juiz se convença da existência do crime e dos indícios de autoria, ou seja, havendo dúvida, ainda que mínima, a questão deve ser remetida ao Tribunal do Júri, constitucionalmente competente para a decisão final. - Na ausência de prova estreme de dúvida quanto à intenção do agente, não há que se falar nesta fase em reconhecimento da inexistência de <font color="#FF0000"><b>dolo</b></font> na conduta, devendo tal questão ser dirimida pelo Conselho de Sentença. - Não se mostrando manifestamente improcedentes, as qualificadoras devem ser mantidas para a apreciação do Conselho de Sentença (Inteligência da Súmula nº 64 do TJMG). - Os crimes conexos, cuja materialidade e indícios de autoria se mostram presentes, devem ser submetidos à apreciação pelos Jurados, em atenção à competência constitucionalmente estabelecida ao Tribunal do Júri. V.v. - Se os elementos indiciários produzidos nos autos não sustentam, minimamente, que com a ação perpetrada o denunciado assumiu o risco de produzir o resultado morte das vítimas e, assim, agira com <font color="#FF0000"><b>dolo</b></font> <font color="#FF0000"><b>eventual</b></font>, impõe-se a desclassificação do delito para a forma prevista no art. 15 da Lei nº 10.826/03 e consequente remessa dos autos ao juízo singular.
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=8&totalLinhas=713&paginaNumero=8&linhasPorPagina=1&palavras=homicidio qualificado dolo eventual&pesquisarPor=ementa&orderByData=2&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                8 - Processo: Rec em Sentido Estrito <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.25.418767-7/001
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    1138785-83.2018.8.13.0024 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=25&procCodigo=1&procCodigoOrigem=0&procNumero=418767&procSequencial=1&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Maria Isabel Fleck (JD Convocada)</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            25/03/2026
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            27/03/2026
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA: EMENTA: RECURSO EM SENTIDO ESTRITO - PRONÚNCIA - TENTATIVA DE <font color="#FF0000"><b>HOMICÍDIO</b></font> <font color="#FF0000"><b>QUALIFICADO</b></font> E ABORTO - MATERIALIDADE E INDÍCIOS DE AUTORIA PRESENTES - DESCLASSIFICAÇÃO - INVIABILIDADE - NECESSIDADE DE SUBMISSÃO DA INTEIREZA DA ACUSAÇÃO AO CONSELHO DE SENTENÇA - DECISÃO MANTIDA - RECURSO DESPROVIDO. 1. A pronúncia é mero juízo de admissibilidade da acusação, vigorando nesta etapa o princípio in dubio pro societate, em detrimento do in dubio pro reo. 2. Pela existência de provas da materialidade e de indícios suficientes da autoria, e pela demonstração do animus necandi, em princípio, de maneira suficiente, o réu deve ser submetido à decisão do Tribunal do Júri. 3. <font color="#FF0000"><b>Eventuais</b></font> dúvidas sobre a dinâmica dos fatos, as qualificadoras e a suposta ausência de <font color="#FF0000"><b>dolo</b></font>, que não se mostraram inconteste, também são questões que devem ser resolvidas pelo Conselho de Sentença. 4. Recurso desprovido.
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=9&totalLinhas=713&paginaNumero=9&linhasPorPagina=1&palavras=homicidio qualificado dolo eventual&pesquisarPor=ementa&orderByData=2&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                9 - Processo: Rec em Sentido Estrito <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.26.015882-9/001
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    5015876-17.2022.8.13.0707 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=26&procCodigo=1&procCodigoOrigem=0&procNumero=15882&procSequencial=1&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Jaubert Carneiro Jaques</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            24/03/2026
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            25/03/2026
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA: RECURSO EM SENTIDO ESTRITO - DECISÃO DE PRONÚNCIA - TENTATIVA DE <font color="#FF0000"><b>HOMICÍDIO</b></font> <font color="#FF0000"><b>QUALIFICADO</b></font> - IMPRONÚNCIA - IMPOSSIBILIDADE - PRESENÇA DE INDÍCIOS SUFICIENTES DE AUTORIA E PROVA DA MATERIALIDADE DELITIVA - DESCLASSIFICAÇÃO PARA INDUZIMENTO AO SUICÍDIO - INCABÍVEL - INDÍCIOS DA EXISTÊNCIA DE AMEAÇAS - AVALIAÇÃO DO <font color="#FF0000"><b>DOLO</b></font> DO AGENTE - COMPETÊNCIA DO JUÍZO POPULAR - DECOTE DAS QUALIFICADORAS - INVIABILIDADE - APLICAÇÃO DA SÚMULA N. 64 DO TJMG - COMPETÊNCIA DO JUÍZO POPULAR - NECESSIDADE DE REMESSA AO TRIBUNAL DO JÚRI - MANUTENÇÃO DA DECISÃO DE PRONÚNCIA - CABIMENTO - RECURSO NÃO PROVIDO.<br />- A decisão de pronúncia é baseada apenas na prova da materialidade do fato e na existência de indícios suficientes de autoria ou de participação, em atenção ao disposto no art. 413 do Código de Processo Penal, cabendo ao Conselho de Sentença a análise aprofundada das teses defensivas.<br />- Se há real indício de autoria e prova da materialidade, outro não poderia ser o caminho senão a admissibilidade do julgamento pelo Tribunal do Júri, pois, ainda que existissem outros elementos nos autos a suscitar <font color="#FF0000"><b>eventual</b></font> dúvida, a pronúncia se imporia como medida jurídica salutar, em respeito à competência constitucionalmente firmada do Tribunal do Júri.<br />- Se há indícios mínimos de que o recorrente direcionou ameaças à vítima, com o intuito de fazer com que ela tirasse a própria vida, impossível se falar em desclassificação do delito para induzimento ao suicídio, pela ausência de voluntariedade do sujeito passivo, cabendo ao Conselho de Sentença deslindar a controvérsia, no pleno exercício de sua competência constitucional.<br />- Consoante entendimento doutrinário e jurisprudencial dominante, a exclusão de qualificadoras constantes em decisão de pronúncia apenas é viável quando forem manifestamente incoerentes ou injustificáveis, pois cabe ao Tribunal Popular a inteireza da acusação, em conformidade, inclusive, com a Súmula n. 64 do TJMG.
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=10&totalLinhas=713&paginaNumero=10&linhasPorPagina=1&palavras=homicidio qualificado dolo eventual&pesquisarPor=ementa&orderByData=2&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                10 - Processo: Apelação Criminal <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.24.134790-5/002
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    0004531-05.2023.8.13.0708 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=24&procCodigo=1&procCodigoOrigem=0&procNumero=134790&procSequencial=2&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Júlio César Lorens</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            24/03/2026
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            25/03/2026
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA: APELAÇÃO CRIMINAL - <font color="#FF0000"><b>HOMICÍDIO</b></font> <font color="#FF0000"><b>QUALIFICADO</b></font> EM SUA FORMA TENTADA E ROUBO MAJORADO CONSUMADO - TRIBUNAL DO JÚRI - USO DE ALGEMAS EM PLENÁRIO - MEDIDA EXCEPCIONAL DEVIDAMENTE FUNDAMENTADA. VIOLAÇÃO AO DIREITO AO SILÊNCIO - NÃO OCORRÊNCIA. ERRO MATERIAL EM PRONTUÁRIO MÉDICO - IRRELEVÂNCIA PARA A CONFIGURAÇÃO DO <font color="#FF0000"><b>DOLO</b></font>. CASSAÇÃO DO JULGAMENTO POR MANIFESTA CONTRARIEDADE EM RELAÇÃO À PROVA DOS AUTOS - IMPOSSIBILIDADE. DECOTE DAS QUALIFICADORAS ATINENTES AO <font color="#FF0000"><b>HOMICÍDIO</b></font> TENTADO E DA MAJORANTE RELATIVA AO ROUBO - NÃO CABIMENTO. FRAÇÃO DE REDUÇÃO DA PENA RELACIONADA À TENTATIVA - PATAMAR APLICADO EM CONSONÂNCIA COM O ITER CRIMINIS PERCORRIDO. REDUÇÃO DAS PENAS E ABRANDAMENTO DO REGIME PRISIONAL - INVIABILIDADE. RECURSOS NÃO PROVIDOS.<br />I - O uso de algemas durante a sessão plenária não configura nulidade quando devidamente fundamentado em elementos concretos que indiquem risco à segurança dos presentes.<br />II - Não há falar em violação ao direito ao silêncio quando não demonstrada utilização argumentativa ou prejudicial da opção do acusado por permanecer calado.<br />III - <font color="#FF0000"><b>Eventual</b></font> imprecisão documental quanto ao momento do óbito de corréu é irrelevante para a configuração do <font color="#FF0000"><b>dolo</b></font> <font color="#FF0000"><b>eventual</b></font>, quando o elemento subjetivo decorre da conduta voluntária dos acusados ao assumirem o risco de produzir resultado letal contra terceiro.<br />IV - A cassação da decisão dos jurados e consequente sujeição do réu a novo julgamento somente se justifica se a decisão do conselho de sentença destoa das provas de tal forma que sua manutenção seria inconcebível. <br />V- Se os jurados acolhem uma das teses possíveis ao caso, não há falar que a decisão é contrária a prova dos autos.<br />VI - A fuga em alta velocidade, em rodovia movimentada, com manobras arriscadas e colisão traseira contra motocicleta regularmente posicionada, autoriza o reconhecimento do <font color="#FF0000"><b>dolo</b></font> <font color="#FF0000"><b>eventual</b></font>.<br />VII - Inviável o decote das qualificadoras do perigo comum, do recurso que dificultou a defesada vítima e da finalidade de assegurar a impunidade de outro crime quando amparadas no conjunto probatório dos autos.<br />VIII - Comprovado o emprego de arma de fogo no crime de roubo, mediante apreensão e perícia de eficiência, impõe-se a incidência da majorante prevista no art. 157, §2º-A, inciso I, do Código Penal.<br />IX - Se a fração adotada em decorrência da causa de diminuição prevista no art. 14, inciso II, do Código Penal, estiver em conformidade com o iter criminis percorrido, inviável é a sua modificação nesta instância revisora.<br />X - Devidamente observados os critérios legais atinentes à dosimetria da pena, impõe-se a manutenção das reprimendas e do regime prisional fixados na sentença.
+                        </div>                        
+                                         
+
+                    
+
+                    
+                        
+                    
+
+                    <!-- PAGINADOR -->
+                    <br><br>
+                    
+                    <table width="98%" border="0" cellspacing="0" cellpadding="0">
+<tr align="right">
+<td>
+p?gina 1 de 72</td>
+</tr><tr align="right">
+<td>
+<table border="0" cellspacing="1" cellpadding="4">
+ <tr>
+<td width="35" align="center" bgcolor="#DEDEDE">&lt;&lt;</td>
+<td width="35" align="center" bgcolor="#DEDEDE">&lt;</td>
+<td width="35" align="center" class="tabact:active"><b>1</b></td>
+<td width="35" align="center" bgcolor="#DEDEDE"><a href="pesquisaPalavrasEspelhoAcordao.do?palavras=homicidio qualificado dolo eventual&pesquisarPor=ementa&orderByData=2&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=2" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">2</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE"><a href="pesquisaPalavrasEspelhoAcordao.do?palavras=homicidio qualificado dolo eventual&pesquisarPor=ementa&orderByData=2&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=3" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">3</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE"><a href="pesquisaPalavrasEspelhoAcordao.do?palavras=homicidio qualificado dolo eventual&pesquisarPor=ementa&orderByData=2&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=4" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">4</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE"><a href="pesquisaPalavrasEspelhoAcordao.do?palavras=homicidio qualificado dolo eventual&pesquisarPor=ementa&orderByData=2&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=5" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">5</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE"><a href="pesquisaPalavrasEspelhoAcordao.do?palavras=homicidio qualificado dolo eventual&pesquisarPor=ementa&orderByData=2&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=6" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">6</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE"><a href="pesquisaPalavrasEspelhoAcordao.do?palavras=homicidio qualificado dolo eventual&pesquisarPor=ementa&orderByData=2&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=7" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">7</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE"><a href="pesquisaPalavrasEspelhoAcordao.do?palavras=homicidio qualificado dolo eventual&pesquisarPor=ementa&orderByData=2&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=8" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">8</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE"><a href="pesquisaPalavrasEspelhoAcordao.do?palavras=homicidio qualificado dolo eventual&pesquisarPor=ementa&orderByData=2&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=9" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">9</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE" class="footerlink"><a class="logtext" href="pesquisaPalavrasEspelhoAcordao.do?palavras=homicidio qualificado dolo eventual&pesquisarPor=ementa&orderByData=2&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=2" alt="pr?xima" title="pr?xima p?gina" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">&gt;</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE" class="footerlink"><a class="logtext" href="pesquisaPalavrasEspelhoAcordao.do?palavras=homicidio qualificado dolo eventual&pesquisarPor=ementa&orderByData=2&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=72" alt="?ltima" title="?ltima p?gina" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">&gt;&gt;</a></td>
+</tr>
+</table>
+<script type="text/javascript" language="JavaScript">
+// Select the pageNumber field
+function select() {
+  var pager = document.forms['pager'];
+  pager.pageNumber.focus();
+  pager.pageNumber.select();
+}
+
+// Function to adjust the page number (starts with 0)
+// a fun??o recebe o par?metro verificaSubmit para, caso seja chamada do onSubmit do form
+// retornar false e n?o submeter a p?gina;
+// se for chamada do link do bot?o n?o retorna false e executa a fun??o;
+function adjustPage(total, verificaSubmit) {
+  var pager = document.forms['pager'];
+  var page = parseInt(pager.pageNumber.value);
+  if (!pager.pageNumber.value) {
+    alert ("? preciso informar o n?mero da p?gina");
+    select();
+    if (verificaSubmit == 'noLink') return false;
+  } else if (!page) {
+    alert ("O formato do n?mero da p?gina est? incorreto");
+    select();
+    if (verificaSubmit == 'noLink') return false;
+  } else if (page < 1 || page > total) {
+    alert ("O n?mero da p?gina est? fora dos limites");
+    select();
+    if (verificaSubmit == 'noLink') return false;
+  } else {
+    pager.paginaNumero.value = page;
+    if (typeof validaPesquisa == 'function')
+    {
+    		if (validaPesquisa())
+    		{
+    			pager.submit();
+    		}
+    }
+    else
+    {
+    		pager.submit();
+    }
+  }
+}
+</script>
+  <table border="0" cellspacing="0" cellpadding="3" width="100%" bgcolor="#e7e7e7" summary="">
+  <form name="pager" OnSubmit=" return adjustPage(72,'noLink'); " action="pesquisaPalavrasEspelhoAcordao.do" method="post" >
+    <tr align="right">
+       <td width="100%">ir para a p?gina:</td>
+       <td align="right"><input type="text" name="pageNumber" size="5"></td>
+       <td align="left"><a href="javascript: void(0);" onclick="adjustPage(72,'linkSubmit')">ir</a></td>
+    </tr>
+    <input type="hidden" name="paginaNumero">
+    <input type="hidden" name="palavras" value = "homicidio qualificado dolo eventual">
+    <input type="hidden" name="pesquisarPor" value = "ementa">
+    <input type="hidden" name="orderByData" value = "2">
+    <input type="hidden" name="referenciaLegislativa" value = "Clique na lupa para pesquisar as referÃªncias cadastradas...">
+    <input type="hidden" name="pesquisaPalavras" value = "Pesquisar">
+    <input type="hidden" name="">
+    <input type="hidden" name="linhasPorPagina" value = "10">
+  </form>
+  </table></td>
+</tr>
+</table>
+
+                    
+                    <!-- FIM  PAGINADOR -->
+
+                
+                <br><br>
+                <div align="right"><input type="button" value="Nova pesquisa" name="novaPesquisa" onclick="document.location.href='formEspelhoAcordao.do'" class="botao_vinho"/></div>
+            </div>
+        </td></tr>
+</table>
+
+
+
+                        
+
+                    </td>
+                </tr>
+
+            </table>
+            <br /><br />
+            </div>
+            </div>
+                        
+            
+
+             
+
+
+
+
+
+        
+        
+
+    </body>    
+        
+        
+</html>
+

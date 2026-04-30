@@ -1,0 +1,919 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+ 
+ 
+ 
+ 
+ 
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7; IE=9" >
+        <meta http-equiv="Pragma" content="no-cache"/>
+        <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+        <meta http-equiv="Expires" content="0" />    
+        <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+        <link href="css/sistema_antigo.css" rel="stylesheet" type="text/css" />
+        <title>TJMG - Pesquisa por Jurisprud&ecirc;ncia</title>
+        <script language="JavaScript" src="/js/tjmg_ui.js"></script>
+        <script language="JavaScript" src="/js/tjmg.js"></script>
+        <script language="JavaScript" src="js/valida_dv_nu.js"></script>
+        <script type='text/javascript' src='/jurisprudencia/js/ea_util.js'></script>
+                
+        <link title="geral" rel="stylesheet" type="text/css" href="/portaltjmg/css/screen.css" media="screen" />        
+        <link title="alternativo" rel="stylesheet" type="text/css" href="/portaltjmg/css/alternativo.css" media="screen" />   
+        
+    </head>
+    
+        <style type="text/css" media="screen">
+            a:link.linkListaEspelhoAcordaos {color: #990000;}
+            a:visited.linkListaEspelhoAcordaos {color: #2F2F0F;}
+
+            .cabecalho
+            {
+                width: 99%;                   
+                border: solid #CCCCCC 1px;
+                background-color:#DFDFDF;                
+                color: #880000;
+                height: 18px;                    
+                font-family: Verdana, Arial, Helvetica, sans-serif;
+                font-size: 9pt;
+                font-weight: bold;
+                font-style: normal;                
+            }
+
+            .caixa_processo
+            {
+                    width: 99%;                   
+                    margin-top: 20px;
+                    -webkit-border-radius: 5px;
+                    -moz-border-radius: 5px;
+                    border-radius: 5px;
+                    border: solid #CCCCCC 1px;
+                    background-color:#DFDFDF;
+                    text-indent: 5px;
+                    padding: 5px;
+            }
+
+            .corpo 
+            {
+                color: #333333;
+            }           
+            
+        </style>        
+    
+    <style type="text/css" media="print">        
+        td.leftRight
+        {
+            margin: 0;                
+        }
+
+        span#tabelaEspelho
+        {
+            width: 100%;    
+            margin-right: 0;
+        }
+
+        body
+        {
+            margin: 0;
+        }
+
+        img#logoTJ
+        {
+            visibility: visible;
+        }
+
+        img#imgBotao1
+        {
+            visibility: visible;
+        }
+
+        table#tabelaInformacoesAcordaos
+        {
+            margin-left: 0;
+        }
+
+        td.rightTop
+        {
+            visibility: hidden;
+        }
+
+        img#AWMEL3_4
+        {
+            visibility: hidden;
+        }
+
+        div#menutop
+        {
+            visibility: hidden;
+        }
+
+        img
+        {
+            visibility: hidden;
+        }
+
+        div.tabbar
+        {
+            visibility: hidden;
+        }
+
+        div#caminho
+        {
+            visibility: hidden;
+        }            
+
+        div#botaoImprimirInteiroTeor
+        {
+            visibility: hidden;
+        } 
+
+        div#panel2
+        {
+            visibility: hidden;
+        }   
+
+        div#botoesEspelho
+        {
+            visibility: hidden;
+        }        
+
+        div#cabecalhoMenu
+        {
+            visibility: hidden;
+            display: none;
+        }
+
+        td#curvaBotton
+        {
+            visibility: hidden;
+        }
+
+        div.menuPortal
+        {
+            visibility: hidden;                    
+        }        
+    </style>
+        
+    <script>
+    if (navigator.userAgent.toLowerCase().indexOf("msie 7") != -1)
+    {
+        //Comentado, pois alguns navegadores IE 8 estão emulando o IE 7
+        //alert("ATENÇÃO: A versão do seu navegador é Internet Explorer 7.\nA Consulta à Jurisprudência está homologada para Internet Explorer 8 ou versão superior. Favor atualizar a versão do seu navegador.");
+    }
+    </script>
+        
+        <body onload="if (document.getElementById('panel2').style.display == 'none' && (document.getElementById('siglaLegislativa').value != '' || document.getElementById('observacoes').value != '')) mostrarOcultarPanel(2);" onkeydown="if (capturaCtrlP(event)) { return false;}" onkeyup="if (capturaCtrlP(event)) {imprimirEspelho(); return false;}">        
+        	
+            <div id="cabecalhoMenu"><style type="text/css">
+    header .wrapper-header
+    {
+        background: #7e1819;
+        color: white;
+        padding: 0px 0 0px 0;
+    }
+</style>
+
+<header role="banner">             
+    <div class="wrapper-header">
+        <a target="_blank" title="Link para Portal TJMG" 
+        aria-label="Logo do Tribunal de Justiça do Estado de Minas Gerais" class="brand-logo logo-tjmg" 
+        href="http://www.tjmg.jus.br">
+        <img src="imagens/logo_tjmg.png"/>
+        </a>
+    </div>
+</header>  </div>
+            
+            <br />
+            
+            <div id="sistema">
+                <div class="containerSis" style="width: 1200px">
+    
+                
+                <table align="center" width="90%" border="0" cellspacing="0" cellpadding="0">                       
+                      
+                <tr>
+                    <td colspan="4" align="left" valign="top" class="leftRight" bgcolor="#FFFFFF">
+
+                        
+                        <h1>
+                            Resultado da busca
+                        </h1>
+
+                        <div class="textoUmaColuna" >
+                            <div class="tabbar" align="left">
+  <a href="formEspelhoAcordao.do" class="tabact">Ac&oacute;rd&atilde;os</a>
+  <a href="decisao.do">Decis&otilde;es Monocr&aacute;ticas</a>
+  <a href="decisaoVice.do">Decis&otilde;es da 1&ordf; e 3&ordf; Vice-Presid&ecirc;ncia</a>   
+  <a href="sumulas.do">S&uacute;mulas</a>
+  <a href="decisaoTurmaRecursal.do">Decis&otilde;es de Turma Recursal</a>
+    <a href="decisaoTurmaRecursalPJe.do">Decis&otilde;es de Turma Recursal - PJe</a>
+  <a href="sentenca.do">Senten&ccedil;as</a>
+  <a href="ajuda.do">Ajuda</a>
+</div>
+
+<div class="tabbar" align="left">
+  <a href="" class="tabact">Lista de Resultados</a>
+</div>
+
+                        </div>
+                        <br />
+                        <div align="left"><div class="textoUmaColuna">
+
+
+
+
+
+
+
+
+  <p class="info">
+	
+		Foram encontrados 1.905 Espelhos de Acórdãos com os critérios utilizados
+		<br>
+	
+		Palavras: dano E moral
+		<br>
+	
+		Utiliza termos relacionados: NÃO
+		<br>
+	
+		Data de julgamento inicial: 01/01/2025
+		<br>
+	
+		Data de julgamento final: 31/01/2025
+		<br>
+	
+  </p>
+
+
+
+
+
+
+
+
+<!-- Mensagem de erro geral do Struts (Validate por Ex) -->
+
+
+<!-- Mensagem geral do Struts  -->
+
+
+</div></div>
+
+                        
+
+
+
+
+
+ 
+	
+
+
+
+
+
+
+
+
+
+
+<script type='text/javascript' src='dwr/engine.js'></script>
+<script type='text/javascript' src='dwr/util.js'></script>
+<script type='text/javascript' src='dwr/interface/ValidacaoCaptchaAction.js'></script>
+
+
+<table align="center">
+    <tr><td>
+            <div class="textoUmaColuna">
+
+                
+
+                
+
+                    <div align="center">
+                        <strong>Para acessar mais informa&ccedil;&otilde;es clique no n&uacute;mero do ac&oacute;rd&atilde;o.</strong>
+                    </div>
+
+                    
+
+                    <br>
+                    <div align="right"><input type="button" value="Nova pesquisa" name="novaPesquisa" onclick="document.location.href='formEspelhoAcordao.do'" class="botao_vinho"/></div>
+
+
+                    
+                        
+                            
+                        
+                        
+                    
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=11&totalLinhas=1905&paginaNumero=11&linhasPorPagina=1&palavras=dano moral&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/01/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                11 - Processo: Agravo de Instrumento-Cv <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.24.476554-1/001
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    4765558-30.2024.8.13.0000 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=24&procCodigo=1&procCodigoOrigem=0&procNumero=476554&procSequencial=1&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Lúcio de Brito</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            31/01/2025
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            06/02/2025
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA: AGRAVO DE INSTRUMENTO - "AÇÃO DECLARATÓRIA DE NULIDADE DE DÍVIDA C/C REPETIÇÃO DE INDÉBITO C/C <font color="#FF0000"><b>DANOS</b></font> <font color="#FF0000"><b>MORAIS</b></font>" - TUTELA DE URGÊNCIA - SUSPENSÃO DE COBRANÇAS - TRANSAÇÕES BANCÁRIAS REALIZADAS PELO CONSUMIDOR - REQUISITOS CUMULATIVOS DO ARTIGO 300, CAPUT DO CÓDIGO DE PROCESSO CIVIL - AUSÊNCIA. I - Nos termos do artigo 300, caput, do Código de Processo Civil, a tutela provisória de urgência de natureza antecipada há de ser concedida quando existentes elementos que possam evidenciar a probabilidade do direito e o perigo de <font color="#FF0000"><b>dano</b></font> ou o risco ao resultado útil do processo. II - Não havendo a comprovação, ao menos em análise sumária, de citados requisitos, a medida liminar pleiteada deve ser indeferida.
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=12&totalLinhas=1905&paginaNumero=12&linhasPorPagina=1&palavras=dano moral&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/01/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                12 - Processo: Agravo de Instrumento-Cv <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.24.479206-5/001
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    4792073-05.2024.8.13.0000 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=24&procCodigo=1&procCodigoOrigem=0&procNumero=479206&procSequencial=1&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Octávio de Almeida Neves</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            31/01/2025
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            06/02/2025
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA: AGRAVO DE INSTRUMENTO - AÇÃO DECLARATÓRIA DE RESCISÃO CONTRATUAL E RESTITUIÇÃO DE VALORES PAGOS C/C INDENIZAÇÃO POR <font color="#FF0000"><b>DANOS</b></font> <font color="#FF0000"><b>MORAIS</b></font> - GRATUIDADE DA JUSTIÇA - PESSOA NATURAL - ART. 99, §§ 2º E 3º, DO CPC - PRESUNÇÃO DE VERACIDADE - AUSÊNCIA DE ELEMENTOS QUE EVIDENCIEM A FALTA DOS PRESSUPOSTOS LEGAIS - BENEFÍCIO CONCEDIDO. À luz do art. 99, §3º do Código de Processo Civil, a alegação de insuficiência financeira por pessoa natural goza de evidência relativa de veracidade, podendo ser elidida pela parte contrária ou pelo Juiz, se presentes elementos que evidenciem que o requerente não é carecedor do benefício. A ausência de prova satisfatória a infirmar a alegação de pobreza firmada por pessoas naturais obsta o indeferimento do benefício da gratuidade da justiça, nos termos do §2º do art. 99 do CPC.
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=13&totalLinhas=1905&paginaNumero=13&linhasPorPagina=1&palavras=dano moral&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/01/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                13 - Processo: Agravo de Instrumento-Cv <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.24.482730-9/001
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    4827317-92.2024.8.13.0000 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=24&procCodigo=1&procCodigoOrigem=0&procNumero=482730&procSequencial=1&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Octávio de Almeida Neves</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            31/01/2025
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            06/02/2025
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA: AGRAVO DE INSTRUMENTO - AÇÃO DE COBRANÇA C/C <font color="#FF0000"><b>DANOS</b></font> <font color="#FF0000"><b>MORAIS</b></font> - INTERPOSIÇÃO DE RECURSO ADESIVO - DESISTÊNCIA DO APELO PRINCIPAL - NÃO CONHECIMENTO DO SUBORDINADO - RECEBIMENTO COMO RECURSO INDEPENDENTE - NÃO CABIMENTO - PRINCÍPIO DA INSTRUMENTALIDADE DAS FORMA - ERRO GROSSEIRO - RECURSO DESPROVIDO. Ante a subordinação da apelação adesiva à apelação principal, a desistência desta importa a inadmissibilidade daquela. Não é cabível o processamento do recurso interposto como adesivo, após a desistência do principal, como independente, com base em suposto erro de nomeação da peça, por meio do princípio da instrumentalidade das formas, porquanto a interposição equivocada nesse caso se traduz em erro grosseiro.
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=14&totalLinhas=1905&paginaNumero=14&linhasPorPagina=1&palavras=dano moral&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/01/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                14 - Processo: Apelação Cível <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.21.077223-2/003
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    5000090-53.2021.8.13.0064 (2)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=21&procCodigo=1&procCodigoOrigem=0&procNumero=77223&procSequencial=3&procSeqAcordao=1', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Antônio Bispo</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            31/01/2025
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            06/02/2025
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA: APELAÇÃO CÍVEL - AÇÃO DE INEXISTÊNCIA DE CONTRATOS C/C INDENIZAÇÃO POR <font color="#FF0000"><b>DANOS</b></font> <font color="#FF0000"><b>MORAIS</b></font> E REPETIÇÃO DO INDÉBITO - VÍCIO "CITRA PETITA" NA SENTENÇA - RECONHECIMENTO - ALEGAÇÃO DE FALSIDADE DE ASSINATURA DOS CONTRATOS - ÔNUS DE PROVAR A AUTENTICIDADE - PARTE QUE PRODUZIU O DOCUMENTO - REGULARIDADE NÃO DEMONSTRADA - COMPENSAÇÃO DO VALOR CREDITADO AO CONSUMIDOR - PROVIDÊNCIA NECESSÁRIA - JUROS DE MORA E CORREÇÃO MONETÁRIA - ALTERAÇÃO DA SENTENÇA, DE OFÍCIO. Verificada a existência de vício "citra petita" na sentença, com fulcro na Teoria da Causa Madura, adotada pelo art. 1.013, §3º, inciso III, do Código de Processo Civil, a matéria sobre a qual o Magistrado primevo não se manifestou deve ser analisada, desde logo, pelo Tribunal, considerando, sobretudo, que toda a instrução probatória já foi concluída. A prova da autenticidade da assinatura constante no contrato, quando impugnada, incumbe à parte que produziu o documento - art. 429, II, do CPC. Ausente comprovação de existência da relação jurídica é imperiosa a declaração de inexistência do contrato e da dívida dele advinda. Havendo descontos indevidos sobre o benefício previdenciário do autor, deve haver a restituição dos valores pelo réu, devendo ser ressalvado o direito à compensação do montante que for comprovadamente transferido à parte autora como forma de prevenir seu enriquecimento ilícito, tudo a ser apurado em liquidação de sentença. A devolução das parcelas indevidamente debitadas por força de empréstimo consignado irregular está sujeita ao disposto no artigo 42, parágrafo único, do Código de Defesa do Consumidor. Conforme tese firmada pelo STJ: "A repetição em dobro, prevista no parágrafo único do art. 42 do CDC, é cabível quando a cobrança indevida consubstanciar conduta contrária à boa-fé objetiva, ou seja, deve ocorrer independentemente da natureza do elemento volitivo." (EREsp 1.413.542/RS). Esse entendimento, entretanto, por modulação de efeitos, somente é aplicável às cobranças indevidas realizadas após a data da publicação do acórdão em que fixado o precedente. A modificação dos juros de mora e da correção monetária incidentes no valor condenatório pode e deve ser realizada de ofício, por se tratar de matéria de ordem pública, devendo ser observado o disposto no art. 406, §1º, do CC, com redação dada pela Lei 14.905/24.<br />(VvP) APELAÇÃO. DECLARATÓRIA. NEGÓCIO JURÍDICO NULO. AGENTE INCAPAZ. OBJETO ILÍCITO. CONFIGURAÇÃO.DESCONTOS INDEVIDOS. REPETIÇÃO DO INDÉBITO EM DOBRO. A validade do negócio jurídico pressupõe agente capaz, objeto lícito e forma prescrita ou não proibida pela Lei. São nulos os contratos firmados por pessoas jurídicas que não compõem o sistema financeiro nacional. Verificada a ausência de capacitação do proponente do contrato para atuar como instituição financeira incide a regra dos artigos 104 e 166 do CC, restando patente a nulidade do contrato que gera descontos indevidos em face do consumidor. Fica autorizada a restituição em dobro das quantias cobradas a maior quando verificada afronta à CF/88 e ao artigo 591 do CCB, por encartar ilegalidade bastante para configurar a má-fé considerada pela lei.
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=15&totalLinhas=1905&paginaNumero=15&linhasPorPagina=1&palavras=dano moral&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/01/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                15 - Processo: Embargos de Declaração-Cv <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.23.057842-9/003
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    5000327-21.2023.8.13.0710 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=23&procCodigo=1&procCodigoOrigem=0&procNumero=57842&procSequencial=3&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Octávio de Almeida Neves</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            31/01/2025
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            06/02/2025
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA: EMBARGOS DE DECLARAÇÃO - INOVAÇÃO RECURSAL - AUSÊNCIA - ERRO MATERIAL - ENCARGOS INCIDENTES SOBRE A INDENIZAÇÃO POR <font color="#FF0000"><b>DANOS</b></font> <font color="#FF0000"><b>MORAIS</b></font> - ART. 406 DO CC - REDAÇÃO DADA PELA LEI 14.905/24 - VÍCIO SANADO. A correção monetária, assim como os juros de mora, tratam-se de matérias de ordem pública, cognoscíveis de ofício e, por isso mesmo, inviável falar-se em inovação recursal quanto ao pedido de sua modificação. Havendo erro material no acórdão quanto à aplicação dos encargos incidentes sobre a condenação, com observância ao disposto no art. 406 do CC, conforme redação dada pela Lei 14.905/24, a partir do momento em que passou a produzir efeitos, deve ser sanado o vício.
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=16&totalLinhas=1905&paginaNumero=16&linhasPorPagina=1&palavras=dano moral&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/01/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                16 - Processo: Apelação Cível <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.24.496232-0/001
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    5000470-63.2024.8.13.0002 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=24&procCodigo=1&procCodigoOrigem=0&procNumero=496232&procSequencial=1&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Newton Teixeira Carvalho</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            31/01/2025
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            11/02/2025
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA: APELAÇÃO CÍVEL - AÇÃO DECLARATÓRI DE INEXISTÊNCIA DE DÉBITO - INDENIZAÇÃO POR <font color="#FF0000"><b>DANOS</b></font> <font color="#FF0000"><b>MORAIS</b></font> - NEGATIVAÇÃO INDEVIDA - CARTÃO DE CRÉDITO NÃO CONTRATADO - MINORAÇÃO - RECURSO NEGADO. Para o arbitramento da reparação pecuniária por <font color="#FF0000"><b>dano</b></font> <font color="#FF0000"><b>moral</b></font>, o juiz deve considerar circunstâncias fáticas e repercussão do ato ilícito, condições pessoais das partes, razoabilidade e proporcionalidade. A indenização quando excessiva comporta minoração. Não sendo verificado abusividade no quantum indenizatório de R$10.000,00 em razão de inscrição indevida no cadastro de inadimplentes, entende-se que razão não assiste ao apelante, sendo desnecessário reforma da decisão recorrida.
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=17&totalLinhas=1905&paginaNumero=17&linhasPorPagina=1&palavras=dano moral&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/01/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                17 - Processo: Apelação Cível <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.24.516216-9/001
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    5000498-13.2023.8.13.0472 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=24&procCodigo=1&procCodigoOrigem=0&procNumero=516216&procSequencial=1&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Ivone Guilarducci</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            31/01/2025
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            06/02/2025
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA: DIREITO DO CONSUMIDOR E PROCESSUAL CIVIL. APELAÇÃO CÍVEL. CONTRATO DE EMPRÉSTIMO CONSIGNADO. GOLPE DA FALSA CENTRAL DE ATENDIMENTO. CULPA EXCLUSIVA DA VÍTIMA. INEXISTÊNCIA DE FALHA NA PRESTAÇÃO DE SERVIÇOS BANCÁRIOS. RESPONSABILIDADE CIVIL AFASTADA. RECURSO DESPROVIDO.<br /><br />I. CASO EM EXAME<br />1. Apelação cível interposta por consumidora contra sentença que julgou improcedentes os pedidos de nulidade de contrato de empréstimo consignado, restituição em dobro dos valores descontados indevidamente e indenização por <font color="#FF0000"><b>danos</b></font> <font color="#FF0000"><b>morais</b></font>. A apelante alega ter sido vítima de golpe mediante ligação de suposto agente do INSS, levando à celebração de contrato de empréstimo sob vício de consentimento. Sustenta falha na prestação de serviços da instituição financeira e requer reforma da sentença para reconhecimento dos pedidos iniciais.<br /><br />II. QUESTÃO EM DISCUSSÃO<br />2. Há duas questões em discussão: (i) verificar se a instituição financeira é responsável pelos <font color="#FF0000"><b>danos</b></font> alegados em razão de possível falha na prestação de serviços; (ii) averiguar a ocorrência de causas excludentes de responsabilidade, como culpa exclusiva da vítima e fato de terceiro, nos termos do art. 14, §3º, inciso II, do CDC.<br /><br />III. RAZÕES DE DECIDIR<br />3. A responsabilidade das instituições financeiras, no âmbito das relações de consumo, é objetiva, nos termos do art. 14 do CDC e da Súmula 479 do STJ. Contudo, essa responsabilidade é afastada quando configurada culpa exclusiva do consumidor ou de terceiros, ou ocorrência de fortuito externo.<br />4. Constatou-se, nos autos, que a apelante foi vítima do golpe conhecido como "golpe da falsa central de atendimento", em que estelionatários induzem consumidores a fornecerem informações pessoais e aceitarem operações financeiras sob falsas premissas.<br />5. As provas indicam que os atos foram realizados diretamente pela consumidora, que forneceu voluntariamente seus dados pessoais, selfies e aceitou os termos contratuais sem a cautela necessária, caracterizando culpa exclusiva da vítima e excluindo a responsabilidade da instituição financeira.<br />6. Não há elementos que indiquem falha nos sistemas de segurança do banco ou nexo causal entre a conduta da instituição financeira e os <font color="#FF0000"><b>danos</b></font> alegados pela apelante.<br />7. A instituição financeira cumpriu o dever de informação, tendo disponibilizado os termos contratuais de forma clara e ostensiva, conforme art. 54, §3º, do CDC. A apelante leu e aceitou as condições contratuais, demonstrando ausência de vício de consentimento.<br /><br />IV. DISPOSITIVO E TESE<br />8. Recurso desprovido.<br />Tese de julgamento: 1) A responsabilidade civil das instituições financeiras é afastada quando configurada culpa exclusiva do consumidor e inexistência de falha na prestação de serviços. 2) O fornecimento voluntário de dados pessoais e a aceitação de contratos pelo consumidor, sem as devidas cautelas, caracteriza causa excludente de responsabilidade do fornecedor, conforme art. 14, §3º, inciso II, do CDC.<br /><br />Dispositivos relevantes citados: CDC, arts. 14, §3º, incisos I e II, e 54, §3º; CC, art. 393; CPC, arts. 85, §11, e 373, I.<br /><br />Jurisprudência relevante citada: STJ, Súmula nº 479; TJMG, Apelação Cível nº 1.0000.24.173157-9/001, Rel. Des. João Cancio, 18ª CÂMARA CÍVEL, j. 11/06/2024; TJMG, Apelação Cível nº 1.0000.24.307283-2/001, Rel. Des. Fausto Bawden de Castro Silva, 20ª CÂMARA CÍVEL, j. 07/08/2024; TJMG,
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=18&totalLinhas=1905&paginaNumero=18&linhasPorPagina=1&palavras=dano moral&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/01/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                18 - Processo: Apelação Cível <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.24.392009-7/001
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    5000679-95.2021.8.13.0015 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=24&procCodigo=1&procCodigoOrigem=0&procNumero=392009&procSequencial=1&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Antônio Bispo</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            31/01/2025
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            06/02/2025
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA: APELAÇÃO CÍVEL - AÇÃO DE OBRIGAÇÃO DE FAZER C/C INDENIZAÇÃO POR <font color="#FF0000"><b>DANOS</b></font> <font color="#FF0000"><b>MORAIS</b></font> - CONTRATO DE SEGURO DE VIDA - CANCELAMENTO UNILATERAL - AUSÊNCIA DE NOTIFICAÇÃO. Não basta a inadimplência do segurado para ensejar o cancelamento automático do contrato de seguro, sendo necessária a interpelação do segurado, para a sua constituição em mora.<br />(VvP) APELAÇÃO CÍVEL - AÇÃO DE COBRANÇA DE INDENIZAÇÃO SECURITÁRIA - CLÁUSULA QUE PREVÊ A SUSPENSÃO DE COBERTURA EM CASO DE INADIMPLEMENTO - VALIDADE - SINISTRO OCORRIDO APÓS A RETOMADA DA COBERTURA - INDENIZAÇÃO DEVIDA - APURAÇÃO DO VALOR EM LIQUIDAÇÃO DE SENTENÇA - NECESSIDADE. É válida a cláusula que, de maneira clara e inequívoca, estabelece a suspensão da cobertura de contrato de seguro durante o período de inadimplemento dos prêmios mensais. Constatado o pagamento tempestivo do prêmio do seguro, deve ser paga a indenização securitária, nos termos contratuais. Estipulando-se, em contrato, que a indenização por <font color="#FF0000"><b>danos</b></font> materiais decorrentes de acidente veicular deve ser paga a partir da análise dos prejuízos por oficinas credenciadas à seguradora, deve ser relegada para a liquidação de sentença, pelo procedimento comum, a apuração do valor devido ao segurado.
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=19&totalLinhas=1905&paginaNumero=19&linhasPorPagina=1&palavras=dano moral&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/01/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                19 - Processo: Apelação Cível <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.24.415286-4/001
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    5000723-61.2022.8.13.0474 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=24&procCodigo=1&procCodigoOrigem=0&procNumero=415286&procSequencial=1&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Lúcio de Brito</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            31/01/2025
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            06/02/2025
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA: APELAÇÃO CÍVEL - AÇÃO DECLARATÓRIA DE INEXISTÊNCIA DE DÉBITO - NEGATIVAÇÃO INDEVIDA - EXERCÍCIO REGULAR DO DIREITO - JUDICIÁRIO NÃO É ORGÃO DE CONSULTA. - O credor que, no exercício regular do seu direito, realiza cobrança de seu crédito, relativamente ao qual inexiste prova do pagamento, não pratica conduta ilícita. - O Poder Judiciário não é órgão de consulta em que a parte empreende aventura jurídica diante da ausência de interesse de agir e incerteza acerca do direito pleiteado.<br />V.V.P DECLARATÓRIA C/C INDENIZAÇÃO - NEGATIVAÇÃO ABUSIVA - CONSTRANGIMENTO DO CONSUMIDOR - <font color="#FF0000"><b>DANOS</b></font> <font color="#FF0000"><b>MORAIS</b></font> DEVIDOS. Para justificar a negativação do nome de consumidor, o suposto credor deverá estar embasado em documento líquido certo e exigível, sem o que a negativação caracteriza o excesso do artigo 187 do Código Civil, pela violação da regra do artigo 42 do Código de Defesa do Consumidor. Tanto a negativação abusiva, quanto a indevida, caracterizam ilícito, pelo que a sua ocorrência impõe o dever de indenizar nos termos do artigo 944 do Código Civil.
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=20&totalLinhas=1905&paginaNumero=20&linhasPorPagina=1&palavras=dano moral&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/01/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                20 - Processo: Apelação Cível <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.24.516363-9/001
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    5001848-03.2024.8.13.0116 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=24&procCodigo=1&procCodigoOrigem=0&procNumero=516363&procSequencial=1&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Newton Teixeira Carvalho</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            31/01/2025
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            11/02/2025
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA: APELAÇÃO CÍVEL - AÇÃO DE INDENIZAÇÃO - DECLARAÇÃO DE INEXISTÊNCIA DE CONTRATO - ÔNUS DA ASSINATURA QUANDO IMPUGNADA - MINORAÇÃO - <font color="#FF0000"><b>DANOS</b></font> <font color="#FF0000"><b>MORAIS</b></font> - RECURSO NEGADO. É importante ressaltar que, nas ações onde a parte autora nega a existência de negócio jurídico, o ônus de provar o contrato cabe à parte ré, em razão da impossibilidade de se exigir daquele a prova negativa do fato. Sendo do credor o ônus de demonstrar a relação jurídica negada pelo devedor, ao mesmo incumbe comprovar a autenticidade da assinatura lançada no contrato que apresenta, para se desincumbir de tal encargo, a teor do disposto no artigo 429, inciso II, do Código de Processo Civil.  A minoração deve ser feita quando o valor é exorbitante após analisar os autos e os valores descontados, conclui-se que não há necessidade de diminuir o valor.
+                        </div>                        
+                                         
+
+                    
+
+                    
+                        
+                    
+
+                    <!-- PAGINADOR -->
+                    <br><br>
+                    
+                    <table width="98%" border="0" cellspacing="0" cellpadding="0">
+<tr align="right">
+<td>
+p?gina 2 de 191</td>
+</tr><tr align="right">
+<td>
+<table border="0" cellspacing="1" cellpadding="4">
+ <tr>
+<td width="35" align="center" bgcolor="#DEDEDE" class="footerlink"><a class="logtext" href="pesquisaPalavrasEspelhoAcordao.do?palavras=dano moral&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/01/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=1" alt="primeira" title="primeira p?gina" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">&lt;&lt;</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE" class="footerlink"><a class="logtext" href="pesquisaPalavrasEspelhoAcordao.do?palavras=dano moral&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/01/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=1" alt="anterior" title="p?gina anterior" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">&lt;</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE"><a href="pesquisaPalavrasEspelhoAcordao.do?palavras=dano moral&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/01/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=1" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">1</a></td>
+<td width="35" align="center" class="tabact:active"><b>2</b></td>
+<td width="35" align="center" bgcolor="#DEDEDE"><a href="pesquisaPalavrasEspelhoAcordao.do?palavras=dano moral&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/01/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=3" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">3</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE"><a href="pesquisaPalavrasEspelhoAcordao.do?palavras=dano moral&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/01/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=4" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">4</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE"><a href="pesquisaPalavrasEspelhoAcordao.do?palavras=dano moral&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/01/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=5" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">5</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE"><a href="pesquisaPalavrasEspelhoAcordao.do?palavras=dano moral&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/01/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=6" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">6</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE"><a href="pesquisaPalavrasEspelhoAcordao.do?palavras=dano moral&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/01/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=7" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">7</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE"><a href="pesquisaPalavrasEspelhoAcordao.do?palavras=dano moral&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/01/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=8" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">8</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE"><a href="pesquisaPalavrasEspelhoAcordao.do?palavras=dano moral&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/01/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=9" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">9</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE" class="footerlink"><a class="logtext" href="pesquisaPalavrasEspelhoAcordao.do?palavras=dano moral&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/01/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=3" alt="pr?xima" title="pr?xima p?gina" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">&gt;</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE" class="footerlink"><a class="logtext" href="pesquisaPalavrasEspelhoAcordao.do?palavras=dano moral&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/01/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=191" alt="?ltima" title="?ltima p?gina" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">&gt;&gt;</a></td>
+</tr>
+</table>
+<script type="text/javascript" language="JavaScript">
+// Select the pageNumber field
+function select() {
+  var pager = document.forms['pager'];
+  pager.pageNumber.focus();
+  pager.pageNumber.select();
+}
+
+// Function to adjust the page number (starts with 0)
+// a fun??o recebe o par?metro verificaSubmit para, caso seja chamada do onSubmit do form
+// retornar false e n?o submeter a p?gina;
+// se for chamada do link do bot?o n?o retorna false e executa a fun??o;
+function adjustPage(total, verificaSubmit) {
+  var pager = document.forms['pager'];
+  var page = parseInt(pager.pageNumber.value);
+  if (!pager.pageNumber.value) {
+    alert ("? preciso informar o n?mero da p?gina");
+    select();
+    if (verificaSubmit == 'noLink') return false;
+  } else if (!page) {
+    alert ("O formato do n?mero da p?gina est? incorreto");
+    select();
+    if (verificaSubmit == 'noLink') return false;
+  } else if (page < 1 || page > total) {
+    alert ("O n?mero da p?gina est? fora dos limites");
+    select();
+    if (verificaSubmit == 'noLink') return false;
+  } else {
+    pager.paginaNumero.value = page;
+    if (typeof validaPesquisa == 'function')
+    {
+    		if (validaPesquisa())
+    		{
+    			pager.submit();
+    		}
+    }
+    else
+    {
+    		pager.submit();
+    }
+  }
+}
+</script>
+  <table border="0" cellspacing="0" cellpadding="3" width="100%" bgcolor="#e7e7e7" summary="">
+  <form name="pager" OnSubmit=" return adjustPage(191,'noLink'); " action="pesquisaPalavrasEspelhoAcordao.do" method="post" >
+    <tr align="right">
+       <td width="100%">ir para a p?gina:</td>
+       <td align="right"><input type="text" name="pageNumber" size="5"></td>
+       <td align="left"><a href="javascript: void(0);" onclick="adjustPage(191,'linkSubmit')">ir</a></td>
+    </tr>
+    <input type="hidden" name="paginaNumero">
+    <input type="hidden" name="palavras" value = "dano moral">
+    <input type="hidden" name="pesquisarPor" value = "ementa">
+    <input type="hidden" name="orderByData" value = "2">
+    <input type="hidden" name="dataJulgamentoInicial" value = "01/01/2025">
+    <input type="hidden" name="dataJulgamentoFinal" value = "31/01/2025">
+    <input type="hidden" name="referenciaLegislativa" value = "Clique na lupa para pesquisar as referÃªncias cadastradas...">
+    <input type="hidden" name="pesquisaPalavras" value = "Pesquisar">
+    <input type="hidden" name="">
+    <input type="hidden" name="linhasPorPagina" value = "10">
+  </form>
+  </table></td>
+</tr>
+</table>
+
+                    
+                    <!-- FIM  PAGINADOR -->
+
+                
+                <br><br>
+                <div align="right"><input type="button" value="Nova pesquisa" name="novaPesquisa" onclick="document.location.href='formEspelhoAcordao.do'" class="botao_vinho"/></div>
+            </div>
+        </td></tr>
+</table>
+
+
+
+                        
+
+                    </td>
+                </tr>
+
+            </table>
+            <br /><br />
+            </div>
+            </div>
+                        
+            
+
+             
+
+
+
+
+
+        
+        
+
+    </body>    
+        
+        
+</html>
+
