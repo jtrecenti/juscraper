@@ -29,8 +29,7 @@ from responses.registries import OrderedRegistry
 
 import juscraper as jus
 from tests._helpers import load_sample, urlencoded_body_subset_matcher
-
-INDEX_URL = "https://jurisprudencia.tjrr.jus.br/index.xhtml"
+from tests.tjrr._helpers import INDEX_URL, add_get_initial
 
 CJSG_MIN_COLUMNS = {
     "processo", "classe", "relator", "orgao_julgador",
@@ -46,22 +45,6 @@ pytestmark = pytest.mark.skipif(
         "tests/tjrr/samples/cjsg/."
     ),
 )
-
-
-def _add_get_initial():
-    """First leg of every cjsg call: GET /index.xhtml.
-
-    Reused across scenarios because the page is essentially static
-    (the dynamic content is the ViewState and JSF component IDs, which
-    are encoded in the captured sample).
-    """
-    responses.add(
-        responses.GET,
-        INDEX_URL,
-        body=load_sample("tjrr", "cjsg/step_01_consulta.html"),
-        status=200,
-        content_type="text/html; charset=UTF-8",
-    )
 
 
 def _add_post_initial(sample_path: str):
@@ -97,7 +80,7 @@ def _add_post_ajax(sample_path: str, first_offset: str):
 def test_cjsg_typical_com_paginacao(mocker):
     """Two-page query exercises GET → POST inicial → POST AJAX (page 2)."""
     mocker.patch("time.sleep")
-    _add_get_initial()
+    add_get_initial()
     _add_post_initial("cjsg/step_02_search.html")
     _add_post_ajax("cjsg/step_03_pagina_02.xml", "10")
 
@@ -106,13 +89,20 @@ def test_cjsg_typical_com_paginacao(mocker):
     assert isinstance(df, pd.DataFrame)
     assert CJSG_MIN_COLUMNS <= set(df.columns)
     assert len(df) > 0
+    assert df["processo"].notna().all(), "processo nulo em alguma linha"
+    assert (df["processo"].astype(str).str.len() > 0).mean() >= 0.5, (
+        "mais da metade dos processos vazios — parser provavelmente quebrado"
+    )
+    assert df["processo"].nunique() > 1, (
+        "todos os processos iguais — paginação suspeita"
+    )
 
 
 @responses.activate(registry=OrderedRegistry)
 def test_cjsg_single_page(mocker):
     """Single page scenario: GET + POST inicial only (no AJAX)."""
     mocker.patch("time.sleep")
-    _add_get_initial()
+    add_get_initial()
     _add_post_initial("cjsg/single_page.html")
 
     df = jus.scraper("tjrr").cjsg("usucapiao", paginas=1)
@@ -120,6 +110,10 @@ def test_cjsg_single_page(mocker):
     assert isinstance(df, pd.DataFrame)
     assert CJSG_MIN_COLUMNS <= set(df.columns)
     assert len(df) > 0
+    assert df["processo"].notna().all(), "processo nulo em alguma linha"
+    assert (df["processo"].astype(str).str.len() > 0).mean() >= 0.5, (
+        "mais da metade dos processos vazios — parser provavelmente quebrado"
+    )
 
 
 @responses.activate(registry=OrderedRegistry)
@@ -133,7 +127,7 @@ def test_cjsg_no_results(mocker):
     on a fresh session.
     """
     mocker.patch("time.sleep")
-    _add_get_initial()
+    add_get_initial()
     _add_post_initial("cjsg/no_results.html")
 
     df = jus.scraper("tjrr").cjsg(

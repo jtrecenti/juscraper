@@ -11,9 +11,7 @@ Aliases: ``query``/``termo`` (search term) and ``data_inicio``/``data_fim``
 """
 from __future__ import annotations
 
-import sys
 from pathlib import Path
-from unittest.mock import MagicMock
 
 import pandas as pd
 import pytest
@@ -22,14 +20,7 @@ from responses.registries import OrderedRegistry
 
 import juscraper as jus
 from tests._helpers import load_sample_bytes, query_param_subset_matcher
-
-BASE = "https://www5.tjmg.jus.br/jurisprudencia"
-FORM_URL = f"{BASE}/formEspelhoAcordao.do"
-CAPTCHA_IMG_URL = f"{BASE}/captcha.svl"
-DWR_VALIDATE_URL = (
-    f"{BASE}/dwr/call/plaincall/ValidacaoCaptchaAction.isCaptchaValid.dwr"
-)
-SEARCH_URL = f"{BASE}/pesquisaPalavrasEspelhoAcordao.do"
+from tests.tjmg._helpers import SEARCH_URL, add_captcha, add_dwr, add_form
 
 _SAMPLES_DIR = Path(__file__).parent / "samples" / "cjsg"
 pytestmark = pytest.mark.skipif(
@@ -40,43 +31,6 @@ pytestmark = pytest.mark.skipif(
         "para popular tests/tjmg/samples/cjsg/."
     ),
 )
-
-
-@pytest.fixture
-def mock_txtcaptcha(mocker):
-    fake = MagicMock()
-    fake.decrypt = MagicMock(return_value=["12345"])
-    mocker.patch.dict(sys.modules, {"txtcaptcha": fake})
-
-
-def _add_form():
-    responses.add(
-        responses.GET,
-        FORM_URL,
-        body=load_sample_bytes("tjmg", "cjsg/form_acordao.html"),
-        status=200,
-        content_type="text/html; charset=ISO-8859-1",
-    )
-
-
-def _add_captcha():
-    responses.add(
-        responses.GET,
-        CAPTCHA_IMG_URL,
-        body=load_sample_bytes("tjmg", "cjsg/captcha.png"),
-        status=200,
-        content_type="image/png",
-    )
-
-
-def _add_dwr():
-    responses.add(
-        responses.POST,
-        DWR_VALIDATE_URL,
-        body=load_sample_bytes("tjmg", "cjsg/dwr_validate.txt"),
-        status=200,
-        content_type="text/plain",
-    )
 
 
 def _add_search(expected_query_subset: dict[str, str]):
@@ -94,9 +48,9 @@ def _add_search(expected_query_subset: dict[str, str]):
 def test_cjsg_all_filters_land_in_request(mock_txtcaptcha, mocker):
     """All public filters propagate to the query string of the search GET."""
     mocker.patch("time.sleep")
-    _add_form()
-    _add_captcha()
-    _add_dwr()
+    add_form()
+    add_captcha()
+    add_dwr()
     _add_search({
         "palavras": "dano moral",
         "numeroRegistro": "1",
@@ -129,9 +83,9 @@ def test_cjsg_all_filters_land_in_request(mock_txtcaptcha, mocker):
 def test_cjsg_query_alias_emits_deprecation_warning(mock_txtcaptcha, mocker):
     """``query`` alias normalizes to ``pesquisa`` with a warning."""
     mocker.patch("time.sleep")
-    _add_form()
-    _add_captcha()
-    _add_dwr()
+    add_form()
+    add_captcha()
+    add_dwr()
     _add_search({"palavras": "dano moral", "numeroRegistro": "1"})
 
     with pytest.warns(DeprecationWarning, match="query.*deprecado"):
@@ -146,9 +100,9 @@ def test_cjsg_query_alias_emits_deprecation_warning(mock_txtcaptcha, mocker):
 def test_cjsg_termo_alias_emits_deprecation_warning(mock_txtcaptcha, mocker):
     """``termo`` alias normalizes to ``pesquisa`` with a warning."""
     mocker.patch("time.sleep")
-    _add_form()
-    _add_captcha()
-    _add_dwr()
+    add_form()
+    add_captcha()
+    add_dwr()
     _add_search({"palavras": "dano moral", "numeroRegistro": "1"})
 
     with pytest.warns(DeprecationWarning, match="termo.*deprecado"):
@@ -163,9 +117,9 @@ def test_cjsg_termo_alias_emits_deprecation_warning(mock_txtcaptcha, mocker):
 def test_cjsg_data_inicio_alias_maps_to_data_julgamento(mock_txtcaptcha, mocker):
     """``data_inicio``/``data_fim`` propagate as ``data_julgamento_*``."""
     mocker.patch("time.sleep")
-    _add_form()
-    _add_captcha()
-    _add_dwr()
+    add_form()
+    add_captcha()
+    add_dwr()
     _add_search({
         "palavras": "dano moral",
         "numeroRegistro": "1",

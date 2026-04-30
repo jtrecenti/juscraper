@@ -5,8 +5,9 @@ TJRR's ``cjsg`` exposes ``orgao_julgador`` (list of body codes),
 ``data_julgamento_inicio/fim``. The ``relator`` parameter is accepted
 for API parity but the live JSF form no longer carries it as a text
 input (see ``_search`` in ``download.py``: ``relator`` is annotated
-``# noqa: ARG001``); for that reason the contract does not assert
-``relator`` lands in the body.
+``# noqa: ARG001``); the dedicated ``test_cjsg_relator_lands_in_body``
+xfails against this gap and tracks issue #158 (deprecation/remoção
+planejada).
 
 Aliases: ``query``/``termo`` (search term), ``data_inicio``/``data_fim``
 (map to ``data_julgamento_*``).
@@ -22,8 +23,7 @@ from responses.registries import OrderedRegistry
 
 import juscraper as jus
 from tests._helpers import load_sample, urlencoded_body_subset_matcher
-
-INDEX_URL = "https://jurisprudencia.tjrr.jus.br/index.xhtml"
+from tests.tjrr._helpers import INDEX_URL, add_get_initial, get_pesquisa_field_name
 
 _SAMPLES_DIR = Path(__file__).parent / "samples" / "cjsg"
 pytestmark = pytest.mark.skipif(
@@ -34,16 +34,6 @@ pytestmark = pytest.mark.skipif(
         "tests/tjrr/samples/cjsg/."
     ),
 )
-
-
-def _add_get_initial():
-    responses.add(
-        responses.GET,
-        INDEX_URL,
-        body=load_sample("tjrr", "cjsg/step_01_consulta.html"),
-        status=200,
-        content_type="text/html; charset=UTF-8",
-    )
 
 
 def _add_post_initial(expected_body_subset: dict[str, str]):
@@ -62,7 +52,7 @@ def _add_post_initial(expected_body_subset: dict[str, str]):
 def test_cjsg_all_filters_land_in_body(mocker):
     """Public filters (dates + lista orgao + lista especie) land in the body."""
     mocker.patch("time.sleep")
-    _add_get_initial()
+    add_get_initial()
     _add_post_initial({
         "menuinicial:datainicial_input": "01/01/2024",
         "menuinicial:datafinal_input": "31/03/2024",
@@ -83,12 +73,33 @@ def test_cjsg_all_filters_land_in_body(mocker):
     assert df.empty
 
 
+@pytest.mark.xfail(
+    reason=(
+        "TJRR: argumento `relator` é aceito pela API pública mas "
+        "descartado silenciosamente pelo backend (campo virou "
+        "select-multi de IDs). Refs #158 (deprecation/remoção planejada)."
+    ),
+    strict=True,
+)
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_relator_lands_in_body(mocker):
+    """``relator`` deveria propagar ao body — hoje não propaga (issue #158)."""
+    mocker.patch("time.sleep")
+    add_get_initial()
+    _add_post_initial({"menuinicial:relator": "Fulano de Tal"})
+
+    df = jus.scraper("tjrr").cjsg(
+        "dano moral", paginas=1, relator="Fulano de Tal",
+    )
+    assert isinstance(df, pd.DataFrame)
+
+
 @responses.activate(registry=OrderedRegistry)
 def test_cjsg_query_alias_emits_deprecation_warning(mocker):
-    """``query`` alias normalizes to ``pesquisa`` with a warning."""
+    """``query`` alias normalizes to ``pesquisa`` *e* propaga ao body."""
     mocker.patch("time.sleep")
-    _add_get_initial()
-    _add_post_initial({"menuinicial": "menuinicial"})
+    add_get_initial()
+    _add_post_initial({get_pesquisa_field_name(): "dano moral"})
 
     with pytest.warns(DeprecationWarning, match="query.*deprecado"):
         df = jus.scraper("tjrr").cjsg(
@@ -100,10 +111,10 @@ def test_cjsg_query_alias_emits_deprecation_warning(mocker):
 
 @responses.activate(registry=OrderedRegistry)
 def test_cjsg_termo_alias_emits_deprecation_warning(mocker):
-    """``termo`` alias normalizes to ``pesquisa`` with a warning."""
+    """``termo`` alias normalizes to ``pesquisa`` *e* propaga ao body."""
     mocker.patch("time.sleep")
-    _add_get_initial()
-    _add_post_initial({"menuinicial": "menuinicial"})
+    add_get_initial()
+    _add_post_initial({get_pesquisa_field_name(): "dano moral"})
 
     with pytest.warns(DeprecationWarning, match="termo.*deprecado"):
         df = jus.scraper("tjrr").cjsg(
@@ -117,7 +128,7 @@ def test_cjsg_termo_alias_emits_deprecation_warning(mocker):
 def test_cjsg_data_inicio_alias_maps_to_data_julgamento(mocker):
     """``data_inicio``/``data_fim`` propagate as ``data_julgamento_*``."""
     mocker.patch("time.sleep")
-    _add_get_initial()
+    add_get_initial()
     _add_post_initial({
         "menuinicial:datainicial_input": "01/01/2024",
         "menuinicial:datafinal_input": "31/03/2024",

@@ -11,19 +11,7 @@ import responses
 
 import juscraper as jus
 from tests._helpers import load_sample, query_param_subset_matcher, urlencoded_body_subset_matcher
-
-HOME_URL = "https://portal.tjpr.jus.br/jurisprudencia/"
-SEARCH_URL = "https://portal.tjpr.jus.br/jurisprudencia/publico/pesquisa.do"
-
-
-def _add_home():
-    responses.add(
-        responses.GET,
-        HOME_URL,
-        body=load_sample("tjpr", "cjsg/home.html"),
-        status=200,
-        content_type="text/html; charset=UTF-8",
-    )
+from tests.tjpr._helpers import SEARCH_URL, add_home
 
 
 def _add_search(expected_body_subset: dict[str, str]):
@@ -44,7 +32,7 @@ def _add_search(expected_body_subset: dict[str, str]):
 def test_cjsg_all_filters_land_in_body(mocker):
     """Every TJPR public filter must reach the form body."""
     mocker.patch("time.sleep")
-    _add_home()
+    add_home()
     _add_search({
         "criterioPesquisa": "dano moral",
         "pageNumber": "1",
@@ -71,7 +59,7 @@ def test_cjsg_all_filters_land_in_body(mocker):
 def test_cjsg_query_alias_emits_deprecation_warning(mocker):
     """The deprecated ``query`` alias should normalize to ``pesquisa``."""
     mocker.patch("time.sleep")
-    _add_home()
+    add_home()
     _add_search({"criterioPesquisa": "dano moral", "pageNumber": "1"})
 
     with pytest.warns(DeprecationWarning, match="query.*deprecado"):
@@ -84,7 +72,7 @@ def test_cjsg_query_alias_emits_deprecation_warning(mocker):
 def test_cjsg_termo_alias_emits_deprecation_warning(mocker):
     """The deprecated ``termo`` alias should normalize to ``pesquisa``."""
     mocker.patch("time.sleep")
-    _add_home()
+    add_home()
     _add_search({"criterioPesquisa": "dano moral", "pageNumber": "1"})
 
     with pytest.warns(DeprecationWarning, match="termo.*deprecado"):
@@ -97,7 +85,7 @@ def test_cjsg_termo_alias_emits_deprecation_warning(mocker):
 def test_cjsg_data_inicio_alias_maps_to_data_julgamento(mocker):
     """``data_inicio``/``data_fim`` map to ``data_julgamento_*`` with a warning."""
     mocker.patch("time.sleep")
-    _add_home()
+    add_home()
     _add_search({
         "criterioPesquisa": "dano moral",
         "pageNumber": "1",
