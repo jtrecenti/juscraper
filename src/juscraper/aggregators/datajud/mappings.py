@@ -219,3 +219,37 @@ TRIBUNAL_TO_ALIAS = {
     "TJMRS": "api_publica_tjmrs",
     "TJMSP": "api_publica_tjmsp",
 }
+
+
+# Mapeamento de nomes amigaveis -> codigos TPU CNJ usados em
+# ``DatajudScraper.listar_processos(tipos_movimentacao=...)``. Os codigos
+# entram como cláusula ``terms`` em ``movimentos.codigo``.
+#
+# Fonte: TPU (Tabela Processual Unificada) do CNJ. A pagina oficial
+# (http://www.cnj.jus.br/sgt/) impede consulta automatizada (403); os
+# codigos aqui correspondem aos itens raiz e filhos comuns mencionados na
+# issue #49 e validados empiricamente contra a API publica do DataJud.
+#
+# **Bootstrap conservador**: o mapping cobre as 5 categorias de uso mais
+# comum em pesquisa empirica. Ele NAO e exaustivo — a TPU tem milhares
+# de codigos, e cada tribunal pode usar variantes. Para casos avancados:
+#
+# * ``movimentos_codigo=[193, 442, ...]`` — passe codigos TPU diretos.
+# * ``query={'bool': {'must': [{'terms': {'movimentos.codigo': [...]}}]}}``
+#   — paridade total com requisicao direta a Elasticsearch.
+#
+# Para adicionar uma categoria nova: confirmar 2+ casos de uso (Regra 1
+# do refactor #84), citar fonte TPU oficial no PR e abrir teste granular
+# em ``tests/datajud/test_listar_processos_payload.py``.
+TIPOS_MOVIMENTACAO: dict[str, list[int]] = {
+    # Decisao (raiz codigo 3 + variantes comuns).
+    "decisao": [3, 442, 11009, 11010, 11011, 12164],
+    # Sentenca (raiz codigo 219 + filhos: extincao, mérito, etc.).
+    "sentenca": [193, 219, 220, 221, 237, 240, 247, 466, 471, 1042],
+    # Julgamento (apreciacao colegiada / monocratica).
+    "julgamento": [22, 196, 471, 848],
+    # Tutela provisoria (antecipada, cautelar, urgência, evidência).
+    "tutela": [332, 785, 12258, 12259],
+    # Trânsito em julgado.
+    "transito_julgado": [848, 871, 13016],
+}

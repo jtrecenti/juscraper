@@ -29,20 +29,90 @@ def build_listar_processos_payload(
     ano_ajuizamento: Optional[int] = None,
     classe: Optional[str] = None,
     assuntos: Optional[List[str]] = None,
+    data_ajuizamento_inicio: Optional[str] = None,
+    data_ajuizamento_fim: Optional[str] = None,
+    movimentos_codigo: Optional[List[int]] = None,
+    orgao_julgador: Optional[str] = None,
+    query: Optional[Dict[str, Any]] = None,
     mostrar_movs: bool = False,
     tamanho_pagina: int = 5000,
     search_after: Optional[List[Any]] = None,
 ) -> Dict[str, Any]:
     """Construir o body Elasticsearch para ``DatajudScraper.listar_processos``.
 
-    Reune ``must_conditions`` (numero_processo / ano_ajuizamento / classe /
-    assuntos), aplica o sort por ``id.keyword`` exigido pelo ``search_after``
-    e controla o ``_source`` para incluir ou excluir movimentacoes/movimentos.
-    A ordem das chaves e a logica condicional sao consumidas tal qual pelos
-    contratos offline em ``tests/datajud/test_listar_processos_*_contract.py``
-    via ``json_params_matcher`` — qualquer alteracao tem que ser refletida
-    nos samples.
+    Dois caminhos:
+
+    1. **Amigavel** (``query`` is ``None``): reune ``must_conditions`` na
+       ordem canonica abaixo e monta ``query.bool.must`` (ou ``match_all``
+       se nenhum filtro). A ordem importa — os contratos offline em
+       ``tests/datajud/test_listar_processos_*_contract.py`` validam o body
+       inteiro via ``json_params_matcher``.
+
+       Ordem canonica das ``must_conditions``:
+
+       1. ``numero_processo`` -> ``terms`` em ``numeroProcesso``
+       2. ``ano_ajuizamento`` ou ``data_ajuizamento_inicio/fim`` -> ``bool.should``
+          com 2 ``range`` em ``dataAjuizamento`` (ISO + compacto, refs #51).
+          Mutuamente exclusivos no schema (validator); aqui ``ano_ajuizamento``
+          tem precedencia se ambos chegarem.
+       3. ``classe`` -> ``match`` em ``classe.codigo``
+       4. ``assuntos`` -> ``terms`` em ``assuntos.codigo``
+       5. ``movimentos_codigo`` -> ``terms`` em ``movimentos.codigo``
+       6. ``orgao_julgador`` -> ``match`` em ``orgaoJulgador.nome``
+
+    2. **Override** (``query`` is not ``None``): bypassa toda a montagem de
+       ``must_conditions`` e usa ``query`` literalmente como a chave
+       ``query`` do payload Elasticsearch. O resto do payload
+       (``size``/``sort``/``_source``/``search_after``) continua sendo
+       construido pela biblioteca. O schema garante que os filtros
+       amigaveis nao chegam aqui junto com ``query``, mas o builder em si
+       e defensivo: ignora silenciosamente qualquer filtro amigavel quando
+       ``query`` e fornecido.
+
+    Em ambos os caminhos, ``mostrar_movs`` controla ``_source``,
+    ``tamanho_pagina`` -> ``size`` e ``search_after`` -> deep pagination.
     """
+    if query is not None:
+        query_values: Dict[str, Any] = query
+    else:
+        query_values = _build_query_amigavel(
+            numero_processo=numero_processo,
+            ano_ajuizamento=ano_ajuizamento,
+            classe=classe,
+            assuntos=assuntos,
+            data_ajuizamento_inicio=data_ajuizamento_inicio,
+            data_ajuizamento_fim=data_ajuizamento_fim,
+            movimentos_codigo=movimentos_codigo,
+            orgao_julgador=orgao_julgador,
+        )
+
+    payload: Dict[str, Any] = {
+        "query": query_values,
+        "size": tamanho_pagina,
+        "track_total_hits": True,
+        "sort": [{"id.keyword": "asc"}],
+    }
+    if search_after is not None:
+        payload["search_after"] = search_after
+    if mostrar_movs:
+        payload["_source"] = True
+    else:
+        payload["_source"] = {"excludes": ["movimentacoes", "movimentos"]}
+    return payload
+
+
+def _build_query_amigavel(
+    *,
+    numero_processo: Optional[Union[str, List[str]]],
+    ano_ajuizamento: Optional[int],
+    classe: Optional[str],
+    assuntos: Optional[List[str]],
+    data_ajuizamento_inicio: Optional[str],
+    data_ajuizamento_fim: Optional[str],
+    movimentos_codigo: Optional[List[int]],
+    orgao_julgador: Optional[str],
+) -> Dict[str, Any]:
+    """Monta ``query.bool.must`` a partir dos filtros amigaveis."""
     must_conditions: List[Dict[str, Any]] = []
     if numero_processo:
         if isinstance(numero_processo, str):
@@ -69,29 +139,44 @@ def build_listar_processos_payload(
                 "minimum_should_match": 1,
             }
         })
+    elif data_ajuizamento_inicio is not None or data_ajuizamento_fim is not None:
+        # Mesmo padrao dual-format do ``ano_ajuizamento`` (refs #51): TRF3/TRF4
+        # armazenam ``dataAjuizamento`` no formato compacto ``YYYYMMDDhhmmss``
+        # e ignoram ``range`` ISO-only. ``minimum_should_match: 1`` cobre os
+        # dois universos.
+        range_iso: Dict[str, str] = {}
+        range_compact: Dict[str, str] = {}
+        if data_ajuizamento_inicio is not None:
+            range_iso["gte"] = data_ajuizamento_inicio
+            range_compact["gte"] = (
+                data_ajuizamento_inicio.replace("-", "") + "000000"
+            )
+        if data_ajuizamento_fim is not None:
+            range_iso["lte"] = data_ajuizamento_fim
+            range_compact["lte"] = (
+                data_ajuizamento_fim.replace("-", "") + "235959"
+            )
+        must_conditions.append({
+            "bool": {
+                "should": [
+                    {"range": {"dataAjuizamento": range_iso}},
+                    {"range": {"dataAjuizamento": range_compact}},
+                ],
+                "minimum_should_match": 1,
+            }
+        })
     if classe:
         must_conditions.append({"match": {"classe.codigo": str(classe)}})
     if assuntos:
         must_conditions.append({"terms": {"assuntos.codigo": assuntos}})
+    if movimentos_codigo:
+        must_conditions.append({"terms": {"movimentos.codigo": list(movimentos_codigo)}})
+    if orgao_julgador:
+        must_conditions.append({"match": {"orgaoJulgador.nome": orgao_julgador}})
 
     if must_conditions:
-        query_values: Dict[str, Any] = {"bool": {"must": must_conditions}}
-    else:
-        query_values = {"match_all": {}}
-
-    payload: Dict[str, Any] = {
-        "query": query_values,
-        "size": tamanho_pagina,
-        "track_total_hits": True,
-        "sort": [{"id.keyword": "asc"}],
-    }
-    if search_after is not None:
-        payload["search_after"] = search_after
-    if mostrar_movs:
-        payload["_source"] = True
-    else:
-        payload["_source"] = {"excludes": ["movimentacoes", "movimentos"]}
-    return payload
+        return {"bool": {"must": must_conditions}}
+    return {"match_all": {}}
 
 
 def call_datajud_api(
