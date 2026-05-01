@@ -35,7 +35,7 @@ class ComunicaCNJScraper(BaseScraper):
     def __init__(
         self,
         verbose: int = 1,
-        sleep_time: float = 0.0,
+        sleep_time: float = 0.5,
     ):
         super().__init__("ComunicaCNJ")
         self.set_verbose(verbose)

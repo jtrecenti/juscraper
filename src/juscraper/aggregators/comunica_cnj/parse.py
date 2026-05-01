@@ -17,15 +17,16 @@ logger = logging.getLogger(__name__)
 def parse_count(response: requests.Response) -> int:
     """Le o total de resultados a partir da resposta JSON.
 
-    A API expoe o total como ``count``; algumas variantes legacy usavam
-    ``total``. Aceita os dois e levanta ``ValueError`` quando nenhum dos
-    dois esta presente.
+    A API expoe o total como ``count``. Levanta ``ValueError`` quando a
+    chave nao esta presente — sinal de que a API mudou e o parser precisa
+    acompanhar (cf. transicao ``itens`` -> ``items`` ja tratada em
+    :func:`parse_items`).
     """
     data = response.json()
-    contagem = data.get("count", data.get("total"))
+    contagem = data.get("count")
     if contagem is None:
         raise ValueError(
-            "Resposta JSON do ComunicaCNJ nao contem 'count' nem 'total'."
+            "Resposta JSON do ComunicaCNJ nao contem 'count'."
         )
     return int(contagem)
 
