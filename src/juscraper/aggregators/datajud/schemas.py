@@ -51,6 +51,33 @@ class InputListarProcessosDataJud(PaginasMixin):
     )
 
 
+class InputContarProcessosDataJud(BaseModel):
+    """Accepted input for :meth:`DatajudScraper.contar_processos`.
+
+    Conta processos sem baixar nenhum documento — usado em analise de
+    viabilidade. Aceita os mesmos filtros de
+    :class:`InputListarProcessosDataJud` **menos** os parametros de
+    paginacao (``paginas``, ``tamanho_pagina``, ``mostrar_movs``), que
+    nao se aplicam a uma contagem (``size=0`` no Elasticsearch, sem
+    cursor).
+
+    A determinacao do alias-indice segue a mesma regra do
+    ``listar_processos``: por ``tribunal`` (sigla) ou inferido do
+    ``numero_processo`` (CNJ); ambos ausentes -> ``ValueError``.
+    """
+
+    numero_processo: str | list[str] | None = None
+    tribunal: str | None = None
+    ano_ajuizamento: int | None = None
+    classe: str | None = None
+    assuntos: list[str] | None = None
+
+    model_config = ConfigDict(
+        extra="forbid",
+        arbitrary_types_allowed=True,
+    )
+
+
 class OutputListarProcessosDataJud(BaseModel):
     """Colunas observaveis em uma linha do DataFrame de
     :meth:`DatajudScraper.listar_processos`.

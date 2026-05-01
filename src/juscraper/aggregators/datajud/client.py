@@ -17,12 +17,20 @@ from tqdm.auto import tqdm
 from ...core.base import BaseScraper
 from ...utils.cnj import clean_cnj  # Assuming this utility exists and is relevant
 from ...utils.params import normalize_paginas, raise_on_extra_kwargs
-from .download import build_listar_processos_payload, call_datajud_api
+from .download import (
+    build_contar_processos_payload,
+    build_listar_processos_payload,
+    call_datajud_api,
+)
 
 # Import mappings for tribunal and justice aliases.
 from .mappings import ID_JUSTICA_TRIBUNAL_TO_ALIAS, TRIBUNAL_TO_ALIAS
 from .parse import parse_datajud_api_response  # To be created for API response parsing
-from .schemas import InputListarProcessosDataJud
+from .schemas import InputContarProcessosDataJud, InputListarProcessosDataJud
+
+# Mapping inverso pra rotular o DataFrame devolvido por ``contar_processos``
+# com a sigla do tribunal (não só o alias-índice do Elasticsearch).
+ALIAS_TO_TRIBUNAL = {alias: sigla for sigla, alias in TRIBUNAL_TO_ALIAS.items()}
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +65,155 @@ class DatajudScraper(BaseScraper):
             "DatajudScraper initialized. API Key: "
             "{'Provided' if api_key else 'Default'}. Temp path: %s",
             self.download_path
+        )
+
+    def contar_processos(self, **kwargs) -> pd.DataFrame:
+        """Conta processos no DataJud sem baixar nenhum documento.
+
+        Útil para análise de viabilidade — antes de uma raspagem grande,
+        descobrir o volume estimado por tribunal. Usa ``track_total_hits=True``
+        com ``size=0`` (cap do Elasticsearch é 10000 quando ``track_total_hits``
+        é ``True`` apenas via flag boolean — aqui exigimos a contagem exata,
+        então o backend devolve ``relation="eq"`` quando o total é conhecido).
+
+        Aceita o **mesmo conjunto de filtros** de :meth:`listar_processos`
+        (``tribunal``, ``numero_processo``, ``ano_ajuizamento``, ``classe``,
+        ``assuntos``), excluindo apenas os parâmetros de paginação
+        (``paginas``, ``tamanho_pagina``, ``mostrar_movs``) — não há
+        paginação numa contagem.
+
+        Args:
+            **kwargs: Filtros aceitos pelo schema
+                :class:`InputContarProcessosDataJud`.
+
+        Returns:
+            pd.DataFrame: Uma linha por tribunal consultado, com colunas
+            ``tribunal`` (sigla), ``alias`` (índice ES), ``count`` (int) e
+            ``relation`` (``"eq"`` exato ou ``"gte"`` truncado pelo cap
+            interno do Elasticsearch). Quando a chamada falha para um
+            tribunal, ``count`` é ``None`` e a coluna ``error`` traz o
+            motivo.
+
+        Raises:
+            TypeError: Quando um kwarg desconhecido é passado.
+            ValidationError: Quando um filtro tem formato inválido.
+            ValueError: Quando nem ``tribunal`` nem ``numero_processo``
+                são informados, ou quando a sigla não tem alias mapeado.
+
+        Exemplo:
+            >>> import juscraper as jus
+            >>> dj = jus.scraper("datajud")
+            >>> dj.contar_processos(tribunal="TJSP", ano_ajuizamento=2023, classe="436")
+              tribunal             alias  count relation error
+            0     TJSP  api_publica_tjsp  12345       eq   None
+
+        See also:
+            :meth:`listar_processos` — usa o mesmo conjunto de filtros mas
+            baixa os processos.
+        """
+        try:
+            inp = InputContarProcessosDataJud(**kwargs)
+        except ValidationError as exc:
+            raise_on_extra_kwargs(exc, "DatajudScraper.contar_processos()")
+            raise
+
+        target_aliases = self._resolve_aliases(
+            tribunal=inp.tribunal,
+            numero_processo=inp.numero_processo,
+        )
+        # ``_resolve_aliases`` devolve uma list[(alias, cnjs_pra_esse_alias)]
+        # — segue o mesmo padrão do ``listar_processos`` para que ``numero_processo``
+        # cruzando vários tribunais funcione (cada tribunal recebe só os seus CNJs).
+        rows: List[Dict[str, Any]] = []
+        for alias, cnjs in target_aliases:
+            payload = build_contar_processos_payload(
+                numero_processo=cnjs,
+                ano_ajuizamento=inp.ano_ajuizamento,
+                classe=inp.classe,
+                assuntos=inp.assuntos,
+            )
+            api_response = call_datajud_api(
+                base_url=self.BASE_API_URL,
+                alias=alias,
+                api_key=self.api_key,
+                session=self.session,
+                query_payload=payload,
+                verbose=self.verbose > 1,
+            )
+            tribunal_sigla = ALIAS_TO_TRIBUNAL.get(alias, "")
+            if api_response is None:
+                rows.append({
+                    "tribunal": tribunal_sigla,
+                    "alias": alias,
+                    "count": None,
+                    "relation": None,
+                    "error": "API call failed (see logs)",
+                })
+                continue
+            total = api_response.get("hits", {}).get("total", {}) or {}
+            rows.append({
+                "tribunal": tribunal_sigla,
+                "alias": alias,
+                "count": int(total.get("value") or 0),
+                "relation": total.get("relation", "eq"),
+                "error": None,
+            })
+            time.sleep(self.sleep_time)
+        return pd.DataFrame(rows)
+
+    def _resolve_aliases(
+        self,
+        *,
+        tribunal: Optional[str],
+        numero_processo: Optional[Union[str, List[str]]],
+    ) -> List[tuple]:
+        """Determina lista de ``(alias, cnjs_para_esse_alias)``.
+
+        Mesma lógica usada por :meth:`listar_processos` — extraída pra ser
+        reutilizada por :meth:`contar_processos` sem duplicar código.
+        """
+        if tribunal:
+            alias = TRIBUNAL_TO_ALIAS.get(tribunal.upper())
+            if not alias:
+                raise ValueError(
+                    f"Tribunal {tribunal!r} não encontrado nos mappings do DataJud. "
+                    f"Verifique a sigla (ex: TJSP, TRT2, TRE-SP)."
+                )
+            cnjs: Optional[Union[str, List[str]]] = numero_processo
+            return [(alias, cnjs)]
+        if numero_processo:
+            processos_por_alias = defaultdict(list)
+            cnjs_to_query = (
+                [numero_processo] if isinstance(numero_processo, str) else numero_processo
+            )
+            for num_cnj in cnjs_to_query:
+                num_limpo = clean_cnj(num_cnj)
+                if len(num_limpo) == 20:
+                    id_justica = num_limpo[13]
+                    id_tribunal = num_limpo[14:16]
+                    alias = ID_JUSTICA_TRIBUNAL_TO_ALIAS.get((id_justica, id_tribunal))
+                    if alias:
+                        processos_por_alias[alias].append(num_limpo)
+                    else:
+                        warnings.warn(
+                            f"CNJ {num_cnj!r}: tribunal não mapeado no DataJud "
+                            f"(id_justica={id_justica}, id_tribunal={id_tribunal}). "
+                            f"Processo será ignorado.",
+                            UserWarning,
+                            stacklevel=2,
+                        )
+                else:
+                    warnings.warn(
+                        f"CNJ inválido: {num_cnj!r} (após limpeza tem {len(num_limpo)} "
+                        f"dígitos, deveria ter 20). Processo será ignorado.",
+                        UserWarning,
+                        stacklevel=2,
+                    )
+            if not processos_por_alias:
+                return []
+            return [(alias, cnjs) for alias, cnjs in processos_por_alias.items()]
+        raise ValueError(
+            "É necessário especificar 'tribunal' (sigla) ou 'numero_processo' (CNJ)."
         )
 
     def listar_processos(
