@@ -28,6 +28,28 @@ Cannot be used together with the specific names — raises `ValueError`.
 
 **Deprecated aliases:** `data_julgamento_de` / `data_julgamento_ate`, `data_publicacao_de` / `data_publicacao_ate` — accepted with `DeprecationWarning`.
 
+#### Accepted input formats
+
+For endpoints with a wired pydantic schema (eSAJ family, 1C-a tribunals,
+TJDFT, TJES — see `Schemas pydantic` in `CONTRIBUTING.md` for the current
+list), the four canonical date fields accept any of:
+
+- `"DD/MM/AAAA"` — Brazilian short form (e.g. `"01/03/2024"`)
+- `"DD-MM-AAAA"` — Brazilian with dashes (e.g. `"01-03-2024"`)
+- `"AAAA-MM-DD"` — ISO-8601 short form (e.g. `"2024-03-01"`)
+- `"AAAA/MM/DD"` — ISO-8601 with slashes (e.g. `"2024/03/01"`)
+- `datetime.date`
+- `datetime.datetime` (the time component is dropped)
+
+The pipeline coerces every recognized input to whatever format the
+tribunal's backend expects — eSAJ uses `DD/MM/AAAA`, REST/JSON backends
+like TJDFT use `AAAA-MM-DD`. The exact backend format is declared per
+schema via the `BACKEND_DATE_FORMAT: ClassVar[str]` attribute, so
+callers don't need to know it. An empty string and `None` pass through
+unchanged (open-ended search). An unrecognized format surfaces as a
+single `ValueError("...Formato esperado: ...")` raised by
+`validate_intervalo_datas`.
+
 ### Pagination
 
 | Parameter | Type | Description |
@@ -99,6 +121,29 @@ scraper.cjsg(pesquisa="teste", paginas=1) # downloads page 1 only
 scraper.cjsg(pesquisa="teste", paginas=3) # downloads pages 1-3
 ```
 
+### Date format flexibility
+
+Wired endpoints accept multiple input formats and coerce to the
+backend's expected representation. The four examples below all produce
+the same request:
+
+```python
+import datetime as dt
+import juscraper as jus
+
+tjsp = jus.scraper("tjsp")     # eSAJ backend (DD/MM/AAAA)
+tjdft = jus.scraper("tjdft")   # REST JSON backend (AAAA-MM-DD)
+
+# String, any of the four supported formats — coerced internally:
+tjsp.cjsg("dano moral", paginas=1, data_julgamento_inicio="01/03/2024")
+tjsp.cjsg("dano moral", paginas=1, data_julgamento_inicio="2024-03-01")
+tjdft.cjsg("habeas",    paginas=1, data_julgamento_inicio="01/03/2024")
+tjdft.cjsg("habeas",    paginas=1, data_julgamento_inicio="2024-03-01")
+
+# Or pass a date / datetime directly:
+tjsp.cjsg("dano moral", paginas=1, data_julgamento_inicio=dt.date(2024, 3, 1))
+```
+
 ## Auto-chunking (eSAJ family)
 
 Several eSAJ endpoints (`cjpg`/`cjsg` in TJSP, plus `cjsg` in TJAC, TJAL,
@@ -152,6 +197,8 @@ The `juscraper.utils.params` module provides normalization functions used intern
 - `normalize_paginas(paginas)` — normalizes `int | list | range | None`
 - `normalize_pesquisa(pesquisa, **kwargs)` — handles deprecated aliases
 - `normalize_datas(**kwargs)` — handles deprecated and generic date aliases
+- `coerce_brazilian_date(value, backend_format)` — coerces any of the four supported string formats (or `date` / `datetime`) into the backend's expected format
+- `apply_input_pipeline_search(schema_cls, method_name, *, ...)` — runs the canonical input pipeline (alias resolution → date coercion → interval validation → pydantic schema) for `cjsg`/`cjpg` endpoints
 - `iter_date_windows(data_inicio, data_fim, *, max_dias=366)` — splits a date range into non-overlapping windows for auto-chunking
 - `run_chunked_search(fetch_window, *, data_inicio, data_fim, dedup_key, ...)` — drives a search across windows, concatenates and deduplicates
 - `warn_unsupported(param_name, tribunal)` — warns about unsupported parameters
