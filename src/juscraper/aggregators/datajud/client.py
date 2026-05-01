@@ -24,7 +24,7 @@ from .download import (
 )
 
 # Import mappings for tribunal and justice aliases.
-from .mappings import ID_JUSTICA_TRIBUNAL_TO_ALIAS, TRIBUNAL_TO_ALIAS
+from .mappings import ID_JUSTICA_TRIBUNAL_TO_ALIAS, TIPOS_MOVIMENTACAO, TRIBUNAL_TO_ALIAS
 from .parse import parse_datajud_api_response  # To be created for API response parsing
 from .schemas import InputContarProcessosDataJud, InputListarProcessosDataJud
 
@@ -243,9 +243,47 @@ class DatajudScraper(BaseScraper):
                   inferencia via ``numero_processo``.
                 * ``ano_ajuizamento`` (int): Filtra por ano de ajuizamento.
                   Backend recebe ``range`` dual em ``dataAjuizamento`` (ISO
-                  ``YYYY-01-01`` + compacto ``YYYYMMDDhhmmss``).
+                  ``YYYY-01-01`` + compacto ``YYYYMMDDhhmmss``). Mutuamente
+                  exclusivo com ``data_ajuizamento_inicio``/``_fim``.
+                * ``data_ajuizamento_inicio`` / ``data_ajuizamento_fim`` (str):
+                  Range de data de ajuizamento, formato ``YYYY-MM-DD`` (ISO
+                  8601). Backend recebe ``bool.should`` com 2 ``range`` em
+                  ``dataAjuizamento`` (ISO + compacto), mesmo padrao dual-
+                  format do ``ano_ajuizamento`` (refs #51). Pode informar
+                  apenas inicio, apenas fim, ou ambos. **Nao** ha alias
+                  ``data_inicio``/``data_fim`` aqui (a convencao generica
+                  do projeto mapeia esses para ``data_julgamento_*``, e o
+                  DataJud filtra por ajuizamento, nao julgamento).
                 * ``classe`` (str): Codigo da classe processual CNJ.
                 * ``assuntos`` (list[str]): Lista de codigos de assuntos CNJ.
+                * ``tipos_movimentacao`` (list[str]): Nomes amigaveis de
+                  categorias de movimentacao (ex.: ``["decisao", "sentenca"]``).
+                  Resolvidos via ``TIPOS_MOVIMENTACAO`` para uma lista plana
+                  de codigos TPU CNJ. Para nomes nao mapeados, usar
+                  ``movimentos_codigo`` direto. Categorias atuais:
+                  ``decisao``, ``sentenca``, ``julgamento``, ``tutela``,
+                  ``transito_julgado``.
+                * ``movimentos_codigo`` (list[int]): Codigos TPU CNJ
+                  diretos. Concatenado com a lista resolvida de
+                  ``tipos_movimentacao`` (uniao). Backend: ``terms`` em
+                  ``movimentos.codigo``.
+                * ``orgao_julgador`` (str): Nome do orgao julgador (ex.:
+                  ``"Vara Civel de Brasilia"``). Backend: ``match`` em
+                  ``orgaoJulgador.nome``.
+                * ``query`` (dict): **Override total** da query Elasticsearch.
+                  Quando fornecido, vira a chave ``query`` do payload
+                  literalmente. Mutuamente exclusivo com TODOS os filtros
+                  amigaveis acima (``numero_processo``, ``ano_ajuizamento``,
+                  ``classe``, ``assuntos``, ``data_ajuizamento_*``,
+                  ``tipos_movimentacao``, ``movimentos_codigo``,
+                  ``orgao_julgador``). Exige ``tribunal`` explicito (sem
+                  inferencia via CNJ). Em troca, oferece paridade com
+                  requisicao direta a ``/<alias>/_search`` —
+                  ``must_not``, ``should`` com ``minimum_should_match``,
+                  ``range`` em campos arbitrarios, ``wildcard``, ``nested``,
+                  etc. ``size``/``sort``/``_source``/``search_after`` (paginacao)
+                  continuam sendo controlados pela biblioteca. Shape oficial
+                  documentado em https://datajud-wiki.cnj.jus.br/api-publica/.
                 * ``mostrar_movs`` (bool): Se ``True``, inclui
                   ``movimentos``/``movimentacoes`` no ``_source``. Default
                   ``False`` (paginacao mais leve).
@@ -273,7 +311,11 @@ class DatajudScraper(BaseScraper):
             TypeError: Quando um kwarg desconhecido e passado (traduzido de
                 ``ValidationError`` por ``raise_on_extra_kwargs``).
             ValidationError: Quando um filtro tem formato invalido (ex.:
-                ``ano_ajuizamento`` nao-int).
+                ``ano_ajuizamento`` nao-int, ``data_ajuizamento_*`` fora de
+                ISO 8601), quando ``ano_ajuizamento`` coexiste com
+                ``data_ajuizamento_*``, quando ``query`` coexiste com
+                filtros amigaveis, ou quando um nome em ``tipos_movimentacao``
+                nao esta mapeado.
             ValueError: Quando nem ``tribunal`` nem ``numero_processo`` sao
                 informados, ou quando a sigla nao tem alias mapeado.
 
@@ -285,9 +327,26 @@ class DatajudScraper(BaseScraper):
         Exemplo:
             >>> import juscraper as jus
             >>> dj = jus.scraper("datajud")
-            >>> df = dj.listar_processos(tribunal="TJSP", ano_ajuizamento=2023,
-            ...                          classe="436", assuntos=["1127"],
-            ...                          paginas=range(1, 3))
+            >>> # Caminho amigavel: range de data + categoria de movimentacao
+            >>> df = dj.listar_processos(
+            ...     tribunal="TRF1",
+            ...     data_ajuizamento_inicio="2024-01-01",
+            ...     data_ajuizamento_fim="2024-03-31",
+            ...     tipos_movimentacao=["decisao", "sentenca"],
+            ...     paginas=range(1, 3),
+            ... )
+            >>> # Caminho query-override: paridade com requisicao direta
+            >>> df = dj.listar_processos(
+            ...     tribunal="TRF1",
+            ...     query={
+            ...         "bool": {
+            ...             "must_not": [{"exists": {"field": "orgaoJulgador.nome"}}],
+            ...             "should": [{"match": {"classe.nome": "tutela"}}],
+            ...             "minimum_should_match": 1,
+            ...         }
+            ...     },
+            ...     paginas=1,
+            ... )
 
         See also:
             :class:`InputListarProcessosDataJud` — fonte da verdade dos
@@ -317,8 +376,26 @@ class DatajudScraper(BaseScraper):
         ano_ajuizamento = inp.ano_ajuizamento
         classe = inp.classe
         assuntos = inp.assuntos
+        data_ajuizamento_inicio = inp.data_ajuizamento_inicio
+        data_ajuizamento_fim = inp.data_ajuizamento_fim
+        orgao_julgador = inp.orgao_julgador
+        query_override = inp.query
         mostrar_movs = inp.mostrar_movs
         tamanho_pagina = inp.tamanho_pagina
+
+        # Resolve ``tipos_movimentacao`` (nomes amigaveis) -> codigos TPU e
+        # concatena com ``movimentos_codigo`` direto. O builder em download.py
+        # recebe so a lista plana — mantemos o mapping numa unica camada.
+        # Schema garantiu que cada nome em ``tipos_movimentacao`` esta em
+        # ``TIPOS_MOVIMENTACAO``, entao o ``[]`` de fallback aqui e defesa.
+        movimentos_codigo: Optional[List[int]] = None
+        if inp.tipos_movimentacao or inp.movimentos_codigo:
+            codigos: List[int] = []
+            for tipo in inp.tipos_movimentacao or []:
+                codigos.extend(TIPOS_MOVIMENTACAO.get(tipo, []))
+            codigos.extend(inp.movimentos_codigo or [])
+            # Dedup mantendo ordem (uniao das duas fontes).
+            movimentos_codigo = list(dict.fromkeys(codigos))
 
         all_dfs = []
         # Determine target aliases
@@ -390,9 +467,14 @@ class DatajudScraper(BaseScraper):
                 ano_ajuizamento=ano_ajuizamento,
                 classe=classe,
                 assuntos=assuntos,
+                data_ajuizamento_inicio=data_ajuizamento_inicio,
+                data_ajuizamento_fim=data_ajuizamento_fim,
+                movimentos_codigo=movimentos_codigo,
+                orgao_julgador=orgao_julgador,
+                query_override=query_override,
                 mostrar_movs=mostrar_movs,
                 paginas_range=paginas_norm,
-                tamanho_pagina=tamanho_pagina
+                tamanho_pagina=tamanho_pagina,
             )
             if not df_alias.empty:
                 all_dfs.append(df_alias)
@@ -408,6 +490,11 @@ class DatajudScraper(BaseScraper):
         ano_ajuizamento: Optional[int],
         classe: Optional[str],
         assuntos: Optional[List[str]],
+        data_ajuizamento_inicio: Optional[str],
+        data_ajuizamento_fim: Optional[str],
+        movimentos_codigo: Optional[List[int]],
+        orgao_julgador: Optional[str],
+        query_override: Optional[dict],
         mostrar_movs: bool,
         paginas_range: Optional[range],
         tamanho_pagina: int,
@@ -441,6 +528,11 @@ class DatajudScraper(BaseScraper):
                     ano_ajuizamento=ano_ajuizamento,
                     classe=classe,
                     assuntos=assuntos,
+                    data_ajuizamento_inicio=data_ajuizamento_inicio,
+                    data_ajuizamento_fim=data_ajuizamento_fim,
+                    movimentos_codigo=movimentos_codigo,
+                    orgao_julgador=orgao_julgador,
+                    query=query_override,
                     mostrar_movs=mostrar_movs,
                     tamanho_pagina=tamanho_pagina,
                     search_after=search_after_params,
