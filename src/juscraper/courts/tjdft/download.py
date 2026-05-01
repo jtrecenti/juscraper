@@ -5,8 +5,6 @@ import math
 
 import requests
 
-from juscraper.utils.params import to_iso_date
-
 BASE_URL = "https://jurisdf.tjdft.jus.br/api/v1/pesquisa"
 
 
@@ -62,17 +60,15 @@ def cjsg_download(
     headers = {"Content-Type": "application/json"}
 
     termos_acessorios: list = []
-    jul_ini = to_iso_date(data_julgamento_inicio)
-    jul_fim = to_iso_date(data_julgamento_fim)
-    if jul_ini and jul_fim:
+    # Datas chegam aqui ja em BACKEND_DATE_FORMAT (%Y-%m-%d) — coercao feita
+    # por apply_input_pipeline_search no client a partir do schema.
+    if data_julgamento_inicio and data_julgamento_fim:
         termos_acessorios.append(
-            {"campo": "dataJulgamento", "valor": f"entre {jul_ini} e {jul_fim}"}
+            {"campo": "dataJulgamento", "valor": f"entre {data_julgamento_inicio} e {data_julgamento_fim}"}
         )
-    pub_ini = to_iso_date(data_publicacao_inicio)
-    pub_fim = to_iso_date(data_publicacao_fim)
-    if pub_ini and pub_fim:
+    if data_publicacao_inicio and data_publicacao_fim:
         termos_acessorios.append(
-            {"campo": "dataPublicacao", "valor": f"entre {pub_ini} e {pub_fim}"}
+            {"campo": "dataPublicacao", "valor": f"entre {data_publicacao_inicio} e {data_publicacao_fim}"}
         )
 
     def _fetch_page(pagina):

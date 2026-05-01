@@ -128,3 +128,13 @@ def test_cjpg_query_too_long_raises(tmp_path):
     scraper = jus.scraper("tjsp", download_path=str(tmp_path))
     with pytest.raises(QueryTooLongError):
         scraper.cjpg(pesquisa, paginas=1)
+
+
+def test_cjpg_query_too_long_via_alias_raises(tmp_path):
+    """Pre-request guard tambem cobre o caso do alias `query` resolvido pelo
+    pipeline (refs #174 — validate_pesquisa_length roda apos consumir
+    o alias)."""
+    long_query = "a" * 121
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+    with pytest.warns(DeprecationWarning), pytest.raises(QueryTooLongError):
+        scraper.cjpg(paginas=1, query=long_query)

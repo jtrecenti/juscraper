@@ -1,7 +1,7 @@
 """Utility functions for normalizing public API parameters across all scrapers."""
 import difflib
 import warnings
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import Any, Callable, Iterator, Optional, Union
 
 import pandas as pd
@@ -235,6 +235,69 @@ def to_iso_date(date_str):
     return date_str
 
 
+# Date input formats accepted by ``coerce_brazilian_date``. Order matters:
+# parsing tries them sequentially, so the most specific patterns come first.
+# The four string formats cover the combinations of separator (``/`` vs ``-``)
+# and component order (DMY vs YMD) commonly seen in Brazilian web forms and
+# REST/GraphQL backends.
+_ACCEPTED_DATE_FORMATS: tuple[str, ...] = (
+    "%d/%m/%Y",
+    "%d-%m-%Y",
+    "%Y-%m-%d",
+    "%Y/%m/%d",
+)
+
+
+def coerce_brazilian_date(value, backend_format: str):
+    """Coerce a user-supplied date into the format the backend expects.
+
+    Accepted inputs:
+
+    * ``None`` / ``""`` → returned unchanged (open-ended searches).
+    * ``datetime.date`` / ``datetime.datetime`` → emitted via
+      :func:`datetime.strftime` using ``backend_format``.
+    * ``str`` matching one of :data:`_ACCEPTED_DATE_FORMATS`
+      (``DD/MM/AAAA``, ``DD-MM-AAAA``, ``AAAA-MM-DD``, ``AAAA/MM/DD``) →
+      parsed and re-emitted in ``backend_format``.
+    * Anything else (unparseable string, unsupported type) → returned
+      unchanged. :func:`validate_intervalo_datas` is the single point of
+      truth for "is this date valid?", so we hand the value through and
+      let it raise with a precise ``strptime`` error message.
+
+    The function never raises: passthrough is intentional so the validation
+    error happens once, downstream, with the canonical ``backend_format``
+    in the message.
+
+    Args:
+        value: Date as ``str``, :class:`datetime.date`, :class:`datetime.datetime`,
+            or ``None``.
+        backend_format: ``strptime``/``strftime`` format the backend expects
+            (e.g. ``"%d/%m/%Y"`` for eSAJ, ``"%Y-%m-%d"`` for ISO backends).
+
+    Returns:
+        ``None``, an empty string, or a ``str`` in ``backend_format``.
+
+    See also:
+        :func:`apply_input_pipeline_search` — applies this coercion to the
+        four canonical date fields before pydantic validation.
+    """
+    if value is None or value == "":
+        return value
+    if isinstance(value, datetime):
+        return value.strftime(backend_format)
+    if isinstance(value, date):
+        return value.strftime(backend_format)
+    if isinstance(value, str):
+        for fmt in _ACCEPTED_DATE_FORMATS:
+            try:
+                parsed = datetime.strptime(value, fmt)
+            except ValueError:
+                continue
+            return parsed.strftime(backend_format)
+        return value
+    return value
+
+
 def validate_intervalo_datas(
     data_inicio,
     data_fim,
@@ -279,15 +342,18 @@ def validate_intervalo_datas(
     if data_inicio is None or data_fim is None:
         return
 
+    # TypeError tambem cai aqui: coerce_brazilian_date faz passthrough de
+    # tipos nao-suportados (ex.: int) e o strptime levanta TypeError em vez
+    # de ValueError. Mensagem amigavel unica vale para ambos.
     try:
         dt_inicio = datetime.strptime(data_inicio, formato)
-    except ValueError as exc:
+    except (ValueError, TypeError) as exc:
         raise ValueError(
             f"'{rotulo}_inicio' inválida: {data_inicio!r}. Formato esperado: {formato}."
         ) from exc
     try:
         dt_fim = datetime.strptime(data_fim, formato)
-    except ValueError as exc:
+    except (ValueError, TypeError) as exc:
         raise ValueError(
             f"'{rotulo}_fim' inválida: {data_fim!r}. Formato esperado: {formato}."
         ) from exc
@@ -564,36 +630,59 @@ def apply_input_pipeline_search(
     schema_cls: type[BaseModel],
     method_name: str,
     *,
-    pesquisa: str,
+    pesquisa: Optional[str],
     paginas,
     kwargs: dict,
+    data_julgamento_inicio=None,
+    data_julgamento_fim=None,
+    data_publicacao_inicio=None,
+    data_publicacao_fim=None,
     max_dias: Optional[int] = None,
     origem_mensagem: Optional[str] = None,
+    consume_pesquisa_aliases: bool = False,
+    nullable_pesquisa: bool = False,
     **canonical_filters,
 ) -> BaseModel:
     """Run the canonical input-validation pipeline for search endpoints (cjsg/cjpg).
 
     Order:
 
-    1. :func:`normalize_paginas` — int → ``range(1, n+1)``; list/range/None passthrough.
-    2. :func:`normalize_datas` — pop date aliases (``_de``/``_ate``,
+    1. **Optionally consume ``pesquisa`` aliases** (refs #174 follow-up). Set
+       ``consume_pesquisa_aliases=True`` to delegate :func:`normalize_pesquisa`
+       to the helper — ``query``/``termo`` aliases in ``kwargs`` are popped
+       and the canonical value is used. Default is ``False`` because the
+       legacy clients already in ``main`` call :func:`normalize_pesquisa` in
+       their own bodies; flipping the default would double-process and raise.
+       New migrations (TJDFT/TJES/TJSP cjpg, etc.) opt-in to ``True``. Runs
+       *before* the date re-injection so :func:`normalize_pesquisa` only sees
+       the search-related kwargs the user passed.
+    2. **Re-inject nominal date arguments into ``kwargs``** (refs #174). Clients
+       that keep dates as named arguments in the public signature pass them
+       here directly; non-``None`` values are merged into ``kwargs`` *before*
+       :func:`normalize_datas` so alias resolution and conflict detection live
+       in a single pass.
+    3. :func:`normalize_paginas` — int → ``range(1, n+1)``; list/range/None passthrough.
+    4. :func:`normalize_datas` — pop date aliases (``_de``/``_ate``,
        ``data_inicio``/``data_fim``) emitting :class:`DeprecationWarning` and
        returning canonical names.
-    3. :func:`pop_normalize_aliases` — strip from ``kwargs`` everything already
+    5. :func:`pop_normalize_aliases` — strip from ``kwargs`` everything already
        consumed (search aliases, date aliases, canonical date keys), so the
        same value isn't propagated twice into the schema.
-    4. :func:`validate_intervalo_datas` for julgamento *and* publicação. Format
+    6. **Coerce date inputs** via :func:`coerce_brazilian_date` (refs #173).
+       The four canonical dates are coerced into the backend's expected format
+       (``BACKEND_DATE_FORMAT``) before validation. Accepts ``DD/MM/AAAA``,
+       ``DD-MM-AAAA``, ``AAAA-MM-DD``, ``AAAA/MM/DD``, :class:`datetime.date`
+       and :class:`datetime.datetime`.
+    7. :func:`validate_intervalo_datas` for julgamento *and* publicação. Format
        and ``inicio <= fim`` are always validated; the window cap is applied
        only when ``max_dias`` is set.
-    5. ``schema_cls(pesquisa, paginas, **datas, **canonical_filters, **kwargs)``
+    8. ``schema_cls(pesquisa, paginas, **datas, **canonical_filters, **kwargs)``
        — pydantic validation with ``extra="forbid"``.
-    6. :func:`raise_on_extra_kwargs` translates ``extra_forbidden`` errors into
+    9. :func:`raise_on_extra_kwargs` translates ``extra_forbidden`` errors into
        a :class:`TypeError`. Other validation errors propagate as-is.
 
-    The caller is responsible for:
+    The caller is still responsible for:
 
-    - Calling :func:`normalize_pesquisa` (or skipping it when the endpoint
-      accepts ``pesquisa=""``, e.g. TJSP cjpg).
     - Popping tribunal-specific deprecated aliases (``nr_processo``,
       ``magistrado``) **before** invoking this helper, otherwise pydantic
       rejects them as ``extra_forbidden``.
@@ -611,9 +700,10 @@ def apply_input_pipeline_search(
     would silently capture the caller's filter via Python's keyword binding
     rules, instead of forwarding it to the schema via ``**canonical_filters``.
 
-    The date format used by :func:`validate_intervalo_datas` is read from the
-    schema's ``BACKEND_DATE_FORMAT`` :class:`ClassVar`, defaulting to
-    ``"%d/%m/%Y"`` (eSAJ). Tribunals whose backend speaks ISO declare
+    The date format used by :func:`validate_intervalo_datas` (and by
+    :func:`coerce_brazilian_date`) is read from the schema's
+    ``BACKEND_DATE_FORMAT`` :class:`ClassVar`, defaulting to ``"%d/%m/%Y"``
+    (eSAJ). Tribunals whose backend speaks ISO declare
     ``BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"`` in their schema. This
     keeps the format coupled to the schema (where it logically belongs) instead
     of being passed redundantly by every caller.
@@ -622,12 +712,23 @@ def apply_input_pipeline_search(
         schema_cls: Pydantic model class to instantiate (e.g. :class:`InputCJSGTJRN`).
         method_name: Human-readable identifier used in the ``TypeError`` message
             when ``extra_forbidden`` triggers (e.g. ``"TJRNScraper.cjsg()"``).
-        pesquisa: Already-normalized search term (or ``""`` for endpoints that
-            allow open searches).
+        pesquisa: Search term. ``None`` is allowed when ``nullable_pesquisa``
+            is ``True`` (TJSP cjpg). When ``consume_pesquisa_aliases`` is
+            ``True`` (default), the value is normalized internally — pass the
+            raw value from the public method.
         paginas: Pages parameter as accepted by the public method (``int``,
             ``list``, ``range``, or ``None``).
-        kwargs: The caller's local ``kwargs`` dict. Mutated in place by
-            :func:`pop_normalize_aliases` and consumed by ``schema_cls``.
+        kwargs: The caller's local ``kwargs`` dict. Mutated in place: nominal
+            dates are merged in, consumed aliases are popped, and what remains
+            is forwarded to the schema.
+        data_julgamento_inicio, data_julgamento_fim,
+        data_publicacao_inicio, data_publicacao_fim: Nominal date arguments
+            from the public method signature. Each accepts ``str`` in any of
+            the four supported formats (``DD/MM/AAAA``, ``DD-MM-AAAA``,
+            ``AAAA-MM-DD``, ``AAAA/MM/DD``), :class:`datetime.date`,
+            :class:`datetime.datetime`, or ``None``. Non-``None`` values are
+            merged into ``kwargs`` before normalization; a key present both
+            here and in ``kwargs`` raises :class:`ValueError` (collision).
         max_dias: Window cap for date intervals, in days. ``None`` (default)
             disables the cap — used by tribunals whose backend has no
             documented limit (refs #128). The eSAJ family passes
@@ -638,6 +739,17 @@ def apply_input_pipeline_search(
             ``None`` (default) falls back to ``"O backend"`` so non-eSAJ
             tribunals invoking the helper without an explicit subject don't
             leak ``"eSAJ"`` into their error messages.
+        consume_pesquisa_aliases: When ``True``, the helper calls
+            :func:`normalize_pesquisa` internally to consume ``query``/``termo``
+            aliases from ``kwargs``. Default is ``False`` (legacy compat with
+            clients that still call :func:`normalize_pesquisa` themselves).
+            New migrations should set ``True`` and skip the manual call.
+        nullable_pesquisa: When ``True``, the helper passes ``pesquisa or None``
+            to :func:`normalize_pesquisa` — i.e. an empty string is treated as
+            "not provided", letting the alias machinery decide. Used by TJSP
+            cjpg, whose default is ``pesquisa=""`` (open search). When
+            ``False`` (default), an empty/``None`` ``pesquisa`` without an
+            alias raises :class:`TypeError`.
         **canonical_filters: Tribunal-specific filters already extracted from
             the public method signature (e.g. ``numero_processo=...``,
             ``relator=...``). They are forwarded to the schema as-is. **A key
@@ -649,17 +761,48 @@ def apply_input_pipeline_search(
         Instantiated pydantic model with all fields validated.
 
     Raises:
-        TypeError: When ``kwargs`` contains keys not declared in the schema.
+        TypeError: When ``kwargs`` contains keys not declared in the schema,
+            or when ``pesquisa`` is missing without ``nullable_pesquisa``.
         ValidationError: For other validation failures (bad type, format,
             literal mismatch).
-        ValueError: When :func:`validate_intervalo_datas` rejects an interval.
+        ValueError: When :func:`validate_intervalo_datas` rejects an interval,
+            or when the same date key is given both nominally and via
+            ``kwargs``.
     """
+    if consume_pesquisa_aliases:
+        pesquisa_input = (pesquisa or None) if nullable_pesquisa else pesquisa
+        if nullable_pesquisa and pesquisa_input is None and not any(
+            alias in kwargs for alias in SEARCH_ALIASES
+        ):
+            pesquisa = pesquisa or ""
+        else:
+            pesquisa = normalize_pesquisa(pesquisa_input, **kwargs)
+
+    for _date_key, _date_val in (
+        ("data_julgamento_inicio", data_julgamento_inicio),
+        ("data_julgamento_fim", data_julgamento_fim),
+        ("data_publicacao_inicio", data_publicacao_inicio),
+        ("data_publicacao_fim", data_publicacao_fim),
+    ):
+        if _date_val is None:
+            continue
+        if _date_key in kwargs and kwargs[_date_key] is not None:
+            raise ValueError(
+                f"'{_date_key}' foi passado como argumento nominal e via "
+                f"kwargs ao mesmo tempo. Use apenas uma das formas."
+            )
+        kwargs[_date_key] = _date_val
+
     paginas_norm = normalize_paginas(paginas)
     datas = normalize_datas(**kwargs)
     pop_normalize_aliases(kwargs, include_canonical=True)
 
     origem_resolvida = origem_mensagem if origem_mensagem is not None else "O backend"
     date_format = getattr(schema_cls, "BACKEND_DATE_FORMAT", "%d/%m/%Y")
+
+    for _key in DATE_CANONICAL:
+        datas[_key] = coerce_brazilian_date(datas[_key], date_format)
+
     validate_intervalo_datas(
         datas["data_julgamento_inicio"],
         datas["data_julgamento_fim"],

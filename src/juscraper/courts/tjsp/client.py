@@ -315,9 +315,13 @@ class TJSPScraper(EsajSearchScraper):
     ) -> str:
         """Baixa as paginas HTML brutas do CJPG TJSP (sem parsear).
 
-        Roda :func:`validate_pesquisa_length` antes do pydantic para
-        que ``QueryTooLongError`` propague limpo. Aceita os mesmos
-        filtros de :meth:`cjpg`; veja la a lista completa.
+        Delega a normalizacao de ``pesquisa`` ao pipeline (via
+        ``consume_pesquisa_aliases=True`` + ``nullable_pesquisa=True`` —
+        CJPG admite busca aberta com ``pesquisa=""``). Roda
+        :func:`validate_pesquisa_length` sobre o valor ja resolvido
+        (apos consumir ``query``/``termo``) para que ``QueryTooLongError``
+        propague mesmo quando o alias trouxe a string longa. Aceita os
+        mesmos filtros de :meth:`cjpg`; veja la a lista completa.
 
         Args:
             pesquisa (str): Termo livre. Default ``""``. Limite de 120
@@ -330,30 +334,28 @@ class TJSPScraper(EsajSearchScraper):
         Raises:
             TypeError: Quando um kwarg desconhecido e passado.
             ValidationError: Quando um filtro tem formato invalido.
-            QueryTooLongError: Quando ``pesquisa`` excede 120 chars.
+            QueryTooLongError: Quando ``pesquisa`` (ou alias resolvido)
+                excede 120 chars.
 
         Returns:
             str: Caminho do diretorio onde os HTMLs foram salvos.
         """
-        # CJPG allows pesquisa="" (default) — only call normalize_pesquisa
-        # when pesquisa was explicitly passed OR a deprecated alias is in
-        # kwargs. normalize_pesquisa refuses to reconcile pesquisa="" with
-        # an alias, so we pass None when pesquisa is empty to let the alias
-        # take precedence.
-        has_alias = "query" in kwargs or "termo" in kwargs
-        if pesquisa or has_alias:
-            pesquisa = normalize_pesquisa(pesquisa or None, **kwargs)
-        validate_pesquisa_length(pesquisa, endpoint="CJPG")
-
         inp = apply_input_pipeline_search(
             InputCJPGTJSP,
             f"{type(self).__name__}.cjpg_download()",
             pesquisa=pesquisa,
             paginas=paginas,
             kwargs=kwargs,
+            consume_pesquisa_aliases=True,
+            nullable_pesquisa=True,
             max_dias=366,
             origem_mensagem="O eSAJ",
         )
+        # Roda apos o pipeline para validar o valor ja resolvido (caso o
+        # usuario passe `query=<string longa>`). InputCJPGTJSP nao tem
+        # ``max_length`` em ``pesquisa``, entao ordem antes/depois do
+        # pydantic e funcionalmente equivalente.
+        validate_pesquisa_length(inp.pesquisa, endpoint="CJPG")
 
         def _get_n_pags(r0):
             html = r0.content if hasattr(r0, "content") else r0
