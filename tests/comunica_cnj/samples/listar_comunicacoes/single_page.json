@@ -1,0 +1,1776 @@
+{
+  "status": "success",
+  "message": "Sucesso",
+  "count": 40,
+  "items": [
+    {
+      "id": 87016305,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRO",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Cacoal - 3ª Vara Cível",
+      "idOrgao": 882,
+      "texto": "Cacoal - 3ª Vara Cível Avenida Cuiabá, nº 2025, Bairro Centro, CEP 76963-731, Cacoal, - de 1727 a 2065 Endereço eletrônico: cwl3civel@tjro.jus.br Número do processo: 7011534-06.2023.8.22.0007 AUTOR: NILZA OLIVEIRA DOS SANTOS, CPF nº 41106890230, LINHA 05, LOTE 52, GLEBA 05 S/N ZONA RURAL - 76919-000 - MINISTRO ANDREAZZA - RONDÔNIA ADVOGADOS DO AUTOR: JULIANO ROSS, OAB nº MT4743 CARLOS ALBERTO VIEI...[truncado]",
+      "numero_processo": "70115340620238220007",
+      "meio": "D",
+      "link": "https://pjepg.tjro.jus.br/Processo/ConsultaDocumento/listView.seam?x=24053107564600000000102232887",
+      "tipoDocumento": "Sentença",
+      "nomeClasse": "PROCEDIMENTO COMUM CíVEL",
+      "codigoClasse": "7",
+      "numeroComunicacao": 130,
+      "ativo": true,
+      "hash": "QJDEM7aX68JtBLtrTVzNMeYoWe2dLw",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "7011534-06.2023.8.22.0007",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87016305,
+          "nome": "NILZA OLIVEIRA DOS SANTOS",
+          "polo": "A"
+        }
+      ],
+      "destinatarioadvogados": [
+        {
+          "id": 149290221,
+          "comunicacao_id": 87016305,
+          "advogado_id": 253288,
+          "created_at": "2024-05-31T08:56:49",
+          "updated_at": "2024-05-31T08:56:49",
+          "advogado": {
+            "id": 253288,
+            "nome": "CARLOS ALBERTO VIEIRA DA ROCHA",
+            "numero_oab": "11101",
+            "uf_oab": "MT"
+          }
+        },
+        {
+          "id": 149290222,
+          "comunicacao_id": 87016305,
+          "advogado_id": 1054747,
+          "created_at": "2024-05-31T08:56:49",
+          "updated_at": "2024-05-31T08:56:49",
+          "advogado": {
+            "id": 1054747,
+            "nome": "JULIANO ROSS",
+            "numero_oab": "4743A",
+            "uf_oab": "RO"
+          }
+        }
+      ]
+    },
+    {
+      "id": 87056578,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJPA",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Vara de Juizado Especial Cível e Criminal de Altamira",
+      "idOrgao": 44594,
+      "texto": "PODER JUDICIÁRIO TRIBUNAL DE JUSTIÇA DO ESTADO DO PARÁ VARA DE JUIZADO ESPECIAL CÍVEL E CRIMINAL DE ALTAMIRA WhatsApp Institucional da Vara: 91 8251-2486 PJeº 0804563-90.2021.8.14.0005 PROCEDIMENTO DO JUIZADO ESPECIAL CÍVEL (436) PROMOVENTE: AUTOR: ANGRA DOS SANTOS MORAIS REQUERIDO: Nome: BANCO BRADESCO S.A Endereço: Banco Bradesco S.A., Cidade de Deus, s/n, - Prédio Prata, - 4 andar, Vila Yara, O...[truncado]",
+      "numero_processo": "08045639020218140005",
+      "meio": "D",
+      "link": "https://pje.tjpa.jus.br:443/pje/Processo/ConsultaDocumento/listView.seam?x=24053116060232900000108589611",
+      "tipoDocumento": "Sentença",
+      "nomeClasse": "PROCEDIMENTO DO JUIZADO ESPECIAL CíVEL",
+      "codigoClasse": "436",
+      "numeroComunicacao": 283,
+      "ativo": true,
+      "hash": "lkWByzDG6zJid1FvTQmGz96ebmAjON",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "0804563-90.2021.8.14.0005",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87056578,
+          "nome": "ANGRA DOS SANTOS MORAIS",
+          "polo": "A"
+        },
+        {
+          "comunicacao_id": 87056578,
+          "nome": "BANCO BRADESCO S.A",
+          "polo": "P"
+        }
+      ],
+      "destinatarioadvogados": [
+        {
+          "id": 149341031,
+          "comunicacao_id": 87056578,
+          "advogado_id": 170199,
+          "created_at": "2024-05-31T16:06:07",
+          "updated_at": "2024-05-31T16:06:07",
+          "advogado": {
+            "id": 170199,
+            "nome": "GABRIEL TERENCIO MARTINS SANTANA",
+            "numero_oab": "28882",
+            "uf_oab": "PA"
+          }
+        },
+        {
+          "id": 149341032,
+          "comunicacao_id": 87056578,
+          "advogado_id": 9723,
+          "created_at": "2024-05-31T16:06:07",
+          "updated_at": "2024-05-31T16:06:07",
+          "advogado": {
+            "id": 9723,
+            "nome": "GUILHERME DA COSTA FERREIRA PIGNANELI",
+            "numero_oab": "5546",
+            "uf_oab": "RO"
+          }
+        }
+      ]
+    },
+    {
+      "id": 87028022,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRO",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Cacoal - 3ª Vara Cível",
+      "idOrgao": 882,
+      "texto": "Cacoal - 3ª Vara Cível Avenida Cuiabá, nº 2025, Bairro Centro, CEP 76963-731, Cacoal, - de 1727 a 2065 Endereço eletrônico: cwl3civel@tjro.jus.br Número do processo: 7012488-52.2023.8.22.0007 AUTOR: TEREZA OLIVIA TAVEIRA DA SILVA, CPF nº 03102626742, AVENIDA PAPA JOÃO PAULO I 687, GALPÃO 1 JARDIM DAS NAÇÕES - 07183-495 - GUARULHOS - SÃO PAULO ADVOGADOS DO AUTOR: JEFFERSON WILLIAN DALLA COSTA, OAB ...[truncado]",
+      "numero_processo": "70124885220238220007",
+      "meio": "D",
+      "link": "https://pjepg.tjro.jus.br/Processo/ConsultaDocumento/listView.seam?x=24053110474800000000102235764",
+      "tipoDocumento": "Sentença",
+      "nomeClasse": "PROCEDIMENTO COMUM CíVEL",
+      "codigoClasse": "7",
+      "numeroComunicacao": 332,
+      "ativo": true,
+      "hash": "QJDEM7aX68Jt8mcrTVzNMeYoWe2dLw",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "7012488-52.2023.8.22.0007",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87028022,
+          "nome": "TEREZA OLIVIA TAVEIRA DA SILVA",
+          "polo": "A"
+        }
+      ],
+      "destinatarioadvogados": [
+        {
+          "id": 149297318,
+          "comunicacao_id": 87028022,
+          "advogado_id": 9945,
+          "created_at": "2024-05-31T11:47:51",
+          "updated_at": "2024-05-31T11:47:51",
+          "advogado": {
+            "id": 9945,
+            "nome": "JEFFERSON WILLIAN DALLA COSTA",
+            "numero_oab": "6074",
+            "uf_oab": "RO"
+          }
+        },
+        {
+          "id": 149297319,
+          "comunicacao_id": 87028022,
+          "advogado_id": 234739,
+          "created_at": "2024-05-31T11:47:51",
+          "updated_at": "2024-05-31T11:47:51",
+          "advogado": {
+            "id": 234739,
+            "nome": "JOAQUIM JOSE DA SILVA FILHO",
+            "numero_oab": "139081",
+            "uf_oab": "SP"
+          }
+        }
+      ]
+    },
+    {
+      "id": 87262875,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRN",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "1ª Vara Cível da Comarca de Natal",
+      "idOrgao": 31767,
+      "texto": "PODER JUDICIÁRIO DO ESTADO DO RIO GRANDE DO NORTE 1ª Vara Cível da Comarca de Natal Rua Doutor Lauro Pinto, 315, 4º andar, Candelária, NATAL - RN - CEP: 59064-250 Processo: 0800859-80.2023.8.20.5001 Ação: PROCEDIMENTO COMUM CÍVEL (7) AUTOR: MARIA DE LOURDES PEREIRA REU: UP BRASIL ADMINISTRACAO E SERVICOS LTDA. SENTENÇA I – RELATÓRIO Trata de ação declaratória de inexistência de cláusula expressa e...[truncado]",
+      "numero_processo": "08008598020238205001",
+      "meio": "D",
+      "link": "https://pje1g.tjrn.jus.br:443/pje/Processo/ConsultaDocumento/listView.seam?x=24052713225096100000114408172",
+      "tipoDocumento": "Intimação",
+      "nomeClasse": "PROCEDIMENTO COMUM CíVEL",
+      "codigoClasse": "7",
+      "numeroComunicacao": 443,
+      "ativo": true,
+      "hash": "DVMlJ3NoZGyhNKfVTp52KdRLzE4gOP",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "0800859-80.2023.8.20.5001",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87262875,
+          "nome": "JOAO CARLOS RIBEIRO AREOSA",
+          "polo": "P"
+        },
+        {
+          "comunicacao_id": 87262875,
+          "nome": "THIAGO MARQUES CALAZANS DUARTE",
+          "polo": "A"
+        }
+      ],
+      "destinatarioadvogados": [
+        {
+          "id": 149584226,
+          "comunicacao_id": 87262875,
+          "advogado_id": 839760,
+          "created_at": "2024-06-02T16:05:00",
+          "updated_at": "2024-06-02T16:05:00",
+          "advogado": {
+            "id": 839760,
+            "nome": "THIAGO MARQUES CALAZANS DUARTE",
+            "numero_oab": "8204",
+            "uf_oab": "RN"
+          }
+        },
+        {
+          "id": 149584227,
+          "comunicacao_id": 87262875,
+          "advogado_id": 214423,
+          "created_at": "2024-06-02T16:05:00",
+          "updated_at": "2024-06-02T16:05:00",
+          "advogado": {
+            "id": 214423,
+            "nome": "JOAO CARLOS RIBEIRO AREOSA",
+            "numero_oab": "152026",
+            "uf_oab": "RJ"
+          }
+        }
+      ]
+    },
+    {
+      "id": 87262881,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRN",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "1ª Vara Cível da Comarca de Natal",
+      "idOrgao": 31767,
+      "texto": "PODER JUDICIÁRIO DO ESTADO DO RIO GRANDE DO NORTE 1ª Vara Cível da Comarca de Natal Rua Doutor Lauro Pinto, 315, 4º andar, Candelária, NATAL - RN - CEP: 59064-250 Processo: 0857400-36.2023.8.20.5001 Ação: PROCEDIMENTO COMUM CÍVEL (7) AUTOR: JOSE BELARMINO DE OLIVEIRA REU: UP BRASIL ADMINISTRACAO E SERVICOS LTDA. SENTENÇA I – RELATÓRIO Trata de ação declaratória de inexistência de cláusula expressa...[truncado]",
+      "numero_processo": "08574003620238205001",
+      "meio": "D",
+      "link": "https://pje1g.tjrn.jus.br:443/pje/Processo/ConsultaDocumento/listView.seam?x=24052810320345900000114479232",
+      "tipoDocumento": "Intimação",
+      "nomeClasse": "PROCEDIMENTO COMUM CíVEL",
+      "codigoClasse": "7",
+      "numeroComunicacao": 444,
+      "ativo": true,
+      "hash": "vLko4Pw1RXWhOKCoTGjKqXYbAKq5Vd",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "0857400-36.2023.8.20.5001",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87262881,
+          "nome": "JOAO CARLOS RIBEIRO AREOSA",
+          "polo": "P"
+        },
+        {
+          "comunicacao_id": 87262881,
+          "nome": "THIAGO MARQUES CALAZANS DUARTE",
+          "polo": "A"
+        }
+      ],
+      "destinatarioadvogados": [
+        {
+          "id": 149584231,
+          "comunicacao_id": 87262881,
+          "advogado_id": 839760,
+          "created_at": "2024-06-02T16:06:35",
+          "updated_at": "2024-06-02T16:06:35",
+          "advogado": {
+            "id": 839760,
+            "nome": "THIAGO MARQUES CALAZANS DUARTE",
+            "numero_oab": "8204",
+            "uf_oab": "RN"
+          }
+        },
+        {
+          "id": 149584232,
+          "comunicacao_id": 87262881,
+          "advogado_id": 214423,
+          "created_at": "2024-06-02T16:06:35",
+          "updated_at": "2024-06-02T16:06:35",
+          "advogado": {
+            "id": 214423,
+            "nome": "JOAO CARLOS RIBEIRO AREOSA",
+            "numero_oab": "152026",
+            "uf_oab": "RJ"
+          }
+        }
+      ]
+    },
+    {
+      "id": 87263465,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRN",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "1ª Vara Cível da Comarca de Natal",
+      "idOrgao": 31767,
+      "texto": "PODER JUDICIÁRIO DO ESTADO DO RIO GRANDE DO NORTE 1ª Vara Cível da Comarca de Natal Rua Doutor Lauro Pinto, 315, 4º andar, Candelária, NATAL - RN - CEP: 59064-250 Processo: 0910089-91.2022.8.20.5001 Ação: PROCEDIMENTO COMUM CÍVEL (7) AUTOR: WILDA FONSECA DA NOBREGA REU: UP BRASIL ADMINISTRACAO E SERVICOS LTDA. SENTENÇA I – RELATÓRIO Trata de ação declaratória de inexistência de cláusula expressa e...[truncado]",
+      "numero_processo": "09100899120228205001",
+      "meio": "D",
+      "link": "https://pje1g.tjrn.jus.br:443/pje/Processo/ConsultaDocumento/listView.seam?x=24052711224796500000113984059",
+      "tipoDocumento": "Intimação",
+      "nomeClasse": "PROCEDIMENTO COMUM CíVEL",
+      "codigoClasse": "7",
+      "numeroComunicacao": 448,
+      "ativo": true,
+      "hash": "mone3zr86eNh8wt3TBXNjVZABQLjKw",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "0910089-91.2022.8.20.5001",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87263465,
+          "nome": "JOAO CARLOS RIBEIRO AREOSA",
+          "polo": "P"
+        },
+        {
+          "comunicacao_id": 87263465,
+          "nome": "THIAGO MARQUES CALAZANS DUARTE",
+          "polo": "A"
+        }
+      ],
+      "destinatarioadvogados": [
+        {
+          "id": 149584398,
+          "comunicacao_id": 87263465,
+          "advogado_id": 214423,
+          "created_at": "2024-06-02T16:14:02",
+          "updated_at": "2024-06-02T16:14:02",
+          "advogado": {
+            "id": 214423,
+            "nome": "JOAO CARLOS RIBEIRO AREOSA",
+            "numero_oab": "152026",
+            "uf_oab": "RJ"
+          }
+        },
+        {
+          "id": 149584397,
+          "comunicacao_id": 87263465,
+          "advogado_id": 839760,
+          "created_at": "2024-06-02T16:14:02",
+          "updated_at": "2024-06-02T16:14:02",
+          "advogado": {
+            "id": 839760,
+            "nome": "THIAGO MARQUES CALAZANS DUARTE",
+            "numero_oab": "8204",
+            "uf_oab": "RN"
+          }
+        }
+      ]
+    },
+    {
+      "id": 87263887,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRN",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "1ª Vara Cível da Comarca de Natal",
+      "idOrgao": 31767,
+      "texto": "PODER JUDICIÁRIO DO ESTADO DO RIO GRANDE DO NORTE 1ª Vara Cível da Comarca de Natal Rua Doutor Lauro Pinto, 315, 4º andar, Candelária, NATAL - RN - CEP: 59064-250 Processo: 0838639-54.2023.8.20.5001 Ação: PROCEDIMENTO COMUM CÍVEL (7) AUTOR: FRANKLASE DIAS NOBRE REU: UP BRASIL ADMINISTRACAO E SERVICOS LTDA. SENTENÇA I – RELATÓRIO Trata de ação declaratória de inexistência de cláusula expressa e rev...[truncado]",
+      "numero_processo": "08386395420238205001",
+      "meio": "D",
+      "link": "https://pje1g.tjrn.jus.br:443/pje/Processo/ConsultaDocumento/listView.seam?x=24052810320486400000114487414",
+      "tipoDocumento": "Intimação",
+      "nomeClasse": "PROCEDIMENTO COMUM CíVEL",
+      "codigoClasse": "7",
+      "numeroComunicacao": 457,
+      "ativo": true,
+      "hash": "qMO79lz36Pyhnqi3TgyJKoZmDByKEp",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "0838639-54.2023.8.20.5001",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87263887,
+          "nome": "JOAO CARLOS RIBEIRO AREOSA",
+          "polo": "P"
+        },
+        {
+          "comunicacao_id": 87263887,
+          "nome": "THIAGO MARQUES CALAZANS DUARTE",
+          "polo": "A"
+        }
+      ],
+      "destinatarioadvogados": [
+        {
+          "id": 149584517,
+          "comunicacao_id": 87263887,
+          "advogado_id": 839760,
+          "created_at": "2024-06-02T16:24:40",
+          "updated_at": "2024-06-02T16:24:40",
+          "advogado": {
+            "id": 839760,
+            "nome": "THIAGO MARQUES CALAZANS DUARTE",
+            "numero_oab": "8204",
+            "uf_oab": "RN"
+          }
+        },
+        {
+          "id": 149584518,
+          "comunicacao_id": 87263887,
+          "advogado_id": 214423,
+          "created_at": "2024-06-02T16:24:40",
+          "updated_at": "2024-06-02T16:24:40",
+          "advogado": {
+            "id": 214423,
+            "nome": "JOAO CARLOS RIBEIRO AREOSA",
+            "numero_oab": "152026",
+            "uf_oab": "RJ"
+          }
+        }
+      ]
+    },
+    {
+      "id": 87107768,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRO",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Ji-Paraná - 3ª Vara Cível",
+      "idOrgao": 817,
+      "texto": "  PODER JUDICIÁRIO DO ESTADO DE RONDÔNIA  Tribunal de Justiça de Rondônia Ji-Paraná - 3ª Vara Cível Av. Brasil, 595, Bairro Nova Brasília - Ji-Paraná/RO  Contato: gabjip3civel@tjro.jus.br / 69 3411-2903  Número do processo: 7002324-05.2021.8.22.0005 Classe: Execução Fiscal Assunto: Dívida Ativa (Execução Fiscal) Polo Ativo: EXEQUENTE: MUNICIPIO DE JI-PARANA ADVOGADO DO EXEQUENTE: PROCURADORIA GERA...[truncado]",
+      "numero_processo": "70023240520218220005",
+      "meio": "D",
+      "link": "https://pjepg.tjro.jus.br/Processo/ConsultaDocumento/listView.seam?x=24053116451200000000102240550",
+      "tipoDocumento": "Sentença",
+      "nomeClasse": "EXECUçãO FISCAL",
+      "codigoClasse": "1116",
+      "numeroComunicacao": 552,
+      "ativo": true,
+      "hash": "DVMlJ3NoZGJtgVIVTp52Kd6LzE4gOP",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "7002324-05.2021.8.22.0005",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87107768,
+          "nome": "EDIONE DA SILVA SOUZA",
+          "polo": "P"
+        },
+        {
+          "comunicacao_id": 87107768,
+          "nome": "WILSON DE DEUS XAVIER",
+          "polo": "P"
+        },
+        {
+          "comunicacao_id": 87107768,
+          "nome": "XAVIER & SOUZA LTDA - ME",
+          "polo": "P"
+        }
+      ],
+      "destinatarioadvogados": []
+    },
+    {
+      "id": 87108344,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRO",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Ji-Paraná - 3ª Vara Cível",
+      "idOrgao": 817,
+      "texto": "  PODER JUDICIÁRIO DO ESTADO DE RONDÔNIA  Tribunal de Justiça de Rondônia Ji-Paraná - 3ª Vara Cível Av. Brasil, 595, Bairro Nova Brasília - Ji-Paraná/RO  Contato: gabjip3civel@tjro.jus.br / 69 3411-2903  Número do processo: 0010924-47.2015.8.22.0005 Classe: Execução Fiscal Assunto: Dívida Ativa (Execução Fiscal) Polo Ativo: EXEQUENTE: MUNICIPIO DE JI-PARANA ADVOGADO DO EXEQUENTE: PROCURADORIA GERA...[truncado]",
+      "numero_processo": "00109244720158220005",
+      "meio": "D",
+      "link": "https://pjepg.tjro.jus.br/Processo/ConsultaDocumento/listView.seam?x=24053116463100000000102239800",
+      "tipoDocumento": "Sentença",
+      "nomeClasse": "EXECUçãO FISCAL",
+      "codigoClasse": "1116",
+      "numeroComunicacao": 554,
+      "ativo": true,
+      "hash": "Q19VxvmEZMxtzWfmT8oWwE64eny8lp",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "0010924-47.2015.8.22.0005",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87108344,
+          "nome": "ALEX PRUDENTE DE OLIVEIRA - ME",
+          "polo": "P"
+        }
+      ],
+      "destinatarioadvogados": [
+        {
+          "id": 149498926,
+          "comunicacao_id": 87108344,
+          "advogado_id": 19120,
+          "created_at": "2024-05-31T17:46:34",
+          "updated_at": "2024-05-31T17:46:34",
+          "advogado": {
+            "id": 19120,
+            "nome": "ADILSON PRUDENTE DE OLIVEIRA",
+            "numero_oab": "5314",
+            "uf_oab": "RO"
+          }
+        },
+        {
+          "id": 149498925,
+          "comunicacao_id": 87108344,
+          "advogado_id": 12782,
+          "created_at": "2024-05-31T17:46:34",
+          "updated_at": "2024-05-31T17:46:34",
+          "advogado": {
+            "id": 12782,
+            "nome": "GENECI ALVES APOLINARIO",
+            "numero_oab": "1007",
+            "uf_oab": "RO"
+          }
+        }
+      ]
+    },
+    {
+      "id": 87108649,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRO",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Ji-Paraná - 3ª Vara Cível",
+      "idOrgao": 817,
+      "texto": "  PODER JUDICIÁRIO DO ESTADO DE RONDÔNIA  Tribunal de Justiça de Rondônia Ji-Paraná - 3ª Vara Cível Av. Brasil, 595, Bairro Nova Brasília - Ji-Paraná/RO  Contato: gabjip3civel@tjro.jus.br / 69 3411-2903  Número do processo: 7011825-17.2020.8.22.0005 Classe: Execução Fiscal Assunto: Dívida Ativa (Execução Fiscal) Polo Ativo: EXEQUENTE: MUNICIPIO DE JI-PARANA ADVOGADO DO EXEQUENTE: PROCURADORIA GERA...[truncado]",
+      "numero_processo": "70118251720208220005",
+      "meio": "D",
+      "link": "https://pjepg.tjro.jus.br/Processo/ConsultaDocumento/listView.seam?x=24053116472500000000102239801",
+      "tipoDocumento": "Sentença",
+      "nomeClasse": "EXECUçãO FISCAL",
+      "codigoClasse": "1116",
+      "numeroComunicacao": 555,
+      "ativo": true,
+      "hash": "w37ay8AkRrXto5U5TwpAebZ4dOjxNQ",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "7011825-17.2020.8.22.0005",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87108649,
+          "nome": "JOSIEL SILVA OLIVEIRA EIRELI",
+          "polo": "P"
+        },
+        {
+          "comunicacao_id": 87108649,
+          "nome": "MARCO ANTONIO MENEZES",
+          "polo": "P"
+        }
+      ],
+      "destinatarioadvogados": []
+    },
+    {
+      "id": 87109172,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRO",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Ji-Paraná - 3ª Vara Cível",
+      "idOrgao": 817,
+      "texto": "  PODER JUDICIÁRIO DO ESTADO DE RONDÔNIA  Tribunal de Justiça de Rondônia Ji-Paraná - 3ª Vara Cível Av. Brasil, 595, Bairro Nova Brasília - Ji-Paraná/RO  Contato: gabjip3civel@tjro.jus.br / 69 3411-2903  Número do processo: 7002444-48.2021.8.22.0005 Classe: Execução Fiscal Assunto: Dívida Ativa (Execução Fiscal) Polo Ativo: EXEQUENTE: MUNICIPIO DE JI-PARANA ADVOGADO DO EXEQUENTE: PROCURADORIA GERA...[truncado]",
+      "numero_processo": "70024444820218220005",
+      "meio": "D",
+      "link": "https://pjepg.tjro.jus.br/Processo/ConsultaDocumento/listView.seam?x=24053116490000000000102245536",
+      "tipoDocumento": "Sentença",
+      "nomeClasse": "EXECUçãO FISCAL",
+      "codigoClasse": "1116",
+      "numeroComunicacao": 559,
+      "ativo": true,
+      "hash": "geNaPz7wY5Otqpc8T9egBw6BMJpDrL",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "7002444-48.2021.8.22.0005",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87109172,
+          "nome": "REINALDO VIEIRA DE MIRANDA",
+          "polo": "P"
+        }
+      ],
+      "destinatarioadvogados": []
+    },
+    {
+      "id": 87109608,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRO",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Ji-Paraná - 3ª Vara Cível",
+      "idOrgao": 817,
+      "texto": "  PODER JUDICIÁRIO DO ESTADO DE RONDÔNIA  Tribunal de Justiça de Rondônia Ji-Paraná - 3ª Vara Cível Av. Brasil, 595, Bairro Nova Brasília - Ji-Paraná/RO  Contato: gabjip3civel@tjro.jus.br / 69 3411-2903  Número do processo: 7009890-10.2018.8.22.0005 Classe: Execução Fiscal Assunto: Dívida Ativa (Execução Fiscal) Polo Ativo: EXEQUENTE: MUNICIPIO DE JI-PARANA ADVOGADO DO EXEQUENTE: PROCURADORIA GERA...[truncado]",
+      "numero_processo": "70098901020188220005",
+      "meio": "D",
+      "link": "https://pjepg.tjro.jus.br/Processo/ConsultaDocumento/listView.seam?x=24053116494800000000102239762",
+      "tipoDocumento": "Sentença",
+      "nomeClasse": "EXECUçãO FISCAL",
+      "codigoClasse": "1116",
+      "numeroComunicacao": 560,
+      "ativo": true,
+      "hash": "9JqKnM286BJtQ4SOTBmrVp6WjAkoyd",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "7009890-10.2018.8.22.0005",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87109608,
+          "nome": "ORGANIZACAO DE APOIO A SISTEMAS INTEGRADOS DESENVOLVIMENTO SUSTENTAVEL - OASIS",
+          "polo": "P"
+        }
+      ],
+      "destinatarioadvogados": []
+    },
+    {
+      "id": 87109933,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRO",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Ji-Paraná - 3ª Vara Cível",
+      "idOrgao": 817,
+      "texto": "  PODER JUDICIÁRIO DO ESTADO DE RONDÔNIA  Tribunal de Justiça de Rondônia Ji-Paraná - 3ª Vara Cível Av. Brasil, 595, Bairro Nova Brasília - Ji-Paraná/RO  Contato: gabjip3civel@tjro.jus.br / 69 3411-2903  Número do processo: 7004523-97.2021.8.22.0005 Classe: Execução Fiscal Assunto: Dívida Ativa (Execução Fiscal) Polo Ativo: EXEQUENTE: MUNICIPIO DE JI-PARANA ADVOGADO DO EXEQUENTE: PROCURADORIA GERA...[truncado]",
+      "numero_processo": "70045239720218220005",
+      "meio": "D",
+      "link": "https://pjepg.tjro.jus.br/Processo/ConsultaDocumento/listView.seam?x=24053116503500000000102239763",
+      "tipoDocumento": "Sentença",
+      "nomeClasse": "EXECUçãO FISCAL",
+      "codigoClasse": "1116",
+      "numeroComunicacao": 561,
+      "ativo": true,
+      "hash": "W5ljVaJnYkptAlcDTelzd2RAve9mDO",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "7004523-97.2021.8.22.0005",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87109933,
+          "nome": "HERICKSON BRITO MALINI",
+          "polo": "P"
+        }
+      ],
+      "destinatarioadvogados": []
+    },
+    {
+      "id": 87110149,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRO",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Ji-Paraná - 3ª Vara Cível",
+      "idOrgao": 817,
+      "texto": "  PODER JUDICIÁRIO DO ESTADO DE RONDÔNIA  Tribunal de Justiça de Rondônia Ji-Paraná - 3ª Vara Cível Av. Brasil, 595, Bairro Nova Brasília - Ji-Paraná/RO  Contato: gabjip3civel@tjro.jus.br / 69 3411-2903  Número do processo: 7005005-45.2021.8.22.0005 Classe: Execução Fiscal Assunto: Dívida Ativa (Execução Fiscal) Polo Ativo: EXEQUENTE: MUNICIPIO DE JI-PARANA ADVOGADO DO EXEQUENTE: PROCURADORIA GERA...[truncado]",
+      "numero_processo": "70050054520218220005",
+      "meio": "D",
+      "link": "https://pjepg.tjro.jus.br/Processo/ConsultaDocumento/listView.seam?x=24053116511800000000102239802",
+      "tipoDocumento": "Sentença",
+      "nomeClasse": "EXECUçãO FISCAL",
+      "codigoClasse": "1116",
+      "numeroComunicacao": 562,
+      "ativo": true,
+      "hash": "dDzaKrk7YJJt1ESwT8ByxKYbBEe3Nl",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "7005005-45.2021.8.22.0005",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87110149,
+          "nome": "ADRIANA DE SOUZA",
+          "polo": "P"
+        }
+      ],
+      "destinatarioadvogados": []
+    },
+    {
+      "id": 87110352,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRO",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Ji-Paraná - 3ª Vara Cível",
+      "idOrgao": 817,
+      "texto": "  PODER JUDICIÁRIO DO ESTADO DE RONDÔNIA  Tribunal de Justiça de Rondônia Ji-Paraná - 3ª Vara Cível Av. Brasil, 595, Bairro Nova Brasília - Ji-Paraná/RO  Contato: gabjip3civel@tjro.jus.br / 69 3411-2903  Número do processo: 7011944-46.2018.8.22.0005 Classe: Execução Fiscal Assunto: Dívida Ativa (Execução Fiscal) Polo Ativo: EXEQUENTE: MUNICIPIO DE JI-PARANA ADVOGADO DO EXEQUENTE: PROCURADORIA GERA...[truncado]",
+      "numero_processo": "70119444620188220005",
+      "meio": "D",
+      "link": "https://pjepg.tjro.jus.br/Processo/ConsultaDocumento/listView.seam?x=24053116515900000000102240552",
+      "tipoDocumento": "Sentença",
+      "nomeClasse": "EXECUçãO FISCAL",
+      "codigoClasse": "1116",
+      "numeroComunicacao": 563,
+      "ativo": true,
+      "hash": "lx8NKdwz6KJtJ2uPTKelQwRbD1mrEX",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "7011944-46.2018.8.22.0005",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87110352,
+          "nome": "AMORIM & AMORIM LTDA  - ME",
+          "polo": "P"
+        },
+        {
+          "comunicacao_id": 87110352,
+          "nome": "JOSE AMORIM DE OLIVEIRA",
+          "polo": "P"
+        }
+      ],
+      "destinatarioadvogados": []
+    },
+    {
+      "id": 87110618,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRO",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Ji-Paraná - 3ª Vara Cível",
+      "idOrgao": 817,
+      "texto": "  PODER JUDICIÁRIO DO ESTADO DE RONDÔNIA  Tribunal de Justiça de Rondônia Ji-Paraná - 3ª Vara Cível Av. Brasil, 595, Bairro Nova Brasília - Ji-Paraná/RO  Contato: gabjip3civel@tjro.jus.br / 69 3411-2903  Número do processo: 7001028-16.2019.8.22.0005 Classe: Execução Fiscal Assunto: Dívida Ativa (Execução Fiscal) Polo Ativo: EXEQUENTE: MUNICIPIO DE JI-PARANA ADVOGADO DO EXEQUENTE: PROCURADORIA GERA...[truncado]",
+      "numero_processo": "70010281620198220005",
+      "meio": "D",
+      "link": "https://pjepg.tjro.jus.br/Processo/ConsultaDocumento/listView.seam?x=24053116525100000000102245539",
+      "tipoDocumento": "Sentença",
+      "nomeClasse": "EXECUçãO FISCAL",
+      "codigoClasse": "1116",
+      "numeroComunicacao": 567,
+      "ativo": true,
+      "hash": "Ly1D82wNYyvtBwTnTkg5qOR5eBjo9g",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "7001028-16.2019.8.22.0005",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87110618,
+          "nome": "JOELSON EUCLIDES PEREIRA",
+          "polo": "P"
+        },
+        {
+          "comunicacao_id": 87110618,
+          "nome": "SONIA LEMOS DA ROSA",
+          "polo": "P"
+        },
+        {
+          "comunicacao_id": 87110618,
+          "nome": "VITORIA PRESENTES & UTILIDADES LTDA - ME",
+          "polo": "P"
+        }
+      ],
+      "destinatarioadvogados": []
+    },
+    {
+      "id": 87111395,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRO",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Ji-Paraná - 3ª Vara Cível",
+      "idOrgao": 817,
+      "texto": "  PODER JUDICIÁRIO DO ESTADO DE RONDÔNIA  Tribunal de Justiça de Rondônia Ji-Paraná - 3ª Vara Cível Av. Brasil, 595, Bairro Nova Brasília - Ji-Paraná/RO  Contato: gabjip3civel@tjro.jus.br / 69 3411-2903  Número do processo: 0008659-09.2014.8.22.0005 Classe: Execução Fiscal Assunto: Ausência de Cobrança Administrativa Prévia Polo Ativo: EXEQUENTE: MUNICIPIO DE JI-PARANA ADVOGADO DO EXEQUENTE: PROCU...[truncado]",
+      "numero_processo": "00086590920148220005",
+      "meio": "D",
+      "link": "https://pjepg.tjro.jus.br/Processo/ConsultaDocumento/listView.seam?x=24053116552200000000102242893",
+      "tipoDocumento": "Sentença",
+      "nomeClasse": "EXECUçãO FISCAL",
+      "codigoClasse": "1116",
+      "numeroComunicacao": 568,
+      "ativo": true,
+      "hash": "Ekj97AdKZWDtoesQTOeVpdYeLPQ1Gg",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "0008659-09.2014.8.22.0005",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87111395,
+          "nome": "IMESA VEICULOS LTDA",
+          "polo": "P"
+        }
+      ],
+      "destinatarioadvogados": []
+    },
+    {
+      "id": 87111871,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRO",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Ji-Paraná - 3ª Vara Cível",
+      "idOrgao": 817,
+      "texto": "  PODER JUDICIÁRIO DO ESTADO DE RONDÔNIA  Tribunal de Justiça de Rondônia Ji-Paraná - 3ª Vara Cível Av. Brasil, 595, Bairro Nova Brasília - Ji-Paraná/RO  Contato: gabjip3civel@tjro.jus.br / 69 3411-2903  Número do processo: 0011518-61.2015.8.22.0005 Classe: Execução Fiscal Assunto: Dívida Ativa (Execução Fiscal) Polo Ativo: EXEQUENTE: MUNICIPIO DE JI-PARANA ADVOGADO DO EXEQUENTE: PROCURADORIA GERA...[truncado]",
+      "numero_processo": "00115186120158220005",
+      "meio": "D",
+      "link": "https://pjepg.tjro.jus.br/Processo/ConsultaDocumento/listView.seam?x=24053116565100000000102239805",
+      "tipoDocumento": "Sentença",
+      "nomeClasse": "EXECUçãO FISCAL",
+      "codigoClasse": "1116",
+      "numeroComunicacao": 571,
+      "ativo": true,
+      "hash": "XqOELQJvRbxt5PTXTNDyb3Zyo3rGz1",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "0011518-61.2015.8.22.0005",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87111871,
+          "nome": "AUTO PECAS MENSCH LTDA - ME",
+          "polo": "P"
+        }
+      ],
+      "destinatarioadvogados": [
+        {
+          "id": 149509858,
+          "comunicacao_id": 87111871,
+          "advogado_id": 250843,
+          "created_at": "2024-05-31T17:56:54",
+          "updated_at": "2024-05-31T17:56:54",
+          "advogado": {
+            "id": 250843,
+            "nome": "MARIA LUIZA DE ALMEIDA",
+            "numero_oab": "200",
+            "uf_oab": "RO"
+          }
+        }
+      ]
+    },
+    {
+      "id": 87112434,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRO",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Ji-Paraná - 3ª Vara Cível",
+      "idOrgao": 817,
+      "texto": "  PODER JUDICIÁRIO DO ESTADO DE RONDÔNIA  Tribunal de Justiça de Rondônia Ji-Paraná - 3ª Vara Cível Av. Brasil, 595, Bairro Nova Brasília - Ji-Paraná/RO  Contato: gabjip3civel@tjro.jus.br / 69 3411-2903  Número do processo: 7012020-36.2019.8.22.0005 Classe: Execução Fiscal Assunto: Dívida Ativa (Execução Fiscal) Polo Ativo: EXEQUENTE: MUNICIPIO DE JI-PARANA ADVOGADO DO EXEQUENTE: PROCURADORIA GERA...[truncado]",
+      "numero_processo": "70120203620198220005",
+      "meio": "D",
+      "link": "https://pjepg.tjro.jus.br/Processo/ConsultaDocumento/listView.seam?x=24053116581200000000102242894",
+      "tipoDocumento": "Sentença",
+      "nomeClasse": "EXECUçãO FISCAL",
+      "codigoClasse": "1116",
+      "numeroComunicacao": 579,
+      "ativo": true,
+      "hash": "QpOqvB2l63OtbGH9TXGW3l6yPD35na",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "7012020-36.2019.8.22.0005",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87112434,
+          "nome": "PITERSON B. INACIO REPRESENTACOES - ME",
+          "polo": "P"
+        },
+        {
+          "comunicacao_id": 87112434,
+          "nome": "PITERSON BASILIO INACIO",
+          "polo": "P"
+        }
+      ],
+      "destinatarioadvogados": []
+    },
+    {
+      "id": 87113008,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRO",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Ji-Paraná - 3ª Vara Cível",
+      "idOrgao": 817,
+      "texto": "  PODER JUDICIÁRIO DO ESTADO DE RONDÔNIA  Tribunal de Justiça de Rondônia Ji-Paraná - 3ª Vara Cível Av. Brasil, 595, Bairro Nova Brasília - Ji-Paraná/RO  Contato: gabjip3civel@tjro.jus.br / 69 3411-2903  Número do processo: 7012287-08.2019.8.22.0005 Classe: Execução Fiscal Assunto: Dívida Ativa (Execução Fiscal) Polo Ativo: EXEQUENTE: MUNICIPIO DE JI-PARANA ADVOGADO DO EXEQUENTE: PROCURADORIA GERA...[truncado]",
+      "numero_processo": "70122870820198220005",
+      "meio": "D",
+      "link": "https://pjepg.tjro.jus.br/Processo/ConsultaDocumento/listView.seam?x=24053116591800000000102240556",
+      "tipoDocumento": "Sentença",
+      "nomeClasse": "EXECUçãO FISCAL",
+      "codigoClasse": "1116",
+      "numeroComunicacao": 582,
+      "ativo": true,
+      "hash": "PpDAj7XqYvetNnh4TnyD53ZrvMJbg1",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "7012287-08.2019.8.22.0005",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87113008,
+          "nome": "TREVO PALACE HOTEL LTDA",
+          "polo": "P"
+        }
+      ],
+      "destinatarioadvogados": []
+    },
+    {
+      "id": 87113357,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRO",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Ji-Paraná - 3ª Vara Cível",
+      "idOrgao": 817,
+      "texto": "  PODER JUDICIÁRIO DO ESTADO DE RONDÔNIA  Tribunal de Justiça de Rondônia Ji-Paraná - 3ª Vara Cível Av. Brasil, 595, Bairro Nova Brasília - Ji-Paraná/RO  Contato: gabjip3civel@tjro.jus.br / 69 3411-2903  Número do processo: 7012431-79.2019.8.22.0005 Classe: Execução Fiscal Assunto: Dívida Ativa (Execução Fiscal) Polo Ativo: EXEQUENTE: MUNICIPIO DE JI-PARANA ADVOGADO DO EXEQUENTE: PROCURADORIA GERA...[truncado]",
+      "numero_processo": "70124317920198220005",
+      "meio": "D",
+      "link": "https://pjepg.tjro.jus.br/Processo/ConsultaDocumento/listView.seam?x=24053117001800000000102245541",
+      "tipoDocumento": "Sentença",
+      "nomeClasse": "EXECUçãO FISCAL",
+      "codigoClasse": "1116",
+      "numeroComunicacao": 584,
+      "ativo": true,
+      "hash": "qo8LEjMvZgotjot5TGK3nzZmrz2A1x",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "7012431-79.2019.8.22.0005",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87113357,
+          "nome": "PAULO ROBERTO SANDES SIQUEIRA",
+          "polo": "P"
+        }
+      ],
+      "destinatarioadvogados": []
+    },
+    {
+      "id": 87113770,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRO",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Ji-Paraná - 3ª Vara Cível",
+      "idOrgao": 817,
+      "texto": "  PODER JUDICIÁRIO DO ESTADO DE RONDÔNIA  Tribunal de Justiça de Rondônia Ji-Paraná - 3ª Vara Cível Av. Brasil, 595, Bairro Nova Brasília - Ji-Paraná/RO  Contato: gabjip3civel@tjro.jus.br / 69 3411-2903  Número do processo: 7000937-86.2020.8.22.0005 Classe: Execução Fiscal Assunto: Dívida Ativa (Execução Fiscal) Polo Ativo: EXEQUENTE: MUNICIPIO DE JI-PARANA ADVOGADO DO EXEQUENTE: PROCURADORIA GERA...[truncado]",
+      "numero_processo": "70009378620208220005",
+      "meio": "D",
+      "link": "https://pjepg.tjro.jus.br/Processo/ConsultaDocumento/listView.seam?x=24053117011500000000102242895",
+      "tipoDocumento": "Sentença",
+      "nomeClasse": "EXECUçãO FISCAL",
+      "codigoClasse": "1116",
+      "numeroComunicacao": 585,
+      "ativo": true,
+      "hash": "1v3KLNz5YojtaGF7TK78j2ZkXgDenG",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "7000937-86.2020.8.22.0005",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87113770,
+          "nome": "JL RADIADORES EIRELI - ME",
+          "polo": "P"
+        },
+        {
+          "comunicacao_id": 87113770,
+          "nome": "LUIZ GONCALVES DA SILVA",
+          "polo": "P"
+        }
+      ],
+      "destinatarioadvogados": []
+    },
+    {
+      "id": 87114166,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRO",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Ji-Paraná - 3ª Vara Cível",
+      "idOrgao": 817,
+      "texto": "  PODER JUDICIÁRIO DO ESTADO DE RONDÔNIA  Tribunal de Justiça de Rondônia Ji-Paraná - 3ª Vara Cível Av. Brasil, 595, Bairro Nova Brasília - Ji-Paraná/RO  Contato: gabjip3civel@tjro.jus.br / 69 3411-2903  Número do processo: 7002070-66.2020.8.22.0005 Classe: Execução Fiscal Assunto: Dívida Ativa (Execução Fiscal) Polo Ativo: EXEQUENTE: MUNICIPIO DE JI-PARANA ADVOGADO DO EXEQUENTE: PROCURADORIA GERA...[truncado]",
+      "numero_processo": "70020706620208220005",
+      "meio": "D",
+      "link": "https://pjepg.tjro.jus.br/Processo/ConsultaDocumento/listView.seam?x=24053117020200000000102240557",
+      "tipoDocumento": "Sentença",
+      "nomeClasse": "EXECUçãO FISCAL",
+      "codigoClasse": "1116",
+      "numeroComunicacao": 586,
+      "ativo": true,
+      "hash": "LQa7Deb9ZQgtMgSDT5NWvgRgMzm2nv",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "7002070-66.2020.8.22.0005",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87114166,
+          "nome": "COLNIZA TRANSPORTE E TURISMO LTDA",
+          "polo": "P"
+        }
+      ],
+      "destinatarioadvogados": []
+    },
+    {
+      "id": 87115173,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRO",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Ji-Paraná - 3ª Vara Cível",
+      "idOrgao": 817,
+      "texto": "  PODER JUDICIÁRIO DO ESTADO DE RONDÔNIA  Tribunal de Justiça de Rondônia Ji-Paraná - 3ª Vara Cível Av. Brasil, 595, Bairro Nova Brasília - Ji-Paraná/RO  Contato: gabjip3civel@tjro.jus.br / 69 3411-2903  Número do processo: 7009994-31.2020.8.22.0005 Classe: Execução Fiscal Assunto: Dívida Ativa (Execução Fiscal) Polo Ativo: EXEQUENTE: MUNICIPIO DE JI-PARANA ADVOGADO DO EXEQUENTE: PROCURADORIA GERA...[truncado]",
+      "numero_processo": "70099943120208220005",
+      "meio": "D",
+      "link": "https://pjepg.tjro.jus.br/Processo/ConsultaDocumento/listView.seam?x=24053117035600000000102240558",
+      "tipoDocumento": "Sentença",
+      "nomeClasse": "EXECUçãO FISCAL",
+      "codigoClasse": "1116",
+      "numeroComunicacao": 593,
+      "ativo": true,
+      "hash": "A7mjrylDZj7tPVSgTWJKAoYwL5MW2O",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "7009994-31.2020.8.22.0005",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87115173,
+          "nome": "EVANILDE AQUINO PIMENTEL REGISTRADO(A) CIVILMENTE COMO EVANILDE AQUINO PIMENTEL",
+          "polo": "A"
+        },
+        {
+          "comunicacao_id": 87115173,
+          "nome": "M. P. MIRA - ME",
+          "polo": "P"
+        },
+        {
+          "comunicacao_id": 87115173,
+          "nome": "MARCOS PACIFICO MIRA",
+          "polo": "P"
+        }
+      ],
+      "destinatarioadvogados": []
+    },
+    {
+      "id": 87115580,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRO",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Ji-Paraná - 3ª Vara Cível",
+      "idOrgao": 817,
+      "texto": "  PODER JUDICIÁRIO DO ESTADO DE RONDÔNIA  Tribunal de Justiça de Rondônia Ji-Paraná - 3ª Vara Cível Av. Brasil, 595, Bairro Nova Brasília - Ji-Paraná/RO  Contato: gabjip3civel@tjro.jus.br / 69 3411-2903  Número do processo: 7011152-24.2020.8.22.0005 Classe: Execução Fiscal Assunto: Dívida Ativa (Execução Fiscal) Polo Ativo: EXEQUENTE: MUNICIPIO DE JI-PARANA ADVOGADO DO EXEQUENTE: PROCURADORIA GERA...[truncado]",
+      "numero_processo": "70111522420208220005",
+      "meio": "D",
+      "link": "https://pjepg.tjro.jus.br/Processo/ConsultaDocumento/listView.seam?x=24053117050800000000102242897",
+      "tipoDocumento": "Sentença",
+      "nomeClasse": "EXECUçãO FISCAL",
+      "codigoClasse": "1116",
+      "numeroComunicacao": 598,
+      "ativo": true,
+      "hash": "w37ay8AkYrXtM5u5TwpAeb64dOjxNQ",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "7011152-24.2020.8.22.0005",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87115580,
+          "nome": "P. V. APOLINARIO REPRESENTACOES COMERCIAIS LTDA - ME",
+          "polo": "P"
+        },
+        {
+          "comunicacao_id": 87115580,
+          "nome": "RAQUEL DE QUEIROZ LOPES APOLINARIO",
+          "polo": "P"
+        }
+      ],
+      "destinatarioadvogados": []
+    },
+    {
+      "id": 87120179,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRO",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Ji-Paraná - 3ª Vara Cível",
+      "idOrgao": 817,
+      "texto": "  PODER JUDICIÁRIO DO ESTADO DE RONDÔNIA  Tribunal de Justiça de Rondônia Ji-Paraná - 3ª Vara Cível Av. Brasil, 595, Bairro Nova Brasília - Ji-Paraná/RO  Contato: gabjip3civel@tjro.jus.br / 69 3411-2903  Número do processo: 7011161-83.2020.8.22.0005 Classe: Execução Fiscal Assunto: Dívida Ativa (Execução Fiscal) Polo Ativo: EXEQUENTE: MUNICIPIO DE JI-PARANA ADVOGADO DO EXEQUENTE: PROCURADORIA GERA...[truncado]",
+      "numero_processo": "70111618320208220005",
+      "meio": "D",
+      "link": "https://pjepg.tjro.jus.br/Processo/ConsultaDocumento/listView.seam?x=24053117274500000000102239810",
+      "tipoDocumento": "Sentença",
+      "nomeClasse": "EXECUçãO FISCAL",
+      "codigoClasse": "1116",
+      "numeroComunicacao": 620,
+      "ativo": true,
+      "hash": "dDzaKrk7RJJt8NswT8ByxKRbBEe3Nl",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "7011161-83.2020.8.22.0005",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87120179,
+          "nome": "A. F. R. D. S.",
+          "polo": "P"
+        },
+        {
+          "comunicacao_id": 87120179,
+          "nome": "CANAA COMERCIO ATACADISTA E VAREJISTA LTDA - EPP",
+          "polo": "P"
+        },
+        {
+          "comunicacao_id": 87120179,
+          "nome": "CLAUDIA DE AQUINO RIBEIRO",
+          "polo": "P"
+        }
+      ],
+      "destinatarioadvogados": []
+    },
+    {
+      "id": 87120199,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRO",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Ji-Paraná - 3ª Vara Cível",
+      "idOrgao": 817,
+      "texto": "  PODER JUDICIÁRIO DO ESTADO DE RONDÔNIA  Tribunal de Justiça de Rondônia Ji-Paraná - 3ª Vara Cível Av. Brasil, 595, Bairro Nova Brasília - Ji-Paraná/RO  Contato: gabjip3civel@tjro.jus.br / 69 3411-2903  Número do processo: 7011306-47.2017.8.22.0005 Classe: Execução Fiscal Assunto: Ausência de Cobrança Administrativa Prévia Polo Ativo: EXEQUENTE: MUNICIPIO DE JI-PARANA ADVOGADO DO EXEQUENTE: PROCU...[truncado]",
+      "numero_processo": "70113064720178220005",
+      "meio": "D",
+      "link": "https://pjepg.tjro.jus.br/Processo/ConsultaDocumento/listView.seam?x=24053117285200000000102240560",
+      "tipoDocumento": "Sentença",
+      "nomeClasse": "EXECUçãO FISCAL",
+      "codigoClasse": "1116",
+      "numeroComunicacao": 621,
+      "ativo": true,
+      "hash": "lx8NKdwzZKJt74cPTKelQw6bD1mrEX",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "7011306-47.2017.8.22.0005",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87120199,
+          "nome": "J NASCIMENTO COSTA EIRELI - EPP",
+          "polo": "P"
+        },
+        {
+          "comunicacao_id": 87120199,
+          "nome": "JESSICA NASCIMENTO COSTA",
+          "polo": "P"
+        }
+      ],
+      "destinatarioadvogados": []
+    },
+    {
+      "id": 87120217,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRO",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Ji-Paraná - 3ª Vara Cível",
+      "idOrgao": 817,
+      "texto": "  PODER JUDICIÁRIO DO ESTADO DE RONDÔNIA  Tribunal de Justiça de Rondônia Ji-Paraná - 3ª Vara Cível Av. Brasil, 595, Bairro Nova Brasília - Ji-Paraná/RO  Contato: gabjip3civel@tjro.jus.br / 69 3411-2903  Número do processo: 7002798-78.2018.8.22.0005 Classe: Execução Fiscal Assunto: Ausência de Cobrança Administrativa Prévia Polo Ativo: EXEQUENTE: MUNICIPIO DE JI-PARANA ADVOGADO DO EXEQUENTE: PROCU...[truncado]",
+      "numero_processo": "70027987820188220005",
+      "meio": "D",
+      "link": "https://pjepg.tjro.jus.br/Processo/ConsultaDocumento/listView.seam?x=24053117294200000000102242899",
+      "tipoDocumento": "Sentença",
+      "nomeClasse": "EXECUçãO FISCAL",
+      "codigoClasse": "1116",
+      "numeroComunicacao": 623,
+      "ativo": true,
+      "hash": "wEp4n8JxZ1OtXpHeTaqNXER1ObAW3k",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "7002798-78.2018.8.22.0005",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87120217,
+          "nome": "IMOBILIARIA LIDER LTDA",
+          "polo": "P"
+        }
+      ],
+      "destinatarioadvogados": []
+    },
+    {
+      "id": 87120235,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRO",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Ji-Paraná - 3ª Vara Cível",
+      "idOrgao": 817,
+      "texto": "  PODER JUDICIÁRIO DO ESTADO DE RONDÔNIA  Tribunal de Justiça de Rondônia Ji-Paraná - 3ª Vara Cível Av. Brasil, 595, Bairro Nova Brasília - Ji-Paraná/RO  Contato: gabjip3civel@tjro.jus.br / 69 3411-2903  Número do processo: 7011175-67.2020.8.22.0005 Classe: Execução Fiscal Assunto: Ausência de Cobrança Administrativa Prévia Polo Ativo: EXEQUENTE: MUNICIPIO DE JI-PARANA ADVOGADO DO EXEQUENTE: PROCU...[truncado]",
+      "numero_processo": "70111756720208220005",
+      "meio": "D",
+      "link": "https://pjepg.tjro.jus.br/Processo/ConsultaDocumento/listView.seam?x=24053117304600000000102239772",
+      "tipoDocumento": "Sentença",
+      "nomeClasse": "EXECUçãO FISCAL",
+      "codigoClasse": "1116",
+      "numeroComunicacao": 626,
+      "ativo": true,
+      "hash": "Ekj97AdKYWDt12SQTOeVpdReLPQ1Gg",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "7011175-67.2020.8.22.0005",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87120235,
+          "nome": "LAUDICEIA RODRIGUES PAIVA",
+          "polo": "P"
+        },
+        {
+          "comunicacao_id": 87120235,
+          "nome": "LAUDICEIA RODRIGUES PAIVA - ME",
+          "polo": "P"
+        }
+      ],
+      "destinatarioadvogados": []
+    },
+    {
+      "id": 87120286,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRO",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Ji-Paraná - 3ª Vara Cível",
+      "idOrgao": 817,
+      "texto": "  PODER JUDICIÁRIO DO ESTADO DE RONDÔNIA  Tribunal de Justiça de Rondônia Ji-Paraná - 3ª Vara Cível Av. Brasil, 595, Bairro Nova Brasília - Ji-Paraná/RO  Contato: gabjip3civel@tjro.jus.br / 69 3411-2903  Número do processo: 7011180-89.2020.8.22.0005 Classe: Execução Fiscal Assunto: Dívida Ativa (Execução Fiscal) Polo Ativo: EXEQUENTE: MUNICIPIO DE JI-PARANA ADVOGADO DO EXEQUENTE: PROCURADORIA GERA...[truncado]",
+      "numero_processo": "70111808920208220005",
+      "meio": "D",
+      "link": "https://pjepg.tjro.jus.br/Processo/ConsultaDocumento/listView.seam?x=24053117322900000000102239773",
+      "tipoDocumento": "Sentença",
+      "nomeClasse": "EXECUçãO FISCAL",
+      "codigoClasse": "1116",
+      "numeroComunicacao": 627,
+      "ativo": true,
+      "hash": "PDbmx4M3ZqGtOPFyTJ1kAWRgozp85B",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "7011180-89.2020.8.22.0005",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87120286,
+          "nome": "CHARLES CASIMIRO DE SA",
+          "polo": "P"
+        }
+      ],
+      "destinatarioadvogados": []
+    },
+    {
+      "id": 87120295,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRO",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Ji-Paraná - 3ª Vara Cível",
+      "idOrgao": 817,
+      "texto": "  PODER JUDICIÁRIO DO ESTADO DE RONDÔNIA  Tribunal de Justiça de Rondônia Ji-Paraná - 3ª Vara Cível Av. Brasil, 595, Bairro Nova Brasília - Ji-Paraná/RO  Contato: gabjip3civel@tjro.jus.br / 69 3411-2903  Número do processo: 7011203-35.2020.8.22.0005 Classe: Execução Fiscal Assunto: Dívida Ativa (Execução Fiscal) Polo Ativo: EXEQUENTE: MUNICIPIO DE JI-PARANA ADVOGADO DO EXEQUENTE: PROCURADORIA GERA...[truncado]",
+      "numero_processo": "70112033520208220005",
+      "meio": "D",
+      "link": "https://pjepg.tjro.jus.br/Processo/ConsultaDocumento/listView.seam?x=24053117331200000000102239811",
+      "tipoDocumento": "Sentença",
+      "nomeClasse": "EXECUçãO FISCAL",
+      "codigoClasse": "1116",
+      "numeroComunicacao": 628,
+      "ativo": true,
+      "hash": "KAPnkeQmZdvtJyHlTj87xvRd5o94bD",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "7011203-35.2020.8.22.0005",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87120295,
+          "nome": "CONSTRUTORA DIAS EIRELI - EPP",
+          "polo": "P"
+        },
+        {
+          "comunicacao_id": 87120295,
+          "nome": "JOSE DIAS NUNES",
+          "polo": "P"
+        }
+      ],
+      "destinatarioadvogados": []
+    },
+    {
+      "id": 87120309,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRO",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Ji-Paraná - 3ª Vara Cível",
+      "idOrgao": 817,
+      "texto": "  PODER JUDICIÁRIO DO ESTADO DE RONDÔNIA  Tribunal de Justiça de Rondônia Ji-Paraná - 3ª Vara Cível Av. Brasil, 595, Bairro Nova Brasília - Ji-Paraná/RO  Contato: gabjip3civel@tjro.jus.br / 69 3411-2903  Número do processo: 7012021-55.2018.8.22.0005 Classe: Execução Fiscal Assunto: Ausência de Cobrança Administrativa Prévia Polo Ativo: EXEQUENTE: MUNICIPIO DE JI-PARANA ADVOGADO DO EXEQUENTE: PROCU...[truncado]",
+      "numero_processo": "70120215520188220005",
+      "meio": "D",
+      "link": "https://pjepg.tjro.jus.br/Processo/ConsultaDocumento/listView.seam?x=24053117335400000000102240561",
+      "tipoDocumento": "Sentença",
+      "nomeClasse": "EXECUçãO FISCAL",
+      "codigoClasse": "1116",
+      "numeroComunicacao": 629,
+      "ativo": true,
+      "hash": "XqOELQJv6bxtV7fXTNDyb3Yyo3rGz1",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "7012021-55.2018.8.22.0005",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87120309,
+          "nome": "CLAUDINEIA CAETANO DE ANDRADE",
+          "polo": "P"
+        }
+      ],
+      "destinatarioadvogados": []
+    },
+    {
+      "id": 87120507,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRO",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Ji-Paraná - 3ª Vara Cível",
+      "idOrgao": 817,
+      "texto": "  PODER JUDICIÁRIO DO ESTADO DE RONDÔNIA  Tribunal de Justiça de Rondônia Ji-Paraná - 3ª Vara Cível Av. Brasil, 595, Bairro Nova Brasília - Ji-Paraná/RO  Contato: gabjip3civel@tjro.jus.br / 69 3411-2903  Número do processo: 7012033-69.2018.8.22.0005 Classe: Execução Fiscal Assunto: Dívida Ativa (Execução Fiscal) Polo Ativo: EXEQUENTE: MUNICIPIO DE JI-PARANA ADVOGADO DO EXEQUENTE: PROCURADORIA GERA...[truncado]",
+      "numero_processo": "70120336920188220005",
+      "meio": "D",
+      "link": "https://pjepg.tjro.jus.br/Processo/ConsultaDocumento/listView.seam?x=24053117344100000000102245544",
+      "tipoDocumento": "Sentença",
+      "nomeClasse": "EXECUçãO FISCAL",
+      "codigoClasse": "1116",
+      "numeroComunicacao": 630,
+      "ativo": true,
+      "hash": "2nqe4VJb6aety7fzTn1Q2X6Kk7AgOM",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "7012033-69.2018.8.22.0005",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87120507,
+          "nome": "DAVID DA SILVA SOUZA",
+          "polo": "P"
+        },
+        {
+          "comunicacao_id": 87120507,
+          "nome": "DAVID DA SILVA SOUZA - ME",
+          "polo": "P"
+        }
+      ],
+      "destinatarioadvogados": []
+    },
+    {
+      "id": 87120614,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRO",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Ji-Paraná - 3ª Vara Cível",
+      "idOrgao": 817,
+      "texto": "  PODER JUDICIÁRIO DO ESTADO DE RONDÔNIA  Tribunal de Justiça de Rondônia Ji-Paraná - 3ª Vara Cível Av. Brasil, 595, Bairro Nova Brasília - Ji-Paraná/RO  Contato: gabjip3civel@tjro.jus.br / 69 3411-2903  Número do processo: 7012079-58.2018.8.22.0005 Classe: Execução Fiscal Assunto: Dívida Ativa (Execução Fiscal) Polo Ativo: EXEQUENTE: MUNICIPIO DE JI-PARANA ADVOGADO DO EXEQUENTE: PROCURADORIA GERA...[truncado]",
+      "numero_processo": "70120795820188220005",
+      "meio": "D",
+      "link": "https://pjepg.tjro.jus.br/Processo/ConsultaDocumento/listView.seam?x=24053117353400000000102239774",
+      "tipoDocumento": "Sentença",
+      "nomeClasse": "EXECUçãO FISCAL",
+      "codigoClasse": "1116",
+      "numeroComunicacao": 631,
+      "ativo": true,
+      "hash": "jqlwEO1dROvtexcnTX3a82YDGMoWQn",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "7012079-58.2018.8.22.0005",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87120614,
+          "nome": "F. P. DA SILVA - ME",
+          "polo": "P"
+        },
+        {
+          "comunicacao_id": 87120614,
+          "nome": "FABIANO PEREIRA DA SILVA",
+          "polo": "P"
+        }
+      ],
+      "destinatarioadvogados": []
+    },
+    {
+      "id": 87120625,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRO",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Ji-Paraná - 3ª Vara Cível",
+      "idOrgao": 817,
+      "texto": "  PODER JUDICIÁRIO DO ESTADO DE RONDÔNIA  Tribunal de Justiça de Rondônia Ji-Paraná - 3ª Vara Cível Av. Brasil, 595, Bairro Nova Brasília - Ji-Paraná/RO  Contato: gabjip3civel@tjro.jus.br / 69 3411-2903  Número do processo: 7000975-35.2019.8.22.0005 Classe: Execução Fiscal Assunto: Dívida Ativa (Execução Fiscal) Polo Ativo: EXEQUENTE: MUNICIPIO DE JI-PARANA ADVOGADO DO EXEQUENTE: PROCURADORIA GERA...[truncado]",
+      "numero_processo": "70009753520198220005",
+      "meio": "D",
+      "link": "https://pjepg.tjro.jus.br/Processo/ConsultaDocumento/listView.seam?x=24053117361500000000102242901",
+      "tipoDocumento": "Sentença",
+      "nomeClasse": "EXECUçãO FISCAL",
+      "codigoClasse": "1116",
+      "numeroComunicacao": 633,
+      "ativo": true,
+      "hash": "XxDnJOQm6N9tEXToTy9qjWRkWV9dlr",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "7000975-35.2019.8.22.0005",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87120625,
+          "nome": "MARCILIO MATIAS DE SOUZA",
+          "polo": "P"
+        },
+        {
+          "comunicacao_id": 87120625,
+          "nome": "TECNOVEL COMERCIO E SERVICOS LTDA. - ME",
+          "polo": "P"
+        }
+      ],
+      "destinatarioadvogados": []
+    },
+    {
+      "id": 87120657,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRO",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Ji-Paraná - 3ª Vara Cível",
+      "idOrgao": 817,
+      "texto": "  PODER JUDICIÁRIO DO ESTADO DE RONDÔNIA  Tribunal de Justiça de Rondônia Ji-Paraná - 3ª Vara Cível Av. Brasil, 595, Bairro Nova Brasília - Ji-Paraná/RO  Contato: gabjip3civel@tjro.jus.br / 69 3411-2903  Número do processo: 7012158-37.2018.8.22.0005 Classe: Execução Fiscal Assunto: Dívida Ativa (Execução Fiscal) Polo Ativo: EXEQUENTE: MUNICIPIO DE JI-PARANA ADVOGADO DO EXEQUENTE: PROCURADORIA GERA...[truncado]",
+      "numero_processo": "70121583720188220005",
+      "meio": "D",
+      "link": "https://pjepg.tjro.jus.br/Processo/ConsultaDocumento/listView.seam?x=24053117370900000000102245545",
+      "tipoDocumento": "Sentença",
+      "nomeClasse": "EXECUçãO FISCAL",
+      "codigoClasse": "1116",
+      "numeroComunicacao": 634,
+      "ativo": true,
+      "hash": "wx71ANK4Z2OtEzIAT91qobYrzBL3WE",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "7012158-37.2018.8.22.0005",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87120657,
+          "nome": "IRACI ANALIA DA SILVA",
+          "polo": "P"
+        }
+      ],
+      "destinatarioadvogados": []
+    },
+    {
+      "id": 87244061,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJPA",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Vara Criminal de Abaetetuba",
+      "idOrgao": 1132,
+      "texto": "Processo nº 0003934-22.2019.8.14.0070. Autor: Ministério Público. Acusados: Paulo Cezar Trindade dos Santos, Cleberson Nascimento da Silva, Misael Vilhena de Oliveira, Franklin José Maciel Feio e Joana Vasconcelos de Alcântara. Cap. Penal – art. 288, §º único, do Código Penal Brasileiro e art. 33, caput, da Lei 11.343/06. SENTENÇA Vistos, etc. O Ministério Público do Estado do Pará ajuizou a prese...[truncado]",
+      "numero_processo": "00039342220198140070",
+      "meio": "D",
+      "link": "https://pje.tjpa.jus.br:443/pje/Processo/ConsultaDocumento/listView.seam?x=24052414515887600000108321810",
+      "tipoDocumento": "Intimação",
+      "nomeClasse": "AçãO PENAL - PROCEDIMENTO ORDINáRIO",
+      "codigoClasse": "283",
+      "numeroComunicacao": 808,
+      "ativo": true,
+      "hash": "Q19VxvmEYMbiewumT8oWwER4eny8lp",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "0003934-22.2019.8.14.0070",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87244061,
+          "nome": "DENILZA DE SOUZA TEIXEIRA",
+          "polo": "P"
+        }
+      ],
+      "destinatarioadvogados": [
+        {
+          "id": 149579137,
+          "comunicacao_id": 87244061,
+          "advogado_id": 150258,
+          "created_at": "2024-06-02T10:01:58",
+          "updated_at": "2024-06-02T10:01:58",
+          "advogado": {
+            "id": 150258,
+            "nome": "FORTUNATO GONCALVES DE CARVALHO",
+            "numero_oab": "27030",
+            "uf_oab": "PA"
+          }
+        },
+        {
+          "id": 149579138,
+          "comunicacao_id": 87244061,
+          "advogado_id": 12725,
+          "created_at": "2024-06-02T10:01:58",
+          "updated_at": "2024-06-02T10:01:58",
+          "advogado": {
+            "id": 12725,
+            "nome": "DENILZA DE SOUZA TEIXEIRA",
+            "numero_oab": "8020",
+            "uf_oab": "PA"
+          }
+        }
+      ]
+    },
+    {
+      "id": 87244065,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJPA",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Vara Criminal de Abaetetuba",
+      "idOrgao": 1132,
+      "texto": "Processo nº 0003934-22.2019.8.14.0070. Autor: Ministério Público. Acusados: Paulo Cezar Trindade dos Santos, Cleberson Nascimento da Silva, Misael Vilhena de Oliveira, Franklin José Maciel Feio e Joana Vasconcelos de Alcântara. Cap. Penal – art. 288, §º único, do Código Penal Brasileiro e art. 33, caput, da Lei 11.343/06. SENTENÇA Vistos, etc. O Ministério Público do Estado do Pará ajuizou a prese...[truncado]",
+      "numero_processo": "00039342220198140070",
+      "meio": "D",
+      "link": "https://pje.tjpa.jus.br:443/pje/Processo/ConsultaDocumento/listView.seam?x=24052414515887600000108321810",
+      "tipoDocumento": "Intimação",
+      "nomeClasse": "AçãO PENAL - PROCEDIMENTO ORDINáRIO",
+      "codigoClasse": "283",
+      "numeroComunicacao": 809,
+      "ativo": true,
+      "hash": "w37ay8Ak6rMiO4U5TwpAebR4dOjxNQ",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "0003934-22.2019.8.14.0070",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87244065,
+          "nome": "FORTUNATO GONCALVES DE CARVALHO",
+          "polo": "P"
+        }
+      ],
+      "destinatarioadvogados": [
+        {
+          "id": 149579140,
+          "comunicacao_id": 87244065,
+          "advogado_id": 12725,
+          "created_at": "2024-06-02T10:01:58",
+          "updated_at": "2024-06-02T10:01:58",
+          "advogado": {
+            "id": 12725,
+            "nome": "DENILZA DE SOUZA TEIXEIRA",
+            "numero_oab": "8020",
+            "uf_oab": "PA"
+          }
+        },
+        {
+          "id": 149579139,
+          "comunicacao_id": 87244065,
+          "advogado_id": 150258,
+          "created_at": "2024-06-02T10:01:58",
+          "updated_at": "2024-06-02T10:01:58",
+          "advogado": {
+            "id": 150258,
+            "nome": "FORTUNATO GONCALVES DE CARVALHO",
+            "numero_oab": "27030",
+            "uf_oab": "PA"
+          }
+        }
+      ]
+    },
+    {
+      "id": 87205275,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJRO",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "2ª Turma Recursal - Gabinete 02",
+      "idOrgao": 42469,
+      "texto": "PODER JUDICIÁRIO DO ESTADO DE RONDÔNIA  2ª TURMA RECURSAL GABINETE 2 PROCESSO: 7004429-30.2022.8.22.0001 CLASSE: Recurso Inominado Cível REPRESENTANTES PROCESSUAIS: P. G. D. E. D. R., E. D. R., F. E. D. A. S. -. F. ADVOGADOS DOS REPRESENTANTES PROCESSUAIS: PROCURADORIA GERAL DO ESTADO DE RONDÔNIA, PROCURADORIA GERAL DO ESTADO DE RONDÔNIA RECORRIDO: M. N. D. S. A. ADVOGADOS DO RECORRIDO: MOISES NON...[truncado]",
+      "numero_processo": "70044293020228220001",
+      "meio": "D",
+      "link": "https://pjesg.tjro.jus.br/Processo/ConsultaDocumento/listView.seam?x=24060119222400000000023982579",
+      "tipoDocumento": "Acórdão",
+      "nomeClasse": "RECURSO INOMINADO CíVEL",
+      "codigoClasse": "460",
+      "numeroComunicacao": 976,
+      "ativo": true,
+      "hash": "2nqe4VJbRaetPnIzTn1Q2XRKk7AgOM",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "7004429-30.2022.8.22.0001",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87205275,
+          "nome": "MAYCON NIKSON DA SILVA ALMEIDA",
+          "polo": "P"
+        }
+      ],
+      "destinatarioadvogados": [
+        {
+          "id": 149571070,
+          "comunicacao_id": 87205275,
+          "advogado_id": 20483,
+          "created_at": "2024-06-01T20:22:27",
+          "updated_at": "2024-06-01T20:22:27",
+          "advogado": {
+            "id": 20483,
+            "nome": "THAIS SHEILA ALVES SANTIAGO",
+            "numero_oab": "4035",
+            "uf_oab": "RO"
+          }
+        },
+        {
+          "id": 149571071,
+          "comunicacao_id": 87205275,
+          "advogado_id": 10259,
+          "created_at": "2024-06-01T20:22:27",
+          "updated_at": "2024-06-01T20:22:27",
+          "advogado": {
+            "id": 10259,
+            "nome": "GILMARINHO LOBATO MUNIZ",
+            "numero_oab": "3823",
+            "uf_oab": "RO"
+          }
+        },
+        {
+          "id": 149571069,
+          "comunicacao_id": 87205275,
+          "advogado_id": 10258,
+          "created_at": "2024-06-01T20:22:27",
+          "updated_at": "2024-06-01T20:22:27",
+          "advogado": {
+            "id": 10258,
+            "nome": "MOISES NONATO DE SOUZA",
+            "numero_oab": "4337",
+            "uf_oab": "RO"
+          }
+        }
+      ]
+    },
+    {
+      "id": 87032507,
+      "data_disponibilizacao": "2024-06-03",
+      "siglaTribunal": "TJMG",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "TJMG - 7ª CÂMARA CÍVEL",
+      "idOrgao": 28264,
+      "texto": "TRIBUNAL DE JUSTIÇA DE MINAS GERAIS<br />7ª CÂMARA CÍVEL<br />EMBARGOS INFRINGENTES<br />DATA DE EXPEDIENTE: 24/05/2024<br /><br />Embargante(s) - ADILSON DE OLIVEIRA; Embargado(a)(s) - ESTADO    DE    MINAS    GERAIS; <br />Relator - Des(a). Peixoto Henriques<br />A íntegra do despacho/decisão poderá ser consultada no portal do TJMG - em Consultas\\Andamento Processual\\Todos Andamentos. ATENÇÃO: p...[truncado]",
+      "numero_processo": "00126140920148130002",
+      "meio": "D",
+      "link": "https://www4.tjmg.jus.br/juridico/sf/proc_resultado2.jsp?tipoPesquisa2=1&txtProcesso=00126140920148130002&comrCodigo=0024&tipoPessoa=X&naturezaProcesso=0&situacaoParte=X&numero=20&select=1&tipoConsulta=1&natureza=0&ativoBaixado=X&listaProcessos=00126140920148130002",
+      "tipoDocumento": "Embargos Infringentes",
+      "nomeClasse": "EMBARGOS INFRINGENTES",
+      "codigoClasse": "208",
+      "numeroComunicacao": 2377,
+      "ativo": true,
+      "hash": "qG7X2owQ6VLI4OOT7Tdla9LYek9aWL",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "03/06/2024",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "0012614-09.2014.8.13.0002",
+      "destinatarios": [
+        {
+          "comunicacao_id": 87032507,
+          "nome": "ADILSON DE OLIVEIRA",
+          "polo": "A"
+        },
+        {
+          "comunicacao_id": 87032507,
+          "nome": "ESTADO DE MINAS GERAIS",
+          "polo": "P"
+        }
+      ],
+      "destinatarioadvogados": [
+        {
+          "id": 149307992,
+          "comunicacao_id": 87032507,
+          "advogado_id": 690109,
+          "created_at": "2024-05-31T12:09:24",
+          "updated_at": "2024-05-31T12:09:24",
+          "advogado": {
+            "id": 690109,
+            "nome": "RAQUEL OLIVEIRA AMARAL",
+            "numero_oab": "99422",
+            "uf_oab": "MG"
+          }
+        },
+        {
+          "id": 149307993,
+          "comunicacao_id": 87032507,
+          "advogado_id": 717813,
+          "created_at": "2024-05-31T12:09:24",
+          "updated_at": "2024-05-31T12:09:24",
+          "advogado": {
+            "id": 717813,
+            "nome": "LUIZ MENDES DA COSTA",
+            "numero_oab": "145578",
+            "uf_oab": "MG"
+          }
+        },
+        {
+          "id": 149307991,
+          "comunicacao_id": 87032507,
+          "advogado_id": 679807,
+          "created_at": "2024-05-31T12:09:24",
+          "updated_at": "2024-05-31T12:09:24",
+          "advogado": {
+            "id": 679807,
+            "nome": "ALINE GUIMARAES FURLAN",
+            "numero_oab": "86522",
+            "uf_oab": "MG"
+          }
+        }
+      ]
+    }
+  ]
+}

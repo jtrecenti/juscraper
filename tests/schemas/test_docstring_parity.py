@@ -53,6 +53,11 @@ CASES = [
         "juscraper.courts.tjsp.schemas", "InputCJPGTJSP",
         id="tjsp.cjpg",
     ),
+    pytest.param(
+        "juscraper.aggregators.comunica_cnj.client", "ComunicaCNJScraper", "listar_comunicacoes",
+        "juscraper.aggregators.comunica_cnj.schemas", "InputListarComunicacoesComunicaCNJ",
+        id="comunica_cnj.listar_comunicacoes",
+    ),
 ]
 
 # Captura nomes em backticks duplos (RST inline literal). Cobre tanto

@@ -1,0 +1,596 @@
+{
+  "status": "success",
+  "message": "Sucesso",
+  "count": 10000,
+  "items": [
+    {
+      "id": 597290384,
+      "data_disponibilizacao": "2026-04-30",
+      "siglaTribunal": "TJDFT",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "3ª Vara Cível de Taguatinga",
+      "idOrgao": 42387,
+      "texto": "EDITAL DE INTIMAÇÃO DA PENHORA SISBAJUD PRAZO: 20 DIAS A Doutora FERNANDA D AQUINO MAFRA, Juíza de Direito da 3ª Vara Cível de Taguatinga, nos autos da Ação: CUMPRIMENTO DE SENTENÇA (156), processo nº 0709098-48.2018.8.07.0007, em que são partes: Exeqüente - RAFAELA BRITO SILVA (CPF: 093.271.176-62); CONDOMINIO DA CHACARA 321 DO SETOR HABITACIONAL VICENTE PIRES (CPF: 08.345.752/0001-04); BRITO & A...[truncado]",
+      "numero_processo": "07090984820188070007",
+      "meio": "E",
+      "link": "https://pje.tjdft.jus.br/pje/Processo/ConsultaDocumento/listView.seam?x=26042813172825000000248198965",
+      "tipoDocumento": "Edital",
+      "nomeClasse": "CUMPRIMENTO DE SENTENçA",
+      "codigoClasse": "156",
+      "numeroComunicacao": 1,
+      "ativo": true,
+      "hash": "Jwx71ANK4R2yCehJh91lM7YrzBL3WE",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "30/04/2026",
+      "meiocompleto": "Plataforma Nacional de Editais",
+      "numeroprocessocommascara": "0709098-48.2018.8.07.0007",
+      "destinatarios": [
+        {
+          "comunicacao_id": 597290384,
+          "polo": "P",
+          "nome": "ANTONIO JOAO PEREIRA DO AMARAL"
+        }
+      ],
+      "destinatarioadvogados": []
+    },
+    {
+      "id": 597271379,
+      "data_disponibilizacao": "2026-04-30",
+      "siglaTribunal": "TJPB",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "4º Juizado Especial Cível da Capital e de Cabedelo",
+      "idOrgao": 106409,
+      "texto": "Poder Judiciário da Paraíba 4º Juizado Especial Cível da Capital Av. João Machado, 515, Centro; João Pessoa - PB, CEP: 58.013-520 WhastApp : (83) 99144-1428 - Telejudiciário: (83)3621-1581 EXPEDIENTE DE INTIMAÇÃO PARA AUDIÊNCIA VIRTUAL UNA Nº DO PROCESSO: 0828449-44.2026.8.15.2001 CLASSE DO PROCESSO: PROCEDIMENTO DO JUIZADO ESPECIAL CÍVEL (436) ASSUNTO(S) DO PROCESSO: [Bancários, Obrigação de Faze...[truncado]",
+      "numero_processo": "08284494420268152001",
+      "meio": "D",
+      "link": "https://pje.tjpb.jus.br:443/pje/Processo/ConsultaDocumento/listView.seam?x=26042900014153600000149832455",
+      "tipoDocumento": "EXPEDIENTE",
+      "nomeClasse": "PROCEDIMENTO DO JUIZADO ESPECIAL CíVEL",
+      "codigoClasse": "436",
+      "numeroComunicacao": 1,
+      "ativo": true,
+      "hash": "mw37ay8AkZrAszh5TwpEz464dOjxNQ",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "30/04/2026",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "0828449-44.2026.8.15.2001",
+      "destinatarios": [
+        {
+          "comunicacao_id": 597271379,
+          "polo": "A",
+          "nome": "JEAN MARC RAMALHO DUARTE"
+        }
+      ],
+      "destinatarioadvogados": [
+        {
+          "id": 1089967175,
+          "comunicacao_id": 597271379,
+          "advogado_id": 3626980,
+          "created_at": "2026-04-29T00:02:11",
+          "updated_at": "2026-04-29T00:02:11",
+          "advogado": {
+            "id": 3626980,
+            "nome": "JACIRA DOS SANTOS GOMES",
+            "numero_oab": "34283",
+            "uf_oab": "PB"
+          }
+        }
+      ]
+    },
+    {
+      "id": 597288124,
+      "data_disponibilizacao": "2026-04-30",
+      "siglaTribunal": "TJPR",
+      "tipoComunicacao": "Edital",
+      "nomeOrgao": "Vara Cível de Quedas do Iguaçu",
+      "idOrgao": 7987,
+      "texto": "EDITAL DE LEILÃO JUDICIAL E INTIMAÇÃO  Leilão Exclusivamente Eletrônico \n (www.kronleiloes.com.br)  O(A) EXMO(A) SR(A) DR(A) JUIZ(A) DE DIREITO DA (O) VARA CÍVEL DE QUEDAS DO \n IGUAÇU-PARANÁ, JOÃO FELIPE MARCOLINA nomeando o leiloeiro público HELCIO \n KRONBERG, JUCEPAR 653, faz ciência aos interessados e, principalmente, aos executados/devedores \n que, nos autos do(s) processo(s) abaixo indicado(s...[truncado]",
+      "numero_processo": "00021423120178160140",
+      "meio": "E",
+      "link": "https://projudi.tjpr.jus.br/projudi/processo/validacaoDocumentos.do?_tj=8a6c53f8698c7ff7826b4c776d71316d1925abc508bbf0c37395a1a6705262330d543e56b5dcf573517bf9165ac0b77ae84e07b985c7bdae",
+      "tipoDocumento": "Edital",
+      "nomeClasse": "CUMPRIMENTO DE SENTENçA",
+      "codigoClasse": "156",
+      "numeroComunicacao": 1,
+      "ativo": true,
+      "hash": "mQpOqvB2lR3WcMhbhXG5AMRyPD35na",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "30/04/2026",
+      "meiocompleto": "Plataforma Nacional de Editais",
+      "numeroprocessocommascara": "0002142-31.2017.8.16.0140",
+      "destinatarios": [
+        {
+          "comunicacao_id": 597288124,
+          "polo": "P",
+          "nome": "VILMAR GAVIOLLI"
+        }
+      ],
+      "destinatarioadvogados": []
+    },
+    {
+      "id": 597278718,
+      "data_disponibilizacao": "2026-04-30",
+      "siglaTribunal": "TJSE",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "5º Juizado Especial Cível da Comarca de Aracaju",
+      "idOrgao": 107436,
+      "texto": "<b>PROCEDIMENTO DO JUIZADO ESPECIAL CÍVEL  Nº 5001135-23.2026.8.25.0084/SE</b></br><b><table border=\"0\"><tr><td>AUTOR</td><td>: CAMILA COSTA BRASIL</td></tr><tr><td>ADVOGADO(A)</td><td>: THAMIRYS ROCHA ALMEIDA COSTA (OAB SE012440)</td></tr></table></b></br><p align=\"center\">SENTENÇA</p></br>Diante do exposto, RECONHEÇO, de ofício, a incompetência deste Juizado Especial Cível da Comarca de Aracaju,...[truncado]",
+      "numero_processo": "50011352320268250084",
+      "meio": "D",
+      "link": "https://eproc1g.tjse.jus.br/eproc/externo_controlador.php?acao=consulta_publica_documento&numProcesso=50011352320268250084&idDocumento=251777440616103848158170078886&hash=9be3236341dc15ab2a55b9935bceeb926cad340635af83947b74882c65442431",
+      "tipoDocumento": "Sentença",
+      "nomeClasse": "PROCEDIMENTO DO JUIZADO ESPECIAL CíVEL",
+      "codigoClasse": "436",
+      "numeroComunicacao": 1,
+      "ativo": true,
+      "hash": "XA7mjrylD6j2TMhgTWJ1OQ6wL5MW2O",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "30/04/2026",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "5001135-23.2026.8.25.0084",
+      "destinatarios": [
+        {
+          "comunicacao_id": 597278718,
+          "polo": "A",
+          "nome": "CAMILA COSTA BRASIL"
+        }
+      ],
+      "destinatarioadvogados": [
+        {
+          "id": 1089981097,
+          "comunicacao_id": 597278718,
+          "advogado_id": 3664808,
+          "created_at": "2026-04-29T02:48:53",
+          "updated_at": "2026-04-29T02:48:53",
+          "advogado": {
+            "id": 3664808,
+            "nome": "THAMIRYS ROCHA ALMEIDA COSTA",
+            "numero_oab": "12440",
+            "uf_oab": "SE"
+          }
+        }
+      ]
+    },
+    {
+      "id": 597271288,
+      "data_disponibilizacao": "2026-04-30",
+      "siglaTribunal": "TRF1",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "7ª Vara Federal de Juizado Especial Cível da SJMA",
+      "idOrgao": 224,
+      "texto": "PODER JUDICIÁRIO JUSTIÇA FEDERAL DE 1º GRAU SEÇÃO JUDICIÁRIA DO MARANHÃO JUIZADO ESPECIAL FEDERAL – 7ª VARA Processo: 1017007-67.2026.4.01.3700 Classe: PROCEDIMENTO DO JUIZADO ESPECIAL CÍVEL (436) Assunto: [Rural] AUTOR: ELIANE DE BRITO SANTANA ALVES Advogado do(a) AUTOR: JESSICA SILVA PINTO - MA21729 REU: INSTITUTO NACIONAL DO SEGURO SOCIAL - INSS SENTENÇA Tipo B - Resolução CJF 535/2006 Satisfei...[truncado]",
+      "numero_processo": "10170076720264013700",
+      "meio": "D",
+      "link": "https://pje1g.trf1.jus.br:443/pje/Processo/ConsultaDocumento/listView.seam?x=26042812121702600002168548712",
+      "tipoDocumento": "Sentença Tipo B",
+      "nomeClasse": "PROCEDIMENTO DO JUIZADO ESPECIAL CíVEL",
+      "codigoClasse": "436",
+      "numeroComunicacao": 1,
+      "ativo": true,
+      "hash": "jXqOELQJvYbeUGhXTNDW5oZyo3rGz1",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "30/04/2026",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "1017007-67.2026.4.01.3700",
+      "destinatarios": [
+        {
+          "comunicacao_id": 597271288,
+          "polo": "A",
+          "nome": "ELIANE DE BRITO SANTANA ALVES"
+        },
+        {
+          "comunicacao_id": 597271288,
+          "polo": "P",
+          "nome": "INSTITUTO NACIONAL DO SEGURO SOCIAL - INSS"
+        }
+      ],
+      "destinatarioadvogados": [
+        {
+          "id": 1089966999,
+          "comunicacao_id": 597271288,
+          "advogado_id": 36302,
+          "created_at": "2026-04-29T00:00:12",
+          "updated_at": "2026-04-29T00:00:12",
+          "advogado": {
+            "id": 36302,
+            "nome": "JESSICA SILVA PINTO",
+            "numero_oab": "21729",
+            "uf_oab": "MA"
+          }
+        }
+      ]
+    },
+    {
+      "id": 597271358,
+      "data_disponibilizacao": "2026-04-30",
+      "siglaTribunal": "TRF5",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "7ª Vara Federal RN",
+      "idOrgao": 94391,
+      "texto": "PODER JUDICIÁRIO 7ª Vara Federal RN PROCEDIMENTO DO JUIZADO ESPECIAL CÍVEL (436) Nº 0016329-57.2025.4.05.8400 AUTOR: D. L. N. D. F. S. ADVOGADO do(a) AUTOR: ANA FLAVIA DE FREITAS BRITO MOITAS - RN7091 REPRESENTANTE do(a) AUTOR: GARDENIA OLIVEIRA DA SILVA REU: INSTITUTO NACIONAL DO SEGURO SOCIAL - INSS INTIMAÇÃO PROCESSO Nº: 0016329-57.2025.4.05.8400 - PROCEDIMENTO DO JUIZADO ESPECIAL CÍVEL (436) A...[truncado]",
+      "numero_processo": "00163295720254058400",
+      "meio": "D",
+      "link": "https://pje1g.trf5.jus.br/pje/Processo/ConsultaDocumento/listView.seam?x=26042900013778900000179539520",
+      "tipoDocumento": "Intimação",
+      "nomeClasse": "PROCEDIMENTO DO JUIZADO ESPECIAL CíVEL",
+      "codigoClasse": "436",
+      "numeroComunicacao": 1,
+      "ativo": true,
+      "hash": "eXxDnJOQmYNdiVhoTy97XK6kWV9dlr",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "30/04/2026",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "0016329-57.2025.4.05.8400",
+      "destinatarios": [
+        {
+          "comunicacao_id": 597271358,
+          "polo": "A",
+          "nome": "D. L. N. D. F. S."
+        }
+      ],
+      "destinatarioadvogados": [
+        {
+          "id": 1089967130,
+          "comunicacao_id": 597271358,
+          "advogado_id": 1784647,
+          "created_at": "2026-04-29T00:02:03",
+          "updated_at": "2026-04-29T00:02:03",
+          "advogado": {
+            "id": 1784647,
+            "nome": "ANA FLAVIA DE FREITAS BRITO MOITAS",
+            "numero_oab": "7091",
+            "uf_oab": "RN"
+          }
+        }
+      ]
+    },
+    {
+      "id": 597294541,
+      "data_disponibilizacao": "2026-04-30",
+      "siglaTribunal": "TRT1",
+      "tipoComunicacao": "Edital",
+      "nomeOrgao": "3ª Vara do Trabalho de Macaé",
+      "idOrgao": 47672,
+      "texto": "PODER JUDICIÁRIO  JUSTIÇA DO TRABALHO  TRIBUNAL REGIONAL DO TRABALHO DA 1ª REGIÃO  3ª VARA DO TRABALHO DE MACAÉ  ATOrd 0100576-47.2026.5.01.0483  RECLAMANTE: SAMARA RIBEIRO MENEZES  RECLAMADO: HUEBRA LANCHES LTDA E OUTROS (1)  EDITAL DE CITAÇÃO PJe-JT AUDIÊNCIA UNA     O/A MM. Juiz(a) FABIANO FERNANDES LUZES da 3ª Vara do Trabalho de Macaé, faz saber a todos quantos  virem o presente EDITAL DE CIT...[truncado]",
+      "numero_processo": "01005764720265010483",
+      "meio": "E",
+      "link": "https://pje.trt1.jus.br/pjekz/validacao/26042821261263400000260669063?instancia=1",
+      "tipoDocumento": "Edital",
+      "nomeClasse": "AçãO TRABALHISTA - RITO ORDINáRIO",
+      "codigoClasse": "985",
+      "numeroComunicacao": 1,
+      "ativo": true,
+      "hash": "1v3KLNz56o5oh8hEhK7qAdYkXgDenG",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "30/04/2026",
+      "meiocompleto": "Plataforma Nacional de Editais",
+      "numeroprocessocommascara": "0100576-47.2026.5.01.0483",
+      "destinatarios": [
+        {
+          "comunicacao_id": 597294541,
+          "polo": "P",
+          "nome": "BHSS TRANSPORTES SERVICOS E COMERCIO LTDA  - ME"
+        },
+        {
+          "comunicacao_id": 597294541,
+          "polo": "P",
+          "nome": "HUEBRA LANCHES LTDA"
+        },
+        {
+          "comunicacao_id": 597294541,
+          "polo": "A",
+          "nome": "SAMARA RIBEIRO MENEZES"
+        }
+      ],
+      "destinatarioadvogados": [
+        {
+          "id": 1090013293,
+          "comunicacao_id": 597294541,
+          "advogado_id": 4138414,
+          "created_at": "2026-04-29T08:03:25",
+          "updated_at": "2026-04-29T08:03:25",
+          "advogado": {
+            "id": 4138414,
+            "nome": "FELIPE BARBOSA RAMOS PEREIRA",
+            "numero_oab": "261593",
+            "uf_oab": "RJ"
+          }
+        },
+        {
+          "id": 1090013295,
+          "comunicacao_id": 597294541,
+          "advogado_id": 3557965,
+          "created_at": "2026-04-29T08:03:25",
+          "updated_at": "2026-04-29T08:03:25",
+          "advogado": {
+            "id": 3557965,
+            "nome": "JOAO VISEU CARNEIRO DA SILVA",
+            "numero_oab": "254384",
+            "uf_oab": "RJ"
+          }
+        }
+      ]
+    },
+    {
+      "id": 597495626,
+      "data_disponibilizacao": "2026-04-30",
+      "siglaTribunal": "TRT10",
+      "tipoComunicacao": "Edital",
+      "nomeOrgao": "1ª Vara do Trabalho de Palmas - TO",
+      "idOrgao": 46616,
+      "texto": "PODER JUDICIÁRIO  JUSTIÇA DO TRABALHO  TRIBUNAL REGIONAL DO TRABALHO DA 10ª REGIÃO  1ª Vara do Trabalho de Palmas - TO   ATOrd 0001182-68.2025.5.10.0801  RECLAMANTE: GUILHERME BORGES CAETANO DE ALMEIDA  RECLAMADO: 50.229.022 ROBSON DOUGLAS FERREIRA, ROBSON DOUGLAS FERREIRA, ANDREIA DA SILVA FERNANDES  PROCESSO Nº 0001182-68.2025.5.10.0801 - Ação Trabalhista - Rito Ordinário   AUTOR: GUILHERME BORG...[truncado]",
+      "numero_processo": "00011826820255100801",
+      "meio": "E",
+      "link": "https://pje.trt10.jus.br/pjekz/validacao/26042906380146400000052969971?instancia=1",
+      "tipoDocumento": "Edital",
+      "nomeClasse": "AçãO TRABALHISTA - RITO ORDINáRIO",
+      "codigoClasse": "985",
+      "numeroComunicacao": 1,
+      "ativo": true,
+      "hash": "rX21azVqZwkGtghxhyP7QzZAKmGWlN",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "30/04/2026",
+      "meiocompleto": "Plataforma Nacional de Editais",
+      "numeroprocessocommascara": "0001182-68.2025.5.10.0801",
+      "destinatarios": [
+        {
+          "polo": "P",
+          "comunicacao_id": 597495626,
+          "nome": "50.229.022 ROBSON DOUGLAS FERREIRA"
+        },
+        {
+          "polo": "P",
+          "comunicacao_id": 597495626,
+          "nome": "ANDREIA DA SILVA FERNANDES"
+        },
+        {
+          "polo": "A",
+          "comunicacao_id": 597495626,
+          "nome": "GUILHERME BORGES CAETANO DE ALMEIDA"
+        },
+        {
+          "polo": "P",
+          "comunicacao_id": 597495626,
+          "nome": "ROBSON DOUGLAS FERREIRA"
+        }
+      ],
+      "destinatarioadvogados": [
+        {
+          "id": 1090494688,
+          "comunicacao_id": 597495626,
+          "advogado_id": 3415442,
+          "created_at": "2026-04-29T13:02:59",
+          "updated_at": "2026-04-29T13:02:59",
+          "advogado": {
+            "id": 3415442,
+            "nome": "FLAVIA PIRES DE OLIVEIRA",
+            "numero_oab": "13.032",
+            "uf_oab": "TO"
+          }
+        },
+        {
+          "id": 1090494672,
+          "comunicacao_id": 597495626,
+          "advogado_id": 3415443,
+          "created_at": "2026-04-29T13:02:59",
+          "updated_at": "2026-04-29T13:02:59",
+          "advogado": {
+            "id": 3415443,
+            "nome": "FELIPE FERRAZ NASCIMENTO",
+            "numero_oab": "13.018",
+            "uf_oab": "TO"
+          }
+        }
+      ]
+    },
+    {
+      "id": 597389331,
+      "data_disponibilizacao": "2026-04-30",
+      "siglaTribunal": "TRT14",
+      "tipoComunicacao": "Edital",
+      "nomeOrgao": "CEJUSC-JT de 2º Grau",
+      "idOrgao": 46306,
+      "texto": "PODER JUDICIÁRIO  JUSTIÇA DO TRABALHO  TRIBUNAL REGIONAL DO TRABALHO DA 14ª REGIÃO  CEJUSC-JT DE 2º GRAU  Relator: ILSON ALVES PEQUENO JUNIOR  ROT 0000249-80.2021.5.14.0007  RECORRENTE: BANCO DO BRASIL SA  RECORRIDO: ANELY DE MORAES PEREIRA MERLIN  E D I T A L De ordem, considerando as atribuições do CEJUSC de 2º Grau e em atenção ao disposto no art. 165, do CPC, art. 8º, da Resolução nº 125/2010 ...[truncado]",
+      "numero_processo": "00002498020215140007",
+      "meio": "E",
+      "link": "https://pje.trt14.jus.br/pjekz/validacao/26042908011189900000014788372?instancia=2",
+      "tipoDocumento": "Edital",
+      "nomeClasse": "RECURSO ORDINáRIO TRABALHISTA",
+      "codigoClasse": "1009",
+      "numeroComunicacao": 1,
+      "ativo": true,
+      "hash": "w37ay8Ak6r4phzhDhwpEz4Y4dOjxNQ",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "30/04/2026",
+      "meiocompleto": "Plataforma Nacional de Editais",
+      "numeroprocessocommascara": "0000249-80.2021.5.14.0007",
+      "destinatarios": [
+        {
+          "polo": "P",
+          "comunicacao_id": 597389331,
+          "nome": "ANELY DE MORAES PEREIRA MERLIN"
+        },
+        {
+          "polo": "A",
+          "comunicacao_id": 597389331,
+          "nome": "BANCO DO BRASIL SA"
+        }
+      ],
+      "destinatarioadvogados": [
+        {
+          "id": 1090233887,
+          "comunicacao_id": 597389331,
+          "advogado_id": 1449695,
+          "created_at": "2026-04-29T11:38:21",
+          "updated_at": "2026-04-29T11:38:21",
+          "advogado": {
+            "id": 1449695,
+            "nome": "TATIANA DINIZ COSTA",
+            "numero_oab": "13040",
+            "uf_oab": "RO"
+          }
+        },
+        {
+          "id": 1090233901,
+          "comunicacao_id": 597389331,
+          "advogado_id": 1458270,
+          "created_at": "2026-04-29T11:38:22",
+          "updated_at": "2026-04-29T11:38:22",
+          "advogado": {
+            "id": 1458270,
+            "nome": "REGINA CELIA SANTOS TERRA CRUZ",
+            "numero_oab": "1100",
+            "uf_oab": "RO"
+          }
+        },
+        {
+          "id": 1090233881,
+          "comunicacao_id": 597389331,
+          "advogado_id": 3318159,
+          "created_at": "2026-04-29T11:38:21",
+          "updated_at": "2026-04-29T11:38:21",
+          "advogado": {
+            "id": 3318159,
+            "nome": "ANDERSON PEREIRA CHARAO",
+            "numero_oab": "70472-B",
+            "uf_oab": "RS"
+          }
+        },
+        {
+          "id": 1090233878,
+          "comunicacao_id": 597389331,
+          "advogado_id": 1472255,
+          "created_at": "2026-04-29T11:38:21",
+          "updated_at": "2026-04-29T11:38:21",
+          "advogado": {
+            "id": 1472255,
+            "nome": "ADRIANA MATOS DA SILVA",
+            "numero_oab": "3345",
+            "uf_oab": "AC"
+          }
+        },
+        {
+          "id": 1090233892,
+          "comunicacao_id": 597389331,
+          "advogado_id": 36964,
+          "created_at": "2026-04-29T11:38:22",
+          "updated_at": "2026-04-29T11:38:22",
+          "advogado": {
+            "id": 36964,
+            "nome": "LUCILDO CARDOSO FREIRE",
+            "numero_oab": "4751",
+            "uf_oab": "RO"
+          }
+        },
+        {
+          "id": 1090233874,
+          "comunicacao_id": 597389331,
+          "advogado_id": 1509815,
+          "created_at": "2026-04-29T11:38:21",
+          "updated_at": "2026-04-29T11:38:21",
+          "advogado": {
+            "id": 1509815,
+            "nome": "GABRIELA SABRY AZAR MARQUES",
+            "numero_oab": "10770",
+            "uf_oab": "RO"
+          }
+        }
+      ]
+    },
+    {
+      "id": 597287209,
+      "data_disponibilizacao": "2026-04-30",
+      "siglaTribunal": "TRT15",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "CON2 - Jundiaí",
+      "idOrgao": 98488,
+      "texto": "PODER JUDICIÁRIO  JUSTIÇA DO TRABALHO  TRIBUNAL REGIONAL DO TRABALHO DA 15ª REGIÃO  CON2 - JUNDIAÍ  ATOrd 0011763-37.2024.5.15.0188  AUTOR: SIND TRAB INDS MATERIAL PLASTICOS DE JUNDIAI  RÉU: QUALIPOL INDUSTRIA E COMERCIO DE PLASTICOS LTDA  INTIMAÇÃO  Fica V. Sa. intimado para tomar ciência da Sentença ID cf15378 proferida nos autos, cujo dispositivo consta a seguir:  POSTO ISSO, nos termos da fund...[truncado]",
+      "numero_processo": "00117633720245150188",
+      "meio": "D",
+      "link": "https://pje.trt15.jus.br/pjekz/validacao/26042820371833500000291589785?instancia=1",
+      "tipoDocumento": "Notificação",
+      "nomeClasse": "AçãO TRABALHISTA - RITO ORDINáRIO",
+      "codigoClasse": "985",
+      "numeroComunicacao": 1,
+      "ativo": true,
+      "hash": "KOdGxm7gYmx9SXh1T7mMa8Zy5DBkl2",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "30/04/2026",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "0011763-37.2024.5.15.0188",
+      "destinatarios": [
+        {
+          "comunicacao_id": 597287209,
+          "polo": "P",
+          "nome": "QUALIPOL INDUSTRIA E COMERCIO DE PLASTICOS LTDA"
+        },
+        {
+          "comunicacao_id": 597287209,
+          "polo": "A",
+          "nome": "SIND TRAB INDS MATERIAL PLASTICOS DE JUNDIAI"
+        }
+      ],
+      "destinatarioadvogados": [
+        {
+          "id": 1089997139,
+          "comunicacao_id": 597287209,
+          "advogado_id": 1957348,
+          "created_at": "2026-04-29T07:00:24",
+          "updated_at": "2026-04-29T07:00:24",
+          "advogado": {
+            "id": 1957348,
+            "nome": "FERNANDO ROCHA MARTINS",
+            "numero_oab": "225691",
+            "uf_oab": "SP"
+          }
+        },
+        {
+          "id": 1089997141,
+          "comunicacao_id": 597287209,
+          "advogado_id": 1633900,
+          "created_at": "2026-04-29T07:00:25",
+          "updated_at": "2026-04-29T07:00:25",
+          "advogado": {
+            "id": 1633900,
+            "nome": "TANIA CRISTINA MINEIRO",
+            "numero_oab": "343082",
+            "uf_oab": "SP"
+          }
+        },
+        {
+          "id": 1089997145,
+          "comunicacao_id": 597287209,
+          "advogado_id": 1431902,
+          "created_at": "2026-04-29T07:00:25",
+          "updated_at": "2026-04-29T07:00:25",
+          "advogado": {
+            "id": 1431902,
+            "nome": "MARCELO DEPICOLI DIAS",
+            "numero_oab": "195809",
+            "uf_oab": "SP"
+          }
+        }
+      ]
+    }
+  ]
+}
