@@ -166,6 +166,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#from-_de_ate-to-_inicio_fim" id="toc-from-_de_ate-to-_inicio_fim" class="nav-link" data-scroll-target="#from-_de_ate-to-_inicio_fim">From <code>_de/_ate</code> to <code>_inicio/_fim</code></a></li>
   <li><a href="#from-data_iniciofim-to-data_julgamento_iniciofim-tjsp" id="toc-from-data_iniciofim-to-data_julgamento_iniciofim-tjsp" class="nav-link" data-scroll-target="#from-data_iniciofim-to-data_julgamento_iniciofim-tjsp">From <code>data_inicio/fim</code> to <code>data_julgamento_inicio/fim</code> (TJSP)</a></li>
   <li><a href="#pagination-default-change" id="toc-pagination-default-change" class="nav-link" data-scroll-target="#pagination-default-change">Pagination default change</a></li>
+  <li><a href="#date-format-flexibility" id="toc-date-format-flexibility" class="nav-link" data-scroll-target="#date-format-flexibility">Date format flexibility</a></li>
   </ul></li>
   <li><a href="#auto-chunking-esaj-family" id="toc-auto-chunking-esaj-family" class="nav-link" data-scroll-target="#auto-chunking-esaj-family">Auto-chunking (eSAJ family)</a></li>
   <li><a href="#normalization-utilities" id="toc-normalization-utilities" class="nav-link" data-scroll-target="#normalization-utilities">Normalization Utilities</a></li>
@@ -245,6 +246,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <p><strong>Generic aliases:</strong> <code>data_inicio</code> / <code>data_fim</code> map to <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code>. Cannot be used together with the specific names — raises <code>ValueError</code>.</p>
 <p><strong>Deprecated aliases:</strong> <code>data_julgamento_de</code> / <code>data_julgamento_ate</code>, <code>data_publicacao_de</code> / <code>data_publicacao_ate</code> — accepted with <code>DeprecationWarning</code>.</p>
+<section id="accepted-input-formats" class="level4">
+<h4 class="anchored" data-anchor-id="accepted-input-formats">Accepted input formats</h4>
+<p>For endpoints with a wired pydantic schema (eSAJ family, 1C-a tribunals, TJDFT, TJES — see <code>Schemas pydantic</code> in <code>CONTRIBUTING.md</code> for the current list), the four canonical date fields accept any of:</p>
+<ul>
+<li><code>"DD/MM/AAAA"</code> — Brazilian short form (e.g.&nbsp;<code>"01/03/2024"</code>)</li>
+<li><code>"DD-MM-AAAA"</code> — Brazilian with dashes (e.g.&nbsp;<code>"01-03-2024"</code>)</li>
+<li><code>"AAAA-MM-DD"</code> — ISO-8601 short form (e.g.&nbsp;<code>"2024-03-01"</code>)</li>
+<li><code>"AAAA/MM/DD"</code> — ISO-8601 with slashes (e.g.&nbsp;<code>"2024/03/01"</code>)</li>
+<li><code>datetime.date</code></li>
+<li><code>datetime.datetime</code> (the time component is dropped)</li>
+</ul>
+<p>The pipeline coerces every recognized input to whatever format the tribunal’s backend expects — eSAJ uses <code>DD/MM/AAAA</code>, REST/JSON backends like TJDFT use <code>AAAA-MM-DD</code>. The exact backend format is declared per schema via the <code>BACKEND_DATE_FORMAT: ClassVar[str]</code> attribute, so callers don’t need to know it. An empty string and <code>None</code> pass through unchanged (open-ended search). An unrecognized format surfaces as a single <code>ValueError("...Formato esperado: ...")</code> raised by <code>validate_intervalo_datas</code>.</p>
+</section>
 </section>
 <section id="pagination" class="level3">
 <h3 class="anchored" data-anchor-id="pagination">Pagination</h3>
@@ -370,28 +384,46 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>scraper.cjsg(pesquisa<span class="op">=</span><span class="st">"teste"</span>, paginas<span class="op">=</span><span class="dv">1</span>) <span class="co"># downloads page 1 only</span></span>
 <span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>scraper.cjsg(pesquisa<span class="op">=</span><span class="st">"teste"</span>, paginas<span class="op">=</span><span class="dv">3</span>) <span class="co"># downloads pages 1-3</span></span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
+<section id="date-format-flexibility" class="level3">
+<h3 class="anchored" data-anchor-id="date-format-flexibility">Date format flexibility</h3>
+<p>Wired endpoints accept multiple input formats and coerce to the backend’s expected representation. The four examples below all produce the same request:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> datetime <span class="im">as</span> dt</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>tjsp <span class="op">=</span> jus.scraper(<span class="st">"tjsp"</span>)     <span class="co"># eSAJ backend (DD/MM/AAAA)</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>tjdft <span class="op">=</span> jus.scraper(<span class="st">"tjdft"</span>)   <span class="co"># REST JSON backend (AAAA-MM-DD)</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># String, any of the four supported formats — coerced internally:</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>tjsp.cjsg(<span class="st">"dano moral"</span>, paginas<span class="op">=</span><span class="dv">1</span>, data_julgamento_inicio<span class="op">=</span><span class="st">"01/03/2024"</span>)</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>tjsp.cjsg(<span class="st">"dano moral"</span>, paginas<span class="op">=</span><span class="dv">1</span>, data_julgamento_inicio<span class="op">=</span><span class="st">"2024-03-01"</span>)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>tjdft.cjsg(<span class="st">"habeas"</span>,    paginas<span class="op">=</span><span class="dv">1</span>, data_julgamento_inicio<span class="op">=</span><span class="st">"01/03/2024"</span>)</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>tjdft.cjsg(<span class="st">"habeas"</span>,    paginas<span class="op">=</span><span class="dv">1</span>, data_julgamento_inicio<span class="op">=</span><span class="st">"2024-03-01"</span>)</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Or pass a date / datetime directly:</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>tjsp.cjsg(<span class="st">"dano moral"</span>, paginas<span class="op">=</span><span class="dv">1</span>, data_julgamento_inicio<span class="op">=</span>dt.date(<span class="dv">2024</span>, <span class="dv">3</span>, <span class="dv">1</span>))</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
 </section>
 <section id="auto-chunking-esaj-family" class="level2">
 <h2 class="anchored" data-anchor-id="auto-chunking-esaj-family">Auto-chunking (eSAJ family)</h2>
 <p>Several eSAJ endpoints (<code>cjpg</code>/<code>cjsg</code> in TJSP, plus <code>cjsg</code> in TJAC, TJAL, TJAM, TJCE, TJMS) cap each request at a one-year <code>data_julgamento_*</code> window. When the user asks for a longer interval, the scraper <strong>automatically</strong> splits the request into year-long windows, fetches each one, and concatenates the results — deduplicating by <code>cd_acordao</code> (cjsg) or <code>id_processo</code> (cjpg).</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>tjsp <span class="op">=</span> jus.scraper(<span class="st">"tjsp"</span>)</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Six-year span: scraper sends 6 requests under the hood and returns</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co"># a single deduplicated DataFrame.</span></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjsp.cjsg(</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="st">"dano moral"</span>,</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">"01/01/2018"</span>,</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">"31/12/2024"</span>,</span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>tjsp <span class="op">=</span> jus.scraper(<span class="st">"tjsp"</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Six-year span: scraper sends 6 requests under the hood and returns</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co"># a single deduplicated DataFrame.</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjsp.cjsg(</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="st">"dano moral"</span>,</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">"01/01/2018"</span>,</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">"31/12/2024"</span>,</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>The behaviour is controlled by <code>auto_chunk: bool = True</code> (default on). To restore the strict pre-2026 behaviour (a <code>ValueError</code> is raised for windows longer than 366 days), set <code>auto_chunk=False</code> — useful for input validation paths that want to fail before submitting a long job:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>tjsp.cjsg(</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="st">"dano moral"</span>,</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">"01/01/2018"</span>,</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">"31/12/2024"</span>,</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    auto_chunk<span class="op">=</span><span class="va">False</span>,  <span class="co"># raises ValueError ("aceita no máximo 366 dias")</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>tjsp.cjsg(</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="st">"dano moral"</span>,</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">"01/01/2018"</span>,</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">"31/12/2024"</span>,</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    auto_chunk<span class="op">=</span><span class="va">False</span>,  <span class="co"># raises ValueError ("aceita no máximo 366 dias")</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Per-window failures (network errors, captchas, 5xx) are captured and surfaced as a single <code>UserWarning</code> listing the failed windows; the returned DataFrame contains whatever was downloaded successfully (parcial + warning). Combining <code>auto_chunk=True</code> with <code>paginas</code> is rejected when the interval is long enough to actually trigger chunking: the multi-window semantics for <code>paginas</code> are ambiguous (each window? aggregated budget?) and the design prefers to fail explicitly. For short intervals where chunking is a no-op, <code>paginas</code> works as usual.</p>
 </section>
 <section id="normalization-utilities" class="level2">
@@ -401,6 +433,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>normalize_paginas(paginas)</code> — normalizes <code>int | list | range | None</code></li>
 <li><code>normalize_pesquisa(pesquisa, **kwargs)</code> — handles deprecated aliases</li>
 <li><code>normalize_datas(**kwargs)</code> — handles deprecated and generic date aliases</li>
+<li><code>coerce_brazilian_date(value, backend_format)</code> — coerces any of the four supported string formats (or <code>date</code> / <code>datetime</code>) into the backend’s expected format</li>
+<li><code>apply_input_pipeline_search(schema_cls, method_name, *, ...)</code> — runs the canonical input pipeline (alias resolution → date coercion → interval validation → pydantic schema) for <code>cjsg</code>/<code>cjpg</code> endpoints</li>
 <li><code>iter_date_windows(data_inicio, data_fim, *, max_dias=366)</code> — splits a date range into non-overlapping windows for auto-chunking</li>
 <li><code>run_chunked_search(fetch_window, *, data_inicio, data_fim, dedup_key, ...)</code> — drives a search across windows, concatenates and deduplicates</li>
 <li><code>warn_unsupported(param_name, tribunal)</code> — warns about unsupported parameters</li>

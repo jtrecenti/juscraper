@@ -393,7 +393,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Baixa as paginas HTML brutas do CJPG TJSP (sem parsear).</p>
-<p>Roda :func:<code>validate_pesquisa_length</code> antes do pydantic para que <code>QueryTooLongError</code> propague limpo. Aceita os mesmos filtros de :meth:<code>cjpg</code>; veja la a lista completa.</p>
+<p>Delega a normalizacao de <code>pesquisa</code> ao pipeline (via <code>consume_pesquisa_aliases=True</code> + <code>nullable_pesquisa=True</code> — CJPG admite busca aberta com <code>pesquisa=""</code>). Roda :func:<code>validate_pesquisa_length</code> sobre o valor ja resolvido (apos consumir <code>query</code>/<code>termo</code>) para que <code>QueryTooLongError</code> propague mesmo quando o alias trouxe a string longa. Aceita os mesmos filtros de :meth:<code>cjpg</code>; veja la a lista completa.</p>
 <section id="parameters-1" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
 <table class="caption-top table">
@@ -451,7 +451,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><a href="`juscraper.courts.tjsp.exceptions.QueryTooLongError`">QueryTooLongError</a></td>
-<td>Quando <code>pesquisa</code> excede 120 chars.</td>
+<td>Quando <code>pesquisa</code> (ou alias resolvido) excede 120 chars.</td>
 </tr>
 </tbody>
 </table>

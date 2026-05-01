@@ -157,6 +157,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
   <ul class="collapse">
+  <li><a href="#juscraper.aggregators.datajud.client.DatajudScraper.contar_processos" id="toc-juscraper.aggregators.datajud.client.DatajudScraper.contar_processos" class="nav-link" data-scroll-target="#juscraper.aggregators.datajud.client.DatajudScraper.contar_processos">contar_processos</a></li>
   <li><a href="#juscraper.aggregators.datajud.client.DatajudScraper.listar_processos" id="toc-juscraper.aggregators.datajud.client.DatajudScraper.listar_processos" class="nav-link" data-scroll-target="#juscraper.aggregators.datajud.client.DatajudScraper.listar_processos">listar_processos</a></li>
   </ul></li>
   </ul></li>
@@ -189,27 +190,30 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
+<td><a href="#juscraper.aggregators.datajud.client.DatajudScraper.contar_processos">contar_processos</a></td>
+<td>Conta processos no DataJud sem baixar nenhum documento.</td>
+</tr>
+<tr class="even">
 <td><a href="#juscraper.aggregators.datajud.client.DatajudScraper.listar_processos">listar_processos</a></td>
-<td>Lists processes from Datajud via API, with support for multiple filters and pagination.</td>
+<td>Lista processos do DataJud via API publica do CNJ.</td>
 </tr>
 </tbody>
 </table>
-<section id="juscraper.aggregators.datajud.client.DatajudScraper.listar_processos" class="level3">
-<h3 class="anchored" data-anchor-id="juscraper.aggregators.datajud.client.DatajudScraper.listar_processos">listar_processos</h3>
-<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>aggregators.datajud.client.DatajudScraper.listar_processos(</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    numero_processo<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    tribunal<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    ano_ajuizamento<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    classe<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    assuntos<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    mostrar_movs<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    tamanho_pagina<span class="op">=</span><span class="dv">1000</span>,</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Lists processes from Datajud via API, with support for multiple filters and pagination.</p>
+<section id="juscraper.aggregators.datajud.client.DatajudScraper.contar_processos" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.aggregators.datajud.client.DatajudScraper.contar_processos">contar_processos</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>aggregators.datajud.client.DatajudScraper.contar_processos(<span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Conta processos no DataJud sem baixar nenhum documento.</p>
+<p>Útil para análise de viabilidade — antes de uma raspagem grande, descobrir o volume estimado por tribunal. Usa <code>track_total_hits=True</code> com <code>size=0</code> (cap do Elasticsearch é 10000 quando <code>track_total_hits</code> é <code>True</code> apenas via flag boolean — aqui exigimos a contagem exata, então o backend devolve <code>relation="eq"</code> quando o total é conhecido).</p>
+<p>Aceita o <strong>mesmo conjunto de filtros</strong> de :meth:<code>listar_processos</code> (<code>tribunal</code>, <code>numero_processo</code>, <code>ano_ajuizamento</code>, <code>classe</code>, <code>assuntos</code>, <code>data_ajuizamento_inicio</code>/<code>_fim</code>, <code>tipos_movimentacao</code>, <code>movimentos_codigo</code>, <code>orgao_julgador</code>, <code>query</code>), excluindo apenas os parametros de paginacao (<code>paginas</code>, <code>tamanho_pagina</code>, <code>mostrar_movs</code>) — nao ha paginacao numa contagem. Veja a docstring de :meth:<code>listar_processos</code> para a semantica de cada filtro (formato dual ISO+compacto em <code>dataAjuizamento</code>, mapping amigavel de <code>tipos_movimentacao</code>, escape-hatch <code>query</code>).</p>
 <section id="parameters" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
 <table class="caption-top table">
+<colgroup>
+<col style="width: 10%">
+<col style="width: 8%">
+<col style="width: 69%">
+<col style="width: 11%">
+</colgroup>
 <thead>
 <tr class="header">
 <th>Name</th>
@@ -220,13 +224,220 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td>paginas</td>
-<td><a href="`range`">range</a></td>
-<td>Page range (1-based, e.g., range(1, 4) fetches pages 1-3). None fetches all available pages.</td>
-<td><code>None</code></td>
+<td>**kwargs</td>
+<td></td>
+<td>Filtros aceitos pelo schema :class:<code>InputContarProcessosDataJud</code>.</td>
+<td><code>{}</code></td>
 </tr>
 </tbody>
 </table>
+</section>
+<section id="returns" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>pd.DataFrame: Uma linha por tribunal consultado, com colunas</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>tribunal</code> (sigla), <code>alias</code> (índice ES), <code>count</code> (int) e</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>relation</code> (<code>"eq"</code> exato ou <code>"gte"</code> truncado pelo cap</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>interno do Elasticsearch). Quando a chamada falha para um</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>tribunal, <code>count</code> é <code>None</code> e a coluna <code>error</code> traz o</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>motivo.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`TypeError`">TypeError</a></td>
+<td>Quando um kwarg desconhecido é passado.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`pydantic.ValidationError`">ValidationError</a></td>
+<td>Quando um filtro tem formato inválido (ex.: <code>data_ajuizamento_*</code> fora de ISO 8601), quando <code>ano_ajuizamento</code> coexiste com <code>data_ajuizamento_*</code>, quando <code>query</code> coexiste com filtros amigaveis, ou quando um nome em <code>tipos_movimentacao</code> nao esta mapeado.</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>Quando nem <code>tribunal</code> nem <code>numero_processo</code> são informados, ou quando a sigla não tem alias mapeado.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="exemplo" class="level4 doc-section doc-section-exemplo">
+<h4 class="doc-section doc-section-exemplo anchored" data-anchor-id="exemplo">Exemplo</h4>
+<blockquote class="blockquote">
+<blockquote class="blockquote">
+<blockquote class="blockquote">
+<p>import juscraper as jus dj = jus.scraper(“datajud”) dj.contar_processos(tribunal=“TJSP”, ano_ajuizamento=2023, classe=“436”) tribunal alias count relation error 0 TJSP api_publica_tjsp 12345 eq None</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<blockquote class="blockquote">
+<blockquote class="blockquote">
+<blockquote class="blockquote">
+<h1 id="range-de-data-ajuizamento-categoria-de-movimentacao">Range de data ajuizamento + categoria de movimentacao</h1>
+<p>dj.contar_processos( … tribunal=“TRF1”, … data_ajuizamento_inicio=“2024-01-01”, … data_ajuizamento_fim=“2024-03-31”, … tipos_movimentacao=[“decisao”], … )</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</section>
+<section id="see-also" class="level4 doc-section doc-section-see-also">
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See also</h4>
+<p><a href=":meth:`listar_processos`"></a> — usa o mesmo conjunto de filtros mas baixa os processos.</p>
+</section>
+</section>
+<section id="juscraper.aggregators.datajud.client.DatajudScraper.listar_processos" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.aggregators.datajud.client.DatajudScraper.listar_processos">listar_processos</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>aggregators.datajud.client.DatajudScraper.listar_processos(</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Lista processos do DataJud via API publica do CNJ.</p>
+<p>Filtros sao validados pelo schema :class:<code>InputListarProcessosDataJud</code> (<code>extra="forbid"</code>); kwargs desconhecidos viram <code>TypeError</code> com a mensagem <code>DatajudScraper.listar_processos() got unexpected keyword argument(s): '&lt;nome&gt;'</code> em vez de serem silenciosamente ignorados.</p>
+<section id="parameters-1" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 0%">
+<col style="width: 0%">
+<col style="width: 99%">
+<col style="width: 0%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>**kwargs</td>
+<td></td>
+<td>Filtros aceitos pelo schema :class:<code>InputListarProcessosDataJud</code>. Listados abaixo (todos opcionais; <code>None</code> = sem filtro): * <code>numero_processo</code> (str | list[str]): CNJ formatado ou lista de CNJs. Quando informado sem <code>tribunal</code>, o alias- indice e inferido pelos digitos <code>id_justica</code> (pos. 14) + <code>id_tribunal</code> (pos. 15-16). CNJs invalidos ou nao mapeados emitem <code>UserWarning</code> e sao ignorados. * <code>tribunal</code> (str): Sigla do tribunal (ex.: <code>"TJSP"</code>, <code>"TRT2"</code>, <code>"TRE-SP"</code>). Mutuamente exclusivo com inferencia via <code>numero_processo</code>. * <code>ano_ajuizamento</code> (int): Filtra por ano de ajuizamento. Backend recebe <code>range</code> dual em <code>dataAjuizamento</code> (ISO <code>YYYY-01-01</code> + compacto <code>YYYYMMDDhhmmss</code>). Mutuamente exclusivo com <code>data_ajuizamento_inicio</code>/<code>_fim</code>. * <code>data_ajuizamento_inicio</code> / <code>data_ajuizamento_fim</code> (str): Range de data de ajuizamento, formato <code>YYYY-MM-DD</code> (ISO 8601). Backend recebe <code>bool.should</code> com 2 <code>range</code> em <code>dataAjuizamento</code> (ISO + compacto), mesmo padrao dual- format do <code>ano_ajuizamento</code> (refs #51). Pode informar apenas inicio, apenas fim, ou ambos. <strong>Nao</strong> ha alias <code>data_inicio</code>/<code>data_fim</code> aqui (a convencao generica do projeto mapeia esses para <code>data_julgamento_*</code>, e o DataJud filtra por ajuizamento, nao julgamento). * <code>classe</code> (str): Codigo da classe processual CNJ. * <code>assuntos</code> (list[str]): Lista de codigos de assuntos CNJ. * <code>tipos_movimentacao</code> (list[str]): Nomes amigaveis de categorias de movimentacao (ex.: <code>["decisao", "sentenca"]</code>). Resolvidos via <code>TIPOS_MOVIMENTACAO</code> para uma lista plana de codigos TPU CNJ. Para nomes nao mapeados, usar <code>movimentos_codigo</code> direto. Categorias atuais: <code>decisao</code>, <code>sentenca</code>, <code>julgamento</code>, <code>tutela</code>, <code>transito_julgado</code>. * <code>movimentos_codigo</code> (list[int]): Codigos TPU CNJ diretos. Concatenado com a lista resolvida de <code>tipos_movimentacao</code> (uniao). Backend: <code>terms</code> em <code>movimentos.codigo</code>. * <code>orgao_julgador</code> (str): Nome do orgao julgador (ex.: <code>"Vara Civel de Brasilia"</code>). Backend: <code>match</code> em <code>orgaoJulgador.nome</code>. * <code>query</code> (dict): <strong>Override total</strong> da query Elasticsearch. Quando fornecido, vira a chave <code>query</code> do payload literalmente. Mutuamente exclusivo com TODOS os filtros amigaveis acima (<code>numero_processo</code>, <code>ano_ajuizamento</code>, <code>classe</code>, <code>assuntos</code>, <code>data_ajuizamento_*</code>, <code>tipos_movimentacao</code>, <code>movimentos_codigo</code>, <code>orgao_julgador</code>). Exige <code>tribunal</code> explicito (sem inferencia via CNJ). Em troca, oferece paridade com requisicao direta a <code>/&lt;alias&gt;/_search</code> — <code>must_not</code>, <code>should</code> com <code>minimum_should_match</code>, <code>range</code> em campos arbitrarios, <code>wildcard</code>, <code>nested</code>, etc. <code>size</code>/<code>sort</code>/<code>_source</code>/<code>search_after</code> (paginacao) continuam sendo controlados pela biblioteca. Shape oficial documentado em https://datajud-wiki.cnj.jus.br/api-publica/. * <code>mostrar_movs</code> (bool): Se <code>True</code>, inclui <code>movimentos</code>/<code>movimentacoes</code> no <code>_source</code>. Default <code>False</code> (paginacao mais leve). * <code>paginas</code> (int | list[int] | range): Intervalo 1-based. Aceita as 4 formas do contrato unico (refs #118): <code>int</code> (<code>3</code> -&gt; <code>range(1, 4)</code>), <code>list</code> (<code>[3, 5]</code> -&gt; <code>range(3, 6)</code>, baixa 3-5 contiguamente porque o cursor <code>search_after</code> e forwards-only), <code>range</code> (passthrough), <code>None</code> (default, todas). * <code>tamanho_pagina</code> (int): Hits por requisicao (default 5000, range 10-10000 conforme cap da API publica). Em caso de <code>HTTP 504</code>/<code>Timeout</code>, o client refaz a chamada com <code>size // 4</code> automaticamente (1 retry, <code>UserWarning</code>); ainda assim, valores proximos de 10000 sao instaveis na pratica.</td>
+<td><code>{}</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="aliases-deprecados" class="level4 doc-section doc-section-aliases-deprecados">
+<h4 class="doc-section doc-section-aliases-deprecados anchored" data-anchor-id="aliases-deprecados">Aliases deprecados</h4>
+<p>Sem aliases nesta API — DataJud nao tem <code>pesquisa</code> nem filtros de data baseados em <code>DD/MM/AAAA</code>, entao o pipeline canonico <code>normalize_pesquisa</code>/<code>normalize_datas</code> nao se aplica. Todos os filtros aceitam apenas o nome canonico listado acima.</p>
+</section>
+<section id="raises-1" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-1">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`TypeError`">TypeError</a></td>
+<td>Quando um kwarg desconhecido e passado (traduzido de <code>ValidationError</code> por <code>raise_on_extra_kwargs</code>).</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`pydantic.ValidationError`">ValidationError</a></td>
+<td>Quando um filtro tem formato invalido (ex.: <code>ano_ajuizamento</code> nao-int, <code>data_ajuizamento_*</code> fora de ISO 8601), quando <code>ano_ajuizamento</code> coexiste com <code>data_ajuizamento_*</code>, quando <code>query</code> coexiste com filtros amigaveis, ou quando um nome em <code>tipos_movimentacao</code> nao esta mapeado.</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>Quando nem <code>tribunal</code> nem <code>numero_processo</code> sao informados, ou quando a sigla nao tem alias mapeado.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-1" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>pd.DataFrame: Um DataFrame com uma linha por processo. <code>extra</code></td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>do parser e passthrough do <code>_source</code> Elasticsearch — colunas</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>seguem nomenclatura camelCase do CNJ.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="exemplo-1" class="level4 doc-section doc-section-exemplo">
+<h4 class="doc-section doc-section-exemplo anchored" data-anchor-id="exemplo-1">Exemplo</h4>
+<blockquote class="blockquote">
+<blockquote class="blockquote">
+<blockquote class="blockquote">
+<p>import juscraper as jus dj = jus.scraper(“datajud”) # Caminho amigavel: range de data + categoria de movimentacao df = dj.listar_processos( … tribunal=“TRF1”, … data_ajuizamento_inicio=“2024-01-01”, … data_ajuizamento_fim=“2024-03-31”, … tipos_movimentacao=[“decisao”, “sentenca”], … paginas=range(1, 3), … ) # Caminho query-override: paridade com requisicao direta df = dj.listar_processos( … tribunal=“TRF1”, … query={ … “bool”: { … “must_not”: [{“exists”: {“field”: “orgaoJulgador.nome”}}], … “should”: [{“match”: {“classe.nome”: “tutela”}}], … “minimum_should_match”: 1, … } … }, … paginas=1, … )</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</section>
+<section id="see-also-1" class="level4 doc-section doc-section-see-also">
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-1">See also</h4>
+<p><a href=":class:`InputListarProcessosDataJud`"></a> — fonte da verdade dos filtros aceitos.</p>
 
 
 </section>
