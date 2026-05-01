@@ -1,0 +1,686 @@
+{
+  "status": "success",
+  "message": "Sucesso",
+  "count": 10000,
+  "items": [
+    {
+      "id": 597528248,
+      "data_disponibilizacao": "2026-04-30",
+      "siglaTribunal": "TRT17",
+      "tipoComunicacao": "Edital",
+      "nomeOrgao": "Vara do Trabalho de São Mateus",
+      "idOrgao": 44875,
+      "texto": "PODER JUDICIÁRIO  JUSTIÇA DO TRABALHO  TRIBUNAL REGIONAL DO TRABALHO DA 17ª REGIÃO  VARA DO TRABALHO DE SÃO MATEUS  ATOrd 0087900-80.2013.5.17.0191  RECLAMANTE: VERONICA DE ARAUJO  RECLAMADO: IBITURUNA TV POR ASSINATURA LTDA  EDITAL DE LEILÃO ELETRÔNICO Processo: 0087900-80.2013.5.17.0191    O(A) Excelentíssimo(a) Senhor(a) Juiz(a) desta Vara do Trabalho de São Mateus/ES, por meio deste EDITAL, fa...[truncado]",
+      "numero_processo": "00879008020135170191",
+      "meio": "E",
+      "link": "https://pje.trt17.jus.br/pjekz/validacao/26042910493710400000045008323?instancia=1",
+      "tipoDocumento": "Edital",
+      "nomeClasse": "AçãO TRABALHISTA - RITO ORDINáRIO",
+      "codigoClasse": "985",
+      "numeroComunicacao": 1,
+      "ativo": true,
+      "hash": "KOdGxm7gYmxQHXhmh7mMa8Zy5DBkl2",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "30/04/2026",
+      "meiocompleto": "Plataforma Nacional de Editais",
+      "numeroprocessocommascara": "0087900-80.2013.5.17.0191",
+      "destinatarios": [
+        {
+          "polo": "A",
+          "comunicacao_id": 597528248,
+          "nome": "DANIEL DE MORAIS"
+        },
+        {
+          "polo": "P",
+          "comunicacao_id": 597528248,
+          "nome": "IBITURUNA TV POR ASSINATURA LTDA"
+        },
+        {
+          "polo": "A",
+          "comunicacao_id": 597528248,
+          "nome": "VERONICA DE ARAUJO"
+        }
+      ],
+      "destinatarioadvogados": [
+        {
+          "id": 1090578579,
+          "comunicacao_id": 597528248,
+          "advogado_id": 1365396,
+          "created_at": "2026-04-29T13:09:11",
+          "updated_at": "2026-04-29T13:09:11",
+          "advogado": {
+            "id": 1365396,
+            "nome": "LESLIE MESQUITA SALDANHA",
+            "numero_oab": "10326",
+            "uf_oab": "ES"
+          }
+        },
+        {
+          "id": 1090578572,
+          "comunicacao_id": 597528248,
+          "advogado_id": 1377294,
+          "created_at": "2026-04-29T13:09:11",
+          "updated_at": "2026-04-29T13:09:11",
+          "advogado": {
+            "id": 1377294,
+            "nome": "DHAYANE LIESNER SOUSA",
+            "numero_oab": "25132",
+            "uf_oab": "ES"
+          }
+        }
+      ]
+    },
+    {
+      "id": 597513359,
+      "data_disponibilizacao": "2026-04-30",
+      "siglaTribunal": "TRT18",
+      "tipoComunicacao": "Edital",
+      "nomeOrgao": "6ª VARA DO TRABALHO DE GOIÂNIA",
+      "idOrgao": 47136,
+      "texto": "PODER JUDICIÁRIO  JUSTIÇA DO TRABALHO  TRIBUNAL REGIONAL DO TRABALHO DA 18ª REGIÃO  6ª VARA DO TRABALHO DE GOIÂNIA  ATOrd 0000497-62.2026.5.18.0006  AUTOR: SIDNEY ABREU DE OLIVEIRA  RÉU: DISTRIBUIDORA TABOCAO LTDA - EM RECUPERACAO JUDICIAL E OUTROS (14)  **JUÍZO 100% DIGITAL**   CEJUSC - GOIÂNIA - Telefone (WhatsApp): (62) 3222-5800  EDITAL DE NOTIFICAÇÃO DE AUDIÊNCIA VIRTUAL Data de Audiência: 22...[truncado]",
+      "numero_processo": "00004976220265180006",
+      "meio": "E",
+      "link": "https://pje.trt18.jus.br/pjekz/validacao/26042907015446100000080792124?instancia=1",
+      "tipoDocumento": "Edital",
+      "nomeClasse": "AçãO TRABALHISTA - RITO ORDINáRIO",
+      "codigoClasse": "985",
+      "numeroComunicacao": 1,
+      "ativo": true,
+      "hash": "geNaPz7wR5x5hkhbh9e5bKYBMJpDrL",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "30/04/2026",
+      "meiocompleto": "Plataforma Nacional de Editais",
+      "numeroprocessocommascara": "0000497-62.2026.5.18.0006",
+      "destinatarios": [
+        {
+          "polo": "P",
+          "comunicacao_id": 597513359,
+          "nome": "DISTRIBUIDORA TABOCAO LTDA - EM RECUPERACAO JUDICIAL"
+        },
+        {
+          "polo": "P",
+          "comunicacao_id": 597513359,
+          "nome": "DUTRA PARTICIPACOES LTDA"
+        },
+        {
+          "polo": "P",
+          "comunicacao_id": 597513359,
+          "nome": "EDISON JOSE DUTRA"
+        },
+        {
+          "polo": "A",
+          "comunicacao_id": 597513359,
+          "nome": "MINISTÉRIO PÚBLICO DO TRABALHO"
+        },
+        {
+          "polo": "P",
+          "comunicacao_id": 597513359,
+          "nome": "POSTO 89 LTDA"
+        },
+        {
+          "polo": "P",
+          "comunicacao_id": 597513359,
+          "nome": "POSTO NEROPOLIS LTDA"
+        },
+        {
+          "polo": "P",
+          "comunicacao_id": 597513359,
+          "nome": "POSTO PIO XII LTDA EM RECUPERACAO JUDICIAL"
+        },
+        {
+          "polo": "P",
+          "comunicacao_id": 597513359,
+          "nome": "POSTO TABOCAO IV LTDA - EM RECUPERACAO JUDICIAL"
+        },
+        {
+          "polo": "P",
+          "comunicacao_id": 597513359,
+          "nome": "POSTO TABOCAO VI LTDA"
+        },
+        {
+          "polo": "P",
+          "comunicacao_id": 597513359,
+          "nome": "POSTO TABOCAO XIV LTDA EM RECUPERACAO JUDICIAL"
+        },
+        {
+          "polo": "P",
+          "comunicacao_id": 597513359,
+          "nome": "POSTO TABOCAO XVI LTDA"
+        },
+        {
+          "polo": "P",
+          "comunicacao_id": 597513359,
+          "nome": "POSTO TABOCAO XVIII LTDA EM RECUPERACAO JUDICIAL"
+        },
+        {
+          "polo": "P",
+          "comunicacao_id": 597513359,
+          "nome": "POSTO TABOCAO XX LTDA EM RECUPERACAO JUDICIAL"
+        },
+        {
+          "polo": "A",
+          "comunicacao_id": 597513359,
+          "nome": "SIDNEY ABREU DE OLIVEIRA"
+        },
+        {
+          "polo": "P",
+          "comunicacao_id": 597513359,
+          "nome": "TABOCAO ALUGUEIS LTDA EM RECUPERACAO JUDICIAL"
+        },
+        {
+          "polo": "P",
+          "comunicacao_id": 597513359,
+          "nome": "TABOCAO HOLDING LTDA"
+        },
+        {
+          "polo": "P",
+          "comunicacao_id": 597513359,
+          "nome": "TRANSPORTADORA TABOCAO LTDA"
+        }
+      ],
+      "destinatarioadvogados": [
+        {
+          "id": 1090540010,
+          "comunicacao_id": 597513359,
+          "advogado_id": 3259254,
+          "created_at": "2026-04-29T13:06:16",
+          "updated_at": "2026-04-29T13:06:16",
+          "advogado": {
+            "id": 3259254,
+            "nome": "SAMUEL MAIA DE AQUINO",
+            "numero_oab": "74080",
+            "uf_oab": "GO"
+          }
+        },
+        {
+          "id": 1090540014,
+          "comunicacao_id": 597513359,
+          "advogado_id": 1532021,
+          "created_at": "2026-04-29T13:06:16",
+          "updated_at": "2026-04-29T13:06:16",
+          "advogado": {
+            "id": 1532021,
+            "nome": "BRUNO MARTINS BITTES",
+            "numero_oab": "237462",
+            "uf_oab": "SP"
+          }
+        },
+        {
+          "id": 1090540018,
+          "comunicacao_id": 597513359,
+          "advogado_id": 1532020,
+          "created_at": "2026-04-29T13:06:16",
+          "updated_at": "2026-04-29T13:06:16",
+          "advogado": {
+            "id": 1532020,
+            "nome": "NILSON FARIA DE SOUZA",
+            "numero_oab": "76973",
+            "uf_oab": "SP"
+          }
+        }
+      ]
+    },
+    {
+      "id": 597494851,
+      "data_disponibilizacao": "2026-04-30",
+      "siglaTribunal": "TRT19",
+      "tipoComunicacao": "Edital",
+      "nomeOrgao": "9ª Vara do Trabalho de Maceió",
+      "idOrgao": 44791,
+      "texto": "PODER JUDICIÁRIO  JUSTIÇA DO TRABALHO  TRIBUNAL REGIONAL DO TRABALHO DA 19ª REGIÃO  9ª VARA DO TRABALHO DE MACEIÓ  ATSum 0000233-19.2020.5.19.0009  AUTOR: WELLINGTON FERNANDES DOS SANTOS SILVA  RÉU: TERCON SERVICO & COMERCIO EIRELI E OUTROS (1)  EDITAL DE INTIMAÇÃO (Instauração do Incidente de Desconsideração da Pessoa Jurídica) Fica intimado(a) DEIVIDS DE OLIVEIRA SOARES , atualmente em local inc...[truncado]",
+      "numero_processo": "00002331920205190009",
+      "meio": "E",
+      "link": "https://pje.trt19.jus.br/pjekz/validacao/26042907214086800000022999073?instancia=1",
+      "tipoDocumento": "Edital",
+      "nomeClasse": "AçãO TRABALHISTA - RITO SUMARíSSIMO",
+      "codigoClasse": "1125",
+      "numeroComunicacao": 1,
+      "ativo": true,
+      "hash": "9JqKnM28ZBAjt4hJhBm4eo6WjAkoyd",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "30/04/2026",
+      "meiocompleto": "Plataforma Nacional de Editais",
+      "numeroprocessocommascara": "0000233-19.2020.5.19.0009",
+      "destinatarios": [
+        {
+          "polo": "P",
+          "comunicacao_id": 597494851,
+          "nome": "DEIVIDS DE OLIVEIRA SOARES"
+        },
+        {
+          "polo": "P",
+          "comunicacao_id": 597494851,
+          "nome": "TERCON SERVICO & COMERCIO EIRELI"
+        },
+        {
+          "polo": "A",
+          "comunicacao_id": 597494851,
+          "nome": "WELLINGTON FERNANDES DOS SANTOS SILVA"
+        }
+      ],
+      "destinatarioadvogados": [
+        {
+          "id": 1090492821,
+          "comunicacao_id": 597494851,
+          "advogado_id": 1399656,
+          "created_at": "2026-04-29T13:02:46",
+          "updated_at": "2026-04-29T13:02:46",
+          "advogado": {
+            "id": 1399656,
+            "nome": "GUILHERME TENORIO BEZERRA",
+            "numero_oab": "12801",
+            "uf_oab": "AL"
+          }
+        },
+        {
+          "id": 1090492806,
+          "comunicacao_id": 597494851,
+          "advogado_id": 1727998,
+          "created_at": "2026-04-29T13:02:46",
+          "updated_at": "2026-04-29T13:02:46",
+          "advogado": {
+            "id": 1727998,
+            "nome": "WILSON MARCELO DA COSTA FERRO",
+            "numero_oab": "6978",
+            "uf_oab": "AL"
+          }
+        },
+        {
+          "id": 1090492827,
+          "comunicacao_id": 597494851,
+          "advogado_id": 1399327,
+          "created_at": "2026-04-29T13:02:46",
+          "updated_at": "2026-04-29T13:02:46",
+          "advogado": {
+            "id": 1399327,
+            "nome": "MICHELINE DA SILVA MOURA",
+            "numero_oab": "9501",
+            "uf_oab": "AL"
+          }
+        },
+        {
+          "id": 1090492830,
+          "comunicacao_id": 597494851,
+          "advogado_id": 3296370,
+          "created_at": "2026-04-29T13:02:46",
+          "updated_at": "2026-04-29T13:02:46",
+          "advogado": {
+            "id": 3296370,
+            "nome": "JESSICA AMELIA PIMENTEL LEITE",
+            "numero_oab": "12735",
+            "uf_oab": "AL"
+          }
+        }
+      ]
+    },
+    {
+      "id": 597487684,
+      "data_disponibilizacao": "2026-04-30",
+      "siglaTribunal": "TRT22",
+      "tipoComunicacao": "Edital",
+      "nomeOrgao": "Vara do Trabalho de Parnaíba",
+      "idOrgao": 46399,
+      "texto": "PODER JUDICIÁRIO  JUSTIÇA DO TRABALHO  TRIBUNAL REGIONAL DO TRABALHO DA 22ª REGIÃO  VARA DO TRABALHO DE PARNAÍBA  ATSum 0001743-74.2015.5.22.0101  AUTOR: JOAO BATISTA DAMASCENO GASPAR  RÉU: LEONARD STWARTT   JBMCJ  EDITAL DE NOTIFICAÇÃO - PJe-JT - Via DJEN  PRAZO DE 05 (CINCO) DIAS DESTINATÁRIO: LEONARD STWARTT  Expediente enviado por outro meio / LOGRADOURO DESCONHECIDO PROCESSO: 0001743-74.2015....[truncado]",
+      "numero_processo": "00017437420155220101",
+      "meio": "E",
+      "link": "https://pje.trt22.jus.br/pjekz/validacao/26042907330381200000017099833?instancia=1",
+      "tipoDocumento": "Edital",
+      "nomeClasse": "AçãO TRABALHISTA - RITO SUMARíSSIMO",
+      "codigoClasse": "1125",
+      "numeroComunicacao": 1,
+      "ativo": true,
+      "hash": "lx8NKdwzZKK5HohyhKe75GZbD1mrEX",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "30/04/2026",
+      "meiocompleto": "Plataforma Nacional de Editais",
+      "numeroprocessocommascara": "0001743-74.2015.5.22.0101",
+      "destinatarios": [
+        {
+          "polo": "A",
+          "comunicacao_id": 597487684,
+          "nome": "JOAO BATISTA DAMASCENO GASPAR"
+        },
+        {
+          "polo": "P",
+          "comunicacao_id": 597487684,
+          "nome": "LEONARD STWARTT"
+        }
+      ],
+      "destinatarioadvogados": [
+        {
+          "id": 1090475539,
+          "comunicacao_id": 597487684,
+          "advogado_id": 1463049,
+          "created_at": "2026-04-29T13:01:24",
+          "updated_at": "2026-04-29T13:01:24",
+          "advogado": {
+            "id": 1463049,
+            "nome": "TIAGO BRUNO PEREIRA DE CARVALHO",
+            "numero_oab": "5308",
+            "uf_oab": "PI"
+          }
+        }
+      ]
+    },
+    {
+      "id": 595793706,
+      "data_disponibilizacao": "2026-04-30",
+      "siglaTribunal": "TRT3",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "Núcleo Garimpo",
+      "idOrgao": 45237,
+      "texto": "NÚCLEO GARIMPO\n\nProcesso nº. 0186300-63.1996.5.03.0079\nReclamante: Maria da Graça Alves Ramalho\nReclamado: Serviço Nacional de Aprendizagem Industrial - SENAI     \nVara de Origem: 1ª. Vara do Trabalho de Varginha    \n\n\nCERTIDÃO\n\n\n\t\tCertifico que há saldo remanescente de depósito judicial  a ser levantado neste feito, não há valor residual de depósito recursal e que o Reclamado, Serviço Nacional de...[truncado]",
+      "numero_processo": "01863006319965030079",
+      "meio": "D",
+      "link": null,
+      "tipoDocumento": "Despacho",
+      "nomeClasse": "AçãO TRABALHISTA - RITO ORDINáRIO",
+      "codigoClasse": "985",
+      "numeroComunicacao": 1,
+      "ativo": true,
+      "hash": "AOMEBVQ8ZpLGHlhmTWGNlQZd9l2zaP",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "30/04/2026",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "0186300-63.1996.5.03.0079",
+      "destinatarios": [
+        {
+          "polo": "P",
+          "comunicacao_id": 595793706,
+          "nome": "SERVICO NACIONAL DE APR INDUSTRIAL-SENAI"
+        }
+      ],
+      "destinatarioadvogados": [
+        {
+          "id": 1086833917,
+          "comunicacao_id": 595793706,
+          "advogado_id": 1563155,
+          "created_at": "2026-04-27T18:30:48",
+          "updated_at": "2026-04-27T18:30:48",
+          "advogado": {
+            "id": 1563155,
+            "nome": "PETER DE MORAES ROSSI",
+            "numero_oab": "42337",
+            "uf_oab": "MG"
+          }
+        },
+        {
+          "id": 1086833920,
+          "comunicacao_id": 595793706,
+          "advogado_id": 1722526,
+          "created_at": "2026-04-27T18:30:48",
+          "updated_at": "2026-04-27T18:30:48",
+          "advogado": {
+            "id": 1722526,
+            "nome": "GUSTAVO OLIVEIRA DE SIQUEIRA",
+            "numero_oab": "56963",
+            "uf_oab": "MG"
+          }
+        }
+      ]
+    },
+    {
+      "id": 597290226,
+      "data_disponibilizacao": "2026-04-30",
+      "siglaTribunal": "TRT6",
+      "tipoComunicacao": "Edital",
+      "nomeOrgao": "14ª Vara do Trabalho do Recife",
+      "idOrgao": 45747,
+      "texto": "PODER JUDICIÁRIO  JUSTIÇA DO TRABALHO  TRIBUNAL REGIONAL DO TRABALHO DA 6ª REGIÃO  14ª VARA DO TRABALHO DO RECIFE  ATSum 0000007-49.2026.5.06.0014  RECLAMANTE: ELIAS SOARES DE BARROS  RECLAMADO: PLINIO CAVALCANTI & CIA LTDA  EDITAL DE AUDIÊNCIA TELEPRESENCIAL  Por ordem do(a) Excelentíssimo(a) Senhor(a) Doutor(a) PEDRO IVO LIMA NASCIMENTO, Juiz do Trabalho Titular da 14ª Vara do Trabalho do Recife...[truncado]",
+      "numero_processo": "00000074920265060014",
+      "meio": "E",
+      "link": "https://pje.trt6.jus.br/pjekz/validacao/26042822312718600000099015531?instancia=1",
+      "tipoDocumento": "Edital",
+      "nomeClasse": "AçãO TRABALHISTA - RITO SUMARíSSIMO",
+      "codigoClasse": "1125",
+      "numeroComunicacao": 1,
+      "ativo": true,
+      "hash": "8adD75PqYDWzTEhehgEw9zZnyG1xNL",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "30/04/2026",
+      "meiocompleto": "Plataforma Nacional de Editais",
+      "numeroprocessocommascara": "0000007-49.2026.5.06.0014",
+      "destinatarios": [
+        {
+          "comunicacao_id": 597290226,
+          "polo": "A",
+          "nome": "ELIAS SOARES DE BARROS"
+        },
+        {
+          "comunicacao_id": 597290226,
+          "polo": "A",
+          "nome": "MARCELLO RODRIGO CAVALCANTE DA SILVA"
+        },
+        {
+          "comunicacao_id": 597290226,
+          "polo": "P",
+          "nome": "PLINIO CAVALCANTI & CIA LTDA"
+        }
+      ],
+      "destinatarioadvogados": [
+        {
+          "id": 1090004288,
+          "comunicacao_id": 597290226,
+          "advogado_id": 2421095,
+          "created_at": "2026-04-29T07:30:24",
+          "updated_at": "2026-04-29T07:30:24",
+          "advogado": {
+            "id": 2421095,
+            "nome": "ANA CAROLINA MARIA VIEGAS MARINHO",
+            "numero_oab": "1336",
+            "uf_oab": "PE"
+          }
+        },
+        {
+          "id": 1090004284,
+          "comunicacao_id": 597290226,
+          "advogado_id": 1406341,
+          "created_at": "2026-04-29T07:30:24",
+          "updated_at": "2026-04-29T07:30:24",
+          "advogado": {
+            "id": 1406341,
+            "nome": "LUCIANO MATHEUS KISSMANN",
+            "numero_oab": "101353",
+            "uf_oab": "RS"
+          }
+        }
+      ]
+    },
+    {
+      "id": 597271302,
+      "data_disponibilizacao": "2026-04-30",
+      "siglaTribunal": "TJMA",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "1ª Vara de Pedreiras",
+      "idOrgao": 574,
+      "texto": "PODER JUDICIÁRIO TRIBUNAL DE JUSTIÇA DO ESTADO DO MARANHÃO FÓRUM DESEMBARGADOR ARAÚJO NETO 1ª VARA DA COMARCA DE PEDREIRAS Rua das Laranjeiras, s/nº, Goiabal, Pedreiras/MA - CEP: 65.725-000. E-mail: vara1_ped@tjma.jus.br / Fone: (99) 2055-1547 / (99) 2055-1548 Balcão virtual: https://vc.tjma.jus.br/bvvara1ped PROCESSO N: 0803578-23.2023.8.10.0051 CUMPRIMENTO DE SENTENÇA CONTRA A FAZENDA PÚBLICA (1...[truncado]",
+      "numero_processo": "08035782320238100051",
+      "meio": "D",
+      "link": "https://pje.tjma.jus.br:443/pje/Processo/ConsultaDocumento/listView.seam?x=26042820171517200000164971256",
+      "tipoDocumento": "Intimação",
+      "nomeClasse": "CUMPRIMENTO DE SENTENçA CONTRA A FAZENDA PúBLICA",
+      "codigoClasse": "12078",
+      "numeroComunicacao": 1,
+      "ativo": true,
+      "hash": "mQpOqvB2lR3aTMh9TXG5AMZyPD35na",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "30/04/2026",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "0803578-23.2023.8.10.0051",
+      "destinatarios": [
+        {
+          "comunicacao_id": 597271302,
+          "polo": "A",
+          "nome": "IDIRAN SILVA DO NASCIMENTO"
+        }
+      ],
+      "destinatarioadvogados": [
+        {
+          "id": 1089967017,
+          "comunicacao_id": 597271302,
+          "advogado_id": 4918,
+          "created_at": "2026-04-29T00:00:24",
+          "updated_at": "2026-04-29T00:00:24",
+          "advogado": {
+            "id": 4918,
+            "nome": "IDIRAN SILVA DO NASCIMENTO",
+            "numero_oab": "8501",
+            "uf_oab": "PI"
+          }
+        }
+      ]
+    },
+    {
+      "id": 597271489,
+      "data_disponibilizacao": "2026-04-30",
+      "siglaTribunal": "TJPA",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "2ª Vara da Fazenda de Belém",
+      "idOrgao": 881,
+      "texto": "PODER JUDICIÁRIO TRIBUNAL DE JUSTIÇA DO ESTADO DO PARÁ 2ª Vara da Fazenda de Belém 0259250-27.2016.8.14.0301 CUMPRIMENTO DE SENTENÇA (156) AUTOR: OSVALDO ULISSES TRINDADE DO ROSARIO Nome: OSVALDO ULISSES TRINDADE DO ROSARIO Endereï¿½o: desconhecido REU: ESTADO DO PARÁ Nome: ESTADO DO PARÁ Endereï¿½o: desconhecido DECISÃO VISTOS. 1. Relativamente à obrigação de pagar, INTIME-SE O EXECUTADO, na pess...[truncado]",
+      "numero_processo": "02592502720168140301",
+      "meio": "D",
+      "link": "https://pje.tjpa.jus.br:443/pje/Processo/ConsultaDocumento/listView.seam?x=26041310575924400000154345232",
+      "tipoDocumento": "Decisão",
+      "nomeClasse": "CUMPRIMENTO DE SENTENçA",
+      "codigoClasse": "156",
+      "numeroComunicacao": 1,
+      "ativo": true,
+      "hash": "qAOMEBVQ8YpGilhmTWGNlQZd9l2zaP",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "30/04/2026",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "0259250-27.2016.8.14.0301",
+      "destinatarios": [
+        {
+          "comunicacao_id": 597271489,
+          "polo": "A",
+          "nome": "OSVALDO ULISSES TRINDADE DO ROSARIO"
+        }
+      ],
+      "destinatarioadvogados": [
+        {
+          "id": 1089967405,
+          "comunicacao_id": 597271489,
+          "advogado_id": 1562662,
+          "created_at": "2026-04-29T00:03:15",
+          "updated_at": "2026-04-29T00:03:15",
+          "advogado": {
+            "id": 1562662,
+            "nome": "CARLOS FRANCISCO DE SOUSA MAIA",
+            "numero_oab": "16953",
+            "uf_oab": "PA"
+          }
+        }
+      ]
+    },
+    {
+      "id": 597418578,
+      "data_disponibilizacao": "2026-04-30",
+      "siglaTribunal": "TJMT",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "2ª VARA DE SÃO JOSÉ DO RIO CLARO",
+      "idOrgao": 30928,
+      "texto": "PODER JUDICIÁRIO DO ESTADO DE MATO GROSSO COMARCA DE SÃO JOSÉ DO RIO CLARO 2ª VARA DE SÃO JOSÉ DO RIO CLARO RUA SANTA CATARINA, 709, TELEFONE: (65) 3386-1577, CENTRO, SÃO JOSÉ DO RIO CLARO - MT - CEP: 78435-000 EDITAL DE INTIMAÇÃO Prazo do Edital: 30 Dias EXPEDIDO POR DETERMINAÇÃO DO MM.(ª)JUIZ(A) DE DIREITO PEDRO ANTONIO MATTOS SCHMIDT PROCESSO n. 0000315-29.2012.8.11.0033 Valor da causa: 0,00 ES...[truncado]",
+      "numero_processo": "00003152920128110033",
+      "meio": "E",
+      "link": "https://pje.tjmt.jus.br/pje/Processo/ConsultaDocumento/listView.seam?x=26042909561420900000215205699",
+      "tipoDocumento": "Intimação",
+      "nomeClasse": "AçãO PENAL - PROCEDIMENTO ORDINáRIO",
+      "codigoClasse": "283",
+      "numeroComunicacao": 1,
+      "ativo": true,
+      "hash": "wLQa7Deb96QmSlhyh5N7pk6gMzm2nv",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "30/04/2026",
+      "meiocompleto": "Plataforma Nacional de Editais",
+      "numeroprocessocommascara": "0000315-29.2012.8.11.0033",
+      "destinatarios": [
+        {
+          "polo": "P",
+          "comunicacao_id": 597418578,
+          "nome": "CLODOALDO ALVES ROSA"
+        }
+      ],
+      "destinatarioadvogados": [
+        {
+          "id": 1090325624,
+          "comunicacao_id": 597418578,
+          "advogado_id": 2786098,
+          "created_at": "2026-04-29T12:25:03",
+          "updated_at": "2026-04-29T12:25:03",
+          "advogado": {
+            "id": 2786098,
+            "nome": "JOSE MARIA MARIANO",
+            "numero_oab": "3539-B",
+            "uf_oab": "MT"
+          }
+        }
+      ]
+    },
+    {
+      "id": 597271554,
+      "data_disponibilizacao": "2026-04-30",
+      "siglaTribunal": "TJPB",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "4º Juizado Especial Cível da Capital e de Cabedelo",
+      "idOrgao": 106409,
+      "texto": "Poder Judiciário da Paraíba 4º Juizado Especial Cível da Capital Av. João Machado, 515, Centro; João Pessoa - PB, CEP: 58.013-520 WhastApp : (83) 99144-1428 - Telejudiciário: (83)3621-1581 EXPEDIENTE DE INTIMAÇÃO PARA AUDIÊNCIA VIRTUAL UNA Nº DO PROCESSO: 0828449-44.2026.8.15.2001 CLASSE DO PROCESSO: PROCEDIMENTO DO JUIZADO ESPECIAL CÍVEL (436) ASSUNTO(S) DO PROCESSO: [Bancários, Obrigação de Faze...[truncado]",
+      "numero_processo": "08284494420268152001",
+      "meio": "D",
+      "link": "https://pje.tjpb.jus.br:443/pje/Processo/ConsultaDocumento/listView.seam?x=26042900043146100000149832457",
+      "tipoDocumento": "EXPEDIENTE",
+      "nomeClasse": "PROCEDIMENTO DO JUIZADO ESPECIAL CíVEL",
+      "codigoClasse": "436",
+      "numeroComunicacao": 2,
+      "ativo": true,
+      "hash": "bqG7X2owQYVGslC7Tdl72rRek9aWLO",
+      "status": "P",
+      "motivo_cancelamento": null,
+      "data_cancelamento": null,
+      "datadisponibilizacao": "30/04/2026",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "0828449-44.2026.8.15.2001",
+      "destinatarios": [
+        {
+          "comunicacao_id": 597271554,
+          "polo": "A",
+          "nome": "JEAN MARC RAMALHO DUARTE"
+        }
+      ],
+      "destinatarioadvogados": [
+        {
+          "id": 1089967511,
+          "comunicacao_id": 597271554,
+          "advogado_id": 3626980,
+          "created_at": "2026-04-29T00:04:49",
+          "updated_at": "2026-04-29T00:04:49",
+          "advogado": {
+            "id": 3626980,
+            "nome": "JACIRA DOS SANTOS GOMES",
+            "numero_oab": "34283",
+            "uf_oab": "PB"
+          }
+        }
+      ]
+    }
+  ]
+}

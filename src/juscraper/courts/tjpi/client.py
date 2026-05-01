@@ -5,15 +5,11 @@ import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import (
-    normalize_datas,
-    normalize_paginas,
-    normalize_pesquisa,
-    to_iso_date,
-)
+from juscraper.utils.params import apply_input_pipeline_search, normalize_paginas, normalize_pesquisa, to_iso_date
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
+from .schemas import InputCJSGTJPI
 
 
 class TJPIScraper(BaseScraper):
@@ -50,39 +46,64 @@ class TJPIScraper(BaseScraper):
         orgao: str = "",
         **kwargs,
     ) -> pd.DataFrame:
-        """Search TJPI jurisprudence.
+        """Busca jurisprudencia no TJPI.
 
-        Parameters
-        ----------
-        pesquisa : str
-            Free-text search term.
-        paginas : int, list, range, or None
-            Pages to download (1-based). None downloads all.
-        tipo : str, optional
-            Decision type. Options: ``"Acordao"``, ``"Decisao Terminativa"``, ``"Sumula"``.
-        relator : str, optional
-            Reporter judge name (must match dropdown value exactly).
-        classe : str, optional
-            Procedural class (must match dropdown value exactly).
-        orgao : str, optional
-            Judging body (must match dropdown value exactly).
+        Args:
+            pesquisa (str): Termo de busca livre.
+            paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
+                todas. Default ``None``.
+            tipo (str): Tipo de decisao. Opcoes: ``"Acordao"``,
+                ``"Decisao Terminativa"``, ``"Sumula"``.
+            relator (str): Nome do relator (deve bater com o valor do dropdown).
+            classe (str): Classe processual (deve bater com o valor do dropdown).
+            orgao (str): Orgao julgador (deve bater com o valor do dropdown).
+            **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJPI`.
+                Listados abaixo (todos opcionais; ``None`` = sem filtro):
 
-        Returns
-        -------
-        pd.DataFrame
+                * ``data_julgamento_inicio`` / ``data_julgamento_fim`` (str):
+                  ``YYYY-MM-DD``. Mapeado para ``data_min``/``data_max`` no
+                  GET (refs #94).
+
+        Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
+            * ``query`` / ``termo`` -> ``pesquisa``
+            * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``_fim``
+            * ``data_julgamento_de`` / ``_ate`` -> ``data_julgamento_inicio`` / ``_fim``
+
+        Raises:
+            TypeError: Quando um kwarg desconhecido e passado (inclusive
+                ``data_publicacao_*``, que o backend nao expoe).
+            ValidationError: Quando um filtro tem formato invalido.
+
+        Returns:
+            pd.DataFrame: DataFrame com as decisoes.
+
+        See also:
+            :class:`InputCJSGTJPI` — schema pydantic e a fonte da verdade dos
+            filtros aceitos.
         """
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-        paginas = normalize_paginas(paginas)
-        datas = normalize_datas(**kwargs)
-        brutos = self.cjsg_download(
+
+        inp = apply_input_pipeline_search(
+            InputCJSGTJPI,
+            "TJPIScraper.cjsg()",
             pesquisa=pesquisa,
             paginas=paginas,
+            kwargs=kwargs,
             tipo=tipo,
             relator=relator,
             classe=classe,
             orgao=orgao,
-            data_min=to_iso_date(datas["data_julgamento_inicio"]) or "",
-            data_max=to_iso_date(datas["data_julgamento_fim"]) or "",
+        )
+
+        brutos = self.cjsg_download(
+            pesquisa=inp.pesquisa,
+            paginas=inp.paginas,
+            tipo=inp.tipo,
+            relator=inp.relator,
+            classe=inp.classe,
+            orgao=inp.orgao,
+            data_min=to_iso_date(inp.data_julgamento_inicio) or "",
+            data_max=to_iso_date(inp.data_julgamento_fim) or "",
         )
         return self.cjsg_parse(brutos)
 

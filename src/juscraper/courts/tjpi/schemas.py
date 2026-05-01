@@ -1,25 +1,26 @@
-"""Pydantic schemas for TJPI scraper endpoints.
-
-Ainda nao wired em :mod:`juscraper.courts.tjpi.client` — este arquivo e
-documentacao executavel da API publica ate o TJPI ser refatorado para o
-pipeline canonico da #93. A lista de campos bate byte-a-byte com a
-assinatura publica de :meth:`TJPIScraper.cjsg`.
-"""
+"""Pydantic schemas for TJPI scraper endpoints."""
 from __future__ import annotations
 
+from typing import ClassVar
+
 from ...schemas import OutputCJSGBase, SearchBase
+from ...schemas.mixins import DataJulgamentoMixin
 
 
-class InputCJSGTJPI(SearchBase):
+class InputCJSGTJPI(SearchBase, DataJulgamentoMixin):
     """Accepted input for TJPI ``cjsg``.
 
     Endpoint HTML (JusPI, server-rendered). ``pesquisa`` aceita os aliases
     deprecados ``query`` / ``termo`` via
     :func:`juscraper.utils.params.normalize_pesquisa`, que roda *antes*
-    deste modelo. O backend do TJPI nao expoe filtros de data — ao wirar
-    este schema, passar ``data_*`` deve virar ``TypeError`` via
-    ``extra="forbid"`` herdado de :class:`SearchBase`.
+    deste modelo. ``data_julgamento_inicio``/``data_julgamento_fim``
+    (ISO ``YYYY-MM-DD``) sao mapeados para ``data_min``/``data_max`` no
+    GET pelo client (refs #94, #125). O backend nao expoe filtro de data
+    de publicacao, entao ``DataPublicacaoMixin`` nao e herdado: passar
+    ``data_publicacao_*`` levanta ``TypeError`` via ``extra="forbid"``.
     """
+
+    BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
 
     tipo: str = ""
     relator: str = ""

@@ -30,6 +30,7 @@ python -m tests.fixtures.capture.tjmt
 python -m tests.fixtures.capture.tjap
 python -m tests.fixtures.capture.tjes
 python -m tests.fixtures.capture.tjrs
+python -m tests.fixtures.capture.datajud
 ```
 
 Cada script eSAJ:
@@ -125,3 +126,38 @@ defensivo. Lista exata dos campos tocados vive no proprio script.
 
 `auth_firefox()` esta **fora do escopo** dos contratos offline (depende de
 cookies reais do Firefox); candidato a cassette VCR na Fase 4 da #113.
+### DataJud (CNJ)
+
+`tests/fixtures/capture/datajud.py` captura samples para o contrato de
+`DatajudScraper.listar_processos`. O DataJud expoe o indice Elasticsearch
+da CNJ via API publica (`api-publica.datajud.cnj.jus.br`). A
+`DEFAULT_API_KEY` publicada na documentacao oficial fica embutida em
+`aggregators/datajud/client.py` e o script reusa via import — nada de
+env vars.
+
+Diferencas vs. familia 1B:
+
+- Auth: header `Authorization: APIKey <key>`.
+- POST com body JSON (Elasticsearch DSL).
+- Paginacao por **cursor** `search_after` (nao offset). A 2a pagina depende
+  do `sort` do ultimo hit da 1a, exigindo `OrderedRegistry` no contrato.
+
+Saida em `tests/datajud/samples/listar_processos/`:
+
+| Arquivo | Conteudo |
+|---|---|
+| `results_normal_page_01.json` | `tribunal=TJSP` + `tamanho_pagina=2`: exatamente 2 hits, cada um com campo `sort`. |
+| `results_normal_page_02.json` | mesma busca + `search_after` do hit final da p1. |
+| `single_page.json` | `numero_processo=<CNJ_TJSP>` + `tamanho_pagina=1000`: 1 hit (`< tamanho_pagina` forca break). |
+| `no_results.json` | `numero_processo="00000000000000000000"` (estruturalmente valido, inexistente): `hits.hits == []`. |
+
+Saneamento pos-captura: remove `highlight` (defesa) e trunca arrays
+residuais de `movimentos`/`movimentacoes` no `_source` — capturas usam
+`mostrar_movs=False`, mas o trim e rede de seguranca.
+
+O body Elasticsearch e construido por
+`build_listar_processos_payload` em `aggregators/datajud/download.py` —
+a mesma funcao usada pelo client em producao. O capture e os contratos
+em `tests/datajud/test_listar_processos_*_contract.py` importam dessa
+funcao, atendendo a regra 12 do CLAUDE.md (capture e producao falham
+juntos quando o body real do scraper muda).

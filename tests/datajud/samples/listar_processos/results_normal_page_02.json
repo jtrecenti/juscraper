@@ -1,0 +1,420 @@
+{
+  "took": 39699,
+  "timed_out": false,
+  "_shards": {
+    "total": 20,
+    "successful": 20,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 71899024,
+      "relation": "eq"
+    },
+    "max_score": null,
+    "hits": [
+      {
+        "_index": "api_publica_tjsp",
+        "_id": "TJSP_100_G1_10058_00013359620228260450",
+        "_score": null,
+        "_source": {
+          "classe": {
+            "codigo": 100,
+            "nome": "Dúvida"
+          },
+          "numeroProcesso": "00013359620228260450",
+          "sistema": {
+            "codigo": 3,
+            "nome": "SAJ"
+          },
+          "formato": {
+            "codigo": 1,
+            "nome": "Eletrônico"
+          },
+          "tribunal": "TJSP",
+          "dataHoraUltimaAtualizacao": "2023-03-06T05:05:16.658Z",
+          "grau": "G1",
+          "@timestamp": "2025-11-03T14:22:57.031344488Z",
+          "dataAjuizamento": "20221117094752",
+          "id": "TJSP_100_G1_10058_00013359620228260450",
+          "nivelSigilo": 0,
+          "orgaoJulgador": {
+            "codigoMunicipioIBGE": 3538600,
+            "codigo": 10058,
+            "nome": "02 CUMULATIVA DE PIRACAIA"
+          },
+          "assuntos": [
+            {
+              "codigo": 7895,
+              "nome": "Registro de Imóveis"
+            }
+          ]
+        },
+        "sort": [
+          "TJSP_100_G1_10058_00013359620228260450"
+        ]
+      },
+      {
+        "_index": "api_publica_tjsp",
+        "_id": "TJSP_100_G1_10059_00066275020088260451",
+        "_score": null,
+        "_source": {
+          "classe": {
+            "codigo": 100,
+            "nome": "Dúvida"
+          },
+          "numeroProcesso": "00066275020088260451",
+          "sistema": {
+            "codigo": 3,
+            "nome": "SAJ"
+          },
+          "formato": {
+            "codigo": 2,
+            "nome": "Físico"
+          },
+          "tribunal": "TJSP",
+          "dataHoraUltimaAtualizacao": "2024-07-31T04:23:25.825Z",
+          "grau": "G1",
+          "@timestamp": "2025-11-04T07:59:09.128727711Z",
+          "dataAjuizamento": "20080314135000",
+          "id": "TJSP_100_G1_10059_00066275020088260451",
+          "nivelSigilo": 0,
+          "orgaoJulgador": {
+            "codigo": 10059,
+            "nome": "01 CIVEL DE PIRACICABA"
+          },
+          "assuntos": [
+            {
+              "codigo": 7895,
+              "nome": "Registro de Imóveis"
+            }
+          ]
+        },
+        "sort": [
+          "TJSP_100_G1_10059_00066275020088260451"
+        ]
+      },
+      {
+        "_index": "api_publica_tjsp",
+        "_id": "TJSP_100_G1_10061_00001740520098260451",
+        "_score": null,
+        "_source": {
+          "classe": {
+            "codigo": 100,
+            "nome": "Dúvida"
+          },
+          "numeroProcesso": "00001740520098260451",
+          "sistema": {
+            "codigo": 3,
+            "nome": "SAJ"
+          },
+          "formato": {
+            "codigo": 2,
+            "nome": "Físico"
+          },
+          "tribunal": "TJSP",
+          "dataHoraUltimaAtualizacao": "2024-07-31T04:20:25.102Z",
+          "grau": "G1",
+          "@timestamp": "2025-11-04T07:55:05.380959373Z",
+          "dataAjuizamento": "20090106180635",
+          "id": "TJSP_100_G1_10061_00001740520098260451",
+          "nivelSigilo": 0,
+          "orgaoJulgador": {
+            "codigo": 10061,
+            "nome": "03 CIVEL DE PIRACICABA"
+          },
+          "assuntos": [
+            {
+              "codigo": 7725,
+              "nome": "Registro Civil das Pessoas Naturais"
+            }
+          ]
+        },
+        "sort": [
+          "TJSP_100_G1_10061_00001740520098260451"
+        ]
+      },
+      {
+        "_index": "api_publica_tjsp",
+        "_id": "TJSP_100_G1_10062_00001732020098260451",
+        "_score": null,
+        "_source": {
+          "classe": {
+            "codigo": 100,
+            "nome": "Dúvida"
+          },
+          "numeroProcesso": "00001732020098260451",
+          "sistema": {
+            "codigo": 3,
+            "nome": "SAJ"
+          },
+          "formato": {
+            "codigo": 2,
+            "nome": "Físico"
+          },
+          "tribunal": "TJSP",
+          "dataHoraUltimaAtualizacao": "2024-07-31T04:20:24.891Z",
+          "grau": "G1",
+          "@timestamp": "2025-11-04T07:55:03.345767878Z",
+          "dataAjuizamento": "20090106180613",
+          "id": "TJSP_100_G1_10062_00001732020098260451",
+          "nivelSigilo": 0,
+          "orgaoJulgador": {
+            "codigo": 10062,
+            "nome": "04 CIVEL DE PIRACICABA"
+          },
+          "assuntos": [
+            {
+              "codigo": 7725,
+              "nome": "Registro Civil das Pessoas Naturais"
+            }
+          ]
+        },
+        "sort": [
+          "TJSP_100_G1_10062_00001732020098260451"
+        ]
+      },
+      {
+        "_index": "api_publica_tjsp",
+        "_id": "TJSP_100_G1_10072_00280600820118260451",
+        "_score": null,
+        "_source": {
+          "classe": {
+            "codigo": 100,
+            "nome": "Dúvida"
+          },
+          "numeroProcesso": "00280600820118260451",
+          "sistema": {
+            "codigo": 3,
+            "nome": "SAJ"
+          },
+          "formato": {
+            "codigo": 2,
+            "nome": "Físico"
+          },
+          "tribunal": "TJSP",
+          "dataHoraUltimaAtualizacao": "2024-08-01T03:40:58.626Z",
+          "grau": "G1",
+          "@timestamp": "2025-11-05T01:53:54.947436145Z",
+          "dataAjuizamento": "20110929125222",
+          "id": "TJSP_100_G1_10072_00280600820118260451",
+          "nivelSigilo": 0,
+          "orgaoJulgador": {
+            "codigo": 10072,
+            "nome": "03 FAMILIA SUCESSOES DE PIRACICABA"
+          },
+          "assuntos": [
+            {
+              "codigo": 7725,
+              "nome": "Registro Civil das Pessoas Naturais"
+            }
+          ]
+        },
+        "sort": [
+          "TJSP_100_G1_10072_00280600820118260451"
+        ]
+      },
+      {
+        "_index": "api_publica_tjsp",
+        "_id": "TJSP_100_G1_10104_00026115320098260472",
+        "_score": null,
+        "_source": {
+          "classe": {
+            "codigo": 100,
+            "nome": "Dúvida"
+          },
+          "numeroProcesso": "00026115320098260472",
+          "sistema": {
+            "codigo": 3,
+            "nome": "SAJ"
+          },
+          "formato": {
+            "codigo": 2,
+            "nome": "Físico"
+          },
+          "tribunal": "TJSP",
+          "dataHoraUltimaAtualizacao": "2024-08-01T01:56:20.107Z",
+          "grau": "G1",
+          "@timestamp": "2025-11-05T01:17:10.763270917Z",
+          "dataAjuizamento": "20090514162212",
+          "id": "TJSP_100_G1_10104_00026115320098260472",
+          "nivelSigilo": 0,
+          "orgaoJulgador": {
+            "codigo": 10104,
+            "nome": "01 CUMULATIVA DE PORTO FERREIRA"
+          },
+          "assuntos": [
+            {
+              "codigo": 7735,
+              "nome": "Retificação de Nome "
+            }
+          ]
+        },
+        "sort": [
+          "TJSP_100_G1_10104_00026115320098260472"
+        ]
+      },
+      {
+        "_index": "api_publica_tjsp",
+        "_id": "TJSP_100_G1_10124_00076733920128260482",
+        "_score": null,
+        "_source": {
+          "classe": {
+            "codigo": 100,
+            "nome": "Dúvida"
+          },
+          "numeroProcesso": "00076733920128260482",
+          "sistema": {
+            "codigo": 3,
+            "nome": "SAJ"
+          },
+          "formato": {
+            "codigo": 2,
+            "nome": "Físico"
+          },
+          "tribunal": "TJSP",
+          "dataHoraUltimaAtualizacao": "2024-07-31T03:20:18.563Z",
+          "grau": "G1",
+          "@timestamp": "2025-11-04T06:25:48.783764699Z",
+          "dataAjuizamento": "20120322145605",
+          "id": "TJSP_100_G1_10124_00076733920128260482",
+          "nivelSigilo": 0,
+          "orgaoJulgador": {
+            "codigo": 10124,
+            "nome": "03 CIVEL DE PRESIDENTE PRUDENTE"
+          },
+          "assuntos": [
+            {
+              "codigo": 7895,
+              "nome": "Registro de Imóveis"
+            }
+          ]
+        },
+        "sort": [
+          "TJSP_100_G1_10124_00076733920128260482"
+        ]
+      },
+      {
+        "_index": "api_publica_tjsp",
+        "_id": "TJSP_100_G1_10161_00012073920168260498",
+        "_score": null,
+        "_source": {
+          "classe": {
+            "codigo": 100,
+            "nome": "Dúvida"
+          },
+          "numeroProcesso": "00012073920168260498",
+          "sistema": {
+            "codigo": 3,
+            "nome": "SAJ"
+          },
+          "formato": {
+            "codigo": 1,
+            "nome": "Eletrônico"
+          },
+          "tribunal": "TJSP",
+          "dataHoraUltimaAtualizacao": "2024-07-30T23:07:25.020Z",
+          "grau": "G1",
+          "@timestamp": "2025-11-03T21:47:21.692527408Z",
+          "dataAjuizamento": "20160808162713",
+          "id": "TJSP_100_G1_10161_00012073920168260498",
+          "nivelSigilo": 0,
+          "orgaoJulgador": {
+            "codigo": 10161,
+            "nome": "VARA UNICA DE RIBEIRAO BONITO"
+          },
+          "assuntos": [
+            {
+              "codigo": 7895,
+              "nome": "Registro de Imóveis"
+            }
+          ]
+        },
+        "sort": [
+          "TJSP_100_G1_10161_00012073920168260498"
+        ]
+      },
+      {
+        "_index": "api_publica_tjsp",
+        "_id": "TJSP_100_G1_10182_10235283319938260506",
+        "_score": null,
+        "_source": {
+          "numeroProcesso": "10235283319938260506",
+          "classe": {
+            "codigo": 100,
+            "nome": "Dúvida"
+          },
+          "sistema": {
+            "codigo": 3,
+            "nome": "SAJ"
+          },
+          "formato": {
+            "codigo": 2,
+            "nome": "Físico"
+          },
+          "tribunal": "TJSP",
+          "dataHoraUltimaAtualizacao": "2024-08-27T08:59:23.356Z",
+          "grau": "G1",
+          "@timestamp": "2025-06-17T00:36:50.006942240Z",
+          "dataAjuizamento": "1993-07-27T00:00:00.000Z",
+          "id": "TJSP_100_G1_10182_10235283319938260506",
+          "nivelSigilo": 0,
+          "orgaoJulgador": {
+            "codigo": 10182,
+            "nome": "02 CRIMINAL E ANEXO VIOL. DOMEST. E FAM. CONTRA A MULHER DE RIBEIRAO PRETO"
+          },
+          "assuntos": [
+            {
+              "codigo": 7724,
+              "nome": "REGISTROS PÚBLICOS"
+            }
+          ]
+        },
+        "sort": [
+          "TJSP_100_G1_10182_10235283319938260506"
+        ]
+      },
+      {
+        "_index": "api_publica_tjsp",
+        "_id": "TJSP_100_G1_10191_00024566220118260510",
+        "_score": null,
+        "_source": {
+          "classe": {
+            "codigo": 100,
+            "nome": "Dúvida"
+          },
+          "numeroProcesso": "00024566220118260510",
+          "sistema": {
+            "codigo": 3,
+            "nome": "SAJ"
+          },
+          "formato": {
+            "codigo": 2,
+            "nome": "Físico"
+          },
+          "tribunal": "TJSP",
+          "dataHoraUltimaAtualizacao": "2024-07-31T04:43:40.099Z",
+          "grau": "G1",
+          "@timestamp": "2025-11-04T08:24:57.096617170Z",
+          "dataAjuizamento": "20110225120914",
+          "id": "TJSP_100_G1_10191_00024566220118260510",
+          "nivelSigilo": 0,
+          "orgaoJulgador": {
+            "codigo": 10191,
+            "nome": "01 CIVEL DE RIO CLARO"
+          },
+          "assuntos": [
+            {
+              "codigo": 7899,
+              "nome": "Bloqueio de Matrícula"
+            }
+          ]
+        },
+        "sort": [
+          "TJSP_100_G1_10191_00024566220118260510"
+        ]
+      }
+    ]
+  }
+}

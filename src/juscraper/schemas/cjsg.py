@@ -5,22 +5,15 @@ from datetime import date
 
 from pydantic import BaseModel, ConfigDict
 
+from .mixins import PaginasMixin
 
-class SearchBase(BaseModel):
+
+class SearchBase(PaginasMixin):
     """Minimum input accepted by any jurisprudence search (cjsg/cjpg).
 
-    ``paginas`` e **1-based em todos os raspadores** — ``paginas=3`` equivale
-    a ``range(1, 4)`` e baixa as paginas 1, 2 e 3. ``paginas=0`` e invalido.
-    ``None`` (default) significa "todas as paginas disponiveis" — o scraper
-    consulta o backend para descobrir o total. Runtime normaliza
-    ``int`` -> ``range`` em :func:`juscraper.utils.params.normalize_paginas`
-    antes do pydantic, mas o schema aceita as 4 formas para refletir a API
-    publica.
-
-    Este e o **contrato unico** do parametro ``paginas``: schemas concretos
-    nao devem redeclarar. Qualquer divergencia por tribunal (ex.: DataJud
-    aceitar apenas ``range``) vira bug a ser corrigido, nao particularidade
-    a ser documentada.
+    ``paginas`` e herdado de :class:`PaginasMixin` — fonte unica do contrato
+    ``int | list[int] | range | None``, compartilhada com agregadores que
+    nao tem ``pesquisa`` (ex.: :class:`InputListarProcessosDataJud`).
 
     **Nao inclui filtros de data** propositalmente — nem todo tribunal
     suporta ``data_julgamento_*`` ou ``data_publicacao_*``. Quem suporta
@@ -29,7 +22,6 @@ class SearchBase(BaseModel):
     """
 
     pesquisa: str
-    paginas: int | list[int] | range | None = None
 
     model_config = ConfigDict(
         extra="forbid",

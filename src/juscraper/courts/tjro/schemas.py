@@ -1,11 +1,7 @@
-"""Pydantic schemas for TJRO scraper endpoints.
-
-Ainda nao wired em :mod:`juscraper.courts.tjro.client` — este arquivo e
-documentacao executavel da API publica ate o TJRO ser refatorado para o
-pipeline canonico da #93. A lista de campos bate byte-a-byte com a
-assinatura publica de :meth:`TJROScraper.cjsg` / :meth:`TJROScraper.cjsg_download`.
-"""
+"""Pydantic schemas for TJRO scraper endpoints."""
 from __future__ import annotations
+
+from typing import ClassVar
 
 from ...schemas import DataJulgamentoMixin, OutputCJSGBase, OutputDataPublicacaoMixin, OutputRelatoriaMixin, SearchBase
 
@@ -19,8 +15,10 @@ class InputCJSGTJRO(SearchBase, DataJulgamentoMixin):
     roda *antes* deste modelo. Apos a normalizacao, os kwargs que sobram
     caem aqui e sao rejeitados por ``extra="forbid"`` herdado de
     :class:`SearchBase`. Filtro de data de julgamento herdado de
-    :class:`DataJulgamentoMixin`.
+    :class:`DataJulgamentoMixin`. Backend espera ``YYYY-MM-DD``.
     """
+
+    BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
 
     tipo: list | None = None
     numero_processo: str = ""

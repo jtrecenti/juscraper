@@ -1,0 +1,429 @@
+{
+  "took": 8509,
+  "timed_out": false,
+  "_shards": {
+    "total": 20,
+    "successful": 20,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 71899024,
+      "relation": "eq"
+    },
+    "max_score": null,
+    "hits": [
+      {
+        "_index": "api_publica_tjsp",
+        "_id": "TJSP_100_G1_10012_10004132220178260415",
+        "_score": null,
+        "_source": {
+          "classe": {
+            "codigo": 100,
+            "nome": "Dúvida"
+          },
+          "numeroProcesso": "10004132220178260415",
+          "sistema": {
+            "codigo": 3,
+            "nome": "SAJ"
+          },
+          "formato": {
+            "codigo": 1,
+            "nome": "Eletrônico"
+          },
+          "tribunal": "TJSP",
+          "dataHoraUltimaAtualizacao": "2023-07-19T17:31:20.499Z",
+          "grau": "G1",
+          "@timestamp": "2025-11-03T15:24:08.717043217Z",
+          "dataAjuizamento": "20170313185559",
+          "id": "TJSP_100_G1_10012_10004132220178260415",
+          "nivelSigilo": 0,
+          "orgaoJulgador": {
+            "codigoMunicipioIBGE": 3535309,
+            "codigo": 10012,
+            "nome": "01 CUMULATIVA DE PALMITAL"
+          },
+          "assuntos": [
+            {
+              "codigo": 7895,
+              "nome": "Registro de Imóveis"
+            }
+          ]
+        },
+        "sort": [
+          "TJSP_100_G1_10012_10004132220178260415"
+        ]
+      },
+      {
+        "_index": "api_publica_tjsp",
+        "_id": "TJSP_100_G1_10012_10004726820218260415",
+        "_score": null,
+        "_source": {
+          "classe": {
+            "codigo": 100,
+            "nome": "Dúvida"
+          },
+          "numeroProcesso": "10004726820218260415",
+          "sistema": {
+            "codigo": 3,
+            "nome": "SAJ"
+          },
+          "formato": {
+            "codigo": 1,
+            "nome": "Eletrônico"
+          },
+          "tribunal": "TJSP",
+          "dataHoraUltimaAtualizacao": "2023-07-19T17:36:46.249Z",
+          "grau": "G1",
+          "@timestamp": "2025-11-03T15:24:40.441133687Z",
+          "dataAjuizamento": "20210319183939",
+          "id": "TJSP_100_G1_10012_10004726820218260415",
+          "nivelSigilo": 0,
+          "orgaoJulgador": {
+            "codigoMunicipioIBGE": 3535309,
+            "codigo": 10012,
+            "nome": "01 CUMULATIVA DE PALMITAL"
+          },
+          "assuntos": [
+            {
+              "codigo": 7895,
+              "nome": "Registro de Imóveis"
+            }
+          ]
+        },
+        "sort": [
+          "TJSP_100_G1_10012_10004726820218260415"
+        ]
+      },
+      {
+        "_index": "api_publica_tjsp",
+        "_id": "TJSP_100_G1_10012_10005382420168260415",
+        "_score": null,
+        "_source": {
+          "classe": {
+            "codigo": 100,
+            "nome": "Dúvida"
+          },
+          "numeroProcesso": "10005382420168260415",
+          "sistema": {
+            "codigo": 3,
+            "nome": "SAJ"
+          },
+          "formato": {
+            "codigo": 1,
+            "nome": "Eletrônico"
+          },
+          "tribunal": "TJSP",
+          "dataHoraUltimaAtualizacao": "2023-07-19T17:30:52.120Z",
+          "grau": "G1",
+          "@timestamp": "2025-11-03T15:24:04.539883295Z",
+          "dataAjuizamento": "20160322164243",
+          "id": "TJSP_100_G1_10012_10005382420168260415",
+          "nivelSigilo": 0,
+          "orgaoJulgador": {
+            "codigoMunicipioIBGE": 3535309,
+            "codigo": 10012,
+            "nome": "01 CUMULATIVA DE PALMITAL"
+          },
+          "assuntos": [
+            {
+              "codigo": 7895,
+              "nome": "Registro de Imóveis"
+            }
+          ]
+        },
+        "sort": [
+          "TJSP_100_G1_10012_10005382420168260415"
+        ]
+      },
+      {
+        "_index": "api_publica_tjsp",
+        "_id": "TJSP_100_G1_10012_10008476920218260415",
+        "_score": null,
+        "_source": {
+          "classe": {
+            "codigo": 100,
+            "nome": "Dúvida"
+          },
+          "numeroProcesso": "10008476920218260415",
+          "sistema": {
+            "codigo": 3,
+            "nome": "SAJ"
+          },
+          "formato": {
+            "codigo": 1,
+            "nome": "Eletrônico"
+          },
+          "tribunal": "TJSP",
+          "dataHoraUltimaAtualizacao": "2023-07-19T17:37:00.107Z",
+          "grau": "G1",
+          "@timestamp": "2025-11-03T15:24:41.326001460Z",
+          "dataAjuizamento": "20210525115332",
+          "id": "TJSP_100_G1_10012_10008476920218260415",
+          "nivelSigilo": 0,
+          "orgaoJulgador": {
+            "codigoMunicipioIBGE": 3535309,
+            "codigo": 10012,
+            "nome": "01 CUMULATIVA DE PALMITAL"
+          },
+          "assuntos": [
+            {
+              "codigo": 7895,
+              "nome": "Registro de Imóveis"
+            }
+          ]
+        },
+        "sort": [
+          "TJSP_100_G1_10012_10008476920218260415"
+        ]
+      },
+      {
+        "_index": "api_publica_tjsp",
+        "_id": "TJSP_100_G1_10012_10016456920178260415",
+        "_score": null,
+        "_source": {
+          "classe": {
+            "codigo": 100,
+            "nome": "Dúvida"
+          },
+          "numeroProcesso": "10016456920178260415",
+          "sistema": {
+            "codigo": 3,
+            "nome": "SAJ"
+          },
+          "formato": {
+            "codigo": 1,
+            "nome": "Eletrônico"
+          },
+          "tribunal": "TJSP",
+          "dataHoraUltimaAtualizacao": "2023-07-19T17:31:41.595Z",
+          "grau": "G1",
+          "@timestamp": "2025-11-03T15:24:10.732683704Z",
+          "dataAjuizamento": "20170807184933",
+          "id": "TJSP_100_G1_10012_10016456920178260415",
+          "nivelSigilo": 0,
+          "orgaoJulgador": {
+            "codigoMunicipioIBGE": 3535309,
+            "codigo": 10012,
+            "nome": "01 CUMULATIVA DE PALMITAL"
+          },
+          "assuntos": [
+            {
+              "codigo": 7895,
+              "nome": "Registro de Imóveis"
+            }
+          ]
+        },
+        "sort": [
+          "TJSP_100_G1_10012_10016456920178260415"
+        ]
+      },
+      {
+        "_index": "api_publica_tjsp",
+        "_id": "TJSP_100_G1_10026_10002126920238260431",
+        "_score": null,
+        "_source": {
+          "classe": {
+            "codigo": 100,
+            "nome": "Dúvida"
+          },
+          "numeroProcesso": "10002126920238260431",
+          "sistema": {
+            "codigo": 3,
+            "nome": "SAJ"
+          },
+          "formato": {
+            "codigo": 1,
+            "nome": "Eletrônico"
+          },
+          "tribunal": "TJSP",
+          "dataHoraUltimaAtualizacao": "2024-02-28T03:18:12.071Z",
+          "grau": "G1",
+          "@timestamp": "2025-11-03T18:00:02.075743443Z",
+          "dataAjuizamento": "20230127103832",
+          "id": "TJSP_100_G1_10026_10002126920238260431",
+          "nivelSigilo": 0,
+          "orgaoJulgador": {
+            "codigoMunicipioIBGE": 3536703,
+            "codigo": 10026,
+            "nome": "01 CUMULATIVA DE PEDERNEIRAS"
+          },
+          "assuntos": [
+            {
+              "codigo": 7899,
+              "nome": "Bloqueio de Matrícula"
+            }
+          ]
+        },
+        "sort": [
+          "TJSP_100_G1_10026_10002126920238260431"
+        ]
+      },
+      {
+        "_index": "api_publica_tjsp",
+        "_id": "TJSP_100_G1_10026_10002273820238260431",
+        "_score": null,
+        "_source": {
+          "classe": {
+            "codigo": 100,
+            "nome": "Dúvida"
+          },
+          "numeroProcesso": "10002273820238260431",
+          "sistema": {
+            "codigo": 3,
+            "nome": "SAJ"
+          },
+          "formato": {
+            "codigo": 1,
+            "nome": "Eletrônico"
+          },
+          "tribunal": "TJSP",
+          "dataHoraUltimaAtualizacao": "2024-02-28T03:18:12.169Z",
+          "grau": "G1",
+          "@timestamp": "2025-11-03T18:00:02.076976014Z",
+          "dataAjuizamento": "20230130165736",
+          "id": "TJSP_100_G1_10026_10002273820238260431",
+          "nivelSigilo": 0,
+          "orgaoJulgador": {
+            "codigoMunicipioIBGE": 3536703,
+            "codigo": 10026,
+            "nome": "01 CUMULATIVA DE PEDERNEIRAS"
+          },
+          "assuntos": [
+            {
+              "codigo": 7895,
+              "nome": "Registro de Imóveis"
+            }
+          ]
+        },
+        "sort": [
+          "TJSP_100_G1_10026_10002273820238260431"
+        ]
+      },
+      {
+        "_index": "api_publica_tjsp",
+        "_id": "TJSP_100_G1_10026_10002845620238260431",
+        "_score": null,
+        "_source": {
+          "classe": {
+            "codigo": 100,
+            "nome": "Dúvida"
+          },
+          "numeroProcesso": "10002845620238260431",
+          "sistema": {
+            "codigo": 3,
+            "nome": "SAJ"
+          },
+          "formato": {
+            "codigo": 1,
+            "nome": "Eletrônico"
+          },
+          "tribunal": "TJSP",
+          "dataHoraUltimaAtualizacao": "2024-02-28T03:18:12.693Z",
+          "grau": "G1",
+          "@timestamp": "2025-11-03T18:00:02.078379894Z",
+          "dataAjuizamento": "20230207131230",
+          "id": "TJSP_100_G1_10026_10002845620238260431",
+          "nivelSigilo": 0,
+          "orgaoJulgador": {
+            "codigoMunicipioIBGE": 3536703,
+            "codigo": 10026,
+            "nome": "01 CUMULATIVA DE PEDERNEIRAS"
+          },
+          "assuntos": [
+            {
+              "codigo": 7895,
+              "nome": "Registro de Imóveis"
+            }
+          ]
+        },
+        "sort": [
+          "TJSP_100_G1_10026_10002845620238260431"
+        ]
+      },
+      {
+        "_index": "api_publica_tjsp",
+        "_id": "TJSP_100_G1_10026_10002854120238260431",
+        "_score": null,
+        "_source": {
+          "classe": {
+            "codigo": 100,
+            "nome": "Dúvida"
+          },
+          "numeroProcesso": "10002854120238260431",
+          "sistema": {
+            "codigo": 3,
+            "nome": "SAJ"
+          },
+          "formato": {
+            "codigo": 1,
+            "nome": "Eletrônico"
+          },
+          "tribunal": "TJSP",
+          "dataHoraUltimaAtualizacao": "2024-02-28T03:18:12.699Z",
+          "grau": "G1",
+          "@timestamp": "2025-11-03T18:00:02.078434398Z",
+          "dataAjuizamento": "20230207133303",
+          "id": "TJSP_100_G1_10026_10002854120238260431",
+          "nivelSigilo": 0,
+          "orgaoJulgador": {
+            "codigoMunicipioIBGE": 3536703,
+            "codigo": 10026,
+            "nome": "01 CUMULATIVA DE PEDERNEIRAS"
+          },
+          "assuntos": [
+            {
+              "codigo": 7895,
+              "nome": "Registro de Imóveis"
+            }
+          ]
+        },
+        "sort": [
+          "TJSP_100_G1_10026_10002854120238260431"
+        ]
+      },
+      {
+        "_index": "api_publica_tjsp",
+        "_id": "TJSP_100_G1_10038_10012388120238260438",
+        "_score": null,
+        "_source": {
+          "classe": {
+            "codigo": 100,
+            "nome": "Dúvida"
+          },
+          "numeroProcesso": "10012388120238260438",
+          "sistema": {
+            "codigo": 3,
+            "nome": "SAJ"
+          },
+          "formato": {
+            "codigo": 1,
+            "nome": "Eletrônico"
+          },
+          "tribunal": "TJSP",
+          "dataHoraUltimaAtualizacao": "2024-02-28T03:24:45.839Z",
+          "grau": "G1",
+          "@timestamp": "2025-11-03T18:00:19.249611653Z",
+          "dataAjuizamento": "20230208115829",
+          "id": "TJSP_100_G1_10038_10012388120238260438",
+          "nivelSigilo": 0,
+          "orgaoJulgador": {
+            "codigoMunicipioIBGE": 3537305,
+            "codigo": 10038,
+            "nome": "VARA JUIZADO ESP. CIVEL CRIM. DE PENAPOLIS"
+          },
+          "assuntos": [
+            {
+              "codigo": 7895,
+              "nome": "Registro de Imóveis"
+            }
+          ]
+        },
+        "sort": [
+          "TJSP_100_G1_10038_10012388120238260438"
+        ]
+      }
+    ]
+  }
+}

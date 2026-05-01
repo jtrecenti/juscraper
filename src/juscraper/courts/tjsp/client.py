@@ -7,17 +7,10 @@ import shutil
 import tempfile
 from typing import Any, List, Literal, Optional, Union
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 
-from ...utils.params import (
-    SEARCH_ALIASES,
-    normalize_datas,
-    normalize_paginas,
-    normalize_pesquisa,
-    pop_normalize_aliases,
-    validate_intervalo_datas,
-)
-from .._esaj.base import EsajSearchScraper, _raise_on_extra
+from ...utils.params import SEARCH_ALIASES, apply_input_pipeline_search, normalize_pesquisa
+from .._esaj.base import EsajSearchScraper, run_auto_chunk
 from .cjpg_download import cjpg_download as cjpg_download_mod
 from .cjpg_parse import cjpg_n_pags, cjpg_parse_manager
 from .cpopg_download import cpopg_download_api, cpopg_download_html
@@ -107,6 +100,10 @@ class TJSPScraper(EsajSearchScraper):
                   Default ``"acordao"``.
                 * ``data_julgamento_inicio`` / ``data_julgamento_fim``
                   (str, ``DD/MM/AAAA``): Intervalo de julgamento.
+                * ``auto_chunk`` (bool): Default ``True``. Quando o
+                  intervalo ``data_julgamento_*`` excede 366 dias,
+                  divide internamente em janelas, baixa cada uma e
+                  concatena com dedup por ``cd_acordao``.
 
         Aliases deprecados (popados com ``DeprecationWarning`` antes do
         pydantic):
@@ -136,6 +133,9 @@ class TJSPScraper(EsajSearchScraper):
         See also:
             :class:`~juscraper.courts.tjsp.schemas.InputCJSGTJSP` —
             schema pydantic e a fonte da verdade dos filtros aceitos.
+            :meth:`EsajSearchScraper.cjsg` — descricao detalhada do
+            auto-chunking (issue #130) para janelas
+            ``data_julgamento_*`` > 366 dias.
         """
         return super().cjsg(pesquisa=pesquisa, paginas=paginas, **kwargs)
 
@@ -239,6 +239,11 @@ class TJSPScraper(EsajSearchScraper):
                   :func:`clean_cnj` antes do envio.
                 * ``data_julgamento_inicio`` / ``data_julgamento_fim``
                   (str, ``DD/MM/AAAA``): Intervalo de julgamento.
+                * ``auto_chunk`` (bool): Default ``True``. Quando o
+                  intervalo ``data_julgamento_*`` excede 366 dias,
+                  divide internamente em janelas, baixa cada uma e
+                  concatena com dedup por ``id_processo``. Veja a secao
+                  "Auto-chunking" abaixo.
 
         Aliases deprecados (popados com ``DeprecationWarning`` antes do
         pydantic):
@@ -249,7 +254,7 @@ class TJSPScraper(EsajSearchScraper):
 
         Raises:
             TypeError: Quando um kwarg desconhecido e passado (via
-                :func:`_raise_on_extra`).
+                :func:`raise_on_extra_kwargs`).
             ValidationError: Quando um filtro tem formato invalido.
             QueryTooLongError: Quando ``pesquisa`` excede 120 chars.
 
@@ -274,7 +279,28 @@ class TJSPScraper(EsajSearchScraper):
         See also:
             :class:`~juscraper.courts.tjsp.schemas.InputCJPGTJSP` —
             schema pydantic e a fonte da verdade dos filtros aceitos.
+
+        Auto-chunking (issue #130):
+            Se ``auto_chunk=True`` (default herdado de
+            :class:`~juscraper.schemas.AutoChunkMixin`) e o intervalo
+            ``data_julgamento_*`` exceder 366 dias, a busca e dividida em
+            janelas internas, baixadas e concatenadas com dedup por
+            ``id_processo``. Falhas por janela viram :class:`UserWarning`
+            (parcial + warning). ``auto_chunk=True`` + ``paginas != None``
+            em janela > 366 dias e :class:`ValueError`.
         """
+        chunked = run_auto_chunk(
+            method=self.cjpg,
+            method_label="TJSPScraper.cjpg()",
+            input_cls=InputCJPGTJSP,
+            dedup_key="id_processo",
+            pesquisa=pesquisa,
+            paginas=paginas,
+            kwargs=kwargs,
+        )
+        if chunked is not None:
+            return chunked
+
         path = self.cjpg_download(pesquisa=pesquisa, paginas=paginas, **kwargs)
         try:
             return self.cjpg_parse(path)
@@ -319,26 +345,15 @@ class TJSPScraper(EsajSearchScraper):
             pesquisa = normalize_pesquisa(pesquisa or None, **kwargs)
         validate_pesquisa_length(pesquisa, endpoint="CJPG")
 
-        paginas_norm = normalize_paginas(paginas)
-        datas = normalize_datas(**kwargs)
-        pop_normalize_aliases(kwargs, include_canonical=True)
-
-        validate_intervalo_datas(
-            datas["data_julgamento_inicio"],
-            datas["data_julgamento_fim"],
-            rotulo="data_julgamento",
+        inp = apply_input_pipeline_search(
+            InputCJPGTJSP,
+            f"{type(self).__name__}.cjpg_download()",
+            pesquisa=pesquisa,
+            paginas=paginas,
+            kwargs=kwargs,
+            max_dias=366,
+            origem_mensagem="O eSAJ",
         )
-
-        try:
-            inp = InputCJPGTJSP(
-                pesquisa=pesquisa,
-                paginas=paginas_norm,
-                **{k: v for k, v in datas.items() if v is not None},
-                **kwargs,
-            )
-        except ValidationError as exc:
-            _raise_on_extra(exc, f"{type(self).__name__}.cjpg_download()")
-            raise
 
         def _get_n_pags(r0):
             html = r0.content if hasattr(r0, "content") else r0
@@ -356,7 +371,7 @@ class TJSPScraper(EsajSearchScraper):
             id_processo=inp.id_processo,
             data_inicio=inp.data_julgamento_inicio,
             data_fim=inp.data_julgamento_fim,
-            paginas=paginas_norm,
+            paginas=inp.paginas,
             get_n_pags_callback=_get_n_pags,
         )
         return path

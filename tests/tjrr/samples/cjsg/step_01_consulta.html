@@ -1,0 +1,2166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"><head id="j_idt2">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Juris - Sistema de Jurisprudência</title><link type="text/css" rel="stylesheet" href="/javax.faces.resource/theme.css.xhtml;jsessionid=aUF8OlpY_czp9s13kxM_yxhOhwlBmAvHYLO1MCB1.jurisprudencia-prd-59cdf9cf67-jvrtz?ln=primefaces-bootstrap&amp;v=10.0.0&amp;e=10.0.6" /><link type="text/css" rel="stylesheet" href="/javax.faces.resource/primeicons/primeicons.css.xhtml;jsessionid=aUF8OlpY_czp9s13kxM_yxhOhwlBmAvHYLO1MCB1.jurisprudencia-prd-59cdf9cf67-jvrtz?ln=primefaces&amp;v=10.0.0&amp;e=10.0.6" /><link type="text/css" rel="stylesheet" href="/javax.faces.resource/fa/font-awesome.css.xhtml;jsessionid=aUF8OlpY_czp9s13kxM_yxhOhwlBmAvHYLO1MCB1.jurisprudencia-prd-59cdf9cf67-jvrtz?ln=primefaces&amp;v=10.0.0&amp;e=10.0.6" />
+    <!--UBUNTU FONT-->
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Ubuntu:regular,bold" />
+    <!--CSS PERSONALIZADO-->	 <link rel="stylesheet" type="text/css" href="components/estilos.css" />
+    <!--CSS BOOTSTRAP-->
+    <!--BUNDLE JS w/ POPPER--><script type="text/javascript" src="/javax.faces.resource/bootstrap-5.1.3-dist/js/bootstrap.bundle.min.js.xhtml;jsessionid=aUF8OlpY_czp9s13kxM_yxhOhwlBmAvHYLO1MCB1.jurisprudencia-prd-59cdf9cf67-jvrtz?ln=css"></script>
+    <!--CSS ICOFONT-->         <link rel="stylesheet" href="resources/css/icofont/icofont.min.css" />
+    <!--CSS TAILWIND-->
+    <!--CSS CUSTOM-->
+
+    <!--MENUS DE OPERADORES E PESQUISA AVAN&Ccedil;ADA-->
+    <script type="text/javascript">
+      /*Código para saber qual plataforma que está sendo requisitado*/
+      if(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)){
+        let url = document.URL
+        document.location.replace(url+'indexMobile.xhtml')
+      }
+
+      function changeState(value) {
+        switch (value) {
+          case 'operadores' :
+            var x = document.getElementById("idBotoesOperadores");
+            x.style.display === "block"
+                    ? x.style.display = "none"
+                    : x.style.display = "block";
+            break;
+          case 'pesquisaAdv':
+            var x = document.getElementById("idPesquisaAvancada");
+            x.style.display === "block"
+                    ? x.style.display = "none"
+                    : x.style.display = "block";
+            break;
+        }
+      }
+
+      /* DESACENTUAÇÃO DE TODAS AS PALAVRAS DIGITADAS */
+      function normalizar(value) {
+        let pesquisa = value.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        return document.getElementById('consultaAtual').value = pesquisa
+      }
+    </script><link type="text/css" rel="stylesheet" href="/javax.faces.resource/bootstrap-5.1.3-dist/css/bootstrap.css.xhtml;jsessionid=aUF8OlpY_czp9s13kxM_yxhOhwlBmAvHYLO1MCB1.jurisprudencia-prd-59cdf9cf67-jvrtz?ln=css" /><link type="text/css" rel="stylesheet" href="/javax.faces.resource/tailwind/tailwind.min.css.xhtml;jsessionid=aUF8OlpY_czp9s13kxM_yxhOhwlBmAvHYLO1MCB1.jurisprudencia-prd-59cdf9cf67-jvrtz?ln=css" /><link type="text/css" rel="stylesheet" href="/javax.faces.resource/stylesnovo.css.xhtml;jsessionid=aUF8OlpY_czp9s13kxM_yxhOhwlBmAvHYLO1MCB1.jurisprudencia-prd-59cdf9cf67-jvrtz?ln=css" /><link type="text/css" rel="stylesheet" href="/javax.faces.resource/components.css.xhtml;jsessionid=aUF8OlpY_czp9s13kxM_yxhOhwlBmAvHYLO1MCB1.jurisprudencia-prd-59cdf9cf67-jvrtz?ln=primefaces&amp;v=10.0.0&amp;e=10.0.6" /><script type="text/javascript" src="/javax.faces.resource/jquery/jquery.js.xhtml;jsessionid=aUF8OlpY_czp9s13kxM_yxhOhwlBmAvHYLO1MCB1.jurisprudencia-prd-59cdf9cf67-jvrtz?ln=primefaces&amp;v=10.0.0&amp;e=10.0.6"></script><script type="text/javascript" src="/javax.faces.resource/jquery/jquery-plugins.js.xhtml;jsessionid=aUF8OlpY_czp9s13kxM_yxhOhwlBmAvHYLO1MCB1.jurisprudencia-prd-59cdf9cf67-jvrtz?ln=primefaces&amp;v=10.0.0&amp;e=10.0.6"></script><script type="text/javascript" src="/javax.faces.resource/core.js.xhtml;jsessionid=aUF8OlpY_czp9s13kxM_yxhOhwlBmAvHYLO1MCB1.jurisprudencia-prd-59cdf9cf67-jvrtz?ln=primefaces&amp;v=10.0.0&amp;e=10.0.6"></script><script type="text/javascript" src="/javax.faces.resource/components.js.xhtml;jsessionid=aUF8OlpY_czp9s13kxM_yxhOhwlBmAvHYLO1MCB1.jurisprudencia-prd-59cdf9cf67-jvrtz?ln=primefaces&amp;v=10.0.0&amp;e=10.0.6"></script><script type="text/javascript" src="/javax.faces.resource/inputmask/inputmask.js.xhtml;jsessionid=aUF8OlpY_czp9s13kxM_yxhOhwlBmAvHYLO1MCB1.jurisprudencia-prd-59cdf9cf67-jvrtz?ln=primefaces&amp;v=10.0.0&amp;e=10.0.6"></script><script type="text/javascript" src="/javax.faces.resource/touch/touchswipe.js.xhtml;jsessionid=aUF8OlpY_czp9s13kxM_yxhOhwlBmAvHYLO1MCB1.jurisprudencia-prd-59cdf9cf67-jvrtz?ln=primefaces&amp;v=10.0.0&amp;e=10.0.6"></script><script type="text/javascript" src="/javax.faces.resource/clipboard/clipboard.js.xhtml;jsessionid=aUF8OlpY_czp9s13kxM_yxhOhwlBmAvHYLO1MCB1.jurisprudencia-prd-59cdf9cf67-jvrtz?ln=primefaces-extensions&amp;v=10.0.0&amp;e=10.0.6"></script><script type="text/javascript">if(window.PrimeFaces){PrimeFaces.settings.locale='pt_BR';PrimeFaces.settings.viewId='/index.xhtml';PrimeFaces.settings.contextPath='';PrimeFaces.settings.cookiesSecure=false;}</script></head><body><html lang="br" xml:lang="br" xmlns="http://www.w3.org/1999/xhtml"><head id="j_idt15"><link type="text/css" rel="stylesheet" href="/javax.faces.resource/theme.css.xhtml;jsessionid=aUF8OlpY_czp9s13kxM_yxhOhwlBmAvHYLO1MCB1.jurisprudencia-prd-59cdf9cf67-jvrtz?ln=primefaces-bootstrap&amp;v=10.0.0&amp;e=10.0.6" /><link type="text/css" rel="stylesheet" href="/javax.faces.resource/primeicons/primeicons.css.xhtml;jsessionid=aUF8OlpY_czp9s13kxM_yxhOhwlBmAvHYLO1MCB1.jurisprudencia-prd-59cdf9cf67-jvrtz?ln=primefaces&amp;v=10.0.0&amp;e=10.0.6" /><link type="text/css" rel="stylesheet" href="/javax.faces.resource/fa/font-awesome.css.xhtml;jsessionid=aUF8OlpY_czp9s13kxM_yxhOhwlBmAvHYLO1MCB1.jurisprudencia-prd-59cdf9cf67-jvrtz?ln=primefaces&amp;v=10.0.0&amp;e=10.0.6" /><script type="text/javascript">if(window.PrimeFaces){PrimeFaces.settings.locale='pt_BR';PrimeFaces.settings.viewId='/index.xhtml';PrimeFaces.settings.contextPath='';PrimeFaces.settings.cookiesSecure=false;}</script><style>@charset "UTF-8";
+[vp] .vpw-vlibras-span {
+   font-family: "Open Sans", sans-serif; }
+[vp] .vpw-settings {
+   position: relative;
+   width: 100%;
+   height: calc(100% - 40px); }
+[vp] .vpw-settings .vpw-content {
+   position: relative;
+   top: 0;
+   left: 0;
+   width: 100%;
+   height: 100%;
+   z-index: 6;
+   background-color: #003f86;
+   color: white; }
+[vp] .vpw-settings .vpw-content .vpw-flag {
+   position: absolute;
+   height: 24px;
+   margin-top: -12px;
+   margin-left: 4px;
+   border: none;
+   border-radius: 5px; }
+[vp] .vpw-settings .vpw-content > .vpw-bar {
+                                        position: absolute;
+                                        width: 100%;
+                                        height: 54px; }
+[vp] .vpw-settings .vpw-content > .vpw-bar .vpw-title {
+                                        position: absolute;
+                                        top: 16px;
+                                        left: 50px;
+                                        color: #6481b8;
+                                        font-size: 12px;
+                                        font-weight: bold; }
+[vp] .vpw-settings .vpw-content > ul {
+                                        list-style-type: none;
+                                        margin: 0;
+                                        padding: 0 11%;
+                                        font-family: "Open Sans", sans-serif; }
+[vp] .vpw-settings .vpw-content > ul li {
+                                        position: relative;
+                                        padding: 19px 0;
+                                        color: white;
+                                        border-bottom: 0; }
+[vp] .vpw-settings .vpw-content > ul li .vpw-name {
+                                        position: absolute;
+                                        left: 0px;
+                                        margin-top: -10px;
+                                        font-size: 14px; }
+[vp] .vpw-settings .vpw-content > ul li .vpw-percent {
+                                        float: right;
+                                        margin-top: -7px;
+                                        font-size: 11px;
+                                        color: rgba(255, 255, 255, 0.6);
+                                        width: 30px;
+                                        margin-right: -6px;
+                                        margin-left: -4px;
+                                        text-align: center; }
+[vp] .vpw-settings .vpw-content > ul li .arrow-right-opac,
+                                     [vp] .vpw-settings .vpw-content > ul li .arrow-left-opac {
+                                                                             margin-top: -13px;
+                                                                             width: 25px;
+                                                                             float: right; }
+[vp] .vpw-settings .vpw-content > ul li:hover {
+                                        color: #67c8d5; }
+[vp] .vpw-settings .vpw-content > ul .vpw-position {
+                                        display: none; }
+[vp] .vpw-settings .vpw-content > ul .vpw-opacity {
+                                        display: none; }
+[vp] .vpw-settings .vpw-content > ul .vpw-localism {
+                                        padding: 24px 0; }
+[vp] .vpw-settings .vpw-content > ul .vpw-localism .vpw-flag {
+                                        right: 27px;
+                                        height: 24px; }
+[vp] .vpw-settings .vpw-content > ul .vpw-localism .vpw-abbrev {
+                                        position: absolute;
+                                        right: 0px;
+                                        margin-top: -9px;
+                                        font-size: 14px;
+                                        font-weight: bold; }
+[vp] .vpw-settings .vpw-content > ul .vpw-localism .vpw-arrow {
+                                        position: absolute;
+                                        right: 16px;
+                                        height: 13px;
+                                        margin-top: -6px; }
+[vp] .vpw-settings .vpw-content > .vpw-localism {
+                                        position: absolute;
+                                        top: 0;
+                                        left: 0;
+                                        width: 100%;
+                                        height: 100%;
+                                        z-index: 7;
+                                        background-color: white;
+                                        border: 1px solid rgba(0, 0, 0, 0.2);
+                                        border-radius: 2px; }
+[vp] .vpw-settings .vpw-content > .vpw-localism:not(.active) {
+                                        visibility: hidden;
+                                        opacity: 0;
+                                        -webkit-transition: visibility 0s, opacity 0.3s;
+                                        transition: visibility 0s, opacity 0.3s; }
+[vp] .vpw-settings .vpw-content > .vpw-localism.active {
+                                        visibility: visible;
+                                        opacity: 1;
+                                        -webkit-transition: visibility 0s, opacity 0.3s;
+                                        transition: visibility 0s, opacity 0.3s; }
+[vp] .vpw-settings .vpw-content > .vpw-localism .vpw-name {
+                                        position: absolute;
+                                        margin-top: -7px;
+                                        margin-left: 9px;
+                                        font-size: 14px;
+                                        font-weight: bold; }
+[vp] .vpw-settings .vpw-content > .vpw-localism .vpw-national {
+                                        position: relative;
+                                        width: calc(33.33%);
+                                        margin-top: 6px;
+                                        padding-top: 16px;
+                                        display: flex;
+                                        flex-direction: row;
+                                        justify-content: center;
+                                        align-items: center; }
+[vp] .vpw-settings .vpw-content > .vpw-localism .vpw-national .vpw-name {
+                                        color: black;
+                                        position: relative; }
+[vp] .vpw-settings .vpw-content > .vpw-localism .vpw-national .vpw-flag {
+                                        position: relative; }
+[vp] .vpw-settings .vpw-content > .vpw-localism .vpw-regions {
+                                        position: relative;
+                                        width: 100%;
+                                        height: 100%;
+                                        box-sizing: content-box;
+                                        padding: 0px 8px 0px 8px;
+                                        left: 0;
+                                        top: 50%;
+                                        transform: translateY(-50%); }
+[vp] .vpw-settings .vpw-content > .vpw-localism .vpw-regions > .vpw-container-regions {
+                                                                        display: inline-block;
+                                                                        position: relative;
+                                                                        width: 33.33%;
+                                                                        margin-bottom: 1px;
+                                                                        padding: 6px 0;
+                                                                        margin-top: 1%;
+                                                                        cursor: pointer;
+                                                                        opacity: 0.5;
+                                                                        -webkit-transition: opacity 0.3s;
+                                                                        transition: opacity 0.3s; }
+[vp] .vpw-settings .vpw-content > .vpw-localism .vpw-regions > .vpw-container-regions.selected, [vp] .vpw-settings .vpw-content > .vpw-localism .vpw-regions > .vpw-container-regions:hover {
+                                                                                                                                                                              opacity: 1;
+                                                                                                                                                                              -webkit-transition: opacity 0.3s;
+                                                                                                                                                                              transition: opacity 0.3s; }
+[vp] .vpw-settings .vpw-content > .vpw-localism .vpw-regions > .vpw-container-regions .vpw-cont {
+                                                                        display: flex;
+                                                                        flex-direction: row;
+                                                                        justify-content: center;
+                                                                        align-items: center; }
+[vp] .vpw-settings .vpw-content > .vpw-localism .vpw-regions > .vpw-container-regions > .vpw-cont .vpw-flag {
+                                                                                                    position: relative;
+                                                                                                    margin: 0; }
+[vp] .vpw-settings .vpw-content > .vpw-localism .vpw-regions > .vpw-container-regions > .vpw-cont .vpw-name {
+                                                                                                    position: relative;
+                                                                                                    margin: 0 10px 0;
+                                                                                                    color: grey; }
+[vp] .vpw-settings .vpw-content .vpw-vlibras-logo {
+   position: absolute;
+   left: 50%;
+   transform: translateX(-50%);
+   bottom: 0;
+   z-index: 6; }
+[vp] .vpw-settings .vpw-content .vpw-vlibras-logo .vpw-vlibras-span {
+   left: 50%;
+   transform: translateX(-50%);
+   position: absolute;
+   bottom: 15%;
+   align-items: center;
+   font-size: 14px; }
+[vp] .vpw-settings .vpw-content .vpw-vlibras-logo .vpw-logo {
+   width: 100%; }
+[vp] .vpw-settings > .vpw-wall {
+                           position: absolute;
+                           top: 0;
+                           left: 0;
+                           bottom: 0;
+                           right: 0;
+                           z-index: 5; }
+[vp] .vpw-settings.active {
+   display: block; }
+[vp] .vpw-settings.active .vpw-content {
+   left: 0;
+   -webkit-transition: left 0.3s;
+   transition: left 0.3s; }
+[vp] .vpw-settings.active .vpw-wall {
+   visibility: visible; }
+[vp] .vpw-settings:not(.active) {
+   display: none; }
+[vp] .vpw-settings:not(.active) .vpw-content {
+   left: 0;
+   visibility: hidden;
+   -webkit-transition: left 0.3s;
+   transition: left 0.3s; }
+[vp] .vpw-settings:not(.active) .vpw-wall {
+   visibility: hidden; }
+[vp] .vpw-settings .vpw-clickable {
+   cursor: pointer; }
+[vp] .vpw-settings .vpw-clickable:not(:hover) {
+   background-color: inherit;
+   -webkit-transition: 0.12s background-color;
+   transition: 0.12s background-color; }
+[vp] .vpw-settings .vpw-clickable:hover {
+   -webkit-transition: 0.2s background-color;
+   transition: 0.2s background-color; }
+[vp] .vpw-controls-dictionary:not(.vpw-loading-dictionary):before {
+   content: "Dicionário";
+   font-size: 14px;
+   position: absolute;
+   margin-top: -11px; }
+[vp] .vpw-controls-dictionary.vpw-loading-dictionary {
+   min-width: 22px;
+   min-height: 22px;
+   margin-top: -17px;
+   position: absolute;
+   border-left: 3px solid rgba(255, 255, 255, 0.2);
+   border-top: 3px solid rgba(255, 255, 255, 0.6);
+   border-bottom: 3px solid white;
+   border-right: 3px solid rgba(255, 255, 255, 0.6);
+   border-style: inset;
+   border-radius: 50%;
+   -webkit-animation: spin 1.5s linear infinite;
+   animation: spin 0.8s linear infinite; }
+/*@media (min-width: 600px) {
+  .vpw-settings {
+    &.active {
+      visibility: visible;
+      left: 0;
+      -webkit-transition: visibility 0s, left 0.3s;
+      transition: visibility 0s, left 0.3s;
+    }
+    &:not(.active) {
+      visibility: hidden;
+      left: -220px;
+      -webkit-transition: visibility 0.3s, left 0.3s;
+      transition: visibility 0.3s, left 0.3s;
+    }
+    .vpw-content {
+      left: -220px;
+      width: 220px;
+      .vpw-bar {
+        height: 66px;
+        .vpw-btn-back {
+          width: 30px;
+          height: 30px;
+          margin-top: 18px;
+          margin-left: 18px;
+        }
+        .vpw-title {
+          top: 25px;
+          left: 60px;
+          font-size: 1em;
+        }
+      }
+    }
+  }
+}*/
+</style><style>[vp] {
+   /* Hide default HTML checkbox */
+   /* The slider */
+   /* Rounded sliders */ }
+[vp] .vpw-switch {
+   position: relative;
+   display: inline-block;
+   width: 60px;
+   height: 21px;
+   float: right;
+   margin-top: -12px; }
+[vp] .vpw-switch input {
+   opacity: 0;
+   width: 0;
+   height: 0; }
+[vp] .vpw-slider-check {
+   position: absolute;
+   cursor: pointer;
+   top: 0;
+   left: 0;
+   right: 0;
+   bottom: 0;
+   background-color: #2196F3; }
+[vp] .vpw-slider-check:before {
+   position: absolute;
+   content: "";
+   height: 26px;
+   width: 26px;
+   left: 4px;
+   bottom: 4px;
+   background-color: white; }
+[vp] input:checked + .vpw-slider-check {
+   background-color: #2196F3; }
+[vp] input:focus + .vpw-slider-check {
+   box-shadow: 0 0 1px #ccc; }
+[vp] input:checked + .vpw-slider-check:before {
+   -webkit-transform: translateX(26px);
+   -ms-transform: translateX(26px);
+   transform: translateX(26px); }
+[vp] .vpw-slider-check.vpw-round {
+   border-radius: 34px; }
+[vp] .vpw-slider-check.vpw-round:before {
+   border-radius: 50%;
+   top: -3px; }
+</style><style>[vp] .vpw-settings-btn {
+   position: absolute;
+   z-index: 1;
+   height: 100%;
+   width: 100%;
+   cursor: pointer; }
+[vp] .vpw-settings-btn .vpw-settings-btn-menu {
+   display: none;
+   position: absolute;
+   top: 50%;
+   transform: translateY(-50%);
+   width: 20px;
+   height: 18px;
+   left: 20px; }
+[vp] .vpw-settings-btn .vpw-settings-btn-menu.active {
+   display: block; }
+[vp] .vpw-settings-btn .vpw-settings-btn-close {
+   display: none;
+   position: absolute;
+   top: 50%;
+   transform: translateY(-50%);
+   right: 5px; }
+</style><style>[vp] .vpw-info-screen {
+   position: relative;
+   padding: 1em;
+   width: 100%;
+   height: calc(100% - 40px);
+   z-index: 4;
+   background-color: white;
+   color: black;
+   font-family: "Open Sans", sans-serif;
+   text-align: center;
+   align-items: center;
+   -webkit-align-items: center;
+   font-size: 11px;
+   display: none;
+   -webkit-box-sizing: border-box;
+   -moz-box-sizing: border-box;
+   box-sizing: border-box; }
+[vp] .vpw-info-screen.active {
+   display: -webkit-flex;
+   display: flex; }
+[vp] .vpw-info-screen .vpw-arrow {
+   flex-grow: 1;
+   -webkit-flex-grow: 1;
+   visibility: hidden; }
+[vp] .vpw-info-screen .vpw-arrow.active {
+   visibility: visible; }
+[vp] .vpw-info-screen #vpw-info-tabset {
+   position: relative;
+   top: 0;
+   flex-grow: 4;
+   display: -webkit-flex;
+   display: flex;
+   flex-direction: column;
+   -webkit-flex-direction: column;
+   padding: 0;
+   height: 100%;
+   width: 100%;
+   align-items: center;
+   -webkit-align-items: center; }
+[vp] .vpw-info-screen #vpw-info-main {
+   max-width: 600px;
+   font-family: "Open Sans", sans-serif;
+   flex-direction: column;
+   -webkit-flex-direction: column; }
+[vp] .vpw-info-screen #vpw-info-main.active {
+   display: flex;
+   align-content: center;
+   justify-content: center;
+   align-items: center; }
+[vp] .vpw-info-screen #vpw-info-logo img {
+   height: 90px; }
+[vp] .vpw-info-screen #vpw-info-realizadores {
+   height: 100%;
+   min-width: 230px;
+   width: 50%;
+   flex-direction: column;
+   align-items: stretch;
+   -webkit-flex-direction: column;
+   -webkit-align-items: stretch; }
+[vp] .vpw-info-screen #vpw-info-realizadores #vpw-realiz {
+   font-size: 20px; }
+[vp] .vpw-info-screen #vpw-info-realizadores.active {
+   display: flex;
+   align-content: center;
+   justify-content: center;
+   align-items: center; }
+[vp] .vpw-info-screen #vpw-info-realizadores .vpw-siz {
+   max-width: 55% !important; }
+[vp] .vpw-info-screen #vpw-info-realizadores .vpw-logo {
+   margin-top: -2px;
+   margin: 0.5em 0.35em;
+   min-width: 10%;
+   max-width: 29%;
+   max-height: 15vh; }
+[vp] .vpw-info-screen #vpw-info-realizadores .vpw-logo .vpw-short-ver {
+   max-width: none;
+   min-height: 16px; }
+[vp] .vpw-info-screen #vpw-info-realizadores .vpw-logo-group {
+   display: flex;
+   padding: 0.5% 2%;
+   flex-direction: row;
+   flex-wrap: wrap;
+   align-items: center;
+   justify-content: space-around;
+   -webkit-flex-direction: row;
+   -webkit-flex-wrap: wrap;
+   -webkit-align-items: center;
+   -webkit-justify-content: space-around;
+   line-height: 1.1; }
+[vp] .vpw-info-screen #vpw-info-realizadores .vpw-logo-group .p-separator {
+   margin-top: 10px;
+   margin-bottom: 10px;
+   width: 118px; }
+[vp] .vpw-info-screen #vpw-info-realizadores .vpw-logo-group .format-text {
+   margin: 0px; }
+[vp] .vpw-info-screen .vpw-info-tab {
+   flex-grow: 3;
+   -webkit-flex-grow: 3;
+   display: none; }
+[vp] .vpw-info-screen .vpw-info-tab .vpw-info-tab-label {
+   position: absolute;
+   top: 0%;
+   font-size: 16px;
+   font-family: "Open Sans", sans-serif; }
+[vp] .vpw-info-screen .vpw-info-tab .vpw-info-tab-label-two {
+   font-size: 16px;
+   font-family: "Open Sans", sans-serif;
+   margin-top: 10px; }
+[vp] .vpw-info-screen .vpw-info-tab.active {
+   display: block; }
+[vp] .vpw-info-screen #vpw-info-meta p {
+   margin: 0.5em 0 0; }
+[vp] .vpw-info-screen #vpw-info-meta a {
+   text-decoration: none; }
+[vp] .vpw-info-screen .vpw-info-bullet {
+   background-size: 15px 15px;
+   display: inline-block;
+   width: 15px;
+   height: 15px;
+   content: ""; }
+[vp] .vpw-info-screen #vpw-info-tab-bullets {
+   width: 100%;
+   height: auto;
+   position: absolute;
+   bottom: 0%;
+   text-align: center;
+   flex-grow: 1;
+   -webkit-flex-grow: 1;
+   cursor: pointer; }
+[vp] .vpw-info-screen .vpw-close-btn {
+   position: absolute;
+   top: 8px;
+   right: 6px;
+   z-index: 4; }
+[vp] .vpw-info-screen .vpw-close-btn img.icon {
+   width: 34px;
+   height: 34px; }
+@media only screen and (-moz-min-device-pixel-ratio: 2), only screen and (-o-min-device-pixel-ratio: 2 / 1), only screen and (-webkit-min-device-pixel-ratio: 2), only screen and (min-device-pixel-ratio: 2) {
+   [vp] #vpw-info-realizadores .vpw-logo {
+      margin: 0.5em 0.35em;
+      min-width: 10%;
+      max-width: 50%;
+      max-height: 18vh; } }
+@media only screen and (max-height: 360px) {
+   [vp] #vpw-info-main {
+      font-size: 0.84em; } }
+</style><style>[vp] .vpw-dictionary {
+   display: none;
+   position: relative;
+   width: 100%;
+   height: calc(100% - 40px);
+   min-width: 300px;
+   min-height: 300px;
+   font-family: 'Open Sans', sans-serif;
+   background-color: white; }
+[vp] .vpw-dictionary.active {
+   display: block; }
+[vp] .vpw-dictionary .vpw-panel {
+   position: relative;
+   height: 114px;
+   background-color: white; }
+[vp] .vpw-dictionary .vpw-panel .vpw-bar {
+   text-align: center;
+   padding-top: 20px; }
+[vp] .vpw-dictionary .vpw-panel .vpw-search {
+   position: absolute;
+   width: 80%;
+   left: 50%;
+   transform: translateX(-50%);
+   margin-top: 20px; }
+[vp] .vpw-dictionary .vpw-panel .vpw-search input {
+   position: absolute;
+   width: 100%;
+   left: 50%;
+   transform: translateX(-50%);
+   padding: 10px 10px 10px 10px;
+   border-radius: 6px;
+   border: 1px solid #DDD;
+   outline: none; }
+[vp] .vpw-dictionary .vpw-panel .vpw-search input:focus {
+   border: 1px solid #00ddf9; }
+[vp] .vpw-dictionary .vpw-panel .vpw-search .vpw-icon {
+   display: block;
+   position: relative; }
+[vp] .vpw-dictionary .vpw-panel .vpw-search .vpw-icon img {
+   position: absolute;
+   height: 24px;
+   width: 24px;
+   top: 6px;
+   right: 7px; }
+[vp] .vpw-dictionary .vpw-dict-container {
+   position: absolute;
+   width: 80%;
+   height: 68%;
+   left: 50%;
+   transform: translateX(-50%); }
+[vp] .vpw-dictionary .vpw-dict-container ul {
+   height: 100%;
+   margin: 0;
+   padding: 0;
+   overflow-y: scroll;
+   list-style-type: none; }
+[vp] .vpw-dictionary .vpw-dict-container ul::-webkit-scrollbar {
+   width: 8px; }
+[vp] .vpw-dictionary .vpw-dict-container ul::-webkit-scrollbar-track {
+   background-color: #DDD; }
+[vp] .vpw-dictionary .vpw-dict-container ul::-webkit-scrollbar-thumb {
+   background-color: #BCBCBC; }
+[vp] .vpw-dictionary .vpw-dict-container ul li {
+   font-size: 14px;
+   cursor: pointer; }
+[vp] .vpw-dictionary .vpw-dict-container ul li:hover {
+   background-color: #EAEAEA;
+   -webkit-transition: brackground-color 0.3s;
+   transition: brackground-color 0.4s; }
+[vp] .vpw-dictionary .vpw-dict-container ul li.margin {
+   height: 114px; }
+[vp] .vpw-dictionary .vpw-dict-container ul li:not(.margin) {
+   padding: 9px 10px 9px 10px; }
+</style><style>/*! nouislider - 8.5.1 - 2016-04-24 16:00:30 */
+.noUi-target, .noUi-target * {
+   -webkit-touch-callout: none;
+   -webkit-user-select: none;
+   -ms-touch-action: none;
+   touch-action: none;
+   -ms-user-select: none;
+   -moz-user-select: none;
+   user-select: none;
+   -moz-box-sizing: border-box;
+   box-sizing: border-box; }
+.noUi-target {
+   position: relative;
+   direction: ltr; }
+.noUi-base {
+   width: 100%;
+   height: 100%;
+   position: relative;
+   z-index: 1; }
+.noUi-origin {
+   position: absolute;
+   right: 0;
+   top: 0;
+   left: 0;
+   bottom: 0; }
+.noUi-handle {
+   position: relative;
+   z-index: 1; }
+.noUi-stacking .noUi-handle {
+   z-index: 10; }
+.noUi-state-tap .noUi-origin {
+   -webkit-transition: left .3s,top .3s;
+   transition: left .3s,top .3s; }
+.noUi-state-drag * {
+   cursor: inherit !important; }
+.noUi-base, .noUi-handle {
+   -webkit-transform: translate3d(0, 0, 0);
+   transform: translate3d(0, 0, 0); }
+.noUi-horizontal {
+   height: 18px; }
+.noUi-horizontal .noUi-handle {
+   width: 34px;
+   height: 28px;
+   left: -17px;
+   top: -6px; }
+.noUi-vertical {
+   width: 18px; }
+.noUi-vertical .noUi-handle {
+   width: 28px;
+   height: 34px;
+   left: -6px;
+   top: -17px; }
+.noUi-background {
+   background: #FAFAFA;
+   box-shadow: inset 0 1px 1px #f0f0f0; }
+.noUi-connect {
+   background: #3FB8AF;
+   box-shadow: inset 0 0 3px rgba(51, 51, 51, 0.45);
+   -webkit-transition: background 450ms;
+   transition: background 450ms; }
+.noUi-origin {
+   border-radius: 2px; }
+.noUi-target {
+   border-radius: 4px;
+   border: 1px solid #D3D3D3;
+   box-shadow: inset 0 1px 1px #F0F0F0,0 3px 6px -5px #BBB; }
+.noUi-target.noUi-connect {
+   box-shadow: inset 0 0 3px rgba(51, 51, 51, 0.45), 0 3px 6px -5px #BBB; }
+.noUi-draggable {
+   cursor: w-resize; }
+.noUi-vertical .noUi-draggable {
+   cursor: n-resize; }
+.noUi-handle {
+   border: 1px solid #D9D9D9;
+   border-radius: 3px;
+   background: #FFF;
+   cursor: default;
+   box-shadow: inset 0 0 1px #FFF,inset 0 1px 7px #EBEBEB,0 3px 6px -3px #BBB; }
+.noUi-active {
+   box-shadow: inset 0 0 1px #FFF,inset 0 1px 7px #DDD,0 3px 6px -3px #BBB; }
+.noUi-handle:after, .noUi-handle:before {
+   content: "";
+   display: block;
+   position: absolute;
+   height: 14px;
+   width: 1px;
+   background: #E8E7E6;
+   left: 14px;
+   top: 6px; }
+.noUi-handle:after {
+   left: 17px; }
+.noUi-vertical .noUi-handle:after, .noUi-vertical .noUi-handle:before {
+   width: 14px;
+   height: 1px;
+   left: 6px;
+   top: 14px; }
+.noUi-vertical .noUi-handle:after {
+   top: 17px; }
+[disabled] .noUi-connect, [disabled].noUi-connect {
+   background: #B8B8B8; }
+[disabled] .noUi-handle, [disabled].noUi-origin {
+   cursor: not-allowed; }
+.noUi-pips, .noUi-pips * {
+   -moz-box-sizing: border-box;
+   box-sizing: border-box; }
+.noUi-pips {
+   position: absolute;
+   color: #999; }
+.noUi-value {
+   position: absolute;
+   text-align: center; }
+.noUi-value-sub {
+   color: #ccc;
+   font-size: 10px; }
+.noUi-marker {
+   position: absolute;
+   background: #CCC; }
+.noUi-marker-large, .noUi-marker-sub {
+   background: #AAA; }
+.noUi-pips-horizontal {
+   padding: 10px 0;
+   height: 80px;
+   top: 100%;
+   left: 0;
+   width: 100%; }
+.noUi-value-horizontal {
+   -webkit-transform: translate3d(-50%, 50%, 0);
+   transform: translate3d(-50%, 50%, 0); }
+.noUi-marker-horizontal.noUi-marker {
+   margin-left: -1px;
+   width: 2px;
+   height: 5px; }
+.noUi-marker-horizontal.noUi-marker-sub {
+   height: 10px; }
+.noUi-marker-horizontal.noUi-marker-large {
+   height: 15px; }
+.noUi-pips-vertical {
+   padding: 0 10px;
+   height: 100%;
+   top: 0;
+   left: 100%; }
+.noUi-value-vertical {
+   -webkit-transform: translate3d(0, -50%, 0);
+   transform: translate3d(0, -50%, 0);
+   padding-left: 25px; }
+.noUi-marker-vertical.noUi-marker {
+   width: 5px;
+   height: 2px;
+   margin-top: -1px; }
+.noUi-marker-vertical.noUi-marker-sub {
+   width: 10px; }
+.noUi-marker-vertical.noUi-marker-large {
+   width: 15px; }
+.noUi-tooltip {
+   display: block;
+   position: absolute;
+   border: 1px solid #D9D9D9;
+   border-radius: 3px;
+   background: #fff;
+   padding: 5px;
+   text-align: center; }
+.noUi-horizontal .noUi-handle-lower .noUi-tooltip {
+   top: -32px; }
+.noUi-horizontal .noUi-handle-upper .noUi-tooltip {
+   bottom: -32px; }
+.noUi-vertical .noUi-handle-lower .noUi-tooltip {
+   left: 120%; }
+.noUi-vertical .noUi-handle-upper .noUi-tooltip {
+   right: 120%; }
+</style><style>[vp] .vpw-controls {
+   display: -webkit-box;
+   display: -webkit-flex;
+   display: -moz-flex;
+   display: -ms-flexbox;
+   display: flex;
+   -webkit-box-align: center;
+   -ms-flex-align: center;
+   -webkit-align-items: center;
+   -moz-align-items: center;
+   align-items: center;
+   width: calc(100% - 10px);
+   height: 60px;
+   background-size: 100% 100%;
+   background: white;
+   width: 100%; }
+[vp] .vpw-controls .vpw-controls-subtitles, [vp] .vpw-controls .vpw-controls-slider {
+   margin: 0 9px;
+   cursor: pointer; }
+[vp] .vpw-controls .vpw-controls-play .vpw-component-play {
+   display: block;
+   margin: 0 8.5px;
+   cursor: pointer; }
+[vp] .vpw-controls .vpw-controls-play .vpw-component-pause {
+   display: none; }
+[vp] .vpw-controls .vpw-controls-play .vpw-component-restart {
+   display: none; }
+[vp] .vpw-controls.vpw-playing .vpw-controls-play .vpw-component-play {
+   display: none; }
+[vp] .vpw-controls.vpw-playing .vpw-controls-play .vpw-component-pause {
+   display: block;
+   margin: 0 11px;
+   cursor: pointer; }
+[vp] .vpw-controls.vpw-playing .vpw-controls-play .vpw-component-restart {
+   display: none; }
+[vp] .vpw-controls.vpw-stopped .vpw-controls-play .vpw-component-play {
+   display: none; }
+[vp] .vpw-controls.vpw-stopped .vpw-controls-play .vpw-component-pause {
+   display: none; }
+[vp] .vpw-controls.vpw-stopped .vpw-controls-play .vpw-component-restart {
+   display: block;
+   margin: 0 2px;
+   cursor: pointer; }
+[vp] .vpw-controls.vpw-subtitles .vpw-controls-subtitles .vpw-legenda-habilitar {
+   display: block; }
+[vp] .vpw-controls.vpw-subtitles .vpw-controls-subtitles .vpw-legenda-desabilitar {
+   display: none; }
+[vp] .vpw-controls .vpw-controls-subtitles .vpw-legenda-habilitar {
+   display: none; }
+[vp] .vpw-controls .vpw-controls-subtitles .vpw-legenda-desabilitar {
+   display: block; }
+@-webkit-keyframes spin {
+   0% {
+      -webkit-transform: rotate(0deg);
+      /* Chrome, Opera 15+, Safari 3.1+ */
+      -ms-transform: rotate(0deg);
+      /* IE 9 */
+      transform: rotate(0deg);
+      /* Firefox 16+, IE 10+, Opera */ }
+   100% {
+      -webkit-transform: rotate(360deg);
+      /* Chrome, Opera 15+, Safari 3.1+ */
+      -ms-transform: rotate(360deg);
+      /* IE 9 */
+      transform: rotate(360deg);
+      /* Firefox 16+, IE 10+, Opera */ } }
+@keyframes spin {
+   0% {
+      -webkit-transform: rotate(0deg);
+      /* Chrome, Opera 15+, Safari 3.1+ */
+      -ms-transform: rotate(0deg);
+      /* IE 9 */
+      transform: rotate(0deg);
+      /* Firefox 16+, IE 10+, Opera */ }
+   100% {
+      -webkit-transform: rotate(360deg);
+      /* Chrome, Opera 15+, Safari 3.1+ */
+      -ms-transform: rotate(360deg);
+      /* IE 9 */
+      transform: rotate(360deg);
+      /* Firefox 16+, IE 10+, Opera */ } }
+[vp] .vpw-speed-default {
+   border: 1px solid grey;
+   border-radius: 3px 3px 3px 3px;
+   padding: 3px 4px;
+   height: 100%;
+   color: grey;
+   font-size: 15px;
+   cursor: pointer;
+   font-family: 'Open Sans', sans-serif; }
+[vp] .vpw-img-default {
+   display: none;
+   padding: 2px;
+   padding-left: 2.2px;
+   cursor: pointer; }
+[vp] .vpw-border-default {
+   display: none;
+   border: 1px solid #999999;
+   border-radius: 0px 0px 3px 3px; }
+[vp] .vpw-elem-speed {
+   display: none;
+   position: absolute;
+   bottom: 22px;
+   cursor: pointer; }
+[vp] .vpw-block-speed {
+   list-style-type: none;
+   background-color: #003F86;
+   color: white;
+   font-size: 10px;
+   width: 25.5px;
+   text-align: center; }
+[vp] .vpw-block-speed:hover {
+   color: #67C8D5; }
+[vp] .vpw-controls-speed {
+   position: relative;
+   -webkit-touch-callout: none;
+   -webkit-user-select: none;
+   -khtml-user-select: none;
+   -moz-user-select: none;
+   -ms-user-select: none;
+   user-select: none; }
+[vp] .vpw-controls-speed-number {
+   width: 25.5px;
+   padding-left: 0px;
+   margin-top: 0px;
+   margin-bottom: 0px;
+   font-family: 'Open Sans', sans-serif; }
+[vp] .vpw-block-speed-3 {
+   border-radius: 5px 5px 0px 0px; }
+[vp] .vpw-controls-slider {
+   -webkit-appearance: none;
+   width: 50%;
+   margin: 2.5px 0;
+   height: 7px;
+   background-color: transparent; }
+[vp] .vpw-controls-slider .vpw-slider {
+   width: 100%;
+   height: 7px; }
+[vp] .vpw-controls-slider .vpw-slider.noUi-target {
+   box-shadow: none;
+   border: 0; }
+[vp] .vpw-controls-slider .vpw-slider.noUi-connect {
+   background-color: #003F86; }
+[vp] .vpw-controls-slider .vpw-slider .noUi-background {
+   background-color: #B8B8B8;
+   box-shadow: none; }
+[vp] .vpw-controls-slider .vpw-slider .noUi-origin {
+   border-radius: 1px; }
+[vp] .vpw-controls-slider .vpw-slider .noUi-handle {
+   width: 0px;
+   height: 0px;
+   left: -8px;
+   top: -8px;
+   border-radius: 50%; }
+[vp] .vpw-controls-slider .vpw-slider .noUi-handle:after, [vp] .vpw-controls-slider .vpw-slider .noUi-handle:before {
+   display: none; }
+</style><style>[vp] .vpw-message-box {
+   top: -5em;
+   left: 0;
+   width: 100%;
+   padding: 1em;
+   font-size: 13px;
+   word-wrap: break-word;
+   color: #000;
+   opacity: 0;
+   -moz-transition: all .15s ease .15s;
+   -webkit-transition: all .15s ease .15s;
+   transition: all .15s ease .15s;
+   -moz-box-shadow: 0px 2px 5px #888888;
+   -webkit-box-shadow: 0px 2px 5px #888888;
+   box-shadow: 0px 2px 5px #888888;
+   text-align: center;
+   font-family: 'Open Sans', sans-serif; }
+[vp] .vpw-message-box.active {
+   top: 0;
+   opacity: 1; }
+[vp] .vpw-message-box.info {
+   background-color: #003F86;
+   color: white; }
+[vp] .vpw-message-box.warning {
+   background-color: #003F86;
+   color: white; }
+[vp] .vpw-message-box.success {
+   background-color: #003F86;
+   color: white; }
+[vp] .vpw-message-box.default {
+   background-color: #003F86;
+   color: white; }
+[vp] .vpw-message-box a {
+   color: inherit; }
+</style><style>[vp] .vpw-box {
+   width: calc(100%);
+   height: 40px;
+   font-size: 1em;
+   color: #000;
+   opacity: 1;
+   position: relative;
+   background-color: #003F86;
+   color: #ffffff;
+   background-size: 100% 100%;
+   z-index: 2; }
+[vp] .vpw-box .vpw-mes {
+   position: absolute;
+   left: 50%;
+   top: 50%;
+   transform: translate(-50%, -50%);
+   font-size: 15px !important;
+   font-family: 'Open Sans', sans-serif; }
+</style><style>[vp] .vpw-btn-close {
+   position: absolute;
+   top: 0;
+   width: 100%;
+   height: 100%;
+   display: none;
+   z-index: 7;
+   cursor: pointer; }
+[vp] .vpw-btn-close.active {
+   display: block; }
+[vp] .vpw-btn-close .vpw-img {
+   position: absolute;
+   top: 50%;
+   transform: translateY(-50%);
+   width: 37.92px;
+   height: 37.92px;
+   right: 5px; }
+</style><style>[vp] [vp-rate-button] {
+   display: flex;
+   flex-direction: row;
+   justify-content: flex-end;
+   position: absolute;
+   width: 100%;
+   bottom: 60px;
+   z-index: 2;
+   visibility: hidden;
+   max-width: 0;
+   opacity: 0;
+   transition: max-width 0s, visibility 0s, opacity 0.4s; }
+[vp] [vp-rate-button] .vp-button {
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   margin-right: 26px;
+   margin-bottom: 20px;
+   z-index: 1;
+   cursor: pointer; }
+[vp] [vp-rate-button] .vp-button img {
+   width: 43px;
+   margin-right: -13px;
+   margin-bottom: -13px;
+   max-width: none; }
+[vp] [vp-rate-button].vp-enabled {
+   z-index: 2;
+   visibility: visible;
+   max-width: 100%;
+   opacity: 1; }
+</style><style>[vp] [vp-rate-box] {
+   display: flex;
+   flex-direction: row;
+   justify-content: flex-end;
+   position: absolute;
+   width: 100%;
+   bottom: 68px;
+   overflow: hidden;
+   z-index: 2; }
+[vp] [vp-rate-box] .vp-container {
+   display: flex;
+   flex-direction: column;
+   width: 100%;
+   padding-top: 10px;
+   padding-bottom: 10px;
+   background-color: rgba(255, 255, 255, 0.96);
+   max-height: 0;
+   transform: translateY(69px);
+   transition: max-height 0s, transform 0.4s linear 0.05s; }
+[vp] [vp-rate-box] .vp-container .vp-text {
+   text-align: center;
+   font-size: 14px;
+   font-weight: bold;
+   color: #003f86; }
+[vp] [vp-rate-box] .vp-container .vp-buttons {
+   display: flex;
+   flex-direction: row;
+   justify-content: center;
+   margin-top: 10px; }
+[vp] [vp-rate-box] .vp-container .vp-buttons .vp-button {
+   display: flex;
+   flex-direction: row;
+   align-items: center;
+   font-size: 13px;
+   font-weight: bold;
+   color: #545454;
+   cursor: pointer; }
+[vp] [vp-rate-box] .vp-container .vp-buttons .vp-button:not(:last-child) {
+   margin-right: 22px; }
+[vp] [vp-rate-box] .vp-container .vp-buttons .vp-button img {
+   height: 22px;
+   margin-right: 6px; }
+[vp] [vp-rate-box].vp-enabled {
+   z-index: 4; }
+[vp] [vp-rate-box].vp-enabled .vp-container {
+   max-height: 100%;
+   transform: translateY(0);
+   transition: transform 0.4s, max-height 0s linear 0.4s; }
+</style><style>[vp] [vp-suggestion-button] {
+   display: flex;
+   flex-direction: row;
+   justify-content: flex-end;
+   position: absolute;
+   width: 100%;
+   bottom: 68px;
+   z-index: 2; }
+[vp] [vp-suggestion-button] .vp-bounderies {
+   width: 100%;
+   overflow: hidden; }
+[vp] [vp-suggestion-button] .vp-bounderies .vp-container {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   padding-top: 10px;
+   padding-bottom: 10px;
+   background-color: rgba(255, 255, 255, 0.96);
+   z-index: 1;
+   transform: translateY(69px);
+   transition: transform 0.4s;
+   transition-delay: 0.4s; }
+[vp] [vp-suggestion-button] .vp-bounderies .vp-container .vp-open-screen-button {
+   margin-bottom: 16px; }
+[vp] [vp-suggestion-button] .vp-button-container {
+   position: absolute;
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   bottom: 0;
+   width: 100%;
+   padding-bottom: 10px;
+   z-index: 1;
+   opacity: 0;
+   transition: opacity 0.4s; }
+[vp] [vp-suggestion-button] .vp-button-container .vp-close-button {
+   position: absolute;
+   bottom: -13px; }
+[vp] [vp-suggestion-button].vp-enabled {
+   z-index: 4; }
+[vp] [vp-suggestion-button].vp-enabled .vp-container {
+   transform: translateY(0);
+   transition-delay: 0s; }
+[vp] [vp-suggestion-button].vp-enabled .vp-button-container {
+   opacity: 1;
+   transition-delay: 0.4s; }
+</style><style>[vp] [vp-suggestion-screen] {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   position: absolute;
+   top: 45px;
+   right: 0;
+   bottom: 0;
+   width: 100%;
+   padding: 16px;
+   background-color: white;
+   z-index: 3;
+   left: 100%;
+   transition: left 0.4s ease-in;
+   /* Track */
+   /* Handle */
+   /* Handle on hover */ }
+[vp] [vp-suggestion-screen] ::-webkit-scrollbar {
+   width: 10px; }
+[vp] [vp-suggestion-screen] ::-webkit-scrollbar-track {
+   background: #d1d1d1f1 !important; }
+[vp] [vp-suggestion-screen] ::-webkit-scrollbar-thumb {
+   background: #8b8b99; }
+[vp] [vp-suggestion-screen] ::-webkit-scrollbar-thumb:hover {
+   background: #555; }
+[vp] [vp-suggestion-screen] .vp-dropdown-suggest {
+   display: none;
+   font-family: "Open Sans", sans-serif; }
+[vp] [vp-suggestion-screen] .vp-dropdown-suggest.vp-enabled {
+   display: block;
+   position: absolute;
+   height: 54px;
+   width: 120px;
+   overflow: hidden auto;
+   color: white;
+   background: #003f86;
+   border-radius: 3px;
+   font-weight: 600;
+   list-style-type: none;
+   padding: 0px; }
+[vp] [vp-suggestion-screen] .vp-dropdown-item {
+   cursor: pointer;
+   font-size: 12px;
+   margin: 5px 0px -4px 6px; }
+[vp] [vp-suggestion-screen] .vp-dropdown-item:hover {
+   color: #80b6f3; }
+[vp] [vp-suggestion-screen] .vp-title {
+   text-align: center;
+   font-size: 14px;
+   font-weight: bold;
+   color: #003f86; }
+[vp] [vp-suggestion-screen] .vp-text {
+   display: none;
+   flex: 1;
+   align-self: stretch;
+   margin-top: 10px;
+   margin-left: 20px;
+   margin-right: 20px;
+   padding: 8px 10px 6px;
+   font-size: 12px;
+   border: none;
+   border-radius: 12px;
+   background-color: #efeff2; }
+[vp] [vp-suggestion-screen] .vp-close-button {
+   margin-top: 8px; }
+[vp] [vp-suggestion-screen].vp-enabled {
+   left: 0;
+   transition: left 0.4s ease-out 0.8s; }
+</style><style>[vp] [vp-change-avatar] {
+   display: flex;
+   flex-direction: row;
+   justify-content: flex-end;
+   position: absolute;
+   z-index: 2;
+   visibility: hidden;
+   max-width: 100%;
+   opacity: 1;
+   transition: max-width 0s, visibility 0s, opacity 0.4s;
+   left: 13px;
+   top: 50px; }
+[vp] [vp-change-avatar] .vp-button-change-avatar {
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   z-index: 1;
+   cursor: pointer;
+   background: rgba(0, 0, 0, 0.3);
+   border-radius: 50px;
+   width: 32px;
+   height: 32px;
+   box-shadow: 1px 1px 2px 1px rgba(0, 0, 0, 0.45); }
+[vp] [vp-change-avatar] .vp-button-change-avatar .change-avatar-icon {
+   width: 22px;
+   margin-right: 1px;
+   filter: brightness(0) invert(1);
+   display: none; }
+[vp] [vp-change-avatar] .vp-button-change-avatar .active {
+   display: block; }
+[vp] [vp-change-avatar].vp-disabled {
+   visibility: visible; }
+</style><style>[vp] [vp-blue-button] {
+   padding: 7px;
+   border-radius: 6px;
+   font-size: 12px;
+   text-align: center;
+   font-weight: bold;
+   color: white;
+   background-color: #003f86;
+   cursor: pointer;
+   margin: 10px 5px;
+   align-self: center; }
+[vp] [vp-visualize-signal-button] {
+   padding: 7px;
+   border-radius: 6px;
+   font-size: 12px;
+   text-align: center;
+   font-weight: bold;
+   color: #003f86;
+   background: white;
+   border: 1px solid #003f86;
+   cursor: pointer;
+   margin: 10px 5px;
+   align-self: center; }
+[vp] [vp-sugestion-area] {
+   display: flex; }
+[vp] [vp-close-button] {
+   display: flex;
+   flex-direction: row;
+   justify-content: center;
+   align-items: center;
+   width: 28px;
+   height: 28px;
+   border-radius: 14px;
+   background-color: #b3b3b3;
+   cursor: pointer; }
+[vp] [vp-close-button] img {
+   width: 100%; }
+#gameContainer {
+   background: #ebebeb !important; }
+</style><style>[vw] [vw-access-button] {
+   display: none;
+   width: 140px;
+   text-align: center;
+   cursor: pointer;
+   margin: 0px 0px 0px -100px;
+   max-width: none; }
+[vw] [vw-access-button].active {
+   display: block; }
+[vw] [vw-access-button] .access-button {
+   width: 27%;
+   float: right; }
+[vw] [vw-access-button] span {
+   font-size: 13px;
+   color: #004088; }
+[vw] [vw-access-button] .access-button:hover + .pop-up {
+   width: 68%; }
+[vw] [vw-access-button] .pop-up {
+   float: right;
+   width: 0%;
+   margin-right: 6px;
+   -webkit-transition: width 2s;
+   /* For Safari 3.1 to 6.0 */
+   transition: width 0.5s; }
+[vw] [vw-access-button] .pop-up.left {
+   float: left !important;
+   margin-right: 0px; }
+[vw] [vw-access-button] .access-button.left {
+   float: left !important;
+   margin-right: 6px; }
+</style><style>.vw-links {
+   top: -100px;
+   left: -100px;
+   position: absolute; }
+.vw-links .vw-tooltip {
+   position: relative;
+   opacity: 1; }
+.vw-links .vw-tooltip__item {
+   text-align: center;
+   position: absolute;
+   min-width: 123px;
+   padding: 8px;
+   visibility: hidden;
+   opacity: 0;
+   background: white;
+   transition: all 0.25s cubic-bezier(0, 0, 0.2, 1);
+   color: #484848;
+   border: 1px solid #cecece;
+   border-radius: 3px;
+   font-weight: 500;
+   box-shadow: 0 2px 1px #bcbcbc;
+   z-index: 4; }
+.vw-links .vw-tooltip__item:after {
+   content: "";
+   display: block;
+   position: absolute;
+   width: 0;
+   height: 0;
+   border-style: solid; }
+.vw-links .vw-tooltip__initiator {
+   cursor: pointer;
+   z-index: 5; }
+.vw-links .vw-tooltip .vw-tooltip__item {
+   top: calc(100% + 1em);
+   left: 50%;
+   transform: translate3d(-50%, -15px, 0); }
+.vw-links .vw-tooltip .vw-tooltip__item:after {
+   top: -0.5em;
+   left: 50%;
+   transform: translate3d(-50%, 0, 0);
+   border-width: 0 0.5em 0.5em 0.5em;
+   border-color: transparent transparent white transparent;
+   -webkit-filter: drop-shadow(1px 2px 1px #bcbcbc);
+   filter: drop-shadow(1px -1px 1px #bcbcbc); }
+.vw-links .vw-tooltip.active > .vw-tooltip__item {
+                                     transform: translate3d(-50%, 0, 0);
+                                     visibility: visible;
+                                     opacity: 1; }
+[vw].maximize [vw-plugin-wrapper] {
+   width: 100%;
+   height: 100% !important;
+   max-height: initial !important; }
+[vw].left [vw-plugin-wrapper] {
+   float: left; }
+[vw] [vw-plugin-wrapper] {
+   display: none;
+   width: 300px;
+   height: 100%;
+   float: right;
+   overflow: hidden;
+   background: white;
+   -moz-border-radius: 20px;
+   -webkit-border-radius: 20px;
+   -webkit-box-shadow: 0px 0px 9px 0px rgba(0, 0, 0, 0.15);
+   -moz-box-shadow: 0px 0px 9px 0px rgba(121, 76, 76, 0.15);
+   box-shadow: 0px 0px 9px 0px rgba(0, 0, 0, 0.15); }
+[vw] [vw-plugin-wrapper].active {
+   display: -webkit-flex;
+   display: flex;
+   flex-direction: column;
+   -webkit-flex-direction: column;
+   height: 450px;
+   max-width: 100%;
+   overflow: hidden;
+   min-height: 100%; }
+</style><style>[vw] {
+   /* HTML5 display-role reset for older browsers */ }
+[vw] html, [vw] body, [vw] div, [vw] span, [vw] applet, [vw] object, [vw] iframe,
+[vw] h1, [vw] h2, [vw] h3, [vw] h4, [vw] h5, [vw] h6, [vw] p, [vw] blockquote, [vw] pre,
+[vw] a, [vw] abbr, [vw] acronym, [vw] address, [vw] big, [vw] cite, [vw] code,
+[vw] del, [vw] dfn, [vw] em, [vw] img, [vw] ins, [vw] kbd, [vw] q, [vw] s, [vw] samp,
+[vw] small, [vw] strike, [vw] strong, [vw] sub, [vw] sup, [vw] tt, [vw] var,
+[vw] b, [vw] u, [vw] i, [vw] center,
+[vw] dl, [vw] dt, [vw] dd, [vw] ol, [vw] ul, [vw] li,
+[vw] fieldset, [vw] form, [vw] label, [vw] legend,
+[vw] table, [vw] caption, [vw] tbody, [vw] tfoot, [vw] thead, [vw] tr, [vw] th, [vw] td,
+[vw] article, [vw] aside, [vw] canvas, [vw] details, [vw] embed,
+[vw] figure, [vw] figcaption, [vw] footer, [vw] header, [vw] hgroup,
+[vw] menu, [vw] nav, [vw] output, [vw] ruby, [vw] section, [vw] summary,
+[vw] time, [vw] mark, [vw] audio, [vw] video {
+   margin: 0;
+   padding: 0;
+   border: 0;
+   font-size: 100%;
+   font: inherit;
+   vertical-align: baseline;
+   display: block; }
+[vw] article, [vw] aside, [vw] details, [vw] figcaption, [vw] figure,
+[vw] footer, [vw] header, [vw] hgroup, [vw] menu, [vw] nav, [vw] section {
+   display: block; }
+[vw] img {
+   width: unset; }
+[vw] body {
+   line-height: 1; }
+[vw] ol, [vw] ul {
+   list-style: none; }
+[vw] blockquote, [vw] q {
+   quotes: none; }
+[vw] blockquote:before, [vw] blockquote:after,
+[vw] q:before, [vw] q:after {
+   content: '';
+   content: none; }
+[vw] table {
+   border-collapse: collapse;
+   border-spacing: 0; }
+</style><style>@media (max-width: 450px) {
+   div[vw] canvas {
+      min-height: unset !important;
+      min-width: unset !important;
+      -webkit-filter: blur(0px);
+      -moz-filter: blur(0px);
+      -ms-filter: blur(0px);
+      -o-filter: blur(0px);
+      filter: blur(0px);
+      min-height: calc(0.35 * 680px) !important;
+      min-width: calc(0.35 * 420px) !important; }
+   div[vw] [vw-plugin-wrapper].active {
+      height: 358px !important;
+      width: 210px !important; }
+   #gameContainer {
+      display: flex !important;
+      justify-content: center !important;
+      top: -75px !important;
+      left: -90px !important;
+      width: 100% !important;
+      height: 70% !important; }
+   [vp] [vp-controls] {
+      left: 36% !important;
+      bottom: 20% !important;
+      background: white; }
+   [vp] .vpw-controls-slider {
+      width: 27% !important; }
+   [vp] .vpw-box .vpw-mes {
+      left: 36% !important;
+      font-size: 12px !important; }
+   [vp] .vpw-settings-btn .vpw-settings-btn-close,
+   [vp] .vpw-btn-close .vpw-img {
+      right: 100px; }
+   [vp] [vp-rate-box].vp-enabled .vp-container {
+      margin-right: 70px;
+      margin-bottom: 80px; }
+   [vp] [vp-rate-button] .vp-button {
+      margin-right: 110px;
+      margin-bottom: 130px; }
+   [vp] [vp-rate-button] .vp-button img {
+      width: 32px;
+      margin-bottom: -37px;
+      margin-right: -14px; }
+   [vp] .vpw-message-box {
+      font-size: 0.7em; }
+   [vp] .vpw-message-box .vpw-message {
+      margin-left: 10px;
+      margin-right: 93px;
+      margin-bottom: 3px; }
+   [vp] .vpw-settings .vpw-content .vpw-vlibras-logo {
+      left: 39%;
+      bottom: 125px; }
+   [vp] .vpw-settings .vpw-content > ul {
+                                           margin-left: -20px; }
+   [vp] .vpw-settings .vpw-content > ul li .vpw-name {
+                                           font-size: 12px; }
+   [vp] .vpw-settings .vpw-content > ul .vpw-localism .vpw-flag {
+                                           right: 88px;
+                                           height: 24px; }
+   [vp] .vpw-switch {
+      width: 48px;
+      height: 15px;
+      margin-top: -10px;
+      right: 64px; }
+   [vp] .vpw-slider-check.vpw-round:before {
+      top: -3px; }
+   [vp] .vpw-slider-check:before {
+      height: 21px;
+      width: 20px;
+      left: -20;
+      bottom: 4px; }
+   [vp] .vpw-settings .vpw-content .vpw-vlibras-logo .vpw-logo {
+      width: 51%;
+      margin-left: 32px; }
+   [vp] .vpw-settings .vpw-content .vpw-vlibras-logo .vpw-vlibras-span {
+      left: 44%;
+      bottom: 5%; }
+   [vp] .vpw-settings .vpw-content .vpw-vlibras-logo {
+      left: 39%;
+      transform: translateX(-50%);
+      bottom: 125px; }
+   [vp] .vpw-settings .vpw-content > ul .vpw-localism .vpw-abbrev {
+                                           right: 65px; }
+   [vp] .vpw-controls-dictionary:not(.vpw-loading-dictionary):before {
+      font-size: 12px; }
+   [vp] .vpw-info-screen #vpw-info-tab-bullets {
+      right: 47px;
+      bottom: 100px; }
+   [vp] .vpw-info-screen .vpw-arrow-right.active {
+      right: 94px;
+      position: absolute;
+      top: 137px;
+      z-index: 4; }
+   [vp] .vpw-info-screen .vpw-arrow-left.active {
+      right: initial;
+      position: absolute;
+      top: 137px;
+      z-index: 4; }
+   [vp] .vpw-info-screen #vpw-info-main.active {
+      font-size: 0.7125em;
+      margin-right: 99px;
+      margin-bottom: 136px; }
+   [vp] .vpw-info-screen .vpw-info-tab .vpw-info-tab-label {
+      margin-top: -8px;
+      font-size: 14px; }
+   [vp] .vpw-info-screen .vpw-info-tab .vpw-info-tab-label-two {
+      font-size: 14px;
+      margin-top: 6px; }
+   [vp] .vpw-info-screen #vpw-info-realizadores .vpw-logo.ufpb {
+      max-width: 20%; }
+   [vp] .vpw-info-screen #vpw-info-realizadores .vpw-logo-group.text {
+      display: block; }
+   [vp] .vpw-info-screen #vpw-info-realizadores .vpw-logo-group.logo1 {
+      max-width: 70%; }
+   [vp] .vpw-info-screen #vpw-info-realizadores .vpw-logo-group.logo2 {
+      max-width: 86%; }
+   [vp] .vpw-info-screen #vpw-info-realizadores.active {
+      font-size: 0.8125em;
+      margin-right: 81px;
+      margin-bottom: 113px; }
+   [vp] .vpw-settings .vpw-content .vpw-flag {
+      height: 18px; }
+   [vp] .vpw-settings
+   .vpw-content
+> .vpw-localism
+     .vpw-regions
+> .vpw-container-regions {
+        margin-top: -1%;
+        margin-bottom: -2px; }
+   [vp] .vpw-settings .vpw-content > .vpw-localism {
+                                           width: 71%; }
+   [vp] .vpw-settings .vpw-content > .vpw-localism .vpw-regions {
+                                           left: -3px !important; }
+   [vp] .vpw-settings .vpw-content > ul .vpw-opacity {
+                                           margin-right: 56px; }
+   [vp] .vpw-dictionary .vpw-dict-container {
+      width: 64%;
+      height: 44%;
+      left: 44%; }
+   [vp] .vpw-bar .vpw-title {
+      margin-right: 40px; }
+   [vp] .vpw-dictionary .vpw-panel .vpw-search input {
+      width: 73%;
+      left: 39%; }
+   [vp] .vpw-dictionary .vpw-panel .vpw-search .vpw-icon img {
+      right: 70px; }
+   [vp] [vp-dictionary] {
+      right: 18px !important; }
+   [vp] .vpw-dictionary .vpw-dict-container ul li:not(.margin) {
+      padding: 5px; }
+   [vp] [vp-suggestion-button].vp-enabled {
+      right: 40px;
+      bottom: 150px !important; }
+   [vp] [vp-suggestion-screen] {
+      width: 72%;
+      height: 60%;
+      top: 41px; }
+   [vp] [vp-change-avatar] {
+      left: 9px;
+      top: 265px; }
+   [vp] [vp-change-avatar] .vp-button-change-avatar {
+      width: 30px;
+      height: 30px; }
+   [vp] [vp-change-avatar] .vp-button-change-avatar .change-avatar-female {
+      width: 15px; }
+   [vp] [vp-change-avatar] .vp-button-change-avatar .change-avatar-male {
+      width: 15px; } }
+div[vw] {
+   position: fixed;
+   max-width: 95vw;
+   right: 0;
+   top: 60%;
+   margin-top: -32vh;
+   z-index: 99999999;
+   display: none;
+   font-family: Arial;
+   color: #000;
+   line-height: 1.3; }
+div[vw].enabled {
+   display: block; }
+div[vw].active {
+   margin-top: -285px; }
+div[vw].maximize {
+   top: 6vh;
+   left: 6vh;
+   right: 6vh;
+   bottom: 6vh;
+   max-width: initial;
+   margin-top: 0; }
+div[vw].left {
+   left: 0;
+   right: initial; }
+div[vw] #gameContainer {
+   position: absolute !important;
+   top: -25px;
+   left: 0;
+   right: 0;
+   bottom: 0;
+   margin: auto !important;
+   min-height: calc(0.7 * 450px);
+   min-width: calc(0.9 * 300px);
+   width: 100%;
+   height: 80%;
+   overflow: hidden;
+   -moz-border-radius: 10px;
+   -webkit-border-radius: 10px;
+   border-radius: 0px;
+   background: none !important; }
+div[vw] #gameContainer canvas {
+   min-height: calc(0.7 * 450px);
+   min-width: calc(0.9 * 300px);
+   height: 100%;
+   width: 100%;
+   -webkit-filter: blur(0px);
+   -moz-filter: blur(0px);
+   -ms-filter: blur(0px);
+   -o-filter: blur(0px);
+   filter: blur(0px); }
+div[vw] [vp] {
+   position: relative;
+   height: 100%;
+   width: 100%;
+   min-width: 300px;
+   min-height: 450px;
+   z-index: 1;
+   overflow: hidden; }
+div[vw] [vp] [vp-message-box] {
+   position: absolute;
+   z-index: 5; }
+div[vw] [vp] [vp-info-screen] {
+   z-index: 3; }
+div[vw] [vp] [vp-info-screen] #info-text {
+   font-size: 1em !important; }
+div[vw] [vp] [vp-info-screen] #info-realizadores {
+   font-size: 11px !important; }
+div[vw] [vp] [vp-controls] {
+   position: absolute;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   left: 50%;
+   transform: translateX(-50%);
+   bottom: 0%;
+   max-width: 900px;
+   z-index: 2; }
+div[vw] [vp] [vp-settings-btn] {
+   z-index: 2; }
+div[vw] [vp] [vp-dictionary] {
+   z-index: 8; }
+div[vw] [vp] [vp-rate-box] {
+   bottom: 58px; }
+div[vw] [vp] [vp-suggestion-button].vp-enabled,
+div[vw] [vp] [vp-suggestion-button] {
+   bottom: 58px; }
+div[vw] [vp] [vp-suggestion-screen] {
+   top: 41px; }
+.vw-text:hover {
+   background-color: rgba(0, 63, 134, 0.2);
+   color: #000;
+   cursor: pointer; }
+.vw-text-active {
+   background-color: rgba(30, 63, 134, 0.2);
+   color: #000; }
+</style></head>
+<body>
+<div vw="" class="enabled">
+
+   <div vw-access-button="" class="active"><img class="access-button" data-src="assets/component-ac.png" alt="Conteúdo acessível em libras usando o VLibras Widget com opções dos Avatares Ícaro ou Hozana." src="https://vlibras.gov.br/app/assets/component-ac.png" /><img class="pop-up" data-src="assets/popup.png" alt="Conteúdo acessível em libras usando o VLibras Widget com opções dos Avatares Ícaro ou Hozana." src="https://vlibras.gov.br/app/assets/popup.png" /></div>
+
+   <div vw-plugin-wrapper="">
+      <div vp="">
+
+         <div vp-box=""></div>
+
+         <div vp-message-box=""></div>
+
+         <div vp-settings=""></div>
+
+         <div vp-settings-btn=""></div>
+
+         <div vp-info-screen=""></div>
+
+         <div vp-dictionary=""></div>
+
+         <div vp-suggestion-screen=""></div>
+
+         <div vp-suggestion-button=""></div>
+
+         <div vp-rate-box=""></div>
+
+         <div vp-rate-button=""></div>
+
+         <div vp-controls=""></div>
+
+         <div vp-change-avatar=""></div></div></div>
+</div>
+
+<script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+
+<script>
+   new window.VLibras.Widget('https://vlibras.gov.br/app');
+</script></body></html><script type="text/javascript" src="/javax.faces.resource/js/primefaces.calendar-pt_BR.js.xhtml;jsessionid=aUF8OlpY_czp9s13kxM_yxhOhwlBmAvHYLO1MCB1.jurisprudencia-prd-59cdf9cf67-jvrtz"></script><script type="text/javascript" src="/javax.faces.resource/js/newWindow.js.xhtml;jsessionid=aUF8OlpY_czp9s13kxM_yxhOhwlBmAvHYLO1MCB1.jurisprudencia-prd-59cdf9cf67-jvrtz"></script>
+
+  <!-- ========================================== SITE DA JURISPRUD&Ecirc;NCIA =========================================== --><div class="container">
+  <!-- CABE&Ccedil;ALHO -->
+  <div class="row">
+    <nav class="navbar navbar-expand-lg navbar-light bg-header" style="padding-left: 60px; padding-right: 0; justify-content: initial">
+      <a class="navbar-brand"><img src="/javax.faces.resource/logotj-horizontal.svg.xhtml;jsessionid=aUF8OlpY_czp9s13kxM_yxhOhwlBmAvHYLO1MCB1.jurisprudencia-prd-59cdf9cf67-jvrtz?ln=images" width="250" class="d-inline-block align-top" />
+
+      </a>
+    </nav>
+  </div>
+  <div class="row">
+    <div class="text-center" style="padding: 15px 0; background-color: #003f65"><span class="title m-0 d-print-none">JURISPRUDÊNCIA - TJRR</span>
+<!--      &lt;h:outputText styleClass="title ml-6 d-print-none" style="background-color: darkred" value="Homologa&ccedil;&atilde;o"/&gt;-->
+    </div>
+  </div>
+<form id="menuinicial" name="menuinicial" method="post" action="/index.xhtml;jsessionid=aUF8OlpY_czp9s13kxM_yxhOhwlBmAvHYLO1MCB1.jurisprudencia-prd-59cdf9cf67-jvrtz" enctype="application/x-www-form-urlencoded" onsubmit="normalizar(document.getElementById('consultaAtual').value)">
+<input type="hidden" name="menuinicial" value="menuinicial" />
+<input type="hidden" name="javax.faces.ViewState" id="j_id1:javax.faces.ViewState:0" value="5v5q+L3dSO6aH8sGGyzug79mAEGDsjOUmxZ5HMHN6Ebrsi79XKOkyzDNalpdBj2b9BEG6NUn6GCCQaP9CpLoDbr70PSwt/InIWxhqhn++l30kanswzia06WQB6Sfb5eBenydXGUwW3xw0EcDQQNlbmu9+i3m7Zse58YaF4mYH3cpQ2FU7ixtkKDRatyNpE7gUSJFT41Hik0YFA3nM2a4LcrWLHuoB/No74XWuk82VXl9Yiq/bfo2sfvqWD8ABit0RK56gpHUBrIfUEdS/OIim3XUjWNc1hiLkMmYGcjbsoZdijiP4XRHs17FlYCTauHVVkJL4UV8++Tdlu69vpEn39yKBDGL/tZlwACqMnnQBmZ7Bb3dtKfi13RtGRN2rvyY+p+jUYwR2JqiIh3gTOjr2/cysoTH7UR1H/CFx4IQl16L4/jWEwNvkEWmuHCyvw53GFZ9/Aq6vKpqooR2nEpSGl9CbHPUg7Ssl7qMQ9kHmCdoSULpJXlNigyhCpXK4Sjq+hxRi+21uKR/sh8zNZ/0Cz8qmkiO+qNHLqm+dwpzk0TdtQdwyLmGA+ZVenSwWtfpP4htkyGtrt0LoFGYthBzhiD+DcYJZCpF1Rj7B5YSarfEnAM0E3u0ofmpXbvu4mZwz3doyEIbukwfsBofuM2rRo7cCeqBOtkdWLRNKizC2s/kzXbgjGlSv8wwoqCtMxRq7quhZY05lTyt7h9iJd29nJtWtlf/8q6uEp87xWsEQMoiYJe7ES6TpAn+Hdgclm+blAGjHoQJiLZ8bxPW0GfmUbzx7bfgkJu1+RyNKMmibzZXdqINaxJMtT8Bi0BY5CC4M2YX8ifpw/j1eX/HvgQTEWUwbct7bKuSj4o2tEWDilxd2DYgFcl0U+Fj1Fwhf/iTtuIh6ErfhoYYEy0lCsvtk7RMUIaFgY9G/m8rm1Ehqi2S/IzHT7aUq+xYXYIG5SATDE6iPnWBEgTm7af03Ik0944H/PJ5GZGSGdZlCwnDAjnSSE0OFh+Ji/MTwl3px8M28fPr3pqfSK+ZGP7XfbvhcFbvcxVQEuI3apoaC6ib9f7UR8N9iNeLVzowfUG1dCGcKCqYdA1yJRva9IOxSxMwB6KsEjtFDb2SQDJxbG5Sjbvq5zkbLbqp+z0cj/TnZkajDTLM7Fzx5nFmIwAXxDAx6jbd4zCnsLG47un5dmndEUw/1GAGK3zcAsP+G9YoPA5lbTFHTZpa2B6nBl3SRIu/HLx8/zyBUpNCGF2ztCNKXIZhP2eSt4yReDMdrFlR0SdgTHhSs1gHD9qpGkRs+DtnOELsEpna6PRsVvqpZOH50nmA6GohwyeSmcbaYa7rRwHHi7cwU38XeKchQfhAg+FGguf2vgHxNP6tzqiJoVNaekMel+pCIi+sdZ2upalVUXsVIk0psP9NTEpN3rJhYT8+0Y2CNMmiGenZpESClDT8HA0BmgIAf+hzo7uHGnrpoepqgkd983ESX+ML2cWlYh2vN0dB1vD5j/1eYNhj9qUegGNoUzOc5RXXE4l0ZiWTtFTHU56WVD8ojlxqmbVsA8o/VnK3v7o93zaD2TGzoTo8vVNfTjc9juQhtNai5tmw8GPeTKveKFguKIRfhtcfK1LRAf8H92xFzFEvCKUE9HK6GuFSYcAMjmPm3+9u9h4MYkNDbWZz5B+6ZdyY4jQQWdqsJw==" autocomplete="off" />
+
+    <!-- FILTROS DA PESQUISA AVAN&Ccedil;ADA -->
+    <div class="row">
+      <div class="col-md-12 cinza-claro-10 p-5">
+        <label style="cursor: default" for="consultaAtual" class="subtitle">Pesquisa de Jurisprudência</label>
+        <div class="input-group">
+          <!-- BARRA DE PESQUISA --><input name="menuinicial:j_idt28" autocomplete="off" type="text" placeholder="Digite o termo que deseja procurar" id="consultaAtual" class="form-control clearable" />
+          <!-- BOT&Atilde;O DE PESQUISA -->
+          <div class="input-group-append"><button type="submit" name="menuinicial:j_idt30" value="" style="border-radius: 0 5px 5px 0" class="input-group-text icofont-search-1" />
+          </div>
+        </div>
+        <!-- MENUS DE OPERADORES E PESQUISA AVAN&Ccedil;ADA -->
+        <div class="row">
+          <div class="col">
+            <span class="btn" style="font-size: 13px" onclick="changeState('operadores')">
+              Mostrar operadores
+              <i class="icofont-rounded-down"></i>
+            </span>
+          </div>
+          <div class="col text-end">
+            <span class="btn" style="font-size: 13px" onclick="changeState('pesquisaAdv')">
+              Pesquisa avançada
+              <i class="icofont-rounded-down"></i>
+            </span>
+          </div>
+        </div>
+        <div class="clsFormularioPesquisa" id="idBotoesOperadores" style="display: none"><button id="menuinicial:btn_e" name="menuinicial:btn_e" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" onclick="document.getElementById('consultaAtual').value += ' e ';                                     document.getElementById('consultaAtual').focus()" style="border-radius: 5px 0 0 5px; margin: 0" type="button"><span class="ui-button-text ui-c">E</span></button><script id="menuinicial:btn_e_s" type="text/javascript">$(function(){PrimeFaces.cw("CommandButton","widget_menuinicial_btn_e",{id:"menuinicial:btn_e"});});</script><div id="menuinicial:j_idt32" class="ui-tooltip ui-widget ui-tooltip-right" role="tooltip"><div class="ui-tooltip-arrow"></div><div class="ui-tooltip-text ui-shadow ui-corner-all">'E' recupera documentos que contenham ambos os termos.<br />                           Ex.: furto e estacionamento e supermercado                           (não estabelece relação de proximidade ou local no documento).</div></div><script id="menuinicial:j_idt32_s" type="text/javascript">$(function(){PrimeFaces.cw("Tooltip","widget_menuinicial_j_idt32",{id:"menuinicial:j_idt32",showEffect:"fade",hideEffect:"fade",target:"menuinicial:btn_e"});});</script><button id="menuinicial:btn_ou" name="menuinicial:btn_ou" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" onclick="PrimeFaces.bcn(this,event,[function(event){document.getElementById('consultaAtual').value += ' ou ';                                     document.getElementById('consultaAtual').focus()},function(event){PrimeFaces.ab({s:&quot;menuinicial:btn_ou&quot;,f:&quot;menuinicial&quot;});return false;}]);" style="border-radius: 0; margin: 0" type="submit"><span class="ui-button-text ui-c">OU</span></button><script id="menuinicial:btn_ou_s" type="text/javascript">$(function(){PrimeFaces.cw("CommandButton","widget_menuinicial_btn_ou",{id:"menuinicial:btn_ou"});});</script><div id="menuinicial:j_idt34" class="ui-tooltip ui-widget ui-tooltip-right" role="tooltip"><div class="ui-tooltip-arrow"></div><div class="ui-tooltip-text ui-shadow ui-corner-all">'OU' localiza um e/ou outro termo no julgado. <br />                           Ex.: furto ou estacionamento ou supermercado ou hipermercado ou mercado</div></div><script id="menuinicial:j_idt34_s" type="text/javascript">$(function(){PrimeFaces.cw("Tooltip","widget_menuinicial_j_idt34",{id:"menuinicial:j_idt34",showEffect:"fade",hideEffect:"fade",target:"menuinicial:btn_ou"});});</script><button id="menuinicial:btn_nao" name="menuinicial:btn_nao" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" onclick="PrimeFaces.bcn(this,event,[function(event){document.getElementById('consultaAtual').value += ' nao ';                                     document.getElementById('consultaAtual').focus()},function(event){PrimeFaces.ab({s:&quot;menuinicial:btn_nao&quot;,f:&quot;menuinicial&quot;});return false;}]);" style="border-radius: 0; margin: 0" type="submit"><span class="ui-button-text ui-c">NÃO</span></button><script id="menuinicial:btn_nao_s" type="text/javascript">$(function(){PrimeFaces.cw("CommandButton","widget_menuinicial_btn_nao",{id:"menuinicial:btn_nao"});});</script><div id="menuinicial:j_idt36" class="ui-tooltip ui-widget ui-tooltip-right" role="tooltip"><div class="ui-tooltip-arrow"></div><div class="ui-tooltip-text ui-shadow ui-corner-all">'NÃO' recupera documentos que contenham o primeiro, mas não o segundo termo,                           funcionando como excludente.<br/ >Ex.: furto e estacionamento não supermercado.</div></div><script id="menuinicial:j_idt36_s" type="text/javascript">$(function(){PrimeFaces.cw("Tooltip","widget_menuinicial_j_idt36",{id:"menuinicial:j_idt36",showEffect:"fade",hideEffect:"fade",target:"menuinicial:btn_nao"});});</script><button id="menuinicial:btn_aspas" name="menuinicial:btn_aspas" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" onclick="PrimeFaces.bcn(this,event,[function(event){document.getElementById('consultaAtual').value = '&quot;'+                            document.getElementById('consultaAtual').value+'&quot;';                            document.getElementById('consultaAtual').focus()},function(event){PrimeFaces.ab({s:&quot;menuinicial:btn_aspas&quot;,f:&quot;menuinicial&quot;});return false;}]);" style="border-radius: 0 5px 5px 0; margin: 0" type="submit"><span class="ui-button-text ui-c">"  "</span></button><script id="menuinicial:btn_aspas_s" type="text/javascript">$(function(){PrimeFaces.cw("CommandButton","widget_menuinicial_btn_aspas",{id:"menuinicial:btn_aspas"});});</script><div id="menuinicial:j_idt38" class="ui-tooltip ui-widget ui-tooltip-right" role="tooltip"><div class="ui-tooltip-arrow"></div><div class="ui-tooltip-text ui-shadow ui-corner-all">'ASPAS' recupera a expressão completa.<br/ >                           Obs.: Funciona somente com frases<br/ >Ex.: "furto no supermercado"</div></div><script id="menuinicial:j_idt38_s" type="text/javascript">$(function(){PrimeFaces.cw("Tooltip","widget_menuinicial_j_idt38",{id:"menuinicial:j_idt38",showEffect:"fade",hideEffect:"fade",target:"menuinicial:btn_aspas"});});</script>
+        </div>
+        <div class="row" id="idPesquisaAvancada" style="display: none;">
+          <label style="cursor: default;" class="subtitle">Pesquisa por campos específicos:</label>
+          <!-- N&Uacute;MERO SISCOM/PROJUDI -->
+          <div class="ui-md-12">
+            <label for="numProcesso">Número SISCOM / PROJUDI:</label><input id="menuinicial:numProcesso" name="menuinicial:numProcesso" type="text" class="ui-inputfield ui-inputtext ui-widget ui-state-default ui-corner-all form-control" autocomplete="off" maxlength="25" placeholder="13 Dígitos - SISCOM / 20 Dígitos - PROJUDI" /><script id="menuinicial:numProcesso_s" type="text/javascript">$(function(){PrimeFaces.cw("InputText","widget_menuinicial_numProcesso",{id:"menuinicial:numProcesso",maxlength:25});});</script>
+          </div>
+
+          <!-- RELATORES -->
+          <div class="ui-md-12">
+            <label for="labelListaRelator">Relator:</label><div id="menuinicial:j_idt42" class="ui-panel ui-widget ui-widget-content ui-corner-all ui-hidden-container" style="cursor: pointer" data-widget="widget_menuinicial_j_idt42"><div id="menuinicial:j_idt42_header" class="ui-panel-titlebar ui-widget-header ui-helper-clearfix ui-corner-all"><span class="ui-panel-title"><span id="menuinicial:labelListaRelator"><label class="preformatted"> </label></span></span><a id="menuinicial:j_idt42_toggler" href="#" class="ui-panel-titlebar-icon ui-corner-all ui-state-default" aria-label="Alternar painel"><span class="ui-icon ui-icon-plusthick"></span></a></div><div id="menuinicial:j_idt42_content" class="ui-panel-content ui-widget-content" style="display:none">
+
+              <div class="docParagrafo">
+                <div class="docTituloRelator text-end">
+                  <label class="relator" for="toggle-1" title="Clique para exibir ou esconder a lista">
+                    <span style="color: #808080">SEGUNDO GRAU DE JURISDIÇÃO</span>
+                    <i style="color: #808080" class="fa fa-angle-down"></i>
+                  </label>
+                </div>
+                <input type="checkbox" id="toggle-1" />
+
+                <div id="mostra1"><div id="menuinicial:relatorList" class="ui-selectmanycheckbox ui-widget ui-grid ui-grid-responsive"><div class="ui-g"><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList:0" name="menuinicial:relatorList" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3010559, nomeRegimental:ALMIRO PADILHA)" tabindex="" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList:0">ALMIRO PADILHA</label></div><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList:1" name="menuinicial:relatorList" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3010222, nomeRegimental:CRISTÓVÃO SUTER)" tabindex="" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList:1">CRISTÓVÃO SUTER</label></div></div><div class="ui-g"><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList:2" name="menuinicial:relatorList" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3010206, nomeRegimental:ELAINE BIANCHI)" tabindex="" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList:2">ELAINE BIANCHI</label></div><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList:3" name="menuinicial:relatorList" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3010510, nomeRegimental:ERICK LINHARES)" tabindex="" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList:3">ERICK LINHARES</label></div></div><div class="ui-g"><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList:4" name="menuinicial:relatorList" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3010224, nomeRegimental:JÉSUS NASCIMENTO)" tabindex="" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList:4">JÉSUS NASCIMENTO</label></div><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList:5" name="menuinicial:relatorList" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3010203, nomeRegimental:LEONARDO CUPELLO)" tabindex="" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList:5">LEONARDO CUPELLO</label></div></div><div class="ui-g"><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList:6" name="menuinicial:relatorList" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3010211, nomeRegimental:MAURO CAMPELLO)" tabindex="" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList:6">MAURO CAMPELLO</label></div><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList:7" name="menuinicial:relatorList" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3010210, nomeRegimental:MOZARILDO CAVALCANTI)" tabindex="" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList:7">MOZARILDO CAVALCANTI</label></div></div><div class="ui-g"><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList:8" name="menuinicial:relatorList" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3010335, nomeRegimental:RICARDO OLIVEIRA)" tabindex="" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList:8">RICARDO OLIVEIRA</label></div><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList:9" name="menuinicial:relatorList" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3010208, nomeRegimental:TÂNIA VASCONCELOS)" tabindex="" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList:9">TÂNIA VASCONCELOS</label></div></div><div class="ui-g"><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList:10" name="menuinicial:relatorList" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3010220, nomeRegimental:ANTÔNIO AUGUSTO MARTINS NETO)" tabindex="" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList:10">ANTÔNIO AUGUSTO MARTINS NETO (JUIZ CONVOCADO)</label></div><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList:11" name="menuinicial:relatorList" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3011849, nomeRegimental:ESDRAS SILVA PINTO)" tabindex="" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList:11">ESDRAS SILVA PINTO (JUIZ CONVOCADO)</label></div></div><div class="ui-g"><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList:12" name="menuinicial:relatorList" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3010223, nomeRegimental:GRACIETE SOTTO MAYOR RIBEIRO)" tabindex="" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList:12">GRACIETE SOTTO MAYOR RIBEIRO (JUÍZA CONVOCADA)</label></div><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList:13" name="menuinicial:relatorList" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3010202, nomeRegimental:LUIZ FERNANDO MALLET)" tabindex="" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList:13">LUIZ FERNANDO MALLET (JUIZ CONVOCADO)</label></div></div><div class="ui-g"><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList:14" name="menuinicial:relatorList" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3011381, nomeRegimental:RODRIGO BEZERRA DELGADO)" tabindex="" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList:14">RODRIGO BEZERRA DELGADO (JUIZ CONVOCADO)</label></div></div></div><script id="menuinicial:relatorList_s" type="text/javascript">$(function(){PrimeFaces.cw("SelectManyCheckbox","widget_menuinicial_relatorList",{id:"menuinicial:relatorList"});});</script>
+                </div>
+              </div>
+
+              <div class="docParagrafo">
+                <div class="docTituloRelator text-end">
+                  <label class="relator" for="toggle-2" title="Clique para exibir ou esconder a lista">
+                    <span style="color: #808080">TURMA RECURSAL</span>
+                    <i style="color: #808080" class="fa fa-angle-down"></i>
+                  </label>
+                </div>
+                <input type="checkbox" id="toggle-2" />
+                <div id="mostra2"><div id="menuinicial:relatorList2" class="ui-selectmanycheckbox ui-widget ui-grid ui-grid-responsive"><div class="ui-g"><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList2:0" name="menuinicial:relatorList2" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3010509, nomeRegimental:ALEXANDRE MAGNO MAGALHÃES VIEIRA)" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList2&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList2&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList2:0">ALEXANDRE MAGNO MAGALHÃES VIEIRA</label></div><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList2:1" name="menuinicial:relatorList2" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3010221, nomeRegimental:CÉSAR HENRIQUE ALVES)" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList2&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList2&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList2:1">CÉSAR HENRIQUE ALVES</label></div></div><div class="ui-g"><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList2:2" name="menuinicial:relatorList2" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3011325, nomeRegimental:CLÁUDIO ROBERTO BARBOSA DE ARAÚJO)" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList2&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList2&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList2:2">CLÁUDIO ROBERTO BARBOSA DE ARAÚJO</label></div><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList2:3" name="menuinicial:relatorList2" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3011342, nomeRegimental:DANIELA SCHIRATO COLLESI MINHOLI)" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList2&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList2&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList2:3">DANIELA SCHIRATO COLLESI MINHOLI</label></div></div><div class="ui-g"><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList2:4" name="menuinicial:relatorList2" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3011382, nomeRegimental:JOANA SARMENTO DE MATOS)" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList2&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList2&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList2:4">JOANA SARMENTO DE MATOS</label></div><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList2:5" name="menuinicial:relatorList2" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3010424, nomeRegimental:PARIMA DIAS VERAS)" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList2&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList2&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList2:5">PARIMA DIAS VERAS</label></div></div><div class="ui-g"><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList2:6" name="menuinicial:relatorList2" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3010506, nomeRegimental:PAULO CÉZAR DIAS MENEZES)" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList2&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList2&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList2:6">PAULO CÉZAR DIAS MENEZES</label></div></div></div><script id="menuinicial:relatorList2_s" type="text/javascript">$(function(){PrimeFaces.cw("SelectManyCheckbox","widget_menuinicial_relatorList2",{id:"menuinicial:relatorList2"});});</script>
+                </div>
+              </div>
+
+              <div class="docParagrafo">
+                <div class="docTituloRelator text-end">
+                  <label class="relator" for="toggle-3" title="Clique para exibir ou esconder a lista">
+                    <span style="color: #808080">MAGISTRADOS APOSENTADOS E EX-CONVOCADOS</span>
+                    <i style="color: #808080" class="fa fa-angle-down"></i>
+                  </label>
+                </div>
+                <input type="checkbox" id="toggle-3" />
+                <div id="mostra3"><div id="menuinicial:relatorList3" class="ui-selectmanycheckbox ui-widget ui-grid ui-grid-responsive"><div class="ui-g"><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList3:0" name="menuinicial:relatorList3" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3011455, nomeRegimental:AIR MARIN JÚNIOR)" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList3&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList3&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList3:0">AIR MARIN JÚNIOR</label></div><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList3:1" name="menuinicial:relatorList3" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3011323, nomeRegimental:ALUÍZIO FERREIRA VIEIRA)" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList3&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList3&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList3:1">ALUÍZIO FERREIRA VIEIRA</label></div></div><div class="ui-g"><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList3:2" name="menuinicial:relatorList3" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3010729, nomeRegimental:ANGELO AUGUSTO GRAÇA MENDES)" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList3&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList3&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList3:2">ANGELO AUGUSTO GRAÇA MENDES</label></div><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList3:3" name="menuinicial:relatorList3" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3011346, nomeRegimental:BRUNA GUIMARÃES FIALHO ZAGALLO)" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList3&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList3&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList3:3">BRUNA GUIMARÃES FIALHO ZAGALLO</label></div></div><div class="ui-g"><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList3:4" name="menuinicial:relatorList3" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3011322, nomeRegimental:BRUNO FERNANDO ALVES COSTA)" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList3&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList3&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList3:4">BRUNO FERNANDO ALVES COSTA</label></div><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList3:5" name="menuinicial:relatorList3" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3010212, nomeRegimental:CARLOS HENRIQUES)" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList3&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList3&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList3:5">CARLOS HENRIQUES</label></div></div><div class="ui-g"><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList3:6" name="menuinicial:relatorList3" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3011426, nomeRegimental:EDUARDO MESSAGGI DIAS)" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList3&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList3&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList3:6">EDUARDO MESSAGGI DIAS</label></div><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList3:7" name="menuinicial:relatorList3" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3010557, nomeRegimental:ELVO PIGARI JUNIOR)" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList3&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList3&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList3:7">ELVO PIGARI JUNIOR</label></div></div><div class="ui-g"><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList3:8" name="menuinicial:relatorList3" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3010507, nomeRegimental:EUCLYDES CALIL FILHO)" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList3&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList3&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList3:8">EUCLYDES CALIL FILHO</label></div><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList3:9" name="menuinicial:relatorList3" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:51520, nomeRegimental:GUILHERME VERSIANI GUSMÃO FONSECA)" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList3&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList3&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList3:9">GUILHERME VERSIANI GUSMÃO FONSECA</label></div></div><div class="ui-g"><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList3:10" name="menuinicial:relatorList3" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3010315, nomeRegimental:GURSEN DE MIRANDA)" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList3&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList3&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList3:10">GURSEN DE MIRANDA</label></div><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList3:11" name="menuinicial:relatorList3" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3010544, nomeRegimental:JARBAS LACERDA DE MIRANDA)" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList3&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList3&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList3:11">JARBAS LACERDA DE MIRANDA</label></div></div><div class="ui-g"><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList3:12" name="menuinicial:relatorList3" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3010204, nomeRegimental:JEFFERSON FERNANDES DA SILVA)" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList3&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList3&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList3:12">JEFFERSON FERNANDES DA SILVA</label></div><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList3:13" name="menuinicial:relatorList3" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3010214, nomeRegimental:JOSÉ PEDRO)" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList3&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList3&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList3:13">JOSÉ PEDRO</label></div></div><div class="ui-g"><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList3:14" name="menuinicial:relatorList3" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3010666, nomeRegimental:LANA LEITÃO MARTINS)" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList3&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList3&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList3:14">LANA LEITÃO MARTINS</label></div><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList3:15" name="menuinicial:relatorList3" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3010218, nomeRegimental:LUPERCINO NOGUEIRA)" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList3&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList3&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList3:15">LUPERCINO NOGUEIRA</label></div></div><div class="ui-g"><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList3:16" name="menuinicial:relatorList3" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3011997, nomeRegimental:PHILLIP BARBIEUX SAMPAIO BRAGA DE MACEDO)" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList3&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList3&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList3:16">PHILLIP BARBIEUX SAMPAIO BRAGA DE MACEDO</label></div><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList3:17" name="menuinicial:relatorList3" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3010217, nomeRegimental:ROBÉRIO NUNES)" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList3&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList3&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList3:17">ROBÉRIO NUNES</label></div></div><div class="ui-g"><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList3:18" name="menuinicial:relatorList3" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3010553, nomeRegimental:RODRIGO CARDOSO FURLAN)" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList3&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList3&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList3:18">RODRIGO CARDOSO FURLAN</label></div><div class="ui-g-12 ui-md-6"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:relatorList3:19" name="menuinicial:relatorList3" type="checkbox" value="br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3011344, nomeRegimental:SISSI MARLENE DIETRICH SCHWANTES)" onchange="PrimeFaces.ab({s:&quot;menuinicial:relatorList3&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:relatorList3&quot;,u:&quot;menuinicial:labelListaRelator&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:relatorList3:19">SISSI MARLENE DIETRICH SCHWANTES</label></div></div></div><script id="menuinicial:relatorList3_s" type="text/javascript">$(function(){PrimeFaces.cw("SelectManyCheckbox","widget_menuinicial_relatorList3",{id:"menuinicial:relatorList3"});});</script>
+                </div>
+              </div></div><input type="hidden" id="menuinicial:j_idt42_collapsed" name="menuinicial:j_idt42_collapsed" value="true" /></div><script id="menuinicial:j_idt42_s" type="text/javascript">$(function(){PrimeFaces.cw("Panel","widget_menuinicial_j_idt42",{id:"menuinicial:j_idt42",toggleable:true,toggleSpeed:500,collapsed:true,toggleOrientation:"vertical",toggleableHeader:true});});</script>
+          </div>
+
+          <!-- DATA INICIAL/FINAL -->
+          <div class="row" style="alignment-baseline: center">
+            <div class="col-md-4">
+              <label for="datainicial">Data Inicial:</label><span id="menuinicial:datainicial" class="ui-calendar"><input id="menuinicial:datainicial_input" name="menuinicial:datainicial_input" type="text" class="ui-inputfield ui-widget ui-state-default ui-corner-all form-control" autocomplete="off" /></span><script id="menuinicial:datainicial_s" type="text/javascript">$(function(){PrimeFaces.cw("Calendar","widget_menuinicial_datainicial",{id:"menuinicial:datainicial",popup:true,locale:"pt_BR",dateFormat:"dd\/mm\/yy",minDate:"01\/01\/2006",maxDate:"today",changeMonth:true,changeYear:true,mask:"99\/99\/9999"});});</script>
+            </div>
+            <div class="col-md-4">
+              <label>Data Final:</label><span id="menuinicial:datafinal" class="ui-calendar"><input id="menuinicial:datafinal_input" name="menuinicial:datafinal_input" type="text" class="ui-inputfield ui-widget ui-state-default ui-corner-all form-control" autocomplete="off" maxlength="10" /></span><script id="menuinicial:datafinal_s" type="text/javascript">$(function(){PrimeFaces.cw("Calendar","widget_menuinicial_datafinal",{id:"menuinicial:datafinal",popup:true,locale:"pt_BR",dateFormat:"dd\/mm\/yy",minDate:"01\/01\/2006",maxDate:"today",changeMonth:true,changeYear:true,mask:"99\/99\/9999"});});</script>
+            </div>
+            <div class="col-md-4">
+              <label for="tipoProcedimento">Procedimento</label><select id="menuinicial:tipoProcedimento" name="menuinicial:tipoProcedimento" class="form-control" size="1">	<option value="" selected="selected">TODOS</option>
+	<option value="JULGAMENTO">Julgamento</option>
+	<option value="PUBLICACAO">Publicação</option>
+</select>
+            </div>
+          </div>
+
+          <!-- &Oacute;RG&Atilde;O JULGADOR -->
+          <div class="ui-md-12">
+            <label for="tipoOrgaoList">Órgão Julgador:</label><div id="menuinicial:j_idt61" class="ui-panel ui-widget ui-widget-content ui-corner-all ui-hidden-container" style="cursor: pointer" data-widget="widget_menuinicial_j_idt61"><div id="menuinicial:j_idt61_header" class="ui-panel-titlebar ui-widget-header ui-helper-clearfix ui-corner-all"><span class="ui-panel-title"><span id="menuinicial:labelListaOrgao"><label class="preformatted">         </label></span></span><a id="menuinicial:j_idt61_toggler" href="#" class="ui-panel-titlebar-icon ui-corner-all ui-state-default" aria-label="Alternar painel"><span class="ui-icon ui-icon-plusthick"></span></a></div><div id="menuinicial:j_idt61_content" class="ui-panel-content ui-widget-content" style="display:none"><div id="menuinicial:tipoOrgaoList" class="ui-selectmanycheckbox ui-widget ui-grid ui-grid-responsive"><div class="ui-g"><div class="ui-g-12 ui-md-4"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:tipoOrgaoList:0" name="menuinicial:tipoOrgaoList" type="checkbox" value="PRIMEIRA_TURMA_CIVEL" onchange="PrimeFaces.ab({s:&quot;menuinicial:tipoOrgaoList&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:tipoOrgaoList&quot;,u:&quot;menuinicial:labelListaOrgao&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:tipoOrgaoList:0">Primeira Turma Cível</label></div><div class="ui-g-12 ui-md-4"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:tipoOrgaoList:1" name="menuinicial:tipoOrgaoList" type="checkbox" value="SEGUNDA_TURMA_CIVEL" onchange="PrimeFaces.ab({s:&quot;menuinicial:tipoOrgaoList&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:tipoOrgaoList&quot;,u:&quot;menuinicial:labelListaOrgao&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:tipoOrgaoList:1">Segunda Turma Cível</label></div><div class="ui-g-12 ui-md-4"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:tipoOrgaoList:2" name="menuinicial:tipoOrgaoList" type="checkbox" value="CAMARA_CRIMINAL" onchange="PrimeFaces.ab({s:&quot;menuinicial:tipoOrgaoList&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:tipoOrgaoList&quot;,u:&quot;menuinicial:labelListaOrgao&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:tipoOrgaoList:2">Câmara Criminal</label></div></div><div class="ui-g"><div class="ui-g-12 ui-md-4"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:tipoOrgaoList:3" name="menuinicial:tipoOrgaoList" type="checkbox" value="VICE_PRESIDENCIA" onchange="PrimeFaces.ab({s:&quot;menuinicial:tipoOrgaoList&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:tipoOrgaoList&quot;,u:&quot;menuinicial:labelListaOrgao&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:tipoOrgaoList:3">Vice-Presidência</label></div><div class="ui-g-12 ui-md-4"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:tipoOrgaoList:4" name="menuinicial:tipoOrgaoList" type="checkbox" value="TRIBUNAL_PLENO" onchange="PrimeFaces.ab({s:&quot;menuinicial:tipoOrgaoList&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:tipoOrgaoList&quot;,u:&quot;menuinicial:labelListaOrgao&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:tipoOrgaoList:4">Tribunal Pleno</label></div><div class="ui-g-12 ui-md-4"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:tipoOrgaoList:5" name="menuinicial:tipoOrgaoList" type="checkbox" value="TURMA_RECURSAL" onchange="PrimeFaces.ab({s:&quot;menuinicial:tipoOrgaoList&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:tipoOrgaoList&quot;,u:&quot;menuinicial:labelListaOrgao&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:tipoOrgaoList:5">Turma Recursal</label></div></div><div class="ui-g"><div class="ui-g-12 ui-md-4"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:tipoOrgaoList:6" name="menuinicial:tipoOrgaoList" type="checkbox" value="CAMARAS_REUNIDAS" onchange="PrimeFaces.ab({s:&quot;menuinicial:tipoOrgaoList&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:tipoOrgaoList&quot;,u:&quot;menuinicial:labelListaOrgao&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:tipoOrgaoList:6">Câmaras Reunidas</label></div><div class="ui-g-12 ui-md-4"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:tipoOrgaoList:7" name="menuinicial:tipoOrgaoList" type="checkbox" value="PRESIDENCIA" onchange="PrimeFaces.ab({s:&quot;menuinicial:tipoOrgaoList&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:tipoOrgaoList&quot;,u:&quot;menuinicial:labelListaOrgao&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:tipoOrgaoList:7">Presidência</label></div><div class="ui-g-12 ui-md-4"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:tipoOrgaoList:8" name="menuinicial:tipoOrgaoList" type="checkbox" value="CONSELHO_DA_MAGISTRATURA" onchange="PrimeFaces.ab({s:&quot;menuinicial:tipoOrgaoList&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:tipoOrgaoList&quot;,u:&quot;menuinicial:labelListaOrgao&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:tipoOrgaoList:8">Conselho da Magistratura</label></div></div><div class="ui-g"><div class="ui-g-12 ui-md-4"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:tipoOrgaoList:9" name="menuinicial:tipoOrgaoList" type="checkbox" value="CAMARA_CIVEL" onchange="PrimeFaces.ab({s:&quot;menuinicial:tipoOrgaoList&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:tipoOrgaoList&quot;,u:&quot;menuinicial:labelListaOrgao&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:tipoOrgaoList:9">Câmara Cível</label></div><div class="ui-g-12 ui-md-4"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:tipoOrgaoList:10" name="menuinicial:tipoOrgaoList" type="checkbox" value="CAMARA_UNICA" onchange="PrimeFaces.ab({s:&quot;menuinicial:tipoOrgaoList&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:tipoOrgaoList&quot;,u:&quot;menuinicial:labelListaOrgao&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:tipoOrgaoList:10">Câmara Única</label></div><div class="ui-g-12 ui-md-4"><div class="ui-chkbox ui-widget"><div class="ui-helper-hidden-accessible"><input id="menuinicial:tipoOrgaoList:11" name="menuinicial:tipoOrgaoList" type="checkbox" value="PLANTAO_JUDICIAL" onchange="PrimeFaces.ab({s:&quot;menuinicial:tipoOrgaoList&quot;,e:&quot;change&quot;,f:&quot;menuinicial&quot;,p:&quot;menuinicial:tipoOrgaoList&quot;,u:&quot;menuinicial:labelListaOrgao&quot;});" /></div><div class="ui-chkbox-box ui-widget ui-corner-all ui-state-default"><span class="ui-chkbox-icon ui-icon ui-icon-blank ui-c"></span></div></div><label for="menuinicial:tipoOrgaoList:11">Plantão Judicial</label></div></div></div><script id="menuinicial:tipoOrgaoList_s" type="text/javascript">$(function(){PrimeFaces.cw("SelectManyCheckbox","widget_menuinicial_tipoOrgaoList",{id:"menuinicial:tipoOrgaoList"});});</script></div><input type="hidden" id="menuinicial:j_idt61_collapsed" name="menuinicial:j_idt61_collapsed" value="true" /></div><script id="menuinicial:j_idt61_s" type="text/javascript">$(function(){PrimeFaces.cw("Panel","widget_menuinicial_j_idt61",{id:"menuinicial:j_idt61",toggleable:true,toggleSpeed:500,collapsed:true,toggleOrientation:"vertical",toggleableHeader:true});});</script>
+          </div>
+
+          <!-- EMENTA/INDEXA&Ccedil;&Atilde;O -->
+          <div class="ui-md-12">
+            <label for="numIndex">Ementa/Indexação:</label><input name="menuinicial:j_idt68" aria-describedby="numProcessoHelp" id="numIndex" type="text" class="form-control" />
+          </div>
+
+          <!-- TIPO DE RECURSO -->
+          <div class="ui-md-12">
+            <label for="tipoClasseList">Espécie de Recurso:</label><select id="menuinicial:tipoClasseList" name="menuinicial:tipoClasseList" class="form-select" size="1" style="width: inherit;">	<option value="0" selected="selected"></option>
+	<option value="1">Ação Cautelar</option>
+	<option value="2">Ação Cível</option>
+	<option value="3">Ação Civil Pública</option>
+	<option value="4">Ação Declaratória de Greve</option>
+	<option value="5">Ação Declaratória de Ilegalidade de Greve </option>
+	<option value="6">Ação Declaratória de Nulidade Insanável</option>
+	<option value="7">Ação Direta de Inconstitucionalidade</option>
+	<option value="8">Ação Penal</option>
+	<option value="9">Ação Rescisória</option>
+	<option value="10">Agravo de Instrumento</option>
+	<option value="11">Agravo de Instrumento no Recurso Extraordinário</option>
+	<option value="12">Agravo em Execução</option>
+	<option value="13">Agravo em Execução Penal</option>
+	<option value="14">Agravo em Recurso Especial</option>
+	<option value="15">Agravo em Recurso Especial na Apelação Cível</option>
+	<option value="16">Agravo em Recurso Especial no Agravo de Instrumento</option>
+	<option value="17">Agravo em Recurso Especial no Agravo Interno</option>
+	<option value="18">Agravo em Recurso Extraordinário</option>
+	<option value="19">Agravo Interno</option>
+	<option value="20">Agravo Interno do Recurso Especial</option>
+	<option value="21">Agravo Interno em Ação Rescisória</option>
+	<option value="22">Agravo Interno em Habeas Corpus</option>
+	<option value="23">Agravo Interno em Mandado de Segurança</option>
+	<option value="24">Agravo Interno em Revisão Criminal</option>
+	<option value="25">Agravo Interno na Apelação Cível</option>
+	<option value="26">Agravo Interno no Agravo de Instrumento</option>
+	<option value="27">Agravo Interno no Agravo de Instrumento no Mandado de Segurança</option>
+	<option value="28">Agravo Interno no Agravo de Instrumento no Recurso Especial</option>
+	<option value="29">Agravo Interno no Recurso Especial</option>
+	<option value="30">Agravo Interno no Recurso Especial em Agravo de Instrumento</option>
+	<option value="31">Agravo Interno no Recurso Especial na Apelação Cível</option>
+	<option value="32">Agravo Interno no Recurso Extraordinário</option>
+	<option value="33">Agravo Interno no Recurso Inominado</option>
+	<option value="34">Agravo Interno nos Embargos de Declaração na Apelação Cível</option>
+	<option value="35">Agravo Interno nos Embargos de Declaração na Apelação Criminal</option>
+	<option value="36">Agravo no Recurso Especial</option>
+	<option value="37">Agravo no Recurso Especial na Apelação Cível</option>
+	<option value="38">Agravo no Recurso Extraordinário</option>
+	<option value="39">Agravo no Recurso Extraordinário na Apelação Cível</option>
+	<option value="40">Agravo no Recurso Extraordinário na Apelação Criminal</option>
+	<option value="41">Agravo nos Recursos Extraordinário e Especial na Apelação Criminal</option>
+	<option value="42">Agravo Regimental</option>
+	<option value="43">Agravos em Recurso Especial e Extraordinário na Apelação Cível</option>
+	<option value="44">Apelação Cível</option>
+	<option value="45">Apelação Cível em Mandado de Segurança</option>
+	<option value="46">Apelação Criminal</option>
+	<option value="47">Apelação Criminal em Mandado de Segurança</option>
+	<option value="48">Apelação em Mandado de Segurança</option>
+	<option value="49">Arguição de Inconstitucionalidade</option>
+	<option value="50">Arguição de Inconstitucionalidade por Omissão</option>
+	<option value="51">Ata de Sessão</option>
+	<option value="52">Carta Afiançável</option>
+	<option value="53">Carta de Ordem</option>
+	<option value="54">Carta Precatória</option>
+	<option value="55">Carta Testemunhável</option>
+	<option value="56">Cautelar Inominada</option>
+	<option value="57">Classe Não Mapeada</option>
+	<option value="58">Conflito de Competência</option>
+	<option value="59">Conflito de Jurisdição</option>
+	<option value="60">Correição Parcial</option>
+	<option value="61">Cumprimento de Sentença</option>
+	<option value="62">Cumprimento Provisório de Sentença</option>
+	<option value="63">Desaforamento de Julgamento</option>
+	<option value="64">Dissídio Coletivo</option>
+	<option value="65">Embargos à Execução</option>
+	<option value="66">Embargos à Penhora</option>
+	<option value="67">Embargos de Declaração</option>
+	<option value="68">Embargos de Declaração em Recurso em Sentido Estrito</option>
+	<option value="69">Embargos de Declaração em Recurso Especial na Apelação Cível</option>
+	<option value="70">Embargos de Declaração em Recurso Especial na Apelação Criminal</option>
+	<option value="71">Embargos de Declaração em Recurso Especial no Agravo de Instrumento</option>
+	<option value="72">Embargos de Declaração em Recurso Especial no Agravo Regimental</option>
+	<option value="73">Embargos de Declaração em Recurso Extraordinário na Ação Direta de Inconstitucionalidade</option>
+	<option value="74">Embargos de Declaração em Recurso Extraordinário na Apelação Cível</option>
+	<option value="75">Embargos de Declaração na Ação Direta de Inconstitucionalidade</option>
+	<option value="76">Embargos de Declaração na Ação Penal</option>
+	<option value="77">Embargos de Declaração na Ação Rescisória</option>
+	<option value="78">Embargos de Declaração na Apelação Cível</option>
+	<option value="79">Embargos de Declaração na Apelação Criminal</option>
+	<option value="80">Embargos de Declaração na Carta Testemunhável</option>
+	<option value="81">Embargos de Declaração na Cautelar Inominada</option>
+	<option value="82">Embargos de Declaração na Correição Parcial</option>
+	<option value="83">Embargos de Declaração na Exceção de Pré-Executividade</option>
+	<option value="84">Embargos de Declaração na Petição</option>
+	<option value="85">Embargos de Declaração na Reclamação</option>
+	<option value="86">Embargos de Declaração na Remessa Necessária</option>
+	<option value="87">Embargos de Declaração na Representação Criminal</option>
+	<option value="88">Embargos de Declaração na Revisão Criminal</option>
+	<option value="89">Embargos de Declaração no Agravo de Instrumento</option>
+	<option value="90">Embargos de Declaração no Agravo em Execução Penal</option>
+	<option value="91">Embargos de Declaração no Agravo Interno</option>
+	<option value="92">Embargos de Declaração no Agravo Regimental</option>
+	<option value="93">Embargos de Declaração no Conflito de Competência</option>
+	<option value="94">Embargos de Declaração no Habeas Corpus</option>
+	<option value="95">Embargos de Declaração no Habeas Data</option>
+	<option value="96">Embargos de Declaração no Incidente de Resolução de Demandas Repetitivas </option>
+	<option value="97">Embargos de Declaração no Mandado de Segurança</option>
+	<option value="98">Embargos de Declaração no Recurso em Sentido Estrito</option>
+	<option value="99">Embargos de Declaração no Recurso Especial</option>
+	<option value="100">Embargos de Declaração no Recurso Especial na Apelação Cível</option>
+	<option value="101">Embargos de Declaração no Recurso Inominado</option>
+	<option value="102">Embargos de Declaração no Reexame Necessário</option>
+	<option value="103">Embargos de Declaração nos Embargos de Declaração na Ação Direta de Insconstitcuionalidade</option>
+	<option value="104">Embargos de Declaração nos Embargos de Declaração na Apelação Cível</option>
+	<option value="105">Embargos de Declaração nos Embargos de Declaração na Apelação Criminal</option>
+	<option value="106">Embargos de Declaração nos Embargos de Declaração no Agravo de Execução Penal</option>
+	<option value="107">Embargos de Declaração nos Embargos de Declaração no Agravo de Instrumento</option>
+	<option value="108">Embargos de Declaração nos Embargos de Declaração no Agravo Interno</option>
+	<option value="109">Embargos de Declaração nos Embargos de Declaração no Mandado de Segurança</option>
+	<option value="110">Embargos de Declaração nos Embargos de Declaração nos Embargos de Declaração na Apelação Cível</option>
+	<option value="111">Embargos de Declaração nos Embargos de Declaração nos Embargos de Declaração no Agravo Interno</option>
+	<option value="112">Embargos de Declaração nos Embargos de Declaração nos Embargos de Declaração no Mandado de Segurança</option>
+	<option value="113">Embargos de Declaração nos Embargos Infringentes</option>
+	<option value="114">Embargos de Terceiro</option>
+	<option value="115">Embargos do Devedor</option>
+	<option value="116">Embargos Infringentes</option>
+	<option value="117">Embargos Infringentes na Apelação Criminal</option>
+	<option value="118">Exceção da Verdade</option>
+	<option value="119">Exceção de Coisa Julgada</option>
+	<option value="120">Exceção de Impedimento</option>
+	<option value="121">Exceção de Pré-Executividade</option>
+	<option value="122">Exceção de Suspeição</option>
+	<option value="123">Execução</option>
+	<option value="124">Execução de Honorários na Ação Rescisória</option>
+	<option value="125">Habeas Corpus</option>
+	<option value="126">Habeas Data</option>
+	<option value="127">Impugnação ao Cumprimento de Sentença</option>
+	<option value="128">Incidente de Arguição de Inconstitucionalidade</option>
+	<option value="129">Incidente de Assunção de Competência</option>
+	<option value="130">Incidente de Inconstitucionalidade</option>
+	<option value="131">Incidente de Resolução de Demandas Repetitivas</option>
+	<option value="132">Incidente de Restituição de Coisa Apreendida</option>
+	<option value="133">Incidente de Suspeição</option>
+	<option value="134">INCIDENTE DE SUSPEIÇÃO</option>
+	<option value="135">Inquérito</option>
+	<option value="136">Inquérito Policial</option>
+	<option value="137">Interpelação Criminal</option>
+	<option value="138">Investigação Preliminar</option>
+	<option value="139">Juntada de Acórdão</option>
+	<option value="140">Mandado de Injunção</option>
+	<option value="141">Mandado de Segurança</option>
+	<option value="142">Medida Cautelar Inominada Criminal</option>
+	<option value="143">Medida Protetiva</option>
+	<option value="144">Medida Provisional</option>
+	<option value="145">Notícia Crime</option>
+	<option value="146">Notificação Judicial</option>
+	<option value="147">Orientação</option>
+	<option value="148">Pedido de Avocação</option>
+	<option value="149">Pedido de Desaforamento de Julgamento</option>
+	<option value="150">Pedido de Efeito Suspensivo</option>
+	<option value="151">Pedido de Extensão no Habeas Corpus</option>
+	<option value="152">Pedido de Liberdade Provisória</option>
+	<option value="153">Pedido de prisão temporaria </option>
+	<option value="154">Pedido de Prisão Temporária </option>
+	<option value="155">Pedido de Reconsideração</option>
+	<option value="156">Pedido de Reconsideração na Apelação Cível</option>
+	<option value="157">Pedido de Restituição de Bens Apreendidos</option>
+	<option value="158">Pedido de Suspensão de Segurança</option>
+	<option value="159">Pedido de Suspensão de Sentença </option>
+	<option value="160">Pedido de Tutela Antecipada</option>
+	<option value="161">Petição</option>
+	<option value="162">Petição de Recurso Especial</option>
+	<option value="163">Petição de Recurso Ordinário em Habeas Corpus</option>
+	<option value="164">Precatório</option>
+	<option value="165">Procedimento Administrativo</option>
+	<option value="166">Procedimento de Investigação Criminal</option>
+	<option value="167">Procedimento Ordinário</option>
+	<option value="168">Processo Administrativo</option>
+	<option value="169">Processo Administrativo Disciplinar</option>
+	<option value="170">Processos Sumários</option>
+	<option value="171">Queixa Crime</option>
+	<option value="172">Questão de Ordem na Ação Penal</option>
+	<option value="173">Questão de Ordem na Apelação Criminal</option>
+	<option value="174">Reclamação</option>
+	<option value="175">Reclamação Constitucional</option>
+	<option value="176">Recurso Administrativo</option>
+	<option value="177">Recurso Criminal</option>
+	<option value="178">Recurso de Habeas Corpus</option>
+	<option value="179">Recurso de Habeas Data</option>
+	<option value="180">Recurso de Petição em Apelação Cível </option>
+	<option value="181">Recurso em Sentido Estrito</option>
+	<option value="182">Recurso Especial</option>
+	<option value="183">Recurso Especial e Extraordinário na Apelação Cível</option>
+	<option value="184">Recurso Especial e Extraordinário na Apelação Criminal</option>
+	<option value="185">Recurso Especial e Extraordinário no Agravo de Instrumento</option>
+	<option value="186">Recurso Especial e Extraordinário no Mandado de Segurança</option>
+	<option value="187">Recurso Especial em Agravo Interno</option>
+	<option value="188">Recurso Especial em Agravo Interno na Apelação Cível</option>
+	<option value="189">Recurso Especial na Ação Civil Pública</option>
+	<option value="190">Recurso Especial na Ação Direta de Inconstitucionalidade</option>
+	<option value="191">Recurso Especial na Ação Rescisória</option>
+	<option value="192">Recurso Especial na Apelação Civel</option>
+	<option value="193">Recurso Especial na Apelação Criminal</option>
+	<option value="194">Recurso Especial na Petição</option>
+	<option value="195">Recurso Especial na Revisão Criminal</option>
+	<option value="196">Recurso Especial no Agravo de Instrumento</option>
+	<option value="197">Recurso Especial no Agravo em Execução Penal</option>
+	<option value="198">Recurso Especial no Agravo Interno na Apelação Cível</option>
+	<option value="199">Recurso Especial no Agravo Regimental</option>
+	<option value="200">Recurso Especial no Mandado de Segurança</option>
+	<option value="201">Recurso Especial no Recurso em Sentido Estrito</option>
+	<option value="202">Recurso Especial no Reexame Necessário</option>
+	<option value="203">Recurso Especial nos Embargos de Declaração</option>
+	<option value="204">Recurso Especial nos Embargos Infringentes</option>
+	<option value="205">Recurso Extraordinário</option>
+	<option value="206">Recurso Extraordinário com Agravo na Apelação Cível</option>
+	<option value="207">Recurso Extraordinário e Especial no Agravo de Instrumento</option>
+	<option value="208">Recurso Extraordinário na Ação Direta de Inconstitucionalidade</option>
+	<option value="209">Recurso Extraordinário na Apelação Cível</option>
+	<option value="210">Recurso Extraordinário na Apelação Criminal</option>
+	<option value="211">Recurso Extraordinário na Remessa Necessária</option>
+	<option value="212">Recurso Extraordinário no Agravo de Instrumento</option>
+	<option value="213">Recurso Extraordinário no Agravo Interno</option>
+	<option value="214">Recurso Extraordinário no Agravo Regimental</option>
+	<option value="215">Recurso Extraordinário no Dissídio Coletivo de Greve</option>
+	<option value="216">Recurso Extraordinário no Mandado de Segurança</option>
+	<option value="217">Recurso Extraordinário no Recurso Especial no Agravo Interno</option>
+	<option value="218">Recurso Extraordinário no Reexame Necessário</option>
+	<option value="219">RECURSO EXTRORDINÁRIO EM EXECUÇÃO PENAL</option>
+	<option value="220">Recurso Inominado</option>
+	<option value="221">Recurso Ordinário em Apelação</option>
+	<option value="222">Recurso Ordinário em Habeas Corpus</option>
+	<option value="223">Recurso Ordinário em Mandado de Segurança</option>
+	<option value="224">Recurso Ordinário no Agravo Regimental</option>
+	<option value="225">Recursos Especial e Extraodinário nos Embargos Infrigentes</option>
+	<option value="226">Recursos Especial e Extraordinário</option>
+	<option value="227">Recursos Especial e Extraordinário na Ação Direta de Inconstitucionalidade</option>
+	<option value="228">Recursos Especial e Extraordinário na Apelação Cível</option>
+	<option value="229">Recursos Especial e Extraordinário na Apelação Criminal</option>
+	<option value="230">Recursos Especial e Extraordinário na Petição</option>
+	<option value="231">Recursos Especial e Extraordinário no Agravo de Instrumento</option>
+	<option value="232">Recursos Especial e Extraordinário no Agravo Interno</option>
+	<option value="233">Recursos Especial e Extraordinário no Agravo Regimental</option>
+	<option value="234">Recursos Especial e Extraordinário no Mandado de Segurança</option>
+	<option value="235">Recursos Especial e Extraordinário no Recurso em Sentido Estrito</option>
+	<option value="236">Recursos Especial e Extraordinário no Reexame Necessário</option>
+	<option value="237">Recursos Especial e Extraordinário nos Embargos de Declaração</option>
+	<option value="238">Reexame Necessário</option>
+	<option value="239">Relaxamento de Prisão</option>
+	<option value="240">Remessa em Mandado de Segurança</option>
+	<option value="241">Remessa Necessária</option>
+	<option value="242">Representação</option>
+	<option value="243">Representação Criminal</option>
+	<option value="244">Representação para Perda de Graduação</option>
+	<option value="245">Representação por Indignidade para o Oficialato</option>
+	<option value="246">Representação por Quebra de Sigilo Bancário e Fiscal</option>
+	<option value="247">Requerimento</option>
+	<option value="248">Restituição de Coisa Apreendida</option>
+	<option value="249">Revisão Criminal</option>
+	<option value="250">Revogação de Prisão Preventiva</option>
+	<option value="251">Suspensão de Liminar</option>
+	<option value="252">Suspensão de Segurança</option>
+	<option value="253">Termo Circunstanciado de Ocorrência</option>
+	<option value="254">Tutela Antecipada</option>
+</select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOT&Otilde;ES REDONDOS -->
+    <div class="row">
+      <div class="col cinza-escuro-120 col pb-4 pt-4 text-center">
+        <a class="btn-redondo-link mb-1" target="_blank" href="https://www.tjrr.jus.br/index.php/informativodejurisprudencia">Informativo de Jurisprudência</a>
+        <a class="btn-redondo-P" href="https://www.tjrr.jus.br/index.php/informativodejurisprudencia" target="_blank"><img src="/javax.faces.resource/icone-Informativo-Juris.svg.xhtml;jsessionid=aUF8OlpY_czp9s13kxM_yxhOhwlBmAvHYLO1MCB1.jurisprudencia-prd-59cdf9cf67-jvrtz?ln=images" />
+        </a>
+      </div>
+      <div class="col cinza-escuro-100 col pb-4 pt-4 text-center">
+        <a class="btn-redondo-link mb-1" target="_blank" href="https://jurisprudenciatematica.tjrr.jus.br/">Jurisprudência Temática</a>
+        <a class="btn-redondo-P " href="https://jurisprudenciatematica.tjrr.jus.br/" target="_blank"><img src="/javax.faces.resource/icon_jurisprudenciaTematica.svg.xhtml;jsessionid=aUF8OlpY_czp9s13kxM_yxhOhwlBmAvHYLO1MCB1.jurisprudencia-prd-59cdf9cf67-jvrtz?ln=images" />
+        </a>
+      </div>
+      <div class="col cinza-escuro-50 col pb-4 pt-4 text-center">
+        <a class="btn-redondo-link mb-1" target="_blank" href="https://www.tjrr.jus.br/index.php/sumulas">Súmulas</a>
+        <a class="btn-redondo-P " href="https://www.tjrr.jus.br/index.php/sumulas" target="_blank"><img src="/javax.faces.resource/icon_jurisLegislacao.svg.xhtml;jsessionid=aUF8OlpY_czp9s13kxM_yxhOhwlBmAvHYLO1MCB1.jurisprudencia-prd-59cdf9cf67-jvrtz?ln=images" />
+        </a>
+      </div>
+      <div class="col cinza-escuro-45 col pb-4 pt-4 text-center">
+        <a class="btn-redondo-link mb-1" target="_blank" href="https://www.tjrr.jus.br/index.php/enunciados">Enunciados</a>
+        <a class="btn-redondo-P " href="https://www.tjrr.jus.br/index.php/enunciados" target="_blank"><img src="/javax.faces.resource/icon_enunciado.svg.xhtml;jsessionid=aUF8OlpY_czp9s13kxM_yxhOhwlBmAvHYLO1MCB1.jurisprudencia-prd-59cdf9cf67-jvrtz?ln=images" />
+        </a>
+      </div>
+      <div class="col cinza-medio-35 col pb-4 pt-4 text-center">
+        <a class="btn-redondo-link mb-1" target="_blank" href="https://www.tjrr.jus.br/index.php/legislacaotjrr">Legislação</a>
+        <a class="btn-redondo-P " href="https://www.tjrr.jus.br/index.php/legislacaotjrr" target="_blank"><img src="/javax.faces.resource/icon_sumulas.svg.xhtml;jsessionid=aUF8OlpY_czp9s13kxM_yxhOhwlBmAvHYLO1MCB1.jurisprudencia-prd-59cdf9cf67-jvrtz?ln=images" />
+        </a>
+      </div>
+      <div class="col cinza-claro-20 col pb-4 pt-4 text-center">
+        <a class="btn-redondo-link mb-1" target="_blank" href="https://www.tjrr.jus.br/index.php/precedentes-obrigatorios">Precedentes Obrigatórios</a>
+        <a class="btn-redondo-P " href="https://www.tjrr.jus.br/index.php/precedentes-obrigatorios" target="_blank"><img src="/javax.faces.resource/icon_precedentes_obrigatorios.svg.xhtml;jsessionid=aUF8OlpY_czp9s13kxM_yxhOhwlBmAvHYLO1MCB1.jurisprudencia-prd-59cdf9cf67-jvrtz?ln=images" />
+        </a>
+      </div>
+    </div>
+</form></div>
+  <div class="row">
+<head title="rodape">
+  <style>
+    @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css');
+
+    .footer {
+      text-align: center;
+      padding: 20px;
+      background-color: #f1f1f1;
+    }
+    .rate-service-button {
+      display: block;
+      width: 200px;
+      margin: 20px auto;
+      padding: 10px 20px;
+      background: linear-gradient(135deg, #005b99, #003f65);
+      color: white;
+      text-align: center;
+      text-decoration: none;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: background 0.3s, transform 0.3s;
+    }
+    .rate-service-button:hover {
+      background: linear-gradient(135deg, #003f65, #005b99);
+      transform: translateY(-2px);
+    }
+    .rate-service-button i {
+      margin-right: 8px;
+    }
+    .rate-service-container p {
+      text-align: center;
+      font-size: 14px;
+      color: #555;
+    }
+  </style>
+</head>
+<div class="rate-service-container">
+  <a target="_blank" href="https://forms.gle/Tt29SGH9qgwY9bqP7" class="rate-service-button">
+    <i class="fas fa-thumbs-up"></i> Avalie nosso serviço
+  </a>
+  <p>E ajude a aprimorar a Pesquisa de Jurisprudência</p>
+</div>
+<div class="footer">
+  Praça do Centro Cívico, 296 - Centro. <i class="icofont-phone t-cinza-escuro"></i>(95) 3198-2800 /
+  Forum: <i class="icofont-phone t-cinza-escuro"></i>(95) 3198-4746 /
+  Varas de Fazenda: <i class="icofont-phone t-cinza-escuro"></i>(95) 3198-4150 /
+  Administrativo: <i class="icofont-phone t-cinza-escuro"></i>(95) 3198-4100 <br />
+  Copyright® 2022, Tribunal de Justiça de Roraima. Jurisprudencia v5.2.3
+</div>
+  </div></body>
+</html>
