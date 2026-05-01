@@ -78,9 +78,14 @@ class DatajudScraper(BaseScraper):
 
         Aceita o **mesmo conjunto de filtros** de :meth:`listar_processos`
         (``tribunal``, ``numero_processo``, ``ano_ajuizamento``, ``classe``,
-        ``assuntos``), excluindo apenas os parâmetros de paginação
-        (``paginas``, ``tamanho_pagina``, ``mostrar_movs``) — não há
-        paginação numa contagem.
+        ``assuntos``, ``data_ajuizamento_inicio``/``_fim``,
+        ``tipos_movimentacao``, ``movimentos_codigo``, ``orgao_julgador``,
+        ``query``), excluindo apenas os parametros de paginacao
+        (``paginas``, ``tamanho_pagina``, ``mostrar_movs``) — nao ha
+        paginacao numa contagem. Veja a docstring de
+        :meth:`listar_processos` para a semantica de cada filtro
+        (formato dual ISO+compacto em ``dataAjuizamento``, mapping
+        amigavel de ``tipos_movimentacao``, escape-hatch ``query``).
 
         Args:
             **kwargs: Filtros aceitos pelo schema
@@ -96,7 +101,11 @@ class DatajudScraper(BaseScraper):
 
         Raises:
             TypeError: Quando um kwarg desconhecido é passado.
-            ValidationError: Quando um filtro tem formato inválido.
+            ValidationError: Quando um filtro tem formato inválido (ex.:
+                ``data_ajuizamento_*`` fora de ISO 8601), quando
+                ``ano_ajuizamento`` coexiste com ``data_ajuizamento_*``,
+                quando ``query`` coexiste com filtros amigaveis, ou
+                quando um nome em ``tipos_movimentacao`` nao esta mapeado.
             ValueError: Quando nem ``tribunal`` nem ``numero_processo``
                 são informados, ou quando a sigla não tem alias mapeado.
 
@@ -106,6 +115,14 @@ class DatajudScraper(BaseScraper):
             >>> dj.contar_processos(tribunal="TJSP", ano_ajuizamento=2023, classe="436")
               tribunal             alias  count relation error
             0     TJSP  api_publica_tjsp  12345       eq   None
+
+            >>> # Range de data ajuizamento + categoria de movimentacao
+            >>> dj.contar_processos(
+            ...     tribunal="TRF1",
+            ...     data_ajuizamento_inicio="2024-01-01",
+            ...     data_ajuizamento_fim="2024-03-31",
+            ...     tipos_movimentacao=["decisao"],
+            ... )
 
         See also:
             :meth:`listar_processos` — usa o mesmo conjunto de filtros mas
@@ -121,6 +138,17 @@ class DatajudScraper(BaseScraper):
             tribunal=inp.tribunal,
             numero_processo=inp.numero_processo,
         )
+
+        # ``tipos_movimentacao`` (nomes amigaveis) -> codigos TPU; uniao com
+        # ``movimentos_codigo`` direto. Mesma logica de ``listar_processos``.
+        movimentos_codigo: Optional[List[int]] = None
+        if inp.tipos_movimentacao or inp.movimentos_codigo:
+            codigos: List[int] = []
+            for tipo in inp.tipos_movimentacao or []:
+                codigos.extend(TIPOS_MOVIMENTACAO.get(tipo, []))
+            codigos.extend(inp.movimentos_codigo or [])
+            movimentos_codigo = list(dict.fromkeys(codigos))
+
         # ``_resolve_aliases`` devolve uma list[(alias, cnjs_pra_esse_alias)]
         # — segue o mesmo padrão do ``listar_processos`` para que ``numero_processo``
         # cruzando vários tribunais funcione (cada tribunal recebe só os seus CNJs).
@@ -131,6 +159,11 @@ class DatajudScraper(BaseScraper):
                 ano_ajuizamento=inp.ano_ajuizamento,
                 classe=inp.classe,
                 assuntos=inp.assuntos,
+                data_ajuizamento_inicio=inp.data_ajuizamento_inicio,
+                data_ajuizamento_fim=inp.data_ajuizamento_fim,
+                movimentos_codigo=movimentos_codigo,
+                orgao_julgador=inp.orgao_julgador,
+                query=inp.query,
             )
             api_response = call_datajud_api(
                 base_url=self.BASE_API_URL,
