@@ -1,6 +1,7 @@
 """Unit tests for the canonical input-validation pipeline (cjsg/cjpg)."""
 from __future__ import annotations
 
+from datetime import date, datetime
 from typing import ClassVar
 
 import pytest
@@ -8,7 +9,7 @@ from pydantic import ConfigDict, ValidationError
 
 from juscraper.schemas.cjsg import SearchBase
 from juscraper.schemas.mixins import DataJulgamentoMixin, DataPublicacaoMixin
-from juscraper.utils.params import apply_input_pipeline_search, raise_on_extra_kwargs
+from juscraper.utils.params import apply_input_pipeline_search, raise_on_extra_kwargs, validate_intervalo_datas
 
 
 class _SchemaSimples(SearchBase):
@@ -363,7 +364,6 @@ def test_apply_input_pipeline_iso_backend_aceita_quatro_strings(entrada, esperad
 
 def test_apply_input_pipeline_aceita_datetime_date():
     """``datetime.date`` é coercido para o BACKEND_DATE_FORMAT do schema."""
-    from datetime import date
     inp_br = apply_input_pipeline_search(
         _SchemaComJulgamento, "Test.cjsg()",
         pesquisa="x", paginas=1,
@@ -389,13 +389,12 @@ def test_apply_input_pipeline_aceita_datetime_date():
 
 def test_apply_input_pipeline_aceita_datetime_datetime():
     """``datetime.datetime`` é coercido tratado como ``date`` (componente time descartado)."""
-    from datetime import datetime as _dt
     inp = apply_input_pipeline_search(
         _SchemaIsoBackend, "Test.cjsg()",
         pesquisa="x", paginas=1,
         kwargs={
-            "data_julgamento_inicio": _dt(2024, 1, 15, 10, 30, 0),
-            "data_julgamento_fim": _dt(2024, 3, 31, 23, 59, 59),
+            "data_julgamento_inicio": datetime(2024, 1, 15, 10, 30, 0),
+            "data_julgamento_fim": datetime(2024, 3, 31, 23, 59, 59),
         },
     )
     assert inp.data_julgamento_inicio == "2024-01-15"
@@ -413,6 +412,27 @@ def test_apply_input_pipeline_formato_irreconhecivel_levanta_value_error():
                 "data_julgamento_fim": "2024.03.31",
             },
         )
+
+
+def test_apply_input_pipeline_tipo_inesperado_levanta_value_error():
+    """Tipo não suportado (ex.: int) faz passthrough no coerce e o
+    ``validate_intervalo_datas`` converte o ``TypeError`` cru do
+    ``strptime`` na mensagem amigável de formato (refs #173)."""
+    with pytest.raises(ValueError, match="Formato esperado"):
+        apply_input_pipeline_search(
+            _SchemaIsoBackend, "Test.cjsg()",
+            pesquisa="x", paginas=1,
+            kwargs={
+                "data_julgamento_inicio": 20240115,
+                "data_julgamento_fim": 20240331,
+            },
+        )
+
+
+def test_validate_intervalo_datas_aceita_typeerror_do_strptime():
+    """Cobertura unitária da captura de ``TypeError`` em validate_intervalo_datas."""
+    with pytest.raises(ValueError, match="Formato esperado"):
+        validate_intervalo_datas(20240115, 20240331, formato="%Y-%m-%d", max_dias=None)
 
 
 # --- Cobertura dos parâmetros nominais de data (refs #174) -------------------
@@ -436,7 +456,7 @@ def test_apply_input_pipeline_aceita_datas_nominais():
 
 def test_apply_input_pipeline_data_nominal_e_kwargs_levanta_collision():
     """Mesma data nominal e via kwargs ao mesmo tempo é colisão (ValueError)."""
-    with pytest.raises(ValueError, match="nominal e dentro de \\*\\*kwargs"):
+    with pytest.raises(ValueError, match="nominal e via kwargs"):
         apply_input_pipeline_search(
             _SchemaComJulgamento, "Test.cjsg()",
             pesquisa="x", paginas=1,

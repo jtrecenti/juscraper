@@ -342,15 +342,18 @@ def validate_intervalo_datas(
     if data_inicio is None or data_fim is None:
         return
 
+    # TypeError tambem cai aqui: coerce_brazilian_date faz passthrough de
+    # tipos nao-suportados (ex.: int) e o strptime levanta TypeError em vez
+    # de ValueError. Mensagem amigavel unica vale para ambos.
     try:
         dt_inicio = datetime.strptime(data_inicio, formato)
-    except ValueError as exc:
+    except (ValueError, TypeError) as exc:
         raise ValueError(
             f"'{rotulo}_inicio' inválida: {data_inicio!r}. Formato esperado: {formato}."
         ) from exc
     try:
         dt_fim = datetime.strptime(data_fim, formato)
-    except ValueError as exc:
+    except (ValueError, TypeError) as exc:
         raise ValueError(
             f"'{rotulo}_fim' inválida: {data_fim!r}. Formato esperado: {formato}."
         ) from exc
@@ -644,18 +647,20 @@ def apply_input_pipeline_search(
 
     Order:
 
-    1. **Re-inject nominal date arguments into ``kwargs``** (refs #174). Clients
-       that keep dates as named arguments in the public signature pass them
-       here directly; non-``None`` values are merged into ``kwargs`` *before*
-       :func:`normalize_datas` so alias resolution and conflict detection live
-       in a single pass.
-    2. **Optionally consume ``pesquisa`` aliases** (refs #174 follow-up). Set
+    1. **Optionally consume ``pesquisa`` aliases** (refs #174 follow-up). Set
        ``consume_pesquisa_aliases=True`` to delegate :func:`normalize_pesquisa`
        to the helper — ``query``/``termo`` aliases in ``kwargs`` are popped
        and the canonical value is used. Default is ``False`` because the
        legacy clients already in ``main`` call :func:`normalize_pesquisa` in
        their own bodies; flipping the default would double-process and raise.
-       New migrations (TJDFT/TJES, etc.) opt-in to ``True``.
+       New migrations (TJDFT/TJES/TJSP cjpg, etc.) opt-in to ``True``. Runs
+       *before* the date re-injection so :func:`normalize_pesquisa` only sees
+       the search-related kwargs the user passed.
+    2. **Re-inject nominal date arguments into ``kwargs``** (refs #174). Clients
+       that keep dates as named arguments in the public signature pass them
+       here directly; non-``None`` values are merged into ``kwargs`` *before*
+       :func:`normalize_datas` so alias resolution and conflict detection live
+       in a single pass.
     3. :func:`normalize_paginas` — int → ``range(1, n+1)``; list/range/None passthrough.
     4. :func:`normalize_datas` — pop date aliases (``_de``/``_ate``,
        ``data_inicio``/``data_fim``) emitting :class:`DeprecationWarning` and
@@ -764,6 +769,15 @@ def apply_input_pipeline_search(
             or when the same date key is given both nominally and via
             ``kwargs``.
     """
+    if consume_pesquisa_aliases:
+        pesquisa_input = (pesquisa or None) if nullable_pesquisa else pesquisa
+        if nullable_pesquisa and pesquisa_input is None and not any(
+            alias in kwargs for alias in SEARCH_ALIASES
+        ):
+            pesquisa = pesquisa or ""
+        else:
+            pesquisa = normalize_pesquisa(pesquisa_input, **kwargs)
+
     for _date_key, _date_val in (
         ("data_julgamento_inicio", data_julgamento_inicio),
         ("data_julgamento_fim", data_julgamento_fim),
@@ -774,19 +788,10 @@ def apply_input_pipeline_search(
             continue
         if _date_key in kwargs and kwargs[_date_key] is not None:
             raise ValueError(
-                f"'{_date_key}' foi passado como argumento nominal e dentro de "
-                f"**kwargs ao mesmo tempo. Use apenas uma das formas."
+                f"'{_date_key}' foi passado como argumento nominal e via "
+                f"kwargs ao mesmo tempo. Use apenas uma das formas."
             )
         kwargs[_date_key] = _date_val
-
-    if consume_pesquisa_aliases:
-        pesquisa_input = (pesquisa or None) if nullable_pesquisa else pesquisa
-        if nullable_pesquisa and pesquisa_input is None and not any(
-            alias in kwargs for alias in SEARCH_ALIASES
-        ):
-            pesquisa = pesquisa or ""
-        else:
-            pesquisa = normalize_pesquisa(pesquisa_input, **kwargs)
 
     paginas_norm = normalize_paginas(paginas)
     datas = normalize_datas(**kwargs)

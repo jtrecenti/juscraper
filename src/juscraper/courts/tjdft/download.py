@@ -60,6 +60,8 @@ def cjsg_download(
     headers = {"Content-Type": "application/json"}
 
     termos_acessorios: list = []
+    # Datas chegam aqui ja em BACKEND_DATE_FORMAT (%Y-%m-%d) — coercao feita
+    # por apply_input_pipeline_search no client a partir do schema.
     if data_julgamento_inicio and data_julgamento_fim:
         termos_acessorios.append(
             {"campo": "dataJulgamento", "valor": f"entre {data_julgamento_inicio} e {data_julgamento_fim}"}
