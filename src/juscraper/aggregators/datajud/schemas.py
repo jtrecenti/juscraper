@@ -31,8 +31,18 @@ class InputListarProcessosDataJud(PaginasMixin):
 
     numero_processo: str | list[str] | None = None
     tribunal: str | None = None
-    ano_ajuizamento: int | None = None
-    classe: str | None = None
+    # ``ano_ajuizamento`` aceita 3 formas:
+    # - ``int`` (ex.: ``2023``): filtra por ano-calendario unico (1 jan a 31 dez).
+    # - ``tuple[int, int]`` (ex.: ``(2020, 2024)``): range inclusivo de
+    #   anos, ``min(t) <= ano <= max(t)``. Implementado como ``range`` ES
+    #   em ``dataAjuizamento`` (``YYYY-01-01`` a ``YYYY-12-31`` dos extremos).
+    # - ``list[int]`` (ex.: ``[2020, 2022, 2024]``): lista discreta de anos.
+    #   Util para excluir um ano intermediario; backend gera ``should``
+    #   com um ``range`` por ano.
+    ano_ajuizamento: int | tuple[int, int] | list[int] | None = None
+    # ``classe`` aceita ``str`` (codigo unico) ou ``list[str]`` (varios
+    # codigos OR-ed via ``terms`` no ES). Compativel com ``assuntos``.
+    classe: str | list[str] | None = None
     assuntos: list[str] | None = None
     mostrar_movs: bool = False
     # Limites do parametro ``size`` da API publica do DataJud
@@ -68,8 +78,9 @@ class InputContarProcessosDataJud(BaseModel):
 
     numero_processo: str | list[str] | None = None
     tribunal: str | None = None
-    ano_ajuizamento: int | None = None
-    classe: str | None = None
+    # Mesmo contrato extendido de InputListarProcessosDataJud — ver docstring la.
+    ano_ajuizamento: int | tuple[int, int] | list[int] | None = None
+    classe: str | list[str] | None = None
     assuntos: list[str] | None = None
 
     model_config = ConfigDict(

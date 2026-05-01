@@ -82,6 +82,11 @@ class DatajudScraper(BaseScraper):
         (``paginas``, ``tamanho_pagina``, ``mostrar_movs``) — não há
         paginação numa contagem.
 
+        ``ano_ajuizamento`` aceita ``int`` (1 ano), ``tuple[int, int]``
+        (range inclusivo, ex.: ``(2020, 2024)``) ou ``list[int]`` (anos
+        discretos, ex.: ``[2020, 2022, 2024]``). ``classe`` aceita
+        ``str`` (1 código) ou ``list[str]`` (vários códigos OR-ed).
+
         Args:
             **kwargs: Filtros aceitos pelo schema
                 :class:`InputContarProcessosDataJud`.
@@ -106,6 +111,14 @@ class DatajudScraper(BaseScraper):
             >>> dj.contar_processos(tribunal="TJSP", ano_ajuizamento=2023, classe="436")
               tribunal             alias  count relation error
             0     TJSP  api_publica_tjsp  12345       eq   None
+
+            >>> # Range de anos + lista de classes (estudo plurianual):
+            >>> dj.contar_processos(
+            ...     tribunal="TJSP",
+            ...     ano_ajuizamento=(2020, 2024),
+            ...     classe=["7", "436"],
+            ...     assuntos=["7780"],
+            ... )
 
         See also:
             :meth:`listar_processos` — usa o mesmo conjunto de filtros mas
@@ -241,10 +254,15 @@ class DatajudScraper(BaseScraper):
                 * ``tribunal`` (str): Sigla do tribunal (ex.: ``"TJSP"``,
                   ``"TRT2"``, ``"TRE-SP"``). Mutuamente exclusivo com
                   inferencia via ``numero_processo``.
-                * ``ano_ajuizamento`` (int): Filtra por ano de ajuizamento.
-                  Backend recebe ``range`` dual em ``dataAjuizamento`` (ISO
-                  ``YYYY-01-01`` + compacto ``YYYYMMDDhhmmss``).
-                * ``classe`` (str): Codigo da classe processual CNJ.
+                * ``ano_ajuizamento`` (int | tuple[int, int] | list[int]):
+                  Filtra por ano de ajuizamento. ``int`` = 1 ano. ``tuple``
+                  = range inclusivo (ex.: ``(2020, 2024)``). ``list`` =
+                  anos discretos (ex.: ``[2020, 2022]``). Backend recebe
+                  ``range`` dual em ``dataAjuizamento`` (ISO + compacto)
+                  por ano, OR-eds via ``should``.
+                * ``classe`` (str | list[str]): Codigo da classe CNJ.
+                  ``str`` vira ``match``, ``list`` vira ``terms``
+                  (varios codigos OR-ed).
                 * ``assuntos`` (list[str]): Lista de codigos de assuntos CNJ.
                 * ``mostrar_movs`` (bool): Se ``True``, inclui
                   ``movimentos``/``movimentacoes`` no ``_source``. Default

@@ -22,12 +22,87 @@ FALLBACK_DIVISOR = 4
 FALLBACK_MIN_SIZE = 100
 FALLBACK_RETRY_STATUS = {504}
 
+# Tipo composto aceito por ``ano_ajuizamento``: int unico, range
+# ``(inicio, fim)`` inclusivo, ou lista discreta de anos. Mantido aqui pra
+# reuso entre listar_processos / contar_processos / schemas.
+AnoAjuizamento = Union[int, "tuple[int, int]", List[int]]
+
+
+def _build_ano_ajuizamento_clause(
+    ano_ajuizamento: Optional[AnoAjuizamento],
+) -> Optional[Dict[str, Any]]:
+    """Constroi a clausula ``must`` para ``dataAjuizamento`` aceitando 3 formas
+    de input. Retorna ``None`` quando ``ano_ajuizamento`` e None/vazio.
+
+    Cada ano vira um par ``range`` (ISO + compacto) OR-ed via ``should`` —
+    historico do datajud tem documentos com ``dataAjuizamento`` nos dois
+    formatos, entao manter os dois e necessario pra cobertura.
+    """
+    if ano_ajuizamento is None:
+        return None
+
+    # Normaliza para uma lista de anos discretos.
+    if isinstance(ano_ajuizamento, int):
+        anos: List[int] = [ano_ajuizamento]
+    elif isinstance(ano_ajuizamento, tuple):
+        if len(ano_ajuizamento) != 2:
+            raise ValueError(
+                "ano_ajuizamento como tuple deve ser (inicio, fim) com 2 elementos."
+            )
+        lo, hi = sorted(ano_ajuizamento)
+        anos = list(range(lo, hi + 1))
+    else:  # list
+        anos = list(ano_ajuizamento)
+
+    if not anos:
+        return None
+
+    shoulds: List[Dict[str, Any]] = []
+    for ano in anos:
+        shoulds.append({
+            "range": {
+                "dataAjuizamento": {
+                    "gte": f"{ano}-01-01",
+                    "lte": f"{ano}-12-31",
+                }
+            }
+        })
+        shoulds.append({
+            "range": {
+                "dataAjuizamento": {
+                    "gte": f"{ano}0101000000",
+                    "lte": f"{ano}1231235959",
+                }
+            }
+        })
+
+    return {"bool": {"should": shoulds, "minimum_should_match": 1}}
+
+
+def _build_classe_clause(
+    classe: Optional[Union[str, List[str]]],
+) -> Optional[Dict[str, Any]]:
+    """``str`` -> ``match`` (1 codigo). ``list`` -> ``terms`` (varios codigos
+    OR-ed). ``None``/vazio -> sem clausula."""
+    if classe is None:
+        return None
+    if isinstance(classe, str):
+        if not classe:
+            return None
+        return {"match": {"classe.codigo": classe}}
+    codes = [str(c) for c in classe if str(c).strip()]
+    if not codes:
+        return None
+    if len(codes) == 1:
+        return {"match": {"classe.codigo": codes[0]}}
+    return {"terms": {"classe.codigo": codes}}
+
 
 def build_listar_processos_payload(
     *,
     numero_processo: Optional[Union[str, List[str]]] = None,
-    ano_ajuizamento: Optional[int] = None,
-    classe: Optional[str] = None,
+    ano_ajuizamento: Optional[AnoAjuizamento] = None,
+    classe: Optional[Union[str, List[str]]] = None,
     assuntos: Optional[List[str]] = None,
     mostrar_movs: bool = False,
     tamanho_pagina: int = 5000,
@@ -42,6 +117,11 @@ def build_listar_processos_payload(
     contratos offline em ``tests/datajud/test_listar_processos_*_contract.py``
     via ``json_params_matcher`` — qualquer alteracao tem que ser refletida
     nos samples.
+
+    ``ano_ajuizamento`` aceita ``int`` (ano unico, mantido por retro-compat),
+    ``tuple[int, int]`` (range inclusivo) ou ``list[int]`` (anos discretos).
+    ``classe`` aceita ``str`` (codigo unico) ou ``list[str]`` (varios codigos
+    OR-ed via ``terms`` no ES).
     """
     must_conditions: List[Dict[str, Any]] = []
     if numero_processo:
@@ -51,26 +131,15 @@ def build_listar_processos_payload(
             nproc = list(numero_processo)
         nproc = [clean_cnj(n) for n in nproc]
         must_conditions.append({"terms": {"numeroProcesso": nproc}})
-    if ano_ajuizamento:
-        date_range_iso = {
-            "gte": f"{ano_ajuizamento}-01-01",
-            "lte": f"{ano_ajuizamento}-12-31",
-        }
-        date_range_compact = {
-            "gte": f"{ano_ajuizamento}0101000000",
-            "lte": f"{ano_ajuizamento}1231235959",
-        }
-        must_conditions.append({
-            "bool": {
-                "should": [
-                    {"range": {"dataAjuizamento": date_range_iso}},
-                    {"range": {"dataAjuizamento": date_range_compact}},
-                ],
-                "minimum_should_match": 1,
-            }
-        })
-    if classe:
-        must_conditions.append({"match": {"classe.codigo": str(classe)}})
+
+    ano_clause = _build_ano_ajuizamento_clause(ano_ajuizamento)
+    if ano_clause is not None:
+        must_conditions.append(ano_clause)
+
+    classe_clause = _build_classe_clause(classe)
+    if classe_clause is not None:
+        must_conditions.append(classe_clause)
+
     if assuntos:
         must_conditions.append({"terms": {"assuntos.codigo": assuntos}})
 
@@ -97,8 +166,8 @@ def build_listar_processos_payload(
 def build_contar_processos_payload(
     *,
     numero_processo: Optional[Union[str, List[str]]] = None,
-    ano_ajuizamento: Optional[int] = None,
-    classe: Optional[str] = None,
+    ano_ajuizamento: Optional[AnoAjuizamento] = None,
+    classe: Optional[Union[str, List[str]]] = None,
     assuntos: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     """Body Elasticsearch para ``DatajudScraper.contar_processos``.
@@ -108,6 +177,10 @@ def build_contar_processos_payload(
     ``track_total_hits=True`` — não baixa documento nenhum, apenas o
     ``hits.total`` (``value`` + ``relation``). Sem ``sort`` nem
     ``_source`` (não há paginação).
+
+    ``ano_ajuizamento`` aceita ``int``, ``tuple[int, int]`` (range
+    inclusivo) ou ``list[int]`` (anos discretos). ``classe`` aceita
+    ``str`` ou ``list[str]``.
     """
     must_conditions: List[Dict[str, Any]] = []
     if numero_processo:
@@ -117,26 +190,15 @@ def build_contar_processos_payload(
             nproc = list(numero_processo)
         nproc = [clean_cnj(n) for n in nproc]
         must_conditions.append({"terms": {"numeroProcesso": nproc}})
-    if ano_ajuizamento:
-        date_range_iso = {
-            "gte": f"{ano_ajuizamento}-01-01",
-            "lte": f"{ano_ajuizamento}-12-31",
-        }
-        date_range_compact = {
-            "gte": f"{ano_ajuizamento}0101000000",
-            "lte": f"{ano_ajuizamento}1231235959",
-        }
-        must_conditions.append({
-            "bool": {
-                "should": [
-                    {"range": {"dataAjuizamento": date_range_iso}},
-                    {"range": {"dataAjuizamento": date_range_compact}},
-                ],
-                "minimum_should_match": 1,
-            }
-        })
-    if classe:
-        must_conditions.append({"match": {"classe.codigo": str(classe)}})
+
+    ano_clause = _build_ano_ajuizamento_clause(ano_ajuizamento)
+    if ano_clause is not None:
+        must_conditions.append(ano_clause)
+
+    classe_clause = _build_classe_clause(classe)
+    if classe_clause is not None:
+        must_conditions.append(classe_clause)
+
     if assuntos:
         must_conditions.append({"terms": {"assuntos.codigo": assuntos}})
 
