@@ -53,6 +53,7 @@ Piramide de testes (sufixos `*_contract.py` / `*_granular.py` / `*_cassette.py` 
 - Busca: `pesquisa` como nome padrao em todos os scrapers
 - Datas: `data_julgamento_inicio/fim`, `data_publicacao_inicio/fim`
 - Alias generico: `data_inicio/fim` mapeia para `data_julgamento_inicio/fim`
+- **Excecao**: `DatajudScraper.listar_processos` filtra por `dataAjuizamento` (nao julgamento), entao usa `data_ajuizamento_inicio/fim` como nome canonico e **nao aceita** o alias generico `data_inicio/fim`. Quem tenta receber `TypeError` via `extra="forbid"`. Refs #49.
 - Nomes antigos (`query`, `termo`, `_de/_ate`) aceitos com `DeprecationWarning`
 - Paginacao: `paginas: int | list | range | None`, default `None` (todas as paginas). Sempre 1-based: `range(1, 4)` baixa paginas 1, 2 e 3; `paginas=3` e equivalente a `range(1, 4)`.
 - Normalizacao centralizada em `src/juscraper/utils/params.py`
