@@ -88,6 +88,44 @@ Excecoes: TJMT tambem salva `cjsg/config.json` porque o scraper consulta
 
 ## Agregadores
 
+### JusBR (PDPJ-CNJ)
+
+`tests/fixtures/capture/jusbr.py` exercita `cpopg` (lista + detalhes) e
+documentos (`hrefTexto` + `hrefBinario`) contra a API PDPJ. Diferente dos
+scrapers eSAJ, exige autenticacao real:
+
+```bash
+JUSBR_JWT=<token> JUSBR_CNJ_1=<cnj-real> JUSBR_CNJ_2=<outro-cnj-real> \
+  python -m tests.fixtures.capture.jusbr
+```
+
+| Env var | Obrigatoria? | Descricao |
+|---|---|---|
+| `JUSBR_JWT` | sim | JWT valido obtido do devtools do navegador logado em `portaldeservicos.pdpj.jus.br`. |
+| `JUSBR_CNJ_1` | sim | CNJ real (com ou sem mascara) que retorne 1+ processo. Sera substituido por `00000000000000000000` no sample. |
+| `JUSBR_CNJ_2` | sim | Segundo CNJ real para o cenario `list[str]`. Substituido por `11111111111111111111`. |
+| `JUSBR_CNJ_NO_RESULTS` | nao | CNJ valido sem hit no PDPJ. Default: `9999999-99.9999.9.99.9999`. |
+
+Saida em `tests/jusbr/samples/`:
+
+| Arquivo | Conteudo |
+|---|---|
+| `cpopg/typical_single.json` | resposta do `GET /api/v2/processos/?numeroProcesso=...` (1 item). |
+| `cpopg/typical_single_details.json` | resposta do `GET /api/v2/processos/{numeroOficial}`. |
+| `cpopg/list_two_first*.json` + `list_two_second*.json` | par de capturas para o cenario `list[str]`. |
+| `cpopg/no_results.json` | resposta com `content: []`. |
+| `documents/text_typical.txt` | texto de um documento (UTF-8, com PII redatada e truncado). |
+| `documents/binary_typical.bin` | PDF inteiro do documento (decisao do plano da #141). |
+
+**Sanitizacao agressiva pos-captura** acontece automaticamente: CNJs reais
+sao substituidos por neutros (`00...0`, `11...1`); campos PII (`nome`, `cpf`,
+`email`, `telefone`, `endereco`, ...) sao trocados por `"REDACTED"`; campos
+textuais longos (`ementa`, `decisao`, `fundamentacao`, ...) sao truncados em
+80 chars. CPFs e e-mails residuais no texto de documentos passam por regex
+defensivo. Lista exata dos campos tocados vive no proprio script.
+
+`auth_firefox()` esta **fora do escopo** dos contratos offline (depende de
+cookies reais do Firefox); candidato a cassette VCR na Fase 4 da #113.
 ### DataJud (CNJ)
 
 `tests/fixtures/capture/datajud.py` captura samples para o contrato de
