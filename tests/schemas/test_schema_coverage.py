@@ -93,6 +93,10 @@ EXPECTED_AGGREGATOR_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
         "juscraper.aggregators.jusbr.schemas",
         "InputDownloadDocumentsJusBR",
     ),
+    ("comunica_cnj", "listar_comunicacoes"): (
+        "juscraper.aggregators.comunica_cnj.schemas",
+        "InputListarComunicacoesComunicaCNJ",
+    ),
 }
 
 
@@ -193,6 +197,7 @@ def test_every_aggregator_endpoint_has_schema():
         "auth_firefox",
         "cpopg",
         "download_documents",
+        "listar_comunicacoes",
         "listar_processos",
     )
     missing: list[str] = []
@@ -231,6 +236,7 @@ def test_no_stale_entries_in_expected_mapping():
         "auth_firefox",
         "cpopg",
         "download_documents",
+        "listar_comunicacoes",
         "listar_processos",
     )
     live_agg = {
