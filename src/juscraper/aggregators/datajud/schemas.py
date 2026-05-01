@@ -198,6 +198,12 @@ class InputContarProcessosDataJud(BaseModel):
     A determinacao do alias-indice segue a mesma regra do
     ``listar_processos``: por ``tribunal`` (sigla) ou inferido do
     ``numero_processo`` (CNJ); ambos ausentes -> ``ValueError``.
+
+    Conjunto de filtros bate com :class:`InputListarProcessosDataJud`
+    (incluindo ``data_ajuizamento_*``, ``tipos_movimentacao``,
+    ``movimentos_codigo``, ``orgao_julgador`` e o escape-hatch ``query``).
+    Ver docstring la para detalhes semanticos e regras de mutual
+    exclusivity.
     """
 
     numero_processo: str | list[str] | None = None
@@ -205,11 +211,109 @@ class InputContarProcessosDataJud(BaseModel):
     ano_ajuizamento: int | None = None
     classe: str | None = None
     assuntos: list[str] | None = None
+    data_ajuizamento_inicio: str | None = None
+    data_ajuizamento_fim: str | None = None
+    tipos_movimentacao: list[str] | None = None
+    movimentos_codigo: list[int] | None = None
+    orgao_julgador: str | None = None
+    query: dict[str, Any] | None = None
 
     model_config = ConfigDict(
         extra="forbid",
         arbitrary_types_allowed=True,
     )
+
+    @model_validator(mode="after")
+    def _validar_datas_e_ano_excluem(self) -> "InputContarProcessosDataJud":
+        if self.ano_ajuizamento is not None and (
+            self.data_ajuizamento_inicio is not None
+            or self.data_ajuizamento_fim is not None
+        ):
+            raise ValueError(
+                "'ano_ajuizamento' e 'data_ajuizamento_inicio'/'data_ajuizamento_fim' "
+                "sao mutuamente exclusivos. Use apenas um dos dois."
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _validar_formato_datas(self) -> "InputContarProcessosDataJud":
+        for campo in ("data_ajuizamento_inicio", "data_ajuizamento_fim"):
+            valor = getattr(self, campo)
+            if valor is None:
+                continue
+            try:
+                date.fromisoformat(valor)
+            except ValueError as exc:
+                raise ValueError(
+                    f"'{campo}' deve estar no formato 'YYYY-MM-DD' (ISO 8601). "
+                    f"Recebido: {valor!r}."
+                ) from exc
+        return self
+
+    @model_validator(mode="after")
+    def _validar_range_datas(self) -> "InputContarProcessosDataJud":
+        if (
+            self.data_ajuizamento_inicio is not None
+            and self.data_ajuizamento_fim is not None
+        ):
+            inicio = date.fromisoformat(self.data_ajuizamento_inicio)
+            fim = date.fromisoformat(self.data_ajuizamento_fim)
+            if inicio > fim:
+                raise ValueError(
+                    f"'data_ajuizamento_inicio' ({self.data_ajuizamento_inicio}) deve "
+                    f"ser <= 'data_ajuizamento_fim' ({self.data_ajuizamento_fim})."
+                )
+        return self
+
+    @model_validator(mode="after")
+    def _validar_tipos_movimentacao_conhecidos(self) -> "InputContarProcessosDataJud":
+        if not self.tipos_movimentacao:
+            return self
+        desconhecidos = [
+            t for t in self.tipos_movimentacao  # pylint: disable=not-an-iterable
+            if t not in TIPOS_MOVIMENTACAO
+        ]
+        if desconhecidos:
+            validos = sorted(TIPOS_MOVIMENTACAO.keys())
+            raise ValueError(
+                f"'tipos_movimentacao' contem nomes nao mapeados: {desconhecidos}. "
+                f"Validos: {validos}. Para codigos TPU fora do mapping, use "
+                f"'movimentos_codigo' (lista de inteiros) diretamente."
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _validar_query_exclusiva(self) -> "InputContarProcessosDataJud":
+        if self.query is None:
+            return self
+        coexistentes = [
+            campo for campo in _FILTROS_AMIGAVEIS if getattr(self, campo) is not None
+        ]
+        if coexistentes:
+            raise ValueError(
+                f"'query' (override total da query Elasticsearch) e mutuamente exclusivo "
+                f"com os filtros amigaveis. Recebidos junto com 'query': {coexistentes}. "
+                f"Use 'query' OU os filtros amigaveis."
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _validar_query_exige_tribunal(self) -> "InputContarProcessosDataJud":
+        if self.query is not None and self.tribunal is None:
+            raise ValueError(
+                "'query' (override) exige 'tribunal' explicito — nao ha "
+                "'numero_processo' para inferir o alias-indice."
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _validar_query_dict_nao_vazio(self) -> "InputContarProcessosDataJud":
+        if self.query is not None and not self.query:
+            raise ValueError(
+                "'query' deve ser um dict nao-vazio com a query Elasticsearch (ex.: "
+                "{'bool': {'must_not': [...]}}). Para 'sem filtro', omita o parametro."
+            )
+        return self
 
 
 class OutputListarProcessosDataJud(BaseModel):

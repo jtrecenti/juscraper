@@ -185,50 +185,41 @@ def build_contar_processos_payload(
     ano_ajuizamento: Optional[int] = None,
     classe: Optional[str] = None,
     assuntos: Optional[List[str]] = None,
+    data_ajuizamento_inicio: Optional[str] = None,
+    data_ajuizamento_fim: Optional[str] = None,
+    movimentos_codigo: Optional[List[int]] = None,
+    orgao_julgador: Optional[str] = None,
+    query: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Body Elasticsearch para ``DatajudScraper.contar_processos``.
 
     Reutiliza o mesmo conjunto de filtros de
     :func:`build_listar_processos_payload`, mas com ``size=0`` e
-    ``track_total_hits=True`` — não baixa documento nenhum, apenas o
+    ``track_total_hits=True`` — nao baixa documento nenhum, apenas o
     ``hits.total`` (``value`` + ``relation``). Sem ``sort`` nem
-    ``_source`` (não há paginação).
-    """
-    must_conditions: List[Dict[str, Any]] = []
-    if numero_processo:
-        if isinstance(numero_processo, str):
-            nproc = [numero_processo]
-        else:
-            nproc = list(numero_processo)
-        nproc = [clean_cnj(n) for n in nproc]
-        must_conditions.append({"terms": {"numeroProcesso": nproc}})
-    if ano_ajuizamento:
-        date_range_iso = {
-            "gte": f"{ano_ajuizamento}-01-01",
-            "lte": f"{ano_ajuizamento}-12-31",
-        }
-        date_range_compact = {
-            "gte": f"{ano_ajuizamento}0101000000",
-            "lte": f"{ano_ajuizamento}1231235959",
-        }
-        must_conditions.append({
-            "bool": {
-                "should": [
-                    {"range": {"dataAjuizamento": date_range_iso}},
-                    {"range": {"dataAjuizamento": date_range_compact}},
-                ],
-                "minimum_should_match": 1,
-            }
-        })
-    if classe:
-        must_conditions.append({"match": {"classe.codigo": str(classe)}})
-    if assuntos:
-        must_conditions.append({"terms": {"assuntos.codigo": assuntos}})
+    ``_source`` (nao ha paginacao).
 
-    if must_conditions:
-        query_values: Dict[str, Any] = {"bool": {"must": must_conditions}}
+    Aceita os mesmos filtros amigaveis de ``listar_processos``
+    (``data_ajuizamento_*``, ``movimentos_codigo``, ``orgao_julgador``)
+    e o escape-hatch ``query`` (override total da query Elasticsearch,
+    mutuamente exclusivo com os filtros amigaveis pelo schema). Os
+    filtros sao construidos pelo mesmo helper interno
+    :func:`_build_query_amigavel` usado por ``listar_processos`` —
+    capture e producao falham juntos quando o body real muda.
+    """
+    if query is not None:
+        query_values: Dict[str, Any] = query
     else:
-        query_values = {"match_all": {}}
+        query_values = _build_query_amigavel(
+            numero_processo=numero_processo,
+            ano_ajuizamento=ano_ajuizamento,
+            classe=classe,
+            assuntos=assuntos,
+            data_ajuizamento_inicio=data_ajuizamento_inicio,
+            data_ajuizamento_fim=data_ajuizamento_fim,
+            movimentos_codigo=movimentos_codigo,
+            orgao_julgador=orgao_julgador,
+        )
 
     return {
         "query": query_values,
