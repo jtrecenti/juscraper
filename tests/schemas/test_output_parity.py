@@ -77,6 +77,10 @@ EXPECTED_AGGREGATOR_OUTPUT_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
         "juscraper.aggregators.jusbr.schemas",
         "OutputDownloadDocumentsJusBR",
     ),
+    ("comunica_cnj", "listar_comunicacoes"): (
+        "juscraper.aggregators.comunica_cnj.schemas",
+        "OutputListarComunicacoesComunicaCNJ",
+    ),
 }
 
 # Campos que herdamos de OutputCJSGBase / OutputCnjConsultaBase e nao
@@ -105,6 +109,9 @@ SKIP_REASONS: dict[tuple[str, str], str] = {
     ("jusbr", "cpopg"): "JusBR passthrough PDPJ-CNJ — extra=allow e o contrato",
     ("jusbr", "download_documents"): (
         "JusBR download_documents passthrough — extra=allow e o contrato"
+    ),
+    ("comunica_cnj", "listar_comunicacoes"): (
+        "ComunicaCNJ passthrough JSON da API — extra=allow e o contrato"
     ),
 }
 

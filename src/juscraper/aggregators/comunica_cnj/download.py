@@ -37,8 +37,8 @@ def build_listar_comunicacoes_params(
     pesquisa: str,
     pagina: int,
     itens_por_pagina: int = 100,
-    data_inicio: Optional[str] = None,
-    data_fim: Optional[str] = None,
+    data_disponibilizacao_inicio: Optional[str] = None,
+    data_disponibilizacao_fim: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Monta a querystring aceita pelo endpoint de listagem.
 
@@ -46,18 +46,20 @@ def build_listar_comunicacoes_params(
         pesquisa: Termo de busca (parametro ``texto``).
         pagina: Numero da pagina (1-based).
         itens_por_pagina: Resultados por pagina (1-100).
-        data_inicio: ISO ``YYYY-MM-DD`` para ``dataDisponibilizacaoInicio``.
-        data_fim: ISO ``YYYY-MM-DD`` para ``dataDisponibilizacaoFim``.
+        data_disponibilizacao_inicio: ISO ``YYYY-MM-DD`` para o param
+            ``dataDisponibilizacaoInicio`` da API.
+        data_disponibilizacao_fim: ISO ``YYYY-MM-DD`` para o param
+            ``dataDisponibilizacaoFim`` da API.
     """
     params: Dict[str, Any] = {
         "itensPorPagina": itens_por_pagina,
         "pagina": pagina,
         "texto": pesquisa,
     }
-    if data_inicio is not None:
-        params["dataDisponibilizacaoInicio"] = data_inicio
-    if data_fim is not None:
-        params["dataDisponibilizacaoFim"] = data_fim
+    if data_disponibilizacao_inicio is not None:
+        params["dataDisponibilizacaoInicio"] = data_disponibilizacao_inicio
+    if data_disponibilizacao_fim is not None:
+        params["dataDisponibilizacaoFim"] = data_disponibilizacao_fim
     return params
 
 

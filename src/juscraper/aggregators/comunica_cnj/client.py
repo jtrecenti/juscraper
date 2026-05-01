@@ -4,8 +4,8 @@ Wrapper sobre a API publica de Comunicacoes Processuais do CNJ
 (``https://comunicaapi.pje.jus.br/api/v1/comunicacao``). O metodo
 :meth:`ComunicaCNJScraper.listar_comunicacoes` aceita um termo de busca
 obrigatorio (``pesquisa``) e filtros opcionais por intervalo de
-disponibilizacao (``data_inicio``/``data_fim``), pagina o resultado e
-devolve um ``pandas.DataFrame``.
+disponibilizacao (``data_disponibilizacao_inicio``/``_fim``), pagina o
+resultado e devolve um ``pandas.DataFrame``.
 """
 from __future__ import annotations
 
@@ -61,11 +61,12 @@ class ComunicaCNJScraper(BaseScraper):
             **kwargs: Filtros opcionais aceitos pelo schema
                 :class:`InputListarComunicacoesComunicaCNJ`:
 
-                * ``data_inicio`` (str): Inicio do intervalo de
-                  ``dataDisponibilizacao``. Aceita ISO ``YYYY-MM-DD`` ou
-                  formato brasileiro ``DD/MM/YYYY`` (convertido para ISO).
-                * ``data_fim`` (str): Fim do intervalo de
-                  ``dataDisponibilizacao``. Mesmos formatos de ``data_inicio``.
+                * ``data_disponibilizacao_inicio`` (str): Inicio do
+                  intervalo de ``dataDisponibilizacao``. Aceita ISO
+                  ``YYYY-MM-DD`` ou formato brasileiro ``DD/MM/YYYY``
+                  (convertido para ISO antes do schema).
+                * ``data_disponibilizacao_fim`` (str): Fim do intervalo de
+                  ``dataDisponibilizacao``. Mesmos formatos aceitos.
                 * ``itens_por_pagina`` (int): Resultados por requisicao
                   (1-100, default 100).
 
@@ -76,32 +77,33 @@ class ComunicaCNJScraper(BaseScraper):
 
         Raises:
             TypeError: Quando um kwarg desconhecido e passado.
-            ValidationError: Quando um filtro tem formato invalido.
-            ValueError: Quando ``pesquisa`` nao e informado ou quando o
-                intervalo de datas e invalido.
+            ValidationError: Quando ``pesquisa`` nao e informado ou um
+                filtro tem formato invalido.
+            ValueError: Quando o intervalo de datas e invalido (fim antes
+                de inicio, formato divergente do backend).
 
         Exemplo:
             >>> import juscraper as jus
             >>> s = jus.scraper("comunica_cnj")
-            >>> df = s.listar_comunicacoes(pesquisa="resolucao",
-            ...                            data_inicio="2024-01-01",
-            ...                            data_fim="2024-01-31",
-            ...                            paginas=range(1, 4))
-        """
-        if pesquisa is None:
-            raise ValueError(
-                "ComunicaCNJScraper.listar_comunicacoes(): 'pesquisa' e obrigatorio."
-            )
+            >>> df = s.listar_comunicacoes(
+            ...     pesquisa="resolucao",
+            ...     data_disponibilizacao_inicio="2024-01-01",
+            ...     data_disponibilizacao_fim="2024-01-31",
+            ...     paginas=range(1, 4),
+            ... )
 
+        See also:
+            :class:`InputListarComunicacoesComunicaCNJ` -- schema pydantic
+            e a fonte da verdade dos filtros aceitos.
+        """
         paginas_norm = normalize_paginas(paginas)
 
         # Aceita ``DD/MM/YYYY`` na entrada por conveniencia, mas a API
         # espera ISO ``YYYY-MM-DD``. ``to_iso_date`` e idempotente para
         # strings ja em ISO.
-        if "data_inicio" in kwargs and kwargs["data_inicio"] is not None:
-            kwargs["data_inicio"] = to_iso_date(kwargs["data_inicio"])
-        if "data_fim" in kwargs and kwargs["data_fim"] is not None:
-            kwargs["data_fim"] = to_iso_date(kwargs["data_fim"])
+        for nome in ("data_disponibilizacao_inicio", "data_disponibilizacao_fim"):
+            if kwargs.get(nome) is not None:
+                kwargs[nome] = to_iso_date(kwargs[nome])
 
         try:
             inp = InputListarComunicacoesComunicaCNJ(
@@ -118,9 +120,9 @@ class ComunicaCNJScraper(BaseScraper):
             raise
 
         validate_intervalo_datas(
-            inp.data_inicio,
-            inp.data_fim,
-            rotulo="data",
+            inp.data_disponibilizacao_inicio,
+            inp.data_disponibilizacao_fim,
+            rotulo="data_disponibilizacao",
             max_dias=None,
             origem="O ComunicaCNJ",
             formato="%Y-%m-%d",
@@ -131,8 +133,8 @@ class ComunicaCNJScraper(BaseScraper):
                 pesquisa=inp.pesquisa,
                 pagina=pagina,
                 itens_por_pagina=inp.itens_por_pagina,
-                data_inicio=inp.data_inicio,
-                data_fim=inp.data_fim,
+                data_disponibilizacao_inicio=inp.data_disponibilizacao_inicio,
+                data_disponibilizacao_fim=inp.data_disponibilizacao_fim,
             )
 
         # Descobrir total de paginas a partir da pagina 1 quando o usuario
