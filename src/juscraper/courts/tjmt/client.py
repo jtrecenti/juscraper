@@ -73,22 +73,14 @@ class TJMTScraper(BaseScraper):
         """
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
         paginas = normalize_paginas(paginas)
-        # Re-inject explicit date args into kwargs so the pipeline can resolve
-        # aliases (data_inicio/data_fim) and canonical names in a single pass.
-        # Passing them as canonical_filters collides with what normalize_datas
-        # extracts from kwargs.
-        for key, val in (
-            ("data_julgamento_inicio", data_julgamento_inicio),
-            ("data_julgamento_fim", data_julgamento_fim),
-        ):
-            if val is not None:
-                kwargs[key] = val
         inp = apply_input_pipeline_search(
             InputCJSGTJMT,
             "TJMTScraper.cjsg_download()",
             pesquisa=pesquisa,
             paginas=paginas,
             kwargs=kwargs,
+            data_julgamento_inicio=data_julgamento_inicio,
+            data_julgamento_fim=data_julgamento_fim,
             tipo_consulta=tipo_consulta,
             relator=relator,
             orgao_julgador=orgao_julgador,
