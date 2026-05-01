@@ -263,12 +263,15 @@ class TestCJPGDateRangeValidation:
         scraper.session.post.assert_not_called()
 
     def test_invalid_format_raises_before_request(self):
+        # ISO + BR mixed are both accepted (coerced to backend format, refs #173).
+        # Use a format the coercer cannot recognize (e.g. dotted) so the
+        # downstream validate_intervalo_datas raises the expected error.
         scraper = self._patched_scraper()
         with pytest.raises(ValueError, match="Formato esperado"):
             scraper.cjpg_download(
                 pesquisa="direito",
-                data_julgamento_inicio="2020-01-01",
-                data_julgamento_fim="31/12/2020",
+                data_julgamento_inicio="01.01.2020",
+                data_julgamento_fim="31.12.2020",
             )
         scraper.session.get.assert_not_called()
 

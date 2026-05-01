@@ -6,7 +6,7 @@ from typing import List, Optional, Union
 import pandas as pd
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import apply_input_pipeline_search, normalize_paginas, normalize_pesquisa
+from juscraper.utils.params import apply_input_pipeline_search
 
 from .download import cjsg_download
 from .parse import cjsg_parse
@@ -50,14 +50,13 @@ class TJDFTScraper(BaseScraper):
                 range: range(1, 4) downloads pages 1-3.
                 None: downloads all available pages.
         """
-        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-        paginas = normalize_paginas(paginas)
         inp = apply_input_pipeline_search(
             InputCJSGTJDFT,
             "TJDFTScraper.cjsg_download()",
             pesquisa=pesquisa,
             paginas=paginas,
             kwargs=kwargs,
+            consume_pesquisa_aliases=True,
             sinonimos=sinonimos,
             espelho=espelho,
             inteiro_teor=inteiro_teor,

@@ -7,12 +7,7 @@ import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import (
-    apply_input_pipeline_search,
-    normalize_paginas,
-    normalize_pesquisa,
-    resolve_deprecated_alias,
-)
+from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
 from .download import CJPG_CORE, CJSG_CORES, DEFAULT_CORE, DEFAULT_PER_PAGE, cjsg_download
 from .parse import cjsg_parse
@@ -106,14 +101,15 @@ class TJESScraper(BaseScraper):
             )
         relator = resolve_deprecated_alias(kwargs, "magistrado", "relator", relator)
         classe = resolve_deprecated_alias(kwargs, "classe_judicial", "classe", classe)
-        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-        paginas = normalize_paginas(paginas)
         inp = apply_input_pipeline_search(
             InputCJSGTJES,
             "TJESScraper.cjsg_download()",
             pesquisa=pesquisa,
             paginas=paginas,
             kwargs=kwargs,
+            consume_pesquisa_aliases=True,
+            data_julgamento_inicio=data_julgamento_inicio,
+            data_julgamento_fim=data_julgamento_fim,
             core=core,
             busca_exata=busca_exata,
             relator=relator,
@@ -123,8 +119,6 @@ class TJESScraper(BaseScraper):
             assunto=assunto,
             ordenacao=ordenacao,
             per_page=per_page,
-            data_julgamento_inicio=data_julgamento_inicio,
-            data_julgamento_fim=data_julgamento_fim,
         )
         return cjsg_download(
             pesquisa=inp.pesquisa,
@@ -218,14 +212,13 @@ class TJESScraper(BaseScraper):
         assunto = kwargs.pop("assunto", None)
         ordenacao = kwargs.pop("ordenacao", None)
         per_page = kwargs.pop("per_page", DEFAULT_PER_PAGE)
-        pesquisa_val = normalize_pesquisa(pesquisa, **kwargs)
-        paginas = normalize_paginas(paginas)
         inp = apply_input_pipeline_search(
             InputCJPGTJES,
             "TJESScraper.cjpg_download()",
-            pesquisa=pesquisa_val,
+            pesquisa=pesquisa,
             paginas=paginas,
             kwargs=kwargs,
+            consume_pesquisa_aliases=True,
             busca_exata=busca_exata,
             relator=relator,
             orgao_julgador=orgao_julgador,

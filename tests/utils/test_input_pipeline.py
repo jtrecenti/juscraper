@@ -296,27 +296,211 @@ def test_apply_input_pipeline_backend_iso_accepts_iso_date():
     assert inp.data_julgamento_fim == "2024-03-31"
 
 
-def test_apply_input_pipeline_default_br_rejects_iso_date():
-    """Schema sem BACKEND_DATE_FORMAT (default ``%d/%m/%Y``) rejeita ISO."""
+def test_apply_input_pipeline_default_br_coerces_iso_date():
+    """Schema sem BACKEND_DATE_FORMAT (default ``%d/%m/%Y``) aceita ISO via coerção (refs #173)."""
     kwargs = {
-        "data_julgamento_inicio": "2024-01-01",   # ISO, nao BR
+        "data_julgamento_inicio": "2024-01-01",   # ISO -> coage p/ BR
         "data_julgamento_fim": "2024-12-31",
     }
-    with pytest.raises(ValueError, match=r"Formato esperado: %d/%m/%Y"):
-        apply_input_pipeline_search(
-            _SchemaComJulgamento, "Test.cjsg()",
-            pesquisa="x", paginas=1, kwargs=kwargs,
-        )
+    inp = apply_input_pipeline_search(
+        _SchemaComJulgamento, "Test.cjsg()",
+        pesquisa="x", paginas=1, kwargs=kwargs,
+    )
+    assert inp.data_julgamento_inicio == "01/01/2024"
+    assert inp.data_julgamento_fim == "31/12/2024"
 
 
-def test_apply_input_pipeline_backend_iso_rejects_br_date():
-    """Schema com BACKEND_DATE_FORMAT ISO rejeita ``DD/MM/YYYY``."""
+def test_apply_input_pipeline_backend_iso_coerces_br_date():
+    """Schema com BACKEND_DATE_FORMAT ISO aceita ``DD/MM/YYYY`` via coerção (refs #173)."""
     kwargs = {
-        "data_julgamento_inicio": "01/01/2024",   # BR, nao ISO
+        "data_julgamento_inicio": "01/01/2024",   # BR -> coage p/ ISO
         "data_julgamento_fim": "31/03/2024",
     }
-    with pytest.raises(ValueError, match=r"Formato esperado: %Y-%m-%d"):
+    inp = apply_input_pipeline_search(
+        _SchemaIsoBackend, "Test.cjsg()",
+        pesquisa="x", paginas=1, kwargs=kwargs,
+    )
+    assert inp.data_julgamento_inicio == "2024-01-01"
+    assert inp.data_julgamento_fim == "2024-03-31"
+
+
+# --- Cobertura de coerção tolerante de formatos de data (refs #173) ---------
+
+
+@pytest.mark.parametrize("entrada,esperado", [
+    ("01/03/2024", "01/03/2024"),    # BR canonical
+    ("01-03-2024", "01/03/2024"),    # BR com hífen
+    ("2024-03-01", "01/03/2024"),    # ISO
+    ("2024/03/01", "01/03/2024"),    # ISO com barra
+])
+def test_apply_input_pipeline_br_backend_aceita_quatro_strings(entrada, esperado):
+    """Backend BR (default ``%d/%m/%Y``) aceita as 4 variações de string."""
+    inp = apply_input_pipeline_search(
+        _SchemaComJulgamento, "Test.cjsg()",
+        pesquisa="x", paginas=1,
+        kwargs={"data_julgamento_inicio": entrada, "data_julgamento_fim": entrada},
+    )
+    assert inp.data_julgamento_inicio == esperado
+    assert inp.data_julgamento_fim == esperado
+
+
+@pytest.mark.parametrize("entrada,esperado", [
+    ("01/03/2024", "2024-03-01"),
+    ("01-03-2024", "2024-03-01"),
+    ("2024-03-01", "2024-03-01"),
+    ("2024/03/01", "2024-03-01"),
+])
+def test_apply_input_pipeline_iso_backend_aceita_quatro_strings(entrada, esperado):
+    """Backend ISO (``%Y-%m-%d``) aceita as 4 variações de string."""
+    inp = apply_input_pipeline_search(
+        _SchemaIsoBackend, "Test.cjsg()",
+        pesquisa="x", paginas=1,
+        kwargs={"data_julgamento_inicio": entrada, "data_julgamento_fim": entrada},
+    )
+    assert inp.data_julgamento_inicio == esperado
+    assert inp.data_julgamento_fim == esperado
+
+
+def test_apply_input_pipeline_aceita_datetime_date():
+    """``datetime.date`` é coercido para o BACKEND_DATE_FORMAT do schema."""
+    from datetime import date
+    inp_br = apply_input_pipeline_search(
+        _SchemaComJulgamento, "Test.cjsg()",
+        pesquisa="x", paginas=1,
+        kwargs={
+            "data_julgamento_inicio": date(2024, 1, 15),
+            "data_julgamento_fim": date(2024, 3, 31),
+        },
+    )
+    assert inp_br.data_julgamento_inicio == "15/01/2024"
+    assert inp_br.data_julgamento_fim == "31/03/2024"
+
+    inp_iso = apply_input_pipeline_search(
+        _SchemaIsoBackend, "Test.cjsg()",
+        pesquisa="x", paginas=1,
+        kwargs={
+            "data_julgamento_inicio": date(2024, 1, 15),
+            "data_julgamento_fim": date(2024, 3, 31),
+        },
+    )
+    assert inp_iso.data_julgamento_inicio == "2024-01-15"
+    assert inp_iso.data_julgamento_fim == "2024-03-31"
+
+
+def test_apply_input_pipeline_aceita_datetime_datetime():
+    """``datetime.datetime`` é coercido tratado como ``date`` (componente time descartado)."""
+    from datetime import datetime as _dt
+    inp = apply_input_pipeline_search(
+        _SchemaIsoBackend, "Test.cjsg()",
+        pesquisa="x", paginas=1,
+        kwargs={
+            "data_julgamento_inicio": _dt(2024, 1, 15, 10, 30, 0),
+            "data_julgamento_fim": _dt(2024, 3, 31, 23, 59, 59),
+        },
+    )
+    assert inp.data_julgamento_inicio == "2024-01-15"
+    assert inp.data_julgamento_fim == "2024-03-31"
+
+
+def test_apply_input_pipeline_formato_irreconhecivel_levanta_value_error():
+    """Formato fora dos 4 aceitos (ex.: dotted) cai no validate_intervalo_datas."""
+    with pytest.raises(ValueError, match="Formato esperado"):
         apply_input_pipeline_search(
             _SchemaIsoBackend, "Test.cjsg()",
-            pesquisa="x", paginas=1, kwargs=kwargs,
+            pesquisa="x", paginas=1,
+            kwargs={
+                "data_julgamento_inicio": "2024.01.15",
+                "data_julgamento_fim": "2024.03.31",
+            },
         )
+
+
+# --- Cobertura dos parâmetros nominais de data (refs #174) -------------------
+
+
+def test_apply_input_pipeline_aceita_datas_nominais():
+    """Datas passadas como argumentos nominais chegam ao schema."""
+    inp = apply_input_pipeline_search(
+        _SchemaComAmbas, "Test.cjsg()",
+        pesquisa="x", paginas=1, kwargs={},
+        data_julgamento_inicio="01/01/2024",
+        data_julgamento_fim="31/03/2024",
+        data_publicacao_inicio="2024-02-01",
+        data_publicacao_fim="2024-04-30",
+    )
+    assert inp.data_julgamento_inicio == "01/01/2024"
+    assert inp.data_julgamento_fim == "31/03/2024"
+    assert inp.data_publicacao_inicio == "01/02/2024"     # coercida para BR
+    assert inp.data_publicacao_fim == "30/04/2024"
+
+
+def test_apply_input_pipeline_data_nominal_e_kwargs_levanta_collision():
+    """Mesma data nominal e via kwargs ao mesmo tempo é colisão (ValueError)."""
+    with pytest.raises(ValueError, match="nominal e dentro de \\*\\*kwargs"):
+        apply_input_pipeline_search(
+            _SchemaComJulgamento, "Test.cjsg()",
+            pesquisa="x", paginas=1,
+            kwargs={"data_julgamento_inicio": "01/01/2024"},
+            data_julgamento_inicio="02/01/2024",
+        )
+
+
+def test_apply_input_pipeline_data_nominal_none_nao_re_injeta():
+    """Data nominal com valor ``None`` não polui kwargs nem o schema."""
+    inp = apply_input_pipeline_search(
+        _SchemaComJulgamento, "Test.cjsg()",
+        pesquisa="x", paginas=1, kwargs={},
+        data_julgamento_inicio=None,
+        data_julgamento_fim=None,
+    )
+    assert inp.data_julgamento_inicio is None
+    assert inp.data_julgamento_fim is None
+
+
+# --- Cobertura de consume_pesquisa_aliases / nullable_pesquisa ---------------
+
+
+def test_apply_input_pipeline_consume_pesquisa_aliases_pop_query():
+    """Com ``consume_pesquisa_aliases=True`` o helper resolve ``query`` em kwargs."""
+    with pytest.warns(DeprecationWarning, match="'query' está deprecado"):
+        inp = apply_input_pipeline_search(
+            _SchemaSimples, "Test.cjsg()",
+            pesquisa=None, paginas=1,
+            kwargs={"query": "dano moral"},
+            consume_pesquisa_aliases=True,
+        )
+    assert inp.pesquisa == "dano moral"
+
+
+def test_apply_input_pipeline_consume_pesquisa_aliases_passthrough():
+    """Sem alias e com ``pesquisa`` definido, consume_pesquisa_aliases é noop."""
+    inp = apply_input_pipeline_search(
+        _SchemaSimples, "Test.cjsg()",
+        pesquisa="direito", paginas=1, kwargs={},
+        consume_pesquisa_aliases=True,
+    )
+    assert inp.pesquisa == "direito"
+
+
+def test_apply_input_pipeline_nullable_pesquisa_aceita_string_vazia():
+    """Com ``nullable_pesquisa=True``, ``pesquisa=""`` sem alias é aceito (caso TJSP cjpg)."""
+    inp = apply_input_pipeline_search(
+        _SchemaSimples, "Test.cjsg()",
+        pesquisa="", paginas=1, kwargs={},
+        consume_pesquisa_aliases=True,
+        nullable_pesquisa=True,
+    )
+    assert inp.pesquisa == ""
+
+
+def test_apply_input_pipeline_nullable_pesquisa_resolve_alias():
+    """Com ``nullable_pesquisa=True`` e alias presente, alias é consumido normalmente."""
+    with pytest.warns(DeprecationWarning):
+        inp = apply_input_pipeline_search(
+            _SchemaSimples, "Test.cjsg()",
+            pesquisa="", paginas=1,
+            kwargs={"termo": "habeas corpus"},
+            consume_pesquisa_aliases=True,
+            nullable_pesquisa=True,
+        )
+    assert inp.pesquisa == "habeas corpus"

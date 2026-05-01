@@ -143,6 +143,10 @@ Checklist obrigatória para o PR que adiciona o raspador:
 
 Pipeline implementado em `juscraper.utils.params.apply_input_pipeline_search` (chamado por `src/juscraper/courts/_esaj/base.py:cjsg_download` e `tjsp/client.py:cjpg_download`) e exercitado em `tests/tj{ac,al,am,ce,ms,sp}/test_cjsg_filters_contract.py`. Ao wirar tribunal novo, copiar a ordem de lá: aliases (via `normalize_pesquisa`/`normalize_datas`) → validators custom → pydantic → build body a partir do modelo. Motivos: aliases antes do pydantic (senão viram `TypeError` genérico); validators custom antes (senão viram wrapped em `ValidationError`); `raise_on_extra_kwargs` depois (só `extra_forbidden` deve virar `TypeError` — erro de tipo real sobe natural). Tribunais sem limite documentado de janela ficam com `max_dias=None` (default); eSAJ passa `max_dias=366, origem="O eSAJ"` explicitamente.
 
+### `BACKEND_DATE_FORMAT` é só formato de saída
+
+Cada `Input*` declara um `BACKEND_DATE_FORMAT: ClassVar[str]` (default `"%d/%m/%Y"` para eSAJ; tribunais com backend ISO declaram `"%Y-%m-%d"`). Esse formato governa **apenas** o que sai para o backend — o que o pydantic guarda no campo e o que `validate_intervalo_datas` usa para parsear. Na **entrada** (kwargs vindos do usuário), o pipeline aceita as quatro variações de string (`DD/MM/AAAA`, `DD-MM-AAAA`, `AAAA-MM-DD`, `AAAA/MM/DD`) e também `datetime.date` / `datetime.datetime`, e coage para `BACKEND_DATE_FORMAT` antes da validação (refs #173). O autor de schema só precisa escolher o formato de saída e declarar; a tolerância de entrada é gratuita.
+
 ### Checklist ao adicionar um tribunal novo
 
 1. Criar `courts/<xx>/schemas.py` com Input+Output para cada método **implementado**.
