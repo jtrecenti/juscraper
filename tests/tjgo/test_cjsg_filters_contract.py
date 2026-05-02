@@ -129,6 +129,26 @@ def test_cjsg_unknown_kwarg_raises():
         jus.scraper("tjgo").cjsg("dano moral", paginas=1, kwarg_inventado="x")
 
 
+def test_cjsg_download_unknown_kwarg_raises():
+    """``cjsg_download`` rejects unknown kwargs at the lower-level entry point
+    too — guards against silent drop when the caller skips :meth:`cjsg` (refs #183)."""
+    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
+        jus.scraper("tjgo").cjsg_download("dano moral", paginas=1, kwarg_inventado="x")
+
+
+def test_cjsg_download_data_julgamento_raises_typeerror():
+    """``cjsg_download`` tambem rejeita ``data_julgamento_*`` — TJGO Projudi nao
+    expoe esse filtro, e o pipeline em ``cjsg_download`` agora pega o caso
+    direto (antes do #183 era silenciosamente dropado pelo trio
+    normalize_pesquisa/_paginas/_datas)."""
+    with pytest.raises(TypeError, match=r"data_julgamento_inicio"):
+        jus.scraper("tjgo").cjsg_download(
+            "dano moral",
+            paginas=1,
+            data_julgamento_inicio="2024-01-01",
+        )
+
+
 @responses.activate
 def test_cjsg_data_publicacao_canonico_no_extra_warning(mocker):
     """``data_publicacao_*`` is canonical for TJGO — no deprecation/unsupported."""
