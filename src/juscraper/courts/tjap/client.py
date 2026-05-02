@@ -5,12 +5,7 @@ import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import (
-    apply_input_pipeline_search,
-    normalize_paginas,
-    normalize_pesquisa,
-    resolve_deprecated_alias,
-)
+from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
@@ -136,14 +131,13 @@ class TJAPScraper(BaseScraper):
         numero_processo = resolve_deprecated_alias(
             kwargs, "numero_cnj", "numero_processo", numero_processo
         )
-        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-        paginas = normalize_paginas(paginas)
         inp = apply_input_pipeline_search(
             InputCJSGTJAP,
             "TJAPScraper.cjsg_download()",
             pesquisa=pesquisa,
             paginas=paginas,
             kwargs=kwargs,
+            consume_pesquisa_aliases=True,
             orgao=orgao,
             numero_processo=numero_processo,
             numero_acordao=numero_acordao,
