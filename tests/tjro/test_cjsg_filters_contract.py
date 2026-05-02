@@ -14,7 +14,7 @@ from responses.matchers import json_params_matcher
 
 import juscraper as jus
 from juscraper.courts.tjro.download import BASE_URL, build_cjsg_payload
-from tests._helpers import load_sample
+from tests._helpers import assert_unsupported_date_filter_raises, load_sample
 
 
 @responses.activate
@@ -225,6 +225,19 @@ def test_cjsg_unknown_kwarg_raises():
     the field name (refs #84, #93)."""
     with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
         jus.scraper("tjro").cjsg("dano moral", paginas=1, kwarg_inventado="x")
+
+
+def test_cjsg_data_publicacao_raises_typeerror():
+    """TJRO backend Elasticsearch nao expoe filtro de data de publicacao —
+    ``InputCJSGTJRO`` herda apenas :class:`DataJulgamentoMixin`, entao
+    ``data_publicacao_*`` deve cair como ``extra_forbidden`` -> ``TypeError``
+    em vez de ser silently dropped (refs #186)."""
+    assert_unsupported_date_filter_raises(
+        jus.scraper("tjro").cjsg,
+        "data_publicacao_inicio",
+        "dano moral",
+        paginas=1,
+    )
 
 
 def test_cjsg_unknown_kwarg_suggests_close_match():

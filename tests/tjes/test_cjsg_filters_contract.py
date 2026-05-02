@@ -4,6 +4,7 @@ import pytest
 import responses
 
 import juscraper as jus
+from tests._helpers import assert_unsupported_date_filter_raises
 from tests.tjes.test_cjsg_contract import _add_page
 
 
@@ -129,12 +130,20 @@ def test_cjpg_unknown_kwarg_raises():
 def test_cjsg_data_publicacao_raises_typeerror():
     """TJES backend nao expoe filtro de data de publicacao — passar
     ``data_publicacao_*`` deve levantar ``TypeError`` em vez de silently drop
-    (refs #165, #173)."""
-    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'data_publicacao_inicio'"):
-        jus.scraper("tjes").cjsg("dano moral", paginas=1, data_publicacao_inicio="2024-01-01")
+    (refs #165, #173, #186)."""
+    assert_unsupported_date_filter_raises(
+        jus.scraper("tjes").cjsg,
+        "data_publicacao_inicio",
+        "dano moral",
+        paginas=1,
+    )
 
 
 def test_cjpg_data_publicacao_raises_typeerror():
     """Mesmo que ``test_cjsg_data_publicacao_raises_typeerror`` para cjpg."""
-    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'data_publicacao_inicio'"):
-        jus.scraper("tjes").cjpg("dano moral", paginas=1, data_publicacao_inicio="2024-01-01")
+    assert_unsupported_date_filter_raises(
+        jus.scraper("tjes").cjpg,
+        "data_publicacao_inicio",
+        "dano moral",
+        paginas=1,
+    )
