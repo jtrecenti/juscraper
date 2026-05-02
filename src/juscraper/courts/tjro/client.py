@@ -5,13 +5,7 @@ import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import (
-    apply_input_pipeline_search,
-    normalize_paginas,
-    normalize_pesquisa,
-    resolve_deprecated_alias,
-    to_iso_date,
-)
+from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias, to_iso_date
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
@@ -97,17 +91,53 @@ class TJROScraper(BaseScraper):
             :class:`InputCJSGTJRO` — schema pydantic e a fonte da verdade dos
             filtros aceitos.
         """
+        return self.cjsg_parse(self.cjsg_download(
+            pesquisa=pesquisa,
+            paginas=paginas,
+            tipo=tipo,
+            numero_processo=numero_processo,
+            magistrado=magistrado,
+            orgao_julgador=orgao_julgador,
+            orgao_julgador_colegiado=orgao_julgador_colegiado,
+            classe_judicial=classe_judicial,
+            instancia=instancia,
+            termo_exato=termo_exato,
+            **kwargs,
+        ))
+
+    def cjsg_download(
+        self,
+        pesquisa: Optional[str] = None,
+        paginas: Union[int, list, range, None] = None,
+        tipo: list | None = None,
+        numero_processo: str = "",
+        magistrado: str = "",
+        orgao_julgador: int | str = "",
+        orgao_julgador_colegiado: int | str = "",
+        classe_judicial: str = "",
+        instancia: list | None = None,
+        termo_exato: bool = False,
+        **kwargs,
+    ) -> list:
+        """Download raw CJSG JSON responses from TJRO.
+
+        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
+
+        Returns
+        -------
+        list
+            List of raw JSON responses (one per page).
+        """
         numero_processo = resolve_deprecated_alias(
             kwargs, "nr_processo", "numero_processo", numero_processo, sentinel=""
         )
-        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-
         inp = apply_input_pipeline_search(
             InputCJSGTJRO,
-            "TJROScraper.cjsg()",
+            "TJROScraper.cjsg_download()",
             pesquisa=pesquisa,
             paginas=paginas,
             kwargs=kwargs,
+            consume_pesquisa_aliases=True,
             tipo=tipo,
             numero_processo=numero_processo,
             magistrado=magistrado,
@@ -117,10 +147,10 @@ class TJROScraper(BaseScraper):
             instancia=instancia,
             termo_exato=termo_exato,
         )
-
-        brutos = self.cjsg_download(
+        return cjsg_download_manager(
             pesquisa=inp.pesquisa,
             paginas=inp.paginas,
+            session=self.session,
             tipo=inp.tipo,
             nr_processo=inp.numero_processo,
             magistrado=inp.magistrado,
@@ -131,29 +161,6 @@ class TJROScraper(BaseScraper):
             data_julgamento_fim=to_iso_date(inp.data_julgamento_fim) or "",
             instancia=inp.instancia,
             termo_exato=inp.termo_exato,
-        )
-        return self.cjsg_parse(brutos)
-
-    def cjsg_download(
-        self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
-        **kwargs,
-    ) -> list:
-        """Download raw CJSG JSON responses from TJRO.
-
-        Returns
-        -------
-        list
-            List of raw JSON responses (one per page).
-        """
-        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-        paginas = normalize_paginas(paginas)
-        return cjsg_download_manager(
-            pesquisa=pesquisa,
-            paginas=paginas,
-            session=self.session,
-            **{k: v for k, v in kwargs.items() if k not in ("query", "termo")},
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> pd.DataFrame:

@@ -8,7 +8,12 @@ from ...schemas.mixins import DataJulgamentoMixin
 
 
 class InputCJSGTJPI(SearchBase, DataJulgamentoMixin):
-    """Accepted input for TJPI ``cjsg``.
+    """Accepted input for TJPI ``cjsg`` / ``cjsg_download``.
+
+    Wired em :meth:`juscraper.courts.tjpi.client.TJPIScraper.cjsg_download`
+    desde o #183 — kwargs desconhecidos viram :class:`TypeError` em ambos
+    ``cjsg`` e ``cjsg_download``. ``cjsg`` e wrapper trivial
+    (``download → parse``).
 
     Endpoint HTML (JusPI, server-rendered). ``pesquisa`` aceita os aliases
     deprecados ``query`` / ``termo`` via

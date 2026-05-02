@@ -1,9 +1,9 @@
 """Pydantic schemas for TJPR scraper endpoints.
 
-Wired em :meth:`juscraper.courts.tjpr.client.TJPRScraper.cjsg` desde o
-lote L5 do #165 — kwargs desconhecidos viram :class:`TypeError`.
-``cjsg_download`` permanece sem pipeline (chamada interna recebe so valores
-ja validados pelo pipeline do :meth:`cjsg`).
+Wired em :meth:`juscraper.courts.tjpr.client.TJPRScraper.cjsg_download`
+desde o lote L5 do #165 (relocalizado pelo #183) — kwargs desconhecidos
+viram :class:`TypeError` em ambos ``cjsg`` e ``cjsg_download``. ``cjsg``
+e wrapper trivial (``download → parse``).
 """
 from __future__ import annotations
 

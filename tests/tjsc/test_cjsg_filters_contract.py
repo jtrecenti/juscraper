@@ -133,3 +133,67 @@ def test_cjsg_unknown_kwarg_raises():
     the field name (refs #84, #93)."""
     with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
         jus.scraper("tjsc").cjsg("dano moral", paginas=1, kwarg_inventado="x")
+
+
+def test_cjsg_download_unknown_kwarg_raises():
+    """``cjsg_download`` rejects unknown kwargs at the lower-level entry point
+    too — guards against silent drop when the caller skips :meth:`cjsg` (refs #183)."""
+    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
+        jus.scraper("tjsc").cjsg_download("dano moral", paginas=1, kwarg_inventado="x")
+
+
+@responses.activate
+def test_cjsg_download_query_alias_emits_deprecation_warning(mocker):
+    """``cjsg_download`` direto consome ``query`` -> ``pesquisa`` via pipeline (refs #183)."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.POST,
+        cjsg_url_for_page(1),
+        body=load_sample_bytes("tjsc", "cjsg/no_results.html"),
+        status=200,
+        content_type="text/html; charset=iso-8859-1",
+        match=[urlencoded_params_matcher(
+            build_cjsg_form_body("dano moral", page=1), allow_blank=True,
+        )],
+    )
+
+    with pytest.warns(DeprecationWarning, match="query.*deprecado"):
+        result = jus.scraper("tjsc").cjsg_download(pesquisa=None, query="dano moral", paginas=1)
+
+    assert isinstance(result, list)
+
+
+@responses.activate
+def test_cjsg_download_data_inicio_alias_maps_to_dt_decisao(mocker):
+    """``cjsg_download`` direto: ``data_inicio`` -> ``data_julgamento_inicio`` ->
+    ``dtDecisaoInicio`` no form body (refs #183)."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.POST,
+        cjsg_url_for_page(1),
+        body=load_sample_bytes("tjsc", "cjsg/no_results.html"),
+        status=200,
+        content_type="text/html; charset=iso-8859-1",
+        match=[urlencoded_params_matcher(
+            build_cjsg_form_body(
+                "dano moral",
+                page=1,
+                dt_decisao_inicio="2024-01-01",
+                dt_decisao_fim="2024-03-31",
+            ),
+            allow_blank=True,
+        )],
+    )
+
+    with pytest.warns(DeprecationWarning) as warning_list:
+        result = jus.scraper("tjsc").cjsg_download(
+            "dano moral",
+            paginas=1,
+            data_inicio="2024-01-01",
+            data_fim="2024-03-31",
+        )
+
+    assert isinstance(result, list)
+    messages = [str(w.message) for w in warning_list]
+    assert any("data_inicio" in m and "deprecado" in m for m in messages)
+    assert any("data_fim" in m and "deprecado" in m for m in messages)

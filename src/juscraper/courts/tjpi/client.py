@@ -5,7 +5,7 @@ import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import apply_input_pipeline_search, normalize_paginas, normalize_pesquisa, to_iso_date
+from juscraper.utils.params import apply_input_pipeline_search, to_iso_date
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
@@ -81,52 +81,57 @@ class TJPIScraper(BaseScraper):
             :class:`InputCJSGTJPI` — schema pydantic e a fonte da verdade dos
             filtros aceitos.
         """
-        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-
-        inp = apply_input_pipeline_search(
-            InputCJSGTJPI,
-            "TJPIScraper.cjsg()",
+        return self.cjsg_parse(self.cjsg_download(
             pesquisa=pesquisa,
             paginas=paginas,
-            kwargs=kwargs,
             tipo=tipo,
             relator=relator,
             classe=classe,
             orgao=orgao,
-        )
-
-        brutos = self.cjsg_download(
-            pesquisa=inp.pesquisa,
-            paginas=inp.paginas,
-            tipo=inp.tipo,
-            relator=inp.relator,
-            classe=inp.classe,
-            orgao=inp.orgao,
-            data_min=to_iso_date(inp.data_julgamento_inicio) or "",
-            data_max=to_iso_date(inp.data_julgamento_fim) or "",
-        )
-        return self.cjsg_parse(brutos)
+            **kwargs,
+        ))
 
     def cjsg_download(
         self,
         pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
+        tipo: str = "",
+        relator: str = "",
+        classe: str = "",
+        orgao: str = "",
         **kwargs,
     ) -> list:
         """Download raw HTML pages from TJPI.
+
+        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
 
         Returns
         -------
         list
             List of raw HTML strings (one per page).
         """
-        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-        paginas = normalize_paginas(paginas)
-        return cjsg_download_manager(
+        inp = apply_input_pipeline_search(
+            InputCJSGTJPI,
+            "TJPIScraper.cjsg_download()",
             pesquisa=pesquisa,
             paginas=paginas,
+            kwargs=kwargs,
+            consume_pesquisa_aliases=True,
+            tipo=tipo,
+            relator=relator,
+            classe=classe,
+            orgao=orgao,
+        )
+        return cjsg_download_manager(
+            pesquisa=inp.pesquisa,
+            paginas=inp.paginas,
             session=self.session,
-            **{k: v for k, v in kwargs.items() if k not in ("query", "termo")},
+            tipo=inp.tipo,
+            relator=inp.relator,
+            classe=inp.classe,
+            orgao=inp.orgao,
+            data_min=to_iso_date(inp.data_julgamento_inicio) or "",
+            data_max=to_iso_date(inp.data_julgamento_fim) or "",
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> pd.DataFrame:
