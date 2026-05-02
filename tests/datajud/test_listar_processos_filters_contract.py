@@ -4,13 +4,10 @@ DataJud has no deprecated aliases (rule 6a of the contract checklist
 in CLAUDE.md is N/A here): the API is recent and was designed with
 the canonical names from day one.
 
-The unknown-kwarg test asserts ``(ValidationError, TypeError)``: today
-``listar_processos`` has a closed signature (no ``**kwargs``), so passing
-an unknown keyword raises ``TypeError`` naturally. When
-``InputListarProcessosDataJud`` is wired into the client (follow-up
-PR — see ``CLAUDE.md`` "Schemas pydantic > Wiring segue o refactor #84"),
-the same call will raise ``ValidationError`` instead. The tuple lets the
-test continue to pass without modification across that transition.
+``InputListarProcessosDataJud`` is wired into the client — unknown
+kwargs are converted to ``TypeError`` via ``raise_on_extra_kwargs``;
+other validation errors (bad date format, mutually-exclusive filters,
+out-of-range ``tamanho_pagina``) surface as ``ValidationError``.
 """
 import pandas as pd
 import pytest
@@ -20,7 +17,7 @@ from responses.matchers import header_matcher, json_params_matcher
 
 import juscraper as jus
 from juscraper.aggregators.datajud.client import DatajudScraper
-from tests._helpers import load_sample
+from tests._helpers import assert_unknown_kwarg_raises, load_sample
 from tests.fixtures.capture.datajud import build_payload as _payload
 
 BASE = DatajudScraper.BASE_API_URL
@@ -89,13 +86,14 @@ def test_listar_processos_cnj_invalido_nao_chama_api():
 
 
 def test_listar_processos_unknown_kwarg_raises():
-    """Unknown kwargs raise ``TypeError`` today (closed signature) and
-    will raise ``ValidationError`` once the schema is wired. No HTTP
-    mock needed — the error fires before any request is built."""
-    with pytest.raises((ValidationError, TypeError)):
-        jus.scraper("datajud").listar_processos(
-            tribunal="TJSP", parametro_inventado="xyz"
-        )
+    """Unknown kwargs raise ``TypeError`` via ``raise_on_extra_kwargs`` —
+    ``InputListarProcessosDataJud`` is wired and ``extra="forbid"``
+    rejects unknown kwargs before any HTTP request is built."""
+    assert_unknown_kwarg_raises(
+        jus.scraper("datajud").listar_processos,
+        "parametro_inventado",
+        tribunal="TJSP",
+    )
 
 
 def test_listar_processos_tamanho_pagina_acima_do_cap():
