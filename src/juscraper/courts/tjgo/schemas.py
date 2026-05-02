@@ -37,7 +37,7 @@ class InputCJSGTJGO(SearchBase, DataPublicacaoMixin):
     # TODO (#212): apertar com Literal[...] após captura do dropdown do site.
     id_serventia_subtipo: str | int = 0
     numero_processo: str | None = None
-    qtde_itens_pagina: int = Field(default=10, ge=1)
+    tamanho_pagina: int = Field(default=10, ge=1)
 
 
 class OutputCJSGTJGO(OutputCJSGBase):

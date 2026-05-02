@@ -44,9 +44,9 @@ class TestLiteralRejection:
         InputCJSGTJMG(pesquisa="x", order_by=0)
         InputCJSGTJMG(pesquisa="x", order_by="2")
 
-    def test_tjmg_linhas_por_pagina_rejects_out_of_domain(self):
+    def test_tjmg_tamanho_pagina_rejects_out_of_domain(self):
         with pytest.raises(ValidationError):
-            InputCJSGTJMG(pesquisa="x", linhas_por_pagina=99)
+            InputCJSGTJMG(pesquisa="x", tamanho_pagina=99)
 
     def test_tjmg_pesquisar_por_rejects_out_of_domain(self):
         with pytest.raises(ValidationError):
@@ -95,31 +95,31 @@ class TestNumericFieldRejection:
     do backend para definir o teto real, encaminhada em issue follow-up.
     """
 
-    def test_tjba_items_per_page_rejects_below_ge(self):
+    def test_tjba_tamanho_pagina_rejects_below_ge(self):
         with pytest.raises(ValidationError):
-            InputCJSGTJBA(pesquisa="x", items_per_page=0)
+            InputCJSGTJBA(pesquisa="x", tamanho_pagina=0)
 
-    def test_tjba_items_per_page_accepts_above_default(self):
-        InputCJSGTJBA(pesquisa="x", items_per_page=1)
-        InputCJSGTJBA(pesquisa="x", items_per_page=1000)
+    def test_tjba_tamanho_pagina_accepts_above_default(self):
+        InputCJSGTJBA(pesquisa="x", tamanho_pagina=1)
+        InputCJSGTJBA(pesquisa="x", tamanho_pagina=1000)
 
-    def test_tjdft_quantidade_por_pagina_rejects_below_ge(self):
+    def test_tjdft_tamanho_pagina_rejects_below_ge(self):
         with pytest.raises(ValidationError):
-            InputCJSGTJDFT(pesquisa="x", quantidade_por_pagina=0)
+            InputCJSGTJDFT(pesquisa="x", tamanho_pagina=0)
 
-    def test_tjes_per_page_rejects_below_ge_in_cjsg_and_cjpg(self):
+    def test_tjes_tamanho_pagina_rejects_below_ge_in_cjsg_and_cjpg(self):
         with pytest.raises(ValidationError):
-            InputCJSGTJES(pesquisa="x", per_page=0)
+            InputCJSGTJES(pesquisa="x", tamanho_pagina=0)
         with pytest.raises(ValidationError):
-            InputCJPGTJES(pesquisa="x", per_page=0)
+            InputCJPGTJES(pesquisa="x", tamanho_pagina=0)
 
-    def test_tjgo_qtde_itens_pagina_rejects_below_ge(self):
+    def test_tjgo_tamanho_pagina_rejects_below_ge(self):
         with pytest.raises(ValidationError):
-            InputCJSGTJGO(pesquisa="x", qtde_itens_pagina=0)
+            InputCJSGTJGO(pesquisa="x", tamanho_pagina=0)
 
-    def test_tjmt_quantidade_por_pagina_rejects_below_ge(self):
+    def test_tjmt_tamanho_pagina_rejects_below_ge(self):
         with pytest.raises(ValidationError):
-            InputCJSGTJMT(pesquisa="x", quantidade_por_pagina=0)
+            InputCJSGTJMT(pesquisa="x", tamanho_pagina=0)
 
 
 # (Schema, field_name) — campos da Categoria C cujo default mudou de ``""``

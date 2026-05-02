@@ -27,7 +27,7 @@ def test_cjsg_all_filters_land_in_graphql_body(mocker):
         tipo_acordaos=False,
         tipo_decisoes_monocraticas=True,
         ordenado_por="relevancia",
-        items_per_page=5,
+        tamanho_pagina=5,
     )
     responses.add(
         responses.POST,
@@ -67,6 +67,33 @@ def test_cjsg_unknown_kwarg_raises():
     the field name, instead of being silently dropped (refs #84, #93, #165)."""
     with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
         jus.scraper("tjba").cjsg("dano moral", paginas=1, kwarg_inventado="x")
+
+
+@responses.activate
+def test_cjsg_items_per_page_alias_emits_deprecation_warning(mocker):
+    """``items_per_page`` e alias deprecado de ``tamanho_pagina`` (refs #211)."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.POST,
+        BASE,
+        body=load_sample("tjba", "cjsg/no_results.json"),
+        status=200,
+        content_type="application/json",
+        match=[json_params_matcher(_payload("dano moral", 0, tamanho_pagina=5))],
+    )
+
+    with pytest.warns(DeprecationWarning, match="items_per_page.*deprecado"):
+        df = jus.scraper("tjba").cjsg("dano moral", paginas=1, items_per_page=5)
+
+    assert isinstance(df, pd.DataFrame)
+
+
+def test_cjsg_tamanho_pagina_collision_raises():
+    """Passar canonico + alias simultaneamente levanta ValueError (refs #211)."""
+    with pytest.raises(ValueError, match=r"tamanho_pagina.*items_per_page"):
+        jus.scraper("tjba").cjsg(
+            "dano moral", paginas=1, tamanho_pagina=5, items_per_page=10
+        )
 
 
 def test_cjsg_data_julgamento_raises_typeerror():

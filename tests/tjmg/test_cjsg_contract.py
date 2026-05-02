@@ -11,7 +11,7 @@ TJMG hits four endpoints in strict sequence per ``cjsg`` call:
    plaintext call validating the decoded captcha. Server flags the
    session; subsequent searches reuse it.
 4. ``GET pesquisaPalavrasEspelhoAcordao.do?...`` — actual results
-   (paginated by ``numeroRegistro = (pagina-1) * linhas_por_pagina + 1``).
+   (paginated by ``numeroRegistro = (pagina-1) * tamanho_pagina + 1``).
 
 Pytest never decodes the real captcha: the contract patches
 ``txtcaptcha`` into ``sys.modules`` with a stub that returns a fixed
