@@ -1,11 +1,12 @@
 """Pydantic schemas for TJBA scraper endpoints.
 
-Ainda nao wired em :mod:`juscraper.courts.tjba.client` — este arquivo e
-documentacao executavel da API publica ate o TJBA ser refatorado para o
-pipeline canonico da #93. A lista de campos bate byte-a-byte com a
-assinatura publica de :meth:`TJBAScraper.cjsg` / :meth:`TJBAScraper.cjsg_download`.
+Wired em :mod:`juscraper.courts.tjba.client` desde o lote L2 do #165 —
+:meth:`TJBAScraper.cjsg_download` valida kwargs via :class:`InputCJSGTJBA`
+com ``extra="forbid"`` herdado de :class:`SearchBase`.
 """
 from __future__ import annotations
+
+from typing import ClassVar
 
 from ...schemas import DataPublicacaoMixin, OutputCJSGBase, OutputDataPublicacaoMixin, OutputRelatoriaMixin, SearchBase
 
@@ -19,7 +20,13 @@ class InputCJSGTJBA(SearchBase, DataPublicacaoMixin):
     caem aqui e sao rejeitados por ``extra="forbid"`` herdado de
     :class:`SearchBase`. Filtro de data de publicacao vem de
     :class:`DataPublicacaoMixin`.
+
+    ``BACKEND_DATE_FORMAT="%Y-%m-%d"`` (ISO) — o backend GraphQL aceita
+    datas em ``YYYY-MM-DD``, entao :func:`apply_input_pipeline_search`
+    coage as datas para esse formato antes de validar (refs #173).
     """
+
+    BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
 
     numero_recurso: str | None = None
     orgaos: list | None = None
