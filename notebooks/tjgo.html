@@ -413,7 +413,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <p>Scraper for the TJGO jurisprudence search hosted on Projudi (<code>ConsultaJurisprudencia</code>). The page renders a Cloudflare Turnstile widget but the backend does not validate the token, so the scraper works with pure HTTP requests.</p>
-<div id="cell-2" class="cell" data-execution_count="1">
+<div id="36edeb0f" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>tjgo <span class="op">=</span> jus.scraper(<span class="st">'tjgo'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -421,7 +421,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="basic-search" class="level2">
 <h2 class="anchored" data-anchor-id="basic-search">Basic search</h2>
 <p>Download two pages of results so we can verify pagination works.</p>
-<div id="cell-4" class="cell" data-execution_count="2">
+<div id="013ecb45" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjgo.cjsg(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">3</span>))</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df.shape)</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>df.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -485,7 +485,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="available-columns" class="level2">
 <h2 class="anchored" data-anchor-id="available-columns">Available columns</h2>
-<div id="cell-6" class="cell" data-execution_count="3">
+<div id="e041d0bd" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>df.columns.tolist()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="3">
 <pre><code>['processo',
@@ -500,7 +500,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="text-preview" class="level2">
 <h2 class="anchored" data-anchor-id="text-preview">Text preview</h2>
-<div id="cell-8" class="cell" data-execution_count="4">
+<div id="06e8e60d" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df[<span class="st">'texto'</span>].iloc[<span class="dv">0</span>][:<span class="dv">300</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>ESTADO DE GOIÁS - PODER JUDICIÁRIOPlantão Regionalizado - Macrorregião 06Águas Lindas de Goiás, Alexânia, Cidade Ocidental, Cristalina, Luziânia, Novo Gama, Padre Bernardo, Santo Antônio do Descoberto e Valparaíso de GoiásDECISÃOAutos n.: 5316968-04.2026.8.09.0100Classe: PROCESSO CRIMINAL -&gt; Procedi</code></pre>
@@ -514,7 +514,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>id_instancia</code>: <code>0</code> all / <code>1</code> 1st degree / <code>2</code> recursal / <code>3</code> tribunal</li>
 <li><code>id_area</code>: <code>0</code> all / <code>1</code> civil / <code>2</code> criminal</li>
 </ul>
-<div id="cell-10" class="cell" data-execution_count="5">
+<div id="d0ef70bc" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>df_civel <span class="op">=</span> tjgo.cjsg(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="dv">1</span>, id_instancia<span class="op">=</span><span class="dv">3</span>, id_area<span class="op">=</span><span class="dv">1</span>)</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>df_civel[[<span class="st">'processo'</span>, <span class="st">'serventia'</span>, <span class="st">'tipo_ato'</span>]].head()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="5">
@@ -571,7 +571,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="download-and-parse-separately" class="level2">
 <h2 class="anchored" data-anchor-id="download-and-parse-separately">Download and parse separately</h2>
 <p><code>cjsg_download</code> returns the raw HTML responses, which is useful when you want to keep the original payloads.</p>
-<div id="cell-12" class="cell" data-execution_count="6">
+<div id="76414407" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>raw <span class="op">=</span> tjgo.cjsg_download(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="bu">type</span>(raw), <span class="bu">len</span>(raw), <span class="st">'chars in page 1:'</span>, <span class="bu">len</span>(raw[<span class="dv">0</span>]))</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>df_raw <span class="op">=</span> tjgo.cjsg_parse(raw)</span>

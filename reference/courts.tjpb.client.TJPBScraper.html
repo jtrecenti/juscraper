@@ -190,7 +190,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td><a href="#juscraper.courts.tjpb.client.TJPBScraper.cjsg">cjsg</a></td>
-<td>Search TJPB jurisprudence.</td>
+<td>Busca jurisprudencia no TJPB.</td>
 </tr>
 <tr class="even">
 <td><a href="#juscraper.courts.tjpb.client.TJPBScraper.cjsg_download">cjsg_download</a></td>
@@ -215,22 +215,136 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>courts.tjpb.client.TJPBScraper.cjsg(</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    numero_processo<span class="op">=</span><span class="st">''</span>,</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    id_classe_judicial<span class="op">=</span><span class="st">''</span>,</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    id_orgao_julgador<span class="op">=</span><span class="st">''</span>,</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    id_relator<span class="op">=</span><span class="st">''</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    numero_processo<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    id_classe<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    id_orgao_julgador<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    id_relator<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    id_origem<span class="op">=</span><span class="st">'8,2'</span>,</span>
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    decisoes<span class="op">=</span><span class="va">False</span>,</span>
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Search TJPB jurisprudence.</p>
+<p>Busca jurisprudencia no TJPB.</p>
 <section id="parameters" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
-<p>pesquisa : str Free-text search term (searched in ementa). paginas : int, list, range, or None Pages to download (1-based). None downloads all. numero_processo : str, optional Process number filter. Accepts the deprecated alias <code>nr_processo</code>. id_classe_judicial : str, optional Judicial class ID. id_orgao_julgador : str, optional Judging body ID. id_relator : str, optional Reporter judge ID. id_origem : str, optional Origin filter. <code>"8,2"</code> for all (default), <code>"8"</code> for Turmas Recursais, <code>"2"</code> for Tribunal Pleno/Camaras. decisoes : bool If True, include monocratic decisions.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>pesquisa</td>
+<td><a href="`str`">str</a></td>
+<td>Termo de busca livre (busca na ementa).</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>paginas</td>
+<td><a href="`int`">int</a> | <a href="`list`">list</a> | <a href="`range`">range</a> | None</td>
+<td>Paginas 1-based; <code>None</code> baixa todas. Default <code>None</code>.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>numero_processo</td>
+<td><a href="`str`">str</a></td>
+<td>Numero CNJ do processo. Aceita o alias deprecado <code>nr_processo</code>.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>id_classe</td>
+<td><a href="`str`">str</a></td>
+<td>ID da classe judicial. Aceita o alias deprecado <code>id_classe_judicial</code> (refs #129).</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>id_orgao_julgador</td>
+<td><a href="`str`">str</a></td>
+<td>ID do orgao julgador.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>id_relator</td>
+<td><a href="`str`">str</a></td>
+<td>ID do relator.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>id_origem</td>
+<td><a href="`str`">str</a></td>
+<td>Filtro de origem. <code>"8,2"</code> para todos (default), <code>"8"</code> para Turmas Recursais, <code>"2"</code> para Tribunal Pleno/Camaras.</td>
+<td><code>'8,2'</code></td>
+</tr>
+<tr class="even">
+<td>decisoes</td>
+<td><a href="`bool`">bool</a></td>
+<td>Se <code>True</code>, inclui decisoes monocraticas.</td>
+<td><code>False</code></td>
+</tr>
+<tr class="odd">
+<td>**kwargs</td>
+<td></td>
+<td>Filtros aceitos pelo schema :class:<code>InputCJSGTJPB</code>. Listados abaixo (todos opcionais; <code>None</code> = sem filtro): * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str | date | datetime): <code>DD/MM/YYYY</code>, <code>DD-MM-YYYY</code>, <code>YYYY-MM-DD</code> ou <code>YYYY/MM/DD</code>. Convertido para <code>YYYY-MM-DD</code> antes do envio ao backend. O backend filtra por uma data interna de disponibilizacao (nao por <code>dt_ementa</code>); o cliente aplica um post-filter local sobre <code>data_julgamento</code> para garantir que a janela pedida bate com o que e devolvido (refs #195).</td>
+<td><code>{}</code></td>
+</tr>
+</tbody>
+</table>
+<p>Aliases deprecados (popados com <code>DeprecationWarning</code> antes do pydantic): * <code>query</code> / <code>termo</code> -&gt; <code>pesquisa</code> * <code>nr_processo</code> -&gt; <code>numero_processo</code> * <code>id_classe_judicial</code> -&gt; <code>id_classe</code> * <code>data_inicio</code> / <code>data_fim</code> -&gt; <code>data_julgamento_inicio</code> / <code>_fim</code> * <code>data_julgamento_de</code> / <code>_ate</code> -&gt; <code>data_julgamento_inicio</code> / <code>_fim</code></p>
+</section>
+<section id="raises" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`TypeError`">TypeError</a></td>
+<td>Quando um kwarg desconhecido e passado.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>Quando um canonico e seu alias deprecado sao passados simultaneamente.</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><a href="`ValidationError`">ValidationError</a></td>
+<td>Quando um filtro tem formato invalido.</td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="returns" class="level4 doc-section doc-section-returns">
 <h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
-<p>pd.DataFrame</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>pd.DataFrame: DataFrame com as decisoes.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="see-also" class="level4 doc-section doc-section-see-also">
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See also</h4>
+<p><a href=":class:`InputCJSGTJPB`"></a> — schema pydantic e a fonte da verdade dos filtros aceitos.</p>
 </section>
 </section>
 <section id="juscraper.courts.tjpb.client.TJPBScraper.cjsg_download" class="level3">
@@ -238,12 +352,34 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>courts.tjpb.client.TJPBScraper.cjsg_download(</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    numero_processo<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    id_classe<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    id_orgao_julgador<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    id_relator<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    id_origem<span class="op">=</span><span class="st">'8,2'</span>,</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    decisoes<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Download raw CJSG JSON responses from TJPB.</p>
+<p>Aceita os mesmos filtros de :meth:<code>cjsg</code>; veja la a lista completa.</p>
 <section id="returns-1" class="level4 doc-section doc-section-returns">
 <h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
-<p>list List of raw JSON responses (one per page).</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>list</td>
+<td><a href="`list`">list</a></td>
+<td>Lista de respostas JSON cruas (uma por pagina).</td>
+</tr>
+</tbody>
+</table>
 </section>
 </section>
 <section id="juscraper.courts.tjpb.client.TJPBScraper.cjsg_parse" class="level3">
@@ -252,7 +388,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Parse downloaded CJSG JSON responses.</p>
 <section id="returns-2" class="level4 doc-section doc-section-returns">
 <h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-2">Returns</h4>
-<p>pd.DataFrame</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>pd.DataFrame: DataFrame com as decisoes.</td>
+</tr>
+</tbody>
+</table>
 </section>
 </section>
 <section id="juscraper.courts.tjpb.client.TJPBScraper.cpopg" class="level3">

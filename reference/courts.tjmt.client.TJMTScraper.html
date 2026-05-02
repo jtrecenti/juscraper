@@ -223,10 +223,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    quantidade_por_pagina<span class="op">=</span><span class="dv">10</span>,</span>
 <span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    data_publicacao_inicio<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    data_publicacao_fim<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Search TJMT jurisprudence (download + parse).</p>
 <p>Returns a ready-to-analyze DataFrame.</p>
 </section>
@@ -244,10 +242,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    quantidade_por_pagina<span class="op">=</span><span class="dv">10</span>,</span>
 <span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    data_publicacao_inicio<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    data_publicacao_fim<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Download raw JSON results from the TJMT jurisprudence API.</p>
 <section id="parameters" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
@@ -263,13 +259,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>pesquisa</td>
-<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
+<td><a href="`str`">str</a> | None</td>
 <td>Search term. <code>query</code> and <code>termo</code> are accepted as deprecated aliases.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>paginas</td>
-<td><a href="`typing.Union`">Union</a>[<a href="`int`">int</a>, <a href="`list`">list</a>, <a href="`range`">range</a>, None]</td>
+<td><a href="`int`">int</a> | <a href="`list`">list</a> | <a href="`range`">range</a> | None</td>
 <td>Pages to download (1-based). int: paginas=3 downloads pages 1-3. range: range(1, 4) downloads pages 1-3. None: downloads all available pages.</td>
 <td><code>None</code></td>
 </tr>
@@ -281,25 +277,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>relator</td>
-<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
+<td><a href="`str`">str</a> | None</td>
 <td>Filter by judge name.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>orgao_julgador</td>
-<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
+<td><a href="`str`">str</a> | None</td>
 <td>Filter by court chamber.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>classe</td>
-<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
+<td><a href="`str`">str</a> | None</td>
 <td>Filter by case class.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>tipo_processo</td>
-<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
+<td><a href="`str`">str</a> | None</td>
 <td><code>"Civel"</code> or <code>"Criminal"</code>.</td>
 <td><code>None</code></td>
 </tr>
@@ -317,18 +313,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>data_julgamento_inicio</td>
-<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
+<td><a href="`str`">str</a> | None</td>
 <td>Start date for filtering (<code>yyyy-mm-dd</code>).</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>data_julgamento_fim</td>
-<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
+<td><a href="`str`">str</a> | None</td>
 <td>End date for filtering (<code>yyyy-mm-dd</code>).</td>
 <td><code>None</code></td>
 </tr>
 </tbody>
 </table>
+<p>The backend exposes only a single date range (<code>filtro.periodoDataDe</code> / <code>filtro.periodoDataAte</code>) applied to the judgment date; passing <code>data_publicacao_*</code> raises <code>TypeError</code>.</p>
 </section>
 </section>
 <section id="juscraper.courts.tjmt.client.TJMTScraper.cjsg_parse" class="level3">

@@ -215,15 +215,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>courts.tjrn.client.TJRNScraper.cjsg(</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    numero_processo<span class="op">=</span><span class="st">''</span>,</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    id_classe_judicial<span class="op">=</span><span class="st">''</span>,</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    id_orgao_julgador<span class="op">=</span><span class="st">''</span>,</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    id_relator<span class="op">=</span><span class="st">''</span>,</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    id_colegiado<span class="op">=</span><span class="st">''</span>,</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    sistema<span class="op">=</span><span class="st">''</span>,</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    decisoes<span class="op">=</span><span class="st">''</span>,</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    jurisdicoes<span class="op">=</span><span class="st">''</span>,</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    grau<span class="op">=</span><span class="st">''</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    numero_processo<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    id_classe<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    id_orgao_julgador<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    id_relator<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    id_colegiado<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    sistema<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    decisoes<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    jurisdicoes<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    grau<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Busca jurisprudencia no TJRN.</p>
@@ -255,55 +255,55 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>numero_processo</td>
 <td><a href="`str`">str</a></td>
 <td>Numero CNJ do processo. Aceita o alias deprecado <code>nr_processo</code>.</td>
-<td><code>''</code></td>
+<td><code>None</code></td>
 </tr>
 <tr class="even">
-<td>id_classe_judicial</td>
+<td>id_classe</td>
 <td><a href="`str`">str</a></td>
-<td>ID da classe judicial.</td>
-<td><code>''</code></td>
+<td>ID da classe judicial. Aceita o alias deprecado <code>id_classe_judicial</code> (refs #129).</td>
+<td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>id_orgao_julgador</td>
 <td><a href="`str`">str</a></td>
 <td>ID do orgao julgador.</td>
-<td><code>''</code></td>
+<td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>id_relator</td>
 <td><a href="`str`">str</a></td>
 <td>ID do relator.</td>
-<td><code>''</code></td>
+<td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>id_colegiado</td>
 <td><a href="`str`">str</a></td>
 <td>ID do colegiado.</td>
-<td><code>''</code></td>
+<td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>sistema</td>
 <td><a href="`str`">str</a></td>
 <td><code>"PJE"</code>, <code>"SAJ"</code> ou vazio para todos.</td>
-<td><code>''</code></td>
+<td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>decisoes</td>
 <td><a href="`str`">str</a></td>
 <td><code>"Monocraticas"</code>, <code>"Colegiadas"</code>, <code>"Sentencas"</code> ou vazio para todos.</td>
-<td><code>''</code></td>
+<td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>jurisdicoes</td>
 <td><a href="`str`">str</a></td>
 <td><code>"Tribunal de Justica"</code>, <code>"Turmas Recursais"</code> ou vazio para todos.</td>
-<td><code>''</code></td>
+<td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>grau</td>
 <td><a href="`str`">str</a></td>
 <td><code>"1"</code> (primeiro), <code>"2"</code> (segundo) ou vazio para todos.</td>
-<td><code>''</code></td>
+<td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>**kwargs</td>
@@ -313,7 +313,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
-<p>Aliases deprecados (popados com <code>DeprecationWarning</code> antes do pydantic): * <code>query</code> / <code>termo</code> -&gt; <code>pesquisa</code> * <code>nr_processo</code> -&gt; <code>numero_processo</code> * <code>data_inicio</code> / <code>data_fim</code> -&gt; <code>data_julgamento_inicio</code> / <code>_fim</code> * <code>data_julgamento_de</code> / <code>_ate</code> -&gt; <code>data_julgamento_inicio</code> / <code>_fim</code></p>
+<p>Aliases deprecados (popados com <code>DeprecationWarning</code> antes do pydantic): * <code>query</code> / <code>termo</code> -&gt; <code>pesquisa</code> * <code>nr_processo</code> -&gt; <code>numero_processo</code> * <code>id_classe_judicial</code> -&gt; <code>id_classe</code> * <code>data_inicio</code> / <code>data_fim</code> -&gt; <code>data_julgamento_inicio</code> / <code>_fim</code> * <code>data_julgamento_de</code> / <code>_ate</code> -&gt; <code>data_julgamento_inicio</code> / <code>_fim</code></p>
 </section>
 <section id="raises" class="level4 doc-section doc-section-raises">
 <h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
@@ -334,7 +334,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td></td>
 <td><a href="`ValueError`">ValueError</a></td>
-<td>Quando <code>numero_processo</code> e <code>nr_processo</code> sao passados simultaneamente.</td>
+<td>Quando um canonico e seu alias deprecado sao passados simultaneamente.</td>
 </tr>
 <tr class="odd">
 <td></td>
@@ -373,10 +373,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>courts.tjrn.client.TJRNScraper.cjsg_download(</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    numero_processo<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    id_classe<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    id_orgao_julgador<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    id_relator<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    id_colegiado<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    sistema<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    decisoes<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    jurisdicoes<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    grau<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Download raw CJSG JSON responses from TJRN.</p>
-<p>Parameters are the same as :meth:<code>cjsg</code>.</p>
+<p>Aceita os mesmos filtros de :meth:<code>cjsg</code>; veja la a lista completa.</p>
 <section id="returns-1" class="level4 doc-section doc-section-returns">
 <h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
 <p>list List of raw JSON responses (one per page).</p>

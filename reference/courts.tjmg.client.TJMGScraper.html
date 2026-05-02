@@ -190,7 +190,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td><a href="#juscraper.courts.tjmg.client.TJMGScraper.cjsg">cjsg</a></td>
-<td>Convenience method: download + parse.</td>
+<td>Busca jurisprudencia no TJMG (acordaos com captcha numerico).</td>
 </tr>
 <tr class="even">
 <td><a href="#juscraper.courts.tjmg.client.TJMGScraper.cjsg_download">cjsg_download</a></td>
@@ -212,8 +212,114 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <section id="juscraper.courts.tjmg.client.TJMGScraper.cjsg" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjmg.client.TJMGScraper.cjsg">cjsg</h3>
-<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>courts.tjmg.client.TJMGScraper.cjsg(pesquisa<span class="op">=</span><span class="va">None</span>, paginas<span class="op">=</span><span class="va">None</span>, <span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Convenience method: download + parse.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>courts.tjmg.client.TJMGScraper.cjsg(</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    pesquisar_por<span class="op">=</span><span class="st">'ementa'</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    order_by<span class="op">=</span><span class="dv">2</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    linhas_por_pagina<span class="op">=</span><span class="dv">10</span>,</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Busca jurisprudencia no TJMG (acordaos com captcha numerico).</p>
+<section id="parameters" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>pesquisa</td>
+<td><a href="`str`">str</a></td>
+<td>Termo de busca livre.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>paginas</td>
+<td><a href="`int`">int</a> | <a href="`list`">list</a> | <a href="`range`">range</a> | None</td>
+<td>Paginas 1-based; <code>None</code> baixa todas. Default <code>None</code> (cap de 400 resultados, limite do TJMG).</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>pesquisar_por</td>
+<td>{'ementa', 'acordao'}</td>
+<td>Campo onde buscar. <code>"acordao"</code> busca no inteiro teor. Default <code>"ementa"</code>.</td>
+<td><code>'ementa'</code></td>
+</tr>
+<tr class="even">
+<td>order_by</td>
+<td><a href="`int`">int</a> | <a href="`str`">str</a></td>
+<td>Ordenacao: <code>2</code> data julgamento, <code>1</code> data publicacao, <code>0</code> precisao. Default <code>2</code>.</td>
+<td><code>2</code></td>
+</tr>
+<tr class="odd">
+<td>linhas_por_pagina</td>
+<td><a href="`int`">int</a></td>
+<td>Resultados por pagina (10, 20 ou 50).</td>
+<td><code>10</code></td>
+</tr>
+<tr class="even">
+<td>**kwargs</td>
+<td></td>
+<td>Filtros aceitos pelo schema :class:<code>InputCJSGTJMG</code>. Listados abaixo (todos opcionais; <code>None</code> = sem filtro): * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str): <code>DD/MM/AAAA</code>. Backend: <code>dataJulgamentoInicial</code> / <code>dataJulgamentoFinal</code>. * <code>data_publicacao_inicio</code> / <code>data_publicacao_fim</code> (str): <code>DD/MM/AAAA</code>. Backend: <code>dataPublicacaoInicial</code> / <code>dataPublicacaoFinal</code>.</td>
+<td><code>{}</code></td>
+</tr>
+</tbody>
+</table>
+<p>Aliases deprecados (popados com <code>DeprecationWarning</code> antes do pydantic): * <code>query</code> / <code>termo</code> -&gt; <code>pesquisa</code> * <code>data_inicio</code> / <code>data_fim</code> -&gt; <code>data_julgamento_inicio</code> / <code>_fim</code> * <code>data_julgamento_de</code> / <code>_ate</code> -&gt; <code>data_julgamento_inicio</code> / <code>_fim</code> * <code>data_publicacao_de</code> / <code>_ate</code> -&gt; <code>data_publicacao_inicio</code> / <code>_fim</code></p>
+</section>
+<section id="raises" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`TypeError`">TypeError</a></td>
+<td>Quando um kwarg desconhecido e passado.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`ValidationError`">ValidationError</a></td>
+<td>Quando um filtro tem formato invalido.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>pd.DataFrame: DataFrame com os acordaos.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="see-also" class="level4 doc-section doc-section-see-also">
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See also</h4>
+<p><a href=":class:`InputCJSGTJMG`"></a> — schema pydantic e a fonte da verdade dos filtros aceitos.</p>
+</section>
 </section>
 <section id="juscraper.courts.tjmg.client.TJMGScraper.cjsg_download" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjmg.client.TJMGScraper.cjsg_download">cjsg_download</h3>
@@ -223,11 +329,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    pesquisar_por<span class="op">=</span><span class="st">'ementa'</span>,</span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    order_by<span class="op">=</span><span class="dv">2</span>,</span>
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    linhas_por_pagina<span class="op">=</span><span class="dv">10</span>,</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    data_publicacao_inicio<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    data_publicacao_fim<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Run a TJMG acórdão search and return the raw HTML of each page.</p>
-<section id="parameters" class="level4 doc-section doc-section-parameters">
-<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
+<p>Aceita os mesmos filtros de :meth:<code>cjsg</code>; veja la a lista completa.</p>
+<section id="parameters-1" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
 <p>pesquisa : str Free-text search term. paginas : int, list, range or None Pages to download (1-based). <code>None</code> downloads every page (capped at 400 results, the TJMG limit). pesquisar_por : str Field to search in: <code>"ementa"</code> or <code>"acordao"</code> (inteiro teor). order_by : int Sort order: <code>2</code> data julgamento, <code>1</code> data publicação, <code>0</code> precisão. linhas_por_pagina : int Results per page (10, 20 or 50). data_julgamento_inicio, data_julgamento_fim : str Julgamento date range (<code>dd/mm/yyyy</code> or <code>yyyy-mm-dd</code>). data_publicacao_inicio, data_publicacao_fim : str Publicação date range (<code>dd/mm/yyyy</code> or <code>yyyy-mm-dd</code>).</p>
 </section>
 </section>

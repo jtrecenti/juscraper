@@ -619,230 +619,56 @@ Voto servindo como ementa.
 </section>
 <section id="using-filters" class="level2">
 <h2 class="anchored" data-anchor-id="using-filters">Using filters</h2>
-<p>The TJES scraper supports several filters: <code>magistrado</code>, <code>orgao_julgador</code>, <code>classe_judicial</code>, <code>jurisdicao</code>, <code>assunto</code>, date range (<code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code>), <code>busca_exata</code>, and <code>ordenacao</code>.</p>
-<div id="34a75d9d" class="cell" data-execution_count="5">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter by date range and magistrado</span></span>
+<p>The TJES scraper supports several filters: <code>relator</code>, <code>orgao_julgador</code>, <code>classe</code>, <code>jurisdicao</code>, <code>assunto</code>, date range (<code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code>), <code>busca_exata</code>, and <code>ordenacao</code>.</p>
+<div id="34a75d9d" class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter by date range and relator</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>dados_filtrados <span class="op">=</span> tjes.cjsg(</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'direito'</span>,</span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">'2024-01-01'</span>,</span>
 <span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">'2024-06-30'</span>,</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    magistrado<span class="op">=</span><span class="st">'HELIMAR PINTO'</span>,</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    relator<span class="op">=</span><span class="st">'HELIMAR PINTO'</span>,</span>
 <span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">1</span>,</span>
 <span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_filtrados.shape)</span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>dados_filtrados[[<span class="st">'nr_processo'</span>, <span class="st">'magistrado'</span>, <span class="st">'classe_judicial'</span>, <span class="st">'dt_juntada'</span>]].head(<span class="dv">5</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Baixando paginas TJES: 100%|██████████| 1/1 [00:00&lt;00:00, 10.22it/s]</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>(20, 23)</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code></code></pre>
-</div>
-<div class="cell-output cell-output-display" data-execution_count="5">
-<div>
-
-
-<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
-<thead>
-<tr class="header">
-<th data-quarto-table-cell-role="th"></th>
-<th data-quarto-table-cell-role="th">nr_processo</th>
-<th data-quarto-table-cell-role="th">magistrado</th>
-<th data-quarto-table-cell-role="th">classe_judicial</th>
-<th data-quarto-table-cell-role="th">dt_juntada</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">0</td>
-<td>5005361-74.2024.8.08.0000</td>
-<td>HELIMAR PINTO</td>
-<td>AGRAVO DE EXECUÇÃO PENAL</td>
-<td>2024-06-25</td>
-</tr>
-<tr class="even">
-<td data-quarto-table-cell-role="th">1</td>
-<td>0001362-38.2023.8.08.0000</td>
-<td>HELIMAR PINTO</td>
-<td>MANDADO DE SEGURANÇA CÍVEL</td>
-<td>2024-02-29</td>
-</tr>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">2</td>
-<td>5003125-52.2024.8.08.0000</td>
-<td>HELIMAR PINTO</td>
-<td>HABEAS CORPUS CRIMINAL</td>
-<td>2024-04-18</td>
-</tr>
-<tr class="even">
-<td data-quarto-table-cell-role="th">3</td>
-<td>0026004-72.2016.8.08.0048</td>
-<td>HELIMAR PINTO</td>
-<td>APELAÇÃO CRIMINAL</td>
-<td>2024-04-25</td>
-</tr>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">4</td>
-<td>5005989-63.2024.8.08.0000</td>
-<td>HELIMAR PINTO</td>
-<td>HABEAS CORPUS CRIMINAL</td>
-<td>2024-06-25</td>
-</tr>
-</tbody>
-</table>
-
-</div>
-</div>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>dados_filtrados[[<span class="st">'processo'</span>, <span class="st">'relator'</span>, <span class="st">'classe'</span>, <span class="st">'dt_juntada'</span>]].head(<span class="dv">5</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="querying-different-cores" class="level2">
 <h2 class="anchored" data-anchor-id="querying-different-cores">Querying different cores</h2>
 <p>By default, the scraper queries <code>pje2g</code> (second instance). You can switch cores with the <code>core</code> parameter.</p>
-<div id="66f3ceb5" class="cell" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Search monocratic decisions (2nd instance)</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>dados_mono <span class="op">=</span> tjes.cjsg(<span class="st">'dano moral'</span>, core<span class="op">=</span><span class="st">'pje2g_mono'</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Monocratic results: </span><span class="sc">{</span><span class="bu">len</span>(dados_mono)<span class="sc">}</span><span class="ss"> rows"</span>)</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>dados_mono[[<span class="st">'nr_processo'</span>, <span class="st">'magistrado'</span>, <span class="st">'classe_judicial'</span>]].head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Baixando paginas TJES: 100%|██████████| 1/1 [00:00&lt;00:00, 10.46it/s]</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Monocratic results: 20 rows</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code></code></pre>
-</div>
-<div class="cell-output cell-output-display" data-execution_count="6">
-<div>
-
-
-<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
-<thead>
-<tr class="header">
-<th data-quarto-table-cell-role="th"></th>
-<th data-quarto-table-cell-role="th">nr_processo</th>
-<th data-quarto-table-cell-role="th">magistrado</th>
-<th data-quarto-table-cell-role="th">classe_judicial</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">0</td>
-<td>5001274-40.2022.8.08.0002</td>
-<td>GRECIO NOGUEIRA GREGIO</td>
-<td>Recurso Inominado Cível</td>
-</tr>
-<tr class="even">
-<td data-quarto-table-cell-role="th">1</td>
-<td>5023551-77.2024.8.08.0035</td>
-<td>DOUGLAS DEMONER FIGUEIREDO</td>
-<td>RECURSO INOMINADO CÍVEL</td>
-</tr>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">2</td>
-<td>5001473-59.2023.8.08.0024</td>
-<td>SALOMAO AKHNATON ZOROASTRO SPENCER ELESBON</td>
-<td>Recurso Inominado Cível</td>
-</tr>
-</tbody>
-</table>
-
-</div>
-</div>
+<div id="66f3ceb5" class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Search monocratic decisions (2nd instance)</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>dados_mono <span class="op">=</span> tjes.cjsg(<span class="st">'dano moral'</span>, core<span class="op">=</span><span class="st">'pje2g_mono'</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Monocratic results: </span><span class="sc">{</span><span class="bu">len</span>(dados_mono)<span class="sc">}</span><span class="ss"> rows"</span>)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>dados_mono[[<span class="st">'processo'</span>, <span class="st">'relator'</span>, <span class="st">'classe'</span>]].head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="first-instance-cjpg" class="level2">
 <h2 class="anchored" data-anchor-id="first-instance-cjpg">First instance (cjpg)</h2>
 <p>Use <code>cjpg()</code> to query first-instance decisions (core <code>pje1g</code>). It accepts the same filters as <code>cjsg</code> (except <code>core</code>).</p>
 <p>Note: <code>cjsg()</code> does <strong>not</strong> accept <code>core="pje1g"</code> — use <code>cjpg()</code> instead.</p>
-<div id="116996c0" class="cell" data-execution_count="7">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Search first-instance decisions</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>dados_1g <span class="op">=</span> tjes.cjpg(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"First instance results: </span><span class="sc">{</span><span class="bu">len</span>(dados_1g)<span class="sc">}</span><span class="ss"> rows"</span>)</span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>dados_1g[[<span class="st">'nr_processo'</span>, <span class="st">'magistrado'</span>, <span class="st">'classe_judicial'</span>, <span class="st">'dt_juntada'</span>]].head(<span class="dv">5</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Baixando paginas TJES: 100%|██████████| 1/1 [00:00&lt;00:00,  5.04it/s]</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>First instance results: 20 rows</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code></code></pre>
-</div>
-<div class="cell-output cell-output-display" data-execution_count="7">
-<div>
-
-
-<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
-<thead>
-<tr class="header">
-<th data-quarto-table-cell-role="th"></th>
-<th data-quarto-table-cell-role="th">nr_processo</th>
-<th data-quarto-table-cell-role="th">magistrado</th>
-<th data-quarto-table-cell-role="th">classe_judicial</th>
-<th data-quarto-table-cell-role="th">dt_juntada</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">0</td>
-<td>5000704-46.2022.8.08.0037</td>
-<td>MARCELO MATTAR COUTINHO</td>
-<td>Procedimento do Juizado Especial Cível</td>
-<td>2023-09-28</td>
-</tr>
-<tr class="even">
-<td data-quarto-table-cell-role="th">1</td>
-<td>5000057-89.2018.8.08.0005</td>
-<td>EVANDRO COELHO DE LIMA</td>
-<td>Procedimento do Juizado Especial Cível</td>
-<td>2019-12-17</td>
-</tr>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">2</td>
-<td>5004066-91.2024.8.08.0035</td>
-<td>INES VELLO CORREA</td>
-<td>Procedimento do Juizado Especial Cível</td>
-<td>2024-11-08</td>
-</tr>
-<tr class="even">
-<td data-quarto-table-cell-role="th">3</td>
-<td>5000045-13.2017.8.08.0037</td>
-<td>MARCELO MATTAR COUTINHO</td>
-<td>Procedimento do Juizado Especial Cível</td>
-<td>2020-01-04</td>
-</tr>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">4</td>
-<td>5005643-41.2022.8.08.0014</td>
-<td>SALOMAO AKHNATON ZOROASTRO SPENCER ELESBON</td>
-<td>Procedimento do Juizado Especial Cível</td>
-<td>2022-11-01</td>
-</tr>
-</tbody>
-</table>
-
-</div>
-</div>
+<div id="116996c0" class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Search first-instance decisions</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>dados_1g <span class="op">=</span> tjes.cjpg(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"First instance results: </span><span class="sc">{</span><span class="bu">len</span>(dados_1g)<span class="sc">}</span><span class="ss"> rows"</span>)</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>dados_1g[[<span class="st">'processo'</span>, <span class="st">'relator'</span>, <span class="st">'classe'</span>, <span class="st">'dt_juntada'</span>]].head(<span class="dv">5</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="download-and-parse-separately" class="level2">
 <h2 class="anchored" data-anchor-id="download-and-parse-separately">Download and parse separately</h2>
 <p>For more control, you can use <code>cjsg_download</code> and <code>cjsg_parse</code> separately. This is useful when you want to cache the raw responses or inspect them before parsing.</p>
 <div id="f3cfc1d9" class="cell" data-execution_count="8">
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Download raw JSON responses</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>brutos <span class="op">=</span> tjes.cjsg_download(<span class="st">'direito'</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Inspect raw response structure</span></span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Pages downloaded: </span><span class="sc">{</span><span class="bu">len</span>(brutos)<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Keys in response: </span><span class="sc">{</span><span class="bu">list</span>(brutos[<span class="dv">0</span>].keys())<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Total results available: </span><span class="sc">{</span>brutos[<span class="dv">0</span>][<span class="st">'total'</span>]<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Docs in this page: </span><span class="sc">{</span><span class="bu">len</span>(brutos[<span class="dv">0</span>][<span class="st">'docs'</span>])<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Download raw JSON responses</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>brutos <span class="op">=</span> tjes.cjsg_download(<span class="st">'direito'</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Inspect raw response structure</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Pages downloaded: </span><span class="sc">{</span><span class="bu">len</span>(brutos)<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Keys in response: </span><span class="sc">{</span><span class="bu">list</span>(brutos[<span class="dv">0</span>].keys())<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Total results available: </span><span class="sc">{</span>brutos[<span class="dv">0</span>][<span class="st">'total'</span>]<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Docs in this page: </span><span class="sc">{</span><span class="bu">len</span>(brutos[<span class="dv">0</span>][<span class="st">'docs'</span>])<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Baixando paginas TJES: 100%|██████████| 1/1 [00:00&lt;00:00,  6.54it/s]</code></pre>
 </div>
@@ -857,9 +683,9 @@ Docs in this page: 20</code></pre>
 </div>
 </div>
 <div id="bc18f7ad" class="cell" data-execution_count="9">
-<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Parse into DataFrame</span></span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjes.cjsg_parse(brutos)</span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>df.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Parse into DataFrame</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjes.cjsg_parse(brutos)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>df.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="9">
 <div>
 
