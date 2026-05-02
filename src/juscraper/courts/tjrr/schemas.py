@@ -1,9 +1,9 @@
 """Pydantic schemas for TJRR scraper endpoints.
 
-Ainda nao wired em :mod:`juscraper.courts.tjrr.client` — este arquivo e
-documentacao executavel da API publica ate o TJRR ser refatorado para o
-pipeline canonico da #93. A lista de campos bate byte-a-byte com a
-assinatura publica de :meth:`TJRRScraper.cjsg` / :meth:`TJRRScraper.cjsg_download`.
+Wired em :mod:`juscraper.courts.tjrr.client` via
+:func:`juscraper.utils.params.apply_input_pipeline_search` (refs #93/#165).
+A lista de campos bate byte-a-byte com a assinatura publica de
+:meth:`TJRRScraper.cjsg` / :meth:`TJRRScraper.cjsg_download`.
 """
 from __future__ import annotations
 
