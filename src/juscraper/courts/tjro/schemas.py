@@ -9,6 +9,11 @@ from ...schemas import DataJulgamentoMixin, OutputCJSGBase, OutputDataPublicacao
 class InputCJSGTJRO(SearchBase, DataJulgamentoMixin):
     """Accepted input for TJRO ``cjsg`` / ``cjsg_download``.
 
+    Wired em :meth:`juscraper.courts.tjro.client.TJROScraper.cjsg_download`
+    desde o #183 — kwargs desconhecidos viram :class:`TypeError` em ambos
+    ``cjsg`` e ``cjsg_download``. ``cjsg`` e wrapper trivial
+    (``download → parse``).
+
     Endpoint Elasticsearch do JURIS (juris-back.tjro.jus.br) com paginacao
     por offset. ``pesquisa`` aceita os aliases deprecados ``query`` /
     ``termo`` via :func:`juscraper.utils.params.normalize_pesquisa`, que

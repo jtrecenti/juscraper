@@ -7,7 +7,12 @@ from ...schemas import DataJulgamentoMixin, OutputCJSGBase, OutputRelatoriaMixin
 
 
 class InputCJSGTJRN(SearchBase, DataJulgamentoMixin):
-    """Accepted input for TJRN ``cjsg``.
+    """Accepted input for TJRN ``cjsg`` / ``cjsg_download``.
+
+    Wired em :meth:`juscraper.courts.tjrn.client.TJRNScraper.cjsg_download`
+    desde o #183 — kwargs desconhecidos viram :class:`TypeError` em ambos
+    ``cjsg`` e ``cjsg_download``. ``cjsg`` e wrapper trivial
+    (``download → parse``).
 
     Endpoint REST JSON (Elasticsearch). ``pesquisa`` aceita os aliases
     deprecados ``query`` / ``termo`` via

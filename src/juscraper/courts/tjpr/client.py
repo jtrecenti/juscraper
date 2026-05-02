@@ -97,7 +97,10 @@ class TJPRScraper(BaseScraper):
             pydantic e a fonte da verdade dos filtros aceitos via ``**kwargs``.
         """
         # Resolve search alias here so cjsg_parse receives the actual term
-        # for inteiro-teor lookups; cjsg_download still validates kwargs.
+        # for inteiro-teor lookups. Strip apenas SEARCH_ALIASES (query/termo)
+        # para evitar re-pass duplicado; date aliases (data_inicio/data_fim,
+        # *_de/*_ate) seguem em kwargs e sao normalizados pelo pipeline em
+        # cjsg_download via normalize_datas.
         pesquisa_resolved = normalize_pesquisa(pesquisa, **kwargs)
         for alias in SEARCH_ALIASES:
             kwargs.pop(alias, None)
