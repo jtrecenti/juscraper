@@ -5,7 +5,7 @@ import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import apply_input_pipeline_search, normalize_paginas, normalize_pesquisa
+from juscraper.utils.params import apply_input_pipeline_search
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
@@ -82,48 +82,57 @@ class TJRRScraper(BaseScraper):
             :class:`InputCJSGTJRR` — schema pydantic e a fonte da verdade dos
             filtros aceitos.
         """
-        pesquisa_val = normalize_pesquisa(pesquisa, **kwargs)
-        inp = apply_input_pipeline_search(
-            InputCJSGTJRR,
-            "TJRRScraper.cjsg()",
-            pesquisa=pesquisa_val,
+        return self.cjsg_parse(self.cjsg_download(
+            pesquisa=pesquisa,
             paginas=paginas,
-            kwargs=kwargs,
             relator=relator,
             orgao_julgador=orgao_julgador,
             especie=especie,
-        )
-        brutos = self.cjsg_download(
-            pesquisa=inp.pesquisa,
-            paginas=inp.paginas,
-            relator=inp.relator,
-            data_inicio=inp.data_julgamento_inicio or "",
-            data_fim=inp.data_julgamento_fim or "",
-            orgao_julgador=inp.orgao_julgador,
-            especie=inp.especie,
-        )
-        return self.cjsg_parse(brutos)
+            **kwargs,
+        ))
 
     def cjsg_download(
         self,
         pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
+        relator: str = "",
+        orgao_julgador: list | None = None,
+        especie: list | None = None,
+        data_julgamento_inicio: Optional[str] = None,
+        data_julgamento_fim: Optional[str] = None,
         **kwargs,
     ) -> list:
         """Download raw HTML pages from TJRR.
+
+        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
 
         Returns
         -------
         list
             List of raw HTML strings (one per page).
         """
-        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-        paginas = normalize_paginas(paginas)
-        return cjsg_download_manager(
+        inp = apply_input_pipeline_search(
+            InputCJSGTJRR,
+            "TJRRScraper.cjsg_download()",
             pesquisa=pesquisa,
             paginas=paginas,
+            kwargs=kwargs,
+            consume_pesquisa_aliases=True,
+            data_julgamento_inicio=data_julgamento_inicio,
+            data_julgamento_fim=data_julgamento_fim,
+            relator=relator,
+            orgao_julgador=orgao_julgador,
+            especie=especie,
+        )
+        return cjsg_download_manager(
+            pesquisa=inp.pesquisa,
+            paginas=inp.paginas,
             session=self.session,
-            **{k: v for k, v in kwargs.items() if k not in ("query", "termo")},
+            relator=inp.relator,
+            data_inicio=inp.data_julgamento_inicio or "",
+            data_fim=inp.data_julgamento_fim or "",
+            orgao_julgador=inp.orgao_julgador,
+            especie=inp.especie,
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> pd.DataFrame:
