@@ -43,6 +43,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- TJRJ `cjsg`: o POST inicial agora envia o hidden `ctl00$ContentPlaceHolder1$hfListaPalavrasBloqueadas`, mimetizando o form ASPX real. O backend ASPX comecou a 500 transientemente em 2026-04-30 quando esse campo era omitido. Junto com isso, `InputCJSGTJRJ` foi wired no metodo publico via `apply_input_pipeline_search` — kwargs desconhecidos (incluindo `data_julgamento_*` e `data_publicacao_*`, que o backend nao expoe — granularidade so anual via `ano_inicio`/`ano_fim`) passam a levantar `TypeError` em vez de serem silenciosamente dropados pelo antigo `warn_unsupported`. `competencia` e `origem` agora aceitam tanto `str` quanto `int` (`competencia=2` deixa de virar `ValidationError`). Refs #93, #143.
 - Filtros de data passam a ser efetivamente enviados ao backend (e respeitados) em varios tribunais que silenciosamente devolviam resultados nao-filtrados ou em formato invalido:
   - **TJDFT** envia `termosAcessorios="entre YYYY-MM-DD e YYYY-MM-DD"`. Antes emitia `UserWarning` dizendo que o filtro nao era suportado e devolvia resultados sem filtro.
   - **TJTO** envia `tempo_julgados=pers` quando `data_julgamento_*` e fornecido. Sem isso, o backend ignorava `dat_jul_ini`/`dat_jul_fim`.
