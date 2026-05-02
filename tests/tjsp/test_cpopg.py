@@ -9,12 +9,7 @@ import pandas as pd
 import pytest
 
 import juscraper
-from juscraper.courts.tjsp.cpopg_parse import (
-    cpopg_parse_manager,
-    cpopg_parse_single,
-    cpopg_parse_single_html,
-    get_cpopg_download_links,
-)
+from juscraper.courts.tjsp.cpopg_parse import cpopg_parse_manager, cpopg_parse_single_html, get_cpopg_download_links
 from tests._helpers import load_sample
 
 from .test_utils import create_mock_response

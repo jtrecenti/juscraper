@@ -1,8 +1,9 @@
 """Utility functions for normalizing public API parameters across all scrapers."""
 import difflib
 import warnings
+from collections.abc import Callable, Iterator
 from datetime import date, datetime, timedelta
-from typing import Any, Callable, Iterator, Optional, Union
+from typing import Any
 
 import pandas as pd
 from pydantic import BaseModel, ValidationError
@@ -53,7 +54,7 @@ def pop_normalize_aliases(kwargs: dict, *, include_canonical: bool = False) -> N
             kwargs.pop(key, None)
 
 
-def normalize_paginas(paginas) -> Optional[Union[list, range]]:
+def normalize_paginas(paginas) -> list | range | None:
     """Normalize the ``paginas`` parameter to a consistent type.
 
     Args:
@@ -77,7 +78,7 @@ def normalize_paginas(paginas) -> Optional[Union[list, range]]:
     )
 
 
-def normalize_pesquisa(pesquisa: Optional[str] = None, **kwargs) -> str:
+def normalize_pesquisa(pesquisa: str | None = None, **kwargs) -> str:
     """Normalize the search-term parameter.
 
     Canonical name is ``pesquisa``.  ``query`` and ``termo`` are accepted
@@ -302,7 +303,7 @@ def validate_intervalo_datas(
     data_inicio,
     data_fim,
     *,
-    max_dias: Optional[int] = 366,
+    max_dias: int | None = 366,
     formato="%d/%m/%Y",
     rotulo="data",
     origem="O eSAJ",
@@ -378,12 +379,12 @@ def validate_intervalo_datas(
 
 
 def iter_date_windows(
-    data_inicio: Optional[str],
-    data_fim: Optional[str],
+    data_inicio: str | None,
+    data_fim: str | None,
     *,
     max_dias: int = 366,
     formato: str = "%d/%m/%Y",
-) -> Iterator[tuple[Optional[str], Optional[str]]]:
+) -> Iterator[tuple[str | None, str | None]]:
     """Split a date range into non-overlapping windows of at most ``max_dias`` days.
 
     Used by :func:`run_chunked_search` to honour platform-specific window
@@ -436,10 +437,10 @@ def iter_date_windows(
 
 
 def run_chunked_search(
-    fetch_window: Callable[[Optional[str], Optional[str]], Any],
+    fetch_window: Callable[[str | None, str | None], Any],
     *,
-    data_inicio: Optional[str],
-    data_fim: Optional[str],
+    data_inicio: str | None,
+    data_fim: str | None,
     dedup_key: str,
     max_dias: int = 366,
     paginas=None,
@@ -518,7 +519,7 @@ def run_chunked_search(
         )
 
     frames = []
-    failed: list[tuple[Optional[str], Optional[str], str]] = []
+    failed: list[tuple[str | None, str | None, str]] = []
     for win_i, win_f in windows:
         try:
             df = fetch_window(win_i, win_f)
@@ -580,7 +581,7 @@ def raise_on_extra_kwargs(
     exc: ValidationError,
     method: str,
     *,
-    schema_cls: Optional[type[BaseModel]] = None,
+    schema_cls: type[BaseModel] | None = None,
 ) -> None:
     """Convert pydantic ``extra_forbidden`` errors into a friendly ``TypeError``.
 
@@ -630,15 +631,15 @@ def apply_input_pipeline_search(
     schema_cls: type[BaseModel],
     method_name: str,
     *,
-    pesquisa: Optional[str],
+    pesquisa: str | None,
     paginas,
     kwargs: dict,
     data_julgamento_inicio=None,
     data_julgamento_fim=None,
     data_publicacao_inicio=None,
     data_publicacao_fim=None,
-    max_dias: Optional[int] = None,
-    origem_mensagem: Optional[str] = None,
+    max_dias: int | None = None,
+    origem_mensagem: str | None = None,
     consume_pesquisa_aliases: bool = False,
     nullable_pesquisa: bool = False,
     **canonical_filters,
@@ -856,7 +857,7 @@ def resolve_deprecated_alias(
       e o caso de uso "alias funcionando ainda" que o warning sinaliza.
 
     ``sentinel`` descreve o "nao setado" do parametro canonico:
-    ``None`` para ``Optional[...]``, ``""`` para ``str = ""``. Kw-only
+    ``None`` para ``X | None``, ``""`` para ``str = ""``. Kw-only
     pra forcar o autor a pensar sobre o default do seu metodo.
     """
     if old not in kwargs:

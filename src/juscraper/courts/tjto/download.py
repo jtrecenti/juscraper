@@ -5,7 +5,7 @@ import logging
 import math
 import re
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 import requests
 from tqdm import tqdm
@@ -62,7 +62,7 @@ def build_cjsg_payload(
     dat_ini_br = to_br_date(dat_jul_ini) or ""
     dat_fim_br = to_br_date(dat_jul_fim) or ""
     tempo_julgados = "pers" if (dat_ini_br or dat_fim_br) else ""
-    payload: Dict[str, str] = {
+    payload: dict[str, str] = {
         "start": str(start),
         "rows": str(RESULTS_PER_PAGE),
         "type_minuta_selected": type_minuta,
@@ -122,13 +122,13 @@ def _fetch_page(
     return ""  # unreachable
 
 
-def _fetch_ementa(session: requests.Session, uuid: str) -> Dict[Any, Any]:
+def _fetch_ementa(session: requests.Session, uuid: str) -> dict[Any, Any]:
     """Fetch ementa JSON for a given document UUID."""
     resp = session.get(EMENTA_URL, params={"id": uuid}, timeout=30)
     resp.raise_for_status()
     data = resp.json()
     docs = data.get("response", {}).get("docs", [])
-    doc: Dict[Any, Any] = docs[0] if docs else {}
+    doc: dict[Any, Any] = docs[0] if docs else {}
     return doc
 
 
@@ -142,7 +142,7 @@ def cjsg_download_manager(
     dat_jul_ini: str = "",
     dat_jul_fim: str = "",
     soementa: bool = False,
-    session: Optional[requests.Session] = None,
+    session: requests.Session | None = None,
     **kwargs,
 ) -> list:
     """Download raw HTML pages from TJTO jurisprudence search.
@@ -158,7 +158,7 @@ def cjsg_download_manager(
     if session is None:
         session = requests.Session()
 
-    fetch_kwargs: Dict[str, Any] = {
+    fetch_kwargs: dict[str, Any] = {
         "type_minuta": type_minuta,
         "tip_criterio_inst": tip_criterio_inst,
         "tip_criterio_data": tip_criterio_data,

@@ -4,7 +4,7 @@ Funções de download específicas para JUSBR
 
 import logging
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 import requests
 
@@ -57,7 +57,7 @@ def fetch_process_list(
     session: requests.Session,
     cnj_cleaned: str,
     base_api_url: str
-) -> Optional[Dict[str, Any]]:
+) -> dict[str, Any] | None:
     """
     Fetches the initial list of processes matching a CNJ.
     Corresponds to the first API call in the original cpopg.
@@ -68,7 +68,7 @@ def fetch_process_list(
         response = request_with_retry(session, url, timeout=15)
         if response is None:
             return None
-        data: Dict[str, Any] = response.json()
+        data: dict[str, Any] = response.json()
         return data
     except requests.Timeout:
         logger.error(
@@ -94,7 +94,7 @@ def fetch_process_details(
     session: requests.Session,
     numero_processo_oficial: str,
     base_api_url: str
-) -> Optional[Dict[str, Any]]:
+) -> dict[str, Any] | None:
     """
     Fetches detailed information for a specific official process number.
     Corresponds to the second API call in the original cpopg.
@@ -105,7 +105,7 @@ def fetch_process_details(
         response = request_with_retry(session, url, timeout=15)
         if response is None:
             return None
-        data: Dict[str, Any] = response.json()
+        data: dict[str, Any] = response.json()
         return data
     except requests.Timeout:
         logger.error(
@@ -132,7 +132,7 @@ def fetch_document_text(
     numero_processo: str,
     id_documento: str,
     base_api_url_docs: str
-) -> Optional[str]:
+) -> str | None:
     """
     Fetches the raw text of a specific document for a given process number.
     """
@@ -197,7 +197,7 @@ def fetch_document_binary(
     numero_processo: str,
     id_documento: str,
     base_api_url_docs: str
-) -> Optional[bytes]:
+) -> bytes | None:
     """Fetch the binary payload of a document from the JusBR API."""
     numero_processo_param = numero_processo  # original, pode estar com máscara
     doc_url = (

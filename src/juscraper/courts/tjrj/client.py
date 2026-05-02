@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import List, Optional, Union
 
 import pandas as pd
 import requests
@@ -37,16 +36,16 @@ class TJRJScraper(BaseScraper):
 
     def cjsg_download(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
-        ano_inicio: Optional[Union[str, int]] = None,
-        ano_fim: Optional[Union[str, int]] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
+        ano_inicio: str | int | None = None,
+        ano_fim: str | int | None = None,
         competencia: str = "1",
         origem: str = "1",
         tipo_acordao: bool = True,
         tipo_monocratica: bool = True,
-        magistrado_codigo: Optional[str] = None,
-        orgao_codigo: Optional[str] = None,
+        magistrado_codigo: str | None = None,
+        orgao_codigo: str | None = None,
         **kwargs,
     ) -> list:
         """Run a TJRJ search and return the raw page payloads (list of dicts).
@@ -98,18 +97,18 @@ class TJRJScraper(BaseScraper):
 
     def cjsg(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Convenience method: download + parse."""
         raw = self.cjsg_download(pesquisa=pesquisa, paginas=paginas, **kwargs)
         return self.cjsg_parse(raw)
 
-    def cpopg(self, id_cnj: Union[str, List[str]]):
+    def cpopg(self, id_cnj: str | list[str]):
         """Stub: first degree case search not implemented for TJRJ."""
         raise NotImplementedError("TJRJ does not implement cpopg.")
 
-    def cposg(self, id_cnj: Union[str, List[str]]):
+    def cposg(self, id_cnj: str | list[str]):
         """Stub: second degree case search not implemented for TJRJ."""
         raise NotImplementedError("TJRJ does not implement cposg.")

@@ -13,7 +13,6 @@ import logging
 import math
 import re
 import time
-from typing import Optional
 
 import requests
 from bs4 import BeautifulSoup
@@ -121,14 +120,14 @@ def _step2_post_search(
     session: requests.Session,
     viewstate: str,
     pesquisa: str,
-    data_julgamento_inicio: Optional[str] = None,
-    data_julgamento_fim: Optional[str] = None,
-    relator: Optional[str] = None,
-    classe_cnj: Optional[str] = None,
-    assunto_cnj: Optional[str] = None,
-    meio_tramitacao: Optional[str] = None,
+    data_julgamento_inicio: str | None = None,
+    data_julgamento_fim: str | None = None,
+    relator: str | None = None,
+    classe_cnj: str | None = None,
+    assunto_cnj: str | None = None,
+    meio_tramitacao: str | None = None,
     tipo_decisao: str = "acordaos",
-    search_html: Optional[str] = None,
+    search_html: str | None = None,
 ) -> tuple[str, str]:
     """POST the search form; return (response HTML, ViewState).
 
@@ -238,14 +237,14 @@ def _step4_paginate(
 def cjsg_download(
     pesquisa: str,
     paginas=None,
-    data_julgamento_inicio: Optional[str] = None,
-    data_julgamento_fim: Optional[str] = None,
-    relator: Optional[str] = None,
-    classe_cnj: Optional[str] = None,
-    assunto_cnj: Optional[str] = None,
-    meio_tramitacao: Optional[str] = None,
+    data_julgamento_inicio: str | None = None,
+    data_julgamento_fim: str | None = None,
+    relator: str | None = None,
+    classe_cnj: str | None = None,
+    assunto_cnj: str | None = None,
+    meio_tramitacao: str | None = None,
     tipo_decisao: str = "acordaos",
-    session: Optional[requests.Session] = None,
+    session: requests.Session | None = None,
 ) -> list[str]:
     """
     Download raw HTML pages from the TJPE jurisprudence search.

@@ -4,7 +4,6 @@ Downloads raw results from the TJPA jurisprudence search.
 import json
 import logging
 import time
-from typing import Optional
 
 import requests
 from tqdm import tqdm
@@ -27,16 +26,16 @@ def build_cjsg_payload(
     pesquisa: str,
     pagina_0based: int,
     size: int = RESULTS_PER_PAGE,
-    origem: Optional[list] = None,
-    tipo: Optional[list] = None,
-    relator: Optional[str] = None,
-    orgao_julgador_colegiado: Optional[str] = None,
-    classe: Optional[str] = None,
-    assunto: Optional[str] = None,
-    data_julgamento_inicio: Optional[str] = None,
-    data_julgamento_fim: Optional[str] = None,
-    data_publicacao_inicio: Optional[str] = None,
-    data_publicacao_fim: Optional[str] = None,
+    origem: list | None = None,
+    tipo: list | None = None,
+    relator: str | None = None,
+    orgao_julgador_colegiado: str | None = None,
+    classe: str | None = None,
+    assunto: str | None = None,
+    data_julgamento_inicio: str | None = None,
+    data_julgamento_fim: str | None = None,
+    data_publicacao_inicio: str | None = None,
+    data_publicacao_fim: str | None = None,
     sort_by: str = "datajulgamento",
     sort_order: str = "desc",
     query_type: str = "free",
@@ -114,7 +113,7 @@ def _fetch_page(session: requests.Session, payload: dict, max_retries: int = 3) 
 def cjsg_download_manager(
     pesquisa: str,
     paginas=None,
-    session: Optional[requests.Session] = None,
+    session: requests.Session | None = None,
     **kwargs,
 ) -> list:
     """

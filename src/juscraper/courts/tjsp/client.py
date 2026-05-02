@@ -5,7 +5,7 @@ import logging
 import os
 import shutil
 import tempfile
-from typing import Any, List, Literal, Optional, Union
+from typing import Any, Literal
 
 from pydantic import BaseModel
 
@@ -48,7 +48,7 @@ class TJSPScraper(EsajSearchScraper):
         )
         self.u_base = self.BASE_URL
         self.api_base = "https://api.tjsp.jus.br/"
-        self.method: Optional[Literal["html", "api"]] = None
+        self.method: Literal["html", "api"] | None = None
 
     def set_download_path(self, path: str | None = None):
         """Set download base dir; creates a tempdir when ``path`` is ``None``."""
@@ -385,7 +385,7 @@ class TJSPScraper(EsajSearchScraper):
     # --- cpopg ----------------------------------------------------------
     # Kept as-is — unique to TJSP, not eSAJ-search-shaped.
 
-    def cpopg(self, id_cnj: Union[str, List[str]], method: Literal["html", "api"] = "html"):
+    def cpopg(self, id_cnj: str | list[str], method: Literal["html", "api"] = "html"):
         """Fetch a first-degree process by CNJ and return a DataFrame."""
         self.set_method(method)
         self.cpopg_download(id_cnj, method)
@@ -395,7 +395,7 @@ class TJSPScraper(EsajSearchScraper):
 
     def cpopg_download(
         self,
-        id_cnj: Union[str, List[str]],
+        id_cnj: str | list[str],
         method: Literal["html", "api"] = "html",
     ):
         """Download raw CPOPG files for one or many CNJs via ``'html'`` or ``'api'``."""
@@ -441,7 +441,7 @@ class TJSPScraper(EsajSearchScraper):
             logger.warning("[TJSP] Aviso: diretório %s não existe e não pôde ser removido.", path)
         return result
 
-    def cposg_download(self, id_cnj: Union[str, list], method: Literal["html", "api"] = "html"):
+    def cposg_download(self, id_cnj: str | list, method: Literal["html", "api"] = "html"):
         """Download raw CPOSG files for one or many CNJs via ``'html'`` or ``'api'``."""
         self.set_method(method)
         if isinstance(id_cnj, str):

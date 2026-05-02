@@ -2,7 +2,6 @@
 Scraper for the Tribunal de Justica do Tocantins (TJTO).
 """
 import logging
-from typing import List, Optional, Union
 
 import pandas as pd
 import requests
@@ -29,11 +28,11 @@ class TJTOScraper(BaseScraper):
             "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
         })
 
-    def cpopg(self, id_cnj: Union[str, List[str]]):
+    def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJTO."""
         raise NotImplementedError("Consulta de processos de 1 grau nao implementada para TJTO.")
 
-    def cposg(self, id_cnj: Union[str, List[str]]):
+    def cposg(self, id_cnj: str | list[str]):
         """Stub: second instance case consultation not implemented for TJTO."""
         raise NotImplementedError("Consulta de processos de 2 grau nao implementada para TJTO.")
 
@@ -41,7 +40,7 @@ class TJTOScraper(BaseScraper):
         self,
         inp,
         instancia: str,
-        session: Optional["requests.Session"] = None,
+        session: requests.Session | None = None,
     ) -> list:
         """Shared download logic for cjsg and cjpg.
 
@@ -72,15 +71,15 @@ class TJTOScraper(BaseScraper):
 
     def cjsg_download(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
         tipo_documento: str = "acordaos",
         ordenacao: str = "DESC",
         numero_processo: str = "",
-        data_julgamento_inicio: Optional[str] = None,
-        data_julgamento_fim: Optional[str] = None,
+        data_julgamento_inicio: str | None = None,
+        data_julgamento_fim: str | None = None,
         soementa: bool = False,
-        session: Optional["requests.Session"] = None,
+        session: requests.Session | None = None,
         **kwargs,
     ) -> list:
         """Download raw HTML pages from the TJTO second-instance jurisprudence search.
@@ -119,15 +118,15 @@ class TJTOScraper(BaseScraper):
 
     def cjsg(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
         tipo_documento: str = "acordaos",
         ordenacao: str = "DESC",
         numero_processo: str = "",
-        data_julgamento_inicio: Optional[str] = None,
-        data_julgamento_fim: Optional[str] = None,
+        data_julgamento_inicio: str | None = None,
+        data_julgamento_fim: str | None = None,
         soementa: bool = False,
-        session: Optional["requests.Session"] = None,
+        session: requests.Session | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Busca jurisprudencia de 2o grau no TJTO (download + parse).
@@ -186,15 +185,15 @@ class TJTOScraper(BaseScraper):
 
     def cjpg_download(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
         tipo_documento: str = "acordaos",
         ordenacao: str = "DESC",
         numero_processo: str = "",
-        data_julgamento_inicio: Optional[str] = None,
-        data_julgamento_fim: Optional[str] = None,
+        data_julgamento_inicio: str | None = None,
+        data_julgamento_fim: str | None = None,
         soementa: bool = False,
-        session: Optional["requests.Session"] = None,
+        session: requests.Session | None = None,
         **kwargs,
     ) -> list:
         """Download raw HTML pages from the TJTO first-instance jurisprudence search.
@@ -234,15 +233,15 @@ class TJTOScraper(BaseScraper):
 
     def cjpg(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
         tipo_documento: str = "acordaos",
         ordenacao: str = "DESC",
         numero_processo: str = "",
-        data_julgamento_inicio: Optional[str] = None,
-        data_julgamento_fim: Optional[str] = None,
+        data_julgamento_inicio: str | None = None,
+        data_julgamento_fim: str | None = None,
         soementa: bool = False,
-        session: Optional["requests.Session"] = None,
+        session: requests.Session | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Busca jurisprudencia de 1o grau no TJTO (download + parse).

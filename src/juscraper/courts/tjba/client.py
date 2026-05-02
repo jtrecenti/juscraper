@@ -1,7 +1,6 @@
 """
 Scraper for the Tribunal de Justica do Estado da Bahia (TJBA).
 """
-from typing import List, Optional, Union
 
 import pandas as pd
 import requests
@@ -27,31 +26,31 @@ class TJBAScraper(BaseScraper):
             "Content-Type": "application/json",
         })
 
-    def cpopg(self, id_cnj: Union[str, List[str]]):
+    def cpopg(self, id_cnj: str | list[str]):
         """Stub: first-instance case consultation not implemented for TJBA."""
         raise NotImplementedError("Consulta de processos de 1 grau nao implementada para TJBA.")
 
-    def cposg(self, id_cnj: Union[str, List[str]]):
+    def cposg(self, id_cnj: str | list[str]):
         """Stub: second-instance case consultation not implemented for TJBA."""
         raise NotImplementedError("Consulta de processos de 2 grau nao implementada para TJBA.")
 
     def cjsg_download(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
-        numero_recurso: Optional[str] = None,
-        orgaos: Optional[list] = None,
-        relatores: Optional[list] = None,
-        classes: Optional[list] = None,
-        data_publicacao_inicio: Optional[str] = None,
-        data_publicacao_fim: Optional[str] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
+        numero_recurso: str | None = None,
+        orgaos: list | None = None,
+        relatores: list | None = None,
+        classes: list | None = None,
+        data_publicacao_inicio: str | None = None,
+        data_publicacao_fim: str | None = None,
         segundo_grau: bool = True,
         turmas_recursais: bool = True,
         tipo_acordaos: bool = True,
         tipo_decisoes_monocraticas: bool = True,
         ordenado_por: str = "dataPublicacao",
         items_per_page: int = 10,
-        session: Optional[requests.Session] = None,
+        session: requests.Session | None = None,
         **kwargs,
     ) -> list:
         """
@@ -148,21 +147,21 @@ class TJBAScraper(BaseScraper):
 
     def cjsg(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
-        numero_recurso: Optional[str] = None,
-        orgaos: Optional[list] = None,
-        relatores: Optional[list] = None,
-        classes: Optional[list] = None,
-        data_publicacao_inicio: Optional[str] = None,
-        data_publicacao_fim: Optional[str] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
+        numero_recurso: str | None = None,
+        orgaos: list | None = None,
+        relatores: list | None = None,
+        classes: list | None = None,
+        data_publicacao_inicio: str | None = None,
+        data_publicacao_fim: str | None = None,
         segundo_grau: bool = True,
         turmas_recursais: bool = True,
         tipo_acordaos: bool = True,
         tipo_decisoes_monocraticas: bool = True,
         ordenado_por: str = "dataPublicacao",
         items_per_page: int = 10,
-        session: Optional[requests.Session] = None,
+        session: requests.Session | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """

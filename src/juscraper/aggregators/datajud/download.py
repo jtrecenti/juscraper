@@ -3,7 +3,8 @@ Functions for downloading specific data from the Datajud API.
 """
 import logging
 import warnings
-from typing import Any, Callable, Dict, List, Optional, Union
+from collections.abc import Callable
+from typing import Any
 
 import requests
 
@@ -25,19 +26,19 @@ FALLBACK_RETRY_STATUS = {504}
 
 def build_listar_processos_payload(
     *,
-    numero_processo: Optional[Union[str, List[str]]] = None,
-    ano_ajuizamento: Optional[int] = None,
-    classe: Optional[str] = None,
-    assuntos: Optional[List[str]] = None,
-    data_ajuizamento_inicio: Optional[str] = None,
-    data_ajuizamento_fim: Optional[str] = None,
-    movimentos_codigo: Optional[List[int]] = None,
-    orgao_julgador: Optional[str] = None,
-    query: Optional[Dict[str, Any]] = None,
+    numero_processo: str | list[str] | None = None,
+    ano_ajuizamento: int | None = None,
+    classe: str | None = None,
+    assuntos: list[str] | None = None,
+    data_ajuizamento_inicio: str | None = None,
+    data_ajuizamento_fim: str | None = None,
+    movimentos_codigo: list[int] | None = None,
+    orgao_julgador: str | None = None,
+    query: dict[str, Any] | None = None,
     mostrar_movs: bool = False,
     tamanho_pagina: int = 5000,
-    search_after: Optional[List[Any]] = None,
-) -> Dict[str, Any]:
+    search_after: list[Any] | None = None,
+) -> dict[str, Any]:
     """Construir o body Elasticsearch para ``DatajudScraper.listar_processos``.
 
     Dois caminhos:
@@ -73,7 +74,7 @@ def build_listar_processos_payload(
     ``tamanho_pagina`` -> ``size`` e ``search_after`` -> deep pagination.
     """
     if query is not None:
-        query_values: Dict[str, Any] = query
+        query_values: dict[str, Any] = query
     else:
         query_values = _build_query_amigavel(
             numero_processo=numero_processo,
@@ -86,7 +87,7 @@ def build_listar_processos_payload(
             orgao_julgador=orgao_julgador,
         )
 
-    payload: Dict[str, Any] = {
+    payload: dict[str, Any] = {
         "query": query_values,
         "size": tamanho_pagina,
         "track_total_hits": True,
@@ -103,17 +104,17 @@ def build_listar_processos_payload(
 
 def _build_query_amigavel(
     *,
-    numero_processo: Optional[Union[str, List[str]]],
-    ano_ajuizamento: Optional[int],
-    classe: Optional[str],
-    assuntos: Optional[List[str]],
-    data_ajuizamento_inicio: Optional[str],
-    data_ajuizamento_fim: Optional[str],
-    movimentos_codigo: Optional[List[int]],
-    orgao_julgador: Optional[str],
-) -> Dict[str, Any]:
+    numero_processo: str | list[str] | None,
+    ano_ajuizamento: int | None,
+    classe: str | None,
+    assuntos: list[str] | None,
+    data_ajuizamento_inicio: str | None,
+    data_ajuizamento_fim: str | None,
+    movimentos_codigo: list[int] | None,
+    orgao_julgador: str | None,
+) -> dict[str, Any]:
     """Monta ``query.bool.must`` a partir dos filtros amigaveis."""
-    must_conditions: List[Dict[str, Any]] = []
+    must_conditions: list[dict[str, Any]] = []
     if numero_processo:
         if isinstance(numero_processo, str):
             nproc = [numero_processo]
@@ -144,8 +145,8 @@ def _build_query_amigavel(
         # armazenam ``dataAjuizamento`` no formato compacto ``YYYYMMDDhhmmss``
         # e ignoram ``range`` ISO-only. ``minimum_should_match: 1`` cobre os
         # dois universos.
-        range_iso: Dict[str, str] = {}
-        range_compact: Dict[str, str] = {}
+        range_iso: dict[str, str] = {}
+        range_compact: dict[str, str] = {}
         if data_ajuizamento_inicio is not None:
             range_iso["gte"] = data_ajuizamento_inicio
             range_compact["gte"] = (
@@ -181,16 +182,16 @@ def _build_query_amigavel(
 
 def build_contar_processos_payload(
     *,
-    numero_processo: Optional[Union[str, List[str]]] = None,
-    ano_ajuizamento: Optional[int] = None,
-    classe: Optional[str] = None,
-    assuntos: Optional[List[str]] = None,
-    data_ajuizamento_inicio: Optional[str] = None,
-    data_ajuizamento_fim: Optional[str] = None,
-    movimentos_codigo: Optional[List[int]] = None,
-    orgao_julgador: Optional[str] = None,
-    query: Optional[Dict[str, Any]] = None,
-) -> Dict[str, Any]:
+    numero_processo: str | list[str] | None = None,
+    ano_ajuizamento: int | None = None,
+    classe: str | None = None,
+    assuntos: list[str] | None = None,
+    data_ajuizamento_inicio: str | None = None,
+    data_ajuizamento_fim: str | None = None,
+    movimentos_codigo: list[int] | None = None,
+    orgao_julgador: str | None = None,
+    query: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """Body Elasticsearch para ``DatajudScraper.contar_processos``.
 
     Reutiliza o mesmo conjunto de filtros de
@@ -208,7 +209,7 @@ def build_contar_processos_payload(
     capture e producao falham juntos quando o body real muda.
     """
     if query is not None:
-        query_values: Dict[str, Any] = query
+        query_values: dict[str, Any] = query
     else:
         query_values = _build_query_amigavel(
             numero_processo=numero_processo,
@@ -233,10 +234,10 @@ def call_datajud_api(
     alias: str,
     api_key: str,
     session: requests.Session,
-    query_payload: Dict[str, Any],
+    query_payload: dict[str, Any],
     verbose: bool = False,
     timeout: int = 60  # seconds
-) -> Optional[Dict[str, Any]]:
+) -> dict[str, Any] | None:
     """
     Calls the Datajud API for a given alias with a specific query.
 
@@ -245,12 +246,12 @@ def call_datajud_api(
         alias (str): The API alias for the specific tribunal/service (e.g. api_publica_tjsp).
         api_key (str): The API key for authorization.
         session (requests.Session): The requests session to use.
-        query_payload (Dict[str, Any]): The Elasticsearch query payload.
+        query_payload (dict[str, Any]): The Elasticsearch query payload.
         verbose (bool): If True, logs more details about the request.
         timeout (int): Request timeout in seconds.
 
     Returns:
-        Optional[Dict[str, Any]]: The JSON response from the API as a dictionary,
+        dict[str, Any] | None: The JSON response from the API as a dictionary,
                                    or None if the request fails or returns an error.
 
     Note:
@@ -282,12 +283,12 @@ def call_datajud_api(
         )
         logger.debug("Payload: %s", query_payload)
 
-    def _do_post() -> Optional[Dict[str, Any]]:
+    def _do_post() -> dict[str, Any] | None:
         response = session.post(api_url, json=query_payload, headers=headers, timeout=timeout)
         if verbose:
             logger.debug("Response Status Code: %s", response.status_code)
         response.raise_for_status()
-        data: Dict[str, Any] = response.json()
+        data: dict[str, Any] = response.json()
         return data
 
     def _is_overload(exc: BaseException) -> bool:
@@ -319,10 +320,10 @@ def call_datajud_api(
 def _retry_with_reduced_size(
     api_url: str,
     alias: str,
-    query_payload: Dict[str, Any],
-    do_post: Callable[[], Optional[Dict[str, Any]]],
+    query_payload: dict[str, Any],
+    do_post: Callable[[], dict[str, Any] | None],
     original_exc: BaseException,
-) -> Optional[Dict[str, Any]]:
+) -> dict[str, Any] | None:
     """1 retry com ``size`` reduzido por ``FALLBACK_DIVISOR`` apos 504/timeout.
 
     Muta ``query_payload["size"]`` em place para que o caller leia o size
