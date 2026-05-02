@@ -9,8 +9,11 @@ Examples
 >>> from tests._helpers import load_sample
 >>> html = load_sample("tjsp", "cjsg/results_normal.html")
 """
+from collections.abc import Callable
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
+
+import pytest
 
 _SAMPLES_ROOT = Path(__file__).parent
 
@@ -76,6 +79,40 @@ def urlencoded_body_subset_matcher(expected: dict[str, str]):
             return False, f"body fields mismatch: {missing}"
         return True, ""
     return matcher
+
+
+def assert_unsupported_date_filter_raises(
+    method: Callable,
+    kwarg: str,
+    *args,
+    valor: str = "2024-01-01",
+    **extra_kwargs,
+) -> None:
+    """Confirma que ``kwarg`` dispara ``TypeError`` canonico no endpoint.
+
+    Padrao da issue #186 — backends que so aceitam um dos intervalos de
+    data (``data_julgamento_*`` xor ``data_publicacao_*``) devem rejeitar
+    o oposto via ``extra="forbid"`` do schema pydantic.
+
+    Parameters
+    ----------
+    method : callable
+        Bound method publico do scraper (e.g., ``jus.scraper("tjmt").cjsg``).
+    kwarg : str
+        Nome do filtro de data nao suportado (e.g., ``"data_publicacao_inicio"``).
+    *args
+        Argumentos posicionais propagados para ``method`` (tipicamente
+        ``"pesquisa"``).
+    valor : str
+        Valor passado em ``kwarg``. Default ``"2024-01-01"``.
+    **extra_kwargs
+        Kwargs extras propagados para ``method`` — util para cenarios que
+        precisam de filtros adicionais (ex.: TJSP auto_chunk exige uma
+        janela longa de ``data_julgamento_*`` para acionar o sniff).
+    """
+    pattern = rf"got unexpected keyword argument\(s\): '{kwarg}'"
+    with pytest.raises(TypeError, match=pattern):
+        method(*args, **{kwarg: valor, **extra_kwargs})
 
 
 def query_param_subset_matcher(expected: dict[str, str]):
