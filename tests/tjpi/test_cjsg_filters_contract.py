@@ -12,7 +12,7 @@ from responses.matchers import query_param_matcher
 
 import juscraper as jus
 from juscraper.courts.tjpi.download import BASE_URL, build_cjsg_params
-from tests._helpers import load_sample
+from tests._helpers import assert_unsupported_date_filter_raises, load_sample
 
 
 @responses.activate
@@ -141,13 +141,13 @@ def test_cjsg_unknown_kwarg_raises():
 def test_cjsg_data_publicacao_kwarg_raises():
     """TJPI backend nao expoe filtro de data de publicacao; ``InputCJSGTJPI``
     nao herda ``DataPublicacaoMixin``, entao ``data_publicacao_*`` deve cair
-    como ``extra_forbidden`` -> ``TypeError`` (refs #84, #93, #125)."""
-    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'data_publicacao_inicio'"):
-        jus.scraper("tjpi").cjsg(
-            "dano moral",
-            paginas=1,
-            data_publicacao_inicio="2024-01-01",
-        )
+    como ``extra_forbidden`` -> ``TypeError`` (refs #84, #93, #125, #186)."""
+    assert_unsupported_date_filter_raises(
+        jus.scraper("tjpi").cjsg,
+        "data_publicacao_inicio",
+        "dano moral",
+        paginas=1,
+    )
 
 
 def test_cjsg_download_unknown_kwarg_raises():
