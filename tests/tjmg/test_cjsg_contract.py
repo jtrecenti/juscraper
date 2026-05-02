@@ -5,7 +5,8 @@ TJMG hits four endpoints in strict sequence per ``cjsg`` call:
 1. ``GET formEspelhoAcordao.do`` — initial form (HTML).
 2. ``GET captcha.svl?<timestamp>`` — 5-digit numeric captcha image
    (PNG). The scraper writes it to a temporary file and decodes it via
-   ``txtcaptcha`` (lazy import, **not** in ``pyproject.toml``).
+   ``txtcaptcha`` (lazy import; optional extra ``[tjmg]`` in
+   ``pyproject.toml``).
 3. ``POST .../ValidacaoCaptchaAction.isCaptchaValid.dwr`` — DWR
    plaintext call validating the decoded captcha. Server flags the
    session; subsequent searches reuse it.
@@ -46,7 +47,7 @@ pytestmark = pytest.mark.skipif(
     not (_SAMPLES_DIR / "form_acordao.html").exists(),
     reason=(
         "TJMG samples ainda não capturados — rode "
-        "`pip install txtcaptcha && python -m tests.fixtures.capture.tjmg` "
+        "`uv pip install -e \".[tjmg]\" && python -m tests.fixtures.capture.tjmg` "
         "para popular tests/tjmg/samples/cjsg/."
     ),
 )
