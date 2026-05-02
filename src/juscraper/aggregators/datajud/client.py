@@ -7,7 +7,7 @@ import tempfile
 import time
 import warnings
 from collections import defaultdict
-from typing import Any, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import pandas as pd
 import requests
@@ -17,11 +17,7 @@ from tqdm.auto import tqdm
 from ...core.base import BaseScraper
 from ...utils.cnj import clean_cnj  # Assuming this utility exists and is relevant
 from ...utils.params import normalize_paginas, raise_on_extra_kwargs
-from .download import (
-    build_contar_processos_payload,
-    build_listar_processos_payload,
-    call_datajud_api,
-)
+from .download import build_contar_processos_payload, build_listar_processos_payload, call_datajud_api
 
 # Import mappings for tribunal and justice aliases.
 from .mappings import ID_JUSTICA_TRIBUNAL_TO_ALIAS, TIPOS_MOVIMENTACAO, TRIBUNAL_TO_ALIAS
@@ -244,7 +240,7 @@ class DatajudScraper(BaseScraper):
                     )
             if not processos_por_alias:
                 return []
-            return [(alias, cnjs) for alias, cnjs in processos_por_alias.items()]
+            return list(processos_por_alias.items())
         raise ValueError(
             "É necessário especificar 'tribunal' (sigla) ou 'numero_processo' (CNJ)."
         )
