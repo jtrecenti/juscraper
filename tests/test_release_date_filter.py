@@ -37,12 +37,9 @@ from __future__ import annotations
 
 import pandas as pd
 import pytest
+from helpers import run_filtro_data_unica, run_paginacao_data_unica
 
 import juscraper as jus
-from helpers import (
-    run_filtro_data_unica,
-    run_paginacao_data_unica,
-)
 
 # Every tribunal registered in the public factory.
 TRIBUNAIS = [

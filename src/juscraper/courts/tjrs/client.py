@@ -1,8 +1,6 @@
 """
 Scraper for the Tribunal de Justiça do Rio Grande do Sul (TJRS).
 """
-from typing import List, Optional, Union
-
 import pandas as pd
 import requests
 
@@ -42,29 +40,29 @@ class TJRSScraper(BaseScraper):
         super().__init__("TJRS")
         self.session = requests.Session()
 
-    def cpopg(self, id_cnj: Union[str, List[str]]):
+    def cpopg(self, id_cnj: str | list[str]):
         """Stub: Primeiro grau case consultation not implemented for TJRS."""
         raise NotImplementedError("Consulta de processos de 1º grau não implementada para TJRS.")
 
-    def cposg(self, id_cnj: Union[str, List[str]]):
+    def cposg(self, id_cnj: str | list[str]):
         """Stub: Segundo grau case consultation not implemented for TJRS."""
         raise NotImplementedError("Consulta de processos de 2º grau não implementada para TJRS.")
 
     def cjsg_download(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
-        classe: Optional[str] = None,
-        assunto: Optional[str] = None,
-        orgao_julgador: Optional[str] = None,
-        relator: Optional[str] = None,
-        data_julgamento_inicio: Optional[str] = None,
-        data_julgamento_fim: Optional[str] = None,
-        data_publicacao_inicio: Optional[str] = None,
-        data_publicacao_fim: Optional[str] = None,
-        tipo_processo: Optional[str] = None,
-        secao: Optional[str] = None,
-        session: Optional['requests.Session'] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
+        classe: str | None = None,
+        assunto: str | None = None,
+        orgao_julgador: str | None = None,
+        relator: str | None = None,
+        data_julgamento_inicio: str | None = None,
+        data_julgamento_fim: str | None = None,
+        data_publicacao_inicio: str | None = None,
+        data_publicacao_fim: str | None = None,
+        tipo_processo: str | None = None,
+        secao: str | None = None,
+        session: requests.Session | None = None,
         **kwargs,
     ) -> list:
         """
@@ -124,19 +122,19 @@ class TJRSScraper(BaseScraper):
 
     def cjsg(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
-        classe: Optional[str] = None,
-        assunto: Optional[str] = None,
-        orgao_julgador: Optional[str] = None,
-        relator: Optional[str] = None,
-        data_julgamento_inicio: Optional[str] = None,
-        data_julgamento_fim: Optional[str] = None,
-        data_publicacao_inicio: Optional[str] = None,
-        data_publicacao_fim: Optional[str] = None,
-        tipo_processo: Optional[str] = None,
-        secao: Optional[str] = None,
-        session: Optional['requests.Session'] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
+        classe: str | None = None,
+        assunto: str | None = None,
+        orgao_julgador: str | None = None,
+        relator: str | None = None,
+        data_julgamento_inicio: str | None = None,
+        data_julgamento_fim: str | None = None,
+        data_publicacao_inicio: str | None = None,
+        data_publicacao_fim: str | None = None,
+        tipo_processo: str | None = None,
+        secao: str | None = None,
+        session: requests.Session | None = None,
         **kwargs,
     ) -> 'pd.DataFrame':
         """

@@ -26,8 +26,6 @@ need it unless they use TJMG.
 """
 from __future__ import annotations
 
-from typing import Optional
-
 import juscraper as jus
 
 from ._util import samples_dir_for
@@ -38,7 +36,7 @@ def _classify(
     method: str,
     scenario: str,
     counters: dict[str, int],
-) -> Optional[str]:
+) -> str | None:
     """Pick the filename for a given response, or ``None`` to skip."""
     if "formEspelhoAcordao.do" in url:
         return "form_acordao.html"

@@ -2,7 +2,6 @@
 import logging
 import re
 import time
-from typing import Optional
 
 import requests
 from bs4 import BeautifulSoup
@@ -200,7 +199,7 @@ def _paginate(
 def cjsg_download_manager(
     pesquisa: str,
     paginas=None,
-    session: Optional[requests.Session] = None,
+    session: requests.Session | None = None,
     **kwargs,
 ) -> list:
     """Download raw HTML results from the TJRR jurisprudence search.

@@ -16,7 +16,8 @@ from __future__ import annotations
 import logging
 import shutil
 import warnings
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 import requests
 from pydantic import BaseModel, ValidationError
@@ -120,7 +121,7 @@ def run_auto_chunk(
         raise_on_extra_kwargs(exc, method_label)
         raise
 
-    def _fetch(win_i: Optional[str], win_f: Optional[str]) -> Any:
+    def _fetch(win_i: str | None, win_f: str | None) -> Any:
         return method(
             pesquisa=pesquisa,
             paginas=None,

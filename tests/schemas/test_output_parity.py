@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import importlib
 import inspect
-from typing import Iterable
+from collections.abc import Iterable
 
 import pytest
 from pydantic import BaseModel

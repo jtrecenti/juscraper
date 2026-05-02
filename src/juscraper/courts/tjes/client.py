@@ -1,7 +1,6 @@
 """
 Scraper for the Tribunal de Justica do Espirito Santo (TJES).
 """
-from typing import List, Optional, Union
 
 import pandas as pd
 import requests
@@ -26,29 +25,29 @@ class TJESScraper(BaseScraper):
             "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
         })
 
-    def cpopg(self, id_cnj: Union[str, List[str]]):
+    def cpopg(self, id_cnj: str | list[str]):
         """Stub: first-instance case lookup not implemented for TJES."""
         raise NotImplementedError("Consulta de processos de 1 grau nao implementada para TJES.")
 
-    def cposg(self, id_cnj: Union[str, List[str]]):
+    def cposg(self, id_cnj: str | list[str]):
         """Stub: second-instance case lookup not implemented for TJES."""
         raise NotImplementedError("Consulta de processos de 2 grau nao implementada para TJES.")
 
     def cjsg_download(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
         core: str = DEFAULT_CORE,
         busca_exata: bool = False,
-        relator: Optional[str] = None,
-        orgao_julgador: Optional[str] = None,
-        classe: Optional[str] = None,
-        jurisdicao: Optional[str] = None,
-        assunto: Optional[str] = None,
-        ordenacao: Optional[str] = None,
+        relator: str | None = None,
+        orgao_julgador: str | None = None,
+        classe: str | None = None,
+        jurisdicao: str | None = None,
+        assunto: str | None = None,
+        ordenacao: str | None = None,
         per_page: int = DEFAULT_PER_PAGE,
-        data_julgamento_inicio: Optional[str] = None,
-        data_julgamento_fim: Optional[str] = None,
+        data_julgamento_inicio: str | None = None,
+        data_julgamento_fim: str | None = None,
         **kwargs,
     ) -> list:
         """
@@ -155,19 +154,19 @@ class TJESScraper(BaseScraper):
 
     def cjsg(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
         core: str = DEFAULT_CORE,
         busca_exata: bool = False,
-        relator: Optional[str] = None,
-        orgao_julgador: Optional[str] = None,
-        classe: Optional[str] = None,
-        jurisdicao: Optional[str] = None,
-        assunto: Optional[str] = None,
-        ordenacao: Optional[str] = None,
+        relator: str | None = None,
+        orgao_julgador: str | None = None,
+        classe: str | None = None,
+        jurisdicao: str | None = None,
+        assunto: str | None = None,
+        ordenacao: str | None = None,
         per_page: int = DEFAULT_PER_PAGE,
-        data_julgamento_inicio: Optional[str] = None,
-        data_julgamento_fim: Optional[str] = None,
+        data_julgamento_inicio: str | None = None,
+        data_julgamento_fim: str | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """
@@ -249,8 +248,8 @@ class TJESScraper(BaseScraper):
 
     def cjpg_download(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
         **kwargs,
     ) -> list:
         """
@@ -283,8 +282,8 @@ class TJESScraper(BaseScraper):
 
     def cjpg(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """

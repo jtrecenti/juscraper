@@ -11,7 +11,6 @@ import logging
 import os
 import time
 from datetime import datetime
-from typing import Optional
 
 import requests
 from tqdm import tqdm
@@ -28,13 +27,13 @@ def cjpg_download(
     u_base: str,
     download_path: str,
     sleep_time: float = 0.5,
-    classes: Optional['list[str] | None'] = None,
-    assuntos: Optional['list[str] | None'] = None,
-    varas: Optional['list[str] | None'] = None,
-    id_processo: Optional['str | None'] = None,
-    data_inicio: Optional['str | None'] = None,
-    data_fim: Optional['str | None'] = None,
-    paginas: Optional['list | range | None'] = None,
+    classes: 'list[str] | None' | None = None,
+    assuntos: 'list[str] | None' | None = None,
+    varas: 'list[str] | None' | None = None,
+    id_processo: 'str | None' | None = None,
+    data_inicio: 'str | None' | None = None,
+    data_fim: 'str | None' | None = None,
+    paginas: 'list | range | None' | None = None,
     get_n_pags_callback=None,
 ):
     """Download cases from the TJSP jurisprudence search.

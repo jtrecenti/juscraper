@@ -2,7 +2,6 @@
 Downloads raw files from the TJRS jurisprudence search.
 """
 import math
-from typing import Optional
 from urllib.parse import urlencode
 
 import requests
@@ -16,16 +15,16 @@ def build_cjsg_inner_payload(
     termo: str,
     pagina_1based: int,
     *,
-    classe: Optional[str] = None,
-    assunto: Optional[str] = None,
-    orgao_julgador: Optional[str] = None,
-    relator: Optional[str] = None,
-    data_julgamento_inicio: Optional[str] = None,
-    data_julgamento_fim: Optional[str] = None,
-    data_publicacao_inicio: Optional[str] = None,
-    data_publicacao_fim: Optional[str] = None,
-    tipo_processo: Optional[str] = None,
-    secao: Optional[str] = None,
+    classe: str | None = None,
+    assunto: str | None = None,
+    orgao_julgador: str | None = None,
+    relator: str | None = None,
+    data_julgamento_inicio: str | None = None,
+    data_julgamento_fim: str | None = None,
+    data_publicacao_inicio: str | None = None,
+    data_publicacao_fim: str | None = None,
+    tipo_processo: str | None = None,
+    secao: str | None = None,
     **kwargs,
 ) -> dict:
     """Build the inner Solr params sent to the TJRS jurisprudence AJAX endpoint.
@@ -80,17 +79,17 @@ def build_cjsg_inner_payload(
 def cjsg_download_manager(
     termo: str,
     paginas=None,
-    classe: Optional[str] = None,
-    assunto: Optional[str] = None,
-    orgao_julgador: Optional[str] = None,
-    relator: Optional[str] = None,
-    data_julgamento_inicio: Optional[str] = None,
-    data_julgamento_fim: Optional[str] = None,
-    data_publicacao_inicio: Optional[str] = None,
-    data_publicacao_fim: Optional[str] = None,
-    tipo_processo: Optional[str] = None,
-    secao: Optional[str] = None,
-    session: Optional[requests.Session] = None,
+    classe: str | None = None,
+    assunto: str | None = None,
+    orgao_julgador: str | None = None,
+    relator: str | None = None,
+    data_julgamento_inicio: str | None = None,
+    data_julgamento_fim: str | None = None,
+    data_publicacao_inicio: str | None = None,
+    data_publicacao_fim: str | None = None,
+    tipo_processo: str | None = None,
+    secao: str | None = None,
+    session: requests.Session | None = None,
     **kwargs,
 ) -> list:
     """

@@ -3,7 +3,7 @@ Functions for parsing DATAJUD API responses
 """
 import logging
 import warnings
-from typing import Any, Dict, Optional
+from typing import Any
 
 import pandas as pd
 
@@ -11,14 +11,14 @@ logger = logging.getLogger(__name__)
 
 
 def parse_datajud_api_response(
-    api_response_json: Optional[Dict[str, Any]],
+    api_response_json: dict[str, Any] | None,
     mostrar_movs: bool = True
 ) -> pd.DataFrame:
     """
     Parses the JSON response from the Datajud API into a pandas DataFrame.
 
     Args:
-        api_response_json (Optional[Dict[str, Any]]): The parsed JSON response from the API
+        api_response_json (dict[str, Any] | None): The parsed JSON response from the API
                                                        (output of call_datajud_api).
         mostrar_movs (bool): If True, includes 'movimentacoes' in the DataFrame.
                              Otherwise, they are excluded.
