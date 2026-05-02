@@ -80,7 +80,7 @@ def test_cjsg_query_alias_emits_deprecation_warning(tmp_path, mocker):
     antes de chamar `super()`, entao nenhum teste do TJSP cobre este
     caminho. Se alguem quebrar a chamada no `_esaj/base.py` (deixando o
     alias chegar no pydantic, que tem `extra='forbid'`), este teste falha
-    com `TypeError`/`ValidationError` em vez do `DeprecationWarning` esperado.
+    com `TypeError` em vez do `DeprecationWarning` esperado.
     """
     mocker.patch("time.sleep")
     expected_body = make_esaj_body(pesquisa="dano moral")

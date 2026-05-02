@@ -87,9 +87,8 @@ def test_listar_processos_cnj_invalido_nao_chama_api():
 
 def test_listar_processos_unknown_kwarg_raises():
     """Unknown kwargs raise ``TypeError`` via ``raise_on_extra_kwargs`` —
-    o schema ``InputListarProcessosDataJud`` esta wired e
-    ``extra="forbid"`` rejeita kwargs desconhecidos antes de qualquer
-    requisicao HTTP."""
+    ``InputListarProcessosDataJud`` is wired and ``extra="forbid"``
+    rejects unknown kwargs before any HTTP request is built."""
     with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'parametro_inventado'"):
         jus.scraper("datajud").listar_processos(
             tribunal="TJSP", parametro_inventado="xyz"
