@@ -65,7 +65,25 @@ def _coerce_to_int_list(v: Any) -> Any:
     return out
 
 
-class InputListarProcessosDataJud(PaginasMixin):
+class _DatajudCoercaoMixin(BaseModel):
+    # Mixin local (refs #217): centraliza os validators de coercao bidirecional
+    # int<->str em ``assuntos`` e ``movimentos_codigo``. Aplicado em ambos
+    # InputListarProcessosDataJud e InputContarProcessosDataJud. Nao promovido
+    # para src/juscraper/schemas/mixins.py — Regra 1 do #84 exige 2+ familias
+    # distintas, e por enquanto so o DataJud precisa.
+
+    @field_validator("assuntos", mode="before", check_fields=False)
+    @classmethod
+    def _normalize_assuntos(cls, v: Any) -> Any:
+        return _coerce_to_str_list(v)
+
+    @field_validator("movimentos_codigo", mode="before", check_fields=False)
+    @classmethod
+    def _normalize_movimentos_codigo(cls, v: Any) -> Any:
+        return _coerce_to_int_list(v)
+
+
+class InputListarProcessosDataJud(_DatajudCoercaoMixin, PaginasMixin):
     """Accepted input for :meth:`DatajudScraper.listar_processos`.
 
     A API do DataJud e baseada em Elasticsearch. A escolha do alias-indice
@@ -122,16 +140,6 @@ class InputListarProcessosDataJud(PaginasMixin):
         extra="forbid",
         arbitrary_types_allowed=True,
     )
-
-    @field_validator("assuntos", mode="before")
-    @classmethod
-    def _normalize_assuntos(cls, v: Any) -> Any:
-        return _coerce_to_str_list(v)
-
-    @field_validator("movimentos_codigo", mode="before")
-    @classmethod
-    def _normalize_movimentos_codigo(cls, v: Any) -> Any:
-        return _coerce_to_int_list(v)
 
     @model_validator(mode="after")
     def _validar_datas_e_ano_excluem(self) -> "InputListarProcessosDataJud":
@@ -226,7 +234,7 @@ class InputListarProcessosDataJud(PaginasMixin):
         return self
 
 
-class InputContarProcessosDataJud(BaseModel):
+class InputContarProcessosDataJud(_DatajudCoercaoMixin):
     """Accepted input for :meth:`DatajudScraper.contar_processos`.
 
     Conta processos sem baixar nenhum documento — usado em analise de
@@ -263,16 +271,6 @@ class InputContarProcessosDataJud(BaseModel):
         extra="forbid",
         arbitrary_types_allowed=True,
     )
-
-    @field_validator("assuntos", mode="before")
-    @classmethod
-    def _normalize_assuntos(cls, v: Any) -> Any:
-        return _coerce_to_str_list(v)
-
-    @field_validator("movimentos_codigo", mode="before")
-    @classmethod
-    def _normalize_movimentos_codigo(cls, v: Any) -> Any:
-        return _coerce_to_int_list(v)
 
     @model_validator(mode="after")
     def _validar_datas_e_ano_excluem(self) -> "InputContarProcessosDataJud":

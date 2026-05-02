@@ -58,6 +58,11 @@ CASES = [
         "juscraper.aggregators.comunica_cnj.schemas", "InputListarComunicacoesComunicaCNJ",
         id="comunica_cnj.listar_comunicacoes",
     ),
+    pytest.param(
+        "juscraper.aggregators.datajud.client", "DatajudScraper", "listar_processos",
+        "juscraper.aggregators.datajud.schemas", "InputListarProcessosDataJud",
+        id="datajud.listar_processos",
+    ),
 ]
 
 # Captura nomes em backticks duplos (RST inline literal). Cobre tanto
@@ -123,8 +128,12 @@ def test_docstring_lists_schema_fields(
     mod = importlib.import_module(scraper_module)
     method = getattr(getattr(mod, scraper_class), endpoint)
 
-    bullets = _docstring_bullets(method) - EXPLICIT_PARAMS - DEPRECATED_ALIASES
     fields = _schema_filter_fields(schema_module, schema_class)
+    # Um nome em ``DEPRECATED_ALIASES`` so e subtraido quando NAO e um campo
+    # real do schema do caso atual. Cobre colisoes onde o mesmo nome e
+    # alias deprecado em outros tribunais (``query`` -> ``pesquisa``) mas
+    # campo real aqui (``query`` no DataJud e o override Elasticsearch).
+    bullets = _docstring_bullets(method) - EXPLICIT_PARAMS - (DEPRECATED_ALIASES - fields)
 
     schema_only = fields - bullets
     docstring_only = bullets - fields
