@@ -24,7 +24,7 @@ class InputCJSGTJPB(SearchBase, DataJulgamentoMixin):
     """
 
     numero_processo: str = ""
-    id_classe_judicial: str = ""
+    id_classe: str = ""
     id_orgao_julgador: str = ""
     id_relator: str = ""
     id_origem: str = "8,2"

@@ -53,7 +53,7 @@ def test_cjsg_all_filters_land_in_body(mocker):
         pesquisa="dano moral",
         page=1,
         nr_processo="0000000-00.0000.0.00.0000",
-        id_classe_judicial="C123",
+        id_classe="C123",
         id_orgao_julgador="O456",
         id_relator="R789",
         id_origem="2",
@@ -66,7 +66,7 @@ def test_cjsg_all_filters_land_in_body(mocker):
         "dano moral",
         paginas=1,
         numero_processo="0000000-00.0000.0.00.0000",
-        id_classe_judicial="C123",
+        id_classe="C123",
         id_orgao_julgador="O456",
         id_relator="R789",
         id_origem="2",
@@ -118,6 +118,25 @@ def test_cjsg_nr_processo_alias_emits_deprecation_warning(mocker):
         df = jus.scraper("tjpb").cjsg(
             "dano moral", paginas=1,
             nr_processo="0000000-00.0000.0.00.0000",
+        )
+
+    assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
+def test_cjsg_id_classe_judicial_alias_emits_deprecation_warning(mocker):
+    """The deprecated ``id_classe_judicial`` alias maps to ``id_classe`` and
+    the backend body keeps the ``id_classe_judicial`` field (refs #129)."""
+    mocker.patch("time.sleep")
+    _add_get_home()
+    _add_post_no_results(build_cjsg_payload(
+        token=_TOKEN, pesquisa="dano moral", page=1, id_classe="C123",
+    ))
+
+    with pytest.warns(DeprecationWarning, match="id_classe_judicial.*id_classe"):
+        df = jus.scraper("tjpb").cjsg(
+            "dano moral", paginas=1,
+            id_classe_judicial="C123",
         )
 
     assert isinstance(df, pd.DataFrame)
