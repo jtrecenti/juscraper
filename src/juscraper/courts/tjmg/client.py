@@ -8,7 +8,7 @@ import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import apply_input_pipeline_search, normalize_datas, normalize_paginas, normalize_pesquisa
+from juscraper.utils.params import apply_input_pipeline_search
 
 from .download import cjsg_download as _cjsg_download
 from .parse import cjsg_parse as _cjsg_parse
@@ -46,9 +46,15 @@ class TJMGScraper(BaseScraper):
         pesquisar_por: str = "ementa",
         order_by: Union[str, int] = 2,
         linhas_por_pagina: int = 10,
+        data_julgamento_inicio: Optional[str] = None,
+        data_julgamento_fim: Optional[str] = None,
+        data_publicacao_inicio: Optional[str] = None,
+        data_publicacao_fim: Optional[str] = None,
         **kwargs,
     ) -> list:
         """Run a TJMG acórdão search and return the raw HTML of each page.
+
+        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
 
         Parameters
         ----------
@@ -70,21 +76,33 @@ class TJMGScraper(BaseScraper):
         data_publicacao_inicio, data_publicacao_fim : str
             Publicação date range (``dd/mm/yyyy`` or ``yyyy-mm-dd``).
         """
-        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-        paginas = normalize_paginas(paginas)
-        datas = normalize_datas(**kwargs)
+        inp = apply_input_pipeline_search(
+            InputCJSGTJMG,
+            "TJMGScraper.cjsg_download()",
+            pesquisa=pesquisa,
+            paginas=paginas,
+            kwargs=kwargs,
+            consume_pesquisa_aliases=True,
+            data_julgamento_inicio=data_julgamento_inicio,
+            data_julgamento_fim=data_julgamento_fim,
+            data_publicacao_inicio=data_publicacao_inicio,
+            data_publicacao_fim=data_publicacao_fim,
+            pesquisar_por=pesquisar_por,
+            order_by=order_by,
+            linhas_por_pagina=linhas_por_pagina,
+        )
 
         return _cjsg_download(
             session=self.session,
-            pesquisa=pesquisa or "",
-            paginas=paginas,
-            pesquisar_por=pesquisar_por,
-            order_by=str(order_by),
-            data_julgamento_inicial=_br_date(datas["data_julgamento_inicio"]),
-            data_julgamento_final=_br_date(datas["data_julgamento_fim"]),
-            data_publicacao_inicial=_br_date(datas["data_publicacao_inicio"]),
-            data_publicacao_final=_br_date(datas["data_publicacao_fim"]),
-            linhas_por_pagina=linhas_por_pagina,
+            pesquisa=inp.pesquisa or "",
+            paginas=inp.paginas,
+            pesquisar_por=inp.pesquisar_por,
+            order_by=str(inp.order_by),
+            data_julgamento_inicial=_br_date(inp.data_julgamento_inicio),
+            data_julgamento_final=_br_date(inp.data_julgamento_fim),
+            data_publicacao_inicial=_br_date(inp.data_publicacao_inicio),
+            data_publicacao_final=_br_date(inp.data_publicacao_fim),
+            linhas_por_pagina=inp.linhas_por_pagina,
             sleep_time=self.sleep_time,
         )
 
@@ -139,29 +157,14 @@ class TJMGScraper(BaseScraper):
             :class:`InputCJSGTJMG` — schema pydantic e a fonte da verdade dos
             filtros aceitos.
         """
-        pesquisa_val = normalize_pesquisa(pesquisa, **kwargs)
-        inp = apply_input_pipeline_search(
-            InputCJSGTJMG,
-            "TJMGScraper.cjsg()",
-            pesquisa=pesquisa_val,
+        return self.cjsg_parse(self.cjsg_download(
+            pesquisa=pesquisa,
             paginas=paginas,
-            kwargs=kwargs,
             pesquisar_por=pesquisar_por,
             order_by=order_by,
             linhas_por_pagina=linhas_por_pagina,
-        )
-        raw = self.cjsg_download(
-            pesquisa=inp.pesquisa,
-            paginas=inp.paginas,
-            pesquisar_por=inp.pesquisar_por,
-            order_by=inp.order_by,
-            linhas_por_pagina=inp.linhas_por_pagina,
-            data_julgamento_inicio=inp.data_julgamento_inicio,
-            data_julgamento_fim=inp.data_julgamento_fim,
-            data_publicacao_inicio=inp.data_publicacao_inicio,
-            data_publicacao_fim=inp.data_publicacao_fim,
-        )
-        return self.cjsg_parse(raw)
+            **kwargs,
+        ))
 
     def cpopg(self, id_cnj: Union[str, List[str]]):
         """Stub: first degree case search not implemented for TJMG."""
