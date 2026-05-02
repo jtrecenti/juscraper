@@ -27,7 +27,7 @@ pytestmark = pytest.mark.skipif(
     not (_SAMPLES_DIR / "form_acordao.html").exists(),
     reason=(
         "TJMG samples ainda não capturados — rode "
-        "`pip install txtcaptcha && python -m tests.fixtures.capture.tjmg` "
+        "`uv pip install -e \".[tjmg]\" && python -m tests.fixtures.capture.tjmg` "
         "para popular tests/tjmg/samples/cjsg/."
     ),
 )
