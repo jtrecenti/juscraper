@@ -145,65 +145,72 @@ def normalize_datas(**kwargs):
         dict with the four canonical keys (values may be ``None``).
 
     Raises:
-        ValueError: If a generic alias conflicts with the specific canonical name.
+        ValueError: When mais de uma fonte (canônico ou alias) preenche o
+            mesmo campo canônico. A mensagem cita os nomes que o usuário
+            realmente passou — não o canônico (refs #193).
     """
-    result = {
-        "data_julgamento_inicio": None,
-        "data_julgamento_fim": None,
-        "data_publicacao_inicio": None,
-        "data_publicacao_fim": None,
-    }
-
+    canonicals: tuple[str, ...] = (
+        "data_julgamento_inicio",
+        "data_julgamento_fim",
+        "data_publicacao_inicio",
+        "data_publicacao_fim",
+    )
     deprecated_map = {
         "data_julgamento_de": "data_julgamento_inicio",
         "data_julgamento_ate": "data_julgamento_fim",
         "data_publicacao_de": "data_publicacao_inicio",
         "data_publicacao_ate": "data_publicacao_fim",
     }
-
     generic_map = {
         "data_inicio": "data_julgamento_inicio",
         "data_fim": "data_julgamento_fim",
     }
 
-    # 1. Canonical names first
-    for key in list(result.keys()):
-        if key in kwargs:
-            result[key] = kwargs.pop(key)
+    # canonical -> [(source_name, value), ...] na ordem em que apareceram
+    # nas três fases (canônico, _de/_ate, genérico). Único valor None
+    # entra silenciosamente no pop e nao gera fonte — preserva o
+    # comportamento antigo de aceitar canonical=None ao lado de alias.
+    sources: dict[str, list[tuple[str, Any]]] = {c: [] for c in canonicals}
 
-    # 2. Deprecated _de/_ate aliases
+    def _collect(name: str, canonical: str) -> None:
+        if name not in kwargs:
+            return
+        value = kwargs.pop(name)
+        if value is not None:
+            sources[canonical].append((name, value))
+
+    for canonical in canonicals:
+        _collect(canonical, canonical)
     for old_name, canonical in deprecated_map.items():
-        if old_name in kwargs:
-            value = kwargs.pop(old_name)
-            if value is not None:
-                if result[canonical] is not None:
-                    raise ValueError(
-                        f"Não é possível passar '{old_name}' e '{canonical}' ao mesmo tempo. "
-                        f"Use apenas '{canonical}'."
-                    )
-                warnings.warn(
-                    f"O parâmetro '{old_name}' está deprecado. Use '{canonical}' em vez disso.",
-                    DeprecationWarning,
-                    stacklevel=2,
-                )
-                result[canonical] = value
-
-    # 3. Generic aliases
+        _collect(old_name, canonical)
     for generic, canonical in generic_map.items():
-        if generic in kwargs:
-            value = kwargs.pop(generic)
-            if value is not None:
-                if result[canonical] is not None:
-                    raise ValueError(
-                        f"Não é possível passar '{generic}' e '{canonical}' ao mesmo tempo. "
-                        f"Use apenas '{canonical}'."
-                    )
-                warnings.warn(
-                    f"O parâmetro '{generic}' está deprecado. Use '{canonical}' em vez disso.",
-                    DeprecationWarning,
-                    stacklevel=2,
-                )
-                result[canonical] = value
+        _collect(generic, canonical)
+
+    # Detecta colisão olhando todas as fontes coletadas. Mensagem cita os
+    # nomes que o usuário escreveu (em vez do canônico, que ele pode nem
+    # ter digitado — refs #193).
+    for canonical, srcs in sources.items():
+        if len(srcs) > 1:
+            names = [name for name, _ in srcs]
+            quoted = [f"'{n}'" for n in names]
+            joined = ", ".join(quoted[:-1]) + f" e {quoted[-1]}"
+            raise ValueError(
+                f"Não é possível passar {joined} ao mesmo tempo. "
+                f"Use apenas '{canonical}'."
+            )
+
+    result: dict[str, Any] = {c: None for c in canonicals}
+    for canonical, srcs in sources.items():
+        if not srcs:
+            continue
+        name, value = srcs[0]
+        if name != canonical:
+            warnings.warn(
+                f"O parâmetro '{name}' está deprecado. Use '{canonical}' em vez disso.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        result[canonical] = value
 
     return result
 

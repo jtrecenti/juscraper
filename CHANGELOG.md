@@ -65,6 +65,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - TJSP `get_cpopg_download_links`: ramo `else` nunca populava a lista de links (atribuia `processos = lista.find_all('a')` e descartava o resultado). Agora itera sobre os `<a href>` e devolve a lista corretamente.
 - TJSP `cpopg_download`/`cposg_download`: `RuntimeError` introduzido ao trocar `dict.get(k, [None])[0]` por early-raise (PR #105) escapava dos `except` de batch e abortava o download de todos os CNJs seguintes quando um link de listagem vinha sem `processo.codigo`. Agora o `RuntimeError` e capturado no loop externo e o batch segue.
 - TJMT/TJBA `cjsg_parse`: respostas sem resultados podem vir do backend real com `null` em qualquer nivel intermediario; os parsers tratam `null` como lista vazia / dict ausente e retornam DataFrame vazio em vez de quebrar.
+- `normalize_datas`: quando o usuario passa dois aliases distintos para o mesmo campo canonico (ex.: `data_inicio` + `data_julgamento_de`), a mensagem de `ValueError` agora cita os nomes que ele realmente escreveu, em vez do canonico que ele nunca digitou. O canonico aparece apenas como sugestao no trecho "Use apenas 'X'". Vale para todos os tribunais (a normalizacao e centralizada). Refs #193.
 
 ### Known Issues
 

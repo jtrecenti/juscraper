@@ -132,6 +132,48 @@ class TestNormalizeDatas:
                 data_julgamento_inicio="01/01/2023",
             )
 
+    def test_conflict_two_aliases_same_canonical_inicio(self):
+        # Reprodução literal da issue #193: usuário passou só aliases (não
+        # passou o canônico). A mensagem deve citar os dois aliases que ele
+        # de fato escreveu, e o canônico só aparece como sugestão.
+        with pytest.raises(ValueError) as excinfo:
+            normalize_datas(
+                data_julgamento_de="02/01/2023",
+                data_inicio="01/01/2023",
+            )
+        msg = str(excinfo.value)
+        assert "'data_julgamento_de'" in msg
+        assert "'data_inicio'" in msg
+        # canônico aparece apenas no trecho "Use apenas 'X'"; antes desse
+        # trecho a mensagem só pode citar o que o usuário escreveu.
+        antes_use_apenas, _, depois = msg.partition("Use apenas")
+        assert "'data_julgamento_inicio'" not in antes_use_apenas
+        assert "'data_julgamento_inicio'" in depois
+
+    def test_conflict_two_aliases_same_canonical_fim(self):
+        with pytest.raises(ValueError) as excinfo:
+            normalize_datas(
+                data_julgamento_ate="31/12/2023",
+                data_fim="30/12/2023",
+            )
+        msg = str(excinfo.value)
+        assert "'data_julgamento_ate'" in msg
+        assert "'data_fim'" in msg
+        antes_use_apenas, _, _ = msg.partition("Use apenas")
+        assert "'data_julgamento_fim'" not in antes_use_apenas
+
+    def test_conflict_three_sources_same_canonical(self):
+        # Canônico + alias _de + alias genérico → mensagem cita os três.
+        with pytest.raises(ValueError) as excinfo:
+            normalize_datas(
+                data_julgamento_inicio="01/01/2023",
+                data_julgamento_de="02/01/2023",
+                data_inicio="03/01/2023",
+            )
+        msg = str(excinfo.value)
+        for nome in ("'data_julgamento_inicio'", "'data_julgamento_de'", "'data_inicio'"):
+            assert nome in msg
+
     def test_all_none(self):
         result = normalize_datas()
         assert all(v is None for v in result.values())
