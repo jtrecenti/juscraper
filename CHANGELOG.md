@@ -45,6 +45,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   - `numero_cnj` -> `numero_processo` em TJAP.
   - `magistrado` -> `relator`, `classe_judicial` -> `classe` em TJES (`cjsg` e `cjpg`) e TJRO (`cjsg`). Refs #129.
   - `classe_cnj` -> `classe`, `assunto_cnj` -> `assunto` em TJPE.
+  - `id_classe_judicial` -> `id_classe` em TJRN (`cjsg`), por simetria com `id_relator`/`id_orgao_julgador`/`id_colegiado`. Refs #129.
 
   Helpers `juscraper.utils.params.pop_deprecated_alias` (pop + warning) e `juscraper.utils.params.resolve_deprecated_alias` (pop + checagem de colisao + reatribuicao) centralizam o padrao. Refs #93, #117.
 

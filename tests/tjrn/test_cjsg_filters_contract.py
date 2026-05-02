@@ -1,4 +1,11 @@
-"""Filter-propagation contract for TJRN cjsg."""
+"""Filter-propagation contract for TJRN cjsg.
+
+``id_classe`` is the canonical kwarg in ``TJRNScraper.cjsg`` (refs #129).
+The legacy ``id_classe_judicial`` alias is still accepted and emits
+``DeprecationWarning`` for one version. The backend PJe payload keeps
+the original field name (``id_classe_judicial``) — that is an internal
+detail of the PJe API and not exposed in the public signature.
+"""
 import pandas as pd
 import pytest
 import responses
@@ -33,7 +40,7 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
             "dano moral",
             page=1,
             nr_processo="00000000000000000000",
-            id_classe_judicial="123",
+            id_classe="123",
             id_orgao_julgador="456",
             id_relator="789",
             id_colegiado="10",
@@ -50,7 +57,7 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
         "dano moral",
         paginas=1,
         numero_processo="00000000000000000000",
-        id_classe_judicial="123",
+        id_classe="123",
         id_orgao_julgador="456",
         id_relator="789",
         id_colegiado="10",
@@ -124,6 +131,32 @@ def test_cjsg_nr_processo_alias_emits_deprecation_warning(mocker):
             "dano moral",
             paginas=1,
             nr_processo="00000000000000000000",
+        )
+
+    assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
+def test_cjsg_id_classe_judicial_alias_emits_deprecation_warning(mocker):
+    """The deprecated ``id_classe_judicial`` alias maps to ``id_classe`` and
+    the backend body keeps the ``id_classe_judicial`` field (refs #129)."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.POST,
+        BASE_URL,
+        body=load_sample("tjrn", "cjsg/no_results.json"),
+        status=200,
+        content_type="application/json",
+        match=[json_params_matcher(build_cjsg_payload(
+            "dano moral", page=1, id_classe="123",
+        ))],
+    )
+
+    with pytest.warns(DeprecationWarning, match="id_classe_judicial.*id_classe"):
+        df = jus.scraper("tjrn").cjsg(
+            "dano moral",
+            paginas=1,
+            id_classe_judicial="123",
         )
 
     assert isinstance(df, pd.DataFrame)
