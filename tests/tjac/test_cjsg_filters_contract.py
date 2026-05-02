@@ -12,7 +12,7 @@ import responses
 from responses.matchers import query_param_matcher, urlencoded_params_matcher
 
 import juscraper as jus
-from tests._helpers import load_sample_bytes
+from tests._helpers import assert_unknown_kwarg_raises, load_sample_bytes
 from tests.fixtures.capture._util import make_esaj_body
 
 BASE = "https://esaj.tjac.jus.br/cjsg"
@@ -69,8 +69,7 @@ def test_cjsg_all_filters_land_in_post_body(tmp_path, mocker):
 def test_cjsg_unknown_kwarg_raises(tmp_path):
     """Kwargs that are not in InputCJSGEsajPuro must raise, not be silently ignored."""
     scraper = jus.scraper("tjac", download_path=str(tmp_path))
-    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'parametro_bobo'"):
-        scraper.cjsg("dano moral", paginas=1, parametro_bobo="xyz")
+    assert_unknown_kwarg_raises(scraper.cjsg, "parametro_bobo", "dano moral", paginas=1)
 
 
 @responses.activate

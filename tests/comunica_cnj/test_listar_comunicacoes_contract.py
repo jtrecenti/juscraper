@@ -26,7 +26,7 @@ from responses.registries import OrderedRegistry
 
 import juscraper as jus
 from juscraper.aggregators.comunica_cnj.download import BASE_URL, build_listar_comunicacoes_params
-from tests._helpers import load_sample
+from tests._helpers import assert_unknown_kwarg_raises, load_sample
 
 LISTAR_COMUNICACOES_MIN_COLUMNS = {
     "numero_processo",
@@ -137,11 +137,11 @@ def test_listar_comunicacoes_pesquisa_obrigatoria():
 def test_listar_comunicacoes_unknown_kwarg_raises_typeerror():
     """``extra='forbid'`` no schema + ``raise_on_extra_kwargs`` traduz
     kwarg desconhecido em ``TypeError`` amigavel."""
-    with pytest.raises(TypeError, match="unexpected keyword argument"):
-        jus.scraper("comunica_cnj").listar_comunicacoes(
-            pesquisa="resolucao",
-            parametro_inventado="xyz",
-        )
+    assert_unknown_kwarg_raises(
+        jus.scraper("comunica_cnj").listar_comunicacoes,
+        "parametro_inventado",
+        pesquisa="resolucao",
+    )
 
 
 @responses.activate

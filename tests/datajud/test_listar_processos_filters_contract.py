@@ -17,7 +17,7 @@ from responses.matchers import header_matcher, json_params_matcher
 
 import juscraper as jus
 from juscraper.aggregators.datajud.client import DatajudScraper
-from tests._helpers import load_sample
+from tests._helpers import assert_unknown_kwarg_raises, load_sample
 from tests.fixtures.capture.datajud import build_payload as _payload
 
 BASE = DatajudScraper.BASE_API_URL
@@ -89,10 +89,11 @@ def test_listar_processos_unknown_kwarg_raises():
     """Unknown kwargs raise ``TypeError`` via ``raise_on_extra_kwargs`` —
     ``InputListarProcessosDataJud`` is wired and ``extra="forbid"``
     rejects unknown kwargs before any HTTP request is built."""
-    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'parametro_inventado'"):
-        jus.scraper("datajud").listar_processos(
-            tribunal="TJSP", parametro_inventado="xyz"
-        )
+    assert_unknown_kwarg_raises(
+        jus.scraper("datajud").listar_processos,
+        "parametro_inventado",
+        tribunal="TJSP",
+    )
 
 
 def test_listar_processos_tamanho_pagina_acima_do_cap():
