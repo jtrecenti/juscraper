@@ -5,13 +5,7 @@ import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import (
-    apply_input_pipeline_search,
-    normalize_paginas,
-    normalize_pesquisa,
-    resolve_deprecated_alias,
-    to_br_date,
-)
+from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias, to_br_date
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
@@ -113,17 +107,55 @@ class TJRNScraper(BaseScraper):
             :class:`InputCJSGTJRN` — schema pydantic e a fonte da verdade dos
             filtros aceitos.
         """
+        return self.cjsg_parse(self.cjsg_download(
+            pesquisa=pesquisa,
+            paginas=paginas,
+            numero_processo=numero_processo,
+            id_classe_judicial=id_classe_judicial,
+            id_orgao_julgador=id_orgao_julgador,
+            id_relator=id_relator,
+            id_colegiado=id_colegiado,
+            sistema=sistema,
+            decisoes=decisoes,
+            jurisdicoes=jurisdicoes,
+            grau=grau,
+            **kwargs,
+        ))
+
+    def cjsg_download(
+        self,
+        pesquisa: Optional[str] = None,
+        paginas: Union[int, list, range, None] = None,
+        numero_processo: str = "",
+        id_classe_judicial: str = "",
+        id_orgao_julgador: str = "",
+        id_relator: str = "",
+        id_colegiado: str = "",
+        sistema: str = "",
+        decisoes: str = "",
+        jurisdicoes: str = "",
+        grau: str = "",
+        **kwargs,
+    ) -> list:
+        """Download raw CJSG JSON responses from TJRN.
+
+        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
+
+        Returns
+        -------
+        list
+            List of raw JSON responses (one per page).
+        """
         numero_processo = resolve_deprecated_alias(
             kwargs, "nr_processo", "numero_processo", numero_processo, sentinel=""
         )
-        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-
         inp = apply_input_pipeline_search(
             InputCJSGTJRN,
-            "TJRNScraper.cjsg()",
+            "TJRNScraper.cjsg_download()",
             pesquisa=pesquisa,
             paginas=paginas,
             kwargs=kwargs,
+            consume_pesquisa_aliases=True,
             numero_processo=numero_processo,
             id_classe_judicial=id_classe_judicial,
             id_orgao_julgador=id_orgao_julgador,
@@ -134,10 +166,10 @@ class TJRNScraper(BaseScraper):
             jurisdicoes=jurisdicoes,
             grau=grau,
         )
-
-        brutos = self.cjsg_download(
+        return cjsg_download_manager(
             pesquisa=inp.pesquisa,
             paginas=inp.paginas,
+            session=self.session,
             nr_processo=inp.numero_processo,
             id_classe_judicial=inp.id_classe_judicial,
             id_orgao_julgador=inp.id_orgao_julgador,
@@ -149,31 +181,6 @@ class TJRNScraper(BaseScraper):
             decisoes=inp.decisoes,
             jurisdicoes=inp.jurisdicoes,
             grau=inp.grau,
-        )
-        return self.cjsg_parse(brutos)
-
-    def cjsg_download(
-        self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
-        **kwargs,
-    ) -> list:
-        """Download raw CJSG JSON responses from TJRN.
-
-        Parameters are the same as :meth:`cjsg`.
-
-        Returns
-        -------
-        list
-            List of raw JSON responses (one per page).
-        """
-        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-        paginas = normalize_paginas(paginas)
-        return cjsg_download_manager(
-            pesquisa=pesquisa,
-            paginas=paginas,
-            session=self.session,
-            **{k: v for k, v in kwargs.items() if k not in ("query", "termo")},
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> pd.DataFrame:

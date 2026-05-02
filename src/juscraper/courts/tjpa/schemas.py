@@ -17,6 +17,11 @@ from ...schemas import (
 class InputCJSGTJPA(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     """Accepted input for TJPA ``cjsg`` / ``cjsg_download``.
 
+    Wired em :meth:`juscraper.courts.tjpa.client.TJPAScraper.cjsg_download`
+    desde o #183 (eliminada duplicacao do pipeline em ``cjsg``) — kwargs
+    desconhecidos viram :class:`TypeError` em ambos ``cjsg`` e
+    ``cjsg_download``. ``cjsg`` e wrapper trivial (``download → parse``).
+
     Endpoint REST JSON (BFF). ``pesquisa`` aceita os aliases deprecados
     ``query`` / ``termo`` via :func:`juscraper.utils.params.normalize_pesquisa`,
     que roda *antes* deste modelo. Datas aceitam os aliases

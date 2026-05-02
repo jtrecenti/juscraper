@@ -7,10 +7,11 @@ import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa, pop_normalize_aliases
+from juscraper.utils.params import SEARCH_ALIASES, apply_input_pipeline_search, normalize_pesquisa
 
 from .download import cjsg_download, get_initial_tokens
 from .parse import cjsg_parse
+from .schemas import InputCJSGTJPR
 
 
 class TJPRScraper(BaseScraper):
@@ -50,19 +51,22 @@ class TJPRScraper(BaseScraper):
                 range: range(1, 4) downloads pages 1-3.
                 None: downloads all available pages.
         """
-        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-        paginas = normalize_paginas(paginas)
-        datas = normalize_datas(
+        inp = apply_input_pipeline_search(
+            InputCJSGTJPR,
+            "TJPRScraper.cjsg_download()",
+            pesquisa=pesquisa,
+            paginas=paginas,
+            kwargs=kwargs,
+            consume_pesquisa_aliases=True,
             data_julgamento_inicio=data_julgamento_inicio,
             data_julgamento_fim=data_julgamento_fim,
             data_publicacao_inicio=data_publicacao_inicio,
             data_publicacao_fim=data_publicacao_fim,
-            **kwargs,
         )
         brutos: list = cjsg_download(
-            self.session, self.USER_AGENT, self.HOME_URL, pesquisa, paginas,
-            datas["data_julgamento_inicio"], datas["data_julgamento_fim"],
-            datas["data_publicacao_inicio"], datas["data_publicacao_fim"],
+            self.session, self.USER_AGENT, self.HOME_URL, inp.pesquisa, inp.paginas,
+            inp.data_julgamento_inicio, inp.data_julgamento_fim,
+            inp.data_publicacao_inicio, inp.data_publicacao_fim,
         )
         return brutos
 
@@ -87,26 +91,29 @@ class TJPRScraper(BaseScraper):
         """
         Searches for TJPR jurisprudence in a simplified way (download + parse).
         Returns a ready-to-analyze DataFrame.
+
+        See also:
+            :class:`juscraper.courts.tjpr.schemas.InputCJSGTJPR` — schema
+            pydantic e a fonte da verdade dos filtros aceitos via ``**kwargs``.
         """
-        pesquisa_val = normalize_pesquisa(pesquisa, **kwargs)
-        datas = normalize_datas(
+        # Resolve search alias here so cjsg_parse receives the actual term
+        # for inteiro-teor lookups. Strip apenas SEARCH_ALIASES (query/termo)
+        # para evitar re-pass duplicado; date aliases (data_inicio/data_fim,
+        # *_de/*_ate) seguem em kwargs e sao normalizados pelo pipeline em
+        # cjsg_download via normalize_datas.
+        pesquisa_resolved = normalize_pesquisa(pesquisa, **kwargs)
+        for alias in SEARCH_ALIASES:
+            kwargs.pop(alias, None)
+        brutos = self.cjsg_download(
+            pesquisa=pesquisa_resolved,
+            paginas=paginas,
             data_julgamento_inicio=data_julgamento_inicio,
             data_julgamento_fim=data_julgamento_fim,
             data_publicacao_inicio=data_publicacao_inicio,
             data_publicacao_fim=data_publicacao_fim,
             **kwargs,
         )
-        pop_normalize_aliases(kwargs, include_canonical=True)
-        brutos = self.cjsg_download(
-            pesquisa=pesquisa_val,
-            paginas=paginas,
-            data_julgamento_inicio=datas["data_julgamento_inicio"],
-            data_julgamento_fim=datas["data_julgamento_fim"],
-            data_publicacao_inicio=datas["data_publicacao_inicio"],
-            data_publicacao_fim=datas["data_publicacao_fim"],
-            **kwargs,
-        )
-        return self.cjsg_parse(brutos, pesquisa_val)
+        return self.cjsg_parse(brutos, pesquisa_resolved)
 
     def cpopg(self, id_cnj: Union[str, List[str]]):
         """Stub: Primeiro grau case consultation not implemented for TJPR."""
