@@ -1,8 +1,9 @@
 """Pydantic schemas for TJAP scraper endpoints.
 
-Wired em :meth:`juscraper.courts.tjap.client.TJAPScraper.cjsg` desde o lote
-L3 do #165 — kwargs desconhecidos viram :class:`TypeError`. ``cjsg_download``
-permanece sem pipeline (chamada interna receba so valores ja validados).
+Wired em :meth:`juscraper.courts.tjap.client.TJAPScraper.cjsg_download` desde
+o lote L3 do #165 — kwargs desconhecidos viram :class:`TypeError`.
+:meth:`TJAPScraper.cjsg` repassa ``**kwargs`` para ``cjsg_download``,
+ficando coberto transitivamente.
 """
 from __future__ import annotations
 

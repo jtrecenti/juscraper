@@ -90,17 +90,9 @@ class TJAPScraper(BaseScraper):
         -------
         pd.DataFrame
         """
-        numero_processo = resolve_deprecated_alias(
-            kwargs, "numero_cnj", "numero_processo", numero_processo
-        )
-        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-        paginas = normalize_paginas(paginas)
-        inp = apply_input_pipeline_search(
-            InputCJSGTJAP,
-            "TJAPScraper.cjsg()",
+        brutos = self.cjsg_download(
             pesquisa=pesquisa,
             paginas=paginas,
-            kwargs=kwargs,
             orgao=orgao,
             numero_processo=numero_processo,
             numero_acordao=numero_acordao,
@@ -111,20 +103,7 @@ class TJAPScraper(BaseScraper):
             classe=classe,
             votacao=votacao,
             origem=origem,
-        )
-        brutos = self.cjsg_download(
-            pesquisa=inp.pesquisa,
-            paginas=inp.paginas,
-            orgao=inp.orgao,
-            numero_processo=inp.numero_processo,
-            numero_acordao=inp.numero_acordao,
-            numero_ano=inp.numero_ano,
-            palavras_exatas=inp.palavras_exatas,
-            relator=inp.relator,
-            secretaria=inp.secretaria,
-            classe=inp.classe,
-            votacao=inp.votacao,
-            origem=inp.origem,
+            **kwargs,
         )
         return self.cjsg_parse(brutos)
 
@@ -159,12 +138,14 @@ class TJAPScraper(BaseScraper):
         )
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
         paginas = normalize_paginas(paginas)
-        return cjsg_download_manager(
+        inp = apply_input_pipeline_search(
+            InputCJSGTJAP,
+            "TJAPScraper.cjsg_download()",
             pesquisa=pesquisa,
             paginas=paginas,
-            session=self.session,
+            kwargs=kwargs,
             orgao=orgao,
-            numero_cnj=numero_processo,
+            numero_processo=numero_processo,
             numero_acordao=numero_acordao,
             numero_ano=numero_ano,
             palavras_exatas=palavras_exatas,
@@ -173,6 +154,21 @@ class TJAPScraper(BaseScraper):
             classe=classe,
             votacao=votacao,
             origem=origem,
+        )
+        return cjsg_download_manager(
+            pesquisa=inp.pesquisa,
+            paginas=inp.paginas,
+            session=self.session,
+            orgao=inp.orgao,
+            numero_cnj=inp.numero_processo,
+            numero_acordao=inp.numero_acordao,
+            numero_ano=inp.numero_ano,
+            palavras_exatas=inp.palavras_exatas,
+            relator=inp.relator,
+            secretaria=inp.secretaria,
+            classe=inp.classe,
+            votacao=inp.votacao,
+            origem=inp.origem,
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> pd.DataFrame:
