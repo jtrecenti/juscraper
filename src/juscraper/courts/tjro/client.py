@@ -41,10 +41,10 @@ class TJROScraper(BaseScraper):
         paginas: Union[int, list, range, None] = None,
         tipo: list | None = None,
         numero_processo: str = "",
-        magistrado: str = "",
+        relator: str = "",
         orgao_julgador: int | str = "",
         orgao_julgador_colegiado: int | str = "",
-        classe_judicial: str = "",
+        classe: str = "",
         instancia: list | None = None,
         termo_exato: bool = False,
         **kwargs,
@@ -60,10 +60,12 @@ class TJROScraper(BaseScraper):
                 ``"SENTENCA"``, ``"VOTO"``, etc.
             numero_processo (str): Numero CNJ. Aceita o alias deprecado
                 ``nr_processo``.
-            magistrado (str): Nome do relator/magistrado.
+            relator (str): Nome do relator. Aceita o alias deprecado
+                ``magistrado`` (refs #129).
             orgao_julgador (int | str): ID do orgao julgador.
             orgao_julgador_colegiado (int | str): ID do orgao colegiado.
-            classe_judicial (str): Nome da classe judicial.
+            classe (str): Nome da classe judicial. Aceita o alias deprecado
+                ``classe_judicial`` (refs #129).
             instancia (list | None): Instancias (ex.: ``[1]``, ``[2]``, ``[1, 2]``).
             termo_exato (bool): Busca por termo exato.
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJRO`.
@@ -75,13 +77,15 @@ class TJROScraper(BaseScraper):
         Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
             * ``query`` / ``termo`` -> ``pesquisa``
             * ``nr_processo`` -> ``numero_processo``
+            * ``magistrado`` -> ``relator``
+            * ``classe_judicial`` -> ``classe``
             * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``_fim``
             * ``data_julgamento_de`` / ``_ate`` -> ``data_julgamento_inicio`` / ``_fim``
 
         Raises:
             TypeError: Quando um kwarg desconhecido e passado.
-            ValueError: Quando ``numero_processo`` e ``nr_processo`` sao
-                passados simultaneamente.
+            ValueError: Quando um canonico e seu alias deprecado sao passados
+                simultaneamente.
             ValidationError: Quando um filtro tem formato invalido.
 
         Returns:
@@ -96,10 +100,10 @@ class TJROScraper(BaseScraper):
             paginas=paginas,
             tipo=tipo,
             numero_processo=numero_processo,
-            magistrado=magistrado,
+            relator=relator,
             orgao_julgador=orgao_julgador,
             orgao_julgador_colegiado=orgao_julgador_colegiado,
-            classe_judicial=classe_judicial,
+            classe=classe,
             instancia=instancia,
             termo_exato=termo_exato,
             **kwargs,
@@ -111,10 +115,10 @@ class TJROScraper(BaseScraper):
         paginas: Union[int, list, range, None] = None,
         tipo: list | None = None,
         numero_processo: str = "",
-        magistrado: str = "",
+        relator: str = "",
         orgao_julgador: int | str = "",
         orgao_julgador_colegiado: int | str = "",
-        classe_judicial: str = "",
+        classe: str = "",
         instancia: list | None = None,
         termo_exato: bool = False,
         **kwargs,
@@ -131,6 +135,12 @@ class TJROScraper(BaseScraper):
         numero_processo = resolve_deprecated_alias(
             kwargs, "nr_processo", "numero_processo", numero_processo, sentinel=""
         )
+        relator = resolve_deprecated_alias(
+            kwargs, "magistrado", "relator", relator, sentinel=""
+        )
+        classe = resolve_deprecated_alias(
+            kwargs, "classe_judicial", "classe", classe, sentinel=""
+        )
         inp = apply_input_pipeline_search(
             InputCJSGTJRO,
             "TJROScraper.cjsg_download()",
@@ -140,10 +150,10 @@ class TJROScraper(BaseScraper):
             consume_pesquisa_aliases=True,
             tipo=tipo,
             numero_processo=numero_processo,
-            magistrado=magistrado,
+            relator=relator,
             orgao_julgador=orgao_julgador,
             orgao_julgador_colegiado=orgao_julgador_colegiado,
-            classe_judicial=classe_judicial,
+            classe=classe,
             instancia=instancia,
             termo_exato=termo_exato,
         )
@@ -153,10 +163,10 @@ class TJROScraper(BaseScraper):
             session=self.session,
             tipo=inp.tipo,
             nr_processo=inp.numero_processo,
-            magistrado=inp.magistrado,
+            relator=inp.relator,
             orgao_julgador=inp.orgao_julgador,
             orgao_julgador_colegiado=inp.orgao_julgador_colegiado,
-            classe_judicial=inp.classe_judicial,
+            classe=inp.classe,
             data_julgamento_inicio=to_iso_date(inp.data_julgamento_inicio) or "",
             data_julgamento_fim=to_iso_date(inp.data_julgamento_fim) or "",
             instancia=inp.instancia,

@@ -53,7 +53,7 @@ class TJRNScraper(BaseScraper):
         pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
         numero_processo: str = "",
-        id_classe_judicial: str = "",
+        id_classe: str = "",
         id_orgao_julgador: str = "",
         id_relator: str = "",
         id_colegiado: str = "",
@@ -71,7 +71,8 @@ class TJRNScraper(BaseScraper):
                 todas. Default ``None``.
             numero_processo (str): Numero CNJ do processo. Aceita o alias
                 deprecado ``nr_processo``.
-            id_classe_judicial (str): ID da classe judicial.
+            id_classe (str): ID da classe judicial. Aceita o alias deprecado
+                ``id_classe_judicial`` (refs #129).
             id_orgao_julgador (str): ID do orgao julgador.
             id_relator (str): ID do relator.
             id_colegiado (str): ID do colegiado.
@@ -91,13 +92,14 @@ class TJRNScraper(BaseScraper):
         Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
             * ``query`` / ``termo`` -> ``pesquisa``
             * ``nr_processo`` -> ``numero_processo``
+            * ``id_classe_judicial`` -> ``id_classe``
             * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``_fim``
             * ``data_julgamento_de`` / ``_ate`` -> ``data_julgamento_inicio`` / ``_fim``
 
         Raises:
             TypeError: Quando um kwarg desconhecido e passado.
-            ValueError: Quando ``numero_processo`` e ``nr_processo`` sao
-                passados simultaneamente.
+            ValueError: Quando um canonico e seu alias deprecado sao passados
+                simultaneamente.
             ValidationError: Quando um filtro tem formato invalido.
 
         Returns:
@@ -111,7 +113,7 @@ class TJRNScraper(BaseScraper):
             pesquisa=pesquisa,
             paginas=paginas,
             numero_processo=numero_processo,
-            id_classe_judicial=id_classe_judicial,
+            id_classe=id_classe,
             id_orgao_julgador=id_orgao_julgador,
             id_relator=id_relator,
             id_colegiado=id_colegiado,
@@ -127,7 +129,7 @@ class TJRNScraper(BaseScraper):
         pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
         numero_processo: str = "",
-        id_classe_judicial: str = "",
+        id_classe: str = "",
         id_orgao_julgador: str = "",
         id_relator: str = "",
         id_colegiado: str = "",
@@ -149,6 +151,9 @@ class TJRNScraper(BaseScraper):
         numero_processo = resolve_deprecated_alias(
             kwargs, "nr_processo", "numero_processo", numero_processo, sentinel=""
         )
+        id_classe = resolve_deprecated_alias(
+            kwargs, "id_classe_judicial", "id_classe", id_classe, sentinel=""
+        )
         inp = apply_input_pipeline_search(
             InputCJSGTJRN,
             "TJRNScraper.cjsg_download()",
@@ -157,7 +162,7 @@ class TJRNScraper(BaseScraper):
             kwargs=kwargs,
             consume_pesquisa_aliases=True,
             numero_processo=numero_processo,
-            id_classe_judicial=id_classe_judicial,
+            id_classe=id_classe,
             id_orgao_julgador=id_orgao_julgador,
             id_relator=id_relator,
             id_colegiado=id_colegiado,
@@ -171,7 +176,7 @@ class TJRNScraper(BaseScraper):
             paginas=inp.paginas,
             session=self.session,
             nr_processo=inp.numero_processo,
-            id_classe_judicial=inp.id_classe_judicial,
+            id_classe=inp.id_classe,
             id_orgao_julgador=inp.id_orgao_julgador,
             id_relator=inp.id_relator,
             id_colegiado=inp.id_colegiado,
