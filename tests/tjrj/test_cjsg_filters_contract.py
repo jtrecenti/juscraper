@@ -15,7 +15,7 @@ from responses.matchers import json_params_matcher
 
 import juscraper as jus
 from juscraper.courts.tjrj.download import FORM_URL, RESULT_URL, build_cjsg_payload, extract_viewstate_fields
-from tests._helpers import assert_unsupported_date_filter_raises, load_sample, urlencoded_body_subset_matcher
+from tests._helpers import assert_unknown_kwarg_raises, load_sample, urlencoded_body_subset_matcher
 
 
 def _form_html() -> str:
@@ -29,7 +29,7 @@ def _xhr_no_results() -> dict:
 
 def _expected_body_subset(pesquisa: str, **overrides) -> dict:
     hidden = extract_viewstate_fields(_form_html())
-    body = build_cjsg_payload(hidden=hidden, pesquisa=pesquisa, **overrides)
+    body: dict = build_cjsg_payload(hidden=hidden, pesquisa=pesquisa, **overrides)
     body.pop("__VIEWSTATE", None)
     body.pop("__VIEWSTATEGENERATOR", None)
     body.pop("__EVENTVALIDATION", None)
@@ -120,14 +120,14 @@ def test_cjsg_termo_alias_emits_deprecation_warning(mocker):
 
 def test_cjsg_data_julgamento_raises_typeerror():
     """``data_julgamento_*`` not accepted — TJRJ has only year granularity."""
-    assert_unsupported_date_filter_raises(
+    assert_unknown_kwarg_raises(
         jus.scraper("tjrj").cjsg, "data_julgamento_inicio", "dano moral", paginas=1,
     )
 
 
 def test_cjsg_data_publicacao_raises_typeerror():
     """``data_publicacao_*`` is also rejected — TJRJ does not expose it."""
-    assert_unsupported_date_filter_raises(
+    assert_unknown_kwarg_raises(
         jus.scraper("tjrj").cjsg, "data_publicacao_inicio", "dano moral", paginas=1,
     )
 
@@ -150,12 +150,14 @@ def test_cjsg_data_inicio_alias_raises_typeerror():
 def test_cjsg_unknown_kwarg_raises():
     """Kwargs not declared in :class:`InputCJSGTJRJ` raise ``TypeError`` with
     the field name, instead of being silently dropped (refs #93, #143)."""
-    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
-        jus.scraper("tjrj").cjsg("dano moral", paginas=1, kwarg_inventado="x")
+    assert_unknown_kwarg_raises(
+        jus.scraper("tjrj").cjsg, "kwarg_inventado", "dano moral", paginas=1,
+    )
 
 
 def test_cjsg_download_unknown_kwarg_raises():
     """``cjsg_download`` rejects unknown kwargs at the lower-level entry point
     too — guards against silent drop when the caller skips :meth:`cjsg`."""
-    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
-        jus.scraper("tjrj").cjsg_download("dano moral", paginas=1, kwarg_inventado="x")
+    assert_unknown_kwarg_raises(
+        jus.scraper("tjrj").cjsg_download, "kwarg_inventado", "dano moral", paginas=1,
+    )
