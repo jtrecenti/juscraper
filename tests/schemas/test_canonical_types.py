@@ -15,8 +15,10 @@ Dois enforcamentos em schemas concretos Input/Output (mapeados em
 
 :data:`TYPE_GRACE_PERIOD` e :data:`SYNONYM_GRACE_PERIOD` documentam
 excecoes conhecidas que ainda aparecem por razao explicita — p.ex.
-TJRO/TJPI nao foram renomeados neste PR, DataJud ainda so aceita
-``range`` na assinatura. Cada entrada tem a razao e o PR pendente.
+TJPI/TJGO nao convertem ``data_publicacao`` para ``date``, DataJud
+ainda so aceita ``range`` na assinatura, ``OutputCJSGEsaj`` declara
+``relatora`` por causa do parser ``_normalize_key``. Cada entrada
+tem a razao e o PR pendente.
 """
 from __future__ import annotations
 
@@ -113,18 +115,6 @@ TYPE_GRACE_PERIOD: dict[tuple[str, str], str] = {
 # Documentam tribunais que ainda nao passaram pelo rename canonico
 # mas estao na agenda.
 SYNONYM_GRACE_PERIOD: dict[tuple[str, str], str] = {
-    # TJRO cjsg ainda expoe ``magistrado`` e ``classe_judicial`` na
-    # assinatura do client — rename para ``relator``/``classe`` foi
-    # feito apenas no parser (coluna canonica). Proximo PR TJRO deve
-    # deprecar os aliases no client tambem, como TJES/TJPE.
-    (
-        "InputCJSGTJRO",
-        "magistrado",
-    ): "TJRO client ainda nao renomeado — proximo PR TJRO com deprecacao via pop_deprecated_alias",
-    (
-        "InputCJSGTJRO",
-        "classe_judicial",
-    ): "TJRO client ainda nao renomeado — proximo PR TJRO com deprecacao via pop_deprecated_alias",
     # OutputCJSGEsaj declara ``relatora`` explicito porque o parser eSAJ
     # _normalize_key transforma "Relator(a):" em "relatora". Correcao
     # estrutural no parser e breaking para 6 tribunais — PR dedicado.

@@ -27,10 +27,10 @@ class InputCJSGTJRO(SearchBase, DataJulgamentoMixin):
 
     tipo: list | None = None
     numero_processo: str = ""
-    magistrado: str = ""
+    relator: str = ""
     orgao_julgador: int | str = ""
     orgao_julgador_colegiado: int | str = ""
-    classe_judicial: str = ""
+    classe: str = ""
     instancia: list | None = None
     termo_exato: bool = False
 

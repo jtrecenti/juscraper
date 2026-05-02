@@ -1,10 +1,11 @@
 """Filter-propagation contract for TJRO cjsg.
 
-``magistrado`` and ``classe_judicial`` are still canonical kwargs in
-``TJROScraper.cjsg`` today (no ``DeprecationWarning``). The repo-wide
-canonical names defined in ``CLAUDE.md`` > "Nomes canonicos de coluna"
-are ``relator`` and ``classe`` — alignment here is tracked as part of
-the family 1C refactor (#84), not within this contract PR.
+``relator`` and ``classe`` are the canonical kwargs in ``TJROScraper.cjsg``
+(refs #129). The legacy ``magistrado`` / ``classe_judicial`` aliases are
+still accepted and emit ``DeprecationWarning`` for one version. The
+backend Elasticsearch payload keeps the original field names
+(``ds_nome``, ``ds_classe_judicial``) — that is an internal detail of
+the JURIS API and not exposed in the public signature.
 """
 import pandas as pd
 import pytest
@@ -20,8 +21,8 @@ from tests._helpers import load_sample
 def test_cjsg_all_filters_land_in_json_body(mocker):
     """Every public filter must reach the POST JSON payload via ``build_cjsg_payload``.
 
-    ``magistrado`` / ``classe_judicial`` are passed as-is (canonical in TJRO today —
-    see module docstring).
+    Public filters are passed in canonical form (``relator``, ``classe``);
+    the matcher asserts the backend body keeps ``ds_nome`` / ``ds_classe_judicial``.
 
     Note: ``TJROScraper.cjsg`` exposes only ``data_julgamento_inicio``/``fim``;
     ``data_publicacao_*`` is not in the public signature, so the publication
@@ -39,10 +40,10 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
             offset=0,
             tipo=["ACORDAO"],
             nr_processo="00000000000000000000",
-            magistrado="FULANO DE TAL",
+            relator="FULANO DE TAL",
             orgao_julgador=42,
             orgao_julgador_colegiado=7,
-            classe_judicial="Apelacao",
+            classe="Apelacao",
             data_julgamento_inicio="2024-01-01",
             data_julgamento_fim="2024-03-31",
             instancia=[2],
@@ -55,10 +56,10 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
         paginas=1,
         tipo=["ACORDAO"],
         numero_processo="00000000000000000000",
-        magistrado="FULANO DE TAL",
+        relator="FULANO DE TAL",
         orgao_julgador=42,
         orgao_julgador_colegiado=7,
-        classe_judicial="Apelacao",
+        classe="Apelacao",
         data_julgamento_inicio="2024-01-01",
         data_julgamento_fim="2024-03-31",
         instancia=[2],
@@ -127,6 +128,58 @@ def test_cjsg_nr_processo_alias_emits_deprecation_warning(mocker):
             "dano moral",
             paginas=1,
             nr_processo="00000000000000000000",
+        )
+
+    assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
+def test_cjsg_magistrado_alias_emits_deprecation_warning(mocker):
+    """The deprecated ``magistrado`` alias maps to ``relator`` and the
+    backend body keeps the ``ds_nome`` field (refs #129)."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.POST,
+        BASE_URL,
+        body=load_sample("tjro", "cjsg/no_results.json"),
+        status=200,
+        content_type="application/json",
+        match=[json_params_matcher(build_cjsg_payload(
+            "dano moral", offset=0, relator="FULANO DE TAL",
+        ))],
+    )
+
+    with pytest.warns(DeprecationWarning, match="magistrado.*relator"):
+        df = jus.scraper("tjro").cjsg(
+            "dano moral",
+            paginas=1,
+            magistrado="FULANO DE TAL",
+        )
+
+    assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
+def test_cjsg_classe_judicial_alias_emits_deprecation_warning(mocker):
+    """The deprecated ``classe_judicial`` alias maps to ``classe`` and the
+    backend body keeps the ``ds_classe_judicial`` field (refs #129)."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.POST,
+        BASE_URL,
+        body=load_sample("tjro", "cjsg/no_results.json"),
+        status=200,
+        content_type="application/json",
+        match=[json_params_matcher(build_cjsg_payload(
+            "dano moral", offset=0, classe="Apelacao",
+        ))],
+    )
+
+    with pytest.warns(DeprecationWarning, match="classe_judicial.*classe"):
+        df = jus.scraper("tjro").cjsg(
+            "dano moral",
+            paginas=1,
+            classe_judicial="Apelacao",
         )
 
     assert isinstance(df, pd.DataFrame)

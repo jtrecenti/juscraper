@@ -43,7 +43,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Parametros de Input renomeados para canonicos; os nomes antigos continuam aceitos com `DeprecationWarning` por um ciclo:
   - `nr_processo` -> `numero_processo` em TJPB, TJRN, TJRO.
   - `numero_cnj` -> `numero_processo` em TJAP.
-  - `magistrado` -> `relator`, `classe_judicial` -> `classe` em TJES (`cjsg` e `cjpg`).
+  - `magistrado` -> `relator`, `classe_judicial` -> `classe` em TJES (`cjsg` e `cjpg`) e TJRO (`cjsg`). Refs #129.
   - `classe_cnj` -> `classe`, `assunto_cnj` -> `assunto` em TJPE.
 
   Helpers `juscraper.utils.params.pop_deprecated_alias` (pop + warning) e `juscraper.utils.params.resolve_deprecated_alias` (pop + checagem de colisao + reatribuicao) centralizam o padrao. Refs #93, #117.
