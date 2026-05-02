@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from typing import ClassVar
 
+from pydantic import Field
+
 from ...schemas import DataJulgamentoMixin, OutputCJSGBase, OutputDataPublicacaoMixin, OutputRelatoriaMixin, SearchBase
 
 
@@ -33,13 +35,14 @@ class InputCJSGTJMT(SearchBase, DataJulgamentoMixin):
 
     BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
 
+    # TODO: apertar com Literal[...] após captura do Hellsgate — refs follow-up de #184.
     tipo_consulta: str = "Acordao"
     relator: str | None = None
     orgao_julgador: str | None = None
     classe: str | None = None
     tipo_processo: str | None = None
     thesaurus: bool = False
-    quantidade_por_pagina: int = 10
+    quantidade_por_pagina: int = Field(default=10, ge=1, le=100)
 
 
 class OutputCJSGTJMT(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):

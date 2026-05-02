@@ -52,15 +52,15 @@ class TJRNScraper(BaseScraper):
         self,
         pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
-        numero_processo: str = "",
-        id_classe: str = "",
-        id_orgao_julgador: str = "",
-        id_relator: str = "",
-        id_colegiado: str = "",
-        sistema: str = "",
-        decisoes: str = "",
-        jurisdicoes: str = "",
-        grau: str = "",
+        numero_processo: Optional[str] = None,
+        id_classe: Optional[str] = None,
+        id_orgao_julgador: Optional[str] = None,
+        id_relator: Optional[str] = None,
+        id_colegiado: Optional[str] = None,
+        sistema: Optional[str] = None,
+        decisoes: Optional[str] = None,
+        jurisdicoes: Optional[str] = None,
+        grau: Optional[str] = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Busca jurisprudencia no TJRN.
@@ -128,15 +128,15 @@ class TJRNScraper(BaseScraper):
         self,
         pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
-        numero_processo: str = "",
-        id_classe: str = "",
-        id_orgao_julgador: str = "",
-        id_relator: str = "",
-        id_colegiado: str = "",
-        sistema: str = "",
-        decisoes: str = "",
-        jurisdicoes: str = "",
-        grau: str = "",
+        numero_processo: Optional[str] = None,
+        id_classe: Optional[str] = None,
+        id_orgao_julgador: Optional[str] = None,
+        id_relator: Optional[str] = None,
+        id_colegiado: Optional[str] = None,
+        sistema: Optional[str] = None,
+        decisoes: Optional[str] = None,
+        jurisdicoes: Optional[str] = None,
+        grau: Optional[str] = None,
         **kwargs,
     ) -> list:
         """Download raw CJSG JSON responses from TJRN.
@@ -149,10 +149,10 @@ class TJRNScraper(BaseScraper):
             List of raw JSON responses (one per page).
         """
         numero_processo = resolve_deprecated_alias(
-            kwargs, "nr_processo", "numero_processo", numero_processo, sentinel=""
+            kwargs, "nr_processo", "numero_processo", numero_processo
         )
         id_classe = resolve_deprecated_alias(
-            kwargs, "id_classe_judicial", "id_classe", id_classe, sentinel=""
+            kwargs, "id_classe_judicial", "id_classe", id_classe
         )
         inp = apply_input_pipeline_search(
             InputCJSGTJRN,
@@ -175,17 +175,17 @@ class TJRNScraper(BaseScraper):
             pesquisa=inp.pesquisa,
             paginas=inp.paginas,
             session=self.session,
-            nr_processo=inp.numero_processo,
-            id_classe=inp.id_classe,
-            id_orgao_julgador=inp.id_orgao_julgador,
-            id_relator=inp.id_relator,
-            id_colegiado=inp.id_colegiado,
+            nr_processo=inp.numero_processo or "",
+            id_classe=inp.id_classe or "",
+            id_orgao_julgador=inp.id_orgao_julgador or "",
+            id_relator=inp.id_relator or "",
+            id_colegiado=inp.id_colegiado or "",
             dt_inicio=_to_tjrn_date(inp.data_julgamento_inicio),
             dt_fim=_to_tjrn_date(inp.data_julgamento_fim),
-            sistema=inp.sistema,
-            decisoes=inp.decisoes,
-            jurisdicoes=inp.jurisdicoes,
-            grau=inp.grau,
+            sistema=inp.sistema or "",
+            decisoes=inp.decisoes or "",
+            jurisdicoes=inp.jurisdicoes or "",
+            grau=inp.grau or "",
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> pd.DataFrame:

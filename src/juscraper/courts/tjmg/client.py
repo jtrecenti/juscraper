@@ -43,9 +43,9 @@ class TJMGScraper(BaseScraper):
         self,
         pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
-        pesquisar_por: str = "ementa",
-        order_by: Union[str, int] = 2,
-        linhas_por_pagina: int = 10,
+        pesquisar_por: Literal["ementa", "acordao"] = "ementa",
+        order_by: Literal[0, 1, 2, "0", "1", "2"] = 2,
+        linhas_por_pagina: Literal[10, 20, 50] = 10,
         data_julgamento_inicio: Optional[str] = None,
         data_julgamento_fim: Optional[str] = None,
         data_publicacao_inicio: Optional[str] = None,
@@ -115,8 +115,8 @@ class TJMGScraper(BaseScraper):
         pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
         pesquisar_por: Literal["ementa", "acordao"] = "ementa",
-        order_by: Union[str, int] = 2,
-        linhas_por_pagina: int = 10,
+        order_by: Literal[0, 1, 2, "0", "1", "2"] = 2,
+        linhas_por_pagina: Literal[10, 20, 50] = 10,
         **kwargs,
     ) -> pd.DataFrame:
         """Busca jurisprudencia no TJMG (acordaos com captcha numerico).

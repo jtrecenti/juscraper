@@ -11,6 +11,7 @@ atual — por isso nao ganham schemas de Input/Output aqui.
 from __future__ import annotations
 
 from datetime import date
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
@@ -28,9 +29,9 @@ class InputCJSGTJTO(SearchBase, DataJulgamentoMixin):
     julgamento herdado de :class:`DataJulgamentoMixin`.
     """
 
-    tipo_documento: str = "acordaos"
-    ordenacao: str = "DESC"
-    numero_processo: str = ""
+    tipo_documento: Literal["acordaos", "decisoes", "sentencas"] = "acordaos"
+    ordenacao: Literal["ASC", "DESC", "RELEV"] = "DESC"
+    numero_processo: str | None = None
     soementa: bool = False
 
 
@@ -63,9 +64,9 @@ class InputCJPGTJTO(SearchBase, DataJulgamentoMixin):
     Filtro de data de julgamento herdado de :class:`DataJulgamentoMixin`.
     """
 
-    tipo_documento: str = "acordaos"
-    ordenacao: str = "DESC"
-    numero_processo: str = ""
+    tipo_documento: Literal["acordaos", "decisoes", "sentencas"] = "acordaos"
+    ordenacao: Literal["ASC", "DESC", "RELEV"] = "DESC"
+    numero_processo: str | None = None
     soementa: bool = False
 
 

@@ -27,10 +27,10 @@ class InputCJSGTJPI(SearchBase, DataJulgamentoMixin):
 
     BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
 
-    tipo: str = ""
-    relator: str = ""
-    classe: str = ""
-    orgao: str = ""
+    tipo: str | None = None
+    relator: str | None = None
+    classe: str | None = None
+    orgao: str | None = None
 
 
 class OutputCJSGTJPI(OutputCJSGBase):

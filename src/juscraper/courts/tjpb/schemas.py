@@ -23,10 +23,11 @@ class InputCJSGTJPB(SearchBase, DataJulgamentoMixin):
     de julgamento herdado de :class:`DataJulgamentoMixin`.
     """
 
-    numero_processo: str = ""
-    id_classe: str = ""
-    id_orgao_julgador: str = ""
-    id_relator: str = ""
+    numero_processo: str | None = None
+    id_classe: str | None = None
+    id_orgao_julgador: str | None = None
+    id_relator: str | None = None
+    # TODO: investigar formato real (provavelmente list[str]) — refs follow-up de #184.
     id_origem: str = "8,2"
     decisoes: bool = False
 

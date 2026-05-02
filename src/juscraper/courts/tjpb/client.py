@@ -51,10 +51,10 @@ class TJPBScraper(BaseScraper):
         self,
         pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
-        numero_processo: str = "",
-        id_classe: str = "",
-        id_orgao_julgador: str = "",
-        id_relator: str = "",
+        numero_processo: Optional[str] = None,
+        id_classe: Optional[str] = None,
+        id_orgao_julgador: Optional[str] = None,
+        id_relator: Optional[str] = None,
         id_origem: str = "8,2",
         decisoes: bool = False,
         **kwargs,
@@ -86,10 +86,10 @@ class TJPBScraper(BaseScraper):
         pd.DataFrame
         """
         numero_processo = resolve_deprecated_alias(
-            kwargs, "nr_processo", "numero_processo", numero_processo, sentinel=""
+            kwargs, "nr_processo", "numero_processo", numero_processo
         )
         id_classe = resolve_deprecated_alias(
-            kwargs, "id_classe_judicial", "id_classe", id_classe, sentinel=""
+            kwargs, "id_classe_judicial", "id_classe", id_classe
         )
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
         paginas = normalize_paginas(paginas)
@@ -97,10 +97,10 @@ class TJPBScraper(BaseScraper):
         brutos = self.cjsg_download(
             pesquisa=pesquisa,
             paginas=paginas,
-            nr_processo=numero_processo,
-            id_classe=id_classe,
-            id_orgao_julgador=id_orgao_julgador,
-            id_relator=id_relator,
+            nr_processo=numero_processo or "",
+            id_classe=id_classe or "",
+            id_orgao_julgador=id_orgao_julgador or "",
+            id_relator=id_relator or "",
             dt_inicio=datas["data_julgamento_inicio"] or "",
             dt_fim=datas["data_julgamento_fim"] or "",
             id_origem=id_origem,
