@@ -52,7 +52,7 @@ class TJPBScraper(BaseScraper):
         pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
         numero_processo: str = "",
-        id_classe_judicial: str = "",
+        id_classe: str = "",
         id_orgao_julgador: str = "",
         id_relator: str = "",
         id_origem: str = "8,2",
@@ -69,8 +69,8 @@ class TJPBScraper(BaseScraper):
             Pages to download (1-based). None downloads all.
         numero_processo : str, optional
             Process number filter. Accepts the deprecated alias ``nr_processo``.
-        id_classe_judicial : str, optional
-            Judicial class ID.
+        id_classe : str, optional
+            Judicial class ID. Accepts the deprecated alias ``id_classe_judicial``.
         id_orgao_julgador : str, optional
             Judging body ID.
         id_relator : str, optional
@@ -88,6 +88,9 @@ class TJPBScraper(BaseScraper):
         numero_processo = resolve_deprecated_alias(
             kwargs, "nr_processo", "numero_processo", numero_processo, sentinel=""
         )
+        id_classe = resolve_deprecated_alias(
+            kwargs, "id_classe_judicial", "id_classe", id_classe, sentinel=""
+        )
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
         paginas = normalize_paginas(paginas)
         datas = normalize_datas(**kwargs)
@@ -95,7 +98,7 @@ class TJPBScraper(BaseScraper):
             pesquisa=pesquisa,
             paginas=paginas,
             nr_processo=numero_processo,
-            id_classe_judicial=id_classe_judicial,
+            id_classe=id_classe,
             id_orgao_julgador=id_orgao_julgador,
             id_relator=id_relator,
             dt_inicio=datas["data_julgamento_inicio"] or "",
