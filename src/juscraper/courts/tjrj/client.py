@@ -41,8 +41,8 @@ class TJRJScraper(BaseScraper):
         paginas: int | list | range | None = None,
         ano_inicio: str | int | None = None,
         ano_fim: str | int | None = None,
-        competencia: str = "1",
-        origem: str = "1",
+        competencia: str | int = "1",
+        origem: str | int = "1",
         tipo_acordao: bool = True,
         tipo_monocratica: bool = True,
         magistrado_codigo: str | None = None,
@@ -101,14 +101,6 @@ class TJRJScraper(BaseScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        ano_inicio: str | int | None = None,
-        ano_fim: str | int | None = None,
-        competencia: str = "1",
-        origem: str = "1",
-        tipo_acordao: bool = True,
-        tipo_monocratica: bool = True,
-        magistrado_codigo: str | None = None,
-        orgao_codigo: str | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Busca jurisprudencia (acordaos + monocraticas) no TJRJ.
@@ -121,21 +113,29 @@ class TJRJScraper(BaseScraper):
             pesquisa (str): Termo de busca livre.
             paginas (int | list | range | None): Paginas 1-based; ``None``
                 baixa todas. Default ``None``.
-            ano_inicio (str | int): Ano de julgamento inicial. Default ``None``
-                (sem filtro de ano).
-            ano_fim (str | int): Ano de julgamento final. Default ``None``.
-            competencia (str): ``"1"`` civel / ``"2"`` criminal / ``"3"`` ambos.
-                Default ``"1"``.
-            origem (str): ``"1"`` 2o grau (default).
-            tipo_acordao (bool): Inclui acordaos. Default ``True``.
-            tipo_monocratica (bool): Inclui decisoes monocraticas. Default ``True``.
-            magistrado_codigo (str): IDs internos do magistrado, separados por
-                virgula. Backend: ``hfCodMags``. Default ``None``.
-            orgao_codigo (str): IDs internos do orgao julgador, separados por
-                virgula. Backend: ``hfCodOrgs``. Default ``None``.
-            **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJRJ`. O
-                TJRJ nao expoe filtros de data julgamento/publicacao
-                granulares — use ``ano_inicio`` / ``ano_fim``.
+            **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJRJ`
+                (todos opcionais; ``None`` = sem filtro):
+
+                * ``ano_inicio`` / ``ano_fim`` (str | int): Ano de
+                  julgamento. **Granularidade anual e o unico filtro de
+                  data exposto pelo backend ASPX** — use estes em vez de
+                  ``data_julgamento_*``. Backend:
+                  ``cmbAnoInicio`` / ``cmbAnoFim``.
+                * ``competencia`` (str | int): ``"1"`` civel / ``"2"``
+                  criminal / ``"3"`` ambos. Default ``"1"``. Backend:
+                  ``cmbCompetencia``.
+                * ``origem`` (str | int): ``"1"`` 2o grau (default).
+                  Backend: ``cmbOrigem``.
+                * ``tipo_acordao`` (bool): Inclui acordaos. Default
+                  ``True``. Backend: ``chkAcordao``.
+                * ``tipo_monocratica`` (bool): Inclui decisoes
+                  monocraticas. Default ``True``. Backend: ``chkDecMon``.
+                * ``magistrado_codigo`` (str): IDs internos do
+                  magistrado, separados por virgula. Backend:
+                  ``hfCodMags``.
+                * ``orgao_codigo`` (str): IDs internos do orgao
+                  julgador, separados por virgula. Backend:
+                  ``hfCodOrgs``.
 
         Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
             * ``query`` / ``termo`` -> ``pesquisa``
@@ -164,19 +164,7 @@ class TJRJScraper(BaseScraper):
             :class:`InputCJSGTJRJ` — schema pydantic e a fonte da verdade dos
             filtros aceitos.
         """
-        raw = self.cjsg_download(
-            pesquisa=pesquisa,
-            paginas=paginas,
-            ano_inicio=ano_inicio,
-            ano_fim=ano_fim,
-            competencia=competencia,
-            origem=origem,
-            tipo_acordao=tipo_acordao,
-            tipo_monocratica=tipo_monocratica,
-            magistrado_codigo=magistrado_codigo,
-            orgao_codigo=orgao_codigo,
-            **kwargs,
-        )
+        raw = self.cjsg_download(pesquisa=pesquisa, paginas=paginas, **kwargs)
         return self.cjsg_parse(raw)
 
     def cpopg(self, id_cnj: str | list[str]):

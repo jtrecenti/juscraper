@@ -1,6 +1,8 @@
 """Pydantic schemas for TJRJ scraper endpoints."""
 from __future__ import annotations
 
+from pydantic import field_validator
+
 from ...schemas import OutputCJSGBase, OutputDataPublicacaoMixin, OutputRelatoriaMixin, SearchBase
 
 
@@ -24,6 +26,19 @@ class InputCJSGTJRJ(SearchBase):
     tipo_monocratica: bool = True
     magistrado_codigo: str | None = None
     orgao_codigo: str | None = None
+
+    @field_validator("competencia", "origem", mode="before")
+    @classmethod
+    def _coerce_int(cls, value):
+        # O backend ASPX espera string no body, mas o usuario tipicamente
+        # pensa em valores discretos pequenos (1/2/3) — aceitar ``int`` evita
+        # surpresa do tipo `competencia=2 -> ValidationError`. Coerce so para
+        # int "puro"; bool nao entra (Python trata bool como subtipo de int).
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, int):
+            return str(value)
+        return value
 
 
 class OutputCJSGTJRJ(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):

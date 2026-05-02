@@ -28,16 +28,17 @@ _HIDDEN_RE = re.compile(
 
 
 def extract_viewstate_fields(html: str) -> dict:
-    """Extract the four hidden fields the ASP.NET POST requires.
+    """Extrai os quatro hidden fields exigidos pelo POST ASP.NET do TJRJ.
 
-    Returns ``__VIEWSTATE``, ``__VIEWSTATEGENERATOR``, ``__EVENTVALIDATION`` and
-    ``ctl00$ContentPlaceHolder1$hfListaPalavrasBloqueadas``. Missing fields are
-    omitted from the dict so callers can substitute defaults explicitly.
+    Retorna ``__VIEWSTATE``, ``__VIEWSTATEGENERATOR``, ``__EVENTVALIDATION`` e
+    ``ctl00$ContentPlaceHolder1$hfListaPalavrasBloqueadas``. Campos ausentes
+    sao omitidos do dict — o caller substitui defaults explicitamente.
 
-    The blocked-words hidden carries the server-side stopword list (``"A;ACIMA;
-    COM;..."``); the backend reads it back to validate the search term, and a
-    POST that omits this field can trigger a 500 Runtime Error in some windows
-    (refs #143, surfaced 2026-04-30).
+    O hidden de palavras bloqueadas carrega a stopword list do backend
+    (``"A;ACIMA;COM;..."``); o servidor le esse valor de volta para validar o
+    termo de busca, e um POST que omite o campo pode disparar 500 Runtime
+    Error em janelas onde o backend espera o roundtrip (refs #143, exposto
+    em 2026-04-30).
     """
     fields: dict = {}
     for match in _HIDDEN_RE.finditer(html):
@@ -58,11 +59,11 @@ def build_cjsg_payload(
     magistrado_codigo: str | None = None,
     orgao_codigo: str | None = None,
 ) -> dict:
-    """Build the URL-encoded form body for the TJRJ ASPX POST.
+    """Monta o body URL-encoded para o POST ASPX do TJRJ.
 
-    ``hidden`` carries the four hidden fields returned by
-    :func:`extract_viewstate_fields`. ``g-recaptcha-response`` is left empty —
-    the widget is decorative; the backend does not validate the token.
+    ``hidden`` carrega os quatro hidden fields devolvidos por
+    :func:`extract_viewstate_fields`. ``g-recaptcha-response`` fica vazio
+    propositalmente — o widget e decorativo, o backend nao valida o token.
     """
     data = {
         "__EVENTTARGET": f"{_FIELD_PREFIX}btnPesquisar",

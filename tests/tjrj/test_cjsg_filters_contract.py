@@ -15,7 +15,7 @@ from responses.matchers import json_params_matcher
 
 import juscraper as jus
 from juscraper.courts.tjrj.download import FORM_URL, RESULT_URL, build_cjsg_payload, extract_viewstate_fields
-from tests._helpers import load_sample, urlencoded_body_subset_matcher
+from tests._helpers import assert_unsupported_date_filter_raises, load_sample, urlencoded_body_subset_matcher
 
 
 def _form_html() -> str:
@@ -120,22 +120,16 @@ def test_cjsg_termo_alias_emits_deprecation_warning(mocker):
 
 def test_cjsg_data_julgamento_raises_typeerror():
     """``data_julgamento_*`` not accepted — TJRJ has only year granularity."""
-    with pytest.raises(TypeError, match=r"data_julgamento_inicio"):
-        jus.scraper("tjrj").cjsg(
-            "dano moral", paginas=1,
-            data_julgamento_inicio="2024-01-01",
-            data_julgamento_fim="2024-03-31",
-        )
+    assert_unsupported_date_filter_raises(
+        jus.scraper("tjrj").cjsg, "data_julgamento_inicio", "dano moral", paginas=1,
+    )
 
 
 def test_cjsg_data_publicacao_raises_typeerror():
     """``data_publicacao_*`` is also rejected — TJRJ does not expose it."""
-    with pytest.raises(TypeError, match=r"data_publicacao_inicio"):
-        jus.scraper("tjrj").cjsg(
-            "dano moral", paginas=1,
-            data_publicacao_inicio="2024-01-01",
-            data_publicacao_fim="2024-03-31",
-        )
+    assert_unsupported_date_filter_raises(
+        jus.scraper("tjrj").cjsg, "data_publicacao_inicio", "dano moral", paginas=1,
+    )
 
 
 def test_cjsg_data_inicio_alias_raises_typeerror():

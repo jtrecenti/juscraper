@@ -58,6 +58,11 @@ CASES = [
         "juscraper.aggregators.comunica_cnj.schemas", "InputListarComunicacoesComunicaCNJ",
         id="comunica_cnj.listar_comunicacoes",
     ),
+    pytest.param(
+        "juscraper.courts.tjrj.client", "TJRJScraper", "cjsg",
+        "juscraper.courts.tjrj.schemas", "InputCJSGTJRJ",
+        id="tjrj.cjsg",
+    ),
 ]
 
 # Captura nomes em backticks duplos (RST inline literal). Cobre tanto
@@ -162,6 +167,11 @@ DOWNLOAD_REFERENCE_CASES = [
         "juscraper.courts.tjsp.client", "TJSPScraper",
         "cjpg_download", "cjpg",
         id="tjsp.cjpg_download",
+    ),
+    pytest.param(
+        "juscraper.courts.tjrj.client", "TJRJScraper",
+        "cjsg_download", "cjsg",
+        id="tjrj.cjsg_download",
     ),
 ]
 
