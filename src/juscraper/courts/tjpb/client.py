@@ -1,25 +1,37 @@
 """Scraper for the Tribunal de Justica da Paraiba (TJPB)."""
-from datetime import date
+from datetime import date, datetime
 from typing import List, Optional, Union
 
 import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa, resolve_deprecated_alias
+from juscraper.utils.params import (
+    apply_input_pipeline_search,
+    coerce_brazilian_date,
+    pop_deprecated_alias,
+    resolve_deprecated_alias,
+)
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
+from .schemas import InputCJSGTJPB
 
 
-def _parse_br(d: str) -> date | None:
-    """Parse DD/MM/YYYY → date, tolerant to empty/None."""
+def _parse_backend_date(d: Optional[str]) -> Optional[date]:
+    """Parse a date string already coerced to ``InputCJSGTJPB.BACKEND_DATE_FORMAT``.
+
+    ``apply_input_pipeline_search`` runs ``coerce_brazilian_date`` against the
+    schema's ``BACKEND_DATE_FORMAT`` before instantiating the model, so values
+    on ``inp.data_julgamento_*`` are guaranteed to be either ``""``/``None`` or
+    a string in that format. Returns ``None`` for empty/malformed input so the
+    post-filter caller can short-circuit.
+    """
     if not d:
         return None
     try:
-        dd, mm, yy = d.split("/")
-        return date(int(yy), int(mm), int(dd))
-    except (ValueError, AttributeError):
+        return datetime.strptime(d, InputCJSGTJPB.BACKEND_DATE_FORMAT).date()
+    except (ValueError, TypeError):
         return None
 
 
@@ -57,6 +69,8 @@ class TJPBScraper(BaseScraper):
         id_relator: str = "",
         id_origem: str = "8,2",
         decisoes: bool = False,
+        data_julgamento_inicio: Optional[str] = None,
+        data_julgamento_fim: Optional[str] = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Search TJPB jurisprudence.
@@ -80,38 +94,58 @@ class TJPBScraper(BaseScraper):
             ``"2"`` for Tribunal Pleno/Camaras.
         decisoes : bool
             If True, include monocratic decisions.
+        data_julgamento_inicio, data_julgamento_fim : str, optional
+            Julgamento date range. Backend filtra dt_disponibilizacao, mas o
+            DataFrame expoe dt_ementa como ``data_julgamento`` — pos-filtro
+            aplicado para alinhar com a intencao do usuario.
 
         Returns
         -------
         pd.DataFrame
         """
-        numero_processo = resolve_deprecated_alias(
-            kwargs, "nr_processo", "numero_processo", numero_processo, sentinel=""
-        )
-        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-        paginas = normalize_paginas(paginas)
-        datas = normalize_datas(**kwargs)
-        brutos = self.cjsg_download(
+        # Resolve datas aliases here so the post-filter has access to the
+        # canonical values; cjsg_download will handle pesquisa/numero_processo
+        # aliases via the pipeline.
+        for old, new, current in (
+            ("data_inicio", "data_julgamento_inicio", data_julgamento_inicio),
+            ("data_fim", "data_julgamento_fim", data_julgamento_fim),
+            ("data_julgamento_de", "data_julgamento_inicio", data_julgamento_inicio),
+            ("data_julgamento_ate", "data_julgamento_fim", data_julgamento_fim),
+        ):
+            if old in kwargs:
+                if current is not None and current != "":
+                    raise ValueError(
+                        f"Não é possível passar '{new}' e '{old}' ao mesmo tempo. "
+                        f"Use apenas '{new}'."
+                    )
+                value = pop_deprecated_alias(kwargs, old, new)
+                if new == "data_julgamento_inicio":
+                    data_julgamento_inicio = value
+                else:
+                    data_julgamento_fim = value
+
+        df = self.cjsg_parse(self.cjsg_download(
             pesquisa=pesquisa,
             paginas=paginas,
-            nr_processo=numero_processo,
+            numero_processo=numero_processo,
             id_classe_judicial=id_classe_judicial,
             id_orgao_julgador=id_orgao_julgador,
             id_relator=id_relator,
-            dt_inicio=datas["data_julgamento_inicio"] or "",
-            dt_fim=datas["data_julgamento_fim"] or "",
             id_origem=id_origem,
             decisoes=decisoes,
-        )
-        df = self.cjsg_parse(brutos)
+            data_julgamento_inicio=data_julgamento_inicio,
+            data_julgamento_fim=data_julgamento_fim,
+            **kwargs,
+        ))
 
         # The TJPB backend filter on dt_inicio/dt_fim acts on an internal
         # disponibilização date, not on dt_ementa. Rows returned can have
         # dt_ementa far outside the requested window. Post-filter so the
         # returned data_julgamento (= dt_ementa) matches user intent.
         if not df.empty and "data_julgamento" in df.columns:
-            start = _parse_br(datas["data_julgamento_inicio"])
-            end = _parse_br(datas["data_julgamento_fim"])
+            backend_format = InputCJSGTJPB.BACKEND_DATE_FORMAT
+            start = _parse_backend_date(coerce_brazilian_date(data_julgamento_inicio, backend_format))
+            end = _parse_backend_date(coerce_brazilian_date(data_julgamento_fim, backend_format))
             if start is not None and end is not None:
                 mask = df["data_julgamento"].between(start, end)
                 df = df[mask].reset_index(drop=True)
@@ -121,22 +155,52 @@ class TJPBScraper(BaseScraper):
         self,
         pesquisa: Optional[str] = None,
         paginas: Union[int, list, range, None] = None,
+        numero_processo: str = "",
+        id_classe_judicial: str = "",
+        id_orgao_julgador: str = "",
+        id_relator: str = "",
+        id_origem: str = "8,2",
+        decisoes: bool = False,
         **kwargs,
     ) -> list:
         """Download raw CJSG JSON responses from TJPB.
+
+        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
 
         Returns
         -------
         list
             List of raw JSON responses (one per page).
         """
-        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-        paginas = normalize_paginas(paginas)
-        return cjsg_download_manager(
+        numero_processo = resolve_deprecated_alias(
+            kwargs, "nr_processo", "numero_processo", numero_processo, sentinel=""
+        )
+        inp = apply_input_pipeline_search(
+            InputCJSGTJPB,
+            "TJPBScraper.cjsg_download()",
             pesquisa=pesquisa,
             paginas=paginas,
+            kwargs=kwargs,
+            consume_pesquisa_aliases=True,
+            numero_processo=numero_processo,
+            id_classe_judicial=id_classe_judicial,
+            id_orgao_julgador=id_orgao_julgador,
+            id_relator=id_relator,
+            id_origem=id_origem,
+            decisoes=decisoes,
+        )
+        return cjsg_download_manager(
+            pesquisa=inp.pesquisa,
+            paginas=inp.paginas,
             session=self.session,
-            **{k: v for k, v in kwargs.items() if k not in ("query", "termo")},
+            nr_processo=inp.numero_processo,
+            id_classe_judicial=inp.id_classe_judicial,
+            id_orgao_julgador=inp.id_orgao_julgador,
+            id_relator=inp.id_relator,
+            dt_inicio=inp.data_julgamento_inicio or "",
+            dt_fim=inp.data_julgamento_fim or "",
+            id_origem=inp.id_origem,
+            decisoes=inp.decisoes,
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> pd.DataFrame:

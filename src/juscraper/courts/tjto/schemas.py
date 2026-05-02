@@ -1,9 +1,9 @@
 """Pydantic schemas for TJTO scraper endpoints.
 
-Ainda nao wired em :mod:`juscraper.courts.tjto.client` — este arquivo e
-documentacao executavel da API publica ate o TJTO ser refatorado para o
-pipeline canonico da #93. A lista de campos bate byte-a-byte com a
-assinatura publica dos metodos publicos de :class:`TJTOScraper`.
+Wired em :mod:`juscraper.courts.tjto.client` desde o lote L4 do #165 —
+:meth:`TJTOScraper.cjsg_download` e :meth:`TJTOScraper.cjpg_download`
+validam kwargs via :class:`InputCJSGTJTO` / :class:`InputCJPGTJTO` com
+``extra="forbid"`` herdado de :class:`SearchBase`.
 
 ``cpopg`` e ``cposg`` do TJTO sao stubs ``NotImplementedError`` no client
 atual — por isso nao ganham schemas de Input/Output aqui.
@@ -11,6 +11,7 @@ atual — por isso nao ganham schemas de Input/Output aqui.
 from __future__ import annotations
 
 from datetime import date
+from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict
 
@@ -27,6 +28,8 @@ class InputCJSGTJTO(SearchBase, DataJulgamentoMixin):
     :func:`juscraper.utils.params.normalize_datas`. Filtro de data de
     julgamento herdado de :class:`DataJulgamentoMixin`.
     """
+
+    BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
 
     tipo_documento: str = "acordaos"
     ordenacao: str = "DESC"
@@ -62,6 +65,8 @@ class InputCJPGTJTO(SearchBase, DataJulgamentoMixin):
     interna e ``instancia='1'`` em vez de ``'2'`` no download manager.
     Filtro de data de julgamento herdado de :class:`DataJulgamentoMixin`.
     """
+
+    BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
 
     tipo_documento: str = "acordaos"
     ordenacao: str = "DESC"
