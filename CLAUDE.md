@@ -46,7 +46,7 @@ juscraper e uma biblioteca Python para raspagem de dados de tribunais brasileiro
 - Cassetes (`pytest-recording`) sao adotados caso a caso; medir peso agregado antes de generalizar (limite indicativo: ~20 MB no repo).
 - Antes de refatorar um tribunal pela #84, ele precisa ter contratos passando.
 
-Piramide de testes (sufixos `*_contract.py` / `*_granular.py` / `*_cassette.py` / `*_integration.py`), ferramentas (`responses`, `pytest-mock`, `pytest-recording`) e checklist de 12 itens para adicionar raspador novo: ver `CONTRIBUTING.md` > **Tests** e **Adding a new tribunal**.
+Piramide de testes (sufixos `*_contract.py` / `*_granular.py` / `*_cassette.py` / `*_integration.py`), ferramentas (`responses`, `pytest-mock`, `pytest-recording`) e checklist de 13 itens para adicionar raspador novo: ver `CONTRIBUTING.md` > **Tests** e **Adding a new tribunal**.
 
 ## Convencao de API para raspadores
 
@@ -164,6 +164,25 @@ Referencia: o metodo `EsajSearchScraper.cjsg` em `src/juscraper/courts/_esaj/bas
 ## Extracao de numero de paginas/resultados em raspadores HTML
 
 Paginas de tribunais mudam estrutura sem aviso. Use **selecao em cascata** (varios seletores tentados em sequencia) e **regex em cascata** (numero no final, depois `(?<=de )[0-9]+`, depois descritores opcionais, ultimo recurso: maior `\d+`). Referencia canonica: `cjsg_n_pags` em `src/juscraper/courts/tjsp/cjsg_parse.py`. Cada formato suportado precisa de sample em `tests/<tribunal>/samples/` + teste unitario.
+
+## Worktree por sessao do agente
+
+Toda sessao do Claude Code que vai mexer em codigo ou docs deve **comecar criando uma worktree dedicada**, em vez de trabalhar direto na branch atual do repo. Motivos: (1) o repo principal pode ter trabalho em progresso do usuario em outra branch — `git checkout` no meio da sessao perde mudancas nao-commitadas; (2) o PR alvo pode estar em uma branch que diverge do `main`, e a worktree deixa o setup explicito; (3) commits da sessao ficam isolados em uma branch propria, prontos para virar PR.
+
+Comando padrao no inicio da sessao:
+
+```bash
+git fetch origin --prune
+git worktree add ../<repo>-<topico> -b <branch-nova> origin/<branch-base>
+```
+
+Onde:
+
+- `<repo>-<topico>` — diretorio irmao (ex.: `juscraper-pr132-followup`).
+- `<branch-nova>` — branch da sessao (ex.: `docs/claude-md-pr132-followup`).
+- `<branch-base>` — branch alvo do trabalho. Em PR aberto, e a branch do PR (ex.: `origin/docs/audit-claude-md`); em trabalho novo, normalmente `origin/main`.
+
+A worktree compartilha o `.git/` do repo principal, entao branches/refs/objects sao unicos. Sao apenas as working copies que ficam separadas. Ao fim da sessao, `git worktree remove ../<repo>-<topico>` limpa o diretorio (a branch continua acessivel via `gh pr checkout`).
 
 ## Regras de workflow no GitHub
 
