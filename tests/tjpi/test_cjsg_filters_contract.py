@@ -12,7 +12,7 @@ from responses.matchers import query_param_matcher
 
 import juscraper as jus
 from juscraper.courts.tjpi.download import BASE_URL, build_cjsg_params
-from tests._helpers import assert_unsupported_date_filter_raises, load_sample
+from tests._helpers import assert_unknown_kwarg_raises, load_sample
 
 
 @responses.activate
@@ -142,7 +142,7 @@ def test_cjsg_data_publicacao_kwarg_raises():
     """TJPI backend nao expoe filtro de data de publicacao; ``InputCJSGTJPI``
     nao herda ``DataPublicacaoMixin``, entao ``data_publicacao_*`` deve cair
     como ``extra_forbidden`` -> ``TypeError`` (refs #84, #93, #125, #186)."""
-    assert_unsupported_date_filter_raises(
+    assert_unknown_kwarg_raises(
         jus.scraper("tjpi").cjsg,
         "data_publicacao_inicio",
         "dano moral",

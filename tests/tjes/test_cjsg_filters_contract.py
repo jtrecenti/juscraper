@@ -4,7 +4,7 @@ import pytest
 import responses
 
 import juscraper as jus
-from tests._helpers import assert_unsupported_date_filter_raises
+from tests._helpers import assert_unknown_kwarg_raises
 from tests.tjes.test_cjsg_contract import _add_page
 
 
@@ -131,7 +131,7 @@ def test_cjsg_data_publicacao_raises_typeerror():
     """TJES backend nao expoe filtro de data de publicacao — passar
     ``data_publicacao_*`` deve levantar ``TypeError`` em vez de silently drop
     (refs #165, #173, #186)."""
-    assert_unsupported_date_filter_raises(
+    assert_unknown_kwarg_raises(
         jus.scraper("tjes").cjsg,
         "data_publicacao_inicio",
         "dano moral",
@@ -141,7 +141,7 @@ def test_cjsg_data_publicacao_raises_typeerror():
 
 def test_cjpg_data_publicacao_raises_typeerror():
     """Mesmo que ``test_cjsg_data_publicacao_raises_typeerror`` para cjpg."""
-    assert_unsupported_date_filter_raises(
+    assert_unknown_kwarg_raises(
         jus.scraper("tjes").cjpg,
         "data_publicacao_inicio",
         "dano moral",

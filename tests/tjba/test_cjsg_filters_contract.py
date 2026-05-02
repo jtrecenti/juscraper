@@ -7,7 +7,7 @@ import responses
 from responses.matchers import json_params_matcher
 
 import juscraper as jus
-from tests._helpers import assert_unsupported_date_filter_raises, load_sample
+from tests._helpers import assert_unknown_kwarg_raises, load_sample
 from tests.tjba.test_cjsg_contract import BASE, _payload
 
 
@@ -74,7 +74,7 @@ def test_cjsg_data_julgamento_raises_typeerror():
     ``InputCJSGTJBA`` herda apenas :class:`DataPublicacaoMixin`, entao
     ``data_julgamento_*`` deve cair como ``extra_forbidden`` -> ``TypeError``
     em vez de ser silently dropped (refs #186)."""
-    assert_unsupported_date_filter_raises(
+    assert_unknown_kwarg_raises(
         jus.scraper("tjba").cjsg,
         "data_julgamento_inicio",
         "dano moral",
