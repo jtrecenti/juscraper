@@ -136,11 +136,19 @@ class TestNormalizeDatas:
         # Reprodução literal da issue #193: usuário passou só aliases (não
         # passou o canônico). A mensagem deve citar os dois aliases que ele
         # de fato escreveu, e o canônico só aparece como sugestão.
-        with pytest.raises(ValueError) as excinfo:
-            normalize_datas(
-                data_julgamento_de="02/01/2023",
-                data_inicio="01/01/2023",
-            )
+        # Adicionalmente trava: nenhum DeprecationWarning é emitido antes
+        # do raise. A colisão é erro do chamador, não evento de migração;
+        # emitir warning + raise no mesmo fluxo confunde o tracebacks.
+        with warnings.catch_warnings(record=True) as captured:
+            warnings.simplefilter("always")
+            with pytest.raises(ValueError) as excinfo:
+                normalize_datas(
+                    data_julgamento_de="02/01/2023",
+                    data_inicio="01/01/2023",
+                )
+        assert not any(
+            issubclass(w.category, DeprecationWarning) for w in captured
+        ), "colisão alias+alias não deve emitir DeprecationWarning antes do raise"
         msg = str(excinfo.value)
         assert "'data_julgamento_de'" in msg
         assert "'data_inicio'" in msg

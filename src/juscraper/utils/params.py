@@ -145,16 +145,12 @@ def normalize_datas(**kwargs):
         dict with the four canonical keys (values may be ``None``).
 
     Raises:
-        ValueError: When mais de uma fonte (canônico ou alias) preenche o
-            mesmo campo canônico. A mensagem cita os nomes que o usuário
-            realmente passou — não o canônico (refs #193).
+        ValueError: When more than one source (canonical or alias) fills the
+            same canonical field. The message quotes the names the user
+            actually passed — not the canonical one (refs #193). No
+            ``DeprecationWarning`` is emitted before the raise; the conflict
+            is the user's mistake to fix, not a soft deprecation event.
     """
-    canonicals: tuple[str, ...] = (
-        "data_julgamento_inicio",
-        "data_julgamento_fim",
-        "data_publicacao_inicio",
-        "data_publicacao_fim",
-    )
     deprecated_map = {
         "data_julgamento_de": "data_julgamento_inicio",
         "data_julgamento_ate": "data_julgamento_fim",
@@ -170,7 +166,7 @@ def normalize_datas(**kwargs):
     # nas três fases (canônico, _de/_ate, genérico). Único valor None
     # entra silenciosamente no pop e nao gera fonte — preserva o
     # comportamento antigo de aceitar canonical=None ao lado de alias.
-    sources: dict[str, list[tuple[str, Any]]] = {c: [] for c in canonicals}
+    sources: dict[str, list[tuple[str, Any]]] = {c: [] for c in DATE_CANONICAL}
 
     def _collect(name: str, canonical: str) -> None:
         if name not in kwargs:
@@ -179,7 +175,7 @@ def normalize_datas(**kwargs):
         if value is not None:
             sources[canonical].append((name, value))
 
-    for canonical in canonicals:
+    for canonical in DATE_CANONICAL:
         _collect(canonical, canonical)
     for old_name, canonical in deprecated_map.items():
         _collect(old_name, canonical)
@@ -199,7 +195,7 @@ def normalize_datas(**kwargs):
                 f"Use apenas '{canonical}'."
             )
 
-    result: dict[str, Any] = {c: None for c in canonicals}
+    result: dict[str, Any] = {c: None for c in DATE_CANONICAL}
     for canonical, srcs in sources.items():
         if not srcs:
             continue
