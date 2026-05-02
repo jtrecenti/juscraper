@@ -11,7 +11,7 @@ from __future__ import annotations
 from datetime import date
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ...schemas import PaginasMixin
 from .mappings import TIPOS_MOVIMENTACAO
@@ -32,6 +32,37 @@ _FILTROS_AMIGAVEIS = (
     "movimentos_codigo",
     "orgao_julgador",
 )
+
+
+def _coerce_to_str_list(v: Any) -> Any:
+    # Codigos CNJ de assunto sao inteiros por natureza (TPU); o backend
+    # Elasticsearch coage int -> str em campos keyword transparentemente.
+    # Rodamos em ``mode="before"`` para que o tipo final do campo continue
+    # sendo ``list[str]`` (pydantic valida o tipo apos a coercao).
+    if v is None or not isinstance(v, list):
+        return v
+    return [str(x) if isinstance(x, int) and not isinstance(x, bool) else x for x in v]
+
+
+def _coerce_to_int_list(v: Any) -> Any:
+    # Simetrico a _coerce_to_str_list para ``movimentos_codigo``: aceitamos
+    # str (ex.: vinda de planilha/CSV) antes da validacao de tipo. Strings
+    # nao-numericas viram ValueError com mensagem nomeando o campo.
+    if v is None or not isinstance(v, list):
+        return v
+    out: list[int] = []
+    for x in v:
+        if isinstance(x, int) and not isinstance(x, bool):
+            out.append(x)
+            continue
+        try:
+            out.append(int(x))
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                f"'movimentos_codigo' deve ser uma lista de codigos TPU "
+                f"(inteiros). Item nao-conversivel: {exc}"
+            ) from exc
+    return out
 
 
 class InputListarProcessosDataJud(PaginasMixin):
@@ -91,6 +122,16 @@ class InputListarProcessosDataJud(PaginasMixin):
         extra="forbid",
         arbitrary_types_allowed=True,
     )
+
+    @field_validator("assuntos", mode="before")
+    @classmethod
+    def _normalize_assuntos(cls, v: Any) -> Any:
+        return _coerce_to_str_list(v)
+
+    @field_validator("movimentos_codigo", mode="before")
+    @classmethod
+    def _normalize_movimentos_codigo(cls, v: Any) -> Any:
+        return _coerce_to_int_list(v)
 
     @model_validator(mode="after")
     def _validar_datas_e_ano_excluem(self) -> "InputListarProcessosDataJud":
@@ -222,6 +263,16 @@ class InputContarProcessosDataJud(BaseModel):
         extra="forbid",
         arbitrary_types_allowed=True,
     )
+
+    @field_validator("assuntos", mode="before")
+    @classmethod
+    def _normalize_assuntos(cls, v: Any) -> Any:
+        return _coerce_to_str_list(v)
+
+    @field_validator("movimentos_codigo", mode="before")
+    @classmethod
+    def _normalize_movimentos_codigo(cls, v: Any) -> Any:
+        return _coerce_to_int_list(v)
 
     @model_validator(mode="after")
     def _validar_datas_e_ano_excluem(self) -> "InputContarProcessosDataJud":

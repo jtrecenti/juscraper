@@ -43,6 +43,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- **DataJud** `listar_processos` e `contar_processos`: o filtro `assuntos` voltou a aceitar `int` (ex.: `assuntos=[12503]`) e o filtro `movimentos_codigo` passou a aceitar `str` (ex.: `movimentos_codigo=["246"]`) — ambos sao normalizados pelo schema antes do payload Elasticsearch. Antes do fix, o wiring pydantic rejeitava com `ValidationError` o caso natural de cada campo (codigos TPU sao inteiros por natureza; strings sao comuns vindo de planilha/CSV), embora o backend Elasticsearch coage os dois transparentemente. Refs #217.
 - Filtros de data passam a ser efetivamente enviados ao backend (e respeitados) em varios tribunais que silenciosamente devolviam resultados nao-filtrados ou em formato invalido:
   - **TJDFT** envia `termosAcessorios="entre YYYY-MM-DD e YYYY-MM-DD"`. Antes emitia `UserWarning` dizendo que o filtro nao era suportado e devolvia resultados sem filtro.
   - **TJTO** envia `tempo_julgados=pers` quando `data_julgamento_*` e fornecido. Sem isso, o backend ignorava `dat_jul_ini`/`dat_jul_fim`.

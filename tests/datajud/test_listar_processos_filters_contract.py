@@ -336,3 +336,130 @@ def test_query_dict_vazio_rejeitado():
             tribunal="TJSP",
             query={},
         )
+
+
+# =============================================================================
+# Coercao bidirecional int<->str em ``assuntos`` e ``movimentos_codigo``
+# (issue #217). Codigos CNJ TPU sao inteiros por natureza; o backend
+# Elasticsearch coage int -> str em campos keyword transparentemente. O
+# schema aceita ambos no input e normaliza antes do payload, restaurando
+# o comportamento que existia antes do wiring pydantic.
+# =============================================================================
+
+
+@responses.activate
+def test_assuntos_aceita_int(mocker):
+    """``assuntos=[12503]`` (int) deve produzir o mesmo body que
+    ``assuntos=["12503"]`` — o validator coage int -> str antes do builder.
+    Restaura o caso do notebook ``docs/notebooks/datajud.ipynb``."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.POST,
+        f"{BASE}/api_publica_tjmg/_search",
+        body=load_sample("datajud", "listar_processos/single_page.json"),
+        status=200,
+        content_type="application/json",
+        match=[
+            json_params_matcher(_payload(
+                assuntos=["12503"],
+                tamanho_pagina=10,
+            )),
+        ],
+    )
+    df = jus.scraper("datajud").listar_processos(
+        tribunal="TJMG",
+        assuntos=[12503],
+        tamanho_pagina=10,
+        paginas=range(1, 2),
+    )
+    assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
+def test_assuntos_aceita_mix_int_str(mocker):
+    """``assuntos=[12503, "12504"]`` -> ``["12503", "12504"]`` no body."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.POST,
+        f"{BASE}/api_publica_tjmg/_search",
+        body=load_sample("datajud", "listar_processos/single_page.json"),
+        status=200,
+        content_type="application/json",
+        match=[
+            json_params_matcher(_payload(
+                assuntos=["12503", "12504"],
+                tamanho_pagina=10,
+            )),
+        ],
+    )
+    df = jus.scraper("datajud").listar_processos(
+        tribunal="TJMG",
+        assuntos=[12503, "12504"],
+        tamanho_pagina=10,
+        paginas=range(1, 2),
+    )
+    assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
+def test_movimentos_codigo_aceita_str(mocker):
+    """``movimentos_codigo=["246"]`` (str) deve produzir o mesmo body que
+    ``[246]`` — simetrico a ``assuntos``, normaliza str -> int antes do
+    builder. Cobre o caso de codigos TPU vindos de planilha/CSV."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.POST,
+        f"{BASE}/api_publica_tjsp/_search",
+        body=load_sample("datajud", "listar_processos/single_page.json"),
+        status=200,
+        content_type="application/json",
+        match=[
+            json_params_matcher(_payload(
+                movimentos_codigo=[246],
+                tamanho_pagina=10,
+            )),
+        ],
+    )
+    df = jus.scraper("datajud").listar_processos(
+        tribunal="TJSP",
+        movimentos_codigo=["246"],
+        tamanho_pagina=10,
+        paginas=range(1, 2),
+    )
+    assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
+def test_movimentos_codigo_aceita_mix_int_str(mocker):
+    """``movimentos_codigo=[246, "247"]`` -> ``[246, 247]`` no body."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.POST,
+        f"{BASE}/api_publica_tjsp/_search",
+        body=load_sample("datajud", "listar_processos/single_page.json"),
+        status=200,
+        content_type="application/json",
+        match=[
+            json_params_matcher(_payload(
+                movimentos_codigo=[246, 247],
+                tamanho_pagina=10,
+            )),
+        ],
+    )
+    df = jus.scraper("datajud").listar_processos(
+        tribunal="TJSP",
+        movimentos_codigo=[246, "247"],
+        tamanho_pagina=10,
+        paginas=range(1, 2),
+    )
+    assert isinstance(df, pd.DataFrame)
+
+
+def test_movimentos_codigo_str_nao_numerica_rejeita():
+    """Strings nao-conversiveis em ``movimentos_codigo`` levantam
+    ``ValidationError`` com mensagem mencionando o nome do campo."""
+    with pytest.raises(ValidationError, match="movimentos_codigo"):
+        jus.scraper("datajud").listar_processos(
+            tribunal="TJSP",
+            movimentos_codigo=["abc"],
+        )

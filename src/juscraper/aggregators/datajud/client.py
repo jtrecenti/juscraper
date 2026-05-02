@@ -284,7 +284,13 @@ class DatajudScraper(BaseScraper):
                   do projeto mapeia esses para ``data_julgamento_*``, e o
                   DataJud filtra por ajuizamento, nao julgamento).
                 * ``classe`` (str): Codigo da classe processual CNJ.
-                * ``assuntos`` (list[str]): Lista de codigos de assuntos CNJ.
+                * ``assuntos`` (list[str | int]): Lista de codigos de
+                  assuntos CNJ (TPU). Aceita int e str — int e a forma
+                  natural (codigos TPU sao inteiros); str e aceita por
+                  compatibilidade. O schema normaliza para str antes do
+                  payload, ja que o Elasticsearch coage int -> str em
+                  campos ``keyword``. Backend: ``terms`` em
+                  ``assuntos.codigo``.
                 * ``tipos_movimentacao`` (list[str]): Nomes amigaveis de
                   categorias de movimentacao (ex.: ``["decisao", "sentenca"]``).
                   Resolvidos via ``TIPOS_MOVIMENTACAO`` para uma lista plana
@@ -292,8 +298,11 @@ class DatajudScraper(BaseScraper):
                   ``movimentos_codigo`` direto. Categorias atuais:
                   ``decisao``, ``sentenca``, ``julgamento``, ``tutela``,
                   ``transito_julgado``.
-                * ``movimentos_codigo`` (list[int]): Codigos TPU CNJ
-                  diretos. Concatenado com a lista resolvida de
+                * ``movimentos_codigo`` (list[int | str]): Codigos TPU
+                  CNJ diretos. Aceita int e str — int e a forma natural;
+                  str e aceita por conveniencia (ex.: vinda de planilha/
+                  CSV) e normalizada para int antes do payload.
+                  Concatenado com a lista resolvida de
                   ``tipos_movimentacao`` (uniao). Backend: ``terms`` em
                   ``movimentos.codigo``.
                 * ``orgao_julgador`` (str): Nome do orgao julgador (ex.:

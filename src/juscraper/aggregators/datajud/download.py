@@ -167,7 +167,7 @@ def _build_query_amigavel(
             }
         })
     if classe:
-        must_conditions.append({"match": {"classe.codigo": str(classe)}})
+        must_conditions.append({"match": {"classe.codigo": classe}})
     if assuntos:
         must_conditions.append({"terms": {"assuntos.codigo": assuntos}})
     if movimentos_codigo:
