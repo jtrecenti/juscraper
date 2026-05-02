@@ -7,7 +7,6 @@ no ``dtPublicacao*``, ``origem`` derived from ``baixar_sg``. See
 import pandas as pd
 import pytest
 import responses
-from pydantic import ValidationError
 from responses.matchers import query_param_matcher, urlencoded_params_matcher
 
 import juscraper as jus
@@ -81,7 +80,7 @@ def test_cjsg_all_filters_land_in_post_body(tmp_path, mocker):
 
 def test_cjsg_unknown_kwarg_raises(tmp_path):
     scraper = jus.scraper("tjsp", download_path=str(tmp_path))
-    with pytest.raises((ValidationError, TypeError)):
+    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'parametro_bobo'"):
         scraper.cjsg("dano moral", paginas=1, parametro_bobo="xyz")
 
 
@@ -89,5 +88,5 @@ def test_cjsg_rejects_esaj_puro_only_fields(tmp_path):
     """TJSP doesn't expose ``numero_recurso``/``data_publicacao_*``/``origem``."""
     scraper = jus.scraper("tjsp", download_path=str(tmp_path))
     for bad in ("numero_recurso", "data_publicacao_inicio", "origem"):
-        with pytest.raises((ValidationError, TypeError)):
+        with pytest.raises(TypeError, match=rf"got unexpected keyword argument\(s\): '{bad}'"):
             scraper.cjsg("dano moral", paginas=1, **{bad: "x"})

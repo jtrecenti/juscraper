@@ -2,7 +2,6 @@
 import pandas as pd
 import pytest
 import responses
-from pydantic import ValidationError
 from responses.matchers import query_param_matcher
 
 import juscraper as jus
@@ -63,7 +62,7 @@ def test_cjpg_all_filters_land_in_query_params(tmp_path, mocker):
 
 def test_cjpg_unknown_kwarg_raises(tmp_path):
     scraper = jus.scraper("tjsp", download_path=str(tmp_path))
-    with pytest.raises((ValidationError, TypeError)):
+    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'parametro_bobo'"):
         scraper.cjpg("dano moral", paginas=1, parametro_bobo="xyz")
 
 
@@ -71,5 +70,5 @@ def test_cjpg_rejects_cjsg_fields(tmp_path):
     """cjpg takes plural lists, not cjsg's singular ementa/classe/comarca."""
     scraper = jus.scraper("tjsp", download_path=str(tmp_path))
     for bad in ("ementa", "classe", "comarca", "orgao_julgador", "baixar_sg"):
-        with pytest.raises((ValidationError, TypeError)):
+        with pytest.raises(TypeError, match=rf"got unexpected keyword argument\(s\): '{bad}'"):
             scraper.cjpg("dano moral", paginas=1, **{bad: "x"})

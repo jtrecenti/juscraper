@@ -2,7 +2,6 @@
 import pandas as pd
 import pytest
 import responses
-from pydantic import ValidationError
 from responses.matchers import query_param_matcher, urlencoded_params_matcher
 
 import juscraper as jus
@@ -56,5 +55,5 @@ def test_cjsg_all_filters_land_in_post_body(tmp_path, mocker):
 
 def test_cjsg_unknown_kwarg_raises(tmp_path):
     scraper = jus.scraper("tjam", download_path=str(tmp_path))
-    with pytest.raises((ValidationError, TypeError)):
+    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'parametro_bobo'"):
         scraper.cjsg("dano moral", paginas=1, parametro_bobo="xyz")
