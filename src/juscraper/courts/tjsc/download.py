@@ -6,6 +6,8 @@ import time
 import requests
 from tqdm import tqdm
 
+from juscraper.utils.pagination import extract_count_with_cascade
+
 logger = logging.getLogger(__name__)
 
 SEARCH_URL = (
@@ -94,13 +96,23 @@ def _fetch_page(
     return ""  # unreachable
 
 
+_PAGINATION_CSS_SELECTORS: tuple[str, ...] = ("h2.mb-0", "h2")
+_PAGINATION_REGEXES: tuple[re.Pattern[str], ...] = (
+    re.compile(r"(\d+)\s*documentos?\s*encontrados?", re.IGNORECASE),
+)
+
+
 def _get_total_pages(html: str, per_page: int = RESULTS_PER_PAGE) -> int:
     """Extract total page count from the TJSC response."""
-    match = re.search(r"(\d+)\s*documentos?\s*encontrados?", html)
-    if match:
-        total = int(match.group(1))
-        return max(1, (total + per_page - 1) // per_page)
-    return 1
+    total = extract_count_with_cascade(
+        html,
+        css_selectors=_PAGINATION_CSS_SELECTORS,
+        regex_patterns=_PAGINATION_REGEXES,
+        fallback_max_int=False,
+    )
+    if total is None:
+        return 1
+    return max(1, (total + per_page - 1) // per_page)
 
 
 def cjsg_download_manager(

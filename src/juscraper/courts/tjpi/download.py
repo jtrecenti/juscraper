@@ -6,6 +6,8 @@ import time
 import requests
 from tqdm import tqdm
 
+from juscraper.utils.pagination import extract_count_with_cascade
+
 logger = logging.getLogger(__name__)
 
 BASE_URL = "https://jurisprudencia.tjpi.jus.br/jurisprudences/search"
@@ -81,13 +83,23 @@ def _fetch_page(
     return ""  # unreachable
 
 
+_PAGINATION_CSS_SELECTORS: tuple[str, ...] = ("ul.pagination",)
+_PAGINATION_REGEXES: tuple[re.Pattern[str], ...] = (
+    re.compile(r"[?&]page=(\d+)"),
+)
+
+
 def _get_total_pages(html: str) -> int:
     """Extract total number of pages from the TJPI pagination links."""
-    # Find the last page number from pagination links (e.g. page=5515 in the » button)
-    matches = re.findall(r'[?&]page=(\d+)', html)
-    if matches:
-        return max(int(m) for m in matches)
-    return 1
+    n = extract_count_with_cascade(
+        html,
+        css_selectors=_PAGINATION_CSS_SELECTORS,
+        regex_patterns=_PAGINATION_REGEXES,
+        use_element_html=True,
+        aggregate="max",
+        fallback_max_int=False,
+    )
+    return n if n is not None else 1
 
 
 def cjsg_download_manager(

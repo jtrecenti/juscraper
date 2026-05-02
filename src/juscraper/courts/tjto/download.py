@@ -10,6 +10,7 @@ from typing import Any
 import requests
 from tqdm import tqdm
 
+from juscraper.utils.pagination import extract_count_with_cascade
 from juscraper.utils.params import to_br_date
 
 logger = logging.getLogger(__name__)
@@ -26,15 +27,27 @@ TYPE_MINUTA_MAP = {
 }
 
 
+_PAGINATION_CSS_SELECTORS: tuple[str, ...] = (
+    ".nav-link.active .num_minuta",
+    ".nav-link.active span",
+)
+_PAGINATION_REGEXES: tuple[re.Pattern[str], ...] = (
+    re.compile(r"\((\d[\d.]*)\s*resultados?\)", re.IGNORECASE),
+    re.compile(r"\(([\d.]+)\)"),
+)
+_ZERO_MARKERS: tuple[str, ...] = ("nenhum documento encontrado",)
+
+
 def _get_total_results(html: str) -> int:
     """Extract the total number of results from the active tab's count."""
-    match = re.search(r'active\s*"[^>]*>[^<]*<span[^>]*>\(([0-9.]+)\)', html)
-    if match:
-        return int(match.group(1).replace(".", ""))
-    match = re.search(r'\((\d[\d.]*)\s*resultados?\)', html)
-    if match:
-        return int(match.group(1).replace(".", ""))
-    return 0
+    n = extract_count_with_cascade(
+        html,
+        css_selectors=_PAGINATION_CSS_SELECTORS,
+        regex_patterns=_PAGINATION_REGEXES,
+        zero_markers=_ZERO_MARKERS,
+        fallback_max_int=False,
+    )
+    return n if n is not None else 0
 
 
 def build_cjsg_payload(

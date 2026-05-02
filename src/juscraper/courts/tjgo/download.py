@@ -8,11 +8,18 @@ import time
 
 import requests
 
+from juscraper.utils.pagination import extract_count_with_cascade
+
 logger = logging.getLogger("juscraper.tjgo")
 
 SEARCH_URL = "https://projudi.tjgo.jus.br/ConsultaJurisprudencia"
 RESULTS_PER_PAGE = 10
-_TOTAL_RE = re.compile(r"(\d[\d\.]*)\s*resultados?", re.IGNORECASE)
+
+_PAGINATION_CSS_SELECTORS: tuple[str, ...] = ("legend.formLocalizarLegenda",)
+_PAGINATION_REGEXES: tuple[re.Pattern[str], ...] = (
+    re.compile(r"(\d[\d\.]*)\s*resultados?\s+encontrados?", re.IGNORECASE),
+    re.compile(r"(\d[\d\.]*)\s*resultados?", re.IGNORECASE),
+)
 
 
 def build_cjsg_payload(
@@ -59,14 +66,13 @@ def build_cjsg_payload(
 
 
 def _extract_total(html: str) -> int:
-    match = _TOTAL_RE.search(html)
-    if not match:
-        return 0
-    raw = match.group(1).replace(".", "").replace(",", "")
-    try:
-        return int(raw)
-    except ValueError:
-        return 0
+    n = extract_count_with_cascade(
+        html,
+        css_selectors=_PAGINATION_CSS_SELECTORS,
+        regex_patterns=_PAGINATION_REGEXES,
+        fallback_max_int=False,
+    )
+    return n if n is not None else 0
 
 
 def _fetch_page(
