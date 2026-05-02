@@ -2,7 +2,7 @@
 Scraper for the Tribunal de Justica do Tocantins (TJTO).
 """
 import logging
-from typing import List, Optional, Type, Union
+from typing import List, Optional, Union
 
 import pandas as pd
 import requests
@@ -43,7 +43,7 @@ class TJTOScraper(BaseScraper):
         pesquisa,
         paginas,
         instancia: str,
-        schema_cls: Type[BaseModel],
+        schema_cls: type[BaseModel],
         method_name: str,
         tipo_documento: str = "acordaos",
         ordenacao: str = "DESC",
@@ -57,20 +57,14 @@ class TJTOScraper(BaseScraper):
         """Shared download logic for cjsg and cjpg."""
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
         paginas = normalize_paginas(paginas)
-        # Re-inject explicit date args into kwargs so the pipeline can resolve
-        # aliases (data_inicio/data_fim) and canonical names in a single pass.
-        for _date_key, _date_val in (
-            ("data_julgamento_inicio", data_julgamento_inicio),
-            ("data_julgamento_fim", data_julgamento_fim),
-        ):
-            if _date_val is not None:
-                kwargs[_date_key] = _date_val
         inp = apply_input_pipeline_search(
             schema_cls,
             method_name,
             pesquisa=pesquisa,
             paginas=paginas,
             kwargs=kwargs,
+            data_julgamento_inicio=data_julgamento_inicio,
+            data_julgamento_fim=data_julgamento_fim,
             tipo_documento=tipo_documento,
             ordenacao=ordenacao,
             numero_processo=numero_processo,
