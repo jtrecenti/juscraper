@@ -94,21 +94,21 @@ def assert_unsupported_date_filter_raises(
     data (``data_julgamento_*`` xor ``data_publicacao_*``) devem rejeitar
     o oposto via ``extra="forbid"`` do schema pydantic.
 
-    Parameters
-    ----------
-    method : callable
-        Bound method publico do scraper (e.g., ``jus.scraper("tjmt").cjsg``).
-    kwarg : str
-        Nome do filtro de data nao suportado (e.g., ``"data_publicacao_inicio"``).
-    *args
-        Argumentos posicionais propagados para ``method`` (tipicamente
-        ``"pesquisa"``).
-    valor : str
-        Valor passado em ``kwarg``. Default ``"2024-01-01"``.
-    **extra_kwargs
-        Kwargs extras propagados para ``method`` — util para cenarios que
-        precisam de filtros adicionais (ex.: TJSP auto_chunk exige uma
-        janela longa de ``data_julgamento_*`` para acionar o sniff).
+    Args:
+        method (callable): Bound method publico do scraper (e.g.,
+            ``jus.scraper("tjmt").cjsg``).
+        kwarg (str): Nome do filtro de data nao suportado (e.g.,
+            ``"data_publicacao_inicio"``).
+        *args: Argumentos posicionais propagados para ``method``
+            (tipicamente ``"pesquisa"``).
+        valor (str): Valor passado em ``kwarg``. Cosmetico — o
+            ``TypeError`` e emitido pelo pydantic *antes* de qualquer
+            validacao de formato, entao qualquer string serve. Default
+            ``"2024-01-01"``.
+        **extra_kwargs: Kwargs extras propagados para ``method`` — util
+            para cenarios que precisam de filtros adicionais (ex.: TJSP
+            auto_chunk exige uma janela longa de ``data_julgamento_*``
+            para acionar o sniff).
     """
     pattern = rf"got unexpected keyword argument\(s\): '{kwarg}'"
     with pytest.raises(TypeError, match=pattern):
