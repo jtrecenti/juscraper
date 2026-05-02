@@ -148,3 +148,62 @@ def test_cjsg_data_publicacao_kwarg_raises():
             paginas=1,
             data_publicacao_inicio="2024-01-01",
         )
+
+
+def test_cjsg_download_unknown_kwarg_raises():
+    """``cjsg_download`` rejects unknown kwargs at the lower-level entry point
+    too — guards against silent drop when the caller skips :meth:`cjsg` (refs #183)."""
+    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
+        jus.scraper("tjpi").cjsg_download("dano moral", paginas=1, kwarg_inventado="x")
+
+
+@responses.activate
+def test_cjsg_download_query_alias_emits_deprecation_warning(mocker):
+    """``cjsg_download`` direto consome ``query`` -> ``pesquisa`` via pipeline (refs #183)."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.GET,
+        BASE_URL,
+        body=load_sample("tjpi", "cjsg/no_results.html"),
+        status=200,
+        content_type="text/html; charset=utf-8",
+        match=[query_param_matcher(build_cjsg_params("dano moral", page=1))],
+    )
+
+    with pytest.warns(DeprecationWarning, match="query.*deprecado"):
+        result = jus.scraper("tjpi").cjsg_download(pesquisa=None, query="dano moral", paginas=1)
+
+    assert isinstance(result, list)
+
+
+@responses.activate
+def test_cjsg_download_data_inicio_alias_maps_to_data_min(mocker):
+    """``cjsg_download`` direto: ``data_inicio`` -> ``data_julgamento_inicio`` ->
+    ``data_min`` na query-string (refs #183)."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.GET,
+        BASE_URL,
+        body=load_sample("tjpi", "cjsg/no_results.html"),
+        status=200,
+        content_type="text/html; charset=utf-8",
+        match=[query_param_matcher(build_cjsg_params(
+            "dano moral",
+            page=1,
+            data_min="2024-01-01",
+            data_max="2024-03-31",
+        ))],
+    )
+
+    with pytest.warns(DeprecationWarning) as warning_list:
+        result = jus.scraper("tjpi").cjsg_download(
+            "dano moral",
+            paginas=1,
+            data_inicio="2024-01-01",
+            data_fim="2024-03-31",
+        )
+
+    assert isinstance(result, list)
+    messages = [str(w.message) for w in warning_list]
+    assert any("data_inicio" in m and "deprecado" in m for m in messages)
+    assert any("data_fim" in m and "deprecado" in m for m in messages)

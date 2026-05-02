@@ -63,3 +63,10 @@ def test_cjsg_numero_cnj_alias_emits_deprecation_warning(mocker):
         )
 
     assert isinstance(df, pd.DataFrame)
+
+
+def test_cjsg_unknown_kwarg_raises():
+    """Kwargs not declared in :class:`InputCJSGTJAP` raise ``TypeError`` with
+    the field name, instead of being silently dropped (refs #84, #93, #165)."""
+    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
+        jus.scraper("tjap").cjsg("dano moral", paginas=1, kwarg_inventado="x")
