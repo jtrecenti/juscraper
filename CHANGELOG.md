@@ -71,7 +71,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Known Issues
 
-- Dois tribunais tem o teste de filtro de datas marcado como `xfail` estrito em `test_release_date_filter.py`: **TJAP** (Tucujuris genuinamente nao expoe filtro por data — confirmado na engenharia reversa do site) e **TJRJ** (endpoint legado ASP.NET devolve HTTP 500 ate sem filtros). Ambas sao server-side — nao dependem do cliente.
+- Dois tribunais tem o teste de filtro de datas marcado como `xfail` estrito em `test_release_date_filter.py`: **TJAP** (Tucujuris genuinamente nao expoe filtro por data — confirmado na engenharia reversa do site) e **TJRJ** (backend ASPX expoe apenas granularidade anual via `ano_inicio`/`ano_fim`; `InputCJSGTJRJ` rejeita `data_julgamento_*`/`data_publicacao_*` com `TypeError` por design — refs #143, #220). Ambas sao limitacoes server-side — nao dependem do cliente.
 
 ## [0.2.1] - 2026-04-13
 
