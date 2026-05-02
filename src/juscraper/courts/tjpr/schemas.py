@@ -1,9 +1,9 @@
 """Pydantic schemas for TJPR scraper endpoints.
 
-Ainda nao wired em :mod:`juscraper.courts.tjpr.client` — este arquivo e
-documentacao executavel da API publica ate o TJPR ser refatorado para o
-pipeline canonico da #93. A lista de campos bate byte-a-byte com a
-assinatura publica de :meth:`TJPRScraper.cjsg` / :meth:`TJPRScraper.cjsg_download`.
+Wired em :meth:`juscraper.courts.tjpr.client.TJPRScraper.cjsg` desde o
+lote L5 do #165 — kwargs desconhecidos viram :class:`TypeError`.
+``cjsg_download`` permanece sem pipeline (chamada interna recebe so valores
+ja validados pelo pipeline do :meth:`cjsg`).
 """
 from __future__ import annotations
 
