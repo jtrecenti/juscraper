@@ -25,6 +25,10 @@ class InputCJSGTJMT(SearchBase, DataJulgamentoMixin):
     aplicado a data de julgamento. Nao ha filtro de data de publicacao;
     ``data_publicacao_*`` levanta ``TypeError`` em vez de ser silenciosamente
     descartado.
+
+    ``BACKEND_DATE_FORMAT="%Y-%m-%d"`` (ISO) — o Hellsgate aceita datas em
+    ``YYYY-MM-DD``, entao :func:`apply_input_pipeline_search` coage as
+    datas para esse formato antes de validar (refs #173).
     """
 
     BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"

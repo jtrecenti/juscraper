@@ -7,7 +7,7 @@ import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import apply_input_pipeline_search, normalize_paginas, normalize_pesquisa
+from juscraper.utils.params import apply_input_pipeline_search
 
 from .download import cjsg_download
 from .parse import cjsg_parse
@@ -92,14 +92,13 @@ class TJBAScraper(BaseScraper):
         list
             List of raw GraphQL response dicts (one per page).
         """
-        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-        paginas = normalize_paginas(paginas)
         inp = apply_input_pipeline_search(
             InputCJSGTJBA,
             "TJBAScraper.cjsg_download()",
             pesquisa=pesquisa,
             paginas=paginas,
             kwargs=kwargs,
+            consume_pesquisa_aliases=True,
             data_publicacao_inicio=data_publicacao_inicio,
             data_publicacao_fim=data_publicacao_fim,
             numero_recurso=numero_recurso,

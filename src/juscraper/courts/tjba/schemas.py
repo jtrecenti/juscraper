@@ -20,6 +20,10 @@ class InputCJSGTJBA(SearchBase, DataPublicacaoMixin):
     caem aqui e sao rejeitados por ``extra="forbid"`` herdado de
     :class:`SearchBase`. Filtro de data de publicacao vem de
     :class:`DataPublicacaoMixin`.
+
+    ``BACKEND_DATE_FORMAT="%Y-%m-%d"`` (ISO) — o backend GraphQL aceita
+    datas em ``YYYY-MM-DD``, entao :func:`apply_input_pipeline_search`
+    coage as datas para esse formato antes de validar (refs #173).
     """
 
     BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
