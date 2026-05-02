@@ -148,3 +148,10 @@ def test_cjsg_data_publicacao_kwarg_raises():
             paginas=1,
             data_publicacao_inicio="2024-01-01",
         )
+
+
+def test_cjsg_download_unknown_kwarg_raises():
+    """``cjsg_download`` rejects unknown kwargs at the lower-level entry point
+    too — guards against silent drop when the caller skips :meth:`cjsg` (refs #183)."""
+    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
+        jus.scraper("tjpi").cjsg_download("dano moral", paginas=1, kwarg_inventado="x")
