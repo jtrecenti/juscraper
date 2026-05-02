@@ -77,6 +77,9 @@ web = [
     "flask>=3.1.1",
     "joblib>=1.5.0",
 ]
+tjmg = [
+    "txtcaptcha>=0.1.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/jtrecenti/juscraper"
