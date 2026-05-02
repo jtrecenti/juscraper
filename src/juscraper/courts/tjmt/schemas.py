@@ -35,14 +35,14 @@ class InputCJSGTJMT(SearchBase, DataJulgamentoMixin):
 
     BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
 
-    # TODO: apertar com Literal[...] após captura do Hellsgate — refs follow-up de #184.
+    # TODO (#212): apertar com Literal[...] após captura do Hellsgate.
     tipo_consulta: str = "Acordao"
     relator: str | None = None
     orgao_julgador: str | None = None
     classe: str | None = None
     tipo_processo: str | None = None
     thesaurus: bool = False
-    quantidade_por_pagina: int = Field(default=10, ge=1, le=100)
+    quantidade_por_pagina: int = Field(default=10, ge=1)
 
 
 class OutputCJSGTJMT(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):

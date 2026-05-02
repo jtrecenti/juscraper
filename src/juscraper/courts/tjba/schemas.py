@@ -38,9 +38,9 @@ class InputCJSGTJBA(SearchBase, DataPublicacaoMixin):
     turmas_recursais: bool = True
     tipo_acordaos: bool = True
     tipo_decisoes_monocraticas: bool = True
-    # TODO: apertar com Literal[...] após captura do GraphQL — refs follow-up de #184.
+    # TODO (#212): apertar com Literal[...] após captura do GraphQL.
     ordenado_por: str = "dataPublicacao"
-    items_per_page: int = Field(default=10, ge=1, le=100)
+    items_per_page: int = Field(default=10, ge=1)
 
 
 class OutputCJSGTJBA(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):

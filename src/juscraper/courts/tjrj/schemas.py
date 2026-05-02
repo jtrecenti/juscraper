@@ -23,9 +23,8 @@ class InputCJSGTJRJ(SearchBase):
 
     ano_inicio: str | int | None = None
     ano_fim: str | int | None = None
-    # TODO: apertar com Literal[...] após captura do form ASPX/ejuris — refs follow-up de #184.
+    # TODO (#212): apertar com Literal[...] após captura do form ASPX/ejuris — vale para `competencia` e `origem`.
     competencia: str = "1"
-    # TODO: apertar com Literal[...] após captura do form ASPX/ejuris — refs follow-up de #184.
     origem: str = "1"
     tipo_acordao: bool = True
     tipo_monocratica: bool = True

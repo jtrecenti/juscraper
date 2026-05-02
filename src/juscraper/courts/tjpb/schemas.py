@@ -27,7 +27,7 @@ class InputCJSGTJPB(SearchBase, DataJulgamentoMixin):
     id_classe: str | None = None
     id_orgao_julgador: str | None = None
     id_relator: str | None = None
-    # TODO: investigar formato real (provavelmente list[str]) — refs follow-up de #184.
+    # TODO (#212): investigar formato real (provavelmente list[str]).
     id_origem: str = "8,2"
     decisoes: bool = False
 

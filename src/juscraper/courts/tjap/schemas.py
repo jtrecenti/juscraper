@@ -22,7 +22,7 @@ class InputCJSGTJAP(SearchBase):
     sao rejeitados por ``extra="forbid"`` herdado de :class:`SearchBase`.
     """
 
-    # TODO: apertar com Literal[...] após captura do form Tucujuris — refs follow-up de #184.
+    # TODO (#212): apertar com Literal[...] após captura do form Tucujuris.
     orgao: str = "0"
     numero_processo: str | None = None
     numero_acordao: str | None = None
@@ -31,7 +31,7 @@ class InputCJSGTJAP(SearchBase):
     relator: str | None = None
     secretaria: str | None = None
     classe: str | None = None
-    # TODO: apertar com Literal[...] após captura do form Tucujuris — refs follow-up de #184.
+    # TODO (#212): apertar com Literal[...] após captura do form Tucujuris.
     votacao: str = "0"
     origem: str | None = None
 

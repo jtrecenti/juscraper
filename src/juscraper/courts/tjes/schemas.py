@@ -46,9 +46,9 @@ class InputCJSGTJES(SearchBase, DataJulgamentoMixin):
     classe: str | None = None
     jurisdicao: str | None = None
     assunto: str | None = None
-    # TODO: apertar com Literal[...] após captura do Solr — refs follow-up de #184.
+    # TODO (#212): apertar com Literal[...] após captura do Solr.
     ordenacao: str | None = None
-    per_page: int = Field(default=20, ge=1, le=100)
+    per_page: int = Field(default=20, ge=1)
 
 
 class _OutputCJSGTJESBase(OutputCJSGBase, OutputRelatoriaMixin):
@@ -96,9 +96,9 @@ class InputCJPGTJES(SearchBase, DataJulgamentoMixin):
     classe: str | None = None
     jurisdicao: str | None = None
     assunto: str | None = None
-    # TODO: apertar com Literal[...] após captura do Solr — refs follow-up de #184.
+    # TODO (#212): apertar com Literal[...] após captura do Solr.
     ordenacao: str | None = None
-    per_page: int = Field(default=20, ge=1, le=100)
+    per_page: int = Field(default=20, ge=1)
 
 
 class OutputCJPGTJES(_OutputCJSGTJESBase):

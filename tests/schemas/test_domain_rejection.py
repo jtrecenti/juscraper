@@ -24,6 +24,12 @@ from juscraper.courts.tjgo.schemas import InputCJSGTJGO
 from juscraper.courts.tjmg.schemas import InputCJSGTJMG
 from juscraper.courts.tjmt.schemas import InputCJSGTJMT
 from juscraper.courts.tjpa.schemas import InputCJSGTJPA
+from juscraper.courts.tjpb.schemas import InputCJSGTJPB
+from juscraper.courts.tjpi.schemas import InputCJSGTJPI
+from juscraper.courts.tjrn.schemas import InputCJSGTJRN
+from juscraper.courts.tjro.schemas import InputCJSGTJRO
+from juscraper.courts.tjrr.schemas import InputCJSGTJRR
+from juscraper.courts.tjsc.schemas import InputCJSGTJSC
 from juscraper.courts.tjto.schemas import InputCJPGTJTO, InputCJSGTJTO
 
 
@@ -82,29 +88,24 @@ class TestLiteralRejection:
 
 
 class TestNumericFieldRejection:
-    """Categoria B — limites numéricos via ``Field(ge=, le=)``."""
+    """Categoria B — lower bound numérico via ``Field(ge=1)``.
 
-    def test_tjba_items_per_page_rejects_above_le(self):
-        with pytest.raises(ValidationError):
-            InputCJSGTJBA(pesquisa="x", items_per_page=999)
+    Apenas o lower bound é fiscalizado (zero/negativo nunca faz sentido em
+    paginação). Upper bound não é apertado neste PR — exige captura ao vivo
+    do backend para definir o teto real, encaminhada em issue follow-up.
+    """
 
     def test_tjba_items_per_page_rejects_below_ge(self):
         with pytest.raises(ValidationError):
             InputCJSGTJBA(pesquisa="x", items_per_page=0)
 
-    def test_tjba_items_per_page_accepts_within_range(self):
+    def test_tjba_items_per_page_accepts_above_default(self):
         InputCJSGTJBA(pesquisa="x", items_per_page=1)
-        InputCJSGTJBA(pesquisa="x", items_per_page=100)
+        InputCJSGTJBA(pesquisa="x", items_per_page=1000)
 
-    def test_tjdft_quantidade_por_pagina_rejects_above_le(self):
+    def test_tjdft_quantidade_por_pagina_rejects_below_ge(self):
         with pytest.raises(ValidationError):
-            InputCJSGTJDFT(pesquisa="x", quantidade_por_pagina=999)
-
-    def test_tjes_per_page_rejects_above_le_in_cjsg_and_cjpg(self):
-        with pytest.raises(ValidationError):
-            InputCJSGTJES(pesquisa="x", per_page=999)
-        with pytest.raises(ValidationError):
-            InputCJPGTJES(pesquisa="x", per_page=999)
+            InputCJSGTJDFT(pesquisa="x", quantidade_por_pagina=0)
 
     def test_tjes_per_page_rejects_below_ge_in_cjsg_and_cjpg(self):
         with pytest.raises(ValidationError):
@@ -112,28 +113,96 @@ class TestNumericFieldRejection:
         with pytest.raises(ValidationError):
             InputCJPGTJES(pesquisa="x", per_page=0)
 
-    def test_tjgo_qtde_itens_pagina_rejects_above_le(self):
+    def test_tjgo_qtde_itens_pagina_rejects_below_ge(self):
         with pytest.raises(ValidationError):
-            InputCJSGTJGO(pesquisa="x", qtde_itens_pagina=999)
+            InputCJSGTJGO(pesquisa="x", qtde_itens_pagina=0)
 
-    def test_tjmt_quantidade_por_pagina_rejects_above_le(self):
+    def test_tjmt_quantidade_por_pagina_rejects_below_ge(self):
         with pytest.raises(ValidationError):
-            InputCJSGTJMT(pesquisa="x", quantidade_por_pagina=999)
+            InputCJSGTJMT(pesquisa="x", quantidade_por_pagina=0)
+
+
+# (Schema, field_name) — campos da Categoria C cujo default mudou de ``""``
+# para ``None``. A parametrização garante que cada um dos 8 tribunais
+# afetados preserve o contrato não-breaking: default ``None``, e ``""``
+# continua aceito.
+_CAT_C_CASES = [
+    (InputCJSGTJGO, "numero_processo"),
+    (InputCJSGTJPB, "numero_processo"),
+    (InputCJSGTJPB, "id_classe"),
+    (InputCJSGTJPB, "id_orgao_julgador"),
+    (InputCJSGTJPB, "id_relator"),
+    (InputCJSGTJRN, "numero_processo"),
+    (InputCJSGTJRN, "id_classe"),
+    (InputCJSGTJRN, "id_orgao_julgador"),
+    (InputCJSGTJRN, "id_relator"),
+    (InputCJSGTJRN, "id_colegiado"),
+    (InputCJSGTJRN, "sistema"),
+    (InputCJSGTJRN, "decisoes"),
+    (InputCJSGTJRN, "jurisdicoes"),
+    (InputCJSGTJRN, "grau"),
+    (InputCJSGTJPI, "tipo"),
+    (InputCJSGTJPI, "relator"),
+    (InputCJSGTJPI, "classe"),
+    (InputCJSGTJPI, "orgao"),
+    (InputCJSGTJRO, "numero_processo"),
+    (InputCJSGTJRO, "relator"),
+    (InputCJSGTJRO, "classe"),
+    (InputCJSGTJTO, "numero_processo"),
+    (InputCJPGTJTO, "numero_processo"),
+    (InputCJSGTJSC, "processo"),
+    (InputCJSGTJRR, "relator"),
+]
 
 
 class TestOptionalSentinelAcceptance:
     """Categoria C — ``str = ""`` → ``str | None = None``.
 
-    Garante que (a) ``None`` é aceito como default novo; (b) string vazia
-    continua sendo aceita (não-breaking — quem passava ``""`` explícito
-    segue funcionando).
+    Garante que (a) ``None`` é o default novo; (b) ``None`` explícito é
+    aceito; (c) string vazia continua sendo aceita (não-breaking — quem
+    passava ``""`` explícito segue funcionando).
     """
 
-    def test_tjgo_numero_processo_accepts_none_and_empty(self):
-        InputCJSGTJGO(pesquisa="x")  # default agora é None
-        InputCJSGTJGO(pesquisa="x", numero_processo=None)
-        InputCJSGTJGO(pesquisa="x", numero_processo="")
+    @pytest.mark.parametrize(
+        "schema_cls,field_name",
+        _CAT_C_CASES,
+        ids=lambda v: v.__name__ if hasattr(v, "__name__") else v,
+    )
+    def test_default_is_none(self, schema_cls, field_name):
+        model = schema_cls(pesquisa="x")
+        assert getattr(model, field_name) is None
 
-    def test_tjgo_numero_processo_default_is_none(self):
-        model = InputCJSGTJGO(pesquisa="x")
-        assert model.numero_processo is None
+    @pytest.mark.parametrize(
+        "schema_cls,field_name",
+        _CAT_C_CASES,
+        ids=lambda v: v.__name__ if hasattr(v, "__name__") else v,
+    )
+    def test_accepts_explicit_none(self, schema_cls, field_name):
+        schema_cls(pesquisa="x", **{field_name: None})
+
+    @pytest.mark.parametrize(
+        "schema_cls,field_name",
+        _CAT_C_CASES,
+        ids=lambda v: v.__name__ if hasattr(v, "__name__") else v,
+    )
+    def test_accepts_empty_string(self, schema_cls, field_name):
+        schema_cls(pesquisa="x", **{field_name: ""})
+
+
+class TestTJROOrgaoJulgadorIntZero:
+    """TJRO ``orgao_julgador`` aceita ``int | str | None`` — ``0`` (int) deve
+    ser preservado intacto, não confundido com ``None`` nem com ``""``.
+
+    Protege o ternário ``inp.orgao_julgador if inp.orgao_julgador is not None
+    else ""`` no client (o ingênuo ``or ""`` quebraria o caso).
+    """
+
+    def test_orgao_julgador_zero_int_preserved(self):
+        inp = InputCJSGTJRO(pesquisa="x", orgao_julgador=0)
+        assert inp.orgao_julgador == 0
+        assert inp.orgao_julgador is not None
+
+    def test_orgao_julgador_colegiado_zero_int_preserved(self):
+        inp = InputCJSGTJRO(pesquisa="x", orgao_julgador_colegiado=0)
+        assert inp.orgao_julgador_colegiado == 0
+        assert inp.orgao_julgador_colegiado is not None
