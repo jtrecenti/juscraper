@@ -6,7 +6,7 @@ atual — por isso nao ganham schemas de Input/Output aqui.
 from __future__ import annotations
 
 from datetime import date
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 from pydantic import BaseModel, ConfigDict
 
@@ -32,9 +32,9 @@ class InputCJSGTJTO(SearchBase, DataJulgamentoMixin):
 
     BACKEND_DATE_FORMAT: ClassVar[str] = "%d/%m/%Y"
 
-    tipo_documento: str = "acordaos"
-    ordenacao: str = "DESC"
-    numero_processo: str = ""
+    tipo_documento: Literal["acordaos", "decisoes", "sentencas"] = "acordaos"
+    ordenacao: Literal["ASC", "DESC", "RELEV"] = "DESC"
+    numero_processo: str | None = None
     soementa: bool = False
 
 
@@ -71,9 +71,9 @@ class InputCJPGTJTO(SearchBase, DataJulgamentoMixin):
 
     BACKEND_DATE_FORMAT: ClassVar[str] = "%d/%m/%Y"
 
-    tipo_documento: str = "acordaos"
-    ordenacao: str = "DESC"
-    numero_processo: str = ""
+    tipo_documento: Literal["acordaos", "decisoes", "sentencas"] = "acordaos"
+    ordenacao: Literal["ASC", "DESC", "RELEV"] = "DESC"
+    numero_processo: str | None = None
     soementa: bool = False
 
 

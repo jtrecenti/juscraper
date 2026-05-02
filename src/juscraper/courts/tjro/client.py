@@ -39,11 +39,11 @@ class TJROScraper(BaseScraper):
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
         tipo: list | None = None,
-        numero_processo: str = "",
-        relator: str = "",
-        orgao_julgador: int | str = "",
-        orgao_julgador_colegiado: int | str = "",
-        classe: str = "",
+        numero_processo: str | None = None,
+        relator: str | None = None,
+        orgao_julgador: int | str | None = None,
+        orgao_julgador_colegiado: int | str | None = None,
+        classe: str | None = None,
         instancia: list | None = None,
         termo_exato: bool = False,
         **kwargs,
@@ -113,11 +113,11 @@ class TJROScraper(BaseScraper):
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
         tipo: list | None = None,
-        numero_processo: str = "",
-        relator: str = "",
-        orgao_julgador: int | str = "",
-        orgao_julgador_colegiado: int | str = "",
-        classe: str = "",
+        numero_processo: str | None = None,
+        relator: str | None = None,
+        orgao_julgador: int | str | None = None,
+        orgao_julgador_colegiado: int | str | None = None,
+        classe: str | None = None,
         instancia: list | None = None,
         termo_exato: bool = False,
         **kwargs,
@@ -132,13 +132,13 @@ class TJROScraper(BaseScraper):
             List of raw JSON responses (one per page).
         """
         numero_processo = resolve_deprecated_alias(
-            kwargs, "nr_processo", "numero_processo", numero_processo, sentinel=""
+            kwargs, "nr_processo", "numero_processo", numero_processo
         )
         relator = resolve_deprecated_alias(
-            kwargs, "magistrado", "relator", relator, sentinel=""
+            kwargs, "magistrado", "relator", relator
         )
         classe = resolve_deprecated_alias(
-            kwargs, "classe_judicial", "classe", classe, sentinel=""
+            kwargs, "classe_judicial", "classe", classe
         )
         inp = apply_input_pipeline_search(
             InputCJSGTJRO,
@@ -161,11 +161,13 @@ class TJROScraper(BaseScraper):
             paginas=inp.paginas,
             session=self.session,
             tipo=inp.tipo,
-            nr_processo=inp.numero_processo,
-            relator=inp.relator,
-            orgao_julgador=inp.orgao_julgador,
-            orgao_julgador_colegiado=inp.orgao_julgador_colegiado,
-            classe=inp.classe,
+            nr_processo=inp.numero_processo or "",
+            relator=inp.relator or "",
+            orgao_julgador=inp.orgao_julgador if inp.orgao_julgador is not None else "",
+            orgao_julgador_colegiado=(
+                inp.orgao_julgador_colegiado if inp.orgao_julgador_colegiado is not None else ""
+            ),
+            classe=inp.classe or "",
             data_julgamento_inicio=to_iso_date(inp.data_julgamento_inicio) or "",
             data_julgamento_fim=to_iso_date(inp.data_julgamento_fim) or "",
             instancia=inp.instancia,

@@ -32,7 +32,7 @@ class InputCJSGTJSC(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
 
     campo: Literal["E", "I"] = "E"
-    processo: str = ""
+    processo: str | None = None
 
 
 class OutputCJSGTJSC(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):

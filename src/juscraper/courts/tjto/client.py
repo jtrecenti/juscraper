@@ -2,6 +2,7 @@
 Scraper for the Tribunal de Justica do Tocantins (TJTO).
 """
 import logging
+from typing import Literal
 
 import pandas as pd
 import requests
@@ -60,7 +61,7 @@ class TJTOScraper(BaseScraper):
             type_minuta=type_minuta,
             tip_criterio_inst=instancia,
             tip_criterio_data=inp.ordenacao,
-            numero_processo=inp.numero_processo,
+            numero_processo=inp.numero_processo or "",
             dat_jul_ini=inp.data_julgamento_inicio or "",
             dat_jul_fim=inp.data_julgamento_fim or "",
             soementa=inp.soementa,
@@ -73,9 +74,9 @@ class TJTOScraper(BaseScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        tipo_documento: str = "acordaos",
-        ordenacao: str = "DESC",
-        numero_processo: str = "",
+        tipo_documento: Literal["acordaos", "decisoes", "sentencas"] = "acordaos",
+        ordenacao: Literal["ASC", "DESC", "RELEV"] = "DESC",
+        numero_processo: str | None = None,
         data_julgamento_inicio: str | None = None,
         data_julgamento_fim: str | None = None,
         soementa: bool = False,
@@ -120,9 +121,9 @@ class TJTOScraper(BaseScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        tipo_documento: str = "acordaos",
-        ordenacao: str = "DESC",
-        numero_processo: str = "",
+        tipo_documento: Literal["acordaos", "decisoes", "sentencas"] = "acordaos",
+        ordenacao: Literal["ASC", "DESC", "RELEV"] = "DESC",
+        numero_processo: str | None = None,
         data_julgamento_inicio: str | None = None,
         data_julgamento_fim: str | None = None,
         soementa: bool = False,
@@ -187,9 +188,9 @@ class TJTOScraper(BaseScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        tipo_documento: str = "acordaos",
-        ordenacao: str = "DESC",
-        numero_processo: str = "",
+        tipo_documento: Literal["acordaos", "decisoes", "sentencas"] = "acordaos",
+        ordenacao: Literal["ASC", "DESC", "RELEV"] = "DESC",
+        numero_processo: str | None = None,
         data_julgamento_inicio: str | None = None,
         data_julgamento_fim: str | None = None,
         soementa: bool = False,
@@ -235,9 +236,9 @@ class TJTOScraper(BaseScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        tipo_documento: str = "acordaos",
-        ordenacao: str = "DESC",
-        numero_processo: str = "",
+        tipo_documento: Literal["acordaos", "decisoes", "sentencas"] = "acordaos",
+        ordenacao: Literal["ASC", "DESC", "RELEV"] = "DESC",
+        numero_processo: str | None = None,
         data_julgamento_inicio: str | None = None,
         data_julgamento_fim: str | None = None,
         soementa: bool = False,

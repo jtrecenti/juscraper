@@ -7,7 +7,9 @@ A lista de campos bate byte-a-byte com a assinatura publica de
 """
 from __future__ import annotations
 
-from typing import ClassVar
+from typing import ClassVar, Literal
+
+from pydantic import Field
 
 from ...schemas import DataPublicacaoMixin, OutputCJSGBase, SearchBase
 
@@ -30,11 +32,12 @@ class InputCJSGTJGO(SearchBase, DataPublicacaoMixin):
 
     BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
 
-    id_instancia: str | int = 0
-    id_area: str | int = 0
+    id_instancia: Literal[0, 1, 2, 3, "0", "1", "2", "3"] = 0
+    id_area: Literal[0, 1, 2, "0", "1", "2"] = 0
+    # TODO (#212): apertar com Literal[...] após captura do dropdown do site.
     id_serventia_subtipo: str | int = 0
-    numero_processo: str = ""
-    qtde_itens_pagina: int = 10
+    numero_processo: str | None = None
+    qtde_itens_pagina: int = Field(default=10, ge=1)
 
 
 class OutputCJSGTJGO(OutputCJSGBase):

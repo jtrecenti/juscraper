@@ -69,10 +69,10 @@ class TJPBScraper(BaseScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        numero_processo: str = "",
-        id_classe: str = "",
-        id_orgao_julgador: str = "",
-        id_relator: str = "",
+        numero_processo: str | None = None,
+        id_classe: str | None = None,
+        id_orgao_julgador: str | None = None,
+        id_relator: str | None = None,
         id_origem: str = "8,2",
         decisoes: bool = False,
         **kwargs,
@@ -165,10 +165,10 @@ class TJPBScraper(BaseScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        numero_processo: str = "",
-        id_classe: str = "",
-        id_orgao_julgador: str = "",
-        id_relator: str = "",
+        numero_processo: str | None = None,
+        id_classe: str | None = None,
+        id_orgao_julgador: str | None = None,
+        id_relator: str | None = None,
         id_origem: str = "8,2",
         decisoes: bool = False,
         **kwargs,
@@ -181,10 +181,10 @@ class TJPBScraper(BaseScraper):
             list: Lista de respostas JSON cruas (uma por pagina).
         """
         numero_processo = resolve_deprecated_alias(
-            kwargs, "nr_processo", "numero_processo", numero_processo, sentinel=""
+            kwargs, "nr_processo", "numero_processo", numero_processo
         )
         id_classe = resolve_deprecated_alias(
-            kwargs, "id_classe_judicial", "id_classe", id_classe, sentinel=""
+            kwargs, "id_classe_judicial", "id_classe", id_classe
         )
         inp = apply_input_pipeline_search(
             InputCJSGTJPB,
@@ -204,10 +204,10 @@ class TJPBScraper(BaseScraper):
             pesquisa=inp.pesquisa,
             paginas=inp.paginas,
             session=self.session,
-            nr_processo=inp.numero_processo,
-            id_classe=inp.id_classe,
-            id_orgao_julgador=inp.id_orgao_julgador,
-            id_relator=inp.id_relator,
+            nr_processo=inp.numero_processo or "",
+            id_classe=inp.id_classe or "",
+            id_orgao_julgador=inp.id_orgao_julgador or "",
+            id_relator=inp.id_relator or "",
             id_origem=inp.id_origem,
             decisoes=inp.decisoes,
             dt_inicio=inp.data_julgamento_inicio or "",
