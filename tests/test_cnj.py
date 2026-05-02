@@ -57,3 +57,22 @@ class TestFormatCnj:
 
     def test_format_idempotent(self):
         assert format_cnj("0003325-88.2014.8.01.0001") == "0003325-88.2014.8.01.0001"
+
+    def test_strict_default_raises_on_invalid(self):
+        with pytest.raises(ValueError, match="20 dígitos"):
+            format_cnj("abc")
+
+    def test_lenient_returns_input_when_invalid(self):
+        # refs #201: TJRN/TJRO/TJRR podem receber número parcial do backend.
+        assert format_cnj("abc", strict=False) == "abc"
+        assert format_cnj("123", strict=False) == "123"
+
+    def test_lenient_passes_none(self):
+        assert format_cnj(None, strict=False) is None
+
+    def test_lenient_passes_empty_string(self):
+        assert format_cnj("", strict=False) == ""
+
+    def test_lenient_formats_valid_number(self):
+        # Caminho feliz com strict=False ainda formata.
+        assert format_cnj("00033258820148010001", strict=False) == "0003325-88.2014.8.01.0001"

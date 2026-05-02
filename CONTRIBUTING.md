@@ -128,6 +128,7 @@ Checklist obrigatória para o PR que adiciona o raspador:
 11. **Captchas, tokens dinâmicos e libs externas** (`txtcaptcha`, `browser_cookie3`) são **mockados** — nunca invocados. Injetar fakes via `mocker.patch.dict(sys.modules, ...)` para lazy imports ausentes das deps.
 12. **Entry no CHANGELOG** em `[Unreleased]/Added`.
 13. **Payload builders públicos** em `courts/<xx>/download.py` sempre que o script de captura precisar reusar o dict/body enviado ao backend. Extrair como função de nome público (`build_<endpoint>_payload` — **sem underscore inicial**) + constante da URL base (`BASE_URL`, `RESULTS_PER_PAGE`, etc.). O script em `tests/fixtures/capture/<xx>.py` importa esses helpers em vez de redefinir o payload inline — qualquer mudança no scraper quebra a captura, evitando drift silencioso. Helpers privados (`_`) em módulos de download ficam reservados para lógica interna não reusada pelo capture script.
+14. **Base recomendada: `juscraper.core.http.HTTPScraper`** (em vez de `BaseScraper` direto) para raspadores **novos**. Ela cria `self.session = requests.Session()`, expõe o hook `_configure_session(session)` (mesmo contrato do `EsajSearchScraper`), oferece `_request_with_retry(method, url, *, session=None, max_retries=3)` com backoff exponencial para 429/5xx + respeito a `Retry-After` numérico, e centraliza a validação de `session=` (resolve #185). Tribunais existentes ainda em `BaseScraper` migram pelas Fases 1-4 do refactor #194 — tribunais novos já podem (e devem) herdar de `HTTPScraper`.
 
 ## Schemas pydantic
 
@@ -164,6 +165,10 @@ Campo presente em ≥ 2 Inputs/Outputs concretos sobe para base/mixin; abaixo di
 ### Pipeline canônico (wiring)
 
 Pipeline implementado em `juscraper.utils.params.apply_input_pipeline_search` (chamado por `src/juscraper/courts/_esaj/base.py:cjsg_download` e `tjsp/client.py:cjpg_download`) e exercitado em `tests/tj{ac,al,am,ce,ms,sp}/test_cjsg_filters_contract.py`. Ao wirar tribunal novo, copiar a ordem de lá: aliases (via `normalize_pesquisa`/`normalize_datas`) → validators custom → pydantic → build body a partir do modelo. Motivos: aliases antes do pydantic (senão viram `TypeError` genérico); validators custom antes (senão viram wrapped em `ValidationError`); `raise_on_extra_kwargs` depois (só `extra_forbidden` deve virar `TypeError` — erro de tipo real sobe natural). Tribunais sem limite documentado de janela ficam com `max_dias=None` (default); eSAJ passa `max_dias=366, origem="O eSAJ"` explicitamente.
+
+### `session=` fica fora do schema pydantic (decisão #185)
+
+Métodos públicos que aceitam `session: requests.Session | None = None` (caminho de transporte para reuso de cookies/TLS) **não declaram esse parâmetro no schema pydantic**. O parâmetro é detalhe de transporte, não filtro de backend, e a validação `isinstance(session, requests.Session)` fica centralizada em `juscraper.core.http.HTTPScraper._request_with_retry` — que levanta `TypeError` na fronteira quando recebe valor inválido. Tribunais ainda não migrados para `HTTPScraper` chamam essa mesma validação assim que migrarem (Fases 1-4 do refactor #194). Resolve #185.
 
 ### `BACKEND_DATE_FORMAT` é só formato de saída
 
