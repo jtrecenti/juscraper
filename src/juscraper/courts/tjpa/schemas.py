@@ -37,12 +37,10 @@ class InputCJSGTJPA(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     assunto: str | None = None
     origem: list | None = None
     tipo: list | None = None
-    # TODO (#212): apertar com Literal[...] após captura do BFF.
-    sort_by: str = "datajulgamento"
     sort_order: Literal["asc", "desc"] = "desc"
-    # TODO (#212): apertar com Literal[...] após captura do BFF.
+    # TODO (#212): apertar `sort_by`, `query_type` e `query_scope` com Literal[...] após captura do BFF.
+    sort_by: str = "datajulgamento"
     query_type: str = "free"
-    # TODO (#212): apertar com Literal[...] após captura do BFF.
     query_scope: str = "ementa"
 
 
