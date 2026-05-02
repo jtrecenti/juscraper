@@ -3,6 +3,8 @@
 Wired em :mod:`juscraper.courts.tjrs.client` desde o lote L3 do #165 —
 :meth:`TJRSScraper.cjsg_download` valida kwargs via :class:`InputCJSGTJRS`
 com ``extra="forbid"`` herdado de :class:`SearchBase`.
+:meth:`TJRSScraper.cjsg` repassa ``**kwargs`` para ``cjsg_download``,
+ficando coberto transitivamente.
 """
 from __future__ import annotations
 

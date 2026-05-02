@@ -81,22 +81,16 @@ class TJRSScraper(BaseScraper):
         """
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
         paginas = normalize_paginas(paginas)
-        # Re-inject explicit date args into kwargs so the pipeline can resolve
-        # aliases (data_inicio/data_fim) and canonical names in a single pass.
-        for _date_key, _date_val in (
-            ("data_julgamento_inicio", data_julgamento_inicio),
-            ("data_julgamento_fim", data_julgamento_fim),
-            ("data_publicacao_inicio", data_publicacao_inicio),
-            ("data_publicacao_fim", data_publicacao_fim),
-        ):
-            if _date_val is not None:
-                kwargs[_date_key] = _date_val
         inp = apply_input_pipeline_search(
             InputCJSGTJRS,
             "TJRSScraper.cjsg_download()",
             pesquisa=pesquisa,
             paginas=paginas,
             kwargs=kwargs,
+            data_julgamento_inicio=data_julgamento_inicio,
+            data_julgamento_fim=data_julgamento_fim,
+            data_publicacao_inicio=data_publicacao_inicio,
+            data_publicacao_fim=data_publicacao_fim,
             classe=classe,
             assunto=assunto,
             orgao_julgador=orgao_julgador,
