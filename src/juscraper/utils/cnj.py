@@ -38,7 +38,7 @@ def split_cnj(numero: str) -> dict:
     }
 
 
-def format_cnj(numero, strict: bool = True):
+def format_cnj(numero: str | None, strict: bool = True) -> str | None:
     """Formata um número de processo CNJ para o padrão NNNNNNN-DD.AAAA.J.TR.OOOO.
 
     Args:
@@ -52,13 +52,19 @@ def format_cnj(numero, strict: bool = True):
             refs #201, #194).
 
     Returns:
-        String no formato canônico, ou o input original quando ``strict=False``
-        e o número não puder ser formatado.
+        String no formato canônico. Quando ``strict=False`` e o número não
+        puder ser formatado, retorna o input original (``None``, vazio,
+        não-string ou sem 20 dígitos).
     """
     if not strict:
         if not numero or not isinstance(numero, str):
             return numero
         if len(clean_cnj(numero)) != 20:
             return numero
+    elif not isinstance(numero, str):
+        raise TypeError(
+            f"format_cnj espera str em strict=True, recebido {type(numero).__name__}. "
+            "Use strict=False para aceitar None/vazio."
+        )
     partes = split_cnj(numero)  # split_cnj lida com a limpeza interna
     return f"{partes['num']}-{partes['dv']}.{partes['ano']}.{partes['justica']}.{partes['tribunal']}.{partes['orgao']}"

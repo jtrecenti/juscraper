@@ -38,6 +38,11 @@ class TestCleanHtml:
         result = clean_html("<b>R$&nbsp;1.000</b>")
         assert result == "R$ 1.000"
 
+    def test_decode_extended_named_entities(self):
+        # html.unescape cobre toda a tabela HTML5 — não só o subset
+        # acute/grave/etc do _clean_html original do TJAP.
+        assert clean_html("&copy; 2024 &hellip; &deg;C") == "© 2024 … °C"
+
 
 class TestCoerceDateColumns:
     def test_empty_df_no_raise(self):

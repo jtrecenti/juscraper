@@ -150,3 +150,39 @@ def test_configure_session_hook_called(mocker):
 
     instance = _ProbeWithHook()
     assert spy_calls == [instance.session]
+
+
+@responses.activate
+def test_request_with_retry_post_forwards_body(probe):
+    """POST encaminha ``json=`` via ``**kwargs`` para ``session.request``."""
+    captured: dict = {}
+
+    def _callback(request):
+        captured["body"] = request.body
+        captured["method"] = request.method
+        return (200, {}, '{"ok": true}')
+
+    responses.add_callback(responses.POST, URL, callback=_callback, content_type="application/json")
+
+    resp = probe._request_with_retry("POST", URL, json={"x": 1})
+
+    assert resp.status_code == 200
+    assert captured["method"] == "POST"
+    assert captured["body"] == b'{"x": 1}'
+
+
+@responses.activate
+def test_request_with_retry_negative_retry_after_clamped(probe, mocker):
+    """``Retry-After: -5`` é tolerado (clamp em 0) em vez de explodir em ``time.sleep``."""
+    sleep_spy = mocker.patch("juscraper.core.http.time.sleep")
+    responses.add(responses.GET, URL, status=503, headers={"Retry-After": "-5"})
+    responses.add(responses.GET, URL, json={"ok": True}, status=200)
+
+    probe._request_with_retry("GET", URL)
+
+    sleep_spy.assert_called_once_with(0.0)
+
+
+def test_request_with_retry_invalid_max_retries(probe):
+    with pytest.raises(ValueError, match=r"max_retries deve ser >= 1, recebido 0"):
+        probe._request_with_retry("GET", URL, max_retries=0)

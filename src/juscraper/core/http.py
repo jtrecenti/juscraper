@@ -91,6 +91,7 @@ class HTTPScraper(BaseScraper):
 
         Raises:
             TypeError: Se ``session`` não for ``None`` nem ``requests.Session``.
+            ValueError: Se ``max_retries`` for menor que 1.
             RetryExhaustedError: Quando esgota ``max_retries`` em status retryable.
             requests.HTTPError: Para 4xx não-retryable (via ``raise_for_status``).
         """
@@ -98,9 +99,10 @@ class HTTPScraper(BaseScraper):
             raise TypeError(
                 f"session deve ser requests.Session, recebido {type(session).__name__}"
             )
+        if max_retries < 1:
+            raise ValueError(f"max_retries deve ser >= 1, recebido {max_retries}")
 
         sess = session if session is not None else self.session
-        last_status: int | None = None
 
         for attempt in range(1, max_retries + 1):
             resp = sess.request(method, url, **kwargs)
@@ -108,12 +110,12 @@ class HTTPScraper(BaseScraper):
                 return resp
 
             if resp.status_code in RETRYABLE_STATUSES:
-                last_status = resp.status_code
                 if attempt == max_retries:
                     raise RetryExhaustedError(resp.status_code, attempt)
                 wait = self._parse_retry_after(resp.headers.get("Retry-After"))
                 if wait is None:
                     wait = base_backoff ** attempt
+                wait = max(0.0, wait)  # tolera Retry-After negativo de servidores mal-comportados
                 logger.warning(
                     "HTTP %s em %s %s (tentativa %d/%d). Aguardando %.2fs.",
                     resp.status_code, method, url, attempt, max_retries, wait,
@@ -123,7 +125,8 @@ class HTTPScraper(BaseScraper):
 
             resp.raise_for_status()
 
-        raise RetryExhaustedError(last_status, max_retries)
+        # Inalcançável: o loop sai sempre via return, RetryExhaustedError ou raise_for_status.
+        raise RuntimeError("loop de retry terminou sem decisão")  # pragma: no cover
 
     @staticmethod
     def _parse_retry_after(header: str | None) -> float | None:
