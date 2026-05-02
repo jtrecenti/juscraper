@@ -59,6 +59,11 @@ CASES = [
         id="comunica_cnj.listar_comunicacoes",
     ),
     pytest.param(
+        "juscraper.courts.tjrj.client", "TJRJScraper", "cjsg",
+        "juscraper.courts.tjrj.schemas", "InputCJSGTJRJ",
+        id="tjrj.cjsg",
+    ),
+    pytest.param(
         "juscraper.aggregators.datajud.client", "DatajudScraper", "listar_processos",
         "juscraper.aggregators.datajud.schemas", "InputListarProcessosDataJud",
         id="datajud.listar_processos",
@@ -171,6 +176,11 @@ DOWNLOAD_REFERENCE_CASES = [
         "juscraper.courts.tjsp.client", "TJSPScraper",
         "cjpg_download", "cjpg",
         id="tjsp.cjpg_download",
+    ),
+    pytest.param(
+        "juscraper.courts.tjrj.client", "TJRJScraper",
+        "cjsg_download", "cjsg",
+        id="tjrj.cjsg_download",
     ),
 ]
 

@@ -44,6 +44,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Fixed
 
 - **DataJud** `listar_processos` e `contar_processos`: o filtro `assuntos` voltou a aceitar `int` (ex.: `assuntos=[12503]`) e o filtro `movimentos_codigo` passou a aceitar `str` (ex.: `movimentos_codigo=["246"]`) — ambos sao normalizados pelo schema antes do payload Elasticsearch. Antes do fix, o wiring pydantic rejeitava com `ValidationError` o caso natural de cada campo (codigos TPU sao inteiros por natureza; strings sao comuns vindo de planilha/CSV), embora o backend Elasticsearch coage os dois transparentemente. Refs #217.
+- TJRJ `cjsg`: o POST inicial agora envia o hidden `ctl00$ContentPlaceHolder1$hfListaPalavrasBloqueadas`, mimetizando o form ASPX real. O backend ASPX comecou a 500 transientemente em 2026-04-30 quando esse campo era omitido. Junto com isso, `InputCJSGTJRJ` foi wired no metodo publico via `apply_input_pipeline_search` — kwargs desconhecidos (incluindo `data_julgamento_*` e `data_publicacao_*`, que o backend nao expoe — granularidade so anual via `ano_inicio`/`ano_fim`) passam a levantar `TypeError` em vez de serem silenciosamente dropados pelo antigo `warn_unsupported`. `competencia` e `origem` agora aceitam tanto `str` quanto `int` (`competencia=2` deixa de virar `ValidationError`). Refs #93, #143.
 - Filtros de data passam a ser efetivamente enviados ao backend (e respeitados) em varios tribunais que silenciosamente devolviam resultados nao-filtrados ou em formato invalido:
   - **TJDFT** envia `termosAcessorios="entre YYYY-MM-DD e YYYY-MM-DD"`. Antes emitia `UserWarning` dizendo que o filtro nao era suportado e devolvia resultados sem filtro.
   - **TJTO** envia `tempo_julgados=pers` quando `data_julgamento_*` e fornecido. Sem isso, o backend ignorava `dat_jul_ini`/`dat_jul_fim`.
@@ -66,6 +67,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - TJSP `get_cpopg_download_links`: ramo `else` nunca populava a lista de links (atribuia `processos = lista.find_all('a')` e descartava o resultado). Agora itera sobre os `<a href>` e devolve a lista corretamente.
 - TJSP `cpopg_download`/`cposg_download`: `RuntimeError` introduzido ao trocar `dict.get(k, [None])[0]` por early-raise (PR #105) escapava dos `except` de batch e abortava o download de todos os CNJs seguintes quando um link de listagem vinha sem `processo.codigo`. Agora o `RuntimeError` e capturado no loop externo e o batch segue.
 - TJMT/TJBA `cjsg_parse`: respostas sem resultados podem vir do backend real com `null` em qualquer nivel intermediario; os parsers tratam `null` como lista vazia / dict ausente e retornam DataFrame vazio em vez de quebrar.
+- `normalize_datas`: quando o usuario passa dois aliases distintos para o mesmo campo canonico (ex.: `data_inicio` + `data_julgamento_de`), a mensagem de `ValueError` agora cita os nomes que ele realmente escreveu, em vez do canonico que ele nunca digitou. O canonico aparece apenas como sugestao no trecho "Use apenas 'X'". Vale para todos os tribunais (a normalizacao e centralizada). Refs #193.
 
 ### Known Issues
 

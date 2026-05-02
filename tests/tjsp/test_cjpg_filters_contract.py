@@ -1,12 +1,10 @@
 """Filter-propagation contract for TJSP cjpg (refs #84, #104 comment)."""
 import pandas as pd
-import pytest
 import responses
-from pydantic import ValidationError
 from responses.matchers import query_param_matcher
 
 import juscraper as jus
-from tests._helpers import load_sample_bytes
+from tests._helpers import assert_unknown_kwarg_raises, load_sample_bytes
 from tests.fixtures.capture._util import make_tjsp_cjpg_params
 
 BASE = "https://esaj.tjsp.jus.br/cjpg"
@@ -63,13 +61,11 @@ def test_cjpg_all_filters_land_in_query_params(tmp_path, mocker):
 
 def test_cjpg_unknown_kwarg_raises(tmp_path):
     scraper = jus.scraper("tjsp", download_path=str(tmp_path))
-    with pytest.raises((ValidationError, TypeError)):
-        scraper.cjpg("dano moral", paginas=1, parametro_bobo="xyz")
+    assert_unknown_kwarg_raises(scraper.cjpg, "parametro_bobo", "dano moral", paginas=1)
 
 
 def test_cjpg_rejects_cjsg_fields(tmp_path):
     """cjpg takes plural lists, not cjsg's singular ementa/classe/comarca."""
     scraper = jus.scraper("tjsp", download_path=str(tmp_path))
     for bad in ("ementa", "classe", "comarca", "orgao_julgador", "baixar_sg"):
-        with pytest.raises((ValidationError, TypeError)):
-            scraper.cjpg("dano moral", paginas=1, **{bad: "x"})
+        assert_unknown_kwarg_raises(scraper.cjpg, bad, "dano moral", paginas=1)

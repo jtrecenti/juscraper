@@ -17,63 +17,85 @@ RESULT_URL = (
 )
 RESULTS_PER_PAGE = 10
 
+_FIELD_PREFIX = "ctl00$ContentPlaceHolder1$"
+_BLOCKED_WORDS_FIELD = f"{_FIELD_PREFIX}hfListaPalavrasBloqueadas"
+
 _HIDDEN_RE = re.compile(
-    r'<input[^>]*name="(__VIEWSTATE|__VIEWSTATEGENERATOR|__EVENTVALIDATION)"'
-    r'[^>]*value="([^"]*)"',
+    r'<input[^>]*name="(?P<name>__VIEWSTATE|__VIEWSTATEGENERATOR|__EVENTVALIDATION'
+    r'|ctl00\$ContentPlaceHolder1\$hfListaPalavrasBloqueadas)"[^>]*value="(?P<value>[^"]*)"',
     re.IGNORECASE,
 )
 
 
-def _scrape_hidden(html: str) -> dict:
-    fields = {}
+def extract_viewstate_fields(html: str) -> dict:
+    """Extrai os quatro hidden fields exigidos pelo POST ASP.NET do TJRJ.
+
+    Retorna ``__VIEWSTATE``, ``__VIEWSTATEGENERATOR``, ``__EVENTVALIDATION`` e
+    ``ctl00$ContentPlaceHolder1$hfListaPalavrasBloqueadas``. Campos ausentes
+    sao omitidos do dict — o caller substitui defaults explicitamente.
+
+    O hidden de palavras bloqueadas carrega a stopword list do backend
+    (``"A;ACIMA;COM;..."``); o servidor le esse valor de volta para validar o
+    termo de busca, e um POST que omite o campo pode disparar 500 Runtime
+    Error em janelas onde o backend espera o roundtrip (refs #143, exposto
+    em 2026-04-30).
+    """
+    fields: dict = {}
     for match in _HIDDEN_RE.finditer(html):
-        fields[match.group(1)] = match.group(2)
+        fields[match.group("name")] = match.group("value")
     return fields
 
 
-def _build_form_data(
+def build_cjsg_payload(
     hidden: dict,
     pesquisa: str,
-    ano_inicio: str,
-    ano_fim: str,
-    competencia: str,
-    origem: str,
-    tipo_acordao: bool,
-    tipo_monocratica: bool,
-    magistrado_codigo: str | None,
-    orgao_codigo: str | None,
+    *,
+    ano_inicio: str = "",
+    ano_fim: str = "",
+    competencia: str = "1",
+    origem: str = "1",
+    tipo_acordao: bool = True,
+    tipo_monocratica: bool = True,
+    magistrado_codigo: str | None = None,
+    orgao_codigo: str | None = None,
 ) -> dict:
+    """Monta o body URL-encoded para o POST ASPX do TJRJ.
+
+    ``hidden`` carrega os quatro hidden fields devolvidos por
+    :func:`extract_viewstate_fields`. ``g-recaptcha-response`` fica vazio
+    propositalmente — o widget e decorativo, o backend nao valida o token.
+    """
     data = {
-        "__EVENTTARGET": "ctl00$ContentPlaceHolder1$btnPesquisar",
+        "__EVENTTARGET": f"{_FIELD_PREFIX}btnPesquisar",
         "__EVENTARGUMENT": "",
         "__LASTFOCUS": "",
         "__VIEWSTATE": hidden.get("__VIEWSTATE", ""),
         "__VIEWSTATEGENERATOR": hidden.get("__VIEWSTATEGENERATOR", ""),
         "__EVENTVALIDATION": hidden.get("__EVENTVALIDATION", ""),
-        "ctl00$ContentPlaceHolder1$hfCodRamos": "",
-        "ctl00$ContentPlaceHolder1$hfCodMags": magistrado_codigo or "",
-        "ctl00$ContentPlaceHolder1$hfCodOrgs": orgao_codigo or "",
-        "ctl00$ContentPlaceHolder1$txtTextoPesq": pesquisa,
-        "ctl00$ContentPlaceHolder1$cmbOrigem": origem,
-        "ctl00$ContentPlaceHolder1$cmbAnoInicio": ano_inicio,
-        "ctl00$ContentPlaceHolder1$cmbAnoFim": ano_fim,
-        "ctl00$ContentPlaceHolder1$cmbCompetencia": competencia,
-        "ctl00$ContentPlaceHolder1$cmbRamo": "",
-        "ctl00$ContentPlaceHolder1$cmbMagistrado": "",
-        "ctl00$ContentPlaceHolder1$chkAtivo": "on",
-        "ctl00$ContentPlaceHolder1$chkInativo": "on",
-        "ctl00$ContentPlaceHolder1$cmbOrgaoJulgador": "",
-        "ctl00$ContentPlaceHolder1$cmbTipNumeracao": "1",
-        "ctl00$ContentPlaceHolder1$txtNumeracao": "",
-        "ctl00$ContentPlaceHolder1$chkIntTeor": "on",
-        "ctl00$ContentPlaceHolder1$chkEmentario": "on",
-        # Decorative reCAPTCHA: backend does not validate the token.
+        _BLOCKED_WORDS_FIELD: hidden.get(_BLOCKED_WORDS_FIELD, ""),
+        f"{_FIELD_PREFIX}hfCodRamos": "",
+        f"{_FIELD_PREFIX}hfCodMags": magistrado_codigo or "",
+        f"{_FIELD_PREFIX}hfCodOrgs": orgao_codigo or "",
+        f"{_FIELD_PREFIX}txtTextoPesq": pesquisa,
+        f"{_FIELD_PREFIX}cmbOrigem": origem,
+        f"{_FIELD_PREFIX}cmbAnoInicio": ano_inicio,
+        f"{_FIELD_PREFIX}cmbAnoFim": ano_fim,
+        f"{_FIELD_PREFIX}cmbCompetencia": competencia,
+        f"{_FIELD_PREFIX}cmbRamo": "",
+        f"{_FIELD_PREFIX}cmbMagistrado": "",
+        f"{_FIELD_PREFIX}chkAtivo": "on",
+        f"{_FIELD_PREFIX}chkInativo": "on",
+        f"{_FIELD_PREFIX}cmbOrgaoJulgador": "",
+        f"{_FIELD_PREFIX}cmbTipNumeracao": "1",
+        f"{_FIELD_PREFIX}txtNumeracao": "",
+        f"{_FIELD_PREFIX}chkIntTeor": "on",
+        f"{_FIELD_PREFIX}chkEmentario": "on",
         "g-recaptcha-response": "",
     }
     if tipo_acordao:
-        data["ctl00$ContentPlaceHolder1$chkAcordao"] = "on"
+        data[f"{_FIELD_PREFIX}chkAcordao"] = "on"
     if tipo_monocratica:
-        data["ctl00$ContentPlaceHolder1$chkDecMon"] = "on"
+        data[f"{_FIELD_PREFIX}chkDecMon"] = "on"
     return data
 
 
@@ -92,8 +114,8 @@ def _init_session(
     """Submit the search form so the result XHR has a valid server session."""
     resp = session.get(FORM_URL, timeout=30)
     resp.raise_for_status()
-    hidden = _scrape_hidden(resp.text)
-    data = _build_form_data(
+    hidden = extract_viewstate_fields(resp.text)
+    data = build_cjsg_payload(
         hidden=hidden,
         pesquisa=pesquisa,
         ano_inicio=ano_inicio or "",
