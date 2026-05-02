@@ -9,7 +9,7 @@ from Platforma Digital do Poder Judiciario (PDPJ).
 import logging
 import time
 import urllib
-from typing import Any, List, Optional, Union
+from typing import Any
 
 import browser_cookie3
 import jwt
@@ -39,9 +39,9 @@ class JusbrScraper(BaseScraper):
     def __init__(
         self,
         verbose: int = 0,
-        download_path: Optional[str] = None,
+        download_path: str | None = None,
         sleep_time: float = 0.5,
-        token: Optional[str] = None
+        token: str | None = None
     ):
         super().__init__("jusbr")
         self.set_verbose(verbose)
@@ -120,7 +120,7 @@ class JusbrScraper(BaseScraper):
         self.session.headers.update({'authorization': f'Bearer {self.token}'})
         return True
 
-    def cpopg(self, id_cnj: Union[str, List[str]]) -> pd.DataFrame:
+    def cpopg(self, id_cnj: str | list[str]) -> pd.DataFrame:
         """
         Consulta processos pelo numero CNJ (ou lista de numeros CNJ) via API nacional.
         """
@@ -188,7 +188,7 @@ class JusbrScraper(BaseScraper):
 
     def download_documents(self,
                            base_df: pd.DataFrame,
-                           max_docs_per_process: Optional[int] = None) -> pd.DataFrame:
+                           max_docs_per_process: int | None = None) -> pd.DataFrame:
         """
         Downloads document texts for processes in base_df.
         Iterates through processes in base_df, extracts document metadata from the

@@ -5,7 +5,6 @@ import logging
 import os
 import tempfile
 from abc import ABC
-from typing import Optional
 
 logger = logging.getLogger("juscraper.core.base")
 
@@ -28,7 +27,7 @@ class BaseScraper(ABC):
         """
         self.verbose = verbose
 
-    def set_download_path(self, path: Optional[str]) -> None:
+    def set_download_path(self, path: str | None) -> None:
         """Set the download path. If None, creates a temporary directory."""
         if path is None:
             path = tempfile.mkdtemp()

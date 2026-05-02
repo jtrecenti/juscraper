@@ -1,5 +1,4 @@
 """Scraper for the Tribunal de Justica do Rio Grande do Norte (TJRN)."""
-from typing import List, Optional, Union
 
 import pandas as pd
 import requests
@@ -40,18 +39,18 @@ class TJRNScraper(BaseScraper):
             "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
         })
 
-    def cpopg(self, id_cnj: Union[str, List[str]]):
+    def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJRN."""
         raise NotImplementedError("Consulta de processos de 1o grau nao implementada para TJRN.")
 
-    def cposg(self, id_cnj: Union[str, List[str]]):
+    def cposg(self, id_cnj: str | list[str]):
         """Stub: second instance case consultation not implemented for TJRN."""
         raise NotImplementedError("Consulta de processos de 2o grau nao implementada para TJRN.")
 
     def cjsg(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
         numero_processo: str = "",
         id_classe: str = "",
         id_orgao_julgador: str = "",
@@ -126,8 +125,8 @@ class TJRNScraper(BaseScraper):
 
     def cjsg_download(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
         numero_processo: str = "",
         id_classe: str = "",
         id_orgao_julgador: str = "",

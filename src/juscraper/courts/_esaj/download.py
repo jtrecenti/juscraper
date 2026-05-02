@@ -12,8 +12,8 @@ from __future__ import annotations
 import logging
 import os
 import time
+from collections.abc import Callable
 from datetime import datetime
-from typing import Callable, Optional
 
 import requests
 from bs4 import BeautifulSoup
@@ -56,7 +56,7 @@ def _extract_conversation_id(html: str) -> str:
 
 
 def _pages_to_fetch(
-    paginas: Optional["list | range | None"],
+    paginas: "list | range | None" | None,
     n_pags: int,
 ) -> list[int]:
     """Return the list of pages >1 that should still be fetched after page 1."""
@@ -70,7 +70,7 @@ def _pages_to_fetch(
     return [p for p in paginas if 1 < p <= n_pags]
 
 
-def _page1_in_range(paginas: Optional["list | range | None"]) -> bool:
+def _page1_in_range(paginas: "list | range | None" | None) -> bool:
     if paginas is None:
         return True
     if isinstance(paginas, range):
@@ -86,7 +86,7 @@ def download_cjsg_pages(
     download_path: str,
     body: dict,
     tipo_decisao: str,
-    paginas: Optional["list | range | None"],
+    paginas: "list | range | None" | None,
     get_n_pags_callback: Callable[[str], int],
     sleep_time: float = 1.0,
     chrome_ua: bool = False,

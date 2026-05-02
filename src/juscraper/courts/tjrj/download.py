@@ -5,7 +5,6 @@ import logging
 import math
 import re
 import time
-from typing import Optional
 
 import requests
 
@@ -41,8 +40,8 @@ def _build_form_data(
     origem: str,
     tipo_acordao: bool,
     tipo_monocratica: bool,
-    magistrado_codigo: Optional[str],
-    orgao_codigo: Optional[str],
+    magistrado_codigo: str | None,
+    orgao_codigo: str | None,
 ) -> dict:
     data = {
         "__EVENTTARGET": "ctl00$ContentPlaceHolder1$btnPesquisar",
@@ -81,14 +80,14 @@ def _build_form_data(
 def _init_session(
     session: requests.Session,
     pesquisa: str,
-    ano_inicio: Optional[str],
-    ano_fim: Optional[str],
+    ano_inicio: str | None,
+    ano_fim: str | None,
     competencia: str,
     origem: str,
     tipo_acordao: bool,
     tipo_monocratica: bool,
-    magistrado_codigo: Optional[str],
-    orgao_codigo: Optional[str],
+    magistrado_codigo: str | None,
+    orgao_codigo: str | None,
 ) -> None:
     """Submit the search form so the result XHR has a valid server session."""
     resp = session.get(FORM_URL, timeout=30)
@@ -131,14 +130,14 @@ def cjsg_download(
     session: requests.Session,
     pesquisa: str,
     paginas,
-    ano_inicio: Optional[str],
-    ano_fim: Optional[str],
+    ano_inicio: str | None,
+    ano_fim: str | None,
     competencia: str,
     origem: str,
     tipo_acordao: bool,
     tipo_monocratica: bool,
-    magistrado_codigo: Optional[str],
-    orgao_codigo: Optional[str],
+    magistrado_codigo: str | None,
+    orgao_codigo: str | None,
     sleep_time: float,
 ) -> list:
     """Run a TJRJ search and return the raw JSON page payloads."""

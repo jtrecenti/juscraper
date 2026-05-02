@@ -18,9 +18,8 @@ from __future__ import annotations
 import importlib
 import inspect
 import pkgutil
-from typing import Iterator
+from collections.abc import Iterator
 
-import pytest
 from pydantic import BaseModel
 
 PUBLIC_SEARCH_ENDPOINTS = ("cjsg", "cjpg")

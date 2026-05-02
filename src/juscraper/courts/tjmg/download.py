@@ -6,7 +6,6 @@ import math
 import re
 import time
 from pathlib import Path
-from typing import Optional
 
 import requests
 
@@ -133,7 +132,7 @@ def _fetch_page(session: requests.Session, params: dict) -> str:
     return resp.text
 
 
-def _extract_total(html: str) -> Optional[int]:
+def _extract_total(html: str) -> int | None:
     m = _MUITOS_RE.search(html)
     if m:
         raw = m.group(1).replace(".", "").replace(",", "")
