@@ -63,6 +63,7 @@ dev = [
     "isort>=5.12.0",
     "flake8>=6.0.0",
     "mypy>=1.0.0",
+    "ruff>=0.15.0",
     "types-requests>=2.32.0",
     "pre-commit>=3.0.0",
 ]
@@ -203,6 +204,19 @@ disable = [
     "f-string-without-interpolation",
     "consider-using-f-string",
     "use-dict-literal",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+extend-exclude = ["tests/*/samples"]
+
+[tool.ruff.lint]
+select = [
+    "UP006",  # PEP 585 (List -> list)
+    "UP007",  # PEP 604 (Union[X, Y] -> X | Y)
+    "UP035",  # deprecated import (typing.List -> builtins, etc.)
+    "UP045",  # PEP 604 (Optional[X] -> X | None)
 ]
 
 [tool.isort]

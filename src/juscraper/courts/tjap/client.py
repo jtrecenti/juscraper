@@ -1,16 +1,10 @@
 """Scraper for the Tribunal de Justica do Amapa (TJAP)."""
-from typing import List, Optional, Union
 
 import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import (
-    apply_input_pipeline_search,
-    normalize_paginas,
-    normalize_pesquisa,
-    resolve_deprecated_alias,
-)
+from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
@@ -33,18 +27,18 @@ class TJAPScraper(BaseScraper):
             "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
         })
 
-    def cpopg(self, id_cnj: Union[str, List[str]]):
+    def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJAP."""
         raise NotImplementedError("Consulta de processos de 1o grau nao implementada para TJAP.")
 
-    def cposg(self, id_cnj: Union[str, List[str]]):
+    def cposg(self, id_cnj: str | list[str]):
         """Stub: second instance case consultation not implemented for TJAP."""
         raise NotImplementedError("Consulta de processos de 2o grau nao implementada para TJAP.")
 
     def cjsg(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
         orgao: str = "0",
         numero_processo: str | None = None,
         numero_acordao: str | None = None,
@@ -109,8 +103,8 @@ class TJAPScraper(BaseScraper):
 
     def cjsg_download(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
         orgao: str = "0",
         numero_processo: str | None = None,
         numero_acordao: str | None = None,
@@ -136,14 +130,13 @@ class TJAPScraper(BaseScraper):
         numero_processo = resolve_deprecated_alias(
             kwargs, "numero_cnj", "numero_processo", numero_processo
         )
-        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-        paginas = normalize_paginas(paginas)
         inp = apply_input_pipeline_search(
             InputCJSGTJAP,
             "TJAPScraper.cjsg_download()",
             pesquisa=pesquisa,
             paginas=paginas,
             kwargs=kwargs,
+            consume_pesquisa_aliases=True,
             orgao=orgao,
             numero_processo=numero_processo,
             numero_acordao=numero_acordao,

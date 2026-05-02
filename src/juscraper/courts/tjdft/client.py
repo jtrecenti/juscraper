@@ -1,7 +1,6 @@
 """
 Module for the scraper of the Court of Justice of the Federal District and Territories (TJDFT).
 """
-from typing import List, Optional, Union
 
 import pandas as pd
 
@@ -21,18 +20,18 @@ class TJDFTScraper(BaseScraper):
     def __init__(self):
         super().__init__("TJDFT")
 
-    def cpopg(self, id_cnj: Union[str, List[str]]):
+    def cpopg(self, id_cnj: str | list[str]):
         """Stub for compatibility with BaseScraper."""
         raise NotImplementedError("TJDFT does not implement cpopg.")
 
-    def cposg(self, id_cnj: Union[str, List[str]]):
+    def cposg(self, id_cnj: str | list[str]):
         """Stub for compatibility with BaseScraper."""
         raise NotImplementedError("TJDFT does not implement cposg.")
 
     def cjsg_download(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
         sinonimos: bool = True,
         espelho: bool = True,
         inteiro_teor: bool = False,
@@ -87,8 +86,8 @@ class TJDFTScraper(BaseScraper):
 
     def cjsg(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """

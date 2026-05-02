@@ -6,12 +6,12 @@ Includes utilities for processing API responses and cleaning document texts.
 # Functions for parsing and cleaning results and documents from JUSBR
 
 import logging
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
-def parse_process_list_response(json_data: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def parse_process_list_response(json_data: dict[str, Any] | None) -> list[dict[str, Any]]:
     """
     Parses the JSON response from fetching the process list.
     Returns the list of process items under the 'content' key.
@@ -29,8 +29,8 @@ def parse_process_list_response(json_data: Optional[Dict[str, Any]]) -> List[Dic
     return processos_content
 
 
-def parse_process_details_response(json_data: Optional[Union[Dict[str, Any], List[Dict[str, Any]]]],
-                                   cnj_searched: str) -> Optional[Dict[str, Any]]:
+def parse_process_details_response(json_data: dict[str, Any] | list[dict[str, Any]] | None,
+                                   cnj_searched: str) -> dict[str, Any] | None:
     """
     Parses the JSON response for process details.
     Adds 'processo_pesquisado' to the data.
@@ -42,7 +42,7 @@ def parse_process_details_response(json_data: Optional[Union[Dict[str, Any], Lis
         )
         return None
 
-    details_dict: Optional[Dict[str, Any]] = None
+    details_dict: dict[str, Any] | None = None
 
     if isinstance(json_data, list):
         if json_data:  # Check if list is not empty
@@ -79,7 +79,7 @@ def parse_process_details_response(json_data: Optional[Union[Dict[str, Any], Lis
     return parsed_data
 
 
-def clean_document_text(text_content: Optional[str]) -> Optional[str]:
+def clean_document_text(text_content: str | None) -> str | None:
     """
     Cleans the raw text content of a document.
     """

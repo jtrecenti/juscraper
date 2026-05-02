@@ -1,7 +1,6 @@
 """
 Scraper for the Tribunal de Justica do Estado de Mato Grosso (TJMT).
 """
-from typing import List, Optional, Union
 
 import pandas as pd
 import requests
@@ -26,27 +25,27 @@ class TJMTScraper(BaseScraper):
             "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
         })
 
-    def cpopg(self, id_cnj: Union[str, List[str]]):
+    def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJMT."""
         raise NotImplementedError("Consulta de processos de 1 grau nao implementada para TJMT.")
 
-    def cposg(self, id_cnj: Union[str, List[str]]):
+    def cposg(self, id_cnj: str | list[str]):
         """Stub: second instance case consultation not implemented for TJMT."""
         raise NotImplementedError("Consulta de processos de 2 grau nao implementada para TJMT.")
 
     def cjsg_download(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
         tipo_consulta: str = "Acordao",
-        relator: Optional[str] = None,
-        orgao_julgador: Optional[str] = None,
-        classe: Optional[str] = None,
-        tipo_processo: Optional[str] = None,
+        relator: str | None = None,
+        orgao_julgador: str | None = None,
+        classe: str | None = None,
+        tipo_processo: str | None = None,
         thesaurus: bool = False,
         quantidade_por_pagina: int = 10,
-        data_julgamento_inicio: Optional[str] = None,
-        data_julgamento_fim: Optional[str] = None,
+        data_julgamento_inicio: str | None = None,
+        data_julgamento_fim: str | None = None,
         **kwargs,
     ) -> list:
         """Download raw JSON results from the TJMT jurisprudence API.
@@ -117,17 +116,17 @@ class TJMTScraper(BaseScraper):
 
     def cjsg(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
         tipo_consulta: str = "Acordao",
-        relator: Optional[str] = None,
-        orgao_julgador: Optional[str] = None,
-        classe: Optional[str] = None,
-        tipo_processo: Optional[str] = None,
+        relator: str | None = None,
+        orgao_julgador: str | None = None,
+        classe: str | None = None,
+        tipo_processo: str | None = None,
         thesaurus: bool = False,
         quantidade_por_pagina: int = 10,
-        data_julgamento_inicio: Optional[str] = None,
-        data_julgamento_fim: Optional[str] = None,
+        data_julgamento_inicio: str | None = None,
+        data_julgamento_fim: str | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Search TJMT jurisprudence (download + parse).

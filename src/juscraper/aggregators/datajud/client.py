@@ -7,7 +7,7 @@ import tempfile
 import time
 import warnings
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import pandas as pd
 import requests
@@ -42,9 +42,9 @@ class DatajudScraper(BaseScraper):
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         verbose: int = 1,
-        download_path: Optional[str] = None,  # For temporary files if needed
+        download_path: str | None = None,  # For temporary files if needed
         sleep_time: float = 0.5,
     ):
         super().__init__("DatajudAPI")
@@ -137,9 +137,9 @@ class DatajudScraper(BaseScraper):
 
         # ``tipos_movimentacao`` (nomes amigaveis) -> codigos TPU; uniao com
         # ``movimentos_codigo`` direto. Mesma logica de ``listar_processos``.
-        movimentos_codigo: Optional[List[int]] = None
+        movimentos_codigo: list[int] | None = None
         if inp.tipos_movimentacao or inp.movimentos_codigo:
-            codigos: List[int] = []
+            codigos: list[int] = []
             for tipo in inp.tipos_movimentacao or []:
                 codigos.extend(TIPOS_MOVIMENTACAO.get(tipo, []))
             codigos.extend(inp.movimentos_codigo or [])
@@ -148,7 +148,7 @@ class DatajudScraper(BaseScraper):
         # ``_resolve_aliases`` devolve uma list[(alias, cnjs_pra_esse_alias)]
         # — segue o mesmo padrão do ``listar_processos`` para que ``numero_processo``
         # cruzando vários tribunais funcione (cada tribunal recebe só os seus CNJs).
-        rows: List[Dict[str, Any]] = []
+        rows: list[dict[str, Any]] = []
         for alias, cnjs in target_aliases:
             payload = build_contar_processos_payload(
                 numero_processo=cnjs,
@@ -193,9 +193,9 @@ class DatajudScraper(BaseScraper):
     def _resolve_aliases(
         self,
         *,
-        tribunal: Optional[str],
-        numero_processo: Optional[Union[str, List[str]]],
-    ) -> List[tuple]:
+        tribunal: str | None,
+        numero_processo: str | list[str] | None,
+    ) -> list[tuple]:
         """Determina lista de ``(alias, cnjs_para_esse_alias)``.
 
         Mesma lógica usada por :meth:`listar_processos` — extraída pra ser
@@ -208,7 +208,7 @@ class DatajudScraper(BaseScraper):
                     f"Tribunal {tribunal!r} não encontrado nos mappings do DataJud. "
                     f"Verifique a sigla (ex: TJSP, TRT2, TRE-SP)."
                 )
-            cnjs: Optional[Union[str, List[str]]] = numero_processo
+            cnjs: str | list[str] | None = numero_processo
             return [(alias, cnjs)]
         if numero_processo:
             processos_por_alias = defaultdict(list)
@@ -247,7 +247,7 @@ class DatajudScraper(BaseScraper):
 
     def listar_processos(
         self,
-        paginas: Optional[Union[int, List[int], range]] = None,
+        paginas: int | list[int] | range | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Lista processos do DataJud via API publica do CNJ.
@@ -417,9 +417,9 @@ class DatajudScraper(BaseScraper):
         # recebe so a lista plana — mantemos o mapping numa unica camada.
         # Schema garantiu que cada nome em ``tipos_movimentacao`` esta em
         # ``TIPOS_MOVIMENTACAO``, entao o ``[]`` de fallback aqui e defesa.
-        movimentos_codigo: Optional[List[int]] = None
+        movimentos_codigo: list[int] | None = None
         if inp.tipos_movimentacao or inp.movimentos_codigo:
-            codigos: List[int] = []
+            codigos: list[int] = []
             for tipo in inp.tipos_movimentacao or []:
                 codigos.extend(TIPOS_MOVIMENTACAO.get(tipo, []))
             codigos.extend(inp.movimentos_codigo or [])
@@ -485,7 +485,7 @@ class DatajudScraper(BaseScraper):
         for alias_idx, alias_name in enumerate(target_aliases):
             logger.info("Consultando: %s (%d/%d)", alias_name, alias_idx+1, len(target_aliases))
             # If CNJs were grouped, use only the CNJs for this specific alias
-            current_cnjs_for_alias: Optional[Union[str, List[str]]]
+            current_cnjs_for_alias: str | list[str] | None
             if numero_processo and not tribunal:
                 current_cnjs_for_alias = processos_por_alias[alias_name]
             else:
@@ -515,24 +515,24 @@ class DatajudScraper(BaseScraper):
     def _listar_processos_por_alias(
         self,
         alias: str,
-        numero_processo: Optional[Union[str, List[str]]],
-        ano_ajuizamento: Optional[int],
-        classe: Optional[str],
-        assuntos: Optional[List[str]],
-        data_ajuizamento_inicio: Optional[str],
-        data_ajuizamento_fim: Optional[str],
-        movimentos_codigo: Optional[List[int]],
-        orgao_julgador: Optional[str],
-        query_override: Optional[dict],
+        numero_processo: str | list[str] | None,
+        ano_ajuizamento: int | None,
+        classe: str | None,
+        assuntos: list[str] | None,
+        data_ajuizamento_inicio: str | None,
+        data_ajuizamento_fim: str | None,
+        movimentos_codigo: list[int] | None,
+        orgao_julgador: str | None,
+        query_override: dict | None,
         mostrar_movs: bool,
-        paginas_range: Optional[range],
+        paginas_range: range | None,
         tamanho_pagina: int,
     ) -> pd.DataFrame:
         """Helper to fetch and parse data for a single alias with pagination."""
         dfs_alias = []
         current_page = paginas_range.start if paginas_range else 1
         end_page = paginas_range.stop if paginas_range else float('inf')
-        search_after_params: Optional[List[Any]] = None  # For deep pagination
+        search_after_params: list[Any] | None = None  # For deep pagination
 
         # Initialize tqdm progress bar
         if paginas_range:

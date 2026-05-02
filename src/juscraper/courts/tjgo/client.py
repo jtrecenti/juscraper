@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import List, Literal, Optional, Union
+from typing import Literal
 
 import pandas as pd
 import requests
@@ -39,15 +39,15 @@ class TJGOScraper(BaseScraper):
 
     def cjsg_download(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
         id_instancia: Literal[0, 1, 2, 3, "0", "1", "2", "3"] = 0,
         id_area: Literal[0, 1, 2, "0", "1", "2"] = 0,
-        id_serventia_subtipo: Union[str, int] = 0,
-        numero_processo: Optional[str] = None,
+        id_serventia_subtipo: str | int = 0,
+        numero_processo: str | None = None,
         qtde_itens_pagina: int = 10,
-        data_publicacao_inicio: Optional[str] = None,
-        data_publicacao_fim: Optional[str] = None,
+        data_publicacao_inicio: str | None = None,
+        data_publicacao_fim: str | None = None,
         **kwargs,
     ) -> list:
         """Run a TJGO search and return the raw HTML of each page.
@@ -109,12 +109,12 @@ class TJGOScraper(BaseScraper):
 
     def cjsg(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
         id_instancia: Literal[0, 1, 2, 3, "0", "1", "2", "3"] = 0,
         id_area: Literal[0, 1, 2, "0", "1", "2"] = 0,
-        id_serventia_subtipo: Union[str, int] = 0,
-        numero_processo: Optional[str] = None,
+        id_serventia_subtipo: str | int = 0,
+        numero_processo: str | None = None,
         qtde_itens_pagina: int = 10,
         **kwargs,
     ) -> pd.DataFrame:
@@ -168,11 +168,11 @@ class TJGOScraper(BaseScraper):
             **kwargs,
         ))
 
-    def cpopg(self, id_cnj: Union[str, List[str]]):
+    def cpopg(self, id_cnj: str | list[str]):
         """Stub: first degree case search not implemented for TJGO."""
         raise NotImplementedError("TJGO does not implement cpopg.")
 
-    def cposg(self, id_cnj: Union[str, List[str]]):
+    def cposg(self, id_cnj: str | list[str]):
         """Stub: second degree case search not implemented for TJGO."""
         raise NotImplementedError("TJGO does not implement cposg.")
 

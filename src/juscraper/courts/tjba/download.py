@@ -3,7 +3,6 @@ Downloads raw results from the TJBA jurisprudence search (GraphQL API).
 """
 import logging
 import time
-from typing import Optional
 
 import requests
 from tqdm import tqdm
@@ -48,12 +47,12 @@ query filter(
 
 def _build_filter(
     pesquisa: str = "",
-    numero_recurso: Optional[str] = None,
-    orgaos: Optional[list] = None,
-    relatores: Optional[list] = None,
-    classes: Optional[list] = None,
-    data_publicacao_inicio: Optional[str] = None,
-    data_publicacao_fim: Optional[str] = None,
+    numero_recurso: str | None = None,
+    orgaos: list | None = None,
+    relatores: list | None = None,
+    classes: list | None = None,
+    data_publicacao_inicio: str | None = None,
+    data_publicacao_fim: str | None = None,
     segundo_grau: bool = True,
     turmas_recursais: bool = True,
     tipo_acordaos: bool = True,
@@ -128,19 +127,19 @@ def _fetch_page(
 def cjsg_download(
     pesquisa: str = "",
     paginas=None,
-    numero_recurso: Optional[str] = None,
-    orgaos: Optional[list] = None,
-    relatores: Optional[list] = None,
-    classes: Optional[list] = None,
-    data_publicacao_inicio: Optional[str] = None,
-    data_publicacao_fim: Optional[str] = None,
+    numero_recurso: str | None = None,
+    orgaos: list | None = None,
+    relatores: list | None = None,
+    classes: list | None = None,
+    data_publicacao_inicio: str | None = None,
+    data_publicacao_fim: str | None = None,
     segundo_grau: bool = True,
     turmas_recursais: bool = True,
     tipo_acordaos: bool = True,
     tipo_decisoes_monocraticas: bool = True,
     ordenado_por: str = "dataPublicacao",
     items_per_page: int = 10,
-    session: Optional[requests.Session] = None,
+    session: requests.Session | None = None,
 ) -> list:
     """
     Download raw results from TJBA jurisprudence search (multiple pages).

@@ -1,7 +1,7 @@
 """
 Scraper for the Tribunal de Justica do Estado do Para (TJPA).
 """
-from typing import List, Literal, Optional, Union
+from typing import Literal
 
 import pandas as pd
 import requests
@@ -26,24 +26,24 @@ class TJPAScraper(BaseScraper):
             "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
         })
 
-    def cpopg(self, id_cnj: Union[str, List[str]]):
+    def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJPA."""
         raise NotImplementedError("Consulta de processos de 1o grau nao implementada para TJPA.")
 
-    def cposg(self, id_cnj: Union[str, List[str]]):
+    def cposg(self, id_cnj: str | list[str]):
         """Stub: second instance case consultation not implemented for TJPA."""
         raise NotImplementedError("Consulta de processos de 2o grau nao implementada para TJPA.")
 
     def cjsg_download(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
-        relator: Optional[str] = None,
-        orgao_julgador_colegiado: Optional[str] = None,
-        classe: Optional[str] = None,
-        assunto: Optional[str] = None,
-        origem: Optional[list] = None,
-        tipo: Optional[list] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
+        relator: str | None = None,
+        orgao_julgador_colegiado: str | None = None,
+        classe: str | None = None,
+        assunto: str | None = None,
+        origem: list | None = None,
+        tipo: list | None = None,
         sort_by: str = "datajulgamento",
         sort_order: Literal["asc", "desc"] = "desc",
         query_type: str = "free",
@@ -112,14 +112,14 @@ class TJPAScraper(BaseScraper):
 
     def cjsg(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
-        relator: Optional[str] = None,
-        orgao_julgador_colegiado: Optional[str] = None,
-        classe: Optional[str] = None,
-        assunto: Optional[str] = None,
-        origem: Optional[list] = None,
-        tipo: Optional[list] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
+        relator: str | None = None,
+        orgao_julgador_colegiado: str | None = None,
+        classe: str | None = None,
+        assunto: str | None = None,
+        origem: list | None = None,
+        tipo: list | None = None,
         sort_by: str = "datajulgamento",
         sort_order: Literal["asc", "desc"] = "desc",
         query_type: str = "free",

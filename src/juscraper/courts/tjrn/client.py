@@ -1,5 +1,4 @@
 """Scraper for the Tribunal de Justica do Rio Grande do Norte (TJRN)."""
-from typing import List, Optional, Union
 
 import pandas as pd
 import requests
@@ -40,27 +39,27 @@ class TJRNScraper(BaseScraper):
             "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
         })
 
-    def cpopg(self, id_cnj: Union[str, List[str]]):
+    def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJRN."""
         raise NotImplementedError("Consulta de processos de 1o grau nao implementada para TJRN.")
 
-    def cposg(self, id_cnj: Union[str, List[str]]):
+    def cposg(self, id_cnj: str | list[str]):
         """Stub: second instance case consultation not implemented for TJRN."""
         raise NotImplementedError("Consulta de processos de 2o grau nao implementada para TJRN.")
 
     def cjsg(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
-        numero_processo: Optional[str] = None,
-        id_classe: Optional[str] = None,
-        id_orgao_julgador: Optional[str] = None,
-        id_relator: Optional[str] = None,
-        id_colegiado: Optional[str] = None,
-        sistema: Optional[str] = None,
-        decisoes: Optional[str] = None,
-        jurisdicoes: Optional[str] = None,
-        grau: Optional[str] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
+        numero_processo: str | None = None,
+        id_classe: str | None = None,
+        id_orgao_julgador: str | None = None,
+        id_relator: str | None = None,
+        id_colegiado: str | None = None,
+        sistema: str | None = None,
+        decisoes: str | None = None,
+        jurisdicoes: str | None = None,
+        grau: str | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Busca jurisprudencia no TJRN.
@@ -126,17 +125,17 @@ class TJRNScraper(BaseScraper):
 
     def cjsg_download(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
-        numero_processo: Optional[str] = None,
-        id_classe: Optional[str] = None,
-        id_orgao_julgador: Optional[str] = None,
-        id_relator: Optional[str] = None,
-        id_colegiado: Optional[str] = None,
-        sistema: Optional[str] = None,
-        decisoes: Optional[str] = None,
-        jurisdicoes: Optional[str] = None,
-        grau: Optional[str] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
+        numero_processo: str | None = None,
+        id_classe: str | None = None,
+        id_orgao_julgador: str | None = None,
+        id_relator: str | None = None,
+        id_colegiado: str | None = None,
+        sistema: str | None = None,
+        decisoes: str | None = None,
+        jurisdicoes: str | None = None,
+        grau: str | None = None,
         **kwargs,
     ) -> list:
         """Download raw CJSG JSON responses from TJRN.

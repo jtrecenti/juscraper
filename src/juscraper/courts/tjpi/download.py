@@ -2,7 +2,6 @@
 import logging
 import re
 import time
-from typing import Optional
 
 import requests
 from tqdm import tqdm
@@ -94,7 +93,7 @@ def _get_total_pages(html: str) -> int:
 def cjsg_download_manager(
     pesquisa: str,
     paginas=None,
-    session: Optional[requests.Session] = None,
+    session: requests.Session | None = None,
     **kwargs,
 ) -> list:
     """Download raw HTML pages from the TJPI jurisprudence search.

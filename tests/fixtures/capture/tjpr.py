@@ -26,7 +26,6 @@ classifies each response by URL/scenario. Files produced:
 """
 from __future__ import annotations
 
-from typing import Optional
 from urllib.parse import parse_qs, urlparse
 
 import juscraper as jus
@@ -34,7 +33,7 @@ import juscraper as jus
 from ._util import samples_dir_for
 
 
-def _classify(url: str, kind: str, scenario: str, page_counter: dict[str, int]) -> Optional[str]:
+def _classify(url: str, kind: str, scenario: str, page_counter: dict[str, int]) -> str | None:
     """Pick the filename to use for the given response, or ``None`` to skip."""
     parsed = urlparse(url)
     params = parse_qs(parsed.query)

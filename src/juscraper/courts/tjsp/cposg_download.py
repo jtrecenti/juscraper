@@ -4,7 +4,6 @@ Downloads processes from the TJSP Consulta de Processos Originarios do Primeiro 
 import logging
 import os
 import time
-from typing import Optional
 from urllib.parse import parse_qs, urlparse
 
 import requests
@@ -90,7 +89,7 @@ def _cposg_download_html_single(id_cnj, session, u_base, download_path):
                 f.write(r_show.text)
     # Caso 3: resposta simples
     else:
-        codigo_simples: Optional[str] = None
+        codigo_simples: str | None = None
         input_cd = soup.find('input', {'name': 'cdProcesso'})
         if input_cd:
             value = input_cd.get('value')

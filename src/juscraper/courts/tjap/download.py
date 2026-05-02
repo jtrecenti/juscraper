@@ -5,7 +5,6 @@ Uses requests library only (no browser automation needed).
 import json
 import logging
 import time
-from typing import Optional
 
 import requests
 from tqdm import tqdm
@@ -94,7 +93,7 @@ def _fetch_page(session: requests.Session, payload: dict, max_retries: int = 3) 
 def cjsg_download_manager(
     pesquisa: str,
     paginas=None,
-    session: Optional[requests.Session] = None,
+    session: requests.Session | None = None,
     **kwargs,
 ) -> list:
     """Download raw results from the TJAP jurisprudence search (multiple pages).

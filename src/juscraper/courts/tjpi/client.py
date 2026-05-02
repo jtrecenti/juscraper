@@ -1,5 +1,4 @@
 """Scraper for the Tribunal de Justica do Piaui (TJPI)."""
-from typing import List, Optional, Union
 
 import pandas as pd
 import requests
@@ -28,22 +27,22 @@ class TJPIScraper(BaseScraper):
             "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
         })
 
-    def cpopg(self, id_cnj: Union[str, List[str]]):
+    def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJPI."""
         raise NotImplementedError("Consulta de processos de 1o grau nao implementada para TJPI.")
 
-    def cposg(self, id_cnj: Union[str, List[str]]):
+    def cposg(self, id_cnj: str | list[str]):
         """Stub: second instance case consultation not implemented for TJPI."""
         raise NotImplementedError("Consulta de processos de 2o grau nao implementada para TJPI.")
 
     def cjsg(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
-        tipo: Optional[str] = None,
-        relator: Optional[str] = None,
-        classe: Optional[str] = None,
-        orgao: Optional[str] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
+        tipo: str | None = None,
+        relator: str | None = None,
+        classe: str | None = None,
+        orgao: str | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Busca jurisprudencia no TJPI.
@@ -93,12 +92,12 @@ class TJPIScraper(BaseScraper):
 
     def cjsg_download(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
-        tipo: Optional[str] = None,
-        relator: Optional[str] = None,
-        classe: Optional[str] = None,
-        orgao: Optional[str] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
+        tipo: str | None = None,
+        relator: str | None = None,
+        classe: str | None = None,
+        orgao: str | None = None,
         **kwargs,
     ) -> list:
         """Download raw HTML pages from TJPI.

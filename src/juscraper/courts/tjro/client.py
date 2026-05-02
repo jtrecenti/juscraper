@@ -1,5 +1,4 @@
 """Scraper for the Tribunal de Justica de Rondonia (TJRO)."""
-from typing import List, Optional, Union
 
 import pandas as pd
 import requests
@@ -27,24 +26,24 @@ class TJROScraper(BaseScraper):
             "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
         })
 
-    def cpopg(self, id_cnj: Union[str, List[str]]):
+    def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJRO."""
         raise NotImplementedError("Consulta de processos de 1o grau nao implementada para TJRO.")
 
-    def cposg(self, id_cnj: Union[str, List[str]]):
+    def cposg(self, id_cnj: str | list[str]):
         """Stub: second instance case consultation not implemented for TJRO."""
         raise NotImplementedError("Consulta de processos de 2o grau nao implementada para TJRO.")
 
     def cjsg(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
         tipo: list | None = None,
-        numero_processo: Optional[str] = None,
-        relator: Optional[str] = None,
+        numero_processo: str | None = None,
+        relator: str | None = None,
         orgao_julgador: int | str | None = None,
         orgao_julgador_colegiado: int | str | None = None,
-        classe: Optional[str] = None,
+        classe: str | None = None,
         instancia: list | None = None,
         termo_exato: bool = False,
         **kwargs,
@@ -111,14 +110,14 @@ class TJROScraper(BaseScraper):
 
     def cjsg_download(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
         tipo: list | None = None,
-        numero_processo: Optional[str] = None,
-        relator: Optional[str] = None,
+        numero_processo: str | None = None,
+        relator: str | None = None,
         orgao_julgador: int | str | None = None,
         orgao_julgador_colegiado: int | str | None = None,
-        classe: Optional[str] = None,
+        classe: str | None = None,
         instancia: list | None = None,
         termo_exato: bool = False,
         **kwargs,

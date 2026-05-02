@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import List, Literal, Optional, Union
+from typing import Literal
 
 import pandas as pd
 import requests
@@ -41,15 +41,15 @@ class TJMGScraper(BaseScraper):
 
     def cjsg_download(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
         pesquisar_por: Literal["ementa", "acordao"] = "ementa",
         order_by: Literal[0, 1, 2, "0", "1", "2"] = 2,
         linhas_por_pagina: Literal[10, 20, 50] = 10,
-        data_julgamento_inicio: Optional[str] = None,
-        data_julgamento_fim: Optional[str] = None,
-        data_publicacao_inicio: Optional[str] = None,
-        data_publicacao_fim: Optional[str] = None,
+        data_julgamento_inicio: str | None = None,
+        data_julgamento_fim: str | None = None,
+        data_publicacao_inicio: str | None = None,
+        data_publicacao_fim: str | None = None,
         **kwargs,
     ) -> list:
         """Run a TJMG acórdão search and return the raw HTML of each page.
@@ -112,8 +112,8 @@ class TJMGScraper(BaseScraper):
 
     def cjsg(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
         pesquisar_por: Literal["ementa", "acordao"] = "ementa",
         order_by: Literal[0, 1, 2, "0", "1", "2"] = 2,
         linhas_por_pagina: Literal[10, 20, 50] = 10,
@@ -166,11 +166,11 @@ class TJMGScraper(BaseScraper):
             **kwargs,
         ))
 
-    def cpopg(self, id_cnj: Union[str, List[str]]):
+    def cpopg(self, id_cnj: str | list[str]):
         """Stub: first degree case search not implemented for TJMG."""
         raise NotImplementedError("TJMG does not implement cpopg.")
 
-    def cposg(self, id_cnj: Union[str, List[str]]):
+    def cposg(self, id_cnj: str | list[str]):
         """Stub: second degree case search not implemented for TJMG."""
         raise NotImplementedError("TJMG does not implement cposg.")
 

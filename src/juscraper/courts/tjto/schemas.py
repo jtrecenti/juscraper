@@ -1,17 +1,12 @@
 """Pydantic schemas for TJTO scraper endpoints.
 
-Ainda nao wired em :mod:`juscraper.courts.tjto.client` — este arquivo e
-documentacao executavel da API publica ate o TJTO ser refatorado para o
-pipeline canonico da #93. A lista de campos bate byte-a-byte com a
-assinatura publica dos metodos publicos de :class:`TJTOScraper`.
-
 ``cpopg`` e ``cposg`` do TJTO sao stubs ``NotImplementedError`` no client
 atual — por isso nao ganham schemas de Input/Output aqui.
 """
 from __future__ import annotations
 
 from datetime import date
-from typing import Literal
+from typing import ClassVar, Literal
 
 from pydantic import BaseModel, ConfigDict
 
@@ -21,13 +16,21 @@ from ...schemas import DataJulgamentoMixin, OutputCJSGBase, OutputRelatoriaMixin
 class InputCJSGTJTO(SearchBase, DataJulgamentoMixin):
     """Accepted input for TJTO ``cjsg`` / ``cjsg_download``.
 
+    Wired em :meth:`juscraper.courts.tjto.client.TJTOScraper.cjsg_download`
+    — kwargs desconhecidos viram :class:`TypeError` em ambos ``cjsg`` e
+    ``cjsg_download``. ``cjsg`` e wrapper trivial (``download → parse``).
+
     Endpoint HTML (``jurisprudencia.tjto.jus.br/consulta.php``). ``pesquisa``
     aceita os aliases deprecados ``query`` / ``termo`` via
     :func:`juscraper.utils.params.normalize_pesquisa`, que roda *antes* deste
     modelo. Datas aceitam os aliases ``data_inicio``/``data_fim`` via
     :func:`juscraper.utils.params.normalize_datas`. Filtro de data de
-    julgamento herdado de :class:`DataJulgamentoMixin`.
+    julgamento herdado de :class:`DataJulgamentoMixin`. Backend espera
+    ``DD/MM/YYYY`` (convertido por ``to_br_date`` em
+    :func:`juscraper.courts.tjto.download.build_cjsg_payload`).
     """
+
+    BACKEND_DATE_FORMAT: ClassVar[str] = "%d/%m/%Y"
 
     tipo_documento: Literal["acordaos", "decisoes", "sentencas"] = "acordaos"
     ordenacao: Literal["ASC", "DESC", "RELEV"] = "DESC"
@@ -62,7 +65,11 @@ class InputCJPGTJTO(SearchBase, DataJulgamentoMixin):
     A assinatura de ``cjpg`` e identica a de ``cjsg`` — a unica diferenca
     interna e ``instancia='1'`` em vez de ``'2'`` no download manager.
     Filtro de data de julgamento herdado de :class:`DataJulgamentoMixin`.
+    Backend espera ``DD/MM/YYYY`` (convertido por ``to_br_date`` em
+    :func:`juscraper.courts.tjto.download.build_cjsg_payload`).
     """
+
+    BACKEND_DATE_FORMAT: ClassVar[str] = "%d/%m/%Y"
 
     tipo_documento: Literal["acordaos", "decisoes", "sentencas"] = "acordaos"
     ordenacao: Literal["ASC", "DESC", "RELEV"] = "DESC"

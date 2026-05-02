@@ -1,7 +1,6 @@
 """
 Scraper for the Court of Justice of Paraná (TJPR).
 """
-from typing import List, Optional, Union
 
 import pandas as pd
 import requests
@@ -27,17 +26,17 @@ class TJPRScraper(BaseScraper):
     def __init__(self):
         super().__init__("TJPR")
         self.session = requests.Session()
-        self.token: Optional[str] = None
-        self.jsessionid: Optional[str] = None
+        self.token: str | None = None
+        self.jsessionid: str | None = None
 
     def cjsg_download(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
-        data_julgamento_inicio: Optional[str] = None,
-        data_julgamento_fim: Optional[str] = None,
-        data_publicacao_inicio: Optional[str] = None,
-        data_publicacao_fim: Optional[str] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
+        data_julgamento_inicio: str | None = None,
+        data_julgamento_fim: str | None = None,
+        data_publicacao_inicio: str | None = None,
+        data_publicacao_fim: str | None = None,
         **kwargs,
     ) -> list:
         """
@@ -70,7 +69,7 @@ class TJPRScraper(BaseScraper):
         )
         return brutos
 
-    def cjsg_parse(self, resultados_brutos: list, criterio: Optional[str] = None) -> pd.DataFrame:
+    def cjsg_parse(self, resultados_brutos: list, criterio: str | None = None) -> pd.DataFrame:
         """
         Extracts relevant data from the HTMLs returned by TJPR.
         Returns a DataFrame with the decisions.
@@ -80,12 +79,12 @@ class TJPRScraper(BaseScraper):
 
     def cjsg(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
-        data_julgamento_inicio: Optional[str] = None,
-        data_julgamento_fim: Optional[str] = None,
-        data_publicacao_inicio: Optional[str] = None,
-        data_publicacao_fim: Optional[str] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
+        data_julgamento_inicio: str | None = None,
+        data_julgamento_fim: str | None = None,
+        data_publicacao_inicio: str | None = None,
+        data_publicacao_fim: str | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """
@@ -115,10 +114,10 @@ class TJPRScraper(BaseScraper):
         )
         return self.cjsg_parse(brutos, pesquisa_resolved)
 
-    def cpopg(self, id_cnj: Union[str, List[str]]):
+    def cpopg(self, id_cnj: str | list[str]):
         """Stub: Primeiro grau case consultation not implemented for TJPR."""
         raise NotImplementedError("Consulta de processos de 1º grau não implementada para TJPR.")
 
-    def cposg(self, id_cnj: Union[str, List[str]]):
+    def cposg(self, id_cnj: str | list[str]):
         """Stub: Segundo grau case consultation not implemented for TJPR."""
         raise NotImplementedError("Consulta de processos de 2º grau não implementada para TJPR.")

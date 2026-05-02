@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import List, Optional, Union
 
 import pandas as pd
 import requests
@@ -46,8 +45,8 @@ class ComunicaCNJScraper(BaseScraper):
 
     def listar_comunicacoes(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Optional[Union[int, List[int], range]] = None,
+        pesquisa: str | None = None,
+        paginas: int | list[int] | range | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Lista comunicacoes processuais publicadas pelos tribunais via PJe.
