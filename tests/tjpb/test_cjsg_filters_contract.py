@@ -156,6 +156,13 @@ def test_cjsg_unknown_kwarg_raises():
         jus.scraper("tjpb").cjsg("dano moral", paginas=1, kwarg_inventado="x")
 
 
+def test_cjsg_download_unknown_kwarg_raises():
+    """``cjsg_download`` rejects unknown kwargs at the lower-level entry point
+    too — guards against silent drop when the caller skips :meth:`cjsg` (refs #183)."""
+    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
+        jus.scraper("tjpb").cjsg_download("dano moral", paginas=1, kwarg_inventado="x")
+
+
 @responses.activate
 def test_cjsg_post_filter_drops_rows_outside_data_julgamento_window(mocker):
     """Post-filter remove linhas com ``dt_ementa`` fora da janela.
