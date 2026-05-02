@@ -1,5 +1,5 @@
 """Scraper for the Tribunal de Justica da Paraiba (TJPB)."""
-from datetime import date
+from datetime import date, datetime
 from typing import List, Optional, Union
 
 import pandas as pd
@@ -18,14 +18,20 @@ from .parse import cjsg_parse_manager
 from .schemas import InputCJSGTJPB
 
 
-def _parse_br(d: str) -> date | None:
-    """Parse DD/MM/YYYY → date, tolerant to empty/None."""
+def _parse_backend_date(d: Optional[str]) -> Optional[date]:
+    """Parse a date string already coerced to ``InputCJSGTJPB.BACKEND_DATE_FORMAT``.
+
+    ``apply_input_pipeline_search`` runs ``coerce_brazilian_date`` against the
+    schema's ``BACKEND_DATE_FORMAT`` before instantiating the model, so values
+    on ``inp.data_julgamento_*`` are guaranteed to be either ``""``/``None`` or
+    a string in that format. Returns ``None`` for empty/malformed input so the
+    post-filter caller can short-circuit.
+    """
     if not d:
         return None
     try:
-        dd, mm, yy = d.split("/")
-        return date(int(yy), int(mm), int(dd))
-    except (ValueError, AttributeError):
+        return datetime.strptime(d, InputCJSGTJPB.BACKEND_DATE_FORMAT).date()
+    except (ValueError, TypeError):
         return None
 
 
@@ -128,8 +134,8 @@ class TJPBScraper(BaseScraper):
         # dt_ementa far outside the requested window. Post-filter so the
         # returned data_julgamento (= dt_ementa) matches user intent.
         if not df.empty and "data_julgamento" in df.columns:
-            start = _parse_br(inp.data_julgamento_inicio)
-            end = _parse_br(inp.data_julgamento_fim)
+            start = _parse_backend_date(inp.data_julgamento_inicio)
+            end = _parse_backend_date(inp.data_julgamento_fim)
             if start is not None and end is not None:
                 mask = df["data_julgamento"].between(start, end)
                 df = df[mask].reset_index(drop=True)

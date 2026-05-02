@@ -1,12 +1,16 @@
 """Filter-propagation contract for TJPB cjsg.
 
 The TJPB backend's release-date filter is ``dt_inicio``/``dt_fim`` inside
-``jurisprudencia``; ``normalize_datas`` keeps ISO ``yyyy-mm-dd`` so the
-matchers compare against ISO strings. The client also runs a post-filter
-on the parsed DataFrame against ``data_julgamento`` — for filter contracts
-we use the ``no_results`` sample so the post-filter is a no-op regardless
-of date ranges.
+``jurisprudencia``; ``apply_input_pipeline_search`` coerces user input to
+``InputCJSGTJPB.BACKEND_DATE_FORMAT`` (ISO ``yyyy-mm-dd``) before sending,
+so the matchers compare against ISO strings. The client also runs a
+post-filter on the parsed DataFrame against ``data_julgamento`` — most
+filter contracts use the ``no_results`` sample so the post-filter is a
+no-op regardless of date ranges; ``test_cjsg_post_filter_*`` exercises
+the post-filter end-to-end with ``single_page.json``.
 """
+from datetime import date
+
 import pandas as pd
 import pytest
 import responses
@@ -150,3 +154,43 @@ def test_cjsg_unknown_kwarg_raises():
     the field name, instead of being silently dropped (refs #84, #93, #165)."""
     with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
         jus.scraper("tjpb").cjsg("dano moral", paginas=1, kwarg_inventado="x")
+
+
+@responses.activate
+def test_cjsg_post_filter_drops_rows_outside_data_julgamento_window(mocker):
+    """Post-filter remove linhas com ``dt_ementa`` fora da janela.
+
+    O backend do TJPB filtra ``dt_inicio``/``dt_fim`` por uma data interna
+    de disponibilizacao (nao por ``dt_ementa``), entao o client aplica um
+    post-filter local sobre ``data_julgamento`` para honrar o intervalo do
+    usuario. ``single_page.json`` carrega 5 hits com ``dt_ementa`` em
+    23/09/2023, 24/09/2020, 17/07/2023, 17/07/2023 e 19/12/2025 — a janela
+    01/01/2023..31/12/2024 mantem 3 e descarta o de 2020 e o de 2025.
+
+    Cobre a regressao apontada na revisao do PR #169: como
+    ``InputCJSGTJPB`` declara ``BACKEND_DATE_FORMAT='%Y-%m-%d'``, o
+    pipeline coage ``inp.data_julgamento_*`` para ISO antes de chegar no
+    post-filter — o parser de datas do client tem que ler nesse formato.
+    """
+    mocker.patch("time.sleep")
+    _add_get_home()
+    responses.add(
+        responses.POST,
+        SEARCH_URL,
+        body=load_sample("tjpb", "cjsg/single_page.json"),
+        status=200,
+        content_type="application/json",
+        match=[json_params_matcher(build_cjsg_payload(
+            token=_TOKEN, pesquisa="usucapiao", page=1,
+            dt_inicio="2023-01-01", dt_fim="2024-12-31",
+        ))],
+    )
+
+    df = jus.scraper("tjpb").cjsg(
+        "usucapiao", paginas=1,
+        data_julgamento_inicio="01/01/2023",
+        data_julgamento_fim="31/12/2024",
+    )
+
+    assert len(df) == 3
+    assert all(date(2023, 1, 1) <= d <= date(2024, 12, 31) for d in df["data_julgamento"])
