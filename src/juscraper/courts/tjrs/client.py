@@ -7,7 +7,7 @@ import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import apply_input_pipeline_search, normalize_paginas, normalize_pesquisa
+from juscraper.utils.params import apply_input_pipeline_search
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
@@ -79,14 +79,13 @@ class TJRSScraper(BaseScraper):
                 None: downloads all available pages.
             secao: 'civel', 'crime', or None.
         """
-        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-        paginas = normalize_paginas(paginas)
         inp = apply_input_pipeline_search(
             InputCJSGTJRS,
             "TJRSScraper.cjsg_download()",
             pesquisa=pesquisa,
             paginas=paginas,
             kwargs=kwargs,
+            consume_pesquisa_aliases=True,
             data_julgamento_inicio=data_julgamento_inicio,
             data_julgamento_fim=data_julgamento_fim,
             data_publicacao_inicio=data_publicacao_inicio,
