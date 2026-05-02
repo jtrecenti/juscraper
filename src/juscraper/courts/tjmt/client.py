@@ -6,7 +6,7 @@ import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import apply_input_pipeline_search
+from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
 from .download import cjsg_download
 from .parse import cjsg_parse
@@ -43,7 +43,7 @@ class TJMTScraper(BaseScraper):
         classe: str | None = None,
         tipo_processo: str | None = None,
         thesaurus: bool = False,
-        quantidade_por_pagina: int = 10,
+        tamanho_pagina: int = 10,
         data_julgamento_inicio: str | None = None,
         data_julgamento_fim: str | None = None,
         **kwargs,
@@ -62,7 +62,8 @@ class TJMTScraper(BaseScraper):
             classe: Filter by case class.
             tipo_processo: ``"Civel"`` or ``"Criminal"``.
             thesaurus: Whether to use synonym search.
-            quantidade_por_pagina: Items per page (default 10).
+            tamanho_pagina: Items per page (default 10). Aceita
+                ``quantidade_por_pagina`` como alias deprecado.
             data_julgamento_inicio: Start date for filtering (``yyyy-mm-dd``).
             data_julgamento_fim: End date for filtering (``yyyy-mm-dd``).
 
@@ -70,6 +71,9 @@ class TJMTScraper(BaseScraper):
         / ``filtro.periodoDataAte``) applied to the judgment date; passing
         ``data_publicacao_*`` raises ``TypeError``.
         """
+        tamanho_pagina = resolve_deprecated_alias(
+            kwargs, "quantidade_por_pagina", "tamanho_pagina", tamanho_pagina, sentinel=10
+        )
         inp = apply_input_pipeline_search(
             InputCJSGTJMT,
             "TJMTScraper.cjsg_download()",
@@ -85,7 +89,7 @@ class TJMTScraper(BaseScraper):
             classe=classe,
             tipo_processo=tipo_processo,
             thesaurus=thesaurus,
-            quantidade_por_pagina=quantidade_por_pagina,
+            tamanho_pagina=tamanho_pagina,
         )
         return cjsg_download(
             pesquisa=inp.pesquisa,
@@ -98,7 +102,7 @@ class TJMTScraper(BaseScraper):
             classe=inp.classe,
             tipo_processo=inp.tipo_processo,
             thesaurus=inp.thesaurus,
-            quantidade_por_pagina=inp.quantidade_por_pagina,
+            quantidade_por_pagina=inp.tamanho_pagina,
             session=self.session,
         )
 
@@ -124,14 +128,15 @@ class TJMTScraper(BaseScraper):
         classe: str | None = None,
         tipo_processo: str | None = None,
         thesaurus: bool = False,
-        quantidade_por_pagina: int = 10,
+        tamanho_pagina: int = 10,
         data_julgamento_inicio: str | None = None,
         data_julgamento_fim: str | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Search TJMT jurisprudence (download + parse).
 
-        Returns a ready-to-analyze DataFrame.
+        Returns a ready-to-analyze DataFrame. Aceita ``quantidade_por_pagina``
+        como alias deprecado de ``tamanho_pagina``.
         """
         brutos = self.cjsg_download(
             pesquisa=pesquisa,
@@ -142,7 +147,7 @@ class TJMTScraper(BaseScraper):
             classe=classe,
             tipo_processo=tipo_processo,
             thesaurus=thesaurus,
-            quantidade_por_pagina=quantidade_por_pagina,
+            tamanho_pagina=tamanho_pagina,
             data_julgamento_inicio=data_julgamento_inicio,
             data_julgamento_fim=data_julgamento_fim,
             **kwargs,

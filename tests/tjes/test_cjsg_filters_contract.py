@@ -17,7 +17,7 @@ def test_cjsg_all_supported_filters_land_in_query_params(mocker):
         1,
         "cjsg/no_results.json",
         core="pje2g_mono",
-        per_page=5,
+        tamanho_pagina=5,
         busca_exata=True,
         data_inicio="2024-01-01",
         data_fim="2024-03-31",
@@ -33,7 +33,7 @@ def test_cjsg_all_supported_filters_land_in_query_params(mocker):
         "dano moral",
         paginas=1,
         core="pje2g_mono",
-        per_page=5,
+        tamanho_pagina=5,
         busca_exata=True,
         data_julgamento_inicio="2024-01-01",
         data_julgamento_fim="2024-03-31",
@@ -57,7 +57,7 @@ def test_cjpg_all_supported_filters_land_in_query_params(mocker):
         1,
         "cjpg/no_results.json",
         core="pje1g",
-        per_page=5,
+        tamanho_pagina=5,
         busca_exata=True,
         data_inicio="2024-01-01",
         data_fim="2024-03-31",
@@ -72,7 +72,7 @@ def test_cjpg_all_supported_filters_land_in_query_params(mocker):
     df = jus.scraper("tjes").cjpg(
         "obrigacao de fazer",
         paginas=1,
-        per_page=5,
+        tamanho_pagina=5,
         busca_exata=True,
         data_julgamento_inicio="2024-01-01",
         data_julgamento_fim="2024-03-31",
@@ -147,3 +147,43 @@ def test_cjpg_data_publicacao_raises_typeerror():
         "dano moral",
         paginas=1,
     )
+
+
+@responses.activate
+def test_cjsg_per_page_alias_emits_deprecation_warning(mocker):
+    """``per_page`` e alias deprecado de ``tamanho_pagina`` em cjsg (refs #211)."""
+    mocker.patch("time.sleep")
+    _add_page("dano moral", 1, "cjsg/no_results.json", tamanho_pagina=5)
+
+    with pytest.warns(DeprecationWarning, match="per_page.*deprecado"):
+        df = jus.scraper("tjes").cjsg("dano moral", paginas=1, per_page=5)
+
+    assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
+def test_cjpg_per_page_alias_emits_deprecation_warning(mocker):
+    """``per_page`` e alias deprecado de ``tamanho_pagina`` em cjpg (refs #211)."""
+    mocker.patch("time.sleep")
+    _add_page("dano moral", 1, "cjpg/no_results.json", core="pje1g", tamanho_pagina=5)
+
+    with pytest.warns(DeprecationWarning, match="per_page.*deprecado"):
+        df = jus.scraper("tjes").cjpg("dano moral", paginas=1, per_page=5)
+
+    assert isinstance(df, pd.DataFrame)
+
+
+def test_cjsg_tamanho_pagina_collision_raises():
+    """Passar canonico + alias simultaneamente levanta ValueError (refs #211)."""
+    with pytest.raises(ValueError, match=r"tamanho_pagina.*per_page"):
+        jus.scraper("tjes").cjsg(
+            "dano moral", paginas=1, tamanho_pagina=5, per_page=10
+        )
+
+
+def test_cjpg_tamanho_pagina_collision_raises():
+    """Mesmo que cjsg, mas para cjpg (refs #211)."""
+    with pytest.raises(ValueError, match=r"tamanho_pagina.*per_page"):
+        jus.scraper("tjes").cjpg(
+            "dano moral", paginas=1, tamanho_pagina=5, per_page=10
+        )

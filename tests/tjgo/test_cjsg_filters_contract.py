@@ -56,7 +56,7 @@ def test_cjsg_all_filters_land_in_form_body(mocker):
         id_area=1,
         id_serventia_subtipo=42,
         numero_processo="0000000-00.0000.0.00.0000",
-        qtde_itens_pagina=20,
+        tamanho_pagina=20,
         data_publicacao_inicio="2024-02-01",
         data_publicacao_fim="2024-04-30",
     )
@@ -146,6 +146,29 @@ def test_cjsg_download_data_julgamento_raises_typeerror():
             "dano moral",
             paginas=1,
             data_julgamento_inicio="2024-01-01",
+        )
+
+
+@responses.activate
+def test_cjsg_qtde_itens_pagina_alias_emits_deprecation_warning(mocker):
+    """``qtde_itens_pagina`` e alias deprecado de ``tamanho_pagina`` (refs #211)."""
+    mocker.patch("time.sleep")
+    _add_get_prime()
+    _add_post(build_cjsg_payload(pesquisa="dano moral", page=1, qtde_itens_pagina=20))
+
+    with pytest.warns(DeprecationWarning, match="qtde_itens_pagina.*deprecado"):
+        df = jus.scraper("tjgo").cjsg(
+            "dano moral", paginas=1, qtde_itens_pagina=20
+        )
+
+    assert isinstance(df, pd.DataFrame)
+
+
+def test_cjsg_tamanho_pagina_collision_raises():
+    """Passar canonico + alias simultaneamente levanta ValueError (refs #211)."""
+    with pytest.raises(ValueError, match=r"tamanho_pagina.*qtde_itens_pagina"):
+        jus.scraper("tjgo").cjsg(
+            "dano moral", paginas=1, tamanho_pagina=20, qtde_itens_pagina=30
         )
 
 

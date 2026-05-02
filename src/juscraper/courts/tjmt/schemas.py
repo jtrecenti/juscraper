@@ -42,7 +42,7 @@ class InputCJSGTJMT(SearchBase, DataJulgamentoMixin):
     classe: str | None = None
     tipo_processo: str | None = None
     thesaurus: bool = False
-    quantidade_por_pagina: int = Field(default=10, ge=1)
+    tamanho_pagina: int = Field(default=10, ge=1)
 
 
 class OutputCJSGTJMT(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):

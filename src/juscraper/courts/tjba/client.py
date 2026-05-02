@@ -6,7 +6,7 @@ import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import apply_input_pipeline_search
+from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
 from .download import cjsg_download
 from .parse import cjsg_parse
@@ -49,7 +49,7 @@ class TJBAScraper(BaseScraper):
         tipo_acordaos: bool = True,
         tipo_decisoes_monocraticas: bool = True,
         ordenado_por: str = "dataPublicacao",
-        items_per_page: int = 10,
+        tamanho_pagina: int = 10,
         session: requests.Session | None = None,
         **kwargs,
     ) -> list:
@@ -83,14 +83,18 @@ class TJBAScraper(BaseScraper):
             Include acordaos (default True).
         tipo_decisoes_monocraticas : bool
             Include monocratic decisions (default True).
-        items_per_page : int
-            Results per page (default 10).
+        tamanho_pagina : int
+            Results per page (default 10). Aceita ``items_per_page`` como
+            alias deprecado (emite ``DeprecationWarning``).
 
         Returns
         -------
         list
             List of raw GraphQL response dicts (one per page).
         """
+        tamanho_pagina = resolve_deprecated_alias(
+            kwargs, "items_per_page", "tamanho_pagina", tamanho_pagina, sentinel=10
+        )
         inp = apply_input_pipeline_search(
             InputCJSGTJBA,
             "TJBAScraper.cjsg_download()",
@@ -109,7 +113,7 @@ class TJBAScraper(BaseScraper):
             tipo_acordaos=tipo_acordaos,
             tipo_decisoes_monocraticas=tipo_decisoes_monocraticas,
             ordenado_por=ordenado_por,
-            items_per_page=items_per_page,
+            tamanho_pagina=tamanho_pagina,
         )
         return cjsg_download(
             pesquisa=inp.pesquisa,
@@ -125,7 +129,7 @@ class TJBAScraper(BaseScraper):
             tipo_acordaos=inp.tipo_acordaos,
             tipo_decisoes_monocraticas=inp.tipo_decisoes_monocraticas,
             ordenado_por=inp.ordenado_por,
-            items_per_page=inp.items_per_page,
+            items_per_page=inp.tamanho_pagina,
             session=session or self.session,
         )
 
@@ -160,7 +164,7 @@ class TJBAScraper(BaseScraper):
         tipo_acordaos: bool = True,
         tipo_decisoes_monocraticas: bool = True,
         ordenado_por: str = "dataPublicacao",
-        items_per_page: int = 10,
+        tamanho_pagina: int = 10,
         session: requests.Session | None = None,
         **kwargs,
     ) -> pd.DataFrame:
@@ -179,6 +183,9 @@ class TJBAScraper(BaseScraper):
             Start date (YYYY-MM-DD).
         data_publicacao_fim : str, optional
             End date (YYYY-MM-DD).
+        tamanho_pagina : int
+            Results per page (default 10). Aceita ``items_per_page`` como
+            alias deprecado.
 
         Returns
         -------
@@ -199,7 +206,7 @@ class TJBAScraper(BaseScraper):
             tipo_acordaos=tipo_acordaos,
             tipo_decisoes_monocraticas=tipo_decisoes_monocraticas,
             ordenado_por=ordenado_por,
-            items_per_page=items_per_page,
+            tamanho_pagina=tamanho_pagina,
             session=session,
             **kwargs,
         )

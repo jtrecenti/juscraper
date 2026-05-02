@@ -40,7 +40,7 @@ class InputCJSGTJBA(SearchBase, DataPublicacaoMixin):
     tipo_decisoes_monocraticas: bool = True
     # TODO (#212): apertar com Literal[...] após captura do GraphQL.
     ordenado_por: str = "dataPublicacao"
-    items_per_page: int = Field(default=10, ge=1)
+    tamanho_pagina: int = Field(default=10, ge=1)
 
 
 class OutputCJSGTJBA(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):

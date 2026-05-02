@@ -56,6 +56,7 @@ Piramide de testes (sufixos `*_contract.py` / `*_granular.py` / `*_cassette.py` 
 - **Excecao**: `DatajudScraper.listar_processos` filtra por `dataAjuizamento` (nao julgamento), entao usa `data_ajuizamento_inicio/fim` como nome canonico e **nao aceita** o alias generico `data_inicio/fim`. Quem tenta receber `TypeError` via `extra="forbid"`. Refs #49.
 - Nomes antigos (`query`, `termo`, `_de/_ate`) aceitos com `DeprecationWarning`
 - Paginacao: `paginas: int | list | range | None`, default `None` (todas as paginas). Sempre 1-based: `range(1, 4)` baixa paginas 1, 2 e 3; `paginas=3` e equivalente a `range(1, 4)`.
+- Tamanho de pagina: `tamanho_pagina` (default 10; **TJES=20** por particularidade do backend Elasticsearch). Aliases deprecados, um por tribunal: `items_per_page` (TJBA), `quantidade_por_pagina` (TJDFT, TJMT), `per_page` (TJES), `qtde_itens_pagina` (TJGO), `linhas_por_pagina` (TJMG). Cada client conhece so o seu alias — passar alias de outro tribunal cai em `TypeError`. Refs #211.
 - Normalizacao centralizada em `src/juscraper/utils/params.py`
 - **Validacao da API publica via pydantic com `extra="forbid"`**. Kwargs desconhecidos levantam `ValidationError` em vez de serem silenciosamente ignorados.
 

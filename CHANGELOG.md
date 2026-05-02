@@ -36,6 +36,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   - `magistrado` -> `relator`, `classe_judicial` -> `classe` em TJES (`cjsg` e `cjpg`) e TJRO (`cjsg`). Refs #129.
   - `classe_cnj` -> `classe`, `assunto_cnj` -> `assunto` em TJPE.
   - `id_classe_judicial` -> `id_classe` em TJRN e TJPB (`cjsg`), por simetria com `id_relator`/`id_orgao_julgador`/`id_colegiado`. Refs #129.
+- Tamanho de pagina ganha nome canonico `tamanho_pagina` em `cjsg`/`cjpg` dos 6 tribunais que expunham nomes divergentes; passar o alias antigo continua funcionando mas emite `DeprecationWarning`. Mapeamento: `items_per_page` (TJBA), `quantidade_por_pagina` (TJDFT, TJMT), `per_page` (TJES `cjsg`/`cjpg`), `qtde_itens_pagina` (TJGO), `linhas_por_pagina` (TJMG). Default permanece 10 em todos exceto TJES (20, por particularidade do backend Elasticsearch). Passar canonico + alias simultaneamente levanta `ValueError`. Refs #211.
 
 ### Removed
 

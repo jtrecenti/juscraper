@@ -18,7 +18,7 @@ def test_cjsg_all_supported_filters_land_in_query_params(mocker):
         "dano moral",
         1,
         "cjsg/filters_all.json",
-        quantidade_por_pagina=5,
+        tamanho_pagina=5,
         tipo_consulta="Acordao",
         data_julgamento_inicio="2024-01-01",
         data_julgamento_fim="2024-03-31",
@@ -31,7 +31,7 @@ def test_cjsg_all_supported_filters_land_in_query_params(mocker):
     df = jus.scraper("tjmt").cjsg(
         "dano moral",
         paginas=1,
-        quantidade_por_pagina=5,
+        tamanho_pagina=5,
         tipo_consulta="Acordao",
         data_julgamento_inicio="2024-01-01",
         data_julgamento_fim="2024-03-31",
@@ -126,3 +126,26 @@ def test_cjsg_data_publicacao_raises_typeerror():
         "dano moral",
         paginas=1,
     )
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_quantidade_por_pagina_alias_emits_deprecation_warning(mocker):
+    """``quantidade_por_pagina`` e alias deprecado de ``tamanho_pagina`` (refs #211)."""
+    mocker.patch("time.sleep")
+    _add_config()
+    _add_page("dano moral", 1, "cjsg/no_results.json", tamanho_pagina=5)
+
+    with pytest.warns(DeprecationWarning, match="quantidade_por_pagina.*deprecado"):
+        df = jus.scraper("tjmt").cjsg(
+            "dano moral", paginas=1, quantidade_por_pagina=5
+        )
+
+    assert isinstance(df, pd.DataFrame)
+
+
+def test_cjsg_tamanho_pagina_collision_raises():
+    """Passar canonico + alias simultaneamente levanta ValueError (refs #211)."""
+    with pytest.raises(ValueError, match=r"tamanho_pagina.*quantidade_por_pagina"):
+        jus.scraper("tjmt").cjsg(
+            "dano moral", paginas=1, tamanho_pagina=5, quantidade_por_pagina=10
+        )
