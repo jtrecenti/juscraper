@@ -1,5 +1,5 @@
 """Scraper for the Tribunal de Justica da Paraiba (TJPB)."""
-from datetime import date
+from datetime import date, datetime
 from typing import List, Optional, Union
 
 import pandas as pd
@@ -25,10 +25,21 @@ def _to_date(value, fallback: date) -> date:
     if not coerced or not isinstance(coerced, str):
         return fallback
     try:
-        dd, mm, yy = coerced.split("/")
-        return date(int(yy), int(mm), int(dd))
-    except (ValueError, AttributeError):
+        return datetime.strptime(coerced, "%d/%m/%Y").date()
+    except ValueError:
         return fallback
+
+
+def _first_present(kwargs: dict, *keys: str):
+    """Retorna o primeiro valor cuja key esta em ``kwargs`` (mesmo que vazio).
+
+    Distinto de ``or`` chain: trata ``""`` como valor explicito do usuario
+    (canonico empty vence alias preenchido), nao como "passa adiante".
+    """
+    for key in keys:
+        if key in kwargs:
+            return kwargs[key]
+    return None
 
 
 class TJPBScraper(BaseScraper):
@@ -116,16 +127,13 @@ class TJPBScraper(BaseScraper):
         """
         # Lookup passivo das datas para o post-filter local. Sem `pop` para
         # nao consumir aliases antes do pipeline em `cjsg_download`, que e
-        # quem valida e emite DeprecationWarning.
-        raw_inicio = (
-            kwargs.get("data_julgamento_inicio")
-            or kwargs.get("data_julgamento_de")
-            or kwargs.get("data_inicio")
+        # quem valida e emite DeprecationWarning. `_first_present` (em vez
+        # de `or` chain) preserva canonico empty contra alias preenchido.
+        raw_inicio = _first_present(
+            kwargs, "data_julgamento_inicio", "data_julgamento_de", "data_inicio"
         )
-        raw_fim = (
-            kwargs.get("data_julgamento_fim")
-            or kwargs.get("data_julgamento_ate")
-            or kwargs.get("data_fim")
+        raw_fim = _first_present(
+            kwargs, "data_julgamento_fim", "data_julgamento_ate", "data_fim"
         )
 
         brutos = self.cjsg_download(

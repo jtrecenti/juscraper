@@ -125,3 +125,55 @@ def test_postfilter_no_dates_is_noop(mocker):
     df = jus.scraper("tjpb").cjsg("dano moral", paginas=1)
 
     assert len(df) == 10  # all hits from the sample
+
+
+@responses.activate
+def test_postfilter_with_generic_alias(mocker):
+    """Refs #195: alias generico ``data_inicio`` deve disparar o post-filter.
+
+    O lookup passivo em ``cjsg`` precisa olhar os aliases deprecados
+    porque o pipeline so consome esses aliases dentro de ``cjsg_download``.
+    Sem esse lookup, o post-filter rodaria com bounds abertos em ambos os
+    lados quando o usuario passa um alias.
+    """
+    mocker.patch("time.sleep")
+    _stub_endpoints()
+
+    with pytest.warns(DeprecationWarning, match="data_inicio"):
+        df = jus.scraper("tjpb").cjsg(
+            "dano moral", paginas=1, data_inicio="01/01/2024"
+        )
+
+    assert len(df) == 6  # 2 from 2024 + 4 from 2025
+    assert df["data_julgamento"].min() >= date(2024, 1, 1)
+
+
+@responses.activate
+def test_postfilter_with_legacy_alias(mocker):
+    """Refs #195: alias antigo ``data_julgamento_de`` deve disparar o post-filter."""
+    mocker.patch("time.sleep")
+    _stub_endpoints()
+
+    with pytest.warns(DeprecationWarning, match="data_julgamento_de"):
+        df = jus.scraper("tjpb").cjsg(
+            "dano moral", paginas=1, data_julgamento_de="01/01/2024"
+        )
+
+    assert len(df) == 6
+    assert df["data_julgamento"].min() >= date(2024, 1, 1)
+
+
+def test_unknown_kwarg_fails_before_request(mocker):
+    """Kwargs desconhecidos devem virar TypeError antes de qualquer HTTP.
+
+    Salvaguarda contra regressoes da ordem ``validate -> download -> postfilter``:
+    se alguem mover a validacao para depois do download, o teste quebra
+    com ConnectionError em vez de TypeError. Sem ``@responses.activate``
+    nem ``_stub_endpoints()`` de proposito.
+    """
+    mocker.patch("time.sleep")
+
+    with pytest.raises(TypeError, match="filtro_inexistente"):
+        jus.scraper("tjpb").cjsg(
+            "dano moral", paginas=1, filtro_inexistente="x"
+        )
