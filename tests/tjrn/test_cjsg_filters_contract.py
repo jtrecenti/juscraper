@@ -180,3 +180,10 @@ def test_cjsg_alias_conflict_raises():
             "dano moral", paginas=1,
             numero_processo="X", nr_processo="Y",
         )
+
+
+def test_cjsg_download_unknown_kwarg_raises():
+    """``cjsg_download`` rejects unknown kwargs at the lower-level entry point
+    too — guards against silent drop when the caller skips :meth:`cjsg` (refs #183)."""
+    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
+        jus.scraper("tjrn").cjsg_download("dano moral", paginas=1, kwarg_inventado="x")
