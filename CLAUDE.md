@@ -194,11 +194,54 @@ A worktree compartilha o `.git/` do repo principal, entao branches/refs/objects 
 
 ## Changelog
 
-- Seguimos o padrao [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
-- Toda mudanca relevante deve ser registrada em `CHANGELOG.md` sob `[Unreleased]`. Categorias: Added, Changed, Deprecated, Removed, Fixed, Security
-- **Secoes de versoes ja lancadas (`## [0.2.1]`, `## [0.2.0]`, ...) sao imutaveis.** Toda entrada nova vai em `[Unreleased]`, mesmo que corrija algo introduzido na ultima versao.
-- **Antes de inserir uma entrada, confirme que ela cai *acima* do primeiro heading `## [x.y.z]` do arquivo.** Se `[Unreleased]` estiver sem subsecoes (`### Added/Changed/Fixed/...`), crie a subsecao necessaria.
-- **Todo commit de `feat:`, `fix:`, `refactor:` ou `deprecated:` com efeito observavel pelo usuario deve incluir a entrada em `[Unreleased]` no mesmo commit.** Mudancas puramente internas (testes, tipagem, rename de simbolo privado, docs) nao precisam.
+Seguimos o padrao [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Categorias: Added, Changed, Deprecated, Removed, Fixed, Security. Toda entrada nova vai em `[Unreleased]`, **acima** do primeiro `## [x.y.z]` — secoes de versoes ja lancadas sao imutaveis.
+
+### Filtro: o que entra
+
+Antes de adicionar uma entrada, pergunte: **"isso importa para alguem que so usa a API publica?"** Se a resposta for nao, nao entra.
+
+Em concreto, **NAO entra**:
+
+- Refactors internos sem mudanca de API publica (mover simbolo privado, renomear helper, extrair funcao, promover algo para `_<familia>/`).
+- Wiring de schema pydantic em si (a entrada relevante e o efeito observavel — "kwargs desconhecidos passam a levantar TypeError"; nao "schema X foi wired no metodo Y").
+- Testes, fixtures, samples, capture scripts, tooling (pre-commit, ruff, lint AST anti-drift, `pytest-mock`, marker novo).
+- Modernizacao de tipos (`Optional[X]` -> `X | None`, `Tuple` -> `tuple`), anotacoes `ClassVar`, mover constante de modulo para classe.
+- Remocao de dead code, `MANIFEST.in`, vestigios de setuptools.
+- Docs (`docs/`, `README.md`, `CLAUDE.md`, `CONTRIBUTING.md`, docstring), exceto quando uma docstring que estava enganando o usuario foi consertada.
+
+**Entra:**
+
+- Breaking changes (mudanca de coluna no DataFrame, alteracao de assinatura, exception substituindo retorno silencioso).
+- Endpoint, scraper ou agregador novo.
+- Filtro novo aceito pela API publica.
+- Bug que produzia resultado errado e visivel (filtro descartado, coluna ausente, parser quebrando, dependencia nova).
+- Deprecation de parametro/coluna (sempre com a tabela de aliases).
+
+### Granularidade: consolidar quando o mesmo efeito atinge N tribunais
+
+Mudancas que aterrissam em varios tribunais com o mesmo efeito visivel viram **uma unica entrada com lista de siglas**, nao N entradas. Vale especialmente para o refactor #84 (schema wired, datas polimorfas, `extra="forbid"`, kwargs viram `TypeError`).
+
+Bom (uma linha cobre 12 tribunais):
+
+```
+- Filtros de data nos endpoints com pydantic wired (TJSP, TJAC, TJAL, TJAM, TJCE, TJMS, TJDFT, TJES, TJBA, TJMT, TJAP, TJRS, TJPB, TJTO, TJPR, TJGO, TJRR, TJMG, TJRN, TJPA, TJRO, TJSC, TJPI) passam a aceitar `DD/MM/AAAA`, `DD-MM-AAAA`, `AAAA-MM-DD`, `AAAA/MM/DD` e `datetime.date`. Antes so `DD/MM/AAAA`.
+```
+
+Ruim (12 entradas dizendo a mesma coisa):
+
+```
+- TJSP cjsg: agora aceita 4 formatos de data
+- TJAC cjsg: agora aceita 4 formatos de data
+- TJAL cjsg: agora aceita 4 formatos de data
+- ...
+```
+
+Fragmentar so quando o efeito diverge entre tribunais (ex.: TJES rejeita `data_publicacao_*` com TypeError porque o backend so expoe `data_julgamento_*`; TJTO rejeita por outro motivo).
+
+### Timing
+
+- Em PR com varios commits, **uma unica entrada consolidada** (no commit principal ou no merge) e preferivel a uma entrada por commit. CHANGELOG nao e changelog de commits.
+- Mudancas puramente internas (lista acima) **nao precisam de entrada**, mesmo no commit que as introduz. Se na duvida, deixar de fora; reviewer pede para adicionar se julgar que importa.
 
 ## Documentacao
 
