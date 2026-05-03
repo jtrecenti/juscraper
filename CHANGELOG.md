@@ -7,6 +7,8 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-05-03
+
 ### Added
 
 - Novo agregador `comunica_cnj` (`ComunicaCNJScraper`) para a API publica de Comunicacoes Processuais do CNJ. Metodo publico `listar_comunicacoes(pesquisa, paginas=None, data_disponibilizacao_inicio=None, data_disponibilizacao_fim=None, itens_por_pagina=100)`. Datas aceitam ISO `YYYY-MM-DD` e `DD/MM/YYYY`. Validacao via pydantic com `extra="forbid"`.
