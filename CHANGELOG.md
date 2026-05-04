@@ -7,6 +7,10 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- Endpoints com pydantic wired (TJSP `cjsg`/`cjpg`; familia eSAJ `cjsg` em TJAC/TJAL/TJAM/TJCE/TJMS; `cjsg` em TJDFT/TJES/TJBA/TJMT/TJAP/TJRS/TJPB/TJTO/TJPR/TJGO/TJRR/TJMG/TJRN/TJPA/TJRO/TJSC/TJPI; `cjpg` em TJES/TJTO) passam a autopreencher datas parciais. Quando o usuario informa apenas `data_*_inicio`, `data_*_fim` vira a data atual; quando informa apenas `data_*_fim`, `data_*_inicio` vira `01/01/1990` (e o auto-chunk divide a janela em chunks de 366 dias). Antes, o backend recebia uma data vazia em um dos lados e podia retornar resultado degenerado — no `cjpg` do TJSP, em particular, o paginador iterava sobre dezenas de milhares de paginas. `UserWarning` e emitido sinalizando o auto-fill e sugerindo passar a data explicitamente para restringir a janela.
+
 ## [0.3.0] - 2026-05-03
 
 ### Added

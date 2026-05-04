@@ -127,7 +127,12 @@ def test_apply_input_pipeline_inicio_after_fim_raises_valueerror():
 
 
 def test_apply_input_pipeline_data_filter_on_schema_without_mixin_raises_typeerror():
-    """Schema sem mixin de data deve rejeitar kwargs de data como extra_forbidden."""
+    """Schema sem mixin de data deve rejeitar kwargs de data como extra_forbidden.
+
+    Auto-fill (refs bug TJSP cjpg) é gated por ``schema_cls.model_fields`` —
+    schemas sem ``DataJulgamentoMixin`` não disparam fill nem warning, deixam
+    o ``extra_forbidden`` virar ``TypeError`` direto.
+    """
     kwargs = {"data_julgamento_inicio": "01/01/2024"}
     with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'data_julgamento_inicio'"):
         apply_input_pipeline_search(
@@ -215,16 +220,37 @@ def test_apply_input_pipeline_paginas_none_passthrough():
     assert inp.paginas is None
 
 
-def test_apply_input_pipeline_single_bound_data_aceita():
-    """Single-bound (so inicio, fim=None) e no-op em validate_intervalo_datas."""
+def test_apply_input_pipeline_single_bound_data_autopreenche_fim():
+    """Só ``_inicio`` passado: pipeline preenche ``_fim=hoje`` (refs bug TJSP cjpg).
+
+    Antes o single-bound era no-op em ``validate_intervalo_datas`` e o
+    backend recebia ``dtFim=`` vazio, levando o paginador a iterar sobre
+    dezenas de milhares de páginas. Agora o auto-fill no pipeline preenche
+    ``_fim`` com a data atual e emite ``UserWarning``.
+    """
+    hoje = date.today().strftime("%d/%m/%Y")
     kwargs = {"data_julgamento_inicio": "01/01/2024"}
-    inp = apply_input_pipeline_search(
-        _SchemaComJulgamento, "Test.cjsg()",
-        pesquisa="x", paginas=1, kwargs=kwargs,
-        max_dias=366, origem_mensagem="O eSAJ",
-    )
+    with pytest.warns(UserWarning, match=r"data_julgamento_fim"):
+        inp = apply_input_pipeline_search(
+            _SchemaComJulgamento, "Test.cjsg()",
+            pesquisa="x", paginas=1, kwargs=kwargs,
+            # max_dias=None para o teste não esbarrar na janela de 366d
+            # (auto-fill preenche com hoje, e a janela 2024→hoje pode passar de 366d)
+        )
     assert inp.data_julgamento_inicio == "01/01/2024"
-    assert inp.data_julgamento_fim is None
+    assert inp.data_julgamento_fim == hoje
+
+
+def test_apply_input_pipeline_single_bound_data_fim_autopreenche_inicio():
+    """Só ``_fim`` passado: pipeline preenche ``_inicio="01/01/1990"``."""
+    kwargs = {"data_julgamento_fim": "31/12/2024"}
+    with pytest.warns(UserWarning, match=r"01/01/1990"):
+        inp = apply_input_pipeline_search(
+            _SchemaComJulgamento, "Test.cjsg()",
+            pesquisa="x", paginas=1, kwargs=kwargs,
+        )
+    assert inp.data_julgamento_inicio == "01/01/1990"
+    assert inp.data_julgamento_fim == "31/12/2024"
 
 
 def test_apply_input_pipeline_max_dias_none_aceita_janela_grande():

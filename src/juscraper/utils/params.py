@@ -381,6 +381,67 @@ def validate_intervalo_datas(
         )
 
 
+# Data-zero pragmática para o judiciário brasileiro digital: anterior à
+# informatização da maioria dos backends. Usada como ``data_*_inicio`` quando
+# o usuário informa apenas ``data_*_fim`` — em vez de amputar a janela, o
+# auto-chunk divide o intervalo e baixa tudo.
+OPEN_ENDED_DATE_FLOOR_BR = "01/01/1990"
+
+
+def fill_open_ended_dates(
+    datas: dict,
+    *,
+    formato: str = "%d/%m/%Y",
+    rotulo: str = "data_julgamento",
+) -> None:
+    """Preenche par ``data_<rotulo>_inicio/fim`` quando exatamente um lado é ``None``.
+
+    Mutação in-place. Idempotente: noop quando ambos preenchidos ou ambos
+    ``None``. Refs: bug do TJSP cjpg que enviava ``dadosConsulta.dtFim=``
+    vazio ao backend, fazendo o eSAJ retornar "tudo desde X até hoje" e o
+    paginador iterar sobre dezenas de milhares de páginas.
+
+    - Só ``_inicio``: ``_fim = data de hoje`` (no formato canônico).
+    - Só ``_fim``: ``_inicio = OPEN_ENDED_DATE_FLOOR_BR`` no formato
+      canônico (``"01/01/1990"`` em BR, ``"1990-01-01"`` em ISO).
+
+    Em ambos os casos emite :class:`UserWarning` orientando o usuário a
+    passar a data explicitamente para restringir a janela.
+
+    Args:
+        datas: Dict com as chaves ``data_<rotulo>_inicio`` e
+            ``data_<rotulo>_fim``. Mutado in-place.
+        formato: ``strftime`` format do backend (``"%d/%m/%Y"`` para eSAJ,
+            ``"%Y-%m-%d"`` para backends ISO). Default eSAJ.
+        rotulo: ``"data_julgamento"`` (default) ou ``"data_publicacao"``.
+    """
+    key_inicio = f"{rotulo}_inicio"
+    key_fim = f"{rotulo}_fim"
+    val_inicio = datas.get(key_inicio)
+    val_fim = datas.get(key_fim)
+
+    if val_inicio is None and val_fim is not None:
+        # Floor pragmático: 01/01/1990 no formato canônico do backend.
+        floor = datetime.strptime(OPEN_ENDED_DATE_FLOOR_BR, "%d/%m/%Y").strftime(formato)
+        datas[key_inicio] = floor
+        warnings.warn(
+            f"'{key_inicio}' não foi informada -- assumindo {floor!r}. Para "
+            f"restringir a busca, passe '{key_inicio}' explicitamente "
+            "(auto_chunk dividirá a janela em chunks de 366 dias).",
+            UserWarning,
+            stacklevel=2,
+        )
+    elif val_fim is None and val_inicio is not None:
+        hoje = date.today().strftime(formato)
+        datas[key_fim] = hoje
+        warnings.warn(
+            f"'{key_fim}' não foi informada -- assumindo {hoje!r} (data atual). "
+            f"Para buscar uma janela diferente, passe '{key_fim}' explicitamente.",
+            UserWarning,
+            stacklevel=2,
+        )
+
+
 def iter_date_windows(
     data_inicio: str | None,
     data_fim: str | None,
@@ -806,6 +867,23 @@ def apply_input_pipeline_search(
 
     for _key in DATE_CANONICAL:
         datas[_key] = coerce_brazilian_date(datas[_key], date_format)
+
+    # Auto-fill datas parciais antes da validação. Idempotente: para
+    # tribunais que passam por ``run_auto_chunk`` (família eSAJ + TJSP cjpg),
+    # o auto-chunk já preencheu antes do sniff e este é noop. Para os
+    # demais (TJES cjpg, TJTO cjpg, vários cjsg), este é o único ponto
+    # de auto-fill — e cobre ``data_publicacao``, que o auto-chunk não
+    # sniffa.
+    #
+    # Só dispara para schemas que declaram os campos correspondentes:
+    # schemas sem ``DataJulgamentoMixin`` (ou ``DataPublicacaoMixin``)
+    # rejeitarão a chave como ``extra_forbidden`` adiante; emitir warning
+    # antes desse erro seria ruído. Pre-checagem via ``model_fields``.
+    schema_field_names = set(schema_cls.model_fields.keys())
+    if {"data_julgamento_inicio", "data_julgamento_fim"}.issubset(schema_field_names):
+        fill_open_ended_dates(datas, formato=date_format, rotulo="data_julgamento")
+    if {"data_publicacao_inicio", "data_publicacao_fim"}.issubset(schema_field_names):
+        fill_open_ended_dates(datas, formato=date_format, rotulo="data_publicacao")
 
     validate_intervalo_datas(
         datas["data_julgamento_inicio"],
