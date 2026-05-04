@@ -99,15 +99,18 @@ class TRF5Scraper(BaseScraper):
         """Download the detail HTML for each ``id_cnj``.
 
         Returns a list aligned with the input order. ``None`` entries indicate
-        processes the public consultation could not return — typically sigilo
-        or invalid CNJ.
+        processes the public consultation could not return — typically sigilo,
+        invalid CNJ, ou qualquer erro transiente (rede, payload inesperado do
+        PJe, falha de extração de token). Falhas individuais não interrompem o
+        batch: o CNJ problemático vira ``None`` e o loop segue para o próximo,
+        igual ao padrão do TJSP.
         """
         cnjs = self._coerce_id_cnj(id_cnj, **kwargs)
         results: list[str | None] = []
         for i, cnj in enumerate(tqdm(cnjs, desc="TRF5 cpopg")):
             try:
                 results.append(self._fetch_one(cnj))
-            except requests.RequestException as exc:
+            except Exception as exc:  # noqa: BLE001 — resiliência por item
                 logger.warning("Erro ao consultar %s: %s", cnj, exc)
                 results.append(None)
             if i + 1 < len(cnjs) and self.sleep_time:
@@ -123,7 +126,10 @@ class TRF5Scraper(BaseScraper):
 
         Rows for ``None`` entries (process not found) carry ``id_cnj`` plus
         ``None`` in every other column, so callers can still distinguish
-        "looked up but missing" from "never tried".
+        "looked up but missing" from "never tried". Um HTML que sobreviveu ao
+        download mas falhou no parse vira o mesmo formato (linha só com
+        ``id_cnj``) e o batch continua — assim um erro pontual não derruba
+        a coleta inteira.
         """
         if len(htmls) != len(id_cnj_list):
             raise ValueError(
@@ -134,10 +140,15 @@ class TRF5Scraper(BaseScraper):
         for cnj, html in zip(id_cnj_list, htmls):
             if html is None:
                 rows.append({"id_cnj": cnj})
-            else:
+                continue
+            try:
                 record = parse_detail(html)
-                record["id_cnj"] = cnj
-                rows.append(record)
+            except Exception as exc:  # noqa: BLE001 — resiliência por item
+                logger.warning("Erro ao parsear detalhe de %s: %s", cnj, exc)
+                rows.append({"id_cnj": cnj})
+                continue
+            record["id_cnj"] = cnj
+            rows.append(record)
         return pd.DataFrame(rows)
 
     def cpopg(

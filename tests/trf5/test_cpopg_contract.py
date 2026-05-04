@@ -125,3 +125,79 @@ def test_cpopg_rejects_unknown_kwargs() -> None:
     scraper = jus.scraper("trf5", sleep_time=0)
     with pytest.raises(TypeError, match="unexpected keyword"):
         scraper.cpopg("00584573120254058000", magistrado="x")
+
+
+@responses.activate
+def test_cpopg_batch_continues_after_download_error() -> None:
+    """Erro de rede num CNJ não derruba o batch — vira linha só com ``id_cnj``."""
+    responses.add(
+        responses.GET,
+        LIST_URL,
+        body=load_sample("trf5", "cpopg/form_initial.html"),
+    )
+    responses.add(responses.POST, LIST_URL, body=ConnectionError("kaboom"))
+    responses.add(
+        responses.POST,
+        LIST_URL,
+        body=load_sample("trf5", "cpopg/search_one_result.html"),
+    )
+    responses.add(
+        responses.GET,
+        DETAIL_URL,
+        body=load_sample_bytes("trf5", "cpopg/detail_normal.html"),
+    )
+
+    scraper = jus.scraper("trf5", sleep_time=0)
+    df = scraper.cpopg(["00000000020994050000", "00584573120254058000"])
+    assert list(df["id_cnj"]) == ["00000000020994050000", "00584573120254058000"]
+    assert pd.isna(df.iloc[0].get("processo")) or df.iloc[0].get("processo") is None
+    assert df.iloc[1]["processo"] == "0058457-31.2025.4.05.8000"
+
+
+@responses.activate
+def test_cpopg_batch_continues_after_parse_error(monkeypatch) -> None:
+    """Erro no parser de um item vira linha só com ``id_cnj`` e o batch segue."""
+    responses.add(
+        responses.GET,
+        LIST_URL,
+        body=load_sample("trf5", "cpopg/form_initial.html"),
+    )
+    responses.add(
+        responses.POST,
+        LIST_URL,
+        body=load_sample("trf5", "cpopg/search_one_result.html"),
+    )
+    responses.add(
+        responses.GET,
+        DETAIL_URL,
+        body=load_sample_bytes("trf5", "cpopg/detail_normal.html"),
+    )
+    responses.add(
+        responses.POST,
+        LIST_URL,
+        body=load_sample("trf5", "cpopg/search_one_result.html"),
+    )
+    responses.add(
+        responses.GET,
+        DETAIL_URL,
+        body=load_sample_bytes("trf5", "cpopg/detail_normal.html"),
+    )
+
+    from juscraper.courts.trf5 import client as trf5_client
+
+    real_parse = trf5_client.parse_detail
+    calls = {"n": 0}
+
+    def flaky_parse(html):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise ValueError("HTML inesperado")
+        return real_parse(html)
+
+    monkeypatch.setattr(trf5_client, "parse_detail", flaky_parse)
+
+    scraper = jus.scraper("trf5", sleep_time=0)
+    df = scraper.cpopg(["00584573120254058000", "00584573120254058001"])
+    assert list(df["id_cnj"]) == ["00584573120254058000", "00584573120254058001"]
+    assert pd.isna(df.iloc[0].get("processo")) or df.iloc[0].get("processo") is None
+    assert df.iloc[1]["processo"] == "0058457-31.2025.4.05.8000"

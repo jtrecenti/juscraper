@@ -168,3 +168,83 @@ def test_cpopg_rejects_unknown_kwargs() -> None:
     scraper = jus.scraper("trf3", sleep_time=0)
     with pytest.raises(TypeError, match="unexpected keyword"):
         scraper.cpopg("50059460920254036324", filtro_inexistente="x")
+
+
+@responses.activate
+def test_cpopg_batch_continues_after_download_error() -> None:
+    """Erro de rede num CNJ não derruba o batch — vira linha só com ``id_cnj``."""
+    # GET form OK + 1 POST que dá ConnectionError + 1 POST OK + 1 GET detail OK.
+    responses.add(
+        responses.GET,
+        LIST_URL,
+        body=load_sample("trf3", "cpopg/form_initial.html"),
+    )
+    responses.add(responses.POST, LIST_URL, body=ConnectionError("kaboom"))
+    responses.add(
+        responses.POST,
+        LIST_URL,
+        body=load_sample("trf3", "cpopg/search_one_result.html"),
+    )
+    responses.add(
+        responses.GET,
+        DETAIL_URL,
+        body=load_sample_bytes("trf3", "cpopg/detail_normal.html"),
+    )
+
+    scraper = jus.scraper("trf3", sleep_time=0)
+    df = scraper.cpopg(["00000000020994030000", "50059460920254036324"])
+    assert list(df["id_cnj"]) == ["00000000020994030000", "50059460920254036324"]
+    # CNJ que falhou no download vira linha só com id_cnj.
+    assert pd.isna(df.iloc[0].get("processo")) or df.iloc[0].get("processo") is None
+    # CNJ que veio depois é parseado normalmente.
+    assert df.iloc[1]["processo"] == "5005946-09.2025.4.03.6324"
+
+
+@responses.activate
+def test_cpopg_batch_continues_after_parse_error(monkeypatch) -> None:
+    """Erro no parser de um item vira linha só com ``id_cnj`` e o batch segue."""
+    responses.add(
+        responses.GET,
+        LIST_URL,
+        body=load_sample("trf3", "cpopg/form_initial.html"),
+    )
+    responses.add(
+        responses.POST,
+        LIST_URL,
+        body=load_sample("trf3", "cpopg/search_one_result.html"),
+    )
+    responses.add(
+        responses.GET,
+        DETAIL_URL,
+        body=load_sample_bytes("trf3", "cpopg/detail_normal.html"),
+    )
+    responses.add(
+        responses.POST,
+        LIST_URL,
+        body=load_sample("trf3", "cpopg/search_one_result.html"),
+    )
+    responses.add(
+        responses.GET,
+        DETAIL_URL,
+        body=load_sample_bytes("trf3", "cpopg/detail_normal.html"),
+    )
+
+    # Faz o parser explodir só na primeira chamada.
+    from juscraper.courts.trf3 import client as trf3_client
+
+    real_parse = trf3_client.parse_detail
+    calls = {"n": 0}
+
+    def flaky_parse(html):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise ValueError("HTML inesperado")
+        return real_parse(html)
+
+    monkeypatch.setattr(trf3_client, "parse_detail", flaky_parse)
+
+    scraper = jus.scraper("trf3", sleep_time=0)
+    df = scraper.cpopg(["50059460920254036324", "50059460920254036325"])
+    assert list(df["id_cnj"]) == ["50059460920254036324", "50059460920254036325"]
+    assert pd.isna(df.iloc[0].get("processo")) or df.iloc[0].get("processo") is None
+    assert df.iloc[1]["processo"] == "5005946-09.2025.4.03.6324"
