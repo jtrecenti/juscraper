@@ -121,19 +121,16 @@ def test_auto_chunk_default_short_window_with_paginas_ok(tmp_path, mocker):
     assert kwargs["paginas"] == range(1, 3)
 
 
-def test_sniff_does_not_emit_deprecation_for_aliases(tmp_path, mocker):
-    """O sniff em ``cjsg()`` deve suprimir warnings para nao duplicar.
+def test_sniff_emite_um_deprecation_por_alias_no_caminho_noop(tmp_path, mocker):
+    """Cada alias passado vira exatamente 1 ``DeprecationWarning`` (não 2).
 
-    Antes do fix, o sniff em ``cjsg()`` chamava ``normalize_datas`` sem
-    suprimir warnings, e depois ``cjsg_download`` chamava ``normalize_datas``
-    de novo — o usuario recebia 2 warnings (um do sniff + um do download)
-    para o **mesmo** alias. Total: ``2 * num_aliases``.
-
-    Como aqui ``cjsg_download`` esta mockado (nao emite), qualquer
-    ``DeprecationWarning`` capturado vem **apenas** do sniff. O fix
-    silencia o sniff via ``warnings.catch_warnings`` — esperamos 0.
-
-    Sem o fix, viriam 2 (um por alias passado).
+    Antes do auto-fill, o ``run_auto_chunk`` silenciava o sniff e o
+    ``cjsg_download`` downstream emitia. Com o auto-fill (refs bug TJSP
+    cjpg), o caminho noop absorve aliases para evitar duplicação do
+    ``UserWarning`` e re-emite manualmente o ``DeprecationWarning``.
+    O efeito observável continua sendo 1 warning por alias — só muda
+    a fonte. Como ``cjsg_download`` está mockado, capturamos exatamente
+    os warnings do ``run_auto_chunk``.
     """
     _patch_pipeline(mocker)
     scraper = jus.scraper("tjsp", download_path=str(tmp_path))
@@ -150,11 +147,13 @@ def test_sniff_does_not_emit_deprecation_for_aliases(tmp_path, mocker):
         warning for warning in w
         if issubclass(warning.category, DeprecationWarning)
     ]
-    assert deprecation_warnings == [], (
-        f"Sniff em cjsg() emitiu {len(deprecation_warnings)} "
-        "DeprecationWarning(s); esperado 0 (silenciado por catch_warnings). "
-        "Sem o fix, viriam 2 (data_inicio + data_fim)."
-    )
+    aliases_passados = {"data_inicio", "data_fim"}
+    mensagens = [str(warning.message) for warning in deprecation_warnings]
+    for alias in aliases_passados:
+        assert sum(1 for m in mensagens if f"'{alias}'" in m) == 1, (
+            f"Esperado exatamente 1 DeprecationWarning para '{alias}', "
+            f"recebido: {mensagens}"
+        )
 
 
 def test_auto_chunk_not_propagated_to_download(tmp_path, mocker):

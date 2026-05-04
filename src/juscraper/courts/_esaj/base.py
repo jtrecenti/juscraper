@@ -25,6 +25,7 @@ from pydantic import BaseModel, ValidationError
 from ...core.base import BaseScraper
 from ...utils.params import (
     apply_input_pipeline_search,
+    fill_open_ended_dates,
     iter_date_windows,
     normalize_datas,
     normalize_pesquisa,
@@ -84,15 +85,61 @@ def run_auto_chunk(
 
     # Suprimir DeprecationWarning aqui evita duplicacao quando o caminho
     # *_download chamar normalize_datas/normalize_pesquisa de novo.
+    # ``fill_open_ended_dates`` emite ``UserWarning`` (categoria diferente),
+    # que passa pelo filtro acima e chega ao usuário. Auto-fill ANTES de
+    # ``iter_date_windows``: se ``_inicio`` chega ``None`` com ``_fim``
+    # preenchido, sem o fill ``iter_date_windows`` faria passthrough e o
+    # auto-chunk pularia exatamente o caso que precisa dividir.
+    date_format = getattr(input_cls, "BACKEND_DATE_FORMAT", "%d/%m/%Y")
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", DeprecationWarning)
         sniff = normalize_datas(**kwargs)
 
-        dj_i = sniff["data_julgamento_inicio"]
-        dj_f = sniff["data_julgamento_fim"]
-        windows = list(iter_date_windows(dj_i, dj_f, max_dias=366))
-        if len(windows) <= 1:
-            return None
+    # Auto-fill fora do ``catch_warnings`` para que ``UserWarning`` chegue.
+    fill_open_ended_dates(sniff, formato=date_format, rotulo="data_julgamento")
+
+    dj_i = sniff["data_julgamento_inicio"]
+    dj_f = sniff["data_julgamento_fim"]
+    windows = list(iter_date_windows(dj_i, dj_f, max_dias=366))
+    if len(windows) <= 1:
+        # Caminho noop: o caller cai em ``cjpg_download`` direto, e o
+        # ``apply_input_pipeline_search`` lá faria seu próprio auto-fill,
+        # duplicando o warning. Propaga o ``sniff`` canonicalizado para
+        # ``kwargs`` para que o pipeline downstream veja ambas datas
+        # preenchidas e seu auto-fill vire noop. Como ``normalize_datas``
+        # rodou sob ``catch_warnings`` (silenciou ``DeprecationWarning``)
+        # e popou os aliases, re-emitimos manualmente aqui o warning para
+        # cada alias que estava em ``kwargs`` original — preservando o
+        # contrato do ``normalize_datas`` downstream que esperava esse
+        # warning.
+        _alias_to_canonical = {
+            "data_julgamento_de": "data_julgamento_inicio",
+            "data_julgamento_ate": "data_julgamento_fim",
+            "data_publicacao_de": "data_publicacao_inicio",
+            "data_publicacao_ate": "data_publicacao_fim",
+            "data_inicio": "data_julgamento_inicio",
+            "data_fim": "data_julgamento_fim",
+        }
+        for _alias, _canonical in _alias_to_canonical.items():
+            if _alias in kwargs:
+                warnings.warn(
+                    f"O parâmetro '{_alias}' está deprecado. Use '{_canonical}' em vez disso.",
+                    DeprecationWarning,
+                    stacklevel=3,
+                )
+                kwargs.pop(_alias)
+        kwargs["data_julgamento_inicio"] = dj_i
+        kwargs["data_julgamento_fim"] = dj_f
+        # data_publicacao não é tocado pelo auto-chunk; seus aliases já
+        # foram limpos no loop acima e os valores canonicais (se houver)
+        # estão em ``sniff`` — propagar:
+        for _key in ("data_publicacao_inicio", "data_publicacao_fim"):
+            if sniff.get(_key) is not None:
+                kwargs[_key] = sniff[_key]
+        return None
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
 
         # Detectar conflito pesquisa + alias deprecado ANTES de
         # pop_normalize_aliases, que descartaria o alias silentemente. cjpg
