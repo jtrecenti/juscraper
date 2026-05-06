@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="pt" xml:lang="pt"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.26">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>PDPJ - DATALAKE de Processos – juscraper</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../notebooks/jusbr.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-bce56a8797285a143a31a7a522035b36.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "Nenhum resultado",
+    "search-matching-documents-text": "documentos correspondentes",
+    "search-copy-link-title": "Copiar link para a busca",
+    "search-hide-matches-text": "Esconder correspondências adicionais",
+    "search-more-match-text": "mais correspondência neste documento",
+    "search-more-matches-text": "mais correspondências neste documento",
+    "search-clear-button-title": "Limpar",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancelar",
+    "search-submit-button-title": "Enviar",
+    "search-label": "Procurar"
+  }
+}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+
+<link rel="stylesheet" href="reference/_styles-quartodoc.css">
+</head>
+
+<body class="nav-sidebar floating nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">juscraper</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Procurar"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Alternar de navegação" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link active" href="../index.html" aria-current="page"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../reference/index.html"> 
+<span class="menu-text">Referência da API</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/jtrecenti/juscraper"> <i class="bi bi-github" role="img" aria-label="GitHub repository">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Exemplos</li><li class="breadcrumb-item"><a href="../notebooks/datajud.html">Agregadores</a></li><li class="breadcrumb-item"><a href="../notebooks/pdpj.html">PDPJ</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Home</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../reference/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Referência da API</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Exemplos</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Alternar seção">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false">
+ <span class="menu-text">Tribunais</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false" aria-label="Alternar seção">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjac.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJAC</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjal.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJAL</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjam.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJAP</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjce.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJCE</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjba.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJBA</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjdft.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJDFT</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjgo.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJGO</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjmt.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJMT</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjpa.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJPA</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjpb.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJPB</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjpe.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJPE</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjpi.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJPI</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjpr.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJPR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjrn.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJRN</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJRO</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjrr.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJRR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjrj.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJRJ</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjrs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJRS</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjsc.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJSC</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJES</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjto.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJTO</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjmg.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJMG</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJMS</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjsp.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJSP</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/trf3.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TRF3</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/trf5.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TRF5</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Agregadores</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Alternar seção">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/datajud.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Datajud</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/jusbr.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Jus.br</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/pdpj.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">PDPJ</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Nesta página</h2>
+   
+  <ul>
+  <li><a href="#sumario" id="toc-sumario" class="nav-link active" data-scroll-target="#sumario">Sumario</a></li>
+  <li><a href="#como-obter-o-token-jwt" id="toc-como-obter-o-token-jwt" class="nav-link" data-scroll-target="#como-obter-o-token-jwt"></a><a id="autenticacao" class="nav-link" data-scroll-target="undefined"></a>Como obter o token JWT</li>
+  <li><a href="#verificar-se-um-processo-existe" id="toc-verificar-se-um-processo-existe" class="nav-link" data-scroll-target="#verificar-se-um-processo-existe"></a><a id="existe" class="nav-link" data-scroll-target="undefined"></a>Verificar se um processo existe</li>
+  <li><a href="#detalhes-do-processo" id="toc-detalhes-do-processo" class="nav-link" data-scroll-target="#detalhes-do-processo"></a><a id="cpopg" class="nav-link" data-scroll-target="undefined"></a>Detalhes do processo
+  <ul class="collapse">
+  <li><a href="#multiplos-processos-de-uma-vez" id="toc-multiplos-processos-de-uma-vez" class="nav-link" data-scroll-target="#multiplos-processos-de-uma-vez">Multiplos processos de uma vez</a></li>
+  </ul></li>
+  <li><a href="#documentos-movimentos-e-partes" id="toc-documentos-movimentos-e-partes" class="nav-link" data-scroll-target="#documentos-movimentos-e-partes"></a><a id="sub-recursos" class="nav-link" data-scroll-target="undefined"></a>Documentos, movimentos e partes</li>
+  <li><a href="#busca-profunda-pesquisa-e-contagem-contar" id="toc-busca-profunda-pesquisa-e-contagem-contar" class="nav-link" data-scroll-target="#busca-profunda-pesquisa-e-contagem-contar"></a><a id="pesquisa" class="nav-link" data-scroll-target="undefined"></a>Busca profunda (<code>pesquisa</code>) e contagem (<code>contar</code>)
+  <ul class="collapse">
+  <li><a href="#validacao-de-kwargs" id="toc-validacao-de-kwargs" class="nav-link" data-scroll-target="#validacao-de-kwargs">Validacao de kwargs</a></li>
+  </ul></li>
+  <li><a href="#baixando-textos-e-binarios-dos-documentos" id="toc-baixando-textos-e-binarios-dos-documentos" class="nav-link" data-scroll-target="#baixando-textos-e-binarios-dos-documentos"></a><a id="download" class="nav-link" data-scroll-target="undefined"></a>Baixando textos e binarios dos documentos</li>
+  <li><a href="#persistindo-em-disco" id="toc-persistindo-em-disco" class="nav-link" data-scroll-target="#persistindo-em-disco">Persistindo em disco</a></li>
+  <li><a href="#erros-comuns" id="toc-erros-comuns" class="nav-link" data-scroll-target="#erros-comuns">Erros comuns</a></li>
+  <li><a href="#referencia-rapida-da-api-publica" id="toc-referencia-rapida-da-api-publica" class="nav-link" data-scroll-target="#referencia-rapida-da-api-publica">Referencia rapida da API publica</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.dev/jtrecenti/juscraper/blob/main/docs/notebooks/pdpj.ipynb" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Exemplos</li><li class="breadcrumb-item"><a href="../notebooks/datajud.html">Agregadores</a></li><li class="breadcrumb-item"><a href="../notebooks/pdpj.html">PDPJ</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">PDPJ - DATALAKE de Processos</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Este notebook demonstra como usar o agregador <code>pdpj</code> do <code>juscraper</code> para consultar a <a href="https://api-processo-integracao.data-lake.pdpj.jus.br/processo-api/swagger-ui.html">API DATALAKE - API Processos do PDPJ</a>. A API e parecida com a do Jus.br: requer um JWT no header <code>Authorization: Bearer &lt;token&gt;</code>, mas expoe varios endpoints documentados (busca profunda com filtros, contagem, partes, movimentos, documentos, texto e binario).</p>
+<section id="sumario" class="level2">
+<h2 class="anchored" data-anchor-id="sumario">Sumario</h2>
+<ol type="1">
+<li><a href="#autenticacao">Autenticacao</a></li>
+<li><a href="#existe">Verificar se um processo existe (<code>existe</code>)</a></li>
+<li><a href="#cpopg">Detalhes de um processo (<code>cpopg</code>)</a></li>
+<li><a href="#sub-recursos">Documentos, movimentos e partes</a></li>
+<li><a href="#pesquisa">Busca profunda (<code>pesquisa</code> / <code>contar</code>)</a></li>
+<li><a href="#download">Download dos textos e binarios (<code>download_documents</code>)</a></li>
+</ol>
+</section>
+<section id="como-obter-o-token-jwt" class="level2">
+<h2 class="anchored" data-anchor-id="como-obter-o-token-jwt"><a id="autenticacao"></a>Como obter o token JWT</h2>
+<ol type="1">
+<li>Acesse <a href="https://www.jus.br" class="uri">https://www.jus.br</a> e faca login com gov.br.</li>
+<li>Entre em <a href="https://portaldeservicos.pdpj.jus.br/consulta" class="uri">https://portaldeservicos.pdpj.jus.br/consulta</a>.</li>
+<li>Abra a aba <strong>Network</strong> do navegador (F12) e atualize a pagina (F5).</li>
+<li>Procure a requisicao <code>token</code> (POST), clique nela.</li>
+<li>Na aba <strong>Resposta</strong>, copie o valor de <code>access_token</code> – esse e o JWT.</li>
+</ol>
+<blockquote class="blockquote">
+<p>O token expira em algumas horas. Para uso interativo, prefira coloca-lo em variavel de ambiente (<code>JUSCRAPER_PDPJ_TOKEN</code>).</p>
+</blockquote>
+<div id="c48112a1" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-05-06T16:58:03.348348Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-05-06T16:58:03.348039Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-06T16:58:03.950993Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-06T16:58:03.950511Z&quot;}" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> getpass <span class="im">import</span> getpass</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>pdpj <span class="op">=</span> jus.scraper(<span class="st">"pdpj"</span>, sleep_time<span class="op">=</span><span class="fl">0.2</span>, verbose<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>token <span class="op">=</span> os.environ.get(<span class="st">"JUSCRAPER_PDPJ_TOKEN"</span>) <span class="kw">or</span> getpass(<span class="st">"Cole o JWT do PDPJ: "</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>pdpj.auth(token<span class="op">=</span>token)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="1">
+<pre><code>True</code></pre>
+</div>
+</div>
+</section>
+<section id="verificar-se-um-processo-existe" class="level2">
+<h2 class="anchored" data-anchor-id="verificar-se-um-processo-existe"><a id="existe"></a>Verificar se um processo existe</h2>
+<p>O endpoint <code>/existe</code> aceita um CNJ (com ou sem mascara) e devolve <code>True</code>/<code>False</code>. O scraper aceita string (retorna <code>bool</code>) ou lista (retorna DataFrame).</p>
+<div id="daf3499c" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-05-06T16:58:03.952871Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-05-06T16:58:03.952526Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-06T16:58:04.440775Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-06T16:58:04.440054Z&quot;}" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>pdpj.existe(<span class="st">"10029886420194014100"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="2">
+<pre><code>True</code></pre>
+</div>
+</div>
+<div id="7ad31aba" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-05-06T16:58:04.442424Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-05-06T16:58:04.442169Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-06T16:58:05.176758Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-06T16:58:05.176357Z&quot;}" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>pdpj.existe([</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"10029886420194014100"</span>,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"50211226520184036100"</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"00000000000000000000"</span>,  <span class="co"># nao existe</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="3">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">processo</th>
+<th data-quarto-table-cell-role="th">existe</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>10029886420194014100</td>
+<td>True</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>50211226520184036100</td>
+<td>True</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>00000000000000000000</td>
+<td>True</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="detalhes-do-processo" class="level2">
+<h2 class="anchored" data-anchor-id="detalhes-do-processo"><a id="cpopg"></a>Detalhes do processo</h2>
+<p><code>cpopg(id_cnj)</code> chama <code>GET /processos/{numeroProcesso}</code> e devolve um DataFrame. Cada linha tem:</p>
+<ul>
+<li><code>processo</code>: CNJ pesquisado (so digitos)</li>
+<li><code>numero_processo</code>: CNJ formatado pela API (<code>NNNNNNN-DD.AAAA.J.TR.OOOO</code>)</li>
+<li><code>sigla_tribunal</code>, <code>segmento_justica</code>, <code>nivel_sigilo</code>, <code>data_atualizacao</code></li>
+<li><code>detalhes</code>: dict completo da resposta (tramitacoes, classes, assuntos, partes etc.)</li>
+</ul>
+<div id="2ac43502" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-05-06T16:58:05.178082Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-05-06T16:58:05.177841Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-06T16:58:05.427708Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-06T16:58:05.426953Z&quot;}" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pdpj.cpopg(<span class="st">"1002988-64.2019.4.01.4100"</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>df[[<span class="st">"processo"</span>, <span class="st">"numero_processo"</span>, <span class="st">"sigla_tribunal"</span>, <span class="st">"segmento_justica"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="4">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">processo</th>
+<th data-quarto-table-cell-role="th">numero_processo</th>
+<th data-quarto-table-cell-role="th">sigla_tribunal</th>
+<th data-quarto-table-cell-role="th">segmento_justica</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>10029886420194014100</td>
+<td>1002988-64.2019.4.01.4100</td>
+<td>TRF1</td>
+<td>JUSTICA_FEDERAL</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="50f84cb1" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-05-06T16:58:05.429063Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-05-06T16:58:05.428848Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-06T16:58:05.431787Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-06T16:58:05.431451Z&quot;}" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># o dict completo fica em 'detalhes' -- util para extrair campos especificos</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> json</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>detalhes <span class="op">=</span> df.iloc[<span class="dv">0</span>][<span class="st">"detalhes"</span>]</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>tramitacao <span class="op">=</span> detalhes[<span class="st">"tramitacoes"</span>][<span class="dv">0</span>]</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(json.dumps({</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"instancia"</span>: tramitacao.get(<span class="st">"instancia"</span>),</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"natureza"</span>: tramitacao.get(<span class="st">"natureza"</span>),</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"competencia"</span>: tramitacao.get(<span class="st">"dadosCompetencia"</span>),</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"tribunal"</span>: tramitacao.get(<span class="st">"tribunal"</span>),</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>}, indent<span class="op">=</span><span class="dv">2</span>, ensure_ascii<span class="op">=</span><span class="va">False</span>))</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{
+  "instancia": "PRIMEIRO_GRAU",
+  "natureza": "CIVEL",
+  "competencia": {
+    "id": 7065,
+    "idLocal": 248451,
+    "nome": "Cível (exceto Ambiental/Agrário)"
+  },
+  "tribunal": {
+    "idCodex": 3,
+    "sigla": "TRF1",
+    "nome": "Tribunal Regional Federal da 1ª Região",
+    "segmento": "JUSTICA_FEDERAL",
+    "jtr": "401"
+  }
+}</code></pre>
+</div>
+</div>
+<section id="multiplos-processos-de-uma-vez" class="level3">
+<h3 class="anchored" data-anchor-id="multiplos-processos-de-uma-vez">Multiplos processos de uma vez</h3>
+<p><code>cpopg</code> aceita lista. Cada CNJ vira uma (ou mais) linhas no DataFrame final, com a coluna <code>processo</code> ligando a entrada do usuario a saida.</p>
+<div id="691cff01" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-05-06T16:58:05.433017Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-05-06T16:58:05.432831Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-06T16:58:06.223584Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-06T16:58:06.223230Z&quot;}" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>processos <span class="op">=</span> [</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"10029886420194014100"</span>,</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"50211226520184036100"</span>,</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"10122143420204013300"</span>,</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>df_multi <span class="op">=</span> pdpj.cpopg(processos)</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>df_multi[[<span class="st">"processo"</span>, <span class="st">"numero_processo"</span>, <span class="st">"sigla_tribunal"</span>, <span class="st">"data_atualizacao"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="6">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">processo</th>
+<th data-quarto-table-cell-role="th">numero_processo</th>
+<th data-quarto-table-cell-role="th">sigla_tribunal</th>
+<th data-quarto-table-cell-role="th">data_atualizacao</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>10029886420194014100</td>
+<td>1002988-64.2019.4.01.4100</td>
+<td>TRF1</td>
+<td>2026-04-28T04:11:48.852</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>50211226520184036100</td>
+<td>5021122-65.2018.4.03.6100</td>
+<td>TRF3</td>
+<td>2026-04-30T06:45:26.116</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>10122143420204013300</td>
+<td>1012214-34.2020.4.01.3300</td>
+<td>TRF1</td>
+<td>2026-04-27T21:33:46.760</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="documentos-movimentos-e-partes" class="level2">
+<h2 class="anchored" data-anchor-id="documentos-movimentos-e-partes"><a id="sub-recursos"></a>Documentos, movimentos e partes</h2>
+<p>Para cada processo, a API expoe sub-recursos com cada uma dessas listas. O scraper achata o JSON em DataFrames.</p>
+<div id="598f2dd9" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-05-06T16:58:06.224871Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-05-06T16:58:06.224730Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-06T16:58:06.467116Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-06T16:58:06.466733Z&quot;}" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Lista de documentos: cada linha e um documento. id_documento e o UUID</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co"># que identifica o documento na API (usado depois em download_documents).</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>docs <span class="op">=</span> pdpj.documentos(<span class="st">"10029886420194014100"</span>)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>docs[[<span class="st">"sequencia"</span>, <span class="st">"data_juntada"</span>, <span class="st">"nome"</span>, <span class="st">"tipo_nome"</span>, <span class="st">"id_documento"</span>, <span class="st">"arquivo_tipo"</span>]].head()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="7">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">sequencia</th>
+<th data-quarto-table-cell-role="th">data_juntada</th>
+<th data-quarto-table-cell-role="th">nome</th>
+<th data-quarto-table-cell-role="th">tipo_nome</th>
+<th data-quarto-table-cell-role="th">id_documento</th>
+<th data-quarto-table-cell-role="th">arquivo_tipo</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>10</td>
+<td>2019-12-13T14:54:51.811</td>
+<td>Ato ordinatório.html</td>
+<td>Ato ordinatório</td>
+<td>d68cccee-b756-51e5-ae87-edb296ac220f</td>
+<td>TEXT_HTML</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>8</td>
+<td>2019-07-17T09:32:26.372</td>
+<td>Decisão.html</td>
+<td>Decisão</td>
+<td>d5b2fe52-8747-59c8-9953-8f320971a492</td>
+<td>TEXT_HTML</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="0a015b27" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-05-06T16:58:06.468825Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-05-06T16:58:06.468581Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-06T16:58:06.716386Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-06T16:58:06.715989Z&quot;}" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Lista de movimentos -- omitimos `descricao` do display por LGPD</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co"># (pode citar nome de partes). A coluna existe no DataFrame retornado.</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>movs <span class="op">=</span> pdpj.movimentos(<span class="st">"10029886420194014100"</span>)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>movs[[<span class="st">"sequencia"</span>, <span class="st">"data_hora"</span>, <span class="st">"tipo_nome"</span>]].head()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="8">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">sequencia</th>
+<th data-quarto-table-cell-role="th">data_hora</th>
+<th data-quarto-table-cell-role="th">tipo_nome</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>13</td>
+<td>2020-04-22T19:28:49.17</td>
+<td>Baixa Definitiva</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>12</td>
+<td>2020-04-22T19:27:25.643</td>
+<td>Documento</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>11</td>
+<td>2020-02-12T04:21:16.861</td>
+<td>Decurso de Prazo</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>10</td>
+<td>2019-12-13T15:04:04.938</td>
+<td>Expedição de documento</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>9</td>
+<td>2019-12-13T14:54:51.831</td>
+<td>Documento</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="cb537f28" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-05-06T16:58:06.717583Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-05-06T16:58:06.717430Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-06T16:58:06.960197Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-06T16:58:06.959687Z&quot;}" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Lista de partes -- omitimos `nome` e `documento_numero` do display</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co"># por LGPD; ambas as colunas existem no DataFrame retornado.</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>partes <span class="op">=</span> pdpj.partes(<span class="st">"10029886420194014100"</span>)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>partes[[<span class="st">"polo"</span>, <span class="st">"tipo_parte"</span>, <span class="st">"tipo_pessoa"</span>, <span class="st">"situacao"</span>]].head()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="9">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">polo</th>
+<th data-quarto-table-cell-role="th">tipo_parte</th>
+<th data-quarto-table-cell-role="th">tipo_pessoa</th>
+<th data-quarto-table-cell-role="th">situacao</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>ATIVO</td>
+<td>AUTOR</td>
+<td>FISICA</td>
+<td>ATIVO</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>PASSIVO</td>
+<td>RÉU</td>
+<td>JURIDICA</td>
+<td>ATIVO</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="busca-profunda-pesquisa-e-contagem-contar" class="level2">
+<h2 class="anchored" data-anchor-id="busca-profunda-pesquisa-e-contagem-contar"><a id="pesquisa"></a>Busca profunda (<code>pesquisa</code>) e contagem (<code>contar</code>)</h2>
+<p>O endpoint <code>GET /processos</code> aceita uma colecao grande de filtros. O scraper valida-os via pydantic com nomes em snake_case e converte para o camelCase aceito pela API. Filtros principais:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 40%">
+<col style="width: 41%">
+<col style="width: 17%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>snake_case (juscraper)</th>
+<th>camelCase (API)</th>
+<th>Tipo / Exemplo</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>numero_processo</code></td>
+<td><code>numeroProcesso</code></td>
+<td><code>"1002988..."</code></td>
+</tr>
+<tr class="even">
+<td><code>cpf_cnpj_parte</code></td>
+<td><code>cpfCnpjParte</code></td>
+<td><code>"123.456.789-00"</code></td>
+</tr>
+<tr class="odd">
+<td><code>nome_parte</code></td>
+<td><code>nomeParte</code></td>
+<td><code>"FULANO"</code></td>
+</tr>
+<tr class="even">
+<td><code>polo_parte</code></td>
+<td><code>poloParte</code></td>
+<td><code>"ATIVO"</code> / <code>"PASSIVO"</code></td>
+</tr>
+<tr class="odd">
+<td><code>oab_representante</code></td>
+<td><code>oabRepresentante</code></td>
+<td><code>"123456"</code></td>
+</tr>
+<tr class="even">
+<td><code>id_classe</code></td>
+<td><code>idClasse</code></td>
+<td><code>"7,12728"</code></td>
+</tr>
+<tr class="odd">
+<td><code>id_assunto_judicial</code></td>
+<td><code>idAssuntoJudicial</code></td>
+<td><code>"7,8"</code></td>
+</tr>
+<tr class="even">
+<td><code>id_orgao_julgador</code></td>
+<td><code>idOrgaoJulgador</code></td>
+<td><code>["12345", "67890"]</code> -&gt; <code>"12345,67890"</code></td>
+</tr>
+<tr class="odd">
+<td><code>instancia</code></td>
+<td><code>instancia</code></td>
+<td><code>"PRIMEIRO_GRAU"</code></td>
+</tr>
+<tr class="even">
+<td><code>segmento_justica</code></td>
+<td><code>segmentoJustica</code></td>
+<td><code>"JUSTICA_FEDERAL"</code></td>
+</tr>
+<tr class="odd">
+<td><code>tribunal</code></td>
+<td><code>tribunal</code></td>
+<td><code>"TRF1,TJSP"</code> (max 5)</td>
+</tr>
+<tr class="even">
+<td><code>data_atualizacao_inicio</code> / <code>_fim</code></td>
+<td><code>dataHoraAtualizacaoInicio</code>/<code>Fim</code></td>
+<td>ISO datetime</td>
+</tr>
+<tr class="odd">
+<td><code>data_primeiro_ajuizamento_inicio</code>/<code>_fim</code></td>
+<td><code>dataHoraPrimeiroAjuizamentoInicio</code>/<code>Fim</code></td>
+<td>ISO datetime</td>
+</tr>
+<tr class="even">
+<td><code>campo_ordenacao</code></td>
+<td><code>campoOrdenacao</code></td>
+<td><code>"dataHoraUltimoMovimento"</code></td>
+</tr>
+<tr class="odd">
+<td><code>itens_por_pagina</code></td>
+<td><code>maxElementsSize</code></td>
+<td>1-100, default 100</td>
+</tr>
+</tbody>
+</table>
+<p>A paginacao e feita via cursor <code>searchAfter</code>; o scraper cuida disso e respeita <code>paginas</code> (<code>int</code>, <code>list</code>, <code>range</code>, ou <code>None</code> = todas).</p>
+<div id="2f06f6af" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-05-06T16:58:06.961676Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-05-06T16:58:06.961437Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-06T16:58:07.005855Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-06T16:58:07.005271Z&quot;}" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Quantos processos tem o numero CNJ fornecido?</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>pdpj.contar(numero_processo<span class="op">=</span><span class="st">"10029886420194014100"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="10">
+<pre><code>1</code></pre>
+</div>
+</div>
+<div id="3c92ccce" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-05-06T16:58:07.007585Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-05-06T16:58:07.007352Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-06T16:58:07.048133Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-06T16:58:07.047712Z&quot;}" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Busca por um CNJ especifico (1 pagina, normalmente devolve 1 resultado).</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>df_search <span class="op">=</span> pdpj.pesquisa(</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    numero_processo<span class="op">=</span><span class="st">"10029886420194014100"</span>,</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>df_search[[<span class="st">"numero_processo"</span>, <span class="st">"sigla_tribunal"</span>, <span class="st">"data_atualizacao"</span>, <span class="st">"data_ultimo_movimento"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="11">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">numero_processo</th>
+<th data-quarto-table-cell-role="th">sigla_tribunal</th>
+<th data-quarto-table-cell-role="th">data_atualizacao</th>
+<th data-quarto-table-cell-role="th">data_ultimo_movimento</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>1002988-64.2019.4.01.4100</td>
+<td>TRF1</td>
+<td>2026-04-28T04:11:48.852</td>
+<td>2020-04-22T19:28:49.17</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="11d5f4ab" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-05-06T16:58:07.049474Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-05-06T16:58:07.049244Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-06T16:58:08.151127Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-06T16:58:08.150372Z&quot;}" data-execution_count="12">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Exemplo com varios filtros: processos do TRF1 atualizados em uma janela.</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Descomente para rodar -- pode demorar conforme volume.</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>df_janela <span class="op">=</span> pdpj.pesquisa(</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    tribunal<span class="op">=</span><span class="st">"TRF1"</span>,</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    data_atualizacao_inicio<span class="op">=</span><span class="st">"2026-04-01T00:00:00.000"</span>,</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    data_atualizacao_fim<span class="op">=</span><span class="st">"2026-04-30T23:59:59.999"</span>,</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">4</span>),</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>df_janela.shape</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="12">
+<pre><code>(300, 8)</code></pre>
+</div>
+</div>
+<section id="validacao-de-kwargs" class="level3">
+<h3 class="anchored" data-anchor-id="validacao-de-kwargs">Validacao de kwargs</h3>
+<p>Nomes invalidos viram <code>TypeError</code> com sugestao de typo (igual <code>cjsg</code>/<code>cjpg</code>):</p>
+<div id="756ad79b" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-05-06T16:58:08.153415Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-05-06T16:58:08.153003Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-06T16:58:08.156282Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-06T16:58:08.155951Z&quot;}" data-execution_count="13">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>:</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    pdpj.pesquisa(numero_porcesso<span class="op">=</span><span class="st">"10029886420194014100"</span>)  <span class="co"># typo</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> <span class="pp">TypeError</span> <span class="im">as</span> exc:</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(exc)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>PdpjScraper.pesquisa() got unexpected keyword argument(s): 'numero_porcesso' (você quis dizer 'numero_processo'?)</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="baixando-textos-e-binarios-dos-documentos" class="level2">
+<h2 class="anchored" data-anchor-id="baixando-textos-e-binarios-dos-documentos"><a id="download"></a>Baixando textos e binarios dos documentos</h2>
+<p><code>download_documents(base_df, ...)</code> aceita dois shapes de entrada:</p>
+<ol type="1">
+<li><strong>DataFrame de <code>documentos(cnj)</code></strong> – uma linha por documento, ja com <code>id_documento</code> exposto.</li>
+<li><strong>DataFrame de <code>cpopg(cnj)</code></strong> – uma linha por processo. O scraper extrai a lista de documentos do campo <code>detalhes</code>.</li>
+</ol>
+<p>Flags:</p>
+<ul>
+<li><code>with_text=True</code> (default): baixa o texto extraido pela API (UTF-8, ja limpo).</li>
+<li><code>with_binary=False</code> (default): baixa o arquivo bruto (HTML, PDF, imagem…).</li>
+<li><code>max_docs_per_process=None</code>: limite de documentos baixados por processo.</li>
+</ul>
+<div id="b3682f66" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-05-06T16:58:08.157543Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-05-06T16:58:08.157332Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-06T16:58:08.653120Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-06T16:58:08.652617Z&quot;}" data-execution_count="14">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Baixa apenas o primeiro documento do processo, com texto.</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Nao imprimimos o conteudo aqui por LGPD (documentos podem citar</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="co"># nomes de partes/advogados); apenas confirmamos que veio.</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>docs <span class="op">=</span> pdpj.documentos(<span class="st">"50211226520184036100"</span>)</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>out <span class="op">=</span> pdpj.download_documents(docs, max_docs_per_process<span class="op">=</span><span class="dv">1</span>, with_text<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"colunas:"</span>, <span class="bu">list</span>(out.columns))</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"tamanho do texto:"</span>, <span class="bu">len</span>(out.iloc[<span class="dv">0</span>][<span class="st">"texto"</span>]), <span class="st">"chars"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>colunas: ['processo', 'numero_processo', 'id_documento', 'id_codex', 'id_origem', 'sequencia', 'data_juntada', 'nome', 'nivel_sigilo', 'tipo_codigo', 'tipo_nome', 'arquivo_id', 'arquivo_tipo', 'arquivo_tamanho', 'arquivo_tamanho_texto', 'arquivo_paginas', '_raw', 'texto', '_raw_texto']
+tamanho do texto: 23532 chars</code></pre>
+</div>
+</div>
+<div id="ede01ec3" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-05-06T16:58:08.654780Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-05-06T16:58:08.654561Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-06T16:58:09.649711Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-06T16:58:09.649356Z&quot;}" data-execution_count="15">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Tambem da pra passar o resultado de cpopg direto</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>df_cpopg <span class="op">=</span> pdpj.cpopg(<span class="st">"50211226520184036100"</span>)</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>out2 <span class="op">=</span> pdpj.download_documents(df_cpopg, max_docs_per_process<span class="op">=</span><span class="dv">2</span>, with_text<span class="op">=</span><span class="va">True</span>, with_binary<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>out2[[<span class="st">"processo"</span>, <span class="st">"id_documento"</span>, <span class="st">"nome"</span>, <span class="st">"tipo_nome"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="15">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">processo</th>
+<th data-quarto-table-cell-role="th">id_documento</th>
+<th data-quarto-table-cell-role="th">nome</th>
+<th data-quarto-table-cell-role="th">tipo_nome</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>50211226520184036100</td>
+<td>98cff81c-17e4-5b0f-8a64-039f3a1bcf80</td>
+<td>Acórdão.html</td>
+<td>Acórdão</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>50211226520184036100</td>
+<td>c7ba25c6-2fff-55fa-a6bb-7242dc519739</td>
+<td>Acórdão.html</td>
+<td>Acórdão</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="ceff9217" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-05-06T16:58:09.651028Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-05-06T16:58:09.650847Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-06T16:58:09.655783Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-06T16:58:09.655159Z&quot;}" data-execution_count="16">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 'binario' contem os bytes brutos -- HTML, PDF, etc.</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="bu">type</span>(out2.iloc[<span class="dv">0</span>][<span class="st">"binario"</span>]))</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(out2.iloc[<span class="dv">0</span>][<span class="st">"binario"</span>][:<span class="dv">60</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>&lt;class 'bytes'&gt;
+b'&lt;div style="color: #000000; font-style: normal; font-variant'</code></pre>
+</div>
+</div>
+</section>
+<section id="persistindo-em-disco" class="level2">
+<h2 class="anchored" data-anchor-id="persistindo-em-disco">Persistindo em disco</h2>
+<p>Estrategia simples: salvar metadados + documentos em parquet por processo, particionando por CNJ. Util quando vai baixar lotes grandes.</p>
+<div id="77dea08a" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-05-06T16:58:09.657629Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-05-06T16:58:09.657347Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-06T16:58:35.871309Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-06T16:58:35.870806Z&quot;}" data-execution_count="17">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> tqdm <span class="im">import</span> tqdm</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>processos <span class="op">=</span> [</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"10029886420194014100"</span>,</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"50211226520184036100"</span>,</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"10122143420204013300"</span>,</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>raiz <span class="op">=</span> <span class="st">"pdpj/cpopg"</span></span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>os.makedirs(raiz, exist_ok<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> cnj <span class="kw">in</span> tqdm(processos):</span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>    base <span class="op">=</span> pdpj.cpopg(cnj)</span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> base.empty:</span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">continue</span></span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>    pasta <span class="op">=</span> os.path.join(raiz, cnj)</span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>    os.makedirs(pasta, exist_ok<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a>    base.to_parquet(os.path.join(pasta, <span class="st">"metadata.parquet"</span>), index<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a>    docs <span class="op">=</span> pdpj.download_documents(base, with_text<span class="op">=</span><span class="va">True</span>, with_binary<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">not</span> docs.empty:</span>
+<span id="cb25-22"><a href="#cb25-22" aria-hidden="true" tabindex="-1"></a>        docs.to_parquet(os.path.join(pasta, <span class="st">"documents.parquet"</span>), index<span class="op">=</span><span class="va">False</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>  0%|          | 0/3 [00:00&lt;?, ?it/s] 33%|███▎      | 1/3 [00:00&lt;00:01,  1.25it/s] 67%|██████▋   | 2/3 [00:12&lt;00:07,  7.24s/it]100%|██████████| 3/3 [00:26&lt;00:00, 10.17s/it]100%|██████████| 3/3 [00:26&lt;00:00,  8.73s/it]</code></pre>
+</div>
+</div>
+</section>
+<section id="erros-comuns" class="level2">
+<h2 class="anchored" data-anchor-id="erros-comuns">Erros comuns</h2>
+<ul>
+<li><strong><code>RuntimeError: Autenticacao necessaria</code></strong>: chame <code>pdpj.auth(token)</code> antes de qualquer endpoint.</li>
+<li><strong><code>ValueError: Token JWT expirado</code></strong>: gere um novo no portal (o token vive algumas horas).</li>
+<li><strong>HTTP 500 em binarios antigos</strong>: nem todos os documentos tem binario disponivel no Codex; o <code>download_documents</code> registra warning e segue.</li>
+<li><strong>HTTP 429</strong>: o scraper ja faz backoff exponencial. Se persistir, aumente <code>sleep_time</code> ao instanciar (<code>jus.scraper("pdpj", sleep_time=1.0)</code>).</li>
+</ul>
+</section>
+<section id="referencia-rapida-da-api-publica" class="level2">
+<h2 class="anchored" data-anchor-id="referencia-rapida-da-api-publica">Referencia rapida da API publica</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 24%">
+<col style="width: 52%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Metodo</th>
+<th>Endpoint REST</th>
+<th>Saida</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>auth(token)</code></td>
+<td>-</td>
+<td><code>True</code> (bool)</td>
+</tr>
+<tr class="even">
+<td><code>existe(cnj)</code></td>
+<td><code>GET /processos/{n}/existe</code></td>
+<td><code>bool</code> ou <code>DataFrame</code></td>
+</tr>
+<tr class="odd">
+<td><code>cpopg(cnj)</code></td>
+<td><code>GET /processos/{n}</code></td>
+<td><code>DataFrame</code></td>
+</tr>
+<tr class="even">
+<td><code>documentos(cnj)</code></td>
+<td><code>GET /processos/{n}/documentos</code></td>
+<td><code>DataFrame</code></td>
+</tr>
+<tr class="odd">
+<td><code>movimentos(cnj)</code></td>
+<td><code>GET /processos/{n}/movimentos</code></td>
+<td><code>DataFrame</code></td>
+</tr>
+<tr class="even">
+<td><code>partes(cnj)</code></td>
+<td><code>GET /processos/{n}/partes</code></td>
+<td><code>DataFrame</code></td>
+</tr>
+<tr class="odd">
+<td><code>pesquisa(**filtros)</code></td>
+<td><code>GET /processos</code></td>
+<td><code>DataFrame</code></td>
+</tr>
+<tr class="even">
+<td><code>contar(**filtros)</code></td>
+<td><code>GET /processos:contar</code></td>
+<td><code>int</code></td>
+</tr>
+<tr class="odd">
+<td><code>download_documents(df)</code></td>
+<td><code>GET /processos/{n}/documentos/{id}/{texto,binario}</code></td>
+<td><code>DataFrame</code></td>
+</tr>
+</tbody>
+</table>
+<p>Schemas pydantic com a fonte da verdade: <code>juscraper.aggregators.pdpj.schemas</code>.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copiada");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copiada");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jtrecenti\.github\.io\/juscraper\/");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../notebooks/jusbr.html" class="pagination-link" aria-label="Jus.br">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Jus.br</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Copyright 2025, Julio Trecenti</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.dev/jtrecenti/juscraper/blob/main/docs/notebooks/pdpj.ipynb" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>
