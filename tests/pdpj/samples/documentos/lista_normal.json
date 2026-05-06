@@ -16,11 +16,11 @@
       "id": "d68cccee-b756-51e5-ae87-edb296ac220f",
       "idCodex": 5960188814,
       "idOrigem": "141530864",
-      "nome": "Ato ordinatório.html",
+      "nome": "[REDIGIDO]",
       "nivelSigilo": "PUBLICO",
       "tipo": {
         "codigo": 14575,
-        "nome": "Ato ordinatório",
+        "nome": "[REDIGIDO]",
         "idCodex": 1806701,
         "idOrigem": "150"
       },
@@ -35,7 +35,7 @@
       },
       "signatarios": [
         {
-          "nome": "EDUARDO AUGUSTO PORTELA CHAVES"
+          "nome": "[REDIGIDO]"
         }
       ]
     },
@@ -45,11 +45,11 @@
       "id": "d5b2fe52-8747-59c8-9953-8f320971a492",
       "idCodex": 5960188812,
       "idOrigem": "68993546",
-      "nome": "Decisão.html",
+      "nome": "[REDIGIDO]",
       "nivelSigilo": "PUBLICO",
       "tipo": {
         "codigo": 404,
-        "nome": "Decisão",
+        "nome": "[REDIGIDO]",
         "idCodex": 1802351,
         "idOrigem": "64"
       },
@@ -64,7 +64,7 @@
       },
       "signatarios": [
         {
-          "nome": "GRACE ANNY DE SOUZA MONTEIRO"
+          "nome": "[REDIGIDO]"
         }
       ]
     }

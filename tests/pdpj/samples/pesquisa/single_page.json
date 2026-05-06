@@ -37,7 +37,7 @@
           "tribunal": {
             "idCodex": 3,
             "sigla": "TRF1",
-            "nome": "Tribunal Regional Federal da 1ª Região",
+            "nome": "[REDIGIDO]",
             "segmento": "JUSTICA_FEDERAL",
             "jtr": "401"
           },
@@ -46,7 +46,7 @@
           "dadosCompetencia": {
             "id": 7065,
             "idLocal": 248451,
-            "nome": "Cível (exceto Ambiental/Agrário)"
+            "nome": "[REDIGIDO]"
           },
           "tipoProcesso": "ORIGINARIO",
           "tipoPrioridade": null,
@@ -85,14 +85,14 @@
               "situacao": "ATIVO",
               "racaCor": null,
               "href": "/pessoas/0a292f6f-b5fa-5263-badc-6dd883a5cb85",
-              "nome": "MARTA HELENA RABELO DE SOUZA",
-              "sexo": "FEMININO",
+              "nome": "[REDIGIDO]",
+              "sexo": "[REDIGIDO]",
               "nacionalidade": null,
               "outrosNomes": null,
               "tipoPessoa": "FISICA",
               "documentosPrincipais": [
                 {
-                  "numero": "38626730225",
+                  "numero": "00000000000",
                   "tipo": "CPF"
                 }
               ],
@@ -106,123 +106,118 @@
               "situacao": "ATIVO",
               "racaCor": null,
               "href": "/pessoas/ff318c34-5b59-5a41-9b0d-1e8250becab5",
-              "nome": "ESTADO DE RONDONIA",
+              "nome": "[REDIGIDO]",
               "sexo": null,
               "nacionalidade": null,
-              "outrosNomes": [
-                {
-                  "nome": "SEDAM",
-                  "tipo": "OUTRO"
-                }
-              ],
+              "outrosNomes": [],
               "tipoPessoa": "JURIDICA",
               "documentosPrincipais": [
                 {
-                  "numero": "07824639000130",
+                  "numero": "00000000000000",
                   "tipo": "CNPJ"
                 },
                 {
-                  "numero": "04564498000257",
+                  "numero": "00000000000000",
                   "tipo": "CNPJ"
                 },
                 {
-                  "numero": "00394585001062",
+                  "numero": "00000000000000",
                   "tipo": "CNPJ"
                 },
                 {
-                  "numero": "02603612000102",
+                  "numero": "00000000000000",
                   "tipo": "CNPJ"
                 },
                 {
-                  "numero": "09601829000114",
+                  "numero": "00000000000000",
                   "tipo": "CNPJ"
                 },
                 {
-                  "numero": "04564530000113",
+                  "numero": "00000000000000",
                   "tipo": "CNPJ"
                 },
                 {
-                  "numero": "01664910000131",
+                  "numero": "00000000000000",
                   "tipo": "CNPJ"
                 },
                 {
-                  "numero": "04285722000271",
+                  "numero": "00000000000000",
                   "tipo": "CNPJ"
                 },
                 {
-                  "numero": "05599253000147",
+                  "numero": "00000000000000",
                   "tipo": "CNPJ"
                 },
                 {
-                  "numero": "04798328000156",
+                  "numero": "00000000000000",
                   "tipo": "CNPJ"
                 },
                 {
-                  "numero": "04801221000110",
+                  "numero": "00000000000000",
                   "tipo": "CNPJ"
                 },
                 {
-                  "numero": "04293700000172",
+                  "numero": "00000000000000",
                   "tipo": "CNPJ"
                 },
                 {
-                  "numero": "00394585000252",
+                  "numero": "00000000000000",
                   "tipo": "CNPJ"
                 },
                 {
-                  "numero": "09317468000189",
+                  "numero": "00000000000000",
                   "tipo": "CNPJ"
                 },
                 {
-                  "numero": "10217367000115",
+                  "numero": "00000000000000",
                   "tipo": "CNPJ"
                 },
                 {
-                  "numero": "04287520000188",
+                  "numero": "00000000000000",
                   "tipo": "CNPJ"
                 },
                 {
-                  "numero": "04280889000401",
+                  "numero": "00000000000000",
                   "tipo": "CNPJ"
                 },
                 {
-                  "numero": "03682401000167",
+                  "numero": "00000000000000",
                   "tipo": "CNPJ"
                 },
                 {
-                  "numero": "04793055000157",
+                  "numero": "00000000000000",
                   "tipo": "CNPJ"
                 },
                 {
-                  "numero": "04287520000269",
+                  "numero": "00000000000000",
                   "tipo": "CNPJ"
                 },
                 {
-                  "numero": "04381083000167",
+                  "numero": "00000000000000",
                   "tipo": "CNPJ"
                 },
                 {
-                  "numero": "07172665000121",
+                  "numero": "00000000000000",
                   "tipo": "CNPJ"
                 },
                 {
-                  "numero": "04794681000168",
+                  "numero": "00000000000000",
                   "tipo": "CNPJ"
                 },
                 {
-                  "numero": "63752604000104",
+                  "numero": "00000000000000",
                   "tipo": "CNPJ"
                 },
                 {
-                  "numero": "03693136000112",
+                  "numero": "00000000000000",
                   "tipo": "CNPJ"
                 },
                 {
-                  "numero": "00394585000171",
+                  "numero": "00000000000000",
                   "tipo": "CNPJ"
                 },
                 {
-                  "numero": "04287520000501",
+                  "numero": "00000000000000",
                   "tipo": "CNPJ"
                 }
               ],
@@ -233,12 +228,12 @@
           ],
           "jurisdicao": {
             "codigo": 12418,
-            "nome": "Capital SJRO"
+            "nome": "[REDIGIDO]"
           },
           "orgaoJulgador": {
             "id": 12419,
             "idLocal": 328466,
-            "nome": "1ª PORTO VELHO",
+            "nome": "[REDIGIDO]",
             "ibge": {
               "codIbge": "1100205",
               "codCidade": 3927,
@@ -263,7 +258,7 @@
               {
                 "id": 12419,
                 "idLocal": 328466,
-                "nome": "1ª PORTO VELHO",
+                "nome": "[REDIGIDO]",
                 "ibge": {
                   "codIbge": "1100205",
                   "codCidade": 3927,
@@ -293,8 +288,8 @@
           "juizo100Digital": null,
           "magistrados": [
             {
-              "nome": "GRACE ANNY DE SOUZA MONTEIRO",
-              "cpf": "00718302354"
+              "nome": "[REDIGIDO]",
+              "cpf": "[REDIGIDO]"
             }
           ]
         }

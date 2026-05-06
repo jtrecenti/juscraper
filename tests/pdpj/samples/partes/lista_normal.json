@@ -15,62 +15,31 @@
       "tipoParte": "AUTOR",
       "situacao": "ATIVO",
       "racaCor": null,
-      "nome": "MARTA HELENA RABELO DE SOUZA",
-      "sexo": "FEMININO",
-      "dataNascimento": "1965-04-01",
+      "nome": "[REDIGIDO]",
+      "sexo": "[REDIGIDO]",
+      "dataNascimento": "[REDIGIDO]",
       "tipoPessoa": "FISICA",
       "assistenciaJudiciariaGratuita": null,
       "sigilosa": false,
       "nacionalidade": null,
-      "genitores": [
-        {
-          "nome": "AUGUSTA GONZAGA RABELO",
-          "sexo": "FEMININO"
-        }
-      ],
+      "genitores": [],
       "outrosNomes": [],
       "documentosPrincipais": [
         {
-          "numero": "38626730225",
+          "numero": "00000000000",
           "tipo": "CPF"
         }
       ],
-      "outrosDocumentos": [
-        {
-          "nome": "MARTA HELENA RABELO DE SOUZA",
-          "numero": "30306501074",
-          "tipo": "TE",
-          "orgaoEmissor": "Justiça Eleitoral",
-          "estadoEmissor": null
-        }
-      ],
+      "outrosDocumentos": [],
       "representantes": [],
-      "enderecos": [
-        {
-          "idEndereco": 206136191,
-          "logradouro": "Rua Silas shoknes",
-          "numero": "2756",
-          "complemento": null,
-          "bairro": "Embratel",
-          "cep": "76820-746",
-          "localidade": "PORTO VELHO",
-          "uf": {
-            "sigla": "RO",
-            "nome": "RONDÔNIA"
-          },
-          "pais": {
-            "sigla": "BR",
-            "nome": "Brasil"
-          }
-        }
-      ]
+      "enderecos": []
     },
     {
       "polo": "PASSIVO",
       "tipoParte": "RÉU",
       "situacao": "ATIVO",
       "racaCor": null,
-      "nome": "ESTADO DE RONDONIA",
+      "nome": "[REDIGIDO]",
       "sexo": null,
       "dataNascimento": null,
       "tipoPessoa": "JURIDICA",
@@ -78,119 +47,114 @@
       "sigilosa": false,
       "nacionalidade": null,
       "genitores": [],
-      "outrosNomes": [
-        {
-          "nome": "SEDAM",
-          "tipo": "OUTRO"
-        }
-      ],
+      "outrosNomes": [],
       "documentosPrincipais": [
         {
-          "numero": "07824639000130",
+          "numero": "00000000000000",
           "tipo": "CNPJ"
         },
         {
-          "numero": "04564498000257",
+          "numero": "00000000000000",
           "tipo": "CNPJ"
         },
         {
-          "numero": "00394585001062",
+          "numero": "00000000000000",
           "tipo": "CNPJ"
         },
         {
-          "numero": "02603612000102",
+          "numero": "00000000000000",
           "tipo": "CNPJ"
         },
         {
-          "numero": "09601829000114",
+          "numero": "00000000000000",
           "tipo": "CNPJ"
         },
         {
-          "numero": "04564530000113",
+          "numero": "00000000000000",
           "tipo": "CNPJ"
         },
         {
-          "numero": "01664910000131",
+          "numero": "00000000000000",
           "tipo": "CNPJ"
         },
         {
-          "numero": "04285722000271",
+          "numero": "00000000000000",
           "tipo": "CNPJ"
         },
         {
-          "numero": "05599253000147",
+          "numero": "00000000000000",
           "tipo": "CNPJ"
         },
         {
-          "numero": "04798328000156",
+          "numero": "00000000000000",
           "tipo": "CNPJ"
         },
         {
-          "numero": "04801221000110",
+          "numero": "00000000000000",
           "tipo": "CNPJ"
         },
         {
-          "numero": "04293700000172",
+          "numero": "00000000000000",
           "tipo": "CNPJ"
         },
         {
-          "numero": "00394585000252",
+          "numero": "00000000000000",
           "tipo": "CNPJ"
         },
         {
-          "numero": "09317468000189",
+          "numero": "00000000000000",
           "tipo": "CNPJ"
         },
         {
-          "numero": "10217367000115",
+          "numero": "00000000000000",
           "tipo": "CNPJ"
         },
         {
-          "numero": "04287520000188",
+          "numero": "00000000000000",
           "tipo": "CNPJ"
         },
         {
-          "numero": "04280889000401",
+          "numero": "00000000000000",
           "tipo": "CNPJ"
         },
         {
-          "numero": "03682401000167",
+          "numero": "00000000000000",
           "tipo": "CNPJ"
         },
         {
-          "numero": "04793055000157",
+          "numero": "00000000000000",
           "tipo": "CNPJ"
         },
         {
-          "numero": "04287520000269",
+          "numero": "00000000000000",
           "tipo": "CNPJ"
         },
         {
-          "numero": "04381083000167",
+          "numero": "00000000000000",
           "tipo": "CNPJ"
         },
         {
-          "numero": "07172665000121",
+          "numero": "00000000000000",
           "tipo": "CNPJ"
         },
         {
-          "numero": "04794681000168",
+          "numero": "00000000000000",
           "tipo": "CNPJ"
         },
         {
-          "numero": "63752604000104",
+          "numero": "00000000000000",
           "tipo": "CNPJ"
         },
         {
-          "numero": "03693136000112",
+          "numero": "00000000000000",
           "tipo": "CNPJ"
         },
         {
-          "numero": "00394585000171",
+          "numero": "00000000000000",
           "tipo": "CNPJ"
         },
         {
-          "numero": "04287520000501",
+          "numero": "00000000000000",
           "tipo": "CNPJ"
         }
       ],
