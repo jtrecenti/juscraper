@@ -9,8 +9,12 @@ Examples
 >>> from tests._helpers import load_sample
 >>> html = load_sample("tjsp", "cjsg/results_normal.html")
 """
+import re
+from collections.abc import Callable
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
+
+import pytest
 
 _SAMPLES_ROOT = Path(__file__).parent
 
@@ -76,6 +80,53 @@ def urlencoded_body_subset_matcher(expected: dict[str, str]):
             return False, f"body fields mismatch: {missing}"
         return True, ""
     return matcher
+
+
+def assert_unknown_kwarg_raises(
+    method: Callable,
+    kwarg: str,
+    *args,
+    valor: str = "x",
+    **extra_kwargs,
+) -> None:
+    """Confirma que ``kwarg`` dispara ``TypeError`` canonico no endpoint.
+
+    Centraliza o regex que da match na mensagem de
+    :func:`juscraper.utils.params.raise_on_extra_kwargs`. Mudancas no
+    formato da mensagem (aspas, prefixo, sufixo de close-match) ficam
+    em uma linha so, em vez de espalhadas em 30+ tribunais.
+
+    Cobre dois cenarios — mecanicamente identicos, ambos sao
+    ``extra_forbidden`` puro do pydantic:
+
+    - **Filtros de data nao suportados pelo backend** (issue #186):
+      tribunais que so aceitam um dos intervalos
+      (``data_julgamento_*`` xor ``data_publicacao_*``) rejeitam o
+      oposto via ``extra="forbid"`` do schema.
+    - **Kwargs desconhecidos genericos** (issue #84): typos ou
+      parametros inventados (ex.: ``parametro_bobo``) sao rejeitados
+      pelo mesmo mecanismo.
+
+    Args:
+        method (callable): Bound method publico do scraper (e.g.,
+            ``jus.scraper("tjmt").cjsg``).
+        kwarg (str): Nome do kwarg que deve ser rejeitado (e.g.,
+            ``"data_publicacao_inicio"`` para datas, ``"parametro_bobo"``
+            para typos genericos).
+        *args: Argumentos posicionais propagados para ``method``
+            (tipicamente ``"pesquisa"``).
+        valor (str): Valor passado em ``kwarg``. Cosmetico — o
+            ``TypeError`` e emitido pelo pydantic *antes* de qualquer
+            validacao de formato, entao qualquer string serve. Default
+            ``"x"``.
+        **extra_kwargs: Kwargs extras propagados para ``method`` — util
+            para cenarios que precisam de filtros adicionais (ex.: TJSP
+            auto_chunk exige uma janela longa de ``data_julgamento_*``
+            para acionar o sniff; eSAJ exige ``paginas=1``).
+    """
+    pattern = rf"got unexpected keyword argument\(s\): '{re.escape(kwarg)}'"
+    with pytest.raises(TypeError, match=pattern):
+        method(*args, **{kwarg: valor, **extra_kwargs})
 
 
 def query_param_subset_matcher(expected: dict[str, str]):

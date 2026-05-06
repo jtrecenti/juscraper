@@ -52,13 +52,15 @@ TRIBUNAIS = [
 # Tribunals where the date filter itself is broken. Remove once fixed.
 KNOWN_FILTRO_FAILURES = {
     "tjap": "Tucujuris UI/backend does not expose date filtering (no date input exists)",
-    "tjrj": "legacy ASP.NET endpoint returns HTTP 500; scraper does not wire date filter",
+    "tjrj": "ASP.NET backend exposes only year-level filter (ano_inicio/ano_fim); "
+            "InputCJSGTJRJ rejects data_julgamento_*/data_publicacao_* via extra=forbid (refs #143, #220)",
 }
 
 # Tribunals where pagination specifically is broken (usually HTTP errors
 # bubbling up on page 2). Subset of above for clarity.
 KNOWN_PAGINACAO_FAILURES = {
-    "tjrj": "legacy endpoint returns HTTP 500",
+    "tjrj": "test passes data_julgamento_*/data_publicacao_* kwargs that TJRJ rejects via "
+            "extra=forbid (granularidade so anual). Same root cause as KNOWN_FILTRO_FAILURES (refs #220).",
 }
 
 

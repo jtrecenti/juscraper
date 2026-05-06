@@ -11,7 +11,7 @@ from __future__ import annotations
 from datetime import date
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ...schemas import PaginasMixin
 from .mappings import TIPOS_MOVIMENTACAO
@@ -34,7 +34,56 @@ _FILTROS_AMIGAVEIS = (
 )
 
 
-class InputListarProcessosDataJud(PaginasMixin):
+def _coerce_to_str_list(v: Any) -> Any:
+    # Codigos CNJ de assunto sao inteiros por natureza (TPU); o backend
+    # Elasticsearch coage int -> str em campos keyword transparentemente.
+    # Rodamos em ``mode="before"`` para que o tipo final do campo continue
+    # sendo ``list[str]`` (pydantic valida o tipo apos a coercao).
+    if v is None or not isinstance(v, list):
+        return v
+    return [str(x) if isinstance(x, int) and not isinstance(x, bool) else x for x in v]
+
+
+def _coerce_to_int_list(v: Any) -> Any:
+    # Simetrico a _coerce_to_str_list para ``movimentos_codigo``: aceitamos
+    # str (ex.: vinda de planilha/CSV) antes da validacao de tipo. Strings
+    # nao-numericas viram ValueError com mensagem nomeando o campo.
+    if v is None or not isinstance(v, list):
+        return v
+    out: list[int] = []
+    for x in v:
+        if isinstance(x, int) and not isinstance(x, bool):
+            out.append(x)
+            continue
+        try:
+            out.append(int(x))
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                f"'movimentos_codigo' deve ser uma lista de codigos TPU "
+                f"(inteiros). Item nao-conversivel: {exc}"
+            ) from exc
+    return out
+
+
+class _DatajudCoercaoMixin(BaseModel):
+    # Mixin local (refs #217): centraliza os validators de coercao bidirecional
+    # int<->str em ``assuntos`` e ``movimentos_codigo``. Aplicado em ambos
+    # InputListarProcessosDataJud e InputContarProcessosDataJud. Nao promovido
+    # para src/juscraper/schemas/mixins.py — Regra 1 do #84 exige 2+ familias
+    # distintas, e por enquanto so o DataJud precisa.
+
+    @field_validator("assuntos", mode="before", check_fields=False)
+    @classmethod
+    def _normalize_assuntos(cls, v: Any) -> Any:
+        return _coerce_to_str_list(v)
+
+    @field_validator("movimentos_codigo", mode="before", check_fields=False)
+    @classmethod
+    def _normalize_movimentos_codigo(cls, v: Any) -> Any:
+        return _coerce_to_int_list(v)
+
+
+class InputListarProcessosDataJud(_DatajudCoercaoMixin, PaginasMixin):
     """Accepted input for :meth:`DatajudScraper.listar_processos`.
 
     A API do DataJud e baseada em Elasticsearch. A escolha do alias-indice
@@ -185,7 +234,7 @@ class InputListarProcessosDataJud(PaginasMixin):
         return self
 
 
-class InputContarProcessosDataJud(BaseModel):
+class InputContarProcessosDataJud(_DatajudCoercaoMixin):
     """Accepted input for :meth:`DatajudScraper.contar_processos`.
 
     Conta processos sem baixar nenhum documento — usado em analise de

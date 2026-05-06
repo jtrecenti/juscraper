@@ -27,15 +27,15 @@ class InputCJSGTJRN(SearchBase, DataJulgamentoMixin):
 
     BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
 
-    numero_processo: str = ""
-    id_classe: str = ""
-    id_orgao_julgador: str = ""
-    id_relator: str = ""
-    id_colegiado: str = ""
-    sistema: str = ""
-    decisoes: str = ""
-    jurisdicoes: str = ""
-    grau: str = ""
+    numero_processo: str | None = None
+    id_classe: str | None = None
+    id_orgao_julgador: str | None = None
+    id_relator: str | None = None
+    id_colegiado: str | None = None
+    sistema: str | None = None
+    decisoes: str | None = None
+    jurisdicoes: str | None = None
+    grau: str | None = None
 
 
 class OutputCJSGTJRN(OutputCJSGBase, OutputRelatoriaMixin):

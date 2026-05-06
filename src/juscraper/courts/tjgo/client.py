@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Literal
 
 import pandas as pd
 import requests
@@ -40,10 +41,10 @@ class TJGOScraper(BaseScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        id_instancia: str | int = 0,
-        id_area: str | int = 0,
+        id_instancia: Literal[0, 1, 2, 3, "0", "1", "2", "3"] = 0,
+        id_area: Literal[0, 1, 2, "0", "1", "2"] = 0,
         id_serventia_subtipo: str | int = 0,
-        numero_processo: str = "",
+        numero_processo: str | None = None,
         qtde_itens_pagina: int = 10,
         data_publicacao_inicio: str | None = None,
         data_publicacao_fim: str | None = None,
@@ -97,7 +98,7 @@ class TJGOScraper(BaseScraper):
             id_serventia_subtipo=str(inp.id_serventia_subtipo),
             data_publicacao_inicio=_br_date(inp.data_publicacao_inicio),
             data_publicacao_fim=_br_date(inp.data_publicacao_fim),
-            numero_processo=inp.numero_processo,
+            numero_processo=inp.numero_processo or "",
             qtde_itens_pagina=inp.qtde_itens_pagina,
             sleep_time=self.sleep_time,
         )
@@ -110,10 +111,10 @@ class TJGOScraper(BaseScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        id_instancia: str | int = 0,
-        id_area: str | int = 0,
+        id_instancia: Literal[0, 1, 2, 3, "0", "1", "2", "3"] = 0,
+        id_area: Literal[0, 1, 2, "0", "1", "2"] = 0,
         id_serventia_subtipo: str | int = 0,
-        numero_processo: str = "",
+        numero_processo: str | None = None,
         qtde_itens_pagina: int = 10,
         **kwargs,
     ) -> pd.DataFrame:

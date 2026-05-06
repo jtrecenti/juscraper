@@ -1,4 +1,5 @@
 """Scraper for the Tribunal de Justica de Santa Catarina (TJSC)."""
+from typing import Literal
 
 import pandas as pd
 import requests
@@ -38,8 +39,8 @@ class TJSCScraper(BaseScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        campo: str = "E",
-        processo: str = "",
+        campo: Literal["E", "I"] = "E",
+        processo: str | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Busca jurisprudencia no TJSC.
@@ -88,8 +89,8 @@ class TJSCScraper(BaseScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        campo: str = "E",
-        processo: str = "",
+        campo: Literal["E", "I"] = "E",
+        processo: str | None = None,
         **kwargs,
     ) -> list:
         """Download raw HTML pages from TJSC.
@@ -116,7 +117,7 @@ class TJSCScraper(BaseScraper):
             paginas=inp.paginas,
             session=self.session,
             campo=inp.campo,
-            processo=inp.processo,
+            processo=inp.processo or "",
             dt_decisao_inicio=inp.data_julgamento_inicio or "",
             dt_decisao_fim=inp.data_julgamento_fim or "",
             dt_publicacao_inicio=inp.data_publicacao_inicio or "",

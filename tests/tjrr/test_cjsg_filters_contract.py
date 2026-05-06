@@ -22,7 +22,7 @@ import responses
 from responses.registries import OrderedRegistry
 
 import juscraper as jus
-from tests._helpers import load_sample, urlencoded_body_subset_matcher
+from tests._helpers import assert_unknown_kwarg_raises, load_sample, urlencoded_body_subset_matcher
 from tests.tjrr._helpers import INDEX_URL, add_get_initial, get_pesquisa_field_name
 
 _SAMPLES_DIR = Path(__file__).parent / "samples" / "cjsg"
@@ -151,12 +151,20 @@ def test_cjsg_data_inicio_alias_maps_to_data_julgamento(mocker):
 def test_cjsg_unknown_kwarg_raises():
     """Kwargs not declared in :class:`InputCJSGTJRR` raise ``TypeError`` with
     the field name (refs #84, #93, #165, #183)."""
-    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
-        jus.scraper("tjrr").cjsg("dano moral", paginas=1, kwarg_inventado="x")
+    assert_unknown_kwarg_raises(
+        jus.scraper("tjrr").cjsg,
+        "kwarg_inventado",
+        "dano moral",
+        paginas=1,
+    )
 
 
 def test_cjsg_download_unknown_kwarg_raises():
     """``cjsg_download`` rejects unknown kwargs at the lower-level entry point
     too — guards against silent drop when the caller skips :meth:`cjsg` (refs #183)."""
-    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
-        jus.scraper("tjrr").cjsg_download("dano moral", paginas=1, kwarg_inventado="x")
+    assert_unknown_kwarg_raises(
+        jus.scraper("tjrr").cjsg_download,
+        "kwarg_inventado",
+        "dano moral",
+        paginas=1,
+    )

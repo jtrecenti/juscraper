@@ -4,6 +4,14 @@ import pytest
 
 import juscraper as jus
 
+pytest.importorskip(
+    "txtcaptcha",
+    reason=(
+        "TJMG hits a numeric image captcha solved via txtcaptcha "
+        '(extra opcional `[tjmg]`; instale com `uv pip install -e ".[tjmg]"`).'
+    ),
+)
+
 
 @pytest.mark.integration
 def test_cjsg_busca_simples():

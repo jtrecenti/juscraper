@@ -1,6 +1,7 @@
 """
 Scraper for the Tribunal de Justica do Estado do Para (TJPA).
 """
+from typing import Literal
 
 import pandas as pd
 import requests
@@ -44,7 +45,7 @@ class TJPAScraper(BaseScraper):
         origem: list | None = None,
         tipo: list | None = None,
         sort_by: str = "datajulgamento",
-        sort_order: str = "desc",
+        sort_order: Literal["asc", "desc"] = "desc",
         query_type: str = "free",
         query_scope: str = "ementa",
         **kwargs,
@@ -120,7 +121,7 @@ class TJPAScraper(BaseScraper):
         origem: list | None = None,
         tipo: list | None = None,
         sort_by: str = "datajulgamento",
-        sort_order: str = "desc",
+        sort_order: Literal["asc", "desc"] = "desc",
         query_type: str = "free",
         query_scope: str = "ementa",
         **kwargs,

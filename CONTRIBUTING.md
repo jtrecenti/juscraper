@@ -100,6 +100,27 @@ As seções a seguir são notas internas para quem contribui com novos raspadore
 
 Antes de refatorar um tribunal pela #84, ele precisa ter contratos passando. A camada de contrato valida só a API pública e sobrevive à mudança estrutural; serve como rede de segurança da refatoração. Granulares vêm depois, na estrutura já refatorada. **TJSP refatora por último** (mais usado, mais complexo).
 
+### Notebooks como sanity check (`pytest --nbmake`)
+
+Os notebooks de exemplo em `docs/notebooks/<tribunal>.ipynb` exercitam o fluxo público de cada raspador (cjsg, cjpg, cpopg, cposg, listar_processos) com chamadas reais ao tribunal. Servem ao mesmo tempo como documentação executável (build do site Quarto) e como **canário de regressão pós-refactor** — pegam quebras visíveis ao usuário (parser quebrado, schema rejeitando input antes válido, coluna renomeada sem migração) que um teste granular pode mascarar.
+
+Comando padrão (rodar localmente antes de release ou após refactor amplo):
+
+```bash
+pytest --nbmake docs/notebooks/ \
+  --ignore=docs/notebooks/jusbr.ipynb \
+  --ignore=docs/notebooks/tjmg.ipynb \
+  --nbmake-timeout=300 \
+  -n auto
+```
+
+Notas:
+
+- **Não rodar em `pre-commit` nem em CI por PR.** São 25 notebooks contra rede real (~10-30 min com `pytest-xdist`); flakiness de tribunal vai bloquear merge sem motivo. O lugar certo, se um dia entrar no CI, é o workflow nightly proposto em #101 com `continue-on-error`.
+- `jusbr.ipynb` é excluído porque depende de token gov.br (`JUSBR_ACCESS_TOKEN`); `tjmg.ipynb` depende do extra `[tjmg]` instalado (`txtcaptcha`). Ambos rodam sob demanda quando as condições estão presentes.
+- Falha 5xx em um único notebook normalmente é instabilidade do tribunal — re-rodar o notebook isolado antes de reportar regressão (`pytest --nbmake docs/notebooks/<tribunal>.ipynb`).
+- Quando o resultado real divergir do output cacheado (ex.: coluna nova, ementa em formato diferente), o notebook deve ser **commitado com outputs limpos** (`jupyter nbconvert --clear-output --inplace docs/notebooks/<tribunal>.ipynb`) para que `git diff` futuro fique focado em código.
+
 ## Adding a new tribunal
 
 Todo raspador novo em `src/juscraper/courts/<xx>/` ou `src/juscraper/aggregators/<xx>/` deve entrar acompanhado de **pelo menos um teste de contrato** por método público (`cjsg`, `cjpg`, `cpopg`, `cposg`, `listar_processos`, etc.). O PR fica bloqueado sem isso.
@@ -121,13 +142,14 @@ Checklist obrigatória para o PR que adiciona o raspador:
 4. **Pydantic schema** em `src/juscraper/courts/<xx>/schemas.py` (ou no diretório compartilhado `src/juscraper/courts/_<familia>/schemas.py`) com `model_config = ConfigDict(extra="forbid")`. Um modelo por endpoint (`InputCJSG<TRIB>`, `InputCJPG<TRIB>`, etc.), herdando de `juscraper.schemas.cjsg.SearchBase`. O modelo **é a fonte única da verdade da API pública** — params listados no scraper têm que bater com campos do modelo.
 5. **Teste de schema** em `tests/<xx>/test_<endpoint>_schema_contract.py` (ou consolidado em `tests/test_cjsg_schemas.py` para modelos compartilhados): valida (a) todos os params documentados aceitos, (b) kwargs desconhecidos levantam `ValidationError`, (c) defaults corretos, (d) validators/Literals rejeitam valores fora do domínio.
 6. **Teste de propagação de filtros** em `tests/<xx>/test_<endpoint>_filters_contract.py`: chama o método público passando **todos** os filtros simultaneamente e o matcher (`urlencoded_params_matcher`/`json_params_matcher`/`query_param_matcher`) confirma que cada filtro chegou no body/params. Fecha o gap onde o happy-path com filtros vazios não detecta uma quebra de propagação.
-6a. **Cobertura mínima de aliases deprecados** no `test_<endpoint>_filters_contract.py`: um teste para **cada** alias que o scraper aceita em `normalize_pesquisa`/`normalize_datas`, assertando o `DeprecationWarning` + (quando aplicável) que o valor cai no body/params como o canônico. Exemplos: `query`/`termo` se o endpoint tem busca textual; `data_inicio`/`data_fim` se o endpoint tem filtro de data. Quando o alias vira noop silencioso (ex.: `data_inicio` num tribunal que só suporta `data_publicacao`), testar que o `DeprecationWarning` + o `UserWarning` de `warn_unsupported` são emitidos juntos.
-7. **Sem `@pytest.mark.integration`** no contrato.
-8. **Sem dependência de rede, relógio ou TLS real**. Adapter TLS custom: testar só montagem (`isinstance`).
-9. **Fluxos multi-step com ordem obrigatória** usam `responses.registries.OrderedRegistry`.
-10. **Captchas, tokens dinâmicos e libs externas** (`txtcaptcha`, `browser_cookie3`) são **mockados** — nunca invocados. Injetar fakes via `mocker.patch.dict(sys.modules, ...)` para lazy imports ausentes das deps.
-11. **Entry no CHANGELOG** em `[Unreleased]/Added`.
-12. **Payload builders públicos** em `courts/<xx>/download.py` sempre que o script de captura precisar reusar o dict/body enviado ao backend. Extrair como função de nome público (`build_<endpoint>_payload` — **sem underscore inicial**) + constante da URL base (`BASE_URL`, `RESULTS_PER_PAGE`, etc.). O script em `tests/fixtures/capture/<xx>.py` importa esses helpers em vez de redefinir o payload inline — qualquer mudança no scraper quebra a captura, evitando drift silencioso. Helpers privados (`_`) em módulos de download ficam reservados para lógica interna não reusada pelo capture script.
+7. **Cobertura mínima de aliases deprecados** no `test_<endpoint>_filters_contract.py`: um teste para **cada** alias que o scraper aceita em `normalize_pesquisa`/`normalize_datas`, assertando o `DeprecationWarning` + (quando aplicável) que o valor cai no body/params como o canônico. Exemplos: `query`/`termo` se o endpoint tem busca textual; `data_inicio`/`data_fim` se o endpoint tem filtro de data. Quando o alias vira noop silencioso (ex.: `data_inicio` num tribunal que só suporta `data_publicacao`), testar que o `DeprecationWarning` + o `UserWarning` de `warn_unsupported` são emitidos juntos.
+8. **Sem `@pytest.mark.integration`** no contrato.
+9. **Sem dependência de rede, relógio ou TLS real**. Adapter TLS custom: testar só montagem (`isinstance`).
+10. **Fluxos multi-step com ordem obrigatória** usam `responses.registries.OrderedRegistry`.
+11. **Captchas, tokens dinâmicos e libs externas** (`txtcaptcha`, `browser_cookie3`) são **mockados** — nunca invocados. Injetar fakes via `mocker.patch.dict(sys.modules, ...)` para lazy imports ausentes das deps.
+12. **Entry no CHANGELOG** em `[Unreleased]/Added`.
+13. **Payload builders públicos** em `courts/<xx>/download.py` sempre que o script de captura precisar reusar o dict/body enviado ao backend. Extrair como função de nome público (`build_<endpoint>_payload` — **sem underscore inicial**) + constante da URL base (`BASE_URL`, `RESULTS_PER_PAGE`, etc.). O script em `tests/fixtures/capture/<xx>.py` importa esses helpers em vez de redefinir o payload inline — qualquer mudança no scraper quebra a captura, evitando drift silencioso. Helpers privados (`_`) em módulos de download ficam reservados para lógica interna não reusada pelo capture script.
+14. **Base recomendada: `juscraper.core.http.HTTPScraper`** (em vez de `BaseScraper` direto) para raspadores **novos**. Ela cria `self.session = requests.Session()`, expõe o hook `_configure_session(session)` (mesmo contrato do `EsajSearchScraper`), oferece `_request_with_retry(method, url, *, session=None, max_retries=3)` com backoff exponencial para 429/5xx + respeito a `Retry-After` numérico, e centraliza a validação de `session=` (resolve #185). Tribunais existentes ainda em `BaseScraper` migram pelas Fases 1-4 do refactor #194 — tribunais novos já podem (e devem) herdar de `HTTPScraper`.
 
 ## Schemas pydantic
 
@@ -139,9 +161,35 @@ Checklist obrigatória para o PR que adiciona o raspador:
 - `src/juscraper/courts/_<familia>/schemas.py` — compartilhado pela família (ex.: `InputCJSGEsajPuro`, `OutputCJSGEsaj`). Criar só com 2+ ocorrências (Regra 1 do #84).
 - `src/juscraper/courts/<xx>/schemas.py` / `aggregators/<yy>/schemas.py` — um arquivo por tribunal/agregador com Input/Output de todos os endpoints.
 
+### Wiring em duas fases
+
+- **Schema-arquivo** (todos) — o modelo `Input<Endpoint><Tribunal>` existe em `courts/<xx>/schemas.py` e bate byte-a-byte com a assinatura do método público. Protegido contra drift por `tests/schemas/test_signature_parity.py`. Vale para todos os tribunais, inclusive os ainda não refatorados — funciona como documentação executável.
+- **Wired** (subset) — o método público invoca o schema em runtime; kwargs desconhecidos viram `TypeError` amigável via `_raise_on_extra` em `juscraper.courts._esaj.base`. Hoje: TJAC/TJAL/TJAM/TJCE/TJMS + TJSP `cjsg`/`cjpg`. O wiring entra junto com a refatoração estrutural #84.
+
+### Modelos são irmãos de `SearchBase`
+
+Modelos de endpoints diferentes herdam de `SearchBase`/mixins, **não entre si**. Exemplo: `InputCJSGEsajPuro` e `InputCJSGTJSP` divergem por histórico da API e ficam como irmãos, nunca um herdando do outro. Compartilhamento real só via base/mixin com 2+ ocorrências (Regra 1 do #84).
+
+### OOP dirigida por evidência
+
+Campo presente em ≥ 2 Inputs/Outputs concretos sobe para base/mixin; abaixo disso fica inline no tribunal. Operacionaliza a Regra 1 do #84 para schemas: evita refactor em cascata quando o desenho inicial não encaixa o segundo caso.
+
+### `paginas`: contrato único, redeclaração é drift
+
+`SearchBase.paginas: int | list[int] | range | None = None` é fonte única e 1-based em todos os raspadores. Redeclarar em schema concreto é cosmético — vira drift entre `SearchBase` e a redeclaração. Tribunais que não aceitam alguma forma (ex.: DataJud só aceita `range`) viram `xfail` em `tests/schemas/test_paginas_acceptance.py` e correção em PR próprio.
+
+### Tratamento de divergências de nome
+
+- **Output**: divergências são corrigidas no parser via renomeação. Isso é **breaking change** declarado em `CHANGELOG.md`. Output bate o nome canônico após a renomeação.
+- **Input**: divergências viram **alias deprecado** via `pop_deprecated_alias` (`src/juscraper/utils/params.py`), emitindo `DeprecationWarning`. O campo canônico não é removido do Input ao deprecar um alias.
+
 ### Pipeline canônico (wiring)
 
 Pipeline implementado em `juscraper.utils.params.apply_input_pipeline_search` (chamado por `src/juscraper/courts/_esaj/base.py:cjsg_download` e `tjsp/client.py:cjpg_download`) e exercitado em `tests/tj{ac,al,am,ce,ms,sp}/test_cjsg_filters_contract.py`. Ao wirar tribunal novo, copiar a ordem de lá: aliases (via `normalize_pesquisa`/`normalize_datas`) → validators custom → pydantic → build body a partir do modelo. Motivos: aliases antes do pydantic (senão viram `TypeError` genérico); validators custom antes (senão viram wrapped em `ValidationError`); `raise_on_extra_kwargs` depois (só `extra_forbidden` deve virar `TypeError` — erro de tipo real sobe natural). Tribunais sem limite documentado de janela ficam com `max_dias=None` (default); eSAJ passa `max_dias=366, origem="O eSAJ"` explicitamente.
+
+### `session=` fica fora do schema pydantic (decisão #185)
+
+Métodos públicos que aceitam `session: requests.Session | None = None` (caminho de transporte para reuso de cookies/TLS) **não declaram esse parâmetro no schema pydantic**. O parâmetro é detalhe de transporte, não filtro de backend, e a validação `isinstance(session, requests.Session)` fica centralizada em `juscraper.core.http.HTTPScraper._request_with_retry` — que levanta `TypeError` na fronteira quando recebe valor inválido. Tribunais ainda não migrados para `HTTPScraper` chamam essa mesma validação assim que migrarem (Fases 1-4 do refactor #194). Resolve #185.
 
 ### `BACKEND_DATE_FORMAT` é só formato de saída
 

@@ -12,7 +12,7 @@ from responses.matchers import query_param_matcher
 
 import juscraper as jus
 from juscraper.courts.tjpi.download import BASE_URL, build_cjsg_params
-from tests._helpers import load_sample
+from tests._helpers import assert_unknown_kwarg_raises, load_sample
 
 
 @responses.activate
@@ -134,27 +134,35 @@ def test_cjsg_data_inicio_alias_maps_to_data_min(mocker):
 def test_cjsg_unknown_kwarg_raises():
     """Kwargs not declared in :class:`InputCJSGTJPI` raise ``TypeError`` with
     the field name (refs #84, #93)."""
-    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
-        jus.scraper("tjpi").cjsg("dano moral", paginas=1, kwarg_inventado="x")
+    assert_unknown_kwarg_raises(
+        jus.scraper("tjpi").cjsg,
+        "kwarg_inventado",
+        "dano moral",
+        paginas=1,
+    )
 
 
 def test_cjsg_data_publicacao_kwarg_raises():
     """TJPI backend nao expoe filtro de data de publicacao; ``InputCJSGTJPI``
     nao herda ``DataPublicacaoMixin``, entao ``data_publicacao_*`` deve cair
-    como ``extra_forbidden`` -> ``TypeError`` (refs #84, #93, #125)."""
-    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'data_publicacao_inicio'"):
-        jus.scraper("tjpi").cjsg(
-            "dano moral",
-            paginas=1,
-            data_publicacao_inicio="2024-01-01",
-        )
+    como ``extra_forbidden`` -> ``TypeError`` (refs #84, #93, #125, #186)."""
+    assert_unknown_kwarg_raises(
+        jus.scraper("tjpi").cjsg,
+        "data_publicacao_inicio",
+        "dano moral",
+        paginas=1,
+    )
 
 
 def test_cjsg_download_unknown_kwarg_raises():
     """``cjsg_download`` rejects unknown kwargs at the lower-level entry point
     too — guards against silent drop when the caller skips :meth:`cjsg` (refs #183)."""
-    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
-        jus.scraper("tjpi").cjsg_download("dano moral", paginas=1, kwarg_inventado="x")
+    assert_unknown_kwarg_raises(
+        jus.scraper("tjpi").cjsg_download,
+        "kwarg_inventado",
+        "dano moral",
+        paginas=1,
+    )
 
 
 @responses.activate

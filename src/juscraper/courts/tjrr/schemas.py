@@ -21,7 +21,7 @@ class InputCJSGTJRR(SearchBase, DataJulgamentoMixin):
     Filtro de data de julgamento herdado de :class:`DataJulgamentoMixin`.
     """
 
-    relator: str = ""
+    relator: str | None = None
     orgao_julgador: list | None = None
     especie: list | None = None
 

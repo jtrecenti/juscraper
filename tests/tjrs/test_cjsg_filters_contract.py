@@ -4,6 +4,7 @@ import pytest
 import responses
 
 import juscraper as jus
+from tests._helpers import assert_unknown_kwarg_raises
 from tests.tjrs.test_cjsg_contract import _add_page
 
 
@@ -101,5 +102,9 @@ def test_cjsg_data_inicio_alias_maps_to_data_julgamento(mocker):
 def test_cjsg_unknown_kwarg_raises():
     """Kwargs not declared in :class:`InputCJSGTJRS` raise ``TypeError`` with
     the field name, instead of being silently dropped (refs #84, #93, #165)."""
-    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
-        jus.scraper("tjrs").cjsg("dano moral", paginas=1, kwarg_inventado="x")
+    assert_unknown_kwarg_raises(
+        jus.scraper("tjrs").cjsg,
+        "kwarg_inventado",
+        "dano moral",
+        paginas=1,
+    )

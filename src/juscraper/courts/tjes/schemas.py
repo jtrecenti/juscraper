@@ -10,6 +10,8 @@ from __future__ import annotations
 from datetime import date
 from typing import ClassVar, Literal
 
+from pydantic import Field
+
 from ...schemas import DataJulgamentoMixin, OutputCJSGBase, OutputRelatoriaMixin, SearchBase
 
 
@@ -44,8 +46,9 @@ class InputCJSGTJES(SearchBase, DataJulgamentoMixin):
     classe: str | None = None
     jurisdicao: str | None = None
     assunto: str | None = None
+    # TODO (#212): apertar com Literal[...] após captura do Solr.
     ordenacao: str | None = None
-    per_page: int = 20
+    per_page: int = Field(default=20, ge=1)
 
 
 class _OutputCJSGTJESBase(OutputCJSGBase, OutputRelatoriaMixin):
@@ -93,8 +96,9 @@ class InputCJPGTJES(SearchBase, DataJulgamentoMixin):
     classe: str | None = None
     jurisdicao: str | None = None
     assunto: str | None = None
+    # TODO (#212): apertar com Literal[...] após captura do Solr.
     ordenacao: str | None = None
-    per_page: int = 20
+    per_page: int = Field(default=20, ge=1)
 
 
 class OutputCJPGTJES(_OutputCJSGTJESBase):
