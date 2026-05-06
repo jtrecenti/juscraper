@@ -7,6 +7,10 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- `TJSPScraper.cjsg` aceita `pesquisa=""` por default — antes o argumento era obrigatorio e `tjsp.cjsg(classe="...", assunto="...")` levantava `TypeError`. Agora o usuario pode buscar so por filtros (sem termo textual), igualando o comportamento de `cjpg`. Refs #229.
+
 ## [0.3.0] - 2026-05-03
 
 ### Added
