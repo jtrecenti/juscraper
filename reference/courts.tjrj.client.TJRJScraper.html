@@ -190,11 +190,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td><a href="#juscraper.courts.tjrj.client.TJRJScraper.cjsg">cjsg</a></td>
-<td>Convenience method: download + parse.</td>
+<td>Busca jurisprudencia (acordaos + monocraticas) no TJRJ.</td>
 </tr>
 <tr class="even">
 <td><a href="#juscraper.courts.tjrj.client.TJRJScraper.cjsg_download">cjsg_download</a></td>
-<td>Run a TJRJ search and return the raw page payloads (list of dicts).</td>
+<td>Baixa as paginas de resultado da busca de jurisprudencia do TJRJ.</td>
 </tr>
 <tr class="odd">
 <td><a href="#juscraper.courts.tjrj.client.TJRJScraper.cjsg_parse">cjsg_parse</a></td>
@@ -213,7 +213,114 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="juscraper.courts.tjrj.client.TJRJScraper.cjsg" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjrj.client.TJRJScraper.cjsg">cjsg</h3>
 <div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>courts.tjrj.client.TJRJScraper.cjsg(pesquisa<span class="op">=</span><span class="va">None</span>, paginas<span class="op">=</span><span class="va">None</span>, <span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Convenience method: download + parse.</p>
+<p>Busca jurisprudencia (acordaos + monocraticas) no TJRJ.</p>
+<p>Submete o form ASPX em <code>ConsultarJurisprudencia.aspx</code> e segue a chamada XHR para <code>ProcessarConsJurisES.aspx</code> que entrega os documentos em JSON.</p>
+<section id="parameters" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>pesquisa</td>
+<td><a href="`str`">str</a></td>
+<td>Termo de busca livre.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>paginas</td>
+<td><a href="`int`">int</a> | <a href="`list`">list</a> | <a href="`range`">range</a> | None</td>
+<td>Paginas 1-based; <code>None</code> baixa todas. Default <code>None</code>.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>**kwargs</td>
+<td></td>
+<td>Filtros aceitos pelo schema :class:<code>InputCJSGTJRJ</code> (todos opcionais; <code>None</code> = sem filtro): * <code>ano_inicio</code> / <code>ano_fim</code> (str | int): Ano de julgamento. <strong>Granularidade anual e o unico filtro de data exposto pelo backend ASPX</strong> — use estes em vez de <code>data_julgamento_*</code>. Backend: <code>cmbAnoInicio</code> / <code>cmbAnoFim</code>. * <code>competencia</code> (str | int): <code>"1"</code> civel / <code>"2"</code> criminal / <code>"3"</code> ambos. Default <code>"1"</code>. Backend: <code>cmbCompetencia</code>. * <code>origem</code> (str | int): <code>"1"</code> 2o grau (default). Backend: <code>cmbOrigem</code>. * <code>tipo_acordao</code> (bool): Inclui acordaos. Default <code>True</code>. Backend: <code>chkAcordao</code>. * <code>tipo_monocratica</code> (bool): Inclui decisoes monocraticas. Default <code>True</code>. Backend: <code>chkDecMon</code>. * <code>magistrado_codigo</code> (str): IDs internos do magistrado, separados por virgula. Backend: <code>hfCodMags</code>. * <code>orgao_codigo</code> (str): IDs internos do orgao julgador, separados por virgula. Backend: <code>hfCodOrgs</code>.</td>
+<td><code>{}</code></td>
+</tr>
+</tbody>
+</table>
+<p>Aliases deprecados (popados com <code>DeprecationWarning</code> antes do pydantic): * <code>query</code> / <code>termo</code> -&gt; <code>pesquisa</code></p>
+</section>
+<section id="raises" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`TypeError`">TypeError</a></td>
+<td>Quando um kwarg desconhecido e passado, <strong>incluindo</strong> <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> / <code>data_publicacao_inicio</code> / <code>data_publicacao_fim</code> — o backend ASPX do TJRJ nao expoe esses filtros; use <code>ano_inicio</code> / <code>ano_fim</code> (granularidade anual apenas).</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`ValidationError`">ValidationError</a></td>
+<td>Quando um filtro tem formato invalido.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>pd.DataFrame: DataFrame com colunas <code>processo</code>, <code>classe</code>,</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>orgao_julgador</code>, <code>relator</code>, <code>data_julgamento</code>,</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>data_publicacao</code>, <code>ementa</code>, alem de <code>cod_documento</code>,</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>numero_antigo</code> e <code>tipo_documento</code>.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="exemplo" class="level4 doc-section doc-section-exemplo">
+<h4 class="doc-section doc-section-exemplo anchored" data-anchor-id="exemplo">Exemplo</h4>
+<blockquote class="blockquote">
+<blockquote class="blockquote">
+<blockquote class="blockquote">
+<p>import juscraper as jus tjrj = jus.scraper(“tjrj”) df = tjrj.cjsg(“dano moral”, ano_inicio=2024, ano_fim=2024, … paginas=range(1, 3))</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</section>
+<section id="see-also" class="level4 doc-section doc-section-see-also">
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See also</h4>
+<p><a href=":class:`InputCJSGTJRJ`"></a> — schema pydantic e a fonte da verdade dos filtros aceitos.</p>
+</section>
 </section>
 <section id="juscraper.courts.tjrj.client.TJRJScraper.cjsg_download" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjrj.client.TJRJScraper.cjsg_download">cjsg_download</h3>
@@ -230,10 +337,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    orgao_codigo<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Run a TJRJ search and return the raw page payloads (list of dicts).</p>
-<section id="parameters" class="level4 doc-section doc-section-parameters">
-<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
-<p>pesquisa : str Free-text search term. Aliases <code>query</code> / <code>termo</code> are accepted. paginas : int, list, range, or None Pages to download (1-based). <code>None</code> fetches every page. ano_inicio, ano_fim : str or int, optional Year range for judgment date. Defaults to blank (no filter). competencia : str <code>"1"</code> Cível / <code>"2"</code> Criminal / <code>"3"</code> ambos. Default <code>"1"</code>. origem : str <code>"1"</code> 2º grau (default). tipo_acordao, tipo_monocratica : bool Whether to include acórdãos or monocratic decisions. magistrado_codigo, orgao_codigo : str, optional Comma-separated ids used by the site’s tree selectors.</p>
+<p>Baixa as paginas de resultado da busca de jurisprudencia do TJRJ.</p>
+<p>Aceita os mesmos filtros de :meth:<code>cjsg</code>; veja la a lista completa. Retorna a lista bruta de payloads JSON, sem parser.</p>
+<section id="see-also-1" class="level4 doc-section doc-section-see-also">
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-1">See also</h4>
+<p><a href=":class:`InputCJSGTJRJ`"></a> — schema pydantic e a fonte da verdade dos filtros aceitos. <a href=":meth:`cjsg`"></a> — versao high-level que ja parseia para DataFrame.</p>
 </section>
 </section>
 <section id="juscraper.courts.tjrj.client.TJRJScraper.cjsg_parse" class="level3">
