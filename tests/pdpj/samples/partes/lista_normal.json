@@ -1,0 +1,166 @@
+{
+  "id": "10029886420194014100",
+  "versao": "1.0.9",
+  "numeroProcesso": "1002988-64.2019.4.01.4100",
+  "numeroProcessoSintetico": "1002988-64",
+  "dataHoraAtualizacao": "2026-04-28T04:11:48.852",
+  "dataHoraUltimaAtualizacaoCodex": "2025-11-29T04:56:34.276",
+  "nivelSigilo": 0,
+  "segmentoJustica": "JUSTICA_FEDERAL",
+  "idCodexTribunal": 3,
+  "siglaTribunal": "TRF1",
+  "partes": [
+    {
+      "polo": "ATIVO",
+      "tipoParte": "AUTOR",
+      "situacao": "ATIVO",
+      "racaCor": null,
+      "nome": "[REDIGIDO]",
+      "sexo": "[REDIGIDO]",
+      "dataNascimento": "[REDIGIDO]",
+      "tipoPessoa": "FISICA",
+      "assistenciaJudiciariaGratuita": null,
+      "sigilosa": false,
+      "nacionalidade": null,
+      "genitores": [],
+      "outrosNomes": [],
+      "documentosPrincipais": [
+        {
+          "numero": "00000000000",
+          "tipo": "CPF"
+        }
+      ],
+      "outrosDocumentos": [],
+      "representantes": [],
+      "enderecos": []
+    },
+    {
+      "polo": "PASSIVO",
+      "tipoParte": "RÉU",
+      "situacao": "ATIVO",
+      "racaCor": null,
+      "nome": "[REDIGIDO]",
+      "sexo": null,
+      "dataNascimento": null,
+      "tipoPessoa": "JURIDICA",
+      "assistenciaJudiciariaGratuita": null,
+      "sigilosa": false,
+      "nacionalidade": null,
+      "genitores": [],
+      "outrosNomes": [],
+      "documentosPrincipais": [
+        {
+          "numero": "00000000000000",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "00000000000000",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "00000000000000",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "00000000000000",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "00000000000000",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "00000000000000",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "00000000000000",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "00000000000000",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "00000000000000",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "00000000000000",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "00000000000000",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "00000000000000",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "00000000000000",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "00000000000000",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "00000000000000",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "00000000000000",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "00000000000000",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "00000000000000",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "00000000000000",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "00000000000000",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "00000000000000",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "00000000000000",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "00000000000000",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "00000000000000",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "00000000000000",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "00000000000000",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "00000000000000",
+          "tipo": "CNPJ"
+        }
+      ],
+      "outrosDocumentos": [],
+      "representantes": [],
+      "enderecos": []
+    }
+  ]
+}

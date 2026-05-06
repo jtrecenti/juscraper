@@ -7,6 +7,10 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- Novo agregador `pdpj` (`PdpjScraper`) para a API DATALAKE - Processos do PDPJ (`api-processo-integracao.data-lake.pdpj.jus.br`). Autenticacao via JWT com `auth(token)` e endpoints publicos `existe`, `cpopg`, `documentos`, `movimentos`, `partes`, `pesquisa`, `contar` e `download_documents` (texto e/ou binario). Validacao via pydantic com `extra="forbid"`.
+
 ### Changed
 
 - `TJSPScraper.cjsg` aceita `pesquisa=""` por default — antes o argumento era obrigatorio e `tjsp.cjsg(classe="...", assunto="...")` levantava `TypeError`. Agora o usuario pode buscar so por filtros (sem termo textual), igualando o comportamento de `cjpg`. Refs #229.
