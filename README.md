@@ -76,6 +76,7 @@ dados.head()
 |-----------|-----------------------------------|
 | Datajud   | listar_processos                  |
 | Jusbr     | cpopg, download_documents         |
+| PDPJ      | existe, cpopg, documentos, movimentos, partes, pesquisa, contar, download_documents |
 
 ### Notebooks de Exemplo
 
@@ -99,6 +100,7 @@ dados.head()
 - [Exemplo TJTO](docs/notebooks/tjto.ipynb)
 - [Exemplo Datajud](docs/notebooks/datajud.ipynb)
 - [Exemplo Jusbr](docs/notebooks/jusbr.ipynb)
+- [Exemplo PDPJ](docs/notebooks/pdpj.ipynb)
 
 ## Detalhes
 

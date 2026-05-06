@@ -96,6 +96,12 @@ EXPECTED_AGGREGATOR_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
         "juscraper.aggregators.comunica_cnj.schemas",
         "InputListarComunicacoesComunicaCNJ",
     ),
+    ("pdpj", "auth"): ("juscraper.aggregators.pdpj.schemas", "InputAuthPdpj"),
+    ("pdpj", "cpopg"): ("juscraper.aggregators.pdpj.schemas", "InputCnjPdpj"),
+    ("pdpj", "download_documents"): (
+        "juscraper.aggregators.pdpj.schemas",
+        "InputDownloadDocumentsPdpj",
+    ),
 }
 
 

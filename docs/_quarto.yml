@@ -102,6 +102,8 @@ website:
                   text: "Datajud"
                 - href: notebooks/jusbr.ipynb
                   text: "Jus.br"
+                - href: notebooks/pdpj.ipynb
+                  text: "PDPJ"
 
 format:
   html:
@@ -126,6 +128,7 @@ quartodoc:
       contents:
         - aggregators.datajud.client.DatajudScraper
         - aggregators.jusbr.client.JusbrScraper
+        - aggregators.pdpj.client.PdpjScraper
     - title: Scrapers de Tribunais
       desc: "Classes para coletar dados de tribunais específicos."
       contents:

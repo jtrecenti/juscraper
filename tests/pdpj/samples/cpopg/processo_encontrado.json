@@ -1,0 +1,1031 @@
+[
+  {
+    "id": "10029886420194014100",
+    "versao": "1.0.9",
+    "numeroProcesso": "1002988-64.2019.4.01.4100",
+    "numeroProcessoSintetico": "1002988-64",
+    "dataHoraAtualizacao": "2026-04-28T04:11:48.852",
+    "dataHoraUltimaAtualizacaoCodex": "2025-11-29T04:56:34.276",
+    "nivelSigilo": 0,
+    "segmentoJustica": "JUSTICA_FEDERAL",
+    "idCodexTribunal": 3,
+    "siglaTribunal": "TRF1",
+    "tramitacoes": [
+      {
+        "idOrigem": "699638",
+        "idCodex": 144205486,
+        "idFonteDadosCodex": 8,
+        "dataHoraUltimaAtualizacaoCodex": "2025-11-29T04:56:34.276",
+        "dataHoraAjuizamento": "2019-07-10T17:26:36.247",
+        "dataBaixa": null,
+        "dataDistribuicao": null,
+        "dataSentenca": null,
+        "dataSuspensao": null,
+        "tipoJustica": "COMUM",
+        "sistemaProcessual": "PJE",
+        "tipoSistemaProcessual": "ELETRONICO",
+        "tribunal": {
+          "idCodex": 3,
+          "sigla": "TRF1",
+          "nome": "Tribunal Regional Federal da 1ª Região",
+          "segmento": "JUSTICA_FEDERAL",
+          "jtr": "401"
+        },
+        "numeroHistorico": null,
+        "competencia": null,
+        "dadosCompetencia": {
+          "id": 7065,
+          "idLocal": 248451,
+          "nome": "Cível (exceto Ambiental/Agrário)"
+        },
+        "idCompetencia": null,
+        "instancia": "PRIMEIRO_GRAU",
+        "tipoProcesso": "ORIGINARIO",
+        "tipoPrioridade": null,
+        "natureza": "CIVEL",
+        "liminar": true,
+        "justicaGratuita": true,
+        "nivelSigilo": 0,
+        "valorAcao": 0.0,
+        "custasFinais": null,
+        "custasIniciais": null,
+        "custasRecolhidas": null,
+        "custasRecursais": null,
+        "dataHoraUltimaDistribuicao": "2019-07-10T17:26:36.247",
+        "ativo": true,
+        "dataHoraExclusao": null,
+        "anoEleicao": null,
+        "situacaoMigracao": "NATIVO",
+        "intervencaoMP": null,
+        "juizo100Digital": null,
+        "classe": [
+          {
+            "sequencia": 1,
+            "dataHoraInicio": "2019-07-10T17:26:36.247",
+            "codigo": 7,
+            "descricao": "Procedimento Comum Cível",
+            "hierarquia": "(7) Procedimento Comum Cível | (1107) Procedimento de Conhecimento | (1106) Processo de Conhecimento | (2) PROCESSO CÍVEL E DO TRABALHO",
+            "polo_passivo": "Réu",
+            "polo_ativo": "Autor",
+            "historico": []
+          }
+        ],
+        "assunto": [
+          {
+            "codigo": 12487,
+            "descricao": "Fornecimento de medicamentos",
+            "hierarquia": "(12487) Fornecimento de medicamentos | (12486) Planos de saúde | (12482) Suplementar | (12480) DIREITO DA SAÚDE",
+            "assunto_secundario": "N",
+            "outrosAssuntos": []
+          }
+        ],
+        "partes": [
+          {
+            "polo": "ATIVO",
+            "tipoParte": "AUTOR",
+            "situacao": "ATIVO",
+            "racaCor": null,
+            "nome": "MARTA HELENA RABELO DE SOUZA",
+            "sexo": "FEMININO",
+            "dataNascimento": "1965-04-01",
+            "tipoPessoa": "FISICA",
+            "assistenciaJudiciariaGratuita": null,
+            "sigilosa": false,
+            "nacionalidade": null,
+            "genitores": [
+              {
+                "nome": "AUGUSTA GONZAGA RABELO",
+                "sexo": "FEMININO"
+              }
+            ],
+            "outrosNomes": [],
+            "documentosPrincipais": [
+              {
+                "numero": "38626730225",
+                "tipo": "CPF"
+              }
+            ],
+            "outrosDocumentos": [
+              {
+                "nome": "MARTA HELENA RABELO DE SOUZA",
+                "numero": "30306501074",
+                "tipo": "TE",
+                "orgaoEmissor": "Justiça Eleitoral",
+                "estadoEmissor": null
+              }
+            ],
+            "representantes": [],
+            "enderecos": [
+              {
+                "idEndereco": 206136191,
+                "logradouro": "Rua Silas shoknes",
+                "numero": "2756",
+                "complemento": null,
+                "bairro": "Embratel",
+                "cep": "76820-746",
+                "localidade": "PORTO VELHO",
+                "uf": {
+                  "sigla": "RO",
+                  "nome": "RONDÔNIA"
+                },
+                "pais": {
+                  "sigla": "BR",
+                  "nome": "Brasil"
+                }
+              }
+            ]
+          },
+          {
+            "polo": "PASSIVO",
+            "tipoParte": "RÉU",
+            "situacao": "ATIVO",
+            "racaCor": null,
+            "nome": "ESTADO DE RONDONIA",
+            "sexo": null,
+            "dataNascimento": null,
+            "tipoPessoa": "JURIDICA",
+            "assistenciaJudiciariaGratuita": null,
+            "sigilosa": false,
+            "nacionalidade": null,
+            "genitores": [],
+            "outrosNomes": [
+              {
+                "nome": "SEDAM",
+                "tipo": "OUTRO"
+              }
+            ],
+            "documentosPrincipais": [
+              {
+                "numero": "07824639000130",
+                "tipo": "CNPJ"
+              },
+              {
+                "numero": "04564498000257",
+                "tipo": "CNPJ"
+              },
+              {
+                "numero": "00394585001062",
+                "tipo": "CNPJ"
+              },
+              {
+                "numero": "02603612000102",
+                "tipo": "CNPJ"
+              },
+              {
+                "numero": "09601829000114",
+                "tipo": "CNPJ"
+              },
+              {
+                "numero": "04564530000113",
+                "tipo": "CNPJ"
+              },
+              {
+                "numero": "01664910000131",
+                "tipo": "CNPJ"
+              },
+              {
+                "numero": "04285722000271",
+                "tipo": "CNPJ"
+              },
+              {
+                "numero": "05599253000147",
+                "tipo": "CNPJ"
+              },
+              {
+                "numero": "04798328000156",
+                "tipo": "CNPJ"
+              },
+              {
+                "numero": "04801221000110",
+                "tipo": "CNPJ"
+              },
+              {
+                "numero": "04293700000172",
+                "tipo": "CNPJ"
+              },
+              {
+                "numero": "00394585000252",
+                "tipo": "CNPJ"
+              },
+              {
+                "numero": "09317468000189",
+                "tipo": "CNPJ"
+              },
+              {
+                "numero": "10217367000115",
+                "tipo": "CNPJ"
+              },
+              {
+                "numero": "04287520000188",
+                "tipo": "CNPJ"
+              },
+              {
+                "numero": "04280889000401",
+                "tipo": "CNPJ"
+              },
+              {
+                "numero": "03682401000167",
+                "tipo": "CNPJ"
+              },
+              {
+                "numero": "04793055000157",
+                "tipo": "CNPJ"
+              },
+              {
+                "numero": "04287520000269",
+                "tipo": "CNPJ"
+              },
+              {
+                "numero": "04381083000167",
+                "tipo": "CNPJ"
+              },
+              {
+                "numero": "07172665000121",
+                "tipo": "CNPJ"
+              },
+              {
+                "numero": "04794681000168",
+                "tipo": "CNPJ"
+              },
+              {
+                "numero": "63752604000104",
+                "tipo": "CNPJ"
+              },
+              {
+                "numero": "03693136000112",
+                "tipo": "CNPJ"
+              },
+              {
+                "numero": "00394585000171",
+                "tipo": "CNPJ"
+              },
+              {
+                "numero": "04287520000501",
+                "tipo": "CNPJ"
+              }
+            ],
+            "outrosDocumentos": [],
+            "representantes": [],
+            "enderecos": []
+          }
+        ],
+        "distribuicoes": [
+          {
+            "sequencia": 1,
+            "dataHora": "2019-07-10T17:26:36.247",
+            "id": "99d8abfc-8487-5408-88e9-2cff67ee754f",
+            "idCodex": 436621338,
+            "orgaoJulgadorLocal": {
+              "id": 328466,
+              "nome": "1ª Vara Federal Cível da SJRO",
+              "idOrigem": "91",
+              "jurisdicaoLocal": {
+                "id": 610,
+                "idOrigem": "22",
+                "nome": "Seção Judiciária de Rondônia"
+              }
+            },
+            "orgaoJulgador": [
+              {
+                "tribunal": {
+                  "segmento": "JUSTICA_FEDERAL",
+                  "sigla": "TRF1",
+                  "nome": "Tribunal Regional Federal da 1ª Região"
+                },
+                "id": 12419,
+                "idLocal": 328466,
+                "nome": "1ª PORTO VELHO",
+                "jurisdicao": {
+                  "id": 12418,
+                  "nome": "Capital SJRO"
+                },
+                "ibge": {
+                  "codIbge": "1100205",
+                  "codCidade": 3927,
+                  "nomeCidade": "PORTO VELHO",
+                  "sigUf": "RO"
+                }
+              }
+            ],
+            "orgaoJulgadorColegiado": []
+          }
+        ],
+        "movimentos": [
+          {
+            "sequencia": 13,
+            "dataHora": "2020-04-22T19:28:49.17",
+            "idDistribuicao": "99d8abfc-8487-5408-88e9-2cff67ee754f",
+            "idCodex": 6829068641,
+            "idOrigem": "258979860",
+            "descricao": "Baixa Definitiva - declaração de competência - órgão vinculado a Tribunal diferente",
+            "classe": {
+              "codigo": 7,
+              "descricao": "Procedimento Comum Cível"
+            },
+            "tipo": {
+              "id": 22,
+              "nome": "Baixa Definitiva",
+              "descricao": "Baixa Definitiva",
+              "hierarquia": "/Serventuário/Distribuidor/Baixa Definitiva",
+              "complementos": [
+                {
+                  "codigo": -1,
+                  "nome": "inconsistente",
+                  "idComplementoOrigem": "141747381",
+                  "categoria": "LIVRE",
+                  "valor": {
+                    "codigo": null,
+                    "descricao": null,
+                    "valor": "declaração de competência"
+                  }
+                },
+                {
+                  "codigo": -1,
+                  "nome": "inconsistente",
+                  "idComplementoOrigem": "141747382",
+                  "categoria": "LIVRE",
+                  "valor": {
+                    "codigo": null,
+                    "descricao": null,
+                    "valor": "órgão vinculado a Tribunal diferente"
+                  }
+                }
+              ]
+            },
+            "orgaoJulgador": {
+              "id": 12419,
+              "idLocal": 328466,
+              "nome": "1ª PORTO VELHO",
+              "ibge": {
+                "codIbge": "1100205",
+                "codCidade": 3927,
+                "nomeCidade": "PORTO VELHO",
+                "sigUf": "RO"
+              }
+            },
+            "idDocumento": null,
+            "magistrado": null,
+            "usuario": {
+              "nome": "ODIR CARVALHO LIMA FILHO",
+              "login": "61176540220",
+              "CPF": "61176540220"
+            }
+          },
+          {
+            "sequencia": 12,
+            "dataHora": "2020-04-22T19:27:25.643",
+            "idDistribuicao": "99d8abfc-8487-5408-88e9-2cff67ee754f",
+            "idCodex": 6829068640,
+            "idOrigem": "258979855",
+            "descricao": "Juntada de outros documentos",
+            "classe": {
+              "codigo": 7,
+              "descricao": "Procedimento Comum Cível"
+            },
+            "tipo": {
+              "id": 581,
+              "nome": "Documento",
+              "descricao": "Juntada de #{tipo_de_documento}",
+              "hierarquia": "/Serventuário/Escrivão-Diretor de Secretaria-Secretário Jurídico/Juntada/Documento",
+              "complementos": [
+                {
+                  "codigo": 4,
+                  "nome": "tipo_de_documento",
+                  "idComplementoOrigem": "141747377",
+                  "categoria": "TABELADO",
+                  "valor": {
+                    "codigo": 80,
+                    "descricao": "Outros documentos",
+                    "valor": "Outros documentos"
+                  }
+                }
+              ]
+            },
+            "orgaoJulgador": {
+              "id": 12419,
+              "idLocal": 328466,
+              "nome": "1ª PORTO VELHO",
+              "ibge": {
+                "codIbge": "1100205",
+                "codCidade": 3927,
+                "nomeCidade": "PORTO VELHO",
+                "sigUf": "RO"
+              }
+            },
+            "idDocumento": "29611b04-a7f0-5ca8-bb13-aecc151e8538",
+            "magistrado": null,
+            "usuario": {
+              "nome": "ODIR CARVALHO LIMA FILHO",
+              "login": "61176540220",
+              "CPF": "61176540220"
+            }
+          },
+          {
+            "sequencia": 11,
+            "dataHora": "2020-02-12T04:21:16.861",
+            "idDistribuicao": "99d8abfc-8487-5408-88e9-2cff67ee754f",
+            "idCodex": 6829068639,
+            "idOrigem": "208189090",
+            "descricao": "Decorrido prazo de MARTA HELENA RABELO DE SOUZA em 11/02/2020 23:59:59.",
+            "classe": {
+              "codigo": 7,
+              "descricao": "Procedimento Comum Cível"
+            },
+            "tipo": {
+              "id": 1051,
+              "nome": "Decurso de Prazo",
+              "descricao": "Decorrido prazo de #{nome_da_parte} em #{data}.",
+              "hierarquia": "/Serventuário/Escrivão-Diretor de Secretaria-Secretário Jurídico/Decurso de Prazo",
+              "complementos": [
+                {
+                  "codigo": 1,
+                  "nome": "nome_da_parte",
+                  "idComplementoOrigem": "108949922",
+                  "categoria": "IDENTIFICADOR",
+                  "valor": {
+                    "codigo": null,
+                    "descricao": null,
+                    "valor": "MARTA HELENA RABELO DE SOUZA"
+                  }
+                },
+                {
+                  "codigo": 14,
+                  "nome": "data",
+                  "idComplementoOrigem": "108949923",
+                  "categoria": "IDENTIFICADOR",
+                  "valor": {
+                    "codigo": null,
+                    "descricao": null,
+                    "valor": "11/02/2020 23:59:59"
+                  }
+                }
+              ]
+            },
+            "orgaoJulgador": {
+              "id": 12419,
+              "idLocal": 328466,
+              "nome": "1ª PORTO VELHO",
+              "ibge": {
+                "codIbge": "1100205",
+                "codCidade": 3927,
+                "nomeCidade": "PORTO VELHO",
+                "sigUf": "RO"
+              }
+            },
+            "idDocumento": null,
+            "magistrado": null,
+            "usuario": null
+          },
+          {
+            "sequencia": 10,
+            "dataHora": "2019-12-13T15:04:04.938",
+            "idDistribuicao": "99d8abfc-8487-5408-88e9-2cff67ee754f",
+            "idCodex": 6829068638,
+            "idOrigem": "106841399",
+            "descricao": "Expedição de Comunicação via sistema.",
+            "classe": {
+              "codigo": 7,
+              "descricao": "Procedimento Comum Cível"
+            },
+            "tipo": {
+              "id": 60,
+              "nome": "Expedição de documento",
+              "descricao": "Expedição de #{tipo_de_documento}. ",
+              "hierarquia": "/Serventuário/Escrivão-Diretor de Secretaria-Secretário Jurídico/Expedição de documento",
+              "complementos": [
+                {
+                  "codigo": 4,
+                  "nome": "tipo_de_documento",
+                  "idComplementoOrigem": "89268864",
+                  "categoria": "TABELADO",
+                  "valor": {
+                    "codigo": -1,
+                    "descricao": "inconsistente",
+                    "valor": "Comunicação via sistema"
+                  }
+                }
+              ]
+            },
+            "orgaoJulgador": {
+              "id": 12419,
+              "idLocal": 328466,
+              "nome": "1ª PORTO VELHO",
+              "ibge": {
+                "codIbge": "1100205",
+                "codCidade": 3927,
+                "nomeCidade": "PORTO VELHO",
+                "sigUf": "RO"
+              }
+            },
+            "idDocumento": "7ec0b824-f434-5c12-944c-58daf22c9605",
+            "magistrado": null,
+            "usuario": {
+              "nome": "EDUARDO AUGUSTO PORTELA CHAVES",
+              "login": "92601405287",
+              "CPF": "92601405287"
+            }
+          },
+          {
+            "sequencia": 9,
+            "dataHora": "2019-12-13T14:54:51.831",
+            "idDistribuicao": "99d8abfc-8487-5408-88e9-2cff67ee754f",
+            "idCodex": 6829068637,
+            "idOrigem": "106841365",
+            "descricao": "Juntada de ato ordinatório",
+            "classe": {
+              "codigo": 7,
+              "descricao": "Procedimento Comum Cível"
+            },
+            "tipo": {
+              "id": 581,
+              "nome": "Documento",
+              "descricao": "Juntada de #{tipo_de_documento}",
+              "hierarquia": "/Serventuário/Escrivão-Diretor de Secretaria-Secretário Jurídico/Juntada/Documento",
+              "complementos": [
+                {
+                  "codigo": 4,
+                  "nome": "tipo_de_documento",
+                  "idComplementoOrigem": "89259377",
+                  "categoria": "TABELADO",
+                  "valor": {
+                    "codigo": -1,
+                    "descricao": "inconsistente",
+                    "valor": "ato ordinatório"
+                  }
+                }
+              ]
+            },
+            "orgaoJulgador": {
+              "id": 12419,
+              "idLocal": 328466,
+              "nome": "1ª PORTO VELHO",
+              "ibge": {
+                "codIbge": "1100205",
+                "codCidade": 3927,
+                "nomeCidade": "PORTO VELHO",
+                "sigUf": "RO"
+              }
+            },
+            "idDocumento": "d68cccee-b756-51e5-ae87-edb296ac220f",
+            "magistrado": null,
+            "usuario": {
+              "nome": "EDUARDO AUGUSTO PORTELA CHAVES",
+              "login": "92601405287",
+              "CPF": "92601405287"
+            }
+          },
+          {
+            "sequencia": 8,
+            "dataHora": "2019-08-24T23:43:55.232",
+            "idDistribuicao": "99d8abfc-8487-5408-88e9-2cff67ee754f",
+            "idCodex": 6829068636,
+            "idOrigem": "60150657",
+            "descricao": "Decorrido prazo de MARTA HELENA RABELO DE SOUZA em 19/08/2019 23:59:59.",
+            "classe": {
+              "codigo": 7,
+              "descricao": "Procedimento Comum Cível"
+            },
+            "tipo": {
+              "id": 1051,
+              "nome": "Decurso de Prazo",
+              "descricao": "Decorrido prazo de #{nome_da_parte} em #{data}.",
+              "hierarquia": "/Serventuário/Escrivão-Diretor de Secretaria-Secretário Jurídico/Decurso de Prazo",
+              "complementos": [
+                {
+                  "codigo": 1,
+                  "nome": "nome_da_parte",
+                  "idComplementoOrigem": "53416266",
+                  "categoria": "IDENTIFICADOR",
+                  "valor": {
+                    "codigo": null,
+                    "descricao": null,
+                    "valor": "MARTA HELENA RABELO DE SOUZA"
+                  }
+                },
+                {
+                  "codigo": 14,
+                  "nome": "data",
+                  "idComplementoOrigem": "53416267",
+                  "categoria": "IDENTIFICADOR",
+                  "valor": {
+                    "codigo": null,
+                    "descricao": null,
+                    "valor": "19/08/2019 23:59:59"
+                  }
+                }
+              ]
+            },
+            "orgaoJulgador": {
+              "id": 12419,
+              "idLocal": 328466,
+              "nome": "1ª PORTO VELHO",
+              "ibge": {
+                "codIbge": "1100205",
+                "codCidade": 3927,
+                "nomeCidade": "PORTO VELHO",
+                "sigUf": "RO"
+              }
+            },
+            "idDocumento": null,
+            "magistrado": null,
+            "usuario": null
+          },
+          {
+            "sequencia": 7,
+            "dataHora": "2019-07-17T14:55:39.719",
+            "idDistribuicao": "99d8abfc-8487-5408-88e9-2cff67ee754f",
+            "idCodex": 6829068635,
+            "idOrigem": "52883814",
+            "descricao": "Expedição de Comunicação via sistema.",
+            "classe": {
+              "codigo": 7,
+              "descricao": "Procedimento Comum Cível"
+            },
+            "tipo": {
+              "id": 60,
+              "nome": "Expedição de documento",
+              "descricao": "Expedição de #{tipo_de_documento}. ",
+              "hierarquia": "/Serventuário/Escrivão-Diretor de Secretaria-Secretário Jurídico/Expedição de documento",
+              "complementos": [
+                {
+                  "codigo": 4,
+                  "nome": "tipo_de_documento",
+                  "idComplementoOrigem": "47002210",
+                  "categoria": "TABELADO",
+                  "valor": {
+                    "codigo": -1,
+                    "descricao": "inconsistente",
+                    "valor": "Comunicação via sistema"
+                  }
+                }
+              ]
+            },
+            "orgaoJulgador": {
+              "id": 12419,
+              "idLocal": 328466,
+              "nome": "1ª PORTO VELHO",
+              "ibge": {
+                "codIbge": "1100205",
+                "codCidade": 3927,
+                "nomeCidade": "PORTO VELHO",
+                "sigUf": "RO"
+              }
+            },
+            "idDocumento": "396e1e61-68c3-5e48-b794-719187ae841d",
+            "magistrado": null,
+            "usuario": {
+              "nome": "BIONISON VIEIRA LEITE",
+              "login": "78308313272",
+              "CPF": "78308313272"
+            }
+          },
+          {
+            "sequencia": 6,
+            "dataHora": "2019-07-17T09:32:26.586",
+            "idDistribuicao": "99d8abfc-8487-5408-88e9-2cff67ee754f",
+            "idCodex": 6829068634,
+            "idOrigem": "52766236",
+            "descricao": "Declarada incompetência",
+            "classe": {
+              "codigo": 7,
+              "descricao": "Procedimento Comum Cível"
+            },
+            "tipo": {
+              "id": 941,
+              "nome": "Incompetência",
+              "descricao": "Declarada incompetência",
+              "hierarquia": "/Magistrado/Decisão/Declaração/Incompetência",
+              "complementos": []
+            },
+            "orgaoJulgador": {
+              "id": 12419,
+              "idLocal": 328466,
+              "nome": "1ª PORTO VELHO",
+              "ibge": {
+                "codIbge": "1100205",
+                "codCidade": 3927,
+                "nomeCidade": "PORTO VELHO",
+                "sigUf": "RO"
+              }
+            },
+            "idDocumento": "d5b2fe52-8747-59c8-9953-8f320971a492",
+            "magistrado": {
+              "nome": "GRACE ANNY DE SOUZA MONTEIRO",
+              "CPF": "00718302354"
+            },
+            "usuario": {
+              "nome": "GRACE ANNY DE SOUZA MONTEIRO",
+              "login": "00718302354",
+              "CPF": "00718302354"
+            }
+          },
+          {
+            "sequencia": 5,
+            "dataHora": "2019-07-11T17:16:46.24",
+            "idDistribuicao": "99d8abfc-8487-5408-88e9-2cff67ee754f",
+            "idCodex": 6829068633,
+            "idOrigem": "51689165",
+            "descricao": "Conclusos para decisão",
+            "classe": {
+              "codigo": 7,
+              "descricao": "Procedimento Comum Cível"
+            },
+            "tipo": {
+              "id": 51,
+              "nome": "Conclusão",
+              "descricao": "Conclusos #{tipo_de_conclusao}",
+              "hierarquia": "/Serventuário/Escrivão-Diretor de Secretaria-Secretário Jurídico/Conclusão",
+              "complementos": [
+                {
+                  "codigo": 3,
+                  "nome": "tipo_de_conclusao",
+                  "idComplementoOrigem": "45909166",
+                  "categoria": "TABELADO",
+                  "valor": {
+                    "codigo": 6,
+                    "descricao": "para decisão",
+                    "valor": "para decisão"
+                  }
+                }
+              ]
+            },
+            "orgaoJulgador": {
+              "id": 12419,
+              "idLocal": 328466,
+              "nome": "1ª PORTO VELHO",
+              "ibge": {
+                "codIbge": "1100205",
+                "codCidade": 3927,
+                "nomeCidade": "PORTO VELHO",
+                "sigUf": "RO"
+              }
+            },
+            "idDocumento": null,
+            "magistrado": null,
+            "usuario": {
+              "nome": "EDUARDO AUGUSTO PORTELA CHAVES",
+              "login": "92601405287",
+              "CPF": "92601405287"
+            }
+          },
+          {
+            "sequencia": 4,
+            "dataHora": "2019-07-10T17:43:57.291",
+            "idDistribuicao": "99d8abfc-8487-5408-88e9-2cff67ee754f",
+            "idCodex": 6829068632,
+            "idOrigem": "51398703",
+            "descricao": "Remetidos os Autos da Distribuição a 1ª Vara Federal Cível da SJRO",
+            "classe": {
+              "codigo": 7,
+              "descricao": "Procedimento Comum Cível"
+            },
+            "tipo": {
+              "id": 982,
+              "nome": "Remessa",
+              "descricao": "Remetidos os Autos (#{motivo_da_remessa}) da Distribuição ao #{destino}",
+              "hierarquia": "/Serventuário/Distribuidor/Remessa",
+              "complementos": [
+                {
+                  "codigo": 18,
+                  "nome": "motivo_da_remessa",
+                  "idComplementoOrigem": "1051915712",
+                  "categoria": "TABELADO",
+                  "valor": {
+                    "codigo": 40,
+                    "descricao": "outros motivos",
+                    "valor": "outros motivos"
+                  }
+                },
+                {
+                  "codigo": 7,
+                  "nome": "destino",
+                  "idComplementoOrigem": "45639167",
+                  "categoria": "IDENTIFICADOR",
+                  "valor": {
+                    "codigo": null,
+                    "descricao": null,
+                    "valor": "1ª Vara Federal Cível da SJRO"
+                  }
+                }
+              ]
+            },
+            "orgaoJulgador": {
+              "id": 12419,
+              "idLocal": 328466,
+              "nome": "1ª PORTO VELHO",
+              "ibge": {
+                "codIbge": "1100205",
+                "codCidade": 3927,
+                "nomeCidade": "PORTO VELHO",
+                "sigUf": "RO"
+              }
+            },
+            "idDocumento": null,
+            "magistrado": null,
+            "usuario": {
+              "nome": "SANDRA LUCIA COUTO MAIA CASARA",
+              "login": "03704297291",
+              "CPF": "03704297291"
+            }
+          },
+          {
+            "sequencia": 3,
+            "dataHora": "2019-07-10T17:43:57.061",
+            "idDistribuicao": "99d8abfc-8487-5408-88e9-2cff67ee754f",
+            "idCodex": 6829068631,
+            "idOrigem": "51398702",
+            "descricao": "Juntada de Informação de Prevenção.",
+            "classe": {
+              "codigo": 7,
+              "descricao": "Procedimento Comum Cível"
+            },
+            "tipo": {
+              "id": 581,
+              "nome": "Documento",
+              "descricao": "Juntada de #{tipo_de_documento}",
+              "hierarquia": "/Serventuário/Escrivão-Diretor de Secretaria-Secretário Jurídico/Juntada/Documento",
+              "complementos": [
+                {
+                  "codigo": 4,
+                  "nome": "tipo_de_documento",
+                  "idComplementoOrigem": "45639166",
+                  "categoria": "TABELADO",
+                  "valor": {
+                    "codigo": -1,
+                    "descricao": "inconsistente",
+                    "valor": "Informação de Prevenção"
+                  }
+                }
+              ]
+            },
+            "orgaoJulgador": {
+              "id": 12419,
+              "idLocal": 328466,
+              "nome": "1ª PORTO VELHO",
+              "ibge": {
+                "codIbge": "1100205",
+                "codCidade": 3927,
+                "nomeCidade": "PORTO VELHO",
+                "sigUf": "RO"
+              }
+            },
+            "idDocumento": "0592d4fd-3bf8-5762-b694-fa07a39d769d",
+            "magistrado": null,
+            "usuario": {
+              "nome": "SANDRA LUCIA COUTO MAIA CASARA",
+              "login": "03704297291",
+              "CPF": "03704297291"
+            }
+          },
+          {
+            "sequencia": 2,
+            "dataHora": "2019-07-10T17:26:39.564",
+            "idDistribuicao": "99d8abfc-8487-5408-88e9-2cff67ee754f",
+            "idCodex": 6829068630,
+            "idOrigem": "51388195",
+            "descricao": "Recebido pelo Distribuidor",
+            "classe": {
+              "codigo": 7,
+              "descricao": "Procedimento Comum Cível"
+            },
+            "tipo": {
+              "id": 981,
+              "nome": "Recebimento",
+              "descricao": "Recebido pelo Distribuidor",
+              "hierarquia": "/Serventuário/Distribuidor/Recebimento",
+              "complementos": []
+            },
+            "orgaoJulgador": {
+              "id": 12419,
+              "idLocal": 328466,
+              "nome": "1ª PORTO VELHO",
+              "ibge": {
+                "codIbge": "1100205",
+                "codCidade": 3927,
+                "nomeCidade": "PORTO VELHO",
+                "sigUf": "RO"
+              }
+            },
+            "idDocumento": null,
+            "magistrado": null,
+            "usuario": {
+              "nome": "MICHELE NOGUEIRA DE SOUZA",
+              "login": "00623153238",
+              "CPF": "00623153238"
+            }
+          },
+          {
+            "sequencia": 1,
+            "dataHora": "2019-07-10T17:26:36.338",
+            "idDistribuicao": "99d8abfc-8487-5408-88e9-2cff67ee754f",
+            "idCodex": 6829068629,
+            "idOrigem": "51388194",
+            "descricao": "Distribuído por sorteio",
+            "classe": {
+              "codigo": 7,
+              "descricao": "Procedimento Comum Cível"
+            },
+            "tipo": {
+              "id": 26,
+              "nome": "Distribuição",
+              "descricao": "Distribuído por #{tipo_de_distribuicao_redistribuicao}",
+              "hierarquia": "/Serventuário/Distribuidor/Distribuição",
+              "complementos": [
+                {
+                  "codigo": 2,
+                  "nome": "tipo_de_distribuicao_redistribuicao",
+                  "idComplementoOrigem": "45611748",
+                  "categoria": "TABELADO",
+                  "valor": {
+                    "codigo": 2,
+                    "descricao": "sorteio",
+                    "valor": "sorteio"
+                  }
+                }
+              ]
+            },
+            "orgaoJulgador": {
+              "id": 12419,
+              "idLocal": 328466,
+              "nome": "1ª PORTO VELHO",
+              "ibge": {
+                "codIbge": "1100205",
+                "codCidade": 3927,
+                "nomeCidade": "PORTO VELHO",
+                "sigUf": "RO"
+              }
+            },
+            "idDocumento": null,
+            "magistrado": null,
+            "usuario": {
+              "nome": "MICHELE NOGUEIRA DE SOUZA",
+              "login": "00623153238",
+              "CPF": "00623153238"
+            }
+          }
+        ],
+        "documentos": [
+          {
+            "sequencia": 10,
+            "dataHoraJuntada": "2019-12-13T14:54:51.811",
+            "id": "d68cccee-b756-51e5-ae87-edb296ac220f",
+            "idCodex": 5960188814,
+            "idOrigem": "141530864",
+            "nome": "Ato ordinatório.html",
+            "nivelSigilo": "PUBLICO",
+            "tipo": {
+              "codigo": 14575,
+              "nome": "Ato ordinatório",
+              "idCodex": 1806701,
+              "idOrigem": "150"
+            },
+            "arquivo": {
+              "id": "29ae973f-42c9-56ee-8f83-d02f498e14e6",
+              "idCodex": 2306244613,
+              "tipo": "TEXT_HTML",
+              "quantidadePaginas": 1,
+              "quantidadeImagens": 1,
+              "tamanho": 20703,
+              "tamanhoTexto": 875
+            },
+            "signatarios": [
+              {
+                "nome": "EDUARDO AUGUSTO PORTELA CHAVES"
+              }
+            ]
+          },
+          {
+            "sequencia": 8,
+            "dataHoraJuntada": "2019-07-17T09:32:26.372",
+            "id": "d5b2fe52-8747-59c8-9953-8f320971a492",
+            "idCodex": 5960188812,
+            "idOrigem": "68993546",
+            "nome": "Decisão.html",
+            "nivelSigilo": "PUBLICO",
+            "tipo": {
+              "codigo": 404,
+              "nome": "Decisão",
+              "idCodex": 1802351,
+              "idOrigem": "64"
+            },
+            "arquivo": {
+              "id": "357f60d9-8094-52e0-bf4d-02f2fe139c1c",
+              "idCodex": 3041651690,
+              "tipo": "TEXT_HTML",
+              "quantidadePaginas": 1,
+              "quantidadeImagens": 1,
+              "tamanho": 46442,
+              "tamanhoTexto": 3747
+            },
+            "signatarios": [
+              {
+                "nome": "GRACE ANNY DE SOUZA MONTEIRO"
+              }
+            ]
+          }
+        ],
+        "processosRelacionados": []
+      }
+    ]
+  }
+]

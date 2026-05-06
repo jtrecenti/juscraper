@@ -1,0 +1,202 @@
+{
+  "id": "10029886420194014100",
+  "versao": "1.0.9",
+  "numeroProcesso": "1002988-64.2019.4.01.4100",
+  "numeroProcessoSintetico": "1002988-64",
+  "dataHoraAtualizacao": "2026-04-28T04:11:48.852",
+  "dataHoraUltimaAtualizacaoCodex": "2025-11-29T04:56:34.276",
+  "nivelSigilo": 0,
+  "segmentoJustica": "JUSTICA_FEDERAL",
+  "idCodexTribunal": 3,
+  "siglaTribunal": "TRF1",
+  "partes": [
+    {
+      "polo": "ATIVO",
+      "tipoParte": "AUTOR",
+      "situacao": "ATIVO",
+      "racaCor": null,
+      "nome": "MARTA HELENA RABELO DE SOUZA",
+      "sexo": "FEMININO",
+      "dataNascimento": "1965-04-01",
+      "tipoPessoa": "FISICA",
+      "assistenciaJudiciariaGratuita": null,
+      "sigilosa": false,
+      "nacionalidade": null,
+      "genitores": [
+        {
+          "nome": "AUGUSTA GONZAGA RABELO",
+          "sexo": "FEMININO"
+        }
+      ],
+      "outrosNomes": [],
+      "documentosPrincipais": [
+        {
+          "numero": "38626730225",
+          "tipo": "CPF"
+        }
+      ],
+      "outrosDocumentos": [
+        {
+          "nome": "MARTA HELENA RABELO DE SOUZA",
+          "numero": "30306501074",
+          "tipo": "TE",
+          "orgaoEmissor": "Justiça Eleitoral",
+          "estadoEmissor": null
+        }
+      ],
+      "representantes": [],
+      "enderecos": [
+        {
+          "idEndereco": 206136191,
+          "logradouro": "Rua Silas shoknes",
+          "numero": "2756",
+          "complemento": null,
+          "bairro": "Embratel",
+          "cep": "76820-746",
+          "localidade": "PORTO VELHO",
+          "uf": {
+            "sigla": "RO",
+            "nome": "RONDÔNIA"
+          },
+          "pais": {
+            "sigla": "BR",
+            "nome": "Brasil"
+          }
+        }
+      ]
+    },
+    {
+      "polo": "PASSIVO",
+      "tipoParte": "RÉU",
+      "situacao": "ATIVO",
+      "racaCor": null,
+      "nome": "ESTADO DE RONDONIA",
+      "sexo": null,
+      "dataNascimento": null,
+      "tipoPessoa": "JURIDICA",
+      "assistenciaJudiciariaGratuita": null,
+      "sigilosa": false,
+      "nacionalidade": null,
+      "genitores": [],
+      "outrosNomes": [
+        {
+          "nome": "SEDAM",
+          "tipo": "OUTRO"
+        }
+      ],
+      "documentosPrincipais": [
+        {
+          "numero": "07824639000130",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "04564498000257",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "00394585001062",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "02603612000102",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "09601829000114",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "04564530000113",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "01664910000131",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "04285722000271",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "05599253000147",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "04798328000156",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "04801221000110",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "04293700000172",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "00394585000252",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "09317468000189",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "10217367000115",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "04287520000188",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "04280889000401",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "03682401000167",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "04793055000157",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "04287520000269",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "04381083000167",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "07172665000121",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "04794681000168",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "63752604000104",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "03693136000112",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "00394585000171",
+          "tipo": "CNPJ"
+        },
+        {
+          "numero": "04287520000501",
+          "tipo": "CNPJ"
+        }
+      ],
+      "outrosDocumentos": [],
+      "representantes": [],
+      "enderecos": []
+    }
+  ]
+}

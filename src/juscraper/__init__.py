@@ -39,6 +39,7 @@ _SCRAPERS: dict[str, str] = {
     "tjmg":  "juscraper.courts.tjmg.client:TJMGScraper",
     "datajud": "juscraper.aggregators.datajud.client:DatajudScraper",
     "jusbr": "juscraper.aggregators.jusbr.client:JusbrScraper",
+    "pdpj": "juscraper.aggregators.pdpj.client:PdpjScraper",
     "comunica_cnj": "juscraper.aggregators.comunica_cnj.client:ComunicaCNJScraper",
 }
 
