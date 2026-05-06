@@ -73,6 +73,10 @@ EXPECTED_COURT_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
         "juscraper.courts.tjto.schemas",
         "InputCjsgEmentaTJTO",
     ),
+    # PJe consulta pública (TRF1, TRF3, TRF5) — schema próprio por tribunal.
+    ("trf1", "cpopg"): ("juscraper.courts.trf1.schemas", "InputCpopgTRF1"),
+    ("trf3", "cpopg"): ("juscraper.courts.trf3.schemas", "InputCpopgTRF3"),
+    ("trf5", "cpopg"): ("juscraper.courts.trf5.schemas", "InputCpopgTRF5"),
 }
 
 # Agregadores sao mapeados separadamente porque os endpoints fogem do
