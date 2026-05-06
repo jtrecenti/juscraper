@@ -43,6 +43,55 @@ DETAIL_URL = (
 )
 
 
+def test_extract_movs_pagination_returns_none_when_no_slider() -> None:
+    """Processes with ≤ 15 movs render no slider — paginator must short-circuit."""
+    from juscraper.courts.trf3.download import extract_movs_pagination
+
+    detail = load_sample_bytes("trf3", "cpopg/detail_normal.html").decode("latin-1")
+    assert extract_movs_pagination(detail) is None
+
+
+def test_extract_movs_pagination_picks_movs_slider_not_documentos() -> None:
+    """Detail HTML has two Richfaces sliders (movs + docs). We must hit movs."""
+    from juscraper.courts.trf3.download import extract_movs_pagination
+
+    detail = load_sample_bytes("trf3", "cpopg/detail_paginated.html").decode("latin-1")
+    info = extract_movs_pagination(detail)
+    assert info is not None
+    # The movs panel wrapper is ``j_id<NN>:j_id<NN>``; we don't pin the exact
+    # ``j_id`` numbers (they're regenerated on every PJe redeploy), but the
+    # structure does need to look right.
+    assert info.max_pages > 1
+    assert info.container_id != info.form_id
+    assert info.slider_input_name.startswith(info.form_id + ":")
+    assert info.ajax_source_name.startswith(info.form_id + ":")
+    assert info.view_state  # ViewState is required for the AJAX POST
+
+
+def test_merge_movs_pages_appends_rows_into_movs_tbody() -> None:
+    """Splicing page-2 rows into page-1 tbody yields a single contiguous list."""
+    from juscraper.courts.trf3.download import merge_movs_pages
+    from juscraper.courts.trf3.parse import parse_detail
+
+    detail = load_sample_bytes("trf3", "cpopg/detail_paginated.html").decode("latin-1")
+    page_2 = load_sample_bytes("trf3", "cpopg/movs_page_2.html").decode("latin-1")
+    page1_movs = parse_detail(detail)["movimentacoes"]
+    merged_movs = parse_detail(merge_movs_pages(detail, [page_2]))["movimentacoes"]
+    # Page 1 has 15 rows, page 2 has another 15 — merged must hold both.
+    assert len(page1_movs) == 15
+    assert len(merged_movs) == 30
+    # The first 15 are unchanged (we append at the end of the tbody).
+    assert merged_movs[:15] == page1_movs
+
+
+def test_merge_movs_pages_noop_when_extras_empty() -> None:
+    """No extra pages → identical HTML, identical parse."""
+    from juscraper.courts.trf3.download import merge_movs_pages
+
+    detail = load_sample_bytes("trf3", "cpopg/detail_paginated.html").decode("latin-1")
+    assert merge_movs_pages(detail, []) is detail
+
+
 @responses.activate
 def test_cpopg_returns_dataframe_with_canonical_columns() -> None:
     """Happy path: one CNJ → one row, canonical columns populated."""

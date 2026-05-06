@@ -24,8 +24,11 @@ from .download import (
     build_search_payload,
     extract_ca_token,
     extract_form_field_ids,
+    extract_movs_pagination,
     fetch_detail,
     fetch_form,
+    fetch_movs_page,
+    merge_movs_pages,
     submit_search,
 )
 from .parse import parse_detail
@@ -81,14 +84,30 @@ class TRF3Scraper(BaseScraper):
         return [clean_cnj(c) for c in raw]
 
     def _fetch_one(self, id_cnj_clean: str) -> str | None:
-        """Run the 2-request flow for a single CNJ. Returns detail HTML or ``None``."""
+        """Run the search/detail flow for a single CNJ.
+
+        Returns the detail HTML with all movimentação pages spliced in, or
+        ``None`` when the public consultation has nothing for the CNJ. PJe
+        renders the movs table 15 rows at a time behind a Richfaces slider,
+        so processes with > 15 movs need additional POSTs to surface the
+        remaining pages.
+        """
         ids = self._ensure_field_ids()
         payload = build_search_payload(format_cnj(id_cnj_clean), ids)
         search_html = submit_search(self.session, payload)
         ca = extract_ca_token(search_html)
         if not ca:
             return None
-        return fetch_detail(self.session, ca)
+        detail = fetch_detail(self.session, ca)
+        info = extract_movs_pagination(detail)
+        if info is None or info.max_pages <= 1:
+            return detail
+        extras: list[str] = []
+        for page in range(2, info.max_pages + 1):
+            extras.append(fetch_movs_page(self.session, info, page, ca))
+            if self.sleep_time:
+                time.sleep(self.sleep_time)
+        return merge_movs_pages(detail, extras)
 
     # --- public API ------------------------------------------------------
 

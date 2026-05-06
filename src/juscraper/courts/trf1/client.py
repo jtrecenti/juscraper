@@ -1,9 +1,10 @@
-"""Scraper for the Tribunal Regional Federal da 5ª Região (TRF5).
+"""Scraper for the Tribunal Regional Federal da 1ª Região (TRF1).
 
 Wraps the PJe public-consultation system at
-``pje1g.trf5.jus.br/pjeconsulta/``. The TRF5 form ships with reCAPTCHA
-markup, but the ``executarReCaptcha()`` JS function short-circuits with
-``if (false)`` — the captcha is never enforced, so direct ``requests`` work.
+``pje1g-consultapublica.trf1.jus.br/consultapublica/``. The form layout
+mirrors TRF3 (autocomplete ``classeJudicial`` + ``dataAutuacaoDecoration``
+block), so the search payload shape is shared down to the field names; the
+divergences live entirely in :data:`BASE_URL`.
 """
 from __future__ import annotations
 
@@ -31,15 +32,15 @@ from .download import (
     submit_search,
 )
 from .parse import parse_detail
-from .schemas import InputCpopgTRF5
+from .schemas import InputCpopgTRF1
 
-logger = logging.getLogger("juscraper.trf5")
+logger = logging.getLogger("juscraper.trf1")
 
 
-class TRF5Scraper(BaseScraper):
-    """TRF5 PJe consulta pública (1º grau)."""
+class TRF1Scraper(BaseScraper):
+    """TRF1 PJe consulta pública (1º grau)."""
 
-    BASE_URL = "https://pje1g.trf5.jus.br/pjeconsulta/"
+    BASE_URL = "https://pje1g-consultapublica.trf1.jus.br/consultapublica/"
 
     def __init__(
         self,
@@ -48,7 +49,7 @@ class TRF5Scraper(BaseScraper):
         sleep_time: float = 1.0,
         **kwargs: Any,
     ):
-        super().__init__("TRF5")
+        super().__init__("TRF1")
         self.session = requests.Session()
         self.session.headers.update(BROWSER_HEADERS)
         self.set_verbose(verbose)
@@ -64,19 +65,19 @@ class TRF5Scraper(BaseScraper):
         if self._field_ids is None:
             form_html = fetch_form(self.session)
             self._field_ids = extract_form_field_ids(form_html)
-            logger.debug("TRF5 field IDs: %s", self._field_ids)
+            logger.debug("TRF1 field IDs: %s", self._field_ids)
         return self._field_ids
 
     def _coerce_id_cnj(self, id_cnj: str | list[str], **kwargs: Any) -> list[str]:
         """Validate via pydantic and return a list of cleaned 20-digit CNJs."""
         try:
-            inp = InputCpopgTRF5(id_cnj=id_cnj, **kwargs)
+            inp = InputCpopgTRF1(id_cnj=id_cnj, **kwargs)
         except ValidationError as exc:
             extras = [err for err in exc.errors() if err["type"] == "extra_forbidden"]
             if extras and len(extras) == len(exc.errors()):
                 names = ", ".join(repr(err["loc"][-1]) for err in extras)
                 raise TypeError(
-                    f"TRF5Scraper.cpopg got unexpected keyword argument(s): {names}"
+                    f"TRF1Scraper.cpopg got unexpected keyword argument(s): {names}"
                 ) from exc
             raise
         raw = inp.id_cnj if isinstance(inp.id_cnj, list) else [inp.id_cnj]
@@ -126,7 +127,7 @@ class TRF5Scraper(BaseScraper):
         """
         cnjs = self._coerce_id_cnj(id_cnj, **kwargs)
         results: list[str | None] = []
-        for i, cnj in enumerate(tqdm(cnjs, desc="TRF5 cpopg")):
+        for i, cnj in enumerate(tqdm(cnjs, desc="TRF1 cpopg")):
             try:
                 results.append(self._fetch_one(cnj))
             except Exception as exc:  # noqa: BLE001 — resiliência por item
