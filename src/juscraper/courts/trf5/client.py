@@ -20,6 +20,7 @@ from ...core.base import BaseScraper
 from ...utils.cnj import clean_cnj, format_cnj
 from .download import (
     BROWSER_HEADERS,
+    FormFieldIds,
     build_search_payload,
     extract_ca_token,
     extract_form_field_ids,
@@ -55,7 +56,7 @@ class TRF5Scraper(BaseScraper):
         self.set_download_path(download_path)
         self.sleep_time = sleep_time
         self.args = kwargs
-        self._field_ids = None  # cached after first form fetch
+        self._field_ids: FormFieldIds | None = None  # cached after first form fetch
 
     # --- internal helpers -----------------------------------------------
 
@@ -92,7 +93,7 @@ class TRF5Scraper(BaseScraper):
         remaining pages.
         """
         ids = self._ensure_field_ids()
-        payload = build_search_payload(format_cnj(id_cnj_clean), ids)
+        payload = build_search_payload(format_cnj(id_cnj_clean), ids)  # type: ignore[arg-type]
         search_html = submit_search(self.session, payload)
         ca = extract_ca_token(search_html)
         if not ca:

@@ -36,6 +36,7 @@ def _subset_form_matcher(expected: dict[str, str]):
 
     return _match
 
+
 LIST_URL = "https://pje1g.trf3.jus.br/pje/ConsultaPublica/listView.seam"
 DETAIL_URL = (
     "https://pje1g.trf3.jus.br/pje/"

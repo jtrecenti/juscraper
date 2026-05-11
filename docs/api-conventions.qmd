@@ -61,6 +61,30 @@ single `ValueError("...Formato esperado: ...")` raised by
 - `range`: e.g., `range(1, 4)` downloads pages 1, 2, 3
 - `list`: e.g., `[1, 3, 5]` downloads specific pages
 
+### Page Size
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `tamanho_pagina` | `int` | Results per page (default `10`; **TJES uses `20`** because of the Elasticsearch backend) |
+
+`tamanho_pagina` is the canonical name across all tribunals that expose
+page-size control. Each tribunal accepts exactly one deprecated alias —
+the historical name from its specific backend — emitting
+`DeprecationWarning`:
+
+| Tribunal | Deprecated alias |
+|----------|------------------|
+| TJBA | `items_per_page` |
+| TJDFT | `quantidade_por_pagina` |
+| TJES (`cjsg` and `cjpg`) | `per_page` |
+| TJGO | `qtde_itens_pagina` |
+| TJMG | `linhas_por_pagina` |
+| TJMT | `quantidade_por_pagina` |
+
+Passing both the canonical name and the alias in the same call raises
+`ValueError`. Cross-tribunal aliases (e.g. passing `linhas_por_pagina`
+to the TJBA scraper) are rejected with `TypeError` via `extra="forbid"`.
+
 ## Parameter Support by Tribunal
 
 | Parameter | TJSP (cjsg/cjpg) | TJDFT | TJPR | TJRS |

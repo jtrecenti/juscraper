@@ -39,13 +39,7 @@ from .parse import (
     clean_document_text,
     parse_pesquisa_response,
 )
-from .schemas import (
-    InputAuthPdpj,
-    InputCnjPdpj,
-    InputContarPdpj,
-    InputDownloadDocumentsPdpj,
-    InputPesquisaPdpj,
-)
+from .schemas import InputAuthPdpj, InputCnjPdpj, InputContarPdpj, InputDownloadDocumentsPdpj, InputPesquisaPdpj
 
 logger = logging.getLogger(__name__)
 
@@ -183,7 +177,7 @@ class PdpjScraper(BaseScraper):
         return [clean_cnj(c) for c in items]
 
     def existe(self, id_cnj: str | list[str]) -> bool | pd.DataFrame:
-        """Verifica se o(s) processo(s) existe(m) no Data Lake.
+        """Checa presenca de processo(s) no Data Lake.
 
         Args:
             id_cnj: Numero CNJ unico (``str``) ou lista de numeros.
@@ -517,7 +511,7 @@ class PdpjScraper(BaseScraper):
             for docs in doc_lists:
                 for doc in docs:
                     if not isinstance(doc, dict):
-                        continue
+                        continue  # type: ignore[unreachable]
                     arquivo = doc.get("arquivo") or {}
                     tipo = doc.get("tipo") or {}
                     rows.append({

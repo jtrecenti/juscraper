@@ -274,6 +274,7 @@ def fetch_contar(
             return data
         if isinstance(data, dict):
             for key in ("total", "count", "valor"):
-                if isinstance(data.get(key), int):
-                    return data[key]
+                value = data.get(key)
+                if isinstance(value, int):
+                    return value
         return None

@@ -26,11 +26,7 @@ from juscraper.aggregators.pdpj.parse import (
     clean_document_text,
     parse_pesquisa_response,
 )
-from tests._helpers import (
-    assert_unknown_kwarg_raises,
-    load_sample,
-    query_param_subset_matcher,
-)
+from tests._helpers import assert_unknown_kwarg_raises, load_sample, query_param_subset_matcher
 
 # Token JWT minimo (header + payload com ``exp`` futura) so para passar pelo
 # decoder do PyJWT em ``PdpjScraper.auth``. Nao bate com nenhuma chave real --
@@ -243,7 +239,7 @@ def test_pesquisa_lista_orgao_julgador_vira_csv():
 
     def _matcher(request):
         qs = parse_qs(urlparse(request.url).query, keep_blank_values=True)
-        captured["idOrgaoJulgador"] = qs.get("idOrgaoJulgador", [None])[0]
+        captured["idOrgaoJulgador"] = qs.get("idOrgaoJulgador", [""])[0]
         return True, ""
 
     responses.add(
