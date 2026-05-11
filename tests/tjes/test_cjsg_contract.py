@@ -16,7 +16,7 @@ def _params(
     pagina: int,
     *,
     core: str = "pje2g",
-    per_page: int = 20,
+    tamanho_pagina: int = 20,
     busca_exata: bool = False,
     data_inicio: str | None = None,
     data_fim: str | None = None,
@@ -31,7 +31,7 @@ def _params(
         "core": core,
         "q": pesquisa,
         "page": str(pagina),
-        "per_page": str(per_page),
+        "per_page": str(tamanho_pagina),
     }
     if busca_exata:
         params["exact_match"] = "true"

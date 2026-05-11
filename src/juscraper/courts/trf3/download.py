@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Optional
 
 import requests
 
@@ -151,7 +150,7 @@ def build_search_payload(
     }
 
 
-def extract_ca_token(search_html: str) -> Optional[str]:
+def extract_ca_token(search_html: str) -> str | None:
     """Return the ``ca=<token>`` from a search response, or ``None`` if no result."""
     m = _CA_TOKEN_RE.search(search_html)
     return m.group(1) if m else None
@@ -242,7 +241,7 @@ class MovsPagination:
     view_state: str  # e.g. ``j_id2``
 
 
-def extract_movs_pagination(detail_html: str) -> Optional[MovsPagination]:
+def extract_movs_pagination(detail_html: str) -> MovsPagination | None:  # pylint: disable=too-many-return-statements
     """Locate the Richfaces slider that paginates the movs table.
 
     Returns ``None`` when the process has 15 or fewer movimentações (PJe omits

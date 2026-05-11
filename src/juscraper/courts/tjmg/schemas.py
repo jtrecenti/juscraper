@@ -25,7 +25,7 @@ class InputCJSGTJMG(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
 
     pesquisar_por: Literal["ementa", "acordao"] = "ementa"
     order_by: Literal[0, 1, 2, "0", "1", "2"] = 2
-    linhas_por_pagina: Literal[10, 20, 50] = 10
+    tamanho_pagina: Literal[10, 20, 50] = 10
 
 
 class OutputCJSGTJMG(OutputCJSGBase, OutputDataPublicacaoMixin):

@@ -51,7 +51,7 @@ def _payload(
     pesquisa: str,
     page_number: int,
     *,
-    items_per_page: int = 10,
+    tamanho_pagina: int = 10,
     **filters,
 ) -> dict:
     return {
@@ -59,7 +59,7 @@ def _payload(
         "variables": {
             "decisaoFilter": _decisao_filter(pesquisa, **filters),
             "pageNumber": page_number,
-            "itemsPerPage": items_per_page,
+            "itemsPerPage": tamanho_pagina,
         },
         "query": FILTER_QUERY,
     }

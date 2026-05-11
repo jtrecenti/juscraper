@@ -28,7 +28,7 @@ class InputCJSGTJDFT(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     sinonimos: bool = True
     espelho: bool = True
     inteiro_teor: bool = False
-    quantidade_por_pagina: int = Field(default=10, ge=1)
+    tamanho_pagina: int = Field(default=10, ge=1)
 
 
 class OutputCJSGTJDFT(OutputCJSGBase):
