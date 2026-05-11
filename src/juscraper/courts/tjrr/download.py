@@ -7,6 +7,8 @@ import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
+from juscraper.utils.pagination import extract_count_with_cascade
+
 logger = logging.getLogger(__name__)
 
 BASE_URL = "https://jurisprudencia.tjrr.jus.br/index.xhtml"
@@ -142,12 +144,22 @@ def _search(
     return ""  # unreachable
 
 
+_PAGINATION_CSS_SELECTORS: tuple[str, ...] = ("span.ui-paginator-current",)
+_PAGINATION_REGEXES: tuple[re.Pattern[str], ...] = (
+    re.compile(r"of\s+(\d+)\)", re.IGNORECASE),
+    re.compile(r"de\s+(\d+)\)", re.IGNORECASE),
+)
+
+
 def _get_total_pages(html: str) -> int:
     """Extract total pages from the PrimeFaces paginator."""
-    match = re.search(r"\((\d+) of (\d+)\)", html)
-    if match:
-        return int(match.group(2))
-    return 1
+    n = extract_count_with_cascade(
+        html,
+        css_selectors=_PAGINATION_CSS_SELECTORS,
+        regex_patterns=_PAGINATION_REGEXES,
+        fallback_max_int=False,
+    )
+    return n if n is not None else 1
 
 
 def _paginate(

@@ -1,0 +1,72 @@
+{
+  "id": "10029886420194014100",
+  "versao": "1.0.9",
+  "numeroProcesso": "1002988-64.2019.4.01.4100",
+  "numeroProcessoSintetico": "1002988-64",
+  "dataHoraAtualizacao": "2026-04-28T04:11:48.852",
+  "dataHoraUltimaAtualizacaoCodex": "2025-11-29T04:56:34.276",
+  "nivelSigilo": 0,
+  "segmentoJustica": "JUSTICA_FEDERAL",
+  "idCodexTribunal": 3,
+  "siglaTribunal": "TRF1",
+  "documentos": [
+    {
+      "sequencia": 10,
+      "dataHoraJuntada": "2019-12-13T14:54:51.811",
+      "id": "d68cccee-b756-51e5-ae87-edb296ac220f",
+      "idCodex": 5960188814,
+      "idOrigem": "141530864",
+      "nome": "[REDIGIDO]",
+      "nivelSigilo": "PUBLICO",
+      "tipo": {
+        "codigo": 14575,
+        "nome": "[REDIGIDO]",
+        "idCodex": 1806701,
+        "idOrigem": "150"
+      },
+      "arquivo": {
+        "id": "29ae973f-42c9-56ee-8f83-d02f498e14e6",
+        "idCodex": 2306244613,
+        "tipo": "TEXT_HTML",
+        "quantidadePaginas": 1,
+        "quantidadeImagens": 1,
+        "tamanho": 20703,
+        "tamanhoTexto": 875
+      },
+      "signatarios": [
+        {
+          "nome": "[REDIGIDO]"
+        }
+      ]
+    },
+    {
+      "sequencia": 8,
+      "dataHoraJuntada": "2019-07-17T09:32:26.372",
+      "id": "d5b2fe52-8747-59c8-9953-8f320971a492",
+      "idCodex": 5960188812,
+      "idOrigem": "68993546",
+      "nome": "[REDIGIDO]",
+      "nivelSigilo": "PUBLICO",
+      "tipo": {
+        "codigo": 404,
+        "nome": "[REDIGIDO]",
+        "idCodex": 1802351,
+        "idOrigem": "64"
+      },
+      "arquivo": {
+        "id": "357f60d9-8094-52e0-bf4d-02f2fe139c1c",
+        "idCodex": 3041651690,
+        "tipo": "TEXT_HTML",
+        "quantidadePaginas": 1,
+        "quantidadeImagens": 1,
+        "tamanho": 46442,
+        "tamanhoTexto": 3747
+      },
+      "signatarios": [
+        {
+          "nome": "[REDIGIDO]"
+        }
+      ]
+    }
+  ]
+}
