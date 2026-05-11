@@ -30,7 +30,7 @@ CNJ_TJSP_CLEAN = "10004132220178260415"
 @responses.activate
 def test_listar_processos_all_filters_land_in_body(mocker):
     """All filters propagate simultaneously: numero_processo + ano +
-    classe + assuntos + mostrar_movs + tamanho_pagina. The matcher
+    classe + assunto + mostrar_movs + tamanho_pagina. The matcher
     confirms the body has the four ``must_conditions`` in canonical order
     plus the dual ``dataAjuizamento`` range and ``_source: True``."""
     mocker.patch("time.sleep")
@@ -45,7 +45,7 @@ def test_listar_processos_all_filters_land_in_body(mocker):
                 numero_processo=CNJ_TJSP_CLEAN,
                 ano_ajuizamento=2023,
                 classe="436",
-                assuntos=["1127", "1156"],
+                assunto=["1127", "1156"],
                 mostrar_movs=True,
                 tamanho_pagina=50,
             )),
@@ -60,7 +60,7 @@ def test_listar_processos_all_filters_land_in_body(mocker):
         numero_processo=CNJ_TJSP_FORMATTED,
         ano_ajuizamento=2023,
         classe="436",
-        assuntos=["1127", "1156"],
+        assunto=["1127", "1156"],
         mostrar_movs=True,
         tamanho_pagina=50,
         paginas=range(1, 2),
@@ -304,7 +304,7 @@ def test_tipo_movimentacao_desconhecido_lista_validos():
         ("numero_processo", "10004132220178260415"),
         ("ano_ajuizamento", 2023),
         ("classe", "436"),
-        ("assuntos", ["1127"]),
+        ("assunto", ["1127"]),
         ("data_ajuizamento_inicio", "2024-01-01"),
         ("data_ajuizamento_fim", "2024-03-31"),
         ("tipos_movimentacao", ["decisao"]),
@@ -337,7 +337,7 @@ def test_query_dict_vazio_rejeitado():
 
 
 # =============================================================================
-# Coercao bidirecional int<->str em ``assuntos`` e ``movimentos_codigo``
+# Coercao bidirecional int<->str em ``assunto`` e ``movimentos_codigo``
 # (issue #217). Codigos CNJ TPU sao inteiros por natureza; o backend
 # Elasticsearch coage int -> str em campos keyword transparentemente. O
 # schema aceita ambos no input e normaliza antes do payload, restaurando
@@ -346,9 +346,9 @@ def test_query_dict_vazio_rejeitado():
 
 
 @responses.activate
-def test_assuntos_aceita_int(mocker):
-    """``assuntos=[12503]`` (int) deve produzir o mesmo body que
-    ``assuntos=["12503"]`` — o validator coage int -> str antes do builder.
+def test_assunto_aceita_int(mocker):
+    """``assunto=[12503]`` (int) deve produzir o mesmo body que
+    ``assunto=["12503"]`` — o validator coage int -> str antes do builder.
     Restaura o caso do notebook ``docs/notebooks/datajud.ipynb``."""
     mocker.patch("time.sleep")
     responses.add(
@@ -359,14 +359,14 @@ def test_assuntos_aceita_int(mocker):
         content_type="application/json",
         match=[
             json_params_matcher(_payload(
-                assuntos=["12503"],
+                assunto=["12503"],
                 tamanho_pagina=10,
             )),
         ],
     )
     df = jus.scraper("datajud").listar_processos(
         tribunal="TJMG",
-        assuntos=[12503],
+        assunto=[12503],
         tamanho_pagina=10,
         paginas=range(1, 2),
     )
@@ -374,8 +374,8 @@ def test_assuntos_aceita_int(mocker):
 
 
 @responses.activate
-def test_assuntos_aceita_mix_int_str(mocker):
-    """``assuntos=[12503, "12504"]`` -> ``["12503", "12504"]`` no body."""
+def test_assunto_aceita_mix_int_str(mocker):
+    """``assunto=[12503, "12504"]`` -> ``["12503", "12504"]`` no body."""
     mocker.patch("time.sleep")
     responses.add(
         responses.POST,
@@ -385,14 +385,14 @@ def test_assuntos_aceita_mix_int_str(mocker):
         content_type="application/json",
         match=[
             json_params_matcher(_payload(
-                assuntos=["12503", "12504"],
+                assunto=["12503", "12504"],
                 tamanho_pagina=10,
             )),
         ],
     )
     df = jus.scraper("datajud").listar_processos(
         tribunal="TJMG",
-        assuntos=[12503, "12504"],
+        assunto=[12503, "12504"],
         tamanho_pagina=10,
         paginas=range(1, 2),
     )
@@ -402,7 +402,7 @@ def test_assuntos_aceita_mix_int_str(mocker):
 @responses.activate
 def test_movimentos_codigo_aceita_str(mocker):
     """``movimentos_codigo=["246"]`` (str) deve produzir o mesmo body que
-    ``[246]`` — simetrico a ``assuntos``, normaliza str -> int antes do
+    ``[246]`` — simetrico a ``assunto``, normaliza str -> int antes do
     builder. Cobre o caso de codigos TPU vindos de planilha/CSV."""
     mocker.patch("time.sleep")
     responses.add(

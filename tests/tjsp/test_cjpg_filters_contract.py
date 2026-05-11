@@ -49,9 +49,9 @@ def test_cjpg_all_filters_land_in_query_params(tmp_path, mocker):
     df = jus.scraper("tjsp", download_path=str(tmp_path)).cjpg(
         "dano moral",
         paginas=1,
-        classes=_CLASSES,
-        assuntos=_ASSUNTOS,
-        varas=_VARAS,
+        classe=_CLASSES,
+        assunto=_ASSUNTOS,
+        vara=_VARAS,
         id_processo=_ID_PROCESSO,
         data_julgamento_inicio=_DATA_INI,
         data_julgamento_fim=_DATA_FIM,
@@ -65,7 +65,12 @@ def test_cjpg_unknown_kwarg_raises(tmp_path):
 
 
 def test_cjpg_rejects_cjsg_fields(tmp_path):
-    """cjpg takes plural lists, not cjsg's singular ementa/classe/comarca."""
+    """cjpg ainda nao aceita ementa/comarca/orgao_julgador/baixar_sg.
+
+    Refs #232: ``classe``/``assunto``/``vara`` agora **sao** aceitos (singular
+    canonico). Os plurais (``classes``/``assuntos``/``varas``) viraram alias
+    deprecados na camada do client.
+    """
     scraper = jus.scraper("tjsp", download_path=str(tmp_path))
-    for bad in ("ementa", "classe", "comarca", "orgao_julgador", "baixar_sg"):
+    for bad in ("ementa", "comarca", "orgao_julgador", "baixar_sg"):
         assert_unknown_kwarg_raises(scraper.cjpg, bad, "dano moral", paginas=1)

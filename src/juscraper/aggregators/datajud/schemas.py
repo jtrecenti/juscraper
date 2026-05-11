@@ -25,7 +25,7 @@ _FILTROS_AMIGAVEIS = (
     "numero_processo",
     "ano_ajuizamento",
     "classe",
-    "assuntos",
+    "assunto",
     "data_ajuizamento_inicio",
     "data_ajuizamento_fim",
     "tipos_movimentacao",
@@ -67,14 +67,14 @@ def _coerce_to_int_list(v: Any) -> Any:
 
 class _DatajudCoercaoMixin(BaseModel):
     # Mixin local (refs #217): centraliza os validators de coercao bidirecional
-    # int<->str em ``assuntos`` e ``movimentos_codigo``. Aplicado em ambos
+    # int<->str em ``assunto`` e ``movimentos_codigo``. Aplicado em ambos
     # InputListarProcessosDataJud e InputContarProcessosDataJud. Nao promovido
     # para src/juscraper/schemas/mixins.py — Regra 1 do #84 exige 2+ familias
     # distintas, e por enquanto so o DataJud precisa.
 
-    @field_validator("assuntos", mode="before", check_fields=False)
+    @field_validator("assunto", mode="before", check_fields=False)
     @classmethod
-    def _normalize_assuntos(cls, v: Any) -> Any:
+    def _normalize_assunto(cls, v: Any) -> Any:
         return _coerce_to_str_list(v)
 
     @field_validator("movimentos_codigo", mode="before", check_fields=False)
@@ -118,7 +118,7 @@ class InputListarProcessosDataJud(_DatajudCoercaoMixin, PaginasMixin):
     tribunal: str | None = None
     ano_ajuizamento: int | None = None
     classe: str | None = None
-    assuntos: list[str] | None = None
+    assunto: list[str] | None = None
     data_ajuizamento_inicio: str | None = None
     data_ajuizamento_fim: str | None = None
     tipos_movimentacao: list[str] | None = None
@@ -259,7 +259,7 @@ class InputContarProcessosDataJud(_DatajudCoercaoMixin):
     tribunal: str | None = None
     ano_ajuizamento: int | None = None
     classe: str | None = None
-    assuntos: list[str] | None = None
+    assunto: list[str] | None = None
     data_ajuizamento_inicio: str | None = None
     data_ajuizamento_fim: str | None = None
     tipos_movimentacao: list[str] | None = None

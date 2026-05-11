@@ -280,10 +280,17 @@ class EsajSearchScraper(BaseScraper):
                 * ``ementa`` (str): Termo buscado especificamente na
                   ementa.
                 * ``numero_recurso`` (str): Numero do recurso.
-                * ``classe`` (str): ID interno da classe processual.
-                * ``assunto`` (str): ID interno do assunto.
-                * ``comarca`` (str): ID interno da comarca.
-                * ``orgao_julgador`` (str): ID interno do orgao julgador.
+                * ``classe`` (int | str | list[int | str]): ID(s) interno(s)
+                  da classe processual. Backend:
+                  ``classesTreeSelection.values`` (CSV).
+                * ``assunto`` (int | str | list[int | str]): ID(s) interno(s)
+                  do assunto. Backend: ``assuntosTreeSelection.values``
+                  (CSV).
+                * ``comarca`` (int | str): ID interno da comarca. Backend:
+                  ``cdComarca`` (single-value, nao aceita lista).
+                * ``orgao_julgador`` (int | str | list[int | str]): ID(s)
+                  interno(s) do orgao julgador. Backend:
+                  ``secoesTreeSelection.values`` (CSV).
                 * ``origem`` (Literal["T", "R"]): ``"T"`` (segundo grau,
                   default) ou ``"R"`` (colegio recursal).
                 * ``tipo_decisao`` (Literal["acordao", "monocratica"]):
