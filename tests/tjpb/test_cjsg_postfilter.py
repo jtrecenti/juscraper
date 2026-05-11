@@ -46,8 +46,14 @@ def _stub_endpoints() -> None:
 
 
 @responses.activate
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_postfilter_only_inicio(mocker):
-    """Refs #195: post-filter must run when only ``data_julgamento_inicio`` is set."""
+    """Refs #195: post-filter must run when only ``data_julgamento_inicio`` is set.
+
+    Auto-fill (refs bug TJSP cjpg) preenche ``data_julgamento_fim=hoje`` e
+    emite ``UserWarning``; o filtro mark suprime esse warning para focar
+    no contrato do post-filter (que continua válido — janela 2024→hoje).
+    """
     mocker.patch("time.sleep")
     _stub_endpoints()
 
@@ -63,8 +69,13 @@ def test_postfilter_only_inicio(mocker):
 
 
 @responses.activate
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_postfilter_only_fim(mocker):
-    """Symmetric case: only ``data_julgamento_fim`` is set."""
+    """Symmetric case: only ``data_julgamento_fim`` is set.
+
+    Auto-fill preenche ``data_julgamento_inicio=01/01/1990`` e emite
+    ``UserWarning``; o filtro mark suprime para focar no post-filter.
+    """
     mocker.patch("time.sleep")
     _stub_endpoints()
 
@@ -128,6 +139,7 @@ def test_postfilter_no_dates_is_noop(mocker):
 
 
 @responses.activate
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_postfilter_with_generic_alias(mocker):
     """Refs #195: alias generico ``data_inicio`` deve disparar o post-filter.
 
@@ -135,6 +147,10 @@ def test_postfilter_with_generic_alias(mocker):
     porque o pipeline so consome esses aliases dentro de ``cjsg_download``.
     Sem esse lookup, o post-filter rodaria com bounds abertos em ambos os
     lados quando o usuario passa um alias.
+
+    Auto-fill (refs bug TJSP cjpg) também emite ``UserWarning`` para
+    ``data_julgamento_fim`` autopreenchido — suprimido pelo mark para
+    focar no ``DeprecationWarning`` do alias.
     """
     mocker.patch("time.sleep")
     _stub_endpoints()
@@ -149,6 +165,7 @@ def test_postfilter_with_generic_alias(mocker):
 
 
 @responses.activate
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_postfilter_with_legacy_alias(mocker):
     """Refs #195: alias antigo ``data_julgamento_de`` deve disparar o post-filter."""
     mocker.patch("time.sleep")
