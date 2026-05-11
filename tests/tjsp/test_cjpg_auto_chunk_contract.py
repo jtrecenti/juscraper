@@ -5,6 +5,7 @@ Mesma estrutura de ``test_cjsg_auto_chunk_contract.py``, com dedup por
 ``tjsp/cjpg_parse.py``).
 """
 import warnings
+from datetime import date
 
 import pandas as pd
 import pytest
@@ -238,7 +239,6 @@ def test_query_alias_only_long_window_works(tmp_path, mocker):
 
 def test_cjpg_so_data_inicio_autopreenche_fim_com_hoje(tmp_path, mocker):
     """Só ``data_julgamento_inicio`` → ``cjpg_download`` recebe ``_fim=hoje``."""
-    from datetime import date as _date
     download, _ = _patch_pipeline(mocker)
     scraper = jus.scraper("tjsp", download_path=str(tmp_path))
 
@@ -249,7 +249,7 @@ def test_cjpg_so_data_inicio_autopreenche_fim_com_hoje(tmp_path, mocker):
     _, kwargs = download.call_args
     # Janela curta (~33 dias) cabe em 1 chunk → caminho noop, kwargs
     # carregam a data autopreenchida explicitamente.
-    hoje = _date.today().strftime("%d/%m/%Y")
+    hoje = date.today().strftime("%d/%m/%Y")
     assert kwargs["data_julgamento_inicio"] == "01/04/2026"
     assert kwargs["data_julgamento_fim"] == hoje
 

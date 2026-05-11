@@ -24,6 +24,7 @@ from pydantic import BaseModel, ValidationError
 
 from ...core.base import BaseScraper
 from ...utils.params import (
+    DATE_ALIAS_TO_CANONICAL,
     apply_input_pipeline_search,
     fill_open_ended_dates,
     iter_date_windows,
@@ -91,12 +92,21 @@ def run_auto_chunk(
     # preenchido, sem o fill ``iter_date_windows`` faria passthrough e o
     # auto-chunk pularia exatamente o caso que precisa dividir.
     date_format = getattr(input_cls, "BACKEND_DATE_FORMAT", "%d/%m/%Y")
+    schema_field_names = set(input_cls.model_fields.keys())
+    has_data_publicacao = {"data_publicacao_inicio", "data_publicacao_fim"}.issubset(schema_field_names)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", DeprecationWarning)
         sniff = normalize_datas(**kwargs)
 
     # Auto-fill fora do ``catch_warnings`` para que ``UserWarning`` chegue.
     fill_open_ended_dates(sniff, formato=date_format, rotulo="data_julgamento")
+    # Também preenche ``data_publicacao`` aqui — caso contrário, no caminho
+    # auto-chunk com N janelas o fill seria refeito dentro de cada chunk
+    # pelo ``apply_input_pipeline_search``, emitindo o ``UserWarning`` N
+    # vezes (uma por chunk, antes do filtro padrão do warnings deduplicar).
+    # Pre-fill aqui garante 1 warning total.
+    if has_data_publicacao:
+        fill_open_ended_dates(sniff, formato=date_format, rotulo="data_publicacao")
 
     dj_i = sniff["data_julgamento_inicio"]
     dj_f = sniff["data_julgamento_fim"]
@@ -111,16 +121,8 @@ def run_auto_chunk(
         # e popou os aliases, re-emitimos manualmente aqui o warning para
         # cada alias que estava em ``kwargs`` original — preservando o
         # contrato do ``normalize_datas`` downstream que esperava esse
-        # warning.
-        _alias_to_canonical = {
-            "data_julgamento_de": "data_julgamento_inicio",
-            "data_julgamento_ate": "data_julgamento_fim",
-            "data_publicacao_de": "data_publicacao_inicio",
-            "data_publicacao_ate": "data_publicacao_fim",
-            "data_inicio": "data_julgamento_inicio",
-            "data_fim": "data_julgamento_fim",
-        }
-        for _alias, _canonical in _alias_to_canonical.items():
+        # warning. Fonte única dos aliases: :data:`DATE_ALIAS_TO_CANONICAL`.
+        for _alias, _canonical in DATE_ALIAS_TO_CANONICAL.items():
             if _alias in kwargs:
                 warnings.warn(
                     f"O parâmetro '{_alias}' está deprecado. Use '{_canonical}' em vez disso.",
@@ -130,9 +132,9 @@ def run_auto_chunk(
                 kwargs.pop(_alias)
         kwargs["data_julgamento_inicio"] = dj_i
         kwargs["data_julgamento_fim"] = dj_f
-        # data_publicacao não é tocado pelo auto-chunk; seus aliases já
-        # foram limpos no loop acima e os valores canonicais (se houver)
-        # estão em ``sniff`` — propagar:
+        # Propaga ``data_publicacao`` (já filled acima quando aplicável)
+        # para que o pipeline downstream veja ambas as datas preenchidas
+        # e seu auto-fill vire noop.
         for _key in ("data_publicacao_inicio", "data_publicacao_fim"):
             if sniff.get(_key) is not None:
                 kwargs[_key] = sniff[_key]

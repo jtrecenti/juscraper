@@ -1,4 +1,6 @@
 """Filter-propagation contract for TJES cjsg/cjpg."""
+from datetime import date
+
 import pandas as pd
 import pytest
 import responses
@@ -155,3 +157,54 @@ def test_cjpg_data_publicacao_raises_typeerror():
         "dano moral",
         paginas=1,
     )
+
+
+# --- Auto-fill de data parcial (TJES não passa por run_auto_chunk) -----------
+# Refs bug TJSP cjpg: o pipeline canônico (``apply_input_pipeline_search``)
+# autopreenche a data faltante, garantindo que TJES (backend Solr, formato
+# ISO) também receba ambas as datas no query param.
+
+
+@responses.activate
+def test_cjpg_so_data_inicio_autopreenche_fim_com_hoje(mocker):
+    """Só ``data_julgamento_inicio`` → backend recebe ``dataFim=hoje`` em ISO."""
+    mocker.patch("time.sleep")
+    hoje_iso = date.today().strftime("%Y-%m-%d")
+    _add_page(
+        "dano moral",
+        1,
+        "cjpg/no_results.json",
+        core="pje1g",
+        data_inicio="2024-01-01",
+        data_fim=hoje_iso,
+    )
+
+    with pytest.warns(UserWarning, match=r"data_julgamento_fim"):
+        df = jus.scraper("tjes").cjpg(
+            "dano moral", paginas=1,
+            data_julgamento_inicio="2024-01-01",
+        )
+
+    assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
+def test_cjpg_so_data_fim_autopreenche_inicio_com_1990(mocker):
+    """Só ``data_julgamento_fim`` → backend recebe ``dataIni=1990-01-01``."""
+    mocker.patch("time.sleep")
+    _add_page(
+        "dano moral",
+        1,
+        "cjpg/no_results.json",
+        core="pje1g",
+        data_inicio="1990-01-01",
+        data_fim="2024-12-31",
+    )
+
+    with pytest.warns(UserWarning, match=r"1990-01-01"):
+        df = jus.scraper("tjes").cjpg(
+            "dano moral", paginas=1,
+            data_julgamento_fim="2024-12-31",
+        )
+
+    assert isinstance(df, pd.DataFrame)

@@ -21,13 +21,24 @@ DATE_CANONICAL: tuple[str, ...] = (
     "data_publicacao_inicio", "data_publicacao_fim",
 )
 
-# Deprecated date aliases consumed by ``normalize_datas``. Keep in sync with
-# the ``deprecated_map``/``generic_map`` dicts inside that function.
-DATE_ALIASES: tuple[str, ...] = (
-    "data_julgamento_de", "data_julgamento_ate",
-    "data_publicacao_de", "data_publicacao_ate",
-    "data_inicio", "data_fim",
-)
+# Mapping from deprecated date aliases to their canonical names. Single source
+# of truth for both ``normalize_datas`` (alias resolution + DeprecationWarning)
+# and the noop branch of ``run_auto_chunk`` (manual re-emission when the auto-
+# chunk silenced the sniff). Order matters in ``normalize_datas``: ``_de``/
+# ``_ate`` precede the generic ``data_inicio``/``data_fim`` so a conflict
+# between specific and generic surfaces against the specific name.
+DATE_ALIAS_TO_CANONICAL: dict[str, str] = {
+    "data_julgamento_de": "data_julgamento_inicio",
+    "data_julgamento_ate": "data_julgamento_fim",
+    "data_publicacao_de": "data_publicacao_inicio",
+    "data_publicacao_ate": "data_publicacao_fim",
+    "data_inicio": "data_julgamento_inicio",
+    "data_fim": "data_julgamento_fim",
+}
+
+# Deprecated date aliases consumed by ``normalize_datas``. Derived from
+# :data:`DATE_ALIAS_TO_CANONICAL` to keep both in sync.
+DATE_ALIASES: tuple[str, ...] = tuple(DATE_ALIAS_TO_CANONICAL.keys())
 
 
 def pop_normalize_aliases(kwargs: dict, *, include_canonical: bool = False) -> None:
@@ -151,16 +162,12 @@ def normalize_datas(**kwargs):
             ``DeprecationWarning`` is emitted before the raise; the conflict
             is the user's mistake to fix, not a soft deprecation event.
     """
-    deprecated_map = {
-        "data_julgamento_de": "data_julgamento_inicio",
-        "data_julgamento_ate": "data_julgamento_fim",
-        "data_publicacao_de": "data_publicacao_inicio",
-        "data_publicacao_ate": "data_publicacao_fim",
-    }
-    generic_map = {
-        "data_inicio": "data_julgamento_inicio",
-        "data_fim": "data_julgamento_fim",
-    }
+    # Particiona DATE_ALIAS_TO_CANONICAL em _de/_ate (específicos) vs.
+    # data_inicio/data_fim (genéricos) preservando a ordem de coleta: específicos
+    # antes do genérico, para que uma colisão entre eles surja com o nome
+    # específico no erro.
+    deprecated_map = {k: v for k, v in DATE_ALIAS_TO_CANONICAL.items() if k.endswith(("_de", "_ate"))}
+    generic_map = {k: v for k, v in DATE_ALIAS_TO_CANONICAL.items() if k in ("data_inicio", "data_fim")}
 
     # canonical -> [(source_name, value), ...] na ordem em que apareceram
     # nas três fases (canônico, _de/_ate, genérico). Único valor None
