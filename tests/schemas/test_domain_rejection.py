@@ -122,6 +122,42 @@ class TestNumericFieldRejection:
             InputCJSGTJMT(pesquisa="x", tamanho_pagina=0)
 
 
+# (Schema, foreign_alias) — cada schema testado contra um alias de
+# tamanho_pagina que pertence a outro tribunal. A invariante é "cada
+# client conhece só o seu alias" (refs #211): TJBA aceita
+# ``items_per_page`` mas não ``linhas_por_pagina``; este último cai em
+# ``ValidationError`` via ``extra="forbid"`` no schema, traduzido pelo
+# client em ``TypeError`` na API pública.
+_FOREIGN_ALIAS_CASES = [
+    (InputCJSGTJBA, "linhas_por_pagina"),
+    (InputCJSGTJDFT, "items_per_page"),
+    (InputCJSGTJES, "qtde_itens_pagina"),
+    (InputCJPGTJES, "qtde_itens_pagina"),
+    (InputCJSGTJGO, "per_page"),
+    (InputCJSGTJMG, "quantidade_por_pagina"),
+    (InputCJSGTJMT, "linhas_por_pagina"),
+]
+
+
+class TestCrossTribunalAliasRejection:
+    """Cross-tribunal alias rejection (refs #211).
+
+    Cada tribunal deprecou exatamente um alias para ``tamanho_pagina`` —
+    o nome histórico do seu backend específico. Passar o alias de outro
+    tribunal não é uma migração válida, e o schema rejeita via
+    ``extra="forbid"``.
+    """
+
+    @pytest.mark.parametrize(
+        "schema_cls,foreign_alias",
+        _FOREIGN_ALIAS_CASES,
+        ids=lambda v: v.__name__ if hasattr(v, "__name__") else v,
+    )
+    def test_foreign_alias_rejected(self, schema_cls, foreign_alias):
+        with pytest.raises(ValidationError):
+            schema_cls(pesquisa="x", **{foreign_alias: 10})
+
+
 # (Schema, field_name) — campos da Categoria C cujo default mudou de ``""``
 # para ``None``. A parametrização garante que cada um dos 8 tribunais
 # afetados preserve o contrato não-breaking: default ``None``, e ``""``

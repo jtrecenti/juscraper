@@ -98,6 +98,9 @@ class TJDFTScraper(BaseScraper):
         """
         Searches for TJDFT jurisprudence in a simplified way (download + parse).
         Returns a ready-to-analyze DataFrame.
+
+        Aliases deprecados:
+            * ``quantidade_por_pagina`` -> ``tamanho_pagina``
         """
         brutos = self.cjsg_download(pesquisa=pesquisa, paginas=paginas, **kwargs)
         dados = self.cjsg_parse(brutos)

@@ -135,8 +135,10 @@ class TJMTScraper(BaseScraper):
     ) -> pd.DataFrame:
         """Search TJMT jurisprudence (download + parse).
 
-        Returns a ready-to-analyze DataFrame. Aceita ``quantidade_por_pagina``
-        como alias deprecado de ``tamanho_pagina``.
+        Returns a ready-to-analyze DataFrame.
+
+        Aliases deprecados:
+            * ``quantidade_por_pagina`` -> ``tamanho_pagina``
         """
         brutos = self.cjsg_download(
             pesquisa=pesquisa,

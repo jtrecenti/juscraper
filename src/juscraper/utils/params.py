@@ -868,6 +868,7 @@ def resolve_deprecated_alias(
     if current_value != sentinel:
         kwargs.pop(old)
         raise ValueError(
-            f"Não é possível passar '{new}' e '{old}' simultaneamente."
+            f"Não é possível passar '{new}' e '{old}' ao mesmo tempo. "
+            f"Use apenas '{new}'."
         )
     return pop_deprecated_alias(kwargs, old, new)

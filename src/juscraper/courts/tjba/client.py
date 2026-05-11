@@ -184,8 +184,11 @@ class TJBAScraper(BaseScraper):
         data_publicacao_fim : str, optional
             End date (YYYY-MM-DD).
         tamanho_pagina : int
-            Results per page (default 10). Aceita ``items_per_page`` como
-            alias deprecado.
+            Results per page (default 10).
+
+        Aliases deprecados
+        ------------------
+        * ``items_per_page`` -> ``tamanho_pagina``
 
         Returns
         -------

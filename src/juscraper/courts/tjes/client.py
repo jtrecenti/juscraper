@@ -178,9 +178,12 @@ class TJESScraper(BaseScraper):
         Search TJES jurisprudence (download + parse).
 
         Returns a ready-to-analyze DataFrame. Accepts all the same parameters
-        as :meth:`cjsg_download`. ``magistrado`` / ``classe_judicial`` /
-        ``per_page`` sao aceitos com ``DeprecationWarning`` como aliases de
-        ``relator`` / ``classe`` / ``tamanho_pagina``.
+        as :meth:`cjsg_download`.
+
+        Aliases deprecados:
+            * ``magistrado`` -> ``relator``
+            * ``classe_judicial`` -> ``classe``
+            * ``per_page`` -> ``tamanho_pagina``
         """
         brutos = self.cjsg_download(
             pesquisa=pesquisa,
@@ -202,7 +205,7 @@ class TJESScraper(BaseScraper):
 
     # --- cjpg (first instance / 1o grau) ---
 
-    def _cjpg_download_internal(self, pesquisa, paginas, tamanho_pagina, kwargs):
+    def _cjpg_download_internal(self, pesquisa, paginas, kwargs, *, tamanho_pagina):
         """Shared logic for cjpg_download — delegates to cjsg_download with core=pje1g."""
         relator = resolve_deprecated_alias(
             kwargs, "magistrado", "relator", kwargs.pop("relator", None)
@@ -271,7 +274,9 @@ class TJESScraper(BaseScraper):
         list
             Raw JSON responses, one per page.
         """
-        resultados: list = self._cjpg_download_internal(pesquisa, paginas, tamanho_pagina, kwargs)
+        resultados: list = self._cjpg_download_internal(
+            pesquisa, paginas, kwargs, tamanho_pagina=tamanho_pagina
+        )
         return resultados
 
     def cjpg_parse(self, resultados_brutos: list) -> pd.DataFrame:
@@ -301,12 +306,16 @@ class TJESScraper(BaseScraper):
 
         Shortcut for :meth:`cjpg_download` + :meth:`cjpg_parse`.
         Queries the ``pje1g`` core. Accepts the same filter parameters as
-        :meth:`cjsg` (except ``core``). ``per_page`` é aceito como alias
-        deprecado de ``tamanho_pagina``.
+        :meth:`cjsg` (except ``core``).
+
+        Aliases deprecados:
+            * ``magistrado`` -> ``relator``
+            * ``classe_judicial`` -> ``classe``
+            * ``per_page`` -> ``tamanho_pagina``
 
         Returns
         -------
         pd.DataFrame
         """
-        brutos = self._cjpg_download_internal(pesquisa, paginas, tamanho_pagina, kwargs)
+        brutos = self._cjpg_download_internal(pesquisa, paginas, kwargs, tamanho_pagina=tamanho_pagina)
         return cjsg_parse(brutos)
