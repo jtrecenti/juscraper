@@ -21,7 +21,7 @@ _FALLBACK_NUMERO_RE = re.compile(r"\d[\d.]*")
 
 
 def _coerce_int(raw: str) -> int | None:
-    digits = raw.replace(".", "")
+    digits = raw.replace(".", "").replace(",", "")
     return int(digits) if digits.isdigit() else None
 
 
@@ -59,12 +59,14 @@ def extract_count_with_cascade(
             (texto ou HTML, conforme ``use_element_html``) vira candidato.
             Use ``()`` quando nao houver seletor estruturado confiavel —
             a cascata cai direto em ``regex_patterns`` sobre o HTML bruto.
+            Se ``css_selectors`` e nao vazio mas nenhum seletor casa em
+            nenhum elemento, a cascata tambem cai no HTML bruto.
         regex_patterns: Regex tentadas em ordem para cada texto candidato.
             Se a regex tem grupos, retorna o primeiro grupo numerico
-            valido; caso contrario tenta ``group(0)``. **Com**
-            ``aggregate="max"``, use regex de **1 grupo apenas** — apenas o
-            primeiro grupo de cada match e considerado (groups extras sao
-            silenciosamente ignorados).
+            valido; caso contrario tenta ``group(0)``. Com
+            ``aggregate="max"`` a regra e a mesma — em cada match, o
+            primeiro grupo numerico valido (varrendo a tupla quando ha
+            varios grupos) entra no acumulador para depois ser comparado.
         zero_markers: Substrings (case-insensitive) que, quando presentes
             em **qualquer lugar** do texto da pagina, fazem o util retornar
             ``0`` imediatamente — sem rodar a cascata de seletores. Use
@@ -115,9 +117,12 @@ def extract_count_with_cascade(
         for txt in candidates:
             for pattern in regex_patterns:
                 for raw in pattern.findall(txt):
-                    coerced = _coerce_int(raw if isinstance(raw, str) else raw[0])
-                    if coerced is not None:
-                        all_matches.append(coerced)
+                    groups: tuple[str, ...] = raw if isinstance(raw, tuple) else (raw,)
+                    for group in groups:
+                        coerced = _coerce_int(group)
+                        if coerced is not None:
+                            all_matches.append(coerced)
+                            break
         if all_matches:
             return max(all_matches)
     else:
