@@ -158,6 +158,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#search" id="toc-search" class="nav-link" data-scroll-target="#search">Search</a></li>
   <li><a href="#date-filters" id="toc-date-filters" class="nav-link" data-scroll-target="#date-filters">Date Filters</a></li>
   <li><a href="#pagination" id="toc-pagination" class="nav-link" data-scroll-target="#pagination">Pagination</a></li>
+  <li><a href="#page-size" id="toc-page-size" class="nav-link" data-scroll-target="#page-size">Page Size</a></li>
   </ul></li>
   <li><a href="#parameter-support-by-tribunal" id="toc-parameter-support-by-tribunal" class="nav-link" data-scroll-target="#parameter-support-by-tribunal">Parameter Support by Tribunal</a></li>
   <li><a href="#migration-guide" id="toc-migration-guide" class="nav-link" data-scroll-target="#migration-guide">Migration Guide</a>
@@ -289,6 +290,66 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>range</code>: e.g., <code>range(1, 4)</code> downloads pages 1, 2, 3</li>
 <li><code>list</code>: e.g., <code>[1, 3, 5]</code> downloads specific pages</li>
 </ul>
+</section>
+<section id="page-size" class="level3">
+<h3 class="anchored" data-anchor-id="page-size">Page Size</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 36%">
+<col style="width: 20%">
+<col style="width: 43%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>tamanho_pagina</code></td>
+<td><code>int</code></td>
+<td>Results per page (default <code>10</code>; <strong>TJES uses <code>20</code></strong> because of the Elasticsearch backend)</td>
+</tr>
+</tbody>
+</table>
+<p><code>tamanho_pagina</code> is the canonical name across all tribunals that expose page-size control. Each tribunal accepts exactly one deprecated alias — the historical name from its specific backend — emitting <code>DeprecationWarning</code>:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Tribunal</th>
+<th>Deprecated alias</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>TJBA</td>
+<td><code>items_per_page</code></td>
+</tr>
+<tr class="even">
+<td>TJDFT</td>
+<td><code>quantidade_por_pagina</code></td>
+</tr>
+<tr class="odd">
+<td>TJES (<code>cjsg</code> and <code>cjpg</code>)</td>
+<td><code>per_page</code></td>
+</tr>
+<tr class="even">
+<td>TJGO</td>
+<td><code>qtde_itens_pagina</code></td>
+</tr>
+<tr class="odd">
+<td>TJMG</td>
+<td><code>linhas_por_pagina</code></td>
+</tr>
+<tr class="even">
+<td>TJMT</td>
+<td><code>quantidade_por_pagina</code></td>
+</tr>
+</tbody>
+</table>
+<p>Passing both the canonical name and the alias in the same call raises <code>ValueError</code>. Cross-tribunal aliases (e.g.&nbsp;passing <code>linhas_por_pagina</code> to the TJBA scraper) are rejected with <code>TypeError</code> via <code>extra="forbid"</code>.</p>
 </section>
 </section>
 <section id="parameter-support-by-tribunal" class="level2">

@@ -220,13 +220,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    classe<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    tipo_processo<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    thesaurus<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    quantidade_por_pagina<span class="op">=</span><span class="dv">10</span>,</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    tamanho_pagina<span class="op">=</span><span class="dv">10</span>,</span>
 <span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Search TJMT jurisprudence (download + parse).</p>
 <p>Returns a ready-to-analyze DataFrame.</p>
+<section id="aliases-deprecados" class="level4 doc-section doc-section-aliases-deprecados">
+<h4 class="doc-section doc-section-aliases-deprecados anchored" data-anchor-id="aliases-deprecados">Aliases deprecados</h4>
+<ul>
+<li><code>quantidade_por_pagina</code> -&gt; <code>tamanho_pagina</code></li>
+</ul>
+</section>
 </section>
 <section id="juscraper.courts.tjmt.client.TJMTScraper.cjsg_download" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjmt.client.TJMTScraper.cjsg_download">cjsg_download</h3>
@@ -239,7 +245,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    classe<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    tipo_processo<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    thesaurus<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    quantidade_por_pagina<span class="op">=</span><span class="dv">10</span>,</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    tamanho_pagina<span class="op">=</span><span class="dv">10</span>,</span>
 <span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
@@ -306,9 +312,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><code>False</code></td>
 </tr>
 <tr class="odd">
-<td>quantidade_por_pagina</td>
+<td>tamanho_pagina</td>
 <td><a href="`int`">int</a></td>
-<td>Items per page (default 10).</td>
+<td>Items per page (default 10). Aceita <code>quantidade_por_pagina</code> como alias deprecado.</td>
 <td><code>10</code></td>
 </tr>
 <tr class="even">

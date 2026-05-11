@@ -213,6 +213,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjdft.client.TJDFTScraper.cjsg">cjsg</h3>
 <div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>courts.tjdft.client.TJDFTScraper.cjsg(pesquisa<span class="op">=</span><span class="va">None</span>, paginas<span class="op">=</span><span class="va">None</span>, <span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Searches for TJDFT jurisprudence in a simplified way (download + parse). Returns a ready-to-analyze DataFrame.</p>
+<section id="aliases-deprecados" class="level4 doc-section doc-section-aliases-deprecados">
+<h4 class="doc-section doc-section-aliases-deprecados anchored" data-anchor-id="aliases-deprecados">Aliases deprecados</h4>
+<ul>
+<li><code>quantidade_por_pagina</code> -&gt; <code>tamanho_pagina</code></li>
+</ul>
+</section>
 </section>
 <section id="juscraper.courts.tjdft.client.TJDFTScraper.cjsg_download" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjdft.client.TJDFTScraper.cjsg_download">cjsg_download</h3>
@@ -222,7 +228,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    sinonimos<span class="op">=</span><span class="va">True</span>,</span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    espelho<span class="op">=</span><span class="va">True</span>,</span>
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    inteiro_teor<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    quantidade_por_pagina<span class="op">=</span><span class="dv">10</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    tamanho_pagina<span class="op">=</span><span class="dv">10</span>,</span>
 <span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Downloads raw search results from the TJDFT jurisprudence search (using requests). Returns a list of raw results (JSON).</p>
@@ -249,6 +255,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>int, list, range, or None</td>
 <td>Pages to download (1-based). int: paginas=3 downloads pages 1-3. range: range(1, 4) downloads pages 1-3. None: downloads all available pages.</td>
 <td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>tamanho_pagina</td>
+<td><a href="`int`">int</a></td>
+<td>Results per page (default 10). Aceita <code>quantidade_por_pagina</code> como alias deprecado.</td>
+<td><code>10</code></td>
 </tr>
 </tbody>
 </table>
