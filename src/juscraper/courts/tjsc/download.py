@@ -96,7 +96,7 @@ def _fetch_page(
     return ""  # unreachable
 
 
-_PAGINATION_CSS_SELECTORS: tuple[str, ...] = ("h2.mb-0", "h2")
+_PAGINATION_CSS_SELECTORS: tuple[str, ...] = ("h2.mb-0",)
 _PAGINATION_REGEXES: tuple[re.Pattern[str], ...] = (
     re.compile(r"(\d+)\s*documentos?\s*encontrados?", re.IGNORECASE),
 )

@@ -41,7 +41,7 @@ def extract_count_with_cascade(
     css_selectors: Sequence[str] = (),
     regex_patterns: Sequence[re.Pattern[str]] = (),
     zero_markers: Sequence[str] = (),
-    fallback_max_int: bool = True,
+    fallback_max_int: bool = False,
     use_element_html: bool = False,
     aggregate: Literal["first", "max"] = "first",
 ) -> int | None:
@@ -61,15 +61,23 @@ def extract_count_with_cascade(
             a cascata cai direto em ``regex_patterns`` sobre o HTML bruto.
         regex_patterns: Regex tentadas em ordem para cada texto candidato.
             Se a regex tem grupos, retorna o primeiro grupo numerico
-            valido; caso contrario tenta ``group(0)``.
+            valido; caso contrario tenta ``group(0)``. **Com**
+            ``aggregate="max"``, use regex de **1 grupo apenas** — apenas o
+            primeiro grupo de cada match e considerado (groups extras sao
+            silenciosamente ignorados).
         zero_markers: Substrings (case-insensitive) que, quando presentes
-            no texto da pagina, indicam zero resultados — caminho rapido,
-            evita extrair ``0`` por engano de markup com numero da
-            paginacao "Resultados 1 ate 0 de 0".
-        fallback_max_int: Se ``True`` (default), ultimo recurso e pegar
-            ``max(\\d+)`` no primeiro candidato. Util para layouts onde
-            varios numeros aparecem mas o total e o maior. Se ``False``,
-            falha ao retornar ``None`` — caller controla.
+            em **qualquer lugar** do texto da pagina, fazem o util retornar
+            ``0`` imediatamente — sem rodar a cascata de seletores. Use
+            marcadores especificos do tribunal ("Nenhum documento
+            encontrado", "Sua pesquisa nao retornou resultados") para nao
+            falso-positivar em textos de ajuda.
+        fallback_max_int: Se ``True``, ultimo recurso e pegar ``max(\\d+)``
+            no primeiro candidato — util para layouts onde varios numeros
+            aparecem mas o total e o maior. Default ``False`` (fail-fast:
+            retorna ``None``). Os 5 callers atuais usam ``False`` e
+            controlam o default semantico (1 pagina ou 0 resultados) do
+            lado deles; ``True`` deve ser opt-in explicito para evitar
+            extrair numeros irrelevantes da pagina (ano, codigo, etc.).
         use_element_html: Quando ``True``, cada candidato e o HTML completo
             do elemento (``str(el)``) em vez de apenas o texto. Necessario
             quando o numero alvo esta em atributo (ex.: ``href="?page=N"``

@@ -46,6 +46,12 @@ def test_no_match_without_fallback_returns_none():
     ) is None
 
 
+def test_default_fallback_is_off():
+    """Default ``fallback_max_int=False`` evita extrair numero qualquer da pagina."""
+    html = "<html><body>pagina 1 de 12, mostrando 10 itens</body></html>"
+    assert extract_count_with_cascade(html, regex_patterns=()) is None
+
+
 def test_zero_marker_short_circuits():
     html = """
     <html><body>
@@ -151,4 +157,30 @@ def test_use_element_html_keeps_attributes():
         css_selectors=("a.page-link",),
         regex_patterns=(re.compile(r"page=(\d+)"),),
         use_element_html=True,
+    ) == 99
+
+
+def test_aggregate_max_iterates_all_selectors():
+    """Com ``aggregate="max"``, o util percorre TODOS os seletores que matcham
+    (nao para no primeiro hit) — necessario para paginadores espalhados em
+    multiplos blocos do markup.
+    """
+    html = """
+    <nav class="topo">
+      <ul class="pagination">
+        <li><a href="?page=5">5</a></li>
+      </ul>
+    </nav>
+    <nav class="rodape">
+      <ul class="pagination">
+        <li><a href="?page=99">99</a></li>
+      </ul>
+    </nav>
+    """
+    assert extract_count_with_cascade(
+        html,
+        css_selectors=("nav.topo ul.pagination", "nav.rodape ul.pagination"),
+        regex_patterns=(re.compile(r"[?&]page=(\d+)"),),
+        use_element_html=True,
+        aggregate="max",
     ) == 99
