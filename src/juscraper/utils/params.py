@@ -391,8 +391,9 @@ def validate_intervalo_datas(
 # Data-zero pragmática para o judiciário brasileiro digital: anterior à
 # informatização da maioria dos backends. Usada como ``data_*_inicio`` quando
 # o usuário informa apenas ``data_*_fim`` — em vez de amputar a janela, o
-# auto-chunk divide o intervalo e baixa tudo.
-OPEN_ENDED_DATE_FLOOR_BR = "01/01/1990"
+# auto-chunk divide o intervalo e baixa tudo. Definida em BR; convertida para
+# o formato do backend pelo ``fill_open_ended_dates``.
+OPEN_ENDED_DATE_FLOOR = "01/01/1990"
 
 
 def fill_open_ended_dates(
@@ -409,7 +410,7 @@ def fill_open_ended_dates(
     paginador iterar sobre dezenas de milhares de páginas.
 
     - Só ``_inicio``: ``_fim = data de hoje`` (no formato canônico).
-    - Só ``_fim``: ``_inicio = OPEN_ENDED_DATE_FLOOR_BR`` no formato
+    - Só ``_fim``: ``_inicio = OPEN_ENDED_DATE_FLOOR`` no formato
       canônico (``"01/01/1990"`` em BR, ``"1990-01-01"`` em ISO).
 
     Em ambos os casos emite :class:`UserWarning` orientando o usuário a
@@ -429,14 +430,14 @@ def fill_open_ended_dates(
 
     if val_inicio is None and val_fim is not None:
         # Floor pragmático: 01/01/1990 no formato canônico do backend.
-        floor = datetime.strptime(OPEN_ENDED_DATE_FLOOR_BR, "%d/%m/%Y").strftime(formato)
+        floor = datetime.strptime(OPEN_ENDED_DATE_FLOOR, "%d/%m/%Y").strftime(formato)
         datas[key_inicio] = floor
         warnings.warn(
             f"'{key_inicio}' não foi informada -- assumindo {floor!r}. Para "
             f"restringir a busca, passe '{key_inicio}' explicitamente "
             "(auto_chunk dividirá a janela em chunks de 366 dias).",
             UserWarning,
-            stacklevel=2,
+            stacklevel=3,
         )
     elif val_fim is None and val_inicio is not None:
         hoje = date.today().strftime(formato)
@@ -445,7 +446,7 @@ def fill_open_ended_dates(
             f"'{key_fim}' não foi informada -- assumindo {hoje!r} (data atual). "
             f"Para buscar uma janela diferente, passe '{key_fim}' explicitamente.",
             UserWarning,
-            stacklevel=2,
+            stacklevel=3,
         )
 
 

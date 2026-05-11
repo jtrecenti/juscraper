@@ -5,7 +5,12 @@ from datetime import date, datetime
 
 import pytest
 
-from juscraper.utils.params import OPEN_ENDED_DATE_FLOOR_BR, coerce_brazilian_date, fill_open_ended_dates
+from juscraper.utils.params import (
+    DATE_ALIAS_TO_CANONICAL,
+    OPEN_ENDED_DATE_FLOOR,
+    coerce_brazilian_date,
+    fill_open_ended_dates,
+)
 
 
 @pytest.mark.parametrize("entrada", [
@@ -142,4 +147,19 @@ def test_fill_open_ended_publicacao_rotulo():
 
 def test_open_ended_date_floor_constant():
     """A constante de floor é a data zero pragmática do judiciário digital."""
-    assert OPEN_ENDED_DATE_FLOOR_BR == "01/01/1990"
+    assert OPEN_ENDED_DATE_FLOOR == "01/01/1990"
+
+
+def test_date_alias_partition_covers_all():
+    """``deprecated_map`` ∪ ``generic_map`` cobre ``DATE_ALIAS_TO_CANONICAL`` sem sobreposição.
+
+    Trava o invariante do particionamento em ``normalize_datas`` e do loop
+    de re-emissão manual no caminho noop de ``run_auto_chunk``: qualquer
+    alias novo em ``DATE_ALIAS_TO_CANONICAL`` precisa cair em exatamente
+    uma das duas categorias (``_de``/``_ate`` ou genérico). Sem isso, um
+    alias órfão sairia silenciosamente do consumo de ``normalize_datas``.
+    """
+    deprecated = {k for k in DATE_ALIAS_TO_CANONICAL if k.endswith(("_de", "_ate"))}
+    generic = {k for k in DATE_ALIAS_TO_CANONICAL if k in ("data_inicio", "data_fim")}
+    assert deprecated | generic == set(DATE_ALIAS_TO_CANONICAL.keys())
+    assert deprecated & generic == set()

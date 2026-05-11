@@ -25,7 +25,9 @@ from pydantic import BaseModel, ValidationError
 from ...core.base import BaseScraper
 from ...utils.params import (
     DATE_ALIAS_TO_CANONICAL,
+    DATE_CANONICAL,
     apply_input_pipeline_search,
+    coerce_brazilian_date,
     fill_open_ended_dates,
     iter_date_windows,
     normalize_datas,
@@ -97,6 +99,15 @@ def run_auto_chunk(
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", DeprecationWarning)
         sniff = normalize_datas(**kwargs)
+
+    # Coage formato não-canônico antes do auto-fill. Sem isso, um valor em
+    # formato divergente do backend (ex.: ISO "2024-01-01" num backend BR)
+    # chegaria ao ``iter_date_windows`` e quebraria com ``ValueError`` técnico
+    # do ``strptime``. ``coerce_brazilian_date`` é passthrough seguro — formato
+    # realmente inválido cai depois no ``validate_intervalo_datas`` com
+    # mensagem amigável.
+    for _key in DATE_CANONICAL:
+        sniff[_key] = coerce_brazilian_date(sniff[_key], date_format)
 
     # Auto-fill fora do ``catch_warnings`` para que ``UserWarning`` chegue.
     fill_open_ended_dates(sniff, formato=date_format, rotulo="data_julgamento")
