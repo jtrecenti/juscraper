@@ -68,7 +68,7 @@ class TJSPScraper(EsajSearchScraper):
 
     def cjsg(
         self,
-        pesquisa: str,
+        pesquisa: str = "",
         paginas: int | list | range | None = None,
         **kwargs: Any,
     ):
@@ -80,9 +80,15 @@ class TJSPScraper(EsajSearchScraper):
         (sem ``numero_recurso``/``data_publicacao_*``/``origem``; com
         ``baixar_sg``). A logica de execucao continua na base.
 
+        Diferente da familia eSAJ pura, ``pesquisa`` aceita string vazia
+        — o usuario pode buscar so por filtros (ex.: ``classe``,
+        ``assunto``, ``data_julgamento_*``) sem termo textual. Mesmo
+        comportamento de :meth:`cjpg` (issue #229).
+
         Args:
-            pesquisa (str): Termo livre buscado no acordao/ementa.
-                Limite de 120 caracteres (raises ``QueryTooLongError``).
+            pesquisa (str): Termo livre buscado no acordao/ementa. Default
+                ``""`` (sem termo, busca aberta por filtros). Limite de
+                120 caracteres (raises ``QueryTooLongError``).
             paginas (int | list | range | None): Paginas 1-based;
                 ``None`` baixa todas. Default ``None``.
             **kwargs: Filtros aceitos por :class:`InputCJSGTJSP` (todos
@@ -141,7 +147,7 @@ class TJSPScraper(EsajSearchScraper):
 
     def cjsg_download(
         self,
-        pesquisa: str,
+        pesquisa: str = "",
         paginas: int | list | range | None = None,
         diretorio: str | None = None,
         **kwargs: Any,
@@ -154,7 +160,8 @@ class TJSPScraper(EsajSearchScraper):
         veja la a lista completa.
 
         Args:
-            pesquisa (str): Termo livre. Limite de 120 chars.
+            pesquisa (str): Termo livre. Default ``""`` (sem termo).
+                Limite de 120 chars.
             paginas (int | list | range | None): Paginas 1-based;
                 ``None`` baixa todas. Default ``None``.
             diretorio (str | None): Sobrescreve :attr:`download_path`

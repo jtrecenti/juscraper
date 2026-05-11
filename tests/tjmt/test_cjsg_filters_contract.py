@@ -5,7 +5,7 @@ import responses
 from responses.registries import OrderedRegistry
 
 import juscraper as jus
-from tests._helpers import assert_unsupported_date_filter_raises
+from tests._helpers import assert_unknown_kwarg_raises
 from tests.tjmt.test_cjsg_contract import _add_config, _add_page
 
 
@@ -112,15 +112,19 @@ def test_cjsg_data_inicio_alias_maps_to_data_julgamento(mocker):
 def test_cjsg_unknown_kwarg_raises():
     """Kwargs not declared in :class:`InputCJSGTJMT` raise ``TypeError`` with
     the field name, instead of being silently dropped (refs #84, #93, #165)."""
-    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
-        jus.scraper("tjmt").cjsg("dano moral", paginas=1, kwarg_inventado="x")
+    assert_unknown_kwarg_raises(
+        jus.scraper("tjmt").cjsg,
+        "kwarg_inventado",
+        "dano moral",
+        paginas=1,
+    )
 
 
 def test_cjsg_data_publicacao_raises_typeerror():
     """TJMT backend nao expoe filtro de data de publicacao — passar
     ``data_publicacao_*`` deve levantar ``TypeError`` em vez de silently drop
     (refs #165, #173, #186)."""
-    assert_unsupported_date_filter_raises(
+    assert_unknown_kwarg_raises(
         jus.scraper("tjmt").cjsg,
         "data_publicacao_inicio",
         "dano moral",

@@ -20,7 +20,7 @@ import pytest
 
 import juscraper as jus
 from juscraper.courts.tjsp.client import TJSPScraper
-from tests._helpers import assert_unsupported_date_filter_raises
+from tests._helpers import assert_unknown_kwarg_raises
 
 
 def _patch_pipeline(mocker, parse_side_effect=None, parse_return=None):
@@ -189,7 +189,7 @@ def test_data_publicacao_long_window_raises_typeerror_immediately(tmp_path, mock
     download, _ = _patch_pipeline(mocker)
     scraper = jus.scraper("tjsp", download_path=str(tmp_path))
 
-    assert_unsupported_date_filter_raises(
+    assert_unknown_kwarg_raises(
         scraper.cjsg,
         "data_publicacao_inicio",
         "dano moral",

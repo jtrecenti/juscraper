@@ -201,6 +201,27 @@ class TestFiltrosNovos176:
             )
 
 
+class TestCoercaoTipos217:
+    """Issue #217: ``assuntos`` aceita int (codigos TPU sao inteiros);
+    ``movimentos_codigo`` aceita str (vindo de planilha/CSV). Smoke test
+    confirmando que o validator do schema tambem roda em ``contar_processos``,
+    nao so em ``listar_processos``."""
+
+    def test_assuntos_aceita_int(self, captured_payloads):
+        scraper = jus.scraper("datajud")
+        scraper.contar_processos(tribunal="TJMG", assuntos=[12503])
+
+        must = captured_payloads[0]["payload"]["query"]["bool"]["must"]
+        assert {"terms": {"assuntos.codigo": ["12503"]}} in must
+
+    def test_movimentos_codigo_aceita_str(self, captured_payloads):
+        scraper = jus.scraper("datajud")
+        scraper.contar_processos(tribunal="TJSP", movimentos_codigo=["246"])
+
+        must = captured_payloads[0]["payload"]["query"]["bool"]["must"]
+        assert {"terms": {"movimentos.codigo": [246]}} in must
+
+
 class TestExtraKwargs:
     def test_kwarg_desconhecido_levanta_typeerror(self):
         scraper = jus.scraper("datajud")

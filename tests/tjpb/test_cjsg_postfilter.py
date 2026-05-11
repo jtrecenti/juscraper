@@ -14,7 +14,7 @@ import responses
 
 import juscraper as jus
 from juscraper.courts.tjpb.download import BASE_URL, SEARCH_URL, TOKEN_RE
-from tests._helpers import load_sample, load_sample_bytes
+from tests._helpers import assert_unknown_kwarg_raises, load_sample, load_sample_bytes
 
 _HOME_HTML_BYTES = load_sample_bytes("tjpb", "cjsg/home.html")
 _TOKEN_MATCH = TOKEN_RE.search(_HOME_HTML_BYTES.decode("utf-8"))
@@ -173,7 +173,9 @@ def test_unknown_kwarg_fails_before_request(mocker):
     """
     mocker.patch("time.sleep")
 
-    with pytest.raises(TypeError, match="filtro_inexistente"):
-        jus.scraper("tjpb").cjsg(
-            "dano moral", paginas=1, filtro_inexistente="x"
-        )
+    assert_unknown_kwarg_raises(
+        jus.scraper("tjpb").cjsg,
+        "filtro_inexistente",
+        "dano moral",
+        paginas=1,
+    )

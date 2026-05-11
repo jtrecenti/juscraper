@@ -1,0 +1,299 @@
+{
+  "total": 1,
+  "numberOfElements": 1,
+  "maxElementsSize": 100,
+  "searchAfter": [
+    1587583729170,
+    "10029886420194014100"
+  ],
+  "content": [
+    {
+      "id": "10029886420194014100",
+      "versao": "1.0.9",
+      "numeroProcesso": "1002988-64.2019.4.01.4100",
+      "numeroProcessoSintetico": "1002988-64",
+      "dataHoraAtualizacao": "2026-04-28T04:11:48.852",
+      "dataHoraUltimaAtualizacaoCodex": "2025-11-29T04:56:34.276",
+      "dataHoraUltimoMovimento": "2020-04-22T19:28:49.17",
+      "dataHoraPrimeiroAjuizamento": "2019-07-10T17:26:36.247",
+      "dataHoraUltimoAjuizamento": "2019-07-10T17:26:36.247",
+      "nivelSigilo": 0,
+      "segmentoJustica": "JUSTICA_FEDERAL",
+      "idCodexTribunal": 3,
+      "siglaTribunal": "TRF1",
+      "tipoOperacao": "ALTERACAO_META",
+      "tramitacoes": [
+        {
+          "idOrigem": "699638",
+          "idCodex": 144205486,
+          "idFonteDadosCodex": 8,
+          "dataHoraUltimaAtualizacaoCodex": "2025-11-29T04:56:34.276",
+          "dataHoraAjuizamento": "2019-07-10T17:26:36.247",
+          "dataBaixa": null,
+          "dataDistribuicao": null,
+          "dataSentenca": null,
+          "dataSuspensao": null,
+          "tipoJustica": "COMUM",
+          "tribunal": {
+            "idCodex": 3,
+            "sigla": "TRF1",
+            "nome": "[REDIGIDO]",
+            "segmento": "JUSTICA_FEDERAL",
+            "jtr": "401"
+          },
+          "numeroHistorico": null,
+          "instancia": "PRIMEIRO_GRAU",
+          "dadosCompetencia": {
+            "id": 7065,
+            "idLocal": 248451,
+            "nome": "[REDIGIDO]"
+          },
+          "tipoProcesso": "ORIGINARIO",
+          "tipoPrioridade": null,
+          "natureza": "CIVEL",
+          "liminar": true,
+          "justicaGratuita": true,
+          "nivelSigilo": 0,
+          "valorAcao": 0.0,
+          "custasFinais": null,
+          "custasIniciais": null,
+          "custasRecolhidas": null,
+          "custasRecursais": null,
+          "dataHoraUltimaDistribuicao": "2019-07-10T17:26:36.247",
+          "classe": [
+            {
+              "codigo": 7,
+              "descricao": "Procedimento Comum Cível",
+              "hierarquia": "(7) Procedimento Comum Cível | (1107) Procedimento de Conhecimento | (1106) Processo de Conhecimento | (2) PROCESSO CÍVEL E DO TRABALHO",
+              "polo_passivo": "Réu",
+              "polo_ativo": "Autor"
+            }
+          ],
+          "assunto": [
+            {
+              "codigo": 12487,
+              "descricao": "Fornecimento de medicamentos",
+              "hierarquia": "(12487) Fornecimento de medicamentos | (12486) Planos de saúde | (12482) Suplementar | (12480) DIREITO DA SAÚDE",
+              "outrosAssuntos": null,
+              "assunto_secundario": "N"
+            }
+          ],
+          "partes": [
+            {
+              "polo": "ATIVO",
+              "tipoParte": "AUTOR",
+              "situacao": "ATIVO",
+              "racaCor": null,
+              "href": "/pessoas/0a292f6f-b5fa-5263-badc-6dd883a5cb85",
+              "nome": "[REDIGIDO]",
+              "sexo": "[REDIGIDO]",
+              "nacionalidade": null,
+              "outrosNomes": null,
+              "tipoPessoa": "FISICA",
+              "documentosPrincipais": [
+                {
+                  "numero": "00000000000",
+                  "tipo": "CPF"
+                }
+              ],
+              "assistenciaJudiciariaGratuita": null,
+              "sigilosa": false,
+              "representantes": null
+            },
+            {
+              "polo": "PASSIVO",
+              "tipoParte": "RÉU",
+              "situacao": "ATIVO",
+              "racaCor": null,
+              "href": "/pessoas/ff318c34-5b59-5a41-9b0d-1e8250becab5",
+              "nome": "[REDIGIDO]",
+              "sexo": null,
+              "nacionalidade": null,
+              "outrosNomes": [],
+              "tipoPessoa": "JURIDICA",
+              "documentosPrincipais": [
+                {
+                  "numero": "00000000000000",
+                  "tipo": "CNPJ"
+                },
+                {
+                  "numero": "00000000000000",
+                  "tipo": "CNPJ"
+                },
+                {
+                  "numero": "00000000000000",
+                  "tipo": "CNPJ"
+                },
+                {
+                  "numero": "00000000000000",
+                  "tipo": "CNPJ"
+                },
+                {
+                  "numero": "00000000000000",
+                  "tipo": "CNPJ"
+                },
+                {
+                  "numero": "00000000000000",
+                  "tipo": "CNPJ"
+                },
+                {
+                  "numero": "00000000000000",
+                  "tipo": "CNPJ"
+                },
+                {
+                  "numero": "00000000000000",
+                  "tipo": "CNPJ"
+                },
+                {
+                  "numero": "00000000000000",
+                  "tipo": "CNPJ"
+                },
+                {
+                  "numero": "00000000000000",
+                  "tipo": "CNPJ"
+                },
+                {
+                  "numero": "00000000000000",
+                  "tipo": "CNPJ"
+                },
+                {
+                  "numero": "00000000000000",
+                  "tipo": "CNPJ"
+                },
+                {
+                  "numero": "00000000000000",
+                  "tipo": "CNPJ"
+                },
+                {
+                  "numero": "00000000000000",
+                  "tipo": "CNPJ"
+                },
+                {
+                  "numero": "00000000000000",
+                  "tipo": "CNPJ"
+                },
+                {
+                  "numero": "00000000000000",
+                  "tipo": "CNPJ"
+                },
+                {
+                  "numero": "00000000000000",
+                  "tipo": "CNPJ"
+                },
+                {
+                  "numero": "00000000000000",
+                  "tipo": "CNPJ"
+                },
+                {
+                  "numero": "00000000000000",
+                  "tipo": "CNPJ"
+                },
+                {
+                  "numero": "00000000000000",
+                  "tipo": "CNPJ"
+                },
+                {
+                  "numero": "00000000000000",
+                  "tipo": "CNPJ"
+                },
+                {
+                  "numero": "00000000000000",
+                  "tipo": "CNPJ"
+                },
+                {
+                  "numero": "00000000000000",
+                  "tipo": "CNPJ"
+                },
+                {
+                  "numero": "00000000000000",
+                  "tipo": "CNPJ"
+                },
+                {
+                  "numero": "00000000000000",
+                  "tipo": "CNPJ"
+                },
+                {
+                  "numero": "00000000000000",
+                  "tipo": "CNPJ"
+                },
+                {
+                  "numero": "00000000000000",
+                  "tipo": "CNPJ"
+                }
+              ],
+              "assistenciaJudiciariaGratuita": null,
+              "sigilosa": false,
+              "representantes": null
+            }
+          ],
+          "jurisdicao": {
+            "codigo": 12418,
+            "nome": "[REDIGIDO]"
+          },
+          "orgaoJulgador": {
+            "id": 12419,
+            "idLocal": 328466,
+            "nome": "[REDIGIDO]",
+            "ibge": {
+              "codIbge": "1100205",
+              "codCidade": 3927,
+              "nomeCidade": "PORTO VELHO",
+              "sigUf": "RO"
+            }
+          },
+          "orgaoJulgadorColegiado": null,
+          "ultimoMovimento": {
+            "sequencia": 13,
+            "dataHora": "2020-04-22T19:28:49.17",
+            "codigo": 22,
+            "descricao": "Baixa Definitiva - declaração de competência - órgão vinculado a Tribunal diferente",
+            "idCodex": 6829068641,
+            "idMovimentoOrigem": "258979860",
+            "idDistribuicaoCodex": 436621338,
+            "classe": {
+              "codigo": 7,
+              "descricao": "Procedimento Comum Cível"
+            },
+            "orgaoJulgador": [
+              {
+                "id": 12419,
+                "idLocal": 328466,
+                "nome": "[REDIGIDO]",
+                "ibge": {
+                  "codIbge": "1100205",
+                  "codCidade": 3927,
+                  "nomeCidade": "PORTO VELHO",
+                  "sigUf": "RO"
+                }
+              }
+            ]
+          },
+          "ativo": true,
+          "fase": "CONHECIMENTO",
+          "situacaoAtual": {
+            "dataInicio": "2020-04-22T00:00:00",
+            "href": "/situacao/10029886420194014100",
+            "tipo": {
+              "codigo": 10,
+              "descricao": "Baixado definitivamente"
+            },
+            "orgaoJulgador": {
+              "id": null,
+              "nome": null
+            }
+          },
+          "anoEleicao": null,
+          "situacaoMigracao": "NATIVO",
+          "intervencaoMP": null,
+          "juizo100Digital": null,
+          "magistrados": [
+            {
+              "nome": "[REDIGIDO]",
+              "cpf": "[REDIGIDO]"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

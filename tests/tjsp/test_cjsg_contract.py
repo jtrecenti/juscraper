@@ -104,3 +104,22 @@ def test_cjsg_query_too_long_raises(tmp_path):
     scraper = jus.scraper("tjsp", download_path=str(tmp_path))
     with pytest.raises(QueryTooLongError):
         scraper.cjsg(pesquisa, paginas=1)
+
+
+@responses.activate
+def test_cjsg_busca_aberta_sem_pesquisa(tmp_path, mocker):
+    """``cjsg(paginas=...)`` sem ``pesquisa`` deve funcionar (issue #229).
+
+    Espelha o comportamento de :meth:`TJSPScraper.cjpg`: ``pesquisa`` tem
+    default ``""``, permitindo busca aberta por filtros (classe, assunto,
+    data) sem termo textual. Antes do fix, faltava o argumento e Python
+    levantava ``TypeError: cjsg() missing 1 required positional argument:
+    'pesquisa'``.
+    """
+    mocker.patch("time.sleep")
+    _add_post("")
+    _add_get(1, "cjsg/no_results.html")
+
+    df = jus.scraper("tjsp", download_path=str(tmp_path)).cjsg(paginas=1)
+
+    assert isinstance(df, pd.DataFrame)

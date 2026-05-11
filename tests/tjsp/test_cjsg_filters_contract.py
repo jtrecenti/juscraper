@@ -5,13 +5,11 @@ no ``dtPublicacao*``, ``origem`` derived from ``baixar_sg``. See
 ``make_tjsp_cjsg_body`` in ``tests/fixtures/capture/_util.py``.
 """
 import pandas as pd
-import pytest
 import responses
-from pydantic import ValidationError
 from responses.matchers import query_param_matcher, urlencoded_params_matcher
 
 import juscraper as jus
-from tests._helpers import load_sample_bytes
+from tests._helpers import assert_unknown_kwarg_raises, load_sample_bytes
 from tests.fixtures.capture._util import make_tjsp_cjsg_body
 
 BASE = "https://esaj.tjsp.jus.br/cjsg"
@@ -81,13 +79,11 @@ def test_cjsg_all_filters_land_in_post_body(tmp_path, mocker):
 
 def test_cjsg_unknown_kwarg_raises(tmp_path):
     scraper = jus.scraper("tjsp", download_path=str(tmp_path))
-    with pytest.raises((ValidationError, TypeError)):
-        scraper.cjsg("dano moral", paginas=1, parametro_bobo="xyz")
+    assert_unknown_kwarg_raises(scraper.cjsg, "parametro_bobo", "dano moral", paginas=1)
 
 
 def test_cjsg_rejects_esaj_puro_only_fields(tmp_path):
     """TJSP doesn't expose ``numero_recurso``/``data_publicacao_*``/``origem``."""
     scraper = jus.scraper("tjsp", download_path=str(tmp_path))
     for bad in ("numero_recurso", "data_publicacao_inicio", "origem"):
-        with pytest.raises((ValidationError, TypeError)):
-            scraper.cjsg("dano moral", paginas=1, **{bad: "x"})
+        assert_unknown_kwarg_raises(scraper.cjsg, bad, "dano moral", paginas=1)

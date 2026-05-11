@@ -1,11 +1,7 @@
-"""Pydantic schemas for TJRJ scraper endpoints.
-
-Ainda nao wired em :mod:`juscraper.courts.tjrj.client` — este arquivo e
-documentacao executavel da API publica ate o TJRJ ser refatorado para o
-pipeline canonico da #93. A lista de campos bate byte-a-byte com a
-assinatura publica de :meth:`TJRJScraper.cjsg` / :meth:`TJRJScraper.cjsg_download`.
-"""
+"""Pydantic schemas for TJRJ scraper endpoints."""
 from __future__ import annotations
+
+from pydantic import field_validator
 
 from ...schemas import OutputCJSGBase, OutputDataPublicacaoMixin, OutputRelatoriaMixin, SearchBase
 
@@ -17,8 +13,8 @@ class InputCJSGTJRJ(SearchBase):
     ``query`` / ``termo`` via :func:`juscraper.utils.params.normalize_pesquisa`,
     que roda *antes* deste modelo. O TJRJ so expoe filtro por ano
     (``ano_inicio``/``ano_fim``); ``data_julgamento_*`` e
-    ``data_publicacao_*`` sao emitidos com ``warn_unsupported`` no client
-    atual (excluidos deste schema).
+    ``data_publicacao_*`` nao sao aceitos — o backend ASPX nao expoe esses
+    filtros, e este schema rejeita via ``extra="forbid"``.
     """
 
     ano_inicio: str | int | None = None
@@ -30,6 +26,19 @@ class InputCJSGTJRJ(SearchBase):
     tipo_monocratica: bool = True
     magistrado_codigo: str | None = None
     orgao_codigo: str | None = None
+
+    @field_validator("competencia", "origem", mode="before")
+    @classmethod
+    def _coerce_int(cls, value):
+        # O backend ASPX espera string no body, mas o usuario tipicamente
+        # pensa em valores discretos pequenos (1/2/3) — aceitar ``int`` evita
+        # surpresa do tipo `competencia=2 -> ValidationError`. Coerce so para
+        # int "puro"; bool nao entra (Python trata bool como subtipo de int).
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, int):
+            return str(value)
+        return value
 
 
 class OutputCJSGTJRJ(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):
