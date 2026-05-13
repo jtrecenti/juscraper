@@ -96,7 +96,7 @@ def main() -> None:
     dest = samples_dir_for("tjpe", "cjsg")
     scraper = jus.scraper("tjpe")
 
-    state: dict = {"scenario": None}
+    state: dict[str, str | None] = {"scenario": None}
     seen_files: set[str] = set()
     counters: dict[str, int] = {}
 
