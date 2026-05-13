@@ -280,3 +280,35 @@ def test_cjsg_data_julgamento_aceita_formato_brasileiro(mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
+def test_cjpg_data_julgamento_aceita_formato_brasileiro(mocker):
+    """Datas em ``DD/MM/YYYY`` chegam coercidas em ISO ao backend Solr.
+
+    Espelha ``test_cjsg_data_julgamento_aceita_formato_brasileiro`` para o
+    endpoint ``cjpg``. Cobre o caminho end-to-end de
+    ``apply_input_pipeline_search`` lendo ``BACKEND_DATE_FORMAT='%Y-%m-%d'``
+    declarado em :class:`InputCJPGTJES` e convertendo via
+    ``coerce_brazilian_date``. Se o schema esquecer de declarar o
+    ``BACKEND_DATE_FORMAT``, o backend recebe ``dataIni=01/01/2024`` em
+    vez de ``dataIni=2024-01-01`` e o matcher dispara ``ConnectionError``
+    (refs #182, #173, #167)."""
+    mocker.patch("time.sleep")
+    _add_page(
+        "dano moral",
+        1,
+        "cjpg/no_results.json",
+        core="pje1g",
+        data_inicio="2024-01-01",
+        data_fim="2024-03-31",
+    )
+
+    df = jus.scraper("tjes").cjpg(
+        "dano moral",
+        paginas=1,
+        data_julgamento_inicio="01/01/2024",
+        data_julgamento_fim="31/03/2024",
+    )
+
+    assert isinstance(df, pd.DataFrame)
