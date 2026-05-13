@@ -27,13 +27,13 @@ def cjpg_download(
     u_base: str,
     download_path: str,
     sleep_time: float = 0.5,
-    classes: 'list[str] | None' | None = None,
-    assuntos: 'list[str] | None' | None = None,
-    varas: 'list[str] | None' | None = None,
-    id_processo: 'str | None' | None = None,
-    data_inicio: 'str | None' | None = None,
-    data_fim: 'str | None' | None = None,
-    paginas: 'list | range | None' | None = None,
+    classe: str | None = None,
+    assunto: str | None = None,
+    vara: str | None = None,
+    id_processo: str | None = None,
+    data_inicio: str | None = None,
+    data_fim: str | None = None,
+    paginas: 'list | range | None' = None,
     get_n_pags_callback=None,
 ):
     """Download cases from the TJSP jurisprudence search.
@@ -43,13 +43,14 @@ def cjpg_download(
     and pydantic validation before calling this function. Direct callers
     must validate ``pesquisa`` upstream.
 
+    ``classe``/``assunto``/``vara`` chegam ja como CSV (ou ``None``); a coercao
+    de ``int``/``list`` -> CSV acontece no schema (:class:`InputCJPGTJSP`) via
+    :data:`IdFiltro`. Refs #232.
+
     Raises:
         ValueError: If ``get_n_pags_callback`` is missing or fails to
             extract the page count from the first-page HTML.
     """
-    assuntos_str = ','.join(assuntos) if assuntos is not None else None
-    varas_str = ','.join(varas) if varas is not None else None
-    classes_str = ','.join(classes) if classes is not None else None
     id_processo_str = clean_cnj(id_processo) if id_processo is not None else ''
 
     query = {
@@ -59,11 +60,11 @@ def cjpg_download(
         'numeroDigitoAnoUnificado': id_processo_str[:15],
         'foroNumeroUnificado': id_processo_str[-4:],
         'dadosConsulta.nuProcesso': id_processo_str,
-        'classeTreeSelection.values': classes_str,
-        'assuntoTreeSelection.values': assuntos_str,
+        'classeTreeSelection.values': classe,
+        'assuntoTreeSelection.values': assunto,
         'dadosConsulta.dtInicio': data_inicio,
         'dadosConsulta.dtFim': data_fim,
-        'varasTreeSelection.values': varas_str,
+        'varasTreeSelection.values': vara,
         'dadosConsulta.ordenacao': 'DESC'
     }
 

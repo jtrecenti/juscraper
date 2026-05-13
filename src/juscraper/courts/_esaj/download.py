@@ -6,6 +6,13 @@ sends a slightly different form body (handled via ``body_builder``), a
 Chrome-flavoured User-Agent (``chrome_ua``), and extracts a
 ``conversationId`` from the first page that is propagated to subsequent
 pages.
+
+Issue #203: paginated GETs delegam ao retry centralizado
+:meth:`juscraper.core.http.HTTPScraper._request_with_retry` (backoff
+exponencial, Retry-After, retry em 429/5xx). O POST inicial e o GET de
+descoberta de paginação continuam síncronos — a primeira página é
+condição necessária para qualquer paginação posterior, então retry aqui
+não compõe com o auto-chunk e fica como follow-up.
 """
 from __future__ import annotations
 
@@ -14,10 +21,13 @@ import os
 import time
 from collections.abc import Callable
 from datetime import datetime
+from typing import TYPE_CHECKING
 
-import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
+
+if TYPE_CHECKING:
+    from ...core.http import HTTPScraper
 
 logger = logging.getLogger("juscraper._esaj.download")
 
@@ -81,7 +91,7 @@ def _page1_in_range(paginas: "list | range | None" | None) -> bool:
 
 def download_cjsg_pages(
     *,
-    session: requests.Session,
+    scraper: "HTTPScraper",
     base_url: str,
     download_path: str,
     body: dict,
@@ -96,7 +106,9 @@ def download_cjsg_pages(
     """Execute the eSAJ cjsg two-step flow and save raw HTML files.
 
     Args:
-        session: HTTP session. Caller attaches custom adapters (e.g. TJCE TLS).
+        scraper: :class:`HTTPScraper` que provê ``session`` (com adapters já
+            montados — TJCE TLS via ``_configure_session``) e o método
+            ``_request_with_retry`` usado nos GETs paginados (#203).
         base_url: ``https://esaj.<tribunal>.jus.br/`` (trailing slash).
         download_path: Base directory; actual files land under
             ``<download_path>/cjsg/<YYYYMMDDHHMMSS>/cjsg_NNNNN.html``.
@@ -117,6 +129,7 @@ def download_cjsg_pages(
     Returns:
         Path to the directory containing the downloaded files.
     """
+    session = scraper.session
     session.headers.update(_CHROME_HEADERS if chrome_ua else _ESAJ_HEADERS)
 
     tipo_param = "A" if tipo_decisao == "acordao" else "D"
@@ -168,54 +181,22 @@ def download_cjsg_pages(
         if conversation_id:
             query["conversationId"] = conversation_id
 
-        _fetch_page_with_retry(
-            session=session,
-            url=f"{base_url}cjsg/trocaDePagina.do",
+        # pylint: disable=protected-access
+        # _request_with_retry é API contratual de HTTPScraper para subclasses/código
+        # irmão em juscraper.courts.*. Underscore marca "interno ao juscraper" (não
+        # exportado em __all__), não "privado da instância". Decisão registrada em #201.
+        resp = scraper._request_with_retry(
+            "GET",
+            f"{base_url}cjsg/trocaDePagina.do",
             params=query,
-            referer=f"{base_url}cjsg/resultadoCompleta.do",
-            destination=os.path.join(path, f"cjsg_{pag:05d}.html"),
-            sleep_time=sleep_time,
+            timeout=30,
+            headers={"Accept": "text/html; charset=latin1;", "Referer": link_cjsg},
         )
+        resp.encoding = "latin1"
+        with open(os.path.join(path, f"cjsg_{pag:05d}.html"), "w", encoding="latin1") as fp:
+            fp.write(resp.text)
 
     return path
-
-
-def _fetch_page_with_retry(
-    *,
-    session: requests.Session,
-    url: str,
-    params: dict,
-    referer: str,
-    destination: str,
-    sleep_time: float,
-    max_attempts: int = 3,
-) -> None:
-    """Fetch one paginated GET with exponential backoff, save latin-1 bytes."""
-    for attempt in range(max_attempts):
-        try:
-            resp = session.get(
-                url,
-                params=params,
-                timeout=30,
-                headers={"Accept": "text/html; charset=latin1;", "Referer": referer},
-            )
-            resp.encoding = "latin1"
-            resp.raise_for_status()
-            with open(destination, "w", encoding="latin1") as fp:
-                fp.write(resp.text)
-            return
-        except requests.RequestException as exc:
-            if attempt == max_attempts - 1:
-                logger.error(
-                    "Erro ao baixar %s após %s tentativas: %s",
-                    params.get("pagina"), max_attempts, exc,
-                )
-                raise
-            logger.warning(
-                "Tentativa %s/%s falhou para pagina=%s: %s",
-                attempt + 1, max_attempts, params.get("pagina"), exc,
-            )
-            time.sleep(sleep_time * (attempt + 1))
 
 
 __all__ = ["download_cjsg_pages"]

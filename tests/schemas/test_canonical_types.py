@@ -81,6 +81,10 @@ DEPRECATED_SYNONYMS: dict[str, str] = {
     "classe_judicial": "classe",
     "assunto_cnj": "assunto",
     "assunto_principal": "assunto",
+    # refs #232 — singular canonico para IDs de filtro de busca (cjpg/cjsg).
+    "classes": "classe",
+    "assuntos": "assunto",
+    "varas": "vara",
 }
 
 

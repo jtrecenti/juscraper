@@ -6,7 +6,11 @@ import pandas as pd
 import requests
 
 from juscraper.core.base import BaseScraper
-from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
+from juscraper.utils.params import (
+    apply_input_pipeline_search,
+    pop_deprecated_alias,
+    resolve_deprecated_alias,
+)
 
 from .download import cjsg_download
 from .parse import cjsg_parse
@@ -41,7 +45,7 @@ class TJBAScraper(BaseScraper):
         numero_recurso: str | None = None,
         orgaos: list | None = None,
         relatores: list | None = None,
-        classes: list | None = None,
+        classe: list | None = None,
         data_publicacao_inicio: str | None = None,
         data_publicacao_fim: str | None = None,
         segundo_grau: bool = True,
@@ -69,8 +73,9 @@ class TJBAScraper(BaseScraper):
             List of orgao julgador IDs to filter.
         relatores : list, optional
             List of relator IDs to filter.
-        classes : list, optional
-            List of class IDs to filter.
+        classe : list, optional
+            List of class IDs to filter. ``classes`` (plural) e aceito como
+            alias deprecado (emite :class:`DeprecationWarning`). Refs #232.
         data_publicacao_inicio : str, optional
             Start date for publication filter (YYYY-MM-DD).
         data_publicacao_fim : str, optional
@@ -95,6 +100,17 @@ class TJBAScraper(BaseScraper):
         tamanho_pagina = resolve_deprecated_alias(
             kwargs, "items_per_page", "tamanho_pagina", tamanho_pagina, sentinel=10
         )
+        # Popa alias plural antes do pydantic — sem isso o schema canonico
+        # (que so declara o singular ``classe``) trataria ``classes`` como
+        # ``extra_forbidden``. Usa ``classe is not None`` (nao ``in kwargs``)
+        # para nao tratar ``classe=None`` explicito como conflito. Refs #232.
+        if "classes" in kwargs:
+            if classe is not None:
+                kwargs.pop("classes")
+                raise ValueError(
+                    "Nao e possivel passar 'classe' e 'classes' simultaneamente."
+                )
+            classe = pop_deprecated_alias(kwargs, "classes", "classe")
         inp = apply_input_pipeline_search(
             InputCJSGTJBA,
             "TJBAScraper.cjsg_download()",
@@ -107,7 +123,7 @@ class TJBAScraper(BaseScraper):
             numero_recurso=numero_recurso,
             orgaos=orgaos,
             relatores=relatores,
-            classes=classes,
+            classe=classe,
             segundo_grau=segundo_grau,
             turmas_recursais=turmas_recursais,
             tipo_acordaos=tipo_acordaos,
@@ -121,7 +137,7 @@ class TJBAScraper(BaseScraper):
             numero_recurso=inp.numero_recurso,
             orgaos=inp.orgaos,
             relatores=inp.relatores,
-            classes=inp.classes,
+            classes=inp.classe,
             data_publicacao_inicio=inp.data_publicacao_inicio,
             data_publicacao_fim=inp.data_publicacao_fim,
             segundo_grau=inp.segundo_grau,
@@ -156,7 +172,7 @@ class TJBAScraper(BaseScraper):
         numero_recurso: str | None = None,
         orgaos: list | None = None,
         relatores: list | None = None,
-        classes: list | None = None,
+        classe: list | None = None,
         data_publicacao_inicio: str | None = None,
         data_publicacao_fim: str | None = None,
         segundo_grau: bool = True,
@@ -189,6 +205,7 @@ class TJBAScraper(BaseScraper):
         Aliases deprecados
         ------------------
         * ``items_per_page`` -> ``tamanho_pagina``
+        * ``classes`` -> ``classe`` (refs #232)
 
         Returns
         -------
@@ -201,7 +218,7 @@ class TJBAScraper(BaseScraper):
             numero_recurso=numero_recurso,
             orgaos=orgaos,
             relatores=relatores,
-            classes=classes,
+            classe=classe,
             data_publicacao_inicio=data_publicacao_inicio,
             data_publicacao_fim=data_publicacao_fim,
             segundo_grau=segundo_grau,

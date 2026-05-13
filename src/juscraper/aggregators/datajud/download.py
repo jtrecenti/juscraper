@@ -29,7 +29,7 @@ def build_listar_processos_payload(
     numero_processo: str | list[str] | None = None,
     ano_ajuizamento: int | None = None,
     classe: str | None = None,
-    assuntos: list[str] | None = None,
+    assunto: list[str] | None = None,
     data_ajuizamento_inicio: str | None = None,
     data_ajuizamento_fim: str | None = None,
     movimentos_codigo: list[int] | None = None,
@@ -57,7 +57,7 @@ def build_listar_processos_payload(
           Mutuamente exclusivos no schema (validator); aqui ``ano_ajuizamento``
           tem precedencia se ambos chegarem.
        3. ``classe`` -> ``match`` em ``classe.codigo``
-       4. ``assuntos`` -> ``terms`` em ``assuntos.codigo``
+       4. ``assunto`` -> ``terms`` em ``assuntos.codigo``
        5. ``movimentos_codigo`` -> ``terms`` em ``movimentos.codigo``
        6. ``orgao_julgador`` -> ``match`` em ``orgaoJulgador.nome``
 
@@ -80,7 +80,7 @@ def build_listar_processos_payload(
             numero_processo=numero_processo,
             ano_ajuizamento=ano_ajuizamento,
             classe=classe,
-            assuntos=assuntos,
+            assunto=assunto,
             data_ajuizamento_inicio=data_ajuizamento_inicio,
             data_ajuizamento_fim=data_ajuizamento_fim,
             movimentos_codigo=movimentos_codigo,
@@ -107,7 +107,7 @@ def _build_query_amigavel(
     numero_processo: str | list[str] | None,
     ano_ajuizamento: int | None,
     classe: str | None,
-    assuntos: list[str] | None,
+    assunto: list[str] | None,
     data_ajuizamento_inicio: str | None,
     data_ajuizamento_fim: str | None,
     movimentos_codigo: list[int] | None,
@@ -168,8 +168,10 @@ def _build_query_amigavel(
         })
     if classe:
         must_conditions.append({"match": {"classe.codigo": classe}})
-    if assuntos:
-        must_conditions.append({"terms": {"assuntos.codigo": assuntos}})
+    if assunto:
+        # ``assuntos.codigo`` e a chave do payload Elasticsearch (campo do
+        # backend). O parametro Python e ``assunto`` (singular, refs #232).
+        must_conditions.append({"terms": {"assuntos.codigo": assunto}})
     if movimentos_codigo:
         must_conditions.append({"terms": {"movimentos.codigo": list(movimentos_codigo)}})
     if orgao_julgador:
@@ -185,7 +187,7 @@ def build_contar_processos_payload(
     numero_processo: str | list[str] | None = None,
     ano_ajuizamento: int | None = None,
     classe: str | None = None,
-    assuntos: list[str] | None = None,
+    assunto: list[str] | None = None,
     data_ajuizamento_inicio: str | None = None,
     data_ajuizamento_fim: str | None = None,
     movimentos_codigo: list[int] | None = None,
@@ -215,7 +217,7 @@ def build_contar_processos_payload(
             numero_processo=numero_processo,
             ano_ajuizamento=ano_ajuizamento,
             classe=classe,
-            assuntos=assuntos,
+            assunto=assunto,
             data_ajuizamento_inicio=data_ajuizamento_inicio,
             data_ajuizamento_fim=data_ajuizamento_fim,
             movimentos_codigo=movimentos_codigo,

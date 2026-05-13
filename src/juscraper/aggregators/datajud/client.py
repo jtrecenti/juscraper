@@ -14,7 +14,7 @@ from tqdm.auto import tqdm
 
 from ...core.http import HTTPScraper
 from ...utils.cnj import clean_cnj  # Assuming this utility exists and is relevant
-from ...utils.params import normalize_paginas, raise_on_extra_kwargs
+from ...utils.params import normalize_paginas, pop_deprecated_alias, raise_on_extra_kwargs
 from .download import build_contar_processos_payload, build_listar_processos_payload, call_datajud_api
 
 # Import mappings for tribunal and justice aliases.
@@ -27,6 +27,23 @@ from .schemas import InputContarProcessosDataJud, InputListarProcessosDataJud
 ALIAS_TO_TRIBUNAL = {alias: sigla for sigla, alias in TRIBUNAL_TO_ALIAS.items()}
 
 logger = logging.getLogger(__name__)
+
+
+def _pop_plural_aliases(kwargs: dict) -> None:
+    """Popa aliases plurais deprecados antes de instanciar o schema.
+
+    Refs #232 — singular canonico (``assunto``); ``assuntos`` (plural) emite
+    :class:`DeprecationWarning` e segue funcionando. Passar plural + singular
+    juntos -> :class:`ValueError` (uso conflitante).
+    """
+    if "assuntos" not in kwargs:
+        return
+    if kwargs.get("assunto") is not None:
+        kwargs.pop("assuntos")
+        raise ValueError(
+            "Nao e possivel passar 'assunto' e 'assuntos' simultaneamente."
+        )
+    kwargs["assunto"] = pop_deprecated_alias(kwargs, "assuntos", "assunto")
 
 
 class DatajudScraper(HTTPScraper):
@@ -85,7 +102,7 @@ class DatajudScraper(HTTPScraper):
 
         Aceita o **mesmo conjunto de filtros** de :meth:`listar_processos`
         (``tribunal``, ``numero_processo``, ``ano_ajuizamento``, ``classe``,
-        ``assuntos``, ``data_ajuizamento_inicio``/``_fim``,
+        ``assunto``, ``data_ajuizamento_inicio``/``_fim``,
         ``tipos_movimentacao``, ``movimentos_codigo``, ``orgao_julgador``,
         ``query``), excluindo apenas os parametros de paginacao
         (``paginas``, ``tamanho_pagina``, ``mostrar_movs``) — nao ha
@@ -135,6 +152,7 @@ class DatajudScraper(HTTPScraper):
             :meth:`listar_processos` — usa o mesmo conjunto de filtros mas
             baixa os processos.
         """
+        _pop_plural_aliases(kwargs)
         try:
             inp = InputContarProcessosDataJud(**kwargs)
         except ValidationError as exc:
@@ -165,7 +183,7 @@ class DatajudScraper(HTTPScraper):
                 numero_processo=cnjs,
                 ano_ajuizamento=inp.ano_ajuizamento,
                 classe=inp.classe,
-                assuntos=inp.assuntos,
+                assunto=inp.assunto,
                 data_ajuizamento_inicio=inp.data_ajuizamento_inicio,
                 data_ajuizamento_fim=inp.data_ajuizamento_fim,
                 movimentos_codigo=movimentos_codigo,
@@ -295,13 +313,14 @@ class DatajudScraper(HTTPScraper):
                   do projeto mapeia esses para ``data_julgamento_*``, e o
                   DataJud filtra por ajuizamento, nao julgamento).
                 * ``classe`` (str): Codigo da classe processual CNJ.
-                * ``assuntos`` (list[str | int]): Lista de codigos de
+                * ``assunto`` (list[str | int]): Lista de codigos de
                   assuntos CNJ (TPU). Aceita int e str — int e a forma
                   natural (codigos TPU sao inteiros); str e aceita por
                   compatibilidade. O schema normaliza para str antes do
                   payload, ja que o Elasticsearch coage int -> str em
                   campos ``keyword``. Backend: ``terms`` em
-                  ``assuntos.codigo``.
+                  ``assuntos.codigo``. ``assuntos`` (plural) e aceito como
+                  alias deprecado. Refs #232.
                 * ``tipos_movimentacao`` (list[str]): Nomes amigaveis de
                   categorias de movimentacao (ex.: ``["decisao", "sentenca"]``).
                   Resolvidos via ``TIPOS_MOVIMENTACAO`` para uma lista plana
@@ -323,7 +342,7 @@ class DatajudScraper(HTTPScraper):
                   Quando fornecido, vira a chave ``query`` do payload
                   literalmente. Mutuamente exclusivo com TODOS os filtros
                   amigaveis acima (``numero_processo``, ``ano_ajuizamento``,
-                  ``classe``, ``assuntos``, ``data_ajuizamento_*``,
+                  ``classe``, ``assunto``, ``data_ajuizamento_*``,
                   ``tipos_movimentacao``, ``movimentos_codigo``,
                   ``orgao_julgador``). Exige ``tribunal`` explicito (sem
                   inferencia via CNJ). Em troca, oferece paridade com
@@ -414,6 +433,7 @@ class DatajudScraper(HTTPScraper):
                 else None
             )
 
+        _pop_plural_aliases(kwargs)
         try:
             inp = InputListarProcessosDataJud(paginas=paginas_norm, **kwargs)
         except ValidationError as exc:
@@ -424,7 +444,7 @@ class DatajudScraper(HTTPScraper):
         tribunal = inp.tribunal
         ano_ajuizamento = inp.ano_ajuizamento
         classe = inp.classe
-        assuntos = inp.assuntos
+        assunto = inp.assunto
         data_ajuizamento_inicio = inp.data_ajuizamento_inicio
         data_ajuizamento_fim = inp.data_ajuizamento_fim
         orgao_julgador = inp.orgao_julgador
@@ -515,7 +535,7 @@ class DatajudScraper(HTTPScraper):
                 numero_processo=current_cnjs_for_alias,
                 ano_ajuizamento=ano_ajuizamento,
                 classe=classe,
-                assuntos=assuntos,
+                assunto=assunto,
                 data_ajuizamento_inicio=data_ajuizamento_inicio,
                 data_ajuizamento_fim=data_ajuizamento_fim,
                 movimentos_codigo=movimentos_codigo,
@@ -538,7 +558,7 @@ class DatajudScraper(HTTPScraper):
         numero_processo: str | list[str] | None,
         ano_ajuizamento: int | None,
         classe: str | None,
-        assuntos: list[str] | None,
+        assunto: list[str] | None,
         data_ajuizamento_inicio: str | None,
         data_ajuizamento_fim: str | None,
         movimentos_codigo: list[int] | None,
@@ -576,7 +596,7 @@ class DatajudScraper(HTTPScraper):
                     numero_processo=numero_processo,
                     ano_ajuizamento=ano_ajuizamento,
                     classe=classe,
-                    assuntos=assuntos,
+                    assunto=assunto,
                     data_ajuizamento_inicio=data_ajuizamento_inicio,
                     data_ajuizamento_fim=data_ajuizamento_fim,
                     movimentos_codigo=movimentos_codigo,

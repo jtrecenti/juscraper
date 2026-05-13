@@ -168,3 +168,16 @@ def test_cjsg_download_unknown_kwarg_raises():
         "dano moral",
         paginas=1,
     )
+
+
+def test_cjsg_data_publicacao_kwarg_raises():
+    """TJRR backend nao expoe filtro de data de publicacao;
+    :class:`InputCJSGTJRR` so herda :class:`DataJulgamentoMixin`, entao
+    ``data_publicacao_*`` deve cair como ``extra_forbidden`` -> ``TypeError``
+    em vez de silently drop (refs #186)."""
+    assert_unknown_kwarg_raises(
+        jus.scraper("tjrr").cjsg,
+        "data_publicacao_inicio",
+        "dano moral",
+        paginas=1,
+    )
