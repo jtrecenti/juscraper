@@ -19,7 +19,7 @@ def test_cjsg_all_filters_land_in_graphql_body(mocker):
         numero_recurso="8000001-11.2024.8.05.0001",
         orgaos=[10, 20],
         relatores=[1],
-        classes=[100],
+        classe=[100],
         data_publicacao_inicio="2024-01-01",
         data_publicacao_fim="2024-03-31",
         segundo_grau=False,
@@ -111,3 +111,30 @@ def test_cjsg_data_julgamento_raises_typeerror():
         "dano moral",
         paginas=1,
     )
+
+
+# --- refs #232 ---------------------------------------------------------------
+
+
+@responses.activate
+def test_cjsg_classes_plural_emite_deprecation_warning(mocker):
+    """``classes`` (plural) ainda funciona, mas emite ``DeprecationWarning``."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.POST,
+        BASE,
+        body=load_sample("tjba", "cjsg/no_results.json"),
+        status=200,
+        content_type="application/json",
+        match=[json_params_matcher(_payload("dano moral", 0, classe=[100]))],
+    )
+    with pytest.warns(DeprecationWarning, match=r"'classes' .* 'classe'"):
+        df = jus.scraper("tjba").cjsg("dano moral", paginas=1, classes=[100])
+    assert isinstance(df, pd.DataFrame)
+
+
+def test_cjsg_classe_e_classes_juntos_levanta_value_error():
+    with pytest.raises(ValueError, match=r"'classe' e 'classes' simultaneamente"):
+        jus.scraper("tjba").cjsg(
+            "dano moral", paginas=1, classe=[100], classes=[200]
+        )

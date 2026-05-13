@@ -12,6 +12,8 @@ from ...schemas import (
     AutoChunkMixin,
     DataJulgamentoMixin,
     DataPublicacaoMixin,
+    IdFiltro,
+    IdFiltroUnico,
     OutputDataPublicacaoMixin,
     OutputRelatoriaMixin,
     SearchBase,
@@ -26,14 +28,18 @@ class InputCJSGEsajPuro(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin, Au
     arguments raise ``ValidationError`` instead of being silently ignored.
     Herda tambem os filtros de data de julgamento e de publicacao via
     :class:`DataJulgamentoMixin` / :class:`DataPublicacaoMixin`.
+
+    ``classe``/``assunto``/``orgao_julgador`` aceitam ``int``, ``str`` ou
+    ``list[int | str]`` via :data:`IdFiltro` (refs #232). ``comarca`` aceita
+    ``int`` ou ``str`` (single-value, backend ``cdComarca``).
     """
 
     ementa: str | None = None
     numero_recurso: str | None = None
-    classe: str | None = None
-    assunto: str | None = None
-    comarca: str | None = None
-    orgao_julgador: str | None = None
+    classe: IdFiltro = None
+    assunto: IdFiltro = None
+    comarca: IdFiltroUnico = None
+    orgao_julgador: IdFiltro = None
     origem: Literal["T", "R"] = "T"
     tipo_decisao: Literal["acordao", "monocratica"] = "acordao"
 

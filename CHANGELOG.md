@@ -15,6 +15,15 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 - `TJSPScraper.cjsg` aceita `pesquisa=""` por default — antes o argumento era obrigatorio e `tjsp.cjsg(classe="...", assunto="...")` levantava `TypeError`. Agora o usuario pode buscar so por filtros (sem termo textual), igualando o comportamento de `cjpg`. Refs #229.
 - `EsajSearchScraper` (base de TJAC/TJAL/TJAM/TJCE/TJMS/TJSP) herda de `juscraper.core.http.HTTPScraper` em vez de `BaseScraper`. A construção de `self.session`, o User-Agent padrão e o hook `_configure_session` passam a vir da base compartilhada — o override do TJCE para o adapter TLS continua válido sem alteração. Os GETs paginados em `_esaj/download.py::download_cjsg_pages` agora delegam ao retry centralizado `HTTPScraper._request_with_retry`: o escopo de retry passa a ser 429/5xx com backoff exponencial e suporte a `Retry-After` (antes: qualquer `requests.RequestException`, incluindo `ConnectionError`/`Timeout`, com backoff linear modulado por `sleep_time`). Quando esgota as tentativas, a exceção passa a ser `juscraper.core.exceptions.RetryExhaustedError` em vez da `requests.RequestException` original — usuários que capturavam a exceção antiga precisam atualizar. Refs #203, #194, #201.
+- Filtros `classe`, `assunto` e `orgao_julgador` em `cjsg` (TJAC, TJAL, TJAM, TJCE, TJMS, TJSP) e em `cjpg` (TJSP) passam a aceitar `int`, `str` ou `list[int | str]`. Antes so aceitavam `str`. `comarca` em `cjsg` aceita `int` ou `str` (single-value, backend `cdComarca`). Listas viram CSV automaticamente; valores `int` viram `str`. A chamada `tjsp.cjsg(classe=[417], assunto=[3607, 5885])` deixa de levantar `ValidationError`. Refs #232.
+- `TJSPScraper.cjpg` adota o nome canonico singular para IDs de filtro: `classe`/`assunto`/`vara` substituem `classes`/`assuntos`/`varas`. Os nomes plurais continuam funcionando como alias deprecados (com `DeprecationWarning`) por pelo menos um minor release. Passar plural e singular simultaneamente (`cjpg(classe=12728, classes=[5885])`) levanta `ValueError`. Refs #232.
+- `TJBAScraper.cjsg`/`cjsg_download` e `DatajudScraper.listar_processos`/`contar_processos` adotam o nome canonico singular: `classe` (TJBA) substitui `classes`; `assunto` (Datajud) substitui `assuntos`. Os plurais seguem funcionando como alias deprecados (`DeprecationWarning`) por pelo menos um minor release; plural + singular juntos -> `ValueError`. Refs #232.
+
+### Deprecated
+
+- `TJSPScraper.cjpg`: parametros `classes`/`assuntos`/`varas` emitem `DeprecationWarning`. Use os singulares canonicos `classe`/`assunto`/`vara`. Refs #232.
+- `TJBAScraper.cjsg`/`cjsg_download`: parametro `classes` emite `DeprecationWarning`. Use `classe`. Refs #232.
+- `DatajudScraper.listar_processos`/`contar_processos`: parametro `assuntos` emite `DeprecationWarning`. Use `assunto`. Refs #232.
 
 ### Fixed
 

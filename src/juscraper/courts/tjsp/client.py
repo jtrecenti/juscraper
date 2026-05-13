@@ -9,7 +9,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel
 
-from ...utils.params import SEARCH_ALIASES, apply_input_pipeline_search, normalize_pesquisa
+from ...utils.params import SEARCH_ALIASES, apply_input_pipeline_search, normalize_pesquisa, pop_deprecated_alias
 from .._esaj.base import EsajSearchScraper, run_auto_chunk
 from .cjpg_download import cjpg_download as cjpg_download_mod
 from .cjpg_parse import cjpg_n_pags, cjpg_parse_manager
@@ -22,6 +22,42 @@ from .forms import build_tjsp_cjsg_body
 from .schemas import InputCJPGTJSP, InputCJSGTJSP
 
 logger = logging.getLogger("juscraper.tjsp")
+
+
+# Plurais legados de cjpg (refs #232). Singular canonico ja declarado em
+# ``InputCJPGTJSP``; plurais aparecem so como alias deprecados.
+_CJPG_PLURAL_ALIASES: tuple[tuple[str, str], ...] = (
+    ("classes", "classe"),
+    ("assuntos", "assunto"),
+    ("varas", "vara"),
+)
+
+
+def _pop_cjpg_plural_aliases(kwargs: dict) -> None:
+    """Popa aliases plurais cjpg (``classes``/``assuntos``/``varas`` -> singular).
+
+    Chamado em duas posicoes do client TJSP:
+
+    1. ``cjpg()`` antes de :func:`run_auto_chunk` — a validacao upfront do
+       schema dentro do chunking nao tolera kwargs nao-canonicos
+       (``extra_forbidden`` em :class:`InputCJPGTJSP`), entao precisa
+       acontecer aqui, nao apenas em ``cjpg_download``.
+    2. ``cjpg_download()`` para chamadas diretas que nao passaram por
+       ``cjpg()``. Idempotente: se ``cjpg()`` ja popou, e no-op.
+
+    Conflito plural+singular usa ``kwargs.get(_new) is not None`` (nao
+    ``_new in kwargs``) para nao tratar ``classe=None`` explicito como
+    conflito — alinha com a checagem de TJBA/DataJud. Refs #232.
+    """
+    for _old, _new in _CJPG_PLURAL_ALIASES:
+        if _old not in kwargs:
+            continue
+        if kwargs.get(_new) is not None:
+            kwargs.pop(_old)
+            raise ValueError(
+                f"Nao e possivel passar '{_new}' e '{_old}' simultaneamente."
+            )
+        kwargs[_new] = pop_deprecated_alias(kwargs, _old, _new)
 
 
 class TJSPScraper(EsajSearchScraper):
@@ -233,14 +269,15 @@ class TJSPScraper(EsajSearchScraper):
             **kwargs: Filtros aceitos por :class:`InputCJPGTJSP` (todos
                 opcionais; ``None`` = sem filtro):
 
-                * ``classes`` (list[str]): IDs internos de classe
-                  processual. Backend: ``classeTreeSelection.values``
+                * ``classe`` (int | str | list[int | str]): ID(s) internos
+                  de classe processual. Backend:
+                  ``classeTreeSelection.values`` (CSV).
+                * ``assunto`` (int | str | list[int | str]): ID(s) internos
+                  de assunto. Backend: ``assuntoTreeSelection.values``
                   (CSV).
-                * ``assuntos`` (list[str]): IDs internos de assunto.
-                  Backend: ``assuntoTreeSelection.values`` (CSV).
-                * ``varas`` (list[str]): IDs internos de vara, no
-                  formato em arvore do TJSP (ex.: ``"1-1-1"``). Backend:
-                  ``varasTreeSelection.values`` (CSV).
+                * ``vara`` (int | str | list[int | str]): ID(s) internos de
+                  vara, no formato em arvore do TJSP (ex.: ``"1-1-1"``).
+                  Backend: ``varasTreeSelection.values`` (CSV).
                 * ``id_processo`` (str): Numero CNJ formatado para
                   filtrar uma instancia especifica. Normalizado via
                   :func:`clean_cnj` antes do envio.
@@ -256,6 +293,9 @@ class TJSPScraper(EsajSearchScraper):
         pydantic):
 
             * ``query`` / ``termo`` -> ``pesquisa``
+            * ``classes`` -> ``classe``
+            * ``assuntos`` -> ``assunto``
+            * ``varas`` -> ``vara``
             * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``_fim``
             * ``data_julgamento_de`` / ``_ate`` -> ``data_julgamento_inicio`` / ``_fim``
 
@@ -264,6 +304,8 @@ class TJSPScraper(EsajSearchScraper):
                 :func:`raise_on_extra_kwargs`).
             ValidationError: Quando um filtro tem formato invalido.
             QueryTooLongError: Quando ``pesquisa`` excede 120 chars.
+            ValueError: Quando ``classe`` e ``classes`` (ou par equivalente)
+                sao passados simultaneamente.
 
         Returns:
             pd.DataFrame: Resultados parseados; colunas conforme
@@ -277,9 +319,9 @@ class TJSPScraper(EsajSearchScraper):
             >>> tjsp = jus.scraper("tjsp")
             >>> # Busca textual + filtro de vara:
             >>> df = tjsp.cjpg("dano moral", paginas=range(1, 3),
-            ...                varas=["1-1-1"])
-            >>> # So filtros (sem termo):
-            >>> df = tjsp.cjpg(paginas=1, classes=["12728"],
+            ...                vara="1-1-1")
+            >>> # So filtros (sem termo) — IDs como int ou list:
+            >>> df = tjsp.cjpg(paginas=1, classe=12728, assunto=[3607, 5885],
             ...                data_julgamento_inicio="01/01/2024",
             ...                data_julgamento_fim="31/03/2024")
 
@@ -296,6 +338,12 @@ class TJSPScraper(EsajSearchScraper):
             (parcial + warning). ``auto_chunk=True`` + ``paginas != None``
             em janela > 366 dias e :class:`ValueError`.
         """
+        # Popa plurais antes de ``run_auto_chunk`` — a validacao upfront
+        # do schema dentro do chunking via ``extra_forbidden`` em
+        # ``classes``/``assuntos``/``varas`` antes de o caminho noop
+        # delegar para ``cjpg_download``. Refs #232.
+        _pop_cjpg_plural_aliases(kwargs)
+
         chunked = run_auto_chunk(
             method=self.cjpg,
             method_label="TJSPScraper.cjpg()",
@@ -343,10 +391,18 @@ class TJSPScraper(EsajSearchScraper):
             ValidationError: Quando um filtro tem formato invalido.
             QueryTooLongError: Quando ``pesquisa`` (ou alias resolvido)
                 excede 120 chars.
+            ValueError: Quando o usuario passa um alias deprecado e o nome
+                canonico simultaneamente (ex.: ``classe`` e ``classes``;
+                refs #232).
 
         Returns:
             str: Caminho do diretorio onde os HTMLs foram salvos.
         """
+        # Aliases plurais ja foram popados em ``cjpg()``; chamada direta a
+        # ``cjpg_download()`` precisa fazer a pop tambem. ``_pop_cjpg_plural_aliases``
+        # e idempotente (no-op quando ``cjpg()`` ja rodou). Refs #232.
+        _pop_cjpg_plural_aliases(kwargs)
+
         inp = apply_input_pipeline_search(
             InputCJPGTJSP,
             f"{type(self).__name__}.cjpg_download()",
@@ -374,9 +430,9 @@ class TJSPScraper(EsajSearchScraper):
             u_base=self.u_base,
             download_path=self.download_path,
             sleep_time=self.sleep_time,
-            classes=inp.classes,
-            assuntos=inp.assuntos,
-            varas=inp.varas,
+            classe=inp.classe,
+            assunto=inp.assunto,
+            vara=inp.vara,
             id_processo=inp.id_processo,
             data_inicio=inp.data_julgamento_inicio,
             data_fim=inp.data_julgamento_fim,

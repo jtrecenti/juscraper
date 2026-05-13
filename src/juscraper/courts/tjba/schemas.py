@@ -33,7 +33,7 @@ class InputCJSGTJBA(SearchBase, DataPublicacaoMixin):
     numero_recurso: str | None = None
     orgaos: list | None = None
     relatores: list | None = None
-    classes: list | None = None
+    classe: list | None = None
     segundo_grau: bool = True
     turmas_recursais: bool = True
     tipo_acordaos: bool = True
