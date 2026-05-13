@@ -139,3 +139,37 @@ def test_cjsg_tamanho_pagina_collision_raises():
         jus.scraper("tjdft").cjsg(
             "dano moral", paginas=1, tamanho_pagina=25, quantidade_por_pagina=50
         )
+
+
+@responses.activate
+def test_cjsg_data_julgamento_aceita_formato_brasileiro(mocker):
+    """Datas em ``DD/MM/YYYY`` chegam coercidas em ISO ao backend.
+
+    Cobre o caminho end-to-end de ``apply_input_pipeline_search`` lendo
+    ``BACKEND_DATE_FORMAT='%Y-%m-%d'`` declarado em :class:`InputCJSGTJDFT`
+    e convertendo via ``coerce_brazilian_date``. A data isolada chega ao
+    payload como ``termosAcessorios`` na forma canonica
+    ``"entre 2024-01-01 e 2024-03-31"`` — se o pipeline esquecer de
+    coagir, o termo carrega o formato BR cru e o matcher dispara
+    ``ConnectionError`` (refs #182, #173, #167)."""
+    mocker.patch("time.sleep")
+    expected_termos = [
+        {"campo": "dataJulgamento", "valor": "entre 2024-01-01 e 2024-03-31"},
+    ]
+    responses.add(
+        responses.POST,
+        BASE,
+        body=load_sample("tjdft", "cjsg/no_results.json"),
+        status=200,
+        content_type="application/json",
+        match=[json_params_matcher(_payload("dano moral", 1, termos_acessorios=expected_termos))],
+    )
+
+    df = jus.scraper("tjdft").cjsg(
+        "dano moral",
+        paginas=1,
+        data_julgamento_inicio="01/01/2024",
+        data_julgamento_fim="31/03/2024",
+    )
+
+    assert isinstance(df, pd.DataFrame)

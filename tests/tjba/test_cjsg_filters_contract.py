@@ -138,3 +138,38 @@ def test_cjsg_classe_e_classes_juntos_levanta_value_error():
         jus.scraper("tjba").cjsg(
             "dano moral", paginas=1, classe=[100], classes=[200]
         )
+
+
+@responses.activate
+def test_cjsg_data_publicacao_aceita_formato_brasileiro(mocker):
+    """Datas em ``DD/MM/YYYY`` chegam coercidas em ISO ao backend GraphQL.
+
+    Cobre o caminho end-to-end de ``apply_input_pipeline_search`` lendo
+    ``BACKEND_DATE_FORMAT='%Y-%m-%d'`` declarado em :class:`InputCJSGTJBA`
+    e convertendo via ``coerce_brazilian_date``. Se o schema esquecer de
+    declarar o ``BACKEND_DATE_FORMAT`` (cai no default ``%d/%m/%Y``), o
+    backend recebe ``01/01/2024`` cru e o matcher dispara
+    ``ConnectionError`` (refs #182, #173, #167)."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.POST,
+        BASE,
+        body=load_sample("tjba", "cjsg/no_results.json"),
+        status=200,
+        content_type="application/json",
+        match=[json_params_matcher(_payload(
+            "dano moral",
+            0,
+            data_publicacao_inicio="2024-01-01",
+            data_publicacao_fim="2024-03-31",
+        ))],
+    )
+
+    df = jus.scraper("tjba").cjsg(
+        "dano moral",
+        paginas=1,
+        data_publicacao_inicio="01/01/2024",
+        data_publicacao_fim="31/03/2024",
+    )
+
+    assert isinstance(df, pd.DataFrame)

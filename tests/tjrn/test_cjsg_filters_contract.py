@@ -293,3 +293,40 @@ def test_cjsg_download_data_inicio_alias_maps_to_data_julgamento(mocker):
     messages = [str(w.message) for w in warning_list]
     assert any("data_inicio" in m and "deprecado" in m for m in messages)
     assert any("data_fim" in m and "deprecado" in m for m in messages)
+
+
+@responses.activate
+def test_cjsg_data_julgamento_aceita_formato_brasileiro(mocker):
+    """Datas em ``DD/MM/YYYY`` chegam coercidas em ISO ao pipeline.
+
+    Cobre o caminho end-to-end de ``apply_input_pipeline_search`` lendo
+    ``BACKEND_DATE_FORMAT='%Y-%m-%d'`` declarado em :class:`InputCJSGTJRN`
+    e convertendo via ``coerce_brazilian_date``. Apos a coercao, o
+    ``_to_tjrn_date`` ainda reformata o ISO para ``DD-MM-YYYY`` (com tracos)
+    porque o backend Elasticsearch so aceita esse formato. O matcher fixa
+    o resultado final no body — se a coercao do schema nao acontecer, o
+    pipeline tenta passar ``01/01/2024`` para o ``_to_tjrn_date`` e o
+    backend recebe um valor invalido (refs #182, #173, #167)."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.POST,
+        BASE_URL,
+        body=load_sample("tjrn", "cjsg/no_results.json"),
+        status=200,
+        content_type="application/json",
+        match=[json_params_matcher(build_cjsg_payload(
+            "dano moral",
+            page=1,
+            dt_inicio="01-01-2024",
+            dt_fim="31-03-2024",
+        ))],
+    )
+
+    df = jus.scraper("tjrn").cjsg(
+        "dano moral",
+        paginas=1,
+        data_julgamento_inicio="01/01/2024",
+        data_julgamento_fim="31/03/2024",
+    )
+
+    assert isinstance(df, pd.DataFrame)

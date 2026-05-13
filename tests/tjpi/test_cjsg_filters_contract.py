@@ -215,3 +215,38 @@ def test_cjsg_download_data_inicio_alias_maps_to_data_min(mocker):
     messages = [str(w.message) for w in warning_list]
     assert any("data_inicio" in m and "deprecado" in m for m in messages)
     assert any("data_fim" in m and "deprecado" in m for m in messages)
+
+
+@responses.activate
+def test_cjsg_data_julgamento_aceita_formato_brasileiro(mocker):
+    """Datas em ``DD/MM/YYYY`` chegam coercidas em ISO ao backend.
+
+    Cobre o caminho end-to-end de ``apply_input_pipeline_search`` lendo
+    ``BACKEND_DATE_FORMAT='%Y-%m-%d'`` declarado em :class:`InputCJSGTJPI`
+    e convertendo via ``coerce_brazilian_date``. Se o schema esquecer de
+    declarar o ``BACKEND_DATE_FORMAT``, o backend recebe
+    ``data_min=01/01/2024`` em vez de ``2024-01-01`` e o matcher dispara
+    ``ConnectionError`` (refs #182, #173, #167)."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.GET,
+        BASE_URL,
+        body=load_sample("tjpi", "cjsg/no_results.html"),
+        status=200,
+        content_type="text/html; charset=utf-8",
+        match=[query_param_matcher(build_cjsg_params(
+            "dano moral",
+            page=1,
+            data_min="2024-01-01",
+            data_max="2024-03-31",
+        ))],
+    )
+
+    df = jus.scraper("tjpi").cjsg(
+        "dano moral",
+        paginas=1,
+        data_julgamento_inicio="01/01/2024",
+        data_julgamento_fim="31/03/2024",
+    )
+
+    assert isinstance(df, pd.DataFrame)

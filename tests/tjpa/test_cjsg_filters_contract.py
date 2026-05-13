@@ -161,3 +161,43 @@ def test_cjsg_download_unknown_kwarg_raises():
         "dano moral",
         paginas=1,
     )
+
+
+@responses.activate
+def test_cjsg_datas_aceitam_formato_brasileiro(mocker):
+    """Datas de julgamento e publicacao em ``DD/MM/YYYY`` chegam coercidas
+    em ISO ao BFF.
+
+    Cobre o caminho end-to-end de ``apply_input_pipeline_search`` lendo
+    ``BACKEND_DATE_FORMAT='%Y-%m-%d'`` declarado em :class:`InputCJSGTJPA`
+    e convertendo ambos os intervalos via ``coerce_brazilian_date``. Se o
+    schema esquecer de declarar o ``BACKEND_DATE_FORMAT``, o backend recebe
+    ``dataJulgamentoInicio=01/01/2024`` em vez de ``2024-01-01`` e o
+    matcher dispara ``ConnectionError`` (refs #182, #173, #167)."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.POST,
+        BASE_URL,
+        body=load_sample("tjpa", "cjsg/no_results.json"),
+        status=200,
+        content_type="application/json",
+        match=[json_params_matcher(build_cjsg_payload(
+            "dano moral",
+            pagina_0based=0,
+            data_julgamento_inicio="2024-01-01",
+            data_julgamento_fim="2024-03-31",
+            data_publicacao_inicio="2024-02-01",
+            data_publicacao_fim="2024-04-30",
+        ))],
+    )
+
+    df = jus.scraper("tjpa").cjsg(
+        "dano moral",
+        paginas=1,
+        data_julgamento_inicio="01/01/2024",
+        data_julgamento_fim="31/03/2024",
+        data_publicacao_inicio="01/02/2024",
+        data_publicacao_fim="30/04/2024",
+    )
+
+    assert isinstance(df, pd.DataFrame)

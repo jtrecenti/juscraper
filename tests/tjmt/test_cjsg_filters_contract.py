@@ -153,3 +153,34 @@ def test_cjsg_tamanho_pagina_collision_raises():
         jus.scraper("tjmt").cjsg(
             "dano moral", paginas=1, tamanho_pagina=5, quantidade_por_pagina=10
         )
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_data_julgamento_aceita_formato_brasileiro(mocker):
+    """Datas em ``DD/MM/YYYY`` chegam coercidas em ISO ao Hellsgate.
+
+    Cobre o caminho end-to-end de ``apply_input_pipeline_search`` lendo
+    ``BACKEND_DATE_FORMAT='%Y-%m-%d'`` declarado em :class:`InputCJSGTJMT`
+    e convertendo via ``coerce_brazilian_date``. Se o schema esquecer de
+    declarar o ``BACKEND_DATE_FORMAT`` (cai no default ``%d/%m/%Y``), o
+    backend recebe ``filtro.periodoDataDe=01/01/2024`` em vez de
+    ``2024-01-01`` e o matcher dispara ``ConnectionError`` (refs #182,
+    #173, #167)."""
+    mocker.patch("time.sleep")
+    _add_config()
+    _add_page(
+        "dano moral",
+        1,
+        "cjsg/no_results.json",
+        data_julgamento_inicio="2024-01-01",
+        data_julgamento_fim="2024-03-31",
+    )
+
+    df = jus.scraper("tjmt").cjsg(
+        "dano moral",
+        paginas=1,
+        data_julgamento_inicio="01/01/2024",
+        data_julgamento_fim="31/03/2024",
+    )
+
+    assert isinstance(df, pd.DataFrame)
