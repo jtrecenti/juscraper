@@ -19,6 +19,7 @@ import responses
 from responses.matchers import query_param_matcher
 
 import juscraper as jus
+from juscraper.courts.tjsp.client import TJSPScraper
 from tests._helpers import load_sample_bytes
 from tests.fixtures.capture._util import make_tjsp_cjpg_params
 
@@ -156,3 +157,86 @@ def test_body_parity_plural_alias(tmp_path, mocker):
         jus.scraper("tjsp", download_path=str(tmp_path)).cjpg(
             "dano moral", paginas=1, classes=["12728", "5885"]
         )
+
+
+# --- Regressao: plural alias + janela > 366d (auto_chunk) ------------------
+
+
+def test_classes_plural_funciona_com_auto_chunk_long_window(tmp_path, mocker):
+    """Regressao: plural alias + ``data_julgamento`` > 366d nao deve TypeError.
+
+    Antes do fix de pop antes do ``run_auto_chunk``, a validacao upfront do
+    schema :class:`InputCJPGTJSP` dentro do chunking via ``extra_forbidden``
+    em ``classes`` (declarado so como alias deprecado, nao como campo do
+    schema) — virava ``TypeError`` antes da pop acontecer em
+    ``cjpg_download``. Agora o helper :func:`_pop_cjpg_plural_aliases` roda
+    no entry point ``cjpg()`` antes do chunking.
+
+    Mocka ``cjpg_download``/``cjpg_parse`` para isolar a pop+chunking do
+    pipeline real (mesma estrategia de ``test_cjpg_auto_chunk_contract.py``).
+    """
+    mocker.patch.object(TJSPScraper, "cjpg_download", return_value="/fake/path")
+    mocker.patch.object(
+        TJSPScraper,
+        "cjpg_parse",
+        return_value=pd.DataFrame({"id_processo": ["x"]}),
+    )
+    mocker.patch("juscraper.courts.tjsp.client.shutil.rmtree")
+
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+    with pytest.warns(DeprecationWarning, match=r"'classes' .* 'classe'"):
+        df = scraper.cjpg(
+            "dano",
+            classes=["12728"],
+            data_julgamento_inicio="01/01/2022",
+            data_julgamento_fim="31/12/2024",
+        )
+    assert isinstance(df, pd.DataFrame)
+
+
+def test_classes_plural_passa_canonico_para_cjpg_download(tmp_path, mocker):
+    """Apos a pop em ``cjpg()``, ``cjpg_download`` recebe ``classe`` (singular).
+
+    Garante que o helper substitui o alias antes da delegacao — sem isso,
+    chamadas internas de chunking iriam re-popar o alias dentro de cada
+    janela, duplicando o ``DeprecationWarning``.
+    """
+    download = mocker.patch.object(TJSPScraper, "cjpg_download", return_value="/fake/path")
+    mocker.patch.object(
+        TJSPScraper,
+        "cjpg_parse",
+        return_value=pd.DataFrame({"id_processo": ["x"]}),
+    )
+    mocker.patch("juscraper.courts.tjsp.client.shutil.rmtree")
+
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        scraper.cjpg("dano", paginas=1, classes=["12728", "5885"])
+
+    # cjpg_download deve receber 'classe' (canonico), nunca 'classes' (alias)
+    assert download.call_count == 1
+    call_kwargs = download.call_args.kwargs
+    assert "classes" not in call_kwargs
+    assert call_kwargs.get("classe") == ["12728", "5885"]
+
+
+def test_classe_none_explicito_nao_conflita_com_classes_plural(tmp_path, mocker):
+    """``classe=None`` explicito + ``classes=[...]`` nao deve levantar conflito.
+
+    A checagem usa ``kwargs.get(_new) is not None`` (nao ``_new in kwargs``),
+    entao passar ``classe=None`` explicito e tratado como "sem filtro
+    canonico" e o alias plural prossegue normalmente. Alinha com a
+    semantica de TJBA/DataJud.
+    """
+    mocker.patch.object(TJSPScraper, "cjpg_download", return_value="/fake/path")
+    mocker.patch.object(
+        TJSPScraper,
+        "cjpg_parse",
+        return_value=pd.DataFrame({"id_processo": ["x"]}),
+    )
+    mocker.patch("juscraper.courts.tjsp.client.shutil.rmtree")
+
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+    with pytest.warns(DeprecationWarning, match=r"'classes' .* 'classe'"):
+        scraper.cjpg("dano", paginas=1, classe=None, classes=["12728"])

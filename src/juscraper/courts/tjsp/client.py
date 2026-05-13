@@ -24,6 +24,42 @@ from .schemas import InputCJPGTJSP, InputCJSGTJSP
 logger = logging.getLogger("juscraper.tjsp")
 
 
+# Plurais legados de cjpg (refs #232). Singular canonico ja declarado em
+# ``InputCJPGTJSP``; plurais aparecem so como alias deprecados.
+_CJPG_PLURAL_ALIASES: tuple[tuple[str, str], ...] = (
+    ("classes", "classe"),
+    ("assuntos", "assunto"),
+    ("varas", "vara"),
+)
+
+
+def _pop_cjpg_plural_aliases(kwargs: dict) -> None:
+    """Popa aliases plurais cjpg (``classes``/``assuntos``/``varas`` -> singular).
+
+    Chamado em duas posicoes do client TJSP:
+
+    1. ``cjpg()`` antes de :func:`run_auto_chunk` — a validacao upfront do
+       schema dentro do chunking nao tolera kwargs nao-canonicos
+       (``extra_forbidden`` em :class:`InputCJPGTJSP`), entao precisa
+       acontecer aqui, nao apenas em ``cjpg_download``.
+    2. ``cjpg_download()`` para chamadas diretas que nao passaram por
+       ``cjpg()``. Idempotente: se ``cjpg()`` ja popou, e no-op.
+
+    Conflito plural+singular usa ``kwargs.get(_new) is not None`` (nao
+    ``_new in kwargs``) para nao tratar ``classe=None`` explicito como
+    conflito — alinha com a checagem de TJBA/DataJud. Refs #232.
+    """
+    for _old, _new in _CJPG_PLURAL_ALIASES:
+        if _old not in kwargs:
+            continue
+        if kwargs.get(_new) is not None:
+            kwargs.pop(_old)
+            raise ValueError(
+                f"Nao e possivel passar '{_new}' e '{_old}' simultaneamente."
+            )
+        kwargs[_new] = pop_deprecated_alias(kwargs, _old, _new)
+
+
 class TJSPScraper(EsajSearchScraper):
     """Main scraper for TJSP — eSAJ web + api.tjsp.jus.br."""
 
@@ -302,6 +338,12 @@ class TJSPScraper(EsajSearchScraper):
             (parcial + warning). ``auto_chunk=True`` + ``paginas != None``
             em janela > 366 dias e :class:`ValueError`.
         """
+        # Popa plurais antes de ``run_auto_chunk`` — a validacao upfront
+        # do schema dentro do chunking via ``extra_forbidden`` em
+        # ``classes``/``assuntos``/``varas`` antes de o caminho noop
+        # delegar para ``cjpg_download``. Refs #232.
+        _pop_cjpg_plural_aliases(kwargs)
+
         chunked = run_auto_chunk(
             method=self.cjpg,
             method_label="TJSPScraper.cjpg()",
@@ -356,17 +398,10 @@ class TJSPScraper(EsajSearchScraper):
         Returns:
             str: Caminho do diretorio onde os HTMLs foram salvos.
         """
-        # Popa aliases plurais antes do pydantic; sem isso virariam
-        # ``extra_forbidden`` (o schema canonico ja so declara o singular).
-        # Refs #232.
-        for _old, _new in (("classes", "classe"), ("assuntos", "assunto"), ("varas", "vara")):
-            if _old in kwargs:
-                if _new in kwargs:
-                    kwargs.pop(_old)
-                    raise ValueError(
-                        f"Nao e possivel passar '{_new}' e '{_old}' simultaneamente."
-                    )
-                kwargs[_new] = pop_deprecated_alias(kwargs, _old, _new)
+        # Aliases plurais ja foram popados em ``cjpg()``; chamada direta a
+        # ``cjpg_download()`` precisa fazer a pop tambem. ``_pop_cjpg_plural_aliases``
+        # e idempotente (no-op quando ``cjpg()`` ja rodou). Refs #232.
+        _pop_cjpg_plural_aliases(kwargs)
 
         inp = apply_input_pipeline_search(
             InputCJPGTJSP,
