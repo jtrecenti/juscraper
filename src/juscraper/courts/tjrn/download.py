@@ -1,12 +1,10 @@
 """Downloads raw results from the TJRN jurisprudence search (Elasticsearch API)."""
-import logging
 import math
 import time
 
-import requests
 from tqdm import tqdm
 
-logger = logging.getLogger(__name__)
+from juscraper.core.http import RequestFn
 
 BASE_URL = "https://jurisprudencia.tjrn.jus.br/api/pesquisar"
 RESULTS_PER_PAGE = 10
@@ -60,30 +58,11 @@ def build_cjsg_payload(
     }
 
 
-def _fetch_page(session: requests.Session, payload: dict, max_retries: int = 3) -> dict:
-    """Fetch a single page from the TJRN API with retry logic."""
-    for attempt in range(1, max_retries + 1):
-        try:
-            resp = session.post(BASE_URL, json=payload, timeout=30)
-            resp.raise_for_status()
-            data: dict = resp.json()
-            return data
-        except (requests.RequestException, ValueError) as exc:
-            if attempt == max_retries:
-                raise
-            wait = 2 ** attempt
-            logger.warning(
-                "TJRN request failed (attempt %d/%d): %s. Retrying in %ds...",
-                attempt, max_retries, exc, wait,
-            )
-            time.sleep(wait)
-    return {}  # unreachable
-
-
 def cjsg_download_manager(
     pesquisa: str,
     paginas=None,
-    session: requests.Session | None = None,
+    *,
+    request_fn: RequestFn,
     **kwargs,
 ) -> list:
     """Download raw results from the TJRN jurisprudence search.
@@ -93,18 +72,16 @@ def cjsg_download_manager(
     Args:
         pesquisa: Search term.
         paginas (list, range, or None): Pages to download (1-based).
-        session: Optional requests.Session to reuse.
+        request_fn: HTTP callable that handles retry + raise_for_status — em
+            uso normal e ``TJRNScraper._request_with_retry`` (via
+            ``core.http.HTTPScraper``), centralizando backoff exponencial
+            para 429/5xx.
         **kwargs: Additional filter parameters.
     """
-    if session is None:
-        session = requests.Session()
-        session.headers.update({
-            "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-        })
-
     def _get_page(pagina_1based):
         payload = build_cjsg_payload(pesquisa, page=pagina_1based, **kwargs)
-        data = _fetch_page(session, payload)
+        resp = request_fn("POST", BASE_URL, json=payload, timeout=30)
+        data: dict = resp.json()
         time.sleep(1)
         return data
 

@@ -1,9 +1,8 @@
 """Scraper for the Tribunal de Justica de Roraima (TJRR)."""
 
 import pandas as pd
-import requests
 
-from juscraper.core.base import BaseScraper
+from juscraper.core.http import HTTPScraper
 from juscraper.utils.params import apply_input_pipeline_search
 
 from .download import cjsg_download_manager
@@ -11,7 +10,7 @@ from .parse import cjsg_parse_manager
 from .schemas import InputCJSGTJRR
 
 
-class TJRRScraper(BaseScraper):
+class TJRRScraper(HTTPScraper):
     """Scraper for the Tribunal de Justica de Roraima (TJRR).
 
     Uses the JSF/PrimeFaces-based jurisprudence search at jurisprudencia.tjrr.jus.br.
@@ -21,10 +20,6 @@ class TJRRScraper(BaseScraper):
 
     def __init__(self):
         super().__init__("TJRR")
-        self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-        })
 
     def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJRR."""
@@ -126,7 +121,7 @@ class TJRRScraper(BaseScraper):
         return cjsg_download_manager(
             pesquisa=inp.pesquisa,
             paginas=inp.paginas,
-            session=self.session,
+            request_fn=self._request_with_retry,
             relator=inp.relator or "",
             data_inicio=inp.data_julgamento_inicio or "",
             data_fim=inp.data_julgamento_fim or "",

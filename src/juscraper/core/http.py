@@ -20,7 +20,8 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any
+from collections.abc import Callable
+from typing import Any, TypeAlias
 
 import requests
 
@@ -31,6 +32,29 @@ from juscraper.core.exceptions import RetryExhaustedError
 logger = logging.getLogger("juscraper.core.http")
 
 RETRYABLE_STATUSES: frozenset[int] = frozenset({429, 500, 502, 503, 504})
+
+RequestFn: TypeAlias = Callable[..., requests.Response]
+"""Tipo do callable bound do ``HTTPScraper._request_with_retry``.
+
+Repassado a ``courts/<xx>/download.py::cjsg_download_manager`` (Fase 1 do
+refactor #194) para centralizar retry + ``raise_for_status`` sem expor a
+``session`` do client. Contrato esperado em runtime:
+
+* ``method`` (1o positional) — verbo HTTP (``"GET"``, ``"POST"``, ...).
+* ``url`` (2o positional) — URL alvo.
+* kwargs livres — encaminhados a ``requests.Session.request`` (``json=``,
+  ``data=``, ``headers=``, ``timeout=``, ...). ``max_retries`` e
+  ``base_backoff`` tambem sao aceitos para sobrepor o default.
+
+A response retornada e garantida com ``status_code < 400`` (4xx ja foi
+via ``raise_for_status``; 5xx/429 ja esgotou ``max_retries`` ->
+``RetryExhaustedError``). O caller pode chamar ``.json()`` / ler ``.text``
+sem se preocupar com retry de transitorios.
+
+Implementado como ``Callable[..., Response]`` (e nao ``Protocol``) por
+compatibilidade com mypy: o ``__call__`` do bound method tem keyword
+args nomeados (``session``/``max_retries``/``base_backoff``) que nao
+casam estritamente com ``**kwargs: Any`` em ``Protocol`` matching."""
 
 
 class HTTPScraper(BaseScraper):

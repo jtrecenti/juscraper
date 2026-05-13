@@ -1,12 +1,10 @@
 """Downloads raw results from the TJRO jurisprudence search (Elasticsearch API)."""
-import logging
 import math
 import time
 
-import requests
 from tqdm import tqdm
 
-logger = logging.getLogger(__name__)
+from juscraper.core.http import RequestFn
 
 BASE_URL = "https://juris-back.tjro.jus.br/search/varios_parametros/"
 RESULTS_PER_PAGE = 10
@@ -74,30 +72,11 @@ def build_cjsg_payload(
     }
 
 
-def _fetch_page(session: requests.Session, payload: dict, max_retries: int = 3) -> dict:
-    """Fetch a single page from the TJRO API with retry logic."""
-    for attempt in range(1, max_retries + 1):
-        try:
-            resp = session.post(BASE_URL, json=payload, timeout=30)
-            resp.raise_for_status()
-            data: dict = resp.json()
-            return data
-        except (requests.RequestException, ValueError) as exc:
-            if attempt == max_retries:
-                raise
-            wait = 2 ** attempt
-            logger.warning(
-                "TJRO request failed (attempt %d/%d): %s. Retrying in %ds...",
-                attempt, max_retries, exc, wait,
-            )
-            time.sleep(wait)
-    return {}  # unreachable
-
-
 def cjsg_download_manager(
     pesquisa: str,
     paginas=None,
-    session: requests.Session | None = None,
+    *,
+    request_fn: RequestFn,
     **kwargs,
 ) -> list:
     """Download raw results from the TJRO jurisprudence search.
@@ -107,19 +86,16 @@ def cjsg_download_manager(
     Args:
         pesquisa: Search term.
         paginas (list, range, or None): Pages to download (1-based).
-        session: Optional requests.Session to reuse.
+        request_fn: HTTP callable que faz retry + raise_for_status — em uso
+            normal e ``TJROScraper._request_with_retry`` (via
+            ``core.http.HTTPScraper``), centralizando backoff para 429/5xx.
         **kwargs: Additional filter parameters forwarded to ``build_cjsg_payload``.
     """
-    if session is None:
-        session = requests.Session()
-        session.headers.update({
-            "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-        })
-
     def _get_page(pagina_1based):
         offset = (pagina_1based - 1) * RESULTS_PER_PAGE
         payload = build_cjsg_payload(pesquisa, offset=offset, **kwargs)
-        data = _fetch_page(session, payload)
+        resp = request_fn("POST", BASE_URL, json=payload, timeout=30)
+        data: dict = resp.json()
         time.sleep(1)
         return data
 
