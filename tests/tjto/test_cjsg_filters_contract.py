@@ -11,7 +11,7 @@ from responses.matchers import urlencoded_params_matcher
 
 import juscraper as jus
 from juscraper.courts.tjto.download import BASE_URL, build_cjsg_payload
-from tests._helpers import load_sample
+from tests._helpers import assert_unknown_kwarg_raises, load_sample
 
 
 def _add_post(expected_payload: dict) -> None:
@@ -98,3 +98,16 @@ def test_cjsg_data_inicio_alias_maps_to_data_julgamento(mocker):
     messages = [str(w.message) for w in warning_list]
     assert any("data_inicio" in m and "deprecado" in m for m in messages)
     assert any("data_fim" in m and "deprecado" in m for m in messages)
+
+
+def test_cjsg_data_publicacao_kwarg_raises():
+    """TJTO backend Solr so expoe filtro de data de julgamento
+    (``dat_jul_ini``/``dat_jul_fim``); :class:`InputCJSGTJTO` so herda
+    :class:`DataJulgamentoMixin`, entao ``data_publicacao_*`` deve cair como
+    ``extra_forbidden`` -> ``TypeError`` em vez de silently drop (refs #186)."""
+    assert_unknown_kwarg_raises(
+        jus.scraper("tjto").cjsg,
+        "data_publicacao_inicio",
+        "dano moral",
+        paginas=1,
+    )
