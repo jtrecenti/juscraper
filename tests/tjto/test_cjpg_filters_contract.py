@@ -12,7 +12,7 @@ from responses.matchers import urlencoded_params_matcher
 
 import juscraper as jus
 from juscraper.courts.tjto.download import BASE_URL, build_cjsg_payload
-from tests._helpers import load_sample
+from tests._helpers import assert_unknown_kwarg_raises, load_sample
 
 
 def _add_post(expected_payload: dict) -> None:
@@ -142,3 +142,16 @@ def test_cjpg_so_data_fim_autopreenche_inicio_com_1990(mocker):
         )
 
     assert isinstance(df, pd.DataFrame)
+
+
+def test_cjpg_data_publicacao_kwarg_raises():
+    """Mesmo principio do cjsg: :class:`InputCJPGTJTO` so herda
+    :class:`DataJulgamentoMixin` (o backend Solr nao expoe filtro de data
+    de publicacao), entao ``data_publicacao_*`` deve cair como
+    ``extra_forbidden`` -> ``TypeError`` (refs #186)."""
+    assert_unknown_kwarg_raises(
+        jus.scraper("tjto").cjpg,
+        "data_publicacao_inicio",
+        '"dano moral"',
+        paginas=1,
+    )
