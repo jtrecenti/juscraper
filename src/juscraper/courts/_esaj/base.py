@@ -19,10 +19,9 @@ import warnings
 from collections.abc import Callable
 from typing import Any
 
-import requests
 from pydantic import BaseModel, ValidationError
 
-from ...core.base import BaseScraper
+from ...core.http import HTTPScraper
 from ...utils.params import (
     DATE_ALIAS_TO_CANONICAL,
     DATE_CANONICAL,
@@ -204,7 +203,7 @@ def run_auto_chunk(
     )
 
 
-class EsajSearchScraper(BaseScraper):
+class EsajSearchScraper(HTTPScraper):
     """Shared scaffolding for eSAJ cjsg scrapers.
 
     Class attributes:
@@ -217,6 +216,12 @@ class EsajSearchScraper(BaseScraper):
             eSAJ form expects from browsers.
         CJSG_EXTRACT_CONVERSATION_ID: TJSP only — capture ``conversationId``
             from the first-page HTML and propagate to subsequent GETs.
+
+    Session lifecycle (issue #203):
+        ``self.session`` é criada por :class:`HTTPScraper.__init__`; o hook
+        :meth:`_configure_session` é chamado lá com a mesma assinatura.
+        Subclasses que sobrepõem o hook (TJCE para TLS) continuam funcionando
+        sem alteração.
     """
 
     BASE_URL: str = ""
@@ -236,22 +241,13 @@ class EsajSearchScraper(BaseScraper):
             raise NotImplementedError(
                 f"{type(self).__name__} must set BASE_URL as a class attribute."
             )
-        super().__init__(self.TRIBUNAL_NAME or type(self).__name__)
-        self.session = requests.Session()
-        self._configure_session(self.session)
-        self.set_verbose(verbose)
-        self.set_download_path(download_path)
-        self.sleep_time = sleep_time
-        self.args = kwargs
-
-    # --- hook -----------------------------------------------------------
-
-    def _configure_session(self, session: requests.Session) -> None:
-        """Override to mount custom adapters. Default: no-op.
-
-        TJCE attaches a TLS adapter with ``SECLEVEL=1`` to accept the court's
-        outdated cipher suite.
-        """
+        super().__init__(
+            self.TRIBUNAL_NAME or type(self).__name__,
+            verbose=verbose,
+            download_path=download_path,
+            sleep_time=sleep_time,
+            **kwargs,
+        )
 
     # --- cjsg -----------------------------------------------------------
 
@@ -402,7 +398,7 @@ class EsajSearchScraper(BaseScraper):
         body = self._build_cjsg_body(input_model)
 
         return download_cjsg_pages(
-            session=self.session,
+            scraper=self,
             base_url=self.BASE_URL,
             download_path=diretorio or self.download_path,
             body=body,

@@ -14,6 +14,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 
 - `TJSPScraper.cjsg` aceita `pesquisa=""` por default — antes o argumento era obrigatorio e `tjsp.cjsg(classe="...", assunto="...")` levantava `TypeError`. Agora o usuario pode buscar so por filtros (sem termo textual), igualando o comportamento de `cjpg`. Refs #229.
+- `EsajSearchScraper` (base de TJAC/TJAL/TJAM/TJCE/TJMS/TJSP) herda de `juscraper.core.http.HTTPScraper` em vez de `BaseScraper`. A construção de `self.session`, o User-Agent padrão e o hook `_configure_session` passam a vir da base compartilhada — o override do TJCE para o adapter TLS continua válido sem alteração. Os GETs paginados em `_esaj/download.py::download_cjsg_pages` agora delegam ao retry centralizado `HTTPScraper._request_with_retry` (backoff exponencial, suporte a `Retry-After`, retry em 429/5xx); a assinatura troca `session=` por `scraper=` — chamadores externos da função privada precisam atualizar. Refs #203, #194, #201.
 
 ### Fixed
 
