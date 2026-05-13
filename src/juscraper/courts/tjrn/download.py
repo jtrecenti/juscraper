@@ -1,13 +1,10 @@
 """Downloads raw results from the TJRN jurisprudence search (Elasticsearch API)."""
-import logging
 import math
 import time
 from collections.abc import Callable
 
 import requests
 from tqdm import tqdm
-
-logger = logging.getLogger(__name__)
 
 BASE_URL = "https://jurisprudencia.tjrn.jus.br/api/pesquisar"
 RESULTS_PER_PAGE = 10

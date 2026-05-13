@@ -1,5 +1,4 @@
 """Downloads raw results from the TJRR jurisprudence search (JSF/PrimeFaces)."""
-import logging
 import re
 import time
 from collections.abc import Callable
@@ -9,8 +8,6 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 
 from juscraper.utils.pagination import extract_count_with_cascade
-
-logger = logging.getLogger(__name__)
 
 BASE_URL = "https://jurisprudencia.tjrr.jus.br/index.xhtml"
 RESULTS_PER_PAGE = 10
