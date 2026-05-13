@@ -2,6 +2,7 @@
 import logging
 import re
 import time
+from collections.abc import Callable
 
 import requests
 from bs4 import BeautifulSoup
@@ -63,7 +64,7 @@ def _collect_form_defaults(soup: BeautifulSoup) -> dict:
     return {k: (v[0] if len(v) == 1 else v) for k, v in defaults.items()}
 
 
-def _get_form_fields(session: requests.Session) -> dict:
+def _get_form_fields(request_fn: Callable[..., requests.Response]) -> dict:
     """Fetch the initial page and discover JSF field names and defaults.
 
     JSF auto-generates component IDs like ``menuinicial:j_idt28`` that
@@ -72,8 +73,7 @@ def _get_form_fields(session: requests.Session) -> dict:
     (``id=consultaAtual`` for the search input) and snapshot every form
     default so the POST matches what a browser would send.
     """
-    resp = session.get(BASE_URL, timeout=30)
-    resp.raise_for_status()
+    resp = request_fn("GET", BASE_URL, timeout=30)
     soup = BeautifulSoup(resp.text, "html.parser")
     vs_input = soup.find("input", {"name": "javax.faces.ViewState"})
     if not vs_input:
@@ -96,7 +96,7 @@ def _get_form_fields(session: requests.Session) -> dict:
 
 
 def _search(
-    session: requests.Session,
+    request_fn: Callable[..., requests.Response],
     form_fields: dict,
     pesquisa: str,
     relator: str = "",  # noqa: ARG001 - accepted for API compat; no longer a text input in TJRR
@@ -104,7 +104,6 @@ def _search(
     data_fim: str = "",
     orgao_julgador: list | None = None,
     especie: list | None = None,
-    max_retries: int = 3,
 ) -> str:
     """Submit the search form and return the HTML response."""
     data: dict = dict(form_fields.get("defaults", {}))
@@ -126,22 +125,9 @@ def _search(
         "Origin": "https://jurisprudencia.tjrr.jus.br",
         "Referer": "https://jurisprudencia.tjrr.jus.br/",
     }
-    for attempt in range(1, max_retries + 1):
-        try:
-            resp = session.post(BASE_URL, data=data, headers=headers, timeout=60)
-            resp.raise_for_status()
-            resp.encoding = "utf-8"
-            return resp.text
-        except requests.RequestException as exc:
-            if attempt == max_retries:
-                raise
-            wait = 2 ** attempt
-            logger.warning(
-                "TJRR request failed (attempt %d/%d): %s. Retrying in %ds...",
-                attempt, max_retries, exc, wait,
-            )
-            time.sleep(wait)
-    return ""  # unreachable
+    resp = request_fn("POST", BASE_URL, data=data, headers=headers, timeout=60)
+    resp.encoding = "utf-8"
+    return resp.text
 
 
 _PAGINATION_CSS_SELECTORS: tuple[str, ...] = ("span.ui-paginator-current",)
@@ -163,10 +149,9 @@ def _get_total_pages(html: str) -> int:
 
 
 def _paginate(
-    session: requests.Session,
+    request_fn: Callable[..., requests.Response],
     html: str,
     page: int,
-    max_retries: int = 3,
 ) -> str:
     """Navigate to a specific page using PrimeFaces AJAX pagination."""
     soup = BeautifulSoup(html, "html.parser")
@@ -190,28 +175,16 @@ def _paginate(
         "javax.faces.ViewState": viewstate,
     }
 
-    for attempt in range(1, max_retries + 1):
-        try:
-            resp = session.post(BASE_URL, data=data, timeout=60)
-            resp.raise_for_status()
-            resp.encoding = "utf-8"
-            return _extract_cdata(resp.text)
-        except requests.RequestException as exc:
-            if attempt == max_retries:
-                raise
-            wait = 2 ** attempt
-            logger.warning(
-                "TJRR pagination failed (attempt %d/%d): %s. Retrying in %ds...",
-                attempt, max_retries, exc, wait,
-            )
-            time.sleep(wait)
-    return ""  # unreachable
+    resp = request_fn("POST", BASE_URL, data=data, timeout=60)
+    resp.encoding = "utf-8"
+    return _extract_cdata(resp.text)
 
 
 def cjsg_download_manager(
     pesquisa: str,
     paginas=None,
-    session: requests.Session | None = None,
+    *,
+    request_fn: Callable[..., requests.Response],
     **kwargs,
 ) -> list:
     """Download raw HTML results from the TJRR jurisprudence search.
@@ -221,17 +194,13 @@ def cjsg_download_manager(
     Args:
         pesquisa: Search term.
         paginas (list, range, or None): Pages to download (1-based).
-        session: Optional requests.Session to reuse.
+        request_fn: HTTP callable que faz retry + raise_for_status — em uso
+            normal e ``TJRRScraper._request_with_retry`` (via
+            ``core.http.HTTPScraper``), centralizando backoff para 429/5xx.
         **kwargs: Additional filter parameters.
     """
-    if session is None:
-        session = requests.Session()
-        session.headers.update({
-            "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-        })
-
-    form_fields = _get_form_fields(session)
-    first_html = _search(session, form_fields, pesquisa, **kwargs)
+    form_fields = _get_form_fields(request_fn)
+    first_html = _search(request_fn, form_fields, pesquisa, **kwargs)
     time.sleep(1)
 
     if paginas is None:
@@ -239,7 +208,7 @@ def cjsg_download_manager(
         n_pags = _get_total_pages(first_html)
         if n_pags > 1:
             for pagina in tqdm(range(2, n_pags + 1), desc="Baixando CJSG TJRR"):
-                html = _paginate(session, first_html, pagina)
+                html = _paginate(request_fn, first_html, pagina)
                 resultados.append(html)
                 time.sleep(1)
         return resultados
@@ -250,7 +219,7 @@ def cjsg_download_manager(
         if pagina_1based == 1:
             resultados.append(first_html)
         else:
-            html = _paginate(session, first_html, pagina_1based)
+            html = _paginate(request_fn, first_html, pagina_1based)
             resultados.append(html)
             time.sleep(1)
     return resultados

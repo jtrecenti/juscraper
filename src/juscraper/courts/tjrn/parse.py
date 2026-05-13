@@ -1,16 +1,8 @@
 """Parse raw results from the TJRN jurisprudence search (Elasticsearch)."""
-import re
-
 import pandas as pd
 
-
-def _clean_html(html_text: str | None) -> str | None:
-    """Remove HTML tags from text."""
-    if not html_text:
-        return html_text
-    text = re.sub(r"<[^>]+>", " ", html_text)
-    text = re.sub(r"\s+", " ", text).strip()
-    return text
+from juscraper.core.parse_utils import clean_html, coerce_date_columns
+from juscraper.utils.cnj import format_cnj
 
 
 def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
@@ -40,20 +32,17 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
                 "data_publicacao": source.get("dt_publicacao"),
                 "sistema": source.get("sistema"),
                 "sigiloso": source.get("sigiloso"),
-                "ementa": _clean_html(source.get("ementa")),
+                "ementa": clean_html(source.get("ementa")),
             })
 
     df = pd.DataFrame(registros)
     if df.empty:
         return df
 
-    for col in ["data_julgamento", "data_publicacao"]:
-        if col in df.columns:
-            df[col] = pd.to_datetime(df[col], errors="coerce").dt.date
+    coerce_date_columns(df, ["data_julgamento", "data_publicacao"])
 
-    # Format processo as CNJ pattern
     if "processo" in df.columns:
-        df["processo"] = df["processo"].apply(_format_cnj)
+        df["processo"] = df["processo"].apply(lambda v: format_cnj(v, strict=False))
 
     principais = [
         "processo", "classe", "orgao_julgador", "colegiado",
@@ -64,13 +53,3 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
     cols_restantes = [c for c in df.columns if c not in principais]
     df = df[cols_principais + cols_restantes]
     return df
-
-
-def _format_cnj(numero: str | None) -> str | None:
-    """Format a raw 20-digit number as CNJ pattern NNNNNNN-DD.YYYY.J.TR.OOOO."""
-    if not numero or not numero.isdigit() or len(numero) != 20:
-        return numero
-    return (
-        f"{numero[:7]}-{numero[7:9]}.{numero[9:13]}."
-        f"{numero[13]}.{numero[14:16]}.{numero[16:]}"
-    )

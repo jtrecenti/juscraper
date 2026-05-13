@@ -13,6 +13,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- TJRN, TJRO e TJRR: `cjsg` passa a usar `core.http.HTTPScraper` (backoff exponencial centralizado para 429/5xx, respeito a `Retry-After`) e os helpers de `core.parse_utils` (`clean_html`, `coerce_date_columns` em TJRN/TJRO) + `utils.cnj.format_cnj(strict=False)`. Comportamento observavel preservado byte-a-byte (mesmas colunas, mesmo payload); falha agora levanta `RetryExhaustedError` apos esgotar tentativas em vez de propagar a ultima `requests.HTTPError` cega. Refs #194, #202.
 - `TJSPScraper.cjsg` aceita `pesquisa=""` por default — antes o argumento era obrigatorio e `tjsp.cjsg(classe="...", assunto="...")` levantava `TypeError`. Agora o usuario pode buscar so por filtros (sem termo textual), igualando o comportamento de `cjpg`. Refs #229.
 
 ### Fixed
