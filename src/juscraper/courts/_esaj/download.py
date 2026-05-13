@@ -182,9 +182,9 @@ def download_cjsg_pages(
             query["conversationId"] = conversation_id
 
         # pylint: disable=protected-access
-        # _request_with_retry e API contratual de HTTPScraper para subclasses/codigo
-        # irmao em juscraper.courts.*. Underscore marca "interno ao juscraper" (nao
-        # exportado em __all__), nao "privado da instancia". Decisao registrada em #201.
+        # _request_with_retry é API contratual de HTTPScraper para subclasses/código
+        # irmão em juscraper.courts.*. Underscore marca "interno ao juscraper" (não
+        # exportado em __all__), não "privado da instância". Decisão registrada em #201.
         resp = scraper._request_with_retry(
             "GET",
             f"{base_url}cjsg/trocaDePagina.do",
