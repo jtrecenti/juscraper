@@ -2,7 +2,6 @@
 Orchestrates the flow for DATAJUD (user entry point) - API BASED
 """
 import logging
-import os
 import tempfile
 import time
 import warnings
@@ -10,11 +9,10 @@ from collections import defaultdict
 from typing import Any
 
 import pandas as pd
-import requests
 from pydantic import ValidationError
 from tqdm.auto import tqdm
 
-from ...core.base import BaseScraper
+from ...core.http import HTTPScraper
 from ...utils.cnj import clean_cnj  # Assuming this utility exists and is relevant
 from ...utils.params import normalize_paginas, pop_deprecated_alias, raise_on_extra_kwargs
 from .download import build_contar_processos_payload, build_listar_processos_payload, call_datajud_api
@@ -48,8 +46,19 @@ def _pop_plural_aliases(kwargs: dict) -> None:
     kwargs["assunto"] = pop_deprecated_alias(kwargs, "assuntos", "assunto")
 
 
-class DatajudScraper(BaseScraper):
-    """Scraper for CNJ's Datajud API."""
+class DatajudScraper(HTTPScraper):
+    """Scraper for CNJ's Datajud API.
+
+    Note:
+        Diferente de outros agregadores migrados em #204, o DataJud nao usa
+        ``self._request_with_retry`` no caminho quente: a funcao
+        :func:`download.call_datajud_api` aplica um retry especializado
+        (504/Timeout -> refaz **1 vez** com ``size`` reduzido por
+        ``FALLBACK_DIVISOR``), incompativel com o backoff exponencial do
+        ``HTTPScraper``. A heranca aqui garante session/headers
+        compartilhados e o cumprimento de #185, mas o transporte segue via
+        :func:`call_datajud_api`.
+    """
 
     DEFAULT_API_KEY = "cDZHYzlZa0JadVREZDJCendQbXY6SkJlTzNjLV9TRENyQk1RdnFKZGRQdw=="
     BASE_API_URL = "https://api-publica.datajud.cnj.jus.br"
@@ -64,20 +73,22 @@ class DatajudScraper(BaseScraper):
         download_path: str | None = None,  # For temporary files if needed
         sleep_time: float = 0.5,
     ):
-        super().__init__("DatajudAPI")
-        self.set_verbose(verbose)
-        # download_path for API responses if saved temporarily, or can be ignored if
-        # data is processed in memory
-        self.download_path = download_path or tempfile.mkdtemp(prefix="datajud_api_")
-        if not os.path.exists(self.download_path):
-            os.makedirs(self.download_path)
-        self.session = requests.Session()
+        # Preserva o prefix historico ``datajud_api_`` para download_path
+        # default. ``set_download_path`` (em ``BaseScraper``) usa
+        # ``tempfile.mkdtemp()`` sem prefix, entao resolvemos aqui antes
+        # de delegar ao ``HTTPScraper``.
+        resolved_path = download_path or tempfile.mkdtemp(prefix="datajud_api_")
+        super().__init__(
+            "DatajudAPI",
+            verbose=verbose,
+            download_path=resolved_path,
+            sleep_time=sleep_time,
+        )
         self.api_key = api_key or self.DEFAULT_API_KEY
-        self.sleep_time = sleep_time
         logger.info(
-            "DatajudScraper initialized. API Key: "
-            "{'Provided' if api_key else 'Default'}. Temp path: %s",
-            self.download_path
+            "DatajudScraper initialized. API Key: %s. Temp path: %s",
+            "Provided" if api_key else "Default",
+            self.download_path,
         )
 
     def contar_processos(self, **kwargs) -> pd.DataFrame:
