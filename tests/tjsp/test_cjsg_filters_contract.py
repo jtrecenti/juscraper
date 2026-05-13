@@ -87,3 +87,46 @@ def test_cjsg_rejects_esaj_puro_only_fields(tmp_path):
     scraper = jus.scraper("tjsp", download_path=str(tmp_path))
     for bad in ("numero_recurso", "data_publicacao_inicio", "origem"):
         assert_unknown_kwarg_raises(scraper.cjsg, bad, "dano moral", paginas=1)
+
+
+# --- refs #232: classe/assunto aceitam int e list (CSV) ---------------------
+
+
+@responses.activate
+def test_cjsg_classe_lista_int_vira_csv_no_body(tmp_path, mocker):
+    """``classe=[417, 5885]`` deve produzir CSV em ``classesTreeSelection.values``."""
+    mocker.patch("time.sleep")
+    expected_body = make_tjsp_cjsg_body(
+        pesquisa="",
+        ementa="",
+        classe="417,5885",
+        assunto="3607",
+        comarca="",
+        orgao_julgador="",
+        data_inicio="",
+        data_fim="",
+    )
+    responses.add(
+        responses.POST,
+        f"{BASE}/resultadoCompleta.do",
+        body=load_sample_bytes("tjsp", "cjsg/no_results.html"),
+        status=200,
+        content_type="text/html; charset=latin-1",
+        match=[urlencoded_params_matcher(expected_body, allow_blank=True)],
+    )
+    responses.add(
+        responses.GET,
+        f"{BASE}/trocaDePagina.do",
+        body=load_sample_bytes("tjsp", "cjsg/no_results.html"),
+        status=200,
+        content_type="text/html; charset=latin-1",
+        match=[query_param_matcher({"tipoDeDecisao": "A", "pagina": "1"})],
+    )
+
+    df = jus.scraper("tjsp", download_path=str(tmp_path)).cjsg(
+        pesquisa="",
+        paginas=1,
+        classe=[417, 5885],
+        assunto=3607,
+    )
+    assert isinstance(df, pd.DataFrame)

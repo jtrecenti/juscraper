@@ -14,6 +14,15 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 
 - `TJSPScraper.cjsg` aceita `pesquisa=""` por default — antes o argumento era obrigatorio e `tjsp.cjsg(classe="...", assunto="...")` levantava `TypeError`. Agora o usuario pode buscar so por filtros (sem termo textual), igualando o comportamento de `cjpg`. Refs #229.
+- Filtros `classe`, `assunto` e `orgao_julgador` em `cjsg` (TJAC, TJAL, TJAM, TJCE, TJMS, TJSP) e em `cjpg` (TJSP) passam a aceitar `int`, `str` ou `list[int | str]`. Antes so aceitavam `str`. `comarca` em `cjsg` aceita `int` ou `str` (single-value, backend `cdComarca`). Listas viram CSV automaticamente; valores `int` viram `str`. A chamada `tjsp.cjsg(classe=[417], assunto=[3607, 5885])` deixa de levantar `ValidationError`. Refs #232.
+- `TJSPScraper.cjpg` adota o nome canonico singular para IDs de filtro: `classe`/`assunto`/`vara` substituem `classes`/`assuntos`/`varas`. Os nomes plurais continuam funcionando como alias deprecados (com `DeprecationWarning`) por pelo menos um minor release. Passar plural e singular simultaneamente (`cjpg(classe=12728, classes=[5885])`) levanta `ValueError`. Refs #232.
+- `TJBAScraper.cjsg`/`cjsg_download` e `DatajudScraper.listar_processos`/`contar_processos` adotam o nome canonico singular: `classe` (TJBA) substitui `classes`; `assunto` (Datajud) substitui `assuntos`. Os plurais seguem funcionando como alias deprecados (`DeprecationWarning`) por pelo menos um minor release; plural + singular juntos -> `ValueError`. Refs #232.
+
+### Deprecated
+
+- `TJSPScraper.cjpg`: parametros `classes`/`assuntos`/`varas` emitem `DeprecationWarning`. Use os singulares canonicos `classe`/`assunto`/`vara`. Refs #232.
+- `TJBAScraper.cjsg`/`cjsg_download`: parametro `classes` emite `DeprecationWarning`. Use `classe`. Refs #232.
+- `DatajudScraper.listar_processos`/`contar_processos`: parametro `assuntos` emite `DeprecationWarning`. Use `assunto`. Refs #232.
 
 ### Fixed
 

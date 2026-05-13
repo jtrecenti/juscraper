@@ -9,6 +9,7 @@ from .mixins import (
     OutputRelatoriaMixin,
     PaginasMixin,
 )
+from .types import IdFiltro, IdFiltroUnico
 
 __all__ = [
     "SearchBase",
@@ -21,4 +22,6 @@ __all__ = [
     "OutputDataPublicacaoMixin",
     "CnjInputBase",
     "OutputCnjConsultaBase",
+    "IdFiltro",
+    "IdFiltroUnico",
 ]
