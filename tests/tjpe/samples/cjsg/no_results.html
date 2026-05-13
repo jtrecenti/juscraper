@@ -1,0 +1,122 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd" >
+<html xmlns="http://www.w3.org/1999/xhtml">
+	
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+		<title>Consulta Jurisprud&ecirc;ncia Web</title>
+		
+		<link class="component" href="/consultajurisprudenciaweb/a4j/s/3_3_3.Finalorg/richfaces/renderkit/html/css/basic_classes.xcss/DATB/eAELXT5DOhSIAQ!sA18_.xhtml" rel="stylesheet" type="text/css" /><link class="component" href="/consultajurisprudenciaweb/a4j/s/3_3_3.Finalorg/richfaces/renderkit/html/css/extended_classes.xcss/DATB/eAELXT5DOhSIAQ!sA18_.xhtml" media="rich-extended-skinning" rel="stylesheet" type="text/css" /><link class="component" href="/consultajurisprudenciaweb/a4j/s/3_3_3.Finalcss/panel.xcss/DATB/eAELXT5DOhSIAQ!sA18_.xhtml" rel="stylesheet" type="text/css" /><script type="text/javascript">window.RICH_FACES_EXTENDED_SKINNING_ON=true;</script><script src="/consultajurisprudenciaweb/a4j/g/3_3_3.Finalorg/richfaces/renderkit/html/scripts/skinning.js.xhtml" type="text/javascript"></script><script src="/consultajurisprudenciaweb/a4j/g/3_3_3.Finaljquery.js.xhtml" type="text/javascript"></script><script src="https://www.tjpe.jus.br/tjpeestatico/javascript/jquery.maskedinput-1.2.2.js" type="text/javascript"></script><script src="https://www.tjpe.jus.br/tjpeestatico/javascript/jquery.maskMoney.0.2.js" type="text/javascript"></script><script src="https://www.tjpe.jus.br/tjpeestatico/javascript/jquery.numeric.js" type="text/javascript"></script><link rel="stylesheet" type="text/css" href="/consultajurisprudenciaweb/xhtml/css/reset.css" media="screen" />	
+				
+		<link rel="stylesheet" type="text/css" href="https://www.tjpe.jus.br/tjpeestatico/css/layout.css" media="screen" />
+		<link rel="stylesheet" type="text/css" href="https://www.tjpe.jus.br/tjpeestatico/css/richfaces.css" media="screen" />		
+		<link rel="stylesheet" type="text/css" href="/consultajurisprudenciaweb/xhtml/css/acompanhamento.css" media="screen" />
+		<link rel="stylesheet" type="text/css" href="/consultajurisprudenciaweb/xhtml/css/escolhaResultado.css" media="screen" />
+		
+	</head>
+	<body>
+		<div id="wrapper">
+			<div id="wrapper_background">
+				<div id="background_esquerda_continuacao">
+					<div id="background_direita_continuacao">
+						
+						<div class="clear"></div>
+						
+						<!-- CABEÇALHO -->
+	<!-- TOPO - Título do sistema -->
+	<div id="topo_esquerda">
+		<h1>Consulta Jurisprud&ecirc;ncia Web</h1>
+	</div>
+	<!-- Fim TOPO - Título do sistema -->
+
+	<!-- TOPO - Ajuda e Suporte-->
+<!-- 	<h:form>
+		<div id="topo_direita">
+			<ul> 
+				<li><h:commandLink action=""><span style="padding: 4px 0 0 0 !important; width: 55px;"><h:graphicImage value="https://www.tjpe.jus.br/tjpeestatico/images/icones/icon_exit.png" style="border:0px; width:15px; height: 15px;margin-top:-5px;background:none"/>Sair</span></h:commandLink></li>			
+			</ul>
+		</div>
+	</h:form> -->
+	<!-- Fim TOPO - Ajuda e Suporte-->
+
+	<!-- BANNER - Imagem e Procurar -->
+	<div id="banner">
+		<a href="/consultajurisprudenciaweb/">
+			<div id="link_home"></div>
+		</a>
+
+	</div>
+	<!-- Fim BANNER - Imagem e Procurar -->
+						
+						<div class="clear"></div>
+						
+<!-- 						MENU
+						<ui:include src="menu.xhtml"/>-->
+					
+						<div class="clear"></div> 
+
+						<!-- CONTEÚDO -->
+			<div id="bread_crumb_wrapper">
+				<div class="box">
+<form id="trilhaForm" name="trilhaForm" method="post" action="/consultajurisprudenciaweb/xhtml/consulta/escolhaResultado.xhtml" enctype="application/x-www-form-urlencoded">
+<input type="hidden" name="trilhaForm" value="trilhaForm" />
+
+						<ul id="bread_crumb">
+							<li><label class="label-title">
+Voc&ecirc; est&aacute; em:</label></li>
+							<li>
+<script type="text/javascript" language="Javascript">function dpf(f) {var adp = f.adp;if (adp != null) {for (var i = 0;i < adp.length;i++) {f.removeChild(adp[i]);}}};function apf(f, pvp) {var adp = new Array();f.adp = adp;var i = 0;for (k in pvp) {var p = document.createElement("input");p.type = "hidden";p.name = k;p.value = pvp[k];f.appendChild(p);adp[i++] = p;}};function jsfcljs(f, pvp, t) {apf(f, pvp);var ft = f.target;if (t) {f.target = t;}f.submit();f.target = ft;dpf(f);};</script>
+<a href="#" onclick="if(typeof jsfcljs == 'function'){jsfcljs(document.getElementById('trilhaForm'),{'trilhaForm:j_id15':'trilhaForm:j_id15'},'');}return false">Consulta Jurisprud&ecirc;ncia</a></li>
+							<li><label>
+Escolha do Resultado</label></li>
+						</ul><input type="hidden" name="javax.faces.ViewState" id="javax.faces.ViewState" value="j_id2" autocomplete="off" />
+</form>
+				</div>
+			</div>
+				
+			<div class="clear"></div><!-- Sinalização de Nova linha -->
+			
+			<div id="conteudo">
+				<div class="box">
+<form id="resultadoForm" name="resultadoForm" method="post" action="/consultajurisprudenciaweb/xhtml/consulta/escolhaResultado.xhtml" class="form-consulta" enctype="application/x-www-form-urlencoded">
+<input type="hidden" name="resultadoForm" value="resultadoForm" />
+<div class="rich-panel escolha-resultado" id="resultadoForm:j_id20"><div class="rich-panel-header " id="resultadoForm:j_id20_header">Jurisprud&ecirc;ncia</div><div class="rich-panel-body " id="resultadoForm:j_id20_body">
+							<div class="escolha-resultado-table">
+								<table>
+									<tr>
+											<td><label>
+Ac&oacute;rd&atilde;os</label></td>
+											<td class="text-right">Nenhum documento encontrado
+											</td>
+									</tr>
+									
+									<tr>
+									</tr>
+								</table>
+							</div></div></div>
+						
+						<div class="form-button-toolbar">
+							<div class="nova-pesquisa-button"><input type="submit" name="resultadoForm:j_id45" value="Nova Pesquisa" class="form-button" />
+							</div>
+						</div><input type="hidden" name="javax.faces.ViewState" id="javax.faces.ViewState" value="j_id2" autocomplete="off" />
+</form>	
+				</div>		
+			</div>
+
+						<div class="clear"></div>
+
+						<!-- RODAPÉ -->
+
+	<!-- RODAPE -->
+	<div id="rodape">
+		Sistemas Web | Tribunal de Justi&ccedil;a de Pernambuco | <a class="noicon" href="http://www.tjpe.jus.br">www.tjpe.jus.br</a>
+	</div>
+	<!-- Fim RODAPE -->
+
+						<div class="clear"></div>
+
+					</div><!-- FIM #background_direita_continuacao -->
+				</div><!-- FIM #background_esquerda_continuacao -->
+			</div><!-- FIM #wrapper_background -->
+		</div><!-- FIM .container_16 -->
+	</body>	
+</html>

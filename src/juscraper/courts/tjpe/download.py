@@ -69,7 +69,7 @@ def _is_escolha_page(html: str) -> bool:
 
 def _extract_escolha_button_id(html: str, tipo: str = "Acórdãos") -> str:
     """Extract the form submit ID for the result type link on the escolha page."""
-    soup = BeautifulSoup(html, "lxml")
+    soup = BeautifulSoup(html, "html.parser")
     for link in soup.find_all("a", onclick=True):
         if "documentos encontrados" in link.get_text():
             td = link.find_parent("td")
