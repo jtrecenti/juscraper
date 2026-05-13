@@ -14,6 +14,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 
 - `TJSPScraper.cjsg` aceita `pesquisa=""` por default — antes o argumento era obrigatorio e `tjsp.cjsg(classe="...", assunto="...")` levantava `TypeError`. Agora o usuario pode buscar so por filtros (sem termo textual), igualando o comportamento de `cjpg`. Refs #229.
+- `ComunicaCNJScraper`, `JusbrScraper` e `DatajudScraper` agora herdam de `core.http.HTTPScraper` (refs #204, Fase 3 de #194). A session/headers de cada um passa pelo hook compartilhado `_configure_session` (User-Agent, Origin/Referer no ComunicaCNJ; UA Chrome no JusBR; UA default do `HTTPScraper` no Datajud), e a validacao `session=` (TypeError quando nao for `requests.Session`) passa a ser garantida via heranca (cumpre #185 sem duplicar codigo). `ComunicaCNJ` ganha resiliencia a 429/5xx via `self._request_with_retry` (antes nao tinha retry algum); `JusBR` substitui o `request_with_retry` interno do `download.py` pelo mesmo, e os `fetch_*` agora recebem um `request_fn` (tipicamente `self._request_with_retry`) em vez da `session` crua — o contrato de "erro -> None" e preservado capturando `RetryExhaustedError`/`RequestException`. `DatajudScraper` herda `HTTPScraper` apenas para session/headers e cumprimento de #185: a funcao `call_datajud_api` continua intacta porque o retry especifico (504/Timeout -> reduz `size` por `FALLBACK_DIVISOR`, 1 retry) e incompativel com o backoff exponencial generico, e a refatoracao virou explicitamente fora de escopo no proprio guarda-chuva #194.
 
 ### Fixed
 

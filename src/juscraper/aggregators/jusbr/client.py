@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd
 import requests
 
-from ...core.base import BaseScraper
+from ...core.http import HTTPScraper
 from ...utils.cnj import clean_cnj
 from .download import USER_AGENT, fetch_document_binary, fetch_document_text, fetch_process_details, fetch_process_list
 from .parse import clean_document_text, parse_process_details_response, parse_process_list_response
@@ -25,7 +25,7 @@ from .parse import clean_document_text, parse_process_details_response, parse_pr
 logger = logging.getLogger(__name__)
 
 
-class JusbrScraper(BaseScraper):
+class JusbrScraper(HTTPScraper):
     """Raspador para o JusBR (consulta unificada da PDPJ-CNJ).
 
     Este scraper interage com a API da Plataforma Digital do Poder Judiciario (PDPJ).
@@ -43,15 +43,17 @@ class JusbrScraper(BaseScraper):
         sleep_time: float = 0.5,
         token: str | None = None
     ):
-        super().__init__("jusbr")
-        self.set_verbose(verbose)
-        self.set_download_path(download_path)
-        self.sleep_time = sleep_time
-        self.session = requests.Session()
+        super().__init__(
+            "jusbr", verbose=verbose, download_path=download_path, sleep_time=sleep_time
+        )
         self.token = token
         if self.token:
             self.session.headers.update({'authorization': f'Bearer {self.token}'})
-        self.session.headers.update({'user-agent': USER_AGENT})
+
+    def _configure_session(self, session: requests.Session) -> None:
+        # PDPJ rejeita User-Agent não-browser; sobrescreve o default do
+        # HTTPScraper (``juscraper/<version>``) por uma string Chrome/Edg.
+        session.headers.update({'user-agent': USER_AGENT})
 
     def auth(self, token: str) -> bool:
         """
@@ -142,7 +144,7 @@ class JusbrScraper(BaseScraper):
 
             logger.info("Consultando processo CNJ: %s", cnj_cleaned)
 
-            raw_list_data = fetch_process_list(self.session, cnj_cleaned, self.BASE_API_URL_V2)
+            raw_list_data = fetch_process_list(self._request_with_retry, cnj_cleaned, self.BASE_API_URL_V2)
             processos_content = parse_process_list_response(raw_list_data)
 
             if not processos_content:
@@ -164,7 +166,7 @@ class JusbrScraper(BaseScraper):
                     continue
 
                 raw_details_data = fetch_process_details(
-                    self.session, numero_processo_oficial, self.BASE_API_URL_V2
+                    self._request_with_retry, numero_processo_oficial, self.BASE_API_URL_V2
                 )
                 parsed_details = parse_process_details_response(raw_details_data, cnj_cleaned)
                 if parsed_details:
@@ -320,15 +322,19 @@ class JusbrScraper(BaseScraper):
                 )
                 # Usa CNJ limpo para a API de documentos
                 numero_processo_api_clean = clean_cnj(numero_processo_api)
+                authorization = self.session.headers.get('authorization', '')
+                if isinstance(authorization, bytes):
+                    authorization = authorization.decode('latin-1')
                 raw_text = fetch_document_text(
-                    self.session,
+                    self._request_with_retry,
                     numero_processo_api_clean,
                     str(id_doc_uuid),
-                    self.BASE_API_URL_V1_DOCS
+                    self.BASE_API_URL_V1_DOCS,
+                    authorization=authorization,
                 )
                 cleaned_text = clean_document_text(raw_text)
                 raw_binary = fetch_document_binary(
-                    self.session,
+                    self._request_with_retry,
                     numero_processo_api_clean,
                     str(id_doc_uuid_binario),
                     self.BASE_API_URL_V2
