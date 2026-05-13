@@ -79,7 +79,7 @@ def cjsg_parse(raw_pages: list[str]) -> pd.DataFrame:
     for html in raw_pages:
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
-            soup = BeautifulSoup(html, "lxml")
+            soup = BeautifulSoup(html, "html.parser")
 
         inteiro_teor_urls = _extract_inteiro_teor_urls(soup)
         tables = _find_result_tables(soup)

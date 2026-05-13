@@ -170,7 +170,7 @@ def parse_detail(html: str) -> dict[str, Any]:
     rather than raising — sigilo or partially-rendered pages still yield
     a row.
     """
-    soup = BeautifulSoup(html, "lxml")
+    soup = BeautifulSoup(html, "html.parser")
     record: dict[str, Any] = _parse_property_views(soup)
     record["polo_ativo"] = _parse_polo(soup, "processoPartesPoloAtivoResumidoList")
     record["polo_passivo"] = _parse_polo(soup, "processoPartesPoloPassivoResumidoList")
