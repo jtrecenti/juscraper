@@ -322,15 +322,18 @@ class JusbrScraper(HTTPScraper):
                 )
                 # Usa CNJ limpo para a API de documentos
                 numero_processo_api_clean = clean_cnj(numero_processo_api)
-                authorization = self.session.headers.get('authorization', '')
-                if isinstance(authorization, bytes):
-                    authorization = authorization.decode('latin-1')
+                # ``Session.headers`` e tipada como ``CaseInsensitiveDict[str | bytes]``
+                # em ``types-requests`` — o token e sempre str em runtime, mas mypy
+                # exige o cast aqui para satisfazer a assinatura de ``fetch_document_text``.
+                auth_header = self.session.headers.get('authorization', '')
+                if isinstance(auth_header, bytes):
+                    auth_header = auth_header.decode('latin-1')
                 raw_text = fetch_document_text(
                     self._request_with_retry,
                     numero_processo_api_clean,
                     str(id_doc_uuid),
                     self.BASE_API_URL_V1_DOCS,
-                    authorization=authorization,
+                    authorization=auth_header,
                 )
                 cleaned_text = clean_document_text(raw_text)
                 raw_binary = fetch_document_binary(

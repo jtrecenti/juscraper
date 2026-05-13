@@ -69,9 +69,9 @@ class DatajudScraper(HTTPScraper):
         )
         self.api_key = api_key or self.DEFAULT_API_KEY
         logger.info(
-            "DatajudScraper initialized. API Key: "
-            "{'Provided' if api_key else 'Default'}. Temp path: %s",
-            self.download_path
+            "DatajudScraper initialized. API Key: %s. Temp path: %s",
+            "Provided" if api_key else "Default",
+            self.download_path,
         )
 
     def contar_processos(self, **kwargs) -> pd.DataFrame:
