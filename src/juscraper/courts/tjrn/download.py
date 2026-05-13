@@ -1,10 +1,10 @@
 """Downloads raw results from the TJRN jurisprudence search (Elasticsearch API)."""
 import math
 import time
-from collections.abc import Callable
 
-import requests
 from tqdm import tqdm
+
+from juscraper.core.http import RequestFn
 
 BASE_URL = "https://jurisprudencia.tjrn.jus.br/api/pesquisar"
 RESULTS_PER_PAGE = 10
@@ -62,7 +62,7 @@ def cjsg_download_manager(
     pesquisa: str,
     paginas=None,
     *,
-    request_fn: Callable[..., requests.Response],
+    request_fn: RequestFn,
     **kwargs,
 ) -> list:
     """Download raw results from the TJRN jurisprudence search.

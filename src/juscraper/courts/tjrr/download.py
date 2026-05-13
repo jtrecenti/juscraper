@@ -1,12 +1,11 @@
 """Downloads raw results from the TJRR jurisprudence search (JSF/PrimeFaces)."""
 import re
 import time
-from collections.abc import Callable
 
-import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
+from juscraper.core.http import RequestFn
 from juscraper.utils.pagination import extract_count_with_cascade
 
 BASE_URL = "https://jurisprudencia.tjrr.jus.br/index.xhtml"
@@ -61,7 +60,7 @@ def _collect_form_defaults(soup: BeautifulSoup) -> dict:
     return {k: (v[0] if len(v) == 1 else v) for k, v in defaults.items()}
 
 
-def _get_form_fields(request_fn: Callable[..., requests.Response]) -> dict:
+def _get_form_fields(request_fn: RequestFn) -> dict:
     """Fetch the initial page and discover JSF field names and defaults.
 
     JSF auto-generates component IDs like ``menuinicial:j_idt28`` that
@@ -93,7 +92,7 @@ def _get_form_fields(request_fn: Callable[..., requests.Response]) -> dict:
 
 
 def _search(
-    request_fn: Callable[..., requests.Response],
+    request_fn: RequestFn,
     form_fields: dict,
     pesquisa: str,
     relator: str = "",  # noqa: ARG001 - accepted for API compat; no longer a text input in TJRR
@@ -146,7 +145,7 @@ def _get_total_pages(html: str) -> int:
 
 
 def _paginate(
-    request_fn: Callable[..., requests.Response],
+    request_fn: RequestFn,
     html: str,
     page: int,
 ) -> str:
@@ -181,7 +180,7 @@ def cjsg_download_manager(
     pesquisa: str,
     paginas=None,
     *,
-    request_fn: Callable[..., requests.Response],
+    request_fn: RequestFn,
     **kwargs,
 ) -> list:
     """Download raw HTML results from the TJRR jurisprudence search.
