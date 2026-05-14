@@ -4,26 +4,21 @@ Scraper for the Tribunal de Justica de Pernambuco (TJPE).
 
 
 import pandas as pd
-import requests
 
-from juscraper.core.base import BaseScraper
+from juscraper.core.http import HTTPScraper
 from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa, resolve_deprecated_alias
 
 from .download import cjsg_download
 from .parse import cjsg_parse
 
 
-class TJPEScraper(BaseScraper):
+class TJPEScraper(HTTPScraper):
     """Scraper for the Tribunal de Justica de Pernambuco."""
 
     BASE_URL = "https://www.tjpe.jus.br/consultajurisprudenciaweb"
 
     def __init__(self):
         super().__init__("TJPE")
-        self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-        })
 
     def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJPE."""
@@ -44,7 +39,6 @@ class TJPEScraper(BaseScraper):
         assunto: str | None = None,
         meio_tramitacao: str | None = None,
         tipo_decisao: str = "acordaos",
-        session: requests.Session | None = None,
         **kwargs,
     ) -> list:
         """
@@ -73,11 +67,10 @@ class TJPEScraper(BaseScraper):
             data_julgamento_fim=data_julgamento_fim,
             **kwargs,
         )
-        if session is None:
-            session = self.session
         return cjsg_download(
             pesquisa=pesquisa,
             paginas=paginas,
+            request_fn=self._request_with_retry,
             data_julgamento_inicio=datas["data_julgamento_inicio"],
             data_julgamento_fim=datas["data_julgamento_fim"],
             relator=relator,
@@ -85,7 +78,6 @@ class TJPEScraper(BaseScraper):
             assunto_cnj=assunto,
             meio_tramitacao=meio_tramitacao,
             tipo_decisao=tipo_decisao,
-            session=session,
         )
 
     def cjsg_parse(self, raw_pages: list) -> pd.DataFrame:
@@ -105,7 +97,6 @@ class TJPEScraper(BaseScraper):
         assunto: str | None = None,
         meio_tramitacao: str | None = None,
         tipo_decisao: str = "acordaos",
-        session: requests.Session | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """
@@ -135,7 +126,6 @@ class TJPEScraper(BaseScraper):
             assunto=assunto,
             meio_tramitacao=meio_tramitacao,
             tipo_decisao=tipo_decisao,
-            session=session,
             **kwargs,
         )
         return self.cjsg_parse(raw)

@@ -14,9 +14,10 @@ import math
 import re
 import time
 
-import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
+
+from juscraper.core.http import RequestFn
 
 logger = logging.getLogger(__name__)
 
@@ -107,17 +108,16 @@ def _extract_pagination_ids(html: str):
     return form_id, scroller_id
 
 
-def _step1_get_session(session: requests.Session) -> tuple[str, str]:
+def _step1_get_session(request_fn: RequestFn) -> tuple[str, str]:
     """GET the search page; return (HTML, ViewState)."""
     url = f"{BASE_URL}/consulta.xhtml"
-    resp = session.get(url, timeout=30)
-    resp.raise_for_status()
+    resp = request_fn("GET", url, timeout=30)
     resp.encoding = resp.apparent_encoding
     return resp.text, _extract_viewstate(resp.text)
 
 
 def _step2_post_search(
-    session: requests.Session,
+    request_fn: RequestFn,
     viewstate: str,
     pesquisa: str,
     data_julgamento_inicio: str | None = None,
@@ -178,14 +178,13 @@ def _step2_post_search(
     if tipo_todos:
         data["formPesquisaJurisprudencia:tipoTodos"] = tipo_todos
 
-    resp = session.post(url, data=data, timeout=30)
-    resp.raise_for_status()
+    resp = request_fn("POST", url, data=data, timeout=30)
     resp.encoding = resp.apparent_encoding
     return resp.text, _extract_viewstate(resp.text)
 
 
 def _step3_choose_tipo(
-    session: requests.Session,
+    request_fn: RequestFn,
     viewstate: str,
     escolha_html: str,
     tipo: str = "Acórdãos",
@@ -199,14 +198,13 @@ def _step3_choose_tipo(
         "javax.faces.ViewState": viewstate,
         button_id: button_id,
     }
-    resp = session.post(url, data=data, timeout=30)
-    resp.raise_for_status()
+    resp = request_fn("POST", url, data=data, timeout=30)
     resp.encoding = resp.apparent_encoding
     return resp.text, _extract_viewstate(resp.text)
 
 
 def _step4_paginate(
-    session: requests.Session,
+    request_fn: RequestFn,
     viewstate: str,
     form_id: str,
     scroller_id: str,
@@ -228,8 +226,7 @@ def _step4_paginate(
         "X-Requested-With": "XMLHttpRequest",
         "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
     }
-    resp = session.post(url, data=data, headers=headers, timeout=30)
-    resp.raise_for_status()
+    resp = request_fn("POST", url, data=data, headers=headers, timeout=30)
     resp.encoding = resp.apparent_encoding
     return resp.text
 
@@ -237,6 +234,8 @@ def _step4_paginate(
 def cjsg_download(
     pesquisa: str,
     paginas=None,
+    *,
+    request_fn: RequestFn,
     data_julgamento_inicio: str | None = None,
     data_julgamento_fim: str | None = None,
     relator: str | None = None,
@@ -244,31 +243,29 @@ def cjsg_download(
     assunto_cnj: str | None = None,
     meio_tramitacao: str | None = None,
     tipo_decisao: str = "acordaos",
-    session: requests.Session | None = None,
 ) -> list[str]:
     """
     Download raw HTML pages from the TJPE jurisprudence search.
 
+    Args:
+        request_fn: HTTP callable que aplica retry + ``raise_for_status``.
+            Em uso normal e ``TJPEScraper._request_with_retry`` (via
+            ``core.http.HTTPScraper``).
+
     Returns a list of HTML strings, one per page.
     """
-    if session is None:
-        session = requests.Session()
-        session.headers.update({
-            "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-        })
-
     tipo_label = {
         "acordaos": "Acórdãos",
         "monocraticas": "Decisões Monocráticas",
     }.get(tipo_decisao, "Acórdãos")
 
     # Step 1 - GET search page
-    search_html, vs = _step1_get_session(session)
+    search_html, vs = _step1_get_session(request_fn)
     time.sleep(1)
 
     # Step 2 - POST search form
     response_html, vs = _step2_post_search(
-        session, vs, pesquisa,
+        request_fn, vs, pesquisa,
         data_julgamento_inicio=data_julgamento_inicio,
         data_julgamento_fim=data_julgamento_fim,
         relator=relator,
@@ -283,7 +280,7 @@ def cjsg_download(
     # Step 2 may return results directly (single type) or escolha page (multiple types)
     if _is_escolha_page(response_html):
         # Step 3 - choose result type
-        results_html, vs = _step3_choose_tipo(session, vs, response_html, tipo_label)
+        results_html, vs = _step3_choose_tipo(request_fn, vs, response_html, tipo_label)
         time.sleep(1)
     elif _is_results_page(response_html):
         results_html = response_html
@@ -312,7 +309,7 @@ def cjsg_download(
         if page_num == 1:
             results.append(results_html)
         else:
-            html = _step4_paginate(session, vs, form_id, scroller_id, pesquisa, page_num)
+            html = _step4_paginate(request_fn, vs, form_id, scroller_id, pesquisa, page_num)
             results.append(html)
             time.sleep(1)
 

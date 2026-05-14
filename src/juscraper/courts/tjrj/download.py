@@ -6,7 +6,7 @@ import math
 import re
 import time
 
-import requests
+from juscraper.core.http import RequestFn
 
 logger = logging.getLogger("juscraper.tjrj")
 
@@ -100,7 +100,7 @@ def build_cjsg_payload(
 
 
 def _init_session(
-    session: requests.Session,
+    request_fn: RequestFn,
     pesquisa: str,
     ano_inicio: str | None,
     ano_fim: str | None,
@@ -112,8 +112,7 @@ def _init_session(
     orgao_codigo: str | None,
 ) -> None:
     """Submit the search form so the result XHR has a valid server session."""
-    resp = session.get(FORM_URL, timeout=30)
-    resp.raise_for_status()
+    resp = request_fn("GET", FORM_URL, timeout=30)
     hidden = extract_viewstate_fields(resp.text)
     data = build_cjsg_payload(
         hidden=hidden,
@@ -127,13 +126,13 @@ def _init_session(
         magistrado_codigo=magistrado_codigo,
         orgao_codigo=orgao_codigo,
     )
-    resp2 = session.post(FORM_URL, data=data, allow_redirects=True, timeout=30)
-    resp2.raise_for_status()
+    request_fn("POST", FORM_URL, data=data, allow_redirects=True, timeout=30)
 
 
-def _fetch_page(session: requests.Session, num_pagina_0: int) -> dict:
+def _fetch_page(request_fn: RequestFn, num_pagina_0: int) -> dict:
     payload = {"numPagina": num_pagina_0, "pageSeq": "0"}
-    resp = session.post(
+    resp = request_fn(
+        "POST",
         RESULT_URL,
         json=payload,
         headers={
@@ -142,16 +141,16 @@ def _fetch_page(session: requests.Session, num_pagina_0: int) -> dict:
         },
         timeout=60,
     )
-    resp.raise_for_status()
     resp.encoding = "utf-8"
     data: dict = resp.json().get("d", {})
     return data
 
 
 def cjsg_download(
-    session: requests.Session,
     pesquisa: str,
     paginas,
+    *,
+    request_fn: RequestFn,
     ano_inicio: str | None,
     ano_fim: str | None,
     competencia: str,
@@ -162,9 +161,15 @@ def cjsg_download(
     orgao_codigo: str | None,
     sleep_time: float,
 ) -> list:
-    """Run a TJRJ search and return the raw JSON page payloads."""
+    """Run a TJRJ search and return the raw JSON page payloads.
+
+    Args:
+        request_fn: HTTP callable que aplica retry + ``raise_for_status``.
+            Em uso normal e ``TJRJScraper._request_with_retry`` (via
+            ``core.http.HTTPScraper``).
+    """
     _init_session(
-        session=session,
+        request_fn=request_fn,
         pesquisa=pesquisa,
         ano_inicio=ano_inicio,
         ano_fim=ano_fim,
@@ -175,7 +180,7 @@ def cjsg_download(
         magistrado_codigo=magistrado_codigo,
         orgao_codigo=orgao_codigo,
     )
-    first = _fetch_page(session, 0)
+    first = _fetch_page(request_fn, 0)
     total = int(first.get("TotalDocs") or 0)
     n_pags = max(1, math.ceil(total / RESULTS_PER_PAGE)) if total else 1
 
@@ -191,6 +196,6 @@ def cjsg_download(
             results.append(first)
             continue
         time.sleep(sleep_time)
-        data = _fetch_page(session, pagina - 1)
+        data = _fetch_page(request_fn, pagina - 1)
         results.append(data)
     return results

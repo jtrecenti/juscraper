@@ -8,6 +8,8 @@ import time
 import requests
 from tqdm import tqdm
 
+from juscraper.core.http import RequestFn
+
 logger = logging.getLogger(__name__)
 
 BASE_URL = "https://jurisprudencia.tjpa.jus.br/bff/api/decisoes/buscar"
@@ -79,41 +81,23 @@ def build_cjsg_payload(
     return payload
 
 
-def post_cjsg(session: requests.Session, payload: dict, *, timeout: int = 30) -> requests.Response:
-    """Send the TJPA CJSG search request and return the raw ``Response``.
+def post_cjsg(request_fn: RequestFn, payload: dict, *, timeout: int = 30) -> requests.Response:
+    """Send the TJPA CJSG search request via ``request_fn``.
 
     Single source of truth for the request shape (URL + body serialization
-    with ``ensure_ascii=False`` + headers). Both ``_fetch_page`` and the
-    capture script in ``tests/fixtures/capture/tjpa.py`` call this helper
-    so a change to body/headers can't drift silently.
+    with ``ensure_ascii=False`` + headers). Both ``cjsg_download_manager``
+    and the capture script in ``tests/fixtures/capture/tjpa.py`` call this
+    helper so a change to body/headers can't drift silently.
     """
     body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
-    return session.post(BASE_URL, data=body, headers=CJSG_HEADERS, timeout=timeout)
-
-
-def _fetch_page(session: requests.Session, payload: dict, max_retries: int = 3) -> dict:
-    """Fetch a single page from the TJPA API with retry logic."""
-    for attempt in range(1, max_retries + 1):
-        try:
-            resp = post_cjsg(session, payload)
-            resp.raise_for_status()
-            resp.encoding = "utf-8"
-            data: dict = resp.json()
-            return data
-        except (requests.RequestException, ValueError) as exc:
-            if attempt == max_retries:
-                raise
-            wait = 2 ** attempt
-            logger.warning("TJPA request failed (attempt %d/%d): %s. Retrying in %ds...",
-                           attempt, max_retries, exc, wait)
-            time.sleep(wait)
-    return {}  # unreachable
+    return request_fn("POST", BASE_URL, data=body, headers=CJSG_HEADERS, timeout=timeout)
 
 
 def cjsg_download_manager(
     pesquisa: str,
     paginas=None,
-    session: requests.Session | None = None,
+    *,
+    request_fn: RequestFn,
     **kwargs,
 ) -> list:
     """
@@ -124,18 +108,16 @@ def cjsg_download_manager(
         pesquisa: Search term.
         paginas (list, range, or None): Pages to download (1-based).
             None: downloads all available pages.
-        session: Optional requests.Session to reuse.
+        request_fn: HTTP callable que aplica retry + ``raise_for_status``.
+            Em uso normal e ``TJPAScraper._request_with_retry`` (via
+            ``core.http.HTTPScraper``).
         **kwargs: Additional parameters forwarded to ``build_cjsg_payload``.
     """
-    if session is None:
-        session = requests.Session()
-        session.headers.update({
-            "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-        })
-
     def _get_page(pagina_1based):
         payload = build_cjsg_payload(pesquisa, pagina_0based=pagina_1based - 1, **kwargs)
-        data = _fetch_page(session, payload)
+        resp = post_cjsg(request_fn, payload)
+        resp.encoding = "utf-8"
+        data: dict = resp.json()
         time.sleep(1)
         return data
 

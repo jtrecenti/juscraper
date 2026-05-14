@@ -7,7 +7,7 @@ from typing import Literal
 import pandas as pd
 import requests
 
-from juscraper.core.base import BaseScraper
+from juscraper.core.http import HTTPScraper
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
 from .download import cjsg_download as _cjsg_download
@@ -17,7 +17,7 @@ from .schemas import InputCJSGTJGO
 logger = logging.getLogger("juscraper.tjgo")
 
 
-class TJGOScraper(BaseScraper):
+class TJGOScraper(HTTPScraper):
     """Scraper for the Court of Justice of Goiás.
 
     The TJGO jurisprudence search (Projudi) renders a Cloudflare Turnstile
@@ -32,10 +32,10 @@ class TJGOScraper(BaseScraper):
     )
 
     def __init__(self, sleep_time: float = 1.0):
-        super().__init__("TJGO")
-        self.session = requests.Session()
-        self.session.headers.update({"User-Agent": self.USER_AGENT})
-        self.sleep_time = sleep_time
+        super().__init__("TJGO", sleep_time=sleep_time)
+
+    def _configure_session(self, session: requests.Session) -> None:
+        session.headers["User-Agent"] = self.USER_AGENT
 
     def cjsg_download(
         self,
@@ -94,7 +94,7 @@ class TJGOScraper(BaseScraper):
         )
 
         return _cjsg_download(
-            session=self.session,
+            request_fn=self._request_with_retry,
             pesquisa=inp.pesquisa or "",
             paginas=inp.paginas,
             id_instancia=str(inp.id_instancia),
