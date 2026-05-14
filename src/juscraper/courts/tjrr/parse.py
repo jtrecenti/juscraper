@@ -4,6 +4,7 @@ import re
 import pandas as pd
 from bs4 import BeautifulSoup
 
+from juscraper.core.parse_utils import coerce_date_columns
 from juscraper.utils.cnj import format_cnj
 
 
@@ -63,13 +64,7 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
     if df.empty:
         return df
 
-    # TJRR serializa datas como ``DD/MM/AAAA``; sem ``format=`` explicito o
-    # pandas pode interpretar valores ambiguos no formato americano. Mantemos
-    # ``pd.to_datetime`` aqui ate ``core.parse_utils.coerce_date_columns``
-    # ganhar suporte a ``format=``.
-    for col in ["data_julgamento", "data_publicacao"]:
-        if col in df.columns:
-            df[col] = pd.to_datetime(df[col], format="%d/%m/%Y", errors="coerce").dt.date
+    coerce_date_columns(df, ["data_julgamento", "data_publicacao"], date_format="%d/%m/%Y")
 
     principais = [
         "processo", "classe", "relator", "orgao_julgador",

@@ -83,6 +83,30 @@ class TestCoerceDateColumns:
         assert df["data_publicacao"].iloc[0] == dt.date(2024, 1, 20)
         assert df["outra"].iloc[0] == "x"
 
+    def test_date_format_br(self):
+        # Sem ``date_format``, ``03/02/2024`` poderia ser lido como
+        # 2 de março (formato americano). Com ``%d/%m/%Y`` virou 3 de fevereiro.
+        df = pd.DataFrame({"data_julgamento": ["03/02/2024", "15/01/2024"]})
+        coerce_date_columns(df, ["data_julgamento"], date_format="%d/%m/%Y")
+        assert df["data_julgamento"].tolist() == [dt.date(2024, 2, 3), dt.date(2024, 1, 15)]
+
+    def test_date_format_keyword_only(self):
+        df = pd.DataFrame({"data_julgamento": ["03/02/2024"]})
+        with pytest.raises(TypeError):
+            coerce_date_columns(df, ["data_julgamento"], "%d/%m/%Y")  # type: ignore[misc]
+
+    def test_date_format_invalid_for_content_returns_nat(self):
+        # Conteúdo ISO não bate com ``%d/%m/%Y`` -> ``errors="coerce"`` vira NaT.
+        df = pd.DataFrame({"data_julgamento": ["2024-01-15", "2024-02-20"]})
+        coerce_date_columns(df, ["data_julgamento"], date_format="%d/%m/%Y")
+        assert df["data_julgamento"].isna().all()
+
+    def test_date_format_none_default_preserves_iso(self):
+        # ``date_format=None`` (default) mantém o caminho de inferência atual.
+        df = pd.DataFrame({"data_julgamento": ["2024-01-15"]})
+        coerce_date_columns(df, ["data_julgamento"], date_format=None)
+        assert df["data_julgamento"].iloc[0] == dt.date(2024, 1, 15)
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
