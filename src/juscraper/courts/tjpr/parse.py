@@ -5,17 +5,25 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
+from juscraper.core.http import RequestFn
+from juscraper.core.parse_utils import coerce_date_columns
+
+from .download import get_ementa_completa
+
 
 def cjsg_parse(
     htmls,
     criterio=None,
-    session=None,
-    jsessionid=None,
-    user_agent=None,
+    *,
+    request_fn: RequestFn | None = None,
 ):
     """
     Extracts relevant data from the HTMLs returned by TJPR.
     Returns a DataFrame with the decisions.
+
+    ``request_fn`` is used to fetch the full minute when a row is truncated
+    with "Leia mais...". Without it the ementa stays truncated — useful for
+    offline parsing of pre-downloaded pages.
     """
     resultados = []
     for html in htmls:
@@ -73,11 +81,9 @@ def cjsg_parse(
                     id_processo = input_id['value']
                 else:
                     id_processo = ''
-                if id_processo and criterio and session and jsessionid and user_agent:
+                if id_processo and criterio and request_fn is not None:
                     try:
-                        ementa = get_ementa_completa(
-                            session, jsessionid, user_agent, id_processo, criterio
-                        )
+                        ementa = get_ementa_completa(request_fn, id_processo, criterio)
                     except (requests.RequestException, AttributeError) as e:
                         ementa += (f"\n[Erro ao buscar ementa completa: {e}]")
             resultados.append({
@@ -88,41 +94,5 @@ def cjsg_parse(
                 'ementa': ementa,
             })
     df = pd.DataFrame(resultados)
-    if not df.empty and 'data_julgamento' in df.columns:
-        df['data_julgamento'] = pd.to_datetime(
-            df['data_julgamento'], errors='coerce', dayfirst=True
-        ).dt.date
+    coerce_date_columns(df, ["data_julgamento"], date_format="%d/%m/%Y")
     return df
-
-
-def get_ementa_completa(
-    session,
-    jsessionid,
-    user_agent,
-    id_processo,
-    criterio,
-):
-    """
-    Fetches the complete minute of a process from TJPR.
-    """
-    url = (
-        "https://portal.tjpr.jus.br/jurisprudencia/publico/pesquisa.do?"
-        "actionType=exibirTextoCompleto"
-        f"&idProcesso={id_processo}&criterio={criterio}"
-    )
-    headers = {
-        'accept': 'text/javascript, text/html, application/xml, text/xml, */*',
-        'accept-language': 'pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
-        'cache-control': 'no-cache',
-        'pragma': 'no-cache',
-        'referer': (
-            'https://portal.tjpr.jus.br/jurisprudencia/publico/pesquisa.do?actionType=pesquisar'
-        ),
-        'user-agent': user_agent,
-        'x-prototype-version': '1.5.1.1',
-        'x-requested-with': 'XMLHttpRequest',
-    }
-    cookies = {'JSESSIONID': jsessionid}
-    resp = session.get(url, headers=headers, cookies=cookies)
-    resp.raise_for_status()
-    return BeautifulSoup(resp.text, 'html.parser').get_text("\n", strip=True)

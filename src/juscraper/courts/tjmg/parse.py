@@ -1,12 +1,11 @@
 """Parsing helpers for the TJMG jurisprudence search."""
 from __future__ import annotations
 
-import html as html_mod
 import re
-from datetime import datetime
-from typing import Any
 
 import pandas as pd
+
+from juscraper.core.parse_utils import clean_html, coerce_date_columns
 
 _CNJ_RE = re.compile(r"\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}")
 _INTERNAL_RE = re.compile(r"(\d\.\d{4}\.\d{2}\.\d{6}-\d/\d{3})")
@@ -29,23 +28,6 @@ _PROC_ID_RE = re.compile(
     r"procAno=(\d+)&procCodigo=(\d+)&procCodigoOrigem=(\d+)"
     r"&procNumero=(\d+)&procSequencial=(\d+)&procSeqAcordao=(\d+)"
 )
-_TAG_RE = re.compile(r"<[^>]+>")
-_WS_RE = re.compile(r"\s+")
-
-
-def _clean(text: str) -> str:
-    text = _TAG_RE.sub(" ", text)
-    text = html_mod.unescape(text)
-    return _WS_RE.sub(" ", text).strip()
-
-
-def _parse_date(raw: Any):
-    if not raw:
-        return None
-    try:
-        return datetime.strptime(str(raw).strip(), "%d/%m/%Y").date()
-    except ValueError:
-        return None
 
 
 def _split_blocks(html: str) -> list:
@@ -69,7 +51,7 @@ def _parse_block(block: str) -> dict:
     ementa_match = _EMENTA_RE.search(block)
     proc_id_match = _PROC_ID_RE.search(block)
 
-    ementa = _clean(ementa_match.group(1)) if ementa_match else None
+    ementa = clean_html(ementa_match.group(1)) if ementa_match else None
     if ementa:
         # Strip leading "EMENTA:" label that appears in the body text.
         ementa = re.sub(r"^EMENTA:\s*", "", ementa, flags=re.IGNORECASE)
@@ -77,10 +59,10 @@ def _parse_block(block: str) -> dict:
     return {
         "processo": cnj_match.group(0) if cnj_match else None,
         "processo_interno": internal_match.group(1) if internal_match else None,
-        "tipo_ato": _clean(tipo_match.group(1)) if tipo_match else None,
-        "relator": _clean(relator_match.group(1)) if relator_match else None,
-        "data_julgamento": _parse_date(djulg_match.group(1)) if djulg_match else None,
-        "data_publicacao": _parse_date(dpubl_match.group(1)) if dpubl_match else None,
+        "tipo_ato": clean_html(tipo_match.group(1)) if tipo_match else None,
+        "relator": clean_html(relator_match.group(1)) if relator_match else None,
+        "data_julgamento": djulg_match.group(1) if djulg_match else None,
+        "data_publicacao": dpubl_match.group(1) if dpubl_match else None,
         "ementa": ementa,
         "proc_ano": proc_id_match.group(1) if proc_id_match else None,
         "proc_numero": proc_id_match.group(4) if proc_id_match else None,
@@ -95,4 +77,6 @@ def cjsg_parse(raw_pages: list) -> pd.DataFrame:
             continue
         for block in _split_blocks(html):
             rows.append(_parse_block(block))
-    return pd.DataFrame(rows)
+    df = pd.DataFrame(rows)
+    coerce_date_columns(df, ["data_julgamento", "data_publicacao"], date_format="%d/%m/%Y")
+    return df
