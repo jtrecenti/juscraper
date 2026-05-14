@@ -1,13 +1,12 @@
 """Parsing helpers for the TJGO jurisprudence search."""
 from __future__ import annotations
 
+import html as html_mod
 import re
 from datetime import datetime
 from typing import Any
 
 import pandas as pd
-
-from juscraper.core.parse_utils import clean_html
 
 _RESULT_RE = re.compile(
     r'<div class="search-result">(.*?)</div>\s*<div class="search-result-',
@@ -21,9 +20,21 @@ _PROC_RE = re.compile(r"(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})")
 _ID_ARQUIVO_RE = re.compile(
     r"abrirArquivo\('ConsultaJurisprudencia',\s*'(\d+)'\)"
 )
+# Mantido local (em vez de core.parse_utils.clean_html) porque o backend do
+# Projudi envolve trechos do texto em tags inline (<b>, <i>) e clean_html
+# substitui tags por espaco, introduzindo espacos antes de pontuacao
+# (<b>foo</b>, -> "foo ,"). Mesma decisao registrada em TJMT no batch 3.
+_TAG_RE = re.compile(r"<[^>]+>")
+_WS_RE = re.compile(r"\s+")
 _PUBL_RE = re.compile(
     r"Publicado em\s*(\d{2}/\d{2}/\d{4}(?:\s*\d{2}:\d{2}:\d{2})?)"
 )
+
+
+def _clean(text: str) -> str:
+    text = _TAG_RE.sub("", text)
+    text = html_mod.unescape(text)
+    return _WS_RE.sub(" ", text).strip()
 
 
 def _parse_date(raw: Any):
@@ -75,7 +86,7 @@ def _parse_block(block: str) -> dict:
     publicacao_raw: str | None = None
     texto: str | None = None
     for attrs, content in paragraphs:
-        cleaned = (clean_html(content) or "")
+        cleaned = _clean(content)
         if "conteudoTexto" in attrs:
             texto = cleaned
             continue

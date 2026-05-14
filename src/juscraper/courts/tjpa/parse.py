@@ -64,7 +64,11 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
     if df.empty:
         return df
 
-    coerce_date_columns(df, ["data_julgamento", "data_documento", "data_publicacao"])
+    coerce_date_columns(
+        df,
+        ["data_julgamento", "data_documento", "data_publicacao"],
+        date_format="%Y-%m-%d",
+    )
 
     # Order columns: main fields first
     principais = [
