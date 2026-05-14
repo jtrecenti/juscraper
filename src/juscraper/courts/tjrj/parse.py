@@ -7,6 +7,11 @@ from typing import Any
 
 import pandas as pd
 
+# Mantido local (em vez de core.parse_utils.clean_html) porque clean_html
+# substitui tags por espaco e altera o output observavel quando o backend
+# envolve trechos em tags inline (<b>foo</b> -> "foo " em vez de "foo").
+# Mesma decisao registrada em TJGO/TJMT e aguardando uma variante
+# clean_html(separator="") no core.parse_utils.
 _TAG_RE = re.compile(r"<[^>]+>")
 _DATE_RE = re.compile(r"/Date\((-?\d+)\)/")
 
