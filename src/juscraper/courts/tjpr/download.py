@@ -6,29 +6,36 @@ import re
 from bs4 import BeautifulSoup
 from tqdm.auto import tqdm
 
-
-def get_initial_tokens(session, home_url):
-    """
-    Extracts the JSESSIONID and the token from the TJPR initial page.
-    """
-    resp = session.get(home_url)
-    resp.raise_for_status()
-    jsessionid = session.cookies.get('JSESSIONID')
-    token = None
-    soup = BeautifulSoup(resp.text, "html.parser")
-    for a in soup.find_all('a', href=True):
-        m = re.search(r'tjpr\.url\.crypto=([a-f0-9]+)', str(a['href']))
-        if m:
-            token = m.group(1)
-            break
-    if not token:
-        raise RuntimeError("Não foi possível extrair o token da página inicial.")
-    return jsessionid, token
+from juscraper.core.http import RequestFn
 
 
-def get_ementa_completa(session, jsessionid, user_agent, id_processo, criterio):
+def populate_session(request_fn: RequestFn, home_url: str) -> None:
+    """Hit the TJPR home so ``JSESSIONID`` lands in the session cookie jar.
+
+    Side-effect only — the cookie is read implicitly by subsequent requests
+    that share the same ``requests.Session`` (via ``request_fn`` bound to
+    :class:`HTTPScraper.session`). The portal also embeds a
+    ``tjpr.url.crypto`` token in the home HTML, but it is not consumed by
+    any current code path; keeping it would be dead state.
+
+    ``request_fn`` (em uso normal ``HTTPScraper._request_with_retry``) ja
+    chama ``raise_for_status()`` para 4xx nao-retryable e levanta
+    ``RetryExhaustedError`` em 5xx esgotado, entao a falha do GET inicial
+    se propaga sem precisar de checagem extra.
     """
-    Fetches the complete minute of a process from TJPR.
+    request_fn("GET", home_url)
+
+
+def get_ementa_completa(
+    request_fn: RequestFn,
+    id_processo: str,
+    criterio: str,
+) -> str:
+    """Fetch the full minute (``actionType=exibirTextoCompleto``) for one decision.
+
+    Headers replicate the portal's XHR (``x-prototype-version``,
+    ``x-requested-with``). ``JSESSIONID`` rides on the session cookie jar
+    populated by :func:`populate_session`.
     """
     url = (
         "https://portal.tjpr.jus.br/jurisprudencia/publico/pesquisa.do?"
@@ -43,14 +50,12 @@ def get_ementa_completa(session, jsessionid, user_agent, id_processo, criterio):
         'referer': (
             'https://portal.tjpr.jus.br/jurisprudencia/publico/pesquisa.do?actionType=pesquisar'
         ),
-        'user-agent': user_agent,
         'x-prototype-version': '1.5.1.1',
         'x-requested-with': 'XMLHttpRequest',
     }
-    cookies = {'JSESSIONID': jsessionid}
-    resp = session.get(url, headers=headers, cookies=cookies)
-    resp.raise_for_status()
-    return BeautifulSoup(resp.text, 'html.parser').get_text("\n", strip=True)
+    resp = request_fn("GET", url, headers=headers)
+    text: str = BeautifulSoup(resp.text, 'html.parser').get_text("\n", strip=True)
+    return text
 
 
 def _extract_total_pages(html):
@@ -75,21 +80,21 @@ def _extract_total_pages(html):
 
 
 def cjsg_download(
-    session,
-    user_agent,
-    home_url,
-    termo,
+    home_url: str,
+    pesquisa: str,
     paginas=None,
     data_julgamento_inicio=None,
     data_julgamento_fim=None,
     data_publicacao_inicio=None,
     data_publicacao_fim=None,
-):
+    *,
+    request_fn: RequestFn,
+) -> list:
     """
     Downloads raw results from the TJPR 'jurisprudence search' (multiple pages).
     Returns a list of HTMLs (one per page).
     """
-    jsessionid, _ = get_initial_tokens(session, home_url)
+    populate_session(request_fn, home_url)
     url = "https://portal.tjpr.jus.br/jurisprudencia/publico/pesquisa.do?actionType=pesquisar"
     headers = {
         'accept-language': 'pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
@@ -98,9 +103,7 @@ def cjsg_download(
         'origin': 'https://portal.tjpr.jus.br',
         'pragma': 'no-cache',
         'referer': url,
-        'user-agent': user_agent,
     }
-    cookies = {'JSESSIONID': jsessionid}
 
     def _fetch_page(pagina_atual):
         data = {
@@ -130,7 +133,7 @@ def cjsg_download(
             'idTipoDecisaoAcordao': '',
             'idTipoDecisaoMonocratica': '',
             'idTipoDecisaoDuvidaCompetencia': '',
-            'criterioPesquisa': termo,
+            'criterioPesquisa': pesquisa,
             'pesquisaLivre': '',
             'pageSize': 10,
             'pageNumber': pagina_atual,
@@ -139,8 +142,7 @@ def cjsg_download(
             'page': pagina_atual - 1,
             'iniciar': 'Pesquisar',
         }
-        resp = session.post(url, data=data, headers=headers, cookies=cookies)
-        resp.raise_for_status()
+        resp = request_fn("POST", url, data=data, headers=headers)
         return resp.text
 
     if paginas is None:

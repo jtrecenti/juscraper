@@ -5,15 +5,15 @@ Scraper for the Court of Justice of Paraná (TJPR).
 import pandas as pd
 import requests
 
-from juscraper.core.base import BaseScraper
+from juscraper.core.http import HTTPScraper
 from juscraper.utils.params import SEARCH_ALIASES, apply_input_pipeline_search, normalize_pesquisa
 
-from .download import cjsg_download, get_initial_tokens
+from .download import cjsg_download
 from .parse import cjsg_parse
 from .schemas import InputCJSGTJPR
 
 
-class TJPRScraper(BaseScraper):
+class TJPRScraper(HTTPScraper):
     """Scraper for the Court of Justice of Paraná."""
 
     BASE_URL = "https://portal.tjpr.jus.br/jurisprudencia/publico/pesquisa.do?actionType=pesquisar"
@@ -25,9 +25,10 @@ class TJPRScraper(BaseScraper):
 
     def __init__(self):
         super().__init__("TJPR")
-        self.session = requests.Session()
-        self.token: str | None = None
-        self.jsessionid: str | None = None
+
+    def _configure_session(self, session: requests.Session) -> None:
+        """TJPR's portal applies User-Agent gating — keep the Chrome UA."""
+        session.headers.update({"User-Agent": self.USER_AGENT})
 
     def cjsg_download(
         self,
@@ -63,9 +64,14 @@ class TJPRScraper(BaseScraper):
             data_publicacao_fim=data_publicacao_fim,
         )
         brutos: list = cjsg_download(
-            self.session, self.USER_AGENT, self.HOME_URL, inp.pesquisa, inp.paginas,
-            inp.data_julgamento_inicio, inp.data_julgamento_fim,
-            inp.data_publicacao_inicio, inp.data_publicacao_fim,
+            home_url=self.HOME_URL,
+            pesquisa=inp.pesquisa,
+            paginas=inp.paginas,
+            data_julgamento_inicio=inp.data_julgamento_inicio,
+            data_julgamento_fim=inp.data_julgamento_fim,
+            data_publicacao_inicio=inp.data_publicacao_inicio,
+            data_publicacao_fim=inp.data_publicacao_fim,
+            request_fn=self._request_with_retry,
         )
         return brutos
 
@@ -74,8 +80,11 @@ class TJPRScraper(BaseScraper):
         Extracts relevant data from the HTMLs returned by TJPR.
         Returns a DataFrame with the decisions.
         """
-        jsessionid, _ = get_initial_tokens(self.session, self.HOME_URL)
-        return cjsg_parse(resultados_brutos, criterio, self.session, jsessionid, self.USER_AGENT)
+        return cjsg_parse(
+            resultados_brutos,
+            criterio,
+            request_fn=self._request_with_retry,
+        )
 
     def cjsg(
         self,

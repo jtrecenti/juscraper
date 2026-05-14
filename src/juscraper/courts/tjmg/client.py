@@ -1,23 +1,20 @@
 """Scraper for the Court of Justice of Minas Gerais (TJMG)."""
 from __future__ import annotations
 
-import logging
 from typing import Literal
 
 import pandas as pd
 import requests
 
-from juscraper.core.base import BaseScraper
+from juscraper.core.http import HTTPScraper
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
 from .download import cjsg_download as _cjsg_download
 from .parse import cjsg_parse as _cjsg_parse
 from .schemas import InputCJSGTJMG
 
-logger = logging.getLogger("juscraper.tjmg")
 
-
-class TJMGScraper(BaseScraper):
+class TJMGScraper(HTTPScraper):
     """Scraper for the Court of Justice of Minas Gerais.
 
     The TJMG jurisprudence search uses a 5-digit numeric image captcha
@@ -34,10 +31,11 @@ class TJMGScraper(BaseScraper):
     )
 
     def __init__(self, sleep_time: float = 1.0):
-        super().__init__("TJMG")
-        self.session = requests.Session()
-        self.session.headers.update({"User-Agent": self.USER_AGENT})
-        self.sleep_time = sleep_time
+        super().__init__("TJMG", sleep_time=sleep_time)
+
+    def _configure_session(self, session: requests.Session) -> None:
+        """TJMG's portal applies User-Agent gating — keep the Chrome UA."""
+        session.headers.update({"User-Agent": self.USER_AGENT})
 
     def cjsg_download(
         self,
@@ -97,7 +95,6 @@ class TJMGScraper(BaseScraper):
         )
 
         return _cjsg_download(
-            session=self.session,
             pesquisa=inp.pesquisa or "",
             paginas=inp.paginas,
             pesquisar_por=inp.pesquisar_por,
@@ -108,6 +105,8 @@ class TJMGScraper(BaseScraper):
             data_publicacao_final=_br_date(inp.data_publicacao_fim),
             linhas_por_pagina=inp.tamanho_pagina,
             sleep_time=self.sleep_time,
+            request_fn=self._request_with_retry,
+            session=self.session,
         )
 
     def cjsg_parse(self, raw_pages: list) -> pd.DataFrame:
