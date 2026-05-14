@@ -2,9 +2,8 @@
 from typing import Literal
 
 import pandas as pd
-import requests
 
-from juscraper.core.base import BaseScraper
+from juscraper.core.http import HTTPScraper
 from juscraper.utils.params import apply_input_pipeline_search
 
 from .download import cjsg_download_manager
@@ -12,7 +11,7 @@ from .parse import cjsg_parse_manager
 from .schemas import InputCJSGTJSC
 
 
-class TJSCScraper(BaseScraper):
+class TJSCScraper(HTTPScraper):
     """Scraper for the Tribunal de Justica de Santa Catarina (TJSC).
 
     Uses the eproc jurisprudence search at eproc1g.tjsc.jus.br.
@@ -22,10 +21,6 @@ class TJSCScraper(BaseScraper):
 
     def __init__(self):
         super().__init__("TJSC")
-        self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-        })
 
     def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJSC."""
@@ -115,7 +110,7 @@ class TJSCScraper(BaseScraper):
         return cjsg_download_manager(
             pesquisa=inp.pesquisa,
             paginas=inp.paginas,
-            session=self.session,
+            request_fn=self._request_with_retry,
             campo=inp.campo,
             processo=inp.processo or "",
             dt_decisao_inicio=inp.data_julgamento_inicio or "",
