@@ -17,9 +17,13 @@ def populate_session(request_fn: RequestFn, home_url: str) -> None:
     :class:`HTTPScraper.session`). The portal also embeds a
     ``tjpr.url.crypto`` token in the home HTML, but it is not consumed by
     any current code path; keeping it would be dead state.
+
+    ``request_fn`` (em uso normal ``HTTPScraper._request_with_retry``) ja
+    chama ``raise_for_status()`` para 4xx nao-retryable e levanta
+    ``RetryExhaustedError`` em 5xx esgotado, entao a falha do GET inicial
+    se propaga sem precisar de checagem extra.
     """
-    resp = request_fn("GET", home_url)
-    resp.raise_for_status()
+    request_fn("GET", home_url)
 
 
 def get_ementa_completa(

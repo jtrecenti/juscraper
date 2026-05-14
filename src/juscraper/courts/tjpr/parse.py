@@ -5,6 +5,7 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
+from juscraper.core.exceptions import RetryExhaustedError
 from juscraper.core.http import RequestFn
 from juscraper.core.parse_utils import coerce_date_columns
 
@@ -84,7 +85,10 @@ def cjsg_parse(
                 if id_processo and criterio and request_fn is not None:
                     try:
                         ementa = get_ementa_completa(request_fn, id_processo, criterio)
-                    except (requests.RequestException, AttributeError) as e:
+                    except (requests.RequestException, RetryExhaustedError, AttributeError) as e:
+                        # RetryExhaustedError e RequestException sao engolidos para
+                        # preservar a degradacao graciosa por linha — uma ementa
+                        # truncada que falha no fetch nao deve derrubar o DataFrame.
                         ementa += (f"\n[Erro ao buscar ementa completa: {e}]")
             resultados.append({
                 'processo': processo,
