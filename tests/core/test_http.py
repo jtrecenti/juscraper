@@ -186,3 +186,23 @@ def test_request_with_retry_negative_retry_after_clamped(probe, mocker):
 def test_request_with_retry_invalid_max_retries(probe):
     with pytest.raises(ValueError, match=r"max_retries deve ser >= 1, recebido 0"):
         probe._request_with_retry("GET", URL, max_retries=0)
+
+
+@responses.activate
+def test_request_with_retry_200_invalid_json_no_retry(probe, mocker):
+    """200 com body invalido nao retenta — caller chama ``.json()`` e ``ValueError`` propaga.
+
+    Documenta a mudanca herdada pelo refactor #194: o ``_fetch_page`` antigo
+    de TJAP/TJES capturava ``ValueError`` no laco de retry, mas o
+    ``_request_with_retry`` so retry-a 429/5xx — entao body invalido em 200
+    propaga ``ValueError`` na primeira ocorrencia. Refs #202.
+    """
+    sleep_spy = mocker.patch("juscraper.core.http.time.sleep")
+    responses.add(responses.GET, URL, body="not-json", status=200, content_type="application/json")
+
+    resp = probe._request_with_retry("GET", URL)
+
+    assert resp.status_code == 200
+    sleep_spy.assert_not_called()
+    with pytest.raises(ValueError):
+        resp.json()

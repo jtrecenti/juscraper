@@ -1,11 +1,8 @@
-"""
-Scraper for the Tribunal de Justica do Espirito Santo (TJES).
-"""
+"""Scraper for the Tribunal de Justica do Espirito Santo (TJES)."""
 
 import pandas as pd
-import requests
 
-from juscraper.core.base import BaseScraper
+from juscraper.core.http import HTTPScraper
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
 from .download import CJPG_CORE, CJSG_CORES, DEFAULT_CORE, DEFAULT_PER_PAGE, cjsg_download
@@ -13,17 +10,13 @@ from .parse import cjsg_parse
 from .schemas import InputCJPGTJES, InputCJSGTJES
 
 
-class TJESScraper(BaseScraper):
+class TJESScraper(HTTPScraper):
     """Scraper for the Tribunal de Justica do Espirito Santo."""
 
     BASE_URL = "https://sistemas.tjes.jus.br/consulta-jurisprudencia/api"
 
     def __init__(self):
         super().__init__("TJES")
-        self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-        })
 
     def cpopg(self, id_cnj: str | list[str]):
         """Stub: first-instance case lookup not implemented for TJES."""
@@ -139,7 +132,7 @@ class TJESScraper(BaseScraper):
             assunto=inp.assunto,
             ordenacao=inp.ordenacao,
             per_page=inp.tamanho_pagina,
-            session=self.session,
+            request_fn=self._request_with_retry,
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> pd.DataFrame:
@@ -253,7 +246,7 @@ class TJESScraper(BaseScraper):
             assunto=inp.assunto,
             ordenacao=inp.ordenacao,
             per_page=inp.tamanho_pagina,
-            session=self.session,
+            request_fn=self._request_with_retry,
         )
 
     def cjpg_download(
