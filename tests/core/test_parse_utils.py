@@ -107,6 +107,11 @@ class TestCoerceDateColumns:
         coerce_date_columns(df, ["data_julgamento"], date_format=None)
         assert df["data_julgamento"].iloc[0] == dt.date(2024, 1, 15)
 
+    def test_returns_same_df_with_date_format(self):
+        df = pd.DataFrame({"data_julgamento": ["15/01/2024"]})
+        out = coerce_date_columns(df, ["data_julgamento"], date_format="%d/%m/%Y")
+        assert out is df
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
