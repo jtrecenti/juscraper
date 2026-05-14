@@ -1,23 +1,20 @@
 """
 Downloads raw results from the TJMT jurisprudence search.
 """
-import logging
 import math
 import time
-from collections.abc import Callable
 
 import requests
 from tqdm import tqdm
 
+from juscraper.core.http import RequestFn
 from juscraper.utils.params import to_iso_date
-
-logger = logging.getLogger(__name__)
 
 CONFIG_URL = "https://jurisprudencia.tjmt.jus.br/assets/config/config.json"
 DEFAULT_PAGE_SIZE = 10
 
 
-def _get_api_config(request_fn: Callable[..., requests.Response]) -> dict:
+def _get_api_config(request_fn: RequestFn) -> dict:
     """Fetch the public config.json to obtain the API URL and token."""
     resp = request_fn("GET", CONFIG_URL, timeout=30)
     cfg = resp.json()
@@ -98,7 +95,7 @@ def cjsg_download(
     thesaurus: bool = False,
     quantidade_por_pagina: int = DEFAULT_PAGE_SIZE,
     *,
-    request_fn: Callable[..., requests.Response],
+    request_fn: RequestFn,
     session: requests.Session,
 ) -> list:
     """Download raw JSON results from the TJMT jurisprudence API.

@@ -1,16 +1,12 @@
 """
 Downloads raw results from the TJBA jurisprudence search (GraphQL API).
 """
-import logging
 import time
-from collections.abc import Callable
 
-import requests
 from tqdm import tqdm
 
+from juscraper.core.http import RequestFn
 from juscraper.utils.params import to_iso_date
-
-logger = logging.getLogger(__name__)
 
 GRAPHQL_URL = "https://jurisprudenciaws.tjba.jus.br/graphql"
 
@@ -106,7 +102,7 @@ def cjsg_download(
     ordenado_por: str = "dataPublicacao",
     items_per_page: int = 10,
     *,
-    request_fn: Callable[..., requests.Response],
+    request_fn: RequestFn,
 ) -> list:
     """
     Download raw results from TJBA jurisprudence search (multiple pages).
@@ -121,7 +117,7 @@ def cjsg_download(
         Case/appeal number filter.
     items_per_page : int
         Results per page (default 10).
-    request_fn : Callable
+    request_fn : RequestFn
         HTTP callable that handles retry + raise_for_status — em uso normal e
         ``TJBAScraper._request_with_retry`` (via ``core.http.HTTPScraper``),
         centralizando backoff exponencial para 429/5xx.

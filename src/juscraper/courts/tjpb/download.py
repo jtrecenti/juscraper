@@ -1,14 +1,11 @@
 """Downloads raw results from the TJPB jurisprudence search (Laravel API)."""
-import logging
 import math
 import re
 import time
-from collections.abc import Callable
 
-import requests
 from tqdm import tqdm
 
-logger = logging.getLogger(__name__)
+from juscraper.core.http import RequestFn
 
 BASE_URL = "https://pje-jurisprudencia.tjpb.jus.br"
 SEARCH_URL = f"{BASE_URL}/api/jurisprudencia/pesquisar"
@@ -18,7 +15,7 @@ RESULTS_PER_PAGE = 10
 TOKEN_RE = re.compile(r'<meta name="_token" content="([^"]+)"')
 
 
-def fetch_csrf_token(request_fn: Callable[..., requests.Response]) -> str:
+def fetch_csrf_token(request_fn: RequestFn) -> str:
     """Fetch the ``_token`` CSRF value from the TJPB homepage meta tag.
 
     The Laravel backend embeds the token in ``<meta name="_token" ...>``.
@@ -78,7 +75,7 @@ def cjsg_download_manager(
     pesquisa: str,
     paginas=None,
     *,
-    request_fn: Callable[..., requests.Response],
+    request_fn: RequestFn,
     **kwargs,
 ) -> list:
     """Download raw results from the TJPB jurisprudence search.
