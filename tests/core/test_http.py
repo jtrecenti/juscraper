@@ -152,6 +152,19 @@ def test_request_with_retry_403_exhausted(probe, mocker):
 
 
 @responses.activate
+def test_request_with_retry_403_with_retry_after(probe, mocker):
+    """403 tambem respeita ``Retry-After`` numerico (mesmo branch de 429/5xx)."""
+    sleep_spy = mocker.patch("juscraper.core.http.time.sleep")
+    responses.add(responses.GET, URL, status=403, headers={"Retry-After": "0.5"})
+    responses.add(responses.GET, URL, json={"ok": True}, status=200)
+
+    resp = probe._request_with_retry("GET", URL)
+
+    assert resp.status_code == 200
+    sleep_spy.assert_called_once_with(0.5)
+
+
+@responses.activate
 def test_request_with_retry_max_retries_param(probe, mocker):
     mocker.patch("juscraper.core.http.time.sleep")
     for _ in range(2):

@@ -123,3 +123,41 @@ def test_cjsg_busca_aberta_sem_pesquisa(tmp_path, mocker):
     df = jus.scraper("tjsp", download_path=str(tmp_path)).cjsg(paginas=1)
 
     assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
+def test_cjsg_post_inicial_retenta_403(tmp_path, mocker):
+    """POST inicial retenta 403 transitorio do WAF e prossegue (refs #233, #255).
+
+    Antes do #255, qualquer 403 no ``resultadoCompleta.do`` abortava a
+    coleta na 1a tentativa. Agora a chamada delega ao retry centralizado
+    em ``HTTPScraper._request_with_retry``.
+    """
+    mocker.patch("time.sleep")
+    pesquisa = "usucapiao extraordinario predio rural familia"
+    # Primeira tentativa: 403 (sem matcher de body — a transitoria nao precisa
+    # validar payload). Segunda tentativa: 200 com o sample habitual (com matcher).
+    responses.add(responses.POST, f"{BASE}/resultadoCompleta.do", status=403)
+    _add_post(pesquisa)
+    _add_get(1, "cjsg/single_page.html")
+
+    df = jus.scraper("tjsp", download_path=str(tmp_path)).cjsg(pesquisa, paginas=1)
+
+    assert isinstance(df, pd.DataFrame)
+    assert CJSG_MIN_COLUMNS <= set(df.columns)
+
+
+@responses.activate
+def test_cjsg_get_1a_pagina_retenta_503(tmp_path, mocker):
+    """GET da pagina 1 retenta 503 transitorio (mesmo perfil das paginas >=2)."""
+    mocker.patch("time.sleep")
+    pesquisa = "usucapiao extraordinario predio rural familia"
+    _add_post(pesquisa)
+    # Primeira tentativa do GET pagina=1: 503. Segunda: 200 via _add_get.
+    responses.add(responses.GET, f"{BASE}/trocaDePagina.do", status=503)
+    _add_get(1, "cjsg/single_page.html")
+
+    df = jus.scraper("tjsp", download_path=str(tmp_path)).cjsg(pesquisa, paginas=1)
+
+    assert isinstance(df, pd.DataFrame)
+    assert CJSG_MIN_COLUMNS <= set(df.columns)

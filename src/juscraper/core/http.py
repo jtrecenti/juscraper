@@ -40,7 +40,13 @@ classico (que daria 429). Como o 403 e produzido pelo WAF e nao por
 autenticacao/autorizacao do recurso, retentar com backoff resolve a maioria
 dos casos transitorios. 403 ``permanente`` (ex.: credenciais invalidas) ainda
 acaba caindo em ``RetryExhaustedError`` apos ``max_retries`` tentativas, o que
-e o sintoma certo — o WAF nao distingue os dois casos pelo status code."""
+e o sintoma certo — o WAF nao distingue os dois casos pelo status code.
+
+A decisao aplica-se globalmente: todos os scrapers que delegam ao
+``_request_with_retry`` herdam o comportamento. Consumidores que distinguem
+403-de-auth de 403-de-WAF (ex.: PDPJ, onde 403 e sempre token expirado)
+mantem retry local proprio em ``aggregators/<xx>/download.py`` em vez de
+delegar."""
 
 RequestFn: TypeAlias = Callable[..., requests.Response]
 """Tipo do callable bound do ``HTTPScraper._request_with_retry``.
