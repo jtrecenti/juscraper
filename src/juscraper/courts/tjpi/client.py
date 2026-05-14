@@ -120,6 +120,7 @@ class TJPIScraper(HTTPScraper):
             pesquisa=inp.pesquisa,
             paginas=inp.paginas,
             request_fn=self._request_with_retry,
+            sleep_time=self.sleep_time,
             tipo=inp.tipo or "",
             relator=inp.relator or "",
             classe=inp.classe or "",

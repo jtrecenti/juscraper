@@ -155,6 +155,7 @@ class TJROScraper(HTTPScraper):
             pesquisa=inp.pesquisa,
             paginas=inp.paginas,
             request_fn=self._request_with_retry,
+            sleep_time=self.sleep_time,
             tipo=inp.tipo,
             nr_processo=inp.numero_processo or "",
             relator=inp.relator or "",

@@ -103,6 +103,7 @@ def cjsg_download_manager(
     paginas=None,
     *,
     request_fn: RequestFn,
+    sleep_time: float = 1.0,
     type_minuta: str = "1",
     tip_criterio_inst: str = "",
     tip_criterio_data: str = "DESC",
@@ -120,6 +121,8 @@ def cjsg_download_manager(
             uso normal e ``TJTOScraper._request_with_retry`` (via
             ``core.http.HTTPScraper``), centralizando backoff exponencial
             para 429/5xx.
+        sleep_time: Delay (em segundos) entre páginas. Default 1.0; o client
+            normalmente passa ``self.sleep_time`` herdado de ``HTTPScraper``.
         type_minuta: '1' (Acórdãos), '2' (Decisões Monocráticas), '3' (Sentenças).
 
     Returns:
@@ -147,7 +150,7 @@ def cjsg_download_manager(
         n_pages = math.ceil(total / RESULTS_PER_PAGE) if total else 1
         if n_pages > 1:
             for page_num in tqdm(range(2, n_pages + 1), desc="Baixando páginas TJTO"):
-                time.sleep(1)
+                time.sleep(sleep_time)
                 start = (page_num - 1) * RESULTS_PER_PAGE
                 resultados.append(_get_page(start))
         return resultados
@@ -156,7 +159,7 @@ def cjsg_download_manager(
     resultados = []
     for page_num in tqdm(paginas_iter, desc="Baixando páginas TJTO"):
         if resultados:
-            time.sleep(1)
+            time.sleep(sleep_time)
         start = (page_num - 1) * RESULTS_PER_PAGE
         resultados.append(_get_page(start))
     return resultados

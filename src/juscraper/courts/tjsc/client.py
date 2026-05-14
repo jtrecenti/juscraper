@@ -111,6 +111,7 @@ class TJSCScraper(HTTPScraper):
             pesquisa=inp.pesquisa,
             paginas=inp.paginas,
             request_fn=self._request_with_retry,
+            sleep_time=self.sleep_time,
             campo=inp.campo,
             processo=inp.processo or "",
             dt_decisao_inicio=inp.data_julgamento_inicio or "",

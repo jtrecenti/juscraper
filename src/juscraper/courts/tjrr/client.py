@@ -122,6 +122,7 @@ class TJRRScraper(HTTPScraper):
             pesquisa=inp.pesquisa,
             paginas=inp.paginas,
             request_fn=self._request_with_retry,
+            sleep_time=self.sleep_time,
             relator=inp.relator or "",
             data_inicio=inp.data_julgamento_inicio or "",
             data_fim=inp.data_julgamento_fim or "",
