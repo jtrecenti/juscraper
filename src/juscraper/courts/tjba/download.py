@@ -3,6 +3,7 @@ Downloads raw results from the TJBA jurisprudence search (GraphQL API).
 """
 import logging
 import time
+from collections.abc import Callable
 
 import requests
 from tqdm import tqdm
@@ -89,41 +90,6 @@ def _to_iso(date_str: str | None) -> str | None:
     return f"{iso}T03:00:00.000Z"
 
 
-def _fetch_page(
-    session: requests.Session,
-    decisao_filter: dict,
-    page_number: int,
-    items_per_page: int = 10,
-    max_retries: int = 3,
-) -> dict:
-    """Fetch a single page from the TJBA GraphQL API (0-based)."""
-    payload = {
-        "operationName": "filter",
-        "variables": {
-            "decisaoFilter": decisao_filter,
-            "pageNumber": page_number,
-            "itemsPerPage": items_per_page,
-        },
-        "query": FILTER_QUERY,
-    }
-    for attempt in range(1, max_retries + 1):
-        try:
-            resp = session.post(GRAPHQL_URL, json=payload, timeout=60)
-            resp.raise_for_status()
-            data: dict = resp.json()
-            if "errors" in data:
-                raise ValueError(f"GraphQL errors: {data['errors']}")
-            return data
-        except (requests.RequestException, ValueError) as exc:
-            if attempt == max_retries:
-                raise
-            wait = 2 ** attempt
-            logger.warning("TJBA request failed (attempt %d/%d): %s. Retrying in %ds...",
-                           attempt, max_retries, exc, wait)
-            time.sleep(wait)
-    return {}  # unreachable, but satisfies type checkers
-
-
 def cjsg_download(
     pesquisa: str = "",
     paginas=None,
@@ -139,7 +105,8 @@ def cjsg_download(
     tipo_decisoes_monocraticas: bool = True,
     ordenado_por: str = "dataPublicacao",
     items_per_page: int = 10,
-    session: requests.Session | None = None,
+    *,
+    request_fn: Callable[..., requests.Response],
 ) -> list:
     """
     Download raw results from TJBA jurisprudence search (multiple pages).
@@ -154,19 +121,16 @@ def cjsg_download(
         Case/appeal number filter.
     items_per_page : int
         Results per page (default 10).
+    request_fn : Callable
+        HTTP callable that handles retry + raise_for_status — em uso normal e
+        ``TJBAScraper._request_with_retry`` (via ``core.http.HTTPScraper``),
+        centralizando backoff exponencial para 429/5xx.
 
     Returns
     -------
     list
         List of raw GraphQL response dicts (one per page).
     """
-    if session is None:
-        session = requests.Session()
-        session.headers.update({
-            "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-            "Content-Type": "application/json",
-        })
-
     decisao_filter = _build_filter(
         pesquisa=pesquisa,
         numero_recurso=numero_recurso,
@@ -182,22 +146,36 @@ def cjsg_download(
         ordenado_por=ordenado_por,
     )
 
+    def _fetch_page(page_number: int) -> dict:
+        payload = {
+            "operationName": "filter",
+            "variables": {
+                "decisaoFilter": decisao_filter,
+                "pageNumber": page_number,
+                "itemsPerPage": items_per_page,
+            },
+            "query": FILTER_QUERY,
+        }
+        resp = request_fn("POST", GRAPHQL_URL, json=payload, timeout=60)
+        data: dict = resp.json()
+        if "errors" in data:
+            raise ValueError(f"GraphQL errors: {data['errors']}")
+        return data
+
     if paginas is None:
-        first = _fetch_page(session, decisao_filter, 0, items_per_page)
+        first = _fetch_page(0)
         resultados = [first]
         page_count = first.get("data", {}).get("filter", {}).get("pageCount", 1)
         if page_count > 1:
             for p in tqdm(range(1, page_count), desc="Baixando paginas TJBA"):
-                resultados.append(_fetch_page(session, decisao_filter, p, items_per_page))
+                resultados.append(_fetch_page(p))
                 time.sleep(1)
         return resultados
 
     paginas_list = list(paginas)
     resultados = []
     for pagina_1based in tqdm(paginas_list, desc="Baixando paginas TJBA"):
-        resultados.append(
-            _fetch_page(session, decisao_filter, pagina_1based - 1, items_per_page)
-        )
+        resultados.append(_fetch_page(pagina_1based - 1))
         if len(paginas_list) > 1:
             time.sleep(1)
     return resultados

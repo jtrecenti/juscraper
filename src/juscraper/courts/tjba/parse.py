@@ -3,6 +3,8 @@ Parse raw results from the TJBA jurisprudence search.
 """
 import pandas as pd
 
+from juscraper.core.parse_utils import coerce_date_columns
+
 
 def cjsg_parse(resultados_brutos: list) -> pd.DataFrame:
     """
@@ -46,10 +48,7 @@ def cjsg_parse(resultados_brutos: list) -> pd.DataFrame:
             })
 
     df = pd.DataFrame(rows)
-    if "data_publicacao" in df.columns:
-        df["data_publicacao"] = pd.to_datetime(
-            df["data_publicacao"], errors="coerce"
-        ).dt.date
+    coerce_date_columns(df, ["data_publicacao"])
     principais = [
         "processo", "relator", "orgao_julgador", "classe",
         "tipo_decisao", "data_publicacao", "ementa", "hash",

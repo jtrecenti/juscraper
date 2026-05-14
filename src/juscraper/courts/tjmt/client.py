@@ -3,9 +3,9 @@ Scraper for the Tribunal de Justica do Estado de Mato Grosso (TJMT).
 """
 
 import pandas as pd
-import requests
 
-from juscraper.core.base import BaseScraper
+from juscraper.core.http import HTTPScraper
+from juscraper.core.parse_utils import coerce_date_columns
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
 from .download import cjsg_download
@@ -13,17 +13,13 @@ from .parse import cjsg_parse
 from .schemas import InputCJSGTJMT
 
 
-class TJMTScraper(BaseScraper):
+class TJMTScraper(HTTPScraper):
     """Scraper for the Tribunal de Justica do Estado de Mato Grosso (TJMT)."""
 
     BASE_URL = "https://hellsgate-preview.tjmt.jus.br/jurisprudencia"
 
     def __init__(self):
         super().__init__("TJMT")
-        self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-        })
 
     def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJMT."""
@@ -103,6 +99,7 @@ class TJMTScraper(BaseScraper):
             tipo_processo=inp.tipo_processo,
             thesaurus=inp.thesaurus,
             quantidade_por_pagina=inp.tamanho_pagina,
+            request_fn=self._request_with_retry,
             session=self.session,
         )
 
@@ -156,7 +153,5 @@ class TJMTScraper(BaseScraper):
         )
         dados = self.cjsg_parse(brutos, tipo_consulta=tipo_consulta)
         df = pd.DataFrame(dados)
-        for col in ["data_julgamento", "data_publicacao"]:
-            if col in df.columns:
-                df[col] = pd.to_datetime(df[col], errors="coerce").dt.date
+        coerce_date_columns(df, ["data_julgamento", "data_publicacao"])
         return df

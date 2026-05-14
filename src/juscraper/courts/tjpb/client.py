@@ -2,9 +2,8 @@
 from datetime import date, datetime
 
 import pandas as pd
-import requests
 
-from juscraper.core.base import BaseScraper
+from juscraper.core.http import HTTPScraper
 from juscraper.utils.params import apply_input_pipeline_search, coerce_brazilian_date, resolve_deprecated_alias
 
 from .download import cjsg_download_manager
@@ -41,7 +40,7 @@ def _first_present(kwargs: dict, *keys: str):
     return None
 
 
-class TJPBScraper(BaseScraper):
+class TJPBScraper(HTTPScraper):
     """Scraper for the Tribunal de Justica da Paraiba (TJPB).
 
     Uses the PJe jurisprudence search at pje-jurisprudencia.tjpb.jus.br.
@@ -52,10 +51,6 @@ class TJPBScraper(BaseScraper):
 
     def __init__(self):
         super().__init__("TJPB")
-        self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-        })
 
     def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJPB."""
@@ -203,7 +198,7 @@ class TJPBScraper(BaseScraper):
         return cjsg_download_manager(
             pesquisa=inp.pesquisa,
             paginas=inp.paginas,
-            session=self.session,
+            request_fn=self._request_with_retry,
             nr_processo=inp.numero_processo or "",
             id_classe=inp.id_classe or "",
             id_orgao_julgador=inp.id_orgao_julgador or "",

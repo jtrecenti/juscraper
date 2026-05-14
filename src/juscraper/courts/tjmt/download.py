@@ -4,6 +4,7 @@ Downloads raw results from the TJMT jurisprudence search.
 import logging
 import math
 import time
+from collections.abc import Callable
 
 import requests
 from tqdm import tqdm
@@ -16,10 +17,9 @@ CONFIG_URL = "https://jurisprudencia.tjmt.jus.br/assets/config/config.json"
 DEFAULT_PAGE_SIZE = 10
 
 
-def _get_api_config(session: requests.Session) -> dict:
+def _get_api_config(request_fn: Callable[..., requests.Response]) -> dict:
     """Fetch the public config.json to obtain the API URL and token."""
-    resp = session.get(CONFIG_URL, timeout=30)
-    resp.raise_for_status()
+    resp = request_fn("GET", CONFIG_URL, timeout=30)
     cfg = resp.json()
     return {
         "api_url": cfg["api_url"],
@@ -97,7 +97,9 @@ def cjsg_download(
     tipo_processo: str | None = None,
     thesaurus: bool = False,
     quantidade_por_pagina: int = DEFAULT_PAGE_SIZE,
-    session: requests.Session | None = None,
+    *,
+    request_fn: Callable[..., requests.Response],
+    session: requests.Session,
 ) -> list:
     """Download raw JSON results from the TJMT jurisprudence API.
 
@@ -113,18 +115,20 @@ def cjsg_download(
         tipo_processo: ``"Cível"`` or ``"Criminal"``.
         thesaurus: Whether to use synonym search.
         quantidade_por_pagina: Items per page (default 10).
-        session: Optional ``requests.Session`` to reuse.
+        request_fn: HTTP callable that handles retry + raise_for_status — em
+            uso normal e ``TJMTScraper._request_with_retry`` (via
+            ``core.http.HTTPScraper``), centralizando backoff exponencial
+            para 429/5xx.
+        session: ``requests.Session`` compartilhada pelo ``HTTPScraper``;
+            recebida explicitamente para persistir os headers ``Token`` /
+            ``Accept`` / ``Referer`` obtidos via ``_get_api_config``. As
+            requisicoes subsequentes via ``request_fn`` usam essa mesma
+            session por baixo.
 
     Returns:
         List of raw JSON response dicts, one per page.
     """
-    if session is None:
-        session = requests.Session()
-        session.headers.update({
-            "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-        })
-
-    cfg = _get_api_config(session)
+    cfg = _get_api_config(request_fn)
     api_url = cfg["api_url"]
     token = cfg["token"]
 
@@ -151,20 +155,9 @@ def cjsg_download(
             tipo_processo=tipo_processo,
             thesaurus=thesaurus,
         )
-        max_retries = 3
-        for attempt in range(max_retries):
-            try:
-                resp = session.get(f"{api_url}/api/Consulta", params=params, timeout=60)
-                resp.raise_for_status()
-                data: dict = resp.json()
-                return data
-            except requests.RequestException:
-                if attempt == max_retries - 1:
-                    raise
-                wait = 2 ** (attempt + 1)
-                logger.warning("Request failed (attempt %d/%d), retrying in %ds...", attempt + 1, max_retries, wait)
-                time.sleep(wait)
-        raise RuntimeError("unreachable")  # satisfaz o mypy; loop acima sempre retorna ou levanta
+        resp = request_fn("GET", f"{api_url}/api/Consulta", params=params, timeout=60)
+        data: dict = resp.json()
+        return data
 
     count_key = "CountAcordaoDocumento" if tipo_consulta == "Acordao" else "CountDecisaoMonocratica"
 
