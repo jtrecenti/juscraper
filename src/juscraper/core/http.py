@@ -31,7 +31,16 @@ from juscraper.core.exceptions import RetryExhaustedError
 
 logger = logging.getLogger("juscraper.core.http")
 
-RETRYABLE_STATUSES: frozenset[int] = frozenset({429, 500, 502, 503, 504})
+RETRYABLE_STATUSES: frozenset[int] = frozenset({403, 429, 500, 502, 503, 504})
+"""Status codes que disparam retry com backoff exponencial.
+
+``403`` foi incluido por causa do TJSP eSAJ (#233): o WAF do eSAJ retorna 403
+intermitente em raspagens longas, mesmo sem o cliente bater em rate limit
+classico (que daria 429). Como o 403 e produzido pelo WAF e nao por
+autenticacao/autorizacao do recurso, retentar com backoff resolve a maioria
+dos casos transitorios. 403 ``permanente`` (ex.: credenciais invalidas) ainda
+acaba caindo em ``RetryExhaustedError`` apos ``max_retries`` tentativas, o que
+e o sintoma certo — o WAF nao distingue os dois casos pelo status code."""
 
 RequestFn: TypeAlias = Callable[..., requests.Response]
 """Tipo do callable bound do ``HTTPScraper._request_with_retry``.
