@@ -171,6 +171,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </ul></li>
   <li><a href="#auto-chunking-esaj-family" id="toc-auto-chunking-esaj-family" class="nav-link" data-scroll-target="#auto-chunking-esaj-family">Auto-chunking (eSAJ family)</a></li>
   <li><a href="#normalization-utilities" id="toc-normalization-utilities" class="nav-link" data-scroll-target="#normalization-utilities">Normalization Utilities</a></li>
+  <li><a href="#rate-limiting-and-retry-behaviour" id="toc-rate-limiting-and-retry-behaviour" class="nav-link" data-scroll-target="#rate-limiting-and-retry-behaviour">Rate limiting and retry behaviour</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.com/jtrecenti/juscraper/edit/main/docs/api-conventions.qmd" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></nav>
     </div>
@@ -499,6 +500,62 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>iter_date_windows(data_inicio, data_fim, *, max_dias=366)</code> — splits a date range into non-overlapping windows for auto-chunking</li>
 <li><code>run_chunked_search(fetch_window, *, data_inicio, data_fim, dedup_key, ...)</code> — drives a search across windows, concatenates and deduplicates</li>
 <li><code>warn_unsupported(param_name, tribunal)</code> — warns about unsupported parameters</li>
+</ul>
+</section>
+<section id="rate-limiting-and-retry-behaviour" class="level2">
+<h2 class="anchored" data-anchor-id="rate-limiting-and-retry-behaviour">Rate limiting and retry behaviour</h2>
+<p>All HTTP scrapers that inherit from <code>juscraper.core.http.HTTPScraper</code> share the same retry loop via <code>_request_with_retry</code>. Defaults:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 24%">
+<col style="width: 24%">
+<col style="width: 51%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Setting</th>
+<th>Default</th>
+<th>Where to override</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Retried statuses</td>
+<td><code>403</code>, <code>429</code>, <code>500</code>, <code>502</code>, <code>503</code>, <code>504</code></td>
+<td>constant <code>RETRYABLE_STATUSES</code></td>
+</tr>
+<tr class="even">
+<td>Max attempts</td>
+<td><code>3</code> (including the first)</td>
+<td><code>max_retries=</code> per call</td>
+</tr>
+<tr class="odd">
+<td>Backoff</td>
+<td><code>base_backoff ** attempt</code> → <code>2s</code> then <code>4s</code> (sleeps run between attempts 1→2 and 2→3; the 3rd failure raises <code>RetryExhaustedError</code> without sleeping, so the default <code>8s</code> from <code>2 ** 3</code> only kicks in with <code>max_retries &gt;= 4</code>)</td>
+<td><code>base_backoff=</code> per call</td>
+</tr>
+<tr class="even">
+<td><code>Retry-After</code> (numeric seconds)</td>
+<td>Honored when present</td>
+<td>n/a</td>
+</tr>
+<tr class="odd">
+<td><code>Retry-After</code> (HTTP-date)</td>
+<td>Ignored — falls back to backoff (#201)</td>
+<td>n/a</td>
+</tr>
+<tr class="even">
+<td>Inter-request pause</td>
+<td><code>sleep_time=1.0</code> from the scraper constructor</td>
+<td><code>jus.scraper("tjsp", sleep_time=5.0)</code></td>
+</tr>
+</tbody>
+</table>
+<p>The exponential backoff (<code>2s</code> then <code>4s</code> across the three default attempts) resolves transient WAF blocks but does <strong>not</strong> always escape longer cooldowns. If you see <code>RetryExhaustedError(status_code=403)</code> (or <code>429</code>) repeatedly on the same scraper:</p>
+<ul>
+<li><strong>First</strong>, increase <code>sleep_time</code> in the constructor so the pause between requests becomes longer than the WAF window. Doubling it (<code>sleep_time=2.0</code>) is usually enough for the TJSP eSAJ WAF.</li>
+<li>If that does not help and you are running from a corporate / institutional IP, the block is likely IP-based — switching to a residential network is the only reliable fix.</li>
+<li>The <code>403</code> retry is global; consumers that can reliably distinguish auth-failure <code>403</code> from WAF <code>403</code> (e.g.&nbsp;PDPJ, where <code>403</code> means expired JWT) keep a local retry loop in <code>aggregators/&lt;name&gt;/download.py</code> and opt out.</li>
 </ul>
 
 

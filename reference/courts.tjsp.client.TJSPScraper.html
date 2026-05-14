@@ -286,13 +286,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>**kwargs</td>
 <td><a href="`typing.Any`">Any</a></td>
-<td>Filtros aceitos por :class:<code>InputCJPGTJSP</code> (todos opcionais; <code>None</code> = sem filtro): * <code>classes</code> (list[str]): IDs internos de classe processual. Backend: <code>classeTreeSelection.values</code> (CSV). * <code>assuntos</code> (list[str]): IDs internos de assunto. Backend: <code>assuntoTreeSelection.values</code> (CSV). * <code>varas</code> (list[str]): IDs internos de vara, no formato em arvore do TJSP (ex.: <code>"1-1-1"</code>). Backend: <code>varasTreeSelection.values</code> (CSV). * <code>id_processo</code> (str): Numero CNJ formatado para filtrar uma instancia especifica. Normalizado via :func:<code>clean_cnj</code> antes do envio. * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str, <code>DD/MM/AAAA</code>): Intervalo de julgamento. * <code>auto_chunk</code> (bool): Default <code>True</code>. Quando o intervalo <code>data_julgamento_*</code> excede 366 dias, divide internamente em janelas, baixa cada uma e concatena com dedup por <code>id_processo</code>. Veja a secao “Auto-chunking” abaixo.</td>
+<td>Filtros aceitos por :class:<code>InputCJPGTJSP</code> (todos opcionais; <code>None</code> = sem filtro): * <code>classe</code> (int | str | list[int | str]): ID(s) internos de classe processual. Backend: <code>classeTreeSelection.values</code> (CSV). * <code>assunto</code> (int | str | list[int | str]): ID(s) internos de assunto. Backend: <code>assuntoTreeSelection.values</code> (CSV). * <code>vara</code> (int | str | list[int | str]): ID(s) internos de vara, no formato em arvore do TJSP (ex.: <code>"1-1-1"</code>). Backend: <code>varasTreeSelection.values</code> (CSV). * <code>id_processo</code> (str): Numero CNJ formatado para filtrar uma instancia especifica. Normalizado via :func:<code>clean_cnj</code> antes do envio. * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str, <code>DD/MM/AAAA</code>): Intervalo de julgamento. * <code>auto_chunk</code> (bool): Default <code>True</code>. Quando o intervalo <code>data_julgamento_*</code> excede 366 dias, divide internamente em janelas, baixa cada uma e concatena com dedup por <code>id_processo</code>. Veja a secao “Auto-chunking” abaixo.</td>
 <td><code>{}</code></td>
 </tr>
 </tbody>
 </table>
 <p>Aliases deprecados (popados com <code>DeprecationWarning</code> antes do pydantic):</p>
 <pre><code>* ``query`` / ``termo`` -&gt; ``pesquisa``
+* ``classes`` -&gt; ``classe``
+* ``assuntos`` -&gt; ``assunto``
+* ``varas`` -&gt; ``vara``
 * ``data_inicio`` / ``data_fim`` -&gt; ``data_julgamento_inicio`` / ``_fim``
 * ``data_julgamento_de`` / ``_ate`` -&gt; ``data_julgamento_inicio`` / ``_fim``</code></pre>
 </section>
@@ -321,6 +324,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td></td>
 <td><a href="`juscraper.courts.tjsp.exceptions.QueryTooLongError`">QueryTooLongError</a></td>
 <td>Quando <code>pesquisa</code> excede 120 chars.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>Quando <code>classe</code> e <code>classes</code> (ou par equivalente) sao passados simultaneamente.</td>
 </tr>
 </tbody>
 </table>
@@ -374,7 +382,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <blockquote class="blockquote">
 <blockquote class="blockquote">
 <blockquote class="blockquote">
-<p>import juscraper as jus tjsp = jus.scraper(“tjsp”) # Busca textual + filtro de vara: df = tjsp.cjpg(“dano moral”, paginas=range(1, 3), … varas=[“1-1-1”]) # So filtros (sem termo): df = tjsp.cjpg(paginas=1, classes=[“12728”], … data_julgamento_inicio=“01/01/2024”, … data_julgamento_fim=“31/03/2024”)</p>
+<p>import juscraper as jus tjsp = jus.scraper(“tjsp”) # Busca textual + filtro de vara: df = tjsp.cjpg(“dano moral”, paginas=range(1, 3), … vara=“1-1-1”) # So filtros (sem termo) — IDs como int ou list: df = tjsp.cjpg(paginas=1, classe=12728, assunto=[3607, 5885], … data_julgamento_inicio=“01/01/2024”, … data_julgamento_fim=“31/03/2024”)</p>
 </blockquote>
 </blockquote>
 </blockquote>
@@ -452,6 +460,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td></td>
 <td><a href="`juscraper.courts.tjsp.exceptions.QueryTooLongError`">QueryTooLongError</a></td>
 <td>Quando <code>pesquisa</code> (ou alias resolvido) excede 120 chars.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>Quando o usuario passa um alias deprecado e o nome canonico simultaneamente (ex.: <code>classe</code> e <code>classes</code>; refs #232).</td>
 </tr>
 </tbody>
 </table>
