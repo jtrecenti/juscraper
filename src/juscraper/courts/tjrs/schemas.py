@@ -28,8 +28,9 @@ class InputCJSGTJRS(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     :func:`juscraper.utils.params.normalize_pesquisa`, que roda *antes*
     deste modelo. Apos a normalizacao, os kwargs que sobram caem aqui e
     sao rejeitados por ``extra="forbid"`` herdado de :class:`SearchBase`.
-    Filtros de data herdados dos mixins. O parametro ``session`` do
-    metodo publico nao aparece aqui (dependencia de runtime, nao da API).
+    Filtros de data herdados dos mixins. O parametro ``session`` foi
+    removido da API publica em #246; quem precisar customizar deve mutar
+    ``scraper.session`` apos ``__init__`` (dependencia de runtime, nao da API).
     """
 
     BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"

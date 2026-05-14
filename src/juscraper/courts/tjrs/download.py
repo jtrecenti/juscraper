@@ -127,7 +127,7 @@ def cjsg_download_manager(
             'metodo': 'buscar_resultados',
             'parametros': parametros_str,
         }
-        resp = request_fn("POST", BASE_URL, data=data)
+        resp = request_fn("POST", BASE_URL, data=data, timeout=30)
         return resp.json()
 
     if paginas is None:

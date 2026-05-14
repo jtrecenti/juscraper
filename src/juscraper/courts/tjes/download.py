@@ -82,17 +82,12 @@ def cjsg_download(
     *,
     request_fn: RequestFn,
 ) -> list:
-    """
-    Download raw JSON results from the TJES jurisprudence search.
+    """Download raw JSON results from the TJES jurisprudence search.
 
     Returns a list of raw page responses (each containing ``docs``, ``total``,
-    ``page``, ``per_page``, ``total_pages``).
-
-    Args:
-        request_fn: HTTP callable that handles retry + raise_for_status — em
-            uso normal e ``TJESScraper._request_with_retry`` (via
-            ``core.http.HTTPScraper``), centralizando backoff exponencial
-            para 429/5xx.
+    ``page``, ``per_page``, ``total_pages``). HTTP via ``request_fn`` (tipicamente
+    ``TJESScraper._request_with_retry`` de ``core.http.HTTPScraper``), que
+    centraliza retry exponencial para 429/5xx.
     """
     url = f"{BASE_URL}/search"
     common = dict(

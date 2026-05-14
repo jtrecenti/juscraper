@@ -1,6 +1,7 @@
 """Downloads raw results from the TJAP jurisprudence search (Tucujuris)."""
 import logging
 import time
+from types import MappingProxyType
 
 from tqdm import tqdm
 
@@ -59,12 +60,12 @@ def _build_payload(
     return payload
 
 
-_HEADERS = {
+_HEADERS = MappingProxyType({
     "Content-Type": "application/json",
     "Accept": "application/json",
     "Referer": FRONT_URL,
     "tucujuris-front-url": FRONT_URL,
-}
+})
 
 
 def cjsg_download_manager(
