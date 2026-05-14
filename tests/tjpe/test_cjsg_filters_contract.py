@@ -18,7 +18,9 @@ junto com :class:`InputCJSGTJPE` no PR de wiring.
 """
 from __future__ import annotations
 
+import logging
 import warnings
+from urllib.parse import parse_qs
 
 import pandas as pd
 import pytest
@@ -30,6 +32,15 @@ from tests._helpers import load_sample, urlencoded_body_subset_matcher
 from tests.tjpe.test_cjsg_contract import CONSULTA_URL
 
 FORM = "formPesquisaJurisprudencia"
+
+
+@pytest.fixture(autouse=True)
+def _silence_unexpected_response_warning(caplog):
+    # ``no_results.html`` nao casa com ``_is_results_page`` nem com
+    # ``_is_escolha_page``, entao o scraper cai no ramo "unexpected response"
+    # e emite ``logger.warning``. Limita a captura do caplog para que o ruido
+    # nao polua a saida se algum teste vier a falhar.
+    caplog.set_level(logging.ERROR, logger="juscraper.courts.tjpe.download")
 
 
 def _add_get_consulta() -> None:
@@ -95,7 +106,6 @@ def test_cjsg_tipo_decisao_monocraticas_marks_only_monocratica_checkbox(mocker):
     todos = f"{FORM}:tipoTodos"
 
     def assert_only_monocratica(request):
-        from urllib.parse import parse_qs
         body = request.body or b""
         if isinstance(body, bytes):
             body = body.decode("utf-8")
