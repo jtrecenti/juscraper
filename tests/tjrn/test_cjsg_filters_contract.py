@@ -199,6 +199,44 @@ def test_cjsg_data_inicio_alias_maps_to_data_julgamento(mocker):
     assert any("data_fim" in m and "deprecado" in m for m in messages)
 
 
+@responses.activate
+def test_cjsg_data_julgamento_aceita_formato_brasileiro(mocker):
+    """Datas em ``DD/MM/AAAA`` sao coercidas para o ``BACKEND_DATE_FORMAT="%Y-%m-%d"``
+    declarado em :class:`InputCJSGTJRN` antes de o cliente reescrever para
+    ``DD-MM-YYYY`` (formato exigido pelo backend Elasticsearch via
+    ``_to_tjrn_date``).
+
+    Cobre o caminho end-to-end (input via API publica -> backend) que o teste
+    unitario do helper (``test_apply_input_pipeline_*``) nao exercita: confirma
+    que TJRN nao se esqueceu de declarar ``BACKEND_DATE_FORMAT`` nem pulou o
+    ``apply_input_pipeline_search`` (refs #182, #173). A reescrita extra para
+    DD-MM-YYYY e particularidade do TJRN, nao do pipeline canonico.
+    """
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.POST,
+        BASE_URL,
+        body=load_sample("tjrn", "cjsg/no_results.json"),
+        status=200,
+        content_type="application/json",
+        match=[json_params_matcher(build_cjsg_payload(
+            "dano moral",
+            page=1,
+            dt_inicio="01-01-2024",
+            dt_fim="31-03-2024",
+        ))],
+    )
+
+    df = jus.scraper("tjrn").cjsg(
+        "dano moral",
+        paginas=1,
+        data_julgamento_inicio="01/01/2024",
+        data_julgamento_fim="31/03/2024",
+    )
+
+    assert isinstance(df, pd.DataFrame)
+
+
 def test_cjsg_unknown_kwarg_raises():
     """Kwargs not declared in :class:`InputCJSGTJRN` raise ``TypeError`` with
     the field name, instead of being silently dropped (refs #84, #93)."""

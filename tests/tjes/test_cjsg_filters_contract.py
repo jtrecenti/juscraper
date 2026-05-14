@@ -251,3 +251,55 @@ def test_cjpg_tamanho_pagina_collision_raises():
         jus.scraper("tjes").cjpg(
             "dano moral", paginas=1, tamanho_pagina=5, per_page=10
         )
+
+
+# --- Coercao BR -> ISO end-to-end (refs #182) --------------------------------
+# Confirma que TJES nao se esqueceu de declarar ``BACKEND_DATE_FORMAT="%Y-%m-%d"``
+# em :class:`InputCJSGTJES`/:class:`InputCJPGTJES`, nem pulou o
+# ``apply_input_pipeline_search``. O backend Solr exige ISO; coercao acontece
+# antes de virar query param.
+
+
+@responses.activate
+def test_cjsg_data_julgamento_aceita_formato_brasileiro(mocker):
+    """``DD/MM/AAAA`` -> ``YYYY-MM-DD`` (BACKEND_DATE_FORMAT) -> Solr query param."""
+    mocker.patch("time.sleep")
+    _add_page(
+        "dano moral",
+        1,
+        "cjsg/no_results.json",
+        data_inicio="2024-01-01",
+        data_fim="2024-03-31",
+    )
+
+    df = jus.scraper("tjes").cjsg(
+        "dano moral",
+        paginas=1,
+        data_julgamento_inicio="01/01/2024",
+        data_julgamento_fim="31/03/2024",
+    )
+
+    assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
+def test_cjpg_data_julgamento_aceita_formato_brasileiro(mocker):
+    """Mesmo que ``test_cjsg_data_julgamento_aceita_formato_brasileiro`` para cjpg."""
+    mocker.patch("time.sleep")
+    _add_page(
+        "obrigacao de fazer",
+        1,
+        "cjpg/no_results.json",
+        core="pje1g",
+        data_inicio="2024-01-01",
+        data_fim="2024-03-31",
+    )
+
+    df = jus.scraper("tjes").cjpg(
+        "obrigacao de fazer",
+        paginas=1,
+        data_julgamento_inicio="01/01/2024",
+        data_julgamento_fim="31/03/2024",
+    )
+
+    assert isinstance(df, pd.DataFrame)

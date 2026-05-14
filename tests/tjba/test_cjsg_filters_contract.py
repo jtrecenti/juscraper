@@ -113,6 +113,41 @@ def test_cjsg_data_julgamento_raises_typeerror():
     )
 
 
+@responses.activate
+def test_cjsg_data_publicacao_aceita_formato_brasileiro(mocker):
+    """Datas em ``DD/MM/AAAA`` sao coercidas para o ``BACKEND_DATE_FORMAT="%Y-%m-%d"``
+    declarado em :class:`InputCJSGTJBA` antes de chegar ao body GraphQL.
+
+    Cobre o caminho end-to-end (input via API publica -> backend) que o teste
+    unitario do helper (``test_apply_input_pipeline_*``) nao exercita: confirma
+    que o tribunal nao se esqueceu de declarar ``BACKEND_DATE_FORMAT`` nem
+    pulou o ``apply_input_pipeline_search`` (refs #182, #173).
+    """
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.POST,
+        BASE,
+        body=load_sample("tjba", "cjsg/no_results.json"),
+        status=200,
+        content_type="application/json",
+        match=[json_params_matcher(_payload(
+            "dano moral",
+            0,
+            data_publicacao_inicio="2024-01-01",
+            data_publicacao_fim="2024-03-31",
+        ))],
+    )
+
+    df = jus.scraper("tjba").cjsg(
+        "dano moral",
+        paginas=1,
+        data_publicacao_inicio="01/01/2024",
+        data_publicacao_fim="31/03/2024",
+    )
+
+    assert isinstance(df, pd.DataFrame)
+
+
 # --- refs #232 ---------------------------------------------------------------
 
 

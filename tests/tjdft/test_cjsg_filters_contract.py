@@ -113,6 +113,40 @@ def test_cjsg_unknown_kwarg_raises():
 
 
 @responses.activate
+def test_cjsg_data_julgamento_aceita_formato_brasileiro(mocker):
+    """Datas em ``DD/MM/AAAA`` sao coercidas para o ``BACKEND_DATE_FORMAT="%Y-%m-%d"``
+    declarado em :class:`InputCJSGTJDFT` antes de virar a string
+    ``"entre AAAA-MM-DD e AAAA-MM-DD"`` no ``termosAcessorios``.
+
+    Cobre o caminho end-to-end (input via API publica -> backend) que o teste
+    unitario do helper (``test_apply_input_pipeline_*``) nao exercita: confirma
+    que TJDFT nao se esqueceu de declarar ``BACKEND_DATE_FORMAT`` nem pulou o
+    ``apply_input_pipeline_search`` (refs #182, #173).
+    """
+    mocker.patch("time.sleep")
+    expected_termos = [
+        {"campo": "dataJulgamento", "valor": "entre 2024-01-01 e 2024-03-31"},
+    ]
+    responses.add(
+        responses.POST,
+        BASE,
+        body=load_sample("tjdft", "cjsg/no_results.json"),
+        status=200,
+        content_type="application/json",
+        match=[json_params_matcher(_payload("dano moral", 1, termos_acessorios=expected_termos))],
+    )
+
+    df = jus.scraper("tjdft").cjsg(
+        "dano moral",
+        paginas=1,
+        data_julgamento_inicio="01/01/2024",
+        data_julgamento_fim="31/03/2024",
+    )
+
+    assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
 def test_cjsg_quantidade_por_pagina_alias_emits_deprecation_warning(mocker):
     """``quantidade_por_pagina`` e alias deprecado de ``tamanho_pagina`` (refs #211)."""
     mocker.patch("time.sleep")

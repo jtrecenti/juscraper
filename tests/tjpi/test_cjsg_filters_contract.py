@@ -142,6 +142,42 @@ def test_cjsg_unknown_kwarg_raises():
     )
 
 
+@responses.activate
+def test_cjsg_data_julgamento_aceita_formato_brasileiro(mocker):
+    """Datas em ``DD/MM/AAAA`` sao coercidas para o ``BACKEND_DATE_FORMAT="%Y-%m-%d"``
+    declarado em :class:`InputCJSGTJPI` antes de virar ``data_min``/``data_max``
+    na query string.
+
+    Cobre o caminho end-to-end (input via API publica -> backend) que o teste
+    unitario do helper (``test_apply_input_pipeline_*``) nao exercita: confirma
+    que TJPI nao se esqueceu de declarar ``BACKEND_DATE_FORMAT`` nem pulou o
+    ``apply_input_pipeline_search`` (refs #182, #173).
+    """
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.GET,
+        BASE_URL,
+        body=load_sample("tjpi", "cjsg/no_results.html"),
+        status=200,
+        content_type="text/html; charset=utf-8",
+        match=[query_param_matcher(build_cjsg_params(
+            "dano moral",
+            page=1,
+            data_min="2024-01-01",
+            data_max="2024-03-31",
+        ))],
+    )
+
+    df = jus.scraper("tjpi").cjsg(
+        "dano moral",
+        paginas=1,
+        data_julgamento_inicio="01/01/2024",
+        data_julgamento_fim="31/03/2024",
+    )
+
+    assert isinstance(df, pd.DataFrame)
+
+
 def test_cjsg_data_publicacao_kwarg_raises():
     """TJPI backend nao expoe filtro de data de publicacao; ``InputCJSGTJPI``
     nao herda ``DataPublicacaoMixin``, entao ``data_publicacao_*`` deve cair

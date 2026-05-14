@@ -133,6 +133,36 @@ def test_cjsg_data_publicacao_raises_typeerror():
 
 
 @responses.activate(registry=OrderedRegistry)
+def test_cjsg_data_julgamento_aceita_formato_brasileiro(mocker):
+    """Datas em ``DD/MM/AAAA`` sao coercidas para o ``BACKEND_DATE_FORMAT="%Y-%m-%d"``
+    declarado em :class:`InputCJSGTJMT` antes de chegar a query string Hellsgate.
+
+    Cobre o caminho end-to-end (input via API publica -> backend) que o teste
+    unitario do helper (``test_apply_input_pipeline_*``) nao exercita: confirma
+    que TJMT nao se esqueceu de declarar ``BACKEND_DATE_FORMAT`` nem pulou o
+    ``apply_input_pipeline_search`` (refs #182, #173).
+    """
+    mocker.patch("time.sleep")
+    _add_config()
+    _add_page(
+        "dano moral",
+        1,
+        "cjsg/no_results.json",
+        data_julgamento_inicio="2024-01-01",
+        data_julgamento_fim="2024-03-31",
+    )
+
+    df = jus.scraper("tjmt").cjsg(
+        "dano moral",
+        paginas=1,
+        data_julgamento_inicio="01/01/2024",
+        data_julgamento_fim="31/03/2024",
+    )
+
+    assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate(registry=OrderedRegistry)
 def test_cjsg_quantidade_por_pagina_alias_emits_deprecation_warning(mocker):
     """``quantidade_por_pagina`` e alias deprecado de ``tamanho_pagina`` (refs #211)."""
     mocker.patch("time.sleep")
