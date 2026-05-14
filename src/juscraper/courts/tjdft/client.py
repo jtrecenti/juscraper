@@ -4,7 +4,8 @@ Module for the scraper of the Court of Justice of the Federal District and Terri
 
 import pandas as pd
 
-from juscraper.core.base import BaseScraper
+from juscraper.core.http import HTTPScraper
+from juscraper.core.parse_utils import coerce_date_columns
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
 from .download import cjsg_download
@@ -12,7 +13,7 @@ from .parse import cjsg_parse
 from .schemas import InputCJSGTJDFT
 
 
-class TJDFTScraper(BaseScraper):
+class TJDFTScraper(HTTPScraper):
     """Scraper for the Court of Justice of the Federal District and Territories (TJDFT)."""
 
     BASE_URL = "https://jurisdf.tjdft.jus.br/api/v1/pesquisa"
@@ -69,6 +70,7 @@ class TJDFTScraper(BaseScraper):
         brutos: list = cjsg_download(
             query=inp.pesquisa,
             paginas=inp.paginas,
+            request_fn=self._request_with_retry,
             sinonimos=inp.sinonimos,
             espelho=inp.espelho,
             inteiro_teor=inp.inteiro_teor,
@@ -105,7 +107,5 @@ class TJDFTScraper(BaseScraper):
         brutos = self.cjsg_download(pesquisa=pesquisa, paginas=paginas, **kwargs)
         dados = self.cjsg_parse(brutos)
         df = pd.DataFrame(dados)
-        for col in ["data_julgamento", "data_publicacao"]:
-            if col in df.columns:
-                df[col] = pd.to_datetime(df[col], errors='coerce').dt.date
+        coerce_date_columns(df, ["data_julgamento", "data_publicacao"])
         return df

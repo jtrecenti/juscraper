@@ -6,7 +6,7 @@ import logging
 import pandas as pd
 import requests
 
-from juscraper.core.base import BaseScraper
+from juscraper.core.http import HTTPScraper
 from juscraper.utils.params import apply_input_pipeline_search
 
 from .download import cjsg_download as _cjsg_download
@@ -16,7 +16,7 @@ from .schemas import InputCJSGTJRJ
 logger = logging.getLogger("juscraper.tjrj")
 
 
-class TJRJScraper(BaseScraper):
+class TJRJScraper(HTTPScraper):
     """Scraper for the Court of Justice of Rio de Janeiro.
 
     The TJRJ search form displays a reCAPTCHA widget, but the backend does
@@ -30,10 +30,10 @@ class TJRJScraper(BaseScraper):
     )
 
     def __init__(self, sleep_time: float = 1.0):
-        super().__init__("TJRJ")
-        self.session = requests.Session()
-        self.session.headers.update({"User-Agent": self.USER_AGENT})
-        self.sleep_time = sleep_time
+        super().__init__("TJRJ", sleep_time=sleep_time)
+
+    def _configure_session(self, session: requests.Session) -> None:
+        session.headers["User-Agent"] = self.USER_AGENT
 
     def cjsg_download(
         self,
@@ -79,7 +79,7 @@ class TJRJScraper(BaseScraper):
         ano_inicio_s = str(inp.ano_inicio) if inp.ano_inicio is not None else None
         ano_fim_s = str(inp.ano_fim) if inp.ano_fim is not None else None
         return _cjsg_download(
-            session=self.session,
+            request_fn=self._request_with_retry,
             pesquisa=inp.pesquisa,
             paginas=inp.paginas,
             ano_inicio=ano_inicio_s,

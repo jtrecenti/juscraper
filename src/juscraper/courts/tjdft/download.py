@@ -3,7 +3,7 @@ Functions for downloading specific to TJDFT
 """
 import math
 
-import requests
+from juscraper.core.http import RequestFn
 
 BASE_URL = "https://jurisdf.tjdft.jus.br/api/v1/pesquisa"
 
@@ -39,6 +39,8 @@ def build_cjsg_payload(
 def cjsg_download(
     query,
     paginas=None,
+    *,
+    request_fn: RequestFn,
     sinonimos=True,
     espelho=True,
     inteiro_teor=False,
@@ -50,12 +52,15 @@ def cjsg_download(
     data_publicacao_fim=None,
 ):
     """
-    Downloads raw results from the TJDFT jurisprudence search (using requests).
+    Downloads raw results from the TJDFT jurisprudence search.
     Returns a list of raw results (JSON).
 
     Args:
         paginas (list, range, or None): Pages to download (1-based).
             None: downloads all available pages.
+        request_fn: HTTP callable que aplica retry + ``raise_for_status``.
+            Em uso normal e ``TJDFTScraper._request_with_retry`` (via
+            ``core.http.HTTPScraper``).
     """
     headers = {"Content-Type": "application/json"}
 
@@ -81,8 +86,7 @@ def cjsg_download(
             quantidade_por_pagina=quantidade_por_pagina,
             termos_acessorios=termos_acessorios,
         )
-        resp = requests.post(base_url, json=payload, headers=headers, timeout=10)
-        resp.raise_for_status()
+        resp = request_fn("POST", base_url, json=payload, headers=headers, timeout=10)
         return resp.json()
 
     if paginas is None:
