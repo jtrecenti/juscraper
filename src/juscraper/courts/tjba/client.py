@@ -3,32 +3,22 @@ Scraper for the Tribunal de Justica do Estado da Bahia (TJBA).
 """
 
 import pandas as pd
-import requests
 
-from juscraper.core.base import BaseScraper
-from juscraper.utils.params import (
-    apply_input_pipeline_search,
-    pop_deprecated_alias,
-    resolve_deprecated_alias,
-)
+from juscraper.core.http import HTTPScraper
+from juscraper.utils.params import apply_input_pipeline_search, pop_deprecated_alias, resolve_deprecated_alias
 
 from .download import cjsg_download
 from .parse import cjsg_parse
 from .schemas import InputCJSGTJBA
 
 
-class TJBAScraper(BaseScraper):
+class TJBAScraper(HTTPScraper):
     """Scraper for the Tribunal de Justica do Estado da Bahia."""
 
     BASE_URL = "https://jurisprudenciaws.tjba.jus.br/graphql"
 
     def __init__(self):
         super().__init__("TJBA")
-        self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-            "Content-Type": "application/json",
-        })
 
     def cpopg(self, id_cnj: str | list[str]):
         """Stub: first-instance case consultation not implemented for TJBA."""
@@ -54,7 +44,6 @@ class TJBAScraper(BaseScraper):
         tipo_decisoes_monocraticas: bool = True,
         ordenado_por: str = "dataPublicacao",
         tamanho_pagina: int = 10,
-        session: requests.Session | None = None,
         **kwargs,
     ) -> list:
         """
@@ -146,7 +135,7 @@ class TJBAScraper(BaseScraper):
             tipo_decisoes_monocraticas=inp.tipo_decisoes_monocraticas,
             ordenado_por=inp.ordenado_por,
             items_per_page=inp.tamanho_pagina,
-            session=session or self.session,
+            request_fn=self._request_with_retry,
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> pd.DataFrame:
@@ -181,7 +170,6 @@ class TJBAScraper(BaseScraper):
         tipo_decisoes_monocraticas: bool = True,
         ordenado_por: str = "dataPublicacao",
         tamanho_pagina: int = 10,
-        session: requests.Session | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """
@@ -227,7 +215,6 @@ class TJBAScraper(BaseScraper):
             tipo_decisoes_monocraticas=tipo_decisoes_monocraticas,
             ordenado_por=ordenado_por,
             tamanho_pagina=tamanho_pagina,
-            session=session,
             **kwargs,
         )
         return self.cjsg_parse(brutos)
