@@ -1,7 +1,7 @@
-"""
-Parse raw results from the TJES jurisprudence search.
-"""
+"""Parse raw results from the TJES jurisprudence search."""
 import pandas as pd
+
+from juscraper.core.parse_utils import coerce_date_columns
 
 # Source field name in the Solr response -> canonical output column name.
 _FIELD_RENAMES = {
@@ -75,9 +75,7 @@ def cjsg_parse(resultados_brutos: list) -> pd.DataFrame:
 
     df = pd.DataFrame(rows)
 
-    # Convert date column
-    if "dt_juntada" in df.columns:
-        df["dt_juntada"] = pd.to_datetime(df["dt_juntada"], errors="coerce").dt.date
+    coerce_date_columns(df, ["dt_juntada"])
 
     # Reorder: main fields first
     present_main = [c for c in _MAIN_FIELDS if c in df.columns]
