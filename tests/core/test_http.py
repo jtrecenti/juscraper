@@ -123,6 +123,48 @@ def test_request_with_retry_4xx_no_retry(probe):
 
 
 @responses.activate
+def test_request_with_retry_403_with_backoff(probe, mocker):
+    """403 e retryable (WAF do TJSP eSAJ, #233) e usa o mesmo backoff de 5xx."""
+    sleep_spy = mocker.patch("juscraper.core.http.time.sleep")
+    responses.add(responses.GET, URL, status=403)
+    responses.add(responses.GET, URL, status=403)
+    responses.add(responses.GET, URL, json={"ok": True}, status=200)
+
+    resp = probe._request_with_retry("GET", URL)
+
+    assert resp.status_code == 200
+    waits = [c.args[0] for c in sleep_spy.call_args_list]
+    assert waits == [2.0, 4.0]
+
+
+@responses.activate
+def test_request_with_retry_403_exhausted(probe, mocker):
+    """403 persistente esgota ``max_retries`` em ``RetryExhaustedError`` (nao ``HTTPError``)."""
+    mocker.patch("juscraper.core.http.time.sleep")
+    for _ in range(3):
+        responses.add(responses.GET, URL, status=403)
+
+    with pytest.raises(RetryExhaustedError) as exc:
+        probe._request_with_retry("GET", URL)
+
+    assert exc.value.status_code == 403
+    assert exc.value.attempts == 3
+
+
+@responses.activate
+def test_request_with_retry_403_with_retry_after(probe, mocker):
+    """403 tambem respeita ``Retry-After`` numerico (mesmo branch de 429/5xx)."""
+    sleep_spy = mocker.patch("juscraper.core.http.time.sleep")
+    responses.add(responses.GET, URL, status=403, headers={"Retry-After": "0.5"})
+    responses.add(responses.GET, URL, json={"ok": True}, status=200)
+
+    resp = probe._request_with_retry("GET", URL)
+
+    assert resp.status_code == 200
+    sleep_spy.assert_called_once_with(0.5)
+
+
+@responses.activate
 def test_request_with_retry_max_retries_param(probe, mocker):
     mocker.patch("juscraper.core.http.time.sleep")
     for _ in range(2):

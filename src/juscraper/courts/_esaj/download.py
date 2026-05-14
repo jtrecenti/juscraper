@@ -7,13 +7,21 @@ Chrome-flavoured User-Agent (``chrome_ua``), and extracts a
 ``conversationId`` from the first page that is propagated to subsequent
 pages.
 
-Issue #203: paginated GETs delegam ao retry centralizado
-:meth:`juscraper.core.http.HTTPScraper._request_with_retry` (backoff
-exponencial, Retry-After, retry em 429/5xx). O POST inicial e o GET de
-descoberta de paginação continuam síncronos — a primeira página é
-condição necessária para qualquer paginação posterior, então retry aqui
-não compõe com o auto-chunk e fica como follow-up.
+Todas as chamadas HTTP — POST inicial (``resultadoCompleta.do``), GET da
+primeira página (``trocaDePagina.do?pagina=1``, usado também para
+descobrir o total de páginas) e GETs paginados — delegam ao retry
+centralizado :meth:`juscraper.core.http.HTTPScraper._request_with_retry`
+(backoff exponencial, ``Retry-After`` numérico, retry em 403/429/5xx).
+Originalmente (#203) apenas os GETs paginados estavam cobertos; o gap do
+POST/GET inicial foi fechado no #255 (refs #233).
+
+``_request_with_retry`` é API contratual de ``HTTPScraper`` para subclasses
+e código irmão em ``juscraper.courts.*``: o underscore marca "interno ao
+juscraper" (não exportado em ``__all__``), não "privado da instância".
+Decisão registrada em #201. Daí o ``pylint: disable=protected-access``
+abaixo no nível de módulo.
 """
+# pylint: disable=protected-access
 from __future__ import annotations
 
 import logging
@@ -141,16 +149,19 @@ def download_cjsg_pages(
     first_page_url = f"{base_url}cjsg/trocaDePagina.do?tipoDeDecisao={tipo_param}&pagina=1"
 
     logger.info("Submetendo formulário de busca...")
-    post_resp = session.post(link_cjsg, data=body, timeout=30, allow_redirects=True)
-    post_resp.raise_for_status()
+    # Body do POST descartado: a resposta é só o "ack" do form submit; o HTML
+    # com os resultados vem do GET subsequente em ``trocaDePagina.do?pagina=1``.
+    scraper._request_with_retry(
+        "POST", link_cjsg, data=body, timeout=30, allow_redirects=True,
+    )
 
     time.sleep(sleep_time)
-    first_resp = session.get(
+    first_resp = scraper._request_with_retry(
+        "GET",
         first_page_url,
         timeout=30,
         headers={"Accept": "text/html; charset=latin1;", "Referer": link_cjsg},
     )
-    first_resp.raise_for_status()
     first_resp.encoding = "latin1"
     first_html = first_resp.text
 
@@ -181,10 +192,6 @@ def download_cjsg_pages(
         if conversation_id:
             query["conversationId"] = conversation_id
 
-        # pylint: disable=protected-access
-        # _request_with_retry é API contratual de HTTPScraper para subclasses/código
-        # irmão em juscraper.courts.*. Underscore marca "interno ao juscraper" (não
-        # exportado em __all__), não "privado da instância". Decisão registrada em #201.
         resp = scraper._request_with_retry(
             "GET",
             f"{base_url}cjsg/trocaDePagina.do",
