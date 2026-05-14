@@ -236,15 +236,15 @@ share the same retry loop via `_request_with_retry`. Defaults:
 |---------|---------|-------------------|
 | Retried statuses | `403`, `429`, `500`, `502`, `503`, `504` | constant `RETRYABLE_STATUSES` |
 | Max attempts | `3` (including the first) | `max_retries=` per call |
-| Backoff | `base_backoff ** attempt` → `2s`, `4s`, `8s` | `base_backoff=` per call |
+| Backoff | `base_backoff ** attempt` → `2s` then `4s` (sleeps run between attempts 1→2 and 2→3; the 3rd failure raises `RetryExhaustedError` without sleeping, so the default `8s` from `2 ** 3` only kicks in with `max_retries >= 4`) | `base_backoff=` per call |
 | `Retry-After` (numeric seconds) | Honored when present | n/a |
 | `Retry-After` (HTTP-date) | Ignored — falls back to backoff (#201) | n/a |
 | Inter-request pause | `sleep_time=1.0` from the scraper constructor | `jus.scraper("tjsp", sleep_time=5.0)` |
 
-The exponential backoff (max `8s` at attempt 3) resolves transient WAF
-blocks but does **not** always escape longer cooldowns. If you see
-`RetryExhaustedError(status_code=403)` (or `429`) repeatedly on the
-same scraper:
+The exponential backoff (`2s` then `4s` across the three default
+attempts) resolves transient WAF blocks but does **not** always escape
+longer cooldowns. If you see `RetryExhaustedError(status_code=403)`
+(or `429`) repeatedly on the same scraper:
 
 - **First**, increase `sleep_time` in the constructor so the pause
   between requests becomes longer than the WAF window. Doubling it

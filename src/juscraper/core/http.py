@@ -34,18 +34,18 @@ logger = logging.getLogger("juscraper.core.http")
 RETRYABLE_STATUSES: frozenset[int] = frozenset({403, 429, 500, 502, 503, 504})
 """Status codes que disparam retry com backoff exponencial.
 
-``403`` foi incluido por causa do TJSP eSAJ (#233): o WAF do eSAJ retorna 403
+``403`` foi incluído por causa do TJSP eSAJ (#233): o WAF do eSAJ retorna 403
 intermitente em raspagens longas, mesmo sem o cliente bater em rate limit
-classico (que daria 429). Como o 403 e produzido pelo WAF e nao por
-autenticacao/autorizacao do recurso, retentar com backoff resolve a maioria
-dos casos transitorios. 403 ``permanente`` (ex.: credenciais invalidas) ainda
-acaba caindo em ``RetryExhaustedError`` apos ``max_retries`` tentativas, o que
-e o sintoma certo — o WAF nao distingue os dois casos pelo status code.
+clássico (que daria 429). Como o 403 é produzido pelo WAF e não por
+autenticação/autorização do recurso, retentar com backoff resolve a maioria
+dos casos transitórios. 403 ``permanente`` (ex.: credenciais inválidas) ainda
+acaba caindo em ``RetryExhaustedError`` após ``max_retries`` tentativas, o que
+é o sintoma certo — o WAF não distingue os dois casos pelo status code.
 
-A decisao aplica-se globalmente: todos os scrapers que delegam ao
+A decisão aplica-se globalmente: todos os scrapers que delegam ao
 ``_request_with_retry`` herdam o comportamento. Consumidores que distinguem
-403-de-auth de 403-de-WAF (ex.: PDPJ, onde 403 e sempre token expirado)
-mantem retry local proprio em ``aggregators/<xx>/download.py`` em vez de
+403-de-auth de 403-de-WAF (ex.: PDPJ, onde 403 é sempre token expirado)
+mantêm retry local próprio em ``aggregators/<xx>/download.py`` em vez de
 delegar."""
 
 RequestFn: TypeAlias = Callable[..., requests.Response]

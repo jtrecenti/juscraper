@@ -145,6 +145,10 @@ def test_cjsg_post_inicial_retenta_403(tmp_path, mocker):
 
     assert isinstance(df, pd.DataFrame)
     assert CJSG_MIN_COLUMNS <= set(df.columns)
+    # POST 403 + POST 200 + GET 200 = 3 chamadas. Trava regressão caso o retry
+    # do POST inicial pare de acontecer (ex.: alguém remove o wrapping em
+    # ``_request_with_retry``).
+    assert len(responses.calls) == 3
 
 
 @responses.activate
@@ -161,3 +165,6 @@ def test_cjsg_get_1a_pagina_retenta_503(tmp_path, mocker):
 
     assert isinstance(df, pd.DataFrame)
     assert CJSG_MIN_COLUMNS <= set(df.columns)
+    # POST 200 + GET 503 + GET 200 = 3 chamadas. Trava regressão simétrica
+    # à do POST inicial.
+    assert len(responses.calls) == 3

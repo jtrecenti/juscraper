@@ -14,7 +14,14 @@ centralizado :meth:`juscraper.core.http.HTTPScraper._request_with_retry`
 (backoff exponencial, ``Retry-After`` numérico, retry em 403/429/5xx).
 Originalmente (#203) apenas os GETs paginados estavam cobertos; o gap do
 POST/GET inicial foi fechado no #255 (refs #233).
+
+``_request_with_retry`` é API contratual de ``HTTPScraper`` para subclasses
+e código irmão em ``juscraper.courts.*``: o underscore marca "interno ao
+juscraper" (não exportado em ``__all__``), não "privado da instância".
+Decisão registrada em #201. Daí o ``pylint: disable=protected-access``
+abaixo no nível de módulo.
 """
+# pylint: disable=protected-access
 from __future__ import annotations
 
 import logging
@@ -142,9 +149,6 @@ def download_cjsg_pages(
     first_page_url = f"{base_url}cjsg/trocaDePagina.do?tipoDeDecisao={tipo_param}&pagina=1"
 
     logger.info("Submetendo formulário de busca...")
-    # pylint: disable=protected-access
-    # _request_with_retry é API contratual de HTTPScraper para subclasses/código
-    # irmão em juscraper.courts.* — ver bloco análogo nos GETs paginados abaixo.
     # Body do POST descartado: a resposta é só o "ack" do form submit; o HTML
     # com os resultados vem do GET subsequente em ``trocaDePagina.do?pagina=1``.
     scraper._request_with_retry(
@@ -152,7 +156,6 @@ def download_cjsg_pages(
     )
 
     time.sleep(sleep_time)
-    # pylint: disable=protected-access
     first_resp = scraper._request_with_retry(
         "GET",
         first_page_url,
@@ -189,10 +192,6 @@ def download_cjsg_pages(
         if conversation_id:
             query["conversationId"] = conversation_id
 
-        # pylint: disable=protected-access
-        # _request_with_retry é API contratual de HTTPScraper para subclasses/código
-        # irmão em juscraper.courts.*. Underscore marca "interno ao juscraper" (não
-        # exportado em __all__), não "privado da instância". Decisão registrada em #201.
         resp = scraper._request_with_retry(
             "GET",
             f"{base_url}cjsg/trocaDePagina.do",
