@@ -1,14 +1,11 @@
 """Downloads raw results from the TJPI jurisprudence search (HTML scraping)."""
-import logging
 import re
 import time
 
-import requests
 from tqdm import tqdm
 
+from juscraper.core.http import RequestFn
 from juscraper.utils.pagination import extract_count_with_cascade
-
-logger = logging.getLogger(__name__)
 
 BASE_URL = "https://jurisprudencia.tjpi.jus.br/jurisprudences/search"
 RESULTS_PER_PAGE = 25
@@ -46,43 +43,6 @@ def build_cjsg_params(
     return params
 
 
-def _fetch_page(
-    session: requests.Session,
-    pesquisa: str,
-    page: int = 1,
-    tipo: str = "",
-    relator: str = "",
-    classe: str = "",
-    orgao: str = "",
-    data_min: str = "",
-    data_max: str = "",
-    max_retries: int = 3,
-) -> str:
-    """Fetch a single page of HTML results from the TJPI search."""
-    params = build_cjsg_params(
-        pesquisa=pesquisa, page=page,
-        tipo=tipo, relator=relator, classe=classe, orgao=orgao,
-        data_min=data_min, data_max=data_max,
-    )
-
-    for attempt in range(1, max_retries + 1):
-        try:
-            resp = session.get(BASE_URL, params=params, timeout=30)
-            resp.raise_for_status()
-            resp.encoding = "utf-8"
-            return resp.text
-        except requests.RequestException as exc:
-            if attempt == max_retries:
-                raise
-            wait = 2 ** attempt
-            logger.warning(
-                "TJPI request failed (attempt %d/%d): %s. Retrying in %ds...",
-                attempt, max_retries, exc, wait,
-            )
-            time.sleep(wait)
-    return ""  # unreachable
-
-
 _PAGINATION_CSS_SELECTORS: tuple[str, ...] = ("ul.pagination",)
 _PAGINATION_REGEXES: tuple[re.Pattern[str], ...] = (
     re.compile(r"[?&]page=(\d+)"),
@@ -105,7 +65,8 @@ def _get_total_pages(html: str) -> int:
 def cjsg_download_manager(
     pesquisa: str,
     paginas=None,
-    session: requests.Session | None = None,
+    *,
+    request_fn: RequestFn,
     **kwargs,
 ) -> list:
     """Download raw HTML pages from the TJPI jurisprudence search.
@@ -115,17 +76,17 @@ def cjsg_download_manager(
     Args:
         pesquisa: Search term.
         paginas (list, range, or None): Pages to download (1-based).
-        session: Optional requests.Session to reuse.
+        request_fn: HTTP callable that handles retry + raise_for_status — em
+            uso normal e ``TJPIScraper._request_with_retry`` (via
+            ``core.http.HTTPScraper``), centralizando backoff exponencial
+            para 429/5xx.
         **kwargs: Additional filter parameters (tipo, relator, classe, orgao).
     """
-    if session is None:
-        session = requests.Session()
-        session.headers.update({
-            "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-        })
-
-    def _get_page(pagina_1based):
-        html = _fetch_page(session, pesquisa, page=pagina_1based, **kwargs)
+    def _get_page(pagina_1based: int) -> str:
+        params = build_cjsg_params(pesquisa=pesquisa, page=pagina_1based, **kwargs)
+        resp = request_fn("GET", BASE_URL, params=params, timeout=30)
+        resp.encoding = "utf-8"
+        html = resp.text
         time.sleep(1)
         return html
 
