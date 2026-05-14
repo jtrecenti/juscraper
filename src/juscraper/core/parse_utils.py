@@ -51,7 +51,12 @@ def clean_html(text: str | None, decode_entities: bool = True) -> str | None:
     return _WHITESPACE_RE.sub(" ", text).strip()
 
 
-def coerce_date_columns(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
+def coerce_date_columns(
+    df: pd.DataFrame,
+    cols: list[str],
+    *,
+    date_format: str | None = None,
+) -> pd.DataFrame:
     """Coage colunas para ``date`` via ``pd.to_datetime(..., errors="coerce").dt.date``.
 
     Mutação **in-place** + retorno (padrão pandas para encadeamento). Colunas
@@ -60,13 +65,24 @@ def coerce_date_columns(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
     Args:
         df: DataFrame alvo.
         cols: Nomes de coluna candidatas a normalizar.
+        date_format: Formato strptime explícito repassado a ``pd.to_datetime``
+            (keyword-only). Use para tribunais que serializam datas em formato
+            ambíguo como ``DD/MM/AAAA`` — sem isso, o pandas pode interpretar o
+            valor no formato americano. Default ``None`` preserva o
+            comportamento de inferência do pandas (ISO e similares).
 
     Returns:
         O próprio ``df``.
+
+    Example:
+        >>> # Default: inferência do pandas (ISO e similares).
+        >>> coerce_date_columns(df, ["data_julgamento"])
+        >>> # Formato ambíguo DD/MM/AAAA — usar ``date_format`` explícito.
+        >>> coerce_date_columns(df, ["data_julgamento"], date_format="%d/%m/%Y")
     """
     if df.empty:
         return df
     for col in cols:
         if col in df.columns:
-            df[col] = pd.to_datetime(df[col], errors="coerce").dt.date
+            df[col] = pd.to_datetime(df[col], format=date_format, errors="coerce").dt.date
     return df

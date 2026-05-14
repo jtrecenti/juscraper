@@ -1,33 +1,25 @@
 """
 Scraper for the Tribunal de Justica do Tocantins (TJTO).
 """
-import logging
 from typing import Literal
 
 import pandas as pd
-import requests
 
-from juscraper.core.base import BaseScraper
+from juscraper.core.http import HTTPScraper
 from juscraper.utils.params import apply_input_pipeline_search
 
 from .download import TYPE_MINUTA_MAP, _fetch_ementa, cjsg_download_manager
 from .parse import cjsg_parse_manager
 from .schemas import InputCJPGTJTO, InputCJSGTJTO
 
-logger = logging.getLogger(__name__)
 
-
-class TJTOScraper(BaseScraper):
+class TJTOScraper(HTTPScraper):
     """Scraper for the Tribunal de Justica do Tocantins."""
 
     BASE_URL = "https://jurisprudencia.tjto.jus.br/consulta.php"
 
     def __init__(self):
         super().__init__("TJTO")
-        self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-        })
 
     def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJTO."""
@@ -37,12 +29,7 @@ class TJTOScraper(BaseScraper):
         """Stub: second instance case consultation not implemented for TJTO."""
         raise NotImplementedError("Consulta de processos de 2 grau nao implementada para TJTO.")
 
-    def _download_internal(
-        self,
-        inp,
-        instancia: str,
-        session: requests.Session | None = None,
-    ) -> list:
+    def _download_internal(self, inp, instancia: str) -> list:
         """Shared download logic for cjsg and cjpg.
 
         Receives a validated pydantic instance and dispatches to the
@@ -52,12 +39,10 @@ class TJTOScraper(BaseScraper):
         """
         type_minuta = TYPE_MINUTA_MAP.get(inp.tipo_documento, "1")
 
-        if session is None:
-            session = self.session
-
         return cjsg_download_manager(
             termo=inp.pesquisa,
             paginas=inp.paginas,
+            request_fn=self._request_with_retry,
             type_minuta=type_minuta,
             tip_criterio_inst=instancia,
             tip_criterio_data=inp.ordenacao,
@@ -65,7 +50,6 @@ class TJTOScraper(BaseScraper):
             dat_jul_ini=inp.data_julgamento_inicio or "",
             dat_jul_fim=inp.data_julgamento_fim or "",
             soementa=inp.soementa,
-            session=session,
         )
 
     # --- cjsg (2o grau) ---
@@ -80,7 +64,6 @@ class TJTOScraper(BaseScraper):
         data_julgamento_inicio: str | None = None,
         data_julgamento_fim: str | None = None,
         soementa: bool = False,
-        session: requests.Session | None = None,
         **kwargs,
     ) -> list:
         """Download raw HTML pages from the TJTO second-instance jurisprudence search.
@@ -104,7 +87,7 @@ class TJTOScraper(BaseScraper):
             numero_processo=numero_processo,
             soementa=soementa,
         )
-        return self._download_internal(inp, instancia="2", session=session)
+        return self._download_internal(inp, instancia="2")
 
     def cjsg_parse(self, resultados_brutos: list) -> pd.DataFrame:
         """Parse raw HTML pages downloaded by cjsg_download.
@@ -127,7 +110,6 @@ class TJTOScraper(BaseScraper):
         data_julgamento_inicio: str | None = None,
         data_julgamento_fim: str | None = None,
         soementa: bool = False,
-        session: requests.Session | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Busca jurisprudencia de 2o grau no TJTO (download + parse).
@@ -147,7 +129,6 @@ class TJTOScraper(BaseScraper):
             data_julgamento_fim (str | date | datetime | None): Data final
                 (mesmos formatos).
             soementa (bool): Se ``True``, restringe busca ao texto da ementa.
-            session (requests.Session | None): Sessao opcional para reuso.
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJTO`.
 
         Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
@@ -177,7 +158,6 @@ class TJTOScraper(BaseScraper):
             data_julgamento_inicio=data_julgamento_inicio,
             data_julgamento_fim=data_julgamento_fim,
             soementa=soementa,
-            session=session,
             **kwargs,
         )
         return self.cjsg_parse(brutos)
@@ -194,7 +174,6 @@ class TJTOScraper(BaseScraper):
         data_julgamento_inicio: str | None = None,
         data_julgamento_fim: str | None = None,
         soementa: bool = False,
-        session: requests.Session | None = None,
         **kwargs,
     ) -> list:
         """Download raw HTML pages from the TJTO first-instance jurisprudence search.
@@ -219,7 +198,7 @@ class TJTOScraper(BaseScraper):
             numero_processo=numero_processo,
             soementa=soementa,
         )
-        return self._download_internal(inp, instancia="1", session=session)
+        return self._download_internal(inp, instancia="1")
 
     def cjpg_parse(self, resultados_brutos: list) -> pd.DataFrame:
         """Parse raw HTML pages downloaded by cjpg_download.
@@ -242,7 +221,6 @@ class TJTOScraper(BaseScraper):
         data_julgamento_inicio: str | None = None,
         data_julgamento_fim: str | None = None,
         soementa: bool = False,
-        session: requests.Session | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Busca jurisprudencia de 1o grau no TJTO (download + parse).
@@ -264,7 +242,6 @@ class TJTOScraper(BaseScraper):
             data_julgamento_inicio=data_julgamento_inicio,
             data_julgamento_fim=data_julgamento_fim,
             soementa=soementa,
-            session=session,
             **kwargs,
         )
         return self.cjpg_parse(brutos)
@@ -280,4 +257,4 @@ class TJTOScraper(BaseScraper):
         Returns:
             Dict with ementa text and process number.
         """
-        return _fetch_ementa(self.session, uuid)
+        return _fetch_ementa(self._request_with_retry, uuid)
