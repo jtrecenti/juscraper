@@ -112,7 +112,7 @@ def extract_escolha_button_id(html: str, tipo: str = "Acórdãos") -> str:
     raise ValueError(f"Could not find escolha button for '{tipo}'")
 
 
-def extract_pagination_ids(html: str):
+def extract_pagination_ids(html: str) -> tuple[str, str]:
     """Extract the form ID and datascroller ID for AJAX pagination."""
     # The datascroller ID reveals the form ID (e.g. "j_id81:j_id87")
     scroller_match = re.search(
@@ -152,14 +152,14 @@ def extract_submit_id(search_html: str | None) -> str:
 def build_cjsg_form_body(
     viewstate: str,
     submit_id: str,
-    pesquisa: str,
+    pesquisa: str | None,
     *,
-    data_julgamento_inicio: str = "",
-    data_julgamento_fim: str = "",
-    relator: str = "",
-    classe: str = "",
-    assunto: str = "",
-    meio_tramitacao: str = "",
+    data_julgamento_inicio: str | None = None,
+    data_julgamento_fim: str | None = None,
+    relator: str | None = None,
+    classe: str | None = None,
+    assunto: str | None = None,
+    meio_tramitacao: str | None = None,
     tipo_decisao: str = "acordaos",
     current_date_hint: str = _CURRENT_DATE_HINT,
 ) -> dict[str, str]:
@@ -170,7 +170,8 @@ def build_cjsg_form_body(
     so aparecem quando ativos (ausencia difere de string vazia para o
     backend). Todos os valores sao retornados como strings para que
     :func:`responses.matchers.urlencoded_params_matcher` possa ser usado
-    com ``allow_blank=True`` nos contratos.
+    com ``allow_blank=True`` nos contratos. ``None`` em qualquer filtro
+    opcional e tratado como string vazia (sem filtro).
     """
     body: dict[str, str] = {
         "formPesquisaJurisprudencia": "formPesquisaJurisprudencia",
@@ -180,14 +181,14 @@ def build_cjsg_form_body(
         "formPesquisaJurisprudencia:j_id48": "",
         "formPesquisaJurisprudencia:numeroAntigoDigito": "",
         "formPesquisaJurisprudencia:numeroAntigoBarramento": "",
-        "formPesquisaJurisprudencia:j_id59InputDate": data_julgamento_inicio,
+        "formPesquisaJurisprudencia:j_id59InputDate": data_julgamento_inicio or "",
         "formPesquisaJurisprudencia:j_id59InputCurrentDate": current_date_hint,
-        "formPesquisaJurisprudencia:periodoFimInputDate": data_julgamento_fim,
+        "formPesquisaJurisprudencia:periodoFimInputDate": data_julgamento_fim or "",
         "formPesquisaJurisprudencia:periodoFimInputCurrentDate": current_date_hint,
-        "formPesquisaJurisprudencia:selectRelator": relator,
-        "formPesquisaJurisprudencia:selectClasseCNJ": classe,
-        "formPesquisaJurisprudencia:selectAssuntoCNJ": assunto,
-        "formPesquisaJurisprudencia:selectMeioTramitacao": meio_tramitacao,
+        "formPesquisaJurisprudencia:selectRelator": relator or "",
+        "formPesquisaJurisprudencia:selectClasseCNJ": classe or "",
+        "formPesquisaJurisprudencia:selectAssuntoCNJ": assunto or "",
+        "formPesquisaJurisprudencia:selectMeioTramitacao": meio_tramitacao or "",
         "javax.faces.ViewState": viewstate,
         submit_id: submit_id,
     }
@@ -230,12 +231,12 @@ def step2_post_search(
         viewstate=viewstate,
         submit_id=submit_id,
         pesquisa=pesquisa,
-        data_julgamento_inicio=data_julgamento_inicio or "",
-        data_julgamento_fim=data_julgamento_fim or "",
-        relator=relator or "",
-        classe=classe or "",
-        assunto=assunto or "",
-        meio_tramitacao=meio_tramitacao or "",
+        data_julgamento_inicio=data_julgamento_inicio,
+        data_julgamento_fim=data_julgamento_fim,
+        relator=relator,
+        classe=classe,
+        assunto=assunto,
+        meio_tramitacao=meio_tramitacao,
         tipo_decisao=tipo_decisao,
     )
     resp = request_fn("POST", CONSULTA_URL, data=data, timeout=30)
