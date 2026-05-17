@@ -198,6 +198,31 @@ class TJSPScraper(EsajSearchScraper):
         """
         return super().cjsg(pesquisa=pesquisa, paginas=paginas, **kwargs)
 
+    def _cjsg_count_only(
+        self,
+        pesquisa: str,
+        paginas: int | list | range | None,
+        **kwargs: Any,
+    ) -> int:
+        """Override TJSP — valida limite de 120 chars antes do probe (#92).
+
+        O caminho normal de cjsg em TJSP passa por :meth:`cjsg_download`
+        (override), que roda :func:`validate_pesquisa_length` antes de
+        delegar para a base. Com ``count_only=True``, o ramo na base desvia
+        direto para :meth:`_cjsg_count_only` e pula esse check — entao
+        replicamos a validacao aqui antes de delegar para
+        :meth:`EsajSearchScraper._cjsg_count_only`. Espelha o padrao de
+        :meth:`cjsg_download` (pop manual dos search aliases para evitar
+        reprocessamento no helper de pipeline).
+        """
+        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
+        for alias in SEARCH_ALIASES:
+            kwargs.pop(alias, None)
+        validate_pesquisa_length(pesquisa, endpoint="CJSG")
+        return super()._cjsg_count_only(
+            pesquisa=pesquisa, paginas=paginas, **kwargs,
+        )
+
     def cjsg_download(
         self,
         pesquisa: str = "",
@@ -409,6 +434,13 @@ class TJSPScraper(EsajSearchScraper):
         e ``auto_chunk=True``, itera janelas disjuntas via
         :func:`iter_date_windows`. ``auto_chunk=False`` + janela > 366d
         levanta :class:`ValueError` (consistencia com caminho normal).
+
+        **Fail-fast no auto-chunk**: diferente do caminho normal
+        (:func:`run_auto_chunk`), que tolera falha por janela como
+        :class:`UserWarning` e devolve resultado parcial deduplicado, este
+        probe usa ``sum()`` — qualquer :class:`ValueError` em uma janela
+        aborta toda a iteracao. Decisao deliberada: estimativa parcial sem
+        aviso seria pior que erro explicito.
         """
         if paginas is not None:
             warnings.warn(
@@ -430,7 +462,7 @@ class TJSPScraper(EsajSearchScraper):
         )
         validate_pesquisa_length(inp.pesquisa, endpoint="CJPG")
 
-        auto_chunk = getattr(inp, "auto_chunk", True)
+        auto_chunk = inp.auto_chunk
         di = inp.data_julgamento_inicio
         df_ = inp.data_julgamento_fim
 

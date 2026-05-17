@@ -395,7 +395,17 @@ class EsajSearchScraper(HTTPScraper):
         e ``auto_chunk=True`` (default), itera janelas disjuntas
         (:func:`iter_date_windows`) e soma. ``auto_chunk=False`` + janela
         > 366 dias levanta :class:`ValueError` (mesmo comportamento do
-        caminho normal).
+        caminho normal). Intervalo ``data_publicacao_*`` > 366 dias tambem
+        levanta :class:`ValueError` em qualquer ``auto_chunk`` — auto-chunk
+        so pivota em ``data_julgamento``, entao publicacao precisa ser
+        validada explicitamente para consistencia com o caminho normal.
+
+        **Fail-fast no auto-chunk**: diferente do caminho normal
+        (:func:`run_auto_chunk`), que tolera falha por janela como
+        :class:`UserWarning` e devolve resultado parcial deduplicado, este
+        probe usa ``sum()`` — qualquer :class:`ValueError` em uma janela
+        aborta toda a iteracao. Decisao deliberada: estimativa parcial sem
+        aviso seria pior que erro explicito.
         """
         if paginas is not None:
             warnings.warn(
@@ -404,31 +414,47 @@ class EsajSearchScraper(HTTPScraper):
                 stacklevel=3,
             )
 
-        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-
         # Validacao do schema com max_dias=None — vamos iterar janelas
         # manualmente ou disparar ValueError abaixo conforme auto_chunk.
+        # ``consume_pesquisa_aliases=True`` deixa o helper consumir
+        # ``query``/``termo`` em uma unica passagem; sem ``nullable_pesquisa``
+        # porque o caminho normal de cjsg tambem nao aceita pesquisa vazia
+        # sem filtro (excecao TJSP, onde a chamada parte com ``pesquisa=""``
+        # e seguiria pelo mesmo fluxo do caminho normal).
         input_model = apply_input_pipeline_search(
             self.INPUT_CJSG,
             f"{type(self).__name__}.cjsg(count_only=True)",
             pesquisa=pesquisa,
             paginas=None,
             kwargs=kwargs,
+            consume_pesquisa_aliases=True,
             max_dias=None,
             origem_mensagem="O eSAJ",
         )
 
-        di = getattr(input_model, "data_julgamento_inicio", None)
-        df_ = getattr(input_model, "data_julgamento_fim", None)
-        auto_chunk = getattr(input_model, "auto_chunk", True)
-        tipo_decisao = getattr(input_model, "tipo_decisao", "acordao")
+        di = input_model.data_julgamento_inicio
+        df_ = input_model.data_julgamento_fim
+        auto_chunk = input_model.auto_chunk
+        tipo_decisao = input_model.tipo_decisao
+
+        # ``data_publicacao_*`` existe so em InputCJSGEsajPuro (via
+        # DataPublicacaoMixin); InputCJSGTJSP nao herda. ``getattr`` cobre
+        # ambos os schemas sem ramo if/else.
+        dp_i = getattr(input_model, "data_publicacao_inicio", None)
+        dp_f = getattr(input_model, "data_publicacao_fim", None)
 
         # auto_chunk=False + janela > 366d: replicar o ValueError do caminho
         # normal para consistencia. validate_intervalo_datas tolera None.
+        # ``data_julgamento`` so quando auto_chunk=False (auto_chunk=True
+        # divide em janelas). ``data_publicacao`` sempre, porque auto-chunk
+        # nao pivota em publicacao — caminho normal valida nos dois fluxos.
         if not auto_chunk:
             validate_intervalo_datas(
                 di, df_, max_dias=366, rotulo="data_julgamento", origem="O eSAJ",
             )
+        validate_intervalo_datas(
+            dp_i, dp_f, max_dias=366, rotulo="data_publicacao", origem="O eSAJ",
+        )
 
         def _probe(win_i: str | None, win_f: str | None) -> int:
             body_input = input_model.model_copy(update={

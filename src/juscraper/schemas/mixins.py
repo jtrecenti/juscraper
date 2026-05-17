@@ -116,6 +116,13 @@ class CountOnlyMixin(BaseModel):
     no caminho normal quando ha documentos republicados (mesma chave em
     janelas distintas).
 
+    **Fail-fast no auto-chunk** (divergencia deliberada do caminho normal):
+    o caminho normal (:func:`juscraper.courts._esaj.base.run_auto_chunk`)
+    tolera falha por janela como :class:`UserWarning` e devolve parcial
+    deduplicado. ``count_only`` usa ``sum()`` — qualquer ``ValueError`` em
+    uma janela aborta toda a iteracao e propaga limpo. Estimativa parcial
+    silenciosa seria mais perigosa que erro explicito.
+
     Tribunais que ainda nao implementam ``count_only`` **nao devem herdar**
     deste mixin — ``extra='forbid'`` da classe concreta rejeita o flag com
     :class:`TypeError`, sinalizando ao usuario que o endpoint nao expoe a

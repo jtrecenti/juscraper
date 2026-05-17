@@ -5,6 +5,7 @@ Mocks ``resultadoCompleta.do`` + ``trocaDePagina.do`` with captured samples
 contract. Covers typical multi-page, single-page, and zero-result scenarios.
 """
 import pandas as pd
+import pytest
 import responses
 from responses.matchers import query_param_matcher, urlencoded_params_matcher
 
@@ -105,3 +106,22 @@ def test_cjsg_count_only_via_esaj_base(tmp_path, mocker):
     assert isinstance(n, int)
     assert n == 13929  # totalResultadoAbaRetornoFiltro-A no sample
     assert len(responses.calls) == 2  # POST + 1 GET, sem pagina 2
+
+
+def test_cjsg_count_only_rejects_long_data_publicacao_window(tmp_path):
+    """count_only=True com data_publicacao_* > 366d levanta ValueError (#92).
+
+    O auto-chunk so pivota em ``data_julgamento`` — ``data_publicacao`` nao
+    e dividida em janelas. O caminho normal valida o intervalo de
+    publicacao via ``apply_input_pipeline_search(max_dias=366)``; o probe
+    ``_cjsg_count_only`` precisa replicar para nao deixar passar janela
+    > 366d silenciosamente para o backend.
+    """
+    scraper = jus.scraper("tjac", download_path=str(tmp_path))
+    with pytest.raises(ValueError, match="366"):
+        scraper.cjsg(
+            "dano moral",
+            data_publicacao_inicio="01/01/2020",
+            data_publicacao_fim="01/01/2022",
+            count_only=True,
+        )
