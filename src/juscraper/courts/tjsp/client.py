@@ -5,14 +5,23 @@ import logging
 import os
 import shutil
 import tempfile
+import warnings
 from typing import Any, Literal
 
 from pydantic import BaseModel
 
-from ...utils.params import SEARCH_ALIASES, apply_input_pipeline_search, normalize_pesquisa, pop_deprecated_alias
+from ...utils.params import (
+    SEARCH_ALIASES,
+    apply_input_pipeline_search,
+    iter_date_windows,
+    normalize_pesquisa,
+    pop_deprecated_alias,
+    validate_intervalo_datas,
+)
 from .._esaj.base import EsajSearchScraper, run_auto_chunk
 from .cjpg_download import cjpg_download as cjpg_download_mod
-from .cjpg_parse import cjpg_n_pags, cjpg_parse_manager
+from .cjpg_download import fetch_cjpg_first_page
+from .cjpg_parse import cjpg_n_pags, cjpg_n_results, cjpg_parse_manager
 from .cpopg_download import cpopg_download_api, cpopg_download_html
 from .cpopg_parse import cpopg_parse_manager, get_cpopg_download_links
 from .cposg_download import cposg_download_api, cposg_download_html
@@ -146,6 +155,11 @@ class TJSPScraper(EsajSearchScraper):
                   intervalo ``data_julgamento_*`` excede 366 dias,
                   divide internamente em janelas, baixa cada uma e
                   concatena com dedup por ``cd_acordao``.
+                * ``count_only`` (bool): Default ``False``. Se ``True``,
+                  faz so a chamada inicial e retorna ``int`` com o total
+                  de resultados em vez de ``pd.DataFrame``. Util pra
+                  estimar wall-clock antes de coleta longa (issue #92).
+                  Soma bruta cross-janela em ``auto_chunk=True``.
 
         Aliases deprecados (popados com ``DeprecationWarning`` antes do
         pydantic):
@@ -160,10 +174,11 @@ class TJSPScraper(EsajSearchScraper):
             QueryTooLongError: Quando ``pesquisa`` excede 120 chars.
 
         Returns:
-            pd.DataFrame: Resultados parseados; colunas conforme
-            :class:`OutputCJSGTJSP` (``processo``, ``ementa``,
+            pd.DataFrame | int: Resultados parseados (colunas conforme
+            :class:`OutputCJSGTJSP` — ``processo``, ``ementa``,
             ``data_julgamento``, ``cd_acordao``, ``relator``,
-            ``orgao_julgador``).
+            ``orgao_julgador``); ``int`` com o total de resultados quando
+            ``count_only=True``.
 
         Exemplo:
             >>> import juscraper as jus
@@ -171,6 +186,8 @@ class TJSPScraper(EsajSearchScraper):
             >>> df = tjsp.cjsg("dano moral", paginas=range(1, 3),
             ...                tipo_decisao="acordao",
             ...                data_julgamento_inicio="01/01/2024")
+            >>> # Estimativa pre-scraping (issue #92):
+            >>> n = tjsp.cjsg("dano moral", count_only=True)
 
         See also:
             :class:`~juscraper.courts.tjsp.schemas.InputCJSGTJSP` —
@@ -180,6 +197,31 @@ class TJSPScraper(EsajSearchScraper):
             ``data_julgamento_*`` > 366 dias.
         """
         return super().cjsg(pesquisa=pesquisa, paginas=paginas, **kwargs)
+
+    def _cjsg_count_only(
+        self,
+        pesquisa: str,
+        paginas: int | list | range | None,
+        **kwargs: Any,
+    ) -> int:
+        """Override TJSP — valida limite de 120 chars antes do probe (#92).
+
+        O caminho normal de cjsg em TJSP passa por :meth:`cjsg_download`
+        (override), que roda :func:`validate_pesquisa_length` antes de
+        delegar para a base. Com ``count_only=True``, o ramo na base desvia
+        direto para :meth:`_cjsg_count_only` e pula esse check — entao
+        replicamos a validacao aqui antes de delegar para
+        :meth:`EsajSearchScraper._cjsg_count_only`. Espelha o padrao de
+        :meth:`cjsg_download` (pop manual dos search aliases para evitar
+        reprocessamento no helper de pipeline).
+        """
+        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
+        for alias in SEARCH_ALIASES:
+            kwargs.pop(alias, None)
+        validate_pesquisa_length(pesquisa, endpoint="CJSG")
+        return super()._cjsg_count_only(
+            pesquisa=pesquisa, paginas=paginas, **kwargs,
+        )
 
     def cjsg_download(
         self,
@@ -288,6 +330,14 @@ class TJSPScraper(EsajSearchScraper):
                   divide internamente em janelas, baixa cada uma e
                   concatena com dedup por ``id_processo``. Veja a secao
                   "Auto-chunking" abaixo.
+                * ``count_only`` (bool): Default ``False``. Se ``True``,
+                  faz so o GET inicial, extrai o total de resultados via
+                  ``cjpg_n_results`` e retorna ``int`` em vez de
+                  ``pd.DataFrame``. Util pra estimar wall-clock antes de
+                  coleta longa (issue #92). Com ``auto_chunk=True`` +
+                  janela > 366 dias, itera janelas disjuntas e soma —
+                  soma bruta (sem dedup por ``id_processo``). ``paginas``
+                  e ignorado (emite ``UserWarning``).
 
         Aliases deprecados (popados com ``DeprecationWarning`` antes do
         pydantic):
@@ -308,11 +358,12 @@ class TJSPScraper(EsajSearchScraper):
                 sao passados simultaneamente.
 
         Returns:
-            pd.DataFrame: Resultados parseados; colunas conforme
-            :class:`OutputCJPGTJSP` (``id_processo``, ``cd_processo`` e
+            pd.DataFrame | int: Resultados parseados (colunas conforme
+            :class:`OutputCJPGTJSP` — ``id_processo``, ``cd_processo`` e
             campos extras emitidos pelo parser via ``extra='allow'`` —
             ``classe``, ``assunto``, ``magistrado``, ``comarca``,
-            ``foro``, ``vara``, ``data_disponibilizacao``, ``decisao``).
+            ``foro``, ``vara``, ``data_disponibilizacao``, ``decisao``);
+            ``int`` com o total de resultados quando ``count_only=True``.
 
         Exemplo:
             >>> import juscraper as jus
@@ -324,6 +375,8 @@ class TJSPScraper(EsajSearchScraper):
             >>> df = tjsp.cjpg(paginas=1, classe=12728, assunto=[3607, 5885],
             ...                data_julgamento_inicio="01/01/2024",
             ...                data_julgamento_fim="31/03/2024")
+            >>> # Estimativa pre-scraping (issue #92):
+            >>> n = tjsp.cjpg("dano moral", count_only=True)
 
         See also:
             :class:`~juscraper.courts.tjsp.schemas.InputCJPGTJSP` —
@@ -344,6 +397,10 @@ class TJSPScraper(EsajSearchScraper):
         # delegar para ``cjpg_download``. Refs #232.
         _pop_cjpg_plural_aliases(kwargs)
 
+        # count_only=True: probe leve antes do run_auto_chunk (issue #92).
+        if kwargs.get("count_only", False):
+            return self._cjpg_count_only(pesquisa=pesquisa, paginas=paginas, **kwargs)
+
         chunked = run_auto_chunk(
             method=self.cjpg,
             method_label="TJSPScraper.cjpg()",
@@ -361,6 +418,77 @@ class TJSPScraper(EsajSearchScraper):
             return self.cjpg_parse(path)
         finally:
             shutil.rmtree(path, ignore_errors=True)
+
+    def _cjpg_count_only(
+        self,
+        pesquisa: str,
+        paginas: int | list | range | None,
+        **kwargs: Any,
+    ) -> int:
+        """Probe leve para ``cjpg(count_only=True)`` — refs #92.
+
+        Faz o GET inicial por janela, extrai ``n_results`` via
+        :func:`cjpg_n_results` e retorna a soma. ``paginas`` e ignorado.
+
+        Multi-janela: se o intervalo ``data_julgamento_*`` excede 366 dias
+        e ``auto_chunk=True``, itera janelas disjuntas via
+        :func:`iter_date_windows`. ``auto_chunk=False`` + janela > 366d
+        levanta :class:`ValueError` (consistencia com caminho normal).
+
+        **Fail-fast no auto-chunk**: diferente do caminho normal
+        (:func:`run_auto_chunk`), que tolera falha por janela como
+        :class:`UserWarning` e devolve resultado parcial deduplicado, este
+        probe usa ``sum()`` — qualquer :class:`ValueError` em uma janela
+        aborta toda a iteracao. Decisao deliberada: estimativa parcial sem
+        aviso seria pior que erro explicito.
+        """
+        if paginas is not None:
+            warnings.warn(
+                "paginas e ignorado quando count_only=True (probe sempre olha so a pagina 1).",
+                UserWarning,
+                stacklevel=3,
+            )
+
+        inp = apply_input_pipeline_search(
+            InputCJPGTJSP,
+            f"{type(self).__name__}.cjpg(count_only=True)",
+            pesquisa=pesquisa,
+            paginas=None,
+            kwargs=kwargs,
+            consume_pesquisa_aliases=True,
+            nullable_pesquisa=True,
+            max_dias=None,
+            origem_mensagem="O eSAJ",
+        )
+        validate_pesquisa_length(inp.pesquisa, endpoint="CJPG")
+
+        auto_chunk = inp.auto_chunk
+        di = inp.data_julgamento_inicio
+        df_ = inp.data_julgamento_fim
+
+        if not auto_chunk:
+            validate_intervalo_datas(
+                di, df_, max_dias=366, rotulo="data_julgamento", origem="O eSAJ",
+            )
+
+        def _probe(win_i: str | None, win_f: str | None) -> int:
+            r0 = fetch_cjpg_first_page(
+                pesquisa=inp.pesquisa,
+                session=self.session,
+                u_base=self.u_base,
+                classe=inp.classe,
+                assunto=inp.assunto,
+                vara=inp.vara,
+                id_processo=inp.id_processo,
+                data_inicio=win_i,
+                data_fim=win_f,
+            )
+            return cjpg_n_results(r0.content)
+
+        if not auto_chunk or di is None or df_ is None:
+            return _probe(di, df_)
+
+        return sum(_probe(win_i, win_f) for win_i, win_f in iter_date_windows(di, df_, max_dias=366))
 
     def cjpg_download(
         self,

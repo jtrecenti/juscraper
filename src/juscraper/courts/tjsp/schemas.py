@@ -23,6 +23,7 @@ from pydantic import BaseModel, ConfigDict
 from ...schemas import (
     AutoChunkMixin,
     CnjInputBase,
+    CountOnlyMixin,
     DataJulgamentoMixin,
     IdFiltro,
     IdFiltroUnico,
@@ -32,7 +33,7 @@ from ...schemas import (
 from ...schemas.cjsg import OutputCJSGBase
 
 
-class InputCJSGTJSP(SearchBase, DataJulgamentoMixin, AutoChunkMixin):
+class InputCJSGTJSP(SearchBase, DataJulgamentoMixin, AutoChunkMixin, CountOnlyMixin):
     """Accepted input for TJSP ``cjsg``. Unknown kwargs raise via ``extra='forbid'``.
 
     Herda filtro de data de julgamento via :class:`DataJulgamentoMixin`.
@@ -65,7 +66,7 @@ class OutputCJSGTJSP(OutputCJSGBase):
     orgao_julgador: str | None = None
 
 
-class InputCJPGTJSP(SearchBase, DataJulgamentoMixin, AutoChunkMixin):
+class InputCJPGTJSP(SearchBase, DataJulgamentoMixin, AutoChunkMixin, CountOnlyMixin):
     """Accepted input for TJSP ``cjpg``. Unknown kwargs raise via ``extra='forbid'``.
 
     Sobrescreve ``pesquisa`` com default vazio porque o TJSP permite buscar

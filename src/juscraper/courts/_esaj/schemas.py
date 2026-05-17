@@ -10,6 +10,7 @@ from typing import Literal
 
 from ...schemas import (
     AutoChunkMixin,
+    CountOnlyMixin,
     DataJulgamentoMixin,
     DataPublicacaoMixin,
     IdFiltro,
@@ -21,7 +22,9 @@ from ...schemas import (
 from ...schemas.cjsg import OutputCJSGBase
 
 
-class InputCJSGEsajPuro(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin, AutoChunkMixin):
+class InputCJSGEsajPuro(
+    SearchBase, DataJulgamentoMixin, DataPublicacaoMixin, AutoChunkMixin, CountOnlyMixin,
+):
     """Accepted input for TJAC/TJAL/TJAM/TJCE/TJMS ``cjsg``.
 
     Inherits ``extra='forbid'`` from :class:`SearchBase`, so unknown keyword

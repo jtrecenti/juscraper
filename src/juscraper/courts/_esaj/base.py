@@ -34,10 +34,11 @@ from ...utils.params import (
     pop_normalize_aliases,
     raise_on_extra_kwargs,
     run_chunked_search,
+    validate_intervalo_datas,
 )
-from .download import download_cjsg_pages
+from .download import download_cjsg_pages, fetch_cjsg_first_page
 from .forms import build_cjsg_form_body
-from .parse import cjsg_n_pags, cjsg_parse_manager
+from .parse import cjsg_n_pags, cjsg_n_results, cjsg_parse_manager
 from .schemas import InputCJSGEsajPuro
 
 logger = logging.getLogger("juscraper._esaj.base")
@@ -300,6 +301,16 @@ class EsajSearchScraper(HTTPScraper):
                   divide internamente em janelas, baixa cada uma e
                   concatena com dedup por ``cd_acordao``. Veja a secao
                   "Auto-chunking" abaixo.
+                * ``count_only`` (bool): Default ``False``. Se ``True``,
+                  faz so a chamada inicial da pagina 1, extrai o total
+                  de resultados via ``cjsg_n_results`` e retorna ``int``
+                  em vez de ``pd.DataFrame``. Util pra estimar wall-clock
+                  antes de uma coleta longa (issue #92). Com
+                  ``auto_chunk=True`` + janela > 366 dias, itera janelas
+                  disjuntas e soma — **soma bruta** (sem dedup por
+                  ``cd_acordao``), pode divergir ligeiramente de
+                  ``len(cjsg(...))`` quando ha acordaos republicados.
+                  ``paginas`` e ignorado (emite ``UserWarning``).
 
         Aliases deprecados (popados com ``DeprecationWarning`` antes do
         pydantic):
@@ -315,16 +326,19 @@ class EsajSearchScraper(HTTPScraper):
             ValidationError: Quando um filtro tem formato invalido.
 
         Returns:
-            pd.DataFrame: Resultados parseados; colunas conforme
-            :class:`OutputCJSGEsaj` (``processo``, ``ementa``, ``relator``
+            pd.DataFrame | int: Resultados parseados (colunas conforme
+            :class:`OutputCJSGEsaj` — ``processo``, ``ementa``, ``relator``
             via mixin, ``data_publicacao`` via mixin, ``cd_acordao``,
-            ``cd_foro``).
+            ``cd_foro``); ``int`` com o total de resultados quando
+            ``count_only=True``.
 
         Exemplo:
             >>> import juscraper as jus
             >>> tjac = jus.scraper("tjac")
             >>> df = tjac.cjsg("dano moral", paginas=range(1, 3),
             ...                data_julgamento_inicio="01/01/2024")
+            >>> # Estimativa pre-scraping (issue #92):
+            >>> n = tjac.cjsg("dano moral", count_only=True)
 
         See also:
             :class:`InputCJSGEsajPuro` (ou
@@ -342,6 +356,11 @@ class EsajSearchScraper(HTTPScraper):
             comportamento estrito antigo (``ValueError`` em janelas
             longas), passe ``auto_chunk=False``.
         """
+        # count_only=True: probe leve antes do run_auto_chunk (issue #92).
+        # auto_chunk soma DataFrames com dedup; count_only soma ints brutos.
+        if kwargs.get("count_only", False):
+            return self._cjsg_count_only(pesquisa=pesquisa, paginas=paginas, **kwargs)
+
         chunked = run_auto_chunk(
             method=self.cjsg,
             method_label=f"{type(self).__name__}.cjsg()",
@@ -359,6 +378,104 @@ class EsajSearchScraper(HTTPScraper):
             return self.cjsg_parse(path)
         finally:
             shutil.rmtree(path, ignore_errors=True)
+
+    def _cjsg_count_only(
+        self,
+        pesquisa: str,
+        paginas: int | list | range | None,
+        **kwargs: Any,
+    ) -> int:
+        """Probe leve para ``cjsg(count_only=True)`` — refs #92.
+
+        Faz POST + GET da primeira pagina por janela, extrai ``n_results``
+        via :func:`cjsg_n_results` e retorna a soma. ``paginas`` e
+        ignorado (count_only sempre olha a pagina 1).
+
+        Multi-janela: se o intervalo ``data_julgamento_*`` excede 366 dias
+        e ``auto_chunk=True`` (default), itera janelas disjuntas
+        (:func:`iter_date_windows`) e soma. ``auto_chunk=False`` + janela
+        > 366 dias levanta :class:`ValueError` (mesmo comportamento do
+        caminho normal). Intervalo ``data_publicacao_*`` > 366 dias tambem
+        levanta :class:`ValueError` em qualquer ``auto_chunk`` — auto-chunk
+        so pivota em ``data_julgamento``, entao publicacao precisa ser
+        validada explicitamente para consistencia com o caminho normal.
+
+        **Fail-fast no auto-chunk**: diferente do caminho normal
+        (:func:`run_auto_chunk`), que tolera falha por janela como
+        :class:`UserWarning` e devolve resultado parcial deduplicado, este
+        probe usa ``sum()`` — qualquer :class:`ValueError` em uma janela
+        aborta toda a iteracao. Decisao deliberada: estimativa parcial sem
+        aviso seria pior que erro explicito.
+        """
+        if paginas is not None:
+            warnings.warn(
+                "paginas e ignorado quando count_only=True (probe sempre olha so a pagina 1).",
+                UserWarning,
+                stacklevel=3,
+            )
+
+        # Validacao do schema com max_dias=None — vamos iterar janelas
+        # manualmente ou disparar ValueError abaixo conforme auto_chunk.
+        # ``consume_pesquisa_aliases=True`` deixa o helper consumir
+        # ``query``/``termo`` em uma unica passagem; sem ``nullable_pesquisa``
+        # porque o caminho normal de cjsg tambem nao aceita pesquisa vazia
+        # sem filtro (excecao TJSP, onde a chamada parte com ``pesquisa=""``
+        # e seguiria pelo mesmo fluxo do caminho normal).
+        input_model = apply_input_pipeline_search(
+            self.INPUT_CJSG,
+            f"{type(self).__name__}.cjsg(count_only=True)",
+            pesquisa=pesquisa,
+            paginas=None,
+            kwargs=kwargs,
+            consume_pesquisa_aliases=True,
+            max_dias=None,
+            origem_mensagem="O eSAJ",
+        )
+
+        di = input_model.data_julgamento_inicio
+        df_ = input_model.data_julgamento_fim
+        auto_chunk = input_model.auto_chunk
+        tipo_decisao = input_model.tipo_decisao
+
+        # ``data_publicacao_*`` existe so em InputCJSGEsajPuro (via
+        # DataPublicacaoMixin); InputCJSGTJSP nao herda. ``getattr`` cobre
+        # ambos os schemas sem ramo if/else.
+        dp_i = getattr(input_model, "data_publicacao_inicio", None)
+        dp_f = getattr(input_model, "data_publicacao_fim", None)
+
+        # auto_chunk=False + janela > 366d: replicar o ValueError do caminho
+        # normal para consistencia. validate_intervalo_datas tolera None.
+        # ``data_julgamento`` so quando auto_chunk=False (auto_chunk=True
+        # divide em janelas). ``data_publicacao`` sempre, porque auto-chunk
+        # nao pivota em publicacao — caminho normal valida nos dois fluxos.
+        if not auto_chunk:
+            validate_intervalo_datas(
+                di, df_, max_dias=366, rotulo="data_julgamento", origem="O eSAJ",
+            )
+        validate_intervalo_datas(
+            dp_i, dp_f, max_dias=366, rotulo="data_publicacao", origem="O eSAJ",
+        )
+
+        def _probe(win_i: str | None, win_f: str | None) -> int:
+            body_input = input_model.model_copy(update={
+                "data_julgamento_inicio": win_i,
+                "data_julgamento_fim": win_f,
+            })
+            body = self._build_cjsg_body(body_input)
+            html = fetch_cjsg_first_page(
+                scraper=self,
+                base_url=self.BASE_URL,
+                body=body,
+                tipo_decisao=tipo_decisao,
+                sleep_time=self.sleep_time,
+                chrome_ua=self.CJSG_CHROME_UA,
+            )
+            return cjsg_n_results(html)
+
+        if not auto_chunk or di is None or df_ is None:
+            return _probe(di, df_)
+
+        return sum(_probe(win_i, win_f) for win_i, win_f in iter_date_windows(di, df_, max_dias=366))
 
     def cjsg_download(
         self,

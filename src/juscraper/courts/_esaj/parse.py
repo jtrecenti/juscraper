@@ -34,13 +34,26 @@ _TYPO_FIXES = {
 }
 
 
-def cjsg_n_pags(html_source: str) -> int:
-    """Extract the total number of pages from a cjsg first-page HTML.
+def cjsg_n_results(html_source: str) -> int:
+    """Extract the total number of results from a cjsg first-page HTML.
+
+    Canonical implementation — used by all six eSAJ courts. Sibling of
+    :func:`cjsg_n_pags`, which is now a thin wrapper that divides by the
+    20-hits-per-page constant.
+
+    Used by the ``count_only=True`` short-circuit in
+    :meth:`EsajSearchScraper.cjsg` (issue #92) and by
+    :func:`juscraper.courts._esaj.download.download_cjsg_pages` to size the
+    pagination loop.
 
     Uses a cascade of selectors and regex to survive layout changes. See the
     "Extração de número de páginas/resultados em raspadores HTML" section of
-    CLAUDE.md for the rationale. Canonical implementation — used by all six
-    eSAJ courts.
+    CLAUDE.md for the rationale.
+
+    Fallback for the "results table present but pagination marker missing"
+    edge case: counts ``tr.fundocinza1`` rows on the page (the row class used
+    by the eSAJ results table). Ensures ``count_only`` returns a meaningful
+    estimate instead of a hardcoded ``1``.
 
     Raises:
         ValueError: If the HTML contains a captcha/error marker, if it still
@@ -48,7 +61,7 @@ def cjsg_n_pags(html_source: str) -> int:
             pagination marker can be found.
 
     Returns:
-        Number of pages (0 when the search returned no hits, >=1 otherwise).
+        Number of results (0 when the search returned no hits, >=1 otherwise).
     """
     soup = BeautifulSoup(html_source, "html.parser")
 
@@ -106,7 +119,11 @@ def cjsg_n_pags(html_source: str) -> int:
                 "na resposta HTML. Verifique se a busca retornou resultados "
                 "ou se a estrutura da página mudou."
             )
-        return 1
+        # Pagination marker missing but results table present: count the
+        # result rows (eSAJ uses ``tr.fundocinza1`` for each hit). Minimum
+        # of 1 when the table exists but the row class differs.
+        n_rows = len(soup.find_all("tr", class_="fundocinza1"))
+        return max(n_rows, 1)
 
     txt_pag = td_npags.get_text()
 
@@ -126,8 +143,25 @@ def cjsg_n_pags(html_source: str) -> int:
             f"Formato inesperado encontrado. Texto: {txt_pag[:100]}"
         )
 
-    n_results = int(encontrados[0])
-    return (n_results + 19) // 20  # 20 hits per page, ceil div
+    return int(encontrados[0])
+
+
+def cjsg_n_pags(html_source: str) -> int:
+    """Extract the total number of pages from a cjsg first-page HTML.
+
+    Thin wrapper over :func:`cjsg_n_results` that converts result count into
+    page count via ``ceil(n_results / 20)`` (eSAJ serves 20 hits per page).
+
+    Raises:
+        ValueError: Same conditions as :func:`cjsg_n_results`.
+
+    Returns:
+        Number of pages (0 when the search returned no hits, >=1 otherwise).
+    """
+    n_results = cjsg_n_results(html_source)
+    if n_results == 0:
+        return 0
+    return (n_results + 19) // 20
 
 
 def _normalize_key(label: str) -> str:

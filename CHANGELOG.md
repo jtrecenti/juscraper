@@ -10,6 +10,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 
 - Novo agregador `pdpj` (`PdpjScraper`) para a API DATALAKE - Processos do PDPJ (`api-processo-integracao.data-lake.pdpj.jus.br`). Autenticacao via JWT com `auth(token)` e endpoints publicos `existe`, `cpopg`, `documentos`, `movimentos`, `partes`, `pesquisa`, `contar` e `download_documents` (texto e/ou binario). Validacao via pydantic com `extra="forbid"`.
+- Parametro `count_only=True` em `cjsg` (TJAC, TJAL, TJAM, TJCE, TJMS, TJSP) e `cjpg` (TJSP). Quando passado, o metodo faz so a chamada inicial (POST + 1 GET no caso eSAJ; 1 GET no caso CJPG), extrai o total de resultados da primeira pagina e retorna `int` em vez do `pd.DataFrame` completo. Util para estimativa de wall-clock antes de coletas longas — ~2s/resultado em `cjsg`/`cjpg`, entao 5000 hits = ~3h. Com `auto_chunk=True` (default) e janela `data_julgamento_*` > 366 dias, itera as janelas disjuntas (`iter_date_windows`) e soma; e **soma bruta** (sem dedup por `cd_acordao`/`id_processo`), entao pode divergir ligeiramente de `len(cjsg(...))` quando ha acordaos republicados em janelas diferentes. `paginas` e ignorado em count_only (emite `UserWarning`); `auto_chunk=False` + janela > 366d continua levantando `ValueError`. Refs #92.
 
 ### Changed
 
