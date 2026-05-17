@@ -66,7 +66,7 @@ def build_cjsg_form_body(
     data_julgamento_fim: str = "",
     data_publicacao_inicio: str = "",
     data_publicacao_fim: str = "",
-) -> dict:
+) -> dict[str, str]:
     """Build the form-encoded body for the TJPR CJSG search endpoint.
 
     All values are returned as strings so that

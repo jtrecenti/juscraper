@@ -16,7 +16,6 @@ from .schemas import InputCJSGTJPR
 class TJPRScraper(HTTPScraper):
     """Scraper for the Court of Justice of Paraná."""
 
-    HOME_URL = BASE_URL
     USER_AGENT = (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
         "(KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0"
@@ -63,7 +62,7 @@ class TJPRScraper(HTTPScraper):
             data_publicacao_fim=data_publicacao_fim,
         )
         brutos: list = cjsg_download(
-            home_url=self.HOME_URL,
+            home_url=BASE_URL,
             pesquisa=inp.pesquisa,
             paginas=inp.paginas,
             data_julgamento_inicio=inp.data_julgamento_inicio,
