@@ -127,10 +127,10 @@ class TestBuildParams:
 class TestExtractTotal:
     """``_extract_total`` casca os dois padroes em ordem fixa.
 
-    Ordem na funcao (``download.py:135-143``): ``muitos resultados (N)``
-    primeiro, ``totalLinhas=N`` depois. Em ``cjsg_download`` o caller
-    curto-circuita antes quando "muitos resultados" aparece, mas o
-    contrato do helper isolado contempla ambos os ramos.
+    Cascata: ``muitos resultados (N)`` primeiro, ``totalLinhas=N`` depois.
+    Em ``cjsg_download`` o caller curto-circuita antes quando "muitos
+    resultados" aparece, mas o contrato do helper isolado contempla ambos
+    os ramos.
     """
 
     def test_total_linhas_pattern(self):
@@ -141,9 +141,15 @@ class TestExtractTotal:
         assert _extract_total(html) == 123
 
     def test_muitos_resultados_com_ponto(self):
-        # ``.replace(".", "")`` em download.py:138 trata separador de milhar.
+        # ``.replace(".", "")`` em ``_extract_total`` trata separador de milhar.
         html = "Sua pesquisa retornou muitos resultados (1.234)."
         assert _extract_total(html) == 1234
+
+    def test_muitos_resultados_com_virgula(self):
+        # ``.replace(",", "")`` cobre locale alternativo; guard contra
+        # remocao acidental do segundo replace em ``_extract_total``.
+        html = "muitos resultados (2,500)."
+        assert _extract_total(html) == 2500
 
     def test_muitos_resultados_simples(self):
         html = "Sua pesquisa retornou muitos resultados (50)."
@@ -203,7 +209,7 @@ class TestFetchPage:
     @responses.activate
     def test_force_encoding_iso_8859_1(self):
         # Body em latin-1; servidor anuncia utf-8 (mentira proposital).
-        # ``_fetch_page`` sobrescreve para iso-8859-1 (download.py:141),
+        # ``_fetch_page`` sobrescreve ``resp.encoding`` para iso-8859-1,
         # entao o texto sai certo apesar do header errado.
         body = "AÇÃO".encode("iso-8859-1")
         responses.add(
@@ -218,8 +224,9 @@ class TestFetchPage:
         assert result == "AÇÃO"
 
     def test_invoca_request_fn_com_get_e_search_url(self):
-        # Contrato minimo: GET + url + params (timeout e detalhe interno).
-        response = MagicMock(spec=requests.Response)
+        # Contrato minimo: GET + url + params + timeout=120 (pinado para
+        # detectar mudanca silenciosa do default que afetaria conexoes lentas).
+        response = MagicMock()
         response.text = "<html>ok</html>"
         request_fn = MagicMock(return_value=response)
 
@@ -231,6 +238,7 @@ class TestFetchPage:
         assert method == "GET"
         assert url == SEARCH_URL
         assert request_fn.call_args.kwargs["params"] == {"palavras": "x"}
+        assert request_fn.call_args.kwargs["timeout"] == 120
 
 
 # ---------------------------------------------------------------------------
