@@ -152,6 +152,52 @@ def test_cjsg_post_inicial_retenta_403(tmp_path, mocker):
 
 
 @responses.activate
+def test_cjsg_count_only_returns_int(tmp_path, mocker):
+    """``count_only=True`` short-circuits to an int after page 1 (issue #92)."""
+    mocker.patch("time.sleep")
+    _add_post("dano moral")
+    _add_get(1, "cjsg/results_normal_page_01.html")
+
+    n = jus.scraper("tjsp", download_path=str(tmp_path)).cjsg(
+        "dano moral", count_only=True,
+    )
+
+    assert isinstance(n, int)
+    assert n == 2571077  # totalResultadoAbaRetornoFiltro-A no sample
+    # Garante que NAO houve fetch de pagina 2+. POST + 1 GET = 2 chamadas.
+    assert len(responses.calls) == 2
+
+
+@responses.activate
+def test_cjsg_count_only_zero_results(tmp_path, mocker):
+    """``count_only=True`` em busca sem hits retorna 0 (issue #92)."""
+    mocker.patch("time.sleep")
+    _add_post("juscraper_probe_zero_hits_xyzqwe")
+    _add_get(1, "cjsg/no_results.html")
+
+    n = jus.scraper("tjsp", download_path=str(tmp_path)).cjsg(
+        "juscraper_probe_zero_hits_xyzqwe", count_only=True,
+    )
+
+    assert n == 0
+
+
+@responses.activate
+def test_cjsg_count_only_ignora_paginas_com_warning(tmp_path, mocker):
+    """``count_only=True`` + ``paginas != None`` emite UserWarning e ignora."""
+    mocker.patch("time.sleep")
+    _add_post("dano moral")
+    _add_get(1, "cjsg/results_normal_page_01.html")
+
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+    with pytest.warns(UserWarning, match="paginas e ignorado"):
+        n = scraper.cjsg("dano moral", paginas=range(1, 5), count_only=True)
+
+    assert isinstance(n, int)
+    assert n == 2571077
+
+
+@responses.activate
 def test_cjsg_get_1a_pagina_retenta_503(tmp_path, mocker):
     """GET da pagina 1 retenta 503 transitorio (mesmo perfil das paginas >=2)."""
     mocker.patch("time.sleep")

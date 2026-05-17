@@ -18,7 +18,49 @@ from tqdm import tqdm
 from ...utils.cnj import clean_cnj
 from .exceptions import QueryTooLongError
 
-__all__ = ["QueryTooLongError", "cjpg_download"]
+__all__ = ["QueryTooLongError", "cjpg_download", "fetch_cjpg_first_page"]
+
+
+def fetch_cjpg_first_page(
+    *,
+    pesquisa: str,
+    session: requests.Session,
+    u_base: str,
+    classe: str | None = None,
+    assunto: str | None = None,
+    vara: str | None = None,
+    id_processo: str | None = None,
+    data_inicio: str | None = None,
+    data_fim: str | None = None,
+) -> requests.Response:
+    """Run the CJPG initial GET and return the raw :class:`requests.Response`.
+
+    Shared by :func:`cjpg_download` (continues into paginated download) and
+    by the ``count_only=True`` short-circuit in :meth:`TJSPScraper.cjpg`
+    (issue #92), which only needs the first-page HTML.
+
+    Returns the response (not just ``.text``) so that the download path can
+    persist it to disk and the count-only path can extract ``n_results``
+    from ``.text`` without an extra request.
+    """
+    id_processo_str = clean_cnj(id_processo) if id_processo is not None else ''
+
+    query = {
+        'conversationId': '',
+        'dadosConsulta.pesquisaLivre': pesquisa,
+        'tipoNumero': 'UNIFICADO',
+        'numeroDigitoAnoUnificado': id_processo_str[:15],
+        'foroNumeroUnificado': id_processo_str[-4:],
+        'dadosConsulta.nuProcesso': id_processo_str,
+        'classeTreeSelection.values': classe,
+        'assuntoTreeSelection.values': assunto,
+        'dadosConsulta.dtInicio': data_inicio,
+        'dadosConsulta.dtFim': data_fim,
+        'varasTreeSelection.values': vara,
+        'dadosConsulta.ordenacao': 'DESC'
+    }
+
+    return session.get(f"{u_base}cjpg/pesquisar.do", params=query)
 
 
 def cjpg_download(
@@ -51,24 +93,17 @@ def cjpg_download(
         ValueError: If ``get_n_pags_callback`` is missing or fails to
             extract the page count from the first-page HTML.
     """
-    id_processo_str = clean_cnj(id_processo) if id_processo is not None else ''
-
-    query = {
-        'conversationId': '',
-        'dadosConsulta.pesquisaLivre': pesquisa,
-        'tipoNumero': 'UNIFICADO',
-        'numeroDigitoAnoUnificado': id_processo_str[:15],
-        'foroNumeroUnificado': id_processo_str[-4:],
-        'dadosConsulta.nuProcesso': id_processo_str,
-        'classeTreeSelection.values': classe,
-        'assuntoTreeSelection.values': assunto,
-        'dadosConsulta.dtInicio': data_inicio,
-        'dadosConsulta.dtFim': data_fim,
-        'varasTreeSelection.values': vara,
-        'dadosConsulta.ordenacao': 'DESC'
-    }
-
-    r0 = session.get(f"{u_base}cjpg/pesquisar.do", params=query)
+    r0 = fetch_cjpg_first_page(
+        pesquisa=pesquisa,
+        session=session,
+        u_base=u_base,
+        classe=classe,
+        assunto=assunto,
+        vara=vara,
+        id_processo=id_processo,
+        data_inicio=data_inicio,
+        data_fim=data_fim,
+    )
     try:
         if get_n_pags_callback is None:
             raise ValueError(

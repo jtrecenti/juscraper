@@ -84,3 +84,24 @@ def test_cjsg_no_results(tmp_path, mocker):
 
     assert isinstance(df, pd.DataFrame)
     assert df.empty
+
+
+@responses.activate
+def test_cjsg_count_only_via_esaj_base(tmp_path, mocker):
+    """Smoke: ``count_only=True`` em TJAC funciona via base eSAJ (issue #92).
+
+    Confirma que o ramo count_only declarado em :class:`EsajSearchScraper`
+    nao depende do override TJSP — vale tambem para TJAC/TJAL/TJAM/TJCE/
+    TJMS que herdam direto.
+    """
+    mocker.patch("time.sleep")
+    _add_post("dano moral")
+    _add_get(1, "cjsg/results_normal_page_01.html")
+
+    n = jus.scraper("tjac", download_path=str(tmp_path)).cjsg(
+        "dano moral", count_only=True,
+    )
+
+    assert isinstance(n, int)
+    assert n == 13929  # totalResultadoAbaRetornoFiltro-A no sample
+    assert len(responses.calls) == 2  # POST + 1 GET, sem pagina 2

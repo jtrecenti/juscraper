@@ -138,3 +138,82 @@ def test_cjpg_query_too_long_via_alias_raises(tmp_path):
     scraper = jus.scraper("tjsp", download_path=str(tmp_path))
     with pytest.warns(DeprecationWarning), pytest.raises(QueryTooLongError):
         scraper.cjpg(paginas=1, query=long_query)
+
+
+@responses.activate
+def test_cjpg_count_only_returns_int(tmp_path, mocker):
+    """``count_only=True`` short-circuits to int after the initial GET (#92)."""
+    mocker.patch("time.sleep")
+    _add_pesquisar("dano moral", "cjpg/results_novo_formato.html")
+
+    n = jus.scraper("tjsp", download_path=str(tmp_path)).cjpg(
+        "dano moral", count_only=True,
+    )
+
+    assert isinstance(n, int)
+    assert n == 39764  # "Resultados 1 a 10 de 39764" no sample
+    # Apenas 1 GET (pesquisar.do); nenhum trocarDePagina.do.
+    assert len(responses.calls) == 1
+
+
+@responses.activate
+def test_cjpg_count_only_zero_results(tmp_path, mocker):
+    """``count_only=True`` em busca sem hits retorna 0 (issue #92)."""
+    mocker.patch("time.sleep")
+    _add_pesquisar("juscraper_probe_zero_hits_xyzqwe", "cjpg/no_results.html")
+
+    n = jus.scraper("tjsp", download_path=str(tmp_path)).cjpg(
+        "juscraper_probe_zero_hits_xyzqwe", count_only=True,
+    )
+
+    assert n == 0
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjpg_count_only_sums_across_chunks(tmp_path, mocker):
+    """``count_only=True`` + janela > 366d soma contagens cross-window (#92).
+
+    Mocka 2 GETs distintos com `data_inicio` diferente (uma janela cada) e
+    afere que o total e a soma das contagens reportadas. Vai falhar se o
+    auto_chunk count-only path quebrar (ex.: iterar fora de
+    `iter_date_windows` ou nao somar). 39764 + 25 = 39789.
+    """
+    mocker.patch("time.sleep")
+    # Janela total: 02/01/2020 a 02/01/2022 = ~2 anos = 2 janelas de 366d.
+    # Janela 1: 02/01/2020 -> 02/01/2021. Janela 2: 03/01/2021 -> 02/01/2022.
+    expected_w1 = {
+        k: v for k, v in make_tjsp_cjpg_params("dano moral").items() if v is not None
+    }
+    expected_w1["dadosConsulta.dtInicio"] = "02/01/2020"
+    expected_w1["dadosConsulta.dtFim"] = "02/01/2021"
+    responses.add(
+        responses.GET,
+        f"{BASE}/pesquisar.do",
+        body=load_sample_bytes("tjsp", "cjpg/results_novo_formato.html"),
+        status=200,
+        content_type="text/html; charset=utf-8",
+        match=[query_param_matcher(expected_w1)],
+    )
+
+    expected_w2 = dict(expected_w1)
+    expected_w2["dadosConsulta.dtInicio"] = "03/01/2021"
+    expected_w2["dadosConsulta.dtFim"] = "02/01/2022"
+    responses.add(
+        responses.GET,
+        f"{BASE}/pesquisar.do",
+        body=load_sample_bytes("tjsp", "cjpg/results_legacy.html"),
+        status=200,
+        content_type="text/html; charset=utf-8",
+        match=[query_param_matcher(expected_w2)],
+    )
+
+    n = jus.scraper("tjsp", download_path=str(tmp_path)).cjpg(
+        "dano moral",
+        data_julgamento_inicio="02/01/2020",
+        data_julgamento_fim="02/01/2022",
+        count_only=True,
+    )
+
+    assert isinstance(n, int)
+    assert n == 39764 + 25  # soma bruta cross-janela
+    assert len(responses.calls) == 2

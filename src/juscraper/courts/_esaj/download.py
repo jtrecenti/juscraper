@@ -73,6 +73,62 @@ def _extract_conversation_id(html: str) -> str:
     return ""
 
 
+def fetch_cjsg_first_page(
+    *,
+    scraper: "HTTPScraper",
+    base_url: str,
+    body: dict,
+    tipo_decisao: str,
+    sleep_time: float = 1.0,
+    chrome_ua: bool = False,
+) -> str:
+    """Run ``POST resultadoCompleta + GET pagina=1`` and return the HTML.
+
+    Shared by :func:`download_cjsg_pages` (continues into paginated download)
+    and by the ``count_only=True`` short-circuit in
+    :meth:`EsajSearchScraper.cjsg` (issue #92), which only needs the
+    first-page HTML to extract ``n_results``.
+
+    Side effect: updates ``scraper.session.headers`` with the eSAJ or Chrome
+    UA, mirroring :func:`download_cjsg_pages`.
+
+    Args:
+        scraper: :class:`HTTPScraper` providing ``session`` and
+            ``_request_with_retry`` (#203 retry policy).
+        base_url: ``https://esaj.<tribunal>.jus.br/`` (trailing slash).
+        body: Form body for ``POST cjsg/resultadoCompleta.do``.
+        tipo_decisao: ``"acordao"`` or ``"monocratica"``.
+        sleep_time: Seconds between the POST and the subsequent GET.
+        chrome_ua: When ``True`` sends the Chrome UA (TJSP); otherwise the
+            polite juscraper UA.
+
+    Returns:
+        First-page HTML as a ``str`` (latin1-decoded).
+    """
+    session = scraper.session
+    session.headers.update(_CHROME_HEADERS if chrome_ua else _ESAJ_HEADERS)
+
+    tipo_param = "A" if tipo_decisao == "acordao" else "D"
+    link_cjsg = f"{base_url}cjsg/resultadoCompleta.do"
+    first_page_url = f"{base_url}cjsg/trocaDePagina.do?tipoDeDecisao={tipo_param}&pagina=1"
+
+    # Body do POST descartado: a resposta é só o "ack" do form submit; o HTML
+    # com os resultados vem do GET subsequente em ``trocaDePagina.do?pagina=1``.
+    scraper._request_with_retry(
+        "POST", link_cjsg, data=body, timeout=30, allow_redirects=True,
+    )
+
+    time.sleep(sleep_time)
+    first_resp = scraper._request_with_retry(
+        "GET",
+        first_page_url,
+        timeout=30,
+        headers={"Accept": "text/html; charset=latin1;", "Referer": link_cjsg},
+    )
+    first_resp.encoding = "latin1"
+    return first_resp.text
+
+
 def _pages_to_fetch(
     paginas: "list | range | None" | None,
     n_pags: int,
@@ -137,33 +193,22 @@ def download_cjsg_pages(
     Returns:
         Path to the directory containing the downloaded files.
     """
-    session = scraper.session
-    session.headers.update(_CHROME_HEADERS if chrome_ua else _ESAJ_HEADERS)
-
     tipo_param = "A" if tipo_decisao == "acordao" else "D"
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     path = os.path.join(download_path, "cjsg", timestamp)
     os.makedirs(path, exist_ok=True)
 
     link_cjsg = f"{base_url}cjsg/resultadoCompleta.do"
-    first_page_url = f"{base_url}cjsg/trocaDePagina.do?tipoDeDecisao={tipo_param}&pagina=1"
 
     logger.info("Submetendo formulário de busca...")
-    # Body do POST descartado: a resposta é só o "ack" do form submit; o HTML
-    # com os resultados vem do GET subsequente em ``trocaDePagina.do?pagina=1``.
-    scraper._request_with_retry(
-        "POST", link_cjsg, data=body, timeout=30, allow_redirects=True,
+    first_html = fetch_cjsg_first_page(
+        scraper=scraper,
+        base_url=base_url,
+        body=body,
+        tipo_decisao=tipo_decisao,
+        sleep_time=sleep_time,
+        chrome_ua=chrome_ua,
     )
-
-    time.sleep(sleep_time)
-    first_resp = scraper._request_with_retry(
-        "GET",
-        first_page_url,
-        timeout=30,
-        headers={"Accept": "text/html; charset=latin1;", "Referer": link_cjsg},
-    )
-    first_resp.encoding = "latin1"
-    first_html = first_resp.text
 
     n_pags = get_n_pags_callback(first_html)
 
@@ -206,4 +251,4 @@ def download_cjsg_pages(
     return path
 
 
-__all__ = ["download_cjsg_pages"]
+__all__ = ["download_cjsg_pages", "fetch_cjsg_first_page"]

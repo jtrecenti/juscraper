@@ -214,6 +214,58 @@ semantics for `paginas` are ambiguous (each window? aggregated budget?)
 and the design prefers to fail explicitly. For short intervals where
 chunking is a no-op, `paginas` works as usual.
 
+## Pre-scraping count (`count_only`)
+
+Empirical legal research often benefits from a quick estimate of how many
+results a query will return before committing to a long collection job
+(~2 s/result in `cjsg`/`cjpg` with `sleep_time=0.5`, so 5 000 hits ≈ 3 h).
+The `count_only: bool = False` flag — accepted by `cjsg` in TJAC, TJAL,
+TJAM, TJCE, TJMS, TJSP and by `cjpg` in TJSP — short-circuits the public
+method to a single network call per window, extracts the total result
+count from the first-page HTML, and returns an `int` instead of a
+`pd.DataFrame`:
+
+```python
+import juscraper as jus
+
+tjsp = jus.scraper("tjsp")
+
+# One POST + one GET. Returns an int.
+n = tjsp.cjpg(
+    pesquisa="dano moral",
+    data_julgamento_inicio="01/01/2024",
+    data_julgamento_fim="31/12/2024",
+    count_only=True,
+)
+print(f"Estimated wall-clock for full collection: {n * 2 / 3600:.1f}h")
+```
+
+Interaction with `auto_chunk`: when the interval exceeds 366 days and
+`auto_chunk=True` (default), `count_only` iterates the disjoint windows
+produced by `iter_date_windows` and **sums** the per-window counts. The
+sum is raw — the de-duplication step that the normal path performs by
+`cd_acordao` / `id_processo` does not apply here, so the returned number
+can slightly overestimate `len(cjsg(...))` when documents are republished
+across windows (same `cd_acordao` appearing in two windows). For most
+estimation use cases this is the desired behaviour: the count reflects
+what the backend will hand over, not the deduplicated final shape.
+
+Other edge cases:
+
+- `paginas` is ignored when `count_only=True` (the probe always inspects
+  page 1). A `UserWarning` is emitted if both are passed.
+- `auto_chunk=False` plus an interval longer than 366 days still raises
+  `ValueError` — consistent with the strict path.
+- Captcha or layout-change failures on page 1 propagate as `ValueError`
+  with the same message as the regular path.
+- Tribunals not yet wired reject `count_only` via `extra="forbid"`
+  (`TypeError`).
+
+The underlying helpers `cjsg_n_results(html)` and `cjpg_n_results(html)`
+are exposed from `juscraper.courts._esaj.parse` and
+`juscraper.courts.tjsp.cjpg_parse` for callers that already hold the
+raw HTML.
+
 ## Normalization Utilities
 
 The `juscraper.utils.params` module provides normalization functions used internally by all scrapers:

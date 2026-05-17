@@ -7,11 +7,12 @@ six eSAJ courts (TJAC/TJAL/TJAM/TJCE/TJMS/TJSP).
 """
 from .base import EsajSearchScraper
 from .forms import build_cjsg_form_body
-from .parse import cjsg_n_pags, cjsg_parse_manager
+from .parse import cjsg_n_pags, cjsg_n_results, cjsg_parse_manager
 
 __all__ = [
     "EsajSearchScraper",
     "build_cjsg_form_body",
     "cjsg_n_pags",
+    "cjsg_n_results",
     "cjsg_parse_manager",
 ]
