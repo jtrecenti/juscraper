@@ -126,14 +126,11 @@ class TJPEScraper(HTTPScraper):
                 ``"todos"``. Quando ``"todos"``, o backend marca os dois
                 checkboxes e o fluxo passa pela pagina de escolha
                 (``escolhaResultado.xhtml``).
-            **kwargs: Filtros aceitos por :class:`InputCJSGTJPE` que chegam via
-                kwargs em vez de parametros nomeados (todos opcionais; ``None``
-                = sem filtro). Listados abaixo:
 
-                * ``data_julgamento_inicio`` / ``data_julgamento_fim`` (str):
-                  Tambem podem ser passados como nomeados (acima). Aliases
-                  deprecados aceitos: ``data_inicio`` / ``data_fim``,
-                  ``data_julgamento_de`` / ``data_julgamento_ate``.
+        Todos os filtros do schema :class:`InputCJSGTJPE` estao listados
+        acima como parametros nomeados. O ``**kwargs`` so e exposto para
+        absorver aliases deprecados (listados abaixo) e qualquer kwarg
+        desconhecido vira ``TypeError`` via ``raise_on_extra_kwargs``.
 
         Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
             * ``query`` / ``termo`` -> ``pesquisa``
