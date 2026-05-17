@@ -28,7 +28,6 @@ from juscraper.courts.tjpb.schemas import InputCJSGTJPB
 from juscraper.courts.tjpi.schemas import InputCJSGTJPI
 from juscraper.courts.tjrn.schemas import InputCJSGTJRN
 from juscraper.courts.tjro.schemas import InputCJSGTJRO
-from juscraper.courts.tjrr.schemas import InputCJSGTJRR
 from juscraper.courts.tjsc.schemas import InputCJSGTJSC
 from juscraper.courts.tjto.schemas import InputCJPGTJTO, InputCJSGTJTO
 
@@ -187,7 +186,6 @@ _CAT_C_CASES = [
     (InputCJSGTJTO, "numero_processo"),
     (InputCJPGTJTO, "numero_processo"),
     (InputCJSGTJSC, "processo"),
-    (InputCJSGTJRR, "relator"),
 ]
 
 

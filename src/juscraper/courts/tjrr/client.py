@@ -47,7 +47,7 @@ class TJRRScraper(HTTPScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        relator: str | None = None,
+        relator: list | None = None,
         orgao_julgador: list | None = None,
         especie: list | None = None,
         **kwargs,
@@ -58,10 +58,17 @@ class TJRRScraper(HTTPScraper):
             pesquisa (str): Termo de busca livre (busca na ementa).
             paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
                 todas. Default ``None``.
-            relator (str): Nome do relator. **Aceito por compat de API**, mas
-                hoje o backend nao expoe campo de texto livre para relator
-                (virou multi-select de IDs); o filtro e descartado pelo
-                Projudi/PrimeFaces. Refs #158 (deprecation/remocao planejada).
+            relator (list[str] | None): Lista de nomes regimentais de
+                magistrados (ex.: ``["ALMIRO PADILHA", "ERICK LINHARES"]``).
+                O backend usa um ``SelectManyCheckbox``
+                (``menuinicial:relatorList``) cujos values sao beans Java
+                serializados; o scraper baixa o form GET inicial e resolve
+                cada nome regimental para o bean correspondente. Match
+                insensivel a caixa e diacritico — ``"cristovao suter"``,
+                ``"Cristóvão Suter"`` e ``"CRISTÓVÃO SUTER"`` resolvem
+                para o mesmo magistrado. ``ValueError`` se algum nome nao
+                bater (a mensagem lista os nomes na forma canonica:
+                UPPERCASE com acento). Refs #158.
             orgao_julgador (list[str] | None): Codigos do orgao julgador
                 (ex.: ``["PRIMEIRA_TURMA_CIVEL"]``). Backend:
                 ``menuinicial:tipoOrgaoList``.
@@ -81,6 +88,7 @@ class TJRRScraper(HTTPScraper):
 
         Raises:
             TypeError: Quando um kwarg desconhecido e passado.
+            ValueError: Quando ``relator`` contem nome nao encontrado no form.
             ValidationError: Quando um filtro tem formato invalido.
 
         Returns:
@@ -103,7 +111,7 @@ class TJRRScraper(HTTPScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        relator: str | None = None,
+        relator: list | None = None,
         orgao_julgador: list | None = None,
         especie: list | None = None,
         data_julgamento_inicio: str | None = None,
@@ -137,7 +145,7 @@ class TJRRScraper(HTTPScraper):
             paginas=inp.paginas,
             request_fn=self._request_with_retry,
             sleep_time=self.sleep_time,
-            relator=inp.relator or "",
+            relator=inp.relator,
             data_inicio=inp.data_julgamento_inicio or "",
             data_fim=inp.data_julgamento_fim or "",
             orgao_julgador=inp.orgao_julgador,

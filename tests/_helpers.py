@@ -10,7 +10,7 @@ Examples
 >>> html = load_sample("tjsp", "cjsg/results_normal.html")
 """
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
@@ -59,23 +59,34 @@ def load_sample_bytes(tribunal: str, relative_path: str) -> bytes:
     return path.read_bytes()
 
 
-def urlencoded_body_subset_matcher(expected: dict[str, str]):
+def urlencoded_body_subset_matcher(expected: Mapping[str, str | list[str]]):
     """``responses`` matcher that checks only a subset of urlencoded body fields.
 
     ``responses.matchers.urlencoded_params_matcher`` requires the full body;
     use this when the scraper sends hidden/dynamic fields (CSRF tokens,
     ViewState, crypto tokens) that the contract should not pin down.
+
+    Quando ``expected[k]`` e ``list[str]``, compara como conjunto contra
+    todas as ocorrencias do campo no body (multi-value, ex.:
+    ``menuinicial:relatorList=v1&menuinicial:relatorList=v2``). Quando e
+    ``str``, compara contra a primeira ocorrencia — comportamento
+    historico, preservado para os chamadores existentes.
     """
     def matcher(request):
         body = request.body or b""
         if isinstance(body, bytes):
             body = body.decode("utf-8")
-        parsed = {k: v[0] if v else "" for k, v in parse_qs(body, keep_blank_values=True).items()}
-        missing = {
-            k: (expected[k], parsed.get(k))
-            for k in expected
-            if parsed.get(k) != expected[k]
-        }
+        parsed_raw = parse_qs(body, keep_blank_values=True)
+        missing: dict = {}
+        for k, expected_v in expected.items():
+            actual = parsed_raw.get(k, [])
+            if isinstance(expected_v, list):
+                if sorted(actual) != sorted(expected_v):
+                    missing[k] = (expected_v, actual)
+            else:
+                actual_scalar = actual[0] if actual else ""
+                if actual_scalar != expected_v:
+                    missing[k] = (expected_v, actual_scalar)
         if missing:
             return False, f"body fields mismatch: {missing}"
         return True, ""

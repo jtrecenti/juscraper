@@ -1,6 +1,7 @@
 """Downloads raw results from the TJRR jurisprudence search (JSF/PrimeFaces)."""
 import re
 import time
+import unicodedata
 
 from bs4 import BeautifulSoup
 from tqdm import tqdm
@@ -60,6 +61,32 @@ def _collect_form_defaults(soup: BeautifulSoup) -> dict:
     return {k: (v[0] if len(v) == 1 else v) for k, v in defaults.items()}
 
 
+_RELATOR_NOME_RE = re.compile(r"nomeRegimental:(.+?)\)\s*$")
+
+
+def _collect_relator_map(soup: BeautifulSoup) -> dict[str, str]:
+    """Map each magistrado's ``nomeRegimental`` to its opaque form value.
+
+    O backend TJRR expoe o filtro de relator como um PrimeFaces
+    ``SelectManyCheckbox`` (``menuinicial:relatorList``). Cada option
+    tem como ``value`` um entity bean Java serializado, por exemplo::
+
+        br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3010559, nomeRegimental:ALMIRO PADILHA)
+
+    Para a API publica aceitar o nome regimental ("ALMIRO PADILHA") em
+    vez do bean opaco, parseamos o GET inicial (ja baixado para
+    descoberta de ViewState) e entregamos o mapa para ``_search`` via
+    ``form_fields["relator_map"]``.
+    """
+    mapping: dict[str, str] = {}
+    for tag in soup.find_all("input", {"name": "menuinicial:relatorList"}):
+        value = tag.get("value") or ""
+        match = _RELATOR_NOME_RE.search(value)
+        if match:
+            mapping[match.group(1).strip()] = value
+    return mapping
+
+
 def _get_form_fields(request_fn: RequestFn) -> dict:
     """Fetch the initial page and discover JSF field names and defaults.
 
@@ -88,14 +115,61 @@ def _get_form_fields(request_fn: RequestFn) -> dict:
         "pesquisa_name": pesq["name"],
         "submit_name": submit_name,
         "defaults": _collect_form_defaults(soup),
+        "relator_map": _collect_relator_map(soup),
     }
+
+
+def _norm_relator_key(s: str) -> str:
+    """Normaliza nome regimental para lookup: tira diacriticos e baixa caixa.
+
+    NFD separa cada caractere acentuado em base + combining mark
+    (``"Á"`` -> ``"A" + U+0301``); o filtro descarta os marks. Depois
+    ``casefold()`` baixa a caixa de forma agressiva (mais correta que
+    ``lower()`` em casos como ``"ß"``). Continua sendo igualdade exata —
+    nao habilita substring ou fuzzy.
+    """
+    nfd = unicodedata.normalize("NFD", s)
+    no_diacritics = "".join(c for c in nfd if not unicodedata.combining(c))
+    return no_diacritics.casefold()
+
+
+def _resolve_relator_values(
+    relator: list[str], relator_map: dict[str, str]
+) -> list[str]:
+    """Resolve regimental names to the opaque bean values expected by the form.
+
+    Match e exato apos normalizacao ``_norm_relator_key`` — o usuario pode
+    digitar ``"cristovao suter"``, ``"Cristóvão Suter"`` ou
+    ``"CRISTÓVÃO SUTER"`` e bate com o mesmo magistrado. Continua sendo
+    igualdade (nao fuzzy/substring), entao nao ha risco de bater dois
+    nomes pelo primeiro componente. ``ValueError`` lista os nomes
+    **canonicos** (UPPERCASE com acento) para o usuario corrigir.
+    """
+    normalized_lookup = {
+        _norm_relator_key(name): value for name, value in relator_map.items()
+    }
+    resolved: list[str] = []
+    unknown: list[str] = []
+    for name in relator:
+        opaque = normalized_lookup.get(_norm_relator_key(name))
+        if opaque is None:
+            unknown.append(name)
+        else:
+            resolved.append(opaque)
+    if unknown:
+        available = ", ".join(sorted(relator_map)) or "(nenhum encontrado no form)"
+        raise ValueError(
+            f"Relator(es) desconhecido(s) no TJRR: {unknown}. "
+            f"Nomes disponiveis (nomeRegimental): {available}."
+        )
+    return resolved
 
 
 def _search(
     request_fn: RequestFn,
     form_fields: dict,
     pesquisa: str,
-    relator: str = "",  # noqa: ARG001 - accepted for API compat; no longer a text input in TJRR
+    relator: list[str] | None = None,
     data_inicio: str = "",
     data_fim: str = "",
     orgao_julgador: list | None = None,
@@ -115,6 +189,10 @@ def _search(
         data["menuinicial:tipoOrgaoList"] = list(orgao_julgador)
     if especie:
         data["menuinicial:tipoEspecieList"] = list(especie)
+    if relator:
+        data["menuinicial:relatorList"] = _resolve_relator_values(
+            list(relator), form_fields.get("relator_map", {})
+        )
 
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
