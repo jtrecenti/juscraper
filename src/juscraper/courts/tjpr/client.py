@@ -8,7 +8,7 @@ import requests
 from juscraper.core.http import HTTPScraper
 from juscraper.utils.params import SEARCH_ALIASES, apply_input_pipeline_search, normalize_pesquisa
 
-from .download import cjsg_download
+from .download import BASE_URL, cjsg_download
 from .parse import cjsg_parse
 from .schemas import InputCJSGTJPR
 
@@ -16,8 +16,7 @@ from .schemas import InputCJSGTJPR
 class TJPRScraper(HTTPScraper):
     """Scraper for the Court of Justice of Paraná."""
 
-    BASE_URL = "https://portal.tjpr.jus.br/jurisprudencia/publico/pesquisa.do?actionType=pesquisar"
-    HOME_URL = "https://portal.tjpr.jus.br/jurisprudencia/"
+    HOME_URL = BASE_URL
     USER_AGENT = (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
         "(KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0"

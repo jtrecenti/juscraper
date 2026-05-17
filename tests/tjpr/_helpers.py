@@ -10,10 +10,11 @@ from __future__ import annotations
 
 import responses
 
+from juscraper.courts.tjpr.download import BASE_URL as HOME_URL
+from juscraper.courts.tjpr.download import SEARCH_URL
 from tests._helpers import load_sample
 
-HOME_URL = "https://portal.tjpr.jus.br/jurisprudencia/"
-SEARCH_URL = "https://portal.tjpr.jus.br/jurisprudencia/publico/pesquisa.do"
+__all__ = ["HOME_URL", "SEARCH_URL", "add_home"]
 
 
 def add_home() -> None:
