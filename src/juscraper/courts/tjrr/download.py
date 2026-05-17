@@ -181,6 +181,7 @@ def cjsg_download_manager(
     paginas=None,
     *,
     request_fn: RequestFn,
+    sleep_time: float = 1.0,
     **kwargs,
 ) -> list:
     """Download raw HTML results from the TJRR jurisprudence search.
@@ -193,20 +194,21 @@ def cjsg_download_manager(
         request_fn: HTTP callable que faz retry + raise_for_status — em uso
             normal e ``TJRRScraper._request_with_retry`` (via
             ``core.http.HTTPScraper``), centralizando backoff para 429/5xx.
+        sleep_time: Delay (em segundos) entre páginas. Default 1.0; o client
+            normalmente passa ``self.sleep_time`` herdado de ``HTTPScraper``.
         **kwargs: Additional filter parameters.
     """
     form_fields = _get_form_fields(request_fn)
     first_html = _search(request_fn, form_fields, pesquisa, **kwargs)
-    time.sleep(1)
 
     if paginas is None:
         resultados = [first_html]
         n_pags = _get_total_pages(first_html)
         if n_pags > 1:
             for pagina in tqdm(range(2, n_pags + 1), desc="Baixando CJSG TJRR"):
+                time.sleep(sleep_time)
                 html = _paginate(request_fn, first_html, pagina)
                 resultados.append(html)
-                time.sleep(1)
         return resultados
 
     paginas_iter = list(paginas)
@@ -215,7 +217,7 @@ def cjsg_download_manager(
         if pagina_1based == 1:
             resultados.append(first_html)
         else:
+            time.sleep(sleep_time)
             html = _paginate(request_fn, first_html, pagina_1based)
             resultados.append(html)
-            time.sleep(1)
     return resultados

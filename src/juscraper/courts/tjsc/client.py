@@ -1,5 +1,5 @@
 """Scraper for the Tribunal de Justica de Santa Catarina (TJSC)."""
-from typing import Literal
+from typing import Any, Literal
 
 import pandas as pd
 
@@ -19,8 +19,20 @@ class TJSCScraper(HTTPScraper):
 
     BASE_URL = "https://eproc1g.tjsc.jus.br"
 
-    def __init__(self):
-        super().__init__("TJSC")
+    def __init__(
+        self,
+        verbose: int = 0,
+        download_path: str | None = None,
+        sleep_time: float = 1.0,
+        **kwargs: Any,
+    ):
+        super().__init__(
+            "TJSC",
+            verbose=verbose,
+            download_path=download_path,
+            sleep_time=sleep_time,
+            **kwargs,
+        )
 
     def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJSC."""
@@ -111,6 +123,7 @@ class TJSCScraper(HTTPScraper):
             pesquisa=inp.pesquisa,
             paginas=inp.paginas,
             request_fn=self._request_with_retry,
+            sleep_time=self.sleep_time,
             campo=inp.campo,
             processo=inp.processo or "",
             dt_decisao_inicio=inp.data_julgamento_inicio or "",

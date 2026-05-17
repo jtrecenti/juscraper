@@ -67,6 +67,7 @@ def cjsg_download_manager(
     paginas=None,
     *,
     request_fn: RequestFn,
+    sleep_time: float = 1.0,
     **kwargs,
 ) -> list:
     """Download raw HTML pages from the TJPI jurisprudence search.
@@ -80,6 +81,8 @@ def cjsg_download_manager(
             uso normal e ``TJPIScraper._request_with_retry`` (via
             ``core.http.HTTPScraper``), centralizando backoff exponencial
             para 429/5xx.
+        sleep_time: Delay (em segundos) entre páginas. Default 1.0; o client
+            normalmente passa ``self.sleep_time`` herdado de ``HTTPScraper``.
         **kwargs: Additional filter parameters (tipo, relator, classe, orgao).
     """
     def _get_page(pagina_1based: int) -> str:
@@ -87,7 +90,6 @@ def cjsg_download_manager(
         resp = request_fn("GET", BASE_URL, params=params, timeout=30)
         resp.encoding = "utf-8"
         html = resp.text
-        time.sleep(1)
         return html
 
     if paginas is None:
@@ -96,11 +98,14 @@ def cjsg_download_manager(
         n_pags = _get_total_pages(first)
         if n_pags > 1:
             for pagina in tqdm(range(2, n_pags + 1), desc="Baixando CJSG TJPI"):
+                time.sleep(sleep_time)
                 resultados.append(_get_page(pagina))
         return resultados
 
     paginas_iter = list(paginas)
     resultados = []
     for pagina_1based in tqdm(paginas_iter, desc="Baixando CJSG TJPI"):
+        if resultados:
+            time.sleep(sleep_time)
         resultados.append(_get_page(pagina_1based))
     return resultados

@@ -1,7 +1,7 @@
 """
 Scraper for the Tribunal de Justica do Tocantins (TJTO).
 """
-from typing import Literal
+from typing import Any, Literal
 
 import pandas as pd
 
@@ -18,8 +18,20 @@ class TJTOScraper(HTTPScraper):
 
     BASE_URL = "https://jurisprudencia.tjto.jus.br/consulta.php"
 
-    def __init__(self):
-        super().__init__("TJTO")
+    def __init__(
+        self,
+        verbose: int = 0,
+        download_path: str | None = None,
+        sleep_time: float = 1.0,
+        **kwargs: Any,
+    ):
+        super().__init__(
+            "TJTO",
+            verbose=verbose,
+            download_path=download_path,
+            sleep_time=sleep_time,
+            **kwargs,
+        )
 
     def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJTO."""
@@ -43,6 +55,7 @@ class TJTOScraper(HTTPScraper):
             termo=inp.pesquisa,
             paginas=inp.paginas,
             request_fn=self._request_with_retry,
+            sleep_time=self.sleep_time,
             type_minuta=type_minuta,
             tip_criterio_inst=instancia,
             tip_criterio_data=inp.ordenacao,

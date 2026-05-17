@@ -1,5 +1,7 @@
 """Scraper for the Tribunal de Justica do Piaui (TJPI)."""
 
+from typing import Any
+
 import pandas as pd
 
 from juscraper.core.http import HTTPScraper
@@ -19,8 +21,20 @@ class TJPIScraper(HTTPScraper):
 
     BASE_URL = "https://jurisprudencia.tjpi.jus.br"
 
-    def __init__(self):
-        super().__init__("TJPI")
+    def __init__(
+        self,
+        verbose: int = 0,
+        download_path: str | None = None,
+        sleep_time: float = 1.0,
+        **kwargs: Any,
+    ):
+        super().__init__(
+            "TJPI",
+            verbose=verbose,
+            download_path=download_path,
+            sleep_time=sleep_time,
+            **kwargs,
+        )
 
     def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJPI."""
@@ -120,6 +134,7 @@ class TJPIScraper(HTTPScraper):
             pesquisa=inp.pesquisa,
             paginas=inp.paginas,
             request_fn=self._request_with_retry,
+            sleep_time=self.sleep_time,
             tipo=inp.tipo or "",
             relator=inp.relator or "",
             classe=inp.classe or "",

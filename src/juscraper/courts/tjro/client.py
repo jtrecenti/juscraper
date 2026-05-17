@@ -1,5 +1,7 @@
 """Scraper for the Tribunal de Justica de Rondonia (TJRO)."""
 
+from typing import Any
+
 import pandas as pd
 
 from juscraper.core.http import HTTPScraper
@@ -18,8 +20,20 @@ class TJROScraper(HTTPScraper):
 
     BASE_URL = "https://juris.tjro.jus.br"
 
-    def __init__(self):
-        super().__init__("TJRO")
+    def __init__(
+        self,
+        verbose: int = 0,
+        download_path: str | None = None,
+        sleep_time: float = 1.0,
+        **kwargs: Any,
+    ):
+        super().__init__(
+            "TJRO",
+            verbose=verbose,
+            download_path=download_path,
+            sleep_time=sleep_time,
+            **kwargs,
+        )
 
     def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJRO."""
@@ -155,6 +169,7 @@ class TJROScraper(HTTPScraper):
             pesquisa=inp.pesquisa,
             paginas=inp.paginas,
             request_fn=self._request_with_retry,
+            sleep_time=self.sleep_time,
             tipo=inp.tipo,
             nr_processo=inp.numero_processo or "",
             relator=inp.relator or "",
