@@ -1,7 +1,7 @@
-"""Testes unitarios da extracao de contagem TJPE via util compartilhado (refs #87)."""
+"""Testes unitarios da parseria de paginacao TJPE (refs #87)."""
 from __future__ import annotations
 
-from juscraper.courts.tjpe.download import _extract_total_docs
+from juscraper.courts.tjpe.download import _extract_total_docs, _is_escolha_page, _is_results_page
 from tests._helpers import load_sample
 
 
@@ -36,3 +36,14 @@ def test_extract_total_docs_resilient_to_table_class_change():
 def test_extract_total_docs_falls_back_to_zero_when_unrecognized():
     html = "<div>HTML totalmente diferente sem informacao de contagem</div>"
     assert _extract_total_docs(html) == 0
+
+
+def test_is_results_page_case_insensitive():
+    html = "<html><body>DOCUMENTOS ENCONTRADOS: 5<br>DOCUMENTO 1</body></html>"
+    assert _is_results_page(html) is True
+
+
+def test_is_escolha_page_case_insensitive():
+    html = "<html><body>5 DOCUMENTOS ENCONTRADOS</body></html>"
+    assert _is_escolha_page(html) is True
+    assert _is_results_page(html) is False

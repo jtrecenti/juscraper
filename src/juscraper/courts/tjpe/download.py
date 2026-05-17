@@ -59,13 +59,24 @@ def _extract_total_docs(html: str) -> int:
 
 
 def _is_results_page(html: str) -> bool:
-    """Check if the HTML is a results page (not the escolha page)."""
-    return "Documentos encontrados:" in html and "Documento 1" in html
+    """Check if the HTML is a results page (not the escolha page).
+
+    Case-insensitive: a results page traz o rotulo ``Documentos encontrados:``
+    (com dois pontos — distingue da escolha) e o cabecalho ``Documento 1``.
+    """
+    html_lower = html.lower()
+    return "documentos encontrados:" in html_lower and "documento 1" in html_lower
 
 
 def _is_escolha_page(html: str) -> bool:
-    """Check if we got the 'escolha' page (choose result type)."""
-    return "documentos encontrados" in html and "Documento 1" not in html
+    """Check if we got the 'escolha' page (choose result type).
+
+    Case-insensitive: a pagina de escolha traz ``N documentos encontrados``
+    (sem dois pontos) e nao tem o cabecalho ``Documento 1`` da pagina de
+    resultados.
+    """
+    html_lower = html.lower()
+    return "documentos encontrados" in html_lower and "documento 1" not in html_lower
 
 
 def _extract_escolha_button_id(html: str, tipo: str = "Acórdãos") -> str:
