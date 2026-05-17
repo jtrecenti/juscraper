@@ -34,7 +34,7 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-def _add_post_initial(expected_body_subset: dict[str, str]):
+def _add_post_initial(expected_body_subset: dict[str, str | list[str]]):
     """Empty-result POST whose body the matcher inspects."""
     responses.add(
         responses.POST,
@@ -75,6 +75,14 @@ _RELATOR_ALMIRO_VALUE = (
     "br.jus.tjrr.bpu.domain.model.MagistradoBPU"
     "(matricula:3010559, nomeRegimental:ALMIRO PADILHA)"
 )
+_RELATOR_ERICK_VALUE = (
+    "br.jus.tjrr.bpu.domain.model.MagistradoBPU"
+    "(matricula:3010510, nomeRegimental:ERICK LINHARES)"
+)
+_RELATOR_CRISTOVAO_VALUE = (
+    "br.jus.tjrr.bpu.domain.model.MagistradoBPU"
+    "(matricula:3010222, nomeRegimental:CRISTÓVÃO SUTER)"
+)
 
 
 @responses.activate(registry=OrderedRegistry)
@@ -92,6 +100,53 @@ def test_cjsg_relator_lands_in_body(mocker):
 
     df = jus.scraper("tjrr").cjsg(
         "dano moral", paginas=1, relator=["ALMIRO PADILHA"],
+    )
+    assert isinstance(df, pd.DataFrame)
+
+
+@pytest.mark.parametrize(
+    "user_input",
+    [
+        "cristovao suter",      # caixa baixa + sem acento
+        "Cristóvão Suter",      # caixa mista + com acento
+        "CRISTÓVÃO SUTER",      # forma canonica
+        "CRISTOVAO SUTER",      # UPPERCASE sem acento
+    ],
+)
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_relator_lookup_is_case_and_accent_insensitive(mocker, user_input):
+    """Variantes de caixa/acento resolvem para o mesmo bean (refs #158 follow-up).
+
+    O backend so reconhece o bean opaco serializado; a normalizacao
+    ``_norm_relator_key`` (NFD + remove combining + casefold) traduz
+    o input do usuario para o canonical e injeta sempre o mesmo value.
+    """
+    mocker.patch("time.sleep")
+    add_get_initial()
+    _add_post_initial({"menuinicial:relatorList": _RELATOR_CRISTOVAO_VALUE})
+
+    df = jus.scraper("tjrr").cjsg(
+        "dano moral", paginas=1, relator=[user_input],
+    )
+    assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_relator_multi_lands_in_body(mocker):
+    """Multi-relator: os dois beans saem no body como multi-value (refs #158 follow-up).
+
+    O backend espera ``menuinicial:relatorList=<v1>&menuinicial:relatorList=<v2>``;
+    o matcher recebe ``list[str]`` em ``expected`` e compara as
+    ocorrencias do campo como conjunto.
+    """
+    mocker.patch("time.sleep")
+    add_get_initial()
+    _add_post_initial({
+        "menuinicial:relatorList": [_RELATOR_ALMIRO_VALUE, _RELATOR_ERICK_VALUE],
+    })
+
+    df = jus.scraper("tjrr").cjsg(
+        "dano moral", paginas=1, relator=["ALMIRO PADILHA", "ERICK LINHARES"],
     )
     assert isinstance(df, pd.DataFrame)
 

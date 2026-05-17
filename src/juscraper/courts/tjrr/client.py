@@ -64,8 +64,11 @@ class TJRRScraper(HTTPScraper):
                 (``menuinicial:relatorList``) cujos values sao beans Java
                 serializados; o scraper baixa o form GET inicial e resolve
                 cada nome regimental para o bean correspondente. Match
-                case-sensitive exato; ``ValueError`` se algum nome nao bater
-                (a mensagem lista os nomes disponiveis). Refs #158.
+                insensivel a caixa e diacritico — ``"cristovao suter"``,
+                ``"Cristóvão Suter"`` e ``"CRISTÓVÃO SUTER"`` resolvem
+                para o mesmo magistrado. ``ValueError`` se algum nome nao
+                bater (a mensagem lista os nomes na forma canonica:
+                UPPERCASE com acento). Refs #158.
             orgao_julgador (list[str] | None): Codigos do orgao julgador
                 (ex.: ``["PRIMEIRA_TURMA_CIVEL"]``). Backend:
                 ``menuinicial:tipoOrgaoList``.

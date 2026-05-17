@@ -1,6 +1,7 @@
 """Downloads raw results from the TJRR jurisprudence search (JSF/PrimeFaces)."""
 import re
 import time
+import unicodedata
 
 from bs4 import BeautifulSoup
 from tqdm import tqdm
@@ -118,20 +119,39 @@ def _get_form_fields(request_fn: RequestFn) -> dict:
     }
 
 
+def _norm_relator_key(s: str) -> str:
+    """Normaliza nome regimental para lookup: tira diacriticos e baixa caixa.
+
+    NFD separa cada caractere acentuado em base + combining mark
+    (``"Á"`` -> ``"A" + U+0301``); o filtro descarta os marks. Depois
+    ``casefold()`` baixa a caixa de forma agressiva (mais correta que
+    ``lower()`` em casos como ``"ß"``). Continua sendo igualdade exata —
+    nao habilita substring ou fuzzy.
+    """
+    nfd = unicodedata.normalize("NFD", s)
+    no_diacritics = "".join(c for c in nfd if not unicodedata.combining(c))
+    return no_diacritics.casefold()
+
+
 def _resolve_relator_values(
     relator: list[str], relator_map: dict[str, str]
 ) -> list[str]:
     """Resolve regimental names to the opaque bean values expected by the form.
 
-    Match e case-sensitive exato — evita ambiguidade silenciosa
-    (substring/fuzzy correriam o risco de bater dois magistrados pelo
-    primeiro nome). Se algum nome nao bater, levanta ``ValueError``
-    listando os nomes disponiveis para o usuario corrigir.
+    Match e exato apos normalizacao ``_norm_relator_key`` — o usuario pode
+    digitar ``"cristovao suter"``, ``"Cristóvão Suter"`` ou
+    ``"CRISTÓVÃO SUTER"`` e bate com o mesmo magistrado. Continua sendo
+    igualdade (nao fuzzy/substring), entao nao ha risco de bater dois
+    nomes pelo primeiro componente. ``ValueError`` lista os nomes
+    **canonicos** (UPPERCASE com acento) para o usuario corrigir.
     """
+    normalized_lookup = {
+        _norm_relator_key(name): value for name, value in relator_map.items()
+    }
     resolved: list[str] = []
     unknown: list[str] = []
     for name in relator:
-        opaque = relator_map.get(name)
+        opaque = normalized_lookup.get(_norm_relator_key(name))
         if opaque is None:
             unknown.append(name)
         else:
