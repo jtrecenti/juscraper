@@ -1,5 +1,7 @@
 """Scraper for the Tribunal de Justica do Rio Grande do Norte (TJRN)."""
 
+from typing import Any
+
 import pandas as pd
 
 from juscraper.core.http import HTTPScraper
@@ -31,8 +33,20 @@ class TJRNScraper(HTTPScraper):
 
     BASE_URL = "https://jurisprudencia.tjrn.jus.br"
 
-    def __init__(self):
-        super().__init__("TJRN")
+    def __init__(
+        self,
+        verbose: int = 0,
+        download_path: str | None = None,
+        sleep_time: float = 1.0,
+        **kwargs: Any,
+    ):
+        super().__init__(
+            "TJRN",
+            verbose=verbose,
+            download_path=download_path,
+            sleep_time=sleep_time,
+            **kwargs,
+        )
 
     def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJRN."""
