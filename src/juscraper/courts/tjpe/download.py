@@ -18,12 +18,22 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 
 from juscraper.core.http import RequestFn
+from juscraper.utils.pagination import extract_count_with_cascade
 
 logger = logging.getLogger(__name__)
 
 BASE_URL = "https://www.tjpe.jus.br/consultajurisprudenciaweb/xhtml/consulta"
 
 RESULTS_PER_PAGE = 5
+
+_PAGINATION_CSS_SELECTORS: tuple[str, ...] = (
+    "div.resultado-header table.table-header-resultado",
+)
+_PAGINATION_REGEXES: tuple[re.Pattern[str], ...] = (
+    re.compile(r"Documentos\s+encontrados:\s*(\d+)", re.IGNORECASE),
+    re.compile(r"(\d+)\s+documentos\s+encontrados", re.IGNORECASE),
+)
+_ZERO_MARKERS: tuple[str, ...] = ("nenhum documento encontrado",)
 
 
 def _extract_viewstate(html: str) -> str:
@@ -37,25 +47,15 @@ def _extract_viewstate(html: str) -> str:
 
 
 def _extract_total_docs(html: str) -> int:
-    """Extract total document count from the results page.
-
-    Handles two formats:
-    - Results page: "Documentos encontrados: </label>...<span>996</span>"
-    - Escolha page: "953 documentos encontrados"
-    """
-    # Format 1: results page with <span>
-    match = re.search(
-        r"Documentos encontrados:.*?<span>(\d+)</span>", html, re.DOTALL
+    """Extract total document count using cascading selectors + regexes (refs #87)."""
+    n = extract_count_with_cascade(
+        html,
+        css_selectors=_PAGINATION_CSS_SELECTORS,
+        regex_patterns=_PAGINATION_REGEXES,
+        zero_markers=_ZERO_MARKERS,
+        fallback_max_int=False,
     )
-    if match:
-        return int(match.group(1))
-
-    # Format 2: escolha page
-    match = re.search(r"(\d+)\s+documentos encontrados", html)
-    if match:
-        return int(match.group(1))
-
-    return 0
+    return n if n is not None else 0
 
 
 def _is_results_page(html: str) -> bool:
