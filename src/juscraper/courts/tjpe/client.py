@@ -73,8 +73,8 @@ class TJPEScraper(HTTPScraper):
             data_julgamento_inicio=inp.data_julgamento_inicio,
             data_julgamento_fim=inp.data_julgamento_fim,
             relator=inp.relator,
-            classe_cnj=inp.classe,
-            assunto_cnj=inp.assunto,
+            classe=inp.classe,
+            assunto=inp.assunto,
             meio_tramitacao=inp.meio_tramitacao,
             tipo_decisao=inp.tipo_decisao,
         )

@@ -6,10 +6,10 @@ a suite usa ``OrderedRegistry`` (mesmo padrao do
 :mod:`tests.tjpe.test_cjsg_contract`) e cada teste registra GET + POST em ordem.
 
 Cada teste responde o POST com ``no_results.html`` ("Nenhum documento
-encontrado"). A sample nao bate em ``_is_results_page`` nem em
-``_is_escolha_page``, entao o scraper retorna lista vazia antes de qualquer
-AJAX de paginacao — duas chamadas HTTP bastam para fechar o contrato dos
-campos do form, sem precisar fixar pagina seguinte.
+encontrado"). A sample nao bate em :func:`is_results_page` nem em
+:func:`is_escolha_page`, entao o scraper retorna lista vazia antes de
+qualquer AJAX de paginacao — duas chamadas HTTP bastam para fechar o
+contrato dos campos do form, sem precisar fixar pagina seguinte.
 
 Wiring de :class:`InputCJSGTJPE` (etapa 2 da #197) ligou o pydantic ao
 ``cjsg_download`` — kwargs desconhecidos viram ``TypeError``, verificado
@@ -35,8 +35,8 @@ FORM = "formPesquisaJurisprudencia"
 
 @pytest.fixture(autouse=True)
 def _silence_unexpected_response_warning(caplog):
-    # ``no_results.html`` nao casa com ``_is_results_page`` nem com
-    # ``_is_escolha_page``, entao o scraper cai no ramo "unexpected response"
+    # ``no_results.html`` nao casa com :func:`is_results_page` nem com
+    # :func:`is_escolha_page`, entao o scraper cai no ramo "unexpected response"
     # e emite ``logger.warning``. Limita a captura do caplog para que o ruido
     # nao polua a saida se algum teste vier a falhar.
     caplog.set_level(logging.ERROR, logger="juscraper.courts.tjpe.download")
