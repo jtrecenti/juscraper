@@ -1,13 +1,11 @@
 """Filter-propagation contract for TJRR cjsg.
 
 TJRR's ``cjsg`` exposes ``orgao_julgador`` (list of body codes),
-``especie`` (list of decision-type codes) and the date range
-``data_julgamento_inicio/fim``. The ``relator`` parameter is accepted
-for API parity but the live JSF form no longer carries it as a text
-input (see ``_search`` in ``download.py``: ``relator`` is annotated
-``# noqa: ARG001``); the dedicated ``test_cjsg_relator_lands_in_body``
-xfails against this gap and tracks issue #158 (deprecation/remoção
-planejada).
+``especie`` (list of decision-type codes), the date range
+``data_julgamento_inicio/fim`` and ``relator`` (list of regimental
+names resolved via lookup no form GET inicial — refs #158). Match
+case-sensitive exato; nomes desconhecidos levantam ``ValueError``
+listando os disponiveis.
 
 Aliases: ``query``/``termo`` (search term), ``data_inicio``/``data_fim``
 (map to ``data_julgamento_*``).
@@ -73,25 +71,45 @@ def test_cjsg_all_filters_land_in_body(mocker):
     assert df.empty
 
 
-@pytest.mark.xfail(
-    reason=(
-        "TJRR: argumento `relator` é aceito pela API pública mas "
-        "descartado silenciosamente pelo backend (campo virou "
-        "select-multi de IDs). Refs #158 (deprecation/remoção planejada)."
-    ),
-    strict=True,
+_RELATOR_ALMIRO_VALUE = (
+    "br.jus.tjrr.bpu.domain.model.MagistradoBPU"
+    "(matricula:3010559, nomeRegimental:ALMIRO PADILHA)"
 )
+
+
 @responses.activate(registry=OrderedRegistry)
 def test_cjsg_relator_lands_in_body(mocker):
-    """``relator`` deveria propagar ao body — hoje não propaga (issue #158)."""
+    """``relator=[nomeRegimental]`` resolve para o bean opaco no body (refs #158).
+
+    O scraper consulta ``relator_map`` (extraido do GET inicial em
+    ``_collect_relator_map``) e injeta o value bean Java em
+    ``menuinicial:relatorList``. Quem chama ``cjsg(relator=["ALMIRO PADILHA"])``
+    nao precisa saber do bean.
+    """
     mocker.patch("time.sleep")
     add_get_initial()
-    _add_post_initial({"menuinicial:relator": "Fulano de Tal"})
+    _add_post_initial({"menuinicial:relatorList": _RELATOR_ALMIRO_VALUE})
 
     df = jus.scraper("tjrr").cjsg(
-        "dano moral", paginas=1, relator="Fulano de Tal",
+        "dano moral", paginas=1, relator=["ALMIRO PADILHA"],
     )
     assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_relator_unknown_name_raises_value_error(mocker):
+    """``relator`` com nome fora do form GET inicial dispara ``ValueError`` (refs #158).
+
+    A mensagem cita o nome desconhecido e lista os nomes disponiveis —
+    o usuario corrige sem precisar inspecionar o HTML manualmente.
+    """
+    mocker.patch("time.sleep")
+    add_get_initial()
+
+    with pytest.raises(ValueError, match="NOME INEXISTENTE"):
+        jus.scraper("tjrr").cjsg(
+            "dano moral", paginas=1, relator=["NOME INEXISTENTE"],
+        )
 
 
 @responses.activate(registry=OrderedRegistry)
