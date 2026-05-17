@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-bce56a8797285a143a31a7a522035b36.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-f2b092d4c1ad66f51284021528000371.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -170,6 +170,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#date-format-flexibility" id="toc-date-format-flexibility" class="nav-link" data-scroll-target="#date-format-flexibility">Date format flexibility</a></li>
   </ul></li>
   <li><a href="#auto-chunking-esaj-family" id="toc-auto-chunking-esaj-family" class="nav-link" data-scroll-target="#auto-chunking-esaj-family">Auto-chunking (eSAJ family)</a></li>
+  <li><a href="#pre-scraping-count-count_only" id="toc-pre-scraping-count-count_only" class="nav-link" data-scroll-target="#pre-scraping-count-count_only">Pre-scraping count (<code>count_only</code>)</a></li>
   <li><a href="#normalization-utilities" id="toc-normalization-utilities" class="nav-link" data-scroll-target="#normalization-utilities">Normalization Utilities</a></li>
   <li><a href="#rate-limiting-and-retry-behaviour" id="toc-rate-limiting-and-retry-behaviour" class="nav-link" data-scroll-target="#rate-limiting-and-retry-behaviour">Rate limiting and retry behaviour</a></li>
   </ul>
@@ -487,6 +488,31 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    auto_chunk<span class="op">=</span><span class="va">False</span>,  <span class="co"># raises ValueError ("aceita no máximo 366 dias")</span></span>
 <span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Per-window failures (network errors, captchas, 5xx) are captured and surfaced as a single <code>UserWarning</code> listing the failed windows; the returned DataFrame contains whatever was downloaded successfully (parcial + warning). Combining <code>auto_chunk=True</code> with <code>paginas</code> is rejected when the interval is long enough to actually trigger chunking: the multi-window semantics for <code>paginas</code> are ambiguous (each window? aggregated budget?) and the design prefers to fail explicitly. For short intervals where chunking is a no-op, <code>paginas</code> works as usual.</p>
+</section>
+<section id="pre-scraping-count-count_only" class="level2">
+<h2 class="anchored" data-anchor-id="pre-scraping-count-count_only">Pre-scraping count (<code>count_only</code>)</h2>
+<p>Empirical legal research often benefits from a quick estimate of how many results a query will return before committing to a long collection job (~2 s/result in <code>cjsg</code>/<code>cjpg</code> with <code>sleep_time=0.5</code>, so 5 000 hits ≈ 3 h). The <code>count_only: bool = False</code> flag — accepted by <code>cjsg</code> in TJAC, TJAL, TJAM, TJCE, TJMS, TJSP and by <code>cjpg</code> in TJSP — short-circuits the public method to a single network call per window, extracts the total result count from the first-page HTML, and returns an <code>int</code> instead of a <code>pd.DataFrame</code>:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>tjsp <span class="op">=</span> jus.scraper(<span class="st">"tjsp"</span>)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co"># One POST + one GET. Returns an int.</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>n <span class="op">=</span> tjsp.cjpg(</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="st">"dano moral"</span>,</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">"01/01/2024"</span>,</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">"31/12/2024"</span>,</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    count_only<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Estimated wall-clock for full collection: </span><span class="sc">{</span>n <span class="op">*</span> <span class="dv">2</span> <span class="op">/</span> <span class="dv">3600</span><span class="sc">:.1f}</span><span class="ss">h"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Interaction with <code>auto_chunk</code>: when the interval exceeds 366 days and <code>auto_chunk=True</code> (default), <code>count_only</code> iterates the disjoint windows produced by <code>iter_date_windows</code> and <strong>sums</strong> the per-window counts. The sum is raw — the de-duplication step that the normal path performs by <code>cd_acordao</code> / <code>id_processo</code> does not apply here, so the returned number can slightly overestimate <code>len(cjsg(...))</code> when documents are republished across windows (same <code>cd_acordao</code> appearing in two windows). For most estimation use cases this is the desired behaviour: the count reflects what the backend will hand over, not the deduplicated final shape.</p>
+<p>Other edge cases:</p>
+<ul>
+<li><code>paginas</code> is ignored when <code>count_only=True</code> (the probe always inspects page 1). A <code>UserWarning</code> is emitted if both are passed.</li>
+<li><code>auto_chunk=False</code> plus an interval longer than 366 days still raises <code>ValueError</code> — consistent with the strict path.</li>
+<li>Captcha or layout-change failures on page 1 propagate as <code>ValueError</code> with the same message as the regular path.</li>
+<li>Tribunals not yet wired reject <code>count_only</code> via <code>extra="forbid"</code> (<code>TypeError</code>).</li>
+</ul>
+<p>The underlying helpers <code>cjsg_n_results(html)</code> and <code>cjpg_n_results(html)</code> are exposed from <code>juscraper.courts._esaj.parse</code> and <code>juscraper.courts.tjsp.cjpg_parse</code> for callers that already hold the raw HTML.</p>
 </section>
 <section id="normalization-utilities" class="level2">
 <h2 class="anchored" data-anchor-id="normalization-utilities">Normalization Utilities</h2>

@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-bce56a8797285a143a31a7a522035b36.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-f2b092d4c1ad66f51284021528000371.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -189,15 +189,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td><a href="#juscraper.courts.tjpe.client.TJPEScraper.cjsg">cjsg</a></td>
-<td>Search TJPE jurisprudence (download + parse).</td>
+<td>Busca jurisprudencia no TJPE.</td>
 </tr>
 <tr class="even">
 <td><a href="#juscraper.courts.tjpe.client.TJPEScraper.cjsg_download">cjsg_download</a></td>
-<td>Download raw HTML pages from the TJPE jurisprudence search.</td>
+<td>Baixa as paginas brutas do cjsg do TJPE.</td>
 </tr>
 <tr class="odd">
 <td><a href="#juscraper.courts.tjpe.client.TJPEScraper.cjsg_parse">cjsg_parse</a></td>
-<td>Parse raw HTML pages from cjsg_download into a DataFrame.</td>
+<td>Parseia as paginas brutas de :meth:<code>cjsg_download</code> em DataFrame.</td>
 </tr>
 <tr class="even">
 <td><a href="#juscraper.courts.tjpe.client.TJPEScraper.cpopg">cpopg</a></td>
@@ -223,7 +223,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    tipo_decisao<span class="op">=</span><span class="st">'acordaos'</span>,</span>
 <span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Search TJPE jurisprudence (download + parse).</p>
+<p>Busca jurisprudencia no TJPE.</p>
+<p>Wrapper trivial (<code>download → parse</code>) sobre :meth:<code>cjsg_download</code>. O backend e JSF/RichFaces: o fluxo carrega o <code>ViewState</code> da <code>consulta.xhtml</code> e propaga entre requests; a paginacao usa AJAX RichFaces em <code>resultado.xhtml</code> retornando XML envolto em <code>&lt;![CDATA[HTML]]&gt;</code>.</p>
 <section id="parameters" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
 <table class="caption-top table">
@@ -238,57 +239,88 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>pesquisa</td>
-<td><a href="`str`">str</a> | None</td>
-<td>Search term.</td>
+<td><a href="`str`">str</a></td>
+<td>Termo de busca livre (ementa). Aceita os aliases deprecados <code>query</code> / <code>termo</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>paginas</td>
 <td><a href="`int`">int</a> | <a href="`list`">list</a> | <a href="`range`">range</a> | None</td>
-<td>Pages to download (1-based). int, list, range, or None (all).</td>
+<td>Paginas 1-based; <code>None</code> baixa todas. Default <code>None</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>data_julgamento_inicio</td>
-<td><a href="`str`">str</a> | None</td>
-<td>Start date (DD/MM/YYYY).</td>
+<td><a href="`str`">str</a></td>
+<td>Data inicial de julgamento (<code>DD/MM/AAAA</code>, <code>DD-MM-AAAA</code>, <code>AAAA-MM-DD</code>, <code>AAAA/MM/DD</code>, :class:<code>datetime.date</code> ou :class:<code>datetime.datetime</code>).</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>data_julgamento_fim</td>
-<td><a href="`str`">str</a> | None</td>
-<td>End date (DD/MM/YYYY).</td>
+<td><a href="`str`">str</a></td>
+<td>Data final de julgamento (mesmos formatos de <code>data_julgamento_inicio</code>).</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>relator</td>
-<td><a href="`str`">str</a> | None</td>
-<td>Relator name.</td>
+<td><a href="`str`">str</a></td>
+<td>Nome do relator (deve bater exatamente com o valor do dropdown do formulario).</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>classe</td>
-<td><a href="`str`">str</a> | None</td>
-<td>CNJ class code. Accepts the deprecated alias <code>classe_cnj</code>.</td>
+<td><a href="`str`">str</a></td>
+<td>Codigo CNJ da classe. Aceita o alias deprecado <code>classe_cnj</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>assunto</td>
-<td><a href="`str`">str</a> | None</td>
-<td>CNJ subject code. Accepts the deprecated alias <code>assunto_cnj</code>.</td>
+<td><a href="`str`">str</a></td>
+<td>Codigo CNJ do assunto. Aceita o alias deprecado <code>assunto_cnj</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>meio_tramitacao</td>
-<td><a href="`str`">str</a> | None</td>
-<td>Tramitation medium.</td>
+<td><a href="`str`">str</a></td>
+<td>Filtro de meio de tramitacao (ex.: <code>"ELETRONICO"</code>).</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>tipo_decisao</td>
 <td><a href="`str`">str</a></td>
-<td>‘acordaos’, ‘monocraticas’, or ‘todos’.</td>
+<td><code>"acordaos"</code> (default), <code>"monocraticas"</code> ou <code>"todos"</code>. Quando <code>"todos"</code>, o backend marca os dois checkboxes e o fluxo passa pela pagina de escolha (<code>escolhaResultado.xhtml</code>).</td>
 <td><code>'acordaos'</code></td>
+</tr>
+</tbody>
+</table>
+<p>Todos os filtros do schema :class:<code>InputCJSGTJPE</code> estao listados acima como parametros nomeados. O <code>**kwargs</code> so e exposto para absorver aliases deprecados (listados abaixo) e qualquer kwarg desconhecido vira <code>TypeError</code> via <code>raise_on_extra_kwargs</code>.</p>
+<p>Aliases deprecados (popados com <code>DeprecationWarning</code> antes do pydantic): * <code>query</code> / <code>termo</code> -&gt; <code>pesquisa</code> * <code>classe_cnj</code> -&gt; <code>classe</code> * <code>assunto_cnj</code> -&gt; <code>assunto</code> * <code>data_inicio</code> / <code>data_fim</code> -&gt; <code>data_julgamento_inicio</code> / <code>_fim</code> * <code>data_julgamento_de</code> / <code>_ate</code> -&gt; <code>data_julgamento_inicio</code> / <code>_fim</code></p>
+</section>
+<section id="raises" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`TypeError`">TypeError</a></td>
+<td>Quando um kwarg desconhecido e passado.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>Quando um canonico e seu alias deprecado sao passados simultaneamente.</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><a href="`ValidationError`">ValidationError</a></td>
+<td>Quando um filtro tem formato invalido (ex.: data fora dos formatos aceitos, <code>tipo_decisao</code> fora do enum).</td>
 </tr>
 </tbody>
 </table>
@@ -307,10 +339,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
-<td>DataFrame with jurisprudence results.</td>
+<td>pd.DataFrame: Uma linha por decisao. Colunas canonicas: <code>processo</code>, <code>classe</code>, <code>assunto</code>, <code>relator</code>, <code>orgao_julgador</code>, <code>data_julgamento</code>, <code>data_publicacao</code>, <code>ementa</code>, <code>acordao</code>, <code>meio_tramitacao</code>, <code>url_inteiro_teor</code>.</td>
 </tr>
 </tbody>
 </table>
+</section>
+<section id="exemplo" class="level4 doc-section doc-section-exemplo">
+<h4 class="doc-section doc-section-exemplo anchored" data-anchor-id="exemplo">Exemplo</h4>
+<blockquote class="blockquote">
+<blockquote class="blockquote">
+<blockquote class="blockquote">
+<p>import juscraper as jus tjpe = jus.scraper(“tjpe”) df = tjpe.cjsg(“dano moral”, paginas=range(1, 3), … tipo_decisao=“acordaos”)</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</section>
+<section id="see-also" class="level4 doc-section doc-section-see-also">
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See also</h4>
+<p><a href=":class:`InputCJSGTJPE`"></a> — schema pydantic e a fonte da verdade dos filtros aceitos.</p>
 </section>
 </section>
 <section id="juscraper.courts.tjpe.client.TJPEScraper.cjsg_download" class="level3">
@@ -327,76 +373,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    tipo_decisao<span class="op">=</span><span class="st">'acordaos'</span>,</span>
 <span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Download raw HTML pages from the TJPE jurisprudence search.</p>
-<section id="parameters-1" class="level4 doc-section doc-section-parameters">
-<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>pesquisa</td>
-<td><a href="`str`">str</a> | None</td>
-<td>Search term.</td>
-<td><code>None</code></td>
-</tr>
-<tr class="even">
-<td>paginas</td>
-<td><a href="`int`">int</a> | <a href="`list`">list</a> | <a href="`range`">range</a> | None</td>
-<td>Pages to download (1-based). int, list, range, or None (all).</td>
-<td><code>None</code></td>
-</tr>
-<tr class="odd">
-<td>data_julgamento_inicio</td>
-<td><a href="`str`">str</a> | None</td>
-<td>Start date for judgment filter (DD/MM/YYYY).</td>
-<td><code>None</code></td>
-</tr>
-<tr class="even">
-<td>data_julgamento_fim</td>
-<td><a href="`str`">str</a> | None</td>
-<td>End date for judgment filter (DD/MM/YYYY).</td>
-<td><code>None</code></td>
-</tr>
-<tr class="odd">
-<td>relator</td>
-<td><a href="`str`">str</a> | None</td>
-<td>Relator name (must match dropdown value exactly).</td>
-<td><code>None</code></td>
-</tr>
-<tr class="even">
-<td>classe</td>
-<td><a href="`str`">str</a> | None</td>
-<td>CNJ class code. Accepts the deprecated alias <code>classe_cnj</code>.</td>
-<td><code>None</code></td>
-</tr>
-<tr class="odd">
-<td>assunto</td>
-<td><a href="`str`">str</a> | None</td>
-<td>CNJ subject code. Accepts the deprecated alias <code>assunto_cnj</code>.</td>
-<td><code>None</code></td>
-</tr>
-<tr class="even">
-<td>meio_tramitacao</td>
-<td><a href="`str`">str</a> | None</td>
-<td>Tramitation medium filter.</td>
-<td><code>None</code></td>
-</tr>
-<tr class="odd">
-<td>tipo_decisao</td>
-<td><a href="`str`">str</a></td>
-<td>‘acordaos’, ‘monocraticas’, or ‘todos’.</td>
-<td><code>'acordaos'</code></td>
-</tr>
-</tbody>
-</table>
-</section>
+<p>Baixa as paginas brutas do cjsg do TJPE.</p>
+<p>Aceita os mesmos filtros de :meth:<code>cjsg</code>; veja la a lista completa.</p>
 <section id="returns-1" class="level4 doc-section doc-section-returns">
 <h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
 <table class="caption-top table">
@@ -409,9 +387,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td></td>
+<td>list</td>
 <td><a href="`list`">list</a></td>
-<td>List of raw HTML strings, one per page.</td>
+<td>Lista de strings HTML brutas, uma por pagina.</td>
 </tr>
 </tbody>
 </table>
@@ -420,7 +398,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="juscraper.courts.tjpe.client.TJPEScraper.cjsg_parse" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjpe.client.TJPEScraper.cjsg_parse">cjsg_parse</h3>
 <div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>courts.tjpe.client.TJPEScraper.cjsg_parse(raw_pages)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Parse raw HTML pages from cjsg_download into a DataFrame.</p>
+<p>Parseia as paginas brutas de :meth:<code>cjsg_download</code> em DataFrame.</p>
 </section>
 <section id="juscraper.courts.tjpe.client.TJPEScraper.cpopg" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjpe.client.TJPEScraper.cpopg">cpopg</h3>
