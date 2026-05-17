@@ -11,10 +11,9 @@ encontrado"). A sample nao bate em ``_is_results_page`` nem em
 AJAX de paginacao — duas chamadas HTTP bastam para fechar o contrato dos
 campos do form, sem precisar fixar pagina seguinte.
 
-TJPE ainda nao foi wired com pydantic (etapa 2 da #197), entao nao ha
-``test_cjsg_unknown_kwarg_raises`` aqui: kwargs desconhecidos sao silenciosamente
-descartados via ``**kwargs`` ate o wiring entrar. Esse teste deve ser adicionado
-junto com :class:`InputCJSGTJPE` no PR de wiring.
+Wiring de :class:`InputCJSGTJPE` (etapa 2 da #197) ligou o pydantic ao
+``cjsg_download`` — kwargs desconhecidos viram ``TypeError``, verificado
+em :func:`test_cjsg_unknown_kwarg_raises`.
 """
 from __future__ import annotations
 
@@ -28,7 +27,7 @@ import responses
 from responses.registries import OrderedRegistry
 
 import juscraper as jus
-from tests._helpers import load_sample, urlencoded_body_subset_matcher
+from tests._helpers import assert_unknown_kwarg_raises, load_sample, urlencoded_body_subset_matcher
 from tests.tjpe.test_cjsg_contract import CONSULTA_URL
 
 FORM = "formPesquisaJurisprudencia"
@@ -231,3 +230,16 @@ def test_cjsg_data_inicio_alias_maps_to_data_julgamento(mocker):
     msgs = [str(w.message) for w in caught if issubclass(w.category, DeprecationWarning)]
     assert any("data_inicio" in m and "deprecado" in m for m in msgs)
     assert any("data_fim" in m and "deprecado" in m for m in msgs)
+
+
+def test_cjsg_unknown_kwarg_raises():
+    """Kwargs nao declarados em :class:`InputCJSGTJPE` levantam ``TypeError``
+    com o nome do campo, em vez de serem silenciosamente descartados pelo
+    ``**kwargs`` (refs #93, #197).
+    """
+    assert_unknown_kwarg_raises(
+        jus.scraper("tjpe").cjsg,
+        "kwarg_inventado",
+        "dano moral",
+        paginas=1,
+    )

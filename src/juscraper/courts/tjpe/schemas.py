@@ -1,9 +1,9 @@
 """Pydantic schemas for TJPE scraper endpoints.
 
-Ainda nao wired em :mod:`juscraper.courts.tjpe.client` — este arquivo e
-documentacao executavel da API publica ate o TJPE ser refatorado para o
-pipeline canonico da #93. A lista de campos bate byte-a-byte com a
-assinatura publica de :meth:`TJPEScraper.cjsg` / :meth:`TJPEScraper.cjsg_download`.
+Wired em :meth:`juscraper.courts.tjpe.client.TJPEScraper.cjsg_download`
+desde o #197 — kwargs desconhecidos viram :class:`TypeError` em ambos
+``cjsg`` e ``cjsg_download``. ``cjsg`` e wrapper trivial
+(``download → parse``).
 """
 from __future__ import annotations
 
@@ -21,8 +21,9 @@ class InputCJSGTJPE(SearchBase, DataJulgamentoMixin):
     deste modelo. Apos a normalizacao, os kwargs que sobram caem aqui e
     sao rejeitados por ``extra="forbid"`` herdado de :class:`SearchBase`.
     Filtro de data de julgamento herdado de :class:`DataJulgamentoMixin`.
-    O parametro ``session`` do metodo publico nao aparece aqui (dependencia
-    de runtime, nao da API).
+    Os aliases tribunal-especificos ``classe_cnj`` / ``assunto_cnj`` sao
+    resolvidos por :func:`juscraper.utils.params.resolve_deprecated_alias`
+    antes deste modelo.
     """
 
     relator: str | None = None
