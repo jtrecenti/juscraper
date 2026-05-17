@@ -17,9 +17,11 @@ the ementa GETs (×N) all share one fixture.
 """
 import pandas as pd
 import responses
+from responses.matchers import urlencoded_params_matcher
 
 import juscraper as jus
-from tests._helpers import load_sample, query_param_subset_matcher, urlencoded_body_subset_matcher
+from juscraper.courts.tjpr.download import build_cjsg_form_body
+from tests._helpers import load_sample, query_param_subset_matcher
 from tests.tjpr._helpers import SEARCH_URL, add_home
 
 CJSG_MIN_COLUMNS = {"processo", "orgao_julgador", "relator", "data_julgamento", "ementa"}
@@ -34,10 +36,10 @@ def _add_search_page(pesquisa: str, pagina: int, sample_path: str):
         content_type="text/html; charset=UTF-8",
         match=[
             query_param_subset_matcher({"actionType": "pesquisar"}),
-            urlencoded_body_subset_matcher({
-                "criterioPesquisa": pesquisa,
-                "pageNumber": str(pagina),
-            }),
+            urlencoded_params_matcher(
+                build_cjsg_form_body(pesquisa, page=pagina),
+                allow_blank=True,
+            ),
         ],
     )
 
