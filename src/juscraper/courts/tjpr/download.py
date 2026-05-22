@@ -7,10 +7,16 @@ from bs4 import BeautifulSoup
 from tqdm.auto import tqdm
 
 from juscraper.core.http import RequestFn
+from juscraper.utils.pagination import extract_count_with_cascade
 
 BASE_URL = "https://portal.tjpr.jus.br/jurisprudencia/"
 SEARCH_URL = "https://portal.tjpr.jus.br/jurisprudencia/publico/pesquisa.do"
 RESULTS_PER_PAGE = 10
+
+_PAGINATION_CSS_SELECTORS: tuple[str, ...] = ("a.arrowLastOn",)
+_PAGINATION_REGEXES: tuple[re.Pattern[str], ...] = (
+    re.compile(r"\['pageNumber'\]\.value='(\d+)'"),
+)
 
 
 def populate_session(request_fn: RequestFn, home_url: str) -> None:
@@ -111,25 +117,24 @@ def build_cjsg_form_body(
     }
 
 
-def extract_total_pages(html):
-    """Extract total number of pages from TJPR pagination HTML."""
-    soup = BeautifulSoup(html, "html.parser")
-    # Look for the pagination info: "Página X de Y"
-    pag_text = soup.find(string=re.compile(r'Página\s+\d+\s+de\s+\d+'))
-    if pag_text:
-        m = re.search(r'Página\s+\d+\s+de\s+(\d+)', pag_text)
-        if m:
-            return int(m.group(1))
-    # Fallback: look for last page link
-    page_links = soup.find_all('a', href=re.compile(r'pageNumber=\d+'))
-    if page_links:
-        max_page = 1
-        for link in page_links:
-            m = re.search(r'pageNumber=(\d+)', str(link['href']))
-            if m:
-                max_page = max(max_page, int(m.group(1)))
-        return max_page
-    return 1
+def extract_total_pages(html: str) -> int:
+    """Extract total number of pages from TJPR pagination HTML.
+
+    O paginador do TJPR não exibe "Página X de Y"; o total vem do link
+    "Última Página" (``<a class="arrowLastOn">``), cujo href em JavaScript
+    carrega ``['pageNumber'].value='<total>'``. A cascata tenta primeiro
+    esse seletor estruturado e, se ausente, cai no HTML bruto pegando o
+    maior ``pageNumber`` entre os links de paginação numerados. Sem
+    paginador (página única, zero resultados) nada casa e assume-se 1.
+    """
+    total = extract_count_with_cascade(
+        html,
+        css_selectors=_PAGINATION_CSS_SELECTORS,
+        regex_patterns=_PAGINATION_REGEXES,
+        use_element_html=True,
+        aggregate="max",
+    )
+    return total if total else 1
 
 
 def cjsg_download(
