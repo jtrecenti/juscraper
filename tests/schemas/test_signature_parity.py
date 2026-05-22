@@ -115,11 +115,11 @@ def _schema_fields(module_path: str, class_name: str) -> set[str]:
 # acontece dentro de um metodo irmao ou de um download manager). Na pratica,
 # o scraper ja usa o schema pydantic para rejeitar kwargs desconhecidos, mas
 # o padrao "INPUT_CJSG = ..." do EsajSearchScraper nao se aplica.
-WIRED_WITHOUT_CLASS_ATTR: frozenset[tuple[str, str]] = frozenset(
-    {
-        ("tjsp", "cjpg"),  # valida dentro de cjpg_download via InputCJPGTJSP
-    }
-)
+#
+# Vazio desde #205: o TJSP cjpg passou a expor ``INPUT_CJPG`` como atributo
+# de classe (simetrico a ``INPUT_CJSG``), entao cai no ramo ``hasattr`` de
+# ``_is_wired``. A constante permanece como ponto de extensao documentado.
+WIRED_WITHOUT_CLASS_ATTR: frozenset[tuple[str, str]] = frozenset()
 
 
 def _is_wired(scraper_cls: type, endpoint: str) -> bool:

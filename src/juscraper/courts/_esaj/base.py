@@ -250,6 +250,72 @@ class EsajSearchScraper(HTTPScraper):
             **kwargs,
         )
 
+    # --- search template ------------------------------------------------
+
+    def _run_search(
+        self,
+        *,
+        endpoint: str,
+        input_cls: type[BaseModel],
+        dedup_key: str,
+        pesquisa: str,
+        paginas: int | list | range | None,
+        kwargs: dict,
+        pre_normalize: Callable[[dict], None] | None = None,
+    ) -> Any:
+        """Template Method que orquestra um endpoint de busca eSAJ (refs #205).
+
+        Compartilhado por :meth:`cjsg` e :meth:`TJSPScraper.cjpg`. O fluxo —
+        probe ``count_only`` -> auto-chunk -> download -> parse -> cleanup do
+        diretorio temporario — e identico entre os dois endpoints. O que
+        diverge (schema, chave de dedup, normalizacao previa, metodos de
+        download/parse/count) entra por parametro ou e resolvido por nome via
+        ``getattr``, mantendo este metodo agnostico a HTTP e parsing.
+
+        Args:
+            endpoint: ``"cjsg"`` ou ``"cjpg"``. Resolve os hooks
+                ``<endpoint>_download``, ``<endpoint>_parse`` e
+                ``_<endpoint>_count_only`` por ``getattr(self, ...)``.
+            input_cls: Schema pydantic do endpoint (``INPUT_CJSG`` /
+                ``INPUT_CJPG``), repassado ao auto-chunk.
+            dedup_key: Coluna usada para deduplicar resultados cross-janela no
+                auto-chunk (``cd_acordao`` no cjsg, ``id_processo`` no cjpg).
+            pre_normalize: Hook opcional aplicado a ``kwargs`` antes de tudo —
+                cjpg usa para popar os aliases plurais (#232).
+
+        Returns:
+            ``pd.DataFrame`` com os resultados parseados, ou ``int`` quando
+            ``count_only=True``.
+        """
+        if pre_normalize is not None:
+            pre_normalize(kwargs)
+
+        # count_only=True: probe leve antes do run_auto_chunk (issue #92).
+        # auto_chunk soma DataFrames com dedup; count_only soma ints brutos.
+        if kwargs.get("count_only", False):
+            count_probe = getattr(self, f"_{endpoint}_count_only")
+            return count_probe(pesquisa=pesquisa, paginas=paginas, **kwargs)
+
+        chunked = run_auto_chunk(
+            method=getattr(self, endpoint),
+            method_label=f"{type(self).__name__}.{endpoint}()",
+            input_cls=input_cls,
+            dedup_key=dedup_key,
+            pesquisa=pesquisa,
+            paginas=paginas,
+            kwargs=kwargs,
+        )
+        if chunked is not None:
+            return chunked
+
+        download = getattr(self, f"{endpoint}_download")
+        parse = getattr(self, f"{endpoint}_parse")
+        path = download(pesquisa=pesquisa, paginas=paginas, **kwargs)
+        try:
+            return parse(path)
+        finally:
+            shutil.rmtree(path, ignore_errors=True)
+
     # --- cjsg -----------------------------------------------------------
 
     def cjsg(
@@ -356,28 +422,14 @@ class EsajSearchScraper(HTTPScraper):
             comportamento estrito antigo (``ValueError`` em janelas
             longas), passe ``auto_chunk=False``.
         """
-        # count_only=True: probe leve antes do run_auto_chunk (issue #92).
-        # auto_chunk soma DataFrames com dedup; count_only soma ints brutos.
-        if kwargs.get("count_only", False):
-            return self._cjsg_count_only(pesquisa=pesquisa, paginas=paginas, **kwargs)
-
-        chunked = run_auto_chunk(
-            method=self.cjsg,
-            method_label=f"{type(self).__name__}.cjsg()",
+        return self._run_search(
+            endpoint="cjsg",
             input_cls=self.INPUT_CJSG,
             dedup_key="cd_acordao",
             pesquisa=pesquisa,
             paginas=paginas,
             kwargs=kwargs,
         )
-        if chunked is not None:
-            return chunked
-
-        path = self.cjsg_download(pesquisa=pesquisa, paginas=paginas, **kwargs)
-        try:
-            return self.cjsg_parse(path)
-        finally:
-            shutil.rmtree(path, ignore_errors=True)
 
     def _cjsg_count_only(
         self,
