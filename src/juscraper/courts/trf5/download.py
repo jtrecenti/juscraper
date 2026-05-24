@@ -41,6 +41,9 @@ BROWSER_HEADERS: dict[str, str] = {
 
 LISTVIEW_PATH = "ConsultaPublica/listView.seam"
 DETAIL_PATH = "ConsultaPublica/DetalheProcessoConsultaPublica/listView.seam"
+DOC_HTML_PATH = (
+    "ConsultaPublica/DetalheProcessoConsultaPublica/documentoSemLoginHTML.seam"
+)
 
 _CA_TOKEN_RE = re.compile(r"ca=([0-9a-f]+)")
 
@@ -333,6 +336,60 @@ def _extract_movs_rows(fragment_html: str) -> str:
     if end == -1:
         return ""
     return fragment_html[start:end]
+
+
+_DOC_URL_RE = re.compile(
+    r"documentoSemLoginHTML\.seam\?ca=([0-9a-f]+)(?:&amp;|&)idProcessoDoc=(\d+)"
+)
+
+
+def extract_documento_urls(detail_html: str) -> list[tuple[str, str]]:
+    """Extract peça download coordinates from the detail HTML.
+
+    Returns ``[(ca_token, id_processo_doc), ...]`` in the order they appear in
+    the ``processoDocumentoGridTab`` (documentos juntados ao processo) table.
+    De-duplicates by ``id_processo_doc`` — the same document may appear linked
+    from both the movs table and the documentos table, but we only want one
+    download per peça.
+
+    Each peça carries its own ``ca`` token; the token is bound to the Seam
+    conversation that produced the detail HTML, so the caller MUST issue the
+    download requests from the same ``requests.Session`` that fetched the
+    detail (otherwise PJe redirects to ``/login.seam``).
+    """
+    seen: set[str] = set()
+    out: list[tuple[str, str]] = []
+    for m in _DOC_URL_RE.finditer(detail_html):
+        ca, doc_id = m.group(1), m.group(2)
+        if doc_id in seen:
+            continue
+        seen.add(doc_id)
+        out.append((ca, doc_id))
+    return out
+
+
+def fetch_documento(
+    session: requests.Session,
+    ca_token: str,
+    id_processo_doc: str,
+    timeout: float = 30.0,
+) -> bytes:
+    """``GET`` a peça's HTML viewer and return the raw bytes.
+
+    The endpoint serves XHTML (ISO-8859-1) with the document content rendered
+    inline via the PJe ProseMirror viewer — images are inline as ``data:`` URLs,
+    so the returned payload is self-contained and can be persisted as a single
+    ``.html`` file.
+    """
+    url = BASE_URL + DOC_HTML_PATH
+    resp = session.get(
+        url,
+        params={"ca": ca_token, "idProcessoDoc": id_processo_doc, "codigo": ""},
+        timeout=timeout,
+        headers={"Referer": BASE_URL + DETAIL_PATH},
+    )
+    resp.raise_for_status()
+    return resp.content
 
 
 def merge_movs_pages(detail_html: str, extra_pages: list[str]) -> str:

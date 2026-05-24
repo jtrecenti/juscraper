@@ -9,6 +9,7 @@ divergences live entirely in :data:`BASE_URL`.
 from __future__ import annotations
 
 import logging
+import os
 import time
 from typing import Any
 
@@ -24,9 +25,11 @@ from .download import (
     FormFieldIds,
     build_search_payload,
     extract_ca_token,
+    extract_documento_urls,
     extract_form_field_ids,
     extract_movs_pagination,
     fetch_detail,
+    fetch_documento,
     fetch_form,
     fetch_movs_page,
     merge_movs_pages,
@@ -171,6 +174,86 @@ class TRF1Scraper(BaseScraper):
             record["id_cnj"] = cnj
             rows.append(record)
         return pd.DataFrame(rows)
+
+    def cpopg_download_pecas(
+        self,
+        id_cnj: str | list[str],
+        diretorio: str | None = None,
+        **kwargs: Any,
+    ) -> list[list[str]]:
+        """Baixa as peças (documentos juntados) de cada processo.
+
+        Refaz internamente a consulta de detalhe (``cpopg_download``) e em
+        seguida baixa cada peça via ``documentoSemLoginHTML.seam``. O re-fetch
+        é deliberado: os tokens ``ca`` que identificam cada peça estão
+        amarrados à conversa Seam que renderizou o detalhe, então peças
+        precisam ser baixadas dentro da mesma ``requests.Session``. Fazer o
+        detalhe + peças num único método evita expor essa restrição na API
+        pública — o usuário só passa o CNJ.
+
+        Cada peça é gravada como ``<diretorio>/<cnj>/<id_processo_doc>.html``,
+        com o conteúdo XHTML do viewer (imagens embarcadas como ``data:`` URLs).
+
+        Args:
+            id_cnj (str | list[str]): CNJ único ou lista.
+            diretorio (str | None): Sobrescreve ``download_path`` para esta
+                chamada. Default ``None`` (usa ``self.download_path``).
+
+        Returns:
+            list[list[str]]: Lista alinhada com ``id_cnj``; cada entrada é a
+                lista de caminhos das peças baixadas. Entradas vazias indicam
+                processo não encontrado, sem peças ou falha na sessão.
+
+        Raises:
+            TypeError: Quando um kwarg desconhecido é passado.
+            ValueError: Quando nem ``diretorio`` nem ``download_path`` (no
+                construtor) foram definidos — é preciso saber onde gravar.
+        """
+        cnjs = self._coerce_id_cnj(id_cnj, **kwargs)
+        base_dir = diretorio if diretorio is not None else self.download_path
+        if not base_dir:
+            raise ValueError(
+                "TRF1Scraper.cpopg_download_pecas: defina 'diretorio' ou "
+                "passe 'download_path' no construtor."
+            )
+        os.makedirs(base_dir, exist_ok=True)
+        results: list[list[str]] = []
+        for i, cnj in enumerate(tqdm(cnjs, desc="TRF1 pecas")):
+            try:
+                detail = self._fetch_one(cnj)
+            except Exception as exc:  # noqa: BLE001 — resiliência por item
+                logger.warning("Erro ao consultar %s: %s", cnj, exc)
+                results.append([])
+                if i + 1 < len(cnjs) and self.sleep_time:
+                    time.sleep(self.sleep_time)
+                continue
+            if detail is None:
+                results.append([])
+                if i + 1 < len(cnjs) and self.sleep_time:
+                    time.sleep(self.sleep_time)
+                continue
+            urls = extract_documento_urls(detail)
+            proc_dir = os.path.join(base_dir, cnj)
+            os.makedirs(proc_dir, exist_ok=True)
+            paths: list[str] = []
+            for ca, doc_id in urls:
+                try:
+                    content = fetch_documento(self.session, ca, doc_id)
+                except Exception as exc:  # noqa: BLE001 — resiliência por peça
+                    logger.warning(
+                        "Erro ao baixar peça %s do %s: %s", doc_id, cnj, exc
+                    )
+                    continue
+                path = os.path.join(proc_dir, f"{doc_id}.html")
+                with open(path, "wb") as fh:
+                    fh.write(content)
+                paths.append(path)
+                if self.sleep_time:
+                    time.sleep(self.sleep_time)
+            results.append(paths)
+            if i + 1 < len(cnjs) and self.sleep_time:
+                time.sleep(self.sleep_time)
+        return results
 
     def cpopg(
         self,
