@@ -26,6 +26,7 @@ from .download import (
     FormFieldIds,
     build_search_payload,
     extract_ca_token,
+    extract_docs_pagination,
     extract_documento_urls,
     extract_form_field_ids,
     extract_movs_pagination,
@@ -33,6 +34,7 @@ from .download import (
     fetch_documento,
     fetch_form,
     fetch_movs_page,
+    merge_docs_pages,
     merge_movs_pages,
     submit_search,
 )
@@ -104,15 +106,27 @@ class TRF3Scraper(BaseScraper):
         if not ca:
             return None
         detail = fetch_detail(self.session, ca)
-        info = extract_movs_pagination(detail)
-        if info is None or info.max_pages <= 1:
-            return detail
-        extras: list[str] = []
-        for page in range(2, info.max_pages + 1):
-            extras.append(fetch_movs_page(self.session, info, page, ca))
-            if self.sleep_time:
-                time.sleep(self.sleep_time)
-        return merge_movs_pages(detail, extras)
+        movs_info = extract_movs_pagination(detail)
+        if movs_info is not None and movs_info.max_pages > 1:
+            extras: list[str] = []
+            for page in range(2, movs_info.max_pages + 1):
+                extras.append(fetch_movs_page(self.session, movs_info, page, ca))
+                if self.sleep_time:
+                    time.sleep(self.sleep_time)
+            detail = merge_movs_pages(detail, extras)
+        docs_info = extract_docs_pagination(detail)
+        if docs_info is not None and docs_info.max_pages > 1:
+            extras_docs: list[str] = []
+            for page in range(2, docs_info.max_pages + 1):
+                # Re-use fetch_movs_page — POST shape is identical, only the
+                # IDs (container/source/slider) come from docs_info.
+                extras_docs.append(
+                    fetch_movs_page(self.session, docs_info, page, ca)
+                )
+                if self.sleep_time:
+                    time.sleep(self.sleep_time)
+            detail = merge_docs_pages(detail, extras_docs)
+        return detail
 
     # --- public API ------------------------------------------------------
 

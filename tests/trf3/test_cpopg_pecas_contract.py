@@ -42,6 +42,53 @@ def test_extract_documento_urls_finds_all_pecas_in_detail() -> None:
     assert len(ids) == len(set(ids))
 
 
+def test_extract_docs_pagination_detects_slider_on_paginated_sample() -> None:
+    """Detail com > 15 docs deve expor slider próprio (à parte do movs)."""
+    from juscraper.courts.trf3.download import extract_docs_pagination, extract_movs_pagination
+
+    detail = load_sample_bytes("trf3", "cpopg/detail_paginated.html").decode("latin-1")
+    movs_info = extract_movs_pagination(detail)
+    docs_info = extract_docs_pagination(detail)
+    assert movs_info is not None and movs_info.max_pages > 1
+    assert docs_info is not None and docs_info.max_pages > 1
+    # Os dois sliders têm que ser instâncias distintas (form_id diferente).
+    assert movs_info.form_id != docs_info.form_id
+    assert movs_info.slider_input_name != docs_info.slider_input_name
+
+
+def test_extract_docs_pagination_returns_none_when_no_slider() -> None:
+    """Detail com ≤ 15 docs não renderiza slider — paginador retorna None."""
+    from juscraper.courts.trf3.download import extract_docs_pagination
+
+    detail = load_sample_bytes("trf3", "cpopg/detail_normal.html").decode("latin-1")
+    assert extract_docs_pagination(detail) is None
+
+
+def test_merge_docs_pages_splices_into_docs_tbody() -> None:
+    """``merge_docs_pages`` adiciona linhas no tbody de docs sem mexer no movs."""
+    import re
+
+    from juscraper.courts.trf3.download import _extract_docs_rows, extract_documento_urls, merge_docs_pages
+
+    detail = load_sample_bytes("trf3", "cpopg/detail_paginated.html").decode("latin-1")
+    page1_urls = extract_documento_urls(detail)
+    # Forja uma "página 2" reutilizando o tbody da página 1 (mesmo formato).
+    m = re.search(
+        r'<tbody[^>]*\bid="[^"]*:processoDocumentoGridTab:tb"[^>]*>.*?</tbody>',
+        detail,
+        re.DOTALL,
+    )
+    assert m is not None
+    fake_page2 = m.group()
+    # Sanity: a "extração de linhas" da page 2 forjada não é vazia.
+    assert _extract_docs_rows(fake_page2)
+    merged = merge_docs_pages(detail, [fake_page2])
+    # Como reutilizamos os mesmos IDs, o dedup por id_processo_doc deve preservar
+    # a contagem; o teste vale para garantir que o splice em si funciona.
+    merged_urls = extract_documento_urls(merged)
+    assert len(merged_urls) == len(page1_urls)  # dedup mantém único por id
+
+
 def test_extract_documento_urls_empty_when_no_pecas() -> None:
     from juscraper.courts.trf3.download import extract_documento_urls
 

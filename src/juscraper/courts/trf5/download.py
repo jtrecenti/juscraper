@@ -439,3 +439,86 @@ def merge_movs_pages(detail_html: str, extra_pages: list[str]) -> str:
         return detail_html
     appended = "".join(_extract_movs_rows(p) for p in extra_pages)
     return detail_html[:end] + appended + detail_html[end:]
+
+# ---------------------------------------------------------------------------
+# Documentos juntados pagination
+# ---------------------------------------------------------------------------
+#
+# A tabela ``processoDocumentoGridTab`` ("Documentos juntados ao processo")
+# também é paginada (15 linhas por página, mesmo widget Richfaces dos movs).
+# A diferença é só de marcador: o slider dos docs aparece APÓS o panel
+# ``processoDocumentoGridTabPanel`` e é o último grid paginado da página,
+# então o ``region`` vai do panel até o fim do HTML. ``MovsPagination`` é
+# reutilizado porque o shape do POST é idêntico.
+
+
+def extract_docs_pagination(detail_html: str) -> MovsPagination | None:  # pylint: disable=too-many-return-statements
+    """Detect Richfaces slider on the documentos juntados table.
+
+    Returns ``None`` quando o processo tem ≤ 15 documentos (PJe não renderiza
+    o slider nesse caso). O shape devolvido é o mesmo de
+    :func:`extract_movs_pagination` — :func:`fetch_movs_page` aceita qualquer
+    um dos dois.
+    """
+    panel_idx = detail_html.find("processoDocumentoGridTabPanel")
+    if panel_idx == -1:
+        return None
+    region = detail_html[panel_idx:]
+    sl_start = region.find("new Richfaces.Slider")
+    if sl_start == -1:
+        return None
+    block = region[sl_start : sl_start + 2500]
+    sl = re.match(r'new Richfaces\.Slider\("([^"]+)"', block)
+    if not sl:
+        return None
+    slider_id = sl.group(1)
+    max_match = re.search(r"'maxValue':'(\d+)'", block)
+    if not max_match:
+        return None
+    sim_match = re.search(r"similarityGroupingId\\':\\'([^']+)\\'", block)
+    cont_match = re.search(r"containerId\\':\\'([^']+)\\'", block)
+    if not (sim_match and cont_match):
+        return None
+    vs_match = _VIEW_STATE_RE.search(detail_html)
+    if not vs_match:
+        return None
+    form_id = ":".join(slider_id.split(":")[:-1])
+    return MovsPagination(
+        form_id=form_id,
+        slider_input_name=slider_id,
+        ajax_source_name=sim_match.group(1),
+        container_id=cont_match.group(1),
+        max_pages=int(max_match.group(1)),
+        view_state=vs_match.group(1),
+    )
+
+
+_DOCS_TBODY_OPEN_RE = re.compile(
+    r'(<tbody[^>]*\bid="[^"]*:processoDocumentoGridTab:tb"[^>]*>)', re.IGNORECASE
+)
+
+
+def _extract_docs_rows(fragment_html: str) -> str:
+    """Return the inner HTML of the ``processoDocumentoGridTab:tb`` tbody."""
+    m = _DOCS_TBODY_OPEN_RE.search(fragment_html)
+    if not m:
+        return ""
+    start = m.end()
+    end = fragment_html.find(_TBODY_CLOSE, start)
+    if end == -1:
+        return ""
+    return fragment_html[start:end]
+
+
+def merge_docs_pages(detail_html: str, extra_pages: list[str]) -> str:
+    """Splice rows from docs pages 2..N into page 1's tbody."""
+    if not extra_pages:
+        return detail_html
+    m = _DOCS_TBODY_OPEN_RE.search(detail_html)
+    if not m:
+        return detail_html
+    end = detail_html.find(_TBODY_CLOSE, m.end())
+    if end == -1:
+        return detail_html
+    appended = "".join(_extract_docs_rows(p) for p in extra_pages)
+    return detail_html[:end] + appended + detail_html[end:]
