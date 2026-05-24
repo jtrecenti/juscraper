@@ -17,6 +17,31 @@ from dataclasses import dataclass
 
 import requests
 
+from ...core.exceptions import BotChallengeBlockedError
+
+_AKAMAI_REF_RE = re.compile(
+    rb"Reference(?:&#32;|\s)(?:&#35;|#)([0-9a-f]+(?:(?:&#46;|\.)[0-9a-f]+)*)"
+)
+
+
+def _check_bot_challenge(resp: requests.Response, tribunal: str = "TRF1") -> None:
+    """Raise :class:`BotChallengeBlockedError` when Akamai blocks the request.
+
+    The Akamai bot manager returns HTTP 403 with a short ``Access Denied`` body
+    and a ``Reference #...`` identifier; no challenge cookie is emitted. Detect
+    that specific shape (not every 403) so legitimate authorization failures
+    keep propagating as ``HTTPError`` via ``raise_for_status``.
+    """
+    if resp.status_code != 403:
+        return
+    head = resp.content[:600]
+    if b"Access Denied" not in head:
+        return
+    m = _AKAMAI_REF_RE.search(head)
+    ref = m.group(1).decode("ascii").replace("&#46;", ".") if m else None
+    raise BotChallengeBlockedError(tribunal, resp.url, reference=ref)
+
+
 BASE_URL = "https://pje1g-consultapublica.trf1.jus.br/consultapublica/"
 
 # Browser-realistic header set. TRF1 has not surfaced an Akamai-style
@@ -161,6 +186,7 @@ def fetch_form(session: requests.Session, timeout: float = 30.0) -> str:
     """``GET`` the form page and return its UTF-8 text."""
     url = BASE_URL + LISTVIEW_PATH
     resp = session.get(url, timeout=timeout)
+    _check_bot_challenge(resp)
     resp.raise_for_status()
     return resp.text
 
@@ -182,6 +208,7 @@ def submit_search(
             "X-Requested-With": "XMLHttpRequest",
         },
     )
+    _check_bot_challenge(resp)
     resp.raise_for_status()
     return resp.text
 
@@ -204,6 +231,7 @@ def fetch_detail(
         timeout=timeout,
         headers={"Referer": BASE_URL + LISTVIEW_PATH},
     )
+    _check_bot_challenge(resp)
     resp.raise_for_status()
     return resp.content.decode("latin-1")
 
@@ -324,6 +352,7 @@ def fetch_movs_page(
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
         },
     )
+    _check_bot_challenge(resp)
     resp.raise_for_status()
     return resp.content.decode("latin-1")
 
@@ -396,6 +425,7 @@ def fetch_documento(
         timeout=timeout,
         headers={"Referer": BASE_URL + DETAIL_PATH},
     )
+    _check_bot_challenge(resp)
     resp.raise_for_status()
     return resp.content
 

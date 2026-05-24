@@ -1,8 +1,7 @@
-"""Offline contract tests for ``TRF1Scraper.cpopg_download_pecas``.
+"""Offline contract tests for ``TRF1Scraper.cpopg(download_pecas=True, ...)``.
 
 Mirrors the TRF3 suite — the three TRF PJe deployments share the same
-``documentoSemLoginHTML.seam?ca=...&idProcessoDoc=...`` URL shape, so the
-extractor and downloader use the same logic per tribunal.
+``documentoSemLoginHTML.seam?ca=...&idProcessoDoc=...`` URL shape.
 """
 from __future__ import annotations
 
@@ -44,8 +43,16 @@ def test_extract_documento_urls_empty_when_no_pecas() -> None:
     assert extract_documento_urls("<html><body>nada</body></html>") == []
 
 
+def test_cpopg_default_does_not_download_pecas(tmp_path) -> None:
+    scraper = jus.scraper("trf1", sleep_time=0, download_path=str(tmp_path))
+    import inspect
+
+    sig = inspect.signature(scraper.cpopg)
+    assert sig.parameters["download_pecas"].default is False
+
+
 @responses.activate
-def test_cpopg_download_pecas_writes_files_per_cnj(tmp_path) -> None:
+def test_cpopg_with_download_pecas_writes_files_and_adds_column(tmp_path) -> None:
     responses.add(
         responses.GET,
         LIST_URL,
@@ -65,8 +72,8 @@ def test_cpopg_download_pecas_writes_files_per_cnj(tmp_path) -> None:
         content_type="text/html",
     )
     doc_body = load_sample_bytes("trf1", "cpopg_pecas/documento_html.html")
-    # The trf1 sample has 11 distinct documentos — mock them all.
     from juscraper.courts.trf1.download import extract_documento_urls
+
     n_pecas = len(
         extract_documento_urls(
             load_sample_bytes("trf1", "cpopg/detail_normal.html").decode("latin-1")
@@ -77,22 +84,12 @@ def test_cpopg_download_pecas_writes_files_per_cnj(tmp_path) -> None:
             responses.GET, DOC_URL, body=doc_body, content_type="text/html"
         )
 
-    scraper = jus.scraper("trf1", sleep_time=0, download_path=str(tmp_path))
-    # The integration test uses CNJ 10004080820254013602 (Manaus JEF, recent).
-    paths = scraper.cpopg_download_pecas("10004080820254013602")
-
-    assert len(paths) == 1
-    saved = paths[0]
+    scraper = jus.scraper("trf1", sleep_time=0)
+    df = scraper.cpopg(
+        "10004080820254013602", download_pecas=True, diretorio=str(tmp_path)
+    )
+    assert "pecas" in df.columns
+    saved = df.iloc[0]["pecas"]
     assert len(saved) == n_pecas
     for p in saved:
         assert os.path.isfile(p)
-        with open(p, "rb") as fh:
-            assert fh.read() == doc_body
-
-
-def test_cpopg_download_pecas_rejects_unknown_kwargs(tmp_path) -> None:
-    scraper = jus.scraper("trf1", sleep_time=0, download_path=str(tmp_path))
-    with pytest.raises(TypeError, match="unexpected keyword"):
-        scraper.cpopg_download_pecas(
-            "10004080820254013602", filtro_inexistente="x"
-        )

@@ -19,6 +19,7 @@ from pydantic import ValidationError
 from tqdm import tqdm
 
 from ...core.base import BaseScraper
+from ...core.exceptions import BotChallengeBlockedError
 from ...utils.cnj import clean_cnj, format_cnj
 from .download import (
     BROWSER_HEADERS,
@@ -134,6 +135,8 @@ class TRF1Scraper(BaseScraper):
         for i, cnj in enumerate(tqdm(cnjs, desc="TRF1 cpopg")):
             try:
                 results.append(self._fetch_one(cnj))
+            except BotChallengeBlockedError:
+                raise  # session-wide; nenhum item do batch passaria
             except Exception as exc:  # noqa: BLE001 — resiliência por item
                 logger.warning("Erro ao consultar %s: %s", cnj, exc)
                 results.append(None)
@@ -167,6 +170,8 @@ class TRF1Scraper(BaseScraper):
                 continue
             try:
                 record = parse_detail(html)
+            except BotChallengeBlockedError:
+                raise  # session-wide; nenhum item do batch passaria
             except Exception as exc:  # noqa: BLE001 — resiliência por item
                 logger.warning("Erro ao parsear detalhe de %s: %s", cnj, exc)
                 rows.append({"id_cnj": cnj})
@@ -175,70 +180,90 @@ class TRF1Scraper(BaseScraper):
             rows.append(record)
         return pd.DataFrame(rows)
 
-    def cpopg_download_pecas(
+    def cpopg(
         self,
         id_cnj: str | list[str],
+        download_pecas: bool = False,
         diretorio: str | None = None,
         **kwargs: Any,
-    ) -> list[list[str]]:
-        """Baixa as peças (documentos juntados) de cada processo.
+    ) -> pd.DataFrame:
+        """Consulta CPOPG: baixa o detalhe, parseia e (opcional) baixa peças.
 
-        Refaz internamente a consulta de detalhe (``cpopg_download``) e em
-        seguida baixa cada peça via ``documentoSemLoginHTML.seam``. O re-fetch
-        é deliberado: os tokens ``ca`` que identificam cada peça estão
-        amarrados à conversa Seam que renderizou o detalhe, então peças
-        precisam ser baixadas dentro da mesma ``requests.Session``. Fazer o
-        detalhe + peças num único método evita expor essa restrição na API
-        pública — o usuário só passa o CNJ.
+        Por default retorna apenas os metadados + movimentações + lista de
+        documentos (id/data/descrição). Para também baixar os arquivos das
+        peças (HTML viewer do PJe), passe ``download_pecas=True`` + um
+        ``diretorio``. As peças vão para ``<diretorio>/<cnj>/<id>.html`` e a
+        coluna ``pecas`` no DataFrame ganha a lista de caminhos por processo.
 
-        Cada peça é gravada como ``<diretorio>/<cnj>/<id_processo_doc>.html``,
-        com o conteúdo XHTML do viewer (imagens embarcadas como ``data:`` URLs).
+        ``download_pecas`` vive como flag aqui (em vez de um
+        ``cpopg_download_pecas`` separado) porque os tokens ``ca`` que
+        identificam cada peça estão amarrados à conversa Seam que produziu o
+        detalhe — peças precisam ser baixadas na mesma ``requests.Session``.
+        Manter as duas etapas numa só chamada evita refazer o GET do detalhe
+        para cada peça.
 
         Args:
-            id_cnj (str | list[str]): CNJ único ou lista.
-            diretorio (str | None): Sobrescreve ``download_path`` para esta
-                chamada. Default ``None`` (usa ``self.download_path``).
+            id_cnj: CNJ único ou lista.
+            download_pecas: Se ``True``, baixa as peças junto. Default ``False``.
+            diretorio: Onde gravar as peças. Sobrescreve ``download_path``
+                para esta chamada. Quando omitido, usa ``download_path`` (que
+                vira um ``tempfile.mkdtemp()`` se nada for passado ao construtor).
 
         Returns:
-            list[list[str]]: Lista alinhada com ``id_cnj``; cada entrada é a
-                lista de caminhos das peças baixadas. Entradas vazias indicam
-                processo não encontrado, sem peças ou falha na sessão.
+            DataFrame com uma linha por CNJ. Colunas: ``id_cnj``, ``processo``,
+            ``classe``, ``assunto``, ``data_distribuicao``, ``orgao_julgador``,
+            ``jurisdicao``, ``polo_ativo``, ``polo_passivo``, ``movimentacoes``,
+            ``documentos`` (metadados). Quando ``download_pecas=True``, ganha
+            ainda a coluna ``pecas`` com a lista de caminhos salvos.
 
         Raises:
-            TypeError: Quando um kwarg desconhecido é passado.
-            ValueError: Quando nem ``diretorio`` nem ``download_path`` (no
-                construtor) foram definidos — é preciso saber onde gravar.
+            TypeError: Kwarg desconhecido.
+            BotChallengeBlockedError: Akamai bloqueou o IP (HTTP 403 "Access
+                Denied"). Aguarde alguns minutos ou troque de IP.
         """
-        cnjs = self._coerce_id_cnj(id_cnj, **kwargs)
-        base_dir = diretorio if diretorio is not None else self.download_path
-        if not base_dir:
-            raise ValueError(
-                "TRF1Scraper.cpopg_download_pecas: defina 'diretorio' ou "
-                "passe 'download_path' no construtor."
-            )
-        os.makedirs(base_dir, exist_ok=True)
+        cnjs = self._coerce_id_cnj(
+            id_cnj,
+            download_pecas=download_pecas,
+            diretorio=diretorio,
+            **kwargs,
+        )
+        htmls = self.cpopg_download(id_cnj, **kwargs)
+        pecas_paths: list[list[str]] | None = None
+        if download_pecas:
+            base_dir = diretorio if diretorio is not None else self.download_path
+            os.makedirs(base_dir, exist_ok=True)
+            pecas_paths = self._download_pecas(htmls, cnjs, base_dir)
+        df = self.cpopg_parse(htmls, cnjs)
+        if pecas_paths is not None:
+            df["pecas"] = pecas_paths
+        return df
+
+    def _download_pecas(
+        self,
+        htmls: list[str | None],
+        cnjs: list[str],
+        base_dir: str,
+    ) -> list[list[str]]:
+        """Baixa as peças de cada detalhe HTML usando a sessão atual.
+
+        Cada peça vira ``<base_dir>/<cnj>/<id_processo_doc>.html``. Erros por
+        peça viram warning e seguem; um :class:`BotChallengeBlockedError`
+        propaga (session-wide).
+        """
         results: list[list[str]] = []
-        for i, cnj in enumerate(tqdm(cnjs, desc="TRF1 pecas")):
-            try:
-                detail = self._fetch_one(cnj)
-            except Exception as exc:  # noqa: BLE001 — resiliência por item
-                logger.warning("Erro ao consultar %s: %s", cnj, exc)
+        for i, (cnj, html) in enumerate(zip(cnjs, htmls)):
+            if html is None:
                 results.append([])
-                if i + 1 < len(cnjs) and self.sleep_time:
-                    time.sleep(self.sleep_time)
                 continue
-            if detail is None:
-                results.append([])
-                if i + 1 < len(cnjs) and self.sleep_time:
-                    time.sleep(self.sleep_time)
-                continue
-            urls = extract_documento_urls(detail)
+            urls = extract_documento_urls(html)
             proc_dir = os.path.join(base_dir, cnj)
             os.makedirs(proc_dir, exist_ok=True)
             paths: list[str] = []
             for ca, doc_id in urls:
                 try:
                     content = fetch_documento(self.session, ca, doc_id)
+                except BotChallengeBlockedError:
+                    raise  # session-wide; nenhum item passaria
                 except Exception as exc:  # noqa: BLE001 — resiliência por peça
                     logger.warning(
                         "Erro ao baixar peça %s do %s: %s", doc_id, cnj, exc
@@ -254,20 +279,3 @@ class TRF1Scraper(BaseScraper):
             if i + 1 < len(cnjs) and self.sleep_time:
                 time.sleep(self.sleep_time)
         return results
-
-    def cpopg(
-        self,
-        id_cnj: str | list[str],
-        **kwargs: Any,
-    ) -> pd.DataFrame:
-        """High-level ``cpopg`` lookup: download + parse.
-
-        Accepts a single CNJ or a list. Returns a DataFrame with one row per
-        process; columns include ``id_cnj``, ``processo``, ``classe``,
-        ``assunto``, ``data_distribuicao``, ``orgao_julgador``,
-        ``jurisdicao``, ``polo_ativo``, ``polo_passivo``, ``movimentacoes``
-        and ``documentos``.
-        """
-        cnjs = self._coerce_id_cnj(id_cnj, **kwargs)
-        htmls = self.cpopg_download(id_cnj, **kwargs)
-        return self.cpopg_parse(htmls, cnjs)

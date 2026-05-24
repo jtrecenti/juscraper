@@ -24,3 +24,32 @@ class RetryExhaustedError(Exception):
 
 class HTTPSemanticError(Exception):
     """Base para respostas HTTP-200 semanticamente erradas (página de erro disfarçada)."""
+
+
+class BotChallengeBlockedError(Exception):
+    """Levantada quando um portal bloqueia o request via bot manager (ex.: Akamai).
+
+    O sintoma típico é HTTP 403 com body curto ``Access Denied`` e uma referência
+    Akamai (``Reference #...``); o cookie de challenge (``ak_bmsc``) nem chega
+    a ser emitido. Isso normalmente significa que o IP do cliente foi
+    rate-limited — não adianta retentar com a mesma sessão.
+
+    Mensagem orienta o usuário a aguardar alguns minutos antes de tentar de
+    novo, ou trocar de IP (VPN, hotspot). É propagada (em vez de engolida
+    pelos try/except por-item) porque um bloqueio nesse nível é session-wide:
+    nenhum CNJ do batch vai conseguir passar.
+    """
+
+    def __init__(self, tribunal: str, url: str, reference: str | None = None):
+        self.tribunal = tribunal
+        self.url = url
+        self.reference = reference
+        msg = (
+            f"{tribunal} bloqueou a requisição (HTTP 403 'Access Denied') "
+            f"em {url}. Provavelmente foi o bot manager (Akamai) limitando "
+            f"o seu IP — aguarde alguns minutos antes de tentar de novo "
+            f"ou troque de IP (VPN, hotspot)."
+        )
+        if reference:
+            msg += f" Reference: {reference}."
+        super().__init__(msg)
