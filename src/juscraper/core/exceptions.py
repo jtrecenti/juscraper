@@ -24,3 +24,32 @@ class RetryExhaustedError(Exception):
 
 class HTTPSemanticError(Exception):
     """Base para respostas HTTP-200 semanticamente erradas (página de erro disfarçada)."""
+
+
+class EmptyResponseError(HTTPSemanticError):
+    """Resposta com status < 400 cujo corpo não é JSON válido, mesmo após retries.
+
+    Levantada por ``HTTPScraper._request_with_retry`` quando chamado com
+    ``expect_json=True`` e o backend devolve corpo vazio/não-JSON num status de
+    sucesso de forma persistente (ex.: o backend Solr do TJES devolve
+    esporadicamente HTTP 200 com corpo vazio — ver #275). Substitui o
+    ``json.JSONDecodeError`` opaco por um erro com contexto da requisição.
+    """
+
+    def __init__(
+        self,
+        url: str,
+        status_code: int,
+        attempts: int,
+        content_type: str | None = None,
+        snippet: str | None = None,
+    ):
+        self.url = url
+        self.status_code = status_code
+        self.attempts = attempts
+        self.content_type = content_type
+        self.snippet = snippet
+        super().__init__(
+            f"Resposta sem JSON válido em {url} após {attempts} tentativa(s) "
+            f"(status {status_code}, content-type {content_type!r})."
+        )

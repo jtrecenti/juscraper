@@ -8,7 +8,7 @@ import pytest
 import requests
 import responses
 
-from juscraper.core.exceptions import RetryExhaustedError
+from juscraper.core.exceptions import EmptyResponseError, RetryExhaustedError
 from juscraper.core.http import HTTPScraper
 
 URL = "https://example.test/api"
@@ -239,6 +239,49 @@ def test_request_with_retry_200_invalid_json_no_retry(probe, mocker):
     ``_request_with_retry`` so retry-a 429/5xx — entao body invalido em 200
     propaga ``ValueError`` na primeira ocorrencia. Refs #202.
     """
+    sleep_spy = mocker.patch("juscraper.core.http.time.sleep")
+    responses.add(responses.GET, URL, body="not-json", status=200, content_type="application/json")
+
+    resp = probe._request_with_retry("GET", URL)
+
+    assert resp.status_code == 200
+    sleep_spy.assert_not_called()
+    with pytest.raises(ValueError):
+        resp.json()
+
+
+@responses.activate
+def test_request_with_retry_expect_json_retries_empty_body(probe, mocker):
+    """``expect_json=True`` trata 200 com corpo vazio como transitório e retenta. Refs #275."""
+    sleep_spy = mocker.patch("juscraper.core.http.time.sleep")
+    responses.add(responses.GET, URL, body="", status=200)
+    responses.add(responses.GET, URL, json={"ok": True}, status=200)
+
+    resp = probe._request_with_retry("GET", URL, expect_json=True)
+
+    assert resp.status_code == 200
+    assert resp.json() == {"ok": True}
+    sleep_spy.assert_called_once_with(2.0)
+
+
+@responses.activate
+def test_request_with_retry_expect_json_exhausted_raises_empty_response(probe, mocker):
+    """Corpo vazio persistente com ``expect_json=True`` levanta ``EmptyResponseError``. Refs #275."""
+    mocker.patch("juscraper.core.http.time.sleep")
+    for _ in range(3):
+        responses.add(responses.GET, URL, body="", status=200)
+
+    with pytest.raises(EmptyResponseError) as exc:
+        probe._request_with_retry("GET", URL, expect_json=True)
+
+    assert exc.value.status_code == 200
+    assert exc.value.attempts == 3
+    assert exc.value.url == URL
+
+
+@responses.activate
+def test_request_with_retry_expect_json_default_off_does_not_retry(probe, mocker):
+    """Sem ``expect_json``, 200 com corpo inválido não retenta (default preservado, #202)."""
     sleep_spy = mocker.patch("juscraper.core.http.time.sleep")
     responses.add(responses.GET, URL, body="not-json", status=200, content_type="application/json")
 
