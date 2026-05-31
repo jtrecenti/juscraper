@@ -8,7 +8,7 @@ import pytest
 import requests
 import responses
 
-from juscraper.core.exceptions import EmptyResponseError, RetryExhaustedError
+from juscraper.core.exceptions import InvalidJSONResponseError, RetryExhaustedError
 from juscraper.core.http import HTTPScraper
 
 URL = "https://example.test/api"
@@ -265,13 +265,13 @@ def test_request_with_retry_expect_json_retries_empty_body(probe, mocker):
 
 
 @responses.activate
-def test_request_with_retry_expect_json_exhausted_raises_empty_response(probe, mocker):
-    """Corpo vazio persistente com ``expect_json=True`` levanta ``EmptyResponseError``. Refs #275."""
+def test_request_with_retry_expect_json_exhausted_raises_invalid_json(probe, mocker):
+    """Corpo vazio persistente com ``expect_json=True`` levanta ``InvalidJSONResponseError``. Refs #275."""
     mocker.patch("juscraper.core.http.time.sleep")
     for _ in range(3):
         responses.add(responses.GET, URL, body="", status=200)
 
-    with pytest.raises(EmptyResponseError) as exc:
+    with pytest.raises(InvalidJSONResponseError) as exc:
         probe._request_with_retry("GET", URL, expect_json=True)
 
     assert exc.value.status_code == 200

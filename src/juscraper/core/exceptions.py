@@ -26,7 +26,7 @@ class HTTPSemanticError(Exception):
     """Base para respostas HTTP-200 semanticamente erradas (página de erro disfarçada)."""
 
 
-class EmptyResponseError(HTTPSemanticError):
+class InvalidJSONResponseError(HTTPSemanticError):
     """Resposta com status < 400 cujo corpo não é JSON válido, mesmo após retries.
 
     Levantada por ``HTTPScraper._request_with_retry`` quando chamado com
@@ -49,7 +49,10 @@ class EmptyResponseError(HTTPSemanticError):
         self.attempts = attempts
         self.content_type = content_type
         self.snippet = snippet
-        super().__init__(
+        msg = (
             f"Resposta sem JSON válido em {url} após {attempts} tentativa(s) "
             f"(status {status_code}, content-type {content_type!r})."
         )
+        if snippet and snippet.strip():
+            msg += f" Início do corpo: {snippet!r}"
+        super().__init__(msg)

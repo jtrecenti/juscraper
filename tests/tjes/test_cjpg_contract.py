@@ -5,7 +5,7 @@ import responses
 from responses.matchers import query_param_matcher
 
 import juscraper as jus
-from juscraper.core.exceptions import EmptyResponseError
+from juscraper.core.exceptions import InvalidJSONResponseError
 from tests.tjes.test_cjsg_contract import BASE, _add_page, _params
 
 CJPG_MIN_COLUMNS = {"processo", "ementa", "relator", "orgao_julgador", "classe", "assunto", "dt_juntada"}
@@ -84,6 +84,7 @@ def test_cjpg_no_results(mocker):
 @responses.activate
 def test_cjpg_empty_body_retried_then_succeeds(mocker):
     """Corpo vazio transitório do backend é retentado e a query conclui (#275)."""
+    # patch global: cobre o backoff de retry (core.http) e o sleep de paginacao (tjes.download)
     mocker.patch("time.sleep")
     _add_empty_page("obrigacao de fazer", 1, core="pje1g")
     _add_page("obrigacao de fazer", 1, "cjpg/results_normal_page_01.json", core="pje1g")
@@ -96,11 +97,12 @@ def test_cjpg_empty_body_retried_then_succeeds(mocker):
 
 
 @responses.activate
-def test_cjpg_empty_body_persistent_raises_empty_response(mocker):
-    """Corpo vazio persistente levanta EmptyResponseError, não JSONDecodeError opaco (#275)."""
+def test_cjpg_empty_body_persistent_raises_invalid_json(mocker):
+    """Corpo vazio persistente levanta InvalidJSONResponseError, não JSONDecodeError opaco (#275)."""
+    # patch global: cobre o backoff de retry (core.http) e o sleep de paginacao (tjes.download)
     mocker.patch("time.sleep")
     for _ in range(3):
         _add_empty_page("obrigacao de fazer", 1, core="pje1g")
 
-    with pytest.raises(EmptyResponseError):
+    with pytest.raises(InvalidJSONResponseError):
         jus.scraper("tjes").cjpg("obrigacao de fazer", paginas=1)

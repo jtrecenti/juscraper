@@ -27,7 +27,7 @@ import requests
 
 from juscraper import __version__
 from juscraper.core.base import BaseScraper
-from juscraper.core.exceptions import EmptyResponseError, RetryExhaustedError
+from juscraper.core.exceptions import InvalidJSONResponseError, RetryExhaustedError
 
 logger = logging.getLogger("juscraper.core.http")
 
@@ -68,7 +68,7 @@ sem se preocupar com retry de transitorios.
 
 Com ``expect_json=True``, a response retornada tem ainda corpo JSON valido
 garantido: 200 com corpo vazio/nao-JSON e tratado como transitorio (retry com
-backoff) e, persistindo, levanta ``EmptyResponseError`` em vez do
+backoff) e, persistindo, levanta ``InvalidJSONResponseError`` em vez do
 ``json.JSONDecodeError`` opaco. Ver #275.
 
 Implementado como ``Callable[..., Response]`` (e nao ``Protocol``) por
@@ -132,7 +132,7 @@ class HTTPScraper(BaseScraper):
             expect_json: Se ``True``, valida que o corpo de uma resposta com
                 status < 400 é JSON. Corpo vazio/não-JSON é tratado como
                 transitório (retry com backoff); persistindo, levanta
-                ``EmptyResponseError``. Default ``False`` — o caller chama
+                ``InvalidJSONResponseError``. Default ``False`` — o caller chama
                 ``.json()`` por conta própria e um corpo inválido propaga
                 ``json.JSONDecodeError`` na primeira ocorrência (#275).
             **kwargs: Encaminhados para ``session.request``.
@@ -145,7 +145,7 @@ class HTTPScraper(BaseScraper):
             TypeError: Se ``session`` não for ``None`` nem ``requests.Session``.
             ValueError: Se ``max_retries`` for menor que 1.
             RetryExhaustedError: Quando esgota ``max_retries`` em status retryable.
-            EmptyResponseError: Quando ``expect_json=True`` e o corpo permanece
+            InvalidJSONResponseError: Quando ``expect_json=True`` e o corpo permanece
                 vazio/não-JSON após ``max_retries``.
             requests.HTTPError: Para 4xx não-retryable (via ``raise_for_status``).
         """
@@ -163,7 +163,7 @@ class HTTPScraper(BaseScraper):
             if resp.status_code < 400:
                 if expect_json and not self._response_is_json(resp):
                     if attempt == max_retries:
-                        raise EmptyResponseError(
+                        raise InvalidJSONResponseError(
                             url,
                             resp.status_code,
                             attempt,
@@ -204,6 +204,11 @@ class HTTPScraper(BaseScraper):
 
         Usado por ``_request_with_retry(expect_json=True)`` para distinguir um
         200 legítimo de um 200 com corpo vazio/não-JSON (transitório do backend).
+
+        O caller chama ``resp.json()`` de novo após esta validação; isso é
+        intencional e barato: ``resp.content`` fica em cache no objeto
+        ``Response``, então não há requisição extra, apenas um reparse do corpo
+        já em memória.
         """
         try:
             resp.json()

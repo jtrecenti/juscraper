@@ -109,7 +109,7 @@ def cjsg_download(
         params = _build_params(pagina=pagina, **common)
         # expect_json=True: o backend Solr do TJES devolve esporadicamente 200 com
         # corpo vazio; _request_with_retry retenta e, persistindo, levanta
-        # EmptyResponseError com contexto em vez de JSONDecodeError opaco (#275).
+        # InvalidJSONResponseError com contexto em vez de JSONDecodeError opaco (#275).
         resp = request_fn("GET", url, params=params, timeout=30, expect_json=True)
         return resp.json()
 
