@@ -26,6 +26,12 @@ PUBLIC_SEARCH_ENDPOINTS = ("cjsg", "cjpg")
 PUBLIC_CONSULTA_ENDPOINTS = ("cpopg", "cposg")
 # Endpoints especificos de um ou poucos tribunais (fora do quarteto canonico).
 CUSTOM_ENDPOINTS = ("cjsg_ementa",)
+# Nota: os metodos ``listar_classes``/``listar_assuntos``/``listar_orgaos``/
+# ``listar_varas`` da familia eSAJ (refs #228) ficam DE FORA deste regime de
+# schema de proposito — nao recebem input de usuario (so ``grau``, um literal),
+# entao um ``Input*`` com ``extra="forbid"`` seria cerimonia sem valor de
+# validacao. Por nao aparecerem em ALL_PUBLIC_ENDPOINTS, sao invisiveis aos
+# testes de paridade aqui. Se um dia ganharem filtros livres, ai sim entram.
 ALL_PUBLIC_ENDPOINTS = (
     PUBLIC_SEARCH_ENDPOINTS + PUBLIC_CONSULTA_ENDPOINTS + CUSTOM_ENDPOINTS
 )
