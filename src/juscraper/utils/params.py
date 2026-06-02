@@ -21,13 +21,24 @@ DATE_CANONICAL: tuple[str, ...] = (
     "data_publicacao_inicio", "data_publicacao_fim",
 )
 
-# Deprecated date aliases consumed by ``normalize_datas``. Keep in sync with
-# the ``deprecated_map``/``generic_map`` dicts inside that function.
-DATE_ALIASES: tuple[str, ...] = (
-    "data_julgamento_de", "data_julgamento_ate",
-    "data_publicacao_de", "data_publicacao_ate",
-    "data_inicio", "data_fim",
-)
+# Mapping from deprecated date aliases to their canonical names. Single source
+# of truth for both ``normalize_datas`` (alias resolution + DeprecationWarning)
+# and the noop branch of ``run_auto_chunk`` (manual re-emission when the auto-
+# chunk silenced the sniff). Order matters in ``normalize_datas``: ``_de``/
+# ``_ate`` precede the generic ``data_inicio``/``data_fim`` so a conflict
+# between specific and generic surfaces against the specific name.
+DATE_ALIAS_TO_CANONICAL: dict[str, str] = {
+    "data_julgamento_de": "data_julgamento_inicio",
+    "data_julgamento_ate": "data_julgamento_fim",
+    "data_publicacao_de": "data_publicacao_inicio",
+    "data_publicacao_ate": "data_publicacao_fim",
+    "data_inicio": "data_julgamento_inicio",
+    "data_fim": "data_julgamento_fim",
+}
+
+# Deprecated date aliases consumed by ``normalize_datas``. Derived from
+# :data:`DATE_ALIAS_TO_CANONICAL` to keep both in sync.
+DATE_ALIASES: tuple[str, ...] = tuple(DATE_ALIAS_TO_CANONICAL.keys())
 
 
 def pop_normalize_aliases(kwargs: dict, *, include_canonical: bool = False) -> None:
@@ -145,65 +156,64 @@ def normalize_datas(**kwargs):
         dict with the four canonical keys (values may be ``None``).
 
     Raises:
-        ValueError: If a generic alias conflicts with the specific canonical name.
+        ValueError: When more than one source (canonical or alias) fills the
+            same canonical field. The message quotes the names the user
+            actually passed — not the canonical one (refs #193). No
+            ``DeprecationWarning`` is emitted before the raise; the conflict
+            is the user's mistake to fix, not a soft deprecation event.
     """
-    result = {
-        "data_julgamento_inicio": None,
-        "data_julgamento_fim": None,
-        "data_publicacao_inicio": None,
-        "data_publicacao_fim": None,
-    }
+    # Particiona DATE_ALIAS_TO_CANONICAL em _de/_ate (específicos) vs.
+    # data_inicio/data_fim (genéricos) preservando a ordem de coleta: específicos
+    # antes do genérico, para que uma colisão entre eles surja com o nome
+    # específico no erro.
+    deprecated_map = {k: v for k, v in DATE_ALIAS_TO_CANONICAL.items() if k.endswith(("_de", "_ate"))}
+    generic_map = {k: v for k, v in DATE_ALIAS_TO_CANONICAL.items() if k in ("data_inicio", "data_fim")}
 
-    deprecated_map = {
-        "data_julgamento_de": "data_julgamento_inicio",
-        "data_julgamento_ate": "data_julgamento_fim",
-        "data_publicacao_de": "data_publicacao_inicio",
-        "data_publicacao_ate": "data_publicacao_fim",
-    }
+    # canonical -> [(source_name, value), ...] na ordem em que apareceram
+    # nas três fases (canônico, _de/_ate, genérico). Único valor None
+    # entra silenciosamente no pop e nao gera fonte — preserva o
+    # comportamento antigo de aceitar canonical=None ao lado de alias.
+    sources: dict[str, list[tuple[str, Any]]] = {c: [] for c in DATE_CANONICAL}
 
-    generic_map = {
-        "data_inicio": "data_julgamento_inicio",
-        "data_fim": "data_julgamento_fim",
-    }
+    def _collect(name: str, canonical: str) -> None:
+        if name not in kwargs:
+            return
+        value = kwargs.pop(name)
+        if value is not None:
+            sources[canonical].append((name, value))
 
-    # 1. Canonical names first
-    for key in list(result.keys()):
-        if key in kwargs:
-            result[key] = kwargs.pop(key)
-
-    # 2. Deprecated _de/_ate aliases
+    for canonical in DATE_CANONICAL:
+        _collect(canonical, canonical)
     for old_name, canonical in deprecated_map.items():
-        if old_name in kwargs:
-            value = kwargs.pop(old_name)
-            if value is not None:
-                if result[canonical] is not None:
-                    raise ValueError(
-                        f"Não é possível passar '{old_name}' e '{canonical}' ao mesmo tempo. "
-                        f"Use apenas '{canonical}'."
-                    )
-                warnings.warn(
-                    f"O parâmetro '{old_name}' está deprecado. Use '{canonical}' em vez disso.",
-                    DeprecationWarning,
-                    stacklevel=2,
-                )
-                result[canonical] = value
-
-    # 3. Generic aliases
+        _collect(old_name, canonical)
     for generic, canonical in generic_map.items():
-        if generic in kwargs:
-            value = kwargs.pop(generic)
-            if value is not None:
-                if result[canonical] is not None:
-                    raise ValueError(
-                        f"Não é possível passar '{generic}' e '{canonical}' ao mesmo tempo. "
-                        f"Use apenas '{canonical}'."
-                    )
-                warnings.warn(
-                    f"O parâmetro '{generic}' está deprecado. Use '{canonical}' em vez disso.",
-                    DeprecationWarning,
-                    stacklevel=2,
-                )
-                result[canonical] = value
+        _collect(generic, canonical)
+
+    # Detecta colisão olhando todas as fontes coletadas. Mensagem cita os
+    # nomes que o usuário escreveu (em vez do canônico, que ele pode nem
+    # ter digitado — refs #193).
+    for canonical, srcs in sources.items():
+        if len(srcs) > 1:
+            names = [name for name, _ in srcs]
+            quoted = [f"'{n}'" for n in names]
+            joined = ", ".join(quoted[:-1]) + f" e {quoted[-1]}"
+            raise ValueError(
+                f"Não é possível passar {joined} ao mesmo tempo. "
+                f"Use apenas '{canonical}'."
+            )
+
+    result: dict[str, Any] = {c: None for c in DATE_CANONICAL}
+    for canonical, srcs in sources.items():
+        if not srcs:
+            continue
+        name, value = srcs[0]
+        if name != canonical:
+            warnings.warn(
+                f"O parâmetro '{name}' está deprecado. Use '{canonical}' em vez disso.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        result[canonical] = value
 
     return result
 
@@ -375,6 +385,68 @@ def validate_intervalo_datas(
             f"e '{rotulo}_fim' (recebido: {dias} dias, de {data_inicio} a "
             f"{data_fim}). Divida a consulta em janelas menores ou mantenha "
             "auto_chunk=True (default) para dividir automaticamente."
+        )
+
+
+# Data-zero pragmática para o judiciário brasileiro digital: anterior à
+# informatização da maioria dos backends. Usada como ``data_*_inicio`` quando
+# o usuário informa apenas ``data_*_fim`` — em vez de amputar a janela, o
+# auto-chunk divide o intervalo e baixa tudo. Definida em BR; convertida para
+# o formato do backend pelo ``fill_open_ended_dates``.
+OPEN_ENDED_DATE_FLOOR = "01/01/1990"
+
+
+def fill_open_ended_dates(
+    datas: dict,
+    *,
+    formato: str = "%d/%m/%Y",
+    rotulo: str = "data_julgamento",
+) -> None:
+    """Preenche par ``data_<rotulo>_inicio/fim`` quando exatamente um lado é ``None``.
+
+    Mutação in-place. Idempotente: noop quando ambos preenchidos ou ambos
+    ``None``. Refs: bug do TJSP cjpg que enviava ``dadosConsulta.dtFim=``
+    vazio ao backend, fazendo o eSAJ retornar "tudo desde X até hoje" e o
+    paginador iterar sobre dezenas de milhares de páginas.
+
+    - Só ``_inicio``: ``_fim = data de hoje`` (no formato canônico).
+    - Só ``_fim``: ``_inicio = OPEN_ENDED_DATE_FLOOR`` no formato
+      canônico (``"01/01/1990"`` em BR, ``"1990-01-01"`` em ISO).
+
+    Em ambos os casos emite :class:`UserWarning` orientando o usuário a
+    passar a data explicitamente para restringir a janela.
+
+    Args:
+        datas: Dict com as chaves ``data_<rotulo>_inicio`` e
+            ``data_<rotulo>_fim``. Mutado in-place.
+        formato: ``strftime`` format do backend (``"%d/%m/%Y"`` para eSAJ,
+            ``"%Y-%m-%d"`` para backends ISO). Default eSAJ.
+        rotulo: ``"data_julgamento"`` (default) ou ``"data_publicacao"``.
+    """
+    key_inicio = f"{rotulo}_inicio"
+    key_fim = f"{rotulo}_fim"
+    val_inicio = datas.get(key_inicio)
+    val_fim = datas.get(key_fim)
+
+    if val_inicio is None and val_fim is not None:
+        # Floor pragmático: 01/01/1990 no formato canônico do backend.
+        floor = datetime.strptime(OPEN_ENDED_DATE_FLOOR, "%d/%m/%Y").strftime(formato)
+        datas[key_inicio] = floor
+        warnings.warn(
+            f"'{key_inicio}' não foi informada -- assumindo {floor!r}. Para "
+            f"restringir a busca, passe '{key_inicio}' explicitamente "
+            "(auto_chunk dividirá a janela em chunks de 366 dias).",
+            UserWarning,
+            stacklevel=3,
+        )
+    elif val_fim is None and val_inicio is not None:
+        hoje = date.today().strftime(formato)
+        datas[key_fim] = hoje
+        warnings.warn(
+            f"'{key_fim}' não foi informada -- assumindo {hoje!r} (data atual). "
+            f"Para buscar uma janela diferente, passe '{key_fim}' explicitamente.",
+            UserWarning,
+            stacklevel=3,
         )
 
 
@@ -804,6 +876,23 @@ def apply_input_pipeline_search(
     for _key in DATE_CANONICAL:
         datas[_key] = coerce_brazilian_date(datas[_key], date_format)
 
+    # Auto-fill datas parciais antes da validação. Idempotente: para
+    # tribunais que passam por ``run_auto_chunk`` (família eSAJ + TJSP cjpg),
+    # o auto-chunk já preencheu antes do sniff e este é noop. Para os
+    # demais (TJES cjpg, TJTO cjpg, vários cjsg), este é o único ponto
+    # de auto-fill — e cobre ``data_publicacao``, que o auto-chunk não
+    # sniffa.
+    #
+    # Só dispara para schemas que declaram os campos correspondentes:
+    # schemas sem ``DataJulgamentoMixin`` (ou ``DataPublicacaoMixin``)
+    # rejeitarão a chave como ``extra_forbidden`` adiante; emitir warning
+    # antes desse erro seria ruído. Pre-checagem via ``model_fields``.
+    schema_field_names = set(schema_cls.model_fields.keys())
+    if {"data_julgamento_inicio", "data_julgamento_fim"}.issubset(schema_field_names):
+        fill_open_ended_dates(datas, formato=date_format, rotulo="data_julgamento")
+    if {"data_publicacao_inicio", "data_publicacao_fim"}.issubset(schema_field_names):
+        fill_open_ended_dates(datas, formato=date_format, rotulo="data_publicacao")
+
     validate_intervalo_datas(
         datas["data_julgamento_inicio"],
         datas["data_julgamento_fim"],
@@ -865,6 +954,7 @@ def resolve_deprecated_alias(
     if current_value != sentinel:
         kwargs.pop(old)
         raise ValueError(
-            f"Não é possível passar '{new}' e '{old}' simultaneamente."
+            f"Não é possível passar '{new}' e '{old}' ao mesmo tempo. "
+            f"Use apenas '{new}'."
         )
     return pop_deprecated_alias(kwargs, old, new)

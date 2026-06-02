@@ -17,14 +17,14 @@ def _payload(
     sinonimos: bool = True,
     espelho: bool = True,
     inteiro_teor: bool = False,
-    quantidade_por_pagina: int = 10,
+    tamanho_pagina: int = 10,
     termos_acessorios: list | None = None,
 ) -> dict:
     return {
         "query": pesquisa,
         "termosAcessorios": list(termos_acessorios) if termos_acessorios else [],
         "pagina": pagina,
-        "tamanho": quantidade_por_pagina,
+        "tamanho": tamanho_pagina,
         "sinonimos": sinonimos,
         "espelho": espelho,
         "inteiroTeor": inteiro_teor,

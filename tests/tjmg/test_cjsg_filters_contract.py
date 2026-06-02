@@ -1,7 +1,7 @@
 """Filter-propagation contract for TJMG cjsg.
 
 TJMG's ``cjsg`` accepts ``pesquisar_por`` (``"ementa"`` | ``"acordao"``),
-``order_by`` (``0``/``1``/``2``), ``linhas_por_pagina``, and the two
+``order_by`` (``0``/``1``/``2``), ``tamanho_pagina``, and the two
 date ranges (``data_julgamento_inicio/fim``,
 ``data_publicacao_inicio/fim``). These ride into the GET on
 ``pesquisaPalavrasEspelhoAcordao.do`` as query params.
@@ -19,7 +19,7 @@ import responses
 from responses.registries import OrderedRegistry
 
 import juscraper as jus
-from tests._helpers import load_sample_bytes, query_param_subset_matcher
+from tests._helpers import assert_unknown_kwarg_raises, load_sample_bytes, query_param_subset_matcher
 from tests.tjmg._helpers import SEARCH_URL, add_captcha, add_dwr, add_form
 
 _SAMPLES_DIR = Path(__file__).parent / "samples" / "cjsg"
@@ -27,7 +27,7 @@ pytestmark = pytest.mark.skipif(
     not (_SAMPLES_DIR / "form_acordao.html").exists(),
     reason=(
         "TJMG samples ainda não capturados — rode "
-        "`pip install txtcaptcha && python -m tests.fixtures.capture.tjmg` "
+        "`uv pip install -e \".[tjmg]\" && python -m tests.fixtures.capture.tjmg` "
         "para popular tests/tjmg/samples/cjsg/."
     ),
 )
@@ -68,7 +68,7 @@ def test_cjsg_all_filters_land_in_request(mock_txtcaptcha, mocker):
         paginas=1,
         pesquisar_por="acordao",
         order_by=1,
-        linhas_por_pagina=20,
+        tamanho_pagina=20,
         data_julgamento_inicio="01/01/2024",
         data_julgamento_fim="31/03/2024",
         data_publicacao_inicio="02/01/2024",
@@ -143,12 +143,49 @@ def test_cjsg_data_inicio_alias_maps_to_data_julgamento(mock_txtcaptcha, mocker)
 
 def test_cjsg_unknown_kwarg_raises():
     """Kwargs not declared in :class:`InputCJSGTJMG` raise ``TypeError`` (refs #84, #93, #165, #183)."""
-    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
-        jus.scraper("tjmg").cjsg("dano moral", paginas=1, kwarg_inventado="x")
+    assert_unknown_kwarg_raises(
+        jus.scraper("tjmg").cjsg,
+        "kwarg_inventado",
+        "dano moral",
+        paginas=1,
+    )
 
 
 def test_cjsg_download_unknown_kwarg_raises():
     """``cjsg_download`` rejects unknown kwargs at the lower-level entry point
     too — guards against silent drop when the caller skips :meth:`cjsg` (refs #183)."""
-    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
-        jus.scraper("tjmg").cjsg_download("dano moral", paginas=1, kwarg_inventado="x")
+    assert_unknown_kwarg_raises(
+        jus.scraper("tjmg").cjsg_download,
+        "kwarg_inventado",
+        "dano moral",
+        paginas=1,
+    )
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_linhas_por_pagina_alias_emits_deprecation_warning(mock_txtcaptcha, mocker):
+    """``linhas_por_pagina`` e alias deprecado de ``tamanho_pagina`` (refs #211)."""
+    mocker.patch("time.sleep")
+    add_form()
+    add_captcha()
+    add_dwr()
+    _add_search({
+        "palavras": "dano moral",
+        "numeroRegistro": "1",
+        "linhasPorPagina": "20",
+    })
+
+    with pytest.warns(DeprecationWarning, match="linhas_por_pagina.*deprecado"):
+        df = jus.scraper("tjmg").cjsg(
+            "dano moral", paginas=1, linhas_por_pagina=20
+        )
+
+    assert isinstance(df, pd.DataFrame)
+
+
+def test_cjsg_tamanho_pagina_collision_raises():
+    """Passar canonico + alias simultaneamente levanta ValueError (refs #211)."""
+    with pytest.raises(ValueError, match=r"tamanho_pagina.*linhas_por_pagina"):
+        jus.scraper("tjmg").cjsg(
+            "dano moral", paginas=1, tamanho_pagina=20, linhas_por_pagina=50
+        )

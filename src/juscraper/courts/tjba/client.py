@@ -3,28 +3,22 @@ Scraper for the Tribunal de Justica do Estado da Bahia (TJBA).
 """
 
 import pandas as pd
-import requests
 
-from juscraper.core.base import BaseScraper
-from juscraper.utils.params import apply_input_pipeline_search
+from juscraper.core.http import HTTPScraper
+from juscraper.utils.params import apply_input_pipeline_search, pop_deprecated_alias, resolve_deprecated_alias
 
 from .download import cjsg_download
 from .parse import cjsg_parse
 from .schemas import InputCJSGTJBA
 
 
-class TJBAScraper(BaseScraper):
+class TJBAScraper(HTTPScraper):
     """Scraper for the Tribunal de Justica do Estado da Bahia."""
 
     BASE_URL = "https://jurisprudenciaws.tjba.jus.br/graphql"
 
     def __init__(self):
         super().__init__("TJBA")
-        self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-            "Content-Type": "application/json",
-        })
 
     def cpopg(self, id_cnj: str | list[str]):
         """Stub: first-instance case consultation not implemented for TJBA."""
@@ -41,7 +35,7 @@ class TJBAScraper(BaseScraper):
         numero_recurso: str | None = None,
         orgaos: list | None = None,
         relatores: list | None = None,
-        classes: list | None = None,
+        classe: list | None = None,
         data_publicacao_inicio: str | None = None,
         data_publicacao_fim: str | None = None,
         segundo_grau: bool = True,
@@ -49,8 +43,7 @@ class TJBAScraper(BaseScraper):
         tipo_acordaos: bool = True,
         tipo_decisoes_monocraticas: bool = True,
         ordenado_por: str = "dataPublicacao",
-        items_per_page: int = 10,
-        session: requests.Session | None = None,
+        tamanho_pagina: int = 10,
         **kwargs,
     ) -> list:
         """
@@ -69,8 +62,9 @@ class TJBAScraper(BaseScraper):
             List of orgao julgador IDs to filter.
         relatores : list, optional
             List of relator IDs to filter.
-        classes : list, optional
-            List of class IDs to filter.
+        classe : list, optional
+            List of class IDs to filter. ``classes`` (plural) e aceito como
+            alias deprecado (emite :class:`DeprecationWarning`). Refs #232.
         data_publicacao_inicio : str, optional
             Start date for publication filter (YYYY-MM-DD).
         data_publicacao_fim : str, optional
@@ -83,14 +77,29 @@ class TJBAScraper(BaseScraper):
             Include acordaos (default True).
         tipo_decisoes_monocraticas : bool
             Include monocratic decisions (default True).
-        items_per_page : int
-            Results per page (default 10).
+        tamanho_pagina : int
+            Results per page (default 10). Aceita ``items_per_page`` como
+            alias deprecado (emite ``DeprecationWarning``).
 
         Returns
         -------
         list
             List of raw GraphQL response dicts (one per page).
         """
+        tamanho_pagina = resolve_deprecated_alias(
+            kwargs, "items_per_page", "tamanho_pagina", tamanho_pagina, sentinel=10
+        )
+        # Popa alias plural antes do pydantic — sem isso o schema canonico
+        # (que so declara o singular ``classe``) trataria ``classes`` como
+        # ``extra_forbidden``. Usa ``classe is not None`` (nao ``in kwargs``)
+        # para nao tratar ``classe=None`` explicito como conflito. Refs #232.
+        if "classes" in kwargs:
+            if classe is not None:
+                kwargs.pop("classes")
+                raise ValueError(
+                    "Nao e possivel passar 'classe' e 'classes' simultaneamente."
+                )
+            classe = pop_deprecated_alias(kwargs, "classes", "classe")
         inp = apply_input_pipeline_search(
             InputCJSGTJBA,
             "TJBAScraper.cjsg_download()",
@@ -103,13 +112,13 @@ class TJBAScraper(BaseScraper):
             numero_recurso=numero_recurso,
             orgaos=orgaos,
             relatores=relatores,
-            classes=classes,
+            classe=classe,
             segundo_grau=segundo_grau,
             turmas_recursais=turmas_recursais,
             tipo_acordaos=tipo_acordaos,
             tipo_decisoes_monocraticas=tipo_decisoes_monocraticas,
             ordenado_por=ordenado_por,
-            items_per_page=items_per_page,
+            tamanho_pagina=tamanho_pagina,
         )
         return cjsg_download(
             pesquisa=inp.pesquisa,
@@ -117,7 +126,7 @@ class TJBAScraper(BaseScraper):
             numero_recurso=inp.numero_recurso,
             orgaos=inp.orgaos,
             relatores=inp.relatores,
-            classes=inp.classes,
+            classes=inp.classe,
             data_publicacao_inicio=inp.data_publicacao_inicio,
             data_publicacao_fim=inp.data_publicacao_fim,
             segundo_grau=inp.segundo_grau,
@@ -125,8 +134,8 @@ class TJBAScraper(BaseScraper):
             tipo_acordaos=inp.tipo_acordaos,
             tipo_decisoes_monocraticas=inp.tipo_decisoes_monocraticas,
             ordenado_por=inp.ordenado_por,
-            items_per_page=inp.items_per_page,
-            session=session or self.session,
+            items_per_page=inp.tamanho_pagina,
+            request_fn=self._request_with_retry,
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> pd.DataFrame:
@@ -152,7 +161,7 @@ class TJBAScraper(BaseScraper):
         numero_recurso: str | None = None,
         orgaos: list | None = None,
         relatores: list | None = None,
-        classes: list | None = None,
+        classe: list | None = None,
         data_publicacao_inicio: str | None = None,
         data_publicacao_fim: str | None = None,
         segundo_grau: bool = True,
@@ -160,8 +169,7 @@ class TJBAScraper(BaseScraper):
         tipo_acordaos: bool = True,
         tipo_decisoes_monocraticas: bool = True,
         ordenado_por: str = "dataPublicacao",
-        items_per_page: int = 10,
-        session: requests.Session | None = None,
+        tamanho_pagina: int = 10,
         **kwargs,
     ) -> pd.DataFrame:
         """
@@ -179,6 +187,13 @@ class TJBAScraper(BaseScraper):
             Start date (YYYY-MM-DD).
         data_publicacao_fim : str, optional
             End date (YYYY-MM-DD).
+        tamanho_pagina : int
+            Results per page (default 10).
+
+        Aliases deprecados
+        ------------------
+        * ``items_per_page`` -> ``tamanho_pagina``
+        * ``classes`` -> ``classe`` (refs #232)
 
         Returns
         -------
@@ -191,7 +206,7 @@ class TJBAScraper(BaseScraper):
             numero_recurso=numero_recurso,
             orgaos=orgaos,
             relatores=relatores,
-            classes=classes,
+            classe=classe,
             data_publicacao_inicio=data_publicacao_inicio,
             data_publicacao_fim=data_publicacao_fim,
             segundo_grau=segundo_grau,
@@ -199,8 +214,7 @@ class TJBAScraper(BaseScraper):
             tipo_acordaos=tipo_acordaos,
             tipo_decisoes_monocraticas=tipo_decisoes_monocraticas,
             ordenado_por=ordenado_por,
-            items_per_page=items_per_page,
-            session=session,
+            tamanho_pagina=tamanho_pagina,
             **kwargs,
         )
         return self.cjsg_parse(brutos)

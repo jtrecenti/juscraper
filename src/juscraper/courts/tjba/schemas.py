@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from typing import ClassVar
 
+from pydantic import Field
+
 from ...schemas import DataPublicacaoMixin, OutputCJSGBase, OutputDataPublicacaoMixin, OutputRelatoriaMixin, SearchBase
 
 
@@ -31,13 +33,14 @@ class InputCJSGTJBA(SearchBase, DataPublicacaoMixin):
     numero_recurso: str | None = None
     orgaos: list | None = None
     relatores: list | None = None
-    classes: list | None = None
+    classe: list | None = None
     segundo_grau: bool = True
     turmas_recursais: bool = True
     tipo_acordaos: bool = True
     tipo_decisoes_monocraticas: bool = True
+    # TODO (#212): apertar com Literal[...] após captura do GraphQL.
     ordenado_por: str = "dataPublicacao"
-    items_per_page: int = 10
+    tamanho_pagina: int = Field(default=10, ge=1)
 
 
 class OutputCJSGTJBA(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):

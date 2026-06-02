@@ -11,7 +11,7 @@ import pytest
 
 import juscraper
 from juscraper.courts.tjsp.cjpg_download import cjpg_download
-from juscraper.courts.tjsp.cjpg_parse import cjpg_n_pags, cjpg_parse_manager, cjpg_parse_single
+from juscraper.courts.tjsp.cjpg_parse import cjpg_n_pags, cjpg_n_results, cjpg_parse_manager, cjpg_parse_single
 from tests._helpers import load_sample
 
 
@@ -171,6 +171,29 @@ class TestCJPGUnit:
             assert len(df) == 0
         finally:
             os.unlink(temp_path)
+
+
+class TestCJPGNResults:
+    """Tests do helper :func:`cjpg_n_results` (issue #92)."""
+
+    def test_extracts_raw_count_legacy_format(self):
+        """Legacy 'Mostrando 1 a 10 de 25 resultados' -> 25."""
+        html = load_sample("tjsp", "cjpg/results_legacy.html")
+        assert cjpg_n_results(html) == 25
+
+    def test_extracts_raw_count_novo_formato(self):
+        """Novo formato 'Resultados 1 a 10 de 39764' -> 39764."""
+        html = load_sample("tjsp", "cjpg/results_novo_formato.html")
+        assert cjpg_n_results(html) == 39764
+
+    def test_zero_results_returns_zero(self):
+        html = load_sample("tjsp", "cjpg/no_results.html")
+        assert cjpg_n_results(html) == 0
+
+    def test_n_pags_e_wrapper_que_aplica_ceil_div(self):
+        """``cjpg_n_pags`` permanece um wrapper sobre ``cjpg_n_results``."""
+        html = load_sample("tjsp", "cjpg/results_novo_formato.html")
+        assert cjpg_n_pags(html) == (39764 + 9) // 10
 
 
 class TestCJPGDownload1Based:

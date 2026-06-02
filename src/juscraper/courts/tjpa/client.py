@@ -1,11 +1,11 @@
 """
 Scraper for the Tribunal de Justica do Estado do Para (TJPA).
 """
+from typing import Literal
 
 import pandas as pd
-import requests
 
-from juscraper.core.base import BaseScraper
+from juscraper.core.http import HTTPScraper
 from juscraper.utils.params import apply_input_pipeline_search, to_iso_date
 
 from .download import cjsg_download_manager
@@ -13,17 +13,13 @@ from .parse import cjsg_parse_manager
 from .schemas import InputCJSGTJPA
 
 
-class TJPAScraper(BaseScraper):
+class TJPAScraper(HTTPScraper):
     """Scraper for the Tribunal de Justica do Estado do Para."""
 
     BASE_URL = "https://jurisprudencia.tjpa.jus.br/bff/api/decisoes/buscar"
 
     def __init__(self):
         super().__init__("TJPA")
-        self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-        })
 
     def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJPA."""
@@ -44,7 +40,7 @@ class TJPAScraper(BaseScraper):
         origem: list | None = None,
         tipo: list | None = None,
         sort_by: str = "datajulgamento",
-        sort_order: str = "desc",
+        sort_order: Literal["asc", "desc"] = "desc",
         query_type: str = "free",
         query_scope: str = "ementa",
         **kwargs,
@@ -85,7 +81,7 @@ class TJPAScraper(BaseScraper):
         return cjsg_download_manager(
             pesquisa=inp.pesquisa,
             paginas=inp.paginas,
-            session=self.session,
+            request_fn=self._request_with_retry,
             relator=inp.relator,
             orgao_julgador_colegiado=inp.orgao_julgador_colegiado,
             classe=inp.classe,
@@ -120,7 +116,7 @@ class TJPAScraper(BaseScraper):
         origem: list | None = None,
         tipo: list | None = None,
         sort_by: str = "datajulgamento",
-        sort_order: str = "desc",
+        sort_order: Literal["asc", "desc"] = "desc",
         query_type: str = "free",
         query_scope: str = "ementa",
         **kwargs,

@@ -20,14 +20,17 @@ DOCS_NB = REPO_ROOT / "docs" / "notebooks"
 
 
 def md(source: str) -> nbformat.NotebookNode:
+    """Build a markdown notebook cell from ``source``."""
     return nbformat.v4.new_markdown_cell(source.strip("\n"))
 
 
 def code(source: str) -> nbformat.NotebookNode:
+    """Build a code notebook cell from ``source``."""
     return nbformat.v4.new_code_cell(source.strip("\n"))
 
 
 def make_trf3() -> nbformat.NotebookNode:
+    """Build the TRF3 cpopg notebook in-memory."""
     nb = nbformat.v4.new_notebook()
     nb.cells = [
         md(
@@ -156,6 +159,7 @@ df_again[["id_cnj", "processo", "data_distribuicao"]]
 
 
 def make_trf5() -> nbformat.NotebookNode:
+    """Build the TRF5 cpopg notebook in-memory."""
     nb = nbformat.v4.new_notebook()
     nb.cells = [
         md(
@@ -284,6 +288,7 @@ df_again[["id_cnj", "processo", "data_distribuicao"]]
 
 
 def execute_and_save(nb: nbformat.NotebookNode, path: Path) -> None:
+    """Execute the notebook and write it to ``path``."""
     print(f"executing {path.name} ...")
     ep = ExecutePreprocessor(timeout=180, kernel_name="python3")
     ep.preprocess(nb, {"metadata": {"path": str(path.parent)}})
@@ -292,6 +297,7 @@ def execute_and_save(nb: nbformat.NotebookNode, path: Path) -> None:
 
 
 def main() -> None:
+    """Build and execute the TRF3 and TRF5 documentation notebooks."""
     DOCS_NB.mkdir(parents=True, exist_ok=True)
     execute_and_save(make_trf3(), DOCS_NB / "trf3.ipynb")
     execute_and_save(make_trf5(), DOCS_NB / "trf5.ipynb")

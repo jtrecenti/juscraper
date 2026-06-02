@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 from ...schemas import (
     DataJulgamentoMixin,
@@ -37,8 +37,9 @@ class InputCJSGTJPA(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     assunto: str | None = None
     origem: list | None = None
     tipo: list | None = None
+    sort_order: Literal["asc", "desc"] = "desc"
+    # TODO (#212): apertar `sort_by`, `query_type` e `query_scope` com Literal[...] após captura do BFF.
     sort_by: str = "datajulgamento"
-    sort_order: str = "desc"
     query_type: str = "free"
     query_scope: str = "ementa"
 

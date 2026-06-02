@@ -1,10 +1,7 @@
-"""
-Scraper for the Tribunal de Justiça do Rio Grande do Sul (TJRS).
-"""
+"""Scraper for the Tribunal de Justiça do Rio Grande do Sul (TJRS)."""
 import pandas as pd
-import requests
 
-from juscraper.core.base import BaseScraper
+from juscraper.core.http import HTTPScraper
 from juscraper.utils.params import apply_input_pipeline_search
 
 from .download import cjsg_download_manager
@@ -12,7 +9,7 @@ from .parse import cjsg_parse_manager
 from .schemas import InputCJSGTJRS
 
 
-class TJRSScraper(BaseScraper):
+class TJRSScraper(HTTPScraper):
     """Scraper for the Tribunal de Justiça do Rio Grande do Sul."""
 
     BASE_URL = "https://www.tjrs.jus.br/buscas/jurisprudencia/ajax.php"
@@ -38,7 +35,6 @@ class TJRSScraper(BaseScraper):
 
     def __init__(self):
         super().__init__("TJRS")
-        self.session = requests.Session()
 
     def cpopg(self, id_cnj: str | list[str]):
         """Stub: Primeiro grau case consultation not implemented for TJRS."""
@@ -62,7 +58,6 @@ class TJRSScraper(BaseScraper):
         data_publicacao_fim: str | None = None,
         tipo_processo: str | None = None,
         secao: str | None = None,
-        session: requests.Session | None = None,
         **kwargs,
     ) -> list:
         """
@@ -95,11 +90,10 @@ class TJRSScraper(BaseScraper):
             tipo_processo=tipo_processo,
             secao=secao,
         )
-        if session is None:
-            session = self.session
         return cjsg_download_manager(
             termo=inp.pesquisa,
             paginas=inp.paginas,
+            request_fn=self._request_with_retry,
             classe=inp.classe,
             assunto=inp.assunto,
             orgao_julgador=inp.orgao_julgador,
@@ -110,7 +104,6 @@ class TJRSScraper(BaseScraper):
             data_publicacao_fim=inp.data_publicacao_fim,
             tipo_processo=inp.tipo_processo,
             secao=inp.secao,
-            session=session,
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> 'pd.DataFrame':
@@ -134,7 +127,6 @@ class TJRSScraper(BaseScraper):
         data_publicacao_fim: str | None = None,
         tipo_processo: str | None = None,
         secao: str | None = None,
-        session: requests.Session | None = None,
         **kwargs,
     ) -> 'pd.DataFrame':
         """
@@ -154,7 +146,6 @@ class TJRSScraper(BaseScraper):
             data_publicacao_fim=data_publicacao_fim,
             tipo_processo=tipo_processo,
             secao=secao,
-            session=session,
             **kwargs,
         )
         return self.cjsg_parse(brutos)

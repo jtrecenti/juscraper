@@ -14,7 +14,7 @@ from responses.matchers import json_params_matcher
 
 import juscraper as jus
 from juscraper.courts.tjpb.download import BASE_URL, SEARCH_URL, TOKEN_RE, build_cjsg_payload
-from tests._helpers import load_sample, load_sample_bytes
+from tests._helpers import assert_unknown_kwarg_raises, load_sample, load_sample_bytes
 
 _HOME_HTML_BYTES = load_sample_bytes("tjpb", "cjsg/home.html")
 _TOKEN_MATCH = TOKEN_RE.search(_HOME_HTML_BYTES.decode("utf-8"))
@@ -162,3 +162,16 @@ def test_cjsg_data_inicio_alias_maps_to_data_julgamento(mocker):
     messages = [str(w.message) for w in warning_list]
     assert any("data_inicio" in m and "deprecado" in m for m in messages)
     assert any("data_fim" in m and "deprecado" in m for m in messages)
+
+
+def test_cjsg_data_publicacao_kwarg_raises():
+    """TJPB backend nao expoe filtro de data de publicacao;
+    :class:`InputCJSGTJPB` so herda :class:`DataJulgamentoMixin`, entao
+    ``data_publicacao_*`` deve cair como ``extra_forbidden`` -> ``TypeError``
+    em vez de silently drop (refs #186)."""
+    assert_unknown_kwarg_raises(
+        jus.scraper("tjpb").cjsg,
+        "data_publicacao_inicio",
+        "dano moral",
+        paginas=1,
+    )

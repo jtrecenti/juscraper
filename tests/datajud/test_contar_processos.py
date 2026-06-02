@@ -51,15 +51,17 @@ class TestPayloadShape:
         payload = captured_payloads[0]["payload"]
         assert payload["query"] == {"match_all": {}}
 
-    def test_payload_combina_classe_e_assuntos(self, captured_payloads):
+    def test_payload_combina_classe_e_assunto(self, captured_payloads):
         scraper = jus.scraper("datajud")
         scraper.contar_processos(
-            tribunal="TJSP", classe="436", assuntos=["7780", "1127"]
+            tribunal="TJSP", classe="436", assunto=["7780", "1127"]
         )
 
         payload = captured_payloads[0]["payload"]
         must = payload["query"]["bool"]["must"]
         assert {"match": {"classe.codigo": "436"}} in must
+        # Chave do payload Elasticsearch fica "assuntos.codigo" (backend);
+        # parametro Python e "assunto" (singular, refs #232).
         assert {"terms": {"assuntos.codigo": ["7780", "1127"]}} in must
 
     def test_payload_ano_ajuizamento_dual_range(self, captured_payloads):
@@ -199,6 +201,29 @@ class TestFiltrosNovos176:
                 ano_ajuizamento=2024,
                 data_ajuizamento_inicio="2024-01-01",
             )
+
+
+class TestCoercaoTipos217:
+    """Issue #217: ``assunto`` aceita int (codigos TPU sao inteiros);
+    ``movimentos_codigo`` aceita str (vindo de planilha/CSV). Smoke test
+    confirmando que o validator do schema tambem roda em ``contar_processos``,
+    nao so em ``listar_processos``."""
+
+    def test_assunto_aceita_int(self, captured_payloads):
+        scraper = jus.scraper("datajud")
+        scraper.contar_processos(tribunal="TJMG", assunto=[12503])
+
+        must = captured_payloads[0]["payload"]["query"]["bool"]["must"]
+        # Chave Elasticsearch fica "assuntos.codigo" (backend); param Python
+        # e "assunto". Refs #232.
+        assert {"terms": {"assuntos.codigo": ["12503"]}} in must
+
+    def test_movimentos_codigo_aceita_str(self, captured_payloads):
+        scraper = jus.scraper("datajud")
+        scraper.contar_processos(tribunal="TJSP", movimentos_codigo=["246"])
+
+        must = captured_payloads[0]["payload"]["query"]["bool"]["must"]
+        assert {"terms": {"movimentos.codigo": [246]}} in must
 
 
 class TestExtraKwargs:

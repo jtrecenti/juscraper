@@ -2,9 +2,9 @@
 
 TJPR's flow:
 
-1. ``GET /jurisprudencia/`` extracts ``JSESSIONID`` and the
-   ``tjpr.url.crypto`` token (the scraper hits this endpoint twice
-   per ``cjsg`` call — once during download, once during parse).
+1. ``GET /jurisprudencia/`` lands ``JSESSIONID`` in the session cookie
+   jar (the scraper hits this endpoint once per ``cjsg`` call, in
+   ``cjsg_download``).
 2. ``POST /jurisprudencia/publico/pesquisa.do?actionType=pesquisar``
    per page (``pageNumber``, 1-based, ``pageSize=10``).
 3. For each row whose ementa is truncated with "Leia mais...", an
@@ -12,14 +12,16 @@ TJPR's flow:
    issued by ``cjsg_parse``.
 
 The contract registers a single response for each kind of request;
-``responses`` reuses registered responses across calls by default,
-so the home GET (×2) and the ementa GETs (×N) all share one fixture.
+``responses`` reuses registered responses across calls by default, so
+the ementa GETs (×N) all share one fixture.
 """
 import pandas as pd
 import responses
+from responses.matchers import urlencoded_params_matcher
 
 import juscraper as jus
-from tests._helpers import load_sample, query_param_subset_matcher, urlencoded_body_subset_matcher
+from juscraper.courts.tjpr.download import build_cjsg_form_body
+from tests._helpers import load_sample, query_param_subset_matcher
 from tests.tjpr._helpers import SEARCH_URL, add_home
 
 CJSG_MIN_COLUMNS = {"processo", "orgao_julgador", "relator", "data_julgamento", "ementa"}
@@ -34,10 +36,10 @@ def _add_search_page(pesquisa: str, pagina: int, sample_path: str):
         content_type="text/html; charset=UTF-8",
         match=[
             query_param_subset_matcher({"actionType": "pesquisar"}),
-            urlencoded_body_subset_matcher({
-                "criterioPesquisa": pesquisa,
-                "pageNumber": str(pagina),
-            }),
+            urlencoded_params_matcher(
+                build_cjsg_form_body(pesquisa, page=pagina),
+                allow_blank=True,
+            ),
         ],
     )
 
@@ -117,3 +119,44 @@ def test_cjsg_no_results(mocker):
 
     assert isinstance(df, pd.DataFrame)
     assert df.empty
+
+
+@responses.activate
+def test_cjsg_ementa_completa_5xx_persistente(mocker):
+    """Falha persistente no fetch da ementa-completa nao derruba o DataFrame.
+
+    Quando o GET ``actionType=exibirTextoCompleto`` devolve 5xx em todas as
+    tentativas, ``HTTPScraper._request_with_retry`` levanta
+    ``RetryExhaustedError``. O ``try/except`` row-level em ``cjsg_parse``
+    deve capturar essa excecao (alem de ``requests.RequestException``) para
+    preservar a degradacao graciosa: o DataFrame retorna com todas as rows
+    parseadas e a ementa truncada ganha o sufixo ``[Erro ao buscar ementa
+    completa: ...]`` apenas nas linhas afetadas. Cobre o gap entre o regime
+    antigo (``session.get(...).raise_for_status()`` -> ``HTTPError`` =
+    ``RequestException``, capturada) e o novo regime via ``HTTPScraper``
+    (``RetryExhaustedError``, que **nao** herda de ``RequestException``).
+    """
+    mocker.patch("time.sleep")
+    add_home()
+    _add_search_page("dano moral", 1, "cjsg/single_page.html")
+    responses.add(
+        responses.GET,
+        SEARCH_URL,
+        body="<html>upstream error</html>",
+        status=503,
+        content_type="text/html; charset=UTF-8",
+        match=[query_param_subset_matcher({"actionType": "exibirTextoCompleto"})],
+    )
+
+    df = jus.scraper("tjpr").cjsg("dano moral", paginas=1)
+
+    assert isinstance(df, pd.DataFrame)
+    assert CJSG_MIN_COLUMNS <= set(df.columns)
+    assert len(df) > 0, "DataFrame vazio — fetch da ementa-completa quebrou o parse inteiro"
+    erros = df["ementa"].astype(str).str.contains(
+        r"\[Erro ao buscar ementa completa", regex=True, na=False
+    )
+    assert erros.any(), (
+        "nenhuma linha recebeu o sufixo de erro — fixture nao acionou o "
+        "fallback de ementa-completa (verificar 'Leia mais...' no sample)"
+    )

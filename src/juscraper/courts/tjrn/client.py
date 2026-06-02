@@ -1,9 +1,10 @@
 """Scraper for the Tribunal de Justica do Rio Grande do Norte (TJRN)."""
 
-import pandas as pd
-import requests
+from typing import Any
 
-from juscraper.core.base import BaseScraper
+import pandas as pd
+
+from juscraper.core.http import HTTPScraper
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias, to_br_date
 
 from .download import cjsg_download_manager
@@ -24,7 +25,7 @@ def _to_tjrn_date(date_str):
     return br.replace("/", "-") if br else ""
 
 
-class TJRNScraper(BaseScraper):
+class TJRNScraper(HTTPScraper):
     """Scraper for the Tribunal de Justica do Rio Grande do Norte (TJRN).
 
     Uses the TJRN Elasticsearch-based JSON API at jurisprudencia.tjrn.jus.br.
@@ -32,12 +33,20 @@ class TJRNScraper(BaseScraper):
 
     BASE_URL = "https://jurisprudencia.tjrn.jus.br"
 
-    def __init__(self):
-        super().__init__("TJRN")
-        self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-        })
+    def __init__(
+        self,
+        verbose: int = 0,
+        download_path: str | None = None,
+        sleep_time: float = 1.0,
+        **kwargs: Any,
+    ):
+        super().__init__(
+            "TJRN",
+            verbose=verbose,
+            download_path=download_path,
+            sleep_time=sleep_time,
+            **kwargs,
+        )
 
     def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJRN."""
@@ -51,15 +60,15 @@ class TJRNScraper(BaseScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        numero_processo: str = "",
-        id_classe: str = "",
-        id_orgao_julgador: str = "",
-        id_relator: str = "",
-        id_colegiado: str = "",
-        sistema: str = "",
-        decisoes: str = "",
-        jurisdicoes: str = "",
-        grau: str = "",
+        numero_processo: str | None = None,
+        id_classe: str | None = None,
+        id_orgao_julgador: str | None = None,
+        id_relator: str | None = None,
+        id_colegiado: str | None = None,
+        sistema: str | None = None,
+        decisoes: str | None = None,
+        jurisdicoes: str | None = None,
+        grau: str | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Busca jurisprudencia no TJRN.
@@ -127,15 +136,15 @@ class TJRNScraper(BaseScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        numero_processo: str = "",
-        id_classe: str = "",
-        id_orgao_julgador: str = "",
-        id_relator: str = "",
-        id_colegiado: str = "",
-        sistema: str = "",
-        decisoes: str = "",
-        jurisdicoes: str = "",
-        grau: str = "",
+        numero_processo: str | None = None,
+        id_classe: str | None = None,
+        id_orgao_julgador: str | None = None,
+        id_relator: str | None = None,
+        id_colegiado: str | None = None,
+        sistema: str | None = None,
+        decisoes: str | None = None,
+        jurisdicoes: str | None = None,
+        grau: str | None = None,
         **kwargs,
     ) -> list:
         """Download raw CJSG JSON responses from TJRN.
@@ -148,10 +157,10 @@ class TJRNScraper(BaseScraper):
             List of raw JSON responses (one per page).
         """
         numero_processo = resolve_deprecated_alias(
-            kwargs, "nr_processo", "numero_processo", numero_processo, sentinel=""
+            kwargs, "nr_processo", "numero_processo", numero_processo
         )
         id_classe = resolve_deprecated_alias(
-            kwargs, "id_classe_judicial", "id_classe", id_classe, sentinel=""
+            kwargs, "id_classe_judicial", "id_classe", id_classe
         )
         inp = apply_input_pipeline_search(
             InputCJSGTJRN,
@@ -173,18 +182,19 @@ class TJRNScraper(BaseScraper):
         return cjsg_download_manager(
             pesquisa=inp.pesquisa,
             paginas=inp.paginas,
-            session=self.session,
-            nr_processo=inp.numero_processo,
-            id_classe=inp.id_classe,
-            id_orgao_julgador=inp.id_orgao_julgador,
-            id_relator=inp.id_relator,
-            id_colegiado=inp.id_colegiado,
+            request_fn=self._request_with_retry,
+            sleep_time=self.sleep_time,
+            nr_processo=inp.numero_processo or "",
+            id_classe=inp.id_classe or "",
+            id_orgao_julgador=inp.id_orgao_julgador or "",
+            id_relator=inp.id_relator or "",
+            id_colegiado=inp.id_colegiado or "",
             dt_inicio=_to_tjrn_date(inp.data_julgamento_inicio),
             dt_fim=_to_tjrn_date(inp.data_julgamento_fim),
-            sistema=inp.sistema,
-            decisoes=inp.decisoes,
-            jurisdicoes=inp.jurisdicoes,
-            grau=inp.grau,
+            sistema=inp.sistema or "",
+            decisoes=inp.decisoes or "",
+            jurisdicoes=inp.jurisdicoes or "",
+            grau=inp.grau or "",
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> pd.DataFrame:

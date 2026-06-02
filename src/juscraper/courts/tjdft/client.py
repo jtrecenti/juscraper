@@ -4,15 +4,16 @@ Module for the scraper of the Court of Justice of the Federal District and Terri
 
 import pandas as pd
 
-from juscraper.core.base import BaseScraper
-from juscraper.utils.params import apply_input_pipeline_search
+from juscraper.core.http import HTTPScraper
+from juscraper.core.parse_utils import coerce_date_columns
+from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
 from .download import cjsg_download
 from .parse import cjsg_parse
 from .schemas import InputCJSGTJDFT
 
 
-class TJDFTScraper(BaseScraper):
+class TJDFTScraper(HTTPScraper):
     """Scraper for the Court of Justice of the Federal District and Territories (TJDFT)."""
 
     BASE_URL = "https://jurisdf.tjdft.jus.br/api/v1/pesquisa"
@@ -35,7 +36,7 @@ class TJDFTScraper(BaseScraper):
         sinonimos: bool = True,
         espelho: bool = True,
         inteiro_teor: bool = False,
-        quantidade_por_pagina: int = 10,
+        tamanho_pagina: int = 10,
         **kwargs,
     ) -> list:
         """
@@ -48,7 +49,12 @@ class TJDFTScraper(BaseScraper):
                 int: paginas=3 downloads pages 1-3.
                 range: range(1, 4) downloads pages 1-3.
                 None: downloads all available pages.
+            tamanho_pagina (int): Results per page (default 10). Aceita
+                ``quantidade_por_pagina`` como alias deprecado.
         """
+        tamanho_pagina = resolve_deprecated_alias(
+            kwargs, "quantidade_por_pagina", "tamanho_pagina", tamanho_pagina, sentinel=10
+        )
         inp = apply_input_pipeline_search(
             InputCJSGTJDFT,
             "TJDFTScraper.cjsg_download()",
@@ -59,15 +65,16 @@ class TJDFTScraper(BaseScraper):
             sinonimos=sinonimos,
             espelho=espelho,
             inteiro_teor=inteiro_teor,
-            quantidade_por_pagina=quantidade_por_pagina,
+            tamanho_pagina=tamanho_pagina,
         )
         brutos: list = cjsg_download(
             query=inp.pesquisa,
             paginas=inp.paginas,
+            request_fn=self._request_with_retry,
             sinonimos=inp.sinonimos,
             espelho=inp.espelho,
             inteiro_teor=inp.inteiro_teor,
-            quantidade_por_pagina=inp.quantidade_por_pagina,
+            quantidade_por_pagina=inp.tamanho_pagina,
             base_url=self.BASE_URL,
             data_julgamento_inicio=inp.data_julgamento_inicio,
             data_julgamento_fim=inp.data_julgamento_fim,
@@ -93,11 +100,12 @@ class TJDFTScraper(BaseScraper):
         """
         Searches for TJDFT jurisprudence in a simplified way (download + parse).
         Returns a ready-to-analyze DataFrame.
+
+        Aliases deprecados:
+            * ``quantidade_por_pagina`` -> ``tamanho_pagina``
         """
         brutos = self.cjsg_download(pesquisa=pesquisa, paginas=paginas, **kwargs)
         dados = self.cjsg_parse(brutos)
         df = pd.DataFrame(dados)
-        for col in ["data_julgamento", "data_publicacao"]:
-            if col in df.columns:
-                df[col] = pd.to_datetime(df[col], errors='coerce').dt.date
+        coerce_date_columns(df, ["data_julgamento", "data_publicacao"])
         return df

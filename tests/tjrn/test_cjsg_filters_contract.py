@@ -13,7 +13,7 @@ from responses.matchers import json_params_matcher
 
 import juscraper as jus
 from juscraper.courts.tjrn.download import BASE_URL, build_cjsg_payload
-from tests._helpers import load_sample
+from tests._helpers import assert_unknown_kwarg_raises, load_sample
 
 
 @responses.activate
@@ -202,8 +202,25 @@ def test_cjsg_data_inicio_alias_maps_to_data_julgamento(mocker):
 def test_cjsg_unknown_kwarg_raises():
     """Kwargs not declared in :class:`InputCJSGTJRN` raise ``TypeError`` with
     the field name, instead of being silently dropped (refs #84, #93)."""
-    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
-        jus.scraper("tjrn").cjsg("dano moral", paginas=1, kwarg_inventado="x")
+    assert_unknown_kwarg_raises(
+        jus.scraper("tjrn").cjsg,
+        "kwarg_inventado",
+        "dano moral",
+        paginas=1,
+    )
+
+
+def test_cjsg_data_publicacao_raises_typeerror():
+    """TJRN backend Elasticsearch nao expoe filtro de data de publicacao —
+    ``InputCJSGTJRN`` herda apenas :class:`DataJulgamentoMixin`, entao
+    ``data_publicacao_*`` deve cair como ``extra_forbidden`` -> ``TypeError``
+    em vez de ser silently dropped (refs #186)."""
+    assert_unknown_kwarg_raises(
+        jus.scraper("tjrn").cjsg,
+        "data_publicacao_inicio",
+        "dano moral",
+        paginas=1,
+    )
 
 
 def test_cjsg_alias_conflict_raises():
@@ -218,8 +235,12 @@ def test_cjsg_alias_conflict_raises():
 def test_cjsg_download_unknown_kwarg_raises():
     """``cjsg_download`` rejects unknown kwargs at the lower-level entry point
     too — guards against silent drop when the caller skips :meth:`cjsg` (refs #183)."""
-    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
-        jus.scraper("tjrn").cjsg_download("dano moral", paginas=1, kwarg_inventado="x")
+    assert_unknown_kwarg_raises(
+        jus.scraper("tjrn").cjsg_download,
+        "kwarg_inventado",
+        "dano moral",
+        paginas=1,
+    )
 
 
 @responses.activate
@@ -272,3 +293,40 @@ def test_cjsg_download_data_inicio_alias_maps_to_data_julgamento(mocker):
     messages = [str(w.message) for w in warning_list]
     assert any("data_inicio" in m and "deprecado" in m for m in messages)
     assert any("data_fim" in m and "deprecado" in m for m in messages)
+
+
+@responses.activate
+def test_cjsg_data_julgamento_aceita_formato_brasileiro(mocker):
+    """Datas em ``DD/MM/YYYY`` chegam coercidas em ISO ao pipeline.
+
+    Cobre o caminho end-to-end de ``apply_input_pipeline_search`` lendo
+    ``BACKEND_DATE_FORMAT='%Y-%m-%d'`` declarado em :class:`InputCJSGTJRN`
+    e convertendo via ``coerce_brazilian_date``. Apos a coercao, o
+    ``_to_tjrn_date`` ainda reformata o ISO para ``DD-MM-YYYY`` (com tracos)
+    porque o backend Elasticsearch so aceita esse formato. O matcher fixa
+    o resultado final no body — se a coercao do schema nao acontecer, o
+    pipeline tenta passar ``01/01/2024`` para o ``_to_tjrn_date`` e o
+    backend recebe um valor invalido (refs #182, #173, #167)."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.POST,
+        BASE_URL,
+        body=load_sample("tjrn", "cjsg/no_results.json"),
+        status=200,
+        content_type="application/json",
+        match=[json_params_matcher(build_cjsg_payload(
+            "dano moral",
+            page=1,
+            dt_inicio="01-01-2024",
+            dt_fim="31-03-2024",
+        ))],
+    )
+
+    df = jus.scraper("tjrn").cjsg(
+        "dano moral",
+        paginas=1,
+        data_julgamento_inicio="01/01/2024",
+        data_julgamento_fim="31/03/2024",
+    )
+
+    assert isinstance(df, pd.DataFrame)

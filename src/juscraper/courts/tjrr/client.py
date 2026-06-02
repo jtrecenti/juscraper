@@ -1,9 +1,10 @@
 """Scraper for the Tribunal de Justica de Roraima (TJRR)."""
 
-import pandas as pd
-import requests
+from typing import Any
 
-from juscraper.core.base import BaseScraper
+import pandas as pd
+
+from juscraper.core.http import HTTPScraper
 from juscraper.utils.params import apply_input_pipeline_search
 
 from .download import cjsg_download_manager
@@ -11,7 +12,7 @@ from .parse import cjsg_parse_manager
 from .schemas import InputCJSGTJRR
 
 
-class TJRRScraper(BaseScraper):
+class TJRRScraper(HTTPScraper):
     """Scraper for the Tribunal de Justica de Roraima (TJRR).
 
     Uses the JSF/PrimeFaces-based jurisprudence search at jurisprudencia.tjrr.jus.br.
@@ -19,12 +20,20 @@ class TJRRScraper(BaseScraper):
 
     BASE_URL = "https://jurisprudencia.tjrr.jus.br"
 
-    def __init__(self):
-        super().__init__("TJRR")
-        self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-        })
+    def __init__(
+        self,
+        verbose: int = 0,
+        download_path: str | None = None,
+        sleep_time: float = 1.0,
+        **kwargs: Any,
+    ):
+        super().__init__(
+            "TJRR",
+            verbose=verbose,
+            download_path=download_path,
+            sleep_time=sleep_time,
+            **kwargs,
+        )
 
     def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJRR."""
@@ -38,7 +47,7 @@ class TJRRScraper(BaseScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        relator: str = "",
+        relator: list | None = None,
         orgao_julgador: list | None = None,
         especie: list | None = None,
         **kwargs,
@@ -49,10 +58,17 @@ class TJRRScraper(BaseScraper):
             pesquisa (str): Termo de busca livre (busca na ementa).
             paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
                 todas. Default ``None``.
-            relator (str): Nome do relator. **Aceito por compat de API**, mas
-                hoje o backend nao expoe campo de texto livre para relator
-                (virou multi-select de IDs); o filtro e descartado pelo
-                Projudi/PrimeFaces. Refs #158 (deprecation/remocao planejada).
+            relator (list[str] | None): Lista de nomes regimentais de
+                magistrados (ex.: ``["ALMIRO PADILHA", "ERICK LINHARES"]``).
+                O backend usa um ``SelectManyCheckbox``
+                (``menuinicial:relatorList``) cujos values sao beans Java
+                serializados; o scraper baixa o form GET inicial e resolve
+                cada nome regimental para o bean correspondente. Match
+                insensivel a caixa e diacritico — ``"cristovao suter"``,
+                ``"Cristóvão Suter"`` e ``"CRISTÓVÃO SUTER"`` resolvem
+                para o mesmo magistrado. ``ValueError`` se algum nome nao
+                bater (a mensagem lista os nomes na forma canonica:
+                UPPERCASE com acento). Refs #158.
             orgao_julgador (list[str] | None): Codigos do orgao julgador
                 (ex.: ``["PRIMEIRA_TURMA_CIVEL"]``). Backend:
                 ``menuinicial:tipoOrgaoList``.
@@ -72,6 +88,7 @@ class TJRRScraper(BaseScraper):
 
         Raises:
             TypeError: Quando um kwarg desconhecido e passado.
+            ValueError: Quando ``relator`` contem nome nao encontrado no form.
             ValidationError: Quando um filtro tem formato invalido.
 
         Returns:
@@ -94,7 +111,7 @@ class TJRRScraper(BaseScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        relator: str = "",
+        relator: list | None = None,
         orgao_julgador: list | None = None,
         especie: list | None = None,
         data_julgamento_inicio: str | None = None,
@@ -126,7 +143,8 @@ class TJRRScraper(BaseScraper):
         return cjsg_download_manager(
             pesquisa=inp.pesquisa,
             paginas=inp.paginas,
-            session=self.session,
+            request_fn=self._request_with_retry,
+            sleep_time=self.sleep_time,
             relator=inp.relator,
             data_inicio=inp.data_julgamento_inicio or "",
             data_fim=inp.data_julgamento_fim or "",

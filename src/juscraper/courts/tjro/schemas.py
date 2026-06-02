@@ -26,11 +26,11 @@ class InputCJSGTJRO(SearchBase, DataJulgamentoMixin):
     BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
 
     tipo: list | None = None
-    numero_processo: str = ""
-    relator: str = ""
-    orgao_julgador: int | str = ""
-    orgao_julgador_colegiado: int | str = ""
-    classe: str = ""
+    numero_processo: str | None = None
+    relator: str | None = None
+    orgao_julgador: int | str | None = None
+    orgao_julgador_colegiado: int | str | None = None
+    classe: str | None = None
     instancia: list | None = None
     termo_exato: bool = False
 

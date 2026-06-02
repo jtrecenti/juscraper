@@ -3,27 +3,23 @@ Scraper for the Tribunal de Justica do Estado de Mato Grosso (TJMT).
 """
 
 import pandas as pd
-import requests
 
-from juscraper.core.base import BaseScraper
-from juscraper.utils.params import apply_input_pipeline_search
+from juscraper.core.http import HTTPScraper
+from juscraper.core.parse_utils import coerce_date_columns
+from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
 from .download import cjsg_download
 from .parse import cjsg_parse
 from .schemas import InputCJSGTJMT
 
 
-class TJMTScraper(BaseScraper):
+class TJMTScraper(HTTPScraper):
     """Scraper for the Tribunal de Justica do Estado de Mato Grosso (TJMT)."""
 
     BASE_URL = "https://hellsgate-preview.tjmt.jus.br/jurisprudencia"
 
     def __init__(self):
         super().__init__("TJMT")
-        self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-        })
 
     def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJMT."""
@@ -43,7 +39,7 @@ class TJMTScraper(BaseScraper):
         classe: str | None = None,
         tipo_processo: str | None = None,
         thesaurus: bool = False,
-        quantidade_por_pagina: int = 10,
+        tamanho_pagina: int = 10,
         data_julgamento_inicio: str | None = None,
         data_julgamento_fim: str | None = None,
         **kwargs,
@@ -62,7 +58,8 @@ class TJMTScraper(BaseScraper):
             classe: Filter by case class.
             tipo_processo: ``"Civel"`` or ``"Criminal"``.
             thesaurus: Whether to use synonym search.
-            quantidade_por_pagina: Items per page (default 10).
+            tamanho_pagina: Items per page (default 10). Aceita
+                ``quantidade_por_pagina`` como alias deprecado.
             data_julgamento_inicio: Start date for filtering (``yyyy-mm-dd``).
             data_julgamento_fim: End date for filtering (``yyyy-mm-dd``).
 
@@ -70,6 +67,9 @@ class TJMTScraper(BaseScraper):
         / ``filtro.periodoDataAte``) applied to the judgment date; passing
         ``data_publicacao_*`` raises ``TypeError``.
         """
+        tamanho_pagina = resolve_deprecated_alias(
+            kwargs, "quantidade_por_pagina", "tamanho_pagina", tamanho_pagina, sentinel=10
+        )
         inp = apply_input_pipeline_search(
             InputCJSGTJMT,
             "TJMTScraper.cjsg_download()",
@@ -85,7 +85,7 @@ class TJMTScraper(BaseScraper):
             classe=classe,
             tipo_processo=tipo_processo,
             thesaurus=thesaurus,
-            quantidade_por_pagina=quantidade_por_pagina,
+            tamanho_pagina=tamanho_pagina,
         )
         return cjsg_download(
             pesquisa=inp.pesquisa,
@@ -98,7 +98,8 @@ class TJMTScraper(BaseScraper):
             classe=inp.classe,
             tipo_processo=inp.tipo_processo,
             thesaurus=inp.thesaurus,
-            quantidade_por_pagina=inp.quantidade_por_pagina,
+            quantidade_por_pagina=inp.tamanho_pagina,
+            request_fn=self._request_with_retry,
             session=self.session,
         )
 
@@ -124,7 +125,7 @@ class TJMTScraper(BaseScraper):
         classe: str | None = None,
         tipo_processo: str | None = None,
         thesaurus: bool = False,
-        quantidade_por_pagina: int = 10,
+        tamanho_pagina: int = 10,
         data_julgamento_inicio: str | None = None,
         data_julgamento_fim: str | None = None,
         **kwargs,
@@ -132,6 +133,9 @@ class TJMTScraper(BaseScraper):
         """Search TJMT jurisprudence (download + parse).
 
         Returns a ready-to-analyze DataFrame.
+
+        Aliases deprecados:
+            * ``quantidade_por_pagina`` -> ``tamanho_pagina``
         """
         brutos = self.cjsg_download(
             pesquisa=pesquisa,
@@ -142,14 +146,12 @@ class TJMTScraper(BaseScraper):
             classe=classe,
             tipo_processo=tipo_processo,
             thesaurus=thesaurus,
-            quantidade_por_pagina=quantidade_por_pagina,
+            tamanho_pagina=tamanho_pagina,
             data_julgamento_inicio=data_julgamento_inicio,
             data_julgamento_fim=data_julgamento_fim,
             **kwargs,
         )
         dados = self.cjsg_parse(brutos, tipo_consulta=tipo_consulta)
         df = pd.DataFrame(dados)
-        for col in ["data_julgamento", "data_publicacao"]:
-            if col in df.columns:
-                df[col] = pd.to_datetime(df[col], errors="coerce").dt.date
+        coerce_date_columns(df, ["data_julgamento", "data_publicacao"])
         return df

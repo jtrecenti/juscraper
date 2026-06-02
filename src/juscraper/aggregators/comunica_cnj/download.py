@@ -12,8 +12,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import requests
-
 logger = logging.getLogger(__name__)
 
 BASE_URL = "https://comunicaapi.pje.jus.br/api/v1/comunicacao"
@@ -61,17 +59,3 @@ def build_listar_comunicacoes_params(
     if data_disponibilizacao_fim is not None:
         params["dataDisponibilizacaoFim"] = data_disponibilizacao_fim
     return params
-
-
-def call_comunica_api(
-    session: requests.Session,
-    params: dict[str, Any],
-    *,
-    timeout: float = 30.0,
-) -> requests.Response:
-    """Faz uma requisicao GET ao endpoint e devolve a Response.
-
-    O caller decide como tratar o body (parse JSON, raise_for_status, etc).
-    """
-    response = session.get(BASE_URL, params=params, timeout=timeout)
-    return response

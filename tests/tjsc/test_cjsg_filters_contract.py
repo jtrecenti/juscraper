@@ -6,7 +6,7 @@ from responses.matchers import urlencoded_params_matcher
 
 import juscraper as jus
 from juscraper.courts.tjsc.download import build_cjsg_form_body, cjsg_url_for_page
-from tests._helpers import load_sample_bytes
+from tests._helpers import assert_unknown_kwarg_raises, load_sample_bytes
 
 
 @responses.activate
@@ -131,15 +131,23 @@ def test_cjsg_data_inicio_alias_maps_to_dt_decisao(mocker):
 def test_cjsg_unknown_kwarg_raises():
     """Kwargs not declared in :class:`InputCJSGTJSC` raise ``TypeError`` with
     the field name (refs #84, #93)."""
-    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
-        jus.scraper("tjsc").cjsg("dano moral", paginas=1, kwarg_inventado="x")
+    assert_unknown_kwarg_raises(
+        jus.scraper("tjsc").cjsg,
+        "kwarg_inventado",
+        "dano moral",
+        paginas=1,
+    )
 
 
 def test_cjsg_download_unknown_kwarg_raises():
     """``cjsg_download`` rejects unknown kwargs at the lower-level entry point
     too — guards against silent drop when the caller skips :meth:`cjsg` (refs #183)."""
-    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
-        jus.scraper("tjsc").cjsg_download("dano moral", paginas=1, kwarg_inventado="x")
+    assert_unknown_kwarg_raises(
+        jus.scraper("tjsc").cjsg_download,
+        "kwarg_inventado",
+        "dano moral",
+        paginas=1,
+    )
 
 
 @responses.activate
@@ -197,3 +205,46 @@ def test_cjsg_download_data_inicio_alias_maps_to_dt_decisao(mocker):
     messages = [str(w.message) for w in warning_list]
     assert any("data_inicio" in m and "deprecado" in m for m in messages)
     assert any("data_fim" in m and "deprecado" in m for m in messages)
+
+
+@responses.activate
+def test_cjsg_datas_aceitam_formato_brasileiro(mocker):
+    """Datas de julgamento e publicacao em ``DD/MM/YYYY`` chegam coercidas
+    em ISO ao form body do eproc.
+
+    Cobre o caminho end-to-end de ``apply_input_pipeline_search`` lendo
+    ``BACKEND_DATE_FORMAT='%Y-%m-%d'`` declarado em :class:`InputCJSGTJSC`
+    e convertendo ambos os intervalos via ``coerce_brazilian_date``. Se o
+    schema esquecer de declarar o ``BACKEND_DATE_FORMAT``, o backend
+    recebe ``dtDecisaoInicio=01/01/2024`` em vez de ``2024-01-01`` e o
+    matcher dispara ``ConnectionError`` (refs #182, #173, #167)."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.POST,
+        cjsg_url_for_page(1),
+        body=load_sample_bytes("tjsc", "cjsg/no_results.html"),
+        status=200,
+        content_type="text/html; charset=iso-8859-1",
+        match=[urlencoded_params_matcher(
+            build_cjsg_form_body(
+                "dano moral",
+                page=1,
+                dt_decisao_inicio="2024-01-01",
+                dt_decisao_fim="2024-03-31",
+                dt_publicacao_inicio="2024-02-01",
+                dt_publicacao_fim="2024-04-30",
+            ),
+            allow_blank=True,
+        )],
+    )
+
+    df = jus.scraper("tjsc").cjsg(
+        "dano moral",
+        paginas=1,
+        data_julgamento_inicio="01/01/2024",
+        data_julgamento_fim="31/03/2024",
+        data_publicacao_inicio="01/02/2024",
+        data_publicacao_fim="30/04/2024",
+    )
+
+    assert isinstance(df, pd.DataFrame)

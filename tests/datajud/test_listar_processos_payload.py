@@ -165,7 +165,7 @@ class TestBuildPayloadFiltrosFlexiveis:
             numero_processo="00000000000000000001",
             ano_ajuizamento=2023,
             classe="436",
-            assuntos=["1127"],
+            assunto=["1127"],
             data_ajuizamento_inicio="2024-01-01",
             movimentos_codigo=[193],
             orgao_julgador="Vara X",
@@ -175,13 +175,13 @@ class TestBuildPayloadFiltrosFlexiveis:
 
     def test_combinacao_filtros_amigaveis_ordem_canonica(self):
         # Confirma a ordem documentada na docstring do builder:
-        # numero_processo, data, classe, assuntos, movimentos, orgao.
+        # numero_processo, data, classe, assunto, movimentos, orgao.
         payload = build_listar_processos_payload(
             numero_processo="00000000000000000001",
             data_ajuizamento_inicio="2024-01-01",
             data_ajuizamento_fim="2024-03-31",
             classe="436",
-            assuntos=["1127"],
+            assunto=["1127"],
             movimentos_codigo=[193],
             orgao_julgador="Vara X",
             tamanho_pagina=10,

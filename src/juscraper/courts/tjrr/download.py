@@ -1,13 +1,13 @@
 """Downloads raw results from the TJRR jurisprudence search (JSF/PrimeFaces)."""
-import logging
 import re
 import time
+import unicodedata
 
-import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
-logger = logging.getLogger(__name__)
+from juscraper.core.http import RequestFn
+from juscraper.utils.pagination import extract_count_with_cascade
 
 BASE_URL = "https://jurisprudencia.tjrr.jus.br/index.xhtml"
 RESULTS_PER_PAGE = 10
@@ -61,7 +61,33 @@ def _collect_form_defaults(soup: BeautifulSoup) -> dict:
     return {k: (v[0] if len(v) == 1 else v) for k, v in defaults.items()}
 
 
-def _get_form_fields(session: requests.Session) -> dict:
+_RELATOR_NOME_RE = re.compile(r"nomeRegimental:(.+?)\)\s*$")
+
+
+def _collect_relator_map(soup: BeautifulSoup) -> dict[str, str]:
+    """Map each magistrado's ``nomeRegimental`` to its opaque form value.
+
+    O backend TJRR expoe o filtro de relator como um PrimeFaces
+    ``SelectManyCheckbox`` (``menuinicial:relatorList``). Cada option
+    tem como ``value`` um entity bean Java serializado, por exemplo::
+
+        br.jus.tjrr.bpu.domain.model.MagistradoBPU(matricula:3010559, nomeRegimental:ALMIRO PADILHA)
+
+    Para a API publica aceitar o nome regimental ("ALMIRO PADILHA") em
+    vez do bean opaco, parseamos o GET inicial (ja baixado para
+    descoberta de ViewState) e entregamos o mapa para ``_search`` via
+    ``form_fields["relator_map"]``.
+    """
+    mapping: dict[str, str] = {}
+    for tag in soup.find_all("input", {"name": "menuinicial:relatorList"}):
+        value = tag.get("value") or ""
+        match = _RELATOR_NOME_RE.search(value)
+        if match:
+            mapping[match.group(1).strip()] = value
+    return mapping
+
+
+def _get_form_fields(request_fn: RequestFn) -> dict:
     """Fetch the initial page and discover JSF field names and defaults.
 
     JSF auto-generates component IDs like ``menuinicial:j_idt28`` that
@@ -70,8 +96,7 @@ def _get_form_fields(session: requests.Session) -> dict:
     (``id=consultaAtual`` for the search input) and snapshot every form
     default so the POST matches what a browser would send.
     """
-    resp = session.get(BASE_URL, timeout=30)
-    resp.raise_for_status()
+    resp = request_fn("GET", BASE_URL, timeout=30)
     soup = BeautifulSoup(resp.text, "html.parser")
     vs_input = soup.find("input", {"name": "javax.faces.ViewState"})
     if not vs_input:
@@ -90,19 +115,65 @@ def _get_form_fields(session: requests.Session) -> dict:
         "pesquisa_name": pesq["name"],
         "submit_name": submit_name,
         "defaults": _collect_form_defaults(soup),
+        "relator_map": _collect_relator_map(soup),
     }
 
 
+def _norm_relator_key(s: str) -> str:
+    """Normaliza nome regimental para lookup: tira diacriticos e baixa caixa.
+
+    NFD separa cada caractere acentuado em base + combining mark
+    (``"Á"`` -> ``"A" + U+0301``); o filtro descarta os marks. Depois
+    ``casefold()`` baixa a caixa de forma agressiva (mais correta que
+    ``lower()`` em casos como ``"ß"``). Continua sendo igualdade exata —
+    nao habilita substring ou fuzzy.
+    """
+    nfd = unicodedata.normalize("NFD", s)
+    no_diacritics = "".join(c for c in nfd if not unicodedata.combining(c))
+    return no_diacritics.casefold()
+
+
+def _resolve_relator_values(
+    relator: list[str], relator_map: dict[str, str]
+) -> list[str]:
+    """Resolve regimental names to the opaque bean values expected by the form.
+
+    Match e exato apos normalizacao ``_norm_relator_key`` — o usuario pode
+    digitar ``"cristovao suter"``, ``"Cristóvão Suter"`` ou
+    ``"CRISTÓVÃO SUTER"`` e bate com o mesmo magistrado. Continua sendo
+    igualdade (nao fuzzy/substring), entao nao ha risco de bater dois
+    nomes pelo primeiro componente. ``ValueError`` lista os nomes
+    **canonicos** (UPPERCASE com acento) para o usuario corrigir.
+    """
+    normalized_lookup = {
+        _norm_relator_key(name): value for name, value in relator_map.items()
+    }
+    resolved: list[str] = []
+    unknown: list[str] = []
+    for name in relator:
+        opaque = normalized_lookup.get(_norm_relator_key(name))
+        if opaque is None:
+            unknown.append(name)
+        else:
+            resolved.append(opaque)
+    if unknown:
+        available = ", ".join(sorted(relator_map)) or "(nenhum encontrado no form)"
+        raise ValueError(
+            f"Relator(es) desconhecido(s) no TJRR: {unknown}. "
+            f"Nomes disponiveis (nomeRegimental): {available}."
+        )
+    return resolved
+
+
 def _search(
-    session: requests.Session,
+    request_fn: RequestFn,
     form_fields: dict,
     pesquisa: str,
-    relator: str = "",  # noqa: ARG001 - accepted for API compat; no longer a text input in TJRR
+    relator: list[str] | None = None,
     data_inicio: str = "",
     data_fim: str = "",
     orgao_julgador: list | None = None,
     especie: list | None = None,
-    max_retries: int = 3,
 ) -> str:
     """Submit the search form and return the HTML response."""
     data: dict = dict(form_fields.get("defaults", {}))
@@ -118,43 +189,43 @@ def _search(
         data["menuinicial:tipoOrgaoList"] = list(orgao_julgador)
     if especie:
         data["menuinicial:tipoEspecieList"] = list(especie)
+    if relator:
+        data["menuinicial:relatorList"] = _resolve_relator_values(
+            list(relator), form_fields.get("relator_map", {})
+        )
 
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
         "Origin": "https://jurisprudencia.tjrr.jus.br",
         "Referer": "https://jurisprudencia.tjrr.jus.br/",
     }
-    for attempt in range(1, max_retries + 1):
-        try:
-            resp = session.post(BASE_URL, data=data, headers=headers, timeout=60)
-            resp.raise_for_status()
-            resp.encoding = "utf-8"
-            return resp.text
-        except requests.RequestException as exc:
-            if attempt == max_retries:
-                raise
-            wait = 2 ** attempt
-            logger.warning(
-                "TJRR request failed (attempt %d/%d): %s. Retrying in %ds...",
-                attempt, max_retries, exc, wait,
-            )
-            time.sleep(wait)
-    return ""  # unreachable
+    resp = request_fn("POST", BASE_URL, data=data, headers=headers, timeout=60)
+    resp.encoding = "utf-8"
+    return resp.text
+
+
+_PAGINATION_CSS_SELECTORS: tuple[str, ...] = ("span.ui-paginator-current",)
+_PAGINATION_REGEXES: tuple[re.Pattern[str], ...] = (
+    re.compile(r"of\s+(\d+)\)", re.IGNORECASE),
+    re.compile(r"de\s+(\d+)\)", re.IGNORECASE),
+)
 
 
 def _get_total_pages(html: str) -> int:
     """Extract total pages from the PrimeFaces paginator."""
-    match = re.search(r"\((\d+) of (\d+)\)", html)
-    if match:
-        return int(match.group(2))
-    return 1
+    n = extract_count_with_cascade(
+        html,
+        css_selectors=_PAGINATION_CSS_SELECTORS,
+        regex_patterns=_PAGINATION_REGEXES,
+        fallback_max_int=False,
+    )
+    return n if n is not None else 1
 
 
 def _paginate(
-    session: requests.Session,
+    request_fn: RequestFn,
     html: str,
     page: int,
-    max_retries: int = 3,
 ) -> str:
     """Navigate to a specific page using PrimeFaces AJAX pagination."""
     soup = BeautifulSoup(html, "html.parser")
@@ -178,28 +249,17 @@ def _paginate(
         "javax.faces.ViewState": viewstate,
     }
 
-    for attempt in range(1, max_retries + 1):
-        try:
-            resp = session.post(BASE_URL, data=data, timeout=60)
-            resp.raise_for_status()
-            resp.encoding = "utf-8"
-            return _extract_cdata(resp.text)
-        except requests.RequestException as exc:
-            if attempt == max_retries:
-                raise
-            wait = 2 ** attempt
-            logger.warning(
-                "TJRR pagination failed (attempt %d/%d): %s. Retrying in %ds...",
-                attempt, max_retries, exc, wait,
-            )
-            time.sleep(wait)
-    return ""  # unreachable
+    resp = request_fn("POST", BASE_URL, data=data, timeout=60)
+    resp.encoding = "utf-8"
+    return _extract_cdata(resp.text)
 
 
 def cjsg_download_manager(
     pesquisa: str,
     paginas=None,
-    session: requests.Session | None = None,
+    *,
+    request_fn: RequestFn,
+    sleep_time: float = 1.0,
     **kwargs,
 ) -> list:
     """Download raw HTML results from the TJRR jurisprudence search.
@@ -209,27 +269,24 @@ def cjsg_download_manager(
     Args:
         pesquisa: Search term.
         paginas (list, range, or None): Pages to download (1-based).
-        session: Optional requests.Session to reuse.
+        request_fn: HTTP callable que faz retry + raise_for_status — em uso
+            normal e ``TJRRScraper._request_with_retry`` (via
+            ``core.http.HTTPScraper``), centralizando backoff para 429/5xx.
+        sleep_time: Delay (em segundos) entre páginas. Default 1.0; o client
+            normalmente passa ``self.sleep_time`` herdado de ``HTTPScraper``.
         **kwargs: Additional filter parameters.
     """
-    if session is None:
-        session = requests.Session()
-        session.headers.update({
-            "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-        })
-
-    form_fields = _get_form_fields(session)
-    first_html = _search(session, form_fields, pesquisa, **kwargs)
-    time.sleep(1)
+    form_fields = _get_form_fields(request_fn)
+    first_html = _search(request_fn, form_fields, pesquisa, **kwargs)
 
     if paginas is None:
         resultados = [first_html]
         n_pags = _get_total_pages(first_html)
         if n_pags > 1:
             for pagina in tqdm(range(2, n_pags + 1), desc="Baixando CJSG TJRR"):
-                html = _paginate(session, first_html, pagina)
+                time.sleep(sleep_time)
+                html = _paginate(request_fn, first_html, pagina)
                 resultados.append(html)
-                time.sleep(1)
         return resultados
 
     paginas_iter = list(paginas)
@@ -238,7 +295,7 @@ def cjsg_download_manager(
         if pagina_1based == 1:
             resultados.append(first_html)
         else:
-            html = _paginate(session, first_html, pagina_1based)
+            time.sleep(sleep_time)
+            html = _paginate(request_fn, first_html, pagina_1based)
             resultados.append(html)
-            time.sleep(1)
     return resultados

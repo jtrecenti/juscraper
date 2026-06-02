@@ -7,7 +7,7 @@ import responses
 from responses.matchers import json_params_matcher
 
 import juscraper as jus
-from tests._helpers import load_sample
+from tests._helpers import assert_unknown_kwarg_raises, load_sample
 from tests.tjdft.test_cjsg_contract import BASE, _payload
 
 
@@ -29,7 +29,7 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
                     sinonimos=False,
                     espelho=False,
                     inteiro_teor=True,
-                    quantidade_por_pagina=25,
+                    tamanho_pagina=25,
                 )
             )
         ],
@@ -41,7 +41,7 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
         sinonimos=False,
         espelho=False,
         inteiro_teor=True,
-        quantidade_por_pagina=25,
+        tamanho_pagina=25,
     )
 
     assert isinstance(df, pd.DataFrame)
@@ -104,5 +104,72 @@ def test_cjsg_data_inicio_alias_maps_to_data_julgamento(mocker):
 def test_cjsg_unknown_kwarg_raises():
     """Kwargs not declared in :class:`InputCJSGTJDFT` raise ``TypeError`` with
     the field name, instead of being silently dropped (refs #84, #93, #165)."""
-    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'kwarg_inventado'"):
-        jus.scraper("tjdft").cjsg("dano moral", paginas=1, kwarg_inventado="x")
+    assert_unknown_kwarg_raises(
+        jus.scraper("tjdft").cjsg,
+        "kwarg_inventado",
+        "dano moral",
+        paginas=1,
+    )
+
+
+@responses.activate
+def test_cjsg_quantidade_por_pagina_alias_emits_deprecation_warning(mocker):
+    """``quantidade_por_pagina`` e alias deprecado de ``tamanho_pagina`` (refs #211)."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.POST,
+        BASE,
+        body=load_sample("tjdft", "cjsg/no_results.json"),
+        status=200,
+        content_type="application/json",
+        match=[json_params_matcher(_payload("dano moral", 1, tamanho_pagina=25))],
+    )
+
+    with pytest.warns(DeprecationWarning, match="quantidade_por_pagina.*deprecado"):
+        df = jus.scraper("tjdft").cjsg(
+            "dano moral", paginas=1, quantidade_por_pagina=25
+        )
+
+    assert isinstance(df, pd.DataFrame)
+
+
+def test_cjsg_tamanho_pagina_collision_raises():
+    """Passar canonico + alias simultaneamente levanta ValueError (refs #211)."""
+    with pytest.raises(ValueError, match=r"tamanho_pagina.*quantidade_por_pagina"):
+        jus.scraper("tjdft").cjsg(
+            "dano moral", paginas=1, tamanho_pagina=25, quantidade_por_pagina=50
+        )
+
+
+@responses.activate
+def test_cjsg_data_julgamento_aceita_formato_brasileiro(mocker):
+    """Datas em ``DD/MM/YYYY`` chegam coercidas em ISO ao backend.
+
+    Cobre o caminho end-to-end de ``apply_input_pipeline_search`` lendo
+    ``BACKEND_DATE_FORMAT='%Y-%m-%d'`` declarado em :class:`InputCJSGTJDFT`
+    e convertendo via ``coerce_brazilian_date``. A data isolada chega ao
+    payload como ``termosAcessorios`` na forma canonica
+    ``"entre 2024-01-01 e 2024-03-31"`` — se o pipeline esquecer de
+    coagir, o termo carrega o formato BR cru e o matcher dispara
+    ``ConnectionError`` (refs #182, #173, #167)."""
+    mocker.patch("time.sleep")
+    expected_termos = [
+        {"campo": "dataJulgamento", "valor": "entre 2024-01-01 e 2024-03-31"},
+    ]
+    responses.add(
+        responses.POST,
+        BASE,
+        body=load_sample("tjdft", "cjsg/no_results.json"),
+        status=200,
+        content_type="application/json",
+        match=[json_params_matcher(_payload("dano moral", 1, termos_acessorios=expected_termos))],
+    )
+
+    df = jus.scraper("tjdft").cjsg(
+        "dano moral",
+        paginas=1,
+        data_julgamento_inicio="01/01/2024",
+        data_julgamento_fim="31/03/2024",
+    )
+
+    assert isinstance(df, pd.DataFrame)

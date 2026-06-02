@@ -1,9 +1,10 @@
 """Scraper for the Tribunal de Justica do Piaui (TJPI)."""
 
-import pandas as pd
-import requests
+from typing import Any
 
-from juscraper.core.base import BaseScraper
+import pandas as pd
+
+from juscraper.core.http import HTTPScraper
 from juscraper.utils.params import apply_input_pipeline_search, to_iso_date
 
 from .download import cjsg_download_manager
@@ -11,7 +12,7 @@ from .parse import cjsg_parse_manager
 from .schemas import InputCJSGTJPI
 
 
-class TJPIScraper(BaseScraper):
+class TJPIScraper(HTTPScraper):
     """Scraper for the Tribunal de Justica do Piaui (TJPI).
 
     Uses the JusPI search interface at jurisprudencia.tjpi.jus.br.
@@ -20,12 +21,20 @@ class TJPIScraper(BaseScraper):
 
     BASE_URL = "https://jurisprudencia.tjpi.jus.br"
 
-    def __init__(self):
-        super().__init__("TJPI")
-        self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-        })
+    def __init__(
+        self,
+        verbose: int = 0,
+        download_path: str | None = None,
+        sleep_time: float = 1.0,
+        **kwargs: Any,
+    ):
+        super().__init__(
+            "TJPI",
+            verbose=verbose,
+            download_path=download_path,
+            sleep_time=sleep_time,
+            **kwargs,
+        )
 
     def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJPI."""
@@ -39,10 +48,10 @@ class TJPIScraper(BaseScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        tipo: str = "",
-        relator: str = "",
-        classe: str = "",
-        orgao: str = "",
+        tipo: str | None = None,
+        relator: str | None = None,
+        classe: str | None = None,
+        orgao: str | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Busca jurisprudencia no TJPI.
@@ -94,10 +103,10 @@ class TJPIScraper(BaseScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        tipo: str = "",
-        relator: str = "",
-        classe: str = "",
-        orgao: str = "",
+        tipo: str | None = None,
+        relator: str | None = None,
+        classe: str | None = None,
+        orgao: str | None = None,
         **kwargs,
     ) -> list:
         """Download raw HTML pages from TJPI.
@@ -124,11 +133,12 @@ class TJPIScraper(BaseScraper):
         return cjsg_download_manager(
             pesquisa=inp.pesquisa,
             paginas=inp.paginas,
-            session=self.session,
-            tipo=inp.tipo,
-            relator=inp.relator,
-            classe=inp.classe,
-            orgao=inp.orgao,
+            request_fn=self._request_with_retry,
+            sleep_time=self.sleep_time,
+            tipo=inp.tipo or "",
+            relator=inp.relator or "",
+            classe=inp.classe or "",
+            orgao=inp.orgao or "",
             data_min=to_iso_date(inp.data_julgamento_inicio) or "",
             data_max=to_iso_date(inp.data_julgamento_fim) or "",
         )

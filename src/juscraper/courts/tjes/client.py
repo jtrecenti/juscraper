@@ -1,11 +1,8 @@
-"""
-Scraper for the Tribunal de Justica do Espirito Santo (TJES).
-"""
+"""Scraper for the Tribunal de Justica do Espirito Santo (TJES)."""
 
 import pandas as pd
-import requests
 
-from juscraper.core.base import BaseScraper
+from juscraper.core.http import HTTPScraper
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
 from .download import CJPG_CORE, CJSG_CORES, DEFAULT_CORE, DEFAULT_PER_PAGE, cjsg_download
@@ -13,17 +10,13 @@ from .parse import cjsg_parse
 from .schemas import InputCJPGTJES, InputCJSGTJES
 
 
-class TJESScraper(BaseScraper):
+class TJESScraper(HTTPScraper):
     """Scraper for the Tribunal de Justica do Espirito Santo."""
 
     BASE_URL = "https://sistemas.tjes.jus.br/consulta-jurisprudencia/api"
 
     def __init__(self):
         super().__init__("TJES")
-        self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-        })
 
     def cpopg(self, id_cnj: str | list[str]):
         """Stub: first-instance case lookup not implemented for TJES."""
@@ -45,7 +38,7 @@ class TJESScraper(BaseScraper):
         jurisdicao: str | None = None,
         assunto: str | None = None,
         ordenacao: str | None = None,
-        per_page: int = DEFAULT_PER_PAGE,
+        tamanho_pagina: int = DEFAULT_PER_PAGE,
         data_julgamento_inicio: str | None = None,
         data_julgamento_fim: str | None = None,
         **kwargs,
@@ -80,8 +73,10 @@ class TJESScraper(BaseScraper):
             Filter by subject.
         ordenacao : str
             Sort expression (e.g. ``dt_juntada desc``).
-        per_page : int
-            Results per page (default 20).
+        tamanho_pagina : int
+            Results per page (default 20 — particularidade do backend
+            Elasticsearch do TJES; demais tribunais usam 10). Aceita
+            ``per_page`` como alias deprecado.
         data_julgamento_inicio / data_julgamento_fim : str
             Date range filter (YYYY-MM-DD). TJES uses ``dataIni``/``dataFim`` which
             filters on ``dt_juntada``. The backend does not expose a separate
@@ -100,6 +95,9 @@ class TJESScraper(BaseScraper):
             )
         relator = resolve_deprecated_alias(kwargs, "magistrado", "relator", relator)
         classe = resolve_deprecated_alias(kwargs, "classe_judicial", "classe", classe)
+        tamanho_pagina = resolve_deprecated_alias(
+            kwargs, "per_page", "tamanho_pagina", tamanho_pagina, sentinel=DEFAULT_PER_PAGE
+        )
         inp = apply_input_pipeline_search(
             InputCJSGTJES,
             "TJESScraper.cjsg_download()",
@@ -117,7 +115,7 @@ class TJESScraper(BaseScraper):
             jurisdicao=jurisdicao,
             assunto=assunto,
             ordenacao=ordenacao,
-            per_page=per_page,
+            tamanho_pagina=tamanho_pagina,
         )
         return cjsg_download(
             pesquisa=inp.pesquisa,
@@ -133,8 +131,8 @@ class TJESScraper(BaseScraper):
             jurisdicao=inp.jurisdicao,
             assunto=inp.assunto,
             ordenacao=inp.ordenacao,
-            per_page=inp.per_page,
-            session=self.session,
+            per_page=inp.tamanho_pagina,
+            request_fn=self._request_with_retry,
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> pd.DataFrame:
@@ -164,7 +162,7 @@ class TJESScraper(BaseScraper):
         jurisdicao: str | None = None,
         assunto: str | None = None,
         ordenacao: str | None = None,
-        per_page: int = DEFAULT_PER_PAGE,
+        tamanho_pagina: int = DEFAULT_PER_PAGE,
         data_julgamento_inicio: str | None = None,
         data_julgamento_fim: str | None = None,
         **kwargs,
@@ -173,9 +171,12 @@ class TJESScraper(BaseScraper):
         Search TJES jurisprudence (download + parse).
 
         Returns a ready-to-analyze DataFrame. Accepts all the same parameters
-        as :meth:`cjsg_download`. ``magistrado`` / ``classe_judicial`` sao
-        aceitos com ``DeprecationWarning`` como aliases de ``relator`` /
-        ``classe``.
+        as :meth:`cjsg_download`.
+
+        Aliases deprecados:
+            * ``magistrado`` -> ``relator``
+            * ``classe_judicial`` -> ``classe``
+            * ``per_page`` -> ``tamanho_pagina``
         """
         brutos = self.cjsg_download(
             pesquisa=pesquisa,
@@ -188,7 +189,7 @@ class TJESScraper(BaseScraper):
             jurisdicao=jurisdicao,
             assunto=assunto,
             ordenacao=ordenacao,
-            per_page=per_page,
+            tamanho_pagina=tamanho_pagina,
             data_julgamento_inicio=data_julgamento_inicio,
             data_julgamento_fim=data_julgamento_fim,
             **kwargs,
@@ -197,7 +198,7 @@ class TJESScraper(BaseScraper):
 
     # --- cjpg (first instance / 1o grau) ---
 
-    def _cjpg_download_internal(self, pesquisa, paginas, kwargs):
+    def _cjpg_download_internal(self, pesquisa, paginas, kwargs, *, tamanho_pagina):
         """Shared logic for cjpg_download — delegates to cjsg_download with core=pje1g."""
         relator = resolve_deprecated_alias(
             kwargs, "magistrado", "relator", kwargs.pop("relator", None)
@@ -205,12 +206,14 @@ class TJESScraper(BaseScraper):
         classe = resolve_deprecated_alias(
             kwargs, "classe_judicial", "classe", kwargs.pop("classe", None)
         )
+        tamanho_pagina = resolve_deprecated_alias(
+            kwargs, "per_page", "tamanho_pagina", tamanho_pagina, sentinel=DEFAULT_PER_PAGE
+        )
         busca_exata = kwargs.pop("busca_exata", False)
         orgao_julgador = kwargs.pop("orgao_julgador", None)
         jurisdicao = kwargs.pop("jurisdicao", None)
         assunto = kwargs.pop("assunto", None)
         ordenacao = kwargs.pop("ordenacao", None)
-        per_page = kwargs.pop("per_page", DEFAULT_PER_PAGE)
         inp = apply_input_pipeline_search(
             InputCJPGTJES,
             "TJESScraper.cjpg_download()",
@@ -225,7 +228,7 @@ class TJESScraper(BaseScraper):
             jurisdicao=jurisdicao,
             assunto=assunto,
             ordenacao=ordenacao,
-            per_page=per_page,
+            tamanho_pagina=tamanho_pagina,
         )
 
         return cjsg_download(
@@ -242,27 +245,31 @@ class TJESScraper(BaseScraper):
             jurisdicao=inp.jurisdicao,
             assunto=inp.assunto,
             ordenacao=inp.ordenacao,
-            per_page=inp.per_page,
-            session=self.session,
+            per_page=inp.tamanho_pagina,
+            request_fn=self._request_with_retry,
         )
 
     def cjpg_download(
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
+        tamanho_pagina: int = DEFAULT_PER_PAGE,
         **kwargs,
     ) -> list:
         """
         Download raw JSON results from the TJES first-instance search (core ``pje1g``).
 
         Accepts the same filter parameters as :meth:`cjsg_download` (except ``core``).
+        ``per_page`` é aceito como alias deprecado de ``tamanho_pagina``.
 
         Returns
         -------
         list
             Raw JSON responses, one per page.
         """
-        resultados: list = self._cjpg_download_internal(pesquisa, paginas, kwargs)
+        resultados: list = self._cjpg_download_internal(
+            pesquisa, paginas, kwargs, tamanho_pagina=tamanho_pagina
+        )
         return resultados
 
     def cjpg_parse(self, resultados_brutos: list) -> pd.DataFrame:
@@ -284,6 +291,7 @@ class TJESScraper(BaseScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
+        tamanho_pagina: int = DEFAULT_PER_PAGE,
         **kwargs,
     ) -> pd.DataFrame:
         """
@@ -293,9 +301,14 @@ class TJESScraper(BaseScraper):
         Queries the ``pje1g`` core. Accepts the same filter parameters as
         :meth:`cjsg` (except ``core``).
 
+        Aliases deprecados:
+            * ``magistrado`` -> ``relator``
+            * ``classe_judicial`` -> ``classe``
+            * ``per_page`` -> ``tamanho_pagina``
+
         Returns
         -------
         pd.DataFrame
         """
-        brutos = self._cjpg_download_internal(pesquisa, paginas, kwargs)
+        brutos = self._cjpg_download_internal(pesquisa, paginas, kwargs, tamanho_pagina=tamanho_pagina)
         return cjsg_parse(brutos)

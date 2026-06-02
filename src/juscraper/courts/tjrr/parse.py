@@ -4,6 +4,9 @@ import re
 import pandas as pd
 from bs4 import BeautifulSoup
 
+from juscraper.core.parse_utils import coerce_date_columns
+from juscraper.utils.cnj import format_cnj
+
 
 def _parse_result_div(div) -> dict:
     """Parse a single result div from the TJRR search page."""
@@ -23,7 +26,7 @@ def _parse_result_div(div) -> dict:
             for line in lines:
                 line = line.strip()
                 if re.match(r"^\d{20}$", line):
-                    result["processo"] = _format_cnj(line)
+                    result["processo"] = format_cnj(line, strict=False)
                 elif re.match(r"^[A-Z]", line) and "Segredo" not in line:
                     result["classe"] = line.strip()
         elif "RELATOR" in title.upper():
@@ -38,16 +41,6 @@ def _parse_result_div(div) -> dict:
             result["ementa"] = text
 
     return result
-
-
-def _format_cnj(numero: str | None) -> str | None:
-    """Format a raw 20-digit number as CNJ pattern."""
-    if not numero or not numero.isdigit() or len(numero) != 20:
-        return numero
-    return (
-        f"{numero[:7]}-{numero[7:9]}.{numero[9:13]}."
-        f"{numero[13]}.{numero[14:16]}.{numero[16:]}"
-    )
 
 
 def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
@@ -71,9 +64,7 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
     if df.empty:
         return df
 
-    for col in ["data_julgamento", "data_publicacao"]:
-        if col in df.columns:
-            df[col] = pd.to_datetime(df[col], format="%d/%m/%Y", errors="coerce").dt.date
+    coerce_date_columns(df, ["data_julgamento", "data_publicacao"], date_format="%d/%m/%Y")
 
     principais = [
         "processo", "classe", "relator", "orgao_julgador",

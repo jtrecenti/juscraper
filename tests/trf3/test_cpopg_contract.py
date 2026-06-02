@@ -36,11 +36,114 @@ def _subset_form_matcher(expected: dict[str, str]):
 
     return _match
 
+
 LIST_URL = "https://pje1g.trf3.jus.br/pje/ConsultaPublica/listView.seam"
 DETAIL_URL = (
     "https://pje1g.trf3.jus.br/pje/"
     "ConsultaPublica/DetalheProcessoConsultaPublica/listView.seam"
 )
+
+
+def test_akamai_block_raises_dedicated_exception() -> None:
+    """403 ``Access Denied`` (Akamai) vira ``BotChallengeBlockedError`` com mensagem clara."""
+    import pytest as _pt
+
+    from juscraper.core.exceptions import BotChallengeBlockedError
+    from juscraper.courts.trf3.download import _check_bot_challenge
+
+    class FakeResp:
+        status_code = 403
+        url = "https://pje1g.trf3.jus.br/pje/ConsultaPublica/listView.seam"
+        content = (
+            b"<HTML><HEAD><TITLE>Access Denied</TITLE></HEAD><BODY>"
+            b"<H1>Access Denied</H1>"
+            b" Reference&#32;&#35;18&#46;27f62917&#46;1779623119&#46;a59b1f4c"
+            b"</BODY></HTML>"
+        )
+
+    with _pt.raises(BotChallengeBlockedError) as exc_info:
+        _check_bot_challenge(FakeResp())  # type: ignore[arg-type]
+    err = exc_info.value
+    assert err.tribunal == "TRF3"
+    assert err.reference == "18.27f62917.1779623119.a59b1f4c"
+    msg = str(err)
+    assert "TRF3" in msg
+    assert "aguarde" in msg  # orientação de espera presente
+    assert "VPN" in msg or "hotspot" in msg  # orientação de troca de IP
+
+
+def test_check_bot_challenge_ignores_legitimate_403() -> None:
+    """403 sem 'Access Denied' segue para ``raise_for_status`` normalmente."""
+    from juscraper.courts.trf3.download import _check_bot_challenge
+
+    class FakeResp:
+        status_code = 403
+        url = "https://example.com/forbidden"
+        content = b"<html>403 - not authorized</html>"
+
+    # Sem 'Access Denied' no body, a função retorna sem levantar.
+    _check_bot_challenge(FakeResp())  # type: ignore[arg-type]
+
+
+def test_check_bot_challenge_ignores_non_403() -> None:
+    """200/500/etc. nunca disparam a detecção."""
+    from juscraper.courts.trf3.download import _check_bot_challenge
+
+    class FakeResp:
+        status_code = 500
+        url = "https://example.com/x"
+        content = b"Access Denied"  # nem assim — só 403 conta
+
+    _check_bot_challenge(FakeResp())  # type: ignore[arg-type]
+
+
+def test_extract_movs_pagination_returns_none_when_no_slider() -> None:
+    """Processes with ≤ 15 movs render no slider — paginator must short-circuit."""
+    from juscraper.courts.trf3.download import extract_movs_pagination
+
+    detail = load_sample_bytes("trf3", "cpopg/detail_normal.html").decode("latin-1")
+    assert extract_movs_pagination(detail) is None
+
+
+def test_extract_movs_pagination_picks_movs_slider_not_documentos() -> None:
+    """Detail HTML has two Richfaces sliders (movs + docs). We must hit movs."""
+    from juscraper.courts.trf3.download import extract_movs_pagination
+
+    detail = load_sample_bytes("trf3", "cpopg/detail_paginated.html").decode("latin-1")
+    info = extract_movs_pagination(detail)
+    assert info is not None
+    # The movs panel wrapper is ``j_id<NN>:j_id<NN>``; we don't pin the exact
+    # ``j_id`` numbers (they're regenerated on every PJe redeploy), but the
+    # structure does need to look right.
+    assert info.max_pages > 1
+    assert info.container_id != info.form_id
+    assert info.slider_input_name.startswith(info.form_id + ":")
+    assert info.ajax_source_name.startswith(info.form_id + ":")
+    assert info.view_state  # ViewState is required for the AJAX POST
+
+
+def test_merge_movs_pages_appends_rows_into_movs_tbody() -> None:
+    """Splicing page-2 rows into page-1 tbody yields a single contiguous list."""
+    from juscraper.courts.trf3.download import merge_movs_pages
+    from juscraper.courts.trf3.parse import parse_detail
+
+    detail = load_sample_bytes("trf3", "cpopg/detail_paginated.html").decode("latin-1")
+    page_2 = load_sample_bytes("trf3", "cpopg/movs_page_2.html").decode("latin-1")
+    page1_movs = parse_detail(detail)["movimentacoes"]
+    merged_movs = parse_detail(merge_movs_pages(detail, [page_2]))["movimentacoes"]
+    # Page 1 has 15 rows, page 2 has another 15 — merged must hold both.
+    assert len(page1_movs) == 15
+    assert len(merged_movs) == 30
+    # The first 15 are unchanged (we append at the end of the tbody).
+    assert merged_movs[:15] == page1_movs
+
+
+def test_merge_movs_pages_noop_when_extras_empty() -> None:
+    """No extra pages → identical HTML, identical parse."""
+    from juscraper.courts.trf3.download import merge_movs_pages
+
+    detail = load_sample_bytes("trf3", "cpopg/detail_paginated.html").decode("latin-1")
+    assert merge_movs_pages(detail, []) is detail
 
 
 @responses.activate
@@ -168,3 +271,83 @@ def test_cpopg_rejects_unknown_kwargs() -> None:
     scraper = jus.scraper("trf3", sleep_time=0)
     with pytest.raises(TypeError, match="unexpected keyword"):
         scraper.cpopg("50059460920254036324", filtro_inexistente="x")
+
+
+@responses.activate
+def test_cpopg_batch_continues_after_download_error() -> None:
+    """Erro de rede num CNJ não derruba o batch — vira linha só com ``id_cnj``."""
+    # GET form OK + 1 POST que dá ConnectionError + 1 POST OK + 1 GET detail OK.
+    responses.add(
+        responses.GET,
+        LIST_URL,
+        body=load_sample("trf3", "cpopg/form_initial.html"),
+    )
+    responses.add(responses.POST, LIST_URL, body=ConnectionError("kaboom"))
+    responses.add(
+        responses.POST,
+        LIST_URL,
+        body=load_sample("trf3", "cpopg/search_one_result.html"),
+    )
+    responses.add(
+        responses.GET,
+        DETAIL_URL,
+        body=load_sample_bytes("trf3", "cpopg/detail_normal.html"),
+    )
+
+    scraper = jus.scraper("trf3", sleep_time=0)
+    df = scraper.cpopg(["00000000020994030000", "50059460920254036324"])
+    assert list(df["id_cnj"]) == ["00000000020994030000", "50059460920254036324"]
+    # CNJ que falhou no download vira linha só com id_cnj.
+    assert pd.isna(df.iloc[0].get("processo")) or df.iloc[0].get("processo") is None
+    # CNJ que veio depois é parseado normalmente.
+    assert df.iloc[1]["processo"] == "5005946-09.2025.4.03.6324"
+
+
+@responses.activate
+def test_cpopg_batch_continues_after_parse_error(monkeypatch) -> None:
+    """Erro no parser de um item vira linha só com ``id_cnj`` e o batch segue."""
+    responses.add(
+        responses.GET,
+        LIST_URL,
+        body=load_sample("trf3", "cpopg/form_initial.html"),
+    )
+    responses.add(
+        responses.POST,
+        LIST_URL,
+        body=load_sample("trf3", "cpopg/search_one_result.html"),
+    )
+    responses.add(
+        responses.GET,
+        DETAIL_URL,
+        body=load_sample_bytes("trf3", "cpopg/detail_normal.html"),
+    )
+    responses.add(
+        responses.POST,
+        LIST_URL,
+        body=load_sample("trf3", "cpopg/search_one_result.html"),
+    )
+    responses.add(
+        responses.GET,
+        DETAIL_URL,
+        body=load_sample_bytes("trf3", "cpopg/detail_normal.html"),
+    )
+
+    # Faz o parser explodir só na primeira chamada.
+    from juscraper.courts.trf3 import client as trf3_client
+
+    real_parse = trf3_client.parse_detail
+    calls = {"n": 0}
+
+    def flaky_parse(html):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise ValueError("HTML inesperado")
+        return real_parse(html)
+
+    monkeypatch.setattr(trf3_client, "parse_detail", flaky_parse)
+
+    scraper = jus.scraper("trf3", sleep_time=0)
+    df = scraper.cpopg(["50059460920254036324", "50059460920254036325"])
+    assert list(df["id_cnj"]) == ["50059460920254036324", "50059460920254036325"]
+    assert pd.isna(df.iloc[0].get("processo")) or df.iloc[0].get("processo") is None
+    assert df.iloc[1]["processo"] == "5005946-09.2025.4.03.6324"

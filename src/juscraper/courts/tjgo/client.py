@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 import logging
+from typing import Literal
 
 import pandas as pd
 import requests
 
-from juscraper.core.base import BaseScraper
-from juscraper.utils.params import apply_input_pipeline_search
+from juscraper.core.http import HTTPScraper
+from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
 from .download import cjsg_download as _cjsg_download
 from .parse import cjsg_parse as _cjsg_parse
@@ -16,7 +17,7 @@ from .schemas import InputCJSGTJGO
 logger = logging.getLogger("juscraper.tjgo")
 
 
-class TJGOScraper(BaseScraper):
+class TJGOScraper(HTTPScraper):
     """Scraper for the Court of Justice of Goiás.
 
     The TJGO jurisprudence search (Projudi) renders a Cloudflare Turnstile
@@ -31,20 +32,20 @@ class TJGOScraper(BaseScraper):
     )
 
     def __init__(self, sleep_time: float = 1.0):
-        super().__init__("TJGO")
-        self.session = requests.Session()
-        self.session.headers.update({"User-Agent": self.USER_AGENT})
-        self.sleep_time = sleep_time
+        super().__init__("TJGO", sleep_time=sleep_time)
+
+    def _configure_session(self, session: requests.Session) -> None:
+        session.headers["User-Agent"] = self.USER_AGENT
 
     def cjsg_download(
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        id_instancia: str | int = 0,
-        id_area: str | int = 0,
+        id_instancia: Literal[0, 1, 2, 3, "0", "1", "2", "3"] = 0,
+        id_area: Literal[0, 1, 2, "0", "1", "2"] = 0,
         id_serventia_subtipo: str | int = 0,
-        numero_processo: str = "",
-        qtde_itens_pagina: int = 10,
+        numero_processo: str | None = None,
+        tamanho_pagina: int = 10,
         data_publicacao_inicio: str | None = None,
         data_publicacao_fim: str | None = None,
         **kwargs,
@@ -67,11 +68,15 @@ class TJGOScraper(BaseScraper):
             Court unit sub-type id (see website dropdown). ``0`` = all.
         numero_processo : str
             Filter by specific CNJ process number.
-        qtde_itens_pagina : int
-            Items per page (default 10).
+        tamanho_pagina : int
+            Items per page (default 10). Aceita ``qtde_itens_pagina`` como
+            alias deprecado.
         data_publicacao_inicio, data_publicacao_fim : str, optional
             Publication date range in ``dd/mm/yyyy`` or ``yyyy-mm-dd``.
         """
+        tamanho_pagina = resolve_deprecated_alias(
+            kwargs, "qtde_itens_pagina", "tamanho_pagina", tamanho_pagina, sentinel=10
+        )
         inp = apply_input_pipeline_search(
             InputCJSGTJGO,
             "TJGOScraper.cjsg_download()",
@@ -85,11 +90,11 @@ class TJGOScraper(BaseScraper):
             id_area=id_area,
             id_serventia_subtipo=id_serventia_subtipo,
             numero_processo=numero_processo,
-            qtde_itens_pagina=qtde_itens_pagina,
+            tamanho_pagina=tamanho_pagina,
         )
 
         return _cjsg_download(
-            session=self.session,
+            request_fn=self._request_with_retry,
             pesquisa=inp.pesquisa or "",
             paginas=inp.paginas,
             id_instancia=str(inp.id_instancia),
@@ -97,8 +102,8 @@ class TJGOScraper(BaseScraper):
             id_serventia_subtipo=str(inp.id_serventia_subtipo),
             data_publicacao_inicio=_br_date(inp.data_publicacao_inicio),
             data_publicacao_fim=_br_date(inp.data_publicacao_fim),
-            numero_processo=inp.numero_processo,
-            qtde_itens_pagina=inp.qtde_itens_pagina,
+            numero_processo=inp.numero_processo or "",
+            qtde_itens_pagina=inp.tamanho_pagina,
             sleep_time=self.sleep_time,
         )
 
@@ -110,11 +115,11 @@ class TJGOScraper(BaseScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        id_instancia: str | int = 0,
-        id_area: str | int = 0,
+        id_instancia: Literal[0, 1, 2, 3, "0", "1", "2", "3"] = 0,
+        id_area: Literal[0, 1, 2, "0", "1", "2"] = 0,
         id_serventia_subtipo: str | int = 0,
-        numero_processo: str = "",
-        qtde_itens_pagina: int = 10,
+        numero_processo: str | None = None,
+        tamanho_pagina: int = 10,
         **kwargs,
     ) -> pd.DataFrame:
         """Busca jurisprudencia no TJGO (Projudi).
@@ -129,7 +134,7 @@ class TJGOScraper(BaseScraper):
             id_serventia_subtipo (int | str): ID do subtipo de serventia
                 (dropdown do site). ``0`` = todas.
             numero_processo (str): Filtrar por numero CNJ especifico.
-            qtde_itens_pagina (int): Itens por pagina (default 10).
+            tamanho_pagina (int): Itens por pagina (default 10).
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJGO`.
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):
 
@@ -140,6 +145,7 @@ class TJGOScraper(BaseScraper):
         Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
             * ``query`` / ``termo`` -> ``pesquisa``
             * ``data_publicacao_de`` / ``_ate`` -> ``data_publicacao_inicio`` / ``_fim``
+            * ``qtde_itens_pagina`` -> ``tamanho_pagina``
 
         Raises:
             TypeError: Quando um kwarg desconhecido e passado, **incluindo**
@@ -163,7 +169,7 @@ class TJGOScraper(BaseScraper):
             id_area=id_area,
             id_serventia_subtipo=id_serventia_subtipo,
             numero_processo=numero_processo,
-            qtde_itens_pagina=qtde_itens_pagina,
+            tamanho_pagina=tamanho_pagina,
             **kwargs,
         ))
 

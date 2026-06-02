@@ -24,7 +24,7 @@ from responses.matchers import query_param_matcher
 
 import juscraper as jus
 from juscraper.aggregators.comunica_cnj.download import BASE_URL, build_listar_comunicacoes_params
-from tests._helpers import load_sample
+from tests._helpers import assert_unknown_kwarg_raises, load_sample
 
 
 @responses.activate
@@ -110,11 +110,12 @@ def test_listar_comunicacoes_data_inicio_e_alias_desconhecido():
     que o schema rejeita o alias generico, evitando o caso ambiguo
     onde o usuario passaria ``data_inicio`` esperando filtro de
     disponibilizacao mas o normalizador o trataria como julgamento."""
-    with pytest.raises(TypeError, match="unexpected keyword argument"):
-        jus.scraper("comunica_cnj").listar_comunicacoes(
-            pesquisa="resolucao",
-            data_inicio="2024-01-01",
-        )
+    assert_unknown_kwarg_raises(
+        jus.scraper("comunica_cnj").listar_comunicacoes,
+        "data_inicio",
+        valor="2024-01-01",
+        pesquisa="resolucao",
+    )
 
 
 def test_listar_comunicacoes_itens_por_pagina_acima_do_cap():

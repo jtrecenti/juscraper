@@ -1,0 +1,232 @@
+# pylint: disable=unused-import
+# astroid injeta IntEnum/StrEnum/namedtuple via brain_http.py para o stdlib `http`;
+# pylint aplica o stub a este modulo por causa do nome (falso positivo).
+"""HTTPScraper — base com session compartilhada e retry exponencial.
+
+Camada inserida entre :class:`BaseScraper` e os scrapers concretos. Centraliza:
+
+* Criação de ``requests.Session`` com User-Agent padrão.
+* Hook ``_configure_session(session)`` (mesmo nome/contrato de
+  ``courts/_esaj/base.py``).
+* ``_request_with_retry`` com backoff exponencial ``base_backoff ** attempt``
+  para 429/5xx e respeito a ``Retry-After`` numérico.
+* Validação ``isinstance(session, requests.Session)`` no override por chamada
+  (resolve #185 — ``session`` fica fora do schema pydantic por design).
+
+Não exportado em ``juscraper.__init__`` — uso interno (ainda em rollout pelas
+Fases 1-4 do refactor #194).
+"""
+from __future__ import annotations
+
+import logging
+import time
+from collections.abc import Callable
+from typing import Any, TypeAlias
+
+import requests
+
+from juscraper import __version__
+from juscraper.core.base import BaseScraper
+from juscraper.core.exceptions import InvalidJSONResponseError, RetryExhaustedError
+
+logger = logging.getLogger("juscraper.core.http")
+
+RETRYABLE_STATUSES: frozenset[int] = frozenset({403, 429, 500, 502, 503, 504})
+"""Status codes que disparam retry com backoff exponencial.
+
+``403`` foi incluído por causa do TJSP eSAJ (#233): o WAF do eSAJ retorna 403
+intermitente em raspagens longas, mesmo sem o cliente bater em rate limit
+clássico (que daria 429). Como o 403 é produzido pelo WAF e não por
+autenticação/autorização do recurso, retentar com backoff resolve a maioria
+dos casos transitórios. 403 ``permanente`` (ex.: credenciais inválidas) ainda
+acaba caindo em ``RetryExhaustedError`` após ``max_retries`` tentativas, o que
+é o sintoma certo — o WAF não distingue os dois casos pelo status code.
+
+A decisão aplica-se globalmente: todos os scrapers que delegam ao
+``_request_with_retry`` herdam o comportamento. Consumidores que distinguem
+403-de-auth de 403-de-WAF (ex.: PDPJ, onde 403 é sempre token expirado)
+mantêm retry local próprio em ``aggregators/<xx>/download.py`` em vez de
+delegar."""
+
+RequestFn: TypeAlias = Callable[..., requests.Response]
+"""Tipo do callable bound do ``HTTPScraper._request_with_retry``.
+
+Repassado a ``courts/<xx>/download.py::cjsg_download_manager`` (Fase 1 do
+refactor #194) para centralizar retry + ``raise_for_status`` sem expor a
+``session`` do client. Contrato esperado em runtime:
+
+* ``method`` (1o positional) — verbo HTTP (``"GET"``, ``"POST"``, ...).
+* ``url`` (2o positional) — URL alvo.
+* kwargs livres — encaminhados a ``requests.Session.request`` (``json=``,
+  ``data=``, ``headers=``, ``timeout=``, ...). ``max_retries``,
+  ``base_backoff`` e ``expect_json`` tambem sao aceitos para sobrepor o default.
+
+A response retornada e garantida com ``status_code < 400`` (4xx ja foi
+via ``raise_for_status``; 5xx/429 ja esgotou ``max_retries`` ->
+``RetryExhaustedError``). O caller pode chamar ``.json()`` / ler ``.text``
+sem se preocupar com retry de transitorios.
+
+Com ``expect_json=True``, a response retornada tem ainda corpo JSON valido
+garantido: 200 com corpo vazio/nao-JSON e tratado como transitorio (retry com
+backoff) e, persistindo, levanta ``InvalidJSONResponseError`` em vez do
+``json.JSONDecodeError`` opaco. Ver #275.
+
+Implementado como ``Callable[..., Response]`` (e nao ``Protocol``) por
+compatibilidade com mypy: o ``__call__`` do bound method tem keyword
+args nomeados (``session``/``max_retries``/``base_backoff``) que nao
+casam estritamente com ``**kwargs: Any`` em ``Protocol`` matching."""
+
+
+class HTTPScraper(BaseScraper):
+    """Base para scrapers que fazem requisições HTTP."""
+
+    def __init__(
+        self,
+        tribunal_name: str = "",
+        *,
+        verbose: int = 0,
+        download_path: str | None = None,
+        sleep_time: float = 1.0,
+        **kwargs: Any,
+    ):
+        super().__init__(tribunal_name or type(self).__name__)
+        self.session = requests.Session()
+        self.session.headers.update({
+            "User-Agent": f"juscraper/{__version__} (https://github.com/jtrecenti/juscraper)",
+        })
+        self._configure_session(self.session)
+        self.set_verbose(verbose)
+        self.set_download_path(download_path)
+        self.sleep_time = sleep_time
+        self.args = kwargs
+
+    def _configure_session(self, session: requests.Session) -> None:
+        """Hook para subclasses montarem adapters customizados (TLS, cookies, etc.).
+
+        Default: no-op. Mesma assinatura/semântica de ``EsajSearchScraper._configure_session``
+        em ``courts/_esaj/base.py`` — quando a Fase 2 (#203) trocar a herança,
+        o override existente do TJCE continua funcionando sem mudança.
+        """
+
+    def _request_with_retry(
+        self,
+        method: str,
+        url: str,
+        *,
+        session: requests.Session | None = None,
+        max_retries: int = 3,
+        base_backoff: float = 2.0,
+        expect_json: bool = False,
+        **kwargs: Any,
+    ) -> requests.Response:
+        """Executa ``method`` em ``url`` com retry exponencial.
+
+        Args:
+            method: Verbo HTTP (``"GET"``, ``"POST"``, ...).
+            url: URL alvo.
+            session: ``requests.Session`` para sobrepor ``self.session`` nesta
+                chamada. Default ``None``.
+            max_retries: Número máximo de tentativas (inclusive a primeira).
+            base_backoff: Base do backoff exponencial (``base_backoff ** attempt``
+                segundos entre tentativas).
+            expect_json: Se ``True``, valida que o corpo de uma resposta com
+                status < 400 é JSON. Corpo vazio/não-JSON é tratado como
+                transitório (retry com backoff); persistindo, levanta
+                ``InvalidJSONResponseError``. Default ``False`` — o caller chama
+                ``.json()`` por conta própria e um corpo inválido propaga
+                ``json.JSONDecodeError`` na primeira ocorrência (#275).
+            **kwargs: Encaminhados para ``session.request``.
+
+        Returns:
+            ``requests.Response`` na primeira resposta com status < 400 (e, se
+            ``expect_json=True``, com corpo JSON válido).
+
+        Raises:
+            TypeError: Se ``session`` não for ``None`` nem ``requests.Session``.
+            ValueError: Se ``max_retries`` for menor que 1.
+            RetryExhaustedError: Quando esgota ``max_retries`` em status retryable.
+            InvalidJSONResponseError: Quando ``expect_json=True`` e o corpo permanece
+                vazio/não-JSON após ``max_retries``.
+            requests.HTTPError: Para 4xx não-retryable (via ``raise_for_status``).
+        """
+        if session is not None and not isinstance(session, requests.Session):
+            raise TypeError(
+                f"session deve ser requests.Session, recebido {type(session).__name__}"
+            )
+        if max_retries < 1:
+            raise ValueError(f"max_retries deve ser >= 1, recebido {max_retries}")
+
+        sess = session if session is not None else self.session
+
+        for attempt in range(1, max_retries + 1):
+            resp = sess.request(method, url, **kwargs)
+            if resp.status_code < 400:
+                if expect_json and not self._response_is_json(resp):
+                    if attempt == max_retries:
+                        raise InvalidJSONResponseError(
+                            url,
+                            resp.status_code,
+                            attempt,
+                            resp.headers.get("Content-Type"),
+                            resp.text[:200],
+                        )
+                    backoff_wait = max(0.0, base_backoff ** attempt)
+                    logger.warning(
+                        "Corpo nao-JSON em HTTP %s %s %s (tentativa %d/%d). Aguardando %.2fs.",
+                        resp.status_code, method, url, attempt, max_retries, backoff_wait,
+                    )
+                    time.sleep(backoff_wait)
+                    continue
+                return resp
+
+            if resp.status_code in RETRYABLE_STATUSES:
+                if attempt == max_retries:
+                    raise RetryExhaustedError(resp.status_code, attempt)
+                wait = self._parse_retry_after(resp.headers.get("Retry-After"))
+                if wait is None:
+                    wait = base_backoff ** attempt
+                wait = max(0.0, wait)  # tolera Retry-After negativo de servidores mal-comportados
+                logger.warning(
+                    "HTTP %s em %s %s (tentativa %d/%d). Aguardando %.2fs.",
+                    resp.status_code, method, url, attempt, max_retries, wait,
+                )
+                time.sleep(wait)
+                continue
+
+            resp.raise_for_status()
+
+        # Inalcançável: o loop sai sempre via return, RetryExhaustedError ou raise_for_status.
+        raise RuntimeError("loop de retry terminou sem decisão")  # pragma: no cover
+
+    @staticmethod
+    def _response_is_json(resp: requests.Response) -> bool:
+        """Retorna ``True`` se o corpo da resposta for JSON válido.
+
+        Usado por ``_request_with_retry(expect_json=True)`` para distinguir um
+        200 legítimo de um 200 com corpo vazio/não-JSON (transitório do backend).
+
+        O caller chama ``resp.json()`` de novo após esta validação; isso é
+        intencional e barato: ``resp.content`` fica em cache no objeto
+        ``Response``, então não há requisição extra, apenas um reparse do corpo
+        já em memória.
+        """
+        try:
+            resp.json()
+        except ValueError:  # json.JSONDecodeError é subclasse de ValueError
+            return False
+        return True
+
+    @staticmethod
+    def _parse_retry_after(header: str | None) -> float | None:
+        """Parseia ``Retry-After`` apenas como segundos numéricos.
+
+        Decisão da issue #201: backends brasileiros não usam HTTP-date; suporte
+        a esse formato fica fora do escopo. Header inválido/ausente → ``None``
+        (caller cai no backoff exponencial).
+        """
+        if header is None:
+            return None
+        try:
+            return float(header)
+        except (TypeError, ValueError):
+            return None

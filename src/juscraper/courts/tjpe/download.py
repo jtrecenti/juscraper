@@ -14,18 +14,42 @@ import math
 import re
 import time
 
-import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
+
+from juscraper.core.http import RequestFn
+from juscraper.utils.pagination import extract_count_with_cascade
 
 logger = logging.getLogger(__name__)
 
 BASE_URL = "https://www.tjpe.jus.br/consultajurisprudenciaweb/xhtml/consulta"
 
+CONSULTA_URL = f"{BASE_URL}/consulta.xhtml"
+ESCOLHA_URL = f"{BASE_URL}/escolhaResultado.xhtml"
+RESULTADO_URL = f"{BASE_URL}/resultado.xhtml"
+
 RESULTS_PER_PAGE = 5
 
+# Hint do calendario RichFaces (mes/ano corrente exibido pelo widget). O
+# backend nao filtra por esses campos — sao echo do estado UI. Congelados
+# para permitir matching byte-a-byte nos contratos offline.
+_CURRENT_DATE_HINT = "04/2026"
 
-def _extract_viewstate(html: str) -> str:
+# Submit button ID padrao quando o regex de extracao nao casa em `search_html`.
+# O ID real vem do JS `jsfcljs(...)` na pagina de consulta.
+DEFAULT_SUBMIT_ID = "formPesquisaJurisprudencia:j_id101"
+
+_PAGINATION_CSS_SELECTORS: tuple[str, ...] = (
+    "div.resultado-header table.table-header-resultado",
+)
+_PAGINATION_REGEXES: tuple[re.Pattern[str], ...] = (
+    re.compile(r"Documentos\s+encontrados:\s*(\d+)", re.IGNORECASE),
+    re.compile(r"(\d+)\s+documentos\s+encontrados", re.IGNORECASE),
+)
+_ZERO_MARKERS: tuple[str, ...] = ("nenhum documento encontrado",)
+
+
+def extract_viewstate(html: str) -> str:
     """Extract javax.faces.ViewState from the HTML."""
     match = re.search(
         r'name="javax\.faces\.ViewState"[^>]*value="([^"]*)"', html
@@ -35,41 +59,42 @@ def _extract_viewstate(html: str) -> str:
     return match.group(1)
 
 
-def _extract_total_docs(html: str) -> int:
-    """Extract total document count from the results page.
-
-    Handles two formats:
-    - Results page: "Documentos encontrados: </label>...<span>996</span>"
-    - Escolha page: "953 documentos encontrados"
-    """
-    # Format 1: results page with <span>
-    match = re.search(
-        r"Documentos encontrados:.*?<span>(\d+)</span>", html, re.DOTALL
+def extract_total_docs(html: str) -> int:
+    """Extract total document count using cascading selectors + regexes (refs #87)."""
+    n = extract_count_with_cascade(
+        html,
+        css_selectors=_PAGINATION_CSS_SELECTORS,
+        regex_patterns=_PAGINATION_REGEXES,
+        zero_markers=_ZERO_MARKERS,
+        fallback_max_int=False,
     )
-    if match:
-        return int(match.group(1))
-
-    # Format 2: escolha page
-    match = re.search(r"(\d+)\s+documentos encontrados", html)
-    if match:
-        return int(match.group(1))
-
-    return 0
+    return n if n is not None else 0
 
 
-def _is_results_page(html: str) -> bool:
-    """Check if the HTML is a results page (not the escolha page)."""
-    return "Documentos encontrados:" in html and "Documento 1" in html
+def is_results_page(html: str) -> bool:
+    """Check if the HTML is a results page (not the escolha page).
+
+    Case-insensitive: a results page traz o rotulo ``Documentos encontrados:``
+    (com dois pontos — distingue da escolha) e o cabecalho ``Documento 1``.
+    """
+    html_lower = html.lower()
+    return "documentos encontrados:" in html_lower and "documento 1" in html_lower
 
 
-def _is_escolha_page(html: str) -> bool:
-    """Check if we got the 'escolha' page (choose result type)."""
-    return "documentos encontrados" in html and "Documento 1" not in html
+def is_escolha_page(html: str) -> bool:
+    """Check if we got the 'escolha' page (choose result type).
+
+    Case-insensitive: a pagina de escolha traz ``N documentos encontrados``
+    (sem dois pontos) e nao tem o cabecalho ``Documento 1`` da pagina de
+    resultados.
+    """
+    html_lower = html.lower()
+    return "documentos encontrados" in html_lower and "documento 1" not in html_lower
 
 
-def _extract_escolha_button_id(html: str, tipo: str = "Acórdãos") -> str:
+def extract_escolha_button_id(html: str, tipo: str = "Acórdãos") -> str:
     """Extract the form submit ID for the result type link on the escolha page."""
-    soup = BeautifulSoup(html, "lxml")
+    soup = BeautifulSoup(html, "html.parser")
     for link in soup.find_all("a", onclick=True):
         if "documentos encontrados" in link.get_text():
             td = link.find_parent("td")
@@ -87,7 +112,7 @@ def _extract_escolha_button_id(html: str, tipo: str = "Acórdãos") -> str:
     raise ValueError(f"Could not find escolha button for '{tipo}'")
 
 
-def _extract_pagination_ids(html: str):
+def extract_pagination_ids(html: str) -> tuple[str, str]:
     """Extract the form ID and datascroller ID for AJAX pagination."""
     # The datascroller ID reveals the form ID (e.g. "j_id81:j_id87")
     scroller_match = re.search(
@@ -107,24 +132,91 @@ def _extract_pagination_ids(html: str):
     return form_id, scroller_id
 
 
-def _step1_get_session(session: requests.Session) -> tuple[str, str]:
+def extract_submit_id(search_html: str | None) -> str:
+    """Extract the form submit button ID from the consulta.xhtml HTML.
+
+    The ID comes from a ``jsfcljs(..., {'<form>:<id>':'...'}...)>Pesquisar``
+    JavaScript call. Falls back to :data:`DEFAULT_SUBMIT_ID` quando o regex
+    nao casa (defensivo — historicamente estavel).
+    """
+    if not search_html:
+        return DEFAULT_SUBMIT_ID
+    match = re.search(
+        r"jsfcljs\([^)]+\{'(formPesquisaJurisprudencia:[^']+)'"
+        r"[^)]*\)[^>]*>Pesquisar",
+        search_html,
+    )
+    return match.group(1) if match else DEFAULT_SUBMIT_ID
+
+
+def build_cjsg_form_body(
+    viewstate: str,
+    submit_id: str,
+    pesquisa: str | None,
+    *,
+    data_julgamento_inicio: str | None = None,
+    data_julgamento_fim: str | None = None,
+    relator: str | None = None,
+    classe: str | None = None,
+    assunto: str | None = None,
+    meio_tramitacao: str | None = None,
+    tipo_decisao: str = "acordaos",
+    current_date_hint: str = _CURRENT_DATE_HINT,
+) -> dict[str, str]:
+    """Build the form-encoded body for the TJPE CJSG search ``POST consulta.xhtml``.
+
+    Inclui apenas os campos que o JSF/RichFaces aceita; os tres checkboxes
+    de tipo (``tipoAcordao`` / ``tipoDecisaoMonocratica`` / ``tipoTodos``)
+    so aparecem quando ativos (ausencia difere de string vazia para o
+    backend). Todos os valores sao retornados como strings para que
+    :func:`responses.matchers.urlencoded_params_matcher` possa ser usado
+    com ``allow_blank=True`` nos contratos. ``None`` em qualquer filtro
+    opcional e tratado como string vazia (sem filtro).
+    """
+    body: dict[str, str] = {
+        "formPesquisaJurisprudencia": "formPesquisaJurisprudencia",
+        "formPesquisaJurisprudencia:inputBuscaSimples": pesquisa or "",
+        "tipo_processo": "NPU",
+        "formPesquisaJurisprudencia:j_id46": "",
+        "formPesquisaJurisprudencia:j_id48": "",
+        "formPesquisaJurisprudencia:numeroAntigoDigito": "",
+        "formPesquisaJurisprudencia:numeroAntigoBarramento": "",
+        "formPesquisaJurisprudencia:j_id59InputDate": data_julgamento_inicio or "",
+        "formPesquisaJurisprudencia:j_id59InputCurrentDate": current_date_hint,
+        "formPesquisaJurisprudencia:periodoFimInputDate": data_julgamento_fim or "",
+        "formPesquisaJurisprudencia:periodoFimInputCurrentDate": current_date_hint,
+        "formPesquisaJurisprudencia:selectRelator": relator or "",
+        "formPesquisaJurisprudencia:selectClasseCNJ": classe or "",
+        "formPesquisaJurisprudencia:selectAssuntoCNJ": assunto or "",
+        "formPesquisaJurisprudencia:selectMeioTramitacao": meio_tramitacao or "",
+        "javax.faces.ViewState": viewstate,
+        submit_id: submit_id,
+    }
+    if tipo_decisao in ("acordaos", "todos"):
+        body["formPesquisaJurisprudencia:tipoAcordao"] = "on"
+    if tipo_decisao in ("monocraticas", "todos"):
+        body["formPesquisaJurisprudencia:tipoDecisaoMonocratica"] = "on"
+    if tipo_decisao == "todos":
+        body["formPesquisaJurisprudencia:tipoTodos"] = "on"
+    return body
+
+
+def step1_get_session(request_fn: RequestFn) -> tuple[str, str]:
     """GET the search page; return (HTML, ViewState)."""
-    url = f"{BASE_URL}/consulta.xhtml"
-    resp = session.get(url, timeout=30)
-    resp.raise_for_status()
+    resp = request_fn("GET", CONSULTA_URL, timeout=30)
     resp.encoding = resp.apparent_encoding
-    return resp.text, _extract_viewstate(resp.text)
+    return resp.text, extract_viewstate(resp.text)
 
 
-def _step2_post_search(
-    session: requests.Session,
+def step2_post_search(
+    request_fn: RequestFn,
     viewstate: str,
     pesquisa: str,
     data_julgamento_inicio: str | None = None,
     data_julgamento_fim: str | None = None,
     relator: str | None = None,
-    classe_cnj: str | None = None,
-    assunto_cnj: str | None = None,
+    classe: str | None = None,
+    assunto: str | None = None,
     meio_tramitacao: str | None = None,
     tipo_decisao: str = "acordaos",
     search_html: str | None = None,
@@ -134,79 +226,45 @@ def _step2_post_search(
     The response is either the results page directly (single type)
     or the escolha page (multiple types).
     """
-    url = f"{BASE_URL}/consulta.xhtml"
-
-    # Try to extract submit button ID from search page
-    submit_id = "formPesquisaJurisprudencia:j_id101"
-    if search_html:
-        match = re.search(
-            r"jsfcljs\([^)]+\{'(formPesquisaJurisprudencia:[^']+)'"
-            r"[^)]*\)[^>]*>Pesquisar",
-            search_html,
-        )
-        if match:
-            submit_id = match.group(1)
-
-    # Build type checkboxes
-    tipo_acordao = "on" if tipo_decisao in ("acordaos", "todos") else ""
-    tipo_monocratica = "on" if tipo_decisao in ("monocraticas", "todos") else ""
-    tipo_todos = "on" if tipo_decisao == "todos" else ""
-
-    data = {
-        "formPesquisaJurisprudencia": "formPesquisaJurisprudencia",
-        "formPesquisaJurisprudencia:inputBuscaSimples": pesquisa or "",
-        "tipo_processo": "NPU",
-        "formPesquisaJurisprudencia:j_id46": "",
-        "formPesquisaJurisprudencia:j_id48": "",
-        "formPesquisaJurisprudencia:numeroAntigoDigito": "",
-        "formPesquisaJurisprudencia:numeroAntigoBarramento": "",
-        "formPesquisaJurisprudencia:j_id59InputDate": data_julgamento_inicio or "",
-        "formPesquisaJurisprudencia:j_id59InputCurrentDate": "04/2026",
-        "formPesquisaJurisprudencia:periodoFimInputDate": data_julgamento_fim or "",
-        "formPesquisaJurisprudencia:periodoFimInputCurrentDate": "04/2026",
-        "formPesquisaJurisprudencia:selectRelator": relator or "",
-        "formPesquisaJurisprudencia:selectClasseCNJ": classe_cnj or "",
-        "formPesquisaJurisprudencia:selectAssuntoCNJ": assunto_cnj or "",
-        "formPesquisaJurisprudencia:selectMeioTramitacao": meio_tramitacao or "",
-        "javax.faces.ViewState": viewstate,
-        submit_id: submit_id,
-    }
-    if tipo_acordao:
-        data["formPesquisaJurisprudencia:tipoAcordao"] = tipo_acordao
-    if tipo_monocratica:
-        data["formPesquisaJurisprudencia:tipoDecisaoMonocratica"] = tipo_monocratica
-    if tipo_todos:
-        data["formPesquisaJurisprudencia:tipoTodos"] = tipo_todos
-
-    resp = session.post(url, data=data, timeout=30)
-    resp.raise_for_status()
+    submit_id = extract_submit_id(search_html)
+    data = build_cjsg_form_body(
+        viewstate=viewstate,
+        submit_id=submit_id,
+        pesquisa=pesquisa,
+        data_julgamento_inicio=data_julgamento_inicio,
+        data_julgamento_fim=data_julgamento_fim,
+        relator=relator,
+        classe=classe,
+        assunto=assunto,
+        meio_tramitacao=meio_tramitacao,
+        tipo_decisao=tipo_decisao,
+    )
+    resp = request_fn("POST", CONSULTA_URL, data=data, timeout=30)
     resp.encoding = resp.apparent_encoding
-    return resp.text, _extract_viewstate(resp.text)
+    return resp.text, extract_viewstate(resp.text)
 
 
-def _step3_choose_tipo(
-    session: requests.Session,
+def step3_choose_tipo(
+    request_fn: RequestFn,
     viewstate: str,
     escolha_html: str,
     tipo: str = "Acórdãos",
 ) -> tuple[str, str]:
     """POST to choose Acordaos or Decisoes Monocraticas; return (results HTML, ViewState)."""
-    url = f"{BASE_URL}/escolhaResultado.xhtml"
-    button_id = _extract_escolha_button_id(escolha_html, tipo)
+    button_id = extract_escolha_button_id(escolha_html, tipo)
 
     data = {
         "resultadoForm": "resultadoForm",
         "javax.faces.ViewState": viewstate,
         button_id: button_id,
     }
-    resp = session.post(url, data=data, timeout=30)
-    resp.raise_for_status()
+    resp = request_fn("POST", ESCOLHA_URL, data=data, timeout=30)
     resp.encoding = resp.apparent_encoding
-    return resp.text, _extract_viewstate(resp.text)
+    return resp.text, extract_viewstate(resp.text)
 
 
-def _step4_paginate(
-    session: requests.Session,
+def step4_paginate(
+    request_fn: RequestFn,
     viewstate: str,
     form_id: str,
     scroller_id: str,
@@ -214,8 +272,6 @@ def _step4_paginate(
     page_number: int,
 ) -> str:
     """AJAX POST to fetch a specific page; return HTML."""
-    url = f"{BASE_URL}/resultado.xhtml"
-
     data = {
         "AJAXREQUEST": "_viewRoot",
         form_id: form_id,
@@ -228,8 +284,7 @@ def _step4_paginate(
         "X-Requested-With": "XMLHttpRequest",
         "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
     }
-    resp = session.post(url, data=data, headers=headers, timeout=30)
-    resp.raise_for_status()
+    resp = request_fn("POST", RESULTADO_URL, data=data, headers=headers, timeout=30)
     resp.encoding = resp.apparent_encoding
     return resp.text
 
@@ -237,43 +292,43 @@ def _step4_paginate(
 def cjsg_download(
     pesquisa: str,
     paginas=None,
+    *,
+    request_fn: RequestFn,
     data_julgamento_inicio: str | None = None,
     data_julgamento_fim: str | None = None,
     relator: str | None = None,
-    classe_cnj: str | None = None,
-    assunto_cnj: str | None = None,
+    classe: str | None = None,
+    assunto: str | None = None,
     meio_tramitacao: str | None = None,
     tipo_decisao: str = "acordaos",
-    session: requests.Session | None = None,
 ) -> list[str]:
     """
     Download raw HTML pages from the TJPE jurisprudence search.
 
+    Args:
+        request_fn: HTTP callable que aplica retry + ``raise_for_status``.
+            Em uso normal e ``TJPEScraper._request_with_retry`` (via
+            ``core.http.HTTPScraper``).
+
     Returns a list of HTML strings, one per page.
     """
-    if session is None:
-        session = requests.Session()
-        session.headers.update({
-            "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-        })
-
     tipo_label = {
         "acordaos": "Acórdãos",
         "monocraticas": "Decisões Monocráticas",
     }.get(tipo_decisao, "Acórdãos")
 
     # Step 1 - GET search page
-    search_html, vs = _step1_get_session(session)
+    search_html, vs = step1_get_session(request_fn)
     time.sleep(1)
 
     # Step 2 - POST search form
-    response_html, vs = _step2_post_search(
-        session, vs, pesquisa,
+    response_html, vs = step2_post_search(
+        request_fn, vs, pesquisa,
         data_julgamento_inicio=data_julgamento_inicio,
         data_julgamento_fim=data_julgamento_fim,
         relator=relator,
-        classe_cnj=classe_cnj,
-        assunto_cnj=assunto_cnj,
+        classe=classe,
+        assunto=assunto,
         meio_tramitacao=meio_tramitacao,
         tipo_decisao=tipo_decisao,
         search_html=search_html,
@@ -281,17 +336,17 @@ def cjsg_download(
     time.sleep(1)
 
     # Step 2 may return results directly (single type) or escolha page (multiple types)
-    if _is_escolha_page(response_html):
+    if is_escolha_page(response_html):
         # Step 3 - choose result type
-        results_html, vs = _step3_choose_tipo(session, vs, response_html, tipo_label)
+        results_html, vs = step3_choose_tipo(request_fn, vs, response_html, tipo_label)
         time.sleep(1)
-    elif _is_results_page(response_html):
+    elif is_results_page(response_html):
         results_html = response_html
     else:
         logger.warning("TJPE: unexpected response after search")
         return []
 
-    total_docs = _extract_total_docs(results_html)
+    total_docs = extract_total_docs(results_html)
     if total_docs == 0:
         logger.info("TJPE: no documents found for '%s'", pesquisa)
         return []
@@ -299,7 +354,7 @@ def cjsg_download(
     total_pages = math.ceil(total_docs / RESULTS_PER_PAGE)
     logger.info("TJPE: %d documents found (%d pages)", total_docs, total_pages)
 
-    form_id, scroller_id = _extract_pagination_ids(results_html)
+    form_id, scroller_id = extract_pagination_ids(results_html)
 
     # Determine pages to download
     pages_iter: list = (
@@ -312,7 +367,7 @@ def cjsg_download(
         if page_num == 1:
             results.append(results_html)
         else:
-            html = _step4_paginate(session, vs, form_id, scroller_id, pesquisa, page_num)
+            html = step4_paginate(request_fn, vs, form_id, scroller_id, pesquisa, page_num)
             results.append(html)
             time.sleep(1)
 

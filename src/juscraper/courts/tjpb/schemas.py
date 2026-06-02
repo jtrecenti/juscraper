@@ -1,17 +1,19 @@
-"""Pydantic schemas for TJPB scraper endpoints.
-
-Ainda nao wired em :mod:`juscraper.courts.tjpb.client` — este arquivo e
-documentacao executavel da API publica ate o TJPB ser refatorado para o
-pipeline canonico da #93. A lista de campos bate byte-a-byte com a
-assinatura publica de :meth:`TJPBScraper.cjsg`.
-"""
+"""Pydantic schemas for TJPB scraper endpoints."""
 from __future__ import annotations
+
+from typing import ClassVar
 
 from ...schemas import DataJulgamentoMixin, OutputCJSGBase, SearchBase
 
 
 class InputCJSGTJPB(SearchBase, DataJulgamentoMixin):
-    """Accepted input for TJPB ``cjsg``.
+    """Accepted input for TJPB ``cjsg`` / ``cjsg_download``.
+
+    Wired em :meth:`juscraper.courts.tjpb.client.TJPBScraper.cjsg_download`
+    — kwargs desconhecidos viram :class:`TypeError` em ambos ``cjsg`` e
+    ``cjsg_download``. ``cjsg`` e wrapper que adiciona post-filter local
+    sobre ``data_julgamento`` (refs #195: o backend filtra por
+    disponibilizacao, nao por ``dt_ementa``).
 
     Endpoint PJe-jurisprudencia (Laravel + Elasticsearch). ``pesquisa``
     aceita os aliases deprecados ``query`` / ``termo`` via
@@ -20,13 +22,17 @@ class InputCJSGTJPB(SearchBase, DataJulgamentoMixin):
     ``data_inicio``/``data_fim`` via
     :func:`juscraper.utils.params.normalize_datas` (``data_publicacao_*``
     nao e suportado pelo backend e fica fora do schema). Filtro de data
-    de julgamento herdado de :class:`DataJulgamentoMixin`.
+    de julgamento herdado de :class:`DataJulgamentoMixin`. Backend espera
+    ``YYYY-MM-DD``.
     """
 
-    numero_processo: str = ""
-    id_classe: str = ""
-    id_orgao_julgador: str = ""
-    id_relator: str = ""
+    BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
+
+    numero_processo: str | None = None
+    id_classe: str | None = None
+    id_orgao_julgador: str | None = None
+    id_relator: str | None = None
+    # TODO (#212): investigar formato real (provavelmente list[str]).
     id_origem: str = "8,2"
     decisoes: bool = False
 

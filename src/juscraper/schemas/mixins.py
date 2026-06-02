@@ -13,6 +13,8 @@ Atual:
 - :class:`DataJulgamentoMixin` — filtro de Input (~13 tribunais).
 - :class:`DataPublicacaoMixin` — filtro de Input (~11 tribunais).
 - :class:`AutoChunkMixin` — flag de Input (familia eSAJ; cjsg + cjpg).
+- :class:`CountOnlyMixin` — flag de Input que muda o tipo de retorno para
+  ``int`` (familia eSAJ cjsg + TJSP cjpg). Refs #92.
 - :class:`OutputRelatoriaMixin` — colunas de Output (>= 10 parsers cjsg
   concretos).
 - :class:`OutputDataPublicacaoMixin` — coluna de Output (>= 9 parsers).
@@ -93,6 +95,48 @@ class AutoChunkMixin(BaseModel):
     """
 
     auto_chunk: bool = True
+
+
+class CountOnlyMixin(BaseModel):
+    """Flag opcional ``count_only`` para probe pre-scraping (issue #92).
+
+    Default ``False``. Quando ``True``, o metodo publico (``cjsg``/``cjpg``):
+
+    - Faz **uma unica** chamada de rede por janela (POST inicial + 1 GET no
+      caso eSAJ; 1 GET no caso CJPG).
+    - Extrai ``n_results`` do HTML via ``cjsg_n_results``/``cjpg_n_results``.
+    - Retorna ``int`` em vez de ``pd.DataFrame``.
+    - **Nao** salva HTML em disco, **nao** parseia conteudo.
+
+    Multi-janela: se ``auto_chunk=True`` e o intervalo ``data_julgamento_*``
+    excede o teto do tribunal (eSAJ: 366 dias), o metodo itera as janelas
+    disjuntas (:func:`juscraper.utils.params.iter_date_windows`) e **soma
+    as contagens**. Soma bruta — sem dedup por ``cd_acordao``/``id_processo``.
+    Util para estimativa de wall-clock; pode divergir de ``len(cjsg(...))``
+    no caminho normal quando ha documentos republicados (mesma chave em
+    janelas distintas).
+
+    **Fail-fast no auto-chunk** (divergencia deliberada do caminho normal):
+    o caminho normal (:func:`juscraper.courts._esaj.base.run_auto_chunk`)
+    tolera falha por janela como :class:`UserWarning` e devolve parcial
+    deduplicado. ``count_only`` usa ``sum()`` — qualquer ``ValueError`` em
+    uma janela aborta toda a iteracao e propaga limpo. Estimativa parcial
+    silenciosa seria mais perigosa que erro explicito.
+
+    Tribunais que ainda nao implementam ``count_only`` **nao devem herdar**
+    deste mixin — ``extra='forbid'`` da classe concreta rejeita o flag com
+    :class:`TypeError`, sinalizando ao usuario que o endpoint nao expoe a
+    feature ainda. Hoje (refs #92): familia eSAJ cjsg (TJAC/TJAL/TJAM/TJCE/
+    TJMS/TJSP) + TJSP cjpg.
+
+    Nota: como :class:`AutoChunkMixin`, o flag ``count_only`` e consumido
+    no metodo publico **antes** da validacao completa do schema — o caminho
+    count_only chama o probe diretamente e nao passa por ``cjsg_download``/
+    ``cjpg_download``. O mixin documenta a API publica e da rede de seguranca
+    via paridade de assinatura/docstring.
+    """
+
+    count_only: bool = False
 
 
 class OutputRelatoriaMixin(BaseModel):

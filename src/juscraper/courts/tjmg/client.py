@@ -1,23 +1,20 @@
 """Scraper for the Court of Justice of Minas Gerais (TJMG)."""
 from __future__ import annotations
 
-import logging
 from typing import Literal
 
 import pandas as pd
 import requests
 
-from juscraper.core.base import BaseScraper
-from juscraper.utils.params import apply_input_pipeline_search
+from juscraper.core.http import HTTPScraper
+from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
 from .download import cjsg_download as _cjsg_download
 from .parse import cjsg_parse as _cjsg_parse
 from .schemas import InputCJSGTJMG
 
-logger = logging.getLogger("juscraper.tjmg")
 
-
-class TJMGScraper(BaseScraper):
+class TJMGScraper(HTTPScraper):
     """Scraper for the Court of Justice of Minas Gerais.
 
     The TJMG jurisprudence search uses a 5-digit numeric image captcha
@@ -34,18 +31,19 @@ class TJMGScraper(BaseScraper):
     )
 
     def __init__(self, sleep_time: float = 1.0):
-        super().__init__("TJMG")
-        self.session = requests.Session()
-        self.session.headers.update({"User-Agent": self.USER_AGENT})
-        self.sleep_time = sleep_time
+        super().__init__("TJMG", sleep_time=sleep_time)
+
+    def _configure_session(self, session: requests.Session) -> None:
+        """TJMG's portal applies User-Agent gating — keep the Chrome UA."""
+        session.headers.update({"User-Agent": self.USER_AGENT})
 
     def cjsg_download(
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        pesquisar_por: str = "ementa",
-        order_by: str | int = 2,
-        linhas_por_pagina: int = 10,
+        pesquisar_por: Literal["ementa", "acordao"] = "ementa",
+        order_by: Literal[0, 1, 2, "0", "1", "2"] = 2,
+        tamanho_pagina: Literal[10, 20, 50] = 10,
         data_julgamento_inicio: str | None = None,
         data_julgamento_fim: str | None = None,
         data_publicacao_inicio: str | None = None,
@@ -69,13 +67,17 @@ class TJMGScraper(BaseScraper):
         order_by : int
             Sort order: ``2`` data julgamento, ``1`` data publicação,
             ``0`` precisão.
-        linhas_por_pagina : int
-            Results per page (10, 20 or 50).
+        tamanho_pagina : int
+            Results per page (10, 20 or 50). Aceita ``linhas_por_pagina``
+            como alias deprecado.
         data_julgamento_inicio, data_julgamento_fim : str
             Julgamento date range (``dd/mm/yyyy`` or ``yyyy-mm-dd``).
         data_publicacao_inicio, data_publicacao_fim : str
             Publicação date range (``dd/mm/yyyy`` or ``yyyy-mm-dd``).
         """
+        tamanho_pagina = resolve_deprecated_alias(
+            kwargs, "linhas_por_pagina", "tamanho_pagina", tamanho_pagina, sentinel=10
+        )
         inp = apply_input_pipeline_search(
             InputCJSGTJMG,
             "TJMGScraper.cjsg_download()",
@@ -89,11 +91,10 @@ class TJMGScraper(BaseScraper):
             data_publicacao_fim=data_publicacao_fim,
             pesquisar_por=pesquisar_por,
             order_by=order_by,
-            linhas_por_pagina=linhas_por_pagina,
+            tamanho_pagina=tamanho_pagina,
         )
 
         return _cjsg_download(
-            session=self.session,
             pesquisa=inp.pesquisa or "",
             paginas=inp.paginas,
             pesquisar_por=inp.pesquisar_por,
@@ -102,8 +103,10 @@ class TJMGScraper(BaseScraper):
             data_julgamento_final=_br_date(inp.data_julgamento_fim),
             data_publicacao_inicial=_br_date(inp.data_publicacao_inicio),
             data_publicacao_final=_br_date(inp.data_publicacao_fim),
-            linhas_por_pagina=inp.linhas_por_pagina,
+            linhas_por_pagina=inp.tamanho_pagina,
             sleep_time=self.sleep_time,
+            request_fn=self._request_with_retry,
+            session=self.session,
         )
 
     def cjsg_parse(self, raw_pages: list) -> pd.DataFrame:
@@ -115,8 +118,8 @@ class TJMGScraper(BaseScraper):
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
         pesquisar_por: Literal["ementa", "acordao"] = "ementa",
-        order_by: str | int = 2,
-        linhas_por_pagina: int = 10,
+        order_by: Literal[0, 1, 2, "0", "1", "2"] = 2,
+        tamanho_pagina: Literal[10, 20, 50] = 10,
         **kwargs,
     ) -> pd.DataFrame:
         """Busca jurisprudencia no TJMG (acordaos com captcha numerico).
@@ -129,7 +132,7 @@ class TJMGScraper(BaseScraper):
                 ``"acordao"`` busca no inteiro teor. Default ``"ementa"``.
             order_by (int | str): Ordenacao: ``2`` data julgamento,
                 ``1`` data publicacao, ``0`` precisao. Default ``2``.
-            linhas_por_pagina (int): Resultados por pagina (10, 20 ou 50).
+            tamanho_pagina (int): Resultados por pagina (10, 20 ou 50).
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJMG`.
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):
 
@@ -145,6 +148,7 @@ class TJMGScraper(BaseScraper):
             * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``_fim``
             * ``data_julgamento_de`` / ``_ate`` -> ``data_julgamento_inicio`` / ``_fim``
             * ``data_publicacao_de`` / ``_ate`` -> ``data_publicacao_inicio`` / ``_fim``
+            * ``linhas_por_pagina`` -> ``tamanho_pagina``
 
         Raises:
             TypeError: Quando um kwarg desconhecido e passado.
@@ -162,7 +166,7 @@ class TJMGScraper(BaseScraper):
             paginas=paginas,
             pesquisar_por=pesquisar_por,
             order_by=order_by,
-            linhas_por_pagina=linhas_por_pagina,
+            tamanho_pagina=tamanho_pagina,
             **kwargs,
         ))
 

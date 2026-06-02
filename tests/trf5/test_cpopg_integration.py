@@ -12,6 +12,11 @@ import juscraper as jus
 # CNJ pulled from data/amostra_jf_primeiro_grau.csv (CEJUSC Maceió, AL).
 _KNOWN_GOOD_CNJ = "00584573120254058000"
 
+# CNJ that — at the time of writing — has > 15 movs and therefore exercises
+# the Richfaces slider paginator (fix for the bug where only the first 15
+# movs were ever scraped).
+_PAGINATED_CNJ = "08147767120224058100"
+
 
 @pytest.mark.integration
 def test_cpopg_lookup_returns_real_data() -> None:
@@ -25,6 +30,18 @@ def test_cpopg_lookup_returns_real_data() -> None:
     assert row["processo"] == "0058457-31.2025.4.05.8000"
     assert row["classe"]  # truthy
     assert isinstance(row["movimentacoes"], list) and row["movimentacoes"]
+
+
+@pytest.mark.integration
+def test_cpopg_returns_all_movs_pages() -> None:
+    """Process with > 15 movs must surface every page, not just the first 15."""
+    scraper = jus.scraper("trf5", sleep_time=0.5)
+    df = scraper.cpopg(_PAGINATED_CNJ)
+    movs = df["movimentacoes"].iloc[0]
+    assert isinstance(movs, list)
+    assert len(movs) > 15, f"expected > 15 movs (paginated), got {len(movs)}"
+    pairs = [(m["data"], m["descricao"]) for m in movs]
+    assert len(pairs) == len(set(pairs)), "duplicate movs after pagination"
 
 
 @pytest.mark.integration

@@ -51,7 +51,7 @@ def main() -> None:
     field_ids = extract_form_field_ids(form_html)
     print(f"[trf5] field ids: {field_ids}")
 
-    found_payload = build_search_payload(format_cnj(clean_cnj(FOUND_CNJ)), field_ids)
+    found_payload = build_search_payload(format_cnj(clean_cnj(FOUND_CNJ)), field_ids)  # type: ignore[arg-type]
     found_html = submit_search(scraper.session, found_payload)
     (dest / "search_one_result.html").write_text(found_html, encoding="utf-8")
     ca = extract_ca_token(found_html)
@@ -66,7 +66,7 @@ def main() -> None:
     (dest / "detail_normal.html").write_text(detail_html, encoding="latin-1")
 
     missing_payload = build_search_payload(
-        format_cnj(clean_cnj(MISSING_CNJ)), field_ids
+        format_cnj(clean_cnj(MISSING_CNJ)), field_ids  # type: ignore[arg-type]
     )
     missing_html = submit_search(scraper.session, missing_payload)
     (dest / "search_no_results.html").write_text(missing_html, encoding="utf-8")

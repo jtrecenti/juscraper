@@ -62,7 +62,7 @@ def main() -> None:
     dump(dest / "home.html", home_resp.content)
     print(f"[tjpb] wrote home.html (bytes={len(home_resp.content)})")
 
-    token = fetch_csrf_token(session)
+    token = fetch_csrf_token(session.request)
 
     _capture(session, dest, token, "dano moral", 1, "results_normal_page_01.json")
     _capture(session, dest, token, "dano moral", 2, "results_normal_page_02.json")

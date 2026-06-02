@@ -1,9 +1,10 @@
 """Scraper for the Tribunal de Justica de Rondonia (TJRO)."""
 
-import pandas as pd
-import requests
+from typing import Any
 
-from juscraper.core.base import BaseScraper
+import pandas as pd
+
+from juscraper.core.http import HTTPScraper
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias, to_iso_date
 
 from .download import cjsg_download_manager
@@ -11,7 +12,7 @@ from .parse import cjsg_parse_manager
 from .schemas import InputCJSGTJRO
 
 
-class TJROScraper(BaseScraper):
+class TJROScraper(HTTPScraper):
     """Scraper for the Tribunal de Justica de Rondonia (TJRO).
 
     Uses the JURIS Elasticsearch backend at juris-back.tjro.jus.br.
@@ -19,12 +20,20 @@ class TJROScraper(BaseScraper):
 
     BASE_URL = "https://juris.tjro.jus.br"
 
-    def __init__(self):
-        super().__init__("TJRO")
-        self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-        })
+    def __init__(
+        self,
+        verbose: int = 0,
+        download_path: str | None = None,
+        sleep_time: float = 1.0,
+        **kwargs: Any,
+    ):
+        super().__init__(
+            "TJRO",
+            verbose=verbose,
+            download_path=download_path,
+            sleep_time=sleep_time,
+            **kwargs,
+        )
 
     def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJRO."""
@@ -39,11 +48,11 @@ class TJROScraper(BaseScraper):
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
         tipo: list | None = None,
-        numero_processo: str = "",
-        relator: str = "",
-        orgao_julgador: int | str = "",
-        orgao_julgador_colegiado: int | str = "",
-        classe: str = "",
+        numero_processo: str | None = None,
+        relator: str | None = None,
+        orgao_julgador: int | str | None = None,
+        orgao_julgador_colegiado: int | str | None = None,
+        classe: str | None = None,
         instancia: list | None = None,
         termo_exato: bool = False,
         **kwargs,
@@ -113,11 +122,11 @@ class TJROScraper(BaseScraper):
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
         tipo: list | None = None,
-        numero_processo: str = "",
-        relator: str = "",
-        orgao_julgador: int | str = "",
-        orgao_julgador_colegiado: int | str = "",
-        classe: str = "",
+        numero_processo: str | None = None,
+        relator: str | None = None,
+        orgao_julgador: int | str | None = None,
+        orgao_julgador_colegiado: int | str | None = None,
+        classe: str | None = None,
         instancia: list | None = None,
         termo_exato: bool = False,
         **kwargs,
@@ -132,13 +141,13 @@ class TJROScraper(BaseScraper):
             List of raw JSON responses (one per page).
         """
         numero_processo = resolve_deprecated_alias(
-            kwargs, "nr_processo", "numero_processo", numero_processo, sentinel=""
+            kwargs, "nr_processo", "numero_processo", numero_processo
         )
         relator = resolve_deprecated_alias(
-            kwargs, "magistrado", "relator", relator, sentinel=""
+            kwargs, "magistrado", "relator", relator
         )
         classe = resolve_deprecated_alias(
-            kwargs, "classe_judicial", "classe", classe, sentinel=""
+            kwargs, "classe_judicial", "classe", classe
         )
         inp = apply_input_pipeline_search(
             InputCJSGTJRO,
@@ -159,13 +168,16 @@ class TJROScraper(BaseScraper):
         return cjsg_download_manager(
             pesquisa=inp.pesquisa,
             paginas=inp.paginas,
-            session=self.session,
+            request_fn=self._request_with_retry,
+            sleep_time=self.sleep_time,
             tipo=inp.tipo,
-            nr_processo=inp.numero_processo,
-            relator=inp.relator,
-            orgao_julgador=inp.orgao_julgador,
-            orgao_julgador_colegiado=inp.orgao_julgador_colegiado,
-            classe=inp.classe,
+            nr_processo=inp.numero_processo or "",
+            relator=inp.relator or "",
+            orgao_julgador=inp.orgao_julgador if inp.orgao_julgador is not None else "",
+            orgao_julgador_colegiado=(
+                inp.orgao_julgador_colegiado if inp.orgao_julgador_colegiado is not None else ""
+            ),
+            classe=inp.classe or "",
             data_julgamento_inicio=to_iso_date(inp.data_julgamento_inicio) or "",
             data_julgamento_fim=to_iso_date(inp.data_julgamento_fim) or "",
             instancia=inp.instancia,
