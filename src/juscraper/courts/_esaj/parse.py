@@ -263,6 +263,71 @@ def _parse_single_page(path: str) -> pd.DataFrame:
     return df
 
 
+_ARVORE_COLUNAS = ["id", "nome", "id_pai", "nivel", "selecionavel", "caminho"]
+
+
+def parse_arvore(html: str) -> pd.DataFrame:
+    """Parseia o HTML de uma arvore eSAJ (classes/assuntos/secoes/varas).
+
+    Le o fragmento retornado por um endpoint ``*TreeSelect.do`` (a arvore
+    inteira vem num unico GET) e devolve um ``DataFrame`` achatado, uma linha
+    por no, preservando a hierarquia via ``id_pai``/``nivel``/``caminho``.
+
+    A hierarquia e derivada do aninhamento ``<ul>/<li>`` do DOM, nao do
+    atributo ``searchValue`` — em arvores reais o ``searchValue`` dos nos
+    intermediarios as vezes vem malformado, enquanto o aninhamento e sempre
+    confiavel. Um mesmo ``id`` pode aparecer em mais de um ramo; cada
+    ocorrencia vira uma linha (a arvore nao e um conjunto de ids unicos).
+
+    Args:
+        html: HTML completo retornado pelo endpoint ``*TreeSelect.do``
+            (ja decodificado para ``str``).
+
+    Returns:
+        pd.DataFrame com as colunas ``id`` (str), ``nome`` (str, caixa
+        original), ``id_pai`` (str | None — ``None`` na raiz), ``nivel``
+        (int, raiz = 1), ``selecionavel`` (bool — folhas selecionaveis) e
+        ``caminho`` (str — nomes dos ancestrais ate o no, juntados por
+        `` > ``). Vazio quando o HTML nao contem nos.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    linhas: list[dict] = []
+
+    for span in soup.select("span.node"):
+        node_id = span.get("value") or span.get("searchid") or ""
+        classes = span.get("class") or []
+        # ``find_parents("li")`` devolve do mais proximo (o <li> do proprio no)
+        # ao mais distante (raiz); cada nivel da arvore e exatamente um <li>.
+        lis = span.find_parents("li")
+        # Nome proprio de cada ancestral: o primeiro ``span.node`` em ordem de
+        # documento dentro do <li> e sempre o no daquele <li> (os filhos vem
+        # depois, em <ul> aninhados).
+        nomes_ancestrais: list[str] = []
+        for li in reversed(lis):  # raiz -> no
+            no_span = li.find("span", class_="node")
+            if no_span is not None:
+                nomes_ancestrais.append(no_span.get_text(strip=True))
+
+        id_pai = None
+        if len(lis) >= 2:
+            pai_span = lis[1].find("span", class_="node")
+            if pai_span is not None:
+                id_pai = pai_span.get("value") or pai_span.get("searchid") or None
+
+        linhas.append({
+            "id": str(node_id),
+            "nome": span.get_text(strip=True),
+            "id_pai": id_pai,
+            "nivel": len(lis),
+            "selecionavel": "selectable" in classes,
+            "caminho": " > ".join(nomes_ancestrais),
+        })
+
+    if not linhas:
+        return pd.DataFrame(columns=_ARVORE_COLUNAS)
+    return pd.DataFrame(linhas, columns=_ARVORE_COLUNAS)
+
+
 def cjsg_parse_manager(path: str) -> pd.DataFrame:
     """Parse downloaded cjsg HTML files into a single DataFrame.
 

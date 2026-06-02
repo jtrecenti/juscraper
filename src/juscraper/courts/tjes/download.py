@@ -107,7 +107,10 @@ def cjsg_download(
 
     def _get_page(pagina):
         params = _build_params(pagina=pagina, **common)
-        resp = request_fn("GET", url, params=params, timeout=30)
+        # expect_json=True: o backend Solr do TJES devolve esporadicamente 200 com
+        # corpo vazio; _request_with_retry retenta e, persistindo, levanta
+        # InvalidJSONResponseError com contexto em vez de JSONDecodeError opaco (#275).
+        resp = request_fn("GET", url, params=params, timeout=30, expect_json=True)
         return resp.json()
 
     if paginas is None:

@@ -27,7 +27,7 @@ import requests
 
 from juscraper import __version__
 from juscraper.core.base import BaseScraper
-from juscraper.core.exceptions import RetryExhaustedError
+from juscraper.core.exceptions import InvalidJSONResponseError, RetryExhaustedError
 
 logger = logging.getLogger("juscraper.core.http")
 
@@ -58,13 +58,18 @@ refactor #194) para centralizar retry + ``raise_for_status`` sem expor a
 * ``method`` (1o positional) — verbo HTTP (``"GET"``, ``"POST"``, ...).
 * ``url`` (2o positional) — URL alvo.
 * kwargs livres — encaminhados a ``requests.Session.request`` (``json=``,
-  ``data=``, ``headers=``, ``timeout=``, ...). ``max_retries`` e
-  ``base_backoff`` tambem sao aceitos para sobrepor o default.
+  ``data=``, ``headers=``, ``timeout=``, ...). ``max_retries``,
+  ``base_backoff`` e ``expect_json`` tambem sao aceitos para sobrepor o default.
 
 A response retornada e garantida com ``status_code < 400`` (4xx ja foi
 via ``raise_for_status``; 5xx/429 ja esgotou ``max_retries`` ->
 ``RetryExhaustedError``). O caller pode chamar ``.json()`` / ler ``.text``
 sem se preocupar com retry de transitorios.
+
+Com ``expect_json=True``, a response retornada tem ainda corpo JSON valido
+garantido: 200 com corpo vazio/nao-JSON e tratado como transitorio (retry com
+backoff) e, persistindo, levanta ``InvalidJSONResponseError`` em vez do
+``json.JSONDecodeError`` opaco. Ver #275.
 
 Implementado como ``Callable[..., Response]`` (e nao ``Protocol``) por
 compatibilidade com mypy: o ``__call__`` do bound method tem keyword
@@ -111,6 +116,7 @@ class HTTPScraper(BaseScraper):
         session: requests.Session | None = None,
         max_retries: int = 3,
         base_backoff: float = 2.0,
+        expect_json: bool = False,
         **kwargs: Any,
     ) -> requests.Response:
         """Executa ``method`` em ``url`` com retry exponencial.
@@ -123,15 +129,24 @@ class HTTPScraper(BaseScraper):
             max_retries: Número máximo de tentativas (inclusive a primeira).
             base_backoff: Base do backoff exponencial (``base_backoff ** attempt``
                 segundos entre tentativas).
+            expect_json: Se ``True``, valida que o corpo de uma resposta com
+                status < 400 é JSON. Corpo vazio/não-JSON é tratado como
+                transitório (retry com backoff); persistindo, levanta
+                ``InvalidJSONResponseError``. Default ``False`` — o caller chama
+                ``.json()`` por conta própria e um corpo inválido propaga
+                ``json.JSONDecodeError`` na primeira ocorrência (#275).
             **kwargs: Encaminhados para ``session.request``.
 
         Returns:
-            ``requests.Response`` na primeira resposta com status < 400.
+            ``requests.Response`` na primeira resposta com status < 400 (e, se
+            ``expect_json=True``, com corpo JSON válido).
 
         Raises:
             TypeError: Se ``session`` não for ``None`` nem ``requests.Session``.
             ValueError: Se ``max_retries`` for menor que 1.
             RetryExhaustedError: Quando esgota ``max_retries`` em status retryable.
+            InvalidJSONResponseError: Quando ``expect_json=True`` e o corpo permanece
+                vazio/não-JSON após ``max_retries``.
             requests.HTTPError: Para 4xx não-retryable (via ``raise_for_status``).
         """
         if session is not None and not isinstance(session, requests.Session):
@@ -146,6 +161,22 @@ class HTTPScraper(BaseScraper):
         for attempt in range(1, max_retries + 1):
             resp = sess.request(method, url, **kwargs)
             if resp.status_code < 400:
+                if expect_json and not self._response_is_json(resp):
+                    if attempt == max_retries:
+                        raise InvalidJSONResponseError(
+                            url,
+                            resp.status_code,
+                            attempt,
+                            resp.headers.get("Content-Type"),
+                            resp.text[:200],
+                        )
+                    backoff_wait = max(0.0, base_backoff ** attempt)
+                    logger.warning(
+                        "Corpo nao-JSON em HTTP %s %s %s (tentativa %d/%d). Aguardando %.2fs.",
+                        resp.status_code, method, url, attempt, max_retries, backoff_wait,
+                    )
+                    time.sleep(backoff_wait)
+                    continue
                 return resp
 
             if resp.status_code in RETRYABLE_STATUSES:
@@ -166,6 +197,24 @@ class HTTPScraper(BaseScraper):
 
         # Inalcançável: o loop sai sempre via return, RetryExhaustedError ou raise_for_status.
         raise RuntimeError("loop de retry terminou sem decisão")  # pragma: no cover
+
+    @staticmethod
+    def _response_is_json(resp: requests.Response) -> bool:
+        """Retorna ``True`` se o corpo da resposta for JSON válido.
+
+        Usado por ``_request_with_retry(expect_json=True)`` para distinguir um
+        200 legítimo de um 200 com corpo vazio/não-JSON (transitório do backend).
+
+        O caller chama ``resp.json()`` de novo após esta validação; isso é
+        intencional e barato: ``resp.content`` fica em cache no objeto
+        ``Response``, então não há requisição extra, apenas um reparse do corpo
+        já em memória.
+        """
+        try:
+            resp.json()
+        except ValueError:  # json.JSONDecodeError é subclasse de ValueError
+            return False
+        return True
 
     @staticmethod
     def _parse_retry_after(header: str | None) -> float | None:

@@ -19,6 +19,7 @@ import warnings
 from collections.abc import Callable
 from typing import Any
 
+import pandas as pd
 from pydantic import BaseModel, ValidationError
 
 from ...core.http import HTTPScraper
@@ -36,9 +37,9 @@ from ...utils.params import (
     run_chunked_search,
     validate_intervalo_datas,
 )
-from .download import download_cjsg_pages, fetch_cjsg_first_page
+from .download import _CHROME_HEADERS, _ESAJ_HEADERS, download_cjsg_pages, fetch_cjsg_first_page
 from .forms import build_cjsg_form_body
-from .parse import cjsg_n_pags, cjsg_n_results, cjsg_parse_manager
+from .parse import cjsg_n_pags, cjsg_n_results, cjsg_parse_manager, parse_arvore
 from .schemas import InputCJSGEsajPuro
 
 logger = logging.getLogger("juscraper._esaj.base")
@@ -230,6 +231,17 @@ class EsajSearchScraper(HTTPScraper):
     INPUT_CJSG: type[BaseModel] = InputCJSGEsajPuro
     CJSG_CHROME_UA: bool = False
     CJSG_EXTRACT_CONVERSATION_ID: bool = False
+
+    # Arvores de selecao do eSAJ (classes/assuntos/orgaos), uma por chave
+    # ``<arvore>_<grau>``, relativas a BASE_URL. O sufixo de grau permite o
+    # TJSP estender com as arvores de 1o grau (cjpg) sem if/else. Todos os
+    # tribunais eSAJ expoem as arvores de cjsg (2o grau); cjpg so existe no
+    # TJSP hoje, entao as entradas ``_1`` ficam no TJSPScraper. Refs #228.
+    TREE_ENDPOINTS: dict[str, str] = {
+        "classes_2": "cjsg/classesTreeSelect.do?campoId=classes",
+        "assuntos_2": "cjsg/assuntosTreeSelect.do?campoId=assuntos",
+        "orgaos_2": "cjsg/secaoTreeSelect.do?campoId=secoes",
+    }
 
     def __init__(
         self,
@@ -538,6 +550,106 @@ class EsajSearchScraper(HTTPScraper):
     def cjsg_parse(self, path: str):
         """Parse downloaded ``cjsg`` HTML files into a ``pd.DataFrame``."""
         return cjsg_parse_manager(path)
+
+    # --- arvores de selecao (classes/assuntos/orgaos/varas) -------------
+
+    def _listar_arvore(self, tree_key: str) -> "pd.DataFrame":
+        """Baixa e parseia uma arvore de selecao do eSAJ.
+
+        Faz um unico GET no endpoint ``*TreeSelect.do`` correspondente a
+        ``tree_key`` (a arvore inteira vem numa resposta so) e delega o parse
+        para :func:`juscraper.courts._esaj.parse.parse_arvore`.
+
+        Args:
+            tree_key: Chave em :attr:`TREE_ENDPOINTS` (ex.: ``"classes_2"``).
+
+        Raises:
+            ValueError: Quando ``tree_key`` nao existe em
+                :attr:`TREE_ENDPOINTS` deste tribunal (ex.: pedir uma arvore
+                de 1o grau num tribunal que so tem cjsg).
+
+        Returns:
+            pd.DataFrame: Colunas ``id``, ``nome``, ``id_pai``, ``nivel``,
+            ``selecionavel``, ``caminho``.
+        """
+        rel = self.TREE_ENDPOINTS.get(tree_key)
+        if rel is None:
+            disponiveis = ", ".join(sorted(self.TREE_ENDPOINTS)) or "(nenhuma)"
+            raise ValueError(
+                f"{self.tribunal_name} nao expoe a arvore '{tree_key}'. "
+                f"Arvores disponiveis: {disponiveis}."
+            )
+        headers = _CHROME_HEADERS if self.CJSG_CHROME_UA else _ESAJ_HEADERS
+        resp = self._request_with_retry("GET", f"{self.BASE_URL}{rel}", headers=headers, timeout=60)
+        # Os endpoints *TreeSelect.do mandam UTF-8 no header (diferente das
+        # paginas de resultado do cjsg, que sao latin-1). Respeita o header e,
+        # se faltar charset, cai no sniff do chardet. Refs #228.
+        resp.encoding = resp.encoding or resp.apparent_encoding
+        return parse_arvore(resp.text)
+
+    def listar_classes(self, *, grau: str = "2") -> "pd.DataFrame":
+        """Lista as classes processuais disponiveis para filtrar.
+
+        Baixa a arvore de classes do eSAJ para descobrir os IDs aceitos pelo
+        filtro ``classe`` de :meth:`cjsg` (e ``classe`` de ``cjpg`` no TJSP).
+
+        Args:
+            grau: ``"2"`` (segundo grau / cjsg, default) ou ``"1"`` (primeiro
+                grau / cjpg). Apenas o TJSP expoe ``grau="1"``.
+
+        Raises:
+            ValueError: Quando ``grau`` nao esta disponivel neste tribunal.
+
+        Returns:
+            pd.DataFrame: Arvore de classes (colunas ``id``, ``nome``,
+            ``id_pai``, ``nivel``, ``selecionavel``, ``caminho``). So as
+            linhas com ``selecionavel=True`` valem como filtro.
+
+        Exemplo:
+            >>> import juscraper as jus
+            >>> tjsp = jus.scraper("tjsp")
+            >>> classes = tjsp.listar_classes()
+            >>> classes.loc[classes["selecionavel"], ["id", "nome"]].head()
+        """
+        return self._listar_arvore(f"classes_{grau}")
+
+    def listar_assuntos(self, *, grau: str = "2") -> "pd.DataFrame":
+        """Lista os assuntos disponiveis para filtrar.
+
+        Baixa a arvore de assuntos do eSAJ para descobrir os IDs aceitos pelo
+        filtro ``assunto`` de :meth:`cjsg` (e ``assunto`` de ``cjpg`` no TJSP).
+
+        Args:
+            grau: ``"2"`` (segundo grau / cjsg, default) ou ``"1"`` (primeiro
+                grau / cjpg). Apenas o TJSP expoe ``grau="1"``.
+
+        Raises:
+            ValueError: Quando ``grau`` nao esta disponivel neste tribunal.
+
+        Returns:
+            pd.DataFrame: Arvore de assuntos (mesmas colunas de
+            :meth:`listar_classes`). So as linhas com ``selecionavel=True``
+            valem como filtro.
+        """
+        return self._listar_arvore(f"assuntos_{grau}")
+
+    def listar_orgaos(self, *, grau: str = "2") -> "pd.DataFrame":
+        """Lista os orgaos julgadores (secoes) de segundo grau.
+
+        Baixa a arvore de secoes do eSAJ para descobrir os IDs aceitos pelo
+        filtro ``orgao_julgador`` de :meth:`cjsg`. So existe no segundo grau.
+
+        Args:
+            grau: ``"2"`` (segundo grau / cjsg). Unico valor aceito.
+
+        Raises:
+            ValueError: Quando ``grau`` nao esta disponivel neste tribunal.
+
+        Returns:
+            pd.DataFrame: Arvore de orgaos julgadores (mesmas colunas de
+            :meth:`listar_classes`).
+        """
+        return self._listar_arvore(f"orgaos_{grau}")
 
     def _build_cjsg_body(self, inp: BaseModel) -> dict:
         """Convert the validated pydantic input into the eSAJ form body.

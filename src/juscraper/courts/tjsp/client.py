@@ -8,6 +8,7 @@ import tempfile
 import warnings
 from typing import Any, Literal
 
+import pandas as pd
 from pydantic import BaseModel
 
 from ...utils.params import (
@@ -78,6 +79,16 @@ class TJSPScraper(EsajSearchScraper):
     CJSG_CHROME_UA = True
     CJSG_EXTRACT_CONVERSATION_ID = True
 
+    # Alem das arvores de cjsg herdadas de EsajSearchScraper, o TJSP expoe as
+    # arvores de 1o grau (cjpg). Os stems do cjpg sao no SINGULAR
+    # (``classeTreeSelect`` etc.), diferente do plural do cjsg. Refs #228.
+    TREE_ENDPOINTS = {
+        **EsajSearchScraper.TREE_ENDPOINTS,
+        "classes_1": "cjpg/classeTreeSelect.do?campoId=classes",
+        "assuntos_1": "cjpg/assuntoTreeSelect.do?campoId=assuntos",
+        "varas_1": "cjpg/varasTreeSelect.do?campoId=varas",
+    }
+
     def __init__(
         self,
         verbose: int = 0,
@@ -94,6 +105,25 @@ class TJSPScraper(EsajSearchScraper):
         self.u_base = self.BASE_URL
         self.api_base = "https://api.tjsp.jus.br/"
         self.method: Literal["html", "api"] | None = None
+
+    def listar_varas(self, *, grau: str = "1") -> pd.DataFrame:
+        """Lista as varas de primeiro grau disponiveis para filtrar (cjpg).
+
+        Baixa a arvore de varas do eSAJ para descobrir os IDs aceitos pelo
+        filtro ``vara`` de :meth:`cjpg`. A arvore agrupa as varas por
+        comarca/foro, entao ``id_pai``/``caminho`` carregam essa hierarquia.
+
+        Args:
+            grau: ``"1"`` (primeiro grau / cjpg). Unico valor aceito.
+
+        Raises:
+            ValueError: Quando ``grau`` nao esta disponivel.
+
+        Returns:
+            pd.DataFrame: Arvore de varas (colunas ``id``, ``nome``,
+            ``id_pai``, ``nivel``, ``selecionavel``, ``caminho``).
+        """
+        return self._listar_arvore(f"varas_{grau}")
 
     def set_download_path(self, path: str | None = None):
         """Set download base dir; creates a tempdir when ``path`` is ``None``."""
