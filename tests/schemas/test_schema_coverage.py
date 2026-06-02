@@ -83,6 +83,8 @@ EXPECTED_COURT_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
     ("trf1", "cpopg"): ("juscraper.courts.trf1.schemas", "InputCpopgTRF1"),
     ("trf3", "cpopg"): ("juscraper.courts.trf3.schemas", "InputCpopgTRF3"),
     ("trf5", "cpopg"): ("juscraper.courts.trf5.schemas", "InputCpopgTRF5"),
+    # eproc consulta pública (TRF6) — captcha-gated.
+    ("trf6", "cpopg"): ("juscraper.courts.trf6.schemas", "InputCpopgTRF6"),
 }
 
 # Agregadores sao mapeados separadamente porque os endpoints fogem do

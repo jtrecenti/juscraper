@@ -82,6 +82,7 @@ O método `.cjsg()` recebe como *input* parâmetros de busca de jurisprudência 
 | TJSC     | cjsg                              |
 | TRF3     | cpopg                             |
 | TRF5     | cpopg                             |
+| TRF6     | cpopg                             |
 
 ### Agregadores Disponíveis
 
@@ -119,6 +120,7 @@ O método `.cjsg()` recebe como *input* parâmetros de busca de jurisprudência 
 - [Exemplo TJSC](notebooks/tjsc.ipynb)
 - [Exemplo TRF3](notebooks/trf3.ipynb)
 - [Exemplo TRF5](notebooks/trf5.ipynb)
+- [Exemplo TRF6](notebooks/trf6.ipynb)
 - [Exemplo Datajud](notebooks/datajud.ipynb)
 - [Exemplo Jusbr](notebooks/jusbr.ipynb)
 
