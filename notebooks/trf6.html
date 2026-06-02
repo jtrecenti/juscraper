@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>TJPA - Tribunal de Justica do Estado do Para – juscraper</title>
+<title>TRF6 — Tribunal Regional Federal da 6ª Região – juscraper</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -64,8 +64,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../notebooks/tjpb.html" rel="next">
-<link href="../notebooks/tjmt.html" rel="prev">
+<link href="../notebooks/datajud.html" rel="next">
+<link href="../notebooks/trf5.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js"></script>
 <script src="../site_libs/quarto-html/popper.min.js"></script>
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
@@ -153,7 +153,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Exemplos</li><li class="breadcrumb-item"><a href="../notebooks/tjac.html">Tribunais</a></li><li class="breadcrumb-item"><a href="../notebooks/tjpa.html">TJPA</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Exemplos</li><li class="breadcrumb-item"><a href="../notebooks/tjac.html">Tribunais</a></li><li class="breadcrumb-item"><a href="../notebooks/trf6.html">TRF6</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -251,7 +251,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../notebooks/tjpa.html" class="sidebar-item-text sidebar-link active">
+  <a href="../notebooks/tjpa.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">TJPA</span></a>
   </div>
 </li>
@@ -359,7 +359,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../notebooks/trf6.html" class="sidebar-item-text sidebar-link">
+  <a href="../notebooks/trf6.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">TRF6</span></a>
   </div>
 </li>
@@ -406,20 +406,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Nesta página</h2>
    
   <ul>
-  <li><a href="#basic-search" id="toc-basic-search" class="nav-link active" data-scroll-target="#basic-search">Basic search</a></li>
+  <li><a href="#looking-up-a-single-process" id="toc-looking-up-a-single-process" class="nav-link active" data-scroll-target="#looking-up-a-single-process">Looking up a single process</a></li>
   <li><a href="#available-columns" id="toc-available-columns" class="nav-link" data-scroll-target="#available-columns">Available columns</a></li>
-  <li><a href="#preview-ementa" id="toc-preview-ementa" class="nav-link" data-scroll-target="#preview-ementa">Preview ementa</a></li>
-  <li><a href="#using-filters" id="toc-using-filters" class="nav-link" data-scroll-target="#using-filters">Using filters</a></li>
-  <li><a href="#download-and-parse-separately" id="toc-download-and-parse-separately" class="nav-link" data-scroll-target="#download-and-parse-separately">Download and parse separately</a></li>
+  <li><a href="#inspecting-movements" id="toc-inspecting-movements" class="nav-link" data-scroll-target="#inspecting-movements">Inspecting movements</a></li>
+  <li><a href="#inspecting-parties" id="toc-inspecting-parties" class="nav-link" data-scroll-target="#inspecting-parties">Inspecting parties</a></li>
+  <li><a href="#looking-up-multiple-processes-at-once" id="toc-looking-up-multiple-processes-at-once" class="nav-link" data-scroll-target="#looking-up-multiple-processes-at-once">Looking up multiple processes at once</a></li>
+  <li><a href="#handling-processes-the-public-portal-cannot-return" id="toc-handling-processes-the-public-portal-cannot-return" class="nav-link" data-scroll-target="#handling-processes-the-public-portal-cannot-return">Handling processes the public portal cannot return</a></li>
+  <li><a href="#splitting-download-from-parse" id="toc-splitting-download-from-parse" class="nav-link" data-scroll-target="#splitting-download-from-parse">Splitting download from parse</a></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.dev/jtrecenti/juscraper/blob/main/docs/notebooks/tjpa.ipynb" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.dev/jtrecenti/juscraper/blob/main/docs/notebooks/trf6.ipynb" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Exemplos</li><li class="breadcrumb-item"><a href="../notebooks/tjac.html">Tribunais</a></li><li class="breadcrumb-item"><a href="../notebooks/tjpa.html">TJPA</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Exemplos</li><li class="breadcrumb-item"><a href="../notebooks/tjac.html">Tribunais</a></li><li class="breadcrumb-item"><a href="../notebooks/trf6.html">TRF6</a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title">TJPA - Tribunal de Justica do Estado do Para</h1>
+<h1 class="title">TRF6 — Tribunal Regional Federal da 6ª Região</h1>
 </div>
 
 
@@ -436,7 +438,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>Scraper for the jurisprudence search of the Court of Justice of the State of Para (TJPA).</p>
+<p>Public process consultation (<code>cpopg</code>) for the federal courts of Minas Gerais (Seção Judiciária de MG), via the eproc system at <a href="https://eproc1g.trf6.jus.br/eproc/externo_controlador.php?acao=processo_consulta_publica">eproc1g.trf6.jus.br/eproc/</a>.</p>
+<p>The form is gated by a text-based image captcha that the backend <strong>does</strong> validate; we solve it via the <a href="https://github.com/jtrecenti/txtcaptcha"><code>txtcaptcha</code></a> package (HuggingFace pretrained CRNN, downloaded on first call). Each captcha is bound to the session cookie, so a wrong solve triggers a fresh form fetch + new captcha — controlled by the <code>max_captcha_attempts</code> constructor parameter (default 3).</p>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -446,43 +449,46 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td>cjsg</td>
+<td>cpopg</td>
 <td>Yes</td>
 </tr>
 <tr class="even">
-<td>cpopg</td>
+<td>cposg</td>
 <td>No</td>
 </tr>
 <tr class="odd">
-<td>cposg</td>
+<td>cjsg</td>
+<td>No</td>
+</tr>
+<tr class="even">
+<td>cjpg</td>
 <td>No</td>
 </tr>
 </tbody>
 </table>
-<section id="basic-search" class="level2">
-<h2 class="anchored" data-anchor-id="basic-search">Basic search</h2>
-<div id="08ae499a" class="cell" data-execution_count="1">
+<section id="looking-up-a-single-process" class="level2">
+<h2 class="anchored" data-anchor-id="looking-up-a-single-process">Looking up a single process</h2>
+<div id="26f72376" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-04-29T17:54:43.769848Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-04-29T17:54:43.769848Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T17:54:44.230968Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T17:54:44.230968Z&quot;}" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the TJPA scraper</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>tjpa <span class="op">=</span> jus.scraper(<span class="st">'tjpa'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># `max_captcha_attempts` retries from a fresh form on each captcha rejection.</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>trf6 <span class="op">=</span> jus.scraper(<span class="st">"trf6"</span>, max_captcha_attempts<span class="op">=</span><span class="dv">5</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="9e3b62a4" class="cell" data-execution_count="8">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Search for jurisprudence</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>dados_cjsg <span class="op">=</span> tjpa.cjsg(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">1</span>,<span class="dv">3</span>))</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_cjsg.shape)</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>dados_cjsg.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="de9be07f" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-04-29T17:54:44.232994Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-04-29T17:54:44.232994Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T17:54:49.478379Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T17:54:49.478379Z&quot;}" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> trf6.cpopg(<span class="st">"1005229-55.2023.4.06.3801"</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df.shape)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>df[[<span class="st">"id_cnj"</span>, <span class="st">"processo"</span>, <span class="st">"classe"</span>, <span class="st">"data_autuacao"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando páginas TJPA: 100%|██████████| 2/2 [00:06&lt;00:00,  3.15s/it]</code></pre>
+<pre><code>TRF6 cpopg:   0%|          | 0/1 [00:00&lt;?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+TRF6 cpopg: 100%|██████████| 1/1 [00:05&lt;00:00,  5.21s/it]TRF6 cpopg: 100%|██████████| 1/1 [00:05&lt;00:00,  5.21s/it]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>(50, 21)</code></pre>
+<pre><code>(1, 13)</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
 <pre><code></code></pre>
 </div>
-<div class="cell-output cell-output-display">
+<div class="cell-output cell-output-display" data-execution_count="2">
 <div>
 
 
@@ -490,172 +496,100 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <thead>
 <tr class="header">
 <th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">id_cnj</th>
 <th data-quarto-table-cell-role="th">processo</th>
-<th data-quarto-table-cell-role="th">tipo</th>
 <th data-quarto-table-cell-role="th">classe</th>
-<th data-quarto-table-cell-role="th">assunto</th>
-<th data-quarto-table-cell-role="th">relator</th>
-<th data-quarto-table-cell-role="th">orgao_julgador_colegiado</th>
-<th data-quarto-table-cell-role="th">data_julgamento</th>
-<th data-quarto-table-cell-role="th">data_publicacao</th>
-<th data-quarto-table-cell-role="th">ementa</th>
-<th data-quarto-table-cell-role="th">id</th>
-<th data-quarto-table-cell-role="th">...</th>
-<th data-quarto-table-cell-role="th">origem</th>
-<th data-quarto-table-cell-role="th">id_classe</th>
-<th data-quarto-table-cell-role="th">id_assunto</th>
-<th data-quarto-table-cell-role="th">orgao_julgador</th>
-<th data-quarto-table-cell-role="th">competencia</th>
-<th data-quarto-table-cell-role="th">data_documento</th>
-<th data-quarto-table-cell-role="th">sentido_decisao</th>
-<th data-quarto-table-cell-role="th">especie</th>
-<th data-quarto-table-cell-role="th">sistema_origem</th>
-<th data-quarto-table-cell-role="th">hash_storage</th>
+<th data-quarto-table-cell-role="th">data_autuacao</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">0</td>
-<td>0008207-65.2016.8.14.0000</td>
-<td>Decisão Monocrática</td>
-<td>Agravo de Instrumento</td>
-<td>Dissolução</td>
-<td>MARIA FILOMENA DE ALMEIDA BUARQUE</td>
-<td>1ª Turma de Direito Privado</td>
-<td>NaT</td>
-<td>NaT</td>
-<td></td>
-<td>20170107834038</td>
-<td>...</td>
-<td>Tribunal de Justiça do Estado do Pará</td>
-<td>202</td>
-<td>7664</td>
-<td>MARIA FILOMENA DE ALMEIDA BUARQUE</td>
-<td>1ª Turma de Direito Privado</td>
-<td>2017-03-27</td>
-<td>None</td>
-<td>JUDICIAL</td>
-<td>Libra</td>
-<td>None</td>
-</tr>
-<tr class="even">
-<td data-quarto-table-cell-role="th">1</td>
-<td>0000107-79.2001.8.14.0035</td>
-<td>Decisão Monocrática</td>
-<td>Apelação Cível</td>
-<td>Admissão / Permanência / Despedida</td>
-<td>CONSTANTINO AUGUSTO GUERREIRO</td>
-<td>2ª Turma de Direito Público</td>
-<td>NaT</td>
-<td>NaT</td>
-<td></td>
-<td>20170122307408</td>
-<td>...</td>
-<td>Tribunal de Justiça do Estado do Pará</td>
-<td>198</td>
-<td>10411</td>
-<td>CONSTANTINO AUGUSTO GUERREIRO</td>
-<td>2ª Turma de Direito Público</td>
-<td>2017-03-28</td>
-<td>None</td>
-<td>JUDICIAL</td>
-<td>Libra</td>
-<td>None</td>
-</tr>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">2</td>
-<td>0038403-26.2002.8.14.0301</td>
-<td>Decisão Monocrática</td>
-<td>Apelação Cível</td>
-<td>Cédula de Crédito Rural</td>
-<td>RICARDO FERREIRA NUNES</td>
-<td>4ª Camara Civel Isolada</td>
-<td>NaT</td>
-<td>NaT</td>
-<td></td>
-<td>20170121753150</td>
-<td>...</td>
-<td>Tribunal de Justiça do Estado do Pará</td>
-<td>198</td>
-<td>4964</td>
-<td>RICARDO FERREIRA NUNES</td>
-<td>4ª Camara Civel Isolada</td>
-<td>2017-03-28</td>
-<td>None</td>
-<td>JUDICIAL</td>
-<td>Libra</td>
-<td>None</td>
+<td>10052295520234063801</td>
+<td>1005229-55.2023.4.06.3801</td>
+<td>Procedimento Comum (Vara Cível)</td>
+<td>12/04/2023 15:07:33</td>
 </tr>
 </tbody>
 </table>
 
-<p>3 rows × 21 columns</p>
 </div>
 </div>
 </div>
 </section>
 <section id="available-columns" class="level2">
 <h2 class="anchored" data-anchor-id="available-columns">Available columns</h2>
-<div id="314e504c" class="cell" data-execution_count="3">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>dados_cjsg.columns.tolist()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display">
+<div id="2e8abd64" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-04-29T17:54:49.482482Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-04-29T17:54:49.481482Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T17:54:49.486404Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T17:54:49.486404Z&quot;}" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>df.columns.tolist()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="3">
 <pre><code>['processo',
- 'tipo',
+ 'data_autuacao',
+ 'situacao',
+ 'magistrado',
  'classe',
- 'assunto',
- 'relator',
- 'orgao_julgador_colegiado',
- 'data_julgamento',
- 'data_publicacao',
- 'ementa',
- 'id',
- 'area',
- 'origem',
- 'id_classe',
- 'id_assunto',
  'orgao_julgador',
- 'competencia',
- 'data_documento',
- 'sentido_decisao',
- 'especie',
- 'sistema_origem',
- 'hash_storage']</code></pre>
+ 'assuntos',
+ 'polo_ativo',
+ 'polo_passivo',
+ 'mpf',
+ 'perito',
+ 'movimentacoes',
+ 'id_cnj']</code></pre>
+</div>
+</div>
+<p>The first six columns are the canonical scalars from the “Capa do Processo” panel. The trailing five (<code>assuntos</code>, <code>polo_ativo</code>, <code>polo_passivo</code>, <code>mpf</code>, <code>perito</code>, <code>movimentacoes</code>) are list-typed and carry the nested arrays from the rest of the detail page.</p>
+</section>
+<section id="inspecting-movements" class="level2">
+<h2 class="anchored" data-anchor-id="inspecting-movements">Inspecting movements</h2>
+<div id="597f0481" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-04-29T17:54:49.489418Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-04-29T17:54:49.488444Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T17:54:49.492928Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T17:54:49.492418Z&quot;}" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>movs <span class="op">=</span> df.iloc[<span class="dv">0</span>][<span class="st">"movimentacoes"</span>]</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span><span class="bu">len</span>(movs)<span class="sc">}</span><span class="ss"> events recorded"</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> m <span class="kw">in</span> movs[:<span class="dv">5</span>]:</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  </span><span class="sc">{</span>m[<span class="st">'evento'</span>]<span class="sc">:&gt;3}</span><span class="ss"> | </span><span class="sc">{</span>m[<span class="st">'data_hora'</span>]<span class="sc">}</span><span class="ss"> | </span><span class="sc">{</span>m[<span class="st">'descricao'</span>][:<span class="dv">60</span>]<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>10 events recorded
+   99 | 14/04/2026 01:29:31 | Decorrido prazo - Refer. ao Evento: 96
+   98 | 05/04/2026 23:59:59 | Confirmada a intimação eletrônica - Refer. ao Evento: 96 - C
+   97 | 02/04/2026 23:59:59 | Confirmada a intimação eletrônica - Refer. ao Evento: 92 - C
+   96 | 26/03/2026 09:58:02 | Expedida/certificada a intimação eletrônica - Contrarrazões 
+   95 | 26/03/2026 09:58:02 | EMBARGOS DE DECLARAÇÃO - Refer. ao Evento: 91</code></pre>
 </div>
 </div>
 </section>
-<section id="preview-ementa" class="level2">
-<h2 class="anchored" data-anchor-id="preview-ementa">Preview ementa</h2>
-<div id="4cd9f052" class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_cjsg[<span class="st">'ementa'</span>].iloc[<span class="dv">0</span>][:<span class="dv">300</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="inspecting-parties" class="level2">
+<h2 class="anchored" data-anchor-id="inspecting-parties">Inspecting parties</h2>
+<div id="21574468" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-04-29T17:54:49.495938Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-04-29T17:54:49.494938Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T17:54:49.500969Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T17:54:49.499959Z&quot;}" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Polo ativo:"</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> p <span class="kw">in</span> df.iloc[<span class="dv">0</span>][<span class="st">"polo_ativo"</span>]:</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  - </span><span class="sc">{</span>p[<span class="st">'descricao'</span>][:<span class="dv">120</span>]<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>()</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Polo passivo:"</span>)</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> p <span class="kw">in</span> df.iloc[<span class="dv">0</span>][<span class="st">"polo_passivo"</span>]:</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  - </span><span class="sc">{</span>p[<span class="st">'descricao'</span>][:<span class="dv">120</span>]<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code></code></pre>
+<pre><code>Polo ativo:
+  - - SANDRA MARCIA TOSTES (017.**********) | ALESSANDRA APARECIDA ESTEVAO SOARES MG142599
+
+Polo passivo:
+  - - INSTITUTO NACIONAL DO SEGURO SOCIAL (29.9**************) | SUBPROCURADORIA REGIONAL FEDERAL DA 6 REGIÃO SUBPRF6</code></pre>
 </div>
 </div>
 </section>
-<section id="using-filters" class="level2">
-<h2 class="anchored" data-anchor-id="using-filters">Using filters</h2>
-<p>The TJPA scraper supports several filters: date ranges, relator, collegiate judging body, class, and subject.</p>
-<div id="0c09bc50" class="cell" data-execution_count="5">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter by judgment date range</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>dados_filtrados <span class="op">=</span> tjpa.cjsg(</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'dano moral'</span>,</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">'2024-01-01'</span>,</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">'2024-06-30'</span>,</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">1</span>,</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_filtrados.shape)</span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>dados_filtrados.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="looking-up-multiple-processes-at-once" class="level2">
+<h2 class="anchored" data-anchor-id="looking-up-multiple-processes-at-once">Looking up multiple processes at once</h2>
+<p>Each lookup is one full request flow (form → captcha → search), so batches are sequential — expect ~3–5 seconds per CNJ depending on captcha-solve latency. Use <code>sleep_time</code> (default 1.0s) to throttle between calls.</p>
+<div id="7d4bbb28" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-04-29T17:54:49.503969Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-04-29T17:54:49.502970Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T17:54:52.141870Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T17:54:52.140820Z&quot;}" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>cnjs <span class="op">=</span> [</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"10052295520234063801"</span>,</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"10052379620234063812"</span>,</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>df_batch <span class="op">=</span> trf6.cpopg(cnjs)</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>df_batch[[<span class="st">"id_cnj"</span>, <span class="st">"processo"</span>, <span class="st">"classe"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando páginas TJPA: 100%|██████████| 1/1 [00:01&lt;00:00,  1.78s/it]</code></pre>
+<pre><code>TRF6 cpopg:   0%|          | 0/2 [00:00&lt;?, ?it/s]TRF6 cpopg:  50%|█████     | 1/2 [00:01&lt;00:01,  1.70s/it]TRF6 cpopg: 100%|██████████| 2/2 [00:02&lt;00:00,  1.23s/it]TRF6 cpopg: 100%|██████████| 2/2 [00:02&lt;00:00,  1.30s/it]</code></pre>
 </div>
-<div class="cell-output cell-output-stdout">
-<pre><code>(25, 21)</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code></code></pre>
-</div>
-<div class="cell-output cell-output-display">
+<div class="cell-output cell-output-display" data-execution_count="6">
 <div>
 
 
@@ -663,143 +597,71 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <thead>
 <tr class="header">
 <th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">id_cnj</th>
 <th data-quarto-table-cell-role="th">processo</th>
-<th data-quarto-table-cell-role="th">tipo</th>
 <th data-quarto-table-cell-role="th">classe</th>
-<th data-quarto-table-cell-role="th">assunto</th>
-<th data-quarto-table-cell-role="th">relator</th>
-<th data-quarto-table-cell-role="th">orgao_julgador_colegiado</th>
-<th data-quarto-table-cell-role="th">data_julgamento</th>
-<th data-quarto-table-cell-role="th">data_publicacao</th>
-<th data-quarto-table-cell-role="th">ementa</th>
-<th data-quarto-table-cell-role="th">id</th>
-<th data-quarto-table-cell-role="th">...</th>
-<th data-quarto-table-cell-role="th">origem</th>
-<th data-quarto-table-cell-role="th">id_classe</th>
-<th data-quarto-table-cell-role="th">id_assunto</th>
-<th data-quarto-table-cell-role="th">orgao_julgador</th>
-<th data-quarto-table-cell-role="th">competencia</th>
-<th data-quarto-table-cell-role="th">data_documento</th>
-<th data-quarto-table-cell-role="th">sentido_decisao</th>
-<th data-quarto-table-cell-role="th">especie</th>
-<th data-quarto-table-cell-role="th">sistema_origem</th>
-<th data-quarto-table-cell-role="th">hash_storage</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">0</td>
-<td>0801607-14.2024.8.14.0000</td>
-<td>Acórdão</td>
-<td>PETIÇÃO CÍVEL</td>
-<td>Depósito</td>
-<td>LUANA DE NAZARETH AMARAL HENRIQUES SANTALICES</td>
-<td>Tribunal Pleno</td>
-<td>2024-06-26</td>
-<td>NaT</td>
-<td>DÚVIDA NÃO MANIFESTADA NA FORMA DE CONFLITO DE...</td>
-<td>20528771</td>
-<td>...</td>
-<td>Tribunal de Justiça do Estado do Pará</td>
-<td>241</td>
-<td>9589</td>
-<td>Desembargadora LUANA DE NAZARETH AMARAL HENRIQ...</td>
-<td>Tribunal Pleno de Direito Privado</td>
-<td>2024-07-04</td>
-<td>None</td>
-<td>JUDICIAL</td>
-<td>Processo Judicial Eletrônico - 2º Grau</td>
-<td>cb07a46f94ed5a4b2c76adc5bac66d047415fc1e</td>
+<td>10052295520234063801</td>
+<td>1005229-55.2023.4.06.3801</td>
+<td>Procedimento Comum (Vara Cível)</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">1</td>
-<td>0817223-63.2023.8.14.0000</td>
-<td>Acórdão</td>
-<td>INCIDENTE DE ASSUNÇÃO DE COMPETÊNCIA</td>
-<td>Imunidade de Jurisdição</td>
-<td>RICARDO FERREIRA NUNES</td>
-<td>Tribunal Pleno</td>
-<td>2024-06-26</td>
-<td>NaT</td>
-<td>INCIDENTE DE ASSUNÇÃO DE COMPETÊNCIA. JULGAMEN...</td>
-<td>20373570</td>
-<td>...</td>
-<td>Tribunal de Justiça do Estado do Pará</td>
-<td>12087</td>
-<td>8838</td>
-<td>Desembargador RICARDO FERREIRA NUNES</td>
-<td>Tribunal Pleno de Direito Privado</td>
-<td>2024-06-27</td>
-<td>None</td>
-<td>JUDICIAL</td>
-<td>Processo Judicial Eletrônico - 2º Grau</td>
-<td>009d1757cd383574c2192005459bc25f7082a868</td>
-</tr>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">2</td>
-<td>0002595-65.2015.8.14.0006</td>
-<td>Acórdão</td>
-<td>APELAÇÃO CÍVEL</td>
-<td>Locação de Móvel</td>
-<td>AMILCAR ROBERTO BEZERRA GUIMARAES</td>
-<td>2ª Turma de Direito Privado</td>
-<td>2024-06-25</td>
-<td>NaT</td>
-<td>APELAÇÃO CÍVEL Nº 0002595-65.2015.8.14.0006 CO...</td>
-<td>20699243</td>
-<td>...</td>
-<td>Tribunal de Justiça do Estado do Pará</td>
-<td>198</td>
-<td>9609</td>
-<td>Desembargador AMILCAR ROBERTO BEZERRA GUIMARÃES</td>
-<td>Turma de Direito Privado</td>
-<td>2024-07-13</td>
-<td>None</td>
-<td>JUDICIAL</td>
-<td>Processo Judicial Eletrônico - 2º Grau</td>
-<td>0c3a35c97ade73440f4e2880ff78f77946187eaf</td>
+<td>10052379620234063812</td>
+<td>1005237-96.2023.4.06.3812</td>
+<td>Execução de Título Extrajudicial (Vara Execução)</td>
 </tr>
 </tbody>
 </table>
 
-<p>3 rows × 21 columns</p>
 </div>
 </div>
 </div>
 </section>
-<section id="download-and-parse-separately" class="level2">
-<h2 class="anchored" data-anchor-id="download-and-parse-separately">Download and parse separately</h2>
-<p>You can also download the raw responses and parse them in a second step.</p>
-<div id="62675916" class="cell" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Download raw JSON responses</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>brutos <span class="op">=</span> tjpa.cjsg_download(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Inspect the raw response structure</span></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Number of pages downloaded: </span><span class="sc">{</span><span class="bu">len</span>(brutos)<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Total results: </span><span class="sc">{</span>brutos[<span class="dv">0</span>][<span class="st">'data'</span>][<span class="st">'totalElements'</span>]<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Results in first page: </span><span class="sc">{</span><span class="bu">len</span>(brutos[<span class="dv">0</span>][<span class="st">'data'</span>][<span class="st">'content'</span>])<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="handling-processes-the-public-portal-cannot-return" class="level2">
+<h2 class="anchored" data-anchor-id="handling-processes-the-public-portal-cannot-return">Handling processes the public portal cannot return</h2>
+<p>When a CNJ does not surface in the public consultation (sigilo, archived, or simply not found), eproc re-serves the form silently with no error message. The scraper detects that and yields a row with only <code>id_cnj</code> populated — callers can still distinguish “looked up but missing” from “never tried”.</p>
+<div id="23fa08f9" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-04-29T17:54:52.144870Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-04-29T17:54:52.143869Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T17:54:52.424898Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T17:54:52.424395Z&quot;}" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>df_missing <span class="op">=</span> trf6.cpopg(<span class="st">"00000000020994060000"</span>)</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"processo:"</span>, df_missing.iloc[<span class="dv">0</span>].get(<span class="st">"processo"</span>))</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"classe:"</span>, df_missing.iloc[<span class="dv">0</span>].get(<span class="st">"classe"</span>))</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando páginas TJPA: 100%|██████████| 1/1 [00:03&lt;00:00,  3.24s/it]</code></pre>
+<pre><code>TRF6 cpopg:   0%|          | 0/1 [00:00&lt;?, ?it/s]TRF6 cpopg: 100%|██████████| 1/1 [00:00&lt;00:00,  3.67it/s]TRF6 cpopg: 100%|██████████| 1/1 [00:00&lt;00:00,  3.66it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Number of pages downloaded: 1
-Total results: 10000
-Results in first page: 25</code></pre>
+<pre><code>processo: None
+classe: None</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
 <pre><code></code></pre>
 </div>
 </div>
-<div id="fe416d14" class="cell" data-execution_count="7">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Parse raw responses into a DataFrame</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>df_parsed <span class="op">=</span> tjpa.cjsg_parse(brutos)</span>
+</section>
+<section id="splitting-download-from-parse" class="level2">
+<h2 class="anchored" data-anchor-id="splitting-download-from-parse">Splitting download from parse</h2>
+<p><code>cpopg</code> is a thin wrapper over <code>cpopg_download</code> (raw HTML) + <code>cpopg_parse</code> (HTML → DataFrame). Splitting them is useful when you want to cache the raw HTMLs to disk before processing — relevant for TRF6 because each download spends a captcha solve.</p>
+<div id="cc209014" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-04-29T17:54:52.425902Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-04-29T17:54:52.425902Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T17:54:53.370361Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T17:54:53.369330Z&quot;}" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>htmls <span class="op">=</span> trf6.cpopg_download(<span class="st">"1005229-55.2023.4.06.3801"</span>)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"got </span><span class="sc">{</span><span class="bu">len</span>(htmls)<span class="sc">}</span><span class="ss"> HTML(s), </span><span class="sc">{</span><span class="bu">len</span>(htmls[<span class="dv">0</span>])<span class="sc">}</span><span class="ss"> chars"</span>)</span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_parsed.shape)</span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>df_parsed.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>(25, 21)</code></pre>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>df_again <span class="op">=</span> trf6.cpopg_parse(htmls, [<span class="st">"10052295520234063801"</span>])</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>df_again[[<span class="st">"id_cnj"</span>, <span class="st">"processo"</span>, <span class="st">"data_autuacao"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>TRF6 cpopg:   0%|          | 0/1 [00:00&lt;?, ?it/s]TRF6 cpopg: 100%|██████████| 1/1 [00:00&lt;00:00,  1.09it/s]TRF6 cpopg: 100%|██████████| 1/1 [00:00&lt;00:00,  1.09it/s]</code></pre>
 </div>
-<div class="cell-output cell-output-display">
+<div class="cell-output cell-output-stdout">
+<pre><code>got 1 HTML(s), 37871 chars</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code></code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="8">
 <div>
 
 
@@ -807,106 +669,21 @@ Results in first page: 25</code></pre>
 <thead>
 <tr class="header">
 <th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">id_cnj</th>
 <th data-quarto-table-cell-role="th">processo</th>
-<th data-quarto-table-cell-role="th">tipo</th>
-<th data-quarto-table-cell-role="th">classe</th>
-<th data-quarto-table-cell-role="th">assunto</th>
-<th data-quarto-table-cell-role="th">relator</th>
-<th data-quarto-table-cell-role="th">orgao_julgador_colegiado</th>
-<th data-quarto-table-cell-role="th">data_julgamento</th>
-<th data-quarto-table-cell-role="th">data_publicacao</th>
-<th data-quarto-table-cell-role="th">ementa</th>
-<th data-quarto-table-cell-role="th">id</th>
-<th data-quarto-table-cell-role="th">...</th>
-<th data-quarto-table-cell-role="th">origem</th>
-<th data-quarto-table-cell-role="th">id_classe</th>
-<th data-quarto-table-cell-role="th">id_assunto</th>
-<th data-quarto-table-cell-role="th">orgao_julgador</th>
-<th data-quarto-table-cell-role="th">competencia</th>
-<th data-quarto-table-cell-role="th">data_documento</th>
-<th data-quarto-table-cell-role="th">sentido_decisao</th>
-<th data-quarto-table-cell-role="th">especie</th>
-<th data-quarto-table-cell-role="th">sistema_origem</th>
-<th data-quarto-table-cell-role="th">hash_storage</th>
+<th data-quarto-table-cell-role="th">data_autuacao</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">0</td>
-<td>0008207-65.2016.8.14.0000</td>
-<td>Decisão Monocrática</td>
-<td>Agravo de Instrumento</td>
-<td>Dissolução</td>
-<td>MARIA FILOMENA DE ALMEIDA BUARQUE</td>
-<td>1ª Turma de Direito Privado</td>
-<td>NaT</td>
-<td>NaT</td>
-<td></td>
-<td>20170107834038</td>
-<td>...</td>
-<td>Tribunal de Justiça do Estado do Pará</td>
-<td>202</td>
-<td>7664</td>
-<td>MARIA FILOMENA DE ALMEIDA BUARQUE</td>
-<td>1ª Turma de Direito Privado</td>
-<td>2017-03-27</td>
-<td>None</td>
-<td>JUDICIAL</td>
-<td>Libra</td>
-<td>None</td>
-</tr>
-<tr class="even">
-<td data-quarto-table-cell-role="th">1</td>
-<td>0000107-79.2001.8.14.0035</td>
-<td>Decisão Monocrática</td>
-<td>Apelação Cível</td>
-<td>Admissão / Permanência / Despedida</td>
-<td>CONSTANTINO AUGUSTO GUERREIRO</td>
-<td>2ª Turma de Direito Público</td>
-<td>NaT</td>
-<td>NaT</td>
-<td></td>
-<td>20170122307408</td>
-<td>...</td>
-<td>Tribunal de Justiça do Estado do Pará</td>
-<td>198</td>
-<td>10411</td>
-<td>CONSTANTINO AUGUSTO GUERREIRO</td>
-<td>2ª Turma de Direito Público</td>
-<td>2017-03-28</td>
-<td>None</td>
-<td>JUDICIAL</td>
-<td>Libra</td>
-<td>None</td>
-</tr>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">2</td>
-<td>0038403-26.2002.8.14.0301</td>
-<td>Decisão Monocrática</td>
-<td>Apelação Cível</td>
-<td>Cédula de Crédito Rural</td>
-<td>RICARDO FERREIRA NUNES</td>
-<td>4ª Camara Civel Isolada</td>
-<td>NaT</td>
-<td>NaT</td>
-<td></td>
-<td>20170121753150</td>
-<td>...</td>
-<td>Tribunal de Justiça do Estado do Pará</td>
-<td>198</td>
-<td>4964</td>
-<td>RICARDO FERREIRA NUNES</td>
-<td>4ª Camara Civel Isolada</td>
-<td>2017-03-28</td>
-<td>None</td>
-<td>JUDICIAL</td>
-<td>Libra</td>
-<td>None</td>
+<td>10052295520234063801</td>
+<td>1005229-55.2023.4.06.3801</td>
+<td>12/04/2023 15:07:33</td>
 </tr>
 </tbody>
 </table>
 
-<p>3 rows × 21 columns</p>
 </div>
 </div>
 </div>
@@ -1337,13 +1114,13 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="../notebooks/tjmt.html" class="pagination-link" aria-label="TJMT">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">TJMT</span>
+      <a href="../notebooks/trf5.html" class="pagination-link" aria-label="TRF5">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">TRF5</span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../notebooks/tjpb.html" class="pagination-link" aria-label="TJPB">
-        <span class="nav-page-text">TJPB</span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../notebooks/datajud.html" class="pagination-link" aria-label="Datajud">
+        <span class="nav-page-text">Datajud</span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
@@ -1355,7 +1132,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.dev/jtrecenti/juscraper/blob/main/docs/notebooks/tjpa.ipynb" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.dev/jtrecenti/juscraper/blob/main/docs/notebooks/trf6.ipynb" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></div>
     <div class="nav-footer-right">
       &nbsp;
     </div>
