@@ -44,6 +44,59 @@ DETAIL_URL = (
 )
 
 
+def test_akamai_block_raises_dedicated_exception() -> None:
+    """403 ``Access Denied`` (Akamai) vira ``BotChallengeBlockedError`` com mensagem clara."""
+    import pytest as _pt
+
+    from juscraper.core.exceptions import BotChallengeBlockedError
+    from juscraper.courts.trf3.download import _check_bot_challenge
+
+    class FakeResp:
+        status_code = 403
+        url = "https://pje1g.trf3.jus.br/pje/ConsultaPublica/listView.seam"
+        content = (
+            b"<HTML><HEAD><TITLE>Access Denied</TITLE></HEAD><BODY>"
+            b"<H1>Access Denied</H1>"
+            b" Reference&#32;&#35;18&#46;27f62917&#46;1779623119&#46;a59b1f4c"
+            b"</BODY></HTML>"
+        )
+
+    with _pt.raises(BotChallengeBlockedError) as exc_info:
+        _check_bot_challenge(FakeResp())  # type: ignore[arg-type]
+    err = exc_info.value
+    assert err.tribunal == "TRF3"
+    assert err.reference == "18.27f62917.1779623119.a59b1f4c"
+    msg = str(err)
+    assert "TRF3" in msg
+    assert "aguarde" in msg  # orientação de espera presente
+    assert "VPN" in msg or "hotspot" in msg  # orientação de troca de IP
+
+
+def test_check_bot_challenge_ignores_legitimate_403() -> None:
+    """403 sem 'Access Denied' segue para ``raise_for_status`` normalmente."""
+    from juscraper.courts.trf3.download import _check_bot_challenge
+
+    class FakeResp:
+        status_code = 403
+        url = "https://example.com/forbidden"
+        content = b"<html>403 - not authorized</html>"
+
+    # Sem 'Access Denied' no body, a função retorna sem levantar.
+    _check_bot_challenge(FakeResp())  # type: ignore[arg-type]
+
+
+def test_check_bot_challenge_ignores_non_403() -> None:
+    """200/500/etc. nunca disparam a detecção."""
+    from juscraper.courts.trf3.download import _check_bot_challenge
+
+    class FakeResp:
+        status_code = 500
+        url = "https://example.com/x"
+        content = b"Access Denied"  # nem assim — só 403 conta
+
+    _check_bot_challenge(FakeResp())  # type: ignore[arg-type]
+
+
 def test_extract_movs_pagination_returns_none_when_no_slider() -> None:
     """Processes with ≤ 15 movs render no slider — paginator must short-circuit."""
     from juscraper.courts.trf3.download import extract_movs_pagination

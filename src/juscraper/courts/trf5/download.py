@@ -17,6 +17,31 @@ from dataclasses import dataclass
 
 import requests
 
+from ...core.exceptions import BotChallengeBlockedError
+
+_AKAMAI_REF_RE = re.compile(
+    rb"Reference(?:&#32;|\s)(?:&#35;|#)([0-9a-f]+(?:(?:&#46;|\.)[0-9a-f]+)*)"
+)
+
+
+def _check_bot_challenge(resp: requests.Response, tribunal: str = "TRF5") -> None:
+    """Raise :class:`BotChallengeBlockedError` when Akamai blocks the request.
+
+    The Akamai bot manager returns HTTP 403 with a short ``Access Denied`` body
+    and a ``Reference #...`` identifier; no challenge cookie is emitted. Detect
+    that specific shape (not every 403) so legitimate authorization failures
+    keep propagating as ``HTTPError`` via ``raise_for_status``.
+    """
+    if resp.status_code != 403:
+        return
+    head = resp.content[:600]
+    if b"Access Denied" not in head:
+        return
+    m = _AKAMAI_REF_RE.search(head)
+    ref = m.group(1).decode("ascii").replace("&#46;", ".") if m else None
+    raise BotChallengeBlockedError(tribunal, resp.url, reference=ref)
+
+
 BASE_URL = "https://pje1g.trf5.jus.br/pjeconsulta/"
 
 # Browser-realistic header set. TRF5 is more lenient than TRF3 (no Akamai
@@ -41,6 +66,9 @@ BROWSER_HEADERS: dict[str, str] = {
 
 LISTVIEW_PATH = "ConsultaPublica/listView.seam"
 DETAIL_PATH = "ConsultaPublica/DetalheProcessoConsultaPublica/listView.seam"
+DOC_HTML_PATH = (
+    "ConsultaPublica/DetalheProcessoConsultaPublica/documentoSemLoginHTML.seam"
+)
 
 _CA_TOKEN_RE = re.compile(r"ca=([0-9a-f]+)")
 
@@ -159,6 +187,7 @@ def fetch_form(session: requests.Session, timeout: float = 30.0) -> str:
     """``GET`` the form page and return its UTF-8 text."""
     url = BASE_URL + LISTVIEW_PATH
     resp = session.get(url, timeout=timeout)
+    _check_bot_challenge(resp)
     resp.raise_for_status()
     return resp.text
 
@@ -180,6 +209,7 @@ def submit_search(
             "X-Requested-With": "XMLHttpRequest",
         },
     )
+    _check_bot_challenge(resp)
     resp.raise_for_status()
     return resp.text
 
@@ -202,6 +232,7 @@ def fetch_detail(
         timeout=timeout,
         headers={"Referer": BASE_URL + LISTVIEW_PATH},
     )
+    _check_bot_challenge(resp)
     resp.raise_for_status()
     return resp.content.decode("latin-1")
 
@@ -314,6 +345,7 @@ def fetch_movs_page(
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
         },
     )
+    _check_bot_challenge(resp)
     resp.raise_for_status()
     return resp.content.decode("latin-1")
 
@@ -335,6 +367,61 @@ def _extract_movs_rows(fragment_html: str) -> str:
     return fragment_html[start:end]
 
 
+_DOC_URL_RE = re.compile(
+    r"documentoSemLoginHTML\.seam\?ca=([0-9a-f]+)(?:&amp;|&)idProcessoDoc=(\d+)"
+)
+
+
+def extract_documento_urls(detail_html: str) -> list[tuple[str, str]]:
+    """Extract peça download coordinates from the detail HTML.
+
+    Returns ``[(ca_token, id_processo_doc), ...]`` in the order they appear in
+    the ``processoDocumentoGridTab`` (documentos juntados ao processo) table.
+    De-duplicates by ``id_processo_doc`` — the same document may appear linked
+    from both the movs table and the documentos table, but we only want one
+    download per peça.
+
+    Each peça carries its own ``ca`` token; the token is bound to the Seam
+    conversation that produced the detail HTML, so the caller MUST issue the
+    download requests from the same ``requests.Session`` that fetched the
+    detail (otherwise PJe redirects to ``/login.seam``).
+    """
+    seen: set[str] = set()
+    out: list[tuple[str, str]] = []
+    for m in _DOC_URL_RE.finditer(detail_html):
+        ca, doc_id = m.group(1), m.group(2)
+        if doc_id in seen:
+            continue
+        seen.add(doc_id)
+        out.append((ca, doc_id))
+    return out
+
+
+def fetch_documento(
+    session: requests.Session,
+    ca_token: str,
+    id_processo_doc: str,
+    timeout: float = 30.0,
+) -> bytes:
+    """``GET`` a peça's HTML viewer and return the raw bytes.
+
+    The endpoint serves XHTML (ISO-8859-1) with the document content rendered
+    inline via the PJe ProseMirror viewer — images are inline as ``data:`` URLs,
+    so the returned payload is self-contained and can be persisted as a single
+    ``.html`` file.
+    """
+    url = BASE_URL + DOC_HTML_PATH
+    resp = session.get(
+        url,
+        params={"ca": ca_token, "idProcessoDoc": id_processo_doc, "codigo": ""},
+        timeout=timeout,
+        headers={"Referer": BASE_URL + DETAIL_PATH},
+    )
+    _check_bot_challenge(resp)
+    resp.raise_for_status()
+    return resp.content
+
+
 def merge_movs_pages(detail_html: str, extra_pages: list[str]) -> str:
     """Splice rows from pages 2..N into page 1's ``processoEvento`` tbody.
 
@@ -351,4 +438,87 @@ def merge_movs_pages(detail_html: str, extra_pages: list[str]) -> str:
     if end == -1:
         return detail_html
     appended = "".join(_extract_movs_rows(p) for p in extra_pages)
+    return detail_html[:end] + appended + detail_html[end:]
+
+# ---------------------------------------------------------------------------
+# Documentos juntados pagination
+# ---------------------------------------------------------------------------
+#
+# A tabela ``processoDocumentoGridTab`` ("Documentos juntados ao processo")
+# também é paginada (15 linhas por página, mesmo widget Richfaces dos movs).
+# A diferença é só de marcador: o slider dos docs aparece APÓS o panel
+# ``processoDocumentoGridTabPanel`` e é o último grid paginado da página,
+# então o ``region`` vai do panel até o fim do HTML. ``MovsPagination`` é
+# reutilizado porque o shape do POST é idêntico.
+
+
+def extract_docs_pagination(detail_html: str) -> MovsPagination | None:  # pylint: disable=too-many-return-statements
+    """Detect Richfaces slider on the documentos juntados table.
+
+    Returns ``None`` quando o processo tem ≤ 15 documentos (PJe não renderiza
+    o slider nesse caso). O shape devolvido é o mesmo de
+    :func:`extract_movs_pagination` — :func:`fetch_movs_page` aceita qualquer
+    um dos dois.
+    """
+    panel_idx = detail_html.find("processoDocumentoGridTabPanel")
+    if panel_idx == -1:
+        return None
+    region = detail_html[panel_idx:]
+    sl_start = region.find("new Richfaces.Slider")
+    if sl_start == -1:
+        return None
+    block = region[sl_start : sl_start + 2500]
+    sl = re.match(r'new Richfaces\.Slider\("([^"]+)"', block)
+    if not sl:
+        return None
+    slider_id = sl.group(1)
+    max_match = re.search(r"'maxValue':'(\d+)'", block)
+    if not max_match:
+        return None
+    sim_match = re.search(r"similarityGroupingId\\':\\'([^']+)\\'", block)
+    cont_match = re.search(r"containerId\\':\\'([^']+)\\'", block)
+    if not (sim_match and cont_match):
+        return None
+    vs_match = _VIEW_STATE_RE.search(detail_html)
+    if not vs_match:
+        return None
+    form_id = ":".join(slider_id.split(":")[:-1])
+    return MovsPagination(
+        form_id=form_id,
+        slider_input_name=slider_id,
+        ajax_source_name=sim_match.group(1),
+        container_id=cont_match.group(1),
+        max_pages=int(max_match.group(1)),
+        view_state=vs_match.group(1),
+    )
+
+
+_DOCS_TBODY_OPEN_RE = re.compile(
+    r'(<tbody[^>]*\bid="[^"]*:processoDocumentoGridTab:tb"[^>]*>)', re.IGNORECASE
+)
+
+
+def _extract_docs_rows(fragment_html: str) -> str:
+    """Return the inner HTML of the ``processoDocumentoGridTab:tb`` tbody."""
+    m = _DOCS_TBODY_OPEN_RE.search(fragment_html)
+    if not m:
+        return ""
+    start = m.end()
+    end = fragment_html.find(_TBODY_CLOSE, start)
+    if end == -1:
+        return ""
+    return fragment_html[start:end]
+
+
+def merge_docs_pages(detail_html: str, extra_pages: list[str]) -> str:
+    """Splice rows from docs pages 2..N into page 1's tbody."""
+    if not extra_pages:
+        return detail_html
+    m = _DOCS_TBODY_OPEN_RE.search(detail_html)
+    if not m:
+        return detail_html
+    end = detail_html.find(_TBODY_CLOSE, m.end())
+    if end == -1:
+        return detail_html
+    appended = "".join(_extract_docs_rows(p) for p in extra_pages)
     return detail_html[:end] + appended + detail_html[end:]

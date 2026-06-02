@@ -48,3 +48,18 @@ def test_cpopg_returns_all_movs_pages() -> None:
     # we're posting the same page twice instead of advancing.
     pairs = [(m["data"], m["descricao"]) for m in movs]
     assert len(pairs) == len(set(pairs)), "duplicate movs after pagination"
+
+
+@pytest.mark.integration
+def test_cpopg_download_pecas_grava_arquivos(tmp_path) -> None:
+    """End-to-end: ``cpopg(download_pecas=True)`` grava arquivos e devolve coluna ``pecas``."""
+    scraper = jus.scraper("trf3", sleep_time=0.5)
+    df = scraper.cpopg(_KNOWN_GOOD_CNJ, download_pecas=True, diretorio=str(tmp_path))
+    assert "pecas" in df.columns
+    saved = df.iloc[0]["pecas"]
+    assert saved, "processo conhecido deveria ter ao menos uma peça"
+    import os
+    for p in saved:
+        assert os.path.isfile(p)
+        assert os.path.getsize(p) > 0
+        assert p.endswith(".html")
