@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-f2b092d4c1ad66f51284021528000371.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-d64a361144e6ff5bcb694466201e5ed0.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -252,8 +252,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>relator</td>
-<td><a href="`str`">str</a></td>
-<td>Nome do relator. <strong>Aceito por compat de API</strong>, mas hoje o backend nao expoe campo de texto livre para relator (virou multi-select de IDs); o filtro e descartado pelo Projudi/PrimeFaces. Refs #158 (deprecation/remocao planejada).</td>
+<td><a href="`list`">list</a>[<a href="`str`">str</a>] | None</td>
+<td>Lista de nomes regimentais de magistrados (ex.: <code>["ALMIRO PADILHA", "ERICK LINHARES"]</code>). O backend usa um <code>SelectManyCheckbox</code> (<code>menuinicial:relatorList</code>) cujos values sao beans Java serializados; o scraper baixa o form GET inicial e resolve cada nome regimental para o bean correspondente. Match insensivel a caixa e diacritico — <code>"cristovao suter"</code>, <code>"Cristóvão Suter"</code> e <code>"CRISTÓVÃO SUTER"</code> resolvem para o mesmo magistrado. <code>ValueError</code> se algum nome nao bater (a mensagem lista os nomes na forma canonica: UPPERCASE com acento). Refs #158.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
@@ -295,6 +295,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Quando um kwarg desconhecido e passado.</td>
 </tr>
 <tr class="even">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>Quando <code>relator</code> contem nome nao encontrado no form.</td>
+</tr>
+<tr class="odd">
 <td></td>
 <td><a href="`ValidationError`">ValidationError</a></td>
 <td>Quando um filtro tem formato invalido.</td>

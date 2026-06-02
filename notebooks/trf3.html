@@ -74,7 +74,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-f2b092d4c1ad66f51284021528000371.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-d64a361144e6ff5bcb694466201e5ed0.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -407,6 +407,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#looking-up-multiple-processes-at-once" id="toc-looking-up-multiple-processes-at-once" class="nav-link" data-scroll-target="#looking-up-multiple-processes-at-once">Looking up multiple processes at once</a></li>
   <li><a href="#handling-processes-the-public-portal-cannot-return" id="toc-handling-processes-the-public-portal-cannot-return" class="nav-link" data-scroll-target="#handling-processes-the-public-portal-cannot-return">Handling processes the public portal cannot return</a></li>
   <li><a href="#splitting-download-from-parse" id="toc-splitting-download-from-parse" class="nav-link" data-scroll-target="#splitting-download-from-parse">Splitting download from parse</a></li>
+  <li><a href="#downloading-peças-anexos" id="toc-downloading-peças-anexos" class="nav-link" data-scroll-target="#downloading-peças-anexos">Downloading peças (anexos)</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.dev/jtrecenti/juscraper/blob/main/docs/notebooks/trf3.ipynb" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></nav>
     </div>
@@ -461,7 +462,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <section id="looking-up-a-single-process" class="level2">
 <h2 class="anchored" data-anchor-id="looking-up-a-single-process">Looking up a single process</h2>
-<div id="c5d45b20" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-04-29T17:23:37.655533Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-04-29T17:23:37.655533Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T17:23:38.172216Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T17:23:38.172216Z&quot;}" data-execution_count="1">
+<div id="c5d45b20" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-05-24T12:24:42.511501Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-05-24T12:24:42.511501Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-24T12:24:43.199207Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-24T12:24:43.198196Z&quot;}" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>trf3 <span class="op">=</span> jus.scraper(<span class="st">"trf3"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -690,6 +691,35 @@ TRF3 cpopg: 100%|██████████| 1/1 [00:00&lt;00:00,  2.43it/s]
 </table>
 
 </div>
+</div>
+</div>
+</section>
+<section id="downloading-peças-anexos" class="level2">
+<h2 class="anchored" data-anchor-id="downloading-peças-anexos">Downloading peças (anexos)</h2>
+<p>By default <code>cpopg</code> returns metadata only: process info, parties, movements, and a <code>documentos</code> list (id / date / description). The actual peça files (HTML viewer payloads) are <strong>not</strong> downloaded.</p>
+<p>To also download the peças, pass <code>download_pecas=True</code> and a <code>diretorio</code>. Each peça is saved as <code>&lt;diretorio&gt;/&lt;cnj&gt;/&lt;id_processo_doc&gt;.html</code> (a self- contained XHTML with images embedded as <code>data:</code> URLs), and the returned DataFrame gains a <code>pecas</code> column with the list of saved paths.</p>
+<p>The flag lives on <code>cpopg</code> (instead of a separate <code>cpopg_download_pecas</code> method) because the <code>ca</code> tokens that identify each peça are bound to the Seam conversation that produced the detail page — peças must be fetched from the same <code>requests.Session</code>. A separate method would have to re-issue the detail GET internally just to obtain fresh tokens; folding the optional download into <code>cpopg</code> avoids that duplicate round-trip.</p>
+<div id="pecas-code-72247" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-05-24T12:24:43.201208Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-05-24T12:24:43.201208Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-24T12:24:48.284574Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-24T12:24:48.283553Z&quot;}" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tempfile</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> tempfile.TemporaryDirectory() <span class="im">as</span> tmp:</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    df_pecas <span class="op">=</span> trf3.cpopg(</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">"5005946-09.2025.4.03.6324"</span>,</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>        download_pecas<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>        diretorio<span class="op">=</span>tmp,</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>    saved <span class="op">=</span> df_pecas.iloc[<span class="dv">0</span>][<span class="st">"pecas"</span>]</span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"saved </span><span class="sc">{</span><span class="bu">len</span>(saved)<span class="sc">}</span><span class="ss"> peça(s)"</span>)</span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> p <span class="kw">in</span> saved[:<span class="dv">3</span>]:</span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="st">" "</span>, p)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>TRF3 cpopg:   0%|          | 0/1 [00:00&lt;?, ?it/s]TRF3 cpopg: 100%|██████████| 1/1 [00:00&lt;00:00,  1.31it/s]TRF3 cpopg: 100%|██████████| 1/1 [00:00&lt;00:00,  1.31it/s]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>saved 4 peça(s)
+  C:\Users\jtrec\AppData\Local\Temp\tmpkxwx55p9\50059460920254036324\582695147.html
+  C:\Users\jtrec\AppData\Local\Temp\tmpkxwx55p9\50059460920254036324\581769486.html
+  C:\Users\jtrec\AppData\Local\Temp\tmpkxwx55p9\50059460920254036324\578698643.html</code></pre>
 </div>
 </div>
 

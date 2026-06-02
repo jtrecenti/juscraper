@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-f2b092d4c1ad66f51284021528000371.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-d64a361144e6ff5bcb694466201e5ed0.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -192,7 +192,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td><a href="#juscraper.courts.trf3.client.TRF3Scraper.cpopg">cpopg</a></td>
-<td>High-level <code>cpopg</code> lookup: download + parse.</td>
+<td>Consulta CPOPG: baixa o detalhe, parseia e (opcional) baixa peças.</td>
 </tr>
 <tr class="even">
 <td><a href="#juscraper.courts.trf3.client.TRF3Scraper.cpopg_download">cpopg_download</a></td>
@@ -206,9 +206,111 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <section id="juscraper.courts.trf3.client.TRF3Scraper.cpopg" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.trf3.client.TRF3Scraper.cpopg">cpopg</h3>
-<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>courts.trf3.client.TRF3Scraper.cpopg(id_cnj, <span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>High-level <code>cpopg</code> lookup: download + parse.</p>
-<p>Accepts a single CNJ or a list. Returns a DataFrame with one row per process; columns include <code>id_cnj</code>, <code>processo</code>, <code>classe</code>, <code>assunto</code>, <code>data_distribuicao</code>, <code>orgao_julgador</code>, <code>jurisdicao</code>, <code>polo_ativo</code>, <code>polo_passivo</code>, <code>movimentacoes</code> and <code>documentos</code>.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>courts.trf3.client.TRF3Scraper.cpopg(</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    id_cnj,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    download_pecas<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    diretorio<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Consulta CPOPG: baixa o detalhe, parseia e (opcional) baixa peças.</p>
+<p>Por default retorna apenas os metadados + movimentações + lista de documentos (id/data/descrição). Para também baixar os arquivos das peças (HTML viewer do PJe), passe <code>download_pecas=True</code> + um <code>diretorio</code>. As peças vão para <code>&lt;diretorio&gt;/&lt;cnj&gt;/&lt;id&gt;.html</code> e a coluna <code>pecas</code> no DataFrame ganha a lista de caminhos por processo.</p>
+<p><code>download_pecas</code> vive como flag aqui (em vez de um <code>cpopg_download_pecas</code> separado) porque os tokens <code>ca</code> que identificam cada peça estão amarrados à conversa Seam que produziu o detalhe — peças precisam ser baixadas na mesma <code>requests.Session</code>. Manter as duas etapas numa só chamada evita refazer o GET do detalhe para cada peça.</p>
+<section id="parameters" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>id_cnj</td>
+<td><a href="`str`">str</a> | <a href="`list`">list</a>[<a href="`str`">str</a>]</td>
+<td>CNJ único ou lista.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>download_pecas</td>
+<td><a href="`bool`">bool</a></td>
+<td>Se <code>True</code>, baixa as peças junto. Default <code>False</code>.</td>
+<td><code>False</code></td>
+</tr>
+<tr class="odd">
+<td>diretorio</td>
+<td><a href="`str`">str</a> | None</td>
+<td>Onde gravar as peças. Sobrescreve <code>download_path</code> para esta chamada. Quando omitido, usa <code>download_path</code> (que vira um <code>tempfile.mkdtemp()</code> se nada for passado ao construtor).</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>DataFrame com uma linha por CNJ. Colunas: <code>id_cnj</code>, <code>processo</code>,</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>classe</code>, <code>assunto</code>, <code>data_distribuicao</code>, <code>orgao_julgador</code>,</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>jurisdicao</code>, <code>polo_ativo</code>, <code>polo_passivo</code>, <code>movimentacoes</code>,</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>documentos</code> (metadados). Quando <code>download_pecas=True</code>, ganha</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>ainda a coluna <code>pecas</code> com a lista de caminhos salvos.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`TypeError`">TypeError</a></td>
+<td>Kwarg desconhecido.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`juscraper.core.exceptions.BotChallengeBlockedError`">BotChallengeBlockedError</a></td>
+<td>Akamai bloqueou o IP (HTTP 403 “Access Denied”). Aguarde alguns minutos ou troque de IP.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="juscraper.courts.trf3.client.TRF3Scraper.cpopg_download" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.trf3.client.TRF3Scraper.cpopg_download">cpopg_download</h3>
