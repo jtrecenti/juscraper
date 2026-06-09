@@ -26,6 +26,13 @@ _HIDDEN_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Bloco <select name="...cmbAnoInicio">...</select> e suas <option value="AAAA">.
+_ANO_SELECT_RE = re.compile(
+    r'<select[^>]*name="ctl00\$ContentPlaceHolder1\$cmbAnoInicio".*?</select>',
+    re.IGNORECASE | re.DOTALL,
+)
+_ANO_OPTION_RE = re.compile(r'<option[^>]*value="(?P<value>[^"]*)"', re.IGNORECASE)
+
 
 def extract_viewstate_fields(html: str) -> dict:
     """Extrai os quatro hidden fields exigidos pelo POST ASP.NET do TJRJ.
@@ -44,6 +51,35 @@ def extract_viewstate_fields(html: str) -> dict:
     for match in _HIDDEN_RE.finditer(html):
         fields[match.group("name")] = match.group("value")
     return fields
+
+
+def extract_default_year(html: str) -> str:
+    """Devolve o ano-padrao do form — a primeira ``<option>`` de ``cmbAnoInicio``.
+
+    O backend do TJRJ passou a exigir ``cmbAnoInicio``/``cmbAnoFim`` nao-vazios:
+    um POST com ano em branco dispara ``HTTP 500`` ja na submissao do form
+    (refs #278). Nenhuma ``<option>`` do dropdown vem marcada com ``selected``,
+    entao o ``<select>`` do navegador submete a primeira opcao (a mais nova) —
+    o ano corrente. Replicamos esse default em vez de usar ``date.today().year``
+    porque o valor parseado e garantidamente uma opcao que o backend aceita
+    (``date.today()`` poderia enviar um ano ainda ausente do dropdown na virada
+    do ano e cair em erro de validacao).
+
+    Fallback: se o ``<select>`` nao parsear (formato mudou), devolve o maior
+    ``\\d{4}`` encontrado no bloco; em ultimo caso, o maior do HTML inteiro.
+    Nunca devolve ``""`` — string vazia e exatamente o que provoca o 500.
+    """
+    block_match = _ANO_SELECT_RE.search(html)
+    block = block_match.group(0) if block_match else html
+    values = [
+        m.group("value")
+        for m in _ANO_OPTION_RE.finditer(block)
+        if m.group("value").strip()
+    ]
+    if values:
+        return values[0]
+    anos = re.findall(r"\b(\d{4})\b", block) or re.findall(r"\b(\d{4})\b", html)
+    return max(anos) if anos else ""
 
 
 def build_cjsg_payload(
@@ -114,11 +150,17 @@ def _init_session(
     """Submit the search form so the result XHR has a valid server session."""
     resp = request_fn("GET", FORM_URL, timeout=30)
     hidden = extract_viewstate_fields(resp.text)
+    # O backend exige cmbAnoInicio/cmbAnoFim nao-vazios (refs #278); quando o
+    # usuario nao filtra por ano, replicamos o padrao do site preenchendo ambos
+    # com o ano corrente (a opcao default do dropdown). O preenchimento e por
+    # campo: passar so um dos dois (ex.: ano_inicio=2020 sem ano_fim) faz o
+    # outro virar o ano corrente, resultando num intervalo 2020..ano-corrente.
+    default_year = extract_default_year(resp.text)
     data = build_cjsg_payload(
         hidden=hidden,
         pesquisa=pesquisa,
-        ano_inicio=ano_inicio or "",
-        ano_fim=ano_fim or "",
+        ano_inicio=ano_inicio or default_year,
+        ano_fim=ano_fim or default_year,
         competencia=competencia,
         origem=origem,
         tipo_acordao=tipo_acordao,
