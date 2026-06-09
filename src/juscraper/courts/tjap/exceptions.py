@@ -22,10 +22,14 @@ class TJAPApiError(HTTPSemanticError):
     def __init__(self, mensagem: str, detalhe: str | None = None):
         self.mensagem = mensagem
         self.detalhe = detalhe
+        super().__init__(self._build_message(mensagem, detalhe))
+
+    @staticmethod
+    def _build_message(mensagem: str, detalhe: str | None) -> str:
         msg = f"TJAP (Tucujuris) devolveu erro: {mensagem!r}."
         if detalhe:
             msg += f" Detalhe: {detalhe!r}"
-        super().__init__(msg)
+        return msg
 
 
 class TJAPSecurityCheckError(TJAPApiError):
@@ -38,12 +42,12 @@ class TJAPSecurityCheckError(TJAPApiError):
     pela API HTTP pública. Ver issue #279.
     """
 
-    def __init__(self, mensagem: str, detalhe: str | None = None):
-        super().__init__(mensagem, detalhe)
-        self.args = (
+    @staticmethod
+    def _build_message(mensagem: str, detalhe: str | None) -> str:
+        return (
             f"TJAP (Tucujuris) bloqueou a consulta de jurisprudência: {mensagem!r}. "
             "O tribunal passou a exigir um CAPTCHA Cloudflare Turnstile na busca, "
             "validado server-side. O raspador (HTTP puro, sem browser) não consegue "
             "produzir esse token, então a coleta de cjsg do TJAP não funciona pela "
-            "API pública. Ver issue #279.",
+            "API pública. Ver issue #279."
         )
