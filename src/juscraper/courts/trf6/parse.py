@@ -176,7 +176,7 @@ def parse_detail(html: str) -> dict[str, Any]:
     ``polo_passivo``, ``mpf``, ``perito`` (each a list), ``movimentacoes``
     (list). Any pole the table doesn't have comes back as an empty list.
     """
-    soup = BeautifulSoup(html, "lxml")
+    soup = BeautifulSoup(html, "html.parser")
     record: dict[str, Any] = _parse_capa(soup)
     record["assuntos"] = _parse_assuntos(soup)
     poles = _parse_partes(soup)
