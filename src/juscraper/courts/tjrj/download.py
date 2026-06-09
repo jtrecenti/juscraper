@@ -152,7 +152,9 @@ def _init_session(
     hidden = extract_viewstate_fields(resp.text)
     # O backend exige cmbAnoInicio/cmbAnoFim nao-vazios (refs #278); quando o
     # usuario nao filtra por ano, replicamos o padrao do site preenchendo ambos
-    # com o ano corrente (a opcao default do dropdown).
+    # com o ano corrente (a opcao default do dropdown). O preenchimento e por
+    # campo: passar so um dos dois (ex.: ano_inicio=2020 sem ano_fim) faz o
+    # outro virar o ano corrente, resultando num intervalo 2020..ano-corrente.
     default_year = extract_default_year(resp.text)
     data = build_cjsg_payload(
         hidden=hidden,

@@ -163,6 +163,22 @@ def test_extract_default_year_uses_newest_dropdown_option():
     assert extract_default_year(_form_html()) == "2026"
 
 
+def test_extract_default_year_fallback_sem_select():
+    """Sem o ``<select>`` de ``cmbAnoInicio``, cai no maior ``\\d{4}`` do HTML."""
+    html = "<html><body><p>rodape 2019</p><p>atualizado em 2030</p></body></html>"
+    assert extract_default_year(html) == "2030"
+
+
+def test_extract_default_year_fallback_select_sem_option_valida():
+    """``<select>`` presente mas sem ``<option value>`` cai no maior ``\\d{4}``."""
+    html = (
+        '<select name="ctl00$ContentPlaceHolder1$cmbAnoInicio">'
+        "<option>2021</option><option>2027</option>"
+        "</select>"
+    )
+    assert extract_default_year(html) == "2027"
+
+
 @responses.activate
 def test_cjsg_sem_ano_usa_ano_corrente(mocker):
     """Sem ``ano_inicio``/``ano_fim``, o POST carrega o ano corrente (refs #278).
@@ -189,3 +205,29 @@ def test_cjsg_sem_ano_usa_ano_corrente(mocker):
     assert "ctl00%24ContentPlaceHolder1%24cmbAnoFim=2026" in body
     # Nunca vazio — vazio e exatamente o que disparava o 500.
     assert "ctl00%24ContentPlaceHolder1%24cmbAnoInicio=&" not in body
+
+
+@responses.activate
+def test_cjsg_ano_parcial_completa_o_omitido_com_ano_corrente(mocker):
+    """So ``ano_inicio`` => ``ano_fim`` vira o ano corrente (refs #278).
+
+    O preenchimento do default e por campo: o ano explicito e respeitado e o
+    omitido recebe o ano mais novo do dropdown, resultando num intervalo
+    ``2020..ano-corrente`` em vez do antigo ``cmbAnoFim`` vazio (que disparava
+    o 500). O contrato fixa essa semantica assimetrica.
+    """
+    mocker.patch("time.sleep")
+    _add_form_get()
+    _add_form_post("dano moral", ano_inicio="2020", ano_fim="2026")
+    _add_xhr(0, "xhr_page_01.json")
+
+    jus.scraper("tjrj").cjsg("dano moral", ano_inicio=2020, paginas=1)
+
+    post_calls = [c for c in responses.calls if c.request.method == "POST"
+                  and c.request.url.startswith(FORM_URL)]
+    assert len(post_calls) == 1
+    body = post_calls[0].request.body or ""
+    if isinstance(body, bytes):
+        body = body.decode("utf-8")
+    assert "ctl00%24ContentPlaceHolder1%24cmbAnoInicio=2020" in body
+    assert "ctl00%24ContentPlaceHolder1%24cmbAnoFim=2026" in body
