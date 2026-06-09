@@ -148,7 +148,9 @@ class PdpjScraper(BaseScraper):
         """
         InputAuthPdpj(token=token)
         try:
-            decoded = jwt.decode(
+            # Decodifica so para validar formato/expiracao; o conteudo do JWT
+            # nao e logado (hardening, #270).
+            jwt.decode(
                 token,
                 options={"verify_signature": False, "verify_aud": False},
                 algorithms=["RS256", "HS256", "ES256", "none"],
@@ -161,7 +163,7 @@ class PdpjScraper(BaseScraper):
         self.token = token
         self.session.headers["Authorization"] = f"Bearer {token}"
         if self.verbose:
-            logger.info("PDPJ: token JWT aceito (sub=%s).", decoded.get("sub"))
+            logger.info("PDPJ: token JWT aceito.")
         return True
 
     def _check_auth(self) -> None:

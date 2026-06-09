@@ -7,6 +7,10 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Security
+
+- Hardening de logging nos agregadores JusBR e PDPJ: logs em modo verbose/DEBUG deixam de emitir credenciais. O header `Authorization` (e demais headers sensíveis) passa a ser redigido como `[REDACTED]` antes de ir para o log no download do JusBR; o dump claim-a-claim do JWT (`verbose > 1`) vira apenas a contagem de claims; e o `sub` do JWT deixa de ser logado no `auth` do PDPJ. Redação centralizada no novo helper `juscraper.utils.logging_cfg.redact_headers`, também adotado pelo Datajud. Refs #270.
+
 ### Added
 
 - Raspador TRF6 (`cpopg` — consulta pública de processos de 1º grau via eproc). Acessa o sistema eproc da Seção Judiciária de Minas Gerais em `eproc1g.trf6.jus.br/eproc/`. O formulário é gated por captcha de texto (imagem PNG embutida inline em base64 no HTML do form, validado server-side); o scraper resolve usando o pacote opcional [`txtcaptcha`](https://github.com/jtrecenti/txtcaptcha) (CRNN pretrained do HuggingFace, baixado on-demand e cacheado). Cada captcha é vinculado ao cookie `PHPSESSID`, então cada nova tentativa após rejeição faz um GET fresco do form para obter um captcha novo (controlado por `max_captcha_attempts`, default 3). API: `cpopg(id_cnj)` aceita um CNJ ou lista; devolve `pd.DataFrame` com colunas `id_cnj`, `processo`, `classe`, `data_autuacao`, `situacao`, `magistrado`, `orgao_julgador`, `assuntos`, `polo_ativo`, `polo_passivo`, `mpf`, `perito`, `movimentacoes`. Implementação completamente independente em `courts/trf6/` (`client.py`, `download.py`, `parse.py`, `schemas.py`) — sem infra compartilhada com TRF3/TRF5 ou outros tribunais (mesma justificativa: tribunais podem trocar de sistema). Schema pydantic com `extra='forbid'` no Input. Samples HTML em `tests/trf6/samples/cpopg/` (form_initial, detail_normal, search_no_results, search_bad_captcha) capturados via `tests/fixtures/capture/trf6.py`. Cobertura: contrato offline com captcha solver mockado (5 testes incluindo retry após rejeição e fail após N tentativas), schema, integração (`@pytest.mark.integration`).

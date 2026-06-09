@@ -68,8 +68,7 @@ class JusbrScraper(HTTPScraper):
             if self.verbose > 0:
                 logger.info("Token JWT definido e decodificado com sucesso!")
                 if self.verbose > 1:
-                    for k, v in decoded.items():
-                        logger.debug("  Token claim %s: %s", k, v)
+                    logger.debug("  Token decodificado com %d claims.", len(decoded))
             return True
         except jwt.ExpiredSignatureError as exc:
             logger.error("Token JWT expirado.")
