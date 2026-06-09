@@ -222,6 +222,39 @@ def _get_total_pages(html: str) -> int:
     return n if n is not None else 1
 
 
+# JSF auto-generates the numeric segment of the results datatable id
+# (``formPesquisa:j_idtNNN:dataTablePesquisa``) and it shifts whenever the
+# page's component tree changes server-side (observed drift j_idt159 -> j_idt158
+# in 2026-06). Hardcoding it silently breaks pagination: the AJAX POST targets a
+# component that no longer exists and the backend replies with an opaque,
+# unparseable partial-response, so every page past the first yields zero rows.
+# Discover it from the rendered results page instead. Tried in cascade per the
+# project rule for tribunal-page extraction (see CLAUDE.md). The ``(?!\w)``
+# lookahead stops the match before ``dataTablePesquisa2`` (the second, distinct
+# results table) and ``dataTablePesquisa_data`` (the tbody), pinning the base id.
+_DATATABLE_ID_SELECTORS: tuple[re.Pattern[str], ...] = (
+    re.compile(r'id="(formPesquisa:j_idt\d+:dataTablePesquisa)(?!\w)'),
+    re.compile(r"(formPesquisa:j_idt\d+:dataTablePesquisa)(?!\w)"),
+    re.compile(r"(formPesquisa:[\w-]+:dataTablePesquisa)(?!\w)"),
+)
+
+
+def _extract_datatable_id(html: str) -> str:
+    """Discover the JSF id of the results datatable from the rendered page.
+
+    Cascade of selectors (most specific first) so a change in how the id is
+    surfaced does not silently fall back to a stale hardcoded value.
+    """
+    for pattern in _DATATABLE_ID_SELECTORS:
+        match = pattern.search(html)
+        if match:
+            return match.group(1)
+    raise RuntimeError(
+        "Could not find the results datatable id "
+        "(formPesquisa:j_idtNNN:dataTablePesquisa) on the TJRR results page."
+    )
+
+
 def _paginate(
     request_fn: RequestFn,
     html: str,
@@ -234,17 +267,18 @@ def _paginate(
         raise RuntimeError("Could not find ViewState for pagination.")
 
     viewstate = vs_input["value"]
+    datatable_id = _extract_datatable_id(html)
     rows = RESULTS_PER_PAGE
     first = (page - 1) * rows
 
     data = {
         "javax.faces.partial.ajax": "true",
-        "javax.faces.source": "formPesquisa:j_idt159:dataTablePesquisa",
-        "javax.faces.partial.execute": "formPesquisa:j_idt159:dataTablePesquisa",
-        "javax.faces.partial.render": "formPesquisa:j_idt159:dataTablePesquisa",
-        "formPesquisa:j_idt159:dataTablePesquisa_pagination": "true",
-        "formPesquisa:j_idt159:dataTablePesquisa_first": str(first),
-        "formPesquisa:j_idt159:dataTablePesquisa_rows": str(rows),
+        "javax.faces.source": datatable_id,
+        "javax.faces.partial.execute": datatable_id,
+        "javax.faces.partial.render": datatable_id,
+        f"{datatable_id}_pagination": "true",
+        f"{datatable_id}_first": str(first),
+        f"{datatable_id}_rows": str(rows),
         "formPesquisa": "formPesquisa",
         "javax.faces.ViewState": viewstate,
     }
