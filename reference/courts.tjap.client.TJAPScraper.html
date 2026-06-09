@@ -236,6 +236,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
 <p>pd.DataFrame</p>
 </section>
+<section id="raises" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
+<p>TJAPSecurityCheckError Quando o TJAP devolve “A verificação de segurança falhou” — desde ~2026 a busca exige um CAPTCHA Cloudflare Turnstile, validado server-side, que o raspador HTTP não consegue produzir (issue #279). TJAPApiError Para qualquer outro envelope de erro (<code>status == "ERRO"</code>) do Tucujuris. Busca com zero resultados devolve DataFrame vazio.</p>
+</section>
 </section>
 <section id="juscraper.courts.tjap.client.TJAPScraper.cjsg_download" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjap.client.TJAPScraper.cjsg_download">cjsg_download</h3>
@@ -259,6 +263,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="returns-1" class="level4 doc-section doc-section-returns">
 <h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
 <p>list List of raw JSON responses (one per page).</p>
+</section>
+<section id="raises-1" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-1">Raises</h4>
+<p>TJAPSecurityCheckError Quando o TJAP devolve “A verificação de segurança falhou” (CAPTCHA Cloudflare Turnstile exigido desde ~2026; issue #279). TJAPApiError Para qualquer outro envelope de erro (<code>status == "ERRO"</code>) do Tucujuris. Busca com zero resultados devolve lista sem registros.</p>
 </section>
 </section>
 <section id="juscraper.courts.tjap.client.TJAPScraper.cjsg_parse" class="level3">

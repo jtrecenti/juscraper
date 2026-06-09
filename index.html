@@ -508,7 +508,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>TJAP</td>
-<td>cjsg</td>
+<td>cjsg ⚠️</td>
 </tr>
 <tr class="odd">
 <td>TJCE</td>
@@ -608,6 +608,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
+<blockquote class="blockquote">
+<p>⚠️ <strong>TJAP — <code>cjsg</code> unavailable:</strong> since ~2026 the TJAP jurisprudence search (Tucujuris platform) requires a <a href="https://www.cloudflare.com/products/turnstile/">Cloudflare Turnstile</a> CAPTCHA, validated server-side. Because the scraper issues plain HTTP requests (no browser), it cannot produce the token and the backend replies <code>"A verificação de segurança falhou"</code>. In that case <code>cjsg</code> raises <code>TJAPSecurityCheckError</code> with an explanation instead of silently returning empty. There is no workaround through the public API. See <a href="https://github.com/jtrecenti/juscraper/issues/279">issue #279</a>.</p>
+</blockquote>
 </section>
 <section id="agregadores-disponíveis" class="level3">
 <h3 class="anchored" data-anchor-id="agregadores-disponíveis">Agregadores Disponíveis</h3>
