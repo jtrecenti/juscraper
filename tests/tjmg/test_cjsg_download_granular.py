@@ -14,7 +14,11 @@ conforme pedido explicito da issue #159.
 """
 from __future__ import annotations
 
+import os
+import re
 import sys
+import tempfile
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -27,7 +31,7 @@ from tests._helpers import query_param_subset_matcher
 
 def _build_params_defaults(**overrides):
     """Argumentos padrao para ``_build_params``; cada teste sobrescreve o que importa."""
-    kwargs = dict(
+    kwargs: dict[str, Any] = dict(
         pesquisa="termo",
         pagina=1,
         total=1,
@@ -265,3 +269,54 @@ class TestSolveCaptcha:
             _solve_captcha(request_fn, session)
         # O import e a primeira coisa: nenhum request foi disparado.
         request_fn.assert_not_called()
+
+
+class TestSolveCaptchaTempFile:
+    """Regressao da issue #271 (CWE-377): a imagem do captcha nao pode ir
+    para um caminho previsivel em ``/tmp``.
+
+    A gravacao usa ``tempfile.NamedTemporaryFile`` (criacao atomica, nome
+    imprevisivel, sem seguir symlink pre-criado). Aqui capturamos o caminho
+    repassado ao ``decrypt`` e afirmamos que (1) vive sob o tempdir do
+    sistema com o prefixo esperado, (2) o basename **nao** casa o padrao
+    previsivel antigo ``tjmg_captcha_<digits>.png``, e (3) o arquivo e
+    removido apos a decodificacao.
+    """
+
+    def test_usa_tempfile_atomico_e_limpa(self, mocker):
+        seen: dict = {}
+
+        def fake_decrypt(paths, **kwargs):
+            path = paths[0]
+            seen["path"] = path
+            # Durante o decrypt o arquivo ainda existe (cleanup so no finally).
+            seen["exists_during"] = os.path.exists(path)
+            return ["12345"]
+
+        fake = MagicMock()
+        fake.decrypt = fake_decrypt
+        mocker.patch.dict(sys.modules, {"txtcaptcha": fake})
+
+        img_resp = MagicMock()
+        img_resp.content = b"\x89PNG\r\n\x1a\n fake png bytes"
+        dwr_resp = MagicMock()
+        dwr_resp.text = "dwr.engine._remoteHandleCallback('0','0',true);"
+        request_fn = MagicMock(side_effect=[img_resp, dwr_resp])
+        session = MagicMock()
+        session.cookies.get.return_value = "JSID123"
+
+        assert _solve_captcha(request_fn, session) is True
+
+        path = seen["path"]
+        basename = os.path.basename(path)
+        # (1) sob o tempdir do sistema, com o prefixo esperado.
+        assert os.path.realpath(os.path.dirname(path)) == os.path.realpath(
+            tempfile.gettempdir()
+        )
+        assert basename.startswith("tjmg_captcha_")
+        assert basename.endswith(".png")
+        # (2) nome imprevisivel: nao e mais ``tjmg_captcha_<digits>.png``.
+        assert not re.fullmatch(r"tjmg_captcha_\d+\.png", basename)
+        # (3) existia durante o decrypt, removido depois (cleanup no finally).
+        assert seen["exists_during"] is True
+        assert not os.path.exists(path)

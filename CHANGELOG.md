@@ -49,6 +49,10 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Endpoints com pydantic wired (TJSP `cjsg`/`cjpg`; familia eSAJ `cjsg` em TJAC/TJAL/TJAM/TJCE/TJMS; `cjsg` em TJDFT/TJES/TJBA/TJMT/TJAP/TJRS/TJPB/TJTO/TJPR/TJGO/TJRR/TJMG/TJRN/TJPA/TJRO/TJSC/TJPI; `cjpg` em TJES/TJTO) passam a autopreencher datas parciais. Quando o usuario informa apenas `data_*_inicio`, `data_*_fim` vira a data atual; quando informa apenas `data_*_fim`, `data_*_inicio` vira `01/01/1990` (e o auto-chunk divide a janela em chunks de 366 dias). Antes, o backend recebia uma data vazia em um dos lados e podia retornar resultado degenerado — no `cjpg` do TJSP, em particular, o paginador iterava sobre dezenas de milhares de paginas. `UserWarning` e emitido sinalizando o auto-fill e sugerindo passar a data explicitamente para restringir a janela.
 - `TJRRScraper.cjsg(relator=...)` voltou a funcionar. O backend TJRR migrou de um campo `relator` de texto livre para um `SelectManyCheckbox` (`menuinicial:relatorList`) cujos values sao beans Java serializados, e o scraper estava descartando o argumento silenciosamente (anotado `# noqa: ARG001`). Agora `cjsg(relator=["ALMIRO PADILHA"])` parseia o form GET inicial, resolve o nome regimental para o bean correspondente e injeta a lista no body — o filtro chega ao backend e a busca e efetivamente restringida ao(s) relator(es). Refs #158.
 
+### Security
+
+- TJMG (`cjsg`): a imagem do CAPTCHA passa a ser gravada com `tempfile.NamedTemporaryFile` (criacao atomica, nome imprevisivel) em vez de um caminho previsivel em `/tmp` (`tjmg_captcha_<timestamp>.png`). O caminho previsivel num diretorio compartilhado permitia, em host multiusuario, que um atacante local pre-criasse um symlink no caminho esperado e causasse overwrite de arquivo via TOCTOU (CWE-377). Severidade baixa — exige atacante local no mesmo host; nulo no uso single-user tipico, plausivel em CI/containers multi-tenant. Refs #271.
+
 ## [0.3.0] - 2026-05-03
 
 ### Added
