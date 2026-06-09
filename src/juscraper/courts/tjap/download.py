@@ -7,12 +7,38 @@ from tqdm import tqdm
 
 from juscraper.core.http import RequestFn
 
+from .exceptions import TJAPApiError, TJAPSecurityCheckError
+
 logger = logging.getLogger(__name__)
 
 BASE_URL = "https://tucujuris.tjap.jus.br/api/publico/consultar-jurisprudencia"
 SITE_URL = "https://tucujuris.tjap.jus.br"
 FRONT_URL = SITE_URL + "/pages/consultar-jurisprudencia/consultar-jurisprudencia.html"
 RESULTS_PER_PAGE = 20
+
+# Mensagem do envelope quando a busca não retorna nada — é um resultado legítimo
+# (zero hits), não um erro: deve virar DataFrame vazio, não exceção.
+NO_RESULTS_MESSAGE = "Nenhum resultado encontrado."
+
+
+def _raise_for_error_envelope(data: dict) -> None:
+    """Levanta exceção se a resposta do Tucujuris for um envelope de erro.
+
+    O backend devolve HTTP-200 mesmo em falha, com
+    ``{"status": "ERRO", "mensagem": ..., "detalhe": ...}`` e sem a chave
+    ``dados``. Sem isso, ``cjsg_download_manager`` interpretaria o erro como "0
+    resultados" (ver issue #279). ``"Nenhum resultado encontrado."`` é a única
+    mensagem ``ERRO`` que representa sucesso (zero hits) e passa batido.
+    """
+    if data.get("status") != "ERRO":
+        return
+    mensagem = (data.get("mensagem") or "").strip()
+    if mensagem == NO_RESULTS_MESSAGE:
+        return
+    detalhe = data.get("detalhe")
+    if "verificação de segurança" in mensagem.lower():
+        raise TJAPSecurityCheckError(mensagem, detalhe)
+    raise TJAPApiError(mensagem, detalhe)
 
 
 def _build_payload(
@@ -95,6 +121,7 @@ def cjsg_download_manager(
         resp = request_fn("POST", BASE_URL, json=payload, headers=_HEADERS, timeout=30)
         resp.encoding = "utf-8"
         data: dict = resp.json()
+        _raise_for_error_envelope(data)
         time.sleep(1)
         return data
 

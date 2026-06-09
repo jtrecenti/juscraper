@@ -78,6 +78,16 @@ class TJAPScraper(HTTPScraper):
         Returns
         -------
         pd.DataFrame
+
+        Raises
+        ------
+        TJAPSecurityCheckError
+            Quando o TJAP devolve "A verificação de segurança falhou" — desde
+            ~2026 a busca exige um CAPTCHA Cloudflare Turnstile, validado
+            server-side, que o raspador HTTP não consegue produzir (issue #279).
+        TJAPApiError
+            Para qualquer outro envelope de erro (``status == "ERRO"``) do
+            Tucujuris. Busca com zero resultados devolve DataFrame vazio.
         """
         brutos = self.cjsg_download(
             pesquisa=pesquisa,
@@ -121,6 +131,15 @@ class TJAPScraper(HTTPScraper):
         -------
         list
             List of raw JSON responses (one per page).
+
+        Raises
+        ------
+        TJAPSecurityCheckError
+            Quando o TJAP devolve "A verificação de segurança falhou" (CAPTCHA
+            Cloudflare Turnstile exigido desde ~2026; issue #279).
+        TJAPApiError
+            Para qualquer outro envelope de erro (``status == "ERRO"``) do
+            Tucujuris. Busca com zero resultados devolve lista sem registros.
         """
         numero_processo = resolve_deprecated_alias(
             kwargs, "numero_cnj", "numero_processo", numero_processo

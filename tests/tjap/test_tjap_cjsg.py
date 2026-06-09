@@ -7,6 +7,12 @@ import juscraper as jus
 
 
 @pytest.mark.integration
+@pytest.mark.xfail(
+    reason="TJAP exige CAPTCHA Cloudflare Turnstile desde ~2026 — cjsg bloqueado "
+    "via API pública (ref #279). Mantido como xfail não-strict: se o tribunal "
+    "remover o Turnstile, o XPASS sinaliza que a coleta voltou a funcionar.",
+    strict=False,
+)
 class TestCJSGTJAP:
     """Tests for cjsg of TJAP."""
 
