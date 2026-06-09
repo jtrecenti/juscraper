@@ -16,6 +16,7 @@ import requests
 
 from ...core.exceptions import RetryExhaustedError
 from ...utils.cnj import clean_cnj
+from ...utils.logging_cfg import redact_headers
 
 logger = logging.getLogger(__name__)
 
@@ -145,7 +146,7 @@ def fetch_document_text(
     }
 
     logger.debug("[JUSBR DEBUG] Baixando documento: URL=%s", doc_url)
-    logger.debug("[JUSBR DEBUG] Headers: %s", request_headers)
+    logger.debug("[JUSBR DEBUG] Headers: %s", redact_headers(request_headers))
 
     response: requests.Response | None = None
     try:

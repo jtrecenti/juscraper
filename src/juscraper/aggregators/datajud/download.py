@@ -9,6 +9,7 @@ from typing import Any
 import requests
 
 from ...utils.cnj import clean_cnj
+from ...utils.logging_cfg import redact_headers
 
 logger = logging.getLogger(__name__)
 
@@ -278,11 +279,7 @@ def call_datajud_api(
 
     if verbose:
         logger.info("Calling Datajud API: %s", api_url)
-        # Redact key in log for security
-        logger.debug(
-            "Headers: {'Authorization': 'APIKey [REDACTED]',"
-            "'Content-Type': 'application/json'}"
-        )
+        logger.debug("Headers: %s", redact_headers(headers))
         logger.debug("Payload: %s", query_payload)
 
     def _do_post() -> dict[str, Any] | None:
