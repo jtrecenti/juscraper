@@ -284,11 +284,12 @@ class TestSolveCaptchaTempFile:
     """
 
     def test_usa_tempfile_atomico_e_limpa(self, mocker):
-        seen: dict = {}
+        seen: dict[str, Any] = {}
 
         def fake_decrypt(paths, **kwargs):
             path = paths[0]
             seen["path"] = path
+            seen["kwargs"] = kwargs
             # Durante o decrypt o arquivo ainda existe (cleanup so no finally).
             seen["exists_during"] = os.path.exists(path)
             return ["12345"]
@@ -306,6 +307,9 @@ class TestSolveCaptchaTempFile:
         session.cookies.get.return_value = "JSID123"
 
         assert _solve_captcha(request_fn, session) is True
+
+        # O codigo de producao passa o mask/length esperados ao decrypt.
+        assert seen["kwargs"] == {"mask": "[0-9]", "length": 5}
 
         path = seen["path"]
         basename = os.path.basename(path)
