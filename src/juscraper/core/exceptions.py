@@ -54,7 +54,7 @@ class BotChallengeBlockedError(Exception):
             msg += f" Reference: {reference}."
         super().__init__(msg)
 
-            
+
 class InvalidJSONResponseError(HTTPSemanticError):
     """Resposta com status < 400 cujo corpo não é JSON válido, mesmo após retries.
 

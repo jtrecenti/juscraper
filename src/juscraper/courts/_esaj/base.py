@@ -17,7 +17,7 @@ import logging
 import shutil
 import warnings
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any, Literal
+from typing import Any, Literal
 
 import pandas as pd
 from pydantic import BaseModel, ValidationError
@@ -41,9 +41,6 @@ from .download import _CHROME_HEADERS, _ESAJ_HEADERS, download_cjsg_pages, fetch
 from .forms import build_cjsg_form_body
 from .parse import cjsg_n_pags, cjsg_n_results, cjsg_parse_manager, parse_arvore
 from .schemas import InputCJSGEsajPuro
-
-if TYPE_CHECKING:
-    import pandas as pd
 
 logger = logging.getLogger("juscraper._esaj.base")
 
