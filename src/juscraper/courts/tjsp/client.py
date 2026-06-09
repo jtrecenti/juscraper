@@ -19,7 +19,7 @@ from ...utils.params import (
     pop_deprecated_alias,
     validate_intervalo_datas,
 )
-from .._esaj.base import EsajSearchScraper, run_auto_chunk
+from .._esaj.base import EsajSearchScraper
 from .cjpg_download import cjpg_download as cjpg_download_mod
 from .cjpg_download import fetch_cjpg_first_page
 from .cjpg_parse import cjpg_n_pags, cjpg_n_results, cjpg_parse_manager
@@ -76,6 +76,7 @@ class TJSPScraper(EsajSearchScraper):
     BASE_URL = "https://esaj.tjsp.jus.br/"
     TRIBUNAL_NAME = "TJSP"
     INPUT_CJSG = InputCJSGTJSP
+    INPUT_CJPG = InputCJPGTJSP
     CJSG_CHROME_UA = True
     CJSG_EXTRACT_CONVERSATION_ID = True
 
@@ -313,10 +314,11 @@ class TJSPScraper(EsajSearchScraper):
         return body
 
     # --- cjpg -----------------------------------------------------------
-    # Internals (``cjpg_download.py`` + ``cjpg_parse.py``) are unique to
-    # TJSP, so they're kept as-is. The public entry point still routes
-    # through pydantic (``InputCJPGTJSP``) for documentation + rejection
-    # of unknown kwargs.
+    # A orquestracao (probe count_only -> auto-chunk -> download -> parse)
+    # e compartilhada com ``cjsg`` via ``EsajSearchScraper._run_search``
+    # (Template Method, #205). Os internals de download/parse
+    # (``cjpg_download.py`` + ``cjpg_parse.py``) sao unicos do TJSP e
+    # entram em ``_run_search`` como hooks resolvidos por nome.
 
     def cjpg(
         self,
@@ -421,33 +423,20 @@ class TJSPScraper(EsajSearchScraper):
             (parcial + warning). ``auto_chunk=True`` + ``paginas != None``
             em janela > 366 dias e :class:`ValueError`.
         """
-        # Popa plurais antes de ``run_auto_chunk`` — a validacao upfront
-        # do schema dentro do chunking via ``extra_forbidden`` em
-        # ``classes``/``assuntos``/``varas`` antes de o caminho noop
-        # delegar para ``cjpg_download``. Refs #232.
-        _pop_cjpg_plural_aliases(kwargs)
-
-        # count_only=True: probe leve antes do run_auto_chunk (issue #92).
-        if kwargs.get("count_only", False):
-            return self._cjpg_count_only(pesquisa=pesquisa, paginas=paginas, **kwargs)
-
-        chunked = run_auto_chunk(
-            method=self.cjpg,
-            method_label="TJSPScraper.cjpg()",
-            input_cls=InputCJPGTJSP,
+        # Orquestracao (probe count_only -> auto-chunk -> download -> parse
+        # -> cleanup) compartilhada com ``cjsg`` via ``_run_search`` (#205).
+        # ``pre_normalize`` popa os plurais antes do auto-chunk: a validacao
+        # upfront do schema dentro do chunking rejeita ``classes``/``assuntos``/
+        # ``varas`` via ``extra_forbidden``. Refs #232.
+        return self._run_search(
+            endpoint="cjpg",
+            input_cls=self.INPUT_CJPG,
             dedup_key="id_processo",
             pesquisa=pesquisa,
             paginas=paginas,
             kwargs=kwargs,
+            pre_normalize=_pop_cjpg_plural_aliases,
         )
-        if chunked is not None:
-            return chunked
-
-        path = self.cjpg_download(pesquisa=pesquisa, paginas=paginas, **kwargs)
-        try:
-            return self.cjpg_parse(path)
-        finally:
-            shutil.rmtree(path, ignore_errors=True)
 
     def _cjpg_count_only(
         self,
