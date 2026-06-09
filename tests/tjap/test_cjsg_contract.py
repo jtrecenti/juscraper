@@ -1,9 +1,11 @@
 """Offline contract tests for TJAP cjsg."""
 import pandas as pd
+import pytest
 import responses
 from responses.matchers import json_params_matcher
 
 import juscraper as jus
+from juscraper.courts.tjap.exceptions import TJAPApiError, TJAPSecurityCheckError
 from tests._helpers import load_sample
 
 BASE = "https://tucujuris.tjap.jus.br/api/publico/consultar-jurisprudencia"
@@ -100,3 +102,31 @@ def test_cjsg_no_results(mocker):
 
     assert isinstance(df, pd.DataFrame)
     assert df.empty
+
+
+@responses.activate
+def test_cjsg_security_check_raises(mocker):
+    """A 'verificação de segurança' error envelope raises instead of returning empty."""
+    mocker.patch("time.sleep")
+    _add_page("dano moral", "cjsg/security_check_failed.json")
+
+    with pytest.raises(TJAPSecurityCheckError) as exc_info:
+        jus.scraper("tjap").cjsg("dano moral", paginas=1)
+
+    message = str(exc_info.value)
+    assert "A verificação de segurança falhou" in message
+    assert "Turnstile" in message
+    assert "#279" in message
+
+
+@responses.activate
+def test_cjsg_generic_error_raises(mocker):
+    """Any other ERRO envelope raises TJAPApiError carrying the backend message."""
+    mocker.patch("time.sleep")
+    _add_page("dano moral", "cjsg/generic_error.json")
+
+    with pytest.raises(TJAPApiError) as exc_info:
+        jus.scraper("tjap").cjsg("dano moral", paginas=1)
+
+    assert not isinstance(exc_info.value, TJAPSecurityCheckError)
+    assert "Erro interno ao processar a consulta." in str(exc_info.value)
