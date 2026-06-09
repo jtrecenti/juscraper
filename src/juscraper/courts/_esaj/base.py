@@ -17,7 +17,7 @@ import logging
 import shutil
 import warnings
 from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import BaseModel, ValidationError
 
@@ -40,6 +40,9 @@ from .download import download_cjsg_pages, fetch_cjsg_first_page
 from .forms import build_cjsg_form_body
 from .parse import cjsg_n_pags, cjsg_n_results, cjsg_parse_manager
 from .schemas import InputCJSGEsajPuro
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 logger = logging.getLogger("juscraper._esaj.base")
 
@@ -255,14 +258,14 @@ class EsajSearchScraper(HTTPScraper):
     def _run_search(
         self,
         *,
-        endpoint: str,
+        endpoint: Literal["cjsg", "cjpg"],
         input_cls: type[BaseModel],
         dedup_key: str,
         pesquisa: str,
         paginas: int | list | range | None,
         kwargs: dict,
         pre_normalize: Callable[[dict], None] | None = None,
-    ) -> Any:
+    ) -> pd.DataFrame | int:
         """Template Method que orquestra um endpoint de busca eSAJ (refs #205).
 
         Compartilhado por :meth:`cjsg` e :meth:`TJSPScraper.cjpg`. O fluxo —
@@ -273,7 +276,10 @@ class EsajSearchScraper(HTTPScraper):
         ``getattr``, mantendo este metodo agnostico a HTTP e parsing.
 
         Args:
-            endpoint: ``"cjsg"`` ou ``"cjpg"``. Resolve os hooks
+            endpoint: ``"cjsg"`` ou ``"cjpg"`` — o vocabulario que esta
+                infra sabe orquestrar, nao a capability por tribunal (quais
+                endpoints cada scraper expoe depende da presenca do metodo:
+                so o TJSP tem ``cjpg``). Resolve os hooks
                 ``<endpoint>_download``, ``<endpoint>_parse`` e
                 ``_<endpoint>_count_only`` por ``getattr(self, ...)``.
             input_cls: Schema pydantic do endpoint (``INPUT_CJSG`` /
