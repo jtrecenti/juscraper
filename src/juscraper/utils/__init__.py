@@ -15,6 +15,12 @@ def safe_path_component(value, *, field: str = "identificador") -> str:
     upstream — e deve falhar alto em vez de gravar fora do diretório de
     download (path traversal). Refs #269.
 
+    Note:
+        O retorno é seguro apenas como componente de path (uso em
+        ``os.path.join``/``open``). Não use como argumento de linha de
+        comando: um valor legítimo pode começar com ``-`` (ex.: ``"-rf"``)
+        e ser interpretado como flag por um shell.
+
     Args:
         value: identificador bruto (str ou coercível para str).
         field: nome do campo, usado na mensagem de erro.

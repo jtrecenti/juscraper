@@ -62,6 +62,7 @@ def _cposg_download_html_single(id_cnj, session, u_base, download_path):
     }
     r = session.get(u, params=params)
     soup = BeautifulSoup(r.text, 'html.parser')
+    # id_clean vem de clean_cnj (so digitos), seguro como componente de path.
     path = f"{download_path}/cposg/{id_clean}"
     if not os.path.isdir(path):
         os.makedirs(path)
@@ -90,7 +91,8 @@ def _cposg_download_html_single(id_cnj, session, u_base, download_path):
             file_name = os.path.join(path, f"{id_clean}_cd_processo_{safe_codigo}.html")
             with open(file_name, 'w', encoding='utf-8') as f:
                 f.write(r_show.text)
-    # Caso 3: resposta simples
+    # Caso 3: resposta simples — o id vem do input[name=cdProcesso] (nao de
+    # processo.codigo como nos casos 1/2), dai field="cdProcesso".
     else:
         codigo_simples: str | None = None
         input_cd = soup.find('input', {'name': 'cdProcesso'})

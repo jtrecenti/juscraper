@@ -77,6 +77,18 @@ _LISTAGEM_MALICIOSA = (
     '</div></body></html>'
 )
 
+_MODAL_MALICIOSO = (
+    '<html><body><div id="modalIncidentes">'
+    f'<input id="processoSelecionado" value="{EVIL}"/>'
+    '</div></body></html>'
+)
+
+_SIMPLES_MALICIOSO = (
+    '<html><body>'
+    f'<input name="cdProcesso" value="{EVIL}"/>'
+    '</body></html>'
+)
+
 
 @responses.activate
 def test_cposg_html_rejeita_codigo_malicioso(tmp_path, mocker):
@@ -96,6 +108,46 @@ def test_cposg_html_rejeita_codigo_malicioso(tmp_path, mocker):
         _cposg_download_html_single(CNJ, scraper.session, scraper.u_base, str(tmp_path))
 
     # nenhum HTML de processo gravado
+    assert not list(tmp_path.rglob("*.html"))
+
+
+@responses.activate
+def test_cposg_html_modal_rejeita_codigo_malicioso(tmp_path, mocker):
+    """Caso 2 (modal): processo.codigo com '..' levanta ValueError antes do show.do."""
+    mocker.patch("time.sleep")
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+    responses.add(
+        responses.GET, f"{ESAJ}/cposg/open.do",
+        body="<html></html>", status=200, content_type="text/html",
+    )
+    responses.add(
+        responses.GET, f"{ESAJ}/cposg/search.do",
+        body=_MODAL_MALICIOSO, status=200, content_type="text/html",
+    )
+
+    with pytest.raises(ValueError, match="processo.codigo"):
+        _cposg_download_html_single(CNJ, scraper.session, scraper.u_base, str(tmp_path))
+
+    assert not list(tmp_path.rglob("*.html"))
+
+
+@responses.activate
+def test_cposg_html_simples_rejeita_codigo_malicioso(tmp_path, mocker):
+    """Caso 3 (resposta simples): cdProcesso com '..' levanta ValueError antes da escrita."""
+    mocker.patch("time.sleep")
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+    responses.add(
+        responses.GET, f"{ESAJ}/cposg/open.do",
+        body="<html></html>", status=200, content_type="text/html",
+    )
+    responses.add(
+        responses.GET, f"{ESAJ}/cposg/search.do",
+        body=_SIMPLES_MALICIOSO, status=200, content_type="text/html",
+    )
+
+    with pytest.raises(ValueError, match="cdProcesso"):
+        _cposg_download_html_single(CNJ, scraper.session, scraper.u_base, str(tmp_path))
+
     assert not list(tmp_path.rglob("*.html"))
 
 

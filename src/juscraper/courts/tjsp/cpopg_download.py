@@ -189,6 +189,7 @@ def cpopg_download_api_single(
     endpoint = 'processo/cpopg/search/numproc/'
     id_clean = clean_cnj(id_cnj)
     u = f"{api_base}{endpoint}{id_clean}"
+    # id_clean vem de clean_cnj (so digitos), seguro como componente de path.
     path = f"{download_path}/cpopg/{id_clean}"
     if not os.path.isdir(path):
         os.makedirs(path)
