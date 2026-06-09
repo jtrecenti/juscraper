@@ -10,6 +10,7 @@ import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
+from ...utils import safe_path_component
 from ...utils.cnj import clean_cnj, format_cnj, split_cnj
 
 logger = logging.getLogger('juscraper.cposg_download')
@@ -73,18 +74,20 @@ def _cposg_download_html_single(id_cnj, session, u_base, download_path):
             if not codigos:
                 raise RuntimeError(f"Link sem 'processo.codigo': {link}")
             codigo = codigos[0]
+            safe_codigo = safe_path_component(codigo, field="processo.codigo")
             show_url = f"{u_base}cposg/show.do?processo.codigo={codigo}"
             r_show = session.get(show_url)
-            file_name = f"{path}/{id_clean}_cd_processo_{codigo}.html"
+            file_name = os.path.join(path, f"{id_clean}_cd_processo_{safe_codigo}.html")
             with open(file_name, 'w', encoding='utf-8') as f:
                 f.write(r_show.text)
     # Caso 2: incidentes/modal
     elif soup.find('div', id='modalIncidentes'):
         codigos = [str(i['value']) for i in soup.select('input#processoSelecionado')]
         for codigo in codigos:
+            safe_codigo = safe_path_component(codigo, field="processo.codigo")
             show_url = f"{u_base}cposg/show.do?processo.codigo={codigo}"
             r_show = session.get(show_url)
-            file_name = f"{path}/{id_clean}_cd_processo_{codigo}.html"
+            file_name = os.path.join(path, f"{id_clean}_cd_processo_{safe_codigo}.html")
             with open(file_name, 'w', encoding='utf-8') as f:
                 f.write(r_show.text)
     # Caso 3: resposta simples
@@ -94,7 +97,8 @@ def _cposg_download_html_single(id_cnj, session, u_base, download_path):
         if input_cd:
             value = input_cd.get('value')
             codigo_simples = str(value) if value is not None else None
-        file_name = f"{path}/{id_clean}_cd_processo_{codigo_simples or 'simples'}.html"
+        codigo_part = safe_path_component(codigo_simples, field="cdProcesso") if codigo_simples else "simples"
+        file_name = os.path.join(path, f"{id_clean}_cd_processo_{codigo_part}.html")
         with open(file_name, 'w', encoding='utf-8') as f:
             f.write(r.text)
     return path

@@ -2,6 +2,38 @@
 
 import re
 
+_SAFE_PATH_COMPONENT_RE = re.compile(r"^[A-Za-z0-9._-]+$")
+
+
+def safe_path_component(value, *, field: str = "identificador") -> str:
+    r"""Valida que ``value`` é seguro como um único componente de path.
+
+    Identificadores vindos de respostas de tribunais (``cdProcesso``,
+    ``cdAcordao``, ``processo.codigo``) são tratados como não confiáveis:
+    um valor com separador de path (``/``, ``\\``), segmento ``..`` ou
+    vazio nunca é legítimo — significa resposta maliciosa, MITM ou bug
+    upstream — e deve falhar alto em vez de gravar fora do diretório de
+    download (path traversal). Refs #269.
+
+    Args:
+        value: identificador bruto (str ou coercível para str).
+        field: nome do campo, usado na mensagem de erro.
+
+    Returns:
+        O ``value`` como ``str`` quando seguro.
+
+    Raises:
+        ValueError: quando ``value`` não casa ``^[A-Za-z0-9._-]+$`` ou é
+            ``"."`` / ``".."``.
+    """
+    s = str(value)
+    if not _SAFE_PATH_COMPONENT_RE.match(s) or s in (".", ".."):
+        raise ValueError(
+            f"{field} inválido para uso em path: {value!r}. "
+            "Esperado apenas caracteres alfanuméricos, '.', '-' e '_'."
+        )
+    return s
+
 
 def sanitize_filename(filename: str) -> str:
     """Remove ou substitui caracteres de uma string que não são adequados para nomes de arquivo.

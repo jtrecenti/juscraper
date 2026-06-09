@@ -49,6 +49,10 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Endpoints com pydantic wired (TJSP `cjsg`/`cjpg`; familia eSAJ `cjsg` em TJAC/TJAL/TJAM/TJCE/TJMS; `cjsg` em TJDFT/TJES/TJBA/TJMT/TJAP/TJRS/TJPB/TJTO/TJPR/TJGO/TJRR/TJMG/TJRN/TJPA/TJRO/TJSC/TJPI; `cjpg` em TJES/TJTO) passam a autopreencher datas parciais. Quando o usuario informa apenas `data_*_inicio`, `data_*_fim` vira a data atual; quando informa apenas `data_*_fim`, `data_*_inicio` vira `01/01/1990` (e o auto-chunk divide a janela em chunks de 366 dias). Antes, o backend recebia uma data vazia em um dos lados e podia retornar resultado degenerado — no `cjpg` do TJSP, em particular, o paginador iterava sobre dezenas de milhares de paginas. `UserWarning` e emitido sinalizando o auto-fill e sugerindo passar a data explicitamente para restringir a janela.
 - `TJRRScraper.cjsg(relator=...)` voltou a funcionar. O backend TJRR migrou de um campo `relator` de texto livre para um `SelectManyCheckbox` (`menuinicial:relatorList`) cujos values sao beans Java serializados, e o scraper estava descartando o argumento silenciosamente (anotado `# noqa: ARG001`). Agora `cjsg(relator=["ALMIRO PADILHA"])` parseia o form GET inicial, resolve o nome regimental para o bean correspondente e injeta a lista no body — o filtro chega ao backend e a busca e efetivamente restringida ao(s) relator(es). Refs #158.
 
+### Security
+
+- Downloaders do TJSP (`cpopg` via API, `cposg` via HTML e `acordao`) passam a validar os identificadores vindos do tribunal (`cdProcesso`, `processo.codigo`, `cdAcordao`) antes de construir o caminho de escrita. Um identificador com separador de path (`/`, `\`) ou segmento `..` levanta `ValueError` em vez de gravar o arquivo fora do diretorio de download (path traversal / escrita arbitraria de arquivo). Em `cpopg`/`cposg` o processo afetado e logado e pulado (os callers ja capturam `ValueError`), e a coleta dos demais continua. Refs #269.
+
 ## [0.3.0] - 2026-05-03
 
 ### Added
