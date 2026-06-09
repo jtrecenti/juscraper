@@ -35,6 +35,19 @@ def test_redige_cookie_set_cookie_e_api_keys():
     }
 
 
+def test_redige_qualquer_sufixo_api_key():
+    out = redact_headers({
+        "Vendor-API-Key": "k1",
+        "x-acme-api-key": "k2",
+        "not-a-key": "visivel",
+    })
+    assert out == {
+        "Vendor-API-Key": "[REDACTED]",
+        "x-acme-api-key": "[REDACTED]",
+        "not-a-key": "visivel",
+    }
+
+
 def test_nao_muta_o_dict_original():
     original = {"authorization": "Bearer xyz", "accept": "*/*"}
     redact_headers(original)
