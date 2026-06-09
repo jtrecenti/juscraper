@@ -26,7 +26,6 @@ import logging
 import os
 import re
 import tempfile
-from typing import Optional
 
 import requests
 
@@ -104,7 +103,7 @@ def solve_captcha(captcha_b64: str) -> str:
         tmp.write(img_bytes)
         tmp_path = tmp.name
     try:
-        return txtcaptcha.decrypt([tmp_path])[0]
+        return str(txtcaptcha.decrypt([tmp_path])[0])
     finally:
         os.unlink(tmp_path)
 
@@ -172,7 +171,7 @@ def fetch_detail(
     *,
     max_captcha_attempts: int = 3,
     timeout: float = 30.0,
-) -> Optional[str]:
+) -> str | None:
     """Run the full captcha-solving lookup for one CNJ.
 
     Returns the detail HTML (latin-1 decoded text) on success, or ``None``
