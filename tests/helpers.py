@@ -111,44 +111,63 @@ def assert_date_matches(df: pd.DataFrame) -> str | None:
     return col
 
 
+# Date-filter kwarg sets, tried in order. After the #84 refactor each
+# tribunal's InputCJSG uses ``extra="forbid"``, so a tribunal that filters only
+# by julgamento (TJSP, TJES, ...) raises ``TypeError`` when handed
+# ``data_publicacao_*`` — and a publicação-only tribunal (TJBA, TJGO) does the
+# reverse. The helpers below try each set and skip the ones the schema rejects;
+# the first accepted, non-empty result wins. ``_BOTH_DATES`` comes first so an
+# eSAJ-style tribunal that ANDs both (e.g. TJAM) still matches (publicação
+# trails julgamento). Tribunals that reject *every* set — no date filter at all
+# (TJAP) or annual-only granularity (TJRJ) — re-raise the ``TypeError`` and are
+# marked xfail in the release suite.
+_BOTH_DATES = {
+    "data_julgamento_inicio": DATA_ALVO_BR,
+    "data_julgamento_fim": DATA_ALVO_FIM_BR,
+    "data_publicacao_inicio": DATA_ALVO_BR,
+    "data_publicacao_fim": DATA_PUB_FIM_BR,
+}
+_JULGAMENTO_DATES = {
+    "data_julgamento_inicio": DATA_ALVO_BR,
+    "data_julgamento_fim": DATA_ALVO_FIM_BR,
+}
+_PUBLICACAO_DATES = {
+    "data_publicacao_inicio": DATA_ALVO_BR,
+    "data_publicacao_fim": DATA_PUB_FIM_BR,
+}
+_DATE_FILTER_SETS = (_BOTH_DATES, _JULGAMENTO_DATES, _PUBLICACAO_DATES)
+
+
 def run_filtro_data_unica(scraper, **extra_kwargs) -> pd.DataFrame:
     """Execute the standard date-filter release test for a scraper.
+
+    Tries each set in ``_DATE_FILTER_SETS`` order, skipping the ones the
+    scraper's schema rejects (``extra="forbid"`` → ``TypeError``), and uses the
+    first accepted set that returns rows. If every set is rejected the tribunal
+    has no usable date filter and the ``TypeError`` is re-raised (the release
+    suite xfails those tribunais).
 
     1. Try ``pesquisa=''``; if the scraper rejects it, fall back to ``'direito'``.
     2. Assert at least one result was returned.
     3. If the output has a date column, assert every row falls inside the
        reference window (10/03/2025 – 14/03/2025).
     """
-    # First pass: julgamento tight + publicação widened. Scrapers that AND
-    # both (e.g. eSAJ-based TJAM) still match because publicação trails
-    # julgamento; scrapers that only filter by publicação (e.g. TJBA, TJGO)
-    # get a window wide enough to include rows judged in the target week.
-    # If this returns empty (e.g. TJPA's publicação index is empty), fall
-    # back to julgamento-only and then publicação-only.
-    both = {
-        "data_julgamento_inicio": DATA_ALVO_BR,
-        "data_julgamento_fim": DATA_ALVO_FIM_BR,
-        "data_publicacao_inicio": DATA_ALVO_BR,
-        "data_publicacao_fim": DATA_PUB_FIM_BR,
-        "paginas": 1,
-    }
-    jul_only = {
-        "data_julgamento_inicio": DATA_ALVO_BR,
-        "data_julgamento_fim": DATA_ALVO_FIM_BR,
-        "paginas": 1,
-    }
-    pub_only = {
-        "data_publicacao_inicio": DATA_ALVO_BR,
-        "data_publicacao_fim": DATA_PUB_FIM_BR,
-        "paginas": 1,
-    }
-
     df = None
-    for attempt in (both, jul_only, pub_only):
-        kwargs = {**attempt, **extra_kwargs}
-        df = _call_cjsg_with_fallback(scraper, kwargs)
+    accepted = False
+    last_type_error: TypeError | None = None
+    for date_filters in _DATE_FILTER_SETS:
+        kwargs = {**date_filters, **extra_kwargs, "paginas": 1}
+        try:
+            df = _call_cjsg_with_fallback(scraper, kwargs)
+        except TypeError as exc:  # schema rejects this date-filter set
+            last_type_error = exc
+            continue
+        accepted = True
         if df is not None and len(df) > 0:
             break
+
+    if not accepted and last_type_error is not None:
+        raise last_type_error
 
     assert isinstance(df, pd.DataFrame), "cjsg deve retornar DataFrame"
     assert len(df) > 0, (
@@ -164,13 +183,15 @@ def run_filtro_data_unica(scraper, **extra_kwargs) -> pd.DataFrame:
 def _call_cjsg_with_fallback(scraper, kwargs: dict) -> pd.DataFrame:
     """Call ``scraper.cjsg`` first with empty pesquisa, then 'direito'.
 
-    Some tribunals reject empty pesquisa with an exception; others silently
-    return an empty DataFrame.  In both cases we fall back to the generic
-    term 'direito' so the caller can still exercise the date filter.
+    Some tribunals reject empty pesquisa with a ``ValueError``; others silently
+    return an empty DataFrame. In both cases we fall back to the generic term
+    'direito' so the caller can still exercise the date filter. A ``TypeError``
+    (an unsupported date kwarg under ``extra="forbid"``) is *not* swallowed: it
+    propagates so the caller can try the next date-filter set.
     """
     try:
         df = scraper.cjsg("", **kwargs)
-    except (ValueError, TypeError):
+    except ValueError:
         df = None
     if df is None or len(df) == 0:
         df = scraper.cjsg("direito", **kwargs)
@@ -180,18 +201,26 @@ def _call_cjsg_with_fallback(scraper, kwargs: dict) -> pd.DataFrame:
 def run_paginacao_data_unica(scraper, **extra_kwargs) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Download ``paginas=1`` and ``paginas=range(1,3)`` with the date fixed.
 
+    Uses the same date-filter resolution as :func:`run_filtro_data_unica`: the
+    first set in ``_DATE_FILTER_SETS`` the scraper's schema accepts is used for
+    both downloads, so a julgamento-only tribunal (TJSP) and a publicação-only
+    one (TJBA) each get the filter their backend understands. Tribunals that
+    reject every set re-raise the ``TypeError`` (xfailed in the release suite).
+
     Returns both DataFrames so the caller can decide whether to assert
-    ``len(df2) > len(df1)`` (only makes sense when the tribunal actually
+    ``len(df2) >= len(df1)`` (only makes sense when the tribunal actually
     has more than one page of results for the target week).
     """
-    base = {
-        "data_julgamento_inicio": DATA_ALVO_BR,
-        "data_julgamento_fim": DATA_ALVO_FIM_BR,
-        "data_publicacao_inicio": DATA_ALVO_BR,
-        "data_publicacao_fim": DATA_PUB_FIM_BR,
-    }
-    base.update(extra_kwargs)
+    last_type_error: TypeError | None = None
+    for date_filters in _DATE_FILTER_SETS:
+        base = {**date_filters, **extra_kwargs}
+        try:
+            df1 = _call_cjsg_with_fallback(scraper, {**base, "paginas": 1})
+            df2 = _call_cjsg_with_fallback(scraper, {**base, "paginas": range(1, 3)})
+        except TypeError as exc:  # schema rejects this date-filter set
+            last_type_error = exc
+            continue
+        return df1, df2
 
-    df1 = _call_cjsg_with_fallback(scraper, {**base, "paginas": 1})
-    df2 = _call_cjsg_with_fallback(scraper, {**base, "paginas": range(1, 3)})
-    return df1, df2
+    assert last_type_error is not None
+    raise last_type_error

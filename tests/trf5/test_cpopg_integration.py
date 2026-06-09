@@ -40,8 +40,17 @@ def test_cpopg_returns_all_movs_pages() -> None:
     movs = df["movimentacoes"].iloc[0]
     assert isinstance(movs, list)
     assert len(movs) > 15, f"expected > 15 movs (paginated), got {len(movs)}"
-    pairs = [(m["data"], m["descricao"]) for m in movs]
-    assert len(pairs) == len(set(pairs)), "duplicate movs after pagination"
+    # Pagination is healthy when later pages bring *different* rows, not a
+    # re-fetch of page 1. Compare the first 15-row page block against the next
+    # one: a stuck slider cursor would make page 2 identical to page 1. Do NOT
+    # assert global uniqueness of (data, descricao) — the PJe legitimately emits
+    # several events with the same second-precision timestamp and description
+    # within a single page, so that key is not unique in real data.
+    page_size = 15
+    first_page = [(m["data"], m["descricao"]) for m in movs[:page_size]]
+    second_page = [(m["data"], m["descricao"]) for m in movs[page_size:2 * page_size]]
+    assert second_page, "pagination did not surface a second page"
+    assert first_page != second_page, "page 2 repeated page 1 (stuck pagination cursor)"
 
 
 @pytest.mark.integration
