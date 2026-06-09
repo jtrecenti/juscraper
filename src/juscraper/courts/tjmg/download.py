@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 import math
 import re
+import tempfile
 import time
 from pathlib import Path
 
@@ -55,16 +56,15 @@ def _solve_captcha(
             "GET", f"{CAPTCHA_IMG_URL}?{time.time()}", timeout=60
         )
         img = img_resp.content
-        tmp = Path(f"/tmp/tjmg_captcha_{int(time.time()*1000)}.png")
-        tmp.parent.mkdir(parents=True, exist_ok=True)
-        tmp.write_bytes(img)
+        with tempfile.NamedTemporaryFile(
+            mode="wb", prefix="tjmg_captcha_", suffix=".png", delete=False
+        ) as f:
+            f.write(img)
+            tmp = Path(f.name)
         try:
             codes = txtcaptcha.decrypt([str(tmp)], mask="[0-9]", length=5)
         finally:
-            try:
-                tmp.unlink()
-            except OSError:
-                pass
+            tmp.unlink(missing_ok=True)
         code = codes[0] if isinstance(codes, list) else codes
         body = (
             "callCount=1\n"

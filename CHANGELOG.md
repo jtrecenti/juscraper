@@ -51,6 +51,8 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Security
 
+- Hardening de logging nos agregadores JusBR e PDPJ: logs em modo verbose/DEBUG deixam de emitir credenciais. O header `Authorization` (e demais headers sensíveis) passa a ser redigido como `[REDACTED]` antes de ir para o log no download do JusBR; o dump claim-a-claim do JWT (`verbose > 1`) vira apenas a contagem de claims; e o `sub` do JWT deixa de ser logado no `auth` do PDPJ. Redação centralizada no novo helper `juscraper.utils.logging_cfg.redact_headers`, também adotado pelo Datajud. Refs #270.
+- TJMG (`cjsg`): a imagem do CAPTCHA passa a ser gravada com `tempfile.NamedTemporaryFile` (criacao atomica, nome imprevisivel) em vez de um caminho previsivel em `/tmp` (`tjmg_captcha_<timestamp>.png`). O caminho previsivel num diretorio compartilhado permitia, em host multiusuario, que um atacante local pre-criasse um symlink no caminho esperado e causasse overwrite de arquivo via TOCTOU (CWE-377). Severidade baixa — exige atacante local no mesmo host; nulo no uso single-user tipico, plausivel em CI/containers multi-tenant. Refs #271.
 - Downloaders do TJSP (`cpopg` via API, `cposg` via HTML e `acordao`) passam a validar os identificadores vindos do tribunal (`cdProcesso`, `processo.codigo`, `cdAcordao`) antes de construir o caminho de escrita. Um identificador com separador de path (`/`, `\`) ou segmento `..` levanta `ValueError` em vez de gravar o arquivo fora do diretorio de download (path traversal / escrita arbitraria de arquivo). Em `cpopg`/`cposg` o processo afetado e logado e pulado (os callers ja capturam `ValueError`), e a coleta dos demais continua. Refs #269.
 
 ## [0.3.0] - 2026-05-03
