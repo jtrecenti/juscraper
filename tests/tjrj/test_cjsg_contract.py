@@ -14,7 +14,13 @@ import responses
 from responses.matchers import json_params_matcher
 
 import juscraper as jus
-from juscraper.courts.tjrj.download import FORM_URL, RESULT_URL, build_cjsg_payload, extract_viewstate_fields
+from juscraper.courts.tjrj.download import (
+    FORM_URL,
+    RESULT_URL,
+    build_cjsg_payload,
+    extract_default_year,
+    extract_viewstate_fields,
+)
 from tests._helpers import load_sample, urlencoded_body_subset_matcher
 
 CJSG_FIELDS = {
@@ -150,3 +156,36 @@ def test_cjsg_payload_carries_blocked_words_hidden(mocker):
     assert "ctl00%24ContentPlaceHolder1%24hfListaPalavrasBloqueadas=" in body
     # Value comes from the GET sample — non-empty stopword list.
     assert "ACIMA" in body  # one of the words in the canonical TJRJ stopword list
+
+
+def test_extract_default_year_uses_newest_dropdown_option():
+    """``extract_default_year`` devolve a opcao mais nova de ``cmbAnoInicio``."""
+    assert extract_default_year(_form_html()) == "2026"
+
+
+@responses.activate
+def test_cjsg_sem_ano_usa_ano_corrente(mocker):
+    """Sem ``ano_inicio``/``ano_fim``, o POST carrega o ano corrente (refs #278).
+
+    O backend do TJRJ passou a exigir ``cmbAnoInicio``/``cmbAnoFim`` nao-vazios:
+    enviar vazio retornava ``HTTP 500`` no POST do form. O contrato fixa o
+    default (ano mais novo do dropdown, igual ao padrao do site) para que uma
+    regressao que volte a mandar ano vazio quebre no CI, e nao como 500 no ar.
+    """
+    mocker.patch("time.sleep")
+    _add_form_get()
+    _add_form_post("dano moral", ano_inicio="2026", ano_fim="2026")
+    _add_xhr(0, "xhr_page_01.json")
+
+    jus.scraper("tjrj").cjsg("dano moral", paginas=1)
+
+    post_calls = [c for c in responses.calls if c.request.method == "POST"
+                  and c.request.url.startswith(FORM_URL)]
+    assert len(post_calls) == 1
+    body = post_calls[0].request.body or ""
+    if isinstance(body, bytes):
+        body = body.decode("utf-8")
+    assert "ctl00%24ContentPlaceHolder1%24cmbAnoInicio=2026" in body
+    assert "ctl00%24ContentPlaceHolder1%24cmbAnoFim=2026" in body
+    # Nunca vazio — vazio e exatamente o que disparava o 500.
+    assert "ctl00%24ContentPlaceHolder1%24cmbAnoInicio=&" not in body
