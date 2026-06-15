@@ -104,7 +104,7 @@ JUSBR_JWT=<token> JUSBR_CNJ_1=<cnj-real> JUSBR_CNJ_2=<outro-cnj-real> \
 | `JUSBR_JWT` | sim | JWT valido obtido do devtools do navegador logado em `portaldeservicos.pdpj.jus.br`. |
 | `JUSBR_CNJ_1` | sim | CNJ real (com ou sem mascara) que retorne 1+ processo. Sera substituido por `00000000000000000000` no sample. |
 | `JUSBR_CNJ_2` | sim | Segundo CNJ real para o cenario `list[str]`. Substituido por `11111111111111111111`. |
-| `JUSBR_CNJ_NO_RESULTS` | nao | CNJ valido sem hit no PDPJ. Default: `9999999-99.9999.9.99.9999`. |
+| `JUSBR_CNJ_NO_RESULTS` | nao | Mantido por compatibilidade, mas hoje sem efeito util (ver nota abaixo). Default: `9999999-99.9999.9.99.9999`. |
 
 Saida em `tests/jusbr/samples/`:
 
@@ -113,16 +113,31 @@ Saida em `tests/jusbr/samples/`:
 | `cpopg/typical_single.json` | resposta do `GET /api/v2/processos/?numeroProcesso=...` (1 item). |
 | `cpopg/typical_single_details.json` | resposta do `GET /api/v2/processos/{numeroOficial}`. |
 | `cpopg/list_two_first*.json` + `list_two_second*.json` | par de capturas para o cenario `list[str]`. |
-| `cpopg/no_results.json` | resposta com `content: []`. |
-| `documents/text_typical.txt` | texto de um documento (UTF-8, com PII redatada e truncado). |
-| `documents/binary_typical.bin` | PDF inteiro do documento (decisao do plano da #141). |
+| `cpopg/no_results.json` | `{"content": []}` — **escrito a mao** (ver nota). |
+| `documents/text_typical.txt` | texto de um documento (UTF-8, PII redatada e truncado). |
+| `documents/binary_typical.bin` | HTML do documento, redatado e truncado (~8 KB). |
 
-**Sanitizacao agressiva pos-captura** acontece automaticamente: CNJs reais
-sao substituidos por neutros (`00...0`, `11...1`); campos PII (`nome`, `cpf`,
-`email`, `telefone`, `endereco`, ...) sao trocados por `"REDACTED"`; campos
-textuais longos (`ementa`, `decisao`, `fundamentacao`, ...) sao truncados em
-80 chars. CPFs e e-mails residuais no texto de documentos passam por regex
-defensivo. Lista exata dos campos tocados vive no proprio script.
+> **`no_results.json` e escrito a mao, nao capturado.** A API V2 do PDPJ
+> responde `HTTP 404` (com JSON de erro) para CNJ inexistente — nunca
+> `HTTP 200` com `content: []`. Logo o cenario "lista vazia" do contrato nao
+> e observavel no backend; o sample e a lista vazia trivial `{"content": []}`.
+> O capture aborta com 404 ao tentar o `JUSBR_CNJ_NO_RESULTS`, **depois** de ja
+> ter gravado os demais samples — esse erro final e esperado e inofensivo.
+
+**Sanitizacao agressiva pos-captura** acontece automaticamente:
+
+- **CNJs reais** viram neutros (`00...0`, `11...1`).
+- **Campos PII por chave** (`nome`, `cpf`, `cnpj`, `email`, `telefone`,
+  `endereco`, `oab`, `login`, ...) viram `"REDACTED"`.
+- **CPF/CNPJ por valor**: qualquer string que seja um CPF/CNPJ valido (com
+  digito verificador correto) e redatada em qualquer campo — o PDPJ espalha o
+  CPF como `login` da parte, `numero` de documento, dentro de `descricao`, etc.
+- **Campos textuais longos** (`ementa`, `decisao`, ...) truncados em 80 chars.
+- **Texto/HTML de documentos**: os nomes de partes/representantes (coletados do
+  proprio JSON do processo, antes da redacao) sao removidos, alem de regex
+  defensivo para CPF, e-mail e numero de OAB. Um documento cujo binario seja
+  PDF/opaco (nao-sanitizavel como texto) faz o script pular `documents/` com
+  aviso, para nao vazar PII. Lista exata dos campos tocados vive no script.
 
 `auth_firefox()` esta **fora do escopo** dos contratos offline (depende de
 cookies reais do Firefox); candidato a cassette VCR na Fase 4 da #113.

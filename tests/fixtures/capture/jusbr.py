@@ -65,6 +65,7 @@ _PII_KEYS = {
     "passaporte",
     "numerooab",
     "oab",
+    "login",  # no PJe/PDPJ o login do usuario/parte e o proprio CPF
 }
 
 # Campos textuais a truncar (preserva shape, descarta conteudo do processo).
@@ -80,20 +81,61 @@ _TRUNCATE_KEYS = {
 }
 _TRUNCATE_LEN = 80
 
+# CPF/CNPJ formatados podem aparecer embutidos em prosa (ex.: ``descricao`` de
+# um movimento: "Conhecido o recurso de F. - CPF: 114.462.811-32"). Redacao por
+# chave nao alcanca esses; o regex defensivo sim.
+_CPF_RE = re.compile(r"\b\d{3}\.\d{3}\.\d{3}-\d{2}\b")
+_CNPJ_RE = re.compile(r"\b\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}\b")
+
+
+def _is_cpf(s: str) -> bool:
+    """Valida o digito verificador — distingue CPF real de ID numerico qualquer."""
+    if not re.fullmatch(r"\d{11}", s) or len(set(s)) == 1:
+        return False
+
+    def dv(nums: str) -> int:
+        total = sum(int(n) * p for n, p in zip(nums, range(len(nums) + 1, 1, -1)))
+        rest = (total * 10) % 11
+        return 0 if rest == 10 else rest
+
+    return dv(s[:9]) == int(s[9]) and dv(s[:10]) == int(s[10])
+
+
+def _is_cnpj(s: str) -> bool:
+    """Valida o digito verificador do CNPJ."""
+    if not re.fullmatch(r"\d{14}", s) or len(set(s)) == 1:
+        return False
+
+    def dv(nums: str, weights: list[int]) -> int:
+        total = sum(int(n) * w for n, w in zip(nums, weights))
+        rest = total % 11
+        return 0 if rest < 2 else 11 - rest
+
+    w1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]
+    return dv(s[:12], w1) == int(s[12]) and dv(s[:13], [6, *w1]) == int(s[13])
+
 
 def _sanitize_string(value: str, replacements: dict[str, str]) -> str:
-    """Substitui CNJs reais por neutros em qualquer string."""
+    """Substitui CNJs reais por neutros e redige CPF/CNPJ formatados embutidos."""
     out = value
     for real, neutral in replacements.items():
         out = out.replace(real, neutral)
+    out = _CPF_RE.sub("[CPF_REDACTED]", out)
+    out = _CNPJ_RE.sub("[CNPJ_REDACTED]", out)
     return out
 
 
 def _redact_value(key_lower: str, value: Any, replacements: dict[str, str]) -> Any:
     if key_lower in _PII_KEYS:
         return "REDACTED" if value not in (None, "", []) else value
+    # CPF/CNPJ cru valido (DV correto) em qualquer chave — o PDPJ espalha o CPF
+    # como ``login`` da parte, ``numero`` de documento, etc. A validacao do
+    # digito verificador evita redatar IDs numericos quaisquer.
+    if isinstance(value, str) and (_is_cpf(value.strip()) or _is_cnpj(value.strip())):
+        return "REDACTED"
     if key_lower in _TRUNCATE_KEYS and isinstance(value, str) and len(value) > _TRUNCATE_LEN:
-        return value[:_TRUNCATE_LEN] + "..."
+        # Trunca e ainda redige CPF/CNPJ que caia dentro do trecho preservado.
+        return _sanitize_string(value[:_TRUNCATE_LEN], replacements) + "..."
     if isinstance(value, str):
         return _sanitize_string(value, replacements)
     return value
@@ -111,6 +153,59 @@ def _walk(obj: Any, replacements: dict[str, str]) -> Any:
     if isinstance(obj, str):
         return _sanitize_string(obj, replacements)
     return obj
+
+
+# Tokens que nao devem ser redatados isoladamente (preposicoes de nome,
+# sufixos de razao social) para nao poluir o texto com ``[PII_REDACTED]``.
+_PII_STOPWORDS = {"DE", "DA", "DO", "DAS", "DOS", "E", "DR", "DRA", "LTDA", "ME", "EPP", "SA"}
+
+
+def _collect_pii_terms(obj: Any) -> set[str]:
+    """Coleta os valores PII (nomes de partes/representantes etc.) do JSON cru.
+
+    A sanitizacao por chave (``_walk``) so alcanca a estrutura JSON; o PDPJ
+    devolve o texto/HTML do documento como um blob opaco com os mesmos nomes
+    em prosa. Estes termos sao reaproveitados para redatar esse blob. Deve ser
+    chamado **antes** de ``_walk`` reescrever os valores para ``"REDACTED"``.
+    """
+    terms: set[str] = set()
+
+    def walk(o: Any) -> None:
+        if isinstance(o, dict):
+            for k, v in o.items():
+                if k.lower() in _PII_KEYS and isinstance(v, str):
+                    s = v.strip()
+                    if len(s) >= 4 and s != "REDACTED":
+                        terms.add(s)
+                walk(v)
+        elif isinstance(o, list):
+            for item in o:
+                walk(item)
+
+    walk(obj)
+
+    # Expande nomes compostos em tokens significativos para pegar variacoes de
+    # formatacao no texto (ex.: "CATARINA MENDES DE SOUZA" tambem cobre
+    # "CATARINA" e "MENDES" isolados).
+    expanded: set[str] = set(terms)
+    for term in terms:
+        for tok in re.split(r"\s+", term):
+            tok = tok.strip(".,;:()[]{}/-")
+            if len(tok) >= 3 and tok.upper() not in _PII_STOPWORDS and not tok.isdigit():
+                expanded.add(tok)
+    return expanded
+
+
+def _redact_pii_terms(text: str, pii_terms: set[str]) -> str:
+    """Substitui cada termo PII por ``[PII_REDACTED]`` (case-insensitive, word-boundary)."""
+    for term in sorted(pii_terms, key=len, reverse=True):
+        text = re.sub(rf"\b{re.escape(term)}\b", "[PII_REDACTED]", text, flags=re.IGNORECASE)
+    return text
+
+
+def _looks_binary(raw: bytes) -> bool:
+    """Heuristica: PDF/imagem/zip (nao-sanitizavel como texto) tem assinatura ou NUL."""
+    return raw[:5] == b"%PDF-" or b"\x00" in raw[:2048]
 
 
 def _build_replacements(real_cnj: str, neutral_digits: str) -> dict[str, str]:
@@ -233,18 +328,33 @@ def _first_document_with_both_hrefs(details_data: Any) -> dict | None:
     return None
 
 
-def _sanitize_text_blob(raw: bytes, replacements: dict[str, str]) -> bytes:
-    """Trunca e remove PII obvio (CPF, e-mail) do texto do documento."""
+def _sanitize_text_blob(
+    raw: bytes,
+    replacements: dict[str, str],
+    pii_terms: set[str] | None = None,
+    *,
+    max_len: int = 2000,
+) -> bytes:
+    """Remove PII (CNJ, nomes de partes/advogados, CPF, e-mail) do blob do documento.
+
+    ``pii_terms`` vem de ``_collect_pii_terms`` sobre o JSON cru do processo:
+    e a unica forma de alcancar os nomes em prosa, que a redacao por chave nao
+    ve no texto/HTML opaco do documento.
+    """
     try:
         text = raw.decode("utf-8")
     except UnicodeDecodeError:
         text = raw.decode("latin-1", errors="replace")
     text = _sanitize_string(text, replacements)
-    # Remove CPFs e e-mails residuais (regex defensivo, alem da redacao por chave).
+    if pii_terms:
+        text = _redact_pii_terms(text, pii_terms)
+    # Remove CPFs, e-mails e numeros de OAB residuais (regex defensivo, alem da
+    # redacao por chave/nome). OAB no texto aparece como "DF66371-A" (UF+numero).
     text = re.sub(r"\d{3}\.?\d{3}\.?\d{3}-?\d{2}", "[CPF_REDACTED]", text)
     text = re.sub(r"[\w.+-]+@[\w-]+\.[\w.-]+", "[EMAIL_REDACTED]", text)
-    if len(text) > 2000:
-        text = text[:2000] + "\n[...truncated by capture script...]"
+    text = re.sub(r"\b[A-Z]{2}\d{4,6}-?[A-Z]?\b", "[OAB_REDACTED]", text)
+    if len(text) > max_len:
+        text = text[:max_len] + "\n[...truncated by capture script...]"
     return text.encode("utf-8")
 
 
@@ -285,6 +395,9 @@ def main() -> None:
     text_blob, binary_blob = _capture_document_payloads(
         scraper, details_data=details_data, cnj_clean=cnj_1_clean
     )
+    # Coleta os nomes do processo enquanto o JSON ainda esta cru, para redatar
+    # tambem o texto/HTML dos documentos (a redacao por chave nao os alcanca la).
+    pii_terms = _collect_pii_terms(details_data)
 
     repl_1 = _build_replacements(cnj_1, NEUTRAL_CNJ_1_DIGITS)
     list_data = _replace_numero_processo_in_list(_walk(list_data, repl_1), NEUTRAL_CNJ_1_DIGITS)
@@ -296,14 +409,25 @@ def main() -> None:
     # --- Cenario: documents/text_typical + binary_typical ---
     if text_blob is None or binary_blob is None:
         print("[jusbr] WARN: nao encontrou documento com ambos hrefs; pulando documents/")
+    elif _looks_binary(binary_blob):
+        # A redacao de nomes so funciona em texto/HTML. Um PDF/binario opaco
+        # carregaria PII das partes sem sanitizacao possivel — abortamos em vez
+        # de vazar. Escolha um documento HTML (ex.: acordao/despacho .html).
+        print(
+            "[jusbr] WARN: binario do documento parece PDF/opaco — nao da para "
+            "redatar nomes. Pulando documents/ para nao vazar PII. Escolha um "
+            "CNJ cujo primeiro documento seja HTML."
+        )
     else:
-        sanitized_text = _sanitize_text_blob(text_blob, repl_1)
+        sanitized_text = _sanitize_text_blob(text_blob, repl_1, pii_terms)
+        # O binario tipico aqui e o HTML do documento — redatado e truncado por
+        # PII (acordaos/decisoes trazem nomes de partes e advogados em prosa).
+        sanitized_binary = _sanitize_text_blob(binary_blob, repl_1, pii_terms, max_len=8000)
         dump(docs_dest / "text_typical.txt", sanitized_text)
-        # Decisao 3 do plano: salvar PDF inteiro (sem truncar). Tipico: 50-500 KB.
-        dump(docs_dest / "binary_typical.bin", binary_blob)
+        dump(docs_dest / "binary_typical.bin", sanitized_binary)
         print(
             f"[jusbr] wrote documents/text_typical.txt ({len(sanitized_text)} bytes) "
-            f"+ binary_typical.bin ({len(binary_blob)} bytes)"
+            f"+ binary_typical.bin ({len(sanitized_binary)} bytes, nomes redatados)"
         )
 
     # --- Cenario: list_two ---
