@@ -16,11 +16,14 @@ import jwt
 import numpy as np
 import pandas as pd
 import requests
+from pydantic import ValidationError
 
 from ...core.http import HTTPScraper
 from ...utils.cnj import clean_cnj
+from ...utils.params import raise_on_extra_kwargs
 from .download import USER_AGENT, fetch_document_binary, fetch_document_text, fetch_process_details, fetch_process_list
 from .parse import clean_document_text, parse_process_details_response, parse_process_list_response
+from .schemas import InputAuthJusBR, InputCPOPGJusBR, InputDownloadDocumentsJusBR
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +38,14 @@ class JusbrScraper(HTTPScraper):
     BASE_API_URL_V1_DOCS = (
         "https://api-processo.data-lake.pdpj.jus.br/processo-api/api/v1/processos/"
     )
+
+    # Schemas pydantic da API publica (``extra="forbid"``). Expostos como
+    # atributos de classe — fonte da verdade dos parametros aceitos e marcador
+    # de "wired" para ``tests/schemas/test_signature_parity.py`` (mesmo padrao
+    # do agregador irmao PDPJ).
+    INPUT_AUTH = InputAuthJusBR
+    INPUT_CPOPG = InputCPOPGJusBR
+    INPUT_DOWNLOAD_DOCUMENTS = InputDownloadDocumentsJusBR
 
     def __init__(
         self,
@@ -55,13 +66,31 @@ class JusbrScraper(HTTPScraper):
         # HTTPScraper (``juscraper/<version>``) por uma string Chrome/Edg.
         session.headers.update({'user-agent': USER_AGENT})
 
-    def auth(self, token: str) -> bool:
+    def auth(self, token: str, **kwargs: Any) -> bool:
         """
         Define o token JWT para autenticacao e o decodifica para verificacao.
+
+        Raises:
+            TypeError: Quando um kwarg desconhecido e passado (schema
+                :class:`InputAuthJusBR`, ``extra="forbid"``).
+            ValueError: Quando o token e invalido ou esta expirado.
         """
         try:
+            inp = self.INPUT_AUTH(token=token, **kwargs)
+        except ValidationError as exc:
+            raise_on_extra_kwargs(exc, "JusbrScraper.auth()", schema_cls=self.INPUT_AUTH)
+            raise
+        token = inp.token
+        try:
+            # ``verify_exp: True`` e explicito porque com ``verify_signature=False``
+            # o PyJWT desativa ``verify_exp`` por padrao — sem isso, o ramo
+            # ``except jwt.ExpiredSignatureError`` abaixo seria dead code.
             decoded = jwt.decode(token,
-                                 options={"verify_signature": False, "verify_aud": False},
+                                 options={
+                                     "verify_signature": False,
+                                     "verify_aud": False,
+                                     "verify_exp": True,
+                                 },
                                  algorithms=["RS256", "HS256", "ES256", "none"])
             self.token = token
             self.session.headers.update({'authorization': f'Bearer {self.token}'})
@@ -121,10 +150,21 @@ class JusbrScraper(HTTPScraper):
         self.session.headers.update({'authorization': f'Bearer {self.token}'})
         return True
 
-    def cpopg(self, id_cnj: str | list[str]) -> pd.DataFrame:
+    def cpopg(self, id_cnj: str | list[str], **kwargs: Any) -> pd.DataFrame:
         """
         Consulta processos pelo numero CNJ (ou lista de numeros CNJ) via API nacional.
+
+        Raises:
+            TypeError: Quando um kwarg desconhecido e passado (schema
+                :class:`InputCPOPGJusBR`, ``extra="forbid"``).
+            RuntimeError: Quando ``auth(token)`` nao foi chamado antes.
         """
+        try:
+            inp = self.INPUT_CPOPG(id_cnj=id_cnj, **kwargs)
+        except ValidationError as exc:
+            raise_on_extra_kwargs(exc, "JusbrScraper.cpopg()", schema_cls=self.INPUT_CPOPG)
+            raise
+        id_cnj = inp.id_cnj
         if not self.token:
             raise RuntimeError("Autenticacao necessaria. Chame o metodo auth(token) primeiro.")
 
@@ -136,6 +176,7 @@ class JusbrScraper(HTTPScraper):
             if not cnj_cleaned:
                 logger.warning("CNJ inválido fornecido e não pôde ser limpo: %s", cnj_input)
                 all_process_data.append({
+                    'processo': cnj_input,
                     'processo_pesquisado': cnj_input,
                     'status_consulta': 'CNJ Invalido'
                 })
@@ -149,6 +190,7 @@ class JusbrScraper(HTTPScraper):
             if not processos_content:
                 logger.warning("Nenhum processo encontrado para o CNJ: %s", cnj_cleaned)
                 all_process_data.append({
+                    'processo': cnj_cleaned,
                     'processo_pesquisado': cnj_cleaned,
                     'status_consulta': 'Nao encontrado na lista inicial'
                 })
@@ -172,6 +214,7 @@ class JusbrScraper(HTTPScraper):
                     all_process_data.append(parsed_details)
                 else:
                     all_process_data.append({
+                        'processo': cnj_cleaned,
                         'processo_pesquisado': cnj_cleaned,
                         'numeroProcessoOficial': numero_processo_oficial,
                         'status_consulta': 'Erro ao obter ou parsear detalhes'
@@ -189,13 +232,30 @@ class JusbrScraper(HTTPScraper):
 
     def download_documents(self,
                            base_df: pd.DataFrame,
-                           max_docs_per_process: int | None = None) -> pd.DataFrame:
+                           max_docs_per_process: int | None = None,
+                           **kwargs: Any) -> pd.DataFrame:
         """
         Downloads document texts for processes in base_df.
         Iterates through processes in base_df, extracts document metadata from the
         'detalhes' column, fetches, and cleans document texts.
         Returns a DataFrame where each row is a document.
+
+        Raises:
+            TypeError: Quando um kwarg desconhecido e passado (schema
+                :class:`InputDownloadDocumentsJusBR`, ``extra="forbid"``).
+            RuntimeError: Quando ``auth(token)`` nao foi chamado antes.
         """
+        try:
+            inp = self.INPUT_DOWNLOAD_DOCUMENTS(
+                base_df=base_df, max_docs_per_process=max_docs_per_process, **kwargs
+            )
+        except ValidationError as exc:
+            raise_on_extra_kwargs(
+                exc, "JusbrScraper.download_documents()", schema_cls=self.INPUT_DOWNLOAD_DOCUMENTS
+            )
+            raise
+        base_df = inp.base_df
+        max_docs_per_process = inp.max_docs_per_process
         if not self.token:
             raise RuntimeError("Autenticação necessária. Chame o método auth(token) primeiro.")
 
@@ -271,8 +331,9 @@ class JusbrScraper(HTTPScraper):
                     )
                     break
 
-                # Para o download correto, sempre usar o UUID extraído
-                # de hrefTexto como identificador do documento na URL.
+                # Extrai UUID de cada href independente — texto e binario
+                # podem chegar separados (ou nenhum). Documento so e pulado
+                # se ambos os UUIDs faltarem.
                 href_texto = doc_meta.get('hrefTexto')
                 id_doc_uuid = None
                 if href_texto and isinstance(href_texto, str) and '/documentos/' in href_texto:
@@ -280,10 +341,9 @@ class JusbrScraper(HTTPScraper):
                         id_doc_uuid = href_texto.split('/documentos/')[1].split('/')[0]
                     except IndexError:
                         logger.warning(
-                            "Não foi possível extrair UUID do hrefTexto: %s"
-                            " para processo %s",
+                            "Não foi possível extrair UUID do hrefTexto: %s para processo %s",
                             href_texto,
-                            numero_processo_api
+                            numero_processo_api,
                         )
                 href_binario = doc_meta.get('hrefBinario')
                 id_doc_uuid_binario = None
@@ -292,21 +352,13 @@ class JusbrScraper(HTTPScraper):
                         id_doc_uuid_binario = href_binario.split('/documentos/')[1].split('/')[0]
                     except IndexError:
                         logger.warning(
-                            "Não foi possível extrair UUID do hrefBinario: %s"
-                            " para processo %s",
+                            "Não foi possível extrair UUID do hrefBinario: %s para processo %s",
                             href_binario,
-                            numero_processo_api
+                            numero_processo_api,
                         )
-                if not id_doc_uuid:
+                if not id_doc_uuid and not id_doc_uuid_binario:
                     logger.warning(
-                        "Documento sem UUID extraível de 'hrefTexto'"
-                        "para o processo %s. Metadados: %s",
-                        numero_processo_api, str(doc_meta)[:200]
-                    )
-                    continue
-                if not id_doc_uuid_binario:
-                    logger.warning(
-                        "Documento sem UUID extraível de 'hrefBinario'"
+                        "Documento sem UUID extraível em hrefTexto nem hrefBinario "
                         "para o processo %s. Metadados: %s",
                         numero_processo_api, str(doc_meta)[:200]
                     )
@@ -314,10 +366,6 @@ class JusbrScraper(HTTPScraper):
                 logger.debug(
                     "[JUSBR DEBUG] doc_meta para processo %s: %r",
                     numero_processo_api, doc_meta
-                )
-                logger.debug(
-                    "Tentando baixar texto do documento UUID %s para processo %s.",
-                    id_doc_uuid, numero_processo_api
                 )
                 # Usa CNJ limpo para a API de documentos
                 numero_processo_api_clean = clean_cnj(numero_processo_api)
@@ -327,45 +375,51 @@ class JusbrScraper(HTTPScraper):
                 auth_header = self.session.headers.get('authorization', '')
                 if isinstance(auth_header, bytes):
                     auth_header = auth_header.decode('latin-1')
-                raw_text = fetch_document_text(
-                    self._request_with_retry,
-                    numero_processo_api_clean,
-                    str(id_doc_uuid),
-                    self.BASE_API_URL_V1_DOCS,
-                    authorization=auth_header,
-                )
-                cleaned_text = clean_document_text(raw_text)
-                raw_binary = fetch_document_binary(
-                    self._request_with_retry,
-                    numero_processo_api_clean,
-                    str(id_doc_uuid_binario),
-                    self.BASE_API_URL_V2
-                )
+                # Download parcial (followup 3 da #141): texto e binario sao
+                # baixados de forma independente. So o que tiver UUID valido e
+                # buscado; o outro fica ``None`` na linha de saida.
+                raw_text: str | None = None
+                cleaned_text: str | None = None
+                if id_doc_uuid:
+                    logger.debug(
+                        "Tentando baixar texto do documento UUID %s para processo %s.",
+                        id_doc_uuid, numero_processo_api
+                    )
+                    raw_text = fetch_document_text(
+                        self._request_with_retry,
+                        numero_processo_api_clean,
+                        str(id_doc_uuid),
+                        self.BASE_API_URL_V1_DOCS,
+                        authorization=auth_header,
+                    )
+                    cleaned_text = clean_document_text(raw_text)
+                raw_binary: bytes | None = None
+                if id_doc_uuid_binario:
+                    raw_binary = fetch_document_binary(
+                        self._request_with_retry,
+                        numero_processo_api_clean,
+                        str(id_doc_uuid_binario),
+                        self.BASE_API_URL_V2
+                    )
 
-                if cleaned_text:
-                    logger.debug(
-                        "Sucesso ao baixar e limpar texto do doc UUID %s"
-                        "(processo %s), tamanho limpo: %d",
-                        id_doc_uuid,
-                        numero_processo_api,
-                        len(cleaned_text)
-                    )
-                elif raw_text:
-                    logger.debug(
-                        "Texto baixado para doc UUID %s"
-                        "(processo %s) mas resultou em None/vazio"
-                        "após limpeza. Raw tamanho: %d",
-                        id_doc_uuid,
-                        numero_processo_api,
-                        len(raw_text)
-                    )
-                else:
-                    logger.warning(
-                        "Falha ao baixar texto do doc UUID %s"
-                        "(processo %s), ou texto vazio.",
-                        id_doc_uuid,
-                        numero_processo_api
-                    )
+                if id_doc_uuid:
+                    if cleaned_text:
+                        logger.debug(
+                            "Sucesso ao baixar e limpar texto do doc UUID %s "
+                            "(processo %s), tamanho limpo: %d",
+                            id_doc_uuid, numero_processo_api, len(cleaned_text),
+                        )
+                    elif raw_text:
+                        logger.debug(
+                            "Texto baixado para doc UUID %s (processo %s) mas resultou "
+                            "em None/vazio após limpeza. Raw tamanho: %d",
+                            id_doc_uuid, numero_processo_api, len(raw_text),
+                        )
+                    else:
+                        logger.warning(
+                            "Falha ao baixar texto do doc UUID %s (processo %s), ou texto vazio.",
+                            id_doc_uuid, numero_processo_api,
+                        )
 
                 doc_data_row = {
                     'numero_processo': numero_processo_api,

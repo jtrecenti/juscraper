@@ -129,6 +129,49 @@ def test_cpopg_rejects_unknown_kwargs() -> None:
 
 
 @responses.activate
+def test_fetch_movs_page_decodes_fragment_as_utf8() -> None:
+    """The Richfaces AJAX fragment is UTF-8; ``fetch_movs_page`` must not latin-1 it.
+
+    Regression for the double-encoding bug where accented movimentação text came
+    back mojibaked (``petição`` -> ``petiÃ§Ã£o``) because the UTF-8 partial
+    response was decoded as latin-1. Serves the *raw bytes* of a fragment
+    captured live (TRF5 process with 505 movs) and asserts the decoded text
+    carries clean accents.
+
+    TRF5 ships no paginated-detail sample, so we build a synthetic
+    ``MovsPagination`` — the focus here is the decode, not the slider extraction
+    (covered live by ``test_cpopg_returns_all_movs_pages``).
+    """
+    import requests
+
+    from juscraper.courts.trf5.download import BASE_URL, DETAIL_PATH, MovsPagination, fetch_movs_page
+
+    info = MovsPagination(
+        form_id="j_id156",
+        slider_input_name="j_id156:j_id220:j_id221Slider",
+        ajax_source_name="j_id156:j_id220:j_id221",
+        container_id="j_id156:processoEventoPanel",
+        max_pages=2,
+        view_state="-1234567890",
+    )
+
+    responses.add(
+        responses.POST,
+        BASE_URL + DETAIL_PATH,
+        body=load_sample_bytes("trf5", "cpopg/movs_page_2.html"),  # raw UTF-8 bytes
+        status=200,
+        content_type="text/xml; charset=UTF-8",
+    )
+
+    fragment = fetch_movs_page(requests.Session(), info, 2, "ca-token")
+
+    assert "ç" in fragment, "fragmento sem acento — decode suspeito"
+    assert "Ã§" not in fragment and "Ã£" not in fragment, (
+        "mojibake: fragmento UTF-8 decodificado como latin-1"
+    )
+
+
+@responses.activate
 def test_cpopg_batch_continues_after_download_error() -> None:
     """Erro de rede num CNJ não derruba o batch — vira linha só com ``id_cnj``."""
     responses.add(
