@@ -40,11 +40,20 @@ def test_cpopg_returns_all_movs_pages() -> None:
     movs = df["movimentacoes"].iloc[0]
     assert isinstance(movs, list)
     assert len(movs) > 15, f"expected > 15 movs (paginated), got {len(movs)}"
+    # Pagination is healthy when later pages bring *different* rows, not a
+    # re-fetch of page 1. A stuck slider cursor would re-fetch page 1 on every
+    # page, so the set of distinct (data, descricao) pairs would not exceed a
+    # single page. Assert it does. Do NOT assert global uniqueness of
+    # (data, descricao) — the PJe legitimately emits several events with the
+    # same second-precision timestamp and description within a single page, so
+    # that key is not unique in real data. ``page_size`` is the PJe movimentações
+    # page size (~15; live capture: TRF1 55 movs/4 pages, TRF5 505/34).
+    page_size = 15
     pairs = [(m["data"], m["descricao"]) for m in movs]
-    assert len(pairs) == len(set(pairs)), "duplicate movs after pagination"
+    assert len(set(pairs)) > page_size, "page 2 repeated page 1 (stuck pagination cursor)"
     # Regression guard: paginated movs (page >= 2) must carry clean accents.
     # The Richfaces fragment is UTF-8; decoding it as latin-1 turns "petição"
-    # into "petiÃ§Ã£o". Without this, the count/uniqueness checks above pass
+    # into "petiÃ§Ã£o". Without this, the count/pagination checks above pass
     # even when every paginated row is mojibaked.
     descricoes = " ".join(m["descricao"] for m in movs)
     assert "Ã§" not in descricoes and "Ã£" not in descricoes, (

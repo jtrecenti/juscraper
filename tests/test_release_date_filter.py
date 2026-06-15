@@ -59,6 +59,9 @@ KNOWN_FILTRO_FAILURES = {
 # Tribunals where pagination specifically is broken (usually HTTP errors
 # bubbling up on page 2). Subset of above for clarity.
 KNOWN_PAGINACAO_FAILURES = {
+    "tjap": "Tucujuris UI/backend does not expose date filtering; run_paginacao_data_unica "
+            "exhausts every date-filter set and re-raises TypeError (same root cause as "
+            "KNOWN_FILTRO_FAILURES).",
     "tjrj": "test passes data_julgamento_*/data_publicacao_* kwargs that TJRJ rejects via "
             "extra=forbid (granularidade so anual). Same root cause as KNOWN_FILTRO_FAILURES (refs #220).",
 }

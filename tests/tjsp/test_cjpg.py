@@ -36,7 +36,7 @@ class TestCJPGIntegration:
         """Test CJPG search with filters."""
         results = self.scraper.cjpg(
             pesquisa='direito',
-            classes=['Procedimento Comum Cível'],
+            classe=['Procedimento Comum Cível'],
             paginas=range(1, 2)
         )
 
