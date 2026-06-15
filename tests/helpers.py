@@ -201,16 +201,20 @@ def _call_cjsg_with_fallback(scraper, kwargs: dict) -> pd.DataFrame:
 def run_paginacao_data_unica(scraper, **extra_kwargs) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Download ``paginas=1`` and ``paginas=range(1,3)`` with the date fixed.
 
-    Uses the same date-filter resolution as :func:`run_filtro_data_unica`: the
-    first set in ``_DATE_FILTER_SETS`` the scraper's schema accepts is used for
-    both downloads, so a julgamento-only tribunal (TJSP) and a publicação-only
-    one (TJBA) each get the filter their backend understands. Tribunals that
+    Uses the same date-filter resolution as :func:`run_filtro_data_unica`: tries
+    each set in ``_DATE_FILTER_SETS`` order, skips the ones the schema rejects
+    (``extra="forbid"`` → ``TypeError``), and uses the first accepted set that
+    returns rows — so a julgamento-only tribunal (TJSP) and a publicação-only one
+    (TJBA) each get the filter their backend understands, and an accepted-but-empty
+    set (e.g. a tribunal whose publicação index is empty for the target week)
+    falls through to the next set instead of returning empty. Tribunals that
     reject every set re-raise the ``TypeError`` (xfailed in the release suite).
 
     Returns both DataFrames so the caller can decide whether to assert
     ``len(df2) >= len(df1)`` (only makes sense when the tribunal actually
     has more than one page of results for the target week).
     """
+    result: tuple[pd.DataFrame, pd.DataFrame] | None = None
     last_type_error: TypeError | None = None
     for date_filters in _DATE_FILTER_SETS:
         base = {**date_filters, **extra_kwargs}
@@ -220,7 +224,12 @@ def run_paginacao_data_unica(scraper, **extra_kwargs) -> tuple[pd.DataFrame, pd.
         except TypeError as exc:  # schema rejects this date-filter set
             last_type_error = exc
             continue
-        return df1, df2
+        result = (df1, df2)
+        if df1 is not None and len(df1) > 0:
+            break
 
-    assert last_type_error is not None
-    raise last_type_error
+    if result is None and last_type_error is not None:
+        raise last_type_error
+
+    assert result is not None
+    return result

@@ -41,16 +41,16 @@ def test_cpopg_returns_all_movs_pages() -> None:
     assert isinstance(movs, list)
     assert len(movs) > 15, f"expected > 15 movs (paginated), got {len(movs)}"
     # Pagination is healthy when later pages bring *different* rows, not a
-    # re-fetch of page 1. Compare the first 15-row page block against the next
-    # one: a stuck slider cursor would make page 2 identical to page 1. Do NOT
-    # assert global uniqueness of (data, descricao) — the PJe legitimately emits
-    # several events with the same second-precision timestamp and description
-    # within a single page, so that key is not unique in real data.
+    # re-fetch of page 1. A stuck slider cursor would re-fetch page 1 on every
+    # page, so the set of distinct (data, descricao) pairs would not exceed a
+    # single page. Assert it does. Do NOT assert global uniqueness of
+    # (data, descricao) — the PJe legitimately emits several events with the
+    # same second-precision timestamp and description within a single page, so
+    # that key is not unique in real data. ``page_size`` is the PJe movimentações
+    # page size (~15; live capture: TRF1 55 movs/4 pages, TRF5 505/34).
     page_size = 15
-    first_page = [(m["data"], m["descricao"]) for m in movs[:page_size]]
-    second_page = [(m["data"], m["descricao"]) for m in movs[page_size:2 * page_size]]
-    assert second_page, "pagination did not surface a second page"
-    assert first_page != second_page, "page 2 repeated page 1 (stuck pagination cursor)"
+    pairs = [(m["data"], m["descricao"]) for m in movs]
+    assert len(set(pairs)) > page_size, "page 2 repeated page 1 (stuck pagination cursor)"
 
 
 @pytest.mark.integration
