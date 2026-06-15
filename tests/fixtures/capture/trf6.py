@@ -48,18 +48,6 @@ FOUND_CNJ = "10052295520234063801"
 MISSING_CNJ = "00000000020994060000"
 
 
-def _cnj_formatado(numero: str) -> str:
-    """``clean_cnj`` + ``format_cnj`` com narrowing de ``str | None`` para ``str``.
-
-    ``format_cnj`` declara retorno ``str | None``; aqui os CNJs são constantes
-    válidas, então o ``None`` é impossível — o ``assert`` documenta isso e
-    satisfaz o type checker.
-    """
-    formatado = format_cnj(clean_cnj(numero))
-    assert formatado is not None, f"CNJ inválido: {numero}"
-    return formatado
-
-
 def _fresh_session() -> requests.Session:
     s = requests.Session()
     s.headers.update(BROWSER_HEADERS)
@@ -76,7 +64,7 @@ def _capture_detail(dest: Path, max_attempts: int = 5) -> None:
             print(f"[trf6]   saved form_initial.html ({len(form_html)} chars)")
         captcha_b64 = extract_captcha_b64(form_html)
         captcha_text = solve_captcha(captcha_b64)
-        payload = build_search_payload(_cnj_formatado(FOUND_CNJ), captcha_text)
+        payload = build_search_payload(format_cnj(clean_cnj(FOUND_CNJ)), captcha_text)
         response = submit_search(s, payload)
         if is_detail_page(response):
             (dest / "detail_normal.html").write_text(response, encoding="latin-1")
@@ -105,7 +93,7 @@ def _capture_no_results(dest: Path, max_attempts: int = 5) -> None:
         form_html = fetch_form(s)
         captcha_b64 = extract_captcha_b64(form_html)
         captcha_text = solve_captcha(captcha_b64)
-        payload = build_search_payload(_cnj_formatado(MISSING_CNJ), captcha_text)
+        payload = build_search_payload(format_cnj(clean_cnj(MISSING_CNJ)), captcha_text)
         response = submit_search(s, payload)
         if is_detail_page(response):
             raise RuntimeError(
@@ -128,7 +116,7 @@ def _capture_bad_captcha(dest: Path) -> None:
     """Force a captcha rejection by submitting an obviously wrong value."""
     s = _fresh_session()
     fetch_form(s)  # primes the session
-    payload = build_search_payload(_cnj_formatado(FOUND_CNJ), "WRONG")
+    payload = build_search_payload(format_cnj(clean_cnj(FOUND_CNJ)), "WRONG")
     response = submit_search(s, payload)
     (dest / "search_bad_captcha.html").write_text(response, encoding="latin-1")
     print("[trf6]   saved search_bad_captcha.html")

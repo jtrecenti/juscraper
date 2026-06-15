@@ -100,7 +100,7 @@ class TRF3Scraper(BaseScraper):
         remaining pages.
         """
         ids = self._ensure_field_ids()
-        payload = build_search_payload(format_cnj(id_cnj_clean), ids)  # type: ignore[arg-type]
+        payload = build_search_payload(format_cnj(id_cnj_clean), ids)
         search_html = submit_search(self.session, payload)
         ca = extract_ca_token(search_html)
         if not ca:
