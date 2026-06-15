@@ -16,11 +16,14 @@ import jwt
 import numpy as np
 import pandas as pd
 import requests
+from pydantic import ValidationError
 
 from ...core.http import HTTPScraper
 from ...utils.cnj import clean_cnj
+from ...utils.params import raise_on_extra_kwargs
 from .download import USER_AGENT, fetch_document_binary, fetch_document_text, fetch_process_details, fetch_process_list
 from .parse import clean_document_text, parse_process_details_response, parse_process_list_response
+from .schemas import InputAuthJusBR, InputCPOPGJusBR, InputDownloadDocumentsJusBR
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +38,14 @@ class JusbrScraper(HTTPScraper):
     BASE_API_URL_V1_DOCS = (
         "https://api-processo.data-lake.pdpj.jus.br/processo-api/api/v1/processos/"
     )
+
+    # Schemas pydantic da API publica (``extra="forbid"``). Expostos como
+    # atributos de classe — fonte da verdade dos parametros aceitos e marcador
+    # de "wired" para ``tests/schemas/test_signature_parity.py`` (mesmo padrao
+    # do agregador irmao PDPJ).
+    INPUT_AUTH = InputAuthJusBR
+    INPUT_CPOPG = InputCPOPGJusBR
+    INPUT_DOWNLOAD_DOCUMENTS = InputDownloadDocumentsJusBR
 
     def __init__(
         self,
@@ -55,10 +66,21 @@ class JusbrScraper(HTTPScraper):
         # HTTPScraper (``juscraper/<version>``) por uma string Chrome/Edg.
         session.headers.update({'user-agent': USER_AGENT})
 
-    def auth(self, token: str) -> bool:
+    def auth(self, token: str, **kwargs: Any) -> bool:
         """
         Define o token JWT para autenticacao e o decodifica para verificacao.
+
+        Raises:
+            TypeError: Quando um kwarg desconhecido e passado (schema
+                :class:`InputAuthJusBR`, ``extra="forbid"``).
+            ValueError: Quando o token e invalido ou esta expirado.
         """
+        try:
+            inp = self.INPUT_AUTH(token=token, **kwargs)
+        except ValidationError as exc:
+            raise_on_extra_kwargs(exc, "JusbrScraper.auth()", schema_cls=self.INPUT_AUTH)
+            raise
+        token = inp.token
         try:
             # ``verify_exp: True`` e explicito porque com ``verify_signature=False``
             # o PyJWT desativa ``verify_exp`` por padrao — sem isso, o ramo
@@ -128,10 +150,21 @@ class JusbrScraper(HTTPScraper):
         self.session.headers.update({'authorization': f'Bearer {self.token}'})
         return True
 
-    def cpopg(self, id_cnj: str | list[str]) -> pd.DataFrame:
+    def cpopg(self, id_cnj: str | list[str], **kwargs: Any) -> pd.DataFrame:
         """
         Consulta processos pelo numero CNJ (ou lista de numeros CNJ) via API nacional.
+
+        Raises:
+            TypeError: Quando um kwarg desconhecido e passado (schema
+                :class:`InputCPOPGJusBR`, ``extra="forbid"``).
+            RuntimeError: Quando ``auth(token)`` nao foi chamado antes.
         """
+        try:
+            inp = self.INPUT_CPOPG(id_cnj=id_cnj, **kwargs)
+        except ValidationError as exc:
+            raise_on_extra_kwargs(exc, "JusbrScraper.cpopg()", schema_cls=self.INPUT_CPOPG)
+            raise
+        id_cnj = inp.id_cnj
         if not self.token:
             raise RuntimeError("Autenticacao necessaria. Chame o metodo auth(token) primeiro.")
 
@@ -199,13 +232,30 @@ class JusbrScraper(HTTPScraper):
 
     def download_documents(self,
                            base_df: pd.DataFrame,
-                           max_docs_per_process: int | None = None) -> pd.DataFrame:
+                           max_docs_per_process: int | None = None,
+                           **kwargs: Any) -> pd.DataFrame:
         """
         Downloads document texts for processes in base_df.
         Iterates through processes in base_df, extracts document metadata from the
         'detalhes' column, fetches, and cleans document texts.
         Returns a DataFrame where each row is a document.
+
+        Raises:
+            TypeError: Quando um kwarg desconhecido e passado (schema
+                :class:`InputDownloadDocumentsJusBR`, ``extra="forbid"``).
+            RuntimeError: Quando ``auth(token)`` nao foi chamado antes.
         """
+        try:
+            inp = self.INPUT_DOWNLOAD_DOCUMENTS(
+                base_df=base_df, max_docs_per_process=max_docs_per_process, **kwargs
+            )
+        except ValidationError as exc:
+            raise_on_extra_kwargs(
+                exc, "JusbrScraper.download_documents()", schema_cls=self.INPUT_DOWNLOAD_DOCUMENTS
+            )
+            raise
+        base_df = inp.base_df
+        max_docs_per_process = inp.max_docs_per_process
         if not self.token:
             raise RuntimeError("Autenticação necessária. Chame o método auth(token) primeiro.")
 

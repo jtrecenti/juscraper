@@ -28,7 +28,7 @@ import responses
 from responses.registries import OrderedRegistry
 
 import juscraper as jus
-from tests._helpers import load_sample, load_sample_bytes
+from tests._helpers import assert_unknown_kwarg_raises, load_sample, load_sample_bytes
 
 BASE_TEXT_URL = "https://api-processo.data-lake.pdpj.jus.br/processo-api/api/v1/processos"
 BASE_BINARY_URL = "https://portaldeservicos.pdpj.jus.br/api/v2/processos"
@@ -265,3 +265,13 @@ def test_download_documents_sem_auth_levanta_runtime_error():
     base_df = _base_df([_doc_meta(href_texto=_href_texto(UUID_TEXT_1), href_binario=_href_binario(UUID_BIN_1))])
     with pytest.raises(RuntimeError, match="[Aa]utentica"):
         scraper.download_documents(base_df)
+
+
+def test_download_documents_kwarg_desconhecido_levanta_type_error():
+    """Kwarg desconhecido vira ``TypeError`` canonico via ``InputDownloadDocumentsJusBR``.
+
+    A validacao do schema precede a checagem de auth, entao o ``TypeError`` sai
+    sem ``auth()`` previo.
+    """
+    scraper = jus.scraper("jusbr")
+    assert_unknown_kwarg_raises(scraper.download_documents, "kwarg_inventado", _base_df([]))
