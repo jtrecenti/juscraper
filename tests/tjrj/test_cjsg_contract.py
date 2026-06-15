@@ -164,13 +164,13 @@ def test_extract_default_year_uses_newest_dropdown_option():
 
 
 def test_extract_default_year_fallback_sem_select():
-    """Sem o ``<select>`` de ``cmbAnoInicio``, cai no maior ``\\d{4}`` do HTML."""
+    r"""Sem o ``<select>`` de ``cmbAnoInicio``, cai no maior ``\d{4}`` do HTML."""
     html = "<html><body><p>rodape 2019</p><p>atualizado em 2030</p></body></html>"
     assert extract_default_year(html) == "2030"
 
 
 def test_extract_default_year_fallback_select_sem_option_valida():
-    """``<select>`` presente mas sem ``<option value>`` cai no maior ``\\d{4}``."""
+    r"""``<select>`` presente mas sem ``<option value>`` cai no maior ``\d{4}``."""
     html = (
         '<select name="ctl00$ContentPlaceHolder1$cmbAnoInicio">'
         "<option>2021</option><option>2027</option>"

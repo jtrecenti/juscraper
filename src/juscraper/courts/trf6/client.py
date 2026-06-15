@@ -69,9 +69,6 @@ class TRF6Scraper(BaseScraper):
     def _fetch_one(self, id_cnj_clean: str) -> str | None:
         """Fetch the detail HTML for a single CNJ. ``None`` when not found."""
         formatted = format_cnj(id_cnj_clean)
-        # format_cnj(strict=True) sempre devolve str ou levanta ValueError;
-        # o None do tipo de retorno so ocorre em strict=False.
-        assert formatted is not None
         return fetch_detail(
             self.session,
             formatted,

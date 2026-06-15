@@ -21,14 +21,17 @@ DOCS_NB = REPO_ROOT / "docs" / "notebooks"
 
 
 def md(source: str) -> nbformat.NotebookNode:
+    """Build a markdown notebook cell from ``source`` (outer newlines stripped)."""
     return nbformat.v4.new_markdown_cell(source.strip("\n"))
 
 
 def code(source: str) -> nbformat.NotebookNode:
+    """Build a code notebook cell from ``source`` (outer newlines stripped)."""
     return nbformat.v4.new_code_cell(source.strip("\n"))
 
 
 def make_trf6() -> nbformat.NotebookNode:
+    """Assemble the TRF6 tutorial notebook (markdown + code cells)."""
     nb = nbformat.v4.new_notebook()
     nb.cells = [
         md(
@@ -175,6 +178,7 @@ df_again[["id_cnj", "processo", "data_autuacao"]]
 
 
 def main() -> None:
+    """Render the TRF6 notebook and write it executed to ``docs/notebooks/``."""
     DOCS_NB.mkdir(parents=True, exist_ok=True)
     nb = make_trf6()
     path = DOCS_NB / "trf6.ipynb"

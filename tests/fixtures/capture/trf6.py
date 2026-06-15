@@ -97,7 +97,7 @@ def _capture_no_results(dest: Path, max_attempts: int = 5) -> None:
         response = submit_search(s, payload)
         if is_detail_page(response):
             raise RuntimeError(
-                f"[trf6] MISSING_CNJ unexpectedly matched a process — "
+                "[trf6] MISSING_CNJ unexpectedly matched a process — "
                 "pick a different synthetic value."
             )
         if is_captcha_error(response):

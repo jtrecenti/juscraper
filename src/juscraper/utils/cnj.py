@@ -1,5 +1,6 @@
 """Funções utilitárias para manipulação de números CNJ (Conselho Nacional de Justiça)."""
 import re
+from typing import Literal, overload
 
 _NON_DIGIT_RE = re.compile(r"\D")
 
@@ -36,6 +37,14 @@ def split_cnj(numero: str) -> dict:
         "tribunal": numero_limpo[14:16],
         "orgao": numero_limpo[16:]
     }
+
+
+@overload
+def format_cnj(numero: str, strict: Literal[True] = ...) -> str: ...
+
+
+@overload
+def format_cnj(numero: str | None, strict: bool = ...) -> str | None: ...
 
 
 def format_cnj(numero: str | None, strict: bool = True) -> str | None:

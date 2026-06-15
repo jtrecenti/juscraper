@@ -54,7 +54,7 @@ def extract_viewstate_fields(html: str) -> dict:
 
 
 def extract_default_year(html: str) -> str:
-    """Devolve o ano-padrao do form — a primeira ``<option>`` de ``cmbAnoInicio``.
+    r"""Devolve o ano-padrao do form — a primeira ``<option>`` de ``cmbAnoInicio``.
 
     O backend do TJRJ passou a exigir ``cmbAnoInicio``/``cmbAnoFim`` nao-vazios:
     um POST com ano em branco dispara ``HTTP 500`` ja na submissao do form
@@ -79,7 +79,7 @@ def extract_default_year(html: str) -> str:
     if values:
         return values[0]
     anos = re.findall(r"\b(\d{4})\b", block) or re.findall(r"\b(\d{4})\b", html)
-    return max(anos) if anos else ""
+    return str(max(anos)) if anos else ""
 
 
 def build_cjsg_payload(
