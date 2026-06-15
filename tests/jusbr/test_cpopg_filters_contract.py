@@ -14,13 +14,12 @@ import json
 
 import jwt
 import pandas as pd
-import pytest
 import responses
 from responses.matchers import query_param_matcher
 from responses.registries import OrderedRegistry
 
 import juscraper as jus
-from tests._helpers import load_sample
+from tests._helpers import assert_unknown_kwarg_raises, load_sample
 
 LIST_URL = "https://portaldeservicos.pdpj.jus.br/api/v2/processos/"
 DETAILS_URL_PREFIX = "https://portaldeservicos.pdpj.jus.br/api/v2/processos/"
@@ -124,13 +123,12 @@ def test_lista_de_cnjs_propaga_cada_um(mocker):
 
 
 def test_kwarg_desconhecido_e_rejeitado():
-    """``cpopg`` nao tem ``**kwargs`` -> Python puro levanta ``TypeError``.
+    """Kwarg desconhecido vira ``TypeError`` canonico via ``InputCPOPGJusBR`` wirado.
 
-    Quando ``InputCPOPGJusBR`` for wirado como follow-up, o
-    ``ValidationError`` do pydantic vai levantar antes; ate la, o
-    ``TypeError`` ja garante a rejeicao silenciosa.
+    Antes do wiring o ``TypeError`` vinha do Python puro (``cpopg`` sem
+    ``**kwargs``); agora vem de ``raise_on_extra_kwargs``, com o nome do metodo
+    no prefixo. A validacao precede a checagem de auth — por isso o teste nao
+    chama ``auth()`` antes.
     """
     scraper = jus.scraper("jusbr")
-    scraper.auth(_fake_jwt())
-    with pytest.raises(TypeError, match="filtro_inexistente"):
-        scraper.cpopg(NEUTRAL_CNJ_1, filtro_inexistente="x")
+    assert_unknown_kwarg_raises(scraper.cpopg, "filtro_inexistente", NEUTRAL_CNJ_1)

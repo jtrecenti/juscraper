@@ -14,6 +14,7 @@ import jwt
 import pytest
 
 import juscraper as jus
+from tests._helpers import assert_unknown_kwarg_raises
 
 # PyJWT emite ``InsecureKeyLengthWarning`` para chaves HMAC < 32 bytes em SHA256;
 # o ``filterwarnings = ["error"]`` do pytest converte isso em falha. Chave de 32+
@@ -72,3 +73,15 @@ def test_auth_token_malformado_levanta_value_error():
         scraper.auth("not-a-jwt")
     assert "authorization" not in scraper.session.headers
     assert scraper.token is None
+
+
+def test_auth_kwarg_desconhecido_levanta_type_error():
+    """Kwarg desconhecido vira ``TypeError`` canonico via ``InputAuthJusBR`` wirado.
+
+    A validacao do schema precede o ``jwt.decode``, entao o ``TypeError`` sai
+    mesmo com um token estruturalmente valido.
+    """
+    scraper = jus.scraper("jusbr")
+    assert_unknown_kwarg_raises(
+        scraper.auth, "kwarg_inventado", _token({"sub": "tester", "exp": 9999999999})
+    )
