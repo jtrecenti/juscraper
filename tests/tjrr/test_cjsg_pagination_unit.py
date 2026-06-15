@@ -64,6 +64,25 @@ def test_extract_datatable_id_pins_base_table_not_second_or_tbody():
     assert _extract_datatable_id(html) == "formPesquisa:j_idt158:dataTablePesquisa"
 
 
+def test_extract_datatable_id_falls_back_when_no_id_attribute():
+    """Segundo nivel da cascata: o id aparece "solto" (ex.: em JS), sem o
+    atributo ``id="..."``. O primeiro seletor (ancorado em ``id="``) nao casa e
+    a busca cai para o seletor sem ancora, em vez de levantar."""
+    html = (
+        '<script>PrimeFaces.cw("DataTable","w",'
+        '{id:"formPesquisa:j_idt300:dataTablePesquisa"});</script>'
+    )
+    assert _extract_datatable_id(html) == "formPesquisa:j_idt300:dataTablePesquisa"
+
+
+def test_extract_datatable_id_falls_back_for_non_jidt_segment():
+    """Terceiro nivel da cascata: o segmento do meio nao segue ``j_idt\\d+``
+    (ex.: id nomeado ``resultTable``). Os dois primeiros seletores (presos a
+    ``j_idt\\d+``) nao casam e o seletor generico ``[\\w-]+`` resolve."""
+    html = '<div id="formPesquisa:resultTable:dataTablePesquisa"></div>'
+    assert _extract_datatable_id(html) == "formPesquisa:resultTable:dataTablePesquisa"
+
+
 def test_extract_datatable_id_raises_when_absent():
     with pytest.raises(RuntimeError, match="datatable id"):
         _extract_datatable_id("<html><body>no datatable here</body></html>")
