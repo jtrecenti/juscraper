@@ -1,0 +1,1595 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head><title>
+	Tribunal de Justiça do Estado do Rio de Janeiro
+</title><meta http-equiv="X-UA-Compatible" content="IE=Edge" /><link href="./img/favicon.ico" rel="Shortcut Icon" /><meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" /><link id="Link3" rel="stylesheet" media="screen" href="Styles/importacao-sistemas.css" /><link id="Link1" rel="stylesheet" media="screen" href="Styles/Site.css" />
+    <script src="https://www.google.com/recaptcha/api.js?render=6LeyHqQUAAAAACUVxyWku1hGU2sHi2vof7q-vCH7" type="text/javascript"></script>
+    <meta http-equiv="Pragma" content="no-cache" /><meta http-equiv="cache-control" content="no-cache" /><meta http-equiv="Expires" content="-1" />
+    <!-- Google tag (gtag.js) -->
+    <script type="text/javascript">
+        var googleAnalyticsId = 'G-5ZKHD9TRY6';
+        var scriptTag = document.createElement('script');
+        scriptTag.async = true;
+        scriptTag.src = 'https://www.googletagmanager.com/gtag/js?id=' + googleAnalyticsId;
+        document.head.appendChild(scriptTag);
+    </script>
+    <script type="text/javascript">
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-5ZKHD9TRY6');
+    </script>
+    <script src="Scripts/jquery-1.11.0.min.js" type="text/javascript"
+        language="javascript"></script>
+    <script src="Scripts/MPS.TJRJ.Util.min.js?Version=1.2.1.0" type="text/javascript"
+        language="javascript"></script>
+    <script src="Scripts/jquery-jtemplates-0.8.4.js" type="text/javascript"
+        language="javascript"></script>
+    <script type="text/javascript" language="javascript" defer="defer">
+
+        $(window).bind("pageshow", function () {
+            if (performance.getEntriesByType("navigation")[0].type == "back_forward") {
+                var parametrosPesquisa = window.sessionStorage.getItem("parametrosPesquisa");
+                if (parametrosPesquisa != null)
+                    PreencherCamposTela(parametrosPesquisa);
+            }            
+        });
+
+        function AdicionarCombo(element) {
+            var tRow = element.parentElement.parentElement;
+            var table = tRow.parentElement;
+            var i = $("." + tRow.className).last().index() + 1;
+            var row = table.insertRow(i);
+            row.className = tRow.className;
+            var cell1 = row.insertCell(0);
+            cell1.classList.add("labeldireita");
+            var novoCampo = $(tRow).find($(".campo")).last().clone(true);
+            novoCampo.appendTo(row);
+            return novoCampo; //retona a TD com o novo combo dentro.
+            $(element).attr("disabled", "disabled");
+        }
+
+        //Definindo ids com a intenção de encontrar os campos para uso nos eventos
+        var hfCodRamos = 'ContentPlaceHolder1_hfCodRamos';
+        var hfCodMags = 'ContentPlaceHolder1_hfCodMags';
+        var hfCodOrgs = 'ContentPlaceHolder1_hfCodOrgs';
+
+        var cmbRamo = 'ContentPlaceHolder1_cmbRamo';
+        var cmbOrgao = 'ContentPlaceHolder1_cmbOrgaoJulgador';
+        var cmbMagistrado = 'ContentPlaceHolder1_cmbMagistrado';
+        var cmbTipNum = 'ContentPlaceHolder1_cmbTipNumeracao';
+
+        function PreencherCombos(idElement, values, classElement) {
+            if ($("#" + idElement).val() !== "") {
+                $.each(values.split(";"), function (index, value) {
+                    if ((index > 0) && (value > 0))
+                        $(AdicionarCombo(document.getElementById(idElement))).find($("." + classElement)).val(value);
+                });
+            }
+        }
+
+        function CriarCombos() {
+            var CodRamos = $("#"+ hfCodRamos).val();
+            var CodOrgs = $("#"+ hfCodOrgs).val();
+            var CodMags = $("#"+ hfCodMags).val();
+
+            if (CodRamos != "")
+                PreencherCombos(cmbRamo, CodRamos, "cmbRamo");
+            if (CodOrgs != "")
+                PreencherCombos(cmbOrgao, CodOrgs, "cmbOrgaoJulgador");
+            if (CodMags != "")
+                PreencherCombos(cmbMagistrado, CodMags, "cmbMagistrado");
+        }
+
+        window.onload = function () {
+            CriarCombos();
+            cmbChange(document.getElementById(cmbRamo), hfCodRamos);
+            cmbChange(document.getElementById(cmbMagistrado), hfCodMags);
+            cmbChange(document.getElementById(cmbOrgao), hfCodOrgs);
+            cmbTipNumeracaoChange(document.getElementById(cmbTipNum));
+        }
+
+        function LimparHiddenFields() {
+            $("#" + hfCodRamos).val("");
+            $("#" + hfCodOrgs).val("");
+            $("#" + hfCodMags).val("");
+        }
+
+        function cmbChange(element, hfElement) {
+            $("#" + hfElement).val(retornaValores(element));
+        }
+
+        function habilitaBtnCombos(element, btnElement) {
+            var habilita = true;
+            $.grep($("." + element.className).map(function() {
+                habilita = habilita & ($(this).val() !== "");
+            }));
+            if (habilita)
+                btnElement.removeAttr('disabled');
+            else
+                btnElement.attr('disabled', 'disabled');
+        }
+
+        function cmbTipNumeracaoChange(element) {
+            var eTxtNumeracao = $("#ContentPlaceHolder1_txtNumeracao");
+            eTxtNumeracao.val("");
+            if ($(element).val() === "1") {
+                eTxtNumeracao.attr({ "MaxLength": "25", "onblur": "javascript: FormataNumCNJ(this.id,this.value);" });
+            } else {
+                eTxtNumeracao.attr({ "MaxLength": "17", "onblur": "javascript: FormataNumAntigo(this.id,this.value);" });
+            }
+        }
+
+        function retornaValores(element) {
+            return $.grep($("." + element.className).map(function() {
+                   return $(this).val(); // retorna todos os valores das combos com a classe css selecionada
+                }).get(), function(v) {
+                   return v !== ""; // filtra os valores, retornando apenas os que não são vazios
+                }
+            ).join(";");//Separador
+        }
+
+        function ValidarPreenchimento() {
+            var retorno = true;
+            var txtTextoPesq = document.getElementById('ContentPlaceHolder1_txtTextoPesq');
+            var txtNumeracao = document.getElementById('ContentPlaceHolder1_txtNumeracao');
+
+            if ((txtTextoPesq.value.trim() == "") && (txtNumeracao.value.trim() == "")) {
+                alert('Para a execução da pesquisa devem ser informados no mínimo os parâmetros:\n "Pesquisa Livre", "Num. Única" ou "Num. Antiga"');
+                retorno = false;
+            }
+            if (retorno)
+                retorno = ValidarPalavrasOperadores('ContentPlaceHolder1_txtTextoPesq');
+
+            return retorno;
+        }
+
+        function PreencherCamposTela(parametrosPesquisa) {
+            var par = JSON.parse(window.sessionStorage.getItem("parametrosPesquisa"));
+
+            if (!isNullOrWhitespace(par.NumAntigo) || !isNullOrWhitespace(par.NumCnj)) {
+                compId = 'ContentPlaceHolder1_txtNumeracao';
+                cmpCmbTipNum = document.getElementById(cmbTipNum);
+                if (!isNullOrWhitespace(par.NumCnj)) {
+                    setarIndexSelect(cmpCmbTipNum, 1)
+                    cmbTipNumeracaoChange(cmpCmbTipNum);
+                    $("#" + compId).val(par.NumCnj);
+                    $("#" + compId).blur();
+                } else {
+                    setarIndexSelect(cmpCmbTipNum, 2);
+                    cmbTipNumeracaoChange(cmpCmbTipNum);
+                    $("#" + compId).val(par.NumAntigo);
+                    $("#" + compId).blur();
+                }
+            } else {
+                var compId = 'ContentPlaceHolder1_txtTextoPesq';
+                $("#" + compId).val(par.TextoPesq);
+
+                compId = 'ContentPlaceHolder1_cmbOrigem';
+                setarIndexSelect(document.getElementById(compId), par.CodOrig);
+                __doPostBack(compId, '');
+                //Usar settimeout para dar tempo de executar o __doPostBack
+                setTimeout(function () {
+
+                    /*Combo Ramos*/
+                    $.each(par.CodRamos, function (index, value) {
+                        //Adicionar um combo na tela para cada Ramo, pular o primeiro por já existir por padrão
+                        if (index > 0)
+                            $(AdicionarCombo(document.getElementById(cmbRamo)));
+                    });
+
+                    //selecionar todos os combos de Ramo
+                    var listaCombos = $(".cmbRamo").map(function () {
+                        return $(this);
+                    });
+
+                    carregarCombosLista(par.CodRamos, listaCombos);
+
+                    compId = 'ContentPlaceHolder1_chkAcordao';
+                    document.getElementById(compId).checked = (par.IndAcordao == true);
+
+                    compId = 'ContentPlaceHolder1_chkDecMon';
+                    document.getElementById(compId).checked = (par.IndDecMon == true);
+
+                    compId = 'ContentPlaceHolder1_chkEmentario';
+                    document.getElementById(compId).checked = (par.IndEmentario == true);
+        
+                    compId = 'ContentPlaceHolder1_chkIntTeor';
+                    document.getElementById(compId).checked = (par.IndInteiroTeor == true);
+        
+                    SetarDependenciasOrigem(par);
+
+                }, 500);
+            }
+
+            setTimeout(function () {
+                var elemento = document.getElementById(cmbRamo);
+                cmbChange(elemento, hfCodRamos);
+                habilitaBtnCombos(elemento, $('#btnAddRamo'));
+
+                elemento = document.getElementById(cmbMagistrado);
+                cmbChange(elemento, hfCodMags);
+                habilitaBtnCombos(elemento, $('#btnAddMag'));
+
+                elemento = document.getElementById(cmbOrgao);
+                cmbChange(elemento, hfCodOrgs);
+                habilitaBtnCombos(elemento, $('#btnAddOrg'));
+
+            }, 1500);
+
+            //window.sessionStorage.removeItem("parametrosPesquisa");
+        }
+
+        function SetarDependenciasOrigem(par) {
+            compId = 'ContentPlaceHolder1_cmbAnoInicio';
+                    setarIndexSelect(document.getElementById(compId), par.AnoInicio);
+
+            compId = 'ContentPlaceHolder1_cmbAnoFim'
+            setarIndexSelect(document.getElementById(compId), par.AnoFim);
+
+            compId = 'ContentPlaceHolder1_cmbCompetencia';
+            setarIndexSelect(document.getElementById(compId), par.CodCompt);
+            __doPostBack(compId, '');
+            //Usar settimeout para dar tempo de executar o __doPostBack
+            setTimeout(
+                function () {
+                    /*Combo Magistrados*/
+                    $.each(par.CodMags, function (index, value) {
+                        //Adicionar um combo na tela para cada Magistrado, pular o primeiro por já existir por padrão
+                        if (index > 0)
+                            $(AdicionarCombo(document.getElementById(cmbMagistrado)));
+                    });
+
+                    //selecionar todos os combos de Magistrado
+                    var listaCombos = $(".cmbMagistrado").map(function () {
+                        return $(this);
+                    });
+
+                    carregarCombosLista(par.CodMags, listaCombos);
+
+                    SetarDependenciasCompetencia(par);
+
+                }, 500);
+        }
+
+        function SetarDependenciasCompetencia(par) {
+            $.each(par.CodOrgJulgs, function (index, value) {
+                if (index > 0)
+                    $(AdicionarCombo(document.getElementById(cmbOrgao)));
+            });
+
+            //selecionar todos os combos de OJ
+            var listaCombos = $(".cmbOrgaoJulgador").map(function () {
+                return $(this);
+            });
+
+            carregarCombosLista(par.CodOrgJulgs, listaCombos);
+        }
+
+        function carregarCombosLista(listaValores, listaCombos) {
+            $.each(listaValores, function (index, value) {
+                var cmb = listaCombos[index];
+                setarIndexSelect(cmb[0], value);
+            });
+        }
+    </script>
+    <style type="text/css">
+        .btnAdd {
+            padding: 1vmin 1em !important;
+            background-color: #286090 !important;
+        }
+        .btnAdd:disabled {
+            background-color: #bbb !important;
+        }
+    </style>
+<script>NS_CSM_td=307766117;NS_CSM_pd=275116664;NS_CSM_u="/clm10";NS_CSM_col="AAAAAAWHoz9hrDdv4568mx1aJXouTRSY1/qixYHq+rEH7vtFQ52yB9iWkQm+nXdBpnhZJXGkYbfTBfYdog+BrTxvfwEP";</script><script type="text/javascript">function sendTimingInfoInit(){setTimeout(sendTimingInfo,0)}function sendTimingInfo(){var wp=window.performance;if(wp){var c1,c2,t;c1=wp.timing;if(c1){var cm={};cm.ns=c1.navigationStart;if((t=c1.unloadEventStart)>0)cm.us=t;if((t=c1.unloadEventEnd)>0)cm.ue=t;if((t=c1.redirectStart)>0)cm.rs=t;if((t=c1.redirectEnd)>0)cm.re=t;cm.fs=c1.fetchStart;cm.dls=c1.domainLookupStart;cm.dle=c1.domainLookupEnd;cm.cs=c1.connectStart;cm.ce=c1.connectEnd;if((t=c1.secureConnectionStart)>0)cm.scs=t;cm.rqs=c1.requestStart;cm.rss=c1.responseStart;cm.rse=c1.responseEnd;cm.dl=c1.domLoading;cm.di=c1.domInteractive;cm.dcls=c1.domContentLoadedEventStart;cm.dcle=c1.domContentLoadedEventEnd;cm.dc=c1.domComplete;if((t=c1.loadEventStart)>0)cm.ls=t;if((t=c1.loadEventEnd)>0)cm.le=t;cm.tid=NS_CSM_td;cm.pid=NS_CSM_pd;cm.ac=NS_CSM_col;var xhttp=new XMLHttpRequest();if(xhttp){var JSON=JSON||{};JSON.stringify=JSON.stringify||function(ob){var t=typeof(ob);if(t!="object"||ob===null){if(t=="string")ob='"'+ob+'"';return String(ob);}else{var n,v,json=[],arr=(ob&&ob.constructor==Array);for(n in ob){v=ob[n];t=typeof(v);if(t=="string")v='"'+v+'"';else if(t=="object"&&v!==null)v=JSON.stringify(v);json.push((arr?"":'"'+n+'":')+String(v));}return(arr?"[":"{")+String(json)+(arr?"]":"}");}};xhttp.open("POST",NS_CSM_u,true);xhttp.send(JSON.stringify(cm));}}}}if(window.addEventListener)window.addEventListener("load",sendTimingInfoInit,false);else if(window.attachEvent)window.attachEvent("onload",sendTimingInfoInit);else window.onload=sendTimingInfoInit;</script></head>
+<body>
+    <div id="tudo">
+        <!-- Ini­cio da div#tudo -->
+        <link href="Styles/aplication.css" rel="stylesheet" />
+<nav role="navigation" class="navbar navbar-default navbar-static-top" style="margin-bottom: 0;">
+	<app-header>
+		<div class="navbar-header">
+			<div class="navbar-header">
+				<a href="https://www.tjrj.jus.br">
+					<div id="logomarca-tribunal">
+						<span id="descricao-logomarca-sistema">Logomarca do Poder Judiciário do Estado do Rio de Janeiro</span>
+					</div>
+				</a>
+			</div>
+		</div>
+		<ul id="lista-acessibilidade" style="margin-top: 10px; margin-bottom: 0; margin-right: 15px;">
+			<!---->
+			<!---->
+		</ul>
+		<p-toast class="ng-tns-c24-0">
+			<div class="ng-tns-c24-0 p-toast p-component p-toast-top-right">
+				<!---->
+			</div>
+		</p-toast>
+	</app-header>
+</nav>            
+        <!-- Fim da div#cabecalho -->
+        <!-- Inicio da div#container -->
+        <div id="container">
+            <!-- Início DIV da barra de Ferramentas do Sistema-->
+            <div id="content-barra">
+                <a href="javascript:history.go(-1);"><img height="17" width="26" class="margin-icos" src="./Img/ico-voltar.gif" title="voltar" alt="voltar"/></a>
+                <a href="javascript:history.go(1);"><img height="17" width="26" class="margin-icos" src="./Img/ico-avancar.gif" title="avançar" alt="avançar"/></a>
+                <a href="javascript:window.print();"><img height="17" width="26" class="margin-icos" src="./Img/ico-print.gif" title="imprimir" alt="imprimir"/></a>
+                <a href="javascript:decreaseFontSize();"><img src="./Img/ico-font-menos.gif" class="margin-icos" alt="Diminuir fonte" title="Diminuir fonte"/></a>&nbsp;
+                <a href="javascript:defaultFontSize();"><img src="./Img/ico-font-default.gif" class="margin-icos" alt="Normalizar fonte" title="Normalizar fonte"/></a>&nbsp;
+                <a href="javascript:increaseFontSize();"><img src="./Img/ico-font-mais.gif" class="margin-icos" alt="Aumentar fonte" title="Aumentar fonte"/></a>
+            </div>
+            <!-- FIM do DIV da barra de ferramentas do Sistema-->
+             <div id="content" name="content">
+                <form method="post" action="./ConsultarJurisprudencia.aspx" id="form1">
+<div class="aspNetHidden">
+<input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value="" />
+<input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value="" />
+<input type="hidden" name="__LASTFOCUS" id="__LASTFOCUS" value="" />
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="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ArMBArQBArUBArYBArcBArgBArkBAroBArsBArwBAr0BAr4BAr8BAsABAsEBAsIBAsMBAsQBAsUBAsYBAscBAsgBAskBAsoBAssBAswBAs0BAs4BAs8BAtABAtEBAtIBAtMBAtQBAtUBAtYBAtcBAtgBAtkBAtoBAtsBAtwBAt0BAt4BAt8BAuABAuEBAuIBAuMBAuQBAuUBAuYBAucBAugBAukBAuoBAusBAuwBAu0BAu4BAu8BAvABAvEBAvIBAvMBAvQBAvUBAvYBAvcBAvgBAvkBAvoBAvsBAvwBAv0BAv4BAv8BAoACAoECAoICAoMCAoQCAoUCAoYCAocCAogCAokCAooCAosCAowCAo0CAo4CAo8CApACApECApICApMCApQCApUCApYCApcCApgCApkCApoCApsCApwCAp0CAp4CAp8CAqACAqECAqICAqMCAqQCAqUCAqYCAqcCAqgCAqkCAqoCAqsCAqwCAq0CAq4CAq8CArACArECArICArMCArQCArUCArYCArcCArgCArkCAroCArsCArwCAr0CAr4CAr8CAsACAsECAsICAsMCAsQCAsUCAsYCAscCAsgCAskCAsoCAssCAswCAs0CAs4CAs8CAtACAtECAtICAtMCAtQCAtUCAtYCAtcCAtgCAtkCAtoCAtsCAtwCAt0CAt4CAt8CAuACAuECAuICAuMCAuQCAuUCAuYCAucCAugCAukCAuoCAusCAuwCAu0CAu4CAu8CAvACAvECAvICAvMCAvQCAvUCAvYCAvcCAvgCAvkCAvoCAvsCAvwCAv0CAv4CAv8CAoADAoEDAoIDAoMDAoQDAoUDAoYDAocDAogDAokDAooDAosDAowDAo0DAo4DAo8DApADApEDApIDApMDApQDApUDApYDApcDApgDApkDApoDApsDApwDAp0DAp4DAp8DAqADAqEDAqIDAqMDAqQDAqUDAqYDAqcDAqgDAqkDAqoDAqsDAqwDAq0DAq4DAq8DArADArEDArIDArMDArQDArUDArYDArcDArgDArkDAroDArsDArwDAr0DAr4DAr8DAsADAsEDAsIDAsMDAsQDAsUDAsYDAscDAsgDAskDAsoDAssDAswDAs0DAs4DAs8DAtADAtEDAtIDAtMDAtQDAtUDAtYDAtcDAtgDAtkDAtoDAtsDAtwDAt0DAt4DAt8DAuADAuEDAuIDAuMDAuQDAuUDAuYDAucDAugDAukDAuoDAusDAuwDAu0DAu4DAu8DAvADAvEDAvIDAvMDAvQDAvUDAvYDAvcDAvgDAvkDAvoDAvsDAvwDAv0DAv4DAv8DAoAEAoEEAoIEAoMEAoQEAoUEAoYEAocEAogEAokEAooEAosEAowEAo0EAo4EAo8EApAEApEEApIEApMEApQEApUEApYEApcEApgEApkEApoEApsEApwEAp0EAp4EAp8EAqAEAqEEAqIEAqMEAqQEAqUEAqYEAqcEAqgEAqkEAqoEAqsEAqwEAq0EAq4EAq8EArAEArEEArIEArMEArQEArUEArYEArcEArgEArkEAroEArsEArwEAr0EAr4EAr8EAsAEAsEEAsIEAsMEAsQEAsUEAsYEAscEAsgEAskEAsoEAssEAswEAs0EAs4EAs8EAtAEAtEEAtIEAtMEAtQEAtUEAtYEAtcEAtgEAtkEAtoEAtsEAtwEAt0EAt4EAt8EAuAEAuEEAuIEAuMEAuQEAuUEAuYEAucEAugEAukEAuoEAusEAuwEAu0EAu4EAu8EAvAEAvEEAvIEAvMEAvQEAvUEAvYEAvcEAvgEAvkEAvoEAvsEAvwEAv0EAv4EAv8EAoAFAoEFAoIFAoMFAoQFAoUFAoYFAocFAogFAokFAooFAosFAowFAo0FAo4FAo8FApAFApEFApIFApMFApQFApUFApYFApcFApgFApkFApoFApsFApwFAp0FAp4FAp8FAqAFAqEFAqIFAqMFAqQFAqUFAqYFAqcFAqgFAqkFAqoFAqsFAqwFAq0FAq4FAq8FArAFArEFArIFArMFArQFArUFArYFArcFArgFArkFAroFArsFArwFAr0FAr4FAr8FAsAFAsEFAsIFAsMFAsQFAsUFAsYFAscFAsgFAskFAsoFAssFAswFAs0FAs4FAs8FAtAFAtEFAtIFAtMFAtQFAtUFAtYFAtcFAtgFAtkFAtoFAtsFAtwFAt0FAt4FAt8FAuAFAuEFAuIFAuMFAuQFAuUFAuYFAucFAugFAukFAuoFAusFAuwFAu0FAu4FAu8FAvAFAvEFAvIFAvMFAvQFAvUFAvYFAvcFAvgFAvkFAvoFAvsFAvwFAv0FAv4FAv8FAoAGAoEGAoIGAoMGAoQGAoUGAoYGAocGAogGAokGAooGAosGAowGAo0GAo4GAo8GApAGApEGApIGApMGApQGApUGApYGApcGApgGApkGApoGApsGApwGAp0GFp4GEAUMU2VsZWNpb25lLi4uZWcQBQ5BQkVZTEFSRCBHT01FUwUFMTAyNDFnEAUVQURFTUlSIFBBVUxPIFBJTUVOVEVMBQUxMTY4NmcQBRVBRElMU09OIFZJRUlSQSBNQUNBQlUFBTIwNzA2ZxAFEUFET0xQSElOTyBSSUJFSVJPBQUxMDUwM2cQBSZBRE9MUEhPIENPUlJFQSBERSBBTkRSQURFIE1FTExPIEpVTklPUgUFMTUzODZnEAUYQURSSUFOQSBDT1NUQSBET1MgU0FOVE9TBQUyNzMxMGcQBShBRFJJQU5BIExPUEVTIE1PVVRJTkhPIERBVURUIEQnIE9MSVZFSVJBBQUxNjA3OWcQBSZBRFJJQU5BIE1BUlFVRVMgRE9TIFNBTlRPUyBMQUlBIEZSQU5DTwUFMjk3OTZnEAUWQURSSUFOQSBSQU1PUyBERSBNRUxMTwUFMTk0NzdnEAUiQURSSUFOQSBTVUNFTkEgTU9OVEVJUk8gSkFSQSBNT1VSQQUFMjA3MzJnEAUYQURSSUFOTyBDRUxTTyBHVUlNQVLDg0VTBQQ3MjcxZxAFIEFGT05TTyBIRU5SSVFVRSBGRVJSRUlSQSBCQVJCT1NBBQUyNDcxNWcQBQ1BRlJBTklPIFNBWUFPBQUxMDgwN2cQBSNBR09TVElOSE8gVEVJWEVJUkEgREUgQUxNRUlEQSBGSUxITwUFMjk4MzlnEAUUQUxCQU5PIE1BVFRPUyBDT1JSRUEFBTE4MzE2ZxAFG0FMQkVSVE8gQ1JBVkVJUk8gREUgQUxNRUlEQQUEMzQ1M2cQBQ5BTEJFUlRPIEdBUkNJQQUDMjAwZxAFD0FMQkVSVE8gTEFDRVJEQQUDMjAxZxAFFEFMQkVSVE8gTU9UVEEgTU9SQUVTBQUxMTIwMmcQBRVBTEJFUlRPIE1PVVJBTyBSVVNTRUwFAzMzMWcQBSRBTEJFUlRPIFJFUFVCTElDQU5PIERFIE1BQ0VETyBKVU5JT1IFBTI3MzE3ZxAFFkFMQkVSVE8gU0FMT01BTyBKVU5JT1IFBTIwNzE5ZxAFF0FMQ0lERVMgREEgRk9OU0VDQSBORVRPBQUxNTQwMmcQBSVBTEVTU0FORFJBIENSSVNUSU5BIFRVRlZFU1NPTiBQRUlYT1RPBQUyNzMxNmcQBShBTEVTU0FORFJBIERFIEFSQVVKTyBCSUxBQyBNT1JFSVJBIFBJTlRPBQUyNDY5NmcQBRlBTEVTU0FORFJPIE9MSVZFSVJBIEZFTElYBQUyMTcxNGcQBSlBTEVYQU5EUkUgIEFOVE9OSU8gRlJBTkNPIEZSRUlUQVMgQ8OCTUFSQQUFMzA3NDVnEAUfQUxFWEFORFJFIEFCUkFIQU8gRElBUyBURUlYRUlSQQUFMjE3MTVnEAUWQUxFWEFORFJFIENPUlJFQSBMRUlURQUFMjQxMjJnEAUeQUxFWEFORFJFIERFIENBUlZBTEhPIE1FU1FVSVRBBQUxNzUzMGcQBRpBTEVYQU5EUkUgRURVQVJETyBTQ0lTSU5JTwUFMTU0MDNnEAUiQUxFWEFORFJFIEhFUkNVTEFOTyBQRVNTT0EgVkFSRUxMQQUFMTE3MTFnEAUbQUxFWEFORFJFIFRFSVhFSVJBIERFIFNPVVpBBQUyMDcxMGcQBQ9BTEZSRURPIE1BUklOSE8FBTEwNjE3ZxAFFEFMSU5FIEFCUkVVIFBFU1NBTkhBBQUzMzQ2M2cQBSJBTElORSBNQVJJQSBHT01FUyBNQVNTT05JIERBIENPU1RBBQUzMzA3OGcQBSNBTFZBUk8gSEVOUklRVUUgVEVJWEVJUkEgREUgQUxNRUlEQQUFMTYwODFnEAUkw4FMVkFSTyBIRU5SSVFVRSBURUlYRUlSQSBERSBBTE1FSURBBQI0MWcQBSVBTFZBUk8gSk9TRSBGRVJSRUlSQSBNQVlSSU5LIERBIENPU1RBBQQyMzIyZxAFEUFMWVJJTyBDQVZBTExJRVJJBQQxNzIxZxAFFkFNQVVSWSBBUlJVREEgREUgU09VWkEFBTEwODMxZxAFEUFNRVJJQ08gQ0FOQUJBUlJPBQQxNDUzZxAFDkFNT1JJTSBEQSBDUlVaBQUxMDg2MWcQBQ9BTVlOVE9SIFZFUkdBUkEFBDE2OTFnEAUbQU5BIEJFQVRSSVogTUVOREVTIEVTVFJFTExBBQUyNjk0M2cQBR8gQU5BIENSSVNUSU5BIE5BU0NJRiBESUIgTUlHVUVMBQUxOTQ3MWcQBSBBTkEgTFVJWkEgQ09JTUJSQSBNQVlPTiBOT0dVRUlSQQUFMTk2MTRnEAUdQU5BIE1BUklBIFBFUkVJUkEgREUgT0xJVkVJUkEFBTEzNzcyZxAFFEFOQSBQQVVMQSBDQUJPIENISU5JBQUxOTc5M2cQBSZBTkEgUEFVTEEgTU9OVEUgRklHVUVJUkVETyBQRU5BIEJBUlJPUwUFMjA3MTVnEAUYQU5BIFBBVUxBIFBPTlRFUyBDQVJET1NPBQUyMDcxOGcQBQ9BTkFVRElNIEZSRUlUQVMFBDE0NTRnEAUlQU5EUkUgRU1JTElPIFJJQkVJUk8gVk9OIE1FTEVOVE9WWVRDSAUFMzE5MjhnEAUWQU5EUkUgRkVSTkFOREVTIEFSUlVEQQUFMjQ2OTBnEAUfQU5EUkUgR1VTVEFWTyBDT1JSRUEgREUgQU5EUkFERQUFMTM3NzBnEAUdQU5EUsOJIExVw41TIE1BTsOHQU5PIE1BUlFVRVMFBTMzOTI4ZxAFEEFORFJFIExVSVogQ0lEUkEFBTE2MDcxZxAFIUFORFJFIFJJQ0FSRE8gREUgRlJBTkNJU0NJUyBSQU1PUwUFMTk2MDJnEAUXQU5EUkVBIEZPUlRVTkEgVEVJWEVJUkEFBTE1Mzg1ZxAFE0FORFJFQSBNQUNJRUwgUEFDSEEFBTE3NzU0ZxAFGEFORFJFSUEgTUFHQUxIQUVTIEFSQVVKTwUFMjczMTVnEAUbQU5FIENSSVNUSU5FIFNDSEVFTEUgU0FOVE9TBQUyOTgwMWcQBSFBTkVMSVNFIERFIEZBUklBIE1BUlRPUkVMTCBEVUFSVEUFBTI4ODExZxAFFkFOR0VMTyBNT1JFSVJBIEdMSU9DSEUFBTI0MjEzZxAFEUFOVE9OSU8gQVNTVU1QQ0FPBQM0MjNnEAUgQU5UT05JTyBBVUdVU1RPIERFIFRPTEVETyBHQVNQQVIFBTE5Nzc0ZxAFFUFOVE9OSU8gQ0FSTE9TIEFNT1JJTQUENzUxMGcQBRxBTlRPTklPIENBUkxPUyBBUlJBQklEQSBQQUVTBQUxNTYyOGcQBSRBTlRPTklPIENBUkxPUyBET1MgU0FOVE9TIEJJVEVOQ09VUlQFBDcyNjlnEAUdQU5UT05JTyBDQVJMT1MgRVNURVZFUyBUT1JSRVMFBDk3NDRnEAUfQU5UT05JTyBDQVJMT1MgTkFTQ0lNRU5UTyBBTUFETwUENjI3M2cQBSdBTlRPTklPIENFU0FSIFJPQ0hBIEFOVFVORVMgREUgU0lRVUVJUkEFBDk3MTJnEAUeQU5UT05JTyBEQSBST0NIQSBMT1VSRU5DTyBORVRPBQUxODA2OGcQBR9BTlRPTklPIEVEVUFSRE8gRkVSUkVJUkEgRFVBUlRFBQUxODMxMGcQBR1BTlRPTklPIEZFTElQRSBEQSBTSUxWQSBORVZFUwUENDc0OGcQBR1BTlRPTklPIElMT0laSU8gQkFSUk9TIEJBU1RPUwUFMTM5MzNnEAUdQU5UT05JTyBJWkFJQVMgREEgQ09TVEEgQUJSRVUFBTExMjE0ZxAFFEFOVE9OSU8gSkFZTUUgQk9FTlRFBQUxNDA1NWcQBRpBTlRPTklPIEpPU0UgQVpFVkVETyBQSU5UTwUFMTgxMjBnEAUeQU5UT05JTyBKT1NFIEZFUlJFSVJBIENBUlZBTEhPBQQ3NTYyZxAFJEFOVE9OSU8gTUFSUkVJUk9TIERBIFNJTFZBIE1FTE8gTkVUTwUFMTY2MDJnEAUPQU5UT05JTyBSSUJFSVJPBQQ2MzE1ZxAFIEFOVE9OSU8gUklDQVJETyBCSU5BVE8gREUgQ0FTVFJPBQUyMTAwN2cQBRlBTlRPTklPIFNBTERBTkhBIFBBTEhFSVJPBQQ5NjQ3ZxAFDkFSTkFMRE8gRFVBUlRFBQQ0NzIwZxAFDUFSUlVEQSBGUkFOQ0EFBTEwNTQ0ZxAFJEFSVEhVUiBFRFVBUkRPIERFIE1BR0FMSEFFUyBGRVJSRUlSQQUFMjE3MDdnEAUfQVJUSFVSIE5BUkNJU08gREUgT0xJVkVJUkEgTkVUTwUFMTU0MDFnEAUVQVNDTEVQSUFERVMgUk9EUklHVUVTBQQzMTU1ZxAFFUFTVFJPR0lMRE8gREUgRlJFSVRBUwUEMTQ0N2cQBRxBVUdVU1RPIEFMVkVTIE1PUkVJUkEgSlVOSU9SBQUxNjU5M2cQBQ1BVUxPTUFSIENPU1RBBQUxMDI0OWcQBRZBVVJFQSBQSU1FTlRBTCBQRVJFSVJBBQMyMDJnEAUOQVVSRU8gQ0FSTkVJUk8FAzIwM2cQBRRCQVJCQVJBIEFMVkVTIFhBVklFUgUFMjYxNzFnEAUPQkFSQk9TQSBNT1JFSVJBBQQzNDc1ZxAFFUJBU0lMRVUgUklCRUlSTyBGSUxITwUDMzk5ZxAFF0JFQVRSSVogUFJFU1RFUyBQQU5UT0pBBQUyMTcwNmcQBRpCRUFUUklaIFRPUlJFUyBERSBPTElWRUlSQQUFMjk3NzBnEAUYQkVORURJQ1RPIFVMVFJBICBBQklDQUlSBQUyOTgxN2cQBQ5CRU5JVE8gRkVST0xMQQUFMTk5NTdnEAUaQkVSTkFSRElOTyBNQUNIQURPIExFSVRVR0EFBTExMTQxZxAFHEJFUk5BUkRPIE1PUkVJUkEgR0FSQ0VaIE5FVE8FBDYzMDdnEAUOQklBUyBHT05DQUxWRVMFBDEyNTVnEAUlQlJVTk8gVklOSUNJVVMgREEgUk9TIEJPREFSVCBEQSBDT1NUQQUFMzMwNTBnEAURQlVBUlFVRSBERSBBTU9SSU0FBDY0ODBnEAUVQy4gQS4gTUVORVpFUyBESVJFSVRPBQQ5OTg0ZxAFDUNBRVRBTk8gQ09TVEEFBDQwMzNnEAUgQ0FFVEFOTyBFUk5FU1RPIERBIEZPTlNFQ0EgQ09TVEEFBTIwNDk0ZxAFGkNBSVJPIMONVEFMTyBGUkFOw4dBIERBVklEBQQ4ODczZxAFFkNBTUlMTyBSSUJFSVJPIFJVTElFUkUFBDg4NzRnEAURQ0FSTEEgRkFSSUEgQk9VWk8FBTI4ODE4ZxAFGkNBUkxPUyBBTEJFUlRPIERFIENBUlZBTEhPBQUxMDYyMGcQBRZDQVJMT1MgQUxCRVJUTyBNQUNIQURPBQUxNzc2MGcQBSRDQVJMT1MgQUxCRVJUTyBNRU5FWkVTIERJUkVJVE8gRklMSE8FBTM1MzI3ZxAFFUNBUkxPUyBBVUdVU1RPIEJPUkdFUwUFMTk3NzZnEAUZQ0FSTE9TIEFaRVJFRE8gREUgQVJBw5pKTwUENzU3OGcQBQ1DQVJMT1MgQlJBWklMBQUxMDUzNmcQBR5DQVJMT1MgQ09FTEhPIExBVklHTkUgREUgTEVNT1MFBTEyMjAyZxAFIkNBUkxPUyBEQVZJRFNPTiBERSBNRU5FWkVTIEZFUlJBUkkFBTEwNzE4ZxAFHkNBUkxPUyBFRFVBUkRPIEJPVUNBREEgVEFTU0FSQQUENzU2NmcQBShDQVJMT1MgRURVQVJETyBEQSBST1NBIERBIEZPTlNFQ0EgUEFTU09TBQQ5NzEwZxAFHkNBUkxPUyBFRFVBUkRPIEZSRUlSRSBST0JPUkVETwUFMTU2MjRnEAUfQ0FSTE9TIEVEVUFSRE8gTU9SRUlSQSBEQSBTSUxWQQUEOTY2NWcQBSFDQVJMT1MgRkVSTkFORE8gUE9UWUdVQVJBIFBFUkVJUkEFBTE5NTkzZxAFHUNBUkxPUyBHVVNUQVZPIFZJQU5OQSBESVJFSVRPBQUyMTcxMGcQBRpDQVJMT1MgSk9Tw4kgTUFSVElOUyBHT01FUwUENzU0NmcQBQxDQVJMT1MgTU9UVEEFAjM4ZxAFF0NBUkxPUyBSQVlNVU5ETyBDQVJET1NPBQQ2MjY3ZxAFGUNBUkxPUyBTQU5UT1MgREUgT0xJVkVJUkEFBTE0MDUzZxAFHENBUk1JTkUgQU5UT05JTyBTQVZJTk8gRklMSE8FBTExNDUyZxAFD0NBU1NJQSBNRURFSVJPUwUEMTI2MWcQBR9DRUxJQSBNQVJJQSBWSURBTCBNRUxJR0EgUEVTU09BBQQ0NzQ2ZxAFIkNFTElPIEdFUkFMRE8gREUgTUFHQUxIQUVTIFJJQkVJUk8FBDc1NzNnEAUUQ0VMU08gRkVSUkVJUkEgRklMSE8FBDcyODdnEAUZQ0VMU08gTFVJWiBERSBNQVRPUyBQRVJFUwUFMTM3NzNnEAUYQ0VMU08gTVVOSVogR1VFREVTIFBJTlRPBQQ0NzU1ZxAFEUNFTFNPIFNJTFZBIEZJTEhPBQUxNTYzMmcQBRNDRVNBUiBBVUdVU1RPIExFSVRFBQUxMDk1MmcQBRFDRVNBUiBGRUxJUEUgQ1VSWQUFMTU0MTZnEAUdQ0VaQVIgQVVHVVNUTyBST0RSSUdVRVMgQ09TVEEFBTE2NjA2ZxAFIUNIRVJVQklOIEhFTENJQVMgU0NIV0FSVFogSsOaTklPUgUFMTM3NzZnEAUeQ0hSSVNUSUFOTyBHT05DQUxWRVMgUEFFUyBMRU1FBQUyODkwMGcQBRlDSU5USUEgU0FOVEFSRU0gQ0FSRElOQUxJBQUxNjA2NmcQBSZDSU5USUEgU09VVE8gTUFDSEFETyBERSBBTkRSQURFIEdVRURFUwUCNDBnEAUmQ0lOVElBIFNPVVRPIE1BQ0hBRE8gREUgQU5EUkFERSBHVUVERVMFBTIwMDgwZxAFKkNMQVJBIE1BUklBIFZBU1NBTEkgQ09TVEEgUEVSRUlSQSBEQSBTSUxWQQUFMjExNDFnEAUZQ0xBUklORE8gREUgQlJJVE8gTklDT0xBVQUFMTAyNTJnEAUZQ0xBVURJQSBHQVJDSUEgQ09VVE8gTUFSSQUFMjAwODFnEAUfQ0xBVURJQSBNQVJJQSBERSBPTElWRUlSQSBNT1RUQQUFMTgwNzhnEAUhQ0xBVURJQSBQSVJFUyBET1MgU0FOVE9TIEZFUlJFSVJBBQUxNDU3MWcQBRhDTEFVRElBIFBPTUFSSUNPIFJJQkVJUk8FBTI4ODIwZxAFHUNMQVVESUEgUkVOQVRBIEFMQkVSSUNPIE9BWkVOBQUyMzEwMmcQBRpDTMOBVURJQSBURUxMRVMgREUgTUVORVpFUwUFMzExNTRnEAUcQ0xBVURJTyBCUkFORMODTyBERSBPTElWRUlSQQUFMTUzNzZnEAUZQ0zDgVVESU8gREUgTUVMTE8gVEFWQVJFUwUFMTk0NDFnEAUaQ0xBVURJTyBGRVJSRUlSQSBST0RSSUdVRVMFBTI1Mzc1ZxAFHUNMw4FVRElPIExVSVogQlJBR0EgREVMTCdPUlRPBQUxNDU2NmcQBRxDTMOBVURJTyBUQVZBUkVTIERFIE9MSVZFSVJBBQUxMTQ3MGcQBSJDTEFVRElPIFRBVkFSRVMgREUgT0xJVkVJUkEgSlVOSU9SBQUzMTkzNGcQBRdDTMOBVURJTyBWSUFOTkEgREUgTElNQQUCMzdnEAUTQ0xFQkVSIEdIRUxGRU5TVEVJTgUFMTQ5OTVnEAU6Q09OQ0VJw4fDg08gQVBBUkVDSURBIE1PVVNOSUVSIFRFSVhFSVJBIERFIEdVSU1BUsODRVMgUEVOQQUEODg3MWcQBSRDUklTVElBTkEgIEFQQVJFQ0lEQSBERSBTT1VaQSBTQU5UT1MFBTI5NzY5ZxAFH0NSSVNUSUFORSBEQSBTSUxWQSBCUkFOREFPIExJTUEFBTI3MzA3ZxAFHUNSSVNUSUFORSBURUxFUyBNT1VSQSBNQVJRVUVTBQUzMzA0NmcQBRtDUklTVElBTk8gR09OQ0FMVkVTIFBFUkVJUkEFBTIzMDk4ZxAFIENSSVNUSU5BIERFIEFSQVVKTyBHT0VTIExBSkNIVEVSBQUyOTc3OWcQBR1DUklTVElOQSBHT01FUyBDQU1QT1MgREUgU0VUQQUFMjAwNjhnEAUUQ1JJU1RJTkEgU0VSUkEgRkVJSk8FBTE2MDU4ZxAFFkNSSVNUSU5BIFRFUkVaQSBHQVVMSUEFBDk2OTdnEAUaQ1VTVMOTRElPIERFIEJBUlJPUyBUT1NURVMFBDk2ODdnEAULREFMTU8gU0lMVkEFBDE3NjNnEAUMREFMVE9OIENPU1RBBQQyMzMwZxAFG0RBTklFTEEgQkFOREVJUkEgREUgRlJFSVRBUwUFMjUzNzJnEAUlREFOSUVMQSBCQVJCT1NBICBBU1NVTVDDh8ODTyBERSBTT1VaQQUFMjUzNzRnEAUZREFOSUVMQSBCUkFORMODTyBGRVJSRUlSQQUFMTYwNTlnEAUlREFOSUVMQSBGRVJSTyBBRkZPTlNPIFJPRFJJR1VFUyBBTFZFUwUFMjE2OTdnEAUWREFOSUVMQSBSRUVUWiBERSBQQUlWQQUFMjczMDFnEAUVREFSQ1kgTElaQVJETyBERSBMSU1BBQUxMDUxM2cQBQ1EQVJDWSBNT1JFSVJBBQUxMTAwN2cQBRZEQVVSTyBJR05BQ0lPIERBIFNJTFZBBQQzNDcwZxAFDURFQ0lPIENSRVRUT04FBDM3NDJnEAUPREVDSU8gSVRBQkFJQU5BBQUxMDE0M2cQBRRERUNJTyBNRUlSRUxMRVMgR09FUwUEODEyMGcQBRFERUNJTyBYQVZJRVIgR0FNQQUEMzQ2N2cQBSlERU5JU0UgQlJVWUVSRSBST0xJTlMgTE9VUkVOQ08gRE9TIFNBTlRPUwUEODg3MGcQBRtERU5JU0UgREUgQVJBVUpPIENBUElCRVJJQkUFBTI3MzAyZxAFE0RFTklTRSBMRVZZIFRSRURMRVIFBDcyNzNnEAUVREVOSVNFIE5JQ09MTCBTSU3DlUVTBQUxNzUzOGcQBRtERU5JU0UgVkFDQ0FSSSBNQUNIQURPIFBBRVMFBTE1NjIyZxAFHkRFUy4gQ0xBVURJQSBOQVNDSU1FTlRPIFZJRUlSQQUFMTgwNjdnEAUiREVTLiBERUJPUkEgTUFSSUEgQkFSQk9TQSBTQVJNRU5UTwUFMjE3MTZnEAUfREVTLiBNQVJJQSBEQSBQRU5IQSBOT0JSRSBNQVVSTwUFMTk0NzNnEAUkREVTLiBSRUdJTkEgSEVMRU5BIEZBQlJFR0FTIEZFUlJFSVJBBQUxOTc4MWcQBQ5ESUxTT04gTkFWQVJSTwUEMTQ0NmcQBQtEVVJWQUwgSEFMRQUENjI4MGcQBQ1FQkVSVCBDSEFNT1VOBQQyNzM5ZxAFFEVER0FSIE1BUklBIFRFSVhFSVJBBQQ0NzUwZxAFFUVESUwgUEVSRUlSQSBEQSBTSUxWQQUFMTEwNDdnEAUbRURTT04gQUdVSUFSIERFIFZBU0NPTkNFTE9TBQQ3MjcyZxAFG0VEU09OIFFVRUlST1ogU0NJU0lOSU8gRElBUwUFMTE2ODJnEAUURURVQVJETyBBQlJFVSBCSU9OREkFBTMzOTI2ZxAFGEVEVUFSRE8gQU5UT05JTyBLTEFVU05FUgUFMTYwNzZnEAUYRURVQVJETyBERSBBWkVWRURPIFBBSVZBBQUxNTM4MGcQBSJFRFVBUkRPIEdVU01BTyBBTFZFUyBERSBCUklUTyBORVRPBQUxNjU4NWcQBR5FRFVBUkRPIEpPU8OJIERBIFNJTFZBIEJBUkJPU0EFBTI0MTEyZxAFDEVEVUFSRE8gTUFZUgUEMzQ4NWcQBSVFRFVBUkRPIFNPQ1JBVEVTIENBU1RBTkhFSVJBIFNBUk1FTlRPBQQzNDY5ZxAFIkVHQVMgTU9OSVogQkFSUkVUTyBERSBBUkFHTyBEQVFVRVIFBTE1NDA5ZxAFDkVHQkVSVE8gVE9TVEVTBQQ3NDYzZxAFF0VMRU4gREUgRlJFSVRBUyBCQVJCT1NBBQUyNjE3NWcQBR9FTElTQUJFVEUgRklMSVpaT0xBICBBU1NVTsOHw4NPBQQ2MzIwZxAFG0VMSVNBQkVURSBGUkFOQ08gTE9OR09CQVJESQUFMjY5MTJnEAUZRUxJWkFCRVRFIEFMVkVTIERFIEFHVUlBUgUFMTQ1NjFnEAUXRUxJWkFCRVRIIEdPTUVTIEdSRUdPUlkFBDUyMTJnEAUXRUxMSVMgSEVSTVlESU8gRklHVUVJUkEFBDk4MjRnEAUMRUxNTyBBUlVFSVJBBQUxMDU5NmcQBRxFTFRPTiBNQVJUSU5FWiBDQVJWQUxITyBMRU1FBQUxNTM4NGcQBQtFTFkgQkFSQk9TQQUFMTEyMDFnEAUPRU1FUlNPTiBQQVJFTlRFBQMyMjFnEAUMRU1JTElPIENBUk1PBQUxMDY5MGcQBQtFTkVBUyBDT1RUQQUFMTAxODZnEAUNRU5FQVMgTUFSWkFOTwUFMTAxNjhnEAUORU5SSUNPIENBUlJBTk8FBTI3Mjc2ZxAFGkVSSUMgU0NBUElNIENVTkhBIEJSQU5Ew4NPBQUzMzA4NGcQBSLDiVJJQ0EgREUgUEFVTEEgUk9EUklHVUVTIERBIENVTkhBBQUxOTU5NmcQBRBFUklFIFNBTEVTIENVTkhBBQQzNDc4ZxAFD0VSTkFOSSBLTEFVU05FUgUENzU1OGcQBRlFU1RFTklPIENBTlRBUklOTyBDQVJET1pPBQUxMDU4OWcQBQ5FVUdFTklPIFNJR0FVRAUENTE5OWcQBRhFVU5JQ0UgQklURU5DT1VSVCBIQUREQUQFBTI0NjkxZxAFFkVVTklDRSBGRVJSRUlSQSBDQUxEQVMFBDI5NzNnEAUXRkFCSUFOTyBSRUlTIERPUyBTQU5UT1MFBTI0MTEwZxAFC0ZBQklPIERVVFJBBQQ5NzAwZxAFJ0ZBQklPIFVDSE9BIFBJTlRPIERFIE1JUkFOREEgTU9OVEVORUdSTwUFMTgwNjVnEAUmRkFCUklDSU8gUEFVTE8gQkFHVUVJUkEgQkFOREVJUkEgRklMSE8FBDM0ODBnEAUVRkFUSU1BIE1BUklBIENMRU1FTlRFBQQ3NTYzZxAFEkZFTElTQkVSVE8gUklCRUlSTwUEMzczOGcQBRhGRVJESU5BTERPIERPIE5BU0NJTUVOVE8FBTI0NzY3ZxAFJ0ZFUk5BTkRBIEZFUk5BTkRFUyBDT0VMSE8gQVJSQUJJREEgUEFFUwUFMTY2MDBnEAUiRkVSTkFOREEgTUFHQUxIQUVTIEZSRUlUQVMgUEFUVVpaTwUFMjY4OTZnEAUvRkVSTkFOREEgU0VQVUxWRURBIFRFUlJBIENBUkRPU08gQkFSQk9TQSBURUxMRVMFBTI4ODIyZxAFGEZFUk5BTkRBIFhBVklFUiBERSBCUklUTwUFMjA3NTdnEAUbRkVSTkFORE8gQU5UT05JTyBERSBBTE1FSURBBQQ5NzgzZxAFIUZFUk5BTkRPIEFOVE9OSU8gREUgU09VWkEgRSBTSUxWQQUFMjAwODNnEAUYRkVSTkFORE8gQ0VMU08gR1VJTUFSQUVTBQMyMDdnEAUZRkVSTkFORE8gQ0VSUVVFSVJBIENIQUdBUwUFMTUzODJnEAUdRkVSTkFORE8gQ0VTQVIgRkVSUkVJUkEgVklBTkEFBTE3NTI4ZxAFG0ZFUk5BTkRPIEZFUk5BTkRZIEZFUk5BTkRFUwUFMjk4MzZnEAUnRkVSTkFORE8gRk9DSCBERSBMRU1PUyBBUklHT05ZIERBIFNJTFZBBQQ3NTgxZxAFIUZFUk5BTkRPIE1BUlFVRVMgREUgQ0FNUE9TIENBQlJBTAUENzI2MmcQBSdGRVJOQU5ETyBNQVJRVUVTIERFIENBTVBPUyBDQUJSQUwgRklMSE8FBTM1MzE5ZxAFFUZFUk5BTkRPIFJPQ0hBIExPVklTSQUFMjExMjhnEAURRkVSTkFORE8gV0hJVEFLRVIFAzIxNWcQBQ5GRVJSRUlSQSBQSU5UTwUFMTA1MDRnEAUlRkzDgVZJQSBERSBBTE1FSURBIFZJVkVJUk9TIERFIENBU1RSTwUFMTY1OTVnEAUmRkxBVklBIERFIEFaRVZFRE8gRkFSSUEgUkVaRU5ERSBDSEFHQVMFBTI3Mjc4ZxAFJ0ZMQVZJQSBGRVJOQU5ERVMgREUgTUVMTyBCQUxJRUlSTyBESU5JWgUFMjk3NjhnEAUpRkxBVklBIE1BQ0hBRE8gREEgU0lMVkEgR09OQ0FMVkVTIFBFUkVJUkEFBTI0MTIzZxAFGUZMw4FWSUEgUk9NQU5PIERFIFJFWkVOREUFBTMxOTQwZxAFJEZMQVZJTyBJVEFCQUlBTkEgREUgT0xJVkVJUkEgTklDT0xBVQUFMTg5OTlnEAUpRkxBVklPIE1BUkNFTE8gREUgQVpFVkVETyBIT1JUQSBGRVJOQU5ERVMFBTE1Mzc1ZxAFFkZMQVZJTyBOVU5FUyBNQUdBTEhBRVMFBDIwMjJnEAUNRkxBVklPIFBJTkFVRAUFMTA5MTBnEAUORk9OU0VDQSBQQVNTT1MFAzIxMmcQBQ9GT05URVMgREUgRkFSSUEFAzM4MWcQBRlGUkFOQ0lTQ08gREEgTU9UVEEgTUFDRURPBQUxMTQ2N2cQBRtGUkFOQ0lTQ08gREUgQVNTSVMgUEVTU0FOSEEFBTI0NzQ0ZxAFIUZSQU5DSVNDTyBERSBBU1NJUyBQRVNTQU5IQSBGSUxITwUFMzM0NDFnEAUiRlJBTkNJU0NPIERPV0VSIFBFUkxJTkdFSVJPIExPVklTSQUFMTEwNDhnEAUPRlJBTkNJU0NPIEZBUklBBQQxNDU2ZxAFGkZSQU5DSVNDTyBKT1PDiSBERSBBU0VWRURPBQQ2MjkyZxAFGUZSQU5DSVNDTyBSQU5HRUwgREUgQUJSRVUFAjM5ZxAFDkdBQlJJRUwgQ1VSQ0lPBQQzNDY0ZxAFGkdBQlJJRUwgREUgT0xJVkVJUkEgWkVGSVJPBQUxMzc3N2cQBRZHQUxESU5PIFNJUVVFSVJBIE5FVFRPBQUxODYxOGcQBRhHQU1BTElFTCBRVUlOVE8gREUgU09VWkEFBTExMTk5ZxAFEUdFTkFSSU5PIENBUlZBTEhPBQUxMDUxMmcQBRlHRcOTUkdJQSBERSBDQVJWQUxITyBMSU1BBQUxNTAwMWcQBRhHRVJBTERPIEFSUlVEQSBHVUVSUkVJUk8FAzIwOGcQBQ9HRVJBTERPIEJBVElTVEEFBTExMDQ5ZxAFH0dFUkFMRE8gREEgU0lMVkEgQkFUSVNUQSBKVU5JT1IFBTE2NTgzZxAFHkdFUkFMRE8gTFVJWiBNQVNDQVJFTkhBUyBQUkFETwUEOTY4OWcQBRxHRVJBUkRPIENBUk5FVkFMRSBOIERBIFNJTFZBBQUxNjA2MWcQBRZHRVJTT04gU0lMVkVJUkEgQVJSQUVTBQQ3Mjg4ZxAFGUdJTEJFUlRPIENBTVBJU1RBIEdVQVJJTk8FBTE0OTkwZxAFHUdJTEJFUlRPIENMw5NWSVMgRkFSSUFTIE1BVE9TBQUxNjYxMGcQBRZHSUxCRVJUTyBEVVRSQSBNT1JFSVJBBQQ2NzcxZxAFEkdJTEJFUlRPIEZFUk5BTkRFUwUFMTE0NzVnEAUVR0lMQkVSVE8gUEVSRUlSQSBSRUdPBQUyMTY4NGcQBRxHSUxEQSBNQVJJQSBESUFTIENBUlJBUEFUT1NPBQUxNTM3N2cQBRdHSUxNQVIgQVVHVVNUTyBURUlYRUlSQQUFMTM5MzVnEAUPR0lMU09OIFZJVE9SSU5PBQUxMTI4MGcQBRVHSVNFTEUgR1VJREEgREUgRkFSSUEFBTIxNzA4ZxAFE0dJU0VMRSBTSUxWQSBKQVJESU0FBTIwNzMzZxAFI0dJVVNFUFBFIElUQUxPIEJSQVNJTElOTyBWSVRBR0xJQU5PBQUxOTYxNWcQBRhHSVpFTERBIExFSVTDg08gVEVJWEVJUkEFBTI0NzY0ZxAFEkdPTkNBTFZFUyBEQSBGT05URQUENjMxOWcQBQ1HT1VMQVJUIFBJUkVTBQMzNzhnEAUPR1JBQ0NITyBBVVJFTElPBQMzOThnEAUUR1JBQ0UgTVVTU0FMRU0gQ0FMSUwFBTI1Mzg4ZxAFIkdSQUNJQSBDUklTVElOQSBNT1JFSVJBIERPIFJPU0FSSU8FBTI1Mzg2ZxAFFEdVQUxCRVJUTyBERSBNSVJBTkRBBQUxMDI1MGcQBRhHVUFSQUNJIERFIENBTVBPUyBWSUFOTkEFBTE0MDU3ZxAFH0dVSUxIRVJNRSBCUkFHQSBQRcORQSBERSBNT1JBRVMFBTM1MzE4ZxAFDUdVU01BUiBBUkFVSk8FBTEwMjM3ZxAFGkdVU1RBVk8gQURPTFBITyBLVUhMIExFSVRFBQQzNDY1ZxAFGEdVU1RBVk8gQUxNRUlEQSBETyBWQUxMRQUFMTAyNDJnEAUhR1VTVEFWTyBIRU5SSVFVRSBOQVNDSU1FTlRPIFNJTFZBBQUyNzMxOGcQBRFHVVNUQVZPIElUQUJBSUFOQQUFMTA0NjZnEAUlR1VTVEFWTyBRVUlOVEFOSUxIQSBURUxMRVMgREUgTUVORVpFUwUFMjg4MTZnEAUYSEFNSUxUT04gTU9SQUVTIEUgQkFSUk9TBQMzOTJnEAUTSEVMREEgTElNQSBNRUlSRUxFUwUFMjczOTZnEAUUSEVMRU5BIEJFTEMgS0xBVVNORVIFBDcyODlnEAUbSEVMRU5BIENBTkRJREEgTElTQk9BIEdBRURFBQQ5NjU4ZxAFG0hFTEVOQSBESUFTIFRPUlJFUyBEQSBTSUxWQQUFMjMxMDNnEAUXSEVMRU5BIEdPTERFTlpPTiBCRUtIT1IFBDI4MTdnEAUcSEVMRU5PIFJJQkVJUk8gUEVSRUlSQSBOVU5FUwUFMTM3NjlnEAUPSEVMSU8gREUgRkFSSUFTBQQ3MjkzZxAFDkhFTElPIFRSSU5EQURFBQQxNDUwZxAFEEhFTFZJTyBQRVJPUkFaSU8FBTEwNDY0ZxAFKUhFTlJJUVVFIEFMQkVSVE8gTUFHQUxIRVMgREUgQUxNRUlEQSBORVRPBQQ1OTQwZxAFI0hFTlJJUVVFIENBUkxPUyBERSBBTkRSQURFIEZJR1VFSVJBBQQ5Njc0ZxAFHUhFUkFMRE8gU0FUVVJOSU5PIERFIE9MSVZFSVJBBQUxMTQ0OGcQBRFIRVJNQU5PIERPUyBBTkpPUwUENDcyMWcQBRlISUxBUklPIERVQVJURSBERSBBTEVOQ0FSBQUxMDQ2MWcQBS5ISU5ERU5CVVJHIEtPSExFUiBCUkFTSUwgQ0FCUkFMIFBJTlRPIERBIFNJTFZBBQUyOTg1MmcQBSBIT1LDgUNJTyBET1MgU0FOVE9TIFJJQkVJUk8gTkVUTwUFMTM5MzZnEAUWSFVEU09OIEJBU1RPUyBMT1VSRU5DTwUFMTA1OTdnEAUOSFVHTyBCQVJDRUxMT1MFBDE2NTBnEAUjSFVNQkVSVE8gREFMTEEgIEJFUk5BUkRJTkEgREUgUElOSE8FBTMzOTI5ZxAFGkhVTUJFUlRPIERFIE1FTkRPTkNBIE1BTkVTBQQyMzE5ZxAFF0hVTUJFUlRPIERFQ05PUCBCQVRJU1RBBQQyNjAxZxAFF0hVTUJFUlRPIFBBU0NIT0FMIFBFUlJJBQQ0NzI0ZxAFFklORElPIEJSQVNJTEVJUk8gUk9DSEEFBTEwOTQzZxAFIElOw4pTIERBIFRSSU5EQURFIENIQVZFUyBERSBNRUxPBQUxMzc3MWcQBQtJT05FIFBFUk5FUwUENzU0OGcQBRpJU0FCRUwgVEVSRVNBIFBJTlRPIENPRUxITwUFMjk4MDRnEAUYIElTQUJFTEEgUEVTU0FOSEEgQ0hBR0FTBQUxODA3N2cQBR9JU0FCRUxMRSBEQSBTSUxWQSBTQ0lTSU5JTyBESUFTBQUyODg1MmcQBRlJU01FTklPIFBFUkVJUkEgREUgQ0FTVFJPBQUyOTgxOGcQBQ9JVEFNQVIgQkFSQkFMSE8FBDI1NDNnEAUJSVZBTiBDVVJZBQQ3Mjg1ZxAFFklWT05FIEZFUlJFSVJBIENBRVRBTk8FBTE3NTQyZxAFGkpBQ1FVRUxJTkUgTElNQSBNT05URU5FR1JPBQUxNjA2NWcQBRlKQUlNRSBESUFTIFBJTkhFSVJPIEZJTEhPBQUxNDU2NGcQBRZKQUlSIFBPTlRFUyBERSBBTE1FSURBBQUxMTQ0OWcQBR1KQU5FIENBUk5FSVJPIFNJTFZBIERFIEFNT1JJTQUFMjUzNzFnEAUTSkFTTUlOIFNJTU9FUyBDT1NUQQUEMzcyOWcQBRlKQVlSTyBET1MgU0FOVE9TIEZFUlJFSVJBBQQzNDYwZxAFGkpFQU4gQUxCRVJUIERFIFNPVVpBIFNBQURJBQUxNjU4OGcQBRtKRUFORUNZIFRIRVJFWklOSEEgREUgU09VWkEFBTExMTk2ZxAFHUpFU1PDiSBUT1JSRVMgUEVSRUlSQSBKw5pOSU9SBQQ3MjY3ZxAFGUpFU1VTIEFOVFVORVMgREUgU0lRVUVJUkEFBTEwNTA5ZxAFGkpPQU5BIENBUkRJQSBKQVJESU0gQ09SVEVTBQUyOTc5MGcQBRVKT0FPIEFOVE9OSU8gREEgU0lMVkEFBTExMTA3ZxAFF0pPQU8gQkFQVElTVEEgQ0hBR0FTIEYuBQQ4ODY4ZxAFF0pPw4NPIEJBVElTVEEgREFNQVNDRU5PBQUxNjY5MWcQBSBKT0FPIEJBVElTVEEgREUgT0xJVkVJUkEgTEFDRVJEQQUENjI3MmcQBRtKT0FPIENBUkxPUyBCUkFHQSBHVUlNQVJBRVMFBDYyNjlnEAUcSk/Dg08gQ0FSTE9TIERFIFNPVVpBIENPUlJFQQUFMjE3MTdnEAUjSk9BTyBDQVJMT1MgUEVTVEFOQSBERSBBR1VJQVIgU0lMVkEFBDIzMzNnEAUiSk9BTyBERSBERVVTIExBQ0VSREEgTUVOTkEgQkFSUkVUTwUEMTQ1OGcQBQ5KT0FPIEZSQU5DSVNDTwUFMTA1MTBnEAUoSk9BTyBNQVJDT1MgREUgQ0FTVEVMTE8gQlJBTkNPIEZBTlRJTkFUTwUFMjA3MzZnEAUVSk9BTyBOSUNPTEFVIFNQWVJJREVTBQUxMTAyMWcQBRtKT0FPIFBBVUxPIEZFUk5BTkRFUyBQT05URVMFBDk2ODFnEAUjSk9BTyBQQVVMTyBLTkFBQ0sgQ0FQQU5FTUEgREUgU09VWkEFBTI5ODU0ZxAFDkpPQU8gV0VIQkkgRElCBQUxMDU0MWcQBRJKT8ODTyBaSVJBTERPIE1BSUEFBTE1NjI3ZxAFJUpPQVFVSU0gQUJJTElPIE1PUkVJUkEgQUxWRVMgREUgQlJJVE8FBTE4MzE1ZxAFIUpPQVFVSU0gQ1lSSUxMTyBCQVBUSVNUQSBNT1VaSU5ITwUFMTA4OTlnEAUgSk9BUVVJTSBET01JTkdPUyBERSBBTE1FSURBIE5FVE8FBTE1Mzk2ZxAFF0pPRUwgUEVSRUlSQSBET1MgU0FOVE9TBQUxMDE3NmcQBRxKT1JHRSBBTEJFUlRPIFJPTUVJUk8gSlVOSU9SBQQ2MDM2ZxAFGkpPUkdFIERFIE1JUkFOREEgTUFHQUxIQUVTBQQzNDUwZxAFDUpPUkdFIExPUkVUVEkFBDQ3NDlnEAUQSk9SR0UgTFVJWiBIQUJJQgUFMTk1ODNnEAUXSk9SR0UgVUNIT0EgREUgTUVORE9OQ0EFBTEwNDU5ZxAFGUpPU8OJIEFDSVIgTEVTU0EgR0lPUkRBTkkFBTE1MzkzZxAFFEpPU0UgQUZGT05TTyBST05ERUFVBQQzNDk2ZxAFG0pPU0UgQVVHVVNUTyBERSBBUkFVSk8gTkVUTwUFMjk4MzdnEAUNSk9TRSBCQUhBRElBTgUFMTE5NDdnEAUZSk9TRSBDQVJMT1MgREUgRklHVUVJUkVETwUFMTE3MTJnEAUiSk9Tw4kgQ0FSTE9TIE1BTERPTkFETyBERSBDQVJWQUxITwUEOTY3N2cQBRFKT1PDiSBDQVJMT1MgUEFFUwUFMjkwMDVnEAUhSk9TRSBDQVJMT1MgU0NITUlEVCBNVVJUQSBSSUJFSVJPBQQzNDQ1ZxAFH0pPU8OJIENBUkxPUyBWQVJBTkRBIERPUyBTQU5UT1MFBDYyODdnEAURSk9TRSBDQVJMT1MgV0FUWkwFBDM0NzdnEAUgSk9TRSBDTEFVRElPIERFIE1BQ0VETyBGRVJOQU5ERVMFBTE5NDgwZxAFF0pPU0UgREUgTUFHQUxIQUVTIFBFUkVTBQQ3NTUyZxAFFkpPU0UgREUgU0FNVUVMIE1BUlFVRVMFBDcyODJnEAUUSk9TRSBFRFZBTERPIFRBVkFSRVMFBDE0NTVnEAUUSk9TRSBHRVJBTERPIEFOVE9OSU8FBDk1MTBnEAUbSk9Tw4kgR1VJTEhFUk1FIFZBU0kgV0VSTkVSBQUyMDc2NmcQBSFKT1NFIExVQ0FTIE1PUkVJUkEgQUxWRVMgREUgQlJJVE8FBDIzOThnEAUPSk9TRSBNT1RBIEZJTEhPBQUxMTQ0MWcQBRxKT1PDiSBNVUnDkU9TIFBJw5FFSVJPIEZJTEhPBQUyOTg3MGcQBRJKT1NFIE5JTE8gRkVSUkVJUkEFBDYzMjJnEAUVSk9TRSBQSU1FTlRFTCBNQVJRVUVTBQUxMTEzNmcQBR5KT1PDiSBST0JFUlRPIExBR1JBTkhBIFTDgVZPUkEFBDk2NDVnEAUeSk9TRSBST0JFUlRPIFBPUlRVR0FMIENPTVBBU1NPBQUxNjA2MmcQBRNKT1NFIFJPRFJJR1VFWiBMRU1BBQQyMzIzZxAFFUpPVklOTyBNQUNIQURPIEpPUkRBTwUFMTA1MDVnEAUXSlVBTiBMVUlaIFNPVVpBIFZBWlFVRVoFBTM1MzI4ZxAFF0pVQVJFWiBGRVJOQU5ERVMgRk9MSEVTBQQ5NzE0ZxAFGkpVTElBTkEgQU5EUkFERSBCQVJJQ0hFTExPBQUyOTc5M2cQBSJKVUxJQU5BIEJFTkVWSURFUyBERSBCQVJST1MgQVJBVUpPBQUyOTg1M2cQBSJKVUxJQU5BIENBUkRPU08gTU9OVEVJUk8gREUgQkFSUk9TBQUyOTgxNWcQBRtKVUxJQU5BIExBTUFSIFBFUkVJUkEgU0lNQU8FBTMxOTU0ZxAFFkpVTElPIENFU0FSIFBBUkFHVUFTU1UFBDMxNTdnEAUWSlVMSU8gREEgUk9DSEEgQUxNRUlEQQUDMjEzZxAFIUpVU1NBUkEgTUFSSUEgREUgQUJSRVUgR1VJTUFSw4NFUwUFMjk3ODNnEAUeS0FSTEEgREEgU0lMVkEgQkFSUk9TTyBWRUxMT1NPBQUzMTk1MmcQBR9LQVRJQSBDUklTVElOQSBOQVNDRU5URVMgVE9SUkVTBQUxOTYwN2cQBRxLw4FUSUEgTUFSSUEgQU1BUkFMIEpBTkdVVFRBBQQ5NzIwZxAFJUtBVFlBIE1BUklBIERFIFBBVUxBIE1FTkVaRVMgTU9OTkVSQVQFBTE0NTYyZxAFE0tFWUxBIEJMQU5LIERFIENOT1AFBTI0NzEzZxAFEUwuIExPUEVTIERFIFNPVVNBBQM0MzhnEAUNTEFFUlNPTiBNQVVSTwUEMzQ1N2cQBRlMQVJJU1NBIE5VTkVTIFBJTlRPIFNBTExZBQUyODgyOWcQBRdMRUFORFJPIExPWU9MQSBERSBBQlJFVQUFMjk4MjVnEAUYTEVBTkRSTyBSSUJFSVJPIERBIFNJTFZBBQQ5NzA3ZxAFFExFRElSIERJQVMgREUgQVJBVUpPBQUxOTQ4MWcQBS5MRUlMQSBNQVJJQSBDQVJSSUxPIENBVkFMQ0FOVEUgUklCRUlSTyBNQVJJQU5PBQUxMTk0NmcQBTVMRUlMQSBNQVJJQSBST0RSSUdVRVMgUElOVE8gREUgQ0FSVkFMSE8gRSBBTEJVUVVFUlFVRQUFMjczNTBnEAUSTEVJTEEgU0FOVE9TIExPUEVTBQUxNjYxMWcQBRhMRU9OWSBNQVJJQSBHUklWRVQgUElOSE8FBDg4NjlnEAUXTEVUSUNJQSBERSBGQVJJQSBTQVJEQVMFBDYzMDNnEAUbTElCT1JOSSBCRVJOQVJESU5PIFNJUVVFSVJBBQUxMDgxOGcQBRtMSURJQSBNQVJJQSBTT0RSRSBERSBNT1JBRVMFBTEzODg3ZxAFE0xJTkRCRVJHIE1PTlRFTkVHUk8FBTEwNTQwZxAFGExJTkRPTFBITyBNT1JBSVMgTUFSSU5ITwUFMjk4MTlnEAUVTFVDSUEgSEVMRU5BIERPIFBBU1NPBQUxNTM4N2cQBSFMw5pDSUEgTUFSSUEgTUlHVUVMIERBIFNJTFZBIExJTUEFBDk2OTJnEAUTTFVDSUEgTU9USEUgR0xJT0NIRQUFMjY5MDNnEAUhTFVDSUEgUkVHSU5BIEVTVEVWRVMgREUgTUFHQUxIQUVTBQUxNzUzN2cQBSFMVUNJQU5BIERBIENVTkhBIE1BUlRJTlMgT0xJVkVJUkEFBTI5NzY3ZxAFGkxVQ0lBTkEgTU9DQ08gTU9SRUlSQSBMSU1BBQUyNjE4MmcQBRdMVUNJQU5BIFNBTlRPUyBURUlYRUlSQQUFMjg4MjNnEAUNTFVDSUFOTyBCRUxFTQUDMjE0ZxAFIkxVQ0lBTk8gU0FCT0lBIFJJTkFMREkgREUgQ0FSVkFMSE8FBTMxOTMzZxAFFUxVQ0lBTk8gU0lMVkEgQkFSUkVUTwUFMTUzOTBnEAUOTMOaQ0lPIERVUkFOVEUFBTE2Njk2ZxAFGUxVSVMgQU5EUkUgQlJVWlpJIFJJQkVJUk8FBTI1MzgxZxAFE0xVSVMgRkVMSVBFIFNBTE9NQU8FBTEzOTMxZxAFLUxVSVMgR1VTVEFWTyBHUkFORElORVRUSSBDQVNUQU5ITyBERSBDQVJWQUxITwUFMTUzOThnEAUcTFVJU0EgQ1JJU1RJTkEgQk9UVFJFTCBTT1VaQQUEODg3NmcQBR1MVUlaIEFMQkVSVE8gQkFSQk9TQSBEQSBTSUxWQQUFMjUzODNnEAUbTFVJWiBBTEJFUlRPIENBUlZBTEhPIEFMVkVTBQUxNjU5NmcQBRxMVUlaIEFMRlJFRE8gQ0FSVkFMSE8gSlVOSU9SBQUyODgzMGcQBRFMVUlaIENBUkxPUyBNT1RUQQUFMTA5ODhnEAUTTFVJWiBDQVJMT1MgUEVDQU5IQQUFMTE0NDJnEAUXTFVJWiBDQVJMT1MgUEVSTElOR0VJUk8FBTEwMjM5ZxAFHExVSVogQ0FSTE9TIFNBTExFUyBHVUlNQVJBRVMFBDM0ODdnEAUKTFVJWiBDRVNBUgUFMTA1NDJnEAUhTFVJWiBDTEFVRElPIFNJTFZBIEpBUkRJTSBNQVJJTkhPBQUyNjE4NGcQBRhMVUlaIEVEVUFSRE8gQyBDQU5BQkFSUk8FBTE3NzczZxAFHkxVSVogRURVQVJETyBHVUlNQVJBRVMgUkFCRUxMTwUENDcyM2cQBRtMVUlaIEZFTElQRSBEQSBTSUxWQSBIQUREQUQFBTExODcxZxAFKUxVSVogRkVMSVBFIE1JUkFOREEgREUgTUVERUlST1MgRlJBTkNJU0NPBQQ5NjQwZxAFHkxVSVogRkVSTkFORE8gREUgQU5EUkFERSBQSU5UTwUFMTc1NDRnEAUhTFVJWiBGRVJOQU5ETyBSSUJFSVJPIERFIENBUlZBTEhPBQQ2Mjc1ZxAFCExVSVogRlVYBQQ2MjY2ZxAFHkxVSVogSEVOUklRVUUgT0xJVkVJUkEgTUFSUVVFUwUFMTUzOTRnEAURTFVJWiBMRUlURSBBUkFVSk8FBTExNjg3ZxAFIExVSVogTUFSQ0lPIFZJQ1RPUiBBTFZFUyBQRVJFSVJBBQUxOTQ4M2cQBRNMVUlaIE5PUk9OSEEgREFOVEFTBQQ5NjcxZxAFGkxVSVogT0RJTE9OIEdPTUVTIEJBTkRFSVJBBQQzNDgyZxAFEkxVSVogUk9CRVJUTyBBWU9VQgUFMTc3NTlnEAUcTFVJWiBST0xEQU8gREUgRlJFSVRBUyBHT01FUwUFMTgxMzhnEAUiTFVJWiBST0xEQU8gREUgRlJFSVRBUyBHT01FUyBGSUxITwUFMzM0NDBnEAULTFVJWiBTVEVFTEUFBDM3MzdnEAUcTFVJWiBVTVBJRVJSRSBERSBNRUxMTyBTRVJSQQUFMTk1OTVnEAUMTFVJWiBaVkVJVEVSBQUxODMxMWcQBS9NQUJFTCBDSFJJU1RJTkEgQ0FTVFJJT1RPIE1FSVJBIERFIFZBU0NPTkNFTExPUwUFMjUzNzNnEAUHbWFmYWxkYQUCMzZnEAUQTUFGQUxEQSBMVUNDSEVTRQUFMTY2MDFnEAUgTUFOT0VMIEFMQkVSVE8gUkVCRUxPIERPUyBTQU5UT1MFBDQ3MTlnEAUVTUFOT0VMIENBUlBFTkEgQU1PUklNBQQ0NzI4ZxAFGU1BTk9FTCBUQVZBUkVTIENBVkFMQ0FOVEkFBTE4MDcwZxAFG01BUkNFTCBMQUdVTkEgRFVRVUUgRVNUUkFEQQUFMTk1OTdnEAUXTUFSQ0VMTE8gREUgU0EgQkFQVElTVEEFBTIwMDY5ZxAFD01BUkNFTE8gQUxNRUlEQQUFMTk0NzBnEAUrTUFSQ0VMTyBDQVNUUk8gQU7DgVRPQ0xFUyBEQSBTSUxWQSBGRVJSRUlSQQUFMTY1OTJnEAUUTUFSQ0VMTyBMSU1BIEJVSEFURU0FBTMxMTUzZxAFD01BUkNFTE8gTUVOQUdFRAUFMjQzMzZnEAUZTUFSQ0VMTyBPTElWRUlSQSBEQSBTSUxWQQUFMjMxMTJnEAUYTUFSQ0VMTyBQRVJFSVJBIERBIFNJTFZBBQUyMTEzOGcQBRRNw4FSQ0lBICBBTFZFUyBTVUNDSQUFMTk0NzhnEAUcTUFSQ0lBIEFORFJFQSBST0RSSUdVRVogTEVNQQUFMjE3MDVnEAUnTcOBUkNJQSBDVU5IQSBTSUxWQSBBUkHDmkpPIERFIENBUlZBTEhPBQUxNTQxM2cQBRdNQVJDSUEgREEgU0lMVkEgUklCRUlSTwUFMjQ3MTRnEAUZTUFSQ0lBIEZFUlJFSVJBIEFMVkFSRU5HQQUFMTQwNTJnEAUVTUFSQ0lBIE1BTFZBUiBCQVJBTUJPBQUxODAzM2cQBRZNw4FSQ0lBIFBFUlJJTkkgQk9EQVJUBQQ5NjQ0ZxAFH01BUkNJQSBTQU5UT1MgQ0FQQU5FTUEgREUgU09VWkEFBTIwNzI3ZxAFIU1BUkNJTyBBTEVYQU5EUkUgUEFDSEVDTyBEQSBTSUxWQQUFMjUzODBnEAUYTUFSQ0lPIFFVSU5URVMgR09OQ0FMVkVTBQUyMDc1NmcQBRlNQVJDSVVTIERBIENPU1RBIEZFUlJFSVJBBQUxNjA4MGcQBRVNQVJDTyBBTlRPTklPIElCUkFISU0FBDQzMzBnEAUfTUFSQ08gQVVSRUxJTyBCRUxMSVpaRSBPTElWRUlSQQUFMTM3NjhnEAUeTUFSQ08gQVVSw4lMSU8gQkVaRVJSQSBERSBNRUxPBQUyOTg3MmcQBR5NQVJDTyBBVVJFTElPIERPUyBTQU5UT1MgRlJPRVMFBDc1NTlnEAUfTUFSQ09TIEFMQ0lOTyBERSBBWkVWRURPIFRPUlJFUwUEOTY3M2cQBRFNQVJDT1MgQU5EUkUgQ0hVVAUFMzMxMTRnEAUlTUFSQ09TIEFOVE9OSU8gUklCRUlSTyBERSBNT1VSQSBCUklUTwUFMjUzOTVnEAUVTUFSQ09TIEJFTlRPIERFIFNPVVpBBQQ5NjYwZxAFHU1BUkNVUyBBTlRPTklPIERFIFNPVVpBIEZBVkVSBQUxMDk1OGcQBR5NQVJDVVMgSEVOUklRVUUgUElOVE8gQkFTw41MSU8FBDk2OTZnEAUWTUFSQ1VTIFFVQVJFU01BIEZFUlJBWgUEODg3NWcQBRRNQVJDVVMgVFVMTElVUyBBTFZFUwUFMTE0ODZnEAUMTUFSREVOIEdPTUVTBQQxNzY0ZxAFJE1BUkdBUkVUIERFIE9MSVZBRVMgVkFMTEUgRE9TIFNBTlRPUwUFMTY1OTdnEAUbTUFSSUEgQUdMQUUgVEVERVNDTyBWSUxBUkRPBQUxNjYwOGcQBShNQVJJQSBBTkfDiUxJQ0EgR1VJTUFSw4NFUyBHVUVSUkEgR1VFREVTBQUxMzc3NWcQBShNQVJJQSBBVUdVU1RBIFZBWiBNT05URUlSTyBERSBGSUdVRUlSRURPBQQ2Mjg0ZxAFJE1BUklBIENFTEVTVEUgUElOVE8gREUgQ0FTVFJPIEpBVEFIWQUEODIwN2cQBR5NQVJJQSBDSFJJU1RJTkEgQkVSQVJETyBSVUNLRVIFBTE2NjAzZxAFIE1BUklBIENIUklTVElOQSBMT1VDSEFSRCBERSBHT0VTBQQ5NjgyZxAFIk1BUklBIENPTExBUkVTIEZFTElQRSBEQSBDT05DRUlDQU8FBTExNzI3ZxAFHSBNQVJJQSBDUklTVElOQSBERSBCUklUTyBMSU1BBQUxNjYwNWcQBSpNQVJJQSBEQSBHTE9SSUEgT0xJVkVJUkEgQkFOREVJUkEgREUgTUVMTE8FBTE4MDcyZxAFFk1BUklBIERFIExPVVJERVMgVkFMTEUFBDc1NDFnEAUhTUFSSUEgRE8gQ0FSTU8gQUxWSU0gUEFESUxIQSBHRVJLBQUxNjA2N2cQBRpNQVJJQSBIRUxFTkEgUElOVE8gTUFDSEFETwUFMTY1OTFnEAUeTUFSSUEgSEVMRU5BIFNBTENFRE8gTUFHQUxIQUVTBQQ2Mjk0ZxAFJ01BUklBIEhFTlJJUVVFVEEgRE8gQU1BUkFMIEZPTlNFQ0EgTE9CTwUFMTkyNzFnEAUbTUFSSUEgSU7DilMgREEgUEVOSEEgR0FTUEFSBQUxMTg2OWcQBRxNQVJJQSBJU0FCRUwgUEFFUyBHT07Dh0FMVkVTBQUxNzUzMWcQBR9NQVJJQSBMVUlaQSBERSBGUkVJVEFTIENBUlZBTEhPBQUxNjA3OGcQBRtNQVJJQSBQQVVMQSBHT1VWRUEgR0FMSEFSRE8FBTIwMDYzZxAFIk1BUklBIFJBSU1VTkRBIFRFSVhFSVJBIERFIEFaRVZFRE8FBDcyOTZnEAUfTUFSSUEgUkVHSU5BIEZPTlNFQ0EgTk9WQSBBTFZFUwUFMzExMTZnEAUgTUFSSUEgU0FORFJBIFJPQ0hBIEtBWUFUIERJUkVJVE8FBTE1NjMwZxAFFk1BUklBIFNURUxMQSBST0RSSUdVRVMFAzIxNmcQBRwgTUFSSUEgVEVSRVNBIFBPTlRFUyBHQVpJTkVVBQUxNzUyOWcQBR1NQVJJQSBaRUxJQSBQUk9DT1BJTyBEQSBTSUxWQQUENzI4NmcQBQxNQVJJQU5OQSBGVVgFBTMzNDM5ZxAFKE1BUklBTk5BIFBFUkVJUkEgTlVORVMgRkVURUlSQSBHT05DQUxWRVMFBTEwMzEwZxAFE01BUklBTlRFIERBIEZPTlNFQ0EFAzIwOWcQBRNNQVJJTEVORSBNRUxPIEFMVkVTBQQ3Mjk0ZxAFH01BUsONTElBIERFIENBU1RSTyBORVZFUyBWSUVJUkEFBTI5ODM0ZxAFFk1BUklPIEFTU0lTIEdPTsOHQUxWRVMFBDc2NTBnEAUWTUFSSU8gRE9TIFNBTlRPUyBQQVVMTwUENzI2NmcQBRVNQVJJTyBHVUlNQVLDg0VTIE5FVE8FBDk2NDJnEAUUTUFSSU8gSEVOUklRVUUgTUFaWkEFBTIxMTI1ZxAFD01BUklPIE1BR0FMSEFFUwUENjA1OGcQBRdNQVJJTyBST0JFUlQgTUFOTkhFSU1FUgUFMjQyMDdnEAUVTUFSSVNBIEJBTEJJIFJPU0VNQkFLBQUyNDY5N2cQBRhNQVJMQU4gREUgTU9SQUVTIE1BUklOSE8FBTExMjEwZxAFFk1BUkxZIE1BQ0VET05JTyBGUkFOQ0EFBTE4MTIyZxAFIU1BUlRIQSBFTElTQUJFVEggRkFMQ8ODTyBTT0JSRUlSQQUFMTY2MDRnEAUPTUFSVElOSE8gQ0FNUE9TBQQxMzEyZxAFEk1BUlRJTlMgREUgQUxNRUlEQQUEMzczNWcQBRZNQVVSw41DSU8gQ0FMREFTIExPUEVTBQUyNDM1MmcQBRdNQVVSSUNJTyBEQSBTSUxWQSBMSU5UWgUFMTEyMDhnEAUeTUFVUklDSU8gR09OQ0FMVkVTIERFIE9MSVZFSVJBBQUxMTE5OGcQBQ9NQVVSSUNJTyBNQUdOVVMFBTI5NzkyZxAFHk1BVVJJTElPIFBBU1NPUyBEQSBTSUxWQSBCUkFHQQUENzI3N2cQBSFNQVVSSUxJTyBURUlYRUlSQSBERSBNRUxMTyBKVU5JT1IFBTI5ODU4ZxAFD01BVVJPIERJQ0tTVEVJTgUEOTY4MGcQBRxNQVVSTyBGT05TRUNBIFBJTlRPIE5PR1VFSVJBBQUxMTcxNmcQBRVNQVVSTyBOSUNPTEFVIErDmk5JT1IFBTE4MDMxZxAFFU1BVVJPIFBFUkVJUkEgTUFSVElOUwUFMTY2OTJnEAULTUVMTE8gU0VSUkEFBDIzMTZnEAUUTUlHVUVMIEFOR0VMTyBCQVJST1MFBTExNDQwZxAFDE1JR1VFTCBQQUNIQQUENDc0NWcQBRlNSUxUT04gRkVSTkFOREVTIERFIFNPVVpBBQQ3MjgzZxAFDE1JUkFOREEgUk9TQQUDMjA2ZxAFDk1JUkVMQSBFUkJJU1RJBQUyNDcxMGcQBRdNT0FDSVIgUEVTU09BIERFIEFSQVVKTwUENzU2N2cQBQ5NT0xFRE8gU0FSVE9SSQUFMTA1MTRnEAUXTcOUTklDQSBERSBGQVJJQSBTQVJEQVMFBTMyMDgwZxAFGU3DlE5JQ0EgRkVMRE1BTiBERSBNQVRUT1MFBTE2MDc3ZxAFHU1PTklDQSBMQUJVVE8gRlJBR09TTyBNQUNIQURPBQUyMDA5MWcQBRxNw5ROSUNBIE1BUklBIENPU1RBIERJIFBJRVJPBQUyOTgzNWcQBRtNw5ROSUNBIFRPTExFRE8gREUgT0xJVkVJUkEFBTEzNzk5ZxAFE01PTklRVUUgQUJSRVUgREFWSUQFBTMxOTQ4ZxAFEE1VUklMTE8gRkFCUkVHQVMFBDI2MDBnEAUaTVVSSUxPIEFORFJBREUgREUgQ0FSVkFMSE8FBDQ2OTZnEAUlTVVSSUxPIEFORFLDiSBLSUVMSU5HIENBUkRPTkEgUEVSRUlSQQUFMTU2MjZnEAUNTVVSVEEgUklCRUlSTwUDMzQzZxAFIE1ZUklBTSBNRURFSVJPUyBEQSBGT05TRUNBIENPU1RBBQUxNTQxMWcQBRNOLiBET1JFU1RFIEJBUFRJU1RBBQQ5MDAwZxAFHk5BRElBIE1BUklBIERFIFNPVVpBIEZSRUlKQU5FUwUFMTY1OTBnEAUSTkFHSUIgU0xBSUJJIEZJTEhPBQQ2MjY4ZxAFFk5BTUVUQUxBIE1BQ0hBRE8gSk9SR0UFBTExNjgxZxAFDE5BTkNJIE1BSEZVWgUENzI5MmcQBQ1OQVJDSVpPIFBJTlRPBQQxNDQ4ZxAFHU5BU0NJTUVOVE8gQU5UT05JTyBQT1ZPQVMgVkFaBQQzNzI1ZxAFNk5BVEFDSEEgTkFTQ0lNRU5UTyBHT01FUyBUT1NURVMgR09Ow4dBTFZFUyBERSBPTElWRUlSQQUFMTUzODhnEAUbTkFUQVNDSEEgTUFDVUxBTiBBRFVNIERBWlpJBQUyOTgxMmcQBR1OQVRIQUxJQSBDQUxJTCBNSUdVRUwgTUFHTFVUQQUFMjcyODhnEAUqTkVBUklTIERPUyBTQU5UT1MgQ0FSVkFMSE8gQVJDRSBET1MgU0FOVE9TBQUyMDA4NmcQBRpORVNUT1IgTFVJWiBCQVNUT1MgQUhSRU5EUwUFMTEyMzVnEAUmTkVVU0EgUkVHSU5BIExBUlNFTiBERSBBTFZBUkVOR0EgTEVJVEUFBTIxMTM5ZxAFIE5FV1RPTiBQQVVMTyBBWkVSRURPIERBIFNJTFZFSVJBBQUxMTA0MWcQBRBORVdUT04gUVVJTlRFTExBBQQzNzMyZxAFE05JQ09MQVUgTUFSWSBKVU5JT1IFBTEwMTQxZxAFF05JTERTT04gQVJBw5pKTyBEQSBDUlVaBQUyNDIwOWcQBRVOSUxTT04gREUgQ0FTVFJPIERJQU8FBTEwNzI5ZxAFH05JTFRPTiBNT05ERUdPIERFIENBUlZBTEhPIExJTUEFBDM0NzNnEAULTklMWkEgQklUQVIFBTExNjg0ZxAFG05PUk1BIFNVRUxZIEZPTlNFQ0EgUVVJTlRFUwUENzU3OWcQBRVPREVURSBLTkFBQ0sgREUgU09VWkEFBDcyOTFnEAUYT1JMQU5ETyBERSBBTE1FSURBIFNFQ0NPBQQ3NTY5ZxAFDU9STElORE8gRUxJQVMFBTEwMjUxZxAFDk9TQ0FSIFNJTFZBUkVTBQUxMDUyM2cQBRBPU1dBTERPIFBPUlRFTExBBQMyMTdnEAURT1TDgVZJTyBST0RSSUdVRVMFBDYzMDhnEAUeUEFUUklDSUEgQ09HTElBVFRJIERFIENBUlZBTEhPBQUyNTM4N2cQBR5QQVRSw41DSUEgUklCRUlSTyBTRVJSQSBWSUVJUkEFBTMxOTMyZxAFGlBBVFJJQ0lBIFJPRFJJR1VFWiBXSEFURUxZBQUyODgzM2cQBRdQQVVMQSBGRVJOQU5ERVMgTUFDSEFETwUFMTk1ODhnEAUZUEFVTEEgUkVHSU5BIEFET1JOTyBDT1NTQQUFMjg4MjdnEAUTUEFVTE8gQVNTRUQgRVNURUZBTgUFMTc3NjFnEAUTUEFVTE8gQ0VTQVIgU0FMT01BTwUENjI3MWcQBRtQQVVMTyBDRVNBUiBWSUVJUkEgQy4gRklMSE8FBTE2NTg5ZxAFJFBBVUxPIERFIE9MSVZFSVJBIExBTlpJTExPVFRBIEJBTERFWgUFMTQ5OTFnEAUUUEFVTE8gREUgVEFSU08gTkVWRVMFBDg4NzdnEAUXUEFVTE8gRE9VUkFETyBERSBHVVNNQU8FBDk1NDBnEAUUUEFVTE8gR09NRVMgREEgU0lMVkEFBTEwODMwZxAFGlBBVUxPIEdPTUVTIERBIFNJTFZBIEZJTEhPBQUxMDUwNmcQBQpQQVVMTyBMQVJBBQUxMTIwM2cQBRJQQVVMTyBNQUxUQSBGRVJSQVoFBDE0NjJnEAUWUEFVTE8gTUFVUklDSU8gUEVSRUlSQQUEMzUxMGcQBQtQQVVMTyBQSU5UTwUENDQwOWcQBRRQQVVMTyBST0JFUlRPIENPUlJFQQUFMTg5OTNnEAUVUEFVTE8gUk9CRVJUTyBGUkVJVEFTBQQxNDg0ZxAFG1BBVUxPIFJPQkVSVE8gTEVJVEUgVkVOVFVSQQUFMTExOTFnEAUlUEFVTE8gU0VSR0lPIERFIEFSQVVKTyBFIFNJTFZBIEZBQklBTwUEMzQ2MWcQBSBQQVVMTyBTw4lSR0lPIFBSRVNURVMgRE9TIFNBTlRPUwUEOTY2MWcQBSJQQVVMTyBTw4lSR0lPIFJBTkdFTCBETyBOQVNDSU1FTlRPBQUzMTExNWcQBRdQQVVMTyBXVU5ERVIgREUgQUxFTkNBUgUFMzM4ODRnEAUUUEVDRUdVRUlSTyBETyBBTUFSQUwFBDU5MzBnEAUaUEVEUk8gQU1FUklDTyBSLiBHT05DQUxWRVMFBTEwNTExZxAFFVBFRFJPIEZSRUlSRSBSQUdVRU5FVAUEOTY5OWcQBRRQRURSTyBIRU5SSVFVRSBBTFZFUwUFMjAwNzdnEAUNUEVEUk8gTElHSUVSTwUEMjQwMGcQBQpQRURSTyBMSU1BBQMzODVnEAUeUEVEUk8gU0FSQUlWQSBERSBBTkRSQURFIExFTU9TBQQ5NjkxZxAFDlBFTkFMVkEgU0FOVE9TBQMyMTFnEAUXUEVURVJTT04gQkFSUk9TTyBTSU3Dg08FBTE1NjMxZxAFGVBJTkRBUk8gTE9QRVMgREUgQ0FSVkFMSE8FBTIwMDg0ZxAFE1BJUkVTIEUgQUxCVVFVRVJRVUUFBDMxMDFnEAUaUEzDjU5JTyBQSU5UTyBDT0VMSE8gRklMSE8FBTE0NTY4ZxAFD1BPUlRFTExBIFNBTlRPUwUFMTA4MjlnEAUOUE9SVE8gQ0FSUkVJUk8FAzQyOGcQBRRQUklTQ0lMQSBBQlJFVSBEQVZJRAUFMjk4MDVnEAUWUkFGQUVMIEVTVFJFTEEgTk9CUkVHQQUFMjg4OThnEAUZUkFGQUVMIFJFWkVOREUgREFTIENIQUdBUwUFMjg4MzZnEAUlUkFGQUVMTEEgQVZJTEEgREUgU09VWkEgVFVGRlkgRkVMSVBQRQUFMzE5NTlnEAUUUkFMUEggTE9QRVMgUElOSEVJUk8FBDM3MzZnEAUYUkFQSEFFTCBDSVJJR0xJQU5PIEZJTEhPBQQ0MDA3ZxAFElJBUVVFTCBERSBPTElWRUlSQQUFMTk2MDZnEAUXUkFRVUVMIEdPVVZFSUEgREEgQ1VOSEEFBTI4ODM0ZxAFF1JBVUwgQ0VMU08gTElOUyBFIFNJTFZBBQUxOTA4M2cQBShSQVVMIERFIFNBTiBUSUFHTyBEQU5UQVMgQkFSQk9TQSBRVUVOVEFMBQQxNDQ0ZxAFE1JFQkVMTE8gREUgTUVORE9OQ0EFBDE0NTdnEAUNUkVCRUxMTyBIT1JUQQUENTIwNWcQBTRSRUdJTkEgTFVDSUEgQ0hVUVVFUiBERSBBTE1FSURBIENPU1RBIERFIENBU1RSTyBMSU1BBQUyMzEwNGcQBRNSRUdJTkEgTFVDSUEgUEFTU09TBQUxNDU3MmcQBRVSRUdJTkFMRCcgREUgQ0FSVkFMSE8FBTExMjMyZxAFHFJFSU5BTERPIFBJTlRPIEFMQkVSVE8gRklMSE8FBDUyMDRnEAUUUkVOQVRBIE1BQ0hBRE8gQ09UVEEFBTMwMzg0ZxAFGVJFTkFUQSBNQVJJQSBOSUNPTEFVIENBQk8FBTM1MjU4ZxAFIVJFTkFUQSBQQUxIRUlSTyBNRU5ERVMgREUgQUxNRUlEQQUFMjk4MDBnEAUdUkVOQVRBIFNJTFZBUkVTIEZSQU7Dh0EgRkFERUwFBTMzOTI1ZxAFIVJFTkFUQSBUUkFWQVNTT1MgTUVESU5BIERFIE1BQ0VETwUFMjY5MDFnEAUaUkVOQVRPIExJTUEgQ0hBUk5BVVggU0VSVEEFBTE2MjQ5ZxAFD1JFTkFUTyBNQU5FU0NIWQUEMTQ0NWcQBRZSRU5BVE8gUklDQVJETyBCQVJCT1NBBQUxNTYyM2cQBQ1SRU5BVE8gU0lNT05JBQUxMTY4NWcQBRdSSUNBUkRPIEFMQkVSVE8gUEVSRUlSQQUFMTgwNzVnEAUrUklDQVJETyBDT0lNQlJBIERBIFNJTFZBIFNUQVJMSU5HIEJBUkNFTExPUwUFMjk3NzRnEAUXUklDQVJETyBDT1VUTyBERSBDQVNUUk8FBTE1NDA0ZxAFGFJJQ0FSRE8gTEFGQVlFVFRFIENBTVBPUwUFMjg4MzlnEAUYUklDQVJETyBQSU5IRUlSTyBNQUNIQURPBQUyOTc3MmcQBRlSSUNBUkRPIFJPRFJJR1VFUyBDQVJET1pPBQQ5NjY3ZxAFG1JJQ0FSRE8gU0lMVkEgREUgQlVTVEFNQU5URQUENzI3NmcQBRlSSUNIQVJEIFJPQkVSVCBGQUlSQ0xPVUdIBQUyOTgwNmcQBRhST0JFUlRPIERFIEFCUkVVIEUgU0lMVkEFBDYzMTNnEAUaUk9CRVJUTyBERSBBTE1FSURBIFJJQkVJUk8FBDk2NzJnEAUXUk9CRVJUTyBERSBTT1VaQSBDT1JURVMFBTEwNDk0ZxAFEVJPQkVSVE8gR1VJTUFSQUVTBQQ4ODgzZxAFIFJPQkVSVE8gTFVJUyBGRUxJTlRPIERFIE9MSVZFSVJBBQQ5NjY0ZxAFDVJPQkVSVE8gTUFST04FBDQ3NjlnEAUWUk9CRVJUTyBST0NIQSBGRVJSRUlSQQUENzU0MmcQBQ1ST0JFUlRPIFdJREVSBQUxMTE5M2cQBRFST0JFUlZBTCBETyBNT05URQUEODczMWcQBRZST0RSSUdPIEZBUklBIERFIFNPVVNBBQUyNzI4MWcQBRpST0fDiVJJTyBERSBPTElWRUlSQSBTT1VaQQUFMTM5MzJnEAUVUk9NRVUgUk9EUklHVUVTIFNJTFZBBQQzNzQwZxAFEVJPTVVMTyBMVUlaIENPTExZBQQ2Mjk2ZxAFHFJPTkFMRCBET1MgU0FOVE9TIFZBTExBREFSRVMFBTExMjE5ZxAFHFJPTkFMRE8gQUxWQVJPIExPUEVTIE1BUlRJTlMFBDk2NjNnEAUVUk9OQUxETyBBU1NFRCBNQUNIQURPBQQ1MjA3ZxAFIlJPTkFMRE8gSk9TRSBPTElWRUlSQSBST0NIQSBQQVNTT1MFBDUyMTFnEAUNUk9RVUUgQkFUSVNUQQUEMzc0MWcQBR5ST1NBIEhFTEVOQSBQRU5OQSBNQUNFRE8gR1VJVEEFBTE2MDY0ZxAFHlJPU0EgTUFSSUEgQ0lSSUdMSUFOTyBNQU5FU0NIWQUFMjExNDJnEAUaUk9TQU5BIEFMQlVRVUVSUVVFIEZSQU7Dh0EFBTI4ODUzZxAFFFJPU0FOQSBOQVZFR0EgQ0hBR0FTBQUxODA2NGcQBRtST1NFIE1BUklFIFBJTUVOVEVMIE1BUlRJTlMFBTE5NTkyZxAFHlJPU0lUQSBNQVJJQSBERSBPTElWRUlSQSBORVRUTwUENjMyNGcQBRBST1NTSURFTElPIExPUEVTBQUxODA2OWcQBRVSVURJIEJBTERJIExPRVdFTktST04FBTIxNzA5ZxAFD1JVREkgTE9FV0VOS1JPTgUFMTE0NjJnEAUVUlVJIE9DVEFWSU8gRE9NSU5HVUVTBQQxNDUyZxAFGFJVWSBNT05URUlSTyBERSBDQVJWQUxITwUFMTA1OTlnEAUiUlVZWiBBVEhBWURFIEFMQ0FOVEFSQSBERSBDQVJWQUxITwUFMTE2ODNnEAURU0FMSU0gSk9TRSBDSEFMVUIFBDM0NjJnEAUOU0FMVkFET1IgUElOVE8FAzc3OWcQBQ1TQU1QQUlPIFBFUkVTBQUxMTA0NmcQBRpTQU5EUkEgU0FOVEFSw4lNIENBUkRJTkFMSQUFMTUzODlnEAUcU0FORFJPIExVQ0lPIEJBUkJPU0EgUElUQVNTSQUFMjExNDNnEAUYU0VCQVNUSUFPIFJVR0lFUiBCT0xFTExJBQUxMTU5OWcQBQpTRU1ZIEdMQU5aBQQyMzIwZxAFFlNFUkdJTyBDQVZBTElFUkkgRklMSE8FBDM0ODNnEAUWU0VSR0lPIERFIFNBRVRBIE1PUkFFUwUENzI3NWcQBRZTRVJHSU8gREUgU09VWkEgVkVSQU5JBQQzNzI2ZxAFIVNFUkdJTyBKRVJPTklNTyBBQlJFVSBEQSBTSUxWRUlSQQUEOTY3NmcQBR9TRVJHSU8gTFVDSU8gREUgT0xJVkVJUkEgRSBDUlVaBQQ2Mjc2ZxAFDlNFUkdJTyBNQVJJQU5PBQMyMTlnEAUbU8OJUkdJTyBOT0dVRUlSQSBERSBBWkVSRURPBQUzMzExM2cQBSJTRVJHSU8gUklDQVJETyBERSBBUlJVREEgRkVSTkFOREVTBQUxNjA3NWcQBR1TRVJHSU8gUk9CRVJUTyBFTUlMSU8gTE9VWkFEQQUFMjQxMDhnEAUWU8OJUkdJTyBTRUFCUkEgVkFSRUxMQQUFMTQwNTZnEAURU0VSR0lPIFdBSlpFTkJFUkcFBTE3NzUzZxAFGlNFUlZJTyBUVUxJTyBTQU5UT1MgVklFSVJBBQQ0NzA2ZxAFG1NFVkVSSUFOTyBJR05BQ0lPIERFIEFSQUdBTwUEMzQ3MWcQBRZTSURORVkgSEFSVFVORyBCVUFSUVVFBQQxNTc3ZxAFFFNJRE5FWSBST1NBIERBIFNJTFZBBQUxNDU4NGcQBRdTSUxWSU8gVEVJWEVJUkEgTU9SRUlSQQUEMzQ5MGcQBRlTSU1PTkUgREFMSUxBIE5BQ0lGIExPUEVTBQUyOTc3OGcQBRdTSU1PTkUgREUgQVJBw5pKTyBST0xJTQUFMjAwNjdnEAUXU0lNT05FIEdBU1RFU0kgQ0hFVlJBTkQFBTIwNzYyZxAFE1NJUkxFWSBBQlJFVSBCSU9OREkFBTEwNDE4ZxAFF1NJUk8gREFSTEFOIERFIE9MSVZFSVJBBQQ2MzIxZxAFFlPDlE5JQSBERSBGw4FUSU1BIERJQVMFBTE1NDA1ZxAFFlNVRUxZIExPUEVTIE1BR0FMSMODRVMFBDc1NTVnEAUWU1VJTUVJIE1FSVJBIENBVkFMSUVSSQUFMTQ5OTZnEAUYU1lMVklPIENBUEFORU1BIERFIFNPVVpBBQUxNjc1MmcQBRpTWU5FU0lPIERFIEFRVUlOTyBQSU5IRUlSTwUFMTAxNjdnEAUSVEVMTUEgTVVTU0UgRElVQU5BBQUxODI4N2cQBRlURUxNSVJBIERFIEJBUlJPUyBNT05ERUdPBQUyMTEyOWcQBR5URVJFU0EgREUgQU5EUkFERSBDQVNUUk8gTkVWRVMFBTE0NTgzZxAFKlRFUkVaQSBDUklTVElOQSBTT0JSQUwgQklUVEVOQ09VUlQgU0FNUEFJTwUFMTQ5OTlnEAUSVEhJQUdPIFJJQkFTIEZJTEhPBQQxNDYwZxAFGVRJQUdPIEZFUk5BTkRFUyBERSBCQVJST1MFBTMxOTUzZxAFDlRJQUdPIFAuIENPU1RBBQQ2Mjk4ZxAFDlRPUlJFUyBERSBNRUxPBQQ1Mjk1ZxAFHFRVTEEgQ09SUkVBIERFIE1FTExPIEJBUkJPU0EFBTI0NzAxZxAFElVMWVNTRVMgVkFMTEFEQVJFUwUFMTA3OTlnEAUbVkFMw4lSSUEgREFDSEVVWCBOQVNDSU1FTlRPBQUxNDU4NWcQBR1WQUxFUklBIEdBUkNJQSBEQSBTSUxWQSBNQVJPTgUEMjA2M2cQBRVWQUxFUklBIFBBQ0hBIEJJQ0hBUkEFBTIxNjk4ZxAFGFZBTE1JUiBERSBPTElWRUlSQSBTSUxWQQUENjI4OWcQBRlWQUxNSVIgRE9TIFNBTlRPUyBSSUJFSVJPBQUxMTQ0N2cQBRlWQU5FTEUgUk9DSEEgRkFMQ0FPIENFU0FSBQUyNzI5MmcQBSNWQU5FU1NBIERFIE9MSVZFSVJBIENBVkFMSUVSSSBGRUxJWAUFMjg4NDRnEAUfVkVMRURBIFNVWkVURSBTQUxEQU5IQSBDQVJWQUxITwUFMjcyOTRnEAUeVkVSQSBNQVJJQSBTT0FSRVMgVkFOIEhPTUJFRUNLBQQ3NTgwZxAFJlZJVE9SIE1BUkNFTE8gQVJBTkhBICBBRk9OU08gUk9EUklHVUVTBQUzMzkyN2cQBRZWSVZJQU5FIEFMT05TTyBBTEtJTUlNBQUyMzEwOWcQBR9XQUdORVIgQ0lORUxMSSBERSBQQVVMQSBGUkVJVEFTBQUxNTQxMGcQBRBXQUxERU1BUiBaVkVJVEVSBQQ2ODYzZxAFGVdBTFRFUiBGRUxJUFBFIEQnQUdPU1RJTk8FBTExNDg3ZxAFE1dBTlkgRE8gQ09VVE8gRkFSSUEFBDYzMDVnEAUQV0VCRVIgTS4gQkFUSVNUQQUEMjMzMmcQBRZXRUxMSU5HVE9OIEpPTkVTIFBBSVZBBQUxMTcyNWcQBRNXRUxMSU5HVE9OIFBJTUVOVEVMBQM0MjRnEAUbV0VSU09OIEZSQU5DTyBQRVJFSVJBIFLDikdPBQUxNjcwMGcQBRlXSUxTT04gRE8gTkFTQ0lNRU5UTyBSRUlTBQUxNTYyOWcQBR9XSUxTT04gTUFSQ0VMTyBLT1pMT1dTS0kgSlVOSU9SBQUyODg1MWcQBQ5XSUxTT04gTUFSUVVFUwUEMzE0NmcQBSFXSUxTT04gU0FOVElBR08gTUVTUVVJVEEgREUgTUVMTE8FBTEwNjkxZxAFEFdMQURJTUlSIEhVTkdSSUEFBTI2OTE4ZxAFD1hBVklFUiBEQSBNQVRUQQUFMTA1MDdnEAUvWUVEREEgQ0hSSVNUSU5BIENISU5HIFNBTiBGSUxJWlpPTEEgIEFTU1VOw4fDg08FBTI4ODQ3ZxAFE1lPVVNTSUYgU0FMSU0gU0FLRVIFBTEwMjQwZxAFHlpFTElBIE1BUklBIE1BQ0hBRE8gRE9TIFNBTlRPUwUEODQ1NmcQBS9KRFMuIEFOQSBDw4lMSUEgTU9OVEVNT1IgU09BUkVTIFJJT1MgR09Ow4dBTFZFUwUFMTQxOTZnEAUvSkRTLiBERVMuIEFMRVhBTkRSRSBPTElWRUlSQSBDQU1BQ0hPIERFIEZSQU7Dh0EFBTI0MTE3ZxAFJEpEUy4gREVTLiBBTkEgUEFVTEEgQUJSRVUgRklMR1VFSVJBUwUFMjk4NDVnEAUeSkRTLiBERVMuIERBTklFTCBWSUFOTkEgVkFSR0FTBQUyNjE5MGcQBSVKRFMuIERFUy4gRURVQVJETyBNQVJRVUVTIEhBQkxJVFNDSEVLBQUxNzc1NWcQBSpKRFMuIERFUy4gRkFCSUFOQSBERSBDQVNUUk8gUEVSRUlSQSBTT0FSRVMFBTE5NjA5ZxAFIUpEUy4gREVTLiBHVUlMSEVSTUUgUEVEUk9TQSBMT1BFUwUFMjAwNjZnEAUuSkRTLiBERVMuIEtBVElBIENJTEVORSBEQSBIT1JBIE1BQ0hBRE8gQlVHQVJJTQUFMjAwNzVnEAUlSkRTLiBERVMuIExFT05BUkRPIENBSlVFSVJPIEQgQVpFVkVETwUFMjk4MjJnEAUuSkRTLiBERVMuIExFT05BUkRPIEdSQU5ETUFTU09OIEZFUlJFSVJBIENIQVZFUwUFMjQ3MDRnEAUwSkRTLiBERVMuIE1BUklBIENSSVNUSU5BIEJBUlJPUyBHVVRJRVJSRVogU0xBSUJJBQUxOTYwNGcQBSFKRFMuIERFUy4gU0FORFJPIERFIEFSQVVKTyBMT05UUkEFBTI2MTgxZxAFKkpEUy4gREVTLiBWQU5JQSBNQVJBIE5BU0NJTUVOVE8gR09Ow4dBTFZFUwUENjE2OGdkZAINDxAPFgIeB0NoZWNrZWRnZGRkZAIODxAPFgIfAGdkZGRkAg8PEGQPFkxmAgECAgIDAgQCBQIGAgcCCAIJAgoCCwIMAg0CDgIPAhACEQISAhMCFAIVAhYCFwIYAhkCGgIbAhwCHQIeAh8CIAIhAiICIwIkAiUCJgInAigCKQIqAisCLAItAi4CLwIwAjECMgIzAjQCNQI2AjcCOAI5AjoCOwI8Aj0CPgI/AkACQQJCAkMCRAJFAkYCRwJIAkkCSgJLFkwQBQxTZWxlY2lvbmUuLi5lZxAFNzHCsCBOw5pD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IEPDgk1BUkEgQ8ONVkVMKQUFMTIyNjFnEAU8UVVBUlRBIENBTUFSQSBERSBESVJFSVRPIFBVQkxJQ08gKEFOVElHQSA3wqogQ8OCTUFSQSBDw41WRUwpBQUxMjI4MGcQBT1RVUlOVEEgQ0FNQVJBIERFIERJUkVJVE8gUFVCTElDTyAoQU5USUdBIDE2wqogQ8OCTUFSQSBDw41WRUwpBQUxMjI2MmcQBTxTRVhUQSBDQU1BUkEgREUgRElSRUlUTyBQVUJMSUNPIChBTlRJR0EgMjHCqiBDw4JNQVJBIEPDjVZFTCkFBTEyMjgxZxAFI1PDiVRJTUEgQ8OCTUFSQSBERSBESVJFSVRPIFDDmkJMSUNPBQUxNDE4MGcQBSBPSVRBVkEgQ0FNQVJBIERFIERJUkVJVE8gUFVCTElDTwUFMTQxODFnEAUeTk9OQSBDQU1BUkEgREUgRElSRUlUTyBQVUJMSUNPBQUxNzg4MGcQBSBERUNJTUEgQ0FNQVJBIERFIERJUkVJVE8gUFVCTElDTwUFMTc5MDBnEAU+UFJJTUVJUkEgQ0FNQVJBIERFIERJUkVJVE8gUFJJVkFETyAoQU5USUdBIDjCqiBDw4JNQVJBIEPDjVZFTCkFBTEyMjgyZxAFPVNFR1VOREEgQ0FNQVJBIERFIERJUkVJVE8gUFJJVkFETyAoQU5USUdBIDPCqiBDw4JNQVJBIEPDjVZFTCkFBTEyMjYzZxAFP1RFUkNFSVJBIENBTUFSQSBERSBESVJFSVRPIFBSSVZBRE8gKEFOVElHQSAxOMKqIEPDgk1BUkEgQ8ONVkVMKQUFMTIyNjRnEAU8UVVBUlRBIENBTUFSQSBERSBESVJFSVRPIFBSSVZBRE8gKEFOVElHQSA1wqogQ8OCTUFSQSBDw41WRUwpBQUxMjI4M2cQBT5RVUlOVEEgQ0FNQVJBIERFIERJUkVJVE8gUFJJVkFETyAoQU5USUdBIDI0wqogQ8OCTUFSQSAgQ8ONVkVMKQUFMTIyNjVnEAU8U0VYVEEgQ0FNQVJBIERFIERJUkVJVE8gUFJJVkFETyAoQU5USUdBIDEzwqogQ8OCTUFSQSBDw41WRUwpBQUxMjI4NGcQBT1TRVRJTUEgQ0FNQVJBIERFIERJUkVJVE8gUFJJVkFETyAoQU5USUdBIDEywqogQ8OCTUFSQSBDw41WRUwpBQUxMjI4NWcQBT1PSVRBVkEgQ0FNQVJBIERFIERJUkVJVE8gUFJJVkFETyAoQU5USUdBIDE3wqogQ8OCTUFSQSBDw41WRUwpBQUxMjI2NmcQBTpOT05BIENBTUFSQSBERSBESVJFSVRPIFBSSVZBRE8gKEFOVElHQSAywqogQ8OCTUFSQSBDw41WRUwpBQUxMjI4NmcQBTxERUNJTUEgQ0FNQVJBIERFIERJUkVJVE8gUFJJVkFETyAoQU5USUdBIDHCqiBDw4JNQVJBIEPDjVZFTCkFBTEyMjY3ZxAFRkRFQ0lNQSBQUklNRUlSQSBDQU1BUkEgREUgRElSRUlUTyBQUklWQURPIChBTlRJR0EgMjfCqiBDw4JNQVJBIEPDjVZFTCkFBTEyMjg3ZxAFRURFQ0lNQSBTRUdVTkRBIENBTUFSQSBERSBESVJFSVRPIFBSSVZBRE8gKEFOVElHQSAxNMKqIEPDgk1BUkEgQ8ONVkVMKQUFMTIyNjhnEAVGREVDSU1BIFRFUkNFSVJBIENBTUFSQSBERSBESVJFSVRPIFBSSVZBRE8gKEFOVElHQSAyMsKqIEPDgk1BUkEgQ8ONVkVMKQUFMTIyNjlnEAVDREVDSU1BIFFVQVJUQSBDQU1BUkEgREUgRElSRUlUTyBQUklWQURPIChBTlRJR0EgOcKqIEPDgk1BUkEgQ8ONVkVMKQUFMTIyODhnEAVEREVDSU1BIFFVSU5UQSBDQU1BUkEgREUgRElSRUlUTyBQUklWQURPIChBTlRJR0EgMjDCqiBDw4JNQVJBIEPDjVZFTCkFBTEyMjcwZxAFQkRFQ0lNQSBTRVhUQSBDQU1BUkEgREUgRElSRUlUTyBQUklWQURPIChBTlRJR0EgNMKqIEPDgk1BUkEgQ8ONVkVMKQUFMTIyODlnEAVEREVDSU1BIFNFVElNQSBDQU1BUkEgREUgRElSRUlUTyBQUklWQURPIChBTlRJR0EgMjbCqiBDw4JNQVJBIEPDjVZFTCkFBTEyMjkwZxAFRERFQ0lNQSBPSVRBVkEgQ0FNQVJBIERFIERJUkVJVE8gUFJJVkFETyAoQU5USUdBIDE1wqogQ8OCTUFSQSBDw41WRUwpBQUxMjI5MWcQBUJERUNJTUEgTk9OQSBDQU1BUkEgREUgRElSRUlUTyBQUklWQURPIChBTlRJR0EgMjXCqiBDw4JNQVJBIEPDjVZFTCkFBTEyMjcxZxAFP1ZJR0VTSU1BIENBTUFSQSBERSBESVJFSVRPIFBSSVZBRE8gKEFOVElHQSAxMcKqIEPDgk1BUkEgQ8ONVkVMKQUFMTIyNzJnEAVIVklHRVNJTUEgUFJJTUVJUkEgQ0FNQVJBIERFIERJUkVJVE8gUFJJVkFETyAoQU5USUdBIDE5wqogQ8OCTUFSQSBDw41WRUwpBQUxMjI5MmcQBUdWSUdFU0lNQSBTRUdVTkRBIENBTUFSQSBERSBESVJFSVRPIFBSSVZBRE8gKEFOVElHQSAyM8KqIEPDgk1BUkEgQ8ONVkVMKQUFMTIyOTNnZGQCEA8QZBAVAgtOdW0uIMOabmljYQtOdW0uIEFudGlnYRUCATEBMhQrAwJnZ2RkAhIPEA8WAh8AZ2RkZGQCEw8QDxYCHwBnZGRkZAIUDxAPFgIfAGhkZGRkAhUPEA8WAh8AaGRkZGQYAQUeX19Db250cm9sc1JlcXVpcmVQb3N0QmFja0tleV9fFgYFImN0bDAwJENvbnRlbnRQbGFjZUhvbGRlcjEkY2hrQXRpdm8FJGN0bDAwJENvbnRlbnRQbGFjZUhvbGRlcjEkY2hrSW5hdGl2bwUkY3RsMDAkQ29udGVudFBsYWNlSG9sZGVyMSRjaGtBY29yZGFvBSNjdGwwMCRDb250ZW50UGxhY2VIb2xkZXIxJGNoa0RlY01vbgUkY3RsMDAkQ29udGVudFBsYWNlSG9sZGVyMSRjaGtJbnRUZW9yBSZjdGwwMCRDb250ZW50UGxhY2VIb2xkZXIxJGNoa0VtZW50YXJpb4/AHpXGtkY4N3Le7dDifWy2p+ZVriytL+x/YhQ5OIef" />
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+var theForm = document.forms['form1'];
+if (!theForm) {
+    theForm = document.form1;
+}
+function __doPostBack(eventTarget, eventArgument) {
+    if (!theForm.onsubmit || (theForm.onsubmit() != false)) {
+        theForm.__EVENTTARGET.value = eventTarget;
+        theForm.__EVENTARGUMENT.value = eventArgument;
+        theForm.submit();
+    }
+}
+//]]>
+</script>
+
+
+<script src="/EJURIS/WebResource.axd?d=tM9Ogh4Eotrwb90nqmufbqQ26wWTtGVMiAzRHQnSVuA-mt4vsraXQsTdNg2XxipoujFyCOlzM5yamJx_HEPbWlsev48HPdJS_xd-DWDp4tE1&amp;t=638901428248157332" type="text/javascript"></script>
+
+
+<script type="text/javascript">
+//<![CDATA[
+ var _AmbienteDescr = 'Segunda Instância'; var SolicitarSenhaProvisoria = 'true'; var URL_Portal = 'https://www.tjrj.jus.br'; var URL_ConsEjud = 'https://www3.tjrj.jus.br/ejud'; var URL_ConsEjud_CM = 'https://www3.tjrj.jus.br/ejud_conselho'; var URL_ConsAlcCiv = 'https://www3.tjrj.jus.br/ejud/ConsultaProcessoTA.aspx?N=NumProcCons&T=18'; var URL_ConsAlcCri = 'https://www3.tjrj.jus.br/ejud/ConsultaProcessoTA.aspx?N=NumProcCons&T=21'; var PagConsProcEjud = 'ConsultaProcesso.aspx'; var URL_InteiroTeor = 'https://www3.tjrj.jus.br/gedcacheweb/default.aspx?UZIP=1&GEDID='; var CodTipDocAcord = '1'; var CodOrig_CM = '5'; var CodOrig_CR = '4'; var CodOrig_Alc_Civ = '2'; var CodOrig_Alc_Crim = '3'; var MsgErroPadrao = 'Se for a primeira ocorrência do erro, tente novamente, caso contrário comunique à informática.'; var ConsultaPrivada = false;//]]>
+</script>
+
+<script src="/EJURIS/ScriptResource.axd?d=WeDNhB18QTInwezrKYCnsp4oOXepRARfxBvJ0w7ZJvDrPh1mBBNK21U_9jBjoGdFMunk4qHHhPSi7hI2GkUb7NfrcBdod6EsH-bgvB5SVIdjv0qCtHLZW8O-oAd3InFGeMMNK6kdayKkDhIgT_ETeNq7ESz5tVWvaRM76JF849w1&amp;t=5c0e0825" type="text/javascript"></script>
+<script src="/EJURIS/ScriptResource.axd?d=vL8Psmuqtv5TYBfQjY5L8nKeJLklLBN_GIR5U8-g6mL-gfbV-9nUk_iAoedmhQSSZvBobonYiOkFuANGDXFxgkg_Tbs8rym-iIl4AaCo9ZsMwmiqbwqXUjG5CM-JHPgVLvXlVgv2XUmjviGC4m4tD6X0uzPY4YP4odUA1vuQ2fvkBxxsrSv-eXyMG1ze5vb60&amp;t=5c0e0825" type="text/javascript"></script>
+<div class="aspNetHidden">
+
+	<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="17008992" />
+	<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="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" />
+</div>
+                <!-- inÃ­cio da div#content 
+                <h3>
+                    Consulta Processual - N&uacute;mero - Segunda Inst&acirc;ncia</h3>-->
+                
+    <!--os componentes asp:ScriptManager e asp:UpdatePanel são para uso de Ajax, 
+        como na atualização do DropDownList(combo delpheiros!) de órgão julgador ao mudar o valor no combo Origem -->
+    <script type="text/javascript">
+//<![CDATA[
+Sys.WebForms.PageRequestManager._initialize('ctl00$ContentPlaceHolder1$ScriptManager1', 'form1', ['tctl00$ContentPlaceHolder1$ctl00','ContentPlaceHolder1_ctl00'], [], [], 90, 'ctl00');
+//]]>
+</script>
+
+    <input type="hidden" name="ctl00$ContentPlaceHolder1$hfListaPalavrasBloqueadas" id="hfListaPalavrasBloqueadas" value="A;ACIMA;COM;DA;DAS;DE;DO;DOS;E;EM;NA;NAS;NO;NOS;O;PARA;POR;SEM;SOB;SOBRE" />
+    <input type="hidden" name="ctl00$ContentPlaceHolder1$hfCodRamos" id="ContentPlaceHolder1_hfCodRamos" />
+    <input type="hidden" name="ctl00$ContentPlaceHolder1$hfCodMags" id="ContentPlaceHolder1_hfCodMags" />
+    <input type="hidden" name="ctl00$ContentPlaceHolder1$hfCodOrgs" id="ContentPlaceHolder1_hfCodOrgs" />
+    <div id="ContentPlaceHolder1_ctl00">
+	
+            <table border="0" cellspacing="1" cellpadding="0" width="100%" class="tab-bord" >
+                <tr style="text-align: center">
+                    <td colspan="2">
+                        <h3>CONSULTA JURISPRUDÊNCIA</h3>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <h4>Pesquisa livre</h4>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <input name="ctl00$ContentPlaceHolder1$txtTextoPesq" type="text" id="ContentPlaceHolder1_txtTextoPesq" onfocus="javascript: posicionarCursor(this);" onkeypress="return EnterEvent(event,this.value)" style="width:74%;" />
+                        
+                    </td>
+                </tr>
+                <table>
+                    <tr>
+                        <td class="Botoes">
+                            <input type="submit" name="ctl00$ContentPlaceHolder1$btnConectorE" value="e" id="ContentPlaceHolder1_btnConectorE" title="Conector lógico E, o documento recuperado deve conter ambos os verbetes informados." />
+                        </td>
+                        <td class="Botoes">
+                            <input type="submit" name="ctl00$ContentPlaceHolder1$btnConectorOU" value="ou" id="ContentPlaceHolder1_btnConectorOU" title="Conector lógico OU, o documento recuperado deve conter um ou ambos os verbetes informados." />
+                        </td>
+                        <td class="Botoes">
+                            <input type="submit" name="ctl00$ContentPlaceHolder1$btnConectorADJ" value="adj" id="ContentPlaceHolder1_btnConectorADJ" title="Conector lógico ADJ, O documento recuperado deve conter ambos os verbetes informados, na ordem especificada pelos operadores." />
+                        </td>
+                        <td class="Botoes">
+                            <input type="submit" name="ctl00$ContentPlaceHolder1$btnConectorNAO" value="não" id="ContentPlaceHolder1_btnConectorNAO" title="Conector lógico NÃO, O documento recuperado deve conter o primeiro verbete, mas não o segundo." />
+                        </td>
+                        <td class="Botoes">
+                            <input type="submit" name="ctl00$ContentPlaceHolder1$btnConectorPROX" value="prox" id="ContentPlaceHolder1_btnConectorPROX" title="Conector lógico PROX, ver Ajuda para mais informações." />
+                        </td>
+                        <td class="Botoes">
+                            <input type="submit" name="ctl00$ContentPlaceHolder1$btnConectorCoringa" value="$" id="ContentPlaceHolder1_btnConectorCoringa" title="Operador Coringa, ignorar um ou mais caracteres após o operador. Ver Ajuda para mais informações" />
+                        </td>
+                    </tr>
+                </table>
+                
+                <tr>
+                    <td>
+                        <table class="principal">
+                            <tr>
+                                <td colspan="2">
+                                    <h4>Pesquisa por campos específicos:</h4>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="labeldireita">Origem:</td>
+                                <td class="campo">
+                                    <select name="ctl00$ContentPlaceHolder1$cmbOrigem" onchange="javascript:setTimeout(&#39;__doPostBack(\&#39;ctl00$ContentPlaceHolder1$cmbOrigem\&#39;,\&#39;\&#39;)&#39;, 0)" id="ContentPlaceHolder1_cmbOrigem" class="cmbOrigem" style="width:100%;">
+		<option selected="selected" value="1">Tribunal de Justica do Rio de Janeiro 2a Inst&#226;ncia</option>
+		<option value="2">Tribunal de Al&#231;ada Civel</option>
+		<option value="3">Tribunal de Al&#231;ada Criminal</option>
+		<option value="4">Turma Recursal</option>
+		<option value="5">Conselho da Magistratura</option>
+
+	</select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="labeldireita">Julgados a partir do ano de:</td>
+                                <td>
+                                    <table width="100%" border="0">
+                                        <tr>                                           
+                                             <td class="campo" style="width: 80px;">
+                                                <select name="ctl00$ContentPlaceHolder1$cmbAnoInicio" id="ContentPlaceHolder1_cmbAnoInicio" onBlur="javascript: ValidarIntervaloData(this);">
+		<option value="2026">2026</option>
+		<option value="2025">2025</option>
+		<option value="2024">2024</option>
+		<option value="2023">2023</option>
+		<option value="2022">2022</option>
+		<option value="2021">2021</option>
+		<option value="2020">2020</option>
+		<option value="2019">2019</option>
+		<option value="2018">2018</option>
+		<option value="2017">2017</option>
+		<option value="2016">2016</option>
+		<option value="2015">2015</option>
+		<option value="2014">2014</option>
+		<option value="2013">2013</option>
+		<option value="2012">2012</option>
+		<option value="2011">2011</option>
+		<option value="2010">2010</option>
+		<option value="2009">2009</option>
+		<option value="2008">2008</option>
+		<option value="2007">2007</option>
+		<option value="2006">2006</option>
+		<option value="2005">2005</option>
+		<option value="2004">2004</option>
+		<option value="2003">2003</option>
+		<option value="2002">2002</option>
+		<option value="2001">2001</option>
+		<option value="2000">2000</option>
+		<option value="1999">1999</option>
+		<option value="1998">1998</option>
+		<option value="1997">1997</option>
+		<option value="1996">1996</option>
+		<option value="1995">1995</option>
+		<option value="1994">1994</option>
+		<option value="1993">1993</option>
+		<option value="1992">1992</option>
+		<option value="1991">1991</option>
+		<option value="1990">1990</option>
+		<option value="1989">1989</option>
+		<option value="1988">1988</option>
+		<option value="1987">1987</option>
+		<option value="1986">1986</option>
+		<option value="1985">1985</option>
+		<option value="1984">1984</option>
+		<option value="1983">1983</option>
+		<option value="1982">1982</option>
+		<option value="1981">1981</option>
+		<option value="1980">1980</option>
+		<option value="1979">1979</option>
+		<option value="1978">1978</option>
+		<option value="1977">1977</option>
+		<option value="1976">1976</option>
+		<option value="1975">1975</option>
+
+	</select>
+                                            </td>
+                                            <td class="labeldireita">Até o ano de:</td>
+                                            <td class="campo">
+                                                <select name="ctl00$ContentPlaceHolder1$cmbAnoFim" id="ContentPlaceHolder1_cmbAnoFim" onBlur="javascript: ValidarIntervaloData(this);">
+		<option value="2026">2026</option>
+		<option value="2025">2025</option>
+		<option value="2024">2024</option>
+		<option value="2023">2023</option>
+		<option value="2022">2022</option>
+		<option value="2021">2021</option>
+		<option value="2020">2020</option>
+		<option value="2019">2019</option>
+		<option value="2018">2018</option>
+		<option value="2017">2017</option>
+		<option value="2016">2016</option>
+		<option value="2015">2015</option>
+		<option value="2014">2014</option>
+		<option value="2013">2013</option>
+		<option value="2012">2012</option>
+		<option value="2011">2011</option>
+		<option value="2010">2010</option>
+		<option value="2009">2009</option>
+		<option value="2008">2008</option>
+		<option value="2007">2007</option>
+		<option value="2006">2006</option>
+		<option value="2005">2005</option>
+		<option value="2004">2004</option>
+		<option value="2003">2003</option>
+		<option value="2002">2002</option>
+		<option value="2001">2001</option>
+		<option value="2000">2000</option>
+		<option value="1999">1999</option>
+		<option value="1998">1998</option>
+		<option value="1997">1997</option>
+		<option value="1996">1996</option>
+		<option value="1995">1995</option>
+		<option value="1994">1994</option>
+		<option value="1993">1993</option>
+		<option value="1992">1992</option>
+		<option value="1991">1991</option>
+		<option value="1990">1990</option>
+		<option value="1989">1989</option>
+		<option value="1988">1988</option>
+		<option value="1987">1987</option>
+		<option value="1986">1986</option>
+		<option value="1985">1985</option>
+		<option value="1984">1984</option>
+		<option value="1983">1983</option>
+		<option value="1982">1982</option>
+		<option value="1981">1981</option>
+		<option value="1980">1980</option>
+		<option value="1979">1979</option>
+		<option value="1978">1978</option>
+		<option value="1977">1977</option>
+		<option value="1976">1976</option>
+		<option value="1975">1975</option>
+
+	</select>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="labeldireita">Competência:</td>
+                                <td class="campo">
+                                    <select name="ctl00$ContentPlaceHolder1$cmbCompetencia" onchange="javascript:setTimeout(&#39;__doPostBack(\&#39;ctl00$ContentPlaceHolder1$cmbCompetencia\&#39;,\&#39;\&#39;)&#39;, 0)" id="ContentPlaceHolder1_cmbCompetencia" style="width:100%;">
+		<option selected="selected" value="1">C&#237;vel</option>
+		<option value="2">Criminal</option>
+
+	</select>
+                                </td>
+                            </tr>
+                            <tr class="trRamo"><!--Adição de classe CSS trRamo para encontrar o elemento com JQuery em razão do id ser dinâmico-->
+                                <td class="labeldireita">Ramo do direito:</td>
+                                <td class="campo">
+                                    <select name="ctl00$ContentPlaceHolder1$cmbRamo" id="ContentPlaceHolder1_cmbRamo" class="cmbRamo" onchange="cmbChange(this, hfCodRamos); habilitaBtnCombos(this, $(&#39;#btnAddRamo&#39;));" style="width:100%;">
+		<option value="">Selecione...</option>
+		<option value="2">DIREITO ADMINISTRATIVO E OUTRAS MAT&#201;RIAS DE DIREITO P&#218;BLICO</option>
+		<option value="1">DIREITO CIVIL</option>
+		<option value="13">DIREITO DA CRIAN&#199;A E DO ADOLESCENTE</option>
+		<option value="3">DIREITO DO CONSUMIDOR</option>
+		<option value="10">DIREITO DO TRABALHO</option>
+		<option value="4">DIREITO ELEITORAL E PROCESSO ELEITORAL</option>
+		<option value="6">DIREITO INTERNACIONAL</option>
+		<option value="14">DIREITO MAR&#205;TIMO</option>
+		<option value="8">DIREITO PENAL</option>
+		<option value="15">DIREITO PENAL MILITAR</option>
+		<option value="12">DIREITO PREVIDENCI&#193;RIO</option>
+		<option value="7">DIREITO PROCESSUAL CIVIL</option>
+		<option value="9">DIREITO PROCESSUAL PENAL</option>
+		<option value="16">DIREITO PROCESSUAL PENAL MILITAR</option>
+		<option value="11">DIREITO TRIBUT&#193;RIO</option>
+		<option value="5">REGISTROS P&#218;BLICOS</option>
+
+	</select>
+                                </td>
+                                <td>
+                                    <input type="button" id="btnAddRamo" value="+" class="btnAdd" onclick="AdicionarCombo(this); $(this).attr('disabled','disabled');" title="Conjugar mais de um Ramo do Direito" disabled="disabled"/>
+                                </td>
+                            </tr>
+                            <tr class="trMagistrado"> <!--Adição de classe CSS trMagistrado para encontrar o elemento com JQuery em razão do id ser dinâmico-->
+                                <td class="labeldireita">Magistrado:</td>
+                                <td class="campo">
+                                    <select name="ctl00$ContentPlaceHolder1$cmbMagistrado" id="ContentPlaceHolder1_cmbMagistrado" class="cmbMagistrado" onchange="cmbChange(this, hfCodMags); habilitaBtnCombos(this, $(&#39;#btnAddMag&#39;));" style="width:100%;">
+		<option value="">Selecione...</option>
+		<option value="10241">ABEYLARD GOMES</option>
+		<option value="11686">ADEMIR PAULO PIMENTEL</option>
+		<option value="20706">ADILSON VIEIRA MACABU</option>
+		<option value="10503">ADOLPHINO RIBEIRO</option>
+		<option value="15386">ADOLPHO CORREA DE ANDRADE MELLO JUNIOR</option>
+		<option value="27310">ADRIANA COSTA DOS SANTOS</option>
+		<option value="16079">ADRIANA LOPES MOUTINHO DAUDT D&#39; OLIVEIRA</option>
+		<option value="29796">ADRIANA MARQUES DOS SANTOS LAIA FRANCO</option>
+		<option value="19477">ADRIANA RAMOS DE MELLO</option>
+		<option value="20732">ADRIANA SUCENA MONTEIRO JARA MOURA</option>
+		<option value="7271">ADRIANO CELSO GUIMAR&#195;ES</option>
+		<option value="24715">AFONSO HENRIQUE FERREIRA BARBOSA</option>
+		<option value="10807">AFRANIO SAYAO</option>
+		<option value="29839">AGOSTINHO TEIXEIRA DE ALMEIDA FILHO</option>
+		<option value="18316">ALBANO MATTOS CORREA</option>
+		<option value="3453">ALBERTO CRAVEIRO DE ALMEIDA</option>
+		<option value="200">ALBERTO GARCIA</option>
+		<option value="201">ALBERTO LACERDA</option>
+		<option value="11202">ALBERTO MOTTA MORAES</option>
+		<option value="331">ALBERTO MOURAO RUSSEL</option>
+		<option value="27317">ALBERTO REPUBLICANO DE MACEDO JUNIOR</option>
+		<option value="20719">ALBERTO SALOMAO JUNIOR</option>
+		<option value="15402">ALCIDES DA FONSECA NETO</option>
+		<option value="27316">ALESSANDRA CRISTINA TUFVESSON PEIXOTO</option>
+		<option value="24696">ALESSANDRA DE ARAUJO BILAC MOREIRA PINTO</option>
+		<option value="21714">ALESSANDRO OLIVEIRA FELIX</option>
+		<option value="30745">ALEXANDRE  ANTONIO FRANCO FREITAS C&#194;MARA</option>
+		<option value="21715">ALEXANDRE ABRAHAO DIAS TEIXEIRA</option>
+		<option value="24122">ALEXANDRE CORREA LEITE</option>
+		<option value="17530">ALEXANDRE DE CARVALHO MESQUITA</option>
+		<option value="15403">ALEXANDRE EDUARDO SCISINIO</option>
+		<option value="11711">ALEXANDRE HERCULANO PESSOA VARELLA</option>
+		<option value="20710">ALEXANDRE TEIXEIRA DE SOUZA</option>
+		<option value="10617">ALFREDO MARINHO</option>
+		<option value="33463">ALINE ABREU PESSANHA</option>
+		<option value="33078">ALINE MARIA GOMES MASSONI DA COSTA</option>
+		<option value="16081">ALVARO HENRIQUE TEIXEIRA DE ALMEIDA</option>
+		<option value="41">&#193;LVARO HENRIQUE TEIXEIRA DE ALMEIDA</option>
+		<option value="2322">ALVARO JOSE FERREIRA MAYRINK DA COSTA</option>
+		<option value="1721">ALYRIO CAVALLIERI</option>
+		<option value="10831">AMAURY ARRUDA DE SOUZA</option>
+		<option value="1453">AMERICO CANABARRO</option>
+		<option value="10861">AMORIM DA CRUZ</option>
+		<option value="1691">AMYNTOR VERGARA</option>
+		<option value="26943">ANA BEATRIZ MENDES ESTRELLA</option>
+		<option value="19471"> ANA CRISTINA NASCIF DIB MIGUEL</option>
+		<option value="19614">ANA LUIZA COIMBRA MAYON NOGUEIRA</option>
+		<option value="13772">ANA MARIA PEREIRA DE OLIVEIRA</option>
+		<option value="19793">ANA PAULA CABO CHINI</option>
+		<option value="20715">ANA PAULA MONTE FIGUEIREDO PENA BARROS</option>
+		<option value="20718">ANA PAULA PONTES CARDOSO</option>
+		<option value="1454">ANAUDIM FREITAS</option>
+		<option value="31928">ANDRE EMILIO RIBEIRO VON MELENTOVYTCH</option>
+		<option value="24690">ANDRE FERNANDES ARRUDA</option>
+		<option value="13770">ANDRE GUSTAVO CORREA DE ANDRADE</option>
+		<option value="33928">ANDR&#201; LU&#205;S MAN&#199;ANO MARQUES</option>
+		<option value="16071">ANDRE LUIZ CIDRA</option>
+		<option value="19602">ANDRE RICARDO DE FRANCISCIS RAMOS</option>
+		<option value="15385">ANDREA FORTUNA TEIXEIRA</option>
+		<option value="17754">ANDREA MACIEL PACHA</option>
+		<option value="27315">ANDREIA MAGALHAES ARAUJO</option>
+		<option value="29801">ANE CRISTINE SCHEELE SANTOS</option>
+		<option value="28811">ANELISE DE FARIA MARTORELL DUARTE</option>
+		<option value="24213">ANGELO MOREIRA GLIOCHE</option>
+		<option value="423">ANTONIO ASSUMPCAO</option>
+		<option value="19774">ANTONIO AUGUSTO DE TOLEDO GASPAR</option>
+		<option value="7510">ANTONIO CARLOS AMORIM</option>
+		<option value="15628">ANTONIO CARLOS ARRABIDA PAES</option>
+		<option value="7269">ANTONIO CARLOS DOS SANTOS BITENCOURT</option>
+		<option value="9744">ANTONIO CARLOS ESTEVES TORRES</option>
+		<option value="6273">ANTONIO CARLOS NASCIMENTO AMADO</option>
+		<option value="9712">ANTONIO CESAR ROCHA ANTUNES DE SIQUEIRA</option>
+		<option value="18068">ANTONIO DA ROCHA LOURENCO NETO</option>
+		<option value="18310">ANTONIO EDUARDO FERREIRA DUARTE</option>
+		<option value="4748">ANTONIO FELIPE DA SILVA NEVES</option>
+		<option value="13933">ANTONIO ILOIZIO BARROS BASTOS</option>
+		<option value="11214">ANTONIO IZAIAS DA COSTA ABREU</option>
+		<option value="14055">ANTONIO JAYME BOENTE</option>
+		<option value="18120">ANTONIO JOSE AZEVEDO PINTO</option>
+		<option value="7562">ANTONIO JOSE FERREIRA CARVALHO</option>
+		<option value="16602">ANTONIO MARREIROS DA SILVA MELO NETO</option>
+		<option value="6315">ANTONIO RIBEIRO</option>
+		<option value="21007">ANTONIO RICARDO BINATO DE CASTRO</option>
+		<option value="9647">ANTONIO SALDANHA PALHEIRO</option>
+		<option value="4720">ARNALDO DUARTE</option>
+		<option value="10544">ARRUDA FRANCA</option>
+		<option value="21707">ARTHUR EDUARDO DE MAGALHAES FERREIRA</option>
+		<option value="15401">ARTHUR NARCISO DE OLIVEIRA NETO</option>
+		<option value="3155">ASCLEPIADES RODRIGUES</option>
+		<option value="1447">ASTROGILDO DE FREITAS</option>
+		<option value="16593">AUGUSTO ALVES MOREIRA JUNIOR</option>
+		<option value="10249">AULOMAR COSTA</option>
+		<option value="202">AUREA PIMENTAL PEREIRA</option>
+		<option value="203">AUREO CARNEIRO</option>
+		<option value="26171">BARBARA ALVES XAVIER</option>
+		<option value="3475">BARBOSA MOREIRA</option>
+		<option value="399">BASILEU RIBEIRO FILHO</option>
+		<option value="21706">BEATRIZ PRESTES PANTOJA</option>
+		<option value="29770">BEATRIZ TORRES DE OLIVEIRA</option>
+		<option value="29817">BENEDICTO ULTRA  ABICAIR</option>
+		<option value="19957">BENITO FEROLLA</option>
+		<option value="11141">BERNARDINO MACHADO LEITUGA</option>
+		<option value="6307">BERNARDO MOREIRA GARCEZ NETO</option>
+		<option value="1255">BIAS GONCALVES</option>
+		<option value="33050">BRUNO VINICIUS DA ROS BODART DA COSTA</option>
+		<option value="6480">BUARQUE DE AMORIM</option>
+		<option value="9984">C. A. MENEZES DIREITO</option>
+		<option value="4033">CAETANO COSTA</option>
+		<option value="20494">CAETANO ERNESTO DA FONSECA COSTA</option>
+		<option value="8873">CAIRO &#205;TALO FRAN&#199;A DAVID</option>
+		<option value="8874">CAMILO RIBEIRO RULIERE</option>
+		<option value="28818">CARLA FARIA BOUZO</option>
+		<option value="10620">CARLOS ALBERTO DE CARVALHO</option>
+		<option value="17760">CARLOS ALBERTO MACHADO</option>
+		<option value="35327">CARLOS ALBERTO MENEZES DIREITO FILHO</option>
+		<option value="19776">CARLOS AUGUSTO BORGES</option>
+		<option value="7578">CARLOS AZEREDO DE ARA&#218;JO</option>
+		<option value="10536">CARLOS BRAZIL</option>
+		<option value="12202">CARLOS COELHO LAVIGNE DE LEMOS</option>
+		<option value="10718">CARLOS DAVIDSON DE MENEZES FERRARI</option>
+		<option value="7566">CARLOS EDUARDO BOUCADA TASSARA</option>
+		<option value="9710">CARLOS EDUARDO DA ROSA DA FONSECA PASSOS</option>
+		<option value="15624">CARLOS EDUARDO FREIRE ROBOREDO</option>
+		<option value="9665">CARLOS EDUARDO MOREIRA DA SILVA</option>
+		<option value="19593">CARLOS FERNANDO POTYGUARA PEREIRA</option>
+		<option value="21710">CARLOS GUSTAVO VIANNA DIREITO</option>
+		<option value="7546">CARLOS JOS&#201; MARTINS GOMES</option>
+		<option value="38">CARLOS MOTTA</option>
+		<option value="6267">CARLOS RAYMUNDO CARDOSO</option>
+		<option value="14053">CARLOS SANTOS DE OLIVEIRA</option>
+		<option value="11452">CARMINE ANTONIO SAVINO FILHO</option>
+		<option value="1261">CASSIA MEDEIROS</option>
+		<option value="4746">CELIA MARIA VIDAL MELIGA PESSOA</option>
+		<option value="7573">CELIO GERALDO DE MAGALHAES RIBEIRO</option>
+		<option value="7287">CELSO FERREIRA FILHO</option>
+		<option value="13773">CELSO LUIZ DE MATOS PERES</option>
+		<option value="4755">CELSO MUNIZ GUEDES PINTO</option>
+		<option value="15632">CELSO SILVA FILHO</option>
+		<option value="10952">CESAR AUGUSTO LEITE</option>
+		<option value="15416">CESAR FELIPE CURY</option>
+		<option value="16606">CEZAR AUGUSTO RODRIGUES COSTA</option>
+		<option value="13776">CHERUBIN HELCIAS SCHWARTZ J&#218;NIOR</option>
+		<option value="28900">CHRISTIANO GONCALVES PAES LEME</option>
+		<option value="16066">CINTIA SANTAREM CARDINALI</option>
+		<option value="40">CINTIA SOUTO MACHADO DE ANDRADE GUEDES</option>
+		<option value="20080">CINTIA SOUTO MACHADO DE ANDRADE GUEDES</option>
+		<option value="21141">CLARA MARIA VASSALI COSTA PEREIRA DA SILVA</option>
+		<option value="10252">CLARINDO DE BRITO NICOLAU</option>
+		<option value="20081">CLAUDIA GARCIA COUTO MARI</option>
+		<option value="18078">CLAUDIA MARIA DE OLIVEIRA MOTTA</option>
+		<option value="14571">CLAUDIA PIRES DOS SANTOS FERREIRA</option>
+		<option value="28820">CLAUDIA POMARICO RIBEIRO</option>
+		<option value="23102">CLAUDIA RENATA ALBERICO OAZEN</option>
+		<option value="31154">CL&#193;UDIA TELLES DE MENEZES</option>
+		<option value="15376">CLAUDIO BRAND&#195;O DE OLIVEIRA</option>
+		<option value="19441">CL&#193;UDIO DE MELLO TAVARES</option>
+		<option value="25375">CLAUDIO FERREIRA RODRIGUES</option>
+		<option value="14566">CL&#193;UDIO LUIZ BRAGA DELL&#39;ORTO</option>
+		<option value="11470">CL&#193;UDIO TAVARES DE OLIVEIRA</option>
+		<option value="31934">CLAUDIO TAVARES DE OLIVEIRA JUNIOR</option>
+		<option value="37">CL&#193;UDIO VIANNA DE LIMA</option>
+		<option value="14995">CLEBER GHELFENSTEIN</option>
+		<option value="8871">CONCEI&#199;&#195;O APARECIDA MOUSNIER TEIXEIRA DE GUIMAR&#195;ES PENA</option>
+		<option value="29769">CRISTIANA  APARECIDA DE SOUZA SANTOS</option>
+		<option value="27307">CRISTIANE DA SILVA BRANDAO LIMA</option>
+		<option value="33046">CRISTIANE TELES MOURA MARQUES</option>
+		<option value="23098">CRISTIANO GONCALVES PEREIRA</option>
+		<option value="29779">CRISTINA DE ARAUJO GOES LAJCHTER</option>
+		<option value="20068">CRISTINA GOMES CAMPOS DE SETA</option>
+		<option value="16058">CRISTINA SERRA FEIJO</option>
+		<option value="9697">CRISTINA TEREZA GAULIA</option>
+		<option value="9687">CUST&#211;DIO DE BARROS TOSTES</option>
+		<option value="1763">DALMO SILVA</option>
+		<option value="2330">DALTON COSTA</option>
+		<option value="25372">DANIELA BANDEIRA DE FREITAS</option>
+		<option value="25374">DANIELA BARBOSA  ASSUMP&#199;&#195;O DE SOUZA</option>
+		<option value="16059">DANIELA BRAND&#195;O FERREIRA</option>
+		<option value="21697">DANIELA FERRO AFFONSO RODRIGUES ALVES</option>
+		<option value="27301">DANIELA REETZ DE PAIVA</option>
+		<option value="10513">DARCY LIZARDO DE LIMA</option>
+		<option value="11007">DARCY MOREIRA</option>
+		<option value="3470">DAURO IGNACIO DA SILVA</option>
+		<option value="3742">DECIO CRETTON</option>
+		<option value="10143">DECIO ITABAIANA</option>
+		<option value="8120">DECIO MEIRELLES GOES</option>
+		<option value="3467">DECIO XAVIER GAMA</option>
+		<option value="8870">DENISE BRUYERE ROLINS LOURENCO DOS SANTOS</option>
+		<option value="27302">DENISE DE ARAUJO CAPIBERIBE</option>
+		<option value="7273">DENISE LEVY TREDLER</option>
+		<option value="17538">DENISE NICOLL SIM&#213;ES</option>
+		<option value="15622">DENISE VACCARI MACHADO PAES</option>
+		<option value="18067">DES. CLAUDIA NASCIMENTO VIEIRA</option>
+		<option value="21716">DES. DEBORA MARIA BARBOSA SARMENTO</option>
+		<option value="19473">DES. MARIA DA PENHA NOBRE MAURO</option>
+		<option value="19781">DES. REGINA HELENA FABREGAS FERREIRA</option>
+		<option value="1446">DILSON NAVARRO</option>
+		<option value="6280">DURVAL HALE</option>
+		<option value="2739">EBERT CHAMOUN</option>
+		<option value="4750">EDGAR MARIA TEIXEIRA</option>
+		<option value="11047">EDIL PEREIRA DA SILVA</option>
+		<option value="7272">EDSON AGUIAR DE VASCONCELOS</option>
+		<option value="11682">EDSON QUEIROZ SCISINIO DIAS</option>
+		<option value="33926">EDUARDO ABREU BIONDI</option>
+		<option value="16076">EDUARDO ANTONIO KLAUSNER</option>
+		<option value="15380">EDUARDO DE AZEVEDO PAIVA</option>
+		<option value="16585">EDUARDO GUSMAO ALVES DE BRITO NETO</option>
+		<option value="24112">EDUARDO JOS&#201; DA SILVA BARBOSA</option>
+		<option value="3485">EDUARDO MAYR</option>
+		<option value="3469">EDUARDO SOCRATES CASTANHEIRA SARMENTO</option>
+		<option value="15409">EGAS MONIZ BARRETO DE ARAGO DAQUER</option>
+		<option value="7463">EGBERTO TOSTES</option>
+		<option value="26175">ELEN DE FREITAS BARBOSA</option>
+		<option value="6320">ELISABETE FILIZZOLA  ASSUN&#199;&#195;O</option>
+		<option value="26912">ELISABETE FRANCO LONGOBARDI</option>
+		<option value="14561">ELIZABETE ALVES DE AGUIAR</option>
+		<option value="5212">ELIZABETH GOMES GREGORY</option>
+		<option value="9824">ELLIS HERMYDIO FIGUEIRA</option>
+		<option value="10596">ELMO ARUEIRA</option>
+		<option value="15384">ELTON MARTINEZ CARVALHO LEME</option>
+		<option value="11201">ELY BARBOSA</option>
+		<option value="221">EMERSON PARENTE</option>
+		<option value="10690">EMILIO CARMO</option>
+		<option value="10186">ENEAS COTTA</option>
+		<option value="10168">ENEAS MARZANO</option>
+		<option value="27276">ENRICO CARRANO</option>
+		<option value="33084">ERIC SCAPIM CUNHA BRAND&#195;O</option>
+		<option value="19596">&#201;RICA DE PAULA RODRIGUES DA CUNHA</option>
+		<option value="3478">ERIE SALES CUNHA</option>
+		<option value="7558">ERNANI KLAUSNER</option>
+		<option value="10589">ESTENIO CANTARINO CARDOZO</option>
+		<option value="5199">EUGENIO SIGAUD</option>
+		<option value="24691">EUNICE BITENCOURT HADDAD</option>
+		<option value="2973">EUNICE FERREIRA CALDAS</option>
+		<option value="24110">FABIANO REIS DOS SANTOS</option>
+		<option value="9700">FABIO DUTRA</option>
+		<option value="18065">FABIO UCHOA PINTO DE MIRANDA MONTENEGRO</option>
+		<option value="3480">FABRICIO PAULO BAGUEIRA BANDEIRA FILHO</option>
+		<option value="7563">FATIMA MARIA CLEMENTE</option>
+		<option value="3738">FELISBERTO RIBEIRO</option>
+		<option value="24767">FERDINALDO DO NASCIMENTO</option>
+		<option value="16600">FERNANDA FERNANDES COELHO ARRABIDA PAES</option>
+		<option value="26896">FERNANDA MAGALHAES FREITAS PATUZZO</option>
+		<option value="28822">FERNANDA SEPULVEDA TERRA CARDOSO BARBOSA TELLES</option>
+		<option value="20757">FERNANDA XAVIER DE BRITO</option>
+		<option value="9783">FERNANDO ANTONIO DE ALMEIDA</option>
+		<option value="20083">FERNANDO ANTONIO DE SOUZA E SILVA</option>
+		<option value="207">FERNANDO CELSO GUIMARAES</option>
+		<option value="15382">FERNANDO CERQUEIRA CHAGAS</option>
+		<option value="17528">FERNANDO CESAR FERREIRA VIANA</option>
+		<option value="29836">FERNANDO FERNANDY FERNANDES</option>
+		<option value="7581">FERNANDO FOCH DE LEMOS ARIGONY DA SILVA</option>
+		<option value="7262">FERNANDO MARQUES DE CAMPOS CABRAL</option>
+		<option value="35319">FERNANDO MARQUES DE CAMPOS CABRAL FILHO</option>
+		<option value="21128">FERNANDO ROCHA LOVISI</option>
+		<option value="215">FERNANDO WHITAKER</option>
+		<option value="10504">FERREIRA PINTO</option>
+		<option value="16595">FL&#193;VIA DE ALMEIDA VIVEIROS DE CASTRO</option>
+		<option value="27278">FLAVIA DE AZEVEDO FARIA REZENDE CHAGAS</option>
+		<option value="29768">FLAVIA FERNANDES DE MELO BALIEIRO DINIZ</option>
+		<option value="24123">FLAVIA MACHADO DA SILVA GONCALVES PEREIRA</option>
+		<option value="31940">FL&#193;VIA ROMANO DE REZENDE</option>
+		<option value="18999">FLAVIO ITABAIANA DE OLIVEIRA NICOLAU</option>
+		<option value="15375">FLAVIO MARCELO DE AZEVEDO HORTA FERNANDES</option>
+		<option value="2022">FLAVIO NUNES MAGALHAES</option>
+		<option value="10910">FLAVIO PINAUD</option>
+		<option value="212">FONSECA PASSOS</option>
+		<option value="381">FONTES DE FARIA</option>
+		<option value="11467">FRANCISCO DA MOTTA MACEDO</option>
+		<option value="24744">FRANCISCO DE ASSIS PESSANHA</option>
+		<option value="33441">FRANCISCO DE ASSIS PESSANHA FILHO</option>
+		<option value="11048">FRANCISCO DOWER PERLINGEIRO LOVISI</option>
+		<option value="1456">FRANCISCO FARIA</option>
+		<option value="6292">FRANCISCO JOS&#201; DE ASEVEDO</option>
+		<option value="39">FRANCISCO RANGEL DE ABREU</option>
+		<option value="3464">GABRIEL CURCIO</option>
+		<option value="13777">GABRIEL DE OLIVEIRA ZEFIRO</option>
+		<option value="18618">GALDINO SIQUEIRA NETTO</option>
+		<option value="11199">GAMALIEL QUINTO DE SOUZA</option>
+		<option value="10512">GENARINO CARVALHO</option>
+		<option value="15001">GE&#211;RGIA DE CARVALHO LIMA</option>
+		<option value="208">GERALDO ARRUDA GUERREIRO</option>
+		<option value="11049">GERALDO BATISTA</option>
+		<option value="16583">GERALDO DA SILVA BATISTA JUNIOR</option>
+		<option value="9689">GERALDO LUIZ MASCARENHAS PRADO</option>
+		<option value="16061">GERARDO CARNEVALE N DA SILVA</option>
+		<option value="7288">GERSON SILVEIRA ARRAES</option>
+		<option value="14990">GILBERTO CAMPISTA GUARINO</option>
+		<option value="16610">GILBERTO CL&#211;VIS FARIAS MATOS</option>
+		<option value="6771">GILBERTO DUTRA MOREIRA</option>
+		<option value="11475">GILBERTO FERNANDES</option>
+		<option value="21684">GILBERTO PEREIRA REGO</option>
+		<option value="15377">GILDA MARIA DIAS CARRAPATOSO</option>
+		<option value="13935">GILMAR AUGUSTO TEIXEIRA</option>
+		<option value="11280">GILSON VITORINO</option>
+		<option value="21708">GISELE GUIDA DE FARIA</option>
+		<option value="20733">GISELE SILVA JARDIM</option>
+		<option value="19615">GIUSEPPE ITALO BRASILINO VITAGLIANO</option>
+		<option value="24764">GIZELDA LEIT&#195;O TEIXEIRA</option>
+		<option value="6319">GONCALVES DA FONTE</option>
+		<option value="378">GOULART PIRES</option>
+		<option value="398">GRACCHO AURELIO</option>
+		<option value="25388">GRACE MUSSALEM CALIL</option>
+		<option value="25386">GRACIA CRISTINA MOREIRA DO ROSARIO</option>
+		<option value="10250">GUALBERTO DE MIRANDA</option>
+		<option value="14057">GUARACI DE CAMPOS VIANNA</option>
+		<option value="35318">GUILHERME BRAGA PE&#209;A DE MORAES</option>
+		<option value="10237">GUSMAR ARAUJO</option>
+		<option value="3465">GUSTAVO ADOLPHO KUHL LEITE</option>
+		<option value="10242">GUSTAVO ALMEIDA DO VALLE</option>
+		<option value="27318">GUSTAVO HENRIQUE NASCIMENTO SILVA</option>
+		<option value="10466">GUSTAVO ITABAIANA</option>
+		<option value="28816">GUSTAVO QUINTANILHA TELLES DE MENEZES</option>
+		<option value="392">HAMILTON MORAES E BARROS</option>
+		<option value="27396">HELDA LIMA MEIRELES</option>
+		<option value="7289">HELENA BELC KLAUSNER</option>
+		<option value="9658">HELENA CANDIDA LISBOA GAEDE</option>
+		<option value="23103">HELENA DIAS TORRES DA SILVA</option>
+		<option value="2817">HELENA GOLDENZON BEKHOR</option>
+		<option value="13769">HELENO RIBEIRO PEREIRA NUNES</option>
+		<option value="7293">HELIO DE FARIAS</option>
+		<option value="1450">HELIO TRINDADE</option>
+		<option value="10464">HELVIO PERORAZIO</option>
+		<option value="5940">HENRIQUE ALBERTO MAGALHES DE ALMEIDA NETO</option>
+		<option value="9674">HENRIQUE CARLOS DE ANDRADE FIGUEIRA</option>
+		<option value="11448">HERALDO SATURNINO DE OLIVEIRA</option>
+		<option value="4721">HERMANO DOS ANJOS</option>
+		<option value="10461">HILARIO DUARTE DE ALENCAR</option>
+		<option value="29852">HINDENBURG KOHLER BRASIL CABRAL PINTO DA SILVA</option>
+		<option value="13936">HOR&#193;CIO DOS SANTOS RIBEIRO NETO</option>
+		<option value="10597">HUDSON BASTOS LOURENCO</option>
+		<option value="1650">HUGO BARCELLOS</option>
+		<option value="33929">HUMBERTO DALLA  BERNARDINA DE PINHO</option>
+		<option value="2319">HUMBERTO DE MENDONCA MANES</option>
+		<option value="2601">HUMBERTO DECNOP BATISTA</option>
+		<option value="4724">HUMBERTO PASCHOAL PERRI</option>
+		<option value="10943">INDIO BRASILEIRO ROCHA</option>
+		<option value="13771">IN&#202;S DA TRINDADE CHAVES DE MELO</option>
+		<option value="7548">IONE PERNES</option>
+		<option value="29804">ISABEL TERESA PINTO COELHO</option>
+		<option value="18077"> ISABELA PESSANHA CHAGAS</option>
+		<option value="28852">ISABELLE DA SILVA SCISINIO DIAS</option>
+		<option value="29818">ISMENIO PEREIRA DE CASTRO</option>
+		<option value="2543">ITAMAR BARBALHO</option>
+		<option value="7285">IVAN CURY</option>
+		<option value="17542">IVONE FERREIRA CAETANO</option>
+		<option value="16065">JACQUELINE LIMA MONTENEGRO</option>
+		<option value="14564">JAIME DIAS PINHEIRO FILHO</option>
+		<option value="11449">JAIR PONTES DE ALMEIDA</option>
+		<option value="25371">JANE CARNEIRO SILVA DE AMORIM</option>
+		<option value="3729">JASMIN SIMOES COSTA</option>
+		<option value="3460">JAYRO DOS SANTOS FERREIRA</option>
+		<option value="16588">JEAN ALBERT DE SOUZA SAADI</option>
+		<option value="11196">JEANECY THEREZINHA DE SOUZA</option>
+		<option value="7267">JESS&#201; TORRES PEREIRA J&#218;NIOR</option>
+		<option value="10509">JESUS ANTUNES DE SIQUEIRA</option>
+		<option value="29790">JOANA CARDIA JARDIM CORTES</option>
+		<option value="11107">JOAO ANTONIO DA SILVA</option>
+		<option value="8868">JOAO BAPTISTA CHAGAS F.</option>
+		<option value="16691">JO&#195;O BATISTA DAMASCENO</option>
+		<option value="6272">JOAO BATISTA DE OLIVEIRA LACERDA</option>
+		<option value="6269">JOAO CARLOS BRAGA GUIMARAES</option>
+		<option value="21717">JO&#195;O CARLOS DE SOUZA CORREA</option>
+		<option value="2333">JOAO CARLOS PESTANA DE AGUIAR SILVA</option>
+		<option value="1458">JOAO DE DEUS LACERDA MENNA BARRETO</option>
+		<option value="10510">JOAO FRANCISCO</option>
+		<option value="20736">JOAO MARCOS DE CASTELLO BRANCO FANTINATO</option>
+		<option value="11021">JOAO NICOLAU SPYRIDES</option>
+		<option value="9681">JOAO PAULO FERNANDES PONTES</option>
+		<option value="29854">JOAO PAULO KNAACK CAPANEMA DE SOUZA</option>
+		<option value="10541">JOAO WEHBI DIB</option>
+		<option value="15627">JO&#195;O ZIRALDO MAIA</option>
+		<option value="18315">JOAQUIM ABILIO MOREIRA ALVES DE BRITO</option>
+		<option value="10899">JOAQUIM CYRILLO BAPTISTA MOUZINHO</option>
+		<option value="15396">JOAQUIM DOMINGOS DE ALMEIDA NETO</option>
+		<option value="10176">JOEL PEREIRA DOS SANTOS</option>
+		<option value="6036">JORGE ALBERTO ROMEIRO JUNIOR</option>
+		<option value="3450">JORGE DE MIRANDA MAGALHAES</option>
+		<option value="4749">JORGE LORETTI</option>
+		<option value="19583">JORGE LUIZ HABIB</option>
+		<option value="10459">JORGE UCHOA DE MENDONCA</option>
+		<option value="15393">JOS&#201; ACIR LESSA GIORDANI</option>
+		<option value="3496">JOSE AFFONSO RONDEAU</option>
+		<option value="29837">JOSE AUGUSTO DE ARAUJO NETO</option>
+		<option value="11947">JOSE BAHADIAN</option>
+		<option value="11712">JOSE CARLOS DE FIGUEIREDO</option>
+		<option value="9677">JOS&#201; CARLOS MALDONADO DE CARVALHO</option>
+		<option value="29005">JOS&#201; CARLOS PAES</option>
+		<option value="3445">JOSE CARLOS SCHMIDT MURTA RIBEIRO</option>
+		<option value="6287">JOS&#201; CARLOS VARANDA DOS SANTOS</option>
+		<option value="3477">JOSE CARLOS WATZL</option>
+		<option value="19480">JOSE CLAUDIO DE MACEDO FERNANDES</option>
+		<option value="7552">JOSE DE MAGALHAES PERES</option>
+		<option value="7282">JOSE DE SAMUEL MARQUES</option>
+		<option value="1455">JOSE EDVALDO TAVARES</option>
+		<option value="9510">JOSE GERALDO ANTONIO</option>
+		<option value="20766">JOS&#201; GUILHERME VASI WERNER</option>
+		<option value="2398">JOSE LUCAS MOREIRA ALVES DE BRITO</option>
+		<option value="11441">JOSE MOTA FILHO</option>
+		<option value="29870">JOS&#201; MUI&#209;OS PI&#209;EIRO FILHO</option>
+		<option value="6322">JOSE NILO FERREIRA</option>
+		<option value="11136">JOSE PIMENTEL MARQUES</option>
+		<option value="9645">JOS&#201; ROBERTO LAGRANHA T&#193;VORA</option>
+		<option value="16062">JOSE ROBERTO PORTUGAL COMPASSO</option>
+		<option value="2323">JOSE RODRIGUEZ LEMA</option>
+		<option value="10505">JOVINO MACHADO JORDAO</option>
+		<option value="35328">JUAN LUIZ SOUZA VAZQUEZ</option>
+		<option value="9714">JUAREZ FERNANDES FOLHES</option>
+		<option value="29793">JULIANA ANDRADE BARICHELLO</option>
+		<option value="29853">JULIANA BENEVIDES DE BARROS ARAUJO</option>
+		<option value="29815">JULIANA CARDOSO MONTEIRO DE BARROS</option>
+		<option value="31954">JULIANA LAMAR PEREIRA SIMAO</option>
+		<option value="3157">JULIO CESAR PARAGUASSU</option>
+		<option value="213">JULIO DA ROCHA ALMEIDA</option>
+		<option value="29783">JUSSARA MARIA DE ABREU GUIMAR&#195;ES</option>
+		<option value="31952">KARLA DA SILVA BARROSO VELLOSO</option>
+		<option value="19607">KATIA CRISTINA NASCENTES TORRES</option>
+		<option value="9720">K&#193;TIA MARIA AMARAL JANGUTTA</option>
+		<option value="14562">KATYA MARIA DE PAULA MENEZES MONNERAT</option>
+		<option value="24713">KEYLA BLANK DE CNOP</option>
+		<option value="438">L. LOPES DE SOUSA</option>
+		<option value="3457">LAERSON MAURO</option>
+		<option value="28829">LARISSA NUNES PINTO SALLY</option>
+		<option value="29825">LEANDRO LOYOLA DE ABREU</option>
+		<option value="9707">LEANDRO RIBEIRO DA SILVA</option>
+		<option value="19481">LEDIR DIAS DE ARAUJO</option>
+		<option value="11946">LEILA MARIA CARRILO CAVALCANTE RIBEIRO MARIANO</option>
+		<option value="27350">LEILA MARIA RODRIGUES PINTO DE CARVALHO E ALBUQUERQUE</option>
+		<option value="16611">LEILA SANTOS LOPES</option>
+		<option value="8869">LEONY MARIA GRIVET PINHO</option>
+		<option value="6303">LETICIA DE FARIA SARDAS</option>
+		<option value="10818">LIBORNI BERNARDINO SIQUEIRA</option>
+		<option value="13887">LIDIA MARIA SODRE DE MORAES</option>
+		<option value="10540">LINDBERG MONTENEGRO</option>
+		<option value="29819">LINDOLPHO MORAIS MARINHO</option>
+		<option value="15387">LUCIA HELENA DO PASSO</option>
+		<option value="9692">L&#218;CIA MARIA MIGUEL DA SILVA LIMA</option>
+		<option value="26903">LUCIA MOTHE GLIOCHE</option>
+		<option value="17537">LUCIA REGINA ESTEVES DE MAGALHAES</option>
+		<option value="29767">LUCIANA DA CUNHA MARTINS OLIVEIRA</option>
+		<option value="26182">LUCIANA MOCCO MOREIRA LIMA</option>
+		<option value="28823">LUCIANA SANTOS TEIXEIRA</option>
+		<option value="214">LUCIANO BELEM</option>
+		<option value="31933">LUCIANO SABOIA RINALDI DE CARVALHO</option>
+		<option value="15390">LUCIANO SILVA BARRETO</option>
+		<option value="16696">L&#218;CIO DURANTE</option>
+		<option value="25381">LUIS ANDRE BRUZZI RIBEIRO</option>
+		<option value="13931">LUIS FELIPE SALOMAO</option>
+		<option value="15398">LUIS GUSTAVO GRANDINETTI CASTANHO DE CARVALHO</option>
+		<option value="8876">LUISA CRISTINA BOTTREL SOUZA</option>
+		<option value="25383">LUIZ ALBERTO BARBOSA DA SILVA</option>
+		<option value="16596">LUIZ ALBERTO CARVALHO ALVES</option>
+		<option value="28830">LUIZ ALFREDO CARVALHO JUNIOR</option>
+		<option value="10988">LUIZ CARLOS MOTTA</option>
+		<option value="11442">LUIZ CARLOS PECANHA</option>
+		<option value="10239">LUIZ CARLOS PERLINGEIRO</option>
+		<option value="3487">LUIZ CARLOS SALLES GUIMARAES</option>
+		<option value="10542">LUIZ CESAR</option>
+		<option value="26184">LUIZ CLAUDIO SILVA JARDIM MARINHO</option>
+		<option value="17773">LUIZ EDUARDO C CANABARRO</option>
+		<option value="4723">LUIZ EDUARDO GUIMARAES RABELLO</option>
+		<option value="11871">LUIZ FELIPE DA SILVA HADDAD</option>
+		<option value="9640">LUIZ FELIPE MIRANDA DE MEDEIROS FRANCISCO</option>
+		<option value="17544">LUIZ FERNANDO DE ANDRADE PINTO</option>
+		<option value="6275">LUIZ FERNANDO RIBEIRO DE CARVALHO</option>
+		<option value="6266">LUIZ FUX</option>
+		<option value="15394">LUIZ HENRIQUE OLIVEIRA MARQUES</option>
+		<option value="11687">LUIZ LEITE ARAUJO</option>
+		<option value="19483">LUIZ MARCIO VICTOR ALVES PEREIRA</option>
+		<option value="9671">LUIZ NORONHA DANTAS</option>
+		<option value="3482">LUIZ ODILON GOMES BANDEIRA</option>
+		<option value="17759">LUIZ ROBERTO AYOUB</option>
+		<option value="18138">LUIZ ROLDAO DE FREITAS GOMES</option>
+		<option value="33440">LUIZ ROLDAO DE FREITAS GOMES FILHO</option>
+		<option value="3737">LUIZ STEELE</option>
+		<option value="19595">LUIZ UMPIERRE DE MELLO SERRA</option>
+		<option value="18311">LUIZ ZVEITER</option>
+		<option value="25373">MABEL CHRISTINA CASTRIOTO MEIRA DE VASCONCELLOS</option>
+		<option value="36">mafalda</option>
+		<option value="16601">MAFALDA LUCCHESE</option>
+		<option value="4719">MANOEL ALBERTO REBELO DOS SANTOS</option>
+		<option value="4728">MANOEL CARPENA AMORIM</option>
+		<option value="18070">MANOEL TAVARES CAVALCANTI</option>
+		<option value="19597">MARCEL LAGUNA DUQUE ESTRADA</option>
+		<option value="20069">MARCELLO DE SA BAPTISTA</option>
+		<option value="19470">MARCELO ALMEIDA</option>
+		<option value="16592">MARCELO CASTRO AN&#193;TOCLES DA SILVA FERREIRA</option>
+		<option value="31153">MARCELO LIMA BUHATEM</option>
+		<option value="24336">MARCELO MENAGED</option>
+		<option value="23112">MARCELO OLIVEIRA DA SILVA</option>
+		<option value="21138">MARCELO PEREIRA DA SILVA</option>
+		<option value="19478">M&#193;RCIA  ALVES SUCCI</option>
+		<option value="21705">MARCIA ANDREA RODRIGUEZ LEMA</option>
+		<option value="15413">M&#193;RCIA CUNHA SILVA ARA&#218;JO DE CARVALHO</option>
+		<option value="24714">MARCIA DA SILVA RIBEIRO</option>
+		<option value="14052">MARCIA FERREIRA ALVARENGA</option>
+		<option value="18033">MARCIA MALVAR BARAMBO</option>
+		<option value="9644">M&#193;RCIA PERRINI BODART</option>
+		<option value="20727">MARCIA SANTOS CAPANEMA DE SOUZA</option>
+		<option value="25380">MARCIO ALEXANDRE PACHECO DA SILVA</option>
+		<option value="20756">MARCIO QUINTES GONCALVES</option>
+		<option value="16080">MARCIUS DA COSTA FERREIRA</option>
+		<option value="4330">MARCO ANTONIO IBRAHIM</option>
+		<option value="13768">MARCO AURELIO BELLIZZE OLIVEIRA</option>
+		<option value="29872">MARCO AUR&#201;LIO BEZERRA DE MELO</option>
+		<option value="7559">MARCO AURELIO DOS SANTOS FROES</option>
+		<option value="9673">MARCOS ALCINO DE AZEVEDO TORRES</option>
+		<option value="33114">MARCOS ANDRE CHUT</option>
+		<option value="25395">MARCOS ANTONIO RIBEIRO DE MOURA BRITO</option>
+		<option value="9660">MARCOS BENTO DE SOUZA</option>
+		<option value="10958">MARCUS ANTONIO DE SOUZA FAVER</option>
+		<option value="9696">MARCUS HENRIQUE PINTO BAS&#205;LIO</option>
+		<option value="8875">MARCUS QUARESMA FERRAZ</option>
+		<option value="11486">MARCUS TULLIUS ALVES</option>
+		<option value="1764">MARDEN GOMES</option>
+		<option value="16597">MARGARET DE OLIVAES VALLE DOS SANTOS</option>
+		<option value="16608">MARIA AGLAE TEDESCO VILARDO</option>
+		<option value="13775">MARIA ANG&#201;LICA GUIMAR&#195;ES GUERRA GUEDES</option>
+		<option value="6284">MARIA AUGUSTA VAZ MONTEIRO DE FIGUEIREDO</option>
+		<option value="8207">MARIA CELESTE PINTO DE CASTRO JATAHY</option>
+		<option value="16603">MARIA CHRISTINA BERARDO RUCKER</option>
+		<option value="9682">MARIA CHRISTINA LOUCHARD DE GOES</option>
+		<option value="11727">MARIA COLLARES FELIPE DA CONCEICAO</option>
+		<option value="16605"> MARIA CRISTINA DE BRITO LIMA</option>
+		<option value="18072">MARIA DA GLORIA OLIVEIRA BANDEIRA DE MELLO</option>
+		<option value="7541">MARIA DE LOURDES VALLE</option>
+		<option value="16067">MARIA DO CARMO ALVIM PADILHA GERK</option>
+		<option value="16591">MARIA HELENA PINTO MACHADO</option>
+		<option value="6294">MARIA HELENA SALCEDO MAGALHAES</option>
+		<option value="19271">MARIA HENRIQUETA DO AMARAL FONSECA LOBO</option>
+		<option value="11869">MARIA IN&#202;S DA PENHA GASPAR</option>
+		<option value="17531">MARIA ISABEL PAES GON&#199;ALVES</option>
+		<option value="16078">MARIA LUIZA DE FREITAS CARVALHO</option>
+		<option value="20063">MARIA PAULA GOUVEA GALHARDO</option>
+		<option value="7296">MARIA RAIMUNDA TEIXEIRA DE AZEVEDO</option>
+		<option value="31116">MARIA REGINA FONSECA NOVA ALVES</option>
+		<option value="15630">MARIA SANDRA ROCHA KAYAT DIREITO</option>
+		<option value="216">MARIA STELLA RODRIGUES</option>
+		<option value="17529"> MARIA TERESA PONTES GAZINEU</option>
+		<option value="7286">MARIA ZELIA PROCOPIO DA SILVA</option>
+		<option value="33439">MARIANNA FUX</option>
+		<option value="10310">MARIANNA PEREIRA NUNES FETEIRA GONCALVES</option>
+		<option value="209">MARIANTE DA FONSECA</option>
+		<option value="7294">MARILENE MELO ALVES</option>
+		<option value="29834">MAR&#205;LIA DE CASTRO NEVES VIEIRA</option>
+		<option value="7650">MARIO ASSIS GON&#199;ALVES</option>
+		<option value="7266">MARIO DOS SANTOS PAULO</option>
+		<option value="9642">MARIO GUIMAR&#195;ES NETO</option>
+		<option value="21125">MARIO HENRIQUE MAZZA</option>
+		<option value="6058">MARIO MAGALHAES</option>
+		<option value="24207">MARIO ROBERT MANNHEIMER</option>
+		<option value="24697">MARISA BALBI ROSEMBAK</option>
+		<option value="11210">MARLAN DE MORAES MARINHO</option>
+		<option value="18122">MARLY MACEDONIO FRANCA</option>
+		<option value="16604">MARTHA ELISABETH FALC&#195;O SOBREIRA</option>
+		<option value="1312">MARTINHO CAMPOS</option>
+		<option value="3735">MARTINS DE ALMEIDA</option>
+		<option value="24352">MAUR&#205;CIO CALDAS LOPES</option>
+		<option value="11208">MAURICIO DA SILVA LINTZ</option>
+		<option value="11198">MAURICIO GONCALVES DE OLIVEIRA</option>
+		<option value="29792">MAURICIO MAGNUS</option>
+		<option value="7277">MAURILIO PASSOS DA SILVA BRAGA</option>
+		<option value="29858">MAURILIO TEIXEIRA DE MELLO JUNIOR</option>
+		<option value="9680">MAURO DICKSTEIN</option>
+		<option value="11716">MAURO FONSECA PINTO NOGUEIRA</option>
+		<option value="18031">MAURO NICOLAU J&#218;NIOR</option>
+		<option value="16692">MAURO PEREIRA MARTINS</option>
+		<option value="2316">MELLO SERRA</option>
+		<option value="11440">MIGUEL ANGELO BARROS</option>
+		<option value="4745">MIGUEL PACHA</option>
+		<option value="7283">MILTON FERNANDES DE SOUZA</option>
+		<option value="206">MIRANDA ROSA</option>
+		<option value="24710">MIRELA ERBISTI</option>
+		<option value="7567">MOACIR PESSOA DE ARAUJO</option>
+		<option value="10514">MOLEDO SARTORI</option>
+		<option value="32080">M&#212;NICA DE FARIA SARDAS</option>
+		<option value="16077">M&#212;NICA FELDMAN DE MATTOS</option>
+		<option value="20091">MONICA LABUTO FRAGOSO MACHADO</option>
+		<option value="29835">M&#212;NICA MARIA COSTA DI PIERO</option>
+		<option value="13799">M&#212;NICA TOLLEDO DE OLIVEIRA</option>
+		<option value="31948">MONIQUE ABREU DAVID</option>
+		<option value="2600">MURILLO FABREGAS</option>
+		<option value="4696">MURILO ANDRADE DE CARVALHO</option>
+		<option value="15626">MURILO ANDR&#201; KIELING CARDONA PEREIRA</option>
+		<option value="343">MURTA RIBEIRO</option>
+		<option value="15411">MYRIAM MEDEIROS DA FONSECA COSTA</option>
+		<option value="9000">N. DORESTE BAPTISTA</option>
+		<option value="16590">NADIA MARIA DE SOUZA FREIJANES</option>
+		<option value="6268">NAGIB SLAIBI FILHO</option>
+		<option value="11681">NAMETALA MACHADO JORGE</option>
+		<option value="7292">NANCI MAHFUZ</option>
+		<option value="1448">NARCIZO PINTO</option>
+		<option value="3725">NASCIMENTO ANTONIO POVOAS VAZ</option>
+		<option value="15388">NATACHA NASCIMENTO GOMES TOSTES GON&#199;ALVES DE OLIVEIRA</option>
+		<option value="29812">NATASCHA MACULAN ADUM DAZZI</option>
+		<option value="27288">NATHALIA CALIL MIGUEL MAGLUTA</option>
+		<option value="20086">NEARIS DOS SANTOS CARVALHO ARCE DOS SANTOS</option>
+		<option value="11235">NESTOR LUIZ BASTOS AHRENDS</option>
+		<option value="21139">NEUSA REGINA LARSEN DE ALVARENGA LEITE</option>
+		<option value="11041">NEWTON PAULO AZEREDO DA SILVEIRA</option>
+		<option value="3732">NEWTON QUINTELLA</option>
+		<option value="10141">NICOLAU MARY JUNIOR</option>
+		<option value="24209">NILDSON ARA&#218;JO DA CRUZ</option>
+		<option value="10729">NILSON DE CASTRO DIAO</option>
+		<option value="3473">NILTON MONDEGO DE CARVALHO LIMA</option>
+		<option value="11684">NILZA BITAR</option>
+		<option value="7579">NORMA SUELY FONSECA QUINTES</option>
+		<option value="7291">ODETE KNAACK DE SOUZA</option>
+		<option value="7569">ORLANDO DE ALMEIDA SECCO</option>
+		<option value="10251">ORLINDO ELIAS</option>
+		<option value="10523">OSCAR SILVARES</option>
+		<option value="217">OSWALDO PORTELLA</option>
+		<option value="6308">OT&#193;VIO RODRIGUES</option>
+		<option value="25387">PATRICIA COGLIATTI DE CARVALHO</option>
+		<option value="31932">PATR&#205;CIA RIBEIRO SERRA VIEIRA</option>
+		<option value="28833">PATRICIA RODRIGUEZ WHATELY</option>
+		<option value="19588">PAULA FERNANDES MACHADO</option>
+		<option value="28827">PAULA REGINA ADORNO COSSA</option>
+		<option value="17761">PAULO ASSED ESTEFAN</option>
+		<option value="6271">PAULO CESAR SALOMAO</option>
+		<option value="16589">PAULO CESAR VIEIRA C. FILHO</option>
+		<option value="14991">PAULO DE OLIVEIRA LANZILLOTTA BALDEZ</option>
+		<option value="8877">PAULO DE TARSO NEVES</option>
+		<option value="9540">PAULO DOURADO DE GUSMAO</option>
+		<option value="10830">PAULO GOMES DA SILVA</option>
+		<option value="10506">PAULO GOMES DA SILVA FILHO</option>
+		<option value="11203">PAULO LARA</option>
+		<option value="1462">PAULO MALTA FERRAZ</option>
+		<option value="3510">PAULO MAURICIO PEREIRA</option>
+		<option value="4409">PAULO PINTO</option>
+		<option value="18993">PAULO ROBERTO CORREA</option>
+		<option value="1484">PAULO ROBERTO FREITAS</option>
+		<option value="11191">PAULO ROBERTO LEITE VENTURA</option>
+		<option value="3461">PAULO SERGIO DE ARAUJO E SILVA FABIAO</option>
+		<option value="9661">PAULO S&#201;RGIO PRESTES DOS SANTOS</option>
+		<option value="31115">PAULO S&#201;RGIO RANGEL DO NASCIMENTO</option>
+		<option value="33884">PAULO WUNDER DE ALENCAR</option>
+		<option value="5930">PECEGUEIRO DO AMARAL</option>
+		<option value="10511">PEDRO AMERICO R. GONCALVES</option>
+		<option value="9699">PEDRO FREIRE RAGUENET</option>
+		<option value="20077">PEDRO HENRIQUE ALVES</option>
+		<option value="2400">PEDRO LIGIERO</option>
+		<option value="385">PEDRO LIMA</option>
+		<option value="9691">PEDRO SARAIVA DE ANDRADE LEMOS</option>
+		<option value="211">PENALVA SANTOS</option>
+		<option value="15631">PETERSON BARROSO SIM&#195;O</option>
+		<option value="20084">PINDARO LOPES DE CARVALHO</option>
+		<option value="3101">PIRES E ALBUQUERQUE</option>
+		<option value="14568">PL&#205;NIO PINTO COELHO FILHO</option>
+		<option value="10829">PORTELLA SANTOS</option>
+		<option value="428">PORTO CARREIRO</option>
+		<option value="29805">PRISCILA ABREU DAVID</option>
+		<option value="28898">RAFAEL ESTRELA NOBREGA</option>
+		<option value="28836">RAFAEL REZENDE DAS CHAGAS</option>
+		<option value="31959">RAFAELLA AVILA DE SOUZA TUFFY FELIPPE</option>
+		<option value="3736">RALPH LOPES PINHEIRO</option>
+		<option value="4007">RAPHAEL CIRIGLIANO FILHO</option>
+		<option value="19606">RAQUEL DE OLIVEIRA</option>
+		<option value="28834">RAQUEL GOUVEIA DA CUNHA</option>
+		<option value="19083">RAUL CELSO LINS E SILVA</option>
+		<option value="1444">RAUL DE SAN TIAGO DANTAS BARBOSA QUENTAL</option>
+		<option value="1457">REBELLO DE MENDONCA</option>
+		<option value="5205">REBELLO HORTA</option>
+		<option value="23104">REGINA LUCIA CHUQUER DE ALMEIDA COSTA DE CASTRO LIMA</option>
+		<option value="14572">REGINA LUCIA PASSOS</option>
+		<option value="11232">REGINALD&#39; DE CARVALHO</option>
+		<option value="5204">REINALDO PINTO ALBERTO FILHO</option>
+		<option value="30384">RENATA MACHADO COTTA</option>
+		<option value="35258">RENATA MARIA NICOLAU CABO</option>
+		<option value="29800">RENATA PALHEIRO MENDES DE ALMEIDA</option>
+		<option value="33925">RENATA SILVARES FRAN&#199;A FADEL</option>
+		<option value="26901">RENATA TRAVASSOS MEDINA DE MACEDO</option>
+		<option value="16249">RENATO LIMA CHARNAUX SERTA</option>
+		<option value="1445">RENATO MANESCHY</option>
+		<option value="15623">RENATO RICARDO BARBOSA</option>
+		<option value="11685">RENATO SIMONI</option>
+		<option value="18075">RICARDO ALBERTO PEREIRA</option>
+		<option value="29774">RICARDO COIMBRA DA SILVA STARLING BARCELLOS</option>
+		<option value="15404">RICARDO COUTO DE CASTRO</option>
+		<option value="28839">RICARDO LAFAYETTE CAMPOS</option>
+		<option value="29772">RICARDO PINHEIRO MACHADO</option>
+		<option value="9667">RICARDO RODRIGUES CARDOZO</option>
+		<option value="7276">RICARDO SILVA DE BUSTAMANTE</option>
+		<option value="29806">RICHARD ROBERT FAIRCLOUGH</option>
+		<option value="6313">ROBERTO DE ABREU E SILVA</option>
+		<option value="9672">ROBERTO DE ALMEIDA RIBEIRO</option>
+		<option value="10494">ROBERTO DE SOUZA CORTES</option>
+		<option value="8883">ROBERTO GUIMARAES</option>
+		<option value="9664">ROBERTO LUIS FELINTO DE OLIVEIRA</option>
+		<option value="4769">ROBERTO MARON</option>
+		<option value="7542">ROBERTO ROCHA FERREIRA</option>
+		<option value="11193">ROBERTO WIDER</option>
+		<option value="8731">ROBERVAL DO MONTE</option>
+		<option value="27281">RODRIGO FARIA DE SOUSA</option>
+		<option value="13932">ROG&#201;RIO DE OLIVEIRA SOUZA</option>
+		<option value="3740">ROMEU RODRIGUES SILVA</option>
+		<option value="6296">ROMULO LUIZ COLLY</option>
+		<option value="11219">RONALD DOS SANTOS VALLADARES</option>
+		<option value="9663">RONALDO ALVARO LOPES MARTINS</option>
+		<option value="5207">RONALDO ASSED MACHADO</option>
+		<option value="5211">RONALDO JOSE OLIVEIRA ROCHA PASSOS</option>
+		<option value="3741">ROQUE BATISTA</option>
+		<option value="16064">ROSA HELENA PENNA MACEDO GUITA</option>
+		<option value="21142">ROSA MARIA CIRIGLIANO MANESCHY</option>
+		<option value="28853">ROSANA ALBUQUERQUE FRAN&#199;A</option>
+		<option value="18064">ROSANA NAVEGA CHAGAS</option>
+		<option value="19592">ROSE MARIE PIMENTEL MARTINS</option>
+		<option value="6324">ROSITA MARIA DE OLIVEIRA NETTO</option>
+		<option value="18069">ROSSIDELIO LOPES</option>
+		<option value="21709">RUDI BALDI LOEWENKRON</option>
+		<option value="11462">RUDI LOEWENKRON</option>
+		<option value="1452">RUI OCTAVIO DOMINGUES</option>
+		<option value="10599">RUY MONTEIRO DE CARVALHO</option>
+		<option value="11683">RUYZ ATHAYDE ALCANTARA DE CARVALHO</option>
+		<option value="3462">SALIM JOSE CHALUB</option>
+		<option value="779">SALVADOR PINTO</option>
+		<option value="11046">SAMPAIO PERES</option>
+		<option value="15389">SANDRA SANTAR&#201;M CARDINALI</option>
+		<option value="21143">SANDRO LUCIO BARBOSA PITASSI</option>
+		<option value="11599">SEBASTIAO RUGIER BOLELLI</option>
+		<option value="2320">SEMY GLANZ</option>
+		<option value="3483">SERGIO CAVALIERI FILHO</option>
+		<option value="7275">SERGIO DE SAETA MORAES</option>
+		<option value="3726">SERGIO DE SOUZA VERANI</option>
+		<option value="9676">SERGIO JERONIMO ABREU DA SILVEIRA</option>
+		<option value="6276">SERGIO LUCIO DE OLIVEIRA E CRUZ</option>
+		<option value="219">SERGIO MARIANO</option>
+		<option value="33113">S&#201;RGIO NOGUEIRA DE AZEREDO</option>
+		<option value="16075">SERGIO RICARDO DE ARRUDA FERNANDES</option>
+		<option value="24108">SERGIO ROBERTO EMILIO LOUZADA</option>
+		<option value="14056">S&#201;RGIO SEABRA VARELLA</option>
+		<option value="17753">SERGIO WAJZENBERG</option>
+		<option value="4706">SERVIO TULIO SANTOS VIEIRA</option>
+		<option value="3471">SEVERIANO IGNACIO DE ARAGAO</option>
+		<option value="1577">SIDNEY HARTUNG BUARQUE</option>
+		<option value="14584">SIDNEY ROSA DA SILVA</option>
+		<option value="3490">SILVIO TEIXEIRA MOREIRA</option>
+		<option value="29778">SIMONE DALILA NACIF LOPES</option>
+		<option value="20067">SIMONE DE ARA&#218;JO ROLIM</option>
+		<option value="20762">SIMONE GASTESI CHEVRAND</option>
+		<option value="10418">SIRLEY ABREU BIONDI</option>
+		<option value="6321">SIRO DARLAN DE OLIVEIRA</option>
+		<option value="15405">S&#212;NIA DE F&#193;TIMA DIAS</option>
+		<option value="7555">SUELY LOPES MAGALH&#195;ES</option>
+		<option value="14996">SUIMEI MEIRA CAVALIERI</option>
+		<option value="16752">SYLVIO CAPANEMA DE SOUZA</option>
+		<option value="10167">SYNESIO DE AQUINO PINHEIRO</option>
+		<option value="18287">TELMA MUSSE DIUANA</option>
+		<option value="21129">TELMIRA DE BARROS MONDEGO</option>
+		<option value="14583">TERESA DE ANDRADE CASTRO NEVES</option>
+		<option value="14999">TEREZA CRISTINA SOBRAL BITTENCOURT SAMPAIO</option>
+		<option value="1460">THIAGO RIBAS FILHO</option>
+		<option value="31953">TIAGO FERNANDES DE BARROS</option>
+		<option value="6298">TIAGO P. COSTA</option>
+		<option value="5295">TORRES DE MELO</option>
+		<option value="24701">TULA CORREA DE MELLO BARBOSA</option>
+		<option value="10799">ULYSSES VALLADARES</option>
+		<option value="14585">VAL&#201;RIA DACHEUX NASCIMENTO</option>
+		<option value="2063">VALERIA GARCIA DA SILVA MARON</option>
+		<option value="21698">VALERIA PACHA BICHARA</option>
+		<option value="6289">VALMIR DE OLIVEIRA SILVA</option>
+		<option value="11447">VALMIR DOS SANTOS RIBEIRO</option>
+		<option value="27292">VANELE ROCHA FALCAO CESAR</option>
+		<option value="28844">VANESSA DE OLIVEIRA CAVALIERI FELIX</option>
+		<option value="27294">VELEDA SUZETE SALDANHA CARVALHO</option>
+		<option value="7580">VERA MARIA SOARES VAN HOMBEECK</option>
+		<option value="33927">VITOR MARCELO ARANHA  AFONSO RODRIGUES</option>
+		<option value="23109">VIVIANE ALONSO ALKIMIM</option>
+		<option value="15410">WAGNER CINELLI DE PAULA FREITAS</option>
+		<option value="6863">WALDEMAR ZVEITER</option>
+		<option value="11487">WALTER FELIPPE D&#39;AGOSTINO</option>
+		<option value="6305">WANY DO COUTO FARIA</option>
+		<option value="2332">WEBER M. BATISTA</option>
+		<option value="11725">WELLINGTON JONES PAIVA</option>
+		<option value="424">WELLINGTON PIMENTEL</option>
+		<option value="16700">WERSON FRANCO PEREIRA R&#202;GO</option>
+		<option value="15629">WILSON DO NASCIMENTO REIS</option>
+		<option value="28851">WILSON MARCELO KOZLOWSKI JUNIOR</option>
+		<option value="3146">WILSON MARQUES</option>
+		<option value="10691">WILSON SANTIAGO MESQUITA DE MELLO</option>
+		<option value="26918">WLADIMIR HUNGRIA</option>
+		<option value="10507">XAVIER DA MATTA</option>
+		<option value="28847">YEDDA CHRISTINA CHING SAN FILIZZOLA  ASSUN&#199;&#195;O</option>
+		<option value="10240">YOUSSIF SALIM SAKER</option>
+		<option value="8456">ZELIA MARIA MACHADO DOS SANTOS</option>
+		<option value="14196">JDS. ANA C&#201;LIA MONTEMOR SOARES RIOS GON&#199;ALVES</option>
+		<option value="24117">JDS. DES. ALEXANDRE OLIVEIRA CAMACHO DE FRAN&#199;A</option>
+		<option value="29845">JDS. DES. ANA PAULA ABREU FILGUEIRAS</option>
+		<option value="26190">JDS. DES. DANIEL VIANNA VARGAS</option>
+		<option value="17755">JDS. DES. EDUARDO MARQUES HABLITSCHEK</option>
+		<option value="19609">JDS. DES. FABIANA DE CASTRO PEREIRA SOARES</option>
+		<option value="20066">JDS. DES. GUILHERME PEDROSA LOPES</option>
+		<option value="20075">JDS. DES. KATIA CILENE DA HORA MACHADO BUGARIM</option>
+		<option value="29822">JDS. DES. LEONARDO CAJUEIRO D AZEVEDO</option>
+		<option value="24704">JDS. DES. LEONARDO GRANDMASSON FERREIRA CHAVES</option>
+		<option value="19604">JDS. DES. MARIA CRISTINA BARROS GUTIERREZ SLAIBI</option>
+		<option value="26181">JDS. DES. SANDRO DE ARAUJO LONTRA</option>
+		<option value="6168">JDS. DES. VANIA MARA NASCIMENTO GON&#199;ALVES</option>
+
+	</select>
+                                </td>
+                                <td>
+                                    <input type="button" id="btnAddMag" value="+" class="btnAdd" onclick="AdicionarCombo(this); $(this).attr('disabled','disabled');" title="Conjugar mais de um Magistrado" disabled="disabled"/>
+                                </td>
+                                <td style="width: 10em;">
+                                    <input id="ContentPlaceHolder1_chkAtivo" type="checkbox" name="ctl00$ContentPlaceHolder1$chkAtivo" checked="checked" onclick="javascript:setTimeout(&#39;__doPostBack(\&#39;ctl00$ContentPlaceHolder1$chkAtivo\&#39;,\&#39;\&#39;)&#39;, 0)" /><label for="ContentPlaceHolder1_chkAtivo">Ativo</label>
+                                    <input id="ContentPlaceHolder1_chkInativo" type="checkbox" name="ctl00$ContentPlaceHolder1$chkInativo" checked="checked" onclick="javascript:setTimeout(&#39;__doPostBack(\&#39;ctl00$ContentPlaceHolder1$chkInativo\&#39;,\&#39;\&#39;)&#39;, 0)" /><label for="ContentPlaceHolder1_chkInativo">Inativo</label>
+                                </td>
+                            </tr>
+                            <tr class="trOrgJulg"> <!--Adição de classe CSS trOrgJulg para encontrar o elemento com JQuery em razão do id ser dinâmico-->
+                                <td class="labeldireita">Órgão Julgador:</td>
+                                <td class="campo">
+                                    <select name="ctl00$ContentPlaceHolder1$cmbOrgaoJulgador" id="ContentPlaceHolder1_cmbOrgaoJulgador" class="cmbOrgaoJulgador" onchange="cmbChange(this, hfCodOrgs); habilitaBtnCombos(this, $(&#39;#btnAddOrg&#39;));" style="width:100%;">
+		<option value="">Selecione...</option>
+		<option value="18140">1&#176; N&#218;CLEO DIGITAL EM SEGUNDO GRAU - EXECU&#199;&#195;O FISCAL</option>
+		<option value="431">PRIMEIRA C&#194;MARA C&#205;VEL</option>
+		<option value="432">SEGUNDA C&#194;MARA C&#205;VEL</option>
+		<option value="433">TERCEIRA C&#194;MARA C&#205;VEL</option>
+		<option value="434">QUARTA C&#194;MARA C&#205;VEL</option>
+		<option value="435">QUINTA C&#194;MARA C&#205;VEL</option>
+		<option value="436">SEXTA C&#194;MARA C&#205;VEL</option>
+		<option value="437">S&#201;TIMA C&#194;MARA C&#205;VEL</option>
+		<option value="438">OITAVA C&#194;MARA C&#205;VEL</option>
+		<option value="439">NONA C&#194;MARA C&#205;VEL</option>
+		<option value="440">D&#201;CIMA C&#194;MARA C&#205;VEL</option>
+		<option value="441">D&#201;CIMA PRIMEIRA C&#194;MARA C&#205;VEL</option>
+		<option value="442">D&#201;CIMA SEGUNDA C&#194;MARA C&#205;VEL</option>
+		<option value="526">OE - SECRETARIA DO TRIBUNAL PLENO E ORGAO ESPECIAL</option>
+		<option value="443">D&#201;CIMA TERCEIRA C&#194;MARA C&#205;VEL</option>
+		<option value="444">D&#201;CIMA QUARTA C&#194;MARA C&#205;VEL</option>
+		<option value="445">D&#201;CIMA QUINTA C&#194;MARA C&#205;VEL</option>
+		<option value="446">D&#201;CIMA SEXTA C&#194;MARA C&#205;VEL</option>
+		<option value="447">D&#201;CIMA S&#201;TIMA C&#194;MARA C&#205;VEL</option>
+		<option value="448">D&#201;CIMA OITAVA C&#194;MARA C&#205;VEL</option>
+		<option value="3904">D&#201;CIMA NONA C&#194;MARA C&#205;VEL</option>
+		<option value="3905">VIG&#201;SIMA C&#194;MARA C&#205;VEL</option>
+		<option value="8478">VIG&#201;SIMA PRIMEIRA C&#194;MARA C&#205;VEL</option>
+		<option value="8479">VIG&#201;SIMA SEGUNDA C&#194;MARA C&#205;VEL</option>
+		<option value="8480">VIG&#201;SIMA TERCEIRA C&#194;MARA C&#205;VEL</option>
+		<option value="8481">VIG&#201;SIMA QUARTA C&#194;MARA C&#205;VEL</option>
+		<option value="8482">VIG&#201;SIMA QUINTA C&#194;MARA C&#205;VEL</option>
+		<option value="8483">VIG&#201;SIMA SEXTA C&#194;MARA C&#205;VEL</option>
+		<option value="8484">VIG&#201;SIMA S&#201;TIMA C&#194;MARA C&#205;VEL</option>
+		<option value="564">PRIMEIRO GRUPO DE C&#194;MARAS C&#205;VEIS</option>
+		<option value="565">SEGUNDO GRUPO DE C&#194;MARAS C&#205;VEIS</option>
+		<option value="566">TERCEIRO GRUPO DE C&#194;MARAS C&#205;VEIS</option>
+		<option value="567">QUARTO GRUPO DE C&#194;MARAS C&#205;VEIS</option>
+		<option value="2083">QUINTO GRUPO DE C&#194;MARAS C&#205;VEIS</option>
+		<option value="2180">SEXTO GRUPO DE C&#194;MARAS C&#205;VEIS</option>
+		<option value="2181">S&#201;TIMO GRUPO DE C&#194;MARAS C&#205;VEIS</option>
+		<option value="2182">OITAVO GRUPO DE C&#194;MARAS C&#205;VEIS</option>
+		<option value="2183">NONO GRUPO DE C&#194;MARAS C&#205;VEIS</option>
+		<option value="562">SE&#199;&#195;O C&#205;VEL (antiga)</option>
+		<option value="9377">SE&#199;&#195;O C&#205;VEL</option>
+		<option value="9378">SE&#199;&#195;O C&#205;VEL DO CONSUMIDOR</option>
+		<option value="12273">SE&#199;AO DE DIREITO PUBLICO</option>
+		<option value="12294">SE&#199;AO DE DIREITO PRIVADO</option>
+		<option value="12180">PRIMEIRA CAMARA DE DIREITO PUBLICO</option>
+		<option value="12260">SEGUNDA CAMARA DE DIREITO PUBLICO (ANTIGA 10&#170; C&#194;MARA C&#205;VEL)</option>
+		<option value="12261">TERCEIRA CAMARA DE DIREITO PUBLICO (ANTIGA 6&#170; C&#194;MARA C&#205;VEL)</option>
+		<option value="12280">QUARTA CAMARA DE DIREITO PUBLICO (ANTIGA 7&#170; C&#194;MARA C&#205;VEL)</option>
+		<option value="12262">QUINTA CAMARA DE DIREITO PUBLICO (ANTIGA 16&#170; C&#194;MARA C&#205;VEL)</option>
+		<option value="12281">SEXTA CAMARA DE DIREITO PUBLICO (ANTIGA 21&#170; C&#194;MARA C&#205;VEL)</option>
+		<option value="14180">S&#201;TIMA C&#194;MARA DE DIREITO P&#218;BLICO</option>
+		<option value="14181">OITAVA CAMARA DE DIREITO PUBLICO</option>
+		<option value="17880">NONA CAMARA DE DIREITO PUBLICO</option>
+		<option value="17900">DECIMA CAMARA DE DIREITO PUBLICO</option>
+		<option value="12282">PRIMEIRA CAMARA DE DIREITO PRIVADO (ANTIGA 8&#170; C&#194;MARA C&#205;VEL)</option>
+		<option value="12263">SEGUNDA CAMARA DE DIREITO PRIVADO (ANTIGA 3&#170; C&#194;MARA C&#205;VEL)</option>
+		<option value="12264">TERCEIRA CAMARA DE DIREITO PRIVADO (ANTIGA 18&#170; C&#194;MARA C&#205;VEL)</option>
+		<option value="12283">QUARTA CAMARA DE DIREITO PRIVADO (ANTIGA 5&#170; C&#194;MARA C&#205;VEL)</option>
+		<option value="12265">QUINTA CAMARA DE DIREITO PRIVADO (ANTIGA 24&#170; C&#194;MARA  C&#205;VEL)</option>
+		<option value="12284">SEXTA CAMARA DE DIREITO PRIVADO (ANTIGA 13&#170; C&#194;MARA C&#205;VEL)</option>
+		<option value="12285">SETIMA CAMARA DE DIREITO PRIVADO (ANTIGA 12&#170; C&#194;MARA C&#205;VEL)</option>
+		<option value="12266">OITAVA CAMARA DE DIREITO PRIVADO (ANTIGA 17&#170; C&#194;MARA C&#205;VEL)</option>
+		<option value="12286">NONA CAMARA DE DIREITO PRIVADO (ANTIGA 2&#170; C&#194;MARA C&#205;VEL)</option>
+		<option value="12267">DECIMA CAMARA DE DIREITO PRIVADO (ANTIGA 1&#170; C&#194;MARA C&#205;VEL)</option>
+		<option value="12287">DECIMA PRIMEIRA CAMARA DE DIREITO PRIVADO (ANTIGA 27&#170; C&#194;MARA C&#205;VEL)</option>
+		<option value="12268">DECIMA SEGUNDA CAMARA DE DIREITO PRIVADO (ANTIGA 14&#170; C&#194;MARA C&#205;VEL)</option>
+		<option value="12269">DECIMA TERCEIRA CAMARA DE DIREITO PRIVADO (ANTIGA 22&#170; C&#194;MARA C&#205;VEL)</option>
+		<option value="12288">DECIMA QUARTA CAMARA DE DIREITO PRIVADO (ANTIGA 9&#170; C&#194;MARA C&#205;VEL)</option>
+		<option value="12270">DECIMA QUINTA CAMARA DE DIREITO PRIVADO (ANTIGA 20&#170; C&#194;MARA C&#205;VEL)</option>
+		<option value="12289">DECIMA SEXTA CAMARA DE DIREITO PRIVADO (ANTIGA 4&#170; C&#194;MARA C&#205;VEL)</option>
+		<option value="12290">DECIMA SETIMA CAMARA DE DIREITO PRIVADO (ANTIGA 26&#170; C&#194;MARA C&#205;VEL)</option>
+		<option value="12291">DECIMA OITAVA CAMARA DE DIREITO PRIVADO (ANTIGA 15&#170; C&#194;MARA C&#205;VEL)</option>
+		<option value="12271">DECIMA NONA CAMARA DE DIREITO PRIVADO (ANTIGA 25&#170; C&#194;MARA C&#205;VEL)</option>
+		<option value="12272">VIGESIMA CAMARA DE DIREITO PRIVADO (ANTIGA 11&#170; C&#194;MARA C&#205;VEL)</option>
+		<option value="12292">VIGESIMA PRIMEIRA CAMARA DE DIREITO PRIVADO (ANTIGA 19&#170; C&#194;MARA C&#205;VEL)</option>
+		<option value="12293">VIGESIMA SEGUNDA CAMARA DE DIREITO PRIVADO (ANTIGA 23&#170; C&#194;MARA C&#205;VEL)</option>
+
+	</select>
+                                </td>
+                                <td>
+                                    <input type="button" id="btnAddOrg" value="+" class="btnAdd" onclick="AdicionarCombo(this); $(this).attr('disabled','disabled');" title="Conjugar mais de um Órgão Julgador" disabled="disabled"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="labeldireita">
+                                    <select name="ctl00$ContentPlaceHolder1$cmbTipNumeracao" id="ContentPlaceHolder1_cmbTipNumeracao" onchange="cmbTipNumeracaoChange(this);">
+		<option value="1">Num. &#218;nica</option>
+		<option value="2">Num. Antiga</option>
+
+	</select>
+                                </td>
+                                <td class="campo">
+                                    <input name="ctl00$ContentPlaceHolder1$txtNumeracao" type="text" maxlength="25" id="ContentPlaceHolder1_txtNumeracao" onblur="javascript: FormataNumCNJ(this.id,this.value);" style="width:100%;" />
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp</td>
+                </tr>
+                <tr>
+                    <td>
+                        <table class="principal">
+                            <tr>
+                                <td align="left">
+                                    <input id="ContentPlaceHolder1_chkAcordao" type="checkbox" name="ctl00$ContentPlaceHolder1$chkAcordao" checked="checked" onclick="javascript:setTimeout(&#39;__doPostBack(\&#39;ctl00$ContentPlaceHolder1$chkAcordao\&#39;,\&#39;\&#39;)&#39;, 0)" /><label for="ContentPlaceHolder1_chkAcordao">Acórdão (ementa)</label>
+                                </td>
+                                <td align="left">
+                                    <input id="ContentPlaceHolder1_chkDecMon" type="checkbox" name="ctl00$ContentPlaceHolder1$chkDecMon" checked="checked" onclick="javascript:setTimeout(&#39;__doPostBack(\&#39;ctl00$ContentPlaceHolder1$chkDecMon\&#39;,\&#39;\&#39;)&#39;, 0)" /><label for="ContentPlaceHolder1_chkDecMon">Decisão Monocrática (ementa)</label>
+                                </td>
+                                <td align="left">
+                                    <input id="ContentPlaceHolder1_chkIntTeor" type="checkbox" name="ctl00$ContentPlaceHolder1$chkIntTeor" onclick="javascript:setTimeout(&#39;__doPostBack(\&#39;ctl00$ContentPlaceHolder1$chkIntTeor\&#39;,\&#39;\&#39;)&#39;, 0)" /><label for="ContentPlaceHolder1_chkIntTeor">Inteiro Teor (PDF)</label>
+                                </td>
+                                <td align="left">
+                                    <input id="ContentPlaceHolder1_chkEmentario" type="checkbox" name="ctl00$ContentPlaceHolder1$chkEmentario" onclick="javascript:setTimeout(&#39;__doPostBack(\&#39;ctl00$ContentPlaceHolder1$chkEmentario\&#39;,\&#39;\&#39;)&#39;, 0)" /><label for="ContentPlaceHolder1_chkEmentario">Ementário</label>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <table class="principal">
+                            <tr>
+                                <td colspan="2">
+                                    <h3></h3>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <input type="submit" name="ctl00$ContentPlaceHolder1$btnAjuda" value="Ajuda" onclick="window.open(&#39;AjudaConsultaJuris.aspx&#39;, &#39;_blank&#39;);" id="ContentPlaceHolder1_btnAjuda" />
+                                </td>
+                                <td align="right">
+                                    <input type="button" name="ctl00$ContentPlaceHolder1$btnPesquisar" value="Pesquisar" onclick="if (!ValidarPreenchimento()){return false;} else {this.disabled = true;} ;__doPostBack(&#39;ctl00$ContentPlaceHolder1$btnPesquisar&#39;,&#39;&#39;)" id="ContentPlaceHolder1_btnPesquisar" class="submit" />
+                                    <input type="submit" name="ctl00$ContentPlaceHolder1$btnLimpar" value="Limpar" onclick="LimparHiddenFields();" id="ContentPlaceHolder1_btnLimpar" AutoPostBack="true" />
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <h3></h3>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Senhores usuários, </br><p>Para melhor atendê-los, alteramos o layout da Consulta à Jurisprudência, que oferece maior refinamento na pesquisa e permite consultar o Ementário através da mesma página.</p>
+                    </td>
+                </tr>
+                
+            </table>
+        
+</div>
+
+                <!-- Fim da div#content -->
+                </form>
+            </div>
+            <div class="clear" />
+        </div>
+        <!-- Fim da div#container -->
+    </div>
+<!-- INICIO DIV do Rodapé do Sistema-->
+        <!-- Fim da div#tudo -->
+        <noscript>o seu navegador não suporta JavaScript!</noscript>
+</body>
+</html>

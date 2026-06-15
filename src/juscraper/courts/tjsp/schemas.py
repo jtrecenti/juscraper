@@ -20,22 +20,35 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
-from ...schemas import AutoChunkMixin, CnjInputBase, DataJulgamentoMixin, OutputCnjConsultaBase, SearchBase
+from ...schemas import (
+    AutoChunkMixin,
+    CnjInputBase,
+    CountOnlyMixin,
+    DataJulgamentoMixin,
+    IdFiltro,
+    IdFiltroUnico,
+    OutputCnjConsultaBase,
+    SearchBase,
+)
 from ...schemas.cjsg import OutputCJSGBase
 
 
-class InputCJSGTJSP(SearchBase, DataJulgamentoMixin, AutoChunkMixin):
+class InputCJSGTJSP(SearchBase, DataJulgamentoMixin, AutoChunkMixin, CountOnlyMixin):
     """Accepted input for TJSP ``cjsg``. Unknown kwargs raise via ``extra='forbid'``.
 
     Herda filtro de data de julgamento via :class:`DataJulgamentoMixin`.
     TJSP **nao** suporta ``data_publicacao_*`` nem ``numero_recurso``.
+
+    ``classe``/``assunto``/``orgao_julgador`` aceitam ``int``, ``str`` ou
+    ``list[int | str]`` via :data:`IdFiltro` (refs #232). ``comarca`` aceita
+    ``int`` ou ``str`` (single-value, backend ``cdComarca``).
     """
 
     ementa: str | None = None
-    classe: str | None = None
-    assunto: str | None = None
-    comarca: str | None = None
-    orgao_julgador: str | None = None
+    classe: IdFiltro = None
+    assunto: IdFiltro = None
+    comarca: IdFiltroUnico = None
+    orgao_julgador: IdFiltro = None
     baixar_sg: bool = True
     tipo_decisao: Literal["acordao", "monocratica"] = "acordao"
 
@@ -53,17 +66,23 @@ class OutputCJSGTJSP(OutputCJSGBase):
     orgao_julgador: str | None = None
 
 
-class InputCJPGTJSP(SearchBase, DataJulgamentoMixin, AutoChunkMixin):
+class InputCJPGTJSP(SearchBase, DataJulgamentoMixin, AutoChunkMixin, CountOnlyMixin):
     """Accepted input for TJSP ``cjpg``. Unknown kwargs raise via ``extra='forbid'``.
 
     Sobrescreve ``pesquisa`` com default vazio porque o TJSP permite buscar
-    so por filtros (ex.: ``classes=[...]``) sem termo textual.
+    so por filtros (ex.: ``classe=[417]``) sem termo textual.
+
+    ``classe``/``assunto``/``vara`` aceitam ``int``, ``str`` ou
+    ``list[int | str]`` via :data:`IdFiltro` (refs #232). Nomes canonicos
+    seguem o singular do projeto; os plurais ``classes``/``assuntos``/``varas``
+    sao alias deprecados popados no client (:meth:`TJSPScraper.cjpg_download`)
+    com :class:`DeprecationWarning`.
     """
 
     pesquisa: str = ""
-    classes: list[str] | None = None
-    assuntos: list[str] | None = None
-    varas: list[str] | None = None
+    classe: IdFiltro = None
+    assunto: IdFiltro = None
+    vara: IdFiltro = None
     id_processo: str | None = None
 
 

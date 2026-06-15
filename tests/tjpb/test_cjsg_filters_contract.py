@@ -14,7 +14,7 @@ from responses.matchers import json_params_matcher
 
 import juscraper as jus
 from juscraper.courts.tjpb.download import BASE_URL, SEARCH_URL, TOKEN_RE, build_cjsg_payload
-from tests._helpers import load_sample, load_sample_bytes
+from tests._helpers import assert_unknown_kwarg_raises, load_sample, load_sample_bytes
 
 _HOME_HTML_BYTES = load_sample_bytes("tjpb", "cjsg/home.html")
 _TOKEN_MATCH = TOKEN_RE.search(_HOME_HTML_BYTES.decode("utf-8"))
@@ -53,7 +53,7 @@ def test_cjsg_all_filters_land_in_body(mocker):
         pesquisa="dano moral",
         page=1,
         nr_processo="0000000-00.0000.0.00.0000",
-        id_classe_judicial="C123",
+        id_classe="C123",
         id_orgao_julgador="O456",
         id_relator="R789",
         id_origem="2",
@@ -66,7 +66,7 @@ def test_cjsg_all_filters_land_in_body(mocker):
         "dano moral",
         paginas=1,
         numero_processo="0000000-00.0000.0.00.0000",
-        id_classe_judicial="C123",
+        id_classe="C123",
         id_orgao_julgador="O456",
         id_relator="R789",
         id_origem="2",
@@ -124,6 +124,25 @@ def test_cjsg_nr_processo_alias_emits_deprecation_warning(mocker):
 
 
 @responses.activate
+def test_cjsg_id_classe_judicial_alias_emits_deprecation_warning(mocker):
+    """The deprecated ``id_classe_judicial`` alias maps to ``id_classe`` and
+    the backend body keeps the ``id_classe_judicial`` field (refs #129)."""
+    mocker.patch("time.sleep")
+    _add_get_home()
+    _add_post_no_results(build_cjsg_payload(
+        token=_TOKEN, pesquisa="dano moral", page=1, id_classe="C123",
+    ))
+
+    with pytest.warns(DeprecationWarning, match="id_classe_judicial.*id_classe"):
+        df = jus.scraper("tjpb").cjsg(
+            "dano moral", paginas=1,
+            id_classe_judicial="C123",
+        )
+
+    assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
 def test_cjsg_data_inicio_alias_maps_to_data_julgamento(mocker):
     """``data_inicio``/``data_fim`` map to ``data_julgamento_*`` via ``normalize_datas``."""
     mocker.patch("time.sleep")
@@ -143,3 +162,16 @@ def test_cjsg_data_inicio_alias_maps_to_data_julgamento(mocker):
     messages = [str(w.message) for w in warning_list]
     assert any("data_inicio" in m and "deprecado" in m for m in messages)
     assert any("data_fim" in m and "deprecado" in m for m in messages)
+
+
+def test_cjsg_data_publicacao_kwarg_raises():
+    """TJPB backend nao expoe filtro de data de publicacao;
+    :class:`InputCJSGTJPB` so herda :class:`DataJulgamentoMixin`, entao
+    ``data_publicacao_*`` deve cair como ``extra_forbidden`` -> ``TypeError``
+    em vez de silently drop (refs #186)."""
+    assert_unknown_kwarg_raises(
+        jus.scraper("tjpb").cjsg,
+        "data_publicacao_inicio",
+        "dano moral",
+        paginas=1,
+    )

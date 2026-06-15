@@ -20,6 +20,10 @@ _PROC_RE = re.compile(r"(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})")
 _ID_ARQUIVO_RE = re.compile(
     r"abrirArquivo\('ConsultaJurisprudencia',\s*'(\d+)'\)"
 )
+# Mantido local (em vez de core.parse_utils.clean_html) porque o backend do
+# Projudi envolve trechos do texto em tags inline (<b>, <i>) e clean_html
+# substitui tags por espaco, introduzindo espacos antes de pontuacao
+# (<b>foo</b>, -> "foo ,"). Mesma decisao registrada em TJMT no batch 3.
 _TAG_RE = re.compile(r"<[^>]+>")
 _WS_RE = re.compile(r"\s+")
 _PUBL_RE = re.compile(

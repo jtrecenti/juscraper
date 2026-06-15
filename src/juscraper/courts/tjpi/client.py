@@ -1,18 +1,18 @@
 """Scraper for the Tribunal de Justica do Piaui (TJPI)."""
-from typing import List, Optional, Union
+
+from typing import Any
 
 import pandas as pd
-import requests
 
-from juscraper.core.base import BaseScraper
-from juscraper.utils.params import apply_input_pipeline_search, normalize_paginas, normalize_pesquisa, to_iso_date
+from juscraper.core.http import HTTPScraper
+from juscraper.utils.params import apply_input_pipeline_search, to_iso_date
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
 from .schemas import InputCJSGTJPI
 
 
-class TJPIScraper(BaseScraper):
+class TJPIScraper(HTTPScraper):
     """Scraper for the Tribunal de Justica do Piaui (TJPI).
 
     Uses the JusPI search interface at jurisprudencia.tjpi.jus.br.
@@ -21,29 +21,37 @@ class TJPIScraper(BaseScraper):
 
     BASE_URL = "https://jurisprudencia.tjpi.jus.br"
 
-    def __init__(self):
-        super().__init__("TJPI")
-        self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-        })
+    def __init__(
+        self,
+        verbose: int = 0,
+        download_path: str | None = None,
+        sleep_time: float = 1.0,
+        **kwargs: Any,
+    ):
+        super().__init__(
+            "TJPI",
+            verbose=verbose,
+            download_path=download_path,
+            sleep_time=sleep_time,
+            **kwargs,
+        )
 
-    def cpopg(self, id_cnj: Union[str, List[str]]):
+    def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJPI."""
         raise NotImplementedError("Consulta de processos de 1o grau nao implementada para TJPI.")
 
-    def cposg(self, id_cnj: Union[str, List[str]]):
+    def cposg(self, id_cnj: str | list[str]):
         """Stub: second instance case consultation not implemented for TJPI."""
         raise NotImplementedError("Consulta de processos de 2o grau nao implementada para TJPI.")
 
     def cjsg(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
-        tipo: str = "",
-        relator: str = "",
-        classe: str = "",
-        orgao: str = "",
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
+        tipo: str | None = None,
+        relator: str | None = None,
+        classe: str | None = None,
+        orgao: str | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Busca jurisprudencia no TJPI.
@@ -81,52 +89,58 @@ class TJPIScraper(BaseScraper):
             :class:`InputCJSGTJPI` — schema pydantic e a fonte da verdade dos
             filtros aceitos.
         """
-        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-
-        inp = apply_input_pipeline_search(
-            InputCJSGTJPI,
-            "TJPIScraper.cjsg()",
+        return self.cjsg_parse(self.cjsg_download(
             pesquisa=pesquisa,
             paginas=paginas,
-            kwargs=kwargs,
             tipo=tipo,
             relator=relator,
             classe=classe,
             orgao=orgao,
-        )
-
-        brutos = self.cjsg_download(
-            pesquisa=inp.pesquisa,
-            paginas=inp.paginas,
-            tipo=inp.tipo,
-            relator=inp.relator,
-            classe=inp.classe,
-            orgao=inp.orgao,
-            data_min=to_iso_date(inp.data_julgamento_inicio) or "",
-            data_max=to_iso_date(inp.data_julgamento_fim) or "",
-        )
-        return self.cjsg_parse(brutos)
+            **kwargs,
+        ))
 
     def cjsg_download(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
+        tipo: str | None = None,
+        relator: str | None = None,
+        classe: str | None = None,
+        orgao: str | None = None,
         **kwargs,
     ) -> list:
         """Download raw HTML pages from TJPI.
+
+        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
 
         Returns
         -------
         list
             List of raw HTML strings (one per page).
         """
-        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-        paginas = normalize_paginas(paginas)
-        return cjsg_download_manager(
+        inp = apply_input_pipeline_search(
+            InputCJSGTJPI,
+            "TJPIScraper.cjsg_download()",
             pesquisa=pesquisa,
             paginas=paginas,
-            session=self.session,
-            **{k: v for k, v in kwargs.items() if k not in ("query", "termo")},
+            kwargs=kwargs,
+            consume_pesquisa_aliases=True,
+            tipo=tipo,
+            relator=relator,
+            classe=classe,
+            orgao=orgao,
+        )
+        return cjsg_download_manager(
+            pesquisa=inp.pesquisa,
+            paginas=inp.paginas,
+            request_fn=self._request_with_retry,
+            sleep_time=self.sleep_time,
+            tipo=inp.tipo or "",
+            relator=inp.relator or "",
+            classe=inp.classe or "",
+            orgao=inp.orgao or "",
+            data_min=to_iso_date(inp.data_julgamento_inicio) or "",
+            data_max=to_iso_date(inp.data_julgamento_fim) or "",
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> pd.DataFrame:

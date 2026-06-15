@@ -6,13 +6,19 @@ import math
 import re
 import time
 
-import requests
+from juscraper.core.http import RequestFn
+from juscraper.utils.pagination import extract_count_with_cascade
 
 logger = logging.getLogger("juscraper.tjgo")
 
 SEARCH_URL = "https://projudi.tjgo.jus.br/ConsultaJurisprudencia"
 RESULTS_PER_PAGE = 10
-_TOTAL_RE = re.compile(r"(\d[\d\.]*)\s*resultados?", re.IGNORECASE)
+
+_PAGINATION_CSS_SELECTORS: tuple[str, ...] = ("legend.formLocalizarLegenda",)
+_PAGINATION_REGEXES: tuple[re.Pattern[str], ...] = (
+    re.compile(r"(\d[\d\.]*)\s*resultados?\s+encontrados?", re.IGNORECASE),
+    re.compile(r"(\d[\d\.]*)\s*resultados?", re.IGNORECASE),
+)
 
 
 def build_cjsg_payload(
@@ -59,18 +65,17 @@ def build_cjsg_payload(
 
 
 def _extract_total(html: str) -> int:
-    match = _TOTAL_RE.search(html)
-    if not match:
-        return 0
-    raw = match.group(1).replace(".", "").replace(",", "")
-    try:
-        return int(raw)
-    except ValueError:
-        return 0
+    n = extract_count_with_cascade(
+        html,
+        css_selectors=_PAGINATION_CSS_SELECTORS,
+        regex_patterns=_PAGINATION_REGEXES,
+        fallback_max_int=False,
+    )
+    return n if n is not None else 0
 
 
 def _fetch_page(
-    session: requests.Session,
+    request_fn: RequestFn,
     pesquisa: str,
     page: int,
     id_instancia: str,
@@ -92,16 +97,16 @@ def _fetch_page(
         numero_processo=numero_processo,
         qtde_itens_pagina=qtde_itens_pagina,
     )
-    resp = session.post(SEARCH_URL, data=payload, timeout=90)
-    resp.raise_for_status()
+    resp = request_fn("POST", SEARCH_URL, data=payload, timeout=90)
     resp.encoding = "iso-8859-1"
     return resp.text
 
 
 def cjsg_download(
-    session: requests.Session,
     pesquisa: str,
     paginas,
+    *,
+    request_fn: RequestFn,
     id_instancia: str,
     id_area: str,
     id_serventia_subtipo: str,
@@ -111,12 +116,18 @@ def cjsg_download(
     qtde_itens_pagina: int,
     sleep_time: float,
 ) -> list:
-    """Run a TJGO search and return the raw HTML of each page."""
+    """Run a TJGO search and return the raw HTML of each page.
+
+    Args:
+        request_fn: HTTP callable que aplica retry + ``raise_for_status``.
+            Em uso normal e ``TJGOScraper._request_with_retry`` (via
+            ``core.http.HTTPScraper``).
+    """
     # Prime the session (cookies) with a GET on the form.
-    session.get(SEARCH_URL, timeout=60)
+    request_fn("GET", SEARCH_URL, timeout=60)
 
     first = _fetch_page(
-        session=session,
+        request_fn=request_fn,
         pesquisa=pesquisa,
         page=1,
         id_instancia=id_instancia,
@@ -143,7 +154,7 @@ def cjsg_download(
             continue
         time.sleep(sleep_time)
         html = _fetch_page(
-            session=session,
+            request_fn=request_fn,
             pesquisa=pesquisa,
             page=pagina,
             id_instancia=id_instancia,

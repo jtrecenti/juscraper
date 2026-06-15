@@ -110,29 +110,42 @@ class TestInputCJPGTJSP:
         model = InputCJPGTJSP(
             pesquisa="dano",
             paginas=range(1, 2),
-            classes=["Ação Civil Pública"],
-            assuntos=["Direito do Consumidor"],
-            varas=["1ª Vara Cível"],
+            classe=["Ação Civil Pública"],
+            assunto=["Direito do Consumidor"],
+            vara=["1ª Vara Cível"],
             id_processo="1000123-45.2023.8.26.0100",
             data_julgamento_inicio="01/01/2024",
             data_julgamento_fim="31/12/2024",
         )
-        assert model.classes == ["Ação Civil Pública"]
+        # IdFiltro colapsa lista para CSV; refs #232.
+        assert model.classe == "Ação Civil Pública"
         assert model.id_processo == "1000123-45.2023.8.26.0100"
 
     def test_defaults(self):
         model = InputCJPGTJSP()
         assert model.pesquisa == ""
-        assert model.classes is None
-        assert model.assuntos is None
-        assert model.varas is None
+        assert model.classe is None
+        assert model.assunto is None
+        assert model.vara is None
         assert model.id_processo is None
 
     def test_rejects_cjsg_fields(self):
-        """cjpg has no ementa/classe-singular/comarca/orgao_julgador/baixar_sg."""
-        for bad in ("ementa", "classe", "comarca", "orgao_julgador", "baixar_sg", "tipo_decisao"):
+        """cjpg nao tem ementa/comarca/orgao_julgador/baixar_sg.
+
+        ``classe``/``assunto`` agora **sao** aceitos (singular canonico,
+        refs #232). Os plurais ``classes``/``assuntos``/``varas`` viraram
+        alias deprecados tratados na camada do client; no schema eles
+        ainda sao ``extra_forbidden``.
+        """
+        for bad in ("ementa", "comarca", "orgao_julgador", "baixar_sg", "tipo_decisao"):
             with pytest.raises(ValidationError, match="extra_forbidden"):
                 InputCJPGTJSP(**{bad: "x"})
+
+    def test_rejects_plural_aliases_at_schema(self):
+        """Plurais sao tratados no client (deprecation); no schema sao extra_forbidden."""
+        for plural in ("classes", "assuntos", "varas"):
+            with pytest.raises(ValidationError, match="extra_forbidden"):
+                InputCJPGTJSP(**{plural: ["x"]})
 
     def test_unknown_kwarg_rejected(self):
         with pytest.raises(ValidationError, match="extra_forbidden"):

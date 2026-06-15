@@ -58,7 +58,7 @@ O método `.cjsg()` recebe como *input* parâmetros de busca de jurisprudência 
 | TJAC     | cjsg                              |
 | TJAL     | cjsg                              |
 | TJAM     | cjsg                              |
-| TJAP     | cjsg                              |
+| TJAP     | cjsg ⚠️                           |
 | TJCE     | cjsg                              |
 | TJBA     | cjsg                              |
 | TJGO     | cjsg                              |
@@ -80,6 +80,11 @@ O método `.cjsg()` recebe como *input* parâmetros de busca de jurisprudência 
 | TJRO     | cjsg                              |
 | TJRR     | cjsg                              |
 | TJSC     | cjsg                              |
+| TRF3     | cpopg                             |
+| TRF5     | cpopg                             |
+| TRF6     | cpopg                             |
+
+> ⚠️ **TJAP — `cjsg` unavailable:** since ~2026 the TJAP jurisprudence search (Tucujuris platform) requires a [Cloudflare Turnstile](https://www.cloudflare.com/products/turnstile/) CAPTCHA, validated server-side. Because the scraper issues plain HTTP requests (no browser), it cannot produce the token and the backend replies `"A verificação de segurança falhou"`. In that case `cjsg` raises `TJAPSecurityCheckError` with an explanation instead of silently returning empty. There is no workaround through the public API. See [issue #279](https://github.com/jtrecenti/juscraper/issues/279).
 
 ### Agregadores Disponíveis
 
@@ -115,6 +120,9 @@ O método `.cjsg()` recebe como *input* parâmetros de busca de jurisprudência 
 - [Exemplo TJRO](notebooks/tjro.ipynb)
 - [Exemplo TJRR](notebooks/tjrr.ipynb)
 - [Exemplo TJSC](notebooks/tjsc.ipynb)
+- [Exemplo TRF3](notebooks/trf3.ipynb)
+- [Exemplo TRF5](notebooks/trf5.ipynb)
+- [Exemplo TRF6](notebooks/trf6.ipynb)
 - [Exemplo Datajud](notebooks/datajud.ipynb)
 - [Exemplo Jusbr](notebooks/jusbr.ipynb)
 

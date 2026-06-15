@@ -1,13 +1,10 @@
 """Downloads raw results from the TJRN jurisprudence search (Elasticsearch API)."""
-import logging
 import math
 import time
-from typing import Optional
 
-import requests
 from tqdm import tqdm
 
-logger = logging.getLogger(__name__)
+from juscraper.core.http import RequestFn
 
 BASE_URL = "https://jurisprudencia.tjrn.jus.br/api/pesquisar"
 RESULTS_PER_PAGE = 10
@@ -18,7 +15,7 @@ def build_cjsg_payload(
     page: int = 1,
     inteiro_teor: str = "",
     nr_processo: str = "",
-    id_classe_judicial: str = "",
+    id_classe: str = "",
     id_orgao_julgador: str = "",
     id_relator: str = "",
     id_colegiado: str = "",
@@ -32,13 +29,17 @@ def build_cjsg_payload(
     jurisdicoes: str = "",
     grau: str = "",
 ) -> dict:
-    """Build the JSON payload for the TJRN CJSG search API."""
+    """Build the JSON payload for the TJRN CJSG search API.
+
+    The public parameter ``id_classe`` is the canonical name; the backend
+    PJe field is ``id_classe_judicial`` and stays unchanged.
+    """
     return {
         "jurisprudencia": {
             "ementa": pesquisa,
             "inteiro_teor": inteiro_teor,
             "nr_processo": nr_processo,
-            "id_classe_judicial": id_classe_judicial,
+            "id_classe_judicial": id_classe,
             "id_orgao_julgador": id_orgao_julgador,
             "id_relator": id_relator,
             "id_colegiado": id_colegiado,
@@ -57,30 +58,12 @@ def build_cjsg_payload(
     }
 
 
-def _fetch_page(session: requests.Session, payload: dict, max_retries: int = 3) -> dict:
-    """Fetch a single page from the TJRN API with retry logic."""
-    for attempt in range(1, max_retries + 1):
-        try:
-            resp = session.post(BASE_URL, json=payload, timeout=30)
-            resp.raise_for_status()
-            data: dict = resp.json()
-            return data
-        except (requests.RequestException, ValueError) as exc:
-            if attempt == max_retries:
-                raise
-            wait = 2 ** attempt
-            logger.warning(
-                "TJRN request failed (attempt %d/%d): %s. Retrying in %ds...",
-                attempt, max_retries, exc, wait,
-            )
-            time.sleep(wait)
-    return {}  # unreachable
-
-
 def cjsg_download_manager(
     pesquisa: str,
     paginas=None,
-    session: Optional[requests.Session] = None,
+    *,
+    request_fn: RequestFn,
+    sleep_time: float = 1.0,
     **kwargs,
 ) -> list:
     """Download raw results from the TJRN jurisprudence search.
@@ -90,19 +73,18 @@ def cjsg_download_manager(
     Args:
         pesquisa: Search term.
         paginas (list, range, or None): Pages to download (1-based).
-        session: Optional requests.Session to reuse.
+        request_fn: HTTP callable that handles retry + raise_for_status — em
+            uso normal e ``TJRNScraper._request_with_retry`` (via
+            ``core.http.HTTPScraper``), centralizando backoff exponencial
+            para 429/5xx.
+        sleep_time: Delay (em segundos) entre páginas. Default 1.0; o client
+            normalmente passa ``self.sleep_time`` herdado de ``HTTPScraper``.
         **kwargs: Additional filter parameters.
     """
-    if session is None:
-        session = requests.Session()
-        session.headers.update({
-            "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-        })
-
     def _get_page(pagina_1based):
         payload = build_cjsg_payload(pesquisa, page=pagina_1based, **kwargs)
-        data = _fetch_page(session, payload)
-        time.sleep(1)
+        resp = request_fn("POST", BASE_URL, json=payload, timeout=30)
+        data: dict = resp.json()
         return data
 
     if paginas is None:
@@ -112,11 +94,14 @@ def cjsg_download_manager(
         n_pags = math.ceil(total / RESULTS_PER_PAGE) if total else 1
         if n_pags > 1:
             for pagina in tqdm(range(2, n_pags + 1), desc="Baixando CJSG TJRN"):
+                time.sleep(sleep_time)
                 resultados.append(_get_page(pagina))
         return resultados
 
     paginas_iter = list(paginas)
     resultados = []
     for pagina_1based in tqdm(paginas_iter, desc="Baixando CJSG TJRN"):
+        if resultados:
+            time.sleep(sleep_time)
         resultados.append(_get_page(pagina_1based))
     return resultados

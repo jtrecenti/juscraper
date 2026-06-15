@@ -4,11 +4,13 @@ from __future__ import annotations
 import logging
 import math
 import re
+import tempfile
 import time
 from pathlib import Path
-from typing import Optional
 
 import requests
+
+from juscraper.core.http import RequestFn
 
 logger = logging.getLogger("juscraper.tjmg")
 
@@ -27,11 +29,18 @@ _TOTAL_RE = re.compile(r"totalLinhas=(\d+)")
 _MUITOS_RE = re.compile(r"muitos resultados\s*\(([\d.,]+)\)", re.IGNORECASE)
 
 
-def _solve_captcha(session: requests.Session, max_attempts: int = 3) -> bool:
+def _solve_captcha(
+    request_fn: RequestFn,
+    session: requests.Session,
+    max_attempts: int = 3,
+) -> bool:
     """Fetch a TJMG captcha image, decode it with txtcaptcha, validate via DWR.
 
     Returns True on success. The validation side-effect is stored in the
-    server-side session, so subsequent search requests succeed.
+    server-side session, so subsequent search requests succeed. The local
+    loop of up to ``max_attempts`` tries is a semantic retry (wrong OCR
+    decoding) — distinct from the transport-level retry already centralized
+    in ``request_fn`` for transient 429/5xx.
     """
     try:
         import txtcaptcha
@@ -43,19 +52,19 @@ def _solve_captcha(session: requests.Session, max_attempts: int = 3) -> bool:
 
     jsid = session.cookies.get("JSESSIONID", "")
     for attempt in range(1, max_attempts + 1):
-        img = session.get(
-            f"{CAPTCHA_IMG_URL}?{time.time()}", timeout=60
-        ).content
-        tmp = Path(f"/tmp/tjmg_captcha_{int(time.time()*1000)}.png")
-        tmp.parent.mkdir(parents=True, exist_ok=True)
-        tmp.write_bytes(img)
+        img_resp = request_fn(
+            "GET", f"{CAPTCHA_IMG_URL}?{time.time()}", timeout=60
+        )
+        img = img_resp.content
+        with tempfile.NamedTemporaryFile(
+            mode="wb", prefix="tjmg_captcha_", suffix=".png", delete=False
+        ) as f:
+            f.write(img)
+            tmp = Path(f.name)
         try:
             codes = txtcaptcha.decrypt([str(tmp)], mask="[0-9]", length=5)
         finally:
-            try:
-                tmp.unlink()
-            except OSError:
-                pass
+            tmp.unlink(missing_ok=True)
         code = codes[0] if isinstance(codes, list) else codes
         body = (
             "callCount=1\n"
@@ -68,7 +77,8 @@ def _solve_captcha(session: requests.Session, max_attempts: int = 3) -> bool:
             f"c0-param0=string:{code}\n"
             "batchId=0\n"
         )
-        resp = session.post(
+        resp = request_fn(
+            "POST",
             DWR_VALIDATE_URL,
             data=body,
             headers={"Content-Type": "text/plain"},
@@ -126,14 +136,13 @@ def _build_params(
     }
 
 
-def _fetch_page(session: requests.Session, params: dict) -> str:
-    resp = session.get(SEARCH_URL, params=params, timeout=120)
-    resp.raise_for_status()
+def _fetch_page(request_fn: RequestFn, params: dict) -> str:
+    resp = request_fn("GET", SEARCH_URL, params=params, timeout=120)
     resp.encoding = "iso-8859-1"
     return resp.text
 
 
-def _extract_total(html: str) -> Optional[int]:
+def _extract_total(html: str) -> int | None:
     m = _MUITOS_RE.search(html)
     if m:
         raw = m.group(1).replace(".", "").replace(",", "")
@@ -145,7 +154,6 @@ def _extract_total(html: str) -> Optional[int]:
 
 
 def cjsg_download(
-    session: requests.Session,
     pesquisa: str,
     paginas,
     pesquisar_por: str,
@@ -156,10 +164,25 @@ def cjsg_download(
     data_publicacao_final: str,
     linhas_por_pagina: int,
     sleep_time: float,
+    *,
+    request_fn: RequestFn,
+    session: requests.Session,
 ) -> list:
-    """Run the TJMG acórdão search and return the raw HTML of each page."""
-    session.get(FORM_URL, timeout=60)
-    if not _solve_captcha(session):
+    """Run the TJMG acórdão search and return the raw HTML of each page.
+
+    Parameters
+    ----------
+    request_fn : RequestFn
+        HTTP callable that handles retry + raise_for_status — em uso normal e
+        ``TJMGScraper._request_with_retry`` (via ``core.http.HTTPScraper``),
+        centralizando backoff exponencial para 429/5xx.
+    session : requests.Session
+        Compartilhada com ``request_fn`` (mesma session do
+        :class:`HTTPScraper`). Precisamos do handle direto para ler o
+        ``JSESSIONID`` do cookie jar e montá-lo no body DWR do captcha.
+    """
+    request_fn("GET", FORM_URL, timeout=60)
+    if not _solve_captcha(request_fn, session):
         raise RuntimeError(
             "TJMG captcha validation failed after 3 attempts."
         )
@@ -176,7 +199,7 @@ def cjsg_download(
         data_publicacao_final=data_publicacao_final,
         linhas_por_pagina=linhas_por_pagina,
     )
-    first_html = _fetch_page(session, first_params)
+    first_html = _fetch_page(request_fn, first_params)
     if "muitos resultados" in first_html:
         raise ValueError(
             "TJMG returned 'muitos resultados' — refine the search "
@@ -215,5 +238,5 @@ def cjsg_download(
             data_publicacao_final=data_publicacao_final,
             linhas_por_pagina=linhas_por_pagina,
         )
-        results.append(_fetch_page(session, params))
+        results.append(_fetch_page(request_fn, params))
     return results

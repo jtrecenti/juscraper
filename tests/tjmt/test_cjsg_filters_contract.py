@@ -5,6 +5,7 @@ import responses
 from responses.registries import OrderedRegistry
 
 import juscraper as jus
+from tests._helpers import assert_unknown_kwarg_raises
 from tests.tjmt.test_cjsg_contract import _add_config, _add_page
 
 
@@ -17,7 +18,7 @@ def test_cjsg_all_supported_filters_land_in_query_params(mocker):
         "dano moral",
         1,
         "cjsg/filters_all.json",
-        quantidade_por_pagina=5,
+        tamanho_pagina=5,
         tipo_consulta="Acordao",
         data_julgamento_inicio="2024-01-01",
         data_julgamento_fim="2024-03-31",
@@ -30,7 +31,7 @@ def test_cjsg_all_supported_filters_land_in_query_params(mocker):
     df = jus.scraper("tjmt").cjsg(
         "dano moral",
         paginas=1,
-        quantidade_por_pagina=5,
+        tamanho_pagina=5,
         tipo_consulta="Acordao",
         data_julgamento_inicio="2024-01-01",
         data_julgamento_fim="2024-03-31",
@@ -106,3 +107,80 @@ def test_cjsg_data_inicio_alias_maps_to_data_julgamento(mocker):
     messages = [str(w.message) for w in warning_list]
     assert any("data_inicio" in m and "deprecado" in m for m in messages)
     assert any("data_fim" in m and "deprecado" in m for m in messages)
+
+
+def test_cjsg_unknown_kwarg_raises():
+    """Kwargs not declared in :class:`InputCJSGTJMT` raise ``TypeError`` with
+    the field name, instead of being silently dropped (refs #84, #93, #165)."""
+    assert_unknown_kwarg_raises(
+        jus.scraper("tjmt").cjsg,
+        "kwarg_inventado",
+        "dano moral",
+        paginas=1,
+    )
+
+
+def test_cjsg_data_publicacao_raises_typeerror():
+    """TJMT backend nao expoe filtro de data de publicacao — passar
+    ``data_publicacao_*`` deve levantar ``TypeError`` em vez de silently drop
+    (refs #165, #173, #186)."""
+    assert_unknown_kwarg_raises(
+        jus.scraper("tjmt").cjsg,
+        "data_publicacao_inicio",
+        "dano moral",
+        paginas=1,
+    )
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_quantidade_por_pagina_alias_emits_deprecation_warning(mocker):
+    """``quantidade_por_pagina`` e alias deprecado de ``tamanho_pagina`` (refs #211)."""
+    mocker.patch("time.sleep")
+    _add_config()
+    _add_page("dano moral", 1, "cjsg/no_results.json", tamanho_pagina=5)
+
+    with pytest.warns(DeprecationWarning, match="quantidade_por_pagina.*deprecado"):
+        df = jus.scraper("tjmt").cjsg(
+            "dano moral", paginas=1, quantidade_por_pagina=5
+        )
+
+    assert isinstance(df, pd.DataFrame)
+
+
+def test_cjsg_tamanho_pagina_collision_raises():
+    """Passar canonico + alias simultaneamente levanta ValueError (refs #211)."""
+    with pytest.raises(ValueError, match=r"tamanho_pagina.*quantidade_por_pagina"):
+        jus.scraper("tjmt").cjsg(
+            "dano moral", paginas=1, tamanho_pagina=5, quantidade_por_pagina=10
+        )
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_data_julgamento_aceita_formato_brasileiro(mocker):
+    """Datas em ``DD/MM/YYYY`` chegam coercidas em ISO ao Hellsgate.
+
+    Cobre o caminho end-to-end de ``apply_input_pipeline_search`` lendo
+    ``BACKEND_DATE_FORMAT='%Y-%m-%d'`` declarado em :class:`InputCJSGTJMT`
+    e convertendo via ``coerce_brazilian_date``. Se o schema esquecer de
+    declarar o ``BACKEND_DATE_FORMAT`` (cai no default ``%d/%m/%Y``), o
+    backend recebe ``filtro.periodoDataDe=01/01/2024`` em vez de
+    ``2024-01-01`` e o matcher dispara ``ConnectionError`` (refs #182,
+    #173, #167)."""
+    mocker.patch("time.sleep")
+    _add_config()
+    _add_page(
+        "dano moral",
+        1,
+        "cjsg/no_results.json",
+        data_julgamento_inicio="2024-01-01",
+        data_julgamento_fim="2024-03-31",
+    )
+
+    df = jus.scraper("tjmt").cjsg(
+        "dano moral",
+        paginas=1,
+        data_julgamento_inicio="01/01/2024",
+        data_julgamento_fim="31/03/2024",
+    )
+
+    assert isinstance(df, pd.DataFrame)

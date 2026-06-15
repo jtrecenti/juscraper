@@ -17,7 +17,7 @@ Helpers accept both and the assertion checks that every row falls inside.
 """
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date
 
 import pandas as pd
 
@@ -55,7 +55,7 @@ def _find_date_column(df: pd.DataFrame) -> str | None:
     for needle in needles:
         for col in df.columns:
             if needle in col.lower():
-                return col
+                return str(col)
     return None
 
 

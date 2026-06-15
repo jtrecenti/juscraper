@@ -1,51 +1,46 @@
 """
 Scraper for the Tribunal de Justica do Estado do Para (TJPA).
 """
-from typing import List, Optional, Union
+from typing import Literal
 
 import pandas as pd
-import requests
 
-from juscraper.core.base import BaseScraper
-from juscraper.utils.params import apply_input_pipeline_search, normalize_pesquisa, to_iso_date
+from juscraper.core.http import HTTPScraper
+from juscraper.utils.params import apply_input_pipeline_search, to_iso_date
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
 from .schemas import InputCJSGTJPA
 
 
-class TJPAScraper(BaseScraper):
+class TJPAScraper(HTTPScraper):
     """Scraper for the Tribunal de Justica do Estado do Para."""
 
     BASE_URL = "https://jurisprudencia.tjpa.jus.br/bff/api/decisoes/buscar"
 
     def __init__(self):
         super().__init__("TJPA")
-        self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-        })
 
-    def cpopg(self, id_cnj: Union[str, List[str]]):
+    def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJPA."""
         raise NotImplementedError("Consulta de processos de 1o grau nao implementada para TJPA.")
 
-    def cposg(self, id_cnj: Union[str, List[str]]):
+    def cposg(self, id_cnj: str | list[str]):
         """Stub: second instance case consultation not implemented for TJPA."""
         raise NotImplementedError("Consulta de processos de 2o grau nao implementada para TJPA.")
 
     def cjsg_download(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
-        relator: Optional[str] = None,
-        orgao_julgador_colegiado: Optional[str] = None,
-        classe: Optional[str] = None,
-        assunto: Optional[str] = None,
-        origem: Optional[list] = None,
-        tipo: Optional[list] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
+        relator: str | None = None,
+        orgao_julgador_colegiado: str | None = None,
+        classe: str | None = None,
+        assunto: str | None = None,
+        origem: list | None = None,
+        tipo: list | None = None,
         sort_by: str = "datajulgamento",
-        sort_order: str = "desc",
+        sort_order: Literal["asc", "desc"] = "desc",
         query_type: str = "free",
         query_scope: str = "ementa",
         **kwargs,
@@ -64,14 +59,13 @@ class TJPAScraper(BaseScraper):
         See also:
             :class:`InputCJSGTJPA` — fonte da verdade dos filtros aceitos.
         """
-        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-
         inp = apply_input_pipeline_search(
             InputCJSGTJPA,
             "TJPAScraper.cjsg_download()",
             pesquisa=pesquisa,
             paginas=paginas,
             kwargs=kwargs,
+            consume_pesquisa_aliases=True,
             relator=relator,
             orgao_julgador_colegiado=orgao_julgador_colegiado,
             classe=classe,
@@ -87,7 +81,7 @@ class TJPAScraper(BaseScraper):
         return cjsg_download_manager(
             pesquisa=inp.pesquisa,
             paginas=inp.paginas,
-            session=self.session,
+            request_fn=self._request_with_retry,
             relator=inp.relator,
             orgao_julgador_colegiado=inp.orgao_julgador_colegiado,
             classe=inp.classe,
@@ -113,16 +107,16 @@ class TJPAScraper(BaseScraper):
 
     def cjsg(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
-        relator: Optional[str] = None,
-        orgao_julgador_colegiado: Optional[str] = None,
-        classe: Optional[str] = None,
-        assunto: Optional[str] = None,
-        origem: Optional[list] = None,
-        tipo: Optional[list] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
+        relator: str | None = None,
+        orgao_julgador_colegiado: str | None = None,
+        classe: str | None = None,
+        assunto: str | None = None,
+        origem: list | None = None,
+        tipo: list | None = None,
         sort_by: str = "datajulgamento",
-        sort_order: str = "desc",
+        sort_order: Literal["asc", "desc"] = "desc",
         query_type: str = "free",
         query_scope: str = "ementa",
         **kwargs,
@@ -170,14 +164,9 @@ class TJPAScraper(BaseScraper):
             :class:`InputCJSGTJPA` — schema pydantic e a fonte da verdade dos
             filtros aceitos.
         """
-        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-
-        inp = apply_input_pipeline_search(
-            InputCJSGTJPA,
-            "TJPAScraper.cjsg()",
+        return self.cjsg_parse(self.cjsg_download(
             pesquisa=pesquisa,
             paginas=paginas,
-            kwargs=kwargs,
             relator=relator,
             orgao_julgador_colegiado=orgao_julgador_colegiado,
             classe=classe,
@@ -188,25 +177,5 @@ class TJPAScraper(BaseScraper):
             sort_order=sort_order,
             query_type=query_type,
             query_scope=query_scope,
-        )
-
-        brutos = cjsg_download_manager(
-            pesquisa=inp.pesquisa,
-            paginas=inp.paginas,
-            session=self.session,
-            relator=inp.relator,
-            orgao_julgador_colegiado=inp.orgao_julgador_colegiado,
-            classe=inp.classe,
-            assunto=inp.assunto,
-            origem=inp.origem,
-            tipo=inp.tipo,
-            data_julgamento_inicio=to_iso_date(inp.data_julgamento_inicio),
-            data_julgamento_fim=to_iso_date(inp.data_julgamento_fim),
-            data_publicacao_inicio=to_iso_date(inp.data_publicacao_inicio),
-            data_publicacao_fim=to_iso_date(inp.data_publicacao_fim),
-            sort_by=inp.sort_by,
-            sort_order=inp.sort_order,
-            query_type=inp.query_type,
-            query_scope=inp.query_scope,
-        )
-        return self.cjsg_parse(brutos)
+            **kwargs,
+        ))

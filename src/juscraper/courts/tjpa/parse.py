@@ -3,6 +3,8 @@ Parse raw results from the TJPA jurisprudence search.
 """
 import pandas as pd
 
+from juscraper.core.parse_utils import coerce_date_columns
+
 
 def _extract_nested(value, key="nome"):
     """Extract a value from a nested dict, or return the value as-is."""
@@ -62,9 +64,11 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
     if df.empty:
         return df
 
-    for col in ["data_julgamento", "data_documento", "data_publicacao"]:
-        if col in df.columns:
-            df[col] = pd.to_datetime(df[col], format="%Y-%m-%d", errors="coerce").dt.date
+    coerce_date_columns(
+        df,
+        ["data_julgamento", "data_documento", "data_publicacao"],
+        date_format="%Y-%m-%d",
+    )
 
     # Order columns: main fields first
     principais = [

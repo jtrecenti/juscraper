@@ -1,24 +1,18 @@
 """Scraper for the Tribunal de Justica de Rondonia (TJRO)."""
-from typing import List, Optional, Union
+
+from typing import Any
 
 import pandas as pd
-import requests
 
-from juscraper.core.base import BaseScraper
-from juscraper.utils.params import (
-    apply_input_pipeline_search,
-    normalize_paginas,
-    normalize_pesquisa,
-    resolve_deprecated_alias,
-    to_iso_date,
-)
+from juscraper.core.http import HTTPScraper
+from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias, to_iso_date
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
 from .schemas import InputCJSGTJRO
 
 
-class TJROScraper(BaseScraper):
+class TJROScraper(HTTPScraper):
     """Scraper for the Tribunal de Justica de Rondonia (TJRO).
 
     Uses the JURIS Elasticsearch backend at juris-back.tjro.jus.br.
@@ -26,31 +20,39 @@ class TJROScraper(BaseScraper):
 
     BASE_URL = "https://juris.tjro.jus.br"
 
-    def __init__(self):
-        super().__init__("TJRO")
-        self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-        })
+    def __init__(
+        self,
+        verbose: int = 0,
+        download_path: str | None = None,
+        sleep_time: float = 1.0,
+        **kwargs: Any,
+    ):
+        super().__init__(
+            "TJRO",
+            verbose=verbose,
+            download_path=download_path,
+            sleep_time=sleep_time,
+            **kwargs,
+        )
 
-    def cpopg(self, id_cnj: Union[str, List[str]]):
+    def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJRO."""
         raise NotImplementedError("Consulta de processos de 1o grau nao implementada para TJRO.")
 
-    def cposg(self, id_cnj: Union[str, List[str]]):
+    def cposg(self, id_cnj: str | list[str]):
         """Stub: second instance case consultation not implemented for TJRO."""
         raise NotImplementedError("Consulta de processos de 2o grau nao implementada para TJRO.")
 
     def cjsg(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
         tipo: list | None = None,
-        numero_processo: str = "",
-        magistrado: str = "",
-        orgao_julgador: int | str = "",
-        orgao_julgador_colegiado: int | str = "",
-        classe_judicial: str = "",
+        numero_processo: str | None = None,
+        relator: str | None = None,
+        orgao_julgador: int | str | None = None,
+        orgao_julgador_colegiado: int | str | None = None,
+        classe: str | None = None,
         instancia: list | None = None,
         termo_exato: bool = False,
         **kwargs,
@@ -66,10 +68,12 @@ class TJROScraper(BaseScraper):
                 ``"SENTENCA"``, ``"VOTO"``, etc.
             numero_processo (str): Numero CNJ. Aceita o alias deprecado
                 ``nr_processo``.
-            magistrado (str): Nome do relator/magistrado.
+            relator (str): Nome do relator. Aceita o alias deprecado
+                ``magistrado`` (refs #129).
             orgao_julgador (int | str): ID do orgao julgador.
             orgao_julgador_colegiado (int | str): ID do orgao colegiado.
-            classe_judicial (str): Nome da classe judicial.
+            classe (str): Nome da classe judicial. Aceita o alias deprecado
+                ``classe_judicial`` (refs #129).
             instancia (list | None): Instancias (ex.: ``[1]``, ``[2]``, ``[1, 2]``).
             termo_exato (bool): Busca por termo exato.
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJRO`.
@@ -81,13 +85,15 @@ class TJROScraper(BaseScraper):
         Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
             * ``query`` / ``termo`` -> ``pesquisa``
             * ``nr_processo`` -> ``numero_processo``
+            * ``magistrado`` -> ``relator``
+            * ``classe_judicial`` -> ``classe``
             * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``_fim``
             * ``data_julgamento_de`` / ``_ate`` -> ``data_julgamento_inicio`` / ``_fim``
 
         Raises:
             TypeError: Quando um kwarg desconhecido e passado.
-            ValueError: Quando ``numero_processo`` e ``nr_processo`` sao
-                passados simultaneamente.
+            ValueError: Quando um canonico e seu alias deprecado sao passados
+                simultaneamente.
             ValidationError: Quando um filtro tem formato invalido.
 
         Returns:
@@ -97,63 +103,85 @@ class TJROScraper(BaseScraper):
             :class:`InputCJSGTJRO` — schema pydantic e a fonte da verdade dos
             filtros aceitos.
         """
-        numero_processo = resolve_deprecated_alias(
-            kwargs, "nr_processo", "numero_processo", numero_processo, sentinel=""
-        )
-        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-
-        inp = apply_input_pipeline_search(
-            InputCJSGTJRO,
-            "TJROScraper.cjsg()",
+        return self.cjsg_parse(self.cjsg_download(
             pesquisa=pesquisa,
             paginas=paginas,
-            kwargs=kwargs,
             tipo=tipo,
             numero_processo=numero_processo,
-            magistrado=magistrado,
+            relator=relator,
             orgao_julgador=orgao_julgador,
             orgao_julgador_colegiado=orgao_julgador_colegiado,
-            classe_judicial=classe_judicial,
+            classe=classe,
             instancia=instancia,
             termo_exato=termo_exato,
-        )
-
-        brutos = self.cjsg_download(
-            pesquisa=inp.pesquisa,
-            paginas=inp.paginas,
-            tipo=inp.tipo,
-            nr_processo=inp.numero_processo,
-            magistrado=inp.magistrado,
-            orgao_julgador=inp.orgao_julgador,
-            orgao_julgador_colegiado=inp.orgao_julgador_colegiado,
-            classe_judicial=inp.classe_judicial,
-            data_julgamento_inicio=to_iso_date(inp.data_julgamento_inicio) or "",
-            data_julgamento_fim=to_iso_date(inp.data_julgamento_fim) or "",
-            instancia=inp.instancia,
-            termo_exato=inp.termo_exato,
-        )
-        return self.cjsg_parse(brutos)
+            **kwargs,
+        ))
 
     def cjsg_download(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
+        tipo: list | None = None,
+        numero_processo: str | None = None,
+        relator: str | None = None,
+        orgao_julgador: int | str | None = None,
+        orgao_julgador_colegiado: int | str | None = None,
+        classe: str | None = None,
+        instancia: list | None = None,
+        termo_exato: bool = False,
         **kwargs,
     ) -> list:
         """Download raw CJSG JSON responses from TJRO.
+
+        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
 
         Returns
         -------
         list
             List of raw JSON responses (one per page).
         """
-        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-        paginas = normalize_paginas(paginas)
-        return cjsg_download_manager(
+        numero_processo = resolve_deprecated_alias(
+            kwargs, "nr_processo", "numero_processo", numero_processo
+        )
+        relator = resolve_deprecated_alias(
+            kwargs, "magistrado", "relator", relator
+        )
+        classe = resolve_deprecated_alias(
+            kwargs, "classe_judicial", "classe", classe
+        )
+        inp = apply_input_pipeline_search(
+            InputCJSGTJRO,
+            "TJROScraper.cjsg_download()",
             pesquisa=pesquisa,
             paginas=paginas,
-            session=self.session,
-            **{k: v for k, v in kwargs.items() if k not in ("query", "termo")},
+            kwargs=kwargs,
+            consume_pesquisa_aliases=True,
+            tipo=tipo,
+            numero_processo=numero_processo,
+            relator=relator,
+            orgao_julgador=orgao_julgador,
+            orgao_julgador_colegiado=orgao_julgador_colegiado,
+            classe=classe,
+            instancia=instancia,
+            termo_exato=termo_exato,
+        )
+        return cjsg_download_manager(
+            pesquisa=inp.pesquisa,
+            paginas=inp.paginas,
+            request_fn=self._request_with_retry,
+            sleep_time=self.sleep_time,
+            tipo=inp.tipo,
+            nr_processo=inp.numero_processo or "",
+            relator=inp.relator or "",
+            orgao_julgador=inp.orgao_julgador if inp.orgao_julgador is not None else "",
+            orgao_julgador_colegiado=(
+                inp.orgao_julgador_colegiado if inp.orgao_julgador_colegiado is not None else ""
+            ),
+            classe=inp.classe or "",
+            data_julgamento_inicio=to_iso_date(inp.data_julgamento_inicio) or "",
+            data_julgamento_fim=to_iso_date(inp.data_julgamento_fim) or "",
+            instancia=inp.instancia,
+            termo_exato=inp.termo_exato,
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> pd.DataFrame:

@@ -14,8 +14,7 @@ under ~200 KB.
 """
 import json
 
-import requests
-
+from juscraper.courts.tjpa.client import TJPAScraper
 from juscraper.courts.tjpa.download import build_cjsg_payload, post_cjsg
 
 from ._util import dump, samples_dir_for
@@ -49,10 +48,9 @@ def _minify(raw: bytes) -> bytes:
     return json.dumps(data, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
 
 
-def _capture(session: requests.Session, dest, pesquisa: str, pagina_1based: int, filename: str) -> None:
+def _capture(scraper: TJPAScraper, dest, pesquisa: str, pagina_1based: int, filename: str) -> None:
     payload = build_cjsg_payload(pesquisa, pagina_0based=pagina_1based - 1)
-    response = post_cjsg(session, payload)
-    response.raise_for_status()
+    response = post_cjsg(scraper._request_with_retry, payload)
     response.encoding = "utf-8"
     dump(dest / filename, _minify(response.content))
     print(f"[tjpa] wrote {filename}")
@@ -61,15 +59,12 @@ def _capture(session: requests.Session, dest, pesquisa: str, pagina_1based: int,
 def main() -> None:
     """Capture cjsg JSON samples for TJPA."""
     dest = samples_dir_for("tjpa", "cjsg")
-    session = requests.Session()
-    session.headers.update({
-        "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-    })
+    scraper = TJPAScraper()
 
-    _capture(session, dest, "dano moral", 1, "results_normal_page_01.json")
-    _capture(session, dest, "dano moral", 2, "results_normal_page_02.json")
-    _capture(session, dest, "mandado de seguranca", 1, "single_page.json")
-    _capture(session, dest, "juscraper_probe_zero_hits_xyzqwe", 1, "no_results.json")
+    _capture(scraper, dest, "dano moral", 1, "results_normal_page_01.json")
+    _capture(scraper, dest, "dano moral", 2, "results_normal_page_02.json")
+    _capture(scraper, dest, "mandado de seguranca", 1, "single_page.json")
+    _capture(scraper, dest, "juscraper_probe_zero_hits_xyzqwe", 1, "no_results.json")
 
 
 if __name__ == "__main__":

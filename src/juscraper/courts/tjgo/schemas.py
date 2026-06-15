@@ -1,11 +1,15 @@
 """Pydantic schemas for TJGO scraper endpoints.
 
-Ainda nao wired em :mod:`juscraper.courts.tjgo.client` — este arquivo e
-documentacao executavel da API publica ate o TJGO ser refatorado para o
-pipeline canonico da #93. A lista de campos bate byte-a-byte com a
-assinatura publica de :meth:`TJGOScraper.cjsg` / :meth:`TJGOScraper.cjsg_download`.
+Wired em :mod:`juscraper.courts.tjgo.client` via
+:func:`juscraper.utils.params.apply_input_pipeline_search` (refs #93/#165).
+A lista de campos bate byte-a-byte com a assinatura publica de
+:meth:`TJGOScraper.cjsg` / :meth:`TJGOScraper.cjsg_download`.
 """
 from __future__ import annotations
+
+from typing import ClassVar, Literal
+
+from pydantic import Field
 
 from ...schemas import DataPublicacaoMixin, OutputCJSGBase, SearchBase
 
@@ -16,15 +20,24 @@ class InputCJSGTJGO(SearchBase, DataPublicacaoMixin):
     Endpoint HTML Projudi. ``pesquisa`` aceita os aliases deprecados
     ``query`` / ``termo`` via :func:`juscraper.utils.params.normalize_pesquisa`,
     que roda *antes* deste modelo. Filtro de data de publicacao vem de
-    :class:`DataPublicacaoMixin`; ``data_julgamento_*`` e emitido com
-    ``warn_unsupported`` no client atual (excluido deste schema).
+    :class:`DataPublicacaoMixin`; o backend Projudi nao expoe filtro de data
+    de julgamento — passar ``data_julgamento_inicio`` / ``data_julgamento_fim``
+    levanta :class:`TypeError` via ``extra="forbid"`` herdado de
+    :class:`SearchBase`.
+
+    A API publica do TJGO aceita datas em ISO (``YYYY-MM-DD``); o client
+    converte para o formato BR (``DD/MM/YYYY``) esperado pelo Projudi via
+    ``_br_date`` antes do POST.
     """
 
-    id_instancia: str | int = 0
-    id_area: str | int = 0
+    BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
+
+    id_instancia: Literal[0, 1, 2, 3, "0", "1", "2", "3"] = 0
+    id_area: Literal[0, 1, 2, "0", "1", "2"] = 0
+    # TODO (#212): apertar com Literal[...] após captura do dropdown do site.
     id_serventia_subtipo: str | int = 0
-    numero_processo: str = ""
-    qtde_itens_pagina: int = 10
+    numero_processo: str | None = None
+    tamanho_pagina: int = Field(default=10, ge=1)
 
 
 class OutputCJSGTJGO(OutputCJSGBase):

@@ -1,26 +1,8 @@
 """Parse raw results from the TJRO jurisprudence search (Elasticsearch)."""
-import re
-
 import pandas as pd
 
-
-def _clean_html(html_text: str | None) -> str | None:
-    """Remove HTML tags from text."""
-    if not html_text:
-        return html_text
-    text = re.sub(r"<[^>]+>", " ", html_text)
-    text = re.sub(r"\s+", " ", text).strip()
-    return text
-
-
-def _format_cnj(numero: str | None) -> str | None:
-    """Format a raw 20-digit number as CNJ pattern NNNNNNN-DD.YYYY.J.TR.OOOO."""
-    if not numero or not numero.isdigit() or len(numero) != 20:
-        return numero
-    return (
-        f"{numero[:7]}-{numero[7:9]}.{numero[9:13]}."
-        f"{numero[13]}.{numero[14:16]}.{numero[16:]}"
-    )
+from juscraper.core.parse_utils import clean_html, coerce_date_columns
+from juscraper.utils.cnj import format_cnj
 
 
 def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
@@ -48,19 +30,17 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
                 "data_publicacao": source.get("dtpublicacao"),
                 "grau_jurisdicao": source.get("grau_jurisdicao"),
                 "sistema_origem": source.get("sistema_origem"),
-                "ementa": _clean_html(source.get("ds_modelo_documento")),
+                "ementa": clean_html(source.get("ds_modelo_documento")),
             })
 
     df = pd.DataFrame(registros)
     if df.empty:
         return df
 
-    for col in ["data_julgamento", "data_publicacao"]:
-        if col in df.columns:
-            df[col] = pd.to_datetime(df[col], errors="coerce").dt.date
+    coerce_date_columns(df, ["data_julgamento", "data_publicacao"])
 
     if "processo" in df.columns:
-        df["processo"] = df["processo"].apply(_format_cnj)
+        df["processo"] = df["processo"].apply(lambda v: format_cnj(v, strict=False))
 
     principais = [
         "processo", "tipo", "classe", "orgao_julgador",

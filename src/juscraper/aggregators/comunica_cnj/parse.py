@@ -7,7 +7,7 @@ priorizando ``items``.
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List
+from typing import Any
 
 import requests
 
@@ -31,7 +31,7 @@ def parse_count(response: requests.Response) -> int:
     return int(contagem)
 
 
-def parse_items(response: requests.Response) -> List[Dict[str, Any]]:
+def parse_items(response: requests.Response) -> list[dict[str, Any]]:
     """Extrai a lista de comunicacoes da resposta.
 
     A chave canonica e ``items`` (a API mudou de ``itens`` para ``items``

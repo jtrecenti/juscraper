@@ -5,15 +5,15 @@ Run from repo root::
     python -m tests.fixtures.capture.tjpr
 
 Saves raw HTML responses under ``tests/tjpr/samples/cjsg/``. TJPR's flow
-involves a GET home (extracts JSESSIONID + ``tjpr.url.crypto`` token),
+involves a GET home (lands ``JSESSIONID`` in the session cookie jar),
 POST per page, and an extra GET per row that contains "Leia mais..."
 (``actionType=exibirTextoCompleto``).
 
 The capture installs a response hook on the scraper's ``Session`` that
 classifies each response by URL/scenario. Files produced:
 
-- ``home.html`` — landing page (shared; the scraper hits it twice per
-  ``cjsg`` call, once during download and once during parse).
+- ``home.html`` — landing page (the scraper hits it once per ``cjsg``
+  call, in ``cjsg_download``).
 - ``results_normal_page_NN.html`` — one per POST in the ``typical``
   scenario (multi-page pagination).
 - ``single_page.html`` — single POST whose results fit on one page.
@@ -26,7 +26,6 @@ classifies each response by URL/scenario. Files produced:
 """
 from __future__ import annotations
 
-from typing import Optional
 from urllib.parse import parse_qs, urlparse
 
 import juscraper as jus
@@ -34,7 +33,7 @@ import juscraper as jus
 from ._util import samples_dir_for
 
 
-def _classify(url: str, kind: str, scenario: str, page_counter: dict[str, int]) -> Optional[str]:
+def _classify(url: str, kind: str, scenario: str, page_counter: dict[str, int]) -> str | None:
     """Pick the filename to use for the given response, or ``None`` to skip."""
     parsed = urlparse(url)
     params = parse_qs(parsed.query)

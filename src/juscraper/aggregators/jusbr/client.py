@@ -9,7 +9,7 @@ from Platforma Digital do Poder Judiciario (PDPJ).
 import logging
 import time
 import urllib
-from typing import Any, List, Optional, Union
+from typing import Any
 
 import browser_cookie3
 import jwt
@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd
 import requests
 
-from ...core.base import BaseScraper
+from ...core.http import HTTPScraper
 from ...utils.cnj import clean_cnj
 from .download import USER_AGENT, fetch_document_binary, fetch_document_text, fetch_process_details, fetch_process_list
 from .parse import clean_document_text, parse_process_details_response, parse_process_list_response
@@ -25,7 +25,7 @@ from .parse import clean_document_text, parse_process_details_response, parse_pr
 logger = logging.getLogger(__name__)
 
 
-class JusbrScraper(BaseScraper):
+class JusbrScraper(HTTPScraper):
     """Raspador para o JusBR (consulta unificada da PDPJ-CNJ).
 
     Este scraper interage com a API da Plataforma Digital do Poder Judiciario (PDPJ).
@@ -39,19 +39,21 @@ class JusbrScraper(BaseScraper):
     def __init__(
         self,
         verbose: int = 0,
-        download_path: Optional[str] = None,
+        download_path: str | None = None,
         sleep_time: float = 0.5,
-        token: Optional[str] = None
+        token: str | None = None
     ):
-        super().__init__("jusbr")
-        self.set_verbose(verbose)
-        self.set_download_path(download_path)
-        self.sleep_time = sleep_time
-        self.session = requests.Session()
+        super().__init__(
+            "jusbr", verbose=verbose, download_path=download_path, sleep_time=sleep_time
+        )
         self.token = token
         if self.token:
             self.session.headers.update({'authorization': f'Bearer {self.token}'})
-        self.session.headers.update({'user-agent': USER_AGENT})
+
+    def _configure_session(self, session: requests.Session) -> None:
+        # PDPJ rejeita User-Agent não-browser; sobrescreve o default do
+        # HTTPScraper (``juscraper/<version>``) por uma string Chrome/Edg.
+        session.headers.update({'user-agent': USER_AGENT})
 
     def auth(self, token: str) -> bool:
         """
@@ -73,8 +75,7 @@ class JusbrScraper(BaseScraper):
             if self.verbose > 0:
                 logger.info("Token JWT definido e decodificado com sucesso!")
                 if self.verbose > 1:
-                    for k, v in decoded.items():
-                        logger.debug("  Token claim %s: %s", k, v)
+                    logger.debug("  Token decodificado com %d claims.", len(decoded))
             return True
         except jwt.ExpiredSignatureError as exc:
             logger.error("Token JWT expirado.")
@@ -127,7 +128,7 @@ class JusbrScraper(BaseScraper):
         self.session.headers.update({'authorization': f'Bearer {self.token}'})
         return True
 
-    def cpopg(self, id_cnj: Union[str, List[str]]) -> pd.DataFrame:
+    def cpopg(self, id_cnj: str | list[str]) -> pd.DataFrame:
         """
         Consulta processos pelo numero CNJ (ou lista de numeros CNJ) via API nacional.
         """
@@ -150,7 +151,7 @@ class JusbrScraper(BaseScraper):
 
             logger.info("Consultando processo CNJ: %s", cnj_cleaned)
 
-            raw_list_data = fetch_process_list(self.session, cnj_cleaned, self.BASE_API_URL_V2)
+            raw_list_data = fetch_process_list(self._request_with_retry, cnj_cleaned, self.BASE_API_URL_V2)
             processos_content = parse_process_list_response(raw_list_data)
 
             if not processos_content:
@@ -173,7 +174,7 @@ class JusbrScraper(BaseScraper):
                     continue
 
                 raw_details_data = fetch_process_details(
-                    self.session, numero_processo_oficial, self.BASE_API_URL_V2
+                    self._request_with_retry, numero_processo_oficial, self.BASE_API_URL_V2
                 )
                 parsed_details = parse_process_details_response(raw_details_data, cnj_cleaned)
                 if parsed_details:
@@ -198,7 +199,7 @@ class JusbrScraper(BaseScraper):
 
     def download_documents(self,
                            base_df: pd.DataFrame,
-                           max_docs_per_process: Optional[int] = None) -> pd.DataFrame:
+                           max_docs_per_process: int | None = None) -> pd.DataFrame:
         """
         Downloads document texts for processes in base_df.
         Iterates through processes in base_df, extracts document metadata from the
@@ -318,24 +319,34 @@ class JusbrScraper(BaseScraper):
                 )
                 # Usa CNJ limpo para a API de documentos
                 numero_processo_api_clean = clean_cnj(numero_processo_api)
-                raw_text: Optional[str] = None
-                cleaned_text: Optional[str] = None
+                # ``Session.headers`` e tipada como ``CaseInsensitiveDict[str | bytes]``
+                # em ``types-requests`` — o token e sempre str em runtime, mas mypy
+                # exige o cast aqui para satisfazer a assinatura de ``fetch_document_text``.
+                auth_header = self.session.headers.get('authorization', '')
+                if isinstance(auth_header, bytes):
+                    auth_header = auth_header.decode('latin-1')
+                # Download parcial (followup 3 da #141): texto e binario sao
+                # baixados de forma independente. So o que tiver UUID valido e
+                # buscado; o outro fica ``None`` na linha de saida.
+                raw_text: str | None = None
+                cleaned_text: str | None = None
                 if id_doc_uuid:
                     logger.debug(
                         "Tentando baixar texto do documento UUID %s para processo %s.",
                         id_doc_uuid, numero_processo_api
                     )
                     raw_text = fetch_document_text(
-                        self.session,
+                        self._request_with_retry,
                         numero_processo_api_clean,
                         str(id_doc_uuid),
-                        self.BASE_API_URL_V1_DOCS
+                        self.BASE_API_URL_V1_DOCS,
+                        authorization=auth_header,
                     )
                     cleaned_text = clean_document_text(raw_text)
-                raw_binary: Optional[bytes] = None
+                raw_binary: bytes | None = None
                 if id_doc_uuid_binario:
                     raw_binary = fetch_document_binary(
-                        self.session,
+                        self._request_with_retry,
                         numero_processo_api_clean,
                         str(id_doc_uuid_binario),
                         self.BASE_API_URL_V2

@@ -1,14 +1,11 @@
 """Downloads raw results from the TJPB jurisprudence search (Laravel API)."""
-import logging
 import math
 import re
 import time
-from typing import Optional
 
-import requests
 from tqdm import tqdm
 
-logger = logging.getLogger(__name__)
+from juscraper.core.http import RequestFn
 
 BASE_URL = "https://pje-jurisprudencia.tjpb.jus.br"
 SEARCH_URL = f"{BASE_URL}/api/jurisprudencia/pesquisar"
@@ -18,15 +15,18 @@ RESULTS_PER_PAGE = 10
 TOKEN_RE = re.compile(r'<meta name="_token" content="([^"]+)"')
 
 
-def fetch_csrf_token(session: requests.Session) -> str:
+def fetch_csrf_token(request_fn: RequestFn) -> str:
     """Fetch the ``_token`` CSRF value from the TJPB homepage meta tag.
 
     The Laravel backend embeds the token in ``<meta name="_token" ...>``.
     The token is then sent inside the JSON body of every search request
     (key ``_token``); no ``X-CSRF-TOKEN`` header is used.
+
+    The GET is dispatched through ``request_fn`` so o cookie de sessao
+    aterriza na ``requests.Session`` compartilhada pelo ``HTTPScraper``,
+    e os POSTs subsequentes herdam o mesmo cookie automaticamente.
     """
-    resp = session.get(BASE_URL, timeout=30)
-    resp.raise_for_status()
+    resp = request_fn("GET", BASE_URL, timeout=30)
     match = TOKEN_RE.search(resp.text)
     if not match:
         raise RuntimeError("Could not find CSRF token on TJPB page.")
@@ -40,7 +40,7 @@ def build_cjsg_payload(
     *,
     teor: str = "",
     nr_processo: str = "",
-    id_classe_judicial: str = "",
+    id_classe: str = "",
     id_orgao_julgador: str = "",
     id_relator: str = "",
     dt_inicio: str = "",
@@ -59,7 +59,7 @@ def build_cjsg_payload(
             "ementa": pesquisa,
             "teor": teor,
             "nr_rocesso": nr_processo,
-            "id_classe_judicial": id_classe_judicial,
+            "id_classe_judicial": id_classe,
             "id_orgao_julgador": id_orgao_julgador,
             "id_relator": id_relator,
             "dt_inicio": dt_inicio,
@@ -71,31 +71,11 @@ def build_cjsg_payload(
     }
 
 
-def _fetch_page(session: requests.Session, payload: dict, max_retries: int = 3) -> dict:
-    """Fetch a single page from the TJPB API with retry logic."""
-    headers = {"X-Requested-With": "XMLHttpRequest"}
-    for attempt in range(1, max_retries + 1):
-        try:
-            resp = session.post(SEARCH_URL, json=payload, headers=headers, timeout=30)
-            resp.raise_for_status()
-            data: dict = resp.json()
-            return data
-        except (requests.RequestException, ValueError) as exc:
-            if attempt == max_retries:
-                raise
-            wait = 2 ** attempt
-            logger.warning(
-                "TJPB request failed (attempt %d/%d): %s. Retrying in %ds...",
-                attempt, max_retries, exc, wait,
-            )
-            time.sleep(wait)
-    return {}  # unreachable
-
-
 def cjsg_download_manager(
     pesquisa: str,
     paginas=None,
-    session: Optional[requests.Session] = None,
+    *,
+    request_fn: RequestFn,
     **kwargs,
 ) -> list:
     """Download raw results from the TJPB jurisprudence search.
@@ -105,20 +85,19 @@ def cjsg_download_manager(
     Args:
         pesquisa: Search term.
         paginas (list, range, or None): Pages to download (1-based).
-        session: Optional requests.Session to reuse.
+        request_fn: HTTP callable that handles retry + raise_for_status — em
+            uso normal e ``TJPBScraper._request_with_retry`` (via
+            ``core.http.HTTPScraper``), centralizando backoff exponencial
+            para 429/5xx.
         **kwargs: Additional filter parameters.
     """
-    if session is None:
-        session = requests.Session()
-        session.headers.update({
-            "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-        })
-
-    token = fetch_csrf_token(session)
+    token = fetch_csrf_token(request_fn)
+    headers = {"X-Requested-With": "XMLHttpRequest"}
 
     def _get_page(pagina_1based):
         payload = build_cjsg_payload(token, pesquisa, page=pagina_1based, **kwargs)
-        data = _fetch_page(session, payload)
+        resp = request_fn("POST", SEARCH_URL, json=payload, headers=headers, timeout=30)
+        data: dict = resp.json()
         time.sleep(1)
         return data
 

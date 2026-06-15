@@ -9,6 +9,11 @@ from ...schemas import DataJulgamentoMixin, OutputCJSGBase, OutputDataPublicacao
 class InputCJSGTJRO(SearchBase, DataJulgamentoMixin):
     """Accepted input for TJRO ``cjsg`` / ``cjsg_download``.
 
+    Wired em :meth:`juscraper.courts.tjro.client.TJROScraper.cjsg_download`
+    desde o #183 — kwargs desconhecidos viram :class:`TypeError` em ambos
+    ``cjsg`` e ``cjsg_download``. ``cjsg`` e wrapper trivial
+    (``download → parse``).
+
     Endpoint Elasticsearch do JURIS (juris-back.tjro.jus.br) com paginacao
     por offset. ``pesquisa`` aceita os aliases deprecados ``query`` /
     ``termo`` via :func:`juscraper.utils.params.normalize_pesquisa`, que
@@ -21,11 +26,11 @@ class InputCJSGTJRO(SearchBase, DataJulgamentoMixin):
     BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
 
     tipo: list | None = None
-    numero_processo: str = ""
-    magistrado: str = ""
-    orgao_julgador: int | str = ""
-    orgao_julgador_colegiado: int | str = ""
-    classe_judicial: str = ""
+    numero_processo: str | None = None
+    relator: str | None = None
+    orgao_julgador: int | str | None = None
+    orgao_julgador_colegiado: int | str | None = None
+    classe: str | None = None
     instancia: list | None = None
     termo_exato: bool = False
 

@@ -54,7 +54,7 @@ dados.head()
 | TJSP     | cpopg, cposg, cjsg, cjpg          |
 | TJES     | cjsg, cjpg                        |
 | TJTO     | cjsg, cjpg                        |
-| TJAP     | cjsg                              |
+| TJAP     | cjsg ⚠️                           |
 | TJBA     | cjsg                              |
 | TJCE     | cjsg                              |
 | TJDFT    | cjsg                              |
@@ -70,12 +70,15 @@ dados.head()
 | TJRS     | cjsg                              |
 | TJSC     | cjsg                              |
 
+> ⚠️ **TJAP — `cjsg` indisponível:** desde ~2026 a busca de jurisprudência do TJAP (plataforma Tucujuris) passou a exigir um CAPTCHA [Cloudflare Turnstile](https://www.cloudflare.com/products/turnstile/), validado no servidor. Como o raspador faz requisições HTTP puras (sem navegador), não há como gerar o token e o backend responde `"A verificação de segurança falhou"`. Nesse caso `cjsg` levanta `TJAPSecurityCheckError` com a explicação, em vez de retornar vazio silenciosamente. Não há solução pela API pública. Ver [issue #279](https://github.com/jtrecenti/juscraper/issues/279).
+
 ### Agregadores Disponíveis
 
 | Nome      | Funcionalidades                   |
 |-----------|-----------------------------------|
 | Datajud   | listar_processos                  |
 | Jusbr     | cpopg, download_documents         |
+| PDPJ      | existe, cpopg, documentos, movimentos, partes, pesquisa, contar, download_documents |
 
 ### Notebooks de Exemplo
 
@@ -99,6 +102,7 @@ dados.head()
 - [Exemplo TJTO](docs/notebooks/tjto.ipynb)
 - [Exemplo Datajud](docs/notebooks/datajud.ipynb)
 - [Exemplo Jusbr](docs/notebooks/jusbr.ipynb)
+- [Exemplo PDPJ](docs/notebooks/pdpj.ipynb)
 
 ## Detalhes
 

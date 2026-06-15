@@ -1,19 +1,15 @@
-"""
-Scraper for the Tribunal de Justiça do Rio Grande do Sul (TJRS).
-"""
-from typing import List, Optional, Union
-
+"""Scraper for the Tribunal de Justiça do Rio Grande do Sul (TJRS)."""
 import pandas as pd
-import requests
 
-from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa, pop_normalize_aliases
+from juscraper.core.http import HTTPScraper
+from juscraper.utils.params import apply_input_pipeline_search
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
+from .schemas import InputCJSGTJRS
 
 
-class TJRSScraper(BaseScraper):
+class TJRSScraper(HTTPScraper):
     """Scraper for the Tribunal de Justiça do Rio Grande do Sul."""
 
     BASE_URL = "https://www.tjrs.jus.br/buscas/jurisprudencia/ajax.php"
@@ -39,31 +35,29 @@ class TJRSScraper(BaseScraper):
 
     def __init__(self):
         super().__init__("TJRS")
-        self.session = requests.Session()
 
-    def cpopg(self, id_cnj: Union[str, List[str]]):
+    def cpopg(self, id_cnj: str | list[str]):
         """Stub: Primeiro grau case consultation not implemented for TJRS."""
         raise NotImplementedError("Consulta de processos de 1º grau não implementada para TJRS.")
 
-    def cposg(self, id_cnj: Union[str, List[str]]):
+    def cposg(self, id_cnj: str | list[str]):
         """Stub: Segundo grau case consultation not implemented for TJRS."""
         raise NotImplementedError("Consulta de processos de 2º grau não implementada para TJRS.")
 
     def cjsg_download(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
-        classe: Optional[str] = None,
-        assunto: Optional[str] = None,
-        orgao_julgador: Optional[str] = None,
-        relator: Optional[str] = None,
-        data_julgamento_inicio: Optional[str] = None,
-        data_julgamento_fim: Optional[str] = None,
-        data_publicacao_inicio: Optional[str] = None,
-        data_publicacao_fim: Optional[str] = None,
-        tipo_processo: Optional[str] = None,
-        secao: Optional[str] = None,
-        session: Optional['requests.Session'] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
+        classe: str | None = None,
+        assunto: str | None = None,
+        orgao_julgador: str | None = None,
+        relator: str | None = None,
+        data_julgamento_inicio: str | None = None,
+        data_julgamento_fim: str | None = None,
+        data_publicacao_inicio: str | None = None,
+        data_publicacao_fim: str | None = None,
+        tipo_processo: str | None = None,
+        secao: str | None = None,
         **kwargs,
     ) -> list:
         """
@@ -78,36 +72,38 @@ class TJRSScraper(BaseScraper):
                 None: downloads all available pages.
             secao: 'civel', 'crime', or None.
         """
-        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-        paginas = normalize_paginas(paginas)
-        datas = normalize_datas(
+        inp = apply_input_pipeline_search(
+            InputCJSGTJRS,
+            "TJRSScraper.cjsg_download()",
+            pesquisa=pesquisa,
+            paginas=paginas,
+            kwargs=kwargs,
+            consume_pesquisa_aliases=True,
             data_julgamento_inicio=data_julgamento_inicio,
             data_julgamento_fim=data_julgamento_fim,
             data_publicacao_inicio=data_publicacao_inicio,
             data_publicacao_fim=data_publicacao_fim,
-            **kwargs,
-        )
-        # Drop deprecated aliases from local kwargs so they are not re-propagated
-        # into cjsg_download_manager via **kwargs (would collide with the canonical
-        # keyword arguments that normalize_* already materialized above).
-        pop_normalize_aliases(kwargs)
-        if session is None:
-            session = self.session
-        return cjsg_download_manager(
-            termo=pesquisa,
-            paginas=paginas,
             classe=classe,
             assunto=assunto,
             orgao_julgador=orgao_julgador,
             relator=relator,
-            data_julgamento_inicio=datas["data_julgamento_inicio"],
-            data_julgamento_fim=datas["data_julgamento_fim"],
-            data_publicacao_inicio=datas["data_publicacao_inicio"],
-            data_publicacao_fim=datas["data_publicacao_fim"],
             tipo_processo=tipo_processo,
             secao=secao,
-            session=session,
-            **kwargs,
+        )
+        return cjsg_download_manager(
+            termo=inp.pesquisa,
+            paginas=inp.paginas,
+            request_fn=self._request_with_retry,
+            classe=inp.classe,
+            assunto=inp.assunto,
+            orgao_julgador=inp.orgao_julgador,
+            relator=inp.relator,
+            data_julgamento_inicio=inp.data_julgamento_inicio,
+            data_julgamento_fim=inp.data_julgamento_fim,
+            data_publicacao_inicio=inp.data_publicacao_inicio,
+            data_publicacao_fim=inp.data_publicacao_fim,
+            tipo_processo=inp.tipo_processo,
+            secao=inp.secao,
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> 'pd.DataFrame':
@@ -119,19 +115,18 @@ class TJRSScraper(BaseScraper):
 
     def cjsg(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
-        classe: Optional[str] = None,
-        assunto: Optional[str] = None,
-        orgao_julgador: Optional[str] = None,
-        relator: Optional[str] = None,
-        data_julgamento_inicio: Optional[str] = None,
-        data_julgamento_fim: Optional[str] = None,
-        data_publicacao_inicio: Optional[str] = None,
-        data_publicacao_fim: Optional[str] = None,
-        tipo_processo: Optional[str] = None,
-        secao: Optional[str] = None,
-        session: Optional['requests.Session'] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
+        classe: str | None = None,
+        assunto: str | None = None,
+        orgao_julgador: str | None = None,
+        relator: str | None = None,
+        data_julgamento_inicio: str | None = None,
+        data_julgamento_fim: str | None = None,
+        data_publicacao_inicio: str | None = None,
+        data_publicacao_fim: str | None = None,
+        tipo_processo: str | None = None,
+        secao: str | None = None,
         **kwargs,
     ) -> 'pd.DataFrame':
         """
@@ -151,7 +146,6 @@ class TJRSScraper(BaseScraper):
             data_publicacao_fim=data_publicacao_fim,
             tipo_processo=tipo_processo,
             secao=secao,
-            session=session,
             **kwargs,
         )
         return self.cjsg_parse(brutos)

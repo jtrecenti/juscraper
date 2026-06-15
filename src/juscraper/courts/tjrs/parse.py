@@ -1,7 +1,7 @@
-"""
-Parse de resultados brutos da pesquisa de jurisprudência do TJRS.
-"""
+"""Parse de resultados brutos da pesquisa de jurisprudência do TJRS."""
 import pandas as pd
+
+from juscraper.core.parse_utils import coerce_date_columns
 
 
 def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
@@ -65,9 +65,7 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
             }
             resultados.append(resultado)
     df = pd.DataFrame(resultados)
-    for col in ["data_julgamento", "data_publicacao"]:
-        if col in df.columns:
-            df[col] = pd.to_datetime(df[col], errors='coerce').dt.date
+    coerce_date_columns(df, ["data_julgamento", "data_publicacao"])
     principais = [
         'processo', 'relator', 'orgao_julgador', 'data_julgamento', 'data_publicacao',
         'classe', 'assunto', 'tribunal', 'tipo_processo', 'url', 'ementa',

@@ -9,6 +9,7 @@ from urllib.parse import parse_qs, urlparse
 import requests
 from tqdm import tqdm
 
+from ...utils import safe_path_component
 from ...utils.cnj import clean_cnj, format_cnj, split_cnj
 
 logger = logging.getLogger('juscraper.cpopg_download')
@@ -188,6 +189,7 @@ def cpopg_download_api_single(
     endpoint = 'processo/cpopg/search/numproc/'
     id_clean = clean_cnj(id_cnj)
     u = f"{api_base}{endpoint}{id_clean}"
+    # id_clean vem de clean_cnj (so digitos), seguro como componente de path.
     path = f"{download_path}/cpopg/{id_clean}"
     if not os.path.isdir(path):
         os.makedirs(path)
@@ -205,6 +207,7 @@ def cpopg_download_api_single(
         return ''
     for processo in json_response:
         cd_processo = processo['cdProcesso']
+        cd_processo_safe = safe_path_component(cd_processo, field="cdProcesso")
         endpoint_basicos = 'processo/cpopg/dadosbasicos/'
         u_basicos = f"{api_base}{endpoint_basicos}{cd_processo}"
         r_basicos = session.post(u_basicos, json={'cdProcesso': cd_processo})
@@ -213,14 +216,14 @@ def cpopg_download_api_single(
                 f"A consulta à API falhou."
                 f"Status code {r_basicos.status_code}."
             )
-        with open(f"{path}/{cd_processo}_basicos.json", 'w', encoding='utf-8') as f:
+        with open(os.path.join(path, f"{cd_processo_safe}_basicos.json"), 'w', encoding='utf-8') as f:
             f.write(r_basicos.text)
         componentes = ['partes', 'movimentacao', 'incidente', 'audiencia']
         for comp in componentes:
             endpoint_comp = f"processo/cpopg/{comp}/{cd_processo}"
             r_comp = session.get(f"{api_base}{endpoint_comp}")
             if r_comp.status_code == 200:
-                with open(f"{path}/{cd_processo}_{comp}.json", 'w', encoding='utf-8') as f:
+                with open(os.path.join(path, f"{cd_processo_safe}_{comp}.json"), 'w', encoding='utf-8') as f:
                     f.write(r_comp.text)
             else:
                 raise requests.HTTPError(

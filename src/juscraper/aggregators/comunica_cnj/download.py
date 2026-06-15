@@ -10,15 +10,13 @@ GET com paginacao 1-based. Cada chamada devolve um JSON com:
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Optional
-
-import requests
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 BASE_URL = "https://comunicaapi.pje.jus.br/api/v1/comunicacao"
 
-DEFAULT_HEADERS: Dict[str, str] = {
+DEFAULT_HEADERS: dict[str, str] = {
     "Accept": "application/json, text/plain, */*",
     "Accept-Encoding": "gzip, deflate, br",
     "Accept-Language": "pt-BR,en-US;q=0.7,en;q=0.3",
@@ -37,9 +35,9 @@ def build_listar_comunicacoes_params(
     pesquisa: str,
     pagina: int,
     itens_por_pagina: int = 100,
-    data_disponibilizacao_inicio: Optional[str] = None,
-    data_disponibilizacao_fim: Optional[str] = None,
-) -> Dict[str, Any]:
+    data_disponibilizacao_inicio: str | None = None,
+    data_disponibilizacao_fim: str | None = None,
+) -> dict[str, Any]:
     """Monta a querystring aceita pelo endpoint de listagem.
 
     Args:
@@ -51,7 +49,7 @@ def build_listar_comunicacoes_params(
         data_disponibilizacao_fim: ISO ``YYYY-MM-DD`` para o param
             ``dataDisponibilizacaoFim`` da API.
     """
-    params: Dict[str, Any] = {
+    params: dict[str, Any] = {
         "itensPorPagina": itens_por_pagina,
         "pagina": pagina,
         "texto": pesquisa,
@@ -61,17 +59,3 @@ def build_listar_comunicacoes_params(
     if data_disponibilizacao_fim is not None:
         params["dataDisponibilizacaoFim"] = data_disponibilizacao_fim
     return params
-
-
-def call_comunica_api(
-    session: requests.Session,
-    params: Dict[str, Any],
-    *,
-    timeout: float = 30.0,
-) -> requests.Response:
-    """Faz uma requisicao GET ao endpoint e devolve a Response.
-
-    O caller decide como tratar o body (parse JSON, raise_for_status, etc).
-    """
-    response = session.get(BASE_URL, params=params, timeout=timeout)
-    return response

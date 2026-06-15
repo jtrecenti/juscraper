@@ -11,23 +11,22 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import List, Optional, Union
 
 import pandas as pd
 import requests
 from pydantic import ValidationError
 from tqdm.auto import tqdm
 
-from ...core.base import BaseScraper
+from ...core.http import HTTPScraper
 from ...utils.params import normalize_paginas, raise_on_extra_kwargs, to_iso_date, validate_intervalo_datas
-from .download import DEFAULT_HEADERS, build_listar_comunicacoes_params, call_comunica_api
+from .download import BASE_URL, DEFAULT_HEADERS, build_listar_comunicacoes_params
 from .parse import parse_count, parse_items
 from .schemas import InputListarComunicacoesComunicaCNJ
 
 logger = logging.getLogger(__name__)
 
 
-class ComunicaCNJScraper(BaseScraper):
+class ComunicaCNJScraper(HTTPScraper):
     """Scraper para a API publica de Comunicacoes Processuais do CNJ."""
 
     INPUT_LISTAR_COMUNICACOES = InputListarComunicacoesComunicaCNJ
@@ -37,17 +36,18 @@ class ComunicaCNJScraper(BaseScraper):
         verbose: int = 1,
         sleep_time: float = 0.5,
     ):
-        super().__init__("ComunicaCNJ")
-        self.set_verbose(verbose)
-        self.session = requests.Session()
-        self.session.headers.update(DEFAULT_HEADERS)
-        self.sleep_time = sleep_time
+        super().__init__("ComunicaCNJ", verbose=verbose, sleep_time=sleep_time)
         logger.info("ComunicaCNJScraper initialized.")
+
+    def _configure_session(self, session: requests.Session) -> None:
+        # API publica do CNJ espera User-Agent firefox-like e os
+        # Origin/Referer do frontend oficial em comunica.pje.jus.br.
+        session.headers.update(DEFAULT_HEADERS)
 
     def listar_comunicacoes(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Optional[Union[int, List[int], range]] = None,
+        pesquisa: str | None = None,
+        paginas: int | list[int] | range | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Lista comunicacoes processuais publicadas pelos tribunais via PJe.
@@ -139,8 +139,9 @@ class ComunicaCNJScraper(BaseScraper):
 
         # Descobrir total de paginas a partir da pagina 1 quando o usuario
         # nao especificou ``paginas`` (ou para fechar o ``range``).
-        primeira_resp = call_comunica_api(self.session, _params_para_pagina(1))
-        primeira_resp.raise_for_status()
+        primeira_resp = self._request_with_retry(
+            "GET", BASE_URL, params=_params_para_pagina(1), timeout=30.0
+        )
         total = parse_count(primeira_resp)
         total_paginas = max(1, (total + inp.itens_por_pagina - 1) // inp.itens_por_pagina)
         if self.verbose:
@@ -163,8 +164,9 @@ class ComunicaCNJScraper(BaseScraper):
             else:
                 if self.sleep_time:
                     time.sleep(self.sleep_time)
-                resp = call_comunica_api(self.session, _params_para_pagina(pagina))
-                resp.raise_for_status()
+                resp = self._request_with_retry(
+                    "GET", BASE_URL, params=_params_para_pagina(pagina), timeout=30.0
+                )
             rows.extend(parse_items(resp))
 
         return pd.DataFrame(rows)

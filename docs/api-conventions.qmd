@@ -28,6 +28,28 @@ Cannot be used together with the specific names — raises `ValueError`.
 
 **Deprecated aliases:** `data_julgamento_de` / `data_julgamento_ate`, `data_publicacao_de` / `data_publicacao_ate` — accepted with `DeprecationWarning`.
 
+#### Accepted input formats
+
+For endpoints with a wired pydantic schema (eSAJ family, 1C-a tribunals,
+TJDFT, TJES — see `Schemas pydantic` in `CONTRIBUTING.md` for the current
+list), the four canonical date fields accept any of:
+
+- `"DD/MM/AAAA"` — Brazilian short form (e.g. `"01/03/2024"`)
+- `"DD-MM-AAAA"` — Brazilian with dashes (e.g. `"01-03-2024"`)
+- `"AAAA-MM-DD"` — ISO-8601 short form (e.g. `"2024-03-01"`)
+- `"AAAA/MM/DD"` — ISO-8601 with slashes (e.g. `"2024/03/01"`)
+- `datetime.date`
+- `datetime.datetime` (the time component is dropped)
+
+The pipeline coerces every recognized input to whatever format the
+tribunal's backend expects — eSAJ uses `DD/MM/AAAA`, REST/JSON backends
+like TJDFT use `AAAA-MM-DD`. The exact backend format is declared per
+schema via the `BACKEND_DATE_FORMAT: ClassVar[str]` attribute, so
+callers don't need to know it. An empty string and `None` pass through
+unchanged (open-ended search). An unrecognized format surfaces as a
+single `ValueError("...Formato esperado: ...")` raised by
+`validate_intervalo_datas`.
+
 ### Pagination
 
 | Parameter | Type | Description |
@@ -38,6 +60,30 @@ Cannot be used together with the specific names — raises `ValueError`.
 - `int`: shorthand — `paginas=3` is equivalent to `range(1, 4)`
 - `range`: e.g., `range(1, 4)` downloads pages 1, 2, 3
 - `list`: e.g., `[1, 3, 5]` downloads specific pages
+
+### Page Size
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `tamanho_pagina` | `int` | Results per page (default `10`; **TJES uses `20`** because of the Elasticsearch backend) |
+
+`tamanho_pagina` is the canonical name across all tribunals that expose
+page-size control. Each tribunal accepts exactly one deprecated alias —
+the historical name from its specific backend — emitting
+`DeprecationWarning`:
+
+| Tribunal | Deprecated alias |
+|----------|------------------|
+| TJBA | `items_per_page` |
+| TJDFT | `quantidade_por_pagina` |
+| TJES (`cjsg` and `cjpg`) | `per_page` |
+| TJGO | `qtde_itens_pagina` |
+| TJMG | `linhas_por_pagina` |
+| TJMT | `quantidade_por_pagina` |
+
+Passing both the canonical name and the alias in the same call raises
+`ValueError`. Cross-tribunal aliases (e.g. passing `linhas_por_pagina`
+to the TJBA scraper) are rejected with `TypeError` via `extra="forbid"`.
 
 ## Parameter Support by Tribunal
 
@@ -99,6 +145,29 @@ scraper.cjsg(pesquisa="teste", paginas=1) # downloads page 1 only
 scraper.cjsg(pesquisa="teste", paginas=3) # downloads pages 1-3
 ```
 
+### Date format flexibility
+
+Wired endpoints accept multiple input formats and coerce to the
+backend's expected representation. The four examples below all produce
+the same request:
+
+```python
+import datetime as dt
+import juscraper as jus
+
+tjsp = jus.scraper("tjsp")     # eSAJ backend (DD/MM/AAAA)
+tjdft = jus.scraper("tjdft")   # REST JSON backend (AAAA-MM-DD)
+
+# String, any of the four supported formats — coerced internally:
+tjsp.cjsg("dano moral", paginas=1, data_julgamento_inicio="01/03/2024")
+tjsp.cjsg("dano moral", paginas=1, data_julgamento_inicio="2024-03-01")
+tjdft.cjsg("habeas",    paginas=1, data_julgamento_inicio="01/03/2024")
+tjdft.cjsg("habeas",    paginas=1, data_julgamento_inicio="2024-03-01")
+
+# Or pass a date / datetime directly:
+tjsp.cjsg("dano moral", paginas=1, data_julgamento_inicio=dt.date(2024, 3, 1))
+```
+
 ## Auto-chunking (eSAJ family)
 
 Several eSAJ endpoints (`cjpg`/`cjsg` in TJSP, plus `cjsg` in TJAC, TJAL,
@@ -145,6 +214,58 @@ semantics for `paginas` are ambiguous (each window? aggregated budget?)
 and the design prefers to fail explicitly. For short intervals where
 chunking is a no-op, `paginas` works as usual.
 
+## Pre-scraping count (`count_only`)
+
+Empirical legal research often benefits from a quick estimate of how many
+results a query will return before committing to a long collection job
+(~2 s/result in `cjsg`/`cjpg` with `sleep_time=0.5`, so 5 000 hits ≈ 3 h).
+The `count_only: bool = False` flag — accepted by `cjsg` in TJAC, TJAL,
+TJAM, TJCE, TJMS, TJSP and by `cjpg` in TJSP — short-circuits the public
+method to a single network call per window, extracts the total result
+count from the first-page HTML, and returns an `int` instead of a
+`pd.DataFrame`:
+
+```python
+import juscraper as jus
+
+tjsp = jus.scraper("tjsp")
+
+# One POST + one GET. Returns an int.
+n = tjsp.cjpg(
+    pesquisa="dano moral",
+    data_julgamento_inicio="01/01/2024",
+    data_julgamento_fim="31/12/2024",
+    count_only=True,
+)
+print(f"Estimated wall-clock for full collection: {n * 2 / 3600:.1f}h")
+```
+
+Interaction with `auto_chunk`: when the interval exceeds 366 days and
+`auto_chunk=True` (default), `count_only` iterates the disjoint windows
+produced by `iter_date_windows` and **sums** the per-window counts. The
+sum is raw — the de-duplication step that the normal path performs by
+`cd_acordao` / `id_processo` does not apply here, so the returned number
+can slightly overestimate `len(cjsg(...))` when documents are republished
+across windows (same `cd_acordao` appearing in two windows). For most
+estimation use cases this is the desired behaviour: the count reflects
+what the backend will hand over, not the deduplicated final shape.
+
+Other edge cases:
+
+- `paginas` is ignored when `count_only=True` (the probe always inspects
+  page 1). A `UserWarning` is emitted if both are passed.
+- `auto_chunk=False` plus an interval longer than 366 days still raises
+  `ValueError` — consistent with the strict path.
+- Captcha or layout-change failures on page 1 propagate as `ValueError`
+  with the same message as the regular path.
+- Tribunals not yet wired reject `count_only` via `extra="forbid"`
+  (`TypeError`).
+
+The underlying helpers `cjsg_n_results(html)` and `cjpg_n_results(html)`
+are exposed from `juscraper.courts._esaj.parse` and
+`juscraper.courts.tjsp.cjpg_parse` for callers that already hold the
+raw HTML.
+
 ## Normalization Utilities
 
 The `juscraper.utils.params` module provides normalization functions used internally by all scrapers:
@@ -152,6 +273,38 @@ The `juscraper.utils.params` module provides normalization functions used intern
 - `normalize_paginas(paginas)` — normalizes `int | list | range | None`
 - `normalize_pesquisa(pesquisa, **kwargs)` — handles deprecated aliases
 - `normalize_datas(**kwargs)` — handles deprecated and generic date aliases
+- `coerce_brazilian_date(value, backend_format)` — coerces any of the four supported string formats (or `date` / `datetime`) into the backend's expected format
+- `apply_input_pipeline_search(schema_cls, method_name, *, ...)` — runs the canonical input pipeline (alias resolution → date coercion → interval validation → pydantic schema) for `cjsg`/`cjpg` endpoints
 - `iter_date_windows(data_inicio, data_fim, *, max_dias=366)` — splits a date range into non-overlapping windows for auto-chunking
 - `run_chunked_search(fetch_window, *, data_inicio, data_fim, dedup_key, ...)` — drives a search across windows, concatenates and deduplicates
 - `warn_unsupported(param_name, tribunal)` — warns about unsupported parameters
+
+## Rate limiting and retry behaviour
+
+All HTTP scrapers that inherit from `juscraper.core.http.HTTPScraper`
+share the same retry loop via `_request_with_retry`. Defaults:
+
+| Setting | Default | Where to override |
+|---------|---------|-------------------|
+| Retried statuses | `403`, `429`, `500`, `502`, `503`, `504` | constant `RETRYABLE_STATUSES` |
+| Max attempts | `3` (including the first) | `max_retries=` per call |
+| Backoff | `base_backoff ** attempt` → `2s` then `4s` (sleeps run between attempts 1→2 and 2→3; the 3rd failure raises `RetryExhaustedError` without sleeping, so the default `8s` from `2 ** 3` only kicks in with `max_retries >= 4`) | `base_backoff=` per call |
+| `Retry-After` (numeric seconds) | Honored when present | n/a |
+| `Retry-After` (HTTP-date) | Ignored — falls back to backoff (#201) | n/a |
+| Inter-request pause | `sleep_time=1.0` from the scraper constructor | `jus.scraper("tjsp", sleep_time=5.0)` |
+
+The exponential backoff (`2s` then `4s` across the three default
+attempts) resolves transient WAF blocks but does **not** always escape
+longer cooldowns. If you see `RetryExhaustedError(status_code=403)`
+(or `429`) repeatedly on the same scraper:
+
+- **First**, increase `sleep_time` in the constructor so the pause
+  between requests becomes longer than the WAF window. Doubling it
+  (`sleep_time=2.0`) is usually enough for the TJSP eSAJ WAF.
+- If that does not help and you are running from a corporate /
+  institutional IP, the block is likely IP-based — switching to a
+  residential network is the only reliable fix.
+- The `403` retry is global; consumers that can reliably distinguish
+  auth-failure `403` from WAF `403` (e.g. PDPJ, where `403` means
+  expired JWT) keep a local retry loop in
+  `aggregators/<name>/download.py` and opt out.

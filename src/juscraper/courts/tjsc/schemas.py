@@ -14,7 +14,12 @@ from ...schemas import (
 
 
 class InputCJSGTJSC(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
-    """Accepted input for TJSC ``cjsg``.
+    """Accepted input for TJSC ``cjsg`` / ``cjsg_download``.
+
+    Wired em :meth:`juscraper.courts.tjsc.client.TJSCScraper.cjsg_download`
+    desde o #183 — kwargs desconhecidos viram :class:`TypeError` em ambos
+    ``cjsg`` e ``cjsg_download``. ``cjsg`` e wrapper trivial
+    (``download → parse``).
 
     Endpoint HTML (eproc). ``pesquisa`` aceita os aliases deprecados
     ``query`` / ``termo`` via :func:`juscraper.utils.params.normalize_pesquisa`,
@@ -27,7 +32,7 @@ class InputCJSGTJSC(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
 
     campo: Literal["E", "I"] = "E"
-    processo: str = ""
+    processo: str | None = None
 
 
 class OutputCJSGTJSC(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):

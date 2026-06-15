@@ -13,18 +13,34 @@ from tqdm import tqdm
 logger = logging.getLogger("juscraper.cjpg_parse")
 
 
-def cjpg_n_pags(page_source):
-    """
-    Extracts the number of pages from the CJPG search results HTML.
+def cjpg_n_results(page_source) -> int:
+    """Extracts the total number of results from a CJPG first-page HTML.
+
+    Sibling of :func:`cjpg_n_pags`, which is now a thin wrapper that divides
+    by the 10-hits-per-page constant. Used by the ``count_only=True``
+    short-circuit in :meth:`TJSPScraper.cjpg` (issue #92).
 
     Uses cascading selector + regex strategy to tolerate TJSP layout changes.
-    Mirrors the approach in ``cjsg_n_pags`` (CJSG uses 20 results/page; CJPG uses 10).
+    Mirrors :func:`juscraper.courts._esaj.parse.cjsg_n_results`.
+
+    Fallback for "results table present but pagination marker missing":
+    counts ``tr.fundocinza1`` rows inside ``divDadosResultado`` instead of
+    returning a hardcoded ``1`` — ensures ``count_only`` returns a meaningful
+    estimate.
+
+    Returns:
+        int: Number of results (0 when the search returned no hits).
+
+    Raises:
+        ValueError: When no pagination marker is found and the results table
+            is also absent — typically signals the search form did not submit
+            or the HTML layout changed.
     """
     soup = BeautifulSoup(page_source, "html.parser")
 
     # Zero-results guard: eSAJ returns the search form (without
     # ``divDadosResultado``) when nothing matches. Mirror the pattern in
-    # ``cjsg_n_pags`` so ``cjpg_download`` can short-circuit and the public
+    # ``cjsg_n_results`` so ``cjpg_download`` can short-circuit and the public
     # call returns an empty DataFrame instead of raising. Refs #109.
     page_text = soup.get_text().lower()
     if (
@@ -56,11 +72,12 @@ def cjpg_n_pags(page_source):
                 page_element = td
                 break
 
-    # 4) If results table exists but no pagination element, assume 1 page
+    # 4) Pagination marker missing but results table present: count rows.
     if page_element is None:
         div_dados = soup.find('div', {'id': 'divDadosResultado'})
         if div_dados is not None and div_dados.find('tr', class_='fundocinza1'):
-            return 1
+            n_rows = len(div_dados.find_all('tr', class_='fundocinza1'))
+            return max(n_rows, 1)
         raise ValueError(
             "Não foi possível encontrar o seletor de número de páginas "
             "na resposta HTML. Verifique se a busca retornou resultados "
@@ -93,8 +110,20 @@ def cjpg_n_pags(page_source):
     else:
         results = int(match.group(1))
 
-    pags = (results + 9) // 10  # math.ceil(results / 10)
-    return pags
+    return results
+
+
+def cjpg_n_pags(page_source) -> int:
+    """Extracts the number of pages from a CJPG first-page HTML.
+
+    Thin wrapper over :func:`cjpg_n_results` that converts result count into
+    page count via ``ceil(n_results / 10)`` (CJPG serves 10 hits per page;
+    differs from CJSG's 20).
+    """
+    n_results = cjpg_n_results(page_source)
+    if n_results == 0:
+        return 0
+    return (n_results + 9) // 10
 
 
 def cjpg_parse_single(path):

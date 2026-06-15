@@ -4,14 +4,14 @@ Includes both integration and unit tests.
 """
 import os
 import tempfile
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock
 
 import pandas as pd
 import pytest
 
 import juscraper
 from juscraper.courts.tjsp.cjpg_download import cjpg_download
-from juscraper.courts.tjsp.cjpg_parse import cjpg_n_pags, cjpg_parse_manager, cjpg_parse_single
+from juscraper.courts.tjsp.cjpg_parse import cjpg_n_pags, cjpg_n_results, cjpg_parse_manager, cjpg_parse_single
 from tests._helpers import load_sample
 
 
@@ -173,6 +173,29 @@ class TestCJPGUnit:
             os.unlink(temp_path)
 
 
+class TestCJPGNResults:
+    """Tests do helper :func:`cjpg_n_results` (issue #92)."""
+
+    def test_extracts_raw_count_legacy_format(self):
+        """Legacy 'Mostrando 1 a 10 de 25 resultados' -> 25."""
+        html = load_sample("tjsp", "cjpg/results_legacy.html")
+        assert cjpg_n_results(html) == 25
+
+    def test_extracts_raw_count_novo_formato(self):
+        """Novo formato 'Resultados 1 a 10 de 39764' -> 39764."""
+        html = load_sample("tjsp", "cjpg/results_novo_formato.html")
+        assert cjpg_n_results(html) == 39764
+
+    def test_zero_results_returns_zero(self):
+        html = load_sample("tjsp", "cjpg/no_results.html")
+        assert cjpg_n_results(html) == 0
+
+    def test_n_pags_e_wrapper_que_aplica_ceil_div(self):
+        """``cjpg_n_pags`` permanece um wrapper sobre ``cjpg_n_results``."""
+        html = load_sample("tjsp", "cjpg/results_novo_formato.html")
+        assert cjpg_n_pags(html) == (39764 + 9) // 10
+
+
 class TestCJPGDownload1Based:
     """Unit tests for CJPG download with 1-based pagination using mocks."""
 
@@ -263,12 +286,15 @@ class TestCJPGDateRangeValidation:
         scraper.session.post.assert_not_called()
 
     def test_invalid_format_raises_before_request(self):
+        # ISO + BR mixed are both accepted (coerced to backend format, refs #173).
+        # Use a format the coercer cannot recognize (e.g. dotted) so the
+        # downstream validate_intervalo_datas raises the expected error.
         scraper = self._patched_scraper()
         with pytest.raises(ValueError, match="Formato esperado"):
             scraper.cjpg_download(
                 pesquisa="direito",
-                data_julgamento_inicio="2020-01-01",
-                data_julgamento_fim="31/12/2020",
+                data_julgamento_inicio="01.01.2020",
+                data_julgamento_fim="31.12.2020",
             )
         scraper.session.get.assert_not_called()
 

@@ -1,49 +1,29 @@
-"""
-Funções de download específicas para JUSBR
+"""Funções de download específicas para JUSBR.
+
+Antes da migração para :class:`juscraper.core.http.HTTPScraper` (issue #204),
+este módulo tinha seu próprio ``request_with_retry`` duplicando a lógica de
+backoff. Agora os ``fetch_*`` recebem um ``request_fn`` — tipicamente o
+``HTTPScraper._request_with_retry`` ligado do scraper — e centralizam o retry
+na infra compartilhada (#201). Os erros são absorvidos aqui e devolvidos como
+``None`` para preservar o contrato dos callers em :mod:`client`.
 """
 
 import logging
-import time
-from typing import Any, Dict, Optional
+from collections.abc import Callable
+from typing import Any
 
 import requests
 
+from ...core.exceptions import RetryExhaustedError
 from ...utils.cnj import clean_cnj
+from ...utils.logging_cfg import redact_headers
 
 logger = logging.getLogger(__name__)
 
 
-def request_with_retry(session, url, *, headers=None, timeout=15, max_retries=5, backoff_factor=1.0, **kwargs):
-    """
-    Faz uma requisição GET com retry exponencial para status 429 (Too Many Requests).
-    """
-    attempt = 0
-    wait = backoff_factor
-    while attempt <= max_retries:
-        try:
-            response = session.get(url, headers=headers, timeout=timeout, **kwargs)
-            if response.status_code == 429:
-                logger.warning(
-                    "[429] Too Many Requests para %s. Tentativa %d/%d. Aguardando %ss...",
-                    url, attempt + 1, max_retries, wait,
-                )
-                time.sleep(wait)
-                attempt += 1
-                wait = min(wait * 2, 32)  # Limite de 32 segundos
-                continue
-            response.raise_for_status()
-            return response
-        except requests.Timeout:
-            logger.error(f"Timeout ao acessar {url} (tentativa {attempt+1}/{max_retries})")
-            time.sleep(wait)
-            attempt += 1
-            wait = min(wait * 2, 32)
-        except requests.RequestException as e:
-            logger.error(f"Erro de requisição em {url}: {e} (tentativa {attempt+1}/{max_retries})")
-            # Só faz retry se for 429, outros erros retornam direto
-            break
-    logger.error(f"Falha após {max_retries} tentativas para {url}")
-    return None
+# Type alias: contrato mínimo do callable usado pelos fetch_*. Mesma assinatura
+# de ``HTTPScraper._request_with_retry`` (method, url, **kwargs) -> Response.
+RequestFn = Callable[..., requests.Response]
 
 
 USER_AGENT = (
@@ -54,10 +34,10 @@ USER_AGENT = (
 
 
 def fetch_process_list(
-    session: requests.Session,
+    request_fn: RequestFn,
     cnj_cleaned: str,
     base_api_url: str
-) -> Optional[Dict[str, Any]]:
+) -> dict[str, Any] | None:
     """
     Fetches the initial list of processes matching a CNJ.
     Corresponds to the first API call in the original cpopg.
@@ -65,11 +45,15 @@ def fetch_process_list(
     url = f"{base_api_url}?numeroProcesso={cnj_cleaned}"
     logger.debug("Fetching process list from: %s", url)
     try:
-        response = request_with_retry(session, url, timeout=15)
-        if response is None:
-            return None
-        data: Dict[str, Any] = response.json()
+        response = request_fn("GET", url, timeout=15)
+        data: dict[str, Any] = response.json()
         return data
+    except RetryExhaustedError as exc:
+        logger.error(
+            "Retry exausto ao buscar lista de processos para %s em %s: %s",
+            cnj_cleaned, url, exc,
+        )
+        return None
     except requests.Timeout:
         logger.error(
             "Timeout ao buscar lista de processos para %s em %s",
@@ -91,10 +75,10 @@ def fetch_process_list(
 
 
 def fetch_process_details(
-    session: requests.Session,
+    request_fn: RequestFn,
     numero_processo_oficial: str,
     base_api_url: str
-) -> Optional[Dict[str, Any]]:
+) -> dict[str, Any] | None:
     """
     Fetches detailed information for a specific official process number.
     Corresponds to the second API call in the original cpopg.
@@ -102,11 +86,15 @@ def fetch_process_details(
     url = f"{base_api_url}{numero_processo_oficial}"
     logger.debug("Fetching process details from: %s", url)
     try:
-        response = request_with_retry(session, url, timeout=15)
-        if response is None:
-            return None
-        data: Dict[str, Any] = response.json()
+        response = request_fn("GET", url, timeout=15)
+        data: dict[str, Any] = response.json()
         return data
+    except RetryExhaustedError as exc:
+        logger.error(
+            "Retry exausto ao buscar detalhes do processo %s em %s: %s",
+            numero_processo_oficial, url, exc,
+        )
+        return None
     except requests.Timeout:
         logger.error(
             "Timeout ao buscar detalhes do processo %s em %s",
@@ -128,11 +116,13 @@ def fetch_process_details(
 
 
 def fetch_document_text(
-    session: requests.Session,
+    request_fn: RequestFn,
     numero_processo: str,
     id_documento: str,
-    base_api_url_docs: str
-) -> Optional[str]:
+    base_api_url_docs: str,
+    *,
+    authorization: str = "",
+) -> str | None:
     """
     Fetches the raw text of a specific document for a given process number.
     """
@@ -144,21 +134,23 @@ def fetch_document_text(
         f"?numeroProcesso={numero_processo_param}&idDocumento={id_documento}"
     )
 
-    # Headers explícitos (garante todos)
+    # Headers explícitos por requisição (override dos defaults da session).
+    # Antes da migração, o caller lia ``session.headers['authorization']`` aqui;
+    # agora o caller passa explicitamente em ``authorization`` para que o
+    # request_fn (``_request_with_retry``) não precise ser ``self`` consciente.
     request_headers = {
         'accept': '*/*',
-        'authorization': session.headers.get('authorization', ''),
+        'authorization': authorization,
         'user-agent': USER_AGENT,
         'referer': 'https://portaldeservicos.pdpj.jus.br/consulta',
     }
 
     logger.debug("[JUSBR DEBUG] Baixando documento: URL=%s", doc_url)
-    logger.debug("[JUSBR DEBUG] Headers: %s", request_headers)
+    logger.debug("[JUSBR DEBUG] Headers: %s", redact_headers(request_headers))
 
+    response: requests.Response | None = None
     try:
-        response = request_with_retry(session, doc_url, headers=request_headers, timeout=30)
-        if response is None:
-            return None
+        response = request_fn("GET", doc_url, headers=request_headers, timeout=30)
         try:
             content_str: str = response.content.decode('utf-8')
             return content_str
@@ -170,6 +162,11 @@ def fetch_document_text(
             )
             fallback: str = response.text  # Fallback to requests' auto-detected encoding
             return fallback
+    except RetryExhaustedError as exc:
+        logger.error(
+            "Retry exausto ao baixar documento %s do processo %s (URL: %s): %s",
+            id_documento, numero_processo, doc_url, exc,
+        )
     except requests.exceptions.HTTPError as e:
         logger.error(
             "HTTP Error fetching document %s for process %s (URL: %s): %s. Response: %s",
@@ -193,11 +190,11 @@ def fetch_document_text(
 
 
 def fetch_document_binary(
-    session: requests.Session,
+    request_fn: RequestFn,
     numero_processo: str,
     id_documento: str,
     base_api_url_docs: str
-) -> Optional[bytes]:
+) -> bytes | None:
     """Fetch the binary payload of a document from the JusBR API."""
     numero_processo_param = numero_processo  # original, pode estar com máscara
     doc_url = (
@@ -205,11 +202,15 @@ def fetch_document_binary(
     )
     logger.debug("Fetching document binary from: %s", doc_url)
     try:
-        response = request_with_retry(session, doc_url, timeout=15)
-        if response is None:
-            return None
+        response = request_fn("GET", doc_url, timeout=15)
         content: bytes = response.content
         return content
+    except RetryExhaustedError as exc:
+        logger.error(
+            "Retry exausto ao baixar binário do documento %s para processo %s em %s: %s",
+            id_documento, numero_processo, doc_url, exc,
+        )
+        return None
     except requests.Timeout:
         logger.error(
             "Timeout ao buscar binário do documento %s para processo %s em %s",

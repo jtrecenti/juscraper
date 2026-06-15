@@ -1,18 +1,17 @@
 """Scraper for the Tribunal de Justica de Santa Catarina (TJSC)."""
-from typing import List, Optional, Union
+from typing import Any, Literal
 
 import pandas as pd
-import requests
 
-from juscraper.core.base import BaseScraper
-from juscraper.utils.params import apply_input_pipeline_search, normalize_paginas, normalize_pesquisa
+from juscraper.core.http import HTTPScraper
+from juscraper.utils.params import apply_input_pipeline_search
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
 from .schemas import InputCJSGTJSC
 
 
-class TJSCScraper(BaseScraper):
+class TJSCScraper(HTTPScraper):
     """Scraper for the Tribunal de Justica de Santa Catarina (TJSC).
 
     Uses the eproc jurisprudence search at eproc1g.tjsc.jus.br.
@@ -20,27 +19,35 @@ class TJSCScraper(BaseScraper):
 
     BASE_URL = "https://eproc1g.tjsc.jus.br"
 
-    def __init__(self):
-        super().__init__("TJSC")
-        self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-        })
+    def __init__(
+        self,
+        verbose: int = 0,
+        download_path: str | None = None,
+        sleep_time: float = 1.0,
+        **kwargs: Any,
+    ):
+        super().__init__(
+            "TJSC",
+            verbose=verbose,
+            download_path=download_path,
+            sleep_time=sleep_time,
+            **kwargs,
+        )
 
-    def cpopg(self, id_cnj: Union[str, List[str]]):
+    def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJSC."""
         raise NotImplementedError("Consulta de processos de 1o grau nao implementada para TJSC.")
 
-    def cposg(self, id_cnj: Union[str, List[str]]):
+    def cposg(self, id_cnj: str | list[str]):
         """Stub: second instance case consultation not implemented for TJSC."""
         raise NotImplementedError("Consulta de processos de 2o grau nao implementada para TJSC.")
 
     def cjsg(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
-        campo: str = "E",
-        processo: str = "",
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
+        campo: Literal["E", "I"] = "E",
+        processo: str | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Busca jurisprudencia no TJSC.
@@ -77,50 +84,52 @@ class TJSCScraper(BaseScraper):
             :class:`InputCJSGTJSC` — schema pydantic e a fonte da verdade dos
             filtros aceitos.
         """
-        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-
-        inp = apply_input_pipeline_search(
-            InputCJSGTJSC,
-            "TJSCScraper.cjsg()",
+        return self.cjsg_parse(self.cjsg_download(
             pesquisa=pesquisa,
             paginas=paginas,
-            kwargs=kwargs,
             campo=campo,
             processo=processo,
-        )
-
-        brutos = self.cjsg_download(
-            pesquisa=inp.pesquisa,
-            paginas=inp.paginas,
-            campo=inp.campo,
-            processo=inp.processo,
-            dt_decisao_inicio=inp.data_julgamento_inicio or "",
-            dt_decisao_fim=inp.data_julgamento_fim or "",
-            dt_publicacao_inicio=inp.data_publicacao_inicio or "",
-            dt_publicacao_fim=inp.data_publicacao_fim or "",
-        )
-        return self.cjsg_parse(brutos)
+            **kwargs,
+        ))
 
     def cjsg_download(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
+        campo: Literal["E", "I"] = "E",
+        processo: str | None = None,
         **kwargs,
     ) -> list:
         """Download raw HTML pages from TJSC.
+
+        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
 
         Returns
         -------
         list
             List of raw HTML strings (one per page).
         """
-        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-        paginas = normalize_paginas(paginas)
-        return cjsg_download_manager(
+        inp = apply_input_pipeline_search(
+            InputCJSGTJSC,
+            "TJSCScraper.cjsg_download()",
             pesquisa=pesquisa,
             paginas=paginas,
-            session=self.session,
-            **{k: v for k, v in kwargs.items() if k not in ("query", "termo")},
+            kwargs=kwargs,
+            consume_pesquisa_aliases=True,
+            campo=campo,
+            processo=processo,
+        )
+        return cjsg_download_manager(
+            pesquisa=inp.pesquisa,
+            paginas=inp.paginas,
+            request_fn=self._request_with_retry,
+            sleep_time=self.sleep_time,
+            campo=inp.campo,
+            processo=inp.processo or "",
+            dt_decisao_inicio=inp.data_julgamento_inicio or "",
+            dt_decisao_fim=inp.data_julgamento_fim or "",
+            dt_publicacao_inicio=inp.data_publicacao_inicio or "",
+            dt_publicacao_fim=inp.data_publicacao_fim or "",
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> pd.DataFrame:

@@ -1,9 +1,9 @@
 """Pydantic schemas for TJMG scraper endpoints.
 
-Ainda nao wired em :mod:`juscraper.courts.tjmg.client` — este arquivo e
-documentacao executavel da API publica ate o TJMG ser refatorado para o
-pipeline canonico da #93. A lista de campos bate byte-a-byte com a
-assinatura publica de :meth:`TJMGScraper.cjsg` / :meth:`TJMGScraper.cjsg_download`.
+Wired em :mod:`juscraper.courts.tjmg.client` via
+:func:`juscraper.utils.params.apply_input_pipeline_search` (refs #93/#165).
+A lista de campos bate byte-a-byte com a assinatura publica de
+:meth:`TJMGScraper.cjsg` / :meth:`TJMGScraper.cjsg_download`.
 """
 from __future__ import annotations
 
@@ -24,8 +24,8 @@ class InputCJSGTJMG(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     """
 
     pesquisar_por: Literal["ementa", "acordao"] = "ementa"
-    order_by: str | int = 2
-    linhas_por_pagina: int = 10
+    order_by: Literal[0, 1, 2, "0", "1", "2"] = 2
+    tamanho_pagina: Literal[10, 20, 50] = 10
 
 
 class OutputCJSGTJMG(OutputCJSGBase, OutputDataPublicacaoMixin):

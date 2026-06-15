@@ -17,7 +17,7 @@ def _decisao_filter(
     numero_recurso: str | None = None,
     orgaos: list | None = None,
     relatores: list | None = None,
-    classes: list | None = None,
+    classe: list | None = None,
     data_publicacao_inicio: str | None = None,
     data_publicacao_fim: str | None = None,
     segundo_grau: bool = True,
@@ -30,7 +30,8 @@ def _decisao_filter(
         "assunto": pesquisa,
         "orgaos": orgaos or [],
         "relatores": relatores or [],
-        "classes": classes or [],
+        # Chave do payload GraphQL fica "classes" (nome no backend). Refs #232.
+        "classes": classe or [],
         "dataInicial": f"{data_publicacao_inicio}T03:00:00.000Z"
         if data_publicacao_inicio
         else "1980-02-01T03:00:00.000Z",
@@ -51,7 +52,7 @@ def _payload(
     pesquisa: str,
     page_number: int,
     *,
-    items_per_page: int = 10,
+    tamanho_pagina: int = 10,
     **filters,
 ) -> dict:
     return {
@@ -59,7 +60,7 @@ def _payload(
         "variables": {
             "decisaoFilter": _decisao_filter(pesquisa, **filters),
             "pageNumber": page_number,
-            "itemsPerPage": items_per_page,
+            "itemsPerPage": tamanho_pagina,
         },
         "query": FILTER_QUERY,
     }

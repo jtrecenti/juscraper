@@ -18,15 +18,20 @@ from __future__ import annotations
 import importlib
 import inspect
 import pkgutil
-from typing import Iterator
+from collections.abc import Iterator
 
-import pytest
 from pydantic import BaseModel
 
 PUBLIC_SEARCH_ENDPOINTS = ("cjsg", "cjpg")
 PUBLIC_CONSULTA_ENDPOINTS = ("cpopg", "cposg")
 # Endpoints especificos de um ou poucos tribunais (fora do quarteto canonico).
 CUSTOM_ENDPOINTS = ("cjsg_ementa",)
+# Nota: os metodos ``listar_classes``/``listar_assuntos``/``listar_orgaos``/
+# ``listar_varas`` da familia eSAJ (refs #228) ficam DE FORA deste regime de
+# schema de proposito — nao recebem input de usuario (so ``grau``, um literal),
+# entao um ``Input*`` com ``extra="forbid"`` seria cerimonia sem valor de
+# validacao. Por nao aparecerem em ALL_PUBLIC_ENDPOINTS, sao invisiveis aos
+# testes de paridade aqui. Se um dia ganharem filtros livres, ai sim entram.
 ALL_PUBLIC_ENDPOINTS = (
     PUBLIC_SEARCH_ENDPOINTS + PUBLIC_CONSULTA_ENDPOINTS + CUSTOM_ENDPOINTS
 )
@@ -74,6 +79,12 @@ EXPECTED_COURT_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
         "juscraper.courts.tjto.schemas",
         "InputCjsgEmentaTJTO",
     ),
+    # PJe consulta pública (TRF1, TRF3, TRF5) — schema próprio por tribunal.
+    ("trf1", "cpopg"): ("juscraper.courts.trf1.schemas", "InputCpopgTRF1"),
+    ("trf3", "cpopg"): ("juscraper.courts.trf3.schemas", "InputCpopgTRF3"),
+    ("trf5", "cpopg"): ("juscraper.courts.trf5.schemas", "InputCpopgTRF5"),
+    # eproc consulta pública (TRF6) — captcha-gated.
+    ("trf6", "cpopg"): ("juscraper.courts.trf6.schemas", "InputCpopgTRF6"),
 }
 
 # Agregadores sao mapeados separadamente porque os endpoints fogem do
@@ -96,6 +107,12 @@ EXPECTED_AGGREGATOR_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
     ("comunica_cnj", "listar_comunicacoes"): (
         "juscraper.aggregators.comunica_cnj.schemas",
         "InputListarComunicacoesComunicaCNJ",
+    ),
+    ("pdpj", "auth"): ("juscraper.aggregators.pdpj.schemas", "InputAuthPdpj"),
+    ("pdpj", "cpopg"): ("juscraper.aggregators.pdpj.schemas", "InputCnjPdpj"),
+    ("pdpj", "download_documents"): (
+        "juscraper.aggregators.pdpj.schemas",
+        "InputDownloadDocumentsPdpj",
     ),
 }
 

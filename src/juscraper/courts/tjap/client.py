@@ -1,17 +1,16 @@
 """Scraper for the Tribunal de Justica do Amapa (TJAP)."""
-from typing import List, Optional, Union
 
 import pandas as pd
-import requests
 
-from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_paginas, normalize_pesquisa, resolve_deprecated_alias
+from juscraper.core.http import HTTPScraper
+from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
+from .schemas import InputCJSGTJAP
 
 
-class TJAPScraper(BaseScraper):
+class TJAPScraper(HTTPScraper):
     """Scraper for the Tribunal de Justica do Amapa (TJAP).
 
     The TJAP uses the Tucujuris platform with a JSON REST API.
@@ -22,23 +21,19 @@ class TJAPScraper(BaseScraper):
 
     def __init__(self):
         super().__init__("TJAP")
-        self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-        })
 
-    def cpopg(self, id_cnj: Union[str, List[str]]):
+    def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJAP."""
         raise NotImplementedError("Consulta de processos de 1o grau nao implementada para TJAP.")
 
-    def cposg(self, id_cnj: Union[str, List[str]]):
+    def cposg(self, id_cnj: str | list[str]):
         """Stub: second instance case consultation not implemented for TJAP."""
         raise NotImplementedError("Consulta de processos de 2o grau nao implementada para TJAP.")
 
     def cjsg(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
         orgao: str = "0",
         numero_processo: str | None = None,
         numero_acordao: str | None = None,
@@ -83,12 +78,17 @@ class TJAPScraper(BaseScraper):
         Returns
         -------
         pd.DataFrame
+
+        Raises
+        ------
+        TJAPSecurityCheckError
+            Quando o TJAP devolve "A verificação de segurança falhou" — desde
+            ~2026 a busca exige um CAPTCHA Cloudflare Turnstile, validado
+            server-side, que o raspador HTTP não consegue produzir (issue #279).
+        TJAPApiError
+            Para qualquer outro envelope de erro (``status == "ERRO"``) do
+            Tucujuris. Busca com zero resultados devolve DataFrame vazio.
         """
-        numero_processo = resolve_deprecated_alias(
-            kwargs, "numero_cnj", "numero_processo", numero_processo
-        )
-        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-        paginas = normalize_paginas(paginas)
         brutos = self.cjsg_download(
             pesquisa=pesquisa,
             paginas=paginas,
@@ -102,13 +102,14 @@ class TJAPScraper(BaseScraper):
             classe=classe,
             votacao=votacao,
             origem=origem,
+            **kwargs,
         )
         return self.cjsg_parse(brutos)
 
     def cjsg_download(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
         orgao: str = "0",
         numero_processo: str | None = None,
         numero_acordao: str | None = None,
@@ -130,18 +131,28 @@ class TJAPScraper(BaseScraper):
         -------
         list
             List of raw JSON responses (one per page).
+
+        Raises
+        ------
+        TJAPSecurityCheckError
+            Quando o TJAP devolve "A verificação de segurança falhou" (CAPTCHA
+            Cloudflare Turnstile exigido desde ~2026; issue #279).
+        TJAPApiError
+            Para qualquer outro envelope de erro (``status == "ERRO"``) do
+            Tucujuris. Busca com zero resultados devolve lista sem registros.
         """
         numero_processo = resolve_deprecated_alias(
             kwargs, "numero_cnj", "numero_processo", numero_processo
         )
-        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-        paginas = normalize_paginas(paginas)
-        return cjsg_download_manager(
+        inp = apply_input_pipeline_search(
+            InputCJSGTJAP,
+            "TJAPScraper.cjsg_download()",
             pesquisa=pesquisa,
             paginas=paginas,
-            session=self.session,
+            kwargs=kwargs,
+            consume_pesquisa_aliases=True,
             orgao=orgao,
-            numero_cnj=numero_processo,
+            numero_processo=numero_processo,
             numero_acordao=numero_acordao,
             numero_ano=numero_ano,
             palavras_exatas=palavras_exatas,
@@ -150,6 +161,21 @@ class TJAPScraper(BaseScraper):
             classe=classe,
             votacao=votacao,
             origem=origem,
+        )
+        return cjsg_download_manager(
+            pesquisa=inp.pesquisa,
+            paginas=inp.paginas,
+            request_fn=self._request_with_retry,
+            orgao=inp.orgao,
+            numero_cnj=inp.numero_processo,
+            numero_acordao=inp.numero_acordao,
+            numero_ano=inp.numero_ano,
+            palavras_exatas=inp.palavras_exatas,
+            relator=inp.relator,
+            secretaria=inp.secretaria,
+            classe=inp.classe,
+            votacao=inp.votacao,
+            origem=inp.origem,
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> pd.DataFrame:

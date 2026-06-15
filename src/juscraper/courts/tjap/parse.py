@@ -1,45 +1,7 @@
-"""
-Parse raw results from the TJAP jurisprudence search (Tucujuris).
-"""
-import re
-
+"""Parse raw results from the TJAP jurisprudence search (Tucujuris)."""
 import pandas as pd
 
-
-def _clean_html(html_text: str | None) -> str | None:
-    """Remove HTML tags and decode HTML entities from ementa text."""
-    if not html_text:
-        return html_text
-    # Remove HTML tags
-    text = re.sub(r"<[^>]+>", " ", html_text)
-    # Decode common HTML entities
-    text = text.replace("&amp;", "&")
-    text = text.replace("&lt;", "<")
-    text = text.replace("&gt;", ">")
-    text = text.replace("&quot;", '"')
-    text = text.replace("&apos;", "'")
-    text = text.replace("&nbsp;", " ")
-    # Decode accented character entities (e.g., &Aacute; -> Á)
-    text = re.sub(
-        r"&([A-Za-z]+(?:acute|grave|circ|tilde|uml|cedil|ring|slash|lig));",
-        lambda m: _decode_entity(m.group(0)),
-        text,
-    )
-    # Decode numeric entities
-    text = re.sub(r"&#(\d+);", lambda m: chr(int(m.group(1))), text)
-    text = re.sub(r"&#x([0-9a-fA-F]+);", lambda m: chr(int(m.group(1), 16)), text)
-    # Collapse whitespace
-    text = re.sub(r"\s+", " ", text).strip()
-    return text
-
-
-def _decode_entity(entity: str) -> str:
-    """Decode a named HTML entity using html module."""
-    import html
-    try:
-        return html.unescape(entity)
-    except Exception:
-        return entity
+from juscraper.core.parse_utils import clean_html, coerce_date_columns
 
 
 def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
@@ -69,7 +31,7 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
                 "data_julgamento": item.get("datajulgamento"),
                 "data_publicacao": item.get("datapublicacao"),
                 "data_registro": item.get("dataregistro"),
-                "ementa": _clean_html(item.get("ementa")),
+                "ementa": clean_html(item.get("ementa")),
             }
             registros.append(registro)
 
@@ -77,11 +39,8 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
     if df.empty:
         return df
 
-    for col in ["data_julgamento", "data_publicacao", "data_registro"]:
-        if col in df.columns:
-            df[col] = pd.to_datetime(df[col], format="%Y-%m-%d", errors="coerce").dt.date
+    coerce_date_columns(df, ["data_julgamento", "data_publicacao", "data_registro"])
 
-    # Order columns: main fields first
     principais = [
         "processo", "numero_acordao", "classe", "relator", "lotacao",
         "comarca", "votacao", "data_julgamento", "data_publicacao", "ementa",

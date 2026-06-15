@@ -2,21 +2,22 @@
 from __future__ import annotations
 
 import logging
-from typing import List, Optional, Union
+from typing import Literal
 
 import pandas as pd
 import requests
 
-from juscraper.core.base import BaseScraper
-from juscraper.utils.params import normalize_datas, normalize_paginas, normalize_pesquisa, warn_unsupported
+from juscraper.core.http import HTTPScraper
+from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
 from .download import cjsg_download as _cjsg_download
 from .parse import cjsg_parse as _cjsg_parse
+from .schemas import InputCJSGTJGO
 
 logger = logging.getLogger("juscraper.tjgo")
 
 
-class TJGOScraper(BaseScraper):
+class TJGOScraper(HTTPScraper):
     """Scraper for the Court of Justice of Goiás.
 
     The TJGO jurisprudence search (Projudi) renders a Cloudflare Turnstile
@@ -31,23 +32,27 @@ class TJGOScraper(BaseScraper):
     )
 
     def __init__(self, sleep_time: float = 1.0):
-        super().__init__("TJGO")
-        self.session = requests.Session()
-        self.session.headers.update({"User-Agent": self.USER_AGENT})
-        self.sleep_time = sleep_time
+        super().__init__("TJGO", sleep_time=sleep_time)
+
+    def _configure_session(self, session: requests.Session) -> None:
+        session.headers["User-Agent"] = self.USER_AGENT
 
     def cjsg_download(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
-        id_instancia: Union[str, int] = 0,
-        id_area: Union[str, int] = 0,
-        id_serventia_subtipo: Union[str, int] = 0,
-        numero_processo: str = "",
-        qtde_itens_pagina: int = 10,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
+        id_instancia: Literal[0, 1, 2, 3, "0", "1", "2", "3"] = 0,
+        id_area: Literal[0, 1, 2, "0", "1", "2"] = 0,
+        id_serventia_subtipo: str | int = 0,
+        numero_processo: str | None = None,
+        tamanho_pagina: int = 10,
+        data_publicacao_inicio: str | None = None,
+        data_publicacao_fim: str | None = None,
         **kwargs,
     ) -> list:
         """Run a TJGO search and return the raw HTML of each page.
+
+        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
 
         Parameters
         ----------
@@ -63,29 +68,42 @@ class TJGOScraper(BaseScraper):
             Court unit sub-type id (see website dropdown). ``0`` = all.
         numero_processo : str
             Filter by specific CNJ process number.
-        qtde_itens_pagina : int
-            Items per page (default 10).
+        tamanho_pagina : int
+            Items per page (default 10). Aceita ``qtde_itens_pagina`` como
+            alias deprecado.
         data_publicacao_inicio, data_publicacao_fim : str, optional
             Publication date range in ``dd/mm/yyyy`` or ``yyyy-mm-dd``.
         """
-        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-        paginas = normalize_paginas(paginas)
-        datas = normalize_datas(**kwargs)
-        for key in ("data_julgamento_inicio", "data_julgamento_fim"):
-            if datas[key] is not None:
-                warn_unsupported(key, "TJGO")
+        tamanho_pagina = resolve_deprecated_alias(
+            kwargs, "qtde_itens_pagina", "tamanho_pagina", tamanho_pagina, sentinel=10
+        )
+        inp = apply_input_pipeline_search(
+            InputCJSGTJGO,
+            "TJGOScraper.cjsg_download()",
+            pesquisa=pesquisa,
+            paginas=paginas,
+            kwargs=kwargs,
+            consume_pesquisa_aliases=True,
+            data_publicacao_inicio=data_publicacao_inicio,
+            data_publicacao_fim=data_publicacao_fim,
+            id_instancia=id_instancia,
+            id_area=id_area,
+            id_serventia_subtipo=id_serventia_subtipo,
+            numero_processo=numero_processo,
+            tamanho_pagina=tamanho_pagina,
+        )
 
         return _cjsg_download(
-            session=self.session,
-            pesquisa=pesquisa or "",
-            paginas=paginas,
-            id_instancia=str(id_instancia),
-            id_area=str(id_area),
-            id_serventia_subtipo=str(id_serventia_subtipo),
-            data_publicacao_inicio=_br_date(datas["data_publicacao_inicio"]),
-            data_publicacao_fim=_br_date(datas["data_publicacao_fim"]),
-            numero_processo=numero_processo,
-            qtde_itens_pagina=qtde_itens_pagina,
+            request_fn=self._request_with_retry,
+            pesquisa=inp.pesquisa or "",
+            paginas=inp.paginas,
+            id_instancia=str(inp.id_instancia),
+            id_area=str(inp.id_area),
+            id_serventia_subtipo=str(inp.id_serventia_subtipo),
+            data_publicacao_inicio=_br_date(inp.data_publicacao_inicio),
+            data_publicacao_fim=_br_date(inp.data_publicacao_fim),
+            numero_processo=inp.numero_processo or "",
+            qtde_itens_pagina=inp.tamanho_pagina,
             sleep_time=self.sleep_time,
         )
 
@@ -95,19 +113,71 @@ class TJGOScraper(BaseScraper):
 
     def cjsg(
         self,
-        pesquisa: Optional[str] = None,
-        paginas: Union[int, list, range, None] = None,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
+        id_instancia: Literal[0, 1, 2, 3, "0", "1", "2", "3"] = 0,
+        id_area: Literal[0, 1, 2, "0", "1", "2"] = 0,
+        id_serventia_subtipo: str | int = 0,
+        numero_processo: str | None = None,
+        tamanho_pagina: int = 10,
         **kwargs,
     ) -> pd.DataFrame:
-        """Convenience method: download + parse."""
-        raw = self.cjsg_download(pesquisa=pesquisa, paginas=paginas, **kwargs)
-        return self.cjsg_parse(raw)
+        """Busca jurisprudencia no TJGO (Projudi).
 
-    def cpopg(self, id_cnj: Union[str, List[str]]):
+        Args:
+            pesquisa (str): Termo de busca livre.
+            paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
+                todas. Default ``None``.
+            id_instancia (int | str): ``0`` todas / ``1`` 1o grau / ``2`` recursal /
+                ``3`` tribunal.
+            id_area (int | str): ``0`` todas / ``1`` civel / ``2`` criminal.
+            id_serventia_subtipo (int | str): ID do subtipo de serventia
+                (dropdown do site). ``0`` = todas.
+            numero_processo (str): Filtrar por numero CNJ especifico.
+            tamanho_pagina (int): Itens por pagina (default 10).
+            **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJGO`.
+                Listados abaixo (todos opcionais; ``None`` = sem filtro):
+
+                * ``data_publicacao_inicio`` / ``data_publicacao_fim`` (str):
+                  ``DD/MM/AAAA`` ou ``AAAA-MM-DD``. Backend Projudi mapeia
+                  para ``DataInicial`` / ``DataFinal`` no form body.
+
+        Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
+            * ``query`` / ``termo`` -> ``pesquisa``
+            * ``data_publicacao_de`` / ``_ate`` -> ``data_publicacao_inicio`` / ``_fim``
+            * ``qtde_itens_pagina`` -> ``tamanho_pagina``
+
+        Raises:
+            TypeError: Quando um kwarg desconhecido e passado, **incluindo**
+                ``data_julgamento_inicio`` / ``data_julgamento_fim`` — o backend
+                Projudi nao expoe filtro de data de julgamento; use
+                ``data_publicacao_*`` (canonico para o TJGO).
+            ValidationError: Quando um filtro tem formato invalido.
+
+        Returns:
+            pd.DataFrame: DataFrame com as decisoes (coluna ``texto`` carrega
+            o conteudo do documento; ``ementa`` nao e preenchido).
+
+        See also:
+            :class:`InputCJSGTJGO` — schema pydantic e a fonte da verdade dos
+            filtros aceitos.
+        """
+        return self.cjsg_parse(self.cjsg_download(
+            pesquisa=pesquisa,
+            paginas=paginas,
+            id_instancia=id_instancia,
+            id_area=id_area,
+            id_serventia_subtipo=id_serventia_subtipo,
+            numero_processo=numero_processo,
+            tamanho_pagina=tamanho_pagina,
+            **kwargs,
+        ))
+
+    def cpopg(self, id_cnj: str | list[str]):
         """Stub: first degree case search not implemented for TJGO."""
         raise NotImplementedError("TJGO does not implement cpopg.")
 
-    def cposg(self, id_cnj: Union[str, List[str]]):
+    def cposg(self, id_cnj: str | list[str]):
         """Stub: second degree case search not implemented for TJGO."""
         raise NotImplementedError("TJGO does not implement cposg.")
 

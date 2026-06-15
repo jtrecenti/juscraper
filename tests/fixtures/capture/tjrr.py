@@ -27,8 +27,6 @@ Samples are byte-identical to what the live backend served.
 """
 from __future__ import annotations
 
-from typing import Optional
-
 import juscraper as jus
 
 from ._util import samples_dir_for
@@ -39,7 +37,7 @@ def _classify(
     body_text: str,
     scenario: str,
     counters: dict[str, int],
-) -> Optional[str]:
+) -> str | None:
     """Pick the filename for a given response, or ``None`` to skip."""
     if method == "GET":
         return "step_01_consulta.html"

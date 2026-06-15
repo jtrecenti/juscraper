@@ -2,29 +2,23 @@
 Orchestrates the flow for DATAJUD (user entry point) - API BASED
 """
 import logging
-import os
 import tempfile
 import time
 import warnings
 from collections import defaultdict
-from typing import Any, List, Optional, Union
+from typing import Any
 
 import pandas as pd
-import requests
 from pydantic import ValidationError
 from tqdm.auto import tqdm
 
-from ...core.base import BaseScraper
+from ...core.http import HTTPScraper
 from ...utils.cnj import clean_cnj  # Assuming this utility exists and is relevant
-from ...utils.params import normalize_paginas, raise_on_extra_kwargs
-from .download import (
-    build_contar_processos_payload,
-    build_listar_processos_payload,
-    call_datajud_api,
-)
+from ...utils.params import normalize_paginas, pop_deprecated_alias, raise_on_extra_kwargs
+from .download import build_contar_processos_payload, build_listar_processos_payload, call_datajud_api
 
 # Import mappings for tribunal and justice aliases.
-from .mappings import ID_JUSTICA_TRIBUNAL_TO_ALIAS, TRIBUNAL_TO_ALIAS
+from .mappings import ID_JUSTICA_TRIBUNAL_TO_ALIAS, TIPOS_MOVIMENTACAO, TRIBUNAL_TO_ALIAS
 from .parse import parse_datajud_api_response  # To be created for API response parsing
 from .schemas import InputContarProcessosDataJud, InputListarProcessosDataJud
 
@@ -35,8 +29,36 @@ ALIAS_TO_TRIBUNAL = {alias: sigla for sigla, alias in TRIBUNAL_TO_ALIAS.items()}
 logger = logging.getLogger(__name__)
 
 
-class DatajudScraper(BaseScraper):
-    """Scraper for CNJ's Datajud API."""
+def _pop_plural_aliases(kwargs: dict) -> None:
+    """Popa aliases plurais deprecados antes de instanciar o schema.
+
+    Refs #232 — singular canonico (``assunto``); ``assuntos`` (plural) emite
+    :class:`DeprecationWarning` e segue funcionando. Passar plural + singular
+    juntos -> :class:`ValueError` (uso conflitante).
+    """
+    if "assuntos" not in kwargs:
+        return
+    if kwargs.get("assunto") is not None:
+        kwargs.pop("assuntos")
+        raise ValueError(
+            "Nao e possivel passar 'assunto' e 'assuntos' simultaneamente."
+        )
+    kwargs["assunto"] = pop_deprecated_alias(kwargs, "assuntos", "assunto")
+
+
+class DatajudScraper(HTTPScraper):
+    """Scraper for CNJ's Datajud API.
+
+    Note:
+        Diferente de outros agregadores migrados em #204, o DataJud nao usa
+        ``self._request_with_retry`` no caminho quente: a funcao
+        :func:`download.call_datajud_api` aplica um retry especializado
+        (504/Timeout -> refaz **1 vez** com ``size`` reduzido por
+        ``FALLBACK_DIVISOR``), incompativel com o backoff exponencial do
+        ``HTTPScraper``. A heranca aqui garante session/headers
+        compartilhados e o cumprimento de #185, mas o transporte segue via
+        :func:`call_datajud_api`.
+    """
 
     DEFAULT_API_KEY = "cDZHYzlZa0JadVREZDJCendQbXY6SkJlTzNjLV9TRENyQk1RdnFKZGRQdw=="
     BASE_API_URL = "https://api-publica.datajud.cnj.jus.br"
@@ -46,25 +68,27 @@ class DatajudScraper(BaseScraper):
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         verbose: int = 1,
-        download_path: Optional[str] = None,  # For temporary files if needed
+        download_path: str | None = None,  # For temporary files if needed
         sleep_time: float = 0.5,
     ):
-        super().__init__("DatajudAPI")
-        self.set_verbose(verbose)
-        # download_path for API responses if saved temporarily, or can be ignored if
-        # data is processed in memory
-        self.download_path = download_path or tempfile.mkdtemp(prefix="datajud_api_")
-        if not os.path.exists(self.download_path):
-            os.makedirs(self.download_path)
-        self.session = requests.Session()
+        # Preserva o prefix historico ``datajud_api_`` para download_path
+        # default. ``set_download_path`` (em ``BaseScraper``) usa
+        # ``tempfile.mkdtemp()`` sem prefix, entao resolvemos aqui antes
+        # de delegar ao ``HTTPScraper``.
+        resolved_path = download_path or tempfile.mkdtemp(prefix="datajud_api_")
+        super().__init__(
+            "DatajudAPI",
+            verbose=verbose,
+            download_path=resolved_path,
+            sleep_time=sleep_time,
+        )
         self.api_key = api_key or self.DEFAULT_API_KEY
-        self.sleep_time = sleep_time
         logger.info(
-            "DatajudScraper initialized. API Key: "
-            "{'Provided' if api_key else 'Default'}. Temp path: %s",
-            self.download_path
+            "DatajudScraper initialized. API Key: %s. Temp path: %s",
+            "Provided" if api_key else "Default",
+            self.download_path,
         )
 
     def contar_processos(self, **kwargs) -> pd.DataFrame:
@@ -78,9 +102,14 @@ class DatajudScraper(BaseScraper):
 
         Aceita o **mesmo conjunto de filtros** de :meth:`listar_processos`
         (``tribunal``, ``numero_processo``, ``ano_ajuizamento``, ``classe``,
-        ``assuntos``), excluindo apenas os parâmetros de paginação
-        (``paginas``, ``tamanho_pagina``, ``mostrar_movs``) — não há
-        paginação numa contagem.
+        ``assunto``, ``data_ajuizamento_inicio``/``_fim``,
+        ``tipos_movimentacao``, ``movimentos_codigo``, ``orgao_julgador``,
+        ``query``), excluindo apenas os parametros de paginacao
+        (``paginas``, ``tamanho_pagina``, ``mostrar_movs``) — nao ha
+        paginacao numa contagem. Veja a docstring de
+        :meth:`listar_processos` para a semantica de cada filtro
+        (formato dual ISO+compacto em ``dataAjuizamento``, mapping
+        amigavel de ``tipos_movimentacao``, escape-hatch ``query``).
 
         Args:
             **kwargs: Filtros aceitos pelo schema
@@ -96,7 +125,11 @@ class DatajudScraper(BaseScraper):
 
         Raises:
             TypeError: Quando um kwarg desconhecido é passado.
-            ValidationError: Quando um filtro tem formato inválido.
+            ValidationError: Quando um filtro tem formato inválido (ex.:
+                ``data_ajuizamento_*`` fora de ISO 8601), quando
+                ``ano_ajuizamento`` coexiste com ``data_ajuizamento_*``,
+                quando ``query`` coexiste com filtros amigaveis, ou
+                quando um nome em ``tipos_movimentacao`` nao esta mapeado.
             ValueError: Quando nem ``tribunal`` nem ``numero_processo``
                 são informados, ou quando a sigla não tem alias mapeado.
 
@@ -107,10 +140,19 @@ class DatajudScraper(BaseScraper):
               tribunal             alias  count relation error
             0     TJSP  api_publica_tjsp  12345       eq   None
 
+            >>> # Range de data ajuizamento + categoria de movimentacao
+            >>> dj.contar_processos(
+            ...     tribunal="TRF1",
+            ...     data_ajuizamento_inicio="2024-01-01",
+            ...     data_ajuizamento_fim="2024-03-31",
+            ...     tipos_movimentacao=["decisao"],
+            ... )
+
         See also:
             :meth:`listar_processos` — usa o mesmo conjunto de filtros mas
             baixa os processos.
         """
+        _pop_plural_aliases(kwargs)
         try:
             inp = InputContarProcessosDataJud(**kwargs)
         except ValidationError as exc:
@@ -121,16 +163,32 @@ class DatajudScraper(BaseScraper):
             tribunal=inp.tribunal,
             numero_processo=inp.numero_processo,
         )
+
+        # ``tipos_movimentacao`` (nomes amigaveis) -> codigos TPU; uniao com
+        # ``movimentos_codigo`` direto. Mesma logica de ``listar_processos``.
+        movimentos_codigo: list[int] | None = None
+        if inp.tipos_movimentacao or inp.movimentos_codigo:
+            codigos: list[int] = []
+            for tipo in inp.tipos_movimentacao or []:
+                codigos.extend(TIPOS_MOVIMENTACAO.get(tipo, []))
+            codigos.extend(inp.movimentos_codigo or [])
+            movimentos_codigo = list(dict.fromkeys(codigos))
+
         # ``_resolve_aliases`` devolve uma list[(alias, cnjs_pra_esse_alias)]
         # — segue o mesmo padrão do ``listar_processos`` para que ``numero_processo``
         # cruzando vários tribunais funcione (cada tribunal recebe só os seus CNJs).
-        rows: List[Dict[str, Any]] = []
+        rows: list[dict[str, Any]] = []
         for alias, cnjs in target_aliases:
             payload = build_contar_processos_payload(
                 numero_processo=cnjs,
                 ano_ajuizamento=inp.ano_ajuizamento,
                 classe=inp.classe,
-                assuntos=inp.assuntos,
+                assunto=inp.assunto,
+                data_ajuizamento_inicio=inp.data_ajuizamento_inicio,
+                data_ajuizamento_fim=inp.data_ajuizamento_fim,
+                movimentos_codigo=movimentos_codigo,
+                orgao_julgador=inp.orgao_julgador,
+                query=inp.query,
             )
             api_response = call_datajud_api(
                 base_url=self.BASE_API_URL,
@@ -164,9 +222,9 @@ class DatajudScraper(BaseScraper):
     def _resolve_aliases(
         self,
         *,
-        tribunal: Optional[str],
-        numero_processo: Optional[Union[str, List[str]]],
-    ) -> List[tuple]:
+        tribunal: str | None,
+        numero_processo: str | list[str] | None,
+    ) -> list[tuple]:
         """Determina lista de ``(alias, cnjs_para_esse_alias)``.
 
         Mesma lógica usada por :meth:`listar_processos` — extraída pra ser
@@ -179,7 +237,7 @@ class DatajudScraper(BaseScraper):
                     f"Tribunal {tribunal!r} não encontrado nos mappings do DataJud. "
                     f"Verifique a sigla (ex: TJSP, TRT2, TRE-SP)."
                 )
-            cnjs: Optional[Union[str, List[str]]] = numero_processo
+            cnjs: str | list[str] | None = numero_processo
             return [(alias, cnjs)]
         if numero_processo:
             processos_por_alias = defaultdict(list)
@@ -211,14 +269,14 @@ class DatajudScraper(BaseScraper):
                     )
             if not processos_por_alias:
                 return []
-            return [(alias, cnjs) for alias, cnjs in processos_por_alias.items()]
+            return list(processos_por_alias.items())
         raise ValueError(
             "É necessário especificar 'tribunal' (sigla) ou 'numero_processo' (CNJ)."
         )
 
     def listar_processos(
         self,
-        paginas: Optional[Union[int, List[int], range]] = None,
+        paginas: int | list[int] | range | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Lista processos do DataJud via API publica do CNJ.
@@ -243,9 +301,57 @@ class DatajudScraper(BaseScraper):
                   inferencia via ``numero_processo``.
                 * ``ano_ajuizamento`` (int): Filtra por ano de ajuizamento.
                   Backend recebe ``range`` dual em ``dataAjuizamento`` (ISO
-                  ``YYYY-01-01`` + compacto ``YYYYMMDDhhmmss``).
+                  ``YYYY-01-01`` + compacto ``YYYYMMDDhhmmss``). Mutuamente
+                  exclusivo com ``data_ajuizamento_inicio``/``_fim``.
+                * ``data_ajuizamento_inicio`` / ``data_ajuizamento_fim`` (str):
+                  Range de data de ajuizamento, formato ``YYYY-MM-DD`` (ISO
+                  8601). Backend recebe ``bool.should`` com 2 ``range`` em
+                  ``dataAjuizamento`` (ISO + compacto), mesmo padrao dual-
+                  format do ``ano_ajuizamento`` (refs #51). Pode informar
+                  apenas inicio, apenas fim, ou ambos. **Nao** ha alias
+                  ``data_inicio``/``data_fim`` aqui (a convencao generica
+                  do projeto mapeia esses para ``data_julgamento_*``, e o
+                  DataJud filtra por ajuizamento, nao julgamento).
                 * ``classe`` (str): Codigo da classe processual CNJ.
-                * ``assuntos`` (list[str]): Lista de codigos de assuntos CNJ.
+                * ``assunto`` (list[str | int]): Lista de codigos de
+                  assuntos CNJ (TPU). Aceita int e str — int e a forma
+                  natural (codigos TPU sao inteiros); str e aceita por
+                  compatibilidade. O schema normaliza para str antes do
+                  payload, ja que o Elasticsearch coage int -> str em
+                  campos ``keyword``. Backend: ``terms`` em
+                  ``assuntos.codigo``. ``assuntos`` (plural) e aceito como
+                  alias deprecado. Refs #232.
+                * ``tipos_movimentacao`` (list[str]): Nomes amigaveis de
+                  categorias de movimentacao (ex.: ``["decisao", "sentenca"]``).
+                  Resolvidos via ``TIPOS_MOVIMENTACAO`` para uma lista plana
+                  de codigos TPU CNJ. Para nomes nao mapeados, usar
+                  ``movimentos_codigo`` direto. Categorias atuais:
+                  ``decisao``, ``sentenca``, ``julgamento``, ``tutela``,
+                  ``transito_julgado``.
+                * ``movimentos_codigo`` (list[int | str]): Codigos TPU
+                  CNJ diretos. Aceita int e str — int e a forma natural;
+                  str e aceita por conveniencia (ex.: vinda de planilha/
+                  CSV) e normalizada para int antes do payload.
+                  Concatenado com a lista resolvida de
+                  ``tipos_movimentacao`` (uniao). Backend: ``terms`` em
+                  ``movimentos.codigo``.
+                * ``orgao_julgador`` (str): Nome do orgao julgador (ex.:
+                  ``"Vara Civel de Brasilia"``). Backend: ``match`` em
+                  ``orgaoJulgador.nome``.
+                * ``query`` (dict): **Override total** da query Elasticsearch.
+                  Quando fornecido, vira a chave ``query`` do payload
+                  literalmente. Mutuamente exclusivo com TODOS os filtros
+                  amigaveis acima (``numero_processo``, ``ano_ajuizamento``,
+                  ``classe``, ``assunto``, ``data_ajuizamento_*``,
+                  ``tipos_movimentacao``, ``movimentos_codigo``,
+                  ``orgao_julgador``). Exige ``tribunal`` explicito (sem
+                  inferencia via CNJ). Em troca, oferece paridade com
+                  requisicao direta a ``/<alias>/_search`` —
+                  ``must_not``, ``should`` com ``minimum_should_match``,
+                  ``range`` em campos arbitrarios, ``wildcard``, ``nested``,
+                  etc. ``size``/``sort``/``_source``/``search_after`` (paginacao)
+                  continuam sendo controlados pela biblioteca. Shape oficial
+                  documentado em https://datajud-wiki.cnj.jus.br/api-publica/.
                 * ``mostrar_movs`` (bool): Se ``True``, inclui
                   ``movimentos``/``movimentacoes`` no ``_source``. Default
                   ``False`` (paginacao mais leve).
@@ -273,7 +379,11 @@ class DatajudScraper(BaseScraper):
             TypeError: Quando um kwarg desconhecido e passado (traduzido de
                 ``ValidationError`` por ``raise_on_extra_kwargs``).
             ValidationError: Quando um filtro tem formato invalido (ex.:
-                ``ano_ajuizamento`` nao-int).
+                ``ano_ajuizamento`` nao-int, ``data_ajuizamento_*`` fora de
+                ISO 8601), quando ``ano_ajuizamento`` coexiste com
+                ``data_ajuizamento_*``, quando ``query`` coexiste com
+                filtros amigaveis, ou quando um nome em ``tipos_movimentacao``
+                nao esta mapeado.
             ValueError: Quando nem ``tribunal`` nem ``numero_processo`` sao
                 informados, ou quando a sigla nao tem alias mapeado.
 
@@ -285,9 +395,26 @@ class DatajudScraper(BaseScraper):
         Exemplo:
             >>> import juscraper as jus
             >>> dj = jus.scraper("datajud")
-            >>> df = dj.listar_processos(tribunal="TJSP", ano_ajuizamento=2023,
-            ...                          classe="436", assuntos=["1127"],
-            ...                          paginas=range(1, 3))
+            >>> # Caminho amigavel: range de data + categoria de movimentacao
+            >>> df = dj.listar_processos(
+            ...     tribunal="TRF1",
+            ...     data_ajuizamento_inicio="2024-01-01",
+            ...     data_ajuizamento_fim="2024-03-31",
+            ...     tipos_movimentacao=["decisao", "sentenca"],
+            ...     paginas=range(1, 3),
+            ... )
+            >>> # Caminho query-override: paridade com requisicao direta
+            >>> df = dj.listar_processos(
+            ...     tribunal="TRF1",
+            ...     query={
+            ...         "bool": {
+            ...             "must_not": [{"exists": {"field": "orgaoJulgador.nome"}}],
+            ...             "should": [{"match": {"classe.nome": "tutela"}}],
+            ...             "minimum_should_match": 1,
+            ...         }
+            ...     },
+            ...     paginas=1,
+            ... )
 
         See also:
             :class:`InputListarProcessosDataJud` — fonte da verdade dos
@@ -306,6 +433,7 @@ class DatajudScraper(BaseScraper):
                 else None
             )
 
+        _pop_plural_aliases(kwargs)
         try:
             inp = InputListarProcessosDataJud(paginas=paginas_norm, **kwargs)
         except ValidationError as exc:
@@ -316,9 +444,27 @@ class DatajudScraper(BaseScraper):
         tribunal = inp.tribunal
         ano_ajuizamento = inp.ano_ajuizamento
         classe = inp.classe
-        assuntos = inp.assuntos
+        assunto = inp.assunto
+        data_ajuizamento_inicio = inp.data_ajuizamento_inicio
+        data_ajuizamento_fim = inp.data_ajuizamento_fim
+        orgao_julgador = inp.orgao_julgador
+        query_override = inp.query
         mostrar_movs = inp.mostrar_movs
         tamanho_pagina = inp.tamanho_pagina
+
+        # Resolve ``tipos_movimentacao`` (nomes amigaveis) -> codigos TPU e
+        # concatena com ``movimentos_codigo`` direto. O builder em download.py
+        # recebe so a lista plana — mantemos o mapping numa unica camada.
+        # Schema garantiu que cada nome em ``tipos_movimentacao`` esta em
+        # ``TIPOS_MOVIMENTACAO``, entao o ``[]`` de fallback aqui e defesa.
+        movimentos_codigo: list[int] | None = None
+        if inp.tipos_movimentacao or inp.movimentos_codigo:
+            codigos: list[int] = []
+            for tipo in inp.tipos_movimentacao or []:
+                codigos.extend(TIPOS_MOVIMENTACAO.get(tipo, []))
+            codigos.extend(inp.movimentos_codigo or [])
+            # Dedup mantendo ordem (uniao das duas fontes).
+            movimentos_codigo = list(dict.fromkeys(codigos))
 
         all_dfs = []
         # Determine target aliases
@@ -379,7 +525,7 @@ class DatajudScraper(BaseScraper):
         for alias_idx, alias_name in enumerate(target_aliases):
             logger.info("Consultando: %s (%d/%d)", alias_name, alias_idx+1, len(target_aliases))
             # If CNJs were grouped, use only the CNJs for this specific alias
-            current_cnjs_for_alias: Optional[Union[str, List[str]]]
+            current_cnjs_for_alias: str | list[str] | None
             if numero_processo and not tribunal:
                 current_cnjs_for_alias = processos_por_alias[alias_name]
             else:
@@ -389,10 +535,15 @@ class DatajudScraper(BaseScraper):
                 numero_processo=current_cnjs_for_alias,
                 ano_ajuizamento=ano_ajuizamento,
                 classe=classe,
-                assuntos=assuntos,
+                assunto=assunto,
+                data_ajuizamento_inicio=data_ajuizamento_inicio,
+                data_ajuizamento_fim=data_ajuizamento_fim,
+                movimentos_codigo=movimentos_codigo,
+                orgao_julgador=orgao_julgador,
+                query_override=query_override,
                 mostrar_movs=mostrar_movs,
                 paginas_range=paginas_norm,
-                tamanho_pagina=tamanho_pagina
+                tamanho_pagina=tamanho_pagina,
             )
             if not df_alias.empty:
                 all_dfs.append(df_alias)
@@ -404,19 +555,24 @@ class DatajudScraper(BaseScraper):
     def _listar_processos_por_alias(
         self,
         alias: str,
-        numero_processo: Optional[Union[str, List[str]]],
-        ano_ajuizamento: Optional[int],
-        classe: Optional[str],
-        assuntos: Optional[List[str]],
+        numero_processo: str | list[str] | None,
+        ano_ajuizamento: int | None,
+        classe: str | None,
+        assunto: list[str] | None,
+        data_ajuizamento_inicio: str | None,
+        data_ajuizamento_fim: str | None,
+        movimentos_codigo: list[int] | None,
+        orgao_julgador: str | None,
+        query_override: dict | None,
         mostrar_movs: bool,
-        paginas_range: Optional[range],
+        paginas_range: range | None,
         tamanho_pagina: int,
     ) -> pd.DataFrame:
         """Helper to fetch and parse data for a single alias with pagination."""
         dfs_alias = []
         current_page = paginas_range.start if paginas_range else 1
         end_page = paginas_range.stop if paginas_range else float('inf')
-        search_after_params: Optional[List[Any]] = None  # For deep pagination
+        search_after_params: list[Any] | None = None  # For deep pagination
 
         # Initialize tqdm progress bar
         if paginas_range:
@@ -440,7 +596,12 @@ class DatajudScraper(BaseScraper):
                     numero_processo=numero_processo,
                     ano_ajuizamento=ano_ajuizamento,
                     classe=classe,
-                    assuntos=assuntos,
+                    assunto=assunto,
+                    data_ajuizamento_inicio=data_ajuizamento_inicio,
+                    data_ajuizamento_fim=data_ajuizamento_fim,
+                    movimentos_codigo=movimentos_codigo,
+                    orgao_julgador=orgao_julgador,
+                    query=query_override,
                     mostrar_movs=mostrar_movs,
                     tamanho_pagina=tamanho_pagina,
                     search_after=search_after_params,

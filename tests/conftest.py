@@ -10,12 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from helpers import (
-    DATA_ALVO_BR,
-    DATA_ALVO_FIM_BR,
-    DATA_ALVO_FIM_ISO,
-    DATA_ALVO_ISO,
-)
+from tests.helpers import DATA_ALVO_BR, DATA_ALVO_FIM_BR, DATA_ALVO_FIM_ISO, DATA_ALVO_ISO
 
 
 @pytest.fixture

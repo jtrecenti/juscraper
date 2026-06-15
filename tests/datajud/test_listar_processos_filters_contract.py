@@ -4,13 +4,10 @@ DataJud has no deprecated aliases (rule 6a of the contract checklist
 in CLAUDE.md is N/A here): the API is recent and was designed with
 the canonical names from day one.
 
-The unknown-kwarg test asserts ``(ValidationError, TypeError)``: today
-``listar_processos`` has a closed signature (no ``**kwargs``), so passing
-an unknown keyword raises ``TypeError`` naturally. When
-``InputListarProcessosDataJud`` is wired into the client (follow-up
-PR — see ``CLAUDE.md`` "Schemas pydantic > Wiring segue o refactor #84"),
-the same call will raise ``ValidationError`` instead. The tuple lets the
-test continue to pass without modification across that transition.
+``InputListarProcessosDataJud`` is wired into the client — unknown
+kwargs are converted to ``TypeError`` via ``raise_on_extra_kwargs``;
+other validation errors (bad date format, mutually-exclusive filters,
+out-of-range ``tamanho_pagina``) surface as ``ValidationError``.
 """
 import pandas as pd
 import pytest
@@ -20,7 +17,7 @@ from responses.matchers import header_matcher, json_params_matcher
 
 import juscraper as jus
 from juscraper.aggregators.datajud.client import DatajudScraper
-from tests._helpers import load_sample
+from tests._helpers import assert_unknown_kwarg_raises, load_sample
 from tests.fixtures.capture.datajud import build_payload as _payload
 
 BASE = DatajudScraper.BASE_API_URL
@@ -33,7 +30,7 @@ CNJ_TJSP_CLEAN = "10004132220178260415"
 @responses.activate
 def test_listar_processos_all_filters_land_in_body(mocker):
     """All filters propagate simultaneously: numero_processo + ano +
-    classe + assuntos + mostrar_movs + tamanho_pagina. The matcher
+    classe + assunto + mostrar_movs + tamanho_pagina. The matcher
     confirms the body has the four ``must_conditions`` in canonical order
     plus the dual ``dataAjuizamento`` range and ``_source: True``."""
     mocker.patch("time.sleep")
@@ -48,7 +45,7 @@ def test_listar_processos_all_filters_land_in_body(mocker):
                 numero_processo=CNJ_TJSP_CLEAN,
                 ano_ajuizamento=2023,
                 classe="436",
-                assuntos=["1127", "1156"],
+                assunto=["1127", "1156"],
                 mostrar_movs=True,
                 tamanho_pagina=50,
             )),
@@ -63,7 +60,7 @@ def test_listar_processos_all_filters_land_in_body(mocker):
         numero_processo=CNJ_TJSP_FORMATTED,
         ano_ajuizamento=2023,
         classe="436",
-        assuntos=["1127", "1156"],
+        assunto=["1127", "1156"],
         mostrar_movs=True,
         tamanho_pagina=50,
         paginas=range(1, 2),
@@ -89,13 +86,14 @@ def test_listar_processos_cnj_invalido_nao_chama_api():
 
 
 def test_listar_processos_unknown_kwarg_raises():
-    """Unknown kwargs raise ``TypeError`` today (closed signature) and
-    will raise ``ValidationError`` once the schema is wired. No HTTP
-    mock needed — the error fires before any request is built."""
-    with pytest.raises((ValidationError, TypeError)):
-        jus.scraper("datajud").listar_processos(
-            tribunal="TJSP", parametro_inventado="xyz"
-        )
+    """Unknown kwargs raise ``TypeError`` via ``raise_on_extra_kwargs`` —
+    ``InputListarProcessosDataJud`` is wired and ``extra="forbid"``
+    rejects unknown kwargs before any HTTP request is built."""
+    assert_unknown_kwarg_raises(
+        jus.scraper("datajud").listar_processos,
+        "parametro_inventado",
+        tribunal="TJSP",
+    )
 
 
 def test_listar_processos_tamanho_pagina_acima_do_cap():
@@ -116,3 +114,350 @@ def test_listar_processos_tamanho_pagina_abaixo_do_minimo():
             jus.scraper("datajud").listar_processos(
                 tribunal="TJSP", tamanho_pagina=valor
             )
+
+
+# =============================================================================
+# Filtros novos da issue #49: data_ajuizamento_*, tipos_movimentacao,
+# movimentos_codigo, orgao_julgador, query (override).
+# =============================================================================
+
+
+@responses.activate
+def test_data_ajuizamento_range_propaga(mocker):
+    """Filtro ``data_ajuizamento_inicio/fim`` propaga como ``bool.should``
+    com 2 ``range`` (ISO + compacto, mesmo padrao da issue #51 para
+    ``ano_ajuizamento``)."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.POST,
+        f"{BASE}/api_publica_tjsp/_search",
+        body=load_sample("datajud", "listar_processos/single_page.json"),
+        status=200,
+        content_type="application/json",
+        match=[
+            json_params_matcher(_payload(
+                data_ajuizamento_inicio="2024-01-15",
+                data_ajuizamento_fim="2024-03-31",
+                tamanho_pagina=10,
+            )),
+        ],
+    )
+    df = jus.scraper("datajud").listar_processos(
+        tribunal="TJSP",
+        data_ajuizamento_inicio="2024-01-15",
+        data_ajuizamento_fim="2024-03-31",
+        tamanho_pagina=10,
+        paginas=range(1, 2),
+    )
+    assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
+def test_tipos_movimentacao_resolve_para_codigos(mocker):
+    """``tipos_movimentacao=['decisao']`` vira lista de codigos TPU
+    no body Elasticsearch via ``TIPOS_MOVIMENTACAO``."""
+    from juscraper.aggregators.datajud.mappings import TIPOS_MOVIMENTACAO
+    mocker.patch("time.sleep")
+    codigos_esperados = TIPOS_MOVIMENTACAO["decisao"]
+    responses.add(
+        responses.POST,
+        f"{BASE}/api_publica_tjsp/_search",
+        body=load_sample("datajud", "listar_processos/single_page.json"),
+        status=200,
+        content_type="application/json",
+        match=[
+            json_params_matcher(_payload(
+                movimentos_codigo=codigos_esperados,
+                tamanho_pagina=10,
+            )),
+        ],
+    )
+    df = jus.scraper("datajud").listar_processos(
+        tribunal="TJSP",
+        tipos_movimentacao=["decisao"],
+        tamanho_pagina=10,
+        paginas=range(1, 2),
+    )
+    assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
+def test_tipos_movimentacao_e_movimentos_codigo_concatenam(mocker):
+    """Passar ``tipos_movimentacao`` + ``movimentos_codigo`` -> uniao no
+    ``terms``. Dedup mantem ordem (categoria primeiro, codigos extras depois)."""
+    from juscraper.aggregators.datajud.mappings import TIPOS_MOVIMENTACAO
+    mocker.patch("time.sleep")
+    codigos_decisao = TIPOS_MOVIMENTACAO["decisao"]
+    extras = [99999]
+    codigos_esperados = list(dict.fromkeys(codigos_decisao + extras))
+    responses.add(
+        responses.POST,
+        f"{BASE}/api_publica_tjsp/_search",
+        body=load_sample("datajud", "listar_processos/single_page.json"),
+        status=200,
+        content_type="application/json",
+        match=[
+            json_params_matcher(_payload(
+                movimentos_codigo=codigos_esperados,
+                tamanho_pagina=10,
+            )),
+        ],
+    )
+    df = jus.scraper("datajud").listar_processos(
+        tribunal="TJSP",
+        tipos_movimentacao=["decisao"],
+        movimentos_codigo=extras,
+        tamanho_pagina=10,
+        paginas=range(1, 2),
+    )
+    assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
+def test_query_override_propaga(mocker):
+    """``query`` (dict) vira a chave ``query`` do payload Elasticsearch
+    literalmente, sem wrapping. Outros campos do payload (size/sort/source)
+    continuam controlados pela biblioteca."""
+    mocker.patch("time.sleep")
+    custom_query = {
+        "bool": {
+            "must_not": [{"exists": {"field": "orgaoJulgador.nome"}}],
+            "should": [{"match": {"classe.nome": "tutela"}}],
+            "minimum_should_match": 1,
+        }
+    }
+    expected_body = {
+        "query": custom_query,
+        "size": 10,
+        "track_total_hits": True,
+        "sort": [{"id.keyword": "asc"}],
+        "_source": {"excludes": ["movimentacoes", "movimentos"]},
+    }
+    responses.add(
+        responses.POST,
+        f"{BASE}/api_publica_tjsp/_search",
+        body=load_sample("datajud", "listar_processos/single_page.json"),
+        status=200,
+        content_type="application/json",
+        match=[json_params_matcher(expected_body)],
+    )
+    df = jus.scraper("datajud").listar_processos(
+        tribunal="TJSP",
+        query=custom_query,
+        tamanho_pagina=10,
+        paginas=range(1, 2),
+    )
+    assert isinstance(df, pd.DataFrame)
+
+
+# -----------------------------------------------------------------------------
+# Validacoes pydantic (sem rede — falha antes do builder).
+# -----------------------------------------------------------------------------
+
+
+def test_data_e_ano_ajuizamento_excluem():
+    with pytest.raises(ValidationError, match="mutuamente exclusivos"):
+        jus.scraper("datajud").listar_processos(
+            tribunal="TJSP",
+            ano_ajuizamento=2023,
+            data_ajuizamento_inicio="2023-01-01",
+        )
+
+
+@pytest.mark.parametrize(
+    "valor",
+    ["2023-13-01", "01/01/2023", "2023-1-1", "2023", "abacate"],
+)
+def test_data_ajuizamento_formato_invalido(valor):
+    with pytest.raises(ValidationError, match="YYYY-MM-DD"):
+        jus.scraper("datajud").listar_processos(
+            tribunal="TJSP",
+            data_ajuizamento_inicio=valor,
+        )
+
+
+def test_data_ajuizamento_range_invertido():
+    with pytest.raises(ValidationError, match=r"deve ser <="):
+        jus.scraper("datajud").listar_processos(
+            tribunal="TJSP",
+            data_ajuizamento_inicio="2024-12-31",
+            data_ajuizamento_fim="2024-01-01",
+        )
+
+
+def test_tipo_movimentacao_desconhecido_lista_validos():
+    with pytest.raises(ValidationError) as excinfo:
+        jus.scraper("datajud").listar_processos(
+            tribunal="TJSP",
+            tipos_movimentacao=["decisao", "inexistente_xyz"],
+        )
+    msg = str(excinfo.value)
+    assert "inexistente_xyz" in msg
+    # A mensagem lista os nomes validos para guiar o usuario.
+    assert "decisao" in msg
+    assert "sentenca" in msg
+
+
+@pytest.mark.parametrize(
+    "kwarg_extra,valor",
+    [
+        ("numero_processo", "10004132220178260415"),
+        ("ano_ajuizamento", 2023),
+        ("classe", "436"),
+        ("assunto", ["1127"]),
+        ("data_ajuizamento_inicio", "2024-01-01"),
+        ("data_ajuizamento_fim", "2024-03-31"),
+        ("tipos_movimentacao", ["decisao"]),
+        ("movimentos_codigo", [193]),
+        ("orgao_julgador", "Vara X"),
+    ],
+)
+def test_query_exclusivo_com_filtros_amigaveis(kwarg_extra, valor):
+    with pytest.raises(ValidationError, match="mutuamente exclusivo"):
+        jus.scraper("datajud").listar_processos(
+            tribunal="TJSP",
+            query={"match_all": {}},
+            **{kwarg_extra: valor},
+        )
+
+
+def test_query_exige_tribunal():
+    with pytest.raises(ValidationError, match="exige 'tribunal'"):
+        jus.scraper("datajud").listar_processos(
+            query={"match_all": {}},
+        )
+
+
+def test_query_dict_vazio_rejeitado():
+    with pytest.raises(ValidationError, match="nao-vazio"):
+        jus.scraper("datajud").listar_processos(
+            tribunal="TJSP",
+            query={},
+        )
+
+
+# =============================================================================
+# Coercao bidirecional int<->str em ``assunto`` e ``movimentos_codigo``
+# (issue #217). Codigos CNJ TPU sao inteiros por natureza; o backend
+# Elasticsearch coage int -> str em campos keyword transparentemente. O
+# schema aceita ambos no input e normaliza antes do payload, restaurando
+# o comportamento que existia antes do wiring pydantic.
+# =============================================================================
+
+
+@responses.activate
+def test_assunto_aceita_int(mocker):
+    """``assunto=[12503]`` (int) deve produzir o mesmo body que
+    ``assunto=["12503"]`` — o validator coage int -> str antes do builder.
+    Restaura o caso do notebook ``docs/notebooks/datajud.ipynb``."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.POST,
+        f"{BASE}/api_publica_tjmg/_search",
+        body=load_sample("datajud", "listar_processos/single_page.json"),
+        status=200,
+        content_type="application/json",
+        match=[
+            json_params_matcher(_payload(
+                assunto=["12503"],
+                tamanho_pagina=10,
+            )),
+        ],
+    )
+    df = jus.scraper("datajud").listar_processos(
+        tribunal="TJMG",
+        assunto=[12503],
+        tamanho_pagina=10,
+        paginas=range(1, 2),
+    )
+    assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
+def test_assunto_aceita_mix_int_str(mocker):
+    """``assunto=[12503, "12504"]`` -> ``["12503", "12504"]`` no body."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.POST,
+        f"{BASE}/api_publica_tjmg/_search",
+        body=load_sample("datajud", "listar_processos/single_page.json"),
+        status=200,
+        content_type="application/json",
+        match=[
+            json_params_matcher(_payload(
+                assunto=["12503", "12504"],
+                tamanho_pagina=10,
+            )),
+        ],
+    )
+    df = jus.scraper("datajud").listar_processos(
+        tribunal="TJMG",
+        assunto=[12503, "12504"],
+        tamanho_pagina=10,
+        paginas=range(1, 2),
+    )
+    assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
+def test_movimentos_codigo_aceita_str(mocker):
+    """``movimentos_codigo=["246"]`` (str) deve produzir o mesmo body que
+    ``[246]`` — simetrico a ``assunto``, normaliza str -> int antes do
+    builder. Cobre o caso de codigos TPU vindos de planilha/CSV."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.POST,
+        f"{BASE}/api_publica_tjsp/_search",
+        body=load_sample("datajud", "listar_processos/single_page.json"),
+        status=200,
+        content_type="application/json",
+        match=[
+            json_params_matcher(_payload(
+                movimentos_codigo=[246],
+                tamanho_pagina=10,
+            )),
+        ],
+    )
+    df = jus.scraper("datajud").listar_processos(
+        tribunal="TJSP",
+        movimentos_codigo=["246"],
+        tamanho_pagina=10,
+        paginas=range(1, 2),
+    )
+    assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
+def test_movimentos_codigo_aceita_mix_int_str(mocker):
+    """``movimentos_codigo=[246, "247"]`` -> ``[246, 247]`` no body."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.POST,
+        f"{BASE}/api_publica_tjsp/_search",
+        body=load_sample("datajud", "listar_processos/single_page.json"),
+        status=200,
+        content_type="application/json",
+        match=[
+            json_params_matcher(_payload(
+                movimentos_codigo=[246, 247],
+                tamanho_pagina=10,
+            )),
+        ],
+    )
+    df = jus.scraper("datajud").listar_processos(
+        tribunal="TJSP",
+        movimentos_codigo=[246, "247"],
+        tamanho_pagina=10,
+        paginas=range(1, 2),
+    )
+    assert isinstance(df, pd.DataFrame)
+
+
+def test_movimentos_codigo_str_nao_numerica_rejeita():
+    """Strings nao-conversiveis em ``movimentos_codigo`` levantam
+    ``ValidationError`` com mensagem mencionando o nome do campo."""
+    with pytest.raises(ValidationError, match="movimentos_codigo"):
+        jus.scraper("datajud").listar_processos(
+            tribunal="TJSP",
+            movimentos_codigo=["abc"],
+        )

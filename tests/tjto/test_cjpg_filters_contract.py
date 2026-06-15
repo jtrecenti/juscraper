@@ -3,6 +3,8 @@
 Same payload semantics as ``cjsg``, but the ``cjpg`` shortcut forces
 ``tip_criterio_inst='1'``.
 """
+from datetime import date
+
 import pandas as pd
 import pytest
 import responses
@@ -10,7 +12,7 @@ from responses.matchers import urlencoded_params_matcher
 
 import juscraper as jus
 from juscraper.courts.tjto.download import BASE_URL, build_cjsg_payload
-from tests._helpers import load_sample
+from tests._helpers import assert_unknown_kwarg_raises, load_sample
 
 
 def _add_post(expected_payload: dict) -> None:
@@ -97,3 +99,59 @@ def test_cjpg_data_inicio_alias_maps_to_data_julgamento(mocker):
     messages = [str(w.message) for w in warning_list]
     assert any("data_inicio" in m and "deprecado" in m for m in messages)
     assert any("data_fim" in m and "deprecado" in m for m in messages)
+
+
+# --- Auto-fill de data parcial (TJTO não passa por run_auto_chunk) -----------
+# Refs bug TJSP cjpg: o pipeline canônico (``apply_input_pipeline_search``)
+# autopreenche a data faltante para que backends sem auto-chunk (como TJTO
+# cjpg) também recebam ambas as datas.
+
+
+@responses.activate
+def test_cjpg_so_data_inicio_autopreenche_fim_com_hoje(mocker):
+    """Só ``data_julgamento_inicio`` → backend recebe ``dat_jul_fim=hoje``."""
+    mocker.patch("time.sleep")
+    hoje_br = date.today().strftime("%d/%m/%Y")
+    _add_post(build_cjsg_payload(
+        '"dano moral"', start=0, tip_criterio_inst="1",
+        dat_jul_ini="01/01/2024", dat_jul_fim=hoje_br,
+    ))
+
+    with pytest.warns(UserWarning, match=r"data_julgamento_fim"):
+        df = jus.scraper("tjto").cjpg(
+            '"dano moral"', paginas=1,
+            data_julgamento_inicio="01/01/2024",
+        )
+
+    assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
+def test_cjpg_so_data_fim_autopreenche_inicio_com_1990(mocker):
+    """Só ``data_julgamento_fim`` → backend recebe ``dat_jul_ini=01/01/1990``."""
+    mocker.patch("time.sleep")
+    _add_post(build_cjsg_payload(
+        '"dano moral"', start=0, tip_criterio_inst="1",
+        dat_jul_ini="01/01/1990", dat_jul_fim="31/12/2024",
+    ))
+
+    with pytest.warns(UserWarning, match=r"01/01/1990"):
+        df = jus.scraper("tjto").cjpg(
+            '"dano moral"', paginas=1,
+            data_julgamento_fim="31/12/2024",
+        )
+
+    assert isinstance(df, pd.DataFrame)
+
+
+def test_cjpg_data_publicacao_kwarg_raises():
+    """Mesmo principio do cjsg: :class:`InputCJPGTJTO` so herda
+    :class:`DataJulgamentoMixin` (o backend Solr nao expoe filtro de data
+    de publicacao), entao ``data_publicacao_*`` deve cair como
+    ``extra_forbidden`` -> ``TypeError`` (refs #186)."""
+    assert_unknown_kwarg_raises(
+        jus.scraper("tjto").cjpg,
+        "data_publicacao_inicio",
+        '"dano moral"',
+        paginas=1,
+    )

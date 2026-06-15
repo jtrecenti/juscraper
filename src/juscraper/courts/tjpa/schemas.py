@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 from ...schemas import (
     DataJulgamentoMixin,
@@ -16,6 +16,11 @@ from ...schemas import (
 
 class InputCJSGTJPA(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     """Accepted input for TJPA ``cjsg`` / ``cjsg_download``.
+
+    Wired em :meth:`juscraper.courts.tjpa.client.TJPAScraper.cjsg_download`
+    desde o #183 (eliminada duplicacao do pipeline em ``cjsg``) — kwargs
+    desconhecidos viram :class:`TypeError` em ambos ``cjsg`` e
+    ``cjsg_download``. ``cjsg`` e wrapper trivial (``download → parse``).
 
     Endpoint REST JSON (BFF). ``pesquisa`` aceita os aliases deprecados
     ``query`` / ``termo`` via :func:`juscraper.utils.params.normalize_pesquisa`,
@@ -32,8 +37,9 @@ class InputCJSGTJPA(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     assunto: str | None = None
     origem: list | None = None
     tipo: list | None = None
+    sort_order: Literal["asc", "desc"] = "desc"
+    # TODO (#212): apertar `sort_by`, `query_type` e `query_scope` com Literal[...] após captura do BFF.
     sort_by: str = "datajulgamento"
-    sort_order: str = "desc"
     query_type: str = "free"
     query_scope: str = "ementa"
 

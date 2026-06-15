@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import importlib
 import inspect
-from typing import Iterable
+from collections.abc import Iterable
 
 import pytest
 from pydantic import BaseModel
@@ -65,6 +65,10 @@ EXPECTED_COURT_OUTPUT_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
     ("tjsc", "cjsg"): ("juscraper.courts.tjsc.schemas", "OutputCJSGTJSC"),
     ("tjto", "cjsg"): ("juscraper.courts.tjto.schemas", "OutputCJSGTJTO"),
     ("tjto", "cjpg"): ("juscraper.courts.tjto.schemas", "OutputCJPGTJTO"),
+    ("trf1", "cpopg"): ("juscraper.courts.trf1.schemas", "OutputCpopgTRF1"),
+    ("trf3", "cpopg"): ("juscraper.courts.trf3.schemas", "OutputCpopgTRF3"),
+    ("trf5", "cpopg"): ("juscraper.courts.trf5.schemas", "OutputCpopgTRF5"),
+    ("trf6", "cpopg"): ("juscraper.courts.trf6.schemas", "OutputCpopgTRF6"),
 }
 
 EXPECTED_AGGREGATOR_OUTPUT_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {

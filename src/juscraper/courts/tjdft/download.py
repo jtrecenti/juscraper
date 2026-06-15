@@ -3,9 +3,7 @@ Functions for downloading specific to TJDFT
 """
 import math
 
-import requests
-
-from juscraper.utils.params import to_iso_date
+from juscraper.core.http import RequestFn
 
 BASE_URL = "https://jurisdf.tjdft.jus.br/api/v1/pesquisa"
 
@@ -41,6 +39,8 @@ def build_cjsg_payload(
 def cjsg_download(
     query,
     paginas=None,
+    *,
+    request_fn: RequestFn,
     sinonimos=True,
     espelho=True,
     inteiro_teor=False,
@@ -52,27 +52,28 @@ def cjsg_download(
     data_publicacao_fim=None,
 ):
     """
-    Downloads raw results from the TJDFT jurisprudence search (using requests).
+    Downloads raw results from the TJDFT jurisprudence search.
     Returns a list of raw results (JSON).
 
     Args:
         paginas (list, range, or None): Pages to download (1-based).
             None: downloads all available pages.
+        request_fn: HTTP callable que aplica retry + ``raise_for_status``.
+            Em uso normal e ``TJDFTScraper._request_with_retry`` (via
+            ``core.http.HTTPScraper``).
     """
     headers = {"Content-Type": "application/json"}
 
     termos_acessorios: list = []
-    jul_ini = to_iso_date(data_julgamento_inicio)
-    jul_fim = to_iso_date(data_julgamento_fim)
-    if jul_ini and jul_fim:
+    # Datas chegam aqui ja em BACKEND_DATE_FORMAT (%Y-%m-%d) — coercao feita
+    # por apply_input_pipeline_search no client a partir do schema.
+    if data_julgamento_inicio and data_julgamento_fim:
         termos_acessorios.append(
-            {"campo": "dataJulgamento", "valor": f"entre {jul_ini} e {jul_fim}"}
+            {"campo": "dataJulgamento", "valor": f"entre {data_julgamento_inicio} e {data_julgamento_fim}"}
         )
-    pub_ini = to_iso_date(data_publicacao_inicio)
-    pub_fim = to_iso_date(data_publicacao_fim)
-    if pub_ini and pub_fim:
+    if data_publicacao_inicio and data_publicacao_fim:
         termos_acessorios.append(
-            {"campo": "dataPublicacao", "valor": f"entre {pub_ini} e {pub_fim}"}
+            {"campo": "dataPublicacao", "valor": f"entre {data_publicacao_inicio} e {data_publicacao_fim}"}
         )
 
     def _fetch_page(pagina):
@@ -85,8 +86,7 @@ def cjsg_download(
             quantidade_por_pagina=quantidade_por_pagina,
             termos_acessorios=termos_acessorios,
         )
-        resp = requests.post(base_url, json=payload, headers=headers, timeout=10)
-        resp.raise_for_status()
+        resp = request_fn("POST", base_url, json=payload, headers=headers, timeout=10)
         return resp.json()
 
     if paginas is None:

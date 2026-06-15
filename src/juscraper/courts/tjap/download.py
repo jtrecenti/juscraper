@@ -1,14 +1,13 @@
-"""
-Downloads raw results from the TJAP jurisprudence search (Tucujuris).
-Uses requests library only (no browser automation needed).
-"""
-import json
+"""Downloads raw results from the TJAP jurisprudence search (Tucujuris)."""
 import logging
 import time
-from typing import Optional
+from types import MappingProxyType
 
-import requests
 from tqdm import tqdm
+
+from juscraper.core.http import RequestFn
+
+from .exceptions import TJAPApiError, TJAPSecurityCheckError
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +15,30 @@ BASE_URL = "https://tucujuris.tjap.jus.br/api/publico/consultar-jurisprudencia"
 SITE_URL = "https://tucujuris.tjap.jus.br"
 FRONT_URL = SITE_URL + "/pages/consultar-jurisprudencia/consultar-jurisprudencia.html"
 RESULTS_PER_PAGE = 20
+
+# Mensagem do envelope quando a busca não retorna nada — é um resultado legítimo
+# (zero hits), não um erro: deve virar DataFrame vazio, não exceção.
+NO_RESULTS_MESSAGE = "Nenhum resultado encontrado."
+
+
+def _raise_for_error_envelope(data: dict) -> None:
+    """Levanta exceção se a resposta do Tucujuris for um envelope de erro.
+
+    O backend devolve HTTP-200 mesmo em falha, com
+    ``{"status": "ERRO", "mensagem": ..., "detalhe": ...}`` e sem a chave
+    ``dados``. Sem isso, ``cjsg_download_manager`` interpretaria o erro como "0
+    resultados" (ver issue #279). ``"Nenhum resultado encontrado."`` é a única
+    mensagem ``ERRO`` que representa sucesso (zero hits) e passa batido.
+    """
+    if data.get("status") != "ERRO":
+        return
+    mensagem = (data.get("mensagem") or "").strip()
+    if mensagem == NO_RESULTS_MESSAGE:
+        return
+    detalhe = data.get("detalhe")
+    if "verificação de segurança" in mensagem.lower():
+        raise TJAPSecurityCheckError(mensagem, detalhe)
+    raise TJAPApiError(mensagem, detalhe)
 
 
 def _build_payload(
@@ -63,38 +86,19 @@ def _build_payload(
     return payload
 
 
-def _fetch_page(session: requests.Session, payload: dict, max_retries: int = 3) -> dict:
-    """Fetch a single page from the TJAP API with retry logic."""
-    headers = {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        "Referer": FRONT_URL,
-        "tucujuris-front-url": FRONT_URL,
-    }
-    body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
-    for attempt in range(1, max_retries + 1):
-        try:
-            resp = session.post(BASE_URL, data=body, headers=headers, timeout=30)
-            resp.raise_for_status()
-            resp.encoding = "utf-8"
-            data: dict = resp.json()
-            return data
-        except (requests.RequestException, ValueError) as exc:
-            if attempt == max_retries:
-                raise
-            wait = 2 ** attempt
-            logger.warning(
-                "TJAP request failed (attempt %d/%d): %s. Retrying in %ds...",
-                attempt, max_retries, exc, wait,
-            )
-            time.sleep(wait)
-    return {}  # unreachable
+_HEADERS = MappingProxyType({
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+    "Referer": FRONT_URL,
+    "tucujuris-front-url": FRONT_URL,
+})
 
 
 def cjsg_download_manager(
     pesquisa: str,
     paginas=None,
-    session: Optional[requests.Session] = None,
+    *,
+    request_fn: RequestFn,
     **kwargs,
 ) -> list:
     """Download raw results from the TJAP jurisprudence search (multiple pages).
@@ -105,19 +109,19 @@ def cjsg_download_manager(
         pesquisa: Search term.
         paginas (list, range, or None): Pages to download (1-based).
             None: downloads all available pages.
-        session: Optional requests.Session to reuse.
+        request_fn: HTTP callable that handles retry + raise_for_status — em
+            uso normal e ``TJAPScraper._request_with_retry`` (via
+            ``core.http.HTTPScraper``), centralizando backoff exponencial
+            para 429/5xx.
         **kwargs: Additional parameters forwarded to ``_build_payload``.
     """
-    if session is None:
-        session = requests.Session()
-        session.headers.update({
-            "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-        })
-
     def _get_page(pagina_1based):
         offset = (pagina_1based - 1) * RESULTS_PER_PAGE
         payload = _build_payload(pesquisa, offset=offset, **kwargs)
-        data = _fetch_page(session, payload)
+        resp = request_fn("POST", BASE_URL, json=payload, headers=_HEADERS, timeout=30)
+        resp.encoding = "utf-8"
+        data: dict = resp.json()
+        _raise_for_error_envelope(data)
         time.sleep(1)
         return data
 

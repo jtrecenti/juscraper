@@ -7,6 +7,7 @@ import tempfile
 import pandas as pd
 import pytest
 
+from juscraper.courts._esaj.parse import cjsg_n_results
 from juscraper.courts.tjsp.cjsg_parse import _cjsg_parse_single_page, cjsg_n_pags, cjsg_parse_manager
 from tests._helpers import load_sample
 
@@ -59,6 +60,35 @@ class TestCJSGNPages:
         )
         with pytest.raises(ValueError, match="Erro detectado"):
             cjsg_n_pags(html)
+
+
+class TestCJSGNResults:
+    """Tests do helper :func:`cjsg_n_results` (issue #92)."""
+
+    def test_extracts_raw_count_from_normal_results(self):
+        """Sample com paginacao explicita (``totalResultadoAbaRetornoFiltro``)."""
+        html = load_sample("tjsp", "cjsg/results_normal_page_01.html")
+        assert cjsg_n_results(html) == 2571077
+
+    def test_zero_results_returns_zero(self):
+        html = load_sample("tjsp", "cjsg/no_results.html")
+        assert cjsg_n_results(html) == 0
+
+    def test_single_result_fallback_counts_rows(self):
+        """Sample com 1 hit e sem marker de paginacao — fallback conta linhas."""
+        html = load_sample("tjsp", "cjsg/single_result.html")
+        assert cjsg_n_results(html) == 1
+
+    def test_single_page_uses_canonical_selector(self):
+        """Sample com totalResultado declarado — usa o numero do sample."""
+        html = load_sample("tjsp", "cjsg/single_page.html")
+        assert cjsg_n_results(html) == 78
+
+    def test_n_pags_e_wrapper_que_aplica_ceil_div(self):
+        """``cjsg_n_pags`` permanece um wrapper sobre ``cjsg_n_results``."""
+        html = load_sample("tjsp", "cjsg/results_normal_page_01.html")
+        # 2571077 resultados / 20 por pagina = 128554 paginas (ceil).
+        assert cjsg_n_pags(html) == (2571077 + 19) // 20
 
 
 class TestCJSGParseSinglePage:

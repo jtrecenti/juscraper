@@ -1,12 +1,10 @@
-"""
-Downloads raw files from the TJRS jurisprudence search.
-"""
+"""Downloads raw files from the TJRS jurisprudence search."""
 import math
-from typing import Optional
 from urllib.parse import urlencode
 
-import requests
 from tqdm import tqdm
+
+from juscraper.core.http import RequestFn
 
 BASE_URL = "https://www.tjrs.jus.br/buscas/jurisprudencia/ajax.php"
 RESULTS_PER_PAGE = 10
@@ -16,16 +14,16 @@ def build_cjsg_inner_payload(
     termo: str,
     pagina_1based: int,
     *,
-    classe: Optional[str] = None,
-    assunto: Optional[str] = None,
-    orgao_julgador: Optional[str] = None,
-    relator: Optional[str] = None,
-    data_julgamento_inicio: Optional[str] = None,
-    data_julgamento_fim: Optional[str] = None,
-    data_publicacao_inicio: Optional[str] = None,
-    data_publicacao_fim: Optional[str] = None,
-    tipo_processo: Optional[str] = None,
-    secao: Optional[str] = None,
+    classe: str | None = None,
+    assunto: str | None = None,
+    orgao_julgador: str | None = None,
+    relator: str | None = None,
+    data_julgamento_inicio: str | None = None,
+    data_julgamento_fim: str | None = None,
+    data_publicacao_inicio: str | None = None,
+    data_publicacao_fim: str | None = None,
+    tipo_processo: str | None = None,
+    secao: str | None = None,
     **kwargs,
 ) -> dict:
     """Build the inner Solr params sent to the TJRS jurisprudence AJAX endpoint.
@@ -80,17 +78,18 @@ def build_cjsg_inner_payload(
 def cjsg_download_manager(
     termo: str,
     paginas=None,
-    classe: Optional[str] = None,
-    assunto: Optional[str] = None,
-    orgao_julgador: Optional[str] = None,
-    relator: Optional[str] = None,
-    data_julgamento_inicio: Optional[str] = None,
-    data_julgamento_fim: Optional[str] = None,
-    data_publicacao_inicio: Optional[str] = None,
-    data_publicacao_fim: Optional[str] = None,
-    tipo_processo: Optional[str] = None,
-    secao: Optional[str] = None,
-    session: Optional[requests.Session] = None,
+    *,
+    request_fn: RequestFn,
+    classe: str | None = None,
+    assunto: str | None = None,
+    orgao_julgador: str | None = None,
+    relator: str | None = None,
+    data_julgamento_inicio: str | None = None,
+    data_julgamento_fim: str | None = None,
+    data_publicacao_inicio: str | None = None,
+    data_publicacao_fim: str | None = None,
+    tipo_processo: str | None = None,
+    secao: str | None = None,
     **kwargs,
 ) -> list:
     """
@@ -100,11 +99,12 @@ def cjsg_download_manager(
     Args:
         paginas (list, range, or None): Pages to download (1-based).
             None: downloads all available pages.
+        request_fn: HTTP callable that handles retry + raise_for_status — em
+            uso normal e ``TJRSScraper._request_with_retry`` (via
+            ``core.http.HTTPScraper``), centralizando backoff exponencial
+            para 429/5xx.
         secao: 'civel', 'crime', or None.
     """
-    if session is None:
-        session = requests.Session()
-
     def _fetch_page(pagina_1based):
         payload = build_cjsg_inner_payload(
             termo,
@@ -127,12 +127,10 @@ def cjsg_download_manager(
             'metodo': 'buscar_resultados',
             'parametros': parametros_str,
         }
-        resp = session.post(BASE_URL, data=data)
-        resp.raise_for_status()
+        resp = request_fn("POST", BASE_URL, data=data, timeout=30)
         return resp.json()
 
     if paginas is None:
-        # Download all pages: fetch first to get numFound, then the rest
         first = _fetch_page(1)
         resultados = [first]
         num_found = first.get('response', {}).get('numFound', 0)

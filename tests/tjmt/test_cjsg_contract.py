@@ -18,7 +18,7 @@ def _params(
     pesquisa: str,
     pagina: int,
     *,
-    quantidade_por_pagina: int = 10,
+    tamanho_pagina: int = 10,
     tipo_consulta: str = "Acordao",
     data_julgamento_inicio: str = "",
     data_julgamento_fim: str = "",
@@ -30,7 +30,7 @@ def _params(
     return {
         "filtro.isBasica": "true",
         "filtro.indicePagina": str(pagina),
-        "filtro.quantidadePagina": str(quantidade_por_pagina),
+        "filtro.quantidadePagina": str(tamanho_pagina),
         "filtro.tipoConsulta": tipo_consulta,
         "filtro.termoDeBusca": pesquisa,
         "filtro.area": "",

@@ -51,15 +51,17 @@ class TestPayloadShape:
         payload = captured_payloads[0]["payload"]
         assert payload["query"] == {"match_all": {}}
 
-    def test_payload_combina_classe_e_assuntos(self, captured_payloads):
+    def test_payload_combina_classe_e_assunto(self, captured_payloads):
         scraper = jus.scraper("datajud")
         scraper.contar_processos(
-            tribunal="TJSP", classe="436", assuntos=["7780", "1127"]
+            tribunal="TJSP", classe="436", assunto=["7780", "1127"]
         )
 
         payload = captured_payloads[0]["payload"]
         must = payload["query"]["bool"]["must"]
         assert {"match": {"classe.codigo": "436"}} in must
+        # Chave do payload Elasticsearch fica "assuntos.codigo" (backend);
+        # parametro Python e "assunto" (singular, refs #232).
         assert {"terms": {"assuntos.codigo": ["7780", "1127"]}} in must
 
     def test_payload_ano_ajuizamento_dual_range(self, captured_payloads):
@@ -119,6 +121,109 @@ class TestReturnShape:
         df = scraper.contar_processos(tribunal="TJSP")
         assert df.iloc[0]["relation"] == "gte"
         assert df.iloc[0]["count"] == 10000
+
+
+class TestFiltrosNovos176:
+    """``contar_processos`` ganha paridade com `listar_processos` no escopo
+    de #176 — `data_ajuizamento_*`, `tipos_movimentacao`, `movimentos_codigo`,
+    `orgao_julgador`, `query`. Validacao e construcao de payload reusam a
+    mesma logica do `listar`."""
+
+    def test_data_ajuizamento_inicio_fim_propaga(self, captured_payloads):
+        scraper = jus.scraper("datajud")
+        scraper.contar_processos(
+            tribunal="TJSP",
+            data_ajuizamento_inicio="2024-01-01",
+            data_ajuizamento_fim="2024-03-31",
+        )
+
+        must = captured_payloads[0]["payload"]["query"]["bool"]["must"]
+        bool_clause = must[0]["bool"]
+        shoulds = bool_clause["should"]
+        assert any(
+            s["range"]["dataAjuizamento"].get("gte") == "2024-01-01" for s in shoulds
+        )
+        assert any(
+            s["range"]["dataAjuizamento"].get("gte") == "20240101000000" for s in shoulds
+        )
+
+    def test_tipos_movimentacao_resolve_codigos_no_terms(self, captured_payloads):
+        scraper = jus.scraper("datajud")
+        scraper.contar_processos(tribunal="TJSP", tipos_movimentacao=["decisao"])
+
+        must = captured_payloads[0]["payload"]["query"]["bool"]["must"]
+        terms_clause = next(c for c in must if "terms" in c and "movimentos.codigo" in c["terms"])
+        assert isinstance(terms_clause["terms"]["movimentos.codigo"], list)
+        assert len(terms_clause["terms"]["movimentos.codigo"]) > 0
+
+    def test_movimentos_codigo_propaga(self, captured_payloads):
+        scraper = jus.scraper("datajud")
+        scraper.contar_processos(tribunal="TJSP", movimentos_codigo=[193, 442])
+
+        must = captured_payloads[0]["payload"]["query"]["bool"]["must"]
+        assert {"terms": {"movimentos.codigo": [193, 442]}} in must
+
+    def test_orgao_julgador_propaga(self, captured_payloads):
+        scraper = jus.scraper("datajud")
+        scraper.contar_processos(tribunal="TJSP", orgao_julgador="Vara X")
+
+        must = captured_payloads[0]["payload"]["query"]["bool"]["must"]
+        assert {"match": {"orgaoJulgador.nome": "Vara X"}} in must
+
+    def test_query_override_propaga(self, captured_payloads):
+        custom = {
+            "bool": {
+                "must_not": [{"exists": {"field": "orgaoJulgador.nome"}}],
+            }
+        }
+        scraper = jus.scraper("datajud")
+        scraper.contar_processos(tribunal="TJSP", query=custom)
+
+        payload = captured_payloads[0]["payload"]
+        assert payload["query"] == custom
+        assert payload["size"] == 0
+        assert payload["track_total_hits"] is True
+
+    def test_query_exclusivo_com_filtros_amigaveis(self):
+        scraper = jus.scraper("datajud")
+        with pytest.raises(Exception, match="mutuamente exclusivo"):
+            scraper.contar_processos(
+                tribunal="TJSP",
+                query={"match_all": {}},
+                ano_ajuizamento=2024,
+            )
+
+    def test_data_e_ano_excluem(self):
+        scraper = jus.scraper("datajud")
+        with pytest.raises(Exception, match="mutuamente exclusivos"):
+            scraper.contar_processos(
+                tribunal="TJSP",
+                ano_ajuizamento=2024,
+                data_ajuizamento_inicio="2024-01-01",
+            )
+
+
+class TestCoercaoTipos217:
+    """Issue #217: ``assunto`` aceita int (codigos TPU sao inteiros);
+    ``movimentos_codigo`` aceita str (vindo de planilha/CSV). Smoke test
+    confirmando que o validator do schema tambem roda em ``contar_processos``,
+    nao so em ``listar_processos``."""
+
+    def test_assunto_aceita_int(self, captured_payloads):
+        scraper = jus.scraper("datajud")
+        scraper.contar_processos(tribunal="TJMG", assunto=[12503])
+
+        must = captured_payloads[0]["payload"]["query"]["bool"]["must"]
+        # Chave Elasticsearch fica "assuntos.codigo" (backend); param Python
+        # e "assunto". Refs #232.
+        assert {"terms": {"assuntos.codigo": ["12503"]}} in must
+
+    def test_movimentos_codigo_aceita_str(self, captured_payloads):
+        scraper = jus.scraper("datajud")
+        scraper.contar_processos(tribunal="TJSP", movimentos_codigo=["246"])
+
+        must = captured_payloads[0]["payload"]["query"]["bool"]["must"]
+        assert {"terms": {"movimentos.codigo": [246]}} in must
 
 
 class TestExtraKwargs:

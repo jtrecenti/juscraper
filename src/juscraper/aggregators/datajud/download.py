@@ -3,11 +3,13 @@ Functions for downloading specific data from the Datajud API.
 """
 import logging
 import warnings
-from typing import Any, Callable, Dict, List, Optional, Union
+from collections.abc import Callable
+from typing import Any
 
 import requests
 
 from ...utils.cnj import clean_cnj
+from ...utils.logging_cfg import redact_headers
 
 logger = logging.getLogger(__name__)
 
@@ -25,61 +27,68 @@ FALLBACK_RETRY_STATUS = {504}
 
 def build_listar_processos_payload(
     *,
-    numero_processo: Optional[Union[str, List[str]]] = None,
-    ano_ajuizamento: Optional[int] = None,
-    classe: Optional[str] = None,
-    assuntos: Optional[List[str]] = None,
+    numero_processo: str | list[str] | None = None,
+    ano_ajuizamento: int | None = None,
+    classe: str | None = None,
+    assunto: list[str] | None = None,
+    data_ajuizamento_inicio: str | None = None,
+    data_ajuizamento_fim: str | None = None,
+    movimentos_codigo: list[int] | None = None,
+    orgao_julgador: str | None = None,
+    query: dict[str, Any] | None = None,
     mostrar_movs: bool = False,
     tamanho_pagina: int = 5000,
-    search_after: Optional[List[Any]] = None,
-) -> Dict[str, Any]:
+    search_after: list[Any] | None = None,
+) -> dict[str, Any]:
     """Construir o body Elasticsearch para ``DatajudScraper.listar_processos``.
 
-    Reune ``must_conditions`` (numero_processo / ano_ajuizamento / classe /
-    assuntos), aplica o sort por ``id.keyword`` exigido pelo ``search_after``
-    e controla o ``_source`` para incluir ou excluir movimentacoes/movimentos.
-    A ordem das chaves e a logica condicional sao consumidas tal qual pelos
-    contratos offline em ``tests/datajud/test_listar_processos_*_contract.py``
-    via ``json_params_matcher`` — qualquer alteracao tem que ser refletida
-    nos samples.
+    Dois caminhos:
+
+    1. **Amigavel** (``query`` is ``None``): reune ``must_conditions`` na
+       ordem canonica abaixo e monta ``query.bool.must`` (ou ``match_all``
+       se nenhum filtro). A ordem importa — os contratos offline em
+       ``tests/datajud/test_listar_processos_*_contract.py`` validam o body
+       inteiro via ``json_params_matcher``.
+
+       Ordem canonica das ``must_conditions``:
+
+       1. ``numero_processo`` -> ``terms`` em ``numeroProcesso``
+       2. ``ano_ajuizamento`` ou ``data_ajuizamento_inicio/fim`` -> ``bool.should``
+          com 2 ``range`` em ``dataAjuizamento`` (ISO + compacto, refs #51).
+          Mutuamente exclusivos no schema (validator); aqui ``ano_ajuizamento``
+          tem precedencia se ambos chegarem.
+       3. ``classe`` -> ``match`` em ``classe.codigo``
+       4. ``assunto`` -> ``terms`` em ``assuntos.codigo``
+       5. ``movimentos_codigo`` -> ``terms`` em ``movimentos.codigo``
+       6. ``orgao_julgador`` -> ``match`` em ``orgaoJulgador.nome``
+
+    2. **Override** (``query`` is not ``None``): bypassa toda a montagem de
+       ``must_conditions`` e usa ``query`` literalmente como a chave
+       ``query`` do payload Elasticsearch. O resto do payload
+       (``size``/``sort``/``_source``/``search_after``) continua sendo
+       construido pela biblioteca. O schema garante que os filtros
+       amigaveis nao chegam aqui junto com ``query``, mas o builder em si
+       e defensivo: ignora silenciosamente qualquer filtro amigavel quando
+       ``query`` e fornecido.
+
+    Em ambos os caminhos, ``mostrar_movs`` controla ``_source``,
+    ``tamanho_pagina`` -> ``size`` e ``search_after`` -> deep pagination.
     """
-    must_conditions: List[Dict[str, Any]] = []
-    if numero_processo:
-        if isinstance(numero_processo, str):
-            nproc = [numero_processo]
-        else:
-            nproc = list(numero_processo)
-        nproc = [clean_cnj(n) for n in nproc]
-        must_conditions.append({"terms": {"numeroProcesso": nproc}})
-    if ano_ajuizamento:
-        date_range_iso = {
-            "gte": f"{ano_ajuizamento}-01-01",
-            "lte": f"{ano_ajuizamento}-12-31",
-        }
-        date_range_compact = {
-            "gte": f"{ano_ajuizamento}0101000000",
-            "lte": f"{ano_ajuizamento}1231235959",
-        }
-        must_conditions.append({
-            "bool": {
-                "should": [
-                    {"range": {"dataAjuizamento": date_range_iso}},
-                    {"range": {"dataAjuizamento": date_range_compact}},
-                ],
-                "minimum_should_match": 1,
-            }
-        })
-    if classe:
-        must_conditions.append({"match": {"classe.codigo": str(classe)}})
-    if assuntos:
-        must_conditions.append({"terms": {"assuntos.codigo": assuntos}})
-
-    if must_conditions:
-        query_values: Dict[str, Any] = {"bool": {"must": must_conditions}}
+    if query is not None:
+        query_values: dict[str, Any] = query
     else:
-        query_values = {"match_all": {}}
+        query_values = _build_query_amigavel(
+            numero_processo=numero_processo,
+            ano_ajuizamento=ano_ajuizamento,
+            classe=classe,
+            assunto=assunto,
+            data_ajuizamento_inicio=data_ajuizamento_inicio,
+            data_ajuizamento_fim=data_ajuizamento_fim,
+            movimentos_codigo=movimentos_codigo,
+            orgao_julgador=orgao_julgador,
+        )
 
-    payload: Dict[str, Any] = {
+    payload: dict[str, Any] = {
         "query": query_values,
         "size": tamanho_pagina,
         "track_total_hits": True,
@@ -94,22 +103,19 @@ def build_listar_processos_payload(
     return payload
 
 
-def build_contar_processos_payload(
+def _build_query_amigavel(
     *,
-    numero_processo: Optional[Union[str, List[str]]] = None,
-    ano_ajuizamento: Optional[int] = None,
-    classe: Optional[str] = None,
-    assuntos: Optional[List[str]] = None,
-) -> Dict[str, Any]:
-    """Body Elasticsearch para ``DatajudScraper.contar_processos``.
-
-    Reutiliza o mesmo conjunto de filtros de
-    :func:`build_listar_processos_payload`, mas com ``size=0`` e
-    ``track_total_hits=True`` — não baixa documento nenhum, apenas o
-    ``hits.total`` (``value`` + ``relation``). Sem ``sort`` nem
-    ``_source`` (não há paginação).
-    """
-    must_conditions: List[Dict[str, Any]] = []
+    numero_processo: str | list[str] | None,
+    ano_ajuizamento: int | None,
+    classe: str | None,
+    assunto: list[str] | None,
+    data_ajuizamento_inicio: str | None,
+    data_ajuizamento_fim: str | None,
+    movimentos_codigo: list[int] | None,
+    orgao_julgador: str | None,
+) -> dict[str, Any]:
+    """Monta ``query.bool.must`` a partir dos filtros amigaveis."""
+    must_conditions: list[dict[str, Any]] = []
     if numero_processo:
         if isinstance(numero_processo, str):
             nproc = [numero_processo]
@@ -135,15 +141,89 @@ def build_contar_processos_payload(
                 "minimum_should_match": 1,
             }
         })
+    elif data_ajuizamento_inicio is not None or data_ajuizamento_fim is not None:
+        # Mesmo padrao dual-format do ``ano_ajuizamento`` (refs #51): TRF3/TRF4
+        # armazenam ``dataAjuizamento`` no formato compacto ``YYYYMMDDhhmmss``
+        # e ignoram ``range`` ISO-only. ``minimum_should_match: 1`` cobre os
+        # dois universos.
+        range_iso: dict[str, str] = {}
+        range_compact: dict[str, str] = {}
+        if data_ajuizamento_inicio is not None:
+            range_iso["gte"] = data_ajuizamento_inicio
+            range_compact["gte"] = (
+                data_ajuizamento_inicio.replace("-", "") + "000000"
+            )
+        if data_ajuizamento_fim is not None:
+            range_iso["lte"] = data_ajuizamento_fim
+            range_compact["lte"] = (
+                data_ajuizamento_fim.replace("-", "") + "235959"
+            )
+        must_conditions.append({
+            "bool": {
+                "should": [
+                    {"range": {"dataAjuizamento": range_iso}},
+                    {"range": {"dataAjuizamento": range_compact}},
+                ],
+                "minimum_should_match": 1,
+            }
+        })
     if classe:
-        must_conditions.append({"match": {"classe.codigo": str(classe)}})
-    if assuntos:
-        must_conditions.append({"terms": {"assuntos.codigo": assuntos}})
+        must_conditions.append({"match": {"classe.codigo": classe}})
+    if assunto:
+        # ``assuntos.codigo`` e a chave do payload Elasticsearch (campo do
+        # backend). O parametro Python e ``assunto`` (singular, refs #232).
+        must_conditions.append({"terms": {"assuntos.codigo": assunto}})
+    if movimentos_codigo:
+        must_conditions.append({"terms": {"movimentos.codigo": list(movimentos_codigo)}})
+    if orgao_julgador:
+        must_conditions.append({"match": {"orgaoJulgador.nome": orgao_julgador}})
 
     if must_conditions:
-        query_values: Dict[str, Any] = {"bool": {"must": must_conditions}}
+        return {"bool": {"must": must_conditions}}
+    return {"match_all": {}}
+
+
+def build_contar_processos_payload(
+    *,
+    numero_processo: str | list[str] | None = None,
+    ano_ajuizamento: int | None = None,
+    classe: str | None = None,
+    assunto: list[str] | None = None,
+    data_ajuizamento_inicio: str | None = None,
+    data_ajuizamento_fim: str | None = None,
+    movimentos_codigo: list[int] | None = None,
+    orgao_julgador: str | None = None,
+    query: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Body Elasticsearch para ``DatajudScraper.contar_processos``.
+
+    Reutiliza o mesmo conjunto de filtros de
+    :func:`build_listar_processos_payload`, mas com ``size=0`` e
+    ``track_total_hits=True`` — nao baixa documento nenhum, apenas o
+    ``hits.total`` (``value`` + ``relation``). Sem ``sort`` nem
+    ``_source`` (nao ha paginacao).
+
+    Aceita os mesmos filtros amigaveis de ``listar_processos``
+    (``data_ajuizamento_*``, ``movimentos_codigo``, ``orgao_julgador``)
+    e o escape-hatch ``query`` (override total da query Elasticsearch,
+    mutuamente exclusivo com os filtros amigaveis pelo schema). Os
+    filtros sao construidos pelo mesmo helper interno
+    :func:`_build_query_amigavel` usado por ``listar_processos`` —
+    capture e producao falham juntos quando o body real muda.
+    """
+    if query is not None:
+        query_values: dict[str, Any] = query
     else:
-        query_values = {"match_all": {}}
+        query_values = _build_query_amigavel(
+            numero_processo=numero_processo,
+            ano_ajuizamento=ano_ajuizamento,
+            classe=classe,
+            assunto=assunto,
+            data_ajuizamento_inicio=data_ajuizamento_inicio,
+            data_ajuizamento_fim=data_ajuizamento_fim,
+            movimentos_codigo=movimentos_codigo,
+            orgao_julgador=orgao_julgador,
+        )
 
     return {
         "query": query_values,
@@ -157,10 +237,10 @@ def call_datajud_api(
     alias: str,
     api_key: str,
     session: requests.Session,
-    query_payload: Dict[str, Any],
+    query_payload: dict[str, Any],
     verbose: bool = False,
     timeout: int = 60  # seconds
-) -> Optional[Dict[str, Any]]:
+) -> dict[str, Any] | None:
     """
     Calls the Datajud API for a given alias with a specific query.
 
@@ -169,12 +249,12 @@ def call_datajud_api(
         alias (str): The API alias for the specific tribunal/service (e.g. api_publica_tjsp).
         api_key (str): The API key for authorization.
         session (requests.Session): The requests session to use.
-        query_payload (Dict[str, Any]): The Elasticsearch query payload.
+        query_payload (dict[str, Any]): The Elasticsearch query payload.
         verbose (bool): If True, logs more details about the request.
         timeout (int): Request timeout in seconds.
 
     Returns:
-        Optional[Dict[str, Any]]: The JSON response from the API as a dictionary,
+        dict[str, Any] | None: The JSON response from the API as a dictionary,
                                    or None if the request fails or returns an error.
 
     Note:
@@ -199,19 +279,15 @@ def call_datajud_api(
 
     if verbose:
         logger.info("Calling Datajud API: %s", api_url)
-        # Redact key in log for security
-        logger.debug(
-            "Headers: {'Authorization': 'APIKey [REDACTED]',"
-            "'Content-Type': 'application/json'}"
-        )
+        logger.debug("Headers: %s", redact_headers(headers))
         logger.debug("Payload: %s", query_payload)
 
-    def _do_post() -> Optional[Dict[str, Any]]:
+    def _do_post() -> dict[str, Any] | None:
         response = session.post(api_url, json=query_payload, headers=headers, timeout=timeout)
         if verbose:
             logger.debug("Response Status Code: %s", response.status_code)
         response.raise_for_status()
-        data: Dict[str, Any] = response.json()
+        data: dict[str, Any] = response.json()
         return data
 
     def _is_overload(exc: BaseException) -> bool:
@@ -243,10 +319,10 @@ def call_datajud_api(
 def _retry_with_reduced_size(
     api_url: str,
     alias: str,
-    query_payload: Dict[str, Any],
-    do_post: Callable[[], Optional[Dict[str, Any]]],
+    query_payload: dict[str, Any],
+    do_post: Callable[[], dict[str, Any] | None],
     original_exc: BaseException,
-) -> Optional[Dict[str, Any]]:
+) -> dict[str, Any] | None:
     """1 retry com ``size`` reduzido por ``FALLBACK_DIVISOR`` apos 504/timeout.
 
     Muta ``query_payload["size"]`` em place para que o caller leia o size

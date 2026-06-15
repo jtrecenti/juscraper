@@ -1,0 +1,1 @@
+{"ambiente":"producao","status":"ERRO","mensagem":"A verificação de segurança falhou","detalhe":"{função anônima} << call_user_func << ExceptionListenerWrapper.__invoke << call_user_func << EventDispatcher.doDispatch << EventDispatcher.dispatch << HttpKernel.handleException << HttpKernel.handle << Application.handle << Application.run"}
