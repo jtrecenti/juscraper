@@ -142,7 +142,7 @@ Exemplo:
     >>> import juscraper as jus
     >>> tjsp = jus.scraper("tjsp")
     >>> df = tjsp.cjpg("dano moral", paginas=range(1, 3),
-    ...                varas=["1-1-1"], classes=["12728"])
+    ...                varas=["1-1-1"], classe=["12728"])
 
 See also:
     :class:`<InputXxxYyy>` — schema pydantic e a fonte da verdade dos
