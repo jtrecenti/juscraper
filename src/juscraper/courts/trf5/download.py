@@ -321,10 +321,15 @@ def fetch_movs_page(
     ca_token: str,
     timeout: float = 30.0,
 ) -> str:
-    """Fetch a single movs page (>=2) as the latin-1 AJAX fragment.
+    """Fetch a single movs page (>=2) as the UTF-8 AJAX fragment.
 
     The trick is that ``AJAXREQUEST`` carries the *container id* (the panel to
     refresh), not the usual ``_viewRoot`` value used by initial form submits.
+
+    Unlike the initial detail page (latin-1, see :func:`fetch_detail`), the
+    Richfaces partial-response declares and uses UTF-8. Decoding it as latin-1
+    double-encodes the accented bytes (``petição`` -> ``petiÃ§Ã£o``), so we
+    decode as UTF-8.
     """
     url = BASE_URL + DETAIL_PATH
     data = {
@@ -347,7 +352,7 @@ def fetch_movs_page(
     )
     _check_bot_challenge(resp)
     resp.raise_for_status()
-    return resp.content.decode("latin-1")
+    return resp.content.decode("utf-8")
 
 
 _TBODY_OPEN_RE = re.compile(
