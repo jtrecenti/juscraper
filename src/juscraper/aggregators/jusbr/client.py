@@ -60,8 +60,15 @@ class JusbrScraper(HTTPScraper):
         Define o token JWT para autenticacao e o decodifica para verificacao.
         """
         try:
+            # ``verify_exp: True`` e explicito porque com ``verify_signature=False``
+            # o PyJWT desativa ``verify_exp`` por padrao — sem isso, o ramo
+            # ``except jwt.ExpiredSignatureError`` abaixo seria dead code.
             decoded = jwt.decode(token,
-                                 options={"verify_signature": False, "verify_aud": False},
+                                 options={
+                                     "verify_signature": False,
+                                     "verify_aud": False,
+                                     "verify_exp": True,
+                                 },
                                  algorithms=["RS256", "HS256", "ES256", "none"])
             self.token = token
             self.session.headers.update({'authorization': f'Bearer {self.token}'})
@@ -136,6 +143,7 @@ class JusbrScraper(HTTPScraper):
             if not cnj_cleaned:
                 logger.warning("CNJ inválido fornecido e não pôde ser limpo: %s", cnj_input)
                 all_process_data.append({
+                    'processo': cnj_input,
                     'processo_pesquisado': cnj_input,
                     'status_consulta': 'CNJ Invalido'
                 })
@@ -149,6 +157,7 @@ class JusbrScraper(HTTPScraper):
             if not processos_content:
                 logger.warning("Nenhum processo encontrado para o CNJ: %s", cnj_cleaned)
                 all_process_data.append({
+                    'processo': cnj_cleaned,
                     'processo_pesquisado': cnj_cleaned,
                     'status_consulta': 'Nao encontrado na lista inicial'
                 })
@@ -172,6 +181,7 @@ class JusbrScraper(HTTPScraper):
                     all_process_data.append(parsed_details)
                 else:
                     all_process_data.append({
+                        'processo': cnj_cleaned,
                         'processo_pesquisado': cnj_cleaned,
                         'numeroProcessoOficial': numero_processo_oficial,
                         'status_consulta': 'Erro ao obter ou parsear detalhes'
@@ -271,8 +281,9 @@ class JusbrScraper(HTTPScraper):
                     )
                     break
 
-                # Para o download correto, sempre usar o UUID extraído
-                # de hrefTexto como identificador do documento na URL.
+                # Extrai UUID de cada href independente — texto e binario
+                # podem chegar separados (ou nenhum). Documento so e pulado
+                # se ambos os UUIDs faltarem.
                 href_texto = doc_meta.get('hrefTexto')
                 id_doc_uuid = None
                 if href_texto and isinstance(href_texto, str) and '/documentos/' in href_texto:
@@ -280,10 +291,9 @@ class JusbrScraper(HTTPScraper):
                         id_doc_uuid = href_texto.split('/documentos/')[1].split('/')[0]
                     except IndexError:
                         logger.warning(
-                            "Não foi possível extrair UUID do hrefTexto: %s"
-                            " para processo %s",
+                            "Não foi possível extrair UUID do hrefTexto: %s para processo %s",
                             href_texto,
-                            numero_processo_api
+                            numero_processo_api,
                         )
                 href_binario = doc_meta.get('hrefBinario')
                 id_doc_uuid_binario = None
@@ -292,21 +302,13 @@ class JusbrScraper(HTTPScraper):
                         id_doc_uuid_binario = href_binario.split('/documentos/')[1].split('/')[0]
                     except IndexError:
                         logger.warning(
-                            "Não foi possível extrair UUID do hrefBinario: %s"
-                            " para processo %s",
+                            "Não foi possível extrair UUID do hrefBinario: %s para processo %s",
                             href_binario,
-                            numero_processo_api
+                            numero_processo_api,
                         )
-                if not id_doc_uuid:
+                if not id_doc_uuid and not id_doc_uuid_binario:
                     logger.warning(
-                        "Documento sem UUID extraível de 'hrefTexto'"
-                        "para o processo %s. Metadados: %s",
-                        numero_processo_api, str(doc_meta)[:200]
-                    )
-                    continue
-                if not id_doc_uuid_binario:
-                    logger.warning(
-                        "Documento sem UUID extraível de 'hrefBinario'"
+                        "Documento sem UUID extraível em hrefTexto nem hrefBinario "
                         "para o processo %s. Metadados: %s",
                         numero_processo_api, str(doc_meta)[:200]
                     )
@@ -314,10 +316,6 @@ class JusbrScraper(HTTPScraper):
                 logger.debug(
                     "[JUSBR DEBUG] doc_meta para processo %s: %r",
                     numero_processo_api, doc_meta
-                )
-                logger.debug(
-                    "Tentando baixar texto do documento UUID %s para processo %s.",
-                    id_doc_uuid, numero_processo_api
                 )
                 # Usa CNJ limpo para a API de documentos
                 numero_processo_api_clean = clean_cnj(numero_processo_api)
@@ -327,45 +325,51 @@ class JusbrScraper(HTTPScraper):
                 auth_header = self.session.headers.get('authorization', '')
                 if isinstance(auth_header, bytes):
                     auth_header = auth_header.decode('latin-1')
-                raw_text = fetch_document_text(
-                    self._request_with_retry,
-                    numero_processo_api_clean,
-                    str(id_doc_uuid),
-                    self.BASE_API_URL_V1_DOCS,
-                    authorization=auth_header,
-                )
-                cleaned_text = clean_document_text(raw_text)
-                raw_binary = fetch_document_binary(
-                    self._request_with_retry,
-                    numero_processo_api_clean,
-                    str(id_doc_uuid_binario),
-                    self.BASE_API_URL_V2
-                )
+                # Download parcial (followup 3 da #141): texto e binario sao
+                # baixados de forma independente. So o que tiver UUID valido e
+                # buscado; o outro fica ``None`` na linha de saida.
+                raw_text: str | None = None
+                cleaned_text: str | None = None
+                if id_doc_uuid:
+                    logger.debug(
+                        "Tentando baixar texto do documento UUID %s para processo %s.",
+                        id_doc_uuid, numero_processo_api
+                    )
+                    raw_text = fetch_document_text(
+                        self._request_with_retry,
+                        numero_processo_api_clean,
+                        str(id_doc_uuid),
+                        self.BASE_API_URL_V1_DOCS,
+                        authorization=auth_header,
+                    )
+                    cleaned_text = clean_document_text(raw_text)
+                raw_binary: bytes | None = None
+                if id_doc_uuid_binario:
+                    raw_binary = fetch_document_binary(
+                        self._request_with_retry,
+                        numero_processo_api_clean,
+                        str(id_doc_uuid_binario),
+                        self.BASE_API_URL_V2
+                    )
 
-                if cleaned_text:
-                    logger.debug(
-                        "Sucesso ao baixar e limpar texto do doc UUID %s"
-                        "(processo %s), tamanho limpo: %d",
-                        id_doc_uuid,
-                        numero_processo_api,
-                        len(cleaned_text)
-                    )
-                elif raw_text:
-                    logger.debug(
-                        "Texto baixado para doc UUID %s"
-                        "(processo %s) mas resultou em None/vazio"
-                        "após limpeza. Raw tamanho: %d",
-                        id_doc_uuid,
-                        numero_processo_api,
-                        len(raw_text)
-                    )
-                else:
-                    logger.warning(
-                        "Falha ao baixar texto do doc UUID %s"
-                        "(processo %s), ou texto vazio.",
-                        id_doc_uuid,
-                        numero_processo_api
-                    )
+                if id_doc_uuid:
+                    if cleaned_text:
+                        logger.debug(
+                            "Sucesso ao baixar e limpar texto do doc UUID %s "
+                            "(processo %s), tamanho limpo: %d",
+                            id_doc_uuid, numero_processo_api, len(cleaned_text),
+                        )
+                    elif raw_text:
+                        logger.debug(
+                            "Texto baixado para doc UUID %s (processo %s) mas resultou "
+                            "em None/vazio após limpeza. Raw tamanho: %d",
+                            id_doc_uuid, numero_processo_api, len(raw_text),
+                        )
+                    else:
+                        logger.warning(
+                            "Falha ao baixar texto do doc UUID %s (processo %s), ou texto vazio.",
+                            id_doc_uuid, numero_processo_api,
+                        )
 
                 doc_data_row = {
                     'numero_processo': numero_processo_api,
