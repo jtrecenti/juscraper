@@ -48,6 +48,14 @@ def test_cpopg_returns_all_movs_pages() -> None:
     # we're posting the same page twice instead of advancing.
     pairs = [(m["data"], m["descricao"]) for m in movs]
     assert len(pairs) == len(set(pairs)), "duplicate movs after pagination"
+    # Regression guard: paginated movs (page >= 2) must carry clean accents.
+    # The Richfaces fragment is UTF-8; decoding it as latin-1 turns "petição"
+    # into "petiÃ§Ã£o". Without this, the count/uniqueness checks above pass
+    # even when every paginated row is mojibaked.
+    descricoes = " ".join(m["descricao"] for m in movs)
+    assert "Ã§" not in descricoes and "Ã£" not in descricoes, (
+        "mojibake nas movs paginadas — fragmento UTF-8 decodificado como latin-1"
+    )
 
 
 @pytest.mark.integration

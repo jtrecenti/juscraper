@@ -127,8 +127,11 @@ def test_merge_movs_pages_appends_rows_into_movs_tbody() -> None:
     from juscraper.courts.trf3.download import merge_movs_pages
     from juscraper.courts.trf3.parse import parse_detail
 
+    # Page 1 (detail page) is latin-1; the AJAX page-2 fragment is UTF-8 — the
+    # two endpoints of the same PJe deployment disagree on charset. Decode each
+    # the way fetch_detail/fetch_movs_page do in production.
     detail = load_sample_bytes("trf3", "cpopg/detail_paginated.html").decode("latin-1")
-    page_2 = load_sample_bytes("trf3", "cpopg/movs_page_2.html").decode("latin-1")
+    page_2 = load_sample_bytes("trf3", "cpopg/movs_page_2.html").decode("utf-8")
     page1_movs = parse_detail(detail)["movimentacoes"]
     merged_movs = parse_detail(merge_movs_pages(detail, [page_2]))["movimentacoes"]
     # Page 1 has 15 rows, page 2 has another 15 — merged must hold both.
@@ -136,6 +139,12 @@ def test_merge_movs_pages_appends_rows_into_movs_tbody() -> None:
     assert len(merged_movs) == 30
     # The first 15 are unchanged (we append at the end of the tbody).
     assert merged_movs[:15] == page1_movs
+    # Regression guard: page-2 rows must carry clean accents, not mojibake.
+    # Decoding the UTF-8 fragment as latin-1 turns "petição" into "petiÃ§Ã£o".
+    page2_text = " ".join(m["descricao"] for m in merged_movs[15:])
+    assert "Ã§" not in page2_text and "Ã£" not in page2_text, (
+        "mojibake nas movs paginadas — fragmento UTF-8 decodificado como latin-1"
+    )
 
 
 def test_merge_movs_pages_noop_when_extras_empty() -> None:
@@ -144,6 +153,44 @@ def test_merge_movs_pages_noop_when_extras_empty() -> None:
 
     detail = load_sample_bytes("trf3", "cpopg/detail_paginated.html").decode("latin-1")
     assert merge_movs_pages(detail, []) is detail
+
+
+@responses.activate
+def test_fetch_movs_page_decodes_fragment_as_utf8() -> None:
+    """The Richfaces AJAX fragment is UTF-8; ``fetch_movs_page`` must not latin-1 it.
+
+    Regression for the double-encoding bug where accented movimentação text came
+    back mojibaked (``petição`` -> ``petiÃ§Ã£o``) because the UTF-8 partial
+    response was decoded as latin-1. Serves the *raw bytes* of the captured
+    fragment and asserts the decoded text carries clean accents.
+    """
+    import requests
+
+    from juscraper.courts.trf3.download import (
+        BASE_URL,
+        DETAIL_PATH,
+        extract_movs_pagination,
+        fetch_movs_page,
+    )
+
+    detail = load_sample_bytes("trf3", "cpopg/detail_paginated.html").decode("latin-1")
+    info = extract_movs_pagination(detail)
+    assert info is not None
+
+    responses.add(
+        responses.POST,
+        BASE_URL + DETAIL_PATH,
+        body=load_sample_bytes("trf3", "cpopg/movs_page_2.html"),  # raw UTF-8 bytes
+        status=200,
+        content_type="text/xml; charset=UTF-8",
+    )
+
+    fragment = fetch_movs_page(requests.Session(), info, 2, "ca-token")
+
+    assert "ç" in fragment, "fragmento sem acento — decode suspeito"
+    assert "Ã§" not in fragment and "Ã£" not in fragment, (
+        "mojibake: fragmento UTF-8 decodificado como latin-1"
+    )
 
 
 @responses.activate
