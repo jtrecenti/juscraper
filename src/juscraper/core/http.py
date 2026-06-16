@@ -59,7 +59,8 @@ refactor #194) para centralizar retry + ``raise_for_status`` sem expor a
 * ``url`` (2o positional) — URL alvo.
 * kwargs livres — encaminhados a ``requests.Session.request`` (``json=``,
   ``data=``, ``headers=``, ``timeout=``, ...). ``max_retries``,
-  ``base_backoff`` e ``expect_json`` tambem sao aceitos para sobrepor o default.
+  ``base_backoff``, ``expect_json`` e ``response_hook`` tambem sao aceitos
+  para sobrepor o default.
 
 A response retornada e garantida com ``status_code < 400`` (4xx ja foi
 via ``raise_for_status``; 5xx/429 ja esgotou ``max_retries`` ->
@@ -117,6 +118,7 @@ class HTTPScraper(BaseScraper):
         max_retries: int = 3,
         base_backoff: float = 2.0,
         expect_json: bool = False,
+        response_hook: Callable[[requests.Response], None] | None = None,
         **kwargs: Any,
     ) -> requests.Response:
         """Executa ``method`` em ``url`` com retry exponencial.
@@ -135,6 +137,15 @@ class HTTPScraper(BaseScraper):
                 ``InvalidJSONResponseError``. Default ``False`` — o caller chama
                 ``.json()`` por conta própria e um corpo inválido propaga
                 ``json.JSONDecodeError`` na primeira ocorrência (#275).
+            response_hook: Callable opcional invocado com a ``Response`` de cada
+                tentativa, **antes** da decisão de retry. Serve para classificar
+                respostas que o status code sozinho não distingue — por exemplo,
+                um 403 ``Access Denied`` de bot manager (Akamai) vs. um 403
+                transitório de WAF. Se o hook levantar, a exceção propaga
+                imediatamente e **veta o retry** (útil para bloqueios session-wide
+                como :class:`BotChallengeBlockedError`, onde retentar com a mesma
+                sessão não adianta). Quando o hook retorna normalmente, o fluxo de
+                retry segue como de costume. Default ``None`` (no-op).
             **kwargs: Encaminhados para ``session.request``.
 
         Returns:
@@ -148,6 +159,8 @@ class HTTPScraper(BaseScraper):
             InvalidJSONResponseError: Quando ``expect_json=True`` e o corpo permanece
                 vazio/não-JSON após ``max_retries``.
             requests.HTTPError: Para 4xx não-retryable (via ``raise_for_status``).
+            Exception: Qualquer exceção levantada por ``response_hook`` propaga sem
+                retry.
         """
         if session is not None and not isinstance(session, requests.Session):
             raise TypeError(
@@ -160,6 +173,10 @@ class HTTPScraper(BaseScraper):
 
         for attempt in range(1, max_retries + 1):
             resp = sess.request(method, url, **kwargs)
+            if response_hook is not None:
+                # Roda antes da decisão de retry: pode classificar o status (ex.:
+                # 403 de bot manager) e vetar o retry levantando uma exceção.
+                response_hook(resp)
             if resp.status_code < 400:
                 if expect_json and not self._response_is_json(resp):
                     if attempt == max_retries:

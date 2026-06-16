@@ -1,7 +1,8 @@
 """Exceções compartilhadas pela infraestrutura HTTP/parse de juscraper.
 
 `RetryExhaustedError` é levantada por `core.http.HTTPScraper._request_with_retry`
-quando todas as tentativas de retry esgotaram em status retryable (429/5xx).
+quando todas as tentativas de retry esgotaram em status retryable (403/429/5xx —
+ver `RETRYABLE_STATUSES`).
 
 `HTTPSemanticError` é a base abstrata para casos de "HTTP-200 com página de erro"
 (captcha expirado, sessão inválida, formulário não submetido). Subclasses concretas

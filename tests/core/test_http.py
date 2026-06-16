@@ -291,3 +291,49 @@ def test_request_with_retry_expect_json_default_off_does_not_retry(probe, mocker
     sleep_spy.assert_not_called()
     with pytest.raises(ValueError):
         resp.json()
+
+
+class _HookSentinel(Exception):
+    """Exceção dedicada para asserir que ``response_hook`` veta o retry."""
+
+
+@responses.activate
+def test_request_with_retry_response_hook_vetoes_retry(probe, mocker):
+    """``response_hook`` que levanta veta o retry: a exceção propaga na 1ª tentativa.
+
+    Mesmo num status retryable (403), se o hook decide que aquela resposta é
+    terminal (ex.: bloqueio Akamai), o ``_request_with_retry`` não retenta —
+    a exceção do hook propaga imediatamente e ``time.sleep`` não é chamado.
+    """
+    sleep_spy = mocker.patch("juscraper.core.http.time.sleep")
+    responses.add(responses.GET, URL, status=403)
+    responses.add(responses.GET, URL, json={"ok": True}, status=200)
+
+    def hook(resp):
+        if resp.status_code == 403:
+            raise _HookSentinel("blocked")
+
+    with pytest.raises(_HookSentinel):
+        probe._request_with_retry("GET", URL, response_hook=hook)
+
+    sleep_spy.assert_not_called()
+    assert len(responses.calls) == 1  # não retentou
+
+
+@responses.activate
+def test_request_with_retry_response_hook_noop_allows_retry(probe, mocker):
+    """``response_hook`` que retorna normalmente não interfere no fluxo de retry."""
+    mocker.patch("juscraper.core.http.time.sleep")
+    responses.add(responses.GET, URL, status=503)
+    responses.add(responses.GET, URL, json={"ok": True}, status=200)
+
+    seen: list[int] = []
+
+    def hook(resp):
+        seen.append(resp.status_code)
+
+    resp = probe._request_with_retry("GET", URL, response_hook=hook)
+
+    assert resp.status_code == 200
+    # O hook viu as duas respostas (503 transitório + 200 final).
+    assert seen == [503, 200]
