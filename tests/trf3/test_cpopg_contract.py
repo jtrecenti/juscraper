@@ -16,7 +16,7 @@ import pytest
 import responses
 
 import juscraper as jus
-from tests._helpers import load_sample, load_sample_bytes
+from tests._helpers import assert_no_mojibake, load_sample, load_sample_bytes
 
 
 def _subset_form_matcher(expected: dict[str, str]):
@@ -62,7 +62,7 @@ def test_akamai_block_raises_dedicated_exception() -> None:
         )
 
     with _pt.raises(BotChallengeBlockedError) as exc_info:
-        _check_bot_challenge(FakeResp())  # type: ignore[arg-type]
+        _check_bot_challenge(FakeResp())
     err = exc_info.value
     assert err.tribunal == "TRF3"
     assert err.reference == "18.27f62917.1779623119.a59b1f4c"
@@ -82,7 +82,7 @@ def test_check_bot_challenge_ignores_legitimate_403() -> None:
         content = b"<html>403 - not authorized</html>"
 
     # Sem 'Access Denied' no body, a função retorna sem levantar.
-    _check_bot_challenge(FakeResp())  # type: ignore[arg-type]
+    _check_bot_challenge(FakeResp())
 
 
 def test_check_bot_challenge_ignores_non_403() -> None:
@@ -94,7 +94,7 @@ def test_check_bot_challenge_ignores_non_403() -> None:
         url = "https://example.com/x"
         content = b"Access Denied"  # nem assim — só 403 conta
 
-    _check_bot_challenge(FakeResp())  # type: ignore[arg-type]
+    _check_bot_challenge(FakeResp())
 
 
 def test_extract_movs_pagination_returns_none_when_no_slider() -> None:
@@ -142,9 +142,7 @@ def test_merge_movs_pages_appends_rows_into_movs_tbody() -> None:
     # Regression guard: page-2 rows must carry clean accents, not mojibake.
     # Decoding the UTF-8 fragment as latin-1 turns "petição" into "petiÃ§Ã£o".
     page2_text = " ".join(m["descricao"] for m in merged_movs[15:])
-    assert "Ã§" not in page2_text and "Ã£" not in page2_text, (
-        "mojibake nas movs paginadas — fragmento UTF-8 decodificado como latin-1"
-    )
+    assert_no_mojibake(page2_text, contexto="movs paginadas (merge)")
 
 
 def test_merge_movs_pages_noop_when_extras_empty() -> None:
@@ -166,12 +164,7 @@ def test_fetch_movs_page_decodes_fragment_as_utf8() -> None:
     """
     import requests
 
-    from juscraper.courts.trf3.download import (
-        BASE_URL,
-        DETAIL_PATH,
-        extract_movs_pagination,
-        fetch_movs_page,
-    )
+    from juscraper.courts.trf3.download import BASE_URL, DETAIL_PATH, extract_movs_pagination, fetch_movs_page
 
     detail = load_sample_bytes("trf3", "cpopg/detail_paginated.html").decode("latin-1")
     info = extract_movs_pagination(detail)
@@ -188,9 +181,7 @@ def test_fetch_movs_page_decodes_fragment_as_utf8() -> None:
     fragment = fetch_movs_page(requests.Session(), info, 2, "ca-token")
 
     assert "ç" in fragment, "fragmento sem acento — decode suspeito"
-    assert "Ã§" not in fragment and "Ã£" not in fragment, (
-        "mojibake: fragmento UTF-8 decodificado como latin-1"
-    )
+    assert_no_mojibake(fragment, contexto="fetch_movs_page")
 
 
 @responses.activate
