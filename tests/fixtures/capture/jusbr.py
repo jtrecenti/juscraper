@@ -125,13 +125,35 @@ def _sanitize_string(value: str, replacements: dict[str, str]) -> str:
     return out
 
 
-def _redact_value(key_lower: str, value: Any, replacements: dict[str, str]) -> Any:
-    if key_lower in _PII_KEYS:
+def _is_cpf_or_cnpj_value(value: Any) -> bool:
+    """``True`` se *value* e um CPF/CNPJ valido — como string OU inteiro.
+
+    O PDPJ devolve o CPF ora como string (``"12345678909"``), ora como inteiro
+    cru (``12345678909``), e o inteiro perde os zeros a esquerda — um CPF que
+    comeca com ``0`` chega como numero de 10 digitos. Zero-padamos para 11 (CPF)
+    ou 14 (CNPJ) antes de validar o digito verificador, que distingue documento
+    real de ID numerico qualquer.
+    """
+    if isinstance(value, bool):  # bool e subclasse de int; nunca e documento
+        return False
+    if isinstance(value, str):
+        s = value.strip()
+        return _is_cpf(s) or _is_cnpj(s)
+    if isinstance(value, int):
+        return _is_cpf(str(value).zfill(11)) or _is_cnpj(str(value).zfill(14))
+    return False
+
+
+def _redact_value(key_lower: str, value: Any, replacements: dict[str, str], *, force: bool = False) -> Any:
+    # ``force`` vem do contexto do dict pai (ex.: ``numero`` irmao de
+    # ``tipo: CPF``); redata mesmo quando o valor sozinho nao passa pela
+    # heuristica de digito verificador.
+    if force or key_lower in _PII_KEYS:
         return "REDACTED" if value not in (None, "", []) else value
-    # CPF/CNPJ cru valido (DV correto) em qualquer chave — o PDPJ espalha o CPF
-    # como ``login`` da parte, ``numero`` de documento, etc. A validacao do
-    # digito verificador evita redatar IDs numericos quaisquer.
-    if isinstance(value, str) and (_is_cpf(value.strip()) or _is_cnpj(value.strip())):
+    # CPF/CNPJ cru valido (DV correto) em qualquer chave, string ou inteiro — o
+    # PDPJ espalha o CPF como ``login`` da parte, ``numero`` de documento, etc.
+    # A validacao do digito verificador evita redatar IDs numericos quaisquer.
+    if _is_cpf_or_cnpj_value(value):
         return "REDACTED"
     if key_lower in _TRUNCATE_KEYS and isinstance(value, str) and len(value) > _TRUNCATE_LEN:
         # Trunca e ainda redige CPF/CNPJ que caia dentro do trecho preservado.
@@ -141,11 +163,21 @@ def _redact_value(key_lower: str, value: Any, replacements: dict[str, str]) -> A
     return value
 
 
+# Chaves cujo valor e o proprio documento quando o dict declara ``tipo`` CPF/CNPJ
+# (ex.: ``cadastroReceitaFederal: {"tipo": "CPF", "numero": 12345678909}``). O
+# ``numero`` ai e PII independentemente de o DV bater ou de vir como int.
+_DOC_NUMBER_KEYS = {"numero"}
+_DOC_TIPOS = {"CPF", "CNPJ"}
+
+
 def _walk(obj: Any, replacements: dict[str, str]) -> Any:
     """Walk dict/list recursively applying redaction + CNJ replacement."""
     if isinstance(obj, dict):
+        # Redacao ciente do contexto: num dict que declara ``tipo`` CPF/CNPJ, o
+        # ``numero`` irmao e o documento e deve ser redatado sempre.
+        force_keys = _DOC_NUMBER_KEYS if str(obj.get("tipo", "")).upper() in _DOC_TIPOS else set()
         return {
-            k: _walk(_redact_value(k.lower(), v, replacements), replacements)
+            k: _walk(_redact_value(k.lower(), v, replacements, force=k.lower() in force_keys), replacements)
             for k, v in obj.items()
         }
     if isinstance(obj, list):
