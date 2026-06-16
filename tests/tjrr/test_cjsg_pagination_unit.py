@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from juscraper.courts.tjrr.download import _extract_datatable_id, _get_total_pages
+from juscraper.courts.tjrr.download import _extract_datatable_id, _get_total_pages, _paginate
 from tests._helpers import load_sample
 
 
@@ -13,12 +13,12 @@ def _sample(name: str) -> str:
 
 def test_get_total_pages_results_normal():
     html = _sample("step_02_search.html")
-    assert _get_total_pages(html) == 1210
+    assert _get_total_pages(html) == 1250
 
 
 def test_get_total_pages_single_page_sample():
     html = _sample("single_page.html")
-    assert _get_total_pages(html) == 58
+    assert _get_total_pages(html) == 59
 
 
 def test_get_total_pages_no_results_sample():
@@ -76,9 +76,9 @@ def test_extract_datatable_id_falls_back_when_no_id_attribute():
 
 
 def test_extract_datatable_id_falls_back_for_non_jidt_segment():
-    """Terceiro nivel da cascata: o segmento do meio nao segue ``j_idt\\d+``
+    r"""Terceiro nivel da cascata: o segmento do meio nao segue ``j_idt\d+``
     (ex.: id nomeado ``resultTable``). Os dois primeiros seletores (presos a
-    ``j_idt\\d+``) nao casam e o seletor generico ``[\\w-]+`` resolve."""
+    ``j_idt\d+``) nao casam e o seletor generico ``[\w-]+`` resolve."""
     html = '<div id="formPesquisa:resultTable:dataTablePesquisa"></div>'
     assert _extract_datatable_id(html) == "formPesquisa:resultTable:dataTablePesquisa"
 
@@ -86,3 +86,47 @@ def test_extract_datatable_id_falls_back_for_non_jidt_segment():
 def test_extract_datatable_id_raises_when_absent():
     with pytest.raises(RuntimeError, match="datatable id"):
         _extract_datatable_id("<html><body>no datatable here</body></html>")
+
+
+class _FakeResp:
+    def __init__(self, text: str):
+        self.text = text
+        self.encoding = "utf-8"
+
+
+def test_paginate_payload_replicates_browser():
+    """Camada 2 da issue #287: o POST AJAX de paginação precisa ecoar o
+    contexto completo do form de resultados (``consultaAtual``), disparar o
+    evento de comportamento ``page`` do PrimeFaces, mandar as flags de
+    feature do datatable e o offset ``_first`` absoluto — e enviar o header
+    ``Faces-Request: partial/ajax``. O payload mínimo, sem essas peças, era
+    silenciosamente ignorado pelo backend (devolvia sempre a página 1).
+    Rede de segurança offline análoga aos testes de ``_extract_datatable_id``.
+    """
+    html = _sample("step_02_search.html")
+    dtid = _extract_datatable_id(html)
+    captured: dict = {}
+
+    def fake_request_fn(method, url, **kwargs):
+        captured["method"] = method
+        captured["data"] = kwargs.get("data")
+        captured["headers"] = kwargs.get("headers")
+        return _FakeResp("<?xml version='1.0'?><partial-response></partial-response>")
+
+    _paginate(fake_request_fn, html, page=2)
+
+    data = captured["data"]
+    headers = captured["headers"]
+    # Contexto completo do form ecoado — o termo de busca é o canário.
+    assert data["formPesquisa:consultaAtual"] == "dano moral"
+    # Evento "page" de comportamento do PrimeFaces.
+    assert data["javax.faces.behavior.event"] == "page"
+    assert data["javax.faces.partial.event"] == "page"
+    # Offset absoluto da página 2 (rows=10 -> first=10).
+    assert data[f"{dtid}_first"] == "10"
+    # Flags de feature do datatable.
+    assert data[f"{dtid}_skipChildren"] == "true"
+    assert data[f"{dtid}_encodeFeature"] == "true"
+    # Header AJAX que o backend JSF usa para tratar como partial-response.
+    assert headers["Faces-Request"] == "partial/ajax"
+    assert headers["X-Requested-With"] == "XMLHttpRequest"

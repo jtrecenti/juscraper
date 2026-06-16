@@ -17,7 +17,7 @@ from responses.registries import OrderedRegistry
 
 import juscraper as jus
 from tests._helpers import load_sample, urlencoded_body_subset_matcher
-from tests.tjrr._helpers import INDEX_URL, add_get_initial
+from tests.tjrr._helpers import INDEX_URL, add_get_initial, get_datatable_id
 
 SLEEP_VALUE = 0.42
 
@@ -52,7 +52,7 @@ def _add_post_ajax(sample_path: str, first_offset: str):
         content_type="application/xml; charset=UTF-8",
         match=[urlencoded_body_subset_matcher({
             "javax.faces.partial.ajax": "true",
-            "formPesquisa:j_idt159:dataTablePesquisa_first": first_offset,
+            f"{get_datatable_id()}_first": first_offset,
         })],
     )
 
