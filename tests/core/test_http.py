@@ -291,3 +291,47 @@ def test_request_with_retry_expect_json_default_off_does_not_retry(probe, mocker
     sleep_spy.assert_not_called()
     with pytest.raises(ValueError):
         resp.json()
+
+
+class _SentinelError(Exception):
+    """Erro de teste levantado pelo callback ``on_response``."""
+
+
+@responses.activate
+def test_request_with_retry_on_response_short_circuits_retry(probe, mocker):
+    """Um ``on_response`` que levanta curto-circuita o retry de status retryable.
+
+    403 está em ``RETRYABLE_STATUSES``; sem o callback, seria retentado até
+    ``RetryExhaustedError``. Com o callback levantando, a exceção propaga na
+    primeira resposta — é como o ``_trf`` transforma o 403 do Akamai em
+    ``BotChallengeBlockedError`` sem gastar tentativas num bloqueio session-wide.
+    """
+    sleep_spy = mocker.patch("juscraper.core.http.time.sleep")
+    # Só uma resposta registrada: se houvesse retry, o responses levantaria
+    # ConnectionError por falta de mock para a 2a tentativa.
+    responses.add(responses.GET, URL, status=403)
+
+    def _raise(resp):
+        if resp.status_code == 403:
+            raise _SentinelError
+
+    with pytest.raises(_SentinelError):
+        probe._request_with_retry("GET", URL, on_response=_raise)
+
+    assert len(responses.calls) == 1
+    sleep_spy.assert_not_called()
+
+
+@responses.activate
+def test_request_with_retry_on_response_noop_lets_flow_proceed(probe, mocker):
+    """Um ``on_response`` que não levanta deixa o fluxo normal (retry/return) seguir."""
+    mocker.patch("juscraper.core.http.time.sleep")
+    seen: list[int] = []
+    responses.add(responses.GET, URL, status=503)
+    responses.add(responses.GET, URL, json={"ok": True}, status=200)
+
+    resp = probe._request_with_retry("GET", URL, on_response=lambda r: seen.append(r.status_code))
+
+    assert resp.status_code == 200
+    # O callback viu as duas respostas (503 transitório, depois 200).
+    assert seen == [503, 200]

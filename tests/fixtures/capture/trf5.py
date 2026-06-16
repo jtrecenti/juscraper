@@ -9,7 +9,7 @@ Writes ``form_initial.html``, ``search_one_result.html``,
 ``tests/trf5/samples/cpopg/``.
 
 Goes through the *real* scraper helpers in
-:mod:`juscraper.courts.trf5.download` — using the same payload-builder and
+:mod:`juscraper.courts._trf.download` — using the same payload-builder and
 field-extraction code as the production code path, so any drift between the
 scraper and what the live tribunal actually accepts breaks this script first
 (instead of silently producing stale samples).
@@ -19,7 +19,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import juscraper as jus
-from juscraper.courts.trf5.download import (
+from juscraper.courts._trf.download import (
     build_search_payload,
     extract_ca_token,
     extract_form_field_ids,

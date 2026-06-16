@@ -142,9 +142,7 @@ def test_fetch_movs_page_decodes_fragment_as_utf8() -> None:
     ``MovsPagination`` — the focus here is the decode, not the slider extraction
     (covered live by ``test_cpopg_returns_all_movs_pages``).
     """
-    import requests
-
-    from juscraper.courts.trf5.download import BASE_URL, DETAIL_PATH, MovsPagination, fetch_movs_page
+    from juscraper.courts._trf.download import DETAIL_PATH, MovsPagination, fetch_movs_page
 
     info = MovsPagination(
         form_id="j_id156",
@@ -155,15 +153,16 @@ def test_fetch_movs_page_decodes_fragment_as_utf8() -> None:
         view_state="-1234567890",
     )
 
+    scraper = jus.scraper("trf5", sleep_time=0)
     responses.add(
         responses.POST,
-        BASE_URL + DETAIL_PATH,
+        scraper.BASE_URL + DETAIL_PATH,
         body=load_sample_bytes("trf5", "cpopg/movs_page_2.html"),  # raw UTF-8 bytes
         status=200,
         content_type="text/xml; charset=UTF-8",
     )
 
-    fragment = fetch_movs_page(requests.Session(), info, 2, "ca-token")
+    fragment = fetch_movs_page(scraper, scraper.BASE_URL, info, 2, "ca-token")
 
     assert "ç" in fragment, "fragmento sem acento — decode suspeito"
     assert "Ã§" not in fragment and "Ã£" not in fragment, (
@@ -227,9 +226,11 @@ def test_cpopg_batch_continues_after_parse_error(monkeypatch) -> None:
         body=load_sample_bytes("trf5", "cpopg/detail_normal.html"),
     )
 
-    from juscraper.courts.trf5 import client as trf5_client
+    # ``parse_detail`` é resolvido no namespace de ``_trf.base`` (onde
+    # ``cpopg_parse`` o chama).
+    from juscraper.courts._trf import base as trf_base
 
-    real_parse = trf5_client.parse_detail
+    real_parse = trf_base.parse_detail
     calls = {"n": 0}
 
     def flaky_parse(html):
@@ -238,7 +239,7 @@ def test_cpopg_batch_continues_after_parse_error(monkeypatch) -> None:
             raise ValueError("HTML inesperado")
         return real_parse(html)
 
-    monkeypatch.setattr(trf5_client, "parse_detail", flaky_parse)
+    monkeypatch.setattr(trf_base, "parse_detail", flaky_parse)
 
     scraper = jus.scraper("trf5", sleep_time=0)
     df = scraper.cpopg(["00584573120254058000", "00584573120254058001"])

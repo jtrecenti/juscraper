@@ -1,30 +1,50 @@
-"""HTTP layer for the TRF1 PJe public-process consultation.
+"""Shared HTTP layer for the TRF PJe public-process consultation (TRF1/TRF3/TRF5).
 
 A single ``cpopg`` lookup is three requests:
 
 1. ``GET BASE_URL + ConsultaPublica/listView.seam`` — primes the session
-   and returns the form HTML, from which the auto-generated JSF IDs
-   (``j_idNNN``) are extracted at runtime.
+   (Akamai bot-challenge cookies, when the deployment sits behind one) and
+   returns the form HTML, from which the auto-generated JSF IDs (``j_idNNN``)
+   are extracted at runtime.
 2. ``POST <same URL>`` with the search payload — returns an Ajax fragment
    carrying a ``ca=<token>`` link when the process is found.
 3. ``GET BASE_URL + ConsultaPublica/DetalheProcessoConsultaPublica/listView.seam?ca=<token>``
    — returns the full process detail page (latin-1 encoded).
+
+The three PJe ConsultaPública deployments share this flow byte-for-byte
+except for ``BASE_URL`` (per-tribunal), the classe form field (TRF1/TRF3 use
+the ``classeJudicial`` autocomplete + ``dataAutuacaoDecoration`` block; TRF5
+uses the ``classeProcessualProcessoHidden`` popup), and the tribunal name.
+Those vary via parameters injected by :class:`TRFConsultaScraper`, never via
+``if tribunal == ...`` here.
+
+Todas as chamadas HTTP delegam ao retry centralizado
+:meth:`juscraper.core.http.HTTPScraper._request_with_retry` (backoff
+exponencial, ``Retry-After`` numérico, retry em 403/429/5xx). A detecção de
+bot-challenge (Akamai 403) é passada via ``on_response`` para curto-circuitar
+o retry — um bloqueio session-wide não se resolve retentando (refs #281).
 """
+# pylint: disable=protected-access
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import requests
 
 from ...core.exceptions import BotChallengeBlockedError
+
+if TYPE_CHECKING:
+    from .base import TRFConsultaScraper
 
 _AKAMAI_REF_RE = re.compile(
     rb"Reference(?:&#32;|\s)(?:&#35;|#)([0-9a-f]+(?:(?:&#46;|\.)[0-9a-f]+)*)"
 )
 
 
-def _check_bot_challenge(resp: requests.Response, tribunal: str = "TRF1") -> None:
+def _check_bot_challenge(resp: requests.Response, tribunal: str = "TRF") -> None:
     """Raise :class:`BotChallengeBlockedError` when Akamai blocks the request.
 
     The Akamai bot manager returns HTTP 403 with a short ``Access Denied`` body
@@ -42,11 +62,11 @@ def _check_bot_challenge(resp: requests.Response, tribunal: str = "TRF1") -> Non
     raise BotChallengeBlockedError(tribunal, resp.url, reference=ref)
 
 
-BASE_URL = "https://pje1g-consultapublica.trf1.jus.br/consultapublica/"
-
-# Browser-realistic header set. TRF1 has not surfaced an Akamai-style
-# bot challenge so far, but sending the same Chrome-flavored headers as
-# TRF3/TRF5 keeps the session-priming behavior predictable.
+# Browser-realistic header set. Some deployments (TRF3) sit behind an Akamai
+# bot manager (``ak_bmsc`` cookie) that closes the connection on stripped
+# requests; the Sec-Fetch-* headers and Accept-Encoding: br are what trip the
+# challenge into returning the page instead of stalling. TRF1/TRF5 are more
+# lenient but sending the same headers keeps the session-priming predictable.
 BROWSER_HEADERS: dict[str, str] = {
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -73,9 +93,14 @@ DOC_HTML_PATH = (
 _CA_TOKEN_RE = re.compile(r"ca=([0-9a-f]+)")
 
 
+def _bot_challenge_guard(scraper: "TRFConsultaScraper") -> Callable[[requests.Response], None]:
+    """Build the ``on_response`` callback that raises on the tribunal's Akamai 403."""
+    return lambda resp: _check_bot_challenge(resp, scraper.TRIBUNAL_NAME)
+
+
 @dataclass(frozen=True)
 class FormFieldIds:
-    """JSF auto-generated IDs needed to build a valid TRF1 search payload.
+    """JSF auto-generated IDs needed to build a valid TRF search payload.
 
     The ``j_idNNN`` numbers vary per deployment but are stable across
     requests within a deployment; we re-extract them on every fresh session
@@ -84,24 +109,34 @@ class FormFieldIds:
 
     processo_referencia: str  # ``fPP:j_idNNN:processoReferenciaInput``
     nome_advogado: str  # ``fPP:j_idNNN:nomeAdv``
-    classe_judicial: str  # ``fPP:j_idNNN:classeJudicial`` (autocomplete)
+    classe: str  # ``fPP:j_idNNN:<CLASSE_FIELD_NAME>`` (autocomplete or popup)
     oab_decoration: str  # ``fPP:Decoration:j_idNNN`` (second OAB digit field)
     search_trigger: str  # ``fPP:j_idNNN`` — JSF Ajax behaviour bound to ``executarPesquisa()``
 
 
-def extract_form_field_ids(form_html: str) -> FormFieldIds:
-    """Pull the dynamic ``j_idNNN`` IDs out of TRF1's form HTML."""
+def extract_form_field_ids(
+    form_html: str,
+    classe_field_name: str = "classeJudicial",
+) -> FormFieldIds:
+    """Pull the dynamic ``j_idNNN`` IDs out of the form HTML.
+
+    ``classe_field_name`` selects the classe component: TRF1/TRF3 ship the
+    ``classeJudicial`` autocomplete, TRF5 the ``classeProcessualProcessoHidden``
+    popup picker — visually similar, different form field names.
+    """
     def _find(pattern: str, label: str) -> str:
         m = re.search(pattern, form_html)
         if not m:
-            raise RuntimeError(f"TRF1: could not locate {label} field in form HTML")
+            raise RuntimeError(f"TRF: could not locate {label} field in form HTML")
         return m.group(1)
 
     processo_ref_id = _find(
         r'name="fPP:(j_id\d+):processoReferenciaInput"', "processoReferenciaInput"
     )
     nome_adv_id = _find(r'name="fPP:(j_id\d+):nomeAdv"', "nomeAdv")
-    classe_id = _find(r'name="fPP:(j_id\d+):classeJudicial"', "classeJudicial")
+    classe_id = _find(
+        rf'name="fPP:(j_id\d+):{re.escape(classe_field_name)}"', classe_field_name
+    )
     oab_deco_id = _find(r'name="fPP:Decoration:(j_id\d+)"', "Decoration:j_idNNN")
 
     # The search button's JSF Ajax behaviour is bound to a generated
@@ -115,12 +150,12 @@ def extract_form_field_ids(form_html: str) -> FormFieldIds:
     )
     if not m:
         raise RuntimeError(
-            "TRF1: could not locate executarPesquisa search trigger in form HTML"
+            "TRF: could not locate executarPesquisa search trigger in form HTML"
         )
     return FormFieldIds(
         processo_referencia=processo_ref_id,
         nome_advogado=nome_adv_id,
-        classe_judicial=classe_id,
+        classe=classe_id,
         oab_decoration=oab_deco_id,
         search_trigger=m.group(1),
     )
@@ -129,6 +164,7 @@ def extract_form_field_ids(form_html: str) -> FormFieldIds:
 def build_search_payload(
     numero_processo: str,
     field_ids: FormFieldIds,
+    classe_fields: dict[str, str],
 ) -> dict[str, str]:
     """Build the ``application/x-www-form-urlencoded`` body for a CNJ lookup.
 
@@ -137,12 +173,10 @@ def build_search_payload(
     backend tolerates omitted optional fields only when the radio/select
     "control" fields are present alongside.
 
-    TRF1 specifics (mirror TRF3):
-
-    * ``classeJudicial`` is an autocomplete component (with paired
-      ``sgbClasseJudicial_selection``).
-    * ``dataAutuacaoDecoration`` is rendered, so the date inputs are part of
-      the expected payload.
+    ``classe_fields`` carries the classe component (and, for TRF1/TRF3, the
+    ``dataAutuacaoDecoration`` date block) — it is supplied by
+    :meth:`TRFConsultaScraper._classe_payload_fields`, which is the only
+    per-tribunal divergence in this payload.
     """
     return {
         "AJAXREQUEST": "_viewRoot",
@@ -153,8 +187,7 @@ def build_search_payload(
         f"fPP:{field_ids.processo_referencia}:processoReferenciaInput": "",
         "fPP:dnp:nomeParte": "",
         f"fPP:{field_ids.nome_advogado}:nomeAdv": "",
-        f"fPP:{field_ids.classe_judicial}:classeJudicial": "",
-        f"fPP:{field_ids.classe_judicial}:sgbClasseJudicial_selection": "",
+        **classe_fields,
         "tipoMascaraDocumento": "on",
         "fPP:dpDec:documentoParte": "",
         "fPP:Decoration:numeroOAB": "",
@@ -162,8 +195,6 @@ def build_search_payload(
         "fPP:Decoration:estadoComboOAB": (
             "org.jboss.seam.ui.NoSelectionConverter.noSelectionValue"
         ),
-        "fPP:dataAutuacaoDecoration:dataAutuacaoInicioInputDate": "",
-        "fPP:dataAutuacaoDecoration:dataAutuacaoFimInputDate": "",
         "fPP": "fPP",
         "autoScroll": "",
         "javax.faces.ViewState": "j_id1",
@@ -182,23 +213,29 @@ def extract_ca_token(search_html: str) -> str | None:
     return m.group(1) if m else None
 
 
-def fetch_form(session: requests.Session, timeout: float = 30.0) -> str:
+def fetch_form(
+    scraper: "TRFConsultaScraper",
+    base_url: str,
+    timeout: float = 30.0,
+) -> str:
     """``GET`` the form page and return its UTF-8 text."""
-    url = BASE_URL + LISTVIEW_PATH
-    resp = session.get(url, timeout=timeout)
-    _check_bot_challenge(resp)
-    resp.raise_for_status()
+    url = base_url + LISTVIEW_PATH
+    resp = scraper._request_with_retry(
+        "GET", url, timeout=timeout, on_response=_bot_challenge_guard(scraper)
+    )
     return resp.text
 
 
 def submit_search(
-    session: requests.Session,
+    scraper: "TRFConsultaScraper",
+    base_url: str,
     payload: dict[str, str],
     timeout: float = 30.0,
 ) -> str:
     """``POST`` the search payload and return the Ajax fragment text (UTF-8)."""
-    url = BASE_URL + LISTVIEW_PATH
-    resp = session.post(
+    url = base_url + LISTVIEW_PATH
+    resp = scraper._request_with_retry(
+        "POST",
         url,
         data=payload,
         timeout=timeout,
@@ -207,14 +244,14 @@ def submit_search(
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
             "X-Requested-With": "XMLHttpRequest",
         },
+        on_response=_bot_challenge_guard(scraper),
     )
-    _check_bot_challenge(resp)
-    resp.raise_for_status()
     return resp.text
 
 
 def fetch_detail(
-    session: requests.Session,
+    scraper: "TRFConsultaScraper",
+    base_url: str,
     ca_token: str,
     timeout: float = 30.0,
 ) -> str:
@@ -224,15 +261,15 @@ def fetch_detail(
     bytes that are invalid UTF-8 (e.g. ``0xe7``); decoding as latin-1 is
     lossless for ISO-8859-1 / Windows-1252 content.
     """
-    url = BASE_URL + DETAIL_PATH
-    resp = session.get(
+    url = base_url + DETAIL_PATH
+    resp = scraper._request_with_retry(
+        "GET",
         url,
         params={"ca": ca_token},
         timeout=timeout,
-        headers={"Referer": BASE_URL + LISTVIEW_PATH},
+        headers={"Referer": base_url + LISTVIEW_PATH},
+        on_response=_bot_challenge_guard(scraper),
     )
-    _check_bot_challenge(resp)
-    resp.raise_for_status()
     return resp.content.decode("latin-1")
 
 
@@ -297,7 +334,6 @@ def extract_movs_pagination(detail_html: str) -> MovsPagination | None:  # pylin
     max_match = re.search(r"'maxValue':'(\d+)'", block)
     if not max_match:
         return None
-    # Inside the ``onchange`` JS string, single quotes are escaped as ``\'``.
     # Inside the ``onchange`` JS string every quote is escaped as ``\'``,
     # so the keys read ``\'similarityGroupingId\'`` etc. We anchor on the key
     # name and let the surrounding ``\'`` floats absorb the escapes.
@@ -320,7 +356,8 @@ def extract_movs_pagination(detail_html: str) -> MovsPagination | None:  # pylin
 
 
 def fetch_movs_page(
-    session: requests.Session,
+    scraper: "TRFConsultaScraper",
+    base_url: str,
     info: MovsPagination,
     page: int,
     ca_token: str,
@@ -337,8 +374,11 @@ def fetch_movs_page(
     Richfaces partial-response declares and uses UTF-8 (``Content-Type:
     text/xml;charset=UTF-8``). Decoding it as latin-1 double-encodes the
     accented bytes (``petição`` -> ``petiÃ§Ã£o``), so we decode as UTF-8.
+
+    Reused verbatim for the documentos juntados paginator — the POST shape is
+    identical; only the IDs in ``info`` (container/source/slider) differ.
     """
-    url = BASE_URL + DETAIL_PATH
+    url = base_url + DETAIL_PATH
     data = {
         "AJAXREQUEST": info.container_id,
         info.slider_input_name: str(page),
@@ -348,7 +388,8 @@ def fetch_movs_page(
         info.ajax_source_name: info.ajax_source_name,
         "AJAX:EVENTS_COUNT": "1",
     }
-    resp = session.post(
+    resp = scraper._request_with_retry(
+        "POST",
         url,
         data=data,
         timeout=timeout,
@@ -356,9 +397,8 @@ def fetch_movs_page(
             "Referer": f"{url}?ca={ca_token}",
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
         },
+        on_response=_bot_challenge_guard(scraper),
     )
-    _check_bot_challenge(resp)
-    resp.raise_for_status()
     return resp.content.decode("utf-8")
 
 
@@ -411,7 +451,8 @@ def extract_documento_urls(detail_html: str) -> list[tuple[str, str]]:
 
 
 def fetch_documento(
-    session: requests.Session,
+    scraper: "TRFConsultaScraper",
+    base_url: str,
     ca_token: str,
     id_processo_doc: str,
     timeout: float = 30.0,
@@ -423,15 +464,15 @@ def fetch_documento(
     so the returned payload is self-contained and can be persisted as a single
     ``.html`` file.
     """
-    url = BASE_URL + DOC_HTML_PATH
-    resp = session.get(
+    url = base_url + DOC_HTML_PATH
+    resp = scraper._request_with_retry(
+        "GET",
         url,
         params={"ca": ca_token, "idProcessoDoc": id_processo_doc, "codigo": ""},
         timeout=timeout,
-        headers={"Referer": BASE_URL + DETAIL_PATH},
+        headers={"Referer": base_url + DETAIL_PATH},
+        on_response=_bot_challenge_guard(scraper),
     )
-    _check_bot_challenge(resp)
-    resp.raise_for_status()
     return resp.content
 
 
