@@ -11,7 +11,7 @@ pertencem a ninguém.
 """
 from __future__ import annotations
 
-from fixtures.capture.jusbr import _is_cpf_or_cnpj_value, _redact_value, _walk
+from tests.fixtures.capture.jusbr import _is_cpf_or_cnpj_value, _redact_value, _walk
 
 _CPF_11_DIGITS = 11144477735      # 11 dígitos, DV válido
 _CPF_LEADING_ZERO = 1234567890    # vale 01234567890 após zfill(11)
