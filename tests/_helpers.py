@@ -140,6 +140,36 @@ def assert_unknown_kwarg_raises(
         method(*args, **{kwarg: valor, **extra_kwargs})
 
 
+_MOJIBAKE_RE = re.compile("[\u00c3\u00c2][\u0080-\u00bf]")
+
+
+def assert_no_mojibake(texto: str, *, contexto: str = "") -> None:
+    """Falha se ``texto`` tiver mojibake de UTF-8 lido como latin-1.
+
+    Detecta o padrao estrutural do double-encoding: um byte lider ``Ã``
+    (0xC3) ou ``Â`` (0xC2) seguido de um caractere na faixa U+0080-U+00BF
+    — a assinatura de ``texto.encode("utf-8").decode("latin-1")``. Cobre
+    qualquer acento do portugues (``petição`` -> ``petiÃ§Ã£o``,
+    ``comunicação`` -> ``comunicaÃ§Ã£o``), nao so ``ç``/``ã``.
+
+    Diferente de ``"Ã" not in texto``, nao da falso positivo em texto
+    legitimo em maiusculas (``"DECISÃO"``, ``"SÃO PAULO"``), onde ``Ã`` e
+    seguido de letra ASCII — fora da faixa de mojibake.
+
+    Args:
+        texto (str): Texto a inspecionar (descricoes de movs concatenadas,
+            fragmento bruto, etc.).
+        contexto (str): Rotulo opcional incluido na mensagem de falha para
+            localizar a origem (ex.: ``"fetch_movs_page"``).
+    """
+    match = _MOJIBAKE_RE.search(texto)
+    suffix = f" ({contexto})" if contexto else ""
+    assert match is None, (
+        f"mojibake detectado{suffix}: {match.group()!r} — "
+        "fragmento UTF-8 decodificado como latin-1"
+    )
+
+
 def query_param_subset_matcher(expected: dict[str, str]):
     """``responses`` matcher that checks only a subset of query-string params."""
     def matcher(request):

@@ -10,6 +10,7 @@ import pandas as pd
 import pytest
 
 import juscraper as jus
+from tests._helpers import assert_no_mojibake
 
 # CNJ pulled from data/amostra_jf_primeiro_grau.csv. Picked because it's a
 # recent JEF process from São José do Rio Preto (TRF3 / SP) that has many
@@ -48,6 +49,12 @@ def test_cpopg_returns_all_movs_pages() -> None:
     # we're posting the same page twice instead of advancing.
     pairs = [(m["data"], m["descricao"]) for m in movs]
     assert len(pairs) == len(set(pairs)), "duplicate movs after pagination"
+    # Regression guard: paginated movs (page >= 2) must carry clean accents.
+    # The Richfaces fragment is UTF-8; decoding it as latin-1 turns "petição"
+    # into "petiÃ§Ã£o". Without this, the count/uniqueness checks above pass
+    # even when every paginated row is mojibaked.
+    descricoes = " ".join(m["descricao"] for m in movs)
+    assert_no_mojibake(descricoes, contexto="movs paginadas (integração)")
 
 
 @pytest.mark.integration
