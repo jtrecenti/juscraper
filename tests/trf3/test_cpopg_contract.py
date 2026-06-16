@@ -351,3 +351,69 @@ def test_cpopg_batch_continues_after_parse_error(monkeypatch) -> None:
     assert list(df["id_cnj"]) == ["50059460920254036324", "50059460920254036325"]
     assert pd.isna(df.iloc[0].get("processo")) or df.iloc[0].get("processo") is None
     assert df.iloc[1]["processo"] == "5005946-09.2025.4.03.6324"
+
+
+@responses.activate
+def test_cpopg_retries_on_transient_5xx(mocker) -> None:
+    """Um 503 transitório no GET do form é absorvido pelo retry e a busca prossegue.
+
+    Antes da migração para ``HTTPScraper`` (#281), qualquer 5xx abortava a coleta
+    na 1ª tentativa; agora ``fetch_form`` delega a ``_request_with_retry``.
+    """
+    mocker.patch("juscraper.core.http.time.sleep")
+    responses.add(responses.GET, LIST_URL, status=503)
+    responses.add(responses.GET, LIST_URL, body=load_sample("trf3", "cpopg/form_initial.html"))
+    responses.add(responses.POST, LIST_URL, body=load_sample("trf3", "cpopg/search_one_result.html"))
+    responses.add(
+        responses.GET, DETAIL_URL, body=load_sample_bytes("trf3", "cpopg/detail_normal.html")
+    )
+
+    df = jus.scraper("trf3", sleep_time=0).cpopg("50059460920254036324")
+
+    assert len(df) == 1
+    assert df.iloc[0]["processo"] == "5005946-09.2025.4.03.6324"
+    # GET 503 + GET 200 (form) + POST + GET detail = 4 chamadas.
+    assert len(responses.calls) == 4
+
+
+@responses.activate
+def test_cpopg_akamai_block_raises_via_flow() -> None:
+    """403 'Access Denied' (Akamai) aborta na 1ª chamada como ``BotChallengeBlockedError``.
+
+    O hook ``_check_bot_challenge`` roda dentro de ``_request_with_retry`` e veta
+    o retry: o bloqueio é session-wide, retentar com a mesma sessão não adianta.
+    """
+    from juscraper.core.exceptions import BotChallengeBlockedError
+
+    responses.add(
+        responses.GET,
+        LIST_URL,
+        status=403,
+        body=b"<html><head><title>Access Denied</title></head><body>Access Denied</body></html>",
+        content_type="text/html",
+    )
+
+    scraper = jus.scraper("trf3", sleep_time=0)
+    with pytest.raises(BotChallengeBlockedError):
+        scraper.cpopg("50059460920254036324")
+    # Abortou na 1ª chamada — o bloqueio não foi retentado.
+    assert len(responses.calls) == 1
+
+
+@responses.activate
+def test_cpopg_generic_403_is_retried(mocker) -> None:
+    """403 sem 'Access Denied' (WAF genérico) é retentado, diferente do bloqueio Akamai."""
+    mocker.patch("juscraper.core.http.time.sleep")
+    responses.add(responses.GET, LIST_URL, status=403)  # sem o corpo Akamai
+    responses.add(responses.GET, LIST_URL, body=load_sample("trf3", "cpopg/form_initial.html"))
+    responses.add(responses.POST, LIST_URL, body=load_sample("trf3", "cpopg/search_one_result.html"))
+    responses.add(
+        responses.GET, DETAIL_URL, body=load_sample_bytes("trf3", "cpopg/detail_normal.html")
+    )
+
+    df = jus.scraper("trf3", sleep_time=0).cpopg("50059460920254036324")
+
+    assert len(df) == 1
+    assert df.iloc[0]["processo"] == "5005946-09.2025.4.03.6324"
+    # GET 403 + GET 200 (form) + POST + GET detail = 4 chamadas.
+    assert len(responses.calls) == 4

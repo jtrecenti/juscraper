@@ -100,14 +100,7 @@ def test_fetch_movs_page_decodes_fragment_as_utf8() -> None:
     response was decoded as latin-1. Serves the *raw bytes* of the captured
     fragment and asserts the decoded text carries clean accents.
     """
-    import requests
-
-    from juscraper.courts.trf1.download import (
-        BASE_URL,
-        DETAIL_PATH,
-        extract_movs_pagination,
-        fetch_movs_page,
-    )
+    from juscraper.courts.trf1.download import BASE_URL, DETAIL_PATH, extract_movs_pagination, fetch_movs_page
 
     detail = load_sample_bytes("trf1", "cpopg/detail_paginated.html").decode("latin-1")
     info = extract_movs_pagination(detail)
@@ -121,7 +114,8 @@ def test_fetch_movs_page_decodes_fragment_as_utf8() -> None:
         content_type="text/xml; charset=UTF-8",
     )
 
-    fragment = fetch_movs_page(requests.Session(), info, 2, "ca-token")
+    request_fn = jus.scraper("trf1", sleep_time=0)._request_with_retry
+    fragment = fetch_movs_page(request_fn, info, 2, "ca-token")
 
     assert "ç" in fragment, "fragmento sem acento — decode suspeito"
     assert "Ã§" not in fragment and "Ã£" not in fragment, (
@@ -218,3 +212,69 @@ def test_cpopg_rejects_unknown_kwargs() -> None:
     scraper = jus.scraper("trf1", sleep_time=0)
     with pytest.raises(TypeError, match="unexpected keyword"):
         scraper.cpopg("10030632720234013304", filtro_inexistente="x")
+
+
+@responses.activate
+def test_cpopg_retries_on_transient_5xx(mocker) -> None:
+    """Um 503 transitório no GET do form é absorvido pelo retry e a busca prossegue.
+
+    Antes da migração para ``HTTPScraper`` (#281), qualquer 5xx abortava a coleta
+    na 1ª tentativa; agora ``fetch_form`` delega a ``_request_with_retry``.
+    """
+    mocker.patch("juscraper.core.http.time.sleep")
+    responses.add(responses.GET, LIST_URL, status=503)
+    responses.add(responses.GET, LIST_URL, body=load_sample("trf1", "cpopg/form_initial.html"))
+    responses.add(responses.POST, LIST_URL, body=load_sample("trf1", "cpopg/search_one_result.html"))
+    responses.add(
+        responses.GET, DETAIL_URL, body=load_sample_bytes("trf1", "cpopg/detail_normal.html")
+    )
+
+    df = jus.scraper("trf1", sleep_time=0).cpopg("10030632720234013304")
+
+    assert len(df) == 1
+    assert df.iloc[0]["processo"] is not None
+    # GET 503 + GET 200 (form) + POST + GET detail = 4 chamadas.
+    assert len(responses.calls) == 4
+
+
+@responses.activate
+def test_cpopg_akamai_block_raises_via_flow() -> None:
+    """403 'Access Denied' (Akamai) aborta na 1ª chamada como ``BotChallengeBlockedError``.
+
+    O hook ``_check_bot_challenge`` roda dentro de ``_request_with_retry`` e veta
+    o retry: o bloqueio é session-wide, retentar com a mesma sessão não adianta.
+    """
+    from juscraper.core.exceptions import BotChallengeBlockedError
+
+    responses.add(
+        responses.GET,
+        LIST_URL,
+        status=403,
+        body=b"<html><head><title>Access Denied</title></head><body>Access Denied</body></html>",
+        content_type="text/html",
+    )
+
+    scraper = jus.scraper("trf1", sleep_time=0)
+    with pytest.raises(BotChallengeBlockedError):
+        scraper.cpopg("10030632720234013304")
+    # Abortou na 1ª chamada — o bloqueio não foi retentado.
+    assert len(responses.calls) == 1
+
+
+@responses.activate
+def test_cpopg_generic_403_is_retried(mocker) -> None:
+    """403 sem 'Access Denied' (WAF genérico) é retentado, diferente do bloqueio Akamai."""
+    mocker.patch("juscraper.core.http.time.sleep")
+    responses.add(responses.GET, LIST_URL, status=403)  # sem o corpo Akamai
+    responses.add(responses.GET, LIST_URL, body=load_sample("trf1", "cpopg/form_initial.html"))
+    responses.add(responses.POST, LIST_URL, body=load_sample("trf1", "cpopg/search_one_result.html"))
+    responses.add(
+        responses.GET, DETAIL_URL, body=load_sample_bytes("trf1", "cpopg/detail_normal.html")
+    )
+
+    df = jus.scraper("trf1", sleep_time=0).cpopg("10030632720234013304")
+
+    assert len(df) == 1
+    assert df.iloc[0]["processo"] is not None
+    # GET 403 + GET 200 (form) + POST + GET detail = 4 chamadas.
+    assert len(responses.calls) == 4

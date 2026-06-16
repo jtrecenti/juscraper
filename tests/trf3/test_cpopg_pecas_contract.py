@@ -204,7 +204,11 @@ def test_cpopg_with_download_pecas_continues_after_peca_error(tmp_path) -> None:
         DETAIL_URL,
         body=load_sample_bytes("trf3", "cpopg/detail_normal.html"),
     )
-    responses.add(responses.GET, DOC_URL, status=500)
+    # 404 é não-retryable: a peça falha de vez e o batch segue. Um 5xx aqui
+    # seria retentado por ``_request_with_retry`` e, com o sample 200 logo
+    # abaixo na fila, acabaria tendo sucesso na 2ª tentativa — mascarando o
+    # cenário de "peça que falha permanentemente".
+    responses.add(responses.GET, DOC_URL, status=404)
     doc_body = load_sample_bytes("trf3", "cpopg_pecas/documento_html.html")
     responses.add(responses.GET, DOC_URL, body=doc_body, content_type="text/html")
 

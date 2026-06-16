@@ -18,8 +18,8 @@ import requests
 from pydantic import ValidationError
 from tqdm import tqdm
 
-from ...core.base import BaseScraper
 from ...core.exceptions import BotChallengeBlockedError
+from ...core.http import HTTPScraper
 from ...utils.cnj import clean_cnj, format_cnj
 from .download import (
     BROWSER_HEADERS,
@@ -44,7 +44,7 @@ from .schemas import InputCpopgTRF3
 logger = logging.getLogger("juscraper.trf3")
 
 
-class TRF3Scraper(BaseScraper):
+class TRF3Scraper(HTTPScraper):
     """TRF3 PJe consulta pública (1º grau)."""
 
     BASE_URL = "https://pje1g.trf3.jus.br/pje/"
@@ -56,21 +56,25 @@ class TRF3Scraper(BaseScraper):
         sleep_time: float = 1.0,
         **kwargs: Any,
     ):
-        super().__init__("TRF3")
-        self.session = requests.Session()
-        self.session.headers.update(BROWSER_HEADERS)
-        self.set_verbose(verbose)
-        self.set_download_path(download_path)
-        self.sleep_time = sleep_time
-        self.args = kwargs
+        super().__init__(
+            "TRF3",
+            verbose=verbose,
+            download_path=download_path,
+            sleep_time=sleep_time,
+            **kwargs,
+        )
         self._field_ids: FormFieldIds | None = None  # cached after first form fetch
 
     # --- internal helpers -----------------------------------------------
 
+    def _configure_session(self, session: requests.Session) -> None:
+        """Send Chrome-flavored headers so PJe's Akamai layer serves the page."""
+        session.headers.update(BROWSER_HEADERS)
+
     def _ensure_field_ids(self):
         """Fetch the form once per session and memoize the auto-generated IDs."""
         if self._field_ids is None:
-            form_html = fetch_form(self.session)
+            form_html = fetch_form(self._request_with_retry)
             self._field_ids = extract_form_field_ids(form_html)
             logger.debug("TRF3 field IDs: %s", self._field_ids)
         return self._field_ids
@@ -101,16 +105,16 @@ class TRF3Scraper(BaseScraper):
         """
         ids = self._ensure_field_ids()
         payload = build_search_payload(format_cnj(id_cnj_clean), ids)
-        search_html = submit_search(self.session, payload)
+        search_html = submit_search(self._request_with_retry, payload)
         ca = extract_ca_token(search_html)
         if not ca:
             return None
-        detail = fetch_detail(self.session, ca)
+        detail = fetch_detail(self._request_with_retry, ca)
         movs_info = extract_movs_pagination(detail)
         if movs_info is not None and movs_info.max_pages > 1:
             extras: list[str] = []
             for page in range(2, movs_info.max_pages + 1):
-                extras.append(fetch_movs_page(self.session, movs_info, page, ca))
+                extras.append(fetch_movs_page(self._request_with_retry, movs_info, page, ca))
                 if self.sleep_time:
                     time.sleep(self.sleep_time)
             detail = merge_movs_pages(detail, extras)
@@ -121,7 +125,7 @@ class TRF3Scraper(BaseScraper):
                 # Re-use fetch_movs_page — POST shape is identical, only the
                 # IDs (container/source/slider) come from docs_info.
                 extras_docs.append(
-                    fetch_movs_page(self.session, docs_info, page, ca)
+                    fetch_movs_page(self._request_with_retry, docs_info, page, ca)
                 )
                 if self.sleep_time:
                     time.sleep(self.sleep_time)
@@ -275,7 +279,7 @@ class TRF3Scraper(BaseScraper):
             paths: list[str] = []
             for ca, doc_id in urls:
                 try:
-                    content = fetch_documento(self.session, ca, doc_id)
+                    content = fetch_documento(self._request_with_retry, ca, doc_id)
                 except BotChallengeBlockedError:
                     raise  # session-wide; nenhum item passaria
                 except Exception as exc:  # noqa: BLE001 — resiliência por peça

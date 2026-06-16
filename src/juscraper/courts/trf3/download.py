@@ -19,6 +19,7 @@ from dataclasses import dataclass
 import requests
 
 from ...core.exceptions import BotChallengeBlockedError
+from ...core.http import RequestFn
 
 _AKAMAI_REF_RE = re.compile(
     rb"Reference(?:&#32;|\s)(?:&#35;|#)([0-9a-f]+(?:(?:&#46;|\.)[0-9a-f]+)*)"
@@ -184,23 +185,22 @@ def extract_ca_token(search_html: str) -> str | None:
     return m.group(1) if m else None
 
 
-def fetch_form(session: requests.Session, timeout: float = 30.0) -> str:
+def fetch_form(request_fn: RequestFn, timeout: float = 30.0) -> str:
     """``GET`` the form page and return its UTF-8 text."""
     url = BASE_URL + LISTVIEW_PATH
-    resp = session.get(url, timeout=timeout)
-    _check_bot_challenge(resp)
-    resp.raise_for_status()
+    resp = request_fn("GET", url, timeout=timeout, response_hook=_check_bot_challenge)
     return resp.text
 
 
 def submit_search(
-    session: requests.Session,
+    request_fn: RequestFn,
     payload: dict[str, str],
     timeout: float = 30.0,
 ) -> str:
     """``POST`` the search payload and return the Ajax fragment text (UTF-8)."""
     url = BASE_URL + LISTVIEW_PATH
-    resp = session.post(
+    resp = request_fn(
+        "POST",
         url,
         data=payload,
         timeout=timeout,
@@ -209,14 +209,13 @@ def submit_search(
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
             "X-Requested-With": "XMLHttpRequest",
         },
+        response_hook=_check_bot_challenge,
     )
-    _check_bot_challenge(resp)
-    resp.raise_for_status()
     return resp.text
 
 
 def fetch_detail(
-    session: requests.Session,
+    request_fn: RequestFn,
     ca_token: str,
     timeout: float = 30.0,
 ) -> str:
@@ -227,14 +226,14 @@ def fetch_detail(
     lossless for ISO-8859-1 / Windows-1252 content.
     """
     url = BASE_URL + DETAIL_PATH
-    resp = session.get(
+    resp = request_fn(
+        "GET",
         url,
         params={"ca": ca_token},
         timeout=timeout,
         headers={"Referer": BASE_URL + LISTVIEW_PATH},
+        response_hook=_check_bot_challenge,
     )
-    _check_bot_challenge(resp)
-    resp.raise_for_status()
     return resp.content.decode("latin-1")
 
 
@@ -321,7 +320,7 @@ def extract_movs_pagination(detail_html: str) -> MovsPagination | None:  # pylin
 
 
 def fetch_movs_page(
-    session: requests.Session,
+    request_fn: RequestFn,
     info: MovsPagination,
     page: int,
     ca_token: str,
@@ -344,7 +343,8 @@ def fetch_movs_page(
         info.ajax_source_name: info.ajax_source_name,
         "AJAX:EVENTS_COUNT": "1",
     }
-    resp = session.post(
+    resp = request_fn(
+        "POST",
         url,
         data=data,
         timeout=timeout,
@@ -352,9 +352,8 @@ def fetch_movs_page(
             "Referer": f"{url}?ca={ca_token}",
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
         },
+        response_hook=_check_bot_challenge,
     )
-    _check_bot_challenge(resp)
-    resp.raise_for_status()
     return resp.content.decode("latin-1")
 
 
@@ -407,7 +406,7 @@ def extract_documento_urls(detail_html: str) -> list[tuple[str, str]]:
 
 
 def fetch_documento(
-    session: requests.Session,
+    request_fn: RequestFn,
     ca_token: str,
     id_processo_doc: str,
     timeout: float = 30.0,
@@ -420,14 +419,14 @@ def fetch_documento(
     ``.html`` file.
     """
     url = BASE_URL + DOC_HTML_PATH
-    resp = session.get(
+    resp = request_fn(
+        "GET",
         url,
         params={"ca": ca_token, "idProcessoDoc": id_processo_doc, "codigo": ""},
         timeout=timeout,
         headers={"Referer": BASE_URL + DETAIL_PATH},
+        response_hook=_check_bot_challenge,
     )
-    _check_bot_challenge(resp)
-    resp.raise_for_status()
     return resp.content
 
 
