@@ -280,6 +280,7 @@ markers = [
     "integration: hits live external services (run with '-m integration')",
     "release: comprehensive tests run before major releases (deselect with '-m \"not release\"')",
     "vcr: uses pytest-recording cassettes",
+    "anti_bot: integration test prone to anti-bot blocking (e.g. Akamai on TRF PJe); a BotChallengeBlockedError is reported as xfail (env-dependent on the client IP), so a real regression still fails loudly",
 ]
 filterwarnings = ["error"]
 
