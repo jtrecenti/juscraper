@@ -226,7 +226,7 @@ class JusbrScraper(HTTPScraper):
         df_resultados = pd.DataFrame(all_process_data)
         if 'processo_pesquisado' in df_resultados.columns:
             cols1 = [col for col in df_resultados.columns if col != 'processo_pesquisado']
-            cols = ['processo_pesquisado'] + cols1
+            cols = ['processo_pesquisado', *cols1]
             df_resultados = df_resultados[cols]
         return df_resultados
 
@@ -452,7 +452,7 @@ class JusbrScraper(HTTPScraper):
             if col in existing_cols_set:
                 final_cols.append(col)
                 existing_cols_set.remove(col)  # Avoid duplication
-        final_cols.extend(sorted(list(existing_cols_set)))  # Add remaining columns alphabetically
+        final_cols.extend(sorted(existing_cols_set))  # Add remaining columns alphabetically
 
         df_docs = df_docs[final_cols]
         # Fill with None if some preferred columns were entirely missing from all docs

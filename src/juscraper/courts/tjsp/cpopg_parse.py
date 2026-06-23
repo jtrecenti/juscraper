@@ -345,7 +345,7 @@ def cpopg_parse_single_json(path: str):
     # primeiro, vamos listar todos os arquivos que estão na
     # mesma pasta que o arquivo que está em path
     lista_arquivos = glob.glob(f"{os.path.dirname(path)}/*.json")
-    lista_processo = [f for f in lista_arquivos if f[-6:-5].isnumeric()][0]
+    lista_processo = next(f for f in lista_arquivos if f[-6:-5].isnumeric())
     lista_arquivos = [f for f in lista_arquivos if f not in lista_processo]
 
     # agora, fazemos a leitura de cada arquivo e transformamos em um dataframe
