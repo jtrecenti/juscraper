@@ -60,6 +60,8 @@ class DatajudScraper(HTTPScraper):
         :func:`call_datajud_api`.
     """
 
+    # Chave pública oficial da API Pública do Datajud (CNJ): documentada e
+    # idêntica para todos os usuários — não é um segredo vazado.
     DEFAULT_API_KEY = "cDZHYzlZa0JadVREZDJCendQbXY6SkJlTzNjLV9TRENyQk1RdnFKZGRQdw=="
     BASE_API_URL = "https://api-publica.datajud.cnj.jus.br"
 

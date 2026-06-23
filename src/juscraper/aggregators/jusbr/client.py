@@ -135,7 +135,7 @@ class JusbrScraper(HTTPScraper):
         if not codes:
             raise RuntimeError("JusBR: parâmetro 'code' ausente no fragmento de auth.")
         code = codes[0]
-        token_url = "https://sso.cloud.pje.jus.br/auth/realms/pje/protocol/openid-connect/token"
+        token_url = "https://sso.cloud.pje.jus.br/auth/realms/pje/protocol/openid-connect/token"  # nosec
         data = {
             "grant_type": "authorization_code",
             "code": code,
