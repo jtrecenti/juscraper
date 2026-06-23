@@ -178,7 +178,7 @@ class TRF1Scraper(BaseScraper):
                 f"({len(htmls)} != {len(id_cnj_list)})"
             )
         rows: list[dict[str, Any]] = []
-        for cnj, html in zip(id_cnj_list, htmls):
+        for cnj, html in zip(id_cnj_list, htmls, strict=False):
             if html is None:
                 rows.append({"id_cnj": cnj})
                 continue
@@ -265,7 +265,7 @@ class TRF1Scraper(BaseScraper):
         propaga (session-wide).
         """
         results: list[list[str]] = []
-        for i, (cnj, html) in enumerate(zip(cnjs, htmls)):
+        for i, (cnj, html) in enumerate(zip(cnjs, htmls, strict=False)):
             if html is None:
                 results.append([])
                 continue

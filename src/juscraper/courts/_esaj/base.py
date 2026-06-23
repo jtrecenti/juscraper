@@ -17,7 +17,7 @@ import logging
 import shutil
 import warnings
 from collections.abc import Callable
-from typing import Any, Literal
+from typing import Any, ClassVar, Literal
 
 import pandas as pd
 from pydantic import BaseModel, ValidationError
@@ -237,7 +237,7 @@ class EsajSearchScraper(HTTPScraper):
     # TJSP estender com as arvores de 1o grau (cjpg) sem if/else. Todos os
     # tribunais eSAJ expoem as arvores de cjsg (2o grau); cjpg so existe no
     # TJSP hoje, entao as entradas ``_1`` ficam no TJSPScraper. Refs #228.
-    TREE_ENDPOINTS: dict[str, str] = {
+    TREE_ENDPOINTS: ClassVar[dict[str, str]] = {
         "classes_2": "cjsg/classesTreeSelect.do?campoId=classes",
         "assuntos_2": "cjsg/assuntosTreeSelect.do?campoId=assuntos",
         "orgaos_2": "cjsg/secaoTreeSelect.do?campoId=secoes",

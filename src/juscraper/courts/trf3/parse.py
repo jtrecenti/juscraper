@@ -41,7 +41,7 @@ def _norm_ws(text: str | None) -> str | None:
 
 def _parse_property_views(soup: BeautifulSoup) -> dict[str, str | None]:
     """Pull ``label -> value`` pairs out of the top ``propertyView`` panels."""
-    out: dict[str, str | None] = {key: None for key in _PROCESS_LABELS.values()}
+    out: dict[str, str | None] = dict.fromkeys(_PROCESS_LABELS.values())
     for div in soup.select("div.propertyView"):
         label_el = div.find(class_="name")
         value_el = div.find(class_="value")
