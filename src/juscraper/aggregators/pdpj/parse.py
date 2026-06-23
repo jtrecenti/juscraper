@@ -177,5 +177,5 @@ def clean_document_text(text: str | None) -> str | None:
     cleaned = text.replace("\x00", "").replace("\x1a", "")
     cleaned = cleaned.replace("\r\n", "\n").replace("\r", "\n")
     cleaned = cleaned.replace("\xa0", " ")
-    cleaned = cleaned.replace(" ", "\n").replace(" ", "\n")
+    cleaned = cleaned.replace("\u2028", "\n").replace("\u2029", "\n")
     return cleaned.strip() or None
