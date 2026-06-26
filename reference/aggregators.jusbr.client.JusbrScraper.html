@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-d64a361144e6ff5bcb694466201e5ed0.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-b434c78eef13aec0c305eba05626043f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -212,8 +212,32 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <section id="juscraper.aggregators.jusbr.client.JusbrScraper.auth" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.aggregators.jusbr.client.JusbrScraper.auth">auth</h3>
-<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>aggregators.jusbr.client.JusbrScraper.auth(token)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>aggregators.jusbr.client.JusbrScraper.auth(token, <span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Define o token JWT para autenticacao e o decodifica para verificacao.</p>
+<section id="raises" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`TypeError`">TypeError</a></td>
+<td>Quando um kwarg desconhecido e passado (schema :class:<code>InputAuthJusBR</code>, <code>extra="forbid"</code>).</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>Quando o token e invalido ou esta expirado.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="juscraper.aggregators.jusbr.client.JusbrScraper.auth_firefox" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.aggregators.jusbr.client.JusbrScraper.auth_firefox">auth_firefox</h3>
@@ -222,18 +246,67 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="juscraper.aggregators.jusbr.client.JusbrScraper.cpopg" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.aggregators.jusbr.client.JusbrScraper.cpopg">cpopg</h3>
-<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>aggregators.jusbr.client.JusbrScraper.cpopg(id_cnj)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>aggregators.jusbr.client.JusbrScraper.cpopg(id_cnj, <span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Consulta processos pelo numero CNJ (ou lista de numeros CNJ) via API nacional.</p>
+<section id="raises-1" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-1">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`TypeError`">TypeError</a></td>
+<td>Quando um kwarg desconhecido e passado (schema :class:<code>InputCPOPGJusBR</code>, <code>extra="forbid"</code>).</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`RuntimeError`">RuntimeError</a></td>
+<td>Quando <code>auth(token)</code> nao foi chamado antes.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="juscraper.aggregators.jusbr.client.JusbrScraper.download_documents" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.aggregators.jusbr.client.JusbrScraper.download_documents">download_documents</h3>
 <div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>aggregators.jusbr.client.JusbrScraper.download_documents(</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    base_df,</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    max_docs_per_process<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Downloads document texts for processes in base_df. Iterates through processes in base_df, extracts document metadata from the ‘detalhes’ column, fetches, and cleans document texts. Returns a DataFrame where each row is a document.</p>
+<section id="raises-2" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-2">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`TypeError`">TypeError</a></td>
+<td>Quando um kwarg desconhecido e passado (schema :class:<code>InputDownloadDocumentsJusBR</code>, <code>extra="forbid"</code>).</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`RuntimeError`">RuntimeError</a></td>
+<td>Quando <code>auth(token)</code> nao foi chamado antes.</td>
+</tr>
+</tbody>
+</table>
 
 
+</section>
 </section>
 </section>
 </section>

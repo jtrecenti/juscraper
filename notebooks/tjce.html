@@ -74,7 +74,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-d64a361144e6ff5bcb694466201e5ed0.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-b434c78eef13aec0c305eba05626043f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -406,8 +406,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#basic-search" id="toc-basic-search" class="nav-link active" data-scroll-target="#basic-search">Basic search</a></li>
   <li><a href="#available-columns" id="toc-available-columns" class="nav-link" data-scroll-target="#available-columns">Available columns</a></li>
   <li><a href="#preview-ementa" id="toc-preview-ementa" class="nav-link" data-scroll-target="#preview-ementa">Preview ementa</a></li>
-  <li><a href="#using-filtersyou-can-filter-by-judgment-date-publication-date-decision-type-and-other-fields." id="toc-using-filtersyou-can-filter-by-judgment-date-publication-date-decision-type-and-other-fields." class="nav-link" data-scroll-target="#using-filtersyou-can-filter-by-judgment-date-publication-date-decision-type-and-other-fields.">Using filtersYou can filter by judgment date, publication date, decision type, and other fields.</a></li>
-  <li><a href="#download-and-parse-separatelyyou-can-also-download-the-raw-html-files-and-parse-them-in-a-separate-step." id="toc-download-and-parse-separatelyyou-can-also-download-the-raw-html-files-and-parse-them-in-a-separate-step." class="nav-link" data-scroll-target="#download-and-parse-separatelyyou-can-also-download-the-raw-html-files-and-parse-them-in-a-separate-step.">Download and parse separatelyYou can also download the raw HTML files and parse them in a separate step.</a></li>
+  <li><a href="#using-filters" id="toc-using-filters" class="nav-link" data-scroll-target="#using-filters">Using filters</a></li>
+  <li><a href="#download-and-parse-separately" id="toc-download-and-parse-separately" class="nav-link" data-scroll-target="#download-and-parse-separately">Download and parse separately</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.dev/jtrecenti/juscraper/blob/main/docs/notebooks/tjce.ipynb" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></nav>
     </div>
@@ -477,14 +477,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df[<span class="st">'ementa'</span>].iloc[<span class="dv">0</span>][:<span class="dv">300</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="using-filtersyou-can-filter-by-judgment-date-publication-date-decision-type-and-other-fields." class="level2">
-<h2 class="anchored" data-anchor-id="using-filtersyou-can-filter-by-judgment-date-publication-date-decision-type-and-other-fields.">Using filtersYou can filter by judgment date, publication date, decision type, and other fields.</h2>
+<section id="using-filters" class="level2">
+<h2 class="anchored" data-anchor-id="using-filters">Using filters</h2>
+<p>You can filter by judgment date, publication date, decision type, and other fields.</p>
 <div id="4ffb494c" class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>df_filtered <span class="op">=</span> tjce.cjsg(    <span class="st">'direito'</span>,    data_julgamento_inicio<span class="op">=</span><span class="st">'01/01/2024'</span>,    data_julgamento_fim<span class="op">=</span><span class="st">'30/06/2024'</span>,    paginas<span class="op">=</span><span class="dv">1</span>,)<span class="bu">print</span>(df_filtered.shape)df_filtered.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="download-and-parse-separatelyyou-can-also-download-the-raw-html-files-and-parse-them-in-a-separate-step." class="level2">
-<h2 class="anchored" data-anchor-id="download-and-parse-separatelyyou-can-also-download-the-raw-html-files-and-parse-them-in-a-separate-step.">Download and parse separatelyYou can also download the raw HTML files and parse them in a separate step.</h2>
+<section id="download-and-parse-separately" class="level2">
+<h2 class="anchored" data-anchor-id="download-and-parse-separately">Download and parse separately</h2>
+<p>You can also download the raw HTML files and parse them in a separate step.</p>
 <div id="977eae94" class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tempfile, ostmp <span class="op">=</span> tempfile.mkdtemp()pasta <span class="op">=</span> tjce.cjsg_download(<span class="st">'direito'</span>, paginas<span class="op">=</span><span class="dv">1</span>, diretorio<span class="op">=</span>tmp)<span class="bu">print</span>(<span class="st">'Downloaded to:'</span>, pasta)<span class="bu">print</span>(<span class="st">'Files:'</span>, os.listdir(pasta))</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
