@@ -120,6 +120,5 @@ def cjsg_parse(raw_pages: list) -> pd.DataFrame:
     for html in raw_pages:
         if not html:
             continue
-        for block in _split_blocks(html):
-            rows.append(_parse_block(block))
+        rows.extend(_parse_block(block) for block in _split_blocks(html))
     return pd.DataFrame(rows)
