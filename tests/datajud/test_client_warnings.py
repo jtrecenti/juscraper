@@ -17,7 +17,7 @@ class TestRaisesValueError:
             datajud.listar_processos(tribunal="XPTO_INEXISTENTE")
 
     def test_missing_required_params_raises(self, datajud):
-        with pytest.raises(ValueError, match="tribunal.*numero_processo"):
+        with pytest.raises(ValueError, match=r"tribunal.*numero_processo"):
             datajud.listar_processos()
 
 

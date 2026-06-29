@@ -31,18 +31,18 @@ from tests._helpers import query_param_subset_matcher
 
 def _build_params_defaults(**overrides):
     """Argumentos padrao para ``_build_params``; cada teste sobrescreve o que importa."""
-    kwargs: dict[str, Any] = dict(
-        pesquisa="termo",
-        pagina=1,
-        total=1,
-        pesquisar_por="ementa",
-        order_by="2",
-        data_julgamento_inicial="",
-        data_julgamento_final="",
-        data_publicacao_inicial="",
-        data_publicacao_final="",
-        linhas_por_pagina=10,
-    )
+    kwargs: dict[str, Any] = {
+        "pesquisa": "termo",
+        "pagina": 1,
+        "total": 1,
+        "pesquisar_por": "ementa",
+        "order_by": "2",
+        "data_julgamento_inicial": "",
+        "data_julgamento_final": "",
+        "data_publicacao_inicial": "",
+        "data_publicacao_final": "",
+        "linhas_por_pagina": 10,
+    }
     kwargs.update(overrides)
     return _build_params(**kwargs)
 

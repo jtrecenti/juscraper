@@ -69,7 +69,7 @@ def test_auth_token_malformado_levanta_value_error():
     """
     scraper = jus.scraper("jusbr")
 
-    with pytest.raises(ValueError, match="inv[áa]lido"):
+    with pytest.raises(ValueError, match=r"inv[áa]lido"):
         scraper.auth("not-a-jwt")
     assert "authorization" not in scraper.session.headers
     assert scraper.token is None

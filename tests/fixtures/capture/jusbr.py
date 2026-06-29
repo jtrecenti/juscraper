@@ -94,7 +94,7 @@ def _is_cpf(s: str) -> bool:
         return False
 
     def dv(nums: str) -> int:
-        total = sum(int(n) * p for n, p in zip(nums, range(len(nums) + 1, 1, -1)))
+        total = sum(int(n) * p for n, p in zip(nums, range(len(nums) + 1, 1, -1), strict=False))
         rest = (total * 10) % 11
         return 0 if rest == 10 else rest
 
@@ -107,7 +107,7 @@ def _is_cnpj(s: str) -> bool:
         return False
 
     def dv(nums: str, weights: list[int]) -> int:
-        total = sum(int(n) * w for n, w in zip(nums, weights))
+        total = sum(int(n) * w for n, w in zip(nums, weights, strict=False))
         rest = total % 11
         return 0 if rest < 2 else 11 - rest
 

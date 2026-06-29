@@ -72,7 +72,7 @@ def _resolve_method(scraper_cls: type, endpoint: str):
 
 
 def _search_cases(expected_map, scraper_iter):
-    scrapers = {name: cls for name, cls in scraper_iter()}
+    scrapers = dict(scraper_iter())
     out = []
     for (name, endpoint), (module_path, class_name) in expected_map.items():
         if endpoint not in SEARCH_ENDPOINTS:
