@@ -232,6 +232,7 @@ select = [
     "RET",    # flake8-return: return flow (ex.: assign inutil antes de return)
     "SIM",    # flake8-simplify: simplificacoes (ternario, with unico, yoda)
     "PERF",   # perflint: laco->comprehension/extend onde compensa
+    "PTH",    # flake8-use-pathlib: os.path/open/glob -> pathlib
 ]
 ignore = [
     # Caracteres "ambiguos" em texto pt-BR sao legitimos. Docstrings e

@@ -25,10 +25,10 @@ abaixo no nível de módulo.
 from __future__ import annotations
 
 import logging
-import os
 import time
 from collections.abc import Callable
 from datetime import datetime
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from bs4 import BeautifulSoup
@@ -195,8 +195,8 @@ def download_cjsg_pages(
     """
     tipo_param = "A" if tipo_decisao == "acordao" else "D"
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    path = os.path.join(download_path, "cjsg", timestamp)
-    os.makedirs(path, exist_ok=True)
+    path = Path(download_path) / "cjsg" / timestamp
+    path.mkdir(parents=True, exist_ok=True)
 
     link_cjsg = f"{base_url}cjsg/resultadoCompleta.do"
 
@@ -212,19 +212,19 @@ def download_cjsg_pages(
 
     n_pags = get_n_pags_callback(first_html)
 
-    with open(os.path.join(path, "cjsg_00001.html"), "w", encoding="latin1") as fp:
+    with (path / "cjsg_00001.html").open("w", encoding="latin1") as fp:
         fp.write(first_html)
 
     if n_pags == 0:
         logger.info("Nenhum resultado encontrado para a busca.")
-        return path
+        return str(path)
 
     conversation_id = _extract_conversation_id(first_html) if extract_conversation_id else ""
 
     paginas_list = _pages_to_fetch(paginas, n_pags)
     if not paginas_list:
         logger.info("Total de páginas: %s. Baixando apenas a primeira.", n_pags)
-        return path
+        return str(path)
 
     logger.info("Total de páginas: %s. Baixando: %s", n_pags, len(paginas_list) + 1)
 
@@ -245,10 +245,10 @@ def download_cjsg_pages(
             headers={"Accept": "text/html; charset=latin1;", "Referer": link_cjsg},
         )
         resp.encoding = "latin1"
-        with open(os.path.join(path, f"cjsg_{pag:05d}.html"), "w", encoding="latin1") as fp:
+        with (path / f"cjsg_{pag:05d}.html").open("w", encoding="latin1") as fp:
             fp.write(resp.text)
 
-    return path
+    return str(path)
 
 
 __all__ = ["download_cjsg_pages", "fetch_cjsg_first_page"]

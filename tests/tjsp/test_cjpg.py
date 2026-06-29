@@ -2,8 +2,8 @@
 Tests for TJSP CJPG functionality.
 Includes both integration and unit tests.
 """
-import os
 import tempfile
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pandas as pd
@@ -136,19 +136,19 @@ class TestCJPGUnit:
             assert 'Procedimento do Juizado Especial Cível' in df.iloc[0].get('classe', '')
             assert 'decisao' in df.columns
         finally:
-            os.unlink(temp_path)
+            Path(temp_path).unlink()
 
     def test_cjpg_parse_manager_directory(self):
         """Test parsing multiple CJPG files from directory."""
         html = load_sample('tjsp', 'cjpg/results_legacy.html')
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            file1 = os.path.join(temp_dir, 'page1.html')
-            file2 = os.path.join(temp_dir, 'page2.html')
+            file1 = Path(temp_dir) / 'page1.html'
+            file2 = Path(temp_dir) / 'page2.html'
 
-            with open(file1, 'w', encoding='utf-8') as f:
+            with file1.open('w', encoding='utf-8') as f:
                 f.write(html)
-            with open(file2, 'w', encoding='utf-8') as f:
+            with file2.open('w', encoding='utf-8') as f:
                 f.write(html)
 
             df = cjpg_parse_manager(temp_dir)
@@ -170,7 +170,7 @@ class TestCJPGUnit:
             assert isinstance(df, pd.DataFrame)
             assert len(df) == 0
         finally:
-            os.unlink(temp_path)
+            Path(temp_path).unlink()
 
 
 class TestCJPGNResults:
@@ -225,7 +225,7 @@ class TestCJPGDownload1Based:
                 paginas=paginas,
                 get_n_pags_callback=get_n_pags_callback,
             )
-            saved_files = sorted(os.listdir(path))
+            saved_files = sorted(p.name for p in Path(path).iterdir())
             # Collect URLs from session.get calls (skip first which is pesquisar.do)
             get_calls = mock_session.get.call_args_list
             trocar_urls = [c[0][0] for c in get_calls[1:] if 'trocarDePagina' in c[0][0]]

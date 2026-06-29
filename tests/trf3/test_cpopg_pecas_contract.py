@@ -8,7 +8,7 @@ links, ``cpopg`` extracts them and issues one GET per peça when invoked with
 """
 from __future__ import annotations
 
-import os
+from pathlib import Path
 
 import pytest
 import responses
@@ -143,9 +143,9 @@ def test_cpopg_with_download_pecas_writes_files_and_adds_column(tmp_path) -> Non
     saved = df.iloc[0]["pecas"]
     assert len(saved) == 2
     for p in saved:
-        assert os.path.isfile(p)
+        assert Path(p).is_file()
         assert p.endswith(".html")
-        with open(p, "rb") as fh:
+        with Path(p).open("rb") as fh:
             assert fh.read() == doc_body
     # Layout: <tmp>/<cnj>/<id>.html
     proc_dir = tmp_path / "50059460920254036324"
@@ -215,4 +215,4 @@ def test_cpopg_with_download_pecas_continues_after_peca_error(tmp_path) -> None:
     saved = df.iloc[0]["pecas"]
     # Só a segunda peça foi salva.
     assert len(saved) == 1
-    assert os.path.isfile(saved[0])
+    assert Path(saved[0]).is_file()

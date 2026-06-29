@@ -1,8 +1,8 @@
 """
 Unit tests for TJSP CJSG functionality using mocked HTML responses.
 """
-import os
 import tempfile
+from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -120,7 +120,7 @@ class TestCJSGParseSinglePage:
             assert df.iloc[1]['processo'] == '1000124-46.2023.8.26.0101'
             assert df.iloc[1]['cd_acordao'] == '12346'
         finally:
-            os.unlink(temp_path)
+            Path(temp_path).unlink()
 
     def test_parse_single_result(self):
         """Test parsing a page with a single result."""
@@ -141,7 +141,7 @@ class TestCJSGParseSinglePage:
             assert 'Apelação Cível' in df.iloc[0].get('classe', '')
             assert 'ementa' in df.columns
         finally:
-            os.unlink(temp_path)
+            Path(temp_path).unlink()
 
     def test_parse_empty_page(self):
         """Test parsing an empty results page."""
@@ -156,7 +156,7 @@ class TestCJSGParseSinglePage:
             assert isinstance(df, pd.DataFrame)
             assert len(df) == 0
         finally:
-            os.unlink(temp_path)
+            Path(temp_path).unlink()
 
     def test_parse_missing_elements(self):
         """Test parsing page with missing elements."""
@@ -189,7 +189,7 @@ class TestCJSGParseSinglePage:
             # Should still create a row, but without process number
             assert len(df) >= 0
         finally:
-            os.unlink(temp_path)
+            Path(temp_path).unlink()
 
 
 class TestCJSGParseManager:
@@ -201,12 +201,12 @@ class TestCJSGParseManager:
         html2 = load_sample('tjsp', 'cjsg/single_result.html')
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            file1 = os.path.join(temp_dir, 'page1.html')
-            file2 = os.path.join(temp_dir, 'page2.html')
+            file1 = Path(temp_dir) / 'page1.html'
+            file2 = Path(temp_dir) / 'page2.html'
 
-            with open(file1, 'w', encoding='utf-8') as f:
+            with file1.open('w', encoding='utf-8') as f:
                 f.write(html1)
-            with open(file2, 'w', encoding='utf-8') as f:
+            with file2.open('w', encoding='utf-8') as f:
                 f.write(html2)
 
             df = cjsg_parse_manager(temp_dir)
@@ -228,7 +228,7 @@ class TestCJSGParseManager:
             assert isinstance(df, pd.DataFrame)
             assert len(df) == 2
         finally:
-            os.unlink(temp_path)
+            Path(temp_path).unlink()
 
     def test_parse_empty_directory(self):
         """Test parsing an empty directory."""
@@ -242,13 +242,13 @@ class TestCJSGParseManager:
         html = load_sample('tjsp', 'cjsg/results_normal.html')
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            valid_file = os.path.join(temp_dir, 'valid.html')
-            invalid_file = os.path.join(temp_dir, 'invalid.html')
+            valid_file = Path(temp_dir) / 'valid.html'
+            invalid_file = Path(temp_dir) / 'invalid.html'
 
-            with open(valid_file, 'w', encoding='utf-8') as f:
+            with valid_file.open('w', encoding='utf-8') as f:
                 f.write(html)
             # Create an invalid file (binary data)
-            with open(invalid_file, 'wb') as f:
+            with invalid_file.open('wb') as f:
                 f.write(b'\x00\x01\x02\x03')
 
             # Should not raise exception, should skip invalid file

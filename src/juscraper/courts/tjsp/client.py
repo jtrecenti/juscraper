@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 import logging
-import os
 import shutil
 import tempfile
 import warnings
+from pathlib import Path
 from typing import Any, ClassVar, Literal
 
 import pandas as pd
@@ -645,7 +645,7 @@ class TJSPScraper(EsajSearchScraper):
         path = self.download_path
         self.cposg_download(id_cnj, method)
         result = self.cposg_parse(path)
-        if os.path.exists(path):
+        if Path(path).exists():
             shutil.rmtree(path)
         else:
             logger.warning("[TJSP] Aviso: diretório %s não existe e não pôde ser removido.", path)

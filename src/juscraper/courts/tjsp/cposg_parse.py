@@ -1,10 +1,9 @@
 """
 Parses downloaded files from the TJSP Consulta de Processos Originarios do Primeiro Grau (CPOSG).
 """
-import glob
 import logging
-import os
 import re
+from pathlib import Path
 
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -17,7 +16,7 @@ def cposg_parse(path: str):
     """
     Parses all HTML files in the given directory.
     """
-    arquivos = glob.glob(os.path.join(path, '**/*.html'), recursive=True)
+    arquivos = list(Path(path).rglob('*.html'))
     dados = []
     for arq in tqdm(arquivos, total=len(arquivos), desc="Processando arquivos"):
         try:
@@ -34,7 +33,7 @@ def cposg_parse_manager(path: str):
     """
     Standalone parse manager for CPOSG HTML files. Returns a DataFrame with parsed data.
     """
-    arquivos = glob.glob(os.path.join(path, '**/*.html'), recursive=True)
+    arquivos = list(Path(path).rglob('*.html'))
     dados = []
     for arq in tqdm(arquivos, total=len(arquivos), desc="Processando arquivos"):
         try:
@@ -56,7 +55,7 @@ def cposg_parse_single_html(html_path):
     """
     Parses a single HTML document from CPOSG.
     """
-    with open(html_path, 'r', encoding='utf-8') as f:
+    with Path(html_path).open('r', encoding='utf-8') as f:
         html_content = f.read()
     soup = BeautifulSoup(html_content, 'html.parser')
     # Validate if the HTML contains expected content

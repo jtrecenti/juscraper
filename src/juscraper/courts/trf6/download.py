@@ -23,9 +23,9 @@ from __future__ import annotations
 
 import base64
 import logging
-import os
 import re
 import tempfile
+from pathlib import Path
 
 import requests
 
@@ -105,7 +105,7 @@ def solve_captcha(captcha_b64: str) -> str:
     try:
         return str(txtcaptcha.decrypt([tmp_path])[0])
     finally:
-        os.unlink(tmp_path)
+        Path(tmp_path).unlink()
 
 
 def build_search_payload(numero_processo: str, captcha_text: str) -> dict[str, str]:

@@ -71,8 +71,8 @@ def test_cpopg_download_pecas_grava_arquivos(tmp_path) -> None:
     assert "pecas" in df.columns
     saved = df.iloc[0]["pecas"]
     assert saved, "processo conhecido deveria ter ao menos uma peça"
-    import os
+    from pathlib import Path
     for p in saved:
-        assert os.path.isfile(p)
-        assert os.path.getsize(p) > 0
+        assert Path(p).is_file()
+        assert Path(p).stat().st_size > 0
         assert p.endswith(".html")

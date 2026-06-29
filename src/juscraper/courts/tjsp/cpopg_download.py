@@ -2,8 +2,8 @@
 Downloads of processes from the TJSP Consulta de Processos Originarios do Primeiro Grau (CPOPG).
 """
 import logging
-import os
 import time
+from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 import requests
@@ -73,10 +73,10 @@ def cpopg_download_html_single(
     id_clean = clean_cnj(id_cnj)
     path = f"{download_path}/cpopg/{id_clean}"
     logger.info("Salvando em %s", path)
-    if not os.path.isdir(path):
-        os.makedirs(path)
-    for file in os.listdir(path):
-        if file.endswith('.html'):
+    if not Path(path).is_dir():
+        Path(path).mkdir(parents=True)
+    for file in Path(path).iterdir():
+        if file.name.endswith('.html'):
             logger.info("O processo %s ja foi baixado.", id_clean)
             return path
     time.sleep(sleep_time)
@@ -116,7 +116,7 @@ def cpopg_download_html_single(
             if len(links) == 1:
                 file_name = f"{path}/{id_clean}_{cd_processo[0]}.html"
                 logger.info("Salvando em %s", file_name)
-                with open(file_name, 'w', encoding='utf-8') as f:
+                with Path(file_name).open('w', encoding='utf-8') as f:
                     f.write(r.text)
             else:
                 for index, link in enumerate(links):
@@ -130,7 +130,7 @@ def cpopg_download_html_single(
                         )
                     file_name = f"{path}/{id_clean}_{cd_processo[index]}.html"
                     logger.info("Salvando em %s", file_name)
-                    with open(file_name, 'w', encoding='utf-8') as f:
+                    with Path(file_name).open('w', encoding='utf-8') as f:
                         f.write(r2.text)
             break
         except (OSError, UnicodeDecodeError, ValueError,
@@ -191,15 +191,15 @@ def cpopg_download_api_single(
     u = f"{api_base}{endpoint}{id_clean}"
     # id_clean vem de clean_cnj (so digitos), seguro como componente de path.
     path = f"{download_path}/cpopg/{id_clean}"
-    if not os.path.isdir(path):
-        os.makedirs(path)
+    if not Path(path).is_dir():
+        Path(path).mkdir(parents=True)
     r = session.get(u)
     if r.status_code != 200:
         raise requests.HTTPError(
             f"A consulta à API falhou."
             f"Status code {r.status_code}."
         )
-    with open(f"{path}/{id_clean}.json", 'w', encoding='utf-8') as f:
+    with Path(f"{path}/{id_clean}.json").open('w', encoding='utf-8') as f:
         f.write(r.text)
     json_response = r.json()
     if not json_response:
@@ -216,14 +216,14 @@ def cpopg_download_api_single(
                 f"A consulta à API falhou."
                 f"Status code {r_basicos.status_code}."
             )
-        with open(os.path.join(path, f"{cd_processo_safe}_basicos.json"), 'w', encoding='utf-8') as f:
+        with (Path(path) / f"{cd_processo_safe}_basicos.json").open('w', encoding='utf-8') as f:
             f.write(r_basicos.text)
         componentes = ['partes', 'movimentacao', 'incidente', 'audiencia']
         for comp in componentes:
             endpoint_comp = f"processo/cpopg/{comp}/{cd_processo}"
             r_comp = session.get(f"{api_base}{endpoint_comp}")
             if r_comp.status_code == 200:
-                with open(os.path.join(path, f"{cd_processo_safe}_{comp}.json"), 'w', encoding='utf-8') as f:
+                with (Path(path) / f"{cd_processo_safe}_{comp}.json").open('w', encoding='utf-8') as f:
                     f.write(r_comp.text)
             else:
                 raise requests.HTTPError(

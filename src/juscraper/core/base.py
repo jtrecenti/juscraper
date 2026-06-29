@@ -2,9 +2,9 @@
 Base scraper class for court data extraction.
 """
 import logging
-import os
 import tempfile
 from abc import ABC
+from pathlib import Path
 
 logger = logging.getLogger("juscraper.core.base")
 
@@ -31,13 +31,13 @@ class BaseScraper(ABC):
         """Set the download path. If None, creates a temporary directory."""
         if path is None:
             path = tempfile.mkdtemp()
-        if not os.path.isdir(path):
+        if not Path(path).is_dir():
             if self.verbose:
                 logger.info(
                     "O caminho de download '%s' não é um diretório. Criando esse diretório...",
                     path
                 )
-            os.makedirs(path)
+            Path(path).mkdir(parents=True, exist_ok=True)
         self.download_path = path
         if self.verbose:
             logger.info(
