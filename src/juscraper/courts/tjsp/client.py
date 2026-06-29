@@ -6,7 +6,7 @@ import os
 import shutil
 import tempfile
 import warnings
-from typing import Any, Literal
+from typing import Any, ClassVar, Literal
 
 import pandas as pd
 from pydantic import BaseModel
@@ -83,7 +83,7 @@ class TJSPScraper(EsajSearchScraper):
     # Alem das arvores de cjsg herdadas de EsajSearchScraper, o TJSP expoe as
     # arvores de 1o grau (cjpg). Os stems do cjpg sao no SINGULAR
     # (``classeTreeSelect`` etc.), diferente do plural do cjsg. Refs #228.
-    TREE_ENDPOINTS = {
+    TREE_ENDPOINTS: ClassVar[dict[str, str]] = {
         **EsajSearchScraper.TREE_ENDPOINTS,
         "classes_1": "cjpg/classeTreeSelect.do?campoId=classes",
         "assuntos_1": "cjpg/assuntoTreeSelect.do?campoId=assuntos",
@@ -680,4 +680,4 @@ class TJSPScraper(EsajSearchScraper):
         return cposg_parse_manager(path)
 
 
-__all__ = ["TJSPScraper", "QueryTooLongError"]
+__all__ = ["QueryTooLongError", "TJSPScraper"]

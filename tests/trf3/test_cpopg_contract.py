@@ -16,7 +16,7 @@ import pytest
 import responses
 
 import juscraper as jus
-from tests._helpers import load_sample, load_sample_bytes
+from tests._helpers import assert_no_mojibake, load_sample, load_sample_bytes
 
 
 def _subset_form_matcher(expected: dict[str, str]):
@@ -62,7 +62,7 @@ def test_akamai_block_raises_dedicated_exception() -> None:
         )
 
     with _pt.raises(BotChallengeBlockedError) as exc_info:
-        _check_bot_challenge(FakeResp())  # type: ignore[arg-type]
+        _check_bot_challenge(FakeResp())
     err = exc_info.value
     assert err.tribunal == "TRF3"
     assert err.reference == "18.27f62917.1779623119.a59b1f4c"
@@ -82,7 +82,7 @@ def test_check_bot_challenge_ignores_legitimate_403() -> None:
         content = b"<html>403 - not authorized</html>"
 
     # Sem 'Access Denied' no body, a função retorna sem levantar.
-    _check_bot_challenge(FakeResp())  # type: ignore[arg-type]
+    _check_bot_challenge(FakeResp())
 
 
 def test_check_bot_challenge_ignores_non_403() -> None:
@@ -94,7 +94,7 @@ def test_check_bot_challenge_ignores_non_403() -> None:
         url = "https://example.com/x"
         content = b"Access Denied"  # nem assim — só 403 conta
 
-    _check_bot_challenge(FakeResp())  # type: ignore[arg-type]
+    _check_bot_challenge(FakeResp())
 
 
 def test_extract_movs_pagination_returns_none_when_no_slider() -> None:
@@ -127,8 +127,11 @@ def test_merge_movs_pages_appends_rows_into_movs_tbody() -> None:
     from juscraper.courts.trf3.download import merge_movs_pages
     from juscraper.courts.trf3.parse import parse_detail
 
+    # Page 1 (detail page) is latin-1; the AJAX page-2 fragment is UTF-8 — the
+    # two endpoints of the same PJe deployment disagree on charset. Decode each
+    # the way fetch_detail/fetch_movs_page do in production.
     detail = load_sample_bytes("trf3", "cpopg/detail_paginated.html").decode("latin-1")
-    page_2 = load_sample_bytes("trf3", "cpopg/movs_page_2.html").decode("latin-1")
+    page_2 = load_sample_bytes("trf3", "cpopg/movs_page_2.html").decode("utf-8")
     page1_movs = parse_detail(detail)["movimentacoes"]
     merged_movs = parse_detail(merge_movs_pages(detail, [page_2]))["movimentacoes"]
     # Page 1 has 15 rows, page 2 has another 15 — merged must hold both.
@@ -136,6 +139,10 @@ def test_merge_movs_pages_appends_rows_into_movs_tbody() -> None:
     assert len(merged_movs) == 30
     # The first 15 are unchanged (we append at the end of the tbody).
     assert merged_movs[:15] == page1_movs
+    # Regression guard: page-2 rows must carry clean accents, not mojibake.
+    # Decoding the UTF-8 fragment as latin-1 turns "petição" into "petiÃ§Ã£o".
+    page2_text = " ".join(m["descricao"] for m in merged_movs[15:])
+    assert_no_mojibake(page2_text, contexto="movs paginadas (merge)")
 
 
 def test_merge_movs_pages_noop_when_extras_empty() -> None:
@@ -144,6 +151,37 @@ def test_merge_movs_pages_noop_when_extras_empty() -> None:
 
     detail = load_sample_bytes("trf3", "cpopg/detail_paginated.html").decode("latin-1")
     assert merge_movs_pages(detail, []) is detail
+
+
+@responses.activate
+def test_fetch_movs_page_decodes_fragment_as_utf8() -> None:
+    """The Richfaces AJAX fragment is UTF-8; ``fetch_movs_page`` must not latin-1 it.
+
+    Regression for the double-encoding bug where accented movimentação text came
+    back mojibaked (``petição`` -> ``petiÃ§Ã£o``) because the UTF-8 partial
+    response was decoded as latin-1. Serves the *raw bytes* of the captured
+    fragment and asserts the decoded text carries clean accents.
+    """
+    import requests
+
+    from juscraper.courts.trf3.download import BASE_URL, DETAIL_PATH, extract_movs_pagination, fetch_movs_page
+
+    detail = load_sample_bytes("trf3", "cpopg/detail_paginated.html").decode("latin-1")
+    info = extract_movs_pagination(detail)
+    assert info is not None
+
+    responses.add(
+        responses.POST,
+        BASE_URL + DETAIL_PATH,
+        body=load_sample_bytes("trf3", "cpopg/movs_page_2.html"),  # raw UTF-8 bytes
+        status=200,
+        content_type="text/xml; charset=UTF-8",
+    )
+
+    fragment = fetch_movs_page(requests.Session(), info, 2, "ca-token")
+
+    assert "ç" in fragment, "fragmento sem acento — decode suspeito"
+    assert_no_mojibake(fragment, contexto="fetch_movs_page")
 
 
 @responses.activate

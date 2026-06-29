@@ -9,6 +9,12 @@ import pytest
 
 import juscraper as jus
 
+# A consulta pública PJe do TRF1 é protegida por Akamai: de IPs de datacenter/CI
+# o portal devolve 403 ``Access Denied`` e o scraper levanta
+# ``BotChallengeBlockedError``. O marker ``anti_bot`` faz o conftest converter
+# esse bloqueio em xfail (falha ambiental, não regressão). Ver issue #292.
+pytestmark = pytest.mark.anti_bot
+
 # CNJs picked from the user-supplied test set. ``KNOWN_GOOD`` has < 15 movs so
 # it exercises the no-pagination short-circuit; ``PAGINATED`` has > 15 movs and
 # locks in the Richfaces slider fix.

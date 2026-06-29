@@ -90,20 +90,20 @@ def cjsg_download(
     centraliza retry exponencial para 429/5xx.
     """
     url = f"{BASE_URL}/search"
-    common = dict(
-        pesquisa=pesquisa,
-        per_page=per_page,
-        core=core,
-        busca_exata=busca_exata,
-        data_inicio=data_inicio,
-        data_fim=data_fim,
-        magistrado=magistrado,
-        orgao_julgador=orgao_julgador,
-        classe_judicial=classe_judicial,
-        jurisdicao=jurisdicao,
-        assunto=assunto,
-        ordenacao=ordenacao,
-    )
+    common = {
+        "pesquisa": pesquisa,
+        "per_page": per_page,
+        "core": core,
+        "busca_exata": busca_exata,
+        "data_inicio": data_inicio,
+        "data_fim": data_fim,
+        "magistrado": magistrado,
+        "orgao_julgador": orgao_julgador,
+        "classe_judicial": classe_judicial,
+        "jurisdicao": jurisdicao,
+        "assunto": assunto,
+        "ordenacao": ordenacao,
+    }
 
     def _get_page(pagina):
         params = _build_params(pagina=pagina, **common)

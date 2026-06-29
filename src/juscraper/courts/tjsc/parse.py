@@ -26,7 +26,7 @@ def _parse_result_item(item) -> dict:
         "DECISAO": "decisao",
     }
 
-    for label, value in zip(labels, values):
+    for label, value in zip(labels, values, strict=False):
         label_text = label.get_text(strip=True).upper()
         # Normalize accented chars for matching
         label_norm = (

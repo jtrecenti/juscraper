@@ -64,10 +64,13 @@ dev = [
     "flake8>=6.0.0",
     "mypy>=1.0.0",
     "ruff>=0.15.0",
+    "bandit>=1.9.4",
     "types-requests>=2.32.0",
     "pre-commit>=3.0.0",
     "nbmake>=1.5.0",
     "pytest-xdist>=3.0.0",
+    "lizard>=1.17.0",
+    "complexipy>=5.0.0",
 ]
 docs = [
     "quartodoc>=0.11.1",
@@ -223,6 +226,23 @@ select = [
     "UP007",  # PEP 604 (Union[X, Y] -> X | Y)
     "UP035",  # deprecated import (typing.List -> builtins, etc.)
     "UP045",  # PEP 604 (Optional[X] -> X | None)
+    "B",      # flake8-bugbear: bug-risk (ex.: zip() sem strict=)
+    "C4",     # flake8-comprehensions: comprehensions/calls desnecessarios
+    "RUF",    # regras do proprio Ruff (ex.: mutable-class-default)
+]
+ignore = [
+    # Caracteres "ambiguos" em texto pt-BR sao legitimos. Docstrings e
+    # comentarios usam EN DASH (travessao) e afins de proposito; nao
+    # queremos que o Ruff peca para troca-los por ASCII.
+    "RUF001",
+    "RUF002",
+    "RUF003",
+    # RUF100 (unused-noqa) nao convive bem com este projeto: o flake8 roda
+    # em paralelo e ha `# noqa: E231/E702` (pycodestyle) e `# noqa: BLE001`
+    # (regra do Ruff ainda nao habilitada) que sao intencionais. O Ruff os
+    # trataria como obsoletos e removeria, quebrando o flake8 e apagando
+    # decisoes documentadas. Reavaliar se/quando BLE for habilitada.
+    "RUF100",
 ]
 
 [tool.isort]
@@ -280,6 +300,7 @@ markers = [
     "integration: hits live external services (run with '-m integration')",
     "release: comprehensive tests run before major releases (deselect with '-m \"not release\"')",
     "vcr: uses pytest-recording cassettes",
+    "anti_bot: integration test prone to anti-bot blocking (e.g. Akamai on TRF PJe); a BotChallengeBlockedError is reported as xfail (env-dependent on the client IP), so a real regression still fails loudly",
 ]
 filterwarnings = ["error"]
 

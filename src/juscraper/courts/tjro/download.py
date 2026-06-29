@@ -59,7 +59,7 @@ def build_cjsg_payload(
         "size": size,
         "fields": fields,
         "sort": [{"_score": "desc"}, {"dtjulgamento": "desc"}],
-        "token": "",
+        "token": "",  # nosec
         "highlight": {
             "type": "plain",
             "number_of_fragments": 1,

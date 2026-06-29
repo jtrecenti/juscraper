@@ -21,6 +21,7 @@ juscraper e uma biblioteca Python para raspagem de dados de tribunais brasileiro
 - Pre-commit hooks configurados (trailing whitespace, isort, pylint, flake8, mypy)
 - Comprimento maximo de linha: 120
 - Preferir trabalhar em worktree com branch específica para a mudança que desejar implementar.
+- Complexidade sob demanda (eixo que o lint nao cobre), duas metricas complementares: `uv run lizard src` (ciclomatico) e `uv run complexipy -i -s desc src` (cognitivo). Detalhes, a tabela de divergencia e o gate planejado em `CONTRIBUTING.md` > **Complexidade de código (lizard + complexipy)**.
 
 ## Testes
 
@@ -36,6 +37,7 @@ juscraper e uma biblioteca Python para raspagem de dados de tribunais brasileiro
 - `pytest -m integration` — roda so integracao (lento, hit live).
 - `pytest -m ""` — roda tudo (offline + integracao).
 - `pytest tests/tjsp` — escopo a um tribunal.
+- `pytest -m "integration and not anti_bot"` — integracao sem os testes sujeitos a bloqueio Akamai (TRF1/TRF3/TRF5 `cpopg`); use em CI/datacenter. O marker `anti_bot` faz o conftest converter `BotChallengeBlockedError` em xfail (falha ambiental, nao regressao) — detalhes em `CONTRIBUTING.md` > **Tests** > **Marker `anti_bot`**. Refs #292.
 - `--strict-markers` esta ativo — todo marker deve ser registrado no `pyproject.toml`.
 
 ### Regras para autor de teste
