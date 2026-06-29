@@ -21,6 +21,7 @@ juscraper e uma biblioteca Python para raspagem de dados de tribunais brasileiro
 - Pre-commit hooks configurados (trailing whitespace, isort, pylint, flake8, mypy)
 - Comprimento maximo de linha: 120
 - Preferir trabalhar em worktree com branch específica para a mudança que desejar implementar.
+- Complexidade sob demanda (eixo que o lint nao cobre), duas metricas complementares: `uv run lizard src` (ciclomatico) e `uv run complexipy -i -s desc src` (cognitivo). Detalhes, a tabela de divergencia e o gate planejado em `CONTRIBUTING.md` > **Complexidade de código (lizard + complexipy)**.
 
 ## Testes
 

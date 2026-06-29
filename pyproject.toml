@@ -69,6 +69,8 @@ dev = [
     "pre-commit>=3.0.0",
     "nbmake>=1.5.0",
     "pytest-xdist>=3.0.0",
+    "lizard>=1.17.0",
+    "complexipy>=5.0.0",
 ]
 docs = [
     "quartodoc>=0.11.1",
