@@ -483,10 +483,7 @@ class DatajudScraper(HTTPScraper):
         elif numero_processo:
             # Group by alias if multiple CNJs from different tribunals are provided
             processos_por_alias = defaultdict(list)
-            if isinstance(numero_processo, str):
-                cnjs_to_query = [numero_processo]
-            else:
-                cnjs_to_query = numero_processo
+            cnjs_to_query = [numero_processo] if isinstance(numero_processo, str) else numero_processo
             for num_cnj in cnjs_to_query:
                 num_limpo = clean_cnj(num_cnj)
                 if len(num_limpo) == 20:
@@ -678,9 +675,7 @@ class DatajudScraper(HTTPScraper):
                     )
                     break  # Fallback or stop if search_after cannot be determined
 
-                if paginas_range is None:  # if fetching all, continue
-                    current_page += 1
-                elif current_page < paginas_range.stop - 1:  # if in specified range, continue
+                if paginas_range is None or current_page < paginas_range.stop - 1:  # if fetching all, continue
                     current_page += 1
                 else:  # reached end of specified range
                     break

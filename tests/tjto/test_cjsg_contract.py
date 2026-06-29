@@ -43,7 +43,7 @@ def test_cjsg_typical_com_paginacao(mocker):
     df = jus.scraper("tjto").cjsg("dano moral", paginas=range(1, 3))
 
     assert isinstance(df, pd.DataFrame)
-    assert CJSG_FIELDS <= set(df.columns)
+    assert set(df.columns) >= CJSG_FIELDS
     assert len(df) > 0
 
 
@@ -56,7 +56,7 @@ def test_cjsg_single_page(mocker):
     df = jus.scraper("tjto").cjsg('"alimentos avoengos"', paginas=1)
 
     assert isinstance(df, pd.DataFrame)
-    assert CJSG_FIELDS <= set(df.columns)
+    assert set(df.columns) >= CJSG_FIELDS
     assert len(df) == 9
 
 

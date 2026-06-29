@@ -88,10 +88,10 @@ def cjsg_n_results(html_source: str) -> int:
     td_npags = None
     for td in soup.find_all("td"):
         td_text = td.get_text()
-        if "Resultados" in td_text or "resultados" in td_text.lower():
-            if len(td_text.strip()) < 400:  # guard against matching result rows
-                td_npags = td
-                break
+        # guard against matching result rows with the 400-char length check
+        if ("Resultados" in td_text or "resultados" in td_text.lower()) and len(td_text.strip()) < 400:
+            td_npags = td
+            break
 
     if td_npags is None:
         td_npags = soup.find("td", bgcolor="#EEEEEE")

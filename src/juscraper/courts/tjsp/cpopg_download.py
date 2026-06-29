@@ -113,7 +113,7 @@ def cpopg_download_html_single(
                 raise RuntimeError(
                     f"Nenhum link encontrado para o processo {id_clean}."
                 )
-            elif len(links) == 1:
+            if len(links) == 1:
                 file_name = f"{path}/{id_clean}_{cd_processo[0]}.html"
                 logger.info("Salvando em %s", file_name)
                 with open(file_name, 'w', encoding='utf-8') as f:

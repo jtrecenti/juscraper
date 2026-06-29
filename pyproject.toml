@@ -229,6 +229,8 @@ select = [
     "B",      # flake8-bugbear: bug-risk (ex.: zip() sem strict=)
     "C4",     # flake8-comprehensions: comprehensions/calls desnecessarios
     "RUF",    # regras do proprio Ruff (ex.: mutable-class-default)
+    "RET",    # flake8-return: return flow (ex.: assign inutil antes de return)
+    "SIM",    # flake8-simplify: simplificacoes (ternario, with unico, yoda)
 ]
 ignore = [
     # Caracteres "ambiguos" em texto pt-BR sao legitimos. Docstrings e

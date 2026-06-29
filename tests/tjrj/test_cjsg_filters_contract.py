@@ -136,13 +136,13 @@ def test_cjsg_data_inicio_alias_raises_typeerror():
     """``data_inicio``/``data_fim`` map to ``data_julgamento_*`` and TJRJ
     rejects that — caller still sees the deprecation warning before the
     ``TypeError`` from the schema."""
-    with pytest.warns(DeprecationWarning) as warning_list:
-        with pytest.raises(TypeError, match=r"data_julgamento_inicio"):
-            jus.scraper("tjrj").cjsg(
-                "dano moral", paginas=1,
-                data_inicio="2024-01-01",
-                data_fim="2024-03-31",
-            )
+    with pytest.warns(DeprecationWarning) as warning_list, \
+            pytest.raises(TypeError, match=r"data_julgamento_inicio"):
+        jus.scraper("tjrj").cjsg(
+            "dano moral", paginas=1,
+            data_inicio="2024-01-01",
+            data_fim="2024-03-31",
+        )
     messages = [str(w.message) for w in warning_list]
     assert any("data_inicio" in m and "deprecado" in m for m in messages)
 

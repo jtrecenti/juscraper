@@ -72,7 +72,7 @@ def test_cjsg_typical_com_paginacao(mocker):
     df = jus.scraper("tjpr").cjsg("dano moral", paginas=range(1, 3))
 
     assert isinstance(df, pd.DataFrame)
-    assert CJSG_MIN_COLUMNS <= set(df.columns)
+    assert set(df.columns) >= CJSG_MIN_COLUMNS
     assert len(df) > 0
     assert df["processo"].notna().all(), "processo nulo em alguma linha"
     # Linhas com processo vazio existem legitimamente no TJPR (sigilo,
@@ -97,7 +97,7 @@ def test_cjsg_single_page(mocker):
     df = jus.scraper("tjpr").cjsg("direito civil", paginas=1)
 
     assert isinstance(df, pd.DataFrame)
-    assert CJSG_MIN_COLUMNS <= set(df.columns)
+    assert set(df.columns) >= CJSG_MIN_COLUMNS
     assert len(df) > 0
     assert df["processo"].notna().all(), "processo nulo em alguma linha"
     # Linhas com processo vazio existem legitimamente no TJPR (sigilo,
@@ -151,7 +151,7 @@ def test_cjsg_ementa_completa_5xx_persistente(mocker):
     df = jus.scraper("tjpr").cjsg("dano moral", paginas=1)
 
     assert isinstance(df, pd.DataFrame)
-    assert CJSG_MIN_COLUMNS <= set(df.columns)
+    assert set(df.columns) >= CJSG_MIN_COLUMNS
     assert len(df) > 0, "DataFrame vazio — fetch da ementa-completa quebrou o parse inteiro"
     erros = df["ementa"].astype(str).str.contains(
         r"\[Erro ao buscar ementa completa", regex=True, na=False

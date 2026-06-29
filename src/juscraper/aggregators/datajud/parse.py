@@ -60,8 +60,7 @@ def parse_datajud_api_response(
             logger.info("No process data extracted from hits.")
             return pd.DataFrame()
 
-        df = pd.DataFrame(processos)
-        return df
+        return pd.DataFrame(processos)
 
     except Exception as e:
         warnings.warn(
