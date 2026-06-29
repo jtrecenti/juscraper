@@ -50,3 +50,26 @@ def get_pesquisa_field_name() -> str:
             "tests/tjrr/samples/cjsg/step_01_consulta.html"
         )
     return match.group(1)
+
+
+def get_datatable_id() -> str:
+    r"""Lê do sample (página de resultados) o id JSF do datatable de acórdãos.
+
+    Retorna algo como ``formPesquisa:j_idt158:dataTablePesquisa``. O número
+    JSF deriva entre deploys do TJRR (drift ``j_idt159 -> j_idt158``
+    observado em 2026-06), então os contratos derivam o id do sample em vez
+    de hardcodá-lo — espelha ``_extract_datatable_id`` do scraper. O
+    lookahead ``(?!\w)`` evita casar ``dataTablePesquisa2`` (a segunda
+    tabela, de decisões) e o ``_data`` (tbody).
+    """
+    sample = load_sample("tjrr", "cjsg/step_02_search.html")
+    match = re.search(
+        r'id="(formPesquisa:j_idt\d+:dataTablePesquisa)(?!\w)',
+        sample,
+    )
+    if not match:
+        raise RuntimeError(
+            "datatable de resultados (dataTablePesquisa) não encontrado em "
+            "tests/tjrr/samples/cjsg/step_02_search.html"
+        )
+    return match.group(1)
