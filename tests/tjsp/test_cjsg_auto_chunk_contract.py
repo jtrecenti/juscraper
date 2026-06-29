@@ -92,7 +92,7 @@ def test_auto_chunk_default_long_window_chunks_and_dedups(tmp_path, mocker):
 def test_auto_chunk_default_long_window_with_paginas_raises(tmp_path):
     """``auto_chunk=True`` + ``paginas != None`` + janela longa = ValueError."""
     scraper = jus.scraper("tjsp", download_path=str(tmp_path))
-    with pytest.raises(ValueError, match="auto_chunk.*paginas"):
+    with pytest.raises(ValueError, match=r"auto_chunk.*paginas"):
         scraper.cjsg(
             "dano moral",
             paginas=range(1, 3),
@@ -211,7 +211,7 @@ def test_pesquisa_plus_query_alias_long_window_raises(tmp_path, mocker):
     download, _ = _patch_pipeline(mocker)
     scraper = jus.scraper("tjsp", download_path=str(tmp_path))
 
-    with pytest.raises(ValueError, match="'pesquisa'.*'query'"):
+    with pytest.raises(ValueError, match=r"'pesquisa'.*'query'"):
         scraper.cjsg(
             "dano moral",
             query="outra coisa",
@@ -227,7 +227,7 @@ def test_pesquisa_plus_termo_alias_long_window_raises(tmp_path, mocker):
     download, _ = _patch_pipeline(mocker)
     scraper = jus.scraper("tjsp", download_path=str(tmp_path))
 
-    with pytest.raises(ValueError, match="'pesquisa'.*'termo'"):
+    with pytest.raises(ValueError, match=r"'pesquisa'.*'termo'"):
         scraper.cjsg(
             "dano moral",
             termo="outra coisa",

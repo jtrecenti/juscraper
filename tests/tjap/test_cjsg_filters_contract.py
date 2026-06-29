@@ -15,18 +15,18 @@ from tests.tjap.test_cjsg_contract import BASE, _payload
 def test_cjsg_all_filters_land_in_json_body(mocker):
     """All TJAP public filters must reach the Tucujuris JSON payload."""
     mocker.patch("time.sleep")
-    filters: dict[str, Any] = dict(
-        orgao="tj",
-        numero_processo="0000001-11.2024.8.03.0001",
-        numero_acordao="12345",
-        numero_ano="001858/1999",
-        palavras_exatas=True,
-        relator="FULANO DE TAL",
-        secretaria="CAMARA UNICA",
-        classe="APELACAO",
-        votacao="Unanime",
-        origem="MACAPA",
-    )
+    filters: dict[str, Any] = {
+        "orgao": "tj",
+        "numero_processo": "0000001-11.2024.8.03.0001",
+        "numero_acordao": "12345",
+        "numero_ano": "001858/1999",
+        "palavras_exatas": True,
+        "relator": "FULANO DE TAL",
+        "secretaria": "CAMARA UNICA",
+        "classe": "APELACAO",
+        "votacao": "Unanime",
+        "origem": "MACAPA",
+    }
     responses.add(
         responses.POST,
         BASE,

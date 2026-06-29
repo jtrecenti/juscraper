@@ -314,7 +314,7 @@ def capture_cjsg_samples(
         session, base_url, typical_query, paginas=typical_pages, body_builder=body_builder
     )
     dump(dest / "post_initial.html", post_resp.content)
-    for pag, resp in zip(typical_pages, get_resps):
+    for pag, resp in zip(typical_pages, get_resps, strict=False):
         dump(dest / f"results_normal_page_{pag:02d}.html", resp.content)  # noqa: E231
     print(f"[{tribunal}] typical ({typical_query!r}) → {len(get_resps)} page(s)")
 

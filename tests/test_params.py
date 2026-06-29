@@ -1,4 +1,5 @@
 """Tests for the parameter normalization utilities."""
+import itertools
 import warnings
 
 import pandas as pd
@@ -68,11 +69,11 @@ class TestNormalizePesquisa:
         assert "termo" in str(w[0].message)
 
     def test_conflict_pesquisa_and_query(self):
-        with pytest.raises(ValueError, match="pesquisa.*query"):
+        with pytest.raises(ValueError, match=r"pesquisa.*query"):
             normalize_pesquisa(pesquisa="a", query="b")
 
     def test_conflict_pesquisa_and_termo(self):
-        with pytest.raises(ValueError, match="pesquisa.*termo"):
+        with pytest.raises(ValueError, match=r"pesquisa.*termo"):
             normalize_pesquisa(pesquisa="a", termo="b")
 
     def test_missing(self):
@@ -119,14 +120,14 @@ class TestNormalizeDatas:
         assert len(w) == 2
 
     def test_conflict_generic_and_specific(self):
-        with pytest.raises(ValueError, match="data_inicio.*data_julgamento_inicio"):
+        with pytest.raises(ValueError, match=r"data_inicio.*data_julgamento_inicio"):
             normalize_datas(
                 data_inicio="01/01/2023",
                 data_julgamento_inicio="01/01/2023",
             )
 
     def test_conflict_deprecated_and_canonical(self):
-        with pytest.raises(ValueError, match="data_julgamento_de.*data_julgamento_inicio"):
+        with pytest.raises(ValueError, match=r"data_julgamento_de.*data_julgamento_inicio"):
             normalize_datas(
                 data_julgamento_de="01/01/2023",
                 data_julgamento_inicio="01/01/2023",
@@ -328,7 +329,7 @@ class TestResolveDeprecatedAlias:
         kwargs = {"magistrado": "Fulano"}
         with warnings.catch_warnings():
             warnings.simplefilter("always")
-            with pytest.raises(ValueError, match="relator.*magistrado"):
+            with pytest.raises(ValueError, match=r"relator.*magistrado"):
                 resolve_deprecated_alias(kwargs, "magistrado", "relator", "Beltrana")
 
     def test_custom_sentinel_empty_string(self):
@@ -345,7 +346,7 @@ class TestResolveDeprecatedAlias:
         kwargs = {"nr_processo": "A"}
         with warnings.catch_warnings():
             warnings.simplefilter("always")
-            with pytest.raises(ValueError, match="numero_processo.*nr_processo"):
+            with pytest.raises(ValueError, match=r"numero_processo.*nr_processo"):
                 resolve_deprecated_alias(
                     kwargs, "nr_processo", "numero_processo", "B", sentinel=""
                 )
@@ -395,7 +396,7 @@ class TestIterDateWindows:
         assert windows[-1][1] == "31/12/2024"
         # Janelas não-sobrepostas (cada início > fim anterior).
         from datetime import datetime
-        for prev, nxt in zip(windows, windows[1:]):
+        for prev, nxt in itertools.pairwise(windows):
             assert prev[1] is not None and nxt[0] is not None
             prev_fim = datetime.strptime(prev[1], "%d/%m/%Y")
             nxt_ini = datetime.strptime(nxt[0], "%d/%m/%Y")
@@ -521,7 +522,7 @@ class TestRunChunkedSearch:
         def fetch(i, f):
             return pd.DataFrame({"cd_acordao": ["a"]})
 
-        with pytest.raises(ValueError, match="auto_chunk.*paginas"):
+        with pytest.raises(ValueError, match=r"auto_chunk.*paginas"):
             run_chunked_search(
                 fetch,
                 data_inicio="01/01/2022",
