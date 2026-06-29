@@ -37,6 +37,7 @@ juscraper e uma biblioteca Python para raspagem de dados de tribunais brasileiro
 - `pytest -m integration` — roda so integracao (lento, hit live).
 - `pytest -m ""` — roda tudo (offline + integracao).
 - `pytest tests/tjsp` — escopo a um tribunal.
+- `pytest -m "integration and not anti_bot"` — integracao sem os testes sujeitos a bloqueio Akamai (TRF1/TRF3/TRF5 `cpopg`); use em CI/datacenter. O marker `anti_bot` faz o conftest converter `BotChallengeBlockedError` em xfail (falha ambiental, nao regressao) — detalhes em `CONTRIBUTING.md` > **Tests** > **Marker `anti_bot`**. Refs #292.
 - `--strict-markers` esta ativo — todo marker deve ser registrado no `pyproject.toml`.
 
 ### Regras para autor de teste

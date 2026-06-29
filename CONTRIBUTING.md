@@ -89,6 +89,22 @@ As seções a seguir são notas internas para quem contribui com novos raspadore
 | **Cassete** — fluxo multi-step com `pytest-recording` | `test_*_cassette.py` | `vcr` | Caso a caso (TJPE, TJRR, JusBR) |
 | **Integracao** — scraper contra tribunal real | `test_*_integration.py` | `integration` | Sob demanda |
 
+### Marker `anti_bot` — bloqueio anti-bot esperado (refs #292)
+
+A consulta pública PJe de TRF1, TRF3 e TRF5 fica atrás do bot manager Akamai. De IPs de datacenter/CI o portal devolve `HTTP 403 Access Denied` e o scraper levanta `BotChallengeBlockedError` de propósito (bloqueio session-wide). Isso é **falha ambiental** — depende do IP do cliente, passa de IP residencial — e não regressão de código. O marker `anti_bot` distingue os dois casos sem esconder regressão real.
+
+O `tests/conftest.py` registra um hook (`pytest_runtest_makereport`, `wrapper=True`) que, **apenas** para testes marcados `anti_bot`, converte `BotChallengeBlockedError` em `xfail`. Qualquer outra exceção — parser quebrado, schema rejeitando input antes válido, coluna renomeada — continua falhando vermelho, e de IP residencial (sem bloqueio) o teste passa normal. Diferente do `xfail(strict=False)` cego de TJAP (Turnstile) e TJRR (PrimeFaces), que são bloqueios *permanentes*: o Akamai é *condicional ao IP*, então o teste só vira xfail quando o bloqueio de fato acontece.
+
+Aplicar com `pytestmark = pytest.mark.anti_bot` no topo do arquivo de integração (cobre todos os testes do arquivo, que batem no mesmo backend protegido). Comandos:
+
+```bash
+pytest -m "integration and anti_bot"        # IP residencial: cobertura real dos TRFs
+pytest -m "integration and not anti_bot"    # CI/datacenter: pula os anti-bot por completo
+pytest -m integration                        # roda tudo; bloqueio Akamai vira xfail, regressao real falha
+```
+
+O hook é coberto por `tests/test_anti_bot_marker.py` (offline, via `pytester`), que reusa a implementação real e afirma os três casos: bloqueio+marker → xfail; regressão real → fail; bloqueio sem marker → fail.
+
 ### Ferramentas
 
 - **`responses`** (getsentry) — padrao para mockar `requests.Session` em testes de contrato. Usar `@responses.activate` ou context manager. Validar payload enviado com matchers (`urlencoded_params_matcher`, `json_params_matcher`).
