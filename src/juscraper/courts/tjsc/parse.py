@@ -61,9 +61,7 @@ def _parse_result_item(item) -> dict:
                     if len(parts) == 2:
                         result["classe"] = parts[1].strip()
                     break
-        elif key == "ementa":
-            result["ementa"] = text
-        elif key == "decisao" and "ementa" not in result:
+        elif key == "ementa" or (key == "decisao" and "ementa" not in result):
             result["ementa"] = text
         else:
             result[key] = text

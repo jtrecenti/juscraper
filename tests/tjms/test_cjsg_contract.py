@@ -51,7 +51,7 @@ def test_cjsg_typical_com_paginacao(tmp_path, mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
-    assert CJSG_MIN_COLUMNS <= set(df.columns)
+    assert set(df.columns) >= CJSG_MIN_COLUMNS
     assert len(df) > 0
 
 
@@ -67,7 +67,7 @@ def test_cjsg_single_page(tmp_path, mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
-    assert CJSG_MIN_COLUMNS <= set(df.columns)
+    assert set(df.columns) >= CJSG_MIN_COLUMNS
     assert len(df) > 0
 
 

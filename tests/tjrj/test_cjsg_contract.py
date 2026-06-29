@@ -85,7 +85,7 @@ def test_cjsg_typical_com_paginacao(mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
-    assert CJSG_FIELDS <= set(df.columns)
+    assert set(df.columns) >= CJSG_FIELDS
     assert len(df) == 20  # 10 docs/page × 2 páginas
 
 
@@ -106,7 +106,7 @@ def test_cjsg_single_page(mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
-    assert CJSG_FIELDS <= set(df.columns)
+    assert set(df.columns) >= CJSG_FIELDS
     assert len(df) == 2
 
 

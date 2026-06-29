@@ -121,8 +121,7 @@ def _sanitize_string(value: str, replacements: dict[str, str]) -> str:
     for real, neutral in replacements.items():
         out = out.replace(real, neutral)
     out = _CPF_RE.sub("[CPF_REDACTED]", out)
-    out = _CNPJ_RE.sub("[CNPJ_REDACTED]", out)
-    return out
+    return _CNPJ_RE.sub("[CNPJ_REDACTED]", out)
 
 
 def _is_cpf_or_cnpj_value(value: Any) -> bool:
@@ -299,9 +298,8 @@ def _replace_numero_processo_in_list(list_data: dict, neutral_digits: str) -> di
 def _replace_numero_processo_in_details(details_data: Any, neutral_digits: str) -> Any:
     if isinstance(details_data, list):
         return [_replace_numero_processo_in_details(d, neutral_digits) for d in details_data]
-    if isinstance(details_data, dict):
-        if "numeroProcesso" in details_data:
-            details_data["numeroProcesso"] = neutral_digits
+    if isinstance(details_data, dict) and "numeroProcesso" in details_data:
+        details_data["numeroProcesso"] = neutral_digits
     return details_data
 
 

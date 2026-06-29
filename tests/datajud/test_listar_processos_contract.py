@@ -78,7 +78,7 @@ def test_listar_processos_typical_multi_page(mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
-    assert LISTAR_PROCESSOS_MIN_COLUMNS <= set(df.columns)
+    assert set(df.columns) >= LISTAR_PROCESSOS_MIN_COLUMNS
     assert len(df) == 20
 
 
@@ -102,7 +102,7 @@ def test_listar_processos_single_page(mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
-    assert LISTAR_PROCESSOS_MIN_COLUMNS <= set(df.columns)
+    assert set(df.columns) >= LISTAR_PROCESSOS_MIN_COLUMNS
     assert len(df) == 1
 
 

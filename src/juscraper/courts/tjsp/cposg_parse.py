@@ -27,8 +27,7 @@ def cposg_parse(path: str):
             logger.error("Erro ao processar %s: %s", arq, e)
     if not dados:
         return pd.DataFrame()
-    df = pd.DataFrame(dados)
-    return df
+    return pd.DataFrame(dados)
 
 
 def cposg_parse_manager(path: str):
@@ -45,8 +44,7 @@ def cposg_parse_manager(path: str):
             logger.error("Erro ao processar %s: %s", arq, e)
     if not dados:
         return pd.DataFrame()
-    df = pd.DataFrame(dados)
-    return df
+    return pd.DataFrame(dados)
 
 
 def cposg_parse_single_json(path: str):

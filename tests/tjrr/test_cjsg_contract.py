@@ -108,7 +108,7 @@ def test_cjsg_typical_com_paginacao(mocker):
     df_p2 = jus.scraper("tjrr").cjsg("dano moral", paginas=range(1, 3))
 
     assert isinstance(df_p2, pd.DataFrame)
-    assert CJSG_MIN_COLUMNS <= set(df_p2.columns)
+    assert set(df_p2.columns) >= CJSG_MIN_COLUMNS
     assert df_p2["processo"].notna().all(), "processo nulo em alguma linha"
     assert (df_p2["processo"].astype(str).str.len() > 0).mean() >= 0.5, (
         "mais da metade dos processos vazios — parser provavelmente quebrado"
@@ -128,7 +128,7 @@ def test_cjsg_single_page(mocker):
     df = jus.scraper("tjrr").cjsg("usucapiao", paginas=1)
 
     assert isinstance(df, pd.DataFrame)
-    assert CJSG_MIN_COLUMNS <= set(df.columns)
+    assert set(df.columns) >= CJSG_MIN_COLUMNS
     assert len(df) > 0
     assert df["processo"].notna().all(), "processo nulo em alguma linha"
     assert (df["processo"].astype(str).str.len() > 0).mean() >= 0.5, (

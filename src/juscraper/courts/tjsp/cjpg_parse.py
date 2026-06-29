@@ -170,10 +170,7 @@ def cjpg_parse_single(path):
             div_decisao = tabela_dados.find('div', {'align': 'justify', 'style': 'display: none;'})
             if div_decisao:
                 spans = div_decisao.find_all('span')
-                if spans:
-                    decisao_text = spans[-1].get_text(separator=" ", strip=True)
-                else:
-                    decisao_text = ''
+                decisao_text = spans[-1].get_text(separator=" ", strip=True) if spans else ''
                 dados_processo['decisao'] = decisao_text
             processos.append(dados_processo)
     return pd.DataFrame(processos)
@@ -200,5 +197,4 @@ def cjpg_parse_manager(path):
                     continue
                 if single_result is not None:
                     result.append(single_result)
-    result = pd.concat(result, ignore_index=True)
-    return result
+    return pd.concat(result, ignore_index=True)

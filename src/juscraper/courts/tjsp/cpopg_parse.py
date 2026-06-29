@@ -40,8 +40,7 @@ def _normalize_field_name(label: str) -> str:
     for src, dst in replacements.items():
         text = text.replace(src, dst)
     text = re.sub(r'[^a-z0-9\s]', '', text)
-    text = re.sub(r'\s+', '_', text.strip())
-    return text
+    return re.sub(r'\s+', '_', text.strip())
 
 
 def cpopg_parse_manager(path: str):
@@ -330,14 +329,12 @@ def cpopg_parse_single_html(path: str):
     df_peticoes = pd.DataFrame(peticoes_diversas)
     df_basicos = pd.DataFrame([dados])
 
-    result = {
+    return {
         "basicos": df_basicos,
         "partes": df_partes,
         "movimentacoes": df_movs,
         "peticoes_diversas": df_peticoes
     }
-
-    return result
 
 
 def cpopg_parse_single_json(path: str):

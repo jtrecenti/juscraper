@@ -49,7 +49,7 @@ def test_cjsg_typical_com_paginacao(mocker):
     df = jus.scraper("tjsc").cjsg("dano moral", paginas=range(1, 3))
 
     assert isinstance(df, pd.DataFrame)
-    assert CJSG_PAGE1_FIELDS <= set(df.columns)
+    assert set(df.columns) >= CJSG_PAGE1_FIELDS
     assert len(df) > 0
     # Confirm both URLs were hit — tests the dual-URL routing rule.
     hit_urls = {call.request.url for call in responses.calls}
@@ -66,7 +66,7 @@ def test_cjsg_single_page(mocker):
     df = jus.scraper("tjsc").cjsg("plano saude paciente doenca rara", paginas=1)
 
     assert isinstance(df, pd.DataFrame)
-    assert CJSG_PAGE1_FIELDS <= set(df.columns)
+    assert set(df.columns) >= CJSG_PAGE1_FIELDS
     assert len(df) > 0
     hit_urls = {call.request.url for call in responses.calls}
     assert hit_urls == {SEARCH_URL}
@@ -86,7 +86,7 @@ def test_cjsg_paginas_none_descobre_via_html(mocker):
     df = jus.scraper("tjsc").cjsg("plano saude paciente doenca rara", paginas=None)
 
     assert isinstance(df, pd.DataFrame)
-    assert CJSG_PAGE1_FIELDS <= set(df.columns)
+    assert set(df.columns) >= CJSG_PAGE1_FIELDS
     assert len(df) > 0
     assert len(responses.calls) == 1
     assert responses.calls[0].request.url == SEARCH_URL
