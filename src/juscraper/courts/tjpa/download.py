@@ -128,7 +128,8 @@ def cjsg_download_manager(
         if total_pages > 1:
             logger.info("TJPA: %d pages found. Downloading all...", total_pages)
             for pagina in tqdm(range(2, total_pages + 1), desc="Baixando páginas TJPA"):
-                resultados.append(_get_page(pagina))
+                # laco de I/O (rede por iteracao sob tqdm): comprehension esconderia o efeito
+                resultados.append(_get_page(pagina))  # noqa: PERF401
         return resultados
 
     paginas_iter = list(paginas)

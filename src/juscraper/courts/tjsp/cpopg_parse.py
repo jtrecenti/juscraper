@@ -381,6 +381,5 @@ def get_cpopg_download_links(request):
         if href is not None and 'show.do' in str(href):
             links.append(href)
     else:
-        for a in lista.find_all('a', href=True):
-            links.append(str(a['href']))
+        links.extend(str(a['href']) for a in lista.find_all('a', href=True))
     return links

@@ -182,7 +182,8 @@ def cjsg_download(
         resultados = [first_html]
         if n_pags > 1:
             for pagina_atual in tqdm(range(2, n_pags + 1), desc='Baixando páginas TJPR'):
-                resultados.append(_fetch_page(pagina_atual))
+                # laco de I/O (rede por iteracao sob tqdm): comprehension esconderia o efeito
+                resultados.append(_fetch_page(pagina_atual))  # noqa: PERF401
         return resultados
 
     paginas_iter = list(paginas)

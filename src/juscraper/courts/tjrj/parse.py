@@ -43,21 +43,21 @@ def cjsg_parse(raw_pages: list) -> pd.DataFrame:
     for page in raw_pages:
         if not page:
             continue
-        for doc in page.get("DocumentosConsulta", []) or []:
-            rows.append(
-                {
-                    "cod_documento": doc.get("CodDoc"),
-                    "processo": doc.get("NumProcCnj") or doc.get("Processo"),
-                    "numero_antigo": doc.get("NumAntigo"),
-                    "classe": doc.get("Classe") or doc.get("DescrRecurso"),
-                    "tipo_documento": doc.get("DescrTipDoc"),
-                    "orgao_julgador": doc.get("NomeOrgJulg"),
-                    "relator": doc.get("NomeMagRel"),
-                    "data_julgamento": _parse_aspnet_date(doc.get("DtHrMov")),
-                    "data_publicacao": _parse_aspnet_date(doc.get("DtHrPubl")),
-                    "ementa": _strip_html(
-                        doc.get("TextoSemFormat") or doc.get("Texto")
-                    ),
-                }
-            )
+        rows.extend(
+            {
+                "cod_documento": doc.get("CodDoc"),
+                "processo": doc.get("NumProcCnj") or doc.get("Processo"),
+                "numero_antigo": doc.get("NumAntigo"),
+                "classe": doc.get("Classe") or doc.get("DescrRecurso"),
+                "tipo_documento": doc.get("DescrTipDoc"),
+                "orgao_julgador": doc.get("NomeOrgJulg"),
+                "relator": doc.get("NomeMagRel"),
+                "data_julgamento": _parse_aspnet_date(doc.get("DtHrMov")),
+                "data_publicacao": _parse_aspnet_date(doc.get("DtHrPubl")),
+                "ementa": _strip_html(
+                    doc.get("TextoSemFormat") or doc.get("Texto")
+                ),
+            }
+            for doc in page.get("DocumentosConsulta", []) or []
+        )
     return pd.DataFrame(rows)
