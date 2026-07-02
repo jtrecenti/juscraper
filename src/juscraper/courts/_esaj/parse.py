@@ -339,7 +339,7 @@ def cjsg_parse_manager(path: str) -> pd.DataFrame:
     if Path(path).is_file():
         return _parse_single_page(path)
 
-    arquivos = [f for f in Path(path).rglob("*.ht*") if f.is_file()]
+    arquivos = [str(f) for f in Path(path).rglob("*.ht*") if f.is_file()]
 
     result: list[pd.DataFrame] = []
     for file in tqdm(arquivos, desc="Processando documentos"):
