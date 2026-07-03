@@ -1,7 +1,6 @@
 """Parses downloaded files from the first-degree procedural query."""
-import glob
-import os
 import re
+from pathlib import Path
 
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -58,16 +57,15 @@ def cpopg_parse_manager(path: str):
         with the parsed data from the case files.
     """
     lista_empilhada = {}
-    if os.path.isfile(path):
+    if Path(path).is_file():
         result = [cpopg_parse_single(path)]
     else:
         result = []
-        arquivos = glob.glob(f"{path}/**/*.[hj][st]*", recursive=True)
-        arquivos = [f for f in arquivos if os.path.isfile(f)]
+        arquivos = [str(f) for f in Path(path).rglob("*.[hj][st]*") if f.is_file()]
         # remover arquivos json cujo nome nao acaba com um número
         arquivos = [f for f in arquivos if not f.endswith('.json') or f[-6:-5].isnumeric()]
         for file in tqdm(arquivos, desc="Processando documentos"):
-            if os.path.isfile(file):
+            if Path(file).is_file():
                 try:
                     single_result = cpopg_parse_single(file)
                 except (OSError, UnicodeDecodeError, ValueError, AttributeError) as e:
@@ -101,7 +99,7 @@ def cpopg_parse_single(path: str):
 
 def cpopg_parse_single_html(path: str):
     """Parse a downloaded HTML file from the TJSP CPOPG consultation."""
-    with open(path, 'r', encoding='utf-8') as f:
+    with Path(path).open('r', encoding='utf-8') as f:
         html = f.read()
         soup = BeautifulSoup(html, 'html.parser')
 
@@ -341,14 +339,14 @@ def cpopg_parse_single_json(path: str):
     """Parse a JSON file downloaded by cpopg_download."""
     # primeiro, vamos listar todos os arquivos que estão na
     # mesma pasta que o arquivo que está em path
-    lista_arquivos = glob.glob(f"{os.path.dirname(path)}/*.json")
+    lista_arquivos = [str(p) for p in Path(path).parent.glob("*.json")]
     lista_processo = next(f for f in lista_arquivos if f[-6:-5].isnumeric())
     lista_arquivos = [f for f in lista_arquivos if f not in lista_processo]
 
     # agora, fazemos a leitura de cada arquivo e transformamos em um dataframe
     dfs = {}
     for arquivo in lista_arquivos:
-        nome = os.path.basename(arquivo)
+        nome = Path(arquivo).name
         # split name in two variables separating by _
         cd_processo, tipo = nome.split("_", 1)
         tipo = tipo.split(".", 1)[0]

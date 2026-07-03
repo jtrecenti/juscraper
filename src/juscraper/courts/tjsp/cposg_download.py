@@ -2,8 +2,8 @@
 Downloads processes from the TJSP Consulta de Processos Originarios do Primeiro Grau (CPOSG).
 """
 import logging
-import os
 import time
+from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 import requests
@@ -64,8 +64,8 @@ def _cposg_download_html_single(id_cnj, session, u_base, download_path):
     soup = BeautifulSoup(r.text, 'html.parser')
     # id_clean vem de clean_cnj (so digitos), seguro como componente de path.
     path = f"{download_path}/cposg/{id_clean}"
-    if not os.path.isdir(path):
-        os.makedirs(path)
+    if not Path(path).is_dir():
+        Path(path).mkdir(parents=True)
     # 3. Tratar tipos de resposta
     # Caso 1: listagem de processos
     if soup.find('div', id='listagemDeProcessos'):
@@ -78,8 +78,8 @@ def _cposg_download_html_single(id_cnj, session, u_base, download_path):
             safe_codigo = safe_path_component(codigo, field="processo.codigo")
             show_url = f"{u_base}cposg/show.do?processo.codigo={codigo}"
             r_show = session.get(show_url)
-            file_name = os.path.join(path, f"{id_clean}_cd_processo_{safe_codigo}.html")
-            with open(file_name, 'w', encoding='utf-8') as f:
+            file_name = Path(path) / f"{id_clean}_cd_processo_{safe_codigo}.html"
+            with file_name.open('w', encoding='utf-8') as f:
                 f.write(r_show.text)
     # Caso 2: incidentes/modal
     elif soup.find('div', id='modalIncidentes'):
@@ -88,8 +88,8 @@ def _cposg_download_html_single(id_cnj, session, u_base, download_path):
             safe_codigo = safe_path_component(codigo, field="processo.codigo")
             show_url = f"{u_base}cposg/show.do?processo.codigo={codigo}"
             r_show = session.get(show_url)
-            file_name = os.path.join(path, f"{id_clean}_cd_processo_{safe_codigo}.html")
-            with open(file_name, 'w', encoding='utf-8') as f:
+            file_name = Path(path) / f"{id_clean}_cd_processo_{safe_codigo}.html"
+            with file_name.open('w', encoding='utf-8') as f:
                 f.write(r_show.text)
     # Caso 3: resposta simples — o id vem do input[name=cdProcesso] (nao de
     # processo.codigo como nos casos 1/2), dai field="cdProcesso".
@@ -100,8 +100,8 @@ def _cposg_download_html_single(id_cnj, session, u_base, download_path):
             value = input_cd.get('value')
             codigo_simples = str(value) if value is not None else None
         codigo_part = safe_path_component(codigo_simples, field="cdProcesso") if codigo_simples else "simples"
-        file_name = os.path.join(path, f"{id_clean}_cd_processo_{codigo_part}.html")
-        with open(file_name, 'w', encoding='utf-8') as f:
+        file_name = Path(path) / f"{id_clean}_cd_processo_{codigo_part}.html"
+        with file_name.open('w', encoding='utf-8') as f:
             f.write(r.text)
     return path
 
@@ -118,12 +118,12 @@ def cposg_download_api(id_cnj_list, session, api_base, download_path, sleep_time
         id_clean = clean_cnj(id_cnj)
         u = f"{api_base}{endpoint}{id_clean}"
         path = f"{download_path}/cposg/{id_clean}"
-        if not os.path.isdir(path):
-            os.makedirs(path)
+        if not Path(path).is_dir():
+            Path(path).mkdir(parents=True)
         r = session.get(u)
         if r.status_code != 200:
             raise RuntimeError(f"A consulta à API falhou. Status code {r.status_code}.")
-        with open(f"{path}/{id_clean}.json", 'w', encoding='utf-8') as f:
+        with Path(f"{path}/{id_clean}.json").open('w', encoding='utf-8') as f:
             f.write(r.text)
         paths.append(path)
         time.sleep(sleep_time)

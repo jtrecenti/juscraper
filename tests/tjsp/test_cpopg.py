@@ -2,8 +2,8 @@
 Tests for TJSP CPOPG functionality.
 Includes both integration and unit tests.
 """
-import os
 import tempfile
+from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -182,7 +182,7 @@ class TestCPOPGUnit:
             # Check peticoes
             assert len(result['peticoes_diversas']) == 2
         finally:
-            os.unlink(temp_path)
+            Path(temp_path).unlink()
 
     def test_cpopg_parse_manager_directory(self):
         """Test parsing multiple CPOPG files from directory."""
@@ -196,12 +196,12 @@ class TestCPOPGUnit:
         '''
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            file1 = os.path.join(temp_dir, 'process1.html')
-            file2 = os.path.join(temp_dir, 'process2.html')
+            file1 = Path(temp_dir) / 'process1.html'
+            file2 = Path(temp_dir) / 'process2.html'
 
-            with open(file1, 'w', encoding='utf-8') as f:
+            with file1.open('w', encoding='utf-8') as f:
                 f.write(html)
-            with open(file2, 'w', encoding='utf-8') as f:
+            with file2.open('w', encoding='utf-8') as f:
                 f.write(html.replace('1000149', '1000150'))
 
             result = cpopg_parse_manager(temp_dir)
@@ -228,7 +228,7 @@ class TestCPOPGUnit:
             assert len(result['partes']) == 0
             assert len(result['movimentacoes']) == 0
         finally:
-            os.unlink(temp_path)
+            Path(temp_path).unlink()
 
 
     def test_parse_alternative_template(self):
@@ -280,7 +280,7 @@ class TestCPOPGUnit:
             assert basicos['foro'] == 'Foro de São José dos Campos'
             assert basicos['vara'] == 'Anexo do Juizado Especial'
         finally:
-            os.unlink(temp_path)
+            Path(temp_path).unlink()
 
     def test_parse_extra_fields_standard_template(self):
         """Test extra fields (Outros assuntos, Controle) are captured in standard template."""
@@ -339,7 +339,7 @@ class TestCPOPGUnit:
             assert basicos['area'] == 'Cível'
             assert basicos['outros_assuntos'] == 'ICMS/ Imposto sobre Circulação de Mercadorias'
         finally:
-            os.unlink(temp_path)
+            Path(temp_path).unlink()
 
     def test_parse_alternative_template_with_processo_principal(self):
         """Test incidente template captures Processo principal field."""
@@ -415,7 +415,7 @@ class TestCPOPGUnit:
             assert basicos['controle'] == '2024/001363'
             assert basicos['area'] == 'Cível'
         finally:
-            os.unlink(temp_path)
+            Path(temp_path).unlink()
 
     def test_parse_alternative_template_from_sample(self):
         """Test parsing the alternative template sample HTML file."""
@@ -441,7 +441,7 @@ class TestCPOPGUnit:
             assert len(result['partes']) == 1
             assert len(result['movimentacoes']) == 1
         finally:
-            os.unlink(temp_path)
+            Path(temp_path).unlink()
 
     def test_parse_standard_template_from_sample(self):
         """Test parsing the standard template sample HTML file with extra fields."""
@@ -466,7 +466,7 @@ class TestCPOPGUnit:
             assert basicos['area'] == 'Cível'
             assert basicos['outros_assuntos'] == 'ICMS/ Imposto sobre Circulação de Mercadorias'
         finally:
-            os.unlink(temp_path)
+            Path(temp_path).unlink()
 
 
 if __name__ == "__main__":

@@ -5,7 +5,7 @@ Mirrors the TRF3 suite — the three TRF PJe deployments share the same
 """
 from __future__ import annotations
 
-import os
+from pathlib import Path
 
 import pytest
 import responses
@@ -89,4 +89,4 @@ def test_cpopg_with_download_pecas_writes_files_and_adds_column(tmp_path) -> Non
     saved = df.iloc[0]["pecas"]
     assert len(saved) == n_pecas
     for p in saved:
-        assert os.path.isfile(p)
+        assert Path(p).is_file()
