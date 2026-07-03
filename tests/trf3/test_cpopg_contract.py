@@ -62,7 +62,7 @@ def test_akamai_block_raises_dedicated_exception() -> None:
         )
 
     with _pt.raises(BotChallengeBlockedError) as exc_info:
-        _check_bot_challenge(FakeResp())
+        _check_bot_challenge(FakeResp())  # type: ignore[arg-type]
     err = exc_info.value
     assert err.tribunal == "TRF3"
     assert err.reference == "18.27f62917.1779623119.a59b1f4c"
@@ -82,7 +82,7 @@ def test_check_bot_challenge_ignores_legitimate_403() -> None:
         content = b"<html>403 - not authorized</html>"
 
     # Sem 'Access Denied' no body, a função retorna sem levantar.
-    _check_bot_challenge(FakeResp())
+    _check_bot_challenge(FakeResp())  # type: ignore[arg-type]
 
 
 def test_check_bot_challenge_ignores_non_403() -> None:
@@ -94,7 +94,7 @@ def test_check_bot_challenge_ignores_non_403() -> None:
         url = "https://example.com/x"
         content = b"Access Denied"  # nem assim — só 403 conta
 
-    _check_bot_challenge(FakeResp())
+    _check_bot_challenge(FakeResp())  # type: ignore[arg-type]
 
 
 def test_extract_movs_pagination_returns_none_when_no_slider() -> None:
