@@ -104,7 +104,7 @@ def test_cposg_html_rejeita_codigo_malicioso(tmp_path, mocker):
         body=_LISTAGEM_MALICIOSA, status=200, content_type="text/html",
     )
 
-    with pytest.raises(ValueError, match="processo.codigo"):
+    with pytest.raises(ValueError, match=r"processo.codigo"):
         _cposg_download_html_single(CNJ, scraper.session, scraper.u_base, str(tmp_path))
 
     # nenhum HTML de processo gravado
@@ -125,7 +125,7 @@ def test_cposg_html_modal_rejeita_codigo_malicioso(tmp_path, mocker):
         body=_MODAL_MALICIOSO, status=200, content_type="text/html",
     )
 
-    with pytest.raises(ValueError, match="processo.codigo"):
+    with pytest.raises(ValueError, match=r"processo.codigo"):
         _cposg_download_html_single(CNJ, scraper.session, scraper.u_base, str(tmp_path))
 
     assert not list(tmp_path.rglob("*.html"))

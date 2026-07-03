@@ -64,7 +64,7 @@ def test_cjsg_typical_com_paginacao(tmp_path, mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
-    assert CJSG_MIN_COLUMNS <= set(df.columns)
+    assert set(df.columns) >= CJSG_MIN_COLUMNS
     assert len(df) > 0
 
 
@@ -80,7 +80,7 @@ def test_cjsg_single_page(tmp_path, mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
-    assert CJSG_MIN_COLUMNS <= set(df.columns)
+    assert set(df.columns) >= CJSG_MIN_COLUMNS
     assert len(df) > 0
 
 
@@ -145,7 +145,7 @@ def test_cjsg_post_inicial_retenta_403(tmp_path, mocker):
     df = jus.scraper("tjsp", download_path=str(tmp_path)).cjsg(pesquisa, paginas=1)
 
     assert isinstance(df, pd.DataFrame)
-    assert CJSG_MIN_COLUMNS <= set(df.columns)
+    assert set(df.columns) >= CJSG_MIN_COLUMNS
     # POST 403 + POST 200 + GET 200 = 3 chamadas. Trava regressão caso o retry
     # do POST inicial pare de acontecer (ex.: alguém remove o wrapping em
     # ``_request_with_retry``).
@@ -313,7 +313,7 @@ def test_cjsg_get_1a_pagina_retenta_503(tmp_path, mocker):
     df = jus.scraper("tjsp", download_path=str(tmp_path)).cjsg(pesquisa, paginas=1)
 
     assert isinstance(df, pd.DataFrame)
-    assert CJSG_MIN_COLUMNS <= set(df.columns)
+    assert set(df.columns) >= CJSG_MIN_COLUMNS
     # POST 200 + GET 503 + GET 200 = 3 chamadas. Trava regressão simétrica
     # à do POST inicial.
     assert len(responses.calls) == 3

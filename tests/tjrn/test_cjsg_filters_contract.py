@@ -225,7 +225,7 @@ def test_cjsg_data_publicacao_raises_typeerror():
 
 def test_cjsg_alias_conflict_raises():
     """Passar canonical e alias deprecado simultaneamente leva a ``ValueError``."""
-    with pytest.raises(ValueError, match="numero_processo.*nr_processo"):
+    with pytest.raises(ValueError, match=r"numero_processo.*nr_processo"):
         jus.scraper("tjrn").cjsg(
             "dano moral", paginas=1,
             numero_processo="X", nr_processo="Y",

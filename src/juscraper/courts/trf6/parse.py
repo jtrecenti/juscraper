@@ -44,7 +44,7 @@ def _norm_ws(text: str | None) -> str | None:
 
 def _parse_capa(soup: BeautifulSoup) -> dict[str, str | None]:
     """Pull dt/dd pairs from the ``Capa do Processo`` fieldset."""
-    out: dict[str, str | None] = {key: None for key in _CAPA_FIELD_IDS.values()}
+    out: dict[str, str | None] = dict.fromkeys(_CAPA_FIELD_IDS.values())
     out["orgao_julgador"] = None
     fieldset = None
     for fs in soup.find_all("fieldset"):
@@ -127,7 +127,7 @@ def _parse_partes(
                 poles.setdefault(key, [])
             continue
         if tds and current_keys:
-            for key, td in zip(current_keys, tds):
+            for key, td in zip(current_keys, tds, strict=False):
                 text = _norm_ws(td.get_text(separator=" | "))
                 if text:
                     poles.setdefault(key, []).append({"descricao": text})

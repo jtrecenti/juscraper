@@ -64,10 +64,10 @@ def test_cpopg_html_single_match(tmp_path, mocker):
     result = jus.scraper("tjsp", download_path=str(tmp_path)).cpopg(CNJ, method="html")
 
     assert isinstance(result, dict)
-    assert CPOPG_HTML_KEYS <= set(result.keys())
+    assert set(result.keys()) >= CPOPG_HTML_KEYS
     basicos = result["basicos"]
     assert isinstance(basicos, pd.DataFrame)
-    assert CPOPG_BASICOS_MIN <= set(basicos.columns)
+    assert set(basicos.columns) >= CPOPG_BASICOS_MIN
     assert len(basicos) == 1
     assert basicos.iloc[0]["id_processo"] == CNJ
 
@@ -104,6 +104,6 @@ def test_cpopg_api(tmp_path, mocker):
     result = jus.scraper("tjsp", download_path=str(tmp_path)).cpopg(CNJ, method="api")
 
     assert isinstance(result, dict)
-    assert CPOPG_API_KEYS <= set(result.keys())
+    assert set(result.keys()) >= CPOPG_API_KEYS
     basicos = result["basicos"]
     assert isinstance(basicos, pd.DataFrame)

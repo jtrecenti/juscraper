@@ -54,7 +54,7 @@ def build_cjsg_payload(
             "grau": grau,
         },
         "page": page,
-        "usuario": {"matricula": "", "token": ""},
+        "usuario": {"matricula": "", "token": ""},  # nosec
     }
 
 

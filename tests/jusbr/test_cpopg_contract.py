@@ -198,5 +198,5 @@ def test_cpopg_cnj_invalido_nao_dispara_http(mocker):
 def test_cpopg_sem_auth_levanta_runtime_error():
     """Sem ``auth(token)`` previo, ``cpopg`` aborta antes de qualquer HTTP."""
     scraper = jus.scraper("jusbr")
-    with pytest.raises(RuntimeError, match="[Aa]utentica"):
+    with pytest.raises(RuntimeError, match=r"[Aa]utentica"):
         scraper.cpopg(NEUTRAL_CNJ_1)

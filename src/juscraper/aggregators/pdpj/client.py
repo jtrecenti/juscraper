@@ -237,8 +237,7 @@ class PdpjScraper(BaseScraper):
                     "status_consulta": "Nao encontrado",
                 })
             else:
-                for det in detalhes:
-                    rows.append(build_processo_row(det, cnj))
+                rows.extend(build_processo_row(det, cnj) for det in detalhes)
             if self.sleep_time:
                 time.sleep(self.sleep_time)
         return pd.DataFrame(rows)
@@ -507,8 +506,9 @@ class PdpjScraper(BaseScraper):
             if isinstance(top_docs, list):
                 doc_lists.append(top_docs)
             for tram in detalhes.get("tramitacoes", []) or []:
+                # filtro composto + narrowing de tipo que o mypy le melhor no laco explicito
                 if isinstance(tram, dict) and isinstance(tram.get("documentos"), list):
-                    doc_lists.append(tram["documentos"])
+                    doc_lists.append(tram["documentos"])  # noqa: PERF401
 
             for docs in doc_lists:
                 for doc in docs:

@@ -15,15 +15,14 @@ def scraper(tribunal_name: str, **kwargs):
 
     if tribunal_name == "TJSP":
         return TJSPScraper(**kwargs)
-    elif tribunal_name == "TJRS":
+    if tribunal_name == "TJRS":
         return TJRSScraper()
-    elif tribunal_name == "TJPR":
+    if tribunal_name == "TJPR":
         return TJPRScraper()
-    elif tribunal_name == "JUSBR":
+    if tribunal_name == "JUSBR":
         return JusbrScraper(**kwargs)
-    elif tribunal_name == "DATAJUD":
+    if tribunal_name == "DATAJUD":
         return DatajudScraper(**kwargs)
-    elif tribunal_name == "TJDFT":
+    if tribunal_name == "TJDFT":
         return TJDFTScraper()
-    else:
-        raise ValueError(f"Tribunal '{tribunal_name}' ainda não é suportado.")
+    raise ValueError(f"Tribunal '{tribunal_name}' ainda não é suportado.")

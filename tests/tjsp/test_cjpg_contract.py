@@ -70,7 +70,7 @@ def test_cjpg_typical_legacy_format(tmp_path, mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
-    assert CJPG_MIN_COLUMNS <= set(df.columns)
+    assert set(df.columns) >= CJPG_MIN_COLUMNS
     assert len(df) > 0
 
 
@@ -86,7 +86,7 @@ def test_cjpg_multi_page(tmp_path, mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
-    assert CJPG_MIN_COLUMNS <= set(df.columns)
+    assert set(df.columns) >= CJPG_MIN_COLUMNS
     # 10 rows per page; cjpg_download.py:114 clamps range.stop to n_pags+1
     # which is large here, so both pages are fetched.
     assert len(df) == 20

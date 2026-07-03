@@ -243,7 +243,7 @@ class TestExtraKwargs:
 
     def test_sem_tribunal_nem_numero_processo_levanta_valueerror(self):
         scraper = jus.scraper("datajud")
-        with pytest.raises(ValueError, match="tribunal.*numero_processo"):
+        with pytest.raises(ValueError, match=r"tribunal.*numero_processo"):
             scraper.contar_processos(ano_ajuizamento=2023)
 
 

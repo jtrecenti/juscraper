@@ -2,8 +2,8 @@
 Tests for TJSP CPOSG functionality.
 Includes both integration and unit tests.
 """
-import os
 import tempfile
+from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -128,7 +128,7 @@ class TestCPOSGUnit:
             assert isinstance(row['movimentacoes'], list)
             assert len(row['movimentacoes']) == 2
         finally:
-            os.unlink(temp_path)
+            Path(temp_path).unlink()
 
     def test_cposg_parse_manager_directory(self):
         """Test parsing multiple CPOSG files from directory."""
@@ -149,12 +149,12 @@ class TestCPOSGUnit:
         '''
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            file1 = os.path.join(temp_dir, 'process1.html')
-            file2 = os.path.join(temp_dir, 'process2.html')
+            file1 = Path(temp_dir) / 'process1.html'
+            file2 = Path(temp_dir) / 'process2.html'
 
-            with open(file1, 'w', encoding='utf-8') as f:
+            with file1.open('w', encoding='utf-8') as f:
                 f.write(html)
-            with open(file2, 'w', encoding='utf-8') as f:
+            with file2.open('w', encoding='utf-8') as f:
                 f.write(html.replace('1000149', '1000150'))
 
             result = cposg_parse_manager(temp_dir)
@@ -176,7 +176,7 @@ class TestCPOSGUnit:
             assert isinstance(result, list)
             assert len(result) == 0
         finally:
-            os.unlink(temp_path)
+            Path(temp_path).unlink()
 
     def test_cposg_parse_no_movement_table(self):
         """Test parsing CPOSG HTML without movement table."""
@@ -198,7 +198,7 @@ class TestCPOSGUnit:
             assert isinstance(result, list)
             assert len(result) == 0
         finally:
-            os.unlink(temp_path)
+            Path(temp_path).unlink()
 
     def test_cposg_parse_with_parts_and_decisions(self):
         """Test parsing CPOSG HTML with parts and decisions."""
@@ -250,7 +250,7 @@ class TestCPOSGUnit:
             assert isinstance(row['partes'], list)
             assert isinstance(row['decisoes'], list)
         finally:
-            os.unlink(temp_path)
+            Path(temp_path).unlink()
 
 
 if __name__ == "__main__":

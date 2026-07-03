@@ -100,7 +100,7 @@ def assert_date_matches(df: pd.DataFrame) -> str | None:
     raw = df[col].astype(str).str.strip()
     parsed = [_parse_row_date(r) for r in raw]
     bad = [
-        (r, p) for r, p in zip(raw, parsed)
+        (r, p) for r, p in zip(raw, parsed, strict=False)
         if p is None or not (_ALVO_START <= p <= end)
     ]
     assert not bad, (

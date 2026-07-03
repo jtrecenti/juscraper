@@ -26,7 +26,7 @@ def _parse_result_item(item) -> dict:
         "DECISAO": "decisao",
     }
 
-    for label, value in zip(labels, values):
+    for label, value in zip(labels, values, strict=False):
         label_text = label.get_text(strip=True).upper()
         # Normalize accented chars for matching
         label_norm = (
@@ -61,9 +61,7 @@ def _parse_result_item(item) -> dict:
                     if len(parts) == 2:
                         result["classe"] = parts[1].strip()
                     break
-        elif key == "ementa":
-            result["ementa"] = text
-        elif key == "decisao" and "ementa" not in result:
+        elif key == "ementa" or (key == "decisao" and "ementa" not in result):
             result["ementa"] = text
         else:
             result[key] = text

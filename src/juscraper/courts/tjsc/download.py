@@ -95,8 +95,7 @@ def cjsg_download_manager(
         url = cjsg_url_for_page(pagina_1based)
         resp = request_fn("POST", url, data=data, timeout=60)
         resp.encoding = resp.apparent_encoding
-        html = resp.text
-        return html
+        return resp.text
 
     if paginas is None:
         first = _get_page(1)

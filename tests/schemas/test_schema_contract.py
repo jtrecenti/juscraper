@@ -155,11 +155,7 @@ def _output_payload(schema_cls) -> dict:
                 out[name] = "Texto da ementa."
             elif name == "id_processo":
                 out[name] = "1000"
-            elif name == "numeroProcesso":
-                out[name] = "0000000-00.0000.0.00.0000"
-            elif name == "processo_pesquisado":
-                out[name] = "0000000-00.0000.0.00.0000"
-            elif name == "numero_processo":
+            elif name == "numeroProcesso" or name == "processo_pesquisado" or name == "numero_processo":
                 out[name] = "0000000-00.0000.0.00.0000"
             else:
                 out[name] = "x"

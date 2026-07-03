@@ -108,7 +108,8 @@ def cjsg_download_manager(
         n_pags = math.ceil(total / RESULTS_PER_PAGE) if total else 1
         if n_pags > 1:
             for pagina in tqdm(range(2, n_pags + 1), desc="Baixando CJSG TJPB"):
-                resultados.append(_get_page(pagina))
+                # laco de I/O (rede por iteracao sob tqdm): comprehension esconderia o efeito
+                resultados.append(_get_page(pagina))  # noqa: PERF401
         return resultados
 
     paginas_iter = list(paginas)

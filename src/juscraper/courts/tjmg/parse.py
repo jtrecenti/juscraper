@@ -34,11 +34,8 @@ def _split_blocks(html: str) -> list:
     parts = html.split('<div class="caixa_processo"')
     if len(parts) <= 1:
         return []
-    blocks = []
     # Each caixa_processo marks the start of a result. End at next caixa_processo.
-    for chunk in parts[1:]:
-        blocks.append(chunk)
-    return blocks
+    return list(parts[1:])
 
 
 def _parse_block(block: str) -> dict:
@@ -75,8 +72,7 @@ def cjsg_parse(raw_pages: list) -> pd.DataFrame:
     for html in raw_pages:
         if not html:
             continue
-        for block in _split_blocks(html):
-            rows.append(_parse_block(block))
+        rows.extend(_parse_block(block) for block in _split_blocks(html))
     df = pd.DataFrame(rows)
     coerce_date_columns(df, ["data_julgamento", "data_publicacao"], date_format="%d/%m/%Y")
     return df

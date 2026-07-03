@@ -239,7 +239,7 @@ def test_grace_period_exceptions_are_still_needed():
             EXPECTED_COURT_OUTPUT_SCHEMAS,
             EXPECTED_AGGREGATOR_OUTPUT_SCHEMAS,
         ):
-            for _, (module_path, cn) in mapping.items():
+            for module_path, cn in mapping.values():
                 if cn != class_name:
                     continue
                 schema_cls = _resolve(module_path, class_name)

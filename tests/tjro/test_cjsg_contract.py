@@ -40,7 +40,7 @@ def test_cjsg_typical_com_paginacao(mocker):
     df = jus.scraper("tjro").cjsg("dano moral", paginas=range(1, 3))
 
     assert isinstance(df, pd.DataFrame)
-    assert CJSG_MIN_COLUMNS <= set(df.columns)
+    assert set(df.columns) >= CJSG_MIN_COLUMNS
     assert len(df) > 0
 
 
@@ -53,7 +53,7 @@ def test_cjsg_single_page(mocker):
     df = jus.scraper("tjro").cjsg("mandado de seguranca", paginas=1)
 
     assert isinstance(df, pd.DataFrame)
-    assert CJSG_MIN_COLUMNS <= set(df.columns)
+    assert set(df.columns) >= CJSG_MIN_COLUMNS
     assert len(df) > 0
 
 

@@ -202,7 +202,7 @@ def normalize_datas(**kwargs):
                 f"Use apenas '{canonical}'."
             )
 
-    result: dict[str, Any] = {c: None for c in DATE_CANONICAL}
+    result: dict[str, Any] = dict.fromkeys(DATE_CANONICAL)
     for canonical, srcs in sources.items():
         if not srcs:
             continue

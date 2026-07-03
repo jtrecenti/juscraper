@@ -70,13 +70,12 @@ def parse_process_details_response(json_data: dict[str, Any] | list[dict[str, An
 
     # Can add more sophisticated parsing here if needed, e.g., flattening nested structures
     # For now, it mostly returns the JSON data, augmented with the searched CNJ.
-    parsed_data = {
+    return {
         'processo': cnj_searched,  # Matches screenshot column 'processo'
         'numeroProcesso': details_dict.get('numeroProcesso'),  # Matches screenshot
         'idCodexTribunal': details_dict.get('idCodexTribunal'),  # Matches screenshot
         'detalhes': details_dict  # Full details dictionary as per screenshot
     }
-    return parsed_data
 
 
 def clean_document_text(text_content: str | None) -> str | None:
@@ -93,9 +92,8 @@ def clean_document_text(text_content: str | None) -> str | None:
         cleaned_text = cleaned_text.replace('\xa0', ' ')    # non-breaking space to regular space
         cleaned_text = cleaned_text.replace('\u2028', '\n')  # Line separator to newline
         cleaned_text = cleaned_text.replace('\u2029', '\n')  # Paragraph separator to nl
-        cleaned_text = cleaned_text.strip()  # Strip leading/trailing whitespace
         # Potentially add more specific cleaning if other problematic characters are found
-        return cleaned_text
+        return cleaned_text.strip()  # Strip leading/trailing whitespace
     except Exception as e:
         # Catching Exception as a last resort to avoid crashing
         # on unexpected text cleaning errors.

@@ -15,20 +15,20 @@ from tests.tjba.test_cjsg_contract import BASE, _payload
 def test_cjsg_all_filters_land_in_graphql_body(mocker):
     """All TJBA public filters must reach the GraphQL variables payload."""
     mocker.patch("time.sleep")
-    filters: dict[str, Any] = dict(
-        numero_recurso="8000001-11.2024.8.05.0001",
-        orgaos=[10, 20],
-        relatores=[1],
-        classe=[100],
-        data_publicacao_inicio="2024-01-01",
-        data_publicacao_fim="2024-03-31",
-        segundo_grau=False,
-        turmas_recursais=True,
-        tipo_acordaos=False,
-        tipo_decisoes_monocraticas=True,
-        ordenado_por="relevancia",
-        tamanho_pagina=5,
-    )
+    filters: dict[str, Any] = {
+        "numero_recurso": "8000001-11.2024.8.05.0001",
+        "orgaos": [10, 20],
+        "relatores": [1],
+        "classe": [100],
+        "data_publicacao_inicio": "2024-01-01",
+        "data_publicacao_fim": "2024-03-31",
+        "segundo_grau": False,
+        "turmas_recursais": True,
+        "tipo_acordaos": False,
+        "tipo_decisoes_monocraticas": True,
+        "ordenado_por": "relevancia",
+        "tamanho_pagina": 5,
+    }
     responses.add(
         responses.POST,
         BASE,

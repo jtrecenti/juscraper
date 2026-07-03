@@ -8,9 +8,9 @@ can continue importing it from here.
 from __future__ import annotations
 
 import logging
-import os
 import time
 from datetime import datetime
+from pathlib import Path
 
 import requests
 from tqdm import tqdm
@@ -112,11 +112,11 @@ def cjpg_download(
         n_pags = get_n_pags_callback(r0)
     except Exception as e:
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-        debug_dir = os.path.join(download_path, "cjpg_debug")
-        if not os.path.isdir(debug_dir):
-            os.makedirs(debug_dir)
-        debug_file = os.path.join(debug_dir, f"cjpg_primeira_pagina_{timestamp}.html")
-        with open(debug_file, 'w', encoding='utf-8') as f:
+        debug_dir = Path(download_path) / "cjpg_debug"
+        if not debug_dir.is_dir():
+            debug_dir.mkdir(parents=True)
+        debug_file = debug_dir / f"cjpg_primeira_pagina_{timestamp}.html"
+        with debug_file.open('w', encoding='utf-8') as f:
             f.write(r0.text)
         logger = logging.getLogger("juscraper.cjpg_download")
         logger.error(
@@ -130,11 +130,11 @@ def cjpg_download(
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     path = f"{download_path}/cjpg/{timestamp}"
-    if not os.path.isdir(path):
-        os.makedirs(path)
+    if not Path(path).is_dir():
+        Path(path).mkdir(parents=True)
 
     if n_pags == 0:
-        with open(f"{path}/cjpg_00001.html", 'w', encoding='utf-8') as f:
+        with Path(f"{path}/cjpg_00001.html").open('w', encoding='utf-8') as f:
             f.write(r0.text)
         return path
 
@@ -150,7 +150,7 @@ def cjpg_download(
 
     first_page_in_range = 1 in paginas
     if first_page_in_range:
-        with open(f"{path}/cjpg_00001.html", 'w', encoding='utf-8') as f:
+        with Path(f"{path}/cjpg_00001.html").open('w', encoding='utf-8') as f:
             f.write(r0.text)
 
     remaining = [p for p in paginas if p > 1]
@@ -161,6 +161,6 @@ def cjpg_download(
         time.sleep(sleep_time)
         u = f"{u_base}cjpg/trocarDePagina.do?pagina={page}&conversationId="
         r = session.get(u)
-        with open(f"{path}/cjpg_{page:05d}.html", 'w', encoding='utf-8') as f:  # noqa: E231
+        with Path(f"{path}/cjpg_{page:05d}.html").open('w', encoding='utf-8') as f:  # noqa: E231
             f.write(r.text)
     return path

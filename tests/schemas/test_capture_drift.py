@@ -21,11 +21,11 @@ def _capture_modules() -> list[Path]:
 
 
 def _module_names(tree: ast.Module) -> list[tuple[str, int]]:
-    out: list[tuple[str, int]] = []
-    for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom):
-            out.append((node.module or "", node.level))
-    return out
+    return [
+        (node.module or "", node.level)
+        for node in ast.walk(tree)
+        if isinstance(node, ast.ImportFrom)
+    ]
 
 
 @pytest.mark.parametrize("path", _capture_modules(), ids=lambda p: p.stem)

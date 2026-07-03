@@ -13,12 +13,14 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
     registros = []
     for response in resultados_brutos:
         hits = response.get("hits", [])
-        for hit in hits:
-            registros.append({
+        registros.extend(
+            {
                 "processo": hit.get("numero_processo"),
                 "ementa": hit.get("ementa"),
                 "data_julgamento": hit.get("dt_ementa"),
-            })
+            }
+            for hit in hits
+        )
 
     df = pd.DataFrame(registros)
     if df.empty:

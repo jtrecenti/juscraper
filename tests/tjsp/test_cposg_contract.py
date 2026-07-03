@@ -69,7 +69,7 @@ def test_cposg_html_simple_response(tmp_path, mocker):
 
     assert isinstance(df, pd.DataFrame)
     assert len(df) == 1
-    assert CPOSG_BASICOS_MIN <= set(df.columns)
+    assert set(df.columns) >= CPOSG_BASICOS_MIN
 
 
 # ---------- method='api' ------------------------------------------------

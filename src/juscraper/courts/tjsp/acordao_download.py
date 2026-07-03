@@ -1,7 +1,7 @@
 """
 Downloads decisions from the TJSP CJSG.
 """
-import os
+from pathlib import Path
 
 from ...utils import safe_path_component
 
@@ -28,10 +28,10 @@ def download_acordao(
     if r.status_code != 200:
         raise AcordaoDownloadError(f"Erro ao baixar o acordão {cd_acordao}: {r.status_code}")
     safe_cd = safe_path_component(cd_acordao, field="cdAcordao")
-    path = os.path.join(download_path, "cjsg", f"{safe_cd}.pdf")
+    path = Path(download_path) / "cjsg" / f"{safe_cd}.pdf"
     # create folder if it doesn't exist
-    if not os.path.isdir(os.path.dirname(path)):
-        os.makedirs(os.path.dirname(path))
-    with open(path, 'wb') as f:
+    if not path.parent.is_dir():
+        path.parent.mkdir(parents=True)
+    with path.open('wb') as f:
         f.write(r.content)
     return r

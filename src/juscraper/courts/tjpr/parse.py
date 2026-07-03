@@ -78,10 +78,7 @@ def cjsg_parse(
             # Detecta "Leia mais..." e busca a ementa completa
             if 'leia mais' in ementa.lower():
                 input_id = dados_td.find('input', {'name': 'idsSelecionados'})
-                if input_id and 'value' in input_id.attrs:
-                    id_processo = input_id['value']
-                else:
-                    id_processo = ''
+                id_processo = input_id['value'] if input_id and 'value' in input_id.attrs else ''
                 if id_processo and criterio and request_fn is not None:
                     try:
                         ementa = get_ementa_completa(request_fn, id_processo, criterio)

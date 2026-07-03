@@ -47,7 +47,7 @@ def _capture_endpoint(session: requests.Session, dest, endpoint: str,
                       instancia: str, queries: list) -> None:
     out = samples_dir_for("tjto", endpoint)
     for query, pages, files in queries:
-        for page, filename in zip(pages, files):
+        for page, filename in zip(pages, files, strict=False):
             start = (page - 1) * 20
             response = _post(session, query, start=start, instancia=instancia)
             stripped = _minify(response.content)

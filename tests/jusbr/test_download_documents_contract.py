@@ -263,7 +263,7 @@ def test_download_documents_sem_auth_levanta_runtime_error():
     """Sem ``auth(token)`` previo, ``download_documents`` aborta antes do loop."""
     scraper = jus.scraper("jusbr")
     base_df = _base_df([_doc_meta(href_texto=_href_texto(UUID_TEXT_1), href_binario=_href_binario(UUID_BIN_1))])
-    with pytest.raises(RuntimeError, match="[Aa]utentica"):
+    with pytest.raises(RuntimeError, match=r"[Aa]utentica"):
         scraper.download_documents(base_df)
 
 

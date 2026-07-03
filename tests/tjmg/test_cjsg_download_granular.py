@@ -18,6 +18,7 @@ import os
 import re
 import sys
 import tempfile
+from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock
 
@@ -31,18 +32,18 @@ from tests._helpers import query_param_subset_matcher
 
 def _build_params_defaults(**overrides):
     """Argumentos padrao para ``_build_params``; cada teste sobrescreve o que importa."""
-    kwargs: dict[str, Any] = dict(
-        pesquisa="termo",
-        pagina=1,
-        total=1,
-        pesquisar_por="ementa",
-        order_by="2",
-        data_julgamento_inicial="",
-        data_julgamento_final="",
-        data_publicacao_inicial="",
-        data_publicacao_final="",
-        linhas_por_pagina=10,
-    )
+    kwargs: dict[str, Any] = {
+        "pesquisa": "termo",
+        "pagina": 1,
+        "total": 1,
+        "pesquisar_por": "ementa",
+        "order_by": "2",
+        "data_julgamento_inicial": "",
+        "data_julgamento_final": "",
+        "data_publicacao_inicial": "",
+        "data_publicacao_final": "",
+        "linhas_por_pagina": 10,
+    }
     kwargs.update(overrides)
     return _build_params(**kwargs)
 
@@ -291,7 +292,7 @@ class TestSolveCaptchaTempFile:
             seen["path"] = path
             seen["kwargs"] = kwargs
             # Durante o decrypt o arquivo ainda existe (cleanup so no finally).
-            seen["exists_during"] = os.path.exists(path)
+            seen["exists_during"] = Path(path).exists()
             return ["12345"]
 
         fake = MagicMock()
@@ -312,9 +313,9 @@ class TestSolveCaptchaTempFile:
         assert seen["kwargs"] == {"mask": "[0-9]", "length": 5}
 
         path = seen["path"]
-        basename = os.path.basename(path)
+        basename = Path(path).name
         # (1) sob o tempdir do sistema, com o prefixo esperado.
-        assert os.path.realpath(os.path.dirname(path)) == os.path.realpath(
+        assert os.path.realpath(Path(path).parent) == os.path.realpath(
             tempfile.gettempdir()
         )
         assert basename.startswith("tjmg_captcha_")
@@ -323,4 +324,4 @@ class TestSolveCaptchaTempFile:
         assert not re.fullmatch(r"tjmg_captcha_\d+\.png", basename)
         # (3) existia durante o decrypt, removido depois (cleanup no finally).
         assert seen["exists_during"] is True
-        assert not os.path.exists(path)
+        assert not Path(path).exists()

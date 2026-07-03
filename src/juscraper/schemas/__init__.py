@@ -13,17 +13,17 @@ from .mixins import (
 from .types import IdFiltro, IdFiltroUnico
 
 __all__ = [
-    "SearchBase",
-    "OutputCJSGBase",
     "AutoChunkMixin",
+    "CnjInputBase",
     "CountOnlyMixin",
-    "PaginasMixin",
     "DataJulgamentoMixin",
     "DataPublicacaoMixin",
-    "OutputRelatoriaMixin",
-    "OutputDataPublicacaoMixin",
-    "CnjInputBase",
-    "OutputCnjConsultaBase",
     "IdFiltro",
     "IdFiltroUnico",
+    "OutputCJSGBase",
+    "OutputCnjConsultaBase",
+    "OutputDataPublicacaoMixin",
+    "OutputRelatoriaMixin",
+    "PaginasMixin",
+    "SearchBase",
 ]

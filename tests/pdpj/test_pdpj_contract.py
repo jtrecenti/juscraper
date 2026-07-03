@@ -110,7 +110,7 @@ def test_cpopg_processo_encontrado():
     )
     df = _mk_scraper().cpopg("10029886420194014100")
     assert isinstance(df, pd.DataFrame)
-    assert CPOPG_REQUIRED_COLUMNS <= set(df.columns)
+    assert set(df.columns) >= CPOPG_REQUIRED_COLUMNS
     assert len(df) == 1
     row = df.iloc[0]
     assert row["processo"] == "10029886420194014100"

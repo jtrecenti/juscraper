@@ -89,6 +89,22 @@ As seções a seguir são notas internas para quem contribui com novos raspadore
 | **Cassete** — fluxo multi-step com `pytest-recording` | `test_*_cassette.py` | `vcr` | Caso a caso (TJPE, TJRR, JusBR) |
 | **Integracao** — scraper contra tribunal real | `test_*_integration.py` | `integration` | Sob demanda |
 
+### Marker `anti_bot` — bloqueio anti-bot esperado (refs #292)
+
+A consulta pública PJe de TRF1, TRF3 e TRF5 fica atrás do bot manager Akamai. De IPs de datacenter/CI o portal devolve `HTTP 403 Access Denied` e o scraper levanta `BotChallengeBlockedError` de propósito (bloqueio session-wide). Isso é **falha ambiental** — depende do IP do cliente, passa de IP residencial — e não regressão de código. O marker `anti_bot` distingue os dois casos sem esconder regressão real.
+
+O `tests/conftest.py` registra um hook (`pytest_runtest_makereport`, `wrapper=True`) que, **apenas** para testes marcados `anti_bot`, converte `BotChallengeBlockedError` em `xfail`. Qualquer outra exceção — parser quebrado, schema rejeitando input antes válido, coluna renomeada — continua falhando vermelho, e de IP residencial (sem bloqueio) o teste passa normal. Diferente do `xfail(strict=False)` cego de TJAP (Turnstile) e TJRR (PrimeFaces), que são bloqueios *permanentes*: o Akamai é *condicional ao IP*, então o teste só vira xfail quando o bloqueio de fato acontece.
+
+Aplicar com `pytestmark = pytest.mark.anti_bot` no topo do arquivo de integração (cobre todos os testes do arquivo, que batem no mesmo backend protegido). Comandos:
+
+```bash
+pytest -m "integration and anti_bot"        # IP residencial: cobertura real dos TRFs
+pytest -m "integration and not anti_bot"    # CI/datacenter: pula os anti-bot por completo
+pytest -m integration                        # roda tudo; bloqueio Akamai vira xfail, regressao real falha
+```
+
+O hook é coberto por `tests/test_anti_bot_marker.py` (offline, via `pytester`), que reusa a implementação real e afirma os três casos: bloqueio+marker → xfail; regressão real → fail; bloqueio sem marker → fail.
+
 ### Ferramentas
 
 - **`responses`** (getsentry) — padrao para mockar `requests.Session` em testes de contrato. Usar `@responses.activate` ou context manager. Validar payload enviado com matchers (`urlencoded_params_matcher`, `json_params_matcher`).
@@ -120,6 +136,40 @@ Notas:
 - `jusbr.ipynb` é excluído porque depende de token gov.br (`JUSBR_ACCESS_TOKEN`); `tjmg.ipynb` depende do extra `[tjmg]` instalado (`txtcaptcha`). Ambos rodam sob demanda quando as condições estão presentes.
 - Falha 5xx em um único notebook normalmente é instabilidade do tribunal — re-rodar o notebook isolado antes de reportar regressão (`pytest --nbmake docs/notebooks/<tribunal>.ipynb`).
 - Quando o resultado real divergir do output cacheado (ex.: coluna nova, ementa em formato diferente), o notebook deve ser **commitado com outputs limpos** (`jupyter nbconvert --clear-output --inplace docs/notebooks/<tribunal>.ipynb`) para que `git diff` futuro fique focado em código.
+
+## Complexidade de código (lizard + complexipy)
+
+Complexidade é um eixo que o stack de lint do projeto (Ruff, flake8, isort, pylint, mypy) **não cobre** — esses veem estilo e tipos. Medimos duas métricas **complementares**, porque elas pegam coisas diferentes e divergem na prática (ver tabela abaixo). Ambas entram no extra `[dev]`. Refs #307.
+
+- **Complexidade ciclomática** (`lizard`, métrica CCN): conta caminhos independentes — começa em 1 e soma +1 por ponto de decisão (`if`, `for`, `while`, `except`, …). É um proxy de *testabilidade* (quantos casos cobrir). Não conta linhas nem aninhamento.
+- **Complexidade cognitiva** (`complexipy`, métrica do SonarSource): conta o quão difícil é *entender* o código, com **penalidade por aninhamento** — um `if` dentro de `for` dentro de `if` custa mais que três `if` rasos.
+
+Por que as duas: elas concordam nos extremos, mas divergem no meio. Código **plano com muitos ramos** (cascata de paginação, dispatch de datas) é ciclomático-alto mas cognitivo-baixo — legível. Código **aninhado com poucos ramos** é o oposto. Exemplos reais do `src`:
+
+| Função | CCN (lizard) | Cognitivo (complexipy) | Leitura |
+|---|---:|---:|---|
+| `cposg_parse_single_html` | 73 | 150 | ruim nas duas |
+| `tjpr cjsg_parse` | 28 | 71 | cognitivo prioriza muito mais |
+| `extract_count_with_cascade` | 26 | <14 | cascata plana — legível apesar do CCN |
+| `extract_escolha_button_id` | <15 | 31 | aninhada — só o cognitivo pega |
+
+### Diagnóstico sob demanda (não roda em pre-commit nem CI)
+
+```bash
+uv run lizard src               # ciclomático (CCN) + NLOC + tokens + nº de params, por função
+uv run complexipy -i -s desc src  # cognitivo por função, ordenado do maior para o menor
+```
+
+São as ferramentas a rodar antes de mexer num parser, para ver onde a dívida está concentrada — cada uma por uma lente.
+
+### Gate planejado (ainda não ativo)
+
+```bash
+uv run complexipy --snapshot-create src   # baseline; o CI compara e falha só em regressão (grandfather)
+uv run lizard -C 15 -w src                 # ciclomático: warning (e exit≠0) acima de CCN 15
+```
+
+Ligar um gate hoje deixaria o CI vermelho (várias funções acima do limiar). O gate entra no CI (job `quality`, #101) **depois** que as piores funções forem refatoradas — liderado pelo `complexipy --snapshot` (ratchet que congela o estado atual e só barra pioras), com o `lizard` como segunda lente. Refs #307, #101.
 
 ## Adding a new tribunal
 

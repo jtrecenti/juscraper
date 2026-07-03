@@ -136,7 +136,7 @@ def _build_parity_cases(
     expected_map: dict,
     scraper_iter,
 ) -> list[tuple[str, str, type, str, str]]:
-    scrapers = {name: cls for name, cls in scraper_iter()}
+    scrapers = dict(scraper_iter())
     cases = []
     for (name, endpoint), (module_path, class_name) in expected_map.items():
         cls = scrapers.get(name)

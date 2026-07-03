@@ -1,10 +1,9 @@
 """
 Parse of cases from the TJSP jurisprudence search.
 """
-import glob
 import logging
-import os
 import re
+from pathlib import Path
 
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -130,7 +129,7 @@ def cjpg_parse_single(path):
     """
     Parses a downloaded HTML file from the cjpg_download function.
     """
-    with open(path, 'r', encoding='utf-8') as f:
+    with Path(path).open('r', encoding='utf-8') as f:
         soup = BeautifulSoup(f, 'html.parser')
     processos = []
     div_dados_resultado = soup.find('div', {'id': 'divDadosResultado'})
@@ -170,10 +169,7 @@ def cjpg_parse_single(path):
             div_decisao = tabela_dados.find('div', {'align': 'justify', 'style': 'display: none;'})
             if div_decisao:
                 spans = div_decisao.find_all('span')
-                if spans:
-                    decisao_text = spans[-1].get_text(separator=" ", strip=True)
-                else:
-                    decisao_text = ''
+                decisao_text = spans[-1].get_text(separator=" ", strip=True) if spans else ''
                 dados_processo['decisao'] = decisao_text
             processos.append(dados_processo)
     return pd.DataFrame(processos)
@@ -184,14 +180,13 @@ def cjpg_parse_manager(path):
     Parses the downloaded files from the cjpg_download function.
     Returns a DataFrame with the information of the processes.
     """
-    if os.path.isfile(path):
+    if Path(path).is_file():
         result = [cjpg_parse_single(path)]
     else:
         result = []
-        arquivos = glob.glob(f"{path}/**/*.ht*", recursive=True)
-        arquivos = [f for f in arquivos if os.path.isfile(f)]
+        arquivos = [f for f in Path(path).rglob("*.ht*") if f.is_file()]
         for file in tqdm(arquivos, desc="Processando documentos"):
-            if os.path.isfile(file):
+            if file.is_file():
                 try:
                     single_result = cjpg_parse_single(file)
                 except (ValueError, OSError) as e:
@@ -200,5 +195,4 @@ def cjpg_parse_manager(path):
                     continue
                 if single_result is not None:
                     result.append(single_result)
-    result = pd.concat(result, ignore_index=True)
-    return result
+    return pd.concat(result, ignore_index=True)

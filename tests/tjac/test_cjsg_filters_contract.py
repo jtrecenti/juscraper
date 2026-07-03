@@ -17,20 +17,20 @@ from tests.fixtures.capture._util import make_esaj_body
 
 BASE = "https://esaj.tjac.jus.br/cjsg"
 
-_ALL_FILTERS = dict(
-    ementa="responsabilidade",
-    numero_recurso="1000123-45.2023.8.26.0100",
-    classe="cls-value",
-    assunto="subj-value",
-    comarca="comarca-value",
-    orgao_julgador="og-value",
-    data_julgamento_inicio="01/01/2024",
-    data_julgamento_fim="31/03/2024",
-    data_publicacao_inicio="01/02/2024",
-    data_publicacao_fim="29/02/2024",
-    origem="R",
-    tipo_decisao="monocratica",
-)
+_ALL_FILTERS = {
+    "ementa": "responsabilidade",
+    "numero_recurso": "1000123-45.2023.8.26.0100",
+    "classe": "cls-value",
+    "assunto": "subj-value",
+    "comarca": "comarca-value",
+    "orgao_julgador": "og-value",
+    "data_julgamento_inicio": "01/01/2024",
+    "data_julgamento_fim": "31/03/2024",
+    "data_publicacao_inicio": "01/02/2024",
+    "data_publicacao_fim": "29/02/2024",
+    "origem": "R",
+    "tipo_decisao": "monocratica",
+}
 
 
 @responses.activate

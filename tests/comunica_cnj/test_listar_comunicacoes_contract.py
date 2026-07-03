@@ -77,7 +77,7 @@ def test_listar_comunicacoes_typical_multi_page(mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
-    assert LISTAR_COMUNICACOES_MIN_COLUMNS <= set(df.columns)
+    assert set(df.columns) >= LISTAR_COMUNICACOES_MIN_COLUMNS
     assert len(df) == 20
 
 
@@ -101,7 +101,7 @@ def test_listar_comunicacoes_single_page(mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
-    assert LISTAR_COMUNICACOES_MIN_COLUMNS <= set(df.columns)
+    assert set(df.columns) >= LISTAR_COMUNICACOES_MIN_COLUMNS
     sample = json.loads(
         load_sample("comunica_cnj", "listar_comunicacoes/single_page.json")
     )

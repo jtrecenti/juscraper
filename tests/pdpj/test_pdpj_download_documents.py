@@ -136,14 +136,14 @@ def test_download_documents_exige_pelo_menos_um_modo():
         "id_documento": "abc",
         "numero_processo": PROC,
     }])
-    with pytest.raises(ValueError, match="with_text.*with_binary"):
+    with pytest.raises(ValueError, match=r"with_text.*with_binary"):
         s.download_documents(df, with_text=False, with_binary=False)
 
 
 def test_download_documents_rejeita_df_sem_id_documento_ou_detalhes():
     s = _mk_scraper()
     df = pd.DataFrame([{"processo": PROC, "outra_coluna": 1}])
-    with pytest.raises(ValueError, match="id_documento.*detalhes"):
+    with pytest.raises(ValueError, match=r"id_documento.*detalhes"):
         s.download_documents(df)
 
 

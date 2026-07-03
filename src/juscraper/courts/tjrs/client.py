@@ -1,4 +1,6 @@
 """Scraper for the Tribunal de Justiça do Rio Grande do Sul (TJRS)."""
+from typing import ClassVar
+
 import pandas as pd
 
 from juscraper.core.http import HTTPScraper
@@ -13,7 +15,7 @@ class TJRSScraper(HTTPScraper):
     """Scraper for the Tribunal de Justiça do Rio Grande do Sul."""
 
     BASE_URL = "https://www.tjrs.jus.br/buscas/jurisprudencia/ajax.php"
-    DEFAULT_PARAMS = {
+    DEFAULT_PARAMS: ClassVar[dict[str, str]] = {
         "tipo-busca": "jurisprudencia-mob",
         "client": "tjrs_index",
         "proxystylesheet": "tjrs_index",

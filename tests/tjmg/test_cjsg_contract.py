@@ -79,7 +79,7 @@ def test_cjsg_typical_com_paginacao(mock_txtcaptcha, mocker):
     df = jus.scraper("tjmg").cjsg("dano moral", paginas=range(1, 3))
 
     assert isinstance(df, pd.DataFrame)
-    assert CJSG_MIN_COLUMNS <= set(df.columns)
+    assert set(df.columns) >= CJSG_MIN_COLUMNS
     assert len(df) > 0
     assert df["processo"].notna().all(), "processo nulo em alguma linha"
     assert (df["processo"].astype(str).str.len() > 0).mean() >= 0.5, (
@@ -104,7 +104,7 @@ def test_cjsg_single_page(mock_txtcaptcha, mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
-    assert CJSG_MIN_COLUMNS <= set(df.columns)
+    assert set(df.columns) >= CJSG_MIN_COLUMNS
     assert len(df) > 0
     assert df["processo"].notna().all(), "processo nulo em alguma linha"
     assert (df["processo"].astype(str).str.len() > 0).mean() >= 0.5, (

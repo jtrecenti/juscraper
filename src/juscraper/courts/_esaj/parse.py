@@ -9,10 +9,9 @@ wording. The parser treats latin-1 as the expected server encoding
 """
 from __future__ import annotations
 
-import glob
 import logging
-import os
 import re
+from pathlib import Path
 
 import pandas as pd
 import unidecode
@@ -88,10 +87,10 @@ def cjsg_n_results(html_source: str) -> int:
     td_npags = None
     for td in soup.find_all("td"):
         td_text = td.get_text()
-        if "Resultados" in td_text or "resultados" in td_text.lower():
-            if len(td_text.strip()) < 400:  # guard against matching result rows
-                td_npags = td
-                break
+        # guard against matching result rows with the 400-char length check
+        if ("Resultados" in td_text or "resultados" in td_text.lower()) and len(td_text.strip()) < 400:
+            td_npags = td
+            break
 
     if td_npags is None:
         td_npags = soup.find("td", bgcolor="#EEEEEE")
@@ -184,7 +183,7 @@ def _clean_value(value: str) -> str:
 
 
 def _parse_single_page(path: str) -> pd.DataFrame:
-    with open(path, "rb") as fp:
+    with Path(path).open("rb") as fp:
         raw = fp.read()
 
     try:
@@ -337,11 +336,10 @@ def cjsg_parse_manager(path: str) -> pd.DataFrame:
     Returns:
         Combined DataFrame. Empty when no files parse successfully.
     """
-    if os.path.isfile(path):
+    if Path(path).is_file():
         return _parse_single_page(path)
 
-    arquivos = glob.glob(os.path.join(path, "**", "*.ht*"), recursive=True)
-    arquivos = [f for f in arquivos if os.path.isfile(f)]
+    arquivos = [str(f) for f in Path(path).rglob("*.ht*") if f.is_file()]
 
     result: list[pd.DataFrame] = []
     for file in tqdm(arquivos, desc="Processando documentos"):

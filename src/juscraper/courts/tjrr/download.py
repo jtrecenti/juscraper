@@ -27,8 +27,8 @@ def _extract_cdata(xml_text: str) -> str:
     return xml_text
 
 
-def _collect_form_defaults(soup: BeautifulSoup) -> dict:
-    """Collect every default field on the ``menuinicial`` form.
+def _collect_form_defaults(soup: BeautifulSoup, form_id: str = "menuinicial") -> dict:
+    """Collect every default field on a JSF form (selected by ``form_id``).
 
     A browser submit includes every form input (with its default value),
     including hidden panel-collapsed flags like
@@ -36,12 +36,17 @@ def _collect_form_defaults(soup: BeautifulSoup) -> dict:
     Dropping them makes the backend return zero results when searching
     with an empty ``pesquisa`` — the empty-term path only works when the
     full form context is preserved.
+
+    Used for two forms: ``menuinicial`` (the initial search POST) and
+    ``formPesquisa`` (the results page, whose full context the AJAX
+    pagination POST must echo back — see :func:`_paginate`). Fields are
+    matched by name prefix, which equals ``form_id`` for both forms.
     """
     defaults: dict[str, list] = {}
-    form = soup.find("form", {"id": "menuinicial"}) or soup
+    form = soup.find("form", {"id": form_id}) or soup
     for tag in form.find_all(["input", "select", "textarea"]):
         name = tag.get("name")
-        if not name or not name.startswith("menuinicial"):
+        if not name or not name.startswith(form_id):
             continue
         ttype = (tag.get("type") or "").lower()
         if ttype in ("submit", "button", "image", "reset"):
@@ -260,7 +265,27 @@ def _paginate(
     html: str,
     page: int,
 ) -> str:
-    """Navigate to a specific page using PrimeFaces AJAX pagination."""
+    """Navigate to a specific page via PrimeFaces AJAX pagination.
+
+    Replicates a browser's "next page" POST faithfully. A minimal payload
+    (datatable params + ViewState only) is silently ignored by the TJRR
+    backend, which keeps returning page 1 — verified live (issue #287,
+    layer 2). The backend honours the ``_first`` offset only when the POST
+    carries the *full* ``formPesquisa`` form context (notably
+    ``consultaAtual``, the search term), the PrimeFaces ``page`` behavior
+    event, the datatable feature flags (``_skipChildren``/``_encodeFeature``)
+    and the ``Faces-Request: partial/ajax`` header — exactly what the
+    browser sends.
+
+    ``_first`` is an absolute offset and the TJRR ViewState is reusable, so
+    each page is fetched independently from the page-1 ``html`` — no need to
+    thread the ViewState returned by each partial-response.
+
+    Only ``dataTablePesquisa`` (acórdãos) is paginated. The results page
+    also renders ``dataTablePesquisa2`` (decisões monocráticas) with its own
+    paginator; those rows are captured from page 1 only. Paginating the
+    second table is tracked as a follow-up to issue #287.
+    """
     soup = BeautifulSoup(html, "html.parser")
     vs_input = soup.find("input", {"name": "javax.faces.ViewState"})
     if not vs_input:
@@ -271,19 +296,33 @@ def _paginate(
     rows = RESULTS_PER_PAGE
     first = (page - 1) * rows
 
-    data = {
+    # Echo the whole results form, then overlay the AJAX pagination params.
+    data = _collect_form_defaults(soup, form_id="formPesquisa")
+    data.update({
         "javax.faces.partial.ajax": "true",
         "javax.faces.source": datatable_id,
         "javax.faces.partial.execute": datatable_id,
         "javax.faces.partial.render": datatable_id,
+        "javax.faces.behavior.event": "page",
+        "javax.faces.partial.event": "page",
         f"{datatable_id}_pagination": "true",
         f"{datatable_id}_first": str(first),
         f"{datatable_id}_rows": str(rows),
+        f"{datatable_id}_skipChildren": "true",
+        f"{datatable_id}_encodeFeature": "true",
         "formPesquisa": "formPesquisa",
         "javax.faces.ViewState": viewstate,
-    }
+    })
 
-    resp = request_fn("POST", BASE_URL, data=data, timeout=60)
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "Faces-Request": "partial/ajax",
+        "X-Requested-With": "XMLHttpRequest",
+        "Accept": "application/xml, text/xml, */*; q=0.01",
+        "Origin": "https://jurisprudencia.tjrr.jus.br",
+        "Referer": "https://jurisprudencia.tjrr.jus.br/",
+    }
+    resp = request_fn("POST", BASE_URL, data=data, headers=headers, timeout=60)
     resp.encoding = "utf-8"
     return _extract_cdata(resp.text)
 

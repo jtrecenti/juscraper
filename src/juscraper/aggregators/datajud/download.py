@@ -117,10 +117,7 @@ def _build_query_amigavel(
     """Monta ``query.bool.must`` a partir dos filtros amigaveis."""
     must_conditions: list[dict[str, Any]] = []
     if numero_processo:
-        if isinstance(numero_processo, str):
-            nproc = [numero_processo]
-        else:
-            nproc = list(numero_processo)
+        nproc = [numero_processo] if isinstance(numero_processo, str) else list(numero_processo)
         nproc = [clean_cnj(n) for n in nproc]
         must_conditions.append({"terms": {"numeroProcesso": nproc}})
     if ano_ajuizamento:
