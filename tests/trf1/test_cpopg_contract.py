@@ -100,11 +100,7 @@ def test_fetch_movs_page_decodes_fragment_as_utf8() -> None:
     response was decoded as latin-1. Serves the *raw bytes* of the captured
     fragment and asserts the decoded text carries clean accents.
     """
-    from juscraper.courts._trf.download import (
-        DETAIL_PATH,
-        extract_movs_pagination,
-        fetch_movs_page,
-    )
+    from juscraper.courts._trf.download import DETAIL_PATH, extract_movs_pagination, fetch_movs_page
 
     detail = load_sample_bytes("trf1", "cpopg/detail_paginated.html").decode("latin-1")
     info = extract_movs_pagination(detail)

@@ -140,7 +140,7 @@ class TRFConsultaScraper(HTTPScraper):
         """
         ids = self._ensure_field_ids()
         classe_fields = self._classe_payload_fields(ids)
-        payload = build_search_payload(format_cnj(id_cnj_clean), ids, classe_fields)  # type: ignore[arg-type]
+        payload = build_search_payload(format_cnj(id_cnj_clean), ids, classe_fields)
         search_html = submit_search(self, self.BASE_URL, payload)
         ca = extract_ca_token(search_html)
         if not ca:
