@@ -13,8 +13,8 @@ classe form-field shape). Mirrors ``courts/_esaj/base.py``:
 from __future__ import annotations
 
 import logging
-import os
 import time
+from pathlib import Path
 from typing import Any
 
 import pandas as pd
@@ -285,7 +285,7 @@ class TRFConsultaScraper(HTTPScraper):
         pecas_paths: list[list[str]] | None = None
         if download_pecas:
             base_dir = diretorio if diretorio is not None else self.download_path
-            os.makedirs(base_dir, exist_ok=True)
+            Path(base_dir).mkdir(parents=True, exist_ok=True)
             pecas_paths = self._download_pecas(htmls, cnjs, base_dir)
         df = self.cpopg_parse(htmls, cnjs)
         if pecas_paths is not None:
@@ -310,8 +310,8 @@ class TRFConsultaScraper(HTTPScraper):
                 results.append([])
                 continue
             urls = extract_documento_urls(html)
-            proc_dir = os.path.join(base_dir, cnj)
-            os.makedirs(proc_dir, exist_ok=True)
+            proc_dir = str(Path(base_dir) / cnj)
+            Path(proc_dir).mkdir(parents=True, exist_ok=True)
             paths: list[str] = []
             for ca, doc_id in urls:
                 try:
@@ -323,8 +323,8 @@ class TRFConsultaScraper(HTTPScraper):
                         "Erro ao baixar peça %s do %s: %s", doc_id, cnj, exc
                     )
                     continue
-                path = os.path.join(proc_dir, f"{doc_id}.html")
-                with open(path, "wb") as fh:
+                path = str(Path(proc_dir) / f"{doc_id}.html")
+                with Path(path).open("wb") as fh:
                     fh.write(content)
                 paths.append(path)
                 if self.sleep_time:
