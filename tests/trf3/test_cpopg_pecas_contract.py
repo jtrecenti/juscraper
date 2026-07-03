@@ -29,7 +29,7 @@ DOC_URL = (
 
 def test_extract_documento_urls_finds_all_pecas_in_detail() -> None:
     """Detail HTML must yield one ``(ca, id_processo_doc)`` per peça juntada."""
-    from juscraper.courts.trf3.download import extract_documento_urls
+    from juscraper.courts._trf.download import extract_documento_urls
 
     detail = load_sample_bytes("trf3", "cpopg/detail_normal.html").decode("latin-1")
     urls = extract_documento_urls(detail)
@@ -44,7 +44,7 @@ def test_extract_documento_urls_finds_all_pecas_in_detail() -> None:
 
 def test_extract_docs_pagination_detects_slider_on_paginated_sample() -> None:
     """Detail com > 15 docs deve expor slider próprio (à parte do movs)."""
-    from juscraper.courts.trf3.download import extract_docs_pagination, extract_movs_pagination
+    from juscraper.courts._trf.download import extract_docs_pagination, extract_movs_pagination
 
     detail = load_sample_bytes("trf3", "cpopg/detail_paginated.html").decode("latin-1")
     movs_info = extract_movs_pagination(detail)
@@ -58,7 +58,7 @@ def test_extract_docs_pagination_detects_slider_on_paginated_sample() -> None:
 
 def test_extract_docs_pagination_returns_none_when_no_slider() -> None:
     """Detail com ≤ 15 docs não renderiza slider — paginador retorna None."""
-    from juscraper.courts.trf3.download import extract_docs_pagination
+    from juscraper.courts._trf.download import extract_docs_pagination
 
     detail = load_sample_bytes("trf3", "cpopg/detail_normal.html").decode("latin-1")
     assert extract_docs_pagination(detail) is None
@@ -68,7 +68,7 @@ def test_merge_docs_pages_splices_into_docs_tbody() -> None:
     """``merge_docs_pages`` adiciona linhas no tbody de docs sem mexer no movs."""
     import re
 
-    from juscraper.courts.trf3.download import _extract_docs_rows, extract_documento_urls, merge_docs_pages
+    from juscraper.courts._trf.download import _extract_docs_rows, extract_documento_urls, merge_docs_pages
 
     detail = load_sample_bytes("trf3", "cpopg/detail_paginated.html").decode("latin-1")
     page1_urls = extract_documento_urls(detail)
@@ -90,7 +90,7 @@ def test_merge_docs_pages_splices_into_docs_tbody() -> None:
 
 
 def test_extract_documento_urls_empty_when_no_pecas() -> None:
-    from juscraper.courts.trf3.download import extract_documento_urls
+    from juscraper.courts._trf.download import extract_documento_urls
 
     assert extract_documento_urls("<html><body>nada aqui</body></html>") == []
 
@@ -204,7 +204,10 @@ def test_cpopg_with_download_pecas_continues_after_peca_error(tmp_path) -> None:
         DETAIL_URL,
         body=load_sample_bytes("trf3", "cpopg/detail_normal.html"),
     )
-    responses.add(responses.GET, DOC_URL, status=500)
+    # 404 é não-retryable (4xx): a peça falha de imediato e é pulada. Um 5xx
+    # aqui seria retentado por ``_request_with_retry`` (resiliência a transitório),
+    # mascarando o erro — por isso o caso de "peça que falha" usa 404.
+    responses.add(responses.GET, DOC_URL, status=404)
     doc_body = load_sample_bytes("trf3", "cpopg_pecas/documento_html.html")
     responses.add(responses.GET, DOC_URL, body=doc_body, content_type="text/html")
 

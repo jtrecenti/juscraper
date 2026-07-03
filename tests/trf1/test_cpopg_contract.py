@@ -48,7 +48,7 @@ DETAIL_URL = (
 
 def test_extract_movs_pagination_returns_none_when_no_slider() -> None:
     """Processes with ≤ 15 movs render no slider — paginator must short-circuit."""
-    from juscraper.courts.trf1.download import extract_movs_pagination
+    from juscraper.courts._trf.download import extract_movs_pagination
 
     detail = load_sample_bytes("trf1", "cpopg/detail_normal.html").decode("latin-1")
     assert extract_movs_pagination(detail) is None
@@ -56,7 +56,7 @@ def test_extract_movs_pagination_returns_none_when_no_slider() -> None:
 
 def test_extract_movs_pagination_picks_movs_slider() -> None:
     """Detail HTML with > 15 movs surfaces the slider coordinates we need."""
-    from juscraper.courts.trf1.download import extract_movs_pagination
+    from juscraper.courts._trf.download import extract_movs_pagination
 
     detail = load_sample_bytes("trf1", "cpopg/detail_paginated.html").decode("latin-1")
     info = extract_movs_pagination(detail)
@@ -70,8 +70,8 @@ def test_extract_movs_pagination_picks_movs_slider() -> None:
 
 def test_merge_movs_pages_appends_rows_into_movs_tbody() -> None:
     """Splicing page-2 rows into page-1 tbody yields a single contiguous list."""
-    from juscraper.courts.trf1.download import merge_movs_pages
-    from juscraper.courts.trf1.parse import parse_detail
+    from juscraper.courts._trf.download import merge_movs_pages
+    from juscraper.courts._trf.parse import parse_detail
 
     # Page 1 (detail page) is latin-1; the AJAX page-2 fragment is UTF-8 — the
     # two endpoints of the same PJe deployment disagree on charset. Decode each
@@ -100,28 +100,22 @@ def test_fetch_movs_page_decodes_fragment_as_utf8() -> None:
     response was decoded as latin-1. Serves the *raw bytes* of the captured
     fragment and asserts the decoded text carries clean accents.
     """
-    import requests
-
-    from juscraper.courts.trf1.download import (
-        BASE_URL,
-        DETAIL_PATH,
-        extract_movs_pagination,
-        fetch_movs_page,
-    )
+    from juscraper.courts._trf.download import DETAIL_PATH, extract_movs_pagination, fetch_movs_page
 
     detail = load_sample_bytes("trf1", "cpopg/detail_paginated.html").decode("latin-1")
     info = extract_movs_pagination(detail)
     assert info is not None
 
+    scraper = jus.scraper("trf1", sleep_time=0)
     responses.add(
         responses.POST,
-        BASE_URL + DETAIL_PATH,
+        scraper.BASE_URL + DETAIL_PATH,
         body=load_sample_bytes("trf1", "cpopg/movs_page_2.html"),  # raw UTF-8 bytes
         status=200,
         content_type="text/xml; charset=UTF-8",
     )
 
-    fragment = fetch_movs_page(requests.Session(), info, 2, "ca-token")
+    fragment = fetch_movs_page(scraper, scraper.BASE_URL, info, 2, "ca-token")
 
     assert "ç" in fragment, "fragmento sem acento — decode suspeito"
     assert "Ã§" not in fragment and "Ã£" not in fragment, (
