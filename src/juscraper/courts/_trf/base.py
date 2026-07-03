@@ -266,9 +266,10 @@ class TRFConsultaScraper(HTTPScraper):
         Returns:
             DataFrame com uma linha por CNJ. Colunas: ``id_cnj``, ``processo``,
             ``classe``, ``assunto``, ``data_distribuicao``, ``orgao_julgador``,
-            ``jurisdicao``, ``polo_ativo``, ``polo_passivo``, ``movimentacoes``,
-            ``documentos`` (metadados). Quando ``download_pecas=True``, ganha
-            ainda a coluna ``pecas`` com a lista de caminhos salvos.
+            ``jurisdicao``, ``endereco_orgao``, ``polo_ativo``, ``polo_passivo``,
+            ``movimentacoes``, ``documentos`` (metadados). Quando
+            ``download_pecas=True``, ganha ainda a coluna ``pecas`` com a lista
+            de caminhos salvos.
 
         Raises:
             TypeError: Kwarg desconhecido.
