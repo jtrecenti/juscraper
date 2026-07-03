@@ -117,6 +117,7 @@ class HTTPScraper(BaseScraper):
         max_retries: int = 3,
         base_backoff: float = 2.0,
         expect_json: bool = False,
+        on_response: Callable[[requests.Response], None] | None = None,
         **kwargs: Any,
     ) -> requests.Response:
         """Executa ``method`` em ``url`` com retry exponencial.
@@ -135,6 +136,14 @@ class HTTPScraper(BaseScraper):
                 ``InvalidJSONResponseError``. Default ``False`` — o caller chama
                 ``.json()`` por conta própria e um corpo inválido propaga
                 ``json.JSONDecodeError`` na primeira ocorrência (#275).
+            on_response: Callback opcional invocado em cada resposta crua, antes
+                de qualquer decisão de retry/``raise_for_status``. Use para
+                inspeção que precisa curto-circuitar o retry — se o callback
+                levantar, a exceção propaga imediatamente, sem novas tentativas.
+                Caso de uso: detectar o 403 de bot-challenge (Akamai) e levantar
+                ``BotChallengeBlockedError`` em vez de retentar um bloqueio
+                session-wide (403 está em ``RETRYABLE_STATUSES``). Default
+                ``None`` — sem inspeção, comportamento idêntico ao anterior.
             **kwargs: Encaminhados para ``session.request``.
 
         Returns:
@@ -160,6 +169,8 @@ class HTTPScraper(BaseScraper):
 
         for attempt in range(1, max_retries + 1):
             resp = sess.request(method, url, **kwargs)
+            if on_response is not None:
+                on_response(resp)
             if resp.status_code < 400:
                 if expect_json and not self._response_is_json(resp):
                     if attempt == max_retries:

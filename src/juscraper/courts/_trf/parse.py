@@ -1,10 +1,13 @@
-"""HTML parser for TRF3 PJe ``ConsultaPublica`` detail pages.
+"""HTML parser for TRF PJe ``ConsultaPublica`` detail pages (TRF1/TRF3/TRF5).
 
 PJe renders the detail page as XHTML with stable ID suffixes
 (``processoEvento``, ``processoPartesPoloAtivoResumidoList``, etc.) and
 labeled ``<div class="propertyView">`` panels. This parser walks the
 labels by visible text and the tables by ID suffix, so deployment-specific
-``j_idNNN`` prefixes don't matter.
+``j_idNNN`` prefixes don't matter. The same parser serves all three PJe
+ConsultaPública deployments — the only known markup difference (number of
+``<td>`` cells in the polo tables) is absorbed defensively (see
+:func:`_parse_polo`).
 """
 from __future__ import annotations
 
@@ -60,9 +63,10 @@ def _parse_property_views(soup: BeautifulSoup) -> dict[str, str | None]:
 def _parse_polo(soup: BeautifulSoup, suffix: str) -> list[dict[str, str | None]]:
     """Parse a polo (ativo/passivo) participants table into a list of dicts.
 
-    TRF3 renders 3 ``<td>`` cells per row (an empty leading cell, then
-    participant text and status). Reading the *last two* non-empty cells is
-    forward-compatible if the leading cell is later dropped.
+    TRF1/TRF3 render 3 ``<td>`` cells per row (an empty leading cell, then
+    participant text and status); TRF5 renders 2 (participant text, then
+    status). Reading the *last two* non-empty cells handles both shapes and
+    stays forward-compatible if a leading cell is added or dropped.
     """
     table = soup.find(
         "table", id=lambda i: bool(i and i.endswith(f":{suffix}"))
@@ -160,7 +164,7 @@ def _parse_documentos(soup: BeautifulSoup) -> list[dict[str, str | None]]:
 
 
 def parse_detail(html: str) -> dict[str, Any]:
-    """Parse a TRF3 PJe detail page into a flat record.
+    """Parse a TRF PJe detail page into a flat record.
 
     Returns a dict with the canonical scalar columns
     (``processo``, ``data_distribuicao``, ``classe``, ``assunto``,

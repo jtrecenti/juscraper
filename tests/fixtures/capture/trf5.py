@@ -9,7 +9,7 @@ Writes ``form_initial.html``, ``search_one_result.html``,
 ``tests/trf5/samples/cpopg/``.
 
 Goes through the *real* scraper helpers in
-:mod:`juscraper.courts.trf5.download` — using the same payload-builder and
+:mod:`juscraper.courts._trf.download` — using the same payload-builder and
 field-extraction code as the production code path, so any drift between the
 scraper and what the live tribunal actually accepts breaks this script first
 (instead of silently producing stale samples).
@@ -19,7 +19,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import juscraper as jus
-from juscraper.courts.trf5.download import (
+from juscraper.courts._trf.download import (
     build_search_payload,
     extract_ca_token,
     extract_form_field_ids,
@@ -46,13 +46,15 @@ def main() -> None:
     dest.mkdir(parents=True, exist_ok=True)
     scraper = jus.scraper("trf5", sleep_time=0.5)
 
-    form_html = fetch_form(scraper.session)
+    form_html = fetch_form(scraper, scraper.BASE_URL)
     (dest / "form_initial.html").write_text(form_html, encoding="utf-8")
-    field_ids = extract_form_field_ids(form_html)
+    field_ids = extract_form_field_ids(form_html, scraper.CLASSE_FIELD_NAME)
     print(f"[trf5] field ids: {field_ids}")
 
-    found_payload = build_search_payload(format_cnj(clean_cnj(FOUND_CNJ)), field_ids)
-    found_html = submit_search(scraper.session, found_payload)
+    found_payload = build_search_payload(
+        format_cnj(clean_cnj(FOUND_CNJ)), field_ids, scraper._classe_payload_fields(field_ids)
+    )
+    found_html = submit_search(scraper, scraper.BASE_URL, found_payload)
     (dest / "search_one_result.html").write_text(found_html, encoding="utf-8")
     ca = extract_ca_token(found_html)
     if not ca:
@@ -62,13 +64,13 @@ def main() -> None:
         )
     print(f"[trf5]   found ca token: {ca}")
 
-    detail_html = fetch_detail(scraper.session, ca)
+    detail_html = fetch_detail(scraper, scraper.BASE_URL, ca)
     (dest / "detail_normal.html").write_text(detail_html, encoding="latin-1")
 
     missing_payload = build_search_payload(
-        format_cnj(clean_cnj(MISSING_CNJ)), field_ids
+        format_cnj(clean_cnj(MISSING_CNJ)), field_ids, scraper._classe_payload_fields(field_ids)
     )
-    missing_html = submit_search(scraper.session, missing_payload)
+    missing_html = submit_search(scraper, scraper.BASE_URL, missing_payload)
     (dest / "search_no_results.html").write_text(missing_html, encoding="utf-8")
     print(f"[trf5] ALL samples written to {dest}")
 

@@ -25,7 +25,7 @@ DOC_URL = (
 
 
 def test_extract_documento_urls_finds_all_pecas_in_detail() -> None:
-    from juscraper.courts.trf5.download import extract_documento_urls
+    from juscraper.courts._trf.download import extract_documento_urls
 
     detail = load_sample_bytes("trf5", "cpopg/detail_normal.html").decode("latin-1")
     urls = extract_documento_urls(detail)
@@ -35,7 +35,7 @@ def test_extract_documento_urls_finds_all_pecas_in_detail() -> None:
 
 
 def test_extract_documento_urls_empty_when_no_pecas() -> None:
-    from juscraper.courts.trf5.download import extract_documento_urls
+    from juscraper.courts._trf.download import extract_documento_urls
 
     assert extract_documento_urls("<html><body>nada</body></html>") == []
 
@@ -69,7 +69,7 @@ def test_cpopg_with_download_pecas_writes_files_and_adds_column(tmp_path) -> Non
         content_type="text/html",
     )
     doc_body = load_sample_bytes("trf5", "cpopg_pecas/documento_html.html")
-    from juscraper.courts.trf5.download import extract_documento_urls
+    from juscraper.courts._trf.download import extract_documento_urls
 
     n_pecas = len(
         extract_documento_urls(
