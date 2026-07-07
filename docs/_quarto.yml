@@ -110,6 +110,8 @@ website:
                   text: "Jus.br"
                 - href: notebooks/pdpj.ipynb
                   text: "PDPJ"
+                - href: notebooks/falcao.ipynb
+                  text: "Falcao (JT)"
 
 format:
   html:
@@ -135,6 +137,7 @@ quartodoc:
         - aggregators.datajud.client.DatajudScraper
         - aggregators.jusbr.client.JusbrScraper
         - aggregators.pdpj.client.PdpjScraper
+        - aggregators.falcao.client.FalcaoScraper
     - title: Scrapers de Tribunais
       desc: "Classes para coletar dados de tribunais específicos."
       contents:
