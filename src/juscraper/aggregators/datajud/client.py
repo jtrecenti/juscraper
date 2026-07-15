@@ -119,6 +119,10 @@ def _last_requested_page(paginas: range | None) -> int | None:
     return max(paginas)
 
 
+def _page_is_requested(paginas: range | None, page: int) -> bool:
+    return paginas is None or page in paginas
+
+
 def _must_fetch_page(paginas: range | None, page: int) -> bool:
     last_page = _last_requested_page(paginas)
     return last_page is None or page <= last_page
@@ -460,7 +464,10 @@ class DatajudScraper(HTTPScraper):
                   ``int`` (``3`` -> ``range(1, 4)``), ``list``
                   (``[3, 5]`` -> ``range(3, 6)``, baixa 3-5 contiguamente
                   porque o cursor ``search_after`` e forwards-only),
-                  ``range`` (passthrough), ``None`` (default, todas).
+                  ``range`` (respeita ``start``/``stop``/``step``) e ``None``
+                  (default, todas). Como o cursor e sequencial, ranges que
+                  comecam depois de 1 percorrem e descartam as paginas
+                  anteriores antes de devolver apenas as solicitadas.
                 * ``tamanho_pagina`` (int): Hits por requisicao (default
                   5000, range 10-10000 conforme cap da API publica). Em
                   caso de ``HTTP 504``/``Timeout``, o client refaz a
@@ -557,7 +564,7 @@ class DatajudScraper(HTTPScraper):
     ) -> pd.DataFrame:
         """Percorre o cursor físico e agrega somente as páginas solicitadas."""
         frames: list[pd.DataFrame] = []
-        current_page = paginas.start if paginas else 1
+        current_page = 1
         tamanho_pagina = inp.tamanho_pagina
         search_after: list[Any] | None = None
         total = None if paginas is None else len(paginas)
@@ -581,8 +588,9 @@ class DatajudScraper(HTTPScraper):
                 if fetched is None:
                     break
                 frame, search_after, tamanho_pagina = fetched
-                frames.append(frame)
-                pbar.update(1)
+                if _page_is_requested(paginas, current_page):
+                    frames.append(frame)
+                    pbar.update(1)
                 if search_after is None:
                     break
                 current_page += 1
