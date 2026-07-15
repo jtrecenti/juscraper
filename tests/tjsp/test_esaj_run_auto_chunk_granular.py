@@ -11,6 +11,14 @@ from juscraper.courts._esaj.schemas import InputCJSGEsajPuro
 from juscraper.courts.tjsp.schemas import InputCJPGTJSP
 
 
+def _deprecation_messages(caught: list[warnings.WarningMessage]) -> list[str]:
+    return [
+        str(warning.message)
+        for warning in caught
+        if issubclass(warning.category, DeprecationWarning)
+    ]
+
+
 def test_disabled_auto_chunk_only_removes_control_flag():
     fetch = Mock()
     kwargs = {
@@ -130,6 +138,102 @@ def test_empty_search_is_valid_for_cjpg_long_window():
     assert fetch.call_count == 3
     assert result.to_dict("records") == [{"id_processo": "shared"}]
     assert {call.kwargs["pesquisa"] for call in fetch.call_args_list} == {""}
+
+
+@pytest.mark.parametrize("alias", ["query", "termo"])
+def test_search_alias_supplies_every_long_window_and_warns_once(alias):
+    fetch = Mock(return_value=pd.DataFrame({"id_processo": ["shared"]}))
+    kwargs = {
+        alias: "dano moral pelo alias",
+        "data_julgamento_inicio": "01/01/2022",
+        "data_julgamento_fim": "31/12/2024",
+    }
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        result = run_auto_chunk(
+            method=fetch,
+            method_label="TJSPScraper.cjpg()",
+            input_cls=InputCJPGTJSP,
+            dedup_key="id_processo",
+            pesquisa="",
+            paginas=None,
+            kwargs=kwargs,
+        )
+
+    messages = _deprecation_messages(caught)
+    assert messages == [
+        f"O parâmetro '{alias}' está deprecado. Use 'pesquisa' em vez disso."
+    ]
+    assert kwargs == {}
+    assert fetch.call_count == 3
+    assert result.to_dict("records") == [{"id_processo": "shared"}]
+    assert {
+        call.kwargs["pesquisa"] for call in fetch.call_args_list
+    } == {"dano moral pelo alias"}
+
+
+@pytest.mark.parametrize(
+    ("input_cls", "dedup_key", "date_kwargs", "aliases"),
+    [
+        (
+            InputCJPGTJSP,
+            "id_processo",
+            {
+                "data_inicio": "01/01/2022",
+                "data_fim": "31/12/2024",
+            },
+            {"data_inicio", "data_fim"},
+        ),
+        (
+            InputCJPGTJSP,
+            "id_processo",
+            {
+                "data_julgamento_de": "01/01/2022",
+                "data_julgamento_ate": "31/12/2024",
+            },
+            {"data_julgamento_de", "data_julgamento_ate"},
+        ),
+        (
+            InputCJSGEsajPuro,
+            "cd_acordao",
+            {
+                "data_julgamento_inicio": "01/01/2022",
+                "data_julgamento_fim": "31/12/2024",
+                "data_publicacao_de": "01/03/2023",
+                "data_publicacao_ate": "30/06/2023",
+            },
+            {"data_publicacao_de", "data_publicacao_ate"},
+        ),
+    ],
+)
+def test_long_window_date_aliases_warn_once_and_are_not_repropagated(
+    input_cls,
+    dedup_key,
+    date_kwargs,
+    aliases,
+):
+    fetch = Mock(return_value=pd.DataFrame({dedup_key: ["shared"]}))
+    kwargs = date_kwargs.copy()
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        result = run_auto_chunk(
+            method=fetch,
+            method_label="EsajSearchScraper.cjsg()",
+            input_cls=input_cls,
+            dedup_key=dedup_key,
+            pesquisa="dano moral",
+            paginas=None,
+            kwargs=kwargs,
+        )
+
+    messages = _deprecation_messages(caught)
+    assert len(messages) == len(aliases)
+    assert all(sum(f"'{alias}'" in message for message in messages) == 1 for alias in aliases)
+    assert kwargs == {}
+    assert fetch.call_count == 3
+    assert result.to_dict("records") == [{dedup_key: "shared"}]
 
 
 def test_invalid_known_filter_remains_validation_error_before_fetch():

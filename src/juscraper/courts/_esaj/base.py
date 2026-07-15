@@ -26,6 +26,7 @@ from ...core.http import HTTPScraper
 from ...utils.params import (
     DATE_ALIAS_TO_CANONICAL,
     DATE_CANONICAL,
+    SEARCH_ALIASES,
     apply_input_pipeline_search,
     coerce_brazilian_date,
     fill_open_ended_dates,
@@ -49,7 +50,7 @@ def _normalize_auto_chunk_dates(
     input_cls: type[BaseModel],
     kwargs: dict,
 ) -> tuple[dict[str, Any], str, bool]:
-    """Sniff and coerce dates without consuming the caller's ``kwargs``."""
+    """Normalize and coerce dates without consuming the caller's ``kwargs``."""
     date_format = getattr(input_cls, "BACKEND_DATE_FORMAT", "%d/%m/%Y")
     schema_field_names = set(input_cls.model_fields)
     has_data_publicacao = {
@@ -57,12 +58,9 @@ def _normalize_auto_chunk_dates(
         "data_publicacao_fim",
     }.issubset(schema_field_names)
 
-    # The short path re-emits deprecation warnings after propagating canonical
-    # values. The chunked path preserves the existing no-warning behavior by
-    # exposing only canonical names to its recursive calls.
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", DeprecationWarning)
-        sniff = normalize_datas(**kwargs)
+    # ``normalize_datas`` sees a copy created by ``**kwargs``: it emits each
+    # deprecation warning once while leaving the caller's dictionary intact.
+    sniff = normalize_datas(**kwargs)
 
     # Invalid values deliberately pass through so the canonical interval
     # validator can raise the project's user-facing error.
@@ -74,58 +72,14 @@ def _normalize_auto_chunk_dates(
 
 def _propagate_auto_chunk_noop_dates(kwargs: dict, sniff: dict[str, Any]) -> None:
     """Canonicalize dates in ``kwargs`` before the downstream noop path."""
-    for alias, canonical in DATE_ALIAS_TO_CANONICAL.items():
-        if alias not in kwargs:
-            continue
-        warnings.warn(
-            f"O parâmetro '{alias}' está deprecado. Use '{canonical}' em vez disso.",
-            DeprecationWarning,
-            stacklevel=4,
-        )
-        kwargs.pop(alias)
+    for alias in DATE_ALIAS_TO_CANONICAL:
+        kwargs.pop(alias, None)
 
     kwargs["data_julgamento_inicio"] = sniff["data_julgamento_inicio"]
     kwargs["data_julgamento_fim"] = sniff["data_julgamento_fim"]
     for key in ("data_publicacao_inicio", "data_publicacao_fim"):
         if sniff.get(key) is not None:
             kwargs[key] = sniff[key]
-
-
-def _normalize_auto_chunk_search(pesquisa: str, kwargs: dict) -> None:
-    """Preserve search-alias conflicts before aliases are consumed."""
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", DeprecationWarning)
-        has_search_alias = "query" in kwargs or "termo" in kwargs
-        if pesquisa or has_search_alias:
-            # CJPG permits an empty canonical search when only an alias was
-            # supplied, hence ``None`` rather than ``""`` in that case.
-            normalize_pesquisa(pesquisa or None, **kwargs)
-
-
-def _validate_auto_chunk_input(
-    *,
-    input_cls: type[BaseModel],
-    method_label: str,
-    pesquisa: str,
-    paginas: Any,
-    data_inicio: str | None,
-    data_fim: str | None,
-    extras: dict[str, Any],
-    kwargs: dict,
-) -> None:
-    """Validate once before any chunk can trigger a network request."""
-    try:
-        input_cls(
-            pesquisa=pesquisa,
-            paginas=paginas,
-            data_julgamento_inicio=data_inicio,
-            data_julgamento_fim=data_fim,
-            **extras,
-            **kwargs,
-        )
-    except ValidationError as exc:
-        raise_on_extra_kwargs(exc, method_label)
-        raise
 
 
 def run_auto_chunk(
@@ -144,12 +98,12 @@ def run_auto_chunk(
     e :meth:`TJSPScraper.cjpg`:
 
     1. Pop ``auto_chunk`` (default ``True``) — se ``False``, retorna ``None``.
-    2. Sniff de ``normalize_datas`` (com warnings suprimidos para nao
-       duplicar a emissao do caminho ``*_download``).
+    2. Normaliza datas e emite uma vez o ``DeprecationWarning`` de cada
+       alias; os caminhos seguintes recebem apenas nomes canonicos.
     3. Se a janela cabe em ``max_dias=366``, retorna ``None`` (caller cai no
        caminho noop).
-    4. Detecta conflito ``pesquisa + query/termo`` antes do
-       :func:`pop_normalize_aliases` descartar o alias silentemente.
+    4. Normaliza ``query/termo`` e preserva o valor retornado antes do
+       :func:`pop_normalize_aliases` consumir o alias.
     5. Pop aliases + canonicals de data, monta ``extras`` (dates
        nao-julgamento sniffadas), valida o schema upfront para converter
        ``extra_forbidden`` em ``TypeError`` cedo.
@@ -178,7 +132,7 @@ def run_auto_chunk(
     # auto-chunk pularia exatamente o caso que precisa dividir.
     sniff, date_format, has_data_publicacao = _normalize_auto_chunk_dates(input_cls, kwargs)
 
-    # Auto-fill fora do ``catch_warnings`` para que ``UserWarning`` chegue.
+    # Auto-fill depois da normalizacao para que ``UserWarning`` chegue uma vez.
     fill_open_ended_dates(sniff, formato=date_format, rotulo="data_julgamento")
     # Também preenche ``data_publicacao`` aqui — caso contrário, no caminho
     # auto-chunk com N janelas o fill seria refeito dentro de cada chunk
@@ -195,7 +149,10 @@ def run_auto_chunk(
         _propagate_auto_chunk_noop_dates(kwargs, sniff)
         return None
 
-    _normalize_auto_chunk_search(pesquisa, kwargs)
+    if pesquisa or any(alias in kwargs for alias in SEARCH_ALIASES):
+        # CJPG permits an empty canonical search when only an alias was
+        # supplied, hence ``None`` rather than ``""`` in that case.
+        pesquisa = normalize_pesquisa(pesquisa or None, **kwargs)
 
     pop_normalize_aliases(kwargs, include_canonical=True)
     extras = {
@@ -203,16 +160,18 @@ def run_auto_chunk(
         if v is not None and not k.startswith("data_julgamento")
     }
 
-    _validate_auto_chunk_input(
-        input_cls=input_cls,
-        method_label=method_label,
-        pesquisa=pesquisa,
-        paginas=paginas,
-        data_inicio=dj_i,
-        data_fim=dj_f,
-        extras=extras,
-        kwargs=kwargs,
-    )
+    try:
+        input_cls(
+            pesquisa=pesquisa,
+            paginas=paginas,
+            data_julgamento_inicio=dj_i,
+            data_julgamento_fim=dj_f,
+            **extras,
+            **kwargs,
+        )
+    except ValidationError as exc:
+        raise_on_extra_kwargs(exc, method_label)
+        raise
 
     def _fetch(win_i: str | None, win_f: str | None) -> Any:
         return method(

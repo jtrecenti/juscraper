@@ -106,13 +106,9 @@ def test_auto_chunk_default_short_window_with_paginas_ok(tmp_path, mocker):
 def test_sniff_emite_um_deprecation_por_alias_no_caminho_noop(tmp_path, mocker):
     """Cada alias passado vira exatamente 1 ``DeprecationWarning`` (não 2).
 
-    Antes do fix do auto-fill (refs bug TJSP cjpg), o ``run_auto_chunk``
-    silenciava o sniff e o ``cjpg_download`` downstream emitia. Com o
-    auto-fill, o caminho noop absorve aliases (para evitar duplicação do
-    ``UserWarning`` de auto-fill) e re-emite manualmente o
-    ``DeprecationWarning``. Resultado observável pelo usuário continua
-    sendo 1 warning por alias — só que agora a emissão acontece no
-    ``run_auto_chunk`` e o downstream fica silencioso. Como
+    O ``run_auto_chunk`` normaliza os aliases uma vez e propaga apenas os
+    nomes canônicos, evitando que o ``cjpg_download`` downstream repita os
+    warnings. Como
     ``cjpg_download`` está mockado, capturamos exatamente os warnings
     emitidos pelo ``run_auto_chunk``.
     """
