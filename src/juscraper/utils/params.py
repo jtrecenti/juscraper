@@ -23,8 +23,8 @@ DATE_CANONICAL: tuple[str, ...] = (
 
 # Mapping from deprecated date aliases to their canonical names. Single source
 # of truth for both ``normalize_datas`` (alias resolution + DeprecationWarning)
-# and the noop branch of ``run_auto_chunk`` (manual re-emission when the auto-
-# chunk silenced the sniff). Order matters in ``normalize_datas``: ``_de``/
+# and the noop branch of ``run_auto_chunk`` (discarding aliases after their
+# single normalization). Order matters in ``normalize_datas``: ``_de``/
 # ``_ate`` precede the generic ``data_inicio``/``data_fim`` so a conflict
 # between specific and generic surfaces against the specific name.
 DATE_ALIAS_TO_CANONICAL: dict[str, str] = {
