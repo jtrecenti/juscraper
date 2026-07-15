@@ -73,6 +73,14 @@ def _raise_page_error(soup: BeautifulSoup) -> None:
         raise ValueError(f"Erro detectado na página: {error_msg[:200]}")
 
 
+def _raise_initial_form_error(soup: BeautifulSoup) -> None:
+    if soup.find("form", id=_FORM_ID_RE):
+        raise ValueError(
+            "Ainda na página de consulta. "
+            "O formulário pode não ter sido submetido corretamente."
+        )
+
+
 def _has_zero_results(soup: BeautifulSoup) -> bool:
     page_text = soup.get_text().lower()
     return any(marker in page_text for marker in _ZERO_RESULT_MARKERS)
@@ -109,11 +117,7 @@ def _count_result_rows_or_raise(soup: BeautifulSoup) -> int:
         n_rows = len(soup.find_all("tr", class_="fundocinza1"))
         return max(n_rows, 1)
 
-    if soup.find("form", id=_FORM_ID_RE):
-        raise ValueError(
-            "Ainda na página de consulta. "
-            "O formulário pode não ter sido submetido corretamente."
-        )
+    _raise_initial_form_error(soup)
     raise ValueError(
         "Não foi possível encontrar o seletor de número de páginas "
         "na resposta HTML. Verifique se a busca retornou resultados "
