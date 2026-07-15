@@ -4,6 +4,81 @@ import re
 import pandas as pd
 from bs4 import BeautifulSoup
 
+_FIELD_MAP = {
+    "PROCESSO": "processo",
+    "UF": "uf",
+    "ORGAO JULGADOR": "orgao_julgador",
+    "ÓRGÃO JULGADOR": "orgao_julgador",
+    "DATA DO JULGAMENTO": "data_julgamento",
+    "DATA DA PUBLICAÇÃO": "data_publicacao",
+    "DATA DA PUBLICACAO": "data_publicacao",
+    "RELATOR": "relator",
+    "RELATORA": "relator",
+    "EMENTA": "ementa",
+    "DECISÃO": "decisao",
+    "DECISAO": "decisao",
+}
+
+_LABEL_REPLACEMENTS = str.maketrans({
+    "Ã": "A",
+    "Õ": "O",
+    "Ç": "C",
+    "É": "E",
+    "Á": "A",
+})
+
+
+def _normalize_label(label: str) -> str:
+    """Normalize only the accented characters historically accepted by TJSC."""
+    return label.translate(_LABEL_REPLACEMENTS)
+
+
+def _resolve_field(label: str) -> str | None:
+    """Resolve exact, normalized, and partial labels in their original order."""
+    normalized_label = _normalize_label(label)
+    direct_match = _FIELD_MAP.get(label) or _FIELD_MAP.get(normalized_label)
+    if direct_match:
+        return direct_match
+
+    for field_label, field_key in _FIELD_MAP.items():
+        if field_label in label or field_label in normalized_label:
+            return field_key
+    return None
+
+
+def _extract_class(value) -> str | None:
+    """Extract the class description from the process field when present."""
+    class_text = str(value.get_text(separator="\n", strip=True))
+    lines = (line.strip() for line in class_text.split("\n") if line.strip())
+    for line in lines:
+        if not re.match(r"^[A-Z]{2,}", line) or "-" not in line:
+            continue
+        parts = line.split(" - ", 1)
+        if len(parts) == 2:
+            return parts[1].strip()
+        break
+    return None
+
+
+def _extract_process_fields(value) -> dict[str, str]:
+    """Extract the linked process number and the adjacent class description."""
+    fields = {}
+    link = value.find("a", class_="numero-processo")
+    if link:
+        fields["processo"] = link.get_text(strip=True).rstrip("/T")
+    process_class = _extract_class(value)
+    if process_class is not None:
+        fields["classe"] = process_class
+    return fields
+
+
+def _store_text_field(result: dict, key: str, text: str) -> None:
+    """Preserve the asymmetric precedence between DECISÃO and EMENTA."""
+    if key == "ementa" or (key == "decisao" and "ementa" not in result):
+        result["ementa"] = text
+        return
+    result[key] = text
+
 
 def _parse_result_item(item) -> dict:
     """Parse a single resultadoItem div from the TJSC search page."""
@@ -11,60 +86,16 @@ def _parse_result_item(item) -> dict:
     labels = item.find_all("div", class_="resLabel")
     values = item.find_all("div", class_="resValue")
 
-    field_map = {
-        "PROCESSO": "processo",
-        "UF": "uf",
-        "ORGAO JULGADOR": "orgao_julgador",
-        "ÓRGÃO JULGADOR": "orgao_julgador",
-        "DATA DO JULGAMENTO": "data_julgamento",
-        "DATA DA PUBLICAÇÃO": "data_publicacao",
-        "DATA DA PUBLICACAO": "data_publicacao",
-        "RELATOR": "relator",
-        "RELATORA": "relator",
-        "EMENTA": "ementa",
-        "DECISÃO": "decisao",
-        "DECISAO": "decisao",
-    }
-
     for label, value in zip(labels, values, strict=False):
         label_text = label.get_text(strip=True).upper()
-        # Normalize accented chars for matching
-        label_norm = (
-            label_text.replace("Ã", "A").replace("Õ", "O")
-            .replace("Ç", "C").replace("É", "E").replace("Á", "A")
-        )
-
-        key = field_map.get(label_text) or field_map.get(label_norm)
-        if not key:
-            # Try partial matching
-            for field_label, field_key in field_map.items():
-                if field_label in label_text or field_label in label_norm:
-                    key = field_key
-                    break
+        key = _resolve_field(label_text)
         if not key:
             continue
 
-        text = value.get_text(strip=True)
-
         if key == "processo":
-            # Extract process number from link
-            link = value.find("a", class_="numero-processo")
-            if link:
-                result["processo"] = link.get_text(strip=True).rstrip("/T")
-            # Extract class from remaining text
-            classe_text = value.get_text(separator="\n", strip=True)
-            lines = [ln.strip() for ln in classe_text.split("\n") if ln.strip()]
-            for line in lines:
-                if re.match(r"^[A-Z]{2,}", line) and "-" in line:
-                    # e.g. "AI - Agravo de Instrumento"
-                    parts = line.split(" - ", 1)
-                    if len(parts) == 2:
-                        result["classe"] = parts[1].strip()
-                    break
-        elif key == "ementa" or (key == "decisao" and "ementa" not in result):
-            result["ementa"] = text
-        else:
-            result[key] = text
+            result.update(_extract_process_fields(value))
+            continue
+        _store_text_field(result, key, value.get_text(strip=True))
 
     return result
 
