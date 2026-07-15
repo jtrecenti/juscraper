@@ -28,6 +28,9 @@ ALIAS_TO_TRIBUNAL = {alias: sigla for sigla, alias in TRIBUNAL_TO_ALIAS.items()}
 
 logger = logging.getLogger(__name__)
 
+DatajudFilterInput = InputListarProcessosDataJud | InputContarProcessosDataJud
+AliasSelection = tuple[str, str | list[str] | None]
+
 
 def _pop_plural_aliases(kwargs: dict) -> None:
     """Popa aliases plurais deprecados antes de instanciar o schema.
@@ -44,6 +47,139 @@ def _pop_plural_aliases(kwargs: dict) -> None:
             "Nao e possivel passar 'assunto' e 'assuntos' simultaneamente."
         )
     kwargs["assunto"] = pop_deprecated_alias(kwargs, "assuntos", "assunto")
+
+
+def _resolve_movimentos_codigo(inp: DatajudFilterInput) -> list[int] | None:
+    """Combina categorias amigáveis e códigos TPU preservando a ordem."""
+    if not inp.tipos_movimentacao and not inp.movimentos_codigo:
+        return None
+    codigos = [
+        codigo
+        for tipo in inp.tipos_movimentacao or []
+        for codigo in TIPOS_MOVIMENTACAO[tipo]
+    ]
+    codigos.extend(inp.movimentos_codigo or [])
+    return list(dict.fromkeys(codigos))
+
+
+def _resolve_cnj_alias(numero_processo: str) -> tuple[str, str] | None:
+    """Resolve um CNJ para ``(alias, numero_limpo)`` ou emite o warning público."""
+    numero_limpo = clean_cnj(numero_processo)
+    if len(numero_limpo) != 20:
+        warnings.warn(
+            f"CNJ inválido: {numero_processo!r} (após limpeza tem {len(numero_limpo)} "
+            "dígitos, deveria ter 20). Processo será ignorado.",
+            UserWarning,
+            stacklevel=3,
+        )
+        return None
+    id_justica = numero_limpo[13]
+    id_tribunal = numero_limpo[14:16]
+    alias = ID_JUSTICA_TRIBUNAL_TO_ALIAS.get((id_justica, id_tribunal))
+    if alias is not None:
+        return alias, numero_limpo
+    warnings.warn(
+        f"CNJ {numero_processo!r}: tribunal não mapeado no DataJud "
+        f"(id_justica={id_justica}, id_tribunal={id_tribunal}). Processo será ignorado.",
+        UserWarning,
+        stacklevel=3,
+    )
+    return None
+
+
+def _group_cnjs_by_alias(numero_processo: str | list[str]) -> list[AliasSelection]:
+    """Agrupa CNJs válidos pelo índice Elasticsearch correspondente."""
+    processos_por_alias: dict[str, list[str]] = defaultdict(list)
+    numeros = [numero_processo] if isinstance(numero_processo, str) else numero_processo
+    for numero in numeros:
+        resolved = _resolve_cnj_alias(numero)
+        if resolved is None:
+            continue
+        alias, numero_limpo = resolved
+        processos_por_alias[alias].append(numero_limpo)
+    return list(processos_por_alias.items())
+
+
+def _normalize_datajud_pages(paginas: int | list[int] | range | None) -> range | None:
+    """Normaliza a seleção para um range compatível com cursor forwards-only."""
+    paginas_norm = normalize_paginas(paginas)
+    if not isinstance(paginas_norm, list):
+        return paginas_norm
+    if not paginas_norm:
+        return None
+    return range(min(paginas_norm), max(paginas_norm) + 1)
+
+
+def _last_requested_page(paginas: range | None) -> int | None:
+    """Retorna a última página física necessária; ``None`` significa todas."""
+    if paginas is None:
+        return None
+    if not paginas:
+        return 0
+    return max(paginas)
+
+
+def _must_fetch_page(paginas: range | None, page: int) -> bool:
+    last_page = _last_requested_page(paginas)
+    return last_page is None or page <= last_page
+
+
+def _build_listar_payload(
+    inp: InputListarProcessosDataJud,
+    *,
+    numero_processo: str | list[str] | None,
+    movimentos_codigo: list[int] | None,
+    tamanho_pagina: int,
+    search_after: list[Any] | None,
+) -> dict[str, Any]:
+    return build_listar_processos_payload(
+        numero_processo=numero_processo,
+        ano_ajuizamento=inp.ano_ajuizamento,
+        classe=inp.classe,
+        assunto=inp.assunto,
+        data_ajuizamento_inicio=inp.data_ajuizamento_inicio,
+        data_ajuizamento_fim=inp.data_ajuizamento_fim,
+        movimentos_codigo=movimentos_codigo,
+        orgao_julgador=inp.orgao_julgador,
+        query=inp.query,
+        mostrar_movs=inp.mostrar_movs,
+        tamanho_pagina=tamanho_pagina,
+        search_after=search_after,
+    )
+
+
+def _next_search_after(
+    api_response: dict[str, Any],
+    *,
+    alias: str,
+    effective_size: int,
+) -> list[Any] | None:
+    hits = api_response.get("hits", {}).get("hits", [])
+    if not hits or len(hits) < effective_size:
+        logger.info(
+            "Last page reached for alias %s (less than %d results or no hits).",
+            alias,
+            effective_size,
+        )
+        return None
+    search_after = hits[-1].get("sort")
+    if not isinstance(search_after, list):
+        logger.warning(
+            "Sort parameters for 'search_after' not found in last hit. "
+            "Cannot continue deep pagination."
+        )
+        return None
+    return search_after
+
+
+def _log_total(api_response: dict[str, Any], alias: str) -> None:
+    total_info = api_response.get("hits", {}).get("total", {})
+    logger.info(
+        "Total de processos encontrados para %s: %s (%s)",
+        alias,
+        total_info.get("value", "?"),
+        total_info.get("relation", "eq"),
+    )
 
 
 class DatajudScraper(HTTPScraper):
@@ -166,15 +302,7 @@ class DatajudScraper(HTTPScraper):
             numero_processo=inp.numero_processo,
         )
 
-        # ``tipos_movimentacao`` (nomes amigaveis) -> codigos TPU; uniao com
-        # ``movimentos_codigo`` direto. Mesma logica de ``listar_processos``.
-        movimentos_codigo: list[int] | None = None
-        if inp.tipos_movimentacao or inp.movimentos_codigo:
-            codigos: list[int] = []
-            for tipo in inp.tipos_movimentacao or []:
-                codigos.extend(TIPOS_MOVIMENTACAO.get(tipo, []))
-            codigos.extend(inp.movimentos_codigo or [])
-            movimentos_codigo = list(dict.fromkeys(codigos))
+        movimentos_codigo = _resolve_movimentos_codigo(inp)
 
         # ``_resolve_aliases`` devolve uma list[(alias, cnjs_pra_esse_alias)]
         # — segue o mesmo padrão do ``listar_processos`` para que ``numero_processo``
@@ -226,7 +354,7 @@ class DatajudScraper(HTTPScraper):
         *,
         tribunal: str | None,
         numero_processo: str | list[str] | None,
-    ) -> list[tuple]:
+    ) -> list[AliasSelection]:
         """Determina lista de ``(alias, cnjs_para_esse_alias)``.
 
         Mesma lógica usada por :meth:`listar_processos` — extraída pra ser
@@ -239,39 +367,9 @@ class DatajudScraper(HTTPScraper):
                     f"Tribunal {tribunal!r} não encontrado nos mappings do DataJud. "
                     f"Verifique a sigla (ex: TJSP, TRT2, TRE-SP)."
                 )
-            cnjs: str | list[str] | None = numero_processo
-            return [(alias, cnjs)]
+            return [(alias, numero_processo)]
         if numero_processo:
-            processos_por_alias = defaultdict(list)
-            cnjs_to_query = (
-                [numero_processo] if isinstance(numero_processo, str) else numero_processo
-            )
-            for num_cnj in cnjs_to_query:
-                num_limpo = clean_cnj(num_cnj)
-                if len(num_limpo) == 20:
-                    id_justica = num_limpo[13]
-                    id_tribunal = num_limpo[14:16]
-                    alias = ID_JUSTICA_TRIBUNAL_TO_ALIAS.get((id_justica, id_tribunal))
-                    if alias:
-                        processos_por_alias[alias].append(num_limpo)
-                    else:
-                        warnings.warn(
-                            f"CNJ {num_cnj!r}: tribunal não mapeado no DataJud "
-                            f"(id_justica={id_justica}, id_tribunal={id_tribunal}). "
-                            f"Processo será ignorado.",
-                            UserWarning,
-                            stacklevel=2,
-                        )
-                else:
-                    warnings.warn(
-                        f"CNJ inválido: {num_cnj!r} (após limpeza tem {len(num_limpo)} "
-                        f"dígitos, deveria ter 20). Processo será ignorado.",
-                        UserWarning,
-                        stacklevel=2,
-                    )
-            if not processos_por_alias:
-                return []
-            return list(processos_por_alias.items())
+            return _group_cnjs_by_alias(numero_processo)
         raise ValueError(
             "É necessário especificar 'tribunal' (sigla) ou 'numero_processo' (CNJ)."
         )
@@ -422,19 +520,7 @@ class DatajudScraper(HTTPScraper):
             :class:`InputListarProcessosDataJud` — fonte da verdade dos
             filtros aceitos.
         """
-        # ``paginas`` e int|list|range|None na API publica (contrato de
-        # PaginasMixin). O cursor ``search_after`` da API DataJud e
-        # forwards-only e o client interno consome ``.start``/``.stop``,
-        # entao convertemos ``int``/``list`` para ``range`` contiguo aqui:
-        # ``[3, 5]`` -> ``range(3, 6)`` baixa as paginas 3, 4 e 5.
-        paginas_norm = normalize_paginas(paginas)
-        if isinstance(paginas_norm, list):
-            paginas_norm = (
-                range(min(paginas_norm), max(paginas_norm) + 1)
-                if paginas_norm
-                else None
-            )
-
+        paginas_norm = _normalize_datajud_pages(paginas)
         _pop_plural_aliases(kwargs)
         try:
             inp = InputListarProcessosDataJud(paginas=paginas_norm, **kwargs)
@@ -442,247 +528,126 @@ class DatajudScraper(HTTPScraper):
             raise_on_extra_kwargs(exc, "DatajudScraper.listar_processos()")
             raise
 
-        numero_processo = inp.numero_processo
-        tribunal = inp.tribunal
-        ano_ajuizamento = inp.ano_ajuizamento
-        classe = inp.classe
-        assunto = inp.assunto
-        data_ajuizamento_inicio = inp.data_ajuizamento_inicio
-        data_ajuizamento_fim = inp.data_ajuizamento_fim
-        orgao_julgador = inp.orgao_julgador
-        query_override = inp.query
-        mostrar_movs = inp.mostrar_movs
-        tamanho_pagina = inp.tamanho_pagina
-
-        # Resolve ``tipos_movimentacao`` (nomes amigaveis) -> codigos TPU e
-        # concatena com ``movimentos_codigo`` direto. O builder em download.py
-        # recebe so a lista plana — mantemos o mapping numa unica camada.
-        # Schema garantiu que cada nome em ``tipos_movimentacao`` esta em
-        # ``TIPOS_MOVIMENTACAO``, entao o ``[]`` de fallback aqui e defesa.
-        movimentos_codigo: list[int] | None = None
-        if inp.tipos_movimentacao or inp.movimentos_codigo:
-            codigos: list[int] = []
-            for tipo in inp.tipos_movimentacao or []:
-                codigos.extend(TIPOS_MOVIMENTACAO.get(tipo, []))
-            codigos.extend(inp.movimentos_codigo or [])
-            # Dedup mantendo ordem (uniao das duas fontes).
-            movimentos_codigo = list(dict.fromkeys(codigos))
-
-        all_dfs = []
-        # Determine target aliases
-        target_aliases = []
-        if tribunal:
-            alias = TRIBUNAL_TO_ALIAS.get(tribunal.upper())
-            if alias:
-                target_aliases.append(alias)
-            else:
-                raise ValueError(
-                    f"Tribunal {tribunal!r} não encontrado nos mappings do DataJud. "
-                    f"Verifique a sigla (ex: TJSP, TRT2, TRE-SP)."
-                )
-        elif numero_processo:
-            # Group by alias if multiple CNJs from different tribunals are provided
-            processos_por_alias = defaultdict(list)
-            cnjs_to_query = [numero_processo] if isinstance(numero_processo, str) else numero_processo
-            for num_cnj in cnjs_to_query:
-                num_limpo = clean_cnj(num_cnj)
-                if len(num_limpo) == 20:
-                    id_justica_cnj = num_limpo[13]
-                    id_tribunal_cnj = num_limpo[14:16]
-                    alias = ID_JUSTICA_TRIBUNAL_TO_ALIAS.get((id_justica_cnj, id_tribunal_cnj))
-                    if alias:
-                        processos_por_alias[alias].append(num_limpo)
-                    else:
-                        warnings.warn(
-                            f"CNJ {num_cnj!r}: tribunal não mapeado no DataJud "
-                            f"(id_justica={id_justica_cnj}, id_tribunal={id_tribunal_cnj}). "
-                            f"Processo será ignorado.",
-                            UserWarning,
-                            stacklevel=2,
-                        )
-                        logger.warning("Não foi possível determinar alias para CNJ: %s", num_cnj)
-                else:
-                    warnings.warn(
-                        f"CNJ inválido: {num_cnj!r} (após limpeza tem {len(num_limpo)} "
-                        f"dígitos, deveria ter 20). Processo será ignorado.",
-                        UserWarning,
-                        stacklevel=2,
-                    )
-                    logger.warning("CNJ inválido: %s", num_cnj)
-            if not processos_por_alias:
-                # Os warnings por CNJ (CNJ inválido / tribunal não mapeado) já
-                # comunicam o problema. O `logger.error` mantém o registro de
-                # que nenhum alias foi determinado sem duplicar o warning.
-                logger.error("Nenhum CNJ válido para determinar tribunal/alias.")
-                return pd.DataFrame()
-            target_aliases = list(processos_por_alias.keys())
-        else:
-            raise ValueError(
-                "É necessário especificar 'tribunal' (sigla) ou 'numero_processo' (CNJ)."
-            )
-
-        for alias_idx, alias_name in enumerate(target_aliases):
-            logger.info("Consultando: %s (%d/%d)", alias_name, alias_idx+1, len(target_aliases))
-            # If CNJs were grouped, use only the CNJs for this specific alias
-            current_cnjs_for_alias: str | list[str] | None
-            if numero_processo and not tribunal:
-                current_cnjs_for_alias = processos_por_alias[alias_name]
-            else:
-                current_cnjs_for_alias = numero_processo
-            df_alias = self._listar_processos_por_alias(
-                alias=alias_name,
-                numero_processo=current_cnjs_for_alias,
-                ano_ajuizamento=ano_ajuizamento,
-                classe=classe,
-                assunto=assunto,
-                data_ajuizamento_inicio=data_ajuizamento_inicio,
-                data_ajuizamento_fim=data_ajuizamento_fim,
+        aliases = self._resolve_aliases(
+            tribunal=inp.tribunal,
+            numero_processo=inp.numero_processo,
+        )
+        movimentos_codigo = _resolve_movimentos_codigo(inp)
+        frames = [
+            self._listar_processos_por_alias(
+                alias=alias,
+                numero_processo=cnjs,
+                inp=inp,
                 movimentos_codigo=movimentos_codigo,
-                orgao_julgador=orgao_julgador,
-                query_override=query_override,
-                mostrar_movs=mostrar_movs,
-                paginas_range=paginas_norm,
-                tamanho_pagina=tamanho_pagina,
+                paginas=paginas_norm,
             )
-            if not df_alias.empty:
-                all_dfs.append(df_alias)
-
-        if not all_dfs:
-            return pd.DataFrame()
-        return pd.concat(all_dfs, ignore_index=True)
+            for alias, cnjs in aliases
+        ]
+        non_empty = [frame for frame in frames if not frame.empty]
+        return pd.concat(non_empty, ignore_index=True) if non_empty else pd.DataFrame()
 
     def _listar_processos_por_alias(
         self,
+        *,
         alias: str,
         numero_processo: str | list[str] | None,
-        ano_ajuizamento: int | None,
-        classe: str | None,
-        assunto: list[str] | None,
-        data_ajuizamento_inicio: str | None,
-        data_ajuizamento_fim: str | None,
+        inp: InputListarProcessosDataJud,
         movimentos_codigo: list[int] | None,
-        orgao_julgador: str | None,
-        query_override: dict | None,
-        mostrar_movs: bool,
-        paginas_range: range | None,
-        tamanho_pagina: int,
+        paginas: range | None,
     ) -> pd.DataFrame:
-        """Helper to fetch and parse data for a single alias with pagination."""
-        dfs_alias = []
-        current_page = paginas_range.start if paginas_range else 1
-        end_page = paginas_range.stop if paginas_range else float('inf')
-        search_after_params: list[Any] | None = None  # For deep pagination
-
-        # Initialize tqdm progress bar
-        if paginas_range:
-            total_pages_to_fetch = paginas_range.stop - paginas_range.start
-            # Disable pbar if no pages are to be fetched based on range
-            pbar_disabled = total_pages_to_fetch <= 0
-            pbar = tqdm(
-                total=total_pages_to_fetch,
-                desc=f"Paginando {alias}",
-                unit=" página",
-                disable=pbar_disabled
-            )
-        else:
-            # If paginas_range is None, total is unknown
-            pbar = tqdm(desc=f"Paginando {alias}", unit=" página")
-
+        """Percorre o cursor físico e agrega somente as páginas solicitadas."""
+        frames: list[pd.DataFrame] = []
+        current_page = paginas.start if paginas else 1
+        tamanho_pagina = inp.tamanho_pagina
+        search_after: list[Any] | None = None
+        total = None if paginas is None else len(paginas)
+        pbar = tqdm(
+            total=total,
+            desc=f"Paginando {alias}",
+            unit=" página",
+            disable=total == 0,
+        )
         try:
-            while current_page < end_page:
-                logger.info("Fetching page %d for alias %s...", current_page, alias)
-                query_payload = build_listar_processos_payload(
-                    numero_processo=numero_processo,
-                    ano_ajuizamento=ano_ajuizamento,
-                    classe=classe,
-                    assunto=assunto,
-                    data_ajuizamento_inicio=data_ajuizamento_inicio,
-                    data_ajuizamento_fim=data_ajuizamento_fim,
-                    movimentos_codigo=movimentos_codigo,
-                    orgao_julgador=orgao_julgador,
-                    query=query_override,
-                    mostrar_movs=mostrar_movs,
-                    tamanho_pagina=tamanho_pagina,
-                    search_after=search_after_params,
-                )
-                api_response_json = call_datajud_api(
-                    base_url=self.BASE_API_URL,
+            while _must_fetch_page(paginas, current_page):
+                fetched = self._fetch_process_page(
                     alias=alias,
-                    api_key=self.api_key,
-                    session=self.session,
-                    query_payload=query_payload,
-                    verbose=self.verbose > 1  # Pass verbose flag for more detailed logging
+                    numero_processo=numero_processo,
+                    inp=inp,
+                    movimentos_codigo=movimentos_codigo,
+                    current_page=current_page,
+                    tamanho_pagina=tamanho_pagina,
+                    search_after=search_after,
                 )
-
-                if api_response_json is None:
-                    warnings.warn(
-                        f"DataJud: falha ao consultar alias {alias!r} na página "
-                        f"{current_page}. Resultados parciais retornados.",
-                        UserWarning,
-                        stacklevel=3,
-                    )
-                    logger.error(
-                        "Failed to get API response for alias %s, page %d."
-                        "Stopping.",
-                        alias,
-                        current_page
-                    )
+                if fetched is None:
                     break
-
-                if current_page == (paginas_range.start if paginas_range else 1):
-                    total_info = api_response_json.get("hits", {}).get("total", {})
-                    total_value = total_info.get("value", "?")
-                    total_relation = total_info.get("relation", "eq")
-                    logger.info("Total de processos encontrados para %s: %s (%s)", alias, total_value, total_relation)
-
-                df_page = parse_datajud_api_response(api_response_json, mostrar_movs)
-                if df_page.empty:
-                    logger.info(
-                        "No more results for alias %s on page %d (or parsing failed).",
-                        alias,
-                        current_page
-                    )
+                frame, search_after, tamanho_pagina = fetched
+                frames.append(frame)
+                pbar.update(1)
+                if search_after is None:
                     break
-                dfs_alias.append(df_page)
-                pbar.update(1)  # Update progress bar
-
-                # For search_after pagination: extract the sort values of the last hit
-                # This part depends on the exact structure of api_response_json
-                # Assuming api_response_json is a dict parsed from the JSON string
-                hits = api_response_json.get("hits", {}).get("hits", [])
-                # Quando ``call_datajud_api`` aciona o fallback de 504/timeout,
-                # ele muta ``query_payload["size"]`` em place. Propagamos o
-                # size efetivo para ``tamanho_pagina`` para que paginas
-                # subsequentes ja partam do size reduzido — em gateway
-                # saturado consistentemente, isso evita pagar ~60s a cada
-                # pagina antes de cair no fallback de novo.
-                effective_size = query_payload.get("size", tamanho_pagina)
-                if effective_size < tamanho_pagina:
-                    tamanho_pagina = effective_size
-                if not hits or len(hits) < effective_size:
-                    logger.info(
-                        "Last page reached for alias %s (less than %d results or no hits).",
-                        alias,
-                        effective_size,
-                    )
-                    break
-                last_hit = hits[-1]
-                search_after_params = last_hit.get("sort")
-                if search_after_params is None:
-                    logger.warning(
-                        "Sort parameters for 'search_after' not found in last hit."
-                        "Cannot continue deep pagination."
-                    )
-                    break  # Fallback or stop if search_after cannot be determined
-
-                if paginas_range is None or current_page < paginas_range.stop - 1:  # if fetching all, continue
-                    current_page += 1
-                else:  # reached end of specified range
-                    break
-                time.sleep(self.sleep_time)  # Respect sleep time
+                current_page += 1
+                if _must_fetch_page(paginas, current_page):
+                    time.sleep(self.sleep_time)
         finally:
-            pbar.close()  # Ensure progress bar is closed
+            pbar.close()
 
-        if not dfs_alias:
-            return pd.DataFrame()
-        return pd.concat(dfs_alias, ignore_index=True)
+        return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+
+    def _fetch_process_page(
+        self,
+        *,
+        alias: str,
+        numero_processo: str | list[str] | None,
+        inp: InputListarProcessosDataJud,
+        movimentos_codigo: list[int] | None,
+        current_page: int,
+        tamanho_pagina: int,
+        search_after: list[Any] | None,
+    ) -> tuple[pd.DataFrame, list[Any] | None, int] | None:
+        """Busca uma página física e devolve frame, próximo cursor e size efetivo."""
+        logger.info("Fetching page %d for alias %s...", current_page, alias)
+        query_payload = _build_listar_payload(
+            inp,
+            numero_processo=numero_processo,
+            movimentos_codigo=movimentos_codigo,
+            tamanho_pagina=tamanho_pagina,
+            search_after=search_after,
+        )
+        api_response = call_datajud_api(
+            base_url=self.BASE_API_URL,
+            alias=alias,
+            api_key=self.api_key,
+            session=self.session,
+            query_payload=query_payload,
+            verbose=self.verbose > 1,
+        )
+        if api_response is None:
+            warnings.warn(
+                f"DataJud: falha ao consultar alias {alias!r} na página "
+                f"{current_page}. Resultados parciais retornados.",
+                UserWarning,
+                stacklevel=3,
+            )
+            logger.error(
+                "Failed to get API response for alias %s, page %d. Stopping.",
+                alias,
+                current_page,
+            )
+            return None
+        if current_page == 1:
+            _log_total(api_response, alias)
+        frame = parse_datajud_api_response(api_response, inp.mostrar_movs)
+        if frame.empty:
+            logger.info(
+                "No more results for alias %s on page %d (or parsing failed).",
+                alias,
+                current_page,
+            )
+            return None
+        effective_size = min(tamanho_pagina, query_payload.get("size", tamanho_pagina))
+        next_search_after = _next_search_after(
+            api_response,
+            alias=alias,
+            effective_size=effective_size,
+        )
+        return frame, next_search_after, effective_size
