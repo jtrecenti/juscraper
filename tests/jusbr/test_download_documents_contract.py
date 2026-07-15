@@ -21,6 +21,8 @@ Fluxo real do ``download_documents`` (de ``aggregators/jusbr/client.py``):
 Samples (``text_typical.txt`` / ``binary_typical.bin``) sao capturados via
 ``tests/fixtures/capture/jusbr.py``.
 """
+from typing import Any
+
 import jwt
 import numpy as np
 import pandas as pd
@@ -69,12 +71,12 @@ def _doc_meta(*, href_texto: str | None, href_binario: str | None, **extra) -> d
     return meta
 
 
-def _base_df(documentos: list[dict]) -> pd.DataFrame:
+def _base_df(documentos: list[Any]) -> pd.DataFrame:
     """Build the input DataFrame for ``download_documents``."""
     return _base_df_with_details({"dadosBasicos": {"documentos": documentos}})
 
 
-def _base_df_with_details(detalhes: dict) -> pd.DataFrame:
+def _base_df_with_details(detalhes: dict[str, Any]) -> pd.DataFrame:
     """Build the input DataFrame with an explicit ``detalhes`` payload."""
     return pd.DataFrame([{
         "processo_pesquisado": CNJ_DIGITS,
@@ -296,7 +298,7 @@ def test_download_documents_respeita_prioridade_dos_caminhos_de_metadata(
         href_binario=None,
         idDocumento="tramitacao",
     )
-    detalhes = {
+    detalhes: dict[str, Any] = {
         "dadosBasicos": {"documentos": [doc_dados_basicos]},
         "documentos": [doc_documentos],
         "tramitacaoAtual": {"documentos": [doc_tramitacao]},

@@ -1,15 +1,9 @@
-"""
-Module client.py: Orchestrates the flow for JUSBR (user entry point).
-Contains the JusbrScraper class for interaction with the API
-from Platforma Digital do Poder Judiciario (PDPJ).
-"""
-# Orchestrates the flow for JUSBR (user entry point)
-# Will contain JusbrScraper class
+"""Cliente público do JusBR para a Plataforma Digital do Poder Judiciário."""
 
 import logging
 import time
 import urllib
-from typing import Any
+from typing import Any, TypeAlias
 
 import browser_cookie3
 import jwt
@@ -26,6 +20,139 @@ from .parse import clean_document_text, parse_process_details_response, parse_pr
 from .schemas import InputAuthJusBR, InputCPOPGJusBR, InputDownloadDocumentsJusBR
 
 logger = logging.getLogger(__name__)
+
+_DocumentMetadata: TypeAlias = dict[str, Any]
+_DocumentDataRow: TypeAlias = dict[str, Any]
+
+_PREFERRED_DOCUMENT_COLUMNS = (
+    'numero_processo', 'idDocumento', 'idCodex', 'sequencia', 'descricao', 'nome',
+    'tipoDocumento', 'tipo', 'dataHoraJuntada', 'dataJuntada', 'nivelSigilo',
+    'hrefTexto', 'hrefBinario', 'texto', '_raw_text_api', '_raw_binary_api',
+)
+
+
+def _metadata_is_empty(metadata: Any) -> bool:
+    """Testa vazio sem avaliar ``ndarray`` como booleano ambíguo."""
+    if isinstance(metadata, np.ndarray):
+        return bool(metadata.size == 0)
+    return not bool(metadata)
+
+
+def _coerce_document_metadata_list(
+    metadata: Any,
+    numero_processo: str,
+    detalhes: dict[str, Any],
+) -> list[_DocumentMetadata]:
+    """Normaliza a coleção externa e elimina itens sem shape de metadata."""
+    if isinstance(metadata, np.ndarray):
+        metadata = metadata.tolist()
+    if not isinstance(metadata, list):
+        logger.warning(
+            "Lista de metadados de documentos não encontrada ou não é uma lista "
+            "para o processo %s. Conteúdo de 'detalhes' (início): %s",
+            numero_processo, str(detalhes)[:200]
+        )
+        return []
+
+    valid_metadata = []
+    for item in metadata:
+        if not isinstance(item, dict):
+            logger.warning(
+                "Item na lista de documentos não é um dicionário para o processo %s. Item: %s",
+                numero_processo, str(item)[:100]
+            )
+            continue
+        valid_metadata.append(item)
+    return valid_metadata
+
+
+def _resolve_document_metadata_list(
+    detalhes: dict[str, Any],
+    numero_processo: str,
+) -> list[_DocumentMetadata]:
+    """Resolve a primeira lista não vazia na precedência exposta pelo JusBR."""
+    metadata: Any = []
+    dados_basicos = detalhes.get('dadosBasicos')
+    if isinstance(dados_basicos, dict):
+        metadata = dados_basicos.get('documentos', [])
+
+    if _metadata_is_empty(metadata):
+        direct_metadata = detalhes.get('documentos')
+        if isinstance(direct_metadata, list):
+            metadata = direct_metadata
+
+    if _metadata_is_empty(metadata):
+        tramitacao_atual = detalhes.get('tramitacaoAtual')
+        if isinstance(tramitacao_atual, dict):
+            metadata = tramitacao_atual.get('documentos', [])
+
+    return _coerce_document_metadata_list(metadata, numero_processo, detalhes)
+
+
+def _extract_document_uuid(href: Any) -> str | None:
+    """Extrai o identificador situado após o segmento ``/documentos/``."""
+    if not isinstance(href, str):
+        return None
+    _, marker, path_after_marker = href.partition('/documentos/')
+    if not marker:
+        return None
+    document_uuid, _, _ = path_after_marker.partition('/')
+    return document_uuid or None
+
+
+def _log_document_text_result(
+    document_uuid: str | None,
+    numero_processo: str,
+    raw_text: str | None,
+    cleaned_text: str | None,
+) -> None:
+    """Registra o resultado do ramo textual sem misturá-lo à orquestração."""
+    if not document_uuid:
+        return
+    if cleaned_text:
+        logger.debug(
+            "Sucesso ao baixar e limpar texto do doc UUID %s (processo %s), tamanho limpo: %d",
+            document_uuid, numero_processo, len(cleaned_text),
+        )
+        return
+    if raw_text:
+        logger.debug(
+            "Texto baixado para doc UUID %s (processo %s) mas resultou em "
+            "None/vazio após limpeza. Raw tamanho: %d",
+            document_uuid, numero_processo, len(raw_text),
+        )
+        return
+    logger.warning(
+        "Falha ao baixar texto do doc UUID %s (processo %s), ou texto vazio.",
+        document_uuid, numero_processo,
+    )
+
+
+def _build_documents_dataframe(rows: list[_DocumentDataRow]) -> pd.DataFrame:
+    """Monta o DataFrame preservando a ordem pública e os campos auxiliares."""
+    if not rows:
+        logger.info("Nenhum documento foi baixado ou processado.")
+        return pd.DataFrame()
+
+    dataframe = pd.DataFrame(rows)
+    final_columns = []
+    remaining_columns = set(dataframe.columns)
+    for column in _PREFERRED_DOCUMENT_COLUMNS:
+        if column in remaining_columns:
+            final_columns.append(column)
+            remaining_columns.remove(column)
+    final_columns.extend(sorted(remaining_columns))
+    dataframe = dataframe[final_columns]
+
+    for column in _PREFERRED_DOCUMENT_COLUMNS:
+        if column not in dataframe.columns:
+            dataframe[column] = None
+
+    logger.info(
+        "Download de documentos finalizado. Total de linhas de documentos: %d.",
+        len(dataframe)
+    )
+    return dataframe
 
 
 class JusbrScraper(HTTPScraper):
@@ -230,10 +357,130 @@ class JusbrScraper(HTTPScraper):
             df_resultados = df_resultados[cols]
         return df_resultados
 
-    def download_documents(self,
-                           base_df: pd.DataFrame,
-                           max_docs_per_process: int | None = None,
-                           **kwargs: Any) -> pd.DataFrame:
+    def _fetch_document_contents(
+        self,
+        numero_processo: str,
+        text_uuid: str | None,
+        binary_uuid: str | None,
+        authorization: str,
+    ) -> tuple[str | None, str | None, bytes | None]:
+        """Baixa texto e binário de forma independente para um documento."""
+        numero_processo_clean = clean_cnj(numero_processo)
+        raw_text = None
+        cleaned_text = None
+        if text_uuid:
+            logger.debug(
+                "Tentando baixar texto do documento UUID %s para processo %s.",
+                text_uuid, numero_processo,
+            )
+            raw_text = fetch_document_text(
+                self._request_with_retry,
+                numero_processo_clean,
+                text_uuid,
+                self.BASE_API_URL_V1_DOCS,
+                authorization=authorization,
+            )
+            cleaned_text = clean_document_text(raw_text)
+
+        raw_binary = None
+        if binary_uuid:
+            raw_binary = fetch_document_binary(
+                self._request_with_retry,
+                numero_processo_clean,
+                binary_uuid,
+                self.BASE_API_URL_V2,
+            )
+        return raw_text, cleaned_text, raw_binary
+
+    def _process_single_document(
+        self,
+        document_metadata: _DocumentMetadata,
+        numero_processo: str,
+    ) -> _DocumentDataRow | None:
+        """Processa uma metadata já validada e produz no máximo uma linha."""
+        text_uuid = _extract_document_uuid(document_metadata.get('hrefTexto'))
+        binary_uuid = _extract_document_uuid(document_metadata.get('hrefBinario'))
+        if not text_uuid and not binary_uuid:
+            logger.warning(
+                "Documento sem UUID extraível em hrefTexto nem hrefBinario "
+                "para o processo %s. Metadados: %s",
+                numero_processo, str(document_metadata)[:200]
+            )
+            return None
+
+        logger.debug(
+            "[JUSBR DEBUG] doc_meta para processo %s: %r",
+            numero_processo, document_metadata,
+        )
+        authorization = self.session.headers.get('authorization', '')
+        if isinstance(authorization, bytes):
+            authorization = authorization.decode('latin-1')
+        raw_text, cleaned_text, raw_binary = self._fetch_document_contents(
+            numero_processo, text_uuid, binary_uuid, authorization
+        )
+        _log_document_text_result(text_uuid, numero_processo, raw_text, cleaned_text)
+
+        document_row = {
+            'numero_processo': numero_processo,
+            'texto': cleaned_text,
+            '_raw_text_api': raw_text,
+            '_raw_binary_api': raw_binary,
+        }
+        document_row.update(document_metadata)
+        return document_row
+
+    def _download_process_documents(
+        self,
+        index: Any,
+        row: pd.Series,
+        max_docs_per_process: int | None,
+    ) -> list[_DocumentDataRow]:
+        """Baixa as linhas válidas de um único processo do DataFrame de entrada."""
+        numero_processo = row.get('numeroProcesso')
+        processo_pesquisado = row.get('processo')
+        if not numero_processo:
+            logger.warning(
+                "Linha %s (CNJ: %s) sem 'numeroProcesso' para download de documentos",
+                index, processo_pesquisado,
+            )
+            return []
+
+        detalhes = row.get('detalhes')
+        if not isinstance(detalhes, dict):
+            logger.warning(
+                "Campo 'detalhes' não é um dicionário para o processo %s "
+                "(linha %s). Tipo: %s. Pulando documentos.",
+                numero_processo, index, type(detalhes).__name__,
+            )
+            return []
+
+        metadata_list = _resolve_document_metadata_list(detalhes, numero_processo)
+        logger.info(
+            "Processo %s (pesquisado: %s): %d documentos encontrados na metadata.",
+            numero_processo, processo_pesquisado, len(metadata_list),
+        )
+
+        document_rows: list[_DocumentDataRow] = []
+        for document_metadata in metadata_list:
+            if max_docs_per_process is not None and len(document_rows) >= max_docs_per_process:
+                logger.info(
+                    "Limite de %d documentos atingido para o processo %s.",
+                    max_docs_per_process, numero_processo,
+                )
+                break
+            document_row = self._process_single_document(document_metadata, numero_processo)
+            if document_row is None:
+                continue
+            document_rows.append(document_row)
+            time.sleep(self.sleep_time)
+        return document_rows
+
+    def download_documents(
+        self,
+        base_df: pd.DataFrame,
+        max_docs_per_process: int | None = None,
+        **kwargs: Any,
+    ) -> pd.DataFrame:
         """
         Downloads document texts for processes in base_df.
         Iterates through processes in base_df, extracts document metadata from the
@@ -259,209 +506,11 @@ class JusbrScraper(HTTPScraper):
         if not self.token:
             raise RuntimeError("Autenticação necessária. Chame o método auth(token) primeiro.")
 
-        all_docs_data = []
+        all_docs_data: list[_DocumentDataRow] = []
         logger.info("Iniciando download de documentos para %d processos...", len(base_df))
 
         for index, row in base_df.iterrows():
-            numero_processo_api = row.get('numeroProcesso')  # Official CNJ for API calls
-            cnj_original_pesquisa = row.get('processo')  # User's search term
-
-            if not numero_processo_api:
-                logger.warning(
-                    "Linha %d (CNJ: %s) sem 'numeroProcesso' para download de documentos",
-                    index, cnj_original_pesquisa
-                )
-                continue
-
-            detalhes = row.get('detalhes')
-            if not isinstance(detalhes, dict):
-                logger.warning(
-                    "Campo 'detalhes' não é um dicionário para o"
-                    "processo %s (linha %d). Tipo: %s. Pulando documentos.",
-                    numero_processo_api, index, type(detalhes).__name__
-                )
-                continue
-
-            document_metadata_list: Any = []
-            # Try common paths for document metadata list within 'detalhes'
-            if 'dadosBasicos' in detalhes and isinstance(detalhes['dadosBasicos'], dict):
-                document_metadata_list = detalhes['dadosBasicos'].get('documentos', [])
-
-            if (not document_metadata_list
-                    and 'documentos' in detalhes
-                    and isinstance(detalhes['documentos'], list)):
-                document_metadata_list = detalhes['documentos']
-
-            if (not document_metadata_list
-                    and 'tramitacaoAtual' in detalhes
-                    and isinstance(detalhes['tramitacaoAtual'], dict)):
-                document_metadata_list = detalhes['tramitacaoAtual'].get('documentos', [])
-                if isinstance(document_metadata_list, np.ndarray):
-                    document_metadata_list = document_metadata_list.tolist()
-
-            # Ensure it's a list
-            if not isinstance(document_metadata_list, list):
-                logger.warning(
-                    "Lista de metadados de documentos não encontrada ou não é uma lista "
-                    "para o processo %s. Conteúdo de 'detalhes' (início): %s",
-                    numero_processo_api, str(detalhes)[:200]
-                )
-                document_metadata_list = []
-
-            logger.info(
-                "Processo %s (pesquisado: %s): %d documentos encontrados na metadata.",
-                numero_processo_api, cnj_original_pesquisa, len(document_metadata_list)
+            all_docs_data.extend(
+                self._download_process_documents(index, row, max_docs_per_process)
             )
-
-            docs_processed_count = 0
-            for doc_meta in document_metadata_list:
-                if not isinstance(doc_meta, dict):
-                    logger.warning(
-                        "Item na lista de documentos não é um"
-                        "dicionário para o processo %s. Item: %s",
-                        numero_processo_api, str(doc_meta)[:100]
-                    )
-                    continue
-
-                if (max_docs_per_process is not None
-                        and docs_processed_count >= max_docs_per_process):
-                    logger.info(
-                        "Limite de %d documentos atingido para o processo %s.",
-                        max_docs_per_process, numero_processo_api
-                    )
-                    break
-
-                # Extrai UUID de cada href independente — texto e binario
-                # podem chegar separados (ou nenhum). Documento so e pulado
-                # se ambos os UUIDs faltarem.
-                href_texto = doc_meta.get('hrefTexto')
-                id_doc_uuid = None
-                if href_texto and isinstance(href_texto, str) and '/documentos/' in href_texto:
-                    try:
-                        id_doc_uuid = href_texto.split('/documentos/')[1].split('/')[0]
-                    except IndexError:
-                        logger.warning(
-                            "Não foi possível extrair UUID do hrefTexto: %s para processo %s",
-                            href_texto,
-                            numero_processo_api,
-                        )
-                href_binario = doc_meta.get('hrefBinario')
-                id_doc_uuid_binario = None
-                if href_binario and isinstance(href_binario, str) and '/documentos/' in href_binario:
-                    try:
-                        id_doc_uuid_binario = href_binario.split('/documentos/')[1].split('/')[0]
-                    except IndexError:
-                        logger.warning(
-                            "Não foi possível extrair UUID do hrefBinario: %s para processo %s",
-                            href_binario,
-                            numero_processo_api,
-                        )
-                if not id_doc_uuid and not id_doc_uuid_binario:
-                    logger.warning(
-                        "Documento sem UUID extraível em hrefTexto nem hrefBinario "
-                        "para o processo %s. Metadados: %s",
-                        numero_processo_api, str(doc_meta)[:200]
-                    )
-                    continue
-                logger.debug(
-                    "[JUSBR DEBUG] doc_meta para processo %s: %r",
-                    numero_processo_api, doc_meta
-                )
-                # Usa CNJ limpo para a API de documentos
-                numero_processo_api_clean = clean_cnj(numero_processo_api)
-                # ``Session.headers`` e tipada como ``CaseInsensitiveDict[str | bytes]``
-                # em ``types-requests`` — o token e sempre str em runtime, mas mypy
-                # exige o cast aqui para satisfazer a assinatura de ``fetch_document_text``.
-                auth_header = self.session.headers.get('authorization', '')
-                if isinstance(auth_header, bytes):
-                    auth_header = auth_header.decode('latin-1')
-                # Download parcial (followup 3 da #141): texto e binario sao
-                # baixados de forma independente. So o que tiver UUID valido e
-                # buscado; o outro fica ``None`` na linha de saida.
-                raw_text: str | None = None
-                cleaned_text: str | None = None
-                if id_doc_uuid:
-                    logger.debug(
-                        "Tentando baixar texto do documento UUID %s para processo %s.",
-                        id_doc_uuid, numero_processo_api
-                    )
-                    raw_text = fetch_document_text(
-                        self._request_with_retry,
-                        numero_processo_api_clean,
-                        str(id_doc_uuid),
-                        self.BASE_API_URL_V1_DOCS,
-                        authorization=auth_header,
-                    )
-                    cleaned_text = clean_document_text(raw_text)
-                raw_binary: bytes | None = None
-                if id_doc_uuid_binario:
-                    raw_binary = fetch_document_binary(
-                        self._request_with_retry,
-                        numero_processo_api_clean,
-                        str(id_doc_uuid_binario),
-                        self.BASE_API_URL_V2
-                    )
-
-                if id_doc_uuid:
-                    if cleaned_text:
-                        logger.debug(
-                            "Sucesso ao baixar e limpar texto do doc UUID %s "
-                            "(processo %s), tamanho limpo: %d",
-                            id_doc_uuid, numero_processo_api, len(cleaned_text),
-                        )
-                    elif raw_text:
-                        logger.debug(
-                            "Texto baixado para doc UUID %s (processo %s) mas resultou "
-                            "em None/vazio após limpeza. Raw tamanho: %d",
-                            id_doc_uuid, numero_processo_api, len(raw_text),
-                        )
-                    else:
-                        logger.warning(
-                            "Falha ao baixar texto do doc UUID %s (processo %s), ou texto vazio.",
-                            id_doc_uuid, numero_processo_api,
-                        )
-
-                doc_data_row = {
-                    'numero_processo': numero_processo_api,
-                    'texto': cleaned_text,
-                    '_raw_text_api': raw_text,
-                    '_raw_binary_api': raw_binary
-                }
-                doc_data_row.update(doc_meta)  # Add all metadata from the document item
-                all_docs_data.append(doc_data_row)
-                docs_processed_count += 1
-                time.sleep(self.sleep_time)
-
-        if not all_docs_data:
-            logger.info("Nenhum documento foi baixado ou processado.")
-            return pd.DataFrame()
-
-        df_docs = pd.DataFrame(all_docs_data)
-
-        # Define preferred columns based on original and common JusBR fields
-        # 'nome' from original might map to 'descricao' in API meta
-        preferred_columns = [
-            'numero_processo', 'idDocumento', 'idCodex', 'sequencia', 'descricao', 'nome',
-            'tipoDocumento', 'tipo', 'dataHoraJuntada', 'dataJuntada', 'nivelSigilo',
-            'hrefTexto', 'hrefBinario', 'texto', '_raw_text_api', '_raw_binary_api'
-        ]
-        # Ensure preferred columns are present and in order, add others at the end
-        final_cols = []
-        existing_cols_set = set(df_docs.columns)
-        for col in preferred_columns:
-            if col in existing_cols_set:
-                final_cols.append(col)
-                existing_cols_set.remove(col)  # Avoid duplication
-        final_cols.extend(sorted(existing_cols_set))  # Add remaining columns alphabetically
-
-        df_docs = df_docs[final_cols]
-        # Fill with None if some preferred columns were entirely missing from all docs
-        for col_pref in preferred_columns:
-            if col_pref not in df_docs.columns:
-                df_docs[col_pref] = None
-
-        logger.info(
-            "Download de documentos finalizado. Total de linhas de documentos: %d.",
-            len(df_docs)
-        )
-        return df_docs
+        return _build_documents_dataframe(all_docs_data)
