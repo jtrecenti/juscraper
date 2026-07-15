@@ -32,6 +32,10 @@ _BASIC_SELECTORS = (
     ('data_distribuicao', 'div', 'dataHoraDistribuicaoProcesso'),
     ('valor_acao', 'div', 'valorAcaoProcesso'),
 )
+_BASIC_COLUMNS = ('file_path', *(field for field, _, _ in _BASIC_SELECTORS))
+_PARTY_COLUMNS = ('file_path', 'tipo', 'nome', 'advogados')
+_MOVEMENT_COLUMNS = ('file_path', 'data', 'movimento', 'observacao')
+_MISC_PETITION_COLUMNS = ('file_path', 'data', 'tipo')
 
 
 def _normalize_field_name(label: str) -> str:
@@ -67,33 +71,31 @@ def cpopg_parse_manager(path: str):
         A dictionary where the keys are table names and the values are DataFrames
         with the parsed data from the case files.
     """
-    lista_empilhada = {}
-    if Path(path).is_file():
-        result = [cpopg_parse_single(path)]
-    else:
-        result = []
-        arquivos = [str(f) for f in Path(path).rglob("*.[hj][st]*") if f.is_file()]
-        # remover arquivos json cujo nome nao acaba com um número
-        arquivos = [f for f in arquivos if not f.endswith('.json') or f[-6:-5].isnumeric()]
-        for file in tqdm(arquivos, desc="Processando documentos"):
-            if Path(file).is_file():
-                try:
-                    single_result = cpopg_parse_single(file)
-                except (OSError, UnicodeDecodeError, ValueError, AttributeError) as e:
-                    print(f"Erro ao processar o arquivo {file}: {e}")
-                    single_result = None
-                    continue
-                if single_result:
-                    result.append(single_result)
-        keys = result[0].keys()
-        lista_empilhada = {
-            key: pd.concat([dic[key] for dic in result], ignore_index=True)
-            for key in keys
-        }
-    # Defensive: if result is empty, return an empty dict or suitable structure
-    if not result:
-        return lista_empilhada
-    return lista_empilhada
+    root = Path(path)
+    if root.is_file():
+        return cpopg_parse_single(str(root))
+
+    files = [
+        file
+        for file in root.rglob("*.[hj][st]*")
+        if file.is_file() and (file.suffix != '.json' or file.name[-6:-5].isnumeric())
+    ]
+    parsed = []
+    for file in tqdm(files, desc="Processando documentos"):
+        try:
+            single_result = cpopg_parse_single(str(file))
+        except (OSError, UnicodeDecodeError, ValueError, AttributeError) as error:
+            print(f"Erro ao processar o arquivo {file}: {error}")
+            continue
+        if single_result:
+            parsed.append(single_result)
+
+    if not parsed:
+        return {}
+    return {
+        key: pd.concat([result[key] for result in parsed], ignore_index=True)
+        for key in parsed[0]
+    }
 
 
 def cpopg_parse_single(path: str):
@@ -110,17 +112,8 @@ def cpopg_parse_single(path: str):
 
 def _extract_basic_data(soup: BeautifulSoup, path: str) -> dict:
     """Extract stable identifiers from the standard process header."""
-    data = {
-        'file_path': path,
-        'id_processo': None,
-        'classe': None,
-        'assunto': None,
-        'foro': None,
-        'vara': None,
-        'juiz': None,
-        'data_distribuicao': None,
-        'valor_acao': None
-    }
+    data = dict.fromkeys(_BASIC_COLUMNS)
+    data['file_path'] = path
     for field, tag_name, element_id in _BASIC_SELECTORS:
         tag = soup.find(tag_name, id=element_id)
         if tag:
@@ -181,60 +174,31 @@ def _fill_extra_fields(soup: BeautifulSoup, data: dict) -> None:
                 data[canonical] = value
 
 
-def _extract_party_row(row, path: str) -> dict | None:
-    """Convert one first-degree party row to the public table shape."""
-    cells = row.find_all('td')
-    if len(cells) < 2:
-        return None
-
-    type_tag = cells[0].find('span', class_='tipoDeParticipacao')
-    party_type = type_tag.get_text(strip=True) if type_tag else ''
-    raw_text = cells[1].get_text('||', strip=True)
-    lawyers = []
-    if 'Advogado:' in raw_text:
-        split_text = raw_text.split('Advogado:')
-        party_name = split_text[0].replace('||', ' ').strip()
-        lawyers.append(split_text[1].replace('||', ' ').strip())
-    else:
-        party_name = raw_text.replace('||', ' ').strip()
-
-    if not party_name:
-        return None
-    return {
-        'file_path': path,
-        'tipo': party_type,
-        'nome': party_name,
-        'advogados': lawyers,
-    }
-
-
 def _extract_parties(soup: BeautifulSoup, path: str) -> list[dict]:
     """Extract parties and lawyers in source order."""
     table = soup.find('table', id='tablePartesPrincipais')
     if not table:
         return []
-    return [
-        party
-        for row in table.find_all('tr')
-        if (party := _extract_party_row(row, path)) is not None
-    ]
-
-
-def _extract_movement_row(row, path: str) -> dict | None:
-    """Convert one movement row to the public table shape."""
-    cells = row.find_all('td')
-    if len(cells) < 3:
-        return None
-
-    description_cell = cells[2]
-    main_description = description_cell.find(string=True, recursive=False) or ''
-    italic_span = description_cell.find('span', style='font-style: italic;')
-    return {
-        'file_path': path,
-        'data': cells[0].get_text(strip=True),
-        'movimento': main_description.strip(),
-        'observacao': italic_span.get_text(strip=True) if italic_span else '',
-    }
+    parties = []
+    for row in table.find_all('tr'):
+        cells = row.find_all('td')
+        if len(cells) < 2:
+            continue
+        type_tag = cells[0].find('span', class_='tipoDeParticipacao')
+        party_type = type_tag.get_text(strip=True) if type_tag else ''
+        raw_text = cells[1].get_text('||', strip=True)
+        split_text = raw_text.split('Advogado:')
+        party_name = split_text[0].replace('||', ' ').strip()
+        if not party_name:
+            continue
+        lawyers = [split_text[1].replace('||', ' ').strip()] if len(split_text) > 1 else []
+        parties.append({
+            'file_path': path,
+            'tipo': party_type,
+            'nome': party_name,
+            'advogados': lawyers,
+        })
+    return parties
 
 
 def _extract_movements(soup: BeautifulSoup, path: str) -> list[dict]:
@@ -242,23 +206,21 @@ def _extract_movements(soup: BeautifulSoup, path: str) -> list[dict]:
     table = soup.find('tbody', id='tabelaTodasMovimentacoes')
     if not table:
         return []
-    return [
-        movement
-        for row in table.find_all('tr', class_='containerMovimentacao')
-        if (movement := _extract_movement_row(row, path)) is not None
-    ]
-
-
-def _extract_petition_row(row, path: str) -> dict | None:
-    """Convert one miscellaneous-petition row to the public table shape."""
-    cells = row.find_all('td')
-    if len(cells) != 2:
-        return None
-    return {
-        'file_path': path,
-        'data': cells[0].get_text(strip=True),
-        'tipo': cells[1].get_text(strip=True),
-    }
+    movements = []
+    for row in table.find_all('tr', class_='containerMovimentacao'):
+        cells = row.find_all('td')
+        if len(cells) < 3:
+            continue
+        description_cell = cells[2]
+        main_description = description_cell.find(string=True, recursive=False) or ''
+        italic_span = description_cell.find('span', style='font-style: italic;')
+        movements.append({
+            'file_path': path,
+            'data': cells[0].get_text(strip=True),
+            'movimento': main_description.strip(),
+            'observacao': italic_span.get_text(strip=True) if italic_span else '',
+        })
+    return movements
 
 
 def _extract_misc_petitions(soup: BeautifulSoup, path: str) -> list[dict]:
@@ -269,11 +231,16 @@ def _extract_misc_petitions(soup: BeautifulSoup, path: str) -> list[dict]:
     table = heading.find_next('table')
     if not table:
         return []
-    return [
-        petition
-        for row in table.find_all('tr')
-        if (petition := _extract_petition_row(row, path)) is not None
-    ]
+    petitions = []
+    for row in table.find_all('tr'):
+        cells = row.find_all('td')
+        if len(cells) == 2:
+            petitions.append({
+                'file_path': path,
+                'data': cells[0].get_text(strip=True),
+                'tipo': cells[1].get_text(strip=True),
+            })
+    return petitions
 
 
 def cpopg_parse_single_html(path: str):
@@ -287,9 +254,9 @@ def cpopg_parse_single_html(path: str):
 
     return {
         'basicos': pd.DataFrame([basic_data]),
-        'partes': pd.DataFrame(_extract_parties(soup, path)),
-        'movimentacoes': pd.DataFrame(_extract_movements(soup, path)),
-        'peticoes_diversas': pd.DataFrame(_extract_misc_petitions(soup, path)),
+        'partes': pd.DataFrame(_extract_parties(soup, path), columns=_PARTY_COLUMNS),
+        'movimentacoes': pd.DataFrame(_extract_movements(soup, path), columns=_MOVEMENT_COLUMNS),
+        'peticoes_diversas': pd.DataFrame(_extract_misc_petitions(soup, path), columns=_MISC_PETITION_COLUMNS),
     }
 
 

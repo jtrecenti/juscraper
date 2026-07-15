@@ -212,6 +212,14 @@ class TestCPOPGUnit:
             assert 'basicos' in result
             assert len(result['basicos']) == 2
 
+            single_result = cpopg_parse_manager(str(file1))
+            assert len(single_result['basicos']) == 1
+
+            unsupported = Path(temp_dir) / 'unsupported.txt'
+            unsupported.write_text('unsupported', encoding='utf-8')
+            with pytest.raises(ValueError, match='Unknown file extension'):
+                cpopg_parse_manager(str(unsupported))
+
     def test_cpopg_parse_empty_file(self):
         """Test parsing an empty CPOPG HTML file."""
         html = '<html><body></body></html>'
@@ -229,6 +237,9 @@ class TestCPOPGUnit:
             # Should have empty DataFrames for other tables
             assert len(result['partes']) == 0
             assert len(result['movimentacoes']) == 0
+            assert list(result['partes'].columns) == ['file_path', 'tipo', 'nome', 'advogados']
+            assert list(result['movimentacoes'].columns) == ['file_path', 'data', 'movimento', 'observacao']
+            assert list(result['peticoes_diversas'].columns) == ['file_path', 'data', 'tipo']
         finally:
             Path(temp_path).unlink()
 
@@ -559,7 +570,7 @@ class TestCPOPGUnit:
         assert list(result['movimentacoes'].columns) == ['file_path', 'data', 'movimento', 'observacao']
         assert result['movimentacoes'].iloc[0].to_dict() == {'file_path': str(sample_path), **movement_values}
         assert result['peticoes_diversas'].empty
-        assert list(result['peticoes_diversas'].columns) == []
+        assert list(result['peticoes_diversas'].columns) == ['file_path', 'data', 'tipo']
 
 
 if __name__ == "__main__":

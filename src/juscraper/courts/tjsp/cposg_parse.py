@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pandas as pd
 from bs4 import BeautifulSoup
+from bs4.element import Tag
 from tqdm import tqdm
 
 logger = logging.getLogger('juscraper.cposg_parse')
@@ -23,7 +24,8 @@ _FIELD_MAPPING = (
     ('volumes / apensos', 'volume_apenso'),
 )
 
-_REQUIRED_FIELDS = (
+_OUTPUT_COLUMNS = (
+    'id_original',
     'processo',
     'status',
     'classe',
@@ -35,7 +37,6 @@ _REQUIRED_FIELDS = (
     'valor_da_acao',
     'origem',
     'volume_apenso',
-    'id_original',
     'movimentacoes',
     'partes',
     'historico',
@@ -48,20 +49,8 @@ _DETAIL_TABLE_STYLE = 'margin-left:15px; margin-top:1px;'
 
 
 def cposg_parse(path: str):
-    """
-    Parses all HTML files in the given directory.
-    """
-    arquivos = list(Path(path).rglob('*.html'))
-    dados = []
-    for arq in tqdm(arquivos, total=len(arquivos), desc="Processando arquivos"):
-        try:
-            linhas = cposg_parse_single_html(arq)
-            dados.extend(linhas)
-        except (OSError, UnicodeDecodeError, ValueError, AttributeError) as e:
-            logger.error("Erro ao processar %s: %s", arq, e)
-    if not dados:
-        return pd.DataFrame()
-    return pd.DataFrame(dados)
+    """Parse all CPOSG HTML files under ``path``."""
+    return cposg_parse_manager(path)
 
 
 def cposg_parse_manager(path: str):
@@ -76,9 +65,7 @@ def cposg_parse_manager(path: str):
             dados.extend(linhas)
         except (OSError, UnicodeDecodeError, ValueError, AttributeError) as e:
             logger.error("Erro ao processar %s: %s", arq, e)
-    if not dados:
-        return pd.DataFrame()
-    return pd.DataFrame(dados)
+    return pd.DataFrame(dados, columns=_OUTPUT_COLUMNS)
 
 
 def cposg_parse_single_json(path: str):
@@ -166,25 +153,27 @@ def _extract_movements(soup: BeautifulSoup) -> list[dict]:
     return movements
 
 
-def _extract_party_roles(papeis_text: str, *, party_id: int, party_type: str) -> list[dict]:
-    """Split the role/name pairs stored in one party cell."""
-    roles = []
-    for papel in papeis_text.split('\t'):
-        papel = papel.strip()
-        if not papel:
+def _split_party_cell(cell: Tag) -> list[str]:
+    """Split a party cell at ``br`` boundaries without joining adjacent labels."""
+    segments: list[str] = []
+    pieces: list[str] = []
+    for child in cell.children:
+        if isinstance(child, Tag) and child.name == 'br':
+            segment = ' '.join(pieces).strip()
+            if segment:
+                segments.append(segment)
+            pieces = []
             continue
-        papel_clean = papel.replace('&nbsp', ' ')
-        nome_match = re.search(r'(?<=:)\s*([^:]+)$', papel_clean)
-        if not nome_match:
+        if isinstance(child, Tag) and child.name == 'input':
             continue
-        papel_match = re.search(r'^([^:]+)(?=:)', papel_clean)
-        roles.append({
-            'id_parte': party_id,
-            'nome': nome_match.group(1).strip(),
-            'parte': party_type,
-            'papel': papel_match.group(1).strip() if papel_match else party_type,
-        })
-    return roles
+        text = child.get_text(' ', strip=True) if isinstance(child, Tag) else str(child).strip()
+        if text:
+            pieces.append(text)
+
+    segment = ' '.join(pieces).strip()
+    if segment:
+        segments.append(segment)
+    return segments
 
 
 def _extract_parties(soup: BeautifulSoup) -> list[dict]:
@@ -198,10 +187,26 @@ def _extract_parties(soup: BeautifulSoup) -> list[dict]:
         cells = row.find_all('td')
         if len(cells) < 2:
             continue
-        party_type = re.sub(r'[^a-zA-Z]', '', cells[0].get_text(strip=True))
-        parties.extend(
-            _extract_party_roles(cells[1].get_text(strip=True), party_id=index + 1, party_type=party_type)
-        )
+        party_type = cells[0].get_text(' ', strip=True).removesuffix(':').strip()
+        segments = _split_party_cell(cells[1])
+        if not segments:
+            continue
+        party_id = index + 1
+        parties.append({
+            'id_parte': party_id,
+            'nome': segments[0],
+            'parte': party_type,
+            'papel': party_type,
+        })
+        for segment in segments[1:]:
+            role, separator, name = segment.partition(':')
+            if separator and name.strip():
+                parties.append({
+                    'id_parte': party_id,
+                    'nome': name.strip(),
+                    'parte': party_type,
+                    'papel': role.strip(),
+                })
     return parties
 
 
@@ -210,11 +215,12 @@ def _extract_history(soup: BeautifulSoup) -> list[list[str]]:
     hist_table = soup.find(id='tdHistoricoDeClasses')
     if not hist_table:
         return []
-    return [
-        [cell.get_text(strip=True) for cell in row.find_all('td')]
-        for row in hist_table.find_all('tr')
-        if row.find_all('td')
-    ]
+    history = []
+    for row in hist_table.find_all('tr'):
+        cells = row.find_all('td')
+        if cells:
+            history.append([cell.get_text(strip=True) for cell in cells])
+    return history
 
 
 def _extract_decisions(tables: list) -> list[dict]:
@@ -262,7 +268,7 @@ def _extract_composition(tables: list) -> tuple[list[dict], str | None]:
             continue
         magistrate = cells[1].get_text(strip=True)
         composition.append({'participacao': participation, 'magistrado': magistrate})
-        if participation == "Relator" and fallback_relator is None:
+        if participation == "Relator" and magistrate and fallback_relator is None:
             fallback_relator = magistrate
     return composition, fallback_relator
 
@@ -291,30 +297,10 @@ def _extract_first_instance(tables: list) -> list[dict]:
     return first_instance
 
 
-def _fill_html_fallbacks(result: dict, html_content: str) -> None:
-    """Fill labeled fields when the page does not expose the expected div structure."""
-    if not result.get('classe'):
-        classe_match = re.search(r'Classe:\s*([^<]+)', html_content)
-        if classe_match:
-            result['classe'] = classe_match.group(1).strip()
-    if not result.get('assunto'):
-        assunto_match = re.search(r'Assunto:\s*([^<]+)', html_content)
-        if assunto_match:
-            result['assunto'] = assunto_match.group(1).strip()
-
-    for label, field in _FIELD_MAPPING:
-        if result.get(field):
-            continue
-        match = re.search(fr"{label.capitalize()}:\s*([^<\n]+)", html_content, re.IGNORECASE)
-        if match:
-            result[field] = match.group(1).strip()
-
-
 def cposg_parse_single_html(html_path):
     """Parse a single HTML document from CPOSG."""
     with Path(html_path).open('r', encoding='utf-8') as file:
-        html_content = file.read()
-    soup = BeautifulSoup(html_content, 'html.parser')
+        soup = BeautifulSoup(file.read(), 'html.parser')
 
     if soup.select('.linkProcesso'):
         return []
@@ -335,7 +321,6 @@ def cposg_parse_single_html(html_path):
     result['composicao'] = composition
     result['primeira_inst'] = _extract_first_instance(detail_tables)
 
-    for field in _REQUIRED_FIELDS:
+    for field in _OUTPUT_COLUMNS:
         result.setdefault(field, None)
-    _fill_html_fallbacks(result, html_content)
-    return [result]
+    return [{field: result[field] for field in _OUTPUT_COLUMNS}]
