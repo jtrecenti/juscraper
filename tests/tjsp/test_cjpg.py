@@ -12,7 +12,7 @@ import pytest
 import juscraper
 from juscraper.courts.tjsp.cjpg_download import cjpg_download
 from juscraper.courts.tjsp.cjpg_parse import cjpg_n_pags, cjpg_n_results, cjpg_parse_manager, cjpg_parse_single
-from tests._helpers import load_sample
+from tests._helpers import load_sample, load_sample_bytes
 
 
 @pytest.mark.integration
@@ -185,6 +185,53 @@ class TestCJPGNResults:
         """Novo formato 'Resultados 1 a 10 de 39764' -> 39764."""
         html = load_sample("tjsp", "cjpg/results_novo_formato.html")
         assert cjpg_n_results(html) == 39764
+
+    @pytest.mark.parametrize(
+        ("sample", "expected"),
+        [
+            ("count_bgcolor_legacy.html", 25),
+            ("count_page_summary.html", 31),
+            ("count_max_number_fallback.html", 47),
+            ("results_normal_page_01.html", 3565472),
+        ],
+    )
+    def test_selector_and_text_cascades(self, sample, expected):
+        """Characterizes the CJPG-only selectors and shared text cascade."""
+        html = load_sample("tjsp", f"cjpg/{sample}")
+        assert cjpg_n_results(html) == expected
+
+    @pytest.mark.parametrize(
+        "sample",
+        [
+            "count_precedence_results_over_bgcolor.html",
+            "count_precedence_bgcolor_over_page.html",
+        ],
+    )
+    def test_selector_precedence(self, sample):
+        html = load_sample("tjsp", f"cjpg/{sample}")
+        assert cjpg_n_results(html) == 25
+
+    def test_counts_result_rows_when_pagination_marker_is_missing(self):
+        html = load_sample("tjsp", "cjpg/count_rows_fallback.html")
+        assert cjpg_n_results(html) == 3
+
+    def test_empty_results_container_still_raises_missing_selector(self):
+        html = load_sample("tjsp", "cjpg/count_empty_results.html")
+        with pytest.raises(ValueError, match="Não foi possível encontrar o seletor"):
+            cjpg_n_results(html)
+
+    def test_raises_when_pagination_marker_has_no_number(self):
+        html = load_sample("tjsp", "cjpg/count_invalid_marker.html")
+        with pytest.raises(ValueError, match="Não foi possível extrair o número de resultados"):
+            cjpg_n_results(html)
+
+    @pytest.mark.parametrize(
+        ("counter", "expected"),
+        [(cjpg_n_results, 39764), (cjpg_n_pags, 3977)],
+    )
+    def test_accepts_response_content_bytes(self, counter, expected):
+        html = load_sample_bytes("tjsp", "cjpg/results_novo_formato.html")
+        assert counter(html) == expected
 
     def test_zero_results_returns_zero(self):
         html = load_sample("tjsp", "cjpg/no_results.html")
