@@ -136,28 +136,21 @@ def normalize_pesquisa(pesquisa: str | None = None, **kwargs) -> str:
 
 
 def _collect_date_sources(kwargs: dict) -> dict[str, list[tuple[str, Any]]]:
-    """Collect ordered sources and reject conflicts before warning."""
+    """Collect date sources in canonical, specific-alias, generic-alias order."""
     sources: dict[str, list[tuple[str, Any]]] = {
         canonical: [] for canonical in DATE_CANONICAL
     }
 
-    def collect(name: str, canonical: str) -> None:
-        if name not in kwargs:
-            return
-        value = kwargs.pop(name)
+    for canonical in DATE_CANONICAL:
+        value = kwargs.pop(canonical, None)
+        if value is not None:
+            sources[canonical].append((canonical, value))
+
+    for name, canonical in DATE_ALIAS_TO_CANONICAL.items():
+        value = kwargs.pop(name, None)
         if value is not None:
             sources[canonical].append((name, value))
 
-    for canonical in DATE_CANONICAL:
-        collect(canonical, canonical)
-    for name, canonical in DATE_ALIAS_TO_CANONICAL.items():
-        if name.endswith(("_de", "_ate")):
-            collect(name, canonical)
-    for name, canonical in DATE_ALIAS_TO_CANONICAL.items():
-        if name in ("data_inicio", "data_fim"):
-            collect(name, canonical)
-
-    _raise_on_date_source_conflict(sources)
     return sources
 
 
@@ -222,6 +215,7 @@ def normalize_datas(**kwargs):
             is the user's mistake to fix, not a soft deprecation event.
     """
     sources = _collect_date_sources(kwargs)
+    _raise_on_date_source_conflict(sources)
     return _materialize_normalized_dates(sources)
 
 
@@ -722,25 +716,23 @@ def _reinject_nominal_dates(
         kwargs[date_key] = date_value
 
 
-def _instantiate_pipeline_schema(
+def _validate_pipeline_schema(
     schema_cls: type[BaseModel],
     method_name: str,
-    *,
-    pesquisa: str | None,
-    paginas,
-    datas: dict[str, Any],
-    canonical_filters: dict[str, Any],
-    kwargs: dict,
+    sources: tuple[dict[str, Any], ...],
 ) -> BaseModel:
-    """Build the schema and translate only pure unknown-field errors."""
+    """Merge unique pipeline sources, instantiate, and translate unknown fields."""
+    values: dict[str, Any] = {}
+    for source in sources:
+        duplicate = next((name for name in source if name in values), None)
+        if duplicate is not None:
+            raise TypeError(
+                f"got multiple values for keyword argument '{duplicate}'"
+            )
+        values.update(source)
+
     try:
-        return schema_cls(
-            pesquisa=pesquisa,
-            paginas=paginas,
-            **{key: value for key, value in datas.items() if value is not None},
-            **canonical_filters,
-            **kwargs,
-        )
+        return schema_cls(**values)
     except ValidationError as exc:
         raise_on_extra_kwargs(exc, method_name, schema_cls=schema_cls)
         raise
@@ -834,7 +826,7 @@ def apply_input_pipeline_search(
             when ``extra_forbidden`` triggers (e.g. ``"TJRNScraper.cjsg()"``).
         pesquisa: Search term. ``None`` is allowed when ``nullable_pesquisa``
             is ``True`` (TJSP cjpg). When ``consume_pesquisa_aliases`` is
-            ``True`` (default), the value is normalized internally — pass the
+            ``True``, the value is normalized internally — pass the
             raw value from the public method.
         paginas: Pages parameter as accepted by the public method (``int``,
             ``list``, ``range``, or ``None``).
@@ -951,15 +943,13 @@ def apply_input_pipeline_search(
         formato=date_format,
     )
 
-    return _instantiate_pipeline_schema(
-        schema_cls,
-        method_name,
-        pesquisa=pesquisa,
-        paginas=paginas_norm,
-        datas=datas,
-        canonical_filters=canonical_filters,
-        kwargs=kwargs,
+    schema_sources = (
+        {"pesquisa": pesquisa, "paginas": paginas_norm},
+        {key: value for key, value in datas.items() if value is not None},
+        canonical_filters,
+        kwargs,
     )
+    return _validate_pipeline_schema(schema_cls, method_name, schema_sources)
 
 
 def resolve_deprecated_alias(

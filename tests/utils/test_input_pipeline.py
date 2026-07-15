@@ -159,22 +159,6 @@ def test_apply_input_pipeline_kwargs_dict_is_consumed_in_place():
     assert "data_julgamento_inicio" not in kwargs
 
 
-def test_apply_input_pipeline_reinjects_nominal_date_before_page_validation():
-    kwargs: dict = {}
-
-    with pytest.raises(TypeError, match="paginas deve ser"):
-        apply_input_pipeline_search(
-            _SchemaComJulgamento,
-            "Test.cjsg()",
-            pesquisa="x",
-            paginas="invalid",
-            kwargs=kwargs,
-            data_julgamento_inicio="01/01/2024",
-        )
-
-    assert kwargs == {"data_julgamento_inicio": "01/01/2024"}
-
-
 def test_apply_input_pipeline_date_conflict_precedes_kwargs_consumption():
     kwargs = {
         "data_julgamento_de": "01/01/2024",

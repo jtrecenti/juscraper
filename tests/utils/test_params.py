@@ -10,6 +10,7 @@ from juscraper.utils.params import (
     OPEN_ENDED_DATE_FLOOR,
     coerce_brazilian_date,
     fill_open_ended_dates,
+    normalize_datas,
 )
 
 
@@ -150,16 +151,15 @@ def test_open_ended_date_floor_constant():
     assert OPEN_ENDED_DATE_FLOOR == "01/01/1990"
 
 
-def test_date_alias_partition_covers_all():
-    """``deprecated_map`` ∪ ``generic_map`` cobre ``DATE_ALIAS_TO_CANONICAL`` sem sobreposição.
+def test_normalize_datas_uses_alias_mapping_as_single_source(monkeypatch):
+    """An alias added to the canonical mapping is consumed without another registry."""
+    monkeypatch.setitem(
+        DATE_ALIAS_TO_CANONICAL,
+        "data_julgamento_legada",
+        "data_julgamento_inicio",
+    )
 
-    Trava o invariante do particionamento em ``normalize_datas`` e do loop
-    de re-emissão manual no caminho noop de ``run_auto_chunk``: qualquer
-    alias novo em ``DATE_ALIAS_TO_CANONICAL`` precisa cair em exatamente
-    uma das duas categorias (``_de``/``_ate`` ou genérico). Sem isso, um
-    alias órfão sairia silenciosamente do consumo de ``normalize_datas``.
-    """
-    deprecated = {k for k in DATE_ALIAS_TO_CANONICAL if k.endswith(("_de", "_ate"))}
-    generic = {k for k in DATE_ALIAS_TO_CANONICAL if k in ("data_inicio", "data_fim")}
-    assert deprecated | generic == set(DATE_ALIAS_TO_CANONICAL.keys())
-    assert deprecated & generic == set()
+    with pytest.warns(DeprecationWarning, match="data_julgamento_legada"):
+        result = normalize_datas(data_julgamento_legada="01/01/2024")
+
+    assert result["data_julgamento_inicio"] == "01/01/2024"
