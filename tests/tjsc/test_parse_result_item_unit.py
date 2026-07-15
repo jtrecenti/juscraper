@@ -35,6 +35,17 @@ def test_parse_result_item_preserves_normalized_labels_decision_fallback_and_unk
         "orgao_julgador": "Segunda Câmara",
         "data_publicacao": "02/07/2025",
         "ementa": "Decisão usada como ementa",
+        "decisao": "Decisão usada como ementa",
+    }
+
+
+def test_parse_result_item_keeps_decision_when_it_precedes_explicit_summary():
+    """DECISÃO remains available when a later EMENTA takes precedence."""
+    result = _parse_result_item(_sample_items()["decision-before-summary"])
+
+    assert result == {
+        "decisao": "Decisão preservada",
+        "ementa": "Ementa preferencial",
     }
 
 

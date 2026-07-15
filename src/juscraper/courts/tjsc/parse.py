@@ -1,27 +1,29 @@
 """Parse raw HTML results from the TJSC jurisprudence search (eproc)."""
 import re
+from collections.abc import Iterator
 
 import pandas as pd
 from bs4 import BeautifulSoup
+from bs4.element import Tag
+
+from juscraper.utils.cnj import format_cnj
 
 _FIELD_MAP = {
     "PROCESSO": "processo",
     "UF": "uf",
     "ORGAO JULGADOR": "orgao_julgador",
-    "ÓRGÃO JULGADOR": "orgao_julgador",
     "DATA DO JULGAMENTO": "data_julgamento",
-    "DATA DA PUBLICAÇÃO": "data_publicacao",
     "DATA DA PUBLICACAO": "data_publicacao",
     "RELATOR": "relator",
     "RELATORA": "relator",
     "EMENTA": "ementa",
-    "DECISÃO": "decisao",
     "DECISAO": "decisao",
 }
 
 _LABEL_REPLACEMENTS = str.maketrans({
     "Ã": "A",
     "Õ": "O",
+    "Ó": "O",
     "Ç": "C",
     "É": "E",
     "Á": "A",
@@ -34,14 +36,14 @@ def _normalize_label(label: str) -> str:
 
 
 def _resolve_field(label: str) -> str | None:
-    """Resolve exact, normalized, and partial labels in their original order."""
+    """Resolve exact and partial labels after normalizing accents."""
     normalized_label = _normalize_label(label)
-    direct_match = _FIELD_MAP.get(label) or _FIELD_MAP.get(normalized_label)
+    direct_match = _FIELD_MAP.get(normalized_label)
     if direct_match:
         return direct_match
 
     for field_label, field_key in _FIELD_MAP.items():
-        if field_label in label or field_label in normalized_label:
+        if field_label in normalized_label:
             return field_key
     return None
 
@@ -65,19 +67,12 @@ def _extract_process_fields(value) -> dict[str, str]:
     fields = {}
     link = value.find("a", class_="numero-processo")
     if link:
-        fields["processo"] = link.get_text(strip=True).rstrip("/T")
+        raw_process = link.get_text(strip=True)
+        fields["processo"] = format_cnj(raw_process, strict=False) or raw_process
     process_class = _extract_class(value)
     if process_class is not None:
         fields["classe"] = process_class
     return fields
-
-
-def _store_text_field(result: dict, key: str, text: str) -> None:
-    """Preserve the asymmetric precedence between DECISÃO and EMENTA."""
-    if key == "ementa" or (key == "decisao" and "ementa" not in result):
-        result["ementa"] = text
-        return
-    result[key] = text
 
 
 def _parse_result_item(item) -> dict:
@@ -95,9 +90,19 @@ def _parse_result_item(item) -> dict:
         if key == "processo":
             result.update(_extract_process_fields(value))
             continue
-        _store_text_field(result, key, value.get_text(strip=True))
+        result[key] = value.get_text(strip=True)
+
+    if "decisao" in result:
+        result.setdefault("ementa", result["decisao"])
 
     return result
+
+
+def _iter_result_items(resultados_brutos: list) -> Iterator[Tag]:
+    """Yield result items from every downloaded page."""
+    for html in resultados_brutos:
+        soup = BeautifulSoup(html, "html.parser")
+        yield from soup.find_all("div", class_="resultadoItem")
 
 
 def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
@@ -109,13 +114,10 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
         resultados_brutos: List of raw HTML strings from the TJSC search.
     """
     registros = []
-    for html in resultados_brutos:
-        soup = BeautifulSoup(html, "html.parser")
-        items = soup.find_all("div", class_="resultadoItem")
-        for item in items:
-            registro = _parse_result_item(item)
-            if registro and ("ementa" in registro or "processo" in registro):
-                registros.append(registro)
+    for item in _iter_result_items(resultados_brutos):
+        registro = _parse_result_item(item)
+        if registro and ("ementa" in registro or "processo" in registro):
+            registros.append(registro)
 
     df = pd.DataFrame(registros)
     if df.empty:
