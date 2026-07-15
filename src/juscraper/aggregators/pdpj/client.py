@@ -8,7 +8,8 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any
+from collections.abc import Iterator
+from typing import Any, cast
 
 import jwt
 import pandas as pd
@@ -94,6 +95,47 @@ def _to_query_params(model_data: dict[str, Any]) -> dict[str, Any]:
         else:
             out[api_key] = value
     return out
+
+
+def _iter_documents(details: dict[str, Any]) -> Iterator[Any]:
+    """Itera documentos do topo e das tramitacoes na ordem da API."""
+    top_documents = details.get("documentos")
+    if isinstance(top_documents, list):
+        yield from top_documents
+    traversals = details.get("tramitacoes")
+    if not isinstance(traversals, list):
+        return
+    for traversal in traversals:
+        if isinstance(traversal, dict) and isinstance(traversal.get("documentos"), list):
+            yield from traversal["documentos"]
+
+
+def _document_to_row(
+    document: Any,
+    process: Any,
+    process_number: Any,
+) -> dict[str, Any] | None:
+    """Achata um documento PDPJ bem-formado no formato de download."""
+    if not isinstance(document, dict):
+        return None
+    file_data = document.get("arquivo") or {}
+    document_type = document.get("tipo") or {}
+    return {
+        "processo": process,
+        "numero_processo": process_number,
+        "id_documento": document.get("id"),
+        "id_codex": document.get("idCodex"),
+        "sequencia": document.get("sequencia"),
+        "data_juntada": document.get("dataHoraJuntada"),
+        "nome": document.get("nome"),
+        "nivel_sigilo": document.get("nivelSigilo"),
+        "tipo_codigo": document_type.get("codigo"),
+        "tipo_nome": document_type.get("nome"),
+        "arquivo_id": file_data.get("id"),
+        "arquivo_tipo": file_data.get("tipo"),
+        "arquivo_tamanho": file_data.get("tamanho"),
+        "arquivo_paginas": file_data.get("quantidadePaginas"),
+    }
 
 
 class PdpjScraper(BaseScraper):
@@ -420,7 +462,7 @@ class PdpjScraper(BaseScraper):
         self._check_auth()
         # Validacao via schema -- garante que kwargs desconhecidos viram TypeError.
         try:
-            InputDownloadDocumentsPdpj(
+            inp = InputDownloadDocumentsPdpj(
                 base_df=base_df,
                 max_docs_per_process=max_docs_per_process,
                 with_text=with_text,
@@ -433,6 +475,10 @@ class PdpjScraper(BaseScraper):
                 schema_cls=InputDownloadDocumentsPdpj,
             )
             raise
+        base_df = inp.base_df
+        max_docs_per_process = inp.max_docs_per_process
+        with_text = inp.with_text
+        with_binary = inp.with_binary
         if not with_text and not with_binary:
             raise ValueError(
                 "Pelo menos um de 'with_text' ou 'with_binary' deve ser True."
@@ -444,38 +490,50 @@ class PdpjScraper(BaseScraper):
 
         rows: list[dict[str, Any]] = []
         for processo, grupo in docs_df.groupby("processo", sort=False):
-            limite = (
-                len(grupo)
-                if max_docs_per_process is None
-                else min(max_docs_per_process, len(grupo))
-            )
-            for _, doc_row in grupo.head(limite).iterrows():
-                row = doc_row.to_dict()
-                id_documento = row.get("id_documento")
-                numero_processo = row.get("numero_processo") or processo
-                if not id_documento:
-                    logger.warning(
-                        "Documento sem id_documento no processo %s; pulando.",
-                        numero_processo,
-                    )
-                    continue
-                cnj_clean = clean_cnj(str(numero_processo))
-                if with_text:
-                    raw = fetch_documento_texto(
-                        self.session, cnj_clean, str(id_documento),
-                        base_url=self.BASE_URL,
-                    )
-                    row["texto"] = clean_document_text(raw)
-                    row["_raw_texto"] = raw
-                if with_binary:
-                    row["binario"] = fetch_documento_binario(
-                        self.session, cnj_clean, str(id_documento),
-                        base_url=self.BASE_URL,
-                    )
-                rows.append(row)
-                if self.sleep_time:
-                    time.sleep(self.sleep_time)
+            selected = grupo if max_docs_per_process is None else grupo.head(max_docs_per_process)
+            for _, doc_row in selected.iterrows():
+                row = self._download_document(doc_row, processo, with_text, with_binary)
+                if row is not None:
+                    rows.append(row)
         return pd.DataFrame(rows)
+
+    def _download_document(
+        self,
+        doc_row: pd.Series,
+        processo: Any,
+        with_text: bool,
+        with_binary: bool,
+    ) -> dict[str, Any] | None:
+        """Baixa os conteúdos selecionados para uma linha de documento."""
+        row = cast(dict[str, Any], doc_row.to_dict())
+        id_documento = row.get("id_documento")
+        numero_processo = row.get("numero_processo") or processo
+        if not id_documento:
+            logger.warning(
+                "Documento sem id_documento no processo %s; pulando.",
+                numero_processo,
+            )
+            return None
+        cnj_clean = clean_cnj(str(numero_processo))
+        if with_text:
+            raw = fetch_documento_texto(
+                self.session,
+                cnj_clean,
+                str(id_documento),
+                base_url=self.BASE_URL,
+            )
+            row["texto"] = clean_document_text(raw)
+            row["_raw_texto"] = raw
+        if with_binary:
+            row["binario"] = fetch_documento_binario(
+                self.session,
+                cnj_clean,
+                str(id_documento),
+                base_url=self.BASE_URL,
+            )
+        if self.sleep_time:
+            time.sleep(self.sleep_time)
+        return row
 
     def _coerce_to_documentos_df(self, base_df: pd.DataFrame) -> pd.DataFrame:
         """Aceita tanto o DataFrame de :meth:`documentos` quanto o de :meth:`cpopg`.
@@ -484,7 +542,7 @@ class PdpjScraper(BaseScraper):
         linha tem ``detalhes['documentos']`` que precisamos achatar antes
         de baixar conteudo.
         """
-        if base_df is None or base_df.empty:
+        if base_df.empty:
             return pd.DataFrame()
         if "id_documento" in base_df.columns:
             return base_df
@@ -499,37 +557,8 @@ class PdpjScraper(BaseScraper):
             detalhes = linha.get("detalhes") or {}
             if not isinstance(detalhes, dict):
                 continue
-            # Os documentos podem estar no topo (legacy) ou aninhados em
-            # tramitacoes[*].documentos (shape atual da PDPJ).
-            doc_lists: list[list[dict[str, Any]]] = []
-            top_docs = detalhes.get("documentos")
-            if isinstance(top_docs, list):
-                doc_lists.append(top_docs)
-            for tram in detalhes.get("tramitacoes", []) or []:
-                # filtro composto + narrowing de tipo que o mypy le melhor no laco explicito
-                if isinstance(tram, dict) and isinstance(tram.get("documentos"), list):
-                    doc_lists.append(tram["documentos"])  # noqa: PERF401
-
-            for docs in doc_lists:
-                for doc in docs:
-                    if not isinstance(doc, dict):
-                        continue  # type: ignore[unreachable]
-                    arquivo = doc.get("arquivo") or {}
-                    tipo = doc.get("tipo") or {}
-                    rows.append({
-                        "processo": cnj,
-                        "numero_processo": detalhes.get("numeroProcesso"),
-                        "id_documento": doc.get("id"),
-                        "id_codex": doc.get("idCodex"),
-                        "sequencia": doc.get("sequencia"),
-                        "data_juntada": doc.get("dataHoraJuntada"),
-                        "nome": doc.get("nome"),
-                        "nivel_sigilo": doc.get("nivelSigilo"),
-                        "tipo_codigo": tipo.get("codigo"),
-                        "tipo_nome": tipo.get("nome"),
-                        "arquivo_id": arquivo.get("id"),
-                        "arquivo_tipo": arquivo.get("tipo"),
-                        "arquivo_tamanho": arquivo.get("tamanho"),
-                        "arquivo_paginas": arquivo.get("quantidadePaginas"),
-                    })
+            for document in _iter_documents(detalhes):
+                row = _document_to_row(document, cnj, detalhes.get("numeroProcesso"))
+                if row is not None:
+                    rows.append(row)
         return pd.DataFrame(rows)

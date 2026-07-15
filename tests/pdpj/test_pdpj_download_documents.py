@@ -9,6 +9,7 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 import responses
+from pydantic import ValidationError
 
 import juscraper as jus
 from juscraper.aggregators.pdpj.download import BASE_URL
@@ -19,6 +20,22 @@ FAKE_TOKEN = (
     "eyJzdWIiOiJ0ZXN0IiwiZXhwIjo5OTk5OTk5OTk5LCJpYXQiOjE3MDAwMDAwMDB9."
 )
 PROC = "10029886420194014100"
+COERCED_DOCUMENT_COLUMNS = [
+    "processo",
+    "numero_processo",
+    "id_documento",
+    "id_codex",
+    "sequencia",
+    "data_juntada",
+    "nome",
+    "nivel_sigilo",
+    "tipo_codigo",
+    "tipo_nome",
+    "arquivo_id",
+    "arquivo_tipo",
+    "arquivo_tamanho",
+    "arquivo_paginas",
+]
 
 
 def _mk_scraper():
@@ -91,6 +108,32 @@ def test_download_documents_max_docs_per_process():
 
 
 @responses.activate
+def test_download_documents_usa_valores_coeridos_pelo_schema():
+    _mock_documentos_endpoint()
+    s = _mk_scraper()
+    docs_df = s.documentos(PROC)
+    primeiro = docs_df.iloc[0]["id_documento"]
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/processos/{PROC}/documentos/{primeiro}/binario",
+        body=b"conteudo-binario",
+        status=200,
+        content_type="application/octet-stream",
+    )
+
+    out = s.download_documents(
+        docs_df,
+        max_docs_per_process="1",
+        with_text="false",
+        with_binary="true",
+    )
+
+    assert out["id_documento"].tolist() == [primeiro]
+    assert out.iloc[0]["binario"] == b"conteudo-binario"
+    assert "texto" not in out.columns
+
+
+@responses.activate
 def test_download_documents_a_partir_de_cpopg_df():
     """Documentos podem vir aninhados em ``tramitacoes[*].documentos``."""
     _mock_cpopg_endpoint()
@@ -156,3 +199,140 @@ def test_download_documents_kwarg_desconhecido_raises_typeerror():
     }])
     with pytest.raises(TypeError, match="parametro_inventado"):
         s.download_documents(df, parametro_inventado="x")
+
+
+@pytest.mark.parametrize("base_df", [None, []])
+def test_download_documents_rejeita_base_que_nao_e_dataframe(base_df):
+    s = _mk_scraper()
+
+    with pytest.raises(ValidationError, match="base_df"):
+        s.download_documents(base_df)
+
+
+def test_download_documents_rejeita_limite_negativo():
+    s = _mk_scraper()
+
+    with pytest.raises(ValidationError, match="max_docs_per_process"):
+        s.download_documents(
+            pd.DataFrame([{"processo": PROC, "id_documento": "doc-1"}]),
+            max_docs_per_process=-1,
+        )
+
+
+def test_coerce_documentos_rejeita_df_sem_coluna_reconhecida():
+    s = _mk_scraper()
+    base_df = pd.DataFrame([{"processo": PROC, "outra_coluna": 1}])
+
+    with pytest.raises(
+        ValueError,
+        match=r"base_df precisa ter coluna 'id_documento'.*ou 'detalhes'",
+    ):
+        s._coerce_to_documentos_df(base_df)
+
+
+def test_coerce_documentos_ignora_detalhes_nao_dict_e_listas_vazias():
+    s = _mk_scraper()
+    base_df = pd.DataFrame([
+        {"processo": "processo-1", "detalhes": None},
+        {"processo": "processo-2", "detalhes": "malformado"},
+        {"processo": "processo-3", "detalhes": ["malformado"]},
+        {
+            "processo": "processo-4",
+            "detalhes": {"documentos": None, "tramitacoes": []},
+        },
+        {
+            "processo": "processo-5",
+            "detalhes": {"documentos": [], "tramitacoes": None},
+        },
+        {
+            "processo": "processo-6",
+            "detalhes": {"documentos": "lista-malformada", "tramitacoes": [42]},
+        },
+    ])
+
+    result = s._coerce_to_documentos_df(base_df)
+
+    assert result.empty
+
+
+def test_coerce_documentos_preserva_precedencia_ordem_duplicatas_e_shape():
+    s = _mk_scraper()
+    top_document = {
+        "id": "doc-top",
+        "idCodex": "codex-top",
+        "sequencia": 1,
+        "dataHoraJuntada": "2026-01-02T03:04:05",
+        "nome": "Documento do topo",
+        "nivelSigilo": 0,
+        "tipo": {"codigo": 10, "nome": "Petição"},
+        "arquivo": {
+            "id": "arquivo-top",
+            "tipo": "application/pdf",
+            "tamanho": 123,
+            "quantidadePaginas": 2,
+        },
+    }
+    nested_document = {
+        "id": "doc-tramitacao",
+        "tipo": None,
+        "arquivo": None,
+    }
+    last_document = {"id": "doc-ultima-linha"}
+    base_df = pd.DataFrame([
+        {
+            "processo": "cnj-pesquisado-1",
+            "detalhes": {
+                "numeroProcesso": "cnj-retornado-1",
+                "documentos": [top_document, "documento-malformado", top_document],
+                "tramitacoes": [
+                    None,
+                    {"documentos": []},
+                    {"documentos": [nested_document, 42, top_document]},
+                    {"documentos": None},
+                    {"documentos": "lista-malformada"},
+                    "tramitacao-malformada",
+                ],
+            },
+        },
+        {
+            "processo": "cnj-pesquisado-2",
+            "detalhes": {
+                "numeroProcesso": "cnj-retornado-2",
+                "documentos": [last_document],
+            },
+        },
+    ])
+
+    result = s._coerce_to_documentos_df(base_df)
+
+    assert result.columns.tolist() == COERCED_DOCUMENT_COLUMNS
+    assert result["id_documento"].tolist() == [
+        "doc-top",
+        "doc-top",
+        "doc-tramitacao",
+        "doc-top",
+        "doc-ultima-linha",
+    ]
+    assert result["processo"].tolist() == [
+        "cnj-pesquisado-1",
+        "cnj-pesquisado-1",
+        "cnj-pesquisado-1",
+        "cnj-pesquisado-1",
+        "cnj-pesquisado-2",
+    ]
+    assert result.iloc[0].to_dict() == {
+        "processo": "cnj-pesquisado-1",
+        "numero_processo": "cnj-retornado-1",
+        "id_documento": "doc-top",
+        "id_codex": "codex-top",
+        "sequencia": 1.0,
+        "data_juntada": "2026-01-02T03:04:05",
+        "nome": "Documento do topo",
+        "nivel_sigilo": 0.0,
+        "tipo_codigo": 10.0,
+        "tipo_nome": "Petição",
+        "arquivo_id": "arquivo-top",
+        "arquivo_tipo": "application/pdf",
+        "arquivo_tamanho": 123.0,
+        "arquivo_paginas": 2.0,
+    }
