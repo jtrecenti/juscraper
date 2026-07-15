@@ -46,13 +46,6 @@ def _extract_labeled_value(
     return str(sibling).strip() if sibling else ""
 
 
-def _extract_document_id(dados_td: Tag) -> str:
-    process_input = dados_td.find("input", {"name": "idsSelecionados"})
-    if not process_input or "value" not in process_input.attrs:
-        return ""
-    return str(process_input["value"])
-
-
 def _extract_ementa(
     dados_td: Tag,
     ementa_td: Tag,
@@ -63,13 +56,18 @@ def _extract_ementa(
     if "leia mais" not in ementa.lower():
         return ementa
 
-    id_processo = _extract_document_id(dados_td)
+    process_input = dados_td.find("input", {"name": "idsSelecionados"})
+    id_processo = (
+        str(process_input["value"])
+        if process_input and "value" in process_input.attrs
+        else ""
+    )
     if not id_processo or not criterio or request_fn is None:
         return ementa
 
     try:
         return get_ementa_completa(request_fn, id_processo, criterio)
-    except (requests.RequestException, RetryExhaustedError, AttributeError) as error:
+    except (requests.RequestException, RetryExhaustedError) as error:
         # A falha de uma ementa completa não invalida os demais resultados da página.
         return f"{ementa}\n[Erro ao buscar ementa completa: {error}]"
 
@@ -78,7 +76,7 @@ def _parse_row(
     row: Tag,
     criterio: str | None,
     request_fn: RequestFn | None,
-) -> dict[str, object] | None:
+) -> dict[str, str] | None:
     cols = row.find_all("td")
     if len(cols) < 2:
         return None

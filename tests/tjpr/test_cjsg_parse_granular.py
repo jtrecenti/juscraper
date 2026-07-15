@@ -5,6 +5,7 @@ from datetime import date
 from types import SimpleNamespace
 
 import pandas as pd
+import pytest
 import requests
 
 from juscraper.courts.tjpr.parse import cjsg_parse
@@ -80,3 +81,14 @@ def test_cjsg_parse_keeps_truncated_ementa_after_row_request_error(mocker):
         "[Erro ao buscar ementa completa: indisponível]"
     )
     assert result.loc[2, "ementa"] == "Ementa sem metadados."
+
+
+def test_cjsg_parse_propagates_programming_errors_from_full_ementa_fetch(mocker):
+    request_fn = mocker.Mock(side_effect=AttributeError("contrato inválido"))
+
+    with pytest.raises(AttributeError, match="contrato inválido"):
+        cjsg_parse(
+            [load_sample("tjpr", "cjsg/parser_edge_cases.html")],
+            criterio="dano moral",
+            request_fn=request_fn,
+        )
