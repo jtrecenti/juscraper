@@ -22,6 +22,21 @@ _CANONICAL_KEYS = {
 # Regex for CNJ process number format: NNNNNNN-DD.YYYY.J.TR.OOOO
 _CNJ_PATTERN = re.compile(r'\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}')
 
+_BASIC_SELECTORS = (
+    ('id_processo', 'span', 'numeroProcesso'),
+    ('classe', 'span', 'classeProcesso'),
+    ('assunto', 'span', 'assuntoProcesso'),
+    ('foro', 'span', 'foroProcesso'),
+    ('vara', 'span', 'varaProcesso'),
+    ('juiz', 'span', 'juizProcesso'),
+    ('data_distribuicao', 'div', 'dataHoraDistribuicaoProcesso'),
+    ('valor_acao', 'div', 'valorAcaoProcesso'),
+)
+_BASIC_COLUMNS = ('file_path', *(field for field, _, _ in _BASIC_SELECTORS))
+_PARTY_COLUMNS = ('file_path', 'tipo', 'nome', 'advogados')
+_MOVEMENT_COLUMNS = ('file_path', 'data', 'movimento', 'observacao')
+_MISC_PETITION_COLUMNS = ('file_path', 'data', 'tipo')
+
 
 def _normalize_field_name(label: str) -> str:
     """Convert a Portuguese label like 'Processo principal' to 'processo_principal'."""
@@ -56,33 +71,31 @@ def cpopg_parse_manager(path: str):
         A dictionary where the keys are table names and the values are DataFrames
         with the parsed data from the case files.
     """
-    lista_empilhada = {}
-    if Path(path).is_file():
-        result = [cpopg_parse_single(path)]
-    else:
-        result = []
-        arquivos = [str(f) for f in Path(path).rglob("*.[hj][st]*") if f.is_file()]
-        # remover arquivos json cujo nome nao acaba com um número
-        arquivos = [f for f in arquivos if not f.endswith('.json') or f[-6:-5].isnumeric()]
-        for file in tqdm(arquivos, desc="Processando documentos"):
-            if Path(file).is_file():
-                try:
-                    single_result = cpopg_parse_single(file)
-                except (OSError, UnicodeDecodeError, ValueError, AttributeError) as e:
-                    print(f"Erro ao processar o arquivo {file}: {e}")
-                    single_result = None
-                    continue
-                if single_result:
-                    result.append(single_result)
-        keys = result[0].keys()
-        lista_empilhada = {
-            key: pd.concat([dic[key] for dic in result], ignore_index=True)
-            for key in keys
-        }
-    # Defensive: if result is empty, return an empty dict or suitable structure
-    if not result:
-        return lista_empilhada
-    return lista_empilhada
+    root = Path(path)
+    if root.is_file():
+        return cpopg_parse_single(str(root))
+
+    files = [
+        file
+        for file in root.rglob("*.[hj][st]*")
+        if file.is_file() and (file.suffix != '.json' or file.name[-6:-5].isnumeric())
+    ]
+    parsed = []
+    for file in tqdm(files, desc="Processando documentos"):
+        try:
+            single_result = cpopg_parse_single(str(file))
+        except (OSError, UnicodeDecodeError, ValueError, AttributeError) as error:
+            print(f"Erro ao processar o arquivo {file}: {error}")
+            continue
+        if single_result:
+            parsed.append(single_result)
+
+    if not parsed:
+        return {}
+    return {
+        key: pd.concat([result[key] for result in parsed], ignore_index=True)
+        for key in parsed[0]
+    }
 
 
 def cpopg_parse_single(path: str):
@@ -97,241 +110,153 @@ def cpopg_parse_single(path: str):
     return result
 
 
+def _extract_basic_data(soup: BeautifulSoup, path: str) -> dict:
+    """Extract stable identifiers from the standard process header."""
+    data = dict.fromkeys(_BASIC_COLUMNS)
+    data['file_path'] = path
+    for field, tag_name, element_id in _BASIC_SELECTORS:
+        tag = soup.find(tag_name, id=element_id)
+        if tag:
+            data[field] = tag.get_text(strip=True)
+    return data
+
+
+def _fill_incident_header(soup: BeautifulSoup, data: dict) -> None:
+    """Fill process number and class from the incident-page header."""
+    if data['id_processo'] is not None:
+        return
+
+    larger_tag = soup.find('span', class_='unj-larger')
+    if not larger_tag:
+        return
+
+    text = larger_tag.get_text(strip=True)
+    match = _CNJ_PATTERN.search(text)
+    if match:
+        data['id_processo'] = match.group(0)
+    if data['classe'] is None:
+        classe_text = re.sub(r'\s*\(.*$', '', text).replace('\xa0', ' ').strip()
+        if classe_text:
+            data['classe'] = classe_text
+
+
+def _extract_labeled_value(label_span) -> tuple[str, str] | None:
+    """Resolve one dynamic label and its sibling value."""
+    key = _normalize_field_name(label_span.get_text(strip=True))
+    if not key:
+        return None
+    parent_col = label_span.find_parent('div', class_=re.compile(r'^col-'))
+    if parent_col is None:
+        return None
+    value_div = parent_col.find('div')
+    if value_div is None or value_div.find('span', class_='unj-larger'):
+        return None
+    value = value_div.get_text(strip=True)
+    if not value:
+        return None
+    return _CANONICAL_KEYS.get(key, key), value
+
+
+def _fill_extra_fields(soup: BeautifulSoup, data: dict) -> None:
+    """Fill dynamic fields represented by visible unj-label spans."""
+    sections = (
+        section
+        for section in (soup.find('div', id='containerDadosPrincipaisProcesso'), soup.find('div', id='maisDetalhes'))
+        if section is not None
+    )
+    for section in sections:
+        for label_span in section.find_all('span', class_='unj-label'):
+            extracted = _extract_labeled_value(label_span)
+            if extracted is None:
+                continue
+            canonical, value = extracted
+            if canonical not in data or data[canonical] is None:
+                data[canonical] = value
+
+
+def _extract_parties(soup: BeautifulSoup, path: str) -> list[dict]:
+    """Extract parties and lawyers in source order."""
+    table = soup.find('table', id='tablePartesPrincipais')
+    if not table:
+        return []
+    parties = []
+    for row in table.find_all('tr'):
+        cells = row.find_all('td')
+        if len(cells) < 2:
+            continue
+        type_tag = cells[0].find('span', class_='tipoDeParticipacao')
+        party_type = type_tag.get_text(strip=True) if type_tag else ''
+        raw_text = cells[1].get_text('||', strip=True)
+        split_text = raw_text.split('Advogado:')
+        party_name = split_text[0].replace('||', ' ').strip()
+        if not party_name:
+            continue
+        lawyers = [split_text[1].replace('||', ' ').strip()] if len(split_text) > 1 else []
+        parties.append({
+            'file_path': path,
+            'tipo': party_type,
+            'nome': party_name,
+            'advogados': lawyers,
+        })
+    return parties
+
+
+def _extract_movements(soup: BeautifulSoup, path: str) -> list[dict]:
+    """Extract all visible process movements."""
+    table = soup.find('tbody', id='tabelaTodasMovimentacoes')
+    if not table:
+        return []
+    movements = []
+    for row in table.find_all('tr', class_='containerMovimentacao'):
+        cells = row.find_all('td')
+        if len(cells) < 3:
+            continue
+        description_cell = cells[2]
+        main_description = description_cell.find(string=True, recursive=False) or ''
+        italic_span = description_cell.find('span', style='font-style: italic;')
+        movements.append({
+            'file_path': path,
+            'data': cells[0].get_text(strip=True),
+            'movimento': main_description.strip(),
+            'observacao': italic_span.get_text(strip=True) if italic_span else '',
+        })
+    return movements
+
+
+def _extract_misc_petitions(soup: BeautifulSoup, path: str) -> list[dict]:
+    """Extract the table following the miscellaneous-petitions heading."""
+    heading = soup.find(lambda tag: tag.name == 'h2' and tag.get_text(strip=True) == 'Petições diversas')
+    if not heading:
+        return []
+    table = heading.find_next('table')
+    if not table:
+        return []
+    petitions = []
+    for row in table.find_all('tr'):
+        cells = row.find_all('td')
+        if len(cells) == 2:
+            petitions.append({
+                'file_path': path,
+                'data': cells[0].get_text(strip=True),
+                'tipo': cells[1].get_text(strip=True),
+            })
+    return petitions
+
+
 def cpopg_parse_single_html(path: str):
     """Parse a downloaded HTML file from the TJSP CPOPG consultation."""
-    with Path(path).open('r', encoding='utf-8') as f:
-        html = f.read()
-        soup = BeautifulSoup(html, 'html.parser')
+    with Path(path).open('r', encoding='utf-8') as file:
+        soup = BeautifulSoup(file.read(), 'html.parser')
 
-    # 1) Dicionário-base para os dados coletados
-    dados = {
-        'file_path': path,
-        'id_processo': None,
-        'classe': None,
-        'assunto': None,
-        'foro': None,
-        'vara': None,
-        'juiz': None,
-        'data_distribuicao': None,
-        'valor_acao': None
-    }
-
-    movimentacoes = []
-    partes = []
-    peticoes_diversas = []
-
-    # 2) Extrair dados básicos (identificadores no HTML)
-    # -------------------------------------------------
-
-    # número do processo
-    numero_processo_tag = soup.find("span", id="numeroProcesso")
-    if numero_processo_tag:
-        dados['id_processo'] = numero_processo_tag.get_text(strip=True)
-
-    # classe
-    classe_tag = soup.find("span", id="classeProcesso")
-    if classe_tag:
-        dados['classe'] = classe_tag.get_text(strip=True)
-
-    # assunto
-    assunto_tag = soup.find("span", id="assuntoProcesso")
-    if assunto_tag:
-        dados['assunto'] = assunto_tag.get_text(strip=True)
-
-    # foro
-    foro_tag = soup.find("span", id="foroProcesso")
-    if foro_tag:
-        dados['foro'] = foro_tag.get_text(strip=True)
-
-    # vara
-    vara_tag = soup.find("span", id="varaProcesso")
-    if vara_tag:
-        dados['vara'] = vara_tag.get_text(strip=True)
-
-    # juiz
-    juiz_tag = soup.find("span", id="juizProcesso")
-    if juiz_tag:
-        dados['juiz'] = juiz_tag.get_text(strip=True)
-
-    # data/hora de distribuição
-    # (há um trecho: <div id="dataHoraDistribuicaoProcesso">19/04/2024 às 12:27 - Livre</div>)
-    dist_tag = soup.find("div", id="dataHoraDistribuicaoProcesso")
-    if dist_tag:
-        dados['data_distribuicao'] = dist_tag.get_text(strip=True)
-
-    # valor da ação
-    valor_acao_tag = soup.find("div", id="valorAcaoProcesso")
-    if valor_acao_tag:
-        dados['valor_acao'] = valor_acao_tag.get_text(strip=True)
-
-    # 2b) Fallback: incidente template (span.unj-larger contains class + CNJ)
-    # Some processes (e.g. Execução de Sentença / Cumprimento de Sentença) don't have
-    # id="numeroProcesso" or id="classeProcesso". Instead, the class is inside
-    # <span class="unj-larger"> and the CNJ is in parentheses within that span.
-    if dados['id_processo'] is None:
-        larger_tag = soup.find("span", class_="unj-larger")
-        if larger_tag:
-            text = larger_tag.get_text(strip=True)
-            match = _CNJ_PATTERN.search(text)
-            if match:
-                dados['id_processo'] = match.group(0)
-            # The class is the text before the parenthesized CNJ
-            if dados['classe'] is None:
-                classe_text = re.sub(r'\s*\(.*$', '', text).replace('\xa0', ' ').strip()
-                if classe_text:
-                    dados['classe'] = classe_text
-
-    # 2c) Extract extra fields from unj-label spans (Processo principal, Controle, Área, etc.)
-    # Both templates use <span class="unj-label">Label</span> followed by a sibling <div>
-    # containing the value. We skip labels that map to already-populated canonical fields.
-    container = soup.find("div", id="containerDadosPrincipaisProcesso")
-    mais_detalhes = soup.find("div", id="maisDetalhes")
-    sections = [s for s in [container, mais_detalhes] if s is not None]
-    for section in sections:
-        for label_span in section.find_all("span", class_="unj-label"):
-            label_text = label_span.get_text(strip=True)
-            key = _normalize_field_name(label_text)
-            if not key:
-                continue
-            # Skip pure section labels like "Classe", "Assunto" etc. that are already handled by IDs
-            canonical = _CANONICAL_KEYS.get(key, key)
-            if canonical in dados and dados[canonical] is not None:
-                continue
-            # Find the value: next sibling <div> in the same parent col-* div
-            parent_col = label_span.find_parent("div", class_=re.compile(r'^col-'))
-            if parent_col is None:
-                continue
-            value_div = parent_col.find("div")
-            if value_div is None:
-                continue
-            # Skip category labels whose value div contains the unj-larger class header
-            if value_div.find("span", class_="unj-larger"):
-                continue
-            value = value_div.get_text(strip=True)
-            if not value:
-                continue
-            if canonical in dados:
-                dados[canonical] = value
-            else:
-                dados[canonical] = value
-
-    # 3) Extrair Partes e Advogados
-    # -----------------------------
-    # Tabela: <table id="tablePartesPrincipais">
-    tabela_partes = soup.find("table", id="tablePartesPrincipais")
-    if tabela_partes:
-        # Geralmente as linhas têm classe "fundoClaro" ou "fundoEscuro"
-        for tr in tabela_partes.find_all("tr"):
-            # 1ª <td> = tipo de participação (ex: "Reqte", "Reqdo")
-            # 2ª <td> = nome da parte e advogado(s)
-            tds = tr.find_all("td")
-            if len(tds) >= 2:
-                tipo_tag = tds[0].find("span", class_="tipoDeParticipacao")
-                tipo_parte = tipo_tag.get_text(strip=True) if tipo_tag else ""
-
-                # Nome da parte + advogados
-                parte_adv_html = tds[1]
-                # Pode ter um <br>, ou "Advogado:" em <span>
-                # Fazemos algo simples: pegue o texto todo e depois
-                # tente separar parte e advogado manualmente, ou
-                # identifique pelos spans
-                nome_parte = ""
-                advs = []
-
-                # Pegar o texto *antes* do "Advogado:"
-                # Procure <span class="mensagemExibindo">Advogado:</span> e separe
-                raw_text = parte_adv_html.get_text("||", strip=True)
-                # Exemplo de raw_text (com || como separador de <br>):
-                # "Juan Bruno da Conceição Santos||Advogado:||Igor Galvão..."
-
-                # Vamos quebrar por "Advogado:" e ver o que acontece
-                if "Advogado:" in raw_text:
-                    splitted = raw_text.split("Advogado:")
-                    nome_parte = splitted[0].replace("||", " ").strip()
-                    # splitted[1] pode conter o(s) advogado(s)
-                    # Ex: "||Igor Galvão Venancio Martins||"
-                    # ou "Igor Galvão Venancio Martins"
-                    parte2 = splitted[1]
-                    adv_raw = parte2.replace("||", " ").strip()
-                    # Dependendo do caso pode ter mais advs na sequência; aqui vamos
-                    # tratar como um só ou separar por vírgula, se for o caso.
-                    # Ex.: "Igor Galvão Venancio Martins"
-                    advs.append(adv_raw)
-                else:
-                    # Não tem "Advogado:"? Então é só a parte
-                    nome_parte = raw_text.replace("||", " ").strip()
-
-                if nome_parte:
-                    partes.append({
-                        'file_path': path,
-                        "tipo": tipo_parte,
-                        "nome": nome_parte,
-                        "advogados": advs
-                    })
-
-    # 4) Extrair Movimentações
-    # ------------------------
-    # Podemos optar por pegar TODAS as movimentações (tabelaTodasMovimentacoes).
-    # A tabela tem <tbody id="tabelaTodasMovimentacoes">
-    # com várias <tr class="containerMovimentacao">
-    tabela_todas = soup.find("tbody", id="tabelaTodasMovimentacoes")
-    if tabela_todas:
-        for tr in tabela_todas.find_all("tr", class_="containerMovimentacao"):
-            # 1ª <td> = data
-            # 3ª <td> = descrição
-            tds = tr.find_all("td")
-            if len(tds) >= 3:
-                data = tds[0].get_text(strip=True)
-                descricao_html = tds[2]
-                # A "descrição" pode estar dividida em um texto principal e um <span> em itálico
-                # Ex.: <span style="font-style: italic;">Some text</span>
-                # Vamos concatenar
-                descricao_principal = descricao_html.find(string=True, recursive=False) or ""
-                descricao_principal = descricao_principal.strip()
-
-                span_it = descricao_html.find("span", style="font-style: italic;")
-                descricao_observacao = span_it.get_text(strip=True) if span_it else ""
-
-                # Montar uma string única ou armazenar separadamente
-                movimentacoes.append({
-                    'file_path': path,
-                    "data": data,
-                    "movimento": descricao_principal,
-                    "observacao": descricao_observacao
-                })
-
-    # 5) Petições diversas
-    # --------------------
-    # Tabela logo abaixo de "<h2 class="subtitle tituloDoBloco">Petições diversas</h2>"
-    # No HTML, as datas ficam na primeira <td>, e o tipo no segundo <td>
-    # Normalmente: <table> ... <tr class="fundoClaro"> <td>24/05/2024</td> <td>Contestação</td> ...
-    peticoes_div = soup.find(lambda t: t.name == "h2" and t.get_text(strip=True) == "Petições diversas")
-    if peticoes_div:
-        # Pegar a tabela que vem a seguir
-        tabela_peticoes = peticoes_div.find_next("table")
-        if tabela_peticoes:
-            for tr in tabela_peticoes.find_all("tr"):
-                tds = tr.find_all("td")
-                if len(tds) == 2:
-                    data_peticao = tds[0].get_text(strip=True)
-                    tipo_peticao = tds[1].get_text(strip=True)
-                    # Às vezes pode vir "Contestação\n\n"
-                    # limpamos com strip e etc
-                    peticoes_diversas.append({
-                        'file_path': path,
-                        "data": data_peticao,
-                        "tipo": tipo_peticao
-                    })
-    df_movs = pd.DataFrame(movimentacoes)
-    df_partes = pd.DataFrame(partes)
-    df_peticoes = pd.DataFrame(peticoes_diversas)
-    df_basicos = pd.DataFrame([dados])
+    basic_data = _extract_basic_data(soup, path)
+    _fill_incident_header(soup, basic_data)
+    _fill_extra_fields(soup, basic_data)
 
     return {
-        "basicos": df_basicos,
-        "partes": df_partes,
-        "movimentacoes": df_movs,
-        "peticoes_diversas": df_peticoes
+        'basicos': pd.DataFrame([basic_data]),
+        'partes': pd.DataFrame(_extract_parties(soup, path), columns=_PARTY_COLUMNS),
+        'movimentacoes': pd.DataFrame(_extract_movements(soup, path), columns=_MOVEMENT_COLUMNS),
+        'peticoes_diversas': pd.DataFrame(_extract_misc_petitions(soup, path), columns=_MISC_PETITION_COLUMNS),
     }
 
 
