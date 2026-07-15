@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import logging
 import time
-from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
 
@@ -17,6 +16,7 @@ import requests
 from tqdm import tqdm
 
 from ...utils.cnj import clean_cnj
+from .cjpg_parse import cjpg_n_pags
 from .exceptions import QueryTooLongError
 
 __all__ = ["QueryTooLongError", "cjpg_download", "fetch_cjpg_first_page"]
@@ -38,15 +38,10 @@ def _save_debug_html(response: requests.Response, download_path: str, error: Exc
 
 def _extract_page_count(
     response: requests.Response,
-    callback: Callable[[requests.Response], int] | None,
     download_path: str,
 ) -> int:
     try:
-        if callback is None:
-            raise ValueError(
-                "É necessário fornecer get_n_pags_callback para extrair o número de páginas."
-            )
-        return callback(response)
+        return cjpg_n_pags(response.content)
     except Exception as error:
         debug_file = _save_debug_html(response, download_path, error)
         raise ValueError(
@@ -54,14 +49,7 @@ def _extract_page_count(
         ) from error
 
 
-def _create_download_directory(download_path: str) -> str:
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    path = f"{download_path}/cjpg/{timestamp}"
-    Path(path).mkdir(parents=True, exist_ok=True)
-    return path
-
-
-def _normalize_pages(paginas: list | range | None, n_pags: int) -> list | range:
+def _normalize_pages(paginas: list[int] | range | None, n_pags: int) -> list[int] | range:
     if paginas is None:
         return range(1, n_pags + 1)
     if isinstance(paginas, range):
@@ -69,8 +57,8 @@ def _normalize_pages(paginas: list | range | None, n_pags: int) -> list | range:
     return [page for page in paginas if page <= n_pags]
 
 
-def _save_page(path: str, page: int, html: str) -> None:
-    Path(f"{path}/cjpg_{page:05d}.html").write_text(html, encoding="utf-8")
+def _save_page(path: Path, page: int, html: str) -> None:
+    path.joinpath(f"cjpg_{page:05d}.html").write_text(html, encoding="utf-8")
 
 
 def fetch_cjpg_first_page(
@@ -127,9 +115,8 @@ def cjpg_download(
     id_processo: str | None = None,
     data_inicio: str | None = None,
     data_fim: str | None = None,
-    paginas: 'list | range | None' = None,
-    get_n_pags_callback=None,
-):
+    paginas: list[int] | range | None = None,
+) -> str:
     """Download cases from the TJSP jurisprudence search.
 
     Internal helper — the public scraper entry point
@@ -142,8 +129,8 @@ def cjpg_download(
     :data:`IdFiltro`. Refs #232.
 
     Raises:
-        ValueError: If ``get_n_pags_callback`` is missing or fails to
-            extract the page count from the first-page HTML.
+        ValueError: If the page count cannot be extracted from the first-page
+            HTML. The response is saved for diagnosis before raising.
     """
     r0 = fetch_cjpg_first_page(
         pesquisa=pesquisa,
@@ -156,12 +143,14 @@ def cjpg_download(
         data_inicio=data_inicio,
         data_fim=data_fim,
     )
-    n_pags = _extract_page_count(r0, get_n_pags_callback, download_path)
-    path = _create_download_directory(download_path)
+    n_pags = _extract_page_count(r0, download_path)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    path = Path(download_path) / "cjpg" / timestamp
+    path.mkdir(parents=True, exist_ok=True)
 
     if n_pags == 0:
         _save_page(path, 1, r0.text)
-        return path
+        return str(path)
 
     paginas = _normalize_pages(paginas, n_pags)
 
@@ -178,4 +167,4 @@ def cjpg_download(
         u = f"{u_base}cjpg/trocarDePagina.do?pagina={page}&conversationId="
         r = session.get(u)
         _save_page(path, page, r.text)
-    return path
+    return str(path)

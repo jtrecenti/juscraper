@@ -22,7 +22,7 @@ from ...utils.params import (
 from .._esaj.base import EsajSearchScraper
 from .cjpg_download import cjpg_download as cjpg_download_mod
 from .cjpg_download import fetch_cjpg_first_page
-from .cjpg_parse import cjpg_n_pags, cjpg_n_results, cjpg_parse_manager
+from .cjpg_parse import cjpg_n_results, cjpg_parse_manager
 from .cpopg_download import cpopg_download_api, cpopg_download_html
 from .cpopg_parse import cpopg_parse_manager, get_cpopg_download_links
 from .cposg_download import cposg_download_api, cposg_download_html
@@ -567,10 +567,6 @@ class TJSPScraper(EsajSearchScraper):
         # pydantic e funcionalmente equivalente.
         validate_pesquisa_length(inp.pesquisa, endpoint="CJPG")
 
-        def _get_n_pags(r0):
-            html = r0.content if hasattr(r0, "content") else r0
-            return cjpg_n_pags(html)
-
         path: str = cjpg_download_mod(
             pesquisa=inp.pesquisa,
             session=self.session,
@@ -584,7 +580,6 @@ class TJSPScraper(EsajSearchScraper):
             data_inicio=inp.data_julgamento_inicio,
             data_fim=inp.data_julgamento_fim,
             paginas=inp.paginas,
-            get_n_pags_callback=_get_n_pags,
         )
         return path
 
