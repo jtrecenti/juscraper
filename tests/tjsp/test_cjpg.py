@@ -4,7 +4,7 @@ Includes both integration and unit tests.
 """
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, call
 
 import pandas as pd
 import pytest
@@ -231,6 +231,29 @@ class TestCJPGDownload1Based:
             trocar_urls = [c[0][0] for c in get_calls[1:] if 'trocarDePagina' in c[0][0]]
             return saved_files, trocar_urls
 
+    def _download_with_mocks(self, tmp_path, *, n_pags, paginas=None, sleep_time=0, callback=None):
+        """Run the internal downloader while retaining its collaborators."""
+        mock_session = MagicMock()
+        r0_response = self._make_mock_response("<html>page1</html>")
+        mock_session.get.side_effect = [
+            r0_response,
+            self._make_mock_response("<html>page2+</html>"),
+            self._make_mock_response("<html>page2+</html>"),
+        ]
+        get_n_pags_callback = callback or MagicMock(return_value=n_pags)
+
+        path = cjpg_download(
+            pesquisa="teste",
+            session=mock_session,
+            u_base="https://esaj.tjsp.jus.br/",
+            download_path=str(tmp_path),
+            sleep_time=sleep_time,
+            paginas=paginas,
+            get_n_pags_callback=get_n_pags_callback,
+        )
+
+        return path, mock_session, r0_response, get_n_pags_callback
+
     def test_default_all_pages(self):
         """Default (None) downloads all 3 pages: saves 00001, 00002, 00003."""
         files, urls = self._run_download(n_pags=3, paginas=None)
@@ -260,6 +283,101 @@ class TestCJPGDownload1Based:
         files, urls = self._run_download(n_pags=3, paginas=range(1, 101))
         assert files == ["cjpg_00001.html", "cjpg_00002.html", "cjpg_00003.html"]
         assert len(urls) == 2
+
+    def test_callback_receives_first_page_response_and_return_is_str(self, tmp_path):
+        callback = MagicMock(return_value=1)
+
+        path, _, r0_response, _ = self._download_with_mocks(
+            tmp_path,
+            n_pags=1,
+            paginas=[1],
+            callback=callback,
+        )
+
+        assert isinstance(path, str)
+        callback.assert_called_once_with(r0_response)
+
+    def test_zero_pages_still_saves_first_page(self, tmp_path):
+        path, mock_session, _, _ = self._download_with_mocks(
+            tmp_path,
+            n_pags=0,
+            paginas=[3],
+        )
+
+        assert [file.name for file in Path(path).iterdir()] == ["cjpg_00001.html"]
+        assert Path(path, "cjpg_00001.html").read_text(encoding="utf-8") == "<html>page1</html>"
+        assert mock_session.get.call_count == 1
+
+    def test_sparse_page_list_discards_unavailable_pages(self, tmp_path, mocker):
+        sleep = mocker.patch("juscraper.courts.tjsp.cjpg_download.time.sleep")
+
+        path, mock_session, _, _ = self._download_with_mocks(
+            tmp_path,
+            n_pags=3,
+            paginas=[1, 3, 99],
+            sleep_time=0.25,
+        )
+
+        assert sorted(file.name for file in Path(path).iterdir()) == ["cjpg_00001.html", "cjpg_00003.html"]
+        assert mock_session.get.call_args_list[1:] == [
+            call("https://esaj.tjsp.jus.br/cjpg/trocarDePagina.do?pagina=3&conversationId=")
+        ]
+        sleep.assert_called_once_with(0.25)
+
+    def test_range_step_preserves_page_order_and_request_urls(self, tmp_path, mocker):
+        sleep = mocker.patch("juscraper.courts.tjsp.cjpg_download.time.sleep")
+
+        path, mock_session, _, _ = self._download_with_mocks(
+            tmp_path,
+            n_pags=5,
+            paginas=range(1, 8, 2),
+            sleep_time=0.4,
+        )
+
+        assert sorted(file.name for file in Path(path).iterdir()) == [
+            "cjpg_00001.html",
+            "cjpg_00003.html",
+            "cjpg_00005.html",
+        ]
+        assert mock_session.get.call_args_list[1:] == [
+            call("https://esaj.tjsp.jus.br/cjpg/trocarDePagina.do?pagina=3&conversationId="),
+            call("https://esaj.tjsp.jus.br/cjpg/trocarDePagina.do?pagina=5&conversationId="),
+        ]
+        assert sleep.call_args_list == [call(0.4), call(0.4)]
+
+    def test_missing_callback_saves_debug_html_and_chains_value_error(self, tmp_path):
+        mock_session = MagicMock()
+        mock_session.get.return_value = self._make_mock_response("<html>diagnostico</html>")
+
+        with pytest.raises(ValueError, match="HTML salvo em") as exc_info:
+            cjpg_download(
+                pesquisa="teste",
+                session=mock_session,
+                u_base="https://esaj.tjsp.jus.br/",
+                download_path=str(tmp_path),
+            )
+
+        assert isinstance(exc_info.value.__cause__, ValueError)
+        assert "É necessário fornecer get_n_pags_callback" in str(exc_info.value.__cause__)
+        debug_files = list(Path(tmp_path, "cjpg_debug").glob("cjpg_primeira_pagina_*.html"))
+        assert len(debug_files) == 1
+        assert debug_files[0].read_text(encoding="utf-8") == "<html>diagnostico</html>"
+
+    def test_callback_error_saves_debug_html_and_preserves_cause(self, tmp_path):
+        upstream_error = RuntimeError("falha no callback")
+        callback = MagicMock(side_effect=upstream_error)
+
+        with pytest.raises(ValueError, match="falha no callback") as exc_info:
+            self._download_with_mocks(
+                tmp_path,
+                n_pags=1,
+                callback=callback,
+            )
+
+        assert exc_info.value.__cause__ is upstream_error
+        debug_files = list(Path(tmp_path, "cjpg_debug").glob("cjpg_primeira_pagina_*.html"))
+        assert len(debug_files) == 1
+        assert debug_files[0].read_text(encoding="utf-8") == "<html>page1</html>"
 
 
 class TestCJPGDateRangeValidation:
