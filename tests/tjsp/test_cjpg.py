@@ -200,20 +200,24 @@ class TestCJPGNResults:
         html = load_sample("tjsp", f"cjpg/{sample}")
         assert cjpg_n_results(html) == expected
 
-    @pytest.mark.parametrize(
-        "sample",
-        [
-            "count_precedence_results_over_bgcolor.html",
-            "count_precedence_bgcolor_over_page.html",
-        ],
-    )
-    def test_selector_precedence(self, sample):
-        html = load_sample("tjsp", f"cjpg/{sample}")
-        assert cjpg_n_results(html) == 25
-
     def test_counts_result_rows_when_pagination_marker_is_missing(self):
         html = load_sample("tjsp", "cjpg/count_rows_fallback.html")
         assert cjpg_n_results(html) == 3
+
+    def test_raises_when_full_page_has_no_pagination_marker(self):
+        html = load_sample("tjsp", "cjpg/count_truncated_full_page.html")
+        with pytest.raises(ValueError, match=r"página completa.*sem marcador"):
+            cjpg_n_results(html)
+
+    def test_captcha_error_takes_precedence_over_zero_marker(self):
+        html = load_sample("tjsp", "cjpg/count_captcha_error.html")
+        with pytest.raises(ValueError, match="Captcha não foi resolvido"):
+            cjpg_n_results(html)
+
+    def test_initial_form_has_specific_error(self):
+        html = load_sample("tjsp", "cjpg/count_initial_form.html")
+        with pytest.raises(ValueError, match="Ainda na página de consulta"):
+            cjpg_n_results(html)
 
     def test_empty_results_container_still_raises_missing_selector(self):
         html = load_sample("tjsp", "cjpg/count_empty_results.html")

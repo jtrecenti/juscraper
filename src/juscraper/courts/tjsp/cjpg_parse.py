@@ -9,20 +9,16 @@ from bs4 import BeautifulSoup
 from bs4.element import Tag
 from tqdm import tqdm
 
-from juscraper.courts._esaj.parse import _extract_pagination_count
+from juscraper.courts._esaj.parse import (
+    _extract_pagination_count,
+    _has_zero_results,
+    _raise_initial_form_error,
+    _raise_page_error,
+)
 
 logger = logging.getLogger("juscraper.cjpg_parse")
 
-_ZERO_RESULT_MARKERS = (
-    "nenhum resultado",
-    "não foram encontrados",
-    "sem resultados",
-)
-
-
-def _has_zero_results(soup: BeautifulSoup) -> bool:
-    page_text = soup.get_text().lower()
-    return any(marker in page_text for marker in _ZERO_RESULT_MARKERS)
+_CJPG_PAGE_SIZE = 10
 
 
 def _find_cjpg_pagination_element(soup: BeautifulSoup) -> Tag | None:
@@ -47,9 +43,15 @@ def _count_cjpg_result_rows_or_raise(soup: BeautifulSoup) -> int:
     results_container = soup.find("div", {"id": "divDadosResultado"})
     if results_container is not None:
         result_rows = results_container.find_all("tr", class_="fundocinza1")
-        if result_rows:
+        if 0 < len(result_rows) < _CJPG_PAGE_SIZE:
             return len(result_rows)
+        if len(result_rows) >= _CJPG_PAGE_SIZE:
+            raise ValueError(
+                "A resposta contém uma página completa de resultados sem "
+                "marcador de paginação; o HTML pode estar truncado."
+            )
 
+    _raise_initial_form_error(soup)
     raise ValueError(
         "Não foi possível encontrar o seletor de número de páginas "
         "na resposta HTML. Verifique se a busca retornou resultados "
@@ -68,20 +70,21 @@ def cjpg_n_results(page_source) -> int:
     Mirrors :func:`juscraper.courts._esaj.parse.cjsg_n_results`.
 
     Fallback for "results table present but pagination marker missing":
-    counts ``tr.fundocinza1`` rows inside ``divDadosResultado`` instead of
-    returning a hardcoded ``1`` — ensures ``count_only`` returns a meaningful
-    estimate.
+    counts ``tr.fundocinza1`` rows inside ``divDadosResultado`` when the page
+    has fewer than 10 rows. A full page without pagination is ambiguous and
+    raises instead of undercounting a potentially truncated response.
 
     Returns:
         int: Number of results (0 when the search returned no hits).
 
     Raises:
-        ValueError: When no pagination marker is found and the results table
-            is also absent — typically signals the search form did not submit
-            or the HTML layout changed.
+        ValueError: When the page reports an error, remains on the search form,
+            contains a full results page without pagination, or has no known
+            result marker.
     """
     soup = BeautifulSoup(page_source, "html.parser")
 
+    _raise_page_error(soup)
     if _has_zero_results(soup):
         return 0
 
@@ -109,7 +112,7 @@ def cjpg_n_pags(page_source) -> int:
     n_results = cjpg_n_results(page_source)
     if n_results == 0:
         return 0
-    return (n_results + 9) // 10
+    return (n_results + _CJPG_PAGE_SIZE - 1) // _CJPG_PAGE_SIZE
 
 
 def cjpg_parse_single(path):
