@@ -73,15 +73,6 @@ def _extract_first(
     return None
 
 
-def _extract_from_findall_match(raw: str | tuple[str, ...]) -> int | None:
-    groups = raw if isinstance(raw, tuple) else (raw,)
-    for group in groups:
-        value = _coerce_int(group)
-        if value is not None:
-            return value
-    return None
-
-
 def _extract_max(
     candidates: Sequence[str],
     regex_patterns: Sequence[re.Pattern[str]],
@@ -89,8 +80,8 @@ def _extract_max(
     values: list[int] = []
     for candidate in candidates:
         for pattern in regex_patterns:
-            for raw in pattern.findall(candidate):
-                value = _extract_from_findall_match(raw)
+            for match in pattern.finditer(candidate):
+                value = _extract_from_match(match)
                 if value is not None:
                     values.append(value)
     return max(values) if values else None
@@ -146,17 +137,17 @@ def extract_count_with_cascade(
         fallback_max_int: Se ``True``, ultimo recurso e pegar ``max(\\d+)``
             no primeiro candidato — util para layouts onde varios numeros
             aparecem mas o total e o maior. Default ``False`` (fail-fast:
-            retorna ``None``). Os 5 callers atuais usam ``False`` e
-            controlam o default semantico (1 pagina ou 0 resultados) do
-            lado deles; ``True`` deve ser opt-in explicito para evitar
-            extrair numeros irrelevantes da pagina (ano, codigo, etc.).
+            retorna ``None``). Os callers controlam o default semantico
+            (1 pagina ou 0 resultados) do lado deles; ``True`` deve ser
+            opt-in explicito para evitar extrair numeros irrelevantes da
+            pagina (ano, codigo, etc.).
         use_element_html: Quando ``True``, cada candidato e o HTML completo
             do elemento (``str(el)``) em vez de apenas o texto. Necessario
             quando o numero alvo esta em atributo (ex.: ``href="?page=N"``
             em paginadores estilo Bootstrap).
         aggregate: ``"first"`` (default) retorna o primeiro match valido na
             ordem de cascata. ``"max"`` percorre TODOS os matches em todos
-            os candidatos via ``pattern.findall`` e retorna o maior — util
+            os candidatos via ``pattern.finditer`` e retorna o maior — util
             para paginadores que listam varios numeros de pagina (1, 2, …,
             N) e o "total" e ``max(N)``.
 

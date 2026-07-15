@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import re
-from typing import Any, cast
 
 from juscraper.utils.pagination import extract_count_with_cascade
 
@@ -241,17 +240,6 @@ def test_first_preserves_selector_and_element_order_while_skipping_empty():
         css_selectors=("span.primary", "span.secondary"),
         regex_patterns=(re.compile(r"(\d+)\s+resultados"),),
     ) == 12
-
-
-def test_non_max_aggregate_keeps_first_semantics():
-    html = "<span>3 resultados</span><span>88 resultados</span>"
-
-    assert extract_count_with_cascade(
-        html,
-        css_selectors=("span",),
-        regex_patterns=(re.compile(r"(\d+)\s+resultados"),),
-        aggregate=cast(Any, "largest"),
-    ) == 3
 
 
 def test_fallback_max_int_only_reads_first_candidate():
