@@ -7,9 +7,22 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from juscraper.courts._esaj.parse import cjsg_n_results
+from juscraper.courts._esaj.parse import _parse_single_page, cjsg_n_results
 from juscraper.courts.tjsp.cjsg_parse import _cjsg_parse_single_page, cjsg_n_pags, cjsg_parse_manager
 from tests._helpers import load_sample
+
+ESAJ_COLUMNS = (
+    "processo",
+    "cd_acordao",
+    "cd_foro",
+    "classe_assunto",
+    "relatora",
+    "comarca",
+    "orgao_julgador",
+    "data_julgamento",
+    "data_publicacao",
+    "ementa",
+)
 
 
 class TestCJSGNPages:
@@ -89,6 +102,58 @@ class TestCJSGNResults:
         html = load_sample("tjsp", "cjsg/results_normal_page_01.html")
         # 2571077 resultados / 20 por pagina = 128554 paginas (ceil).
         assert cjsg_n_pags(html) == (2571077 + 19) // 20
+
+    @pytest.mark.parametrize(
+        ("sample", "expected"),
+        [
+            ("count_legacy_bgcolor.html", 42),
+            ("count_pagination_class.html", 77),
+            ("count_page_text.html", 99),
+            ("count_rows_fallback.html", 3),
+        ],
+    )
+    def test_selector_and_regex_cascades(self, sample, expected):
+        html = load_sample("tjsp", f"cjsg/{sample}")
+        assert cjsg_n_results(html) == expected
+
+    def test_search_form_without_results_raises_specific_message(self):
+        html = load_sample("tjsp", "cjsg/count_form_initial.html")
+        with pytest.raises(ValueError, match="Ainda na página de consulta"):
+            cjsg_n_results(html)
+
+    def test_pagination_marker_without_number_raises_with_text(self):
+        html = load_sample("tjsp", "cjsg/count_invalid_text.html")
+        with pytest.raises(ValueError, match="Formato inesperado encontrado"):
+            cjsg_n_results(html)
+
+    @pytest.mark.parametrize(
+        ("court", "expected_count", "expected_rows", "first_process"),
+        [
+            ("tjac", 13929, 20, "1000233-68.2026.8.01.0000"),
+            ("tjal", 136804, 20, "0709767-89.2020.8.02.0001"),
+            ("tjam", 54334, 10, "0708349-62.2020.8.04.0001"),
+            ("tjce", 100860, 20, "0206389-11.2024.8.06.0300"),
+            ("tjms", 149670, 100, "0800383-78.2024.8.12.0038"),
+            ("tjsp", 2571077, 20, "2399632-18.2025.8.26.0000"),
+        ],
+    )
+    def test_real_first_page_contract_for_every_esaj_court(
+        self,
+        court,
+        expected_count,
+        expected_rows,
+        first_process,
+    ):
+        relative_path = "cjsg/results_normal_page_01.html"
+        html = load_sample(court, relative_path)
+        sample_path = Path(__file__).parent.parent / court / "samples" / relative_path
+
+        df = _parse_single_page(str(sample_path))
+
+        assert cjsg_n_results(html) == expected_count
+        assert len(df) == expected_rows
+        assert tuple(df.columns) == ESAJ_COLUMNS
+        assert df.iloc[0]["processo"] == first_process
 
 
 class TestCJSGParseSinglePage:
@@ -190,6 +255,52 @@ class TestCJSGParseSinglePage:
             assert len(df) >= 0
         finally:
             Path(temp_path).unlink()
+
+    def test_tjsp_reexport_preserves_internal_parser_identity(self):
+        assert _cjsg_parse_single_page is _parse_single_page
+
+    def test_dynamic_labels_malformed_rows_and_ementa_fallback(self):
+        sample_path = Path(__file__).parent / "samples/cjsg/parser_edge_cases.html"
+
+        df = _parse_single_page(str(sample_path))
+
+        assert len(df) == 3
+        assert tuple(df.columns) == (
+            "processo",
+            "cd_acordao",
+            "cd_foro",
+            "classe_assunto",
+            "relatora",
+            "campo_especial",
+            "data_publicacao",
+            "orgao_julgador",
+            "ementa",
+        )
+        assert df.iloc[0].to_dict() == {
+            "processo": "0000001-02.2024.8.26.0001",
+            "cd_acordao": "123",
+            "cd_foro": "4",
+            "classe_assunto": "Apelacao / Contratos",
+            "relatora": "Des. Joao Acu",
+            "campo_especial": "valor dinamico",
+            "data_publicacao": "01/02/2024",
+            "orgao_julgador": "Camara Especial",
+            "ementa": "texto visivel.",
+        }
+        assert df.iloc[1]["ementa"] == "fallback oculto."
+        assert df.iloc[2]["ementa"] == ""
+        assert "outros_numeros" not in df.columns
+
+    def test_latin1_file_is_decoded_without_mojibake(self, tmp_path):
+        html = load_sample("tjsp", "cjsg/latin1_result.html")
+        path = tmp_path / "latin1.html"
+        path.write_bytes(html.encode("latin-1"))
+
+        df = _parse_single_page(str(path))
+
+        assert df.iloc[0]["processo"] == "0000002-03.2024.8.26.0002"
+        assert df.iloc[0]["relatora"] == "Des. João Açú"
+        assert df.iloc[0]["ementa"] == "Decisão sobre obrigação."
 
 
 class TestCJSGParseManager:
