@@ -126,6 +126,15 @@ class TestCJSGNResults:
         with pytest.raises(ValueError, match="Formato inesperado encontrado"):
             cjsg_n_results(html)
 
+    def test_page_error_takes_precedence_over_zero_results_marker(self):
+        html = load_sample("tjsp", "cjsg/count_error_and_zero.html")
+        with pytest.raises(ValueError, match="Captcha"):
+            cjsg_n_results(html)
+
+    def test_results_table_without_standard_rows_returns_minimum_one(self):
+        html = load_sample("tjsp", "cjsg/count_table_without_standard_rows.html")
+        assert cjsg_n_results(html) == 1
+
     @pytest.mark.parametrize(
         ("court", "expected_count", "expected_rows", "first_process"),
         [
