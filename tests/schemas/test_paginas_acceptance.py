@@ -29,6 +29,7 @@ from typing import Any
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from juscraper.schemas import PaginasMixin
 from juscraper.utils.params import normalize_paginas
 from tests.schemas.test_schema_coverage import (
     EXPECTED_AGGREGATOR_SCHEMAS,
@@ -119,6 +120,15 @@ def test_normalize_paginas_accepts_all_variants(variant_name, paginas_value):
         pytest.fail(
             f"normalize_paginas rejeitou paginas={paginas_value!r} ({variant_name}): {exc}"
         )
+
+
+@pytest.mark.parametrize(
+    "paginas",
+    [0, -1, [], [0], [-1], range(3, 0, -1)],
+)
+def test_paginas_mixin_rejects_invalid_selections(paginas):
+    with pytest.raises(ValidationError, match="paginas"):
+        PaginasMixin(paginas=paginas)
 
 
 @pytest.mark.parametrize(

@@ -6,6 +6,7 @@ import tempfile
 import time
 import warnings
 from collections import defaultdict
+from collections.abc import Iterator
 from typing import Any
 
 import pandas as pd
@@ -105,27 +106,7 @@ def _normalize_datajud_pages(paginas: int | list[int] | range | None) -> range |
     paginas_norm = normalize_paginas(paginas)
     if not isinstance(paginas_norm, list):
         return paginas_norm
-    if not paginas_norm:
-        return None
     return range(min(paginas_norm), max(paginas_norm) + 1)
-
-
-def _last_requested_page(paginas: range | None) -> int | None:
-    """Retorna a última página física necessária; ``None`` significa todas."""
-    if paginas is None:
-        return None
-    if not paginas:
-        return 0
-    return max(paginas)
-
-
-def _page_is_requested(paginas: range | None, page: int) -> bool:
-    return paginas is None or page in paginas
-
-
-def _must_fetch_page(paginas: range | None, page: int) -> bool:
-    last_page = _last_requested_page(paginas)
-    return last_page is None or page <= last_page
 
 
 def _build_listar_payload(
@@ -527,13 +508,14 @@ class DatajudScraper(HTTPScraper):
             :class:`InputListarProcessosDataJud` — fonte da verdade dos
             filtros aceitos.
         """
-        paginas_norm = _normalize_datajud_pages(paginas)
+        paginas_norm = normalize_paginas(paginas)
         _pop_plural_aliases(kwargs)
         try:
             inp = InputListarProcessosDataJud(paginas=paginas_norm, **kwargs)
         except ValidationError as exc:
             raise_on_extra_kwargs(exc, "DatajudScraper.listar_processos()")
             raise
+        paginas_datajud = _normalize_datajud_pages(inp.paginas)
 
         aliases = self._resolve_aliases(
             tribunal=inp.tribunal,
@@ -546,7 +528,7 @@ class DatajudScraper(HTTPScraper):
                 numero_processo=cnjs,
                 inp=inp,
                 movimentos_codigo=movimentos_codigo,
-                paginas=paginas_norm,
+                paginas=paginas_datajud,
             )
             for alias, cnjs in aliases
         ]
@@ -564,9 +546,6 @@ class DatajudScraper(HTTPScraper):
     ) -> pd.DataFrame:
         """Percorre o cursor físico e agrega somente as páginas solicitadas."""
         frames: list[pd.DataFrame] = []
-        current_page = 1
-        tamanho_pagina = inp.tamanho_pagina
-        search_after: list[Any] | None = None
         total = None if paginas is None else len(paginas)
         pbar = tqdm(
             total=total,
@@ -575,31 +554,63 @@ class DatajudScraper(HTTPScraper):
             disable=total == 0,
         )
         try:
-            while _must_fetch_page(paginas, current_page):
-                fetched = self._fetch_process_page(
-                    alias=alias,
-                    numero_processo=numero_processo,
-                    inp=inp,
-                    movimentos_codigo=movimentos_codigo,
-                    current_page=current_page,
-                    tamanho_pagina=tamanho_pagina,
-                    search_after=search_after,
-                )
-                if fetched is None:
+            for current_page, api_response in self._iter_process_pages(
+                alias=alias,
+                numero_processo=numero_processo,
+                inp=inp,
+                movimentos_codigo=movimentos_codigo,
+                paginas=paginas,
+            ):
+                if paginas is not None and current_page not in paginas:
+                    continue
+                frame = parse_datajud_api_response(api_response, inp.mostrar_movs)
+                if frame.empty:
+                    logger.info(
+                        "No more results for alias %s on page %d (or parsing failed).",
+                        alias,
+                        current_page,
+                    )
                     break
-                frame, search_after, tamanho_pagina = fetched
-                if _page_is_requested(paginas, current_page):
-                    frames.append(frame)
-                    pbar.update(1)
-                if search_after is None:
-                    break
-                current_page += 1
-                if _must_fetch_page(paginas, current_page):
-                    time.sleep(self.sleep_time)
+                frames.append(frame)
+                pbar.update(1)
         finally:
             pbar.close()
 
         return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+
+    def _iter_process_pages(
+        self,
+        *,
+        alias: str,
+        numero_processo: str | list[str] | None,
+        inp: InputListarProcessosDataJud,
+        movimentos_codigo: list[int] | None,
+        paginas: range | None,
+    ) -> Iterator[tuple[int, dict[str, Any]]]:
+        """Percorre o cursor físico até a última página necessária."""
+        current_page = 1
+        tamanho_pagina = inp.tamanho_pagina
+        search_after: list[Any] | None = None
+        last_page = None if paginas is None else paginas[-1]
+        while last_page is None or current_page <= last_page:
+            fetched = self._fetch_process_page(
+                alias=alias,
+                numero_processo=numero_processo,
+                inp=inp,
+                movimentos_codigo=movimentos_codigo,
+                current_page=current_page,
+                tamanho_pagina=tamanho_pagina,
+                search_after=search_after,
+            )
+            if fetched is None:
+                return
+            api_response, search_after, tamanho_pagina = fetched
+            yield current_page, api_response
+            if search_after is None:
+                return
+            current_page += 1
+            if last_page is None or current_page <= last_page:
+                time.sleep(self.sleep_time)
 
     def _fetch_process_page(
         self,
@@ -611,8 +622,8 @@ class DatajudScraper(HTTPScraper):
         current_page: int,
         tamanho_pagina: int,
         search_after: list[Any] | None,
-    ) -> tuple[pd.DataFrame, list[Any] | None, int] | None:
-        """Busca uma página física e devolve frame, próximo cursor e size efetivo."""
+    ) -> tuple[dict[str, Any], list[Any] | None, int] | None:
+        """Busca uma página física e devolve resposta, próximo cursor e size efetivo."""
         logger.info("Fetching page %d for alias %s...", current_page, alias)
         query_payload = _build_listar_payload(
             inp,
@@ -644,18 +655,10 @@ class DatajudScraper(HTTPScraper):
             return None
         if current_page == 1:
             _log_total(api_response, alias)
-        frame = parse_datajud_api_response(api_response, inp.mostrar_movs)
-        if frame.empty:
-            logger.info(
-                "No more results for alias %s on page %d (or parsing failed).",
-                alias,
-                current_page,
-            )
-            return None
         effective_size = min(tamanho_pagina, query_payload.get("size", tamanho_pagina))
         next_search_after = _next_search_after(
             api_response,
             alias=alias,
             effective_size=effective_size,
         )
-        return frame, next_search_after, effective_size
+        return api_response, next_search_after, effective_size

@@ -7,6 +7,7 @@ from typing import Any
 
 import pandas as pd
 import pytest
+from pydantic import ValidationError
 
 import juscraper as jus
 from juscraper.aggregators.datajud import client as datajud_client
@@ -66,17 +67,44 @@ def test_range_com_inicio_maior_percorre_prefixo_e_descarta(monkeypatch):
 
 
 def test_range_com_passo_retorna_apenas_paginas_pedidas(monkeypatch):
-    calls = _install_pages(monkeypatch, [_page(page) for page in range(1, 5)])
+    calls = _install_pages(monkeypatch, [_page(page) for page in range(1, 6)])
+    parsed_pages: list[int] = []
+    parse_response = datajud_client.parse_datajud_api_response
+
+    def tracked_parse(response, mostrar_movs):
+        parsed_pages.append(response["hits"]["hits"][0]["_source"]["pagina_fisica"])
+        return parse_response(response, mostrar_movs)
+
+    monkeypatch.setattr(datajud_client, "parse_datajud_api_response", tracked_parse)
 
     df = jus.scraper("datajud", verbose=0).listar_processos(
         tribunal="TJSP",
-        paginas=range(2, 6, 2),
+        paginas=range(3, 6, 2),
         tamanho_pagina=10,
     )
 
-    assert df["pagina_fisica"].tolist() == [2] * 10 + [4] * 10
-    assert len(calls) == 4
+    assert df["pagina_fisica"].tolist() == [3] * 10 + [5] * 10
+    assert len(calls) == 5
+    assert parsed_pages == [3, 5]
     _assert_cursor_chain(calls)
+
+
+@pytest.mark.parametrize(
+    "paginas",
+    [0, -1, [], [0], [-1], range(3, 0, -1)],
+)
+def test_paginas_invalidas_falham_antes_do_http(monkeypatch, paginas):
+    def unexpected_call(**_kwargs):
+        raise AssertionError("call_datajud_api não deveria ser chamado")
+
+    monkeypatch.setattr(datajud_client, "call_datajud_api", unexpected_call)
+
+    with pytest.raises(ValidationError, match="paginas"):
+        jus.scraper("datajud", verbose=0).listar_processos(
+            tribunal="TJSP",
+            paginas=paginas,
+            tamanho_pagina=10,
+        )
 
 
 def test_lista_esparsa_continua_baixando_intervalo_inteiro(monkeypatch):

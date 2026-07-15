@@ -23,7 +23,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 
 
 class PaginasMixin(BaseModel):
@@ -46,6 +46,26 @@ class PaginasMixin(BaseModel):
     paginas: int | list[int] | range | None = None
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    @field_validator("paginas")
+    @classmethod
+    def _validate_paginas(
+        cls,
+        paginas: int | list[int] | range | None,
+    ) -> int | list[int] | range | None:
+        if paginas is None:
+            return paginas
+        if isinstance(paginas, int):
+            if paginas <= 0:
+                raise ValueError("'paginas' deve ser um inteiro positivo.")
+            return paginas
+        if not paginas:
+            raise ValueError("'paginas' não pode ser uma seleção vazia.")
+        if isinstance(paginas, range) and paginas.step <= 0:
+            raise ValueError("'paginas' não aceita range descendente.")
+        if any(pagina <= 0 for pagina in paginas):
+            raise ValueError("'paginas' aceita somente páginas 1-based positivas.")
+        return paginas
 
 
 class DataJulgamentoMixin(BaseModel):
