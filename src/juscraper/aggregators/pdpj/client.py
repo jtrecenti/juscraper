@@ -96,6 +96,46 @@ def _to_query_params(model_data: dict[str, Any]) -> dict[str, Any]:
     return out
 
 
+def _collect_documents(details: dict[str, Any]) -> list[Any]:
+    """Coleta documentos do topo e das tramitacoes na ordem da API."""
+    documents: list[Any] = []
+    top_documents = details.get("documentos")
+    if isinstance(top_documents, list):
+        documents.extend(top_documents)
+    for traversal in details.get("tramitacoes", []) or []:
+        if isinstance(traversal, dict) and isinstance(traversal.get("documentos"), list):
+            documents.extend(traversal["documentos"])
+    return documents
+
+
+def _document_to_row(
+    document: Any,
+    process: Any,
+    process_number: Any,
+) -> dict[str, Any] | None:
+    """Achata um documento PDPJ bem-formado no formato de download."""
+    if not isinstance(document, dict):
+        return None
+    file_data = document.get("arquivo") or {}
+    document_type = document.get("tipo") or {}
+    return {
+        "processo": process,
+        "numero_processo": process_number,
+        "id_documento": document.get("id"),
+        "id_codex": document.get("idCodex"),
+        "sequencia": document.get("sequencia"),
+        "data_juntada": document.get("dataHoraJuntada"),
+        "nome": document.get("nome"),
+        "nivel_sigilo": document.get("nivelSigilo"),
+        "tipo_codigo": document_type.get("codigo"),
+        "tipo_nome": document_type.get("nome"),
+        "arquivo_id": file_data.get("id"),
+        "arquivo_tipo": file_data.get("tipo"),
+        "arquivo_tamanho": file_data.get("tamanho"),
+        "arquivo_paginas": file_data.get("quantidadePaginas"),
+    }
+
+
 class PdpjScraper(BaseScraper):
     """Raspador para a API DATALAKE - Processos do PDPJ.
 
@@ -499,37 +539,8 @@ class PdpjScraper(BaseScraper):
             detalhes = linha.get("detalhes") or {}
             if not isinstance(detalhes, dict):
                 continue
-            # Os documentos podem estar no topo (legacy) ou aninhados em
-            # tramitacoes[*].documentos (shape atual da PDPJ).
-            doc_lists: list[list[dict[str, Any]]] = []
-            top_docs = detalhes.get("documentos")
-            if isinstance(top_docs, list):
-                doc_lists.append(top_docs)
-            for tram in detalhes.get("tramitacoes", []) or []:
-                # filtro composto + narrowing de tipo que o mypy le melhor no laco explicito
-                if isinstance(tram, dict) and isinstance(tram.get("documentos"), list):
-                    doc_lists.append(tram["documentos"])  # noqa: PERF401
-
-            for docs in doc_lists:
-                for doc in docs:
-                    if not isinstance(doc, dict):
-                        continue  # type: ignore[unreachable]
-                    arquivo = doc.get("arquivo") or {}
-                    tipo = doc.get("tipo") or {}
-                    rows.append({
-                        "processo": cnj,
-                        "numero_processo": detalhes.get("numeroProcesso"),
-                        "id_documento": doc.get("id"),
-                        "id_codex": doc.get("idCodex"),
-                        "sequencia": doc.get("sequencia"),
-                        "data_juntada": doc.get("dataHoraJuntada"),
-                        "nome": doc.get("nome"),
-                        "nivel_sigilo": doc.get("nivelSigilo"),
-                        "tipo_codigo": tipo.get("codigo"),
-                        "tipo_nome": tipo.get("nome"),
-                        "arquivo_id": arquivo.get("id"),
-                        "arquivo_tipo": arquivo.get("tipo"),
-                        "arquivo_tamanho": arquivo.get("tamanho"),
-                        "arquivo_paginas": arquivo.get("quantidadePaginas"),
-                    })
+            for document in _collect_documents(detalhes):
+                row = _document_to_row(document, cnj, detalhes.get("numeroProcesso"))
+                if row is not None:
+                    rows.append(row)
         return pd.DataFrame(rows)
