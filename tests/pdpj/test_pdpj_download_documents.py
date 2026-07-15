@@ -9,6 +9,7 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 import responses
+from pydantic import ValidationError
 
 import juscraper as jus
 from juscraper.aggregators.pdpj.download import BASE_URL
@@ -107,6 +108,32 @@ def test_download_documents_max_docs_per_process():
 
 
 @responses.activate
+def test_download_documents_usa_valores_coeridos_pelo_schema():
+    _mock_documentos_endpoint()
+    s = _mk_scraper()
+    docs_df = s.documentos(PROC)
+    primeiro = docs_df.iloc[0]["id_documento"]
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/processos/{PROC}/documentos/{primeiro}/binario",
+        body=b"conteudo-binario",
+        status=200,
+        content_type="application/octet-stream",
+    )
+
+    out = s.download_documents(
+        docs_df,
+        max_docs_per_process="1",
+        with_text="false",
+        with_binary="true",
+    )
+
+    assert out["id_documento"].tolist() == [primeiro]
+    assert out.iloc[0]["binario"] == b"conteudo-binario"
+    assert "texto" not in out.columns
+
+
+@responses.activate
 def test_download_documents_a_partir_de_cpopg_df():
     """Documentos podem vir aninhados em ``tramitacoes[*].documentos``."""
     _mock_cpopg_endpoint()
@@ -174,25 +201,22 @@ def test_download_documents_kwarg_desconhecido_raises_typeerror():
         s.download_documents(df, parametro_inventado="x")
 
 
-def test_coerce_documentos_none_e_dataframe_vazio_retornam_vazio():
+@pytest.mark.parametrize("base_df", [None, []])
+def test_download_documents_rejeita_base_que_nao_e_dataframe(base_df):
     s = _mk_scraper()
 
-    from_none = s._coerce_to_documentos_df(None)
-    from_empty = s._coerce_to_documentos_df(pd.DataFrame(columns=["id_documento"]))
-
-    assert isinstance(from_none, pd.DataFrame)
-    assert isinstance(from_empty, pd.DataFrame)
-    assert from_none.empty
-    assert from_empty.empty
+    with pytest.raises(ValidationError, match="base_df"):
+        s.download_documents(base_df)
 
 
-def test_coerce_documentos_df_pronto_retorna_mesmo_objeto():
+def test_download_documents_rejeita_limite_negativo():
     s = _mk_scraper()
-    base_df = pd.DataFrame([{"processo": PROC, "id_documento": "doc-1"}])
 
-    result = s._coerce_to_documentos_df(base_df)
-
-    assert result is base_df
+    with pytest.raises(ValidationError, match="max_docs_per_process"):
+        s.download_documents(
+            pd.DataFrame([{"processo": PROC, "id_documento": "doc-1"}]),
+            max_docs_per_process=-1,
+        )
 
 
 def test_coerce_documentos_rejeita_df_sem_coluna_reconhecida():

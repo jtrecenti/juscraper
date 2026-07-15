@@ -8,9 +8,8 @@ querystring no :mod:`download`).
 """
 from __future__ import annotations
 
-from typing import Any
-
-from pydantic import BaseModel, ConfigDict
+import pandas as pd
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class InputAuthPdpj(BaseModel):
@@ -131,13 +130,13 @@ class InputContarPdpj(BaseModel):
 class InputDownloadDocumentsPdpj(BaseModel):
     """Input aceito por :meth:`PdpjScraper.download_documents`.
 
-    ``base_df`` e tipado como ``Any`` porque pydantic nao tem validador
-    nativo para ``pandas.DataFrame``. ``with_text``/``with_binary``
-    selecionam quais conteudos baixar — pelo menos um deve ser ``True``.
+    ``base_df`` aceita somente :class:`pandas.DataFrame`. ``with_text``/
+    ``with_binary`` selecionam quais conteudos baixar — pelo menos um deve
+    ser ``True``.
     """
 
-    base_df: Any
-    max_docs_per_process: int | None = None
+    base_df: pd.DataFrame
+    max_docs_per_process: int | None = Field(default=None, ge=0)
     with_text: bool = True
     with_binary: bool = False
 
