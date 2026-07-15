@@ -2,14 +2,59 @@
 Parse of cases from the TJSP jurisprudence search.
 """
 import logging
-import re
 from pathlib import Path
 
 import pandas as pd
 from bs4 import BeautifulSoup
+from bs4.element import Tag
 from tqdm import tqdm
 
+from juscraper.courts._esaj.parse import _extract_pagination_count
+
 logger = logging.getLogger("juscraper.cjpg_parse")
+
+_ZERO_RESULT_MARKERS = (
+    "nenhum resultado",
+    "não foram encontrados",
+    "sem resultados",
+)
+
+
+def _has_zero_results(soup: BeautifulSoup) -> bool:
+    page_text = soup.get_text().lower()
+    return any(marker in page_text for marker in _ZERO_RESULT_MARKERS)
+
+
+def _find_cjpg_pagination_element(soup: BeautifulSoup) -> Tag | None:
+    # A ordem faz parte do contrato legado do CJPG e difere dos seletores
+    # compartilhados pelo CJSG. Ver issue #307.
+    for cell in soup.find_all("td"):
+        if "resultado" in cell.get_text().lower():
+            return cell
+
+    legacy_element = soup.find(attrs={"bgcolor": "#EEEEEE"})
+    if legacy_element is not None:
+        return legacy_element
+
+    for cell in soup.find_all("td"):
+        text = cell.get_text().lower()
+        if "página" in text and ("de" in text or "total" in text):
+            return cell
+    return None
+
+
+def _count_cjpg_result_rows_or_raise(soup: BeautifulSoup) -> int:
+    results_container = soup.find("div", {"id": "divDadosResultado"})
+    if results_container is not None:
+        result_rows = results_container.find_all("tr", class_="fundocinza1")
+        if result_rows:
+            return len(result_rows)
+
+    raise ValueError(
+        "Não foi possível encontrar o seletor de número de páginas "
+        "na resposta HTML. Verifique se a busca retornou resultados "
+        "ou se a estrutura da página mudou."
+    )
 
 
 def cjpg_n_results(page_source) -> int:
@@ -37,79 +82,21 @@ def cjpg_n_results(page_source) -> int:
     """
     soup = BeautifulSoup(page_source, "html.parser")
 
-    # Zero-results guard: eSAJ returns the search form (without
-    # ``divDadosResultado``) when nothing matches. Mirror the pattern in
-    # ``cjsg_n_results`` so ``cjpg_download`` can short-circuit and the public
-    # call returns an empty DataFrame instead of raising. Refs #109.
-    page_text = soup.get_text().lower()
-    if (
-        'nenhum resultado' in page_text
-        or 'não foram encontrados' in page_text
-        or 'sem resultados' in page_text
-    ):
+    if _has_zero_results(soup):
         return 0
 
-    # --- Selector cascade ---
-    page_element = None
-
-    # 1) <td> containing "Resultados" / "resultados" (current TJSP format,
-    #    e.g. "Resultados 1 a 10 de 39764")
-    for td in soup.find_all("td"):
-        if 'resultado' in td.get_text().lower():
-            page_element = td
-            break
-
-    # 2) Original selector: bgcolor='#EEEEEE' (legacy format)
+    page_element = _find_cjpg_pagination_element(soup)
     if page_element is None:
-        page_element = soup.find(attrs={'bgcolor': '#EEEEEE'})
+        return _count_cjpg_result_rows_or_raise(soup)
 
-    # 3) Any <td> that mentions "página" plus "de" or "total"
-    if page_element is None:
-        for td in soup.find_all("td"):
-            txt = td.get_text().lower()
-            if 'página' in txt and ('de' in txt or 'total' in txt):
-                page_element = td
-                break
-
-    # 4) Pagination marker missing but results table present: count rows.
-    if page_element is None:
-        div_dados = soup.find('div', {'id': 'divDadosResultado'})
-        if div_dados is not None and div_dados.find('tr', class_='fundocinza1'):
-            n_rows = len(div_dados.find_all('tr', class_='fundocinza1'))
-            return max(n_rows, 1)
+    pagination_text = page_element.get_text().strip()
+    count = _extract_pagination_count(pagination_text)
+    if count is None:
         raise ValueError(
-            "Não foi possível encontrar o seletor de número de páginas "
-            "na resposta HTML. Verifique se a busca retornou resultados "
-            "ou se a estrutura da página mudou."
+            "Não foi possível extrair o número de resultados "
+            f"da string: {pagination_text}"
         )
-
-    texto = page_element.get_text().strip()
-
-    # --- Regex cascade ---
-    # 1) Number at end of text (covers "Resultados 1 a 10 de 39764")
-    match = re.search(r'(\d+)\s*$', texto)
-    if match is None:
-        # 2) Number after "de "
-        m2 = re.search(r'(?<=de )([0-9]+)', texto)
-        match = m2
-    if match is None:
-        # 3) Number followed by descriptor
-        m3 = re.search(r'([0-9]+)(?=\s*(?:resultado|registro|página))', texto, re.I)
-        match = m3
-    if match is None:
-        # 4) Last resort: pick the largest number found in the text
-        nums = re.findall(r'\d+', texto)
-        if nums:
-            results = max(int(n) for n in nums)
-        else:
-            raise ValueError(
-                "Não foi possível extrair o número de resultados "
-                f"da string: {texto}"
-            )
-    else:
-        results = int(match.group(1))
-
-    return results
+    return count
 
 
 def cjpg_n_pags(page_source) -> int:
