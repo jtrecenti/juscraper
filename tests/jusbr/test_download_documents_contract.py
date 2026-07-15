@@ -22,6 +22,7 @@ Samples (``text_typical.txt`` / ``binary_typical.bin``) sao capturados via
 ``tests/fixtures/capture/jusbr.py``.
 """
 import jwt
+import numpy as np
 import pandas as pd
 import pytest
 import responses
@@ -64,17 +65,23 @@ def _doc_meta(*, href_texto: str | None, href_binario: str | None, **extra) -> d
         meta["hrefTexto"] = href_texto
     if href_binario is not None:
         meta["hrefBinario"] = href_binario
+    meta.update({key: value for key, value in extra.items() if key not in meta})
     return meta
 
 
 def _base_df(documentos: list[dict]) -> pd.DataFrame:
     """Build the input DataFrame for ``download_documents``."""
+    return _base_df_with_details({"dadosBasicos": {"documentos": documentos}})
+
+
+def _base_df_with_details(detalhes: dict) -> pd.DataFrame:
+    """Build the input DataFrame with an explicit ``detalhes`` payload."""
     return pd.DataFrame([{
         "processo_pesquisado": CNJ_DIGITS,
         "numeroProcesso": CNJ_DIGITS,
         "processo": CNJ_DIGITS,
         "idCodexTribunal": "TRIB",
-        "detalhes": {"dadosBasicos": {"documentos": documentos}},
+        "detalhes": detalhes,
     }])
 
 
@@ -257,6 +264,129 @@ def test_download_documents_max_docs_per_process_limita(mocker):
     assert isinstance(df, pd.DataFrame)
     assert len(df) == 1
     assert df.iloc[0]["idDocumento"] == "doc-1"
+
+
+@pytest.mark.parametrize(
+    ("metadata_location", "expected_id", "expected_uuid"),
+    [
+        ("dados_basicos", "dados-basicos", UUID_TEXT_1),
+        ("documentos", "documentos", UUID_TEXT_2),
+        ("tramitacao_ndarray", "tramitacao", UUID_BIN_1),
+    ],
+)
+@responses.activate(registry=OrderedRegistry)
+def test_download_documents_respeita_prioridade_dos_caminhos_de_metadata(
+    mocker, metadata_location, expected_id, expected_uuid
+):
+    """O primeiro caminho não vazio vence; ``tramitacaoAtual`` aceita ndarray."""
+    mocker.patch("time.sleep")
+    scraper = _authenticated_scraper()
+    doc_dados_basicos = _doc_meta(
+        href_texto=_href_texto(UUID_TEXT_1),
+        href_binario=None,
+        idDocumento="dados-basicos",
+    )
+    doc_documentos = _doc_meta(
+        href_texto=_href_texto(UUID_TEXT_2),
+        href_binario=None,
+        idDocumento="documentos",
+    )
+    doc_tramitacao = _doc_meta(
+        href_texto=_href_texto(UUID_BIN_1),
+        href_binario=None,
+        idDocumento="tramitacao",
+    )
+    detalhes = {
+        "dadosBasicos": {"documentos": [doc_dados_basicos]},
+        "documentos": [doc_documentos],
+        "tramitacaoAtual": {"documentos": [doc_tramitacao]},
+    }
+    if metadata_location == "documentos":
+        detalhes["dadosBasicos"]["documentos"] = []
+    elif metadata_location == "tramitacao_ndarray":
+        detalhes["dadosBasicos"]["documentos"] = []
+        detalhes["documentos"] = []
+        detalhes["tramitacaoAtual"]["documentos"] = np.array([doc_tramitacao], dtype=object)
+
+    responses.add(
+        responses.GET,
+        f"{BASE_TEXT_URL}/{CNJ_DIGITS}/documentos/{expected_uuid}/texto",
+        body=load_sample("jusbr", "documents/text_typical.txt"),
+        status=200,
+    )
+
+    df = scraper.download_documents(_base_df_with_details(detalhes))
+
+    assert df["idDocumento"].tolist() == [expected_id]
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_download_documents_limite_conta_so_linhas_produzidas_e_sleep_so_apos_sucesso(mocker):
+    """Metadata inválida ou sem UUID não consome limite nem dispara pausa."""
+    sleep = mocker.patch("time.sleep")
+    scraper = _authenticated_scraper(sleep_time=0.25)
+    documentos = [
+        "metadata-invalida",
+        _doc_meta(href_texto=None, href_binario=None, idDocumento="sem-uuid"),
+        _doc_meta(href_texto=_href_texto(UUID_TEXT_1), href_binario=None, idDocumento="valido-1"),
+        _doc_meta(href_texto=_href_texto(UUID_TEXT_2), href_binario=None, idDocumento="valido-2"),
+    ]
+    responses.add(
+        responses.GET,
+        f"{BASE_TEXT_URL}/{CNJ_DIGITS}/documentos/{UUID_TEXT_1}/texto",
+        body=load_sample("jusbr", "documents/text_typical.txt"),
+        status=200,
+    )
+
+    df = scraper.download_documents(_base_df(documentos), max_docs_per_process=1)
+
+    assert df["idDocumento"].tolist() == ["valido-1"]
+    sleep.assert_called_once_with(0.25)
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_download_documents_preserva_ordem_de_colunas_e_extras(mocker):
+    """Metadados extras ficam ordenados antes das colunas preferenciais ausentes."""
+    mocker.patch("time.sleep")
+    scraper = _authenticated_scraper()
+    documento = _doc_meta(
+        href_texto=_href_texto(UUID_TEXT_1),
+        href_binario=None,
+        nome="Petição",
+        zetaExtra=2,
+        alphaExtra=1,
+    )
+    responses.add(
+        responses.GET,
+        f"{BASE_TEXT_URL}/{CNJ_DIGITS}/documentos/{UUID_TEXT_1}/texto",
+        body=load_sample("jusbr", "documents/text_typical.txt"),
+        status=200,
+    )
+
+    df = scraper.download_documents(_base_df([documento]))
+
+    assert list(df.columns) == [
+        "numero_processo",
+        "idDocumento",
+        "sequencia",
+        "descricao",
+        "nome",
+        "tipo",
+        "hrefTexto",
+        "texto",
+        "_raw_text_api",
+        "_raw_binary_api",
+        "alphaExtra",
+        "zetaExtra",
+        "idCodex",
+        "tipoDocumento",
+        "dataHoraJuntada",
+        "dataJuntada",
+        "nivelSigilo",
+        "hrefBinario",
+    ]
+    assert df.loc[0, "alphaExtra"] == 1
+    assert df.loc[0, "zetaExtra"] == 2
 
 
 def test_download_documents_sem_auth_levanta_runtime_error():
