@@ -14,6 +14,8 @@ from tests._helpers import load_sample
 
 from .test_utils import create_mock_response
 
+_SAMPLES = Path(__file__).parent / 'samples' / 'cpopg'
+
 
 @pytest.mark.integration
 class TestCPOPGIntegration:
@@ -467,6 +469,97 @@ class TestCPOPGUnit:
             assert basicos['outros_assuntos'] == 'ICMS/ Imposto sobre Circulação de Mercadorias'
         finally:
             Path(temp_path).unlink()
+
+    @pytest.mark.parametrize(
+        ('sample_name', 'basic_columns', 'basic_values', 'party_values', 'movement_values'),
+        [
+            (
+                'show_standard.html',
+                [
+                    'file_path',
+                    'id_processo',
+                    'classe',
+                    'assunto',
+                    'foro',
+                    'vara',
+                    'juiz',
+                    'data_distribuicao',
+                    'valor_acao',
+                    'controle',
+                    'area',
+                    'outros_assuntos',
+                ],
+                {
+                    'id_processo': '1009367-76.2017.8.26.0344',
+                    'classe': 'Procedimento Comum Cível',
+                    'assunto': 'Responsabilidade do Fornecedor',
+                    'foro': 'Foro de Marília',
+                    'vara': 'Vara da Fazenda Pública',
+                    'juiz': 'WALMIR IDALENCIO DOS SANTOS CRUZ',
+                    'data_distribuicao': '06/06/2017 às 09:08 - Livre',
+                    'valor_acao': 'R$         10.000,00',
+                    'controle': '2017/006364',
+                    'area': 'Cível',
+                    'outros_assuntos': 'ICMS/ Imposto sobre Circulação de Mercadorias',
+                },
+                {'tipo': 'Reqte', 'nome': 'João da Silva', 'advogados': ['Pedro Souza']},
+                {'data': '01/03/2025', 'movimento': 'Juntada de Petição', 'observacao': ''},
+            ),
+            (
+                'show_alternative.html',
+                [
+                    'file_path',
+                    'id_processo',
+                    'classe',
+                    'assunto',
+                    'foro',
+                    'vara',
+                    'juiz',
+                    'data_distribuicao',
+                    'valor_acao',
+                    'processo_principal',
+                    'controle',
+                    'area',
+                ],
+                {
+                    'id_processo': '0015615-74.2025.8.26.0577',
+                    'classe': 'Cumprimento de Sentença contra a Fazenda Pública',
+                    'assunto': 'Reajuste de Prestações',
+                    'foro': 'Foro de São José dos Campos',
+                    'vara': 'Anexo do Juizado Especial da Fazenda Pública',
+                    'juiz': None,
+                    'data_distribuicao': '28/02/2025 às 12:15',
+                    'valor_acao': None,
+                    'processo_principal': '1010658-13.2025.8.26.0577',
+                    'controle': '2024/005678',
+                    'area': 'Cível',
+                },
+                {'tipo': 'Exeqte', 'nome': 'Maria Santos', 'advogados': ['Ana Oliveira']},
+                {'data': '15/03/2025', 'movimento': 'Recebidos os autos', 'observacao': ''},
+            ),
+        ],
+    )
+    def test_cpopg_parse_sample_contract(
+        self,
+        sample_name,
+        basic_columns,
+        basic_values,
+        party_values,
+        movement_values,
+    ):
+        """Characterize field order and nested table shapes for both CPOPG templates."""
+        sample_path = _SAMPLES / sample_name
+        result = cpopg_parse_single_html(str(sample_path))
+
+        assert list(result) == ['basicos', 'partes', 'movimentacoes', 'peticoes_diversas']
+        assert list(result['basicos'].columns) == basic_columns
+        assert result['basicos'].iloc[0].to_dict() == {'file_path': str(sample_path), **basic_values}
+        assert list(result['partes'].columns) == ['file_path', 'tipo', 'nome', 'advogados']
+        assert result['partes'].iloc[0].to_dict() == {'file_path': str(sample_path), **party_values}
+        assert list(result['movimentacoes'].columns) == ['file_path', 'data', 'movimento', 'observacao']
+        assert result['movimentacoes'].iloc[0].to_dict() == {'file_path': str(sample_path), **movement_values}
+        assert result['peticoes_diversas'].empty
+        assert list(result['peticoes_diversas'].columns) == []
 
 
 if __name__ == "__main__":

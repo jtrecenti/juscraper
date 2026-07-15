@@ -11,6 +11,8 @@ import pytest
 import juscraper
 from juscraper.courts.tjsp.cposg_parse import cposg_parse_manager, cposg_parse_single_html
 
+_SAMPLES = Path(__file__).parent / 'samples' / 'cposg'
+
 
 @pytest.mark.integration
 class TestCPOSGIntegration:
@@ -129,6 +131,106 @@ class TestCPOSGUnit:
             assert len(row['movimentacoes']) == 2
         finally:
             Path(temp_path).unlink()
+
+    def test_cposg_parse_complete_sample_contract(self):
+        """Characterize every collection returned by the complete CPOSG sample."""
+        result = cposg_parse_single_html(_SAMPLES / 'results_complete.html')
+
+        assert len(result) == 1
+        row = result[0]
+        assert list(row) == [
+            'id_original',
+            'processo',
+            'status',
+            'classe',
+            'assunto',
+            'secao',
+            'orgao_julgador',
+            'area',
+            'relator',
+            'valor_da_acao',
+            'origem',
+            'volume_apenso',
+            'movimentacoes',
+            'partes',
+            'historico',
+            'decisoes',
+            'composicao',
+            'primeira_inst',
+        ]
+        assert row['id_original'] == '1234567-89.2025.8.26.0000'
+        assert row['processo'] == '1234567-89.2025.8.26.0000'
+        assert row['status'] == 'Em julgamento / Digital'
+        assert row['movimentacoes'] == [
+            {'data': '01/07/2025', 'movimento': 'Distribuído', 'descricao': 'Observação vinculada'},
+            {'data': '02/07/2025', 'movimento': 'Movimento sem link', 'descricao': 'Observação livre'},
+        ]
+        assert row['partes'] == [
+            {'id_parte': 1, 'nome': 'Ana Silva', 'parte': 'Apelante', 'papel': 'ADVOGADO'},
+            {'id_parte': 1, 'nome': 'Bruno Souza', 'parte': 'Apelante', 'papel': 'PROCURADOR'},
+            {'id_parte': 2, 'nome': 'Carla Lima', 'parte': 'Apelado', 'papel': 'ADVOGADO'},
+        ]
+        assert row['historico'] == [
+            ['01/01/2025', 'Procedimento Comum Cível'],
+            ['15/06/2025', 'Apelação Cível'],
+        ]
+        assert row['decisoes'] == [
+            {'data': '10/07/2025', 'situacao': 'Julgado', 'decisao': 'Recurso não provido'},
+        ]
+        assert row['composicao'] == [
+            {'participacao': 'Relator', 'magistrado': 'Desembargador A'},
+            {'participacao': '2º Juiz', 'magistrado': 'Desembargador B'},
+        ]
+        assert row['primeira_inst'] == [
+            {
+                'id_1a_inst': '0000001-11.2024.8.26.0100',
+                'foro': 'Foro Central',
+                'vara': '1ª Vara Cível',
+                'juiz': 'Juíza C',
+                'obs': 'Digital',
+            },
+        ]
+
+    def test_cposg_parse_real_sample_contract(self):
+        """Characterize the collection sizes and representative rows from the recorded page."""
+        result = cposg_parse_single_html(_SAMPLES / 'search_listagem.html')
+
+        assert len(result) == 1
+        row = result[0]
+        assert row['id_original'] == '1000149-71.2024.8.26.0346'
+        assert row['classe'] == 'Apelação Cível'
+        assert row['processo'] is None
+        assert row['volume_apenso'] is None
+        assert len(row['movimentacoes']) == 24
+        assert row['movimentacoes'][:2] == [
+            {
+                'data': '25/06/2025',
+                'movimento': 'Expedido Certidão de Baixa de Recurso',
+                'descricao': 'Certidão de Baixa de Recurso - [Digital]',
+            },
+            {'data': '25/06/2025', 'movimento': 'Baixa Definitiva', 'descricao': ''},
+        ]
+        assert len(row['partes']) == 6
+        assert row['partes'][0] == {
+            'id_parte': 1,
+            'nome': 'Fabio Cabral Silva de Oliveira Monteiro',
+            'parte': 'Apelante',
+            'papel': 'Banco Bradesco S/AAdvogado',
+        }
+        assert row['historico'] == []
+        assert row['decisoes'] == [
+            {'data': '24/05/2025', 'situacao': 'Julgado', 'decisao': 'Negaram provimento ao recurso. V. U.'},
+        ]
+        assert len(row['composicao']) == 3
+        assert row['primeira_inst'] == [
+            {
+                'id_1a_inst': '1000149-71.2024.8.26.0346(Principal)',
+                'foro': 'Foro de Martinópolis',
+                'vara': '2ª Vara Judicial',
+                'juiz': 'Renata Esser de Souza',
+                'obs': '-',
+            },
+        ]
 
     def test_cposg_parse_manager_directory(self):
         """Test parsing multiple CPOSG files from directory."""
