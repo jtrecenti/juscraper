@@ -19,6 +19,22 @@ FAKE_TOKEN = (
     "eyJzdWIiOiJ0ZXN0IiwiZXhwIjo5OTk5OTk5OTk5LCJpYXQiOjE3MDAwMDAwMDB9."
 )
 PROC = "10029886420194014100"
+COERCED_DOCUMENT_COLUMNS = [
+    "processo",
+    "numero_processo",
+    "id_documento",
+    "id_codex",
+    "sequencia",
+    "data_juntada",
+    "nome",
+    "nivel_sigilo",
+    "tipo_codigo",
+    "tipo_nome",
+    "arquivo_id",
+    "arquivo_tipo",
+    "arquivo_tamanho",
+    "arquivo_paginas",
+]
 
 
 def _mk_scraper():
@@ -156,3 +172,143 @@ def test_download_documents_kwarg_desconhecido_raises_typeerror():
     }])
     with pytest.raises(TypeError, match="parametro_inventado"):
         s.download_documents(df, parametro_inventado="x")
+
+
+def test_coerce_documentos_none_e_dataframe_vazio_retornam_vazio():
+    s = _mk_scraper()
+
+    from_none = s._coerce_to_documentos_df(None)
+    from_empty = s._coerce_to_documentos_df(pd.DataFrame(columns=["id_documento"]))
+
+    assert isinstance(from_none, pd.DataFrame)
+    assert isinstance(from_empty, pd.DataFrame)
+    assert from_none.empty
+    assert from_empty.empty
+
+
+def test_coerce_documentos_df_pronto_retorna_mesmo_objeto():
+    s = _mk_scraper()
+    base_df = pd.DataFrame([{"processo": PROC, "id_documento": "doc-1"}])
+
+    result = s._coerce_to_documentos_df(base_df)
+
+    assert result is base_df
+
+
+def test_coerce_documentos_rejeita_df_sem_coluna_reconhecida():
+    s = _mk_scraper()
+    base_df = pd.DataFrame([{"processo": PROC, "outra_coluna": 1}])
+
+    with pytest.raises(
+        ValueError,
+        match=r"base_df precisa ter coluna 'id_documento'.*ou 'detalhes'",
+    ):
+        s._coerce_to_documentos_df(base_df)
+
+
+def test_coerce_documentos_ignora_detalhes_nao_dict_e_listas_vazias():
+    s = _mk_scraper()
+    base_df = pd.DataFrame([
+        {"processo": "processo-1", "detalhes": None},
+        {"processo": "processo-2", "detalhes": "malformado"},
+        {"processo": "processo-3", "detalhes": ["malformado"]},
+        {
+            "processo": "processo-4",
+            "detalhes": {"documentos": None, "tramitacoes": []},
+        },
+        {
+            "processo": "processo-5",
+            "detalhes": {"documentos": [], "tramitacoes": None},
+        },
+        {
+            "processo": "processo-6",
+            "detalhes": {"documentos": "lista-malformada", "tramitacoes": [42]},
+        },
+    ])
+
+    result = s._coerce_to_documentos_df(base_df)
+
+    assert result.empty
+
+
+def test_coerce_documentos_preserva_precedencia_ordem_duplicatas_e_shape():
+    s = _mk_scraper()
+    top_document = {
+        "id": "doc-top",
+        "idCodex": "codex-top",
+        "sequencia": 1,
+        "dataHoraJuntada": "2026-01-02T03:04:05",
+        "nome": "Documento do topo",
+        "nivelSigilo": 0,
+        "tipo": {"codigo": 10, "nome": "Petição"},
+        "arquivo": {
+            "id": "arquivo-top",
+            "tipo": "application/pdf",
+            "tamanho": 123,
+            "quantidadePaginas": 2,
+        },
+    }
+    nested_document = {
+        "id": "doc-tramitacao",
+        "tipo": None,
+        "arquivo": None,
+    }
+    last_document = {"id": "doc-ultima-linha"}
+    base_df = pd.DataFrame([
+        {
+            "processo": "cnj-pesquisado-1",
+            "detalhes": {
+                "numeroProcesso": "cnj-retornado-1",
+                "documentos": [top_document, "documento-malformado", top_document],
+                "tramitacoes": [
+                    None,
+                    {"documentos": []},
+                    {"documentos": [nested_document, 42, top_document]},
+                    {"documentos": None},
+                    {"documentos": "lista-malformada"},
+                    "tramitacao-malformada",
+                ],
+            },
+        },
+        {
+            "processo": "cnj-pesquisado-2",
+            "detalhes": {
+                "numeroProcesso": "cnj-retornado-2",
+                "documentos": [last_document],
+            },
+        },
+    ])
+
+    result = s._coerce_to_documentos_df(base_df)
+
+    assert result.columns.tolist() == COERCED_DOCUMENT_COLUMNS
+    assert result["id_documento"].tolist() == [
+        "doc-top",
+        "doc-top",
+        "doc-tramitacao",
+        "doc-top",
+        "doc-ultima-linha",
+    ]
+    assert result["processo"].tolist() == [
+        "cnj-pesquisado-1",
+        "cnj-pesquisado-1",
+        "cnj-pesquisado-1",
+        "cnj-pesquisado-1",
+        "cnj-pesquisado-2",
+    ]
+    assert result.iloc[0].to_dict() == {
+        "processo": "cnj-pesquisado-1",
+        "numero_processo": "cnj-retornado-1",
+        "id_documento": "doc-top",
+        "id_codex": "codex-top",
+        "sequencia": 1.0,
+        "data_juntada": "2026-01-02T03:04:05",
+        "nome": "Documento do topo",
+        "nivel_sigilo": 0.0,
+        "tipo_codigo": 10.0,
+        "tipo_nome": "Petição",
+        "arquivo_id": "arquivo-top",
+        "arquivo_tipo": "application/pdf",
+        "arquivo_tamanho": 123.0,
+        "arquivo_paginas": 2.0,
+    }
