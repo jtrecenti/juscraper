@@ -28,6 +28,7 @@ import numpy as np
 import pandas as pd
 import pytest
 import responses
+from pydantic import ValidationError
 from responses.registries import OrderedRegistry
 
 import juscraper as jus
@@ -274,6 +275,8 @@ def test_download_documents_max_docs_per_process_limita(mocker):
         ("dados_basicos", "dados-basicos", UUID_TEXT_1),
         ("documentos", "documentos", UUID_TEXT_2),
         ("tramitacao_ndarray", "tramitacao", UUID_BIN_1),
+        ("dados_basicos_invalido", "documentos", UUID_TEXT_2),
+        ("documentos_invalido", "tramitacao", UUID_BIN_1),
     ],
 )
 @responses.activate(registry=OrderedRegistry)
@@ -309,6 +312,11 @@ def test_download_documents_respeita_prioridade_dos_caminhos_de_metadata(
         detalhes["dadosBasicos"]["documentos"] = []
         detalhes["documentos"] = []
         detalhes["tramitacaoAtual"]["documentos"] = np.array([doc_tramitacao], dtype=object)
+    elif metadata_location == "dados_basicos_invalido":
+        detalhes["dadosBasicos"]["documentos"] = "container-malformado"
+    elif metadata_location == "documentos_invalido":
+        detalhes["dadosBasicos"]["documentos"] = []
+        detalhes["documentos"] = {"container": "malformado"}
 
     responses.add(
         responses.GET,
@@ -407,3 +415,18 @@ def test_download_documents_kwarg_desconhecido_levanta_type_error():
     """
     scraper = jus.scraper("jusbr")
     assert_unknown_kwarg_raises(scraper.download_documents, "kwarg_inventado", _base_df([]))
+
+
+@pytest.mark.parametrize("base_df", [None, []])
+def test_download_documents_rejeita_base_que_nao_e_dataframe(base_df):
+    scraper = _authenticated_scraper()
+
+    with pytest.raises(ValidationError, match="base_df"):
+        scraper.download_documents(base_df)
+
+
+def test_download_documents_rejeita_limite_negativo():
+    scraper = _authenticated_scraper()
+
+    with pytest.raises(ValidationError, match="max_docs_per_process"):
+        scraper.download_documents(_base_df([]), max_docs_per_process=-1)

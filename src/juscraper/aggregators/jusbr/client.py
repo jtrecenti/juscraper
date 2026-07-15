@@ -3,7 +3,8 @@
 import logging
 import time
 import urllib
-from typing import Any, TypeAlias
+from collections.abc import Iterator
+from typing import Any
 
 import browser_cookie3
 import jwt
@@ -21,9 +22,6 @@ from .schemas import InputAuthJusBR, InputCPOPGJusBR, InputDownloadDocumentsJusB
 
 logger = logging.getLogger(__name__)
 
-_DocumentMetadata: TypeAlias = dict[str, Any]
-_DocumentDataRow: TypeAlias = dict[str, Any]
-
 _PREFERRED_DOCUMENT_COLUMNS = (
     'numero_processo', 'idDocumento', 'idCodex', 'sequencia', 'descricao', 'nome',
     'tipoDocumento', 'tipo', 'dataHoraJuntada', 'dataJuntada', 'nivelSigilo',
@@ -31,62 +29,70 @@ _PREFERRED_DOCUMENT_COLUMNS = (
 )
 
 
-def _metadata_is_empty(metadata: Any) -> bool:
-    """Testa vazio sem avaliar ``ndarray`` como booleano ambíguo."""
-    if isinstance(metadata, np.ndarray):
-        return bool(metadata.size == 0)
-    return not bool(metadata)
-
-
-def _coerce_document_metadata_list(
+def _coerce_document_metadata_container(
     metadata: Any,
+    location: str,
     numero_processo: str,
-    detalhes: dict[str, Any],
-) -> list[_DocumentMetadata]:
-    """Normaliza a coleção externa e elimina itens sem shape de metadata."""
+) -> list[Any] | None:
+    """Coage uma coleção externa ou sinaliza que o próximo fallback deve ser tentado."""
     if isinstance(metadata, np.ndarray):
         metadata = metadata.tolist()
-    if not isinstance(metadata, list):
-        logger.warning(
-            "Lista de metadados de documentos não encontrada ou não é uma lista "
-            "para o processo %s. Conteúdo de 'detalhes' (início): %s",
-            numero_processo, str(detalhes)[:200]
-        )
-        return []
-
-    valid_metadata = []
-    for item in metadata:
-        if not isinstance(item, dict):
-            logger.warning(
-                "Item na lista de documentos não é um dicionário para o processo %s. Item: %s",
-                numero_processo, str(item)[:100]
-            )
-            continue
-        valid_metadata.append(item)
-    return valid_metadata
+    if metadata is None or (isinstance(metadata, list) and not metadata):
+        return None
+    if isinstance(metadata, list):
+        return metadata
+    logger.warning(
+        "Metadados em %s não são uma lista para o processo %s. Conteúdo: %s",
+        location,
+        numero_processo,
+        str(metadata)[:100],
+    )
+    return None
 
 
-def _resolve_document_metadata_list(
+def _iter_document_metadata(
     detalhes: dict[str, Any],
     numero_processo: str,
-) -> list[_DocumentMetadata]:
-    """Resolve a primeira lista não vazia na precedência exposta pelo JusBR."""
-    metadata: Any = []
+) -> Iterator[dict[str, Any]]:
+    """Itera a primeira coleção válida na precedência exposta pelo JusBR."""
     dados_basicos = detalhes.get('dadosBasicos')
-    if isinstance(dados_basicos, dict):
-        metadata = dados_basicos.get('documentos', [])
+    tramitacao_atual = detalhes.get('tramitacaoAtual')
+    candidates = (
+        ('dadosBasicos.documentos', dados_basicos.get('documentos') if isinstance(dados_basicos, dict) else None),
+        ('documentos', detalhes.get('documentos')),
+        (
+            'tramitacaoAtual.documentos',
+            tramitacao_atual.get('documentos') if isinstance(tramitacao_atual, dict) else None,
+        ),
+    )
+    for location, metadata in candidates:
+        metadata_list = _coerce_document_metadata_container(
+            metadata,
+            location,
+            numero_processo,
+        )
+        if metadata_list is None:
+            continue
+        found_document = False
+        for item in metadata_list:
+            if not isinstance(item, dict):
+                logger.warning(
+                    "Item na lista de documentos não é um dicionário para o processo %s. Item: %s",
+                    numero_processo,
+                    str(item)[:100],
+                )
+                continue
+            found_document = True
+            yield item
+        if found_document:
+            return
 
-    if _metadata_is_empty(metadata):
-        direct_metadata = detalhes.get('documentos')
-        if isinstance(direct_metadata, list):
-            metadata = direct_metadata
-
-    if _metadata_is_empty(metadata):
-        tramitacao_atual = detalhes.get('tramitacaoAtual')
-        if isinstance(tramitacao_atual, dict):
-            metadata = tramitacao_atual.get('documentos', [])
-
-    return _coerce_document_metadata_list(metadata, numero_processo, detalhes)
+    logger.warning(
+        "Lista válida de metadados de documentos não encontrada para o processo %s. "
+        "Conteúdo de 'detalhes' (início): %s",
+        numero_processo,
+        str(detalhes)[:200],
+    )
 
 
 def _extract_document_uuid(href: Any) -> str | None:
@@ -100,35 +106,7 @@ def _extract_document_uuid(href: Any) -> str | None:
     return document_uuid or None
 
 
-def _log_document_text_result(
-    document_uuid: str | None,
-    numero_processo: str,
-    raw_text: str | None,
-    cleaned_text: str | None,
-) -> None:
-    """Registra o resultado do ramo textual sem misturá-lo à orquestração."""
-    if not document_uuid:
-        return
-    if cleaned_text:
-        logger.debug(
-            "Sucesso ao baixar e limpar texto do doc UUID %s (processo %s), tamanho limpo: %d",
-            document_uuid, numero_processo, len(cleaned_text),
-        )
-        return
-    if raw_text:
-        logger.debug(
-            "Texto baixado para doc UUID %s (processo %s) mas resultou em "
-            "None/vazio após limpeza. Raw tamanho: %d",
-            document_uuid, numero_processo, len(raw_text),
-        )
-        return
-    logger.warning(
-        "Falha ao baixar texto do doc UUID %s (processo %s), ou texto vazio.",
-        document_uuid, numero_processo,
-    )
-
-
-def _build_documents_dataframe(rows: list[_DocumentDataRow]) -> pd.DataFrame:
+def _build_documents_dataframe(rows: list[dict[str, Any]]) -> pd.DataFrame:
     """Monta o DataFrame preservando a ordem pública e os campos auxiliares."""
     if not rows:
         logger.info("Nenhum documento foi baixado ou processado.")
@@ -394,9 +372,9 @@ class JusbrScraper(HTTPScraper):
 
     def _process_single_document(
         self,
-        document_metadata: _DocumentMetadata,
+        document_metadata: dict[str, Any],
         numero_processo: str,
-    ) -> _DocumentDataRow | None:
+    ) -> dict[str, Any] | None:
         """Processa uma metadata já validada e produz no máximo uma linha."""
         text_uuid = _extract_document_uuid(document_metadata.get('hrefTexto'))
         binary_uuid = _extract_document_uuid(document_metadata.get('hrefBinario'))
@@ -418,7 +396,27 @@ class JusbrScraper(HTTPScraper):
         raw_text, cleaned_text, raw_binary = self._fetch_document_contents(
             numero_processo, text_uuid, binary_uuid, authorization
         )
-        _log_document_text_result(text_uuid, numero_processo, raw_text, cleaned_text)
+        if text_uuid and cleaned_text:
+            logger.debug(
+                "Sucesso ao baixar e limpar texto do doc UUID %s (processo %s), tamanho limpo: %d",
+                text_uuid,
+                numero_processo,
+                len(cleaned_text),
+            )
+        elif text_uuid and raw_text:
+            logger.debug(
+                "Texto baixado para doc UUID %s (processo %s) mas resultou em "
+                "None/vazio após limpeza. Raw tamanho: %d",
+                text_uuid,
+                numero_processo,
+                len(raw_text),
+            )
+        elif text_uuid:
+            logger.warning(
+                "Falha ao baixar texto do doc UUID %s (processo %s), ou texto vazio.",
+                text_uuid,
+                numero_processo,
+            )
 
         document_row = {
             'numero_processo': numero_processo,
@@ -434,7 +432,7 @@ class JusbrScraper(HTTPScraper):
         index: Any,
         row: pd.Series,
         max_docs_per_process: int | None,
-    ) -> list[_DocumentDataRow]:
+    ) -> list[dict[str, Any]]:
         """Baixa as linhas válidas de um único processo do DataFrame de entrada."""
         numero_processo = row.get('numeroProcesso')
         processo_pesquisado = row.get('processo')
@@ -454,14 +452,8 @@ class JusbrScraper(HTTPScraper):
             )
             return []
 
-        metadata_list = _resolve_document_metadata_list(detalhes, numero_processo)
-        logger.info(
-            "Processo %s (pesquisado: %s): %d documentos encontrados na metadata.",
-            numero_processo, processo_pesquisado, len(metadata_list),
-        )
-
-        document_rows: list[_DocumentDataRow] = []
-        for document_metadata in metadata_list:
+        document_rows: list[dict[str, Any]] = []
+        for document_metadata in _iter_document_metadata(detalhes, numero_processo):
             if max_docs_per_process is not None and len(document_rows) >= max_docs_per_process:
                 logger.info(
                     "Limite de %d documentos atingido para o processo %s.",
@@ -506,7 +498,7 @@ class JusbrScraper(HTTPScraper):
         if not self.token:
             raise RuntimeError("Autenticação necessária. Chame o método auth(token) primeiro.")
 
-        all_docs_data: list[_DocumentDataRow] = []
+        all_docs_data: list[dict[str, Any]] = []
         logger.info("Iniciando download de documentos para %d processos...", len(base_df))
 
         for index, row in base_df.iterrows():
