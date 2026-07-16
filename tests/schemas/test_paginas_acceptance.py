@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import importlib
 import inspect
-from typing import Any
+from typing import Any, get_args, get_origin
 
 import pytest
 from pydantic import BaseModel, ValidationError
@@ -120,6 +120,21 @@ def test_normalize_paginas_accepts_all_variants(variant_name, paginas_value):
         pytest.fail(
             f"normalize_paginas rejeitou paginas={paginas_value!r} ({variant_name}): {exc}"
         )
+
+
+def test_paginas_mixin_validates_large_range_without_scanning():
+    paginas = range(1, 100_000_001)
+    variants = get_args(PaginasMixin.model_fields["paginas"].annotation)
+    range_index = variants.index(range)
+    list_index = next(
+        index for index, variant in enumerate(variants)
+        if get_origin(variant) is list
+    )
+
+    result = PaginasMixin(paginas=paginas).paginas
+
+    assert range_index < list_index
+    assert result == paginas
 
 
 @pytest.mark.parametrize(

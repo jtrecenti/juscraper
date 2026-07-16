@@ -43,7 +43,9 @@ class PaginasMixin(BaseModel):
     ``range`` nao e um tipo nativo do pydantic.
     """
 
-    paginas: int | list[int] | range | None = None
+    # ``range`` precisa preceder ``list``: o pydantic tenta as variantes da
+    # union em ordem e percorreria todo o range ao testa-lo como ``list[int]``.
+    paginas: int | range | list[int] | None = None
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
@@ -51,18 +53,24 @@ class PaginasMixin(BaseModel):
     @classmethod
     def _validate_paginas(
         cls,
-        paginas: int | list[int] | range | None,
-    ) -> int | list[int] | range | None:
+        paginas: int | range | list[int] | None,
+    ) -> int | range | list[int] | None:
         if paginas is None:
             return paginas
         if isinstance(paginas, int):
             if paginas <= 0:
                 raise ValueError("'paginas' deve ser um inteiro positivo.")
             return paginas
+        if isinstance(paginas, range):
+            if not paginas:
+                raise ValueError("'paginas' não pode ser uma seleção vazia.")
+            if paginas.step <= 0:
+                raise ValueError("'paginas' não aceita range descendente.")
+            if paginas.start <= 0:
+                raise ValueError("'paginas' aceita somente páginas 1-based positivas.")
+            return paginas
         if not paginas:
             raise ValueError("'paginas' não pode ser uma seleção vazia.")
-        if isinstance(paginas, range) and paginas.step <= 0:
-            raise ValueError("'paginas' não aceita range descendente.")
         if any(pagina <= 0 for pagina in paginas):
             raise ValueError("'paginas' aceita somente páginas 1-based positivas.")
         return paginas

@@ -7,7 +7,7 @@ import time
 import warnings
 from collections import defaultdict
 from collections.abc import Iterator
-from typing import Any
+from typing import Any, cast
 
 import pandas as pd
 from pydantic import ValidationError
@@ -101,38 +101,6 @@ def _group_cnjs_by_alias(numero_processo: str | list[str]) -> list[AliasSelectio
     return list(processos_por_alias.items())
 
 
-def _normalize_datajud_pages(paginas: int | list[int] | range | None) -> range | None:
-    """Normaliza a seleção para um range compatível com cursor forwards-only."""
-    paginas_norm = normalize_paginas(paginas)
-    if not isinstance(paginas_norm, list):
-        return paginas_norm
-    return range(min(paginas_norm), max(paginas_norm) + 1)
-
-
-def _build_listar_payload(
-    inp: InputListarProcessosDataJud,
-    *,
-    numero_processo: str | list[str] | None,
-    movimentos_codigo: list[int] | None,
-    tamanho_pagina: int,
-    search_after: list[Any] | None,
-) -> dict[str, Any]:
-    return build_listar_processos_payload(
-        numero_processo=numero_processo,
-        ano_ajuizamento=inp.ano_ajuizamento,
-        classe=inp.classe,
-        assunto=inp.assunto,
-        data_ajuizamento_inicio=inp.data_ajuizamento_inicio,
-        data_ajuizamento_fim=inp.data_ajuizamento_fim,
-        movimentos_codigo=movimentos_codigo,
-        orgao_julgador=inp.orgao_julgador,
-        query=inp.query,
-        mostrar_movs=inp.mostrar_movs,
-        tamanho_pagina=tamanho_pagina,
-        search_after=search_after,
-    )
-
-
 def _next_search_after(
     api_response: dict[str, Any],
     *,
@@ -155,16 +123,6 @@ def _next_search_after(
         )
         return None
     return search_after
-
-
-def _log_total(api_response: dict[str, Any], alias: str) -> None:
-    total_info = api_response.get("hits", {}).get("total", {})
-    logger.info(
-        "Total de processos encontrados para %s: %s (%s)",
-        alias,
-        total_info.get("value", "?"),
-        total_info.get("relation", "eq"),
-    )
 
 
 class DatajudScraper(HTTPScraper):
@@ -515,7 +473,12 @@ class DatajudScraper(HTTPScraper):
         except ValidationError as exc:
             raise_on_extra_kwargs(exc, "DatajudScraper.listar_processos()")
             raise
-        paginas_datajud = _normalize_datajud_pages(inp.paginas)
+        # ``normalize_paginas`` acima garante que ``int`` ja virou ``range``;
+        # o cast registra essa invariante sem repetir a normalizacao. Listas
+        # continuam virando o intervalo contiguo exigido pelo cursor forwards-only.
+        paginas_datajud = cast(list[int] | range | None, inp.paginas)
+        if isinstance(paginas_datajud, list):
+            paginas_datajud = range(min(paginas_datajud), max(paginas_datajud) + 1)
 
         aliases = self._resolve_aliases(
             tribunal=inp.tribunal,
@@ -593,72 +556,64 @@ class DatajudScraper(HTTPScraper):
         search_after: list[Any] | None = None
         last_page = None if paginas is None else paginas[-1]
         while last_page is None or current_page <= last_page:
-            fetched = self._fetch_process_page(
-                alias=alias,
+            logger.info("Fetching page %d for alias %s...", current_page, alias)
+            query_payload = build_listar_processos_payload(
                 numero_processo=numero_processo,
-                inp=inp,
+                ano_ajuizamento=inp.ano_ajuizamento,
+                classe=inp.classe,
+                assunto=inp.assunto,
+                data_ajuizamento_inicio=inp.data_ajuizamento_inicio,
+                data_ajuizamento_fim=inp.data_ajuizamento_fim,
                 movimentos_codigo=movimentos_codigo,
-                current_page=current_page,
+                orgao_julgador=inp.orgao_julgador,
+                query=inp.query,
+                mostrar_movs=inp.mostrar_movs,
                 tamanho_pagina=tamanho_pagina,
                 search_after=search_after,
             )
-            if fetched is None:
+            api_response = call_datajud_api(
+                base_url=self.BASE_API_URL,
+                alias=alias,
+                api_key=self.api_key,
+                session=self.session,
+                query_payload=query_payload,
+                verbose=self.verbose > 1,
+            )
+            if api_response is None:
+                warnings.warn(
+                    f"DataJud: falha ao consultar alias {alias!r} na página "
+                    f"{current_page}. Resultados parciais retornados.",
+                    UserWarning,
+                    stacklevel=3,
+                )
+                logger.error(
+                    "Failed to get API response for alias %s, page %d. Stopping.",
+                    alias,
+                    current_page,
+                )
                 return
-            api_response, search_after, tamanho_pagina = fetched
+            if current_page == 1:
+                total_info = api_response.get("hits", {}).get("total", {})
+                logger.info(
+                    "Total de processos encontrados para %s: %s (%s)",
+                    alias,
+                    total_info.get("value", "?"),
+                    total_info.get("relation", "eq"),
+                )
+            effective_size = min(
+                tamanho_pagina,
+                query_payload.get("size", tamanho_pagina),
+            )
+            next_search_after = _next_search_after(
+                api_response,
+                alias=alias,
+                effective_size=effective_size,
+            )
             yield current_page, api_response
-            if search_after is None:
+            if next_search_after is None:
                 return
+            search_after = next_search_after
+            tamanho_pagina = effective_size
             current_page += 1
             if last_page is None or current_page <= last_page:
                 time.sleep(self.sleep_time)
-
-    def _fetch_process_page(
-        self,
-        *,
-        alias: str,
-        numero_processo: str | list[str] | None,
-        inp: InputListarProcessosDataJud,
-        movimentos_codigo: list[int] | None,
-        current_page: int,
-        tamanho_pagina: int,
-        search_after: list[Any] | None,
-    ) -> tuple[dict[str, Any], list[Any] | None, int] | None:
-        """Busca uma página física e devolve resposta, próximo cursor e size efetivo."""
-        logger.info("Fetching page %d for alias %s...", current_page, alias)
-        query_payload = _build_listar_payload(
-            inp,
-            numero_processo=numero_processo,
-            movimentos_codigo=movimentos_codigo,
-            tamanho_pagina=tamanho_pagina,
-            search_after=search_after,
-        )
-        api_response = call_datajud_api(
-            base_url=self.BASE_API_URL,
-            alias=alias,
-            api_key=self.api_key,
-            session=self.session,
-            query_payload=query_payload,
-            verbose=self.verbose > 1,
-        )
-        if api_response is None:
-            warnings.warn(
-                f"DataJud: falha ao consultar alias {alias!r} na página "
-                f"{current_page}. Resultados parciais retornados.",
-                UserWarning,
-                stacklevel=3,
-            )
-            logger.error(
-                "Failed to get API response for alias %s, page %d. Stopping.",
-                alias,
-                current_page,
-            )
-            return None
-        if current_page == 1:
-            _log_total(api_response, alias)
-        effective_size = min(tamanho_pagina, query_payload.get("size", tamanho_pagina))
-        next_search_after = _next_search_after(
-            api_response,
-            alias=alias,
-            effective_size=effective_size,
-        )
-        return api_response, next_search_after, effective_size
