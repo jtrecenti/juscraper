@@ -40,12 +40,16 @@ HMAC_KEY = "0123456789abcdef0123456789abcdef-test"
 
 CNJ_DIGITS = "00000000000000000000"
 CNJ_DIGITS_2 = "11111111111111111111"
+CNJ_FORMATTED = "0000000-00.0000.0.00.0000"
+CNJ_FORMATTED_2 = "1111111-11.1111.1.11.1111"
 UUID_TEXT_1 = "11111111-1111-1111-1111-111111111111"
 UUID_BIN_1 = "22222222-2222-2222-2222-222222222222"
 UUID_TEXT_2 = "33333333-3333-3333-3333-333333333333"
 UUID_BIN_2 = "44444444-4444-4444-4444-444444444444"
 UUID_TEXT_3 = "55555555-5555-5555-5555-555555555555"
 UUID_TEXT_4 = "66666666-6666-6666-6666-666666666666"
+UUID_TEXT_5 = "77777777-7777-7777-7777-777777777777"
+UUID_TEXT_6 = "88888888-8888-8888-8888-888888888888"
 
 
 def _fake_jwt() -> str:
@@ -280,16 +284,14 @@ def test_download_documents_max_docs_per_process_limita(mocker):
 
 @responses.activate(registry=OrderedRegistry)
 def test_download_documents_limite_e_independente_entre_processos(mocker):
-    """Cotas independentes preservam a ordem de processos intercalados."""
+    """Cotas normalizadas e independentes preservam a ordem intercalada."""
     mocker.patch("time.sleep")
     scraper = _authenticated_scraper()
-    documentos = [
-        (CNJ_DIGITS, UUID_TEXT_1, "a-1"),
-        (CNJ_DIGITS_2, UUID_BIN_1, "b-1"),
-        (CNJ_DIGITS, UUID_TEXT_2, "a-2"),
-        (CNJ_DIGITS_2, UUID_BIN_2, "b-2"),
-        (CNJ_DIGITS, UUID_TEXT_3, "a-3"),
-        (CNJ_DIGITS_2, UUID_TEXT_4, "b-3"),
+    linhas = [
+        (CNJ_DIGITS, [(UUID_TEXT_1, "a-1")]),
+        (CNJ_DIGITS_2, [(UUID_TEXT_3, "b-1")]),
+        (CNJ_FORMATTED, [(UUID_TEXT_2, "a-2"), (UUID_TEXT_5, "a-3")]),
+        (CNJ_FORMATTED_2, [(UUID_TEXT_4, "b-2"), (UUID_TEXT_6, "b-3")]),
     ]
     base_df = pd.concat(
         [
@@ -299,15 +301,22 @@ def test_download_documents_limite_e_independente_entre_processos(mocker):
                         href_texto=_href_texto(uuid, numero_processo),
                         href_binario=None,
                         idDocumento=document_id,
-                    ),
+                    )
+                    for uuid, document_id in documentos
                 ],
                 numero_processo=numero_processo,
             )
-            for numero_processo, uuid, document_id in documentos
+            for numero_processo, documentos in linhas
         ],
         ignore_index=True,
     )
-    for numero_processo, uuid, _ in documentos[:4]:
+    expected_requests = [
+        (CNJ_DIGITS, UUID_TEXT_1),
+        (CNJ_DIGITS_2, UUID_TEXT_3),
+        (CNJ_DIGITS, UUID_TEXT_2),
+        (CNJ_DIGITS_2, UUID_TEXT_4),
+    ]
+    for numero_processo, uuid in expected_requests:
         responses.add(
             responses.GET,
             f"{BASE_TEXT_URL}/{numero_processo}/documentos/{uuid}/texto",
@@ -320,8 +329,8 @@ def test_download_documents_limite_e_independente_entre_processos(mocker):
     assert df["numero_processo"].tolist() == [
         CNJ_DIGITS,
         CNJ_DIGITS_2,
-        CNJ_DIGITS,
-        CNJ_DIGITS_2,
+        CNJ_FORMATTED,
+        CNJ_FORMATTED_2,
     ]
     assert df["idDocumento"].tolist() == ["a-1", "b-1", "a-2", "b-2"]
     assert len(responses.calls) == 4
