@@ -418,13 +418,13 @@ class JusbrScraper(HTTPScraper):
                 numero_processo,
             )
 
-        document_row = {
+        document_row = dict(document_metadata)
+        document_row.update({
             'numero_processo': numero_processo,
             'texto': cleaned_text,
             '_raw_text_api': raw_text,
             '_raw_binary_api': raw_binary,
-        }
-        document_row.update(document_metadata)
+        })
         return document_row
 
     def _download_process_documents(
@@ -432,6 +432,7 @@ class JusbrScraper(HTTPScraper):
         index: Any,
         row: pd.Series,
         max_docs_per_process: int | None,
+        already_downloaded: int,
     ) -> list[dict[str, Any]]:
         """Baixa as linhas válidas de um único processo do DataFrame de entrada."""
         numero_processo = row.get('numeroProcesso')
@@ -440,6 +441,13 @@ class JusbrScraper(HTTPScraper):
             logger.warning(
                 "Linha %s (CNJ: %s) sem 'numeroProcesso' para download de documentos",
                 index, processo_pesquisado,
+            )
+            return []
+
+        if max_docs_per_process is not None and already_downloaded >= max_docs_per_process:
+            logger.info(
+                "Limite de %d documentos atingido para o processo %s.",
+                max_docs_per_process, numero_processo,
             )
             return []
 
@@ -454,7 +462,10 @@ class JusbrScraper(HTTPScraper):
 
         document_rows: list[dict[str, Any]] = []
         for document_metadata in _iter_document_metadata(detalhes, numero_processo):
-            if max_docs_per_process is not None and len(document_rows) >= max_docs_per_process:
+            if (
+                max_docs_per_process is not None
+                and already_downloaded + len(document_rows) >= max_docs_per_process
+            ):
                 logger.info(
                     "Limite de %d documentos atingido para o processo %s.",
                     max_docs_per_process, numero_processo,
@@ -473,16 +484,32 @@ class JusbrScraper(HTTPScraper):
         max_docs_per_process: int | None = None,
         **kwargs: Any,
     ) -> pd.DataFrame:
-        """
-        Downloads document texts for processes in base_df.
-        Iterates through processes in base_df, extracts document metadata from the
-        'detalhes' column, fetches, and cleans document texts.
-        Returns a DataFrame where each row is a document.
+        """Baixa e limpa os documentos dos processos de um DataFrame.
+
+        O limite é aplicado ao ``numeroProcesso`` em todo o DataFrame, inclusive
+        quando o mesmo processo aparece em mais de uma linha.
+
+        Args:
+            base_df (pd.DataFrame): Processos com as colunas ``numeroProcesso``
+                e ``detalhes``, como retornados por :meth:`cpopg`.
+            max_docs_per_process (int | None): Limite de documentos por processo.
+                ``None`` baixa todos; ``0`` não faz downloads. Default ``None``.
+            **kwargs: Nenhum parâmetro adicional é aceito.
 
         Raises:
             TypeError: Quando um kwarg desconhecido e passado (schema
                 :class:`InputDownloadDocumentsJusBR`, ``extra="forbid"``).
-            RuntimeError: Quando ``auth(token)`` nao foi chamado antes.
+            ValidationError: Quando ``base_df`` não é um DataFrame ou
+                ``max_docs_per_process`` é negativo.
+            RuntimeError: Quando ``auth(token)`` não foi chamado antes.
+
+        Returns:
+            pd.DataFrame: Uma linha por documento, com metadados, texto limpo e
+            respostas brutas disponíveis.
+
+        See also:
+            :class:`InputDownloadDocumentsJusBR` — schema pydantic e fonte da
+            verdade dos parâmetros aceitos.
         """
         try:
             inp = self.INPUT_DOWNLOAD_DOCUMENTS(
@@ -499,10 +526,20 @@ class JusbrScraper(HTTPScraper):
             raise RuntimeError("Autenticação necessária. Chame o método auth(token) primeiro.")
 
         all_docs_data: list[dict[str, Any]] = []
+        downloaded_by_process: dict[str, int] = {}
         logger.info("Iniciando download de documentos para %d processos...", len(base_df))
 
         for index, row in base_df.iterrows():
-            all_docs_data.extend(
-                self._download_process_documents(index, row, max_docs_per_process)
+            numero_processo = row.get('numeroProcesso')
+            process_key = clean_cnj(numero_processo) if isinstance(numero_processo, str) else None
+            already_downloaded = downloaded_by_process.get(process_key, 0) if process_key else 0
+            document_rows = self._download_process_documents(
+                index,
+                row,
+                max_docs_per_process,
+                already_downloaded,
             )
+            all_docs_data.extend(document_rows)
+            if process_key:
+                downloaded_by_process[process_key] = already_downloaded + len(document_rows)
         return _build_documents_dataframe(all_docs_data)
