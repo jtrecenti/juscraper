@@ -42,8 +42,10 @@ dependencies = [
     "browser-cookie3>=0.20.1",
     "comm>=0.2.2",
     "nest-asyncio>=1.6.0",
+    # Teto <3.0.0 mantido por causa do conflito de resolvedor no Google Colab
+    # (cudf-cu12 exige pandas<2.2.4dev0,>=2.0) — ver issue #25. Nao remover sem
+    # validar contra a imagem atual do Colab.
     "pandas>=2.0.0,<3.0.0",
-    "pyarrow>=14.0.0",
     "pyjwt>=2.10.1",
     "pydantic>=2.0.0",
     "python-dotenv>=1.1.0",
@@ -77,6 +79,13 @@ docs = [
     "jupyter>=1.0.0",
     "ipykernel>=6.29.5",
     "ipywidgets>=8.1.7",
+    # Engine de Parquet usada apenas pelos notebooks de docs/ (`df.to_parquet`).
+    # A biblioteca nunca importa pyarrow — manter aqui e nao em dependencies e o
+    # que impede o juscraper de arrastar a versao do pyarrow para quem o instala
+    # (era a origem do conflito com cudf no Colab, #25, e do alerta de pip-audit
+    # em projetos downstream, #342). Piso 23.0.1: primeira versao com wheel para
+    # todos os Pythons suportados e fora da faixa do PYSEC-2026-113.
+    "pyarrow>=23.0.1",
 ]
 web = [
     "flask>=3.1.1",
