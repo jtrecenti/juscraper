@@ -1,6 +1,7 @@
 """Unit tests for the canonical input-validation pipeline (cjsg/cjpg)."""
 from __future__ import annotations
 
+import warnings
 from datetime import date, datetime
 from typing import ClassVar
 
@@ -134,11 +135,15 @@ def test_apply_input_pipeline_data_filter_on_schema_without_mixin_raises_typeerr
     o ``extra_forbidden`` virar ``TypeError`` direto.
     """
     kwargs = {"data_julgamento_inicio": "01/01/2024"}
-    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'data_julgamento_inicio'"):
-        apply_input_pipeline_search(
-            _SchemaSimples, "Test.cjsg()",
-            pesquisa="x", paginas=1, kwargs=kwargs,
-        )
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'data_julgamento_inicio'"):
+            apply_input_pipeline_search(
+                _SchemaSimples, "Test.cjsg()",
+                pesquisa="x", paginas=1, kwargs=kwargs,
+            )
+
+    assert not any(issubclass(warning.category, UserWarning) for warning in caught)
 
 
 def test_apply_input_pipeline_kwargs_dict_is_consumed_in_place():
@@ -152,6 +157,72 @@ def test_apply_input_pipeline_kwargs_dict_is_consumed_in_place():
     assert "data_inicio" not in kwargs
     assert "data_fim" not in kwargs
     assert "data_julgamento_inicio" not in kwargs
+
+
+def test_apply_input_pipeline_date_conflict_precedes_kwargs_consumption():
+    kwargs = {
+        "data_julgamento_de": "01/01/2024",
+        "data_inicio": "02/01/2024",
+        "marker": "preserved",
+    }
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        with pytest.raises(ValueError, match=r"data_julgamento_de.*data_inicio"):
+            apply_input_pipeline_search(
+                _SchemaComJulgamento,
+                "Test.cjsg()",
+                pesquisa="x",
+                paginas=1,
+                kwargs=kwargs,
+            )
+
+    assert kwargs == {
+        "data_julgamento_de": "01/01/2024",
+        "data_inicio": "02/01/2024",
+        "marker": "preserved",
+    }
+    assert not any(issubclass(warning.category, DeprecationWarning) for warning in caught)
+
+
+def test_apply_input_pipeline_search_conflict_precedes_date_reinjection():
+    kwargs = {"query": "alias"}
+
+    with pytest.raises(ValueError, match=r"'pesquisa'.*'query'"):
+        apply_input_pipeline_search(
+            _SchemaComJulgamento,
+            "Test.cjsg()",
+            pesquisa="canonical",
+            paginas=1,
+            kwargs=kwargs,
+            data_julgamento_inicio="01/01/2024",
+            consume_pesquisa_aliases=True,
+        )
+
+    assert kwargs == {"query": "alias"}
+
+
+def test_apply_input_pipeline_validates_julgamento_before_publicacao():
+    kwargs = {
+        "data_julgamento_inicio": "invalid-julgamento",
+        "data_julgamento_fim": "also-invalid-julgamento",
+        "data_publicacao_inicio": "invalid-publicacao",
+        "data_publicacao_fim": "also-invalid-publicacao",
+        "marker": "preserved",
+    }
+
+    with pytest.raises(ValueError) as exc_info:
+        apply_input_pipeline_search(
+            _SchemaComAmbas,
+            "Test.cjsg()",
+            pesquisa="x",
+            paginas=1,
+            kwargs=kwargs,
+        )
+
+    assert "data_julgamento_inicio" in str(exc_info.value)
+    assert "data_publicacao" not in str(exc_info.value)
+    assert kwargs == {"marker": "preserved"}
 
 
 def test_raise_on_extra_kwargs_passes_through_when_other_errors_present():

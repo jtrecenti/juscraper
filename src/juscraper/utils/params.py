@@ -135,6 +135,58 @@ def normalize_pesquisa(pesquisa: str | None = None, **kwargs) -> str:
     raise TypeError("É necessário fornecer o parâmetro 'pesquisa'.")
 
 
+def _collect_date_sources(kwargs: dict) -> dict[str, list[tuple[str, Any]]]:
+    """Collect date sources in canonical, specific-alias, generic-alias order."""
+    sources: dict[str, list[tuple[str, Any]]] = {
+        canonical: [] for canonical in DATE_CANONICAL
+    }
+
+    for canonical in DATE_CANONICAL:
+        value = kwargs.pop(canonical, None)
+        if value is not None:
+            sources[canonical].append((canonical, value))
+
+    for name, canonical in DATE_ALIAS_TO_CANONICAL.items():
+        value = kwargs.pop(name, None)
+        if value is not None:
+            sources[canonical].append((name, value))
+
+    return sources
+
+
+def _raise_on_date_source_conflict(sources: dict[str, list[tuple[str, Any]]]) -> None:
+    """Reject multiple names for one canonical date before warning."""
+    for canonical, source_values in sources.items():
+        if len(source_values) <= 1:
+            continue
+        names = [name for name, _ in source_values]
+        quoted = [f"'{name}'" for name in names]
+        joined = ", ".join(quoted[:-1]) + f" e {quoted[-1]}"
+        raise ValueError(
+            f"Não é possível passar {joined} ao mesmo tempo. "
+            f"Use apenas '{canonical}'."
+        )
+
+
+def _materialize_normalized_dates(
+    sources: dict[str, list[tuple[str, Any]]],
+) -> dict[str, Any]:
+    """Build the four-key result and warn for each selected alias."""
+    result: dict[str, Any] = dict.fromkeys(DATE_CANONICAL)
+    for canonical, source_values in sources.items():
+        if not source_values:
+            continue
+        name, value = source_values[0]
+        if name != canonical:
+            warnings.warn(
+                f"O parâmetro '{name}' está deprecado. Use '{canonical}' em vez disso.",
+                DeprecationWarning,
+                stacklevel=3,
+            )
+        result[canonical] = value
+    return result
+
+
 def normalize_datas(**kwargs):
     """Normalize date parameters to canonical names.
 
@@ -162,60 +214,9 @@ def normalize_datas(**kwargs):
             ``DeprecationWarning`` is emitted before the raise; the conflict
             is the user's mistake to fix, not a soft deprecation event.
     """
-    # Particiona DATE_ALIAS_TO_CANONICAL em _de/_ate (específicos) vs.
-    # data_inicio/data_fim (genéricos) preservando a ordem de coleta: específicos
-    # antes do genérico, para que uma colisão entre eles surja com o nome
-    # específico no erro.
-    deprecated_map = {k: v for k, v in DATE_ALIAS_TO_CANONICAL.items() if k.endswith(("_de", "_ate"))}
-    generic_map = {k: v for k, v in DATE_ALIAS_TO_CANONICAL.items() if k in ("data_inicio", "data_fim")}
-
-    # canonical -> [(source_name, value), ...] na ordem em que apareceram
-    # nas três fases (canônico, _de/_ate, genérico). Único valor None
-    # entra silenciosamente no pop e nao gera fonte — preserva o
-    # comportamento antigo de aceitar canonical=None ao lado de alias.
-    sources: dict[str, list[tuple[str, Any]]] = {c: [] for c in DATE_CANONICAL}
-
-    def _collect(name: str, canonical: str) -> None:
-        if name not in kwargs:
-            return
-        value = kwargs.pop(name)
-        if value is not None:
-            sources[canonical].append((name, value))
-
-    for canonical in DATE_CANONICAL:
-        _collect(canonical, canonical)
-    for old_name, canonical in deprecated_map.items():
-        _collect(old_name, canonical)
-    for generic, canonical in generic_map.items():
-        _collect(generic, canonical)
-
-    # Detecta colisão olhando todas as fontes coletadas. Mensagem cita os
-    # nomes que o usuário escreveu (em vez do canônico, que ele pode nem
-    # ter digitado — refs #193).
-    for canonical, srcs in sources.items():
-        if len(srcs) > 1:
-            names = [name for name, _ in srcs]
-            quoted = [f"'{n}'" for n in names]
-            joined = ", ".join(quoted[:-1]) + f" e {quoted[-1]}"
-            raise ValueError(
-                f"Não é possível passar {joined} ao mesmo tempo. "
-                f"Use apenas '{canonical}'."
-            )
-
-    result: dict[str, Any] = dict.fromkeys(DATE_CANONICAL)
-    for canonical, srcs in sources.items():
-        if not srcs:
-            continue
-        name, value = srcs[0]
-        if name != canonical:
-            warnings.warn(
-                f"O parâmetro '{name}' está deprecado. Use '{canonical}' em vez disso.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-        result[canonical] = value
-
-    return result
+    sources = _collect_date_sources(kwargs)
+    _raise_on_date_source_conflict(sources)
+    return _materialize_normalized_dates(sources)
 
 
 def to_br_date(date_str):
@@ -699,6 +700,44 @@ def raise_on_extra_kwargs(
         ) from exc
 
 
+def _reinject_nominal_dates(
+    kwargs: dict,
+    nominal_dates: dict[str, Any],
+) -> None:
+    """Merge named date arguments sequentially into the caller's ``kwargs``."""
+    for date_key, date_value in nominal_dates.items():
+        if date_value is None:
+            continue
+        if date_key in kwargs and kwargs[date_key] is not None:
+            raise ValueError(
+                f"'{date_key}' foi passado como argumento nominal e via "
+                f"kwargs ao mesmo tempo. Use apenas uma das formas."
+            )
+        kwargs[date_key] = date_value
+
+
+def _validate_pipeline_schema(
+    schema_cls: type[BaseModel],
+    method_name: str,
+    sources: tuple[dict[str, Any], ...],
+) -> BaseModel:
+    """Merge unique pipeline sources, instantiate, and translate unknown fields."""
+    values: dict[str, Any] = {}
+    for source in sources:
+        duplicate = next((name for name in source if name in values), None)
+        if duplicate is not None:
+            raise TypeError(
+                f"got multiple values for keyword argument '{duplicate}'"
+            )
+        values.update(source)
+
+    try:
+        return schema_cls(**values)
+    except ValidationError as exc:
+        raise_on_extra_kwargs(exc, method_name, schema_cls=schema_cls)
+        raise
+
+
 def apply_input_pipeline_search(
     schema_cls: type[BaseModel],
     method_name: str,
@@ -787,7 +826,7 @@ def apply_input_pipeline_search(
             when ``extra_forbidden`` triggers (e.g. ``"TJRNScraper.cjsg()"``).
         pesquisa: Search term. ``None`` is allowed when ``nullable_pesquisa``
             is ``True`` (TJSP cjpg). When ``consume_pesquisa_aliases`` is
-            ``True`` (default), the value is normalized internally — pass the
+            ``True``, the value is normalized internally — pass the
             raw value from the public method.
         paginas: Pages parameter as accepted by the public method (``int``,
             ``list``, ``range``, or ``None``).
@@ -851,20 +890,15 @@ def apply_input_pipeline_search(
         else:
             pesquisa = normalize_pesquisa(pesquisa_input, **kwargs)
 
-    for _date_key, _date_val in (
-        ("data_julgamento_inicio", data_julgamento_inicio),
-        ("data_julgamento_fim", data_julgamento_fim),
-        ("data_publicacao_inicio", data_publicacao_inicio),
-        ("data_publicacao_fim", data_publicacao_fim),
-    ):
-        if _date_val is None:
-            continue
-        if _date_key in kwargs and kwargs[_date_key] is not None:
-            raise ValueError(
-                f"'{_date_key}' foi passado como argumento nominal e via "
-                f"kwargs ao mesmo tempo. Use apenas uma das formas."
-            )
-        kwargs[_date_key] = _date_val
+    _reinject_nominal_dates(
+        kwargs,
+        {
+            "data_julgamento_inicio": data_julgamento_inicio,
+            "data_julgamento_fim": data_julgamento_fim,
+            "data_publicacao_inicio": data_publicacao_inicio,
+            "data_publicacao_fim": data_publicacao_fim,
+        },
+    )
 
     paginas_norm = normalize_paginas(paginas)
     datas = normalize_datas(**kwargs)
@@ -872,9 +906,8 @@ def apply_input_pipeline_search(
 
     origem_resolvida = origem_mensagem if origem_mensagem is not None else "O backend"
     date_format = getattr(schema_cls, "BACKEND_DATE_FORMAT", "%d/%m/%Y")
-
-    for _key in DATE_CANONICAL:
-        datas[_key] = coerce_brazilian_date(datas[_key], date_format)
+    for key in DATE_CANONICAL:
+        datas[key] = coerce_brazilian_date(datas[key], date_format)
 
     # Auto-fill datas parciais antes da validação. Idempotente: para
     # tribunais que passam por ``run_auto_chunk`` (família eSAJ + TJSP cjpg),
@@ -910,17 +943,13 @@ def apply_input_pipeline_search(
         formato=date_format,
     )
 
-    try:
-        return schema_cls(
-            pesquisa=pesquisa,
-            paginas=paginas_norm,
-            **{k: v for k, v in datas.items() if v is not None},
-            **canonical_filters,
-            **kwargs,
-        )
-    except ValidationError as exc:
-        raise_on_extra_kwargs(exc, method_name, schema_cls=schema_cls)
-        raise
+    schema_sources = (
+        {"pesquisa": pesquisa, "paginas": paginas_norm},
+        {key: value for key, value in datas.items() if value is not None},
+        canonical_filters,
+        kwargs,
+    )
+    return _validate_pipeline_schema(schema_cls, method_name, schema_sources)
 
 
 def resolve_deprecated_alias(
