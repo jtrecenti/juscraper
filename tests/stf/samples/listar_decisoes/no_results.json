@@ -1,0 +1,81 @@
+{
+ "result": {
+  "took": 107,
+  "timed_out": false,
+  "_shards": {
+   "total": 5,
+   "successful": 5,
+   "skipped": 0,
+   "failed": 0
+  },
+  "hits": {
+   "total": {
+    "value": 0,
+    "relation": "eq"
+   },
+   "max_score": null,
+   "hits": []
+  },
+  "aggregations": {
+   "processo_classe_processual_unificada_classe_sigla_agg": {
+    "doc_count": 0,
+    "processo_classe_processual_unificada_classe_sigla_agg": {
+     "doc_count_error_upper_bound": 0,
+     "sum_other_doc_count": 0,
+     "buckets": []
+    }
+   },
+   "orgao_julgador_agg": {
+    "doc_count": 0,
+    "orgao_julgador_agg": {
+     "doc_count_error_upper_bound": 0,
+     "sum_other_doc_count": 0,
+     "buckets": []
+    }
+   },
+   "procedencia_geografica_uf_sigla_agg": {
+    "doc_count": 0,
+    "procedencia_geografica_uf_sigla_agg": {
+     "doc_count_error_upper_bound": 0,
+     "sum_other_doc_count": 0,
+     "buckets": []
+    }
+   },
+   "is_decisao_presidencia_agg": {
+    "buckets": {
+     "false": {
+      "doc_count": 0
+     },
+     "true": {
+      "doc_count": 0
+     }
+    }
+   },
+   "base_agg": {
+    "buckets": {
+     "acordaos": {
+      "doc_count": 0
+     },
+     "decisoes": {
+      "doc_count": 0
+     },
+     "informativos": {
+      "doc_count": 0
+     },
+     "sumulas": {
+      "doc_count": 0
+     }
+    }
+   },
+   "ministro_facet_agg": {
+    "doc_count": 0,
+    "ministro_facet_agg": {
+     "doc_count_error_upper_bound": 0,
+     "sum_other_doc_count": 0,
+     "buckets": []
+    }
+   }
+  }
+ },
+ "search_id": 1
+}
