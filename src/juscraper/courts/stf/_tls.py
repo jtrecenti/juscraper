@@ -53,12 +53,26 @@ h3KcAVCBJWvnOkVwxyU5QJMcnwW95JlOtx+9100GL99jHE5rs3gXp7F4bg8H01QT
 """
 
 
+def _contexto_ssl():
+    ctx = create_urllib3_context()
+    ctx.load_verify_locations(cafile=certifi.where())
+    ctx.load_verify_locations(cadata=INTERMEDIARIA_PEM)
+    return ctx
+
+
 class _STFTLSAdapter(HTTPAdapter):
-    """Verifica o certificado do STF contra certifi + a intermediaria omitida pelo servidor."""
+    """Verifica o certificado do STF contra certifi + a intermediaria omitida pelo servidor.
+
+    Com ``HTTPS_PROXY`` definido, o ``requests`` nao usa o pool de ``init_poolmanager``:
+    monta um ``ProxyManager`` proprio em ``proxy_manager_for``. Sem o contexto tambem
+    ali, a conexao via proxy volta ao bundle padrao e falha com ``CERTIFICATE_VERIFY_FAILED``.
+    """
 
     def init_poolmanager(self, *args, **kwargs):
-        ctx = create_urllib3_context()
-        ctx.load_verify_locations(cafile=certifi.where())
-        ctx.load_verify_locations(cadata=INTERMEDIARIA_PEM)
-        kwargs["ssl_context"] = ctx
+        kwargs["ssl_context"] = _contexto_ssl()
         return super().init_poolmanager(*args, **kwargs)
+
+    def proxy_manager_for(self, proxy, **proxy_kwargs):
+        # O requests guarda o manager por proxy, entao o contexto e criado uma vez por proxy.
+        proxy_kwargs.setdefault("ssl_context", _contexto_ssl())
+        return super().proxy_manager_for(proxy, **proxy_kwargs)
