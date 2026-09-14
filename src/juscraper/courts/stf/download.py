@@ -39,14 +39,24 @@ def _template(base: str) -> dict:
     return template
 
 
+_OPERADORES = {"e": "AND", "ou": "OR", "não": "NOT", "nao": "NOT"}
+_OPERADOR_RE = re.compile(r"(?<!\S)(e|ou|não|nao)(?!\S)", flags=re.IGNORECASE)
+
+
 def traduzir_operadores(pesquisa: str) -> str:
     """Converte os operadores do portal para a sintaxe ``query_string`` do Elasticsearch.
 
-    O portal aceita ``$`` como curinga e ``ou`` como disjuncao, e os traduz antes de
-    enviar: ``terceiriz$`` vira ``terceiriz*`` e ``a ou b`` vira ``a OR b``. Os demais
-    operadores do ``query_string`` (``AND``, ``NOT``, aspas) passam como estao.
+    Reproduz a traducao que o portal faz antes de enviar: ``e``, ``ou`` e ``não`` como
+    palavras soltas viram ``AND``, ``OR`` e ``NOT``, e ``$`` vira o curinga ``*``
+    (``terceiriz$`` -> ``terceiriz*``). Trechos entre aspas passam intactos, porque no
+    portal os termos entre aspas perdem a funcao de operador. ``?``, ``~`` e parenteses
+    ja sao sintaxe do Elasticsearch e passam como estao.
     """
-    return re.sub(r"\s+ou\s+", " OR ", pesquisa.replace("$", "*"), flags=re.IGNORECASE)
+    # Com o grupo de captura, re.split devolve os trechos entre aspas nas posicoes impares.
+    trechos = re.split(r'("[^"]*")', pesquisa)
+    for i in range(0, len(trechos), 2):
+        trechos[i] = _OPERADOR_RE.sub(lambda m: _OPERADORES[m.group(1).lower()], trechos[i].replace("$", "*"))
+    return "".join(trechos)
 
 
 def build_payload(

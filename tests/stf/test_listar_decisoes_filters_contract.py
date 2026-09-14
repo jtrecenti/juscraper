@@ -118,5 +118,21 @@ def test_build_payload_sem_pesquisa_busca_tudo_e_encurta_ultima_pagina():
     assert (body["from"], body["size"]) == (9996, 4)
 
 
-def test_traduzir_operadores_preserva_palavras_com_ou():
-    assert traduzir_operadores("ouvidoria OU contrato") == "ouvidoria OR contrato"
+@pytest.mark.parametrize(
+    "digitado,enviado",
+    [
+        # Pares observados no corpo que o portal envia para a API.
+        ("direito e privacidade", "direito AND privacidade"),
+        ("prisão não preventiva", "prisão NOT preventiva"),
+        ("$constitucional", "*constitucional"),
+        ("RE 56394?", "RE 56394?"),
+        ("direito E (privacidade OU intimidade)", "direito AND (privacidade OR intimidade)"),
+        ("terceirização ou terceiriz$", "terceirização OR terceiriz*"),
+        # Operador so vale como palavra solta e fora de aspas.
+        ("ouvidoria ou contrato", "ouvidoria OR contrato"),
+        ('presunção de "não" culpabilidade', 'presunção de "não" culpabilidade'),
+        ('"direito e dever$" ou multa', '"direito e dever$" OR multa'),
+    ],
+)
+def test_traduzir_operadores_como_o_portal(digitado, enviado):
+    assert traduzir_operadores(digitado) == enviado
