@@ -82,6 +82,36 @@ def test_alias_data_inicio_fim_vira_data_julgamento(stf, mocker):
         stf.listar_decisoes(PESQUISA, paginas=1, data_inicio="01/01/2024", data_fim="31/12/2024")
 
 
+@responses.activate
+def test_alias_termo_vira_pesquisa(stf, mocker):
+    mocker.patch("time.sleep")
+    _add_no_results(pesquisa=PESQUISA, pagina=1, tamanho_pagina=250)
+
+    with pytest.warns(DeprecationWarning):
+        stf.listar_decisoes(termo=PESQUISA, paginas=1)
+
+
+@pytest.mark.parametrize(
+    "aliases,campo",
+    [
+        ({"data_julgamento_de": "01/01/2024", "data_julgamento_ate": "31/12/2024"}, "julgamento"),
+        ({"data_publicacao_de": "01/01/2024", "data_publicacao_ate": "31/12/2024"}, "publicacao"),
+    ],
+)
+@responses.activate
+def test_aliases_de_ate_viram_datas_canonicas(stf, mocker, aliases, campo):
+    mocker.patch("time.sleep")
+    _add_no_results(
+        pesquisa=PESQUISA,
+        pagina=1,
+        tamanho_pagina=250,
+        **{f"data_{campo}_inicio": "01012024", f"data_{campo}_fim": "31122024"},
+    )
+
+    with pytest.warns(DeprecationWarning):
+        stf.listar_decisoes(PESQUISA, paginas=1, **aliases)
+
+
 def test_kwarg_desconhecido_levanta_type_error(stf):
     with pytest.raises(TypeError, match="ministro"):
         stf.listar_decisoes(PESQUISA, ministro="GILMAR MENDES")
