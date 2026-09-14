@@ -3,8 +3,10 @@
 O corpo parte do que o proprio portal envia (``payloads/<base>.json``, capturado
 de ``jurisprudencia.stf.jus.br/pages/search`` sem o bloco ``highlight``). Manter o
 corpo do portal, e nao uma query minima, faz a busca devolver o mesmo conjunto e a
-mesma ordem que o site: campos pesquisados, pesos, fuzziness e decaimento por data
-vem de la. ``build_payload`` so altera o que os filtros pedem.
+mesma ordem por relevancia que o site: campos pesquisados, pesos, fuzziness e
+decaimento por data vem de la. ``build_payload`` so altera o que os filtros pedem e
+acrescenta ``id`` como desempate da ordenacao, de modo que, entre documentos com o
+mesmo score, a ordem e por ``id`` e nao a do portal.
 """
 from __future__ import annotations
 
@@ -98,6 +100,11 @@ def build_payload(
         )
 
     body = copy.deepcopy(_template(base))
+    # O score empata com frequencia (sem pesquisa, todas as decisoes julgadas no mesmo dia
+    # tem o mesmo score), e cada pagina e uma requisicao separada: sem desempate, o
+    # Elasticsearch nao garante a mesma ordem entre paginas e pode repetir ou pular
+    # documentos. ``id`` e keyword ordenavel nas duas bases; ``_id`` a API recusa com 400.
+    body["sort"].append({"id": "asc"})
     consulta_bool = body["query"]["function_score"]["query"]["bool"]
     busca = consulta_bool["filter"][0]["query_string"]
     reforcos = [clausula["query_string"] for clausula in consulta_bool["should"]]

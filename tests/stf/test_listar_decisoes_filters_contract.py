@@ -148,6 +148,12 @@ def test_build_payload_sem_pesquisa_busca_tudo_e_encurta_ultima_pagina():
     assert (body["from"], body["size"]) == (9996, 4)
 
 
+@pytest.mark.parametrize("base", ["decisoes", "acordaos"])
+def test_build_payload_desempata_score_por_id_sem_mutar_o_template(base):
+    build_payload(base=base)
+    assert build_payload(base=base)["sort"] == [{"_score": "desc"}, {"id": "asc"}]
+
+
 @pytest.mark.parametrize(
     "digitado,enviado",
     [
