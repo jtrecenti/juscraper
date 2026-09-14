@@ -1,4 +1,6 @@
 """Offline contract tests for STF listar_decisoes."""
+import json
+
 import pandas as pd
 import pytest
 import responses
@@ -147,3 +149,40 @@ def test_sem_token_obtem_um_antes_da_primeira_busca(mocker):
 
     obter.assert_called_once_with()
     assert responses.calls[0].request.headers["Cookie"] == "aws-waf-token=token-obtido"
+
+
+@responses.activate
+def test_paginas_none_busca_as_paginas_seguintes(stf, mocker):
+    """Sem ``paginas``, o total da primeira resposta define quantas paginas faltam."""
+    mocker.patch("time.sleep")
+    pagina_1 = json.loads(load_sample("stf", "listar_decisoes/results_normal_page_01.json"))
+    # O sample real tem 3.369 resultados; com total 10 e 5 por pagina, falta uma pagina.
+    pagina_1["result"]["hits"]["total"]["value"] = 10
+    responses.add(
+        responses.POST,
+        BASE_URL,
+        json=pagina_1,
+        match=[json_params_matcher(build_payload("pejotização", classe="Rcl", pagina=1, tamanho_pagina=5))],
+    )
+    _add("results_normal_page_02.json", pesquisa="pejotização", classe="Rcl", pagina=2, tamanho_pagina=5)
+
+    df = stf.listar_decisoes("pejotização", classe="Rcl", tamanho_pagina=5)
+
+    assert len(responses.calls) == 2
+    assert len(df) == 10
+
+
+@responses.activate
+def test_paginas_none_para_no_teto_com_aviso(stf, mocker):
+    """Com mais de 10.000 resultados, baixa 40 paginas de 250, a ultima terminando no registro 10.000."""
+    mocker.patch("time.sleep")
+    pagina = json.loads(load_sample("stf", "listar_decisoes/results_normal_page_01.json"))
+    pagina["result"]["hits"]["total"]["value"] = 16899
+    responses.add(responses.POST, BASE_URL, json=pagina)
+
+    with pytest.warns(UserWarning, match="so entrega os 10000"):
+        stf.listar_decisoes("terceirização", tamanho_pagina=250)
+
+    assert len(responses.calls) == 40
+    ultimo = json.loads(responses.calls[-1].request.body)
+    assert (ultimo["from"], ultimo["size"]) == (9750, 250)

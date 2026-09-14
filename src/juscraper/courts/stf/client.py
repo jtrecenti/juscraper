@@ -10,7 +10,7 @@ import requests
 
 from juscraper.core.http import HTTPScraper
 from juscraper.core.parse_utils import coerce_date_columns
-from juscraper.utils.params import apply_input_pipeline_search
+from juscraper.utils.params import SEARCH_ALIASES, apply_input_pipeline_search
 
 from ._tls import _STFTLSAdapter
 from ._waf import PAGINA_BUSCA, USER_AGENT, WAF_COOKIE, obter_waf_token
@@ -30,8 +30,8 @@ _FILTROS = {
 
 
 def _pesquisa_ou_tudo(pesquisa: str | None, kwargs: dict) -> str | None:
-    """Sem termo, a busca vai com ``"*"``, salvo quando o termo chega por ``query``/``termo``."""
-    if pesquisa is None and not {"query", "termo"} & kwargs.keys():
+    """Sem termo, a busca vai com ``"*"``, salvo quando o termo chega por um alias deprecado."""
+    if pesquisa is None and not set(SEARCH_ALIASES) & kwargs.keys():
         return "*"
     return pesquisa
 
