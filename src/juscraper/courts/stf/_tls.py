@@ -73,6 +73,8 @@ class _STFTLSAdapter(HTTPAdapter):
         return super().init_poolmanager(*args, **kwargs)
 
     def proxy_manager_for(self, proxy, **proxy_kwargs):
-        # O requests guarda o manager por proxy, entao o contexto e criado uma vez por proxy.
-        proxy_kwargs.setdefault("ssl_context", _contexto_ssl())
+        # O requests chama este metodo a cada requisicao e guarda o manager por proxy em
+        # self.proxy_manager; so o primeiro uso de cada proxy precisa montar o contexto.
+        if proxy not in self.proxy_manager:
+            proxy_kwargs.setdefault("ssl_context", _contexto_ssl())
         return super().proxy_manager_for(proxy, **proxy_kwargs)
