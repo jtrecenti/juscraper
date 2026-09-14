@@ -25,7 +25,7 @@ from pydantic import BaseModel
 PUBLIC_SEARCH_ENDPOINTS = ("cjsg", "cjpg")
 PUBLIC_CONSULTA_ENDPOINTS = ("cpopg", "cposg")
 # Endpoints especificos de um ou poucos tribunais (fora do quarteto canonico).
-CUSTOM_ENDPOINTS = ("cjsg_ementa",)
+CUSTOM_ENDPOINTS = ("cjsg_ementa", "listar_decisoes", "contar_decisoes")
 # Nota: os metodos ``listar_classes``/``listar_assuntos``/``listar_orgaos``/
 # ``listar_varas`` da familia eSAJ (refs #228) ficam DE FORA deste regime de
 # schema de proposito — nao recebem input de usuario (so ``grau``, um literal),
@@ -86,6 +86,9 @@ EXPECTED_COURT_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
     ("trf5", "cpopg"): ("juscraper.courts._trf.schemas", "InputCpopgTRF"),
     # eproc consulta pública (TRF6) — captcha-gated.
     ("trf6", "cpopg"): ("juscraper.courts.trf6.schemas", "InputCpopgTRF6"),
+    # Busca de jurisprudencia do STF (acordaos e monocraticas).
+    ("stf", "listar_decisoes"): ("juscraper.courts.stf.schemas", "InputListarDecisoesSTF"),
+    ("stf", "contar_decisoes"): ("juscraper.courts.stf.schemas", "InputContarDecisoesSTF"),
 }
 
 # Agregadores sao mapeados separadamente porque os endpoints fogem do

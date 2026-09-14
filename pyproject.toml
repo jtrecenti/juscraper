@@ -74,6 +74,10 @@ dev = [
     "lizard>=1.17.0",
     "complexipy>=5.0.0",
 ]
+stf = [
+    # Obtem o cookie aws-waf-token do portal de jurisprudencia do STF (desafio JavaScript do AWS WAF).
+    "playwright>=1.49",
+]
 docs = [
     "quartodoc>=0.11.1",
     "jupyter>=1.0.0",
