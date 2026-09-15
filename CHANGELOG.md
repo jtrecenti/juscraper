@@ -7,6 +7,8 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-15
+
 ### Added
 
 - Novo raspador `stf` (`STFScraper`) para a busca de jurisprudencia do STF (`jurisprudencia.stf.jus.br`), com `listar_decisoes` (acordaos ou decisoes monocraticas, paginado, ate 250 por pagina) e `contar_decisoes` (total e facetas do portal: base, classe, ministro, UF, orgao). Filtros: `pesquisa` na sintaxe do portal (`$` como curinga, `ou`), `base`, `classe`, `inteiro_teor` e `data_julgamento_*`/`data_publicacao_*`. O portal fica atras de um desafio JavaScript do AWS WAF: o cookie `aws-waf-token` e obtido com Playwright, no novo extra `pip install "juscraper[stf]"` (seguido de `playwright install chromium`), ou pode ser passado em `jus.scraper("stf", waf_token=...)`; as buscas seguem em `requests` e o cookie e renovado quando o WAF volta a desafiar. A API so entrega os 10.000 primeiros registros de uma busca: pagina alem disso levanta `ValueError` antes de qualquer requisicao, e `paginas=None` emite `UserWarning` e para no teto.
