@@ -1,0 +1,354 @@
+{
+ "result": {
+  "took": 48,
+  "timed_out": false,
+  "_shards": {
+   "total": 5,
+   "successful": 5,
+   "skipped": 0,
+   "failed": 0
+  },
+  "hits": {
+   "total": {
+    "value": 436,
+    "relation": "eq"
+   },
+   "max_score": null,
+   "hits": []
+  },
+  "aggregations": {
+   "orgao_julgador_agg": {
+    "doc_count": 436,
+    "orgao_julgador_agg": {
+     "doc_count_error_upper_bound": 0,
+     "sum_other_doc_count": 0,
+     "buckets": [
+      {
+       "key": "Segunda Turma",
+       "doc_count": 264
+      },
+      {
+       "key": "Primeira Turma",
+       "doc_count": 171
+      },
+      {
+       "key": "Tribunal Pleno",
+       "doc_count": 1
+      }
+     ]
+    }
+   },
+   "is_questao_ordem_agg": {
+    "doc_count": 3806,
+    "is_questao_ordem_agg": {
+     "buckets": {
+      "false": {
+       "doc_count": 436
+      },
+      "true": {
+       "doc_count": 0
+      }
+     }
+    }
+   },
+   "is_repercussao_geral_merito_agg": {
+    "doc_count": 3806,
+    "is_repercussao_geral_merito_agg": {
+     "buckets": {
+      "false": {
+       "doc_count": 436
+      },
+      "true": {
+       "doc_count": 0
+      }
+     }
+    }
+   },
+   "is_repercussao_geral_agg": {
+    "doc_count": 3806,
+    "is_repercussao_geral_agg": {
+     "buckets": {
+      "false": {
+       "doc_count": 436
+      },
+      "true": {
+       "doc_count": 0
+      }
+     }
+    }
+   },
+   "procedencia_geografica_uf_sigla_agg": {
+    "doc_count": 436,
+    "procedencia_geografica_uf_sigla_agg": {
+     "doc_count_error_upper_bound": 0,
+     "sum_other_doc_count": 0,
+     "buckets": [
+      {
+       "key": "SP",
+       "doc_count": 164
+      },
+      {
+       "key": "MG",
+       "doc_count": 55
+      },
+      {
+       "key": "RJ",
+       "doc_count": 54
+      },
+      {
+       "key": "RS",
+       "doc_count": 45
+      },
+      {
+       "key": "BA",
+       "doc_count": 19
+      },
+      {
+       "key": "DF",
+       "doc_count": 17
+      },
+      {
+       "key": "PR",
+       "doc_count": 15
+      },
+      {
+       "key": "ES",
+       "doc_count": 14
+      },
+      {
+       "key": "GO",
+       "doc_count": 11
+      },
+      {
+       "key": "CE",
+       "doc_count": 9
+      },
+      {
+       "key": "PE",
+       "doc_count": 7
+      },
+      {
+       "key": "SC",
+       "doc_count": 7
+      },
+      {
+       "key": "RO",
+       "doc_count": 4
+      },
+      {
+       "key": "MA",
+       "doc_count": 3
+      },
+      {
+       "key": "PA",
+       "doc_count": 3
+      },
+      {
+       "key": "AM",
+       "doc_count": 2
+      },
+      {
+       "key": "PB",
+       "doc_count": 2
+      },
+      {
+       "key": "AC",
+       "doc_count": 1
+      },
+      {
+       "key": "MS",
+       "doc_count": 1
+      },
+      {
+       "key": "MT",
+       "doc_count": 1
+      },
+      {
+       "key": "PI",
+       "doc_count": 1
+      },
+      {
+       "key": "RN",
+       "doc_count": 1
+      }
+     ]
+    }
+   },
+   "ministro_facet_agg": {
+    "doc_count": 436,
+    "ministro_facet_agg": {
+     "doc_count_error_upper_bound": 0,
+     "sum_other_doc_count": 0,
+     "buckets": [
+      {
+       "key": "GILMAR MENDES",
+       "doc_count": 96
+      },
+      {
+       "key": "DIAS TOFFOLI",
+       "doc_count": 65
+      },
+      {
+       "key": "ANDRÉ MENDONÇA",
+       "doc_count": 63
+      },
+      {
+       "key": "ALEXANDRE DE MORAES",
+       "doc_count": 61
+      },
+      {
+       "key": "EDSON FACHIN",
+       "doc_count": 53
+      },
+      {
+       "key": "CRISTIANO ZANIN",
+       "doc_count": 46
+      },
+      {
+       "key": "FLÁVIO DINO",
+       "doc_count": 43
+      },
+      {
+       "key": "CÁRMEN LÚCIA",
+       "doc_count": 36
+      },
+      {
+       "key": "NUNES MARQUES",
+       "doc_count": 30
+      },
+      {
+       "key": "LUIZ FUX",
+       "doc_count": 22
+      },
+      {
+       "key": "LUÍS ROBERTO BARROSO",
+       "doc_count": 3
+      },
+      {
+       "key": "RICARDO LEWANDOWSKI",
+       "doc_count": 2
+      },
+      {
+       "key": "ROSA WEBER",
+       "doc_count": 1
+      }
+     ]
+    }
+   },
+   "processo_classe_processual_unificada_classe_sigla_agg": {
+    "doc_count": 440,
+    "processo_classe_processual_unificada_classe_sigla_agg": {
+     "doc_count_error_upper_bound": 0,
+     "sum_other_doc_count": 0,
+     "buckets": [
+      {
+       "key": "Rcl",
+       "doc_count": 436
+      },
+      {
+       "key": "ADI",
+       "doc_count": 1
+      },
+      {
+       "key": "AR",
+       "doc_count": 1
+      },
+      {
+       "key": "ARE",
+       "doc_count": 1
+      },
+      {
+       "key": "RE",
+       "doc_count": 1
+      }
+     ]
+    }
+   },
+   "is_iac_admissibilidade_agg": {
+    "doc_count": 3806,
+    "is_iac_admissibilidade_agg": {
+     "buckets": {
+      "false": {
+       "doc_count": 27
+      },
+      "true": {
+       "doc_count": 0
+      }
+     }
+    }
+   },
+   "is_iac_merito_agg": {
+    "doc_count": 3806,
+    "is_iac_merito_agg": {
+     "buckets": {
+      "false": {
+       "doc_count": 27
+      },
+      "true": {
+       "doc_count": 0
+      }
+     }
+    }
+   },
+   "is_repercussao_geral_admissibilidade_agg": {
+    "doc_count": 3806,
+    "is_repercussao_geral_admissibilidade_agg": {
+     "buckets": {
+      "false": {
+       "doc_count": 436
+      },
+      "true": {
+       "doc_count": 0
+      }
+     }
+    }
+   },
+   "is_colac_agg": {
+    "doc_count": 3806,
+    "is_colac_agg": {
+     "buckets": {
+      "false": {
+       "doc_count": 436
+      },
+      "true": {
+       "doc_count": 0
+      }
+     }
+    }
+   },
+   "is_iac_agg": {
+    "doc_count": 3806,
+    "is_iac_agg": {
+     "buckets": {
+      "false": {
+       "doc_count": 27
+      },
+      "true": {
+       "doc_count": 0
+      }
+     }
+    }
+   },
+   "base_agg": {
+    "doc_count": 3806,
+    "base_agg": {
+     "buckets": {
+      "acordaos": {
+       "doc_count": 436
+      },
+      "decisoes": {
+       "doc_count": 3370
+      },
+      "informativos": {
+       "doc_count": 0
+      },
+      "sumulas": {
+       "doc_count": 0
+      }
+     }
+    }
+   }
+  }
+ },
+ "search_id": 1
+}

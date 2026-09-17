@@ -1,0 +1,368 @@
+{
+ "result": {
+  "took": 77,
+  "timed_out": false,
+  "_shards": {
+   "total": 5,
+   "successful": 5,
+   "skipped": 0,
+   "failed": 0
+  },
+  "hits": {
+   "total": {
+    "value": 6,
+    "relation": "eq"
+   },
+   "max_score": null,
+   "hits": [
+    {
+     "_index": "jurisprudencia-idx20230518",
+     "_id": "sjur493171",
+     "_score": 80.22824,
+     "_ignored": [
+      "documental_observacao_html.keyword"
+     ],
+     "_source": {
+      "base": "acordaos",
+      "id": "sjur493171",
+      "dg_unique": "sjur493171",
+      "titulo": "Rcl 53688 AgR",
+      "ministro_facet": [
+       "RICARDO LEWANDOWSKI",
+       "NUNES MARQUES"
+      ],
+      "procedencia_geografica_pais_sigla": "BR",
+      "procedencia_geografica_uf_sigla": "RJ",
+      "procedencia_geografica_uf_extenso": "Rio de Janeiro",
+      "procedencia_geografica_completo": "RJ - RIO DE JANEIRO",
+      "processo_codigo_completo": "Rcl 53688 AgR",
+      "processo_numero": 53688,
+      "processo_classe_processual_unificada_sigla": "Rcl-AgR",
+      "processo_classe_processual_unificada_extenso": "AG.REG. NA RECLAMAÇÃO",
+      "processo_classe_processual_unificada_classe_sigla": "Rcl",
+      "processo_classe_processual_unificada_incidente_sigla": "AgR",
+      "is_questao_ordem": false,
+      "is_repercussao_geral_admissibilidade": false,
+      "is_repercussao_geral_merito": false,
+      "is_repercussao_geral": false,
+      "is_processo_antigo": false,
+      "is_colac": false,
+      "colac_numero": null,
+      "colac_pagina": null,
+      "relator_processo_nome": "RICARDO LEWANDOWSKI",
+      "revisor_processo_nome": null,
+      "relator_acordao_nome": "NUNES MARQUES",
+      "julgamento_data": "2023-10-17",
+      "orgao_julgador": "Segunda Turma",
+      "julgamento_is_sessao_virtual": null,
+      "publicacao_data": "2023-12-12",
+      "republicacao_data": null,
+      "ementa_texto": "EMENTA\n\n\n\n    AGRAVO INTERNO EM RECLAMAÇÃO. PRESTAÇÃO DE SERVIÇOS POR MEIO DE PESSOA JURÍDICA. “PEJOTIZAÇÃO”. RECONHECIMENTO DE VÍNCULO EMPREGATÍCIO. INADEQUAÇÃO. ADPF 324. ACÓRDÃO. DESRESPEITO CONFIGURADO.\n\n\n\n    1. O Plenário, ao apreciar a ADPF 324, declarou lícita a terceirização ou qualquer out",
+      "acordao_ata": "Após o voto do Ministro Ricardo Lewandowski (Relator), que negava provimento ao agravo regimental, pediu destaque o Ministro Nunes Marques. Segunda Turma, Sessão Virtual de 5.8.2022 a 15.8.2022.\r\n\n           Decisão: Em continuidade à Sessão Virtual de 5.8.2022 a 15.8.2022, na qual votou o Ministro Ricardo Lewandowski (Relator), negando provimento ao agravo regimental, no que, na presente Sessão, foi acompanhado pelo Ministro Edson Fachin, e dos votos divergentes apresentados pelos Ministros Nunes Marques e André Mendonça, no sentido de dar provimento ao agravo regimental para julgar procedente a reclamação e cassar a decisão reclamada, o julgamento foi suspenso para colheita do voto do Ministro Gilmar Mendes, ausente eventualmente e justificadamente durante este julgamento. Não votou o Ministro Dias Toffoli por suceder a cadeira do Ministro Ricardo Lewandowski na Turma. Presidência do Ministro Dias Toffoli. 2ª Turma, 19.9.2023.\r\n\n           Decisão: A Turma, por maioria, deu provimento ao agravo regimental para, julgando procedente a reclamação, cassar a decisão reclamada, nos termos do voto do Ministro Nunes Marques, Redator para o acórdão, vencidos o Ministro Ricardo Lewandowski (Relator), que proferiu voto na Sessão Virtual de 5.8.2022 a 15.8.2022, e o Ministro Edson Fachin. Não votou o Ministro Dias Toffoli por suceder a cadeira do Ministro Ricardo Lewandowski na Turma. Presidência do Ministro Dias Toffoli. 2ª Turma, 17.10.2023.",
+      "inteiro_teor_url": "https://portal.stf.jus.br/jurisprudencia/obterInteiroTeor.asp?idDocumento=773359592",
+      "acompanhamento_processual_url": "https://portal.stf.jus.br/processos/listarProcessos.asp?numeroProcesso=53688&classe=Rcl",
+      "dje_url": "https://portal.stf.jus.br/servicos/dje/listarDiarioJustica.asp?tipoPesquisaDJ=AP&numero=53688&classe=Rcl",
+      "partes_lista_texto": "AGTE.(S)  : BGC LIQUIDEZ DISTRIBUIDORA DE TITULOS E VALORES MOBILIARIOS LTDA E OUTRO(A/S)\nADV.(A/S)  : MAURICIO DE SOUSA PESSOA \nAGDO.(A/S)  : UBIRAJARA PENNA PESSOA \nADV.(A/S)  : SEM REPRESENTAÇÃO NOS AUTOS \nINTDO.(A/S)  : TRIBUNAL REGIONAL DO TRABALHO DA 1ª REGIÃO \nADV.(A/S)  : SEM REPRESENTAÇÃO N",
+      "documental_publicacao_lista_texto": "PROCESSO ELETRÔNICO\nDJe-s/n  DIVULG 11-12-2023  PUBLIC 12-12-2023",
+      "documental_acordao_mesmo_sentido_lista_texto": null,
+      "documental_acordao_mesmo_sentido_lista_html": null,
+      "documental_acordao_mesmo_sentido_is_secundario": false,
+      "documental_jurisprudencia_citada_texto": null,
+      "documental_legislacao_citada_texto": [
+       "LEG-FED   CF ANO-1988\n    ART-00102 INC-00001 LET-L ART-0103A\n    PAR-00003\n    CF-1988 CONSTITUIÇÃO FEDERAL\n\n",
+       "LEG-FED   LEI-006385 ANO-1976\n    LEI ORDINÁRIA\n\n",
+       "LEG-FED   LEI-013105 ANO-2015\n    ART-00988 PAR-00005 INC-00002 ART-00989\n    ART-00990 ART-00991 ART-00992 ART-00993\n    CPC-2015 CÓDIGO DE PROCESSO CIVIL\n\n",
+       "LEG-FED   DEL-005452 ANO-1943\n    ART-00003\n    CLT-1943 CONSOLIDAÇÃO DAS LEIS DO TRABALHO\n\n",
+       "LEG-FED   RGI ANO-1980\n    ART-00156 ART-00157 ART-00158 ART-00159\n    ART-00160 ART-00161 ART-00162\n    RISTF-1980 REGIMENTO INTERNO DO SUPREMO TRIBUNAL FEDERAL\n\n",
+       "LEG-FED   SUMTST-000331\n    SÚMULA DO TRIBUNAL SUPERIOR DO TRABALHO - TST"
+      ],
+      "documental_indexacao_texto": "- FUNDAMENTAÇÃO COMPLEMENTAR, MIN. GILMAR MENDES: INSTITUTO JURÍDICO, PRECEDENTE, AUSÊNCIA, EXIGÊNCIA, IDENTIDADE, CASO CONCRETO, SUFICIÊNCIA, SIMILARIDADE, CASO CONCRETO. JULGAMENTO, JUSTIÇA DO TRABALHO, AUSÊNCIA, CONSIDERAÇÃO, REGULAÇÃO, COMISSÃO DE VALORES MOBILIÁRIOS (CVM), DESCONSIDERAÇÃO, REALIDADE, MERCADO DE TRABALHO. LICITUDE, TERCEIRIZAÇÃO, ATIVIDADE-FIM, PEJOTIZAÇÃO.\n\n- VOTO VENCIDO, MIN. RICARDO LEWANDOWSKI: DESPROVIMENTO, AGRAVO REGIMENTAL. AUSÊNCIA DE ADERÊNCIA ESTRITA, ACÓRDÃO PARADIGMA. AUSÊNCIA, ESGOTAMENTO, INSTÂNCIA ORDINÁRIA. INADMISSIBILIDADE, REEXAME, FATO, PROVA, ÂMBITO, RECLAMAÇÃO.",
+      "documental_observacao_texto": "- Acórdão(s) citado(s):\n(LICITUDE, TERCEIRIZAÇÃO, ATIVIDADE-MEIO, ATIVIDADE-FIM)\nADI 3961 (TP), ADPF 324 (TP), RE 958252 (TP), ADI 5625 (TP), ADC 48 (TP), ADC 66 (TP), Rcl 56285 AgR (1ªT), Rcl 57917 AgR (2ªT), Rcl 58301 AgR-segundo (1ªT), Rcl 58104 AgR (1ªT), Rcl 59748 AgR (1ªT). \n(RECLAMAÇÃO, ADERÊNCIA ESTRITA)\nRcl 53558 AgR (2ªT), Rcl 57057 AgR (2ªT), Rcl 59842 AgR (2ªT). \n- Decisões monocráticas citadas:\n(LICITUDE, TERCEIRIZAÇÃO, ATIVIDADE-MEIO, ATIVIDADE-FIM)\nRcl 47843, Rcl 56285, Rcl 57917, Rcl 61415.\n(RECLAMAÇÃO, ADERÊNCIA ESTRITA)\nRcl 55786, Rcl 55806, Rcl 59222, Rcl 59612, Rcl 61266, Rcl 61442.\nNúmero de páginas: 54.\nAnálise: 03/06/2024, KBP.",
+      "documental_observacao_html": "- Acórdão(s) citado(s):\n(LICITUDE, TERCEIRIZAÇÃO, ATIVIDADE-MEIO, ATIVIDADE-FIM)\n<a onclick=\"openPopup('https://portal.stf.jus.br/jurisprudencia/obterInteiroTeor.asp?numero=3961&classe=ADI')\" class=\"urls\">ADI 3961</a> (TP), <a onclick=\"openPopup('https://portal.stf.jus.br/jurisprudencia/obterInteiroTeor.asp?numero=324&classe=ADPF')\" class=\"urls\">ADPF 324</a> (TP), <a onclick=\"openPopup('https://portal.stf.jus.br/jurisprudencia/obterInteiroTeor.asp?numero=958252&classe=RE')\" class=\"urls\">RE 958252</a> (TP), <a onclick=\"openPopup('https://portal.stf.jus.br/jurisprudencia/obterInteiroTeor.asp?numero=5625&classe=ADI')\" class=\"urls\">ADI 5625</a> (TP), <a onclick=\"openPopup('https://portal.stf.jus.br/jurisprudencia/obterInteiroTeor.asp?numero=48&classe=ADC')\" class=\"urls\">ADC 48</a> (TP), <a onclick=\"openPopup('https://portal.stf.jus.br/jurisprudencia/obterInteiroTeor.asp?numero=66&classe=ADC')\" class=\"urls\">ADC 66</a> (TP), <a onclick=\"openPopup('https://portal.stf.jus.br/jurisprudencia/obterInteiroTeor.asp?numero=56285&classe=Rcl-AgR')\" class=\"urls\">Rcl 56285 AgR</a> (1ªT), <a onclick=\"openPopup('https://portal.stf.jus.br/jurisprudencia/obterInteiroTeor.asp?numero=57917&classe=Rcl-AgR')\" class=\"urls\">Rcl 57917 AgR</a> (2ªT), <a onclick=\"openPopup('https://portal.stf.jus.br/jurisprudencia/obterInteiroTeor.asp?numero=58301&classe=Rcl-AgR-segundo')\" class=\"urls\">Rcl 58301 AgR-segundo</a> (1ªT), <a onclick=\"openPopup('https://portal.stf.jus.br/jurisprudencia/obterInteiroTeor.asp?numero=58104&classe=Rcl-AgR')\" class=\"urls\">Rcl 58104 AgR</a> (1ªT), <a onclick=\"openPopup('https://portal.stf.jus.br/jurisprudencia/obterInteiroTeor.asp?numero=59748&classe=Rcl-AgR')\" class=\"urls\">Rcl 59748 AgR</a> (1ªT). \n(RECLAMAÇÃO, ADERÊNCIA ESTRITA)\n<a onclick=\"openPopup('https://portal.stf.jus.br/jurisprudencia/obterInteiroTeor.asp?numero=53558&classe=Rcl-AgR')\" class=\"urls\">Rcl 53558 AgR</a> (2ªT), <a onclick=\"openPopup('https://portal.stf.jus.br/jurisprudencia/obterInteiroTeor.asp?numero=57057&classe=Rcl-AgR')\" class=\"urls\">Rcl 57057 AgR</a> (2ªT), <a onclick=\"openPopup('https://portal.stf.jus.br/jurisprudencia/obterInteiroTeor.asp?numero=59842&classe=Rcl-AgR')\" class=\"urls\">Rcl 59842 AgR</a> (2ªT). \n- Decisões monocráticas citadas:\n(LICITUDE, TERCEIRIZAÇÃO, ATIVIDADE-MEIO, ATIVIDADE-FIM)\nRcl 47843, Rcl 56285, Rcl 57917, Rcl 61415.\n(RECLAMAÇÃO, ADERÊNCIA ESTRITA)\nRcl 55786, Rcl 55806, Rcl 59222, Rcl 59612, Rcl 61266, Rcl 61442.\nNúmero de páginas: 54.\nAnálise: 03/06/2024, KBP.",
+      "documental_assunto_texto": null,
+      "documental_doutrina_texto": null,
+      "documental_tese_tipo": null,
+      "documental_tese_texto": null,
+      "documental_tese_tema_texto": null,
+      "dg_atualizado_em": "2024-06-03T12:40:11.879675",
+      "externo_seq_objeto_incidente": 6429306,
+      "old_seq_colac": null,
+      "old_seq_repercussao_geral": null,
+      "old_seq_sjur": 493171,
+      "ods_onu": []
+     },
+     "sort": [
+      80.22824,
+      "sjur493171"
+     ]
+    },
+    {
+     "_index": "jurisprudencia-idx20230518",
+     "_id": "sjur503174",
+     "_score": 18.176403,
+     "_ignored": [
+      "documental_observacao_html.keyword"
+     ],
+     "_source": {
+      "base": "acordaos",
+      "id": "sjur503174",
+      "dg_unique": "sjur503174",
+      "titulo": "Rcl 66108 ED",
+      "ministro_facet": [
+       "GILMAR MENDES"
+      ],
+      "procedencia_geografica_pais_sigla": "BR",
+      "procedencia_geografica_uf_sigla": "SE",
+      "procedencia_geografica_uf_extenso": "Sergipe",
+      "procedencia_geografica_completo": "SE - SERGIPE",
+      "processo_codigo_completo": "Rcl 66108 ED",
+      "processo_numero": 66108,
+      "processo_classe_processual_unificada_sigla": "Rcl-ED",
+      "processo_classe_processual_unificada_extenso": "EMB.DECL. NA RECLAMAÇÃO",
+      "processo_classe_processual_unificada_classe_sigla": "Rcl",
+      "processo_classe_processual_unificada_incidente_sigla": "ED",
+      "is_questao_ordem": false,
+      "is_repercussao_geral_admissibilidade": false,
+      "is_repercussao_geral_merito": false,
+      "is_repercussao_geral": false,
+      "is_processo_antigo": false,
+      "is_colac": false,
+      "colac_numero": null,
+      "colac_pagina": null,
+      "relator_processo_nome": "GILMAR MENDES",
+      "revisor_processo_nome": null,
+      "relator_acordao_nome": null,
+      "julgamento_data": "2024-04-29",
+      "orgao_julgador": "Segunda Turma",
+      "julgamento_is_sessao_virtual": null,
+      "publicacao_data": "2024-05-20",
+      "republicacao_data": null,
+      "ementa_texto": "Embargos de declaração na reclamação recebidos como agravo regimental. 2. Direito Constitucional e do Trabalho. 3. Terceirização. Corretor de imóveis. Lei 6.530/1978. Liberdade de organização produtiva dos cidadãos. Licitude de outras formas de organização. Tribunal de origem violou entendimento fir",
+      "acordao_ata": "A Turma, por maioria, converteu os embargos de declaração em agravo regimental e negou-lhe provimento, nos termos do voto do Relator, vencido o Ministro Edson Fachin. Segunda Turma, Sessão Virtual de 19.4.2024 a 26.4.2024.",
+      "inteiro_teor_url": "https://portal.stf.jus.br/jurisprudencia/obterInteiroTeor.asp?idDocumento=777006694",
+      "acompanhamento_processual_url": "https://portal.stf.jus.br/processos/listarProcessos.asp?numeroProcesso=66108&classe=Rcl",
+      "dje_url": "https://portal.stf.jus.br/servicos/dje/listarDiarioJustica.asp?tipoPesquisaDJ=AP&numero=66108&classe=Rcl",
+      "partes_lista_texto": "EMBTE.(S)  : GILBERTO FERREIRA DE SOUZA JUNIOR \nADV.(A/S)  : MELISSA DE CASTRO VILELA CARVALHO DA SILVEIRA \nEMBDO.(A/S)  : MRV ENGENHARIA E PARTICIPACOES SA \nADV.(A/S)  : ALBERTO MAGNO DE ANDRADE PINTO GONTIJO MENDES E OUTRO(A/S)\nINTDO.(A/S)  : TRIBUNAL REGIONAL DO TRABALHO DA 20ª REGIÃO \nADV.(A/S) ",
+      "documental_publicacao_lista_texto": "PROCESSO ELETRÔNICO\nDJe-s/n  DIVULG 17-05-2024  PUBLIC 20-05-2024",
+      "documental_acordao_mesmo_sentido_lista_texto": null,
+      "documental_acordao_mesmo_sentido_lista_html": null,
+      "documental_acordao_mesmo_sentido_is_secundario": false,
+      "documental_jurisprudencia_citada_texto": null,
+      "documental_legislacao_citada_texto": [
+       "LEG-FED   CF ANO-1988\n    ART-00007 ART-00102 INC-00001 LET-L\n    ART-0103A PAR-00003 ART-00114\n    CF-1988 CONSTITUIÇÃO FEDERAL\n\n",
+       "LEG-FED   LEI-006530 ANO-1978\n    LEI ORDINÁRIA\n\n",
+       "LEG-FED   LEI-013105 ANO-2015\n    ART-00988 INC-00001 INC-00002 INC-00003\n    INC-00004 PAR-00004 ART-01021 PAR-00001\n    ART-01024 PAR-00003\n    CPC-2015 CÓDIGO DE PROCESSO CIVIL\n\n",
+       "LEG-FED   DEL-005452 ANO-1943\n    ART-00002 ART-00003\n    CLT-1943 CONSOLIDAÇÃO DAS LEIS DO TRABALHO\n\n",
+       "LEG-FED   SUMTST-000331\n    SÚMULA DO TRIBUNAL SUPERIOR DO TRABALHO - TST"
+      ],
+      "documental_indexacao_texto": "- LICITUDE, TERCEIRIZAÇÃO, INCONSTITUCIONALIDADE, CRITÉRIO, DISTINÇÃO, ATIVIDADE-MEIO, ATIVIDADE-FIM. FLEXIBILIZAÇÃO, LEGISLAÇÃO TRABALHISTA.\n\n- VOTO VENCIDO, MIN. EDSON FACHIN: RECLAMAÇÃO, APLICAÇÃO, TEMA DE REPERCUSSÃO GERAL, EXIGÊNCIA, ESGOTAMENTO, INSTÂNCIA ORDINÁRIA. RECLAMAÇÃO, AUSÊNCIA DE ADERÊNCIA ESTRITA. COMPETÊNCIA, JUSTIÇA DO TRABALHO, APRECIAÇÃO, FRAUDE. LEGISLAÇÃO TRABALHISTA. RECLAMAÇÃO, REEXAME, FATO, PROVA.",
+      "documental_observacao_texto": "- Acórdão(s) citado(s):\n(PERMISSIVO CONSTITUCIONAL, FORMAS ALTERNATIVAS, RELAÇÃO DE TRABALHO)\nRcl 53688 AgR (2ªT), Rcl 56285 AgR (1ªT), Rcl 59841 AgR (1ªT). \n(RECLAMAÇÃO, SUCEDÂNEO, RECURSO)\nRcl 7082 AgR (1ªT), Rcl 15956 ED (2ªT), Rcl 12851 AgR-segundo (1ªT), Rcl 11463 AgR (1ªT). \n- Veja ADPF 324, ADC 48 e RE 958252 (tema 725).\nNúmero de páginas: 24.\nAnálise: 17/09/2024, MAV.",
+      "documental_observacao_html": "- Acórdão(s) citado(s):\n(PERMISSIVO CONSTITUCIONAL, FORMAS ALTERNATIVAS, RELAÇÃO DE TRABALHO)\n<a onclick=\"openPopup('https://portal.stf.jus.br/jurisprudencia/obterInteiroTeor.asp?numero=53688&classe=Rcl-AgR')\" class=\"urls\">Rcl 53688 AgR</a> (2ªT), <a onclick=\"openPopup('https://portal.stf.jus.br/jurisprudencia/obterInteiroTeor.asp?numero=56285&classe=Rcl-AgR')\" class=\"urls\">Rcl 56285 AgR</a> (1ªT), <a onclick=\"openPopup('https://portal.stf.jus.br/jurisprudencia/obterInteiroTeor.asp?numero=59841&classe=Rcl-AgR')\" class=\"urls\">Rcl 59841 AgR</a> (1ªT). \n(RECLAMAÇÃO, SUCEDÂNEO, RECURSO)\n<a onclick=\"openPopup('https://portal.stf.jus.br/jurisprudencia/obterInteiroTeor.asp?numero=7082&classe=Rcl-AgR')\" class=\"urls\">Rcl 7082 AgR</a> (1ªT), <a onclick=\"openPopup('https://portal.stf.jus.br/jurisprudencia/obterInteiroTeor.asp?numero=15956&classe=Rcl-ED')\" class=\"urls\">Rcl 15956 ED</a> (2ªT), <a onclick=\"openPopup('https://portal.stf.jus.br/jurisprudencia/obterInteiroTeor.asp?numero=12851&classe=Rcl-AgR-segundo')\" class=\"urls\">Rcl 12851 AgR-segundo</a> (1ªT), <a onclick=\"openPopup('https://portal.stf.jus.br/jurisprudencia/obterInteiroTeor.asp?numero=11463&classe=Rcl-AgR')\" class=\"urls\">Rcl 11463 AgR</a> (1ªT). \n- Veja ADPF 324, ADC 48 e RE 958252 (tema 725).\nNúmero de páginas: 24.\nAnálise: 17/09/2024, MAV.",
+      "documental_assunto_texto": null,
+      "documental_doutrina_texto": null,
+      "documental_tese_tipo": null,
+      "documental_tese_texto": null,
+      "documental_tese_tema_texto": null,
+      "dg_atualizado_em": "2024-09-17T16:00:22.762612",
+      "externo_seq_objeto_incidente": 6889616,
+      "old_seq_colac": null,
+      "old_seq_repercussao_geral": null,
+      "old_seq_sjur": 503174,
+      "ods_onu": []
+     },
+     "sort": [
+      18.176403,
+      "sjur503174"
+     ]
+    }
+   ]
+  },
+  "aggregations": {
+   "orgao_julgador_agg": {
+    "doc_count": 6,
+    "orgao_julgador_agg": {
+     "doc_count_error_upper_bound": 0,
+     "sum_other_doc_count": 0,
+     "buckets": [
+      {
+       "key": "Segunda Turma",
+       "doc_count": 5
+      },
+      {
+       "key": "Tribunal Pleno",
+       "doc_count": 1
+      }
+     ]
+    }
+   },
+   "is_questao_ordem_agg": {
+    "buckets": {
+     "false": {
+      "doc_count": 6
+     },
+     "true": {
+      "doc_count": 0
+     }
+    }
+   },
+   "is_repercussao_geral_merito_agg": {
+    "buckets": {
+     "false": {
+      "doc_count": 6
+     },
+     "true": {
+      "doc_count": 0
+     }
+    }
+   },
+   "is_repercussao_geral_agg": {
+    "buckets": {
+     "false": {
+      "doc_count": 6
+     },
+     "true": {
+      "doc_count": 0
+     }
+    }
+   },
+   "procedencia_geografica_uf_sigla_agg": {
+    "doc_count": 6,
+    "procedencia_geografica_uf_sigla_agg": {
+     "doc_count_error_upper_bound": 0,
+     "sum_other_doc_count": 0,
+     "buckets": [
+      {
+       "key": "RJ",
+       "doc_count": 2
+      },
+      {
+       "key": "GO",
+       "doc_count": 1
+      },
+      {
+       "key": "PR",
+       "doc_count": 1
+      },
+      {
+       "key": "RS",
+       "doc_count": 1
+      },
+      {
+       "key": "SE",
+       "doc_count": 1
+      }
+     ]
+    }
+   },
+   "ministro_facet_agg": {
+    "doc_count": 6,
+    "ministro_facet_agg": {
+     "doc_count_error_upper_bound": 0,
+     "sum_other_doc_count": 0,
+     "buckets": [
+      {
+       "key": "GILMAR MENDES",
+       "doc_count": 3
+      },
+      {
+       "key": "NUNES MARQUES",
+       "doc_count": 2
+      },
+      {
+       "key": "DIAS TOFFOLI",
+       "doc_count": 1
+      },
+      {
+       "key": "RICARDO LEWANDOWSKI",
+       "doc_count": 1
+      }
+     ]
+    }
+   },
+   "processo_classe_processual_unificada_classe_sigla_agg": {
+    "doc_count": 6,
+    "processo_classe_processual_unificada_classe_sigla_agg": {
+     "doc_count_error_upper_bound": 0,
+     "sum_other_doc_count": 0,
+     "buckets": [
+      {
+       "key": "Rcl",
+       "doc_count": 5
+      },
+      {
+       "key": "AR",
+       "doc_count": 1
+      }
+     ]
+    }
+   },
+   "is_iac_admissibilidade_agg": {
+    "buckets": {
+     "false": {
+      "doc_count": 0
+     },
+     "true": {
+      "doc_count": 0
+     }
+    }
+   },
+   "is_iac_merito_agg": {
+    "buckets": {
+     "false": {
+      "doc_count": 0
+     },
+     "true": {
+      "doc_count": 0
+     }
+    }
+   },
+   "is_repercussao_geral_admissibilidade_agg": {
+    "buckets": {
+     "false": {
+      "doc_count": 6
+     },
+     "true": {
+      "doc_count": 0
+     }
+    }
+   },
+   "is_colac_agg": {
+    "buckets": {
+     "false": {
+      "doc_count": 6
+     },
+     "true": {
+      "doc_count": 0
+     }
+    }
+   },
+   "is_iac_agg": {
+    "buckets": {
+     "false": {
+      "doc_count": 0
+     },
+     "true": {
+      "doc_count": 0
+     }
+    }
+   },
+   "base_agg": {
+    "buckets": {
+     "acordaos": {
+      "doc_count": 6
+     },
+     "decisoes": {
+      "doc_count": 189
+     },
+     "informativos": {
+      "doc_count": 0
+     },
+     "sumulas": {
+      "doc_count": 0
+     }
+    }
+   }
+  }
+ },
+ "search_id": 1
+}

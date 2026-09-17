@@ -1,4 +1,6 @@
 """Filter propagation, empty result and aliases for STF contar_decisoes."""
+import json
+
 import pytest
 import responses
 from responses.matchers import json_params_matcher
@@ -74,3 +76,43 @@ def test_alias_termo_vira_pesquisa(stf):
 def test_tamanho_pagina_nao_e_filtro_de_contagem(stf):
     with pytest.raises(TypeError, match="tamanho_pagina"):
         stf.contar_decisoes(PESQUISA, tamanho_pagina=10)
+
+
+@pytest.mark.parametrize("base", ["decisoes", "acordaos"])
+@responses.activate
+def test_class_filter_reaches_base_and_boolean_facets(stf, base):
+    responses.add(
+        responses.POST,
+        BASE_URL,
+        body=load_sample("stf", "listar_decisoes/no_results.json"),
+        content_type="application/json",
+    )
+
+    stf.contar_decisoes(PESQUISA, base=base, classe="Rcl")
+
+    payload = json.loads(responses.calls[0].request.body)
+    class_filter = {"terms": {"processo_classe_processual_unificada_classe_sigla.keyword": ["Rcl"]}}
+    facets = {name: agg for name, agg in payload["aggs"].items() if name == "base_agg" or name.startswith("is_")}
+    assert "base_agg" in facets
+    assert any(name.startswith("is_") for name in facets)
+    missing = [
+        name for name, agg in facets.items()
+        if class_filter not in agg.get("filter", {}).get("bool", {}).get("must", [])
+    ]
+    assert not missing, f"Facetas sem o filtro de classe: {missing}"
+
+
+@pytest.mark.parametrize("base", ["decisoes", "acordaos"])
+def test_class_filter_preserves_buckets_and_unfiltered_template(base):
+    original = build_payload(base=base)
+    filtered = build_payload(base=base, classe=["Rcl", "ADI"])
+    class_facet = "processo_classe_processual_unificada_classe_sigla_agg"
+    class_filter = {"terms": {"processo_classe_processual_unificada_classe_sigla.keyword": ["Rcl", "ADI"]}}
+
+    assert set(filtered["aggs"]) == set(original["aggs"])
+    assert filtered["aggs"][class_facet] == original["aggs"][class_facet]
+    for name, aggregation in original["aggs"].items():
+        if "filters" in aggregation:
+            assert filtered["aggs"][name]["aggs"][name] == aggregation
+            assert filtered["aggs"][name]["filter"] == {"bool": {"must": [class_filter]}}
+    assert build_payload(base=base) == original

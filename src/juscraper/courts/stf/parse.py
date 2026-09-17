@@ -14,6 +14,18 @@ _RENOMEAR = {
 }
 
 
+def validate_search_response(response: dict) -> None:
+    """Rejeita respostas parciais do Elasticsearch, mesmo quando chegam com HTTP 200."""
+    result = response["result"]
+    timed_out = result.get("timed_out", False)
+    failed_shards = result.get("_shards", {}).get("failed", 0)
+    if timed_out or failed_shards > 0:
+        raise RuntimeError(
+            f"A busca do STF retornou uma resposta incompleta: timed_out={timed_out}, "
+            f"shards com falha={failed_shards}. Nenhum resultado parcial será devolvido."
+        )
+
+
 def parse_decisoes(respostas: list[dict]) -> list[dict]:
     """Uma linha por documento das respostas de busca, com as chaves de :data:`_RENOMEAR` renomeadas."""
     return [
@@ -28,7 +40,7 @@ def parse_contagem(resposta: dict) -> list[dict]:
 
     As agregacoes de faceta (ministro, classe, UF, orgao) vem aninhadas num filtro,
     ``{"doc_count", "<nome>": {"buckets": [{"key", "doc_count"}]}}``. As de base e dos
-    indicadores booleanos vem como ``filters``, ``{"buckets": {"<chave>": {"doc_count"}}}``.
+    indicadores booleanos vêm como ``filters``, também aninhados quando há filtro de classe.
     """
     resultado = resposta["result"]
     linhas: list[dict] = [{"faceta": "total", "valor": None, "n": resultado["hits"]["total"]["value"]}]

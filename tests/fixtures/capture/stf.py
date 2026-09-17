@@ -10,6 +10,7 @@ Os samples sao saneados para caber no repositorio: ``decisao_texto``,
 ``highlight`` de cada hit removido.
 """
 import json
+import time
 
 from juscraper.courts.stf.client import STFScraper
 from juscraper.courts.stf.download import build_payload
@@ -30,6 +31,7 @@ def _sanear(resposta: dict) -> dict:
 
 
 def _capture(stf: STFScraper, endpoint: str, filename: str, **payload_kwargs) -> None:
+    time.sleep(stf.sleep_time)
     resposta = _sanear(stf._buscar(build_payload(**payload_kwargs)))  # pylint: disable=protected-access
     dest = samples_dir_for("stf", endpoint)
     dump(dest / filename, json.dumps(resposta, ensure_ascii=False, indent=1).encode("utf-8"))
@@ -50,6 +52,10 @@ def main() -> None:
              pesquisa="juscraper_probe_zero_hits_xyzqwe", pagina=1, tamanho_pagina=250)
     _capture(stf, "contar_decisoes", "results_normal.json",
              pesquisa="pejotização", classe="Rcl", tamanho_pagina=0)
+    _capture(stf, "listar_decisoes", "acordaos.json",
+             pesquisa="Rcl 53688", base="acordaos", tamanho_pagina=2)
+    _capture(stf, "contar_decisoes", "acordaos_filtered.json",
+             pesquisa="pejotização", base="acordaos", classe="Rcl", tamanho_pagina=0)
 
 
 if __name__ == "__main__":
