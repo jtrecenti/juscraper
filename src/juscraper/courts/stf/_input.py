@@ -20,9 +20,13 @@ def search_input(schema, method, pesquisa, paginas, kwargs):
     pop_normalize_aliases(kwargs, include_canonical=True)
     dates = {key: coerce_brazilian_date(value, schema.BACKEND_DATE_FORMAT) for key, value in dates.items()}
     for axis in ("julgamento", "publicacao"):
+        inicio = dates[f"data_{axis}_inicio"]
+        fim = dates[f"data_{axis}_fim"]
+        # Validar o extremo isolado não deve preencher o limite ausente no payload.
         validate_intervalo_datas(
-            dates[f"data_{axis}_inicio"],
-            dates[f"data_{axis}_fim"],
+            inicio if inicio is not None else fim,
+            fim if fim is not None else inicio,
+            max_dias=None,
             rotulo=f"data_{axis}",
             formato=schema.BACKEND_DATE_FORMAT,
         )

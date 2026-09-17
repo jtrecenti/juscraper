@@ -4,7 +4,7 @@ import responses
 
 import juscraper as jus
 from juscraper.courts.stf.download import build_payload, traduzir_operadores
-from tests.stf._collection_helpers import add_sample
+from tests.stf._collection_helpers import Source, add_sample, make_rows
 
 PESQUISA = "juscraper_probe_zero_hits_xyzqwe"
 
@@ -107,6 +107,77 @@ def test_aliases_de_ate_viram_datas_canonicas(stf, mocker, aliases, campo):
 def test_kwarg_desconhecido_levanta_type_error(stf):
     with pytest.raises(TypeError, match="ministro"):
         stf.listar_decisoes(PESQUISA, ministro="GILMAR MENDES")
+
+
+@pytest.mark.parametrize("metodo", ["listar_decisoes", "contar_decisoes"])
+@pytest.mark.parametrize("eixo", ["julgamento", "publicacao"])
+@responses.activate
+def test_intervalo_plurianual_preserva_os_limites(stf, mocker, metodo, eixo):
+    mocker.patch("time.sleep")
+    fonte = Source(make_rows(2, start="2021-01-01")).install()
+    filtros = {f"data_{eixo}_inicio": "2020-01-01", f"data_{eixo}_fim": "2022-01-01"}
+
+    resultado = getattr(stf, metodo)(PESQUISA, **filtros)
+
+    if metodo == "listar_decisoes":
+        assert len(resultado) == 2
+    else:
+        assert resultado.loc[resultado.faceta == "total", "n"].item() == 2
+    for corpo in fonte.payloads:
+        assert {"range": {f"{eixo}_data": {"format": "ddMMyyyy", "from": "01012020", "lte": "01012022"}}} in (
+            corpo["query"]["function_score"]["query"]["bool"]["filter"]
+        )
+
+
+@pytest.mark.parametrize("metodo", ["listar_decisoes", "contar_decisoes"])
+@pytest.mark.parametrize("eixo", ["julgamento", "publicacao"])
+@pytest.mark.parametrize("limite", ["inicio", "fim"])
+@responses.activate
+def test_data_isolada_valida_nao_preenche_outro_limite(stf, mocker, metodo, eixo, limite):
+    mocker.patch("time.sleep")
+    fonte = Source(make_rows(1, start="1988-01-01")).install()
+
+    getattr(stf, metodo)(PESQUISA, **{f"data_{eixo}_{limite}": "1988-01-01"})
+
+    operador = "from" if limite == "inicio" else "lte"
+    for corpo in fonte.payloads:
+        intervalos = [
+            filtro["range"]
+            for filtro in corpo["query"]["function_score"]["query"]["bool"]["filter"]
+            if "range" in filtro
+        ]
+        assert intervalos == [{f"{eixo}_data": {"format": "ddMMyyyy", operador: "01011988"}}]
+
+
+@pytest.mark.parametrize("metodo", ["listar_decisoes", "contar_decisoes"])
+@pytest.mark.parametrize("eixo", ["julgamento", "publicacao"])
+@pytest.mark.parametrize("limite", ["inicio", "fim"])
+@pytest.mark.parametrize("data", ["31/02/2024", "2024-02-30", "invalida"])
+@responses.activate
+def test_data_isolada_invalida_falha_antes_de_efeitos(stf, mocker, tmp_path, metodo, eixo, limite, data):
+    renovar = mocker.patch.object(stf, "_renovar_token")
+    diretorio = tmp_path / "checkpoint"
+    filtros = {f"data_{eixo}_{limite}": data}
+    if metodo == "listar_decisoes":
+        filtros["checkpoint_dir"] = diretorio
+
+    with pytest.raises(ValueError, match=f"data_{eixo}"):
+        getattr(stf, metodo)(PESQUISA, **filtros)
+
+    renovar.assert_not_called()
+    assert not responses.calls
+    assert not diretorio.exists()
+
+
+@pytest.mark.parametrize("metodo", ["listar_decisoes", "contar_decisoes"])
+@pytest.mark.parametrize("eixo", ["julgamento", "publicacao"])
+@responses.activate
+def test_intervalo_invertido_continua_rejeitado(stf, metodo, eixo):
+    with pytest.raises(ValueError, match="posterior"):
+        getattr(stf, metodo)(
+            PESQUISA, **{f"data_{eixo}_inicio": "2022-01-01", f"data_{eixo}_fim": "2020-01-01"}
+        )
+    assert not responses.calls
 
 
 def test_build_payload_aplica_filtros_como_o_portal():

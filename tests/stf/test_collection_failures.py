@@ -178,6 +178,39 @@ def test_checkpoint_structural_corruption_before_http(stf, tmp_path, corruption)
     assert not source.payloads
 
 
+@pytest.mark.parametrize("paginas", [10**9, range(1, 10**9), range(1, 10**9, 3)])
+@pytest.mark.parametrize("tamanho", [1, 249, 250])
+@responses.activate
+def test_paginacao_excessiva_falha_antes_de_materializar(stf, mocker, tmp_path, paginas, tamanho):
+    materializar = mocker.patch(
+        "juscraper.courts.stf._collection.list",
+        create=True,
+        side_effect=AssertionError("Seleção inválida não deve ser materializada."),
+    )
+    diretorio = tmp_path / "checkpoint"
+    with pytest.raises(ValueError, match="10000 primeiros registros"):
+        stf.listar_decisoes(paginas=paginas, tamanho_pagina=tamanho, checkpoint_dir=diretorio)
+    materializar.assert_not_called()
+    assert not responses.calls
+    assert not diretorio.exists()
+
+
+@pytest.mark.parametrize(
+    "paginas,tamanho,inicio,fim",
+    [(range(40, 41), 250, 9750, 10000), (range(41, 42), 249, 9960, 10000), (range(2, 10**9, 10**9), 2, 2, 4)],
+)
+@responses.activate
+def test_range_valido_preserva_ultima_pagina_e_passo(stf, paginas, tamanho, inicio, fim):
+    fonte = Source(make_rows(10001)).install()
+
+    resultado = stf.listar_decisoes(paginas=paginas, tamanho_pagina=tamanho)
+
+    assert resultado.id.tolist() == [registro["id"] for registro in fonte.rows[inicio:fim]]
+    corpos = [corpo for corpo in fonte.payloads if corpo["size"]]
+    assert len(corpos) == 1
+    assert (corpos[0]["from"], corpos[0]["size"]) == (inicio, fim - inicio)
+
+
 @pytest.mark.parametrize("kwargs", [{"paginas": [1, 1]}, {"tamanho_pagina": 251}, {"resume": []}])
 @responses.activate
 def test_invalid_input_fails_before_request(stf, kwargs):

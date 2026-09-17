@@ -74,6 +74,8 @@ class Collection:
             self.filters["classe"] = sorted(set([classes] if isinstance(classes, str) else classes))
         tem_publicacao = any(self.filters[f"data_publicacao_{limite}"] for limite in ("inicio", "fim"))
         self.axis = "publicacao" if tem_publicacao else "julgamento"
+        if isinstance(entrada.paginas, range):
+            build_payload(pagina=entrada.paginas[-1], tamanho_pagina=entrada.tamanho_pagina)
         self.pages = None if entrada.paginas is None else list(entrada.paginas)
         if self.pages is not None:
             if len(set(self.pages)) != len(self.pages):
