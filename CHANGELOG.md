@@ -7,9 +7,14 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- STF `listar_decisoes` aceita `checkpoint_dir` e `resume=True` para retomar coletas interrompidas. Preserva páginas em disco, valida a compatibilidade antes de requisitar e reinicia apenas a janela incompleta, sem misturar tentativas. Sem diretório, não grava checkpoints.
+
 ### Fixed
 
 - STF: o filtro `classe` passa a valer também nas facetas de base e indicadores, sem restringir a própria faceta de classe; respostas com timeout da busca ou shards falhos levantam `RuntimeError` em vez de devolver resultados parciais; a obtenção e renovação do cookie funcionam com um loop asyncio ativo, inclusive em notebooks Jupyter, mantendo a API síncrona.
+- STF `listar_decisoes(paginas=None)` deixa de truncar buscas em 10.000 documentos com aviso. Divide consultas maiores em janelas de datas disjuntas e falha explicitamente quando um dia ou o residual sem data excede o teto, quando faltam IDs ou quando as contagens divergem. Mantém o DataFrame e a numeração de páginas explícitas. Datas abertas no STF deixam de receber limites artificiais; a coleta integral fixa a referência temporal da ordenação, sem prometer snapshot do índice.
 
 ## [0.4.0] - 2026-09-15
 

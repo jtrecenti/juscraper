@@ -1,24 +1,16 @@
 """Filter propagation, deprecated aliases and payload shape for STF listar_decisoes."""
 import pytest
 import responses
-from responses.matchers import json_params_matcher
 
 import juscraper as jus
-from juscraper.courts.stf.download import BASE_URL, build_payload, traduzir_operadores
-from tests._helpers import load_sample
+from juscraper.courts.stf.download import build_payload, traduzir_operadores
+from tests.stf._collection_helpers import add_sample
 
 PESQUISA = "juscraper_probe_zero_hits_xyzqwe"
 
 
 def _add_no_results(**payload_kwargs) -> None:
-    responses.add(
-        responses.POST,
-        BASE_URL,
-        body=load_sample("stf", "listar_decisoes/no_results.json"),
-        status=200,
-        content_type="application/json",
-        match=[json_params_matcher(build_payload(**payload_kwargs))],
-    )
+    add_sample("no_results.json", **payload_kwargs)
 
 
 @pytest.fixture
@@ -55,7 +47,7 @@ def test_todos_os_filtros_chegam_ao_corpo(stf, mocker):
         data_publicacao_fim="30/11/2024",
     )
 
-    assert len(responses.calls) == 1
+    assert len(responses.calls) == 3
 
 
 @responses.activate
