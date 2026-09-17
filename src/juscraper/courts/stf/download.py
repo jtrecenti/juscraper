@@ -73,6 +73,7 @@ def build_payload(
     data_julgamento_fim: str | None = None,
     data_publicacao_inicio: str | None = None,
     data_publicacao_fim: str | None = None,
+    reference_time: str | None = None,
 ) -> dict:
     """Monta o corpo JSON enviado a ``BASE_URL``.
 
@@ -87,6 +88,8 @@ def build_payload(
         inteiro_teor (bool): Pesquisa tambem no inteiro teor, como a opcao do portal.
         data_julgamento_inicio, data_julgamento_fim, data_publicacao_inicio,
         data_publicacao_fim (str | None): Datas ja no formato ``ddMMyyyy``.
+        reference_time (str | None): Referência UTC fixa para o decaimento do score.
+            ``None`` mantém o ``now`` do portal.
 
     Raises:
         ValueError: Quando a pagina pedida comeca depois do registro 10.000.
@@ -100,6 +103,8 @@ def build_payload(
         )
 
     body = copy.deepcopy(_template(base))
+    if reference_time is not None:
+        body["query"]["function_score"]["functions"][0]["exp"]["julgamento_data"]["origin"] = reference_time
     # O score empata com frequencia (sem pesquisa, todas as decisoes julgadas no mesmo dia
     # tem o mesmo score), e cada pagina e uma requisicao separada: sem desempate, o
     # Elasticsearch nao garante a mesma ordem entre paginas e pode repetir ou pular

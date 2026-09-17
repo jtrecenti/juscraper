@@ -1,15 +1,13 @@
 """Offline contract tests for STF listar_decisoes."""
-import json
 from datetime import date
 
 import pandas as pd
 import pytest
 import responses
-from responses.matchers import json_params_matcher
 
 import juscraper as jus
-from juscraper.courts.stf.download import BASE_URL, build_payload
-from tests._helpers import load_sample
+from juscraper.courts.stf.download import BASE_URL
+from tests.stf._collection_helpers import Source, add_sample, make_rows
 
 MIN_COLUMNS = {
     "processo",
@@ -23,14 +21,7 @@ MIN_COLUMNS = {
 
 
 def _add(sample: str, **payload_kwargs) -> None:
-    responses.add(
-        responses.POST,
-        BASE_URL,
-        body=load_sample("stf", f"listar_decisoes/{sample}"),
-        status=200,
-        content_type="application/json",
-        match=[json_params_matcher(build_payload(**payload_kwargs))],
-    )
+    add_sample(sample, **payload_kwargs)
 
 
 @pytest.fixture
@@ -40,7 +31,7 @@ def stf():
 
 @responses.activate
 def test_listar_decisoes_com_paginacao(stf, mocker):
-    """Duas paginas pedidas viram dois POSTs e um DataFrame com as colunas canonicas."""
+    """Páginas explícitas preservam a seleção e as colunas canônicas."""
     mocker.patch("time.sleep")
     _add("results_normal_page_01.json", pesquisa="pejotização", classe="Rcl", pagina=1, tamanho_pagina=5)
     _add("results_normal_page_02.json", pesquisa="pejotização", classe="Rcl", pagina=2, tamanho_pagina=5)
@@ -71,7 +62,7 @@ def test_listar_decisoes_todas_as_paginas_com_datas(stf, mocker):
         "pejotização", data_julgamento_inicio="01/01/2020", data_julgamento_fim="2020-12-31"
     )
 
-    assert len(responses.calls) == 1
+    assert len(responses.calls) == 3
     assert set(df.columns) >= MIN_COLUMNS
     assert len(df) == 2
 
@@ -156,37 +147,23 @@ def test_sem_token_obtem_um_antes_da_primeira_busca(mocker):
 def test_paginas_none_busca_as_paginas_seguintes(stf, mocker):
     """Sem ``paginas``, o total da primeira resposta define quantas paginas faltam."""
     mocker.patch("time.sleep")
-    pagina_1 = json.loads(load_sample("stf", "listar_decisoes/results_normal_page_01.json"))
-    # O sample real tem 3.369 resultados; com total 10 e 5 por pagina, falta uma pagina.
-    pagina_1["result"]["hits"]["total"]["value"] = 10
-    responses.add(
-        responses.POST,
-        BASE_URL,
-        json=pagina_1,
-        match=[json_params_matcher(build_payload("pejotização", classe="Rcl", pagina=1, tamanho_pagina=5))],
-    )
-    _add("results_normal_page_02.json", pesquisa="pejotização", classe="Rcl", pagina=2, tamanho_pagina=5)
-
+    Source(make_rows(10)).install()
     df = stf.listar_decisoes("pejotização", classe="Rcl", tamanho_pagina=5)
 
-    assert len(responses.calls) == 2
+    assert len(responses.calls) == 4
     assert len(df) == 10
 
 
 @responses.activate
-def test_paginas_none_para_no_teto_com_aviso(stf, mocker):
-    """Com mais de 10.000 resultados, baixa 40 paginas de 250, a ultima terminando no registro 10.000."""
+def test_paginas_none_acima_do_teto_fatia_sem_truncar(stf, mocker):
+    """Acima do teto, janelas disjuntas entregam o conjunto inteiro."""
     mocker.patch("time.sleep")
-    pagina = json.loads(load_sample("stf", "listar_decisoes/results_normal_page_01.json"))
-    pagina["result"]["hits"]["total"]["value"] = 16899
-    responses.add(responses.POST, BASE_URL, json=pagina)
+    source = Source(make_rows(10001)).install()
+    df = stf.listar_decisoes("terceirização", tamanho_pagina=250)
 
-    with pytest.warns(UserWarning, match="so entrega os 10000"):
-        stf.listar_decisoes("terceirização", tamanho_pagina=250)
-
-    assert len(responses.calls) == 40
-    ultimo = json.loads(responses.calls[-1].request.body)
-    assert (ultimo["from"], ultimo["size"]) == (9750, 250)
+    assert len(df) == 10001
+    assert set(df.id) == {row["id"] for row in source.rows}
+    assert all(body["from"] + body["size"] <= 10000 for body in source.payloads)
 
 
 @responses.activate

@@ -6,6 +6,7 @@ de :class:`SearchBase`.
 """
 from __future__ import annotations
 
+from pathlib import Path
 from typing import ClassVar, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -29,6 +30,8 @@ class InputListarDecisoesSTF(SearchBase, DataJulgamentoMixin, DataPublicacaoMixi
     classe: str | list[str] | None = None
     inteiro_teor: bool = False
     tamanho_pagina: int = Field(default=MAX_TAMANHO_PAGINA, ge=1, le=MAX_TAMANHO_PAGINA)
+    checkpoint_dir: str | Path | None = None
+    resume: bool = False
 
 
 class InputContarDecisoesSTF(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
