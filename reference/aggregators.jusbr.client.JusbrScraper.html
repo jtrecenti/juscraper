@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-b434c78eef13aec0c305eba05626043f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-faf98ddab0c3cf5e728a320f2ec4f090.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -206,7 +206,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td><a href="#juscraper.aggregators.jusbr.client.JusbrScraper.download_documents">download_documents</a></td>
-<td>Downloads document texts for processes in base_df.</td>
+<td>Baixa e limpa os documentos dos processos de um DataFrame.</td>
 </tr>
 </tbody>
 </table>
@@ -280,7 +280,41 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    max_docs_per_process<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Downloads document texts for processes in base_df. Iterates through processes in base_df, extracts document metadata from the ‘detalhes’ column, fetches, and cleans document texts. Returns a DataFrame where each row is a document.</p>
+<p>Baixa e limpa os documentos dos processos de um DataFrame.</p>
+<p>O limite é aplicado ao <code>numeroProcesso</code> em todo o DataFrame, inclusive quando o mesmo processo aparece em mais de uma linha.</p>
+<section id="parameters" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>base_df</td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>Processos com as colunas <code>numeroProcesso</code> e <code>detalhes</code>, como retornados por :meth:<code>cpopg</code>.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>max_docs_per_process</td>
+<td><a href="`int`">int</a> | None</td>
+<td>Limite de documentos por processo. <code>None</code> baixa todos; <code>0</code> não faz downloads. Default <code>None</code>.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>**kwargs</td>
+<td><a href="`typing.Any`">Any</a></td>
+<td>Nenhum parâmetro adicional é aceito.</td>
+<td><code>{}</code></td>
+</tr>
+</tbody>
+</table>
+</section>
 <section id="raises-2" class="level4 doc-section doc-section-raises">
 <h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-2">Raises</h4>
 <table class="caption-top table">
@@ -299,11 +333,44 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td></td>
+<td><a href="`pydantic.ValidationError`">ValidationError</a></td>
+<td>Quando <code>base_df</code> não é um DataFrame ou <code>max_docs_per_process</code> é negativo.</td>
+</tr>
+<tr class="odd">
+<td></td>
 <td><a href="`RuntimeError`">RuntimeError</a></td>
-<td>Quando <code>auth(token)</code> nao foi chamado antes.</td>
+<td>Quando <code>auth(token)</code> não foi chamado antes.</td>
 </tr>
 </tbody>
 </table>
+</section>
+<section id="returns" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>pd.DataFrame: Uma linha por documento, com metadados, texto limpo e</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>respostas brutas disponíveis.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="see-also" class="level4 doc-section doc-section-see-also">
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See also</h4>
+<p><a href=":class:`InputDownloadDocumentsJusBR`"></a> — schema pydantic e fonte da verdade dos parâmetros aceitos.</p>
 
 
 </section>

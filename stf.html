@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>courts.tjsc.client.tjscscraper – juscraper</title>
+<title>STF collection and checkpoints – juscraper</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -57,22 +57,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </style>
 
 
-<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="../site_libs/quarto-nav/headroom.min.js"></script>
-<script src="../site_libs/clipboard/clipboard.min.js"></script>
-<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="../site_libs/quarto-search/fuse.min.js"></script>
-<script src="../site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="../">
-<script src="../site_libs/quarto-html/quarto.js"></script>
-<script src="../site_libs/quarto-html/popper.min.js"></script>
-<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="../site_libs/quarto-html/anchor.min.js"></script>
-<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-faf98ddab0c3cf5e728a320f2ec4f090.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-faf98ddab0c3cf5e728a320f2ec4f090.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -112,7 +112,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="../index.html">
+    <a class="navbar-brand" href="./index.html">
     <span class="navbar-title">juscraper</span>
     </a>
   </div>
@@ -123,11 +123,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../index.html"> 
+    <a class="nav-link" href="./index.html"> 
 <span class="menu-text">Home</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../reference/index.html"> 
+    <a class="nav-link" href="./reference/index.html"> 
 <span class="menu-text">Referência da API</span></a>
   </li>  
 </ul>
@@ -153,210 +153,71 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Nesta página</h2>
    
   <ul>
-  <li><a href="#juscraper.courts.tjsc.client.TJSCScraper" id="toc-juscraper.courts.tjsc.client.TJSCScraper" class="nav-link active" data-scroll-target="#juscraper.courts.tjsc.client.TJSCScraper">courts.tjsc.client.TJSCScraper</a>
-  <ul class="collapse">
-  <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
-  <ul class="collapse">
-  <li><a href="#juscraper.courts.tjsc.client.TJSCScraper.cjsg" id="toc-juscraper.courts.tjsc.client.TJSCScraper.cjsg" class="nav-link" data-scroll-target="#juscraper.courts.tjsc.client.TJSCScraper.cjsg">cjsg</a></li>
-  <li><a href="#juscraper.courts.tjsc.client.TJSCScraper.cjsg_download" id="toc-juscraper.courts.tjsc.client.TJSCScraper.cjsg_download" class="nav-link" data-scroll-target="#juscraper.courts.tjsc.client.TJSCScraper.cjsg_download">cjsg_download</a></li>
-  <li><a href="#juscraper.courts.tjsc.client.TJSCScraper.cjsg_parse" id="toc-juscraper.courts.tjsc.client.TJSCScraper.cjsg_parse" class="nav-link" data-scroll-target="#juscraper.courts.tjsc.client.TJSCScraper.cjsg_parse">cjsg_parse</a></li>
-  <li><a href="#juscraper.courts.tjsc.client.TJSCScraper.cpopg" id="toc-juscraper.courts.tjsc.client.TJSCScraper.cpopg" class="nav-link" data-scroll-target="#juscraper.courts.tjsc.client.TJSCScraper.cpopg">cpopg</a></li>
-  <li><a href="#juscraper.courts.tjsc.client.TJSCScraper.cposg" id="toc-juscraper.courts.tjsc.client.TJSCScraper.cposg" class="nav-link" data-scroll-target="#juscraper.courts.tjsc.client.TJSCScraper.cposg">cposg</a></li>
-  </ul></li>
-  </ul></li>
+  <li><a href="#collect-and-resume" id="toc-collect-and-resume" class="nav-link active" data-scroll-target="#collect-and-resume">Collect and resume</a></li>
+  <li><a href="#queries-above-the-api-ceiling" id="toc-queries-above-the-api-ceiling" class="nav-link" data-scroll-target="#queries-above-the-api-ceiling">Queries above the API ceiling</a></li>
+  <li><a href="#what-the-checks-establish" id="toc-what-the-checks-establish" class="nav-link" data-scroll-target="#what-the-checks-establish">What the checks establish</a></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.com/jtrecenti/juscraper/edit/main/docs/reference/courts.tjsc.client.TJSCScraper.qmd" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.com/jtrecenti/juscraper/edit/main/docs/stf.qmd" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">STF collection and checkpoints</h1>
+</div>
 
 
 
-<section id="juscraper.courts.tjsc.client.TJSCScraper" class="level1">
-<h1>courts.tjsc.client.TJSCScraper</h1>
-<div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>courts.tjsc.client.TJSCScraper(</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    verbose<span class="op">=</span><span class="dv">0</span>,</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    download_path<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    sleep_time<span class="op">=</span><span class="fl">1.0</span>,</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Scraper for the Tribunal de Justica de Santa Catarina (TJSC).</p>
-<p>Uses the eproc jurisprudence search at eproc1g.tjsc.jus.br.</p>
-<section id="methods" class="level2">
-<h2 class="anchored" data-anchor-id="methods">Methods</h2>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Name</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><a href="#juscraper.courts.tjsc.client.TJSCScraper.cjsg">cjsg</a></td>
-<td>Busca jurisprudencia no TJSC.</td>
-</tr>
-<tr class="even">
-<td><a href="#juscraper.courts.tjsc.client.TJSCScraper.cjsg_download">cjsg_download</a></td>
-<td>Download raw HTML pages from TJSC.</td>
-</tr>
-<tr class="odd">
-<td><a href="#juscraper.courts.tjsc.client.TJSCScraper.cjsg_parse">cjsg_parse</a></td>
-<td>Parse downloaded HTML pages.</td>
-</tr>
-<tr class="even">
-<td><a href="#juscraper.courts.tjsc.client.TJSCScraper.cpopg">cpopg</a></td>
-<td>Stub: first instance case consultation not implemented for TJSC.</td>
-</tr>
-<tr class="odd">
-<td><a href="#juscraper.courts.tjsc.client.TJSCScraper.cposg">cposg</a></td>
-<td>Stub: second instance case consultation not implemented for TJSC.</td>
-</tr>
-</tbody>
-</table>
-<section id="juscraper.courts.tjsc.client.TJSCScraper.cjsg" class="level3">
-<h3 class="anchored" data-anchor-id="juscraper.courts.tjsc.client.TJSCScraper.cjsg">cjsg</h3>
-<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>courts.tjsc.client.TJSCScraper.cjsg(</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    campo<span class="op">=</span><span class="st">'E'</span>,</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    processo<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Busca jurisprudencia no TJSC.</p>
-<section id="parameters" class="level4 doc-section doc-section-parameters">
-<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>pesquisa</td>
-<td><a href="`str`">str</a></td>
-<td>Termo de busca livre.</td>
-<td><code>None</code></td>
-</tr>
-<tr class="even">
-<td>paginas</td>
-<td><a href="`int`">int</a> | <a href="`list`">list</a> | <a href="`range`">range</a> | None</td>
-<td>Paginas 1-based; <code>None</code> baixa todas. Default <code>None</code>.</td>
-<td><code>None</code></td>
-</tr>
-<tr class="odd">
-<td>campo</td>
-<td><a href="`str`">str</a></td>
-<td>Campo de busca: <code>"E"</code> para ementa (default), <code>"I"</code> para inteiro teor.</td>
-<td><code>'E'</code></td>
-</tr>
-<tr class="even">
-<td>processo</td>
-<td><a href="`str`">str</a></td>
-<td>Filtro por numero do processo.</td>
-<td><code>None</code></td>
-</tr>
-<tr class="odd">
-<td>**kwargs</td>
-<td></td>
-<td>Filtros aceitos pelo schema :class:<code>InputCJSGTJSC</code>. Listados abaixo (todos opcionais; <code>None</code> = sem filtro): * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str): <code>YYYY-MM-DD</code>. Mapeado para <code>dt_decisao_*</code> no backend. * <code>data_publicacao_inicio</code> / <code>data_publicacao_fim</code> (str): <code>YYYY-MM-DD</code>.</td>
-<td><code>{}</code></td>
-</tr>
-</tbody>
-</table>
-<p>Aliases deprecados (popados com <code>DeprecationWarning</code> antes do pydantic): * <code>query</code> / <code>termo</code> -&gt; <code>pesquisa</code> * <code>data_inicio</code> / <code>data_fim</code> -&gt; <code>data_julgamento_inicio</code> / <code>_fim</code> * <code>data_julgamento_de</code> / <code>_ate</code> -&gt; <code>data_julgamento_inicio</code> / <code>_fim</code> * <code>data_publicacao_de</code> / <code>_ate</code> -&gt; <code>data_publicacao_inicio</code> / <code>_fim</code></p>
-</section>
-<section id="raises" class="level4 doc-section doc-section-raises">
-<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td></td>
-<td><a href="`TypeError`">TypeError</a></td>
-<td>Quando um kwarg desconhecido e passado.</td>
-</tr>
-<tr class="even">
-<td></td>
-<td><a href="`ValidationError`">ValidationError</a></td>
-<td>Quando um filtro tem formato invalido.</td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="returns" class="level4 doc-section doc-section-returns">
-<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
-<td>pd.DataFrame: DataFrame com as decisoes.</td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="see-also" class="level4 doc-section doc-section-see-also">
-<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See also</h4>
-<p><a href=":class:`InputCJSGTJSC`"></a> — schema pydantic e a fonte da verdade dos filtros aceitos.</p>
-</section>
-</section>
-<section id="juscraper.courts.tjsc.client.TJSCScraper.cjsg_download" class="level3">
-<h3 class="anchored" data-anchor-id="juscraper.courts.tjsc.client.TJSCScraper.cjsg_download">cjsg_download</h3>
-<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>courts.tjsc.client.TJSCScraper.cjsg_download(</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    campo<span class="op">=</span><span class="st">'E'</span>,</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    processo<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Download raw HTML pages from TJSC.</p>
-<p>Aceita os mesmos filtros de :meth:<code>cjsg</code>; veja la a lista completa.</p>
-<section id="returns-1" class="level4 doc-section doc-section-returns">
-<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
-<p>list List of raw HTML strings (one per page).</p>
-</section>
-</section>
-<section id="juscraper.courts.tjsc.client.TJSCScraper.cjsg_parse" class="level3">
-<h3 class="anchored" data-anchor-id="juscraper.courts.tjsc.client.TJSCScraper.cjsg_parse">cjsg_parse</h3>
-<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>courts.tjsc.client.TJSCScraper.cjsg_parse(resultados_brutos)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Parse downloaded HTML pages.</p>
-<section id="returns-2" class="level4 doc-section doc-section-returns">
-<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-2">Returns</h4>
-<p>pd.DataFrame</p>
-</section>
-</section>
-<section id="juscraper.courts.tjsc.client.TJSCScraper.cpopg" class="level3">
-<h3 class="anchored" data-anchor-id="juscraper.courts.tjsc.client.TJSCScraper.cpopg">cpopg</h3>
-<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>courts.tjsc.client.TJSCScraper.cpopg(id_cnj)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Stub: first instance case consultation not implemented for TJSC.</p>
-</section>
-<section id="juscraper.courts.tjsc.client.TJSCScraper.cposg" class="level3">
-<h3 class="anchored" data-anchor-id="juscraper.courts.tjsc.client.TJSCScraper.cposg">cposg</h3>
-<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>courts.tjsc.client.TJSCScraper.cposg(id_cnj)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Stub: second instance case consultation not implemented for TJSC.</p>
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
 
 
+</header>
+
+
+<p><code>STFScraper.listar_decisoes</code> returns a pandas DataFrame with one row per document. It preserves the existing source columns and converts <code>data_julgamento</code> and <code>data_publicacao</code> to dates. <code>paginas=None</code> collects the entire query or raises an exception; it no longer warns and returns only the first 10,000 documents.</p>
+<section id="collect-and-resume" class="level2">
+<h2 class="anchored" data-anchor-id="collect-and-resume">Collect and resume</h2>
+<div id="78245323" class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>stf <span class="op">=</span> jus.scraper(<span class="st">"stf"</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>checkpoint <span class="op">=</span> Path(<span class="st">"stf-checkpoint"</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>filters <span class="op">=</span> {</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"classe"</span>: <span class="st">"Rcl"</span>,</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"data_publicacao_fim"</span>: <span class="st">"2023-08-20"</span>,</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"tamanho_pagina"</span>: <span class="dv">250</span>,</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> stf.listar_decisoes(<span class="st">"pejotização"</span>, checkpoint_dir<span class="op">=</span>checkpoint, <span class="op">**</span>filters)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co"># After an interruption, repeat the same query and filters explicitly.</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> stf.listar_decisoes(</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">"pejotização"</span>, checkpoint_dir<span class="op">=</span>checkpoint, resume<span class="op">=</span><span class="va">True</span>, <span class="op">**</span>filters</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Without <code>checkpoint_dir</code>, collection keeps parsed rows in memory and writes no checkpoint files. With a checkpoint, it writes each parsed page before atomically advancing <code>manifest.json</code>, flushes files and directory entries with <code>fsync</code>, and checks page checksums before resuming. The final DataFrame still requires enough RAM for all returned rows. Checkpoint locking currently requires a POSIX filesystem and <code>fcntl</code>; use a local directory, not a shared network mount whose locking or durability semantics differ.</p>
+<p>A new collection refuses an occupied directory. <code>resume=True</code> requires an existing compatible checkpoint, including the translated query, normalized filters, page selection, page size, ordering and collection contract. Validation runs before any request or WAF token acquisition. Checkpoints contain document data and query metadata, not request headers, cookies or WAF tokens. Protect these local files according to the sensitivity of the documents.</p>
+<p>An interrupted window restarts at page 1 with a new attempt. Files from the abandoned attempt, including pages written just before a crash, remain on disk, but only the completed attempt contributes rows. Completed windows retain their original observation times and are not downloaded again. A fully completed checkpoint returns its saved rows without refreshing the remote source. Use a new directory for a fresh observation.</p>
 </section>
+<section id="queries-above-the-api-ceiling" class="level2">
+<h2 class="anchored" data-anchor-id="queries-above-the-api-ceiling">Queries above the API ceiling</h2>
+<p>The API allows at most 10,000 records per query and 250 per page. For an integral collection, the scraper recursively bisects date windows until each fits the ceiling. Publication dates take precedence when a publication filter exists; otherwise the scraper uses judgment dates. The windows cover disjoint inclusive calendar-day ranges and retain the other filters. A single day above the ceiling raises <code>ValueError</code> instead of returning a partial result.</p>
+<p>Open-ended date filters remain open: the scraper does not insert 1990 or the current date. When an open interval needs partitioning, a filtered aggregation discovers its minimum and maximum dates and counts documents missing that date. The scraper collects this residual separately if it fits the ceiling; a larger residual raises <code>ValueError</code>. An invalid or unsupported aggregation response also raises an exception.</p>
+<p>Explicit pages, such as <code>paginas=[2, 4]</code>, keep their original offsets and do not trigger date partitioning. A page starting beyond record 10,000 fails before requests. A last page crossing the ceiling is shortened to the remaining records, including when the page size does not divide 10,000.</p>
 </section>
+<section id="what-the-checks-establish" class="level2">
+<h2 class="anchored" data-anchor-id="what-the-checks-establish">What the checks establish</h2>
+<p>Every window requires an exact total (<code>relation="eq"</code>), the expected number of received rows, and unique document identities <code>(base, id)</code>. Process numbers are not document identifiers. The scraper compares counts before and after each window and checks parent totals against completed children. It rejects missing or duplicated IDs, inconsistent counts and incomplete pages. Sorting uses score followed by the keyword field <code>id</code>; integral collection freezes the score’s reference time and persists it for resumption.</p>
+<p>These checks do not establish a snapshot. Documents may be replaced or edited without changing the total, including between page requests. A resumed collection may combine windows observed at different times. The manifest records those observations; it does not certify that the index stayed unchanged. No PIT or <code>search_after</code> support is assumed.</p>
+
+
 </section>
 
 </main> <!-- /main -->
@@ -788,7 +649,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.com/jtrecenti/juscraper/edit/main/docs/reference/courts.tjsc.client.TJSCScraper.qmd" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.com/jtrecenti/juscraper/edit/main/docs/stf.qmd" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></div>
     <div class="nav-footer-right">
       &nbsp;
     </div>
