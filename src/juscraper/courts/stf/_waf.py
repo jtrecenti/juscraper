@@ -13,6 +13,7 @@ sessao ``requests`` usa o mesmo user agent do navegador que obteve o token.
 from __future__ import annotations
 
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 PAGINA_BUSCA = "https://jurisprudencia.stf.jus.br/pages/search"
 WAF_COOKIE = "aws-waf-token"
@@ -35,6 +36,12 @@ def obter_waf_token(timeout: float = 60.0) -> str:
         ImportError: Quando o Playwright nao esta instalado (extra ``juscraper[stf]``).
         RuntimeError: Quando o cookie nao aparece dentro de ``timeout``.
     """
+    # O Playwright síncrono exige uma thread sem o loop ativo do Jupyter.
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        return executor.submit(_obtain_waf_token, timeout).result()
+
+
+def _obtain_waf_token(timeout: float) -> str:
     try:
         from playwright.sync_api import sync_playwright  # pylint: disable=import-outside-toplevel
     except ImportError as exc:

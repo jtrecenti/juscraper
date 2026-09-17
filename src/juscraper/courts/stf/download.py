@@ -134,12 +134,17 @@ def build_payload(
     if classe:
         filtro_classe = {"terms": {_CAMPO_CLASSE: [classe] if isinstance(classe, str) else list(classe)}}
         body["post_filter"]["bool"]["must"].append(filtro_classe)
-        # O portal aplica o filtro de uma faceta as agregacoes das outras facetas, mas nao a
-        # dela mesma: a contagem por classe continua mostrando as classes nao selecionadas,
-        # enquanto ministro, UF e orgao passam a contar so a classe filtrada.
+        # A faceta de classe ignora o próprio filtro; todas as outras o respeitam.
         for nome, agg in body["aggs"].items():
-            if "filter" in agg and nome != _AGG_CLASSE:
+            if nome == _AGG_CLASSE:
+                continue
+            if "filter" in agg:
                 agg["filter"]["bool"]["must"].append(filtro_classe)
+            else:
+                body["aggs"][nome] = {
+                    "filter": {"bool": {"must": [filtro_classe]}},
+                    "aggs": {nome: agg},
+                }
 
     body["from"] = inicio
     body["size"] = min(tamanho_pagina, MAX_REGISTROS - inicio)

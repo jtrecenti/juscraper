@@ -1,5 +1,6 @@
 """Offline contract tests for STF listar_decisoes."""
 import json
+from datetime import date
 
 import pandas as pd
 import pytest
@@ -186,3 +187,23 @@ def test_paginas_none_para_no_teto_com_aviso(stf, mocker):
     assert len(responses.calls) == 40
     ultimo = json.loads(responses.calls[-1].request.body)
     assert (ultimo["from"], ultimo["size"]) == (9750, 250)
+
+
+@responses.activate
+def test_acordaos_preserve_canonical_fields_and_auxiliary_data(stf):
+    _add("acordaos.json", pesquisa="Rcl 53688", base="acordaos", tamanho_pagina=2)
+
+    df = stf.listar_decisoes("Rcl 53688", base="acordaos", paginas=1, tamanho_pagina=2)
+
+    assert (MIN_COLUMNS - {"decisao_texto"}) | {"ementa"} <= set(df.columns)
+    assert list(df["id"]) == ["sjur493171", "sjur503174"]
+    assert df["id"].is_unique
+    assert set(df["base"]) == {"acordaos"}
+    assert df["ementa"].str.len().gt(0).all()
+    first = df.iloc[0]
+    assert first["processo"] == "Rcl 53688 AgR"
+    assert first["relator"] == "RICARDO LEWANDOWSKI"
+    assert first["relator_acordao_nome"] == "NUNES MARQUES"
+    assert first["data_julgamento"] == date(2023, 10, 17)
+    assert first["data_publicacao"] == date(2023, 12, 12)
+    assert first["inteiro_teor_url"].endswith("idDocumento=773359592")

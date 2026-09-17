@@ -142,6 +142,12 @@ def test_build_payload_aplica_filtros_como_o_portal():
     assert (body["from"], body["size"]) == (100, 50)
 
 
+def test_build_payload_with_only_start_date():
+    body = build_payload(data_julgamento_inicio="01012024")
+    filters = body["query"]["function_score"]["query"]["bool"]["filter"]
+    assert filters[-1] == {"range": {"julgamento_data": {"format": "ddMMyyyy", "from": "01012024"}}}
+
+
 def test_build_payload_sem_pesquisa_busca_tudo_e_encurta_ultima_pagina():
     body = build_payload(pagina=1429, tamanho_pagina=7)
     assert body["query"]["function_score"]["query"]["bool"]["filter"][0]["query_string"]["query"] == "*"

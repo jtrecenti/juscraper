@@ -15,7 +15,7 @@ from juscraper.utils.params import SEARCH_ALIASES, apply_input_pipeline_search
 from ._tls import _STFTLSAdapter
 from ._waf import PAGINA_BUSCA, USER_AGENT, WAF_COOKIE, obter_waf_token
 from .download import BASE_URL, MAX_REGISTROS, build_payload
-from .parse import parse_contagem, parse_decisoes
+from .parse import parse_contagem, parse_decisoes, validate_search_response
 from .schemas import InputContarDecisoesSTF, InputListarDecisoesSTF
 
 _FILTROS = {
@@ -114,6 +114,7 @@ class STFScraper(HTTPScraper):
                     "Aguarde alguns minutos antes de tentar outra vez."
                 )
         dados: dict = resp.json()
+        validate_search_response(dados)
         return dados
 
     def listar_decisoes(
@@ -162,6 +163,7 @@ class STFScraper(HTTPScraper):
             TypeError: Quando um kwarg desconhecido e passado.
             ValidationError: Quando um filtro tem formato invalido.
             ValueError: Quando a pagina pedida passa do registro 10.000.
+            RuntimeError: Quando a busca retorna uma resposta parcial por timeout ou shards falhos.
             ImportError: Quando nao ha ``waf_token`` e o Playwright nao esta instalado.
 
         Returns:
@@ -232,6 +234,7 @@ class STFScraper(HTTPScraper):
         Raises:
             TypeError: Quando um kwarg desconhecido e passado.
             ValidationError: Quando um filtro tem formato invalido.
+            RuntimeError: Quando a busca retorna uma resposta parcial por timeout ou shards falhos.
 
         Returns:
             pd.DataFrame: Colunas ``faceta``, ``valor`` e ``n``. A primeira linha e

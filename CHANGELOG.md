@@ -7,6 +7,10 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- STF: o filtro `classe` passa a valer também nas facetas de base e indicadores, sem restringir a própria faceta de classe; respostas com timeout da busca ou shards falhos levantam `RuntimeError` em vez de devolver resultados parciais; a obtenção e renovação do cookie funcionam com um loop asyncio ativo, inclusive em notebooks Jupyter, mantendo a API síncrona.
+
 ## [0.4.0] - 2026-09-15
 
 ### Added
