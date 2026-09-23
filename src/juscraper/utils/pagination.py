@@ -35,6 +35,67 @@ def _extract_from_match(match: re.Match[str]) -> int | None:
     return _coerce_int(match.group(0))
 
 
+def _has_zero_marker(soup: BeautifulSoup, zero_markers: Sequence[str]) -> bool:
+    if not zero_markers:
+        return False
+    text_lower = soup.get_text(" ", strip=True).lower()
+    return any(marker.lower() in text_lower for marker in zero_markers)
+
+
+def _collect_candidates(
+    soup: BeautifulSoup,
+    html: str,
+    css_selectors: Sequence[str],
+    *,
+    use_element_html: bool,
+) -> list[str]:
+    candidates: list[str] = []
+    for selector in css_selectors:
+        for element in soup.select(selector):
+            content = str(element) if use_element_html else element.get_text(" ", strip=True)
+            if content:
+                candidates.append(content)
+    return candidates or [html]
+
+
+def _extract_first(
+    candidates: Sequence[str],
+    regex_patterns: Sequence[re.Pattern[str]],
+) -> int | None:
+    for candidate in candidates:
+        for pattern in regex_patterns:
+            match = pattern.search(candidate)
+            if not match:
+                continue
+            value = _extract_from_match(match)
+            if value is not None:
+                return value
+    return None
+
+
+def _extract_max(
+    candidates: Sequence[str],
+    regex_patterns: Sequence[re.Pattern[str]],
+) -> int | None:
+    values: list[int] = []
+    for candidate in candidates:
+        for pattern in regex_patterns:
+            for match in pattern.finditer(candidate):
+                value = _extract_from_match(match)
+                if value is not None:
+                    values.append(value)
+    return max(values) if values else None
+
+
+def _extract_fallback_max(candidate: str) -> int | None:
+    values = [
+        value
+        for raw in _FALLBACK_NUMERO_RE.findall(candidate)
+        if (value := _coerce_int(raw)) is not None
+    ]
+    return max(values) if values else None
+
+
 def extract_count_with_cascade(
     html: str,
     *,
@@ -76,17 +137,17 @@ def extract_count_with_cascade(
         fallback_max_int: Se ``True``, ultimo recurso e pegar ``max(\\d+)``
             no primeiro candidato — util para layouts onde varios numeros
             aparecem mas o total e o maior. Default ``False`` (fail-fast:
-            retorna ``None``). Os 5 callers atuais usam ``False`` e
-            controlam o default semantico (1 pagina ou 0 resultados) do
-            lado deles; ``True`` deve ser opt-in explicito para evitar
-            extrair numeros irrelevantes da pagina (ano, codigo, etc.).
+            retorna ``None``). Os callers controlam o default semantico
+            (1 pagina ou 0 resultados) do lado deles; ``True`` deve ser
+            opt-in explicito para evitar extrair numeros irrelevantes da
+            pagina (ano, codigo, etc.).
         use_element_html: Quando ``True``, cada candidato e o HTML completo
             do elemento (``str(el)``) em vez de apenas o texto. Necessario
             quando o numero alvo esta em atributo (ex.: ``href="?page=N"``
             em paginadores estilo Bootstrap).
         aggregate: ``"first"`` (default) retorna o primeiro match valido na
             ordem de cascata. ``"max"`` percorre TODOS os matches em todos
-            os candidatos via ``pattern.findall`` e retorna o maior — util
+            os candidatos via ``pattern.finditer`` e retorna o maior — util
             para paginadores que listam varios numeros de pagina (1, 2, …,
             N) e o "total" e ``max(N)``.
 
@@ -95,52 +156,22 @@ def extract_count_with_cascade(
         nao salvar. ``0`` quando ``zero_markers`` casarem.
     """
     soup = BeautifulSoup(html, "html.parser")
+    if _has_zero_marker(soup, zero_markers):
+        return 0
 
-    if zero_markers:
-        text_lower = soup.get_text(" ", strip=True).lower()
-        for marker in zero_markers:
-            if marker.lower() in text_lower:
-                return 0
-
-    candidates: list[str] = []
-    for selector in css_selectors:
-        for el in soup.select(selector):
-            content = str(el) if use_element_html else el.get_text(" ", strip=True)
-            if content:
-                candidates.append(content)
-
-    if not candidates:
-        candidates = [html]
-
-    if aggregate == "max":
-        all_matches: list[int] = []
-        for txt in candidates:
-            for pattern in regex_patterns:
-                for raw in pattern.findall(txt):
-                    groups: tuple[str, ...] = raw if isinstance(raw, tuple) else (raw,)
-                    for group in groups:
-                        coerced = _coerce_int(group)
-                        if coerced is not None:
-                            all_matches.append(coerced)
-                            break
-        if all_matches:
-            return max(all_matches)
-    else:
-        for txt in candidates:
-            for pattern in regex_patterns:
-                match = pattern.search(txt)
-                if match:
-                    value = _extract_from_match(match)
-                    if value is not None:
-                        return value
-
-    if fallback_max_int and candidates:
-        valid_nums: list[int] = []
-        for raw in _FALLBACK_NUMERO_RE.findall(candidates[0]):
-            coerced = _coerce_int(raw)
-            if coerced is not None:
-                valid_nums.append(coerced)
-        if valid_nums:
-            return max(valid_nums)
-
+    candidates = _collect_candidates(
+        soup,
+        html,
+        css_selectors,
+        use_element_html=use_element_html,
+    )
+    value = (
+        _extract_max(candidates, regex_patterns)
+        if aggregate == "max"
+        else _extract_first(candidates, regex_patterns)
+    )
+    if value is not None:
+        return value
+    if fallback_max_int:
+        return _extract_fallback_max(candidates[0])
     return None
