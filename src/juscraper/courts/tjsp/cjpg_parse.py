@@ -13,7 +13,6 @@ from juscraper.courts._esaj.parse import (
     _extract_pagination_count,
     _find_page_summary_cell,
     _has_zero_results,
-    _raise_initial_form_error,
     _raise_page_error,
 )
 
@@ -53,7 +52,6 @@ def _count_cjpg_result_rows_or_raise(soup: BeautifulSoup) -> int:
                 "marcador de paginação; o HTML pode estar truncado."
             )
 
-    _raise_initial_form_error(soup)
     raise ValueError(
         "Não foi possível encontrar o seletor de número de páginas "
         "na resposta HTML. Verifique se a busca retornou resultados "
@@ -80,9 +78,8 @@ def cjpg_n_results(page_source) -> int:
         int: Number of results (0 when the search returned no hits).
 
     Raises:
-        ValueError: When the page reports an error, remains on the search form,
-            contains a full results page without pagination, or has no known
-            result marker.
+        ValueError: When the page reports an error, contains a full results
+            page without pagination, or has no known result marker.
     """
     soup = BeautifulSoup(page_source, "html.parser")
 

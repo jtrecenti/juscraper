@@ -215,9 +215,16 @@ class TestCJPGNResults:
         with pytest.raises(ValueError, match="Captcha não foi resolvido"):
             cjpg_n_results(html)
 
-    def test_initial_form_has_specific_error(self):
-        html = load_sample("tjsp", "cjpg/count_initial_form.html")
-        with pytest.raises(ValueError, match="Ainda na página de consulta"):
+    def test_search_form_without_zero_marker_raises_missing_selector(self):
+        """The real CJPG form has an empty ``id`` and also appears on result
+        pages, so the parser does not claim the search stayed on the form.
+        A form page without the zero-results notice gets the generic error.
+        """
+        zero_notice = "Não foi encontrado nenhum resultado correspondente à busca realizada."
+        html = load_sample("tjsp", "cjpg/no_results.html")
+        assert zero_notice in html
+        html = html.replace(zero_notice, "")
+        with pytest.raises(ValueError, match="Não foi possível encontrar o seletor"):
             cjpg_n_results(html)
 
     def test_empty_results_container_still_raises_missing_selector(self):
