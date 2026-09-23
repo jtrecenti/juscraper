@@ -14,6 +14,10 @@ Guardas do backend descobertas por engenharia reversa (ver ``schemas.py``):
   ``"Tentativa invalida de acesso ao sistema"``. O frontend gera um id
   aleatorio (``"_" + 7 chars base36``) e o guarda num cookie; replicamos.
 - ``Origin``/``Referer`` do site oficial sao checados pelo WAF (403 sem eles).
+- Rate limit por IP: estourada a janela, o backend responde 429 com
+  ``x-rate-limit-retry-after-seconds`` na casa das horas (observado: 20880 s,
+  cerca de 5h48). Retentar com backoff de segundos nao adianta; ver
+  :func:`verificar_resposta`.
 """
 from __future__ import annotations
 
@@ -21,6 +25,10 @@ import logging
 import secrets
 import string
 from typing import Any
+
+import requests
+
+from ...core.exceptions import BotChallengeBlockedError
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +51,10 @@ DEFAULT_HEADERS: dict[str, str] = {
     ),
 }
 
+# Espera acima da qual um 429 deixa de ser retentado: o retry do
+# ``HTTPScraper`` espera segundos, e o bloqueio do Falcao dura horas.
+_ESPERA_MAXIMA_RETRY = 60
+
 # Mapeamento nome-canonico (juscraper) -> parametro do backend. Cada valor e
 # uma lista no schema; a querystring espera CSV.
 _FILTROS_CSV: dict[str, str] = {
@@ -64,6 +76,51 @@ def gerar_session_id() -> str:
     """
     alfabeto = string.ascii_lowercase + string.digits
     return "_" + "".join(secrets.choice(alfabeto) for _ in range(7))
+
+
+def verificar_resposta(resp: requests.Response) -> None:
+    """Callback ``on_response``: converte bloqueios definitivos em erro sem retry.
+
+    ``HTTPScraper._request_with_retry`` repete 403 e 429 porque, em outros
+    backends, sao transitorios. No Falcao ha tres respostas que repetir nao
+    muda, e cada uma vira um erro que diz o que fazer:
+
+    - 403 HTML servido pelo CloudFront (UA fora do padrao, IP bloqueado):
+      :class:`BotChallengeBlockedError`, que o marker ``anti_bot`` dos testes
+      de integracao converte em xfail.
+    - 403 JSON do proprio backend (``userMessage``, ex.: ``sessionId``
+      ausente): ``ValueError`` com a mensagem do backend.
+    - 429 com ``x-rate-limit-retry-after-seconds`` acima de
+      :data:`_ESPERA_MAXIMA_RETRY`: ``requests.HTTPError`` dizendo quanto
+      tempo falta para o IP ser liberado.
+    """
+    if resp.status_code == 403:
+        content_type = resp.headers.get("Content-Type", "")
+        if "json" in content_type:
+            try:
+                mensagem = resp.json().get("userMessage")
+            except (ValueError, AttributeError):
+                mensagem = None
+            if mensagem:
+                raise ValueError(f"O backend do Falcao recusou a busca: {mensagem}")
+            return
+        if resp.headers.get("Server", "").lower() == "cloudfront":
+            raise BotChallengeBlockedError("Falcao", resp.url, bot_manager="CloudFront")
+        return
+    if resp.status_code == 429:
+        try:
+            espera = int(resp.headers.get("x-rate-limit-retry-after-seconds", ""))
+        except ValueError:
+            return
+        if espera > _ESPERA_MAXIMA_RETRY:
+            horas, resto = divmod(espera, 3600)
+            raise requests.HTTPError(
+                "O Falcao bloqueou este IP por excesso de requisicoes (HTTP 429). "
+                f"Liberacao em {horas}h{resto // 60:02d}min "
+                f"(x-rate-limit-retry-after-seconds={espera}). Reduza o volume "
+                "(paginas, janelas de data) ou aumente sleep_time.",
+                response=resp,
+            )
 
 
 def _as_csv(valor: str | list[str]) -> str:
@@ -102,7 +159,9 @@ def build_pesquisa_params(
             convertido aqui para o ``page`` 0-based do backend.
         tamanho_pagina: ``size`` (5 ou 10 para nao autenticado).
         tribunais..prioridade: Filtros multivalorados (str ou list[str]);
-            serializados como CSV.
+            serializados como CSV. ``classe`` vai para ``classeProcesso``,
+            que so aceita a sigla (``ROT``, ``ATOrd``); o nome por extenso
+            devolve zero resultados sem erro.
         tem_ementa / somente_ementa: Flags booleanas (``temEmenta`` /
             ``pesquisaSomenteNasEmentas``).
         ordenacao: ``ordenacao`` (``mais_relevante``/``mais_recente``/

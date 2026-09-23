@@ -61,7 +61,10 @@ class InputCJSGFalcao(SearchBase):
             ``tribunais`` (CSV).
         relator: Nome(s) de relator. Backend: ``nomeRelator`` (CSV).
         orgao_julgador: Orgao(s) julgador(es). Backend: ``orgaoJulgador`` (CSV).
-        classe: Classe(s) processual(is). Backend: ``classeProcesso`` (CSV).
+        classe: Sigla(s) da classe processual (``"ROT"``, ``"ATOrd"``), a
+            mesma da coluna de saida ``classe_sigla``. Backend:
+            ``classeProcesso`` (CSV). O nome por extenso (coluna ``classe``)
+            devolve zero resultados sem erro.
         fase_processual: Fase(s) processual(is). Backend: ``faseProcessual`` (CSV).
         prioridade: Marcador(es) de prioridade. Backend: ``prioridade`` (CSV).
         tem_ementa: Restringe a documentos com/sem ementa. Backend: ``temEmenta``.
@@ -140,19 +143,34 @@ class OutputCJSGFalcao(OutputCJSGBase):
     nucleo canonico comum e propaga o restante via ``extra="allow"``.
 
     Colunas garantidas:
-        processo: Numero CNJ do processo (``numeroProcesso``). Para a colecao
-            ``precedentes`` — que nao tem processo unico — recebe o numero do
-            precedente (``numero``, ex.: numero da sumula/OJ).
+        processo: Numero CNJ do processo (``numeroProcesso``). Na colecao
+            ``precedentes``, que nao tem processo, recebe uma chave legivel
+            ``{tribunal}-{tipo}-{numero}`` (``TST-SUM-392``; OJ do TST leva o
+            orgao, ``TST-OJ-SBDI2-130``). Sem ``tipo`` ou ``numero``, a chave
+            e ``{tribunal}-id{id}``.
         colecao: Colecao de origem do documento (uma de :data:`COLECOES`).
         tribunal: Sigla do tribunal de origem (``TST``, ``TRT1``..``TRT24``).
-        ementa: Ementa quando disponivel (so ``acordaos``); ``None`` nas demais.
+        relator: Magistrado do documento. ``relator``/``nomeRelator`` e, quando
+            vazio (juiz singular), ``nomeRedator``.
+        classe: Nome da classe processual por extenso.
+        classe_sigla: Sigla da classe (``ROT``, ``ATOrd``), o valor aceito
+            pelo filtro ``classe``.
+        ementa: Ementa em texto corrido, sem HTML; ``None`` quando o documento
+            nao tem ementa.
         data_julgamento: Data de julgamento (``dataJulgamento``), quando existir.
+        data_juntada: Data de juntada (``dataJuntada``), quando existir.
 
     ``extra="allow"`` propaga os demais campos brutos da colecao
-    (``textoAcordao``, ``score``, ``nomeRelator``, ``dataJuntada``, ...).
+    (``textoAcordao``, ``score``, ``nomeRelator``, ...). Os campos
+    ``highlight*`` do backend nao entram: repetem o inteiro teor com o termo
+    buscado marcado.
     """
 
     colecao: str
     tribunal: str | None = None
+    relator: str | None = None
+    classe: str | None = None
+    classe_sigla: str | None = None
+    data_juntada: str | None = None
 
     model_config = ConfigDict(extra="allow")
