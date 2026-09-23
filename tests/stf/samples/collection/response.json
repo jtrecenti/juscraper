@@ -1,0 +1,15 @@
+{
+  "result": {
+    "timed_out": false,
+    "_shards": {"total": 1, "successful": 1, "failed": 0},
+    "hits": {"total": {"value": 0, "relation": "eq"}, "hits": []},
+    "aggregations": {
+      "collection_bounds": {
+        "doc_count": 0,
+        "lower": {"value": null},
+        "upper": {"value": null},
+        "missing": {"doc_count": 0}
+      }
+    }
+  }
+}
