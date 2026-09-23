@@ -130,11 +130,14 @@ class InputContarPdpj(BaseModel):
 class InputDownloadDocumentsPdpj(BaseModel):
     """Input aceito por :meth:`PdpjScraper.download_documents`.
 
-    ``base_df`` aceita somente :class:`pandas.DataFrame`. ``with_text``/
-    ``with_binary`` selecionam quais conteudos baixar — pelo menos um deve
-    ser ``True``. ``max_docs_per_process`` aceita zero, que devolve
-    DataFrame vazio sem fazer requisicao; valor negativo levanta
+    ``base_df`` aceita somente :class:`pandas.DataFrame`. ``with_text`` e
+    ``with_binary`` são coeridos para ``bool``. ``max_docs_per_process``
+    aceita ``None`` ou inteiro não negativo; valor negativo levanta
     ``ValidationError``.
+
+    O significado do limite (o que ocupa vaga, o que o zero faz) e o
+    tratamento das falhas de download estão em
+    :meth:`PdpjScraper.download_documents`.
     """
 
     base_df: pd.DataFrame
