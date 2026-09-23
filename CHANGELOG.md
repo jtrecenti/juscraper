@@ -19,6 +19,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - `PdpjScraper.download_documents` passa a usar os valores validados e coeridos por `InputDownloadDocumentsPdpj`: por exemplo, `with_text="false"` deixa de ser tratado como verdadeiro e `max_docs_per_process="1"` passa a limitar corretamente. O método também rejeita `base_df` que não seja `pd.DataFrame` e limites negativos antes de iterar ou fazer chamadas de rede.
 - Auto-chunk do eSAJ em buscas superiores a 366 dias (`cjpg` do TJSP e `cjsg` de TJAC, TJAL, TJAM, TJCE, TJMS e TJSP): `query` e `termo` usados sem `pesquisa` agora chegam a todas as janelas. Antes, o `cjpg` validava o alias e depois o descartava, e as janelas executavam uma busca textual vazia; o `cjsg` chamado com `pesquisa=None` e o alias levantava `ValidationError`, embora o mesmo pedido funcionasse em janela curta. Aliases de busca e de data passam a emitir exatamente um `DeprecationWarning` também no caminho dividido, onde antes não emitiam nenhum. Refs #130, #307.
 - TJSC `cjsg`: a coluna `processo` deixa de carregar o sufixo `/TJSC`, e resultados com o rótulo `DECISÃO` preservam a coluna `decisao` independentemente da ordem dos campos; `decisao` só preenche `ementa` quando o resultado não traz uma ementa explícita. Antes, a decisão podia desaparecer quando antecedia `EMENTA`. Refs #307.
+- TJPI `cjsg(paginas=None)` lê o total de páginas do link de última página (»); se o paginador vier sem esse link, levanta `ValueError` em vez de baixar menos páginas em silêncio.
 
 ## [0.4.0] - 2026-09-15
 

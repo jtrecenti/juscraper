@@ -1,11 +1,11 @@
 """Downloads raw results from the TJPI jurisprudence search (HTML scraping)."""
-import re
 import time
+from urllib.parse import parse_qs, urlparse
 
+from bs4 import BeautifulSoup, Tag
 from tqdm import tqdm
 
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import extract_count_with_cascade
 
 BASE_URL = "https://jurisprudencia.tjpi.jus.br/jurisprudences/search"
 RESULTS_PER_PAGE = 25
@@ -43,23 +43,58 @@ def build_cjsg_params(
     return params
 
 
-_PAGINATION_CSS_SELECTORS: tuple[str, ...] = ("ul.pagination",)
-_PAGINATION_REGEXES: tuple[re.Pattern[str], ...] = (
-    re.compile(r"[?&]page=(\d+)"),
-)
+_PAGINATOR_SELECTOR = "ul.pagination"
+_LAST_PAGE_TEXT = "\u00bb"  # », rotulo do link de ultima pagina
+
+
+def _last_page_from_paginator(paginator: Tag) -> int:
+    """Le o ``page=N`` do link ``»`` de um paginador.
+
+    O link de ultima pagina nao tem classe, ``rel`` nem ``aria-label``
+    proprios: e um ``a.page-link`` como os numerados, e so o rotulo ``»``
+    o distingue. A posicao (ultimo ``li``) nao serve, porque sem o ``»`` o
+    ultimo item passa a ser o ``›``, que aponta para a pagina seguinte.
+    """
+    for link in paginator.select("a[href]"):
+        if link.get_text(strip=True) != _LAST_PAGE_TEXT:
+            continue
+        page = parse_qs(urlparse(str(link["href"])).query).get("page", [""])[0]
+        if not page.isdigit():
+            raise ValueError(f"TJPI: link de última página sem page=N no href: {link['href']!r}")
+        return int(page)
+    raise ValueError(
+        "TJPI: paginador sem o link de última página (»); "
+        "o total de páginas não pode ser determinado sem estimar."
+    )
 
 
 def _get_total_pages(html: str) -> int:
-    """Extract total number of pages from the TJPI pagination links."""
-    n = extract_count_with_cascade(
-        html,
-        css_selectors=_PAGINATION_CSS_SELECTORS,
-        regex_patterns=_PAGINATION_REGEXES,
-        use_element_html=True,
-        aggregate="max",
-        fallback_max_int=False,
-    )
-    return n if n is not None else 1
+    """Extrai o total de paginas da primeira pagina de resultados.
+
+    O total vem do link ``»`` do paginador, e nao do maior ``page=N``: o
+    paginador mostra so uma janela de paginas, e sem o ``»`` o maior numero
+    visivel e o fim da janela, nao o total. Sem ``ul.pagination`` a busca
+    tem uma pagina so (ou nenhum resultado) e o retorno e 1.
+
+    Vale para a primeira pagina, a unica que ``cjsg_download_manager`` le.
+    O paginador esconde os links que nao levam a lugar nenhum: a pagina 1
+    nao traz ``«`` nem ``‹``, que aparecem na 2, e pelo mesmo padrao a
+    ultima pagina deve omitir ``»``. Na pagina 1, porem, busca de pagina
+    unica nao tem paginador, entao paginador sem ``»`` so ocorre se o
+    markup mudou. O TJPI desenha dois paginadores iguais, acima e abaixo
+    da lista; todos precisam trazer o ``»`` com o mesmo total.
+
+    Raises:
+        ValueError: Paginador sem o link ``»``, ``»`` sem ``page=N`` ou
+            paginadores com totais diferentes.
+    """
+    paginators = BeautifulSoup(html, "html.parser").select(_PAGINATOR_SELECTOR)
+    if not paginators:
+        return 1
+    totals = {_last_page_from_paginator(paginator) for paginator in paginators}
+    if len(totals) > 1:
+        raise ValueError(f"TJPI: paginadores discordam do total de páginas: {sorted(totals)}")
+    return totals.pop()
 
 
 def cjsg_download_manager(
