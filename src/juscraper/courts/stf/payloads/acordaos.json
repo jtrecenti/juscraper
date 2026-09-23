@@ -1,0 +1,597 @@
+{
+  "query": {
+    "function_score": {
+      "functions": [
+        {
+          "exp": {
+            "julgamento_data": {
+              "origin": "now",
+              "scale": "47450d",
+              "offset": "1095d",
+              "decay": 0.1
+            }
+          }
+        },
+        {
+          "filter": {
+            "term": {
+              "orgao_julgador.keyword": "Tribunal Pleno"
+            }
+          },
+          "weight": 1.15
+        },
+        {
+          "filter": {
+            "term": {
+              "is_repercussao_geral": true
+            }
+          },
+          "weight": 1.1
+        }
+      ],
+      "query": {
+        "bool": {
+          "filter": [
+            {
+              "query_string": {
+                "default_operator": "AND",
+                "fields": [
+                  "processo_codigo_completo.plural",
+                  "acordao_ata.plural^3",
+                  "documental_acordao_mesmo_sentido_lista_texto.plural",
+                  "documental_doutrina_texto.plural",
+                  "documental_indexacao_texto.plural",
+                  "documental_jurisprudencia_citada_texto.plural",
+                  "documental_legislacao_citada_texto.plural",
+                  "documental_observacao_texto.plural",
+                  "documental_publicacao_lista_texto.plural",
+                  "documental_tese_tema_texto.plural^3",
+                  "documental_tese_texto.plural^3",
+                  "ementa_texto.plural^3",
+                  "ministro_facet.plural",
+                  "revisor_processo_nome.plural",
+                  "orgao_julgador.plural",
+                  "partes_lista_texto.plural",
+                  "procedencia_geografica_completo.plural",
+                  "processo_classe_processual_unificada_extenso.plural",
+                  "titulo.plural^6",
+                  "colac_numero.plural",
+                  "colac_pagina.plural",
+                  "decisao_texto.plural^2",
+                  "documental_decisao_mesmo_sentido_lista_texto.plural",
+                  "processo_precedente_texto.plural",
+                  "sumula_texto.plural^3",
+                  "ramo_direito.plural^1",
+                  "situacao_sumula.plural^1",
+                  "materia_noticia.plural^1",
+                  "titulo_noticia.plural^3",
+                  "resumo_noticia.plural^3",
+                  "conteudo_noticia.plural^1",
+                  "ramo_noticia.plural^1"
+                ],
+                "query": "",
+                "type": "cross_fields",
+                "fuzziness": "AUTO:4,7",
+                "analyzer": "legal_search_analyzer",
+                "quote_analyzer": "legal_index_analyzer"
+              }
+            }
+          ],
+          "must": [],
+          "should": [
+            {
+              "query_string": {
+                "default_operator": "AND",
+                "fields": [
+                  "acordao_ata.plural^3",
+                  "documental_doutrina_texto.plural",
+                  "documental_indexacao_texto.plural",
+                  "documental_jurisprudencia_citada_texto.plural",
+                  "documental_observacao_texto.plural",
+                  "documental_tese_tema_texto.plural^3",
+                  "documental_tese_texto.plural^3",
+                  "ementa_texto.plural^3",
+                  "titulo.plural^6",
+                  "decisao_texto.plural^2",
+                  "sumula_texto.plural^3",
+                  "ramo_direito.plural^1",
+                  "situacao_sumula.plural^1",
+                  "materia_noticia.plural^1",
+                  "titulo_noticia.plural^3",
+                  "resumo_noticia.plural^3",
+                  "conteudo_noticia.plural^1",
+                  "ramo_noticia.plural^1"
+                ],
+                "query": "",
+                "tie_breaker": 1,
+                "fuzziness": "AUTO:4,7",
+                "analyzer": "legal_search_analyzer",
+                "quote_analyzer": "legal_index_analyzer"
+              }
+            },
+            {
+              "query_string": {
+                "default_operator": "and",
+                "type": "phrase",
+                "tie_breaker": 1,
+                "phrase_slop": 20,
+                "fields": [
+                  "acordao_ata.plural^3",
+                  "documental_tese_tema_texto.plural^3",
+                  "documental_tese_texto.plural^3",
+                  "ementa_texto.plural^3",
+                  "decisao_texto.plural^2",
+                  "situacao_sumula.plural^1",
+                  "titulo_noticia.plural^3",
+                  "resumo_noticia.plural^3",
+                  "conteudo_noticia.plural^1"
+                ],
+                "query": "",
+                "fuzziness": "AUTO:4,7",
+                "analyzer": "legal_search_analyzer",
+                "quote_analyzer": "legal_index_analyzer"
+              }
+            },
+            {
+              "query_string": {
+                "default_operator": "and",
+                "type": "phrase",
+                "tie_breaker": 1,
+                "phrase_slop": 5,
+                "fields": [
+                  "documental_acordao_mesmo_sentido_lista_texto.plural",
+                  "documental_doutrina_texto.plural",
+                  "documental_indexacao_texto.plural",
+                  "documental_jurisprudencia_citada_texto.plural",
+                  "documental_legislacao_citada_texto.plural",
+                  "documental_observacao_texto.plural",
+                  "partes_lista_texto.plural",
+                  "processo_precedente_texto.plural",
+                  "documental_decisao_mesmo_sentido_lista_texto.plural"
+                ],
+                "query": "",
+                "fuzziness": "AUTO:4,7",
+                "analyzer": "legal_search_analyzer",
+                "quote_analyzer": "legal_index_analyzer"
+              }
+            },
+            {
+              "query_string": {
+                "default_operator": "and",
+                "type": "phrase",
+                "phrase_slop": 1,
+                "fields": [
+                  "documental_publicacao_lista_texto.plural",
+                  "ministro_facet.plural",
+                  "revisor_processo_nome.plural",
+                  "orgao_julgador.plural",
+                  "ramo_direito.plural^1",
+                  "ramo_noticia.plural^1",
+                  "procedencia_geografica_completo.plural",
+                  "processo_classe_processual_unificada_extenso.plural",
+                  "titulo.plural^6",
+                  "colac_numero.plural",
+                  "colac_pagina.plural",
+                  "sumula_texto.plural^3"
+                ],
+                "query": "",
+                "fuzziness": "AUTO:4,7",
+                "boost": 0,
+                "analyzer": "legal_search_analyzer",
+                "quote_analyzer": "legal_index_analyzer"
+              }
+            }
+          ],
+          "must_not": []
+        }
+      }
+    }
+  },
+  "_source": [
+    "base",
+    "_id",
+    "id",
+    "dg_unique",
+    "titulo",
+    "ministro_facet",
+    "procedencia_geografica_completo",
+    "procedencia_geografica_pais_sigla",
+    "procedencia_geografica_uf_sigla",
+    "procedencia_geografica_uf_extenso",
+    "processo_codigo_completo",
+    "processo_classe_processual_unificada_extenso",
+    "processo_classe_processual_unificada_classe_sigla",
+    "processo_classe_processual_unificada_incidente_sigla",
+    "processo_numero",
+    "julgamento_data",
+    "publicacao_data",
+    "is_decisao_presidencia",
+    "relator_processo_nome",
+    "presidente_nome",
+    "relator_decisao_nome",
+    "acordao_ata",
+    "decisao_texto",
+    "partes_lista_texto",
+    "acompanhamento_processual_url",
+    "dje_url",
+    "documental_publicacao_lista_texto",
+    "documental_decisao_mesmo_sentido_lista_texto",
+    "documental_decisao_mesmo_sentido_lista_html",
+    "documental_decisao_mesmo_sentido_is_secundario",
+    "documental_legislacao_citada_texto",
+    "documental_indexacao_texto",
+    "documental_observacao_texto",
+    "documental_observacao_html",
+    "documental_doutrina_texto",
+    "externo_seq_objeto_incidente",
+    "dg_atualizado_em",
+    "dg_unique",
+    "volume_informativo",
+    "ramo_noticia",
+    "materia_noticia",
+    "titulo_noticia",
+    "resumo_noticia",
+    "conteudo_noticia",
+    "is_covid",
+    "tipo_julgamento",
+    "acompanhamento_processual_url",
+    "informativo_url",
+    "pesquisa_url",
+    "audio_url",
+    "video_url",
+    "numero_noticias_url",
+    "numero_noticias_processo",
+    "informativo_url",
+    "periodo_inicio_data",
+    "periodo_fim_data",
+    "processo_lista_texto",
+    "sumula_numero",
+    "orgao_julgador",
+    "is_vinculante",
+    "sumula_texto",
+    "situacao_sumula",
+    "ramo_direito",
+    "aprovacao_url",
+    "processo_precedente_texto",
+    "processo_precedente_html",
+    "processo_classe_processual_unificada_sigla",
+    "is_questao_ordem",
+    "is_repercussao_geral_admissibilidade",
+    "is_repercussao_geral_merito",
+    "is_repercussao_geral_recurso_interno",
+    "is_repercussao_geral",
+    "is_iac",
+    "is_iac_admissibilidade",
+    "is_iac_merito",
+    "is_processo_antigo",
+    "is_colac",
+    "colac_numero",
+    "colac_pagina",
+    "revisor_processo_nome",
+    "relator_acordao_nome",
+    "julgamento_is_sessao_virtual",
+    "republicacao_data",
+    "ementa_texto",
+    "inteiro_teor_url",
+    "documental_acordao_mesmo_sentido_lista_texto",
+    "documental_acordao_mesmo_sentido_lista_html",
+    "documental_acordao_mesmo_sentido_is_secundario",
+    "documental_jurisprudencia_citada_texto",
+    "documental_assunto_texto",
+    "documental_tese_tipo",
+    "documental_tese_texto",
+    "documental_tese_tema_texto",
+    "old_seq_colac",
+    "old_seq_repercussao_geral",
+    "old_seq_sjur",
+    "ods_onu"
+  ],
+  "aggs": {
+    "base_agg": {
+      "filters": {
+        "filters": {
+          "acordaos": {
+            "match": {
+              "base": "acordaos"
+            }
+          },
+          "sumulas": {
+            "match": {
+              "base": "sumulas"
+            }
+          },
+          "decisoes": {
+            "match": {
+              "base": "decisoes"
+            }
+          },
+          "informativos": {
+            "match": {
+              "base": "novo_informativo"
+            }
+          }
+        }
+      }
+    },
+    "is_repercussao_geral_agg": {
+      "filters": {
+        "filters": {
+          "true": {
+            "bool": {
+              "must": [
+                {
+                  "match": {
+                    "is_repercussao_geral": true
+                  }
+                },
+                {
+                  "term": {
+                    "base": "acordaos"
+                  }
+                }
+              ]
+            }
+          },
+          "false": {
+            "bool": {
+              "must": [
+                {
+                  "match": {
+                    "is_repercussao_geral": false
+                  }
+                },
+                {
+                  "term": {
+                    "base": "acordaos"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "is_repercussao_geral_admissibilidade_agg": {
+      "filters": {
+        "filters": {
+          "true": {
+            "match": {
+              "is_repercussao_geral_admissibilidade": true
+            }
+          },
+          "false": {
+            "match": {
+              "is_repercussao_geral_admissibilidade": false
+            }
+          }
+        }
+      }
+    },
+    "is_repercussao_geral_merito_agg": {
+      "filters": {
+        "filters": {
+          "true": {
+            "match": {
+              "is_repercussao_geral_merito": true
+            }
+          },
+          "false": {
+            "match": {
+              "is_repercussao_geral_merito": false
+            }
+          }
+        }
+      }
+    },
+    "is_iac_agg": {
+      "filters": {
+        "filters": {
+          "true": {
+            "bool": {
+              "must": [
+                {
+                  "match": {
+                    "is_iac": true
+                  }
+                },
+                {
+                  "term": {
+                    "base": "acordaos"
+                  }
+                }
+              ]
+            }
+          },
+          "false": {
+            "bool": {
+              "must": [
+                {
+                  "match": {
+                    "is_iac": false
+                  }
+                },
+                {
+                  "term": {
+                    "base": "acordaos"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "is_iac_admissibilidade_agg": {
+      "filters": {
+        "filters": {
+          "true": {
+            "match": {
+              "is_iac_admissibilidade": true
+            }
+          },
+          "false": {
+            "match": {
+              "is_iac_admissibilidade": false
+            }
+          }
+        }
+      }
+    },
+    "is_iac_merito_agg": {
+      "filters": {
+        "filters": {
+          "true": {
+            "match": {
+              "is_iac_merito": true
+            }
+          },
+          "false": {
+            "match": {
+              "is_iac_merito": false
+            }
+          }
+        }
+      }
+    },
+    "is_questao_ordem_agg": {
+      "filters": {
+        "filters": {
+          "true": {
+            "match": {
+              "is_questao_ordem": true
+            }
+          },
+          "false": {
+            "match": {
+              "is_questao_ordem": false
+            }
+          }
+        }
+      }
+    },
+    "is_colac_agg": {
+      "filters": {
+        "filters": {
+          "true": {
+            "match": {
+              "is_colac": true
+            }
+          },
+          "false": {
+            "match": {
+              "is_colac": false
+            }
+          }
+        }
+      }
+    },
+    "orgao_julgador_agg": {
+      "aggs": {
+        "orgao_julgador_agg": {
+          "terms": {
+            "field": "orgao_julgador.keyword",
+            "size": 200,
+            "execution_hint": "map"
+          }
+        }
+      },
+      "filter": {
+        "bool": {
+          "must": [
+            {
+              "term": {
+                "base": "acordaos"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "ministro_facet_agg": {
+      "aggs": {
+        "ministro_facet_agg": {
+          "terms": {
+            "field": "ministro_facet.keyword",
+            "size": 200,
+            "execution_hint": "map"
+          }
+        }
+      },
+      "filter": {
+        "bool": {
+          "must": [
+            {
+              "term": {
+                "base": "acordaos"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "processo_classe_processual_unificada_classe_sigla_agg": {
+      "aggs": {
+        "processo_classe_processual_unificada_classe_sigla_agg": {
+          "terms": {
+            "field": "processo_classe_processual_unificada_classe_sigla.keyword",
+            "size": 200,
+            "execution_hint": "map"
+          }
+        }
+      },
+      "filter": {
+        "bool": {
+          "must": [
+            {
+              "term": {
+                "base": "acordaos"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "procedencia_geografica_uf_sigla_agg": {
+      "aggs": {
+        "procedencia_geografica_uf_sigla_agg": {
+          "terms": {
+            "field": "procedencia_geografica_uf_sigla",
+            "size": 200,
+            "execution_hint": "map"
+          }
+        }
+      },
+      "filter": {
+        "bool": {
+          "must": [
+            {
+              "term": {
+                "base": "acordaos"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "size": 10,
+  "from": 0,
+  "post_filter": {
+    "bool": {
+      "must": [
+        {
+          "term": {
+            "base": "acordaos"
+          }
+        }
+      ],
+      "should": []
+    }
+  },
+  "sort": [
+    {
+      "_score": "desc"
+    }
+  ],
+  "track_total_hits": true
+}
