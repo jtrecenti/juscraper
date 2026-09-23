@@ -71,6 +71,9 @@ def test_cjsg_single_page(mocker):
     assert isinstance(df, pd.DataFrame)
     assert set(df.columns) >= CJSG_PAGE1_FIELDS
     assert len(df) > 0
+    # The eproc link text is "<number>/TJSC", including legacy non-CNJ numbers
+    # such as "0000.20.13.007510-0/TJSC"; the suffix must not leak into ``processo``.
+    assert not df["processo"].str.endswith("/TJSC").any()
     hit_urls = {call.request.url for call in responses.calls}
     assert hit_urls == {SEARCH_URL}
 

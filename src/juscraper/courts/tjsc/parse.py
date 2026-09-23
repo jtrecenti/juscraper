@@ -67,7 +67,9 @@ def _extract_process_fields(value) -> dict[str, str]:
     fields = {}
     link = value.find("a", class_="numero-processo")
     if link:
-        raw_process = link.get_text(strip=True)
+        # O eproc anexa "/TJSC" ao número. Tirar o sufixo antes de formatar vale
+        # também para números antigos fora do padrão CNJ, que format_cnj devolve crus.
+        raw_process = link.get_text(strip=True).removesuffix("/TJSC")
         fields["processo"] = format_cnj(raw_process, strict=False) or raw_process
     process_class = _extract_class(value)
     if process_class is not None:
