@@ -69,7 +69,16 @@ def cpopg_parse_manager(path: str):
     -------
     dict
         A dictionary where the keys are table names and the values are DataFrames
-        with the parsed data from the case files.
+        with the parsed data from the case files. When ``path`` is a directory,
+        files that fail to parse are reported with ``print`` and skipped.
+
+    Raises
+    ------
+    ValueError
+        When ``path`` is a directory and no file in it could be parsed, either
+        because it holds no candidate ``.html``/``.json`` file or because every
+        candidate failed. Returning ``{}`` here would hide a download or read
+        failure behind an empty result.
     """
     root = Path(path)
     if root.is_file():
@@ -81,21 +90,36 @@ def cpopg_parse_manager(path: str):
         if file.is_file() and (file.suffix != '.json' or file.name[-6:-5].isnumeric())
     ]
     parsed = []
+    falhas = 0
     for file in tqdm(files, desc="Processando documentos"):
         try:
             single_result = cpopg_parse_single(str(file))
         except (OSError, UnicodeDecodeError, ValueError, AttributeError) as error:
             print(f"Erro ao processar o arquivo {file}: {error}")
+            falhas += 1
             continue
         if single_result:
             parsed.append(single_result)
 
     if not parsed:
-        return {}
+        raise _nothing_parsed_error(root, len(files), falhas)
     return {
         key: pd.concat([result[key] for result in parsed], ignore_index=True)
         for key in parsed[0]
     }
+
+
+def _nothing_parsed_error(root: Path, candidatos: int, falhas: int) -> ValueError:
+    """Build the error for a directory where no CPOPG file could be parsed."""
+    if candidatos == 0:
+        return ValueError(
+            f"Nenhum arquivo do CPOPG lido em {root}: nenhum arquivo candidato "
+            "(.html ou .json de processo) encontrado no diretório."
+        )
+    return ValueError(
+        f"Nenhum arquivo do CPOPG lido em {root}: {candidatos} arquivo(s) candidato(s), "
+        f"{falhas} com erro. Os erros de cada arquivo foram impressos acima."
+    )
 
 
 def cpopg_parse_single(path: str):

@@ -220,6 +220,38 @@ class TestCPOPGUnit:
             with pytest.raises(ValueError, match='Unknown file extension'):
                 cpopg_parse_manager(str(unsupported))
 
+    def test_cpopg_parse_manager_empty_directory_raises(self, tmp_path):
+        """A directory without candidate files raises instead of returning ``{}``."""
+        with pytest.raises(ValueError, match=r'nenhum arquivo candidato') as excinfo:
+            cpopg_parse_manager(str(tmp_path))
+
+        assert str(tmp_path) in str(excinfo.value)
+
+    def test_cpopg_parse_manager_all_files_failing_raises(self, tmp_path, capsys):
+        """A directory whose every candidate fails to parse reports the failure count."""
+        quebrado = tmp_path / 'quebrado.html'
+        quebrado.write_bytes(b'\xff\xfe\xfa invalido em utf-8')
+
+        with pytest.raises(ValueError, match=r'1 arquivo\(s\) candidato\(s\), 1 com erro') as excinfo:
+            cpopg_parse_manager(str(tmp_path))
+
+        assert str(tmp_path) in str(excinfo.value)
+        assert f'Erro ao processar o arquivo {quebrado}' in capsys.readouterr().out
+
+    def test_cpopg_parse_manager_skips_broken_file(self, tmp_path, capsys):
+        """One readable file is enough: broken files are printed and skipped."""
+        valido = tmp_path / 'show_standard.html'
+        valido.write_text(load_sample('tjsp', 'cpopg/show_standard.html'), encoding='utf-8')
+        quebrado = tmp_path / 'quebrado.html'
+        quebrado.write_bytes(b'\xff\xfe\xfa invalido em utf-8')
+
+        result = cpopg_parse_manager(str(tmp_path))
+
+        assert list(result) == ['basicos', 'partes', 'movimentacoes', 'peticoes_diversas']
+        assert result['basicos']['file_path'].tolist() == [str(valido)]
+        assert result['basicos'].iloc[0]['id_processo'] == '1009367-76.2017.8.26.0344'
+        assert f'Erro ao processar o arquivo {quebrado}' in capsys.readouterr().out
+
     def test_cpopg_parse_empty_file(self):
         """Test parsing an empty CPOPG HTML file."""
         html = '<html><body></body></html>'
