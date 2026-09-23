@@ -2,6 +2,7 @@
 Tests for TJSP CJPG functionality.
 Includes both integration and unit tests.
 """
+import logging
 import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, call
@@ -345,7 +346,7 @@ class TestCJPGDownload1Based:
         ]
         assert sleep.call_args_list == [call(0.4), call(0.4)]
 
-    def test_count_error_saves_debug_html_and_preserves_cause(self, tmp_path, mocker):
+    def test_count_error_saves_debug_html_and_preserves_cause(self, tmp_path, mocker, caplog):
         mock_session = MagicMock()
         mock_session.get.return_value = self._make_mock_response("<html>diagnostico</html>")
         upstream_error = RuntimeError("falha ao contar páginas")
@@ -353,19 +354,34 @@ class TestCJPGDownload1Based:
             "juscraper.courts.tjsp.cjpg_download.cjpg_n_pags",
             side_effect=upstream_error,
         )
+        # A pasta de download ainda não existe: o diagnóstico precisa criá-la
+        # junto com ``cjpg_debug``, senão o usuário recebe FileNotFoundError
+        # no lugar do ValueError que aponta para o HTML salvo.
+        download_path = tmp_path / "ainda_nao_existe"
 
-        with pytest.raises(ValueError, match="falha ao contar páginas") as exc_info:
+        with (
+            caplog.at_level(logging.ERROR, logger="juscraper.cjpg_download"),
+            pytest.raises(ValueError, match="falha ao contar páginas") as exc_info,
+        ):
             cjpg_download(
                 pesquisa="teste",
                 session=mock_session,
                 u_base="https://esaj.tjsp.jus.br/",
-                download_path=str(tmp_path),
+                download_path=str(download_path),
             )
 
         assert exc_info.value.__cause__ is upstream_error
-        debug_files = list(Path(tmp_path, "cjpg_debug").glob("cjpg_primeira_pagina_*.html"))
+        debug_files = list(Path(download_path, "cjpg_debug").glob("cjpg_primeira_pagina_*.html"))
         assert len(debug_files) == 1
         assert debug_files[0].read_text(encoding="utf-8") == "<html>diagnostico</html>"
+        assert str(debug_files[0]) in str(exc_info.value)
+        assert any(
+            record.name == "juscraper.cjpg_download"
+            and record.levelno == logging.ERROR
+            and "Erro ao extrair número de páginas" in record.getMessage()
+            and str(debug_files[0]) in record.getMessage()
+            for record in caplog.records
+        )
 
 
 class TestCJPGDateRangeValidation:
