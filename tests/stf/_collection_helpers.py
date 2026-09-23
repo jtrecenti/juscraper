@@ -89,7 +89,8 @@ class Source:
         return rows
 
 
-def add_sample(sample, **kwargs):
+def add_sample(sample, integral=False, **kwargs):
+    """Registra a resposta para o payload esperado; ``integral`` é a coleta com ``paginas=None``."""
     response = json.loads(load_sample("stf", f"listar_decisoes/{sample}"))
     if kwargs.get("classe"):
         value = kwargs["classe"]
@@ -97,6 +98,8 @@ def add_sample(sample, **kwargs):
     expected = build_payload(**kwargs)
     expected["aggs"] = {}
     expected["track_total_hits"] = True
+    if integral:
+        expected["sort"] = [{"id": "asc"}]
 
     def match(request):
         actual = json.loads(request.body)
