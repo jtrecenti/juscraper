@@ -69,6 +69,8 @@ EXPECTED_COURT_OUTPUT_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
     ("trf3", "cpopg"): ("juscraper.courts._trf.schemas", "OutputCpopgTRF"),
     ("trf5", "cpopg"): ("juscraper.courts._trf.schemas", "OutputCpopgTRF"),
     ("trf6", "cpopg"): ("juscraper.courts.trf6.schemas", "OutputCpopgTRF6"),
+    ("stf", "listar_decisoes"): ("juscraper.courts.stf.schemas", "OutputListarDecisoesSTF"),
+    ("stf", "contar_decisoes"): ("juscraper.courts.stf.schemas", "OutputContarDecisoesSTF"),
 }
 
 EXPECTED_AGGREGATOR_OUTPUT_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
@@ -105,6 +107,8 @@ SKIP_REASONS: dict[tuple[str, str], str] = {
     ("tjsp", "cjsg"): "eSAJ parser extrai labels HTML — OutputCJSGTJSP validado manualmente",
     # TJDFT: parser passthrough do JSON da API.
     ("tjdft", "cjsg"): "TJDFT parser e passthrough do JSON — shape delegado ao backend",
+    # STF: parser renomeia 6 chaves e repassa o resto do _source da API.
+    ("stf", "listar_decisoes"): "STF parser e passthrough do _source — extra=allow e o contrato",
     # TJSP cpopg/cposg retornam 4 DataFrames; Output e pivot.
     ("tjsp", "cpopg"): "TJSP cpopg retorna 4 DataFrames — Output cobre apenas o pivot",
     ("tjsp", "cposg"): "TJSP cposg retorna 4 DataFrames — Output cobre apenas o pivot",
