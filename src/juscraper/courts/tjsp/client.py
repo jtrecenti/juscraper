@@ -646,11 +646,12 @@ class TJSPScraper(EsajSearchScraper):
             raise ValueError(f"Método '{method}' não é suportado.")
 
     def cpopg_parse(self, path: str):
-        """Parse downloaded CPOPG files into a dict of DataFrames.
+        """Le os arquivos baixados do CPOPG e devolve um dict de DataFrames.
 
         Raises:
             ValueError: Quando ``path`` e um diretorio e nenhum arquivo dele
-                pode ser lido. Ver :func:`cpopg_parse_manager`.
+                pode ser lido, ou quando ``path`` e um arquivo com extensao
+                diferente de ``.html``/``.json``. Ver :func:`cpopg_parse_manager`.
         """
         return cpopg_parse_manager(path)
 
