@@ -6,6 +6,8 @@ veio de :meth:`cpopg` (uma linha por processo com ``detalhes`` cheio).
 """
 from __future__ import annotations
 
+import re
+
 import pandas as pd
 import pytest
 import responses
@@ -74,6 +76,17 @@ def _mock_text_endpoint(doc_id: str, body: str) -> None:
     )
 
 
+def _mock_any_text_endpoint() -> None:
+    """Responde ao texto de qualquer documento, de qualquer processo."""
+    responses.add(
+        responses.GET,
+        re.compile(rf"{re.escape(BASE_URL)}/processos/[^/]+/documentos/[^/]+/texto"),
+        body="texto qualquer\n",
+        status=200,
+        content_type="text/plain",
+    )
+
+
 @responses.activate
 def test_download_documents_a_partir_de_documentos_df():
     _mock_documentos_endpoint()
@@ -108,6 +121,21 @@ def test_download_documents_max_docs_per_process():
 
 
 @responses.activate
+def test_download_documents_limite_zero_nao_faz_requisicao():
+    s = _mk_scraper()
+    docs_df = pd.DataFrame([
+        {"processo": PROC, "numero_processo": PROC, "id_documento": "doc-1"},
+        {"processo": PROC, "numero_processo": PROC, "id_documento": "doc-2"},
+    ])
+
+    out = s.download_documents(docs_df, max_docs_per_process=0)
+
+    assert isinstance(out, pd.DataFrame)
+    assert out.empty
+    assert len(responses.calls) == 0
+
+
+@responses.activate
 def test_download_documents_usa_valores_coeridos_pelo_schema():
     _mock_documentos_endpoint()
     s = _mk_scraper()
@@ -131,6 +159,23 @@ def test_download_documents_usa_valores_coeridos_pelo_schema():
     assert out["id_documento"].tolist() == [primeiro]
     assert out.iloc[0]["binario"] == b"conteudo-binario"
     assert "texto" not in out.columns
+
+
+@responses.activate
+def test_download_documents_coage_with_binary_falso_em_string():
+    """``with_binary="false"`` e truthy em Python; so o schema o torna ``False``."""
+    _mock_documentos_endpoint()
+    s = _mk_scraper()
+    docs_df = s.documentos(PROC)
+    for doc_id in docs_df["id_documento"]:
+        _mock_text_endpoint(doc_id, f"texto do doc {doc_id}\n")
+    responses.calls.reset()
+
+    out = s.download_documents(docs_df, with_text=True, with_binary="false")
+
+    assert "binario" not in out.columns
+    assert "texto" in out.columns
+    assert len(responses.calls) == len(docs_df)
 
 
 @responses.activate
@@ -186,7 +231,10 @@ def test_download_documents_exige_pelo_menos_um_modo():
 def test_download_documents_rejeita_df_sem_id_documento_ou_detalhes():
     s = _mk_scraper()
     df = pd.DataFrame([{"processo": PROC, "outra_coluna": 1}])
-    with pytest.raises(ValueError, match=r"id_documento.*detalhes"):
+    with pytest.raises(
+        ValueError,
+        match=r"base_df precisa ter coluna 'id_documento'.*ou 'detalhes'",
+    ):
         s.download_documents(df)
 
 
@@ -219,18 +267,9 @@ def test_download_documents_rejeita_limite_negativo():
         )
 
 
-def test_coerce_documentos_rejeita_df_sem_coluna_reconhecida():
-    s = _mk_scraper()
-    base_df = pd.DataFrame([{"processo": PROC, "outra_coluna": 1}])
-
-    with pytest.raises(
-        ValueError,
-        match=r"base_df precisa ter coluna 'id_documento'.*ou 'detalhes'",
-    ):
-        s._coerce_to_documentos_df(base_df)
-
-
-def test_coerce_documentos_ignora_detalhes_nao_dict_e_listas_vazias():
+@responses.activate
+def test_download_documents_ignora_detalhes_nao_dict_e_listas_vazias():
+    _mock_any_text_endpoint()
     s = _mk_scraper()
     base_df = pd.DataFrame([
         {"processo": "processo-1", "detalhes": None},
@@ -250,12 +289,15 @@ def test_coerce_documentos_ignora_detalhes_nao_dict_e_listas_vazias():
         },
     ])
 
-    result = s._coerce_to_documentos_df(base_df)
+    out = s.download_documents(base_df)
 
-    assert result.empty
+    assert out.empty
+    assert len(responses.calls) == 0
 
 
-def test_coerce_documentos_preserva_precedencia_ordem_duplicatas_e_shape():
+@responses.activate
+def test_download_documents_preserva_precedencia_ordem_duplicatas_e_shape():
+    _mock_any_text_endpoint()
     s = _mk_scraper()
     top_document = {
         "id": "doc-top",
@@ -303,36 +345,40 @@ def test_coerce_documentos_preserva_precedencia_ordem_duplicatas_e_shape():
         },
     ])
 
-    result = s._coerce_to_documentos_df(base_df)
+    out = s.download_documents(base_df)
 
-    assert result.columns.tolist() == COERCED_DOCUMENT_COLUMNS
-    assert result["id_documento"].tolist() == [
+    assert out.columns.tolist() == [*COERCED_DOCUMENT_COLUMNS, "texto", "_raw_texto"]
+    assert out["id_documento"].tolist() == [
         "doc-top",
         "doc-top",
         "doc-tramitacao",
         "doc-top",
         "doc-ultima-linha",
     ]
-    assert result["processo"].tolist() == [
+    assert out["processo"].tolist() == [
         "cnj-pesquisado-1",
         "cnj-pesquisado-1",
         "cnj-pesquisado-1",
         "cnj-pesquisado-1",
         "cnj-pesquisado-2",
     ]
-    assert result.iloc[0].to_dict() == {
+    assert len(responses.calls) == 5
+    # As colunas numericas viram float porque outras linhas trazem None;
+    # a comparacao por igualdade aceita 1 == 1.0 sem fixar o dtype.
+    primeira = out.iloc[0]
+    assert {coluna: primeira[coluna] for coluna in COERCED_DOCUMENT_COLUMNS} == {
         "processo": "cnj-pesquisado-1",
         "numero_processo": "cnj-retornado-1",
         "id_documento": "doc-top",
         "id_codex": "codex-top",
-        "sequencia": 1.0,
+        "sequencia": 1,
         "data_juntada": "2026-01-02T03:04:05",
         "nome": "Documento do topo",
-        "nivel_sigilo": 0.0,
-        "tipo_codigo": 10.0,
+        "nivel_sigilo": 0,
+        "tipo_codigo": 10,
         "tipo_nome": "Petição",
         "arquivo_id": "arquivo-top",
         "arquivo_tipo": "application/pdf",
-        "arquivo_tamanho": 123.0,
-        "arquivo_paginas": 2.0,
+        "arquivo_tamanho": 123,
+        "arquivo_paginas": 2,
     }
