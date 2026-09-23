@@ -366,15 +366,20 @@ def test_apply_input_pipeline_origem_custom_aparece_na_mensagem():
 
 
 def test_apply_input_pipeline_canonical_x_kwargs_collision_raises_typeerror():
-    """Colisao entre canonical_filters e kwargs vira TypeError do Python (sem
-    merge silencioso). Caller precisa popar conflitos antes de invocar o helper."""
-    with pytest.raises(TypeError, match=r"got multiple values for keyword argument 'relator'"):
+    """Colisao entre canonical_filters e kwargs vira TypeError com a mensagem
+    exata que o Python emite em ``schema_cls(**a, **b)`` (sem merge silencioso).
+    Caller precisa popar conflitos antes de invocar o helper."""
+    with pytest.raises(TypeError) as exc_info:
         apply_input_pipeline_search(
             _SchemaSimples, "Test.cjsg()",
             pesquisa="x", paginas=1,
             kwargs={"relator": "FROM_KWARGS"},
             relator="FROM_CANONICAL",
         )
+    prefixo = f"{_SchemaSimples.__module__}.{_SchemaSimples.__qualname__}()"
+    assert str(exc_info.value) == (
+        f"{prefixo} got multiple values for keyword argument 'relator'"
+    )
 
 
 # --- Cobertura de BACKEND_DATE_FORMAT (1C-a) -------------------------------

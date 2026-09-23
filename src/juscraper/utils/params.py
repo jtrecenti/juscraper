@@ -726,7 +726,10 @@ def _validate_pipeline_schema(
     for source in sources:
         duplicate = next((name for name in source if name in values), None)
         if duplicate is not None:
+            # Reproduz o texto que o Python emite em ``schema_cls(**a, **b)``,
+            # para que a mensagem seja a mesma de antes do merge explícito.
             raise TypeError(
+                f"{schema_cls.__module__}.{schema_cls.__qualname__}() "
                 f"got multiple values for keyword argument '{duplicate}'"
             )
         values.update(source)
