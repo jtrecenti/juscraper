@@ -313,6 +313,10 @@ class TJSPScraper(EsajSearchScraper):
             pesquisa=pesquisa, paginas=paginas, diretorio=diretorio, **kwargs,
         )
 
+    def _validate_pesquisa(self, pesquisa: str | None, *, endpoint: Literal["cjsg", "cjpg"]) -> None:
+        """Aplica o limite de 120 chars antes de o auto-chunk dividir a busca em janelas."""
+        validate_pesquisa_length(pesquisa, endpoint=endpoint.upper())
+
     def _build_cjsg_body(self, inp: BaseModel) -> dict:
         data = inp.model_dump()
         body: dict = build_tjsp_cjsg_body(

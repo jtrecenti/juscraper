@@ -9,10 +9,13 @@ Hooks a subclass may override:
 
 * ``_configure_session`` — mount custom HTTPAdapter (TJCE TLS).
 * ``INPUT_CJSG`` — swap ``InputCJSGEsajPuro`` for a tribunal-specific
-  schema (TJSP uses ``InputCJSGTJSP`` which enforces a 120-char limit).
+  schema (TJSP uses ``InputCJSGTJSP``).
+* ``_validate_pesquisa`` — reject the resolved search term before any
+  request (TJSP enforces its 120-char limit here).
 """
 from __future__ import annotations
 
+import functools
 import logging
 import shutil
 import warnings
@@ -91,6 +94,7 @@ def run_auto_chunk(
     pesquisa: str,
     paginas: Any,
     kwargs: dict,
+    validate_pesquisa: Callable[[str | None], None] | None = None,
 ) -> Any:
     """Orquestra a busca auto-chunked pelo limite de janela do eSAJ (#130).
 
@@ -103,7 +107,11 @@ def run_auto_chunk(
     3. Se a janela cabe em ``max_dias=366``, retorna ``None`` (caller cai no
        caminho noop).
     4. Normaliza ``query/termo`` e preserva o valor retornado antes do
-       :func:`pop_normalize_aliases` consumir o alias.
+       :func:`pop_normalize_aliases` consumir o alias. Passa o termo
+       resolvido a ``validate_pesquisa``, quando houver, antes de qualquer
+       janela: um erro levantado dentro de uma janela seria engolido por
+       :func:`run_chunked_search` como falha de janela, e o usuario
+       receberia resultado vazio com ``UserWarning`` em vez do erro.
     5. Pop aliases + canonicals de data, monta ``extras`` (dates
        nao-julgamento sniffadas), valida o schema upfront para converter
        ``extra_forbidden`` em ``TypeError`` cedo.
@@ -153,6 +161,8 @@ def run_auto_chunk(
         # CJPG permits an empty canonical search when only an alias was
         # supplied, hence ``None`` rather than ``""`` in that case.
         pesquisa = normalize_pesquisa(pesquisa or None, **kwargs)
+    if validate_pesquisa is not None:
+        validate_pesquisa(pesquisa)
 
     pop_normalize_aliases(kwargs, include_canonical=True)
     extras = {
@@ -310,6 +320,7 @@ class EsajSearchScraper(HTTPScraper):
             pesquisa=pesquisa,
             paginas=paginas,
             kwargs=kwargs,
+            validate_pesquisa=functools.partial(self._validate_pesquisa, endpoint=endpoint),
         )
         if chunked is not None:
             return chunked
@@ -321,6 +332,19 @@ class EsajSearchScraper(HTTPScraper):
             return parse(path)
         finally:
             shutil.rmtree(path, ignore_errors=True)
+
+    def _validate_pesquisa(self, pesquisa: str | None, *, endpoint: Literal["cjsg", "cjpg"]) -> None:
+        """Hook para rejeitar o termo de busca ja resolvido antes de qualquer requisicao.
+
+        Default: no-op. Recebe ``pesquisa`` depois de consumidos os aliases
+        ``query``/``termo``. :func:`run_auto_chunk` o chama antes de dividir
+        a busca em janelas, para que o erro chegue ao usuario em vez de
+        virar falha por janela. O hook cobre so o caminho multi-janela: os
+        caminhos de janela unica e ``count_only`` passam por
+        ``<endpoint>_download`` e ``_<endpoint>_count_only``, que o
+        tribunal com restricao valida por conta propria. TJSP sobrepoe para
+        o limite de 120 caracteres.
+        """
 
     # --- cjsg -----------------------------------------------------------
 
