@@ -444,7 +444,8 @@ class PdpjScraper(BaseScraper):
         Args:
             base_df: DataFrame fonte das chamadas.
             max_docs_per_process: Limite de documentos baixados por
-                processo. ``None`` = sem limite.
+                processo. ``None`` = sem limite; ``0`` devolve DataFrame
+                vazio sem fazer requisicao.
             with_text: Se ``True`` (default), baixa o texto via
                 ``/documentos/{id}/texto``.
             with_binary: Se ``True``, baixa o binario via
@@ -456,8 +457,11 @@ class PdpjScraper(BaseScraper):
             ``texto`` e ``binario`` (quando solicitados).
 
         Raises:
+            ValidationError: Quando ``base_df`` nao e um DataFrame ou
+                ``max_docs_per_process`` e negativo.
             ValueError: Quando ``with_text`` e ``with_binary`` sao ambos
-                ``False``.
+                ``False``, ou quando ``base_df`` nao tem coluna
+                ``id_documento`` nem ``detalhes``.
         """
         self._check_auth()
         # Validacao via schema -- garante que kwargs desconhecidos viram TypeError.

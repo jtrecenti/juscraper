@@ -132,7 +132,9 @@ class InputDownloadDocumentsPdpj(BaseModel):
 
     ``base_df`` aceita somente :class:`pandas.DataFrame`. ``with_text``/
     ``with_binary`` selecionam quais conteudos baixar — pelo menos um deve
-    ser ``True``.
+    ser ``True``. ``max_docs_per_process`` aceita zero, que devolve
+    DataFrame vazio sem fazer requisicao; valor negativo levanta
+    ``ValidationError``.
     """
 
     base_df: pd.DataFrame
