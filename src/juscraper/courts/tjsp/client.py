@@ -70,6 +70,29 @@ def _pop_cjpg_plural_aliases(kwargs: dict) -> None:
         kwargs[_new] = pop_deprecated_alias(kwargs, _old, _new)
 
 
+def _resolve_cjsg_pesquisa(pesquisa: str | None, kwargs: dict) -> str:
+    """Resolve ``pesquisa`` contra ``query``/``termo`` e popa os aliases de ``kwargs``.
+
+    O ``cjsg`` do TJSP tem ``pesquisa=""`` como default (busca aberta,
+    issue #229). Passado direto a :func:`normalize_pesquisa`, esse ``""``
+    conta como valor informado, e ``cjsg(query="x")`` cairia no erro de
+    conflito entre ``pesquisa`` e ``query``. Com alias presente, ``""`` vale
+    como ausente, a mesma regra que :func:`run_auto_chunk` aplica no
+    caminho multi-janela. ``pesquisa`` nao vazia junto de alias continua
+    sendo conflito.
+
+    Os aliases saem de ``kwargs`` aqui porque :func:`normalize_pesquisa`
+    so popa da propria copia; os aliases de data ficam para a base, que
+    emite o ``DeprecationWarning`` deles.
+    """
+    if any(alias in kwargs for alias in SEARCH_ALIASES):
+        pesquisa = pesquisa or None
+    resolvida = normalize_pesquisa(pesquisa, **kwargs)
+    for alias in SEARCH_ALIASES:
+        kwargs.pop(alias, None)
+    return resolvida
+
+
 class TJSPScraper(EsajSearchScraper):
     """Main scraper for TJSP — eSAJ web + api.tjsp.jus.br."""
 
@@ -242,13 +265,11 @@ class TJSPScraper(EsajSearchScraper):
         delegar para a base. Com ``count_only=True``, o ramo na base desvia
         direto para :meth:`_cjsg_count_only` e pula esse check — entao
         replicamos a validacao aqui antes de delegar para
-        :meth:`EsajSearchScraper._cjsg_count_only`. Espelha o padrao de
-        :meth:`cjsg_download` (pop manual dos search aliases para evitar
-        reprocessamento no helper de pipeline).
+        :meth:`EsajSearchScraper._cjsg_count_only`. Resolve ``query``/``termo``
+        com :func:`_resolve_cjsg_pesquisa`, como :meth:`cjsg_download`, para
+        validar o termo que de fato vai ao backend.
         """
-        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-        for alias in SEARCH_ALIASES:
-            kwargs.pop(alias, None)
+        pesquisa = _resolve_cjsg_pesquisa(pesquisa, kwargs)
         validate_pesquisa_length(pesquisa, endpoint="CJSG")
         return super()._cjsg_count_only(
             pesquisa=pesquisa, paginas=paginas, **kwargs,
@@ -286,12 +307,7 @@ class TJSPScraper(EsajSearchScraper):
         Returns:
             str: Caminho do diretorio onde os HTMLs foram salvos.
         """
-        pesquisa = normalize_pesquisa(pesquisa, **kwargs)
-        # Only the search aliases get popped here; the base class will run
-        # normalize_datas on the date aliases before popping them, preserving
-        # the DeprecationWarning they emit.
-        for alias in SEARCH_ALIASES:
-            kwargs.pop(alias, None)
+        pesquisa = _resolve_cjsg_pesquisa(pesquisa, kwargs)
         validate_pesquisa_length(pesquisa, endpoint="CJSG")
         return super().cjsg_download(
             pesquisa=pesquisa, paginas=paginas, diretorio=diretorio, **kwargs,
