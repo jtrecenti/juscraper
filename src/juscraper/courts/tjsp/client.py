@@ -611,7 +611,24 @@ class TJSPScraper(EsajSearchScraper):
     # Kept as-is — unique to TJSP, not eSAJ-search-shaped.
 
     def cpopg(self, id_cnj: str | list[str], method: Literal["html", "api"] = "html"):
-        """Fetch a first-degree process by CNJ and return a DataFrame."""
+        """Baixa processos de primeiro grau pelo CNJ e devolve as tabelas extraidas.
+
+        Args:
+            id_cnj (str | list[str]): Numero CNJ ou lista de numeros CNJ.
+            method (str): ``"html"`` (paginas do eSAJ) ou ``"api"``. Default
+                ``"html"``.
+
+        Raises:
+            ValueError: Quando ``method`` nao e suportado, ou quando nenhum
+                arquivo baixado pode ser lido (nenhum arquivo candidato no
+                diretorio de download, ou todos com erro de leitura). Nesse
+                caso o diretorio de download nao e apagado.
+
+        Returns:
+            dict[str, pd.DataFrame]: Tabelas ``basicos``, ``partes``,
+            ``movimentacoes`` e ``peticoes_diversas`` no metodo ``"html"``;
+            no metodo ``"api"``, uma tabela por tipo de JSON baixado.
+        """
         self.set_method(method)
         self.cpopg_download(id_cnj, method)
         result = self.cpopg_parse(self.download_path)
@@ -649,7 +666,13 @@ class TJSPScraper(EsajSearchScraper):
             raise ValueError(f"Método '{method}' não é suportado.")
 
     def cpopg_parse(self, path: str):
-        """Parse downloaded CPOPG files into a DataFrame."""
+        """Le os arquivos baixados do CPOPG e devolve um dict de DataFrames.
+
+        Raises:
+            ValueError: Quando ``path`` e um diretorio e nenhum arquivo dele
+                pode ser lido, ou quando ``path`` e um arquivo com extensao
+                diferente de ``.html``/``.json``. Ver :func:`cpopg_parse_manager`.
+        """
         return cpopg_parse_manager(path)
 
     # --- cposg ----------------------------------------------------------
