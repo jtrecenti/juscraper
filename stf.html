@@ -184,7 +184,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><code>STFScraper.listar_decisoes</code> returns a pandas DataFrame with one row per document. It preserves the existing source columns and converts <code>data_julgamento</code> and <code>data_publicacao</code> to dates. <code>paginas=None</code> collects the entire query or raises an exception; it no longer warns and returns only the first 10,000 documents.</p>
 <section id="collect-and-resume" class="level2">
 <h2 class="anchored" data-anchor-id="collect-and-resume">Collect and resume</h2>
-<div id="78245323" class="cell" data-execution_count="1">
+<div id="d84a8eec" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -214,7 +214,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="what-the-checks-establish" class="level2">
 <h2 class="anchored" data-anchor-id="what-the-checks-establish">What the checks establish</h2>
-<p>Every window requires an exact total (<code>relation="eq"</code>), the expected number of received rows, and unique document identities <code>(base, id)</code>. Process numbers are not document identifiers. The scraper compares counts before and after each window and checks parent totals against completed children. It rejects missing or duplicated IDs, inconsistent counts and incomplete pages. Sorting uses score followed by the keyword field <code>id</code>; integral collection freezes the score’s reference time and persists it for resumption.</p>
+<p>Every window requires an exact total (<code>relation="eq"</code>), the expected number of received rows, and unique document identities <code>(base, id)</code>. Process numbers are not document identifiers. The scraper compares counts before and after each window and checks parent totals against completed children. It rejects missing or duplicated IDs, inconsistent counts and incomplete pages. Integral collection (<code>paginas=None</code>) sorts only by the keyword field <code>id</code>: with a text query, the relevance score varies between index replicas, so a score-based order changes from one page request to the next and pagination repeats or skips documents. Explicit pages keep the portal’s order, score followed by <code>id</code>. Integral collection still freezes the score’s reference time and persists it for resumption, so the payload stays identical across resumed windows.</p>
 <p>These checks do not establish a snapshot. Documents may be replaced or edited without changing the total, including between page requests. A resumed collection may combine windows observed at different times. The manifest records those observations; it does not certify that the index stayed unchanged. No PIT or <code>search_after</code> support is assumed.</p>
 
 
