@@ -261,3 +261,29 @@ def test_number_with_comma_is_normalized():
         css_selectors=("span.total",),
         regex_patterns=(re.compile(r"(\d[\d.,]*)\s+resultados"),),
     ) == 1234
+
+
+def test_first_tries_every_regex_on_a_candidate_before_the_next_candidate():
+    html = "<span class='a'>7 docs</span><span class='b'>total 9</span>"
+
+    assert extract_count_with_cascade(
+        html,
+        css_selectors=("span.a", "span.b"),
+        regex_patterns=(re.compile(r"total (\d+)"), re.compile(r"(\d+) docs")),
+    ) == 7
+
+
+def test_first_skips_match_without_number_and_tries_next_regex():
+    # Um grupo como ``([\d.]+)`` pode capturar so ``"."``, que nao vira
+    # numero; a cascata tem de seguir para a proxima regex em vez de
+    # devolver ``None`` na primeira que casou.
+    html = "<span class='t'>total: . / 5 resultados</span>"
+
+    assert extract_count_with_cascade(
+        html,
+        css_selectors=("span.t",),
+        regex_patterns=(
+            re.compile(r"total:\s*([\d.]+)"),
+            re.compile(r"(\d+)\s+resultados"),
+        ),
+    ) == 5
