@@ -1,10 +1,11 @@
 """Offline contract tests for TJPI cjsg.
 
-TJPI is a GET endpoint with query-string parameters. The max page is
-extracted via regex over the pagination links, so ``single_page`` must
-contain zero pagination links for the 1-page path to exercise correctly.
+TJPI is a GET endpoint with query-string parameters. The page count is
+read from the last-page link (``»``) of the ``ul.pagination`` paginator;
+``single_page`` has no paginator at all, which is the 1-page path.
 """
 import pandas as pd
+import pytest
 import responses
 from responses.matchers import query_param_matcher
 
@@ -57,9 +58,8 @@ def test_cjsg_single_page(mocker):
 def test_cjsg_paginas_none_descobre_via_html(mocker):
     r"""``paginas=None`` exercises ``_get_total_pages`` against the HTML.
 
-    The ``single_page`` sample has zero pagination links, so the regex
-    ``[?&]page=(\d+)`` finds nothing and ``_get_total_pages`` falls back
-    to 1. Only one request must hit the wire.
+    The ``single_page`` sample has no ``ul.pagination``, so
+    ``_get_total_pages`` returns 1. Only one request must hit the wire.
     """
     mocker.patch("time.sleep")
     _add_page("mandado de seguranca usucapiao extraordinario", 1, "cjsg/single_page.html")
@@ -71,6 +71,33 @@ def test_cjsg_paginas_none_descobre_via_html(mocker):
     assert isinstance(df, pd.DataFrame)
     assert set(df.columns) >= CJSG_MIN_COLUMNS
     assert len(df) > 0
+    assert len(responses.calls) == 1
+
+
+@responses.activate
+def test_cjsg_paginas_none_sem_link_de_ultima_pagina_levanta(mocker):
+    """A paginator without the ``»`` link cannot tell the total: raise, never estimate.
+
+    The largest visible ``page=N`` would be the end of the page window (2 here),
+    so ``paginas=None`` would silently download fewer pages. The error comes
+    after the first request and before any other.
+    """
+    mocker.patch("time.sleep")
+    link_ultima = '<a class="page-link" href="/jurisprudences/search?page=5515&amp;q=dano+moral">&raquo;</a>'
+    html = load_sample("tjpi", "cjsg/results_normal_page_01.html")
+    assert html.count(link_ultima) == 2
+    responses.add(
+        responses.GET,
+        BASE_URL,
+        body=html.replace(link_ultima, ""),
+        status=200,
+        content_type="text/html; charset=utf-8",
+        match=[query_param_matcher(build_cjsg_params("dano moral", page=1))],
+    )
+
+    with pytest.raises(ValueError, match="última página"):
+        jus.scraper("tjpi").cjsg("dano moral", paginas=None)
+
     assert len(responses.calls) == 1
 
 

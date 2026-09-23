@@ -81,6 +81,11 @@ class TJPIScraper(HTTPScraper):
             TypeError: Quando um kwarg desconhecido e passado (inclusive
                 ``data_publicacao_*``, que o backend nao expoe).
             ValidationError: Quando um filtro tem formato invalido.
+            ValueError: Com ``paginas=None``, quando o paginador da primeira
+                página não permite ler o total de páginas: falta o link de
+                última página (``»``), o ``»`` não tem ``page=N`` com
+                N >= 1, ou há links ``»`` com totais diferentes. O scraper
+                levanta em vez de estimar e baixar menos páginas.
 
         Returns:
             pd.DataFrame: DataFrame com as decisoes.
@@ -117,6 +122,12 @@ class TJPIScraper(HTTPScraper):
         -------
         list
             List of raw HTML strings (one per page).
+
+        Raises
+        ------
+        ValueError
+            Com ``paginas=None``, quando o paginador da primeira página não
+            traz um link de última página (``»``) legível; ver :meth:`cjsg`.
         """
         inp = apply_input_pipeline_search(
             InputCJSGTJPI,
