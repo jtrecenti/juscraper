@@ -10,6 +10,7 @@ import pytest
 
 import juscraper
 from juscraper.courts.tjsp.cposg_parse import cposg_parse_manager, cposg_parse_single_html
+from tests._helpers import load_sample
 
 _SAMPLES = Path(__file__).parent / 'samples' / 'cposg'
 
@@ -303,6 +304,7 @@ class TestCPOSGUnit:
         ]
 
     def test_empty_relator_row_does_not_block_nonempty_fallback(self, tmp_path):
+        """Preserve the relator fallback past an empty composition row, as the previous parser did."""
         sample = tmp_path / 'empty_relator.html'
         sample.write_text(
             '''
@@ -320,6 +322,72 @@ class TestCPOSGUnit:
         result = cposg_parse_single_html(sample)
 
         assert result[0]['relator'] == 'Desembargadora Ada'
+
+    def test_missing_relator_is_not_recovered_from_raw_html(self, tmp_path):
+        """Fields absent from the canonical DOM stay ``None``; loose ``Label: valor`` text is ignored."""
+        html = load_sample('tjsp', 'cposg/results_complete.html')
+        html = html.replace('<div><span class="unj-label">Relator</span><div>Desembargador A</div></div>', '')
+        html = html.replace(
+            '<tr><td>Relator</td><td>Desembargador A</td></tr>',
+            '<tr><td>Relator</td><td></td></tr>',
+        )
+        html = html.replace('<body>', '<body>\n    <div>Relator: Nome Solto</div>', 1)
+        assert 'Nome Solto' in html and 'Desembargador A' not in html
+        sample = tmp_path / 'loose_relator.html'
+        sample.write_text(html, encoding='utf-8')
+
+        result = cposg_parse_single_html(sample)
+
+        assert result[0]['relator'] is None
+
+    def test_party_type_keeps_accents_and_slash(self, tmp_path):
+        """The party type keeps its original spelling instead of dropping non-ASCII letters and ``/``."""
+        sample = tmp_path / 'party_type.html'
+        sample.write_text(
+            '''
+            <html><body>
+                <tbody id="tabelaTodasMovimentacoes"></tbody>
+                <table id="tableTodasPartes">
+                    <tr>
+                        <td><span class="tipoDeParticipacao">Réu/Apdo:&nbsp;</span></td>
+                        <td>Empresa Ré<br>Advogado: Carla Lima</td>
+                    </tr>
+                </table>
+            </body></html>
+            ''',
+            encoding='utf-8',
+        )
+
+        result = cposg_parse_single_html(sample)
+
+        assert [party['parte'] for party in result[0]['partes']] == ['Réu/Apdo', 'Réu/Apdo']
+
+    @pytest.mark.parametrize(
+        'hidden',
+        ['<!-- oculto -->', '<script>var oculto = 1;</script>', '<style>.oculto { color: red; }</style>'],
+        ids=['comment', 'script', 'style'],
+    )
+    def test_party_name_ignores_non_text_nodes(self, tmp_path, hidden):
+        """HTML comments, scripts and styles inside the party cell do not leak into the name."""
+        sample = tmp_path / 'party_hidden.html'
+        sample.write_text(
+            '''
+            <html><body>
+                <tbody id="tabelaTodasMovimentacoes"></tbody>
+                <table id="tableTodasPartes">
+                    <tr><td>Apelante</td><td>NomeHIDDEN<br>Advogado: X</td></tr>
+                </table>
+            </body></html>
+            '''.replace('HIDDEN', hidden),
+            encoding='utf-8',
+        )
+
+        result = cposg_parse_single_html(sample)
+
+        assert result[0]['partes'] == [
+            {'id_parte': 1, 'nome': 'Nome', 'parte': 'Apelante', 'papel': 'Apelante'},
+            {'id_parte': 1, 'nome': 'X', 'parte': 'Apelante', 'papel': 'Advogado'},
+        ]
 
     def test_cposg_parse_empty_file(self):
         """Test parsing an empty CPOSG HTML file."""

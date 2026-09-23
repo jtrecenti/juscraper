@@ -17,6 +17,7 @@ import responses
 from responses.matchers import query_param_matcher
 
 import juscraper as jus
+from juscraper.courts.tjsp.cposg_parse import _OUTPUT_COLUMNS
 from tests._helpers import load_sample, load_sample_bytes
 
 ESAJ = "https://esaj.tjsp.jus.br"
@@ -70,6 +71,7 @@ def test_cposg_html_simple_response(tmp_path, mocker):
     assert isinstance(df, pd.DataFrame)
     assert len(df) == 1
     assert set(df.columns) >= CPOSG_BASICOS_MIN
+    assert list(df.columns) == list(_OUTPUT_COLUMNS)
 
 
 # ---------- method='api' ------------------------------------------------

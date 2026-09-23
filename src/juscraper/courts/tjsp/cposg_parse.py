@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pandas as pd
 from bs4 import BeautifulSoup
-from bs4.element import Tag
+from bs4.element import Comment, Script, Stylesheet, Tag, TemplateString
 from tqdm import tqdm
 
 logger = logging.getLogger('juscraper.cposg_parse')
@@ -153,6 +153,20 @@ def _extract_movements(soup: BeautifulSoup) -> list[dict]:
     return movements
 
 
+# ``str()`` of these strings returns their raw content, which ``get_text`` would skip.
+_NON_TEXT_STRINGS = (Comment, Script, Stylesheet, TemplateString)
+_NON_TEXT_TAGS = frozenset({'input', 'script', 'style'})
+
+
+def _party_child_text(child) -> str:
+    """Return the visible text of one direct child of a party cell."""
+    if isinstance(child, Tag):
+        return '' if child.name in _NON_TEXT_TAGS else str(child.get_text(' ', strip=True))
+    if isinstance(child, _NON_TEXT_STRINGS):
+        return ''
+    return str(child).strip()
+
+
 def _split_party_cell(cell: Tag) -> list[str]:
     """Split a party cell at ``br`` boundaries without joining adjacent labels."""
     segments: list[str] = []
@@ -164,9 +178,7 @@ def _split_party_cell(cell: Tag) -> list[str]:
                 segments.append(segment)
             pieces = []
             continue
-        if isinstance(child, Tag) and child.name == 'input':
-            continue
-        text = child.get_text(' ', strip=True) if isinstance(child, Tag) else str(child).strip()
+        text = _party_child_text(child)
         if text:
             pieces.append(text)
 
