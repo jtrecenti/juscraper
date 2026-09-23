@@ -1,0 +1,72 @@
+{
+ "documentos": [
+  {
+   "highlightTitulo": "AÇÃO CIVIL PÚBLICA. COMPETÊNCIA. LOCAL DO <MARK>DANO</MARK>. LEI Nº 7.347/1985, ART. 2º. CÓDIGO DE DEFESA DO CONSUMIDOR, ART. 93.",
+   "score": 186.7084,
+   "origemDocumentos": "TST",
+   "tribunal": "TST",
+   "descricaoTribunal": "Tribunal Superior do Trabalho",
+   "situacao": {
+    "valor": "ALTERADA",
+    "descricao": "Alterada",
+    "temaJulgado": true
+   },
+   "pendenteDecisao": false,
+   "dataPublicacao": "27/09/2012",
+   "id": "830",
+   "numero": "130",
+   "orgaoJulgador": "Subseção II Especializada em Dissídios Individuais",
+   "tipo": "ORIENTACAO_JURISPRUDENCIAL",
+   "titulo": "AÇÃO CIVIL PÚBLICA. COMPETÊNCIA. LOCAL DO DANO. LEI Nº 7.347/1985, ART. 2º. CÓDIGO DE DEFESA DO CONSUMIDOR, ART. 93.",
+   "processosPrecedente": [],
+   "tituloDecisao": "ORIENTAÇÃO JURISPRUDENCIAL Nº 130, DO TST",
+   "conteudoDecisao": "<b>AÇÃO CIVIL PÚBLICA. COMPETÊNCIA. LOCAL DO <MARK>DANO</MARK>. LEI Nº 7.347/1985, ART. 2º. CÓDIGO DE DEFESA DO CONSUMIDOR, ART. 93.</b><br/>I - A competência para a Ação Civil Pública fixa-se pela extensão do <MARK>dano</MARK>.\nII - Em caso de <MARK>dano</MARK> de abrangência regional, que atinja cidades sujeitas à jurisdição de mais de uma Vara do Trabalho, a competência será de qualquer das varas das localidades atingidas, ainda que vinculadas a Tribunais Regionais do Trabalho distintos. \nIII - Em caso de <MARK>dano</MARK> de abrangência suprarregional ou nacional, há competência concorrent…[truncado]"
+  },
+  {
+   "highlightTitulo": "<MARK>DANO</MARK> MORAL E MATERIAL. RELAÇÃO DE TRABALHO. COMPETÊNCIA DA JUSTIÇA DO TRABALHO.",
+   "score": 181.23015,
+   "origemDocumentos": "TST",
+   "tribunal": "TST",
+   "descricaoTribunal": "Tribunal Superior do Trabalho",
+   "situacao": {
+    "valor": "ALTERADA",
+    "descricao": "Alterada",
+    "temaJulgado": true
+   },
+   "pendenteDecisao": false,
+   "dataPublicacao": "04/11/2015",
+   "id": "2721",
+   "numero": "392",
+   "orgaoJulgador": null,
+   "tipo": "SUMULA",
+   "titulo": "DANO MORAL E MATERIAL. RELAÇÃO DE TRABALHO. COMPETÊNCIA DA JUSTIÇA DO TRABALHO.",
+   "processosPrecedente": [
+    {
+     "numero": "E-RR - 483206-28.1998.5.03.5555",
+     "dataPublicacao": null,
+     "relator": "João Batista Brito Pereira",
+     "orgaoJudicante": "Subseção I Especializada em Dissídios Individuais",
+     "tipoDecisao": "Decisão por maioria"
+    },
+    {
+     "numero": "E-RR - 74200-75.2005.5.12.0023",
+     "dataPublicacao": null,
+     "relator": "Delaíde Alves Miranda Arantes",
+     "orgaoJudicante": "Subseção I Especializada em Dissídios Individuais",
+     "tipoDecisao": "Decisão unânime"
+    },
+    {
+     "numero": "E-RR - 91800-35.1999.5.05.0017",
+     "dataPublicacao": null,
+     "relator": "Guilherme Augusto Caputo Bastos",
+     "orgaoJudicante": "Subseção I Especializada em Dissídios Individuais",
+     "tipoDecisao": "Decisão unânime"
+    }
+   ],
+   "tituloDecisao": "SÚMULA Nº 392, DO TST",
+   "conteudoDecisao": "<b><MARK>DANO</MARK> MORAL E MATERIAL. RELAÇÃO DE TRABALHO. COMPETÊNCIA DA JUSTIÇA DO TRABALHO.</b><br/>Nos termos do art. 114, inc. VI, da Constituição da República, a Justiça do Trabalho é competente para processar e julgar ações de indenização por <MARK>dano</MARK> moral e material, decorrentes da relação de trabalho, inclusive as oriundas de acidente de trabalho e doenças a ele equiparadas, ainda que propostas pelos dependentes ou sucessores do trabalhador falecido.<br/><br/><strong>Observação: </strong>(redação alterada em sessão do Tribunal Pleno realizada em 27.10.2015 - Res. 200/2015, …[truncado]"
+  }
+ ],
+ "temasTopFive": [],
+ "quantidadeTotal": 354
+}

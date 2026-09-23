@@ -59,6 +59,11 @@ CASES = [
         id="comunica_cnj.listar_comunicacoes",
     ),
     pytest.param(
+        "juscraper.aggregators.falcao.client", "FalcaoScraper", "listar_decisoes",
+        "juscraper.aggregators.falcao.schemas", "InputListarDecisoesFalcao",
+        id="falcao.listar_decisoes",
+    ),
+    pytest.param(
         "juscraper.courts.tjrj.client", "TJRJScraper", "cjsg",
         "juscraper.courts.tjrj.schemas", "InputCJSGTJRJ",
         id="tjrj.cjsg",
@@ -186,6 +191,11 @@ DOWNLOAD_REFERENCE_CASES = [
         "juscraper.courts.tjrj.client", "TJRJScraper",
         "cjsg_download", "cjsg",
         id="tjrj.cjsg_download",
+    ),
+    pytest.param(
+        "juscraper.aggregators.falcao.client", "FalcaoScraper",
+        "listar_decisoes_download", "listar_decisoes",
+        id="falcao.listar_decisoes_download",
     ),
 ]
 

@@ -1,0 +1,357 @@
+"""Client publico do agregador Falcao (Jurisprudencia Nacional da JT).
+
+Wrapper sobre a busca publica do sistema "Jurisprudencia Nacional" da Justica
+do Trabalho (``https://jurisprudencia.jt.jus.br``, backend interno ``falcao``,
+mantido pelo CSJT). O endpoint ``/no-auth/pesquisa`` cobre TST e os 24 TRTs
+sobre cinco colecoes de documentos (:data:`.schemas.COLECOES`).
+
+O metodo :meth:`FalcaoScraper.listar_decisoes` aceita um termo de busca obrigatorio
+(``pesquisa``), a colecao alvo e filtros opcionais, pagina o resultado e
+devolve um ``pandas.DataFrame``. O par :meth:`listar_decisoes_download` /
+:meth:`listar_decisoes_parse` separa a coleta (JSON bruto em disco) do parsing.
+"""
+from __future__ import annotations
+
+import json
+import logging
+import math
+import tempfile
+import time
+import warnings
+from datetime import datetime
+from pathlib import Path
+
+import pandas as pd
+import requests
+from pydantic import ValidationError
+from tqdm.auto import tqdm
+
+from ...core.http import HTTPScraper
+from ...utils.params import (
+    coerce_brazilian_date,
+    normalize_paginas,
+    normalize_pesquisa,
+    raise_on_extra_kwargs,
+    validate_intervalo_datas,
+)
+from .download import DEFAULT_HEADERS, SEARCH_URL, build_pesquisa_params, gerar_session_id, verificar_resposta
+from .parse import parse_documentos, parse_total
+from .schemas import COLECOES, InputListarDecisoesFalcao
+
+logger = logging.getLogger(__name__)
+
+# Teto imposto pelo backend Elasticsearch: ``page*size`` acima de 10000 e
+# rejeitado, e ``quantidadeTotal`` tambem para em 10000, entao o total
+# reportado nao distingue "exatamente 10000" de "10000 ou mais".
+_MAX_RESULTADOS = 10000
+
+_FORMATO_BACKEND = "%Y-%m-%d"
+
+
+class FalcaoScraper(HTTPScraper):
+    """Scraper para a Jurisprudencia Nacional da Justica do Trabalho (CSJT)."""
+
+    INPUT_LISTAR_DECISOES = InputListarDecisoesFalcao
+    COLECOES = COLECOES
+
+    def __init__(
+        self,
+        verbose: int = 1,
+        download_path: str | None = None,
+        sleep_time: float = 1.0,
+    ):
+        super().__init__(
+            "Falcao",
+            verbose=verbose,
+            download_path=download_path,
+            sleep_time=sleep_time,
+        )
+        # Um sessionId por instancia, reusado em todas as paginas — espelha o
+        # cookie de 30 dias do frontend oficial.
+        self.session_id = gerar_session_id()
+        logger.info("FalcaoScraper initialized (sessionId=%s).", self.session_id)
+
+    def _configure_session(self, session: requests.Session) -> None:
+        # O WAF do site checa Origin/Referer; o backend exige Accept JSON.
+        session.headers.update(DEFAULT_HEADERS)
+
+    # ------------------------------------------------------------------ #
+    # listar_decisoes (jurisprudencia)
+    # ------------------------------------------------------------------ #
+    def listar_decisoes(
+        self,
+        pesquisa: str | None = None,
+        paginas: int | list[int] | range | None = None,
+        **kwargs,
+    ) -> pd.DataFrame:
+        """Consulta a Jurisprudencia Nacional da Justica do Trabalho.
+
+        Baixa as paginas para um diretorio temporario e devolve o resultado
+        parseado. Para inspecionar o JSON bruto, use :meth:`listar_decisoes_download` +
+        :meth:`listar_decisoes_parse`.
+
+        Args:
+            pesquisa (str): Termo de busca livre (parametro ``texto``).
+                Obrigatorio.
+            paginas (int | list | range | None): Paginas 1-based; ``None``
+                baixa todas as disponiveis, ate o teto de 10000 resultados
+                do backend (acima dele, emite ``UserWarning``). Default
+                ``None``.
+            **kwargs: Filtros aceitos pelo schema :class:`InputListarDecisoesFalcao`.
+                Listados abaixo (todos opcionais salvo indicacao):
+
+                * ``colecao`` (str): Colecao alvo. Uma de
+                  ``acordaos``, ``sentencas``, ``decisoesmonocraticas``,
+                  ``precedentes``, ``recursorevista``. Default ``"acordaos"``.
+                  ``precedentes`` devolve enunciados (sumulas, OJs), nao
+                  decisoes.
+                * ``tamanho_pagina`` (int): Documentos por pagina. So ``5`` ou
+                  ``10`` (limite do backend para usuario nao autenticado).
+                  Default ``10``.
+                * ``tribunais`` (str | list[str]): Sigla(s) de tribunal
+                  (``"TST"``, ``"TRT3"``, ...). Backend: ``tribunais``.
+                * ``relator`` (str | list[str]): Nome(s) de relator. Backend:
+                  ``nomeRelator``.
+                * ``orgao_julgador`` (str | list[str]): Backend: ``orgaoJulgador``.
+                * ``classe`` (str | list[str]): Sigla(s) da classe processual
+                  (``"ROT"``, ``"ATOrd"``), a mesma da coluna de saida
+                  ``classe_sigla``. O nome por extenso devolve zero
+                  resultados sem erro. Backend: ``classeProcesso``.
+                * ``fase_processual`` (str | list[str]): Backend: ``faseProcessual``.
+                * ``prioridade`` (str | list[str]): Backend: ``prioridade``.
+                * ``tem_ementa`` (bool): Restringe a documentos com/sem ementa.
+                * ``somente_ementa`` (bool): Busca ``texto`` so nas ementas.
+                * ``ordenacao`` (str): ``mais_relevante`` (default do backend),
+                  ``mais_recente`` ou ``menos_recente``.
+                * ``data_juntada_inicio`` / ``data_juntada_fim`` (str):
+                  Intervalo de data de juntada. Aceita ``DD/MM/AAAA``,
+                  ``AAAA-MM-DD`` ou ``date``; convertido para ISO antes do
+                  backend (``dataInicio`` / ``dataFim``). Cada limite pode
+                  ser usado sozinho.
+
+        Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
+            * ``query`` / ``termo`` -> ``pesquisa``
+
+        Returns:
+            pd.DataFrame: Uma linha por documento. Colunas canonicas
+            garantidas: ``processo``, ``colecao``, ``tribunal``, ``relator``,
+            ``classe``, ``classe_sigla`` e, quando a colecao os expoe,
+            ``ementa`` (texto sem HTML), ``data_julgamento`` e
+            ``data_juntada``. Os demais campos brutos da colecao sao
+            preservados, exceto os ``highlight*`` (ver
+            :class:`OutputListarDecisoesFalcao`).
+
+        Raises:
+            TypeError: Quando um kwarg desconhecido e passado (inclusive
+                ``diretorio``, que so :meth:`listar_decisoes_download` aceita).
+            ValidationError: Quando ``pesquisa`` falta ou um filtro tem valor
+                invalido (``colecao``/``tamanho_pagina``/``ordenacao`` fora do
+                dominio).
+            ValueError: Quando uma data e invalida, o intervalo esta
+                invertido ou o backend recusa a busca (403 com mensagem).
+            BotChallengeBlockedError: Quando o WAF (CloudFront) bloqueia a
+                requisicao.
+            requests.HTTPError: Quando o backend bloqueia o IP por excesso
+                de requisicoes (429 com espera de horas).
+
+        Exemplo:
+            >>> import juscraper as jus
+            >>> falcao = jus.scraper("falcao")
+            >>> df = falcao.listar_decisoes("dano moral", paginas=range(1, 3),
+            ...                  tribunais=["TST", "TRT3"])
+
+        See also:
+            :class:`InputListarDecisoesFalcao` -- schema pydantic e a fonte da verdade
+            dos filtros aceitos.
+        """
+        if "diretorio" in kwargs:
+            raise TypeError(
+                "FalcaoScraper.listar_decisoes() got unexpected keyword argument(s): 'diretorio'. "
+                "Para gravar o JSON bruto num diretorio, use listar_decisoes_download()."
+            )
+        with tempfile.TemporaryDirectory(prefix="falcao_") as tmp:
+            diretorio = self._baixar(pesquisa, paginas, tmp, kwargs, "FalcaoScraper.listar_decisoes()")
+            return self.listar_decisoes_parse(diretorio)
+
+    def listar_decisoes_download(
+        self,
+        pesquisa: str | None = None,
+        paginas: int | list[int] | range | None = None,
+        diretorio: str | None = None,
+        **kwargs,
+    ) -> str:
+        """Baixa as paginas cruas (JSON) da busca para um diretorio.
+
+        Mesma validacao e filtros de :meth:`listar_decisoes` (veja la a lista completa de
+        ``**kwargs``). Cada chamada cria um subdiretorio proprio
+        ``falcao_{colecao}_<sufixo aleatorio>``, entao buscas diferentes
+        no mesmo ``diretorio`` nunca se misturam. Cada pagina vira um arquivo
+        ``{colecao}_{pagina:04d}.json``.
+
+        Args:
+            pesquisa (str): Termo de busca. Obrigatorio.
+            paginas (int | list | range | None): Paginas 1-based; ``None`` =
+                todas. Default ``None``.
+            diretorio (str | None): Sobrescreve ``download_path`` para esta
+                chamada. Default ``None`` (usa o ``download_path`` do scraper,
+                que sem configuracao e um diretorio temporario criado na
+                instanciacao).
+
+        Returns:
+            str: Caminho do subdiretorio com os arquivos JSON baixados.
+
+        See also:
+            :meth:`listar_decisoes` -- lista completa de filtros aceitos.
+        """
+        base = diretorio if diretorio is not None else self.download_path
+        return self._baixar(pesquisa, paginas, base, kwargs, "FalcaoScraper.listar_decisoes_download()")
+
+    def listar_decisoes_parse(self, diretorio: str | Path) -> pd.DataFrame:
+        """Le os arquivos JSON baixados por :meth:`listar_decisoes_download`.
+
+        Percorre ``diretorio`` recursivamente, entao aceita tanto o caminho
+        devolvido por :meth:`listar_decisoes_download` quanto a pasta-mae que junta
+        varias buscas. A colecao de cada arquivo e inferida do prefixo do
+        nome (``{colecao}_{pagina}.json``).
+
+        Args:
+            diretorio (str | Path): Pasta com os arquivos JSON.
+
+        Returns:
+            pd.DataFrame: Resultados concatenados (veja :meth:`listar_decisoes` para as
+            colunas canonicas).
+        """
+        pasta = Path(diretorio)
+        arquivos = sorted(pasta.rglob("*.json"))
+        rows: list[dict] = []
+        for arquivo in arquivos:
+            colecao = arquivo.stem.rsplit("_", 1)[0]
+            data = json.loads(arquivo.read_text(encoding="utf-8"))
+            rows.extend(parse_documentos(data, colecao))
+        return pd.DataFrame(rows)
+
+    # ------------------------------------------------------------------ #
+    # helpers
+    # ------------------------------------------------------------------ #
+    def _baixar(self, pesquisa, paginas, base, kwargs: dict, metodo: str) -> str:
+        """Valida a entrada, pagina a busca e grava cada pagina em ``base``."""
+        inp = self._validar_input(pesquisa, normalize_paginas(paginas), kwargs, metodo)
+        destino = Path(tempfile.mkdtemp(prefix=f"falcao_{inp.colecao}_", dir=base))
+
+        # A primeira pagina pedida serve tambem para ler o total; com
+        # ``paginas`` que nao inclui a 1, isso poupa uma requisicao.
+        primeira = inp.paginas[0] if isinstance(inp.paginas, (range, list)) and inp.paginas else 1
+        primeiro_json = self._buscar_pagina(inp, primeira)
+        total = parse_total(primeiro_json)
+        total_paginas = self._total_paginas(total, inp.tamanho_pagina)
+        if self.verbose:
+            logger.info(
+                "Falcao/%s: %d resultados (teto %d) em %d paginas de %d.",
+                inp.colecao, total, _MAX_RESULTADOS, total_paginas,
+                inp.tamanho_pagina,
+            )
+        if inp.paginas is None and total >= _MAX_RESULTADOS:
+            warnings.warn(
+                f"A busca atingiu o teto de {_MAX_RESULTADOS} resultados do Falcao; o "
+                "backend nao informa o total real e o resultado pode estar incompleto. "
+                "Divida a busca em janelas de data_juntada_inicio/data_juntada_fim.",
+                UserWarning,
+                stacklevel=3,
+            )
+
+        paginas_iter = list(self._resolver_paginas(inp.paginas, total_paginas))
+        for pagina in tqdm(paginas_iter, desc=f"Falcao/{inp.colecao}", disable=not self.verbose):
+            if pagina == primeira:
+                conteudo = primeiro_json
+            else:
+                if self.sleep_time:
+                    time.sleep(self.sleep_time)
+                conteudo = self._buscar_pagina(inp, pagina)
+            arquivo = destino / f"{inp.colecao}_{pagina:04d}.json"
+            arquivo.write_text(json.dumps(conteudo, ensure_ascii=False), encoding="utf-8")
+
+        return str(destino)
+
+    def _buscar_pagina(self, inp: InputListarDecisoesFalcao, pagina: int) -> dict:
+        params = build_pesquisa_params(
+            pesquisa=inp.pesquisa,
+            colecao=inp.colecao,
+            session_id=self.session_id,
+            pagina=pagina,
+            tamanho_pagina=inp.tamanho_pagina,
+            tribunais=inp.tribunais,
+            relator=inp.relator,
+            orgao_julgador=inp.orgao_julgador,
+            classe=inp.classe,
+            fase_processual=inp.fase_processual,
+            prioridade=inp.prioridade,
+            tem_ementa=inp.tem_ementa,
+            somente_ementa=inp.somente_ementa,
+            ordenacao=inp.ordenacao,
+            data_juntada_inicio=inp.data_juntada_inicio,
+            data_juntada_fim=inp.data_juntada_fim,
+        )
+        resp = self._request_with_retry(
+            "GET", SEARCH_URL, params=params, timeout=30.0,
+            expect_json=True, on_response=verificar_resposta,
+        )
+        dados: dict = resp.json()
+        return dados
+
+    @staticmethod
+    def _validar_input(pesquisa: str | None, paginas_norm, kwargs: dict, metodo: str) -> InputListarDecisoesFalcao:
+        """Resolve aliases, coage e valida datas e instancia o schema."""
+        kwargs = dict(kwargs)
+        aliases = {nome: kwargs.pop(nome) for nome in ("query", "termo") if nome in kwargs}
+        if aliases:
+            pesquisa = normalize_pesquisa(pesquisa, **aliases)
+        for nome in ("data_juntada_inicio", "data_juntada_fim"):
+            if kwargs.get(nome) is not None:
+                kwargs[nome] = coerce_brazilian_date(kwargs[nome], _FORMATO_BACKEND)
+                _validar_data(kwargs[nome], nome)
+        try:
+            inp = InputListarDecisoesFalcao(pesquisa=pesquisa, paginas=paginas_norm, **kwargs)
+        except ValidationError as exc:
+            raise_on_extra_kwargs(exc, metodo, schema_cls=InputListarDecisoesFalcao)
+            raise
+        validate_intervalo_datas(
+            inp.data_juntada_inicio,
+            inp.data_juntada_fim,
+            rotulo="data_juntada",
+            max_dias=None,
+            origem="O Falcao",
+            formato=_FORMATO_BACKEND,
+        )
+        return inp
+
+    @staticmethod
+    def _total_paginas(total: int, tamanho_pagina: int) -> int:
+        alcancavel = min(total, _MAX_RESULTADOS)
+        return max(1, math.ceil(alcancavel / tamanho_pagina))
+
+    @staticmethod
+    def _resolver_paginas(paginas, total_paginas: int):
+        if paginas is None:
+            return range(1, total_paginas + 1)
+        if isinstance(paginas, range):
+            return range(
+                max(1, paginas.start),
+                min(paginas.stop, total_paginas + 1),
+                paginas.step,
+            )
+        return [p for p in paginas if 1 <= p <= total_paginas]
+
+
+def _validar_data(valor, nome: str) -> None:
+    """Rejeita a data que ``coerce_brazilian_date`` nao conseguiu converter.
+
+    ``validate_intervalo_datas`` so confere o formato quando os dois limites
+    estao presentes. Com um limite so, o valor cru (``""``, ``"abc"``,
+    ``"31/02/2024"``) ia para o backend e voltava como HTTP 400 generico.
+    """
+    try:
+        datetime.strptime(valor, _FORMATO_BACKEND)
+    except (ValueError, TypeError) as exc:
+        raise ValueError(
+            f"'{nome}' inválida: {valor!r}. Use DD/MM/AAAA, AAAA-MM-DD ou datetime.date."
+        ) from exc

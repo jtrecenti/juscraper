@@ -112,6 +112,7 @@ EXPECTED_AGGREGATOR_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
         "juscraper.aggregators.comunica_cnj.schemas",
         "InputListarComunicacoesComunicaCNJ",
     ),
+    ("falcao", "listar_decisoes"): ("juscraper.aggregators.falcao.schemas", "InputListarDecisoesFalcao"),
     ("pdpj", "auth"): ("juscraper.aggregators.pdpj.schemas", "InputAuthPdpj"),
     ("pdpj", "cpopg"): ("juscraper.aggregators.pdpj.schemas", "InputCnjPdpj"),
     ("pdpj", "download_documents"): (
@@ -216,9 +217,11 @@ def test_every_aggregator_endpoint_has_schema():
     candidates = (
         "auth",
         "auth_firefox",
+        "cjsg",
         "cpopg",
         "download_documents",
         "listar_comunicacoes",
+        "listar_decisoes",
         "listar_processos",
     )
     missing: list[str] = []
@@ -255,9 +258,11 @@ def test_no_stale_entries_in_expected_mapping():
     aggregator_candidates = (
         "auth",
         "auth_firefox",
+        "cjsg",
         "cpopg",
         "download_documents",
         "listar_comunicacoes",
+        "listar_decisoes",
         "listar_processos",
     )
     live_agg = {
