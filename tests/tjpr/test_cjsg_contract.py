@@ -15,7 +15,10 @@ The contract registers a single response for each kind of request;
 ``responses`` reuses registered responses across calls by default, so
 the ementa GETs (×N) all share one fixture.
 """
+import re
+
 import pandas as pd
+import pytest
 import responses
 from responses.matchers import urlencoded_params_matcher
 
@@ -106,6 +109,37 @@ def test_cjsg_single_page(mocker):
     assert (df["processo"].astype(str).str.len() > 0).mean() >= 0.5, (
         "mais da metade dos processos vazios — parser provavelmente quebrado"
     )
+
+
+@responses.activate
+def test_cjsg_paginas_none_sem_link_de_ultima_pagina_levanta(mocker):
+    """Paginador sem o link "Última Página" não informa o total: levanta, nunca estima.
+
+    O maior ``pageNumber`` visível seria o fim da janela de links numerados
+    (3 na página 1), e ``paginas=None`` baixaria menos páginas em silêncio.
+    O erro sai depois da home e da primeira página, antes de qualquer outra.
+    """
+    mocker.patch("time.sleep")
+    add_home()
+    link_ultima = re.compile(r'<a class="arrowLastOn"[^>]*>.*?</a>')
+    html = load_sample("tjpr", "cjsg/results_normal_page_01.html")
+    assert len(link_ultima.findall(html)) == 2
+    responses.add(
+        responses.POST,
+        SEARCH_URL,
+        body=link_ultima.sub("", html),
+        status=200,
+        content_type="text/html; charset=UTF-8",
+        match=[
+            query_param_subset_matcher({"actionType": "pesquisar"}),
+            urlencoded_params_matcher(build_cjsg_form_body("dano moral", page=1), allow_blank=True),
+        ],
+    )
+
+    with pytest.raises(ValueError, match="última página"):
+        jus.scraper("tjpr").cjsg("dano moral", paginas=None)
+
+    assert len(responses.calls) == 2
 
 
 @responses.activate

@@ -3,20 +3,17 @@ Functions for downloading specific to TJPR
 """
 import re
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from tqdm.auto import tqdm
 
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import extract_count_with_cascade
 
 BASE_URL = "https://portal.tjpr.jus.br/jurisprudencia/"
 SEARCH_URL = "https://portal.tjpr.jus.br/jurisprudencia/publico/pesquisa.do"
 RESULTS_PER_PAGE = 10
 
-_PAGINATION_CSS_SELECTORS: tuple[str, ...] = ("a.arrowLastOn",)
-_PAGINATION_REGEXES: tuple[re.Pattern[str], ...] = (
-    re.compile(r"\['pageNumber'\]\.value='(\d+)'"),
-)
+_PAGINATOR_SELECTOR = "#navigator .navRight"
+_PAGE_NUMBER_RE = re.compile(r"\['pageNumber'\]\.value='([^']*)'")
 
 
 def populate_session(request_fn: RequestFn, home_url: str) -> None:
@@ -117,24 +114,64 @@ def build_cjsg_form_body(
     }
 
 
-def extract_total_pages(html: str) -> int:
-    """Extract total number of pages from TJPR pagination HTML.
+def _last_page_from_paginator(paginator: Tag) -> int:
+    """Lê o total de páginas do link "Última Página" de um paginador.
 
-    O paginador do TJPR não exibe "Página X de Y"; o total vem do link
-    "Última Página" (``<a class="arrowLastOn">``), cujo href em JavaScript
-    carrega ``['pageNumber'].value='<total>'``. A cascata tenta primeiro
-    esse seletor estruturado e, se ausente, cai no HTML bruto pegando o
-    maior ``pageNumber`` entre os links de paginação numerados. Sem
-    paginador (página única, zero resultados) nada casa e assume-se 1.
+    Ativo, o link é ``a.arrowLastOn`` e o href em JavaScript carrega
+    ``['pageNumber'].value='<total>'``. Desativado, o portal desenha a mesma
+    âncora com classe ``*Off`` e sem href, como faz com "Primeira" e
+    "Anterior" na página 1 (``arrowFirstOff``, ``arrowPreviousOff``).
     """
-    total = extract_count_with_cascade(
-        html,
-        css_selectors=_PAGINATION_CSS_SELECTORS,
-        regex_patterns=_PAGINATION_REGEXES,
-        use_element_html=True,
-        aggregate="max",
-    )
-    return total if total else 1
+    link = paginator.select_one("a.arrowLastOn")
+    if link is None:
+        if paginator.select_one("a.arrowLastOff") is not None:
+            return 1
+        raise ValueError(
+            "TJPR: paginador sem o link de última página (a.arrowLastOn); "
+            "o total de páginas não pode ser determinado sem estimar."
+        )
+    href = str(link.get("href", ""))
+    match = _PAGE_NUMBER_RE.search(href)
+    page = match.group(1) if match else ""
+    if not re.fullmatch(r"[0-9]+", page) or int(page) < 1:
+        raise ValueError(f"TJPR: link de última página sem pageNumber válido no href: {href!r}")
+    return int(page)
+
+
+def extract_total_pages(html: str) -> int:
+    """Extrai o total de páginas da primeira página de resultados do TJPR.
+
+    O paginador (``#navigator .navRight``) não exibe "Página X de Y" e mostra
+    só uma janela de links numerados; o total vem do link "Última Página".
+    O maior ``pageNumber`` da página não serve: sem o link "Última", ele é o
+    fim da janela (3 na página 1), não o total. Sem paginador, ou com o
+    ``.navRight`` vazio que o portal desenha quando a busca não tem
+    resultados, o retorno é 1.
+
+    Vale para a primeira página, a única que :func:`cjsg_download` lê. Nela,
+    "Última" desativada (``a.arrowLastOff``) só ocorre se a página 1 for a
+    última, e o retorno é 1. Não há sample real da última página que
+    confirme essa forma; ela segue a de "Primeira" e "Anterior" na página 1.
+    Em outra página, "Última" desativada daria 1 em vez do número dela. O
+    TJPR desenha dois paginadores iguais, acima e abaixo da lista, e os dois
+    precisam dar o mesmo total.
+
+    Raises:
+        ValueError: Paginador sem o link "Última" (ativo ou desativado),
+            link sem ``pageNumber`` inteiro positivo no href ou paginadores
+            com totais diferentes.
+    """
+    paginators = [
+        paginator
+        for paginator in BeautifulSoup(html, "html.parser").select(_PAGINATOR_SELECTOR)
+        if paginator.find(True) is not None
+    ]
+    if not paginators:
+        return 1
+    totals = {_last_page_from_paginator(paginator) for paginator in paginators}
+    if len(totals) > 1:
+        raise ValueError(f"TJPR: paginadores discordam do total de páginas: {sorted(totals)}")
+    return totals.pop()
 
 
 def cjsg_download(
