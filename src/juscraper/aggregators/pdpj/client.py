@@ -8,7 +8,8 @@ from __future__ import annotations
 
 import logging
 import time
-from collections.abc import Iterator
+import warnings
+from collections.abc import Callable, Iterator
 from typing import Any, cast
 
 import jwt
@@ -136,6 +137,62 @@ def _document_to_row(
         "arquivo_tamanho": file_data.get("tamanho"),
         "arquivo_paginas": file_data.get("quantidadePaginas"),
     }
+
+
+# 401/403 indicam token ausente, expirado ou sem permissao. Esse erro vale
+# para todos os documentos do lote, entao propaga em vez de virar linha vazia:
+# engolir o erro produziria um DataFrame inteiro de ``texto=None``, sem que o
+# usuario percebesse que precisa renovar o token.
+_STATUS_DE_AUTENTICACAO = frozenset({401, 403})
+
+# Quantas falhas o aviso agregado de :meth:`PdpjScraper.download_documents`
+# cita por extenso; as demais entram so na contagem.
+_EXEMPLOS_NO_AVISO = 3
+
+
+def _buscar_conteudo(
+    buscar: Callable[..., Any],
+    session: requests.Session,
+    cnj_limpo: str,
+    id_documento: str,
+    base_url: str,
+    falhas: list[str],
+    descricao: str,
+) -> Any:
+    """Busca texto ou binario; em falha, anota ``descricao`` e devolve ``None``.
+
+    O ``None`` devolvido por ``fetch_documento_*`` so aparece quando
+    ``_request_with_retry`` desistiu (retry de 429/503/timeout esgotado ou
+    erro de conexao): uma resposta 200 com corpo vazio chega como ``""`` ou
+    ``b""``. Por isso ``None`` conta como falha, e nao como documento vazio.
+    """
+    try:
+        conteudo = buscar(session, cnj_limpo, id_documento, base_url=base_url)
+    except requests.HTTPError as exc:
+        status = exc.response.status_code if exc.response is not None else None
+        if status in _STATUS_DE_AUTENTICACAO:
+            raise
+        falhas.append(f"{descricao}: HTTP {status}")
+        return None
+    if conteudo is None:
+        falhas.append(f"{descricao}: sem resposta (retry esgotado ou erro de conexão)")
+    return conteudo
+
+
+def _avisar_falhas(falhas: list[str]) -> None:
+    """Emite um unico ``UserWarning`` com a contagem e alguns exemplos."""
+    if not falhas:
+        return
+    exemplos = falhas[:_EXEMPLOS_NO_AVISO]
+    if len(falhas) > len(exemplos):
+        exemplos = [*exemplos, f"e mais {len(falhas) - len(exemplos)}"]
+    lista = "; ".join(exemplos)
+    warnings.warn(
+        f"PdpjScraper.download_documents: {len(falhas)} download(s) de documento falharam, "
+        f"e as linhas correspondentes saem com o conteúdo None. Falhas: {lista}.",
+        UserWarning,
+        stacklevel=3,
+    )
 
 
 class PdpjScraper(BaseScraper):
@@ -441,11 +498,22 @@ class PdpjScraper(BaseScraper):
         caso a lista de documentos e extraida de
         ``detalhes['documentos']``).
 
+        Um documento cujo download falha (erro HTTP que nao seja 401/403,
+        ou retry de 429/503/timeout esgotado) nao interrompe a coleta: a
+        linha sai com ``texto``/``_raw_texto`` e/ou ``binario`` iguais a
+        ``None`` e o metodo segue para o proximo documento. Ao fim, um unico
+        ``UserWarning`` informa quantos downloads falharam e cita alguns,
+        com processo, documento e motivo (status HTTP ou retry esgotado).
+
         Args:
             base_df: DataFrame fonte das chamadas.
-            max_docs_per_process: Limite de documentos baixados por
-                processo. ``None`` = sem limite; ``0`` devolve DataFrame
-                vazio sem fazer requisicao.
+            max_docs_per_process: Limite de linhas devolvidas por processo,
+                na ordem de ``base_df``. Linhas sem ``id_documento`` sao
+                puladas sem ocupar vaga do limite; um documento cujo
+                download falhou ocupa vaga, porque sua linha sai no
+                resultado (com conteudo ``None``) e a requisicao ja foi
+                feita. ``None`` = sem limite; ``0`` devolve DataFrame vazio
+                sem fazer requisicao.
             with_text: Se ``True`` (default), baixa o texto via
                 ``/documentos/{id}/texto``.
             with_binary: Se ``True``, baixa o binario via
@@ -454,7 +522,8 @@ class PdpjScraper(BaseScraper):
 
         Returns:
             DataFrame com uma linha por documento. Inclui colunas
-            ``texto`` e ``binario`` (quando solicitados).
+            ``texto`` e ``binario`` (quando solicitados), ``None`` nos
+            documentos cujo download falhou.
 
         Raises:
             ValidationError: Quando ``base_df`` nao e um DataFrame ou
@@ -462,6 +531,17 @@ class PdpjScraper(BaseScraper):
             ValueError: Quando ``with_text`` e ``with_binary`` sao ambos
                 ``False``, ou quando ``base_df`` nao tem coluna
                 ``id_documento`` nem ``detalhes``.
+            requests.HTTPError: Quando a API responde 401 ou 403 (token
+                expirado ou sem permissao). O erro atinge o lote inteiro,
+                entao propaga e as linhas ja baixadas se perdem.
+
+        Warns:
+            UserWarning: Quando pelo menos um download de documento falhou.
+                Um aviso por chamada, com a contagem e alguns exemplos.
+
+        See also:
+            :class:`InputDownloadDocumentsPdpj`: schema pydantic e fonte
+            da verdade dos parametros aceitos.
         """
         self._check_auth()
         # Validacao via schema -- garante que kwargs desconhecidos viram TypeError.
@@ -493,13 +573,37 @@ class PdpjScraper(BaseScraper):
             return pd.DataFrame()
 
         rows: list[dict[str, Any]] = []
+        falhas: list[str] = []
         for processo, grupo in docs_df.groupby("processo", sort=False):
-            selected = grupo if max_docs_per_process is None else grupo.head(max_docs_per_process)
-            for _, doc_row in selected.iterrows():
-                row = self._download_document(doc_row, processo, with_text, with_binary)
-                if row is not None:
-                    rows.append(row)
+            rows.extend(self._download_process_documents(
+                grupo, processo, max_docs_per_process, with_text, with_binary, falhas,
+            ))
+        _avisar_falhas(falhas)
         return pd.DataFrame(rows)
+
+    def _download_process_documents(
+        self,
+        grupo: pd.DataFrame,
+        processo: Any,
+        max_docs_per_process: int | None,
+        with_text: bool,
+        with_binary: bool,
+        falhas: list[str],
+    ) -> list[dict[str, Any]]:
+        """Baixa os documentos de um processo ate o limite de linhas devolvidas.
+
+        O limite e conferido antes de cada documento, e nao com ``head(N)``
+        sobre ``grupo``: assim uma linha sem ``id_documento``, que
+        :meth:`_download_document` pula, nao ocupa uma vaga do limite.
+        """
+        rows: list[dict[str, Any]] = []
+        for _, doc_row in grupo.iterrows():
+            if max_docs_per_process is not None and len(rows) >= max_docs_per_process:
+                break
+            row = self._download_document(doc_row, processo, with_text, with_binary, falhas)
+            if row is not None:
+                rows.append(row)
+        return rows
 
     def _download_document(
         self,
@@ -507,8 +611,14 @@ class PdpjScraper(BaseScraper):
         processo: Any,
         with_text: bool,
         with_binary: bool,
+        falhas: list[str],
     ) -> dict[str, Any] | None:
-        """Baixa os conteúdos selecionados para uma linha de documento."""
+        """Baixa os conteúdos selecionados para uma linha de documento.
+
+        Falha de download de texto ou binario vira ``None`` na coluna e uma
+        entrada em ``falhas``; 401/403 propagam (ver
+        ``_STATUS_DE_AUTENTICACAO``).
+        """
         row = cast(dict[str, Any], doc_row.to_dict())
         id_documento = row.get("id_documento")
         numero_processo = row.get("numero_processo") or processo
@@ -519,21 +629,18 @@ class PdpjScraper(BaseScraper):
             )
             return None
         cnj_clean = clean_cnj(str(numero_processo))
+        descricao = f"processo {numero_processo}, documento {id_documento}"
         if with_text:
-            raw = fetch_documento_texto(
-                self.session,
-                cnj_clean,
-                str(id_documento),
-                base_url=self.BASE_URL,
+            raw = _buscar_conteudo(
+                fetch_documento_texto, self.session, cnj_clean, str(id_documento),
+                self.BASE_URL, falhas, f"{descricao}, texto",
             )
             row["texto"] = clean_document_text(raw)
             row["_raw_texto"] = raw
         if with_binary:
-            row["binario"] = fetch_documento_binario(
-                self.session,
-                cnj_clean,
-                str(id_documento),
-                base_url=self.BASE_URL,
+            row["binario"] = _buscar_conteudo(
+                fetch_documento_binario, self.session, cnj_clean, str(id_documento),
+                self.BASE_URL, falhas, f"{descricao}, binario",
             )
         if self.sleep_time:
             time.sleep(self.sleep_time)
