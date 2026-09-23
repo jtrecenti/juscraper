@@ -132,6 +132,18 @@ def test_incompatible_resume_before_http(stf, tmp_path, change):
 
 
 @responses.activate
+def test_checkpoint_from_score_order_contract_is_rejected_before_http(stf, tmp_path):
+    source = Source(make_rows(2)).install()
+    stf.listar_decisoes(checkpoint_dir=tmp_path)
+    antigo = manifest(tmp_path)
+    antigo["identity"]["contract"] = "exact-counts-disjoint-days-score-id-v1"
+    write_manifest(tmp_path, antigo)
+    source.payloads.clear()
+    with pytest.raises(ValueError, match="incompatível"):
+        stf.listar_decisoes(checkpoint_dir=tmp_path, resume=True)
+    assert not source.payloads
+
+@responses.activate
 def test_identity_preserves_query_and_normalizes_filters(stf, tmp_path):
     source = Source(make_rows(2)).install()
     stf.listar_decisoes("x ou y$", classe="Rcl", data_julgamento_fim="31/12/2020", checkpoint_dir=tmp_path)
