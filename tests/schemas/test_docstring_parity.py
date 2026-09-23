@@ -59,6 +59,11 @@ CASES = [
         id="comunica_cnj.listar_comunicacoes",
     ),
     pytest.param(
+        "juscraper.aggregators.falcao.client", "FalcaoScraper", "cjsg",
+        "juscraper.aggregators.falcao.schemas", "InputCJSGFalcao",
+        id="falcao.cjsg",
+    ),
+    pytest.param(
         "juscraper.courts.tjrj.client", "TJRJScraper", "cjsg",
         "juscraper.courts.tjrj.schemas", "InputCJSGTJRJ",
         id="tjrj.cjsg",

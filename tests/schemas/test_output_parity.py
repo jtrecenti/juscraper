@@ -87,6 +87,7 @@ EXPECTED_AGGREGATOR_OUTPUT_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
         "juscraper.aggregators.comunica_cnj.schemas",
         "OutputListarComunicacoesComunicaCNJ",
     ),
+    ("falcao", "cjsg"): ("juscraper.aggregators.falcao.schemas", "OutputCJSGFalcao"),
 }
 
 # Campos que herdamos de OutputCJSGBase / OutputCnjConsultaBase e nao
