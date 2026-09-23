@@ -145,14 +145,60 @@ Complexidade é um eixo que o stack de lint do projeto (Ruff, flake8, isort, pyl
 - **Complexidade ciclomática** (`lizard`, métrica CCN): conta caminhos independentes — começa em 1 e soma +1 por ponto de decisão (`if`, `for`, `while`, `except`, …). É um proxy de *testabilidade* (quantos casos cobrir). Não conta linhas nem aninhamento.
 - **Complexidade cognitiva** (`complexipy`, métrica do SonarSource): conta o quão difícil é *entender* o código, com **penalidade por aninhamento** — um `if` dentro de `for` dentro de `if` custa mais que três `if` rasos.
 
-Por que as duas: elas concordam nos extremos, mas divergem no meio. Código **plano com muitos ramos** (cascata de paginação, dispatch de datas) é ciclomático-alto mas cognitivo-baixo — legível. Código **aninhado com poucos ramos** é o oposto. Exemplos reais do `src`:
+Por que as duas: elas concordam nos extremos, mas divergem no meio. Código **plano com muitos ramos**, como uma sequência de tentativas encadeadas com `or` ou um `match/case`, é ciclomático-alto mas cognitivo-baixo, e continua legível. Uma cascata de `if/elif` não entra nesse caso: cada `elif` custa +1 nas duas métricas. Código **aninhado com poucos ramos** é o oposto. Os dois exemplos abaixo foram escritos para esta documentação e não vêm do `src`, para que os números não mudem a cada refatoração.
 
-| Função | CCN (lizard) | Cognitivo (complexipy) | Leitura |
+**(a) Plano com muitos ramos**, uma sequência de tentativas no mesmo nível:
+
+```python
+import re
+
+
+def extrair_total_resultados(texto):
+    """Tenta, em ordem, os formatos de contagem que cada tribunal usa."""
+    achado = (
+        re.search(r"(\d+) resultados? encontrados?", texto)
+        or re.search(r"Total de registros: (\d+)", texto)
+        or re.search(r"Exibindo \d+ a \d+ de (\d+)", texto)
+        or re.search(r"Foram encontrados (\d+) documentos", texto)
+        or re.search(r"(\d+) acórdãos", texto)
+        or re.search(r"(\d+) decisões", texto)
+        or re.search(r"Resultados: (\d+)", texto)
+        or re.search(r"de um total de (\d+)", texto)
+        or re.search(r"Quantidade: (\d+)", texto)
+        or re.search(r"(\d+) processos", texto)
+        or re.search(r"(\d+) itens", texto)
+        or re.search(r"(\d+) registros", texto)
+        or re.search(r"(\d+) julgados", texto)
+        or re.search(r"(\d+) ementas", texto)
+        or re.search(r"(\d+) sentenças", texto)
+    )
+    if achado is None:
+        return 0
+    return int(achado.group(1))
+```
+
+**(b) Aninhado com poucos ramos**, três pares de `for` e `if`, cada um dentro do anterior:
+
+```python
+def advogados_do_polo(processos, polo):
+    """Lista as OABs dos advogados de um polo, processo a processo."""
+    oabs = []
+    for processo in processos:
+        if processo.get("partes"):
+            for parte in processo["partes"]:
+                if parte["polo"] == polo:
+                    for advogado in parte.get("advogados", []):
+                        if advogado.get("oab"):
+                            oabs.append((processo["id_cnj"], advogado["oab"]))
+    return oabs
+```
+
+| Exemplo | CCN (lizard) | Cognitivo (complexipy) | Leitura |
 |---|---:|---:|---|
-| `cposg_parse_single_html` | 73 | 150 | ruim nas duas |
-| `tjpr cjsg_parse` | 28 | 71 | cognitivo prioriza muito mais |
-| `extract_count_with_cascade` | 26 | <14 | cascata plana — legível apesar do CCN |
-| `extract_escolha_button_id` | <15 | 31 | aninhada — só o cognitivo pega |
+| (a) `extrair_total_resultados` | 16 | 2 | sequência plana, legível apesar do CCN; só o lizard pega |
+| (b) `advogados_do_polo` | 7 | 21 | aninhada, só o cognitivo pega |
+
+Números medidos com lizard 1.24.0 e complexipy 8.0.1. Em (a), o lizard soma +1 por `or` e +1 pelo `if`, enquanto o complexipy conta a sequência de `or` uma vez só. Em (b), cada estrutura paga +1 mais a profundidade em que está: o `if` mais interno custa 6 sozinho, embora a função tenha só seis pontos de decisão.
 
 ### Diagnóstico sob demanda (não roda em pre-commit nem CI)
 
