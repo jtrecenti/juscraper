@@ -15,14 +15,17 @@ from tests._helpers import load_sample_bytes
 # Page 1 (``listar_resultados``) emits ``ORGAO JULGADOR`` per hit; the AJAX
 # paginator (``ajax_paginar_resultado``) does not. Pandas concat takes the
 # union of columns, so ``orgao_julgador`` is in ``df.columns`` even after
-# multi-page joins (NaN for AJAX rows).
+# multi-page joins (NaN for AJAX rows). Both endpoints emit ``DECISÃO``
+# before ``EMENTA``; the parser must keep ``decisao`` as its own column
+# instead of letting the later ``EMENTA`` overwrite it.
 CJSG_PAGE1_FIELDS = {
     "processo", "relator", "orgao_julgador",
-    "data_julgamento", "data_publicacao", "ementa",
+    "data_julgamento", "data_publicacao", "ementa", "decisao",
 }
 # Subset emitted by AJAX hits (no ``orgao_julgador``); kept for documentation.
 CJSG_AJAX_FIELDS = {
     "processo", "relator", "data_julgamento", "data_publicacao", "ementa",
+    "decisao",
 }
 
 
@@ -68,6 +71,9 @@ def test_cjsg_single_page(mocker):
     assert isinstance(df, pd.DataFrame)
     assert set(df.columns) >= CJSG_PAGE1_FIELDS
     assert len(df) > 0
+    # The eproc link text is "<number>/TJSC", including legacy non-CNJ numbers
+    # such as "0000.20.13.007510-0/TJSC"; the suffix must not leak into ``processo``.
+    assert not df["processo"].str.endswith("/TJSC").any()
     hit_urls = {call.request.url for call in responses.calls}
     assert hit_urls == {SEARCH_URL}
 
