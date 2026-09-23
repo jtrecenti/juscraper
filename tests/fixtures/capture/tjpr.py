@@ -16,7 +16,9 @@ classifies each response by URL/scenario. Files produced:
   call, in ``cjsg_download``).
 - ``results_normal_page_NN.html`` — one per POST in the ``typical``
   scenario (multi-page pagination).
-- ``single_page.html`` — single POST whose results fit on one page.
+- ``single_page.html`` — single POST for a search whose results fit on
+  one page ("quilombola", 6 hits as of 2026-09): both paginators render
+  "Última Página" disabled (``a.arrowLastOff``, no href).
 - ``no_results.html`` — single POST with zero hits.
 - ``ementa_completa.html`` — single sample for the GET extras. As of
   2026-04, the upstream endpoint returns a generic Struts error page
@@ -84,10 +86,11 @@ def main() -> None:
     print(f"[tjpr/typical] DataFrame columns: {list(df.columns)}")
     print(f"[tjpr/typical] rows: {len(df)}")
 
-    # Single page: a query that yields ~one page worth of hits.
+    # Single page: a query whose hits fit on one page, so the paginator
+    # renders "Última Página" disabled.
     state["scenario"] = "single_page"
     seen_files.clear()
-    df = scraper.cjsg("direito civil", paginas=1)
+    df = scraper.cjsg("quilombola", paginas=1)
     print(f"[tjpr/single_page] rows: {len(df)}")
 
     # Zero hits.
