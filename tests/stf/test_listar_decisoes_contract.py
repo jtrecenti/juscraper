@@ -1,0 +1,187 @@
+"""Offline contract tests for STF listar_decisoes."""
+from datetime import date
+
+import pandas as pd
+import pytest
+import responses
+
+import juscraper as jus
+from juscraper.courts.stf.download import BASE_URL
+from tests.stf._collection_helpers import Source, add_sample, make_rows
+
+MIN_COLUMNS = {
+    "processo",
+    "classe",
+    "relator",
+    "data_julgamento",
+    "data_publicacao",
+    "decisao_texto",
+    "inteiro_teor_url",
+}
+
+
+def _add(sample: str, **payload_kwargs) -> None:
+    add_sample(sample, **payload_kwargs)
+
+
+@pytest.fixture
+def stf():
+    return jus.scraper("stf", waf_token="token-de-teste")
+
+
+@responses.activate
+def test_listar_decisoes_com_paginacao(stf, mocker):
+    """Páginas explícitas preservam a seleção e as colunas canônicas."""
+    mocker.patch("time.sleep")
+    _add("results_normal_page_01.json", pesquisa="pejotização", classe="Rcl", pagina=1, tamanho_pagina=5)
+    _add("results_normal_page_02.json", pesquisa="pejotização", classe="Rcl", pagina=2, tamanho_pagina=5)
+
+    df = stf.listar_decisoes("pejotização", classe="Rcl", paginas=range(1, 3), tamanho_pagina=5)
+
+    assert isinstance(df, pd.DataFrame)
+    assert set(df.columns) >= MIN_COLUMNS
+    assert len(df) == 10
+    assert set(df["classe"]) == {"Rcl"}
+    assert responses.calls[0].request.headers["Cookie"] == "aws-waf-token=token-de-teste"
+
+
+@responses.activate
+def test_listar_decisoes_todas_as_paginas_com_datas(stf, mocker):
+    """``paginas=None`` para depois da primeira pagina quando o total cabe nela; datas saem em ddMMyyyy."""
+    mocker.patch("time.sleep")
+    _add(
+        "single_page.json",
+        integral=True,
+        pesquisa="pejotização",
+        pagina=1,
+        tamanho_pagina=250,
+        data_julgamento_inicio="01012020",
+        data_julgamento_fim="31122020",
+    )
+
+    df = stf.listar_decisoes(
+        "pejotização", data_julgamento_inicio="01/01/2020", data_julgamento_fim="2020-12-31"
+    )
+
+    assert len(responses.calls) == 3
+    assert set(df.columns) >= MIN_COLUMNS
+    assert len(df) == 2
+
+
+@responses.activate
+def test_listar_decisoes_sem_resultados(stf, mocker):
+    """Busca sem resultados devolve DataFrame vazio."""
+    mocker.patch("time.sleep")
+    _add("no_results.json", integral=True, pesquisa="juscraper_probe_zero_hits_xyzqwe", pagina=1, tamanho_pagina=250)
+
+    df = stf.listar_decisoes("juscraper_probe_zero_hits_xyzqwe")
+
+    assert isinstance(df, pd.DataFrame)
+    assert df.empty
+
+
+@responses.activate
+def test_pagina_alem_do_teto_falha_sem_requisicao(stf):
+    """A pagina que comeca depois do registro 10.000 e recusada antes de qualquer POST."""
+    with pytest.raises(ValueError, match="10000 primeiros registros"):
+        stf.listar_decisoes("terceiriz$", paginas=[1, 41], tamanho_pagina=250)
+    assert len(responses.calls) == 0
+
+
+@responses.activate
+def test_limite_da_api_vira_value_error_sem_retry(stf, mocker):
+    """O 403 com ``detail`` e regra da API: sobe ``ValueError`` na primeira resposta."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.POST,
+        BASE_URL,
+        json={"detail": "Excedido o limite de 250 documentos por consulta."},
+        status=403,
+    )
+
+    with pytest.raises(ValueError, match="limite de 250"):
+        stf.listar_decisoes("pejotização", paginas=1)
+    assert len(responses.calls) == 1
+
+
+@responses.activate
+def test_desafio_do_waf_renova_o_token_e_repete(stf, mocker):
+    """HTTP 202 com challenge renova o cookie uma vez e repete a mesma busca."""
+    mocker.patch("time.sleep")
+    obter = mocker.patch("juscraper.courts.stf.client.obter_waf_token", return_value="token-novo")
+    responses.add(responses.POST, BASE_URL, body="", status=202, headers={"x-amzn-waf-action": "challenge"})
+    _add("no_results.json", integral=True, pesquisa="juscraper_probe_zero_hits_xyzqwe", pagina=1, tamanho_pagina=250)
+
+    df = stf.listar_decisoes("juscraper_probe_zero_hits_xyzqwe")
+
+    assert df.empty
+    obter.assert_called_once_with()
+    assert responses.calls[1].request.headers["Cookie"] == "aws-waf-token=token-novo"
+
+
+@responses.activate
+def test_desafio_repetido_depois_da_renovacao_levanta(stf, mocker):
+    """Se o WAF desafiar de novo com o cookie recem-obtido, o scraper para."""
+    mocker.patch("time.sleep")
+    mocker.patch("juscraper.courts.stf.client.obter_waf_token", return_value="token-novo")
+    responses.add(responses.POST, BASE_URL, body="", status=202, headers={"x-amzn-waf-action": "challenge"})
+
+    with pytest.raises(RuntimeError, match="desafiou de novo"):
+        stf.listar_decisoes("pejotização", paginas=1)
+    assert len(responses.calls) == 2
+
+
+@responses.activate
+def test_sem_token_obtem_um_antes_da_primeira_busca(mocker):
+    """Sem ``waf_token``, o cookie e obtido antes do primeiro POST."""
+    mocker.patch("time.sleep")
+    obter = mocker.patch("juscraper.courts.stf.client.obter_waf_token", return_value="token-obtido")
+    _add("no_results.json", integral=True, pesquisa="juscraper_probe_zero_hits_xyzqwe", pagina=1, tamanho_pagina=250)
+
+    jus.scraper("stf").listar_decisoes("juscraper_probe_zero_hits_xyzqwe")
+
+    obter.assert_called_once_with()
+    assert responses.calls[0].request.headers["Cookie"] == "aws-waf-token=token-obtido"
+
+
+@responses.activate
+def test_paginas_none_busca_as_paginas_seguintes(stf, mocker):
+    """Sem ``paginas``, o total da primeira resposta define quantas paginas faltam."""
+    mocker.patch("time.sleep")
+    Source(make_rows(10)).install()
+    df = stf.listar_decisoes("pejotização", classe="Rcl", tamanho_pagina=5)
+
+    assert len(responses.calls) == 4
+    assert len(df) == 10
+
+
+@responses.activate
+def test_paginas_none_acima_do_teto_fatia_sem_truncar(stf, mocker):
+    """Acima do teto, janelas disjuntas entregam o conjunto inteiro."""
+    mocker.patch("time.sleep")
+    source = Source(make_rows(10001)).install()
+    df = stf.listar_decisoes("terceirização", tamanho_pagina=250)
+
+    assert len(df) == 10001
+    assert set(df.id) == {row["id"] for row in source.rows}
+    assert all(body["from"] + body["size"] <= 10000 for body in source.payloads)
+
+
+@responses.activate
+def test_acordaos_preserve_canonical_fields_and_auxiliary_data(stf):
+    _add("acordaos.json", pesquisa="Rcl 53688", base="acordaos", tamanho_pagina=2)
+
+    df = stf.listar_decisoes("Rcl 53688", base="acordaos", paginas=1, tamanho_pagina=2)
+
+    assert (MIN_COLUMNS - {"decisao_texto"}) | {"ementa"} <= set(df.columns)
+    assert list(df["id"]) == ["sjur493171", "sjur503174"]
+    assert df["id"].is_unique
+    assert set(df["base"]) == {"acordaos"}
+    assert df["ementa"].str.len().gt(0).all()
+    first = df.iloc[0]
+    assert first["processo"] == "Rcl 53688 AgR"
+    assert first["relator"] == "RICARDO LEWANDOWSKI"
+    assert first["relator_acordao_nome"] == "NUNES MARQUES"
+    assert first["data_julgamento"] == date(2023, 10, 17)
+    assert first["data_publicacao"] == date(2023, 12, 12)
+    assert first["inteiro_teor_url"].endswith("idDocumento=773359592")

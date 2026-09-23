@@ -130,6 +130,7 @@ OUTPUT_MODULES = {
     ("tjsc", "cjsg"): ("juscraper.courts.tjsc.schemas", "OutputCJSGTJSC"),
     ("tjto", "cjsg"): ("juscraper.courts.tjto.schemas", "OutputCJSGTJTO"),
     ("tjto", "cjpg"): ("juscraper.courts.tjto.schemas", "OutputCJPGTJTO"),
+    ("stf", "listar_decisoes"): ("juscraper.courts.stf.schemas", "OutputListarDecisoesSTF"),
     ("datajud", "listar_processos"): (
         "juscraper.aggregators.datajud.schemas",
         "OutputListarProcessosDataJud",

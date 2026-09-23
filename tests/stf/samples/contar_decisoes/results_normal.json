@@ -1,0 +1,264 @@
+{
+ "result": {
+  "took": 47,
+  "timed_out": false,
+  "_shards": {
+   "total": 5,
+   "successful": 5,
+   "skipped": 0,
+   "failed": 0
+  },
+  "hits": {
+   "total": {
+    "value": 3369,
+    "relation": "eq"
+   },
+   "max_score": null,
+   "hits": []
+  },
+  "aggregations": {
+   "processo_classe_processual_unificada_classe_sigla_agg": {
+    "doc_count": 3421,
+    "processo_classe_processual_unificada_classe_sigla_agg": {
+     "doc_count_error_upper_bound": 0,
+     "sum_other_doc_count": 0,
+     "buckets": [
+      {
+       "key": "Rcl",
+       "doc_count": 3369
+      },
+      {
+       "key": "ARE",
+       "doc_count": 19
+      },
+      {
+       "key": "AR",
+       "doc_count": 16
+      },
+      {
+       "key": "Pet",
+       "doc_count": 8
+      },
+      {
+       "key": "MS",
+       "doc_count": 5
+      },
+      {
+       "key": "RE",
+       "doc_count": 4
+      }
+     ]
+    }
+   },
+   "orgao_julgador_agg": {
+    "doc_count": 3369,
+    "orgao_julgador_agg": {
+     "doc_count_error_upper_bound": 0,
+     "sum_other_doc_count": 0,
+     "buckets": []
+    }
+   },
+   "procedencia_geografica_uf_sigla_agg": {
+    "doc_count": 3369,
+    "procedencia_geografica_uf_sigla_agg": {
+     "doc_count_error_upper_bound": 0,
+     "sum_other_doc_count": 0,
+     "buckets": [
+      {
+       "key": "SP",
+       "doc_count": 1298
+      },
+      {
+       "key": "RJ",
+       "doc_count": 400
+      },
+      {
+       "key": "MG",
+       "doc_count": 325
+      },
+      {
+       "key": "RS",
+       "doc_count": 313
+      },
+      {
+       "key": "BA",
+       "doc_count": 175
+      },
+      {
+       "key": "PR",
+       "doc_count": 163
+      },
+      {
+       "key": "DF",
+       "doc_count": 107
+      },
+      {
+       "key": "GO",
+       "doc_count": 105
+      },
+      {
+       "key": "ES",
+       "doc_count": 84
+      },
+      {
+       "key": "CE",
+       "doc_count": 71
+      },
+      {
+       "key": "PE",
+       "doc_count": 55
+      },
+      {
+       "key": "SC",
+       "doc_count": 55
+      },
+      {
+       "key": "PB",
+       "doc_count": 37
+      },
+      {
+       "key": "PA",
+       "doc_count": 34
+      },
+      {
+       "key": "AM",
+       "doc_count": 23
+      },
+      {
+       "key": "PI",
+       "doc_count": 20
+      },
+      {
+       "key": "RN",
+       "doc_count": 19
+      },
+      {
+       "key": "MS",
+       "doc_count": 18
+      },
+      {
+       "key": "MA",
+       "doc_count": 16
+      },
+      {
+       "key": "MT",
+       "doc_count": 16
+      },
+      {
+       "key": "AL",
+       "doc_count": 11
+      },
+      {
+       "key": "RO",
+       "doc_count": 8
+      },
+      {
+       "key": "SE",
+       "doc_count": 6
+      },
+      {
+       "key": "AP",
+       "doc_count": 4
+      },
+      {
+       "key": "AC",
+       "doc_count": 3
+      },
+      {
+       "key": "TO",
+       "doc_count": 3
+      }
+     ]
+    }
+   },
+   "is_decisao_presidencia_agg": {
+    "buckets": {
+     "false": {
+      "doc_count": 3416
+     },
+     "true": {
+      "doc_count": 5
+     }
+    }
+   },
+   "base_agg": {
+    "buckets": {
+     "acordaos": {
+      "doc_count": 438
+     },
+     "decisoes": {
+      "doc_count": 3421
+     },
+     "informativos": {
+      "doc_count": 0
+     },
+     "sumulas": {
+      "doc_count": 0
+     }
+    }
+   },
+   "ministro_facet_agg": {
+    "doc_count": 3369,
+    "ministro_facet_agg": {
+     "doc_count_error_upper_bound": 0,
+     "sum_other_doc_count": 0,
+     "buckets": [
+      {
+       "key": "ANDRÉ MENDONÇA",
+       "doc_count": 558
+      },
+      {
+       "key": "CRISTIANO ZANIN",
+       "doc_count": 504
+      },
+      {
+       "key": "DIAS TOFFOLI",
+       "doc_count": 452
+      },
+      {
+       "key": "CÁRMEN LÚCIA",
+       "doc_count": 432
+      },
+      {
+       "key": "ALEXANDRE DE MORAES",
+       "doc_count": 339
+      },
+      {
+       "key": "GILMAR MENDES",
+       "doc_count": 320
+      },
+      {
+       "key": "LUIZ FUX",
+       "doc_count": 206
+      },
+      {
+       "key": "FLÁVIO DINO",
+       "doc_count": 204
+      },
+      {
+       "key": "EDSON FACHIN",
+       "doc_count": 171
+      },
+      {
+       "key": "NUNES MARQUES",
+       "doc_count": 155
+      },
+      {
+       "key": "LUÍS ROBERTO BARROSO",
+       "doc_count": 23
+      },
+      {
+       "key": "RICARDO LEWANDOWSKI",
+       "doc_count": 7
+      },
+      {
+       "key": "ROSA WEBER",
+       "doc_count": 3
+      }
+     ]
+    }
+   }
+  }
+ },
+ "search_id": 1
+}
