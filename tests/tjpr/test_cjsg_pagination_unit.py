@@ -31,12 +31,22 @@ def _pagina_1() -> str:
     return html
 
 
-def _ultima_desativada(html: str, count: int = 0) -> str:
-    """Troca o link "Última" ativo pela âncora desativada, copiada do sample real de página única."""
+def _ancora_desativada() -> str:
+    """Âncora "Última" desativada, copiada do sample real de página única."""
     match = re.search(r'<a class="arrowLastOff"[^>]*>.*?</a>', _sample("single_page.html"))
     assert match is not None
-    desativado = match.group(0)
-    return _LINK_ULTIMA_RE.sub(lambda _: desativado, html, count=count)
+    return match.group(0)
+
+
+def _ultima_desativada(html: str) -> str:
+    """Troca só o primeiro link "Última" ativo (paginador de cima) pela âncora desativada."""
+    desativado = _ancora_desativada()
+    return _LINK_ULTIMA_RE.sub(lambda _: desativado, html, count=1)
+
+
+def _acrescenta_depois_da_ultima(html: str, extra) -> str:
+    """Em cada paginador, acrescenta ``extra(link)`` logo depois do link "Última" ativo."""
+    return _LINK_ULTIMA_RE.sub(lambda m: m.group(0) + extra(m.group(0)), html)
 
 
 @pytest.mark.parametrize(
@@ -59,6 +69,13 @@ def test_extract_total_pages_pagina_unica_real_devolve_um():
     assert "arrowLastOn" not in html
     assert html.count('class="arrowLastOff"') == 2
     assert extract_total_pages(html) == 1
+
+
+def test_extract_total_pages_dois_links_ultima_iguais_no_mesmo_paginador():
+    """Link "Última" repetido com o mesmo total no mesmo paginador não é ambíguo."""
+    html = _acrescenta_depois_da_ultima(_pagina_1(), lambda link: link)
+    assert html.count(_PAGE_NUMBER_ULTIMA) == 4
+    assert extract_total_pages(html) == 39477
 
 
 def test_extract_total_pages_sem_paginador_devolve_um():
@@ -91,13 +108,25 @@ def test_extract_total_pages_sem_paginador_devolve_um():
         ),
         pytest.param(
             lambda html: html.replace(_PAGE_NUMBER_ULTIMA, "['pageNumber'].value='39476'", 1),
-            "paginadores discordam",
+            "discordam do total",
             id="paginadores-discordam",
         ),
         pytest.param(
-            lambda html: _ultima_desativada(html, count=1),
-            "paginadores discordam",
+            _ultima_desativada,
+            "discordam do total",
             id="um-ativo-outro-desativado",
+        ),
+        pytest.param(
+            # O segundo link vem depois do primeiro nos dois paginadores, que
+            # continuam iguais entre si: só a checagem dentro do paginador pega.
+            lambda html: _acrescenta_depois_da_ultima(html, lambda link: link.replace("'39477'", "'39476'")),
+            "discordam do total",
+            id="dois-ativos-discordantes-no-mesmo-paginador",
+        ),
+        pytest.param(
+            lambda html: _acrescenta_depois_da_ultima(html, lambda _: _ancora_desativada()),
+            "ativo .* e desativado",
+            id="ativo-e-desativado-no-mesmo-paginador",
         ),
     ],
 )

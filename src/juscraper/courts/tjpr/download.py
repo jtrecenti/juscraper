@@ -114,27 +114,43 @@ def build_cjsg_form_body(
     }
 
 
-def _last_page_from_paginator(paginator: Tag) -> int:
-    """Lê o total de páginas do link "Última Página" de um paginador.
-
-    Ativo, o link é ``a.arrowLastOn`` e o href em JavaScript carrega
-    ``['pageNumber'].value='<total>'``. Desativado, o portal desenha a mesma
-    âncora com classe ``arrowLastOff`` e sem href.
-    """
-    link = paginator.select_one("a.arrowLastOn")
-    if link is None:
-        if paginator.select_one("a.arrowLastOff") is not None:
-            return 1
-        raise ValueError(
-            "TJPR: paginador sem o link de última página (a.arrowLastOn); "
-            "o total de páginas não pode ser determinado sem estimar."
-        )
+def _page_from_last_link(link: Tag) -> int:
+    """Lê o ``pageNumber`` do href de um link "Última" ativo; exige inteiro >= 1."""
     href = str(link.get("href", ""))
     match = _PAGE_NUMBER_RE.search(href)
     page = match.group(1) if match else ""
     if not re.fullmatch(r"[0-9]+", page) or int(page) < 1:
         raise ValueError(f"TJPR: link de última página sem pageNumber válido no href: {href!r}")
     return int(page)
+
+
+def _last_pages_from_paginator(paginator: Tag) -> set[int]:
+    """Lê os totais de página dos links "Última Página" de um paginador.
+
+    Ativo, o link é ``a.arrowLastOn`` e o href em JavaScript carrega
+    ``['pageNumber'].value='<total>'``. Desativado, o portal desenha a mesma
+    âncora com classe ``arrowLastOff`` e sem href, e o total é 1.
+
+    Devolve o conjunto de todos os links ativos, não só o do primeiro: dois
+    ativos com totais diferentes no mesmo paginador caem na checagem de
+    discordância de :func:`extract_total_pages`, em vez de o primeiro
+    vencer. Ativo e desativado no mesmo paginador se contradizem e levantam.
+    """
+    active = paginator.select("a.arrowLastOn")
+    disabled = paginator.select_one("a.arrowLastOff") is not None
+    if active and disabled:
+        raise ValueError(
+            "TJPR: paginador com o link de última página ativo (a.arrowLastOn) "
+            "e desativado (a.arrowLastOff) ao mesmo tempo."
+        )
+    if disabled:
+        return {1}
+    if not active:
+        raise ValueError(
+            "TJPR: paginador sem o link de última página (a.arrowLastOn); "
+            "o total de páginas não pode ser determinado sem estimar."
+        )
+    return {_page_from_last_link(link) for link in active}
 
 
 def extract_total_pages(html: str) -> int:
@@ -158,8 +174,9 @@ def extract_total_pages(html: str) -> int:
 
     Raises:
         ValueError: Paginador sem o link "Última" (ativo ou desativado),
-            link sem ``pageNumber`` inteiro positivo no href ou paginadores
-            com totais diferentes.
+            com "Última" ativo e desativado ao mesmo tempo, link sem
+            ``pageNumber`` inteiro positivo no href, ou links "Última" com
+            totais diferentes, no mesmo paginador ou entre paginadores.
     """
     paginators = [
         paginator
@@ -168,9 +185,9 @@ def extract_total_pages(html: str) -> int:
     ]
     if not paginators:
         return 1
-    totals = {_last_page_from_paginator(paginator) for paginator in paginators}
+    totals = set().union(*(_last_pages_from_paginator(paginator) for paginator in paginators))
     if len(totals) > 1:
-        raise ValueError(f"TJPR: paginadores discordam do total de páginas: {sorted(totals)}")
+        raise ValueError(f"TJPR: links de última página discordam do total de páginas: {sorted(totals)}")
     return totals.pop()
 
 
