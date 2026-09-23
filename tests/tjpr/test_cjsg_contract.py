@@ -91,17 +91,17 @@ def test_cjsg_typical_com_paginacao(mocker):
 
 @responses.activate
 def test_cjsg_single_page(mocker):
-    """Single page scenario."""
+    """Busca real de página única ("quilombola", 6 resultados)."""
     mocker.patch("time.sleep")
     add_home()
-    _add_search_page("direito civil", 1, "cjsg/single_page.html")
+    _add_search_page("quilombola", 1, "cjsg/single_page.html")
     _add_ementa_completa()
 
-    df = jus.scraper("tjpr").cjsg("direito civil", paginas=1)
+    df = jus.scraper("tjpr").cjsg("quilombola", paginas=1)
 
     assert isinstance(df, pd.DataFrame)
     assert set(df.columns) >= CJSG_MIN_COLUMNS
-    assert len(df) > 0
+    assert len(df) == 6
     assert df["processo"].notna().all(), "processo nulo em alguma linha"
     # Linhas com processo vazio existem legitimamente no TJPR (sigilo,
     # rows de cabeçalho, etc.); só falha se a maioria estiver vazia
@@ -109,6 +109,25 @@ def test_cjsg_single_page(mocker):
     assert (df["processo"].astype(str).str.len() > 0).mean() >= 0.5, (
         "mais da metade dos processos vazios — parser provavelmente quebrado"
     )
+
+
+@responses.activate
+def test_cjsg_paginas_none_pagina_unica_baixa_so_a_primeira(mocker):
+    """``paginas=None`` numa busca de página única lê "Última" desativada e para na página 1.
+
+    Além da home e da página 1, as únicas requisições são os GETs de ementa
+    completa das linhas com "Leia mais...", que ``cjsg_parse`` dispara.
+    """
+    mocker.patch("time.sleep")
+    add_home()
+    _add_search_page("quilombola", 1, "cjsg/single_page.html")
+    _add_ementa_completa()
+
+    df = jus.scraper("tjpr").cjsg("quilombola", paginas=None)
+
+    assert len(df) == 6
+    busca = [call for call in responses.calls if "exibirTextoCompleto" not in call.request.url]
+    assert [call.request.method for call in busca] == ["GET", "POST"]
 
 
 @responses.activate
@@ -172,7 +191,7 @@ def test_cjsg_ementa_completa_5xx_persistente(mocker):
     """
     mocker.patch("time.sleep")
     add_home()
-    _add_search_page("dano moral", 1, "cjsg/single_page.html")
+    _add_search_page("quilombola", 1, "cjsg/single_page.html")
     responses.add(
         responses.GET,
         SEARCH_URL,
@@ -182,7 +201,7 @@ def test_cjsg_ementa_completa_5xx_persistente(mocker):
         match=[query_param_subset_matcher({"actionType": "exibirTextoCompleto"})],
     )
 
-    df = jus.scraper("tjpr").cjsg("dano moral", paginas=1)
+    df = jus.scraper("tjpr").cjsg("quilombola", paginas=1)
 
     assert isinstance(df, pd.DataFrame)
     assert set(df.columns) >= CJSG_MIN_COLUMNS

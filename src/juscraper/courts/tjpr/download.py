@@ -119,8 +119,7 @@ def _last_page_from_paginator(paginator: Tag) -> int:
 
     Ativo, o link é ``a.arrowLastOn`` e o href em JavaScript carrega
     ``['pageNumber'].value='<total>'``. Desativado, o portal desenha a mesma
-    âncora com classe ``*Off`` e sem href, como faz com "Primeira" e
-    "Anterior" na página 1 (``arrowFirstOff``, ``arrowPreviousOff``).
+    âncora com classe ``arrowLastOff`` e sem href.
     """
     link = paginator.select_one("a.arrowLastOn")
     if link is None:
@@ -150,11 +149,12 @@ def extract_total_pages(html: str) -> int:
 
     Vale para a primeira página, a única que :func:`cjsg_download` lê. Nela,
     "Última" desativada (``a.arrowLastOff``) só ocorre se a página 1 for a
-    última, e o retorno é 1. Não há sample real da última página que
-    confirme essa forma; ela segue a de "Primeira" e "Anterior" na página 1.
-    Em outra página, "Última" desativada daria 1 em vez do número dela. O
-    TJPR desenha dois paginadores iguais, acima e abaixo da lista, e os dois
-    precisam dar o mesmo total.
+    última, e o retorno é 1. Essa forma foi confirmada com sample real de
+    busca de página única, em que os dois paginadores trazem "Primeira",
+    "Anterior", "Próxima" e "Última" desativadas. Em outra página, "Última"
+    desativada daria 1 em vez do número dela. O TJPR desenha dois
+    paginadores iguais, acima e abaixo da lista, e os dois precisam dar o
+    mesmo total.
 
     Raises:
         ValueError: Paginador sem o link "Última" (ativo ou desativado),

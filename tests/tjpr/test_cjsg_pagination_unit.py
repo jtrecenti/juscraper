@@ -32,28 +32,11 @@ def _pagina_1() -> str:
 
 
 def _ultima_desativada(html: str, count: int = 0) -> str:
-    """Troca o link "Última" ativo pela forma desativada.
-
-    A forma segue a que o portal usa para "Primeira" e "Anterior" na
-    página 1 (``arrowFirstOff``/``arrowPreviousOff``: mesma âncora, sem
-    ``href``). Não há sample real da última página para confirmar.
-    """
-    desativado = (
-        '<a class="arrowLastOff" title="Ir para a &uacute;ltima p&aacute;gina">'
-        "<span>&Uacute;ltima P&aacute;gina</span></a>"
-    )
-    return _LINK_ULTIMA_RE.sub(desativado, html, count=count)
-
-
-def _pagina_unica() -> str:
-    """Página 1 de uma busca de página única: sem links numerados, próxima e última desativadas."""
-    html = re.sub(r',&nbsp;<a title="Ir para a p&aacute;gina \d+" href="[^"]*">\d+</a>', "", _pagina_1())
-    html = re.sub(
-        r'<a class="arrowNextOn"[^>]*>(.*?)</a>',
-        r'<a class="arrowNextOff" title="Ir para a pr&oacute;xima p&aacute;gina">\1</a>',
-        html,
-    )
-    return _ultima_desativada(html)
+    """Troca o link "Última" ativo pela âncora desativada, copiada do sample real de página única."""
+    match = re.search(r'<a class="arrowLastOff"[^>]*>.*?</a>', _sample("single_page.html"))
+    assert match is not None
+    desativado = match.group(0)
+    return _LINK_ULTIMA_RE.sub(lambda _: desativado, html, count=count)
 
 
 @pytest.mark.parametrize(
@@ -62,8 +45,6 @@ def _pagina_unica() -> str:
         # Link "Última" ativo nos dois paginadores, com o mesmo total.
         ("results_normal_page_01.html", 39477),
         ("results_normal_page_02.html", 39477),
-        # Apesar do nome, este sample tem 38767 páginas (o paginador aponta a última).
-        ("single_page.html", 38767),
         # Zero resultados: o #navigator existe, mas o .navRight vem vazio.
         ("no_results.html", 1),
     ],
@@ -72,16 +53,16 @@ def test_extract_total_pages(sample_name: str, expected: int):
     assert extract_total_pages(_sample(sample_name)) == expected
 
 
-def test_extract_total_pages_sem_paginador_devolve_um():
-    html = "<div>HTML totalmente diferente sem informacao de paginacao</div>"
+def test_extract_total_pages_pagina_unica_real_devolve_um():
+    """Busca real de página única: os dois paginadores trazem "Última" desativada, sem href."""
+    html = _sample("single_page.html")
+    assert "arrowLastOn" not in html
+    assert html.count('class="arrowLastOff"') == 2
     assert extract_total_pages(html) == 1
 
 
-def test_extract_total_pages_ultima_desativada_na_pagina_1_devolve_um():
-    """Na página 1, "Última" desativada significa que a página 1 é a última."""
-    html = _pagina_unica()
-    assert "arrowLastOn" not in html
-    assert html.count("arrowLastOff") == 2
+def test_extract_total_pages_sem_paginador_devolve_um():
+    html = "<div>HTML totalmente diferente sem informacao de paginacao</div>"
     assert extract_total_pages(html) == 1
 
 
