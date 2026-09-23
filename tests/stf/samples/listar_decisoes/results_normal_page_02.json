@@ -1,0 +1,515 @@
+{
+ "result": {
+  "took": 37,
+  "timed_out": false,
+  "_shards": {
+   "total": 5,
+   "successful": 5,
+   "skipped": 0,
+   "failed": 0
+  },
+  "hits": {
+   "total": {
+    "value": 3369,
+    "relation": "eq"
+   },
+   "max_score": 41.291348,
+   "hits": [
+    {
+     "_index": "jurisprudencia-idx20230518",
+     "_id": "despacho1712738",
+     "_score": 38.675247,
+     "_source": {
+      "base": "decisoes",
+      "id": "despacho1712738",
+      "dg_unique": "despacho1712738",
+      "titulo": "Rcl 86559",
+      "ministro_facet": [
+       "CRISTIANO ZANIN"
+      ],
+      "procedencia_geografica_completo": "PE - PERNAMBUCO",
+      "procedencia_geografica_pais_sigla": "BR",
+      "procedencia_geografica_uf_sigla": "PE",
+      "procedencia_geografica_uf_extenso": "Pernambuco",
+      "processo_codigo_completo": "Rcl 86559",
+      "processo_classe_processual_unificada_extenso": "RECLAMAÇÃO",
+      "processo_classe_processual_unificada_classe_sigla": "Rcl",
+      "processo_classe_processual_unificada_incidente_sigla": null,
+      "processo_numero": 86559,
+      "julgamento_data": "2025-10-24",
+      "publicacao_data": "2025-10-27",
+      "is_decisao_presidencia": false,
+      "relator_processo_nome": "CRISTIANO ZANIN",
+      "presidente_nome": null,
+      "relator_decisao_nome": null,
+      "decisao_texto": "Trata-se de reclamação, com pedido de liminar, proposta por Centro Odontológico Pernambuco Sorrisos Casa Nova Bahia Ltda. contra decisão da 1ª Vara do Trabalho de Petrolina/PE no Processo 0000776-64.2025.5.06.0411, para garantir a observância da tese fixada pelo Supremo Tribunal Federal no julgament",
+      "partes_lista_texto": "RECLTE.(S)          : CENTRO ODONTOLOGICO PERNAMBUCO SORRISOS CASA NOVA BAHIA LTDA\r\nADV.(A/S)           : PAULO SERGIO RODRIGUES DE SANTANA\r\nRECLDO.(A/S)        : JUIZ DO TRABALHO DA 1ª VARA DO TRABALHO DE PETROLINA\r\nADV.(A/S)           : SEM REPRESENTAÇÃO NOS AUTOS\r\nBENEF.(A/S)         : GABRIEL CA",
+      "inteiro_teor_url": "http://portal.stf.jus.br/processos/downloadPeca.asp?id=15381661179&ext=.pdf",
+      "acompanhamento_processual_url": "https://portal.stf.jus.br/processos/listarProcessos.asp?numeroProcesso=86559&classe=Rcl",
+      "dje_url": "https://portal.stf.jus.br/servicos/dje/listarDiarioJustica.asp?tipoPesquisaDJ=AP&numero=86559&classe=Rcl",
+      "documental_publicacao_lista_texto": "PROCESSO ELETRÔNICO\r\nDJe-s/n DIVULG 24/10/2025 PUBLIC 27/10/2025",
+      "documental_decisao_mesmo_sentido_lista_texto": null,
+      "documental_decisao_mesmo_sentido_lista_html": null,
+      "documental_decisao_mesmo_sentido_is_secundario": false,
+      "documental_legislacao_citada_texto": [
+       "LEG-FED   LEI-013105 ANO-2015\n    ART-00992\n    CPC-2015 CÓDIGO DE PROCESSO CIVIL\n\n",
+       "LEG-FED   DEL-005452 ANO-1943\n    ART-00002 ART-00003\n    CLT-1943 CONSOLIDAÇÃO DAS LEIS DO TRABALHO\n\n",
+       "LEG-FED   RGI ANO-1980\n    ART-00052 PAR-ÚNICO ART-00161 PAR-ÚNICO\n    RISTF-1980 REGIMENTO INTERNO DO SUPREMO TRIBUNAL FEDERAL"
+      ],
+      "documental_indexacao_texto": null,
+      "documental_observacao_html": "03/11/2025\nLegislação feita por: (PHN).",
+      "documental_observacao_texto": "03/11/2025\nLegislação feita por: (PHN).",
+      "documental_doutrina_texto": null,
+      "externo_seq_objeto_incidente": 7415037,
+      "dg_atualizado_em": "2025-11-03T14:20:09.715231",
+      "ods_onu": []
+     }
+    },
+    {
+     "_index": "jurisprudencia-idx20230518",
+     "_id": "despacho1597617",
+     "_score": 38.36164,
+     "_source": {
+      "base": "decisoes",
+      "id": "despacho1597617",
+      "dg_unique": "despacho1597617",
+      "titulo": "Rcl 66837",
+      "ministro_facet": [
+       "CÁRMEN LÚCIA"
+      ],
+      "procedencia_geografica_completo": "RS - RIO GRANDE DO SUL",
+      "procedencia_geografica_pais_sigla": "BR",
+      "procedencia_geografica_uf_sigla": "RS",
+      "procedencia_geografica_uf_extenso": "Rio Grande do Sul",
+      "processo_codigo_completo": "Rcl 66837",
+      "processo_classe_processual_unificada_extenso": "RECLAMAÇÃO",
+      "processo_classe_processual_unificada_classe_sigla": "Rcl",
+      "processo_classe_processual_unificada_incidente_sigla": null,
+      "processo_numero": 66837,
+      "julgamento_data": "2024-11-29",
+      "publicacao_data": "2024-12-02",
+      "is_decisao_presidencia": false,
+      "relator_processo_nome": "CÁRMEN LÚCIA",
+      "presidente_nome": null,
+      "relator_decisao_nome": null,
+      "decisao_texto": "DECISÃO\n\n\n\nPETIÇÃO NA RECLAMAÇÃO. ALEGADO DESCUMPRIMENTO DO DECIDIDO PELO SUPREMO TRIBUNAL FEDERAL NESTA RECLAMAÇÃO, NA ARGUIÇÃO DE DESCUMPRIMENTO DE PRECEITO FUNDAMENTAL N. 324/DF E NO RECURSO EXTRAORDINÁRIO \nN. 958.252, TEMA 725 DA REPERCUSÃO GERAL. DESCUMPRIMENTO CONFIGURADO. PEDIDO DEFERIDO.\n\n\n\n",
+      "partes_lista_texto": "RECLTE.(S)          : SB CREDITO FUNDO DE INVESTIMENTO EM DIREITOS CREDITORIOS MULTISSETORIAL\r\nADV.(A/S)           : JOSE CARLOS LARANJEIRA\r\nRECLDO.(A/S)        : TRIBUNAL REGIONAL DO TRABALHO DA 4ª REGIÃO\r\nADV.(A/S)           : SEM REPRESENTAÇÃO NOS AUTOS\r\nBENEF.(A/S)         : JOAO BENINI\r\nADV.(A/",
+      "inteiro_teor_url": "http://portal.stf.jus.br/processos/downloadPeca.asp?id=15372526788&ext=.pdf",
+      "acompanhamento_processual_url": "https://portal.stf.jus.br/processos/listarProcessos.asp?numeroProcesso=66837&classe=Rcl",
+      "dje_url": "https://portal.stf.jus.br/servicos/dje/listarDiarioJustica.asp?tipoPesquisaDJ=AP&numero=66837&classe=Rcl",
+      "documental_publicacao_lista_texto": "PROCESSO ELETRÔNICO\r\nDJe-s/n DIVULG 29/11/2024 PUBLIC 02/12/2024",
+      "documental_decisao_mesmo_sentido_lista_texto": null,
+      "documental_decisao_mesmo_sentido_lista_html": null,
+      "documental_decisao_mesmo_sentido_is_secundario": false,
+      "documental_legislacao_citada_texto": [
+       "LEG-FED   CF ANO-1988\n    ART-00005 PAR-00002 PAR-00003\n    CF-1988 CONSTITUIÇÃO FEDERAL\n\n",
+       "LEG-FED   DEL-005452 ANO-1943\n    ART-00002 ART-00003 ART-00009 ART-00029\n    ART-00041\n    CLT-1943 CONSOLIDAÇÃO DAS LEIS DO TRABALHO\n\n",
+       "LEG-FED   DEC-009571 ANO-2018\n    ART-00002 ART-00003 INC-00011 ART-00005\n    ART-00007 ART-00014 ART-00015\n    DECRETO"
+      ],
+      "documental_indexacao_texto": null,
+      "documental_observacao_html": "17/01/2025\nLegislação feita por: (MVA).",
+      "documental_observacao_texto": "17/01/2025\nLegislação feita por: (MVA).",
+      "documental_doutrina_texto": null,
+      "externo_seq_objeto_incidente": 6884346,
+      "dg_atualizado_em": "2025-01-17T14:59:16.646980",
+      "ods_onu": []
+     }
+    },
+    {
+     "_index": "jurisprudencia-idx20230518",
+     "_id": "despacho1695084",
+     "_score": 38.158077,
+     "_source": {
+      "base": "decisoes",
+      "id": "despacho1695084",
+      "dg_unique": "despacho1695084",
+      "titulo": "Rcl 84271",
+      "ministro_facet": [
+       "CRISTIANO ZANIN"
+      ],
+      "procedencia_geografica_completo": "RN - RIO GRANDE DO NORTE",
+      "procedencia_geografica_pais_sigla": "BR",
+      "procedencia_geografica_uf_sigla": "RN",
+      "procedencia_geografica_uf_extenso": "Rio Grande do Norte",
+      "processo_codigo_completo": "Rcl 84271",
+      "processo_classe_processual_unificada_extenso": "RECLAMAÇÃO",
+      "processo_classe_processual_unificada_classe_sigla": "Rcl",
+      "processo_classe_processual_unificada_incidente_sigla": null,
+      "processo_numero": 84271,
+      "julgamento_data": "2025-09-11",
+      "publicacao_data": "2025-09-15",
+      "is_decisao_presidencia": false,
+      "relator_processo_nome": "CRISTIANO ZANIN",
+      "presidente_nome": null,
+      "relator_decisao_nome": null,
+      "decisao_texto": "Trata-se de reclamação, com pedido de liminar, proposta por Botoesthetic Natal Serviços Estéticos Ltda. e outros contra decisão da 9ª Vara do Trabalho de Natal/RN no Processo 0000688-51.2025.5.21.0009, para garantir a observância da tese fixada pelo Supremo Tribunal Federal no julgamento do Recurso ",
+      "partes_lista_texto": "RECLTE.(S)          : BOTOESTHETIC NATAL SERVICOS ESTETICOS LTDA E OUTRO(A/S)\r\nADV.(A/S)           : LANDOALDO FALCAO DE SOUSA NETO\r\nADV.(A/S)           : LARISSA DE ARRUDA SOUSA PINTO\r\nRECLDO.(A/S)        : JUÍZA DO TRABALHO DA 9ª VARA DO TRABALHO DE NATAL\r\nADV.(A/S)           : SEM REPRESENTAÇÃO N",
+      "inteiro_teor_url": "http://portal.stf.jus.br/processos/downloadPeca.asp?id=15380162262&ext=.pdf",
+      "acompanhamento_processual_url": "https://portal.stf.jus.br/processos/listarProcessos.asp?numeroProcesso=84271&classe=Rcl",
+      "dje_url": "https://portal.stf.jus.br/servicos/dje/listarDiarioJustica.asp?tipoPesquisaDJ=AP&numero=84271&classe=Rcl",
+      "documental_publicacao_lista_texto": "PROCESSO ELETRÔNICO\r\nDJe-s/n DIVULG 12/09/2025 PUBLIC 15/09/2025",
+      "documental_decisao_mesmo_sentido_lista_texto": null,
+      "documental_decisao_mesmo_sentido_lista_html": null,
+      "documental_decisao_mesmo_sentido_is_secundario": false,
+      "documental_legislacao_citada_texto": [
+       "LEG-FED   LEI-013105 ANO-2015\n    ART-00992\n    CPC-2015 CÓDIGO DE PROCESSO CIVIL\n\n",
+       "LEG-FED   RGI ANO-1980\n    ART-00052 PAR-ÚNICO ART-00161 PAR-ÚNICO\n    RISTF-1980 REGIMENTO INTERNO DO SUPREMO TRIBUNAL FEDERAL"
+      ],
+      "documental_indexacao_texto": null,
+      "documental_observacao_html": "25/09/2025\nLegislação feita por: (PHO).",
+      "documental_observacao_texto": "25/09/2025\nLegislação feita por: (PHO).",
+      "documental_doutrina_texto": null,
+      "externo_seq_objeto_incidente": 7364251,
+      "dg_atualizado_em": "2025-09-25T16:00:08.218297",
+      "ods_onu": []
+     }
+    },
+    {
+     "_index": "jurisprudencia-idx20230518",
+     "_id": "despacho1477589",
+     "_score": 37.936638,
+     "_source": {
+      "base": "decisoes",
+      "id": "despacho1477589",
+      "dg_unique": "despacho1477589",
+      "titulo": "Rcl 63941",
+      "ministro_facet": [
+       "LUIZ FUX"
+      ],
+      "procedencia_geografica_completo": "ES - ESPÍRITO SANTO",
+      "procedencia_geografica_pais_sigla": "BR",
+      "procedencia_geografica_uf_sigla": "ES",
+      "procedencia_geografica_uf_extenso": "Espírito Santo",
+      "processo_codigo_completo": "Rcl 63941",
+      "processo_classe_processual_unificada_extenso": "RECLAMAÇÃO",
+      "processo_classe_processual_unificada_classe_sigla": "Rcl",
+      "processo_classe_processual_unificada_incidente_sigla": null,
+      "processo_numero": 63941,
+      "julgamento_data": "2023-12-07",
+      "publicacao_data": "2023-12-11",
+      "is_decisao_presidencia": false,
+      "relator_processo_nome": "LUIZ FUX",
+      "presidente_nome": null,
+      "relator_decisao_nome": null,
+      "decisao_texto": "RECLAMAÇÃO. DIREITO DO TRABALHO. TERCEIRIZAÇÃO DE SERVIÇOS PARA CONSECUÇÃO DE ATIVIDADE-FIM. ALEGAÇÃO DE AFRONTA À AUTORIDADE DA DECISÃO PROFERIDA POR ESTA SUPREMA CORTE NA ARGUIÇÃO DE DESCUMPRIMENTO DE PRECEITO FUNDAMENTAL 324. OCORRÊNCIA. PRECEDENTES. RECLAMAÇÃO QUE SE JULGA PROCEDENTE.  \n\n\n\n    D",
+      "partes_lista_texto": "RECLTE.(S)          : VITORIA APART HOSPITAL S/A\r\nADV.(A/S)           : WILSON GONDIM CAVALCANTI FILHO\r\nRECLDO.(A/S)        : TRIBUNAL REGIONAL DO TRABALHO DA 17ª REGIÃO\r\nADV.(A/S)           : SEM REPRESENTAÇÃO NOS AUTOS\r\nBENEF.(A/S)         : PAULO EUGENIO BRINGUENTE FILHO\r\nADV.(A/S)           : JO",
+      "inteiro_teor_url": "http://portal.stf.jus.br/processos/downloadPeca.asp?id=15363541402&ext=.pdf",
+      "acompanhamento_processual_url": "https://portal.stf.jus.br/processos/listarProcessos.asp?numeroProcesso=63941&classe=Rcl",
+      "dje_url": "https://portal.stf.jus.br/servicos/dje/listarDiarioJustica.asp?tipoPesquisaDJ=AP&numero=63941&classe=Rcl",
+      "documental_publicacao_lista_texto": "PROCESSO ELETRÔNICO\r\nDJe-s/n DIVULG 07/12/2023 PUBLIC 11/12/2023",
+      "documental_decisao_mesmo_sentido_lista_texto": "Rcl 64425 PROCESSO ELETRÔNICO\n      JULG-27/02/2024 UF-SP MIN-LUIZ FUX\n      DJe-s/n DIVULG 27/02/2024 PUBLIC 28/02/2024",
+      "documental_decisao_mesmo_sentido_lista_html": "<a onclick=\"openPopup('http://portal.stf.jus.br/processos/downloadPeca.asp?id=15364830660&ext=.pdf')\" class=\"urls\">Rcl 64425</a> PROCESSO ELETRÔNICO\n      JULG-27/02/2024 UF-SP MIN-LUIZ FUX\n      DJe-s/n DIVULG 27/02/2024 PUBLIC 28/02/2024",
+      "documental_decisao_mesmo_sentido_is_secundario": false,
+      "documental_legislacao_citada_texto": [
+       "LEG-FED   CF ANO-1988\n    ART-00001 INC-00004 ART-00007 ART-00102\n    LET-L INC-00001 ART-00170\n    CF-1988 CONSTITUIÇÃO FEDERAL\n\n",
+       "LEG-FED   LEI-011442 ANO-2007\n    LEI ORDINÁRIA\n\n",
+       "LEG-FED   LEI-013105 ANO-2015\n    ART-00988 INC-00001 INC-00002 INC-00003\n    INC-00004 PAR-00005 INC-00001 INC-00002\n    CPC-2015 CÓDIGO DE PROCESSO CIVIL\n\n",
+       "LEG-FED   RGI ANO-1980\n    ART-00052 PAR-ÚNICO\n    RISTF-1980 REGIMENTO INTERNO DO SUPREMO TRIBUNAL FEDERAL"
+      ],
+      "documental_indexacao_texto": null,
+      "documental_observacao_html": "26/01/2024\nLegislação feita por:(AKS)",
+      "documental_observacao_texto": "26/01/2024\nLegislação feita por:(AKS)",
+      "documental_doutrina_texto": null,
+      "externo_seq_objeto_incidente": 6795510,
+      "dg_atualizado_em": "2026-08-03T17:58:49.838723",
+      "ods_onu": []
+     }
+    },
+    {
+     "_index": "jurisprudencia-idx20230518",
+     "_id": "despacho1654395",
+     "_score": 37.856747,
+     "_source": {
+      "base": "decisoes",
+      "id": "despacho1654395",
+      "dg_unique": "despacho1654395",
+      "titulo": "Rcl 79478",
+      "ministro_facet": [
+       "CRISTIANO ZANIN"
+      ],
+      "procedencia_geografica_completo": "PA - PARÁ",
+      "procedencia_geografica_pais_sigla": "BR",
+      "procedencia_geografica_uf_sigla": "PA",
+      "procedencia_geografica_uf_extenso": "Pará",
+      "processo_codigo_completo": "Rcl 79478",
+      "processo_classe_processual_unificada_extenso": "RECLAMAÇÃO",
+      "processo_classe_processual_unificada_classe_sigla": "Rcl",
+      "processo_classe_processual_unificada_incidente_sigla": null,
+      "processo_numero": 79478,
+      "julgamento_data": "2025-05-19",
+      "publicacao_data": "2025-05-20",
+      "is_decisao_presidencia": false,
+      "relator_processo_nome": "CRISTIANO ZANIN",
+      "presidente_nome": null,
+      "relator_decisao_nome": null,
+      "decisao_texto": "Trata-se de reclamação, com pedido de liminar, proposta por A Ribeiro de Almeida Logística Ltda., contra decisão do Juízo da 1ª Vara do Trabalho de Marabá/PA no Processo 0000154-04.2024.5.08.0107, para garantir a observância da tese fixada pelo Supremo Tribunal Federal no julgamento do Recurso Extra",
+      "partes_lista_texto": "RECLTE.(S)          : A RIBEIRO DE ALMEIDA LOGISTICA LTDA\r\nADV.(A/S)           : CIRO RAFAEL SANTOS LINDOSO\r\nRECLDO.(A/S)        : JUIZ DO TRABALHO DA 1ª VARA DO TRABALHO DE MARABÁ\r\nADV.(A/S)           : SEM REPRESENTAÇÃO NOS AUTOS\r\nBENEF.(A/S)         : EUCLEBIO LIMA CARDOSO\r\nADV.(A/S)           : ",
+      "inteiro_teor_url": "http://portal.stf.jus.br/processos/downloadPeca.asp?id=15376885074&ext=.pdf",
+      "acompanhamento_processual_url": "https://portal.stf.jus.br/processos/listarProcessos.asp?numeroProcesso=79478&classe=Rcl",
+      "dje_url": "https://portal.stf.jus.br/servicos/dje/listarDiarioJustica.asp?tipoPesquisaDJ=AP&numero=79478&classe=Rcl",
+      "documental_publicacao_lista_texto": "PROCESSO ELETRÔNICO\r\nDJe-s/n DIVULG 19/05/2025 PUBLIC 20/05/2025",
+      "documental_decisao_mesmo_sentido_lista_texto": null,
+      "documental_decisao_mesmo_sentido_lista_html": null,
+      "documental_decisao_mesmo_sentido_is_secundario": false,
+      "documental_legislacao_citada_texto": [
+       "LEG-FED   CF ANO-1988\n    ART-00005 INC-00078\n    CF-1988 CONSTITUIÇÃO FEDERAL\n\n",
+       "LEG-FED   LEI-013105 ANO-2015\n    ART-00992\n    CPC-2015 CÓDIGO DE PROCESSO CIVIL\n\n",
+       "LEG-FED   RGI ANO-1980\n    ART-00052 PAR-ÚNICO ART-00161 PAR-ÚNICO\n    RISTF-1980 REGIMENTO INTERNO DO SUPREMO TRIBUNAL FEDERAL"
+      ],
+      "documental_indexacao_texto": null,
+      "documental_observacao_html": "30/05/2025\nLegislação feita por:(KAR).",
+      "documental_observacao_texto": "30/05/2025\nLegislação feita por:(KAR).",
+      "documental_doutrina_texto": null,
+      "externo_seq_objeto_incidente": 7256894,
+      "dg_atualizado_em": "2025-05-30T15:00:15.152676",
+      "ods_onu": []
+     }
+    }
+   ]
+  },
+  "aggregations": {
+   "processo_classe_processual_unificada_classe_sigla_agg": {
+    "doc_count": 3421,
+    "processo_classe_processual_unificada_classe_sigla_agg": {
+     "doc_count_error_upper_bound": 0,
+     "sum_other_doc_count": 0,
+     "buckets": [
+      {
+       "key": "Rcl",
+       "doc_count": 3369
+      },
+      {
+       "key": "ARE",
+       "doc_count": 19
+      },
+      {
+       "key": "AR",
+       "doc_count": 16
+      },
+      {
+       "key": "Pet",
+       "doc_count": 8
+      },
+      {
+       "key": "MS",
+       "doc_count": 5
+      },
+      {
+       "key": "RE",
+       "doc_count": 4
+      }
+     ]
+    }
+   },
+   "orgao_julgador_agg": {
+    "doc_count": 3369,
+    "orgao_julgador_agg": {
+     "doc_count_error_upper_bound": 0,
+     "sum_other_doc_count": 0,
+     "buckets": []
+    }
+   },
+   "procedencia_geografica_uf_sigla_agg": {
+    "doc_count": 3369,
+    "procedencia_geografica_uf_sigla_agg": {
+     "doc_count_error_upper_bound": 0,
+     "sum_other_doc_count": 0,
+     "buckets": [
+      {
+       "key": "SP",
+       "doc_count": 1298
+      },
+      {
+       "key": "RJ",
+       "doc_count": 400
+      },
+      {
+       "key": "MG",
+       "doc_count": 325
+      },
+      {
+       "key": "RS",
+       "doc_count": 313
+      },
+      {
+       "key": "BA",
+       "doc_count": 175
+      },
+      {
+       "key": "PR",
+       "doc_count": 163
+      },
+      {
+       "key": "DF",
+       "doc_count": 107
+      },
+      {
+       "key": "GO",
+       "doc_count": 105
+      },
+      {
+       "key": "ES",
+       "doc_count": 84
+      },
+      {
+       "key": "CE",
+       "doc_count": 71
+      },
+      {
+       "key": "PE",
+       "doc_count": 55
+      },
+      {
+       "key": "SC",
+       "doc_count": 55
+      },
+      {
+       "key": "PB",
+       "doc_count": 37
+      },
+      {
+       "key": "PA",
+       "doc_count": 34
+      },
+      {
+       "key": "AM",
+       "doc_count": 23
+      },
+      {
+       "key": "PI",
+       "doc_count": 20
+      },
+      {
+       "key": "RN",
+       "doc_count": 19
+      },
+      {
+       "key": "MS",
+       "doc_count": 18
+      },
+      {
+       "key": "MA",
+       "doc_count": 16
+      },
+      {
+       "key": "MT",
+       "doc_count": 16
+      },
+      {
+       "key": "AL",
+       "doc_count": 11
+      },
+      {
+       "key": "RO",
+       "doc_count": 8
+      },
+      {
+       "key": "SE",
+       "doc_count": 6
+      },
+      {
+       "key": "AP",
+       "doc_count": 4
+      },
+      {
+       "key": "AC",
+       "doc_count": 3
+      },
+      {
+       "key": "TO",
+       "doc_count": 3
+      }
+     ]
+    }
+   },
+   "is_decisao_presidencia_agg": {
+    "buckets": {
+     "false": {
+      "doc_count": 3416
+     },
+     "true": {
+      "doc_count": 5
+     }
+    }
+   },
+   "base_agg": {
+    "buckets": {
+     "acordaos": {
+      "doc_count": 438
+     },
+     "decisoes": {
+      "doc_count": 3421
+     },
+     "informativos": {
+      "doc_count": 0
+     },
+     "sumulas": {
+      "doc_count": 0
+     }
+    }
+   },
+   "ministro_facet_agg": {
+    "doc_count": 3369,
+    "ministro_facet_agg": {
+     "doc_count_error_upper_bound": 0,
+     "sum_other_doc_count": 0,
+     "buckets": [
+      {
+       "key": "ANDRÉ MENDONÇA",
+       "doc_count": 558
+      },
+      {
+       "key": "CRISTIANO ZANIN",
+       "doc_count": 504
+      },
+      {
+       "key": "DIAS TOFFOLI",
+       "doc_count": 452
+      },
+      {
+       "key": "CÁRMEN LÚCIA",
+       "doc_count": 432
+      },
+      {
+       "key": "ALEXANDRE DE MORAES",
+       "doc_count": 339
+      },
+      {
+       "key": "GILMAR MENDES",
+       "doc_count": 320
+      },
+      {
+       "key": "LUIZ FUX",
+       "doc_count": 206
+      },
+      {
+       "key": "FLÁVIO DINO",
+       "doc_count": 204
+      },
+      {
+       "key": "EDSON FACHIN",
+       "doc_count": 171
+      },
+      {
+       "key": "NUNES MARQUES",
+       "doc_count": 155
+      },
+      {
+       "key": "LUÍS ROBERTO BARROSO",
+       "doc_count": 23
+      },
+      {
+       "key": "RICARDO LEWANDOWSKI",
+       "doc_count": 7
+      },
+      {
+       "key": "ROSA WEBER",
+       "doc_count": 3
+      }
+     ]
+    }
+   }
+  }
+ },
+ "search_id": 1
+}

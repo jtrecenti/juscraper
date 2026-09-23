@@ -1,0 +1,47 @@
+---
+title: "STF collection and checkpoints"
+---
+
+`STFScraper.listar_decisoes` returns a pandas DataFrame with one row per document. It preserves the existing source columns and converts `data_julgamento` and `data_publicacao` to dates. `paginas=None` collects the entire query or raises an exception; it no longer warns and returns only the first 10,000 documents.
+
+## Collect and resume
+
+```{python}
+#| eval: false
+from pathlib import Path
+import juscraper as jus
+
+stf = jus.scraper("stf")
+checkpoint = Path("stf-checkpoint")
+filters = {
+    "classe": "Rcl",
+    "data_publicacao_fim": "2023-08-20",
+    "tamanho_pagina": 250,
+}
+df = stf.listar_decisoes("pejotização", checkpoint_dir=checkpoint, **filters)
+
+# After an interruption, repeat the same query and filters explicitly.
+df = stf.listar_decisoes(
+    "pejotização", checkpoint_dir=checkpoint, resume=True, **filters
+)
+```
+
+Without `checkpoint_dir`, collection keeps parsed rows in memory and writes no checkpoint files. With a checkpoint, it writes each parsed page before atomically advancing `manifest.json`, flushes files and directory entries with `fsync`, and checks page checksums before resuming. The final DataFrame still requires enough RAM for all returned rows. Checkpoint locking currently requires a POSIX filesystem and `fcntl`; use a local directory, not a shared network mount whose locking or durability semantics differ.
+
+A new collection refuses an occupied directory. `resume=True` requires an existing compatible checkpoint, including the translated query, normalized filters, page selection, page size, ordering and collection contract. Validation runs before any request or WAF token acquisition. Checkpoints contain document data and query metadata, not request headers, cookies or WAF tokens. Protect these local files according to the sensitivity of the documents.
+
+An interrupted window restarts at page 1 with a new attempt. Files from the abandoned attempt, including pages written just before a crash, remain on disk, but only the completed attempt contributes rows. Completed windows retain their original observation times and are not downloaded again. A fully completed checkpoint returns its saved rows without refreshing the remote source. Use a new directory for a fresh observation.
+
+## Queries above the API ceiling
+
+The API allows at most 10,000 records per query and 250 per page. For an integral collection, the scraper recursively bisects date windows until each fits the ceiling. Publication dates take precedence when a publication filter exists; otherwise the scraper uses judgment dates. The windows cover disjoint inclusive calendar-day ranges and retain the other filters. A single day above the ceiling raises `ValueError` instead of returning a partial result.
+
+Open-ended date filters remain open: the scraper does not insert 1990 or the current date. When an open interval needs partitioning, a filtered aggregation discovers its minimum and maximum dates and counts documents missing that date. The scraper collects this residual separately if it fits the ceiling; a larger residual raises `ValueError`. An invalid or unsupported aggregation response also raises an exception.
+
+Explicit pages, such as `paginas=[2, 4]`, keep their original offsets and do not trigger date partitioning. A page starting beyond record 10,000 fails before requests. A last page crossing the ceiling is shortened to the remaining records, including when the page size does not divide 10,000.
+
+## What the checks establish
+
+Every window requires an exact total (`relation="eq"`), the expected number of received rows, and unique document identities `(base, id)`. Process numbers are not document identifiers. The scraper compares counts before and after each window and checks parent totals against completed children. It rejects missing or duplicated IDs, inconsistent counts and incomplete pages. Integral collection (`paginas=None`) sorts only by the keyword field `id`: with a text query, the relevance score varies between index replicas, so a score-based order changes from one page request to the next and pagination repeats or skips documents. Explicit pages keep the portal's order, score followed by `id`. Integral collection still freezes the score's reference time and persists it for resumption, so the payload stays identical across resumed windows.
+
+These checks do not establish a snapshot. Documents may be replaced or edited without changing the total, including between page requests. A resumed collection may combine windows observed at different times. The manifest records those observations; it does not certify that the index stayed unchanged. No PIT or `search_after` support is assumed.

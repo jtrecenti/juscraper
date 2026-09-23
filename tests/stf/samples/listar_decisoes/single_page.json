@@ -1,0 +1,206 @@
+{
+ "result": {
+  "took": 35,
+  "timed_out": false,
+  "_shards": {
+   "total": 5,
+   "successful": 5,
+   "skipped": 0,
+   "failed": 0
+  },
+  "hits": {
+   "total": {
+    "value": 2,
+    "relation": "eq"
+   },
+   "max_score": 25.5505,
+   "hits": [
+    {
+     "_index": "jurisprudencia-idx20230518",
+     "_id": "despacho1089541",
+     "_score": 25.5505,
+     "_source": {
+      "base": "decisoes",
+      "id": "despacho1089541",
+      "dg_unique": "despacho1089541",
+      "titulo": "Rcl 38942",
+      "ministro_facet": [
+       "RICARDO LEWANDOWSKI"
+      ],
+      "procedencia_geografica_completo": "SP - SÃO PAULO",
+      "procedencia_geografica_pais_sigla": "BR",
+      "procedencia_geografica_uf_sigla": "SP",
+      "procedencia_geografica_uf_extenso": "São Paulo",
+      "processo_codigo_completo": "Rcl 38942",
+      "processo_classe_processual_unificada_extenso": "RECLAMAÇÃO",
+      "processo_classe_processual_unificada_classe_sigla": "Rcl",
+      "processo_classe_processual_unificada_incidente_sigla": null,
+      "processo_numero": 38942,
+      "julgamento_data": "2020-02-19",
+      "publicacao_data": "2020-02-26",
+      "is_decisao_presidencia": false,
+      "relator_processo_nome": "RICARDO LEWANDOWSKI",
+      "presidente_nome": null,
+      "relator_decisao_nome": null,
+      "decisao_texto": "Trata-se de reclamação com pedido liminar proposta por Fleury S/A, contra decisão proferida pela 3ª Turma do Tribunal Superior do Trabalho nos autos da Ação Civil Pública 10287-83.2013.5.01.0011, que teria afrontado a autoridade desta Suprema Corte no julgamento da ADPF 324/DF e no RE 958.252/MG.\r\n ",
+      "partes_lista_texto": "RECLTE.(S)          : FLEURY S.A.\r\nADV.(A/S)           : CARLA TERESA MARTINS ROMAR\r\nRECLDO.(A/S)        : TRIBUNAL SUPERIOR DO TRABALHO\r\nADV.(A/S)           : SEM REPRESENTAÇÃO NOS AUTOS\r\nINTDO.(A/S)         : MINISTÉRIO PÚBLICO DO TRABALHO\r\nPROC.(A/S)(ES)      : PROCURADOR-GERAL DA REPÚBLICA",
+      "inteiro_teor_url": "http://portal.stf.jus.br/processos/downloadPeca.asp?id=15342448628&ext=.pdf",
+      "acompanhamento_processual_url": "https://portal.stf.jus.br/processos/listarProcessos.asp?numeroProcesso=38942&classe=Rcl",
+      "dje_url": "https://portal.stf.jus.br/servicos/dje/listarDiarioJustica.asp?tipoPesquisaDJ=AP&numero=38942&classe=Rcl",
+      "documental_publicacao_lista_texto": "PROCESSO ELETRÔNICO\r\nDJe-039 DIVULG 21/02/2020 PUBLIC 26/02/2020",
+      "documental_decisao_mesmo_sentido_lista_texto": null,
+      "documental_decisao_mesmo_sentido_lista_html": null,
+      "documental_decisao_mesmo_sentido_is_secundario": false,
+      "documental_legislacao_citada_texto": [
+       "LEG-FED   DEL-005452       ANO-1943\r\n          ART-00003   \r\n          CLT-1943 CONSOLIDAÇÃO DAS LEIS DO TRABALHO\r\n",
+       "LEG-FED   LEI-013105       ANO-2015\r\n          ART-00988 ART-00989 INC-00002 \r\n          CPC-2015 CÓDIGO DE PROCESSO CIVIL\r\n",
+       "LEG-FED   LEI-008212       ANO-1991\r\n          LEI ORDINÁRIA\r\n",
+       "LEG-FED   LEI-013429       ANO-2017\r\n          LEI ORDINÁRIA\r\n",
+       "LEG-FED   LEI-013467       ANO-2017\r\n          LEI ORDINÁRIA\r\n",
+       "LEG-FED   RGI       ANO-1980\r\n          ART-00158 ART-00162  \r\n          RISTF-1980 REGIMENTO INTERNO DO SUPREMO TRIBUNAL FEDERAL\r\n",
+       "LEG-FED   SUMTST-000331\r\n          SÚMULA DO TRIBUNAL SUPERIOR DO TRABALHO - TST"
+      ],
+      "documental_indexacao_texto": null,
+      "documental_observacao_html": "10/11/2020\t\t\t\r\nLegislação feita por:(JMP).",
+      "documental_observacao_texto": "10/11/2020\t\t\t\r\nLegislação feita por:(JMP).",
+      "documental_doutrina_texto": null,
+      "externo_seq_objeto_incidente": 5847162,
+      "dg_atualizado_em": "2023-06-01T15:40:22.595722",
+      "ods_onu": []
+     }
+    },
+    {
+     "_index": "jurisprudencia-idx20230518",
+     "_id": "despacho1130787",
+     "_score": 25.009937,
+     "_source": {
+      "base": "decisoes",
+      "id": "despacho1130787",
+      "dg_unique": "despacho1130787",
+      "titulo": "Rcl 42666",
+      "ministro_facet": [
+       "RICARDO LEWANDOWSKI"
+      ],
+      "procedencia_geografica_completo": "MG - MINAS GERAIS",
+      "procedencia_geografica_pais_sigla": "BR",
+      "procedencia_geografica_uf_sigla": "MG",
+      "procedencia_geografica_uf_extenso": "Minas Gerais",
+      "processo_codigo_completo": "Rcl 42666",
+      "processo_classe_processual_unificada_extenso": "RECLAMAÇÃO",
+      "processo_classe_processual_unificada_classe_sigla": "Rcl",
+      "processo_classe_processual_unificada_incidente_sigla": null,
+      "processo_numero": 42666,
+      "julgamento_data": "2020-08-26",
+      "publicacao_data": "2020-08-31",
+      "is_decisao_presidencia": false,
+      "relator_processo_nome": "RICARDO LEWANDOWSKI",
+      "presidente_nome": null,
+      "relator_decisao_nome": null,
+      "decisao_texto": "Trata-se de reclamação proposta por Kyros Tecnologia Ltda. contra decisão administrativa proferida pela Procuradoria Seccional da Fazenda Nacional em Uberlândia - MG, na qual se alega suposta inobservância de decisão do Supremo Tribunal Federal em controle concentrado de constitucionalidade, proferi",
+      "partes_lista_texto": "RECLTE.(S)          : KYROS TECNOLOGIA LTDA\r\nADV.(A/S)           : IGOR ALEXANDER MIRANDA CARVALHAES\r\nRECLDO.(A/S)        : PROCURADOR DA FAZENDA NACIONAL EM UBERLÂNDIA\r\nADV.(A/S)           : SEM REPRESENTAÇÃO NOS AUTOS\r\nBENEF.(A/S)         : NÃO INDICADO",
+      "inteiro_teor_url": "http://portal.stf.jus.br/processos/downloadPeca.asp?id=15344214192&ext=.pdf",
+      "acompanhamento_processual_url": "https://portal.stf.jus.br/processos/listarProcessos.asp?numeroProcesso=42666&classe=Rcl",
+      "dje_url": "http://stf.jus.br/portal/diarioJustica/listarDiarioJustica.asp?tipoPesquisaDJ=AP&numero=42666&classe=Rcl",
+      "documental_publicacao_lista_texto": "PROCESSO ELETRÔNICO\r\nDJe-216 DIVULG 28/08/2020 PUBLIC 31/08/2020",
+      "documental_decisao_mesmo_sentido_lista_texto": null,
+      "documental_decisao_mesmo_sentido_lista_html": null,
+      "documental_decisao_mesmo_sentido_is_secundario": false,
+      "documental_legislacao_citada_texto": [
+       "LEG-FED   LEI-006019       ANO-1974\r\n          ART-00027   \r\n          LEI ORDINÁRIA\r\n",
+       "LEG-FED   LEI-009882       ANO-1999\r\n          ART-00011   \r\n          LEI ORDINÁRIA\r\n",
+       "LEG-FED   RGI       ANO-1980\r\n          ART-00021 PAR-00001 ART-00052 PAR-ÚNICO\r\n          ART-00161 PAR-ÚNICO  \r\n          RISTF-1980 REGIMENTO INTERNO DO SUPREMO TRIBUNAL FEDERAL\r\n",
+       "LEG-FED   SUMTST-000331\r\n          SÚMULA DO TRIBUNAL SUPERIOR DO TRABALHO - TST"
+      ],
+      "documental_indexacao_texto": null,
+      "documental_observacao_html": "31/01/2021\r\nLegislação feita por:(WRQ).",
+      "documental_observacao_texto": "31/01/2021\r\nLegislação feita por:(WRQ).",
+      "documental_doutrina_texto": null,
+      "externo_seq_objeto_incidente": 5977692,
+      "dg_atualizado_em": "2022-09-16T10:56:11.456906",
+      "ods_onu": []
+     }
+    }
+   ]
+  },
+  "aggregations": {
+   "processo_classe_processual_unificada_classe_sigla_agg": {
+    "doc_count": 2,
+    "processo_classe_processual_unificada_classe_sigla_agg": {
+     "doc_count_error_upper_bound": 0,
+     "sum_other_doc_count": 0,
+     "buckets": [
+      {
+       "key": "Rcl",
+       "doc_count": 2
+      }
+     ]
+    }
+   },
+   "orgao_julgador_agg": {
+    "doc_count": 2,
+    "orgao_julgador_agg": {
+     "doc_count_error_upper_bound": 0,
+     "sum_other_doc_count": 0,
+     "buckets": []
+    }
+   },
+   "procedencia_geografica_uf_sigla_agg": {
+    "doc_count": 2,
+    "procedencia_geografica_uf_sigla_agg": {
+     "doc_count_error_upper_bound": 0,
+     "sum_other_doc_count": 0,
+     "buckets": [
+      {
+       "key": "MG",
+       "doc_count": 1
+      },
+      {
+       "key": "SP",
+       "doc_count": 1
+      }
+     ]
+    }
+   },
+   "is_decisao_presidencia_agg": {
+    "buckets": {
+     "false": {
+      "doc_count": 2
+     },
+     "true": {
+      "doc_count": 0
+     }
+    }
+   },
+   "base_agg": {
+    "buckets": {
+     "acordaos": {
+      "doc_count": 1
+     },
+     "decisoes": {
+      "doc_count": 2
+     },
+     "informativos": {
+      "doc_count": 0
+     },
+     "sumulas": {
+      "doc_count": 0
+     }
+    }
+   },
+   "ministro_facet_agg": {
+    "doc_count": 2,
+    "ministro_facet_agg": {
+     "doc_count_error_upper_bound": 0,
+     "sum_other_doc_count": 0,
+     "buckets": [
+      {
+       "key": "RICARDO LEWANDOWSKI",
+       "doc_count": 2
+      }
+     ]
+    }
+   }
+  }
+ },
+ "search_id": 1
+}
