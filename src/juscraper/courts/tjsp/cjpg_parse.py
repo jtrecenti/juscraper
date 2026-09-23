@@ -11,6 +11,7 @@ from tqdm import tqdm
 
 from juscraper.courts._esaj.parse import (
     _extract_pagination_count,
+    _find_page_summary_cell,
     _has_zero_results,
     _raise_initial_form_error,
     _raise_page_error,
@@ -22,8 +23,13 @@ _CJPG_PAGE_SIZE = 10
 
 
 def _find_cjpg_pagination_element(soup: BeautifulSoup) -> Tag | None:
-    # A ordem faz parte do contrato legado do CJPG e difere dos seletores
-    # compartilhados pelo CJSG. Ver issue #307.
+    # A cascata do CJPG difere da que o CJSG usa em
+    # ``_esaj.parse._find_pagination_element``. Aqui qualquer ``td`` com
+    # "resultado" vence, sem o limite de 400 caracteres, antes de ``bgcolor``,
+    # e ``bgcolor`` vale em qualquer tag. O CJSG exige "resultados" em célula
+    # curta e ainda tenta ``td`` com classe "pag". A ordem faz parte do
+    # contrato legado do CJPG: unificar as duas mudaria qual célula é lida
+    # em páginas que casam com mais de um seletor.
     for cell in soup.find_all("td"):
         if "resultado" in cell.get_text().lower():
             return cell
@@ -32,11 +38,7 @@ def _find_cjpg_pagination_element(soup: BeautifulSoup) -> Tag | None:
     if legacy_element is not None:
         return legacy_element
 
-    for cell in soup.find_all("td"):
-        text = cell.get_text().lower()
-        if "página" in text and ("de" in text or "total" in text):
-            return cell
-    return None
+    return _find_page_summary_cell(soup)
 
 
 def _count_cjpg_result_rows_or_raise(soup: BeautifulSoup) -> int:
