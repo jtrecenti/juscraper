@@ -82,6 +82,9 @@ dados.head()
 
 ### Notebooks de Exemplo
 
+> [!WARNING]
+> **Ambiente de execução:** estes notebooks fazem requisições reais a serviços externos e não têm compatibilidade garantida com o Google Colab. Tribunais podem bloquear ou limitar IPs compartilhados de provedores de nuvem e datacenters, mesmo quando a mesma consulta funciona em uma conexão local. Alguns exemplos também dependem de CAPTCHA, tokens de acesso ou dependências opcionais. A execução local no Jupyter é o ambiente de referência do projeto; uma falha de conexão no Colab não indica, por si só, uma regressão do `juscraper`.
+
 - [Exemplo TJSP](docs/notebooks/tjsp.ipynb)
 - [Exemplo TJRS](docs/notebooks/tjrs.ipynb)
 - [Exemplo TJPR](docs/notebooks/tjpr.ipynb)

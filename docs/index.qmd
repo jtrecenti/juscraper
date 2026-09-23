@@ -95,6 +95,12 @@ O método `.cjsg()` recebe como *input* parâmetros de busca de jurisprudência 
 
 ### Notebooks de Exemplo
 
+::: {.callout-warning}
+## Notebook runtime and Google Colab
+
+These notebooks send live requests to external services and are not guaranteed to work on Google Colab. Courts may block or throttle shared cloud and datacenter IP addresses even when the same request works from a local connection. Some examples also require CAPTCHA handling, access tokens, or optional dependencies. Local Jupyter execution is the project's reference environment; a connection failure on Colab does not, by itself, indicate a `juscraper` regression.
+:::
+
 - [Exemplo TJAC](notebooks/tjac.ipynb)
 - [Exemplo TJAL](notebooks/tjal.ipynb)
 - [Exemplo TJAM](notebooks/tjam.ipynb)
