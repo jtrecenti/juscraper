@@ -12,10 +12,12 @@ from __future__ import annotations
 import logging
 import re
 from pathlib import Path
+from typing import cast
 
 import pandas as pd
 import unidecode
 from bs4 import BeautifulSoup
+from bs4.element import Tag
 from tqdm import tqdm
 
 logger = logging.getLogger("juscraper._esaj.parse")
@@ -31,6 +33,105 @@ _TYPO_FIXES = {
     "data_publicassapso": "data_publicacao",
     "argapso_julgador": "orgao_julgador",
 }
+
+_ERROR_CLASS_RE = re.compile(r"error|erro|mensagem.*erro", re.I)
+_FORM_ID_RE = re.compile(r"form|consulta", re.I)
+_PAGINATION_CLASS_RE = re.compile(r".*pag.*", re.I)
+_RESULT_TABLE_CLASS_RE = re.compile(r"fundocinza|resultado", re.I)
+_PAGINATION_COUNT_PATTERNS = (
+    re.compile(r"\d+$"),
+    re.compile(r"(?<=de )\d+"),
+    re.compile(r"\d+(?=\s*(?:resultado|registro|página))", re.I),
+)
+_FIELD_STAMPS = {
+    "data_publicacao": (
+        "Data de publicação:",
+        "Data de Publicação:",
+        "Data de publicassapso:",
+    ),
+    "orgao_julgador": (
+        "Órgão julgador:",
+        "Orgão julgador:",
+        "argapso julgador:",
+    ),
+}
+
+
+def _raise_page_error(soup: BeautifulSoup) -> None:
+    error_divs = soup.find_all(["div", "span", "p"], class_=_ERROR_CLASS_RE)
+    if not error_divs:
+        return
+
+    error_text = " ".join(elem.get_text().lower() for elem in error_divs[:3])
+    if "captcha" in error_text or "verificação" in error_text:
+        raise ValueError(
+            "Captcha não foi resolvido. A página pode requerer verificação manual."
+        )
+
+    error_msg = " ".join(elem.get_text() for elem in error_divs[:3]).strip()
+    if error_msg:
+        raise ValueError(f"Erro detectado na página: {error_msg[:200]}")
+
+
+def _has_zero_results(soup: BeautifulSoup) -> bool:
+    page_text = soup.get_text().lower()
+    return any(marker in page_text for marker in _ZERO_RESULT_MARKERS)
+
+
+def _find_short_results_cell(soup: BeautifulSoup) -> Tag | None:
+    for cell in soup.find_all("td"):
+        text = cell.get_text()
+        if "resultados" in text.lower() and len(text.strip()) < 400:
+            return cell
+    return None
+
+
+def _find_page_summary_cell(soup: BeautifulSoup) -> Tag | None:
+    for cell in soup.find_all("td"):
+        text = cell.get_text().lower()
+        if "página" in text and ("de" in text or "total" in text):
+            return cell
+    return None
+
+
+def _find_pagination_element(soup: BeautifulSoup) -> Tag | None:
+    return (
+        _find_short_results_cell(soup)
+        or soup.find("td", bgcolor="#EEEEEE")
+        or soup.find("td", class_=_PAGINATION_CLASS_RE)
+        or _find_page_summary_cell(soup)
+    )
+
+
+def _count_result_rows_or_raise(soup: BeautifulSoup) -> int:
+    results_table = soup.find("table", class_=_RESULT_TABLE_CLASS_RE)
+    if results_table is not None:
+        n_rows = len(soup.find_all("tr", class_="fundocinza1"))
+        return max(n_rows, 1)
+
+    if soup.find("form", id=_FORM_ID_RE):
+        raise ValueError(
+            "Ainda na página de consulta. "
+            "O formulário pode não ter sido submetido corretamente."
+        )
+    raise ValueError(
+        "Não foi possível encontrar o seletor de número de páginas "
+        "na resposta HTML. Verifique se a busca retornou resultados "
+        "ou se a estrutura da página mudou."
+    )
+
+
+def _extract_pagination_count(text: str) -> int | None:
+    stripped_text = text.strip()
+    for pattern in _PAGINATION_COUNT_PATTERNS:
+        match = pattern.search(stripped_text)
+        if match is not None:
+            return int(match.group())
+
+    all_numbers = re.findall(r"\d+", text)
+    if all_numbers:
+        return max(int(number) for number in all_numbers)
+    return None
 
 
 def cjsg_n_results(html_source: str) -> int:
@@ -64,85 +165,22 @@ def cjsg_n_results(html_source: str) -> int:
     """
     soup = BeautifulSoup(html_source, "html.parser")
 
-    # eSAJ returns an HTTP 200 page with error divs when the captcha expires
-    # or validation fails. Surface a specific error instead of letting the
-    # cascade below raise a confusing "seletor não encontrado".
-    error_divs = soup.find_all(
-        ["div", "span", "p"], class_=re.compile(r"error|erro|mensagem.*erro", re.I)
-    )
-    if error_divs:
-        error_text = " ".join(elem.get_text().lower() for elem in error_divs[:3])
-        if "captcha" in error_text or "verificação" in error_text:
-            raise ValueError(
-                "Captcha não foi resolvido. A página pode requerer verificação manual."
-            )
-        error_msg = " ".join(elem.get_text() for elem in error_divs[:3]).strip()
-        if error_msg:
-            raise ValueError(f"Erro detectado na página: {error_msg[:200]}")
-
-    page_text = soup.get_text().lower()
-    if any(marker in page_text for marker in _ZERO_RESULT_MARKERS):
+    _raise_page_error(soup)
+    if _has_zero_results(soup):
         return 0
 
-    td_npags = None
-    for td in soup.find_all("td"):
-        td_text = td.get_text()
-        # guard against matching result rows with the 400-char length check
-        if ("Resultados" in td_text or "resultados" in td_text.lower()) and len(td_text.strip()) < 400:
-            td_npags = td
-            break
+    pagination_element = _find_pagination_element(soup)
+    if pagination_element is None:
+        return _count_result_rows_or_raise(soup)
 
-    if td_npags is None:
-        td_npags = soup.find("td", bgcolor="#EEEEEE")
-
-    if td_npags is None:
-        td_npags = soup.find("td", class_=re.compile(r".*pag.*", re.I))
-
-    if td_npags is None:
-        for td in soup.find_all("td"):
-            td_text = td.get_text().lower()
-            if "página" in td_text and ("de" in td_text or "total" in td_text):
-                td_npags = td
-                break
-
-    if td_npags is None:
-        results_table = soup.find("table", class_=re.compile(r"fundocinza|resultado", re.I))
-        if results_table is None:
-            if soup.find("form", id=re.compile(r"form|consulta", re.I)):
-                raise ValueError(
-                    "Ainda na página de consulta. "
-                    "O formulário pode não ter sido submetido corretamente."
-                )
-            raise ValueError(
-                "Não foi possível encontrar o seletor de número de páginas "
-                "na resposta HTML. Verifique se a busca retornou resultados "
-                "ou se a estrutura da página mudou."
-            )
-        # Pagination marker missing but results table present: count the
-        # result rows (eSAJ uses ``tr.fundocinza1`` for each hit). Minimum
-        # of 1 when the table exists but the row class differs.
-        n_rows = len(soup.find_all("tr", class_="fundocinza1"))
-        return max(n_rows, 1)
-
-    txt_pag = td_npags.get_text()
-
-    encontrados = re.findall(r"\d+$", txt_pag.strip())
-    if not encontrados:
-        encontrados = re.findall(r"(?<=de )\d+", txt_pag)
-    if not encontrados:
-        encontrados = re.findall(r"\d+(?=\s*(?:resultado|registro|página))", txt_pag, flags=re.I)
-    if not encontrados:
-        all_nums = re.findall(r"\d+", txt_pag)
-        if all_nums:
-            encontrados = [max(all_nums, key=int)]
-
-    if not encontrados:
+    pagination_text = pagination_element.get_text()
+    count = _extract_pagination_count(pagination_text)
+    if count is None:
         raise ValueError(
             "Não foi possível extrair o número de resultados da paginação. "
-            f"Formato inesperado encontrado. Texto: {txt_pag[:100]}"
+            f"Formato inesperado encontrado. Texto: {pagination_text[:100]}"
         )
-
-    return int(encontrados[0])
+    return count
 
 
 def cjsg_n_pags(html_source: str) -> int:
@@ -174,92 +212,112 @@ def _normalize_key(label: str) -> str:
 
 def _clean_value(value: str) -> str:
     return (
-        value
-        .replace("\xad", "")       # soft hyphen
-        .replace("\u200b", "")    # zero-width space
-        .replace("\u200c", "")    # zero-width non-joiner
-        .replace("\u200d", "")    # zero-width joiner
+        value.replace("\xad", "")  # soft hyphen
+        .replace("\u200b", "")  # zero-width space
+        .replace("\u200c", "")  # zero-width non-joiner
+        .replace("\u200d", "")  # zero-width joiner
     )
 
 
-def _parse_single_page(path: str) -> pd.DataFrame:
-    with Path(path).open("rb") as fp:
-        raw = fp.read()
-
+def _read_html(path: str) -> str:
+    raw = Path(path).read_bytes()
     try:
-        content = raw.decode("utf-8")
+        return raw.decode("utf-8")
     except UnicodeDecodeError:
-        try:
-            content = raw.decode("latin1")
-        except UnicodeDecodeError:
-            content = raw.decode("utf-8", errors="replace")
+        return raw.decode("latin1")
+
+
+def _extract_process_metadata(details_table: Tag, data: dict) -> None:
+    process_link = details_table.find("a", class_="esajLinkLogin downloadEmenta")
+    if process_link is None:
+        return
+
+    data["processo"] = process_link.get_text(strip=True)
+    data["cd_acordao"] = process_link.get("cdacordao")
+    data["cd_foro"] = process_link.get("cdforo")
+
+
+def _extract_ementa(detail_row: Tag) -> str:
+    for div in detail_row.find_all("div", align="justify"):
+        style = str(div.get("style", "display: none;"))
+        if "display: none" not in style:
+            text = cast(str, div.get_text(" ", strip=True))
+            return text.replace("Ementa:", "").strip()
+    text = cast(str, detail_row.get_text(" ", strip=True))
+    return text.replace("Ementa:", "").strip()
+
+
+def _canonicalize_field(key: str, value: str) -> tuple[str, str]:
+    for canonical_key, stamps in _FIELD_STAMPS.items():
+        if canonical_key not in key:
+            continue
+        for stamp in stamps:
+            value = value.replace(stamp, "")
+        return canonical_key, value.strip()
+    return key, value
+
+
+def _extract_labeled_value(detail_row: Tag, label: str) -> tuple[str, str] | None:
+    full_text = detail_row.get_text(" ", strip=True)
+    value = _clean_value(full_text.replace(label, "", 1).strip().lstrip(":").strip())
+    key = _normalize_key(label)
+    if key == "outros_numeros":
+        return None
+    return _canonicalize_field(key, value)
+
+
+def _extract_detail(detail_row: Tag, data: dict) -> None:
+    strong = detail_row.find("strong")
+    if strong is None:
+        return
+
+    label = strong.get_text(strip=True)
+    if "ementa:" in label.lower():
+        data["ementa"] = _extract_ementa(detail_row)
+        return
+
+    labeled_value = _extract_labeled_value(detail_row, label)
+    if labeled_value is not None:
+        key, value = labeled_value
+        data[key] = value
+
+
+def _parse_result_row(result_row: Tag) -> dict | None:
+    cells = result_row.find_all("td")
+    if len(cells) < 2:
+        return None
+
+    details_table = cells[1].find("table")
+    if details_table is None:
+        return None
+
+    data: dict = {"ementa": ""}
+    _extract_process_metadata(details_table, data)
+    for detail_row in details_table.find_all("tr", class_="ementaClass2"):
+        _extract_detail(detail_row, data)
+    return data
+
+
+def _to_dataframe(processes: list[dict]) -> pd.DataFrame:
+    dataframe = pd.DataFrame(processes)
+    if "ementa" not in dataframe.columns:
+        return dataframe
+    columns = [column for column in dataframe.columns if column != "ementa"]
+    return dataframe[[*columns, "ementa"]]
+
+
+def _parse_single_page(path: str) -> pd.DataFrame:
+    content = _read_html(path)
 
     soup = BeautifulSoup(content, "html.parser")
     processos: list[dict] = []
 
-    for tr in soup.find_all("tr", class_="fundocinza1"):
-        tds = tr.find_all("td")
-        if len(tds) < 2:
-            continue
+    for result_row in soup.find_all("tr", class_="fundocinza1"):
+        process = _parse_result_row(result_row)
+        if process is not None:
+            processos.append(process)
 
-        details_table = tds[1].find("table")
-        if not details_table:
-            continue
-
-        dados: dict = {"ementa": ""}
-
-        proc_a = details_table.find("a", class_="esajLinkLogin downloadEmenta")
-        if proc_a:
-            dados["processo"] = proc_a.get_text(strip=True)
-            dados["cd_acordao"] = proc_a.get("cdacordao")
-            dados["cd_foro"] = proc_a.get("cdforo")
-
-        for tr_detail in details_table.find_all("tr", class_="ementaClass2"):
-            strong = tr_detail.find("strong")
-            if not strong:
-                continue
-            label = strong.get_text(strip=True)
-
-            if "ementa:" in label.lower():
-                visible_div = None
-                for div in tr_detail.find_all("div", align="justify"):
-                    style = str(div.get("style", "display: none;"))
-                    if "display: none" not in style:
-                        visible_div = div
-                        break
-                if visible_div:
-                    ementa_text = visible_div.get_text(" ", strip=True)
-                else:
-                    ementa_text = tr_detail.get_text(" ", strip=True)
-                dados["ementa"] = ementa_text.replace("Ementa:", "").strip()
-                continue
-
-            full_text = tr_detail.get_text(" ", strip=True)
-            value = _clean_value(full_text.replace(label, "", 1).strip().lstrip(":").strip())
-
-            key = _normalize_key(label)
-            if key == "outros_numeros":
-                continue
-            if "data_publicacao" in key:
-                key = "data_publicacao"
-                for stamp in ("Data de publicação:", "Data de Publicação:", "Data de publicassapso:"):
-                    value = value.replace(stamp, "")
-                value = value.strip()
-            elif "orgao_julgador" in key:
-                key = "orgao_julgador"
-                for stamp in ("Órgão julgador:", "Orgão julgador:", "argapso julgador:"):
-                    value = value.replace(stamp, "")
-                value = value.strip()
-
-            dados[key] = value
-
-        processos.append(dados)
-
-    df = pd.DataFrame(processos)
-    if "ementa" in df.columns:
-        cols = [c for c in df.columns if c != "ementa"] + ["ementa"]
-        df = df[cols]
-    return df
+    return _to_dataframe(processos)
 
 
 _ARVORE_COLUNAS = ["id", "nome", "id_pai", "nivel", "selecionavel", "caminho"]
