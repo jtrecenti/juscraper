@@ -27,6 +27,15 @@ CNJ_DIGITS = "10001497120248260346"
 
 CPOSG_BASICOS_MIN = {"id_original", "classe", "status"}
 
+# Ordem pública das colunas do cposg HTML. A lista é literal de propósito: se o
+# teste importasse a constante do módulo testado, uma reordenação dela passaria.
+CPOSG_COLUNAS_ORDENADAS = [
+    "id_original", "processo", "status", "classe", "assunto", "secao",
+    "orgao_julgador", "area", "relator", "valor_da_acao", "origem",
+    "volume_apenso", "movimentacoes", "partes", "historico", "decisoes",
+    "composicao", "primeira_inst",
+]
+
 
 # ---------- method='html' -----------------------------------------------
 
@@ -70,6 +79,7 @@ def test_cposg_html_simple_response(tmp_path, mocker):
     assert isinstance(df, pd.DataFrame)
     assert len(df) == 1
     assert set(df.columns) >= CPOSG_BASICOS_MIN
+    assert list(df.columns) == CPOSG_COLUNAS_ORDENADAS
 
 
 # ---------- method='api' ------------------------------------------------
