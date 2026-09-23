@@ -47,25 +47,43 @@ _PAGINATOR_SELECTOR = "ul.pagination"
 _LAST_PAGE_TEXT = "\u00bb"  # », rotulo do link de ultima pagina
 
 
-def _last_page_from_paginator(paginator: Tag) -> int:
-    """Le o ``page=N`` do link ``»`` de um paginador.
+def _page_from_last_link(link: Tag) -> int:
+    """Lê o ``page=N`` do href de um link ``»``; exige N inteiro >= 1.
+
+    ``isdecimal`` e não ``isdigit``: ``isdigit`` aceita dígitos Unicode como
+    ``²``, que ``int()`` recusa com uma mensagem que não diz de onde veio.
+    ``page=0`` passaria no teste de dígito e viraria total 0, e o download
+    pararia na primeira página sem erro.
+    """
+    page = parse_qs(urlparse(str(link["href"])).query).get("page", [""])[0]
+    if not page.isdecimal() or int(page) < 1:
+        raise ValueError(f"TJPI: link de última página sem page=N válido (N >= 1) no href: {link['href']!r}")
+    return int(page)
+
+
+def _last_pages_from_paginator(paginator: Tag) -> set[int]:
+    """Lê os totais dos links ``»`` de um paginador.
 
     O link de ultima pagina nao tem classe, ``rel`` nem ``aria-label``
     proprios: e um ``a.page-link`` como os numerados, e so o rotulo ``»``
     o distingue. A posicao (ultimo ``li``) nao serve, porque sem o ``»`` o
     ultimo item passa a ser o ``›``, que aponta para a pagina seguinte.
+
+    Devolve o conjunto de todos os ``»``, não só o primeiro: dois ``»`` com
+    totais diferentes no mesmo paginador caem na mesma checagem de
+    discordância de ``_get_total_pages``, em vez de o primeiro vencer.
     """
-    for link in paginator.select("a[href]"):
-        if link.get_text(strip=True) != _LAST_PAGE_TEXT:
-            continue
-        page = parse_qs(urlparse(str(link["href"])).query).get("page", [""])[0]
-        if not page.isdigit():
-            raise ValueError(f"TJPI: link de última página sem page=N no href: {link['href']!r}")
-        return int(page)
-    raise ValueError(
-        "TJPI: paginador sem o link de última página (»); "
-        "o total de páginas não pode ser determinado sem estimar."
-    )
+    totals = {
+        _page_from_last_link(link)
+        for link in paginator.select("a[href]")
+        if link.get_text(strip=True) == _LAST_PAGE_TEXT
+    }
+    if not totals:
+        raise ValueError(
+            "TJPI: paginador sem o link de última página (»); "
+            "o total de páginas não pode ser determinado sem estimar."
+        )
+    return totals
 
 
 def _get_total_pages(html: str) -> int:
@@ -85,15 +103,16 @@ def _get_total_pages(html: str) -> int:
     da lista; todos precisam trazer o ``»`` com o mesmo total.
 
     Raises:
-        ValueError: Paginador sem o link ``»``, ``»`` sem ``page=N`` ou
-            paginadores com totais diferentes.
+        ValueError: Paginador sem o link ``»``, ``»`` sem ``page=N`` com
+            N >= 1, ou links ``»`` com totais diferentes, no mesmo
+            paginador ou entre paginadores.
     """
     paginators = BeautifulSoup(html, "html.parser").select(_PAGINATOR_SELECTOR)
     if not paginators:
         return 1
-    totals = {_last_page_from_paginator(paginator) for paginator in paginators}
+    totals = set().union(*(_last_pages_from_paginator(paginator) for paginator in paginators))
     if len(totals) > 1:
-        raise ValueError(f"TJPI: paginadores discordam do total de páginas: {sorted(totals)}")
+        raise ValueError(f"TJPI: links de última página discordam do total de páginas: {sorted(totals)}")
     return totals.pop()
 
 
@@ -119,6 +138,13 @@ def cjsg_download_manager(
         sleep_time: Delay (em segundos) entre páginas. Default 1.0; o client
             normalmente passa ``self.sleep_time`` herdado de ``HTTPScraper``.
         **kwargs: Additional filter parameters (tipo, relator, classe, orgao).
+
+    Raises:
+        ValueError: Com ``paginas=None``, quando a primeira página traz
+            paginador mas não dá para ler dele o total de páginas: falta o
+            link de última página (``»``), o ``»`` não tem ``page=N`` com
+            N >= 1, ou há links ``»`` com totais diferentes. Nesses casos o
+            download para depois da primeira requisição, em vez de estimar.
     """
     def _get_page(pagina_1based: int) -> str:
         params = build_cjsg_params(pesquisa=pesquisa, page=pagina_1based, **kwargs)

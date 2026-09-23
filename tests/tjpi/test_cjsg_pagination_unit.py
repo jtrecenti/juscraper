@@ -95,3 +95,46 @@ def test_get_total_pages_link_de_ultima_sem_page_levanta():
     )
     with pytest.raises(ValueError, match="page="):
         _get_total_pages(html)
+
+
+def test_get_total_pages_espaco_em_volta_do_link_de_ultima_casa():
+    # O rótulo é comparado sem espaço nem quebra de linha em volta; um
+    # template reindentado não pode transformar o » em paginador sem ».
+    html = _primeira_pagina_com(
+        '<a class="page-link" href="/jurisprudences/search?page=5515&amp;q=dano+moral">\n  &raquo; \n</a>'
+    )
+    assert _get_total_pages(html) == 5515
+
+
+def test_get_total_pages_link_de_ultima_com_page_zero_levanta():
+    # page=0 passa no teste de dígito; sem a checagem N >= 1 o total seria 0
+    # e o download pararia na primeira página sem erro.
+    html = _primeira_pagina_com(
+        '<a class="page-link" href="/jurisprudences/search?page=0&amp;q=dano+moral">&raquo;</a>'
+    )
+    with pytest.raises(ValueError, match="TJPI: link de última página"):
+        _get_total_pages(html)
+
+
+def test_get_total_pages_link_de_ultima_com_digito_unicode_levanta():
+    # "²" passa em ``str.isdigit`` mas ``int()`` o recusa com uma mensagem
+    # genérica; o erro precisa ser o do TJPI, que diz o que estava no href.
+    html = _primeira_pagina_com(
+        '<a class="page-link" href="/jurisprudences/search?page=²&amp;q=dano+moral">&raquo;</a>'
+    )
+    with pytest.raises(ValueError, match="TJPI: link de última página"):
+        _get_total_pages(html)
+
+
+def test_get_total_pages_dois_links_de_ultima_discordantes_no_mesmo_paginador_levantam():
+    # O primeiro » de cada paginador traz 5515, então os dois paginadores
+    # concordam se só o primeiro contar; o segundo », com 7, tem que pesar.
+    link_7 = '<a class="page-link" href="/jurisprudences/search?page=7&amp;q=dano+moral">&raquo;</a>'
+    html = _primeira_pagina_com(_LINK_ULTIMA + link_7)
+    with pytest.raises(ValueError, match="discordam"):
+        _get_total_pages(html)
+
+
+def test_get_total_pages_dois_links_de_ultima_iguais_no_mesmo_paginador():
+    html = _primeira_pagina_com(_LINK_ULTIMA + _LINK_ULTIMA)
+    assert _get_total_pages(html) == 5515
