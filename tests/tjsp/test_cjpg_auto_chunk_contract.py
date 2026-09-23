@@ -225,6 +225,41 @@ def test_query_alias_only_long_window_works(tmp_path, mocker):
     assert len(df) == 3
 
 
+@pytest.mark.parametrize("alias", ["query", "termo"])
+def test_search_alias_long_window_reaches_every_window(tmp_path, mocker, alias):
+    """Alias de busca em janela longa chega a todas as janelas pela API pública.
+
+    O orquestrador precisa guardar o valor devolvido por
+    ``normalize_pesquisa`` antes de ``pop_normalize_aliases`` consumir o
+    alias. Se o valor for descartado, cada janela roda com ``pesquisa=""``,
+    uma busca sem termo que devolve todas as sentenças do período. O alias
+    também precisa emitir o ``DeprecationWarning`` uma única vez, e não ficar
+    silenciado no caminho dividido.
+    """
+    download, _ = _patch_pipeline(mocker)
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        scraper.cjpg(
+            **{alias: "via alias"},
+            data_julgamento_inicio="01/01/2022",
+            data_julgamento_fim="31/12/2024",
+        )
+
+    # 01/01/2022 -> 31/12/2024 = 1096 dias = 3 janelas de até 366 dias.
+    assert download.call_count == 3
+    pesquisas = [call.kwargs["pesquisa"] for call in download.call_args_list]
+    assert pesquisas == ["via alias"] * 3
+
+    mensagens = [
+        str(warning.message) for warning in w
+        if issubclass(warning.category, DeprecationWarning)
+    ]
+    assert len(mensagens) == 1, mensagens
+    assert f"'{alias}'" in mensagens[0]
+
+
 # --- Auto-fill de data parcial (refs bug TJSP cjpg) --------------------------
 # Antes: o backend eSAJ recebia ``dadosConsulta.dtFim=`` vazio quando o
 # usuário passava só ``data_julgamento_inicio`` e devolvia "tudo desde X até
