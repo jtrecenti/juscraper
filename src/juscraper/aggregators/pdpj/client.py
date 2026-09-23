@@ -139,11 +139,14 @@ def _document_to_row(
     }
 
 
-# 401/403 indicam token ausente, expirado ou sem permissao. Esse erro vale
-# para todos os documentos do lote, entao propaga em vez de virar linha vazia:
-# engolir o erro produziria um DataFrame inteiro de ``texto=None``, sem que o
-# usuario percebesse que precisa renovar o token.
-_STATUS_DE_AUTENTICACAO = frozenset({401, 403})
+# 401 indica token ausente, expirado ou inválido. Esse erro vale para todos
+# os documentos do lote, então propaga em vez de virar linha vazia: engolir o
+# erro produziria um DataFrame inteiro de ``texto=None``, sem que o usuário
+# percebesse que precisa renovar o token. O 403 fica de fora de propósito:
+# com token válido, a API pode negar um documento só (um sigiloso, por
+# exemplo), e propagar descartaria o lote inteiro por causa dele. Por isso o
+# 403 segue o caminho dos demais erros HTTP: linha vazia e entrada no aviso.
+_STATUS_TOKEN_INVALIDO = 401
 
 # Quantas falhas o aviso agregado de :meth:`PdpjScraper.download_documents`
 # cita por extenso; as demais entram so na contagem.
@@ -170,7 +173,7 @@ def _buscar_conteudo(
         conteudo = buscar(session, cnj_limpo, id_documento, base_url=base_url)
     except requests.HTTPError as exc:
         status = exc.response.status_code if exc.response is not None else None
-        if status in _STATUS_DE_AUTENTICACAO:
+        if status == _STATUS_TOKEN_INVALIDO:
             raise
         falhas.append(f"{descricao}: HTTP {status}")
         return None
@@ -179,17 +182,27 @@ def _buscar_conteudo(
     return conteudo
 
 
-def _avisar_falhas(falhas: list[str]) -> None:
-    """Emite um unico ``UserWarning`` com a contagem e alguns exemplos."""
+def _avisar_falhas(falhas: list[str], concluida: bool) -> None:
+    """Emite um único ``UserWarning`` com a contagem e alguns exemplos.
+
+    ``concluida`` é ``False`` quando um 401 interrompeu a coleta: nesse caso
+    nenhum DataFrame é devolvido, e o aviso não pode prometer linhas com
+    conteúdo ``None``.
+    """
     if not falhas:
         return
     exemplos = falhas[:_EXEMPLOS_NO_AVISO]
     if len(falhas) > len(exemplos):
         exemplos = [*exemplos, f"e mais {len(falhas) - len(exemplos)}"]
     lista = "; ".join(exemplos)
+    consequencia = (
+        "e as linhas correspondentes saem com o conteúdo None"
+        if concluida
+        else "antes de a coleta ser interrompida"
+    )
     warnings.warn(
         f"PdpjScraper.download_documents: {len(falhas)} download(s) de documento falharam, "
-        f"e as linhas correspondentes saem com o conteúdo None. Falhas: {lista}.",
+        f"{consequencia}. Falhas: {lista}.",
         UserWarning,
         stacklevel=3,
     )
@@ -498,21 +511,25 @@ class PdpjScraper(BaseScraper):
         caso a lista de documentos e extraida de
         ``detalhes['documentos']``).
 
-        Um documento cujo download falha (erro HTTP que nao seja 401/403,
-        ou retry de 429/503/timeout esgotado) nao interrompe a coleta: a
-        linha sai com ``texto``/``_raw_texto`` e/ou ``binario`` iguais a
-        ``None`` e o metodo segue para o proximo documento. Ao fim, um unico
+        Um documento cujo download falha não interrompe a coleta: a linha
+        sai com ``texto``/``_raw_texto`` e/ou ``binario`` iguais a ``None``
+        e o método segue para o próximo documento. Conta como falha qualquer
+        erro HTTP diferente de 401 (inclusive o 403, que a API pode devolver
+        para um documento isolado, como um sigiloso), o retry de
+        429/503/timeout esgotado e o erro de conexão. Ao fim, um único
         ``UserWarning`` informa quantos downloads falharam e cita alguns,
-        com processo, documento e motivo (status HTTP ou retry esgotado).
+        com processo, documento e motivo: o status HTTP, ou "sem resposta"
+        no retry esgotado e no erro de conexão. O 401 propaga, porque token
+        inválido atinge o lote inteiro.
 
         Args:
             base_df: DataFrame fonte das chamadas.
             max_docs_per_process: Limite de linhas devolvidas por processo,
                 na ordem de ``base_df``. Linhas sem ``id_documento`` sao
                 puladas sem ocupar vaga do limite; um documento cujo
-                download falhou ocupa vaga, porque sua linha sai no
-                resultado (com conteudo ``None``) e a requisicao ja foi
-                feita. ``None`` = sem limite; ``0`` devolve DataFrame vazio
+                download falhou ocupa vaga, como no JusBR, porque sua linha
+                sai no resultado (com conteúdo ``None``) e a requisição já
+                foi feita. ``None`` = sem limite; ``0`` devolve DataFrame vazio
                 sem fazer requisicao.
             with_text: Se ``True`` (default), baixa o texto via
                 ``/documentos/{id}/texto``.
@@ -531,13 +548,15 @@ class PdpjScraper(BaseScraper):
             ValueError: Quando ``with_text`` e ``with_binary`` sao ambos
                 ``False``, ou quando ``base_df`` nao tem coluna
                 ``id_documento`` nem ``detalhes``.
-            requests.HTTPError: Quando a API responde 401 ou 403 (token
-                expirado ou sem permissao). O erro atinge o lote inteiro,
-                entao propaga e as linhas ja baixadas se perdem.
+            requests.HTTPError: Quando a API responde 401 (token ausente,
+                expirado ou inválido). O erro atinge o lote inteiro, então
+                propaga e as linhas já baixadas se perdem; as falhas
+                anteriores ao 401 ainda saem no ``UserWarning``.
 
         Warns:
             UserWarning: Quando pelo menos um download de documento falhou.
-                Um aviso por chamada, com a contagem e alguns exemplos.
+                Um aviso por chamada, com a contagem e alguns exemplos,
+                emitido também quando o 401 interrompe a coleta.
 
         See also:
             :class:`InputDownloadDocumentsPdpj`: schema pydantic e fonte
@@ -574,11 +593,17 @@ class PdpjScraper(BaseScraper):
 
         rows: list[dict[str, Any]] = []
         falhas: list[str] = []
-        for processo, grupo in docs_df.groupby("processo", sort=False):
-            rows.extend(self._download_process_documents(
-                grupo, processo, max_docs_per_process, with_text, with_binary, falhas,
-            ))
-        _avisar_falhas(falhas)
+        concluida = False
+        # O ``finally`` emite o aviso também quando o 401 propaga no meio do
+        # lote; sem ele, as falhas acumuladas até ali sumiriam sem registro.
+        try:
+            for processo, grupo in docs_df.groupby("processo", sort=False):
+                rows.extend(self._download_process_documents(
+                    grupo, processo, max_docs_per_process, with_text, with_binary, falhas,
+                ))
+            concluida = True
+        finally:
+            _avisar_falhas(falhas, concluida)
         return pd.DataFrame(rows)
 
     def _download_process_documents(
@@ -616,13 +641,14 @@ class PdpjScraper(BaseScraper):
         """Baixa os conteúdos selecionados para uma linha de documento.
 
         Falha de download de texto ou binario vira ``None`` na coluna e uma
-        entrada em ``falhas``; 401/403 propagam (ver
-        ``_STATUS_DE_AUTENTICACAO``).
+        entrada em ``falhas``; o 401 propaga (ver ``_STATUS_TOKEN_INVALIDO``).
         """
         row = cast(dict[str, Any], doc_row.to_dict())
         id_documento = row.get("id_documento")
         numero_processo = row.get("numero_processo") or processo
-        if not id_documento:
+        # ``pd.isna`` cobre o ``NaN`` que o pandas põe no id ausente; ``NaN`` é
+        # truthy e passaria por ``not id_documento`` como id válido.
+        if pd.isna(id_documento) or id_documento == "":
             logger.warning(
                 "Documento sem id_documento no processo %s; pulando.",
                 numero_processo,

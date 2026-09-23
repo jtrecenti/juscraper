@@ -130,18 +130,13 @@ class InputContarPdpj(BaseModel):
 class InputDownloadDocumentsPdpj(BaseModel):
     """Input aceito por :meth:`PdpjScraper.download_documents`.
 
-    ``base_df`` aceita somente :class:`pandas.DataFrame`. ``with_text``/
-    ``with_binary`` selecionam quais conteudos baixar — pelo menos um deve
-    ser ``True``. ``max_docs_per_process`` limita as linhas devolvidas por
-    processo: linhas sem ``id_documento`` sao puladas sem ocupar vaga, e um
-    documento cujo download falhou ocupa vaga, porque sai no resultado com
-    conteudo ``None``. Zero devolve DataFrame vazio sem fazer requisicao;
-    valor negativo levanta ``ValidationError``.
+    ``base_df`` aceita somente :class:`pandas.DataFrame`. ``with_text`` e
+    ``with_binary`` são coeridos para ``bool``. ``max_docs_per_process``
+    aceita ``None`` ou inteiro não negativo; valor negativo levanta
+    ``ValidationError``.
 
-    Falha de download num documento (erro HTTP que nao seja 401/403, ou
-    retry esgotado) vira linha com ``texto``/``binario`` ``None`` e entra
-    num unico ``UserWarning`` agregado ao fim da chamada; 401/403 propagam
-    ``requests.HTTPError``. Detalhes em
+    O significado do limite (o que ocupa vaga, o que o zero faz) e o
+    tratamento das falhas de download estão em
     :meth:`PdpjScraper.download_documents`.
     """
 
