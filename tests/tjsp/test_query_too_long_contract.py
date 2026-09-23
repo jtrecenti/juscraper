@@ -59,7 +59,9 @@ def test_pesquisa_acima_do_limite_levanta_sem_requisicao(tmp_path, endpoint, jan
     scraper = jus.scraper("tjsp", download_path=str(tmp_path))
 
     with responses.RequestsMock(assert_all_requests_are_fired=False) as mock_http:
-        with _aviso_de_alias(forma), pytest.raises(QueryTooLongError, match="121 caracteres"):
+        with _aviso_de_alias(forma), pytest.raises(
+            QueryTooLongError, match=rf"do {endpoint.upper()} do TJSP.*recebido: 121 caracteres"
+        ):
             _chamar(scraper, endpoint, forma, "a" * 121, janela, count_only)
         assert len(mock_http.calls) == 0
 
