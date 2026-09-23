@@ -132,6 +132,18 @@ def test_incompatible_resume_before_http(stf, tmp_path, change):
 
 
 @responses.activate
+def test_checkpoint_from_score_order_contract_is_rejected_before_http(stf, tmp_path):
+    source = Source(make_rows(2)).install()
+    stf.listar_decisoes(checkpoint_dir=tmp_path)
+    antigo = manifest(tmp_path)
+    antigo["identity"]["contract"] = "exact-counts-disjoint-days-score-id-v1"
+    write_manifest(tmp_path, antigo)
+    source.payloads.clear()
+    with pytest.raises(ValueError, match="incompatível"):
+        stf.listar_decisoes(checkpoint_dir=tmp_path, resume=True)
+    assert not source.payloads
+
+@responses.activate
 def test_identity_preserves_query_and_normalizes_filters(stf, tmp_path):
     source = Source(make_rows(2)).install()
     stf.listar_decisoes("x ou y$", classe="Rcl", data_julgamento_fim="31/12/2020", checkpoint_dir=tmp_path)
@@ -391,3 +403,33 @@ def test_bounds_payload_applies_post_filter_and_exact_format():
     agg = payload["aggs"]["collection_bounds"]
     assert agg["filter"] == payload["post_filter"]
     assert agg["aggs"]["lower"] == {"min": {"field": "julgamento_data", "format": "yyyy-MM-dd"}}
+
+
+class ReplicaSource(Source):
+    """Réplicas que discordam do score: a ordem por relevância muda a cada requisição."""
+
+    def __init__(self, rows):
+        super().__init__(rows)
+        self.score_requests = 0
+
+    def select(self, body):
+        rows = super().select(body)
+        if body["sort"] == [{"id": "asc"}]:
+            return sorted(rows, key=lambda row: row["id"])
+        self.score_requests += 1
+        return rows if self.score_requests % 2 else rows[::-1]
+
+
+@responses.activate
+def test_full_collection_orders_by_id_despite_unstable_scores(stf):
+    source = ReplicaSource(make_rows(7)).install()
+    df = stf.listar_decisoes(tamanho_pagina=2)
+    assert sorted(df.id) == sorted(f"doc-{i}" for i in range(7))
+    assert all(body["sort"] == [{"id": "asc"}] for body in data_payloads(source))
+
+
+@responses.activate
+def test_explicit_pages_keep_portal_order(stf):
+    source = Source(make_rows(5)).install()
+    stf.listar_decisoes(paginas=[1], tamanho_pagina=2)
+    assert data_payloads(source)[0]["sort"] == [{"_score": "desc"}, {"id": "asc"}]

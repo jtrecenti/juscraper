@@ -87,7 +87,7 @@ class Collection:
             "pages": self.pages,
             "page_size": entrada.tamanho_pagina,
             "payload": build_payload(entrada.pesquisa, tamanho_pagina=0, **self.filters),
-            "contract": "exact-counts-disjoint-days-score-id-v1",
+            "contract": "exact-counts-disjoint-days-id-order-v2",
         }
         self.store = Checkpoint(entrada.checkpoint_dir, entrada.resume, identidade)
         self.requested = False
@@ -107,6 +107,13 @@ class Collection:
         )
         payload["track_total_hits"] = True
         payload["aggs"] = {}
+        if self.pages is None:
+            # O score de texto (BM25) varia entre réplicas do índice: a mesma página,
+            # pedida duas vezes, volta com scores e ordem diferentes, e a paginação
+            # repete ou pula documentos. O desempate por id não resolve, porque o que
+            # muda é o próprio score. A coleta integral não precisa da relevância e
+            # ordena só por id; páginas explícitas mantêm a ordem do portal.
+            payload["sort"] = [{"id": "asc"}]
         if window.missing:
             payload["query"]["function_score"]["query"]["bool"]["must_not"] = [
                 {"exists": {"field": f"{self.axis}_data"}},

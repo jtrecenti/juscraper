@@ -51,6 +51,7 @@ def test_listar_decisoes_todas_as_paginas_com_datas(stf, mocker):
     mocker.patch("time.sleep")
     _add(
         "single_page.json",
+        integral=True,
         pesquisa="pejotização",
         pagina=1,
         tamanho_pagina=250,
@@ -71,7 +72,7 @@ def test_listar_decisoes_todas_as_paginas_com_datas(stf, mocker):
 def test_listar_decisoes_sem_resultados(stf, mocker):
     """Busca sem resultados devolve DataFrame vazio."""
     mocker.patch("time.sleep")
-    _add("no_results.json", pesquisa="juscraper_probe_zero_hits_xyzqwe", pagina=1, tamanho_pagina=250)
+    _add("no_results.json", integral=True, pesquisa="juscraper_probe_zero_hits_xyzqwe", pagina=1, tamanho_pagina=250)
 
     df = stf.listar_decisoes("juscraper_probe_zero_hits_xyzqwe")
 
@@ -109,7 +110,7 @@ def test_desafio_do_waf_renova_o_token_e_repete(stf, mocker):
     mocker.patch("time.sleep")
     obter = mocker.patch("juscraper.courts.stf.client.obter_waf_token", return_value="token-novo")
     responses.add(responses.POST, BASE_URL, body="", status=202, headers={"x-amzn-waf-action": "challenge"})
-    _add("no_results.json", pesquisa="juscraper_probe_zero_hits_xyzqwe", pagina=1, tamanho_pagina=250)
+    _add("no_results.json", integral=True, pesquisa="juscraper_probe_zero_hits_xyzqwe", pagina=1, tamanho_pagina=250)
 
     df = stf.listar_decisoes("juscraper_probe_zero_hits_xyzqwe")
 
@@ -135,7 +136,7 @@ def test_sem_token_obtem_um_antes_da_primeira_busca(mocker):
     """Sem ``waf_token``, o cookie e obtido antes do primeiro POST."""
     mocker.patch("time.sleep")
     obter = mocker.patch("juscraper.courts.stf.client.obter_waf_token", return_value="token-obtido")
-    _add("no_results.json", pesquisa="juscraper_probe_zero_hits_xyzqwe", pagina=1, tamanho_pagina=250)
+    _add("no_results.json", integral=True, pesquisa="juscraper_probe_zero_hits_xyzqwe", pagina=1, tamanho_pagina=250)
 
     jus.scraper("stf").listar_decisoes("juscraper_probe_zero_hits_xyzqwe")
 
