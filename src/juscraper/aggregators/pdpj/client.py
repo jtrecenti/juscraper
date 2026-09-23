@@ -182,27 +182,21 @@ def _buscar_conteudo(
     return conteudo
 
 
-def _avisar_falhas(falhas: list[str], concluida: bool) -> None:
-    """Emite um único ``UserWarning`` com a contagem e alguns exemplos.
-
-    ``concluida`` é ``False`` quando um 401 interrompeu a coleta: nesse caso
-    nenhum DataFrame é devolvido, e o aviso não pode prometer linhas com
-    conteúdo ``None``.
-    """
-    if not falhas:
-        return
+def _resumir_falhas(falhas: list[str]) -> str:
+    """Contagem e alguns exemplos das falhas, para o aviso e para a nota do 401."""
     exemplos = falhas[:_EXEMPLOS_NO_AVISO]
     if len(falhas) > len(exemplos):
         exemplos = [*exemplos, f"e mais {len(falhas) - len(exemplos)}"]
-    lista = "; ".join(exemplos)
-    consequencia = (
-        "e as linhas correspondentes saem com o conteúdo None"
-        if concluida
-        else "antes de a coleta ser interrompida"
-    )
+    return f"{len(falhas)} download(s) de documento falharam. Falhas: {'; '.join(exemplos)}."
+
+
+def _avisar_falhas(falhas: list[str]) -> None:
+    """Emite um único ``UserWarning`` ao fim de uma coleta concluída."""
+    if not falhas:
+        return
     warnings.warn(
-        f"PdpjScraper.download_documents: {len(falhas)} download(s) de documento falharam, "
-        f"{consequencia}. Falhas: {lista}.",
+        f"PdpjScraper.download_documents: {_resumir_falhas(falhas)} "
+        "As linhas correspondentes saem com o conteúdo None.",
         UserWarning,
         stacklevel=3,
     )
@@ -551,12 +545,13 @@ class PdpjScraper(BaseScraper):
             requests.HTTPError: Quando a API responde 401 (token ausente,
                 expirado ou inválido). O erro atinge o lote inteiro, então
                 propaga e as linhas já baixadas se perdem; as falhas
-                anteriores ao 401 ainda saem no ``UserWarning``.
+                anteriores ao 401 vão numa nota do próprio erro
+                (``__notes__``), não no ``UserWarning``.
 
         Warns:
             UserWarning: Quando pelo menos um download de documento falhou.
                 Um aviso por chamada, com a contagem e alguns exemplos,
-                emitido também quando o 401 interrompe a coleta.
+                emitido só quando a coleta termina.
 
         See also:
             :class:`InputDownloadDocumentsPdpj`: schema pydantic e fonte
@@ -593,17 +588,20 @@ class PdpjScraper(BaseScraper):
 
         rows: list[dict[str, Any]] = []
         falhas: list[str] = []
-        concluida = False
-        # O ``finally`` emite o aviso também quando o 401 propaga no meio do
-        # lote; sem ele, as falhas acumuladas até ali sumiriam sem registro.
+        # Quando o 401 interrompe o lote, as falhas anteriores viram nota do
+        # próprio ``HTTPError`` em vez de aviso: um ``warnings.warn`` durante a
+        # propagação, com avisos promovidos a erro (``-W error``), trocaria o
+        # 401 por um ``UserWarning`` e esconderia a causa real.
         try:
             for processo, grupo in docs_df.groupby("processo", sort=False):
                 rows.extend(self._download_process_documents(
                     grupo, processo, max_docs_per_process, with_text, with_binary, falhas,
                 ))
-            concluida = True
-        finally:
-            _avisar_falhas(falhas, concluida)
+        except requests.HTTPError as erro:
+            if falhas:
+                erro.add_note(f"Antes do 401, {_resumir_falhas(falhas)}")
+            raise
+        _avisar_falhas(falhas)
         return pd.DataFrame(rows)
 
     def _download_process_documents(

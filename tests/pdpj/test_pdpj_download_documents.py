@@ -476,7 +476,7 @@ def test_download_documents_aviso_cita_alguns_exemplos_e_conta_o_resto():
     assert "5 download(s)" in mensagem
     assert "doc-0" in mensagem
     assert "doc-4" not in mensagem
-    assert re.search(r"e mais \d+\.$", mensagem)
+    assert re.search(r"; e mais 2\.", mensagem)
 
 
 @responses.activate
@@ -521,21 +521,24 @@ def test_download_documents_403_vira_linha_vazia_com_aviso():
 
 
 @responses.activate
-def test_download_documents_401_no_meio_do_lote_ainda_avisa_falhas_anteriores():
-    """As falhas acumuladas antes do 401 saem no aviso, e o 401 continua propagando."""
+def test_download_documents_401_no_meio_do_lote_anota_falhas_anteriores():
+    """As falhas anteriores ao 401 vão numa nota do erro, sem aviso.
+
+    A suíte roda com ``filterwarnings = error``: se o método emitisse o aviso
+    durante a propagação, o ``UserWarning`` substituiria o ``HTTPError`` e o
+    ``pytest.raises`` abaixo falharia.
+    """
     _mock_text_error("doc-a", 500)
     _mock_text_error("doc-b", 401)
     s = _mk_scraper()
 
-    with pytest.raises(requests.HTTPError) as erro, pytest.warns(UserWarning) as avisos:
+    with pytest.raises(requests.HTTPError) as erro:
         s.download_documents(_docs_df("doc-a", "doc-b"))
 
     assert erro.value.response.status_code == 401
-    assert len(avisos) == 1
-    mensagem = str(avisos[0].message)
-    assert "doc-a, texto: HTTP 500" in mensagem
-    assert "interrompida" in mensagem
-    assert "saem com o conteúdo None" not in mensagem
+    notas = " ".join(getattr(erro.value, "__notes__", []))
+    assert "Antes do 401" in notas
+    assert "doc-a, texto: HTTP 500" in notas
 
 
 @responses.activate
