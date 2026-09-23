@@ -17,6 +17,8 @@ import logging
 import math
 import tempfile
 import time
+import warnings
+from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
@@ -25,16 +27,25 @@ from pydantic import ValidationError
 from tqdm.auto import tqdm
 
 from ...core.http import HTTPScraper
-from ...utils.params import coerce_brazilian_date, normalize_paginas, raise_on_extra_kwargs, validate_intervalo_datas
-from .download import DEFAULT_HEADERS, SEARCH_URL, build_pesquisa_params, gerar_session_id
+from ...utils.params import (
+    coerce_brazilian_date,
+    normalize_paginas,
+    normalize_pesquisa,
+    raise_on_extra_kwargs,
+    validate_intervalo_datas,
+)
+from .download import DEFAULT_HEADERS, SEARCH_URL, build_pesquisa_params, gerar_session_id, verificar_resposta
 from .parse import parse_documentos, parse_total
 from .schemas import COLECOES, InputCJSGFalcao
 
 logger = logging.getLogger(__name__)
 
 # Teto imposto pelo backend Elasticsearch: ``page*size`` acima de 10000 e
-# rejeitado, mesmo que ``quantidadeTotal`` reporte 10000 fixo.
+# rejeitado, e ``quantidadeTotal`` tambem para em 10000, entao o total
+# reportado nao distingue "exatamente 10000" de "10000 ou mais".
 _MAX_RESULTADOS = 10000
+
+_FORMATO_BACKEND = "%Y-%m-%d"
 
 
 class FalcaoScraper(HTTPScraper):
@@ -83,8 +94,9 @@ class FalcaoScraper(HTTPScraper):
             pesquisa (str): Termo de busca livre (parametro ``texto``).
                 Obrigatorio.
             paginas (int | list | range | None): Paginas 1-based; ``None``
-                baixa todas as disponiveis (respeitando o teto de 10000
-                resultados do backend). Default ``None``.
+                baixa todas as disponiveis, ate o teto de 10000 resultados
+                do backend (acima dele, emite ``UserWarning``). Default
+                ``None``.
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGFalcao`.
                 Listados abaixo (todos opcionais salvo indicacao):
 
@@ -99,8 +111,10 @@ class FalcaoScraper(HTTPScraper):
                 * ``relator`` (str | list[str]): Nome(s) de relator. Backend:
                   ``nomeRelator``.
                 * ``orgao_julgador`` (str | list[str]): Backend: ``orgaoJulgador``.
-                * ``classe`` (str | list[str]): Classe(s) processual(is).
-                  Backend: ``classeProcesso``.
+                * ``classe`` (str | list[str]): Sigla(s) da classe processual
+                  (``"ROT"``, ``"ATOrd"``), a mesma da coluna de saida
+                  ``classe_sigla``. O nome por extenso devolve zero
+                  resultados sem erro. Backend: ``classeProcesso``.
                 * ``fase_processual`` (str | list[str]): Backend: ``faseProcessual``.
                 * ``prioridade`` (str | list[str]): Backend: ``prioridade``.
                 * ``tem_ementa`` (bool): Restringe a documentos com/sem ementa.
@@ -110,21 +124,33 @@ class FalcaoScraper(HTTPScraper):
                 * ``data_juntada_inicio`` / ``data_juntada_fim`` (str):
                   Intervalo de data de juntada. Aceita ``DD/MM/AAAA``,
                   ``AAAA-MM-DD`` ou ``date``; convertido para ISO antes do
-                  backend (``dataInicio`` / ``dataFim``).
+                  backend (``dataInicio`` / ``dataFim``). Cada limite pode
+                  ser usado sozinho.
+
+        Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
+            * ``query`` / ``termo`` -> ``pesquisa``
 
         Returns:
             pd.DataFrame: Uma linha por documento. Colunas canonicas
-            garantidas: ``processo``, ``colecao``, ``tribunal`` e (quando a
-            colecao os expoe) ``relator``, ``classe``, ``ementa``,
-            ``data_julgamento``, ``data_juntada``. Campos brutos da colecao
-            sao preservados.
+            garantidas: ``processo``, ``colecao``, ``tribunal``, ``relator``,
+            ``classe``, ``classe_sigla`` e, quando a colecao os expoe,
+            ``ementa`` (texto sem HTML), ``data_julgamento`` e
+            ``data_juntada``. Os demais campos brutos da colecao sao
+            preservados, exceto os ``highlight*`` (ver
+            :class:`OutputCJSGFalcao`).
 
         Raises:
-            TypeError: Quando um kwarg desconhecido e passado.
+            TypeError: Quando um kwarg desconhecido e passado (inclusive
+                ``diretorio``, que so :meth:`cjsg_download` aceita).
             ValidationError: Quando ``pesquisa`` falta ou um filtro tem valor
                 invalido (``colecao``/``tamanho_pagina``/``ordenacao`` fora do
                 dominio).
-            ValueError: Quando o intervalo de datas e invalido.
+            ValueError: Quando uma data e invalida, o intervalo esta
+                invertido ou o backend recusa a busca (403 com mensagem).
+            BotChallengeBlockedError: Quando o WAF (CloudFront) bloqueia a
+                requisicao.
+            requests.HTTPError: Quando o backend bloqueia o IP por excesso
+                de requisicoes (429 com espera de horas).
 
         Exemplo:
             >>> import juscraper as jus
@@ -136,10 +162,13 @@ class FalcaoScraper(HTTPScraper):
             :class:`InputCJSGFalcao` -- schema pydantic e a fonte da verdade
             dos filtros aceitos.
         """
-        with tempfile.TemporaryDirectory(prefix="falcao_cjsg_") as tmp:
-            diretorio = self.cjsg_download(
-                pesquisa=pesquisa, paginas=paginas, diretorio=tmp, **kwargs
+        if "diretorio" in kwargs:
+            raise TypeError(
+                "FalcaoScraper.cjsg() got unexpected keyword argument(s): 'diretorio'. "
+                "Para gravar o JSON bruto num diretorio, use cjsg_download()."
             )
+        with tempfile.TemporaryDirectory(prefix="falcao_cjsg_") as tmp:
+            diretorio = self._baixar(pesquisa, paginas, tmp, kwargs, "FalcaoScraper.cjsg()")
             return self.cjsg_parse(diretorio)
 
     def cjsg_download(
@@ -152,16 +181,19 @@ class FalcaoScraper(HTTPScraper):
         """Baixa as paginas cruas (JSON) da busca para um diretorio.
 
         Mesma validacao e filtros de :meth:`cjsg` (veja la a lista completa de
-        ``**kwargs``). Cada pagina vira um arquivo
-        ``{colecao}_{pagina:04d}.json`` dentro de um subdiretorio da busca.
+        ``**kwargs``). Cada chamada cria um subdiretorio proprio
+        ``falcao_cjsg_{colecao}_<sufixo aleatorio>``, entao buscas diferentes
+        no mesmo ``diretorio`` nunca se misturam. Cada pagina vira um arquivo
+        ``{colecao}_{pagina:04d}.json``.
 
         Args:
             pesquisa (str): Termo de busca. Obrigatorio.
             paginas (int | list | range | None): Paginas 1-based; ``None`` =
                 todas. Default ``None``.
             diretorio (str | None): Sobrescreve ``download_path`` para esta
-                chamada. Default ``None`` (usa ``download_path`` ou o diretorio
-                atual).
+                chamada. Default ``None`` (usa o ``download_path`` do scraper,
+                que sem configuracao e um diretorio temporario criado na
+                instanciacao).
 
         Returns:
             str: Caminho do subdiretorio com os arquivos JSON baixados.
@@ -169,83 +201,16 @@ class FalcaoScraper(HTTPScraper):
         See also:
             :meth:`cjsg` -- lista completa de filtros aceitos.
         """
-        paginas_norm = normalize_paginas(paginas)
-
-        inp = self._validar_input(pesquisa, paginas_norm, kwargs)
-
-        validate_intervalo_datas(
-            inp.data_juntada_inicio,
-            inp.data_juntada_fim,
-            rotulo="data_juntada",
-            max_dias=None,
-            origem="O Falcao",
-            formato="%Y-%m-%d",
-        )
-
-        def _params(pagina: int) -> dict:
-            return build_pesquisa_params(
-                pesquisa=inp.pesquisa,
-                colecao=inp.colecao,
-                session_id=self.session_id,
-                pagina=pagina,
-                tamanho_pagina=inp.tamanho_pagina,
-                tribunais=inp.tribunais,
-                relator=inp.relator,
-                orgao_julgador=inp.orgao_julgador,
-                classe=inp.classe,
-                fase_processual=inp.fase_processual,
-                prioridade=inp.prioridade,
-                tem_ementa=inp.tem_ementa,
-                somente_ementa=inp.somente_ementa,
-                ordenacao=inp.ordenacao,
-                data_juntada_inicio=inp.data_juntada_inicio,
-                data_juntada_fim=inp.data_juntada_fim,
-            )
-
-        destino = self._preparar_destino(diretorio, inp.colecao)
-
-        # Pagina 1 sempre e baixada — serve para descobrir o total.
-        primeira = self._request_with_retry(
-            "GET", SEARCH_URL, params=_params(1), timeout=30.0, expect_json=True
-        )
-        primeiro_json = primeira.json()
-        total = parse_total(primeiro_json)
-        total_paginas = self._total_paginas(total, inp.tamanho_pagina)
-        if self.verbose:
-            logger.info(
-                "Falcao/%s: %d resultados (teto %d) em %d paginas de %d.",
-                inp.colecao, total, _MAX_RESULTADOS, total_paginas,
-                inp.tamanho_pagina,
-            )
-
-        paginas_iter = self._resolver_paginas(paginas_norm, total_paginas)
-
-        for pagina in tqdm(
-            list(paginas_iter), desc=f"Falcao/{inp.colecao}", disable=not self.verbose
-        ):
-            if pagina == 1:
-                conteudo = primeiro_json
-            else:
-                if self.sleep_time:
-                    time.sleep(self.sleep_time)
-                resp = self._request_with_retry(
-                    "GET", SEARCH_URL, params=_params(pagina),
-                    timeout=30.0, expect_json=True,
-                )
-                conteudo = resp.json()
-            arquivo = destino / f"{inp.colecao}_{pagina:04d}.json"
-            arquivo.write_text(
-                json.dumps(conteudo, ensure_ascii=False), encoding="utf-8"
-            )
-
-        return str(destino)
+        base = diretorio if diretorio is not None else self.download_path
+        return self._baixar(pesquisa, paginas, base, kwargs, "FalcaoScraper.cjsg_download()")
 
     def cjsg_parse(self, diretorio: str | Path) -> pd.DataFrame:
         """Le os arquivos JSON baixados por :meth:`cjsg_download`.
 
-        A colecao de cada arquivo e inferida do prefixo do nome
-        (``{colecao}_{pagina}.json``), o que permite parsear diretorios com
-        varias colecoes misturadas.
+        Percorre ``diretorio`` recursivamente, entao aceita tanto o caminho
+        devolvido por :meth:`cjsg_download` quanto a pasta-mae que junta
+        varias buscas. A colecao de cada arquivo e inferida do prefixo do
+        nome (``{colecao}_{pagina}.json``).
 
         Args:
             diretorio (str | Path): Pasta com os arquivos JSON.
@@ -255,7 +220,7 @@ class FalcaoScraper(HTTPScraper):
             colunas canonicas).
         """
         pasta = Path(diretorio)
-        arquivos = sorted(pasta.glob("*.json"))
+        arquivos = sorted(pasta.rglob("*.json"))
         rows: list[dict] = []
         for arquivo in arquivos:
             colecao = arquivo.stem.rsplit("_", 1)[0]
@@ -266,28 +231,96 @@ class FalcaoScraper(HTTPScraper):
     # ------------------------------------------------------------------ #
     # helpers
     # ------------------------------------------------------------------ #
-    def _validar_input(
-        self, pesquisa: str | None, paginas_norm, kwargs: dict
-    ) -> InputCJSGFalcao:
-        """Coage datas, instancia o schema e traduz kwargs desconhecidos."""
+    def _baixar(self, pesquisa, paginas, base, kwargs: dict, metodo: str) -> str:
+        """Valida a entrada, pagina a busca e grava cada pagina em ``base``."""
+        inp = self._validar_input(pesquisa, normalize_paginas(paginas), kwargs, metodo)
+        destino = Path(tempfile.mkdtemp(prefix=f"falcao_cjsg_{inp.colecao}_", dir=base))
+
+        # A primeira pagina pedida serve tambem para ler o total; com
+        # ``paginas`` que nao inclui a 1, isso poupa uma requisicao.
+        primeira = inp.paginas[0] if isinstance(inp.paginas, (range, list)) and inp.paginas else 1
+        primeiro_json = self._buscar_pagina(inp, primeira)
+        total = parse_total(primeiro_json)
+        total_paginas = self._total_paginas(total, inp.tamanho_pagina)
+        if self.verbose:
+            logger.info(
+                "Falcao/%s: %d resultados (teto %d) em %d paginas de %d.",
+                inp.colecao, total, _MAX_RESULTADOS, total_paginas,
+                inp.tamanho_pagina,
+            )
+        if inp.paginas is None and total >= _MAX_RESULTADOS:
+            warnings.warn(
+                f"A busca atingiu o teto de {_MAX_RESULTADOS} resultados do Falcao; o "
+                "backend nao informa o total real e o resultado pode estar incompleto. "
+                "Divida a busca em janelas de data_juntada_inicio/data_juntada_fim.",
+                UserWarning,
+                stacklevel=3,
+            )
+
+        paginas_iter = list(self._resolver_paginas(inp.paginas, total_paginas))
+        for pagina in tqdm(paginas_iter, desc=f"Falcao/{inp.colecao}", disable=not self.verbose):
+            if pagina == primeira:
+                conteudo = primeiro_json
+            else:
+                if self.sleep_time:
+                    time.sleep(self.sleep_time)
+                conteudo = self._buscar_pagina(inp, pagina)
+            arquivo = destino / f"{inp.colecao}_{pagina:04d}.json"
+            arquivo.write_text(json.dumps(conteudo, ensure_ascii=False), encoding="utf-8")
+
+        return str(destino)
+
+    def _buscar_pagina(self, inp: InputCJSGFalcao, pagina: int) -> dict:
+        params = build_pesquisa_params(
+            pesquisa=inp.pesquisa,
+            colecao=inp.colecao,
+            session_id=self.session_id,
+            pagina=pagina,
+            tamanho_pagina=inp.tamanho_pagina,
+            tribunais=inp.tribunais,
+            relator=inp.relator,
+            orgao_julgador=inp.orgao_julgador,
+            classe=inp.classe,
+            fase_processual=inp.fase_processual,
+            prioridade=inp.prioridade,
+            tem_ementa=inp.tem_ementa,
+            somente_ementa=inp.somente_ementa,
+            ordenacao=inp.ordenacao,
+            data_juntada_inicio=inp.data_juntada_inicio,
+            data_juntada_fim=inp.data_juntada_fim,
+        )
+        resp = self._request_with_retry(
+            "GET", SEARCH_URL, params=params, timeout=30.0,
+            expect_json=True, on_response=verificar_resposta,
+        )
+        dados: dict = resp.json()
+        return dados
+
+    @staticmethod
+    def _validar_input(pesquisa: str | None, paginas_norm, kwargs: dict, metodo: str) -> InputCJSGFalcao:
+        """Resolve aliases, coage e valida datas e instancia o schema."""
+        kwargs = dict(kwargs)
+        aliases = {nome: kwargs.pop(nome) for nome in ("query", "termo") if nome in kwargs}
+        if aliases:
+            pesquisa = normalize_pesquisa(pesquisa, **aliases)
         for nome in ("data_juntada_inicio", "data_juntada_fim"):
             if kwargs.get(nome) is not None:
-                kwargs[nome] = coerce_brazilian_date(kwargs[nome], "%Y-%m-%d")
+                kwargs[nome] = coerce_brazilian_date(kwargs[nome], _FORMATO_BACKEND)
+                _validar_data(kwargs[nome], nome)
         try:
-            return InputCJSGFalcao(pesquisa=pesquisa, paginas=paginas_norm, **kwargs)
+            inp = InputCJSGFalcao(pesquisa=pesquisa, paginas=paginas_norm, **kwargs)
         except ValidationError as exc:
-            raise_on_extra_kwargs(
-                exc,
-                "FalcaoScraper.cjsg()",
-                schema_cls=InputCJSGFalcao,
-            )
+            raise_on_extra_kwargs(exc, metodo, schema_cls=InputCJSGFalcao)
             raise
-
-    def _preparar_destino(self, diretorio: str | None, colecao: str) -> Path:
-        base = diretorio if diretorio is not None else (self.download_path or ".")
-        destino = Path(base) / f"falcao_cjsg_{colecao}"
-        destino.mkdir(parents=True, exist_ok=True)
-        return destino
+        validate_intervalo_datas(
+            inp.data_juntada_inicio,
+            inp.data_juntada_fim,
+            rotulo="data_juntada",
+            max_dias=None,
+            origem="O Falcao",
+            formato=_FORMATO_BACKEND,
+        )
+        return inp
 
     @staticmethod
     def _total_paginas(total: int, tamanho_pagina: int) -> int:
@@ -295,12 +328,28 @@ class FalcaoScraper(HTTPScraper):
         return max(1, math.ceil(alcancavel / tamanho_pagina))
 
     @staticmethod
-    def _resolver_paginas(paginas_norm, total_paginas: int):
-        if paginas_norm is None:
+    def _resolver_paginas(paginas, total_paginas: int):
+        if paginas is None:
             return range(1, total_paginas + 1)
-        if isinstance(paginas_norm, range):
+        if isinstance(paginas, range):
             return range(
-                max(1, paginas_norm.start),
-                min(paginas_norm.stop, total_paginas + 1),
+                max(1, paginas.start),
+                min(paginas.stop, total_paginas + 1),
+                paginas.step,
             )
-        return [p for p in paginas_norm if 1 <= p <= total_paginas]
+        return [p for p in paginas if 1 <= p <= total_paginas]
+
+
+def _validar_data(valor, nome: str) -> None:
+    """Rejeita a data que ``coerce_brazilian_date`` nao conseguiu converter.
+
+    ``validate_intervalo_datas`` so confere o formato quando os dois limites
+    estao presentes. Com um limite so, o valor cru (``""``, ``"abc"``,
+    ``"31/02/2024"``) ia para o backend e voltava como HTTP 400 generico.
+    """
+    try:
+        datetime.strptime(valor, _FORMATO_BACKEND)
+    except (ValueError, TypeError) as exc:
+        raise ValueError(
+            f"'{nome}' inválida: {valor!r}. Use DD/MM/AAAA, AAAA-MM-DD ou datetime.date."
+        ) from exc
