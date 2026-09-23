@@ -118,7 +118,7 @@ Antes de refatorar um tribunal pela #84, ele precisa ter contratos passando. A c
 
 ### Notebooks como sanity check (`pytest --nbmake`)
 
-Os notebooks de exemplo em `docs/notebooks/<tribunal>.ipynb` exercitam o fluxo público de cada raspador (cjsg, cjpg, cpopg, cposg, listar_processos) com chamadas reais ao tribunal. Servem ao mesmo tempo como documentação executável (build do site Quarto) e como **canário de regressão pós-refactor** — pegam quebras visíveis ao usuário (parser quebrado, schema rejeitando input antes válido, coluna renomeada sem migração) que um teste granular pode mascarar.
+Os notebooks de exemplo em `docs/notebooks/<tribunal>.ipynb` exercitam o fluxo público de cada raspador (cjsg, cjpg, cpopg, cposg, listar_processos) com chamadas reais ao tribunal. Servem ao mesmo tempo como documentação executável (build do site Quarto) e como **canário de regressão pós-refactor** — pegam quebras visíveis ao usuário (parser quebrado, schema rejeitando input antes válido, coluna renomeada sem migração) que um teste granular pode mascarar. A execução local é o ambiente de referência; compatibilidade com o Google Colab ou outro provedor de notebooks em nuvem não integra os critérios de aceitação do projeto.
 
 Comando padrão (rodar localmente antes de release ou após refactor amplo):
 
@@ -133,6 +133,7 @@ pytest --nbmake docs/notebooks/ \
 Notas:
 
 - **Não rodar em `pre-commit` nem em CI por PR.** São 25 notebooks contra rede real (~10-30 min com `pytest-xdist`); flakiness de tribunal vai bloquear merge sem motivo. O lugar certo, se um dia entrar no CI, é o workflow nightly proposto em #101 com `continue-on-error`.
+- Falhas de conexão no Google Colab ou em outro ambiente de nuvem devem ser reproduzidas localmente antes de motivar mudanças em timeout, retry ou no scraper. Um `ConnectTimeout` sem resposta HTTP pode indicar bloqueio de IP compartilhado ou problema de rota; isoladamente, não demonstra regressão do `juscraper` nem bloqueio intencional pelo tribunal.
 - `jusbr.ipynb` é excluído porque depende de token gov.br (`JUSBR_ACCESS_TOKEN`); `tjmg.ipynb` depende do extra `[tjmg]` instalado (`txtcaptcha`). Ambos rodam sob demanda quando as condições estão presentes.
 - Falha 5xx em um único notebook normalmente é instabilidade do tribunal — re-rodar o notebook isolado antes de reportar regressão (`pytest --nbmake docs/notebooks/<tribunal>.ipynb`).
 - Quando o resultado real divergir do output cacheado (ex.: coluna nova, ementa em formato diferente), o notebook deve ser **commitado com outputs limpos** (`jupyter nbconvert --clear-output --inplace docs/notebooks/<tribunal>.ipynb`) para que `git diff` futuro fique focado em código.

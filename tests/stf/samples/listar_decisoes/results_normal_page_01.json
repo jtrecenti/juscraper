@@ -1,0 +1,515 @@
+{
+ "result": {
+  "took": 35,
+  "timed_out": false,
+  "_shards": {
+   "total": 5,
+   "successful": 5,
+   "skipped": 0,
+   "failed": 0
+  },
+  "hits": {
+   "total": {
+    "value": 3369,
+    "relation": "eq"
+   },
+   "max_score": 41.305527,
+   "hits": [
+    {
+     "_index": "jurisprudencia-idx20230518",
+     "_id": "despacho1505542",
+     "_score": 41.305527,
+     "_source": {
+      "base": "decisoes",
+      "id": "despacho1505542",
+      "dg_unique": "despacho1505542",
+      "titulo": "Rcl 57606",
+      "ministro_facet": [
+       "GILMAR MENDES"
+      ],
+      "procedencia_geografica_completo": "RJ - RIO DE JANEIRO",
+      "procedencia_geografica_pais_sigla": "BR",
+      "procedencia_geografica_uf_sigla": "RJ",
+      "procedencia_geografica_uf_extenso": "Rio de Janeiro",
+      "processo_codigo_completo": "Rcl 57606",
+      "processo_classe_processual_unificada_extenso": "RECLAMAÇÃO",
+      "processo_classe_processual_unificada_classe_sigla": "Rcl",
+      "processo_classe_processual_unificada_incidente_sigla": null,
+      "processo_numero": 57606,
+      "julgamento_data": "2024-03-20",
+      "publicacao_data": "2024-03-21",
+      "is_decisao_presidencia": false,
+      "relator_processo_nome": "GILMAR MENDES",
+      "presidente_nome": null,
+      "relator_decisao_nome": null,
+      "decisao_texto": "DECISÃO: Trata-se da Petição 5344/2024 (ID 1150cac3), apresentada pela parte reclamante, na qual alega-se que o Juízo de origem descumpriu a decisão proferida por esta Corte nos presentes autos. \n\n\n\n    Solicitadas informações, a Relatora do processo no Tribunal Regional Federal da 1º Região informo",
+      "partes_lista_texto": "RECLTE.(S)          : SUPERPESA INDUSTRIAL LTDA - EM RECUPERACAO JUDICIAL\r\nADV.(A/S)           : LUCIANA PAMPLONA BARCELOS NAHID E OUTRO(A/S)\r\nRECLDO.(A/S)        : TRIBUNAL REGIONAL DO TRABALHO DA 1ª REGIÃO\r\nADV.(A/S)           : SEM REPRESENTAÇÃO NOS AUTOS\r\nBENEF.(A/S)         : FABIO DE ALMEIDA C",
+      "inteiro_teor_url": "http://portal.stf.jus.br/processos/downloadPeca.asp?id=15365597820&ext=.pdf",
+      "acompanhamento_processual_url": "https://portal.stf.jus.br/processos/listarProcessos.asp?numeroProcesso=57606&classe=Rcl",
+      "dje_url": "https://portal.stf.jus.br/servicos/dje/listarDiarioJustica.asp?tipoPesquisaDJ=AP&numero=57606&classe=Rcl",
+      "documental_publicacao_lista_texto": "PROCESSO ELETRÔNICO\r\nDJe-s/n DIVULG 20/03/2024 PUBLIC 21/03/2024",
+      "documental_decisao_mesmo_sentido_lista_texto": null,
+      "documental_decisao_mesmo_sentido_lista_html": null,
+      "documental_decisao_mesmo_sentido_is_secundario": false,
+      "documental_legislacao_citada_texto": [
+       "LEG-FED   DEL-005452 ANO-1943\n    ART-00003 ART-00009\n    CLT-1943 CONSOLIDAÇÃO DAS LEIS DO TRABALHO"
+      ],
+      "documental_indexacao_texto": null,
+      "documental_observacao_html": "09/05/2024\nLegislação feita por:(DYS).",
+      "documental_observacao_texto": "09/05/2024\nLegislação feita por:(DYS).",
+      "documental_doutrina_texto": null,
+      "externo_seq_objeto_incidente": 6547355,
+      "dg_atualizado_em": "2024-05-09T09:40:12.145763",
+      "ods_onu": []
+     }
+    },
+    {
+     "_index": "jurisprudencia-idx20230518",
+     "_id": "despacho1549537",
+     "_score": 40.965424,
+     "_source": {
+      "base": "decisoes",
+      "id": "despacho1549537",
+      "dg_unique": "despacho1549537",
+      "titulo": "Rcl 69547",
+      "ministro_facet": [
+       "CRISTIANO ZANIN"
+      ],
+      "procedencia_geografica_completo": "MG - MINAS GERAIS",
+      "procedencia_geografica_pais_sigla": "BR",
+      "procedencia_geografica_uf_sigla": "MG",
+      "procedencia_geografica_uf_extenso": "Minas Gerais",
+      "processo_codigo_completo": "Rcl 69547",
+      "processo_classe_processual_unificada_extenso": "RECLAMAÇÃO",
+      "processo_classe_processual_unificada_classe_sigla": "Rcl",
+      "processo_classe_processual_unificada_incidente_sigla": null,
+      "processo_numero": 69547,
+      "julgamento_data": "2024-08-01",
+      "publicacao_data": "2024-08-02",
+      "is_decisao_presidencia": false,
+      "relator_processo_nome": "CRISTIANO ZANIN",
+      "presidente_nome": null,
+      "relator_decisao_nome": null,
+      "decisao_texto": "Trata-se de reclamação, com pedido liminar, proposta por Atend Serviços Profissionais de Saúde Ltda. contra acórdão proferido pelo Tribunal Regional do Trabalho da 3ª Região – TRT3 nos Autos 0010897-89.2023.5.03.0061, para garantir a observância das teses fixadas pelo Supremo Tribunal Federal no jul",
+      "partes_lista_texto": "RECLTE.(S)          : ATEND SERVICOS PROFISSIONAIS DE SAUDE LTDA\r\nADV.(A/S)           : JUSSARA JENNER SOARES\r\nRECLDO.(A/S)        : TRIBUNAL REGIONAL DO TRABALHO DA 3ª REGIÃO\r\nADV.(A/S)           : SEM REPRESENTAÇÃO NOS AUTOS\r\nBENEF.(A/S)         : KAUANY BARBARA DA SILVA\r\nADV.(A/S)           : SEM",
+      "inteiro_teor_url": "http://portal.stf.jus.br/processos/downloadPeca.asp?id=15368754571&ext=.pdf",
+      "acompanhamento_processual_url": "https://portal.stf.jus.br/processos/listarProcessos.asp?numeroProcesso=69547&classe=Rcl",
+      "dje_url": "https://portal.stf.jus.br/servicos/dje/listarDiarioJustica.asp?tipoPesquisaDJ=AP&numero=69547&classe=Rcl",
+      "documental_publicacao_lista_texto": "PROCESSO ELETRÔNICO\r\nDJe-s/n DIVULG 01/08/2024 PUBLIC 02/08/2024",
+      "documental_decisao_mesmo_sentido_lista_texto": null,
+      "documental_decisao_mesmo_sentido_lista_html": null,
+      "documental_decisao_mesmo_sentido_is_secundario": false,
+      "documental_legislacao_citada_texto": [
+       "LEG-FED   LEI-013105 ANO-2015\n    ART-00992\n    CPC-2015 CÓDIGO DE PROCESSO CIVIL\n\n",
+       "LEG-FED   DEL-005452 ANO-1943\n    ART-00002 ART-00003 ART-00009\n    CLT-1943 CONSOLIDAÇÃO DAS LEIS DO TRABALHO\n\n",
+       "LEG-FED   RGI ANO-1980\n    ART-00052 PAR-ÚNICO ART-00161 PAR-ÚNICO\n    RISTF-1980 REGIMENTO INTERNO DO SUPREMO TRIBUNAL FEDERAL\n\n",
+       "LEG-FED   SUMSTF-000725\n    SÚMULA DO SUPREMO TRIBUNAL FEDERAL - STF"
+      ],
+      "documental_indexacao_texto": null,
+      "documental_observacao_html": "15/08/2024\nLegislação feita por:(TCS).",
+      "documental_observacao_texto": "15/08/2024\nLegislação feita por:(TCS).",
+      "documental_doutrina_texto": null,
+      "externo_seq_objeto_incidente": 6972535,
+      "dg_atualizado_em": "2024-08-15T15:40:09.152033",
+      "ods_onu": []
+     }
+    },
+    {
+     "_index": "jurisprudencia-idx20230518",
+     "_id": "despacho1606462",
+     "_score": 40.084656,
+     "_source": {
+      "base": "decisoes",
+      "id": "despacho1606462",
+      "dg_unique": "despacho1606462",
+      "titulo": "Rcl 70931",
+      "ministro_facet": [
+       "NUNES MARQUES"
+      ],
+      "procedencia_geografica_completo": "RJ - RIO DE JANEIRO",
+      "procedencia_geografica_pais_sigla": "BR",
+      "procedencia_geografica_uf_sigla": "RJ",
+      "procedencia_geografica_uf_extenso": "Rio de Janeiro",
+      "processo_codigo_completo": "Rcl 70931",
+      "processo_classe_processual_unificada_extenso": "RECLAMAÇÃO",
+      "processo_classe_processual_unificada_classe_sigla": "Rcl",
+      "processo_classe_processual_unificada_incidente_sigla": null,
+      "processo_numero": 70931,
+      "julgamento_data": "2024-12-16",
+      "publicacao_data": "2025-01-07",
+      "is_decisao_presidencia": false,
+      "relator_processo_nome": "NUNES MARQUES",
+      "presidente_nome": null,
+      "relator_decisao_nome": null,
+      "decisao_texto": "DECISÃO\n\n    1. Novo Traço Publicidade e Propaganda Ltda. - ME alega ter o Tribunal Regional do Trabalho da 1ª Região, no processo n. 0100718-36.2018.5.01.0029, descumprido o decidido por esta Suprema Corte nos julgamentos da ADC 48, da ADPF 324, das ADIs 3.961 e 5.625 e e dos REs 958.252 (Tema 725/",
+      "partes_lista_texto": "RECLTE.(S)          : NOVO TRACO PUBLICIDADE E PROPAGANDA LTDA\r\nADV.(A/S)           : PAULO RENATO FERNANDES DA SILVA\r\nADV.(A/S)           : RODRIGO FERNANDES MARTINS\r\nRECLDO.(A/S)        : JUIZ DO TRABALHO DA 29ª VARA DO TRABALHO DO RIO DE JANEIRO\r\nADV.(A/S)           : SEM REPRESENTAÇÃO NOS AUTOS\r",
+      "inteiro_teor_url": "http://portal.stf.jus.br/processos/downloadPeca.asp?id=15373094824&ext=.pdf",
+      "acompanhamento_processual_url": "https://portal.stf.jus.br/processos/listarProcessos.asp?numeroProcesso=70931&classe=Rcl",
+      "dje_url": "https://portal.stf.jus.br/servicos/dje/listarDiarioJustica.asp?tipoPesquisaDJ=AP&numero=70931&classe=Rcl",
+      "documental_publicacao_lista_texto": "PROCESSO ELETRÔNICO\r\nDJe-s/n DIVULG 19/12/2024 PUBLIC 07/01/2025",
+      "documental_decisao_mesmo_sentido_lista_texto": null,
+      "documental_decisao_mesmo_sentido_lista_html": null,
+      "documental_decisao_mesmo_sentido_is_secundario": false,
+      "documental_legislacao_citada_texto": [
+       "LEG-FED   LEI-008212 ANO-1993\n    ART-00031\n    LEI ORDINÁRIA\n\n",
+       "LEG-FED   LEI-013105 ANO-2015\n    ART-00373 INC-00002 ART-00988 PAR-00005\n    INC-00002\n    CPC-2015 CÓDIGO DE PROCESSO CIVIL\n\n",
+       "LEG-FED   DEL-002848 ANO-1940\n    ART-00203\n    CP-1940 CÓDIGO PENAL\n\n",
+       "LEG-FED   DEL-005452 ANO-1943\n    ART-00003 ART-00009 ART-00818\n    CLT-1943 CONSOLIDAÇÃO DAS LEIS DO TRABALHO\n\n",
+       "LEG-FED   RGI ANO-1980\n    ART-00161 PAR-ÚNICO\n    RISTF-1980 REGIMENTO INTERNO DO SUPREMO TRIBUNAL FEDERAL"
+      ],
+      "documental_indexacao_texto": null,
+      "documental_observacao_html": "04/02/2025\nLegislação feita por: (PHN)",
+      "documental_observacao_texto": "04/02/2025\nLegislação feita por: (PHN)",
+      "documental_doutrina_texto": null,
+      "externo_seq_objeto_incidente": 7011840,
+      "dg_atualizado_em": "2026-01-08T12:20:09.755402",
+      "ods_onu": []
+     }
+    },
+    {
+     "_index": "jurisprudencia-idx20230518",
+     "_id": "despacho1714804",
+     "_score": 40.031624,
+     "_source": {
+      "base": "decisoes",
+      "id": "despacho1714804",
+      "dg_unique": "despacho1714804",
+      "titulo": "Rcl 86802",
+      "ministro_facet": [
+       "CRISTIANO ZANIN"
+      ],
+      "procedencia_geografica_completo": "SP - SÃO PAULO",
+      "procedencia_geografica_pais_sigla": "BR",
+      "procedencia_geografica_uf_sigla": "SP",
+      "procedencia_geografica_uf_extenso": "São Paulo",
+      "processo_codigo_completo": "Rcl 86802",
+      "processo_classe_processual_unificada_extenso": "RECLAMAÇÃO",
+      "processo_classe_processual_unificada_classe_sigla": "Rcl",
+      "processo_classe_processual_unificada_incidente_sigla": null,
+      "processo_numero": 86802,
+      "julgamento_data": "2025-10-30",
+      "publicacao_data": "2025-11-03",
+      "is_decisao_presidencia": false,
+      "relator_processo_nome": "CRISTIANO ZANIN",
+      "presidente_nome": null,
+      "relator_decisao_nome": null,
+      "decisao_texto": "Trata-se de reclamação, com pedido de liminar, proposta por AJX Capital Investimentos S/A, contra decisão do Juízo da 2ª Vara do Trabalho de Barueri/SP no Processo 1001533-97.2025.5.02.0202, para garantir a observância da tese fixada pelo Supremo Tribunal Federal no julgamento do Recurso Extraordiná",
+      "partes_lista_texto": "RECLTE.(S)          : AJX CAPITAL INVESTIMENTOS S.A.\r\nADV.(A/S)           : MARCOS NOVAKOSKI FERNANDES VELLOZA\r\nADV.(A/S)           : RUBENS JOSÉ NOVAKOSKI FERNANDES VELLOZA\r\nRECLDO.(A/S)        : JUIZ DO TRABALHO DA 2ª VARA DO TRABALHO DE BARUERI\r\nADV.(A/S)           : SEM REPRESENTAÇÃO NOS AUTOS\r\n",
+      "inteiro_teor_url": "http://portal.stf.jus.br/processos/downloadPeca.asp?id=15381873911&ext=.pdf",
+      "acompanhamento_processual_url": "https://portal.stf.jus.br/processos/listarProcessos.asp?numeroProcesso=86802&classe=Rcl",
+      "dje_url": "https://portal.stf.jus.br/servicos/dje/listarDiarioJustica.asp?tipoPesquisaDJ=AP&numero=86802&classe=Rcl",
+      "documental_publicacao_lista_texto": "PROCESSO ELETRÔNICO\r\nDJe-s/n DIVULG 30/10/2025 PUBLIC 03/11/2025",
+      "documental_decisao_mesmo_sentido_lista_texto": null,
+      "documental_decisao_mesmo_sentido_lista_html": null,
+      "documental_decisao_mesmo_sentido_is_secundario": false,
+      "documental_legislacao_citada_texto": [
+       "LEG-FED   LEI-013105 ANO-2015\n    ART-00992\n    CPC-2015 CÓDIGO DE PROCESSO CIVIL\n\n",
+       "LEG-FED   DEL-005452 ANO-1943\n    ART-00003\n    CLT-1943 CONSOLIDAÇÃO DAS LEIS DO TRABALHO\n\n",
+       "LEG-FED   RGI ANO-1980\n    ART-00052 PAR-ÚNICO ART-00161 PAR-ÚNICO\n    RISTF-1980 REGIMENTO INTERNO DO SUPREMO TRIBUNAL FEDERAL"
+      ],
+      "documental_indexacao_texto": null,
+      "documental_observacao_html": "11/11/2025\nCom legislação citada:(TCS).",
+      "documental_observacao_texto": "11/11/2025\nCom legislação citada:(TCS).",
+      "documental_doutrina_texto": null,
+      "externo_seq_objeto_incidente": 7420350,
+      "dg_atualizado_em": "2025-11-11T09:20:18.818804",
+      "ods_onu": []
+     }
+    },
+    {
+     "_index": "jurisprudencia-idx20230518",
+     "_id": "despacho1541969",
+     "_score": 39.186043,
+     "_source": {
+      "base": "decisoes",
+      "id": "despacho1541969",
+      "dg_unique": "despacho1541969",
+      "titulo": "Rcl 68492 AgR",
+      "ministro_facet": [
+       "ALEXANDRE DE MORAES"
+      ],
+      "procedencia_geografica_completo": "PB - PARAÍBA",
+      "procedencia_geografica_pais_sigla": "BR",
+      "procedencia_geografica_uf_sigla": "PB",
+      "procedencia_geografica_uf_extenso": "Paraíba",
+      "processo_codigo_completo": "Rcl 68492 AgR",
+      "processo_classe_processual_unificada_extenso": "AG.REG. NA RECLAMAÇÃO",
+      "processo_classe_processual_unificada_classe_sigla": "Rcl",
+      "processo_classe_processual_unificada_incidente_sigla": "AgR",
+      "processo_numero": 68492,
+      "julgamento_data": "2024-07-01",
+      "publicacao_data": "2024-07-04",
+      "is_decisao_presidencia": false,
+      "relator_processo_nome": "ALEXANDRE DE MORAES",
+      "presidente_nome": null,
+      "relator_decisao_nome": null,
+      "decisao_texto": "DECISÃO\n\n\n\n     Trata-se de Agravo Interno interposto por Nadja Ferreira da Silva contra decisão que julgou procedente a Reclamação para cassar a decisão reclamada por ofensa à ADPF 324 e ao Tema 725 da Repercussão Geral, RE 958.252.\n\n\n\n    Neste recurso de agravo, a parte agravante sustenta, em sín",
+      "partes_lista_texto": "AGTE.(S)            : NADJA FERREIRA DA SILVA\r\nADV.(A/S)           : PEDRO HENRIQUE CITTADINO DA ROCHA\r\nAGDO.(A/S)          : FUNDACAO NAPOLEAO LAUREANO\r\nADV.(A/S)           : DANIEL DE OLIVEIRA ROCHA\r\nINTDO.(A/S)         : TRIBUNAL REGIONAL DO TRABALHO DA 13ª REGIÃO\r\nADV.(A/S)           : SEM REPRE",
+      "inteiro_teor_url": "http://portal.stf.jus.br/processos/downloadPeca.asp?id=15368358821&ext=.pdf",
+      "acompanhamento_processual_url": "https://portal.stf.jus.br/processos/listarProcessos.asp?numeroProcesso=68492&classe=Rcl",
+      "dje_url": "https://portal.stf.jus.br/servicos/dje/listarDiarioJustica.asp?tipoPesquisaDJ=AP&numero=68492&classe=Rcl",
+      "documental_publicacao_lista_texto": "PROCESSO ELETRÔNICO\r\nDJe-s/n DIVULG 03/07/2024 PUBLIC 04/07/2024",
+      "documental_decisao_mesmo_sentido_lista_texto": null,
+      "documental_decisao_mesmo_sentido_lista_html": null,
+      "documental_decisao_mesmo_sentido_is_secundario": false,
+      "documental_legislacao_citada_texto": [
+       "LEG-FED   LEI-013105 ANO-2015\n    ART-01021 PAR-00002\n    CPC-2015 CÓDIGO DE PROCESSO CIVIL\n\n",
+       "LEG-FED   RGI ANO-1980\n    ART-00021 PAR-00001 ART-00317 PAR-00002\n    RISTF-1980 REGIMENTO INTERNO DO SUPREMO TRIBUNAL FEDERAL"
+      ],
+      "documental_indexacao_texto": null,
+      "documental_observacao_html": "26/07/2024\nLegislação feita por:(TCS).",
+      "documental_observacao_texto": "26/07/2024\nLegislação feita por:(TCS).",
+      "documental_doutrina_texto": null,
+      "externo_seq_objeto_incidente": 6950952,
+      "dg_atualizado_em": "2024-07-26T15:20:13.543812",
+      "ods_onu": []
+     }
+    }
+   ]
+  },
+  "aggregations": {
+   "processo_classe_processual_unificada_classe_sigla_agg": {
+    "doc_count": 3421,
+    "processo_classe_processual_unificada_classe_sigla_agg": {
+     "doc_count_error_upper_bound": 0,
+     "sum_other_doc_count": 0,
+     "buckets": [
+      {
+       "key": "Rcl",
+       "doc_count": 3369
+      },
+      {
+       "key": "ARE",
+       "doc_count": 19
+      },
+      {
+       "key": "AR",
+       "doc_count": 16
+      },
+      {
+       "key": "Pet",
+       "doc_count": 8
+      },
+      {
+       "key": "MS",
+       "doc_count": 5
+      },
+      {
+       "key": "RE",
+       "doc_count": 4
+      }
+     ]
+    }
+   },
+   "orgao_julgador_agg": {
+    "doc_count": 3369,
+    "orgao_julgador_agg": {
+     "doc_count_error_upper_bound": 0,
+     "sum_other_doc_count": 0,
+     "buckets": []
+    }
+   },
+   "procedencia_geografica_uf_sigla_agg": {
+    "doc_count": 3369,
+    "procedencia_geografica_uf_sigla_agg": {
+     "doc_count_error_upper_bound": 0,
+     "sum_other_doc_count": 0,
+     "buckets": [
+      {
+       "key": "SP",
+       "doc_count": 1298
+      },
+      {
+       "key": "RJ",
+       "doc_count": 400
+      },
+      {
+       "key": "MG",
+       "doc_count": 325
+      },
+      {
+       "key": "RS",
+       "doc_count": 313
+      },
+      {
+       "key": "BA",
+       "doc_count": 175
+      },
+      {
+       "key": "PR",
+       "doc_count": 163
+      },
+      {
+       "key": "DF",
+       "doc_count": 107
+      },
+      {
+       "key": "GO",
+       "doc_count": 105
+      },
+      {
+       "key": "ES",
+       "doc_count": 84
+      },
+      {
+       "key": "CE",
+       "doc_count": 71
+      },
+      {
+       "key": "PE",
+       "doc_count": 55
+      },
+      {
+       "key": "SC",
+       "doc_count": 55
+      },
+      {
+       "key": "PB",
+       "doc_count": 37
+      },
+      {
+       "key": "PA",
+       "doc_count": 34
+      },
+      {
+       "key": "AM",
+       "doc_count": 23
+      },
+      {
+       "key": "PI",
+       "doc_count": 20
+      },
+      {
+       "key": "RN",
+       "doc_count": 19
+      },
+      {
+       "key": "MS",
+       "doc_count": 18
+      },
+      {
+       "key": "MA",
+       "doc_count": 16
+      },
+      {
+       "key": "MT",
+       "doc_count": 16
+      },
+      {
+       "key": "AL",
+       "doc_count": 11
+      },
+      {
+       "key": "RO",
+       "doc_count": 8
+      },
+      {
+       "key": "SE",
+       "doc_count": 6
+      },
+      {
+       "key": "AP",
+       "doc_count": 4
+      },
+      {
+       "key": "AC",
+       "doc_count": 3
+      },
+      {
+       "key": "TO",
+       "doc_count": 3
+      }
+     ]
+    }
+   },
+   "is_decisao_presidencia_agg": {
+    "buckets": {
+     "false": {
+      "doc_count": 3416
+     },
+     "true": {
+      "doc_count": 5
+     }
+    }
+   },
+   "base_agg": {
+    "buckets": {
+     "acordaos": {
+      "doc_count": 438
+     },
+     "decisoes": {
+      "doc_count": 3421
+     },
+     "informativos": {
+      "doc_count": 0
+     },
+     "sumulas": {
+      "doc_count": 0
+     }
+    }
+   },
+   "ministro_facet_agg": {
+    "doc_count": 3369,
+    "ministro_facet_agg": {
+     "doc_count_error_upper_bound": 0,
+     "sum_other_doc_count": 0,
+     "buckets": [
+      {
+       "key": "ANDRÉ MENDONÇA",
+       "doc_count": 558
+      },
+      {
+       "key": "CRISTIANO ZANIN",
+       "doc_count": 504
+      },
+      {
+       "key": "DIAS TOFFOLI",
+       "doc_count": 452
+      },
+      {
+       "key": "CÁRMEN LÚCIA",
+       "doc_count": 432
+      },
+      {
+       "key": "ALEXANDRE DE MORAES",
+       "doc_count": 339
+      },
+      {
+       "key": "GILMAR MENDES",
+       "doc_count": 320
+      },
+      {
+       "key": "LUIZ FUX",
+       "doc_count": 206
+      },
+      {
+       "key": "FLÁVIO DINO",
+       "doc_count": 204
+      },
+      {
+       "key": "EDSON FACHIN",
+       "doc_count": 171
+      },
+      {
+       "key": "NUNES MARQUES",
+       "doc_count": 155
+      },
+      {
+       "key": "LUÍS ROBERTO BARROSO",
+       "doc_count": 23
+      },
+      {
+       "key": "RICARDO LEWANDOWSKI",
+       "doc_count": 7
+      },
+      {
+       "key": "ROSA WEBER",
+       "doc_count": 3
+      }
+     ]
+    }
+   }
+  }
+ },
+ "search_id": 1
+}

@@ -8,9 +8,8 @@ byte-a-byte com as assinaturas publicas dos metodos de
 """
 from __future__ import annotations
 
-from typing import Any
-
-from pydantic import BaseModel, ConfigDict
+import pandas as pd
+from pydantic import BaseModel, ConfigDict, Field
 
 from ...schemas import CnjInputBase
 
@@ -77,14 +76,12 @@ class OutputCPOPGJusBR(BaseModel):
 class InputDownloadDocumentsJusBR(BaseModel):
     """Accepted input for :meth:`JusbrScraper.download_documents`.
 
-    ``base_df`` e tipado como ``Any`` porque pydantic nao tem validador
-    nativo para ``pandas.DataFrame``; ``arbitrary_types_allowed`` no
-    ``ConfigDict`` deixa passar, mas ``Any`` evita o acoplamento de um
-    import de pandas so para tipagem.
+    ``base_df`` aceita somente :class:`pandas.DataFrame`. O limite por
+    processo aceita zero, que produz um resultado vazio sem fazer downloads.
     """
 
-    base_df: Any
-    max_docs_per_process: int | None = None
+    base_df: pd.DataFrame
+    max_docs_per_process: int | None = Field(default=None, ge=0)
 
     model_config = ConfigDict(
         extra="forbid",
