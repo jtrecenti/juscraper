@@ -21,7 +21,7 @@ class TestFalcaoIntegration:
         self.scraper = jus.scraper("falcao", verbose=0, sleep_time=1.5)
 
     def test_busca_simples(self):
-        df = self.scraper.cjsg("dano moral", paginas=1)
+        df = self.scraper.listar_decisoes("dano moral", paginas=1)
         assert isinstance(df, pd.DataFrame)
         assert len(df) > 0
         assert {"processo", "colecao", "tribunal", "classe_sigla"}.issubset(df.columns)
@@ -29,7 +29,7 @@ class TestFalcaoIntegration:
         assert not [c for c in df.columns if c.startswith("highlight")]
 
     def test_ementa_presente_e_sem_html_em_acordaos(self):
-        df = self.scraper.cjsg("dano moral", paginas=1)
+        df = self.scraper.listar_decisoes("dano moral", paginas=1)
         ementas = df["ementa"].dropna()
         assert len(ementas) > 0
         assert not ementas.str.contains(r"<\w+[^>]*>", regex=True).any()
@@ -39,7 +39,7 @@ class TestFalcaoIntegration:
         ["sentencas", "decisoesmonocraticas", "precedentes", "recursorevista"],
     )
     def test_outras_colecoes(self, colecao):
-        df = self.scraper.cjsg("trabalho", paginas=1, colecao=colecao)
+        df = self.scraper.listar_decisoes("trabalho", paginas=1, colecao=colecao)
         assert isinstance(df, pd.DataFrame)
         assert len(df) > 0
         assert (df["colecao"] == colecao).all()
@@ -48,24 +48,24 @@ class TestFalcaoIntegration:
 
     @pytest.mark.parametrize("colecao", ["sentencas", "decisoesmonocraticas"])
     def test_relator_preenchido_em_juiz_singular(self, colecao):
-        df = self.scraper.cjsg("horas extras", paginas=1, colecao=colecao)
+        df = self.scraper.listar_decisoes("horas extras", paginas=1, colecao=colecao)
         assert df["relator"].notna().all()
         assert (df["relator"] != "").all()
 
     def test_classe_sigla_serve_de_filtro(self):
-        df = self.scraper.cjsg("horas extras", paginas=1, colecao="sentencas")
+        df = self.scraper.listar_decisoes("horas extras", paginas=1, colecao="sentencas")
         sigla = df["classe_sigla"].dropna().iloc[0]
-        filtrado = self.scraper.cjsg("horas extras", paginas=1, colecao="sentencas", classe=sigla)
+        filtrado = self.scraper.listar_decisoes("horas extras", paginas=1, colecao="sentencas", classe=sigla)
         assert len(filtrado) > 0
         assert (filtrado["classe_sigla"] == sigla).all()
 
     def test_filtro_tribunal(self):
-        df = self.scraper.cjsg("recurso", paginas=1, tribunais="TST")
+        df = self.scraper.listar_decisoes("recurso", paginas=1, tribunais="TST")
         assert len(df) > 0
         assert (df["tribunal"] == "TST").all()
 
     def test_filtro_data_juntada(self):
-        df = self.scraper.cjsg(
+        df = self.scraper.listar_decisoes(
             "trabalho",
             paginas=1,
             data_juntada_inicio="2023-01-01",
@@ -74,13 +74,13 @@ class TestFalcaoIntegration:
         assert len(df) > 0
 
     def test_paginacao_tamanho_10(self):
-        df = self.scraper.cjsg("dano moral", paginas=1, tamanho_pagina=10)
+        df = self.scraper.listar_decisoes("dano moral", paginas=1, tamanho_pagina=10)
         assert len(df) == 10
 
     def test_download_e_parse(self, tmp_path):
-        pasta = self.scraper.cjsg_download(
+        pasta = self.scraper.listar_decisoes_download(
             "dano moral", paginas=1, diretorio=str(tmp_path)
         )
-        df = self.scraper.cjsg_parse(pasta)
+        df = self.scraper.listar_decisoes_parse(pasta)
         assert isinstance(df, pd.DataFrame)
         assert len(df) > 0

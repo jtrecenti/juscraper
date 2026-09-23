@@ -43,8 +43,8 @@ TAMANHOS_PERMITIDOS: tuple[int, ...] = (5, 10)
 """Tamanhos de pagina que o backend libera para usuario nao autenticado."""
 
 
-class InputCJSGFalcao(SearchBase):
-    """Filtros aceitos por :meth:`FalcaoScraper.cjsg`.
+class InputListarDecisoesFalcao(SearchBase):
+    """Filtros aceitos por :meth:`FalcaoScraper.listar_decisoes`.
 
     Herda ``pesquisa`` (obrigatorio) e ``paginas`` de :class:`SearchBase`
     (``extra="forbid"``). Cada filtro corresponde a um parametro da
@@ -135,8 +135,8 @@ class InputCJSGFalcao(SearchBase):
         return v
 
 
-class OutputCJSGFalcao(OutputCJSGBase):
-    """Colunas observaveis em uma linha do DataFrame de :meth:`FalcaoScraper.cjsg`.
+class OutputListarDecisoesFalcao(OutputCJSGBase):
+    """Colunas observaveis em uma linha do DataFrame de :meth:`FalcaoScraper.listar_decisoes`.
 
     Cada colecao devolve um shape proprio (``acordaos`` traz ``textoAcordao``,
     ``sentencas`` traz ``textoSentenca``, etc.), mas o parser normaliza um

@@ -92,7 +92,7 @@ O método `.cjsg()` recebe como *input* parâmetros de busca de jurisprudência 
 |-----------|-----------------------------------|
 | Datajud   | listar_processos                  |
 | Jusbr     | cpopg, download_documents         |
-| Falcao    | cjsg (national labor jurisprudence: TST + TRTs) |
+| Falcao    | listar_decisoes (national labor jurisprudence: TST + TRTs) |
 
 ### Notebooks de Exemplo
 

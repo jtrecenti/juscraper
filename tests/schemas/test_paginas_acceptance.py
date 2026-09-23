@@ -38,7 +38,7 @@ from tests.schemas.test_schema_coverage import (
     _iter_court_scrapers,
 )
 
-SEARCH_ENDPOINTS = frozenset({"cjsg", "cjpg", "listar_processos"})
+SEARCH_ENDPOINTS = frozenset({"cjsg", "cjpg", "listar_processos", "listar_decisoes"})
 
 PAGINAS_VARIANTS: list[tuple[str, Any]] = [
     ("int", 1),

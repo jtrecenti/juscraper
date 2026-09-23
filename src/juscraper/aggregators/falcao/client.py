@@ -5,10 +5,10 @@ do Trabalho (``https://jurisprudencia.jt.jus.br``, backend interno ``falcao``,
 mantido pelo CSJT). O endpoint ``/no-auth/pesquisa`` cobre TST e os 24 TRTs
 sobre cinco colecoes de documentos (:data:`.schemas.COLECOES`).
 
-O metodo :meth:`FalcaoScraper.cjsg` aceita um termo de busca obrigatorio
+O metodo :meth:`FalcaoScraper.listar_decisoes` aceita um termo de busca obrigatorio
 (``pesquisa``), a colecao alvo e filtros opcionais, pagina o resultado e
-devolve um ``pandas.DataFrame``. O par :meth:`cjsg_download` /
-:meth:`cjsg_parse` separa a coleta (JSON bruto em disco) do parsing.
+devolve um ``pandas.DataFrame``. O par :meth:`listar_decisoes_download` /
+:meth:`listar_decisoes_parse` separa a coleta (JSON bruto em disco) do parsing.
 """
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ from ...utils.params import (
 )
 from .download import DEFAULT_HEADERS, SEARCH_URL, build_pesquisa_params, gerar_session_id, verificar_resposta
 from .parse import parse_documentos, parse_total
-from .schemas import COLECOES, InputCJSGFalcao
+from .schemas import COLECOES, InputListarDecisoesFalcao
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ _FORMATO_BACKEND = "%Y-%m-%d"
 class FalcaoScraper(HTTPScraper):
     """Scraper para a Jurisprudencia Nacional da Justica do Trabalho (CSJT)."""
 
-    INPUT_CJSG = InputCJSGFalcao
+    INPUT_LISTAR_DECISOES = InputListarDecisoesFalcao
     COLECOES = COLECOES
 
     def __init__(
@@ -76,9 +76,9 @@ class FalcaoScraper(HTTPScraper):
         session.headers.update(DEFAULT_HEADERS)
 
     # ------------------------------------------------------------------ #
-    # cjsg (jurisprudencia)
+    # listar_decisoes (jurisprudencia)
     # ------------------------------------------------------------------ #
-    def cjsg(
+    def listar_decisoes(
         self,
         pesquisa: str | None = None,
         paginas: int | list[int] | range | None = None,
@@ -87,8 +87,8 @@ class FalcaoScraper(HTTPScraper):
         """Consulta a Jurisprudencia Nacional da Justica do Trabalho.
 
         Baixa as paginas para um diretorio temporario e devolve o resultado
-        parseado. Para inspecionar o JSON bruto, use :meth:`cjsg_download` +
-        :meth:`cjsg_parse`.
+        parseado. Para inspecionar o JSON bruto, use :meth:`listar_decisoes_download` +
+        :meth:`listar_decisoes_parse`.
 
         Args:
             pesquisa (str): Termo de busca livre (parametro ``texto``).
@@ -97,12 +97,14 @@ class FalcaoScraper(HTTPScraper):
                 baixa todas as disponiveis, ate o teto de 10000 resultados
                 do backend (acima dele, emite ``UserWarning``). Default
                 ``None``.
-            **kwargs: Filtros aceitos pelo schema :class:`InputCJSGFalcao`.
+            **kwargs: Filtros aceitos pelo schema :class:`InputListarDecisoesFalcao`.
                 Listados abaixo (todos opcionais salvo indicacao):
 
                 * ``colecao`` (str): Colecao alvo. Uma de
                   ``acordaos``, ``sentencas``, ``decisoesmonocraticas``,
                   ``precedentes``, ``recursorevista``. Default ``"acordaos"``.
+                  ``precedentes`` devolve enunciados (sumulas, OJs), nao
+                  decisoes.
                 * ``tamanho_pagina`` (int): Documentos por pagina. So ``5`` ou
                   ``10`` (limite do backend para usuario nao autenticado).
                   Default ``10``.
@@ -137,11 +139,11 @@ class FalcaoScraper(HTTPScraper):
             ``ementa`` (texto sem HTML), ``data_julgamento`` e
             ``data_juntada``. Os demais campos brutos da colecao sao
             preservados, exceto os ``highlight*`` (ver
-            :class:`OutputCJSGFalcao`).
+            :class:`OutputListarDecisoesFalcao`).
 
         Raises:
             TypeError: Quando um kwarg desconhecido e passado (inclusive
-                ``diretorio``, que so :meth:`cjsg_download` aceita).
+                ``diretorio``, que so :meth:`listar_decisoes_download` aceita).
             ValidationError: Quando ``pesquisa`` falta ou um filtro tem valor
                 invalido (``colecao``/``tamanho_pagina``/``ordenacao`` fora do
                 dominio).
@@ -155,23 +157,23 @@ class FalcaoScraper(HTTPScraper):
         Exemplo:
             >>> import juscraper as jus
             >>> falcao = jus.scraper("falcao")
-            >>> df = falcao.cjsg("dano moral", paginas=range(1, 3),
+            >>> df = falcao.listar_decisoes("dano moral", paginas=range(1, 3),
             ...                  tribunais=["TST", "TRT3"])
 
         See also:
-            :class:`InputCJSGFalcao` -- schema pydantic e a fonte da verdade
+            :class:`InputListarDecisoesFalcao` -- schema pydantic e a fonte da verdade
             dos filtros aceitos.
         """
         if "diretorio" in kwargs:
             raise TypeError(
-                "FalcaoScraper.cjsg() got unexpected keyword argument(s): 'diretorio'. "
-                "Para gravar o JSON bruto num diretorio, use cjsg_download()."
+                "FalcaoScraper.listar_decisoes() got unexpected keyword argument(s): 'diretorio'. "
+                "Para gravar o JSON bruto num diretorio, use listar_decisoes_download()."
             )
-        with tempfile.TemporaryDirectory(prefix="falcao_cjsg_") as tmp:
-            diretorio = self._baixar(pesquisa, paginas, tmp, kwargs, "FalcaoScraper.cjsg()")
-            return self.cjsg_parse(diretorio)
+        with tempfile.TemporaryDirectory(prefix="falcao_") as tmp:
+            diretorio = self._baixar(pesquisa, paginas, tmp, kwargs, "FalcaoScraper.listar_decisoes()")
+            return self.listar_decisoes_parse(diretorio)
 
-    def cjsg_download(
+    def listar_decisoes_download(
         self,
         pesquisa: str | None = None,
         paginas: int | list[int] | range | None = None,
@@ -180,9 +182,9 @@ class FalcaoScraper(HTTPScraper):
     ) -> str:
         """Baixa as paginas cruas (JSON) da busca para um diretorio.
 
-        Mesma validacao e filtros de :meth:`cjsg` (veja la a lista completa de
+        Mesma validacao e filtros de :meth:`listar_decisoes` (veja la a lista completa de
         ``**kwargs``). Cada chamada cria um subdiretorio proprio
-        ``falcao_cjsg_{colecao}_<sufixo aleatorio>``, entao buscas diferentes
+        ``falcao_{colecao}_<sufixo aleatorio>``, entao buscas diferentes
         no mesmo ``diretorio`` nunca se misturam. Cada pagina vira um arquivo
         ``{colecao}_{pagina:04d}.json``.
 
@@ -199,16 +201,16 @@ class FalcaoScraper(HTTPScraper):
             str: Caminho do subdiretorio com os arquivos JSON baixados.
 
         See also:
-            :meth:`cjsg` -- lista completa de filtros aceitos.
+            :meth:`listar_decisoes` -- lista completa de filtros aceitos.
         """
         base = diretorio if diretorio is not None else self.download_path
-        return self._baixar(pesquisa, paginas, base, kwargs, "FalcaoScraper.cjsg_download()")
+        return self._baixar(pesquisa, paginas, base, kwargs, "FalcaoScraper.listar_decisoes_download()")
 
-    def cjsg_parse(self, diretorio: str | Path) -> pd.DataFrame:
-        """Le os arquivos JSON baixados por :meth:`cjsg_download`.
+    def listar_decisoes_parse(self, diretorio: str | Path) -> pd.DataFrame:
+        """Le os arquivos JSON baixados por :meth:`listar_decisoes_download`.
 
         Percorre ``diretorio`` recursivamente, entao aceita tanto o caminho
-        devolvido por :meth:`cjsg_download` quanto a pasta-mae que junta
+        devolvido por :meth:`listar_decisoes_download` quanto a pasta-mae que junta
         varias buscas. A colecao de cada arquivo e inferida do prefixo do
         nome (``{colecao}_{pagina}.json``).
 
@@ -216,7 +218,7 @@ class FalcaoScraper(HTTPScraper):
             diretorio (str | Path): Pasta com os arquivos JSON.
 
         Returns:
-            pd.DataFrame: Resultados concatenados (veja :meth:`cjsg` para as
+            pd.DataFrame: Resultados concatenados (veja :meth:`listar_decisoes` para as
             colunas canonicas).
         """
         pasta = Path(diretorio)
@@ -234,7 +236,7 @@ class FalcaoScraper(HTTPScraper):
     def _baixar(self, pesquisa, paginas, base, kwargs: dict, metodo: str) -> str:
         """Valida a entrada, pagina a busca e grava cada pagina em ``base``."""
         inp = self._validar_input(pesquisa, normalize_paginas(paginas), kwargs, metodo)
-        destino = Path(tempfile.mkdtemp(prefix=f"falcao_cjsg_{inp.colecao}_", dir=base))
+        destino = Path(tempfile.mkdtemp(prefix=f"falcao_{inp.colecao}_", dir=base))
 
         # A primeira pagina pedida serve tambem para ler o total; com
         # ``paginas`` que nao inclui a 1, isso poupa uma requisicao.
@@ -270,7 +272,7 @@ class FalcaoScraper(HTTPScraper):
 
         return str(destino)
 
-    def _buscar_pagina(self, inp: InputCJSGFalcao, pagina: int) -> dict:
+    def _buscar_pagina(self, inp: InputListarDecisoesFalcao, pagina: int) -> dict:
         params = build_pesquisa_params(
             pesquisa=inp.pesquisa,
             colecao=inp.colecao,
@@ -297,7 +299,7 @@ class FalcaoScraper(HTTPScraper):
         return dados
 
     @staticmethod
-    def _validar_input(pesquisa: str | None, paginas_norm, kwargs: dict, metodo: str) -> InputCJSGFalcao:
+    def _validar_input(pesquisa: str | None, paginas_norm, kwargs: dict, metodo: str) -> InputListarDecisoesFalcao:
         """Resolve aliases, coage e valida datas e instancia o schema."""
         kwargs = dict(kwargs)
         aliases = {nome: kwargs.pop(nome) for nome in ("query", "termo") if nome in kwargs}
@@ -308,9 +310,9 @@ class FalcaoScraper(HTTPScraper):
                 kwargs[nome] = coerce_brazilian_date(kwargs[nome], _FORMATO_BACKEND)
                 _validar_data(kwargs[nome], nome)
         try:
-            inp = InputCJSGFalcao(pesquisa=pesquisa, paginas=paginas_norm, **kwargs)
+            inp = InputListarDecisoesFalcao(pesquisa=pesquisa, paginas=paginas_norm, **kwargs)
         except ValidationError as exc:
-            raise_on_extra_kwargs(exc, metodo, schema_cls=InputCJSGFalcao)
+            raise_on_extra_kwargs(exc, metodo, schema_cls=InputListarDecisoesFalcao)
             raise
         validate_intervalo_datas(
             inp.data_juntada_inicio,

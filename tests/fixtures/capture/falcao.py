@@ -1,4 +1,4 @@
-"""Capture cjsg samples for the Falcao aggregator (Jurisprudencia Nacional da JT).
+"""Capture listar_decisoes samples for the Falcao aggregator (Jurisprudencia Nacional da JT).
 
 Run from repo root::
 

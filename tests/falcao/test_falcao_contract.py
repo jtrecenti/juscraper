@@ -2,7 +2,7 @@
 
 Validam, sem tocar a rede (``responses``):
 
-- schema do DataFrame devolvido por ``cjsg`` (colunas canonicas garantidas);
+- schema do DataFrame devolvido por ``listar_decisoes`` (colunas canonicas garantidas);
 - que a querystring enviada carrega as guardas obrigatorias do backend
   (``colecao``, ``sessionId``, ``page`` 0-based, ``size``) e todos os filtros;
 - a paginacao (varias paginas, ``range`` com passo, pagina 1 fora do pedido);
@@ -60,9 +60,9 @@ def falcao():
 
 
 @responses.activate
-def test_cjsg_schema_colunas_canonicas(falcao):
+def test_listar_decisoes_schema_colunas_canonicas(falcao):
     _register("acordaos")
-    df = falcao.cjsg("dano moral", paginas=1)
+    df = falcao.listar_decisoes("dano moral", paginas=1)
     assert isinstance(df, pd.DataFrame)
     assert len(df) == len(_sample("acordaos")["documentos"])
     for coluna in ("processo", "colecao", "tribunal", "relator", "classe", "classe_sigla", "ementa"):
@@ -72,9 +72,9 @@ def test_cjsg_schema_colunas_canonicas(falcao):
 
 
 @responses.activate
-def test_cjsg_querystring_guardas_obrigatorias(falcao):
+def test_listar_decisoes_querystring_guardas_obrigatorias(falcao):
     _register("acordaos", colecao="acordaos", texto="dano moral", page=0, size=5)
-    falcao.cjsg("dano moral", paginas=1, tamanho_pagina=5)
+    falcao.listar_decisoes("dano moral", paginas=1, tamanho_pagina=5)
     assert len(responses.calls) == 1
     assert falcao.session_id in responses.calls[0].request.url
 
@@ -83,9 +83,9 @@ def test_cjsg_querystring_guardas_obrigatorias(falcao):
 @pytest.mark.parametrize(
     "colecao", ["sentencas", "decisoesmonocraticas", "precedentes", "recursorevista"]
 )
-def test_cjsg_todas_colecoes_parseiam(falcao, colecao):
+def test_listar_decisoes_todas_colecoes_parseiam(falcao, colecao):
     _register(colecao, colecao=colecao)
-    df = falcao.cjsg("dano moral", paginas=1, colecao=colecao)
+    df = falcao.listar_decisoes("dano moral", paginas=1, colecao=colecao)
     assert len(df) == len(_sample(colecao)["documentos"])
     assert (df["colecao"] == colecao).all()
     assert df["processo"].notna().all()
@@ -93,15 +93,15 @@ def test_cjsg_todas_colecoes_parseiam(falcao, colecao):
 
 
 @responses.activate
-def test_cjsg_resultado_vazio(falcao):
+def test_listar_decisoes_resultado_vazio(falcao):
     _register("acordaos", "vazio")
-    df = falcao.cjsg("termosemresultado", paginas=1)
+    df = falcao.listar_decisoes("termosemresultado", paginas=1)
     assert isinstance(df, pd.DataFrame)
     assert df.empty
 
 
 @responses.activate
-def test_cjsg_todos_os_filtros_viram_querystring(falcao):
+def test_listar_decisoes_todos_os_filtros_viram_querystring(falcao):
     _register(
         "acordaos",
         tribunais="TST,TRT3",
@@ -118,7 +118,7 @@ def test_cjsg_todos_os_filtros_viram_querystring(falcao):
         size=10,
         colecao="acordaos",
     )
-    falcao.cjsg(
+    falcao.listar_decisoes(
         "dano moral",
         paginas=1,
         colecao="acordaos",
@@ -139,11 +139,11 @@ def test_cjsg_todos_os_filtros_viram_querystring(falcao):
 
 
 @responses.activate
-def test_cjsg_pagina_varias_paginas(falcao, tmp_path):
+def test_listar_decisoes_pagina_varias_paginas(falcao, tmp_path):
     # 25 resultados em paginas de 10: tres paginas, a ultima parcial.
     for pagina in (1, 2, 3):
         _register("acordaos", total=25, pagina=pagina)
-    pasta = Path(falcao.cjsg_download("dano moral", paginas=None, diretorio=str(tmp_path)))
+    pasta = Path(falcao.listar_decisoes_download("dano moral", paginas=None, diretorio=str(tmp_path)))
     assert _paginas_pedidas() == [1, 2, 3]
     assert sorted(p.name for p in pasta.iterdir()) == [
         "acordaos_0001.json", "acordaos_0002.json", "acordaos_0003.json",
@@ -151,48 +151,48 @@ def test_cjsg_pagina_varias_paginas(falcao, tmp_path):
 
 
 @responses.activate
-def test_cjsg_range_com_passo_respeita_o_passo(falcao):
+def test_listar_decisoes_range_com_passo_respeita_o_passo(falcao):
     for pagina in (1, 3, 5):
         _register("acordaos", total=100, pagina=pagina)
-    falcao.cjsg("dano moral", paginas=range(1, 6, 2))
+    falcao.listar_decisoes("dano moral", paginas=range(1, 6, 2))
     assert _paginas_pedidas() == [1, 3, 5]
 
 
 @responses.activate
-def test_cjsg_sem_pagina_1_nao_a_requisita(falcao):
+def test_listar_decisoes_sem_pagina_1_nao_a_requisita(falcao):
     for pagina in (2, 3):
         _register("acordaos", total=100, pagina=pagina)
-    df = falcao.cjsg("dano moral", paginas=[2, 3])
+    df = falcao.listar_decisoes("dano moral", paginas=[2, 3])
     assert _paginas_pedidas() == [2, 3]
     assert len(df) == 2 * len(_sample("acordaos")["documentos"])
 
 
 @responses.activate
 @pytest.mark.parametrize("paginas", [[1.0, 2.0], ["1", "2"]])
-def test_cjsg_paginas_coagidas_pelo_schema(falcao, paginas):
+def test_listar_decisoes_paginas_coagidas_pelo_schema(falcao, paginas):
     for pagina in (1, 2):
         _register("acordaos", total=100, pagina=pagina)
-    df = falcao.cjsg("dano moral", paginas=paginas)
+    df = falcao.listar_decisoes("dano moral", paginas=paginas)
     assert _paginas_pedidas() == [1, 2]
     assert len(df) == 2 * len(_sample("acordaos")["documentos"])
 
 
 @responses.activate
-def test_cjsg_avisa_quando_atinge_o_teto(falcao, monkeypatch):
+def test_listar_decisoes_avisa_quando_atinge_o_teto(falcao, monkeypatch):
     # Teto reduzido para 20 para o teste nao precisar de mil paginas.
     monkeypatch.setattr(falcao_client, "_MAX_RESULTADOS", 20)
     for pagina in (1, 2):
         _register("acordaos", total=20, pagina=pagina)
     with pytest.warns(UserWarning, match="teto de 20 resultados"):
-        falcao.cjsg("dano moral")
+        falcao.listar_decisoes("dano moral")
     assert _paginas_pedidas() == [1, 2]
 
 
 @responses.activate
-def test_cjsg_nao_avisa_com_paginas_explicitas(falcao, monkeypatch):
+def test_listar_decisoes_nao_avisa_com_paginas_explicitas(falcao, monkeypatch):
     monkeypatch.setattr(falcao_client, "_MAX_RESULTADOS", 20)
     _register("acordaos", total=20, pagina=1)
-    falcao.cjsg("dano moral", paginas=1)  # filterwarnings=error: warning viraria falha
+    falcao.listar_decisoes("dano moral", paginas=1)  # filterwarnings=error: warning viraria falha
 
 
 @responses.activate
@@ -204,27 +204,27 @@ def test_downloads_no_mesmo_diretorio_nao_se_misturam(falcao, tmp_path):
     for pagina in (1, 2):
         _register("acordaos", total=100, pagina=pagina, texto="dano moral")
     _register("acordaos", total=100, pagina=1, texto="assedio")
-    pasta_a = falcao.cjsg_download("dano moral", paginas=2, diretorio=str(tmp_path))
-    pasta_b = falcao.cjsg_download("assedio", paginas=1, diretorio=str(tmp_path))
+    pasta_a = falcao.listar_decisoes_download("dano moral", paginas=2, diretorio=str(tmp_path))
+    pasta_b = falcao.listar_decisoes_download("assedio", paginas=1, diretorio=str(tmp_path))
     assert pasta_a != pasta_b
     assert Path(pasta_a).parent == Path(pasta_b).parent == tmp_path
-    assert len(falcao.cjsg_parse(pasta_a)) == 2 * por_pagina
-    assert len(falcao.cjsg_parse(pasta_b)) == por_pagina
+    assert len(falcao.listar_decisoes_parse(pasta_a)) == 2 * por_pagina
+    assert len(falcao.listar_decisoes_parse(pasta_b)) == por_pagina
     # A pasta-mae junta as duas buscas (leitura recursiva).
-    assert len(falcao.cjsg_parse(tmp_path)) == 3 * por_pagina
+    assert len(falcao.listar_decisoes_parse(tmp_path)) == 3 * por_pagina
 
 
 @responses.activate
-def test_cjsg_download_sem_diretorio_usa_download_path(tmp_path):
+def test_listar_decisoes_download_sem_diretorio_usa_download_path(tmp_path):
     scraper = jus.scraper("falcao", verbose=0, sleep_time=0, download_path=str(tmp_path))
     _register("acordaos")
-    pasta = scraper.cjsg_download("dano moral", paginas=1)
+    pasta = scraper.listar_decisoes_download("dano moral", paginas=1)
     assert Path(pasta).parent == tmp_path
 
 
-def test_cjsg_rejeita_diretorio(falcao):
-    with pytest.raises(TypeError, match=r"'diretorio'.*cjsg_download"):
-        falcao.cjsg("dano moral", paginas=1, diretorio="out")
+def test_listar_decisoes_rejeita_diretorio(falcao):
+    with pytest.raises(TypeError, match=r"'diretorio'.*listar_decisoes_download"):
+        falcao.listar_decisoes("dano moral", paginas=1, diretorio="out")
 
 
 @responses.activate
@@ -232,23 +232,23 @@ def test_cjsg_rejeita_diretorio(falcao):
 def test_alias_deprecado_de_pesquisa(falcao, alias):
     _register("acordaos", texto="dano moral")
     with pytest.warns(DeprecationWarning, match=alias):
-        df = falcao.cjsg(paginas=1, **{alias: "dano moral"})
+        df = falcao.listar_decisoes(paginas=1, **{alias: "dano moral"})
     assert not df.empty
 
 
 def test_pesquisa_e_alias_juntos_levantam(falcao):
     with pytest.raises(ValueError, match="pesquisa"):
-        falcao.cjsg("dano moral", paginas=1, query="outra")
+        falcao.listar_decisoes("dano moral", paginas=1, query="outra")
 
 
 def test_kwarg_desconhecido_vira_typeerror(falcao):
     # Nao precisa de mock: raise_on_extra_kwargs dispara antes de qualquer request.
-    assert_unknown_kwarg_raises(falcao.cjsg, "parametro_bobo", "dano moral", paginas=1)
+    assert_unknown_kwarg_raises(falcao.listar_decisoes, "parametro_bobo", "dano moral", paginas=1)
 
 
 def test_kwarg_desconhecido_no_download_cita_o_metodo_certo(falcao, tmp_path):
-    with pytest.raises(TypeError, match=r"cjsg_download\(\)"):
-        falcao.cjsg_download("dano moral", paginas=1, diretorio=str(tmp_path), parametro_bobo=1)
+    with pytest.raises(TypeError, match=r"listar_decisoes_download\(\)"):
+        falcao.listar_decisoes_download("dano moral", paginas=1, diretorio=str(tmp_path), parametro_bobo=1)
     assert not list(tmp_path.iterdir())
 
 
@@ -262,7 +262,7 @@ def test_kwarg_desconhecido_no_download_cita_o_metodo_certo(falcao, tmp_path):
 )
 def test_filtro_invalido_vira_validationerror(falcao, kwargs):
     with pytest.raises(ValidationError):
-        falcao.cjsg("dano moral", paginas=1, **kwargs)
+        falcao.listar_decisoes("dano moral", paginas=1, **kwargs)
 
 
 @responses.activate  # sem endpoint registrado: qualquer request falharia com ConnectionError
@@ -270,19 +270,19 @@ def test_filtro_invalido_vira_validationerror(falcao, kwargs):
 @pytest.mark.parametrize("valor", ["abc", "", "31/02/2024"])
 def test_data_invalida_isolada_vira_valueerror(falcao, campo, valor):
     with pytest.raises(ValueError, match=campo):
-        falcao.cjsg("dano moral", paginas=1, **{campo: valor})
+        falcao.listar_decisoes("dano moral", paginas=1, **{campo: valor})
     assert not responses.calls
 
 
 def test_intervalo_invertido_vira_valueerror(falcao):
     with pytest.raises(ValueError, match="posterior"):
-        falcao.cjsg("dano moral", paginas=1, data_juntada_inicio="2024-02-01", data_juntada_fim="2024-01-01")
+        falcao.listar_decisoes("dano moral", paginas=1, data_juntada_inicio="2024-02-01", data_juntada_fim="2024-01-01")
 
 
 @responses.activate
 def test_data_isolada_valida_vai_para_o_backend(falcao):
     _register("acordaos", dataInicio="2024-01-31")
-    falcao.cjsg("dano moral", paginas=1, data_juntada_inicio="31/01/2024")
+    falcao.listar_decisoes("dano moral", paginas=1, data_juntada_inicio="31/01/2024")
     assert len(responses.calls) == 1
 
 
@@ -294,7 +294,7 @@ def test_waf_cloudfront_nao_e_retentado(falcao):
         headers={"Server": "CloudFront"},
     )
     with pytest.raises(BotChallengeBlockedError):
-        falcao.cjsg("dano moral", paginas=1)
+        falcao.listar_decisoes("dano moral", paginas=1)
     assert len(responses.calls) == 1
 
 
@@ -305,5 +305,5 @@ def test_429_de_horas_nao_e_retentado(falcao):
         headers={"x-rate-limit-retry-after-seconds": "20880"},
     )
     with pytest.raises(requests.HTTPError, match="429"):
-        falcao.cjsg("dano moral", paginas=1)
+        falcao.listar_decisoes("dano moral", paginas=1)
     assert len(responses.calls) == 1
