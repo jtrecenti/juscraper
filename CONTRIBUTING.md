@@ -302,6 +302,7 @@ class TJXXScraper(EsajSearchScraper):
 - `_configure_session(session)` — montar adapters HTTP customizados (TLS, cookies, etc.)
 - Atributos de classe `CJSG_CHROME_UA`, `CJSG_EXTRACT_CONVERSATION_ID` (defaults `False`)
 - `_build_cjsg_body(inp)` — trocar o builder do form body quando diverge do default `build_cjsg_form_body`
+- `_validate_pesquisa(pesquisa, *, endpoint)`: rejeitar o termo de busca já resolvido antes de o auto-chunk dividir a busca em janelas (TJSP aplica o limite de 120 chars). Os caminhos de janela única e `count_only` não passam por ele: o tribunal valida também no próprio `<endpoint>_download` e no probe de contagem
 
 **Não adicionar `if tribunal == "X"` no código compartilhado.** Se a particularidade não encaixar via hook/atributo, prefira um scraper próprio fora da família em vez de vazar a diferença na base.
 

@@ -198,6 +198,68 @@ def test_cjsg_count_only_ignora_paginas_com_warning(tmp_path, mocker):
     assert n == 2571077
 
 
+@responses.activate
+@pytest.mark.parametrize("alias", ["query", "termo"])
+def test_cjsg_alias_de_busca_sem_pesquisa(tmp_path, mocker, alias):
+    """``cjsg(query=...)`` sem ``pesquisa`` busca pelo alias.
+
+    ``pesquisa`` tem default ``""`` (issue #229). Esse default nao pode
+    contar como valor informado, senao o alias cai no erro de conflito
+    entre ``pesquisa`` e ``query`` em toda janela curta.
+    """
+    mocker.patch("time.sleep")
+    _add_post("dano moral")
+    _add_get(1, "cjsg/results_normal_page_01.html")
+
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+    with pytest.warns(DeprecationWarning, match=f"'{alias}' está deprecado"):
+        df = scraper.cjsg(paginas=1, **{alias: "dano moral"})
+
+    assert set(df.columns) >= CJSG_MIN_COLUMNS
+    assert len(df) > 0
+
+
+@responses.activate
+@pytest.mark.parametrize("alias", ["query", "termo"])
+def test_cjsg_count_only_alias_de_busca_sem_pesquisa(tmp_path, mocker, alias):
+    """O probe ``count_only`` resolve o alias com a mesma regra do download."""
+    mocker.patch("time.sleep")
+    _add_post("dano moral")
+    _add_get(1, "cjsg/results_normal_page_01.html")
+
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+    with pytest.warns(DeprecationWarning, match=f"'{alias}' está deprecado"):
+        n = scraper.cjsg(count_only=True, **{alias: "dano moral"})
+
+    assert n == 2571077
+
+
+@pytest.mark.parametrize("count_only", [False, True])
+def test_cjsg_pesquisa_mais_alias_continua_conflito(tmp_path, count_only):
+    """``pesquisa`` nao vazia junto de ``query`` segue levantando ``ValueError``."""
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+    with responses.RequestsMock(assert_all_requests_are_fired=False) as mock_http:
+        with pytest.raises(ValueError, match=r"'pesquisa'.*'query'"):
+            scraper.cjsg("dano moral", query="outra coisa", count_only=count_only)
+        assert len(mock_http.calls) == 0
+
+
+@pytest.mark.parametrize("count_only", [False, True])
+def test_cjsg_alias_none_sem_pesquisa_levanta_type_error(tmp_path, count_only):
+    """``cjsg(query=None)`` sem ``pesquisa`` pede ``pesquisa`` em vez de buscar tudo.
+
+    Com alias presente, o default ``pesquisa=""`` vale como ausente; se o
+    alias tambem vier ``None``, nao ha termo nenhum e a chamada levanta
+    ``TypeError`` antes de qualquer requisicao, como ``cjpg`` e o caminho
+    dividido em janelas. Antes, a janela curta fazia uma busca aberta.
+    """
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+    with responses.RequestsMock(assert_all_requests_are_fired=False) as mock_http:
+        with pytest.raises(TypeError, match="'pesquisa'"):
+            scraper.cjsg(query=None, count_only=count_only)
+        assert len(mock_http.calls) == 0
+
+
 def test_cjsg_count_only_query_too_long_raises(tmp_path):
     """TJSP cjsg + count_only=True mantem o guard de 120 chars (issue #92).
 

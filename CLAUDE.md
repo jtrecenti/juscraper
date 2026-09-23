@@ -85,7 +85,7 @@ Onde ficam os modelos, pipeline canonico de wiring e checklist ao adicionar trib
 
 ## Raspadores eSAJ
 
-A familia eSAJ (TJAC/TJAL/TJAM/TJCE/TJMS/TJSP) compartilha a infra em `src/juscraper/courts/_esaj/`. Caso tipico: subclasse de `EsajSearchScraper` com `BASE_URL` + `TRIBUNAL_NAME`. Hooks para casos de borda: `_configure_session(session)` (TLS/cookies), `INPUT_CJSG` (pydantic proprio), `CJSG_CHROME_UA` / `CJSG_EXTRACT_CONVERSATION_ID` (atributos de classe), `_build_cjsg_body(inp)` (shape divergente do form).
+A familia eSAJ (TJAC/TJAL/TJAM/TJCE/TJMS/TJSP) compartilha a infra em `src/juscraper/courts/_esaj/`. Caso tipico: subclasse de `EsajSearchScraper` com `BASE_URL` + `TRIBUNAL_NAME`. Hooks para casos de borda: `_configure_session(session)` (TLS/cookies), `INPUT_CJSG` (pydantic proprio), `CJSG_CHROME_UA` / `CJSG_EXTRACT_CONVERSATION_ID` (atributos de classe), `_build_cjsg_body(inp)` (shape divergente do form), `_validate_pesquisa(pesquisa, endpoint=...)` (rejeita o termo resolvido antes de o auto-chunk dividir as janelas; TJSP aplica o limite de 120 chars).
 
 **Nao adicionar `if tribunal == "X"` no codigo compartilhado.** Se a particularidade nao encaixar via hook/atributo, prefira um scraper proprio fora da familia. Promover algo de `courts/<xx>/` para `_esaj/` so com 2+ ocorrencias (Regra 1 do #84).
 
