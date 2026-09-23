@@ -68,6 +68,11 @@ CASES = [
         "juscraper.aggregators.datajud.schemas", "InputListarProcessosDataJud",
         id="datajud.listar_processos",
     ),
+    pytest.param(
+        "juscraper.courts.stf.client", "STFScraper", "listar_decisoes",
+        "juscraper.courts.stf.schemas", "InputListarDecisoesSTF",
+        id="stf.listar_decisoes",
+    ),
 ]
 
 # Captura nomes em backticks duplos (RST inline literal). Cobre tanto

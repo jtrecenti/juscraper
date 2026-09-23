@@ -92,14 +92,6 @@ DEPRECATED_SYNONYMS: dict[str, str] = {
 # divergencias conhecidas com o PR pendente. Remover a entrada quando
 # o PR de correcao entrar.
 TYPE_GRACE_PERIOD: dict[tuple[str, str], str] = {
-    # DataJud listar_processos aceita apenas ``range`` hoje; o contrato
-    # canonico de SearchBase e ``int | list[int] | range | None``.
-    # Ver xfail em test_paginas_acceptance.py. Corrigir em PR proprio
-    # ajustando a assinatura do client + o schema.
-    (
-        "InputListarProcessosDataJud",
-        "paginas",
-    ): "DataJud listar_processos so aceita range — PR proprio pendente (ver xfail em test_paginas_acceptance)",
     # TJPI e TJGO entregam data_publicacao sempre como string crua (nao
     # convertem para datetime.date). O canonico do mixin e
     # ``date | str | None`` (mais permissivo). Migrar o parser para
