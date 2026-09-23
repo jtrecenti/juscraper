@@ -96,6 +96,20 @@ class TestNormalizeDatas:
         assert result["data_publicacao_inicio"] is None
         assert result["data_publicacao_fim"] is None
 
+    def test_canonical_none_does_not_conflict_with_deprecated_alias(self):
+        with pytest.warns(DeprecationWarning, match="'data_julgamento_de'"):
+            result = normalize_datas(
+                data_julgamento_inicio=None,
+                data_julgamento_de="01/01/2023",
+            )
+
+        assert result == {
+            "data_julgamento_inicio": "01/01/2023",
+            "data_julgamento_fim": None,
+            "data_publicacao_inicio": None,
+            "data_publicacao_fim": None,
+        }
+
     def test_deprecated_de_ate(self):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
@@ -179,9 +193,11 @@ class TestNormalizeDatas:
                 data_julgamento_de="02/01/2023",
                 data_inicio="03/01/2023",
             )
-        msg = str(excinfo.value)
-        for nome in ("'data_julgamento_inicio'", "'data_julgamento_de'", "'data_inicio'"):
-            assert nome in msg
+        assert str(excinfo.value) == (
+            "Não é possível passar 'data_julgamento_inicio', "
+            "'data_julgamento_de' e 'data_inicio' ao mesmo tempo. "
+            "Use apenas 'data_julgamento_inicio'."
+        )
 
     def test_all_none(self):
         result = normalize_datas()

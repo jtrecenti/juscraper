@@ -1,6 +1,7 @@
 """Unit tests for the canonical input-validation pipeline (cjsg/cjpg)."""
 from __future__ import annotations
 
+import warnings
 from datetime import date, datetime
 from typing import ClassVar
 
@@ -134,11 +135,15 @@ def test_apply_input_pipeline_data_filter_on_schema_without_mixin_raises_typeerr
     o ``extra_forbidden`` virar ``TypeError`` direto.
     """
     kwargs = {"data_julgamento_inicio": "01/01/2024"}
-    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'data_julgamento_inicio'"):
-        apply_input_pipeline_search(
-            _SchemaSimples, "Test.cjsg()",
-            pesquisa="x", paginas=1, kwargs=kwargs,
-        )
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'data_julgamento_inicio'"):
+            apply_input_pipeline_search(
+                _SchemaSimples, "Test.cjsg()",
+                pesquisa="x", paginas=1, kwargs=kwargs,
+            )
+
+    assert not any(issubclass(warning.category, UserWarning) for warning in caught)
 
 
 def test_apply_input_pipeline_kwargs_dict_is_consumed_in_place():
@@ -152,6 +157,64 @@ def test_apply_input_pipeline_kwargs_dict_is_consumed_in_place():
     assert "data_inicio" not in kwargs
     assert "data_fim" not in kwargs
     assert "data_julgamento_inicio" not in kwargs
+
+
+def test_apply_input_pipeline_date_conflict_precedes_deprecation_warning():
+    kwargs = {
+        "data_julgamento_de": "01/01/2024",
+        "data_inicio": "02/01/2024",
+    }
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        with pytest.raises(ValueError, match=r"data_julgamento_de.*data_inicio"):
+            apply_input_pipeline_search(
+                _SchemaComJulgamento,
+                "Test.cjsg()",
+                pesquisa="x",
+                paginas=1,
+                kwargs=kwargs,
+            )
+
+    assert not any(issubclass(warning.category, DeprecationWarning) for warning in caught)
+
+
+def test_apply_input_pipeline_search_conflict_precedes_date_reinjection():
+    # A data em ``kwargs`` colide com a nominal: se a reinjeção rodasse antes
+    # da normalização de ``pesquisa``, o erro seria o da colisão de datas.
+    kwargs = {"query": "alias", "data_julgamento_inicio": "02/01/2024"}
+
+    with pytest.raises(ValueError, match=r"'pesquisa'.*'query'"):
+        apply_input_pipeline_search(
+            _SchemaComJulgamento,
+            "Test.cjsg()",
+            pesquisa="canonical",
+            paginas=1,
+            kwargs=kwargs,
+            data_julgamento_inicio="01/01/2024",
+            consume_pesquisa_aliases=True,
+        )
+
+
+def test_apply_input_pipeline_validates_julgamento_before_publicacao():
+    kwargs = {
+        "data_julgamento_inicio": "invalid-julgamento",
+        "data_julgamento_fim": "also-invalid-julgamento",
+        "data_publicacao_inicio": "invalid-publicacao",
+        "data_publicacao_fim": "also-invalid-publicacao",
+    }
+
+    with pytest.raises(ValueError) as exc_info:
+        apply_input_pipeline_search(
+            _SchemaComAmbas,
+            "Test.cjsg()",
+            pesquisa="x",
+            paginas=1,
+            kwargs=kwargs,
+        )
+
+    assert "data_julgamento_inicio" in str(exc_info.value)
+    assert "data_publicacao" not in str(exc_info.value)
 
 
 def test_raise_on_extra_kwargs_passes_through_when_other_errors_present():
@@ -295,15 +358,20 @@ def test_apply_input_pipeline_origem_custom_aparece_na_mensagem():
 
 
 def test_apply_input_pipeline_canonical_x_kwargs_collision_raises_typeerror():
-    """Colisao entre canonical_filters e kwargs vira TypeError do Python (sem
-    merge silencioso). Caller precisa popar conflitos antes de invocar o helper."""
-    with pytest.raises(TypeError, match=r"got multiple values for keyword argument 'relator'"):
+    """Colisao entre canonical_filters e kwargs vira TypeError com a mensagem
+    exata que o Python emite em ``schema_cls(**a, **b)`` (sem merge silencioso).
+    Caller precisa popar conflitos antes de invocar o helper."""
+    with pytest.raises(TypeError) as exc_info:
         apply_input_pipeline_search(
             _SchemaSimples, "Test.cjsg()",
             pesquisa="x", paginas=1,
             kwargs={"relator": "FROM_KWARGS"},
             relator="FROM_CANONICAL",
         )
+    prefixo = f"{_SchemaSimples.__module__}.{_SchemaSimples.__qualname__}()"
+    assert str(exc_info.value) == (
+        f"{prefixo} got multiple values for keyword argument 'relator'"
+    )
 
 
 # --- Cobertura de BACKEND_DATE_FORMAT (1C-a) -------------------------------
