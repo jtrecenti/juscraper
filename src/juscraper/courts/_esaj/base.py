@@ -26,6 +26,7 @@ from ...core.http import HTTPScraper
 from ...utils.params import (
     DATE_ALIAS_TO_CANONICAL,
     DATE_CANONICAL,
+    SEARCH_ALIASES,
     apply_input_pipeline_search,
     coerce_brazilian_date,
     fill_open_ended_dates,
@@ -45,6 +46,42 @@ from .schemas import InputCJSGEsajPuro
 logger = logging.getLogger("juscraper._esaj.base")
 
 
+def _normalize_auto_chunk_dates(
+    input_cls: type[BaseModel],
+    kwargs: dict,
+) -> tuple[dict[str, Any], str, bool]:
+    """Normalize and coerce dates without consuming the caller's ``kwargs``."""
+    date_format = getattr(input_cls, "BACKEND_DATE_FORMAT", "%d/%m/%Y")
+    schema_field_names = set(input_cls.model_fields)
+    has_data_publicacao = {
+        "data_publicacao_inicio",
+        "data_publicacao_fim",
+    }.issubset(schema_field_names)
+
+    # ``normalize_datas`` sees a copy created by ``**kwargs``: it emits each
+    # deprecation warning once while leaving the caller's dictionary intact.
+    sniff = normalize_datas(**kwargs)
+
+    # Invalid values deliberately pass through so the canonical interval
+    # validator can raise the project's user-facing error.
+    for key in DATE_CANONICAL:
+        sniff[key] = coerce_brazilian_date(sniff[key], date_format)
+
+    return sniff, date_format, has_data_publicacao
+
+
+def _propagate_auto_chunk_noop_dates(kwargs: dict, sniff: dict[str, Any]) -> None:
+    """Canonicalize dates in ``kwargs`` before the downstream noop path."""
+    for alias in DATE_ALIAS_TO_CANONICAL:
+        kwargs.pop(alias, None)
+
+    kwargs["data_julgamento_inicio"] = sniff["data_julgamento_inicio"]
+    kwargs["data_julgamento_fim"] = sniff["data_julgamento_fim"]
+    for key in ("data_publicacao_inicio", "data_publicacao_fim"):
+        if sniff.get(key) is not None:
+            kwargs[key] = sniff[key]
+
+
 def run_auto_chunk(
     *,
     method: Callable[..., Any],
@@ -61,12 +98,12 @@ def run_auto_chunk(
     e :meth:`TJSPScraper.cjpg`:
 
     1. Pop ``auto_chunk`` (default ``True``) — se ``False``, retorna ``None``.
-    2. Sniff de ``normalize_datas`` (com warnings suprimidos para nao
-       duplicar a emissao do caminho ``*_download``).
+    2. Normaliza datas e emite uma vez o ``DeprecationWarning`` de cada
+       alias; os caminhos seguintes recebem apenas nomes canonicos.
     3. Se a janela cabe em ``max_dias=366``, retorna ``None`` (caller cai no
        caminho noop).
-    4. Detecta conflito ``pesquisa + query/termo`` antes do
-       :func:`pop_normalize_aliases` descartar o alias silentemente.
+    4. Normaliza ``query/termo`` e preserva o valor retornado antes do
+       :func:`pop_normalize_aliases` consumir o alias.
     5. Pop aliases + canonicals de data, monta ``extras`` (dates
        nao-julgamento sniffadas), valida o schema upfront para converter
        ``extra_forbidden`` em ``TypeError`` cedo.
@@ -80,37 +117,22 @@ def run_auto_chunk(
         retorna o ``pd.DataFrame`` deduplicado.
 
     Side effects:
-        Quando o chunking dispara, muta ``kwargs`` removendo aliases/canonicals
-        de data (ja absorvidos no sniff e re-injetados via ``extras``).
+        Sempre remove ``auto_chunk`` de ``kwargs``. No caminho noop,
+        canonicaliza datas no proprio dicionario; quando o chunking dispara,
+        remove aliases/canonicals ja absorvidos e os reinjeta nas chamadas
+        internas.
     """
     auto_chunk = kwargs.pop("auto_chunk", True)
     if not auto_chunk:
         return None
 
-    # Suprimir DeprecationWarning aqui evita duplicacao quando o caminho
-    # *_download chamar normalize_datas/normalize_pesquisa de novo.
-    # ``fill_open_ended_dates`` emite ``UserWarning`` (categoria diferente),
-    # que passa pelo filtro acima e chega ao usuário. Auto-fill ANTES de
+    # ``fill_open_ended_dates`` emite ``UserWarning``. Auto-fill ANTES de
     # ``iter_date_windows``: se ``_inicio`` chega ``None`` com ``_fim``
     # preenchido, sem o fill ``iter_date_windows`` faria passthrough e o
     # auto-chunk pularia exatamente o caso que precisa dividir.
-    date_format = getattr(input_cls, "BACKEND_DATE_FORMAT", "%d/%m/%Y")
-    schema_field_names = set(input_cls.model_fields.keys())
-    has_data_publicacao = {"data_publicacao_inicio", "data_publicacao_fim"}.issubset(schema_field_names)
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", DeprecationWarning)
-        sniff = normalize_datas(**kwargs)
+    sniff, date_format, has_data_publicacao = _normalize_auto_chunk_dates(input_cls, kwargs)
 
-    # Coage formato não-canônico antes do auto-fill. Sem isso, um valor em
-    # formato divergente do backend (ex.: ISO "2024-01-01" num backend BR)
-    # chegaria ao ``iter_date_windows`` e quebraria com ``ValueError`` técnico
-    # do ``strptime``. ``coerce_brazilian_date`` é passthrough seguro — formato
-    # realmente inválido cai depois no ``validate_intervalo_datas`` com
-    # mensagem amigável.
-    for _key in DATE_CANONICAL:
-        sniff[_key] = coerce_brazilian_date(sniff[_key], date_format)
-
-    # Auto-fill fora do ``catch_warnings`` para que ``UserWarning`` chegue.
+    # Auto-fill depois da normalizacao para que ``UserWarning`` chegue uma vez.
     fill_open_ended_dates(sniff, formato=date_format, rotulo="data_julgamento")
     # Também preenche ``data_publicacao`` aqui — caso contrário, no caminho
     # auto-chunk com N janelas o fill seria refeito dentro de cada chunk
@@ -124,44 +146,13 @@ def run_auto_chunk(
     dj_f = sniff["data_julgamento_fim"]
     windows = list(iter_date_windows(dj_i, dj_f, max_dias=366))
     if len(windows) <= 1:
-        # Caminho noop: o caller cai em ``cjpg_download`` direto, e o
-        # ``apply_input_pipeline_search`` lá faria seu próprio auto-fill,
-        # duplicando o warning. Propaga o ``sniff`` canonicalizado para
-        # ``kwargs`` para que o pipeline downstream veja ambas datas
-        # preenchidas e seu auto-fill vire noop. Como ``normalize_datas``
-        # rodou sob ``catch_warnings`` (silenciou ``DeprecationWarning``)
-        # e popou os aliases, re-emitimos manualmente aqui o warning para
-        # cada alias que estava em ``kwargs`` original — preservando o
-        # contrato do ``normalize_datas`` downstream que esperava esse
-        # warning. Fonte única dos aliases: :data:`DATE_ALIAS_TO_CANONICAL`.
-        for _alias, _canonical in DATE_ALIAS_TO_CANONICAL.items():
-            if _alias in kwargs:
-                warnings.warn(
-                    f"O parâmetro '{_alias}' está deprecado. Use '{_canonical}' em vez disso.",
-                    DeprecationWarning,
-                    stacklevel=3,
-                )
-                kwargs.pop(_alias)
-        kwargs["data_julgamento_inicio"] = dj_i
-        kwargs["data_julgamento_fim"] = dj_f
-        # Propaga ``data_publicacao`` (já filled acima quando aplicável)
-        # para que o pipeline downstream veja ambas as datas preenchidas
-        # e seu auto-fill vire noop.
-        for _key in ("data_publicacao_inicio", "data_publicacao_fim"):
-            if sniff.get(_key) is not None:
-                kwargs[_key] = sniff[_key]
+        _propagate_auto_chunk_noop_dates(kwargs, sniff)
         return None
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", DeprecationWarning)
-
-        # Detectar conflito pesquisa + alias deprecado ANTES de
-        # pop_normalize_aliases, que descartaria o alias silentemente. cjpg
-        # admite pesquisa="" — passar None para nao bater no falso positivo
-        # de normalize_pesquisa quando so o alias foi fornecido.
-        has_search_alias = "query" in kwargs or "termo" in kwargs
-        if pesquisa or has_search_alias:
-            normalize_pesquisa(pesquisa or None, **kwargs)
+    if pesquisa or any(alias in kwargs for alias in SEARCH_ALIASES):
+        # CJPG permits an empty canonical search when only an alias was
+        # supplied, hence ``None`` rather than ``""`` in that case.
+        pesquisa = normalize_pesquisa(pesquisa or None, **kwargs)
 
     pop_normalize_aliases(kwargs, include_canonical=True)
     extras = {
