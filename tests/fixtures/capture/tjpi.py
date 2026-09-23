@@ -6,8 +6,8 @@ Run from repo root::
 
 Saves raw HTML responses under ``tests/tjpi/samples/cjsg/``. TJPI uses
 a GET with query-string parameters and has no filters for date ranges.
-``single_page`` must contain zero pagination links for the
-``_get_total_pages`` regex fallback to return 1.
+``single_page`` must have no ``ul.pagination`` paginator, which is how
+``_get_total_pages`` recognizes a one-page result and returns 1.
 """
 import requests
 
