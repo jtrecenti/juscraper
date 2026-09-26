@@ -16,6 +16,7 @@ import logging
 import time
 
 import requests
+from tqdm.auto import tqdm
 
 from juscraper.core.http import RequestFn
 
@@ -67,7 +68,7 @@ def cposg_download(
     ``{"id_cnj": numero, "resultado": html | None, "partes": {numero_tjmg: html | None}}``.
     """
     out: list[dict] = []
-    for i, numero in enumerate(numeros):
+    for i, numero in enumerate(tqdm(numeros, desc="TJMG cposg")):
         if i and sleep_time:
             time.sleep(sleep_time)
         item: dict = {"id_cnj": numero, "resultado": None, "partes": {}}
