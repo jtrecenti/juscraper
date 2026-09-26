@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import pandas as pd
 import pytest
+import requests
 import responses
 from responses import matchers
 
@@ -158,3 +159,27 @@ def test_cposg_rejects_unknown_kwarg(scraper):
 def test_cposg_rejects_invalid_length(scraper):
     with pytest.raises(ValueError, match="17 digitos"):
         scraper.cposg("123")
+
+
+@responses.activate
+def test_cposg_retries_timeout(scraper, mocker):
+    mocker.patch("juscraper.courts.tjmg.cposg_download.time.sleep")
+    responses.add(responses.GET, RESULTADO_URL, body=requests.Timeout("lento"))
+    _add(RESULTADO_URL, "00003597920208130205", "resultado_single")
+    _add(PARTES_URL, "10000264083767001", "partes_single")
+
+    df = scraper.cposg("0000359-79.2020.8.13.0205")
+
+    assert df.iloc[0]["processo_interno"] == "1.0000.26.408376-7/001"
+
+
+@responses.activate
+def test_cposg_warns_when_retries_exhausted(scraper, mocker):
+    mocker.patch("juscraper.courts.tjmg.cposg_download.time.sleep")
+    for _ in range(3):
+        responses.add(responses.GET, RESULTADO_URL, body=requests.Timeout("lento"))
+
+    with pytest.warns(UserWarning, match="1 consulta"):
+        df = scraper.cposg("0000359-79.2020.8.13.0205")
+
+    assert list(df.columns) == ["id_cnj"]

@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import logging
 import time
+import warnings
 
 import requests
 from tqdm.auto import tqdm
@@ -30,9 +31,30 @@ PARTES_URL = f"{BASE}/proc_partes_advogados2.jsp"
 ENCODING = "iso-8859-1"
 
 
+TIMEOUT = 30
+TRANSPORT_ATTEMPTS = 3
+
+
 def _get(request_fn: RequestFn, url: str, numero: str) -> str:
-    resp = request_fn("GET", url, params={"listaProcessos": numero}, timeout=60)
-    return resp.content.decode(ENCODING)
+    """GET com retry para timeout/conexao, que o ``request_fn`` nao cobre.
+
+    O ``request_fn`` ja repete HTTP 5xx; aqui cobrimos o caso observado em
+    que o backend responde 500 e, na nova tentativa, trava ate o timeout.
+    """
+    for attempt in range(1, TRANSPORT_ATTEMPTS + 1):
+        try:
+            resp = request_fn("GET", url, params={"listaProcessos": numero}, timeout=TIMEOUT)
+            return resp.content.decode(ENCODING)
+        except (requests.Timeout, requests.ConnectionError) as exc:
+            if attempt == TRANSPORT_ATTEMPTS:
+                raise
+            wait = 2.0 ** attempt
+            logger.warning(
+                "TJMG cposg: %s em %s (tentativa %d/%d). Aguardando %.0fs.",
+                type(exc).__name__, numero, attempt, TRANSPORT_ATTEMPTS, wait,
+            )
+            time.sleep(wait)
+    raise AssertionError("unreachable")  # pragma: no cover
 
 
 def fetch_resultado(request_fn: RequestFn, numero: str) -> str:
@@ -68,6 +90,7 @@ def cposg_download(
     ``{"id_cnj": numero, "resultado": html | None, "partes": {numero_tjmg: html | None}}``.
     """
     out: list[dict] = []
+    falhas: list[str] = []
     for i, numero in enumerate(tqdm(numeros, desc="TJMG cposg")):
         if i and sleep_time:
             time.sleep(sleep_time)
@@ -76,6 +99,7 @@ def cposg_download(
             resultado = fetch_resultado(request_fn, numero)
         except requests.RequestException as exc:
             logger.warning("TJMG cposg: falha ao consultar %s: %s", numero, exc)
+            falhas.append(numero)
             out.append(item)
             continue
         item["resultado"] = resultado
@@ -83,5 +107,14 @@ def cposg_download(
             if sleep_time:
                 time.sleep(sleep_time)
             item["partes"][numero_tjmg] = fetch_partes(request_fn, numero_tjmg)
+            if item["partes"][numero_tjmg] is None:
+                falhas.append(numero_tjmg)
         out.append(item)
+    if falhas:
+        warnings.warn(
+            f"TJMG cposg: {len(falhas)} consulta(s) falharam apos as retentativas "
+            f"e ficaram sem dados: {falhas}. Rode o cposg de novo para esses numeros.",
+            UserWarning,
+            stacklevel=3,
+        )
     return out
