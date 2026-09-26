@@ -9,6 +9,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- TJMG `cposg`: consulta processual de 2º grau sem captcha, com partes e advogados (nome e OAB). Aceita CNJ ou o número TJMG (`processo_interno` do `cjsg`) e devolve uma linha por recurso, com classe, assunto, câmara, situação, datas e a coluna `partes` (lista de `{tipo, nome, baixa, advogados}`). Recursos em segredo de justiça vêm com `segredo_justica=True` e sem partes.
 - STF `listar_decisoes` aceita `checkpoint_dir` e `resume=True` para retomar coletas interrompidas. Preserva páginas em disco, valida a compatibilidade antes de requisitar e reinicia apenas a janela incompleta, sem misturar tentativas. Sem diretório, não grava checkpoints.
 
 ### Fixed
