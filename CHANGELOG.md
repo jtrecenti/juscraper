@@ -9,10 +9,12 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- TJMG `cposg`: consulta processual de 2º grau sem captcha, com partes e advogados (nome e OAB). Aceita CNJ ou o número TJMG (`processo_interno` do `cjsg`) e devolve uma linha por recurso, com classe, assunto, câmara, situação, datas e a coluna `partes` (lista de `{tipo, nome, baixa, advogados}`). Recursos em segredo de justiça vêm com `segredo_justica=True` e sem partes.
 - STF `listar_decisoes` aceita `checkpoint_dir` e `resume=True` para retomar coletas interrompidas. Preserva páginas em disco, valida a compatibilidade antes de requisitar e reinicia apenas a janela incompleta, sem misturar tentativas. Sem diretório, não grava checkpoints.
 
 ### Fixed
 
+- TJMG `cjsg`: buscas com mais de ~15 páginas deixam de falhar com `HTTPError 401`. A validação do captcha expira no meio da paginação; agora o scraper resolve o captcha de novo e repete a página.
 - STF: o filtro `classe` passa a valer também nas facetas de base e indicadores, sem restringir a própria faceta de classe; respostas com timeout da busca ou shards falhos levantam `RuntimeError` em vez de devolver resultados parciais; a obtenção e renovação do cookie funcionam com um loop asyncio ativo, inclusive em notebooks Jupyter, mantendo a API síncrona.
 - STF `listar_decisoes(paginas=None)` ordena a coleta integral só por `id`, sem o score de relevância. Com pesquisa textual, o score varia entre réplicas do índice e a mesma página voltava com outra ordem, o que repetia ou pulava documentos e interrompia a coleta com erro de IDs duplicados entre páginas. Páginas explícitas mantêm a ordem do portal. Checkpoints gravados com a ordenação anterior passam a ser recusados como incompatíveis.
 - STF `listar_decisoes(paginas=None)` deixa de truncar buscas em 10.000 documentos com aviso. Divide consultas maiores em janelas de datas disjuntas e falha explicitamente quando um dia ou o residual sem data excede o teto, quando faltam IDs ou quando as contagens divergem. Mantém o DataFrame e a numeração de páginas explícitas. Datas abertas no STF deixam de receber limites artificiais; a coleta integral fixa a referência temporal da ordenação, sem prometer snapshot do índice.

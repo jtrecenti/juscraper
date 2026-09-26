@@ -142,6 +142,34 @@ def _fetch_page(request_fn: RequestFn, params: dict) -> str:
     return resp.text
 
 
+def _fetch_page_revalidating(
+    request_fn: RequestFn,
+    session: requests.Session,
+    params: dict,
+    max_revalidations: int = 2,
+) -> str:
+    """Fetch a result page, re-solving the captcha when the session expires.
+
+    A validacao do captcha expira no meio da paginacao (observado em torno
+    da 15a pagina): o backend passa a responder HTTP 401. Nesse caso,
+    revalidamos o captcha na mesma sessao e repetimos a pagina.
+    """
+    for attempt in range(max_revalidations + 1):
+        try:
+            return _fetch_page(request_fn, params)
+        except requests.HTTPError as exc:
+            status = exc.response.status_code if exc.response is not None else None
+            if status != 401 or attempt == max_revalidations:
+                raise
+            logger.info("TJMG: sessao do captcha expirou (HTTP 401); revalidando.")
+            request_fn("GET", FORM_URL, timeout=60)
+            if not _solve_captcha(request_fn, session):
+                raise RuntimeError(
+                    "TJMG captcha validation failed after 3 attempts."
+                ) from exc
+    raise AssertionError("unreachable")  # pragma: no cover
+
+
 def _extract_total(html: str) -> int | None:
     m = _MUITOS_RE.search(html)
     if m:
@@ -238,5 +266,5 @@ def cjsg_download(
             data_publicacao_final=data_publicacao_final,
             linhas_por_pagina=linhas_por_pagina,
         )
-        results.append(_fetch_page(request_fn, params))
+        results.append(_fetch_page_revalidating(request_fn, session, params))
     return results

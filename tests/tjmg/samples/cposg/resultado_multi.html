@@ -1,0 +1,703 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html>
+<head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />    
+<link href="/css/tjmg.css" rel="stylesheet" type="text/css">
+<title>TJMG - Andamento Processual - Resultados</title>
+
+<script type="text/javascript" language="JavaScript" src="proc_massiva2.js"></script>
+<script type='text/javascript' src='js/juridico.js'></script>
+<script type='text/javascript' src='dwr/engine.js'></script>
+<script type='text/javascript' src='dwr/util.js'></script>
+<script type="text/javascript" src="js/sfUtil.js"></script>
+<script type='text/javascript' src='dwr/interface/ValidacaoCaptchaAction.js'></script>
+
+<style type="text/css">
+<!--
+.linha3  {
+         background-color: #FFFFFF;
+         font-family: Verdana, Arial, Helvetica, sans-serif;
+         font-size: 7pt;
+         font-style: normal
+}
+
+.linha4  {
+         background-color: #F3E2E2;
+         font-family: Verdana, Arial, Helvetica, sans-serif;
+         font-size: 7pt;
+         font-style: normal
+}
+
+.labelPE
+{
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 10pt;
+	color: #A2354C;
+        font-weight: bold;
+}
+-->
+</style>
+
+
+</head>
+<body>
+ 
+
+<!-- cabecalho -->
+<script type="text/javascript" src="/js/tjmg.js" id="jsTjmg"></script>
+<script type="text/javascript" src="/js/tjmg_ui.js" id="jsTjmgUi"></script>
+
+<style type="text/css">
+    header .wrapper-header
+    {
+        background: #7e1819;
+        color: white;
+        padding: 0px 0 0px 0;
+    }
+</style>
+
+<header role="banner">             
+    <div class="wrapper-header">
+        <a target="_blank" title="Link para Portal TJMG" 
+        aria-label="Logo do Tribunal de Justiça do Estado de Minas Gerais" class="brand-logo logo-tjmg" 
+        href="http://www.tjmg.jus.br">
+        <img src="imagens/logo_tjmg.png"/>
+        </a>
+    </div>
+</header>
+<!-- menu -->
+
+
+
+
+<style>
+a.link-consulta:active, a.link-consulta:visited
+{
+    color: #1515ab;
+}
+
+a.link-consulta:hover
+{
+    color: #000A66;
+    text-decoration: none;
+}
+</style>
+
+<noscript><br><center><font color="#FF0000;"><b>O Javascript do seu Browser est&aacute; desativado. Voc&ecirc; deve ativ&aacute;-lo para realizar a pesquisa.</b></font></center></noscript>
+<br>
+<div style="text-align: right; font-size: 10px; font-style: italic; font-weight: bold;">
+
+    Versão de 16/09/2026 11:09
+
+</div>
+
+<p class="info">Melhor visualizado nas vers&otilde;es mais recentes dos navegadores Internet Explorer, Google Chrome ou Mozilla Firefox.</p>
+
+<div style="text-align: center;">
+<br><br>
+
+    O TJMG possui outros sistemas de consulta processual. Verifique também: 
+    <a class="link-consulta" href="https://pje.tjmg.jus.br/pje/ConsultaPublica/listView.seam" target="_blank">PJe Justiça Comum e JEsp</a>&nbsp;&nbsp;-&nbsp;&nbsp;
+    <a class="link-consulta" href="https://pjerecursal.tjmg.jus.br/pje/ConsultaPublica/listView.seam" target="_blank">PJe Recursal</a>&nbsp;&nbsp;-&nbsp;&nbsp;
+    <a class="link-consulta" href="https://projudi.tjmg.jus.br/projudi/interno.jsp?endereco=/projudi/consultapublica/CentroConsultaPublica" target="_blank">PROJUDI</a>&nbsp;&nbsp;-&nbsp;&nbsp;
+    <a class="link-consulta" href="http://seeu.pje.jus.br/seeu/processo/consultaPublica.do?actionType=iniciar" target="_blank">SEEU</a>
+<br><br>
+</div>
+
+<p id="localizacao">&raquo; Consultas &raquo; Andamento Processual &raquo; 2&ordf; Inst&acirc;ncia &raquo; Resultados </p>
+
+
+
+
+<div class="tabbar">
+ <span class="corpo">1&ordf; Inst&acirc;ncia:</span>
+ <a href="index.jsp">N&uacute;meros</a>
+ <a href="index_nome.jsp">Partes</a>
+ <a href="index_oab.jsp">Advogados</a>
+ <a href="emitir_certidao.jsp" >Certid&atilde;o</a>
+ 
+ 
+ <span class="corpo">2&ordf; Inst&acirc;ncia:</span>
+ <a href="proc_massiva2.jsp"class="tabact">N&uacute;meros</a>
+ <a href="proc_nome.jsp?comrCodigo=24&amp;numero=20">Partes</a>
+ <a href="proc_oab.jsp?comrCodigo=24&amp;numero=20">Advogados</a>
+ <a href="emitir_certidao2.jsp" >Certid&atilde;o</a>
+ 
+ 
+&nbsp;&nbsp;
+<!--   span class="corpo"><a href="https://projudi.tjmg.gov.br/projudi/interno.jsp?endereco=/projudi/buscas/ProcessosParte" target="sisCNJ">Processo Eletr&ocirc;nico</a></span -->
+</div>
+
+
+ 
+
+ 
+
+
+
+<p class="info">
+ <b>Importante:</b> Conforme orientação da 1<sup><u>a</u></sup> Vice-Presidência, não serão apresentados
+                    nos resultados da pesquisa dos processos / partes baixados de natureza criminal,
+                    os processos indicados como segredo de justiça, as partes incluídas como vítimas
+                    e as partes indiciadas em procedimentos investigatórios, evitando-se a publicidade
+                    da informação.
+</p>
+
+<h1>2&ordf; Inst&acirc;ncia - Processos encontrados</h1>
+
+<p align="center" class="corpo">
+<b>Dados Resumidos</b></p>
+
+
+    <form method="get" action="proc_massiva2.jsp">
+
+<table width="100%" class="corpo">
+  <tr>
+      <td>
+        <input type="button" class="botao_vinho" value="Voltar" onClick="history.back(); return false" />
+      </td>
+      <td align = "right">
+        <input type="button" class="botao_vinho" value="Imprimir" onClick="self.print()" />
+        <input type="hidden" name="comrCodigo" value="24" />
+        <input type="hidden" name="numero" value="20" />        
+        <input type="submit" class="botao_vinho" value="Nova Consulta" />
+      </td>
+  </tr>
+</table>
+    </form> 
+
+
+
+
+
+
+<table width="10%" class="corpo_jurisp" height="8">
+  <tr>
+   	
+  </tr>
+  <tr>  
+    <td>
+    
+      <form method="POST" name="frmPrimeiro" id="frmPrimeiro" action="proc_resultado2.jsp?pessCodigo=null&amp;situacaoParte=X&amp;naturezaProcesso=0&amp;comrCodigo=24&amp;numero=20&amp;paginar=1">
+			
+		 
+			&nbsp;	
+		
+	  </form>
+	  
+     </td>
+     
+	 <td>
+	  
+	  		<form method="POST" name="frmAnterior" id="frmAnterior" action="proc_resultado2.jsp?pessCodigo=null&amp;situacaoParte=X&amp;naturezaProcesso=0&amp;comrCodigo=24&amp;numero=20&amp;paginar=1">
+	  	
+		 
+			&nbsp;	
+		
+	  </form>
+	 	  
+	 </td>
+	 <td>
+	
+    
+		  <form method="POST" name="frmProximo" id="frmProximo" action="proc_resultado2.jsp?pessCodigo=null&amp;situacaoParte=X&amp;naturezaProcesso=0&amp;comrCodigo=24&amp;numero=20&amp;paginar=-19">
+		
+		 
+			&nbsp;	
+		
+      </form>
+    
+    </td>
+   
+    <td>
+     
+      <form method="POST" name="frmUltimo" id="frmUltimo" action="proc_resultado2.jsp?pessCodigo=null&amp;situacaoParte=X&amp;naturezaProcesso=0&amp;comrCodigo=24&amp;numero=20&amp;paginar=-19">
+			
+		 
+			&nbsp;	
+		
+	  </form>
+	  
+     </td>
+  </tr>
+</table>
+
+
+<div class="corpo">
+	  <b><u>Processos nesta página</u>: 2 </b>
+</div>
+<hr>
+
+
+
+<div id="proc1">
+<table width="100%" class="tabela_formulario">
+  <tr>
+    
+   	       <td nowrap align="left"><b>N&Uacute;MERO TJMG: 1.0000.26.149284-7/001</b></td>
+   	       <td nowrap align="left"><b>NUMERAÇÃO ÚNICA: 5000344-57.2025.8.13.0461</b> <label class="labelPE">@ (Processo Eletr&ocirc;nico)</label></td>
+    
+  </tr>
+  
+	  
+	  <tr>  
+		<td nowrap align="left" colspan="2">
+		   <b>N&Uacute;MERO VERIFICADOR DO AC&Oacute;RD&Atilde;O: <a href="http://www8.tjmg.jus.br/themis/verificaAssinatura.do?tipo=1&numVerificador=1000026149284700120261366462" target="_blank" title="Verificar Assinatura">1000026149284700120261366462</a></b>
+		</td>
+	  </tr>    
+	  
+  
+  <tr>
+    <td nowrap align="center" id="campoSecretaria">
+      
+            <b>Cartório da 15ª Câmara Cível - Pça Milton Campos</b>
+      
+    </td>
+    <td nowrap align="center" id="campoStatus"><b> ATIVO </b></td>
+    
+          <td nowrap align="center" width="15%" id="campoPrincipal"><b> Principal </b> </td>
+    
+  </tr>
+</table>
+
+
+
+
+<br>
+
+<table width="100%" class="corpo">
+  <tr>
+    <td nowrap width="12%"><b>Classe:&nbsp;</b> </td>
+    <td nowrap width="38%"  id="campoClasse">Apelação Cível </td>
+
+    <td nowrap width="12%" ><b>Processo Siscom:&nbsp;</b></td>
+    <td nowrap width="38%" >
+
+    ..</a>
+    </td>
+  </tr>
+  <tr>
+    <td nowrap width="5%"><b>Assunto:&nbsp;</b></td>
+    <td nowrap width="95%" colspan="3" align="left">Indenização por Dano Moral &lt; Responsabilidade Civil &lt; DIREITO CIVIL</td>
+  </tr>
+  <tr>
+    <td nowrap width="12%" ><b>C&acirc;mara:&nbsp;</b> </td>
+    <td nowrap width="38%"  id="campoCamara">15ª CÂMARA CÍVEL </td>
+    
+  </tr>
+
+  <tr>
+    
+    <td nowrap width="12%" ><b>Documento Origem:&nbsp;</b> </td>
+    <td nowrap width="38%" >50003445720258130461</td>
+    
+    <td nowrap width="12%" ><b>Tipo Documento Origem:&nbsp;</b> </td>
+    <td nowrap width="38%" >Petição inicial </td>
+  </tr>
+
+  <tr>
+    
+    <td nowrap width="12%" ><b>Data Cadastramento:&nbsp;</b> </td>
+    <td nowrap width="38%" >31/03/2026</td>
+    
+    
+    <td nowrap width="12%" ><b>Data Distribuição:&nbsp;</b> </td>
+    <td nowrap width="38%" >20/05/2026</td>
+    
+  </tr>
+</table>
+<br>
+
+
+<table class="corpo" id="partes">
+
+
+     <tr>
+       <td><b>Apelante(s):</b>&nbsp; </td>
+       <td>RAFAELA LUCIA MARCELINO </td>
+     </tr>
+
+     <tr>
+       <td><b>Apelado(a)(s):</b>&nbsp; </td>
+       <td>VALE S/A </td>
+     </tr>
+
+
+</table>
+<br>
+
+
+
+<table width="10%" class="corpo">
+  <tr>
+    <td nowrap><b>Última(s) Movimentaç&atilde;o(ões):</b> </td>
+  </tr>
+</table>
+
+<table class="corpo">
+   <tr>
+       <td>
+        
+        &nbsp;        
+       </td>
+       <td id="descricaoProc1_0">Ver movimentações no Recurso ou Proc. sequencial&nbsp;&nbsp;&nbsp; </td>
+       <td id="dataProc1_0" nowrap>
+         
+              29/07/2026 &nbsp;&nbsp;&nbsp;
+         
+       </td>
+       <td id="complementoProc1_0">/002 </td>
+     </tr>
+     
+       
+      
+   <tr>
+       <td>
+        
+        &nbsp;        
+       </td>
+       <td id="descricaoProc1_1">Juntada de petição eletrônica&nbsp;&nbsp;&nbsp; </td>
+       <td id="dataProc1_1" nowrap>
+         
+              28/07/2026 12:32&nbsp;&nbsp;&nbsp;
+         
+       </td>
+       <td id="complementoProc1_1">Protocolo Eletrônico: 5000344-57.2025.8.13.0461/002.002 Documento: Embargos de Declaração </td>
+     </tr>
+     
+       
+      
+   <tr>
+       <td>
+        
+        &nbsp;        
+       </td>
+       <td id="descricaoProc1_2">Comunicado o acórdão em:&nbsp;&nbsp;&nbsp; </td>
+       <td id="dataProc1_2" nowrap>
+         
+              24/07/2026 &nbsp;&nbsp;&nbsp;
+         
+       </td>
+       <td id="complementoProc1_2"> </td>
+     </tr>
+     
+       
+      
+
+</table>
+
+<br>
+
+
+<table class="corpo" width="100%">
+  <tr align="center">
+    <td nowrap><b> <a href="proc_complemento2.jsp?listaProcessos=10000261492847001" onclick="return validaPesquisa();">Dados Completos</a></b></td>
+    <td nowrap><b> <a href="proc_movimentacoes2.jsp?listaProcessos=10000261492847001" onclick="return validaPesquisa();">Todos Andamentos</a> </b> </td>
+    <td nowrap><b> <a href="proc_partes_advogados2.jsp?listaProcessos=10000261492847001" onclick="return validaPesquisa();">Todas as Partes/Advogados</a></b> </td>
+    <td nowrap>
+      
+          <b><a href="proc_publicacoes2.jsp?listaProcessos=10000261492847001" onclick="return validaPesquisa();">Expediente(s) Enviado(s) para Publicação</a></b>
+      
+    </td>
+    <td nowrap>
+      
+      <b><a href="proc_resultado2.jsp?grupoLigado=1705866" onclick="return validaPesquisa();">Ligados</a></b>
+      
+    </td>
+  </tr>
+</table>
+
+<br>
+
+<div align="left" class="corpo">
+   Consulta realizada em <b> 26/09/2026 às 02:11:10 - (.25)</b>
+</div>
+
+
+
+<hr>
+
+</div>
+
+
+<div id="proc2">
+<table width="100%" class="tabela_formulario">
+  <tr>
+    
+   	       <td nowrap align="left"><b>N&Uacute;MERO TJMG: 1.0000.26.149284-7/002</b></td>
+   	       <td nowrap align="left"><b>NUMERAÇÃO ÚNICA: 5000344-57.2025.8.13.0461</b> <label class="labelPE">@ (Processo Eletr&ocirc;nico)</label></td>
+    
+  </tr>
+  
+	  
+	  <tr>  
+		<td nowrap align="left" colspan="2">
+		   <b>N&Uacute;MERO VERIFICADOR DO AC&Oacute;RD&Atilde;O: <a href="http://www8.tjmg.jus.br/themis/verificaAssinatura.do?tipo=1&numVerificador=1000026149284700220261666417" target="_blank" title="Verificar Assinatura">1000026149284700220261666417</a></b>
+		</td>
+	  </tr>    
+	  
+  
+  <tr>
+    <td nowrap align="center" id="campoSecretaria">
+      
+            <b>Cartório da 15ª Câmara Cível - Pça Milton Campos</b>
+      
+    </td>
+    <td nowrap align="center" id="campoStatus"><b> ATIVO </b></td>
+    
+  </tr>
+</table>
+
+
+
+
+<br>
+
+<table width="100%" class="corpo">
+  <tr>
+    <td nowrap width="12%"><b>Classe:&nbsp;</b> </td>
+    <td nowrap width="38%"  id="campoClasse">Embargos de Declaração-Cv </td>
+
+    <td nowrap width="12%" ><b>Processo Siscom:&nbsp;</b></td>
+    <td nowrap width="38%" >
+
+    ..</a>
+    </td>
+  </tr>
+  <tr>
+    <td nowrap width="5%"><b>Assunto:&nbsp;</b></td>
+    <td nowrap width="95%" colspan="3" align="left">Indenização por Dano Moral &lt; Responsabilidade Civil &lt; DIREITO CIVIL</td>
+  </tr>
+  <tr>
+    <td nowrap width="12%" ><b>C&acirc;mara:&nbsp;</b> </td>
+    <td nowrap width="38%"  id="campoCamara">15ª CÂMARA CÍVEL </td>
+    
+  </tr>
+
+  <tr>
+    
+    <td nowrap width="12%" ><b>Documento Origem:&nbsp;</b> </td>
+    <td nowrap width="38%" >10000261492847001</td>
+    
+    <td nowrap width="12%" ><b>Tipo Documento Origem:&nbsp;</b> </td>
+    <td nowrap width="38%" >Embargos de Declaração </td>
+  </tr>
+
+  <tr>
+    
+    <td nowrap width="12%" ><b>Data Cadastramento:&nbsp;</b> </td>
+    <td nowrap width="38%" >28/07/2026</td>
+    
+    
+    <td nowrap width="12%" ><b>Data Distribuição:&nbsp;</b> </td>
+    <td nowrap width="38%" >29/07/2026</td>
+    
+  </tr>
+</table>
+<br>
+
+
+<table class="corpo" id="partes">
+
+
+     <tr>
+       <td><b>Embargante(s):</b>&nbsp; </td>
+       <td>RAFAELA LUCIA MARCELINO </td>
+     </tr>
+
+     <tr>
+       <td><b>Embargado(a)(s):</b>&nbsp; </td>
+       <td>VALE S/A </td>
+     </tr>
+
+
+</table>
+<br>
+
+
+
+<table width="10%" class="corpo">
+  <tr>
+    <td nowrap><b>Última(s) Movimentaç&atilde;o(ões):</b> </td>
+  </tr>
+</table>
+
+<table class="corpo">
+   <tr>
+       <td>
+        
+        &nbsp;        
+       </td>
+       <td id="descricaoProc2_0">Comunicado o acórdão em:&nbsp;&nbsp;&nbsp; </td>
+       <td id="dataProc2_0" nowrap>
+         
+              11/09/2026 &nbsp;&nbsp;&nbsp;
+         
+       </td>
+       <td id="complementoProc2_0"> </td>
+     </tr>
+     
+       
+      
+   <tr>
+       <td>
+        
+        &nbsp;        
+       </td>
+       <td id="descricaoProc2_1">Comunicação enviada ao DJEN&nbsp;&nbsp;&nbsp; </td>
+       <td id="dataProc2_1" nowrap>
+         
+              09/09/2026 &nbsp;&nbsp;&nbsp;
+         
+       </td>
+       <td id="complementoProc2_1">VALE S/A Remessa para ciência do acórdão </td>
+     </tr>
+     
+       
+      
+   <tr>
+       <td>
+        
+        &nbsp;        
+       </td>
+       <td id="descricaoProc2_2">Comunicação enviada ao DJEN&nbsp;&nbsp;&nbsp; </td>
+       <td id="dataProc2_2" nowrap>
+         
+              09/09/2026 &nbsp;&nbsp;&nbsp;
+         
+       </td>
+       <td id="complementoProc2_2">RAFAELA LUCIA MARCELINO Remessa para ciência do acórdão </td>
+     </tr>
+     
+       
+      
+
+</table>
+
+<br>
+
+
+<table class="corpo" width="100%">
+  <tr align="center">
+    <td nowrap><b> <a href="proc_complemento2.jsp?listaProcessos=10000261492847002" onclick="return validaPesquisa();">Dados Completos</a></b></td>
+    <td nowrap><b> <a href="proc_movimentacoes2.jsp?listaProcessos=10000261492847002" onclick="return validaPesquisa();">Todos Andamentos</a> </b> </td>
+    <td nowrap><b> <a href="proc_partes_advogados2.jsp?listaProcessos=10000261492847002" onclick="return validaPesquisa();">Todas as Partes/Advogados</a></b> </td>
+    <td nowrap>
+      
+          <b><a href="proc_publicacoes2.jsp?listaProcessos=10000261492847002" onclick="return validaPesquisa();">Expediente(s) Enviado(s) para Publicação</a></b>
+      
+    </td>
+    <td nowrap>
+      
+      <b><a href="proc_resultado2.jsp?grupoLigado=1705866" onclick="return validaPesquisa();">Ligados</a></b>
+      
+    </td>
+  </tr>
+</table>
+
+<br>
+
+<div align="left" class="corpo">
+   Consulta realizada em <b> 26/09/2026 às 02:11:10 - (.25)</b>
+</div>
+
+
+
+<hr>
+
+</div>
+
+
+
+
+
+
+
+<table width="10%" class="corpo_jurisp" height="8">
+  <tr>
+   	
+  </tr>
+  <tr>  
+    <td>
+    
+      <form method="POST" name="frmPrimeiro" id="frmPrimeiro" action="proc_resultado2.jsp?pessCodigo=null&amp;situacaoParte=X&amp;naturezaProcesso=0&amp;comrCodigo=24&amp;numero=20&amp;paginar=1">
+			
+		 
+			&nbsp;	
+		
+	  </form>
+	  
+     </td>
+     
+	 <td>
+	  
+	  		<form method="POST" name="frmAnterior" id="frmAnterior" action="proc_resultado2.jsp?pessCodigo=null&amp;situacaoParte=X&amp;naturezaProcesso=0&amp;comrCodigo=24&amp;numero=20&amp;paginar=1">
+	  	
+		 
+			&nbsp;	
+		
+	  </form>
+	 	  
+	 </td>
+	 <td>
+	
+    
+		  <form method="POST" name="frmProximo" id="frmProximo" action="proc_resultado2.jsp?pessCodigo=null&amp;situacaoParte=X&amp;naturezaProcesso=0&amp;comrCodigo=24&amp;numero=20&amp;paginar=-19">
+		
+		 
+			&nbsp;	
+		
+      </form>
+    
+    </td>
+   
+    <td>
+     
+      <form method="POST" name="frmUltimo" id="frmUltimo" action="proc_resultado2.jsp?pessCodigo=null&amp;situacaoParte=X&amp;naturezaProcesso=0&amp;comrCodigo=24&amp;numero=20&amp;paginar=-19">
+			
+		 
+			&nbsp;	
+		
+	  </form>
+	  
+     </td>
+  </tr>
+</table>
+
+
+
+
+    <form method="get" action="proc_massiva2.jsp">
+<table width="100%" class="corpo">
+  <tr>
+      <td>
+        <input type="button" class="botao_vinho" value="Voltar" onClick="history.back(); return false" />
+      </td>
+      <td align = "right">
+        <input type="button" class="botao_vinho" value="Imprimir" onClick="self.print()" />
+        <input type="submit" class="botao_vinho" value="Nova Consulta" />
+      </td>
+  </tr>
+</table>
+    </form>
+
+
+</body>
+</html>
+

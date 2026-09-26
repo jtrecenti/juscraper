@@ -1,17 +1,22 @@
 """Scraper for the Court of Justice of Minas Gerais (TJMG)."""
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 
 import pandas as pd
 import requests
+from pydantic import ValidationError
 
 from juscraper.core.http import HTTPScraper
+from juscraper.utils.cnj import clean_cnj
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
+from .cposg_download import cposg_download as _cposg_download
+from .cposg_parse import cposg_parse as _cposg_parse
+from .cposg_parse import extract_partes_ids
 from .download import cjsg_download as _cjsg_download
 from .parse import cjsg_parse as _cjsg_parse
-from .schemas import InputCJSGTJMG
+from .schemas import InputCJSGTJMG, InputCPOSGTJMG
 
 
 class TJMGScraper(HTTPScraper):
@@ -174,9 +179,85 @@ class TJMGScraper(HTTPScraper):
         """Stub: first degree case search not implemented for TJMG."""
         raise NotImplementedError("TJMG does not implement cpopg.")
 
-    def cposg(self, id_cnj: str | list[str]):
-        """Stub: second degree case search not implemented for TJMG."""
-        raise NotImplementedError("TJMG does not implement cposg.")
+    def _coerce_id_cnj(self, id_cnj: str | list[str], **kwargs: Any) -> list[str]:
+        """Valida via pydantic e devolve a lista de numeros so com digitos."""
+        try:
+            inp = InputCPOSGTJMG(id_cnj=id_cnj, **kwargs)
+        except ValidationError as exc:
+            extras = [err for err in exc.errors() if err["type"] == "extra_forbidden"]
+            if extras and len(extras) == len(exc.errors()):
+                names = ", ".join(repr(err["loc"][-1]) for err in extras)
+                raise TypeError(
+                    f"TJMGScraper.cposg got unexpected keyword argument(s): {names}"
+                ) from exc
+            raise
+        raw = inp.id_cnj if isinstance(inp.id_cnj, list) else [inp.id_cnj]
+        numeros = [clean_cnj(c) for c in raw]
+        invalid = [n for n in numeros if len(n) not in (17, 20)]
+        if invalid:
+            raise ValueError(
+                "TJMG cposg aceita CNJ (20 digitos) ou numero TJMG (17 digitos); "
+                f"recebido: {invalid}"
+            )
+        return numeros
+
+    def cposg_download(self, id_cnj: str | list[str], **kwargs: Any) -> list[dict]:
+        """Baixa o HTML de resultado e de partes/advogados de cada processo.
+
+        Retorna uma lista alinhada com ``id_cnj``. Veja :meth:`cposg` para
+        os formatos de numero aceitos.
+        """
+        numeros = self._coerce_id_cnj(id_cnj, **kwargs)
+        return _cposg_download(
+            numeros,
+            request_fn=self._request_with_retry,
+            extract_partes_ids=extract_partes_ids,
+            sleep_time=self.sleep_time,
+        )
+
+    def cposg_parse(self, raw: list[dict]) -> pd.DataFrame:
+        """Converte a saida de :meth:`cposg_download` em DataFrame."""
+        return _cposg_parse(raw)
+
+    def cposg(self, id_cnj: str | list[str], **kwargs: Any) -> pd.DataFrame:
+        """Consulta processos de 2o grau do TJMG, com partes e advogados.
+
+        Usa a consulta processual publica de 2a instancia
+        (``www4.tjmg.jus.br/juridico/sf``), que nao tem captcha. Um CNJ pode
+        ter varios recursos (apelacao, embargos, agravo...); cada recurso vira
+        uma linha.
+
+        Args:
+            id_cnj (str | list[str]): CNJ (20 digitos) ou numero TJMG
+                (17 digitos, ex.: ``"1.0000.26.408376-7/001"`` — a coluna
+                ``processo_interno`` do :meth:`cjsg`). Mascara opcional.
+                Com CNJ, vem todos os recursos vinculados; com numero TJMG,
+                so aquele recurso.
+
+        Raises:
+            TypeError: Quando um kwarg desconhecido e passado.
+            ValueError: Quando um numero nao tem 17 nem 20 digitos.
+
+        Returns:
+            pd.DataFrame: Uma linha por recurso, com ``id_cnj``, ``processo``,
+            ``processo_interno``, ``segredo_justica``, ``situacao``,
+            ``secretaria``, ``classe``, ``assunto``, ``orgao_julgador``,
+            ``data_cadastramento``, ``data_distribuicao`` e ``partes``.
+            ``partes`` e uma lista de dicts ``{"tipo", "nome", "baixa",
+            "advogados"}``, com ``advogados`` = lista de ``{"oab", "nome"}``.
+            Numeros nao encontrados geram uma linha so com ``id_cnj``;
+            recursos em segredo de justica vem com ``partes=None``.
+
+        Exemplo:
+            >>> import juscraper as jus
+            >>> tjmg = jus.scraper("tjmg")
+            >>> df = tjmg.cposg("5000344-57.2025.8.13.0461")
+            >>> advs = df.explode("partes").dropna(subset=["partes"])
+
+        See also:
+            :class:`InputCPOSGTJMG` / :class:`OutputCPOSGTJMG`.
+        """
+        return self.cposg_parse(self.cposg_download(id_cnj, **kwargs))
 
 
 def _br_date(value) -> str:
