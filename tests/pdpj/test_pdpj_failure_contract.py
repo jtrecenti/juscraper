@@ -21,7 +21,7 @@ import responses
 
 import juscraper as jus
 from juscraper.aggregators.pdpj.client import PdpjScraper
-from juscraper.aggregators.pdpj.download import BASE_URL
+from juscraper.aggregators.pdpj.download import BASE_URL, USER_AGENT, fetch_documento_binario_url
 from juscraper.core.exceptions import InvalidJSONResponseError, RetryExhaustedError
 from juscraper.core.failures import STATUS_CONSULTA_FALHA
 from juscraper.core.http import RequestPolicy
@@ -102,16 +102,65 @@ def test_timeout_de_cada_perfil_chega_a_requisicao():
     assert [call.request.req_kwargs["timeout"] for call in responses.calls] == [30.0, 60.0]
 
 
-@responses.activate
-def test_politica_sobrepoe_o_timeout_do_perfil_documento():
-    """Sem ``timeout=`` literal nas chamadas, o ajuste do usuário chega à requisição."""
-    _mock(f"/processos/{PROC}/documentos/doc-a/texto", body="texto", content_type="text/plain")
-    s = _mk_scraper(politica={"documento": {"timeout": 7}})
+# Cada ``fetch_*`` com o perfil que usa e uma chamada que o exercita. Um
+# ``timeout=`` literal em qualquer um deles venceria o perfil e anularia o ajuste.
+_FETCHES = {
+    "existe": ("listagem", f"/processos/{PROC}/existe", "true", lambda s: s.existe(PROC)),
+    "cpopg": ("listagem", f"/processos/{PROC}", "[]", lambda s: s.cpopg(PROC)),
+    "documentos": ("listagem", f"/processos/{PROC}/documentos", "{}", lambda s: s.documentos(PROC)),
+    "movimentos": ("listagem", f"/processos/{PROC}/movimentos", "{}", lambda s: s.movimentos(PROC)),
+    "partes": ("listagem", f"/processos/{PROC}/partes", "{}", lambda s: s.partes(PROC)),
+    "pesquisa": ("listagem", "/processos", '{"content": []}', lambda s: s.pesquisa(paginas=1)),
+    "contar": ("listagem", "/processos:contar", "0", lambda s: s.contar()),
+    "texto": (
+        "documento", f"/processos/{PROC}/documentos/doc-a/texto", "t",
+        lambda s: s.download_documents(_docs_df()),
+    ),
+    "binario": (
+        "documento", f"/processos/{PROC}/documentos/doc-a/binario", "b",
+        lambda s: s.download_documents(_docs_df(), with_text=False, with_binary=True),
+    ),
+}
 
-    s.download_documents(pd.DataFrame([{"processo": PROC, "numero_processo": PROC, "id_documento": "doc-a"}]))
+
+@pytest.mark.parametrize("fetch", list(_FETCHES))
+@responses.activate
+def test_politica_sobrepoe_o_timeout_do_perfil_em_cada_endpoint(fetch):
+    """Sem ``timeout=`` literal nas chamadas, o ajuste do usuário chega à requisição."""
+    perfil, caminho, corpo, chamar = _FETCHES[fetch]
+    _mock(caminho, body=corpo)
+    s = _mk_scraper(politica={perfil: {"timeout": 7}})
+
+    chamar(s)
 
     assert responses.calls[0].request.req_kwargs["timeout"] == 7
-    assert s._perfis_http["documento"].max_retries == 6
+    assert s._perfis_http[perfil].max_retries == 6
+
+
+def test_fetch_documento_binario_url_usa_o_perfil_documento():
+    chamadas = []
+
+    def request_fn(method, url, **kwargs):
+        chamadas.append(kwargs)
+        resposta = requests.Response()
+        resposta.status_code = 200
+        resposta._content = b'"https://temporaria"'
+        return resposta
+
+    assert fetch_documento_binario_url(request_fn, PROC, "doc-a") == "https://temporaria"
+    assert chamadas == [{"perfil": "documento"}]
+
+
+@responses.activate
+def test_user_agent_de_navegador_e_accept():
+    """A API recusa User-Agent que não é de navegador, e o default do core é ``juscraper/<versão>``."""
+    _mock(f"/processos/{PROC}/existe", body="true")
+
+    _mk_scraper().existe(PROC)
+
+    headers = responses.calls[0].request.headers
+    assert headers["User-Agent"] == USER_AGENT
+    assert headers["Accept"] == "application/json, text/plain, */*"
 
 
 @pytest.mark.parametrize("status", [500, 502, 504])
@@ -288,7 +337,10 @@ def test_lista_no_lugar_do_objeto_vira_json_invalido(metodo):
     with pytest.warns(UserWarning, match="json_invalido"):
         df = getattr(_mk_scraper(), metodo)(PROC)
 
-    assert df.to_dict("records") == [{"processo": PROC, "motivo_falha": "json_invalido"}]
+    esperado = {"processo": PROC, "motivo_falha": "json_invalido"}
+    if metodo == "documentos":
+        esperado = {"processo": PROC, "id_documento": None, "motivo_falha": "json_invalido"}
+    assert df.to_dict("records") == [esperado]
 
 
 @responses.activate
@@ -304,7 +356,7 @@ def test_existe_resposta_sem_true_ou_false():
     assert df.iloc[0]["existe"] is None
 
 
-@pytest.mark.parametrize("body", ["muitos", "true", "4.5", '{"total": "3"}', "[]"])
+@pytest.mark.parametrize("body", ["muitos", "true", "4.5", '{"total": "3"}', '{"total": true}', "[]"])
 @responses.activate
 def test_contar_sem_inteiro_levanta_json_invalido(body):
     _mock("/processos:contar", body=body)
@@ -366,6 +418,59 @@ def test_pesquisa_levanta_na_falha_da_pagina_2():
         _mk_scraper().pesquisa(tribunal="TRF1", paginas=2)
 
     assert "searchAfter" in _urls()[1]
+
+
+@responses.activate
+def test_pesquisa_pagina_sem_content_levanta_em_vez_de_truncar():
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/processos",
+        body=load_sample("pdpj", "pesquisa/single_page.json"),
+        status=200,
+        content_type="application/json",
+    )
+    responses.add(responses.GET, f"{BASE_URL}/processos", json={"content": None, "searchAfter": None}, status=200)
+
+    with pytest.raises(InvalidJSONResponseError):
+        _mk_scraper().pesquisa(tribunal="TRF1", paginas=2)
+
+
+@responses.activate
+def test_cpopg_item_que_nao_e_objeto_vira_json_invalido():
+    _mock(f"/processos/{PROC}", body="[null]")
+
+    with pytest.warns(UserWarning, match="json_invalido"):
+        df = _mk_scraper().cpopg(PROC)
+
+    assert df.iloc[0]["motivo_falha"] == "json_invalido"
+    assert df.iloc[0]["status_consulta"] == STATUS_CONSULTA_FALHA
+
+
+@pytest.mark.parametrize("metodo", ["documentos", "movimentos", "partes"])
+@responses.activate
+def test_motivo_falha_e_a_ultima_coluna_mesmo_com_a_falha_primeiro(metodo):
+    sufixo, sample = METODOS_DE_LISTA[metodo]
+    _mock(f"/processos/{OUTRO}{sufixo}", status=404)
+    _mock_sample(f"/processos/{PROC}{sufixo}", sample)
+
+    with pytest.warns(UserWarning):
+        df = getattr(_mk_scraper(), metodo)([OUTRO, PROC])
+
+    assert df.columns[-1] == "motivo_falha"
+    assert df.columns[0] == "processo"
+
+
+@responses.activate
+def test_download_de_documentos_que_so_falharam_devolve_vazio():
+    _mock(f"/processos/{PROC}/documentos", status=404)
+    s = _mk_scraper()
+    with pytest.warns(UserWarning):
+        docs = s.documentos(PROC)
+
+    out = s.download_documents(docs)
+
+    assert out.empty
+    assert len(responses.calls) == 1
 
 
 @responses.activate

@@ -94,12 +94,14 @@ def fetch_processo_detalhes(
     """Recupera os detalhes do processo. A API responde com **lista** de tramitacoes.
 
     Lista vazia é o processo que a API não encontrou. Um objeto no lugar da
-    lista é forma errada, e não um processo único: aceitá-lo escondia uma
-    mudança de contrato da API.
+    lista, ou item da lista que não é objeto, é forma errada, e não um
+    processo único: aceitá-lo escondia uma mudança de contrato da API.
     """
     url = f"{base_url}/processos/{numero_processo}"
     response = request_fn("GET", url, perfil=PERFIL_LISTAGEM)
     detalhes: list[dict[str, Any]] = _json(response, list)
+    if not all(isinstance(item, dict) for item in detalhes):
+        raise _forma_invalida(response)
     return detalhes
 
 
@@ -191,9 +193,15 @@ def fetch_pesquisa(
     *,
     base_url: str = BASE_URL,
 ) -> dict[str, Any]:
-    """Pesquisa profunda em ``/processos`` (paginacao via ``searchAfter``)."""
+    """Pesquisa profunda em ``/processos`` (paginacao via ``searchAfter``).
+
+    O objeto precisa trazer ``content`` como lista: sem ela, o laço da
+    ``pesquisa`` leria uma página vazia e encerraria a coleta em silêncio.
+    """
     response = request_fn("GET", f"{base_url}/processos", params=params, perfil=PERFIL_LISTAGEM)
     data: dict[str, Any] = _json(response, dict)
+    if not isinstance(data.get("content"), list):
+        raise _forma_invalida(response)
     return data
 
 

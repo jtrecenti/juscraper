@@ -215,8 +215,18 @@ def _linha_cpopg_vazia(cnj: str, status_consulta: str) -> dict[str, Any]:
 
 
 def _linha_processo(cnj: str) -> dict[str, Any]:
-    """Linha de falha dos metodos de lista: so o processo, o motivo entra depois."""
+    """Linha de falha de movimentos e partes: so o processo, o motivo entra depois."""
     return {"processo": cnj}
+
+
+def _linha_documentos(cnj: str) -> dict[str, Any]:
+    """Linha de falha de :meth:`PdpjScraper.documentos`.
+
+    Leva ``id_documento`` vazio para que o DataFrame continue aceito por
+    ``download_documents`` mesmo quando todos os processos falharam; a linha
+    sem id é pulada lá.
+    """
+    return {"processo": cnj, "id_documento": None}
 
 
 class PdpjScraper(HTTPScraper):
@@ -358,7 +368,12 @@ class PdpjScraper(HTTPScraper):
             raise
         # stacklevel 4: warn -> avisar_falhas -> este metodo -> metodo publico -> usuario.
         avisar_falhas(falhas, origem, _ITEM_CONSULTA, stacklevel=4)
-        return pd.DataFrame(rows)
+        df = pd.DataFrame(rows)
+        # A coluna do motivo vai para o fim: com a linha de falha primeiro, o
+        # pandas a poria na ordem de chegada, antes das colunas de conteúdo.
+        if COLUNA_MOTIVO_FALHA in df.columns:
+            df = df[[c for c in df.columns if c != COLUNA_MOTIVO_FALHA] + [COLUNA_MOTIVO_FALHA]]
+        return df
 
     def existe(self, id_cnj: str | list[str]) -> bool | pd.DataFrame:
         """Checa presenca de processo(s) no Data Lake.
@@ -446,7 +461,7 @@ class PdpjScraper(HTTPScraper):
             self._normalize_cnj_input(id_cnj),
             fetch_processo_documentos,
             build_documento_rows,
-            _linha_processo,
+            _linha_documentos,
         )
 
     def movimentos(self, id_cnj: str | list[str]) -> pd.DataFrame:
