@@ -11,6 +11,7 @@ import json
 import re
 from urllib.parse import parse_qs, urlparse
 
+import jwt
 import pandas as pd
 import pytest
 import responses
@@ -299,6 +300,42 @@ def test_auth_define_header_authorization():
     assert "Authorization" not in s.session.headers
     s.auth(FAKE_TOKEN)
     assert s.session.headers["Authorization"] == f"Bearer {FAKE_TOKEN}"
+
+
+# Chave HMAC de 32+ bytes: abaixo disso o PyJWT emite InsecureKeyLengthWarning,
+# que o ``filterwarnings = ["error"]`` converte em falha. A assinatura nao e
+# verificada pelo ``auth``, entao a chave nao afeta o contrato.
+_HMAC_KEY = "0123456789abcdef0123456789abcdef-test"
+
+
+def test_auth_token_expirado_raises_valueerror():
+    """Com ``verify_signature=False`` o PyJWT desliga tambem ``verify_exp``;
+    sem religa-lo, o token vencido era aceito e so falhava na primeira
+    chamada a API (#351).
+    """
+    s = jus.scraper("pdpj")
+    expirado = jwt.encode({"sub": "tester", "exp": 0}, _HMAC_KEY, algorithm="HS256")
+
+    with pytest.raises(ValueError, match="Token JWT expirado"):
+        s.auth(expirado)
+    assert s.token is None
+    assert "Authorization" not in s.session.headers
+
+
+def test_construtor_com_token_expirado_raises_valueerror():
+    expirado = jwt.encode({"sub": "tester", "exp": 0}, _HMAC_KEY, algorithm="HS256")
+
+    with pytest.raises(ValueError, match="Token JWT expirado"):
+        jus.scraper("pdpj", token=expirado)
+
+
+def test_auth_token_sem_exp_e_aceito():
+    """Mesmo contrato do JusBR: o PyJWT so confere ``exp`` quando o claim existe."""
+    s = jus.scraper("pdpj")
+    sem_exp = jwt.encode({"sub": "tester"}, _HMAC_KEY, algorithm="HS256")
+
+    assert s.auth(sem_exp) is True
+    assert s.session.headers["Authorization"] == f"Bearer {sem_exp}"
 
 
 # ---------------------------------------------------------------------
