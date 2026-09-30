@@ -250,7 +250,8 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
     :meth:`download_documents` devolvem uma linha de falha quando a requisicao
     de um item falha, com o motivo na coluna ``motivo_falha`` (vocabulario em
     :mod:`juscraper.core.failures`) e um ``UserWarning`` agregado ao fim. O 401
-    interrompe a coleta. Metodos sem linha por item (:meth:`existe` com
+    e a falha do SSO ao renovar o token (``ErroSsoPdpj``) interrompem a
+    coleta. Metodos sem linha por item (:meth:`existe` com
     ``str``, :meth:`contar` e :meth:`pesquisa`) levantam o erro.
 
     As requisicoes usam os perfis ``"listagem"`` e ``"documento"`` de
@@ -287,7 +288,10 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
             verbose: Nivel de log.
             download_path: Diretorio de download.
             sleep_time: Pausa entre requisicoes de itens, em segundos.
-            token: JWT opcional, validado por :meth:`auth`.
+            token: JWT do SSO da PDPJ, validado por :meth:`auth`. ``None``
+                carrega a credencial de ``PDPJ_JWT`` ou do cache de
+                :meth:`auth_govbr`; ``""`` e sem nenhuma exigem :meth:`auth`
+                antes das consultas.
             politica: Ajustes por campo dos perfis ``"listagem"`` e
                 ``"documento"``, como ``{"documento": {"timeout": 20}}``. O
                 que nao for passado fica como o raspador declara.
@@ -414,6 +418,8 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
 
         Raises:
             requests.HTTPError: No 401, e com ``str`` em qualquer erro HTTP.
+            ErroSsoPdpj: Quando o SSO do PJe recusa ou não consegue renovar o
+                token; na lista, com as falhas anteriores numa nota do erro.
             RetryExhaustedError, requests.Timeout, requests.ConnectionError,
             InvalidJSONResponseError: Com ``str``, quando a consulta falha;
                 a resposta sem ``true``/``false`` levanta o ultimo.
@@ -453,6 +459,9 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
         Raises:
             requests.HTTPError: No 401 (token ausente, expirado ou invalido),
                 com as falhas anteriores numa nota do erro.
+            ErroSsoPdpj: Quando o SSO do PJe recusa ou não consegue renovar o
+                token no meio do lote. Propaga como o 401, com as falhas
+                anteriores numa nota do erro.
 
         Warns:
             UserWarning: Quando pelo menos uma consulta falhou.

@@ -669,5 +669,5 @@ def test_download_documents_sso_fora_do_ar_no_meio_do_lote_anota_falhas_anterior
         s.download_documents(_docs_df("doc-a", "doc-b"))
 
     notas = " ".join(getattr(erro.value, "__notes__", []))
-    assert "Antes da falha do SSO" in notas
+    assert "Antes da falha do SSO, 1 download(s) de documento" in notas
     assert "doc-a, texto: http_404" in notas
