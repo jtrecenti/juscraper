@@ -565,3 +565,56 @@ def test_network_and_status_share_max_retries(probe_perfis, mocker):
 
     assert exc.value.attempts == 4
     assert request.call_count == 4
+
+
+class _ProbeBackoff(HTTPScraper):
+    """Perfil com backoff fora do default, para distinguir perfil, default e fórmula."""
+
+    perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
+        "lento": RequestPolicy(base_backoff=3.0, retry_on_timeout=True),
+    }
+
+
+@responses.activate
+def test_profile_base_backoff_used_for_status(mocker):
+    sleep_spy = mocker.patch("juscraper.core.http.time.sleep")
+    responses.add(responses.GET, URL, status=503)
+    responses.add(responses.GET, URL, status=503)
+    responses.add(responses.GET, URL, json={"ok": True}, status=200)
+
+    _ProbeBackoff()._request_with_retry("GET", URL, perfil="lento")
+
+    assert [c.args[0] for c in sleep_spy.call_args_list] == [3.0, 9.0]
+
+
+@responses.activate
+def test_explicit_base_backoff_beats_profile(mocker):
+    sleep_spy = mocker.patch("juscraper.core.http.time.sleep")
+    responses.add(responses.GET, URL, status=503)
+    responses.add(responses.GET, URL, json={"ok": True}, status=200)
+
+    _ProbeBackoff()._request_with_retry("GET", URL, perfil="lento", base_backoff=5.0)
+
+    sleep_spy.assert_called_once_with(5.0)
+
+
+def test_network_backoff_is_exponential_in_profile_base(mocker):
+    sleep_spy = mocker.patch("juscraper.core.http.time.sleep")
+    probe = _ProbeBackoff()
+    ok = requests.Response()
+    ok.status_code = 200
+    mocker.patch.object(probe.session, "request", side_effect=[requests.ReadTimeout(), requests.ReadTimeout(), ok])
+
+    probe._request_with_retry("GET", URL, perfil="lento")
+
+    assert [c.args[0] for c in sleep_spy.call_args_list] == [3.0, 9.0]
+
+
+def test_politica_timeout_list_becomes_tuple():
+    probe = _ProbeComPerfis(politica={"documento": {"timeout": [5, 30]}})
+    assert probe._perfis_http["documento"].timeout == (5, 30)
+
+
+def test_politica_non_mapping_adjustment_raises():
+    with pytest.raises(ValueError, match=r"deve ser um dict de campos, recebido RequestPolicy"):
+        _ProbeComPerfis(politica={"documento": RequestPolicy(timeout=1)})  # type: ignore[dict-item]

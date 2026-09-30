@@ -47,9 +47,10 @@ acaba caindo em ``RetryExhaustedError`` após ``max_retries`` tentativas, o que
 é o sintoma certo — o WAF não distingue os dois casos pelo status code.
 
 A decisão aplica-se globalmente: todos os scrapers que delegam ao
-``_request_with_retry`` herdam o comportamento. Consumidores para os quais o
-403 não é transitório (ex.: PDPJ, onde 403 nega o recurso) declaram um perfil
-de :class:`RequestPolicy` com ``retryable_statuses`` sem o 403."""
+``_request_with_retry`` herdam o comportamento. Consumidores que distinguem
+403-de-auth de 403-de-WAF (ex.: PDPJ, onde 403 nega o recurso) podem declarar
+um perfil de :class:`RequestPolicy` com ``retryable_statuses`` sem o 403; o
+PDPJ ainda mantém retry local próprio em ``aggregators/pdpj/download.py``."""
 
 
 @dataclass(frozen=True)
@@ -85,9 +86,13 @@ class RequestPolicy:
     retry_on_connection_error: bool = False
 
     def __post_init__(self) -> None:
-        """Valida ``max_retries`` e congela ``retryable_statuses``."""
+        """Valida ``max_retries`` e congela ``retryable_statuses`` e ``timeout``."""
         if self.max_retries < 1:
             raise ValueError(f"max_retries deve ser >= 1, recebido {self.max_retries}")
+        # ``politica=`` vinda de JSON traz lista; ``requests`` só aceita tupla (connect, read).
+        timeout: Any = self.timeout  # a anotação não cobre a lista que chega em runtime
+        if isinstance(timeout, list):
+            object.__setattr__(self, "timeout", tuple(timeout))
         # Aceita set/list vindos de ``politica=`` sem deixar a política mutável.
         object.__setattr__(self, "retryable_statuses", frozenset(self.retryable_statuses))
 
@@ -198,6 +203,10 @@ class HTTPScraper(BaseScraper):
             if nome not in perfis:
                 raise ValueError(
                     f"Perfil HTTP desconhecido em {cls.__name__}: {nome!r}. Perfis declarados: {sorted(perfis)}."
+                )
+            if not isinstance(ajuste, Mapping):
+                raise ValueError(
+                    f"Ajuste do perfil {nome!r} deve ser um dict de campos, recebido {type(ajuste).__name__}."
                 )
             desconhecidos = set(ajuste) - _POLICY_FIELDS
             if desconhecidos:
