@@ -135,3 +135,52 @@ def test_listar_comunicacoes_itens_por_pagina_zero():
             pesquisa="resolucao",
             itens_por_pagina=0,
         )
+
+
+# ---------------------------------------------------------------------------
+# Filtro por número de processo
+# ---------------------------------------------------------------------------
+
+CNJ_FORMATADO = "0000001-11.2024.8.26.0100"
+CNJ_DIGITOS = "00000011120248260100"
+
+
+def _mock_pagina_unica(params: dict) -> None:
+    responses.add(
+        responses.GET,
+        BASE_URL,
+        body=load_sample("comunica_cnj", "listar_comunicacoes/single_page.json"),
+        status=200,
+        content_type="application/json",
+        match=[query_param_matcher({k: str(v) for k, v in params.items()})],
+    )
+
+
+@responses.activate
+def test_numero_processo_sozinho_vai_como_numeroProcesso_sem_texto(mocker):
+    """O termo livre não acha o processo pelo número; a API filtra por ``numeroProcesso``."""
+    mocker.patch("time.sleep")
+    _mock_pagina_unica({"itensPorPagina": 100, "pagina": 1, "numeroProcesso": CNJ_DIGITOS})
+
+    df = jus.scraper("comunica_cnj").listar_comunicacoes(numero_processo=CNJ_FORMATADO)
+
+    assert isinstance(df, pd.DataFrame)
+    assert len(responses.calls) >= 1
+
+
+@responses.activate
+def test_numero_processo_e_pesquisa_juntos(mocker):
+    mocker.patch("time.sleep")
+    _mock_pagina_unica({
+        "itensPorPagina": 100, "pagina": 1, "texto": "liminar", "numeroProcesso": CNJ_DIGITOS,
+    })
+
+    jus.scraper("comunica_cnj").listar_comunicacoes("liminar", numero_processo=CNJ_DIGITOS)
+
+    assert len(responses.calls) >= 1
+
+
+def test_build_params_omite_texto_sem_pesquisa():
+    params = build_listar_comunicacoes_params(pagina=2, numero_processo=CNJ_FORMATADO)
+
+    assert params == {"itensPorPagina": 100, "pagina": 2, "numeroProcesso": CNJ_DIGITOS}

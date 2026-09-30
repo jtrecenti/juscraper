@@ -127,10 +127,9 @@ def test_listar_comunicacoes_no_results(mocker):
     assert df.empty
 
 
-def test_listar_comunicacoes_pesquisa_obrigatoria():
-    """``pesquisa=None`` levanta ``ValidationError`` via pydantic
-    (``pesquisa: str`` no schema, sem default)."""
-    with pytest.raises(ValidationError):
+def test_listar_comunicacoes_exige_pesquisa_ou_numero_processo():
+    """Sem ``pesquisa`` nem ``numero_processo``, o client levanta antes do schema e da rede."""
+    with pytest.raises(ValueError, match="informe pesquisa, numero_processo ou os dois"):
         jus.scraper("comunica_cnj").listar_comunicacoes()
 
 
