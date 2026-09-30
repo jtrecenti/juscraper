@@ -36,6 +36,18 @@ def _resposta_token(dados, ok=True):
     )
 
 
+class _ErroFalso(Exception):
+    """Faz o papel de ``playwright.sync_api.Error``."""
+
+
+class _TimeoutFalso(_ErroFalso):
+    """Faz o papel de ``playwright.sync_api.TimeoutError``, subclasse do ``Error``.
+
+    Nao e o ``TimeoutError`` nativo: se o codigo tolerasse o nativo no lugar do
+    do Playwright, os testes de portal lento ficariam vermelhos.
+    """
+
+
 class _Page:
     """Pagina cujo estado avanca um passo a cada ``wait_for_timeout``.
 
@@ -131,8 +143,8 @@ def _instalar_playwright_falso(mocker, urls, eventos, fecha_no_passo=None):
 
     sync_api = types.ModuleType("playwright.sync_api")
     vars(sync_api)["sync_playwright"] = sync_playwright
-    # No Playwright real e uma subclasse de ``playwright.sync_api.Error``; o falso usa o nativo.
-    vars(sync_api)["TimeoutError"] = TimeoutError
+    vars(sync_api)["Error"] = _ErroFalso
+    vars(sync_api)["TimeoutError"] = _TimeoutFalso
     mocker.patch.dict(sys.modules, {"playwright": types.ModuleType("playwright"), "playwright.sync_api": sync_api})
     return launch, browser
 
@@ -305,7 +317,7 @@ def test_reload_lento_nao_interrompe_a_espera(mocker):
     def goto(self, url, **kwargs):
         goto_original(self, url, **kwargs)
         if len(self.gotos) > 1:
-            raise TimeoutError("Timeout 30000ms exceeded")
+            raise _TimeoutFalso("Timeout 30000ms exceeded")
 
     mocker.patch.object(_Page, "goto", goto)
 
@@ -320,7 +332,7 @@ def test_cancelamento_encerra_a_espera(mocker):
     page = types.SimpleNamespace(is_closed=lambda: False)
 
     with pytest.raises(RuntimeError, match="cancelado"):
-        login._esperar_credencial(page, login._Captura(), 5, cancelar)
+        login._esperar_credencial(page, login._Captura(), 5, cancelar, _ErroFalso)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="SIGINT enviado ao proprio processo")
@@ -395,7 +407,7 @@ def test_abertura_lenta_do_portal_nao_interrompe_a_espera(mocker):
 
     def goto(self, url, **kwargs):
         goto_original(self, url, **kwargs)
-        raise TimeoutError("Timeout 30000ms exceeded")
+        raise _TimeoutFalso("Timeout 30000ms exceeded")
 
     mocker.patch.object(_Page, "goto", goto)
 
@@ -445,11 +457,11 @@ def test_ctrl_c_com_worker_preso_nao_segura_a_saida_do_interpretador():
 
 def test_erro_de_rede_na_abertura_sobe_na_hora(mocker):
     _instalar_playwright_falso(mocker, ["chrome-error://chromewebdata/"], {})
-    erro_de_rede = RuntimeError("net::ERR_NAME_NOT_RESOLVED at https://portaldeservicos")
+    erro_de_rede = _ErroFalso("net::ERR_NAME_NOT_RESOLVED at https://portaldeservicos")
     mocker.patch.object(_Page, "goto", side_effect=erro_de_rede)
     inicio = time.monotonic()
 
-    with pytest.raises(RuntimeError, match="ERR_NAME_NOT_RESOLVED"):
+    with pytest.raises(_ErroFalso, match="ERR_NAME_NOT_RESOLVED"):
         obter_credencial_govbr(timeout=5)
 
     assert time.monotonic() - inicio < 2
@@ -457,7 +469,27 @@ def test_erro_de_rede_na_abertura_sobe_na_hora(mocker):
 
 def test_janela_fechada_durante_a_navegacao_diz_que_fechou(mocker):
     _instalar_playwright_falso(mocker, [PORTAL_CONSULTA], {}, fecha_no_passo=0)
-    mocker.patch.object(_Page, "goto", side_effect=RuntimeError("Target page, context or browser has been closed"))
+    mocker.patch.object(_Page, "goto", side_effect=_ErroFalso("Target page, context or browser has been closed"))
 
     with pytest.raises(RuntimeError, match="fechada"):
         obter_credencial_govbr(timeout=5)
+
+
+def test_reload_interrompido_por_outra_navegacao_nao_derruba_o_login(mocker):
+    """Um clique do usuario antes do commit aborta o reload; o token chega pela navegacao dele."""
+    _, browser = _instalar_playwright_falso(
+        mocker,
+        [PORTAL_CONSULTA, _SSO, "https://portaldeservicos.pdpj.jus.br/home"],
+        {6: [_requisicao(_API, _APOS_RELOAD)]},
+    )
+    goto_original = _Page.goto
+
+    def goto(self, url, **kwargs):
+        goto_original(self, url, **kwargs)
+        if len(self.gotos) > 1:
+            raise _ErroFalso(f'Navigation to "{url}" is interrupted by another navigation')
+
+    mocker.patch.object(_Page, "goto", goto)
+
+    assert obter_credencial_govbr(timeout=5) == CredencialPdpj(_APOS_RELOAD, None)
+    assert browser.processo.encerrado

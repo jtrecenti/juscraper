@@ -212,7 +212,8 @@ def _encerrar(processo: subprocess.Popen[bytes]) -> None:
 def _obter_credencial(timeout: float, navegador: str | None, sessao: _SessaoLogin) -> CredencialPdpj:
     try:
         # pylint: disable-next=import-outside-toplevel
-        from playwright.sync_api import TimeoutError as TimeoutPlaywright
+        from playwright.sync_api import Error as ErroPlaywright
+        from playwright.sync_api import TimeoutError as TimeoutPlaywright  # pylint: disable=import-outside-toplevel
         from playwright.sync_api import sync_playwright  # pylint: disable=import-outside-toplevel
     except ImportError as exc:
         raise ImportError(
@@ -237,7 +238,7 @@ def _obter_credencial(timeout: float, navegador: str | None, sessao: _SessaoLogi
                 page = context.pages[0] if context.pages else context.new_page()
                 inicio = time.monotonic()
                 _navegar(page, _timeout_de_navegacao(inicio + timeout, inicio), TimeoutPlaywright)
-                return _esperar_credencial(page, captura, timeout, sessao.cancelar, TimeoutPlaywright)
+                return _esperar_credencial(page, captura, timeout, sessao.cancelar, ErroPlaywright)
         finally:
             _encerrar(processo)
 
@@ -300,21 +301,25 @@ def _corpo_json(response: Any) -> dict[str, Any]:
     return dados if isinstance(dados, dict) else {}
 
 
-def _navegar(page: Any, timeout_ms: float, erro_de_timeout: type[BaseException]) -> None:
-    """Abre a consulta do portal; so o timeout do Playwright e tolerado.
+def _navegar(page: Any, timeout_ms: float, tolerado: type[BaseException]) -> None:
+    """Abre a consulta do portal, tolerando so os erros da classe ``tolerado``.
 
-    Portal lento nao e erro: a pagina segue carregando e o laco espera o token
-    ate o prazo. Qualquer outra falha (sem rede, DNS, proxy) sobe na hora, em
-    vez de virar uma espera do prazo inteiro com mensagem de timeout.
+    Na abertura, ``tolerado`` e o timeout do Playwright: portal lento nao e erro,
+    e o laco espera o token ate o prazo, mas sem rede, DNS ou proxy a falha sobe
+    na hora, em vez de virar uma espera do prazo inteiro. No reload, e o
+    ``Error`` base do Playwright: a rede acabou de funcionar no caminho ate o
+    SSO, e um clique do usuario antes do commit aborta o ``goto`` ("interrupted
+    by another navigation", ``net::ERR_ABORTED``) sem que o login tenha falhado;
+    a captura continua ouvindo as navegacoes do proprio usuario.
     """
     try:
         page.goto(PORTAL_CONSULTA, wait_until="domcontentloaded", timeout=timeout_ms)
-    except erro_de_timeout:
-        logger.debug("Navegacao da consulta nao terminou no prazo; seguindo a espera.")
     except Exception as exc:
         if page.is_closed():
             raise RuntimeError(_JANELA_FECHADA) from exc
-        raise
+        if not isinstance(exc, tolerado):
+            raise
+        logger.debug("Navegacao da consulta nao terminou (%s); seguindo a espera.", type(exc).__name__)
 
 
 def _timeout_de_navegacao(prazo: float, agora: float) -> float:
@@ -330,8 +335,8 @@ def _esperar_credencial(
     page: Any,
     captura: _Captura,
     timeout: float,
-    cancelar: threading.Event | None = None,
-    erro_de_timeout: type[BaseException] = TimeoutError,
+    cancelar: threading.Event | None,
+    erro_no_reload: type[BaseException],
 ) -> CredencialPdpj:
     prazo = time.monotonic() + timeout
     saiu_do_portal = False
@@ -360,7 +365,7 @@ def _esperar_credencial(
             voltou_em = voltou_em if voltou_em is not None else agora
             if agora - voltou_em >= ESPERA_ANTES_DO_RELOAD:
                 recarregou = True
-                _navegar(page, _timeout_de_navegacao(prazo, agora), erro_de_timeout)
+                _navegar(page, _timeout_de_navegacao(prazo, agora), erro_no_reload)
         try:
             page.wait_for_timeout(500)
         except Exception as exc:  # pylint: disable=broad-except
