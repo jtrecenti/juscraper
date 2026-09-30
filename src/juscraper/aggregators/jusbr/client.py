@@ -26,11 +26,18 @@ from ...core.failures import (
 from ...core.http import RETRYABLE_STATUSES, HTTPScraper, RequestPolicy
 from ...utils.cnj import clean_cnj
 from ...utils.params import raise_on_extra_kwargs
+from .._pdpj_sso import CredencialPdpj, PdpjSsoMixin
+from .._pdpj_sso.renovacao import ErroSsoPdpj, anotar_falhas_antes_do_sso
 from .download import USER_AGENT, fetch_document_binary, fetch_document_text, fetch_process_details, fetch_process_list
 from .parse import clean_document_text, parse_process_details_response, parse_process_list_response
-from .schemas import InputAuthJusBR, InputCPOPGJusBR, InputDownloadDocumentsJusBR
+from .schemas import InputAuthGovbrJusBR, InputAuthJusBR, InputCPOPGJusBR, InputDownloadDocumentsJusBR
 
 logger = logging.getLogger(__name__)
+
+_MENSAGEM_SEM_AUTH = (
+    "Autenticacao necessaria. Chame auth_govbr() para entrar pelo gov.br, auth(token) com um JWT "
+    "ja obtido, ou defina a variavel de ambiente PDPJ_JWT."
+)
 
 _PREFERRED_DOCUMENT_COLUMNS = (
     'numero_processo', 'idDocumento', 'idCodex', 'sequencia', 'descricao', 'nome',
@@ -170,7 +177,7 @@ def _tentar(buscar: Callable[[], Any], descricao: str, falhas: list[str]) -> tup
         return None, motivo
 
 
-class JusbrScraper(HTTPScraper):
+class JusbrScraper(PdpjSsoMixin, HTTPScraper):
     """Raspador para o JusBR (consulta unificada da PDPJ-CNJ).
 
     Este scraper interage com a API da Plataforma Digital do Poder Judiciario (PDPJ).
@@ -186,8 +193,12 @@ class JusbrScraper(HTTPScraper):
     # de "wired" para ``tests/schemas/test_signature_parity.py`` (mesmo padrao
     # do agregador irmao PDPJ).
     INPUT_AUTH = InputAuthJusBR
+    INPUT_AUTH_GOVBR = InputAuthGovbrJusBR
     INPUT_CPOPG = InputCPOPGJusBR
     INPUT_DOWNLOAD_DOCUMENTS = InputDownloadDocumentsJusBR
+
+    # ``JUSBR_JWT`` segue aceita porque o script de captura de fixtures ja a usa.
+    NOMES_ENV_TOKEN = ("PDPJ_JWT", "JUSBR_JWT")
 
     # "listagem" serve à lista de processos e aos detalhes; "documento", ao
     # texto e ao binário, que são maiores e mais lentos. O usuário ajusta
@@ -211,7 +222,9 @@ class JusbrScraper(HTTPScraper):
             verbose: Nível de log.
             download_path: Diretório de download.
             sleep_time: Pausa entre processos e entre documentos, em segundos.
-            token: JWT do SSO da PDPJ. ``None`` exige :meth:`auth` antes das consultas.
+            token: JWT do SSO da PDPJ. ``None`` carrega a credencial de
+                ``PDPJ_JWT``, de ``JUSBR_JWT`` ou do cache de :meth:`auth_govbr`;
+                sem nenhuma, exige :meth:`auth` antes das consultas.
             politica: Ajustes por campo dos perfis ``"listagem"`` e
                 ``"documento"``, como ``{"documento": {"timeout": 10}}``. Ver
                 ``RequestPolicy`` em ``juscraper.core.http``.
@@ -226,6 +239,8 @@ class JusbrScraper(HTTPScraper):
         self.token: str | None = None
         if token is not None:
             self.auth(token)
+        else:
+            self._carregar_credencial_padrao()
 
     def _configure_session(self, session: requests.Session) -> None:
         # PDPJ rejeita User-Agent não-browser; sobrescreve o default do
@@ -257,8 +272,7 @@ class JusbrScraper(HTTPScraper):
             logger.error("%s", exc)
             raise
         # Só depois da validação: um ``auth()`` que falha mantém o token anterior.
-        self.token = token
-        self.session.headers.update({'authorization': f'Bearer {self.token}'})
+        self._instalar_credencial(CredencialPdpj(token), salvar_renovacao=False)
         if self.verbose > 0:
             logger.info("Token JWT definido e decodificado com sucesso!")
             if self.verbose > 1:
@@ -345,6 +359,9 @@ class JusbrScraper(HTTPScraper):
             requests.HTTPError: Quando a API responde 401 (token ausente,
                 expirado ou inválido). As linhas já obtidas se perdem, e as
                 falhas anteriores vão numa nota do próprio erro (``__notes__``).
+            ErroSsoPdpj: Quando o SSO do PJe recusa ou não consegue renovar o
+                token no meio do lote. Propaga como o 401, com as falhas
+                anteriores numa nota do erro.
 
         Warns:
             UserWarning: Quando pelo menos uma consulta falhou; um aviso por
@@ -357,7 +374,7 @@ class JusbrScraper(HTTPScraper):
             raise
         id_cnj = inp.id_cnj
         if not self.token:
-            raise RuntimeError("Autenticacao necessaria. Chame o metodo auth(token) primeiro.")
+            raise RuntimeError(_MENSAGEM_SEM_AUTH)
 
         id_cnj_list = [id_cnj] if isinstance(id_cnj, str) else id_cnj
         all_process_data: list[dict[str, Any]] = []
@@ -368,6 +385,9 @@ class JusbrScraper(HTTPScraper):
         except requests.HTTPError as erro:
             # Só o 401 chega aqui; as falhas anteriores viram nota do erro.
             anotar_falhas_anteriores(erro, falhas, _DESCRICAO_FALHAS_CPOPG)
+            raise
+        except ErroSsoPdpj as erro_sso:
+            anotar_falhas_antes_do_sso(erro_sso, falhas, _DESCRICAO_FALHAS_CPOPG)
             raise
         avisar_falhas(falhas, "JusbrScraper.cpopg", _DESCRICAO_FALHAS_CPOPG)
 
@@ -639,6 +659,9 @@ class JusbrScraper(HTTPScraper):
             requests.HTTPError: Quando a API responde 401 (token ausente,
                 expirado ou inválido). As linhas já baixadas se perdem, e as
                 falhas anteriores vão numa nota do próprio erro (``__notes__``).
+            ErroSsoPdpj: Quando o SSO do PJe recusa ou não consegue renovar o
+                token no meio do lote. Propaga como o 401, com as falhas
+                anteriores numa nota do erro.
 
         Warns:
             UserWarning: Quando pelo menos um download falhou; um aviso por
@@ -664,7 +687,7 @@ class JusbrScraper(HTTPScraper):
         base_df = inp.base_df
         max_docs_per_process = inp.max_docs_per_process
         if not self.token:
-            raise RuntimeError("Autenticação necessária. Chame o método auth(token) primeiro.")
+            raise RuntimeError(_MENSAGEM_SEM_AUTH)
 
         all_docs_data: list[dict[str, Any]] = []
         downloaded_by_process: dict[str, int] = {}
@@ -689,6 +712,9 @@ class JusbrScraper(HTTPScraper):
         except requests.HTTPError as erro:
             # Só o 401 chega aqui; as falhas anteriores viram nota do erro.
             anotar_falhas_anteriores(erro, falhas, _DESCRICAO_FALHAS_DOCUMENTOS)
+            raise
+        except ErroSsoPdpj as erro_sso:
+            anotar_falhas_antes_do_sso(erro_sso, falhas, _DESCRICAO_FALHAS_DOCUMENTOS)
             raise
         avisar_falhas(falhas, "JusbrScraper.download_documents", _DESCRICAO_FALHAS_DOCUMENTOS)
         return _build_documents_dataframe(all_docs_data)

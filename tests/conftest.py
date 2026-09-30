@@ -43,6 +43,19 @@ def pytest_runtest_makereport(item, call):
     return report
 
 
+@pytest.fixture(autouse=True)
+def _isolar_credencial_pdpj(monkeypatch, tmp_path_factory):
+    """Isola os testes do token do PDPJ que exista na maquina de quem roda.
+
+    JusBR e PDPJ carregam sozinhos ``PDPJ_JWT``/``JUSBR_JWT`` e o cache em
+    ``$XDG_CONFIG_HOME/juscraper/``. Sem este isolamento, um token real no
+    ambiente mudaria o resultado dos contratos que esperam instancia sem auth.
+    """
+    monkeypatch.delenv("PDPJ_JWT", raising=False)
+    monkeypatch.delenv("JUSBR_JWT", raising=False)
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path_factory.mktemp("xdg_config")))
+
+
 @pytest.fixture
 def tests_dir() -> Path:
     """Path to ``tests/``. Compose with ``tribunal`` and ``samples`` to reach fixtures.

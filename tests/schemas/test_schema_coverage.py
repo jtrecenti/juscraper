@@ -103,6 +103,7 @@ EXPECTED_AGGREGATOR_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
         "juscraper.aggregators.jusbr.schemas",
         "InputAuthFirefoxJusBR",
     ),
+    ("jusbr", "auth_govbr"): ("juscraper.aggregators.jusbr.schemas", "InputAuthGovbrJusBR"),
     ("jusbr", "cpopg"): ("juscraper.aggregators.jusbr.schemas", "InputCPOPGJusBR"),
     ("jusbr", "download_documents"): (
         "juscraper.aggregators.jusbr.schemas",
@@ -113,6 +114,7 @@ EXPECTED_AGGREGATOR_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
         "InputListarComunicacoesComunicaCNJ",
     ),
     ("pdpj", "auth"): ("juscraper.aggregators.pdpj.schemas", "InputAuthPdpj"),
+    ("pdpj", "auth_govbr"): ("juscraper.aggregators.pdpj.schemas", "InputAuthGovbrPdpj"),
     ("pdpj", "cpopg"): ("juscraper.aggregators.pdpj.schemas", "InputCnjPdpj"),
     ("pdpj", "download_documents"): (
         "juscraper.aggregators.pdpj.schemas",
@@ -216,6 +218,7 @@ def test_every_aggregator_endpoint_has_schema():
     candidates = (
         "auth",
         "auth_firefox",
+        "auth_govbr",
         "cpopg",
         "download_documents",
         "listar_comunicacoes",
@@ -255,6 +258,7 @@ def test_no_stale_entries_in_expected_mapping():
     aggregator_candidates = (
         "auth",
         "auth_firefox",
+        "auth_govbr",
         "cpopg",
         "download_documents",
         "listar_comunicacoes",

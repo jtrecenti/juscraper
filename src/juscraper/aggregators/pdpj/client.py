@@ -28,6 +28,8 @@ from ...core.failures import (
 from ...core.http import HTTPScraper, RequestFn, RequestPolicy
 from ...utils.cnj import clean_cnj
 from ...utils.params import normalize_paginas, raise_on_extra_kwargs
+from .._pdpj_sso import CredencialPdpj, PdpjSsoMixin
+from .._pdpj_sso.renovacao import ErroSsoPdpj, anotar_falhas_antes_do_sso
 from .download import (
     BASE_URL,
     PERFIL_DOCUMENTO,
@@ -51,7 +53,14 @@ from .parse import (
     clean_document_text,
     parse_pesquisa_response,
 )
-from .schemas import InputAuthPdpj, InputCnjPdpj, InputContarPdpj, InputDownloadDocumentsPdpj, InputPesquisaPdpj
+from .schemas import (
+    InputAuthGovbrPdpj,
+    InputAuthPdpj,
+    InputCnjPdpj,
+    InputContarPdpj,
+    InputDownloadDocumentsPdpj,
+    InputPesquisaPdpj,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -229,7 +238,7 @@ def _linha_documentos(cnj: str) -> dict[str, Any]:
     return {"processo": cnj, "id_documento": None}
 
 
-class PdpjScraper(HTTPScraper):
+class PdpjScraper(PdpjSsoMixin, HTTPScraper):
     """Raspador para a API DATALAKE - Processos do PDPJ.
 
     A API consome JWT do SSO PJe (mesmo provedor do JusBR), entao o uso
@@ -241,7 +250,8 @@ class PdpjScraper(HTTPScraper):
     :meth:`download_documents` devolvem uma linha de falha quando a requisicao
     de um item falha, com o motivo na coluna ``motivo_falha`` (vocabulario em
     :mod:`juscraper.core.failures`) e um ``UserWarning`` agregado ao fim. O 401
-    interrompe a coleta. Metodos sem linha por item (:meth:`existe` com
+    e a falha do SSO ao renovar o token (``ErroSsoPdpj``) interrompem a
+    coleta. Metodos sem linha por item (:meth:`existe` com
     ``str``, :meth:`contar` e :meth:`pesquisa`) levantam o erro.
 
     As requisicoes usam os perfis ``"listagem"`` e ``"documento"`` de
@@ -254,6 +264,7 @@ class PdpjScraper(HTTPScraper):
     BASE_URL = BASE_URL
 
     INPUT_AUTH = InputAuthPdpj
+    INPUT_AUTH_GOVBR = InputAuthGovbrPdpj
     INPUT_CPOPG = InputCnjPdpj
     INPUT_DOCUMENTOS = InputCnjPdpj
     INPUT_MOVIMENTOS = InputCnjPdpj
@@ -277,7 +288,10 @@ class PdpjScraper(HTTPScraper):
             verbose: Nivel de log.
             download_path: Diretorio de download.
             sleep_time: Pausa entre requisicoes de itens, em segundos.
-            token: JWT opcional, validado por :meth:`auth`.
+            token: JWT do SSO da PDPJ, validado por :meth:`auth`. ``None``
+                carrega a credencial de ``PDPJ_JWT`` ou do cache de
+                :meth:`auth_govbr`; ``""`` e sem nenhuma exigem :meth:`auth`
+                antes das consultas.
             politica: Ajustes por campo dos perfis ``"listagem"`` e
                 ``"documento"``, como ``{"documento": {"timeout": 20}}``. O
                 que nao for passado fica como o raspador declara.
@@ -292,6 +306,8 @@ class PdpjScraper(HTTPScraper):
         self.token: str | None = None
         if token:
             self.auth(token)
+        elif token is None:
+            self._carregar_credencial_padrao()
 
     def _configure_session(self, session: requests.Session) -> None:
         # A API recusa User-Agent que não é de navegador; troca o default do
@@ -314,8 +330,7 @@ class PdpjScraper(HTTPScraper):
         """
         InputAuthPdpj(token=token)
         validar_jwt(token)
-        self.token = token
-        self.session.headers["Authorization"] = f"Bearer {token}"
+        self._instalar_credencial(CredencialPdpj(token), salvar_renovacao=False)
         if self.verbose:
             logger.info("PDPJ: token JWT aceito.")
         return True
@@ -323,7 +338,8 @@ class PdpjScraper(HTTPScraper):
     def _check_auth(self) -> None:
         if not self.token:
             raise RuntimeError(
-                "Autenticacao necessaria. Chame PdpjScraper.auth(token) primeiro."
+                "Autenticacao necessaria. Chame auth_govbr() para entrar pelo gov.br, auth(token) "
+                "com um JWT ja obtido, ou defina a variavel de ambiente PDPJ_JWT."
             )
 
     @staticmethod
@@ -344,7 +360,8 @@ class PdpjScraper(HTTPScraper):
 
         ``montar`` transforma a resposta nas linhas do processo e
         ``linha_falha`` da as colunas da linha de um processo cuja requisicao
-        falhou. O 401 interrompe, com as falhas anteriores numa nota do erro;
+        falhou. O 401 e a falha do SSO ao renovar o token (``ErroSsoPdpj``)
+        interrompem, com as falhas anteriores numa nota do erro;
         exceção fora de ``EXCECOES_DE_FALHA_POR_LINHA`` propaga como veio.
         """
         rows: list[dict[str, Any]] = []
@@ -365,6 +382,9 @@ class PdpjScraper(HTTPScraper):
                     time.sleep(self.sleep_time)
         except requests.HTTPError as erro:
             anotar_falhas_anteriores(erro, falhas, _ITEM_CONSULTA)
+            raise
+        except ErroSsoPdpj as erro_sso:
+            anotar_falhas_antes_do_sso(erro_sso, falhas, _ITEM_CONSULTA)
             raise
         # stacklevel 4: warn -> avisar_falhas -> este metodo -> metodo publico -> usuario.
         avisar_falhas(falhas, origem, _ITEM_CONSULTA, stacklevel=4)
@@ -398,6 +418,8 @@ class PdpjScraper(HTTPScraper):
 
         Raises:
             requests.HTTPError: No 401, e com ``str`` em qualquer erro HTTP.
+            ErroSsoPdpj: Quando o SSO do PJe recusa ou não consegue renovar o
+                token; na lista, com as falhas anteriores numa nota do erro.
             RetryExhaustedError, requests.Timeout, requests.ConnectionError,
             InvalidJSONResponseError: Com ``str``, quando a consulta falha;
                 a resposta sem ``true``/``false`` levanta o ultimo.
@@ -437,6 +459,9 @@ class PdpjScraper(HTTPScraper):
         Raises:
             requests.HTTPError: No 401 (token ausente, expirado ou invalido),
                 com as falhas anteriores numa nota do erro.
+            ErroSsoPdpj: Quando o SSO do PJe recusa ou não consegue renovar o
+                token no meio do lote. Propaga como o 401, com as falhas
+                anteriores numa nota do erro.
 
         Warns:
             UserWarning: Quando pelo menos uma consulta falhou.
@@ -678,6 +703,9 @@ class PdpjScraper(HTTPScraper):
                 propaga e as linhas já baixadas se perdem; as falhas
                 anteriores ao 401 vão numa nota do próprio erro
                 (``__notes__``), não no ``UserWarning``.
+            ErroSsoPdpj: Quando o SSO do PJe recusa ou não consegue renovar o
+                token no meio do lote. Propaga como o 401, com as falhas
+                anteriores numa nota do erro.
 
         Warns:
             UserWarning: Quando pelo menos um download de documento falhou.
@@ -726,6 +754,9 @@ class PdpjScraper(HTTPScraper):
                 ))
         except requests.HTTPError as erro:
             anotar_falhas_anteriores(erro, falhas, _ITEM_DOWNLOAD)
+            raise
+        except ErroSsoPdpj as erro_sso:
+            anotar_falhas_antes_do_sso(erro_sso, falhas, _ITEM_DOWNLOAD)
             raise
         avisar_falhas(falhas, "PdpjScraper.download_documents", _ITEM_DOWNLOAD)
         return pd.DataFrame(rows)

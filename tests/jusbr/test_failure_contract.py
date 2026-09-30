@@ -21,6 +21,7 @@ from responses.matchers import query_param_matcher
 from responses.registries import OrderedRegistry
 
 import juscraper as jus
+from juscraper.aggregators._pdpj_sso.renovacao import SsoPdpjIndisponivelError
 from juscraper.aggregators.jusbr.client import JusbrScraper
 from juscraper.core.failures import STATUS_CONSULTA_FALHA
 from juscraper.core.http import RETRYABLE_STATUSES
@@ -104,6 +105,19 @@ def _base_df(documentos: list[dict[str, Any]], cnj: str = CNJ_1) -> pd.DataFrame
 
 def _notas(erro: BaseException) -> str:
     return " ".join(getattr(erro, "__notes__", []))
+
+
+def _sso_cai_na_chamada(scraper: JusbrScraper, chamada: int) -> None:
+    """A renovacao do token falha na ``chamada``-esima requisicao, como faria o ``AuthPdpj``."""
+    contagem = {"n": 0}
+
+    def auth(requisicao):
+        contagem["n"] += 1
+        if contagem["n"] == chamada:
+            raise SsoPdpjIndisponivelError("O SSO do PJe respondeu HTTP 503 ao renovar o token; tente de novo.")
+        return requisicao
+
+    scraper.session.auth = auth
 
 
 # ---------------------------------------------------------------------------
@@ -470,3 +484,46 @@ def test_falha_da_listagem_tambem_pausa(mocker):
         scraper.cpopg(CNJ_1)
 
     pausa.assert_called_once_with(0.25)
+
+
+# ---------------------------------------------------------------------------
+# Falha do SSO ao renovar o token: interrompe o lote como o 401
+# ---------------------------------------------------------------------------
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cpopg_falha_do_sso_propaga_com_falhas_anteriores_na_nota():
+    scraper = _scraper()
+    for _ in range(3):
+        _add_lista(CNJ_1, status=500, json={"erro": "x"})
+    _sso_cai_na_chamada(scraper, 4)
+
+    with pytest.raises(SsoPdpjIndisponivelError) as erro:
+        scraper.cpopg([CNJ_1, CNJ_2])
+
+    assert "Antes da falha do SSO, 1 consulta(s) de processo falharam" in _notas(erro.value)
+    assert f"processo {CNJ_1}, listagem: retry_esgotado_500" in _notas(erro.value)
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_download_documents_falha_do_sso_propaga_com_falhas_anteriores_na_nota():
+    scraper = _scraper()
+    responses.add(responses.GET, _texto_url(UUID_TEXT_1), status=404)
+    _sso_cai_na_chamada(scraper, 2)
+
+    with pytest.raises(SsoPdpjIndisponivelError) as erro:
+        scraper.download_documents(_base_df([_doc(UUID_TEXT_1), _doc(UUID_TEXT_2)]))
+
+    assert "Antes da falha do SSO, 1 download(s) de documento falharam" in _notas(erro.value)
+    assert f"documento {UUID_TEXT_1}, texto: http_404" in _notas(erro.value)
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cpopg_falha_do_sso_sem_falhas_anteriores_sai_sem_nota():
+    scraper = _scraper()
+    _sso_cai_na_chamada(scraper, 1)
+
+    with pytest.raises(SsoPdpjIndisponivelError) as erro:
+        scraper.cpopg(CNJ_1)
+
+    assert _notas(erro.value) == ""

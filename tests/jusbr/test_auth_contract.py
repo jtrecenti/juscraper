@@ -119,12 +119,15 @@ def test_construtor_com_token_recusado_levanta_value_error(token, mensagem):
 def test_auth_recusado_preserva_token_e_header_anteriores(recusado):
     valido = _token({"sub": "tester", "exp": 9999999999})
     scraper = jus.scraper("jusbr", token=valido)
+    auth_anterior = scraper.session.auth
 
     with pytest.raises(ValueError):
         scraper.auth(recusado)
 
     assert scraper.token == valido
     assert scraper.session.headers["authorization"] == f"Bearer {valido}"
+    # Quem põe o Authorization enviado é o AuthPdpj em session.auth.
+    assert scraper.session.auth is auth_anterior
 
 
 # ---------------------------------------------------------------------------

@@ -608,3 +608,29 @@ def test_aviso_do_download_aponta_para_quem_chamou_o_metodo():
         _mk_scraper().download_documents(_docs_df())
 
     assert avisos[0].filename == __file__
+
+
+@pytest.mark.parametrize("metodo", list(METODOS_DE_LISTA))
+@responses.activate
+def test_falha_do_sso_interrompe_com_as_falhas_anteriores_na_nota(metodo):
+    """A renovação do token falha na segunda requisição, como faria o ``AuthPdpj``."""
+    from juscraper.aggregators._pdpj_sso.renovacao import SsoPdpjIndisponivelError
+
+    sufixo, _sample = METODOS_DE_LISTA[metodo]
+    _mock(f"/processos/{OUTRO}{sufixo}", status=404)
+    scraper = _mk_scraper()
+    chamadas = {"n": 0}
+
+    def auth(requisicao):
+        chamadas["n"] += 1
+        if chamadas["n"] == 2:
+            raise SsoPdpjIndisponivelError("O SSO do PJe respondeu HTTP 503 ao renovar o token; tente de novo.")
+        return requisicao
+
+    scraper.session.auth = auth
+
+    with pytest.raises(SsoPdpjIndisponivelError) as erro:
+        getattr(scraper, metodo)([OUTRO, PROC])
+
+    notas = " ".join(getattr(erro.value, "__notes__", []))
+    assert "Antes da falha do SSO, 1 consulta(s) de processo falharam" in notas

@@ -349,12 +349,15 @@ def test_auth_que_falha_mantem_o_token_anterior(recusado):
     """Quem chamou recebeu o erro; o token anterior segue valendo até o 401."""
     s = jus.scraper("pdpj")
     s.auth(FAKE_TOKEN)
+    auth_anterior = s.session.auth
 
     with pytest.raises(ValueError):
         s.auth(recusado)
 
     assert s.token == FAKE_TOKEN
     assert s.session.headers["Authorization"] == f"Bearer {FAKE_TOKEN}"
+    # Quem põe o Authorization enviado é o AuthPdpj em session.auth.
+    assert s.session.auth is auth_anterior
 
 
 # ---------------------------------------------------------------------
