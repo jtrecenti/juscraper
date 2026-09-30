@@ -197,7 +197,7 @@ def fetch_pesquisa(
 
     O objeto precisa trazer ``content`` como lista: sem ela, o laço da
     ``pesquisa`` leria uma página vazia e encerraria a coleta em silêncio.
-    A exceção é ``content: null`` com ``numberOfElements == 0``, que vira
+    A exceção é ``content: null`` com ``numberOfElements`` inteiro igual a 0 (não ``false`` nem ``0.0``), que vira
     lista vazia. A API manda ``searchAfter`` preenchido até na última página,
     então toda coleta sem limite pede uma página terminal vazia, e o mesmo
     endpoint serializa outras listas vazias como ``null``. Exigir o zero
