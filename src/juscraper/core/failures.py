@@ -8,6 +8,8 @@ falha leva ``None``.
 O vocabulário separa ``timeout`` (leitura lenta: o ``timeout`` do perfil pode
 estar curto) de ``conexao`` (host inalcançável) e de ``retry_esgotado_<status>``
 (o servidor respondeu, mas com status retentável até o fim das tentativas).
+``json_invalido`` cobre o corpo que não é o JSON esperado: corpo que não é
+JSON e JSON na forma errada (lista no lugar de objeto, contagem sem inteiro).
 """
 from __future__ import annotations
 
@@ -123,16 +125,18 @@ def resumir_falhas(falhas: list[str], descricao: str) -> str:
     return f"{len(falhas)} {descricao} falharam. Falhas: {'; '.join(exemplos)}."
 
 
-def avisar_falhas(falhas: list[str], metodo: str, descricao: str) -> None:
+def avisar_falhas(falhas: list[str], metodo: str, descricao: str, *, stacklevel: int = 3) -> None:
     """Emite um único ``UserWarning`` ao fim de uma coleta concluída.
 
-    O ``stacklevel`` aponta para quem chamou o método público, que por sua vez
-    chama este helper diretamente.
+    O ``stacklevel`` default aponta para quem chamou o método público quando o
+    método chama este helper diretamente; quem chama de um helper privado do
+    método soma um nível por chamada intermediária.
 
     Args:
         falhas: Ver :func:`resumir_falhas`. Lista vazia não emite aviso.
         metodo: Nome qualificado do método público, que abre a mensagem.
         descricao: Ver :func:`resumir_falhas`.
+        stacklevel: Repassado a ``warnings.warn``.
     """
     if not falhas:
         return
@@ -140,7 +144,7 @@ def avisar_falhas(falhas: list[str], metodo: str, descricao: str) -> None:
         f"{metodo}: {resumir_falhas(falhas, descricao)} "
         "As linhas correspondentes saem com o conteúdo None.",
         UserWarning,
-        stacklevel=3,
+        stacklevel=stacklevel,
     )
 
 
