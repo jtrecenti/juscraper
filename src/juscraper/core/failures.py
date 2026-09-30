@@ -10,6 +10,8 @@ estar curto) de ``conexao`` (host inalcançável) e de ``retry_esgotado_<status>
 (o servidor respondeu, mas com status retentável até o fim das tentativas).
 ``json_invalido`` cobre o corpo que não é o JSON esperado: corpo que não é
 JSON e JSON na forma errada (lista no lugar de objeto, contagem sem inteiro).
+``nao_encontrado`` é o processo que a fonte declara ausente por um sinal medido
+dela; cada scraper documenta que sinal é esse.
 """
 from __future__ import annotations
 
@@ -22,12 +24,21 @@ from juscraper.core.exceptions import InvalidJSONResponseError, RetryExhaustedEr
 COLUNA_MOTIVO_FALHA = "motivo_falha"
 """Nome da coluna de motivo de falha nos DataFrames com uma linha por item."""
 
+MOTIVO_NAO_ENCONTRADO = "nao_encontrado"
+"""Motivo do processo que a fonte declara ausente.
+
+É motivo, e não resposta com motivo ``None``, porque nem todo método tem onde
+dizer "não encontrado": uma lista de documentos vazia se confundiria com
+processo sem peças. Entra no aviso agregado como os demais motivos.
+"""
+
 MOTIVOS_FALHA: tuple[str, ...] = (
     "http_<status>",
     "retry_esgotado_<status>",
     "timeout",
     "conexao",
     "json_invalido",
+    MOTIVO_NAO_ENCONTRADO,
 )
 """Valores possíveis de :data:`COLUNA_MOTIVO_FALHA`; ``<status>`` é o código HTTP."""
 

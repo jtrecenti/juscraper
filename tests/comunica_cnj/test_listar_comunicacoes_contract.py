@@ -127,11 +127,17 @@ def test_listar_comunicacoes_no_results(mocker):
     assert df.empty
 
 
-def test_listar_comunicacoes_pesquisa_obrigatoria():
-    """``pesquisa=None`` levanta ``ValidationError`` via pydantic
-    (``pesquisa: str`` no schema, sem default)."""
-    with pytest.raises(ValidationError):
-        jus.scraper("comunica_cnj").listar_comunicacoes()
+@pytest.mark.parametrize("kwargs", [{}, {"numero_processo": ""}, {"numero_processo": "abc"}, {"pesquisa": ""}])
+@responses.activate
+def test_listar_comunicacoes_exige_pesquisa_ou_numero_processo(kwargs):
+    """Sem termo nem número com dígitos, o client levanta antes do schema e da rede.
+
+    Um número sem dígitos iria à API como ``numeroProcesso=""``, uma consulta sem filtro.
+    """
+    with pytest.raises(ValueError, match="informe pesquisa, numero_processo ou os dois"):
+        jus.scraper("comunica_cnj").listar_comunicacoes(**kwargs)
+
+    assert len(responses.calls) == 0
 
 
 def test_listar_comunicacoes_unknown_kwarg_raises_typeerror():

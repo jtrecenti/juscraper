@@ -159,6 +159,25 @@ def _build_documents_dataframe(rows: list[dict[str, Any]]) -> pd.DataFrame:
     return dataframe
 
 
+_Conteudos = tuple[str | None, str | None, bytes | None, str | None]
+"""Texto bruto, texto limpo, binário e motivo, na ordem de ``_fetch_document_contents``."""
+
+_SEM_CONTEUDO: _Conteudos = (None, None, None, None)
+
+
+def _linha_documento(document_metadata: dict[str, Any], numero_processo: str, conteudos: _Conteudos) -> dict[str, Any]:
+    """Linha de ``download_documents``: o metadado com os conteúdos e o motivo."""
+    raw_text, texto, raw_binary, motivo = conteudos
+    return {
+        **document_metadata,
+        'numero_processo': numero_processo,
+        'texto': texto,
+        '_raw_text_api': raw_text,
+        '_raw_binary_api': raw_binary,
+        COLUNA_MOTIVO_FALHA: motivo,
+    }
+
+
 def _tentar(buscar: Callable[[], Any], descricao: str, falhas: list[str]) -> tuple[Any, str | None]:
     """Executa ``buscar``; numa falha do vocabulário, devolve ``(None, motivo)``.
 
@@ -349,6 +368,13 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
         responde com 404 sai "Nao encontrado na lista inicial", com
         ``motivo_falha`` ``None``; o 404 nos detalhes é falha (``http_404``).
 
+        O 403 na listagem sai ``http_403``, e o motivo não diz a causa. Em
+        campo, ele apareceu junto de processo ausente do data lake da PDPJ,
+        mas também pode ser negativa real de acesso. Este raspador não
+        consulta a PDPJ para separar os dois casos; quem precisa separar cruza
+        o resultado com :class:`~juscraper.aggregators.pdpj.client.PdpjScraper`,
+        que marca o processo ausente com ``nao_encontrado``.
+
         Raises:
             TypeError: Quando um kwarg desconhecido e passado (schema
                 :class:`InputCPOPGJusBR`, ``extra="forbid"``).
@@ -468,7 +494,7 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
         binary_uuid: str | None,
         authorization: str,
         falhas: list[str],
-    ) -> tuple[str | None, str | None, bytes | None, str | None]:
+    ) -> _Conteudos:
         """Baixa texto e binário de forma independente para um documento.
 
         Returns:
@@ -534,12 +560,17 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
             "[JUSBR DEBUG] doc_meta para processo %s: %r",
             numero_processo, document_metadata,
         )
+        if not document_metadata.get('arquivo'):
+            # A API omite ``arquivo`` na peça sem conteúdo no data lake e
+            # responde 404 ao pedido de texto dela: o metadado já diz que não
+            # há o que baixar, e a requisição só produziria uma falha falsa.
+            logger.debug("Documento sem arquivo no processo %s; sem download.", numero_processo)
+            return _linha_documento(document_metadata, numero_processo, _SEM_CONTEUDO)
         authorization = self.session.headers.get('authorization', '')
         if isinstance(authorization, bytes):
             authorization = authorization.decode('latin-1')
-        raw_text, cleaned_text, raw_binary, motivo = self._fetch_document_contents(
-            numero_processo, text_uuid, binary_uuid, authorization, falhas
-        )
+        conteudos = self._fetch_document_contents(numero_processo, text_uuid, binary_uuid, authorization, falhas)
+        raw_text, cleaned_text, _raw_binary, _motivo = conteudos
         if text_uuid and cleaned_text:
             logger.debug(
                 "Sucesso ao baixar e limpar texto do doc UUID %s (processo %s), tamanho limpo: %d",
@@ -562,15 +593,7 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
                 numero_processo,
             )
 
-        document_row = dict(document_metadata)
-        document_row.update({
-            'numero_processo': numero_processo,
-            'texto': cleaned_text,
-            '_raw_text_api': raw_text,
-            '_raw_binary_api': raw_binary,
-            COLUNA_MOTIVO_FALHA: motivo,
-        })
-        return document_row
+        return _linha_documento(document_metadata, numero_processo, conteudos)
 
     def _download_process_documents(
         self,
@@ -638,6 +661,11 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
         Um download que falha não interrompe o lote: o conteúdo sai ``None`` e a
         coluna ``motivo_falha`` traz o motivo, o do texto quando o texto falha,
         senão o do binário. O ``UserWarning`` agregado cita as duas falhas.
+
+        A peça sem ``arquivo`` no metadado não tem conteúdo no data lake, e a
+        API responde 404 ao pedido de texto dela. Ela sai com os metadados,
+        ``texto`` e respostas brutas ``None`` e ``motivo_falha`` ``None``, sem
+        requisição e fora do aviso: o metadado já diz por que não há texto.
 
         Args:
             base_df (pd.DataFrame): Processos com as colunas ``numeroProcesso``

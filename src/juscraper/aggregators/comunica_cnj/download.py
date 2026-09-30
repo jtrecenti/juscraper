@@ -12,6 +12,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from ...utils.cnj import clean_cnj
+
 logger = logging.getLogger(__name__)
 
 BASE_URL = "https://comunicaapi.pje.jus.br/api/v1/comunicacao"
@@ -32,7 +34,8 @@ DEFAULT_HEADERS: dict[str, str] = {
 
 def build_listar_comunicacoes_params(
     *,
-    pesquisa: str,
+    pesquisa: str = "",
+    numero_processo: str | None = None,
     pagina: int,
     itens_por_pagina: int = 100,
     data_disponibilizacao_inicio: str | None = None,
@@ -41,7 +44,10 @@ def build_listar_comunicacoes_params(
     """Monta a querystring aceita pelo endpoint de listagem.
 
     Args:
-        pesquisa: Termo de busca (parametro ``texto``).
+        pesquisa: Termo de busca (parametro ``texto``). ``""`` omite o
+            parametro.
+        numero_processo: CNJ para o parametro ``numeroProcesso``, enviado so
+            com os digitos. ``None`` omite o parametro.
         pagina: Numero da pagina (1-based).
         itens_por_pagina: Resultados por pagina (1-100).
         data_disponibilizacao_inicio: ISO ``YYYY-MM-DD`` para o param
@@ -52,8 +58,11 @@ def build_listar_comunicacoes_params(
     params: dict[str, Any] = {
         "itensPorPagina": itens_por_pagina,
         "pagina": pagina,
-        "texto": pesquisa,
     }
+    if pesquisa:
+        params["texto"] = pesquisa
+    if numero_processo is not None:
+        params["numeroProcesso"] = clean_cnj(numero_processo)
     if data_disponibilizacao_inicio is not None:
         params["dataDisponibilizacaoInicio"] = data_disponibilizacao_inicio
     if data_disponibilizacao_fim is not None:
