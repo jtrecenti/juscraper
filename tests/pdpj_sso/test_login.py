@@ -193,6 +193,27 @@ def test_so_o_cabecalho_da_access_sem_refresh_e_ignora_host_de_fora(mocker):
     assert browser.processo.encerrado
 
 
+def test_corpo_de_token_descartado_pelo_navegador_nao_derruba_o_login(mocker):
+    """O ``Error`` do Playwright na leitura do corpo é ignorado, e a resposta seguinte vale."""
+
+    def corpo_descartado():
+        raise _ErroFalso("Response body is unavailable")
+
+    descartada = "response", types.SimpleNamespace(
+        url=_TOKEN, ok=True, request=types.SimpleNamespace(method="POST"), json=corpo_descartado,
+    )
+    _instalar_playwright_falso(
+        mocker,
+        [PORTAL_CONSULTA, _SSO, PORTAL_CONSULTA],
+        {
+            1: [descartada],
+            2: [_resposta_token({"access_token": "acesso", "refresh_token": "renovacao"})],
+        },
+    )
+
+    assert obter_credencial_govbr(timeout=5) == CredencialPdpj("acesso", "renovacao")
+
+
 def test_resposta_de_token_com_erro_e_ignorada(mocker):
     _instalar_playwright_falso(
         mocker,

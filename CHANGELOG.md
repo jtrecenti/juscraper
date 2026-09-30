@@ -26,6 +26,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - `JusbrScraper.auth()` e `PdpjScraper.auth()` validam o token pela mesma função, e a mensagem de token malformado do PDPJ passa a ser `"Token JWT inválido: ..."`, com acento, como no JusBR. Um `auth()` que falha mantém o token e o header anteriores nos dois raspadores.
 - `PdpjScraper.download_documents`: `with_text` e `with_binary` passam a ser keyword-only. `download_documents(df, None, True, False)` levanta `TypeError`; use `download_documents(df, with_text=True, with_binary=False)`.
 - `JusbrScraper.download_documents`: documento cujo texto só tem espaço sai com `texto=None`, como no PDPJ; antes saía `""`. O texto bruto continua em `_raw_text_api`, e `motivo_falha` fica `None`.
+- `clean_document_text` passa a ficar só em `juscraper.core.parse_utils`; o import de `juscraper.aggregators.jusbr.parse` e de `juscraper.aggregators.pdpj.parse` levanta `ImportError`. Os parsers internos do JusBR (`parse_process_list_response`, `parse_process_details_response`) deixam de aceitar `None`.
 
 ### Fixed
 
