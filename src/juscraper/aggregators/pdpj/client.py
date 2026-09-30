@@ -763,17 +763,10 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
         pagina = 1
         search_after: list[Any] | None = None
         while True:
-            params = dict(base_params)
-            if search_after is not None:
-                # API espera searchAfter como string CSV: timestamp,id
-                params["searchAfter"] = ",".join(str(v) for v in search_after)
-            try:
-                data = fetch_pesquisa(self._request_with_retry, params, base_url=self.BASE_URL)
-            except requests.HTTPError as exc:
-                if _e_status(exc, _STATUS_SEM_REGISTRO):
-                    return rows
-                raise
-            page_rows, search_after, _total = parse_pesquisa_response(data)
+            lida = self._pagina_da_pesquisa(base_params, search_after)
+            if lida is None:
+                return rows
+            page_rows, search_after = lida
             if permitidas is None or pagina in permitidas:
                 rows.extend(page_rows)
             ultima = max_paginas is not None and pagina >= max_paginas
@@ -782,6 +775,25 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
             pagina += 1
             if self.sleep_time:
                 time.sleep(self.sleep_time)
+
+    def _pagina_da_pesquisa(
+        self,
+        base_params: dict[str, Any],
+        search_after: list[Any] | None,
+    ) -> tuple[list[dict[str, Any]], list[Any] | None] | None:
+        """Linhas e cursor de uma página da ``pesquisa``; ``None`` no 404 sem registros."""
+        params = dict(base_params)
+        if search_after is not None:
+            # API espera searchAfter como string CSV: timestamp,id
+            params["searchAfter"] = ",".join(str(v) for v in search_after)
+        try:
+            data = fetch_pesquisa(self._request_with_retry, params, base_url=self.BASE_URL)
+        except requests.HTTPError as exc:
+            if _e_status(exc, _STATUS_SEM_REGISTRO):
+                return None
+            raise
+        page_rows, proximo, _total = parse_pesquisa_response(data)
+        return page_rows, proximo
 
     def contar(self, **kwargs: Any) -> int:
         """Total de processos que casam com os filtros (``/processos:contar``).

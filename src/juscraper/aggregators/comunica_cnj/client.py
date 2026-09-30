@@ -26,6 +26,18 @@ from .schemas import InputListarComunicacoesComunicaCNJ
 logger = logging.getLogger(__name__)
 
 
+def _exigir_pesquisa_ou_numero(pesquisa: str | None, numero_processo: str | None) -> None:
+    """Levanta antes do schema e da rede quando falta o filtro principal.
+
+    O schema aceita os dois vazios (``pesquisa`` tem o tipo canônico ``str``,
+    com ``""`` como ausência), então a exigência de um dos dois mora aqui.
+    """
+    if not pesquisa and numero_processo is None:
+        raise ValueError(
+            "ComunicaCNJScraper.listar_comunicacoes(): informe pesquisa, numero_processo ou os dois."
+        )
+
+
 class ComunicaCNJScraper(HTTPScraper):
     """Scraper para a API publica de Comunicacoes Processuais do CNJ."""
 
@@ -103,10 +115,7 @@ class ComunicaCNJScraper(HTTPScraper):
             :class:`InputListarComunicacoesComunicaCNJ` -- schema pydantic
             e a fonte da verdade dos filtros aceitos.
         """
-        if not pesquisa and kwargs.get("numero_processo") is None:
-            raise ValueError(
-                "ComunicaCNJScraper.listar_comunicacoes(): informe pesquisa, numero_processo ou os dois."
-            )
+        _exigir_pesquisa_ou_numero(pesquisa, kwargs.get("numero_processo"))
         paginas_norm = normalize_paginas(paginas)
 
         # Aceita ``DD/MM/YYYY`` na entrada por conveniencia, mas a API
