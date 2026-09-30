@@ -38,7 +38,11 @@ from .download import (
     BASE_URL,
     PERFIL_DOCUMENTO,
     PERFIL_LISTAGEM,
+    STATUS_SEM_REGISTRO,
     USER_AGENT,
+    ProcessoAusenteError,
+    confirmador_de_ausencia,
+    e_status,
     fetch_contar,
     fetch_documento_binario,
     fetch_documento_texto,
@@ -159,26 +163,6 @@ def _document_to_row(
         "arquivo_tamanho": file_data.get("tamanho"),
         "arquivo_paginas": file_data.get("quantidadePaginas"),
     }
-
-
-# O data lake responde 500, e não 404, nos endpoints por processo quando o
-# processo não está no índice dele; a ``pesquisa`` por ``numeroProcesso``
-# responde 404 ao mesmo processo. Medido em campo nas duas direções: todo
-# processo que deu 404 na ``pesquisa`` deu 500 nos endpoints, e nenhum que deu
-# 200 na ``pesquisa`` ficou sem resposta. O 500 sozinho não distingue ausência
-# de pane, e a ``pesquisa`` sozinha nunca marca ausência.
-_STATUS_A_CONFIRMAR = 500
-# 404 é a resposta a processo inexistente nos endpoints por processo e a
-# "Não foram encontrados registros" na ``pesquisa``.
-_STATUS_SEM_REGISTRO = 404
-
-
-class _ProcessoAusenteError(Exception):
-    """O endpoint do processo respondeu 500 e a ``pesquisa`` por número, 404."""
-
-
-def _e_status(exc: BaseException, status: int) -> bool:
-    return isinstance(exc, requests.HTTPError) and exc.response is not None and exc.response.status_code == status
 
 
 _ITEM_CONSULTA = "consulta(s) de processo"
@@ -485,61 +469,23 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
     ) -> list[dict[str, Any]]:
         """Linhas de um CNJ, ou a linha de falha com o motivo; o 401 propaga.
 
-        O 404 do endpoint e o 500 confirmado por :meth:`_confirmar_ausencia`
+        O 404 do endpoint e o 500 confirmado por :func:`confirmador_de_ausencia`
         saem ``nao_encontrado``; as demais falhas, pelo vocabulário do core.
         """
-        request_fn = partial(self._request_with_retry, on_response=self._confirmar_ausencia(cnj))
+        confirmar = confirmador_de_ausencia(self._request_with_retry, cnj, base_url=self.BASE_URL)
+        request_fn = partial(self._request_with_retry, on_response=confirmar)
         try:
             data = buscar(request_fn, cnj, base_url=self.BASE_URL)
-        except _ProcessoAusenteError:
+        except ProcessoAusenteError:
             motivo = MOTIVO_NAO_ENCONTRADO
         except EXCECOES_DE_FALHA_POR_LINHA as exc:
             if e_token_invalido(exc):
                 raise
-            motivo = MOTIVO_NAO_ENCONTRADO if _e_status(exc, _STATUS_SEM_REGISTRO) else motivo_falha(exc)
+            motivo = MOTIVO_NAO_ENCONTRADO if e_status(exc, STATUS_SEM_REGISTRO) else motivo_falha(exc)
         else:
             return [{**row, COLUNA_MOTIVO_FALHA: None} for row in montar(data, cnj)]
         falhas.append(f"processo {cnj}: {motivo}")
         return [{**linha_falha(cnj), COLUNA_MOTIVO_FALHA: motivo}]
-
-    def _confirmar_ausencia(self, cnj: str) -> Callable[[requests.Response], None]:
-        """Gancho ``on_response`` que confirma o primeiro 500 do processo pela ``pesquisa``.
-
-        O core chama o gancho em cada resposta, antes de decidir se retenta, e
-        a exceção que ele levanta propaga sem novas tentativas. Só o primeiro
-        500 de uma chamada dispara a pesquisa; os seguintes, depois de ela não
-        confirmar a ausência, seguem o perfil.
-
-        Raises:
-            _ProcessoAusenteError: Quando a pesquisa responde 404.
-        """
-        pendente = True
-
-        def gancho(resposta: requests.Response) -> None:
-            nonlocal pendente
-            if not pendente or resposta.status_code != _STATUS_A_CONFIRMAR:
-                return
-            pendente = False
-            if self._pesquisa_sem_registro(cnj):
-                raise _ProcessoAusenteError(cnj)
-
-        return gancho
-
-    def _pesquisa_sem_registro(self, cnj: str) -> bool:
-        """Diz se a ``pesquisa`` por ``numeroProcesso`` responde 404, numa tentativa só.
-
-        Uma tentativa porque a pesquisa serve só de sinal: se ela falhar por
-        outro motivo, o processo segue as tentativas do próprio perfil, e
-        retentar a pesquisa atrasaria esse caminho. O 401 propaga.
-        """
-        uma_tentativa = partial(self._request_with_retry, max_retries=1)
-        try:
-            fetch_pesquisa(uma_tentativa, {"numeroProcesso": cnj}, base_url=self.BASE_URL)
-        except EXCECOES_DE_FALHA_POR_LINHA as exc:
-            if e_token_invalido(exc):
-                raise
-            return _e_status(exc, _STATUS_SEM_REGISTRO)
-        return False
 
     def existe(self, id_cnj: str | list[str]) -> bool | pd.DataFrame:
         """Checa presenca de processo(s) no Data Lake.
@@ -786,12 +732,9 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
         if search_after is not None:
             # API espera searchAfter como string CSV: timestamp,id
             params["searchAfter"] = ",".join(str(v) for v in search_after)
-        try:
-            data = fetch_pesquisa(self._request_with_retry, params, base_url=self.BASE_URL)
-        except requests.HTTPError as exc:
-            if _e_status(exc, _STATUS_SEM_REGISTRO):
-                return None
-            raise
+        data = fetch_pesquisa(self._request_with_retry, params, base_url=self.BASE_URL)
+        if data is None:
+            return None
         page_rows, proximo, _total = parse_pesquisa_response(data)
         return page_rows, proximo
 
