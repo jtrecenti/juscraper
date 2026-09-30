@@ -63,6 +63,7 @@ def test_auth_token_sem_exp_passa_silencioso():
     no_exp = _token({"sub": "tester"})
 
     assert scraper.auth(no_exp) is True
+    assert scraper.token == no_exp
     assert scraper.session.headers["authorization"] == f"Bearer {no_exp}"
 
 
