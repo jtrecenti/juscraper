@@ -255,10 +255,12 @@ class PdpjScraper(BaseScraper):
         InputAuthPdpj(token=token)
         try:
             # Decodifica so para validar formato/expiracao; o conteudo do JWT
-            # nao e logado (hardening, #270).
+            # nao e logado (hardening, #270). ``verify_exp`` precisa ser explicito:
+            # com ``verify_signature=False`` o PyJWT o desliga e o token vencido
+            # passava, sem chegar ao ``except ExpiredSignatureError`` (#351).
             jwt.decode(
                 token,
-                options={"verify_signature": False, "verify_aud": False},
+                options={"verify_signature": False, "verify_aud": False, "verify_exp": True},
                 algorithms=["RS256", "HS256", "ES256", "none"],
             )
         except jwt.ExpiredSignatureError as exc:
