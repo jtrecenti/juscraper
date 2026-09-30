@@ -79,7 +79,7 @@ stf = [
     "playwright>=1.49",
 ]
 govbr = [
-    # Login no gov.br numa janela do Chromium para obter o token do JusBR e do PDPJ (`auth_govbr()`).
+    # Conexão por CDP ao Chrome da máquina no login gov.br do JusBR e do PDPJ (`auth_govbr()`).
     "playwright>=1.49",
 ]
 docs = [

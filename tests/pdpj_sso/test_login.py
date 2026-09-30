@@ -3,6 +3,7 @@ import asyncio
 import sys
 import types
 from contextlib import contextmanager
+from typing import Any, cast
 
 import pytest
 
@@ -62,6 +63,7 @@ class _Context:
     def __init__(self, urls, eventos, fecha_no_passo):
         self.handlers: dict[str, list] = {}
         self.page = _Page(self, urls, eventos, fecha_no_passo)
+        self.pages = [self.page]
 
     def on(self, evento, handler):
         self.handlers.setdefault(evento, []).append(handler)
@@ -76,28 +78,44 @@ class _Context:
 
 
 class _Browser:
-    def __init__(self, context):
+    def __init__(self, context, processo):
         self.context = context
-        self.context_kwargs = None
-        self.fechado = False
+        self.contexts = [context]
+        self.processo = processo
 
-    def new_context(self, **kwargs):
-        self.context_kwargs = kwargs
-        return self.context
 
-    def close(self):
-        self.fechado = True
+class _Processo:
+    returncode = 0
+
+    def __init__(self):
+        self.encerrado = False
+
+    def poll(self):
+        return 0 if self.encerrado else None
+
+    def terminate(self):
+        self.encerrado = True
+
+    def wait(self, timeout=None):
+        return 0
 
 
 def _instalar_playwright_falso(mocker, urls, eventos, fecha_no_passo=None):
-    browser = _Browser(_Context(urls, eventos, fecha_no_passo))
+    """Substitui o Playwright e a abertura do navegador.
+
+    Devolve o mock do ``connect_over_cdp`` e o browser falso; ``browser.processo``
+    e o processo falso do navegador, para conferir que ele foi encerrado.
+    """
+    browser = _Browser(_Context(urls, eventos, fecha_no_passo), _Processo())
     launch = mocker.Mock(return_value=browser)
+    mocker.patch.object(login, "localizar_navegador", return_value="/usr/bin/google-chrome")
+    mocker.patch.object(login, "abrir_navegador", return_value=(browser.processo, 9222))
 
     @contextmanager
     def sync_playwright():
         with pytest.raises(RuntimeError, match="no running event loop"):
             asyncio.get_running_loop()
-        yield types.SimpleNamespace(chromium=types.SimpleNamespace(launch=launch))
+        yield types.SimpleNamespace(chromium=types.SimpleNamespace(connect_over_cdp=launch))
 
     sync_api = types.ModuleType("playwright.sync_api")
     vars(sync_api)["sync_playwright"] = sync_playwright
@@ -120,10 +138,9 @@ def test_resposta_do_endpoint_de_token_da_access_e_refresh(mocker):
 
     assert obter_credencial_govbr() == CredencialPdpj("acesso", "renovacao")
 
-    launch.assert_called_once_with(headless=False)
-    assert browser.context_kwargs == {"locale": "pt-BR"}
+    launch.assert_called_once_with("http://127.0.0.1:9222")
     assert browser.context.page.gotos == [PORTAL_CONSULTA]
-    assert browser.fechado
+    assert browser.processo.encerrado
 
 
 def test_so_o_cabecalho_da_access_sem_refresh_e_ignora_host_de_fora(mocker):
@@ -137,7 +154,7 @@ def test_so_o_cabecalho_da_access_sem_refresh_e_ignora_host_de_fora(mocker):
     )
 
     assert obter_credencial_govbr() == CredencialPdpj("do-portal", None)
-    assert browser.fechado
+    assert browser.processo.encerrado
 
 
 def test_resposta_de_token_com_erro_e_ignorada(mocker):
@@ -172,7 +189,7 @@ def test_sem_token_ate_o_prazo_levanta_e_fecha_o_navegador(mocker):
     with pytest.raises(RuntimeError, match="auth\\(token\\)"):
         obter_credencial_govbr(timeout=300)
 
-    assert browser.fechado
+    assert browser.processo.encerrado
 
 
 def test_janela_fechada_levanta(mocker):
@@ -181,7 +198,7 @@ def test_janela_fechada_levanta(mocker):
     with pytest.raises(RuntimeError, match="fechada"):
         obter_credencial_govbr()
 
-    assert browser.fechado
+    assert browser.processo.encerrado
 
 
 def test_sem_playwright_orienta_a_instalar_o_extra(mocker):
@@ -189,3 +206,49 @@ def test_sem_playwright_orienta_a_instalar_o_extra(mocker):
 
     with pytest.raises(ImportError, match=r"juscraper\[govbr\]"):
         obter_credencial_govbr()
+
+
+def test_localizar_navegador_usa_o_primeiro_instalado(mocker):
+    mocker.patch.object(login.shutil, "which", side_effect=lambda nome: "/opt/chromium" if nome == "chromium" else None)
+    assert login.localizar_navegador() == "/opt/chromium"
+
+
+def test_localizar_navegador_sem_nenhum_instalado_levanta(mocker):
+    mocker.patch.object(login.shutil, "which", return_value=None)
+    mocker.patch.object(login, "_CAMINHOS_NAVEGADOR", ())
+    with pytest.raises(RuntimeError, match="navegador="):
+        login.localizar_navegador()
+
+
+def test_localizar_navegador_informado_inexistente_levanta(mocker):
+    mocker.patch.object(login.shutil, "which", return_value=None)
+    with pytest.raises(RuntimeError, match="nao encontrado"):
+        login.localizar_navegador("/nao/existe/chrome")
+
+
+def test_abrir_navegador_le_a_porta_e_nao_liga_automacao(mocker, tmp_path):
+    processo = _Processo()
+    argumentos_recebidos = []
+
+    def popen(argumentos, **_kwargs):
+        (tmp_path / "DevToolsActivePort").write_text("41234\n/devtools/browser/x\n", encoding="utf-8")
+        argumentos_recebidos.extend(argumentos)
+        return processo
+
+    mocker.patch.object(login.subprocess, "Popen", side_effect=popen)
+
+    aberto, porta = login.abrir_navegador("/usr/bin/google-chrome", tmp_path)
+    assert aberto is cast(Any, processo)
+    assert porta == 41234
+    assert f"--user-data-dir={tmp_path}" in argumentos_recebidos
+    assert "--disable-blink-features=AutomationControlled" in argumentos_recebidos
+    assert "--enable-automation" not in argumentos_recebidos
+
+
+def test_abrir_navegador_que_fecha_ao_abrir_levanta(mocker, tmp_path):
+    processo = _Processo()
+    processo.encerrado = True
+    mocker.patch.object(login.subprocess, "Popen", return_value=processo)
+
+    with pytest.raises(RuntimeError, match="fechou logo ao abrir"):
+        login.abrir_navegador("/usr/bin/google-chrome", tmp_path)

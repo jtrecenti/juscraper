@@ -22,7 +22,7 @@ def test_instala_a_credencial_com_renovacao_e_grava_o_cache(mocker, scraper):
 
     assert scraper.auth_govbr(timeout=60) is True
 
-    login.assert_called_once_with(timeout=60)
+    login.assert_called_once_with(timeout=60, navegador=None)
     assert scraper.token == credencial.access_token
     assert scraper.session.auth.credencial == credencial
     assert carregar_credencial_cache() == credencial

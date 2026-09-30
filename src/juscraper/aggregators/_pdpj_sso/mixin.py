@@ -59,10 +59,17 @@ class PdpjSsoMixin:
         credencial, veio_do_cache = encontrada
         self._instalar_credencial(credencial, salvar_renovacao=veio_do_cache)
 
-    def auth_govbr(self, timeout: float = 300.0, salvar: bool = True, **kwargs: Any) -> bool:
-        """Obtem o token do PDPJ pelo login no gov.br, numa janela do Chromium.
+    def auth_govbr(
+        self,
+        timeout: float = 300.0,
+        salvar: bool = True,
+        navegador: str | None = None,
+        **kwargs: Any,
+    ) -> bool:
+        """Obtem o token do PDPJ pelo login no gov.br, no Chrome da maquina.
 
-        Abre o portal de servicos do PDPJ; a pessoa faz o login (CPF, senha,
+        Abre o portal de servicos do PDPJ no Chrome, Chromium ou Edge
+        instalado, com perfil temporario; a pessoa faz o login (CPF, senha,
         captcha e segundo fator) e o metodo captura o token que o portal
         recebe. Com refresh token, as requisicoes seguintes renovam o access
         token sozinhas. Exige navegador com janela, entao nao roda em Colab
@@ -76,6 +83,8 @@ class PdpjSsoMixin:
                 ``~/.config/...``), com permissao ``0600``, para as proximas
                 instancias do JusBR e do PDPJ carregarem sem novo login; as
                 renovacoes tambem sao gravadas. Default ``True``.
+            navegador (str | None): Executavel do Chrome, Chromium ou Edge.
+                ``None`` procura um instalado. Default ``None``.
 
         Returns:
             bool: ``True`` quando o token foi aceito.
@@ -83,7 +92,8 @@ class PdpjSsoMixin:
         Raises:
             TypeError: Quando um kwarg desconhecido e passado.
             ImportError: Quando falta o extra ``juscraper[govbr]``.
-            RuntimeError: Quando a janela e fechada ou o prazo acaba sem token.
+            RuntimeError: Quando nao ha navegador, a janela e fechada ou o
+                prazo acaba sem token.
             ValueError: Quando o token capturado e invalido ou ja expirou.
 
         Exemplo:
@@ -97,11 +107,11 @@ class PdpjSsoMixin:
         """
         nome = f"{type(self).__name__}.auth_govbr()"
         try:
-            inp = self.INPUT_AUTH_GOVBR(timeout=timeout, salvar=salvar, **kwargs)
+            inp = self.INPUT_AUTH_GOVBR(timeout=timeout, salvar=salvar, navegador=navegador, **kwargs)
         except ValidationError as exc:
             raise_on_extra_kwargs(exc, nome, schema_cls=self.INPUT_AUTH_GOVBR)
             raise
-        credencial = obter_credencial_govbr(timeout=inp.timeout)
+        credencial = obter_credencial_govbr(timeout=inp.timeout, navegador=inp.navegador)
         self.auth(credencial.access_token)
         self._instalar_credencial(credencial, salvar_renovacao=inp.salvar)
         if inp.salvar:
