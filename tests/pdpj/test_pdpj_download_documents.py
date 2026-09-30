@@ -628,3 +628,28 @@ def test_download_documents_corpo_vazio_nao_e_falha():
 
     assert out.iloc[0]["_raw_texto"] == ""
     assert out.iloc[0]["texto"] is None
+
+
+@responses.activate
+def test_download_documents_sso_fora_do_ar_no_meio_do_lote_anota_falhas_anteriores():
+    """Falha do SSO ao renovar o token para o lote, como o 401, com as falhas anteriores em nota."""
+    from juscraper.aggregators._pdpj_sso.renovacao import SsoPdpjIndisponivelError
+
+    _mock_text_error("doc-a", 500)
+    s = _mk_scraper()
+    chamadas = []
+
+    def auth(requisicao):
+        chamadas.append(requisicao.url)
+        if len(chamadas) > 1:
+            raise SsoPdpjIndisponivelError("O SSO do PJe respondeu HTTP 503 ao renovar o token; tente de novo.")
+        return requisicao
+
+    s.session.auth = auth
+
+    with pytest.raises(SsoPdpjIndisponivelError) as erro:
+        s.download_documents(_docs_df("doc-a", "doc-b"))
+
+    notas = " ".join(getattr(erro.value, "__notes__", []))
+    assert "Antes da falha do SSO" in notas
+    assert "doc-a, texto: HTTP 500" in notas

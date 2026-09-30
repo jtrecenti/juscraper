@@ -21,6 +21,7 @@ from ...core.base import BaseScraper
 from ...utils.cnj import clean_cnj
 from ...utils.params import normalize_paginas, raise_on_extra_kwargs
 from .._pdpj_sso import CredencialPdpj, PdpjSsoMixin
+from .._pdpj_sso.renovacao import ErroSsoPdpj
 from .download import (
     BASE_URL,
     USER_AGENT,
@@ -560,6 +561,9 @@ class PdpjScraper(PdpjSsoMixin, BaseScraper):
                 propaga e as linhas já baixadas se perdem; as falhas
                 anteriores ao 401 vão numa nota do próprio erro
                 (``__notes__``), não no ``UserWarning``.
+            ErroSsoPdpj: Quando o SSO do PJe recusa ou não consegue renovar o
+                token no meio do lote. Propaga como o 401, com as falhas
+                anteriores numa nota do erro.
 
         Warns:
             UserWarning: Quando pelo menos um download de documento falhou.
@@ -613,6 +617,11 @@ class PdpjScraper(PdpjSsoMixin, BaseScraper):
         except requests.HTTPError as erro:
             if falhas:
                 erro.add_note(f"Antes do 401, {_resumir_falhas(falhas)}")
+            raise
+        except ErroSsoPdpj as erro:
+            # Mesma regra do 401: a falha do SSO ao renovar o token para o lote.
+            if falhas:
+                erro.add_note(f"Antes da falha do SSO, {_resumir_falhas(falhas)}")
             raise
         _avisar_falhas(falhas)
         return pd.DataFrame(rows)

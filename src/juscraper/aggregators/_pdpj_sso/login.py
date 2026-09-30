@@ -43,6 +43,7 @@ ESPERA_ANTES_DO_RELOAD = 3.0
 ESPERA_PELO_REFRESH = 5.0
 # Teto de cada navegacao do portal, em segundos (o default do Playwright).
 TIMEOUT_NAVEGACAO = 30.0
+_JANELA_FECHADA = "A janela do navegador foi fechada antes de o login terminar."
 # Prazo para o navegador recem-aberto publicar a porta de depuracao.
 ESPERA_PELA_PORTA = 30.0
 
@@ -210,6 +211,8 @@ def _encerrar(processo: subprocess.Popen[bytes]) -> None:
 
 def _obter_credencial(timeout: float, navegador: str | None, sessao: _SessaoLogin) -> CredencialPdpj:
     try:
+        # pylint: disable-next=import-outside-toplevel
+        from playwright.sync_api import TimeoutError as TimeoutPlaywright
         from playwright.sync_api import sync_playwright  # pylint: disable=import-outside-toplevel
     except ImportError as exc:
         raise ImportError(
@@ -233,18 +236,8 @@ def _obter_credencial(timeout: float, navegador: str | None, sessao: _SessaoLogi
                 context.on("response", captura.ao_responder)
                 page = context.pages[0] if context.pages else context.new_page()
                 inicio = time.monotonic()
-                try:
-                    page.goto(
-                        PORTAL_CONSULTA,
-                        wait_until="domcontentloaded",
-                        timeout=_timeout_de_navegacao(inicio + timeout, inicio),
-                    )
-                except Exception:  # pylint: disable=broad-except
-                    # Portal lento na abertura nao e erro: a pagina segue carregando
-                    # e o laco espera o token ate o prazo. Janela fechada ou
-                    # cancelamento sao tratados no topo do laco.
-                    logger.debug("Abertura da consulta nao terminou; seguindo a espera.")
-                return _esperar_credencial(page, captura, timeout, sessao.cancelar)
+                _navegar(page, _timeout_de_navegacao(inicio + timeout, inicio), TimeoutPlaywright)
+                return _esperar_credencial(page, captura, timeout, sessao.cancelar, TimeoutPlaywright)
         finally:
             _encerrar(processo)
 
@@ -307,6 +300,23 @@ def _corpo_json(response: Any) -> dict[str, Any]:
     return dados if isinstance(dados, dict) else {}
 
 
+def _navegar(page: Any, timeout_ms: float, erro_de_timeout: type[BaseException]) -> None:
+    """Abre a consulta do portal; so o timeout do Playwright e tolerado.
+
+    Portal lento nao e erro: a pagina segue carregando e o laco espera o token
+    ate o prazo. Qualquer outra falha (sem rede, DNS, proxy) sobe na hora, em
+    vez de virar uma espera do prazo inteiro com mensagem de timeout.
+    """
+    try:
+        page.goto(PORTAL_CONSULTA, wait_until="domcontentloaded", timeout=timeout_ms)
+    except erro_de_timeout:
+        logger.debug("Navegacao da consulta nao terminou no prazo; seguindo a espera.")
+    except Exception as exc:
+        if page.is_closed():
+            raise RuntimeError(_JANELA_FECHADA) from exc
+        raise
+
+
 def _timeout_de_navegacao(prazo: float, agora: float) -> float:
     """Timeout de um ``goto`` em ms: no maximo 30 s, e nunca alem do prazo do login.
 
@@ -321,6 +331,7 @@ def _esperar_credencial(
     captura: _Captura,
     timeout: float,
     cancelar: threading.Event | None = None,
+    erro_de_timeout: type[BaseException] = TimeoutError,
 ) -> CredencialPdpj:
     prazo = time.monotonic() + timeout
     saiu_do_portal = False
@@ -331,7 +342,7 @@ def _esperar_credencial(
         if cancelar is not None and cancelar.is_set():
             raise RuntimeError("Login no gov.br cancelado.")
         if page.is_closed():
-            raise RuntimeError("A janela do navegador foi fechada antes de o login terminar.")
+            raise RuntimeError(_JANELA_FECHADA)
         captura.processar()
         agora = time.monotonic()
         if captura.credencial is not None and captura.credencial.refresh_token is not None:
@@ -349,21 +360,12 @@ def _esperar_credencial(
             voltou_em = voltou_em if voltou_em is not None else agora
             if agora - voltou_em >= ESPERA_ANTES_DO_RELOAD:
                 recarregou = True
-                try:
-                    page.goto(
-                        PORTAL_CONSULTA,
-                        wait_until="domcontentloaded",
-                        timeout=_timeout_de_navegacao(prazo, agora),
-                    )
-                except Exception:  # pylint: disable=broad-except
-                    # Portal lento no reload nao e erro: o laco segue esperando o
-                    # token ate o prazo, e janela fechada e tratada no topo do laco.
-                    logger.debug("Reload da consulta nao terminou; seguindo a espera.")
+                _navegar(page, _timeout_de_navegacao(prazo, agora), erro_de_timeout)
         try:
             page.wait_for_timeout(500)
         except Exception as exc:  # pylint: disable=broad-except
             if page.is_closed():
-                raise RuntimeError("A janela do navegador foi fechada antes de o login terminar.") from exc
+                raise RuntimeError(_JANELA_FECHADA) from exc
             raise
     raise RuntimeError(
         f"O login no gov.br nao terminou em {timeout:.0f}s ou o portal nao expos o token. "

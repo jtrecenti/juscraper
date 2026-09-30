@@ -131,6 +131,8 @@ def _instalar_playwright_falso(mocker, urls, eventos, fecha_no_passo=None):
 
     sync_api = types.ModuleType("playwright.sync_api")
     vars(sync_api)["sync_playwright"] = sync_playwright
+    # No Playwright real e uma subclasse de ``playwright.sync_api.Error``; o falso usa o nativo.
+    vars(sync_api)["TimeoutError"] = TimeoutError
     mocker.patch.dict(sys.modules, {"playwright": types.ModuleType("playwright"), "playwright.sync_api": sync_api})
     return launch, browser
 
@@ -439,3 +441,23 @@ def test_ctrl_c_com_worker_preso_nao_segura_a_saida_do_interpretador():
 
     assert "KeyboardInterrupt" in completado.stderr
     assert time.monotonic() - inicio < 10
+
+
+def test_erro_de_rede_na_abertura_sobe_na_hora(mocker):
+    _instalar_playwright_falso(mocker, ["chrome-error://chromewebdata/"], {})
+    erro_de_rede = RuntimeError("net::ERR_NAME_NOT_RESOLVED at https://portaldeservicos")
+    mocker.patch.object(_Page, "goto", side_effect=erro_de_rede)
+    inicio = time.monotonic()
+
+    with pytest.raises(RuntimeError, match="ERR_NAME_NOT_RESOLVED"):
+        obter_credencial_govbr(timeout=5)
+
+    assert time.monotonic() - inicio < 2
+
+
+def test_janela_fechada_durante_a_navegacao_diz_que_fechou(mocker):
+    _instalar_playwright_falso(mocker, [PORTAL_CONSULTA], {}, fecha_no_passo=0)
+    mocker.patch.object(_Page, "goto", side_effect=RuntimeError("Target page, context or browser has been closed"))
+
+    with pytest.raises(RuntimeError, match="fechada"):
+        obter_credencial_govbr(timeout=5)
