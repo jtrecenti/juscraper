@@ -207,7 +207,11 @@ def fetch_pesquisa(
     response = request_fn("GET", f"{base_url}/processos", params=params, perfil=PERFIL_LISTAGEM)
     data: dict[str, Any] = _json(response, dict)
     content = data.get("content")
-    if content is None and data.get("numberOfElements") == 0:
+    elementos = data.get("numberOfElements")
+    # ``false`` e ``0.0`` também são ``== 0``, e ``bool`` herda de ``int``; a
+    # chave ``content`` tem de estar presente, com ``null``.
+    zero = isinstance(elementos, int) and not isinstance(elementos, bool) and elementos == 0
+    if "content" in data and content is None and zero:
         return {**data, "content": []}
     if not isinstance(content, list):
         raise _forma_invalida(response)

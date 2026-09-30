@@ -11,6 +11,7 @@ core por um mock, e os testes de backoff leem as esperas dele.
 """
 from __future__ import annotations
 
+import json
 import logging
 import warnings
 from dataclasses import replace
@@ -457,6 +458,25 @@ def test_pesquisa_pagina_terminal_com_content_null_e_zero_elementos_encerra():
 
     assert len(df) == 1
     assert len(responses.calls) == 2
+
+
+@pytest.mark.parametrize(
+    "pagina",
+    [
+        {"numberOfElements": 0},
+        {"content": None, "numberOfElements": False},
+        {"content": None, "numberOfElements": 0.0},
+        {"content": None, "numberOfElements": "0"},
+        {"content": None},
+    ],
+    ids=["sem_content", "zero_bool", "zero_float", "zero_str", "sem_contagem"],
+)
+@responses.activate
+def test_pesquisa_so_aceita_null_com_zero_inteiro_explicito(pagina):
+    _mock("/processos", body=json.dumps(pagina))
+
+    with pytest.raises(InvalidJSONResponseError):
+        _mk_scraper().pesquisa(tribunal="TRF1", paginas=1)
 
 
 @responses.activate

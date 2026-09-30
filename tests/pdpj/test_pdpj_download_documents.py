@@ -6,6 +6,7 @@ veio de :meth:`cpopg` (uma linha por processo com ``detalhes`` cheio).
 """
 from __future__ import annotations
 
+import logging
 import re
 import warnings
 
@@ -550,12 +551,16 @@ def test_download_documents_401_no_meio_do_lote_anota_falhas_anteriores():
 
 
 @responses.activate
-def test_download_documents_id_nan_nao_ocupa_vaga_nem_vira_requisicao():
+def test_download_documents_id_nan_nao_ocupa_vaga_nem_vira_requisicao(caplog):
     """``NaN`` no id (o que o pandas põe no id ausente) é pulado como ``None``."""
     _mock_text_endpoint("doc-b", "texto b\n")
     s = _mk_scraper()
 
-    out = s.download_documents(_docs_df(float("nan"), "doc-b"), max_docs_per_process=1)
+    with caplog.at_level(logging.WARNING, logger="juscraper.aggregators.pdpj.client"):
+        out = s.download_documents(_docs_df(float("nan"), "doc-b"), max_docs_per_process=1)
+
+    # Documento que a API listou sem id, sem falha anterior: o log avisa que foi pulado.
+    assert "sem id_documento" in caplog.text
 
     assert out["id_documento"].tolist() == ["doc-b"]
     assert out.iloc[0]["texto"] == "texto b"
