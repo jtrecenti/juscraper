@@ -698,7 +698,15 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
                 * ``data_atualizacao_inicio`` / ``_fim`` (str): ISO datetime
                 * ``data_primeiro_ajuizamento_inicio`` / ``_fim`` (str): ISO datetime
                 * ``campo_ordenacao`` (str): campo de ordenacao decrescente
-                * ``itens_por_pagina`` (int): default 100, max 100
+                * ``itens_por_pagina`` (int): default 100. Vai a API como
+                  ``maxElementsSize``, mas a API ignora o valor: a
+                  especificacao publica do data lake traz
+                  ``maxElementsSize`` so na resposta, como o maximo por
+                  consulta, e nao declara parametro de tamanho de pagina.
+                  Em campo, o pedido de 5 devolveu 100 itens. A pagina nao
+                  se corta no cliente, porque o cursor ``searchAfter`` da
+                  pagina seguinte vem da ultima linha que a API mandou;
+                  para limitar o total, use ``paginas``.
 
         Returns:
             DataFrame com uma linha por processo retornado. A API responde 404
@@ -729,6 +737,9 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
 
         base_data = inp.model_dump(exclude={"paginas", "itens_por_pagina"})
         base_params = _to_query_params(base_data)
+        # Sem efeito na API hoje (ver ``itens_por_pagina`` no docstring); o
+        # parâmetro segue na querystring para não mudar a requisição de quem já
+        # o passa, caso a API volte a aceitá-lo.
         base_params["maxElementsSize"] = inp.itens_por_pagina
         max_paginas, permitidas = _limite_de_paginas(paginas_norm)
         return pd.DataFrame(self._paginar(base_params, max_paginas, permitidas))
