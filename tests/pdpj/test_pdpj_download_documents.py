@@ -7,9 +7,11 @@ veio de :meth:`cpopg` (uma linha por processo com ``detalhes`` cheio).
 from __future__ import annotations
 
 import re
+import warnings
 
 import pandas as pd
 import pytest
+import requests
 import responses
 from pydantic import ValidationError
 
@@ -74,6 +76,23 @@ def _mock_text_endpoint(doc_id: str, body: str) -> None:
         status=200,
         content_type="text/plain",
     )
+
+
+def _mock_text_error(doc_id: str, status: int) -> None:
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/processos/{PROC}/documentos/{doc_id}/texto",
+        body="erro",
+        status=status,
+        content_type="text/plain",
+    )
+
+
+def _docs_df(*ids: str | float | None) -> pd.DataFrame:
+    return pd.DataFrame([
+        {"processo": PROC, "numero_processo": PROC, "id_documento": doc_id}
+        for doc_id in ids
+    ])
 
 
 def _mock_any_text_endpoint() -> None:
@@ -382,3 +401,230 @@ def test_download_documents_preserva_precedencia_ordem_duplicatas_e_shape():
         "arquivo_tamanho": 123,
         "arquivo_paginas": 2,
     }
+
+
+@responses.activate
+def test_download_documents_limite_nao_conta_documento_sem_id():
+    """Documento sem ``id_documento`` é pulado sem consumir o limite."""
+    _mock_text_endpoint("doc-b", "texto b\n")
+    _mock_text_endpoint("doc-c", "texto c\n")
+    s = _mk_scraper()
+
+    out = s.download_documents(_docs_df(None, "doc-b", "doc-c"), max_docs_per_process=2)
+
+    assert out["id_documento"].tolist() == ["doc-b", "doc-c"]
+    assert out["texto"].tolist() == ["texto b", "texto c"]
+
+
+@responses.activate
+def test_download_documents_erro_http_vira_linha_vazia_com_aviso():
+    """Um 500 num documento não derruba a coleta nem descarta o que já foi baixado."""
+    _mock_text_endpoint("doc-a", "texto a\n")
+    _mock_text_error("doc-b", 500)
+    _mock_text_endpoint("doc-c", "texto c\n")
+    s = _mk_scraper()
+
+    with pytest.warns(UserWarning) as avisos:
+        out = s.download_documents(_docs_df("doc-a", "doc-b", "doc-c"))
+
+    assert out["id_documento"].tolist() == ["doc-a", "doc-b", "doc-c"]
+    assert out.iloc[0]["texto"] == "texto a"
+    assert out.iloc[1]["texto"] is None
+    assert out.iloc[1]["_raw_texto"] is None
+    assert out.iloc[2]["texto"] == "texto c"
+    assert len(avisos) == 1
+    mensagem = str(avisos[0].message)
+    assert PROC in mensagem
+    assert "doc-b" in mensagem
+    assert "HTTP 500" in mensagem
+
+
+@responses.activate
+def test_download_documents_falha_consome_limite_e_gera_um_aviso_agregado():
+    """A linha que falhou sai no resultado e conta no limite; o aviso agrega as falhas."""
+    _mock_text_error("doc-a", 500)
+    _mock_text_error("doc-b", 404)
+    _mock_text_endpoint("doc-c", "texto c\n")
+    s = _mk_scraper()
+
+    with pytest.warns(UserWarning) as avisos:
+        out = s.download_documents(_docs_df("doc-a", "doc-b", "doc-c"), max_docs_per_process=2)
+
+    assert out["id_documento"].tolist() == ["doc-a", "doc-b"]
+    assert out["texto"].isna().all()
+    assert [call.request.url.rsplit("/", 2)[-2] for call in responses.calls] == ["doc-a", "doc-b"]
+    assert len(avisos) == 1
+    mensagem = str(avisos[0].message)
+    assert "2 download(s)" in mensagem
+    assert "HTTP 500" in mensagem
+    assert "HTTP 404" in mensagem
+
+
+@responses.activate
+def test_download_documents_aviso_cita_alguns_exemplos_e_conta_o_resto():
+    ids = [f"doc-{indice}" for indice in range(5)]
+    for doc_id in ids:
+        _mock_text_error(doc_id, 500)
+    s = _mk_scraper()
+
+    with pytest.warns(UserWarning) as avisos:
+        out = s.download_documents(_docs_df(*ids))
+
+    assert len(out) == 5
+    assert len(avisos) == 1
+    mensagem = str(avisos[0].message)
+    assert "5 download(s)" in mensagem
+    assert "doc-0" in mensagem
+    assert "doc-4" not in mensagem
+    assert re.search(r"; e mais 2\.", mensagem)
+
+
+@responses.activate
+def test_download_documents_retry_esgotado_entra_no_aviso(monkeypatch):
+    """429 persistente já virava linha vazia; agora também aparece no aviso."""
+    monkeypatch.setattr("juscraper.aggregators.pdpj.download.time.sleep", lambda _segundos: None)
+    _mock_text_error("doc-a", 429)
+    s = _mk_scraper()
+
+    with pytest.warns(UserWarning, match=r"doc-a.*sem resposta"):
+        out = s.download_documents(_docs_df("doc-a"))
+
+    assert out.iloc[0]["texto"] is None
+
+
+@responses.activate
+def test_download_documents_erro_de_autenticacao_propaga():
+    """401 (token inválido) atinge o lote inteiro: propaga em vez de virar linha vazia."""
+    _mock_text_endpoint("doc-a", "texto a\n")
+    _mock_text_error("doc-b", 401)
+    s = _mk_scraper()
+
+    with pytest.raises(requests.HTTPError) as erro:
+        s.download_documents(_docs_df("doc-a", "doc-b"))
+
+    assert erro.value.response.status_code == 401
+
+
+@responses.activate
+def test_download_documents_403_vira_linha_vazia_com_aviso():
+    """403 pode negar um documento só (sigiloso, por exemplo), com token válido."""
+    _mock_text_error("doc-a", 403)
+    _mock_text_endpoint("doc-b", "texto b\n")
+    s = _mk_scraper()
+
+    with pytest.warns(UserWarning, match=r"doc-a, texto: HTTP 403"):
+        out = s.download_documents(_docs_df("doc-a", "doc-b"))
+
+    assert out["id_documento"].tolist() == ["doc-a", "doc-b"]
+    assert out.iloc[0]["texto"] is None
+    assert out.iloc[1]["texto"] == "texto b"
+
+
+@responses.activate
+def test_download_documents_401_no_meio_do_lote_anota_falhas_anteriores():
+    """As falhas anteriores ao 401 vão numa nota do erro, sem aviso.
+
+    A suíte roda com ``filterwarnings = error``: se o método emitisse o aviso
+    durante a propagação, o ``UserWarning`` substituiria o ``HTTPError`` e o
+    ``pytest.raises`` abaixo falharia.
+    """
+    _mock_text_error("doc-a", 500)
+    _mock_text_error("doc-b", 401)
+    s = _mk_scraper()
+
+    with pytest.raises(requests.HTTPError) as erro:
+        s.download_documents(_docs_df("doc-a", "doc-b"))
+
+    assert erro.value.response.status_code == 401
+    notas = " ".join(getattr(erro.value, "__notes__", []))
+    assert "Antes do 401" in notas
+    assert "doc-a, texto: HTTP 500" in notas
+
+
+@responses.activate
+def test_download_documents_id_nan_nao_ocupa_vaga_nem_vira_requisicao():
+    """``NaN`` no id (o que o pandas põe no id ausente) é pulado como ``None``."""
+    _mock_text_endpoint("doc-b", "texto b\n")
+    s = _mk_scraper()
+
+    out = s.download_documents(_docs_df(float("nan"), "doc-b"), max_docs_per_process=1)
+
+    assert out["id_documento"].tolist() == ["doc-b"]
+    assert out.iloc[0]["texto"] == "texto b"
+    assert [call.request.url.rsplit("/", 2)[-2] for call in responses.calls] == ["doc-b"]
+
+
+@responses.activate
+def test_download_documents_falhas_em_dois_processos_geram_um_aviso():
+    outro = "00000011120248260100"
+    _mock_text_error("doc-a", 500)
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/processos/{outro}/documentos/doc-z/texto",
+        body="erro",
+        status=502,
+        content_type="text/plain",
+    )
+    s = _mk_scraper()
+    base_df = pd.DataFrame([
+        {"processo": PROC, "numero_processo": PROC, "id_documento": "doc-a"},
+        {"processo": outro, "numero_processo": outro, "id_documento": "doc-z"},
+    ])
+
+    with pytest.warns(UserWarning) as avisos:
+        out = s.download_documents(base_df)
+
+    assert out["id_documento"].tolist() == ["doc-a", "doc-z"]
+    assert len(avisos) == 1
+    mensagem = str(avisos[0].message)
+    assert "2 download(s)" in mensagem
+    assert f"processo {PROC}, documento doc-a, texto: HTTP 500" in mensagem
+    assert f"processo {outro}, documento doc-z, texto: HTTP 502" in mensagem
+
+
+@responses.activate
+def test_download_documents_erro_no_binario_vira_none_com_aviso():
+    _mock_text_endpoint("doc-a", "texto a\n")
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/processos/{PROC}/documentos/doc-a/binario",
+        body="erro",
+        status=500,
+        content_type="text/plain",
+    )
+    s = _mk_scraper()
+
+    with pytest.warns(UserWarning, match=r"doc-a, binario: HTTP 500"):
+        out = s.download_documents(_docs_df("doc-a"), with_binary=True)
+
+    assert out.iloc[0]["texto"] == "texto a"
+    assert out.iloc[0]["binario"] is None
+
+
+@responses.activate
+def test_download_documents_erro_de_conexao_entra_no_aviso():
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/processos/{PROC}/documentos/doc-a/texto",
+        body=requests.ConnectionError("conexão recusada"),
+    )
+    s = _mk_scraper()
+
+    with pytest.warns(UserWarning, match=r"doc-a, texto: sem resposta"):
+        out = s.download_documents(_docs_df("doc-a"))
+
+    assert out.iloc[0]["texto"] is None
+
+
+@responses.activate
+def test_download_documents_corpo_vazio_nao_e_falha():
+    """Um 200 com corpo vazio é documento vazio, não falha: não entra no aviso."""
+    _mock_text_endpoint("doc-a", "")
+    s = _mk_scraper()
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        out = s.download_documents(_docs_df("doc-a"))
+
+    assert out.iloc[0]["_raw_texto"] == ""
+    assert out.iloc[0]["texto"] is None
