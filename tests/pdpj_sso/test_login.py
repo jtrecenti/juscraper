@@ -513,3 +513,26 @@ def test_erro_fora_do_playwright_no_reload_sobe(mocker):
 
     with pytest.raises(AttributeError, match="bug no reload"):
         obter_credencial_govbr(timeout=5)
+
+
+def test_log_do_reload_tolerado_nao_registra_a_mensagem(mocker, caplog):
+    """A mensagem do Playwright traz a URL de destino, que pode levar o ``code`` do SSO."""
+    _instalar_playwright_falso(
+        mocker,
+        [PORTAL_CONSULTA, _SSO, "https://portaldeservicos.pdpj.jus.br/home"],
+        {6: [_requisicao(_API, _APOS_RELOAD)]},
+    )
+    goto_original = _Page.goto
+
+    def goto(self, url, **kwargs):
+        goto_original(self, url, **kwargs)
+        if len(self.gotos) > 1:
+            destino = "https://portaldeservicos.pdpj.jus.br/home#code=segredo"
+            raise _ErroFalso(f'interrupted by another navigation to "{destino}"')
+
+    mocker.patch.object(_Page, "goto", goto)
+    caplog.set_level("DEBUG", logger=login.logger.name)
+
+    assert obter_credencial_govbr(timeout=5) == CredencialPdpj(_APOS_RELOAD, None)
+    assert "_ErroFalso" in caplog.text
+    assert "segredo" not in caplog.text
