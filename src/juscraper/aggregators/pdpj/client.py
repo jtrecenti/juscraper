@@ -773,10 +773,13 @@ class PdpjScraper(HTTPScraper):
         # ``pd.isna`` cobre o ``NaN`` que o pandas põe no id ausente; ``NaN`` é
         # truthy e passaria por ``not id_documento`` como id válido.
         if pd.isna(id_documento) or id_documento == "":
-            logger.warning(
-                "Documento sem id_documento no processo %s; pulando.",
-                numero_processo,
-            )
+            # A linha de falha de ``documentos`` não tem id e já foi contada no
+            # aviso daquela chamada; o log fica para o documento que veio sem id.
+            if pd.isna(row.get(COLUNA_MOTIVO_FALHA)):
+                logger.warning(
+                    "Documento sem id_documento no processo %s; pulando.",
+                    numero_processo,
+                )
             return None
         cnj_clean = clean_cnj(str(numero_processo))
         descricao = f"processo {numero_processo}, documento {id_documento}"

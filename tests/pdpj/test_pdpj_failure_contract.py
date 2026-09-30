@@ -11,6 +11,7 @@ core por um mock, e os testes de backoff leem as esperas dele.
 """
 from __future__ import annotations
 
+import logging
 import warnings
 from dataclasses import replace
 
@@ -488,16 +489,19 @@ def test_motivo_falha_e_a_ultima_coluna_mesmo_com_a_falha_primeiro(metodo):
 
 
 @responses.activate
-def test_download_de_documentos_que_so_falharam_devolve_vazio():
+def test_download_de_documentos_que_so_falharam_devolve_vazio(caplog):
     _mock(f"/processos/{PROC}/documentos", status=404)
     s = _mk_scraper()
     with pytest.warns(UserWarning):
         docs = s.documentos(PROC)
 
-    out = s.download_documents(docs)
+    with caplog.at_level(logging.WARNING, logger="juscraper.aggregators.pdpj.client"):
+        out = s.download_documents(docs)
 
     assert out.empty
     assert len(responses.calls) == 1
+    # A falha já saiu no aviso de ``documentos``; o log de "documento sem id" não a repete.
+    assert "sem id_documento" not in caplog.text
 
 
 @responses.activate
