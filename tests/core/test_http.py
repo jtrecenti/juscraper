@@ -4,12 +4,15 @@ Inclui os casos canônicos da issue #185 (validação de ``session=`` na frontei
 """
 from __future__ import annotations
 
+from collections.abc import Mapping
+from typing import ClassVar
+
 import pytest
 import requests
 import responses
 
 from juscraper.core.exceptions import InvalidJSONResponseError, RetryExhaustedError
-from juscraper.core.http import HTTPScraper
+from juscraper.core.http import DEFAULT_POLICY, RETRYABLE_STATUSES, HTTPScraper, RequestPolicy
 
 URL = "https://example.test/api"
 
@@ -335,3 +338,295 @@ def test_request_with_retry_on_response_noop_lets_flow_proceed(probe, mocker):
     assert resp.status_code == 200
     # O callback viu as duas respostas (503 transitório, depois 200).
     assert seen == [503, 200]
+
+
+# --- Política de requisição por perfil -------------------------------------
+
+
+class _ProbeComPerfis(HTTPScraper):
+    """Scraper com perfis declarados, como PDPJ/JusBR farão."""
+
+    perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
+        "listagem": RequestPolicy(timeout=60),
+        "documento": RequestPolicy(
+            timeout=30,
+            max_retries=4,
+            retryable_statuses=frozenset({429, 503}),
+            retry_on_timeout=True,
+        ),
+    }
+
+
+@pytest.fixture
+def probe_perfis(mocker):
+    mocker.patch("juscraper.core.http.time.sleep")
+    return _ProbeComPerfis()
+
+
+def test_default_policy_matches_previous_behavior():
+    assert RequestPolicy(
+        timeout=None,
+        max_retries=3,
+        base_backoff=2.0,
+        retryable_statuses=RETRYABLE_STATUSES,
+        retry_on_timeout=False,
+        retry_on_connection_error=False,
+    ) == DEFAULT_POLICY
+
+
+def test_politica_merges_only_passed_fields():
+    probe = _ProbeComPerfis(politica={"documento": {"timeout": 10}})
+
+    doc = probe._perfis_http["documento"]
+    assert doc.timeout == 10
+    assert doc.max_retries == 4
+    assert doc.retryable_statuses == frozenset({429, 503})
+    assert doc.retry_on_timeout is True
+    assert probe._perfis_http["listagem"] == _ProbeComPerfis.perfis_http["listagem"]
+
+
+def test_politica_does_not_mutate_class_profiles():
+    _ProbeComPerfis(politica={"documento": {"timeout": 10}})
+    assert _ProbeComPerfis.perfis_http["documento"].timeout == 30
+
+
+def test_politica_coerces_statuses_to_frozenset():
+    probe = _ProbeComPerfis(politica={"documento": {"retryable_statuses": [500]}})
+    assert probe._perfis_http["documento"].retryable_statuses == frozenset({500})
+
+
+def test_politica_on_scraper_without_profiles_raises():
+    with pytest.raises(ValueError, match="não declara perfis HTTP"):
+        _Probe(politica={"documento": {"timeout": 10}})
+
+
+def test_politica_unknown_profile_raises():
+    with pytest.raises(ValueError, match=r"Perfil HTTP desconhecido.*'inexistente'"):
+        _ProbeComPerfis(politica={"inexistente": {"timeout": 10}})
+
+
+def test_politica_unknown_field_raises():
+    with pytest.raises(ValueError, match=r"Campo.*desconhecido.*'tempo'"):
+        _ProbeComPerfis(politica={"documento": {"tempo": 10}})
+
+
+def test_politica_invalid_max_retries_raises():
+    with pytest.raises(ValueError, match=r"max_retries deve ser >= 1, recebido 0"):
+        _ProbeComPerfis(politica={"documento": {"max_retries": 0}})
+
+
+def test_request_unknown_profile_raises(probe_perfis):
+    with pytest.raises(ValueError, match=r"Perfil HTTP desconhecido.*'inexistente'"):
+        probe_perfis._request_with_retry("GET", URL, perfil="inexistente")
+
+
+def test_request_profile_on_scraper_without_profiles_raises(probe):
+    with pytest.raises(ValueError, match="Perfil HTTP desconhecido"):
+        probe._request_with_retry("GET", URL, perfil="documento")
+
+
+@responses.activate
+def test_profile_timeout_reaches_session_request(probe_perfis, mocker):
+    spy = mocker.spy(probe_perfis.session, "request")
+    responses.add(responses.GET, URL, json={"ok": True}, status=200)
+
+    probe_perfis._request_with_retry("GET", URL, perfil="documento")
+
+    assert spy.call_args.kwargs["timeout"] == 30
+    assert "perfil" not in spy.call_args.kwargs
+
+
+@responses.activate
+def test_no_profile_injects_no_timeout(probe_perfis, mocker):
+    spy = mocker.spy(probe_perfis.session, "request")
+    responses.add(responses.GET, URL, json={"ok": True}, status=200)
+
+    probe_perfis._request_with_retry("GET", URL)
+
+    assert "timeout" not in spy.call_args.kwargs
+
+
+@responses.activate
+def test_explicit_timeout_beats_profile(probe_perfis, mocker):
+    spy = mocker.spy(probe_perfis.session, "request")
+    responses.add(responses.GET, URL, json={"ok": True}, status=200)
+
+    probe_perfis._request_with_retry("GET", URL, perfil="documento", timeout=5)
+
+    assert spy.call_args.kwargs["timeout"] == 5
+
+
+@responses.activate
+def test_explicit_max_retries_beats_profile(probe_perfis):
+    for _ in range(4):
+        responses.add(responses.GET, URL, status=503)
+
+    with pytest.raises(RetryExhaustedError) as exc:
+        probe_perfis._request_with_retry("GET", URL, perfil="documento", max_retries=2)
+
+    assert exc.value.attempts == 2
+
+
+@responses.activate
+def test_profile_max_retries_used(probe_perfis):
+    for _ in range(4):
+        responses.add(responses.GET, URL, status=503)
+
+    with pytest.raises(RetryExhaustedError) as exc:
+        probe_perfis._request_with_retry("GET", URL, perfil="documento")
+
+    assert exc.value.attempts == 4
+
+
+@responses.activate
+def test_profile_retryable_statuses_drop_403(probe_perfis, mocker):
+    """No perfil que tira o 403 dos retentáveis, ele vira ``HTTPError`` na primeira resposta."""
+    sleep_spy = mocker.patch("juscraper.core.http.time.sleep")
+    responses.add(responses.GET, URL, status=403)
+    responses.add(responses.GET, URL, json={"ok": True}, status=200)
+
+    with pytest.raises(requests.HTTPError):
+        probe_perfis._request_with_retry("GET", URL, perfil="documento")
+
+    assert len(responses.calls) == 1
+    sleep_spy.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("exc_cls", "perfil"),
+    [
+        (requests.ReadTimeout, {"retry_on_timeout": True}),
+        (requests.ConnectionError, {"retry_on_connection_error": True}),
+        (requests.ConnectTimeout, {"retry_on_connection_error": True}),
+    ],
+)
+def test_network_error_retried_when_enabled(mocker, exc_cls, perfil):
+    class _P(HTTPScraper):
+        perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {"p": RequestPolicy(**perfil)}
+
+    sleep_spy = mocker.patch("juscraper.core.http.time.sleep")
+    probe = _P()
+    ok = requests.Response()
+    ok.status_code = 200
+    mocker.patch.object(probe.session, "request", side_effect=[exc_cls(), exc_cls(), ok])
+
+    resp = probe._request_with_retry("GET", URL, perfil="p")
+
+    assert resp is ok
+    assert [c.args[0] for c in sleep_spy.call_args_list] == [2.0, 4.0]
+
+
+@pytest.mark.parametrize(
+    ("exc_cls", "perfil"),
+    [
+        (requests.ReadTimeout, {"retry_on_connection_error": True}),
+        (requests.ConnectionError, {"retry_on_timeout": True}),
+        (requests.ConnectTimeout, {"retry_on_timeout": True}),
+        (requests.ReadTimeout, None),
+        (requests.ConnectionError, None),
+    ],
+)
+def test_network_error_not_retried_when_disabled(mocker, exc_cls, perfil):
+    class _P(HTTPScraper):
+        perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {"p": RequestPolicy(**perfil)} if perfil else {}
+
+    sleep_spy = mocker.patch("juscraper.core.http.time.sleep")
+    probe = _P()
+    request = mocker.patch.object(probe.session, "request", side_effect=exc_cls())
+
+    with pytest.raises(exc_cls):
+        probe._request_with_retry("GET", URL, perfil="p" if perfil else None)
+
+    assert request.call_count == 1
+    sleep_spy.assert_not_called()
+
+
+def test_network_retry_exhausted_reraises_original(probe_perfis, mocker):
+    """Esgotado, relança o próprio timeout (motivo ``timeout``), não ``RetryExhaustedError``."""
+    request = mocker.patch.object(probe_perfis.session, "request", side_effect=requests.ReadTimeout())
+
+    with pytest.raises(requests.ReadTimeout):
+        probe_perfis._request_with_retry("GET", URL, perfil="documento")
+
+    assert request.call_count == 4
+
+
+def test_network_and_status_share_max_retries(probe_perfis, mocker):
+    """Timeout e status retentável gastam do mesmo ``max_retries``."""
+    indisponivel = requests.Response()
+    indisponivel.status_code = 503
+    request = mocker.patch.object(
+        probe_perfis.session, "request",
+        side_effect=[requests.ReadTimeout(), indisponivel, requests.ReadTimeout(), indisponivel],
+    )
+
+    with pytest.raises(RetryExhaustedError) as exc:
+        probe_perfis._request_with_retry("GET", URL, perfil="documento")
+
+    assert exc.value.attempts == 4
+    assert request.call_count == 4
+
+
+class _ProbeBackoff(HTTPScraper):
+    """Perfil com backoff fora do default, para distinguir perfil, default e fórmula."""
+
+    perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
+        "lento": RequestPolicy(base_backoff=3.0, retry_on_timeout=True),
+    }
+
+
+@responses.activate
+def test_profile_base_backoff_used_for_status(mocker):
+    sleep_spy = mocker.patch("juscraper.core.http.time.sleep")
+    responses.add(responses.GET, URL, status=503)
+    responses.add(responses.GET, URL, status=503)
+    responses.add(responses.GET, URL, json={"ok": True}, status=200)
+
+    _ProbeBackoff()._request_with_retry("GET", URL, perfil="lento")
+
+    assert [c.args[0] for c in sleep_spy.call_args_list] == [3.0, 9.0]
+
+
+@responses.activate
+def test_explicit_base_backoff_beats_profile(mocker):
+    sleep_spy = mocker.patch("juscraper.core.http.time.sleep")
+    responses.add(responses.GET, URL, status=503)
+    responses.add(responses.GET, URL, json={"ok": True}, status=200)
+
+    _ProbeBackoff()._request_with_retry("GET", URL, perfil="lento", base_backoff=5.0)
+
+    sleep_spy.assert_called_once_with(5.0)
+
+
+def test_network_backoff_is_exponential_in_profile_base(mocker):
+    sleep_spy = mocker.patch("juscraper.core.http.time.sleep")
+    probe = _ProbeBackoff()
+    ok = requests.Response()
+    ok.status_code = 200
+    mocker.patch.object(probe.session, "request", side_effect=[requests.ReadTimeout(), requests.ReadTimeout(), ok])
+
+    probe._request_with_retry("GET", URL, perfil="lento")
+
+    assert [c.args[0] for c in sleep_spy.call_args_list] == [3.0, 9.0]
+
+
+def test_politica_timeout_list_becomes_tuple():
+    probe = _ProbeComPerfis(politica={"documento": {"timeout": [5, 30]}})
+    assert probe._perfis_http["documento"].timeout == (5, 30)
+
+
+def test_politica_non_mapping_adjustment_raises():
+    with pytest.raises(ValueError, match=r"deve ser um dict de campos, recebido RequestPolicy"):
+        _ProbeComPerfis(politica={"documento": RequestPolicy(timeout=1)})  # type: ignore[dict-item]
+
+
+@responses.activate
+def test_profile_base_backoff_used_for_invalid_json(mocker):
+    sleep_spy = mocker.patch("juscraper.core.http.time.sleep")
+    responses.add(responses.GET, URL, body="", status=200)
+    responses.add(responses.GET, URL, body="", status=200)
+    responses.add(responses.GET, URL, json={"ok": True}, status=200)
+
+    _ProbeBackoff()._request_with_retry("GET", URL, perfil="lento", expect_json=True)
+
+    assert [c.args[0] for c in sleep_spy.call_args_list] == [3.0, 9.0]
