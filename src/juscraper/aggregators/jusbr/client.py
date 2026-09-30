@@ -8,12 +8,12 @@ from functools import partial
 from typing import Any, ClassVar, cast
 
 import browser_cookie3
-import jwt
 import numpy as np
 import pandas as pd
 import requests
 from pydantic import ValidationError
 
+from ...core.auth import validar_jwt
 from ...core.failures import (
     COLUNA_MOTIVO_FALHA,
     EXCECOES_DE_FALHA_POR_LINHA,
@@ -257,7 +257,8 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
         Raises:
             TypeError: Quando um kwarg desconhecido e passado (schema
                 :class:`InputAuthJusBR`, ``extra="forbid"``).
-            ValueError: Quando o token e invalido ou esta expirado.
+            ValueError: Quando o token e invalido ou esta expirado (ver
+                :func:`juscraper.core.auth.validar_jwt`).
         """
         try:
             inp = self.INPUT_AUTH(token=token, **kwargs)
@@ -266,28 +267,17 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
             raise
         token = inp.token
         try:
-            # ``verify_exp: True`` e explicito porque com ``verify_signature=False``
-            # o PyJWT desativa ``verify_exp`` por padrao — sem isso, o ramo
-            # ``except jwt.ExpiredSignatureError`` abaixo seria dead code.
-            decoded = jwt.decode(token,
-                                 options={
-                                     "verify_signature": False,
-                                     "verify_aud": False,
-                                     "verify_exp": True,
-                                 },
-                                 algorithms=["RS256", "HS256", "ES256", "none"])
-            self._instalar_credencial(CredencialPdpj(token), salvar_renovacao=False)
-            if self.verbose > 0:
-                logger.info("Token JWT definido e decodificado com sucesso!")
-                if self.verbose > 1:
-                    logger.debug("  Token decodificado com %d claims.", len(decoded))
-            return True
-        except jwt.ExpiredSignatureError as exc:
-            logger.error("Token JWT expirado.")
-            raise ValueError("Token JWT expirado.") from exc
-        except jwt.InvalidTokenError as exc:
-            logger.error("Token JWT inválido: %s", exc)
-            raise ValueError(f"Token JWT inválido: {exc}") from exc
+            claims = validar_jwt(token)
+        except ValueError as exc:
+            logger.error("%s", exc)
+            raise
+        # Só depois da validação: um ``auth()`` que falha mantém o token anterior.
+        self._instalar_credencial(CredencialPdpj(token), salvar_renovacao=False)
+        if self.verbose > 0:
+            logger.info("Token JWT definido e decodificado com sucesso!")
+            if self.verbose > 1:
+                logger.debug("  Token decodificado com %d claims.", len(claims))
+        return True
 
     def auth_firefox(self) -> bool:
         """Obtém o token pela sessão do SSO da PDPJ aberta no Firefox.

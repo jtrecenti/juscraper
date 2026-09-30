@@ -48,9 +48,9 @@ acaba caindo em ``RetryExhaustedError`` após ``max_retries`` tentativas, o que
 
 A decisão aplica-se globalmente: todos os scrapers que delegam ao
 ``_request_with_retry`` herdam o comportamento. Consumidores que distinguem
-403-de-auth de 403-de-WAF (ex.: PDPJ, onde 403 nega o recurso) podem declarar
-um perfil de :class:`RequestPolicy` com ``retryable_statuses`` sem o 403; o
-PDPJ ainda mantém retry local próprio em ``aggregators/pdpj/download.py``."""
+403-de-auth de 403-de-WAF (ex.: PDPJ, onde 403 nega o recurso) declaram
+perfis de :class:`RequestPolicy` com ``retryable_statuses`` sem o 403, como
+``PdpjScraper.perfis_http``."""
 
 
 @dataclass(frozen=True)

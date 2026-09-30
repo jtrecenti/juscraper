@@ -14,7 +14,7 @@ dizer que o CNJ não existe (ver :func:`fetch_process_list`).
 
 import logging
 from collections.abc import Callable
-from typing import Any
+from typing import Any, cast
 
 import requests
 
@@ -84,7 +84,8 @@ def fetch_process_list(
     content = data.get("content") if isinstance(data, dict) else None
     if not isinstance(content, list) or not all(isinstance(item, dict) for item in content):
         raise _forma_invalida(response, url)
-    return data
+    # A conferência acima garante o objeto com ``content``; o mypy não estreita ``data`` por ela.
+    return cast(dict[str, Any], data)
 
 
 def fetch_process_details(

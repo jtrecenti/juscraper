@@ -74,9 +74,10 @@ def test_existe_list_returns_dataframe():
         )
     df = _mk_scraper().existe(["10029886420194014100", "00000000000000000000"])
     assert isinstance(df, pd.DataFrame)
-    assert list(df.columns) == ["processo", "existe"]
+    assert list(df.columns) == ["processo", "existe", "motivo_falha"]
     assert bool(df.iloc[0]["existe"]) is True
     assert bool(df.iloc[1]["existe"]) is False
+    assert df["motivo_falha"].isna().all()
 
 
 def test_existe_requires_auth():
@@ -291,7 +292,7 @@ def test_contar_aceita_resposta_json_dict():
 
 def test_auth_token_invalido_raises_valueerror():
     s = jus.scraper("pdpj")
-    with pytest.raises(ValueError, match="Token JWT invalido"):
+    with pytest.raises(ValueError, match="Token JWT inválido"):
         s.auth("not-a-jwt")
 
 
@@ -335,7 +336,25 @@ def test_auth_token_sem_exp_e_aceito():
     sem_exp = jwt.encode({"sub": "tester"}, _HMAC_KEY, algorithm="HS256")
 
     assert s.auth(sem_exp) is True
+    assert s.token == sem_exp
     assert s.session.headers["Authorization"] == f"Bearer {sem_exp}"
+
+
+@pytest.mark.parametrize(
+    "recusado",
+    [jwt.encode({"sub": "tester", "exp": 0}, _HMAC_KEY, algorithm="HS256"), "not-a-jwt"],
+    ids=["vencido", "malformado"],
+)
+def test_auth_que_falha_mantem_o_token_anterior(recusado):
+    """Quem chamou recebeu o erro; o token anterior segue valendo até o 401."""
+    s = jus.scraper("pdpj")
+    s.auth(FAKE_TOKEN)
+
+    with pytest.raises(ValueError):
+        s.auth(recusado)
+
+    assert s.token == FAKE_TOKEN
+    assert s.session.headers["Authorization"] == f"Bearer {FAKE_TOKEN}"
 
 
 # ---------------------------------------------------------------------

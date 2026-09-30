@@ -6,6 +6,7 @@ veio de :meth:`cpopg` (uma linha por processo com ``detalhes`` cheio).
 """
 from __future__ import annotations
 
+import logging
 import re
 import warnings
 
@@ -366,7 +367,7 @@ def test_download_documents_preserva_precedencia_ordem_duplicatas_e_shape():
 
     out = s.download_documents(base_df)
 
-    assert out.columns.tolist() == [*COERCED_DOCUMENT_COLUMNS, "texto", "_raw_texto"]
+    assert out.columns.tolist() == [*COERCED_DOCUMENT_COLUMNS, "texto", "_raw_texto", "motivo_falha"]
     assert out["id_documento"].tolist() == [
         "doc-top",
         "doc-top",
@@ -418,7 +419,7 @@ def test_download_documents_limite_nao_conta_documento_sem_id():
 
 @responses.activate
 def test_download_documents_erro_http_vira_linha_vazia_com_aviso():
-    """Um 500 num documento não derruba a coleta nem descarta o que já foi baixado."""
+    """Um 500 persistente num documento não derruba a coleta nem descarta o que já foi baixado."""
     _mock_text_endpoint("doc-a", "texto a\n")
     _mock_text_error("doc-b", 500)
     _mock_text_endpoint("doc-c", "texto c\n")
@@ -432,11 +433,12 @@ def test_download_documents_erro_http_vira_linha_vazia_com_aviso():
     assert out.iloc[1]["texto"] is None
     assert out.iloc[1]["_raw_texto"] is None
     assert out.iloc[2]["texto"] == "texto c"
+    assert out["motivo_falha"].tolist() == [None, "retry_esgotado_500", None]
     assert len(avisos) == 1
     mensagem = str(avisos[0].message)
     assert PROC in mensagem
     assert "doc-b" in mensagem
-    assert "HTTP 500" in mensagem
+    assert "retry_esgotado_500" in mensagem
 
 
 @responses.activate
@@ -452,12 +454,16 @@ def test_download_documents_falha_consome_limite_e_gera_um_aviso_agregado():
 
     assert out["id_documento"].tolist() == ["doc-a", "doc-b"]
     assert out["texto"].isna().all()
-    assert [call.request.url.rsplit("/", 2)[-2] for call in responses.calls] == ["doc-a", "doc-b"]
+    assert out["motivo_falha"].tolist() == ["retry_esgotado_500", "http_404"]
+    # O 500 é retentado até o fim das tentativas; o 404 não.
+    documentos_pedidos = [call.request.url.rsplit("/", 2)[-2] for call in responses.calls]
+    assert list(dict.fromkeys(documentos_pedidos)) == ["doc-a", "doc-b"]
+    assert documentos_pedidos.count("doc-b") == 1
     assert len(avisos) == 1
     mensagem = str(avisos[0].message)
     assert "2 download(s)" in mensagem
-    assert "HTTP 500" in mensagem
-    assert "HTTP 404" in mensagem
+    assert "retry_esgotado_500" in mensagem
+    assert "http_404" in mensagem
 
 
 @responses.activate
@@ -480,16 +486,16 @@ def test_download_documents_aviso_cita_alguns_exemplos_e_conta_o_resto():
 
 
 @responses.activate
-def test_download_documents_retry_esgotado_entra_no_aviso(monkeypatch):
-    """429 persistente já virava linha vazia; agora também aparece no aviso."""
-    monkeypatch.setattr("juscraper.aggregators.pdpj.download.time.sleep", lambda _segundos: None)
+def test_download_documents_retry_esgotado_entra_no_aviso():
+    """429 persistente vira linha vazia com o motivo, e aparece no aviso."""
     _mock_text_error("doc-a", 429)
     s = _mk_scraper()
 
-    with pytest.warns(UserWarning, match=r"doc-a.*sem resposta"):
+    with pytest.warns(UserWarning, match=r"doc-a, texto: retry_esgotado_429"):
         out = s.download_documents(_docs_df("doc-a"))
 
     assert out.iloc[0]["texto"] is None
+    assert out.iloc[0]["motivo_falha"] == "retry_esgotado_429"
 
 
 @responses.activate
@@ -512,12 +518,15 @@ def test_download_documents_403_vira_linha_vazia_com_aviso():
     _mock_text_endpoint("doc-b", "texto b\n")
     s = _mk_scraper()
 
-    with pytest.warns(UserWarning, match=r"doc-a, texto: HTTP 403"):
+    with pytest.warns(UserWarning, match=r"doc-a, texto: http_403"):
         out = s.download_documents(_docs_df("doc-a", "doc-b"))
 
     assert out["id_documento"].tolist() == ["doc-a", "doc-b"]
     assert out.iloc[0]["texto"] is None
+    assert out.iloc[0]["motivo_falha"] == "http_403"
     assert out.iloc[1]["texto"] == "texto b"
+    # 403 não é retentado: uma requisição por documento.
+    assert len(responses.calls) == 2
 
 
 @responses.activate
@@ -538,16 +547,20 @@ def test_download_documents_401_no_meio_do_lote_anota_falhas_anteriores():
     assert erro.value.response.status_code == 401
     notas = " ".join(getattr(erro.value, "__notes__", []))
     assert "Antes do 401" in notas
-    assert "doc-a, texto: HTTP 500" in notas
+    assert "doc-a, texto: retry_esgotado_500" in notas
 
 
 @responses.activate
-def test_download_documents_id_nan_nao_ocupa_vaga_nem_vira_requisicao():
+def test_download_documents_id_nan_nao_ocupa_vaga_nem_vira_requisicao(caplog):
     """``NaN`` no id (o que o pandas põe no id ausente) é pulado como ``None``."""
     _mock_text_endpoint("doc-b", "texto b\n")
     s = _mk_scraper()
 
-    out = s.download_documents(_docs_df(float("nan"), "doc-b"), max_docs_per_process=1)
+    with caplog.at_level(logging.WARNING, logger="juscraper.aggregators.pdpj.client"):
+        out = s.download_documents(_docs_df(float("nan"), "doc-b"), max_docs_per_process=1)
+
+    # Documento que a API listou sem id, sem falha anterior: o log avisa que foi pulado.
+    assert "sem id_documento" in caplog.text
 
     assert out["id_documento"].tolist() == ["doc-b"]
     assert out.iloc[0]["texto"] == "texto b"
@@ -578,8 +591,8 @@ def test_download_documents_falhas_em_dois_processos_geram_um_aviso():
     assert len(avisos) == 1
     mensagem = str(avisos[0].message)
     assert "2 download(s)" in mensagem
-    assert f"processo {PROC}, documento doc-a, texto: HTTP 500" in mensagem
-    assert f"processo {outro}, documento doc-z, texto: HTTP 502" in mensagem
+    assert f"processo {PROC}, documento doc-a, texto: retry_esgotado_500" in mensagem
+    assert f"processo {outro}, documento doc-z, texto: retry_esgotado_502" in mensagem
 
 
 @responses.activate
@@ -594,11 +607,12 @@ def test_download_documents_erro_no_binario_vira_none_com_aviso():
     )
     s = _mk_scraper()
 
-    with pytest.warns(UserWarning, match=r"doc-a, binario: HTTP 500"):
+    with pytest.warns(UserWarning, match=r"doc-a, binario: retry_esgotado_500"):
         out = s.download_documents(_docs_df("doc-a"), with_binary=True)
 
     assert out.iloc[0]["texto"] == "texto a"
     assert out.iloc[0]["binario"] is None
+    assert out.iloc[0]["motivo_falha"] == "retry_esgotado_500"
 
 
 @responses.activate
@@ -610,10 +624,13 @@ def test_download_documents_erro_de_conexao_entra_no_aviso():
     )
     s = _mk_scraper()
 
-    with pytest.warns(UserWarning, match=r"doc-a, texto: sem resposta"):
+    with pytest.warns(UserWarning, match=r"doc-a, texto: conexao"):
         out = s.download_documents(_docs_df("doc-a"))
 
     assert out.iloc[0]["texto"] is None
+    assert out.iloc[0]["motivo_falha"] == "conexao"
+    # Erro de conexão não é retentado, como no retry anterior à política.
+    assert len(responses.calls) == 1
 
 
 @responses.activate
@@ -635,7 +652,8 @@ def test_download_documents_sso_fora_do_ar_no_meio_do_lote_anota_falhas_anterior
     """Falha do SSO ao renovar o token para o lote, como o 401, com as falhas anteriores em nota."""
     from juscraper.aggregators._pdpj_sso.renovacao import SsoPdpjIndisponivelError
 
-    _mock_text_error("doc-a", 500)
+    # 404 não é retentado: a segunda chamada da auth já é a do doc-b.
+    _mock_text_error("doc-a", 404)
     s = _mk_scraper()
     chamadas = []
 
@@ -652,4 +670,4 @@ def test_download_documents_sso_fora_do_ar_no_meio_do_lote_anota_falhas_anterior
 
     notas = " ".join(getattr(erro.value, "__notes__", []))
     assert "Antes da falha do SSO" in notas
-    assert "doc-a, texto: HTTP 500" in notas
+    assert "doc-a, texto: http_404" in notas
