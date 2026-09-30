@@ -16,12 +16,15 @@ depuracao, e o Playwright so se conecta por CDP para escutar a rede.
 from __future__ import annotations
 
 import logging
+import os
 import shutil
 import subprocess  # nosec B404
+import sys
 import tempfile
 import threading
 import time
-from pathlib import Path
+from collections.abc import Mapping
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any
 from urllib.parse import urlparse
 
@@ -51,15 +54,45 @@ _NOMES_NAVEGADOR = (
     "google-chrome", "google-chrome-stable", "chromium", "chromium-browser",
     "microsoft-edge", "microsoft-edge-stable", "chrome", "msedge",
 )
-_CAMINHOS_NAVEGADOR = (
-    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-    "/Applications/Chromium.app/Contents/MacOS/Chromium",
-    "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
-    r"C:\Program Files\Google\Chrome\Application\chrome.exe",
-    r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
-    r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
-    r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
+# No macOS e no Windows o executavel costuma ficar fora do PATH. Cada sufixo
+# e procurado abaixo de cada raiz de instalacao, na ordem de preferencia dos
+# navegadores (Chrome antes do Edge em qualquer raiz).
+_SUFIXOS_MACOS = (
+    "Google Chrome.app/Contents/MacOS/Google Chrome",
+    "Chromium.app/Contents/MacOS/Chromium",
+    "Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
 )
+_SUFIXOS_WINDOWS = (
+    r"Google\Chrome\Application\chrome.exe",
+    r"Microsoft\Edge\Application\msedge.exe",
+)
+
+
+def caminhos_navegador(sistema: str = sys.platform, ambiente: Mapping[str, str] | None = None,
+                       casa: str | None = None) -> list[str]:
+    """Lista os caminhos de instalacao do Chrome, Chromium e Edge fora do PATH.
+
+    No Windows, as raizes sao as mesmas que o Playwright usa para achar o
+    Chrome: ``LOCALAPPDATA`` vem primeiro, porque o Chrome se instala ali
+    quando o usuario nao e administrador; as variaveis de ``Program Files``
+    no lugar de ``C:`` fixo cobrem o sistema instalado em outra unidade; e
+    as de ``HOMEDRIVE`` vem depois delas, para quando nao estao definidas.
+    Variavel vazia e ignorada, porque viraria caminho relativo ao diretorio
+    corrente. No macOS, o app pode estar tambem em ``~/Applications``.
+    """
+    if ambiente is None:
+        ambiente = os.environ
+    if sistema == "darwin":
+        pastas = [PurePosixPath("/Applications"), PurePosixPath(casa or Path.home()) / "Applications"]
+        return [str(pasta / sufixo) for sufixo in _SUFIXOS_MACOS for pasta in pastas]
+    if sistema == "win32":
+        variaveis = ("LOCALAPPDATA", "PROGRAMFILES", "PROGRAMFILES(X86)")
+        raizes = [ambiente[nome] for nome in variaveis if ambiente.get(nome)]
+        unidade = ambiente.get("HOMEDRIVE")
+        if unidade:
+            raizes += [unidade + "\\Program Files", unidade + "\\Program Files (x86)"]
+        return [str(PureWindowsPath(raiz, sufixo)) for sufixo in _SUFIXOS_WINDOWS for raiz in raizes]
+    return []
 
 
 def obter_credencial_govbr(timeout: float = 300.0, navegador: str | None = None) -> CredencialPdpj:
@@ -138,7 +171,7 @@ def localizar_navegador(navegador: str | None = None) -> str:
         encontrado = shutil.which(nome)
         if encontrado is not None:
             return encontrado
-    for caminho in _CAMINHOS_NAVEGADOR:
+    for caminho in caminhos_navegador():
         if Path(caminho).is_file():
             return caminho
     raise RuntimeError(

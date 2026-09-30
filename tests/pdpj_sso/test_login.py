@@ -241,9 +241,69 @@ def test_localizar_navegador_usa_o_primeiro_instalado(mocker):
 
 def test_localizar_navegador_sem_nenhum_instalado_levanta(mocker):
     mocker.patch.object(login.shutil, "which", return_value=None)
-    mocker.patch.object(login, "_CAMINHOS_NAVEGADOR", ())
+    mocker.patch.object(login, "caminhos_navegador", return_value=[])
     with pytest.raises(RuntimeError, match="navegador="):
         login.localizar_navegador()
+
+
+def test_localizar_navegador_fora_do_path_usa_o_primeiro_caminho_que_existe(mocker, tmp_path):
+    instalado = tmp_path / "chrome.exe"
+    instalado.write_text("")
+    mocker.patch.object(login.shutil, "which", return_value=None)
+    mocker.patch.object(login, "caminhos_navegador", return_value=[str(tmp_path / "ausente.exe"), str(instalado)])
+    assert login.localizar_navegador() == str(instalado)
+
+
+def test_caminhos_no_windows_seguem_as_raizes_do_ambiente():
+    ambiente = {
+        "LOCALAPPDATA": r"C:\Users\ana\AppData\Local",
+        "PROGRAMFILES": r"D:\Program Files",
+        "PROGRAMFILES(X86)": r"D:\Program Files (x86)",
+        "HOMEDRIVE": "C:",
+    }
+    caminhos = login.caminhos_navegador("win32", ambiente)
+    # Instalacao por usuario primeiro, e o Chrome antes do Edge em qualquer raiz.
+    assert caminhos[0] == r"C:\Users\ana\AppData\Local\Google\Chrome\Application\chrome.exe"
+    assert caminhos[1] == r"D:\Program Files\Google\Chrome\Application\chrome.exe"
+    assert caminhos.index(r"D:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe") > max(
+        i for i, caminho in enumerate(caminhos) if caminho.endswith("chrome.exe")
+    )
+
+
+def test_caminhos_no_windows_sem_program_files_usam_o_homedrive():
+    caminhos = login.caminhos_navegador("win32", {"HOMEDRIVE": "E:"})
+    assert caminhos[:2] == [
+        r"E:\Program Files\Google\Chrome\Application\chrome.exe",
+        r"E:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+    ]
+
+
+def test_caminhos_no_windows_ignoram_variavel_vazia():
+    caminhos = login.caminhos_navegador("win32", {"LOCALAPPDATA": "", "PROGRAMFILES": r"C:\Program Files"})
+    assert caminhos == [
+        r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+        r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
+    ]
+
+
+def test_caminhos_leem_o_ambiente_do_processo_por_padrao(monkeypatch):
+    for nome in ("LOCALAPPDATA", "PROGRAMFILES", "PROGRAMFILES(X86)", "HOMEDRIVE"):
+        monkeypatch.delenv(nome, raising=False)
+    monkeypatch.setenv("LOCALAPPDATA", r"C:\Users\ana\AppData\Local")
+    assert login.caminhos_navegador("win32")[0] == r"C:\Users\ana\AppData\Local\Google\Chrome\Application\chrome.exe"
+
+
+def test_caminhos_no_macos_incluem_as_aplicacoes_do_usuario():
+    caminhos = login.caminhos_navegador("darwin", {}, casa="/Users/ana")
+    assert caminhos[:2] == [
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        "/Users/ana/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    ]
+    assert "/Applications/Chromium.app/Contents/MacOS/Chromium" in caminhos
+
+
+def test_caminhos_no_linux_ficam_so_no_path():
+    assert not login.caminhos_navegador("linux", {})
 
 
 def test_localizar_navegador_informado_inexistente_levanta(mocker):
