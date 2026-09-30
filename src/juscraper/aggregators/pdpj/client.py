@@ -20,6 +20,7 @@ from pydantic import ValidationError
 from ...core.base import BaseScraper
 from ...utils.cnj import clean_cnj
 from ...utils.params import normalize_paginas, raise_on_extra_kwargs
+from .._pdpj_sso import CredencialPdpj, PdpjSsoMixin
 from .download import (
     BASE_URL,
     USER_AGENT,
@@ -41,7 +42,14 @@ from .parse import (
     clean_document_text,
     parse_pesquisa_response,
 )
-from .schemas import InputAuthPdpj, InputCnjPdpj, InputContarPdpj, InputDownloadDocumentsPdpj, InputPesquisaPdpj
+from .schemas import (
+    InputAuthGovbrPdpj,
+    InputAuthPdpj,
+    InputCnjPdpj,
+    InputContarPdpj,
+    InputDownloadDocumentsPdpj,
+    InputPesquisaPdpj,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -202,7 +210,7 @@ def _avisar_falhas(falhas: list[str]) -> None:
     )
 
 
-class PdpjScraper(BaseScraper):
+class PdpjScraper(PdpjSsoMixin, BaseScraper):
     """Raspador para a API DATALAKE - Processos do PDPJ.
 
     A API consome JWT do SSO PJe (mesmo provedor do JusBR), entao o uso
@@ -213,6 +221,7 @@ class PdpjScraper(BaseScraper):
     BASE_URL = BASE_URL
 
     INPUT_AUTH = InputAuthPdpj
+    INPUT_AUTH_GOVBR = InputAuthGovbrPdpj
     INPUT_CPOPG = InputCnjPdpj
     INPUT_DOCUMENTOS = InputCnjPdpj
     INPUT_MOVIMENTOS = InputCnjPdpj
@@ -241,6 +250,8 @@ class PdpjScraper(BaseScraper):
         self.token: str | None = None
         if token:
             self.auth(token)
+        else:
+            self._carregar_credencial_padrao()
 
     def auth(self, token: str) -> bool:
         """Define o JWT usado em todas as chamadas autenticadas.
@@ -268,8 +279,7 @@ class PdpjScraper(BaseScraper):
         except jwt.InvalidTokenError as exc:
             raise ValueError(f"Token JWT invalido: {exc}") from exc
 
-        self.token = token
-        self.session.headers["Authorization"] = f"Bearer {token}"
+        self._instalar_credencial(CredencialPdpj(token), salvar_renovacao=False)
         if self.verbose:
             logger.info("PDPJ: token JWT aceito.")
         return True
@@ -277,7 +287,8 @@ class PdpjScraper(BaseScraper):
     def _check_auth(self) -> None:
         if not self.token:
             raise RuntimeError(
-                "Autenticacao necessaria. Chame PdpjScraper.auth(token) primeiro."
+                "Autenticacao necessaria. Chame auth_govbr() para entrar pelo gov.br, auth(token) "
+                "com um JWT ja obtido, ou defina a variavel de ambiente PDPJ_JWT."
             )
 
     @staticmethod

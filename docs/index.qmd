@@ -92,6 +92,11 @@ O método `.cjsg()` recebe como *input* parâmetros de busca de jurisprudência 
 |-----------|-----------------------------------|
 | Datajud   | listar_processos                  |
 | Jusbr     | cpopg, download_documents         |
+| PDPJ      | existe, cpopg, documentos, movimentos, partes, pesquisa, contar, download_documents |
+
+#### JusBR and PDPJ authentication
+
+JusBR and PDPJ share the same JWT from the PJe SSO. With the `govbr` extra (`pip install 'juscraper[govbr]'` followed by `playwright install chromium`), `auth_govbr()` opens a Chromium window on the PDPJ services portal; the user logs in through gov.br and the token is captured. The token is cached in `~/.config/juscraper/pdpj_token.json` (or under `$XDG_CONFIG_HOME/juscraper/`), readable only by its owner, and later JusBR and PDPJ instances load it without a new login. When the portal issues a refresh token, the access token is renewed automatically before it expires. The login needs a windowed browser, so it does not run on Google Colab or CI; there, pass the token to `auth(token)` or set the `PDPJ_JWT` environment variable (JusBR also accepts `JUSBR_JWT`).
 
 ### Notebooks de Exemplo
 

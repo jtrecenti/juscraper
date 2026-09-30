@@ -78,6 +78,10 @@ stf = [
     # Obtem o cookie aws-waf-token do portal de jurisprudencia do STF (desafio JavaScript do AWS WAF).
     "playwright>=1.49",
 ]
+govbr = [
+    # Login no gov.br numa janela do Chromium para obter o token do JusBR e do PDPJ (`auth_govbr()`).
+    "playwright>=1.49",
+]
 docs = [
     "quartodoc>=0.11.1",
     "jupyter>=1.0.0",

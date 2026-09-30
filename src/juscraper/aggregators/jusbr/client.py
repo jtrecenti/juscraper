@@ -16,11 +16,17 @@ from pydantic import ValidationError
 from ...core.http import HTTPScraper
 from ...utils.cnj import clean_cnj
 from ...utils.params import raise_on_extra_kwargs
+from .._pdpj_sso import CredencialPdpj, PdpjSsoMixin
 from .download import USER_AGENT, fetch_document_binary, fetch_document_text, fetch_process_details, fetch_process_list
 from .parse import clean_document_text, parse_process_details_response, parse_process_list_response
-from .schemas import InputAuthJusBR, InputCPOPGJusBR, InputDownloadDocumentsJusBR
+from .schemas import InputAuthGovbrJusBR, InputAuthJusBR, InputCPOPGJusBR, InputDownloadDocumentsJusBR
 
 logger = logging.getLogger(__name__)
+
+_MENSAGEM_SEM_AUTH = (
+    "Autenticacao necessaria. Chame auth_govbr() para entrar pelo gov.br, auth(token) com um JWT "
+    "ja obtido, ou defina a variavel de ambiente PDPJ_JWT."
+)
 
 _PREFERRED_DOCUMENT_COLUMNS = (
     'numero_processo', 'idDocumento', 'idCodex', 'sequencia', 'descricao', 'nome',
@@ -133,7 +139,7 @@ def _build_documents_dataframe(rows: list[dict[str, Any]]) -> pd.DataFrame:
     return dataframe
 
 
-class JusbrScraper(HTTPScraper):
+class JusbrScraper(PdpjSsoMixin, HTTPScraper):
     """Raspador para o JusBR (consulta unificada da PDPJ-CNJ).
 
     Este scraper interage com a API da Plataforma Digital do Poder Judiciario (PDPJ).
@@ -149,8 +155,12 @@ class JusbrScraper(HTTPScraper):
     # de "wired" para ``tests/schemas/test_signature_parity.py`` (mesmo padrao
     # do agregador irmao PDPJ).
     INPUT_AUTH = InputAuthJusBR
+    INPUT_AUTH_GOVBR = InputAuthGovbrJusBR
     INPUT_CPOPG = InputCPOPGJusBR
     INPUT_DOWNLOAD_DOCUMENTS = InputDownloadDocumentsJusBR
+
+    # ``JUSBR_JWT`` segue aceita porque o script de captura de fixtures ja a usa.
+    NOMES_ENV_TOKEN = ("PDPJ_JWT", "JUSBR_JWT")
 
     def __init__(
         self,
@@ -162,9 +172,11 @@ class JusbrScraper(HTTPScraper):
         super().__init__(
             "jusbr", verbose=verbose, download_path=download_path, sleep_time=sleep_time
         )
-        self.token = token
-        if self.token:
-            self.session.headers.update({'authorization': f'Bearer {self.token}'})
+        self.token = None
+        if token:
+            self._instalar_credencial(CredencialPdpj(token), salvar_renovacao=False)
+        else:
+            self._carregar_credencial_padrao()
 
     def _configure_session(self, session: requests.Session) -> None:
         # PDPJ rejeita User-Agent não-browser; sobrescreve o default do
@@ -197,8 +209,7 @@ class JusbrScraper(HTTPScraper):
                                      "verify_exp": True,
                                  },
                                  algorithms=["RS256", "HS256", "ES256", "none"])
-            self.token = token
-            self.session.headers.update({'authorization': f'Bearer {self.token}'})
+            self._instalar_credencial(CredencialPdpj(token), salvar_renovacao=False)
             if self.verbose > 0:
                 logger.info("Token JWT definido e decodificado com sucesso!")
                 if self.verbose > 1:
@@ -251,8 +262,7 @@ class JusbrScraper(HTTPScraper):
         }
         resp = session.post(token_url, data=data)
         token = resp.json()["access_token"]
-        self.token = token
-        self.session.headers.update({'authorization': f'Bearer {self.token}'})
+        self._instalar_credencial(CredencialPdpj(token), salvar_renovacao=False)
         return True
 
     def cpopg(self, id_cnj: str | list[str], **kwargs: Any) -> pd.DataFrame:
@@ -271,7 +281,7 @@ class JusbrScraper(HTTPScraper):
             raise
         id_cnj = inp.id_cnj
         if not self.token:
-            raise RuntimeError("Autenticacao necessaria. Chame o metodo auth(token) primeiro.")
+            raise RuntimeError(_MENSAGEM_SEM_AUTH)
 
         id_cnj_list = [id_cnj] if isinstance(id_cnj, str) else id_cnj
         all_process_data = []
@@ -523,7 +533,7 @@ class JusbrScraper(HTTPScraper):
         base_df = inp.base_df
         max_docs_per_process = inp.max_docs_per_process
         if not self.token:
-            raise RuntimeError("Autenticação necessária. Chame o método auth(token) primeiro.")
+            raise RuntimeError(_MENSAGEM_SEM_AUTH)
 
         all_docs_data: list[dict[str, Any]] = []
         downloaded_by_process: dict[str, int] = {}

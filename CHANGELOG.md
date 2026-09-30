@@ -9,6 +9,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- JusBR e PDPJ: `auth_govbr()` obtém o token JWT pelo login no gov.br, numa janela do Chromium aberta no portal de serviços do PDPJ, com o novo extra `govbr` (`pip install 'juscraper[govbr]'` e `playwright install chromium`). O token é capturado da resposta do endpoint de token do SSO do PJe, que traz também o refresh token, ou, na falta dela, do cabeçalho `Authorization` das chamadas do portal. Com refresh token, o access token é renovado sozinho antes de vencer, em qualquer requisição dos dois scrapers. A credencial fica em `$XDG_CONFIG_HOME/juscraper/pdpj_token.json` (default `~/.config/...`), com permissão `0600`, compartilhada por JusBR e PDPJ; `salvar=False` desliga a gravação. Sem `token=`, os construtores carregam a credencial da variável de ambiente `PDPJ_JWT` (o JusBR aceita também `JUSBR_JWT`) e depois do cache, ignorando com aviso a que estiver vencida. O login exige navegador com janela e não roda no Colab nem em CI. Refs #22.
 - STF `listar_decisoes` aceita `checkpoint_dir` e `resume=True` para retomar coletas interrompidas. Preserva páginas em disco, valida a compatibilidade antes de requisitar e reinicia apenas a janela incompleta, sem misturar tentativas. Sem diretório, não grava checkpoints.
 
 ### Fixed
