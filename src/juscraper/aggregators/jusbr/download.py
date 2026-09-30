@@ -17,7 +17,7 @@ import requests
 from ...core.exceptions import RetryExhaustedError
 from ...utils.cnj import clean_cnj
 from ...utils.logging_cfg import redact_headers
-from .._pdpj_sso.renovacao import RenovacaoPdpjError
+from .._pdpj_sso.renovacao import ErroSsoPdpj
 
 logger = logging.getLogger(__name__)
 
@@ -178,9 +178,9 @@ def fetch_document_text(
             "Request Exception fetching document %s for process %s (URL: %s): %s",
             id_documento, numero_processo, doc_url, e
         )
-    except RenovacaoPdpjError:
-        # Sessao encerrada no SSO atinge o lote inteiro: propaga, em vez de
-        # virar texto ``None`` em cada documento.
+    except ErroSsoPdpj:
+        # Falha do SSO ao renovar o token atinge o lote inteiro: propaga, em vez
+        # de virar texto ``None`` em cada documento.
         raise
     # Catching Exception as a last resort to avoid
     # crashing on unexpected errors during scraping.

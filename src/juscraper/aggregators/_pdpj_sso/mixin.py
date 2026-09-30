@@ -32,7 +32,7 @@ class PdpjSsoMixin:
     def auth(self, token: str) -> bool:  # pragma: no cover - sobrescrito pelas classes concretas
         raise NotImplementedError
 
-    def _instalar_credencial(self, credencial: CredencialPdpj, salvar_renovacao: bool) -> None:
+    def _instalar_credencial(self, credencial: CredencialPdpj, salvar_renovacao: bool) -> AuthPdpj:
         """Poe a credencial na sessao, com renovacao quando ha refresh token.
 
         O cabecalho fixo da sessao continua sendo gravado para quem le
@@ -43,10 +43,11 @@ class PdpjSsoMixin:
         def ao_renovar(nova: CredencialPdpj) -> None:
             self.token = nova.access_token
             self.session.headers["Authorization"] = f"Bearer {nova.access_token}"
-            if salvar_renovacao and not _salvar_sem_derrubar(nova):
-                # Cache desatualizado nao pode mais ser lido: a instancia trocaria
-                # o refresh bom, que so ela tem, por um antigo.
-                auth.ler_cache = None
+            if salvar_renovacao:
+                # Com a gravacao falhando, o cache fica desatualizado e nao pode ser
+                # lido: a instancia trocaria o refresh bom, que so ela tem, por um
+                # antigo. A leitura volta quando uma gravacao seguinte der certo.
+                auth.ler_cache = carregar_credencial_cache if _salvar_sem_derrubar(nova) else None
             logger.info("Token do PDPJ renovado.")
 
         self.token = credencial.access_token
@@ -56,6 +57,7 @@ class PdpjSsoMixin:
         ler_cache = carregar_credencial_cache if salvar_renovacao else None
         auth = AuthPdpj(credencial, ao_renovar, ler_cache)
         self.session.auth = auth
+        return auth
 
     def _carregar_credencial_padrao(self) -> None:
         """Autentica com a primeira credencial valida do ambiente ou do cache."""
@@ -119,11 +121,11 @@ class PdpjSsoMixin:
             raise
         credencial = obter_credencial_govbr(timeout=inp.timeout, navegador=inp.navegador)
         self.auth(credencial.access_token)
-        self._instalar_credencial(credencial, salvar_renovacao=inp.salvar)
+        auth = self._instalar_credencial(credencial, salvar_renovacao=inp.salvar)
         if inp.salvar and not _salvar_sem_derrubar(credencial):
             # O cache ficou com a credencial anterior; ler dele trocaria o refresh
             # recem-obtido por um antigo.
-            self.session.auth.ler_cache = None  # type: ignore[union-attr]
+            auth.ler_cache = None
         if credencial.refresh_token is None:
             logger.warning(
                 "O portal nao entregou refresh token; quando o access token vencer, "

@@ -3,17 +3,31 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+import jwt
 import requests
 
-from .credencial import MARGEM_RENOVACAO, CredencialPdpj, vigente
+from .credencial import MARGEM_RENOVACAO, CredencialPdpj, ler_exp, vigente
 
 TOKEN_URL = "https://sso.cloud.pje.jus.br/auth/realms/pje/protocol/openid-connect/token"  # nosec B105
 # Cliente publico do portal de servicos: o Keycloak nao exige segredo na troca.
 CLIENT_ID = "portalexterno-frontend"
 
 
-class RenovacaoPdpjError(RuntimeError):
+class ErroSsoPdpj(RuntimeError):
+    """Falha ao renovar o token no SSO do PJe.
+
+    Nao herda de ``requests.RequestException`` de proposito: os downloads dos
+    scrapers tratam essas excecoes como falha do documento ou do processo, e uma
+    falha do SSO viraria texto ``None`` ou "processo nao encontrado" em silencio.
+    """
+
+
+class RenovacaoPdpjError(ErroSsoPdpj):
     """O SSO recusou a renovacao: a sessao acabou e so um novo login resolve."""
+
+
+class SsoPdpjIndisponivelError(ErroSsoPdpj):
+    """O SSO nao respondeu ou respondeu com erro transitorio; tentar de novo pode resolver."""
 
 
 # Status com que o Keycloak recusa um refresh token vencido, revogado ou
@@ -32,17 +46,25 @@ def renovar(refresh_token: str, timeout: float = 30.0) -> CredencialPdpj:
     Raises:
         RenovacaoPdpjError: Quando o SSO recusa o refresh token (HTTP 400 ou
             401) ou responde 2xx sem ``access_token``.
-        requests.HTTPError: Em outro erro HTTP do SSO (503, 429...), que e
-            transitorio.
+        SsoPdpjIndisponivelError: Em erro de rede ou outro erro HTTP do SSO
+            (503, 429...), que e transitorio.
     """
-    resposta = requests.post(
-        TOKEN_URL,
-        data={"grant_type": "refresh_token", "refresh_token": refresh_token, "client_id": CLIENT_ID},
-        timeout=timeout,
-    )
+    try:
+        resposta = requests.post(
+            TOKEN_URL,
+            data={"grant_type": "refresh_token", "refresh_token": refresh_token, "client_id": CLIENT_ID},
+            timeout=timeout,
+        )
+    except requests.RequestException as exc:
+        raise SsoPdpjIndisponivelError(
+            f"O SSO do PJe nao respondeu ao renovar o token ({type(exc).__name__}); tente de novo."
+        ) from exc
     if resposta.status_code in _STATUS_RECUSA:
         raise RenovacaoPdpjError(f"{_MENSAGEM_RECUSA} (HTTP {resposta.status_code})")
-    resposta.raise_for_status()
+    if not resposta.ok:
+        raise SsoPdpjIndisponivelError(
+            f"O SSO do PJe respondeu HTTP {resposta.status_code} ao renovar o token; tente de novo."
+        )
     try:
         dados = resposta.json()
     except ValueError:
@@ -78,6 +100,7 @@ class AuthPdpj(requests.auth.AuthBase):
         # falha, deixa um refresh novo gravado no cache por outra instancia ser
         # tentado.
         self._recusados: set[str] = set()
+        self._ultima_recusa = _MENSAGEM_RECUSA
 
     def __call__(self, requisicao: requests.PreparedRequest) -> requests.PreparedRequest:
         if self.credencial.refresh_token is not None and not vigente(self.credencial.access_token, MARGEM_RENOVACAO):
@@ -87,14 +110,13 @@ class AuthPdpj(requests.auth.AuthBase):
 
     def _renovar(self) -> None:
         do_cache = self.ler_cache() if self.ler_cache is not None else None
-        if (
-            do_cache is not None
-            and do_cache.access_token != self.credencial.access_token
-            and vigente(do_cache.access_token, MARGEM_RENOVACAO)
+        if do_cache is not None and do_cache.access_token != self.credencial.access_token and _access_vigente(
+            do_cache.access_token
         ):
             # Outra instancia (JusBR e PDPJ no mesmo notebook, ou outro processo)
-            # ja renovou ou refez o login e gravou o cache.
-            self._trocar(do_cache)
+            # ja renovou ou refez o login e gravou o cache. Sem refresh no cache,
+            # o proprio segue guardado para quando o access adotado vencer.
+            self._trocar(CredencialPdpj(do_cache.access_token, do_cache.refresh_token or self.credencial.refresh_token))
             return
         # O refresh do cache vem primeiro porque o desta instancia pode ter sido
         # rotacionado e revogado; se o SSO recusar o do cache, o proprio ainda e
@@ -103,16 +125,26 @@ class AuthPdpj(requests.auth.AuthBase):
         for refresh in dict.fromkeys(r for r in candidatos if r is not None and r not in self._recusados):
             try:
                 nova = renovar(refresh)
-            except RenovacaoPdpjError:
+            except RenovacaoPdpjError as exc:
                 self._recusados.add(refresh)
+                self._ultima_recusa = str(exc)
                 continue
             self._trocar(nova)
             return
         # Excecao nova a cada chamada: relevantar sempre o mesmo objeto faria o
         # traceback crescer a cada requisicao de quem captura e segue o laco.
-        raise RenovacaoPdpjError(_MENSAGEM_RECUSA)
+        raise RenovacaoPdpjError(self._ultima_recusa)
 
     def _trocar(self, nova: CredencialPdpj) -> None:
         self.credencial = nova
         if self.ao_renovar is not None:
             self.ao_renovar(nova)
+
+
+def _access_vigente(token: str) -> bool:
+    """Access token que e JWT e ainda vale alem da margem; lixo no cache nao conta."""
+    try:
+        ler_exp(token)
+    except jwt.InvalidTokenError:
+        return False
+    return vigente(token, MARGEM_RENOVACAO)

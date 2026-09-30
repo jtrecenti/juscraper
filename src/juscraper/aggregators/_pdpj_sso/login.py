@@ -21,7 +21,6 @@ import subprocess  # nosec B404
 import tempfile
 import threading
 import time
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -42,8 +41,8 @@ ESPERA_ANTES_DO_RELOAD = 3.0
 # Com o access token em maos, quanto esperar pela resposta do endpoint de
 # token, que traz tambem o refresh.
 ESPERA_PELO_REFRESH = 5.0
-# Teto do reload da consulta, em segundos (o default do Playwright).
-TIMEOUT_RELOAD = 30.0
+# Teto de cada navegacao do portal, em segundos (o default do Playwright).
+TIMEOUT_NAVEGACAO = 30.0
 # Prazo para o navegador recem-aberto publicar a porta de depuracao.
 ESPERA_PELA_PORTA = 30.0
 
@@ -79,21 +78,48 @@ def obter_credencial_govbr(timeout: float = 300.0, navegador: str | None = None)
         RuntimeError: Quando nao ha navegador, a janela e fechada ou o prazo
             acaba sem token.
     """
-    # O Playwright sincrono exige uma thread sem o loop ativo do Jupyter. Sem
-    # ``with``: a saida do ``with`` esperaria o worker, e o Ctrl-C so chegaria
-    # quando a janela fechasse. O evento avisa o worker para fechar o navegador.
-    cancelar = threading.Event()
-    executor = ThreadPoolExecutor(max_workers=1)
-    futuro = executor.submit(_obter_credencial, timeout, navegador, cancelar)
+    # O Playwright sincrono exige uma thread sem o loop ativo do Jupyter. A
+    # thread e daemon e o chamador so espera o resultado: no Ctrl-C, o controle
+    # volta na hora, o navegador e encerrado daqui mesmo (o worker pode estar
+    # preso num ``goto``) e o interpretador nao espera o worker para sair.
+    sessao = _SessaoLogin()
+    resultado: dict[str, Any] = {}
+
+    def trabalhar() -> None:
+        try:
+            resultado["credencial"] = _obter_credencial(timeout, navegador, sessao)
+        except BaseException as exc:  # pylint: disable=broad-except  # repassada ao chamador
+            resultado["erro"] = exc
+
+    worker = threading.Thread(target=trabalhar, name="juscraper-govbr", daemon=True)
+    worker.start()
     concluiu = False
     try:
-        credencial = futuro.result()
+        worker.join()
         concluiu = True
-        return credencial
     finally:
         if not concluiu:
-            cancelar.set()
-        executor.shutdown(wait=False)
+            sessao.cancelar_e_fechar()
+    if "erro" in resultado:
+        raise resultado["erro"]
+    credencial: CredencialPdpj = resultado["credencial"]
+    return credencial
+
+
+class _SessaoLogin:
+    """Estado que o chamador divide com o worker: o pedido de cancelamento e o navegador aberto."""
+
+    def __init__(self) -> None:
+        self.cancelar = threading.Event()
+        self.processo: subprocess.Popen[bytes] | None = None
+
+    def cancelar_e_fechar(self) -> None:
+        self.cancelar.set()
+        # So ``terminate``, sem esperar: quem cancela quer o controle de volta ja.
+        # Com o navegador fechado, a chamada do Playwright em que o worker estiver
+        # falha e o worker termina.
+        if self.processo is not None and self.processo.poll() is None:
+            self.processo.terminate()
 
 
 def localizar_navegador(navegador: str | None = None) -> str:
@@ -120,7 +146,11 @@ def localizar_navegador(navegador: str | None = None) -> str:
     )
 
 
-def abrir_navegador(executavel: str, perfil: Path) -> tuple[subprocess.Popen[bytes], int]:
+def abrir_navegador(
+    executavel: str,
+    perfil: Path,
+    sessao: _SessaoLogin | None = None,
+) -> tuple[subprocess.Popen[bytes], int]:
     """Abre o navegador como processo comum e devolve o processo e a porta CDP.
 
     ``--remote-debugging-port=0`` deixa o navegador escolher uma porta livre e
@@ -129,7 +159,8 @@ def abrir_navegador(executavel: str, perfil: Path) -> tuple[subprocess.Popen[byt
     padrao da pessoa, e o login nao deve se misturar com ele.
 
     Raises:
-        RuntimeError: Quando o navegador fecha ou nao publica a porta no prazo.
+        RuntimeError: Quando o navegador fecha, nao publica a porta no prazo
+            ou o login e cancelado.
     """
     # Sem ``with``: o processo sobrevive a esta funcao e e encerrado por ``_encerrar``.
     processo = subprocess.Popen(  # nosec B603  # pylint: disable=consider-using-with
@@ -148,9 +179,14 @@ def abrir_navegador(executavel: str, perfil: Path) -> tuple[subprocess.Popen[byt
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
+    if sessao is not None:
+        sessao.processo = processo
     arquivo_porta = perfil / "DevToolsActivePort"
     prazo = time.monotonic() + ESPERA_PELA_PORTA
     while time.monotonic() < prazo:
+        if sessao is not None and sessao.cancelar.is_set():
+            _encerrar(processo)
+            raise RuntimeError("Login no gov.br cancelado.")
         if processo.poll() is not None:
             raise RuntimeError(f"O navegador {executavel} fechou logo ao abrir (codigo {processo.returncode}).")
         linhas = arquivo_porta.read_text(encoding="utf-8").split() if arquivo_porta.exists() else []
@@ -172,7 +208,7 @@ def _encerrar(processo: subprocess.Popen[bytes]) -> None:
         processo.wait()
 
 
-def _obter_credencial(timeout: float, navegador: str | None, cancelar: threading.Event) -> CredencialPdpj:
+def _obter_credencial(timeout: float, navegador: str | None, sessao: _SessaoLogin) -> CredencialPdpj:
     try:
         from playwright.sync_api import sync_playwright  # pylint: disable=import-outside-toplevel
     except ImportError as exc:
@@ -187,12 +223,8 @@ def _obter_credencial(timeout: float, navegador: str | None, cancelar: threading
     # segurar arquivos do perfil por um instante, e o erro da limpeza trocaria a
     # credencial ja obtida por uma excecao.
     with tempfile.TemporaryDirectory(prefix="juscraper-govbr-", ignore_cleanup_errors=True) as diretorio:
-        processo, porta = abrir_navegador(executavel, Path(diretorio))
+        processo, porta = abrir_navegador(executavel, Path(diretorio), sessao)
         try:
-            # Ctrl-C durante a abertura: fecha o navegador antes do ``goto``, que
-            # pode esperar ate o prazo inteiro.
-            if cancelar.is_set():
-                raise RuntimeError("Login no gov.br cancelado.")
             with sync_playwright() as pw:
                 browser = pw.chromium.connect_over_cdp(f"http://127.0.0.1:{porta}")
                 context = browser.contexts[0]
@@ -200,8 +232,19 @@ def _obter_credencial(timeout: float, navegador: str | None, cancelar: threading
                 context.on("request", captura.ao_requisitar)
                 context.on("response", captura.ao_responder)
                 page = context.pages[0] if context.pages else context.new_page()
-                page.goto(PORTAL_CONSULTA, wait_until="domcontentloaded", timeout=timeout * 1000)
-                return _esperar_credencial(page, captura, timeout, cancelar)
+                inicio = time.monotonic()
+                try:
+                    page.goto(
+                        PORTAL_CONSULTA,
+                        wait_until="domcontentloaded",
+                        timeout=_timeout_de_navegacao(inicio + timeout, inicio),
+                    )
+                except Exception:  # pylint: disable=broad-except
+                    # Portal lento na abertura nao e erro: a pagina segue carregando
+                    # e o laco espera o token ate o prazo. Janela fechada ou
+                    # cancelamento sao tratados no topo do laco.
+                    logger.debug("Abertura da consulta nao terminou; seguindo a espera.")
+                return _esperar_credencial(page, captura, timeout, sessao.cancelar)
         finally:
             _encerrar(processo)
 
@@ -264,13 +307,13 @@ def _corpo_json(response: Any) -> dict[str, Any]:
     return dados if isinstance(dados, dict) else {}
 
 
-def _prazo_do_reload(prazo: float, agora: float) -> float:
-    """Timeout do reload em ms: no maximo 30 s, e nunca alem do prazo do login.
+def _timeout_de_navegacao(prazo: float, agora: float) -> float:
+    """Timeout de um ``goto`` em ms: no maximo 30 s, e nunca alem do prazo do login.
 
     Enquanto o ``goto`` espera, o laco nao confere cancelamento nem devolve um
-    token ja capturado; um reload travado nao pode segurar o laco por minutos.
+    token ja capturado; uma navegacao travada nao pode segurar o laco por minutos.
     """
-    return max(min(prazo - agora, TIMEOUT_RELOAD), 1.0) * 1000
+    return max(min(prazo - agora, TIMEOUT_NAVEGACAO), 1.0) * 1000
 
 
 def _esperar_credencial(
@@ -307,7 +350,11 @@ def _esperar_credencial(
             if agora - voltou_em >= ESPERA_ANTES_DO_RELOAD:
                 recarregou = True
                 try:
-                    page.goto(PORTAL_CONSULTA, wait_until="domcontentloaded", timeout=_prazo_do_reload(prazo, agora))
+                    page.goto(
+                        PORTAL_CONSULTA,
+                        wait_until="domcontentloaded",
+                        timeout=_timeout_de_navegacao(prazo, agora),
+                    )
                 except Exception:  # pylint: disable=broad-except
                     # Portal lento no reload nao e erro: o laco segue esperando o
                     # token ate o prazo, e janela fechada e tratada no topo do laco.

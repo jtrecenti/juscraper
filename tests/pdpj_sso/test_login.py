@@ -2,6 +2,7 @@
 import asyncio
 import os
 import signal
+import subprocess
 import sys
 import threading
 import time
@@ -50,6 +51,7 @@ class _Page:
         self._fecha_no_passo = fecha_no_passo
         self.passo = 0
         self.gotos: list[str] = []
+        self.goto_kwargs: list[dict] = []
 
     @property
     def url(self):
@@ -58,8 +60,9 @@ class _Page:
     def is_closed(self):
         return self._fecha_no_passo is not None and self.passo >= self._fecha_no_passo
 
-    def goto(self, url, **_kwargs):
+    def goto(self, url, **kwargs):
         self.gotos.append(url)
+        self.goto_kwargs.append(kwargs)
         if len(self.gotos) > 1:
             self._context.disparar(self._eventos.get("goto", []))
 
@@ -193,7 +196,7 @@ def test_volta_ao_portal_sem_token_recarrega_a_consulta_uma_vez(mocker):
 
 def test_sem_token_ate_o_prazo_levanta_e_fecha_o_navegador(mocker):
     _, browser = _instalar_playwright_falso(mocker, [PORTAL_CONSULTA], {})
-    mocker.patch("juscraper.aggregators._pdpj_sso.login.time.monotonic", side_effect=[0.0, 0.0, 0.0, 500.0])
+    mocker.patch("juscraper.aggregators._pdpj_sso.login.time.monotonic", side_effect=[0.0, 0.0, 0.0, 0.0, 500.0])
 
     with pytest.raises(RuntimeError, match="auth\\(token\\)"):
         obter_credencial_govbr(timeout=300)
@@ -322,8 +325,8 @@ def test_cancelamento_encerra_a_espera(mocker):
 def test_ctrl_c_chega_ao_chamador_sem_esperar_o_worker(mocker):
     cancelado = threading.Event()
 
-    def worker(_timeout, _navegador, cancelar):
-        cancelar.wait(10)
+    def worker(_timeout, _navegador, sessao):
+        sessao.cancelar.wait(10)
         cancelado.set()
         raise RuntimeError("Login no gov.br cancelado.")
 
@@ -363,7 +366,76 @@ def test_ctrl_c_nao_espera_worker_preso(mocker):
     assert time.monotonic() - inicio < 2
 
 
-def test_prazo_do_reload_tem_teto_e_respeita_o_prazo():
-    assert login._prazo_do_reload(prazo=1000.0, agora=0.0) == login.TIMEOUT_RELOAD * 1000
-    assert login._prazo_do_reload(prazo=10.0, agora=5.0) == 5000
-    assert login._prazo_do_reload(prazo=10.0, agora=9.9) == 1000
+def test_timeout_de_navegacao_tem_teto_e_respeita_o_prazo():
+    assert login._timeout_de_navegacao(prazo=1000.0, agora=0.0) == login.TIMEOUT_NAVEGACAO * 1000
+    assert login._timeout_de_navegacao(prazo=10.0, agora=5.0) == 5000
+    assert login._timeout_de_navegacao(prazo=10.0, agora=9.9) == 1000
+
+
+def test_toda_navegacao_do_portal_respeita_o_teto(mocker):
+    """Abertura e reload: nenhum ``goto`` espera o prazo inteiro do login."""
+    _, browser = _instalar_playwright_falso(
+        mocker,
+        [PORTAL_CONSULTA, _SSO, "https://portaldeservicos.pdpj.jus.br/home"],
+        {"goto": [_requisicao(_API, _APOS_RELOAD)]},
+    )
+
+    obter_credencial_govbr(timeout=300)
+
+    timeouts = [kwargs["timeout"] for kwargs in browser.context.page.goto_kwargs]
+    assert len(timeouts) == 2
+    assert all(t <= login.TIMEOUT_NAVEGACAO * 1000 for t in timeouts)
+
+
+def test_abertura_lenta_do_portal_nao_interrompe_a_espera(mocker):
+    _instalar_playwright_falso(mocker, [PORTAL_CONSULTA, _SSO, PORTAL_CONSULTA], {2: [_requisicao(_API, _DO_PORTAL)]})
+    goto_original = _Page.goto
+
+    def goto(self, url, **kwargs):
+        goto_original(self, url, **kwargs)
+        raise TimeoutError("Timeout 30000ms exceeded")
+
+    mocker.patch.object(_Page, "goto", goto)
+
+    assert obter_credencial_govbr(timeout=5) == CredencialPdpj(_DO_PORTAL, None)
+
+
+def test_cancelar_fecha_o_navegador_registrado():
+    processo = _Processo()
+    sessao = login._SessaoLogin()
+    sessao.processo = cast(Any, processo)
+
+    sessao.cancelar_e_fechar()
+
+    assert sessao.cancelar.is_set()
+    assert processo.encerrado
+
+
+def test_abrir_navegador_cancelado_encerra_o_processo(mocker, tmp_path):
+    processo = _Processo()
+    mocker.patch.object(login.subprocess, "Popen", return_value=processo)
+    sessao = login._SessaoLogin()
+    sessao.cancelar.set()
+
+    with pytest.raises(RuntimeError, match="cancelado"):
+        login.abrir_navegador("/usr/bin/google-chrome", tmp_path, sessao)
+
+    assert sessao.processo is cast(Any, processo)
+    assert processo.encerrado
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="SIGINT enviado ao proprio processo")
+def test_ctrl_c_com_worker_preso_nao_segura_a_saida_do_interpretador():
+    """O worker e daemon: o processo sai logo depois do Ctrl-C, sem esperar o ``goto`` preso."""
+    codigo = (
+        "import os, signal, threading, time\n"
+        "from juscraper.aggregators._pdpj_sso import login\n"
+        "login._obter_credencial = lambda *_a: time.sleep(20)\n"
+        "threading.Timer(0.3, os.kill, args=(os.getpid(), signal.SIGINT)).start()\n"
+        "login.obter_credencial_govbr(timeout=5)\n"
+    )
+    inicio = time.monotonic()
+    completado = subprocess.run([sys.executable, "-c", codigo], capture_output=True, text=True, timeout=30)
+
+    assert "KeyboardInterrupt" in completado.stderr
+    assert time.monotonic() - inicio < 10
