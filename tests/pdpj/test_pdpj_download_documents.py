@@ -383,7 +383,9 @@ def test_download_documents_preserva_precedencia_ordem_duplicatas_e_shape():
         "cnj-pesquisado-1",
         "cnj-pesquisado-2",
     ]
-    assert len(responses.calls) == 5
+    # ``doc-tramitacao`` e ``doc-ultima-linha`` não têm ``arquivo``: saem sem requisição.
+    assert len(responses.calls) == 3
+    assert out["texto"].isna().tolist() == [False, False, True, False, True]
     # As colunas numericas viram float porque outras linhas trazem None;
     # a comparacao por igualdade aceita 1 == 1.0 sem fixar o dtype.
     primeira = out.iloc[0]
@@ -682,3 +684,55 @@ def test_texto_so_com_espaco_sai_none_sem_motivo():
     assert out.iloc[0]["texto"] is None
     assert out.iloc[0]["_raw_texto"] == " \n\t\xa0 "
     assert out.iloc[0]["motivo_falha"] is None
+
+
+def _docs_df_com_arquivo(*pares: tuple[str, str | None]) -> pd.DataFrame:
+    return pd.DataFrame([
+        {"processo": PROC, "numero_processo": PROC, "id_documento": doc_id, "arquivo_id": arquivo_id}
+        for doc_id, arquivo_id in pares
+    ])
+
+
+@pytest.mark.parametrize("with_binary", [False, True])
+@responses.activate
+def test_documento_sem_arquivo_nao_gera_requisicao_nem_falha(with_binary):
+    """A API omite ``arquivo`` no documento sem conteúdo, e responde 404 ao pedido de texto dele."""
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        out = _mk_scraper().download_documents(
+            _docs_df_com_arquivo(("doc-a", None)), with_binary=with_binary,
+        )
+
+    assert len(responses.calls) == 0
+    assert out["id_documento"].tolist() == ["doc-a"]
+    assert out["texto"].tolist() == [None]
+    assert out["_raw_texto"].tolist() == [None]
+    assert out["motivo_falha"].tolist() == [None]
+    if with_binary:
+        assert out["binario"].tolist() == [None]
+
+
+@responses.activate
+def test_documento_com_arquivo_no_mesmo_lote_continua_baixando():
+    _mock_text_endpoint("doc-b", "texto b\n")
+
+    out = _mk_scraper().download_documents(_docs_df_com_arquivo(("doc-a", None), ("doc-b", "arquivo-b")))
+
+    assert [call.request.url for call in responses.calls] == [
+        f"{BASE_URL}/processos/{PROC}/documentos/doc-b/texto",
+    ]
+    assert out["texto"].tolist() == [None, "texto b"]
+    assert out["motivo_falha"].tolist() == [None, None]
+
+
+@responses.activate
+def test_documento_sem_arquivo_ocupa_vaga_do_limite():
+    """A linha sai no resultado, como a do download que falhou; só não gera requisição."""
+    _mock_text_endpoint("doc-b", "texto b\n")
+
+    out = _mk_scraper().download_documents(
+        _docs_df_com_arquivo(("doc-a", None), ("doc-b", "arquivo-b")), max_docs_per_process=1,
+    )
+
+    assert out["id_documento"].tolist() == ["doc-a"]
+    assert len(responses.calls) == 0

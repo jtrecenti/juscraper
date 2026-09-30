@@ -251,12 +251,33 @@ def _linha_processo(cnj: str) -> dict[str, Any]:
     return {"processo": cnj}
 
 
+def _sem_arquivo(row: dict[str, Any]) -> bool:
+    """Diz se a linha declara que o documento não tem arquivo no data lake.
+
+    A API omite ``arquivo`` no documento sem conteúdo e responde 404 ao pedido
+    de texto dele. Só a linha com a coluna ``arquivo_id`` (de
+    :meth:`PdpjScraper.documentos` ou de ``detalhes`` do :meth:`PdpjScraper.cpopg`)
+    diz isso; uma base montada sem a coluna não informa, e o download segue.
+    """
+    return "arquivo_id" in row and bool(pd.isna(row["arquivo_id"]))
+
+
 @dataclass(frozen=True)
 class _Conteudos:
     """Conteúdos que :meth:`PdpjScraper.download_documents` baixa de cada documento."""
 
     texto: bool
     binario: bool
+
+
+def _linha_sem_conteudo(row: dict[str, Any], conteudos: _Conteudos) -> dict[str, Any]:
+    """Linha do documento sem arquivo: as colunas pedidas vazias e sem motivo de falha."""
+    if conteudos.texto:
+        row["texto"] = row["_raw_texto"] = None
+    if conteudos.binario:
+        row["binario"] = None
+    row[COLUNA_MOTIVO_FALHA] = None
+    return row
 
 
 def _limite_de_paginas(paginas: list[int] | range | None) -> tuple[int | None, set[int] | None]:
@@ -803,6 +824,12 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
         conteúdo e motivo. O 401 propaga, porque token inválido atinge o lote
         inteiro.
 
+        O documento sem arquivo (``arquivo_id`` vazio, na base que traz a
+        coluna) não tem conteúdo no data lake, e a API responde 404 ao pedido
+        de texto dele. Ele sai com os conteúdos ``None`` e ``motivo_falha``
+        ``None``, sem requisição e fora do aviso, e ocupa vaga do limite, como
+        qualquer linha devolvida.
+
         Args:
             base_df: DataFrame fonte das chamadas.
             max_docs_per_process: Limite de linhas devolvidas por processo,
@@ -940,6 +967,8 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
                     numero_processo,
                 )
             return None
+        if _sem_arquivo(row):
+            return _linha_sem_conteudo(row, conteudos)
         cnj_clean = clean_cnj(str(numero_processo))
         descricao = f"processo {numero_processo}, documento {id_documento}"
         motivo_texto = motivo_binario = None
