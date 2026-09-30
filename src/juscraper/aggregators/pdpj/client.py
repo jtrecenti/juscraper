@@ -369,11 +369,20 @@ class PdpjScraper(HTTPScraper):
         # stacklevel 4: warn -> avisar_falhas -> este metodo -> metodo publico -> usuario.
         avisar_falhas(falhas, origem, _ITEM_CONSULTA, stacklevel=4)
         df = pd.DataFrame(rows)
-        # A coluna do motivo vai para o fim: com a linha de falha primeiro, o
-        # pandas a poria na ordem de chegada, antes das colunas de conteúdo.
+        # O pandas ordena as colunas pela chegada, e a linha de falha tem menos
+        # colunas que a de sucesso: se ela viesse primeiro, as colunas dela
+        # (``id_documento``, o motivo) passariam na frente das de conteúdo, e a
+        # ordem dependeria de qual processo falhou. As linhas de sucesso dão a
+        # ordem, as colunas só da linha de falha vêm depois e o motivo por último.
+        ordem = list(dict.fromkeys(
+            coluna
+            for row in rows if row[COLUNA_MOTIVO_FALHA] is None
+            for coluna in row if coluna != COLUNA_MOTIVO_FALHA
+        ))
+        ordem += [c for c in df.columns if c not in ordem and c != COLUNA_MOTIVO_FALHA]
         if COLUNA_MOTIVO_FALHA in df.columns:
-            df = df[[c for c in df.columns if c != COLUNA_MOTIVO_FALHA] + [COLUNA_MOTIVO_FALHA]]
-        return df
+            ordem.append(COLUNA_MOTIVO_FALHA)
+        return df[ordem]
 
     def existe(self, id_cnj: str | list[str]) -> bool | pd.DataFrame:
         """Checa presenca de processo(s) no Data Lake.

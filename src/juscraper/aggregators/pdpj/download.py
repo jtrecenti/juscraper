@@ -197,10 +197,19 @@ def fetch_pesquisa(
 
     O objeto precisa trazer ``content`` como lista: sem ela, o laço da
     ``pesquisa`` leria uma página vazia e encerraria a coleta em silêncio.
+    A exceção é ``content: null`` com ``numberOfElements == 0``, que vira
+    lista vazia. A API manda ``searchAfter`` preenchido até na última página,
+    então toda coleta sem limite pede uma página terminal vazia, e o mesmo
+    endpoint serializa outras listas vazias como ``null``. Exigir o zero
+    explícito mantém a proteção: uma página com ``null`` que não se declara
+    vazia continua sendo forma errada.
     """
     response = request_fn("GET", f"{base_url}/processos", params=params, perfil=PERFIL_LISTAGEM)
     data: dict[str, Any] = _json(response, dict)
-    if not isinstance(data.get("content"), list):
+    content = data.get("content")
+    if content is None and data.get("numberOfElements") == 0:
+        return {**data, "content": []}
+    if not isinstance(content, list):
         raise _forma_invalida(response)
     return data
 

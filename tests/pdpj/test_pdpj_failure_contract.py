@@ -337,7 +337,7 @@ def test_lista_no_lugar_do_objeto_vira_json_invalido(metodo):
     with pytest.warns(UserWarning, match="json_invalido"):
         df = getattr(_mk_scraper(), metodo)(PROC)
 
-    esperado = {"processo": PROC, "motivo_falha": "json_invalido"}
+    esperado: dict[str, str | None] = {"processo": PROC, "motivo_falha": "json_invalido"}
     if metodo == "documentos":
         esperado = {"processo": PROC, "id_documento": None, "motivo_falha": "json_invalido"}
     assert df.to_dict("records") == [esperado]
@@ -436,6 +436,29 @@ def test_pesquisa_pagina_sem_content_levanta_em_vez_de_truncar():
 
 
 @responses.activate
+def test_pesquisa_pagina_terminal_com_content_null_e_zero_elementos_encerra():
+    """A última página traz ``searchAfter`` preenchido, e a seguinte pode vir com ``content: null``."""
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/processos",
+        body=load_sample("pdpj", "pesquisa/single_page.json"),
+        status=200,
+        content_type="application/json",
+    )
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/processos",
+        json={"content": None, "numberOfElements": 0, "searchAfter": None},
+        status=200,
+    )
+
+    df = _mk_scraper().pesquisa(tribunal="TRF1")
+
+    assert len(df) == 1
+    assert len(responses.calls) == 2
+
+
+@responses.activate
 def test_cpopg_item_que_nao_e_objeto_vira_json_invalido():
     _mock(f"/processos/{PROC}", body="[null]")
 
@@ -456,8 +479,12 @@ def test_motivo_falha_e_a_ultima_coluna_mesmo_com_a_falha_primeiro(metodo):
     with pytest.warns(UserWarning):
         df = getattr(_mk_scraper(), metodo)([OUTRO, PROC])
 
+    with pytest.warns(UserWarning):
+        df_sucesso_primeiro = getattr(_mk_scraper(), metodo)([PROC, OUTRO])
+
     assert df.columns[-1] == "motivo_falha"
     assert df.columns[0] == "processo"
+    assert list(df.columns) == list(df_sucesso_primeiro.columns)
 
 
 @responses.activate
