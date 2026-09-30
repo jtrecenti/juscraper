@@ -11,6 +11,7 @@ core por um mock, e os testes de backoff leem as esperas dele.
 """
 from __future__ import annotations
 
+import io
 import json
 import logging
 import warnings
@@ -22,6 +23,7 @@ import requests
 import responses
 
 import juscraper as jus
+from juscraper.aggregators._pdpj_sso.renovacao import SsoPdpjIndisponivelError
 from juscraper.aggregators.pdpj.client import PdpjScraper
 from juscraper.aggregators.pdpj.download import BASE_URL, USER_AGENT, fetch_documento_binario_url
 from juscraper.core.exceptions import InvalidJSONResponseError, RetryExhaustedError
@@ -136,17 +138,18 @@ def test_politica_sobrepoe_o_timeout_do_perfil_em_cada_endpoint(fetch):
     chamar(s)
 
     assert responses.calls[0].request.req_kwargs["timeout"] == 7
-    assert s._perfis_http[perfil].max_retries == 6
+    # Os perfis mesclados não têm acessor público.
+    assert s._perfis_http[perfil].max_retries == 6  # noqa: SLF001
 
 
 def test_fetch_documento_binario_url_usa_o_perfil_documento():
     chamadas = []
 
-    def request_fn(method, url, **kwargs):
+    def request_fn(_method, _url, **kwargs):
         chamadas.append(kwargs)
         resposta = requests.Response()
         resposta.status_code = 200
-        resposta._content = b'"https://temporaria"'
+        resposta.raw = io.BytesIO(b'"https://temporaria"')
         return resposta
 
     assert fetch_documento_binario_url(request_fn, PROC, "doc-a") == "https://temporaria"
@@ -222,7 +225,7 @@ def test_404_vira_linha_http_404_e_o_outro_processo_segue(metodo):
     _mock(f"/processos/{OUTRO}{sufixo}", status=404)
     _mock_sample(f"/processos/{PROC}{sufixo}", sample)
 
-    with pytest.warns(UserWarning) as avisos:
+    with pytest.warns(UserWarning, match="falharam") as avisos:
         df = getattr(_mk_scraper(), metodo)([OUTRO, PROC])
 
     falha = df[df["processo"] == OUTRO]
@@ -497,10 +500,10 @@ def test_motivo_falha_e_a_ultima_coluna_mesmo_com_a_falha_primeiro(metodo):
     _mock(f"/processos/{OUTRO}{sufixo}", status=404)
     _mock_sample(f"/processos/{PROC}{sufixo}", sample)
 
-    with pytest.warns(UserWarning):
+    with pytest.warns(UserWarning, match="falharam"):
         df = getattr(_mk_scraper(), metodo)([OUTRO, PROC])
 
-    with pytest.warns(UserWarning):
+    with pytest.warns(UserWarning, match="falharam"):
         df_sucesso_primeiro = getattr(_mk_scraper(), metodo)([PROC, OUTRO])
 
     assert df.columns[-1] == "motivo_falha"
@@ -512,7 +515,7 @@ def test_motivo_falha_e_a_ultima_coluna_mesmo_com_a_falha_primeiro(metodo):
 def test_download_de_documentos_que_so_falharam_devolve_vazio(caplog):
     _mock(f"/processos/{PROC}/documentos", status=404)
     s = _mk_scraper()
-    with pytest.warns(UserWarning):
+    with pytest.warns(UserWarning, match="falharam"):
         docs = s.documentos(PROC)
 
     with caplog.at_level(logging.WARNING, logger="juscraper.aggregators.pdpj.client"):
@@ -545,7 +548,7 @@ def test_texto_e_binario_falhando_com_motivos_diferentes():
     _mock(f"/processos/{PROC}/documentos/doc-a/texto", status=404, content_type="text/plain")
     _mock(f"/processos/{PROC}/documentos/doc-a/binario", status=500, content_type="text/plain")
 
-    with pytest.warns(UserWarning) as avisos:
+    with pytest.warns(UserWarning, match="falharam") as avisos:
         out = _mk_scraper().download_documents(_docs_df(), with_binary=True)
 
     linha = out.iloc[0]
@@ -594,7 +597,7 @@ def test_aviso_aponta_para_quem_chamou_o_metodo(metodo):
     sufixo, _sample = METODOS_DE_LISTA[metodo]
     _mock(f"/processos/{PROC}{sufixo}", status=404)
 
-    with pytest.warns(UserWarning) as avisos:
+    with pytest.warns(UserWarning, match="falharam") as avisos:
         getattr(_mk_scraper(), metodo)(PROC)
 
     assert avisos[0].filename == __file__
@@ -604,7 +607,7 @@ def test_aviso_aponta_para_quem_chamou_o_metodo(metodo):
 def test_aviso_do_download_aponta_para_quem_chamou_o_metodo():
     _mock(f"/processos/{PROC}/documentos/doc-a/texto", status=404, content_type="text/plain")
 
-    with pytest.warns(UserWarning) as avisos:
+    with pytest.warns(UserWarning, match="falharam") as avisos:
         _mk_scraper().download_documents(_docs_df())
 
     assert avisos[0].filename == __file__
@@ -614,8 +617,6 @@ def test_aviso_do_download_aponta_para_quem_chamou_o_metodo():
 @responses.activate
 def test_falha_do_sso_interrompe_com_as_falhas_anteriores_na_nota(metodo):
     """A renovação do token falha na segunda requisição, como faria o ``AuthPdpj``."""
-    from juscraper.aggregators._pdpj_sso.renovacao import SsoPdpjIndisponivelError
-
     sufixo, _sample = METODOS_DE_LISTA[metodo]
     _mock(f"/processos/{OUTRO}{sufixo}", status=404)
     scraper = _mk_scraper()

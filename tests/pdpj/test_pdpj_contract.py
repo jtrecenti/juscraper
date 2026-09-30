@@ -24,7 +24,6 @@ from juscraper.aggregators.pdpj.parse import (
     build_movimento_rows,
     build_parte_rows,
     build_processo_row,
-    clean_document_text,
     parse_pesquisa_response,
 )
 from tests._helpers import assert_unknown_kwarg_raises, load_sample, query_param_subset_matcher
@@ -310,7 +309,9 @@ _HMAC_KEY = "0123456789abcdef0123456789abcdef-test"
 
 
 def test_auth_token_expirado_raises_valueerror():
-    """Com ``verify_signature=False`` o PyJWT desliga tambem ``verify_exp``;
+    """Token vencido e recusado no ``auth``.
+
+    Com ``verify_signature=False`` o PyJWT desliga tambem ``verify_exp``;
     sem religa-lo, o token vencido era aceito e so falhava na primeira
     chamada a API (#351).
     """
@@ -351,7 +352,7 @@ def test_auth_que_falha_mantem_o_token_anterior(recusado):
     s.auth(FAKE_TOKEN)
     auth_anterior = s.session.auth
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Token JWT"):
         s.auth(recusado)
 
     assert s.token == FAKE_TOKEN
@@ -409,16 +410,6 @@ def test_parse_pesquisa_response_lida_com_none():
     assert total is None
 
 
-def test_clean_document_text_remove_caracteres_de_controle():
-    txt = "abc\x00def\x1aghi\r\njkl mno"
-    assert clean_document_text(txt) == "abcdefghi\njkl\nmno"
-
-
-def test_clean_document_text_string_vazia_retorna_none():
-    assert clean_document_text("") is None
-    assert clean_document_text(None) is None
-
-
 def test_to_query_params_filtra_none_e_serializa_lista():
     params = _to_query_params({
         "numero_processo": "10029886420194014100",
@@ -429,3 +420,26 @@ def test_to_query_params_filtra_none_e_serializa_lista():
         "numeroProcesso": "10029886420194014100",
         "idOrgaoJulgador": "12345,67890",
     }
+
+
+@pytest.mark.parametrize(
+    ("montar", "chave"),
+    [
+        (build_documento_rows, "documentos"),
+        (build_movimento_rows, "movimentos"),
+        (build_parte_rows, "partes"),
+    ],
+    ids=["documentos", "movimentos", "partes"],
+)
+def test_item_que_nao_e_objeto_e_pulado(montar, chave):
+    """O ``fetch_*`` confere só o objeto do topo; item fora de forma na lista não vira linha."""
+    rows = montar({"numeroProcesso": "N", chave: ["texto", None, {"id": "a"}]}, "10029886420194014100")
+    assert len(rows) == 1
+    assert rows[0]["processo"] == "10029886420194014100"
+
+
+def test_parse_pesquisa_response_pula_item_que_nao_e_objeto():
+    rows, _search_after, _total = parse_pesquisa_response(
+        {"content": [42, {"numeroProcesso": "N", "id": "a"}], "searchAfter": None, "total": 1}
+    )
+    assert [row["id"] for row in rows] == ["a"]

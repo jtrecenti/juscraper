@@ -104,3 +104,15 @@ def test_access_malformado_nao_e_carregado(monkeypatch):
 def test_repr_nao_mostra_os_tokens():
     credencial = CredencialPdpj("ACCESS-SECRETO", "REFRESH-SECRETO")
     assert "SECRETO" not in repr(credencial)
+
+
+def test_gravacao_que_falha_apaga_o_temporario_e_preserva_o_cache(mocker):
+    anterior = CredencialPdpj(token(), token(7200))
+    salvar_credencial(anterior)
+    mocker.patch("juscraper.aggregators._pdpj_sso.cache.json.dump", side_effect=OSError("disco cheio"))
+
+    with pytest.raises(OSError, match="disco cheio"):
+        salvar_credencial(CredencialPdpj(token(60)))
+
+    assert [p.name for p in caminho_cache().parent.iterdir()] == ["pdpj_token.json"]
+    assert carregar_credencial_cache() == anterior

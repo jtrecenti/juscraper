@@ -1,7 +1,4 @@
-
-"""
-Exports JusbrScraper for easier access
-"""
+"""Expõe :class:`JusbrScraper` para a factory."""
 from .client import JusbrScraper
 
 __all__ = ["JusbrScraper"]

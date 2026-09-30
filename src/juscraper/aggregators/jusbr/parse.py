@@ -1,9 +1,9 @@
-"""
-Module parse.py: Functions for parsing and cleaning results and documents from JUSBR.
-Includes utilities for processing API responses and cleaning document texts.
-"""
+"""Parse das respostas da API do JusBR.
 
-# Functions for parsing and cleaning results and documents from JUSBR
+A forma de cada resposta já foi conferida em :mod:`.download`: os ``fetch_*``
+levantam ``InvalidJSONResponseError`` para o corpo que não tem a forma do
+endpoint, e por isso as funções daqui só leem.
+"""
 
 import logging
 from typing import Any
@@ -11,96 +11,39 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 
-def parse_process_list_response(json_data: dict[str, Any] | None) -> list[dict[str, Any]]:
+def parse_process_list_response(json_data: dict[str, Any]) -> list[dict[str, Any]]:
+    """Devolve os processos da chave ``content`` da listagem.
+
+    ``fetch_process_list`` garante que ``content`` é uma lista de objetos,
+    inclusive no 404, que chega como ``{"content": []}``.
     """
-    Parses the JSON response from fetching the process list.
-    Returns the list of process items under the 'content' key.
+    processos: list[dict[str, Any]] = json_data["content"]
+    return processos
+
+
+def parse_process_details_response(
+    json_data: dict[str, Any] | list[dict[str, Any]],
+    cnj_searched: str,
+) -> dict[str, Any]:
+    """Monta a linha de :meth:`JusbrScraper.cpopg` a partir dos detalhes do processo.
+
+    A API devolve uma lista com o objeto de detalhes; um objeto solto também
+    é aceito. ``fetch_process_details`` garante a lista não vazia com um
+    objeto no primeiro item. Quando a lista traz mais de um item, só o
+    primeiro é usado, com aviso.
     """
-    if json_data is None:
-        return []
-    processos_content = json_data.get('content', [])
-    if not isinstance(processos_content, list):
-        logger.warning(
-            "Chave 'content' não é uma lista ou está ausente"
-            "na resposta da lista de processos: %s",
-            json_data
-        )
-        return []
-    return processos_content
-
-
-def parse_process_details_response(json_data: dict[str, Any] | list[dict[str, Any]] | None,
-                                   cnj_searched: str) -> dict[str, Any] | None:
-    """
-    Parses the JSON response for process details.
-    Adds 'processo_pesquisado' to the data.
-    Handles cases where API returns a list with a single details object.
-    """
-    if json_data is None:
-        logger.warning(
-            "No JSON data received for process details for CNJ: %s", cnj_searched
-        )
-        return None
-
-    details_dict: dict[str, Any] | None = None
-
-    if isinstance(json_data, list):
-        if json_data:  # Check if list is not empty
-            if isinstance(json_data[0], dict):
-                details_dict = json_data[0]
-                if len(json_data) > 1:
-                    logger.warning(
-                        "Process details API returned a list with %d"
-                        "items for CNJ %s, using only the first.",
-                        len(json_data), cnj_searched
-                    )
-            else:
-                # Defensivo: em produção a API pode contrariar o type hint.
-                logger.error(  # type: ignore[unreachable]
-                    "Process details API returned a list, but the first item"
-                    "is not a dictionary for CNJ %s. Data: %s",
-                    cnj_searched, str(json_data[0])[:200]  # Log snippet of problematic data
-                )
-                return None
-        else:
-            logger.warning("Process details API returned an empty list for CNJ: %s", cnj_searched)
-            return None
-    elif isinstance(json_data, dict):
-        details_dict = json_data
-
-    # Can add more sophisticated parsing here if needed, e.g., flattening nested structures
-    # For now, it mostly returns the JSON data, augmented with the searched CNJ.
+    if isinstance(json_data, dict):
+        detalhes = json_data
+    else:
+        detalhes = json_data[0]
+        if len(json_data) > 1:
+            logger.warning(
+                "A API de detalhes devolveu uma lista com %d itens para o CNJ %s; só o primeiro é usado.",
+                len(json_data), cnj_searched,
+            )
     return {
-        'processo': cnj_searched,  # Matches screenshot column 'processo'
-        'numeroProcesso': details_dict.get('numeroProcesso'),  # Matches screenshot
-        'idCodexTribunal': details_dict.get('idCodexTribunal'),  # Matches screenshot
-        'detalhes': details_dict  # Full details dictionary as per screenshot
+        'processo': cnj_searched,
+        'numeroProcesso': detalhes.get('numeroProcesso'),
+        'idCodexTribunal': detalhes.get('idCodexTribunal'),
+        'detalhes': detalhes,
     }
-
-
-def clean_document_text(text_content: str | None) -> str | None:
-    """
-    Cleans the raw text content of a document.
-    """
-    if not text_content:
-        return None
-    try:
-        # Comprehensive cleaning based on original code and common issues
-        cleaned_text = text_content.replace('\x00', '')  # Remove null characters
-        cleaned_text = cleaned_text.replace('\x1a', '')  # Remove SUB character
-        cleaned_text = cleaned_text.replace('\r\n', '\n').replace('\r', '\n')  # Normalize newlines
-        cleaned_text = cleaned_text.replace('\xa0', ' ')    # non-breaking space to regular space
-        cleaned_text = cleaned_text.replace('\u2028', '\n')  # Line separator to newline
-        cleaned_text = cleaned_text.replace('\u2029', '\n')  # Paragraph separator to nl
-        # Potentially add more specific cleaning if other problematic characters are found
-        return cleaned_text.strip()  # Strip leading/trailing whitespace
-    except Exception as e:
-        # Catching Exception as a last resort to avoid crashing
-        # on unexpected text cleaning errors.
-        # All known issues should be handled above; this logs
-        # and continues for unpredictable encoding/corruption.
-        logger.error(
-            "Erro ao limpar texto do documento: %s. Conteúdo (início): %s",
-            e, str(text_content)[:100]
-        )
-        return None

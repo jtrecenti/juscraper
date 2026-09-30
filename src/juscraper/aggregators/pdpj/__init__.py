@@ -1,4 +1,4 @@
-"""Exports :class:`PdpjScraper` para acesso facil via factory."""
+"""Expõe :class:`PdpjScraper` para a factory."""
 from .client import PdpjScraper
 
 __all__ = ["PdpjScraper"]

@@ -139,7 +139,8 @@ def test_download_documents_baixa_texto_e_binario(mocker):
     assert len(df) == 1
     assert df.columns[0] == "numero_processo"
     assert df.iloc[0]["numero_processo"] == CNJ_DIGITS
-    assert isinstance(df.iloc[0]["texto"], str) and len(df.iloc[0]["texto"]) > 0
+    assert isinstance(df.iloc[0]["texto"], str)
+    assert len(df.iloc[0]["texto"]) > 0
     assert isinstance(df.iloc[0]["_raw_binary_api"], bytes)
     assert len(df.iloc[0]["_raw_binary_api"]) > 0
 
@@ -167,7 +168,8 @@ def test_download_documents_sem_href_binario_baixa_so_texto(mocker):
     df = scraper.download_documents(base_df)
     assert isinstance(df, pd.DataFrame)
     assert len(df) == 1
-    assert isinstance(df.iloc[0]["texto"], str) and len(df.iloc[0]["texto"]) > 0
+    assert isinstance(df.iloc[0]["texto"], str)
+    assert len(df.iloc[0]["texto"]) > 0
     assert df.iloc[0]["_raw_binary_api"] is None
 
 

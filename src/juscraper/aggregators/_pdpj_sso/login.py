@@ -24,20 +24,26 @@ import tempfile
 import threading
 import time
 from collections.abc import Mapping
+from dataclasses import dataclass
 from pathlib import Path, PurePosixPath, PureWindowsPath
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
 import jwt
 
 from .credencial import CredencialPdpj, ler_exp
 
+if TYPE_CHECKING:  # pragma: no cover - so o verificador de tipos le este bloco
+    # So para anotar: o Playwright e dependencia opcional, importada em ``_obter_credencial``.
+    from playwright.sync_api import Page, Request, Response
+
 logger = logging.getLogger(__name__)
 
 PORTAL_CONSULTA = "https://portaldeservicos.pdpj.jus.br/consulta"
 _HOST_PORTAL = "portaldeservicos.pdpj.jus.br"
 _SUFIXO_PDPJ = ".pdpj.jus.br"
-_CAMINHO_TOKEN = "/protocol/openid-connect/token"  # nosec B105
+# Caminho do endpoint de token do SSO, nao uma senha.
+_CAMINHO_TOKEN = "/protocol/openid-connect/token"  # nosec B105  # noqa: S105
 # Depois de voltar ao portal, a pagina ainda troca o ``code`` pelo token; o
 # reload antes disso interromperia a troca.
 ESPERA_ANTES_DO_RELOAD = 3.0
@@ -80,19 +86,23 @@ def caminhos_navegador(sistema: str = sys.platform, ambiente: Mapping[str, str] 
     Variavel vazia e ignorada, porque viraria caminho relativo ao diretorio
     corrente. No macOS, o app pode estar tambem em ``~/Applications``.
     """
-    if ambiente is None:
-        ambiente = os.environ
     if sistema == "darwin":
         pastas = [PurePosixPath("/Applications"), PurePosixPath(casa or Path.home()) / "Applications"]
         return [str(pasta / sufixo) for sufixo in _SUFIXOS_MACOS for pasta in pastas]
     if sistema == "win32":
-        variaveis = ("LOCALAPPDATA", "PROGRAMFILES", "PROGRAMFILES(X86)")
-        raizes = [ambiente[nome] for nome in variaveis if ambiente.get(nome)]
-        unidade = ambiente.get("HOMEDRIVE")
-        if unidade:
-            raizes += [unidade + "\\Program Files", unidade + "\\Program Files (x86)"]
+        raizes = _raizes_windows(os.environ if ambiente is None else ambiente)
         return [str(PureWindowsPath(raiz, sufixo)) for sufixo in _SUFIXOS_WINDOWS for raiz in raizes]
     return []
+
+
+def _raizes_windows(ambiente: Mapping[str, str]) -> list[str]:
+    """Raizes de instalacao do Windows, na ordem descrita em :func:`caminhos_navegador`."""
+    variaveis = ("LOCALAPPDATA", "PROGRAMFILES", "PROGRAMFILES(X86)")
+    raizes = [ambiente[nome] for nome in variaveis if ambiente.get(nome)]
+    unidade = ambiente.get("HOMEDRIVE")
+    if unidade:
+        raizes += [unidade + "\\Program Files", unidade + "\\Program Files (x86)"]
+    return raizes
 
 
 def obter_credencial_govbr(timeout: float = 300.0, navegador: str | None = None) -> CredencialPdpj:
@@ -122,7 +132,8 @@ def obter_credencial_govbr(timeout: float = 300.0, navegador: str | None = None)
     def trabalhar() -> None:
         try:
             resultado["credencial"] = _obter_credencial(timeout, navegador, sessao)
-        except BaseException as exc:  # pylint: disable=broad-except  # repassada ao chamador
+        # Tudo, inclusive ``SystemExit``: o erro e levantado de novo na thread do chamador.
+        except BaseException as exc:  # pylint: disable=broad-except  # noqa: BLE001
             resultado["erro"] = exc
 
     worker = threading.Thread(target=trabalhar, name="juscraper-govbr", daemon=True)
@@ -197,7 +208,8 @@ def abrir_navegador(
             ou o login e cancelado.
     """
     # Sem ``with``: o processo sobrevive a esta funcao e e encerrado por ``_encerrar``.
-    processo = subprocess.Popen(  # nosec B603  # pylint: disable=consider-using-with
+    # O executavel vem de ``localizar_navegador`` e a lista vai sem shell.
+    processo = subprocess.Popen(  # nosec B603  # pylint: disable=consider-using-with  # noqa: S603
         [
             executavel,
             f"--user-data-dir={perfil}",
@@ -243,10 +255,15 @@ def _encerrar(processo: subprocess.Popen[bytes]) -> None:
 
 
 def _obter_credencial(timeout: float, navegador: str | None, sessao: _SessaoLogin) -> CredencialPdpj:
+    # Import tardio: o Playwright e dependencia opcional, do extra ``govbr``.
     try:
-        from playwright.sync_api import Error as ErroPlaywright  # pylint: disable=import-outside-toplevel
-        from playwright.sync_api import TimeoutError as TimeoutPlaywright  # pylint: disable=import-outside-toplevel
-        from playwright.sync_api import sync_playwright  # pylint: disable=import-outside-toplevel
+        from playwright.sync_api import (  # pylint: disable=import-outside-toplevel  # noqa: PLC0415
+            Error as ErroPlaywright,
+        )
+        from playwright.sync_api import (  # pylint: disable=import-outside-toplevel  # noqa: PLC0415
+            TimeoutError as TimeoutPlaywright,
+        )
+        from playwright.sync_api import sync_playwright  # pylint: disable=import-outside-toplevel  # noqa: PLC0415
     except ImportError as exc:
         raise ImportError(
             "O login pelo gov.br precisa do Playwright. Instale com "
@@ -264,7 +281,7 @@ def _obter_credencial(timeout: float, navegador: str | None, sessao: _SessaoLogi
             with sync_playwright() as pw:
                 browser = pw.chromium.connect_over_cdp(f"http://127.0.0.1:{porta}")
                 context = browser.contexts[0]
-                captura = _Captura()
+                captura = _Captura(erros_de_leitura=(ErroPlaywright,))
                 context.on("request", captura.ao_requisitar)
                 context.on("response", captura.ao_responder)
                 page = context.pages[0] if context.pages else context.new_page()
@@ -283,12 +300,21 @@ class _Captura:
     :meth:`processar`, chamado pelo laco de espera.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, erros_de_leitura: tuple[type[Exception], ...] = ()) -> None:
+        """Cria a captura vazia.
+
+        Args:
+            erros_de_leitura: Erros, alem do ``ValueError`` do JSON invalido,
+                que a leitura do corpo de uma resposta pode levantar sem que a
+                captura deva parar; no login, o ``Error`` do Playwright, para o
+                corpo que o navegador ja descartou.
+        """
         self.bearer: str | None = None
         self.credencial: CredencialPdpj | None = None
-        self._respostas_token: list[Any] = []
+        self._respostas_token: list[Response] = []
+        self._erros_de_leitura: tuple[type[Exception], ...] = (ValueError, *erros_de_leitura)
 
-    def ao_requisitar(self, request: Any) -> None:
+    def ao_requisitar(self, request: Request) -> None:
         if self.bearer is not None:
             return
         host = urlparse(request.url).hostname or ""
@@ -305,13 +331,13 @@ class _Captura:
             return
         self.bearer = candidato
 
-    def ao_responder(self, response: Any) -> None:
+    def ao_responder(self, response: Response) -> None:
         if urlparse(response.url).path.endswith(_CAMINHO_TOKEN) and response.request.method == "POST":
             self._respostas_token.append(response)
 
     def processar(self) -> None:
         while self._respostas_token:
-            dados = _corpo_json(self._respostas_token.pop(0))
+            dados = _corpo_json(self._respostas_token.pop(0), self._erros_de_leitura)
             access = dados.get("access_token")
             if isinstance(access, str) and access:
                 self.credencial = CredencialPdpj(access, dados.get("refresh_token") or None)
@@ -322,18 +348,18 @@ class _Captura:
         return CredencialPdpj(self.bearer) if self.bearer is not None else None
 
 
-def _corpo_json(response: Any) -> dict[str, Any]:
-    """Corpo JSON de uma resposta bem-sucedida; qualquer outra coisa vira ``{}``."""
+def _corpo_json(response: Response, erros: tuple[type[Exception], ...]) -> dict[str, Any]:
+    """Corpo JSON de uma resposta bem-sucedida; resposta de erro, corpo ilegivel ou nao objeto vira ``{}``."""
     if not response.ok:
         return {}
     try:
         dados = response.json()
-    except Exception:  # pylint: disable=broad-except  # corpo indisponivel ou nao JSON
+    except erros:
         return {}
     return dados if isinstance(dados, dict) else {}
 
 
-def _navegar(page: Any, timeout_ms: float, tolerado: type[BaseException]) -> None:
+def _navegar(page: Page, timeout_ms: float, tolerado: type[BaseException]) -> None:
     """Abre a consulta do portal, tolerando so os erros da classe ``tolerado``.
 
     Na abertura, ``tolerado`` e o timeout do Playwright: portal lento nao e erro,
@@ -365,47 +391,83 @@ def _timeout_de_navegacao(prazo: float, agora: float) -> float:
     return max(min(prazo - agora, TIMEOUT_NAVEGACAO), 1.0) * 1000
 
 
+@dataclass
+class _Espera:
+    """Estado do laco de :func:`_esperar_credencial` entre um passo e o seguinte."""
+
+    page: Page
+    captura: _Captura
+    prazo: float
+    erro_no_reload: type[BaseException]
+    saiu_do_portal: bool = False
+    voltou_em: float | None = None
+    recarregou: bool = False
+    token_desde: float | None = None
+
+    def credencial_pronta(self, agora: float) -> CredencialPdpj | None:
+        """A credencial a devolver neste passo, ou ``None`` para seguir esperando.
+
+        Com refresh token, devolve na hora. So com o access token, espera
+        ``ESPERA_PELO_REFRESH`` pela resposta do endpoint de token, que traz
+        tambem o refresh. Sem token nenhum, acompanha a navegacao do portal.
+        """
+        credencial = self.captura.credencial
+        if credencial is not None and credencial.refresh_token is not None:
+            return credencial
+        resultado = self.captura.resultado()
+        if resultado is None:
+            self._acompanhar_portal(agora)
+            return None
+        if self.token_desde is None:
+            self.token_desde = agora
+        return resultado if agora - self.token_desde >= ESPERA_PELO_REFRESH else None
+
+    def _acompanhar_portal(self, agora: float) -> None:
+        if urlparse(self.page.url).hostname != _HOST_PORTAL:
+            self.saiu_do_portal = True
+            return
+        if not self.saiu_do_portal or self.recarregou:
+            return
+        # De volta ao portal depois do login e sem token visto: o reload na
+        # /consulta dispara as chamadas autenticadas que expoem o token.
+        if self.voltou_em is None:
+            self.voltou_em = agora
+        if agora - self.voltou_em >= ESPERA_ANTES_DO_RELOAD:
+            self.recarregou = True
+            _navegar(self.page, _timeout_de_navegacao(self.prazo, agora), self.erro_no_reload)
+
+
+def _conferir_janela(page: Page, cancelar: threading.Event | None) -> None:
+    if cancelar is not None and cancelar.is_set():
+        raise RuntimeError("Login no gov.br cancelado.")
+    if page.is_closed():
+        raise RuntimeError(_JANELA_FECHADA)
+
+
+def _aguardar(page: Page) -> None:
+    try:
+        page.wait_for_timeout(500)
+    except Exception as exc:  # pylint: disable=broad-except
+        if page.is_closed():
+            raise RuntimeError(_JANELA_FECHADA) from exc
+        raise
+
+
 def _esperar_credencial(
-    page: Any,
+    page: Page,
     captura: _Captura,
     timeout: float,
     cancelar: threading.Event | None,
     erro_no_reload: type[BaseException],
 ) -> CredencialPdpj:
-    prazo = time.monotonic() + timeout
-    saiu_do_portal = False
-    voltou_em: float | None = None
-    recarregou = False
-    token_desde: float | None = None
-    while time.monotonic() < prazo:
-        if cancelar is not None and cancelar.is_set():
-            raise RuntimeError("Login no gov.br cancelado.")
-        if page.is_closed():
-            raise RuntimeError(_JANELA_FECHADA)
+    espera = _Espera(page, captura, time.monotonic() + timeout, erro_no_reload)
+    while time.monotonic() < espera.prazo:
+        _conferir_janela(page, cancelar)
         captura.processar()
-        agora = time.monotonic()
-        if captura.credencial is not None and captura.credencial.refresh_token is not None:
-            return captura.credencial
-        resultado = captura.resultado()
-        if resultado is not None:
-            token_desde = token_desde if token_desde is not None else agora
-            if agora - token_desde >= ESPERA_PELO_REFRESH:
-                return resultado
-        elif urlparse(page.url).hostname != _HOST_PORTAL:
-            saiu_do_portal = True
-        elif saiu_do_portal and not recarregou:
-            # De volta ao portal depois do login e sem token visto: o reload na
-            # /consulta dispara as chamadas autenticadas que expoem o token.
-            voltou_em = voltou_em if voltou_em is not None else agora
-            if agora - voltou_em >= ESPERA_ANTES_DO_RELOAD:
-                recarregou = True
-                _navegar(page, _timeout_de_navegacao(prazo, agora), erro_no_reload)
-        try:
-            page.wait_for_timeout(500)
-        except Exception as exc:  # pylint: disable=broad-except
-            if page.is_closed():
-                raise RuntimeError(_JANELA_FECHADA) from exc
-            raise
+        credencial = espera.credencial_pronta(time.monotonic())
+        if credencial is not None:
+            return credencial
+        _aguardar(page)
     raise RuntimeError(
         f"O login no gov.br nao terminou em {timeout:.0f}s ou o portal nao expos o token. "
         "Tente de novo com um timeout maior, ou copie o token do devtools e use auth(token)."

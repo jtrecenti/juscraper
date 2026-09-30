@@ -17,7 +17,7 @@ Resposta 200 cujo corpo não tem a forma esperada levanta
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, TypeVar
 
 import requests
 
@@ -25,6 +25,8 @@ from ...core.exceptions import InvalidJSONResponseError
 from ...core.http import RequestFn
 
 logger = logging.getLogger(__name__)
+
+_Forma = TypeVar("_Forma", list[Any], dict[str, Any])
 
 # Base URL completa da API DATALAKE - API Processos.
 BASE_URL = "https://api-processo-integracao.data-lake.pdpj.jus.br/processo-api/api/v1"
@@ -49,7 +51,7 @@ def _forma_invalida(response: requests.Response) -> InvalidJSONResponseError:
     )
 
 
-def _json(response: requests.Response, forma: type | tuple[type, ...]) -> Any:
+def _json(response: requests.Response, forma: type[_Forma]) -> _Forma:
     """Lê o corpo JSON e confere o tipo do topo.
 
     Corpo que não é JSON e JSON de outro tipo levantam o mesmo

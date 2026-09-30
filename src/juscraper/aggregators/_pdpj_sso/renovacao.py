@@ -9,7 +9,8 @@ import requests
 from ...core.failures import resumir_falhas
 from .credencial import MARGEM_RENOVACAO, CredencialPdpj, ler_exp, vigente
 
-TOKEN_URL = "https://sso.cloud.pje.jus.br/auth/realms/pje/protocol/openid-connect/token"  # nosec B105
+# URL do endpoint de token do SSO, nao uma senha.
+TOKEN_URL = "https://sso.cloud.pje.jus.br/auth/realms/pje/protocol/openid-connect/token"  # nosec B105  # noqa: S105
 # Cliente publico do portal de servicos: o Keycloak nao exige segredo na troca.
 CLIENT_ID = "portalexterno-frontend"
 

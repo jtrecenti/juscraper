@@ -14,7 +14,17 @@ import pytest
 
 from juscraper.aggregators._pdpj_sso import login
 from juscraper.aggregators._pdpj_sso.credencial import CredencialPdpj
-from juscraper.aggregators._pdpj_sso.login import PORTAL_CONSULTA, obter_credencial_govbr
+from juscraper.aggregators._pdpj_sso.login import (
+    PORTAL_CONSULTA,
+    _aguardar,
+    _Captura,
+    _corpo_json,
+    _encerrar,
+    _esperar_credencial,
+    _SessaoLogin,
+    _timeout_de_navegacao,
+    obter_credencial_govbr,
+)
 from tests.pdpj_sso._jwt import token
 
 _SSO = "https://sso.cloud.pje.jus.br/auth/realms/pje/protocol/openid-connect/auth?client_id=x"
@@ -30,7 +40,7 @@ def _requisicao(url, bearer):
     return "request", types.SimpleNamespace(url=url, headers={"authorization": f"Bearer {bearer}"})
 
 
-def _resposta_token(dados, ok=True):
+def _resposta_token(dados, *, ok=True):
     return "response", types.SimpleNamespace(
         url=_TOKEN, ok=ok, request=types.SimpleNamespace(method="POST"), json=lambda: dados,
     )
@@ -120,7 +130,7 @@ class _Processo:
     def terminate(self):
         self.encerrado = True
 
-    def wait(self, timeout=None):
+    def wait(self, **_kwargs):
         return 0
 
 
@@ -181,6 +191,27 @@ def test_so_o_cabecalho_da_access_sem_refresh_e_ignora_host_de_fora(mocker):
 
     assert obter_credencial_govbr(timeout=5) == CredencialPdpj(_DO_PORTAL, None)
     assert browser.processo.encerrado
+
+
+def test_corpo_de_token_descartado_pelo_navegador_nao_derruba_o_login(mocker):
+    """O ``Error`` do Playwright na leitura do corpo é ignorado, e a resposta seguinte vale."""
+
+    def corpo_descartado():
+        raise _ErroFalso("Response body is unavailable")
+
+    descartada = "response", types.SimpleNamespace(
+        url=_TOKEN, ok=True, request=types.SimpleNamespace(method="POST"), json=corpo_descartado,
+    )
+    _instalar_playwright_falso(
+        mocker,
+        [PORTAL_CONSULTA, _SSO, PORTAL_CONSULTA],
+        {
+            1: [descartada],
+            2: [_resposta_token({"access_token": "acesso", "refresh_token": "renovacao"})],
+        },
+    )
+
+    assert obter_credencial_govbr(timeout=5) == CredencialPdpj("acesso", "renovacao")
 
 
 def test_resposta_de_token_com_erro_e_ignorada(mocker):
@@ -392,7 +423,7 @@ def test_cancelamento_encerra_a_espera(mocker):
     page = types.SimpleNamespace(is_closed=lambda: False)
 
     with pytest.raises(RuntimeError, match="cancelado"):
-        login._esperar_credencial(page, login._Captura(), 5, cancelar, _ErroFalso)
+        _esperar_credencial(page, _Captura(), 5, cancelar, _ErroFalso)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="SIGINT enviado ao proprio processo")
@@ -441,9 +472,9 @@ def test_ctrl_c_nao_espera_worker_preso(mocker):
 
 
 def test_timeout_de_navegacao_tem_teto_e_respeita_o_prazo():
-    assert login._timeout_de_navegacao(prazo=1000.0, agora=0.0) == login.TIMEOUT_NAVEGACAO * 1000
-    assert login._timeout_de_navegacao(prazo=10.0, agora=5.0) == 5000
-    assert login._timeout_de_navegacao(prazo=10.0, agora=9.9) == 1000
+    assert _timeout_de_navegacao(prazo=1000.0, agora=0.0) == login.TIMEOUT_NAVEGACAO * 1000
+    assert _timeout_de_navegacao(prazo=10.0, agora=5.0) == 5000
+    assert _timeout_de_navegacao(prazo=10.0, agora=9.9) == 1000
 
 
 def test_toda_navegacao_do_portal_respeita_o_teto(mocker):
@@ -476,7 +507,7 @@ def test_abertura_lenta_do_portal_nao_interrompe_a_espera(mocker):
 
 def test_cancelar_fecha_o_navegador_registrado():
     processo = _Processo()
-    sessao = login._SessaoLogin()
+    sessao = _SessaoLogin()
     sessao.processo = cast(Any, processo)
 
     sessao.cancelar_e_fechar()
@@ -488,7 +519,7 @@ def test_cancelar_fecha_o_navegador_registrado():
 def test_abrir_navegador_cancelado_encerra_o_processo(mocker, tmp_path):
     processo = _Processo()
     mocker.patch.object(login.subprocess, "Popen", return_value=processo)
-    sessao = login._SessaoLogin()
+    sessao = _SessaoLogin()
     sessao.cancelar.set()
 
     with pytest.raises(RuntimeError, match="cancelado"):
@@ -509,7 +540,9 @@ def test_ctrl_c_com_worker_preso_nao_segura_a_saida_do_interpretador():
         "login.obter_credencial_govbr(timeout=5)\n"
     )
     inicio = time.monotonic()
-    completado = subprocess.run([sys.executable, "-c", codigo], capture_output=True, text=True, timeout=30)
+    completado = subprocess.run(
+        [sys.executable, "-c", codigo], capture_output=True, text=True, timeout=30, check=False,
+    )
 
     assert "KeyboardInterrupt" in completado.stderr
     assert time.monotonic() - inicio < 10
@@ -596,3 +629,107 @@ def test_log_do_reload_tolerado_nao_registra_a_mensagem(mocker, caplog):
     assert obter_credencial_govbr(timeout=5) == CredencialPdpj(_APOS_RELOAD, None)
     assert "_ErroFalso" in caplog.text
     assert "segredo" not in caplog.text
+
+
+def test_localizar_navegador_informado_no_path_usa_o_encontrado(mocker):
+    mocker.patch.object(login.shutil, "which", return_value="/usr/bin/chromium")
+    assert login.localizar_navegador("chromium") == "/usr/bin/chromium"
+
+
+def test_encerrar_processo_ja_fechado_nao_o_termina():
+    class _JaFechado(_Processo):
+        def terminate(self):
+            raise AssertionError("processo ja fechado nao se termina")
+
+    processo = _JaFechado()
+    processo.encerrado = True
+
+    _encerrar(cast(Any, processo))
+
+
+def test_encerrar_processo_que_nao_fecha_no_prazo_o_mata():
+    chamadas: list[str] = []
+
+    class _Teimoso(_Processo):
+        def terminate(self):
+            chamadas.append("terminate")
+
+        def wait(self, **kwargs):
+            chamadas.append(f"wait {kwargs}")
+            if kwargs:
+                raise subprocess.TimeoutExpired("chrome", kwargs["timeout"])
+            return 0
+
+        def kill(self):
+            chamadas.append("kill")
+
+    _encerrar(cast(Any, _Teimoso()))
+
+    assert chamadas == ["terminate", "wait {'timeout': 10}", "kill", "wait {}"]
+
+
+def test_captura_guarda_o_primeiro_bearer_e_ignora_cabecalho_que_nao_e_bearer():
+    captura = _Captura()
+    primeiro, segundo = token(sub="primeiro"), token(sub="segundo")
+    basic = types.SimpleNamespace(url=_API, headers={"authorization": "Basic abc"})
+
+    captura.ao_requisitar(basic)
+    assert captura.bearer is None
+    captura.ao_requisitar(_requisicao(_API, primeiro)[1])
+    captura.ao_requisitar(_requisicao(_API, segundo)[1])
+
+    assert captura.bearer == primeiro
+
+
+def test_resposta_de_token_sem_refresh_vence_o_bearer():
+    captura = _Captura()
+    acesso = token(sub="do-sso")
+    captura.ao_requisitar(_requisicao(_API, token(sub="do-portal"))[1])
+    captura.ao_responder(_resposta_token({"access_token": acesso})[1])
+
+    captura.processar()
+
+    assert captura.resultado() == CredencialPdpj(acesso)
+
+
+class _ErroDeLeitura(Exception):
+    """Faz o papel do ``Error`` do Playwright na leitura do corpo."""
+
+
+def _resposta_que_levanta(erro):
+    def json():
+        raise erro
+
+    return types.SimpleNamespace(ok=True, json=json)
+
+
+@pytest.mark.parametrize("erro", [ValueError("nao e JSON"), _ErroDeLeitura("corpo descartado")])
+def test_corpo_ilegivel_vira_dicionario_vazio(erro):
+    assert _corpo_json(cast(Any, _resposta_que_levanta(erro)), (ValueError, _ErroDeLeitura)) == {}
+
+
+def test_erro_fora_dos_de_leitura_sobe():
+    with pytest.raises(KeyError):
+        _corpo_json(cast(Any, _resposta_que_levanta(KeyError("bug"))), (ValueError, _ErroDeLeitura))
+
+
+def test_corpo_que_nao_e_objeto_vira_dicionario_vazio():
+    resposta = types.SimpleNamespace(ok=True, json=lambda: ["lista"])
+    assert _corpo_json(cast(Any, resposta), (ValueError,)) == {}
+
+
+def _page_que_falha_na_espera(*, fechada):
+    def wait_for_timeout(_ms):
+        raise _ErroFalso("Target closed")
+
+    return types.SimpleNamespace(wait_for_timeout=wait_for_timeout, is_closed=lambda: fechada)
+
+
+def test_espera_interrompida_com_janela_fechada_diz_que_fechou():
+    with pytest.raises(RuntimeError, match="janela"):
+        _aguardar(cast(Any, _page_que_falha_na_espera(fechada=True)))
+
+
+def test_espera_interrompida_com_janela_aberta_sobe_o_erro():
+    with pytest.raises(_ErroFalso, match="Target closed"):
+        _aguardar(cast(Any, _page_que_falha_na_espera(fechada=False)))

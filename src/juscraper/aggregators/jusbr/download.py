@@ -72,7 +72,7 @@ def fetch_process_list(
             ``content`` de objetos.
     """
     url = f"{base_api_url}?numeroProcesso={cnj_cleaned}"
-    logger.debug("Fetching process list from: %s", url)
+    logger.debug("Buscando a lista de processos em %s", url)
     try:
         response = request_fn("GET", url, perfil="listagem", expect_json=True)
     except requests.HTTPError as exc:
@@ -106,7 +106,7 @@ def fetch_process_details(
             lista cujo primeiro item é objeto.
     """
     url = f"{base_api_url}{numero_processo_oficial}"
-    logger.debug("Fetching process details from: %s", url)
+    logger.debug("Buscando os detalhes do processo em %s", url)
     response = request_fn("GET", url, perfil="listagem", expect_json=True)
     data = response.json()
     if isinstance(data, dict):
@@ -155,15 +155,16 @@ def fetch_document_text(
     response = request_fn("GET", doc_url, headers=request_headers, perfil="documento")
     try:
         content_str: str = response.content.decode('utf-8')
-        return content_str
     except UnicodeDecodeError:
         logger.warning(
-            "UTF-8 decoding failed for document %s of process %s."
-            "Falling back to response.text (detected encoding: %s)",
+            "Decodificação UTF-8 falhou no documento %s do processo %s; "
+            "usando response.text (encoding detectado: %s).",
             id_documento, numero_processo, response.encoding
         )
-        fallback: str = response.text  # Fallback to requests' auto-detected encoding
+        # O requests adivinha o encoding pelos cabeçalhos e pelo corpo.
+        fallback: str = response.text
         return fallback
+    return content_str
 
 
 def fetch_document_binary(
@@ -182,7 +183,7 @@ def fetch_document_binary(
     doc_url = (
         f"{base_api_url_docs.rstrip('/')}/{numero_processo_param}/documentos/{id_documento}/binario"
     )
-    logger.debug("Fetching document binary from: %s", doc_url)
+    logger.debug("Buscando o binário do documento em %s", doc_url)
     response = request_fn("GET", doc_url, perfil="documento")
     content: bytes = response.content
     return content
