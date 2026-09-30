@@ -30,6 +30,7 @@ class PdpjSsoMixin:
     token: str | None
 
     def auth(self, token: str) -> bool:  # pragma: no cover - sobrescrito pelas classes concretas
+        """Valida ``token`` e o instala na sessao; cada scraper tem a sua validacao."""
         raise NotImplementedError
 
     def _instalar_credencial(self, credencial: CredencialPdpj, salvar_renovacao: bool) -> AuthPdpj:

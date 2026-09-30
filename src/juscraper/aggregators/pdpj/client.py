@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import logging
 import time
-import warnings
 from collections.abc import Callable, Iterator
 from typing import Any, cast
 
@@ -18,10 +17,11 @@ import requests
 from pydantic import ValidationError
 
 from ...core.base import BaseScraper
+from ...core.failures import STATUS_TOKEN_INVALIDO, anotar_falhas_anteriores, avisar_falhas
 from ...utils.cnj import clean_cnj
 from ...utils.params import normalize_paginas, raise_on_extra_kwargs
 from .._pdpj_sso import CredencialPdpj, PdpjSsoMixin
-from .._pdpj_sso.renovacao import ErroSsoPdpj
+from .._pdpj_sso.renovacao import ErroSsoPdpj, anotar_falhas_antes_do_sso
 from .download import (
     BASE_URL,
     USER_AGENT,
@@ -148,18 +148,9 @@ def _document_to_row(
     }
 
 
-# 401 indica token ausente, expirado ou inválido. Esse erro vale para todos
-# os documentos do lote, então propaga em vez de virar linha vazia: engolir o
-# erro produziria um DataFrame inteiro de ``texto=None``, sem que o usuário
-# percebesse que precisa renovar o token. O 403 fica de fora de propósito:
-# com token válido, a API pode negar um documento só (um sigiloso, por
-# exemplo), e propagar descartaria o lote inteiro por causa dele. Por isso o
-# 403 segue o caminho dos demais erros HTTP: linha vazia e entrada no aviso.
-_STATUS_TOKEN_INVALIDO = 401
-
-# Quantas falhas o aviso agregado de :meth:`PdpjScraper.download_documents`
-# cita por extenso; as demais entram so na contagem.
-_EXEMPLOS_NO_AVISO = 3
+# Descrição das falhas no aviso agregado e na nota do 401 de
+# :meth:`PdpjScraper.download_documents`.
+_DESCRICAO_FALHAS = "download(s) de documento"
 
 
 def _buscar_conteudo(
@@ -182,33 +173,13 @@ def _buscar_conteudo(
         conteudo = buscar(session, cnj_limpo, id_documento, base_url=base_url)
     except requests.HTTPError as exc:
         status = exc.response.status_code if exc.response is not None else None
-        if status == _STATUS_TOKEN_INVALIDO:
+        if status == STATUS_TOKEN_INVALIDO:
             raise
         falhas.append(f"{descricao}: HTTP {status}")
         return None
     if conteudo is None:
         falhas.append(f"{descricao}: sem resposta (retry esgotado ou erro de conexão)")
     return conteudo
-
-
-def _resumir_falhas(falhas: list[str]) -> str:
-    """Contagem e alguns exemplos das falhas, para o aviso e para a nota do 401."""
-    exemplos = falhas[:_EXEMPLOS_NO_AVISO]
-    if len(falhas) > len(exemplos):
-        exemplos = [*exemplos, f"e mais {len(falhas) - len(exemplos)}"]
-    return f"{len(falhas)} download(s) de documento falharam. Falhas: {'; '.join(exemplos)}."
-
-
-def _avisar_falhas(falhas: list[str]) -> None:
-    """Emite um único ``UserWarning`` ao fim de uma coleta concluída."""
-    if not falhas:
-        return
-    warnings.warn(
-        f"PdpjScraper.download_documents: {_resumir_falhas(falhas)} "
-        "As linhas correspondentes saem com o conteúdo None.",
-        UserWarning,
-        stacklevel=3,
-    )
 
 
 class PdpjScraper(PdpjSsoMixin, BaseScraper):
@@ -606,24 +577,19 @@ class PdpjScraper(PdpjSsoMixin, BaseScraper):
         rows: list[dict[str, Any]] = []
         falhas: list[str] = []
         # Quando o 401 interrompe o lote, as falhas anteriores viram nota do
-        # próprio ``HTTPError`` em vez de aviso: um ``warnings.warn`` durante a
-        # propagação, com avisos promovidos a erro (``-W error``), trocaria o
-        # 401 por um ``UserWarning`` e esconderia a causa real.
+        # próprio erro, e não aviso (ver ``anotar_falhas_anteriores``).
         try:
             for processo, grupo in docs_df.groupby("processo", sort=False):
                 rows.extend(self._download_process_documents(
                     grupo, processo, max_docs_per_process, with_text, with_binary, falhas,
                 ))
         except requests.HTTPError as erro:
-            if falhas:
-                erro.add_note(f"Antes do 401, {_resumir_falhas(falhas)}")
+            anotar_falhas_anteriores(erro, falhas, _DESCRICAO_FALHAS)
             raise
         except ErroSsoPdpj as erro:
-            # Mesma regra do 401: a falha do SSO ao renovar o token para o lote.
-            if falhas:
-                erro.add_note(f"Antes da falha do SSO, {_resumir_falhas(falhas)}")
+            anotar_falhas_antes_do_sso(erro, falhas, _DESCRICAO_FALHAS)
             raise
-        _avisar_falhas(falhas)
+        avisar_falhas(falhas, "PdpjScraper.download_documents", _DESCRICAO_FALHAS)
         return pd.DataFrame(rows)
 
     def _download_process_documents(
@@ -661,7 +627,7 @@ class PdpjScraper(PdpjSsoMixin, BaseScraper):
         """Baixa os conteúdos selecionados para uma linha de documento.
 
         Falha de download de texto ou binario vira ``None`` na coluna e uma
-        entrada em ``falhas``; o 401 propaga (ver ``_STATUS_TOKEN_INVALIDO``).
+        entrada em ``falhas``; o 401 propaga (ver ``STATUS_TOKEN_INVALIDO``).
         """
         row = cast(dict[str, Any], doc_row.to_dict())
         id_documento = row.get("id_documento")

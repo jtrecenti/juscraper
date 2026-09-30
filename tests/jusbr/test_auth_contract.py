@@ -10,8 +10,11 @@ padrao e o ramo ``except jwt.ExpiredSignatureError`` virava dead code. Agora
 tokens expirados levantam ``ValueError("Token JWT expirado.")`` como
 documentado.
 """
+import json
+
 import jwt
 import pytest
+import requests
 
 import juscraper as jus
 from tests._helpers import assert_unknown_kwarg_raises
@@ -85,3 +88,141 @@ def test_auth_kwarg_desconhecido_levanta_type_error():
     assert_unknown_kwarg_raises(
         scraper.auth, "kwarg_inventado", _token({"sub": "tester", "exp": 9999999999})
     )
+
+
+# ---------------------------------------------------------------------------
+# Construtor com token= e auth() que falha
+# ---------------------------------------------------------------------------
+
+
+def test_construtor_valida_token_pelo_auth():
+    token = _token({"sub": "tester", "exp": 9999999999})
+    scraper = jus.scraper("jusbr", token=token)
+    assert scraper.token == token
+    assert scraper.session.headers["authorization"] == f"Bearer {token}"
+
+
+@pytest.mark.parametrize(
+    ("token", "mensagem"),
+    [(_token({"sub": "tester", "exp": 0}), "expirado"), ("not-a-jwt", r"inv[áa]lido"), ("", r"inv[áa]lido")],
+    ids=["vencido", "malformado", "vazio"],
+)
+def test_construtor_com_token_recusado_levanta_value_error(token, mensagem):
+    with pytest.raises(ValueError, match=mensagem):
+        jus.scraper("jusbr", token=token)
+
+
+@pytest.mark.parametrize(
+    "recusado", [_token({"sub": "tester", "exp": 0}), "not-a-jwt"], ids=["vencido", "malformado"],
+)
+def test_auth_recusado_preserva_token_e_header_anteriores(recusado):
+    valido = _token({"sub": "tester", "exp": 9999999999})
+    scraper = jus.scraper("jusbr", token=valido)
+
+    with pytest.raises(ValueError):
+        scraper.auth(recusado)
+
+    assert scraper.token == valido
+    assert scraper.session.headers["authorization"] == f"Bearer {valido}"
+
+
+# ---------------------------------------------------------------------------
+# auth_firefox, com a sessão do SSO simulada
+# ---------------------------------------------------------------------------
+
+_LOCATION_COM_CODE = "https://portaldeservicos.pdpj.jus.br/home#state=1234&code=codigo-sso"
+
+
+def _resposta(status: int = 200, headers: dict | None = None, corpo=None, texto: str | None = None):
+    resp = requests.Response()
+    resp.status_code = status
+    resp.headers.update(headers or {})
+    if corpo is not None:
+        resp._content = json.dumps(corpo).encode()
+    else:
+        resp._content = (texto or "").encode()
+    return resp
+
+
+@pytest.fixture
+def preparar_sso(mocker):
+    """Cria o scraper e depois simula a sessão avulsa que ``auth_firefox`` abre.
+
+    A ordem importa: o patch de ``requests.Session`` alcançaria também a
+    sessão do próprio scraper, se ele fosse criado depois.
+    """
+    def preparar(**kwargs):
+        scraper = jus.scraper("jusbr", **kwargs)
+        mocker.patch("juscraper.aggregators.jusbr.client.browser_cookie3.firefox", return_value={})
+        sessao = mocker.MagicMock()
+        mocker.patch("juscraper.aggregators.jusbr.client.requests.Session", return_value=sessao)
+        return scraper, sessao
+    return preparar
+
+
+def test_auth_firefox_troca_o_code_pelo_token_e_passa_pelo_auth(preparar_sso):
+    token = _token({"sub": "tester", "exp": 9999999999})
+    scraper, sessao_sso = preparar_sso()
+    sessao_sso.get.return_value = _resposta(302, {"Location": _LOCATION_COM_CODE})
+    sessao_sso.post.return_value = _resposta(corpo={"access_token": token})
+
+    assert scraper.auth_firefox() is True
+
+    assert scraper.token == token
+    assert scraper.session.headers["authorization"] == f"Bearer {token}"
+    assert sessao_sso.post.call_args.kwargs["data"]["code"] == "codigo-sso"
+    assert sessao_sso.get.call_args.kwargs["timeout"] == 15
+    assert sessao_sso.post.call_args.kwargs["timeout"] == 15
+
+
+def test_auth_firefox_usa_timeout_da_politica(preparar_sso):
+    scraper, sessao_sso = preparar_sso(politica={"listagem": {"timeout": 4}})
+    sessao_sso.get.return_value = _resposta(302, {"Location": _LOCATION_COM_CODE})
+    sessao_sso.post.return_value = _resposta(corpo={"access_token": _token({"sub": "t"})})
+
+    scraper.auth_firefox()
+
+    assert sessao_sso.get.call_args.kwargs["timeout"] == 4
+
+
+def test_auth_firefox_sem_location_levanta_runtime_error(preparar_sso):
+    scraper, sessao_sso = preparar_sso()
+    sessao_sso.get.return_value = _resposta(200)
+    with pytest.raises(RuntimeError, match="Location"):
+        scraper.auth_firefox()
+
+
+def test_auth_firefox_sem_code_levanta_runtime_error(preparar_sso):
+    scraper, sessao_sso = preparar_sso()
+    sessao_sso.get.return_value = _resposta(302, {"Location": "https://x.test/home#error=login_required"})
+    with pytest.raises(RuntimeError, match="code"):
+        scraper.auth_firefox()
+
+
+@pytest.mark.parametrize(
+    "resposta",
+    [
+        _resposta(400, corpo={"error": "invalid_grant"}),
+        _resposta(200, texto="<html>erro</html>"),
+        _resposta(200, corpo=["access_token"]),
+    ],
+    ids=["sem-chave", "sem-json", "lista"],
+)
+def test_auth_firefox_sem_access_token_levanta_runtime_error(preparar_sso, resposta):
+    scraper, sessao_sso = preparar_sso()
+    sessao_sso.get.return_value = _resposta(302, {"Location": _LOCATION_COM_CODE})
+    sessao_sso.post.return_value = resposta
+
+    with pytest.raises(RuntimeError, match="access_token"):
+        scraper.auth_firefox()
+    assert scraper.token is None
+
+
+def test_auth_firefox_token_vencido_levanta_value_error(preparar_sso):
+    scraper, sessao_sso = preparar_sso()
+    sessao_sso.get.return_value = _resposta(302, {"Location": _LOCATION_COM_CODE})
+    sessao_sso.post.return_value = _resposta(corpo={"access_token": _token({"sub": "t", "exp": 0})})
+
+    with pytest.raises(ValueError, match="expirado"):
+        scraper.auth_firefox()
+    assert scraper.token is None

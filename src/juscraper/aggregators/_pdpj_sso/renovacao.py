@@ -6,6 +6,7 @@ from collections.abc import Callable
 import jwt
 import requests
 
+from ...core.failures import resumir_falhas
 from .credencial import MARGEM_RENOVACAO, CredencialPdpj, ler_exp, vigente
 
 TOKEN_URL = "https://sso.cloud.pje.jus.br/auth/realms/pje/protocol/openid-connect/token"  # nosec B105
@@ -20,6 +21,17 @@ class ErroSsoPdpj(RuntimeError):
     scrapers tratam essas excecoes como falha do documento ou do processo, e uma
     falha do SSO viraria texto ``None`` ou "processo nao encontrado" em silencio.
     """
+
+
+def anotar_falhas_antes_do_sso(erro: ErroSsoPdpj, falhas: list[str], descricao: str) -> None:
+    """Anexa ao erro do SSO as falhas do lote que vieram antes dele.
+
+    Mesmo tratamento que ``anotar_falhas_anteriores`` (``juscraper.core.failures``)
+    da ao 401: a falha do SSO tambem interrompe o lote, e as falhas anteriores
+    vao numa nota do erro, e nao num aviso.
+    """
+    if falhas:
+        erro.add_note(f"Antes da falha do SSO, {resumir_falhas(falhas, descricao)}")
 
 
 class RenovacaoPdpjError(ErroSsoPdpj):
@@ -103,6 +115,7 @@ class AuthPdpj(requests.auth.AuthBase):
         self._ultima_recusa = _MENSAGEM_RECUSA
 
     def __call__(self, requisicao: requests.PreparedRequest) -> requests.PreparedRequest:
+        """Poe o access token na requisicao, renovando-o antes se estiver para vencer."""
         if self.credencial.refresh_token is not None and not vigente(self.credencial.access_token, MARGEM_RENOVACAO):
             self._renovar()
         requisicao.headers["Authorization"] = f"Bearer {self.credencial.access_token}"
