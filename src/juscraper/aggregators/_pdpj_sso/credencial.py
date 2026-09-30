@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import jwt
 
@@ -20,8 +20,10 @@ class CredencialPdpj:
     sem a resposta do endpoint de token).
     """
 
-    access_token: str
-    refresh_token: str | None = None
+    # ``repr=False``: o repr aparece em traceback com variaveis locais
+    # (``pytest -l``, Sentry, IPython verboso) e nao pode levar o token.
+    access_token: str = field(repr=False)
+    refresh_token: str | None = field(default=None, repr=False)
 
 
 def ler_exp(token: str) -> float | None:

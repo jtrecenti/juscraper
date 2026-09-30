@@ -85,3 +85,23 @@ def test_sem_auth_a_mensagem_cita_auth_govbr(nome):
     scraper = jus.scraper(nome)
     with pytest.raises(RuntimeError, match="auth_govbr"):
         scraper.cpopg("0000000-00.0000.0.00.0000")
+
+
+def test_salvar_false_tambem_nao_grava_as_renovacoes(mocker, scraper):
+    mocker.patch(_LOGIN, return_value=CredencialPdpj(token(), token(7200)))
+    scraper.auth_govbr(salvar=False)
+
+    assert scraper.session.auth.ler_cache is None
+    scraper.session.auth.ao_renovar(CredencialPdpj(token(sub="renovado"), token(7200)))
+
+    assert not caminho_cache().exists()
+
+
+def test_falha_ao_gravar_o_cache_nao_derruba_o_login(mocker, scraper, caplog):
+    credencial = CredencialPdpj(token(), token(7200))
+    mocker.patch(_LOGIN, return_value=credencial)
+    mocker.patch("juscraper.aggregators._pdpj_sso.mixin.salvar_credencial", side_effect=PermissionError("sem escrita"))
+
+    assert scraper.auth_govbr() is True
+    assert scraper.token == credencial.access_token
+    assert "Nao foi possivel gravar" in caplog.text

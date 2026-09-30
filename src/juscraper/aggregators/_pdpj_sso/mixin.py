@@ -8,7 +8,7 @@ import requests
 from pydantic import BaseModel, ValidationError
 
 from ...utils.params import raise_on_extra_kwargs
-from .cache import carregar_credencial_padrao, salvar_credencial
+from .cache import carregar_credencial_cache, carregar_credencial_padrao, salvar_credencial
 from .credencial import CredencialPdpj
 from .login import obter_credencial_govbr
 from .renovacao import AuthPdpj
@@ -44,12 +44,15 @@ class PdpjSsoMixin:
             self.token = nova.access_token
             self.session.headers["Authorization"] = f"Bearer {nova.access_token}"
             if salvar_renovacao:
-                salvar_credencial(nova)
-            logger.info("Token do PDPJ renovado pelo refresh token.")
+                _salvar_sem_derrubar(nova)
+            logger.info("Token do PDPJ renovado.")
 
         self.token = credencial.access_token
         self.session.headers["Authorization"] = f"Bearer {credencial.access_token}"
-        self.session.auth = AuthPdpj(credencial, ao_renovar)
+        # Credencial que vive no cache tambem renova pelo cache, para aproveitar
+        # a renovacao feita por outra instancia.
+        ler_cache = carregar_credencial_cache if salvar_renovacao else None
+        self.session.auth = AuthPdpj(credencial, ao_renovar, ler_cache)
 
     def _carregar_credencial_padrao(self) -> None:
         """Autentica com a primeira credencial valida do ambiente ou do cache."""
@@ -115,11 +118,24 @@ class PdpjSsoMixin:
         self.auth(credencial.access_token)
         self._instalar_credencial(credencial, salvar_renovacao=inp.salvar)
         if inp.salvar:
-            caminho = salvar_credencial(credencial)
-            logger.info("Token do PDPJ gravado em %s.", caminho)
+            _salvar_sem_derrubar(credencial)
         if credencial.refresh_token is None:
             logger.warning(
                 "O portal nao entregou refresh token; quando o access token vencer, "
                 "sera preciso chamar auth_govbr() de novo."
             )
         return True
+
+
+def _salvar_sem_derrubar(credencial: CredencialPdpj) -> None:
+    """Grava o cache; uma falha vira aviso, porque a credencial ja esta em uso.
+
+    Sem isso, um diretorio sem permissao de escrita derrubaria um login que deu
+    certo, ou a requisicao que disparou a renovacao.
+    """
+    try:
+        caminho = salvar_credencial(credencial)
+    except OSError as exc:
+        logger.warning("Nao foi possivel gravar o cache do token do PDPJ: %s", exc)
+        return
+    logger.info("Token do PDPJ gravado em %s.", caminho)

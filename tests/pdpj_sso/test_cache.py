@@ -99,3 +99,8 @@ def test_access_vencido_sem_refresh_vigente_nao_e_carregado():
 def test_access_malformado_nao_e_carregado(monkeypatch):
     monkeypatch.setenv("PDPJ_JWT", "nao-e-jwt")
     assert jus.scraper("pdpj").token is None
+
+
+def test_repr_nao_mostra_os_tokens():
+    credencial = CredencialPdpj("ACCESS-SECRETO", "REFRESH-SECRETO")
+    assert "SECRETO" not in repr(credencial)

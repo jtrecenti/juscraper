@@ -1,6 +1,10 @@
 """Login gov.br com um Playwright falso (sem navegador nem rede)."""
 import asyncio
+import os
+import signal
 import sys
+import threading
+import time
 import types
 from contextlib import contextmanager
 from typing import Any, cast
@@ -10,10 +14,15 @@ import pytest
 from juscraper.aggregators._pdpj_sso import login
 from juscraper.aggregators._pdpj_sso.credencial import CredencialPdpj
 from juscraper.aggregators._pdpj_sso.login import PORTAL_CONSULTA, obter_credencial_govbr
+from tests.pdpj_sso._jwt import token
 
 _SSO = "https://sso.cloud.pje.jus.br/auth/realms/pje/protocol/openid-connect/auth?client_id=x"
 _TOKEN = "https://sso.cloud.pje.jus.br/auth/realms/pje/protocol/openid-connect/token"
 _API = "https://portaldeservicos.pdpj.jus.br/api/v2/processos/?numeroProcesso=1"
+# O login so aceita bearer que seja JWT; os nomes ficam no claim ``sub``.
+_DO_PORTAL = token(sub="do-portal")
+_DE_FORA = token(sub="de-fora")
+_APOS_RELOAD = token(sub="apos-reload")
 
 
 def _requisicao(url, bearer):
@@ -136,7 +145,7 @@ def test_resposta_do_endpoint_de_token_da_access_e_refresh(mocker):
         {2: [_resposta_token({"access_token": "acesso", "refresh_token": "renovacao"})]},
     )
 
-    assert obter_credencial_govbr() == CredencialPdpj("acesso", "renovacao")
+    assert obter_credencial_govbr(timeout=5) == CredencialPdpj("acesso", "renovacao")
 
     launch.assert_called_once_with("http://127.0.0.1:9222")
     assert browser.context.page.gotos == [PORTAL_CONSULTA]
@@ -148,12 +157,12 @@ def test_so_o_cabecalho_da_access_sem_refresh_e_ignora_host_de_fora(mocker):
         mocker,
         [PORTAL_CONSULTA, _SSO, PORTAL_CONSULTA],
         {
-            1: [_requisicao("https://www.gov.br/api", "de-fora")],
-            2: [_requisicao(_API, "do-portal")],
+            1: [_requisicao("https://www.gov.br/api", _DE_FORA)],
+            2: [_requisicao(_API, _DO_PORTAL)],
         },
     )
 
-    assert obter_credencial_govbr() == CredencialPdpj("do-portal", None)
+    assert obter_credencial_govbr(timeout=5) == CredencialPdpj(_DO_PORTAL, None)
     assert browser.processo.encerrado
 
 
@@ -163,22 +172,22 @@ def test_resposta_de_token_com_erro_e_ignorada(mocker):
         [PORTAL_CONSULTA, _SSO, PORTAL_CONSULTA],
         {
             1: [_resposta_token({"access_token": "nao-deveria"}, ok=False)],
-            2: [_requisicao(_API, "do-portal")],
+            2: [_requisicao(_API, _DO_PORTAL)],
         },
     )
 
-    assert obter_credencial_govbr() == CredencialPdpj("do-portal", None)
+    assert obter_credencial_govbr(timeout=5) == CredencialPdpj(_DO_PORTAL, None)
 
 
 def test_volta_ao_portal_sem_token_recarrega_a_consulta_uma_vez(mocker):
     _, browser = _instalar_playwright_falso(
         mocker,
         [PORTAL_CONSULTA, _SSO, "https://portaldeservicos.pdpj.jus.br/home"],
-        {"goto": [_requisicao(_API, "apos-reload")]},
+        {"goto": [_requisicao(_API, _APOS_RELOAD)]},
     )
 
     # Prazo curto: se o reload regredir, o teste falha em segundos em vez de esperar 300 s.
-    assert obter_credencial_govbr(timeout=5) == CredencialPdpj("apos-reload", None)
+    assert obter_credencial_govbr(timeout=5) == CredencialPdpj(_APOS_RELOAD, None)
     assert browser.context.page.gotos == [PORTAL_CONSULTA, PORTAL_CONSULTA]
 
 
@@ -196,7 +205,7 @@ def test_janela_fechada_levanta(mocker):
     _, browser = _instalar_playwright_falso(mocker, [PORTAL_CONSULTA, _SSO], {}, fecha_no_passo=2)
 
     with pytest.raises(RuntimeError, match="fechada"):
-        obter_credencial_govbr()
+        obter_credencial_govbr(timeout=5)
 
     assert browser.processo.encerrado
 
@@ -252,3 +261,90 @@ def test_abrir_navegador_que_fecha_ao_abrir_levanta(mocker, tmp_path):
 
     with pytest.raises(RuntimeError, match="fechou logo ao abrir"):
         login.abrir_navegador("/usr/bin/google-chrome", tmp_path)
+
+
+def test_bearer_que_nao_e_jwt_e_ignorado(mocker):
+    _instalar_playwright_falso(
+        mocker,
+        [PORTAL_CONSULTA, _SSO, PORTAL_CONSULTA],
+        {1: [_requisicao(_API, "undefined")], 2: [_requisicao(_API, _DO_PORTAL)]},
+    )
+
+    assert obter_credencial_govbr(timeout=5) == CredencialPdpj(_DO_PORTAL, None)
+
+
+def test_com_bearer_espera_a_resposta_de_token_para_ter_o_refresh(mocker, monkeypatch):
+    # Espera real maior que os passos do falso: a resposta de token chega dois
+    # passos depois do cabecalho e ainda dentro da janela de espera.
+    monkeypatch.setattr(login, "ESPERA_PELO_REFRESH", 30.0)
+    _instalar_playwright_falso(
+        mocker,
+        [PORTAL_CONSULTA, _SSO, PORTAL_CONSULTA],
+        {
+            2: [_requisicao(_API, _DO_PORTAL)],
+            4: [_resposta_token({"access_token": _DO_PORTAL, "refresh_token": "renovacao"})],
+        },
+    )
+
+    assert obter_credencial_govbr(timeout=5) == CredencialPdpj(_DO_PORTAL, "renovacao")
+
+
+def test_reload_lento_nao_interrompe_a_espera(mocker):
+    _, browser = _instalar_playwright_falso(
+        mocker,
+        [PORTAL_CONSULTA, _SSO, "https://portaldeservicos.pdpj.jus.br/home"],
+        {6: [_requisicao(_API, _APOS_RELOAD)]},
+    )
+    goto_original = _Page.goto
+
+    def goto(self, url, **kwargs):
+        goto_original(self, url, **kwargs)
+        if len(self.gotos) > 1:
+            raise TimeoutError("Timeout 30000ms exceeded")
+
+    mocker.patch.object(_Page, "goto", goto)
+
+    assert obter_credencial_govbr(timeout=5) == CredencialPdpj(_APOS_RELOAD, None)
+    assert browser.processo.encerrado
+
+
+def test_cancelamento_encerra_a_espera(mocker):
+    _instalar_playwright_falso(mocker, [PORTAL_CONSULTA], {})
+    cancelar = threading.Event()
+    cancelar.set()
+    page = types.SimpleNamespace(is_closed=lambda: False)
+
+    with pytest.raises(RuntimeError, match="cancelado"):
+        login._esperar_credencial(page, login._Captura(), 5, cancelar)
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="SIGINT enviado ao proprio processo")
+def test_ctrl_c_chega_ao_chamador_sem_esperar_o_worker(mocker):
+    cancelado = threading.Event()
+
+    def worker(_timeout, _navegador, cancelar):
+        cancelar.wait(10)
+        cancelado.set()
+        raise RuntimeError("Login no gov.br cancelado.")
+
+    mocker.patch.object(login, "_obter_credencial", side_effect=worker)
+    # SIGINT real, como o do Ctrl-C: ``interrupt_main`` nao acorda o ``result()`` bloqueado.
+    threading.Timer(0.2, os.kill, args=(os.getpid(), signal.SIGINT)).start()
+    inicio = time.monotonic()
+
+    with pytest.raises(KeyboardInterrupt):
+        obter_credencial_govbr(timeout=5)
+
+    assert time.monotonic() - inicio < 5
+    assert cancelado.wait(5)
+
+
+def test_abrir_navegador_sem_porta_no_prazo_encerra_o_processo(mocker, tmp_path):
+    processo = _Processo()
+    mocker.patch.object(login.subprocess, "Popen", return_value=processo)
+    mocker.patch.object(login, "ESPERA_PELA_PORTA", 0.3)
+
+    with pytest.raises(RuntimeError, match="porta de depuracao"):
+        login.abrir_navegador("/usr/bin/google-chrome", tmp_path)
+
+    assert processo.encerrado

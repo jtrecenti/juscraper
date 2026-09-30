@@ -15,16 +15,22 @@ depuracao, e o Playwright so se conecta por CDP para escutar a rede.
 """
 from __future__ import annotations
 
+import logging
 import shutil
 import subprocess  # nosec B404
 import tempfile
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
-from .credencial import CredencialPdpj
+import jwt
+
+from .credencial import CredencialPdpj, ler_exp
+
+logger = logging.getLogger(__name__)
 
 PORTAL_CONSULTA = "https://portaldeservicos.pdpj.jus.br/consulta"
 _HOST_PORTAL = "portaldeservicos.pdpj.jus.br"
@@ -71,9 +77,21 @@ def obter_credencial_govbr(timeout: float = 300.0, navegador: str | None = None)
         RuntimeError: Quando nao ha navegador, a janela e fechada ou o prazo
             acaba sem token.
     """
-    # O Playwright sincrono exige uma thread sem o loop ativo do Jupyter.
-    with ThreadPoolExecutor(max_workers=1) as executor:
-        return executor.submit(_obter_credencial, timeout, navegador).result()
+    # O Playwright sincrono exige uma thread sem o loop ativo do Jupyter. Sem
+    # ``with``: a saida do ``with`` esperaria o worker, e o Ctrl-C so chegaria
+    # quando a janela fechasse. O evento avisa o worker para fechar o navegador.
+    cancelar = threading.Event()
+    executor = ThreadPoolExecutor(max_workers=1)
+    futuro = executor.submit(_obter_credencial, timeout, navegador, cancelar)
+    concluiu = False
+    try:
+        credencial = futuro.result()
+        concluiu = True
+        return credencial
+    finally:
+        if not concluiu:
+            cancelar.set()
+        executor.shutdown(wait=False)
 
 
 def localizar_navegador(navegador: str | None = None) -> str:
@@ -152,7 +170,7 @@ def _encerrar(processo: subprocess.Popen[bytes]) -> None:
         processo.wait()
 
 
-def _obter_credencial(timeout: float, navegador: str | None) -> CredencialPdpj:
+def _obter_credencial(timeout: float, navegador: str | None, cancelar: threading.Event) -> CredencialPdpj:
     try:
         from playwright.sync_api import sync_playwright  # pylint: disable=import-outside-toplevel
     except ImportError as exc:
@@ -163,7 +181,10 @@ def _obter_credencial(timeout: float, navegador: str | None) -> CredencialPdpj:
         ) from exc
 
     executavel = localizar_navegador(navegador)
-    with tempfile.TemporaryDirectory(prefix="juscraper-govbr-") as diretorio:
+    # ``ignore_cleanup_errors``: no Windows, processos filhos do navegador podem
+    # segurar arquivos do perfil por um instante, e o erro da limpeza trocaria a
+    # credencial ja obtida por uma excecao.
+    with tempfile.TemporaryDirectory(prefix="juscraper-govbr-", ignore_cleanup_errors=True) as diretorio:
         processo, porta = abrir_navegador(executavel, Path(diretorio))
         try:
             with sync_playwright() as pw:
@@ -174,7 +195,7 @@ def _obter_credencial(timeout: float, navegador: str | None) -> CredencialPdpj:
                 context.on("response", captura.ao_responder)
                 page = context.pages[0] if context.pages else context.new_page()
                 page.goto(PORTAL_CONSULTA, wait_until="domcontentloaded", timeout=timeout * 1000)
-                return _esperar_credencial(page, captura, timeout)
+                return _esperar_credencial(page, captura, timeout, cancelar)
         finally:
             _encerrar(processo)
 
@@ -199,8 +220,15 @@ class _Captura:
         if not host.endswith(_SUFIXO_PDPJ):
             return
         valor = request.headers.get("authorization", "")
-        if valor.lower().startswith("bearer ") and valor[7:].strip():
-            self.bearer = valor[7:].strip()
+        if not valor.lower().startswith("bearer "):
+            return
+        candidato = valor[7:].strip()
+        # O front pode mandar ``Bearer undefined`` antes do login; so JWT conta.
+        try:
+            ler_exp(candidato)
+        except jwt.InvalidTokenError:
+            return
+        self.bearer = candidato
 
     def ao_responder(self, response: Any) -> None:
         if urlparse(response.url).path.endswith(_CAMINHO_TOKEN) and response.request.method == "POST":
@@ -230,13 +258,20 @@ def _corpo_json(response: Any) -> dict[str, Any]:
     return dados if isinstance(dados, dict) else {}
 
 
-def _esperar_credencial(page: Any, captura: _Captura, timeout: float) -> CredencialPdpj:
+def _esperar_credencial(
+    page: Any,
+    captura: _Captura,
+    timeout: float,
+    cancelar: threading.Event | None = None,
+) -> CredencialPdpj:
     prazo = time.monotonic() + timeout
     saiu_do_portal = False
     voltou_em: float | None = None
     recarregou = False
     token_desde: float | None = None
     while time.monotonic() < prazo:
+        if cancelar is not None and cancelar.is_set():
+            raise RuntimeError("Login no gov.br cancelado.")
         if page.is_closed():
             raise RuntimeError("A janela do navegador foi fechada antes de o login terminar.")
         captura.processar()
@@ -255,8 +290,13 @@ def _esperar_credencial(page: Any, captura: _Captura, timeout: float) -> Credenc
             # /consulta dispara as chamadas autenticadas que expoem o token.
             voltou_em = voltou_em if voltou_em is not None else agora
             if agora - voltou_em >= ESPERA_ANTES_DO_RELOAD:
-                page.goto(PORTAL_CONSULTA, wait_until="domcontentloaded")
                 recarregou = True
+                try:
+                    page.goto(PORTAL_CONSULTA, wait_until="domcontentloaded", timeout=max(prazo - agora, 1.0) * 1000)
+                except Exception:  # pylint: disable=broad-except
+                    # Portal lento no reload nao e erro: o laco segue esperando o
+                    # token ate o prazo, e janela fechada e tratada no topo do laco.
+                    logger.debug("Reload da consulta nao terminou; seguindo a espera.")
         try:
             page.wait_for_timeout(500)
         except Exception as exc:  # pylint: disable=broad-except

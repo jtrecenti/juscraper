@@ -5,7 +5,8 @@ import responses
 import juscraper as jus
 from juscraper.aggregators._pdpj_sso.cache import carregar_credencial_cache, salvar_credencial
 from juscraper.aggregators._pdpj_sso.credencial import CredencialPdpj
-from juscraper.aggregators._pdpj_sso.renovacao import CLIENT_ID, TOKEN_URL, renovar
+from juscraper.aggregators._pdpj_sso.renovacao import CLIENT_ID, TOKEN_URL, RenovacaoPdpjError, renovar
+from juscraper.aggregators.jusbr.download import fetch_document_text
 from juscraper.aggregators.pdpj.download import BASE_URL
 from tests.pdpj_sso._jwt import token
 
@@ -73,3 +74,78 @@ def test_auth_manual_substitui_a_credencial_do_cache():
         mocked.get(_EXISTE_URL, status=200)
         scraper.session.get(_EXISTE_URL)
         assert mocked.calls[0].request.headers["Authorization"] == f"Bearer {manual}"
+
+
+def test_access_perto_de_vencer_ja_renova():
+    """Dentro da margem de renovacao o token ainda vale, mas venceria na requisicao."""
+    scraper = _scraper_do_cache(CredencialPdpj(token(10), token(3600)))
+    novo = token(sub="novo")
+    with responses.RequestsMock() as mocked:
+        mocked.post(TOKEN_URL, json={"access_token": novo})
+        mocked.get(_EXISTE_URL, status=200)
+        scraper.session.get(_EXISTE_URL)
+        assert mocked.calls[-1].request.headers["Authorization"] == f"Bearer {novo}"
+
+
+def test_recusa_e_memorizada_sem_novo_post():
+    scraper = _scraper_do_cache(CredencialPdpj(token(-60), token(3600)))
+    with responses.RequestsMock() as mocked:
+        mocked.post(TOKEN_URL, status=400, json={"error": "invalid_grant"})
+        for _ in range(3):
+            with pytest.raises(RenovacaoPdpjError):
+                scraper.session.get(_EXISTE_URL)
+        assert len(mocked.calls) == 1
+
+
+def test_segunda_instancia_aproveita_a_renovacao_da_primeira():
+    salvar_credencial(CredencialPdpj(token(-60, sub="antigo"), token(3600, sub="refresh-antigo")))
+    jusbr = jus.scraper("jusbr")
+    pdpj = jus.scraper("pdpj", sleep_time=0)
+    novo_access, novo_refresh = token(sub="novo"), token(7200, sub="refresh-novo")
+    with responses.RequestsMock() as mocked:
+        mocked.post(TOKEN_URL, json={"access_token": novo_access, "refresh_token": novo_refresh})
+        mocked.get(_EXISTE_URL, status=200)
+        mocked.get(_EXISTE_URL, status=200)
+        jusbr.session.get(_EXISTE_URL)
+        pdpj.session.get(_EXISTE_URL)
+        assert sum(c.request.url == TOKEN_URL for c in mocked.calls) == 1
+        assert mocked.calls[-1].request.headers["Authorization"] == f"Bearer {novo_access}"
+    assert pdpj.token == novo_access
+
+
+def test_segunda_instancia_renova_com_o_refresh_do_cache():
+    """Se o access do cache tambem venceu, o refresh usado e o do cache, nao o da memoria."""
+    salvar_credencial(CredencialPdpj(token(-60, sub="a1"), token(3600, sub="r1")))
+    pdpj = jus.scraper("pdpj", sleep_time=0)
+    refresh_rotacionado = token(3600, sub="r2")
+    salvar_credencial(CredencialPdpj(token(-30, sub="a2"), refresh_rotacionado))
+    with responses.RequestsMock() as mocked:
+        mocked.post(
+            TOKEN_URL,
+            json={"access_token": token(sub="a3")},
+            match=[responses.matchers.urlencoded_params_matcher(
+                {"grant_type": "refresh_token", "refresh_token": refresh_rotacionado, "client_id": CLIENT_ID},
+            )],
+        )
+        mocked.get(_EXISTE_URL, status=200)
+        pdpj.session.get(_EXISTE_URL)
+
+
+def test_falha_ao_gravar_o_cache_nao_derruba_a_requisicao(mocker, caplog):
+    scraper = _scraper_do_cache(CredencialPdpj(token(-60), token(3600)))
+    mocker.patch("juscraper.aggregators._pdpj_sso.mixin.salvar_credencial", side_effect=PermissionError("sem escrita"))
+    novo = token(sub="novo")
+    with responses.RequestsMock() as mocked:
+        mocked.post(TOKEN_URL, json={"access_token": novo})
+        mocked.get(_EXISTE_URL, status=200)
+        scraper.session.get(_EXISTE_URL)
+        assert mocked.calls[-1].request.headers["Authorization"] == f"Bearer {novo}"
+    assert "Nao foi possivel gravar" in caplog.text
+
+
+def test_texto_do_jusbr_propaga_a_sessao_encerrada():
+    def request_fn(*_args, **_kwargs):
+        raise RenovacaoPdpjError("A sessao expirou")
+
+    with pytest.raises(RenovacaoPdpjError):
+        fetch_document_text(request_fn, "00000000000000000000", "uuid1", "https://exemplo/")
