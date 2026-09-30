@@ -493,3 +493,23 @@ def test_reload_interrompido_por_outra_navegacao_nao_derruba_o_login(mocker):
 
     assert obter_credencial_govbr(timeout=5) == CredencialPdpj(_APOS_RELOAD, None)
     assert browser.processo.encerrado
+
+
+def test_erro_fora_do_playwright_no_reload_sobe(mocker):
+    """Bug no codigo nao e navegacao interrompida: so o ``Error`` do Playwright e tolerado no reload."""
+    _instalar_playwright_falso(
+        mocker,
+        [PORTAL_CONSULTA, _SSO, "https://portaldeservicos.pdpj.jus.br/home"],
+        {6: [_requisicao(_API, _APOS_RELOAD)]},
+    )
+    goto_original = _Page.goto
+
+    def goto(self, url, **kwargs):
+        goto_original(self, url, **kwargs)
+        if len(self.gotos) > 1:
+            raise AttributeError("bug no reload")
+
+    mocker.patch.object(_Page, "goto", goto)
+
+    with pytest.raises(AttributeError, match="bug no reload"):
+        obter_credencial_govbr(timeout=5)

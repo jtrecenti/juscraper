@@ -211,8 +211,7 @@ def _encerrar(processo: subprocess.Popen[bytes]) -> None:
 
 def _obter_credencial(timeout: float, navegador: str | None, sessao: _SessaoLogin) -> CredencialPdpj:
     try:
-        # pylint: disable-next=import-outside-toplevel
-        from playwright.sync_api import Error as ErroPlaywright
+        from playwright.sync_api import Error as ErroPlaywright  # pylint: disable=import-outside-toplevel
         from playwright.sync_api import TimeoutError as TimeoutPlaywright  # pylint: disable=import-outside-toplevel
         from playwright.sync_api import sync_playwright  # pylint: disable=import-outside-toplevel
     except ImportError as exc:
@@ -319,7 +318,7 @@ def _navegar(page: Any, timeout_ms: float, tolerado: type[BaseException]) -> Non
             raise RuntimeError(_JANELA_FECHADA) from exc
         if not isinstance(exc, tolerado):
             raise
-        logger.debug("Navegacao da consulta nao terminou (%s); seguindo a espera.", type(exc).__name__)
+        logger.debug("Navegacao da consulta nao terminou (%s: %s); seguindo a espera.", type(exc).__name__, exc)
 
 
 def _timeout_de_navegacao(prazo: float, agora: float) -> float:
