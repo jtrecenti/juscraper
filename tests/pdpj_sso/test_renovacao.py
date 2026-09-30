@@ -1,5 +1,6 @@
 """Renovacao do access token pelo refresh token, via ``session.auth``."""
 import pytest
+import requests
 import responses
 
 import juscraper as jus
@@ -149,3 +150,68 @@ def test_texto_do_jusbr_propaga_a_sessao_encerrada():
 
     with pytest.raises(RenovacaoPdpjError):
         fetch_document_text(request_fn, "00000000000000000000", "uuid1", "https://exemplo/")
+
+
+def test_erro_transitorio_do_sso_nao_e_memorizado():
+    scraper = _scraper_do_cache(CredencialPdpj(token(-60), token(3600)))
+    novo = token(sub="novo")
+    with responses.RequestsMock() as mocked:
+        mocked.post(TOKEN_URL, status=503)
+        mocked.post(TOKEN_URL, json={"access_token": novo})
+        mocked.get(_EXISTE_URL, status=200)
+        with pytest.raises(requests.HTTPError):
+            scraper.session.get(_EXISTE_URL)
+        scraper.session.get(_EXISTE_URL)
+        assert mocked.calls[-1].request.headers["Authorization"] == f"Bearer {novo}"
+
+
+def test_recusa_levanta_excecao_nova_a_cada_requisicao():
+    scraper = _scraper_do_cache(CredencialPdpj(token(-60), token(3600)))
+    erros = []
+    with responses.RequestsMock() as mocked:
+        mocked.post(TOKEN_URL, status=400)
+        for _ in range(2):
+            with pytest.raises(RenovacaoPdpjError) as capturado:
+                scraper.session.get(_EXISTE_URL)
+            erros.append(capturado.value)
+    assert erros[0] is not erros[1]
+
+
+def test_depois_da_recusa_adota_login_novo_gravado_por_outra_instancia():
+    scraper = _scraper_do_cache(CredencialPdpj(token(-60, sub="a1"), token(3600, sub="r1")))
+    with responses.RequestsMock() as mocked:
+        mocked.post(TOKEN_URL, status=400)
+        with pytest.raises(RenovacaoPdpjError):
+            scraper.session.get(_EXISTE_URL)
+    relogado = CredencialPdpj(token(sub="a2"), token(7200, sub="r2"))
+    salvar_credencial(relogado)
+    with responses.RequestsMock() as mocked:
+        mocked.get(_EXISTE_URL, status=200)
+        scraper.session.get(_EXISTE_URL)
+        assert mocked.calls[-1].request.headers["Authorization"] == f"Bearer {relogado.access_token}"
+
+
+def test_refresh_do_cache_recusado_ainda_tenta_o_proprio():
+    proprio = token(3600, sub="r-proprio")
+    scraper = _scraper_do_cache(CredencialPdpj(token(-60, sub="a1"), proprio))
+    antigo = token(3600, sub="r-antigo")
+    salvar_credencial(CredencialPdpj(token(-30, sub="a0"), antigo))
+    novo = token(sub="novo")
+    with responses.RequestsMock() as mocked:
+        mocked.post(TOKEN_URL, status=400, match=[responses.matchers.urlencoded_params_matcher(
+            {"grant_type": "refresh_token", "refresh_token": antigo, "client_id": CLIENT_ID})])
+        mocked.post(TOKEN_URL, json={"access_token": novo}, match=[responses.matchers.urlencoded_params_matcher(
+            {"grant_type": "refresh_token", "refresh_token": proprio, "client_id": CLIENT_ID})])
+        mocked.get(_EXISTE_URL, status=200)
+        scraper.session.get(_EXISTE_URL)
+        assert mocked.calls[-1].request.headers["Authorization"] == f"Bearer {novo}"
+
+
+def test_falha_ao_gravar_desliga_a_leitura_do_cache(mocker):
+    scraper = _scraper_do_cache(CredencialPdpj(token(-60), token(3600)))
+    mocker.patch("juscraper.aggregators._pdpj_sso.mixin.salvar_credencial", side_effect=PermissionError("sem escrita"))
+    with responses.RequestsMock() as mocked:
+        mocked.post(TOKEN_URL, json={"access_token": token(sub="novo")})
+        mocked.get(_EXISTE_URL, status=200)
+        scraper.session.get(_EXISTE_URL)
+    assert scraper.session.auth.ler_cache is None

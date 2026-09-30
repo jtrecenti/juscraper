@@ -348,3 +348,22 @@ def test_abrir_navegador_sem_porta_no_prazo_encerra_o_processo(mocker, tmp_path)
         login.abrir_navegador("/usr/bin/google-chrome", tmp_path)
 
     assert processo.encerrado
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="SIGINT enviado ao proprio processo")
+def test_ctrl_c_nao_espera_worker_preso(mocker):
+    """Worker preso num passo que nao confere o cancelamento (``goto`` longo, por exemplo)."""
+    mocker.patch.object(login, "_obter_credencial", side_effect=lambda *_a: time.sleep(3))
+    threading.Timer(0.2, os.kill, args=(os.getpid(), signal.SIGINT)).start()
+    inicio = time.monotonic()
+
+    with pytest.raises(KeyboardInterrupt):
+        obter_credencial_govbr(timeout=5)
+
+    assert time.monotonic() - inicio < 2
+
+
+def test_prazo_do_reload_tem_teto_e_respeita_o_prazo():
+    assert login._prazo_do_reload(prazo=1000.0, agora=0.0) == login.TIMEOUT_RELOAD * 1000
+    assert login._prazo_do_reload(prazo=10.0, agora=5.0) == 5000
+    assert login._prazo_do_reload(prazo=10.0, agora=9.9) == 1000

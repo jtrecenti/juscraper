@@ -42,6 +42,8 @@ ESPERA_ANTES_DO_RELOAD = 3.0
 # Com o access token em maos, quanto esperar pela resposta do endpoint de
 # token, que traz tambem o refresh.
 ESPERA_PELO_REFRESH = 5.0
+# Teto do reload da consulta, em segundos (o default do Playwright).
+TIMEOUT_RELOAD = 30.0
 # Prazo para o navegador recem-aberto publicar a porta de depuracao.
 ESPERA_PELA_PORTA = 30.0
 
@@ -187,6 +189,10 @@ def _obter_credencial(timeout: float, navegador: str | None, cancelar: threading
     with tempfile.TemporaryDirectory(prefix="juscraper-govbr-", ignore_cleanup_errors=True) as diretorio:
         processo, porta = abrir_navegador(executavel, Path(diretorio))
         try:
+            # Ctrl-C durante a abertura: fecha o navegador antes do ``goto``, que
+            # pode esperar ate o prazo inteiro.
+            if cancelar.is_set():
+                raise RuntimeError("Login no gov.br cancelado.")
             with sync_playwright() as pw:
                 browser = pw.chromium.connect_over_cdp(f"http://127.0.0.1:{porta}")
                 context = browser.contexts[0]
@@ -258,6 +264,15 @@ def _corpo_json(response: Any) -> dict[str, Any]:
     return dados if isinstance(dados, dict) else {}
 
 
+def _prazo_do_reload(prazo: float, agora: float) -> float:
+    """Timeout do reload em ms: no maximo 30 s, e nunca alem do prazo do login.
+
+    Enquanto o ``goto`` espera, o laco nao confere cancelamento nem devolve um
+    token ja capturado; um reload travado nao pode segurar o laco por minutos.
+    """
+    return max(min(prazo - agora, TIMEOUT_RELOAD), 1.0) * 1000
+
+
 def _esperar_credencial(
     page: Any,
     captura: _Captura,
@@ -292,7 +307,7 @@ def _esperar_credencial(
             if agora - voltou_em >= ESPERA_ANTES_DO_RELOAD:
                 recarregou = True
                 try:
-                    page.goto(PORTAL_CONSULTA, wait_until="domcontentloaded", timeout=max(prazo - agora, 1.0) * 1000)
+                    page.goto(PORTAL_CONSULTA, wait_until="domcontentloaded", timeout=_prazo_do_reload(prazo, agora))
                 except Exception:  # pylint: disable=broad-except
                     # Portal lento no reload nao e erro: o laco segue esperando o
                     # token ate o prazo, e janela fechada e tratada no topo do laco.

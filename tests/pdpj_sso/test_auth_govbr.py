@@ -105,3 +105,12 @@ def test_falha_ao_gravar_o_cache_nao_derruba_o_login(mocker, scraper, caplog):
     assert scraper.auth_govbr() is True
     assert scraper.token == credencial.access_token
     assert "Nao foi possivel gravar" in caplog.text
+
+
+def test_login_com_falha_ao_gravar_nao_le_cache_antigo(mocker, scraper):
+    mocker.patch(_LOGIN, return_value=CredencialPdpj(token(), token(7200)))
+    mocker.patch("juscraper.aggregators._pdpj_sso.mixin.salvar_credencial", side_effect=PermissionError("sem escrita"))
+
+    scraper.auth_govbr()
+
+    assert scraper.session.auth.ler_cache is None

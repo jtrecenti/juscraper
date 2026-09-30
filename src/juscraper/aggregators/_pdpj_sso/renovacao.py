@@ -16,6 +16,13 @@ class RenovacaoPdpjError(RuntimeError):
     """O SSO recusou a renovacao: a sessao acabou e so um novo login resolve."""
 
 
+# Status com que o Keycloak recusa um refresh token vencido, revogado ou
+# desconhecido (``invalid_grant``). Qualquer outro erro e tratado como
+# transitorio e a proxima requisicao tenta de novo.
+_STATUS_RECUSA = frozenset({400, 401})
+_MENSAGEM_RECUSA = "O SSO do PJe recusou a renovacao do token. A sessao expirou: chame auth_govbr() de novo."
+
+
 def renovar(refresh_token: str, timeout: float = 30.0) -> CredencialPdpj:
     """Troca o refresh token por um access token novo.
 
@@ -23,24 +30,26 @@ def renovar(refresh_token: str, timeout: float = 30.0) -> CredencialPdpj:
     :class:`AuthPdpj` em ``session.auth``, que chamaria a renovacao de novo.
 
     Raises:
-        RenovacaoPdpjError: Quando o SSO recusa o refresh token ou responde
-            sem ``access_token``.
+        RenovacaoPdpjError: Quando o SSO recusa o refresh token (HTTP 400 ou
+            401) ou responde 2xx sem ``access_token``.
+        requests.HTTPError: Em outro erro HTTP do SSO (503, 429...), que e
+            transitorio.
     """
     resposta = requests.post(
         TOKEN_URL,
         data={"grant_type": "refresh_token", "refresh_token": refresh_token, "client_id": CLIENT_ID},
         timeout=timeout,
     )
+    if resposta.status_code in _STATUS_RECUSA:
+        raise RenovacaoPdpjError(f"{_MENSAGEM_RECUSA} (HTTP {resposta.status_code})")
+    resposta.raise_for_status()
     try:
-        dados = resposta.json() if resposta.ok else {}
+        dados = resposta.json()
     except ValueError:
         dados = {}
     access = dados.get("access_token") if isinstance(dados, dict) else None
     if not isinstance(access, str) or not access:
-        raise RenovacaoPdpjError(
-            f"O SSO do PJe recusou a renovacao do token (HTTP {resposta.status_code}). "
-            "A sessao expirou: chame auth_govbr() de novo."
-        )
+        raise RenovacaoPdpjError(f"{_MENSAGEM_RECUSA} (resposta sem access_token)")
     # O Keycloak pode rotacionar o refresh token; sem um novo, o antigo segue valendo.
     return CredencialPdpj(access, dados.get("refresh_token") or refresh_token)
 
@@ -64,7 +73,11 @@ class AuthPdpj(requests.auth.AuthBase):
         self.credencial = credencial
         self.ao_renovar = ao_renovar
         self.ler_cache = ler_cache
-        self._falha: RenovacaoPdpjError | None = None
+        # Refresh tokens que o SSO ja recusou: nao voltam a ser enviados, e a
+        # requisicao seguinte levanta sem novo POST. Guardar o token, e nao a
+        # falha, deixa um refresh novo gravado no cache por outra instancia ser
+        # tentado.
+        self._recusados: set[str] = set()
 
     def __call__(self, requisicao: requests.PreparedRequest) -> requests.PreparedRequest:
         if self.credencial.refresh_token is not None and not vigente(self.credencial.access_token, MARGEM_RENOVACAO):
@@ -73,28 +86,31 @@ class AuthPdpj(requests.auth.AuthBase):
         return requisicao
 
     def _renovar(self) -> None:
-        # Depois de uma recusa, cada requisicao seguinte levanta o mesmo erro sem
-        # novo POST: num download longo, seria um POST recusado por documento.
-        if self._falha is not None:
-            raise self._falha
-        refresh = self.credencial.refresh_token
         do_cache = self.ler_cache() if self.ler_cache is not None else None
-        if do_cache is not None and do_cache.access_token != self.credencial.access_token:
+        if (
+            do_cache is not None
+            and do_cache.access_token != self.credencial.access_token
+            and vigente(do_cache.access_token, MARGEM_RENOVACAO)
+        ):
             # Outra instancia (JusBR e PDPJ no mesmo notebook, ou outro processo)
-            # ja renovou e gravou o cache. O refresh desta instancia pode ter sido
-            # rotacionado e revogado pelo SSO, entao vale o do cache.
-            if vigente(do_cache.access_token, MARGEM_RENOVACAO):
-                self._trocar(do_cache)
-                return
-            refresh = do_cache.refresh_token or refresh
-        if refresh is None:
+            # ja renovou ou refez o login e gravou o cache.
+            self._trocar(do_cache)
             return
-        try:
-            nova = renovar(refresh)
-        except RenovacaoPdpjError as exc:
-            self._falha = exc
-            raise
-        self._trocar(nova)
+        # O refresh do cache vem primeiro porque o desta instancia pode ter sido
+        # rotacionado e revogado; se o SSO recusar o do cache, o proprio ainda e
+        # tentado.
+        candidatos = [do_cache.refresh_token if do_cache is not None else None, self.credencial.refresh_token]
+        for refresh in dict.fromkeys(r for r in candidatos if r is not None and r not in self._recusados):
+            try:
+                nova = renovar(refresh)
+            except RenovacaoPdpjError:
+                self._recusados.add(refresh)
+                continue
+            self._trocar(nova)
+            return
+        # Excecao nova a cada chamada: relevantar sempre o mesmo objeto faria o
+        # traceback crescer a cada requisicao de quem captura e segue o laco.
+        raise RenovacaoPdpjError(_MENSAGEM_RECUSA)
 
     def _trocar(self, nova: CredencialPdpj) -> None:
         self.credencial = nova
