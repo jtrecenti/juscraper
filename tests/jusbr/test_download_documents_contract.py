@@ -70,6 +70,8 @@ def _doc_meta(*, href_texto: str | None, href_binario: str | None, **extra) -> d
         "sequencia": extra.get("sequencia", 1),
         "descricao": extra.get("descricao", "Peticao Inicial"),
         "tipo": extra.get("tipo", "PETICAO"),
+        # A API omite ``arquivo`` só na peça sem texto, que não gera requisição.
+        "arquivo": extra.get("arquivo", {"id": "arquivo-1"}),
     }
     if href_texto is not None:
         meta["hrefTexto"] = href_texto
@@ -477,6 +479,7 @@ def test_download_documents_preserva_ordem_de_colunas_e_extras(mocker):
         "_raw_binary_api",
         "motivo_falha",
         "alphaExtra",
+        "arquivo",
         "zetaExtra",
         "idCodex",
         "tipoDocumento",

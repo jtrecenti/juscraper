@@ -10,6 +10,7 @@ anteriores numa nota do erro. O 404 só conta como ausência na listagem, cujo
 from __future__ import annotations
 
 import json
+import warnings
 from typing import Any
 
 import jwt
@@ -87,7 +88,8 @@ def _binario_url(uuid: str, cnj: str = CNJ_1) -> str:
 
 
 def _doc(uuid_texto: str | None, uuid_binario: str | None = None, cnj: str = CNJ_1) -> dict[str, Any]:
-    meta: dict[str, Any] = {"idDocumento": uuid_texto or uuid_binario}
+    # ``arquivo`` presente: a API o omite só na peça sem texto, que não gera requisição.
+    meta: dict[str, Any] = {"idDocumento": uuid_texto or uuid_binario, "arquivo": {"id": "arquivo-1"}}
     if uuid_texto:
         meta["hrefTexto"] = f"/processos/{cnj}/documentos/{uuid_texto}/texto"
     if uuid_binario:
@@ -541,3 +543,45 @@ def test_texto_so_com_espaco_sai_none_sem_motivo():
     assert df.iloc[0]["texto"] is None
     assert df.iloc[0]["_raw_text_api"] == " \n\t\xa0 "
     assert df.iloc[0]["motivo_falha"] is None
+
+
+# ---------------------------------------------------------------------------
+# Peça sem ``arquivo`` no metadado: sem requisição, sem falha
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("arquivo", ["ausente", None, {}])
+@responses.activate
+def test_peca_sem_arquivo_nao_gera_requisicao_nem_falha(arquivo):
+    """A API omite ``arquivo`` na peça que não tem texto, e responde 404 ao pedido de texto dela."""
+    sem_arquivo = _doc(UUID_TEXT_1, UUID_BIN_1)
+    if arquivo == "ausente":
+        del sem_arquivo["arquivo"]
+    else:
+        sem_arquivo["arquivo"] = arquivo
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        df = _scraper().download_documents(_base_df([sem_arquivo]))
+
+    assert len(responses.calls) == 0
+    assert len(df) == 1
+    linha = df.iloc[0]
+    assert linha["idDocumento"] == UUID_TEXT_1
+    assert linha["texto"] is None
+    assert linha["_raw_text_api"] is None
+    assert linha["_raw_binary_api"] is None
+    assert linha["motivo_falha"] is None
+
+
+@responses.activate
+def test_peca_com_arquivo_no_mesmo_lote_continua_baixando():
+    sem_arquivo = _doc(UUID_TEXT_1)
+    del sem_arquivo["arquivo"]
+    responses.add(responses.GET, _texto_url(UUID_TEXT_2), body="texto da peca", status=200)
+
+    df = _scraper().download_documents(_base_df([sem_arquivo, _doc(UUID_TEXT_2)]))
+
+    assert [call.request.url.split("?")[0] for call in responses.calls] == [_texto_url(UUID_TEXT_2)]
+    assert df["texto"].tolist() == [None, "texto da peca"]
+    assert df["motivo_falha"].tolist() == [None, None]
