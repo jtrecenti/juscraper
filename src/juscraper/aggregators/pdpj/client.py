@@ -9,6 +9,7 @@ from __future__ import annotations
 import logging
 import time
 from collections.abc import Callable, Iterable, Iterator, Mapping
+from dataclasses import dataclass
 from typing import Any, ClassVar, cast
 
 import pandas as pd
@@ -26,6 +27,7 @@ from ...core.failures import (
     motivo_falha,
 )
 from ...core.http import HTTPScraper, RequestFn, RequestPolicy
+from ...core.parse_utils import clean_document_text
 from ...utils.cnj import clean_cnj
 from ...utils.params import normalize_paginas, raise_on_extra_kwargs
 from .._pdpj_sso import CredencialPdpj, PdpjSsoMixin
@@ -50,7 +52,6 @@ from .parse import (
     build_movimento_rows,
     build_parte_rows,
     build_processo_row,
-    clean_document_text,
     parse_pesquisa_response,
 )
 from .schemas import (
@@ -131,9 +132,9 @@ def _iter_documents(details: dict[str, Any]) -> Iterator[Any]:
 
 
 def _document_to_row(
-    document: Any,
-    process: Any,
-    process_number: Any,
+    document: object,
+    process: object,
+    process_number: object,
 ) -> dict[str, Any] | None:
     """Achata um documento PDPJ bem-formado no formato de download."""
     if not isinstance(document, dict):
@@ -226,6 +227,48 @@ def _linha_cpopg_vazia(cnj: str, status_consulta: str) -> dict[str, Any]:
 def _linha_processo(cnj: str) -> dict[str, Any]:
     """Linha de falha de movimentos e partes: so o processo, o motivo entra depois."""
     return {"processo": cnj}
+
+
+@dataclass(frozen=True)
+class _Conteudos:
+    """Conteúdos que :meth:`PdpjScraper.download_documents` baixa de cada documento."""
+
+    texto: bool
+    binario: bool
+
+
+def _limite_de_paginas(paginas: list[int] | range | None) -> tuple[int | None, set[int] | None]:
+    """Última página a pedir e páginas cujas linhas entram; ``None`` é sem limite.
+
+    Com lista, a coleta segue até a maior página pedida, porque o cursor
+    ``searchAfter`` só se obtém percorrendo as anteriores.
+    """
+    if paginas is None:
+        return None, None
+    if isinstance(paginas, range):
+        return paginas.stop - 1, set(paginas)
+    return (max(paginas) if paginas else 0), set(paginas)
+
+
+def _ordenar_colunas(rows: list[dict[str, Any]]) -> pd.DataFrame:
+    """DataFrame com as colunas das linhas de sucesso primeiro e o motivo por último.
+
+    O pandas ordena as colunas pela chegada, e a linha de falha tem menos
+    colunas que a de sucesso: se ela viesse primeiro, as colunas dela
+    (``id_documento``, o motivo) passariam na frente das de conteúdo, e a
+    ordem dependeria de qual processo falhou. As linhas de sucesso dão a
+    ordem, as colunas só da linha de falha vêm depois e o motivo por último.
+    """
+    df = pd.DataFrame(rows)
+    ordem = list(dict.fromkeys(
+        coluna
+        for row in rows if row[COLUNA_MOTIVO_FALHA] is None
+        for coluna in row if coluna != COLUNA_MOTIVO_FALHA
+    ))
+    ordem += [c for c in df.columns if c not in ordem and c != COLUNA_MOTIVO_FALHA]
+    if COLUNA_MOTIVO_FALHA in df.columns:
+        ordem.append(COLUNA_MOTIVO_FALHA)
+    return df[ordem]
 
 
 def _linha_documentos(cnj: str) -> dict[str, Any]:
@@ -368,16 +411,7 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
         falhas: list[str] = []
         try:
             for cnj in cnjs:
-                try:
-                    data = buscar(self._request_with_retry, cnj, base_url=self.BASE_URL)
-                except EXCECOES_DE_FALHA_POR_LINHA as exc:
-                    if e_token_invalido(exc):
-                        raise
-                    motivo = motivo_falha(exc)
-                    falhas.append(f"processo {cnj}: {motivo}")
-                    rows.append({**linha_falha(cnj), COLUNA_MOTIVO_FALHA: motivo})
-                else:
-                    rows.extend({**row, COLUNA_MOTIVO_FALHA: None} for row in montar(data, cnj))
+                rows.extend(self._consultar_processo(cnj, buscar, montar, linha_falha, falhas))
                 if self.sleep_time:
                     time.sleep(self.sleep_time)
         except requests.HTTPError as erro:
@@ -388,21 +422,26 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
             raise
         # stacklevel 4: warn -> avisar_falhas -> este metodo -> metodo publico -> usuario.
         avisar_falhas(falhas, origem, _ITEM_CONSULTA, stacklevel=4)
-        df = pd.DataFrame(rows)
-        # O pandas ordena as colunas pela chegada, e a linha de falha tem menos
-        # colunas que a de sucesso: se ela viesse primeiro, as colunas dela
-        # (``id_documento``, o motivo) passariam na frente das de conteúdo, e a
-        # ordem dependeria de qual processo falhou. As linhas de sucesso dão a
-        # ordem, as colunas só da linha de falha vêm depois e o motivo por último.
-        ordem = list(dict.fromkeys(
-            coluna
-            for row in rows if row[COLUNA_MOTIVO_FALHA] is None
-            for coluna in row if coluna != COLUNA_MOTIVO_FALHA
-        ))
-        ordem += [c for c in df.columns if c not in ordem and c != COLUNA_MOTIVO_FALHA]
-        if COLUNA_MOTIVO_FALHA in df.columns:
-            ordem.append(COLUNA_MOTIVO_FALHA)
-        return df[ordem]
+        return _ordenar_colunas(rows)
+
+    def _consultar_processo(
+        self,
+        cnj: str,
+        buscar: Callable[..., Any],
+        montar: Callable[[Any, str], list[dict[str, Any]]],
+        linha_falha: Callable[[str], dict[str, Any]],
+        falhas: list[str],
+    ) -> list[dict[str, Any]]:
+        """Linhas de um CNJ, ou a linha de falha com o motivo; o 401 propaga."""
+        try:
+            data = buscar(self._request_with_retry, cnj, base_url=self.BASE_URL)
+        except EXCECOES_DE_FALHA_POR_LINHA as exc:
+            if e_token_invalido(exc):
+                raise
+            motivo = motivo_falha(exc)
+            falhas.append(f"processo {cnj}: {motivo}")
+            return [{**linha_falha(cnj), COLUNA_MOTIVO_FALHA: motivo}]
+        return [{**row, COLUNA_MOTIVO_FALHA: None} for row in montar(data, cnj)]
 
     def existe(self, id_cnj: str | list[str]) -> bool | pd.DataFrame:
         """Checa presenca de processo(s) no Data Lake.
@@ -424,7 +463,7 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
             InvalidJSONResponseError: Com ``str``, quando a consulta falha;
                 a resposta sem ``true``/``false`` levanta o ultimo.
 
-        See also:
+        See Also:
             :class:`InputCnjPdpj` -- schema pydantic.
         """
         self._check_auth()
@@ -466,7 +505,7 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
         Warns:
             UserWarning: Quando pelo menos uma consulta falhou.
 
-        See also:
+        See Also:
             :class:`InputCnjPdpj` -- schema pydantic.
         """
         self._check_auth()
@@ -569,7 +608,7 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
                 falha, e devolver as paginas anteriores truncaria o resultado
                 sem aviso.
 
-        See also:
+        See Also:
             :class:`InputPesquisaPdpj` -- schema pydantic e a fonte da
             verdade dos filtros aceitos.
         """
@@ -586,20 +625,20 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
         base_data = inp.model_dump(exclude={"paginas", "itens_por_pagina"})
         base_params = _to_query_params(base_data)
         base_params["maxElementsSize"] = inp.itens_por_pagina
+        max_paginas, permitidas = _limite_de_paginas(paginas_norm)
+        return pd.DataFrame(self._paginar(base_params, max_paginas, permitidas))
 
-        # paginacao via searchAfter: a API devolve o cursor a ser usado
-        # na proxima pagina. Coletamos ate exaurir ou atingir o limite
-        # solicitado pelo usuario.
-        if paginas_norm is None:
-            max_paginas = None
-            allowed: set[int] | None = None
-        elif isinstance(paginas_norm, range):
-            max_paginas = paginas_norm.stop - 1
-            allowed = set(paginas_norm)
-        else:
-            max_paginas = max(paginas_norm) if paginas_norm else 0
-            allowed = set(paginas_norm)
+    def _paginar(
+        self,
+        base_params: dict[str, Any],
+        max_paginas: int | None,
+        permitidas: set[int] | None,
+    ) -> list[dict[str, Any]]:
+        """Segue o cursor ``searchAfter`` até a página vazia, o fim do cursor ou ``max_paginas``.
 
+        A API devolve em cada página o cursor da seguinte; as linhas de uma
+        página entram só quando ela está em ``permitidas`` (``None`` = todas).
+        """
         rows: list[dict[str, Any]] = []
         pagina = 1
         search_after: list[Any] | None = None
@@ -610,16 +649,14 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
                 params["searchAfter"] = ",".join(str(v) for v in search_after)
             data = fetch_pesquisa(self._request_with_retry, params, base_url=self.BASE_URL)
             page_rows, search_after, _total = parse_pesquisa_response(data)
-            if allowed is None or pagina in allowed:
+            if permitidas is None or pagina in permitidas:
                 rows.extend(page_rows)
-            if not search_after or not page_rows:
-                break
-            if max_paginas is not None and pagina >= max_paginas:
-                break
+            ultima = max_paginas is not None and pagina >= max_paginas
+            if not search_after or not page_rows or ultima:
+                return rows
             pagina += 1
             if self.sleep_time:
                 time.sleep(self.sleep_time)
-        return pd.DataFrame(rows)
 
     def contar(self, **kwargs: Any) -> int:
         """Total de processos que casam com os filtros (``/processos:contar``).
@@ -647,6 +684,7 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
         self,
         base_df: pd.DataFrame,
         max_docs_per_process: int | None = None,
+        *,
         with_text: bool = True,
         with_binary: bool = False,
     ) -> pd.DataFrame:
@@ -712,7 +750,7 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
                 Um aviso por chamada, com a contagem e alguns exemplos,
                 emitido só quando a coleta termina.
 
-        See also:
+        See Also:
             :class:`InputDownloadDocumentsPdpj`: schema pydantic e fonte
             da verdade dos parametros aceitos.
         """
@@ -734,9 +772,8 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
             raise
         base_df = inp.base_df
         max_docs_per_process = inp.max_docs_per_process
-        with_text = inp.with_text
-        with_binary = inp.with_binary
-        if not with_text and not with_binary:
+        conteudos = _Conteudos(texto=inp.with_text, binario=inp.with_binary)
+        if not conteudos.texto and not conteudos.binario:
             raise ValueError(
                 "Pelo menos um de 'with_text' ou 'with_binary' deve ser True."
             )
@@ -750,7 +787,7 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
         try:
             for processo, grupo in docs_df.groupby("processo", sort=False):
                 rows.extend(self._download_process_documents(
-                    grupo, processo, max_docs_per_process, with_text, with_binary, falhas,
+                    grupo, processo, max_docs_per_process, conteudos, falhas,
                 ))
         except requests.HTTPError as erro:
             anotar_falhas_anteriores(erro, falhas, _ITEM_DOWNLOAD)
@@ -764,10 +801,9 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
     def _download_process_documents(
         self,
         grupo: pd.DataFrame,
-        processo: Any,
+        processo: object,
         max_docs_per_process: int | None,
-        with_text: bool,
-        with_binary: bool,
+        conteudos: _Conteudos,
         falhas: list[str],
     ) -> list[dict[str, Any]]:
         """Baixa os documentos de um processo ate o limite de linhas devolvidas.
@@ -780,7 +816,7 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
         for _, doc_row in grupo.iterrows():
             if max_docs_per_process is not None and len(rows) >= max_docs_per_process:
                 break
-            row = self._download_document(doc_row, processo, with_text, with_binary, falhas)
+            row = self._download_document(doc_row, processo, conteudos, falhas)
             if row is not None:
                 rows.append(row)
         return rows
@@ -788,9 +824,8 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
     def _download_document(
         self,
         doc_row: pd.Series,
-        processo: Any,
-        with_text: bool,
-        with_binary: bool,
+        processo: object,
+        conteudos: _Conteudos,
         falhas: list[str],
     ) -> dict[str, Any] | None:
         """Baixa os conteúdos selecionados para uma linha de documento.
@@ -815,7 +850,7 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
         cnj_clean = clean_cnj(str(numero_processo))
         descricao = f"processo {numero_processo}, documento {id_documento}"
         motivo_texto = motivo_binario = None
-        if with_text:
+        if conteudos.texto:
             raw, motivo_texto = _buscar_conteudo(
                 fetch_documento_texto, self._request_with_retry, cnj_clean, str(id_documento), self.BASE_URL,
             )
@@ -823,7 +858,7 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
                 falhas.append(f"{descricao}, texto: {motivo_texto}")
             row["texto"] = clean_document_text(raw)
             row["_raw_texto"] = raw
-        if with_binary:
+        if conteudos.binario:
             row["binario"], motivo_binario = _buscar_conteudo(
                 fetch_documento_binario, self._request_with_retry, cnj_clean, str(id_documento), self.BASE_URL,
             )

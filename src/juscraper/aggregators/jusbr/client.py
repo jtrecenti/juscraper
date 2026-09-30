@@ -2,10 +2,10 @@
 
 import logging
 import time
-import urllib
-from collections.abc import Callable, Iterator, Mapping
+import urllib.parse
+from collections.abc import Callable, Hashable, Iterator, Mapping
 from functools import partial
-from typing import Any, ClassVar, cast
+from typing import Any, ClassVar
 
 import browser_cookie3
 import numpy as np
@@ -24,12 +24,13 @@ from ...core.failures import (
     motivo_falha,
 )
 from ...core.http import RETRYABLE_STATUSES, HTTPScraper, RequestPolicy
+from ...core.parse_utils import clean_document_text
 from ...utils.cnj import clean_cnj
 from ...utils.params import raise_on_extra_kwargs
 from .._pdpj_sso import CredencialPdpj, PdpjSsoMixin
 from .._pdpj_sso.renovacao import ErroSsoPdpj, anotar_falhas_antes_do_sso
 from .download import USER_AGENT, fetch_document_binary, fetch_document_text, fetch_process_details, fetch_process_list
-from .parse import clean_document_text, parse_process_details_response, parse_process_list_response
+from .parse import parse_process_details_response, parse_process_list_response
 from .schemas import InputAuthGovbrJusBR, InputAuthJusBR, InputCPOPGJusBR, InputDownloadDocumentsJusBR
 
 logger = logging.getLogger(__name__)
@@ -55,7 +56,7 @@ _DESCRICAO_FALHAS_DOCUMENTOS = "download(s) de documento"
 
 
 def _coerce_document_metadata_container(
-    metadata: Any,
+    metadata: object,
     location: str,
     numero_processo: str,
 ) -> list[Any] | None:
@@ -120,7 +121,7 @@ def _iter_document_metadata(
     )
 
 
-def _extract_document_uuid(href: Any) -> str | None:
+def _extract_document_uuid(href: object) -> str | None:
     """Extrai o identificador situado após o segmento ``/documentos/``."""
     if not isinstance(href, str):
         return None
@@ -215,7 +216,7 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
         sleep_time: float = 0.5,
         token: str | None = None,
         politica: Mapping[str, Mapping[str, Any]] | None = None,
-    ):
+    ) -> None:
         """Cria o raspador; com ``token=``, valida-o por :meth:`auth`.
 
         Args:
@@ -248,8 +249,7 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
         session.headers.update({'user-agent': USER_AGENT})
 
     def auth(self, token: str, **kwargs: Any) -> bool:
-        """
-        Define o token JWT para autenticacao e o decodifica para verificacao.
+        """Define o token JWT para autenticacao e o decodifica para verificacao.
 
         Um token recusado não muda o estado: o token anterior, se havia, continua
         em ``token`` e no header.
@@ -266,11 +266,7 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
             raise_on_extra_kwargs(exc, "JusbrScraper.auth()", schema_cls=self.INPUT_AUTH)
             raise
         token = inp.token
-        try:
-            claims = validar_jwt(token)
-        except ValueError as exc:
-            logger.error("%s", exc)
-            raise
+        claims = validar_jwt(token)
         # Só depois da validação: um ``auth()`` que falha mantém o token anterior.
         self._instalar_credencial(CredencialPdpj(token), salvar_renovacao=False)
         if self.verbose > 0:
@@ -320,7 +316,8 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
         if not codes:
             raise RuntimeError("JusBR: parâmetro 'code' ausente no fragmento de auth.")
         code = codes[0]
-        token_url = "https://sso.cloud.pje.jus.br/auth/realms/pje/protocol/openid-connect/token"  # nosec
+        # URL do endpoint de token do SSO, não uma senha.
+        token_url = "https://sso.cloud.pje.jus.br/auth/realms/pje/protocol/openid-connect/token"  # nosec  # noqa: S105
         data = {
             "grant_type": "authorization_code",
             "code": code,
@@ -459,8 +456,7 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
                     COLUNA_MOTIVO_FALHA: motivo,
                 })
                 continue
-            # ``fetch_process_details`` já recusou as formas que o parser devolveria como None.
-            parsed_details = cast(dict[str, Any], parse_process_details_response(raw_details_data, cnj_cleaned))
+            parsed_details = parse_process_details_response(raw_details_data, cnj_cleaned)
             linhas.append({**parsed_details, COLUNA_MOTIVO_FALHA: None})
         time.sleep(self.sleep_time)
         return linhas
@@ -578,7 +574,7 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
 
     def _download_process_documents(
         self,
-        index: Any,
+        index: Hashable,
         row: pd.Series,
         max_docs_per_process: int | None,
         already_downloaded: int,
@@ -671,7 +667,7 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
             pd.DataFrame: Uma linha por documento, com metadados, texto limpo,
             respostas brutas disponíveis e ``motivo_falha``.
 
-        See also:
+        See Also:
             :class:`InputDownloadDocumentsJusBR` — schema pydantic e fonte da
             verdade dos parâmetros aceitos.
         """

@@ -17,6 +17,7 @@ import responses
 from pydantic import ValidationError
 
 import juscraper as jus
+from juscraper.aggregators._pdpj_sso.renovacao import SsoPdpjIndisponivelError
 from juscraper.aggregators.pdpj.download import BASE_URL
 from tests._helpers import load_sample
 
@@ -425,7 +426,7 @@ def test_download_documents_erro_http_vira_linha_vazia_com_aviso():
     _mock_text_endpoint("doc-c", "texto c\n")
     s = _mk_scraper()
 
-    with pytest.warns(UserWarning) as avisos:
+    with pytest.warns(UserWarning, match="falharam") as avisos:
         out = s.download_documents(_docs_df("doc-a", "doc-b", "doc-c"))
 
     assert out["id_documento"].tolist() == ["doc-a", "doc-b", "doc-c"]
@@ -449,7 +450,7 @@ def test_download_documents_falha_consome_limite_e_gera_um_aviso_agregado():
     _mock_text_endpoint("doc-c", "texto c\n")
     s = _mk_scraper()
 
-    with pytest.warns(UserWarning) as avisos:
+    with pytest.warns(UserWarning, match="falharam") as avisos:
         out = s.download_documents(_docs_df("doc-a", "doc-b", "doc-c"), max_docs_per_process=2)
 
     assert out["id_documento"].tolist() == ["doc-a", "doc-b"]
@@ -473,7 +474,7 @@ def test_download_documents_aviso_cita_alguns_exemplos_e_conta_o_resto():
         _mock_text_error(doc_id, 500)
     s = _mk_scraper()
 
-    with pytest.warns(UserWarning) as avisos:
+    with pytest.warns(UserWarning, match="falharam") as avisos:
         out = s.download_documents(_docs_df(*ids))
 
     assert len(out) == 5
@@ -584,7 +585,7 @@ def test_download_documents_falhas_em_dois_processos_geram_um_aviso():
         {"processo": outro, "numero_processo": outro, "id_documento": "doc-z"},
     ])
 
-    with pytest.warns(UserWarning) as avisos:
+    with pytest.warns(UserWarning, match="falharam") as avisos:
         out = s.download_documents(base_df)
 
     assert out["id_documento"].tolist() == ["doc-a", "doc-z"]
@@ -650,8 +651,6 @@ def test_download_documents_corpo_vazio_nao_e_falha():
 @responses.activate
 def test_download_documents_sso_fora_do_ar_no_meio_do_lote_anota_falhas_anteriores():
     """Falha do SSO ao renovar o token para o lote, como o 401, com as falhas anteriores em nota."""
-    from juscraper.aggregators._pdpj_sso.renovacao import SsoPdpjIndisponivelError
-
     # 404 não é retentado: a segunda chamada da auth já é a do doc-b.
     _mock_text_error("doc-a", 404)
     s = _mk_scraper()
@@ -671,3 +670,15 @@ def test_download_documents_sso_fora_do_ar_no_meio_do_lote_anota_falhas_anterior
     notas = " ".join(getattr(erro.value, "__notes__", []))
     assert "Antes da falha do SSO, 1 download(s) de documento" in notas
     assert "doc-a, texto: http_404" in notas
+
+
+@responses.activate
+def test_texto_so_com_espaco_sai_none_sem_motivo():
+    """Texto só com espaço não é falha: ``texto`` sai ``None``, como no JusBR, e o bruto fica."""
+    _mock_text_endpoint("doc-a", " \n\t\xa0 ")
+
+    out = _mk_scraper().download_documents(_docs_df("doc-a"))
+
+    assert out.iloc[0]["texto"] is None
+    assert out.iloc[0]["_raw_texto"] == " \n\t\xa0 "
+    assert out.iloc[0]["motivo_falha"] is None

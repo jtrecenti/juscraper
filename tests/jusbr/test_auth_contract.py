@@ -10,6 +10,7 @@ padrao e o ramo ``except jwt.ExpiredSignatureError`` virava dead code. Agora
 tokens expirados levantam ``ValueError("Token JWT expirado.")`` como
 documentado.
 """
+import io
 import json
 
 import jwt
@@ -56,8 +57,9 @@ def test_auth_token_expirado_levanta_value_error():
 
 
 def test_auth_token_sem_exp_passa_silencioso():
-    """Token sem claim ``exp`` e aceito sem erro (PyJWT so valida quando o
-    claim existe). Header e setado e ``auth`` retorna ``True``.
+    """Token sem claim ``exp`` e aceito sem erro.
+
+    O PyJWT so valida quando o claim existe. Header e setado e ``auth`` retorna ``True``.
     """
     scraper = jus.scraper("jusbr")
     no_exp = _token({"sub": "tester"})
@@ -68,8 +70,9 @@ def test_auth_token_sem_exp_passa_silencioso():
 
 
 def test_auth_token_malformado_levanta_value_error():
-    """String que nao e JWT estrutural cai em ``InvalidTokenError`` no
-    ``jwt.decode`` — o ``except`` re-levanta como ``ValueError``.
+    """String que nao e JWT estrutural levanta ``ValueError``.
+
+    Ela cai em ``InvalidTokenError`` no ``jwt.decode``, e o ``except`` re-levanta como ``ValueError``.
     """
     scraper = jus.scraper("jusbr")
 
@@ -121,7 +124,7 @@ def test_auth_recusado_preserva_token_e_header_anteriores(recusado):
     scraper = jus.scraper("jusbr", token=valido)
     auth_anterior = scraper.session.auth
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Token JWT"):
         scraper.auth(recusado)
 
     assert scraper.token == valido
@@ -141,10 +144,8 @@ def _resposta(status: int = 200, headers: dict | None = None, corpo=None, texto:
     resp = requests.Response()
     resp.status_code = status
     resp.headers.update(headers or {})
-    if corpo is not None:
-        resp._content = json.dumps(corpo).encode()
-    else:
-        resp._content = (texto or "").encode()
+    # O corpo entra pelo ``raw``, como o requests lê de uma conexão.
+    resp.raw = io.BytesIO(json.dumps(corpo).encode() if corpo is not None else (texto or "").encode())
     return resp
 
 

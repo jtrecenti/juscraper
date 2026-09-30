@@ -67,7 +67,7 @@ def test_kwarg_desconhecido_levanta_type_error(mocker, scraper):
 def test_timeout_nao_positivo_e_recusado(mocker, scraper):
     mocker.patch(_LOGIN)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="timeout"):
         scraper.auth_govbr(timeout=0)
 
 

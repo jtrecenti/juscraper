@@ -69,7 +69,7 @@ _FETCHES = [
 
 
 @pytest.mark.parametrize("erro", _ERROS_PROPAGADOS, ids=lambda e: type(e).__name__)
-@pytest.mark.parametrize("fetch_fn, extra_args, extra_kwargs", [
+@pytest.mark.parametrize(("fetch_fn", "extra_args", "extra_kwargs"), [
     pytest.param(fetch_process_list, (CNJ, BASE_API_URL_V2), {}, id="lista"), *_FETCHES,
 ])
 def test_fetch_propaga_erro_do_request_fn(fetch_fn, extra_args, extra_kwargs, erro):
@@ -80,7 +80,7 @@ def test_fetch_propaga_erro_do_request_fn(fetch_fn, extra_args, extra_kwargs, er
     request_fn.assert_called_once()
 
 
-@pytest.mark.parametrize("fetch_fn, extra_args, extra_kwargs", _FETCHES)
+@pytest.mark.parametrize(("fetch_fn", "extra_args", "extra_kwargs"), _FETCHES)
 def test_404_fora_da_listagem_propaga(fetch_fn, extra_args, extra_kwargs):
     """Só a listagem documenta o 404 como CNJ inexistente."""
     request_fn = MagicMock(side_effect=_http_error(404))
@@ -208,7 +208,7 @@ def test_fetch_document_binary_happy_path_returns_bytes():
 
 
 @pytest.mark.parametrize(
-    "fetch_fn, extra_args, extra_kwargs",
+    ("fetch_fn", "extra_args", "extra_kwargs"),
     [
         (fetch_process_list, (CNJ, BASE_API_URL_V2), {}),
         (fetch_process_details, (CNJ, BASE_API_URL_V2), {}),
@@ -230,7 +230,7 @@ def test_request_fn_is_called_with_get_and_positional_url(
 
 
 @pytest.mark.parametrize(
-    "fetch_fn, extra_args, extra_kwargs, perfil",
+    ("fetch_fn", "extra_args", "extra_kwargs", "perfil"),
     [
         (fetch_process_list, (CNJ, BASE_API_URL_V2), {}, "listagem"),
         (fetch_process_details, (CNJ, BASE_API_URL_V2), {}, "listagem"),

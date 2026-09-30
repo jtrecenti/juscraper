@@ -303,7 +303,7 @@ def test_texto_e_binario_falhos_motivo_do_texto_e_aviso_com_os_dois():
     responses.add(responses.GET, _texto_url(UUID_TEXT_1), status=404)
     responses.add(responses.GET, _binario_url(UUID_BIN_1), status=403)
 
-    with pytest.warns(UserWarning) as avisos:
+    with pytest.warns(UserWarning, match="falharam") as avisos:
         df = scraper.download_documents(_base_df([_doc(UUID_TEXT_1, UUID_BIN_1)]))
 
     mensagem = str(avisos[0].message)
@@ -438,11 +438,13 @@ def test_perfis_declarados():
 
 def test_politica_mescla_por_campo():
     scraper = jus.scraper("jusbr", politica={"documento": {"timeout": 10}})
-    documento = scraper._perfis_http["documento"]
+    # Os perfis mesclados não têm acessor público.
+    perfis = scraper._perfis_http  # noqa: SLF001
+    documento = perfis["documento"]
     assert documento.timeout == 10
     assert documento.retry_on_timeout is True
     assert 403 not in documento.retryable_statuses
-    assert scraper._perfis_http["listagem"].timeout == 15
+    assert perfis["listagem"].timeout == 15
 
 
 @responses.activate(registry=OrderedRegistry)
@@ -467,7 +469,7 @@ def test_aviso_agregado_aponta_para_quem_chamou():
     scraper = _scraper()
     _add_lista(CNJ_1, status=403, json={"erro": "negado"})
 
-    with pytest.warns(UserWarning) as avisos:
+    with pytest.warns(UserWarning, match="falharam") as avisos:
         scraper.cpopg(CNJ_1)
 
     assert avisos[0].filename == __file__
@@ -480,7 +482,7 @@ def test_falha_da_listagem_tambem_pausa(mocker):
     pausa = mocker.patch("time.sleep")
     _add_lista(CNJ_1, status=403, json={"erro": "negado"})
 
-    with pytest.warns(UserWarning):
+    with pytest.warns(UserWarning, match="falharam"):
         scraper.cpopg(CNJ_1)
 
     pausa.assert_called_once_with(0.25)
@@ -527,3 +529,15 @@ def test_cpopg_falha_do_sso_sem_falhas_anteriores_sai_sem_nota():
         scraper.cpopg(CNJ_1)
 
     assert _notas(erro.value) == ""
+
+
+@responses.activate
+def test_texto_so_com_espaco_sai_none_sem_motivo():
+    """Texto só com espaço não é falha: ``texto`` sai ``None``, como no PDPJ, e o bruto fica."""
+    responses.add(responses.GET, _texto_url(UUID_TEXT_1), body=" \n\t\xa0 ", status=200)
+
+    df = _scraper().download_documents(_base_df([_doc(UUID_TEXT_1)]))
+
+    assert df.iloc[0]["texto"] is None
+    assert df.iloc[0]["_raw_text_api"] == " \n\t\xa0 "
+    assert df.iloc[0]["motivo_falha"] is None

@@ -73,8 +73,7 @@ class InputCPOPGJusBR(CnjInputBase):
 
 
 class OutputCPOPGJusBR(BaseModel):
-    """Colunas observaveis em uma linha do DataFrame de
-    :meth:`JusbrScraper.cpopg`.
+    """Colunas observaveis em uma linha do DataFrame de :meth:`JusbrScraper.cpopg`.
 
     ``processo`` (canonico do projeto — ver CLAUDE.md > "Schemas pydantic")
     e a coluna pivot que aparece em todo row, tanto no happy path quanto
@@ -108,8 +107,7 @@ class InputDownloadDocumentsJusBR(BaseModel):
 
 
 class OutputDownloadDocumentsJusBR(BaseModel):
-    """Colunas observaveis em uma linha do DataFrame de
-    :meth:`JusbrScraper.download_documents`.
+    """Colunas observaveis em uma linha do DataFrame de :meth:`JusbrScraper.download_documents`.
 
     Cada linha representa um documento de um processo. ``numero_processo``
     e a coluna pivot que liga de volta ao DataFrame de processos; demais

@@ -33,7 +33,7 @@ class PdpjSsoMixin:
         """Valida ``token`` e o instala na sessao; cada scraper tem a sua validacao."""
         raise NotImplementedError
 
-    def _instalar_credencial(self, credencial: CredencialPdpj, salvar_renovacao: bool) -> AuthPdpj:
+    def _instalar_credencial(self, credencial: CredencialPdpj, *, salvar_renovacao: bool) -> AuthPdpj:
         """Poe a credencial na sessao, com renovacao quando ha refresh token.
 
         O cabecalho fixo da sessao continua sendo gravado para quem le
@@ -71,6 +71,7 @@ class PdpjSsoMixin:
     def auth_govbr(
         self,
         timeout: float = 300.0,
+        *,
         salvar: bool = True,
         navegador: str | None = None,
         **kwargs: Any,
@@ -94,6 +95,7 @@ class PdpjSsoMixin:
                 renovacoes tambem sao gravadas. Default ``True``.
             navegador (str | None): Executavel do Chrome, Chromium ou Edge.
                 ``None`` procura um instalado. Default ``None``.
+            **kwargs: Nenhum parametro adicional e aceito.
 
         Returns:
             bool: ``True`` quando o token foi aceito.
@@ -111,7 +113,7 @@ class PdpjSsoMixin:
             >>> jusbr.auth_govbr()
             >>> df = jusbr.cpopg("0000000-00.0000.0.00.0000")
 
-        See also:
+        See Also:
             :class:`InputAuthGovbrJusBR` e :class:`InputAuthGovbrPdpj`.
         """
         nome = f"{type(self).__name__}.auth_govbr()"
