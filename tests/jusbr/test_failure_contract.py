@@ -441,3 +441,32 @@ def test_politica_chega_ao_documento(mocker):
     scraper.download_documents(_base_df([_doc(UUID_TEXT_1)]))
 
     assert espiao.call_args.kwargs["timeout"] == 7
+
+
+# ---------------------------------------------------------------------------
+# Aviso aponta para quem chamou; pausa também depois de falha
+# ---------------------------------------------------------------------------
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_aviso_agregado_aponta_para_quem_chamou():
+    scraper = _scraper()
+    _add_lista(CNJ_1, status=403, json={"erro": "negado"})
+
+    with pytest.warns(UserWarning) as avisos:
+        scraper.cpopg(CNJ_1)
+
+    assert avisos[0].filename == __file__
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_falha_da_listagem_tambem_pausa(mocker):
+    scraper = jus.scraper("jusbr", sleep_time=0.25)
+    scraper.auth(_jwt())
+    pausa = mocker.patch("time.sleep")
+    _add_lista(CNJ_1, status=403, json={"erro": "negado"})
+
+    with pytest.warns(UserWarning):
+        scraper.cpopg(CNJ_1)
+
+    pausa.assert_called_once_with(0.25)

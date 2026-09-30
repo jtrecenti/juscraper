@@ -100,8 +100,8 @@ def test_fetch_process_list_404_e_lista_vazia():
 
 @pytest.mark.parametrize(
     "payload",
-    [[{"numeroProcesso": CNJ}], {"content": {"numeroProcesso": CNJ}}, {"outra": []}, "texto"],
-    ids=["lista", "content-objeto", "sem-content", "escalar"],
+    [[{"numeroProcesso": CNJ}], {"content": {"numeroProcesso": CNJ}}, {"outra": []}, "texto", {"content": ["x"]}],
+    ids=["lista", "content-objeto", "sem-content", "escalar", "item-escalar"],
 )
 def test_fetch_process_list_forma_errada_levanta_json_invalido(payload):
     request_fn = MagicMock(return_value=_json_response(payload))

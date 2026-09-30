@@ -65,11 +65,11 @@ def fetch_process_list(
         que o :mod:`client` registra como "Nao encontrado na lista inicial".
 
     Raises:
-        requests.HTTPError: Status 4xx diferente de 404.
+        requests.HTTPError: Status de erro fora dos retentáveis, exceto o 404.
         RetryExhaustedError, requests.Timeout, requests.ConnectionError: Ver
             ``HTTPScraper._request_with_retry``.
         InvalidJSONResponseError: Corpo que não é JSON, ou objeto sem a lista
-            ``content``.
+            ``content`` de objetos.
     """
     url = f"{base_api_url}?numeroProcesso={cnj_cleaned}"
     logger.debug("Fetching process list from: %s", url)
@@ -81,7 +81,8 @@ def fetch_process_list(
             return {"content": []}
         raise
     data = response.json()
-    if not isinstance(data, dict) or not isinstance(data.get("content"), list):
+    content = data.get("content") if isinstance(data, dict) else None
+    if not isinstance(content, list) or not all(isinstance(item, dict) for item in content):
         raise _forma_invalida(response, url)
     return data
 
@@ -97,7 +98,7 @@ def fetch_process_details(
     capturados); um objeto solto também é aceito, e o parser trata os dois.
 
     Raises:
-        requests.HTTPError: Status 4xx, inclusive o 404.
+        requests.HTTPError: Status de erro fora dos retentáveis, inclusive o 404.
         RetryExhaustedError, requests.Timeout, requests.ConnectionError: Ver
             ``HTTPScraper._request_with_retry``.
         InvalidJSONResponseError: Corpo que não é JSON, ou que não é objeto nem

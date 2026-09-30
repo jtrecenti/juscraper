@@ -224,7 +224,7 @@ class JusbrScraper(HTTPScraper):
             "jusbr", verbose=verbose, download_path=download_path, sleep_time=sleep_time, politica=politica,
         )
         self.token: str | None = None
-        if token:
+        if token is not None:
             self.auth(token)
 
     def _configure_session(self, session: requests.Session) -> None:
@@ -353,8 +353,8 @@ class JusbrScraper(HTTPScraper):
                 :class:`InputCPOPGJusBR`, ``extra="forbid"``).
             RuntimeError: Quando ``auth(token)`` nao foi chamado antes.
             requests.HTTPError: Quando a API responde 401 (token ausente,
-                expirado ou inválido). As falhas anteriores vão numa nota do
-                próprio erro (``__notes__``).
+                expirado ou inválido). As linhas já obtidas se perdem, e as
+                falhas anteriores vão numa nota do próprio erro (``__notes__``).
 
         Warns:
             UserWarning: Quando pelo menos uma consulta falhou; um aviso por

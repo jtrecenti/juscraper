@@ -104,8 +104,8 @@ def test_construtor_valida_token_pelo_auth():
 
 @pytest.mark.parametrize(
     ("token", "mensagem"),
-    [(_token({"sub": "tester", "exp": 0}), "expirado"), ("not-a-jwt", r"inv[áa]lido")],
-    ids=["vencido", "malformado"],
+    [(_token({"sub": "tester", "exp": 0}), "expirado"), ("not-a-jwt", r"inv[áa]lido"), ("", r"inv[áa]lido")],
+    ids=["vencido", "malformado", "vazio"],
 )
 def test_construtor_com_token_recusado_levanta_value_error(token, mensagem):
     with pytest.raises(ValueError, match=mensagem):
