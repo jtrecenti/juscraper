@@ -9,7 +9,13 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- `JusbrScraper` aceita `politica=` no construtor para ajustar, campo a campo, os perfis HTTP `"listagem"` (lista de processos e detalhes, timeout de 15 s) e `"documento"` (texto e binário, timeout de 30 s): `timeout`, `max_retries`, `base_backoff`, `retryable_statuses`, `retry_on_timeout` e `retry_on_connection_error`. Exemplo: `jus.scraper("jusbr", politica={"documento": {"timeout": 10}})`. Perfil ou campo desconhecido levanta `ValueError`.
 - STF `listar_decisoes` aceita `checkpoint_dir` e `resume=True` para retomar coletas interrompidas. Preserva páginas em disco, valida a compatibilidade antes de requisitar e reinicia apenas a janela incompleta, sem misturar tentativas. Sem diretório, não grava checkpoints.
+
+### Changed
+
+- `JusbrScraper.cpopg` e `JusbrScraper.download_documents` passam a ter contrato de falha por linha. O 401 (token ausente, vencido ou inválido) propaga `requests.HTTPError` e interrompe o lote, com as falhas anteriores numa nota do erro (`__notes__`); antes, um token vencido no meio do lote virava "Nao encontrado na lista inicial" no `cpopg` e `texto=None` no `download_documents`, sem sinal. As demais falhas viram linha com conteúdo `None` e a coluna nova `motivo_falha` (`http_<status>`, `retry_esgotado_<status>`, `timeout`, `conexao` ou `json_invalido`; `None` sem falha), e um único `UserWarning` ao fim da chamada conta as falhas e cita algumas. No `cpopg`, a linha de falha sai com `status_consulta="Falha na consulta"`, que substitui "Erro ao obter ou parsear detalhes"; o CNJ que a listagem responde com 404 continua "Nao encontrado na lista inicial", mas o 404 nos detalhes e nos documentos passa a ser falha (`http_404`). Resposta 200 com JSON na forma errada vira `json_invalido`, em vez de sumir como "não encontrado". No `download_documents`, `motivo_falha` traz o motivo do texto quando o texto falha, senão o do binário, e o aviso cita as duas falhas. Exceções fora desse vocabulário (`TooManyRedirects`, por exemplo) propagam; antes, o download de texto engolia qualquer exceção. O 403 deixa de ser retentado, porque na PDPJ ele nega o recurso, e o timeout de leitura passa a ser retentado.
+- `JusbrScraper(token=...)` passa a validar o token por `auth()` e levanta `ValueError` para JWT vencido ou malformado; antes aceitava qualquer string. `auth_firefox()` também passa o token obtido por `auth()`, usa o timeout do perfil `"listagem"` nas requisições ao SSO e levanta `RuntimeError` com mensagem clara quando a resposta não traz `access_token`, em vez de `KeyError` ou `JSONDecodeError`.
 
 ### Fixed
 

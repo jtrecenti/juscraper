@@ -473,6 +473,7 @@ def test_download_documents_preserva_ordem_de_colunas_e_extras(mocker):
         "texto",
         "_raw_text_api",
         "_raw_binary_api",
+        "motivo_falha",
         "alphaExtra",
         "zetaExtra",
         "idCodex",
@@ -513,6 +514,7 @@ def test_download_documents_campos_calculados_prevalecem_sobre_metadata(mocker):
     assert df.loc[0, "texto"] == raw_text
     assert df.loc[0, "_raw_text_api"] == raw_text
     assert df.loc[0, "_raw_binary_api"] is None
+    assert df.loc[0, "motivo_falha"] is None
 
 
 def test_download_documents_sem_auth_levanta_runtime_error():

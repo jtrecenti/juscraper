@@ -1,11 +1,15 @@
 """Funções de download específicas para JUSBR.
 
-Antes da migração para :class:`juscraper.core.http.HTTPScraper` (issue #204),
-este módulo tinha seu próprio ``request_with_retry`` duplicando a lógica de
-backoff. Agora os ``fetch_*`` recebem um ``request_fn`` — tipicamente o
-``HTTPScraper._request_with_retry`` ligado do scraper — e centralizam o retry
-na infra compartilhada (#201). Os erros são absorvidos aqui e devolvidos como
-``None`` para preservar o contrato dos callers em :mod:`client`.
+Os ``fetch_*`` recebem um ``request_fn``, tipicamente o
+``HTTPScraper._request_with_retry`` ligado do scraper, que aplica o perfil de
+requisição ("listagem" ou "documento") declarado em
+:attr:`juscraper.aggregators.jusbr.client.JusbrScraper.perfis_http`.
+
+Nenhum ``fetch_*`` absorve erro: ``HTTPError``, ``RetryExhaustedError``,
+``Timeout``, ``ConnectionError`` e ``InvalidJSONResponseError`` sobem ao
+:mod:`client`, que decide entre interromper o lote (401) e registrar a linha de
+falha com o motivo. A única exceção é o 404 da listagem, que a API usa para
+dizer que o CNJ não existe (ver :func:`fetch_process_list`).
 """
 
 import logging
@@ -14,7 +18,7 @@ from typing import Any
 
 import requests
 
-from ...core.exceptions import RetryExhaustedError
+from ...core.exceptions import InvalidJSONResponseError
 from ...utils.cnj import clean_cnj
 from ...utils.logging_cfg import redact_headers
 
@@ -32,87 +36,82 @@ USER_AGENT = (
     "Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0"
 )
 
+# A listagem responde 404 com JSON de erro para CNJ inexistente, nunca 200 com
+# ``content`` vazio (``tests/fixtures/capture/README.md``). Nos detalhes e nos
+# documentos, o 404 não está documentado como ausência e conta como falha.
+_STATUS_CNJ_INEXISTENTE = 404
+
+
+def _forma_invalida(response: requests.Response, url: str) -> InvalidJSONResponseError:
+    """Erro para um corpo JSON válido na forma que o endpoint não usa.
+
+    O ``request_fn`` é chamado com ``expect_json=True``, então o corpo já é
+    JSON; o erro aqui é de forma, e sai com o mesmo motivo ``json_invalido``.
+    """
+    return InvalidJSONResponseError(
+        url, response.status_code, 1, response.headers.get("Content-Type"), response.text[:200]
+    )
+
 
 def fetch_process_list(
     request_fn: RequestFn,
     cnj_cleaned: str,
     base_api_url: str
-) -> dict[str, Any] | None:
-    """
-    Fetches the initial list of processes matching a CNJ.
-    Corresponds to the first API call in the original cpopg.
+) -> dict[str, Any]:
+    """Busca a lista de processos que casam com um CNJ.
+
+    Returns:
+        O objeto JSON da listagem. Para CNJ inexistente (404), ``{"content": []}``,
+        que o :mod:`client` registra como "Nao encontrado na lista inicial".
+
+    Raises:
+        requests.HTTPError: Status 4xx diferente de 404.
+        RetryExhaustedError, requests.Timeout, requests.ConnectionError: Ver
+            ``HTTPScraper._request_with_retry``.
+        InvalidJSONResponseError: Corpo que não é JSON, ou objeto sem a lista
+            ``content``.
     """
     url = f"{base_api_url}?numeroProcesso={cnj_cleaned}"
     logger.debug("Fetching process list from: %s", url)
     try:
-        response = request_fn("GET", url, timeout=15)
-        data: dict[str, Any] = response.json()
-        return data
-    except RetryExhaustedError as exc:
-        logger.error(
-            "Retry exausto ao buscar lista de processos para %s em %s: %s",
-            cnj_cleaned, url, exc,
-        )
-        return None
-    except requests.Timeout:
-        logger.error(
-            "Timeout ao buscar lista de processos para %s em %s",
-            cnj_cleaned, url
-        )
-        return None
-    except requests.RequestException as e:
-        logger.error(
-            "Erro ao buscar lista de processos para %s em %s: %s",
-            cnj_cleaned, url, e
-        )
-        return None
-    except ValueError as e:  # JSONDecodeError
-        logger.error(
-            "Erro ao decodificar JSON da lista de processos para %s em %s: %s",
-            cnj_cleaned, url, e
-        )
-        return None
+        response = request_fn("GET", url, perfil="listagem", expect_json=True)
+    except requests.HTTPError as exc:
+        if exc.response is not None and exc.response.status_code == _STATUS_CNJ_INEXISTENTE:
+            logger.info("CNJ %s inexistente na listagem (HTTP 404).", cnj_cleaned)
+            return {"content": []}
+        raise
+    data = response.json()
+    if not isinstance(data, dict) or not isinstance(data.get("content"), list):
+        raise _forma_invalida(response, url)
+    return data
 
 
 def fetch_process_details(
     request_fn: RequestFn,
     numero_processo_oficial: str,
     base_api_url: str
-) -> dict[str, Any] | None:
-    """
-    Fetches detailed information for a specific official process number.
-    Corresponds to the second API call in the original cpopg.
+) -> dict[str, Any] | list[dict[str, Any]]:
+    """Busca os detalhes de um processo pelo número oficial.
+
+    A API devolve uma lista com o objeto de detalhes (forma dos samples
+    capturados); um objeto solto também é aceito, e o parser trata os dois.
+
+    Raises:
+        requests.HTTPError: Status 4xx, inclusive o 404.
+        RetryExhaustedError, requests.Timeout, requests.ConnectionError: Ver
+            ``HTTPScraper._request_with_retry``.
+        InvalidJSONResponseError: Corpo que não é JSON, ou que não é objeto nem
+            lista cujo primeiro item é objeto.
     """
     url = f"{base_api_url}{numero_processo_oficial}"
     logger.debug("Fetching process details from: %s", url)
-    try:
-        response = request_fn("GET", url, timeout=15)
-        data: dict[str, Any] = response.json()
+    response = request_fn("GET", url, perfil="listagem", expect_json=True)
+    data = response.json()
+    if isinstance(data, dict):
         return data
-    except RetryExhaustedError as exc:
-        logger.error(
-            "Retry exausto ao buscar detalhes do processo %s em %s: %s",
-            numero_processo_oficial, url, exc,
-        )
-        return None
-    except requests.Timeout:
-        logger.error(
-            "Timeout ao buscar detalhes do processo %s em %s",
-            numero_processo_oficial, url
-        )
-        return None
-    except requests.RequestException as e:
-        logger.error(
-            "Erro ao buscar detalhes do processo %s em %s: %s",
-            numero_processo_oficial, url, e
-        )
-        return None
-    except ValueError as e:  # JSONDecodeError
-        logger.error(
-            "Erro ao decodificar JSON dos detalhes do processo %s em %s: %s",
-            numero_processo_oficial, url, e
-        )
-        return None
+    if isinstance(data, list) and data and isinstance(data[0], dict):
+        return data
+    raise _forma_invalida(response, url)
 
 
 def fetch_document_text(
@@ -122,9 +121,12 @@ def fetch_document_text(
     base_api_url_docs: str,
     *,
     authorization: str = "",
-) -> str | None:
-    """
-    Fetches the raw text of a specific document for a given process number.
+) -> str:
+    """Baixa o texto bruto de um documento.
+
+    Raises:
+        requests.HTTPError, RetryExhaustedError, requests.Timeout,
+            requests.ConnectionError: Ver ``HTTPScraper._request_with_retry``.
     """
     # Recebe o CNJ limpo na URL, mas espera o CNJ original (com máscara) para a query string
     numero_processo_url = clean_cnj(numero_processo)
@@ -148,45 +150,18 @@ def fetch_document_text(
     logger.debug("[JUSBR DEBUG] Baixando documento: URL=%s", doc_url)
     logger.debug("[JUSBR DEBUG] Headers: %s", redact_headers(request_headers))
 
-    response: requests.Response | None = None
+    response = request_fn("GET", doc_url, headers=request_headers, perfil="documento")
     try:
-        response = request_fn("GET", doc_url, headers=request_headers, timeout=30)
-        try:
-            content_str: str = response.content.decode('utf-8')
-            return content_str
-        except UnicodeDecodeError:
-            logger.warning(
-                "UTF-8 decoding failed for document %s of process %s."
-                "Falling back to response.text (detected encoding: %s)",
-                id_documento, numero_processo, response.encoding
-            )
-            fallback: str = response.text  # Fallback to requests' auto-detected encoding
-            return fallback
-    except RetryExhaustedError as exc:
-        logger.error(
-            "Retry exausto ao baixar documento %s do processo %s (URL: %s): %s",
-            id_documento, numero_processo, doc_url, exc,
+        content_str: str = response.content.decode('utf-8')
+        return content_str
+    except UnicodeDecodeError:
+        logger.warning(
+            "UTF-8 decoding failed for document %s of process %s."
+            "Falling back to response.text (detected encoding: %s)",
+            id_documento, numero_processo, response.encoding
         )
-    except requests.exceptions.HTTPError as e:
-        logger.error(
-            "HTTP Error fetching document %s for process %s (URL: %s): %s. Response: %s",
-            id_documento, numero_processo, doc_url, e, response.text[:200] if response else "N/A"
-        )
-    except requests.exceptions.RequestException as e:
-        logger.error(
-            "Request Exception fetching document %s for process %s (URL: %s): %s",
-            id_documento, numero_processo, doc_url, e
-        )
-    # Catching Exception as a last resort to avoid
-    # crashing on unexpected errors during scraping.
-    # All known exceptions are handled above;
-    # this is to log and continue in production environments.
-    except Exception as e:
-        logger.error(
-            "Unexpected error fetching document %s for process %s (URL: %s): %s",
-            id_documento, numero_processo, doc_url, e
-        )
-    return None
+        fallback: str = response.text  # Fallback to requests' auto-detected encoding
+        return fallback
 
 
 def fetch_document_binary(
@@ -194,32 +169,18 @@ def fetch_document_binary(
     numero_processo: str,
     id_documento: str,
     base_api_url_docs: str
-) -> bytes | None:
-    """Fetch the binary payload of a document from the JusBR API."""
+) -> bytes:
+    """Baixa o binário de um documento.
+
+    Raises:
+        requests.HTTPError, RetryExhaustedError, requests.Timeout,
+            requests.ConnectionError: Ver ``HTTPScraper._request_with_retry``.
+    """
     numero_processo_param = numero_processo  # original, pode estar com máscara
     doc_url = (
         f"{base_api_url_docs.rstrip('/')}/{numero_processo_param}/documentos/{id_documento}/binario"
     )
     logger.debug("Fetching document binary from: %s", doc_url)
-    try:
-        response = request_fn("GET", doc_url, timeout=15)
-        content: bytes = response.content
-        return content
-    except RetryExhaustedError as exc:
-        logger.error(
-            "Retry exausto ao baixar binário do documento %s para processo %s em %s: %s",
-            id_documento, numero_processo, doc_url, exc,
-        )
-        return None
-    except requests.Timeout:
-        logger.error(
-            "Timeout ao buscar binário do documento %s para processo %s em %s",
-            id_documento, numero_processo, doc_url
-        )
-        return None
-    except requests.RequestException as e:
-        logger.error(
-            "Erro ao buscar binário do documento %s para processo %s em %s: %s",
-            id_documento, numero_processo, doc_url, e
-        )
-        return None
+    response = request_fn("GET", doc_url, perfil="documento")
+    content: bytes = response.content
+    return content
