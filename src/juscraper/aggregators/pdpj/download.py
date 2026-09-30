@@ -47,9 +47,30 @@ STATUS_SEM_REGISTRO = 404
 ``pesquisa`` sem resultado ("Não foram encontrados registros")."""
 
 
+_MENSAGEM_SEM_REGISTRO = "encontrados registros"
+"""Trecho da ``message`` do 404 da ``pesquisa``, "Não foram encontrados registros"."""
+
+
 def e_status(exc: BaseException, status: int) -> bool:
     """Diz se ``exc`` é o ``HTTPError`` de ``status``."""
     return isinstance(exc, requests.HTTPError) and exc.response is not None and exc.response.status_code == status
+
+
+def _e_sem_registro(exc: requests.HTTPError) -> bool:
+    """Diz se o erro é o 404 da ``pesquisa`` com o corpo medido, ``{code, message}``.
+
+    O corpo decide, e não só o status: um 404 de roteamento (URL base errada,
+    gateway, página HTML) viraria busca vazia na ``pesquisa`` e processo
+    ausente na confirmação do 500.
+    """
+    if not e_status(exc, STATUS_SEM_REGISTRO) or exc.response is None:
+        return False
+    try:
+        corpo = exc.response.json()
+    except ValueError:
+        return False
+    mensagem = corpo.get("message") if isinstance(corpo, dict) else None
+    return isinstance(mensagem, str) and _MENSAGEM_SEM_REGISTRO in mensagem.lower()
 
 
 def _forma_invalida(response: requests.Response) -> InvalidJSONResponseError:
@@ -209,9 +230,10 @@ def fetch_pesquisa(
 ) -> dict[str, Any] | None:
     """Pesquisa profunda em ``/processos`` (paginacao via ``searchAfter``).
 
-    Devolve ``None`` quando a API responde :data:`STATUS_SEM_REGISTRO`, a forma
-    que ela usa para a página seguinte à última com dados e para a busca sem
-    resultado; outro status de erro sobe. A página vazia em 200, descrita
+    Devolve ``None`` quando a API responde :data:`STATUS_SEM_REGISTRO` com a
+    mensagem "Não foram encontrados registros", a forma que ela usa para a
+    página seguinte à última com dados e para a busca sem resultado; outro
+    erro sobe, inclusive o 404 sem essa mensagem. A página vazia em 200, descrita
     abaixo, continua aceita.
 
     O objeto precisa trazer ``content`` como lista: sem ela, o laço da
@@ -226,7 +248,7 @@ def fetch_pesquisa(
     try:
         response = request_fn("GET", f"{base_url}/processos", params=params, perfil=PERFIL_LISTAGEM)
     except requests.HTTPError as exc:
-        if e_status(exc, STATUS_SEM_REGISTRO):
+        if _e_sem_registro(exc):
             return None
         raise
     data: dict[str, Any] = _json(response, dict)

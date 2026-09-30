@@ -18,6 +18,7 @@ from pydantic import ValidationError
 from tqdm.auto import tqdm
 
 from ...core.http import HTTPScraper
+from ...utils.cnj import clean_cnj
 from ...utils.params import normalize_paginas, raise_on_extra_kwargs, to_iso_date, validate_intervalo_datas
 from .download import BASE_URL, DEFAULT_HEADERS, build_listar_comunicacoes_params
 from .parse import parse_count, parse_items
@@ -32,7 +33,8 @@ def _exigir_pesquisa_ou_numero(pesquisa: str | None, numero_processo: str | None
     O schema aceita os dois vazios (``pesquisa`` tem o tipo canônico ``str``,
     com ``""`` como ausência), então a exigência de um dos dois mora aqui.
     """
-    if not pesquisa and numero_processo is None:
+    # Número sem dígitos iria como ``numeroProcesso=""``, uma consulta sem filtro.
+    if not pesquisa and not (numero_processo and clean_cnj(numero_processo)):
         raise ValueError(
             "ComunicaCNJScraper.listar_comunicacoes(): informe pesquisa, numero_processo ou os dois."
         )

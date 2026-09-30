@@ -218,3 +218,49 @@ def test_confirmacao_vale_por_processo():
 
     assert df["motivo_falha"].tolist() == ["nao_encontrado", "retry_esgotado_500"]
     assert _chamadas(PESQUISA) == 2
+
+
+# ---------------------------------------------------------------------
+# 404 sem o corpo medido não é "sem registros"
+# ---------------------------------------------------------------------
+
+@pytest.mark.parametrize(
+    "corpo",
+    ["<html>Not Found</html>", json.dumps({"code": 404, "message": "Recurso inexistente"}), ""],
+    ids=["html", "outra_mensagem", "vazio"],
+)
+@responses.activate
+def test_pesquisa_404_sem_o_corpo_medido_levanta(corpo):
+    """Um 404 de roteamento (URL base trocada, gateway) não pode virar busca vazia."""
+    _mock(PESQUISA, status=404, body=corpo)
+
+    with pytest.raises(requests.HTTPError):
+        _mk_scraper().pesquisa(tribunal="TRF1")
+
+
+@responses.activate
+def test_500_com_pesquisa_404_sem_o_corpo_medido_retenta_pelo_perfil():
+    endpoint = f"{BASE_URL}/processos/{PROC}/documentos"
+    _mock(endpoint, status=500)
+    _mock(PESQUISA, status=404, body="<html>Not Found</html>")
+
+    with pytest.warns(UserWarning, match="retry_esgotado_500"):
+        df = _mk_scraper().documentos(PROC)
+
+    assert _chamadas(endpoint) == 6
+    assert df["motivo_falha"].tolist() == ["retry_esgotado_500"]
+
+
+@responses.activate
+def test_existe_com_lista_500_com_pesquisa_404_sai_nao_encontrado(esperas_do_backoff):
+    endpoint = f"{BASE_URL}/processos/{OUTRO}/existe"
+    _mock(endpoint, status=500)
+    _mock(PESQUISA, status=404, body=SEM_REGISTROS)
+
+    with pytest.warns(UserWarning, match=f"processo {OUTRO}: nao_encontrado"):
+        df = _mk_scraper().existe([OUTRO])
+
+    assert _chamadas(endpoint) == 1
+    assert df["existe"].tolist() == [None]
+    assert df["motivo_falha"].tolist() == ["nao_encontrado"]
+    esperas_do_backoff.assert_not_called()
