@@ -20,9 +20,9 @@ from tests.pdpj_sso._jwt import token
 _EXISTE_URL = f"{BASE_URL}/processos/00000000000000000000/existe"
 
 
-def _scraper_do_cache(credencial):
+def _scraper_do_cache(credencial, nome="pdpj"):
     salvar_credencial(credencial)
-    return jus.scraper("pdpj", sleep_time=0)
+    return jus.scraper(nome, sleep_time=0)
 
 
 def test_access_vencido_renova_uma_vez_e_regrava_o_cache():
@@ -73,8 +73,9 @@ def test_refresh_sem_rotacao_mantem_o_antigo():
         assert renovar("refresh-antigo") == CredencialPdpj("novo", "refresh-antigo")
 
 
-def test_auth_manual_substitui_a_credencial_do_cache():
-    scraper = _scraper_do_cache(CredencialPdpj(token(3600, sub="cache"), token(7200)))
+@pytest.mark.parametrize("nome", ["pdpj", "jusbr"])
+def test_auth_manual_substitui_a_credencial_do_cache(nome):
+    scraper = _scraper_do_cache(CredencialPdpj(token(3600, sub="cache"), token(7200)), nome)
     manual = token(sub="manual")
     scraper.auth(manual)
     with responses.RequestsMock() as mocked:
@@ -299,3 +300,11 @@ def test_gravacao_que_volta_a_funcionar_religa_a_leitura_do_cache(mocker):
     salvar.side_effect = None
     auth.ao_renovar(CredencialPdpj(token(sub="n2"), token(3600)))
     assert auth.ler_cache is not None
+
+
+def test_pdpj_com_token_vazio_nao_carrega_o_cache():
+    """``token=""`` fica sem autenticacao, como antes; so ``None`` carrega a credencial padrao."""
+    salvar_credencial(CredencialPdpj(token(3600, sub="cache"), token(7200)))
+    scraper = jus.scraper("pdpj", token="", sleep_time=0)
+    assert scraper.token is None
+    assert scraper.session.auth is None

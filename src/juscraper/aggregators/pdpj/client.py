@@ -222,7 +222,7 @@ class PdpjScraper(PdpjSsoMixin, BaseScraper):
         self.token: str | None = None
         if token:
             self.auth(token)
-        else:
+        elif token is None:
             self._carregar_credencial_padrao()
 
     def auth(self, token: str) -> bool:
