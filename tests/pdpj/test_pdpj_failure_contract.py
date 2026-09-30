@@ -220,7 +220,7 @@ def test_403_numa_requisicao_so_nos_metodos_de_lista():
 
 @pytest.mark.parametrize("metodo", list(METODOS_DE_LISTA))
 @responses.activate
-def test_404_vira_linha_http_404_e_o_outro_processo_segue(metodo):
+def test_404_vira_linha_nao_encontrado_e_o_outro_processo_segue(metodo):
     sufixo, sample = METODOS_DE_LISTA[metodo]
     _mock(f"/processos/{OUTRO}{sufixo}", status=404)
     _mock_sample(f"/processos/{PROC}{sufixo}", sample)
@@ -230,27 +230,27 @@ def test_404_vira_linha_http_404_e_o_outro_processo_segue(metodo):
 
     falha = df[df["processo"] == OUTRO]
     assert len(falha) == 1
-    assert falha.iloc[0]["motivo_falha"] == "http_404"
+    assert falha.iloc[0]["motivo_falha"] == "nao_encontrado"
     sucesso = df[df["processo"] == PROC]
     assert len(sucesso) >= 1
     assert sucesso["motivo_falha"].isna().all()
     assert len(avisos) == 1
     mensagem = str(avisos[0].message)
     assert f"PdpjScraper.{metodo}: 1 consulta(s) de processo falharam" in mensagem
-    assert f"processo {OUTRO}: http_404" in mensagem
+    assert f"processo {OUTRO}: nao_encontrado" in mensagem
 
 
 @responses.activate
-def test_404_no_cpopg_e_falha_e_nao_ausencia():
-    """Ninguém mediu se o 404 do ``/processos/{n}`` quer dizer ausência; ausência é a lista vazia."""
+def test_404_no_cpopg_e_linha_de_falha_nao_encontrado():
+    """O 404 é ausência medida, mas sai na linha de falha, com o motivo; a lista vazia segue sem motivo."""
     _mock(f"/processos/{OUTRO}", status=404)
     _mock_sample(f"/processos/{PROC}", "cpopg/processo_nao_encontrado.json")
 
-    with pytest.warns(UserWarning, match="http_404"):
+    with pytest.warns(UserWarning, match="nao_encontrado"):
         df = _mk_scraper().cpopg([OUTRO, PROC])
 
     assert df["status_consulta"].tolist() == [STATUS_CONSULTA_FALHA, "Nao encontrado"]
-    assert df["motivo_falha"].tolist() == ["http_404", None]
+    assert df["motivo_falha"].tolist() == ["nao_encontrado", None]
     assert df["detalhes"].tolist() == [None, None]
 
 
@@ -259,12 +259,12 @@ def test_existe_lista_404_vira_linha_com_existe_none():
     _mock(f"/processos/{OUTRO}/existe", status=404)
     _mock(f"/processos/{PROC}/existe", body="true")
 
-    with pytest.warns(UserWarning, match=f"processo {OUTRO}: http_404"):
+    with pytest.warns(UserWarning, match=f"processo {OUTRO}: nao_encontrado"):
         df = _mk_scraper().existe([OUTRO, PROC])
 
     assert df.columns.tolist() == ["processo", "existe", "motivo_falha"]
     assert df["existe"].tolist() == [None, True]
-    assert df["motivo_falha"].tolist() == ["http_404", None]
+    assert df["motivo_falha"].tolist() == ["nao_encontrado", None]
 
 
 @responses.activate
@@ -292,7 +292,7 @@ def test_401_interrompe_com_as_falhas_anteriores_na_nota(metodo):
     assert erro.value.response.status_code == 401
     notas = " ".join(getattr(erro.value, "__notes__", []))
     assert "Antes do 401, 1 consulta(s) de processo falharam" in notas
-    assert f"processo {OUTRO}: http_404" in notas
+    assert f"processo {OUTRO}: nao_encontrado" in notas
 
 
 @responses.activate

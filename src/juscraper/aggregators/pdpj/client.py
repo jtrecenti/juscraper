@@ -10,6 +10,7 @@ import logging
 import time
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass
+from functools import partial
 from typing import Any, ClassVar, cast
 
 import pandas as pd
@@ -20,6 +21,7 @@ from ...core.auth import validar_jwt
 from ...core.failures import (
     COLUNA_MOTIVO_FALHA,
     EXCECOES_DE_FALHA_POR_LINHA,
+    MOTIVO_NAO_ENCONTRADO,
     STATUS_CONSULTA_FALHA,
     anotar_falhas_anteriores,
     avisar_falhas,
@@ -159,6 +161,26 @@ def _document_to_row(
     }
 
 
+# O data lake responde 500, e não 404, nos endpoints por processo quando o
+# processo não está no índice dele; a ``pesquisa`` por ``numeroProcesso``
+# responde 404 ao mesmo processo. Medido em campo nas duas direções: todo
+# processo que deu 404 na ``pesquisa`` deu 500 nos endpoints, e nenhum que deu
+# 200 na ``pesquisa`` ficou sem resposta. O 500 sozinho não distingue ausência
+# de pane, e a ``pesquisa`` sozinha nunca marca ausência.
+_STATUS_A_CONFIRMAR = 500
+# 404 é a resposta a processo inexistente nos endpoints por processo e a
+# "Não foram encontrados registros" na ``pesquisa``.
+_STATUS_SEM_REGISTRO = 404
+
+
+class _ProcessoAusenteError(Exception):
+    """O endpoint do processo respondeu 500 e a ``pesquisa`` por número, 404."""
+
+
+def _e_status(exc: BaseException, status: int) -> bool:
+    return isinstance(exc, requests.HTTPError) and exc.response is not None and exc.response.status_code == status
+
+
 _ITEM_CONSULTA = "consulta(s) de processo"
 _ITEM_DOWNLOAD = "download(s) de documento"
 
@@ -292,7 +314,15 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
     :meth:`movimentos`, :meth:`partes` e :meth:`existe` com lista) e
     :meth:`download_documents` devolvem uma linha de falha quando a requisicao
     de um item falha, com o motivo na coluna ``motivo_falha`` (vocabulario em
-    :mod:`juscraper.core.failures`) e um ``UserWarning`` agregado ao fim. O 401
+    :mod:`juscraper.core.failures`) e um ``UserWarning`` agregado ao fim.
+
+    Nos metodos por processo, o processo ausente do data lake sai com o motivo
+    ``nao_encontrado``. A API diz isso de duas formas: 404 no endpoint do
+    processo, ou 500 no endpoint com 404 na :meth:`pesquisa` por
+    ``numeroProcesso``. No primeiro 500 de um processo, o raspador faz essa
+    pesquisa, numa tentativa so: com 404, para de retentar; com qualquer outra
+    resposta, segue as tentativas do perfil. Assim o processo ausente custa
+    duas requisicoes, e nao as seis tentativas do perfil. O 401
     e a falha do SSO ao renovar o token (``ErroSsoPdpj``) interrompem a
     coleta. Metodos sem linha por item (:meth:`existe` com
     ``str``, :meth:`contar` e :meth:`pesquisa`) levantam o erro.
@@ -432,16 +462,63 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
         linha_falha: Callable[[str], dict[str, Any]],
         falhas: list[str],
     ) -> list[dict[str, Any]]:
-        """Linhas de um CNJ, ou a linha de falha com o motivo; o 401 propaga."""
+        """Linhas de um CNJ, ou a linha de falha com o motivo; o 401 propaga.
+
+        O 404 do endpoint e o 500 confirmado por :meth:`_confirmar_ausencia`
+        saem ``nao_encontrado``; as demais falhas, pelo vocabulário do core.
+        """
+        request_fn = partial(self._request_with_retry, on_response=self._confirmar_ausencia(cnj))
         try:
-            data = buscar(self._request_with_retry, cnj, base_url=self.BASE_URL)
+            data = buscar(request_fn, cnj, base_url=self.BASE_URL)
+        except _ProcessoAusenteError:
+            motivo = MOTIVO_NAO_ENCONTRADO
         except EXCECOES_DE_FALHA_POR_LINHA as exc:
             if e_token_invalido(exc):
                 raise
-            motivo = motivo_falha(exc)
-            falhas.append(f"processo {cnj}: {motivo}")
-            return [{**linha_falha(cnj), COLUNA_MOTIVO_FALHA: motivo}]
-        return [{**row, COLUNA_MOTIVO_FALHA: None} for row in montar(data, cnj)]
+            motivo = MOTIVO_NAO_ENCONTRADO if _e_status(exc, _STATUS_SEM_REGISTRO) else motivo_falha(exc)
+        else:
+            return [{**row, COLUNA_MOTIVO_FALHA: None} for row in montar(data, cnj)]
+        falhas.append(f"processo {cnj}: {motivo}")
+        return [{**linha_falha(cnj), COLUNA_MOTIVO_FALHA: motivo}]
+
+    def _confirmar_ausencia(self, cnj: str) -> Callable[[requests.Response], None]:
+        """Gancho ``on_response`` que confirma o primeiro 500 do processo pela ``pesquisa``.
+
+        O core chama o gancho em cada resposta, antes de decidir se retenta, e
+        a exceção que ele levanta propaga sem novas tentativas. Só o primeiro
+        500 de uma chamada dispara a pesquisa; os seguintes, depois de ela não
+        confirmar a ausência, seguem o perfil.
+
+        Raises:
+            _ProcessoAusenteError: Quando a pesquisa responde 404.
+        """
+        pendente = True
+
+        def gancho(resposta: requests.Response) -> None:
+            nonlocal pendente
+            if not pendente or resposta.status_code != _STATUS_A_CONFIRMAR:
+                return
+            pendente = False
+            if self._pesquisa_sem_registro(cnj):
+                raise _ProcessoAusenteError(cnj)
+
+        return gancho
+
+    def _pesquisa_sem_registro(self, cnj: str) -> bool:
+        """Diz se a ``pesquisa`` por ``numeroProcesso`` responde 404, numa tentativa só.
+
+        Uma tentativa porque a pesquisa serve só de sinal: se ela falhar por
+        outro motivo, o processo segue as tentativas do próprio perfil, e
+        retentar a pesquisa atrasaria esse caminho. O 401 propaga.
+        """
+        uma_tentativa = partial(self._request_with_retry, max_retries=1)
+        try:
+            fetch_pesquisa(uma_tentativa, {"numeroProcesso": cnj}, base_url=self.BASE_URL)
+        except EXCECOES_DE_FALHA_POR_LINHA as exc:
+            if e_token_invalido(exc):
+                raise
+            return _e_status(exc, _STATUS_SEM_REGISTRO)
+        return False
 
     def existe(self, id_cnj: str | list[str]) -> bool | pd.DataFrame:
         """Checa presenca de processo(s) no Data Lake.
@@ -453,7 +530,8 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
             ``bool`` quando ``id_cnj`` e ``str``; ``pd.DataFrame`` com
             colunas ``processo``, ``existe`` e ``motivo_falha`` quando e
             ``list``. Na lista, o processo cuja consulta falhou sai com
-            ``existe=None`` e o motivo.
+            ``existe=None`` e o motivo, ``nao_encontrado`` no processo ausente
+            (ver a classe).
 
         Raises:
             requests.HTTPError: No 401, e com ``str`` em qualquer erro HTTP.
@@ -491,9 +569,11 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
             ``segmento_justica``, ``data_atualizacao``, ``detalhes``
             (dict com a resposta completa) e ``motivo_falha``. A API que
             responde lista vazia gera uma linha com
-            ``status_consulta="Nao encontrado"``; a consulta que falha,
-            inclusive com 404, gera uma linha com ``status_consulta`` igual a
+            ``status_consulta="Nao encontrado"``; a consulta que falha gera
+            uma linha com ``status_consulta`` igual a
             :data:`juscraper.core.failures.STATUS_CONSULTA_FALHA` e o motivo.
+            O processo ausente do data lake (ver a classe) sai nessa linha,
+            com o motivo ``nao_encontrado``.
 
         Raises:
             requests.HTTPError: No 401 (token ausente, expirado ou invalido),
@@ -525,8 +605,9 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
         """Lista documentos do(s) processo(s) (sem baixar conteudo).
 
         O processo cuja consulta falha sai numa linha so, com ``processo`` e
-        ``motivo_falha`` preenchidos e as demais colunas vazias. O 401
-        interrompe; ver :meth:`cpopg`.
+        ``motivo_falha`` preenchidos e as demais colunas vazias. O processo
+        ausente do data lake sai assim, com ``nao_encontrado``, e nao como lista
+        sem documentos. O 401 interrompe; ver :meth:`cpopg`.
         """
         self._check_auth()
         return self._coletar_por_processo(
@@ -599,14 +680,17 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
                 * ``itens_por_pagina`` (int): default 100, max 100
 
         Returns:
-            DataFrame com uma linha por processo retornado.
+            DataFrame com uma linha por processo retornado. A API responde 404
+            ("Não foram encontrados registros") a pagina seguinte a ultima com
+            dados e a busca sem resultado; o 404 encerra a coleta, e a busca
+            sem resultado devolve DataFrame vazio.
 
         Raises:
             requests.HTTPError, RetryExhaustedError, requests.Timeout,
             requests.ConnectionError, InvalidJSONResponseError: Quando a
-                requisicao de qualquer pagina falha. Pagina nao vira linha de
-                falha, e devolver as paginas anteriores truncaria o resultado
-                sem aviso.
+                requisicao de qualquer pagina falha, com status diferente de
+                404. Pagina nao vira linha de falha, e devolver as paginas
+                anteriores truncaria o resultado sem aviso.
 
         See Also:
             :class:`InputPesquisaPdpj` -- schema pydantic e a fonte da
@@ -638,6 +722,10 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
 
         A API devolve em cada página o cursor da seguinte; as linhas de uma
         página entram só quando ela está em ``permitidas`` (``None`` = todas).
+        A página seguinte à última com dados vem como 404 com ``{code, message}``
+        ("Não foram encontrados registros"), e a página 1 da busca sem resultado
+        também: os dois encerram a coleta com o que já foi lido. Outro status
+        de erro levanta.
         """
         rows: list[dict[str, Any]] = []
         pagina = 1
@@ -647,7 +735,12 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
             if search_after is not None:
                 # API espera searchAfter como string CSV: timestamp,id
                 params["searchAfter"] = ",".join(str(v) for v in search_after)
-            data = fetch_pesquisa(self._request_with_retry, params, base_url=self.BASE_URL)
+            try:
+                data = fetch_pesquisa(self._request_with_retry, params, base_url=self.BASE_URL)
+            except requests.HTTPError as exc:
+                if _e_status(exc, _STATUS_SEM_REGISTRO):
+                    return rows
+                raise
             page_rows, search_after, _total = parse_pesquisa_response(data)
             if permitidas is None or pagina in permitidas:
                 rows.extend(page_rows)

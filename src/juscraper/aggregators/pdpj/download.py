@@ -197,6 +197,10 @@ def fetch_pesquisa(
 ) -> dict[str, Any]:
     """Pesquisa profunda em ``/processos`` (paginacao via ``searchAfter``).
 
+    A página sem registros costuma vir como 404, que sobe como
+    ``requests.HTTPError`` e o laço da ``pesquisa`` trata como fim da coleta.
+    A forma em 200 abaixo continua aceita, para o caso de a API voltar a usá-la.
+
     O objeto precisa trazer ``content`` como lista: sem ela, o laço da
     ``pesquisa`` leria uma página vazia e encerraria a coleta em silêncio.
     A exceção é ``content: null`` com ``numberOfElements`` inteiro igual a 0 (não ``false`` nem ``0.0``), que vira
