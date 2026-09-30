@@ -618,3 +618,15 @@ def test_politica_timeout_list_becomes_tuple():
 def test_politica_non_mapping_adjustment_raises():
     with pytest.raises(ValueError, match=r"deve ser um dict de campos, recebido RequestPolicy"):
         _ProbeComPerfis(politica={"documento": RequestPolicy(timeout=1)})  # type: ignore[dict-item]
+
+
+@responses.activate
+def test_profile_base_backoff_used_for_invalid_json(mocker):
+    sleep_spy = mocker.patch("juscraper.core.http.time.sleep")
+    responses.add(responses.GET, URL, body="", status=200)
+    responses.add(responses.GET, URL, body="", status=200)
+    responses.add(responses.GET, URL, json={"ok": True}, status=200)
+
+    _ProbeBackoff()._request_with_retry("GET", URL, perfil="lento", expect_json=True)
+
+    assert [c.args[0] for c in sleep_spy.call_args_list] == [3.0, 9.0]
