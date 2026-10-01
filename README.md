@@ -61,7 +61,7 @@ dados.head()
 | TJMT     | cjsg                              |
 | TJPA     | cjsg                              |
 | TJPB     | cjsg                              |
-| TJPE     | cjsg                              |
+| TJPE     | cjsg, cpopg                       |
 | TJPI     | cjsg                              |
 | TJPR     | cjsg                              |
 | TJRN     | cjsg                              |

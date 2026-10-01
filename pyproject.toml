@@ -74,9 +74,13 @@ dev = [
     "lizard>=1.17.0",
     "complexipy>=5.0.0",
 ]
-stf = [
-    # Obtem o cookie aws-waf-token do portal de jurisprudencia do STF (desafio JavaScript do AWS WAF).
+waf = [
+    # Obtem o cookie aws-waf-token dos portais atras do desafio JavaScript do AWS WAF (STF, TJPE).
     "playwright>=1.49",
+]
+stf = [
+    # Alias de `waf`, mantido para quem ja instala `juscraper[stf]` desde a 0.4.0.
+    "juscraper[waf]",
 ]
 govbr = [
     # Conexão por CDP ao Chrome da máquina no login gov.br do JusBR e do PDPJ (`auth_govbr()`).

@@ -30,5 +30,5 @@ def test_contar_nao_aceita_tamanho_pagina():
 
 def test_sem_playwright_orienta_a_instalar_o_extra(mocker):
     mocker.patch.dict(sys.modules, {"playwright": None, "playwright.sync_api": None})
-    with pytest.raises(ImportError, match=r"juscraper\[stf\]"):
+    with pytest.raises(ImportError, match=r"juscraper\[waf\]"):
         obter_waf_token()
