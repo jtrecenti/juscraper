@@ -8,6 +8,8 @@ import pandas as pd
 from juscraper.core.http import HTTPScraper
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
+from .._trf.schemas import InputCpopgTRF
+from .consulta_publica import TJPEConsultaPublicaScraper
 from .download import cjsg_download
 from .parse import cjsg_parse
 from .schemas import InputCJSGTJPE
@@ -17,13 +19,72 @@ class TJPEScraper(HTTPScraper):
     """Scraper for the Tribunal de Justica de Pernambuco."""
 
     BASE_URL = "https://www.tjpe.jus.br/consultajurisprudenciaweb"
+    #: Schema do ``cpopg``, o mesmo da família PJe ConsultaPública dos TRFs.
+    INPUT_CPOPG = InputCpopgTRF
 
     def __init__(self):
         super().__init__("TJPE")
+        self._consulta_publica: TJPEConsultaPublicaScraper | None = None
 
-    def cpopg(self, id_cnj: str | list[str]):
-        """Stub: first instance case consultation not implemented for TJPE."""
-        raise NotImplementedError("Consulta de processos de 1 grau não implementada para TJPE.")
+    def _consulta(self) -> TJPEConsultaPublicaScraper:
+        # Sessão própria e criada na primeira consulta: o cjsg roda em outro
+        # host, sem WAF, e não precisa dos cabeçalhos de navegador do PJe.
+        if self._consulta_publica is None:
+            self._consulta_publica = TJPEConsultaPublicaScraper()
+        return self._consulta_publica
+
+    def cpopg(
+        self,
+        id_cnj: str | list[str],
+        download_pecas: bool = False,
+        diretorio: str | None = None,
+        **kwargs,
+    ) -> pd.DataFrame:
+        """Consulta processos de 1º grau na consulta pública do PJe do TJPE.
+
+        Delega a :class:`TJPEConsultaPublicaScraper`, que reaproveita o fluxo
+        dos TRFs (:meth:`juscraper.courts._trf.base.TRFConsultaScraper.cpopg`).
+        Processo sob segredo de justiça não aparece na consulta pública e sai
+        como linha só com ``id_cnj``, igual a processo inexistente.
+
+        O site fica atrás de um AWS WAF que desafia de forma intermitente.
+        Quando o desafio aparece, o cookie ``aws-waf-token`` é obtido com o
+        Playwright (extra ``juscraper[waf]``, seguido de
+        ``playwright install chromium``); sem desafio, nada disso é preciso.
+
+        Args:
+            id_cnj (str | list[str]): CNJ único ou lista, com ou sem máscara.
+            download_pecas (bool): Se ``True``, baixa também as peças públicas
+                (HTML do visualizador do PJe). Default ``False``.
+            diretorio (str | None): Onde gravar as peças, em
+                ``<diretorio>/<cnj>/<id>.html``. Default ``None`` (diretório
+                temporário).
+
+        Returns:
+            pd.DataFrame: Uma linha por CNJ. Colunas: ``id_cnj``, ``processo``,
+                ``classe``, ``assunto``, ``data_distribuicao``,
+                ``orgao_julgador``, ``jurisdicao``, ``endereco_orgao``,
+                ``polo_ativo``, ``polo_passivo``, ``movimentacoes``,
+                ``documentos``; com ``download_pecas=True``, também ``pecas``.
+
+        Raises:
+            TypeError: Kwarg desconhecido.
+            ImportError: O WAF desafiou e o Playwright não está instalado.
+            WafChallengeError: O WAF desafiou de novo logo após a renovação do
+                cookie.
+
+        Exemplo:
+            >>> import juscraper as jus
+            >>> tjpe = jus.scraper("tjpe")
+            >>> df = tjpe.cpopg("0000000-00.0000.8.17.0000")
+
+        See also:
+            :class:`InputCpopgTRF` — schema pydantic e a fonte da verdade dos
+            parâmetros aceitos.
+        """
+        return self._consulta().cpopg(
+            id_cnj, download_pecas=download_pecas, diretorio=diretorio, **kwargs
+        )
 
     def cposg(self, id_cnj: str | list[str]):
         """Stub: second instance case consultation not implemented for TJPE."""

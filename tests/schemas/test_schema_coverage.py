@@ -84,6 +84,8 @@ EXPECTED_COURT_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
     ("trf1", "cpopg"): ("juscraper.courts._trf.schemas", "InputCpopgTRF"),
     ("trf3", "cpopg"): ("juscraper.courts._trf.schemas", "InputCpopgTRF"),
     ("trf5", "cpopg"): ("juscraper.courts._trf.schemas", "InputCpopgTRF"),
+    # TJPE 1º grau roda o mesmo PJe ConsultaPública dos TRFs.
+    ("tjpe", "cpopg"): ("juscraper.courts._trf.schemas", "InputCpopgTRF"),
     # eproc consulta pública (TRF6) — captcha-gated.
     ("trf6", "cpopg"): ("juscraper.courts.trf6.schemas", "InputCpopgTRF6"),
     # Busca de jurisprudencia do STF (acordaos e monocraticas).
