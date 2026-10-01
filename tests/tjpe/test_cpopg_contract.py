@@ -24,6 +24,7 @@ from tests._helpers import load_sample, load_sample_bytes
 BASE = "https://pje.cloud.tjpe.jus.br/1g/"
 LIST_URL = BASE + "ConsultaPublica/listView.seam"
 DETAIL_URL = BASE + "ConsultaPublica/DetalheProcessoConsultaPublica/listView.seam"
+DOC_URL = BASE + "ConsultaPublica/DetalheProcessoConsultaPublica/documentoSemLoginHTML.seam"
 CNJ = "00000011220248170001"
 CNJ_FORMATADO = "0000001-12.2024.8.17.0001"
 
@@ -173,13 +174,61 @@ def test_sem_playwright_o_erro_chega_ao_usuario(tjpe, mocker):
         tjpe.cpopg(CNJ)
 
 
+@responses.activate
+def test_sem_playwright_no_download_das_pecas_o_erro_chega_ao_usuario(tjpe, mocker, tmp_path):
+    mocker.patch(
+        "juscraper.courts.tjpe.consulta_publica.obter_waf_token",
+        side_effect=ImportError("Instale com `pip install 'juscraper[waf]'`"),
+    )
+    _form()
+    _busca()
+    _detalhe()
+    _desafio(url=DOC_URL)
+
+    # Sem a propagação, cada peça viraria warning e ``pecas`` sairia vazia.
+    with pytest.raises(ImportError, match=r"juscraper\[waf\]"):
+        tjpe.cpopg(CNJ, download_pecas=True, diretorio=str(tmp_path))
+
+
+@responses.activate
+def test_falha_do_navegador_interrompe_o_lote_sem_relancar(tjpe, mocker):
+    obter = mocker.patch(
+        "juscraper.courts.tjpe.consulta_publica.obter_waf_token",
+        side_effect=RuntimeError("O portal do TJPE nao emitiu o cookie aws-waf-token em 60s."),
+    )
+    _desafio()
+    _desafio()
+
+    with pytest.raises(WafChallengeError, match="nao foi obtido: O portal do TJPE nao emitiu"):
+        tjpe.cpopg([CNJ, CNJ])
+
+    obter.assert_called_once()
+
+
+@responses.activate
+def test_cookie_fica_restrito_ao_host_do_pje(tjpe, obter):
+    _desafio()
+    _form()
+    _busca("cpopg/search_no_results.html")
+
+    tjpe.cpopg(CNJ)
+
+    (cookie,) = [c for c in tjpe._consulta().session.cookies if c.name == WAF_COOKIE]
+    assert cookie.domain == "pje.cloud.tjpe.jus.br"
+
+
 def test_sessao_usa_o_user_agent_do_navegador_que_resolve_o_desafio():
     scraper = TJPEConsultaPublicaScraper(sleep_time=0)
     assert scraper.session.headers["User-Agent"] == USER_AGENT
 
 
-def test_cjsg_continua_em_sessao_propria(tjpe):
-    assert tjpe.session is not tjpe._consulta().session
+def test_cjsg_continua_em_sessao_propria():
+    # Instância sem a fixture: ela já troca a consulta pública por outra.
+    tjpe = jus.scraper("tjpe")
+    consulta = tjpe._consulta()
+    assert isinstance(consulta, TJPEConsultaPublicaScraper)
+    assert tjpe._consulta() is consulta
+    assert tjpe.session is not consulta.session
     assert tjpe.session.headers["User-Agent"] != USER_AGENT
 
 

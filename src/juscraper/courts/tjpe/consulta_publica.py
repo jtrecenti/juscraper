@@ -15,6 +15,7 @@ voltar sem resultado e este módulo precisa mudar.
 from __future__ import annotations
 
 from typing import Any
+from urllib.parse import urlparse
 
 import requests
 
@@ -36,9 +37,16 @@ class TJPEConsultaPublicaScraper(TRFConsultaScraper):
         # O WAF amarra o cookie ao user agent do navegador que resolveu o desafio.
         session.headers["User-Agent"] = USER_AGENT
 
-    def _renovar_cookie_waf(self) -> None:
-        token = obter_waf_token(self.BASE_URL + LISTVIEW_PATH, tribunal=self.TRIBUNAL_NAME)
-        self.session.cookies.set(WAF_COOKIE, token)
+    def _renovar_cookie_waf(self, url: str) -> None:
+        try:
+            token = obter_waf_token(self.BASE_URL + LISTVIEW_PATH, tribunal=self.TRIBUNAL_NAME)
+        except ImportError:
+            raise  # a mensagem já ensina a instalar o extra
+        except Exception as exc:
+            # Navegador não instalado ou cookie não emitido valem para a sessão
+            # inteira; por item, viraria "não encontrado" e relançaria o navegador.
+            raise WafChallengeError(self.TRIBUNAL_NAME, url, motivo=str(exc)) from exc
+        self.session.cookies.set(WAF_COOKIE, token, domain=urlparse(self.BASE_URL).hostname)
 
     def _request_with_retry(self, method: str, url: str, **kwargs: Any) -> requests.Response:
         """Repete a requisição uma vez com cookie novo quando o WAF desafia.
@@ -50,7 +58,7 @@ class TJPEConsultaPublicaScraper(TRFConsultaScraper):
         resp = super()._request_with_retry(method, url, **kwargs)
         if not eh_desafio_waf(resp):
             return resp
-        self._renovar_cookie_waf()
+        self._renovar_cookie_waf(url)
         resp = super()._request_with_retry(method, url, **kwargs)
         if eh_desafio_waf(resp):
             raise WafChallengeError(self.TRIBUNAL_NAME, url)

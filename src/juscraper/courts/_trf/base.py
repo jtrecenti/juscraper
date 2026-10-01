@@ -319,8 +319,8 @@ class TRFConsultaScraper(HTTPScraper):
             for ca, doc_id in urls:
                 try:
                     content = fetch_documento(self, self.BASE_URL, ca, doc_id)
-                except BotChallengeBlockedError:
-                    raise  # session-wide; nenhum item passaria
+                except (BotChallengeBlockedError, ImportError):
+                    raise  # session-wide; nenhuma peça passaria
                 except Exception as exc:  # noqa: BLE001 — resiliência por peça
                     logger.warning(
                         "Erro ao baixar peça %s do %s: %s", doc_id, cnj, exc
