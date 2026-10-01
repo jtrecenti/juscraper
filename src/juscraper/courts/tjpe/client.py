@@ -69,9 +69,11 @@ class TJPEScraper(HTTPScraper):
 
         Raises:
             TypeError: Kwarg desconhecido.
-            ImportError: O WAF desafiou e o Playwright não está instalado.
+            ImportError: O WAF desafiou e o Playwright não está instalado,
+                inclusive durante o download das peças.
             WafChallengeError: O WAF desafiou de novo logo após a renovação do
-                cookie.
+                cookie, ou o cookie não pôde ser obtido (Chromium do Playwright
+                ausente, cookie não emitido no prazo). Interrompe o lote.
 
         Exemplo:
             >>> import juscraper as jus
