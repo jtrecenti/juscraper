@@ -27,7 +27,7 @@ class HTTPSemanticError(Exception):
 
 
 class BotChallengeBlockedError(Exception):
-    """Levantada quando um portal bloqueia o request via bot manager (ex.: Akamai).
+    """Levantada quando um portal bloqueia o request via bot manager (ex.: Akamai, CloudFront).
 
     O sintoma típico é HTTP 403 com body curto ``Access Denied`` e uma referência
     Akamai (``Reference #...``); o cookie de challenge (``ak_bmsc``) nem chega
@@ -38,15 +38,27 @@ class BotChallengeBlockedError(Exception):
     novo, ou trocar de IP (VPN, hotspot). É propagada (em vez de engolida
     pelos try/except por-item) porque um bloqueio nesse nível é session-wide:
     nenhum CNJ do batch vai conseguir passar.
+
+    ``bot_manager`` nomeia o bloqueador na mensagem. O default é ``"Akamai"``
+    (TRFs); o agregador Falcao passa ``"CloudFront"``, cujo 403 é uma página
+    HTML ``The request could not be satisfied`` servida pelo próprio CDN.
     """
 
-    def __init__(self, tribunal: str, url: str, reference: str | None = None):
+    def __init__(
+        self,
+        tribunal: str,
+        url: str,
+        reference: str | None = None,
+        *,
+        bot_manager: str = "Akamai",
+    ):
         self.tribunal = tribunal
         self.url = url
         self.reference = reference
+        self.bot_manager = bot_manager
         msg = (
-            f"{tribunal} bloqueou a requisição (HTTP 403 'Access Denied') "
-            f"em {url}. Provavelmente foi o bot manager (Akamai) limitando "
+            f"{tribunal} bloqueou a requisição (HTTP 403) em {url}. "
+            f"Provavelmente foi o bot manager ({bot_manager}) limitando "
             f"o seu IP — aguarde alguns minutos antes de tentar de novo "
             f"ou troque de IP (VPN, hotspot)."
         )

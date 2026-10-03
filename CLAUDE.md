@@ -36,6 +36,32 @@ uv run pytest -m integration           # acessa serviços externos
 - Resolver aliases e validações específicas antes do pydantic. Para implementar wiring, seguir `CONTRIBUTING.md` > **Schemas pydantic** > **Pipeline canônico (wiring)**.
 - `Input*` rejeita campos extras; `Output*` aceita auxiliares do backend. Na API pública, `raise_on_extra_kwargs` converte erros exclusivamente de kwargs desconhecidos em `TypeError`; os demais erros de validação permanecem `ValidationError`.
 
+## Política de deprecação
+
+Ao alterar uma API pública, aplicar esta política, definida a partir da [issue #150](https://github.com/jtrecenti/juscraper/issues/150) e dos [estágios do lifecycle do tidyverse](https://lifecycle.r-lib.org/articles/stages.html). O juscraper adota os estágios, mas usa transições curtas, proporcionais ao uso e ao custo de manter compatibilidade em uma biblioteca de raspagem. Não há prazo mínimo em meses ou anos.
+
+### Estágios
+
+O estágio pode se aplicar a um endpoint, parâmetro ou valor aceito. Registrar exceções na docstring e na documentação da API; `stable` é o padrão quando não houver indicação explícita.
+
+| Estágio | Contrato |
+| --- | --- |
+| `experimental` | Interface em avaliação, identificada como tal na documentação. Pode mudar ou desaparecer sem ciclo prévio de aviso; registrar a quebra e a migração no changelog. |
+| `stable` | Interface recomendada. Quebras deliberadas passam pelo fluxo de deprecação abaixo. A estabilidade da API não garante disponibilidade do portal do tribunal. |
+| `superseded` | Há alternativa recomendada, mas a API continua suportada, sem aviso e sem retirada prevista. Recebe correções críticas, sem novas funcionalidades. Para retirá-la, passar antes a `deprecated`. |
+| `deprecated` | Retirada prevista. O uso ainda funciona e emite `DeprecationWarning` com a alternativa, quando existir. |
+
+### Fluxo de mudança
+
+1. No PR que inicia a deprecação, justificar a quebra, identificar os endpoints afetados e registrar a versão de início e a versão-alvo de remoção em `CHANGELOG.md`, na categoria `Deprecated` de `[Unreleased]`. Para aliases, incluir a tabela nome antigo → nome canônico. Descrever a migração em `docs/api-conventions.qmd` ou na documentação do endpoint; se não houver substituto, dizer isso explicitamente.
+2. Enquanto houver compatibilidade, emitir `DeprecationWarning` e testar tanto o aviso quanto o resultado ou payload equivalente ao uso canônico. Para aliases, reutilizar `normalize_pesquisa`, `normalize_datas`, `pop_deprecated_alias` ou `resolve_deprecated_alias`, conforme o caso. Ajustar `stacklevel` à cadeia de chamadas para apontar ao código chamador. O aviso deve orientar a migração; o changelog é a fonte das versões. O Python pode ocultar essa categoria por padrão: conferir a migração com `uv run python -W default::DeprecationWarning script.py`.
+3. Como regra, publicar o aviso em pelo menos uma versão antes da remoção. Antes da 1.0, a próxima versão menor pode encerrar a transição; a partir da 1.0, reservar remoções de API estável para versões maiores. Exceções ao aviso prévio ficam restritas a APIs experimentais ou mudanças externas que tornem impossível manter o comportamento anterior, com motivo e impacto registrados no PR e no changelog. Correções de bugs não exigem preservar o comportamento incorreto.
+4. No PR de remoção, conferir a versão anunciada, excluir a compatibilidade e atualizar testes, docstrings e guia de migração juntos. Testar que o uso antigo falha, sem ser ignorado pelos helpers que consomem `**kwargs`, e que a alternativa continua funcionando. Registrar em `Removed` de `[Unreleased]`, preservando entradas de versões já publicadas. Usar uma etapa `defunct`, com erro explicativo e indicação do substituto, somente quando a mensagem ajudar a migração; não manter wrappers sem prazo apenas para adiar a remoção.
+
+### Transição para a 1.0
+
+Os aliases legados já deprecados pela padronização da API têm a 1.0 como alvo de remoção. Na preparação dessa versão, inventariar os avisos no código e as tabelas de migração, conferir quais deprecações chegaram a uma versão publicada e retirar os aliases com os testes do fluxo acima. Deprecações introduzidas depois recebem versão-alvo própria; a 1.0 não autoriza apagar indiscriminadamente todos os warnings. Até o PR de remoção, os aliases continuam aceitos com aviso. Esta política não remove compatibilidade nem altera a versão do pacote por si só.
+
 ## Schemas pydantic
 
 - Para criar ou alterar modelos, ler `CONTRIBUTING.md` > **Schemas pydantic**. O Output deve refletir o parser, com nomes canônicos, sem valores provisórios; métodos stub não recebem schema.

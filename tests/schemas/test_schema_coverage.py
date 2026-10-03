@@ -61,6 +61,7 @@ EXPECTED_COURT_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
     ("tjes", "cjpg"): ("juscraper.courts.tjes.schemas", "InputCJPGTJES"),
     ("tjgo", "cjsg"): ("juscraper.courts.tjgo.schemas", "InputCJSGTJGO"),
     ("tjmg", "cjsg"): ("juscraper.courts.tjmg.schemas", "InputCJSGTJMG"),
+    ("tjmg", "cposg"): ("juscraper.courts.tjmg.schemas", "InputCPOSGTJMG"),
     ("tjmt", "cjsg"): ("juscraper.courts.tjmt.schemas", "InputCJSGTJMT"),
     ("tjpa", "cjsg"): ("juscraper.courts.tjpa.schemas", "InputCJSGTJPA"),
     ("tjpb", "cjsg"): ("juscraper.courts.tjpb.schemas", "InputCJSGTJPB"),
@@ -115,6 +116,7 @@ EXPECTED_AGGREGATOR_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
         "juscraper.aggregators.comunica_cnj.schemas",
         "InputListarComunicacoesComunicaCNJ",
     ),
+    ("falcao", "listar_decisoes"): ("juscraper.aggregators.falcao.schemas", "InputListarDecisoesFalcao"),
     ("pdpj", "auth"): ("juscraper.aggregators.pdpj.schemas", "InputAuthPdpj"),
     ("pdpj", "auth_govbr"): ("juscraper.aggregators.pdpj.schemas", "InputAuthGovbrPdpj"),
     ("pdpj", "cpopg"): ("juscraper.aggregators.pdpj.schemas", "InputCnjPdpj"),
@@ -220,10 +222,12 @@ def test_every_aggregator_endpoint_has_schema():
     candidates = (
         "auth",
         "auth_firefox",
+        "cjsg",
         "auth_govbr",
         "cpopg",
         "download_documents",
         "listar_comunicacoes",
+        "listar_decisoes",
         "listar_processos",
     )
     missing: list[str] = []
@@ -260,10 +264,12 @@ def test_no_stale_entries_in_expected_mapping():
     aggregator_candidates = (
         "auth",
         "auth_firefox",
+        "cjsg",
         "auth_govbr",
         "cpopg",
         "download_documents",
         "listar_comunicacoes",
+        "listar_decisoes",
         "listar_processos",
     )
     live_agg = {

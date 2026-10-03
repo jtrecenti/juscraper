@@ -62,7 +62,7 @@ O método `.cjsg()` recebe como *input* parâmetros de busca de jurisprudência 
 | TJCE     | cjsg                              |
 | TJBA     | cjsg                              |
 | TJGO     | cjsg                              |
-| TJMG     | cjsg                              |
+| TJMG     | cjsg, cposg                       |
 | TJSP     | cpopg, cposg, cjsg, cjpg, acordao |
 | TJRS     | cjsg                              |
 | TJPR     | cjsg                              |
@@ -92,6 +92,7 @@ O método `.cjsg()` recebe como *input* parâmetros de busca de jurisprudência 
 |-----------|-----------------------------------|
 | Datajud   | listar_processos                  |
 | Jusbr     | cpopg, download_documents         |
+| Falcao    | listar_decisoes (national labor jurisprudence: TST + TRTs) |
 | PDPJ      | existe, cpopg, documentos, movimentos, partes, pesquisa, contar, download_documents |
 
 #### JusBR and PDPJ authentication
@@ -136,6 +137,7 @@ These notebooks send live requests to external services and are not guaranteed t
 - [Exemplo TRF6](notebooks/trf6.ipynb)
 - [Exemplo Datajud](notebooks/datajud.ipynb)
 - [Exemplo Jusbr](notebooks/jusbr.ipynb)
+- [Exemplo Falcao](notebooks/falcao.ipynb)
 
 ## Informações adicionais
 

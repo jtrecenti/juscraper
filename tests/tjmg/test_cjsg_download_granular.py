@@ -26,7 +26,14 @@ import pytest
 import requests
 import responses
 
-from juscraper.courts.tjmg.download import SEARCH_URL, _build_params, _extract_total, _fetch_page, _solve_captcha
+from juscraper.courts.tjmg.download import (
+    SEARCH_URL,
+    _build_params,
+    _extract_total,
+    _fetch_page,
+    _fetch_page_revalidating,
+    _solve_captcha,
+)
 from tests._helpers import query_param_subset_matcher
 
 
@@ -325,3 +332,25 @@ class TestSolveCaptchaTempFile:
         # (3) existia durante o decrypt, removido depois (cleanup no finally).
         assert seen["exists_during"] is True
         assert not Path(path).exists()
+
+
+# ---------------------------------------------------------------------------
+# _fetch_page_revalidating
+# ---------------------------------------------------------------------------
+
+
+def test_revalidacao_com_captcha_falho_levanta_runtime_error(mocker):
+    """Captcha que falha na revalidacao apos HTTP 401 levanta RuntimeError e preserva o 401."""
+    mocker.patch("juscraper.courts.tjmg.download._solve_captcha", return_value=False)
+    resposta_401 = requests.Response()
+    resposta_401.status_code = 401
+
+    def request_fn(method, url, **kwargs):
+        if url == SEARCH_URL:
+            raise requests.HTTPError(response=resposta_401)
+        return MagicMock()
+
+    with pytest.raises(RuntimeError, match="after 3 attempts") as erro:
+        _fetch_page_revalidating(request_fn, MagicMock(spec=requests.Session), {"numeroRegistro": "11"})
+
+    assert isinstance(erro.value.__context__, requests.HTTPError)

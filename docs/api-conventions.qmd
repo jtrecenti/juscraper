@@ -2,6 +2,8 @@
 title: "API Conventions"
 ---
 
+For lifecycle stages and the warning-to-removal process, see the project's [deprecation policy](https://github.com/jtrecenti/juscraper/blob/main/CLAUDE.md#política-de-deprecação).
+
 ## Standard Parameter Names
 
 All scrapers in juscraper follow a unified API convention for parameter names.
