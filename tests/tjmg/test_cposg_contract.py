@@ -183,3 +183,44 @@ def test_cposg_warns_when_retries_exhausted(scraper, mocker):
         df = scraper.cposg("0000359-79.2020.8.13.0205")
 
     assert list(df.columns) == ["id_cnj"]
+
+
+@responses.activate
+def test_cposg_500_persistente_no_resultado_nao_aborta_lote(scraper, mocker):
+    """``RetryExhaustedError`` (5xx esgotado) vira aviso e o lote segue para o proximo numero."""
+    mocker.patch("juscraper.courts.tjmg.cposg_download.time.sleep")
+    for _ in range(3):
+        responses.add(
+            responses.GET,
+            RESULTADO_URL,
+            status=500,
+            match=[matchers.query_param_matcher({"listaProcessos": "12345678920208130024"})],
+        )
+    _add(RESULTADO_URL, "00003597920208130205", "resultado_single")
+    _add(PARTES_URL, "10000264083767001", "partes_single")
+
+    with pytest.warns(UserWarning, match="12345678920208130024"):
+        df = scraper.cposg(["1234567-89.2020.8.13.0024", "0000359-79.2020.8.13.0205"])
+
+    falhas = [c for c in responses.calls if "12345678920208130024" in c.request.url]
+    assert len(falhas) == 3
+    assert list(df["id_cnj"]) == ["12345678920208130024", "00003597920208130205"]
+    assert pd.isna(df.iloc[0]["processo"])
+    assert df.iloc[1]["processo_interno"] == "1.0000.26.408376-7/001"
+
+
+@responses.activate
+def test_cposg_500_persistente_nas_partes_mantem_recurso(scraper, mocker):
+    """5xx esgotado na pagina de partes deixa ``partes=None`` sem perder os dados do recurso."""
+    mocker.patch("juscraper.courts.tjmg.cposg_download.time.sleep")
+    _add(RESULTADO_URL, "00003597920208130205", "resultado_single")
+    for _ in range(3):
+        responses.add(responses.GET, PARTES_URL, status=500)
+
+    with pytest.warns(UserWarning, match="10000264083767001"):
+        df = scraper.cposg("0000359-79.2020.8.13.0205")
+
+    row = df.iloc[0]
+    assert row["processo_interno"] == "1.0000.26.408376-7/001"
+    assert not row["segredo_justica"]
+    assert row["partes"] is None
