@@ -142,7 +142,7 @@ Notas:
 
 Complexidade é um eixo que o stack de lint do projeto (Ruff, flake8, isort, pylint, mypy) **não cobre** — esses veem estilo e tipos. Medimos duas métricas **complementares**, porque elas pegam coisas diferentes e divergem na prática (ver tabela abaixo). Ambas entram no extra `[dev]`. Refs #307.
 
-- **Complexidade ciclomática** (`lizard`, métrica CCN): conta caminhos independentes — começa em 1 e soma +1 por ponto de decisão (`if`, `for`, `while`, `except`, …). É um proxy de *testabilidade* (quantos casos cobrir). Não conta linhas nem aninhamento.
+- **Complexidade ciclomática** (`lizard`, métrica CCN): conta caminhos independentes — começa em 1 e soma +1 por ponto de decisão (`if`, `for`, `while`, `except`, `and`, `or`, …). É um proxy de *testabilidade* (quantos casos cobrir). Não conta linhas nem aninhamento.
 - **Complexidade cognitiva** (`complexipy`, métrica do SonarSource): conta o quão difícil é *entender* o código, com **penalidade por aninhamento** — um `if` dentro de `for` dentro de `if` custa mais que três `if` rasos.
 
 Por que as duas: elas concordam nos extremos, mas divergem no meio. Código **plano com muitos ramos**, como uma sequência de tentativas encadeadas com `or` ou um `match/case`, é ciclomático-alto mas cognitivo-baixo, e continua legível. Uma cascata de `if/elif` não entra nesse caso: cada `elif` custa +1 nas duas métricas. Código **aninhado com poucos ramos** é o oposto. Os dois exemplos abaixo foram escritos para esta documentação e não vêm do `src`, para que os números não mudem a cada refatoração.
@@ -173,7 +173,7 @@ def extrair_total_resultados(texto):
         or re.search(r"(\d+) sentenças", texto)
     )
     if achado is None:
-        return 0
+        raise ValueError("nenhum formato de contagem reconhecido")
     return int(achado.group(1))
 ```
 
@@ -181,7 +181,7 @@ def extrair_total_resultados(texto):
 
 ```python
 def advogados_do_polo(processos, polo):
-    """Lista as OABs dos advogados de um polo, processo a processo."""
+    """Lista os pares (processo, OAB) dos advogados de um polo."""
     oabs = []
     for processo in processos:
         if processo.get("partes"):
