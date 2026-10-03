@@ -134,8 +134,45 @@ def test_get_total_pages_levanta_quando_nao_fixa_o_total(html, mensagem: str):
         _get_total_pages(html())
 
 
-def test_get_total_pages_ementa_com_total_de_n_nao_vira_contagem():
-    """Sem o rótulo, "de um total de 84 prestações" numa ementa não conta como resultado."""
-    html = _primeira_pagina().replace(_CONTAGEM, "").replace("</body>", "<p>de um total de 84 prestações</p></body>")
+def _com_texto_na_ementa(html: str, texto: str) -> str:
+    """Insere ``texto`` no começo da primeira ementa (``div.text-justify``) do sample."""
+    assert '<div class="text-justify">' in html
+    return html.replace('<div class="text-justify">', f'<div class="text-justify">{texto} ', 1)
+
+
+def _sem_rotulo(html: str) -> str:
+    """Tira a contagem e renomeia o div do rótulo, para a cascata cair no HTML bruto."""
+    html = html.replace(_CONTAGEM, "").replace('class="pb-3"', 'class="mb-3"')
+    assert 'class="pb-3"' not in html
+    return html
+
+
+def test_get_total_pages_contagem_em_ementa_nao_vira_contagem_no_fallback():
+    """Sem o rótulo, a cascata lê o HTML bruto; "de um total de N jurisprudência(s)" numa ementa não conta."""
+    html = _sem_rotulo(_primeira_pagina())
+    html = _com_texto_na_ementa(html, "de um total de 40 jurisprudência(s)")
+    with pytest.raises(ValueError, match="não traz a contagem"):
+        _get_total_pages(html)
+
+
+def test_get_total_pages_pagina_unica_com_total_na_ementa_continua_um():
+    """O rótulo "Exibindo 5" vence; o "de um total de 40" da ementa fica fora do seletor."""
+    html = _com_texto_na_ementa(_sample("single_page.html"), "de um total de 40 jurisprudência(s)")
+    assert _get_total_pages(html) == 1
+
+
+@pytest.mark.parametrize("sem_link", [False, True], ids=["com-link-ultima", "sem-link-ultima"])
+def test_get_total_pages_sem_resultados_na_ementa_nao_zera_a_contagem(sem_link: bool):
+    """O texto "sem resultados para" no meio de uma ementa não é o marcador de busca vazia."""
+    html = _com_texto_na_ementa(_primeira_pagina(), "as diligências restaram sem resultados para a localização de bens")
+    if sem_link:
+        html = html.replace(_LINK_ULTIMA, "")
+    assert _get_total_pages(html) == 5515
+
+
+def test_get_total_pages_sem_resultados_na_ementa_sem_contagem_nem_link_levanta():
+    """Sem contagem nem », o marcador no meio de uma ementa não pode virar busca vazia (1 página)."""
+    html = _sem_rotulo(_primeira_pagina()).replace(_LINK_ULTIMA, "")
+    html = _com_texto_na_ementa(html, "as diligências restaram sem resultados para a localização de bens")
     with pytest.raises(ValueError, match="não traz a contagem"):
         _get_total_pages(html)

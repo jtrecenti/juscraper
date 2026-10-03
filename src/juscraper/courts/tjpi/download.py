@@ -46,21 +46,30 @@ def build_cjsg_params(
 
 
 _LAST_PAGE_TEXT = "\u00bb"  # », rótulo do link de última página
-# Cascata da contagem. O rótulo fica num ``div.pb-3`` (o primeiro desses é o
-# formulário de filtros, que nenhuma regex casa); se a classe mudar, a cascata
-# cai no HTML bruto, e por isso as duas regex exigem "jurisprudência(s)" logo
-# após o número: "de um total de 84 prestações" numa ementa não casa.
-_COUNT_SELECTORS = ("div.pb-3",)
+# Cascata da contagem. O rótulo fica num ``<div class="pb-3">`` sem outra
+# classe; o seletor exige a classe exata porque ``div.pb-3`` casaria também o
+# contêiner da página (``content pt-3 pb-3 d-flex``), que guarda as ementas.
+# Se o rótulo mudar de div, a cascata cai no HTML bruto, e por isso as duas
+# regex começam em "Exibindo" e exigem "jurisprudência(s)" depois do número:
+# "de um total de 84 prestações" numa ementa não casa.
+_COUNT_SELECTORS = ('div[class="pb-3"]',)
 # O número vem em ``<b>``; ``_SEP`` aceita espaço e tag entre as palavras para
-# que a mesma regex sirva ao texto do ``div.pb-3`` e ao HTML bruto do fallback.
+# que a mesma regex sirva ao texto do rótulo e ao HTML bruto do fallback.
 _SEP = r"(?:\s|&nbsp;|<[^>]+>)*"
 _COUNT_PATTERNS = (
     # Várias páginas: "Exibindo 1 - 25 de um total de <b>137865</b> jurisprudência(s)".
-    re.compile(rf"de um total de{_SEP}([\d.]+){_SEP}jurisprud", re.IGNORECASE),
+    re.compile(
+        rf"Exibindo{_SEP}[\d.]+{_SEP}-{_SEP}[\d.]+{_SEP}de um total de{_SEP}([\d.]+){_SEP}jurisprud",
+        re.IGNORECASE,
+    ),
     # Página única: "Exibindo <b>5</b> jurisprudência(s)".
     re.compile(rf"Exibindo{_SEP}([\d.]+){_SEP}jurisprud", re.IGNORECASE),
 )
-_ZERO_MARKERS = ("Sem resultados para",)
+# Busca sem resultados: um nó de texto que começa com o marcador, seguido do
+# termo pesquisado em outro div. O marcador só é consultado quando a contagem
+# não aparece, e tem que abrir o nó de texto: "sem resultados para a
+# localização de bens" no meio de uma ementa não zera a contagem.
+_ZERO_MARKER = "Sem resultados para:"
 
 
 def _last_page_links(soup: BeautifulSoup) -> set[int]:
@@ -80,6 +89,10 @@ def _last_page_links(soup: BeautifulSoup) -> set[int]:
     return totais
 
 
+def _sem_resultados(soup: BeautifulSoup) -> bool:
+    return any(texto.strip().startswith(_ZERO_MARKER) for texto in soup.find_all(string=True))
+
+
 def _get_total_pages(html: str) -> int:
     """Extrai o total de páginas da primeira página de resultados.
 
@@ -92,16 +105,18 @@ def _get_total_pages(html: str) -> int:
         ValueError: Nos casos de :func:`~juscraper.utils.pagination.resolve_total_pages`
             e de :func:`~juscraper.utils.pagination.parse_page_number`.
     """
+    soup = BeautifulSoup(html, "html.parser")
     n_resultados = extract_count_with_cascade(
         html,
         css_selectors=_COUNT_SELECTORS,
         regex_patterns=_COUNT_PATTERNS,
-        zero_markers=_ZERO_MARKERS,
     )
+    if n_resultados is None and _sem_resultados(soup):
+        n_resultados = 0
     return resolve_total_pages(
         n_resultados,
         resultados_por_pagina=RESULTS_PER_PAGE,
-        totais_links=_last_page_links(BeautifulSoup(html, "html.parser")),
+        totais_links=_last_page_links(soup),
         tribunal="TJPI",
     )
 
