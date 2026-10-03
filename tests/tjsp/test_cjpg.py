@@ -2,9 +2,10 @@
 Tests for TJSP CJPG functionality.
 Includes both integration and unit tests.
 """
+import logging
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, call
 
 import pandas as pd
 import pytest
@@ -12,7 +13,7 @@ import pytest
 import juscraper
 from juscraper.courts.tjsp.cjpg_download import cjpg_download
 from juscraper.courts.tjsp.cjpg_parse import cjpg_n_pags, cjpg_n_results, cjpg_parse_manager, cjpg_parse_single
-from tests._helpers import load_sample
+from tests._helpers import load_sample, load_sample_bytes
 
 
 @pytest.mark.integration
@@ -186,6 +187,64 @@ class TestCJPGNResults:
         html = load_sample("tjsp", "cjpg/results_novo_formato.html")
         assert cjpg_n_results(html) == 39764
 
+    @pytest.mark.parametrize(
+        ("sample", "expected"),
+        [
+            ("count_bgcolor_legacy.html", 25),
+            ("count_page_summary.html", 31),
+            ("count_max_number_fallback.html", 47),
+            ("results_normal_page_01.html", 3565472),
+        ],
+    )
+    def test_selector_and_text_cascades(self, sample, expected):
+        """Characterizes the CJPG-only selectors and shared text cascade."""
+        html = load_sample("tjsp", f"cjpg/{sample}")
+        assert cjpg_n_results(html) == expected
+
+    def test_counts_result_rows_when_pagination_marker_is_missing(self):
+        html = load_sample("tjsp", "cjpg/count_rows_fallback.html")
+        assert cjpg_n_results(html) == 3
+
+    def test_raises_when_full_page_has_no_pagination_marker(self):
+        html = load_sample("tjsp", "cjpg/count_truncated_full_page.html")
+        with pytest.raises(ValueError, match=r"página completa.*sem marcador"):
+            cjpg_n_results(html)
+
+    def test_captcha_error_takes_precedence_over_zero_marker(self):
+        html = load_sample("tjsp", "cjpg/count_captcha_error.html")
+        with pytest.raises(ValueError, match="Captcha não foi resolvido"):
+            cjpg_n_results(html)
+
+    def test_search_form_without_zero_marker_raises_missing_selector(self):
+        """The real CJPG form has an empty ``id`` and also appears on result
+        pages, so the parser does not claim the search stayed on the form.
+        A form page without the zero-results notice gets the generic error.
+        """
+        zero_notice = "Não foi encontrado nenhum resultado correspondente à busca realizada."
+        html = load_sample("tjsp", "cjpg/no_results.html")
+        assert zero_notice in html
+        html = html.replace(zero_notice, "")
+        with pytest.raises(ValueError, match="Não foi possível encontrar o seletor"):
+            cjpg_n_results(html)
+
+    def test_empty_results_container_still_raises_missing_selector(self):
+        html = load_sample("tjsp", "cjpg/count_empty_results.html")
+        with pytest.raises(ValueError, match="Não foi possível encontrar o seletor"):
+            cjpg_n_results(html)
+
+    def test_raises_when_pagination_marker_has_no_number(self):
+        html = load_sample("tjsp", "cjpg/count_invalid_marker.html")
+        with pytest.raises(ValueError, match="Não foi possível extrair o número de resultados"):
+            cjpg_n_results(html)
+
+    @pytest.mark.parametrize(
+        ("counter", "expected"),
+        [(cjpg_n_results, 39764), (cjpg_n_pags, 3977)],
+    )
+    def test_accepts_response_content_bytes(self, counter, expected):
+        html = load_sample_bytes("tjsp", "cjpg/results_novo_formato.html")
+        assert counter(html) == expected
+
     def test_zero_results_returns_zero(self):
         html = load_sample("tjsp", "cjpg/no_results.html")
         assert cjpg_n_results(html) == 0
@@ -205,61 +264,182 @@ class TestCJPGDownload1Based:
         mock.content = text.encode('utf-8')
         return mock
 
-    def _run_download(self, n_pags, paginas=None, sleep_time=0):
-        """Helper: runs cjpg_download with mocked session and callbacks."""
+    def _download_with_mocks(self, tmp_path, mocker, *, n_pags, paginas=None, sleep_time=0):
+        """Run the internal downloader while retaining its collaborators."""
         mock_session = MagicMock()
         r0_response = self._make_mock_response("<html>page1</html>")
-        page_response = self._make_mock_response("<html>other</html>")
+        page_response = self._make_mock_response("<html>page2+</html>")
         mock_session.get.side_effect = [r0_response] + [page_response] * (n_pags + 10)
+        count_pages = mocker.patch(
+            "juscraper.courts.tjsp.cjpg_download.cjpg_n_pags",
+            return_value=n_pags,
+        )
 
-        def get_n_pags_callback(r0):
-            return n_pags
+        path = cjpg_download(
+            pesquisa="teste",
+            session=mock_session,
+            u_base="https://esaj.tjsp.jus.br/",
+            download_path=str(tmp_path),
+            sleep_time=sleep_time,
+            paginas=paginas,
+        )
 
-        with tempfile.TemporaryDirectory() as tmp:
-            path = cjpg_download(
-                pesquisa="teste",
-                session=mock_session,
-                u_base="https://esaj.tjsp.jus.br/",
-                download_path=tmp,
-                sleep_time=sleep_time,
-                paginas=paginas,
-                get_n_pags_callback=get_n_pags_callback,
-            )
-            saved_files = sorted(p.name for p in Path(path).iterdir())
-            # Collect URLs from session.get calls (skip first which is pesquisar.do)
-            get_calls = mock_session.get.call_args_list
-            trocar_urls = [c[0][0] for c in get_calls[1:] if 'trocarDePagina' in c[0][0]]
-            return saved_files, trocar_urls
+        saved_files = sorted(file.name for file in Path(path).iterdir())
+        trocar_urls = [
+            item.args[0]
+            for item in mock_session.get.call_args_list[1:]
+            if "trocarDePagina" in item.args[0]
+        ]
+        return path, saved_files, trocar_urls, mock_session, r0_response, count_pages
 
-    def test_default_all_pages(self):
+    def test_default_all_pages(self, tmp_path, mocker):
         """Default (None) downloads all 3 pages: saves 00001, 00002, 00003."""
-        files, urls = self._run_download(n_pags=3, paginas=None)
+        _, files, urls, _, _, _ = self._download_with_mocks(tmp_path, mocker, n_pags=3)
         assert files == ["cjpg_00001.html", "cjpg_00002.html", "cjpg_00003.html"]
         assert len(urls) == 2  # trocarDePagina for pages 2 and 3
 
-    def test_single_page(self):
+    def test_single_page(self, tmp_path, mocker):
         """range(1, 2) downloads only page 1."""
-        files, urls = self._run_download(n_pags=3, paginas=range(1, 2))
+        _, files, urls, _, _, _ = self._download_with_mocks(
+            tmp_path,
+            mocker,
+            n_pags=3,
+            paginas=range(1, 2),
+        )
         assert files == ["cjpg_00001.html"]
         assert len(urls) == 0  # no trocarDePagina calls
 
-    def test_three_pages(self):
+    def test_three_pages(self, tmp_path, mocker):
         """range(1, 4) downloads pages 1, 2, 3."""
-        files, urls = self._run_download(n_pags=5, paginas=range(1, 4))
+        _, files, urls, _, _, _ = self._download_with_mocks(
+            tmp_path,
+            mocker,
+            n_pags=5,
+            paginas=range(1, 4),
+        )
         assert files == ["cjpg_00001.html", "cjpg_00002.html", "cjpg_00003.html"]
         assert len(urls) == 2
 
-    def test_custom_range(self):
+    def test_custom_range(self, tmp_path, mocker):
         """range(6, 11) downloads pages 6-10 (no page 1)."""
-        files, urls = self._run_download(n_pags=20, paginas=range(6, 11))
+        _, files, urls, _, _, _ = self._download_with_mocks(
+            tmp_path,
+            mocker,
+            n_pags=20,
+            paginas=range(6, 11),
+        )
         assert files == [f"cjpg_{p:05d}.html" for p in range(6, 11)]
         assert len(urls) == 5  # all via trocarDePagina
 
-    def test_exceeds_available(self):
+    def test_exceeds_available(self, tmp_path, mocker):
         """range(1, 101) with only 3 pages available: downloads only 1, 2, 3."""
-        files, urls = self._run_download(n_pags=3, paginas=range(1, 101))
+        _, files, urls, _, _, _ = self._download_with_mocks(
+            tmp_path,
+            mocker,
+            n_pags=3,
+            paginas=range(1, 101),
+        )
         assert files == ["cjpg_00001.html", "cjpg_00002.html", "cjpg_00003.html"]
         assert len(urls) == 2
+
+    def test_counter_receives_first_page_content_and_return_is_str(self, tmp_path, mocker):
+        path, _, _, _, r0_response, count_pages = self._download_with_mocks(
+            tmp_path,
+            mocker,
+            n_pags=1,
+            paginas=[1],
+        )
+
+        assert isinstance(path, str)
+        count_pages.assert_called_once_with(r0_response.content)
+
+    def test_zero_pages_still_saves_first_page(self, tmp_path, mocker):
+        path, files, _, mock_session, _, _ = self._download_with_mocks(
+            tmp_path,
+            mocker,
+            n_pags=0,
+            paginas=[3],
+        )
+
+        assert files == ["cjpg_00001.html"]
+        assert Path(path, "cjpg_00001.html").read_text(encoding="utf-8") == "<html>page1</html>"
+        assert mock_session.get.call_count == 1
+
+    def test_sparse_page_list_discards_unavailable_pages(self, tmp_path, mocker):
+        sleep = mocker.patch("juscraper.courts.tjsp.cjpg_download.time.sleep")
+
+        _, files, _, mock_session, _, _ = self._download_with_mocks(
+            tmp_path,
+            mocker,
+            n_pags=3,
+            paginas=[1, 3, 99],
+            sleep_time=0.25,
+        )
+
+        assert files == ["cjpg_00001.html", "cjpg_00003.html"]
+        assert mock_session.get.call_args_list[1:] == [
+            call("https://esaj.tjsp.jus.br/cjpg/trocarDePagina.do?pagina=3&conversationId=")
+        ]
+        sleep.assert_called_once_with(0.25)
+
+    def test_range_step_preserves_page_order_and_request_urls(self, tmp_path, mocker):
+        sleep = mocker.patch("juscraper.courts.tjsp.cjpg_download.time.sleep")
+
+        _, files, _, mock_session, _, _ = self._download_with_mocks(
+            tmp_path,
+            mocker,
+            n_pags=5,
+            paginas=range(1, 8, 2),
+            sleep_time=0.4,
+        )
+
+        assert files == [
+            "cjpg_00001.html",
+            "cjpg_00003.html",
+            "cjpg_00005.html",
+        ]
+        assert mock_session.get.call_args_list[1:] == [
+            call("https://esaj.tjsp.jus.br/cjpg/trocarDePagina.do?pagina=3&conversationId="),
+            call("https://esaj.tjsp.jus.br/cjpg/trocarDePagina.do?pagina=5&conversationId="),
+        ]
+        assert sleep.call_args_list == [call(0.4), call(0.4)]
+
+    def test_count_error_saves_debug_html_and_preserves_cause(self, tmp_path, mocker, caplog):
+        mock_session = MagicMock()
+        mock_session.get.return_value = self._make_mock_response("<html>diagnostico</html>")
+        upstream_error = RuntimeError("falha ao contar páginas")
+        mocker.patch(
+            "juscraper.courts.tjsp.cjpg_download.cjpg_n_pags",
+            side_effect=upstream_error,
+        )
+        # A pasta de download ainda não existe: o diagnóstico precisa criá-la
+        # junto com ``cjpg_debug``, senão o usuário recebe FileNotFoundError
+        # no lugar do ValueError que aponta para o HTML salvo.
+        download_path = tmp_path / "ainda_nao_existe"
+
+        with (
+            caplog.at_level(logging.ERROR, logger="juscraper.cjpg_download"),
+            pytest.raises(ValueError, match="falha ao contar páginas") as exc_info,
+        ):
+            cjpg_download(
+                pesquisa="teste",
+                session=mock_session,
+                u_base="https://esaj.tjsp.jus.br/",
+                download_path=str(download_path),
+            )
+
+        assert exc_info.value.__cause__ is upstream_error
+        debug_files = list(Path(download_path, "cjpg_debug").glob("cjpg_primeira_pagina_*.html"))
+        assert len(debug_files) == 1
+        assert debug_files[0].read_text(encoding="utf-8") == "<html>diagnostico</html>"
+        assert str(debug_files[0]) in str(exc_info.value)
+        assert any(
+            record.name == "juscraper.cjpg_download"
+            and record.levelno == logging.ERROR
+            and "Erro ao extrair número de páginas" in record.getMessage()
+            and str(debug_files[0]) in record.getMessage()
+            for record in caplog.records
+        )
 
 
 class TestCJPGDateRangeValidation:

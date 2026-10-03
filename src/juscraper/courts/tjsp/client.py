@@ -22,7 +22,7 @@ from ...utils.params import (
 from .._esaj.base import EsajSearchScraper
 from .cjpg_download import cjpg_download as cjpg_download_mod
 from .cjpg_download import fetch_cjpg_first_page
-from .cjpg_parse import cjpg_n_pags, cjpg_n_results, cjpg_parse_manager
+from .cjpg_parse import cjpg_n_results, cjpg_parse_manager
 from .cpopg_download import cpopg_download_api, cpopg_download_html
 from .cpopg_parse import cpopg_parse_manager, get_cpopg_download_links
 from .cposg_download import cposg_download_api, cposg_download_html
@@ -567,10 +567,6 @@ class TJSPScraper(EsajSearchScraper):
         # pydantic e funcionalmente equivalente.
         validate_pesquisa_length(inp.pesquisa, endpoint="CJPG")
 
-        def _get_n_pags(r0):
-            html = r0.content if hasattr(r0, "content") else r0
-            return cjpg_n_pags(html)
-
         path: str = cjpg_download_mod(
             pesquisa=inp.pesquisa,
             session=self.session,
@@ -584,7 +580,6 @@ class TJSPScraper(EsajSearchScraper):
             data_inicio=inp.data_julgamento_inicio,
             data_fim=inp.data_julgamento_fim,
             paginas=inp.paginas,
-            get_n_pags_callback=_get_n_pags,
         )
         return path
 
@@ -596,7 +591,24 @@ class TJSPScraper(EsajSearchScraper):
     # Kept as-is — unique to TJSP, not eSAJ-search-shaped.
 
     def cpopg(self, id_cnj: str | list[str], method: Literal["html", "api"] = "html"):
-        """Fetch a first-degree process by CNJ and return a DataFrame."""
+        """Baixa processos de primeiro grau pelo CNJ e devolve as tabelas extraidas.
+
+        Args:
+            id_cnj (str | list[str]): Numero CNJ ou lista de numeros CNJ.
+            method (str): ``"html"`` (paginas do eSAJ) ou ``"api"``. Default
+                ``"html"``.
+
+        Raises:
+            ValueError: Quando ``method`` nao e suportado, ou quando nenhum
+                arquivo baixado pode ser lido (nenhum arquivo candidato no
+                diretorio de download, ou todos com erro de leitura). Nesse
+                caso o diretorio de download nao e apagado.
+
+        Returns:
+            dict[str, pd.DataFrame]: Tabelas ``basicos``, ``partes``,
+            ``movimentacoes`` e ``peticoes_diversas`` no metodo ``"html"``;
+            no metodo ``"api"``, uma tabela por tipo de JSON baixado.
+        """
         self.set_method(method)
         self.cpopg_download(id_cnj, method)
         result = self.cpopg_parse(self.download_path)
@@ -634,7 +646,13 @@ class TJSPScraper(EsajSearchScraper):
             raise ValueError(f"Método '{method}' não é suportado.")
 
     def cpopg_parse(self, path: str):
-        """Parse downloaded CPOPG files into a DataFrame."""
+        """Le os arquivos baixados do CPOPG e devolve um dict de DataFrames.
+
+        Raises:
+            ValueError: Quando ``path`` e um diretorio e nenhum arquivo dele
+                pode ser lido, ou quando ``path`` e um arquivo com extensao
+                diferente de ``.html``/``.json``. Ver :func:`cpopg_parse_manager`.
+        """
         return cpopg_parse_manager(path)
 
     # --- cposg ----------------------------------------------------------

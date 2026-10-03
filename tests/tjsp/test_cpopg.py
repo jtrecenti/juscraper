@@ -14,6 +14,8 @@ from tests._helpers import load_sample
 
 from .test_utils import create_mock_response
 
+_SAMPLES = Path(__file__).parent / 'samples' / 'cpopg'
+
 
 @pytest.mark.integration
 class TestCPOPGIntegration:
@@ -210,6 +212,46 @@ class TestCPOPGUnit:
             assert 'basicos' in result
             assert len(result['basicos']) == 2
 
+            single_result = cpopg_parse_manager(str(file1))
+            assert len(single_result['basicos']) == 1
+
+            unsupported = Path(temp_dir) / 'unsupported.txt'
+            unsupported.write_text('unsupported', encoding='utf-8')
+            with pytest.raises(ValueError, match='Unknown file extension'):
+                cpopg_parse_manager(str(unsupported))
+
+    def test_cpopg_parse_manager_empty_directory_raises(self, tmp_path):
+        """A directory without candidate files raises instead of returning ``{}``."""
+        with pytest.raises(ValueError, match=r'nenhum arquivo candidato') as excinfo:
+            cpopg_parse_manager(str(tmp_path))
+
+        assert str(tmp_path) in str(excinfo.value)
+
+    def test_cpopg_parse_manager_all_files_failing_raises(self, tmp_path, capsys):
+        """A directory whose every candidate fails to parse reports the failure count."""
+        quebrado = tmp_path / 'quebrado.html'
+        quebrado.write_bytes(b'\xff\xfe\xfa invalido em utf-8')
+
+        with pytest.raises(ValueError, match=r'1 arquivo\(s\) candidato\(s\), 1 com erro') as excinfo:
+            cpopg_parse_manager(str(tmp_path))
+
+        assert str(tmp_path) in str(excinfo.value)
+        assert f'Erro ao processar o arquivo {quebrado}' in capsys.readouterr().out
+
+    def test_cpopg_parse_manager_skips_broken_file(self, tmp_path, capsys):
+        """One readable file is enough: broken files are printed and skipped."""
+        valido = tmp_path / 'show_standard.html'
+        valido.write_text(load_sample('tjsp', 'cpopg/show_standard.html'), encoding='utf-8')
+        quebrado = tmp_path / 'quebrado.html'
+        quebrado.write_bytes(b'\xff\xfe\xfa invalido em utf-8')
+
+        result = cpopg_parse_manager(str(tmp_path))
+
+        assert list(result) == ['basicos', 'partes', 'movimentacoes', 'peticoes_diversas']
+        assert result['basicos']['file_path'].tolist() == [str(valido)]
+        assert result['basicos'].iloc[0]['id_processo'] == '1009367-76.2017.8.26.0344'
+        assert f'Erro ao processar o arquivo {quebrado}' in capsys.readouterr().out
+
     def test_cpopg_parse_empty_file(self):
         """Test parsing an empty CPOPG HTML file."""
         html = '<html><body></body></html>'
@@ -227,6 +269,9 @@ class TestCPOPGUnit:
             # Should have empty DataFrames for other tables
             assert len(result['partes']) == 0
             assert len(result['movimentacoes']) == 0
+            assert list(result['partes'].columns) == ['file_path', 'tipo', 'nome', 'advogados']
+            assert list(result['movimentacoes'].columns) == ['file_path', 'data', 'movimento', 'observacao']
+            assert list(result['peticoes_diversas'].columns) == ['file_path', 'data', 'tipo']
         finally:
             Path(temp_path).unlink()
 
@@ -467,6 +512,97 @@ class TestCPOPGUnit:
             assert basicos['outros_assuntos'] == 'ICMS/ Imposto sobre Circulação de Mercadorias'
         finally:
             Path(temp_path).unlink()
+
+    @pytest.mark.parametrize(
+        ('sample_name', 'basic_columns', 'basic_values', 'party_values', 'movement_values'),
+        [
+            (
+                'show_standard.html',
+                [
+                    'file_path',
+                    'id_processo',
+                    'classe',
+                    'assunto',
+                    'foro',
+                    'vara',
+                    'juiz',
+                    'data_distribuicao',
+                    'valor_acao',
+                    'controle',
+                    'area',
+                    'outros_assuntos',
+                ],
+                {
+                    'id_processo': '1009367-76.2017.8.26.0344',
+                    'classe': 'Procedimento Comum Cível',
+                    'assunto': 'Responsabilidade do Fornecedor',
+                    'foro': 'Foro de Marília',
+                    'vara': 'Vara da Fazenda Pública',
+                    'juiz': 'WALMIR IDALENCIO DOS SANTOS CRUZ',
+                    'data_distribuicao': '06/06/2017 às 09:08 - Livre',
+                    'valor_acao': 'R$         10.000,00',
+                    'controle': '2017/006364',
+                    'area': 'Cível',
+                    'outros_assuntos': 'ICMS/ Imposto sobre Circulação de Mercadorias',
+                },
+                {'tipo': 'Reqte', 'nome': 'João da Silva', 'advogados': ['Pedro Souza']},
+                {'data': '01/03/2025', 'movimento': 'Juntada de Petição', 'observacao': ''},
+            ),
+            (
+                'show_alternative.html',
+                [
+                    'file_path',
+                    'id_processo',
+                    'classe',
+                    'assunto',
+                    'foro',
+                    'vara',
+                    'juiz',
+                    'data_distribuicao',
+                    'valor_acao',
+                    'processo_principal',
+                    'controle',
+                    'area',
+                ],
+                {
+                    'id_processo': '0015615-74.2025.8.26.0577',
+                    'classe': 'Cumprimento de Sentença contra a Fazenda Pública',
+                    'assunto': 'Reajuste de Prestações',
+                    'foro': 'Foro de São José dos Campos',
+                    'vara': 'Anexo do Juizado Especial da Fazenda Pública',
+                    'juiz': None,
+                    'data_distribuicao': '28/02/2025 às 12:15',
+                    'valor_acao': None,
+                    'processo_principal': '1010658-13.2025.8.26.0577',
+                    'controle': '2024/005678',
+                    'area': 'Cível',
+                },
+                {'tipo': 'Exeqte', 'nome': 'Maria Santos', 'advogados': ['Ana Oliveira']},
+                {'data': '15/03/2025', 'movimento': 'Recebidos os autos', 'observacao': ''},
+            ),
+        ],
+    )
+    def test_cpopg_parse_sample_contract(
+        self,
+        sample_name,
+        basic_columns,
+        basic_values,
+        party_values,
+        movement_values,
+    ):
+        """Characterize field order and nested table shapes for both CPOPG templates."""
+        sample_path = _SAMPLES / sample_name
+        result = cpopg_parse_single_html(str(sample_path))
+
+        assert list(result) == ['basicos', 'partes', 'movimentacoes', 'peticoes_diversas']
+        assert list(result['basicos'].columns) == basic_columns
+        assert result['basicos'].iloc[0].to_dict() == {'file_path': str(sample_path), **basic_values}
+        assert list(result['partes'].columns) == ['file_path', 'tipo', 'nome', 'advogados']
+        assert result['partes'].iloc[0].to_dict() == {'file_path': str(sample_path), **party_values}
+        assert list(result['movimentacoes'].columns) == ['file_path', 'data', 'movimento', 'observacao']
+        assert result['movimentacoes'].iloc[0].to_dict() == {'file_path': str(sample_path), **movement_values}
+        assert result['peticoes_diversas'].empty
+        assert list(result['peticoes_diversas'].columns) == ['file_path', 'data', 'tipo']
 
 
 if __name__ == "__main__":

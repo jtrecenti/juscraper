@@ -67,6 +67,33 @@ class BotChallengeBlockedError(Exception):
         super().__init__(msg)
 
 
+class WafChallengeError(BotChallengeBlockedError):
+    """Levantada quando o AWS WAF desafia de novo logo depois de o cookie ser renovado.
+
+    O desafio JavaScript do AWS WAF se resolve com o cookie ``aws-waf-token``
+    (ver :mod:`juscraper.core.waf`). Se a requisição repetida com o cookie novo
+    volta a receber o desafio, o WAF está recusando a sessão inteira, e nenhum
+    item do batch passaria. Herda de :class:`BotChallengeBlockedError` para ser
+    propagada pelos mesmos ``try/except`` por item.
+
+    Também sai quando o cookie não pôde ser obtido (navegador ausente, cookie
+    não emitido no prazo): sem ele, nenhuma requisição desafiada passaria, e
+    tentar de novo a cada item relançaria o navegador.
+    """
+
+    def __init__(self, tribunal: str, url: str, motivo: str | None = None):
+        super().__init__(tribunal, url)
+        # A mensagem da classe-mãe descreve o 403 do Akamai; aqui o sintoma é outro.
+        if motivo is None:
+            mensagem = (
+                f"O WAF do {tribunal} desafiou de novo logo apos a renovacao do cookie "
+                f"aws-waf-token em {url}. Aguarde alguns minutos antes de tentar outra vez."
+            )
+        else:
+            mensagem = f"O WAF do {tribunal} desafiou em {url}, e o cookie aws-waf-token nao foi obtido: {motivo}"
+        self.args = (mensagem,)
+
+
 class InvalidJSONResponseError(HTTPSemanticError):
     """Resposta com status < 400 cujo corpo não é JSON válido, mesmo após retries.
 

@@ -106,13 +106,9 @@ def test_auto_chunk_default_short_window_with_paginas_ok(tmp_path, mocker):
 def test_sniff_emite_um_deprecation_por_alias_no_caminho_noop(tmp_path, mocker):
     """Cada alias passado vira exatamente 1 ``DeprecationWarning`` (não 2).
 
-    Antes do fix do auto-fill (refs bug TJSP cjpg), o ``run_auto_chunk``
-    silenciava o sniff e o ``cjpg_download`` downstream emitia. Com o
-    auto-fill, o caminho noop absorve aliases (para evitar duplicação do
-    ``UserWarning`` de auto-fill) e re-emite manualmente o
-    ``DeprecationWarning``. Resultado observável pelo usuário continua
-    sendo 1 warning por alias — só que agora a emissão acontece no
-    ``run_auto_chunk`` e o downstream fica silencioso. Como
+    O ``run_auto_chunk`` normaliza os aliases uma vez e propaga apenas os
+    nomes canônicos, evitando que o ``cjpg_download`` downstream repita os
+    warnings. Como
     ``cjpg_download`` está mockado, capturamos exatamente os warnings
     emitidos pelo ``run_auto_chunk``.
     """
@@ -227,6 +223,41 @@ def test_query_alias_only_long_window_works(tmp_path, mocker):
 
     assert download.call_count == 3
     assert len(df) == 3
+
+
+@pytest.mark.parametrize("alias", ["query", "termo"])
+def test_search_alias_long_window_reaches_every_window(tmp_path, mocker, alias):
+    """Alias de busca em janela longa chega a todas as janelas pela API pública.
+
+    O orquestrador precisa guardar o valor devolvido por
+    ``normalize_pesquisa`` antes de ``pop_normalize_aliases`` consumir o
+    alias. Se o valor for descartado, cada janela roda com ``pesquisa=""``,
+    uma busca sem termo que devolve todas as sentenças do período. O alias
+    também precisa emitir o ``DeprecationWarning`` uma única vez, e não ficar
+    silenciado no caminho dividido.
+    """
+    download, _ = _patch_pipeline(mocker)
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        scraper.cjpg(
+            **{alias: "via alias"},
+            data_julgamento_inicio="01/01/2022",
+            data_julgamento_fim="31/12/2024",
+        )
+
+    # 01/01/2022 -> 31/12/2024 = 1096 dias = 3 janelas de até 366 dias.
+    assert download.call_count == 3
+    pesquisas = [call.kwargs["pesquisa"] for call in download.call_args_list]
+    assert pesquisas == ["via alias"] * 3
+
+    mensagens = [
+        str(warning.message) for warning in w
+        if issubclass(warning.category, DeprecationWarning)
+    ]
+    assert len(mensagens) == 1, mensagens
+    assert f"'{alias}'" in mensagens[0]
 
 
 # --- Auto-fill de data parcial (refs bug TJSP cjpg) --------------------------

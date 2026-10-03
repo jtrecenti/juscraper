@@ -86,7 +86,7 @@ def test_devolve_o_cookie_quando_o_desafio_termina(mocker):
 
 def test_sem_cookie_ate_o_prazo_levanta_e_fecha_o_navegador(mocker):
     _, browser = _instalar_playwright_falso(mocker, [[]])
-    mocker.patch("juscraper.courts.stf._waf.time.monotonic", side_effect=[0.0, 0.0, 100.0])
+    mocker.patch("juscraper.core.waf.time.monotonic", side_effect=[0.0, 0.0, 100.0])
 
     with pytest.raises(RuntimeError, match=WAF_COOKIE):
         obter_waf_token(timeout=60)

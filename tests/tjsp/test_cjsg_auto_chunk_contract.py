@@ -10,7 +10,7 @@ o roteamento — o caminho HTTP normal já está coberto em
 * ``auto_chunk=True`` + ``paginas != None`` em janela longa = ``ValueError``.
 * ``auto_chunk=True`` + ``paginas != None`` em janela curta = ok (noop).
 * Aliases deprecados (``data_inicio``/``data_fim``) emitem ``DeprecationWarning``
-  uma unica vez no caminho noop (sniff suprime).
+  uma unica vez no caminho noop.
 * ``auto_chunk`` nao vaza para o schema validator no caminho noop.
 """
 import warnings
@@ -124,13 +124,10 @@ def test_auto_chunk_default_short_window_with_paginas_ok(tmp_path, mocker):
 def test_sniff_emite_um_deprecation_por_alias_no_caminho_noop(tmp_path, mocker):
     """Cada alias passado vira exatamente 1 ``DeprecationWarning`` (não 2).
 
-    Antes do auto-fill, o ``run_auto_chunk`` silenciava o sniff e o
-    ``cjsg_download`` downstream emitia. Com o auto-fill (refs bug TJSP
-    cjpg), o caminho noop absorve aliases para evitar duplicação do
-    ``UserWarning`` e re-emite manualmente o ``DeprecationWarning``.
-    O efeito observável continua sendo 1 warning por alias — só muda
-    a fonte. Como ``cjsg_download`` está mockado, capturamos exatamente
-    os warnings do ``run_auto_chunk``.
+    O ``run_auto_chunk`` normaliza os aliases uma vez e propaga apenas os
+    nomes canônicos, evitando que o ``cjsg_download`` downstream repita os
+    warnings. Como ``cjsg_download`` está mockado, capturamos exatamente os
+    warnings do orquestrador.
     """
     _patch_pipeline(mocker)
     scraper = jus.scraper("tjsp", download_path=str(tmp_path))

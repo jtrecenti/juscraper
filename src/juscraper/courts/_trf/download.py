@@ -117,17 +117,19 @@ class FormFieldIds:
 def extract_form_field_ids(
     form_html: str,
     classe_field_name: str = "classeJudicial",
+    tribunal: str = "TRF",
 ) -> FormFieldIds:
     """Pull the dynamic ``j_idNNN`` IDs out of the form HTML.
 
     ``classe_field_name`` selects the classe component: TRF1/TRF3 ship the
     ``classeJudicial`` autocomplete, TRF5 the ``classeProcessualProcessoHidden``
     popup picker — visually similar, different form field names.
+    ``tribunal`` prefixes the error messages, since the family also serves TJPE.
     """
     def _find(pattern: str, label: str) -> str:
         m = re.search(pattern, form_html)
         if not m:
-            raise RuntimeError(f"TRF: could not locate {label} field in form HTML")
+            raise RuntimeError(f"{tribunal}: could not locate {label} field in form HTML")
         return m.group(1)
 
     processo_ref_id = _find(
@@ -150,7 +152,7 @@ def extract_form_field_ids(
     )
     if not m:
         raise RuntimeError(
-            "TRF: could not locate executarPesquisa search trigger in form HTML"
+            f"{tribunal}: could not locate executarPesquisa search trigger in form HTML"
         )
     return FormFieldIds(
         processo_referencia=processo_ref_id,
