@@ -19,13 +19,21 @@ class InputListarComunicacoesComunicaCNJ(PaginasMixin):
 
     Campos:
         pesquisa: Termo livre buscado no texto da comunicacao (parametro
-            ``texto`` da API). Obrigatorio.
+            ``texto`` da API). ``""`` omite o parametro; opcional quando
+            ``numero_processo`` e passado.
+        numero_processo: Numero CNJ, com ou sem formatacao (parametro
+            ``numeroProcesso`` da API, enviado so com os digitos). O termo
+            livre nao encontra as comunicacoes de um processo pelo numero;
+            este filtro encontra. Opcional quando ``pesquisa`` e passado.
         data_disponibilizacao_inicio: Limite inferior de
             ``dataDisponibilizacao``, ISO ``YYYY-MM-DD``. Opcional.
         data_disponibilizacao_fim: Limite superior de
             ``dataDisponibilizacao``, ISO ``YYYY-MM-DD``. Opcional.
         itens_por_pagina: Quantos resultados por requisicao (1-100). Default
             100 para minimizar round-trips.
+
+    Pelo menos um de ``pesquisa`` e ``numero_processo`` e exigido; o client
+    confere antes do schema.
 
     Os nomes ``data_inicio``/``data_fim`` ficaram **fora** do canonico de
     proposito: no resto do juscraper, esses dois sao aliases deprecados que
@@ -38,7 +46,8 @@ class InputListarComunicacoesComunicaCNJ(PaginasMixin):
 
     BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
 
-    pesquisa: str
+    pesquisa: str = ""
+    numero_processo: str | None = None
     data_disponibilizacao_inicio: str | None = None
     data_disponibilizacao_fim: str | None = None
     itens_por_pagina: int = Field(default=100, ge=1, le=100)

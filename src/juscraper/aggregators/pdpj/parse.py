@@ -1,8 +1,9 @@
 """Funcoes de parse para o agregador PDPJ.
 
-A API responde com JSON ja estruturado — o trabalho deste modulo e (1)
-adicionar a coluna pivot ``processo`` com o CNJ pesquisado e (2)
-limpar/normalizar texto bruto de documentos.
+A API responde com JSON ja estruturado — o trabalho deste modulo e
+adicionar a coluna pivot ``processo`` com o CNJ pesquisado e achatar os
+campos aninhados. A limpeza do texto de documento fica em
+:func:`juscraper.core.parse_utils.clean_document_text`.
 """
 from __future__ import annotations
 
@@ -143,12 +144,11 @@ def parse_pesquisa_response(
 
     Cada elemento de ``content`` vira uma linha bruta — o caller decide
     o shape final do DataFrame (varios cnj's na mesma chamada).
+    ``fetch_pesquisa`` garante ``content`` como lista.
     """
     if not json_data:
         return [], None, None
     content = json_data.get("content") or []
-    if not isinstance(content, list):
-        content = []
     rows: list[dict[str, Any]] = []
     for item in content:
         if not isinstance(item, dict):
@@ -168,14 +168,3 @@ def parse_pesquisa_response(
     if not isinstance(total, int):
         total = None
     return rows, search_after, total
-
-
-def clean_document_text(text: str | None) -> str | None:
-    """Remove caracteres de controle e normaliza espacos do texto bruto."""
-    if not text:
-        return None
-    cleaned = text.replace("\x00", "").replace("\x1a", "")
-    cleaned = cleaned.replace("\r\n", "\n").replace("\r", "\n")
-    cleaned = cleaned.replace("\xa0", " ")
-    cleaned = cleaned.replace("\u2028", "\n").replace("\u2029", "\n")
-    return cleaned.strip() or None

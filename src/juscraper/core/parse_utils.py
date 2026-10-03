@@ -9,6 +9,8 @@ Consolidam lógica duplicada hoje em vários ``courts/<xx>/parse.py``:
   minimalista (só strip de tags e whitespace) usado por TJRN/TJRO.
 * ``coerce_date_columns`` extrai o loop ``pd.to_datetime(..., errors="coerce").dt.date``
   repetido em ~13 tribunais.
+* ``clean_document_text`` limpa o texto bruto de documento dos agregadores
+  JusBR e PDPJ, que servem a mesma API da PDPJ-CNJ.
 
 Uso (a partir das Fases 1-4 do refactor #194)::
 
@@ -86,3 +88,22 @@ def coerce_date_columns(
         if col in df.columns:
             df[col] = pd.to_datetime(df[col], format=date_format, errors="coerce").dt.date
     return df
+
+
+def clean_document_text(text: str | None) -> str | None:
+    """Remove caracteres de controle e normaliza quebras de linha e espaços do texto bruto.
+
+    Args:
+        text: Texto como a API devolveu.
+
+    Returns:
+        O texto limpo, ou ``None`` quando a entrada é ``None``, vazia ou só tem
+        espaço: documento sem texto aproveitável sai igual nos dois agregadores.
+    """
+    if not text:
+        return None
+    cleaned = text.replace("\x00", "").replace("\x1a", "")
+    cleaned = cleaned.replace("\r\n", "\n").replace("\r", "\n")
+    cleaned = cleaned.replace("\xa0", " ")
+    cleaned = cleaned.replace("\u2028", "\n").replace("\u2029", "\n")
+    return cleaned.strip() or None

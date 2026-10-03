@@ -1,0 +1,18 @@
+# Régua estrita dos testes deste módulo, acima da config da raiz. S e ANN ficam
+# de fora: assert e fixture sem anotação são o idioma do pytest.
+extend = "../../pyproject.toml"
+
+[lint]
+extend-select = [
+    "BLE", "TRY", "ARG", "ERA", "T20", "DTZ", "SLF", "D", "FBT", "PL", "PT",
+]
+ignore = [
+    "TRY003",
+    "PLR2004",
+    # O nome do teste descreve o caso; as regras de formato do D seguem valendo
+    # onde houver docstring.
+    "D100", "D101", "D102", "D103", "D104", "D105", "D106", "D107",
+]
+
+[lint.pydocstyle]
+convention = "google"

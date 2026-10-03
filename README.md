@@ -61,7 +61,7 @@ dados.head()
 | TJMT     | cjsg                              |
 | TJPA     | cjsg                              |
 | TJPB     | cjsg                              |
-| TJPE     | cjsg                              |
+| TJPE     | cjsg, cpopg                       |
 | TJPI     | cjsg                              |
 | TJPR     | cjsg                              |
 | TJRN     | cjsg                              |
@@ -77,8 +77,26 @@ dados.head()
 | Nome      | Funcionalidades                   |
 |-----------|-----------------------------------|
 | Datajud   | listar_processos                  |
+| Falcao    | listar_decisoes                   |
 | Jusbr     | cpopg, download_documents         |
 | PDPJ      | existe, cpopg, documentos, movimentos, partes, pesquisa, contar, download_documents |
+
+#### Autenticação no JusBR e no PDPJ
+
+JusBR e PDPJ usam o mesmo token JWT do SSO do PJe. Com o extra `govbr`, `auth_govbr()` abre o Google Chrome, o Chromium ou o Microsoft Edge instalado na máquina, num perfil temporário, no portal de serviços do PDPJ; a pessoa faz o login no gov.br, o token é capturado e a janela fecha sozinha:
+
+```bash
+pip install 'juscraper[govbr]'
+```
+
+```python
+import juscraper as jus
+
+jusbr = jus.scraper("jusbr")
+jusbr.auth_govbr()
+```
+
+O token fica em `~/.config/juscraper/pdpj_token.json` (ou em `$XDG_CONFIG_HOME/juscraper/`), legível só pelo dono do arquivo, e as próximas instâncias do JusBR e do PDPJ o carregam sem novo login. Quando o portal entrega refresh token, o access token é renovado sozinho antes de vencer. Se o navegador não for encontrado, informe o executável em `auth_govbr(navegador=...)`. O login exige navegador com janela e não roda no Google Colab nem em CI; nesses ambientes, passe o token em `auth(token)` ou na variável de ambiente `PDPJ_JWT` (o JusBR também aceita `JUSBR_JWT`).
 
 ### Notebooks de Exemplo
 

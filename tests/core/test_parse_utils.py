@@ -6,7 +6,7 @@ import datetime as dt
 import pandas as pd
 import pytest
 
-from juscraper.core.parse_utils import clean_html, coerce_date_columns
+from juscraper.core.parse_utils import clean_document_text, clean_html, coerce_date_columns
 
 
 class TestCleanHtml:
@@ -115,3 +115,16 @@ class TestCoerceDateColumns:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
+
+class TestCleanDocumentText:
+    def test_remove_caracteres_de_controle_e_normaliza_quebras(self):
+        txt = "abc\x00def\x1aghi\r\njkl\u2028mno\u2029pqr\rstu\xa0vwx"
+        assert clean_document_text(txt) == "abcdefghi\njkl\nmno\npqr\nstu vwx"
+
+    def test_apara_as_pontas(self):
+        assert clean_document_text("  \n texto \r\n") == "texto"
+
+    @pytest.mark.parametrize("vazio", [None, "", "   ", "\n\t ", "\xa0\r\n", "\x00"])
+    def test_sem_texto_aproveitavel_devolve_none(self, vazio):
+        assert clean_document_text(vazio) is None

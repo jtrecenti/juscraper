@@ -54,17 +54,17 @@ class TJPIScraper(HTTPScraper):
         orgao: str | None = None,
         **kwargs,
     ) -> pd.DataFrame:
-        """Busca jurisprudencia no TJPI.
+        """Busca jurisprudência no TJPI.
 
         Args:
             pesquisa (str): Termo de busca livre.
-            paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
+            paginas (int | list | range | None): Páginas 1-based; ``None`` baixa
                 todas. Default ``None``.
-            tipo (str): Tipo de decisao. Opcoes: ``"Acordao"``,
+            tipo (str): Tipo de decisão. Opções: ``"Acordao"``,
                 ``"Decisao Terminativa"``, ``"Sumula"``.
             relator (str): Nome do relator (deve bater com o valor do dropdown).
             classe (str): Classe processual (deve bater com o valor do dropdown).
-            orgao (str): Orgao julgador (deve bater com o valor do dropdown).
+            orgao (str): Órgão julgador (deve bater com o valor do dropdown).
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJPI`.
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):
 
@@ -78,15 +78,20 @@ class TJPIScraper(HTTPScraper):
             * ``data_julgamento_de`` / ``_ate`` -> ``data_julgamento_inicio`` / ``_fim``
 
         Raises:
-            TypeError: Quando um kwarg desconhecido e passado (inclusive
-                ``data_publicacao_*``, que o backend nao expoe).
-            ValidationError: Quando um filtro tem formato invalido.
+            TypeError: Quando um kwarg desconhecido é passado (inclusive
+                ``data_publicacao_*``, que o backend não expõe).
+            ValidationError: Quando um filtro tem formato inválido.
+            ValueError: Com ``paginas=None``, quando o paginador da primeira
+                página não permite ler o total de páginas: falta o link de
+                última página (``»``), o ``»`` não tem ``page=N`` com
+                N >= 1, ou há links ``»`` com totais diferentes. O scraper
+                levanta em vez de estimar e baixar menos páginas.
 
         Returns:
-            pd.DataFrame: DataFrame com as decisoes.
+            pd.DataFrame: DataFrame com as decisões.
 
         See also:
-            :class:`InputCJSGTJPI` — schema pydantic e a fonte da verdade dos
+            :class:`InputCJSGTJPI` — schema pydantic é a fonte da verdade dos
             filtros aceitos.
         """
         return self.cjsg_parse(self.cjsg_download(
@@ -111,12 +116,18 @@ class TJPIScraper(HTTPScraper):
     ) -> list:
         """Download raw HTML pages from TJPI.
 
-        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
+        Aceita os mesmos filtros de :meth:`cjsg`; veja lá a lista completa.
 
         Returns
         -------
         list
             List of raw HTML strings (one per page).
+
+        Raises
+        ------
+        ValueError
+            Com ``paginas=None``, quando o paginador da primeira página não
+            traz um link de última página (``»``) legível; ver :meth:`cjsg`.
         """
         inp = apply_input_pipeline_search(
             InputCJSGTJPI,

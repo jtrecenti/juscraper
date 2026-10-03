@@ -18,12 +18,26 @@ from pydantic import ValidationError
 from tqdm.auto import tqdm
 
 from ...core.http import HTTPScraper
+from ...utils.cnj import clean_cnj
 from ...utils.params import normalize_paginas, raise_on_extra_kwargs, to_iso_date, validate_intervalo_datas
 from .download import BASE_URL, DEFAULT_HEADERS, build_listar_comunicacoes_params
 from .parse import parse_count, parse_items
 from .schemas import InputListarComunicacoesComunicaCNJ
 
 logger = logging.getLogger(__name__)
+
+
+def _exigir_pesquisa_ou_numero(pesquisa: str | None, numero_processo: str | None) -> None:
+    """Levanta antes do schema e da rede quando falta o filtro principal.
+
+    O schema aceita os dois vazios (``pesquisa`` tem o tipo canônico ``str``,
+    com ``""`` como ausência), então a exigência de um dos dois mora aqui.
+    """
+    # Número sem dígitos iria como ``numeroProcesso=""``, uma consulta sem filtro.
+    if not pesquisa and not (numero_processo and clean_cnj(numero_processo)):
+        raise ValueError(
+            "ComunicaCNJScraper.listar_comunicacoes(): informe pesquisa, numero_processo ou os dois."
+        )
 
 
 class ComunicaCNJScraper(HTTPScraper):
@@ -54,13 +68,19 @@ class ComunicaCNJScraper(HTTPScraper):
 
         Args:
             pesquisa: Termo livre buscado no texto da comunicacao
-                (parametro ``texto`` da API). Obrigatorio.
+                (parametro ``texto`` da API). Opcional quando
+                ``numero_processo`` e passado.
             paginas: Intervalo 1-based. Aceita ``int`` (``3`` ->
                 ``range(1, 4)``), ``list``, ``range`` ou ``None``
                 (default = todas as paginas).
             **kwargs: Filtros opcionais aceitos pelo schema
                 :class:`InputListarComunicacoesComunicaCNJ`:
 
+                * ``numero_processo`` (str): Numero CNJ, com ou sem
+                  formatacao; vai a API como ``numeroProcesso``, so com os
+                  digitos. Use este filtro para as comunicacoes de um
+                  processo: o termo livre nao encontra o processo pelo
+                  numero.
                 * ``data_disponibilizacao_inicio`` (str): Inicio do
                   intervalo de ``dataDisponibilizacao``. Aceita ISO
                   ``YYYY-MM-DD`` ou formato brasileiro ``DD/MM/YYYY``
@@ -77,8 +97,9 @@ class ComunicaCNJScraper(HTTPScraper):
 
         Raises:
             TypeError: Quando um kwarg desconhecido e passado.
-            ValidationError: Quando ``pesquisa`` nao e informado ou um
-                filtro tem formato invalido.
+            ValueError: Quando nem ``pesquisa`` nem ``numero_processo`` sao
+                informados.
+            ValidationError: Quando um filtro tem formato invalido.
             ValueError: Quando o intervalo de datas e invalido (fim antes
                 de inicio, formato divergente do backend).
 
@@ -96,6 +117,7 @@ class ComunicaCNJScraper(HTTPScraper):
             :class:`InputListarComunicacoesComunicaCNJ` -- schema pydantic
             e a fonte da verdade dos filtros aceitos.
         """
+        _exigir_pesquisa_ou_numero(pesquisa, kwargs.get("numero_processo"))
         paginas_norm = normalize_paginas(paginas)
 
         # Aceita ``DD/MM/YYYY`` na entrada por conveniencia, mas a API
@@ -107,7 +129,7 @@ class ComunicaCNJScraper(HTTPScraper):
 
         try:
             inp = InputListarComunicacoesComunicaCNJ(
-                pesquisa=pesquisa,
+                pesquisa=pesquisa or "",
                 paginas=paginas_norm,
                 **kwargs,
             )
@@ -131,6 +153,7 @@ class ComunicaCNJScraper(HTTPScraper):
         def _params_para_pagina(pagina: int) -> dict:
             return build_listar_comunicacoes_params(
                 pesquisa=inp.pesquisa,
+                numero_processo=inp.numero_processo,
                 pagina=pagina,
                 itens_por_pagina=inp.itens_por_pagina,
                 data_disponibilizacao_inicio=inp.data_disponibilizacao_inicio,
