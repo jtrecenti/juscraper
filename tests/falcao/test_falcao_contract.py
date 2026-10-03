@@ -11,6 +11,7 @@ Validam, sem tocar a rede (``responses``):
 - que bloqueios definitivos do backend (WAF, 429 de horas) nao sao retentados.
 """
 import json
+import warnings
 from pathlib import Path
 from typing import cast
 
@@ -150,6 +151,27 @@ def test_listar_decisoes_preserva_paginas_se_parser_falha(tmp_path, monkeypatch)
     arquivo, = tmp_path.rglob("*.json")
     assert json.loads(arquivo.read_text())["documentos"] == _sample("acordaos")["documentos"]
     assert str(arquivo.parent.parent) in captura.value.__notes__[0]
+
+
+@responses.activate
+@pytest.mark.parametrize("total,tipo_erro", [("inválido", ValueError), (10000, UserWarning)])
+def test_primeira_resposta_preservada_se_planejamento_falha(tmp_path, total, tipo_erro):
+    falcao = jus.scraper("falcao", verbose=0, sleep_time=0, download_path=str(tmp_path))
+    _register("acordaos", total=total)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", UserWarning)
+        with pytest.raises(tipo_erro) as captura:
+            falcao.listar_decisoes("dano moral")
+    arquivo, = tmp_path.rglob("*.json")
+    assert len(responses.calls) == 1
+    assert str(arquivo.parent.parent) in captura.value.__notes__[0]
+    assert len(falcao.listar_decisoes_parse(arquivo.parent.parent)) == len(_sample("acordaos")["documentos"])
+
+
+@responses.activate
+def test_pagina_alem_do_total_real_nao_entra_no_resultado(falcao):
+    _register("acordaos", total=5, pagina=2)
+    assert falcao.listar_decisoes("dano moral", paginas=[2]).empty
 
 
 @responses.activate

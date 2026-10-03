@@ -273,6 +273,9 @@ class FalcaoScraper(HTTPScraper):
         # ``paginas`` que nao inclui a 1, isso poupa uma requisicao.
         primeira = paginas[0] if paginas is not None else 1
         primeiro_json = self._buscar_pagina(inp, primeira)
+        # O total ou um aviso convertido em erro não pode apagar a resposta recebida.
+        arquivo_inicial = destino / f"{inp.colecao}_{primeira:04d}.json"
+        arquivo_inicial.write_text(json.dumps(primeiro_json, ensure_ascii=False), encoding="utf-8")
         total = parse_total(primeiro_json)
         total_paginas = self._total_paginas(total, inp.tamanho_pagina)
         if self.verbose:
@@ -291,13 +294,14 @@ class FalcaoScraper(HTTPScraper):
             )
 
         paginas_iter = list(self._resolver_paginas(paginas, total_paginas))
+        if primeira not in paginas_iter:
+            arquivo_inicial.unlink()
         for pagina in tqdm(paginas_iter, desc=f"Falcao/{inp.colecao}", disable=not self.verbose):
             if pagina == primeira:
-                conteudo = primeiro_json
-            else:
-                if self.sleep_time:
-                    time.sleep(self.sleep_time)
-                conteudo = self._buscar_pagina(inp, pagina)
+                continue
+            if self.sleep_time:
+                time.sleep(self.sleep_time)
+            conteudo = self._buscar_pagina(inp, pagina)
             arquivo = destino / f"{inp.colecao}_{pagina:04d}.json"
             arquivo.write_text(json.dumps(conteudo, ensure_ascii=False), encoding="utf-8")
 
