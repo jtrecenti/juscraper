@@ -10,7 +10,7 @@ juscraper e uma biblioteca Python para raspagem de dados de tribunais brasileiro
 - Tribunais organizados hierarquicamente: `juscraper.courts.<tribunal>.client` (ex: `juscraper.courts.tjrs.client.TJRSScraper`)
 - A factory function publica e `juscraper.scraper()`
 - Nomes de classes seguem PEP 8 CamelCase: `TJDFTScraper`, `TJPRScraper`, `TJRSScraper`, `TJSPScraper`
-- **Regra 1 do refactor #84:** generalizar (mover para `_<familia>/`, criar mixin/base) so com **2+ ocorrencias concretas**. Duplicar com 1 caso e mais barato que abstrair errado.
+- **Regra de generalização:** mover para `_<familia>/` ou criar mixin/base só com **2+ ocorrências concretas**. Duplicar com 1 caso é mais barato que abstrair errado.
 
 ## Desenvolvimento
 
@@ -20,10 +20,11 @@ juscraper e uma biblioteca Python para raspagem de dados de tribunais brasileiro
 - Nunca usar hacks de `sys.path` nos testes — confiar no install editavel
 - Pre-commit hooks configurados (trailing whitespace, isort, pylint, flake8, mypy)
 - Comprimento maximo de linha: 120
-- Preferir trabalhar em worktree com branch específica para a mudança que desejar implementar.
 - Complexidade sob demanda (eixo que o lint nao cobre), duas metricas complementares: `uv run lizard src` (ciclomatico) e `uv run complexipy -i -s desc src` (cognitivo). Detalhes, a tabela de divergencia e o gate planejado em `CONTRIBUTING.md` > **Complexidade de código (lizard + complexipy)**.
 
 ## Testes
+
+Ao usar skills para criar ou alterar raspadores, seguir a política de testes desta seção e de `CONTRIBUTING.md` > **Tests**.
 
 ### Estrutura
 
@@ -33,7 +34,7 @@ juscraper e uma biblioteca Python para raspagem de dados de tribunais brasileiro
 
 ### Comandos
 
-- `pytest` — roda contrato + granular (offline, ~0.5s). **Default exclui integracao.**
+- `uv run pytest` roda a suíte offline. **O default exclui integração.**
 - `pytest -m integration` — roda so integracao (lento, hit live).
 - `pytest -m ""` — roda tudo (offline + integracao).
 - `pytest tests/tjsp` — escopo a um tribunal.
@@ -55,10 +56,10 @@ Piramide de testes (sufixos `*_contract.py` / `*_granular.py` / `*_cassette.py` 
 - Busca: `pesquisa` como nome padrao em todos os scrapers
 - Datas: `data_julgamento_inicio/fim`, `data_publicacao_inicio/fim`
 - Alias generico: `data_inicio/fim` mapeia para `data_julgamento_inicio/fim`
-- **Excecao**: `DatajudScraper.listar_processos` filtra por `dataAjuizamento` (nao julgamento), entao usa `data_ajuizamento_inicio/fim` como nome canonico e **nao aceita** o alias generico `data_inicio/fim`. Quem tenta receber `TypeError` via `extra="forbid"`. Refs #49.
+- **Exceção**: `DatajudScraper.listar_processos` filtra por `dataAjuizamento`, então usa `data_ajuizamento_inicio/fim` como nome canônico e **não aceita** o alias genérico `data_inicio/fim`. Quem tenta recebe `TypeError` via `extra="forbid"`.
 - Nomes antigos (`query`, `termo`, `_de/_ate`) aceitos com `DeprecationWarning`
 - Paginacao: `paginas: int | list | range | None`, default `None` (todas as paginas). Sempre 1-based: `range(1, 4)` baixa paginas 1, 2 e 3; `paginas=3` e equivalente a `range(1, 4)`.
-- Tamanho de pagina: `tamanho_pagina` (default 10; **TJES=20** por particularidade do backend Elasticsearch). Aliases deprecados, um por tribunal: `items_per_page` (TJBA), `quantidade_por_pagina` (TJDFT, TJMT), `per_page` (TJES), `qtde_itens_pagina` (TJGO), `linhas_por_pagina` (TJMG). Cada client conhece so o seu alias — passar alias de outro tribunal cai em `TypeError`. Refs #211.
+- Tamanho de página: `tamanho_pagina` (default 10; **TJES=20** por particularidade do backend Elasticsearch). Aliases deprecados, um por tribunal: `items_per_page` (TJBA), `quantidade_por_pagina` (TJDFT, TJMT), `per_page` (TJES), `qtde_itens_pagina` (TJGO), `linhas_por_pagina` (TJMG). Cada client conhece só o seu alias; passar alias de outro tribunal cai em `TypeError`.
 - Normalizacao centralizada em `src/juscraper/utils/params.py`
 - **Validacao da API publica via pydantic com `extra="forbid"`**. Kwargs desconhecidos levantam `ValidationError` em vez de serem silenciosamente ignorados.
 
@@ -66,7 +67,7 @@ Referencia completa de parametros e migracao: `docs/api-conventions.qmd`.
 
 ## Schemas pydantic (refs #93)
 
-Todo endpoint publico (`cjsg`, `cjpg`, `cpopg`, `cposg`, `listar_processos`, `auth`, `download_documents`, ...) tem schema `Input<Endpoint><Tribunal>` em `courts/<xx>/schemas.py` ou `aggregators/<yy>/schemas.py`, **inclusive para tribunais ainda nao refatorados** — o schema vive como documentacao executavel ate o wiring. Wired hoje: TJAC/TJAL/TJAM/TJCE/TJMS + TJSP `cjsg`/`cjpg`.
+O registro de endpoints e schemas está em `tests/schemas/test_schema_coverage.py`, nas constantes `EXPECTED_COURT_SCHEMAS` e `EXPECTED_AGGREGATOR_SCHEMAS`. O schema pode existir como documentação executável antes do wiring. Para verificar o wiring reconhecido pelos testes, consultar `_is_wired` em `tests/schemas/test_signature_parity.py` e os atributos `INPUT_<ENDPOINT>` da classe do scraper, inclusive os herdados. A existência do schema no registro, por si só, não comprova que o método o usa.
 
 **Wiring segue o refactor #84, nao o PR de contratos.** Contratos offline (padrao #119/#120) sao rede de seguranca *anterior* a refatoracao; wiring entra junto com a refatoracao estrutural (ou em PR dedicado imediatamente apos), nunca no mesmo PR de contrato. Default: NAO wirar quando uma issue de contratos deixa em aberto — abrir follow-up.
 
@@ -79,7 +80,7 @@ Todo endpoint publico (`cjsg`, `cjpg`, `cpopg`, `cposg`, `listar_processos`, `au
 - Validators custom (ex.: `QueryTooLongError`) rodam **antes** do pydantic. Padrao: `validate_pesquisa_length(pesquisa, endpoint="CJSG")` no topo do metodo.
 - Aliases deprecados sao popados em `normalize_pesquisa`/`normalize_datas`/`pop_deprecated_alias` antes do pydantic, emitindo `DeprecationWarning`. Nao remover o campo canonico ao deprecar um alias.
 - Output reflete shape real do parser — sem `"Provisorio"`. Parsers renomeiam chaves brutas (`classe_cnj` -> `classe`) antes de construir o DataFrame.
-- Nao criar schema para metodo stub `NotImplementedError`. Nao criar mixin/base com 1 ocorrencia (Regra 1 do #84).
+- Não criar schema para método stub `NotImplementedError`. Para mixins e bases, aplicar a **Regra de generalização** de Arquitetura.
 
 Onde ficam os modelos, pipeline canonico de wiring e checklist ao adicionar tribunal: `CONTRIBUTING.md` > **Schemas pydantic**.
 
@@ -87,7 +88,7 @@ Onde ficam os modelos, pipeline canonico de wiring e checklist ao adicionar trib
 
 A familia eSAJ (TJAC/TJAL/TJAM/TJCE/TJMS/TJSP) compartilha a infra em `src/juscraper/courts/_esaj/`. Caso tipico: subclasse de `EsajSearchScraper` com `BASE_URL` + `TRIBUNAL_NAME`. Hooks para casos de borda: `_configure_session(session)` (TLS/cookies), `INPUT_CJSG` (pydantic proprio), `CJSG_CHROME_UA` / `CJSG_EXTRACT_CONVERSATION_ID` (atributos de classe), `_build_cjsg_body(inp)` (shape divergente do form), `_validate_pesquisa(pesquisa, endpoint=...)` (rejeita o termo resolvido antes de o auto-chunk dividir as janelas; TJSP aplica o limite de 120 chars).
 
-**Nao adicionar `if tribunal == "X"` no codigo compartilhado.** Se a particularidade nao encaixar via hook/atributo, prefira um scraper proprio fora da familia. Promover algo de `courts/<xx>/` para `_esaj/` so com 2+ ocorrencias (Regra 1 do #84).
+**Não adicionar `if tribunal == "X"` no código compartilhado.** Se a particularidade não encaixar via hook/atributo, prefira um scraper próprio fora da família. Ao promover código para `_esaj/`, aplicar a **Regra de generalização** de Arquitetura.
 
 Tutorial completo com exemplos de codigo (caso tipico, customizacao TLS, API divergente): `CONTRIBUTING.md` > **Adding an eSAJ tribunal**.
 
@@ -95,7 +96,7 @@ Tutorial completo com exemplos de codigo (caso tipico, customizacao TLS, API div
 
 Metodos publicos de scraper que aceitam filtros via `**kwargs` validados por schema pydantic (`cjsg`, `cjsg_download`, `cjpg`, `cjpg_download` da familia eSAJ refatorada e analogos futuros) seguem um padrao comum de docstring. O motivo: o pydantic e a fonte unica da verdade dos filtros, mas `inspect.signature` mostra so `pesquisa`/`paginas`/`**kwargs` — o usuario fica sem visibilidade dos filtros aceitos. A docstring fecha esse buraco.
 
-Idioma: **portugues** (vale para `src/`; `docs/*.qmd` continua em ingles por causa do build do Quarto). Estilo: Google docstring (`Args:`/`Returns:`/`Raises:`).
+Idioma: **português** em `src/`; para `docs/`, seguir a seção **Documentação**. Estilo: Google docstring (`Args:`/`Returns:`/`Raises:`).
 
 Estrutura (template):
 
@@ -193,7 +194,7 @@ A worktree compartilha o `.git/` do repo principal, entao branches/refs/objects 
 - Usar `gh pr review --comment` para deixar notas de revisao nos proprios PRs
 - Sempre fazer push para uma branch de feature e abrir PR — nunca fazer push direto na main
 - **Merge de PRs: sempre usar commit de merge (`gh pr merge <n> --merge --delete-branch`)**, nunca squash nem rebase. O commit de merge preserva cada commit individual da branch *e* adiciona um commit `Merge pull request #<n> from <branch>` que marca o limite do PR — `git log --all --graph` continua mostrando o que entrou em cada PR. Squash perde a granularidade dos commits; rebase perde o limite do PR. Deletar a branch remota mantem a lista enxuta (a branch continua acessivel via `gh pr checkout <n>`).
-- **Comentarios em PRs, issues e revisoes de codigo neste repo devem ser sempre em portugues.** Vale tambem para mensagens de commit (corpo pode ser bilingue quando convir, mas o assunto e a explicacao do "porque" ficam em portugues). Excecao unica: arquivos em `docs/` continuam em ingles (build do Quarto).
+- **Comentários em PRs, issues e revisões de código neste repo devem ser sempre em português.** Vale também para mensagens de commit (corpo pode ser bilíngue quando convier, mas o assunto e a explicação do "porquê" ficam em português). Para arquivos em `docs/`, seguir a seção **Documentação**.
 
 ## Changelog
 
@@ -246,7 +247,6 @@ Fragmentar so quando o efeito diverge entre tribunais (ex.: TJES rejeita `data_p
 - Em PR com varios commits, **uma unica entrada consolidada** (no commit principal ou no merge) e preferivel a uma entrada por commit. CHANGELOG nao e changelog de commits.
 - Mudancas puramente internas (lista acima) **nao precisam de entrada**, mesmo no commit que as introduz. Se na duvida, deixar de fora; reviewer pede para adicionar se julgar que importa.
 
-## Documentacao
+## Documentação
 
-- Documentacao do projeto (em `docs/`) deve ser escrita em ingles
-- Portugues causa problemas de encoding no build do site (Quarto + GitHub Actions)
+- Escrever a documentação do projeto em `docs/` em inglês, por convenção do projeto.
