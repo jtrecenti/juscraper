@@ -67,6 +67,8 @@ Before you submit a pull request, check that it meets these guidelines:
 2. If the pull request adds functionality, the docs should be updated.
 3. The pull request should work for all currently supported operating systems and versions of Python.
 
+Ao alterar, deprecar ou remover uma API pública, seguir a [política de deprecação](CLAUDE.md#política-de-deprecação), incluindo anúncio da versão-alvo, migração e testes de compatibilidade ou rejeição.
+
 ## Code of Conduct
 
 Please note that the `juscraper` project is released with a
