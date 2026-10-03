@@ -27,7 +27,8 @@ def test_is_cpf_or_cnpj_value_accepts_int_cpf() -> None:
 def test_is_cpf_or_cnpj_value_rejects_plain_ids_and_bools() -> None:
     assert _is_cpf_or_cnpj_value(_NOT_A_CPF) is False
     assert _is_cpf_or_cnpj_value(0) is False
-    assert _is_cpf_or_cnpj_value(True) is False  # bool é subclasse de int, mas não é documento
+    # bool é subclasse de int, mas não é documento; o caso testado é o bool como valor.
+    assert _is_cpf_or_cnpj_value(True) is False  # noqa: FBT003
     assert _is_cpf_or_cnpj_value("nao-e-cpf") is False
 
 

@@ -8,20 +8,41 @@ from __future__ import annotations
 
 import logging
 import time
-from collections.abc import Iterator
-from typing import Any, cast
+from collections.abc import Callable, Iterable, Iterator, Mapping
+from dataclasses import dataclass
+from functools import partial
+from typing import Any, ClassVar, cast
 
-import jwt
 import pandas as pd
 import requests
 from pydantic import ValidationError
 
-from ...core.base import BaseScraper
+from ...core.auth import validar_jwt
+from ...core.failures import (
+    COLUNA_MOTIVO_FALHA,
+    EXCECOES_DE_FALHA_POR_LINHA,
+    MOTIVO_NAO_ENCONTRADO,
+    STATUS_CONSULTA_FALHA,
+    anotar_falhas_anteriores,
+    avisar_falhas,
+    e_token_invalido,
+    motivo_falha,
+)
+from ...core.http import HTTPScraper, RequestFn, RequestPolicy
+from ...core.parse_utils import clean_document_text
 from ...utils.cnj import clean_cnj
 from ...utils.params import normalize_paginas, raise_on_extra_kwargs
+from .._pdpj_sso import CredencialPdpj, PdpjSsoMixin
+from .._pdpj_sso.renovacao import ErroSsoPdpj, anotar_falhas_antes_do_sso
 from .download import (
     BASE_URL,
+    PERFIL_DOCUMENTO,
+    PERFIL_LISTAGEM,
+    STATUS_SEM_REGISTRO,
     USER_AGENT,
+    ProcessoAusenteError,
+    confirmador_de_ausencia,
+    e_status,
     fetch_contar,
     fetch_documento_binario,
     fetch_documento_texto,
@@ -37,10 +58,16 @@ from .parse import (
     build_movimento_rows,
     build_parte_rows,
     build_processo_row,
-    clean_document_text,
     parse_pesquisa_response,
 )
-from .schemas import InputAuthPdpj, InputCnjPdpj, InputContarPdpj, InputDownloadDocumentsPdpj, InputPesquisaPdpj
+from .schemas import (
+    InputAuthGovbrPdpj,
+    InputAuthPdpj,
+    InputCnjPdpj,
+    InputContarPdpj,
+    InputDownloadDocumentsPdpj,
+    InputPesquisaPdpj,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -111,9 +138,9 @@ def _iter_documents(details: dict[str, Any]) -> Iterator[Any]:
 
 
 def _document_to_row(
-    document: Any,
-    process: Any,
-    process_number: Any,
+    document: object,
+    process: object,
+    process_number: object,
 ) -> dict[str, Any] | None:
     """Achata um documento PDPJ bem-formado no formato de download."""
     if not isinstance(document, dict):
@@ -138,17 +165,184 @@ def _document_to_row(
     }
 
 
-class PdpjScraper(BaseScraper):
+_ITEM_CONSULTA = "consulta(s) de processo"
+_ITEM_DOWNLOAD = "download(s) de documento"
+
+# Status retentáveis dos dois perfis: os do core sem o 403. No PDPJ, com token
+# válido, o 403 nega um recurso só (um documento sigiloso, por exemplo), e
+# retentar gastaria as tentativas numa resposta que não muda.
+_STATUS_RETENTAVEIS = frozenset({429, 500, 502, 503, 504})
+
+# 6 tentativas com base 2.0 esperam 2, 4, 8, 16 e 32 s entre elas, perto do
+# retry que o agregador tinha antes da política do core. Menos tentativas
+# contariam como instabilidade da API o que antes passava na quarta.
+_PERFIS_HTTP: dict[str, RequestPolicy] = {
+    PERFIL_LISTAGEM: RequestPolicy(
+        timeout=30.0,
+        max_retries=6,
+        base_backoff=2.0,
+        retryable_statuses=_STATUS_RETENTAVEIS,
+        retry_on_timeout=True,
+    ),
+    PERFIL_DOCUMENTO: RequestPolicy(
+        timeout=60.0,
+        max_retries=6,
+        base_backoff=2.0,
+        retryable_statuses=_STATUS_RETENTAVEIS,
+        retry_on_timeout=True,
+    ),
+}
+
+
+def _buscar_conteudo(
+    buscar: Callable[..., Any],
+    request_fn: RequestFn,
+    cnj_limpo: str,
+    id_documento: str,
+    base_url: str,
+) -> tuple[Any, str | None]:
+    """Busca texto ou binario; devolve ``(conteudo, None)`` ou ``(None, motivo)``.
+
+    O 401 propaga (ver ``e_token_invalido``). Uma resposta 200 com corpo vazio
+    chega como ``""`` ou ``b""`` e não é falha.
+    """
+    try:
+        return buscar(request_fn, cnj_limpo, id_documento, base_url=base_url), None
+    except EXCECOES_DE_FALHA_POR_LINHA as exc:
+        if e_token_invalido(exc):
+            raise
+        return None, motivo_falha(exc)
+
+
+_COLUNAS_CPOPG_VAZIA = (
+    "numero_processo",
+    "id",
+    "sigla_tribunal",
+    "segmento_justica",
+    "nivel_sigilo",
+    "data_atualizacao",
+    "detalhes",
+)
+
+
+def _linha_cpopg_vazia(cnj: str, status_consulta: str) -> dict[str, Any]:
+    """Linha de ``cpopg`` sem tramitacao: processo ausente ou consulta que falhou."""
+    return {"processo": cnj, **dict.fromkeys(_COLUNAS_CPOPG_VAZIA), "status_consulta": status_consulta}
+
+
+def _linha_processo(cnj: str) -> dict[str, Any]:
+    """Linha de falha de movimentos e partes: so o processo, o motivo entra depois."""
+    return {"processo": cnj}
+
+
+def _sem_arquivo(row: dict[str, Any]) -> bool:
+    """Diz se a linha declara que o documento não tem arquivo no data lake.
+
+    A API omite ``arquivo`` no documento sem conteúdo e responde 404 ao pedido
+    de texto dele. Só a linha com a coluna ``arquivo_id`` (de
+    :meth:`PdpjScraper.documentos` ou de ``detalhes`` do :meth:`PdpjScraper.cpopg`)
+    diz isso; uma base montada sem a coluna não informa, e o download segue.
+    """
+    return "arquivo_id" in row and bool(pd.isna(row["arquivo_id"]))
+
+
+@dataclass(frozen=True)
+class _Conteudos:
+    """Conteúdos que :meth:`PdpjScraper.download_documents` baixa de cada documento."""
+
+    texto: bool
+    binario: bool
+
+
+def _linha_sem_conteudo(row: dict[str, Any], conteudos: _Conteudos) -> dict[str, Any]:
+    """Linha do documento sem arquivo: as colunas pedidas vazias e sem motivo de falha."""
+    if conteudos.texto:
+        row["texto"] = row["_raw_texto"] = None
+    if conteudos.binario:
+        row["binario"] = None
+    row[COLUNA_MOTIVO_FALHA] = None
+    return row
+
+
+def _limite_de_paginas(paginas: list[int] | range | None) -> tuple[int | None, set[int] | None]:
+    """Última página a pedir e páginas cujas linhas entram; ``None`` é sem limite.
+
+    Com lista, a coleta segue até a maior página pedida, porque o cursor
+    ``searchAfter`` só se obtém percorrendo as anteriores.
+    """
+    if paginas is None:
+        return None, None
+    if isinstance(paginas, range):
+        return paginas.stop - 1, set(paginas)
+    return (max(paginas) if paginas else 0), set(paginas)
+
+
+def _ordenar_colunas(rows: list[dict[str, Any]]) -> pd.DataFrame:
+    """DataFrame com as colunas das linhas de sucesso primeiro e o motivo por último.
+
+    O pandas ordena as colunas pela chegada, e a linha de falha tem menos
+    colunas que a de sucesso: se ela viesse primeiro, as colunas dela
+    (``id_documento``, o motivo) passariam na frente das de conteúdo, e a
+    ordem dependeria de qual processo falhou. As linhas de sucesso dão a
+    ordem, as colunas só da linha de falha vêm depois e o motivo por último.
+    """
+    df = pd.DataFrame(rows)
+    ordem = list(dict.fromkeys(
+        coluna
+        for row in rows if row[COLUNA_MOTIVO_FALHA] is None
+        for coluna in row if coluna != COLUNA_MOTIVO_FALHA
+    ))
+    ordem += [c for c in df.columns if c not in ordem and c != COLUNA_MOTIVO_FALHA]
+    if COLUNA_MOTIVO_FALHA in df.columns:
+        ordem.append(COLUNA_MOTIVO_FALHA)
+    return df[ordem]
+
+
+def _linha_documentos(cnj: str) -> dict[str, Any]:
+    """Linha de falha de :meth:`PdpjScraper.documentos`.
+
+    Leva ``id_documento`` vazio para que o DataFrame continue aceito por
+    ``download_documents`` mesmo quando todos os processos falharam; a linha
+    sem id é pulada lá.
+    """
+    return {"processo": cnj, "id_documento": None}
+
+
+class PdpjScraper(PdpjSsoMixin, HTTPScraper):
     """Raspador para a API DATALAKE - Processos do PDPJ.
 
     A API consome JWT do SSO PJe (mesmo provedor do JusBR), entao o uso
     tipico e: obter o token via portal do PDPJ logado, chamar
     :meth:`auth` e usar os endpoints de consulta/download.
+
+    Os metodos por processo (:meth:`cpopg`, :meth:`documentos`,
+    :meth:`movimentos`, :meth:`partes` e :meth:`existe` com lista) e
+    :meth:`download_documents` devolvem uma linha de falha quando a requisicao
+    de um item falha, com o motivo na coluna ``motivo_falha`` (vocabulario em
+    :mod:`juscraper.core.failures`) e um ``UserWarning`` agregado ao fim.
+
+    Nos metodos por processo, o processo ausente do data lake sai com o motivo
+    ``nao_encontrado``. A API diz isso de duas formas: 404 no endpoint do
+    processo, ou 500 no endpoint com 404 na :meth:`pesquisa` por
+    ``numeroProcesso``. No primeiro 500 de um processo, o raspador faz essa
+    pesquisa, numa tentativa so: com 404, para de retentar; com qualquer outra
+    resposta, segue as tentativas do perfil. Assim o processo ausente custa
+    duas requisicoes, e nao as seis tentativas do perfil. O 401
+    e a falha do SSO ao renovar o token (``ErroSsoPdpj``) interrompem a
+    coleta. Metodos sem linha por item (:meth:`existe` com
+    ``str``, :meth:`contar` e :meth:`pesquisa`) levantam o erro.
+
+    As requisicoes usam os perfis ``"listagem"`` e ``"documento"`` de
+    :class:`~juscraper.core.http.RequestPolicy`, ajustaveis no construtor com
+    ``politica=``.
     """
+
+    perfis_http: ClassVar[Mapping[str, RequestPolicy]] = _PERFIS_HTTP
 
     BASE_URL = BASE_URL
 
     INPUT_AUTH = InputAuthPdpj
+    INPUT_AUTH_GOVBR = InputAuthGovbrPdpj
     INPUT_CPOPG = InputCnjPdpj
     INPUT_DOCUMENTOS = InputCnjPdpj
     INPUT_MOVIMENTOS = InputCnjPdpj
@@ -164,46 +358,57 @@ class PdpjScraper(BaseScraper):
         download_path: str | None = None,
         sleep_time: float = 0.5,
         token: str | None = None,
+        politica: Mapping[str, Mapping[str, Any]] | None = None,
     ) -> None:
-        super().__init__("pdpj")
-        self.set_verbose(verbose)
-        self.set_download_path(download_path)
-        self.sleep_time = sleep_time
-        self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": USER_AGENT,
-            "Accept": "application/json, text/plain, */*",
-        })
+        """Cria o raspador; ``token`` passa por :meth:`auth`.
+
+        Args:
+            verbose: Nivel de log.
+            download_path: Diretorio de download.
+            sleep_time: Pausa entre requisicoes de itens, em segundos.
+            token: JWT do SSO da PDPJ, validado por :meth:`auth`. ``None``
+                carrega a credencial de ``PDPJ_JWT`` ou do cache de
+                :meth:`auth_govbr`; ``""`` e sem nenhuma exigem :meth:`auth`
+                antes das consultas.
+            politica: Ajustes por campo dos perfis ``"listagem"`` e
+                ``"documento"``, como ``{"documento": {"timeout": 20}}``. O
+                que nao for passado fica como o raspador declara.
+        """
+        super().__init__(
+            "pdpj",
+            verbose=verbose,
+            download_path=download_path,
+            sleep_time=sleep_time,
+            politica=politica,
+        )
         self.token: str | None = None
         if token:
             self.auth(token)
+        elif token is None:
+            self._carregar_credencial_padrao()
+
+    def _configure_session(self, session: requests.Session) -> None:
+        # A API recusa User-Agent que não é de navegador; troca o default do
+        # HTTPScraper (``juscraper/<version>``).
+        session.headers.update({
+            "User-Agent": USER_AGENT,
+            "Accept": "application/json, text/plain, */*",
+        })
 
     def auth(self, token: str) -> bool:
         """Define o JWT usado em todas as chamadas autenticadas.
 
-        Decodifica sem verificar assinatura (algoritmo gerado pelo PDPJ)
-        para validar o formato e capturar tokens expirados antes de
-        tentar usar.
+        O token passa por :func:`juscraper.core.auth.validar_jwt`, que recusa
+        token malformado ou vencido antes do primeiro uso. O conteudo do JWT
+        nao e logado.
 
         Raises:
-            ValueError: Quando o token e malformado ou ja expirou.
+            ValueError: Quando o token e malformado ou ja expirou. O token e o
+                header anteriores ficam como estavam.
         """
         InputAuthPdpj(token=token)
-        try:
-            # Decodifica so para validar formato/expiracao; o conteudo do JWT
-            # nao e logado (hardening, #270).
-            jwt.decode(
-                token,
-                options={"verify_signature": False, "verify_aud": False},
-                algorithms=["RS256", "HS256", "ES256", "none"],
-            )
-        except jwt.ExpiredSignatureError as exc:
-            raise ValueError("Token JWT expirado.") from exc
-        except jwt.InvalidTokenError as exc:
-            raise ValueError(f"Token JWT invalido: {exc}") from exc
-
-        self.token = token
-        self.session.headers["Authorization"] = f"Bearer {token}"
+        validar_jwt(token)
+        self._instalar_credencial(CredencialPdpj(token), salvar_renovacao=False)
         if self.verbose:
             logger.info("PDPJ: token JWT aceito.")
         return True
@@ -211,7 +416,8 @@ class PdpjScraper(BaseScraper):
     def _check_auth(self) -> None:
         if not self.token:
             raise RuntimeError(
-                "Autenticacao necessaria. Chame PdpjScraper.auth(token) primeiro."
+                "Autenticacao necessaria. Chame auth_govbr() para entrar pelo gov.br, auth(token) "
+                "com um JWT ja obtido, ou defina a variavel de ambiente PDPJ_JWT."
             )
 
     @staticmethod
@@ -219,6 +425,67 @@ class PdpjScraper(BaseScraper):
         InputCnjPdpj(id_cnj=id_cnj)
         items = [id_cnj] if isinstance(id_cnj, str) else list(id_cnj)
         return [clean_cnj(c) for c in items]
+
+    def _coletar_por_processo(
+        self,
+        origem: str,
+        cnjs: Iterable[str],
+        buscar: Callable[..., Any],
+        montar: Callable[[Any, str], list[dict[str, Any]]],
+        linha_falha: Callable[[str], dict[str, Any]],
+    ) -> pd.DataFrame:
+        """Uma requisicao por CNJ; a que falha vira linha com ``motivo_falha``.
+
+        ``montar`` transforma a resposta nas linhas do processo e
+        ``linha_falha`` da as colunas da linha de um processo cuja requisicao
+        falhou. O 401 e a falha do SSO ao renovar o token (``ErroSsoPdpj``)
+        interrompem, com as falhas anteriores numa nota do erro;
+        exceção fora de ``EXCECOES_DE_FALHA_POR_LINHA`` propaga como veio.
+        """
+        rows: list[dict[str, Any]] = []
+        falhas: list[str] = []
+        try:
+            for cnj in cnjs:
+                rows.extend(self._consultar_processo(cnj, buscar, montar, linha_falha, falhas))
+                if self.sleep_time:
+                    time.sleep(self.sleep_time)
+        except requests.HTTPError as erro:
+            anotar_falhas_anteriores(erro, falhas, _ITEM_CONSULTA)
+            raise
+        except ErroSsoPdpj as erro_sso:
+            anotar_falhas_antes_do_sso(erro_sso, falhas, _ITEM_CONSULTA)
+            raise
+        # stacklevel 4: warn -> avisar_falhas -> este metodo -> metodo publico -> usuario.
+        avisar_falhas(falhas, origem, _ITEM_CONSULTA, stacklevel=4)
+        return _ordenar_colunas(rows)
+
+    def _consultar_processo(
+        self,
+        cnj: str,
+        buscar: Callable[..., Any],
+        montar: Callable[[Any, str], list[dict[str, Any]]],
+        linha_falha: Callable[[str], dict[str, Any]],
+        falhas: list[str],
+    ) -> list[dict[str, Any]]:
+        """Linhas de um CNJ, ou a linha de falha com o motivo; o 401 propaga.
+
+        O 404 do endpoint e o 500 confirmado por :func:`confirmador_de_ausencia`
+        saem ``nao_encontrado``; as demais falhas, pelo vocabulário do core.
+        """
+        confirmar = confirmador_de_ausencia(self._request_with_retry, cnj, base_url=self.BASE_URL)
+        request_fn = partial(self._request_with_retry, on_response=confirmar)
+        try:
+            data = buscar(request_fn, cnj, base_url=self.BASE_URL)
+        except ProcessoAusenteError:
+            motivo = MOTIVO_NAO_ENCONTRADO
+        except EXCECOES_DE_FALHA_POR_LINHA as exc:
+            if e_token_invalido(exc):
+                raise
+            motivo = MOTIVO_NAO_ENCONTRADO if e_status(exc, STATUS_SEM_REGISTRO) else motivo_falha(exc)
+        else:
+            return [{**row, COLUNA_MOTIVO_FALHA: None} for row in montar(data, cnj)]
+        falhas.append(f"processo {cnj}: {motivo}")
+        return [{**linha_falha(cnj), COLUNA_MOTIVO_FALHA: motivo}]
 
     def existe(self, id_cnj: str | list[str]) -> bool | pd.DataFrame:
         """Checa presenca de processo(s) no Data Lake.
@@ -228,22 +495,33 @@ class PdpjScraper(BaseScraper):
 
         Returns:
             ``bool`` quando ``id_cnj`` e ``str``; ``pd.DataFrame`` com
-            colunas ``processo`` e ``existe`` quando e ``list``.
+            colunas ``processo``, ``existe`` e ``motivo_falha`` quando e
+            ``list``. Na lista, o processo cuja consulta falhou sai com
+            ``existe=None`` e o motivo, ``nao_encontrado`` no processo ausente
+            (ver a classe).
 
-        See also:
+        Raises:
+            requests.HTTPError: No 401, e com ``str`` em qualquer erro HTTP.
+            ErroSsoPdpj: Quando o SSO do PJe recusa ou não consegue renovar o
+                token; na lista, com as falhas anteriores numa nota do erro.
+            RetryExhaustedError, requests.Timeout, requests.ConnectionError,
+            InvalidJSONResponseError: Com ``str``, quando a consulta falha;
+                a resposta sem ``true``/``false`` levanta o ultimo.
+
+        See Also:
             :class:`InputCnjPdpj` -- schema pydantic.
         """
         self._check_auth()
         cnjs = self._normalize_cnj_input(id_cnj)
-        results: list[dict[str, Any]] = []
-        for cnj in cnjs:
-            existe = fetch_processo_existe(self.session, cnj, base_url=self.BASE_URL)
-            results.append({"processo": cnj, "existe": existe})
-            if self.sleep_time:
-                time.sleep(self.sleep_time)
         if isinstance(id_cnj, str):
-            return bool(results[0]["existe"])
-        return pd.DataFrame(results)
+            return fetch_processo_existe(self._request_with_retry, cnjs[0], base_url=self.BASE_URL)
+        return self._coletar_por_processo(
+            "PdpjScraper.existe",
+            cnjs,
+            fetch_processo_existe,
+            lambda existe, cnj: [{"processo": cnj, "existe": existe}],
+            lambda cnj: {"processo": cnj, "existe": None},
+        )
 
     def cpopg(self, id_cnj: str | list[str]) -> pd.DataFrame:
         """Recupera os detalhes de processo(s) via API ``/processos/{n}``.
@@ -256,69 +534,84 @@ class PdpjScraper(BaseScraper):
             principais: ``processo`` (CNJ pesquisado, dignos de digito),
             ``numero_processo`` (formatado pela API), ``sigla_tribunal``,
             ``segmento_justica``, ``data_atualizacao``, ``detalhes``
-            (dict com a resposta completa).
+            (dict com a resposta completa) e ``motivo_falha``. A API que
+            responde lista vazia gera uma linha com
+            ``status_consulta="Nao encontrado"``; a consulta que falha gera
+            uma linha com ``status_consulta`` igual a
+            :data:`juscraper.core.failures.STATUS_CONSULTA_FALHA` e o motivo.
+            O processo ausente do data lake (ver a classe) sai nessa linha,
+            com o motivo ``nao_encontrado``.
 
-        See also:
+        Raises:
+            requests.HTTPError: No 401 (token ausente, expirado ou invalido),
+                com as falhas anteriores numa nota do erro.
+            ErroSsoPdpj: Quando o SSO do PJe recusa ou não consegue renovar o
+                token no meio do lote. Propaga como o 401, com as falhas
+                anteriores numa nota do erro.
+
+        Warns:
+            UserWarning: Quando pelo menos uma consulta falhou.
+
+        See Also:
             :class:`InputCnjPdpj` -- schema pydantic.
         """
         self._check_auth()
-        cnjs = self._normalize_cnj_input(id_cnj)
-        rows: list[dict[str, Any]] = []
-        for cnj in cnjs:
-            detalhes = fetch_processo_detalhes(self.session, cnj, base_url=self.BASE_URL)
-            if not detalhes:
-                rows.append({
-                    "processo": cnj,
-                    "numero_processo": None,
-                    "id": None,
-                    "sigla_tribunal": None,
-                    "segmento_justica": None,
-                    "nivel_sigilo": None,
-                    "data_atualizacao": None,
-                    "detalhes": None,
-                    "status_consulta": "Nao encontrado",
-                })
-            else:
-                rows.extend(build_processo_row(det, cnj) for det in detalhes)
-            if self.sleep_time:
-                time.sleep(self.sleep_time)
-        return pd.DataFrame(rows)
+        return self._coletar_por_processo(
+            "PdpjScraper.cpopg",
+            self._normalize_cnj_input(id_cnj),
+            fetch_processo_detalhes,
+            lambda detalhes, cnj: (
+                [build_processo_row(det, cnj) for det in detalhes]
+                if detalhes
+                else [_linha_cpopg_vazia(cnj, "Nao encontrado")]
+            ),
+            lambda cnj: _linha_cpopg_vazia(cnj, STATUS_CONSULTA_FALHA),
+        )
 
     def documentos(self, id_cnj: str | list[str]) -> pd.DataFrame:
-        """Lista documentos do(s) processo(s) (sem baixar conteudo)."""
+        """Lista documentos do(s) processo(s) (sem baixar conteudo).
+
+        O processo cuja consulta falha sai numa linha so, com ``processo`` e
+        ``motivo_falha`` preenchidos e as demais colunas vazias. O processo
+        ausente do data lake sai assim, com ``nao_encontrado``, e nao como lista
+        sem documentos. O 401 interrompe; ver :meth:`cpopg`.
+        """
         self._check_auth()
-        cnjs = self._normalize_cnj_input(id_cnj)
-        rows: list[dict[str, Any]] = []
-        for cnj in cnjs:
-            data = fetch_processo_documentos(self.session, cnj, base_url=self.BASE_URL)
-            rows.extend(build_documento_rows(data, cnj))
-            if self.sleep_time:
-                time.sleep(self.sleep_time)
-        return pd.DataFrame(rows)
+        return self._coletar_por_processo(
+            "PdpjScraper.documentos",
+            self._normalize_cnj_input(id_cnj),
+            fetch_processo_documentos,
+            build_documento_rows,
+            _linha_documentos,
+        )
 
     def movimentos(self, id_cnj: str | list[str]) -> pd.DataFrame:
-        """Lista movimentos do(s) processo(s)."""
+        """Lista movimentos do(s) processo(s).
+
+        Falha por processo como em :meth:`documentos`.
+        """
         self._check_auth()
-        cnjs = self._normalize_cnj_input(id_cnj)
-        rows: list[dict[str, Any]] = []
-        for cnj in cnjs:
-            data = fetch_processo_movimentos(self.session, cnj, base_url=self.BASE_URL)
-            rows.extend(build_movimento_rows(data, cnj))
-            if self.sleep_time:
-                time.sleep(self.sleep_time)
-        return pd.DataFrame(rows)
+        return self._coletar_por_processo(
+            "PdpjScraper.movimentos",
+            self._normalize_cnj_input(id_cnj),
+            fetch_processo_movimentos,
+            build_movimento_rows,
+            _linha_processo,
+        )
 
     def partes(self, id_cnj: str | list[str]) -> pd.DataFrame:
-        """Lista partes do(s) processo(s)."""
+        """Lista partes do(s) processo(s).
+
+        Falha por processo como em :meth:`documentos`.
+        """
         self._check_auth()
-        cnjs = self._normalize_cnj_input(id_cnj)
-        rows: list[dict[str, Any]] = []
-        for cnj in cnjs:
-            data = fetch_processo_partes(self.session, cnj, base_url=self.BASE_URL)
-            rows.extend(build_parte_rows(data, cnj))
-            if self.sleep_time:
-                time.sleep(self.sleep_time)
-        return pd.DataFrame(rows)
+        return self._coletar_por_processo(
+            "PdpjScraper.partes",
+            self._normalize_cnj_input(id_cnj),
+            fetch_processo_partes,
+            build_parte_rows,
+            _linha_processo,
+        )
 
     def pesquisa(
         self,
@@ -351,12 +644,30 @@ class PdpjScraper(BaseScraper):
                 * ``data_atualizacao_inicio`` / ``_fim`` (str): ISO datetime
                 * ``data_primeiro_ajuizamento_inicio`` / ``_fim`` (str): ISO datetime
                 * ``campo_ordenacao`` (str): campo de ordenacao decrescente
-                * ``itens_por_pagina`` (int): default 100, max 100
+                * ``itens_por_pagina`` (int): default 100. Vai a API como
+                  ``maxElementsSize``, mas a API ignora o valor: a
+                  especificacao publica do data lake traz
+                  ``maxElementsSize`` so na resposta, como o maximo por
+                  consulta, e nao declara parametro de tamanho de pagina.
+                  Em campo, o pedido de 5 devolveu 100 itens. A pagina nao
+                  se corta no cliente, porque o cursor ``searchAfter`` da
+                  pagina seguinte vem da ultima linha que a API mandou;
+                  para limitar o total, use ``paginas``.
 
         Returns:
-            DataFrame com uma linha por processo retornado.
+            DataFrame com uma linha por processo retornado. A API responde 404
+            ("Não foram encontrados registros") a pagina seguinte a ultima com
+            dados e a busca sem resultado; o 404 encerra a coleta, e a busca
+            sem resultado devolve DataFrame vazio.
 
-        See also:
+        Raises:
+            requests.HTTPError, RetryExhaustedError, requests.Timeout,
+            requests.ConnectionError, InvalidJSONResponseError: Quando a
+                requisicao de qualquer pagina falha, com status diferente de
+                404. Pagina nao vira linha de falha, e devolver as paginas
+                anteriores truncaria o resultado sem aviso.
+
+        See Also:
             :class:`InputPesquisaPdpj` -- schema pydantic e a fonte da
             verdade dos filtros aceitos.
         """
@@ -372,47 +683,71 @@ class PdpjScraper(BaseScraper):
 
         base_data = inp.model_dump(exclude={"paginas", "itens_por_pagina"})
         base_params = _to_query_params(base_data)
+        # Sem efeito na API hoje (ver ``itens_por_pagina`` no docstring); o
+        # parâmetro segue na querystring para não mudar a requisição de quem já
+        # o passa, caso a API volte a aceitá-lo.
         base_params["maxElementsSize"] = inp.itens_por_pagina
+        max_paginas, permitidas = _limite_de_paginas(paginas_norm)
+        return pd.DataFrame(self._paginar(base_params, max_paginas, permitidas))
 
-        # paginacao via searchAfter: a API devolve o cursor a ser usado
-        # na proxima pagina. Coletamos ate exaurir ou atingir o limite
-        # solicitado pelo usuario.
-        if paginas_norm is None:
-            max_paginas = None
-            allowed: set[int] | None = None
-        elif isinstance(paginas_norm, range):
-            max_paginas = paginas_norm.stop - 1
-            allowed = set(paginas_norm)
-        else:
-            max_paginas = max(paginas_norm) if paginas_norm else 0
-            allowed = set(paginas_norm)
+    def _paginar(
+        self,
+        base_params: dict[str, Any],
+        max_paginas: int | None,
+        permitidas: set[int] | None,
+    ) -> list[dict[str, Any]]:
+        """Segue o cursor ``searchAfter`` até a página vazia, o fim do cursor ou ``max_paginas``.
 
+        A API devolve em cada página o cursor da seguinte; as linhas de uma
+        página entram só quando ela está em ``permitidas`` (``None`` = todas).
+        A página seguinte à última com dados vem como 404 com ``{code, message}``
+        ("Não foram encontrados registros"), e a página 1 da busca sem resultado
+        também: os dois encerram a coleta com o que já foi lido. Outro status
+        de erro levanta.
+        """
         rows: list[dict[str, Any]] = []
         pagina = 1
         search_after: list[Any] | None = None
         while True:
-            params = dict(base_params)
-            if search_after is not None:
-                # API espera searchAfter como string CSV: timestamp,id
-                params["searchAfter"] = ",".join(str(v) for v in search_after)
-            data = fetch_pesquisa(self.session, params, base_url=self.BASE_URL)
-            page_rows, search_after, _total = parse_pesquisa_response(data)
-            if allowed is None or pagina in allowed:
+            lida = self._pagina_da_pesquisa(base_params, search_after)
+            if lida is None:
+                return rows
+            page_rows, search_after = lida
+            if permitidas is None or pagina in permitidas:
                 rows.extend(page_rows)
-            if not search_after or not page_rows:
-                break
-            if max_paginas is not None and pagina >= max_paginas:
-                break
+            ultima = max_paginas is not None and pagina >= max_paginas
+            if not search_after or not page_rows or ultima:
+                return rows
             pagina += 1
             if self.sleep_time:
                 time.sleep(self.sleep_time)
-        return pd.DataFrame(rows)
+
+    def _pagina_da_pesquisa(
+        self,
+        base_params: dict[str, Any],
+        search_after: list[Any] | None,
+    ) -> tuple[list[dict[str, Any]], list[Any] | None] | None:
+        """Linhas e cursor de uma página da ``pesquisa``; ``None`` no 404 sem registros."""
+        params = dict(base_params)
+        if search_after is not None:
+            # API espera searchAfter como string CSV: timestamp,id
+            params["searchAfter"] = ",".join(str(v) for v in search_after)
+        data = fetch_pesquisa(self._request_with_retry, params, base_url=self.BASE_URL)
+        if data is None:
+            return None
+        page_rows, proximo, _total = parse_pesquisa_response(data)
+        return page_rows, proximo
 
     def contar(self, **kwargs: Any) -> int:
         """Total de processos que casam com os filtros (``/processos:contar``).
 
         Aceita o mesmo subconjunto de filtros de :meth:`pesquisa` exceto
         os relacionados a paginacao/ordenacao. Retorna ``int``.
+
+        Raises:
+            requests.HTTPError, RetryExhaustedError, requests.Timeout,
+            requests.ConnectionError: Quando a requisicao falha.
+            InvalidJSONResponseError: Quando a resposta nao traz um inteiro.
         """
         self._check_auth()
         try:
@@ -423,13 +758,13 @@ class PdpjScraper(BaseScraper):
             )
             raise
         params = _to_query_params(inp.model_dump())
-        total = fetch_contar(self.session, params, base_url=self.BASE_URL)
-        return total or 0
+        return fetch_contar(self._request_with_retry, params, base_url=self.BASE_URL)
 
     def download_documents(
         self,
         base_df: pd.DataFrame,
         max_docs_per_process: int | None = None,
+        *,
         with_text: bool = True,
         with_binary: bool = False,
     ) -> pd.DataFrame:
@@ -441,11 +776,35 @@ class PdpjScraper(BaseScraper):
         caso a lista de documentos e extraida de
         ``detalhes['documentos']``).
 
+        Um documento cujo download falha não interrompe a coleta: a linha
+        sai com ``texto``/``_raw_texto`` e/ou ``binario`` iguais a ``None``
+        e o método segue para o próximo documento. Conta como falha qualquer
+        erro HTTP diferente de 401 (inclusive o 403, que a API pode devolver
+        para um documento isolado, como um sigiloso, e que por isso não é
+        retentado), o retry de 429/5xx/timeout esgotado e o erro de conexão.
+        A coluna ``motivo_falha`` guarda o motivo, no vocabulário de
+        :mod:`juscraper.core.failures`; com texto e binário, guarda o do texto
+        quando o texto falhou, senão o do binário, e o ``None`` de cada coluna
+        diz qual conteúdo faltou. Ao fim, um único ``UserWarning`` informa
+        quantos downloads falharam e cita alguns, com processo, documento,
+        conteúdo e motivo. O 401 propaga, porque token inválido atinge o lote
+        inteiro.
+
+        O documento sem arquivo (``arquivo_id`` vazio, na base que traz a
+        coluna) não tem conteúdo no data lake, e a API responde 404 ao pedido
+        de texto dele. Ele sai com os conteúdos ``None`` e ``motivo_falha``
+        ``None``, sem requisição e fora do aviso, e ocupa vaga do limite, como
+        qualquer linha devolvida.
+
         Args:
             base_df: DataFrame fonte das chamadas.
-            max_docs_per_process: Limite de documentos baixados por
-                processo. ``None`` = sem limite; ``0`` devolve DataFrame
-                vazio sem fazer requisicao.
+            max_docs_per_process: Limite de linhas devolvidas por processo,
+                na ordem de ``base_df``. Linhas sem ``id_documento`` sao
+                puladas sem ocupar vaga do limite; um documento cujo
+                download falhou ocupa vaga, como no JusBR, porque sua linha
+                sai no resultado (com conteúdo ``None``) e a requisição já
+                foi feita. ``None`` = sem limite; ``0`` devolve DataFrame vazio
+                sem fazer requisicao.
             with_text: Se ``True`` (default), baixa o texto via
                 ``/documentos/{id}/texto``.
             with_binary: Se ``True``, baixa o binario via
@@ -454,7 +813,8 @@ class PdpjScraper(BaseScraper):
 
         Returns:
             DataFrame com uma linha por documento. Inclui colunas
-            ``texto`` e ``binario`` (quando solicitados).
+            ``texto`` e ``binario`` (quando solicitados), ``None`` nos
+            documentos cujo download falhou, e ``motivo_falha``.
 
         Raises:
             ValidationError: Quando ``base_df`` nao e um DataFrame ou
@@ -462,6 +822,23 @@ class PdpjScraper(BaseScraper):
             ValueError: Quando ``with_text`` e ``with_binary`` sao ambos
                 ``False``, ou quando ``base_df`` nao tem coluna
                 ``id_documento`` nem ``detalhes``.
+            requests.HTTPError: Quando a API responde 401 (token ausente,
+                expirado ou inválido). O erro atinge o lote inteiro, então
+                propaga e as linhas já baixadas se perdem; as falhas
+                anteriores ao 401 vão numa nota do próprio erro
+                (``__notes__``), não no ``UserWarning``.
+            ErroSsoPdpj: Quando o SSO do PJe recusa ou não consegue renovar o
+                token no meio do lote. Propaga como o 401, com as falhas
+                anteriores numa nota do erro.
+
+        Warns:
+            UserWarning: Quando pelo menos um download de documento falhou.
+                Um aviso por chamada, com a contagem e alguns exemplos,
+                emitido só quando a coleta termina.
+
+        See Also:
+            :class:`InputDownloadDocumentsPdpj`: schema pydantic e fonte
+            da verdade dos parametros aceitos.
         """
         self._check_auth()
         # Validacao via schema -- garante que kwargs desconhecidos viram TypeError.
@@ -481,9 +858,8 @@ class PdpjScraper(BaseScraper):
             raise
         base_df = inp.base_df
         max_docs_per_process = inp.max_docs_per_process
-        with_text = inp.with_text
-        with_binary = inp.with_binary
-        if not with_text and not with_binary:
+        conteudos = _Conteudos(texto=inp.with_text, binario=inp.with_binary)
+        if not conteudos.texto and not conteudos.binario:
             raise ValueError(
                 "Pelo menos um de 'with_text' ou 'with_binary' deve ser True."
             )
@@ -493,48 +869,91 @@ class PdpjScraper(BaseScraper):
             return pd.DataFrame()
 
         rows: list[dict[str, Any]] = []
-        for processo, grupo in docs_df.groupby("processo", sort=False):
-            selected = grupo if max_docs_per_process is None else grupo.head(max_docs_per_process)
-            for _, doc_row in selected.iterrows():
-                row = self._download_document(doc_row, processo, with_text, with_binary)
-                if row is not None:
-                    rows.append(row)
+        falhas: list[str] = []
+        try:
+            for processo, grupo in docs_df.groupby("processo", sort=False):
+                rows.extend(self._download_process_documents(
+                    grupo, processo, max_docs_per_process, conteudos, falhas,
+                ))
+        except requests.HTTPError as erro:
+            anotar_falhas_anteriores(erro, falhas, _ITEM_DOWNLOAD)
+            raise
+        except ErroSsoPdpj as erro_sso:
+            anotar_falhas_antes_do_sso(erro_sso, falhas, _ITEM_DOWNLOAD)
+            raise
+        avisar_falhas(falhas, "PdpjScraper.download_documents", _ITEM_DOWNLOAD)
         return pd.DataFrame(rows)
+
+    def _download_process_documents(
+        self,
+        grupo: pd.DataFrame,
+        processo: object,
+        max_docs_per_process: int | None,
+        conteudos: _Conteudos,
+        falhas: list[str],
+    ) -> list[dict[str, Any]]:
+        """Baixa os documentos de um processo ate o limite de linhas devolvidas.
+
+        O limite e conferido antes de cada documento, e nao com ``head(N)``
+        sobre ``grupo``: assim uma linha sem ``id_documento``, que
+        :meth:`_download_document` pula, nao ocupa uma vaga do limite.
+        """
+        rows: list[dict[str, Any]] = []
+        for _, doc_row in grupo.iterrows():
+            if max_docs_per_process is not None and len(rows) >= max_docs_per_process:
+                break
+            row = self._download_document(doc_row, processo, conteudos, falhas)
+            if row is not None:
+                rows.append(row)
+        return rows
 
     def _download_document(
         self,
         doc_row: pd.Series,
-        processo: Any,
-        with_text: bool,
-        with_binary: bool,
+        processo: object,
+        conteudos: _Conteudos,
+        falhas: list[str],
     ) -> dict[str, Any] | None:
-        """Baixa os conteúdos selecionados para uma linha de documento."""
+        """Baixa os conteúdos selecionados para uma linha de documento.
+
+        Falha de download de texto ou binario vira ``None`` na coluna e uma
+        entrada em ``falhas``; o 401 propaga (ver ``e_token_invalido``).
+        """
         row = cast(dict[str, Any], doc_row.to_dict())
         id_documento = row.get("id_documento")
         numero_processo = row.get("numero_processo") or processo
-        if not id_documento:
-            logger.warning(
-                "Documento sem id_documento no processo %s; pulando.",
-                numero_processo,
-            )
+        # ``pd.isna`` cobre o ``NaN`` que o pandas põe no id ausente; ``NaN`` é
+        # truthy e passaria por ``not id_documento`` como id válido.
+        if pd.isna(id_documento) or id_documento == "":
+            # A linha de falha de ``documentos`` não tem id e já foi contada no
+            # aviso daquela chamada; o log fica para o documento que veio sem id.
+            if pd.isna(row.get(COLUNA_MOTIVO_FALHA)):
+                logger.warning(
+                    "Documento sem id_documento no processo %s; pulando.",
+                    numero_processo,
+                )
             return None
+        if _sem_arquivo(row):
+            return _linha_sem_conteudo(row, conteudos)
         cnj_clean = clean_cnj(str(numero_processo))
-        if with_text:
-            raw = fetch_documento_texto(
-                self.session,
-                cnj_clean,
-                str(id_documento),
-                base_url=self.BASE_URL,
+        descricao = f"processo {numero_processo}, documento {id_documento}"
+        motivo_texto = motivo_binario = None
+        if conteudos.texto:
+            raw, motivo_texto = _buscar_conteudo(
+                fetch_documento_texto, self._request_with_retry, cnj_clean, str(id_documento), self.BASE_URL,
             )
+            if motivo_texto is not None:
+                falhas.append(f"{descricao}, texto: {motivo_texto}")
             row["texto"] = clean_document_text(raw)
             row["_raw_texto"] = raw
-        if with_binary:
-            row["binario"] = fetch_documento_binario(
-                self.session,
-                cnj_clean,
-                str(id_documento),
-                base_url=self.BASE_URL,
+        if conteudos.binario:
+            row["binario"], motivo_binario = _buscar_conteudo(
+                fetch_documento_binario, self._request_with_retry, cnj_clean, str(id_documento), self.BASE_URL,
             )
+            if motivo_binario is not None:
+                falhas.append(f"{descricao}, binario: {motivo_binario}")
+        # Uma coluna de motivo para duas requisições: o texto tem precedência.
+        row[COLUNA_MOTIVO_FALHA] = motivo_texto if motivo_texto is not None else motivo_binario
         if self.sleep_time:
             time.sleep(self.sleep_time)
         return row

@@ -11,6 +11,7 @@ import json
 import re
 from urllib.parse import parse_qs, urlparse
 
+import jwt
 import pandas as pd
 import pytest
 import responses
@@ -23,7 +24,6 @@ from juscraper.aggregators.pdpj.parse import (
     build_movimento_rows,
     build_parte_rows,
     build_processo_row,
-    clean_document_text,
     parse_pesquisa_response,
 )
 from tests._helpers import assert_unknown_kwarg_raises, load_sample, query_param_subset_matcher
@@ -73,9 +73,10 @@ def test_existe_list_returns_dataframe():
         )
     df = _mk_scraper().existe(["10029886420194014100", "00000000000000000000"])
     assert isinstance(df, pd.DataFrame)
-    assert list(df.columns) == ["processo", "existe"]
+    assert list(df.columns) == ["processo", "existe", "motivo_falha"]
     assert bool(df.iloc[0]["existe"]) is True
     assert bool(df.iloc[1]["existe"]) is False
+    assert df["motivo_falha"].isna().all()
 
 
 def test_existe_requires_auth():
@@ -290,7 +291,7 @@ def test_contar_aceita_resposta_json_dict():
 
 def test_auth_token_invalido_raises_valueerror():
     s = jus.scraper("pdpj")
-    with pytest.raises(ValueError, match="Token JWT invalido"):
+    with pytest.raises(ValueError, match="Token JWT inválido"):
         s.auth("not-a-jwt")
 
 
@@ -299,6 +300,65 @@ def test_auth_define_header_authorization():
     assert "Authorization" not in s.session.headers
     s.auth(FAKE_TOKEN)
     assert s.session.headers["Authorization"] == f"Bearer {FAKE_TOKEN}"
+
+
+# Chave HMAC de 32+ bytes: abaixo disso o PyJWT emite InsecureKeyLengthWarning,
+# que o ``filterwarnings = ["error"]`` converte em falha. A assinatura nao e
+# verificada pelo ``auth``, entao a chave nao afeta o contrato.
+_HMAC_KEY = "0123456789abcdef0123456789abcdef-test"
+
+
+def test_auth_token_expirado_raises_valueerror():
+    """Token vencido e recusado no ``auth``.
+
+    Com ``verify_signature=False`` o PyJWT desliga tambem ``verify_exp``;
+    sem religa-lo, o token vencido era aceito e so falhava na primeira
+    chamada a API (#351).
+    """
+    s = jus.scraper("pdpj")
+    expirado = jwt.encode({"sub": "tester", "exp": 0}, _HMAC_KEY, algorithm="HS256")
+
+    with pytest.raises(ValueError, match="Token JWT expirado"):
+        s.auth(expirado)
+    assert s.token is None
+    assert "Authorization" not in s.session.headers
+
+
+def test_construtor_com_token_expirado_raises_valueerror():
+    expirado = jwt.encode({"sub": "tester", "exp": 0}, _HMAC_KEY, algorithm="HS256")
+
+    with pytest.raises(ValueError, match="Token JWT expirado"):
+        jus.scraper("pdpj", token=expirado)
+
+
+def test_auth_token_sem_exp_e_aceito():
+    """Mesmo contrato do JusBR: o PyJWT so confere ``exp`` quando o claim existe."""
+    s = jus.scraper("pdpj")
+    sem_exp = jwt.encode({"sub": "tester"}, _HMAC_KEY, algorithm="HS256")
+
+    assert s.auth(sem_exp) is True
+    assert s.token == sem_exp
+    assert s.session.headers["Authorization"] == f"Bearer {sem_exp}"
+
+
+@pytest.mark.parametrize(
+    "recusado",
+    [jwt.encode({"sub": "tester", "exp": 0}, _HMAC_KEY, algorithm="HS256"), "not-a-jwt"],
+    ids=["vencido", "malformado"],
+)
+def test_auth_que_falha_mantem_o_token_anterior(recusado):
+    """Quem chamou recebeu o erro; o token anterior segue valendo até o 401."""
+    s = jus.scraper("pdpj")
+    s.auth(FAKE_TOKEN)
+    auth_anterior = s.session.auth
+
+    with pytest.raises(ValueError, match="Token JWT"):
+        s.auth(recusado)
+
+    assert s.token == FAKE_TOKEN
+    assert s.session.headers["Authorization"] == f"Bearer {FAKE_TOKEN}"
+    # Quem põe o Authorization enviado é o AuthPdpj em session.auth.
+    assert s.session.auth is auth_anterior
 
 
 # ---------------------------------------------------------------------
@@ -350,16 +410,6 @@ def test_parse_pesquisa_response_lida_com_none():
     assert total is None
 
 
-def test_clean_document_text_remove_caracteres_de_controle():
-    txt = "abc\x00def\x1aghi\r\njkl mno"
-    assert clean_document_text(txt) == "abcdefghi\njkl\nmno"
-
-
-def test_clean_document_text_string_vazia_retorna_none():
-    assert clean_document_text("") is None
-    assert clean_document_text(None) is None
-
-
 def test_to_query_params_filtra_none_e_serializa_lista():
     params = _to_query_params({
         "numero_processo": "10029886420194014100",
@@ -370,3 +420,26 @@ def test_to_query_params_filtra_none_e_serializa_lista():
         "numeroProcesso": "10029886420194014100",
         "idOrgaoJulgador": "12345,67890",
     }
+
+
+@pytest.mark.parametrize(
+    ("montar", "chave"),
+    [
+        (build_documento_rows, "documentos"),
+        (build_movimento_rows, "movimentos"),
+        (build_parte_rows, "partes"),
+    ],
+    ids=["documentos", "movimentos", "partes"],
+)
+def test_item_que_nao_e_objeto_e_pulado(montar, chave):
+    """O ``fetch_*`` confere só o objeto do topo; item fora de forma na lista não vira linha."""
+    rows = montar({"numeroProcesso": "N", chave: ["texto", None, {"id": "a"}]}, "10029886420194014100")
+    assert len(rows) == 1
+    assert rows[0]["processo"] == "10029886420194014100"
+
+
+def test_parse_pesquisa_response_pula_item_que_nao_e_objeto():
+    rows, _search_after, _total = parse_pesquisa_response(
+        {"content": [42, {"numeroProcesso": "N", "id": "a"}], "searchAfter": None, "total": 1}
+    )
+    assert [row["id"] for row in rows] == ["a"]

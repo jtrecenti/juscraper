@@ -68,6 +68,8 @@ EXPECTED_COURT_OUTPUT_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
     ("trf1", "cpopg"): ("juscraper.courts._trf.schemas", "OutputCpopgTRF"),
     ("trf3", "cpopg"): ("juscraper.courts._trf.schemas", "OutputCpopgTRF"),
     ("trf5", "cpopg"): ("juscraper.courts._trf.schemas", "OutputCpopgTRF"),
+    # TJPE 1º grau roda o mesmo PJe ConsultaPública dos TRFs.
+    ("tjpe", "cpopg"): ("juscraper.courts._trf.schemas", "OutputCpopgTRF"),
     ("trf6", "cpopg"): ("juscraper.courts.trf6.schemas", "OutputCpopgTRF6"),
     ("stf", "listar_decisoes"): ("juscraper.courts.stf.schemas", "OutputListarDecisoesSTF"),
     ("stf", "contar_decisoes"): ("juscraper.courts.stf.schemas", "OutputContarDecisoesSTF"),
@@ -87,6 +89,7 @@ EXPECTED_AGGREGATOR_OUTPUT_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
         "juscraper.aggregators.comunica_cnj.schemas",
         "OutputListarComunicacoesComunicaCNJ",
     ),
+    ("falcao", "listar_decisoes"): ("juscraper.aggregators.falcao.schemas", "OutputListarDecisoesFalcao"),
 }
 
 # Campos que herdamos de OutputCJSGBase / OutputCnjConsultaBase e nao

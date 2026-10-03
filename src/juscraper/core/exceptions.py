@@ -27,7 +27,7 @@ class HTTPSemanticError(Exception):
 
 
 class BotChallengeBlockedError(Exception):
-    """Levantada quando um portal bloqueia o request via bot manager (ex.: Akamai).
+    """Levantada quando um portal bloqueia o request via bot manager (ex.: Akamai, CloudFront).
 
     O sintoma típico é HTTP 403 com body curto ``Access Denied`` e uma referência
     Akamai (``Reference #...``); o cookie de challenge (``ak_bmsc``) nem chega
@@ -38,21 +38,60 @@ class BotChallengeBlockedError(Exception):
     novo, ou trocar de IP (VPN, hotspot). É propagada (em vez de engolida
     pelos try/except por-item) porque um bloqueio nesse nível é session-wide:
     nenhum CNJ do batch vai conseguir passar.
+
+    ``bot_manager`` nomeia o bloqueador na mensagem. O default é ``"Akamai"``
+    (TRFs); o agregador Falcao passa ``"CloudFront"``, cujo 403 é uma página
+    HTML ``The request could not be satisfied`` servida pelo próprio CDN.
     """
 
-    def __init__(self, tribunal: str, url: str, reference: str | None = None):
+    def __init__(
+        self,
+        tribunal: str,
+        url: str,
+        reference: str | None = None,
+        *,
+        bot_manager: str = "Akamai",
+    ):
         self.tribunal = tribunal
         self.url = url
         self.reference = reference
+        self.bot_manager = bot_manager
         msg = (
-            f"{tribunal} bloqueou a requisição (HTTP 403 'Access Denied') "
-            f"em {url}. Provavelmente foi o bot manager (Akamai) limitando "
+            f"{tribunal} bloqueou a requisição (HTTP 403) em {url}. "
+            f"Provavelmente foi o bot manager ({bot_manager}) limitando "
             f"o seu IP — aguarde alguns minutos antes de tentar de novo "
             f"ou troque de IP (VPN, hotspot)."
         )
         if reference:
             msg += f" Reference: {reference}."
         super().__init__(msg)
+
+
+class WafChallengeError(BotChallengeBlockedError):
+    """Levantada quando o AWS WAF desafia de novo logo depois de o cookie ser renovado.
+
+    O desafio JavaScript do AWS WAF se resolve com o cookie ``aws-waf-token``
+    (ver :mod:`juscraper.core.waf`). Se a requisição repetida com o cookie novo
+    volta a receber o desafio, o WAF está recusando a sessão inteira, e nenhum
+    item do batch passaria. Herda de :class:`BotChallengeBlockedError` para ser
+    propagada pelos mesmos ``try/except`` por item.
+
+    Também sai quando o cookie não pôde ser obtido (navegador ausente, cookie
+    não emitido no prazo): sem ele, nenhuma requisição desafiada passaria, e
+    tentar de novo a cada item relançaria o navegador.
+    """
+
+    def __init__(self, tribunal: str, url: str, motivo: str | None = None):
+        super().__init__(tribunal, url)
+        # A mensagem da classe-mãe descreve o 403 do Akamai; aqui o sintoma é outro.
+        if motivo is None:
+            mensagem = (
+                f"O WAF do {tribunal} desafiou de novo logo apos a renovacao do cookie "
+                f"aws-waf-token em {url}. Aguarde alguns minutos antes de tentar outra vez."
+            )
+        else:
+            mensagem = f"O WAF do {tribunal} desafiou em {url}, e o cookie aws-waf-token nao foi obtido: {motivo}"
+        self.args = (mensagem,)
 
 
 class InvalidJSONResponseError(HTTPSemanticError):

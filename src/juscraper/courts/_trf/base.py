@@ -110,7 +110,7 @@ class TRFConsultaScraper(HTTPScraper):
         """Fetch the form once per session and memoize the auto-generated IDs."""
         if self._field_ids is None:
             form_html = fetch_form(self, self.BASE_URL)
-            self._field_ids = extract_form_field_ids(form_html, self.CLASSE_FIELD_NAME)
+            self._field_ids = extract_form_field_ids(form_html, self.CLASSE_FIELD_NAME, self.TRIBUNAL_NAME)
             logger.debug("%s field IDs: %s", self.TRIBUNAL_NAME, self._field_ids)
         return self._field_ids
 
@@ -189,8 +189,10 @@ class TRFConsultaScraper(HTTPScraper):
         for i, cnj in enumerate(tqdm(cnjs, desc=f"{self.TRIBUNAL_NAME} cpopg")):
             try:
                 results.append(self._fetch_one(cnj))
-            except BotChallengeBlockedError:
-                raise  # session-wide; nenhum item do batch passaria
+            except (BotChallengeBlockedError, ImportError):
+                # Bloqueio e dependência ausente valem para a sessão inteira:
+                # nenhum item do batch passaria, e engolir viraria "não encontrado".
+                raise
             except Exception as exc:  # noqa: BLE001 — resiliência por item
                 logger.warning("Erro ao consultar %s: %s", cnj, exc)
                 results.append(None)
@@ -317,8 +319,8 @@ class TRFConsultaScraper(HTTPScraper):
             for ca, doc_id in urls:
                 try:
                     content = fetch_documento(self, self.BASE_URL, ca, doc_id)
-                except BotChallengeBlockedError:
-                    raise  # session-wide; nenhum item passaria
+                except (BotChallengeBlockedError, ImportError):
+                    raise  # session-wide; nenhuma peça passaria
                 except Exception as exc:  # noqa: BLE001 — resiliência por peça
                     logger.warning(
                         "Erro ao baixar peça %s do %s: %s", doc_id, cnj, exc
