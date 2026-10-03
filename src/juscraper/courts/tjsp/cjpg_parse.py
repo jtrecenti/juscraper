@@ -114,6 +114,31 @@ def cjpg_n_pags(page_source) -> int:
     return (n_results + _CJPG_PAGE_SIZE - 1) // _CJPG_PAGE_SIZE
 
 
+def _extrair_dados_processo(tabela_dados):
+    """Extrai identificadores, detalhes e decisão de uma tabela CJPG."""
+    dados_processo: dict = {}
+    link_inteiro_teor = tabela_dados.find('a', {'style': 'vertical-align: top'})
+    if link_inteiro_teor:
+        nome = link_inteiro_teor.get('name')
+        dados_processo['cd_processo'] = str(nome).split('-')[0] if nome else None
+        span_negrito = link_inteiro_teor.find('span', class_='fonteNegrito')
+        dados_processo['id_processo'] = span_negrito.text.strip() if span_negrito is not None else None
+
+    for linha in tabela_dados.find_all('tr', class_='fonte'):
+        if linha.find('strong'):
+            chave, valor = linha.text.strip().split(':', 1)
+            chave = chave.strip().lower().replace(' ', '_').replace('-', '')
+            if chave == 'data_de_disponibilização':
+                chave = 'data_disponibilizacao'
+            dados_processo[chave] = valor.strip()
+
+    div_decisao = tabela_dados.find('div', {'align': 'justify', 'style': 'display: none;'})
+    if div_decisao:
+        spans = div_decisao.find_all('span')
+        dados_processo['decisao'] = spans[-1].get_text(separator=" ", strip=True) if spans else ''
+    return dados_processo
+
+
 def cjpg_parse_single(path):
     """
     Parses a downloaded HTML file from the cjpg_download function.
@@ -123,44 +148,10 @@ def cjpg_parse_single(path):
     processos = []
     div_dados_resultado = soup.find('div', {'id': 'divDadosResultado'})
     if div_dados_resultado:
-        tr_processos = div_dados_resultado.find_all('tr', class_='fundocinza1')
-        for tr_processo in tr_processos:
-            dados_processo: dict = {}
+        for tr_processo in div_dados_resultado.find_all('tr', class_='fundocinza1'):
             tabela_dados = tr_processo.find('table')
-            if tabela_dados is None:
-                continue
-            # id_processo
-            link_inteiro_teor = tabela_dados.find('a', {'style': 'vertical-align: top'})
-            if link_inteiro_teor:
-                name_attr = link_inteiro_teor.get('name')
-                if name_attr:
-                    dados_processo['cd_processo'] = str(name_attr).split('-')[0]
-                else:
-                    dados_processo['cd_processo'] = None
-                span_negrito = link_inteiro_teor.find('span', class_='fonteNegrito')
-                if span_negrito is not None:
-                    dados_processo['id_processo'] = span_negrito.text.strip()
-                else:
-                    dados_processo['id_processo'] = None
-            # Outros campos
-            linhas_detalhes = tabela_dados.find_all('tr', class_='fonte')
-            for linha in linhas_detalhes:
-                strong = linha.find('strong')
-                if strong:
-                    texto = linha.text.strip()
-                    chave, valor = texto.split(':', 1)
-                    chave = chave.strip().lower().replace(' ', '_').replace('-', '')
-                    valor = valor.strip()
-                    if chave == 'data_de_disponibilização':
-                        chave = 'data_disponibilizacao'
-                    dados_processo[chave] = valor
-            # Decisão
-            div_decisao = tabela_dados.find('div', {'align': 'justify', 'style': 'display: none;'})
-            if div_decisao:
-                spans = div_decisao.find_all('span')
-                decisao_text = spans[-1].get_text(separator=" ", strip=True) if spans else ''
-                dados_processo['decisao'] = decisao_text
-            processos.append(dados_processo)
+            if tabela_dados is not None:
+                processos.append(_extrair_dados_processo(tabela_dados))
     return pd.DataFrame(processos)
 
 
