@@ -50,83 +50,83 @@ Os métodos `.cpopg()` e `.cposg()` recebem como *input* um número de processo 
 O método `.cjsg()` recebe como *input* parâmetros de busca de jurisprudência (que variam por tribunal) e retorna uma tabela com os resultados da consulta. Boa parte dos tribunais apresentam limites de paginação ao realizar buscas muito gerais (i.e. que retornam muitos resultados). Nesses casos, o método dará um aviso ao usuário com o número total de resultados, confirmando se deseja mesmo baixar todos os resultados.
 
 <!-- status:inicio -->
-## Implementations and status
+## Implementações e status
 
-Status observed in the stated scenario, with no guarantee of current availability. Without evidence or after 30 days, the next generation marks the endpoint as not verified. The validity deadline remains visible between updates. Previous failure reports remain below.
+Status observado no cenário informado, sem garantia de disponibilidade atual. Sem evidência ou após 30 dias, o estado passa a não verificado na próxima geração. A data limite permanece visível entre atualizações. O último relato de falha continua abaixo.
 
-[Criteria and updates](https://github.com/jtrecenti/juscraper/blob/main/CONTRIBUTING.md#status-dos-raspadores)
+[Critérios e atualização](https://github.com/jtrecenti/juscraper/blob/main/CONTRIBUTING.md#status-dos-raspadores)
 
-### Courts
+### Tribunais
 
-| Source | Endpoint | Status | Verified on | Valid until |
+| Fonte | Endpoint | Estado | Verificação | Válido até |
 |---|---|---|---|---|
-| STF | `listar_decisoes` | Not verified | - | - |
-| STF | `contar_decisoes` | Not verified | - | - |
-| TJAC | `cjsg` | Not verified | - | - |
-| TJAL | `cjsg` | Not verified | - | - |
-| TJAM | `cjsg` | Not verified | - | - |
-| TJAP | `cjsg` | Not verified (last: Unavailable) | 2026-06-07 | 2026-07-07 |
-| TJBA | `cjsg` | Not verified | - | - |
-| TJCE | `cjsg` | Not verified | - | - |
-| TJDFT | `cjsg` | Not verified | - | - |
-| TJES | `cjsg` | Not verified | - | - |
-| TJES | `cjpg` | Not verified | - | - |
-| TJGO | `cjsg` | Not verified | - | - |
-| TJMG | `cjsg` | Not verified | - | - |
-| TJMS | `cjsg` | Not verified | - | - |
-| TJMT | `cjsg` | Not verified | - | - |
-| TJPA | `cjsg` | Not verified | - | - |
-| TJPB | `cjsg` | Not verified | - | - |
-| TJPE | `cjsg` | Not verified | - | - |
-| TJPE | `cpopg` | Not verified | - | - |
-| TJPI | `cjsg` | Not verified | - | - |
-| TJPR | `cjsg` | Not verified | - | - |
-| TJRJ | `cjsg` | Not verified | - | - |
-| TJRN | `cjsg` | Not verified | - | - |
-| TJRO | `cjsg` | Not verified | - | - |
-| TJRR | `cjsg` | Not verified | - | - |
-| TJRS | `cjsg` | Not verified | - | - |
-| TJSC | `cjsg` | Not verified | - | - |
-| TJSP | `cpopg` | Not verified | - | - |
-| TJSP | `cposg` | Not verified | - | - |
-| TJSP | `cjsg` | Not verified | - | - |
-| TJSP | `cjpg` | Not verified | - | - |
-| TJTO | `cjsg` | Not verified | - | - |
-| TJTO | `cjpg` | Not verified | - | - |
-| TRF1 | `cpopg` | Not verified | - | - |
-| TRF3 | `cpopg` | Not verified | - | - |
-| TRF5 | `cpopg` | Not verified | - | - |
-| TRF6 | `cpopg` | Not verified | - | - |
+| STF | `listar_decisoes` | Não verificado | - | - |
+| STF | `contar_decisoes` | Não verificado | - | - |
+| TJAC | `cjsg` | Não verificado | - | - |
+| TJAL | `cjsg` | Não verificado | - | - |
+| TJAM | `cjsg` | Não verificado | - | - |
+| TJAP | `cjsg` | Não verificado (último: Indisponível) | 2026-06-07 | 2026-07-07 |
+| TJBA | `cjsg` | Não verificado | - | - |
+| TJCE | `cjsg` | Não verificado | - | - |
+| TJDFT | `cjsg` | Não verificado | - | - |
+| TJES | `cjsg` | Não verificado | - | - |
+| TJES | `cjpg` | Não verificado | - | - |
+| TJGO | `cjsg` | Não verificado | - | - |
+| TJMG | `cjsg` | Não verificado | - | - |
+| TJMS | `cjsg` | Não verificado | - | - |
+| TJMT | `cjsg` | Não verificado | - | - |
+| TJPA | `cjsg` | Não verificado | - | - |
+| TJPB | `cjsg` | Não verificado | - | - |
+| TJPE | `cjsg` | Não verificado | - | - |
+| TJPE | `cpopg` | Não verificado | - | - |
+| TJPI | `cjsg` | Não verificado | - | - |
+| TJPR | `cjsg` | Não verificado | - | - |
+| TJRJ | `cjsg` | Não verificado | - | - |
+| TJRN | `cjsg` | Não verificado | - | - |
+| TJRO | `cjsg` | Não verificado | - | - |
+| TJRR | `cjsg` | Não verificado | - | - |
+| TJRS | `cjsg` | Não verificado | - | - |
+| TJSC | `cjsg` | Não verificado | - | - |
+| TJSP | `cpopg` | Não verificado | - | - |
+| TJSP | `cposg` | Não verificado | - | - |
+| TJSP | `cjsg` | Não verificado | - | - |
+| TJSP | `cjpg` | Não verificado | - | - |
+| TJTO | `cjsg` | Não verificado | - | - |
+| TJTO | `cjpg` | Não verificado | - | - |
+| TRF1 | `cpopg` | Não verificado | - | - |
+| TRF3 | `cpopg` | Não verificado | - | - |
+| TRF5 | `cpopg` | Não verificado | - | - |
+| TRF6 | `cpopg` | Não verificado | - | - |
 
-### Aggregators
+### Agregadores
 
-| Source | Endpoint | Status | Verified on | Valid until |
+| Fonte | Endpoint | Estado | Verificação | Válido até |
 |---|---|---|---|---|
-| Comunica CNJ | `listar_comunicacoes` | Not verified | - | - |
-| Datajud | `listar_processos` | Not verified | - | - |
-| Falcão | `listar_decisoes` | Not verified | - | - |
-| JusBR | `cpopg` | Not verified | - | - |
-| JusBR | `download_documents` | Not verified | - | - |
-| PDPJ | `existe` | Not verified | - | - |
-| PDPJ | `cpopg` | Not verified | - | - |
-| PDPJ | `documentos` | Not verified | - | - |
-| PDPJ | `movimentos` | Not verified | - | - |
-| PDPJ | `partes` | Not verified | - | - |
-| PDPJ | `pesquisa` | Not verified | - | - |
-| PDPJ | `contar` | Not verified | - | - |
-| PDPJ | `download_documents` | Not verified | - | - |
+| Comunica CNJ | `listar_comunicacoes` | Não verificado | - | - |
+| Datajud | `listar_processos` | Não verificado | - | - |
+| Falcão | `listar_decisoes` | Não verificado | - | - |
+| JusBR | `cpopg` | Não verificado | - | - |
+| JusBR | `download_documents` | Não verificado | - | - |
+| PDPJ | `existe` | Não verificado | - | - |
+| PDPJ | `cpopg` | Não verificado | - | - |
+| PDPJ | `documentos` | Não verificado | - | - |
+| PDPJ | `movimentos` | Não verificado | - | - |
+| PDPJ | `partes` | Não verificado | - | - |
+| PDPJ | `pesquisa` | Não verificado | - | - |
+| PDPJ | `contar` | Não verificado | - | - |
+| PDPJ | `download_documents` | Não verificado | - | - |
 
-### Evidence and limitations
+### Evidências e limitações
 
 #### TJAP: `cjsg`
 
-The historical report records a security-check block. The subsequent investigation identified a server-validated Cloudflare Turnstile CAPTCHA. The HTTP client cannot produce this token; on receiving that response, it raises TJAPSecurityCheckError. Current collection has not been revalidated.
+O relato histórico registra bloqueio por verificação de segurança. A investigação posterior identificou CAPTCHA Cloudflare Turnstile validado no servidor. O cliente HTTP não produz esse token; ao receber essa resposta, levanta TJAPSecurityCheckError. A coleta atual não foi revalidada.
 
-Environment/scenario: Searches for dano moral, dano and recurso, over direct HTTP and a proxy; network type not stated in the report. Tested version or commit: 0.3.0 (ca78868e7237).
+Ambiente/cenário: Busca por dano moral, dano e recurso, via HTTP direto e proxy; tipo de rede não informado no relato. Versão ou commit testado: 0.3.0 (ca78868e7237).
 
-[Evidence 1](https://github.com/jtrecenti/juscraper/issues/279) · [Evidence 2](https://github.com/jtrecenti/juscraper/pull/282)
+[Evidência 1](https://github.com/jtrecenti/juscraper/issues/279) · [Evidência 2](https://github.com/jtrecenti/juscraper/pull/282)
 
-Related exception: juscraper.courts.tjap.exceptions.TJAPSecurityCheckError.
+Exceção relacionada: juscraper.courts.tjap.exceptions.TJAPSecurityCheckError.
 
 <!-- status:fim -->
 

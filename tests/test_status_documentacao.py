@@ -28,8 +28,8 @@ def dados():
             "sigla": "tjap", "nome": "TJAP", "tipo": "tribunal", "endpoints": ["cjsg", "cjpg"],
             "observacoes": {"cjsg": {
                 "estado": "indisponivel", "verificado_em": date(2026, 6, 7), "versao": "0.3.0",
-                "motivo": {"pt": "CAPTCHA | servidor\n<teste>", "en": "Server CAPTCHA"},
-                "cenario": {"pt": "HTTP direto", "en": "Direct HTTP"},
+                "motivo": "CAPTCHA | servidor\n<teste>",
+                "cenario": "HTTP direto",
                 "evidencias": ["https://github.com/jtrecenti/juscraper/issues/279"],
             }},
         }],
@@ -54,37 +54,43 @@ def test_validade_preserva_ultimo_estado_e_evidencia(dados, estado):
     dados["fontes"][0]["observacoes"]["cjsg"]["estado"] = estado
     registro = MODULO["Registro"].model_validate(dados)
     renderizar = MODULO["renderizar"]
-    no_limite = renderizar(registro, "pt", date(2026, 7, 7))
-    vencido = renderizar(registro, "pt", date(2026, 7, 8))
-    rotulo = MODULO["ESTADOS"][estado]["pt"]
+    no_limite = renderizar(registro, date(2026, 7, 7))
+    vencido = renderizar(registro, date(2026, 7, 8))
+    rotulo = MODULO["ESTADOS"][estado]
     assert f"| `cjsg` | {rotulo} | 2026-06-07 | 2026-07-07 |" in no_limite
     assert f"Não verificado (último: {rotulo})" in vencido
     assert "| `cjpg` | Não verificado | - | - |" in vencido
     assert "CAPTCHA &#124; servidor &lt;teste&gt;" in vencido
     assert "https://github.com/jtrecenti/juscraper/issues/279" in vencido
     assert dados["fontes"][0]["observacoes"]["cjsg"]["estado"] == estado
-    ingles = renderizar(registro, "en", date(2026, 7, 8))
-    assert "Not verified (last:" in ingles
-    assert "Server CAPTCHA" in ingles
-    assert "HTTP direto" not in ingles
 
 
 def test_data_futura_nao_vira_funcionando(dados):
     registro = MODULO["Registro"].model_validate(dados)
     with pytest.raises(ValueError, match="futura"):
-        MODULO["renderizar"](registro, "pt", date(2026, 6, 6))
+        MODULO["renderizar"](registro, date(2026, 6, 6))
 
 
 @pytest.mark.parametrize("campo,valor", [
-    ("estado", "ok"), ("estado", "nao_verificado"), ("versao", " "),
+    ("estado", "ok"), ("estado", ""), ("versao", " "),
     ("evidencias", []), ("evidencias", ["javascript:alert(1)"]), ("verificado_em", "ontem"),
-    ("motivo", {"pt": "motivo"}), ("cenario", {"pt": " ", "en": "network"}),
+    ("motivo", ""), ("cenario", " "),
     ("campo_desconhecido", "erro"),
 ])
 def test_rejeita_observacao_sem_contrato(dados, campo, valor):
     dados["fontes"][0]["observacoes"]["cjsg"][campo] = valor
     with pytest.raises(ValidationError):
         MODULO["Registro"].model_validate(dados)
+
+
+def test_tentativa_inconclusiva_preserva_motivo_sem_prazo_de_validade(dados):
+    dados["fontes"][0]["observacoes"]["cjsg"]["estado"] = "nao_verificado"
+    registro = MODULO["Registro"].model_validate(dados)
+    for hoje in (date(2026, 6, 7), date(2026, 8, 1)):
+        texto = MODULO["renderizar"](registro, hoje)
+        assert "| `cjsg` | Não verificado | 2026-06-07 | - |" in texto
+        assert "CAPTCHA &#124; servidor &lt;teste&gt;" in texto
+        assert "último: Não verificado" not in texto
 
 
 @pytest.mark.parametrize("erro", ["sigla", "endpoint", "observacao", "prazo"])
@@ -131,6 +137,8 @@ def test_cli_detecta_drift_sem_escrever_e_regenera_preservando_prosa(tmp_path):
         texto = caminho.read_text(encoding="utf-8")
         assert texto.startswith("Introdução autoral\n")
         assert texto.endswith("\nAutenticação\n")
+    assert caminhos[0].read_bytes() == caminhos[1].read_bytes()
+    assert "Implementações e status" in caminhos[1].read_text(encoding="utf-8")
     caminhos[1].write_text("sem marcadores", encoding="utf-8")
     caminhos[0].write_text(antigo, encoding="utf-8")
     assert executar_cli(tmp_path).returncode == 1

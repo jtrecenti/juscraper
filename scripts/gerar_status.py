@@ -14,45 +14,27 @@ RAIZ = Path(__file__).resolve().parents[1]
 INICIO = "<!-- status:inicio -->"
 FIM = "<!-- status:fim -->"
 ESTADOS = {
-    "funcionando": {"pt": "Funcionando", "en": "Working"},
-    "degradado": {"pt": "Degradado", "en": "Degraded"},
-    "indisponivel": {"pt": "Indisponível", "en": "Unavailable"},
-    "nao_verificado": {"pt": "Não verificado", "en": "Not verified"},
+    "funcionando": "Funcionando",
+    "degradado": "Degradado",
+    "indisponivel": "Indisponível",
+    "nao_verificado": "Não verificado",
 }
 TEXTOS = {
-    "pt": {
-        "titulo": "Implementações e status",
-        "aviso": "Status observado no cenário informado, sem garantia de disponibilidade atual. "
-        "Sem evidência ou após {dias} dias, o estado passa a não verificado na próxima geração. "
-        "A data limite permanece visível entre atualizações. O último relato de falha continua abaixo.",
-        "politica": "[Critérios e atualização](CONTRIBUTING.md#status-dos-raspadores)",
-        "tribunal": "Tribunais",
-        "agregador": "Agregadores",
-        "cabecalho": "Fonte | Endpoint | Estado | Verificação | Válido até",
-        "ultimo": "último",
-        "detalhes": "Evidências e limitações",
-        "contexto": "Ambiente/cenário",
-        "versao": "Versão ou commit testado",
-        "evidencia": "Evidência",
-        "excecao": "Exceção relacionada",
-    },
-    "en": {
-        "titulo": "Implementations and status",
-        "aviso": "Status observed in the stated scenario, with no guarantee of current availability. "
-        "Without evidence or after {dias} days, the next generation marks the endpoint as not verified. "
-        "The validity deadline remains visible between updates. Previous failure reports remain below.",
-        "politica": "[Criteria and updates](https://github.com/jtrecenti/juscraper/blob/main/"
-        "CONTRIBUTING.md#status-dos-raspadores)",
-        "tribunal": "Courts",
-        "agregador": "Aggregators",
-        "cabecalho": "Source | Endpoint | Status | Verified on | Valid until",
-        "ultimo": "last",
-        "detalhes": "Evidence and limitations",
-        "contexto": "Environment/scenario",
-        "versao": "Tested version or commit",
-        "evidencia": "Evidence",
-        "excecao": "Related exception",
-    },
+    "titulo": "Implementações e status",
+    "aviso": "Status observado no cenário informado, sem garantia de disponibilidade atual. "
+    "Sem evidência ou após {dias} dias, o estado passa a não verificado na próxima geração. "
+    "A data limite permanece visível entre atualizações. O último relato de falha continua abaixo.",
+    "politica": "[Critérios e atualização](https://github.com/jtrecenti/juscraper/blob/main/"
+    "CONTRIBUTING.md#status-dos-raspadores)",
+    "tribunal": "Tribunais",
+    "agregador": "Agregadores",
+    "cabecalho": "Fonte | Endpoint | Estado | Verificação | Válido até",
+    "ultimo": "último",
+    "detalhes": "Evidências e limitações",
+    "contexto": "Ambiente/cenário",
+    "versao": "Versão ou commit testado",
+    "evidencia": "Evidência",
+    "excecao": "Exceção relacionada",
 }
 
 
@@ -62,28 +44,21 @@ class Modelo(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True, str_min_length=1)
 
 
-class TextoBilingue(Modelo):
-    """Mantém o mesmo registro acessível nos dois idiomas das tabelas."""
-
-    pt: str
-    en: str
-
-
 class Observacao(Modelo):
     """Registra uma verificação datada, com evidência e escopo explícitos."""
 
     estado: str
     verificado_em: date
     versao: str
-    motivo: TextoBilingue
-    cenario: TextoBilingue
+    motivo: str
+    cenario: str
     evidencias: list[HttpUrl] = Field(min_length=1)
     excecao: str | None = None
 
     @model_validator(mode="after")
     def validar_estado(self):
-        """Ausência de observação representa o estado não verificado."""
-        if self.estado not in ESTADOS or self.estado == "nao_verificado":
+        """Uma tentativa inconclusiva também exige cenário e evidência."""
+        if self.estado not in ESTADOS:
             raise ValueError("Observação deve registrar um estado conhecido com evidência.")
         return self
 
@@ -128,9 +103,9 @@ def escapar(texto: str) -> str:
     return html.escape(texto, quote=False).replace("|", "&#124;").replace("\n", " ").replace("\r", " ")
 
 
-def renderizar(registro: Registro, idioma: str, hoje: date) -> str:
+def renderizar(registro: Registro, hoje: date) -> str:
     """Preserva a observação original quando o prazo de verificação vence."""
-    textos = TEXTOS[idioma]
+    textos = TEXTOS
     linhas = [
         INICIO, f"## {textos['titulo']}", "",
         textos["aviso"].format(dias=registro.validade_dias), "", textos["politica"], "",
@@ -143,19 +118,21 @@ def renderizar(registro: Registro, idioma: str, hoje: date) -> str:
                 continue
             for endpoint in fonte.endpoints:
                 observacao = fonte.observacoes.get(endpoint)
-                estado = ESTADOS["nao_verificado"][idioma]
+                estado = ESTADOS["nao_verificado"]
                 verificado = validade = "-"
                 if observacao:
                     if observacao.verificado_em > hoje:
                         raise ValueError(f"Verificação futura: {fonte.sigla}.{endpoint}")
                     limite = observacao.verificado_em + timedelta(days=registro.validade_dias)
-                    verificado, validade = observacao.verificado_em.isoformat(), limite.isoformat()
-                    ultimo = ESTADOS[observacao.estado][idioma]
-                    estado = ultimo if hoje <= limite else f"{estado} ({textos['ultimo']}: {ultimo})"
+                    verificado = observacao.verificado_em.isoformat()
+                    ultimo = ESTADOS[observacao.estado]
+                    if observacao.estado != "nao_verificado":
+                        validade = limite.isoformat()
+                        estado = ultimo if hoje <= limite else f"{estado} ({textos['ultimo']}: {ultimo})"
                     detalhes.extend([
                         f"#### {escapar(fonte.nome)}: `{endpoint}`", "",
-                        escapar(getattr(observacao.motivo, idioma)), "",
-                        f"{textos['contexto']}: {escapar(getattr(observacao.cenario, idioma))}. "
+                        escapar(observacao.motivo), "",
+                        f"{textos['contexto']}: {escapar(observacao.cenario)}. "
                         f"{textos['versao']}: {escapar(observacao.versao)}.", "",
                         " · ".join(
                             f"[{textos['evidencia']} {indice}]({url})"
@@ -195,10 +172,10 @@ def main() -> int:
             registro = Registro.model_validate(tomllib.load(arquivo))
         alteracoes = []
         # Valida os dois documentos antes de escrever, evitando atualização parcial por erro de marcador.
-        for caminho, idioma in (("README.md", "pt"), ("docs/index.qmd", "en")):
+        for caminho in ("README.md", "docs/index.qmd"):
             destino = argumentos.raiz / caminho
             atual = destino.read_text(encoding="utf-8")
-            novo = substituir_bloco(atual, renderizar(registro, idioma, argumentos.data))
+            novo = substituir_bloco(atual, renderizar(registro, argumentos.data))
             if atual != novo:
                 alteracoes.append((destino, novo))
         for destino, novo in alteracoes:

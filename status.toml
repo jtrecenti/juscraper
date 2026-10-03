@@ -69,10 +69,8 @@ verificado_em = 2026-06-07
 versao = "0.3.0 (ca78868e7237)"
 evidencias = ["https://github.com/jtrecenti/juscraper/issues/279", "https://github.com/jtrecenti/juscraper/pull/282"]
 excecao = "juscraper.courts.tjap.exceptions.TJAPSecurityCheckError"
-motivo.pt = "O relato histórico registra bloqueio por verificação de segurança. A investigação posterior identificou CAPTCHA Cloudflare Turnstile validado no servidor. O cliente HTTP não produz esse token; ao receber essa resposta, levanta TJAPSecurityCheckError. A coleta atual não foi revalidada."
-motivo.en = "The historical report records a security-check block. The subsequent investigation identified a server-validated Cloudflare Turnstile CAPTCHA. The HTTP client cannot produce this token; on receiving that response, it raises TJAPSecurityCheckError. Current collection has not been revalidated."
-cenario.pt = "Busca por dano moral, dano e recurso, via HTTP direto e proxy; tipo de rede não informado no relato"
-cenario.en = "Searches for dano moral, dano and recurso, over direct HTTP and a proxy; network type not stated in the report"
+motivo = "O relato histórico registra bloqueio por verificação de segurança. A investigação posterior identificou CAPTCHA Cloudflare Turnstile validado no servidor. O cliente HTTP não produz esse token; ao receber essa resposta, levanta TJAPSecurityCheckError. A coleta atual não foi revalidada."
+cenario = "Busca por dano moral, dano e recurso, via HTTP direto e proxy; tipo de rede não informado no relato"
 
 [[fontes]]
 sigla = "tjba"

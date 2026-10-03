@@ -1,0 +1,3672 @@
+{
+  "data": "2026-10-03",
+  "codigo_testado": "91799582d901756b414e7e7eabe774fd3c635ec4",
+  "versao_juscraper": "0.4.0",
+  "ambiente": {
+    "sistema": "Linux",
+    "python": "3.14.7",
+    "rede": "Wi-Fi local; NetworkManager sem VPN ativa e sem interface de túnel ativa na inspeção local",
+    "extras": {
+      "playwright": "1.63.0",
+      "txtcaptcha": "0.1.0"
+    }
+  },
+  "metodo": "Consultas pela API pública do pacote instalado em modo editável. Uma página por busca ou um CNJ por consulta processual; até três fontes diferentes simultaneamente, com chamadas do mesmo raspador em sequência. Intervalo configurado de pelo menos 1 segundo; retry interno preservado. Limite de 120 segundos por chamada, 180 segundos para STF, TJMG e TRF6, e 60 requisições HTTP por ensaio. Dez consultas inconclusivas foram repetidas uma vez. Nenhuma chamada de JusBR ou PDPJ e nenhum token pessoal usado.",
+  "validacao": "DataFrame não vazio, presença das colunas listadas em cada tentativa e pelo menos um valor preenchido nos campos indicados. Contagem STF exige total positivo. Essa checagem não prova completude, paginação adicional nem funcionamento de filtros não exercitados. Estados classificados após leitura dos resultados e das respostas de falha; timeout ou resposta vazia isolados não bastam para indisponibilidade.",
+  "evidencia": "Inclui parâmetros, horários UTC, formato dos retornos, contagens de preenchimento, status HTTP e hashes SHA-256 das respostas. Corpos de respostas, textos judiciais, credenciais, IPs e nomes de redes locais não são republicados. As requisições internas do Playwright não integram o rastreamento de requests.Session.",
+  "resumo": {
+    "funcionando": 27,
+    "indisponivel": 9,
+    "nao_verificado": 13,
+    "degradado": 1
+  },
+  "endpoints_publicos_consultados": 40,
+  "resultados": [
+    {
+      "fonte": "comunica_cnj",
+      "endpoint": "listar_comunicacoes",
+      "estado": "funcionando",
+      "motivo": "Retornou 5 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado. A primeira tentativa terminou em timeout; a repetição da mesma consulta retornou 5 comunicações.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('comunica_cnj').listar_comunicacoes(pesquisa='resolucao', paginas=1, itens_por_pagina=5, data_disponibilizacao_inicio='2026-09-28', data_disponibilizacao_fim='2026-10-02'); depois jus.scraper('comunica_cnj').listar_comunicacoes(pesquisa='resolucao', paginas=1, itens_por_pagina=5, data_disponibilizacao_inicio='2026-09-28', data_disponibilizacao_fim='2026-10-02'). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "comunica_cnj",
+          "endpoint": "listar_comunicacoes",
+          "parametros": {
+            "pesquisa": "resolucao",
+            "paginas": 1,
+            "itens_por_pagina": 5,
+            "data_disponibilizacao_inicio": "2026-09-28",
+            "data_disponibilizacao_fim": "2026-10-02"
+          },
+          "colunas_exigidas": [
+            "numero_processo",
+            "siglaTribunal",
+            "texto",
+            "link",
+            "data_disponibilizacao"
+          ],
+          "preenchimento_exigido": [
+            "numero_processo",
+            "texto"
+          ],
+          "inicio_utc": "2026-10-03T19:24:52.780054+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://comunicaapi.pje.jus.br",
+              "caminho": "/api/v1/comunicacao"
+            }
+          ],
+          "checagem": "nao_aprovada",
+          "erro_tipo": "requests.exceptions.ReadTimeout",
+          "erro": "HTTPSConnectionPool(host='comunicaapi.pje.jus.br', port=443): Read timed out. (read timeout=30.0)",
+          "duracao_segundos": 30.14,
+          "fim_utc": "2026-10-03T19:25:22.924888+00:00"
+        },
+        {
+          "fonte": "comunica_cnj",
+          "endpoint": "listar_comunicacoes",
+          "parametros": {
+            "pesquisa": "resolucao",
+            "paginas": 1,
+            "itens_por_pagina": 5,
+            "data_disponibilizacao_inicio": "2026-09-28",
+            "data_disponibilizacao_fim": "2026-10-02"
+          },
+          "colunas_exigidas": [
+            "numero_processo",
+            "siglaTribunal",
+            "texto",
+            "link",
+            "data_disponibilizacao"
+          ],
+          "preenchimento_exigido": [
+            "numero_processo",
+            "texto"
+          ],
+          "identificador": "comunica_cnj.listar_comunicacoes.segunda",
+          "inicio_utc": "2026-10-03T19:28:58.382846+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://comunicaapi.pje.jus.br",
+              "caminho": "/api/v1/comunicacao",
+              "status": 200,
+              "bytes": 57177,
+              "sha256": "25beed06ac9e9dcfa845e9f8b8f955d611573251523e92218f8333664678c0e3"
+            }
+          ],
+          "retorno": {
+            "linhas": 5,
+            "colunas": [
+              "id",
+              "data_disponibilizacao",
+              "siglaTribunal",
+              "tipoComunicacao",
+              "nomeOrgao",
+              "idOrgao",
+              "texto",
+              "numero_processo",
+              "meio",
+              "link",
+              "tipoDocumento",
+              "nomeClasse",
+              "codigoClasse",
+              "numeroComunicacao",
+              "ativo",
+              "hash",
+              "status",
+              "motivo_cancelamento",
+              "data_cancelamento",
+              "datadisponibilizacao",
+              "meiocompleto",
+              "numeroprocessocommascara",
+              "destinatarios",
+              "destinatarioadvogados"
+            ],
+            "preenchidos": {
+              "numero_processo": 5,
+              "texto": 5
+            }
+          },
+          "checagem": "aprovada",
+          "duracao_segundos": 0.18,
+          "fim_utc": "2026-10-03T19:28:58.560591+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "datajud",
+      "endpoint": "listar_processos",
+      "estado": "funcionando",
+      "motivo": "Retornou 1 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado. A consulta por CNJ funcionou; a tentativa anterior sem CNJ recebeu HTTP 504 e retornou vazio. O estado se limita à consulta por CNJ.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('datajud').listar_processos(tribunal='TJSP', paginas=1, tamanho_pagina=10); depois jus.scraper('datajud').listar_processos(tribunal='TJSP', paginas=1, tamanho_pagina=10, numero_processo='1000413-22.2017.8.26.0415'). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "datajud",
+          "endpoint": "listar_processos",
+          "parametros": {
+            "tribunal": "TJSP",
+            "paginas": 1,
+            "tamanho_pagina": 10
+          },
+          "colunas_exigidas": [
+            "numeroProcesso",
+            "classe",
+            "tribunal"
+          ],
+          "preenchimento_exigido": [
+            "numeroProcesso"
+          ],
+          "inicio_utc": "2026-10-03T19:24:52.801997+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "POST",
+              "origem": "https://api-publica.datajud.cnj.jus.br",
+              "caminho": "/api_publica_tjsp/_search",
+              "status": 504,
+              "bytes": 161,
+              "sha256": "8aa1c8c843a3716f7d569bcbff2d485676cfb33965b0266ea20c3ab654752026"
+            }
+          ],
+          "retorno": {
+            "linhas": 0,
+            "colunas": [],
+            "preenchidos": {}
+          },
+          "checagem": "nao_aprovada",
+          "erro_tipo": "builtins.AssertionError",
+          "erro": "Resposta vazia; insuficiente para confirmar funcionamento",
+          "duracao_segundos": 60.23,
+          "fim_utc": "2026-10-03T19:25:53.034390+00:00"
+        },
+        {
+          "fonte": "datajud",
+          "endpoint": "listar_processos",
+          "parametros": {
+            "tribunal": "TJSP",
+            "paginas": 1,
+            "tamanho_pagina": 10,
+            "numero_processo": "1000413-22.2017.8.26.0415"
+          },
+          "colunas_exigidas": [
+            "numeroProcesso",
+            "classe",
+            "tribunal"
+          ],
+          "preenchimento_exigido": [
+            "numeroProcesso"
+          ],
+          "identificador": "datajud.listar_processos.segunda",
+          "inicio_utc": "2026-10-03T19:28:58.387916+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "POST",
+              "origem": "https://api-publica.datajud.cnj.jus.br",
+              "caminho": "/api_publica_tjsp/_search",
+              "status": 200,
+              "bytes": 864,
+              "sha256": "61752ef012e4ad5588b4aa988e5183f341d394d45e4ff53debba4467e1044976"
+            }
+          ],
+          "retorno": {
+            "linhas": 1,
+            "colunas": [
+              "classe",
+              "numeroProcesso",
+              "sistema",
+              "formato",
+              "tribunal",
+              "dataHoraUltimaAtualizacao",
+              "grau",
+              "@timestamp",
+              "dataAjuizamento",
+              "id",
+              "nivelSigilo",
+              "orgaoJulgador",
+              "assuntos"
+            ],
+            "preenchidos": {
+              "numeroProcesso": 1,
+              "classe": 1
+            }
+          },
+          "checagem": "aprovada",
+          "duracao_segundos": 43.05,
+          "fim_utc": "2026-10-03T19:29:41.436580+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "falcao",
+      "endpoint": "listar_decisoes",
+      "estado": "indisponivel",
+      "motivo": "HTTP 429 na primeira chamada, com bloqueio do IP informado pelo servidor por 27.300 segundos. Nenhuma repetição durante o bloqueio. Limitação deste ambiente, sem inferência de indisponibilidade para outros IPs.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('falcao').listar_decisoes(pesquisa='dano moral', paginas=1, tamanho_pagina=5). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "falcao",
+          "endpoint": "listar_decisoes",
+          "parametros": {
+            "pesquisa": "dano moral",
+            "paginas": 1,
+            "tamanho_pagina": 5
+          },
+          "colunas_exigidas": [
+            "processo",
+            "colecao",
+            "tribunal",
+            "classe_sigla",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "inicio_utc": "2026-10-03T19:24:52.795369+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://jurisprudencia.jt.jus.br",
+              "caminho": "/jurisprudencia-nacional-backend/api/no-auth/pesquisa",
+              "status": 429,
+              "bytes": 57,
+              "sha256": "08384a9b05fc2e12dd9067e536de11f95cf4062ec25c32da9deeba58fc5f0ba1"
+            }
+          ],
+          "checagem": "nao_aprovada",
+          "erro_tipo": "requests.exceptions.HTTPError",
+          "erro": "O Falcao bloqueou este IP por excesso de requisicoes (HTTP 429). Liberacao em 7h35min (x-rate-limit-retry-after-seconds=27300). Reduza o volume (paginas, janelas de data) ou aumente sleep_time.",
+          "duracao_segundos": 0.18,
+          "fim_utc": "2026-10-03T19:24:52.978530+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "jusbr",
+      "endpoint": "cpopg",
+      "estado": "nao_verificado",
+      "motivo": "Endpoint autenticado, fora da rodada de consultas públicas. Nenhuma credencial usada e nenhuma chamada realizada.",
+      "tentativas": []
+    },
+    {
+      "fonte": "jusbr",
+      "endpoint": "download_documents",
+      "estado": "nao_verificado",
+      "motivo": "Endpoint autenticado, fora da rodada de consultas públicas. Nenhuma credencial usada e nenhuma chamada realizada.",
+      "tentativas": []
+    },
+    {
+      "fonte": "pdpj",
+      "endpoint": "existe",
+      "estado": "nao_verificado",
+      "motivo": "Endpoint autenticado, fora da rodada de consultas públicas. Nenhuma credencial usada e nenhuma chamada realizada.",
+      "tentativas": []
+    },
+    {
+      "fonte": "pdpj",
+      "endpoint": "cpopg",
+      "estado": "nao_verificado",
+      "motivo": "Endpoint autenticado, fora da rodada de consultas públicas. Nenhuma credencial usada e nenhuma chamada realizada.",
+      "tentativas": []
+    },
+    {
+      "fonte": "pdpj",
+      "endpoint": "documentos",
+      "estado": "nao_verificado",
+      "motivo": "Endpoint autenticado, fora da rodada de consultas públicas. Nenhuma credencial usada e nenhuma chamada realizada.",
+      "tentativas": []
+    },
+    {
+      "fonte": "pdpj",
+      "endpoint": "movimentos",
+      "estado": "nao_verificado",
+      "motivo": "Endpoint autenticado, fora da rodada de consultas públicas. Nenhuma credencial usada e nenhuma chamada realizada.",
+      "tentativas": []
+    },
+    {
+      "fonte": "pdpj",
+      "endpoint": "partes",
+      "estado": "nao_verificado",
+      "motivo": "Endpoint autenticado, fora da rodada de consultas públicas. Nenhuma credencial usada e nenhuma chamada realizada.",
+      "tentativas": []
+    },
+    {
+      "fonte": "pdpj",
+      "endpoint": "pesquisa",
+      "estado": "nao_verificado",
+      "motivo": "Endpoint autenticado, fora da rodada de consultas públicas. Nenhuma credencial usada e nenhuma chamada realizada.",
+      "tentativas": []
+    },
+    {
+      "fonte": "pdpj",
+      "endpoint": "contar",
+      "estado": "nao_verificado",
+      "motivo": "Endpoint autenticado, fora da rodada de consultas públicas. Nenhuma credencial usada e nenhuma chamada realizada.",
+      "tentativas": []
+    },
+    {
+      "fonte": "pdpj",
+      "endpoint": "download_documents",
+      "estado": "nao_verificado",
+      "motivo": "Endpoint autenticado, fora da rodada de consultas públicas. Nenhuma credencial usada e nenhuma chamada realizada.",
+      "tentativas": []
+    },
+    {
+      "fonte": "stf",
+      "endpoint": "listar_decisoes",
+      "estado": "funcionando",
+      "motivo": "Retornou 5 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('stf').listar_decisoes(pesquisa='pejotização', classe='Rcl', paginas=1, tamanho_pagina=5). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "stf",
+          "endpoint": "listar_decisoes",
+          "parametros": {
+            "pesquisa": "pejotização",
+            "classe": "Rcl",
+            "paginas": 1,
+            "tamanho_pagina": 5
+          },
+          "colunas_exigidas": [
+            "processo",
+            "classe",
+            "decisao_texto"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "decisao_texto"
+          ],
+          "limite_segundos": 180,
+          "inicio_utc": "2026-10-03T19:24:55.340231+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "POST",
+              "origem": "https://jurisprudencia.stf.jus.br",
+              "caminho": "/api/search/search",
+              "status": 200,
+              "bytes": 189,
+              "sha256": "7fd4646399b9ffc99d1c120eecf4e849841197be982444905405574b981a9d47"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://jurisprudencia.stf.jus.br",
+              "caminho": "/api/search/search",
+              "status": 200,
+              "bytes": 59716,
+              "sha256": "3b30ff8a62c8ef7e385ad074138b74c89d79bfef933724a38a7970fe6a34920e"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://jurisprudencia.stf.jus.br",
+              "caminho": "/api/search/search",
+              "status": 200,
+              "bytes": 189,
+              "sha256": "ccadcd4e5686e5af1e8c23c2036d748788b3e9abc6b4b1d63fbb0ba9bd5065e7"
+            }
+          ],
+          "retorno": {
+            "linhas": 5,
+            "colunas": [
+              "base",
+              "id",
+              "dg_unique",
+              "titulo",
+              "ministro_facet",
+              "procedencia_geografica_completo",
+              "procedencia_geografica_pais_sigla",
+              "procedencia_geografica_uf_sigla",
+              "procedencia_geografica_uf_extenso",
+              "processo",
+              "processo_classe_processual_unificada_extenso",
+              "classe",
+              "processo_classe_processual_unificada_incidente_sigla",
+              "processo_numero",
+              "data_julgamento",
+              "data_publicacao",
+              "is_decisao_presidencia",
+              "relator",
+              "presidente_nome",
+              "relator_decisao_nome",
+              "decisao_texto",
+              "partes_lista_texto",
+              "inteiro_teor_url",
+              "acompanhamento_processual_url",
+              "dje_url",
+              "documental_publicacao_lista_texto",
+              "documental_decisao_mesmo_sentido_lista_texto",
+              "documental_decisao_mesmo_sentido_lista_html",
+              "documental_decisao_mesmo_sentido_is_secundario",
+              "documental_legislacao_citada_texto",
+              "documental_indexacao_texto",
+              "documental_observacao_html",
+              "documental_observacao_texto",
+              "documental_doutrina_texto",
+              "externo_seq_objeto_incidente",
+              "dg_atualizado_em",
+              "ods_onu"
+            ],
+            "preenchidos": {
+              "processo": 5,
+              "classe": 5,
+              "decisao_texto": 5
+            }
+          },
+          "checagem": "aprovada",
+          "duracao_segundos": 4.21,
+          "fim_utc": "2026-10-03T19:24:59.554296+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "stf",
+      "endpoint": "contar_decisoes",
+      "estado": "funcionando",
+      "motivo": "Retornou 52 linhas de total e facetas; o total foi positivo.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('stf').contar_decisoes(pesquisa='pejotização', classe='Rcl'). Somente os parâmetros informados, sem validar outros processos ou filtros",
+      "tentativas": [
+        {
+          "fonte": "stf",
+          "endpoint": "contar_decisoes",
+          "parametros": {
+            "pesquisa": "pejotização",
+            "classe": "Rcl"
+          },
+          "colunas_exigidas": [
+            "faceta",
+            "n"
+          ],
+          "preenchimento_exigido": [],
+          "limite_segundos": 180,
+          "inicio_utc": "2026-10-03T19:25:01.859363+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "POST",
+              "origem": "https://jurisprudencia.stf.jus.br",
+              "caminho": "/api/search/search",
+              "status": 200,
+              "bytes": 2579,
+              "sha256": "0971f79f4d591b723dacbd33281b67f0e1715273feddab69d2bf3c862244277e"
+            }
+          ],
+          "retorno": {
+            "linhas": 52,
+            "colunas": [
+              "faceta",
+              "valor",
+              "n"
+            ],
+            "preenchidos": {
+              "faceta": 52,
+              "n": 52
+            }
+          },
+          "checagem": "aprovada",
+          "duracao_segundos": 1.71,
+          "fim_utc": "2026-10-03T19:25:03.565172+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjac",
+      "endpoint": "cjsg",
+      "estado": "funcionando",
+      "motivo": "Retornou 20 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjac').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjac",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "inicio_utc": "2026-10-03T19:25:05.847741+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "POST",
+              "origem": "https://esaj.tjac.jus.br",
+              "caminho": "/cjsg/resultadoCompleta.do",
+              "status": 200,
+              "bytes": 384874,
+              "sha256": "69dc464751c72839beeacfb8012ceb7983ebbee382d41ca8c70be90fc8fe81e5"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjac.jus.br",
+              "caminho": "/cjsg/trocaDePagina.do",
+              "status": 200,
+              "bytes": 312195,
+              "sha256": "842d58f83bb2361195e885caed2f0e7103b7b35364c307e0f1b9381d3f789c98"
+            }
+          ],
+          "retorno": {
+            "linhas": 20,
+            "colunas": [
+              "processo",
+              "cd_acordao",
+              "cd_foro",
+              "classe_assunto",
+              "relatora",
+              "comarca",
+              "orgao_julgador",
+              "data_julgamento",
+              "data_publicacao",
+              "ementa"
+            ],
+            "preenchidos": {
+              "processo": 20,
+              "ementa": 20
+            }
+          },
+          "checagem": "aprovada",
+          "duracao_segundos": 2.86,
+          "fim_utc": "2026-10-03T19:25:08.709606+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjal",
+      "endpoint": "cjsg",
+      "estado": "funcionando",
+      "motivo": "Retornou 20 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjal').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjal",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "inicio_utc": "2026-10-03T19:25:11.038003+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "POST",
+              "origem": "https://www2.tjal.jus.br",
+              "caminho": "/cjsg/resultadoCompleta.do",
+              "status": 200,
+              "bytes": 344975,
+              "sha256": "75029a1d3443f98e1913c8613ba9837575c14bc49fffa0eb0bd20ec024129e79"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://www2.tjal.jus.br",
+              "caminho": "/cjsg/trocaDePagina.do",
+              "status": 200,
+              "bytes": 275054,
+              "sha256": "a62b48fe9186bdfc869e0aa9af89e2eb401286b1ff10285dbed451d8e4ae7fc8"
+            }
+          ],
+          "retorno": {
+            "linhas": 20,
+            "colunas": [
+              "processo",
+              "cd_acordao",
+              "cd_foro",
+              "classe_assunto",
+              "relatora",
+              "comarca",
+              "orgao_julgador",
+              "data_julgamento",
+              "data_publicacao",
+              "ementa"
+            ],
+            "preenchidos": {
+              "processo": 20,
+              "ementa": 20
+            }
+          },
+          "checagem": "aprovada",
+          "duracao_segundos": 4.2,
+          "fim_utc": "2026-10-03T19:25:15.237447+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjam",
+      "endpoint": "cjsg",
+      "estado": "funcionando",
+      "motivo": "Retornou 10 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjam').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjam",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "inicio_utc": "2026-10-03T19:25:17.604832+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "POST",
+              "origem": "https://consultasaj.tjam.jus.br",
+              "caminho": "/cjsg/resultadoCompleta.do",
+              "status": 200,
+              "bytes": 187252,
+              "sha256": "17946c1791a2113fa7c9fe3737f4cfb538a57e9fba3cd4994108960592e1a730"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://consultasaj.tjam.jus.br",
+              "caminho": "/cjsg/trocaDePagina.do",
+              "status": 200,
+              "bytes": 119326,
+              "sha256": "c9ff2136bea90fb74e0360a0e2cdeee80bf291bec90fe5f8d0df258eb660ebb2"
+            }
+          ],
+          "retorno": {
+            "linhas": 10,
+            "colunas": [
+              "processo",
+              "cd_acordao",
+              "cd_foro",
+              "classe_assunto",
+              "relatora",
+              "comarca",
+              "orgao_julgador",
+              "data_julgamento",
+              "data_publicacao",
+              "ementa"
+            ],
+            "preenchidos": {
+              "processo": 10,
+              "ementa": 10
+            }
+          },
+          "checagem": "aprovada",
+          "duracao_segundos": 2.41,
+          "fim_utc": "2026-10-03T19:25:20.010167+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjap",
+      "endpoint": "cjsg",
+      "estado": "indisponivel",
+      "motivo": "A busca foi bloqueada pela verificação de segurança e levantou TJAPSecurityCheckError. O bloqueio documentado anteriormente continua presente no cenário testado.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjap').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjap",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "inicio_utc": "2026-10-03T19:25:22.369451+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "POST",
+              "origem": "https://tucujuris.tjap.jus.br",
+              "caminho": "/api/publico/consultar-jurisprudencia",
+              "status": 200,
+              "bytes": 344,
+              "sha256": "39029a4abf2969873d030734a0ddf15b1dbc4b53be9d9cb4ec68847b64382e66"
+            }
+          ],
+          "checagem": "nao_aprovada",
+          "erro_tipo": "juscraper.courts.tjap.exceptions.TJAPSecurityCheckError",
+          "erro": "TJAP (Tucujuris) bloqueou a consulta de jurisprudência: 'A verificação de segurança falhou'. O tribunal passou a exigir um CAPTCHA Cloudflare Turnstile na busca, validado server-side. O raspador (HTTP puro, sem browser) não consegue produzir esse token, então a coleta de cjsg do TJAP não funciona pela API pública. Ver issue #279.",
+          "duracao_segundos": 0.77,
+          "fim_utc": "2026-10-03T19:25:23.142137+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjba",
+      "endpoint": "cjsg",
+      "estado": "funcionando",
+      "motivo": "Retornou 10 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjba').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjba",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "inicio_utc": "2026-10-03T19:25:25.286225+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "POST",
+              "origem": "https://jurisprudenciaws.tjba.jus.br",
+              "caminho": "/graphql",
+              "status": 200,
+              "bytes": 433802,
+              "sha256": "ec09ed788561918c65a7646b2ddcdd82e8d97a7b2a1d7c77979966c592a78bde"
+            }
+          ],
+          "retorno": {
+            "linhas": 10,
+            "colunas": [
+              "processo",
+              "relator",
+              "orgao_julgador",
+              "classe",
+              "tipo_decisao",
+              "data_publicacao",
+              "ementa",
+              "hash",
+              "relator_id",
+              "orgao_julgador_id",
+              "classe_id"
+            ],
+            "preenchidos": {
+              "processo": 10,
+              "classe": 10,
+              "ementa": 10
+            }
+          },
+          "checagem": "aprovada",
+          "duracao_segundos": 1.54,
+          "fim_utc": "2026-10-03T19:25:26.829606+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjce",
+      "endpoint": "cjsg",
+      "estado": "funcionando",
+      "motivo": "Retornou 20 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjce').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjce",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "inicio_utc": "2026-10-03T19:25:25.500180+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "POST",
+              "origem": "https://esaj.tjce.jus.br",
+              "caminho": "/cjsg/resultadoCompleta.do",
+              "status": 200,
+              "bytes": 70226,
+              "sha256": "65dca44a4245af37ae813826b85fb088fa4c128653aeb2a479e47f3c6c3924f4"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjce.jus.br",
+              "caminho": "/cjsg/trocaDePagina.do",
+              "status": 200,
+              "bytes": 565334,
+              "sha256": "10a232ed11749f3ccaa5213d5800b7ca6f9b307e68979301dc66400cebd7810c"
+            }
+          ],
+          "retorno": {
+            "linhas": 20,
+            "colunas": [
+              "processo",
+              "cd_acordao",
+              "cd_foro",
+              "classe_assunto",
+              "relatora",
+              "comarca",
+              "orgao_julgador",
+              "data_julgamento",
+              "data_publicacao",
+              "ementa"
+            ],
+            "preenchidos": {
+              "processo": 20,
+              "ementa": 20
+            }
+          },
+          "checagem": "aprovada",
+          "duracao_segundos": 2.52,
+          "fim_utc": "2026-10-03T19:25:28.023669+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjdft",
+      "endpoint": "cjsg",
+      "estado": "funcionando",
+      "motivo": "Retornou 10 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjdft').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjdft",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "inicio_utc": "2026-10-03T19:25:29.208848+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "POST",
+              "origem": "https://jurisdf.tjdft.jus.br",
+              "caminho": "/api/v1/pesquisa",
+              "status": 200,
+              "bytes": 88264,
+              "sha256": "a448f02fe1600ed34895c3efd60a9986e2d813a246ff458773edd3490d8daccc"
+            }
+          ],
+          "retorno": {
+            "linhas": 10,
+            "colunas": [
+              "sequencial",
+              "base",
+              "subbase",
+              "uuid",
+              "identificador",
+              "dataJulgamento",
+              "dataPublicacao",
+              "decisao",
+              "ementa",
+              "localDePublicacao",
+              "processo",
+              "nomeRelator",
+              "relatorAtivo",
+              "uf",
+              "segredoJustica",
+              "turmaRecursal",
+              "descricaoOrgaoJulgador",
+              "versao",
+              "codigoClasseCnj",
+              "codigoSistjOrgaoJulgador",
+              "marcadores",
+              "possuiInteiroTeor"
+            ],
+            "preenchidos": {
+              "processo": 10,
+              "ementa": 10,
+              "decisao": 10
+            }
+          },
+          "checagem": "aprovada",
+          "duracao_segundos": 0.52,
+          "fim_utc": "2026-10-03T19:25:29.727819+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjes",
+      "endpoint": "cjsg",
+      "estado": "funcionando",
+      "motivo": "Retornou 20 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjes').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjes",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "inicio_utc": "2026-10-03T19:25:30.420123+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://sistemas.tjes.jus.br",
+              "caminho": "/consulta-jurisprudencia/api/search",
+              "status": 200,
+              "bytes": 1565448,
+              "sha256": "d08e8c73d9d98a1f860a30881ff644bc3849b7147d8e63571c474b930981386b"
+            }
+          ],
+          "retorno": {
+            "linhas": 20,
+            "colunas": [
+              "processo",
+              "ementa",
+              "relator",
+              "orgao_julgador",
+              "classe",
+              "classe_judicial_sigla",
+              "assunto",
+              "jurisdicao",
+              "competencia",
+              "dt_juntada",
+              "id",
+              "acordao",
+              "lista_assunto",
+              "localizacao",
+              "cargo_julgador",
+              "cd_assunto_principal",
+              "cd_classe_judicial",
+              "id_assunto_principal",
+              "id_classe_judicial",
+              "id_jurisdicao",
+              "id_localizacao",
+              "id_cargo_julgador",
+              "id_bin"
+            ],
+            "preenchidos": {
+              "processo": 20,
+              "classe": 20,
+              "ementa": 20,
+              "acordao": 20
+            }
+          },
+          "checagem": "aprovada",
+          "duracao_segundos": 0.31,
+          "fim_utc": "2026-10-03T19:25:30.728647+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjes",
+      "endpoint": "cjpg",
+      "estado": "degradado",
+      "motivo": "Retornou 20 registros com processo e classe preenchidos, mas ementa e acordao estavam vazios nos 20. A coleta de metadados funcionou; o conteúdo textual não foi confirmado.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjes').cjpg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjes",
+          "endpoint": "cjpg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "inicio_utc": "2026-10-03T19:25:33.054062+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://sistemas.tjes.jus.br",
+              "caminho": "/consulta-jurisprudencia/api/search",
+              "status": 200,
+              "bytes": 1022211,
+              "sha256": "c62a5a616c07aaa196f3ff66d623ec7db89dd9c3029007f60f0e684fa7e93e86"
+            }
+          ],
+          "retorno": {
+            "linhas": 20,
+            "colunas": [
+              "processo",
+              "ementa",
+              "relator",
+              "orgao_julgador",
+              "classe",
+              "classe_judicial_sigla",
+              "assunto",
+              "jurisdicao",
+              "competencia",
+              "dt_juntada",
+              "id",
+              "acordao",
+              "lista_assunto",
+              "localizacao",
+              "cargo_julgador",
+              "cd_assunto_principal",
+              "cd_classe_judicial",
+              "id_assunto_principal",
+              "id_classe_judicial",
+              "id_jurisdicao",
+              "id_localizacao",
+              "id_cargo_julgador",
+              "id_bin"
+            ],
+            "preenchidos": {
+              "processo": 20,
+              "classe": 20,
+              "ementa": 0,
+              "acordao": 0
+            }
+          },
+          "checagem": "nao_aprovada",
+          "erro_tipo": "builtins.AssertionError",
+          "erro": "Campo sem conteúdo: ementa",
+          "duracao_segundos": 1.56,
+          "fim_utc": "2026-10-03T19:25:34.610488+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjgo",
+      "endpoint": "cjsg",
+      "estado": "nao_verificado",
+      "motivo": "Duas buscas, por direito e dano moral, devolveram DataFrame vazio. As respostas HTTP 200 contêm o formulário de pesquisa, sem resultados identificados. A causa não foi confirmada.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjgo').cjsg(pesquisa='direito', paginas=1); depois jus.scraper('tjgo').cjsg(pesquisa='dano moral', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjgo",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "texto"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "texto"
+          ],
+          "inicio_utc": "2026-10-03T19:25:32.036630+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://projudi.tjgo.jus.br",
+              "caminho": "/ConsultaJurisprudencia",
+              "status": 200,
+              "bytes": 39361,
+              "sha256": "344fed21e07e649ab2e3a1ecd349e5c3880ff78918b57c1f6e12aa7015d9397a"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://projudi.tjgo.jus.br",
+              "caminho": "/ConsultaJurisprudencia",
+              "status": 200,
+              "bytes": 39421,
+              "sha256": "97689871efdaa4d299e5b2a4dd1a8e05252e36f90f27e24366e2997434cc20fb"
+            }
+          ],
+          "retorno": {
+            "linhas": 0,
+            "colunas": [],
+            "preenchidos": {}
+          },
+          "checagem": "nao_aprovada",
+          "erro_tipo": "builtins.AssertionError",
+          "erro": "Resposta vazia; insuficiente para confirmar funcionamento",
+          "duracao_segundos": 0.48,
+          "fim_utc": "2026-10-03T19:25:32.519398+00:00"
+        },
+        {
+          "fonte": "tjgo",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "dano moral",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "texto"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "texto"
+          ],
+          "identificador": "tjgo.cjsg.segunda",
+          "inicio_utc": "2026-10-03T19:28:58.387825+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://projudi.tjgo.jus.br",
+              "caminho": "/ConsultaJurisprudencia",
+              "status": 200,
+              "bytes": 39361,
+              "sha256": "e5037c47b21adf567c40ae216f72a099d6a0799365339eb61adae15f7312f1c8"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://projudi.tjgo.jus.br",
+              "caminho": "/ConsultaJurisprudencia",
+              "status": 200,
+              "bytes": 39424,
+              "sha256": "3cc05897865646495bbfd402ca8df21a10702a4310184414847b27f8adb5ab2f"
+            }
+          ],
+          "retorno": {
+            "linhas": 0,
+            "colunas": [],
+            "preenchidos": {}
+          },
+          "checagem": "nao_aprovada",
+          "erro_tipo": "builtins.AssertionError",
+          "erro": "Resposta vazia; insuficiente para confirmar funcionamento",
+          "duracao_segundos": 0.31,
+          "fim_utc": "2026-10-03T19:28:58.692954+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjmg",
+      "endpoint": "cjsg",
+      "estado": "funcionando",
+      "motivo": "Retornou 10 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjmg').cjsg(pesquisa='dano moral presumido', paginas=1, data_julgamento_inicio='2025-01-01', data_julgamento_fim='2025-03-31'). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjmg",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "dano moral presumido",
+            "paginas": 1,
+            "data_julgamento_inicio": "2025-01-01",
+            "data_julgamento_fim": "2025-03-31"
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "limite_segundos": 180,
+          "inicio_utc": "2026-10-03T19:25:34.852917+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://www5.tjmg.jus.br",
+              "caminho": "/jurisprudencia/formEspelhoAcordao.do",
+              "status": 200,
+              "bytes": 831868,
+              "sha256": "be729038772806ed43675a81596f3115ec2801f7aeb93d38b576b85e6149a361"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://www5.tjmg.jus.br",
+              "caminho": "/jurisprudencia/captcha.svl",
+              "status": 200,
+              "bytes": 5567,
+              "sha256": "f446fcaf8b730ebb9422a82fcc192242b314cbf7c19b0ec216dc815b283b4632"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://www5.tjmg.jus.br",
+              "caminho": "/jurisprudencia/dwr/call/plaincall/ValidacaoCaptchaAction.isCaptchaValid.dwr",
+              "status": 200,
+              "bytes": 121,
+              "sha256": "071efecae29141021239e72fcd727b2b98ef751d0c65520b34b5d08c09542a75"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://www5.tjmg.jus.br",
+              "caminho": "/jurisprudencia/pesquisaPalavrasEspelhoAcordao.do",
+              "status": 200,
+              "bytes": 59211,
+              "sha256": "55325aeddf97b123c291aa48352c219a81765dce9ec04a4a393e990157265141"
+            }
+          ],
+          "retorno": {
+            "linhas": 10,
+            "colunas": [
+              "processo",
+              "processo_interno",
+              "tipo_ato",
+              "relator",
+              "data_julgamento",
+              "data_publicacao",
+              "ementa",
+              "proc_ano",
+              "proc_numero"
+            ],
+            "preenchidos": {
+              "processo": 10,
+              "ementa": 10
+            }
+          },
+          "checagem": "aprovada",
+          "duracao_segundos": 19.89,
+          "fim_utc": "2026-10-03T19:25:54.745332+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjms",
+      "endpoint": "cjsg",
+      "estado": "funcionando",
+      "motivo": "Retornou 100 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjms').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjms",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "inicio_utc": "2026-10-03T19:25:36.965508+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "POST",
+              "origem": "https://esaj.tjms.jus.br",
+              "caminho": "/cjsg/resultadoCompleta.do",
+              "status": 200,
+              "bytes": 1205195,
+              "sha256": "9580efa026b7240ed6f9b38569b1e063da134ecb4ccfac68e8f3de377a33fe3f"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjms.jus.br",
+              "caminho": "/cjsg/trocaDePagina.do",
+              "status": 200,
+              "bytes": 1127969,
+              "sha256": "b310e9038a01b422a18cece7370894e77201df0bd79cfccc8eaa23ce8db92a3d"
+            }
+          ],
+          "retorno": {
+            "linhas": 100,
+            "colunas": [
+              "processo",
+              "cd_acordao",
+              "cd_foro",
+              "classe_assunto",
+              "relatora",
+              "comarca",
+              "orgao_julgador",
+              "data_julgamento",
+              "data_publicacao",
+              "ementa"
+            ],
+            "preenchidos": {
+              "processo": 100,
+              "ementa": 100
+            }
+          },
+          "checagem": "aprovada",
+          "duracao_segundos": 3.56,
+          "fim_utc": "2026-10-03T19:25:40.526945+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjmt",
+      "endpoint": "cjsg",
+      "estado": "indisponivel",
+      "motivo": "As duas tentativas receberam HTML na URL de configuração esperada como JSON e terminaram em JSONDecodeError, antes da busca.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjmt').cjsg(pesquisa='direito', paginas=1); depois jus.scraper('tjmt').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjmt",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "inicio_utc": "2026-10-03T19:25:42.909592+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://jurisprudencia.tjmt.jus.br",
+              "caminho": "/assets/config/config.json",
+              "status": 200,
+              "bytes": 2785,
+              "sha256": "e3b52088ea772b3900dba3555eeca87d72f340c9f8aa84dfcfc6eaab498973ca"
+            }
+          ],
+          "checagem": "nao_aprovada",
+          "erro_tipo": "requests.exceptions.JSONDecodeError",
+          "erro": "Expecting value: line 1 column 1 (char 0)",
+          "duracao_segundos": 0.35,
+          "fim_utc": "2026-10-03T19:25:43.257961+00:00"
+        },
+        {
+          "fonte": "tjmt",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "identificador": "tjmt.cjsg.segunda",
+          "inicio_utc": "2026-10-03T19:28:58.925048+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://jurisprudencia.tjmt.jus.br",
+              "caminho": "/assets/config/config.json",
+              "status": 200,
+              "bytes": 2785,
+              "sha256": "e3b52088ea772b3900dba3555eeca87d72f340c9f8aa84dfcfc6eaab498973ca"
+            }
+          ],
+          "checagem": "nao_aprovada",
+          "erro_tipo": "requests.exceptions.JSONDecodeError",
+          "erro": "Expecting value: line 1 column 1 (char 0)",
+          "duracao_segundos": 0.3,
+          "fim_utc": "2026-10-03T19:28:59.228820+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjpa",
+      "endpoint": "cjsg",
+      "estado": "funcionando",
+      "motivo": "Retornou 25 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjpa').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjpa",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "inicio_utc": "2026-10-03T19:25:45.535844+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "POST",
+              "origem": "https://jurisprudencia.tjpa.jus.br",
+              "caminho": "/bff/api/decisoes/buscar",
+              "status": 200,
+              "bytes": 1504368,
+              "sha256": "47439c0f89afbacd743afd34a03f36290748876aea15834a9f9050b87d32ee6c"
+            }
+          ],
+          "retorno": {
+            "linhas": 25,
+            "colunas": [
+              "processo",
+              "tipo",
+              "classe",
+              "assunto",
+              "relator",
+              "orgao_julgador_colegiado",
+              "data_julgamento",
+              "data_publicacao",
+              "ementa",
+              "id",
+              "area",
+              "origem",
+              "id_classe",
+              "id_assunto",
+              "orgao_julgador",
+              "competencia",
+              "data_documento",
+              "sentido_decisao",
+              "especie",
+              "sistema_origem",
+              "hash_storage"
+            ],
+            "preenchidos": {
+              "processo": 25,
+              "classe": 25,
+              "ementa": 8
+            }
+          },
+          "checagem": "aprovada",
+          "duracao_segundos": 7.08,
+          "fim_utc": "2026-10-03T19:25:52.614660+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjpb",
+      "endpoint": "cjsg",
+      "estado": "funcionando",
+      "motivo": "Retornou 10 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjpb').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjpb",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "inicio_utc": "2026-10-03T19:25:54.944857+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://pje-jurisprudencia.tjpb.jus.br",
+              "caminho": "/",
+              "status": 403,
+              "bytes": 5549,
+              "sha256": "4e200412512961e7d068dfa2ca09ec9beddc5231c0d42fbd66ba6c8eabadd5e2"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://pje-jurisprudencia.tjpb.jus.br",
+              "caminho": "/",
+              "status": 200,
+              "bytes": 14310,
+              "sha256": "79e2fe3f4ea20775e6c99cdccc2f1dc25920fc32c1f4e881f6fe5bce5cf9c785"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://pje-jurisprudencia.tjpb.jus.br",
+              "caminho": "/api/jurisprudencia/pesquisar",
+              "status": 200,
+              "bytes": 6229,
+              "sha256": "cf82221f981cfd3579ccd9537cc9cbc0531ccb75368118a3522e2998186295b9"
+            }
+          ],
+          "retorno": {
+            "linhas": 10,
+            "colunas": [
+              "processo",
+              "ementa",
+              "data_julgamento"
+            ],
+            "preenchidos": {
+              "processo": 10,
+              "ementa": 10
+            }
+          },
+          "checagem": "aprovada",
+          "duracao_segundos": 3.73,
+          "fim_utc": "2026-10-03T19:25:58.674678+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjpe",
+      "endpoint": "cjsg",
+      "estado": "funcionando",
+      "motivo": "Retornou 5 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjpe').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjpe",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "inicio_utc": "2026-10-03T19:25:55.442246+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://www.tjpe.jus.br",
+              "caminho": "/consultajurisprudenciaweb/xhtml/consulta/consulta.xhtml",
+              "status": 200,
+              "bytes": 534565,
+              "sha256": "ccb1270a8ca68da757377c895a1df44b0ef7ff20dc918bef450398bae4dc3820"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://www.tjpe.jus.br",
+              "caminho": "/consultajurisprudenciaweb/xhtml/consulta/consulta.xhtml",
+              "status": 200,
+              "bytes": 117712,
+              "sha256": "5348e5b5951e93789959c454d8ad494005c76d68585ae2574c2c9e027f6cec55"
+            }
+          ],
+          "retorno": {
+            "linhas": 5,
+            "colunas": [
+              "processo",
+              "classe",
+              "assunto",
+              "relator",
+              "orgao_julgador",
+              "data_julgamento",
+              "data_publicacao",
+              "ementa",
+              "acordao",
+              "meio_tramitacao",
+              "url_inteiro_teor"
+            ],
+            "preenchidos": {
+              "processo": 5,
+              "classe": 5,
+              "ementa": 5,
+              "acordao": 5
+            }
+          },
+          "checagem": "aprovada",
+          "duracao_segundos": 14.57,
+          "fim_utc": "2026-10-03T19:26:10.009554+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjpe",
+      "endpoint": "cpopg",
+      "estado": "funcionando",
+      "motivo": "Retornou 1 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjpe').cpopg(id_cnj='00963022520218172001'). Somente os parâmetros informados, sem validar outros processos ou filtros",
+      "tentativas": [
+        {
+          "fonte": "tjpe",
+          "endpoint": "cpopg",
+          "parametros": {
+            "id_cnj": "00963022520218172001"
+          },
+          "colunas_exigidas": [
+            "processo",
+            "classe",
+            "documentos"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "classe"
+          ],
+          "inicio_utc": "2026-10-03T19:26:12.298682+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://pje.cloud.tjpe.jus.br",
+              "caminho": "/1g/ConsultaPublica/listView.seam",
+              "status": 200,
+              "bytes": 47425,
+              "sha256": "b897f238476eae345fc47f2b39c682dc144ec455ec9af90895b41c5ae04b5d38"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://pje.cloud.tjpe.jus.br",
+              "caminho": "/1g/ConsultaPublica/listView.seam",
+              "status": 200,
+              "bytes": 5693,
+              "sha256": "8fc1ccc91fdd2a2eaf5ce96b8ebdce7fd9d9721f9cb8b9dfbf0bcff48627fff2"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://pje.cloud.tjpe.jus.br",
+              "caminho": "/1g/ConsultaPublica/DetalheProcessoConsultaPublica/listView.seam",
+              "status": 200,
+              "bytes": 128410,
+              "sha256": "86cd5acf6ea0ce235713f701f9f26c904721b399ea3ef1c030f393877963b224"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://pje.cloud.tjpe.jus.br",
+              "caminho": "/1g/ConsultaPublica/DetalheProcessoConsultaPublica/listView.seam",
+              "status": 200,
+              "bytes": 20376,
+              "sha256": "359429d0c5994b85888ef97a38231857c7fa851273931d2f254c128e682356d2"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://pje.cloud.tjpe.jus.br",
+              "caminho": "/1g/ConsultaPublica/DetalheProcessoConsultaPublica/listView.seam",
+              "status": 200,
+              "bytes": 19627,
+              "sha256": "afa6ee9156cce31f32f373c4842650ecf7e9d56c691db776485927239f747076"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://pje.cloud.tjpe.jus.br",
+              "caminho": "/1g/ConsultaPublica/DetalheProcessoConsultaPublica/listView.seam",
+              "status": 200,
+              "bytes": 19707,
+              "sha256": "f2fbae79aef929b3170cfbc93f8e761cd1952f962d2a866db0e903b466c90487"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://pje.cloud.tjpe.jus.br",
+              "caminho": "/1g/ConsultaPublica/DetalheProcessoConsultaPublica/listView.seam",
+              "status": 200,
+              "bytes": 19714,
+              "sha256": "5b871634985f00065ad79cd1d4c93844ddf74d35b39ec8b5b2212bc2985b5be6"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://pje.cloud.tjpe.jus.br",
+              "caminho": "/1g/ConsultaPublica/DetalheProcessoConsultaPublica/listView.seam",
+              "status": 200,
+              "bytes": 17745,
+              "sha256": "064c782842e4af6bcd6e412244240226589bb9a25ded1d324ebb6312c7882e06"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://pje.cloud.tjpe.jus.br",
+              "caminho": "/1g/ConsultaPublica/DetalheProcessoConsultaPublica/listView.seam",
+              "status": 200,
+              "bytes": 20407,
+              "sha256": "b16511e190d00f753baa23416537eb041e794d3ecbad39db4f0c2c16522f029b"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://pje.cloud.tjpe.jus.br",
+              "caminho": "/1g/ConsultaPublica/DetalheProcessoConsultaPublica/listView.seam",
+              "status": 200,
+              "bytes": 18507,
+              "sha256": "62c00a1c330104788f3f353eda0bbea36a110e813cc751c77210b10c85d95a26"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://pje.cloud.tjpe.jus.br",
+              "caminho": "/1g/ConsultaPublica/DetalheProcessoConsultaPublica/listView.seam",
+              "status": 200,
+              "bytes": 18984,
+              "sha256": "35a09d2f8434401a992614d0baf8eb401844328a7f843d212db7b7a9e586cb80"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://pje.cloud.tjpe.jus.br",
+              "caminho": "/1g/ConsultaPublica/DetalheProcessoConsultaPublica/listView.seam",
+              "status": 200,
+              "bytes": 19575,
+              "sha256": "8fe87b9f549508684d6649432cea7b14c883772e8519f4c31baea243a5ffc843"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://pje.cloud.tjpe.jus.br",
+              "caminho": "/1g/ConsultaPublica/DetalheProcessoConsultaPublica/listView.seam",
+              "status": 200,
+              "bytes": 17711,
+              "sha256": "3386e4f4ec7e362d66e005abd4c86701fc9efbc296ff89e983d6f85c935c0474"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://pje.cloud.tjpe.jus.br",
+              "caminho": "/1g/ConsultaPublica/DetalheProcessoConsultaPublica/listView.seam",
+              "status": 200,
+              "bytes": 13584,
+              "sha256": "29e87916d9d94fdeac7dafdb09cfc0f8b316520aa79b7b5324377e7ac0588d59"
+            }
+          ],
+          "retorno": {
+            "linhas": 1,
+            "colunas": [
+              "processo",
+              "data_distribuicao",
+              "classe",
+              "assunto",
+              "jurisdicao",
+              "orgao_julgador",
+              "endereco_orgao",
+              "polo_ativo",
+              "polo_passivo",
+              "movimentacoes",
+              "documentos",
+              "id_cnj"
+            ],
+            "preenchidos": {
+              "processo": 1,
+              "classe": 1
+            }
+          },
+          "checagem": "aprovada",
+          "duracao_segundos": 16.87,
+          "fim_utc": "2026-10-03T19:26:29.172133+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjpi",
+      "endpoint": "cjsg",
+      "estado": "funcionando",
+      "motivo": "Retornou 25 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjpi').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjpi",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "inicio_utc": "2026-10-03T19:25:57.790433+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://jurisprudencia.tjpi.jus.br",
+              "caminho": "/jurisprudences/search",
+              "status": 200,
+              "bytes": 384389,
+              "sha256": "f5b83b2aa745e6513c0c66064bd77f1a2d973370fbdf2a8c1d0d53431d42a318"
+            }
+          ],
+          "retorno": {
+            "linhas": 25,
+            "colunas": [
+              "processo",
+              "tipo",
+              "classe",
+              "assunto",
+              "data_publicacao",
+              "ementa",
+              "resumo",
+              "inteiro_teor"
+            ],
+            "preenchidos": {
+              "processo": 23,
+              "classe": 23,
+              "ementa": 25
+            }
+          },
+          "checagem": "aprovada",
+          "duracao_segundos": 1.63,
+          "fim_utc": "2026-10-03T19:25:59.419041+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjpr",
+      "endpoint": "cjsg",
+      "estado": "funcionando",
+      "motivo": "Retornou 50 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjpr').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjpr",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "inicio_utc": "2026-10-03T19:26:00.989985+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/",
+              "status": 200,
+              "bytes": 80581,
+              "sha256": "ad0b698770a0a09468d470512e2b770ad08697867dec330f4897f7a8db667a3d"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 333271,
+              "sha256": "47ef411c8bad3ca4d834cb348c3e1743b14ca1b3e3d0eeb6d5fb399e38920cb1"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://portal.tjpr.jus.br",
+              "caminho": "/jurisprudencia/publico/pesquisa.do",
+              "status": 200,
+              "bytes": 13608,
+              "sha256": "54df36e762b9a1440e4ebfe21eb41703288ad899c5a333d885a9737594867c2d"
+            }
+          ],
+          "retorno": {
+            "linhas": 50,
+            "colunas": [
+              "processo",
+              "orgao_julgador",
+              "relator",
+              "data_julgamento",
+              "ementa"
+            ],
+            "preenchidos": {
+              "processo": 40,
+              "ementa": 50
+            }
+          },
+          "checagem": "aprovada",
+          "duracao_segundos": 1.97,
+          "fim_utc": "2026-10-03T19:26:02.964435+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjrj",
+      "endpoint": "cjsg",
+      "estado": "funcionando",
+      "motivo": "Retornou 10 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjrj').cjsg(pesquisa='dano moral', paginas=1, ano_inicio=2024, ano_fim=2024). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjrj",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "dano moral",
+            "paginas": 1,
+            "ano_inicio": 2024,
+            "ano_fim": 2024
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "inicio_utc": "2026-10-03T19:26:01.748161+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://www3.tjrj.jus.br",
+              "caminho": "/ejuris/ConsultarJurisprudencia.aspx",
+              "status": 200,
+              "bytes": 168813,
+              "sha256": "6face91dc9e4227421001eb92296d6ddd0707c051d87a29bd8c7c01f337ecad0"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://www3.tjrj.jus.br",
+              "caminho": "/ejuris/ConsultarJurisprudencia.aspx",
+              "status": 200,
+              "bytes": 15081,
+              "sha256": "5162bd0131eb578c9cba1727060d138201bb45478bca9d169f0e5bd19519e2e2"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://www3.tjrj.jus.br",
+              "caminho": "/EJURIS/ProcessarConsJurisES.aspx",
+              "status": 200,
+              "bytes": 15081,
+              "sha256": "5162bd0131eb578c9cba1727060d138201bb45478bca9d169f0e5bd19519e2e2"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://www3.tjrj.jus.br",
+              "caminho": "/EJURIS/ProcessarConsJurisES.aspx/ExecutarConsultarJurisprudencia",
+              "status": 200,
+              "bytes": 86461,
+              "sha256": "7194757e28b3de761402131875694963019d2e71e5a3f32d770e71a1ec480263"
+            }
+          ],
+          "retorno": {
+            "linhas": 10,
+            "colunas": [
+              "cod_documento",
+              "processo",
+              "numero_antigo",
+              "classe",
+              "tipo_documento",
+              "orgao_julgador",
+              "relator",
+              "data_julgamento",
+              "data_publicacao",
+              "ementa"
+            ],
+            "preenchidos": {
+              "processo": 10,
+              "classe": 10,
+              "ementa": 10
+            }
+          },
+          "checagem": "aprovada",
+          "duracao_segundos": 1.14,
+          "fim_utc": "2026-10-03T19:26:02.888815+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjrn",
+      "endpoint": "cjsg",
+      "estado": "funcionando",
+      "motivo": "Retornou 10 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjrn').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjrn",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "inicio_utc": "2026-10-03T19:26:05.190521+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "POST",
+              "origem": "https://jurisprudencia.tjrn.jus.br",
+              "caminho": "/api/pesquisar",
+              "status": 200,
+              "bytes": 1283007,
+              "sha256": "20c1c6d0226bf37985e7ea0feef8dc89b14e23b58c0c87196005a3f3e2c56724"
+            }
+          ],
+          "retorno": {
+            "linhas": 10,
+            "colunas": [
+              "processo",
+              "classe",
+              "orgao_julgador",
+              "colegiado",
+              "relator",
+              "tipo_decisao",
+              "data_julgamento",
+              "data_publicacao",
+              "ementa",
+              "sistema",
+              "sigiloso"
+            ],
+            "preenchidos": {
+              "processo": 10,
+              "classe": 10,
+              "ementa": 10
+            }
+          },
+          "checagem": "aprovada",
+          "duracao_segundos": 1.47,
+          "fim_utc": "2026-10-03T19:26:06.655797+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjro",
+      "endpoint": "cjsg",
+      "estado": "indisponivel",
+      "motivo": "As duas tentativas terminaram em JSONDecodeError. A resposta HTTP 200 inspecionada contém uma página que declara bloqueio por suspeita de robotização.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjro').cjsg(pesquisa='direito', paginas=1); depois jus.scraper('tjro').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjro",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "inicio_utc": "2026-10-03T19:26:05.302353+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "POST",
+              "origem": "https://juris-back.tjro.jus.br",
+              "caminho": "/search/varios_parametros/",
+              "status": 200,
+              "bytes": 3065,
+              "sha256": "4f3252144bf87ea9163659bf97017210db9769edbc6eaf56846f276017034ce1"
+            }
+          ],
+          "checagem": "nao_aprovada",
+          "erro_tipo": "requests.exceptions.JSONDecodeError",
+          "erro": "Expecting value: line 1 column 1 (char 0)",
+          "duracao_segundos": 0.31,
+          "fim_utc": "2026-10-03T19:26:05.608718+00:00"
+        },
+        {
+          "fonte": "tjro",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "identificador": "tjro.cjsg.segunda",
+          "inicio_utc": "2026-10-03T19:28:59.012798+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "POST",
+              "origem": "https://juris-back.tjro.jus.br",
+              "caminho": "/search/varios_parametros/",
+              "status": 200,
+              "bytes": 3065,
+              "sha256": "71e08adb9f6a579540552bb97a13123eadbd0859441de7c21656d89496f45c7c"
+            }
+          ],
+          "checagem": "nao_aprovada",
+          "erro_tipo": "requests.exceptions.JSONDecodeError",
+          "erro": "Expecting value: line 1 column 1 (char 0)",
+          "duracao_segundos": 0.3,
+          "fim_utc": "2026-10-03T19:28:59.310596+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjrr",
+      "endpoint": "cjsg",
+      "estado": "funcionando",
+      "motivo": "Retornou 20 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjrr').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjrr",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "inicio_utc": "2026-10-03T19:26:07.911521+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://jurisprudencia.tjrr.jus.br",
+              "caminho": "/index.xhtml",
+              "status": 200,
+              "bytes": 140832,
+              "sha256": "9319863407a090426f8fce779b6e55b0789e97e3c8a98b34f93ed514a2765d94"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://jurisprudencia.tjrr.jus.br",
+              "caminho": "/index.xhtml",
+              "status": 200,
+              "bytes": 452383,
+              "sha256": "8150cc580363b3743080849a3e96154f1c3856350548d9325fddcf63ab444673"
+            }
+          ],
+          "retorno": {
+            "linhas": 20,
+            "colunas": [
+              "processo",
+              "classe",
+              "relator",
+              "orgao_julgador",
+              "data_julgamento",
+              "data_publicacao",
+              "ementa"
+            ],
+            "preenchidos": {
+              "processo": 20,
+              "classe": 20,
+              "ementa": 10
+            }
+          },
+          "checagem": "aprovada",
+          "duracao_segundos": 7.09,
+          "fim_utc": "2026-10-03T19:26:14.997704+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjrs",
+      "endpoint": "cjsg",
+      "estado": "indisponivel",
+      "motivo": "As duas buscas devolveram DataFrame vazio. Na repetição, o corpo da resposta contém erro Solr 503: no servers hosting shard: shard2. O retorno vazio não confirma ausência de julgados.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjrs').cjsg(pesquisa='direito', paginas=1); depois jus.scraper('tjrs').cjsg(pesquisa='direito civil', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjrs",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "inicio_utc": "2026-10-03T19:26:08.949212+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "POST",
+              "origem": "https://www.tjrs.jus.br",
+              "caminho": "/buscas/jurisprudencia/ajax.php",
+              "status": 200,
+              "bytes": 3699,
+              "sha256": "3d5d07741e08e430f830a86b37cee6e4b165629f1f08734ee4bec630fd79fb6e"
+            }
+          ],
+          "retorno": {
+            "linhas": 0,
+            "colunas": [],
+            "preenchidos": {}
+          },
+          "checagem": "nao_aprovada",
+          "erro_tipo": "builtins.AssertionError",
+          "erro": "Resposta vazia; insuficiente para confirmar funcionamento",
+          "duracao_segundos": 0.23,
+          "fim_utc": "2026-10-03T19:26:09.183492+00:00"
+        },
+        {
+          "fonte": "tjrs",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito civil",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "identificador": "tjrs.cjsg.segunda",
+          "inicio_utc": "2026-10-03T19:28:59.576475+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "POST",
+              "origem": "https://www.tjrs.jus.br",
+              "caminho": "/buscas/jurisprudencia/ajax.php",
+              "status": 200,
+              "bytes": 3743,
+              "sha256": "92a09f63b7a0cdd582e40d7966899246987a215b4f0f338616869eb31c03c124"
+            }
+          ],
+          "retorno": {
+            "linhas": 0,
+            "colunas": [],
+            "preenchidos": {}
+          },
+          "checagem": "nao_aprovada",
+          "erro_tipo": "builtins.AssertionError",
+          "erro": "Resposta vazia; insuficiente para confirmar funcionamento",
+          "duracao_segundos": 0.23,
+          "fim_utc": "2026-10-03T19:28:59.804491+00:00"
+        }
+      ],
+      "diagnostico": {
+        "erro_solr": {
+          "code": 503,
+          "msg": "no servers hosting shard: shard2"
+        }
+      }
+    },
+    {
+      "fonte": "tjsc",
+      "endpoint": "cjsg",
+      "estado": "funcionando",
+      "motivo": "Retornou 10 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjsc').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjsc",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "inicio_utc": "2026-10-03T19:26:11.456415+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "POST",
+              "origem": "https://eproc1g.tjsc.jus.br",
+              "caminho": "/eproc/externo_controlador.php",
+              "status": 200,
+              "bytes": 1855382,
+              "sha256": "6bd6ce048534a1f7ecb9d7cf4dadc8481125146e9c3ab90a03f1ab89f0b1b2e3"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://eprocwebcon.tjsc.jus.br",
+              "caminho": "/consulta1g/externo_controlador.php",
+              "status": 200,
+              "bytes": 1855382,
+              "sha256": "6bd6ce048534a1f7ecb9d7cf4dadc8481125146e9c3ab90a03f1ab89f0b1b2e3"
+            }
+          ],
+          "retorno": {
+            "linhas": 10,
+            "colunas": [
+              "processo",
+              "classe",
+              "orgao_julgador",
+              "relator",
+              "data_julgamento",
+              "data_publicacao",
+              "ementa",
+              "uf",
+              "decisao"
+            ],
+            "preenchidos": {
+              "processo": 9,
+              "classe": 8,
+              "ementa": 10,
+              "decisao": 9
+            }
+          },
+          "checagem": "aprovada",
+          "duracao_segundos": 1.73,
+          "fim_utc": "2026-10-03T19:26:13.186690+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjsp",
+      "endpoint": "cpopg",
+      "estado": "funcionando",
+      "motivo": "Retornou 1 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjsp').cpopg(id_cnj='1000149-71.2024.8.26.0346', method='html'). Somente os parâmetros informados, sem validar outros processos ou filtros",
+      "tentativas": [
+        {
+          "fonte": "tjsp",
+          "endpoint": "cpopg",
+          "parametros": {
+            "id_cnj": "1000149-71.2024.8.26.0346",
+            "method": "html"
+          },
+          "colunas_exigidas": [
+            "id_processo",
+            "classe"
+          ],
+          "preenchimento_exigido": [
+            "id_processo",
+            "classe"
+          ],
+          "inicio_utc": "2026-10-03T19:26:15.495125+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cpopg/search.do",
+              "status": 200,
+              "bytes": 59713,
+              "sha256": "c799385c48b27248a13a757ee2415fe07b80e681d306d8e7feda033e06038e04"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cpopg/show.do",
+              "status": 200,
+              "bytes": 59713,
+              "sha256": "c799385c48b27248a13a757ee2415fe07b80e681d306d8e7feda033e06038e04"
+            }
+          ],
+          "tabelas": {
+            "basicos": {
+              "linhas": 1,
+              "colunas": [
+                "file_path",
+                "id_processo",
+                "classe",
+                "assunto",
+                "foro",
+                "vara",
+                "juiz",
+                "data_distribuicao",
+                "valor_acao",
+                "controle",
+                "area"
+              ],
+              "preenchidos": {
+                "id_processo": 1,
+                "classe": 1
+              }
+            },
+            "partes": {
+              "linhas": 3,
+              "colunas": [
+                "file_path",
+                "tipo",
+                "nome",
+                "advogados"
+              ],
+              "preenchidos": {}
+            },
+            "movimentacoes": {
+              "linhas": 0,
+              "colunas": [
+                "file_path",
+                "data",
+                "movimento",
+                "observacao"
+              ],
+              "preenchidos": {}
+            },
+            "peticoes_diversas": {
+              "linhas": 28,
+              "colunas": [
+                "file_path",
+                "data",
+                "tipo"
+              ],
+              "preenchidos": {}
+            }
+          },
+          "retorno": {
+            "linhas": 1,
+            "colunas": [
+              "file_path",
+              "id_processo",
+              "classe",
+              "assunto",
+              "foro",
+              "vara",
+              "juiz",
+              "data_distribuicao",
+              "valor_acao",
+              "controle",
+              "area"
+            ],
+            "preenchidos": {
+              "id_processo": 1,
+              "classe": 1
+            }
+          },
+          "checagem": "aprovada",
+          "duracao_segundos": 1.29,
+          "fim_utc": "2026-10-03T19:26:16.787334+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjsp",
+      "endpoint": "cposg",
+      "estado": "indisponivel",
+      "motivo": "As consultas HTML por dois CNJs retornaram DataFrame vazio. Na segunda, o portal entregou duas páginas de detalhe, mas o parser descartou ambas por ausência do marcador tabelaTodasMovimentacoes.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjsp').cposg(id_cnj='1000149-71.2024.8.26.0346', method='html'); depois jus.scraper('tjsp').cposg(id_cnj='00221752420038260344', method='html'). Somente os parâmetros informados, sem validar outros processos ou filtros",
+      "tentativas": [
+        {
+          "fonte": "tjsp",
+          "endpoint": "cposg",
+          "parametros": {
+            "id_cnj": "1000149-71.2024.8.26.0346",
+            "method": "html"
+          },
+          "colunas_exigidas": [
+            "processo",
+            "classe"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "classe"
+          ],
+          "inicio_utc": "2026-10-03T19:26:19.128149+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/open.do",
+              "status": 200,
+              "bytes": 49024,
+              "sha256": "b9bbceb9dd8fb91bb992bedccb14b0cc6bd259fdf7becdbb8e3eaff88e61d3d7"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/sajcas/login",
+              "status": 200,
+              "bytes": 49024,
+              "sha256": "b9bbceb9dd8fb91bb992bedccb14b0cc6bd259fdf7becdbb8e3eaff88e61d3d7"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/search.do",
+              "status": 200,
+              "bytes": 50014,
+              "sha256": "069ee99755669f877f59a6d2f1b6ee1aee7d495d30f9624b8128e9eb3208f124"
+            }
+          ],
+          "retorno": {
+            "linhas": 0,
+            "colunas": [
+              "id_original",
+              "processo",
+              "status",
+              "classe",
+              "assunto",
+              "secao",
+              "orgao_julgador",
+              "area",
+              "relator",
+              "valor_da_acao",
+              "origem",
+              "volume_apenso",
+              "movimentacoes",
+              "partes",
+              "historico",
+              "decisoes",
+              "composicao",
+              "primeira_inst"
+            ],
+            "preenchidos": {
+              "processo": 0,
+              "classe": 0
+            }
+          },
+          "checagem": "nao_aprovada",
+          "erro_tipo": "builtins.AssertionError",
+          "erro": "Resposta vazia; insuficiente para confirmar funcionamento",
+          "duracao_segundos": 1.36,
+          "fim_utc": "2026-10-03T19:26:20.492095+00:00"
+        },
+        {
+          "fonte": "tjsp",
+          "endpoint": "cposg",
+          "parametros": {
+            "id_cnj": "00221752420038260344",
+            "method": "html"
+          },
+          "colunas_exigidas": [
+            "processo",
+            "classe"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "classe"
+          ],
+          "identificador": "tjsp.cposg.segunda",
+          "inicio_utc": "2026-10-03T19:28:59.639025+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/open.do",
+              "status": 200,
+              "bytes": 49024,
+              "sha256": "270c3395ddadab316a25a786ed105805f4d5a9dcce319a483b68b7a46a375a37"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/sajcas/login",
+              "status": 200,
+              "bytes": 49024,
+              "sha256": "270c3395ddadab316a25a786ed105805f4d5a9dcce319a483b68b7a46a375a37"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/search.do",
+              "status": 200,
+              "bytes": 38814,
+              "sha256": "5b21a8dde9cf86712b61046b5a93258fa385d31423fdba08aec861a6a0eedf6b"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/show.do",
+              "status": 200,
+              "bytes": 52737,
+              "sha256": "835c2f013811cdb86fcb812bc16272b72db9683b0c8cf83956b90845ba81d680"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/show.do",
+              "status": 200,
+              "bytes": 51826,
+              "sha256": "80f35ef6bbe809e22a192ae6d2f7b9f90e2b4d0678818e2ff4ffad416edac5da"
+            }
+          ],
+          "retorno": {
+            "linhas": 0,
+            "colunas": [
+              "id_original",
+              "processo",
+              "status",
+              "classe",
+              "assunto",
+              "secao",
+              "orgao_julgador",
+              "area",
+              "relator",
+              "valor_da_acao",
+              "origem",
+              "volume_apenso",
+              "movimentacoes",
+              "partes",
+              "historico",
+              "decisoes",
+              "composicao",
+              "primeira_inst"
+            ],
+            "preenchidos": {
+              "processo": 0,
+              "classe": 0
+            }
+          },
+          "checagem": "nao_aprovada",
+          "erro_tipo": "builtins.AssertionError",
+          "erro": "Resposta vazia; insuficiente para confirmar funcionamento",
+          "duracao_segundos": 3.41,
+          "fim_utc": "2026-10-03T19:29:03.048090+00:00"
+        }
+      ],
+      "diagnostico": {
+        "paginas_detalhe_http_200": 2,
+        "marcador_esperado": "tabelaTodasMovimentacoes",
+        "paginas_com_marcador": 0,
+        "linhas_retornadas_pelo_parser": 0,
+        "parser": "src/juscraper/courts/tjsp/cposg_parse.py::cposg_parse_single_html"
+      }
+    },
+    {
+      "fonte": "tjsp",
+      "endpoint": "cjsg",
+      "estado": "funcionando",
+      "motivo": "Retornou 20 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjsp').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjsp",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "inicio_utc": "2026-10-03T19:26:22.840555+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "POST",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cjsg/resultadoCompleta.do",
+              "status": 200,
+              "bytes": 84253,
+              "sha256": "808f78743dd88fd1381d05a4fb484c6c3caefa803727e20a85dfc76ea5e72ada"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cjsg/trocaDePagina.do",
+              "status": 200,
+              "bytes": 147277,
+              "sha256": "7617834d9ed4d7b87bacfba22213a7ba1caaeadd40f73705a670e2a246817066"
+            }
+          ],
+          "retorno": {
+            "linhas": 20,
+            "colunas": [
+              "processo",
+              "cd_acordao",
+              "cd_foro",
+              "classe_assunto",
+              "relatora",
+              "comarca",
+              "orgao_julgador",
+              "data_julgamento",
+              "data_publicacao",
+              "ementa"
+            ],
+            "preenchidos": {
+              "processo": 20,
+              "ementa": 20
+            }
+          },
+          "checagem": "aprovada",
+          "duracao_segundos": 12.72,
+          "fim_utc": "2026-10-03T19:26:35.562158+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjsp",
+      "endpoint": "cjpg",
+      "estado": "funcionando",
+      "motivo": "Retornou 10 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjsp').cjpg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjsp",
+          "endpoint": "cjpg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "decisao"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "decisao"
+          ],
+          "inicio_utc": "2026-10-03T19:26:37.859576+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cjpg/pesquisar.do",
+              "status": 200,
+              "bytes": 208319,
+              "sha256": "8432e010775fba36487cf2a30b20211e23467cb53f5286e2251fe1c841b5bbb8"
+            }
+          ],
+          "retorno": {
+            "linhas": 10,
+            "colunas": [
+              "cd_processo",
+              "id_processo",
+              "classe",
+              "assunto",
+              "magistrado",
+              "comarca",
+              "foro",
+              "vara",
+              "data_disponibilizacao",
+              "decisao"
+            ],
+            "preenchidos": {
+              "id_processo": 10,
+              "classe": 10,
+              "decisao": 10
+            }
+          },
+          "checagem": "nao_aprovada",
+          "erro_tipo": "builtins.AssertionError",
+          "erro": "Colunas ausentes: processo",
+          "duracao_segundos": 0.68,
+          "fim_utc": "2026-10-03T19:26:38.541731+00:00",
+          "reavaliacao": {
+            "checagem": "aprovada",
+            "colunas_exigidas": [
+              "id_processo",
+              "decisao"
+            ],
+            "preenchimento_exigido": [
+              "id_processo",
+              "decisao"
+            ],
+            "justificativa": "A exigência inicial de processo era incorreta neste ensaio. OutputCJPGTJSP define id_processo; o retorno registrado tem 10 identificadores e 10 textos preenchidos. Reavaliação offline, sem nova consulta."
+          }
+        }
+      ]
+    },
+    {
+      "fonte": "tjto",
+      "endpoint": "cjsg",
+      "estado": "indisponivel",
+      "motivo": "A busca foi recusada com HTTP 403 nas três tentativas internas do cliente e terminou em RetryExhaustedError. A causa do bloqueio não foi determinada.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjto').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjto",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "inicio_utc": "2026-10-03T19:26:17.321367+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "POST",
+              "origem": "https://jurisprudencia.tjto.jus.br",
+              "caminho": "/consulta.php",
+              "status": 403,
+              "bytes": 118,
+              "sha256": "58bf2215b395dcac74c009aa98701854e43cbe54a1cd3a95fee6a647ca9910d4"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://jurisprudencia.tjto.jus.br",
+              "caminho": "/consulta.php",
+              "status": 403,
+              "bytes": 118,
+              "sha256": "58bf2215b395dcac74c009aa98701854e43cbe54a1cd3a95fee6a647ca9910d4"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://jurisprudencia.tjto.jus.br",
+              "caminho": "/consulta.php",
+              "status": 403,
+              "bytes": 118,
+              "sha256": "58bf2215b395dcac74c009aa98701854e43cbe54a1cd3a95fee6a647ca9910d4"
+            }
+          ],
+          "checagem": "nao_aprovada",
+          "erro_tipo": "juscraper.core.exceptions.RetryExhaustedError",
+          "erro": "HTTP request failed after 3 attempts (last status: 403)",
+          "duracao_segundos": 6.18,
+          "fim_utc": "2026-10-03T19:26:23.503930+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjto",
+      "endpoint": "cjpg",
+      "estado": "indisponivel",
+      "motivo": "A busca foi recusada com HTTP 403 nas três tentativas internas do cliente e terminou em RetryExhaustedError. A causa do bloqueio não foi determinada.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjto').cjpg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjto",
+          "endpoint": "cjpg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "inicio_utc": "2026-10-03T19:26:25.801040+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "POST",
+              "origem": "https://jurisprudencia.tjto.jus.br",
+              "caminho": "/consulta.php",
+              "status": 403,
+              "bytes": 118,
+              "sha256": "58bf2215b395dcac74c009aa98701854e43cbe54a1cd3a95fee6a647ca9910d4"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://jurisprudencia.tjto.jus.br",
+              "caminho": "/consulta.php",
+              "status": 403,
+              "bytes": 118,
+              "sha256": "58bf2215b395dcac74c009aa98701854e43cbe54a1cd3a95fee6a647ca9910d4"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://jurisprudencia.tjto.jus.br",
+              "caminho": "/consulta.php",
+              "status": 403,
+              "bytes": 118,
+              "sha256": "58bf2215b395dcac74c009aa98701854e43cbe54a1cd3a95fee6a647ca9910d4"
+            }
+          ],
+          "checagem": "nao_aprovada",
+          "erro_tipo": "juscraper.core.exceptions.RetryExhaustedError",
+          "erro": "HTTP request failed after 3 attempts (last status: 403)",
+          "duracao_segundos": 6.13,
+          "fim_utc": "2026-10-03T19:26:31.928174+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "trf1",
+      "endpoint": "cpopg",
+      "estado": "funcionando",
+      "motivo": "Retornou 1 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('trf1').cpopg(id_cnj='10088283520214013502'). Somente os parâmetros informados, sem validar outros processos ou filtros",
+      "tentativas": [
+        {
+          "fonte": "trf1",
+          "endpoint": "cpopg",
+          "parametros": {
+            "id_cnj": "10088283520214013502"
+          },
+          "colunas_exigidas": [
+            "processo",
+            "classe",
+            "movimentacoes"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "classe"
+          ],
+          "inicio_utc": "2026-10-03T19:26:31.544761+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://pje1g-consultapublica.trf1.jus.br",
+              "caminho": "/consultapublica/ConsultaPublica/listView.seam",
+              "status": 200,
+              "bytes": 48362,
+              "sha256": "be6604ebf595b97fe11fe6e168e5b65e681e820c4735518003f8f709e86c7e9f"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://pje1g-consultapublica.trf1.jus.br",
+              "caminho": "/consultapublica/ConsultaPublica/listView.seam",
+              "status": 200,
+              "bytes": 6050,
+              "sha256": "e3b6cc533757c4dde551610aaff7843e794be0918357a1d31bf3db35a58dabb7"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://pje1g-consultapublica.trf1.jus.br",
+              "caminho": "/consultapublica/ConsultaPublica/DetalheProcessoConsultaPublica/listView.seam",
+              "status": 200,
+              "bytes": 132506,
+              "sha256": "374aa90ca1e105c439ce3a2987f699f89b87d0bb6eba0bc772a3b5b29d89222a"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://pje1g-consultapublica.trf1.jus.br",
+              "caminho": "/consultapublica/ConsultaPublica/DetalheProcessoConsultaPublica/listView.seam",
+              "status": 200,
+              "bytes": 18717,
+              "sha256": "6f9a4d12546b09ee007201572f45d0e12b2939121959edb410569675314cf7d8"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://pje1g-consultapublica.trf1.jus.br",
+              "caminho": "/consultapublica/ConsultaPublica/DetalheProcessoConsultaPublica/listView.seam",
+              "status": 200,
+              "bytes": 21531,
+              "sha256": "fbd9305102d7cf3683e33c67c1013c1e3476897f285c87ee3e91fc93e6f075fa"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://pje1g-consultapublica.trf1.jus.br",
+              "caminho": "/consultapublica/ConsultaPublica/DetalheProcessoConsultaPublica/listView.seam",
+              "status": 200,
+              "bytes": 20102,
+              "sha256": "03923e1ac139c09a6919771592b2b8547ceaf69c519ff7f51721c9759b1648c4"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://pje1g-consultapublica.trf1.jus.br",
+              "caminho": "/consultapublica/ConsultaPublica/DetalheProcessoConsultaPublica/listView.seam",
+              "status": 200,
+              "bytes": 20222,
+              "sha256": "f1f4205f3b3a16acdf84381245ddcb2cabcb9a0aa8cadd5ad9c8d1e47489dc47"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://pje1g-consultapublica.trf1.jus.br",
+              "caminho": "/consultapublica/ConsultaPublica/DetalheProcessoConsultaPublica/listView.seam",
+              "status": 200,
+              "bytes": 19420,
+              "sha256": "ab1029c6ea500d7b4fdae51279b1c29e5a1976697102c491b5012cbb63eb3027"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://pje1g-consultapublica.trf1.jus.br",
+              "caminho": "/consultapublica/ConsultaPublica/DetalheProcessoConsultaPublica/listView.seam",
+              "status": 200,
+              "bytes": 19508,
+              "sha256": "6cccd51e3b9214d40d62f727e9fdf22bf307fe2df42e813a23b5b3e53566b37d"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://pje1g-consultapublica.trf1.jus.br",
+              "caminho": "/consultapublica/ConsultaPublica/DetalheProcessoConsultaPublica/listView.seam",
+              "status": 200,
+              "bytes": 11066,
+              "sha256": "b28a808254b7ad3b7ed9e9fa67d00a4af8dfe172ff985375c97389f8ea980a01"
+            }
+          ],
+          "retorno": {
+            "linhas": 1,
+            "colunas": [
+              "processo",
+              "data_distribuicao",
+              "classe",
+              "assunto",
+              "jurisdicao",
+              "orgao_julgador",
+              "endereco_orgao",
+              "polo_ativo",
+              "polo_passivo",
+              "movimentacoes",
+              "documentos",
+              "id_cnj"
+            ],
+            "preenchidos": {
+              "processo": 1,
+              "classe": 1
+            }
+          },
+          "checagem": "aprovada",
+          "duracao_segundos": 11.98,
+          "fim_utc": "2026-10-03T19:26:43.527677+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "trf3",
+      "endpoint": "cpopg",
+      "estado": "nao_verificado",
+      "motivo": "As duas consultas do CNJ de referência retornaram somente id_cnj, sem processo, classe ou movimentações. Não foi possível distinguir ausência de acesso ao processo de incompatibilidade do fluxo de consulta.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('trf3').cpopg(id_cnj='50059460920254036324'); depois jus.scraper('trf3').cpopg(id_cnj='50059460920254036324'). Somente os parâmetros informados, sem validar outros processos ou filtros",
+      "tentativas": [
+        {
+          "fonte": "trf3",
+          "endpoint": "cpopg",
+          "parametros": {
+            "id_cnj": "50059460920254036324"
+          },
+          "colunas_exigidas": [
+            "processo",
+            "classe",
+            "movimentacoes"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "classe"
+          ],
+          "inicio_utc": "2026-10-03T19:26:34.231511+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://pje1g.trf3.jus.br",
+              "caminho": "/pje/ConsultaPublica/listView.seam",
+              "status": 200,
+              "bytes": 29565,
+              "sha256": "6d58e04ab26d05e93bf2ed83f5e220a542f960b4dbb2b7d8aa9c05a1e5392ee3"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://pje1g-consultapublica.trf3.jus.br",
+              "caminho": "",
+              "status": 200,
+              "bytes": 29565,
+              "sha256": "6d58e04ab26d05e93bf2ed83f5e220a542f960b4dbb2b7d8aa9c05a1e5392ee3"
+            }
+          ],
+          "retorno": {
+            "linhas": 1,
+            "colunas": [
+              "id_cnj"
+            ],
+            "preenchidos": {}
+          },
+          "checagem": "nao_aprovada",
+          "erro_tipo": "builtins.AssertionError",
+          "erro": "Colunas ausentes: classe, movimentacoes, processo",
+          "duracao_segundos": 0.44,
+          "fim_utc": "2026-10-03T19:26:34.666785+00:00"
+        },
+        {
+          "fonte": "trf3",
+          "endpoint": "cpopg",
+          "parametros": {
+            "id_cnj": "50059460920254036324"
+          },
+          "colunas_exigidas": [
+            "processo",
+            "classe",
+            "movimentacoes"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "classe"
+          ],
+          "identificador": "trf3.cpopg.segunda",
+          "inicio_utc": "2026-10-03T19:29:00.077185+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://pje1g.trf3.jus.br",
+              "caminho": "/pje/ConsultaPublica/listView.seam",
+              "status": 200,
+              "bytes": 29565,
+              "sha256": "6d58e04ab26d05e93bf2ed83f5e220a542f960b4dbb2b7d8aa9c05a1e5392ee3"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://pje1g-consultapublica.trf3.jus.br",
+              "caminho": "",
+              "status": 200,
+              "bytes": 29565,
+              "sha256": "6d58e04ab26d05e93bf2ed83f5e220a542f960b4dbb2b7d8aa9c05a1e5392ee3"
+            }
+          ],
+          "retorno": {
+            "linhas": 1,
+            "colunas": [
+              "id_cnj"
+            ],
+            "preenchidos": {}
+          },
+          "checagem": "nao_aprovada",
+          "erro_tipo": "builtins.AssertionError",
+          "erro": "Colunas ausentes: classe, movimentacoes, processo",
+          "duracao_segundos": 0.53,
+          "fim_utc": "2026-10-03T19:29:00.608709+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "trf5",
+      "endpoint": "cpopg",
+      "estado": "nao_verificado",
+      "motivo": "As duas consultas do CNJ de referência retornaram somente id_cnj, sem processo, classe ou movimentações. Não foi possível distinguir ausência de acesso ao processo de incompatibilidade do fluxo de consulta.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('trf5').cpopg(id_cnj='00584573120254058000'); depois jus.scraper('trf5').cpopg(id_cnj='00584573120254058000'). Somente os parâmetros informados, sem validar outros processos ou filtros",
+      "tentativas": [
+        {
+          "fonte": "trf5",
+          "endpoint": "cpopg",
+          "parametros": {
+            "id_cnj": "00584573120254058000"
+          },
+          "colunas_exigidas": [
+            "processo",
+            "classe",
+            "movimentacoes"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "classe"
+          ],
+          "inicio_utc": "2026-10-03T19:26:36.974659+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://pje1g.trf5.jus.br",
+              "caminho": "/pjeconsulta/ConsultaPublica/listView.seam",
+              "status": 200,
+              "bytes": 52710,
+              "sha256": "81b237423cb78df3eb2f3ecf8a0c30fc08a29e199e59f4aba9abcd4090cc6c56"
+            }
+          ],
+          "retorno": {
+            "linhas": 1,
+            "colunas": [
+              "id_cnj"
+            ],
+            "preenchidos": {}
+          },
+          "checagem": "nao_aprovada",
+          "erro_tipo": "builtins.AssertionError",
+          "erro": "Colunas ausentes: classe, movimentacoes, processo",
+          "duracao_segundos": 0.59,
+          "fim_utc": "2026-10-03T19:26:37.563017+00:00"
+        },
+        {
+          "fonte": "trf5",
+          "endpoint": "cpopg",
+          "parametros": {
+            "id_cnj": "00584573120254058000"
+          },
+          "colunas_exigidas": [
+            "processo",
+            "classe",
+            "movimentacoes"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "classe"
+          ],
+          "identificador": "trf5.cpopg.segunda",
+          "inicio_utc": "2026-10-03T19:29:00.891913+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://pje1g.trf5.jus.br",
+              "caminho": "/pjeconsulta/ConsultaPublica/listView.seam",
+              "status": 200,
+              "bytes": 52737,
+              "sha256": "1a79dada16f99456c51709d64208f0c68627605d2838b8238701bc1fe568b7be"
+            }
+          ],
+          "retorno": {
+            "linhas": 1,
+            "colunas": [
+              "id_cnj"
+            ],
+            "preenchidos": {}
+          },
+          "checagem": "nao_aprovada",
+          "erro_tipo": "builtins.AssertionError",
+          "erro": "Colunas ausentes: classe, movimentacoes, processo",
+          "duracao_segundos": 0.43,
+          "fim_utc": "2026-10-03T19:29:01.324058+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "trf6",
+      "endpoint": "cpopg",
+      "estado": "indisponivel",
+      "motivo": "As duas tentativas falharam ao localizar o CAPTCHA esperado. A resposta inspecionada exige JavaScript antes de exibir o conteúdo; o fluxo HTTP do cliente não chegou à consulta.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('trf6').cpopg(id_cnj='10052295520234063801'); depois jus.scraper('trf6').cpopg(id_cnj='10052295520234063801'). Somente os parâmetros informados, sem validar outros processos ou filtros",
+      "tentativas": [
+        {
+          "fonte": "trf6",
+          "endpoint": "cpopg",
+          "parametros": {
+            "id_cnj": "10052295520234063801"
+          },
+          "colunas_exigidas": [
+            "processo",
+            "classe",
+            "movimentacoes"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "classe"
+          ],
+          "limite_segundos": 180,
+          "inicio_utc": "2026-10-03T19:26:39.859709+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://eproc1g.trf6.jus.br",
+              "caminho": "/eproc/externo_controlador.php",
+              "status": 200,
+              "bytes": 6553,
+              "sha256": "ca0ab3951624f8aa0445b1338aecc7360304421399a24644f969c5ce83335495"
+            }
+          ],
+          "checagem": "nao_aprovada",
+          "erro_tipo": "builtins.RuntimeError",
+          "erro": "TRF6: could not locate captcha image in form HTML",
+          "duracao_segundos": 0.12,
+          "fim_utc": "2026-10-03T19:26:39.983939+00:00"
+        },
+        {
+          "fonte": "trf6",
+          "endpoint": "cpopg",
+          "parametros": {
+            "id_cnj": "10052295520234063801"
+          },
+          "colunas_exigidas": [
+            "processo",
+            "classe",
+            "movimentacoes"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "classe"
+          ],
+          "limite_segundos": 180,
+          "identificador": "trf6.cpopg.segunda",
+          "inicio_utc": "2026-10-03T19:29:01.632254+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://eproc1g.trf6.jus.br",
+              "caminho": "/eproc/externo_controlador.php",
+              "status": 200,
+              "bytes": 6559,
+              "sha256": "8aff2da400b9d67b26ec1749543fe0913e254cdff0ee6b82e4523b3ffd241e26"
+            }
+          ],
+          "checagem": "nao_aprovada",
+          "erro_tipo": "builtins.RuntimeError",
+          "erro": "TRF6: could not locate captcha image in form HTML",
+          "duracao_segundos": 0.11,
+          "fim_utc": "2026-10-03T19:29:01.741808+00:00"
+        }
+      ]
+    }
+  ]
+}
