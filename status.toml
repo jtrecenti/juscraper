@@ -1,0 +1,225 @@
+# Inventário editorial; não altera a execução dos raspadores.
+# Critérios e atualização: CONTRIBUTING.md, seção Status dos raspadores.
+validade_dias = 30
+
+[[fontes]]
+sigla = "comunica_cnj"
+nome = "Comunica CNJ"
+tipo = "agregador"
+endpoints = ["listar_comunicacoes"]
+
+[[fontes]]
+sigla = "datajud"
+nome = "Datajud"
+tipo = "agregador"
+endpoints = ["listar_processos"]
+
+[[fontes]]
+sigla = "falcao"
+nome = "Falcão"
+tipo = "agregador"
+endpoints = ["listar_decisoes"]
+
+[[fontes]]
+sigla = "jusbr"
+nome = "JusBR"
+tipo = "agregador"
+endpoints = ["cpopg", "download_documents"]
+
+[[fontes]]
+sigla = "pdpj"
+nome = "PDPJ"
+tipo = "agregador"
+endpoints = ["existe", "cpopg", "documentos", "movimentos", "partes", "pesquisa", "contar", "download_documents"]
+
+[[fontes]]
+sigla = "stf"
+nome = "STF"
+tipo = "tribunal"
+endpoints = ["listar_decisoes", "contar_decisoes"]
+
+[[fontes]]
+sigla = "tjac"
+nome = "TJAC"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[[fontes]]
+sigla = "tjal"
+nome = "TJAL"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[[fontes]]
+sigla = "tjam"
+nome = "TJAM"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[[fontes]]
+sigla = "tjap"
+nome = "TJAP"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[fontes.observacoes.cjsg]
+estado = "indisponivel"
+# Data do relato na issue #279, sem nova coleta nesta migração.
+verificado_em = 2026-06-07
+versao = "0.3.0 (ca78868e7237)"
+evidencias = ["https://github.com/jtrecenti/juscraper/issues/279", "https://github.com/jtrecenti/juscraper/pull/282"]
+excecao = "juscraper.courts.tjap.exceptions.TJAPSecurityCheckError"
+motivo.pt = "O relato histórico registra bloqueio por verificação de segurança. A investigação posterior identificou CAPTCHA Cloudflare Turnstile validado no servidor. O cliente HTTP não produz esse token; ao receber essa resposta, levanta TJAPSecurityCheckError. A coleta atual não foi revalidada."
+motivo.en = "The historical report records a security-check block. The subsequent investigation identified a server-validated Cloudflare Turnstile CAPTCHA. The HTTP client cannot produce this token; on receiving that response, it raises TJAPSecurityCheckError. Current collection has not been revalidated."
+cenario.pt = "Busca por dano moral, dano e recurso, via HTTP direto e proxy; tipo de rede não informado no relato"
+cenario.en = "Searches for dano moral, dano and recurso, over direct HTTP and a proxy; network type not stated in the report"
+
+[[fontes]]
+sigla = "tjba"
+nome = "TJBA"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[[fontes]]
+sigla = "tjce"
+nome = "TJCE"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[[fontes]]
+sigla = "tjdft"
+nome = "TJDFT"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[[fontes]]
+sigla = "tjes"
+nome = "TJES"
+tipo = "tribunal"
+endpoints = ["cjsg", "cjpg"]
+
+[[fontes]]
+sigla = "tjgo"
+nome = "TJGO"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[[fontes]]
+sigla = "tjmg"
+nome = "TJMG"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[[fontes]]
+sigla = "tjms"
+nome = "TJMS"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[[fontes]]
+sigla = "tjmt"
+nome = "TJMT"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[[fontes]]
+sigla = "tjpa"
+nome = "TJPA"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[[fontes]]
+sigla = "tjpb"
+nome = "TJPB"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[[fontes]]
+sigla = "tjpe"
+nome = "TJPE"
+tipo = "tribunal"
+endpoints = ["cjsg", "cpopg"]
+
+[[fontes]]
+sigla = "tjpi"
+nome = "TJPI"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[[fontes]]
+sigla = "tjpr"
+nome = "TJPR"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[[fontes]]
+sigla = "tjrj"
+nome = "TJRJ"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[[fontes]]
+sigla = "tjrn"
+nome = "TJRN"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[[fontes]]
+sigla = "tjro"
+nome = "TJRO"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[[fontes]]
+sigla = "tjrr"
+nome = "TJRR"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[[fontes]]
+sigla = "tjrs"
+nome = "TJRS"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[[fontes]]
+sigla = "tjsc"
+nome = "TJSC"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[[fontes]]
+sigla = "tjsp"
+nome = "TJSP"
+tipo = "tribunal"
+endpoints = ["cpopg", "cposg", "cjsg", "cjpg"]
+
+[[fontes]]
+sigla = "tjto"
+nome = "TJTO"
+tipo = "tribunal"
+endpoints = ["cjsg", "cjpg"]
+
+[[fontes]]
+sigla = "trf1"
+nome = "TRF1"
+tipo = "tribunal"
+endpoints = ["cpopg"]
+
+[[fontes]]
+sigla = "trf3"
+nome = "TRF3"
+tipo = "tribunal"
+endpoints = ["cpopg"]
+
+[[fontes]]
+sigla = "trf5"
+nome = "TRF5"
+tipo = "tribunal"
+endpoints = ["cpopg"]
+
+[[fontes]]
+sigla = "trf6"
+nome = "TRF6"
+tipo = "tribunal"
+endpoints = ["cpopg"]

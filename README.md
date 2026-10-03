@@ -45,41 +45,86 @@ print(f"Encontrados {len(dados)} resultados")
 dados.head()
 ```
 
-## 📊 Implementações
+<!-- status:inicio -->
+## Implementações e status
 
-### Tribunais Disponíveis
+Status observado no cenário informado, sem garantia de disponibilidade atual. Sem evidência ou após 30 dias, o estado passa a não verificado na próxima geração. A data limite permanece visível entre atualizações. O último relato de falha continua abaixo.
 
-| Tribunal | Funcionalidades Disponíveis       |
-|----------|-----------------------------------|
-| TJSP     | cpopg, cposg, cjsg, cjpg          |
-| TJES     | cjsg, cjpg                        |
-| TJTO     | cjsg, cjpg                        |
-| TJAP     | cjsg ⚠️                           |
-| TJBA     | cjsg                              |
-| TJCE     | cjsg                              |
-| TJDFT    | cjsg                              |
-| TJMT     | cjsg                              |
-| TJPA     | cjsg                              |
-| TJPB     | cjsg                              |
-| TJPE     | cjsg, cpopg                       |
-| TJPI     | cjsg                              |
-| TJPR     | cjsg                              |
-| TJRN     | cjsg                              |
-| TJRO     | cjsg                              |
-| TJRR     | cjsg                              |
-| TJRS     | cjsg                              |
-| TJSC     | cjsg                              |
+[Critérios e atualização](CONTRIBUTING.md#status-dos-raspadores)
 
-> ⚠️ **TJAP — `cjsg` indisponível:** desde ~2026 a busca de jurisprudência do TJAP (plataforma Tucujuris) passou a exigir um CAPTCHA [Cloudflare Turnstile](https://www.cloudflare.com/products/turnstile/), validado no servidor. Como o raspador faz requisições HTTP puras (sem navegador), não há como gerar o token e o backend responde `"A verificação de segurança falhou"`. Nesse caso `cjsg` levanta `TJAPSecurityCheckError` com a explicação, em vez de retornar vazio silenciosamente. Não há solução pela API pública. Ver [issue #279](https://github.com/jtrecenti/juscraper/issues/279).
+### Tribunais
 
-### Agregadores Disponíveis
+| Fonte | Endpoint | Estado | Verificação | Válido até |
+|---|---|---|---|---|
+| STF | `listar_decisoes` | Não verificado | - | - |
+| STF | `contar_decisoes` | Não verificado | - | - |
+| TJAC | `cjsg` | Não verificado | - | - |
+| TJAL | `cjsg` | Não verificado | - | - |
+| TJAM | `cjsg` | Não verificado | - | - |
+| TJAP | `cjsg` | Não verificado (último: Indisponível) | 2026-06-07 | 2026-07-07 |
+| TJBA | `cjsg` | Não verificado | - | - |
+| TJCE | `cjsg` | Não verificado | - | - |
+| TJDFT | `cjsg` | Não verificado | - | - |
+| TJES | `cjsg` | Não verificado | - | - |
+| TJES | `cjpg` | Não verificado | - | - |
+| TJGO | `cjsg` | Não verificado | - | - |
+| TJMG | `cjsg` | Não verificado | - | - |
+| TJMS | `cjsg` | Não verificado | - | - |
+| TJMT | `cjsg` | Não verificado | - | - |
+| TJPA | `cjsg` | Não verificado | - | - |
+| TJPB | `cjsg` | Não verificado | - | - |
+| TJPE | `cjsg` | Não verificado | - | - |
+| TJPE | `cpopg` | Não verificado | - | - |
+| TJPI | `cjsg` | Não verificado | - | - |
+| TJPR | `cjsg` | Não verificado | - | - |
+| TJRJ | `cjsg` | Não verificado | - | - |
+| TJRN | `cjsg` | Não verificado | - | - |
+| TJRO | `cjsg` | Não verificado | - | - |
+| TJRR | `cjsg` | Não verificado | - | - |
+| TJRS | `cjsg` | Não verificado | - | - |
+| TJSC | `cjsg` | Não verificado | - | - |
+| TJSP | `cpopg` | Não verificado | - | - |
+| TJSP | `cposg` | Não verificado | - | - |
+| TJSP | `cjsg` | Não verificado | - | - |
+| TJSP | `cjpg` | Não verificado | - | - |
+| TJTO | `cjsg` | Não verificado | - | - |
+| TJTO | `cjpg` | Não verificado | - | - |
+| TRF1 | `cpopg` | Não verificado | - | - |
+| TRF3 | `cpopg` | Não verificado | - | - |
+| TRF5 | `cpopg` | Não verificado | - | - |
+| TRF6 | `cpopg` | Não verificado | - | - |
 
-| Nome      | Funcionalidades                   |
-|-----------|-----------------------------------|
-| Datajud   | listar_processos                  |
-| Falcao    | listar_decisoes                   |
-| Jusbr     | cpopg, download_documents         |
-| PDPJ      | existe, cpopg, documentos, movimentos, partes, pesquisa, contar, download_documents |
+### Agregadores
+
+| Fonte | Endpoint | Estado | Verificação | Válido até |
+|---|---|---|---|---|
+| Comunica CNJ | `listar_comunicacoes` | Não verificado | - | - |
+| Datajud | `listar_processos` | Não verificado | - | - |
+| Falcão | `listar_decisoes` | Não verificado | - | - |
+| JusBR | `cpopg` | Não verificado | - | - |
+| JusBR | `download_documents` | Não verificado | - | - |
+| PDPJ | `existe` | Não verificado | - | - |
+| PDPJ | `cpopg` | Não verificado | - | - |
+| PDPJ | `documentos` | Não verificado | - | - |
+| PDPJ | `movimentos` | Não verificado | - | - |
+| PDPJ | `partes` | Não verificado | - | - |
+| PDPJ | `pesquisa` | Não verificado | - | - |
+| PDPJ | `contar` | Não verificado | - | - |
+| PDPJ | `download_documents` | Não verificado | - | - |
+
+### Evidências e limitações
+
+#### TJAP: `cjsg`
+
+O relato histórico registra bloqueio por verificação de segurança. A investigação posterior identificou CAPTCHA Cloudflare Turnstile validado no servidor. O cliente HTTP não produz esse token; ao receber essa resposta, levanta TJAPSecurityCheckError. A coleta atual não foi revalidada.
+
+Ambiente/cenário: Busca por dano moral, dano e recurso, via HTTP direto e proxy; tipo de rede não informado no relato. Versão ou commit testado: 0.3.0 (ca78868e7237).
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/issues/279) · [Evidência 2](https://github.com/jtrecenti/juscraper/pull/282)
+
+Exceção relacionada: juscraper.courts.tjap.exceptions.TJAPSecurityCheckError.
+
+<!-- status:fim -->
 
 #### Autenticação no JusBR e no PDPJ
 
