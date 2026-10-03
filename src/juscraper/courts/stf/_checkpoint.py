@@ -135,43 +135,54 @@ class Checkpoint:
             self.save()
 
     def _validate(self, window: Window) -> None:
-        for bound in (window.lower, window.upper):
-            if bound is not None:
-                date.fromisoformat(bound)
-        if window.lower and window.upper and window.lower > window.upper:
-            raise ValueError("Intervalo de checkpoint invertido.")
-        if window.missing and (window.lower or window.upper or window.children):
-            raise ValueError("Residual de checkpoint com intervalo ou filhos.")
+        self._validar_limites(window)
         if window.children:
             self._validate_partition(window)
-        for attempt in window.attempts:
-            seen: set[tuple[str, str]] = set()
-            numbers = set()
-            for page in attempt.pages:
-                rows = self.read(page)
-                ids = document_ids(rows, self.manifest.identity["base"])
-                if seen.intersection(ids) or page.number in numbers:
-                    raise ValueError("Páginas duplicadas no checkpoint.")
-                seen.update(ids)
-                numbers.add(page.number)
-            if attempt.completed_at:
-                self._validate_attempt(attempt)
-                if self.manifest.identity["pages"] is None and len(seen) != attempt.total_before:
-                    raise ValueError("Tentativa concluída com páginas faltantes.")
-        for child in window.children:
-            self._validate(child)
+        for tentativa in window.attempts:
+            self._validar_paginas_tentativa(tentativa)
+        for filha in window.children:
+            self._validate(filha)
         if window.completed_at:
-            if window.total_before is None or window.total_before != window.total_after:
-                raise ValueError("Janela concluída com contagens diferentes.")
-            if window.children:
-                if not all(child.completed_at for child in window.children):
-                    raise ValueError("Janela concluída com filhos incompletos.")
-                if sum(child.total_after or 0 for child in window.children) != window.total_after:
-                    raise ValueError("Partição com contagens inconsistentes.")
-            elif not window.attempts or not window.attempts[-1].completed_at:
-                raise ValueError("Janela concluída sem tentativa concluída.")
-            elif window.attempts[-1].total_after != window.total_after:
-                raise ValueError("Janela e tentativa com contagens diferentes.")
+            self._validar_janela_concluida(window)
+
+    @staticmethod
+    def _validar_limites(janela: Window) -> None:
+        for limite in (janela.lower, janela.upper):
+            if limite is not None:
+                date.fromisoformat(limite)
+        if janela.lower and janela.upper and janela.lower > janela.upper:
+            raise ValueError("Intervalo de checkpoint invertido.")
+        if janela.missing and (janela.lower or janela.upper or janela.children):
+            raise ValueError("Residual de checkpoint com intervalo ou filhos.")
+
+    def _validar_paginas_tentativa(self, tentativa: Attempt) -> None:
+        identidades: set[tuple[str, str]] = set()
+        numeros = set()
+        for pagina in tentativa.pages:
+            registros = self.read(pagina)
+            ids = document_ids(registros, self.manifest.identity["base"])
+            if identidades.intersection(ids) or pagina.number in numeros:
+                raise ValueError("Páginas duplicadas no checkpoint.")
+            identidades.update(ids)
+            numeros.add(pagina.number)
+        if tentativa.completed_at:
+            self._validate_attempt(tentativa)
+            if self.manifest.identity["pages"] is None and len(identidades) != tentativa.total_before:
+                raise ValueError("Tentativa concluída com páginas faltantes.")
+
+    @staticmethod
+    def _validar_janela_concluida(janela: Window) -> None:
+        if janela.total_before is None or janela.total_before != janela.total_after:
+            raise ValueError("Janela concluída com contagens diferentes.")
+        if janela.children:
+            if not all(filha.completed_at for filha in janela.children):
+                raise ValueError("Janela concluída com filhos incompletos.")
+            if sum(filha.total_after or 0 for filha in janela.children) != janela.total_after:
+                raise ValueError("Partição com contagens inconsistentes.")
+        elif not janela.attempts or not janela.attempts[-1].completed_at:
+            raise ValueError("Janela concluída sem tentativa concluída.")
+        elif janela.attempts[-1].total_after != janela.total_after:
+            raise ValueError("Janela e tentativa com contagens diferentes.")
 
     def _completed_rows(self, window: Window):
         if window.children:
