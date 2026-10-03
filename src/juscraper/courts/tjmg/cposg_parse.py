@@ -21,7 +21,6 @@ _BLOCK_SEP = re.compile(r'<table width="100%" class="tabela_formulario">')
 _CNJ_RE = re.compile(r"NUMERA\S*O \S*NICA:\s*(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})")
 _PARTES_LINK_RE = re.compile(r"proc_partes_advogados2\.jsp\?listaProcessos=(\d{17})")
 _SEGREDO_RE = re.compile(r"segredo de justi", re.IGNORECASE)
-_OAB_RE = re.compile(r"^\w+/[A-Z]{2}$")
 _NOT_FOUND_RE = re.compile(r"Nenhum processo encontrado", re.IGNORECASE)
 
 
@@ -96,11 +95,15 @@ def parse_partes(html: str) -> list[dict]:
         advogados = []
         for tr in content_td.find_all("tr"):
             tds = tr.find_all("td", recursive=False)
-            if len(tds) != 2:
+            # Advogado e a linha-folha da tabela interna: duas celulas, sem
+            # rotulo em <b> e sem tabela aninhada. A linha externa tambem tem
+            # duas celulas, mas uma traz o rotulo "Advogado(s):" e a outra a
+            # tabela interna, e por isso fica de fora. O filtro e de estrutura,
+            # e nao do formato da OAB, para nao descartar advogado com
+            # inscricao fora do padrao.
+            if len(tds) != 2 or tds[0].find("b") or tds[1].find("table"):
                 continue
-            oab = tds[0].get_text(strip=True)
-            if not _OAB_RE.match(oab):
-                continue
+            oab = tds[0].get_text(strip=True) or None
             nome_adv = tds[1].get_text(" ", strip=True).replace("\xa0", " ")
             advogados.append({"oab": oab, "nome": re.sub(r"^-\s*", "", nome_adv).strip()})
         for t in content_td.find_all("table"):

@@ -226,6 +226,24 @@ def test_cposg_500_persistente_nas_partes_mantem_recurso(scraper, mocker):
     assert row["partes"] is None
 
 
+@responses.activate
+def test_cposg_mantem_advogado_com_oab_fora_do_padrao(scraper):
+    """Advogado e identificado pela estrutura da tabela, nao pelo formato da OAB."""
+    partes = load_sample_bytes("tjmg", "cposg/partes_single.html").replace(b"165085N/MG", b"12.345-A/MG")
+    _add(RESULTADO_URL, "00003597920208130205", "resultado_single")
+    responses.add(
+        responses.GET,
+        PARTES_URL,
+        body=partes,
+        content_type="text/html; charset=ISO-8859-1",
+        match=[matchers.query_param_matcher({"listaProcessos": "10000264083767001"})],
+    )
+
+    df = scraper.cposg("0000359-79.2020.8.13.0205")
+
+    assert df.iloc[0]["partes"][0]["advogados"] == [{"oab": "12.345-A/MG", "nome": "LUIS FERNANDO BATISTA"}]
+
+
 @pytest.mark.parametrize("metodo", ["cposg", "cposg_download"])
 @responses.activate
 def test_cposg_aviso_de_falha_aponta_para_quem_chamou(scraper, mocker, metodo):
