@@ -30,9 +30,7 @@ Cannot be used together with the specific names — raises `ValueError`.
 
 #### Accepted input formats
 
-For endpoints with a wired pydantic schema (eSAJ family, 1C-a tribunals,
-TJDFT, TJES — see `Schemas pydantic` in `CONTRIBUTING.md` for the current
-list), the four canonical date fields accept any of:
+Endpoints using the shared date-coercion pipeline accept the following formats for supported date filters. See `CONTRIBUTING.md` > **Schemas pydantic** > **Pipeline canônico (wiring)** for the implementation:
 
 - `"DD/MM/AAAA"` — Brazilian short form (e.g. `"01/03/2024"`)
 - `"DD-MM-AAAA"` — Brazilian with dashes (e.g. `"01-03-2024"`)
