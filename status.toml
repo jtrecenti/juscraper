@@ -228,6 +228,14 @@ evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c
 motivo = "Retornou 10 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado."
 cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjmg').cjsg(pesquisa='dano moral presumido', paginas=1, data_julgamento_inicio='2025-01-01', data_julgamento_fim='2025-03-31'). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
 
+[fontes.observacoes.cposg]
+estado = "funcionando"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 85b2a2267bbb2322a5403904879ea8ce4d9b0813"
+motivo = "Retornou três recursos do CNJ consultado, com processo, classe, partes e advogados. Os três registros passaram pelo schema de saída após converter datas ausentes de NaT para None."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjmg').cposg(id_cnj='5000344-57.2025.8.13.0461'). Somente esse CNJ; outros processos e recursos não foram verificados."
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/7ab5eb287483c346cf264f4d60d24f71a96b2917/docs/status/2026-10-03-tjmg.json#L8"]
+
 [[fontes]]
 sigla = "tjms"
 nome = "TJMS"

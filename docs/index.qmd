@@ -73,7 +73,7 @@ Status observado no cenário informado, sem garantia de disponibilidade atual. S
 | TJES | `cjpg` | Degradado | 2026-10-03 | 2026-11-02 |
 | TJGO | `cjsg` | Não verificado | 2026-10-03 | - |
 | TJMG | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
-| TJMG | `cposg` | Não verificado | - | - |
+| TJMG | `cposg` | Funcionando | 2026-10-03 | 2026-11-02 |
 | TJMS | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
 | TJMT | `cjsg` | Indisponível | 2026-10-03 | 2026-11-02 |
 | TJPA | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
@@ -224,6 +224,14 @@ Retornou 10 registros; colunas exigidas e preenchimento mínimo conferidos no ce
 Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjmg').cjsg(pesquisa='dano moral presumido', paginas=1, data_julgamento_inicio='2025-01-01', data_julgamento_fim='2025-03-31'). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
 
 [Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L1214)
+
+#### TJMG: `cposg`
+
+Retornou três recursos do CNJ consultado, com processo, classe, partes e advogados. Os três registros passaram pelo schema de saída após converter datas ausentes de NaT para None.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjmg').cposg(id_cnj='5000344-57.2025.8.13.0461'). Somente esse CNJ; outros processos e recursos não foram verificados.. Versão ou commit testado: 0.4.0; código 85b2a2267bbb2322a5403904879ea8ce4d9b0813.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/7ab5eb287483c346cf264f4d60d24f71a96b2917/docs/status/2026-10-03-tjmg.json#L8)
 
 #### TJMS: `cjsg`
 
