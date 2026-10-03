@@ -48,6 +48,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - TJSC `cjsg`: a coluna `processo` deixa de carregar o sufixo `/TJSC`, e resultados com o rótulo `DECISÃO` preservam a coluna `decisao` independentemente da ordem dos campos; `decisao` só preenche `ementa` quando o resultado não traz uma ementa explícita. Antes, a decisão podia desaparecer quando antecedia `EMENTA`. Refs #307.
 - TJSP `cjsg` em janela curta e com `count_only=True`: `query` e `termo` usados sem `pesquisa` passam a buscar pelo alias. Antes, o default `pesquisa=""` contava como valor informado e a chamada levantava `ValueError` de conflito entre `pesquisa` e o alias. `cjsg(query=None)` sem `pesquisa`, que antes fazia uma busca aberta, agora levanta `TypeError` pedindo `pesquisa`, como o `cjpg` e o caminho acima de 366 dias.
 - TJSP `cjsg` e `cjpg` com `pesquisa`, `query` ou `termo` acima de 120 caracteres levantam `QueryTooLongError` antes da primeira requisição também em intervalos acima de 366 dias. Antes, o auto-chunk tratava o erro como falha de cada janela e devolvia um DataFrame vazio com `UserWarning`.
+- TJPI `cjsg(paginas=None)` lê o total de páginas do link de última página (»). Antes usava o maior `page=N` do paginador, que sem esse link é o fim da janela de páginas (2 na primeira página), e baixava menos páginas em silêncio. Agora levanta `ValueError` quando o paginador vem sem o », quando o » não traz `page=N` com N >= 1 ou quando há links » com totais diferentes. Refs #307.
 
 ## [0.4.0] - 2026-09-15
 
