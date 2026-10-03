@@ -73,6 +73,7 @@ Status observado no cenário informado, sem garantia de disponibilidade atual. S
 | TJES | `cjpg` | Degradado | 2026-10-03 | 2026-11-02 |
 | TJGO | `cjsg` | Não verificado | 2026-10-03 | - |
 | TJMG | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
+| TJMG | `cposg` | Não verificado | - | - |
 | TJMS | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
 | TJMT | `cjsg` | Indisponível | 2026-10-03 | 2026-11-02 |
 | TJPA | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |

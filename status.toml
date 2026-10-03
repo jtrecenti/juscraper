@@ -218,7 +218,7 @@ cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjgo').cjsg(pesquisa='
 sigla = "tjmg"
 nome = "TJMG"
 tipo = "tribunal"
-endpoints = ["cjsg"]
+endpoints = ["cjsg", "cposg"]
 
 [fontes.observacoes.cjsg]
 estado = "funcionando"
