@@ -99,6 +99,8 @@ O método `.cjsg()` recebe como *input* parâmetros de busca de jurisprudência 
 
 JusBR and PDPJ share the same JWT from the PJe SSO. With the `govbr` extra (`pip install 'juscraper[govbr]'`), `auth_govbr()` opens the locally installed Google Chrome, Chromium or Microsoft Edge, with a temporary profile, on the PDPJ services portal; the user logs in through gov.br, the token is captured and the window closes on its own. If no browser is found, pass its executable to `auth_govbr(navegador=...)`. The token is cached in `~/.config/juscraper/pdpj_token.json` (or under `$XDG_CONFIG_HOME/juscraper/`), readable only by its owner, and later JusBR and PDPJ instances load it without a new login. When the portal issues a refresh token, the access token is renewed automatically before it expires. The login needs a windowed browser, so it does not run on Google Colab or CI; there, pass the token to `auth(token)` or set the `PDPJ_JWT` environment variable (JusBR also accepts `JUSBR_JWT`).
 
+`JusbrScraper.auth_firefox()` is deprecated and will be removed in a future release. Migrate to `auth_govbr()` with the `govbr` extra. Until removal, the Firefox method requires `pip install 'juscraper[firefox]'`, a Firefox profile and an active login at <https://portaldeservicos.pdpj.jus.br> in that browser. It does not renew the access token automatically. `browser-cookie3` is no longer installed with the base package.
+
 ### Notebooks de Exemplo
 
 ::: {.callout-warning}
