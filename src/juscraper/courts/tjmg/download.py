@@ -142,6 +142,24 @@ def _fetch_page(request_fn: RequestFn, params: dict) -> str:
     return resp.text
 
 
+def _validate_session(
+    request_fn: RequestFn,
+    session: requests.Session,
+    max_attempts: int = 3,
+) -> None:
+    """Open the search form and validate the captcha in the current session.
+
+    Usado na abertura do ``cjsg`` e de novo quando a validacao expira no meio
+    da paginacao (HTTP 401), para que as duas entradas repitam a mesma
+    sequencia (formulario, captcha, DWR) e a mesma mensagem de erro.
+    """
+    request_fn("GET", FORM_URL, timeout=60)
+    if not _solve_captcha(request_fn, session, max_attempts=max_attempts):
+        raise RuntimeError(
+            f"TJMG captcha validation failed after {max_attempts} attempts."
+        )
+
+
 def _fetch_page_revalidating(
     request_fn: RequestFn,
     session: requests.Session,
@@ -162,11 +180,7 @@ def _fetch_page_revalidating(
             if status != 401 or attempt == max_revalidations:
                 raise
             logger.info("TJMG: sessao do captcha expirou (HTTP 401); revalidando.")
-            request_fn("GET", FORM_URL, timeout=60)
-            if not _solve_captcha(request_fn, session):
-                raise RuntimeError(
-                    "TJMG captcha validation failed after 3 attempts."
-                ) from exc
+            _validate_session(request_fn, session)
     raise AssertionError("unreachable")  # pragma: no cover
 
 
@@ -209,11 +223,7 @@ def cjsg_download(
         :class:`HTTPScraper`). Precisamos do handle direto para ler o
         ``JSESSIONID`` do cookie jar e montá-lo no body DWR do captcha.
     """
-    request_fn("GET", FORM_URL, timeout=60)
-    if not _solve_captcha(request_fn, session):
-        raise RuntimeError(
-            "TJMG captcha validation failed after 3 attempts."
-        )
+    _validate_session(request_fn, session)
 
     first_params = _build_params(
         pesquisa=pesquisa,
