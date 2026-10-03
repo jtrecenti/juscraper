@@ -101,37 +101,7 @@ def cpopg_download_html_single(
                     "fornecido para extrair links do HTML."
                 )
             links = get_links_callback(r)
-            cd_processo = []
-            for link in links:
-                query_params = parse_qs(urlparse(link).query)
-                codigos = query_params.get('processo.codigo', [])
-                if not codigos:
-                    raise RuntimeError(f"Link sem 'processo.codigo': {link}")
-                cd_processo.append(codigos[0])
-            if len(links) == 0:
-                logger.error("Nenhum link encontrado para o processo %s.", id_clean)
-                raise RuntimeError(
-                    f"Nenhum link encontrado para o processo {id_clean}."
-                )
-            if len(links) == 1:
-                file_name = f"{path}/{id_clean}_{cd_processo[0]}.html"
-                logger.info("Salvando em %s", file_name)
-                with Path(file_name).open('w', encoding='utf-8') as f:
-                    f.write(r.text)
-            else:
-                for index, link in enumerate(links):
-                    u2 = f"{u_base}{link}"
-                    r2 = session.get(u2)
-                    if r2.status_code != 200:
-                        raise requests.HTTPError(
-                            f"A consulta ao site falhou."
-                            f"Processo: {id_clean}; Código: {cd_processo[index]},"  # noqa: E702
-                            f"Status code {r2.status_code}."
-                        )
-                    file_name = f"{path}/{id_clean}_{cd_processo[index]}.html"
-                    logger.info("Salvando em %s", file_name)
-                    with Path(file_name).open('w', encoding='utf-8') as f:
-                        f.write(r2.text)
+            _salvar_resultados_html(r, links, id_clean, path, session, u_base)
             break
         except (OSError, UnicodeDecodeError, ValueError,
                 AttributeError, requests.RequestException) as e:
@@ -144,6 +114,38 @@ def cpopg_download_html_single(
             )
             time.sleep(sleep_time)
     return path
+
+
+def _salvar_resultados_html(resposta, links, id_limpo, caminho, sessao, url_base):
+    """Valida os códigos e salva a busca ou os documentos individuais."""
+    codigos_processo = []
+    for link in links:
+        parametros = parse_qs(urlparse(link).query)
+        codigos = parametros.get('processo.codigo', [])
+        if not codigos:
+            raise RuntimeError(f"Link sem 'processo.codigo': {link}")
+        codigos_processo.append(codigos[0])
+    if len(links) == 0:
+        logger.error("Nenhum link encontrado para o processo %s.", id_limpo)
+        raise RuntimeError(f"Nenhum link encontrado para o processo {id_limpo}.")
+    if len(links) == 1:
+        nome_arquivo = f"{caminho}/{id_limpo}_{codigos_processo[0]}.html"
+        logger.info("Salvando em %s", nome_arquivo)
+        with Path(nome_arquivo).open('w', encoding='utf-8') as arquivo:
+            arquivo.write(resposta.text)
+    else:
+        for indice, link in enumerate(links):
+            resposta_documento = sessao.get(f"{url_base}{link}")
+            if resposta_documento.status_code != 200:
+                raise requests.HTTPError(
+                    f"A consulta ao site falhou."
+                    f"Processo: {id_limpo}; Código: {codigos_processo[indice]},"  # noqa: E702
+                    f"Status code {resposta_documento.status_code}."
+                )
+            nome_arquivo = f"{caminho}/{id_limpo}_{codigos_processo[indice]}.html"
+            logger.info("Salvando em %s", nome_arquivo)
+            with Path(nome_arquivo).open('w', encoding='utf-8') as arquivo:
+                arquivo.write(resposta_documento.text)
 
 
 def cpopg_download_api(
