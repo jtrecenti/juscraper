@@ -6,7 +6,8 @@ TJPR's flow:
    jar (the scraper hits this endpoint once per ``cjsg`` call, in
    ``cjsg_download``).
 2. ``POST /jurisprudencia/publico/pesquisa.do?actionType=pesquisar``
-   per page (``pageNumber``, 1-based, ``pageSize=10``).
+   per page (``pageNumber``, 1-based, ``pageSize=50``: the portal always
+   returns 50 rows, and a smaller ``pageSize`` only inflates the "Última" link).
 3. For each row whose ementa is truncated with "Leia mais...", an
    extra ``GET ?actionType=exibirTextoCompleto&idProcesso=...`` is
    issued by ``cjsg_parse``.
@@ -131,22 +132,22 @@ def test_cjsg_paginas_none_pagina_unica_baixa_so_a_primeira(mocker):
 
 
 @responses.activate
-def test_cjsg_paginas_none_sem_link_de_ultima_pagina_levanta(mocker):
-    """Paginador sem o link "Última Página" não informa o total: levanta, nunca estima.
+def test_cjsg_paginas_none_sem_contagem_levanta(mocker):
+    """Primeira página sem a contagem de registros não informa o total: levanta, nunca estima.
 
-    O maior ``pageNumber`` visível seria o fim da janela de links numerados
-    (3 na página 1), e ``paginas=None`` baixaria menos páginas em silêncio.
-    O erro sai depois da home e da primeira página, antes de qualquer outra.
+    A contagem "N registro(s) encontrado(s)" é a fonte do total; sem ela,
+    ``paginas=None`` baixava uma página só em silêncio. O erro sai depois da
+    home e da primeira página, antes de qualquer outra.
     """
     mocker.patch("time.sleep")
     add_home()
-    link_ultima = re.compile(r'<a class="arrowLastOn"[^>]*>.*?</a>')
+    contagem = re.compile(r"[0-9]+ registro\(s\) encontrado\(s\)")
     html = load_sample("tjpr", "cjsg/results_normal_page_01.html")
-    assert len(link_ultima.findall(html)) == 2
+    assert len(contagem.findall(html)) == 2
     responses.add(
         responses.POST,
         SEARCH_URL,
-        body=link_ultima.sub("", html),
+        body=contagem.sub("", html),
         status=200,
         content_type="text/html; charset=UTF-8",
         match=[
@@ -155,7 +156,7 @@ def test_cjsg_paginas_none_sem_link_de_ultima_pagina_levanta(mocker):
         ],
     )
 
-    with pytest.raises(ValueError, match="última página"):
+    with pytest.raises(ValueError, match="não traz a contagem"):
         jus.scraper("tjpr").cjsg("dano moral", paginas=None)
 
     assert len(responses.calls) == 2
