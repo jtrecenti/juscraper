@@ -14,7 +14,7 @@ import math
 import re
 import time
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from tqdm import tqdm
 
 from juscraper.core.http import RequestFn
@@ -92,23 +92,32 @@ def is_escolha_page(html: str) -> bool:
     return "documentos encontrados" in html_lower and "documento 1" not in html_lower
 
 
+def _link_corresponde_tipo(link: Tag, tipo: str) -> bool:
+    """Confere o tipo pelo rótulo da primeira célula da linha do link."""
+    if "documentos encontrados" not in link.get_text():
+        return False
+    celula = link.find_parent("td")
+    if not celula:
+        return False
+    linha = celula.find_parent("tr")
+    if not linha:
+        return False
+    celula_rotulo = linha.find("td")
+    rotulo = celula_rotulo.find("label") if celula_rotulo else None
+    texto_rotulo: str = rotulo.get_text(strip=True) if rotulo else ""
+    return texto_rotulo == tipo
+
+
 def extract_escolha_button_id(html: str, tipo: str = "Acórdãos") -> str:
     """Extract the form submit ID for the result type link on the escolha page."""
     soup = BeautifulSoup(html, "html.parser")
     for link in soup.find_all("a", onclick=True):
-        if "documentos encontrados" in link.get_text():
-            td = link.find_parent("td")
-            if td:
-                row = td.find_parent("tr")
-                if row:
-                    label_cell = row.find("td")
-                    label_el = label_cell.find("label") if label_cell else None
-                    label_text = label_el.get_text(strip=True) if label_el else ""
-                    if label_text == tipo:
-                        onclick = str(link["onclick"])
-                        match = re.search(r"'([^']+)':'[^']+'", onclick)
-                        if match:
-                            return match.group(1)
+        if not _link_corresponde_tipo(link, tipo):
+            continue
+        onclick = str(link["onclick"])
+        match = re.search(r"'([^']+)':'[^']+'", onclick)
+        if match:
+            return match.group(1)
     raise ValueError(f"Could not find escolha button for '{tipo}'")
 
 
