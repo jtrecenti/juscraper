@@ -239,6 +239,28 @@ def test_volta_ao_portal_sem_token_recarrega_a_consulta_uma_vez(mocker):
     assert browser.context.page.gotos == [PORTAL_CONSULTA, PORTAL_CONSULTA]
 
 
+def test_portal_sem_token_nao_repete_reload_ate_o_prazo(mocker, monkeypatch):
+    monkeypatch.setattr(login, "ESPERA_ANTES_DO_RELOAD", 2.0)
+    _, navegador = _instalar_playwright_falso(
+        mocker,
+        [PORTAL_CONSULTA, _SSO, PORTAL_CONSULTA],
+        {},
+    )
+    pagina = navegador.context.page
+    # O relógio acompanha os passos de 500 ms, sem depender de quantas vezes é consultado.
+    monkeypatch.setattr(login, "time", types.SimpleNamespace(monotonic=lambda: pagina.passo * 0.5))
+    navegar = mocker.spy(login, "_navegar")
+
+    with pytest.raises(RuntimeError, match="nao terminou em 12s"):
+        obter_credencial_govbr(timeout=12)
+
+    assert pagina.passo == 24
+    # Uma abertura inicial e um único reload, mesmo após várias janelas de espera.
+    assert navegar.call_count == 2
+    assert pagina.gotos == [PORTAL_CONSULTA, PORTAL_CONSULTA]
+    assert navegador.processo.encerrado
+
+
 def test_sem_token_ate_o_prazo_levanta_e_fecha_o_navegador(mocker):
     _, browser = _instalar_playwright_falso(mocker, [PORTAL_CONSULTA], {})
     mocker.patch("juscraper.aggregators._pdpj_sso.login.time.monotonic", side_effect=[0.0, 0.0, 0.0, 0.0, 500.0])
@@ -395,6 +417,24 @@ def test_com_bearer_espera_a_resposta_de_token_para_ter_o_refresh(mocker, monkey
     )
 
     assert obter_credencial_govbr(timeout=5) == CredencialPdpj(_DO_PORTAL, "renovacao")
+
+
+def test_so_access_token_retorna_apos_espera_pelo_refresh_antes_do_prazo(mocker, monkeypatch):
+    monkeypatch.setattr(login, "ESPERA_PELO_REFRESH", 2.25)
+    _, navegador = _instalar_playwright_falso(
+        mocker,
+        [PORTAL_CONSULTA, _SSO, PORTAL_CONSULTA],
+        {2: [_requisicao(_API, _DO_PORTAL)]},
+    )
+    pagina = navegador.context.page
+    monkeypatch.setattr(login, "time", types.SimpleNamespace(monotonic=lambda: pagina.passo * 0.5))
+
+    assert obter_credencial_govbr(timeout=12) == CredencialPdpj(_DO_PORTAL, None)
+
+    # O token chega em 1 s; a primeira volta após os 2,25 s de espera ocorre em 3,5 s.
+    assert pagina.passo * 0.5 == 3.5
+    assert pagina.gotos == [PORTAL_CONSULTA]
+    assert navegador.processo.encerrado
 
 
 def test_reload_lento_nao_interrompe_a_espera(mocker):
