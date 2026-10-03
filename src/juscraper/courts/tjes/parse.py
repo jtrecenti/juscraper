@@ -41,6 +41,17 @@ _EXTRA_FIELDS = [
 ]
 
 
+def _normalizar_documento(documento: dict, campos: list[str]) -> dict:
+    """Seleciona campos e junta listas na ordem recebida, mantendo escalares."""
+    linha = {}
+    for campo in campos:
+        valor = documento.get(campo)
+        if isinstance(valor, list):
+            valor = "; ".join(str(item) for item in valor) if valor else None
+        linha[_FIELD_RENAMES.get(campo, campo)] = valor
+    return linha
+
+
 def cjsg_parse(resultados_brutos: list) -> pd.DataFrame:
     """
     Extract structured data from raw TJES search results.
@@ -54,32 +65,24 @@ def cjsg_parse(resultados_brutos: list) -> pd.DataFrame:
     -------
     pd.DataFrame
     """
-    source_fields = list(_FIELD_RENAMES) + [
-        f for f in _MAIN_FIELDS + _EXTRA_FIELDS if f not in _FIELD_RENAMES.values()
+    campos_origem = list(_FIELD_RENAMES) + [
+        campo for campo in _MAIN_FIELDS + _EXTRA_FIELDS if campo not in _FIELD_RENAMES.values()
     ]
-    rows = []
-    for page_data in resultados_brutos:
-        docs = page_data.get("docs", [])
-        for doc in docs:
-            row = {}
-            for field in source_fields:
-                val = doc.get(field)
-                # Flatten single-element lists (e.g. lista_assunto, localizacao)
-                if isinstance(val, list):
-                    val = "; ".join(str(v) for v in val) if val else None
-                row[_FIELD_RENAMES.get(field, field)] = val
-            rows.append(row)
+    linhas: list[dict] = []
+    for pagina in resultados_brutos:
+        documentos = pagina.get("docs", [])
+        linhas.extend(_normalizar_documento(documento, campos_origem) for documento in documentos)
 
-    if not rows:
+    if not linhas:
         return pd.DataFrame()
 
-    df = pd.DataFrame(rows)
+    df = pd.DataFrame(linhas)
 
     coerce_date_columns(df, ["dt_juntada"])
 
     # Reorder: main fields first
-    present_main = [c for c in _MAIN_FIELDS if c in df.columns]
-    present_extra = [c for c in df.columns if c not in _MAIN_FIELDS]
-    df = df[present_main + present_extra]
+    principais = [coluna for coluna in _MAIN_FIELDS if coluna in df.columns]
+    extras = [coluna for coluna in df.columns if coluna not in _MAIN_FIELDS]
+    df = df[principais + extras]
 
     return df
