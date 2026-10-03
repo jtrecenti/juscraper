@@ -60,51 +60,51 @@ Status observado no cenário informado, sem garantia de disponibilidade atual. S
 
 | Fonte | Endpoint | Estado | Verificação | Válido até |
 |---|---|---|---|---|
-| STF | `listar_decisoes` | Não verificado | - | - |
-| STF | `contar_decisoes` | Não verificado | - | - |
-| TJAC | `cjsg` | Não verificado | - | - |
-| TJAL | `cjsg` | Não verificado | - | - |
-| TJAM | `cjsg` | Não verificado | - | - |
-| TJAP | `cjsg` | Não verificado (último: Indisponível) | 2026-06-07 | 2026-07-07 |
-| TJBA | `cjsg` | Não verificado | - | - |
-| TJCE | `cjsg` | Não verificado | - | - |
-| TJDFT | `cjsg` | Não verificado | - | - |
-| TJES | `cjsg` | Não verificado | - | - |
-| TJES | `cjpg` | Não verificado | - | - |
-| TJGO | `cjsg` | Não verificado | - | - |
-| TJMG | `cjsg` | Não verificado | - | - |
-| TJMS | `cjsg` | Não verificado | - | - |
-| TJMT | `cjsg` | Não verificado | - | - |
-| TJPA | `cjsg` | Não verificado | - | - |
-| TJPB | `cjsg` | Não verificado | - | - |
-| TJPE | `cjsg` | Não verificado | - | - |
-| TJPE | `cpopg` | Não verificado | - | - |
-| TJPI | `cjsg` | Não verificado | - | - |
-| TJPR | `cjsg` | Não verificado | - | - |
-| TJRJ | `cjsg` | Não verificado | - | - |
-| TJRN | `cjsg` | Não verificado | - | - |
-| TJRO | `cjsg` | Não verificado | - | - |
-| TJRR | `cjsg` | Não verificado | - | - |
-| TJRS | `cjsg` | Não verificado | - | - |
-| TJSC | `cjsg` | Não verificado | - | - |
-| TJSP | `cpopg` | Não verificado | - | - |
-| TJSP | `cposg` | Não verificado | - | - |
-| TJSP | `cjsg` | Não verificado | - | - |
-| TJSP | `cjpg` | Não verificado | - | - |
-| TJTO | `cjsg` | Não verificado | - | - |
-| TJTO | `cjpg` | Não verificado | - | - |
-| TRF1 | `cpopg` | Não verificado | - | - |
-| TRF3 | `cpopg` | Não verificado | - | - |
-| TRF5 | `cpopg` | Não verificado | - | - |
-| TRF6 | `cpopg` | Não verificado | - | - |
+| STF | `listar_decisoes` | Funcionando | 2026-10-03 | 2026-11-02 |
+| STF | `contar_decisoes` | Funcionando | 2026-10-03 | 2026-11-02 |
+| TJAC | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
+| TJAL | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
+| TJAM | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
+| TJAP | `cjsg` | Indisponível | 2026-10-03 | 2026-11-02 |
+| TJBA | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
+| TJCE | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
+| TJDFT | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
+| TJES | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
+| TJES | `cjpg` | Degradado | 2026-10-03 | 2026-11-02 |
+| TJGO | `cjsg` | Não verificado | 2026-10-03 | - |
+| TJMG | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
+| TJMS | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
+| TJMT | `cjsg` | Indisponível | 2026-10-03 | 2026-11-02 |
+| TJPA | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
+| TJPB | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
+| TJPE | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
+| TJPE | `cpopg` | Funcionando | 2026-10-03 | 2026-11-02 |
+| TJPI | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
+| TJPR | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
+| TJRJ | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
+| TJRN | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
+| TJRO | `cjsg` | Indisponível | 2026-10-03 | 2026-11-02 |
+| TJRR | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
+| TJRS | `cjsg` | Indisponível | 2026-10-03 | 2026-11-02 |
+| TJSC | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
+| TJSP | `cpopg` | Funcionando | 2026-10-03 | 2026-11-02 |
+| TJSP | `cposg` | Indisponível | 2026-10-03 | 2026-11-02 |
+| TJSP | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
+| TJSP | `cjpg` | Funcionando | 2026-10-03 | 2026-11-02 |
+| TJTO | `cjsg` | Indisponível | 2026-10-03 | 2026-11-02 |
+| TJTO | `cjpg` | Indisponível | 2026-10-03 | 2026-11-02 |
+| TRF1 | `cpopg` | Funcionando | 2026-10-03 | 2026-11-02 |
+| TRF3 | `cpopg` | Não verificado | 2026-10-03 | - |
+| TRF5 | `cpopg` | Não verificado | 2026-10-03 | - |
+| TRF6 | `cpopg` | Indisponível | 2026-10-03 | 2026-11-02 |
 
 ### Agregadores
 
 | Fonte | Endpoint | Estado | Verificação | Válido até |
 |---|---|---|---|---|
-| Comunica CNJ | `listar_comunicacoes` | Não verificado | - | - |
-| Datajud | `listar_processos` | Não verificado | - | - |
-| Falcão | `listar_decisoes` | Não verificado | - | - |
+| Comunica CNJ | `listar_comunicacoes` | Funcionando | 2026-10-03 | 2026-11-02 |
+| Datajud | `listar_processos` | Funcionando | 2026-10-03 | 2026-11-02 |
+| Falcão | `listar_decisoes` | Indisponível | 2026-10-03 | 2026-11-02 |
 | JusBR | `cpopg` | Não verificado | - | - |
 | JusBR | `download_documents` | Não verificado | - | - |
 | PDPJ | `existe` | Não verificado | - | - |
@@ -118,15 +118,339 @@ Status observado no cenário informado, sem garantia de disponibilidade atual. S
 
 ### Evidências e limitações
 
+#### STF: `listar_decisoes`
+
+Retornou 5 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('stf').listar_decisoes(pesquisa='pejotização', classe='Rcl', paginas=1, tamanho_pagina=5). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L362)
+
+#### STF: `contar_decisoes`
+
+Retornou 52 linhas de total e facetas; o total foi positivo.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('stf').contar_decisoes(pesquisa='pejotização', classe='Rcl'). Somente os parâmetros informados, sem validar outros processos ou filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L469)
+
+#### TJAC: `cjsg`
+
+Retornou 20 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjac').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L519)
+
+#### TJAL: `cjsg`
+
+Retornou 20 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjal').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L586)
+
+#### TJAM: `cjsg`
+
+Retornou 10 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjam').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L653)
+
 #### TJAP: `cjsg`
 
-O relato histórico registra bloqueio por verificação de segurança. A investigação posterior identificou CAPTCHA Cloudflare Turnstile validado no servidor. O cliente HTTP não produz esse token; ao receber essa resposta, levanta TJAPSecurityCheckError. A coleta atual não foi revalidada.
+A busca foi bloqueada pela verificação de segurança e levantou TJAPSecurityCheckError. O bloqueio documentado anteriormente continua presente no cenário testado.
 
-Ambiente/cenário: Busca por dano moral, dano e recurso, via HTTP direto e proxy; tipo de rede não informado no relato. Versão ou commit testado: 0.3.0 (ca78868e7237).
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjap').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
 
-[Evidência 1](https://github.com/jtrecenti/juscraper/issues/279) · [Evidência 2](https://github.com/jtrecenti/juscraper/pull/282)
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L720) · [Evidência 2](https://github.com/jtrecenti/juscraper/issues/279) · [Evidência 3](https://github.com/jtrecenti/juscraper/pull/282)
 
 Exceção relacionada: juscraper.courts.tjap.exceptions.TJAPSecurityCheckError.
+
+#### TJBA: `cjsg`
+
+Retornou 10 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjba').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L762)
+
+#### TJCE: `cjsg`
+
+Retornou 20 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjce').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L823)
+
+#### TJDFT: `cjsg`
+
+Retornou 10 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjdft').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L890)
+
+#### TJES: `cjsg`
+
+Retornou 20 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjes').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L962)
+
+#### TJES: `cjpg`
+
+Retornou 20 registros com processo e classe preenchidos, mas ementa e acordao estavam vazios nos 20. A coleta de metadados funcionou; o conteúdo textual não foi confirmado.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjes').cjpg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L1036)
+
+#### TJGO: `cjsg`
+
+Duas buscas, por direito e dano moral, devolveram DataFrame vazio. As respostas HTTP 200 contêm o formulário de pesquisa, sem resultados identificados. A causa não foi confirmada.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjgo').cjsg(pesquisa='direito', paginas=1); depois jus.scraper('tjgo').cjsg(pesquisa='dano moral', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L1112)
+
+#### TJMG: `cjsg`
+
+Retornou 10 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjmg').cjsg(pesquisa='dano moral presumido', paginas=1, data_julgamento_inicio='2025-01-01', data_julgamento_fim='2025-03-31'). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L1214)
+
+#### TJMS: `cjsg`
+
+Retornou 100 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjms').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L1299)
+
+#### TJMT: `cjsg`
+
+As duas tentativas receberam HTML na URL de configuração esperada como JSON e terminaram em JSONDecodeError, antes da busca.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjmt').cjsg(pesquisa='direito', paginas=1); depois jus.scraper('tjmt').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L1366)
+
+Exceção relacionada: requests.exceptions.JSONDecodeError.
+
+#### TJPA: `cjsg`
+
+Retornou 25 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjpa').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L1442)
+
+#### TJPB: `cjsg`
+
+Retornou 10 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjpb').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L1513)
+
+#### TJPE: `cjsg`
+
+Retornou 5 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjpe').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L1581)
+
+#### TJPE: `cpopg`
+
+Retornou 1 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjpe').cpopg(id_cnj='00963022520218172001'). Somente os parâmetros informados, sem validar outros processos ou filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L1651)
+
+#### TJPI: `cjsg`
+
+Retornou 25 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjpi').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L1816)
+
+#### TJPR: `cjsg`
+
+Retornou 50 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjpr').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L1874)
+
+#### TJRJ: `cjsg`
+
+Retornou 10 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjrj').cjsg(pesquisa='dano moral', paginas=1, ano_inicio=2024, ano_fim=2024). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L2256)
+
+#### TJRN: `cjsg`
+
+Retornou 10 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjrn').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L2342)
+
+#### TJRO: `cjsg`
+
+As duas tentativas terminaram em JSONDecodeError. A resposta HTTP 200 inspecionada contém uma página que declara bloqueio por suspeita de robotização.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjro').cjsg(pesquisa='direito', paginas=1); depois jus.scraper('tjro').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L2403)
+
+Exceção relacionada: requests.exceptions.JSONDecodeError.
+
+#### TJRR: `cjsg`
+
+Retornou 20 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjrr').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L2479)
+
+#### TJRS: `cjsg`
+
+As duas buscas devolveram DataFrame vazio. Na repetição, o corpo da resposta contém erro Solr 503: no servers hosting shard: shard2. O retorno vazio não confirma ausência de julgados.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjrs').cjsg(pesquisa='direito', paginas=1); depois jus.scraper('tjrs').cjsg(pesquisa='direito civil', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L2544)
+
+#### TJSC: `cjsg`
+
+Retornou 10 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjsc').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L2636)
+
+#### TJSP: `cpopg`
+
+Retornou 1 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjsp').cpopg(id_cnj='1000149-71.2024.8.26.0346', method='html'). Somente os parâmetros informados, sem validar outros processos ou filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L2704)
+
+#### TJSP: `cposg`
+
+As consultas HTML por dois CNJs retornaram DataFrame vazio. Na segunda, o portal entregou duas páginas de detalhe, mas o parser descartou ambas por ausência do marcador tabelaTodasMovimentacoes.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjsp').cposg(id_cnj='1000149-71.2024.8.26.0346', method='html'); depois jus.scraper('tjsp').cposg(id_cnj='00221752420038260344', method='html'). Somente os parâmetros informados, sem validar outros processos ou filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L2823)
+
+#### TJSP: `cjsg`
+
+Retornou 20 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjsp').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L3008)
+
+#### TJSP: `cjpg`
+
+Retornou 10 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjsp').cjpg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L3075)
+
+#### TJTO: `cjsg`
+
+A busca foi recusada com HTTP 403 nas três tentativas internas do cliente e terminou em RetryExhaustedError. A causa do bloqueio não foi determinada.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjto').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L3149)
+
+Exceção relacionada: juscraper.core.exceptions.RetryExhaustedError.
+
+#### TJTO: `cjpg`
+
+A busca foi recusada com HTTP 403 nas três tentativas internas do cliente e terminou em RetryExhaustedError. A causa do bloqueio não foi determinada.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjto').cjpg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L3207)
+
+Exceção relacionada: juscraper.core.exceptions.RetryExhaustedError.
+
+#### TRF1: `cpopg`
+
+Retornou 1 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('trf1').cpopg(id_cnj='10088283520214013502'). Somente os parâmetros informados, sem validar outros processos ou filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L3265)
+
+#### TRF3: `cpopg`
+
+As duas consultas do CNJ de referência retornaram somente id_cnj, sem processo, classe ou movimentações. Não foi possível distinguir ausência de acesso ao processo de incompatibilidade do fluxo de consulta.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('trf3').cpopg(id_cnj='50059460920254036324'); depois jus.scraper('trf3').cpopg(id_cnj='50059460920254036324'). Somente os parâmetros informados, sem validar outros processos ou filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L3398)
+
+#### TRF5: `cpopg`
+
+As duas consultas do CNJ de referência retornaram somente id_cnj, sem processo, classe ou movimentações. Não foi possível distinguir ausência de acesso ao processo de incompatibilidade do fluxo de consulta.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('trf5').cpopg(id_cnj='00584573120254058000'); depois jus.scraper('trf5').cpopg(id_cnj='00584573120254058000'). Somente os parâmetros informados, sem validar outros processos ou filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L3504)
+
+#### TRF6: `cpopg`
+
+As duas tentativas falharam ao localizar o CAPTCHA esperado. A resposta inspecionada exige JavaScript antes de exibir o conteúdo; o fluxo HTTP do cliente não chegou à consulta.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('trf6').cpopg(id_cnj='10052295520234063801'); depois jus.scraper('trf6').cpopg(id_cnj='10052295520234063801'). Somente os parâmetros informados, sem validar outros processos ou filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L3594)
+
+Exceção relacionada: builtins.RuntimeError.
+
+#### Comunica CNJ: `listar_comunicacoes`
+
+Retornou 5 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado. A primeira tentativa terminou em timeout; a repetição da mesma consulta retornou 5 comunicações.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('comunica_cnj').listar_comunicacoes(pesquisa='resolucao', paginas=1, itens_por_pagina=5, data_disponibilizacao_inicio='2026-09-28', data_disponibilizacao_fim='2026-10-02'); depois jus.scraper('comunica_cnj').listar_comunicacoes(pesquisa='resolucao', paginas=1, itens_por_pagina=5, data_disponibilizacao_inicio='2026-09-28', data_disponibilizacao_fim='2026-10-02'). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L26)
+
+#### Datajud: `listar_processos`
+
+Retornou 1 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado. A consulta por CNJ funcionou; a tentativa anterior sem CNJ recebeu HTTP 504 e retornou vazio. O estado se limita à consulta por CNJ.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('datajud').listar_processos(tribunal='TJSP', paginas=1, tamanho_pagina=10); depois jus.scraper('datajud').listar_processos(tribunal='TJSP', paginas=1, tamanho_pagina=10, numero_processo='1000413-22.2017.8.26.0415'). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L142)
+
+#### Falcão: `listar_decisoes`
+
+HTTP 429 na primeira chamada, com bloqueio do IP informado pelo servidor por 27.300 segundos. Nenhuma repetição durante o bloqueio. Limitação deste ambiente, sem inferência de indisponibilidade para outros IPs.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('falcao').listar_decisoes(pesquisa='dano moral', paginas=1, tamanho_pagina=5). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L246)
+
+Exceção relacionada: requests.exceptions.HTTPError.
 
 <!-- status:fim -->
 
