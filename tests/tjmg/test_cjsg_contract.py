@@ -127,3 +127,29 @@ def test_cjsg_no_results(mock_txtcaptcha, mocker):
 
     assert isinstance(df, pd.DataFrame)
     assert df.empty
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_revalida_captcha_quando_sessao_expira(mock_txtcaptcha, mocker):
+    """HTTP 401 no meio da paginacao dispara nova validacao do captcha e repete a pagina."""
+    mocker.patch("time.sleep")
+    add_form()
+    add_captcha()
+    add_dwr()
+    _add_search("cjsg/results_normal_page_01.html", {"numeroRegistro": "1"})
+    responses.add(
+        responses.GET,
+        SEARCH_URL,
+        status=401,
+        match=[query_param_subset_matcher({"numeroRegistro": "11"})],
+    )
+    add_form()
+    add_captcha()
+    add_dwr()
+    _add_search("cjsg/results_normal_page_02.html", {"numeroRegistro": "11"})
+
+    df = jus.scraper("tjmg").cjsg("dano moral", paginas=range(1, 3))
+
+    assert df["processo"].nunique() > 10
+    dwr_calls = [c for c in responses.calls if "isCaptchaValid" in c.request.url]
+    assert len(dwr_calls) == 2
