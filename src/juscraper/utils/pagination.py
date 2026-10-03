@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import re
 from collections.abc import Sequence
-from typing import Literal
 
 from bs4 import BeautifulSoup
 
@@ -73,20 +72,6 @@ def _extract_first(
     return None
 
 
-def _extract_max(
-    candidates: Sequence[str],
-    regex_patterns: Sequence[re.Pattern[str]],
-) -> int | None:
-    values: list[int] = []
-    for candidate in candidates:
-        for pattern in regex_patterns:
-            for match in pattern.finditer(candidate):
-                value = _extract_from_match(match)
-                if value is not None:
-                    values.append(value)
-    return max(values) if values else None
-
-
 def _extract_fallback_max(candidate: str) -> int | None:
     values = [
         value
@@ -104,7 +89,6 @@ def extract_count_with_cascade(
     zero_markers: Sequence[str] = (),
     fallback_max_int: bool = False,
     use_element_html: bool = False,
-    aggregate: Literal["first", "max"] = "first",
 ) -> int | None:
     r"""Extrai uma contagem (resultados ou paginas) usando cascata.
 
@@ -124,10 +108,8 @@ def extract_count_with_cascade(
             nenhum elemento, a cascata tambem cai no HTML bruto.
         regex_patterns: Regex tentadas em ordem para cada texto candidato.
             Se a regex tem grupos, retorna o primeiro grupo numerico
-            valido; caso contrario tenta ``group(0)``. Com
-            ``aggregate="max"`` a regra e a mesma — em cada match, o
-            primeiro grupo numerico valido (varrendo a tupla quando ha
-            varios grupos) entra no acumulador para depois ser comparado.
+            valido; caso contrario tenta ``group(0)``. Vence o primeiro
+            match valido na ordem da cascata (candidato, depois regex).
         zero_markers: Substrings (case-insensitive) que, quando presentes
             em **qualquer lugar** do texto da pagina, fazem o util retornar
             ``0`` imediatamente — sem rodar a cascata de seletores. Use
@@ -145,11 +127,6 @@ def extract_count_with_cascade(
             do elemento (``str(el)``) em vez de apenas o texto. Necessario
             quando o numero alvo esta em atributo (ex.: ``href="?page=N"``
             em paginadores estilo Bootstrap).
-        aggregate: ``"first"`` (default) retorna o primeiro match valido na
-            ordem de cascata. ``"max"`` percorre TODOS os matches em todos
-            os candidatos via ``pattern.finditer`` e retorna o maior — util
-            para paginadores que listam varios numeros de pagina (1, 2, …,
-            N) e o "total" e ``max(N)``.
 
     Returns:
         ``int`` extraido ou ``None`` se nada casar e ``fallback_max_int``
@@ -165,11 +142,7 @@ def extract_count_with_cascade(
         css_selectors,
         use_element_html=use_element_html,
     )
-    value = (
-        _extract_max(candidates, regex_patterns)
-        if aggregate == "max"
-        else _extract_first(candidates, regex_patterns)
-    )
+    value = _extract_first(candidates, regex_patterns)
     if value is not None:
         return value
     if fallback_max_int:

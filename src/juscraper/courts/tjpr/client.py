@@ -48,6 +48,14 @@ class TJPRScraper(HTTPScraper):
                 int: paginas=3 downloads pages 1-3.
                 range: range(1, 4) downloads pages 1-3.
                 None: downloads all available pages.
+
+        Raises:
+            ValueError: Com ``paginas=None``, quando o paginador da primeira
+                página não permite ler o total de páginas: falta o link
+                "Última Página", o link não tem ``pageNumber`` inteiro >= 1,
+                aparece ativo e desativado ao mesmo tempo, ou há links
+                "Última" com totais diferentes. O scraper levanta depois da
+                primeira página, em vez de estimar e baixar menos páginas.
         """
         inp = apply_input_pipeline_search(
             InputCJSGTJPR,
@@ -97,6 +105,11 @@ class TJPRScraper(HTTPScraper):
         """
         Searches for TJPR jurisprudence in a simplified way (download + parse).
         Returns a ready-to-analyze DataFrame.
+
+        Raises:
+            ValueError: Com ``paginas=None``, quando o paginador da primeira
+                página não traz um link "Última Página" legível e coerente;
+                ver :meth:`cjsg_download`.
 
         See also:
             :class:`juscraper.courts.tjpr.schemas.InputCJSGTJPR` — schema
