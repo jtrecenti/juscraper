@@ -224,3 +224,17 @@ def test_cposg_500_persistente_nas_partes_mantem_recurso(scraper, mocker):
     assert row["processo_interno"] == "1.0000.26.408376-7/001"
     assert not row["segredo_justica"]
     assert row["partes"] is None
+
+
+@pytest.mark.parametrize("metodo", ["cposg", "cposg_download"])
+@responses.activate
+def test_cposg_aviso_de_falha_aponta_para_quem_chamou(scraper, mocker, metodo):
+    """O ``UserWarning`` sai atribuido ao codigo do usuario, nao ao ``client.py``."""
+    mocker.patch("juscraper.courts.tjmg.cposg_download.time.sleep")
+    for _ in range(3):
+        responses.add(responses.GET, RESULTADO_URL, status=500)
+
+    with pytest.warns(UserWarning) as avisos:
+        getattr(scraper, metodo)("0000359-79.2020.8.13.0205")
+
+    assert avisos[0].filename == __file__

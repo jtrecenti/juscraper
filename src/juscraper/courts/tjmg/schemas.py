@@ -67,7 +67,8 @@ class OutputCPOSGTJMG(OutputCnjConsultaBase):
     Reflete ``tjmg.cposg_parse.cposg_parse``. ``partes`` e uma lista de
     dicts ``{"tipo", "nome", "baixa", "advogados"}``; ``advogados`` e uma
     lista de ``{"oab", "nome"}``. Recursos em segredo de justica vem com
-    ``segredo_justica=True`` e os demais campos ``None``. Numeros nao
+    ``segredo_justica=True`` e os demais campos ``None``; ``partes=None``
+    com ``segredo_justica=False`` indica falha ao baixar as partes. Numeros nao
     encontrados geram uma linha so com ``id_cnj`` (fora deste contrato).
     """
 

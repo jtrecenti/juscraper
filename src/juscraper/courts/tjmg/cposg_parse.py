@@ -124,7 +124,8 @@ def cposg_parse(raw: list[dict]) -> pd.DataFrame:
     Numeros sem resultado (nao encontrados ou falha de rede) viram uma linha
     so com ``id_cnj``, para distinguir "consultado mas ausente" de
     "nunca consultado". Recursos em segredo de justica vem com
-    ``segredo_justica=True`` e ``partes=None``.
+    ``segredo_justica=True`` e ``partes=None``; ``partes=None`` com
+    ``segredo_justica=False`` indica falha ao baixar a pagina de partes.
     """
     rows: list[dict] = []
     for item in raw:

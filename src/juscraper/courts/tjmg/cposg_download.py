@@ -90,12 +90,16 @@ def cposg_download(
     request_fn: RequestFn,
     extract_partes_ids,
     sleep_time: float = 1.0,
+    stacklevel: int = 2,
 ) -> list[dict]:
     """Baixa resultado + partes de cada numero.
 
     ``extract_partes_ids`` recebe o HTML do resultado e devolve os numeros
     TJMG (17 digitos) com link de partes — injetado para manter o parsing
     em ``cposg_parse``.
+
+    ``stacklevel`` e repassado ao ``UserWarning`` de falhas, para que o
+    aviso aponte para o codigo de quem chamou o metodo publico.
 
     Retorna uma lista alinhada com ``numeros``; cada item e
     ``{"id_cnj": numero, "resultado": html | None, "partes": {numero_tjmg: html | None}}``.
@@ -126,6 +130,6 @@ def cposg_download(
             f"TJMG cposg: {len(falhas)} consulta(s) falharam apos as retentativas "
             f"e ficaram sem dados: {falhas}. Rode o cposg de novo para esses numeros.",
             UserWarning,
-            stacklevel=3,
+            stacklevel=stacklevel,
         )
     return out

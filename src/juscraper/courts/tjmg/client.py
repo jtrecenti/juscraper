@@ -201,11 +201,13 @@ class TJMGScraper(HTTPScraper):
             )
         return numeros
 
-    def cposg_download(self, id_cnj: str | list[str], **kwargs: Any) -> list[dict]:
-        """Baixa o HTML de resultado e de partes/advogados de cada processo.
+    def _download_cposg(self, id_cnj: str | list[str], kwargs: dict[str, Any]) -> list[dict]:
+        """Corpo comum de :meth:`cposg_download` e :meth:`cposg`.
 
-        Retorna uma lista alinhada com ``id_cnj``. Veja :meth:`cposg` para
-        os formatos de numero aceitos.
+        Os dois metodos publicos chamam este, e nao um ao outro, para que a
+        pilha ate o ``warnings.warn`` tenha a mesma profundidade nos dois
+        caminhos: ``_cposg_download`` (1) -> este metodo (2) -> metodo
+        publico (3) -> codigo do usuario (4).
         """
         numeros = self._coerce_id_cnj(id_cnj, **kwargs)
         return _cposg_download(
@@ -213,7 +215,18 @@ class TJMGScraper(HTTPScraper):
             request_fn=self._request_with_retry,
             extract_partes_ids=extract_partes_ids,
             sleep_time=self.sleep_time,
+            stacklevel=4,
         )
+
+    def cposg_download(self, id_cnj: str | list[str], **kwargs: Any) -> list[dict]:
+        """Baixa o HTML de resultado e de partes/advogados de cada processo.
+
+        Retorna uma lista alinhada com ``id_cnj``. Veja :meth:`cposg` para
+        os formatos de numero aceitos e o ``UserWarning`` emitido quando
+        alguma consulta falha; aqui a falha aparece como ``None`` no HTML
+        correspondente.
+        """
+        return self._download_cposg(id_cnj, kwargs)
 
     def cposg_parse(self, raw: list[dict]) -> pd.DataFrame:
         """Converte a saida de :meth:`cposg_download` em DataFrame."""
@@ -245,8 +258,19 @@ class TJMGScraper(HTTPScraper):
             ``data_cadastramento``, ``data_distribuicao`` e ``partes``.
             ``partes`` e uma lista de dicts ``{"tipo", "nome", "baixa",
             "advogados"}``, com ``advogados`` = lista de ``{"oab", "nome"}``.
-            Numeros nao encontrados geram uma linha so com ``id_cnj``;
-            recursos em segredo de justica vem com ``partes=None``.
+            Numeros nao encontrados geram uma linha so com ``id_cnj``.
+            ``partes`` fica ``None`` em dois casos, separados pela coluna
+            ``segredo_justica``: recurso em segredo de justica
+            (``segredo_justica=True``) ou falha ao baixar a pagina de partes
+            (``segredo_justica=False``).
+
+        Warns:
+            UserWarning: Quando alguma consulta falha mesmo apos as
+                retentativas (timeout, erro de conexao ou status retryable
+                esgotado). A mensagem lista os numeros afetados. Falha na
+                pagina de resultado gera a linha so com ``id_cnj``, igual a
+                um numero nao encontrado; falha na de partes deixa
+                ``partes=None``.
 
         Exemplo:
             >>> import juscraper as jus
@@ -257,7 +281,7 @@ class TJMGScraper(HTTPScraper):
         See also:
             :class:`InputCPOSGTJMG` / :class:`OutputCPOSGTJMG`.
         """
-        return self.cposg_parse(self.cposg_download(id_cnj, **kwargs))
+        return self.cposg_parse(self._download_cposg(id_cnj, kwargs))
 
 
 def _br_date(value) -> str:
