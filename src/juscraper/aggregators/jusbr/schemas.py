@@ -45,6 +45,24 @@ class InputAuthFirefoxJusBR(BaseModel):
     )
 
 
+class InputAuthGovbrJusBR(BaseModel):
+    """Input aceito por :meth:`JusbrScraper.auth_govbr`.
+
+    ``timeout`` limita a espera pelo login no gov.br; ``salvar`` controla a
+    gravacao da credencial no cache local compartilhado por JusBR e PDPJ;
+    ``navegador`` aponta o executavel do Chrome, Chromium ou Edge.
+    """
+
+    timeout: float = Field(default=300.0, gt=0)
+    salvar: bool = True
+    navegador: str | None = None
+
+    model_config = ConfigDict(
+        extra="forbid",
+        arbitrary_types_allowed=True,
+    )
+
+
 class InputCPOPGJusBR(CnjInputBase):
     """Accepted input for :meth:`JusbrScraper.cpopg`.
 
@@ -55,8 +73,7 @@ class InputCPOPGJusBR(CnjInputBase):
 
 
 class OutputCPOPGJusBR(BaseModel):
-    """Colunas observaveis em uma linha do DataFrame de
-    :meth:`JusbrScraper.cpopg`.
+    """Colunas observaveis em uma linha do DataFrame de :meth:`JusbrScraper.cpopg`.
 
     ``processo`` (canonico do projeto — ver CLAUDE.md > "Schemas pydantic")
     e a coluna pivot que aparece em todo row, tanto no happy path quanto
@@ -90,8 +107,7 @@ class InputDownloadDocumentsJusBR(BaseModel):
 
 
 class OutputDownloadDocumentsJusBR(BaseModel):
-    """Colunas observaveis em uma linha do DataFrame de
-    :meth:`JusbrScraper.download_documents`.
+    """Colunas observaveis em uma linha do DataFrame de :meth:`JusbrScraper.download_documents`.
 
     Cada linha representa um documento de um processo. ``numero_processo``
     e a coluna pivot que liga de volta ao DataFrame de processos; demais

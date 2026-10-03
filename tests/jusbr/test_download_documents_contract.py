@@ -70,6 +70,8 @@ def _doc_meta(*, href_texto: str | None, href_binario: str | None, **extra) -> d
         "sequencia": extra.get("sequencia", 1),
         "descricao": extra.get("descricao", "Peticao Inicial"),
         "tipo": extra.get("tipo", "PETICAO"),
+        # A API omite ``arquivo`` só na peça sem texto, que não gera requisição.
+        "arquivo": extra.get("arquivo", {"id": "arquivo-1"}),
     }
     if href_texto is not None:
         meta["hrefTexto"] = href_texto
@@ -139,7 +141,8 @@ def test_download_documents_baixa_texto_e_binario(mocker):
     assert len(df) == 1
     assert df.columns[0] == "numero_processo"
     assert df.iloc[0]["numero_processo"] == CNJ_DIGITS
-    assert isinstance(df.iloc[0]["texto"], str) and len(df.iloc[0]["texto"]) > 0
+    assert isinstance(df.iloc[0]["texto"], str)
+    assert len(df.iloc[0]["texto"]) > 0
     assert isinstance(df.iloc[0]["_raw_binary_api"], bytes)
     assert len(df.iloc[0]["_raw_binary_api"]) > 0
 
@@ -167,7 +170,8 @@ def test_download_documents_sem_href_binario_baixa_so_texto(mocker):
     df = scraper.download_documents(base_df)
     assert isinstance(df, pd.DataFrame)
     assert len(df) == 1
-    assert isinstance(df.iloc[0]["texto"], str) and len(df.iloc[0]["texto"]) > 0
+    assert isinstance(df.iloc[0]["texto"], str)
+    assert len(df.iloc[0]["texto"]) > 0
     assert df.iloc[0]["_raw_binary_api"] is None
 
 
@@ -473,7 +477,9 @@ def test_download_documents_preserva_ordem_de_colunas_e_extras(mocker):
         "texto",
         "_raw_text_api",
         "_raw_binary_api",
+        "motivo_falha",
         "alphaExtra",
+        "arquivo",
         "zetaExtra",
         "idCodex",
         "tipoDocumento",
@@ -513,6 +519,7 @@ def test_download_documents_campos_calculados_prevalecem_sobre_metadata(mocker):
     assert df.loc[0, "texto"] == raw_text
     assert df.loc[0, "_raw_text_api"] == raw_text
     assert df.loc[0, "_raw_binary_api"] is None
+    assert df.loc[0, "motivo_falha"] is None
 
 
 def test_download_documents_sem_auth_levanta_runtime_error():

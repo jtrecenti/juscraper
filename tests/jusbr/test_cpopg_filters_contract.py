@@ -75,7 +75,8 @@ def test_cnj_formatado_e_limpo_antes_do_request(mocker):
     df = scraper.cpopg(NEUTRAL_CNJ_1)  # input com pontuacao
     # Se o matcher acima falhasse (CNJ chegou com pontuacao), responses
     # levantaria ConnectionError em vez de devolver o sample.
-    assert isinstance(df, pd.DataFrame) and len(df) == 1
+    assert isinstance(df, pd.DataFrame)
+    assert len(df) == 1
 
 
 @responses.activate(registry=OrderedRegistry)

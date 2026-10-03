@@ -6,6 +6,7 @@ import requests
 
 from juscraper.core.http import HTTPScraper
 from juscraper.core.parse_utils import coerce_date_columns
+from juscraper.core.waf import eh_desafio_waf
 from juscraper.utils.params import SEARCH_ALIASES
 
 from ._collection import FILTERS, Collection
@@ -22,10 +23,6 @@ def _pesquisa_ou_tudo(pesquisa: str | None, kwargs: dict) -> str | None:
     if pesquisa is None and not set(SEARCH_ALIASES) & kwargs.keys():
         return "*"
     return pesquisa
-
-
-def _eh_desafio(resp: requests.Response) -> bool:
-    return resp.headers.get("x-amzn-waf-action") == "challenge"
 
 
 def _levantar_limite_da_api(resp: requests.Response) -> None:
@@ -62,7 +59,7 @@ class STFScraper(HTTPScraper):
 
         Args:
             waf_token (str | None): Cookie ``aws-waf-token`` ja obtido. Sem ele, o
-                scraper obtem um com o Playwright (extra ``juscraper[stf]``) na
+                scraper obtem um com o Playwright (extra ``juscraper[waf]``) na
                 primeira busca, e renova sempre que o WAF voltar a desafiar.
             verbose (int): Nivel de log.
             sleep_time (float): Pausa em segundos entre paginas. Default ``1.0``.
@@ -93,10 +90,10 @@ class STFScraper(HTTPScraper):
         if WAF_COOKIE not in self.session.cookies:
             self._renovar_token()
         resp = self._post(payload)
-        if _eh_desafio(resp):
+        if eh_desafio_waf(resp):
             self._renovar_token()
             resp = self._post(payload)
-            if _eh_desafio(resp):
+            if eh_desafio_waf(resp):
                 raise RuntimeError(
                     "O WAF do STF desafiou de novo logo apos a renovacao do cookie aws-waf-token. "
                     "Aguarde alguns minutos antes de tentar outra vez."

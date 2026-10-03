@@ -84,6 +84,8 @@ EXPECTED_COURT_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
     ("trf1", "cpopg"): ("juscraper.courts._trf.schemas", "InputCpopgTRF"),
     ("trf3", "cpopg"): ("juscraper.courts._trf.schemas", "InputCpopgTRF"),
     ("trf5", "cpopg"): ("juscraper.courts._trf.schemas", "InputCpopgTRF"),
+    # TJPE 1º grau roda o mesmo PJe ConsultaPública dos TRFs.
+    ("tjpe", "cpopg"): ("juscraper.courts._trf.schemas", "InputCpopgTRF"),
     # eproc consulta pública (TRF6) — captcha-gated.
     ("trf6", "cpopg"): ("juscraper.courts.trf6.schemas", "InputCpopgTRF6"),
     # Busca de jurisprudencia do STF (acordaos e monocraticas).
@@ -103,6 +105,7 @@ EXPECTED_AGGREGATOR_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
         "juscraper.aggregators.jusbr.schemas",
         "InputAuthFirefoxJusBR",
     ),
+    ("jusbr", "auth_govbr"): ("juscraper.aggregators.jusbr.schemas", "InputAuthGovbrJusBR"),
     ("jusbr", "cpopg"): ("juscraper.aggregators.jusbr.schemas", "InputCPOPGJusBR"),
     ("jusbr", "download_documents"): (
         "juscraper.aggregators.jusbr.schemas",
@@ -113,6 +116,7 @@ EXPECTED_AGGREGATOR_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
         "InputListarComunicacoesComunicaCNJ",
     ),
     ("pdpj", "auth"): ("juscraper.aggregators.pdpj.schemas", "InputAuthPdpj"),
+    ("pdpj", "auth_govbr"): ("juscraper.aggregators.pdpj.schemas", "InputAuthGovbrPdpj"),
     ("pdpj", "cpopg"): ("juscraper.aggregators.pdpj.schemas", "InputCnjPdpj"),
     ("pdpj", "download_documents"): (
         "juscraper.aggregators.pdpj.schemas",
@@ -216,6 +220,7 @@ def test_every_aggregator_endpoint_has_schema():
     candidates = (
         "auth",
         "auth_firefox",
+        "auth_govbr",
         "cpopg",
         "download_documents",
         "listar_comunicacoes",
@@ -255,6 +260,7 @@ def test_no_stale_entries_in_expected_mapping():
     aggregator_candidates = (
         "auth",
         "auth_firefox",
+        "auth_govbr",
         "cpopg",
         "download_documents",
         "listar_comunicacoes",

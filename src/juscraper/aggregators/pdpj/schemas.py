@@ -28,6 +28,24 @@ class InputAuthPdpj(BaseModel):
     )
 
 
+class InputAuthGovbrPdpj(BaseModel):
+    """Input aceito por :meth:`PdpjScraper.auth_govbr`.
+
+    ``timeout`` limita a espera pelo login no gov.br; ``salvar`` controla a
+    gravacao da credencial no cache local compartilhado por JusBR e PDPJ;
+    ``navegador`` aponta o executavel do Chrome, Chromium ou Edge.
+    """
+
+    timeout: float = Field(default=300.0, gt=0)
+    salvar: bool = True
+    navegador: str | None = None
+
+    model_config = ConfigDict(
+        extra="forbid",
+        arbitrary_types_allowed=True,
+    )
+
+
 class InputCnjPdpj(BaseModel):
     """Input minimo de endpoints que recebem um (ou varios) numero(s) CNJ.
 
@@ -130,11 +148,14 @@ class InputContarPdpj(BaseModel):
 class InputDownloadDocumentsPdpj(BaseModel):
     """Input aceito por :meth:`PdpjScraper.download_documents`.
 
-    ``base_df`` aceita somente :class:`pandas.DataFrame`. ``with_text``/
-    ``with_binary`` selecionam quais conteudos baixar — pelo menos um deve
-    ser ``True``. ``max_docs_per_process`` aceita zero, que devolve
-    DataFrame vazio sem fazer requisicao; valor negativo levanta
+    ``base_df`` aceita somente :class:`pandas.DataFrame`. ``with_text`` e
+    ``with_binary`` são coeridos para ``bool``. ``max_docs_per_process``
+    aceita ``None`` ou inteiro não negativo; valor negativo levanta
     ``ValidationError``.
+
+    O significado do limite (o que ocupa vaga, o que o zero faz) e o
+    tratamento das falhas de download estão em
+    :meth:`PdpjScraper.download_documents`.
     """
 
     base_df: pd.DataFrame
