@@ -16,8 +16,18 @@ repos:
     rev: v0.15.12
     hooks:
       - id: ruff
-        args: [--fix]
+        args: [--fix, --config, ruff.toml]
         files: ^(src|tests)/.*\.py$
+
+  - repo: local
+    hooks:
+      - id: lint-policy
+        name: Conferir política de lint e dispensas temporárias
+        entry: python scripts/check_lint_policy.py
+        language: python
+        additional_dependencies: [ruff==0.15.12]
+        pass_filenames: false
+        always_run: true
 
   - repo: https://github.com/pycqa/isort
     rev: 5.12.0

@@ -138,6 +138,49 @@ Notas:
 - Falha 5xx em um único notebook normalmente é instabilidade do tribunal — re-rodar o notebook isolado antes de reportar regressão (`pytest --nbmake docs/notebooks/<tribunal>.ipynb`).
 - Quando o resultado real divergir do output cacheado (ex.: coluna nova, ementa em formato diferente), o notebook deve ser **commitado com outputs limpos** (`jupyter nbconvert --clear-output --inplace docs/notebooks/<tribunal>.ipynb`) para que `git diff` futuro fique focado em código.
 
+## Política de lint e adoção gradual
+
+O Ruff aplica a régua estrita a `src/` e `tests/`, exceto às amostras em `tests/*/samples/`. `pyproject.toml` define as regras, as opções e as dispensas permanentes de testes. `ruff.toml` estende essa configuração e concentra as dispensas temporárias por arquivo e código completo, como `ANN201`, sem padrões de diretório ou famílias inteiras. As configurações aninhadas dos agregadores foram incorporadas à política central. Refs [#367](https://github.com/jtrecenti/juscraper/issues/367).
+
+A versão do Ruff é fixa no extra `[dev]`, no pre-commit e em `tool.ruff.required-version`. Uma atualização de versão precisa manter esses pontos alinhados e revalidar a lista de dispensas. O gate não mede complexidade cognitiva ou ciclomática; essa adoção continua na [#307](https://github.com/jtrecenti/juscraper/issues/307).
+
+### Alcance das dispensas
+
+Uma dispensa vale para todas as ocorrências daquela regra naquele arquivo. Portanto, uma função nova em arquivo dispensado também pode violar a regra dispensada. O gate não limita a contagem de ocorrências nem confere apenas as linhas do diff. Arquivos novos entram sem dispensas, e regras não dispensadas continuam exigidas nos arquivos antigos.
+
+Os testes têm uma política permanente própria: aceitam `assert`, dispensam anotações de tipo e não exigem docstrings. Uma docstring existente continua sujeita às regras de formato selecionadas. A tabela correspondente em `pyproject.toml` é a fonte dessa política.
+
+### Comandos locais e pre-commit
+
+```bash
+uv sync --extra dev
+git fetch origin
+uv run ruff check --config ruff.toml src tests
+uv run python scripts/check_lint_policy.py
+uv run pytest tests/lint_policy -q
+uv run pre-commit install
+```
+
+O hook Ruff mantém o autofix seguro nos arquivos Python alterados. O hook `lint-policy` roda em todo commit, inclusive quando só a configuração muda, e confere todo o código de `src/` e `tests/`. O script usa `origin/main` como referência local e compara com o ancestral comum de `HEAD` e dessa referência. Para outra base, executar `uv run python scripts/check_lint_policy.py --base-ref <referência>`. O script nunca faz fetch; uma referência ausente faz o gate falhar com orientação para atualizá-la.
+
+### Retirada de dispensas
+
+Depois de corrigir uma regra, retirar seu código da entrada do arquivo em `ruff.toml`. Se não restar código dispensado, retirar a entrada inteira. O gate rejeita dispensas obsoletas, inclusive as de arquivos excluídos, e rejeita qualquer par arquivo/regra que não existia na base. Trocar uma dispensa entre arquivos também é acréscimo, mesmo que o total não mude. Ao renomear um arquivo dispensado, corrigir as violações antes de retirar sua entrada antiga.
+
+Para ver as pendências de um arquivo sem a lista temporária:
+
+```bash
+uv run ruff check --config pyproject.toml src/juscraper/courts/tjsp/client.py
+```
+
+As correções automáticas desse comando exigem revisão antes de salvar; sem `--fix`, ele só informa os achados. A lista não deve ser regenerada para acomodar código novo. Uma mudança de política exige revisão explícita da configuração e do gate.
+
+### CI e primeira adoção
+
+O workflow `Lint` roda em todo PR e em pushes para `main`, sem coletar dados externos. Ele executa Ruff, o controle de dispensas e os testes do próprio gate. Usa o SHA da base do PR ou o SHA anterior ao push, com histórico Git completo. O job precisa ser selecionado nas regras de proteção da branch para que uma falha impeça o merge; adicionar o workflow não altera essas regras do GitHub.
+
+Na primeira adoção, a base ainda não contém `ruff.toml`. O script extrai os arquivos Python de `src/` e `tests/` daquela revisão em diretório temporário e mede esse código com a régua nova. Só os pares encontrados nesse código antigo podem receber dispensa. Nos PRs seguintes, a comparação usa diretamente a lista já versionada na base. Essa verificação impede incluir problemas criados no próprio PR como se fossem pendências antigas.
+
 ## Complexidade de código (lizard + complexipy)
 
 Complexidade é um eixo que o stack de lint do projeto (Ruff, flake8, isort, pylint, mypy) **não cobre** — esses veem estilo e tipos. Medimos duas métricas **complementares**, porque elas pegam coisas diferentes e divergem na prática (ver tabela abaixo). Ambas entram no extra `[dev]`. Refs #307.

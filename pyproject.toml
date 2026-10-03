@@ -65,7 +65,7 @@ dev = [
     "isort>=5.12.0",
     "flake8>=6.0.0",
     "mypy>=1.0.0",
-    "ruff>=0.15.0",
+    "ruff==0.15.12",
     "bandit>=1.9.4",
     "types-requests>=2.32.0",
     "pre-commit>=3.0.0",
@@ -237,9 +237,11 @@ disable = [
 ]
 
 [tool.ruff]
+required-version = "==0.15.12"
 target-version = "py311"
 line-length = 120
 extend-exclude = ["tests/*/samples"]
+force-exclude = true
 
 [tool.ruff.lint]
 select = [
@@ -254,6 +256,7 @@ select = [
     "SIM",    # flake8-simplify: simplificacoes (ternario, with unico, yoda)
     "PERF",   # perflint: laco->comprehension/extend onde compensa
     "PTH",    # flake8-use-pathlib: os.path/open/glob -> pathlib
+    "BLE", "TRY", "ARG", "ERA", "T20", "DTZ", "SLF", "S", "ANN", "D", "FBT", "PL", "PT",
 ]
 ignore = [
     # Caracteres "ambiguos" em texto pt-BR sao legitimos. Docstrings e
@@ -263,12 +266,24 @@ ignore = [
     "RUF002",
     "RUF003",
     # RUF100 (unused-noqa) nao convive bem com este projeto: o flake8 roda
-    # em paralelo e ha `# noqa: E231/E702` (pycodestyle) e `# noqa: BLE001`
-    # (regra do Ruff ainda nao habilitada) que sao intencionais. O Ruff os
-    # trataria como obsoletos e removeria, quebrando o flake8 e apagando
-    # decisoes documentadas. Reavaliar se/quando BLE for habilitada.
+    # em paralelo e ha `# noqa: E231/E702` (pycodestyle) intencionais.
+    # O Ruff os trataria como obsoletos e removeria, quebrando o flake8.
     "RUF100",
+    # Mensagens de exceção descrevem o contexto em português.
+    "TRY003",
+    # Status HTTP e limites de página podem aparecer como literais.
+    "PLR2004",
 ]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.flake8-annotations]
+allow-star-arg-any = true
+
+[tool.ruff.lint.per-file-ignores]
+# Política permanente dos testes; as dispensas temporárias ficam em ruff.toml.
+"tests/**" = ["S", "ANN", "D100", "D101", "D102", "D103", "D104", "D105", "D106", "D107"]
 
 [tool.isort]
 line_length = 120
