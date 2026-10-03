@@ -44,7 +44,7 @@ def build_cjsg_params(
 
 
 _PAGINATOR_SELECTOR = "ul.pagination"
-_LAST_PAGE_TEXT = "\u00bb"  # », rotulo do link de ultima pagina
+_LAST_PAGE_TEXT = "\u00bb"  # », rótulo do link de última página
 
 
 def _page_from_last_link(link: Tag) -> int:
@@ -64,10 +64,10 @@ def _page_from_last_link(link: Tag) -> int:
 def _last_pages_from_paginator(paginator: Tag) -> set[int]:
     """Lê os totais dos links ``»`` de um paginador.
 
-    O link de ultima pagina nao tem classe, ``rel`` nem ``aria-label``
-    proprios: e um ``a.page-link`` como os numerados, e so o rotulo ``»``
-    o distingue. A posicao (ultimo ``li``) nao serve, porque sem o ``»`` o
-    ultimo item passa a ser o ``›``, que aponta para a pagina seguinte.
+    O link de última página não tem classe, ``rel`` nem ``aria-label``
+    próprios: é um ``a.page-link`` como os numerados, e só o rótulo ``»``
+    o distingue. A posição (último ``li``) não serve, porque sem o ``»`` o
+    último item passa a ser o ``›``, que aponta para a página seguinte.
 
     Devolve o conjunto de todos os ``»``, não só o primeiro: dois ``»`` com
     totais diferentes no mesmo paginador caem na mesma checagem de
@@ -87,18 +87,18 @@ def _last_pages_from_paginator(paginator: Tag) -> set[int]:
 
 
 def _get_total_pages(html: str) -> int:
-    """Extrai o total de paginas da primeira pagina de resultados.
+    """Extrai o total de páginas da primeira página de resultados.
 
-    O total vem do link ``»`` do paginador, e nao do maior ``page=N``: o
-    paginador mostra so uma janela de paginas, e sem o ``»`` o maior numero
-    visivel e o fim da janela, nao o total. Sem ``ul.pagination`` a busca
-    tem uma pagina so (ou nenhum resultado) e o retorno e 1.
+    O total vem do link ``»`` do paginador, e não do maior ``page=N``: o
+    paginador mostra só uma janela de páginas, e sem o ``»`` o maior número
+    visível é o fim da janela, não o total. Sem ``ul.pagination`` a busca
+    tem uma página só (ou nenhum resultado) e o retorno é 1.
 
-    Vale para a primeira pagina, a unica que ``cjsg_download_manager`` le.
-    O paginador esconde os links que nao levam a lugar nenhum: a pagina 1
-    nao traz ``«`` nem ``‹``, que aparecem na 2, e pelo mesmo padrao a
-    ultima pagina deve omitir ``»``. Na pagina 1, porem, busca de pagina
-    unica nao tem paginador, entao paginador sem ``»`` so ocorre se o
+    Vale para a primeira página, a única que ``cjsg_download_manager`` lê.
+    O paginador esconde os links que não levam a lugar nenhum: a página 1
+    não traz ``«`` nem ``‹``, que aparecem na 2, e pelo mesmo padrão a
+    última página deve omitir ``»``. Na página 1, porém, busca de página
+    única não tem paginador, então paginador sem ``»`` só ocorre se o
     markup mudou. O TJPI desenha dois paginadores iguais, acima e abaixo
     da lista; todos precisam trazer o ``»`` com o mesmo total.
 
