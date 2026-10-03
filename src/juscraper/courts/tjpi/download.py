@@ -1,11 +1,13 @@
 """Downloads raw results from the TJPI jurisprudence search (HTML scraping)."""
+import re
 import time
 from urllib.parse import parse_qs, urlparse
 
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup
 from tqdm import tqdm
 
 from juscraper.core.http import RequestFn
+from juscraper.utils.pagination import extract_count_with_cascade, parse_page_number, resolve_total_pages
 
 BASE_URL = "https://jurisprudencia.tjpi.jus.br/jurisprudences/search"
 RESULTS_PER_PAGE = 25
@@ -43,77 +45,65 @@ def build_cjsg_params(
     return params
 
 
-_PAGINATOR_SELECTOR = "ul.pagination"
 _LAST_PAGE_TEXT = "\u00bb"  # », rótulo do link de última página
+# Cascata da contagem. O rótulo fica num ``div.pb-3`` (o primeiro desses é o
+# formulário de filtros, que nenhuma regex casa); se a classe mudar, a cascata
+# cai no HTML bruto, e por isso as duas regex exigem "jurisprudência(s)" logo
+# após o número: "de um total de 84 prestações" numa ementa não casa.
+_COUNT_SELECTORS = ("div.pb-3",)
+# O número vem em ``<b>``; ``_SEP`` aceita espaço e tag entre as palavras para
+# que a mesma regex sirva ao texto do ``div.pb-3`` e ao HTML bruto do fallback.
+_SEP = r"(?:\s|&nbsp;|<[^>]+>)*"
+_COUNT_PATTERNS = (
+    # Várias páginas: "Exibindo 1 - 25 de um total de <b>137865</b> jurisprudência(s)".
+    re.compile(rf"de um total de{_SEP}([\d.]+){_SEP}jurisprud", re.IGNORECASE),
+    # Página única: "Exibindo <b>5</b> jurisprudência(s)".
+    re.compile(rf"Exibindo{_SEP}([\d.]+){_SEP}jurisprud", re.IGNORECASE),
+)
+_ZERO_MARKERS = ("Sem resultados para",)
 
 
-def _page_from_last_link(link: Tag) -> int:
-    """Lê o ``page=N`` do href de um link ``»``; exige N inteiro >= 1.
-
-    ``isdecimal`` e não ``isdigit``: ``isdigit`` aceita dígitos Unicode como
-    ``²``, que ``int()`` recusa com uma mensagem que não diz de onde veio.
-    ``page=0`` passaria no teste de dígito e viraria total 0, e o download
-    pararia na primeira página sem erro.
-    """
-    page = parse_qs(urlparse(str(link["href"])).query).get("page", [""])[0]
-    if not page.isdecimal() or int(page) < 1:
-        raise ValueError(f"TJPI: link de última página sem page=N válido (N >= 1) no href: {link['href']!r}")
-    return int(page)
-
-
-def _last_pages_from_paginator(paginator: Tag) -> set[int]:
-    """Lê os totais dos links ``»`` de um paginador.
+def _last_page_links(soup: BeautifulSoup) -> set[int]:
+    """Lê os totais dos links ``»`` da página inteira.
 
     O link de última página não tem classe, ``rel`` nem ``aria-label``
     próprios: é um ``a.page-link`` como os numerados, e só o rótulo ``»``
-    o distingue. A posição (último ``li``) não serve, porque sem o ``»`` o
-    último item passa a ser o ``›``, que aponta para a página seguinte.
-
-    Devolve o conjunto de todos os ``»``, não só o primeiro: dois ``»`` com
-    totais diferentes no mesmo paginador caem na mesma checagem de
-    discordância de ``_get_total_pages``, em vez de o primeiro vencer.
+    o distingue. A busca cobre a página inteira, e não só ``ul.pagination``,
+    para que uma troca de tema do paginador não esconda o link da conferência.
     """
-    totals = {
-        _page_from_last_link(link)
-        for link in paginator.select("a[href]")
-        if link.get_text(strip=True) == _LAST_PAGE_TEXT
-    }
-    if not totals:
-        raise ValueError(
-            "TJPI: paginador sem o link de última página (»); "
-            "o total de páginas não pode ser determinado sem estimar."
-        )
-    return totals
+    totais = set()
+    for link in soup.select("a[href]"):
+        if link.get_text(strip=True) != _LAST_PAGE_TEXT:
+            continue
+        pagina = parse_qs(urlparse(str(link["href"])).query).get("page", [""])[0]
+        totais.add(parse_page_number(pagina, tribunal="TJPI", origem=f"link » {link['href']!r}"))
+    return totais
 
 
 def _get_total_pages(html: str) -> int:
     """Extrai o total de páginas da primeira página de resultados.
 
-    O total vem do link ``»`` do paginador, e não do maior ``page=N``: o
-    paginador mostra só uma janela de páginas, e sem o ``»`` o maior número
-    visível é o fim da janela, não o total. Sem ``ul.pagination`` a busca
-    tem uma página só (ou nenhum resultado) e o retorno é 1.
-
-    Vale para a primeira página, a única que ``cjsg_download_manager`` lê.
-    O paginador esconde os links que não levam a lugar nenhum: a página 1
-    não traz ``«`` nem ``‹``, que aparecem na 2, e pelo mesmo padrão a
-    última página deve omitir ``»``. Na página 1, porém, busca de página
-    única não tem paginador, então paginador sem ``»`` só ocorre se o
-    markup mudou. O TJPI desenha dois paginadores iguais, acima e abaixo
-    da lista; todos precisam trazer o ``»`` com o mesmo total.
+    O total sai da contagem "de um total de N jurisprudência(s)" dividida por
+    ``RESULTS_PER_PAGE``, e os links ``»`` da página são conferidos contra ele
+    por :func:`~juscraper.utils.pagination.resolve_total_pages`. Vale para a
+    primeira página, a única que ``cjsg_download_manager`` lê.
 
     Raises:
-        ValueError: Paginador sem o link ``»``, ``»`` sem ``page=N`` com
-            N >= 1, ou links ``»`` com totais diferentes, no mesmo
-            paginador ou entre paginadores.
+        ValueError: Nos casos de :func:`~juscraper.utils.pagination.resolve_total_pages`
+            e de :func:`~juscraper.utils.pagination.parse_page_number`.
     """
-    paginators = BeautifulSoup(html, "html.parser").select(_PAGINATOR_SELECTOR)
-    if not paginators:
-        return 1
-    totals = set().union(*(_last_pages_from_paginator(paginator) for paginator in paginators))
-    if len(totals) > 1:
-        raise ValueError(f"TJPI: links de última página discordam do total de páginas: {sorted(totals)}")
-    return totals.pop()
+    n_resultados = extract_count_with_cascade(
+        html,
+        css_selectors=_COUNT_SELECTORS,
+        regex_patterns=_COUNT_PATTERNS,
+        zero_markers=_ZERO_MARKERS,
+    )
+    return resolve_total_pages(
+        n_resultados,
+        resultados_por_pagina=RESULTS_PER_PAGE,
+        totais_links=_last_page_links(BeautifulSoup(html, "html.parser")),
+        tribunal="TJPI",
+    )
 
 
 def cjsg_download_manager(
@@ -140,11 +130,9 @@ def cjsg_download_manager(
         **kwargs: Additional filter parameters (tipo, relator, classe, orgao).
 
     Raises:
-        ValueError: Com ``paginas=None``, quando a primeira página traz
-            paginador mas não dá para ler dele o total de páginas: falta o
-            link de última página (``»``), o ``»`` não tem ``page=N`` com
-            N >= 1, ou há links ``»`` com totais diferentes. Nesses casos o
-            download para depois da primeira requisição, em vez de estimar.
+        ValueError: Com ``paginas=None``, quando a primeira página não permite
+            fixar o total de páginas; os casos estão em :func:`_get_total_pages`.
+            O download para depois da primeira requisição, em vez de estimar.
     """
     def _get_page(pagina_1based: int) -> str:
         params = build_cjsg_params(pesquisa=pesquisa, page=pagina_1based, **kwargs)
