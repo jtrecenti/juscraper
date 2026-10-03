@@ -96,7 +96,8 @@ class FalcaoScraper(HTTPScraper):
             paginas (int | list | range | None): Paginas 1-based; ``None``
                 baixa todas as disponiveis, ate o teto de 10000 resultados
                 do backend (acima dele, emite ``UserWarning``). Default
-                ``None``.
+                ``None``. Páginas selecionadas além do teto são ignoradas
+                sem requisição.
             **kwargs: Filtros aceitos pelo schema :class:`InputListarDecisoesFalcao`.
                 Listados abaixo (todos opcionais salvo indicacao):
 
@@ -195,7 +196,7 @@ class FalcaoScraper(HTTPScraper):
             diretorio (str | None): Sobrescreve ``download_path`` para esta
                 chamada. Default ``None`` (usa o ``download_path`` do scraper,
                 que sem configuracao e um diretorio temporario criado na
-                instanciacao).
+                instanciacao). Cria a pasta e seus pais quando não existem.
 
         Returns:
             str: Caminho do subdiretorio com os arquivos JSON baixados.
@@ -236,11 +237,21 @@ class FalcaoScraper(HTTPScraper):
     def _baixar(self, pesquisa, paginas, base, kwargs: dict, metodo: str) -> str:
         """Valida a entrada, pagina a busca e grava cada pagina em ``base``."""
         inp = self._validar_input(pesquisa, normalize_paginas(paginas), kwargs, metodo)
+        Path(base).mkdir(parents=True, exist_ok=True)
         destino = Path(tempfile.mkdtemp(prefix=f"falcao_{inp.colecao}_", dir=base))
+
+        # O teto é conhecido antes da consulta: nenhuma página fora dele
+        # pode servir de primeira requisição, pois o backend a rejeita.
+        paginas = inp.paginas
+        if paginas is not None:
+            teto_paginas = self._total_paginas(_MAX_RESULTADOS, inp.tamanho_pagina)
+            paginas = self._resolver_paginas(paginas, teto_paginas)
+            if not paginas:
+                return str(destino)
 
         # A primeira pagina pedida serve tambem para ler o total; com
         # ``paginas`` que nao inclui a 1, isso poupa uma requisicao.
-        primeira = inp.paginas[0] if isinstance(inp.paginas, (range, list)) and inp.paginas else 1
+        primeira = paginas[0] if paginas is not None else 1
         primeiro_json = self._buscar_pagina(inp, primeira)
         total = parse_total(primeiro_json)
         total_paginas = self._total_paginas(total, inp.tamanho_pagina)
@@ -259,7 +270,7 @@ class FalcaoScraper(HTTPScraper):
                 stacklevel=3,
             )
 
-        paginas_iter = list(self._resolver_paginas(inp.paginas, total_paginas))
+        paginas_iter = list(self._resolver_paginas(paginas, total_paginas))
         for pagina in tqdm(paginas_iter, desc=f"Falcao/{inp.colecao}", disable=not self.verbose):
             if pagina == primeira:
                 conteudo = primeiro_json

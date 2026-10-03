@@ -93,6 +93,9 @@ def verificar_resposta(resp: requests.Response) -> None:
     - 429 com ``x-rate-limit-retry-after-seconds`` acima de
       :data:`_ESPERA_MAXIMA_RETRY`: ``requests.HTTPError`` dizendo quanto
       tempo falta para o IP ser liberado.
+
+    Nas esperas curtas, adapta o cabeçalho próprio para ``Retry-After``,
+    consumido pelo retry do core, se o backend não enviou o cabeçalho padrão.
     """
     if resp.status_code == 403:
         content_type = resp.headers.get("Content-Type", "")
@@ -121,6 +124,7 @@ def verificar_resposta(resp: requests.Response) -> None:
                 "(paginas, janelas de data) ou aumente sleep_time.",
                 response=resp,
             )
+        resp.headers.setdefault("Retry-After", str(max(0, espera)))
 
 
 def _as_csv(valor: str | list[str]) -> str:

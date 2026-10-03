@@ -12,6 +12,7 @@ Validam, sem tocar a rede (``responses``):
 """
 import json
 from pathlib import Path
+from typing import cast
 
 import pandas as pd
 import pytest
@@ -27,7 +28,7 @@ from tests._helpers import assert_unknown_kwarg_raises, load_sample, query_param
 
 
 def _sample(colecao: str, cenario: str = "normal") -> dict:
-    return json.loads(load_sample("falcao", f"pesquisa/{colecao}_{cenario}.json"))
+    return cast(dict, json.loads(load_sample("falcao", f"pesquisa/{colecao}_{cenario}.json")))
 
 
 def _register(amostra: str = "acordaos", cenario: str = "normal", *, total: int | None = None,
@@ -168,6 +169,26 @@ def test_listar_decisoes_sem_pagina_1_nao_a_requisita(falcao):
 
 
 @responses.activate
+@pytest.mark.parametrize("tamanho_pagina,ultima", [(5, 2000), (10, 1000)])
+def test_primeira_pagina_fora_do_teto_nao_impede_paginas_validas(falcao, tamanho_pagina, ultima):
+    for pagina in (ultima, 1):
+        _register("acordaos", total=10000, pagina=pagina)
+    df = falcao.listar_decisoes(
+        "dano moral", paginas=[ultima + 1, ultima, 1], tamanho_pagina=tamanho_pagina,
+    )
+    assert _paginas_pedidas() == [ultima, 1]
+    assert len(df) == 2 * len(_sample("acordaos")["documentos"])
+
+
+@responses.activate
+@pytest.mark.parametrize("paginas", [[1001, 1002], range(1001, 1003)])
+def test_selecao_inteira_fora_do_teto_nao_requisita(falcao, paginas):
+    df = falcao.listar_decisoes("dano moral", paginas=paginas)
+    assert df.empty
+    assert not responses.calls
+
+
+@responses.activate
 @pytest.mark.parametrize("paginas", [[1.0, 2.0], ["1", "2"]])
 def test_listar_decisoes_paginas_coagidas_pelo_schema(falcao, paginas):
     for pagina in (1, 2):
@@ -220,6 +241,16 @@ def test_listar_decisoes_download_sem_diretorio_usa_download_path(tmp_path):
     _register("acordaos")
     pasta = scraper.listar_decisoes_download("dano moral", paginas=1)
     assert Path(pasta).parent == tmp_path
+
+
+@responses.activate
+def test_download_cria_diretorio_e_pais_ausentes(falcao, tmp_path):
+    destino = tmp_path / "nova" / "coleta"
+    _register("acordaos")
+    pasta = Path(falcao.listar_decisoes_download("dano moral", paginas=1, diretorio=str(destino)))
+    assert pasta.parent == destino
+    assert (pasta / "acordaos_0001.json").is_file()
+    assert len(falcao.listar_decisoes_parse(pasta)) == len(_sample("acordaos")["documentos"])
 
 
 def test_listar_decisoes_rejeita_diretorio(falcao):
@@ -307,3 +338,18 @@ def test_429_de_horas_nao_e_retentado(falcao):
     with pytest.raises(requests.HTTPError, match="429"):
         falcao.listar_decisoes("dano moral", paginas=1)
     assert len(responses.calls) == 1
+
+
+@responses.activate
+@pytest.mark.parametrize("espera", [0, 30, 60])
+def test_429_curto_respeita_espera_do_falcao(falcao, mocker, espera):
+    dormir = mocker.patch("juscraper.core.http.time.sleep")
+    responses.add(
+        responses.GET, SEARCH_URL, status=429, json={"userMessage": "Too Many Requests"},
+        headers={"x-rate-limit-retry-after-seconds": str(espera)},
+    )
+    _register("acordaos")
+    df = falcao.listar_decisoes("dano moral", paginas=1)
+    dormir.assert_called_once_with(float(espera))
+    assert len(responses.calls) == 2
+    assert len(df) == len(_sample("acordaos")["documentos"])
