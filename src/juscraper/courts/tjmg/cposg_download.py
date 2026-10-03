@@ -127,7 +127,7 @@ def cposg_download(
         out.append(item)
     if falhas:
         warnings.warn(
-            f"TJMG cposg: {len(falhas)} consulta(s) falharam apos as retentativas "
+            f"TJMG cposg: {len(falhas)} consulta(s) falharam "
             f"e ficaram sem dados: {falhas}. Rode o cposg de novo para esses numeros.",
             UserWarning,
             stacklevel=stacklevel,

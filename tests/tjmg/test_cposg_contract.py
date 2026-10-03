@@ -18,6 +18,7 @@ import responses
 from responses import matchers
 
 import juscraper as jus
+from juscraper.courts.tjmg.cposg_parse import parse_partes
 from juscraper.courts.tjmg.schemas import OutputCPOSGTJMG
 from tests._helpers import load_sample_bytes
 
@@ -256,3 +257,15 @@ def test_cposg_aviso_de_falha_aponta_para_quem_chamou(scraper, mocker, metodo):
         getattr(scraper, metodo)("0000359-79.2020.8.13.0205")
 
     assert avisos[0].filename == __file__
+
+
+def test_parse_partes_ignora_linha_de_advogado_vazia():
+    """Linha com as duas celulas vazias nao vira advogado."""
+    html = load_sample_bytes("tjmg", "cposg/partes_single.html").replace(
+        b"<td>165085N/MG</td>",
+        b"<td>&nbsp;</td><td>&nbsp;</td></tr><tr><td>165085N/MG</td>",
+    ).decode("iso-8859-1")
+
+    advogados = parse_partes(html)[0]["advogados"]
+
+    assert advogados == [{"oab": "165085N/MG", "nome": "LUIS FERNANDO BATISTA"}]

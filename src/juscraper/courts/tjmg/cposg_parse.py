@@ -6,7 +6,8 @@ Colunas produzidas por :func:`cposg_parse` (uma linha por recurso):
 ``data_cadastramento``, ``data_distribuicao`` e ``partes``.
 
 ``partes`` e uma lista de dicts ``{"tipo", "nome", "baixa", "advogados"}``,
-onde ``advogados`` e uma lista de ``{"oab", "nome"}``.
+onde ``advogados`` e uma lista de ``{"oab", "nome"}``. ``oab`` vem como o
+TJMG publica, sem validar formato, e e ``None`` quando a celula esta vazia.
 """
 from __future__ import annotations
 
@@ -95,17 +96,22 @@ def parse_partes(html: str) -> list[dict]:
         advogados = []
         for tr in content_td.find_all("tr"):
             tds = tr.find_all("td", recursive=False)
-            # Advogado e a linha-folha da tabela interna: duas celulas, sem
-            # rotulo em <b> e sem tabela aninhada. A linha externa tambem tem
-            # duas celulas, mas uma traz o rotulo "Advogado(s):" e a outra a
-            # tabela interna, e por isso fica de fora. O filtro e de estrutura,
-            # e nao do formato da OAB, para nao descartar advogado com
-            # inscricao fora do padrao.
+            # Conta como advogado toda linha-folha de duas celulas dentro da
+            # celula da parte: sem rotulo em <b> e sem tabela aninhada. A linha
+            # que traz o rotulo "Advogado(s):" e a tabela interna fica de fora
+            # por esse criterio. O filtro e de estrutura, e nao do formato da
+            # OAB, para nao descartar advogado com inscricao fora do padrao.
+            # Tambem nao se ancora no rotulo "Advogado(s):", para nao perder
+            # quem venha sob outro rotulo; o custo e que uma tabela de duas
+            # colunas de outra natureza nessa celula entraria como advogado.
+            # Nenhuma pagina capturada tem nenhum dos dois casos.
             if len(tds) != 2 or tds[0].find("b") or tds[1].find("table"):
                 continue
             oab = tds[0].get_text(strip=True) or None
-            nome_adv = tds[1].get_text(" ", strip=True).replace("\xa0", " ")
-            advogados.append({"oab": oab, "nome": re.sub(r"^-\s*", "", nome_adv).strip()})
+            nome_adv = re.sub(r"^-\s*", "", tds[1].get_text(" ", strip=True).replace("\xa0", " ")).strip()
+            if oab is None and not nome_adv:
+                continue
+            advogados.append({"oab": oab, "nome": nome_adv})
         for t in content_td.find_all("table"):
             t.extract()
 

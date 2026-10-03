@@ -257,7 +257,8 @@ class TJMGScraper(HTTPScraper):
             ``secretaria``, ``classe``, ``assunto``, ``orgao_julgador``,
             ``data_cadastramento``, ``data_distribuicao`` e ``partes``.
             ``partes`` e uma lista de dicts ``{"tipo", "nome", "baixa",
-            "advogados"}``, com ``advogados`` = lista de ``{"oab", "nome"}``.
+            "advogados"}``, com ``advogados`` = lista de ``{"oab", "nome"}``
+            (``oab`` como publicada, ou ``None`` quando ausente).
             Numeros nao encontrados geram uma linha so com ``id_cnj``.
             ``partes`` fica ``None`` em dois casos, separados pela coluna
             ``segredo_justica``: recurso em segredo de justica
@@ -265,9 +266,10 @@ class TJMGScraper(HTTPScraper):
             (``segredo_justica=False``).
 
         Warns:
-            UserWarning: Quando alguma consulta falha mesmo apos as
-                retentativas (timeout, erro de conexao ou status retryable
-                esgotado). A mensagem lista os numeros afetados. Falha na
+            UserWarning: Quando alguma consulta falha: timeout, erro de
+                conexao ou status retryable (403, 429, 5xx) que persistem
+                apos as retentativas, ou outro erro HTTP, que nao e repetido.
+                A mensagem lista os numeros afetados. Falha na
                 pagina de resultado gera a linha so com ``id_cnj``, igual a
                 um numero nao encontrado; falha na de partes deixa
                 ``partes=None``.
