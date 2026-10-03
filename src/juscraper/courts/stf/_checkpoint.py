@@ -194,16 +194,19 @@ class Checkpoint:
             raise ValueError("Partição sem contagem ou com tentativa concluída.")
         if len(window.children) != 2:
             raise ValueError("Partição de checkpoint inválida.")
-        left, right = window.children
-        if not left.lower or not left.upper:
+        self._validar_cobertura_particao(window, *window.children)
+
+    def _validar_cobertura_particao(self, janela: Window, esquerda: Window, direita: Window) -> None:
+        """Exige cobertura contígua, exceto para o filho residual sem data."""
+        if not esquerda.lower or not esquerda.upper:
             raise ValueError("Partição sem limites.")
-        if right.missing:
+        if direita.missing:
             return
-        if not right.lower or not right.upper or left.missing:
+        if not direita.lower or not direita.upper or esquerda.missing:
             raise ValueError("Partição sem limites.")
-        if date.fromisoformat(left.upper) + timedelta(days=1) != date.fromisoformat(right.lower):
+        if date.fromisoformat(esquerda.upper) + timedelta(days=1) != date.fromisoformat(direita.lower):
             raise ValueError("Partição com lacuna ou sobreposição.")
-        if (window.lower and window.lower != left.lower) or (window.upper and window.upper != right.upper):
+        if (janela.lower and janela.lower != esquerda.lower) or (janela.upper and janela.upper != direita.upper):
             raise ValueError("Partição não cobre os limites da janela.")
 
     def _validate_attempt(self, attempt: Attempt) -> None:
