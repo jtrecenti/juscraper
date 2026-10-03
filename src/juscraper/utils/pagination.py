@@ -11,12 +11,14 @@ estrategia como helper generico para os tribunais nao-eSAJ.
 """
 from __future__ import annotations
 
+import math
 import re
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 
 from bs4 import BeautifulSoup
 
 _FALLBACK_NUMERO_RE = re.compile(r"\d[\d.]*")
+_NUMERO_PAGINA_RE = re.compile(r"[0-9]+")
 
 
 def _coerce_int(raw: str) -> int | None:
@@ -148,3 +150,58 @@ def extract_count_with_cascade(
     if fallback_max_int:
         return _extract_fallback_max(candidates[0])
     return None
+
+
+def parse_page_number(valor: str, *, tribunal: str, origem: str) -> int:
+    """Converte o número de página lido de um link; exige dígitos ASCII e valor >= 1.
+
+    Só ``[0-9]``: ``str.isdigit`` aceita ``²``, que ``int()`` recusa com uma
+    mensagem que não diz de onde veio, e ``str.isdecimal`` aceita dígitos de
+    largura total, que nenhum portal gera. ``0`` passaria no teste de dígito
+    e viraria total 0, e o download pararia na primeira página sem erro.
+
+    Raises:
+        ValueError: Quando ``valor`` não é inteiro >= 1 em dígitos ASCII.
+    """
+    if not _NUMERO_PAGINA_RE.fullmatch(valor) or int(valor) < 1:
+        raise ValueError(f"{tribunal}: {origem} sem número de página válido (inteiro >= 1): {valor!r}")
+    return int(valor)
+
+
+def resolve_total_pages(
+    n_resultados: int | None,
+    *,
+    resultados_por_pagina: int,
+    totais_links: Iterable[int] = (),
+    tribunal: str,
+) -> int:
+    """Calcula o total de páginas pela contagem de resultados e confere com os links.
+
+    A contagem publicada na página (``N registros encontrados``) é a fonte do
+    total, e não o link de última página: o link some ou muda de contêiner
+    quando o tribunal troca o tema do paginador, e o maior número visível sem
+    ele é o fim da janela de páginas, não o total. ``totais_links`` traz o
+    que os links de última página apontam (1 para link desativado); cada
+    valor precisa bater com a conta, e qualquer divergência (link com
+    ``page=1`` numa busca de várias páginas, "Última" desativada com "Próxima"
+    ativa, tamanho de página errado no payload) levanta em vez de escolher um
+    lado. Zero resultados dá 1 página: o caller já tem a primeira.
+
+    Raises:
+        ValueError: Quando ``n_resultados`` é ``None`` (a página não traz a
+            contagem, por exemplo página de erro ou markup novo) ou quando
+            algum link aponta para total diferente do calculado.
+    """
+    if n_resultados is None:
+        raise ValueError(
+            f"{tribunal}: a primeira página não traz a contagem de resultados; "
+            "o total de páginas não pode ser determinado sem estimar."
+        )
+    total = max(1, math.ceil(n_resultados / resultados_por_pagina))
+    divergentes = sorted(set(totais_links) - {total})
+    if divergentes:
+        raise ValueError(
+            f"{tribunal}: o link de última página aponta {divergentes}, mas {n_resultados} resultados "
+            f"em páginas de {resultados_por_pagina} dão {total} página(s)."
+        )
+    return total

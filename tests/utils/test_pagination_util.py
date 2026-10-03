@@ -1,9 +1,14 @@
-"""Testes do util ``extract_count_with_cascade`` (refs #87)."""
+"""Testes dos utils de paginação.
+
+``extract_count_with_cascade`` (refs #87), ``resolve_total_pages`` e ``parse_page_number``.
+"""
 from __future__ import annotations
 
 import re
 
-from juscraper.utils.pagination import extract_count_with_cascade
+import pytest
+
+from juscraper.utils.pagination import extract_count_with_cascade, parse_page_number, resolve_total_pages
 
 
 def test_selector_and_regex_match():
@@ -220,3 +225,36 @@ def test_first_skips_match_without_number_and_tries_next_regex():
             re.compile(r"(\d+)\s+resultados"),
         ),
     ) == 5
+
+
+@pytest.mark.parametrize(
+    ("n_resultados", "esperado"),
+    [(0, 1), (1, 1), (50, 1), (51, 2), (4795, 96), (410614, 8213)],
+)
+def test_resolve_total_pages_arredonda_para_cima(n_resultados, esperado):
+    assert resolve_total_pages(n_resultados, resultados_por_pagina=50, tribunal="TJXX") == esperado
+
+
+def test_resolve_total_pages_link_que_bate_e_aceito():
+    assert resolve_total_pages(4795, resultados_por_pagina=50, totais_links={96}, tribunal="TJXX") == 96
+
+
+@pytest.mark.parametrize("totais_links", [{480}, {1}, {96, 97}])
+def test_resolve_total_pages_link_divergente_levanta(totais_links):
+    with pytest.raises(ValueError, match="TJXX: o link de última página aponta"):
+        resolve_total_pages(4795, resultados_por_pagina=50, totais_links=totais_links, tribunal="TJXX")
+
+
+def test_resolve_total_pages_sem_contagem_levanta_mesmo_com_link():
+    with pytest.raises(ValueError, match="TJXX: a primeira página não traz a contagem"):
+        resolve_total_pages(None, resultados_por_pagina=50, totais_links={96}, tribunal="TJXX")
+
+
+def test_parse_page_number_aceita_digitos_ascii():
+    assert parse_page_number("5515", tribunal="TJXX", origem="link") == 5515
+
+
+@pytest.mark.parametrize("valor", ["", "0", "00", "-1", "²", "５５１５", " 12", "12\n", "1.0"])
+def test_parse_page_number_rejeita(valor):
+    with pytest.raises(ValueError, match="TJXX: link sem número de página válido"):
+        parse_page_number(valor, tribunal="TJXX", origem="link")
