@@ -61,6 +61,33 @@ def traduzir_operadores(pesquisa: str) -> str:
     return "".join(trechos)
 
 
+def _adicionar_filtro_data(consulta: dict, campo: str, inicio: str | None, fim: str | None) -> None:
+    if not (inicio or fim):
+        return
+    faixa: dict[str, str] = {"format": "ddMMyyyy"}
+    if inicio:
+        faixa["from"] = inicio
+    if fim:
+        faixa["lte"] = fim
+    consulta["filter"].append({"range": {campo: faixa}})
+
+
+def _aplicar_filtro_classe(corpo: dict, classe: str | list[str]) -> None:
+    filtro = {"terms": {_CAMPO_CLASSE: [classe] if isinstance(classe, str) else list(classe)}}
+    corpo["post_filter"]["bool"]["must"].append(filtro)
+    # A faceta de classe ignora o próprio filtro; todas as outras o respeitam.
+    for nome, agregacao in corpo["aggs"].items():
+        if nome == _AGG_CLASSE:
+            continue
+        if "filter" in agregacao:
+            agregacao["filter"]["bool"]["must"].append(filtro)
+        else:
+            corpo["aggs"][nome] = {
+                "filter": {"bool": {"must": [filtro]}},
+                "aggs": {nome: agregacao},
+            }
+
+
 def build_payload(
     pesquisa: str | None = None,
     *,
@@ -124,32 +151,10 @@ def build_payload(
         reforcos[0]["fields"].append("inteiro_teor_texto.plural")
         reforcos[1]["fields"].append("inteiro_teor_texto.plural^0.5")
 
-    for campo, data_inicio, data_fim in (
-        ("julgamento_data", data_julgamento_inicio, data_julgamento_fim),
-        ("publicacao_data", data_publicacao_inicio, data_publicacao_fim),
-    ):
-        if data_inicio or data_fim:
-            faixa: dict[str, str] = {"format": "ddMMyyyy"}
-            if data_inicio:
-                faixa["from"] = data_inicio
-            if data_fim:
-                faixa["lte"] = data_fim
-            consulta_bool["filter"].append({"range": {campo: faixa}})
-
+    _adicionar_filtro_data(consulta_bool, "julgamento_data", data_julgamento_inicio, data_julgamento_fim)
+    _adicionar_filtro_data(consulta_bool, "publicacao_data", data_publicacao_inicio, data_publicacao_fim)
     if classe:
-        filtro_classe = {"terms": {_CAMPO_CLASSE: [classe] if isinstance(classe, str) else list(classe)}}
-        body["post_filter"]["bool"]["must"].append(filtro_classe)
-        # A faceta de classe ignora o próprio filtro; todas as outras o respeitam.
-        for nome, agg in body["aggs"].items():
-            if nome == _AGG_CLASSE:
-                continue
-            if "filter" in agg:
-                agg["filter"]["bool"]["must"].append(filtro_classe)
-            else:
-                body["aggs"][nome] = {
-                    "filter": {"bool": {"must": [filtro_classe]}},
-                    "aggs": {nome: agg},
-                }
+        _aplicar_filtro_classe(body, classe)
 
     body["from"] = inicio
     body["size"] = min(tamanho_pagina, MAX_REGISTROS - inicio)
