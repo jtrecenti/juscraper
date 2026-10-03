@@ -214,3 +214,13 @@ def test_cjsg_ementa_completa_5xx_persistente(mocker):
         "nenhuma linha recebeu o sufixo de erro — fixture nao acionou o "
         "fallback de ementa-completa (verificar 'Leia mais...' no sample)"
     )
+
+
+def test_build_cjsg_form_body_envia_page_size_50():
+    """O portal devolve 50 linhas por página e desenha o link "Última" com o ``pageSize`` enviado.
+
+    Literal de propósito: os matchers dos outros contratos usam o próprio
+    ``build_cjsg_form_body`` como valor esperado e não pegariam a volta do
+    ``pageSize=10``, que inflava o link 5 vezes.
+    """
+    assert build_cjsg_form_body("dano moral", page=1)["pageSize"] == "50"
