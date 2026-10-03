@@ -1,9 +1,14 @@
-"""Testes do util ``extract_count_with_cascade`` (refs #87)."""
+"""Testes dos utils de paginação.
+
+``extract_count_with_cascade`` (refs #87), ``resolve_total_pages`` e ``parse_page_number``.
+"""
 from __future__ import annotations
 
 import re
 
-from juscraper.utils.pagination import extract_count_with_cascade
+import pytest
+
+from juscraper.utils.pagination import extract_count_with_cascade, parse_page_number, resolve_total_pages
 
 
 def test_selector_and_regex_match():
@@ -120,36 +125,6 @@ def test_zero_marker_case_insensitive():
     ) == 0
 
 
-def test_aggregate_max_across_matches():
-    html = """
-    <ul class="pagination">
-      <li><a href="?page=2">2</a></li>
-      <li><a href="?page=10">10</a></li>
-      <li><a href="?page=42">&raquo;</a></li>
-    </ul>
-    """
-    assert extract_count_with_cascade(
-        html,
-        css_selectors=("ul.pagination",),
-        regex_patterns=(re.compile(r"[?&]page=(\d+)"),),
-        use_element_html=True,
-        aggregate="max",
-        fallback_max_int=False,
-    ) == 42
-
-
-def test_aggregate_max_no_matches_returns_none_when_fallback_off():
-    html = '<div class="vazio"></div>'
-    assert extract_count_with_cascade(
-        html,
-        css_selectors=("div.vazio",),
-        regex_patterns=(re.compile(r"[?&]page=(\d+)"),),
-        use_element_html=True,
-        aggregate="max",
-        fallback_max_int=False,
-    ) is None
-
-
 def test_use_element_html_keeps_attributes():
     html = '<a class="page-link" href="/x?page=99">»</a>'
     assert extract_count_with_cascade(
@@ -157,32 +132,6 @@ def test_use_element_html_keeps_attributes():
         css_selectors=("a.page-link",),
         regex_patterns=(re.compile(r"page=(\d+)"),),
         use_element_html=True,
-    ) == 99
-
-
-def test_aggregate_max_iterates_all_selectors():
-    """Com ``aggregate="max"``, o util percorre TODOS os seletores que matcham
-    (nao para no primeiro hit) — necessario para paginadores espalhados em
-    multiplos blocos do markup.
-    """
-    html = """
-    <nav class="topo">
-      <ul class="pagination">
-        <li><a href="?page=5">5</a></li>
-      </ul>
-    </nav>
-    <nav class="rodape">
-      <ul class="pagination">
-        <li><a href="?page=99">99</a></li>
-      </ul>
-    </nav>
-    """
-    assert extract_count_with_cascade(
-        html,
-        css_selectors=("nav.topo ul.pagination", "nav.rodape ul.pagination"),
-        regex_patterns=(re.compile(r"[?&]page=(\d+)"),),
-        use_element_html=True,
-        aggregate="max",
     ) == 99
 
 
@@ -204,17 +153,6 @@ def test_first_ignores_later_numeric_groups_in_same_match():
         css_selectors=("div.counter",),
         regex_patterns=(re.compile(r"page\s+(\d+)\s+of\s+(\d+)"),),
     ) == 4
-
-
-def test_aggregate_max_uses_first_numeric_group_per_match():
-    html = "<div class='counter'>page=2 total=999; page=42 total=1000</div>"
-
-    assert extract_count_with_cascade(
-        html,
-        css_selectors=("div.counter",),
-        regex_patterns=(re.compile(r"page=(\d+)\s+total=(\d+)"),),
-        aggregate="max",
-    ) == 42
 
 
 def test_empty_selector_candidates_fall_back_to_raw_html():
@@ -287,3 +225,36 @@ def test_first_skips_match_without_number_and_tries_next_regex():
             re.compile(r"(\d+)\s+resultados"),
         ),
     ) == 5
+
+
+@pytest.mark.parametrize(
+    ("n_resultados", "esperado"),
+    [(0, 1), (1, 1), (50, 1), (51, 2), (4795, 96), (410614, 8213)],
+)
+def test_resolve_total_pages_arredonda_para_cima(n_resultados, esperado):
+    assert resolve_total_pages(n_resultados, resultados_por_pagina=50, tribunal="TJXX") == esperado
+
+
+def test_resolve_total_pages_link_que_bate_e_aceito():
+    assert resolve_total_pages(4795, resultados_por_pagina=50, totais_links={96}, tribunal="TJXX") == 96
+
+
+@pytest.mark.parametrize("totais_links", [{480}, {1}, {96, 97}])
+def test_resolve_total_pages_link_divergente_levanta(totais_links):
+    with pytest.raises(ValueError, match="TJXX: o link de última página aponta"):
+        resolve_total_pages(4795, resultados_por_pagina=50, totais_links=totais_links, tribunal="TJXX")
+
+
+def test_resolve_total_pages_sem_contagem_levanta_mesmo_com_link():
+    with pytest.raises(ValueError, match="TJXX: a primeira página não traz a contagem"):
+        resolve_total_pages(None, resultados_por_pagina=50, totais_links={96}, tribunal="TJXX")
+
+
+def test_parse_page_number_aceita_digitos_ascii():
+    assert parse_page_number("5515", tribunal="TJXX", origem="link") == 5515
+
+
+@pytest.mark.parametrize("valor", ["", "0", "00", "-1", "²", "５５１５", " 12", "12\n", "1.0"])
+def test_parse_page_number_rejeita(valor):
+    with pytest.raises(ValueError, match="TJXX: link sem número de página válido"):
+        parse_page_number(valor, tribunal="TJXX", origem="link")

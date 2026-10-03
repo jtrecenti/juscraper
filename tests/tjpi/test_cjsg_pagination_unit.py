@@ -1,11 +1,9 @@
 """Testes unitários da contagem de páginas do TJPI.
 
-O total vem do link de última página (``»``) dos paginadores
-``ul.pagination`` (o TJPI desenha dois, acima e abaixo da lista). Um formato
-por teste: sem paginador (página única ou zero resultados), paginador com
-``»``, e os estados ambíguos que levantam ``ValueError``: paginador sem
-``»``, ``»`` sem ``page=N`` e paginadores que discordam do total. Os casos
-sintéticos partem do sample real e mudam só o link ``»``.
+O total vem da contagem "de um total de N jurisprudência(s)" (ou "Exibindo N
+jurisprudência(s)" em página única), dividida pelas 25 linhas por página, e
+os links de última página (``»``) da página inteira são conferidos contra
+ela. Os casos sintéticos partem do sample real e mudam só o trecho em teste.
 """
 from __future__ import annotations
 
@@ -15,126 +13,166 @@ from juscraper.courts.tjpi.download import _get_total_pages
 from tests._helpers import load_sample
 
 # Link de última página exatamente como aparece no sample real da busca
-# "dano moral" (5515 páginas).
+# "dano moral": 137865 resultados em páginas de 25 dão 5515 páginas.
 _LINK_ULTIMA = '<a class="page-link" href="/jurisprudences/search?page=5515&amp;q=dano+moral">&raquo;</a>'
+_CONTAGEM = "de um total de <b>137865</b> jurisprudência(s)"
 
 
 def _sample(name: str) -> str:
     return load_sample("tjpi", f"cjsg/{name}")
 
 
-def _primeira_pagina_com(substituto: str, vezes: int = -1) -> str:
-    """Troca o link ``»`` do sample real; ``vezes=1`` só no paginador de cima."""
+def _link_ultima(page: str) -> str:
+    return f'<a class="page-link" href="/jurisprudences/search?page={page}&amp;q=dano+moral">&raquo;</a>'
+
+
+def _primeira_pagina() -> str:
     html = _sample("results_normal_page_01.html")
     assert html.count(_LINK_ULTIMA) == 2
-    return html.replace(_LINK_ULTIMA, substituto, vezes)
+    assert html.count(_CONTAGEM) == 2
+    return html
 
 
-def test_get_total_pages_results_normal():
-    html = _sample("results_normal_page_01.html")
-    assert _get_total_pages(html) == 5515
+def _primeira_pagina_com(substituto: str, vezes: int = -1) -> str:
+    """Troca o link ``»`` do sample real; ``vezes=1`` só no paginador de cima."""
+    return _primeira_pagina().replace(_LINK_ULTIMA, substituto, vezes)
 
 
-def test_get_total_pages_segunda_pagina_le_o_mesmo_total():
-    # Na página 2 o paginador ganha os links de primeira e anterior
-    # (« e ‹, sem ``page=``); o total continua no ».
-    html = _sample("results_normal_page_02.html")
-    assert _get_total_pages(html) == 5515
+@pytest.mark.parametrize(
+    ("sample_name", "expected"),
+    [
+        ("results_normal_page_01.html", 5515),
+        # Na página 2 o paginador ganha « e ‹ (sem ``page=``); total igual.
+        ("results_normal_page_02.html", 5515),
+        # "Exibindo 5 jurisprudência(s)", sem paginador.
+        ("single_page.html", 1),
+        # "Sem resultados para: ...".
+        ("no_results.html", 1),
+    ],
+)
+def test_get_total_pages_samples(sample_name: str, expected: int):
+    assert _get_total_pages(_sample(sample_name)) == expected
 
 
-def test_get_total_pages_single_page_returns_one():
-    html = _sample("single_page.html")
+@pytest.mark.parametrize(
+    "variante",
+    [
+        pytest.param(lambda html: html.replace('class="pagination', 'class="pager'), id="ul-pagination-renomeado"),
+        pytest.param(
+            # Tema padrão do Kaminari: o » vem como "Last »" dentro de span.last.
+            lambda html: html.replace(
+                _LINK_ULTIMA,
+                '<span class="last"><a href="/jurisprudences/search?page=5515&amp;q=dano+moral">'
+                "Last &raquo;</a></span>",
+            ),
+            id="tema-kaminari",
+        ),
+        pytest.param(lambda html: html.replace(_LINK_ULTIMA, ""), id="sem-link-ultima"),
+        pytest.param(lambda html: html.replace(_LINK_ULTIMA, "", 1), id="um-paginador-sem-link-ultima"),
+        pytest.param(lambda html: html.replace('class="pb-3"', 'class="mb-3"'), id="div-da-contagem-renomeado"),
+        pytest.param(
+            lambda html: html.replace(_LINK_ULTIMA, _LINK_ULTIMA.replace("&raquo;", "\n  &raquo; \n")),
+            id="espaco-em-volta-do-link",
+        ),
+        pytest.param(lambda html: html.replace(_LINK_ULTIMA, _LINK_ULTIMA + _LINK_ULTIMA), id="dois-links-iguais"),
+        pytest.param(lambda html: html.replace("137865", "137.865"), id="contagem-com-separador-de-milhar"),
+    ],
+)
+def test_get_total_pages_markup_alterado_continua_lendo_a_contagem(variante):
+    """Paginador renomeado ou » sumido não pode virar 1: a contagem continua na página."""
+    assert _get_total_pages(variante(_primeira_pagina())) == 5515
+
+
+@pytest.mark.parametrize(
+    ("html", "mensagem"),
+    [
+        pytest.param(lambda: _primeira_pagina_com(_link_ultima("7"), 1), r"aponta \[7\]", id="paginadores-discordam"),
+        pytest.param(
+            # O primeiro » de cada paginador traz 5515; o segundo, com 7, tem que pesar.
+            lambda: _primeira_pagina_com(_LINK_ULTIMA + _link_ultima("7")),
+            r"aponta \[7\]",
+            id="dois-links-discordantes-no-mesmo-paginador",
+        ),
+        pytest.param(
+            # » com page=1 e › apontando para a página 2: markup inconsistente.
+            lambda: _primeira_pagina_com(_link_ultima("1")),
+            r"aponta \[1\]",
+            id="link-ultima-com-page-1",
+        ),
+        pytest.param(
+            lambda: _primeira_pagina_com('<a class="page-link" href="/jurisprudences/search?q=dano+moral">&raquo;</a>'),
+            "número de página válido",
+            id="link-ultima-sem-page",
+        ),
+        pytest.param(lambda: _primeira_pagina_com(_link_ultima("0")), "número de página válido", id="page-zero"),
+        pytest.param(lambda: _primeira_pagina_com(_link_ultima("²")), "número de página válido", id="digito-unicode"),
+        pytest.param(
+            lambda: _primeira_pagina_com(_link_ultima("５５１５")),
+            "número de página válido",
+            id="digitos-largura-total",
+        ),
+        pytest.param(
+            lambda: _primeira_pagina().replace(_CONTAGEM, ""),
+            "não traz a contagem",
+            id="sem-contagem",
+        ),
+        pytest.param(
+            lambda: _primeira_pagina().replace(_CONTAGEM, "").replace('class="pagination', 'class="pager'),
+            "não traz a contagem",
+            id="sem-contagem-e-paginador-renomeado",
+        ),
+        pytest.param(
+            lambda: "<html><body><p>conteudo sem paginacao</p></body></html>",
+            "não traz a contagem",
+            id="pagina-sem-contagem-nem-paginador",
+        ),
+    ],
+)
+def test_get_total_pages_levanta_quando_nao_fixa_o_total(html, mensagem: str):
+    """Sem contagem, ou com » que não bate com ela: levanta em vez de estimar."""
+    with pytest.raises(ValueError, match=mensagem):
+        _get_total_pages(html())
+
+
+def _com_texto_na_ementa(html: str, texto: str) -> str:
+    """Insere ``texto`` no começo da primeira ementa (``div.text-justify``) do sample."""
+    assert '<div class="text-justify">' in html
+    return html.replace('<div class="text-justify">', f'<div class="text-justify">{texto} ', 1)
+
+
+def _sem_rotulo(html: str) -> str:
+    """Tira a contagem e renomeia o div do rótulo, para a cascata cair no HTML bruto."""
+    html = html.replace(_CONTAGEM, "").replace('class="pb-3"', 'class="mb-3"')
+    assert 'class="pb-3"' not in html
+    return html
+
+
+def test_get_total_pages_contagem_em_ementa_nao_vira_contagem_no_fallback():
+    """Sem o rótulo, a cascata lê o HTML bruto; "de um total de N jurisprudência(s)" numa ementa não conta."""
+    html = _sem_rotulo(_primeira_pagina())
+    html = _com_texto_na_ementa(html, "de um total de 40 jurisprudência(s)")
+    with pytest.raises(ValueError, match="não traz a contagem"):
+        _get_total_pages(html)
+
+
+def test_get_total_pages_pagina_unica_com_total_na_ementa_continua_um():
+    """O rótulo "Exibindo 5" vence; o "de um total de 40" da ementa fica fora do seletor."""
+    html = _com_texto_na_ementa(_sample("single_page.html"), "de um total de 40 jurisprudência(s)")
     assert _get_total_pages(html) == 1
 
 
-def test_get_total_pages_no_results_returns_one():
-    html = _sample("no_results.html")
-    assert _get_total_pages(html) == 1
-
-
-def test_get_total_pages_falls_back_when_pagination_missing():
-    html = "<html><body><p>conteudo sem paginacao</p></body></html>"
-    assert _get_total_pages(html) == 1
-
-
-def test_get_total_pages_sem_paginador_ignora_page_fora_dele():
-    # ``page=N`` fora do ``ul.pagination`` não é contagem de páginas.
-    html = _sample("single_page.html").replace(
-        "</body>", '<a href="/jurisprudences/search?page=42&amp;q=x">42</a></body>'
-    )
-    assert _get_total_pages(html) == 1
-
-
-def test_get_total_pages_paginadores_que_discordam_levantam():
-    # O maior ``page=N`` (5515, do paginador de baixo) não desempata: os
-    # dois paginadores saem do mesmo helper, e divergência é markup quebrado.
-    html = _primeira_pagina_com(
-        '<a class="page-link" href="/jurisprudences/search?page=7&amp;q=dano+moral">&raquo;</a>', 1
-    )
-    with pytest.raises(ValueError, match="discordam"):
-        _get_total_pages(html)
-
-
-def test_get_total_pages_um_paginador_sem_link_de_ultima_levanta():
-    html = _primeira_pagina_com("", 1)
-    with pytest.raises(ValueError, match="última página"):
-        _get_total_pages(html)
-
-
-def test_get_total_pages_paginador_sem_link_de_ultima_levanta():
-    # Sem o », o maior ``page=N`` visível é o da janela (aqui, 2), e não o
-    # total. Estimar baixaria menos páginas em silêncio.
-    html = _primeira_pagina_com("")
-    with pytest.raises(ValueError, match="última página"):
-        _get_total_pages(html)
-
-
-def test_get_total_pages_link_de_ultima_sem_page_levanta():
-    html = _primeira_pagina_com(
-        '<a class="page-link" href="/jurisprudences/search?q=dano+moral">&raquo;</a>'
-    )
-    with pytest.raises(ValueError, match="page="):
-        _get_total_pages(html)
-
-
-def test_get_total_pages_espaco_em_volta_do_link_de_ultima_casa():
-    # O rótulo é comparado sem espaço nem quebra de linha em volta; um
-    # template reindentado não pode transformar o » em paginador sem ».
-    html = _primeira_pagina_com(
-        '<a class="page-link" href="/jurisprudences/search?page=5515&amp;q=dano+moral">\n  &raquo; \n</a>'
-    )
+@pytest.mark.parametrize("sem_link", [False, True], ids=["com-link-ultima", "sem-link-ultima"])
+def test_get_total_pages_sem_resultados_na_ementa_nao_zera_a_contagem(sem_link: bool):
+    """O texto "sem resultados para" no meio de uma ementa não é o marcador de busca vazia."""
+    html = _com_texto_na_ementa(_primeira_pagina(), "as diligências restaram sem resultados para a localização de bens")
+    if sem_link:
+        html = html.replace(_LINK_ULTIMA, "")
     assert _get_total_pages(html) == 5515
 
 
-def test_get_total_pages_link_de_ultima_com_page_zero_levanta():
-    # page=0 passa no teste de dígito; sem a checagem N >= 1 o total seria 0
-    # e o download pararia na primeira página sem erro.
-    html = _primeira_pagina_com(
-        '<a class="page-link" href="/jurisprudences/search?page=0&amp;q=dano+moral">&raquo;</a>'
-    )
-    with pytest.raises(ValueError, match="TJPI: link de última página"):
+def test_get_total_pages_sem_resultados_na_ementa_sem_contagem_nem_link_levanta():
+    """Sem contagem nem », o marcador no meio de uma ementa não pode virar busca vazia (1 página)."""
+    html = _sem_rotulo(_primeira_pagina()).replace(_LINK_ULTIMA, "")
+    html = _com_texto_na_ementa(html, "as diligências restaram sem resultados para a localização de bens")
+    with pytest.raises(ValueError, match="não traz a contagem"):
         _get_total_pages(html)
-
-
-def test_get_total_pages_link_de_ultima_com_digito_unicode_levanta():
-    # "²" passa em ``str.isdigit`` mas ``int()`` o recusa com uma mensagem
-    # genérica; o erro precisa ser o do TJPI, que diz o que estava no href.
-    html = _primeira_pagina_com(
-        '<a class="page-link" href="/jurisprudences/search?page=²&amp;q=dano+moral">&raquo;</a>'
-    )
-    with pytest.raises(ValueError, match="TJPI: link de última página"):
-        _get_total_pages(html)
-
-
-def test_get_total_pages_dois_links_de_ultima_discordantes_no_mesmo_paginador_levantam():
-    # O primeiro » de cada paginador traz 5515, então os dois paginadores
-    # concordam se só o primeiro contar; o segundo », com 7, tem que pesar.
-    link_7 = '<a class="page-link" href="/jurisprudences/search?page=7&amp;q=dano+moral">&raquo;</a>'
-    html = _primeira_pagina_com(_LINK_ULTIMA + link_7)
-    with pytest.raises(ValueError, match="discordam"):
-        _get_total_pages(html)
-
-
-def test_get_total_pages_dois_links_de_ultima_iguais_no_mesmo_paginador():
-    html = _primeira_pagina_com(_LINK_ULTIMA + _LINK_ULTIMA)
-    assert _get_total_pages(html) == 5515

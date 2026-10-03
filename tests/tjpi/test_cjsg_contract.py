@@ -75,27 +75,27 @@ def test_cjsg_paginas_none_descobre_via_html(mocker):
 
 
 @responses.activate
-def test_cjsg_paginas_none_sem_link_de_ultima_pagina_levanta(mocker):
-    """A paginator without the ``»`` link cannot tell the total: raise, never estimate.
+def test_cjsg_paginas_none_sem_contagem_levanta(mocker):
+    """A first page without the result count cannot tell the total: raise, never estimate.
 
-    The largest visible ``page=N`` would be the end of the page window (2 here),
-    so ``paginas=None`` would silently download fewer pages. The error comes
-    after the first request and before any other.
+    The count ("de um total de N jurisprudência(s)") is the source of the
+    total; without it, ``paginas=None`` used to download a single page in
+    silence. The error comes after the first request and before any other.
     """
     mocker.patch("time.sleep")
-    link_ultima = '<a class="page-link" href="/jurisprudences/search?page=5515&amp;q=dano+moral">&raquo;</a>'
+    contagem = "de um total de <b>137865</b> jurisprudência(s)"
     html = load_sample("tjpi", "cjsg/results_normal_page_01.html")
-    assert html.count(link_ultima) == 2
+    assert html.count(contagem) == 2
     responses.add(
         responses.GET,
         BASE_URL,
-        body=html.replace(link_ultima, ""),
+        body=html.replace(contagem, ""),
         status=200,
         content_type="text/html; charset=utf-8",
         match=[query_param_matcher(build_cjsg_params("dano moral", page=1))],
     )
 
-    with pytest.raises(ValueError, match="última página"):
+    with pytest.raises(ValueError, match="não traz a contagem"):
         jus.scraper("tjpi").cjsg("dano moral", paginas=None)
 
     assert len(responses.calls) == 1
