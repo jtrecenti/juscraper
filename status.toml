@@ -1,0 +1,548 @@
+# Inventário editorial; não altera a execução dos raspadores.
+# Critérios e atualização: CONTRIBUTING.md, seção Status dos raspadores.
+validade_dias = 30
+
+[[fontes]]
+sigla = "comunica_cnj"
+nome = "Comunica CNJ"
+tipo = "agregador"
+endpoints = ["listar_comunicacoes"]
+
+[fontes.observacoes.listar_comunicacoes]
+estado = "funcionando"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L26"]
+motivo = "Retornou 5 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado. A primeira tentativa terminou em timeout; a repetição da mesma consulta retornou 5 comunicações."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('comunica_cnj').listar_comunicacoes(pesquisa='resolucao', paginas=1, itens_por_pagina=5, data_disponibilizacao_inicio='2026-09-28', data_disponibilizacao_fim='2026-10-02'); depois jus.scraper('comunica_cnj').listar_comunicacoes(pesquisa='resolucao', paginas=1, itens_por_pagina=5, data_disponibilizacao_inicio='2026-09-28', data_disponibilizacao_fim='2026-10-02'). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
+
+[[fontes]]
+sigla = "datajud"
+nome = "Datajud"
+tipo = "agregador"
+endpoints = ["listar_processos"]
+
+[fontes.observacoes.listar_processos]
+estado = "funcionando"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L142"]
+motivo = "Retornou 1 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado. A consulta por CNJ funcionou; a tentativa anterior sem CNJ recebeu HTTP 504 e retornou vazio. O estado se limita à consulta por CNJ."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('datajud').listar_processos(tribunal='TJSP', paginas=1, tamanho_pagina=10); depois jus.scraper('datajud').listar_processos(tribunal='TJSP', paginas=1, tamanho_pagina=10, numero_processo='1000413-22.2017.8.26.0415'). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
+
+[[fontes]]
+sigla = "falcao"
+nome = "Falcão"
+tipo = "agregador"
+endpoints = ["listar_decisoes"]
+
+[fontes.observacoes.listar_decisoes]
+estado = "indisponivel"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L246"]
+motivo = "HTTP 429 na primeira chamada, com bloqueio do IP informado pelo servidor por 27.300 segundos. Nenhuma repetição durante o bloqueio. Limitação deste ambiente, sem inferência de indisponibilidade para outros IPs."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('falcao').listar_decisoes(pesquisa='dano moral', paginas=1, tamanho_pagina=5). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
+excecao = "requests.exceptions.HTTPError"
+
+[[fontes]]
+sigla = "jusbr"
+nome = "JusBR"
+tipo = "agregador"
+endpoints = ["cpopg", "download_documents"]
+
+[[fontes]]
+sigla = "pdpj"
+nome = "PDPJ"
+tipo = "agregador"
+endpoints = ["existe", "cpopg", "documentos", "movimentos", "partes", "pesquisa", "contar", "download_documents"]
+
+[[fontes]]
+sigla = "stf"
+nome = "STF"
+tipo = "tribunal"
+endpoints = ["listar_decisoes", "contar_decisoes"]
+
+[fontes.observacoes.listar_decisoes]
+estado = "funcionando"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L362"]
+motivo = "Retornou 5 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('stf').listar_decisoes(pesquisa='pejotização', classe='Rcl', paginas=1, tamanho_pagina=5). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
+
+[fontes.observacoes.contar_decisoes]
+estado = "funcionando"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L469"]
+motivo = "Retornou 52 linhas de total e facetas; o total foi positivo."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('stf').contar_decisoes(pesquisa='pejotização', classe='Rcl'). Somente os parâmetros informados, sem validar outros processos ou filtros"
+
+[[fontes]]
+sigla = "tjac"
+nome = "TJAC"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[fontes.observacoes.cjsg]
+estado = "funcionando"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L519"]
+motivo = "Retornou 20 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjac').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
+
+[[fontes]]
+sigla = "tjal"
+nome = "TJAL"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[fontes.observacoes.cjsg]
+estado = "funcionando"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L586"]
+motivo = "Retornou 20 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjal').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
+
+[[fontes]]
+sigla = "tjam"
+nome = "TJAM"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[fontes.observacoes.cjsg]
+estado = "funcionando"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L653"]
+motivo = "Retornou 10 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjam').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
+
+[[fontes]]
+sigla = "tjap"
+nome = "TJAP"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[fontes.observacoes.cjsg]
+estado = "indisponivel"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L720", "https://github.com/jtrecenti/juscraper/issues/279", "https://github.com/jtrecenti/juscraper/pull/282"]
+motivo = "A busca foi bloqueada pela verificação de segurança e levantou TJAPSecurityCheckError. O bloqueio documentado anteriormente continua presente no cenário testado."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjap').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
+excecao = "juscraper.courts.tjap.exceptions.TJAPSecurityCheckError"
+
+[[fontes]]
+sigla = "tjba"
+nome = "TJBA"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[fontes.observacoes.cjsg]
+estado = "funcionando"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L762"]
+motivo = "Retornou 10 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjba').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
+
+[[fontes]]
+sigla = "tjce"
+nome = "TJCE"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[fontes.observacoes.cjsg]
+estado = "funcionando"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L823"]
+motivo = "Retornou 20 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjce').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
+
+[[fontes]]
+sigla = "tjdft"
+nome = "TJDFT"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[fontes.observacoes.cjsg]
+estado = "funcionando"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L890"]
+motivo = "Retornou 10 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjdft').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
+
+[[fontes]]
+sigla = "tjes"
+nome = "TJES"
+tipo = "tribunal"
+endpoints = ["cjsg", "cjpg"]
+
+[fontes.observacoes.cjsg]
+estado = "funcionando"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L962"]
+motivo = "Retornou 20 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjes').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
+
+[fontes.observacoes.cjpg]
+estado = "degradado"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L1036"]
+motivo = "Retornou 20 registros com processo e classe preenchidos, mas ementa e acordao estavam vazios nos 20. A coleta de metadados funcionou; o conteúdo textual não foi confirmado."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjes').cjpg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
+
+[[fontes]]
+sigla = "tjgo"
+nome = "TJGO"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[fontes.observacoes.cjsg]
+estado = "nao_verificado"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L1112"]
+motivo = "Duas buscas, por direito e dano moral, devolveram DataFrame vazio. As respostas HTTP 200 contêm o formulário de pesquisa, sem resultados identificados. A causa não foi confirmada."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjgo').cjsg(pesquisa='direito', paginas=1); depois jus.scraper('tjgo').cjsg(pesquisa='dano moral', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
+
+[[fontes]]
+sigla = "tjmg"
+nome = "TJMG"
+tipo = "tribunal"
+endpoints = ["cjsg", "cposg"]
+
+[fontes.observacoes.cjsg]
+estado = "funcionando"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L1214"]
+motivo = "Retornou 10 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjmg').cjsg(pesquisa='dano moral presumido', paginas=1, data_julgamento_inicio='2025-01-01', data_julgamento_fim='2025-03-31'). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
+
+[fontes.observacoes.cposg]
+estado = "funcionando"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 85b2a2267bbb2322a5403904879ea8ce4d9b0813"
+motivo = "Retornou três recursos do CNJ consultado, com processo, classe, partes e advogados. Os três registros passaram pelo schema de saída após converter datas ausentes de NaT para None."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjmg').cposg(id_cnj='5000344-57.2025.8.13.0461'). Somente esse CNJ; outros processos e recursos não foram verificados."
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/7ab5eb287483c346cf264f4d60d24f71a96b2917/docs/status/2026-10-03-tjmg.json#L8"]
+
+[[fontes]]
+sigla = "tjms"
+nome = "TJMS"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[fontes.observacoes.cjsg]
+estado = "funcionando"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L1299"]
+motivo = "Retornou 100 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjms').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
+
+[[fontes]]
+sigla = "tjmt"
+nome = "TJMT"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[fontes.observacoes.cjsg]
+estado = "indisponivel"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L1366"]
+motivo = "As duas tentativas receberam HTML na URL de configuração esperada como JSON e terminaram em JSONDecodeError, antes da busca."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjmt').cjsg(pesquisa='direito', paginas=1); depois jus.scraper('tjmt').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
+excecao = "requests.exceptions.JSONDecodeError"
+
+[[fontes]]
+sigla = "tjpa"
+nome = "TJPA"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[fontes.observacoes.cjsg]
+estado = "funcionando"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L1442"]
+motivo = "Retornou 25 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjpa').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
+
+[[fontes]]
+sigla = "tjpb"
+nome = "TJPB"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[fontes.observacoes.cjsg]
+estado = "funcionando"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L1513"]
+motivo = "Retornou 10 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjpb').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
+
+[[fontes]]
+sigla = "tjpe"
+nome = "TJPE"
+tipo = "tribunal"
+endpoints = ["cjsg", "cpopg"]
+
+[fontes.observacoes.cjsg]
+estado = "funcionando"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L1581"]
+motivo = "Retornou 5 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjpe').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
+
+[fontes.observacoes.cpopg]
+estado = "funcionando"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L1651"]
+motivo = "Retornou 1 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjpe').cpopg(id_cnj='00963022520218172001'). Somente os parâmetros informados, sem validar outros processos ou filtros"
+
+[[fontes]]
+sigla = "tjpi"
+nome = "TJPI"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[fontes.observacoes.cjsg]
+estado = "funcionando"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L1816"]
+motivo = "Retornou 25 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjpi').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
+
+[[fontes]]
+sigla = "tjpr"
+nome = "TJPR"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[fontes.observacoes.cjsg]
+estado = "funcionando"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L1874"]
+motivo = "Retornou 50 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjpr').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
+
+[[fontes]]
+sigla = "tjrj"
+nome = "TJRJ"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[fontes.observacoes.cjsg]
+estado = "funcionando"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L2256"]
+motivo = "Retornou 10 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjrj').cjsg(pesquisa='dano moral', paginas=1, ano_inicio=2024, ano_fim=2024). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
+
+[[fontes]]
+sigla = "tjrn"
+nome = "TJRN"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[fontes.observacoes.cjsg]
+estado = "funcionando"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L2342"]
+motivo = "Retornou 10 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjrn').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
+
+[[fontes]]
+sigla = "tjro"
+nome = "TJRO"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[fontes.observacoes.cjsg]
+estado = "indisponivel"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L2403"]
+motivo = "As duas tentativas terminaram em JSONDecodeError. A resposta HTTP 200 inspecionada contém uma página que declara bloqueio por suspeita de robotização."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjro').cjsg(pesquisa='direito', paginas=1); depois jus.scraper('tjro').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
+excecao = "requests.exceptions.JSONDecodeError"
+
+[[fontes]]
+sigla = "tjrr"
+nome = "TJRR"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[fontes.observacoes.cjsg]
+estado = "funcionando"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L2479"]
+motivo = "Retornou 20 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjrr').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
+
+[[fontes]]
+sigla = "tjrs"
+nome = "TJRS"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[fontes.observacoes.cjsg]
+estado = "indisponivel"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L2544"]
+motivo = "As duas buscas devolveram DataFrame vazio. Na repetição, o corpo da resposta contém erro Solr 503: no servers hosting shard: shard2. O retorno vazio não confirma ausência de julgados."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjrs').cjsg(pesquisa='direito', paginas=1); depois jus.scraper('tjrs').cjsg(pesquisa='direito civil', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
+
+[[fontes]]
+sigla = "tjsc"
+nome = "TJSC"
+tipo = "tribunal"
+endpoints = ["cjsg"]
+
+[fontes.observacoes.cjsg]
+estado = "funcionando"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L2636"]
+motivo = "Retornou 10 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjsc').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
+
+[[fontes]]
+sigla = "tjsp"
+nome = "TJSP"
+tipo = "tribunal"
+endpoints = ["cpopg", "cposg", "cjsg", "cjpg"]
+
+[fontes.observacoes.cpopg]
+estado = "funcionando"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L2704"]
+motivo = "Retornou 1 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjsp').cpopg(id_cnj='1000149-71.2024.8.26.0346', method='html'). Somente os parâmetros informados, sem validar outros processos ou filtros"
+
+[fontes.observacoes.cposg]
+estado = "indisponivel"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L2823"]
+motivo = "As consultas HTML por dois CNJs retornaram DataFrame vazio. Na segunda, o portal entregou duas páginas de detalhe, mas o parser descartou ambas por ausência do marcador tabelaTodasMovimentacoes."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjsp').cposg(id_cnj='1000149-71.2024.8.26.0346', method='html'); depois jus.scraper('tjsp').cposg(id_cnj='00221752420038260344', method='html'). Somente os parâmetros informados, sem validar outros processos ou filtros"
+
+[fontes.observacoes.cjsg]
+estado = "funcionando"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L3008"]
+motivo = "Retornou 20 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjsp').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
+
+[fontes.observacoes.cjpg]
+estado = "funcionando"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L3075"]
+motivo = "Retornou 10 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjsp').cjpg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
+
+[[fontes]]
+sigla = "tjto"
+nome = "TJTO"
+tipo = "tribunal"
+endpoints = ["cjsg", "cjpg"]
+
+[fontes.observacoes.cjsg]
+estado = "indisponivel"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L3149"]
+motivo = "A busca foi recusada com HTTP 403 nas três tentativas internas do cliente e terminou em RetryExhaustedError. A causa do bloqueio não foi determinada."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjto').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
+excecao = "juscraper.core.exceptions.RetryExhaustedError"
+
+[fontes.observacoes.cjpg]
+estado = "indisponivel"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L3207"]
+motivo = "A busca foi recusada com HTTP 403 nas três tentativas internas do cliente e terminou em RetryExhaustedError. A causa do bloqueio não foi determinada."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjto').cjpg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
+excecao = "juscraper.core.exceptions.RetryExhaustedError"
+
+[[fontes]]
+sigla = "trf1"
+nome = "TRF1"
+tipo = "tribunal"
+endpoints = ["cpopg"]
+
+[fontes.observacoes.cpopg]
+estado = "funcionando"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L3265"]
+motivo = "Retornou 1 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('trf1').cpopg(id_cnj='10088283520214013502'). Somente os parâmetros informados, sem validar outros processos ou filtros"
+
+[[fontes]]
+sigla = "trf3"
+nome = "TRF3"
+tipo = "tribunal"
+endpoints = ["cpopg"]
+
+[fontes.observacoes.cpopg]
+estado = "nao_verificado"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L3398"]
+motivo = "As duas consultas do CNJ de referência retornaram somente id_cnj, sem processo, classe ou movimentações. Não foi possível distinguir ausência de acesso ao processo de incompatibilidade do fluxo de consulta."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('trf3').cpopg(id_cnj='50059460920254036324'); depois jus.scraper('trf3').cpopg(id_cnj='50059460920254036324'). Somente os parâmetros informados, sem validar outros processos ou filtros"
+
+[[fontes]]
+sigla = "trf5"
+nome = "TRF5"
+tipo = "tribunal"
+endpoints = ["cpopg"]
+
+[fontes.observacoes.cpopg]
+estado = "nao_verificado"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L3504"]
+motivo = "As duas consultas do CNJ de referência retornaram somente id_cnj, sem processo, classe ou movimentações. Não foi possível distinguir ausência de acesso ao processo de incompatibilidade do fluxo de consulta."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('trf5').cpopg(id_cnj='00584573120254058000'); depois jus.scraper('trf5').cpopg(id_cnj='00584573120254058000'). Somente os parâmetros informados, sem validar outros processos ou filtros"
+
+[[fontes]]
+sigla = "trf6"
+nome = "TRF6"
+tipo = "tribunal"
+endpoints = ["cpopg"]
+
+[fontes.observacoes.cpopg]
+estado = "indisponivel"
+verificado_em = 2026-10-03
+versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L3594"]
+motivo = "As duas tentativas falharam ao localizar o CAPTCHA esperado. A resposta inspecionada exige JavaScript antes de exibir o conteúdo; o fluxo HTTP do cliente não chegou à consulta."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('trf6').cpopg(id_cnj='10052295520234063801'); depois jus.scraper('trf6').cpopg(id_cnj='10052295520234063801'). Somente os parâmetros informados, sem validar outros processos ou filtros"
+excecao = "builtins.RuntimeError"

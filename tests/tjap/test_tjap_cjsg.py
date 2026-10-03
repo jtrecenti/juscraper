@@ -4,6 +4,7 @@ import pandas as pd
 import pytest
 
 import juscraper as jus
+from juscraper.courts.tjap.exceptions import TJAPSecurityCheckError
 
 
 @pytest.mark.integration
@@ -12,6 +13,7 @@ import juscraper as jus
     "via API pública (ref #279). Mantido como xfail não-strict: se o tribunal "
     "remover o Turnstile, o XPASS sinaliza que a coleta voltou a funcionar.",
     strict=False,
+    raises=TJAPSecurityCheckError,
 )
 class TestCJSGTJAP:
     """Tests for cjsg of TJAP."""

@@ -80,6 +80,35 @@ Code of Conduct. By contributing to this project you agree to abide by its terms
 
 As seções a seguir são notas internas para quem contribui com novos raspadores, schemas ou refatorações. Estão em português para acompanhar o conteúdo original do `CLAUDE.md`. Termos técnicos do projeto (`pesquisa`, `paginas`, `data_julgamento_*`, etc.) ficam no original.
 
+## Status dos raspadores
+
+O arquivo `status.toml` é a fonte única do inventário e das observações de funcionamento exibidos em `README.md` e `docs/index.qmd`. O registro cobre endpoints de coleta apresentados nas tabelas, por raspador e método. Não pretende listar todos os auxiliares de autenticação, descoberta de filtros, download e parsing. Incluir um endpoint indica implementação; somente uma observação com evidência informa funcionamento. O registro não altera chamadas, exceções ou a API pública do pacote.
+
+| Estado | Critério |
+|---|---|
+| Funcionando | Coleta validada no cenário descrito, com resultados e schema conferidos. A observação deve informar quais filtros e formas de paginação foram exercitados. |
+| Degradado | Coleta possível, com limitação identificada de filtros, paginação ou ambiente. O motivo descreve o que funciona e o que falha. |
+| Indisponível | Coleta impedida no cenário informado, com evidência e causa documentadas. Não significa que o portal esteja fora do ar para todos os clientes. |
+| Não verificado | Endpoint sem observação suficiente ou com verificação vencida. Não significa ausência de defeitos conhecidos. |
+
+`validade_dias` define o prazo comum no registro, inicialmente 30 dias. Uma observação vale até `verificado_em + validade_dias`, inclusive. Depois desse prazo, o gerador apresenta "Não verificado" e preserva o último estado, a evidência e a limitação. As páginas são estáticas: o rótulo muda na próxima geração, enquanto a coluna "Válido até" permite reconhecer uma observação vencida entre atualizações. O comando `--check` falha se o vencimento exigir regeneração. Regenerar as tabelas nunca muda a data da observação.
+
+Para registrar uma verificação, adicionar ou atualizar `[fontes.observacoes.<endpoint>]` dentro da fonte correspondente. A observação exige `estado`, `verificado_em` como data TOML, `versao` testada, `motivo` e `cenario` em português e uma lista não vazia de URLs em `evidencias`. `excecao` é opcional e documenta a classe relacionada, sem impor equivalência entre exceção e estado. Uma fonte sem observações gera "Não verificado" para todos os endpoints; não preencher os demais campos com datas ou resultados presumidos. Uma tentativa real mas inconclusiva pode registrar `estado = "nao_verificado"`: a coluna "Verificação" informa a data da tentativa, sem prazo de validade, e o motivo explica por que o funcionamento não foi confirmado.
+
+O cenário deve informar consulta, filtros, paginação e ambiente relevante, como HTTP direto, navegador, CI/datacenter ou rede residencial. Não registrar IP pessoal, token ou credencial. Uma falha isolada de rede não basta para declarar indisponibilidade geral. Ao migrar relatos antigos, usar a data e a versão documentadas na evidência e explicitar informações ausentes, sem atribuir a data da migração a uma coleta que não ocorreu. A [rodada de 03/10/2026](docs/status/2026-10-03.json) consultou inicialmente 40 endpoints públicos e registrou parâmetros, retornos e falhas sem publicar textos judiciais. O [complemento do TJMG](docs/status/2026-10-03-tjmg.json) acrescentou a consulta do novo `cposg`, totalizando 41 endpoints públicos consultados. Os links de evidência no registro apontam para o commit que preserva esse relatório; novas verificações devem produzir outro relatório datado, sem reescrever a evidência anterior. JusBR e PDPJ ficaram fora dessa rodada por exigirem autenticação. O bloqueio do TJAP, antes descrito na [issue #279](https://github.com/jtrecenti/juscraper/issues/279), foi confirmado novamente.
+
+Após editar o registro:
+
+```bash
+uv run scripts/gerar_status.py
+uv run scripts/gerar_status.py --check
+uv run pytest tests/test_status_documentacao.py tests/tjap
+```
+
+O gerador modifica somente os blocos entre `<!-- status:inicio -->` e `<!-- status:fim -->`. README e site recebem o mesmo bloco em português, incluindo rótulos, motivos e cenários. Incluir o registro e os dois blocos gerados no mesmo commit. `--data AAAA-MM-DD` permite reproduzir uma renderização histórica; o uso normal e o CI usam a data corrente. A verificação é offline e não executa os métodos de coleta. Os testes conferem as siglas contra a factory, a existência dos métodos listados e a sincronização das tabelas. Ao adicionar um raspador à factory, incluir também uma fonte no inventário.
+
+Testes de integração fornecem evidência para revisão humana do registro. `XPASS` pode indicar recuperação, mas exige conferir resultados, schema e cenário antes de atualizar o estado. No TJAP, `xfail(raises=TJAPSecurityCheckError, strict=False)` absorve somente o bloqueio conhecido; erro de parser continua falhando e recuperação aparece como `XPASS`. Não converter automaticamente um timeout, `skip` ou bloqueio específico do CI em indisponibilidade global. Monitoramento recorrente, notificações e uma API pública de status ficam fora deste fluxo.
+
 ## Tests
 
 ### Pirâmide de testes
@@ -95,7 +124,7 @@ As seções a seguir são notas internas para quem contribui com novos raspadore
 
 A consulta pública PJe de TRF1, TRF3 e TRF5 fica atrás do bot manager Akamai. De IPs de datacenter/CI o portal devolve `HTTP 403 Access Denied` e o scraper levanta `BotChallengeBlockedError` de propósito (bloqueio session-wide). Isso é **falha ambiental** — depende do IP do cliente, passa de IP residencial — e não regressão de código. O marker `anti_bot` distingue os dois casos sem esconder regressão real.
 
-O `tests/conftest.py` registra um hook (`pytest_runtest_makereport`, `wrapper=True`) que, **apenas** para testes marcados `anti_bot`, converte `BotChallengeBlockedError` em `xfail`. Qualquer outra exceção — parser quebrado, schema rejeitando input antes válido, coluna renomeada — continua falhando vermelho, e de IP residencial (sem bloqueio) o teste passa normal. Diferente do `xfail(strict=False)` cego de TJAP (Turnstile) e TJRR (PrimeFaces), que são bloqueios *permanentes*: o Akamai é *condicional ao IP*, então o teste só vira xfail quando o bloqueio de fato acontece.
+O `tests/conftest.py` registra um hook (`pytest_runtest_makereport`, `wrapper=True`) que, apenas para testes marcados `anti_bot`, converte `BotChallengeBlockedError` em `xfail`. Qualquer outra exceção, como parser quebrado, schema rejeitando input antes válido ou coluna renomeada, continua falhando, e de IP residencial sem bloqueio o teste passa normalmente. No TJAP, o marker `xfail` restringe a falha esperada a `TJAPSecurityCheckError`; a aprovação inesperada aparece como `XPASS`. Nos TRFs, o hook produz um teste aprovado normal quando não há bloqueio, pois o Akamai depende do IP do cliente.
 
 Aplicar com `pytestmark = pytest.mark.anti_bot` no topo do arquivo de integração (cobre todos os testes do arquivo, que batem no mesmo backend protegido). Comandos:
 
