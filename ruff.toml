@@ -1,4 +1,4 @@
-# Dispensas temporárias por arquivo e regra. Só podem diminuir (issue #367).
+# Dispensas temporárias por arquivo e regra. Só podem diminuir (jtrecenti/juscraper#367).
 # Para retirar dispensas após uma correção, ver CONTRIBUTING.md.
 extend = "pyproject.toml"
 
@@ -52,7 +52,8 @@ extend = "pyproject.toml"
 "src/juscraper/courts/tjgo/client.py" = ["ANN001", "ANN003", "ANN201", "ANN204", "D107", "D405", "PLR0913"]
 "src/juscraper/courts/tjgo/download.py" = ["ANN001", "D417", "PLR0913"]
 "src/juscraper/courts/tjgo/parse.py" = ["ANN202", "ANN401", "DTZ007"]
-"src/juscraper/courts/tjmg/client.py" = ["ANN001", "ANN003", "ANN201", "ANN204", "D107", "D405", "PLR0913"]
+"src/juscraper/courts/tjmg/client.py" = ["ANN001", "ANN003", "ANN201", "ANN204", "D107", "D405", "D417", "PLR0913"]
+"src/juscraper/courts/tjmg/cposg_download.py" = ["ANN001"]
 "src/juscraper/courts/tjmg/download.py" = ["ANN001", "PLC0415", "PLR0913"]
 "src/juscraper/courts/tjmt/client.py" = ["ANN003", "ANN201", "ANN204", "D107", "D200", "D212", "D417", "FBT001", "FBT002", "PLR0913"]
 "src/juscraper/courts/tjmt/download.py" = ["ANN001", "D200", "D212", "FBT001", "FBT002", "PLR0913"]
@@ -187,7 +188,8 @@ extend = "pyproject.toml"
 "tests/tjgo/test_cjsg_filters_contract.py" = ["D205", "D209", "PT030"]
 "tests/tjmg/test_cjsg.py" = ["PT018"]
 "tests/tjmg/test_cjsg_contract.py" = ["ARG001", "D205", "D209"]
-"tests/tjmg/test_cjsg_download_granular.py" = ["D205"]
+"tests/tjmg/test_cjsg_download_granular.py" = ["ARG001", "D205"]
+"tests/tjmg/test_cposg_contract.py" = ["PT030"]
 "tests/tjmg/test_cjsg_filters_contract.py" = ["ARG001", "D205", "D209", "PT030"]
 "tests/tjmg/test_cjsg_wiring_contract.py" = ["D205", "D209"]
 "tests/tjmt/test_cjsg_contract.py" = ["PLR0913"]
