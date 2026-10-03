@@ -1,19 +1,10 @@
 """Paridade entre filtros listados na docstring e campos do schema pydantic.
 
-A regra 1 do ``CLAUDE.md > Docstrings de metodos publicos com **kwargs``
-exige que cada filtro citado na docstring exista como campo do schema
-pydantic correspondente — e vice-versa, que cada campo do schema esteja
-documentado. Sem este teste, a paridade depende so de revisao humana e
-silenciosamente apodrece quando alguem adiciona/remove um campo no schema
-sem atualizar a docstring (ou inverso).
-
-Cobertura: endpoints **top-level** com ``**kwargs`` documentado seguindo
-o template do CLAUDE.md. Os pares ``*_download`` nao listam bullets — em
-vez disso referenciam o top-level via ``:meth:``, e essa referencia
-(parte do contrato pela regra 5) e fiscalizada por
-:func:`test_download_docstring_references_toplevel` abaixo. Sem isso,
-``*_download`` ficaria fora de qualquer guard e poderia driftar
-silenciosamente.
+O padrão de ``CONTRIBUTING.md > Docstrings de métodos públicos com kwargs``
+exige correspondência entre filtros documentados e campos do schema.
+``CASES`` cobre métodos principais; ``DOWNLOAD_REFERENCE_CASES`` cobre
+pares de download, que referenciam o principal via ``:meth:`` para evitar
+uma segunda lista de filtros sem validação de paridade.
 """
 from __future__ import annotations
 
@@ -161,16 +152,14 @@ def test_docstring_lists_schema_fields(
         f"{sorted(docstring_only) or '-'}\n"
         f"  schema = {schema_module}:{schema_class}\n"
         f"  metodo = {scraper_class}.{endpoint}\n"
-        "Atualize uma das duas pontas (ver CLAUDE.md > "
-        "Docstrings de metodos publicos com **kwargs, regra 1)."
+        "Atualize uma das duas pontas (ver CONTRIBUTING.md > "
+        "Docstrings de métodos públicos com kwargs > Filtros e aliases)."
     )
 
 
-# Pares (download_method, toplevel_method) cuja docstring tem que carregar
-# uma referencia ``:meth:`<toplevel>``` em vez de duplicar bullets. Cobre
-# o caminho onde a regra 5 do CLAUDE.md e violada — alguem regride o
-# padrao listando bullets em ``*_download`` (que fica fora de ``CASES``)
-# e a docstring drifta sem alarme.
+# Pares cuja docstring referencia o método principal via ``:meth:``.
+# CONTRIBUTING.md > Docstrings de métodos públicos com kwargs > Métodos
+# de download define o contrato; esses métodos ficam fora de ``CASES``.
 DOWNLOAD_REFERENCE_CASES = [
     pytest.param(
         "juscraper.courts._esaj.base", "EsajSearchScraper",
@@ -207,14 +196,7 @@ DOWNLOAD_REFERENCE_CASES = [
 def test_download_docstring_references_toplevel(
     module_path, class_name, download_method, toplevel_method,
 ):
-    """``*_download`` referencia o top-level via ``:meth:`` (regra 5 do CLAUDE.md).
-
-    A regra 5 da secao "Docstrings de metodos publicos com **kwargs" do
-    CLAUDE.md proibe duplicar bullets em ``*_download``: a docstring deve
-    delegar a lista de filtros ao top-level via ``:meth:`<top>```. Esse
-    teste falha se a referencia some, evitando que a docstring vire um
-    snapshot orfao do schema.
-    """
+    """Exige a referência ao principal conforme o padrão do CONTRIBUTING.md."""
     mod = importlib.import_module(module_path)
     method = getattr(getattr(mod, class_name), download_method)
     doc = inspect.getdoc(method) or ""
@@ -222,6 +204,6 @@ def test_download_docstring_references_toplevel(
     assert needle in doc, (
         f"{class_name}.{download_method} deve referenciar {needle} "
         f"para a lista de filtros em vez de duplicar bullets.\n"
-        f"  Ver CLAUDE.md > Docstrings de metodos publicos com **kwargs, "
-        "regra 5."
+        "  Ver CONTRIBUTING.md > Docstrings de métodos públicos com kwargs > "
+        "Métodos de download."
     )
