@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 import logging
 import math
+import shutil
 import tempfile
 import time
 import warnings
@@ -86,9 +87,12 @@ class FalcaoScraper(HTTPScraper):
     ) -> pd.DataFrame:
         """Consulta a Jurisprudencia Nacional da Justica do Trabalho.
 
-        Baixa as paginas para um diretorio temporario e devolve o resultado
-        parseado. Para inspecionar o JSON bruto, use :meth:`listar_decisoes_download` +
-        :meth:`listar_decisoes_parse`.
+        Baixa as páginas e limpa os arquivos após devolver o resultado parseado.
+        Se a coleta ou o parsing falhar, preserva as páginas recebidas em
+        ``download_path`` e informa o caminho em uma nota da exceção. Recupere
+        esse resultado parcial com :meth:`listar_decisoes_parse`; não há retomada
+        automática. Para guardar também coletas completas, use
+        :meth:`listar_decisoes_download`.
 
         Args:
             pesquisa (str): Termo de busca livre (parametro ``texto``).
@@ -154,6 +158,8 @@ class FalcaoScraper(HTTPScraper):
                 requisicao.
             requests.HTTPError: Quando o backend bloqueia o IP por excesso
                 de requisicoes (429 com espera de horas).
+            BaseException: Falhas de coleta, parsing ou interrupção manual
+                são propagadas com nota sobre as páginas preservadas, se houver.
 
         Exemplo:
             >>> import juscraper as jus
@@ -170,9 +176,23 @@ class FalcaoScraper(HTTPScraper):
                 "FalcaoScraper.listar_decisoes() got unexpected keyword argument(s): 'diretorio'. "
                 "Para gravar o JSON bruto num diretorio, use listar_decisoes_download()."
             )
-        with tempfile.TemporaryDirectory(prefix="falcao_") as tmp:
-            diretorio = self._baixar(pesquisa, paginas, tmp, kwargs, "FalcaoScraper.listar_decisoes()")
-            return self.listar_decisoes_parse(diretorio)
+        Path(self.download_path).mkdir(parents=True, exist_ok=True)
+        temporario = Path(tempfile.mkdtemp(prefix="falcao_", dir=self.download_path))
+        try:
+            diretorio = self._baixar(pesquisa, paginas, temporario, kwargs, "FalcaoScraper.listar_decisoes()")
+            resultado = self.listar_decisoes_parse(diretorio)
+        except BaseException as erro:
+            # Inclui interrupção manual: a cota já foi gasta nas páginas recebidas.
+            if any(temporario.rglob("*.json")):
+                erro.add_note(
+                    f"Páginas recebidas preservadas em {temporario}. "
+                    "Use listar_decisoes_parse nesse diretório para recuperar o resultado parcial."
+                )
+            else:
+                shutil.rmtree(temporario)
+            raise
+        shutil.rmtree(temporario)
+        return resultado
 
     def listar_decisoes_download(
         self,

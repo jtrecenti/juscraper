@@ -102,6 +102,67 @@ def test_listar_decisoes_resultado_vazio(falcao):
 
 
 @responses.activate
+@pytest.mark.parametrize("falha", ["cota", "conexao", "interrupcao"])
+def test_listar_decisoes_preserva_paginas_apos_falha(tmp_path, falha):
+    falcao = jus.scraper("falcao", verbose=0, sleep_time=0, download_path=str(tmp_path))
+    _register("acordaos", total=20, pagina=1)
+    tipo_erro: type[BaseException]
+    if falha == "cota":
+        responses.add(responses.GET, SEARCH_URL, status=429,
+                      headers={"x-rate-limit-retry-after-seconds": "20880"})
+        tipo_erro = requests.HTTPError
+    else:
+        tipo_erro = requests.ConnectionError if falha == "conexao" else KeyboardInterrupt
+
+        def interromper(_requisicao):
+            raise tipo_erro()
+
+        responses.add_callback(responses.GET, SEARCH_URL, callback=interromper)
+    with pytest.raises(tipo_erro) as captura:
+        falcao.listar_decisoes("dano moral", paginas=2)
+    arquivos = list(tmp_path.rglob("*.json"))
+    assert len(arquivos) == 1
+    assert arquivos[0].name == "acordaos_0001.json"
+    assert str(arquivos[0].parent.parent) in captura.value.__notes__[0]
+    recuperado = falcao.listar_decisoes_parse(arquivos[0].parent.parent)
+    assert len(recuperado) == len(_sample("acordaos")["documentos"])
+
+
+@responses.activate
+def test_listar_decisoes_limpa_temporarios_apos_sucesso(tmp_path):
+    falcao = jus.scraper("falcao", verbose=0, sleep_time=0, download_path=str(tmp_path))
+    _register("acordaos")
+    assert not falcao.listar_decisoes("dano moral", paginas=1).empty
+    assert not list(tmp_path.iterdir())
+
+
+@responses.activate
+def test_listar_decisoes_preserva_paginas_se_parser_falha(tmp_path, monkeypatch):
+    falcao = jus.scraper("falcao", verbose=0, sleep_time=0, download_path=str(tmp_path))
+    _register("acordaos")
+
+    def falhar(_diretorio):
+        raise ValueError("Falha de parsing")
+
+    monkeypatch.setattr(falcao, "listar_decisoes_parse", falhar)
+    with pytest.raises(ValueError, match="Falha de parsing") as captura:
+        falcao.listar_decisoes("dano moral", paginas=1)
+    arquivo, = tmp_path.rglob("*.json")
+    assert json.loads(arquivo.read_text())["documentos"] == _sample("acordaos")["documentos"]
+    assert str(arquivo.parent.parent) in captura.value.__notes__[0]
+
+
+@responses.activate
+def test_listar_decisoes_falha_sem_paginas_nao_deixa_pasta_vazia(tmp_path):
+    falcao = jus.scraper("falcao", verbose=0, sleep_time=0, download_path=str(tmp_path))
+    responses.add(responses.GET, SEARCH_URL, status=429,
+                  headers={"x-rate-limit-retry-after-seconds": "20880"})
+    with pytest.raises(requests.HTTPError):
+        falcao.listar_decisoes("dano moral", paginas=1)
+    assert not list(tmp_path.iterdir())
+
+
+@responses.activate
 def test_listar_decisoes_todos_os_filtros_viram_querystring(falcao):
     _register(
         "acordaos",

@@ -26,10 +26,9 @@ _CLASSE_KEYS: tuple[str, ...] = (
 )
 
 # Campos que o backend devolve para destacar o termo buscado (``<mark>``).
-# Repetem o inteiro teor ou a ementa, e o inteiro teor carrega as imagens do
-# documento em base64, entao manter os tres multiplicava o tamanho de cada
-# linha. Ficam fora da saida; o texto integral segue em ``textoAcordao`` /
-# ``textoSentenca`` / ``conteudoDecisao``.
+# Incluem o texto com marcação e variantes anonimizadas, que podem diferir
+# do original. Ficam fora da saída; os campos brutos de inteiro teor seguem
+# preservados. O JSON de listar_decisoes_download mantém todas as variantes.
 _PREFIXO_HIGHLIGHT = "highlight"
 
 # Abreviacao do ``tipo`` de precedente usada na chave ``processo``. Tipo fora
@@ -70,12 +69,14 @@ def _chave_precedente(doc: dict[str, Any]) -> str | None:
 
     O ``numero`` sozinho se repete entre tipos (Sumula 392 x OJ 392) e entre
     tribunais, e falta em parte dos precedentes regionais. Sem ``tipo`` ou
-    ``numero``, a chave cai para ``{tribunal}-id{id}``.
+    ``numero``, a chave usa ``id`` ou ``idTema`` (precedentes BANJUR).
     """
     tribunal = doc.get("tribunal") or "?"
     tipo = doc.get("tipo")
     numero = doc.get("numero")
     ident = doc.get("id")
+    if ident in (None, "") and doc.get("idTema") not in (None, ""):
+        return f"{tribunal}-idTema{doc['idTema']}"
     if not tipo or numero in (None, ""):
         return f"{tribunal}-id{ident}" if ident is not None else None
     partes = [tribunal, _TIPOS_PRECEDENTE.get(tipo, tipo)]
