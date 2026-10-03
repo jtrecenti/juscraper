@@ -77,6 +77,7 @@ dados.head()
 | Nome      | Funcionalidades                   |
 |-----------|-----------------------------------|
 | Datajud   | listar_processos                  |
+| Falcao    | listar_decisoes                   |
 | Jusbr     | cpopg, download_documents         |
 | PDPJ      | existe, cpopg, documentos, movimentos, partes, pesquisa, contar, download_documents |
 
