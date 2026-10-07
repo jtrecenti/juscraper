@@ -145,6 +145,20 @@ scraper.cjsg(pesquisa="teste", paginas=1) # downloads page 1 only
 scraper.cjsg(pesquisa="teste", paginas=3) # downloads pages 1-3
 ```
 
+### TRF3 `cpopg_parse`: from `htmls` to `brutos`
+
+The TRF3 public portal stopped serving the JSF detail page, so `cpopg_download` now returns one dict of JSON API envelopes per CNJ instead of HTML. `cpopg_parse` takes those dicts as `brutos`; `htmls=` still works with a `DeprecationWarning`, but HTML saved from the old portal raises `TypeError` and must be downloaded again.
+
+```python
+# Before
+htmls = trf3.cpopg_download(cnjs)
+df = trf3.cpopg_parse(htmls=htmls, id_cnj_list=cnjs)
+
+# After
+brutos = trf3.cpopg_download(cnjs)
+df = trf3.cpopg_parse(brutos, cnjs)
+```
+
 ### Date format flexibility
 
 Wired endpoints accept multiple input formats and coerce to the

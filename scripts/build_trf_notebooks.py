@@ -116,8 +116,11 @@ df_2g[["id_cnj", "processo", "classe", "orgao_julgador", "orgao_julgador_colegia
 ## Handling processes the public portal cannot return
 
 When a CNJ does not surface in the public consultation (sealed or simply not
-found), the row carries only `id_cnj`, so callers can still distinguish
-"looked up but missing" from "never tried".
+found), the row carries only `id_cnj`. A lookup that fails (network or HTTP
+error on the search or on `/dados` after the retries, an unexpected response,
+a parser error) produces the same row, so the DataFrame alone does not tell
+"not found" from "failed": the failure is logged as a warning on the
+`juscraper.trf3` logger.
 """
         ),
         code(
