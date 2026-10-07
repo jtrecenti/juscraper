@@ -1,0 +1,163 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "movimento": "Juntada de ato ordinatório",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "02/07/2026 18:10:35 - Ato Ordinatório (Ato Ordinatório)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "02/07/2026 18:10:35",
+   "idDocumento": "uiR9LScQ8NhTqYtrSKcV-hN_x-O5hHuQU3UROdddpZzXX0EDGgaEIS2fnIG8guauDww1"
+  },
+  {
+   "movimento": "Perícia realizada",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "02/07/2026 17:06:23",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de Petição de laudo social - hipossuficiência",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "13/05/2026 09:02:01",
+   "idDocumento": "98T2pHqjI0VX_t5SdYKXFFR7d_3R_bYx6vluskZY4Y2sqf_9XS7JKoh5gC14OtowEg3t"
+  },
+  {
+   "movimento": "Proferido despacho de mero expediente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "05/05/2026 19:01:51",
+   "idDocumento": "NQcy71mY_xnvZvKL0Td47am-H3O_NqAf6D4UWq6ak9xbQEIb0wWARiaKulACdFuepSJs"
+  },
+  {
+   "movimento": "Conclusos para despacho",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "05/05/2026 16:42:24",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Perícia realizada",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "30/04/2026 14:15:42",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de Petição de laudo médico - benefícios assistenciais - não impedimento",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "23/04/2026 14:32:00",
+   "idDocumento": "Bp3v6asYEvVN-GN2uGuFSMXWRhHVxsiEEva_imFaQbdpANZM4qgj5CBLKMIOB1gyUozx"
+  },
+  {
+   "movimento": "Decorrido prazo de CINTIA REGIANE CORREA DOS SANTOS em 14/04/2026 23:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "15/04/2026 00:55:27",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Publicado Despacho em 26/03/2026.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "27/03/2026 00:31:12",
+   "idDocumento": "IxYld8y0IivSJqAlucJnKOWfv6ueP2-epgn1Vjj2ga3HUDw64GeTqAuTCDQpRMJB1RSC"
+  },
+  {
+   "movimento": "Disponibilizado no DJ Eletrônico em 25/03/2026",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "27/03/2026 00:31:12",
+   "idDocumento": "KMUAuh2G89Fc3hShouLNIE4PA65gbt2Mt5bU83XqR1HggNQUDcbB8cTFehvL5Jo3rRHy"
+  },
+  {
+   "movimento": "Desentranhado o documento",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "24/03/2026 18:43:21",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Cancelada a movimentação processual Proferido despacho de mero expediente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "24/03/2026 18:43:21",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Expedição de Outros documentos.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "24/03/2026 18:23:49",
+   "idDocumento": "fgIlfzsDk86e5Rn0_o4kelZI2q_xWK10dz45xE8YRwldJY4mEfjqGk21WX0peYZffPem"
+  },
+  {
+   "movimento": "Proferido despacho de mero expediente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "24/03/2026 18:23:48",
+   "idDocumento": "MHfB27uOKxG0Lx0yhDEtVhlTp7jEvTMD6Zh21S9XpjMebLA3n7ctFm7Z7yN689fX_80V"
+  },
+  {
+   "movimento": "Juntada de Petição de manifestação",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "24/03/2026 18:15:15",
+   "idDocumento": "c2CeVVRlamfpJawtLNJtljxYqkrhJ7o3hUcP52jhkGhRNs2JfDu9Mu7poQsmABbEEKVn"
+  }
+ ],
+ "pageInfo": {
+  "current": 2,
+  "last": 5,
+  "size": 15,
+  "count": 70
+ }
+}

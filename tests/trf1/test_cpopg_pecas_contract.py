@@ -1,6 +1,6 @@
 """Offline contract tests for ``TRF1Scraper.cpopg(download_pecas=True, ...)``.
 
-Mirrors the TRF3 suite — the three TRF PJe deployments share the same
+Mirrors the other PJe JSF suite: TRF1 and TRF5 share the same
 ``documentoSemLoginHTML.seam?ca=...&idProcessoDoc=...`` URL shape.
 """
 from __future__ import annotations
@@ -93,3 +93,64 @@ def test_cpopg_with_download_pecas_writes_files_and_adds_column(tmp_path) -> Non
     assert len(saved) == n_pecas
     for p in saved:
         assert Path(p).is_file()
+
+
+@responses.activate
+def test_cpopg_with_download_pecas_handles_missing_process(tmp_path) -> None:
+    """Processo não encontrado → ``pecas`` vazia, sem pedir documento."""
+    responses.add(
+        responses.GET,
+        LIST_URL,
+        body=load_sample("trf1", "cpopg/form_initial.html"),
+        content_type="text/html; charset=utf-8",
+    )
+    responses.add(
+        responses.POST,
+        LIST_URL,
+        body=load_sample("trf1", "cpopg/search_no_results.html"),
+        content_type="text/xml; charset=utf-8",
+    )
+
+    df = jus.scraper("trf1", sleep_time=0).cpopg(
+        "00000000019994010000", download_pecas=True, diretorio=str(tmp_path)
+    )
+
+    assert df.iloc[0]["pecas"] == []
+    assert not any("documentoSemLoginHTML" in c.request.url for c in responses.calls)
+
+
+@responses.activate
+def test_cpopg_with_download_pecas_continues_after_peca_error(tmp_path, caplog) -> None:
+    """404 na primeira peça vira aviso; as demais continuam sendo gravadas."""
+    from juscraper.courts._trf.download import extract_documento_urls
+
+    detail = load_sample_bytes("trf1", "cpopg/detail_normal.html")
+    responses.add(
+        responses.GET,
+        LIST_URL,
+        body=load_sample("trf1", "cpopg/form_initial.html"),
+        content_type="text/html; charset=utf-8",
+    )
+    responses.add(
+        responses.POST,
+        LIST_URL,
+        body=load_sample("trf1", "cpopg/search_one_result.html"),
+        content_type="text/xml; charset=utf-8",
+    )
+    responses.add(responses.GET, DETAIL_URL, body=detail, content_type="text/html")
+    ids = [doc_id for _, doc_id in extract_documento_urls(detail.decode("latin-1"))]
+    assert len(ids) > 1
+    # 404 não é retentado, então a primeira peça falha de imediato.
+    responses.add(responses.GET, DOC_URL, status=404)
+    doc_body = load_sample_bytes("trf1", "cpopg_pecas/documento_html.html")
+    for _ in ids[1:]:
+        responses.add(responses.GET, DOC_URL, body=doc_body, content_type="text/html")
+
+    with caplog.at_level("WARNING", logger="juscraper._trf"):
+        df = jus.scraper("trf1", sleep_time=0).cpopg(
+            "10004080820254013602", download_pecas=True, diretorio=str(tmp_path)
+        )
+
+    saved = df.iloc[0]["pecas"]
+    assert [Path(p).stem for p in saved] == ids[1:]
+    assert f"Erro ao baixar peça {ids[0]}" in caplog.text

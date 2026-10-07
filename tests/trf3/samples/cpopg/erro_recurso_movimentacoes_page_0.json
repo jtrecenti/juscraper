@@ -1,0 +1,163 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "movimento": "Publicado Intimação em 29/09/2026.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "29/09/2026 02:08:07",
+   "idDocumento": "z4DBT_Bv0hK3aud8sv1wrTzF5tpfCzzGhurcemm5LlSnEMmMzqXjjWraRaxnUZZ37FKt"
+  },
+  {
+   "movimento": "Disponibilizado no DJ Eletrônico em 28/09/2026",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "29/09/2026 02:08:07",
+   "idDocumento": "JpikuTDI0zTcn6B-Ibb6XunIYUn95hs08iys9jdvC_i1XZlePw9HdYYpeVX1FzY9WdIF"
+  },
+  {
+   "movimento": "Expedição de Outros documentos.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "25/09/2026 18:54:11",
+   "idDocumento": "cTtCGSBo1E5qmAIQbqWY8gg10RFxLcyNCD_kVx4Vk-seI7tNjUx6kDJgkv-O6RfRWvA1"
+  },
+  {
+   "movimento": "Proferido despacho de mero expediente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "25/09/2026 16:43:24",
+   "idDocumento": "HraNm9E1yqet1qvCTUdfZJ4S0Q3fg2uiHTG2PYN9QZUCCLqGTW81_ewWOsT4FG1fDz0E"
+  },
+  {
+   "movimento": "Conclusos para despacho",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "24/09/2026 19:11:24",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de Petição de petição intercorrente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "24/09/2026 17:34:28",
+   "idDocumento": "GUAp9t-MHQ5GSu744Kqfk2sPwricrZbIrLvKcQbdFpQHqSxKmWvMyl-Ne8ELoGWrRjn2"
+  },
+  {
+   "movimento": "Juntada de Petição de manifestação",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "09/09/2026 14:00:37",
+   "idDocumento": "FN7ZN28ch-NzMrk4WCg917gtAtS3NUYTWNp9yBu-sM5T6ClfYznwiYuuFe4-3u9B4Rcm"
+  },
+  {
+   "movimento": "Juntada de Petição de petição intercorrente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "08/09/2026 18:38:28",
+   "idDocumento": "qyXjKunaKlxn21vNPgzcnfZDGT52UzKLb6BvAXk9vH8Kl2SoCbvUK0XIrXo52DDwlBpm"
+  },
+  {
+   "movimento": "Publicado Intimação em 04/09/2026.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "02/09/2026 16:48:59 - Decisão (Decisão)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "04/09/2026 01:44:22",
+   "idDocumento": "Vs18KRccY3dOXoTLZSiVAOFjqNwVD08NpWAg6KzO9PEWvqiqKL8wJNR--h26fUFJiMdN"
+  },
+  {
+   "movimento": "Disponibilizado no DJ Eletrônico em 03/09/2026",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "02/09/2026 16:48:59 - Decisão (Decisão)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "04/09/2026 01:44:22",
+   "idDocumento": "OSo3JShJmyEEyuKC_Ocmke_zw_ulOsNaspmPg32mHhdO8Ymjf3y3s3-sJb0344Efad0w"
+  },
+  {
+   "movimento": "Juntada de Petição de petição intercorrente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "03/09/2026 19:21:47",
+   "idDocumento": "sf_r1g36J1ZKMFZ7PVxD48X1fsLU52HzBvL0PA1LwlfyFD5WIntKZRU2EZ0m6KIPpruv"
+  },
+  {
+   "movimento": "Expedição de Outros documentos.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "02/09/2026 16:48:59 - Decisão (Decisão)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "02/09/2026 16:49:00",
+   "idDocumento": "Q1Tm1A_-3clniZdFELxMQ4l18KeruKDRlV0fNCVtwGIHNig2EjHTPWCthH1iaVAISphB"
+  },
+  {
+   "movimento": "Expedida/certificada a intimação eletrônica",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "02/09/2026 16:49:00",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de certidão",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "02/09/2026 16:46:36",
+   "idDocumento": "nkLMFMx7jNZZFOIj-bPOZ8PmP4xWAF-97JWEl5xqokSS69H65IGHVv8qPArP1kKSTd5a"
+  },
+  {
+   "movimento": "EXPEDIÇÃO DE CARTA PRECATÓRIA",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "02/09/2026 15:14:08",
+   "idDocumento": "SI4vRSGRkid_wvrTVfqiXPFOtwooqHmGQzaVFGlyCqXX-OhUuUmKHXejuniVbLt9t3Sq"
+  }
+ ],
+ "pageInfo": {
+  "current": 1,
+  "last": 2,
+  "size": 15,
+  "count": 27
+ }
+}

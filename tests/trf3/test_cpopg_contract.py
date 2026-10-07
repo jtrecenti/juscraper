@@ -1,391 +1,417 @@
-"""Offline contract tests for TRF3 ``cpopg`` (PJe consulta pública).
+"""Contratos offline do ``TRF3Scraper.cpopg`` (API JSON da consulta pública).
 
-Validates the public API shape of :class:`TRF3Scraper` end-to-end with the
-HTTP layer mocked via ``responses``: a real form HTML primes field-ID
-extraction, a real Ajax fragment provides the ``ca`` token and a real detail
-page produces the parsed record. Anything that drifts in the live deployment
-breaks the capture script (``tests/fixtures/capture/trf3.py``) first; this
-test then catches schema/parse regressions on the captured bytes.
+A camada HTTP é simulada com ``responses`` a partir dos samples gravados por
+``tests/fixtures/capture/trf3.py``. Os matchers conferem o número buscado, o
+parâmetro ``page`` de cada página e o cabeçalho ``x-pagina-origem``.
 """
 from __future__ import annotations
 
-from urllib.parse import parse_qsl
-
 import pandas as pd
 import pytest
+import requests
 import responses
+from responses import matchers
 
 import juscraper as jus
-from tests._helpers import assert_no_mojibake, load_sample, load_sample_bytes
+from juscraper.core.exceptions import BotChallengeBlockedError
+from juscraper.courts.trf3.download import BASE_URL_1G, busca_url, recurso_url
+from juscraper.courts.trf3.schemas import OutputCpopgTRF3
+from tests.trf3._api import carregar, id_processo_do_cenario, itens_do_cenario, registrar_busca, registrar_processo
+
+COLUNAS = {
+    "id_cnj",
+    "processo",
+    "classe",
+    "assunto",
+    "data_distribuicao",
+    "orgao_julgador",
+    "orgao_julgador_colegiado",
+    "jurisdicao",
+    "endereco_orgao",
+    "polo_ativo",
+    "polo_passivo",
+    "outros_interessados",
+    "movimentacoes",
+    "documentos",
+}
+CNJ_PAGINADO = "50035362120254036342"
+CNJ_SEM_RESULTADO = "00000000020994030000"
 
 
-def _subset_form_matcher(expected: dict[str, str]):
-    """``responses`` 0.x lacks ``strict_match`` — homemade subset matcher."""
-
-    def _match(request) -> tuple[bool, str]:
-        body = request.body or b""
-        if isinstance(body, bytes):
-            body = body.decode("utf-8")
-        actual = dict(parse_qsl(body, keep_blank_values=True))
-        for key, value in expected.items():
-            if actual.get(key) != value:
-                return False, (
-                    f"expected {key!r}={value!r}, got {actual.get(key)!r}"
-                )
-        return True, ""
-
-    return _match
+@pytest.fixture(autouse=True)
+def _sem_espera(mocker):
+    """Zera as esperas de paginação e de backoff do retry."""
+    mocker.patch("time.sleep")
 
 
-LIST_URL = "https://pje1g.trf3.jus.br/pje/ConsultaPublica/listView.seam"
-DETAIL_URL = (
-    "https://pje1g.trf3.jus.br/pje/"
-    "ConsultaPublica/DetalheProcessoConsultaPublica/listView.seam"
-)
-
-
-def test_akamai_block_raises_dedicated_exception() -> None:
-    """403 ``Access Denied`` (Akamai) vira ``BotChallengeBlockedError`` com mensagem clara."""
-    import pytest as _pt
-
-    from juscraper.core.exceptions import BotChallengeBlockedError
-    from juscraper.courts._trf.download import _check_bot_challenge
-
-    class FakeResp:
-        status_code = 403
-        url = "https://pje1g.trf3.jus.br/pje/ConsultaPublica/listView.seam"
-        content = (
-            b"<HTML><HEAD><TITLE>Access Denied</TITLE></HEAD><BODY>"
-            b"<H1>Access Denied</H1>"
-            b" Reference&#32;&#35;18&#46;27f62917&#46;1779623119&#46;a59b1f4c"
-            b"</BODY></HTML>"
-        )
-
-    with _pt.raises(BotChallengeBlockedError) as exc_info:
-        _check_bot_challenge(FakeResp(), "TRF3")  # type: ignore[arg-type]
-    err = exc_info.value
-    assert err.tribunal == "TRF3"
-    assert err.reference == "18.27f62917.1779623119.a59b1f4c"
-    msg = str(err)
-    assert "TRF3" in msg
-    assert "aguarde" in msg  # orientação de espera presente
-    assert "VPN" in msg or "hotspot" in msg  # orientação de troca de IP
-
-
-def test_check_bot_challenge_ignores_legitimate_403() -> None:
-    """403 sem 'Access Denied' segue para ``raise_for_status`` normalmente."""
-    from juscraper.courts._trf.download import _check_bot_challenge
-
-    class FakeResp:
-        status_code = 403
-        url = "https://example.com/forbidden"
-        content = b"<html>403 - not authorized</html>"
-
-    # Sem 'Access Denied' no body, a função retorna sem levantar.
-    _check_bot_challenge(FakeResp())  # type: ignore[arg-type]
-
-
-def test_check_bot_challenge_ignores_non_403() -> None:
-    """200/500/etc. nunca disparam a detecção."""
-    from juscraper.courts._trf.download import _check_bot_challenge
-
-    class FakeResp:
-        status_code = 500
-        url = "https://example.com/x"
-        content = b"Access Denied"  # nem assim — só 403 conta
-
-    _check_bot_challenge(FakeResp())  # type: ignore[arg-type]
-
-
-def test_extract_movs_pagination_returns_none_when_no_slider() -> None:
-    """Processes with ≤ 15 movs render no slider — paginator must short-circuit."""
-    from juscraper.courts._trf.download import extract_movs_pagination
-
-    detail = load_sample_bytes("trf3", "cpopg/detail_normal.html").decode("latin-1")
-    assert extract_movs_pagination(detail) is None
-
-
-def test_extract_movs_pagination_picks_movs_slider_not_documentos() -> None:
-    """Detail HTML has two Richfaces sliders (movs + docs). We must hit movs."""
-    from juscraper.courts._trf.download import extract_movs_pagination
-
-    detail = load_sample_bytes("trf3", "cpopg/detail_paginated.html").decode("latin-1")
-    info = extract_movs_pagination(detail)
-    assert info is not None
-    # The movs panel wrapper is ``j_id<NN>:j_id<NN>``; we don't pin the exact
-    # ``j_id`` numbers (they're regenerated on every PJe redeploy), but the
-    # structure does need to look right.
-    assert info.max_pages > 1
-    assert info.container_id != info.form_id
-    assert info.slider_input_name.startswith(info.form_id + ":")
-    assert info.ajax_source_name.startswith(info.form_id + ":")
-    assert info.view_state  # ViewState is required for the AJAX POST
-
-
-def test_merge_movs_pages_appends_rows_into_movs_tbody() -> None:
-    """Splicing page-2 rows into page-1 tbody yields a single contiguous list."""
-    from juscraper.courts._trf.download import merge_movs_pages
-    from juscraper.courts._trf.parse import parse_detail
-
-    # Page 1 (detail page) is latin-1; the AJAX page-2 fragment is UTF-8 — the
-    # two endpoints of the same PJe deployment disagree on charset. Decode each
-    # the way fetch_detail/fetch_movs_page do in production.
-    detail = load_sample_bytes("trf3", "cpopg/detail_paginated.html").decode("latin-1")
-    page_2 = load_sample_bytes("trf3", "cpopg/movs_page_2.html").decode("utf-8")
-    page1_movs = parse_detail(detail)["movimentacoes"]
-    merged_movs = parse_detail(merge_movs_pages(detail, [page_2]))["movimentacoes"]
-    # Page 1 has 15 rows, page 2 has another 15 — merged must hold both.
-    assert len(page1_movs) == 15
-    assert len(merged_movs) == 30
-    # The first 15 are unchanged (we append at the end of the tbody).
-    assert merged_movs[:15] == page1_movs
-    # Regression guard: page-2 rows must carry clean accents, not mojibake.
-    # Decoding the UTF-8 fragment as latin-1 turns "petição" into "petiÃ§Ã£o".
-    page2_text = " ".join(m["descricao"] for m in merged_movs[15:])
-    assert_no_mojibake(page2_text, contexto="movs paginadas (merge)")
-
-
-def test_merge_movs_pages_noop_when_extras_empty() -> None:
-    """No extra pages → identical HTML, identical parse."""
-    from juscraper.courts._trf.download import merge_movs_pages
-
-    detail = load_sample_bytes("trf3", "cpopg/detail_paginated.html").decode("latin-1")
-    assert merge_movs_pages(detail, []) is detail
+def _row_sem_dados(row: pd.Series) -> bool:
+    return all(pd.isna(row.get(col)) for col in COLUNAS - {"id_cnj"})
 
 
 @responses.activate
-def test_fetch_movs_page_decodes_fragment_as_utf8() -> None:
-    """The Richfaces AJAX fragment is UTF-8; ``fetch_movs_page`` must not latin-1 it.
+def test_cpopg_paginado_traz_todas_as_paginas_e_colunas() -> None:
+    """Movimentações em 5 páginas viram uma lista só, com as colunas do portal antigo."""
+    paginas = registrar_processo(BASE_URL_1G, "cpopg", "paginado")
+    df = jus.scraper("trf3", sleep_time=0).cpopg("5003536-21.2025.4.03.6342")
 
-    Regression for the double-encoding bug where accented movimentação text came
-    back mojibaked (``petição`` -> ``petiÃ§Ã£o``) because the UTF-8 partial
-    response was decoded as latin-1. Serves the *raw bytes* of the captured
-    fragment and asserts the decoded text carries clean accents.
+    assert len(df) == 1
+    assert set(df.columns) >= COLUNAS
+    row = df.iloc[0]
+    assert row["id_cnj"] == CNJ_PAGINADO
+    assert row["processo"] == "5003536-21.2025.4.03.6342"
+    assert row["classe"] == "PROCEDIMENTO DO JUIZADO ESPECIAL CÍVEL (436)"
+    assert row["data_distribuicao"] == "24/09/2025"
+    assert row["orgao_julgador"] == "1ª Vara Gabinete JEF de Barueri"
+    assert row["orgao_julgador_colegiado"] is None  # "" na API
+
+    movs = row["movimentacoes"]
+    total = carregar("cpopg", "paginado_movimentacoes_page_0.json")["pageInfo"]["count"]
+    assert len(movs) == total == len(itens_do_cenario("cpopg", "paginado", "movimentacoes"))
+    assert set(movs[0]) == {"data", "descricao", "documento"}
+    assert movs[0]["data"] == "24/09/2026 11:38:16"
+
+    autor = row["polo_ativo"][0]
+    assert autor["nome"] == "CINTIA REGIANE CORREA DOS SANTOS"
+    assert autor["tipo"] == "AUTOR"
+    assert autor["participante"].startswith("CINTIA REGIANE")
+    assert autor["situacao"] == "Ativo"
+    assert row["polo_passivo"][0]["procuradoria"] == "Procuradoria-Regional Federal da 3ª Região"
+    assert row["outros_interessados"][0]["tipo"] == "FISCAL DA LEI"
+
+    doc = row["documentos"][0]
+    assert doc["data"] == "22/09/2026 13:33:36"
+    assert doc["descricao"] == "SENTENÇA (SENTENÇA)"
+    assert doc["binario"] is False
+    assert doc["id"] == carregar("cpopg", "paginado_documentos_page_0.json")["result"][0]["id"]
+
+    OutputCpopgTRF3.model_validate(row.to_dict())
+    # Cada página registrada foi pedida exatamente uma vez: busca + dados + páginas.
+    assert len(responses.calls) == 2 + paginas
+
+
+@responses.activate
+def test_cpopg_recurso_vazio_vira_lista_vazia_sem_pedir_outra_pagina() -> None:
+    """``pageInfo.last = 0`` (polo ativo vazio) não dispara ``page=1``."""
+    paginas = registrar_processo(BASE_URL_1G, "cpopg", "normal")
+    df = jus.scraper("trf3", sleep_time=0).cpopg("5021122-65.2018.4.03.6100")
+
+    row = df.iloc[0]
+    assert row["processo"] == "5021122-65.2018.4.03.6100"
+    assert row["polo_ativo"] == []
+    assert row["polo_passivo"][0]["tipo"] == "EXECUTADO"
+    assert len(row["movimentacoes"]) == carregar("cpopg", "normal_movimentacoes_page_0.json")["pageInfo"]["count"]
+    assert len(responses.calls) == 2 + paginas
+
+
+@responses.activate
+def test_cpopg_recurso_com_erro_http_vira_none_e_mantem_o_resto() -> None:
+    """A API responde 500 ao ``poloPassivo`` de alguns mandados de segurança.
+
+    O recurso sai ``None`` (não ``[]``, que significaria "sem partes") e as
+    demais colunas do processo continuam preenchidas.
     """
-    from juscraper.courts._trf.download import DETAIL_PATH, extract_movs_pagination, fetch_movs_page
+    registrar_processo(BASE_URL_1G, "cpopg", "erro_recurso")
+    df = jus.scraper("trf3", sleep_time=0).cpopg("5025507-75.2026.4.03.6100")
 
-    detail = load_sample_bytes("trf3", "cpopg/detail_paginated.html").decode("latin-1")
-    info = extract_movs_pagination(detail)
-    assert info is not None
-
-    scraper = jus.scraper("trf3", sleep_time=0)
-    responses.add(
-        responses.POST,
-        scraper.BASE_URL + DETAIL_PATH,
-        body=load_sample_bytes("trf3", "cpopg/movs_page_2.html"),  # raw UTF-8 bytes
-        status=200,
-        content_type="text/xml; charset=UTF-8",
-    )
-
-    fragment = fetch_movs_page(scraper, scraper.BASE_URL, info, 2, "ca-token")
-
-    assert "ç" in fragment, "fragmento sem acento — decode suspeito"
-    assert_no_mojibake(fragment, contexto="fetch_movs_page")
+    row = df.iloc[0]
+    assert row["processo"] == "5025507-75.2026.4.03.6100"
+    assert row["polo_passivo"] is None
+    assert row["polo_ativo"][0]["tipo"] == "IMPETRANTE"
+    assert row["movimentacoes"]
+    assert "\n" in row["assunto"] and " \n" not in row["assunto"]
+    id_processo = id_processo_do_cenario("cpopg", "erro_recurso")
+    url_polo = recurso_url(BASE_URL_1G, id_processo, "poloPassivo")
+    tentativas = [c for c in responses.calls if c.request.url.startswith(url_polo)]
+    assert len(tentativas) == 4  # perfil "api": 4 tentativas antes de desistir
 
 
 @responses.activate
-def test_cpopg_returns_dataframe_with_canonical_columns() -> None:
-    """Happy path: one CNJ → one row, canonical columns populated."""
+def test_cpopg_sem_resultado_vira_linha_so_com_id_cnj() -> None:
+    """Busca vazia não pede detalhe; a linha traz só ``id_cnj``."""
+    registrar_busca(BASE_URL_1G, "cpopg", "sem_resultado", "0000000-00.2099.4.03.0000")
+    df = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_SEM_RESULTADO)
+
+    assert list(df.columns) == ["id_cnj"]
+    assert df.iloc[0]["id_cnj"] == CNJ_SEM_RESULTADO
+    assert len(responses.calls) == 1
+
+
+@responses.activate
+def test_cpopg_lote_preserva_ordem() -> None:
+    """Lote misto devolve uma linha por CNJ, na ordem de entrada."""
+    registrar_busca(BASE_URL_1G, "cpopg", "sem_resultado", "0000000-00.2099.4.03.0000")
+    registrar_processo(BASE_URL_1G, "cpopg", "paginado")
+    df = jus.scraper("trf3", sleep_time=0).cpopg([CNJ_SEM_RESULTADO, CNJ_PAGINADO])
+
+    assert list(df["id_cnj"]) == [CNJ_SEM_RESULTADO, CNJ_PAGINADO]
+    assert _row_sem_dados(df.iloc[0])
+    assert df.iloc[1]["processo"] == "5003536-21.2025.4.03.6342"
+
+
+@responses.activate
+def test_cpopg_retenta_timeout_de_leitura() -> None:
+    """Requisição sem resposta (Akamai segura parte delas) é retentada."""
+    responses.add(responses.GET, busca_url(BASE_URL_1G), body=requests.ReadTimeout("sem resposta"))
+    registrar_processo(BASE_URL_1G, "cpopg", "paginado")
+    df = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO)
+
+    assert df.iloc[0]["processo"] == "5003536-21.2025.4.03.6342"
+
+
+@responses.activate
+def test_cpopg_lote_segue_apos_erro_de_rede() -> None:
+    """Erro de rede que persiste nas tentativas vira linha só com ``id_cnj``."""
     responses.add(
         responses.GET,
-        LIST_URL,
-        body=load_sample("trf3", "cpopg/form_initial.html"),
-        content_type="text/html; charset=utf-8",
+        busca_url(BASE_URL_1G),
+        body=requests.ConnectionError("caiu"),
+        match=[matchers.query_param_matcher({"page": "0", "numeroProcesso": "0000000-00.2099.4.03.0000"})],
     )
-    responses.add(
-        responses.POST,
-        LIST_URL,
-        body=load_sample("trf3", "cpopg/search_one_result.html"),
-        content_type="text/xml; charset=utf-8",
-        match=[
-            _subset_form_matcher(
-                {
-                    "fPP:numProcesso-inputNumeroProcessoDecoration:"
-                    "numProcesso-inputNumeroProcesso": "5005946-09.2025.4.03.6324",
-                    "AJAXREQUEST": "_viewRoot",
-                    "fPP:j_id247": "fPP:j_id247",
-                    "fPP:dataAutuacaoDecoration:dataAutuacaoInicioInputDate": "",
-                },
-            ),
-        ],
-    )
+    registrar_processo(BASE_URL_1G, "cpopg", "paginado")
+    df = jus.scraper("trf3", sleep_time=0).cpopg([CNJ_SEM_RESULTADO, CNJ_PAGINADO])
+
+    assert _row_sem_dados(df.iloc[0])
+    assert df.iloc[1]["processo"] == "5003536-21.2025.4.03.6342"
+
+
+@responses.activate
+def test_cpopg_lote_segue_apos_erro_de_parse(monkeypatch) -> None:
+    """Erro no parser de um item vira linha só com ``id_cnj`` e o lote segue."""
+    from juscraper.courts.trf3 import client
+
+    registrar_processo(BASE_URL_1G, "cpopg", "paginado")
+    registrar_processo(BASE_URL_1G, "cpopg", "normal")
+    real = client.parse_processo
+    chamadas = {"n": 0}
+
+    def parse_instavel(bruto):
+        chamadas["n"] += 1
+        if chamadas["n"] == 1:
+            raise ValueError("JSON inesperado")
+        return real(bruto)
+
+    monkeypatch.setattr(client, "parse_processo", parse_instavel)
+    df = jus.scraper("trf3", sleep_time=0).cpopg([CNJ_PAGINADO, "50211226520184036100"])
+
+    assert _row_sem_dados(df.iloc[0])
+    assert df.iloc[1]["processo"] == "5021122-65.2018.4.03.6100"
+
+
+@responses.activate
+def test_cpopg_bloqueio_akamai_interrompe_o_lote() -> None:
+    """403 ``Access Denied`` do Akamai levanta ``BotChallengeBlockedError`` sem retentar."""
     responses.add(
         responses.GET,
-        DETAIL_URL,
-        body=load_sample_bytes("trf3", "cpopg/detail_normal.html"),
+        busca_url(BASE_URL_1G),
+        body=(
+            b"<HTML><HEAD><TITLE>Access Denied</TITLE></HEAD><BODY><H1>Access Denied</H1>"
+            b" Reference&#32;&#35;18&#46;27f62917&#46;1779623119&#46;a59b1f4c</BODY></HTML>"
+        ),
+        status=403,
         content_type="text/html",
     )
-
-    scraper = jus.scraper("trf3", sleep_time=0)
-    df = scraper.cpopg("50059460920254036324")
-
-    assert isinstance(df, pd.DataFrame)
-    assert len(df) == 1
-    expected = {
-        "id_cnj",
-        "processo",
-        "classe",
-        "assunto",
-        "data_distribuicao",
-        "orgao_julgador",
-        "polo_ativo",
-        "polo_passivo",
-        "movimentacoes",
-        "documentos",
-    }
-    assert expected <= set(df.columns)
-    row = df.iloc[0]
-    assert row["id_cnj"] == "50059460920254036324"
-    assert row["processo"] == "5005946-09.2025.4.03.6324"
-    assert row["classe"] is not None
-    assert isinstance(row["movimentacoes"], list) and len(row["movimentacoes"]) > 0
+    with pytest.raises(BotChallengeBlockedError) as exc_info:
+        jus.scraper("trf3", sleep_time=0).cpopg([CNJ_PAGINADO, CNJ_SEM_RESULTADO])
+    assert exc_info.value.tribunal == "TRF3"
+    assert exc_info.value.reference == "18.27f62917.1779623119.a59b1f4c"
+    assert len(responses.calls) == 1
 
 
 @responses.activate
-def test_cpopg_missing_process_returns_row_with_only_id_cnj() -> None:
-    """A CNJ that PJe can't find still yields a row keyed by ``id_cnj``."""
-    responses.add(
-        responses.GET,
-        LIST_URL,
-        body=load_sample("trf3", "cpopg/form_initial.html"),
-        content_type="text/html; charset=utf-8",
-    )
-    responses.add(
-        responses.POST,
-        LIST_URL,
-        body=load_sample("trf3", "cpopg/search_no_results.html"),
-        content_type="text/xml; charset=utf-8",
-    )
-    # No detail URL is added — the scraper must short-circuit when there's
-    # no ca token. Adding an unmocked URL would surface as ConnectionError
-    # if the short-circuit ever regressed.
+def test_cpopg_envia_cabecalhos_de_navegador() -> None:
+    """A sessão usa os cabeçalhos de XHR do Chrome, não o User-Agent do juscraper."""
+    registrar_busca(BASE_URL_1G, "cpopg", "sem_resultado", "0000000-00.2099.4.03.0000")
+    jus.scraper("trf3", sleep_time=0).cpopg(CNJ_SEM_RESULTADO)
 
-    scraper = jus.scraper("trf3", sleep_time=0)
-    df = scraper.cpopg("00000000020994030000")
-
-    assert len(df) == 1
-    row = df.iloc[0]
-    assert row["id_cnj"] == "00000000020994030000"
-    assert pd.isna(row.get("processo")) or row.get("processo") is None
+    headers = responses.calls[0].request.headers
+    assert headers["User-Agent"].startswith("Mozilla/5.0")
+    assert headers["Accept"].startswith("application/json")
+    assert headers["Sec-Fetch-Mode"] == "cors"
+    assert "Upgrade-Insecure-Requests" not in headers
 
 
-@responses.activate
-def test_cpopg_batch_lookup_preserves_order() -> None:
-    """Mixed found/missing batch yields one row per input CNJ in order."""
-    # ``GET form`` is fetched once at session init and memoized; subsequent
-    # POSTs/GET-detail responses must be queued in submission order via
-    # responses.add to enforce sequencing.
-    responses.add(
-        responses.GET,
-        LIST_URL,
-        body=load_sample("trf3", "cpopg/form_initial.html"),
-    )
-    responses.add(
-        responses.POST,
-        LIST_URL,
-        body=load_sample("trf3", "cpopg/search_one_result.html"),
-    )
-    responses.add(
-        responses.GET,
-        DETAIL_URL,
-        body=load_sample_bytes("trf3", "cpopg/detail_normal.html"),
-    )
-    responses.add(
-        responses.POST,
-        LIST_URL,
-        body=load_sample("trf3", "cpopg/search_no_results.html"),
-    )
-
-    scraper = jus.scraper("trf3", sleep_time=0)
-    df = scraper.cpopg(["50059460920254036324", "00000000020994030000"])
-    assert list(df["id_cnj"]) == ["50059460920254036324", "00000000020994030000"]
-    assert df.iloc[0]["processo"] == "5005946-09.2025.4.03.6324"
-    assert df.iloc[1].get("processo") in (None,) or pd.isna(df.iloc[1].get("processo"))
-
-
-def test_cpopg_rejects_unknown_kwargs() -> None:
-    """Passing an unknown kwarg surfaces as a friendly ``TypeError``."""
+def test_cpopg_rejeita_kwarg_desconhecido() -> None:
+    """Kwarg desconhecido vira ``TypeError`` antes de qualquer requisição."""
     scraper = jus.scraper("trf3", sleep_time=0)
     with pytest.raises(TypeError, match="unexpected keyword"):
-        scraper.cpopg("50059460920254036324", filtro_inexistente="x")
+        scraper.cpopg(CNJ_PAGINADO, filtro_inexistente="x")
+    with pytest.raises(TypeError, match="cpopg_download"):
+        scraper.cpopg_download(CNJ_PAGINADO, filtro_inexistente="x")
 
 
 @responses.activate
-def test_cpopg_batch_continues_after_download_error() -> None:
-    """Erro de rede num CNJ não derruba o batch — vira linha só com ``id_cnj``."""
-    # GET form OK + 1 POST que dá ConnectionError + 1 POST OK + 1 GET detail OK.
-    responses.add(
-        responses.GET,
-        LIST_URL,
-        body=load_sample("trf3", "cpopg/form_initial.html"),
-    )
-    responses.add(responses.POST, LIST_URL, body=ConnectionError("kaboom"))
-    responses.add(
-        responses.POST,
-        LIST_URL,
-        body=load_sample("trf3", "cpopg/search_one_result.html"),
-    )
-    responses.add(
-        responses.GET,
-        DETAIL_URL,
-        body=load_sample_bytes("trf3", "cpopg/detail_normal.html"),
-    )
-
+def test_cpopg_download_e_parse_separados() -> None:
+    """``cpopg_download`` devolve os envelopes; ``cpopg_parse`` monta o mesmo DataFrame."""
+    registrar_processo(BASE_URL_1G, "cpopg", "paginado")
+    registrar_busca(BASE_URL_1G, "cpopg", "sem_resultado", "0000000-00.2099.4.03.0000")
     scraper = jus.scraper("trf3", sleep_time=0)
-    df = scraper.cpopg(["00000000020994030000", "50059460920254036324"])
-    assert list(df["id_cnj"]) == ["00000000020994030000", "50059460920254036324"]
-    # CNJ que falhou no download vira linha só com id_cnj.
-    assert pd.isna(df.iloc[0].get("processo")) or df.iloc[0].get("processo") is None
-    # CNJ que veio depois é parseado normalmente.
-    assert df.iloc[1]["processo"] == "5005946-09.2025.4.03.6324"
+    brutos = scraper.cpopg_download([CNJ_PAGINADO, CNJ_SEM_RESULTADO])
+
+    assert brutos[1] is None
+    assert set(brutos[0]) == {"busca", "dados", "poloAtivo", "poloPassivo", "outrosInteressados",
+                              "movimentacoes", "documentos"}
+    assert len(brutos[0]["movimentacoes"]) == 5
+    df = scraper.cpopg_parse(brutos, [CNJ_PAGINADO, CNJ_SEM_RESULTADO])
+    assert df.iloc[0]["processo"] == "5003536-21.2025.4.03.6342"
+    with pytest.raises(ValueError, match="mesmo tamanho"):
+        scraper.cpopg_parse(brutos, [CNJ_PAGINADO])
+
+
+def test_cpopg_aceita_politica_por_perfil() -> None:
+    """``politica=`` ajusta os perfis ``api`` e ``documento`` campo a campo."""
+    scraper = jus.scraper("trf3", politica={"api": {"timeout": 5}})
+    assert scraper._perfis_http["api"].timeout == 5  # pylint: disable=protected-access
+    assert scraper._perfis_http["api"].retry_on_timeout is True  # pylint: disable=protected-access
 
 
 @responses.activate
-def test_cpopg_batch_continues_after_parse_error(monkeypatch) -> None:
-    """Erro no parser de um item vira linha só com ``id_cnj`` e o batch segue."""
+def test_cpopg_ignora_resultado_de_outro_numero() -> None:
+    """Busca que devolve processo de outro número é tratada como sem resultado."""
     responses.add(
         responses.GET,
-        LIST_URL,
-        body=load_sample("trf3", "cpopg/form_initial.html"),
+        busca_url(BASE_URL_1G),
+        json=carregar("cpopg", "paginado_busca.json"),  # traz o 5003536-21.2025.4.03.6342
+        match=[matchers.query_param_matcher({"page": "0", "numeroProcesso": "5021122-65.2018.4.03.6100"})],
     )
-    responses.add(
-        responses.POST,
-        LIST_URL,
-        body=load_sample("trf3", "cpopg/search_one_result.html"),
-    )
-    responses.add(
-        responses.GET,
-        DETAIL_URL,
-        body=load_sample_bytes("trf3", "cpopg/detail_normal.html"),
-    )
-    responses.add(
-        responses.POST,
-        LIST_URL,
-        body=load_sample("trf3", "cpopg/search_one_result.html"),
-    )
-    responses.add(
-        responses.GET,
-        DETAIL_URL,
-        body=load_sample_bytes("trf3", "cpopg/detail_normal.html"),
-    )
+    df = jus.scraper("trf3", sleep_time=0).cpopg("50211226520184036100")
 
-    # Faz o parser explodir só na primeira chamada. ``parse_detail`` é
-    # resolvido no namespace de ``_trf.base`` (onde ``cpopg_parse`` o chama).
-    from juscraper.courts._trf import base as trf_base
+    assert list(df.columns) == ["id_cnj"]
+    assert len(responses.calls) == 1
 
-    real_parse = trf_base.parse_detail
-    calls = {"n": 0}
 
-    def flaky_parse(html):
-        calls["n"] += 1
-        if calls["n"] == 1:
-            raise ValueError("HTML inesperado")
-        return real_parse(html)
+@pytest.mark.parametrize("id_processo", ["../../v1/outra", "/abs", "a.b", "", None])
+@responses.activate
+def test_cpopg_id_processo_invalido_vira_erro_do_processo(caplog, id_processo) -> None:
+    """``idProcesso`` fora do alfabeto da API não entra em URL: o processo vira linha só com ``id_cnj``."""
+    busca = carregar("cpopg", "paginado_busca.json")
+    busca["result"][0]["idProcesso"] = id_processo
+    responses.add(responses.GET, busca_url(BASE_URL_1G), json=busca)
 
-    monkeypatch.setattr(trf_base, "parse_detail", flaky_parse)
+    with caplog.at_level("WARNING", logger="juscraper.trf3"):
+        df = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO)
 
+    assert list(df.columns) == ["id_cnj"]
+    assert len(responses.calls) == 1
+    assert "idProcesso inválido" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "falha",
+    [requests.ReadTimeout("sem resposta"), requests.ConnectionError("caiu")],
+    ids=["timeout", "conexao"],
+)
+@responses.activate
+def test_cpopg_erro_de_rede_em_recurso_derruba_o_processo(falha) -> None:
+    """Timeout ou erro de conexão que persiste num recurso paginado derruba o processo.
+
+    Só erro HTTP depois das tentativas deixa o recurso ``None``; erro de rede
+    não diz nada sobre o recurso e vira linha só com ``id_cnj``.
+    """
+    id_processo = id_processo_do_cenario("cpopg", "paginado")
+    for _ in range(4):  # uma falha por tentativa do perfil "api"
+        responses.add(responses.GET, recurso_url(BASE_URL_1G, id_processo, "movimentacoes"), body=falha)
+    registrar_processo(BASE_URL_1G, "cpopg", "paginado")
+
+    df = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO)
+
+    assert list(df.columns) == ["id_cnj"]
+    url_movs = recurso_url(BASE_URL_1G, id_processo, "movimentacoes")
+    assert sum(c.request.url.startswith(url_movs) for c in responses.calls) == 4
+
+
+@responses.activate
+def test_cpopg_erro_em_dados_derruba_o_processo() -> None:
+    """``/dados`` com erro HTTP depois das tentativas derruba o processo, sem pedir os recursos."""
+    id_processo = id_processo_do_cenario("cpopg", "paginado")
+    registrar_busca(BASE_URL_1G, "cpopg", "paginado", "5003536-21.2025.4.03.6342")
+    responses.add(responses.GET, recurso_url(BASE_URL_1G, id_processo, "dados"), status=500, json={"status": 500})
+
+    df = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO)
+
+    assert list(df.columns) == ["id_cnj"]
+    assert len(responses.calls) == 1 + 4
+    assert not any("poloAtivo" in c.request.url for c in responses.calls)
+
+
+@responses.activate
+def test_cpopg_envelope_com_status_diferente_de_ok_derruba_o_processo() -> None:
+    """``/dados`` com HTTP 200 mas ``status`` diferente de ``"ok"`` não vira processo com dados."""
+    id_processo = id_processo_do_cenario("cpopg", "paginado")
+    dados = carregar("cpopg", "paginado_dados.json")
+    dados["status"] = "error"
+    registrar_busca(BASE_URL_1G, "cpopg", "paginado", "5003536-21.2025.4.03.6342")
+    responses.add(responses.GET, recurso_url(BASE_URL_1G, id_processo, "dados"), json=dados)
+
+    df = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO)
+
+    assert list(df.columns) == ["id_cnj"]
+    assert len(responses.calls) == 2
+
+
+@responses.activate
+def test_cpopg_retenta_erro_de_conexao() -> None:
+    """O perfil ``api`` retenta erro de conexão, como diz o CHANGELOG."""
+    responses.add(responses.GET, busca_url(BASE_URL_1G), body=requests.ConnectionError("caiu"))
+    registrar_processo(BASE_URL_1G, "cpopg", "paginado")
+    df = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO)
+
+    assert df.iloc[0]["processo"] == "5003536-21.2025.4.03.6342"
+
+
+@responses.activate
+def test_cpopg_preserva_jurisdicao_endereco_segredo_e_documento_da_movimentacao() -> None:
+    """Campos que o parser copia da API saem com o valor capturado, não ``None``."""
+    registrar_processo(BASE_URL_1G, "cpopg", "paginado")
+    row = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO).iloc[0]
+
+    dados = carregar("cpopg", "paginado_dados.json")["result"]
+    assert row["jurisdicao"] == dados["jurisdicao"] == "Subseção Judiciária de Barueri (Juizado Especial Federal Cível)"
+    assert row["endereco_orgao"] == dados["endereco"]
+    assert row["endereco_orgao"].startswith("Avenida Piracema, 1362")
+    assert row["polo_ativo"][0]["segredo_justica"] is False
+    movs_com_documento = [m for m in row["movimentacoes"] if m["documento"] is not None]
+    assert movs_com_documento
+    assert row["movimentacoes"][2]["documento"] == "22/09/2026 13:33:36 - Sentença (Sentença)"
+
+
+@responses.activate
+def test_cpopg_parse_aceita_htmls_como_alias_deprecado() -> None:
+    """``htmls=`` continua aceito com ``DeprecationWarning`` e produz o mesmo DataFrame de ``brutos=``."""
+    registrar_processo(BASE_URL_1G, "cpopg", "paginado")
     scraper = jus.scraper("trf3", sleep_time=0)
-    df = scraper.cpopg(["50059460920254036324", "50059460920254036325"])
-    assert list(df["id_cnj"]) == ["50059460920254036324", "50059460920254036325"]
-    assert pd.isna(df.iloc[0].get("processo")) or df.iloc[0].get("processo") is None
-    assert df.iloc[1]["processo"] == "5005946-09.2025.4.03.6324"
+    brutos = scraper.cpopg_download(CNJ_PAGINADO)
+    canonico = scraper.cpopg_parse(brutos=brutos, id_cnj_list=[CNJ_PAGINADO])
+
+    with pytest.warns(DeprecationWarning, match="'htmls' está deprecado. Use 'brutos'") as avisos:
+        via_alias = scraper.cpopg_parse(htmls=brutos, id_cnj_list=[CNJ_PAGINADO])
+
+    pd.testing.assert_frame_equal(via_alias, canonico)
+    assert avisos[0].filename == __file__
+
+
+def test_cpopg_parse_recusa_brutos_e_htmls_juntos() -> None:
+    """Canônico e alias juntos levantam ``ValueError`` sem aviso de deprecação."""
+    scraper = jus.scraper("trf3", sleep_time=0)
+    with pytest.raises(ValueError, match="ao mesmo tempo"):
+        scraper.cpopg_parse(brutos=[None], htmls=[None], id_cnj_list=[CNJ_PAGINADO])
+
+
+def test_cpopg_parse_recusa_html_do_portal_antigo() -> None:
+    """HTML passado por posição ou pelo alias levanta ``TypeError`` explicando o formato novo."""
+    scraper = jus.scraper("trf3", sleep_time=0)
+    html = "<html><body>Detalhe do processo</body></html>"
+    with pytest.raises(TypeError, match="envelopes JSON da API"):
+        scraper.cpopg_parse([html, None], [CNJ_PAGINADO, CNJ_SEM_RESULTADO])
+    with pytest.warns(DeprecationWarning), pytest.raises(TypeError, match="não o HTML do portal antigo"):
+        scraper.cpopg_parse(htmls=[html], id_cnj_list=[CNJ_PAGINADO])
+    with pytest.raises(TypeError, match="envelopes JSON da API"):
+        scraper.cposg_parse([html], [CNJ_PAGINADO])
+
+
+def test_cpopg_parse_argumentos_ausentes_ou_desconhecidos() -> None:
+    """Sem ``brutos``/``id_cnj_list`` ou com kwarg desconhecido, ``TypeError``."""
+    scraper = jus.scraper("trf3", sleep_time=0)
+    with pytest.raises(TypeError, match="exige brutos e id_cnj_list"):
+        scraper.cpopg_parse(id_cnj_list=[CNJ_PAGINADO])
+    with pytest.raises(TypeError, match="unexpected keyword"):
+        scraper.cpopg_parse([None], [CNJ_PAGINADO], formato="html")

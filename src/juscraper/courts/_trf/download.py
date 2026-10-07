@@ -1,4 +1,4 @@
-"""Shared HTTP layer for the TRF PJe public-process consultation (TRF1/TRF3/TRF5).
+"""Shared HTTP layer for the TRF PJe public-process consultation (TRF1/TRF5, TJPE).
 
 A single ``cpopg`` lookup is three requests:
 
@@ -11,8 +11,8 @@ A single ``cpopg`` lookup is three requests:
 3. ``GET BASE_URL + ConsultaPublica/DetalheProcessoConsultaPublica/listView.seam?ca=<token>``
    — returns the full process detail page (latin-1 encoded).
 
-The three PJe ConsultaPública deployments share this flow byte-for-byte
-except for ``BASE_URL`` (per-tribunal), the classe form field (TRF1/TRF3 use
+The PJe ConsultaPública JSF deployments share this flow byte-for-byte
+except for ``BASE_URL`` (per-tribunal), the classe form field (TRF1 uses
 the ``classeJudicial`` autocomplete + ``dataAutuacaoDecoration`` block; TRF5
 uses the ``classeProcessualProcessoHidden`` popup), and the tribunal name.
 Those vary via parameters injected by :class:`TRFConsultaScraper`, never via
@@ -62,11 +62,13 @@ def _check_bot_challenge(resp: requests.Response, tribunal: str = "TRF") -> None
     raise BotChallengeBlockedError(tribunal, resp.url, reference=ref)
 
 
-# Browser-realistic header set. Some deployments (TRF3) sit behind an Akamai
-# bot manager (``ak_bmsc`` cookie) that closes the connection on stripped
+# Browser-realistic header set. The PJe deployments sit behind an Akamai bot
+# manager (``ak_bmsc`` cookie) that closes the connection on stripped
 # requests; the Sec-Fetch-* headers and Accept-Encoding: br are what trip the
-# challenge into returning the page instead of stalling. TRF1/TRF5 are more
-# lenient but sending the same headers keeps the session-priming predictable.
+# challenge into returning the page instead of stalling. Tuned on TRF3's former
+# JSF portal; TRF1/TRF5 are more lenient but sending the same headers keeps the
+# session-priming predictable. The TRF3 JSON API client derives its XHR headers
+# from this set.
 BROWSER_HEADERS: dict[str, str] = {
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -121,7 +123,7 @@ def extract_form_field_ids(
 ) -> FormFieldIds:
     """Pull the dynamic ``j_idNNN`` IDs out of the form HTML.
 
-    ``classe_field_name`` selects the classe component: TRF1/TRF3 ship the
+    ``classe_field_name`` selects the classe component: TRF1 ships the
     ``classeJudicial`` autocomplete, TRF5 the ``classeProcessualProcessoHidden``
     popup picker — visually similar, different form field names.
     ``tribunal`` prefixes the error messages, since the family also serves TJPE.
@@ -175,7 +177,7 @@ def build_search_payload(
     backend tolerates omitted optional fields only when the radio/select
     "control" fields are present alongside.
 
-    ``classe_fields`` carries the classe component (and, for TRF1/TRF3, the
+    ``classe_fields`` carries the classe component (and, for TRF1, the
     ``dataAutuacaoDecoration`` date block) — it is supplied by
     :meth:`TRFConsultaScraper._classe_payload_fields`, which is the only
     per-tribunal divergence in this payload.

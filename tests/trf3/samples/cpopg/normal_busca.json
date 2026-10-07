@@ -1,0 +1,35 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "idProcesso": "zWrDtddSnJ8TaRiqUpbVVRmIU51kb0yJmr6kDwNC417E4fT7db_GjyRr-waOV5Y0",
+   "numeroProcesso": "5021122-65.2018.4.03.6100",
+   "classe": "CUMPRIMENTO DE SENTENÇA",
+   "classeSigla": "CumSen",
+   "assunto": "Ressarcimento do SUS",
+   "ultimaMovimentacao": "Juntada de Petição de petição intercorrente (17/09/2026 11:08:04)",
+   "partes": {
+    "poloAtivo": {
+     "nomeParte": "AGENCIA NACIONAL DE SAUDE SUPLEMENTAR",
+     "qntOutros": 0,
+     "sigiloso": false,
+     "suspenso": false
+    },
+    "poloPassivo": {
+     "nomeParte": "UNIMED NACIONAL - COOPERATIVA CENTRAL",
+     "qntOutros": 0,
+     "sigiloso": false,
+     "suspenso": false
+    }
+   }
+  }
+ ],
+ "pageInfo": {
+  "current": 1,
+  "last": 1,
+  "size": 30,
+  "count": 1
+ }
+}
