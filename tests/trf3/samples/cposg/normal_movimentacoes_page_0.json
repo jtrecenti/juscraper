@@ -1,0 +1,163 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "movimento": "Remetidos os Autos (por julgamento definitivo do recurso) para Juízo de origem",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "04/10/2024 10:24:26",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Transitado em Julgado em 04/10/2024",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "04/10/2024 10:23:45",
+   "idDocumento": "l8VmiMrjDgZVaBNtyVK4-ZE77-7DcQMgcLr5RVSHshzunERC4pNCuvOSUfkV_rf-wSyK"
+  },
+  {
+   "movimento": "Decorrido prazo de ANS AGENCIA NACIONAL DE SAUDE SUPLEMENTAR em 03/10/2024 23:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "04/10/2024 00:01:22",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Decorrido prazo de UNIMED NACIONAL - COOPERATIVA CENTRAL em 16/09/2024 23:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "17/09/2024 00:05:23",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Expedida/certificada a intimação eletrônica",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "20/08/2024 12:06:36",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Expedida/certificada a intimação eletrônica",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "20/08/2024 12:06:36",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Conhecido o recurso de UNIMED NACIONAL - COOPERATIVA CENTRAL - CNPJ: 02.812.468/0001-06 (APELANTE) e não-provido",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "19/08/2024 15:42:30 - Acórdão (Acórdão)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "19/08/2024 17:41:39",
+   "idDocumento": "ZBR57rbaxu1n-VL-kyvmNZvIuOXPVy45VoFZ9tUmbqPFWfvRFmTmh3rSHQkbpUXOJ-3d"
+  },
+  {
+   "movimento": "Deliberado em Sessão - Julgado - Mérito",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "19/08/2024 15:05:25",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de certidão de julgamento",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "19/08/2024 15:02:34",
+   "idDocumento": "9LDWxraoEVziTMquzVrKJbnmPxkSEa4Vqib309M676s60TnEBB101iIRJhO0RFgwYqXY"
+  },
+  {
+   "movimento": "Expedição de Outros documentos.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "11/07/2024 11:06:19",
+   "idDocumento": "_1Mz3ukGLjuL9K2mfUKQvwYNb9KfAqeZuy56UL23KHdgyLPMb07qkMAfv6FAXdPTEAZl"
+  },
+  {
+   "movimento": "Expedição de Outros documentos.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "11/07/2024 11:06:19",
+   "idDocumento": "XFI8ixMjraTTLryrAuaU9uGR4lVXXbx2PXGsc9uiS3bGnVZ40HtM-eG6NrqANzbVpAMn"
+  },
+  {
+   "movimento": "Expedição de Outros documentos.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "11/07/2024 11:06:18",
+   "idDocumento": "-c6YQJr-ggxtC83g7elt2rkgti_usrYHR0qdYa1Srq9__JduOpy0LVSwuOcKDako3vdA"
+  },
+  {
+   "movimento": "Decorrido prazo de ANS AGENCIA NACIONAL DE SAUDE SUPLEMENTAR em 15/08/2023 23:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "16/08/2023 00:01:14",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Conclusos com embargos de declaração",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "19/07/2023 14:45:40",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de Petição de contrarrazões",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "18/07/2023 14:55:46",
+   "idDocumento": "ZNKrYf1ZeAEoTwzKJ6EySd_z-kk9ojbRd4g3es7gQKBKMEphwM_-pvhmY-846-Gv28_R"
+  }
+ ],
+ "pageInfo": {
+  "current": 1,
+  "last": 3,
+  "size": 15,
+  "count": 34
+ }
+}

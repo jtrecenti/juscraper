@@ -1,0 +1,61 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "id": "dUcfcmBDqpFlRo5Ncr380iXjLi9mMbwDvgthFSZDyXl9sJotyB8hB98A6PJtAp9FqtUP",
+   "descricao": "19/08/2024 15:42:30 - ACÓRDÃO (ACÓRDÃO)",
+   "mostrarComprovante": true,
+   "binario": false
+  },
+  {
+   "id": "SrUdqEogJfUFYLdwZMpHTh1Kbkz8hhWHJrjKG0WK_s7GMBh5BCKjoXYVA1QEZ3_k8ahI",
+   "descricao": "27/06/2023 15:55:44 - ACÓRDÃO (ACÓRDÃO)",
+   "mostrarComprovante": true,
+   "binario": false
+  },
+  {
+   "id": "TPNl5x4TEzSQ2LFkyTWIgRHT_UCw1K3HujVJoc7jiIUWpWoWViMaKJ5L2_kZVt4XtY9x",
+   "descricao": "06/08/2020 17:20:05 - SENTENÇA (SENTENÇA)",
+   "mostrarComprovante": false,
+   "binario": false
+  },
+  {
+   "id": "orUTY7cGMhg0l2HoPUiaY1tdzCQ7Uy7CYBycItDEliSFPsJ0o_2bS9abFhkYAJLMS69p",
+   "descricao": "30/07/2020 17:29:14 - SENTENÇA (SENTENÇA)",
+   "mostrarComprovante": false,
+   "binario": false
+  },
+  {
+   "id": "CnqnDF6XRiSqOxjhyaevpGgumFQTcINVwXuvi2O46BHP3CvmV6GW1gBST7LccYyp-g18",
+   "descricao": "16/06/2020 17:57:06 - SENTENÇA (SENTENÇA)",
+   "mostrarComprovante": false,
+   "binario": false
+  },
+  {
+   "id": "Fj_tQ7WKK-3pNlTXgEJO6XVUpfW1Bb6W62GpuVCySCcOZlr1-dKMVQg74rBGujI6KRmh",
+   "descricao": "24/03/2020 14:42:19 - SENTENÇA (SENTENÇA)",
+   "mostrarComprovante": false,
+   "binario": false
+  },
+  {
+   "id": "fbNQv4vZOZrg1WWiBC50ZjHDWpLL3-M5a5Q5MSvGksbd9njXKFHEiHMwtv2_6VV4NVr2",
+   "descricao": "07/03/2019 17:09:22 - DESPACHO (DESPACHO)",
+   "mostrarComprovante": false,
+   "binario": false
+  },
+  {
+   "id": "arsnJ2NkE1uZgYVzaT0ubIHGkxVgZ2-dYQTCQifWvEJoRzTMoTkbXVwtXwcoZa8YccJk",
+   "descricao": "27/08/2018 15:01:24 - DESPACHO (DESPACHO)",
+   "mostrarComprovante": false,
+   "binario": false
+  }
+ ],
+ "pageInfo": {
+  "current": 1,
+  "last": 1,
+  "size": 15,
+  "count": 8
+ }
+}

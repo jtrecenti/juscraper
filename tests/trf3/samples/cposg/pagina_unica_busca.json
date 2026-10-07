@@ -1,0 +1,35 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "idProcesso": "iZSsy5Lcx5izKveRXhApz1UTgGnitMVIid46Hm-PpBe9zXpayc532otbaXx992Do2Ik",
+   "numeroProcesso": "5026242-75.2026.4.03.0000",
+   "classe": "AGRAVO DE INSTRUMENTO",
+   "classeSigla": "AI",
+   "assunto": "Multas e demais Sanções",
+   "ultimaMovimentacao": "Expedição de Comunicação via sistema. (16/09/2026 17:57:13)",
+   "partes": {
+    "poloAtivo": {
+     "nomeParte": "UNIMED NACIONAL - COOPERATIVA CENTRAL",
+     "qntOutros": 0,
+     "sigiloso": false,
+     "suspenso": false
+    },
+    "poloPassivo": {
+     "nomeParte": "AGENCIA NACIONAL DE SAÚDE SUPLEMENTAR - ANS",
+     "qntOutros": 0,
+     "sigiloso": false,
+     "suspenso": false
+    }
+   }
+  }
+ ],
+ "pageInfo": {
+  "current": 1,
+  "last": 1,
+  "size": 30,
+  "count": 1
+ }
+}

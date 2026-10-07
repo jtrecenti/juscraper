@@ -1,0 +1,163 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "movimento": "Juntada de ato ordinatório",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "23/01/2026 14:31:07 - Ato Ordinatório (Ato Ordinatório)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "23/01/2026 14:31:07",
+   "idDocumento": "-zgyfsuWbY4MfcELsrZQnVMFqJ0Sri9Rj-24kJwVn1jeGrpO3v-VTavT3wGEK_mX4q80"
+  },
+  {
+   "movimento": "Juntada de certidão",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "23/01/2026 13:22:25",
+   "idDocumento": "3Gb3y3iUbwYY7jNLyOmrqm5vfshe_Mnc3HbeHsaRxI2tpzgln6_pmUlJ_WDigN8SiT2N"
+  },
+  {
+   "movimento": "Juntada de certidão",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "20/01/2026 17:58:28",
+   "idDocumento": "lSTPJQ9rBbGjYg0_DKvUTqXUPWkLQZHNJiVENyxKoFP766ooitrI2Pmo0i7UbyN_efss"
+  },
+  {
+   "movimento": "Proferido despacho de mero expediente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "20/01/2026 17:27:42",
+   "idDocumento": "SSISS9jtds4U5eD7TGeiMD_MOSv5r4YTWJR8AZCXaL0tXcG042yT11cuULHmd27Y5YWP"
+  },
+  {
+   "movimento": "Conclusos para despacho",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "20/01/2026 12:18:09",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Decorrido prazo de AGENCIA NACIONAL DE SAUDE SUPLEMENTAR em 24/10/2025 23:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "25/10/2025 00:51:26",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Decorrido prazo de UNIMED NACIONAL - COOPERATIVA CENTRAL em 16/10/2025 23:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "17/10/2025 00:46:32",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Publicado Intimação em 25/09/2025.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "25/09/2025 02:17:38",
+   "idDocumento": "rhZCSzsjTFgGawPM1aMtJZ6RY-31TwzIRv16ZeDj2dlnf3DHV6EfpFBLAoTPLLhOPV8K"
+  },
+  {
+   "movimento": "Disponibilizado no DJ Eletrônico em 24/09/2025",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "25/09/2025 02:17:38",
+   "idDocumento": "fW2ri5zJoQ8WxvvmYV2pzgU8GCJUtdrfKEV1za9SpSvR64brAYFfag_L0T1dR0zY9qmi"
+  },
+  {
+   "movimento": "Juntada de certidão",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "23/09/2025 20:22:00",
+   "idDocumento": "w6G7I58QbtU6xTRvn5XIcUWP5VfATuYAbx74jL1k6XGRLu4x7d0zzQyfxE2xOpfbCAjj"
+  },
+  {
+   "movimento": "Expedição de Outros documentos.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "23/09/2025 20:21:05",
+   "idDocumento": "5LKw-1oQjoUeY5bGocaauwZz1DaNmfrNKpyv4W3QHto8Em78WbipTu9Wy8M1JaXcHWjt"
+  },
+  {
+   "movimento": "Expedida/certificada a intimação eletrônica",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "23/09/2025 20:21:04",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Proferido despacho de mero expediente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "23/09/2025 18:57:09",
+   "idDocumento": "jlNR45rQAkC3Cp2xpWgb4-gF2IZR5mxU-5mZdabA8dtW6MhjBCNbzxriByQQ0pq1-qqf"
+  },
+  {
+   "movimento": "Conclusos para despacho",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "23/09/2025 18:51:31",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Decorrido prazo de UNIMED NACIONAL - COOPERATIVA CENTRAL em 07/05/2025 23:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "08/05/2025 00:49:50",
+   "idDocumento": null
+  }
+ ],
+ "pageInfo": {
+  "current": 2,
+  "last": 8,
+  "size": 15,
+  "count": 117
+ }
+}

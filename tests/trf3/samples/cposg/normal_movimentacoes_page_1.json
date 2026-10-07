@@ -1,0 +1,163 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "movimento": "Expedição de Comunicação via sistema.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "13/07/2023 16:06:46",
+   "idDocumento": "TrEieWuMmoz12Qfa2W0CkjgRwZK3nERfhNFxUFKD2BCd84NAWJ_tdbNmaYvvsmWzE0LU"
+  },
+  {
+   "movimento": "Juntada de ato ordinatório",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "13/07/2023 16:06:10",
+   "idDocumento": "0sMAC9S1LVxA6qdV6J_-eymBNkU7wQ9-ly6DOuYOt5ZZ6va8a3WwvqURkXf9EHpd_UPB"
+  },
+  {
+   "movimento": "Juntada de Petição de embargos de declaração",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "10/07/2023 17:46:12",
+   "idDocumento": "YkZDtoUqGQE8oBgl7PdqLe8ey4HA-qfIRi1X2YTc4AJ-NBtjFh_I7g4VTBflC5RzuJpC"
+  },
+  {
+   "movimento": "Publicado Acórdão em 04/07/2023.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "30/06/2023 16:12:20 - Acórdão (Acórdão)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "04/07/2023 00:10:00",
+   "idDocumento": "lLpZcArAXAJRY0Y9HfeTVA9REsyyspfYQYZNov3TARZWjQMWc8QLS40FZ0f6H9UwKl8g"
+  },
+  {
+   "movimento": "Disponibilizado no DJ Eletrônico em 03/07/2023",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "30/06/2023 16:12:20 - Acórdão (Acórdão)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "04/07/2023 00:09:59",
+   "idDocumento": "HHHKey4TlZcEGls1bNyLCT0NOIfhqbTgbF79V-jwdQEVXtAscRPkawmwx3pQxW83iBhW"
+  },
+  {
+   "movimento": "Expedição de Outros documentos.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "30/06/2023 16:12:20 - Acórdão (Acórdão)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "30/06/2023 16:12:22",
+   "idDocumento": "b2dPdkX7NcMv1Pg0o7UMG1Is2xfX13B5UViEM25xXndQZbV7pCew1N_sYtXAbCqu9qB1"
+  },
+  {
+   "movimento": "Expedida/certificada a intimação eletrônica",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "30/06/2023 16:12:22",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Conhecido o recurso de CENTRAL NACIONAL UNIMED - COOPERATIVA CENTRAL - CNPJ: 02.812.468/0001-06 (APELANTE) e não-provido",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "27/06/2023 15:55:44 - Acórdão (Acórdão)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "29/06/2023 10:47:56",
+   "idDocumento": "DCJPsy9UuLpwSouU21Y4yXrt-4_CM6d4n9VsdQi-r0lYKDRzyKi1AFt3zrr1pK64KQPF"
+  },
+  {
+   "movimento": "Juntada de certidão de julgamento",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "27/06/2023 16:21:59",
+   "idDocumento": "w7Dzx1MIWFP4hiLbnaYmGqhlr7JJs-pp53DO_Q9v2F0pN1wFeK3TOhpbjxcbGwii-CyA"
+  },
+  {
+   "movimento": "Deliberado em Sessão - Julgado - Mérito",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "27/06/2023 15:15:10",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de Petição de memoriais",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "05/06/2023 18:22:26",
+   "idDocumento": "V6Tc7WNIftgLNJMB23BH6_PTThfr0DJU7T9v8TvYHrxtx_kemglaBSRdWesiGA8INuUh"
+  },
+  {
+   "movimento": "Expedição de Outros documentos.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "22/05/2023 15:07:55",
+   "idDocumento": "WCQPIvrWbUTVeFkRZRhW5NzPdGUyzdWJtwHEFaXDx7RzY6LZoRr6Bw3EKqIe6oB1Mbet"
+  },
+  {
+   "movimento": "Expedição de Outros documentos.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "22/05/2023 15:07:54",
+   "idDocumento": "xbL7m7-sySb9tPkkX2zfjiZOG2WjJOPkEnr-oZmIwgJKGpUJuLNln3yev_ACM0QgFqiY"
+  },
+  {
+   "movimento": "Expedição de Outros documentos.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "22/05/2023 15:07:53",
+   "idDocumento": "7gBwtwe03TwOcYY2EaGPDcRYVETIzh6hkxbQhG4mPGAcDteF0TeUq14jITXSBBym_Ew0"
+  },
+  {
+   "movimento": "Remetidos os Autos (para processamento) para gabinete do Relator",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "04/12/2020 19:25:45",
+   "idDocumento": null
+  }
+ ],
+ "pageInfo": {
+  "current": 2,
+  "last": 3,
+  "size": 15,
+  "count": 34
+ }
+}

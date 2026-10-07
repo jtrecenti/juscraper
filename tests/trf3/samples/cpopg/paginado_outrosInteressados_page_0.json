@@ -1,0 +1,23 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "participante": "MINISTERIO PUBLICO FEDERAL - PR/SP - CNPJ: 26.9XX.XXX/XXXX-XX (FISCAL DA LEI)",
+   "nome": "MINISTERIO PUBLICO FEDERAL - PR/SP",
+   "tipo": "FISCAL DA LEI",
+   "procuradoria": "Procuradoria Regional da República da 3ª Região",
+   "procuradoriaDomicilio": true,
+   "situacao": "Ativo",
+   "principal": true,
+   "segredoJustica": false
+  }
+ ],
+ "pageInfo": {
+  "current": 1,
+  "last": 1,
+  "size": 10,
+  "count": 1
+ }
+}

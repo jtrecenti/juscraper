@@ -1,0 +1,163 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "movimento": "Ato ordinatório praticado",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "13/05/2019 14:16:29 - Ato Ordinatório (Ato Ordinatório)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "13/05/2019 14:16:29",
+   "idDocumento": "rhm-hkvl7MW_bppR4fAO4O9GMTYlsR6LZJYERuw06TMvqlN5dKmbLkDbECg2yJyijtE"
+  },
+  {
+   "movimento": "Juntada de Petição de contestação",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "13/05/2019 14:12:46",
+   "idDocumento": "tbbyL-sZ7GSu8hMzz77p60kEj2pYYAHwADSEvptWiEzCUgMnz903aGLOz1nWl45uz3g"
+  },
+  {
+   "movimento": "Decorrido prazo de CENTRAL NACIONAL UNIMED - COOPERATIVA CENTRAL em 26/03/2019 23:59:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "31/03/2019 06:06:45",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Publicado Intimação em 19/03/2019.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "19/03/2019 01:09:39",
+   "idDocumento": "7T5lRtVVLAIeOdGQ5EMpHShYwzUJh3aShA4sbSWrl1EwpZcOJMBvwB7wrXOlHwxBdjU"
+  },
+  {
+   "movimento": "Disponibilizado no DJE no dia útil anterior à publicação",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "19/03/2019 01:09:38",
+   "idDocumento": "b2QDhNQu_9DH-_IJ4UGj_oGdFPwVxuyyJcK8ZmIoseTjiJneqYz4AUb0FP-X7z7nnaA"
+  },
+  {
+   "movimento": "Expedição de Outros documentos.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "15/03/2019 12:38:31",
+   "idDocumento": "v24dzTn8Z7gbPNtYGDafGbEdwM4ZudGp2lDxgwx46iUv9g6K8iKzSSyggm4lNd29pqA"
+  },
+  {
+   "movimento": "Expedição de Outros documentos.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "15/03/2019 12:38:31",
+   "idDocumento": "ErzZ_qTRnv71pTssZyRYgQITX39lH4UAHe-8m2Nw_yDjrY4T7pnodhhWAe5n34Q1ONw"
+  },
+  {
+   "movimento": "Expedição de Comunicação via sistema.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "15/03/2019 12:38:14",
+   "idDocumento": "7n2gIe1QKO79Eql4nD-WmPSrExjNp7FTe0ML-ho00x12tLrt-aixsDxXyJuzNdDQUVM"
+  },
+  {
+   "movimento": "Proferido despacho de mero expediente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "07/03/2019 17:09:23",
+   "idDocumento": "irYfyWnTm38I81rDcGwM3rKFRNjY7O_xjfAGqsv7ZQU1VWh4V-AyDUxT335S4O5BTAc"
+  },
+  {
+   "movimento": "Conclusos para despacho",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "07/03/2019 16:17:17",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de Petição de petição intercorrente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "14/09/2018 14:38:24",
+   "idDocumento": "zf0DhDE5SDcNvdU441_A6FjZzgJE_vWfV5_-VYZRJcdR1iuitH6xeWSSMTcGvrU7qCw"
+  },
+  {
+   "movimento": "Juntada de Petição de petição intercorrente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "05/09/2018 18:20:37",
+   "idDocumento": "saShZXLpy98j5Vtu1P87CSuFhg2b2CcvCg_BD2WWv8v0Lt8H3JSOQPbhH3gabzjk9Ak"
+  },
+  {
+   "movimento": "Publicado Intimação em 05/09/2018.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "05/09/2018 00:11:17",
+   "idDocumento": "8g_YCGKotDD6TVmjfZ9a8vituU9vQIqdOH8rEY3W19XrXhNOM1fbIHucnhzcSNWUl74"
+  },
+  {
+   "movimento": "Disponibilizado no DJE no dia útil anterior à publicação",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "05/09/2018 00:11:16",
+   "idDocumento": "zOtHeKxCiRdKN7xB2ZTso15gmDDVs0uqxYjnfKyzeJnVPJzzfC5p7wY0-JtE7_H8SyQ"
+  },
+  {
+   "movimento": "Expedição de Outros documentos.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "31/08/2018 15:14:54",
+   "idDocumento": "eUZ5TR0678ynZbD5K3QChlxIPTfsEmLR9mK_EuhbfYUBLDcCOR0XZrKND2cdW4dR0_w"
+  }
+ ],
+ "pageInfo": {
+  "current": 7,
+  "last": 8,
+  "size": 15,
+  "count": 117
+ }
+}

@@ -1,0 +1,91 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "id": "uNyOlrZ_mW77IiRGvJGqTtREi3bDQeCL6qFWKSMtvKI2TkHfKb91bE8YJ5EBLhW-9Ktr",
+   "descricao": "23/01/2026 14:31:07 - ATO ORDINATÓRIO (ATO ORDINATÓRIO)",
+   "mostrarComprovante": false,
+   "binario": false
+  },
+  {
+   "id": "AgTK3dA9jLXgIdr2Qzxs_ASl_Gm2BwsRuJ0bd_OcnRG960pIDXZjyZjVRsm3TtGBOmLD",
+   "descricao": "04/10/2024 15:37:19 - ATO ORDINATÓRIO (ATO ORDINATÓRIO)",
+   "mostrarComprovante": false,
+   "binario": false
+  },
+  {
+   "id": "yFBh6rgxW-vPu2odPy82V8Ixm2R5JRY_po06_fZyQRCrLNdGnKjqa6A6boBqkaSvpqqg",
+   "descricao": "20/08/2024 12:06:34 - ACÓRDÃO (ACÓRDÃO)",
+   "mostrarComprovante": false,
+   "binario": false
+  },
+  {
+   "id": "QhyxfiKhUdTi5oah0Bkfzp8Hxx_g_ezCRb-DBsEWpa9a6o0mjg2h2vznCjyjwMVdbBGE",
+   "descricao": "19/08/2024 15:42:30 - ACÓRDÃO (ACÓRDÃO)",
+   "mostrarComprovante": false,
+   "binario": false
+  },
+  {
+   "id": "HnT2tdspXQui2Esr5qemQViPp51OCEmbnw6j0LpGw9VZEjRtl234WwToPOerpD3vYB9K",
+   "descricao": "13/07/2023 16:06:46 - ATO ORDINATÓRIO (ATO ORDINATÓRIO)",
+   "mostrarComprovante": false,
+   "binario": false
+  },
+  {
+   "id": "YT6QQW5tCadXzLJo0iNaFqZuPUUl-YZw0m308OMEbcOSIp8g4p6HBrvVVQbH5X0R5Gj2",
+   "descricao": "13/07/2023 16:06:10 - ATO ORDINATÓRIO (ATO ORDINATÓRIO)",
+   "mostrarComprovante": false,
+   "binario": false
+  },
+  {
+   "id": "ET3zyESZKN7wZlybE2gVgekPVoqRdWzCxfGfe3Y-qVm96oo7E7Duufd5JQ7UK0v0s9be",
+   "descricao": "30/06/2023 16:12:20 - ACÓRDÃO (ACÓRDÃO)",
+   "mostrarComprovante": false,
+   "binario": false
+  },
+  {
+   "id": "-IQalRu83lGaKjx9RuSOKbi6pkCUl8bFDzijmvrXsx35MBaLs-4DyghjkAGLTK6Z_jMP",
+   "descricao": "27/06/2023 15:55:44 - ACÓRDÃO (ACÓRDÃO)",
+   "mostrarComprovante": false,
+   "binario": false
+  },
+  {
+   "id": "_o8ZAqYaQjjVFl_2ISsOKsT17IGU62YeNnLVddyGg55PT5lXwTjAwl735_vbTP_iVm0",
+   "descricao": "03/09/2020 17:15:15 - ATO ORDINATÓRIO (ATO ORDINATÓRIO)",
+   "mostrarComprovante": true,
+   "binario": false
+  },
+  {
+   "id": "62ijdRN8YzO_6CNu2mMUORuKS40l89jRf3u3xDLgHREeoV4NExu6Nm4aIg6EG5E0gxk",
+   "descricao": "30/07/2020 17:29:14 - SENTENÇA (SENTENÇA)",
+   "mostrarComprovante": true,
+   "binario": false
+  },
+  {
+   "id": "_PJHtsTx77Q7wh4wXOY6cfXnXB-zkm5Pm39RfLO-abRfxIuQYT3Dw1Xg44oBxk23BOk",
+   "descricao": "13/07/2020 20:10:29 - ATO ORDINATÓRIO (ATO ORDINATÓRIO)",
+   "mostrarComprovante": false,
+   "binario": false
+  },
+  {
+   "id": "g3nkljuaKsDEen3dbe86sse095ec-rYGdUjmYvNRYT2-zKb98KDVTpIN7K_q8-ozPaE",
+   "descricao": "24/03/2020 14:42:19 - SENTENÇA (SENTENÇA)",
+   "mostrarComprovante": true,
+   "binario": false
+  },
+  {
+   "id": "1ZRKL1FLitWLR7LcDSXLbHByVHez5C7Fy3h08uaz8FXdbxeWkZUkDFwDLZdl5qCDSCE",
+   "descricao": "13/05/2019 14:16:29 - ATO ORDINATÓRIO (ATO ORDINATÓRIO)",
+   "mostrarComprovante": false,
+   "binario": false
+  }
+ ],
+ "pageInfo": {
+  "current": 1,
+  "last": 1,
+  "size": 15,
+  "count": 13
+ }
+}
