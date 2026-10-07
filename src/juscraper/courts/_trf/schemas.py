@@ -3,7 +3,9 @@
 TRF1/TRF5 (and TJPE's 1º grau) expose the same ``cpopg`` public signature, so
 a single pair of schemas serves all of them, mirroring how the eSAJ family shares
 ``InputCJSGEsajPuro`` across TJAC/TJAL/TJAM/TJCE/TJMS. The schema-coverage
-tables in ``tests/schemas/`` map ``trf{1,3,5}`` to these classes.
+tables in ``tests/schemas/`` map ``trf1``, ``trf5`` and ``tjpe`` (``cpopg``) to
+these classes; TRF3 left the family and has its own schemas in
+``juscraper.courts.trf3.schemas``.
 """
 from __future__ import annotations
 
