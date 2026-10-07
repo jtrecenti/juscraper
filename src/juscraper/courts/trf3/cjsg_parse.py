@@ -10,6 +10,7 @@ Cada documento é um ``li.acordao-retorno`` com quatro blocos:
 """
 from __future__ import annotations
 
+import logging
 import re
 
 import pandas as pd
@@ -18,8 +19,14 @@ from bs4 import BeautifulSoup, Tag
 from ...core.parse_utils import coerce_date_columns
 from ...utils.cnj import format_cnj
 
+logger = logging.getLogger("juscraper.trf3.cjsg")
+
 _PUBLICACAO_RE = re.compile(r"^(?P<meio>.*?)\s*DATA:\s*(?P<data>\d{2}/\d{2}/\d{4})", re.IGNORECASE)
 _DECISAO_RE = re.compile(r"^(?:Julgamento|Decis[ãa]o)\s*:\s*(?P<data>\d{2}/\d{2}/\d{4})", re.IGNORECASE)
+# Título de magistrado no começo do span: "Desembargadora Federal ...",
+# "JUIZ CONVOCADO ...", "Juíza Federal ...". O portal não rotula o relator
+# para o acórdão; o que o identifica é ser um nome de magistrado.
+_MAGISTRADO_RE = re.compile(r"^(?:desembargador|ju[ií]z)a?\b", re.IGNORECASE)
 
 # Título da página de resultados -> base. As monocráticas do TRF3 e das Turmas
 # Recursais têm o mesmo título; separa-as o critério "Base: Recursais".
@@ -78,9 +85,12 @@ def _informacoes_basicas(item: Tag) -> dict[str, str | None]:
     acórdão (só quando existe), publicação (``<meio> DATA: dd/mm/aaaa``) e
     data de julgamento (``Julgamento:`` ou, nas monocráticas, ``Decisão:``).
     Os três primeiros vêm sempre, mesmo vazios; por isso são lidos pela
-    posição. Publicação e julgamento são reconhecidos pelo rótulo, e o que
-    sobra entre o relator e eles é o relator para o acórdão, conforme o
-    rótulo "Relator(a) para acórdão" da página do documento.
+    posição. Publicação e julgamento são reconhecidos pelo rótulo. O relator
+    para o acórdão vem num span sem rótulo (a página do documento o chama de
+    "Relator(a) para acórdão"); ele é reconhecido por começar com título de
+    magistrado (``Desembargador(a)``, ``Juiz(a)``). Span que não case com
+    nenhum desses formatos é ignorado, para que texto novo do portal não vire
+    relator por exclusão.
     """
     spans = [s.get_text(" ", strip=True) for s in item.select("div.informacoes-basicas > span.info")]
     info: dict[str, str | None] = {
@@ -92,17 +102,19 @@ def _informacoes_basicas(item: Tag) -> dict[str, str | None]:
         "meio_publicacao": None,
         "data_julgamento": None,
     }
-    extras: list[str] = []
+    relatores_acordao: list[str] = []
     for span in spans[3:]:
         if decisao := _DECISAO_RE.match(span):
             info["data_julgamento"] = decisao.group("data")
         elif publicacao := _PUBLICACAO_RE.match(span):
             info["data_publicacao"] = publicacao.group("data")
             info["meio_publicacao"] = publicacao.group("meio").strip() or None
+        elif _MAGISTRADO_RE.match(span):
+            relatores_acordao.append(span)
         elif span:
-            extras.append(span)
-    if extras:
-        info["relator_acordao"] = "; ".join(extras)
+            logger.debug("TRF3 cjsg: span de informações básicas não reconhecido: %r", span)
+    if relatores_acordao:
+        info["relator_acordao"] = "; ".join(relatores_acordao)
     return {chave: (valor or None) for chave, valor in info.items()}
 
 
