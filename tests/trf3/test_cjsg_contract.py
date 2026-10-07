@@ -14,8 +14,8 @@ import responses
 from responses.registries import OrderedRegistry
 
 import juscraper as jus
-from juscraper.core.exceptions import BotChallengeBlockedError
-from juscraper.courts.trf3.cjsg_download import BASE_URL, INDEX_URL, SEARCH_URL, build_cjsg_payload
+from juscraper.core.exceptions import BotChallengeBlockedError, RetryExhaustedError
+from juscraper.courts.trf3.cjsg_download import BASE_URL, CJSG_HEADERS, INDEX_URL, SEARCH_URL, build_cjsg_payload
 from tests._helpers import assert_no_mojibake
 from tests.trf3._cjsg_mock import HTML, add_page, add_search, sample
 
@@ -205,3 +205,57 @@ def test_cjsg_bloqueio_akamai_levanta_bot_challenge(mocker):
 
     assert exc_info.value.reference == "18.27f62917.1779623119.a59b1f4c"
     assert len(responses.calls) == 1
+
+
+SLEEP_VALUE = 0.42
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_respeita_sleep_time_do_construtor(mocker):
+    """``sleep_time`` from the constructor reaches ``time.sleep`` before page 2.
+
+    Every call must use that value: a leftover literal (``time.sleep(1)``) or a
+    missing pause both fail.
+    """
+    sleep_mock = mocker.patch("time.sleep")
+    add_search(_semestre("medicamento"), "results_normal_page_01.html")
+    add_page(2, "results_normal_page_02.html")
+
+    jus.scraper("trf3", sleep_time=SLEEP_VALUE).cjsg("medicamento", paginas=range(1, 3), **SEMESTRE)
+
+    assert sleep_mock.call_args_list == [mocker.call(SLEEP_VALUE)]
+
+
+@responses.activate
+def test_cjsg_403_comum_segue_para_o_retry(mocker):
+    """A 403 without the Akamai ``Access Denied`` body is retried, not a bot block."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.GET,
+        INDEX_URL.format(indice=0),
+        status=403,
+        body=b"<html><body><h1>Forbidden</h1></body></html>",
+        content_type=HTML,
+    )
+
+    with pytest.raises(RetryExhaustedError):
+        jus.scraper("trf3").cjsg("medicamento", paginas=1)
+
+    assert len(responses.calls) == jus.scraper("trf3").perfis_http["cjsg"].max_retries
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_envia_cabecalhos_de_navegador_e_referer(mocker):
+    """Every request carries the browser headers; the POST adds Referer and Origin."""
+    mocker.patch("time.sleep")
+    add_search(_semestre("medicamento"), "no_results.html")
+
+    jus.scraper("trf3").cjsg("medicamento", paginas=1, **SEMESTRE)
+
+    for chamada in responses.calls:
+        for nome, valor in CJSG_HEADERS.items():
+            assert chamada.request.headers.get(nome) == valor, (chamada.request.url, nome)
+    post = responses.calls[1].request
+    assert post.method == "POST"
+    assert post.headers["Referer"] == INDEX_URL.format(indice=0)
+    assert post.headers["Origin"] == "https://web.trf3.jus.br"

@@ -8,7 +8,13 @@ from __future__ import annotations
 
 import pytest
 
-from juscraper.courts.trf3.cjsg_download import _paginas_pedidas, cjsg_n_results
+from juscraper.courts.trf3.cjsg_download import (
+    _paginas_pedidas,
+    build_cjsg_payload,
+    build_cjsg_session,
+    cjsg_download_manager,
+    cjsg_n_results,
+)
 from tests._helpers import load_sample
 
 
@@ -75,3 +81,42 @@ def test_paginas_pedidas_corta_alem_do_total_e_mantem_ordem():
 
 def test_paginas_pedidas_sem_total_mantem_pedido():
     assert _paginas_pedidas(range(2, 5), None) == [2, 3, 4]
+
+
+class _Resposta:
+    """Minimal stand-in for ``requests.Response`` as the manager reads it."""
+
+    def __init__(self, text: str, url: str):
+        self.text = text
+        self.url = url
+        self.status_code = 200
+        self.encoding = None
+
+
+@pytest.mark.parametrize(("tamanho_pagina", "n_paginas"), [(10, 60), (30, 20), (50, 12)])
+def test_manager_arredonda_paginas_para_cima(tamanho_pagina, n_paginas):
+    """591 hits do not divide by the page size; the last partial page is downloaded.
+
+    Requests: the tab GET, the POST (whose redirect is page 1) and one GET per
+    page from 2 on.
+    """
+    primeira = _sample("results_normal_page_01.html")
+    chamadas: list[tuple[str, str]] = []
+
+    def request_fn(method, url, **kwargs):
+        chamadas.append((method, url))
+        return _Resposta(primeira, url)
+
+    brutos = cjsg_download_manager(
+        build_cjsg_payload("medicamento", tamanho_pagina=tamanho_pagina),
+        base="acordaos",
+        paginas=None,
+        tamanho_pagina=tamanho_pagina,
+        request_fn=request_fn,
+        session=build_cjsg_session(),
+        sleep_time=0,
+        progress=lambda pedidas, **_: pedidas,
+    )
+
+    assert len(brutos) == n_paginas
+    assert len(chamadas) == 2 + (n_paginas - 1)
