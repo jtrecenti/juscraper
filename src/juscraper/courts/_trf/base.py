@@ -1,7 +1,7 @@
-"""Shared scraper base for the TRF PJe ConsultaPública family (TRF1/TRF3/TRF5).
+"""Shared scraper base for the TRF PJe ConsultaPública family (TRF1/TRF5, TJPE).
 
-Absorbs the near-identical ``client.py`` modules of the three PJe
-ConsultaPública deployments (refs #84, #294). A concrete tribunal is a thin
+Absorbs the near-identical ``client.py`` modules of the PJe
+ConsultaPública JSF deployments (refs #84, #294). A concrete tribunal is a thin
 subclass that sets ``BASE_URL`` + ``TRIBUNAL_NAME`` (and, for TRF5, the
 classe form-field shape). Mirrors ``courts/_esaj/base.py``:
 
@@ -59,7 +59,7 @@ class TRFConsultaScraper(HTTPScraper):
     TRIBUNAL_NAME: str = ""
     #: Pydantic schema validating ``cpopg`` kwargs (``extra="forbid"``).
     INPUT_CPOPG: type[BaseModel] = InputCpopgTRF
-    #: PJe classe form field. TRF1/TRF3 use the ``classeJudicial`` autocomplete;
+    #: PJe classe form field. TRF1 uses the ``classeJudicial`` autocomplete;
     #: TRF5 overrides with the ``classeProcessualProcessoHidden`` popup.
     CLASSE_FIELD_NAME: str = "classeJudicial"
 
@@ -82,8 +82,9 @@ class TRFConsultaScraper(HTTPScraper):
     def _configure_session(self, session) -> None:
         """Send a browser-realistic header set (overrides the juscraper UA).
 
-        TRF3 sits behind an Akamai bot manager that stalls on stripped
-        requests; the Chrome-flavoured headers prime the session predictably.
+        The PJe deployments sit behind an Akamai bot manager that stalls on
+        stripped requests; the Chrome-flavoured headers prime the session
+        predictably.
         Mirrors how TJCE customizes its session in the eSAJ family.
         """
         session.headers.update(BROWSER_HEADERS)
@@ -93,7 +94,7 @@ class TRFConsultaScraper(HTTPScraper):
     def _classe_payload_fields(self, field_ids: FormFieldIds) -> dict[str, str]:
         """Build the classe (+ date) slice of the search payload.
 
-        Default = TRF1/TRF3 shape: the ``classeJudicial`` autocomplete (with its
+        Default = TRF1 shape: the ``classeJudicial`` autocomplete (with its
         paired ``sgbClasseJudicial_selection``) plus the ``dataAutuacaoDecoration``
         date block. TRF5 overrides this with its single popup field.
         """

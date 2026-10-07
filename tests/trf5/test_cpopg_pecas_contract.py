@@ -1,6 +1,6 @@
 """Offline contract tests for ``TRF5Scraper.cpopg(download_pecas=True, ...)``.
 
-Mirrors the TRF3 suite — the three TRF PJe deployments share the same
+Mirrors the other PJe JSF suite: TRF1 and TRF5 share the same
 ``documentoSemLoginHTML.seam?ca=...&idProcessoDoc=...`` URL shape.
 """
 from __future__ import annotations
