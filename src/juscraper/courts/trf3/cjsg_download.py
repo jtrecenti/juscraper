@@ -5,8 +5,9 @@ O portal é ASP.NET MVC com estado na sessão do servidor. A sequência é fixa:
 1. ``GET home/index/{n}`` abre a sessão (cookie ``ASP.NET_SessionId``) e escolhe
    a base. A base fica gravada na sessão, não no formulário: os campos do POST
    são os mesmos nas três abas.
-2. ``POST Home/ResultadoTotais`` executa a busca e redireciona para
-   ``Home/ListaResumida/1?np=0``, que já é a página 1 da lista.
+2. ``POST Home/ResultadoTotais`` executa a busca e responde 302 para
+   ``Home/ListaResumida/1?np=0``; o ``GET`` desse redirect já é a página 1 da
+   lista.
 3. ``GET Home/ListaResumida/2?np=N`` traz a página N da mesma busca.
 
 Sem o passo 1 o POST cai em ``Home/SessaoExpirada``. Por isso cada chamada de
@@ -15,7 +16,8 @@ na mesma sessão disputariam o mesmo estado no servidor.
 
 A lista resumida já traz, para cada documento, a ementa e o inteiro teor (em
 blocos ocultos), então não há uma requisição por documento. O custo de uma
-busca é de duas requisições fixas mais uma por página além da primeira.
+busca é de três requisições fixas (o ``GET`` da aba, o ``POST`` e o ``GET`` do
+redirect, que traz a página 1) mais uma por página além da primeira.
 """
 from __future__ import annotations
 
@@ -54,8 +56,11 @@ BASES: dict[str, tuple[int, dict[str, str]]] = {
 #: Valores de ``data_tipo``. Na aba de monocráticas o rótulo do 1 é "Decisão".
 DATA_TIPO = {"publicacao": "0", "julgamento": "1"}
 
-# Cabeçalhos de navegador. O portal fica atrás do bot manager da Akamai, que
-# deixa a conexão pendurada em requisições sem os cabeçalhos Sec-Fetch-*.
+# Cabeçalhos de navegador. O portal fica atrás do bot manager da Akamai. Na
+# medição, ``requests`` sem cabeçalhos (User-Agent ``python-requests``) ficou
+# com a conexão pendurada, sem resposta; com User-Agent e Accept de navegador,
+# mesmo sem os Sec-Fetch-*, a aba respondeu em 0,2 s. Os Sec-Fetch-* completam
+# o perfil de navegador, sem efeito medido isoladamente.
 CJSG_HEADERS: dict[str, str] = {
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -95,6 +100,18 @@ def _texto_campo(valor: str | None, molde: str) -> str:
     return molde.format(valor) if valor else ""
 
 
+# O JavaScript do formulário reescreve "1a. seção" como "1A" antes de montar o
+# filtro de órgão. Medido no portal: "QUINTA TURMA - 1A" encontra documentos,
+# e "QUINTA TURMA - 1A. SEÇÃO", que é o que a coluna ``orgao_julgador`` mostra
+# nos acórdãos antigos, encontra zero. Mesma expressão do JS
+# (``/1a\.\s+se[cç][aã]o/gi``).
+_PRIMEIRA_SECAO_RE = re.compile(r"1a\.\s+se[cç][aã]o", re.IGNORECASE)
+
+
+def _orgao_indexado(orgao: str | None) -> str:
+    return _PRIMEIRA_SECAO_RE.sub("1A", orgao or "")
+
+
 def build_cjsg_payload(
     pesquisa: str = "",
     *,
@@ -112,11 +129,24 @@ def build_cjsg_payload(
 ) -> dict[str, str]:
     """Monta o corpo form-urlencoded do ``POST Home/ResultadoTotais``.
 
-    Reproduz o que o formulário de pesquisa avançada envia. ``magistrado``,
-    ``classe`` e ``orgao`` vão como ``"0"`` (sem seleção no dropdown); o filtro
-    de verdade viaja nos campos ocultos ``hdnMagistrado``, ``hdnClasse`` e
-    ``hdnOrgao``. ``chkMostrarLista=on`` pede a lista resumida, que já traz
+    Usa os campos e os moldes do formulário de pesquisa avançada, mas não
+    reproduz tudo o que o JavaScript dele faz. ``magistrado``, ``classe`` e
+    ``orgao`` vão como ``"0"`` (sem seleção no dropdown); o filtro de verdade
+    viaja nos campos ocultos ``hdnMagistrado``, ``hdnClasse``, ``hdnOrgao`` e
+    ``hdnOrgaoJef``. ``chkMostrarLista=on`` pede a lista resumida, que já traz
     ementa e inteiro teor de cada documento.
+
+    No órgão julgador, o navegador grava em ``hdnOrgao`` o rótulo da opção do
+    dropdown (``"5ª Turma"``) e em ``hdnOrgaoJef`` o nome indexado, tirado do
+    atributo ``data-val-jef`` da opção (``"QUINTA TURMA"``); o servidor junta
+    os dois com OU (medido: 440 resultados só com ``hdnOrgao``, 33 só com o
+    nome indexado, 473 com os dois). Esta função recebe um texto só e o
+    coloca nos dois campos, depois da mesma troca de "1a. seção" por "1A" que
+    o JavaScript faz. O que ela não faz é traduzir o rótulo do dropdown para
+    o nome indexado, porque essa tabela é dado do portal e não regra: quem
+    filtra pelo rótulo encontra só o que o índice grava com esse rótulo.
+    Também não aplica as checagens do formulário (critério obrigatório,
+    datas); as que importam ficam em ``validar_combinacoes``.
 
     Args:
         pesquisa: Texto da pesquisa livre.
@@ -126,7 +156,8 @@ def build_cjsg_payload(
         numero_processo: Número do processo, com ou sem máscara.
         relator: Nome do relator como o portal indexa (ex.: ``"NERY JUNIOR"``).
         classe: Classe como no dropdown (ex.: ``"AI - AGRAVO DE INSTRUMENTO"``).
-        orgao_julgador: Órgão julgador como o portal indexa.
+        orgao_julgador: Órgão julgador como o portal indexa. "1a. seção" vira
+            "1A", como no formulário. Vai em ``hdnOrgao`` e ``hdnOrgaoJef``.
         ementa: Texto pesquisado só na ementa.
         indexacao: Texto pesquisado na indexação ("Objeto do Processo" nas
             Turmas Recursais).
@@ -153,7 +184,8 @@ def build_cjsg_payload(
         "indexacao": indexacao or "",
         "hdnMagistrado": _texto_campo(relator, "(({})).rel."),
         "hdnClasse": _texto_campo(classe, "({}).dclas."),
-        "hdnOrgao": _texto_campo(orgao_julgador, "({}).org."),
+        "hdnOrgao": _texto_campo(_orgao_indexado(orgao_julgador), "({}).org."),
+        "hdnOrgaoJef": _texto_campo(_orgao_indexado(orgao_julgador), "({}).org."),
     }
     payload.update(BASES[base][1])
     return payload

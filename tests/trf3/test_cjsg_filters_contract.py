@@ -3,9 +3,10 @@
 Every public filter must reach the POST body of ``Home/ResultadoTotais``. The
 expected bodies below are literal dicts, not calls to ``build_cjsg_payload``,
 so a regression in the builder itself also fails here. Field shapes follow
-what the portal's own form sends: the ``hdn*`` fields carry the filter text
+the portal's own form: the ``hdn*`` fields carry the filter text
 (``((NOME)).rel.``, ``(CLASSE).dclas.``, ``(ORGAO).org.``) and the dropdown IDs
-stay ``"0"``, because the server ignores them.
+stay ``"0"``, because the server ignores them. The órgão goes in both
+``hdnOrgao`` and ``hdnOrgaoJef``, which the server ORs together.
 """
 from __future__ import annotations
 
@@ -17,7 +18,7 @@ from responses.registries import OrderedRegistry
 
 import juscraper as jus
 from tests._helpers import assert_unknown_kwarg_raises
-from tests.trf3._cjsg_mock import add_search
+from tests.trf3._cjsg_mock import add_page, add_search
 
 
 def _body(**campos: str) -> dict[str, str]:
@@ -39,6 +40,7 @@ def _body(**campos: str) -> dict[str, str]:
         "hdnMagistrado": "",
         "hdnClasse": "",
         "hdnOrgao": "",
+        "hdnOrgaoJef": "",
     }
     body.update(campos)
     return body
@@ -61,6 +63,7 @@ def test_cjsg_all_filters_land_in_post_body(mocker):
             hdnMagistrado="((NERY JUNIOR)).rel.",
             hdnClasse="(AI - AGRAVO DE INSTRUMENTO).dclas.",
             hdnOrgao="(3ª Turma).org.",
+            hdnOrgaoJef="(3ª Turma).org.",
         ),
         "no_results.html",
     )
@@ -229,3 +232,63 @@ def test_cjsg_download_alias_query(mocker):
         brutos = jus.scraper("trf3").cjsg_download(query="medicamento", paginas=1)
 
     assert isinstance(brutos, list) and len(brutos) == 1
+
+
+@pytest.mark.parametrize(
+    ("orgao", "esperado"),
+    [
+        ("QUINTA TURMA - 1A. SEÇÃO", "(QUINTA TURMA - 1A).org."),
+        ("QUINTA TURMA - 1a.  seção", "(QUINTA TURMA - 1A).org."),
+        ("TURMA SUPLEMENTAR DA PRIMEIRA SEÇÃO", "(TURMA SUPLEMENTAR DA PRIMEIRA SEÇÃO).org."),
+    ],
+)
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_orgao_normaliza_primeira_secao_como_o_formulario(mocker, orgao, esperado):
+    """The form's JS rewrites ``1a. seção`` as ``1A`` and fills ``hdnOrgaoJef`` too.
+
+    Measured on the portal: ``QUINTA TURMA - 1A. SEÇÃO`` finds zero documents
+    and ``QUINTA TURMA - 1A`` finds the panel's judgments.
+    """
+    mocker.patch("time.sleep")
+    add_search(_body(txtPesquisaLivre="medicamento", hdnOrgao=esperado, hdnOrgaoJef=esperado), "no_results.html")
+
+    jus.scraper("trf3").cjsg("medicamento", paginas=1, orgao_julgador=orgao)
+
+
+@pytest.mark.parametrize(
+    ("datas", "data_tipo"),
+    [
+        ({"data_julgamento_inicio": "2026-01-01", "data_julgamento_fim": "2026-06-30"}, "1"),
+        ({"data_publicacao_inicio": "2026-01-01", "data_publicacao_fim": "2026-06-30"}, "0"),
+    ],
+)
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_so_datas_sem_pesquisa_e_criterio_valido(mocker, datas, data_tipo):
+    """A date range alone is a search criterion, as in the portal's form."""
+    mocker.patch("time.sleep")
+    add_search(_body(data_inicial="01/01/2026", data_final="30/06/2026", data_tipo=data_tipo), "no_results.html")
+
+    df = jus.scraper("trf3").cjsg(paginas=1, **datas)
+
+    assert df.empty
+    assert len(responses.calls) == 3
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_tamanho_pagina_chega_ao_payload_e_a_conta_de_paginas(mocker):
+    """``tamanho_pagina=50`` with 591 hits is 12 pages: 11 GETs after the POST.
+
+    The total (591) comes from the sample; with 10 per page the client would
+    ask for 60 pages, so a client that forwards the default instead of the
+    chosen size requests ``np=13`` and finds no mock.
+    """
+    mocker.patch("time.sleep")
+    add_search(_body(txtPesquisaLivre="medicamento", opcaoQtdePagina="50"), "results_normal_page_01.html")
+    for pagina in range(2, 13):
+        add_page(pagina, "results_normal_page_02.html")
+
+    brutos = jus.scraper("trf3").cjsg_download("medicamento", tamanho_pagina=50, paginas=None)
+
+    assert len(brutos) == 12
+    pedidas = [c.request.params.get("np") for c in responses.calls if "ListaResumida/2" in c.request.url]
+    assert pedidas == [str(n) for n in range(2, 13)]

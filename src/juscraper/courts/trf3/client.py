@@ -52,8 +52,9 @@ class TRF3Scraper(TRFConsultaScraper):
 
         Cada chamada abre uma sessão própria no portal, executa a busca e lê
         a lista resumida, que já traz ementa e inteiro teor de cada documento.
-        Custa duas requisições fixas (abertura da aba e busca, que devolve a
-        página 1) e uma por página adicional, com ``sleep_time`` entre páginas.
+        Custa três requisições fixas (abertura da aba, ``POST`` da busca e
+        ``GET`` do redirect que traz a página 1) e uma por página adicional,
+        com ``sleep_time`` entre páginas.
 
         Args:
             pesquisa (str | None): Texto da pesquisa livre, com os operadores do
@@ -79,8 +80,16 @@ class TRF3Scraper(TRFConsultaScraper):
                 * ``orgao_julgador`` (str): Órgão julgador como o portal indexa.
                   Nos acórdãos recentes do TRF3, ``"3ª Turma"``; nos antigos,
                   ``"TERCEIRA TURMA"``. Nas Turmas Recursais, o nome curto
-                  (``"11ª TURMA RECURSAL DE SÃO PAULO"``). Não existe nas
-                  bases de monocráticas.
+                  (``"11ª TURMA RECURSAL DE SÃO PAULO"``). O valor da coluna
+                  ``orgao_julgador`` do resultado nem sempre serve como
+                  filtro: nas Turmas Recursais a coluna traz
+                  ``"11ª Turma Recursal da Seção Judiciária de São Paulo"``,
+                  que não encontra nada, enquanto
+                  ``"11ª TURMA RECURSAL DE SÃO PAULO"`` encontra. "1a. seção"
+                  vira "1A", como no formulário do portal, então
+                  ``"QUINTA TURMA - 1A. SEÇÃO"`` busca
+                  ``"QUINTA TURMA - 1A"``. Não existe nas bases de
+                  monocráticas.
                 * ``ementa`` (str): Texto pesquisado só na ementa. Não existe
                   nas bases de monocráticas.
                 * ``indexacao`` (str): Texto pesquisado na indexação ("Objeto
@@ -117,7 +126,10 @@ class TRF3Scraper(TRFConsultaScraper):
             (``DJEN``, ``Intimação via sistema``, ``e-DJF3 Judicial 1``...),
             ``ementa`` (nas monocráticas, o texto da decisão), ``base``,
             ``url_inteiro_teor`` (íntegra do acórdão no site do TRF3; vazio
-            nas monocráticas) e ``inteiro_teor`` (texto completo).
+            nas monocráticas) e ``inteiro_teor`` (texto completo). Nos
+            acórdãos antigos das Turmas Recursais (2010 a 2014), ``ementa``
+            vem nula porque o portal manda o bloco da ementa vazio;
+            ``inteiro_teor`` vem preenchido.
 
         Exemplo:
             >>> import juscraper as jus
