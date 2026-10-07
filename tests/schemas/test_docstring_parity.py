@@ -69,6 +69,11 @@ CASES = [
         "juscraper.courts.stf.schemas", "InputListarDecisoesSTF",
         id="stf.listar_decisoes",
     ),
+    pytest.param(
+        "juscraper.courts.trf3.client", "TRF3Scraper", "cjsg",
+        "juscraper.courts.trf3.cjsg_schemas", "InputCJSGTRF3",
+        id="trf3.cjsg",
+    ),
 ]
 
 # Captura nomes em backticks duplos (RST inline literal). Cobre tanto
@@ -185,6 +190,11 @@ DOWNLOAD_REFERENCE_CASES = [
         "juscraper.aggregators.falcao.client", "FalcaoScraper",
         "listar_decisoes_download", "listar_decisoes",
         id="falcao.listar_decisoes_download",
+    ),
+    pytest.param(
+        "juscraper.courts.trf3.client", "TRF3Scraper",
+        "cjsg_download", "cjsg",
+        id="trf3.cjsg_download",
     ),
 ]
 

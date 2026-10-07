@@ -84,6 +84,8 @@ EXPECTED_COURT_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
     # família ``_trf`` (assinatura pública idêntica nos três).
     ("trf1", "cpopg"): ("juscraper.courts._trf.schemas", "InputCpopgTRF"),
     ("trf3", "cpopg"): ("juscraper.courts._trf.schemas", "InputCpopgTRF"),
+    # Busca de jurisprudência do TRF3 (portal próprio, fora do PJe).
+    ("trf3", "cjsg"): ("juscraper.courts.trf3.cjsg_schemas", "InputCJSGTRF3"),
     ("trf5", "cpopg"): ("juscraper.courts._trf.schemas", "InputCpopgTRF"),
     # TJPE 1º grau roda o mesmo PJe ConsultaPública dos TRFs.
     ("tjpe", "cpopg"): ("juscraper.courts._trf.schemas", "InputCpopgTRF"),
