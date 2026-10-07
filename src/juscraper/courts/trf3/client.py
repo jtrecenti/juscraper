@@ -17,11 +17,12 @@ from pathlib import Path
 from typing import Any, ClassVar
 
 import pandas as pd
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 from tqdm import tqdm
 
 from ...core.exceptions import BotChallengeBlockedError
 from ...core.http import HTTPScraper, RequestPolicy
+from ...schemas import CnjInputBase
 from ...utils.cnj import clean_cnj, format_cnj
 from .download import API_HEADERS, BASE_URL_1G, BASE_URL_2G, baixar_documento, baixar_processo
 from .parse import parse_processo
@@ -61,8 +62,8 @@ class TRF3Scraper(HTTPScraper):
     #: Raiz da aplicação de 2º grau, usada pelo ``cposg``.
     BASE_URL_2G: str = BASE_URL_2G
     TRIBUNAL_NAME: str = "TRF3"
-    INPUT_CPOPG: type[BaseModel] = InputCpopgTRF3
-    INPUT_CPOSG: type[BaseModel] = InputCposgTRF3
+    INPUT_CPOPG: type[CnjInputBase] = InputCpopgTRF3
+    INPUT_CPOSG: type[CnjInputBase] = InputCposgTRF3
     perfis_http: ClassVar[Mapping[str, RequestPolicy]] = _PERFIS_HTTP
 
     def __init__(
@@ -87,7 +88,7 @@ class TRF3Scraper(HTTPScraper):
     # --- internos -------------------------------------------------------
 
     def _coerce_id_cnj(
-        self, schema: type[BaseModel], endpoint: str, id_cnj: str | list[str], **kwargs: Any
+        self, schema: type[CnjInputBase], endpoint: str, id_cnj: str | list[str], **kwargs: Any
     ) -> list[str]:
         """Valida pelo schema e devolve a lista de CNJs com 20 dígitos."""
         try:
@@ -154,7 +155,7 @@ class TRF3Scraper(HTTPScraper):
     def _consulta(
         self,
         endpoint: str,
-        schema: type[BaseModel],
+        schema: type[CnjInputBase],
         base_url: str,
         id_cnj: str | list[str],
         download_pecas: bool,
