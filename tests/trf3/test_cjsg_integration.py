@@ -43,3 +43,10 @@ def test_cjsg_filtro_relator_restringe() -> None:
     assert len(df) > 0
     nomes = df["relator"].fillna("") + " " + df["relator_acordao"].fillna("")
     assert nomes.str.contains("NABARRETE").all()
+
+
+def test_cjsg_filtro_orgao_primeira_secao() -> None:
+    """The column value ``QUINTA TURMA - 1A. SEÇÃO`` finds documents once normalized to ``1A``."""
+    df = jus.scraper("trf3", sleep_time=1.0).cjsg("medicamento", orgao_julgador="QUINTA TURMA - 1A. SEÇÃO", paginas=1)
+    assert len(df) > 0
+    assert (df["orgao_julgador"] == "QUINTA TURMA - 1A. SEÇÃO").all()

@@ -126,10 +126,11 @@ class TRF3Scraper(TRFConsultaScraper):
             (``DJEN``, ``Intimação via sistema``, ``e-DJF3 Judicial 1``...),
             ``ementa`` (nas monocráticas, o texto da decisão), ``base``,
             ``url_inteiro_teor`` (íntegra do acórdão no site do TRF3; vazio
-            nas monocráticas) e ``inteiro_teor`` (texto completo). Nos
-            acórdãos antigos das Turmas Recursais (2010 a 2014), ``ementa``
-            vem nula porque o portal manda o bloco da ementa vazio;
-            ``inteiro_teor`` vem preenchido.
+            nas monocráticas) e ``inteiro_teor`` (texto completo). Em parte
+            dos acórdãos antigos das Turmas Recursais, ``ementa`` vem nula
+            porque o portal manda o bloco da ementa vazio; ``inteiro_teor``
+            vem preenchido. Na medição, com "medicamento", foram nulas todas
+            as ementas de 2013 e 2014 e parte das de 2011.
 
         Exemplo:
             >>> import juscraper as jus
