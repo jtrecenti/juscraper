@@ -24,7 +24,8 @@ from ...core.exceptions import BotChallengeBlockedError
 from ...core.http import HTTPScraper, RequestPolicy
 from ...schemas import CnjInputBase
 from ...utils.cnj import clean_cnj, format_cnj
-from .download import API_HEADERS, BASE_URL_1G, BASE_URL_2G, baixar_documento, baixar_processo
+from ...utils.params import pop_deprecated_alias
+from .download import API_HEADERS, BASE_URL_1G, BASE_URL_2G, baixar_documento, baixar_processo, token_valido
 from .parse import parse_processo
 from .schemas import InputCpopgTRF3, InputCposgTRF3
 
@@ -138,6 +139,16 @@ class TRF3Scraper(HTTPScraper):
             raise ValueError(
                 f"brutos e id_cnj_list precisam ter o mesmo tamanho ({len(brutos)} != {len(id_cnj_list)})"
             )
+        # O HTML do portal JSF antigo (o que ``cpopg_download`` devolvia antes
+        # da API) viraria, pelo ``except`` abaixo, linha só com ``id_cnj`` sem
+        # erro visível. Recusar a entrada inteira deixa a migração explícita.
+        invalidos = sorted({type(b).__name__ for b in brutos if b is not None and not isinstance(b, dict)})
+        if invalidos:
+            raise TypeError(
+                f"{self.TRIBUNAL_NAME}: os brutos agora são os dicionários com os envelopes JSON da API que "
+                f"cpopg_download/cposg_download devolvem, não o HTML do portal antigo (recebido: "
+                f"{', '.join(invalidos)}). Baixe de novo com cpopg_download ou cposg_download."
+            )
         rows: list[dict[str, Any]] = []
         for cnj, bruto in zip(id_cnj_list, brutos, strict=True):
             if bruto is None:
@@ -183,19 +194,33 @@ class TRF3Scraper(HTTPScraper):
         """Grava o PDF de cada documento em ``<base_dir>/<cnj>/<id do documento>.pdf``.
 
         Falha numa peça vira aviso no log e as demais seguem; bloqueio do
-        Akamai interrompe, porque vale para a sessão inteira.
+        Akamai interrompe, porque vale para a sessão inteira. O ``id`` de
+        cada documento vem do servidor e vira nome de arquivo: documento sem
+        ``id`` ou com ``id`` fora do alfabeto de :func:`token_valido` é pulado
+        com aviso antes de qualquer requisição, e o caminho final ainda é
+        conferido contra o diretório do processo.
         """
         results: list[list[str]] = []
         for cnj, bruto in zip(cnjs, brutos, strict=True):
             if bruto is None:
                 results.append([])
                 continue
+            # ``baixar_processo`` já recusou ``idProcesso`` inválido, e
+            # ``baixar_documento`` confere de novo antes de montar a URL.
             id_processo = bruto["busca"]["idProcesso"]
-            ids = [doc["id"] for pagina in bruto.get("documentos") or [] for doc in pagina.get("result") or []]
+            documentos = [doc for pagina in bruto.get("documentos") or [] for doc in pagina.get("result") or []]
             proc_dir = Path(base_dir) / cnj
             proc_dir.mkdir(parents=True, exist_ok=True)
             paths: list[str] = []
-            for id_documento in ids:
+            for doc in documentos:
+                id_documento = doc.get("id") if isinstance(doc, dict) else None
+                if not token_valido(id_documento):
+                    logger.warning("Peça do %s pulada: id de documento inválido %r", cnj, id_documento)
+                    continue
+                path = proc_dir / f"{id_documento}.pdf"
+                if path.resolve().parent != proc_dir.resolve():
+                    logger.warning("Peça do %s pulada: %r sai do diretório do processo", cnj, id_documento)
+                    continue
                 try:
                     content = baixar_documento(
                         self._request_with_retry, base_url, id_documento, id_processo, tribunal=self.TRIBUNAL_NAME
@@ -205,7 +230,6 @@ class TRF3Scraper(HTTPScraper):
                 except Exception as exc:  # noqa: BLE001 (resiliência por peça)
                     logger.warning("Erro ao baixar peça %s do %s: %s", id_documento, cnj, exc)
                     continue
-                path = proc_dir / f"{id_documento}.pdf"
                 path.write_bytes(content)
                 paths.append(str(path))
                 if self.sleep_time:
@@ -227,12 +251,44 @@ class TRF3Scraper(HTTPScraper):
         cnjs = self._coerce_id_cnj(self.INPUT_CPOPG, "cpopg_download", id_cnj, **kwargs)
         return self._download(cnjs, self.BASE_URL, "cpopg")
 
-    def cpopg_parse(self, brutos: list[dict[str, Any] | None], id_cnj_list: list[str]) -> pd.DataFrame:
+    def cpopg_parse(
+        self,
+        brutos: list[dict[str, Any] | None] | None = None,
+        id_cnj_list: list[str] | None = None,
+        **kwargs: Any,
+    ) -> pd.DataFrame:
         """Transforma a saída de :meth:`cpopg_download` num DataFrame, uma linha por CNJ.
 
-        ``id_cnj_list`` traz os CNJs na mesma ordem de ``brutos``. Entradas
-        ``None`` viram linha só com ``id_cnj``.
+        Args:
+            brutos: Lista devolvida por :meth:`cpopg_download`, com um
+                dicionário de envelopes JSON ou ``None`` por CNJ. Entradas
+                ``None`` viram linha só com ``id_cnj``.
+            id_cnj_list: CNJs na mesma ordem de ``brutos``.
+
+        Aliases deprecados:
+            * ``htmls`` -> ``brutos`` (DeprecationWarning). O nome vem da
+              época em que o ``cpopg_download`` devolvia HTML; o conteúdo
+              agora precisa ser o dicionário da API.
+
+        Raises:
+            TypeError: ``brutos`` ou ``id_cnj_list`` ausentes, kwarg
+                desconhecido, ou item de ``brutos`` que não é dicionário nem
+                ``None`` (o HTML do portal antigo, por exemplo).
+            ValueError: ``brutos`` e ``id_cnj_list`` de tamanhos diferentes,
+                ou ``brutos`` e ``htmls`` passados juntos.
         """
+        # ``pop_deprecated_alias`` chamado daqui aponta o aviso para o código
+        # de quem chamou ``cpopg_parse``; via ``resolve_deprecated_alias`` o
+        # ``stacklevel`` fixo pararia neste arquivo.
+        if "htmls" in kwargs and brutos is not None:
+            raise ValueError("Não é possível passar 'brutos' e 'htmls' ao mesmo tempo. Use apenas 'brutos'.")
+        if "htmls" in kwargs:
+            brutos = pop_deprecated_alias(kwargs, "htmls", "brutos")
+        if kwargs:
+            names = ", ".join(repr(k) for k in kwargs)
+            raise TypeError(f"{type(self).__name__}.cpopg_parse got unexpected keyword argument(s): {names}")
+        if brutos is None or id_cnj_list is None:
+            raise TypeError(f"{type(self).__name__}.cpopg_parse exige brutos e id_cnj_list")
         return self._parse(brutos, id_cnj_list)
 
     def cpopg(
@@ -258,9 +314,12 @@ class TRF3Scraper(HTTPScraper):
             ``jurisdicao``, ``endereco_orgao``, ``polo_ativo``,
             ``polo_passivo``, ``outros_interessados``, ``movimentacoes`` e
             ``documentos``. Com ``download_pecas=True``, ganha ``pecas``, a
-            lista de caminhos gravados. O CNJ que a consulta pública não
-            devolve (inexistente ou em segredo de justiça) vira linha só com
-            ``id_cnj``.
+            lista de caminhos gravados. Vira linha só com ``id_cnj`` tanto o
+            CNJ que a consulta pública não devolve (inexistente ou em segredo
+            de justiça) quanto o CNJ cuja consulta falhou (erro de rede ou HTTP
+            na busca ou em ``/dados`` depois das tentativas, resposta fora do
+            formato esperado, erro no parser). A linha não distingue os dois
+            casos; a falha deixa um aviso no logger ``juscraper.trf3``.
 
         Raises:
             TypeError: Kwarg desconhecido.
@@ -307,7 +366,10 @@ class TRF3Scraper(HTTPScraper):
 
         Returns:
             DataFrame com as mesmas colunas de :meth:`cpopg`. No 2º grau,
-            ``orgao_julgador_colegiado`` traz a turma.
+            ``orgao_julgador_colegiado`` traz a turma. Como no ``cpopg``, o
+            CNJ sem recurso no 2º grau e o CNJ cuja consulta falhou viram a
+            mesma linha só com ``id_cnj``; a falha deixa um aviso no logger
+            ``juscraper.trf3``.
 
         Raises:
             TypeError: Kwarg desconhecido.

@@ -60,7 +60,8 @@ class _CamposProcessoTRF3(BaseModel):
 class OutputCpopgTRF3(OutputCnjConsultaBase, _CamposProcessoTRF3):
     """Uma linha do DataFrame de :meth:`TRF3Scraper.cpopg`.
 
-    CNJ não encontrado gera linha só com ``id_cnj`` (fora deste contrato).
+    CNJ não encontrado ou cuja consulta falhou gera linha só com ``id_cnj``
+    (fora deste contrato).
     """
 
     model_config = ConfigDict(extra="allow")
@@ -70,8 +71,8 @@ class OutputCposgTRF3(OutputCnjConsultaBase, _CamposProcessoTRF3):
     """Uma linha do DataFrame de :meth:`TRF3Scraper.cposg`.
 
     No 2º grau, ``orgao_julgador_colegiado`` traz a turma e ``orgao_julgador``
-    o gabinete do relator. CNJ não encontrado gera linha só com ``id_cnj``
-    (fora deste contrato).
+    o gabinete do relator. CNJ não encontrado ou cuja consulta falhou gera
+    linha só com ``id_cnj`` (fora deste contrato).
     """
 
     model_config = ConfigDict(extra="allow")

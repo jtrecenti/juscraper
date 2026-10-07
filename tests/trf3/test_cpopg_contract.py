@@ -277,3 +277,141 @@ def test_cpopg_ignora_resultado_de_outro_numero() -> None:
 
     assert list(df.columns) == ["id_cnj"]
     assert len(responses.calls) == 1
+
+
+@pytest.mark.parametrize("id_processo", ["../../v1/outra", "/abs", "a.b", "", None])
+@responses.activate
+def test_cpopg_id_processo_invalido_vira_erro_do_processo(caplog, id_processo) -> None:
+    """``idProcesso`` fora do alfabeto da API não entra em URL: o processo vira linha só com ``id_cnj``."""
+    busca = carregar("cpopg", "paginado_busca.json")
+    busca["result"][0]["idProcesso"] = id_processo
+    responses.add(responses.GET, busca_url(BASE_URL_1G), json=busca)
+
+    with caplog.at_level("WARNING", logger="juscraper.trf3"):
+        df = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO)
+
+    assert list(df.columns) == ["id_cnj"]
+    assert len(responses.calls) == 1
+    assert "idProcesso inválido" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "falha",
+    [requests.ReadTimeout("sem resposta"), requests.ConnectionError("caiu")],
+    ids=["timeout", "conexao"],
+)
+@responses.activate
+def test_cpopg_erro_de_rede_em_recurso_derruba_o_processo(falha) -> None:
+    """Timeout ou erro de conexão que persiste num recurso paginado derruba o processo.
+
+    Só erro HTTP depois das tentativas deixa o recurso ``None``; erro de rede
+    não diz nada sobre o recurso e vira linha só com ``id_cnj``.
+    """
+    id_processo = id_processo_do_cenario("cpopg", "paginado")
+    for _ in range(4):  # uma falha por tentativa do perfil "api"
+        responses.add(responses.GET, recurso_url(BASE_URL_1G, id_processo, "movimentacoes"), body=falha)
+    registrar_processo(BASE_URL_1G, "cpopg", "paginado")
+
+    df = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO)
+
+    assert list(df.columns) == ["id_cnj"]
+    url_movs = recurso_url(BASE_URL_1G, id_processo, "movimentacoes")
+    assert sum(c.request.url.startswith(url_movs) for c in responses.calls) == 4
+
+
+@responses.activate
+def test_cpopg_erro_em_dados_derruba_o_processo() -> None:
+    """``/dados`` com erro HTTP depois das tentativas derruba o processo, sem pedir os recursos."""
+    id_processo = id_processo_do_cenario("cpopg", "paginado")
+    registrar_busca(BASE_URL_1G, "cpopg", "paginado", "5003536-21.2025.4.03.6342")
+    responses.add(responses.GET, recurso_url(BASE_URL_1G, id_processo, "dados"), status=500, json={"status": 500})
+
+    df = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO)
+
+    assert list(df.columns) == ["id_cnj"]
+    assert len(responses.calls) == 1 + 4
+    assert not any("poloAtivo" in c.request.url for c in responses.calls)
+
+
+@responses.activate
+def test_cpopg_envelope_com_status_diferente_de_ok_derruba_o_processo() -> None:
+    """``/dados`` com HTTP 200 mas ``status`` diferente de ``"ok"`` não vira processo com dados."""
+    id_processo = id_processo_do_cenario("cpopg", "paginado")
+    dados = carregar("cpopg", "paginado_dados.json")
+    dados["status"] = "error"
+    registrar_busca(BASE_URL_1G, "cpopg", "paginado", "5003536-21.2025.4.03.6342")
+    responses.add(responses.GET, recurso_url(BASE_URL_1G, id_processo, "dados"), json=dados)
+
+    df = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO)
+
+    assert list(df.columns) == ["id_cnj"]
+    assert len(responses.calls) == 2
+
+
+@responses.activate
+def test_cpopg_retenta_erro_de_conexao() -> None:
+    """O perfil ``api`` retenta erro de conexão, como diz o CHANGELOG."""
+    responses.add(responses.GET, busca_url(BASE_URL_1G), body=requests.ConnectionError("caiu"))
+    registrar_processo(BASE_URL_1G, "cpopg", "paginado")
+    df = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO)
+
+    assert df.iloc[0]["processo"] == "5003536-21.2025.4.03.6342"
+
+
+@responses.activate
+def test_cpopg_preserva_jurisdicao_endereco_segredo_e_documento_da_movimentacao() -> None:
+    """Campos que o parser copia da API saem com o valor capturado, não ``None``."""
+    registrar_processo(BASE_URL_1G, "cpopg", "paginado")
+    row = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO).iloc[0]
+
+    dados = carregar("cpopg", "paginado_dados.json")["result"]
+    assert row["jurisdicao"] == dados["jurisdicao"] == "Subseção Judiciária de Barueri (Juizado Especial Federal Cível)"
+    assert row["endereco_orgao"] == dados["endereco"]
+    assert row["endereco_orgao"].startswith("Avenida Piracema, 1362")
+    assert row["polo_ativo"][0]["segredo_justica"] is False
+    movs_com_documento = [m for m in row["movimentacoes"] if m["documento"] is not None]
+    assert movs_com_documento
+    assert row["movimentacoes"][2]["documento"] == "22/09/2026 13:33:36 - Sentença (Sentença)"
+
+
+@responses.activate
+def test_cpopg_parse_aceita_htmls_como_alias_deprecado() -> None:
+    """``htmls=`` continua aceito com ``DeprecationWarning`` e produz o mesmo DataFrame de ``brutos=``."""
+    registrar_processo(BASE_URL_1G, "cpopg", "paginado")
+    scraper = jus.scraper("trf3", sleep_time=0)
+    brutos = scraper.cpopg_download(CNJ_PAGINADO)
+    canonico = scraper.cpopg_parse(brutos=brutos, id_cnj_list=[CNJ_PAGINADO])
+
+    with pytest.warns(DeprecationWarning, match="'htmls' está deprecado. Use 'brutos'") as avisos:
+        via_alias = scraper.cpopg_parse(htmls=brutos, id_cnj_list=[CNJ_PAGINADO])
+
+    pd.testing.assert_frame_equal(via_alias, canonico)
+    assert avisos[0].filename == __file__
+
+
+def test_cpopg_parse_recusa_brutos_e_htmls_juntos() -> None:
+    """Canônico e alias juntos levantam ``ValueError`` sem aviso de deprecação."""
+    scraper = jus.scraper("trf3", sleep_time=0)
+    with pytest.raises(ValueError, match="ao mesmo tempo"):
+        scraper.cpopg_parse(brutos=[None], htmls=[None], id_cnj_list=[CNJ_PAGINADO])
+
+
+def test_cpopg_parse_recusa_html_do_portal_antigo() -> None:
+    """HTML passado por posição ou pelo alias levanta ``TypeError`` explicando o formato novo."""
+    scraper = jus.scraper("trf3", sleep_time=0)
+    html = "<html><body>Detalhe do processo</body></html>"
+    with pytest.raises(TypeError, match="envelopes JSON da API"):
+        scraper.cpopg_parse([html, None], [CNJ_PAGINADO, CNJ_SEM_RESULTADO])
+    with pytest.warns(DeprecationWarning), pytest.raises(TypeError, match="não o HTML do portal antigo"):
+        scraper.cpopg_parse(htmls=[html], id_cnj_list=[CNJ_PAGINADO])
+    with pytest.raises(TypeError, match="envelopes JSON da API"):
+        scraper.cposg_parse([html], [CNJ_PAGINADO])
+
+
+def test_cpopg_parse_argumentos_ausentes_ou_desconhecidos() -> None:
+    """Sem ``brutos``/``id_cnj_list`` ou com kwarg desconhecido, ``TypeError``."""
+    scraper = jus.scraper("trf3", sleep_time=0)
+    with pytest.raises(TypeError, match="exige brutos e id_cnj_list"):
+        scraper.cpopg_parse(id_cnj_list=[CNJ_PAGINADO])
+    with pytest.raises(TypeError, match="unexpected keyword"):
+        scraper.cpopg_parse([None], [CNJ_PAGINADO], formato="html")

@@ -10,6 +10,7 @@ mock e vira ``ConnectionError``.
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -58,12 +59,15 @@ def registrar_processo(
     cenario: str,
     *,
     status_recursos_sem_sample: int = 500,
+    substituir: Mapping[str, list[dict[str, Any]]] | None = None,
 ) -> int:
     """Registra busca, ``/dados`` e todas as páginas de cada recurso do cenário.
 
     Recurso sem sample (o ``poloPassivo`` que a API responde com 500) recebe
-    ``status_recursos_sem_sample``. Devolve o número de páginas registradas,
-    para o teste conferir que nenhuma sobrou.
+    ``status_recursos_sem_sample``. ``substituir`` troca as páginas de um
+    recurso por envelopes montados no teste (``{recurso: [page_0, page_1]}``).
+    Devolve o número de páginas registradas, para o teste conferir que
+    nenhuma sobrou.
     """
     numero = numero_do_cenario(endpoint, cenario)
     id_processo = id_processo_do_cenario(endpoint, cenario)
@@ -76,12 +80,23 @@ def registrar_processo(
         match=[origem],
     )
     paginas = 0
+    substituir = substituir or {}
     for recurso in RECURSOS_PAGINADOS:
+        url = recurso_url(base_url, id_processo, recurso)
+        if recurso in substituir:
+            for indice, envelope in enumerate(substituir[recurso]):
+                responses.add(
+                    responses.GET,
+                    url,
+                    json=envelope,
+                    match=[matchers.query_param_matcher({"page": str(indice)}), origem],
+                )
+                paginas += 1
+            continue
         arquivos = sorted(
             (SAMPLES / endpoint).glob(f"{cenario}_{recurso}_page_*.json"),
             key=lambda p: int(p.stem.rsplit("_", 1)[1]),
         )
-        url = recurso_url(base_url, id_processo, recurso)
         if not arquivos:
             responses.add(
                 responses.GET,
@@ -108,3 +123,33 @@ def itens_do_cenario(endpoint: str, cenario: str, recurso: str) -> list[dict[str
     for arquivo in sorted((SAMPLES / endpoint).glob(f"{cenario}_{recurso}_page_*.json")):
         itens.extend(json.loads(arquivo.read_text(encoding="utf-8"))["result"])
     return itens
+
+
+def envelope_paginado(itens: list[dict[str, Any]], tamanho: int = 15) -> list[dict[str, Any]]:
+    """Reparte ``itens`` em envelopes de página no formato da API.
+
+    ``pageInfo.current`` e ``pageInfo.last`` são 1-based, como nas respostas
+    reais; ``tamanho`` é o ``size`` que a API usa para documentos (15).
+    """
+    blocos = [itens[i : i + tamanho] for i in range(0, len(itens), tamanho)] or [[]]
+    return [
+        {
+            "status": "ok",
+            "code": "200",
+            "messages": [],
+            "result": bloco,
+            "pageInfo": {"current": n + 1, "last": len(blocos), "size": tamanho, "count": len(itens)},
+        }
+        for n, bloco in enumerate(blocos)
+    ]
+
+
+def documentos_em_duas_paginas() -> list[dict[str, Any]]:
+    """Documentos reais de dois processos (13 + 8) repartidos em 2 páginas de 15.
+
+    Nenhum processo capturado tem mais de 15 documentos; a fixture junta os
+    itens reais do ``normal`` do 1º e do 2º grau para exercitar a segunda
+    página do recurso ``documentos``.
+    """
+    itens = itens_do_cenario("cpopg", "normal", "documentos") + itens_do_cenario("cposg", "normal", "documentos")
+    return envelope_paginado(itens)

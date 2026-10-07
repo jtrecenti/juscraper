@@ -30,9 +30,10 @@ parecem vir de navegador, por isso a sessão usa :data:`API_HEADERS`.
 from __future__ import annotations
 
 import logging
+import re
 import time
 from collections.abc import Callable
-from typing import Any
+from typing import Any, TypeGuard
 
 import requests
 
@@ -46,6 +47,19 @@ BASE_URL_1G = "https://pje1g-consultapublica.trf3.jus.br"
 BASE_URL_2G = "https://pje2g-consultapublica.trf3.jus.br"
 PROCESSOS_PATH = "/v1/processos"
 DOCUMENTOS_PATH = "/v1/documentos"
+
+# Alfabeto dos tokens opacos da API (``idProcesso`` e ``id`` dos documentos)
+# observado nos samples: base64 para URL, sem ``=``. Os dois tokens vêm do
+# servidor e entram em URL; o do documento vira também nome de arquivo. Aceitar
+# ``/`` ou ``.`` deixaria uma resposta com ``../`` ou caminho absoluto gravar
+# fora do diretório do processo ou desviar a requisição para outra rota.
+_TOKEN_RE = re.compile(r"[A-Za-z0-9_-]+")
+
+
+def token_valido(valor: object) -> TypeGuard[str]:
+    """Diz se ``valor`` é um token da API (``idProcesso`` ou ``id`` de documento) seguro para URL e arquivo."""
+    return isinstance(valor, str) and _TOKEN_RE.fullmatch(valor) is not None
+
 
 #: Recursos paginados de um processo, na ordem em que são baixados. As chaves
 #: são os nomes das rotas e também as chaves do dicionário bruto devolvido por
@@ -221,12 +235,18 @@ def baixar_processo(
     de forma reproduzível ao ``poloPassivo`` de alguns mandados de segurança,
     e perder o processo inteiro por isso descartaria dados que vieram certos.
     Erro de rede e erro em ``/dados`` continuam derrubando o processo.
+
+    Raises:
+        ValueError: ``idProcesso`` ausente ou fora do alfabeto de
+            :func:`token_valido`; nenhuma requisição de detalhe é feita.
     """
     busca = buscar_processo(request_fn, base_url, numero_processo, tribunal)
     item = _escolher_processo(busca, numero_processo)
     if item is None:
         return None
-    id_processo = item["idProcesso"]
+    id_processo = item.get("idProcesso")
+    if not token_valido(id_processo):
+        raise ValueError(f"{tribunal}: idProcesso inválido na busca de {numero_processo}: {id_processo!r}")
     bruto: dict[str, Any] = {"busca": item}
     bruto["dados"] = _get_json(
         request_fn,
@@ -263,8 +283,12 @@ def baixar_documento(
 
     Raises:
         BotChallengeBlockedError: 403 ``Access Denied`` do Akamai.
-        ValueError: Resposta sem ``Content-Type`` de PDF.
+        ValueError: Token fora do alfabeto de :func:`token_valido` (nenhuma
+            requisição é feita) ou resposta sem ``Content-Type`` de PDF.
     """
+    for nome, token in (("id_documento", id_documento), ("id_processo", id_processo)):
+        if not token_valido(token):
+            raise ValueError(f"{tribunal}: {nome} inválido: {token!r}")
     url = documento_download_url(base_url, id_documento)
     headers = {
         **build_pagina_origem_headers(base_url, f"/processo/{id_processo}"),
