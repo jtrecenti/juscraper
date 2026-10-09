@@ -6,14 +6,14 @@ import tempfile
 import time
 import warnings
 from collections import defaultdict
-from collections.abc import Iterator
-from typing import Any, cast
+from collections.abc import Iterator, Mapping
+from typing import Any, ClassVar, cast
 
 import pandas as pd
 from pydantic import ValidationError
 from tqdm.auto import tqdm
 
-from ...core.http import HTTPScraper
+from ...core.http import HTTPScraper, RequestPolicy
 from ...utils.cnj import clean_cnj  # Assuming this utility exists and is relevant
 from ...utils.params import normalize_paginas, pop_deprecated_alias, raise_on_extra_kwargs
 from .download import build_contar_processos_payload, build_listar_processos_payload, call_datajud_api
@@ -125,6 +125,36 @@ def _next_search_after(
     return search_after
 
 
+def _mensagem_falha_parcial(
+    alias: str,
+    pagina: int,
+    recebidos: int,
+    total_info: dict[str, Any] | None,
+) -> str:
+    """Aviso da paginação interrompida, com quanto veio e quanto faltou.
+
+    ``total_info`` é o ``hits.total`` da página 1, que a consulta já traz
+    (``track_total_hits``); é ``None`` quando a falha foi na própria página 1.
+    ``relation == "gte"`` indica total truncado pelo Elasticsearch, então o
+    texto diz "pelo menos".
+    """
+    inicio = f"DataJud: falha ao consultar alias {alias!r} na página {pagina}."
+    if total_info is None:
+        return (
+            f"{inicio} Resultados parciais retornados: nenhum registro recebido. "
+            "Se a falha foi timeout, reduza o recorte (por exemplo, com "
+            "data_ajuizamento_inicio/_fim) ou aumente o timeout com "
+            "politica={'busca': {'timeout': ...}}."
+        )
+    total = total_info.get("value", "?")
+    if total_info.get("relation", "eq") != "eq":
+        total = f"pelo menos {total}"
+    return (
+        f"{inicio} Resultados parciais retornados: {recebidos} registro(s) "
+        f"recebido(s) de {total} encontrado(s) pela consulta."
+    )
+
+
 class DatajudScraper(HTTPScraper):
     """Scraper for CNJ's Datajud API.
 
@@ -147,13 +177,41 @@ class DatajudScraper(HTTPScraper):
     # Schema pydantic detectado por ``tests/schemas/test_signature_parity._is_wired``.
     INPUT_LISTAR_PROCESSOS = InputListarProcessosDataJud
 
+    # Um perfil só, para ``listar_processos`` e ``contar_processos``. O
+    # transporte é o ``call_datajud_api``, com retry próprio (reduz o ``size``
+    # uma vez após 504/timeout), e não o ``_request_with_retry`` do core: por
+    # isso só o ``timeout`` do perfil tem efeito, e ``__init__`` recusa ajuste
+    # dos demais campos em vez de ignorá-lo.
+    perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
+        "busca": RequestPolicy(timeout=60),
+    }
+    CAMPOS_POLITICA_SUPORTADOS: ClassVar[frozenset[str]] = frozenset({"timeout"})
+
     def __init__(
         self,
         api_key: str | None = None,
         verbose: int = 1,
         download_path: str | None = None,  # For temporary files if needed
         sleep_time: float = 0.5,
+        politica: Mapping[str, Mapping[str, Any]] | None = None,
     ):
+        """Cria o raspador do DataJud.
+
+        Args:
+            api_key: Chave da API pública. Default: a chave pública do CNJ.
+            verbose: Nível de log; acima de 1, loga cada requisição.
+            download_path: Diretório temporário. Default: ``mkdtemp``.
+            sleep_time: Pausa, em segundos, entre páginas.
+            politica: Ajuste do perfil HTTP ``"busca"``, usado por
+                :meth:`listar_processos` e :meth:`contar_processos`. Só o
+                campo ``timeout`` é aceito (default 60 s), como em
+                ``politica={"busca": {"timeout": 180}}``. Consultas grandes
+                podem passar de 60 s já na primeira página.
+
+        Raises:
+            ValueError: Quando ``politica`` cita perfil desconhecido ou campo
+                diferente de ``timeout``.
+        """
         # Preserva o prefix historico ``datajud_api_`` para download_path
         # default. ``set_download_path`` (em ``BaseScraper``) usa
         # ``tempfile.mkdtemp()`` sem prefix, entao resolvemos aqui antes
@@ -164,7 +222,16 @@ class DatajudScraper(HTTPScraper):
             verbose=verbose,
             download_path=resolved_path,
             sleep_time=sleep_time,
+            politica=politica,
         )
+        for nome, ajuste in (politica or {}).items():
+            nao_suportados = set(ajuste) - self.CAMPOS_POLITICA_SUPORTADOS
+            if nao_suportados:
+                raise ValueError(
+                    f"DatajudScraper só aceita {sorted(self.CAMPOS_POLITICA_SUPORTADOS)} "
+                    f"em politica={{{nome!r}: ...}}; recebido {sorted(nao_suportados)}. "
+                    "O DataJud tem retry próprio, que não usa os demais campos."
+                )
         self.api_key = api_key or self.DEFAULT_API_KEY
         logger.info(
             "DatajudScraper initialized. API Key: %s. Temp path: %s",
@@ -270,6 +337,7 @@ class DatajudScraper(HTTPScraper):
                 session=self.session,
                 query_payload=payload,
                 verbose=self.verbose > 1,
+                timeout=self._perfis_http["busca"].timeout,
             )
             tribunal_sigla = ALIAS_TO_TRIBUNAL.get(alias, "")
             if api_response is None:
@@ -555,6 +623,10 @@ class DatajudScraper(HTTPScraper):
         tamanho_pagina = inp.tamanho_pagina
         search_after: list[Any] | None = None
         last_page = None if paginas is None else paginas[-1]
+        # Alimentam o aviso de falha: quanto já veio das páginas pedidas e
+        # quanto a consulta encontrou (``hits.total`` da página 1).
+        recebidos = 0
+        total_info: dict[str, Any] | None = None
         while last_page is None or current_page <= last_page:
             logger.info("Fetching page %d for alias %s...", current_page, alias)
             query_payload = build_listar_processos_payload(
@@ -578,11 +650,11 @@ class DatajudScraper(HTTPScraper):
                 session=self.session,
                 query_payload=query_payload,
                 verbose=self.verbose > 1,
+                timeout=self._perfis_http["busca"].timeout,
             )
             if api_response is None:
                 warnings.warn(
-                    f"DataJud: falha ao consultar alias {alias!r} na página "
-                    f"{current_page}. Resultados parciais retornados.",
+                    _mensagem_falha_parcial(alias, current_page, recebidos, total_info),
                     UserWarning,
                     stacklevel=3,
                 )
@@ -593,7 +665,7 @@ class DatajudScraper(HTTPScraper):
                 )
                 return
             if current_page == 1:
-                total_info = api_response.get("hits", {}).get("total", {})
+                total_info = api_response.get("hits", {}).get("total", {}) or {}
                 logger.info(
                     "Total de processos encontrados para %s: %s (%s)",
                     alias,
@@ -609,6 +681,8 @@ class DatajudScraper(HTTPScraper):
                 alias=alias,
                 effective_size=effective_size,
             )
+            if paginas is None or current_page in paginas:
+                recebidos += len(api_response.get("hits", {}).get("hits", []) or [])
             yield current_page, api_response
             if next_search_after is None:
                 return

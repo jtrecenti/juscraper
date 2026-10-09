@@ -20,7 +20,7 @@ CNJ_LIMPO_TJAC = "00033258820148010001"
 def captured_payloads(monkeypatch):
     payloads = []
 
-    def fake_call(*, base_url, alias, api_key, session, query_payload, verbose=False):
+    def fake_call(*, base_url, alias, api_key, session, query_payload, verbose=False, timeout=60):
         payloads.append(query_payload)
         return {"hits": {"total": {"value": 0, "relation": "eq"}, "hits": []}}
 

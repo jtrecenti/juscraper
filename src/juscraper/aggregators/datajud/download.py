@@ -236,7 +236,7 @@ def call_datajud_api(
     session: requests.Session,
     query_payload: dict[str, Any],
     verbose: bool = False,
-    timeout: int = 60  # seconds
+    timeout: float | tuple[float, float] | None = 60,
 ) -> dict[str, Any] | None:
     """
     Calls the Datajud API for a given alias with a specific query.
@@ -248,7 +248,8 @@ def call_datajud_api(
         session (requests.Session): The requests session to use.
         query_payload (dict[str, Any]): The Elasticsearch query payload.
         verbose (bool): If True, logs more details about the request.
-        timeout (int): Request timeout in seconds.
+        timeout (float | tuple[float, float] | None): Timeout do ``requests`` em
+            segundos. O ``DatajudScraper`` passa o do perfil HTTP ``"busca"``.
 
     Returns:
         dict[str, Any] | None: The JSON response from the API as a dictionary,
