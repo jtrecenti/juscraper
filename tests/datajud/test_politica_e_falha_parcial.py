@@ -73,9 +73,43 @@ def test_timeout_do_perfil_vale_tambem_no_retry_com_size_reduzido(mocker):
     assert [chamada.kwargs["timeout"] for chamada in espiao.call_args_list] == [180, 180]
 
 
-def test_politica_com_campo_sem_efeito_no_datajud_levanta():
-    with pytest.raises(ValueError, match=r"só aceita \['timeout'\].*max_retries"):
-        jus.scraper("datajud", politica={"busca": {"timeout": 90, "max_retries": 5}})
+@pytest.mark.parametrize(
+    "ajuste",
+    [
+        {"timeout": 90, "max_retries": 5},
+        # Inválidos para a ``RequestPolicy`` (TypeError e ValueError do core):
+        # o DataJud recusa antes, com a mesma explicação dos demais campos.
+        {"retryable_statuses": 500},
+        {"max_retries": 0},
+        {"campo_inexistente": 1},
+    ],
+)
+def test_politica_com_campo_sem_efeito_no_datajud_levanta(ajuste):
+    with pytest.raises(ValueError, match=r"só aceita \['timeout'\]"):
+        jus.scraper("datajud", politica={"busca": ajuste})
+
+
+@pytest.mark.parametrize("timeout", ["abc", -1, 0, True, None, [5], [5, -1], (5, "x")])
+def test_politica_com_timeout_invalido_levanta(timeout):
+    with pytest.raises(ValueError, match="timeout inválido"):
+        jus.scraper("datajud", politica={"busca": {"timeout": timeout}})
+
+
+@pytest.mark.parametrize("timeout, esperado", [(90, 90), (12.5, 12.5), ([5, 180], (5, 180)), ((5, 180), (5, 180))])
+def test_politica_com_timeout_valido_e_aceita(timeout, esperado):
+    scraper = jus.scraper("datajud", politica={"busca": {"timeout": timeout}})
+    assert scraper._perfis_http["busca"].timeout == esperado  # noqa: SLF001
+
+
+@pytest.mark.parametrize(
+    "politica",
+    [{"busca": {"max_retries": 5}}, {"busca": {"timeout": -1}}, {"listagem": {"timeout": 90}}, {"busca": "abc"}],
+)
+def test_politica_recusada_nao_cria_diretorio_temporario(mocker, politica):
+    mkdtemp = mocker.patch.object(datajud_client.tempfile, "mkdtemp")
+    with pytest.raises(ValueError):
+        jus.scraper("datajud", politica=politica)
+    mkdtemp.assert_not_called()
 
 
 def test_politica_com_perfil_desconhecido_levanta():
@@ -117,6 +151,46 @@ def test_total_truncado_pelo_elasticsearch_vira_pelo_menos(monkeypatch):
 
     with pytest.warns(UserWarning, match="10 registro\\(s\\) recebido\\(s\\) de pelo menos 10000"):
         jus.scraper("datajud", verbose=0).listar_processos(tribunal="TJSP", tamanho_pagina=10)
+
+
+def test_contagem_usa_o_tamanho_real_das_paginas(monkeypatch):
+    _instalar_paginas(monkeypatch, [_pagina(1, tamanho=20, total=50), None])
+
+    with pytest.warns(UserWarning, match=r"20 registro\(s\) recebido\(s\) de 50 encontrado"):
+        jus.scraper("datajud", verbose=0).listar_processos(tribunal="TJSP", tamanho_pagina=20)
+
+
+def test_total_sem_relation_e_tratado_como_exato(monkeypatch):
+    pagina = _pagina(1)
+    del pagina["hits"]["total"]["relation"]
+    _instalar_paginas(monkeypatch, [pagina, None])
+
+    with pytest.warns(UserWarning) as avisos:
+        jus.scraper("datajud", verbose=0).listar_processos(tribunal="TJSP", tamanho_pagina=10)
+
+    assert "10 registro(s) recebido(s) de 25 encontrado(s)" in str(avisos[0].message)
+
+
+@pytest.mark.parametrize("total", [None, {}, {"relation": "eq"}])
+def test_total_ausente_nao_vira_interrogacao(monkeypatch, total):
+    pagina = _pagina(1)
+    pagina["hits"]["total"] = total
+    _instalar_paginas(monkeypatch, [pagina, None])
+
+    with pytest.warns(UserWarning) as avisos:
+        jus.scraper("datajud", verbose=0).listar_processos(tribunal="TJSP", tamanho_pagina=10)
+
+    mensagem = str(avisos[0].message)
+    assert "10 registro(s) recebido(s); a consulta não informou o total encontrado." in mensagem
+    assert "?" not in mensagem
+
+
+def test_pagina_com_hits_null_encerra_sem_erro(monkeypatch):
+    _instalar_paginas(monkeypatch, [_pagina(1), {"hits": {"total": {"value": 25}, "hits": None}}])
+
+    df = jus.scraper("datajud", verbose=0).listar_processos(tribunal="TJSP", tamanho_pagina=10)
+
+    assert len(df) == 10
 
 
 def test_paginas_descartadas_antes_do_intervalo_nao_contam_como_recebidas(monkeypatch):

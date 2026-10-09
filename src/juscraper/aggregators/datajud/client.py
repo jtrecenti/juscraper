@@ -125,6 +125,21 @@ def _next_search_after(
     return search_after
 
 
+def _numero_positivo(valor: Any) -> bool:
+    return isinstance(valor, (int, float)) and not isinstance(valor, bool) and valor > 0
+
+
+def _timeout_valido(timeout: Any) -> bool:
+    """Número positivo ou par ``(conexão, leitura)`` de positivos, como o ``requests`` aceita.
+
+    ``None`` fica de fora: no ``requests`` ele desliga o limite, e uma consulta
+    pesada ao DataJud ficaria esperando indefinidamente.
+    """
+    if isinstance(timeout, (list, tuple)):
+        return len(timeout) == 2 and all(_numero_positivo(v) for v in timeout)
+    return _numero_positivo(timeout)
+
+
 def _mensagem_falha_parcial(
     alias: str,
     pagina: int,
@@ -146,13 +161,12 @@ def _mensagem_falha_parcial(
             "data_ajuizamento_inicio/_fim) ou aumente o timeout com "
             "politica={'busca': {'timeout': ...}}."
         )
-    total = total_info.get("value", "?")
-    if total_info.get("relation", "eq") != "eq":
-        total = f"pelo menos {total}"
-    return (
-        f"{inicio} Resultados parciais retornados: {recebidos} registro(s) "
-        f"recebido(s) de {total} encontrado(s) pela consulta."
-    )
+    recebidos_txt = f"{inicio} Resultados parciais retornados: {recebidos} registro(s) recebido(s)"
+    total = total_info.get("value")
+    if not isinstance(total, int):
+        return f"{recebidos_txt}; a consulta não informou o total encontrado."
+    total_txt = str(total) if total_info.get("relation", "eq") == "eq" else f"pelo menos {total}"
+    return f"{recebidos_txt} de {total_txt} encontrado(s) pela consulta."
 
 
 class DatajudScraper(HTTPScraper):
@@ -205,13 +219,20 @@ class DatajudScraper(HTTPScraper):
             politica: Ajuste do perfil HTTP ``"busca"``, usado por
                 :meth:`listar_processos` e :meth:`contar_processos`. Só o
                 campo ``timeout`` é aceito (default 60 s), como em
-                ``politica={"busca": {"timeout": 180}}``. Consultas grandes
-                podem passar de 60 s já na primeira página.
+                ``politica={"busca": {"timeout": 180}}``. O valor é um
+                número positivo de segundos ou o par ``(conexão, leitura)``;
+                ``None``, que esperaria indefinidamente, é recusado.
+                Consultas grandes podem passar de 60 s já na primeira página.
 
         Raises:
-            ValueError: Quando ``politica`` cita perfil desconhecido ou campo
-                diferente de ``timeout``.
+            ValueError: Quando ``politica`` cita perfil desconhecido, campo
+                diferente de ``timeout`` ou ``timeout`` inválido.
         """
+        # Valida antes do ``mkdtemp`` e do core: construção recusada não deixa
+        # diretório temporário, e campo sem efeito no DataJud não chega a ser
+        # validado (com outra mensagem, ou outro tipo de erro) pela
+        # ``RequestPolicy``.
+        self._validar_politica(politica)
         # Preserva o prefix historico ``datajud_api_`` para download_path
         # default. ``set_download_path`` (em ``BaseScraper``) usa
         # ``tempfile.mkdtemp()`` sem prefix, entao resolvemos aqui antes
@@ -224,20 +245,37 @@ class DatajudScraper(HTTPScraper):
             sleep_time=sleep_time,
             politica=politica,
         )
-        for nome, ajuste in (politica or {}).items():
-            nao_suportados = set(ajuste) - self.CAMPOS_POLITICA_SUPORTADOS
-            if nao_suportados:
-                raise ValueError(
-                    f"DatajudScraper só aceita {sorted(self.CAMPOS_POLITICA_SUPORTADOS)} "
-                    f"em politica={{{nome!r}: ...}}; recebido {sorted(nao_suportados)}. "
-                    "O DataJud tem retry próprio, que não usa os demais campos."
-                )
         self.api_key = api_key or self.DEFAULT_API_KEY
         logger.info(
             "DatajudScraper initialized. API Key: %s. Temp path: %s",
             "Provided" if api_key else "Default",
             self.download_path,
         )
+
+    @classmethod
+    def _validar_politica(cls, politica: Mapping[str, Any] | None) -> None:
+        """Recusa em ``politica=`` o que o transporte do DataJud não usa ou não aceita.
+
+        Perfil desconhecido e ajuste que não é dict ficam com a mensagem do
+        core, via ``_merge_politica``, chamado aqui só depois da checagem de
+        campos para que ``max_retries`` e afins recebam a explicação do DataJud.
+        """
+        for nome, ajuste in (politica or {}).items():
+            if not isinstance(ajuste, Mapping):
+                continue
+            nao_suportados = set(ajuste) - cls.CAMPOS_POLITICA_SUPORTADOS
+            if nao_suportados:
+                raise ValueError(
+                    f"DatajudScraper só aceita {sorted(cls.CAMPOS_POLITICA_SUPORTADOS)} "
+                    f"em politica={{{nome!r}: ...}}; recebido {sorted(nao_suportados)}. "
+                    "O DataJud tem retry próprio, que não usa os demais campos."
+                )
+            if "timeout" in ajuste and not _timeout_valido(ajuste["timeout"]):
+                raise ValueError(
+                    f"timeout inválido em politica={{{nome!r}: ...}}: {ajuste['timeout']!r}. "
+                    "Use um número positivo de segundos ou o par (conexão, leitura)."
+                )
+        cls._merge_politica(politica)
 
     def contar_processos(self, **kwargs) -> pd.DataFrame:
         """Conta processos no DataJud sem baixar nenhum documento.
