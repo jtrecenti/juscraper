@@ -236,7 +236,7 @@ def call_datajud_api(
     session: requests.Session,
     query_payload: dict[str, Any],
     verbose: bool = False,
-    timeout: int = 60  # seconds
+    timeout: float | tuple[float, float] | None = 60,
 ) -> dict[str, Any] | None:
     """
     Calls the Datajud API for a given alias with a specific query.
@@ -248,7 +248,8 @@ def call_datajud_api(
         session (requests.Session): The requests session to use.
         query_payload (dict[str, Any]): The Elasticsearch query payload.
         verbose (bool): If True, logs more details about the request.
-        timeout (int): Request timeout in seconds.
+        timeout (float | tuple[float, float] | None): Timeout do ``requests`` em
+            segundos. O ``DatajudScraper`` passa o do perfil HTTP ``"busca"``.
 
     Returns:
         dict[str, Any] | None: The JSON response from the API as a dictionary,
@@ -256,7 +257,7 @@ def call_datajud_api(
 
     Note:
         Em caso de falha, retorna None e loga o erro via logger.error. O caller
-        (`_listar_processos_por_alias` em client.py) emite um unico
+        (`_iter_process_pages` em client.py) emite um unico
         `warnings.warn(UserWarning)` agregado por alias quando detecta None,
         evitando spam de warnings em paginacao longa com API instavel.
 
@@ -324,7 +325,7 @@ def _retry_with_reduced_size(
 
     Muta ``query_payload["size"]`` em place para que o caller leia o size
     efetivo na heuristica de ultima pagina (``len(hits) < query_payload['size']``)
-    em ``client.py:_listar_processos_por_alias``. Retorna ``None`` em qualquer
+    em ``client.py:_iter_process_pages``. Retorna ``None`` em qualquer
     falha do retry, alinhado ao contrato de ``call_datajud_api``.
     """
     original_size = query_payload.get("size")
