@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 import logging
 import math
+import shutil
 import tempfile
 import time
 import warnings
@@ -86,9 +87,14 @@ class FalcaoScraper(HTTPScraper):
     ) -> pd.DataFrame:
         """Consulta a Jurisprudencia Nacional da Justica do Trabalho.
 
-        Baixa as paginas para um diretorio temporario e devolve o resultado
-        parseado. Para inspecionar o JSON bruto, use :meth:`listar_decisoes_download` +
-        :meth:`listar_decisoes_parse`.
+        Baixa as páginas para um diretório próprio no temporário do sistema
+        (``tempfile.gettempdir()``), sem usar ``download_path``, e o remove
+        após devolver o resultado parseado.
+        Se a coleta ou o parsing falhar, preserva as páginas recebidas nesse
+        diretório e informa o caminho em uma nota da exceção. Recupere
+        esse resultado parcial com :meth:`listar_decisoes_parse`; não há retomada
+        automática. Para guardar também coletas completas, use
+        :meth:`listar_decisoes_download`.
 
         Args:
             pesquisa (str): Termo de busca livre (parametro ``texto``).
@@ -154,6 +160,8 @@ class FalcaoScraper(HTTPScraper):
                 requisicao.
             requests.HTTPError: Quando o backend bloqueia o IP por excesso
                 de requisicoes (429 com espera de horas).
+            BaseException: Falhas de coleta, parsing ou interrupção manual
+                são propagadas com nota sobre as páginas preservadas, se houver.
 
         Exemplo:
             >>> import juscraper as jus
@@ -170,9 +178,24 @@ class FalcaoScraper(HTTPScraper):
                 "FalcaoScraper.listar_decisoes() got unexpected keyword argument(s): 'diretorio'. "
                 "Para gravar o JSON bruto num diretorio, use listar_decisoes_download()."
             )
-        with tempfile.TemporaryDirectory(prefix="falcao_") as tmp:
-            diretorio = self._baixar(pesquisa, paginas, tmp, kwargs, "FalcaoScraper.listar_decisoes()")
-            return self.listar_decisoes_parse(diretorio)
+        # Não usa download_path: listar_decisoes_parse lê a pasta recursivamente, e
+        # uma sobra preservada ali entraria no parse dos downloads guardados.
+        temporario = Path(tempfile.mkdtemp(prefix="falcao_"))
+        try:
+            diretorio = self._baixar(pesquisa, paginas, temporario, kwargs, "FalcaoScraper.listar_decisoes()")
+            resultado = self.listar_decisoes_parse(diretorio)
+        except BaseException as erro:
+            # Inclui interrupção manual: a cota já foi gasta nas páginas recebidas.
+            if any(temporario.rglob("*.json")):
+                erro.add_note(
+                    f"Páginas recebidas preservadas em {temporario}. "
+                    "Use listar_decisoes_parse nesse diretório para recuperar o resultado parcial."
+                )
+            else:
+                shutil.rmtree(temporario)
+            raise
+        shutil.rmtree(temporario)
+        return resultado
 
     def listar_decisoes_download(
         self,
@@ -253,6 +276,9 @@ class FalcaoScraper(HTTPScraper):
         # ``paginas`` que nao inclui a 1, isso poupa uma requisicao.
         primeira = paginas[0] if paginas is not None else 1
         primeiro_json = self._buscar_pagina(inp, primeira)
+        # O total ou um aviso convertido em erro não pode apagar a resposta recebida.
+        arquivo_inicial = destino / f"{inp.colecao}_{primeira:04d}.json"
+        arquivo_inicial.write_text(json.dumps(primeiro_json, ensure_ascii=False), encoding="utf-8")
         total = parse_total(primeiro_json)
         total_paginas = self._total_paginas(total, inp.tamanho_pagina)
         if self.verbose:
@@ -271,13 +297,14 @@ class FalcaoScraper(HTTPScraper):
             )
 
         paginas_iter = list(self._resolver_paginas(paginas, total_paginas))
+        if primeira not in paginas_iter:
+            arquivo_inicial.unlink()
         for pagina in tqdm(paginas_iter, desc=f"Falcao/{inp.colecao}", disable=not self.verbose):
             if pagina == primeira:
-                conteudo = primeiro_json
-            else:
-                if self.sleep_time:
-                    time.sleep(self.sleep_time)
-                conteudo = self._buscar_pagina(inp, pagina)
+                continue
+            if self.sleep_time:
+                time.sleep(self.sleep_time)
+            conteudo = self._buscar_pagina(inp, pagina)
             arquivo = destino / f"{inp.colecao}_{pagina:04d}.json"
             arquivo.write_text(json.dumps(conteudo, ensure_ascii=False), encoding="utf-8")
 
