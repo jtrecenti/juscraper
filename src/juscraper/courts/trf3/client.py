@@ -21,7 +21,7 @@ Covers two separate systems:
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import ClassVar
+from typing import Any, ClassVar
 
 import pandas as pd
 
@@ -63,7 +63,7 @@ class TRF3Scraper(TRFConsultaScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> pd.DataFrame:
         """Pesquisa jurisprudência no portal do TRF3 (``web.trf3.jus.br/jurisprudencia``).
 
@@ -164,7 +164,7 @@ class TRF3Scraper(TRFConsultaScraper):
             ...     data_julgamento_inicio="2026-01-01", data_julgamento_fim="2026-06-30",
             ... )
 
-        See also:
+        See Also:
             :class:`InputCJSGTRF3`: fonte dos filtros aceitos.
         """
         return self.cjsg_parse(self.cjsg_download(pesquisa=pesquisa, paginas=paginas, **kwargs))
@@ -173,7 +173,7 @@ class TRF3Scraper(TRFConsultaScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> list[str]:
         """Baixa as páginas da lista resumida da busca de jurisprudência do TRF3.
 
