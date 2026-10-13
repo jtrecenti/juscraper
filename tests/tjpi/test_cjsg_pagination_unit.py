@@ -207,7 +207,7 @@ _EMENTA_MARCADOR_NO_MEIO = "Certidão negativa. Sem resultados para: bens penhor
         pytest.param(_EMENTA_ABRE_COM_MARCADOR, id="marcador-abre-a-ementa"),
     ],
 )
-def test_get_total_pages_sem_resultados_na_ementa_nao_zera_a_contagem(texto: str, sem_link: bool):
+def test_get_total_pages_sem_resultados_na_ementa_nao_zera_a_contagem(texto: str, *, sem_link: bool):
     """Com a contagem na página, o marcador de busca vazia numa ementa não é consultado."""
     html = _com_texto_na_ementa(_primeira_pagina(), texto)
     if sem_link:
