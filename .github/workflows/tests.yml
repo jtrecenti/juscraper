@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ["3.11", "3.12", "3.13", "3.14", "3.15"]
+        python: ["3.11", "3.12", "3.13", "3.14"]
         # `cobertura` fica fora da lista acima de propósito: se a chave já
         # existisse na matriz, este include criaria uma perna a mais em vez de
         # anotar a de 3.13.
@@ -58,8 +58,44 @@ jobs:
             echo "</details>"
           } >> "$GITHUB_STEP_SUMMARY"
 
+  # Versões que ainda não barram. Ficam num job à parte, fora do `needs` do
+  # job obrigatório, para que a instalação demorada não atrase o resultado dos
+  # PRs.
+  #
+  # 3.15: o teto `pandas<3.0.0` (issue #25) resolve para o pandas 2.3.3, que
+  # não tem wheel para 3.15. A instalação compila o pandas da fonte (4 min 37 s
+  # medidos em 13/10/2026) e a suíte cai com falha de segmentação em
+  # `pandas/_libs/pandas_datetime`, chamado por `pd.to_datetime`. A versão
+  # volta para a matriz principal quando a suíte passar nela.
+  pytest-experimental:
+    name: pytest (py${{ matrix.python }}, não bloqueante)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.15"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
+        with:
+          python-version: ${{ matrix.python }}
+          cache-dependency-glob: pyproject.toml
+      - name: Instalar dependências de desenvolvimento
+        run: uv sync --extra dev
+      - name: Rodar a suíte offline
+        run: uv run pytest
+      # `continue-on-error` mostra este job como aprovado na lista de checks
+      # mesmo quando ele falha. O aviso mantém a falha visível no resumo.
+      - name: Avisar que a versão experimental falhou
+        if: failure()
+        env:
+          VERSAO: ${{ matrix.python }}
+        run: echo "::warning title=Python $VERSAO::A suíte offline falhou em Python $VERSAO. Este job não barra o merge."
+
   # Check obrigatório é casado pelo nome do job. Este job dá um nome só para o
-  # resultado de todas as pernas, que não muda quando a matriz muda.
+  # resultado de todas as pernas bloqueantes, que não muda quando a matriz muda.
   obrigatorios:
     name: Testes obrigatórios
     if: always()
