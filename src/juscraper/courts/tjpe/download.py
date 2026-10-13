@@ -93,7 +93,7 @@ def is_escolha_page(html: str) -> bool:
 
 
 def _link_corresponde_tipo(link: Tag, tipo: str) -> bool:
-    """Confere o tipo pelo rótulo da primeira célula da linha do link."""
+    """Diz se o link é o de resultados e se a primeira célula da sua linha rotula o tipo pedido."""
     if "documentos encontrados" not in link.get_text():
         return False
     celula = link.find_parent("td")
