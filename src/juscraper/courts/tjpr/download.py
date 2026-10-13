@@ -16,12 +16,23 @@ SEARCH_URL = "https://portal.tjpr.jus.br/jurisprudencia/publico/pesquisa.do"
 # Y" e o link "Última Página". Com 10, o link apontava 5 vezes mais páginas
 # do que existem, e as excedentes voltavam vazias (sondagem ao vivo de
 # 2026-10, "comodato": 4795 registros, link 480, página 97 vazia).
+#
+# As 50 linhas somam duas fontes, a jurisprudência do TJ e os registros da
+# Corte IDH, e a contagem de ``.navLeft`` é a soma das duas (410507 + 107 =
+# 410614 no sample de várias páginas). Nos samples, cada página traz até 10
+# registros da Corte IDH e o TJ completa as 50: 40 + 10 nas páginas 1 e 2, e
+# 43 + 7 num sample anterior, de busca com só 7 registros da Corte IDH.
+# Nenhum sample cobre a página seguinte ao esgotamento da Corte IDH. Se nela
+# o TJ não continuar do registro em que parou, ``ceil(N / 50)`` deixa
+# registros do TJ de fora no fim da busca.
 RESULTS_PER_PAGE = 50
 
 _PAGE_NUMBER_RE = re.compile(r"\['pageNumber'\]\.value='([^']*)'")
 # Cascata da contagem: o rótulo "394770 registro(s) encontrado(s)" fica em
-# ``#navigator .navLeft``; se o contêiner mudar, a cascata cai no HTML bruto,
-# onde a expressão "registro(s) encontrado(s)" continua específica.
+# ``#navigator .navLeft``. O HTML bruto só entra quando o seletor não casa
+# nenhum elemento com texto, e lá a expressão "registro(s) encontrado(s)"
+# continua específica. Se o seletor casar um elemento cujo texto a regex não
+# reconhece, a contagem vem ``None`` e ``resolve_total_pages`` levanta.
 _COUNT_SELECTORS = ("#navigator .navLeft",)
 _COUNT_PATTERNS = (re.compile(r"([\d.]+)\s*registro\(s\)\s*encontrado", re.IGNORECASE),)
 

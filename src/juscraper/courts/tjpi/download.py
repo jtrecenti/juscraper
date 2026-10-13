@@ -49,9 +49,11 @@ _LAST_PAGE_TEXT = "\u00bb"  # », rótulo do link de última página
 # Cascata da contagem. O rótulo fica num ``<div class="pb-3">`` sem outra
 # classe; o seletor exige a classe exata porque ``div.pb-3`` casaria também o
 # contêiner da página (``content pt-3 pb-3 d-flex``), que guarda as ementas.
-# Se o rótulo mudar de div, a cascata cai no HTML bruto, e por isso as duas
-# regex começam em "Exibindo" e exigem "jurisprudência(s)" depois do número:
-# "de um total de 84 prestações" numa ementa não casa.
+# O HTML bruto só entra quando o seletor não casa nenhum elemento com texto,
+# e por isso as duas regex começam em "Exibindo" e exigem "jurisprudência(s)"
+# depois do número: "de um total de 84 prestações" numa ementa não casa. Se o
+# seletor casar um div cujo texto as regex não reconhecem, a contagem vem
+# ``None`` e, sem o marcador de busca vazia, ``resolve_total_pages`` levanta.
 _COUNT_SELECTORS = ('div[class="pb-3"]',)
 # O número vem em ``<b>``; ``_SEP`` aceita espaço e tag entre as palavras para
 # que a mesma regex sirva ao texto do rótulo e ao HTML bruto do fallback.
