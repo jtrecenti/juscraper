@@ -3,7 +3,6 @@ Orchestrates the flow for DATAJUD (user entry point) - API BASED
 """
 import logging
 import math
-import tempfile
 import time
 import warnings
 from collections import defaultdict
@@ -201,6 +200,8 @@ class DatajudScraper(HTTPScraper):
     # Schema pydantic detectado por ``tests/schemas/test_signature_parity._is_wired``.
     INPUT_LISTAR_PROCESSOS = InputListarProcessosDataJud
 
+    PREFIXO_DIRETORIO_TEMPORARIO = "datajud_api_"
+
     # Um perfil só, para ``listar_processos`` e ``contar_processos``. O
     # transporte é o ``call_datajud_api``, com retry próprio (reduz o ``size``
     # uma vez após 504/timeout), e não o ``_request_with_retry`` do core: por
@@ -224,7 +225,8 @@ class DatajudScraper(HTTPScraper):
         Args:
             api_key: Chave da API pública. Default: a chave pública do CNJ.
             verbose: Nível de log; acima de 1, loga cada requisição.
-            download_path: Diretório temporário. Default: ``mkdtemp``.
+            download_path: Diretório temporário. Default: ``mkdtemp``, criado
+                só se ``download_path`` for lido; o DataJud não grava nele.
             sleep_time: Pausa, em segundos, entre páginas.
             politica: Ajuste do perfil HTTP ``"busca"``, usado por
                 :meth:`listar_processos` e :meth:`contar_processos`. Só o
@@ -238,39 +240,34 @@ class DatajudScraper(HTTPScraper):
             ValueError: Quando ``politica`` cita perfil desconhecido, campo
                 diferente de ``timeout`` ou ``timeout`` inválido.
         """
-        # Valida antes do ``mkdtemp`` e do core: construção recusada não deixa
-        # diretório temporário, e campo sem efeito no DataJud não chega a ser
+        # Valida antes do core: campo sem efeito no DataJud não chega a ser
         # validado (com outra mensagem, ou outro tipo de erro) pela
         # ``RequestPolicy``.
         self._validar_politica(politica)
-        # Preserva o prefix historico ``datajud_api_`` para download_path
-        # default. ``set_download_path`` (em ``BaseScraper``) usa
-        # ``tempfile.mkdtemp()`` sem prefix, entao resolvemos aqui antes
-        # de delegar ao ``HTTPScraper``.
-        resolved_path = download_path or tempfile.mkdtemp(prefix="datajud_api_")
         super().__init__(
             "DatajudAPI",
             verbose=verbose,
-            download_path=resolved_path,
+            download_path=download_path,
             sleep_time=sleep_time,
             politica=politica,
         )
         self.api_key = api_key or self.DEFAULT_API_KEY
+        # Sem o caminho temporário no log: ler ``download_path`` criaria o
+        # diretório, que o DataJud não usa.
         logger.info(
-            "DatajudScraper initialized. API Key: %s. Temp path: %s",
+            "DatajudScraper initialized. API Key: %s.",
             "Provided" if api_key else "Default",
-            self.download_path,
         )
 
     @classmethod
     def _validar_politica(cls, politica: Mapping[str, Any] | None) -> None:
         """Recusa em ``politica=`` o que o transporte do DataJud não usa ou não aceita.
 
-        Perfil desconhecido e ajuste que não é dict ficam com a mensagem do
-        core, via ``_merge_politica``, chamado aqui só depois da checagem de
-        campos para que ``max_retries`` e afins recebam a explicação do DataJud.
-        O perfil desconhecido é pulado mesmo com campo recusado: a mensagem
-        de campo citaria um perfil que o raspador não declara.
+        Roda antes do ``HTTPScraper.__init__`` para que ``max_retries`` e afins
+        recebam a explicação do DataJud. Perfil desconhecido e ajuste que não
+        é dict são pulados e ficam com a mensagem do core, que os valida em
+        seguida. O perfil desconhecido é pulado mesmo com campo recusado: a
+        mensagem de campo citaria um perfil que o raspador não declara.
         """
         for nome, ajuste in (politica or {}).items():
             if nome not in cls.perfis_http or not isinstance(ajuste, Mapping):
@@ -287,7 +284,6 @@ class DatajudScraper(HTTPScraper):
                     f"timeout inválido em politica={{{nome!r}: ...}}: {ajuste['timeout']!r}. "
                     "Use um número positivo e finito de segundos ou o par (conexão, leitura)."
                 )
-        cls._merge_politica(politica)
 
     def contar_processos(self, **kwargs) -> pd.DataFrame:
         """Conta processos no DataJud sem baixar nenhum documento.
