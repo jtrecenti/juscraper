@@ -68,8 +68,11 @@ def _chave_precedente(doc: dict[str, Any]) -> str | None:
     """Monta a chave legivel de um precedente, ex.: ``TST-SUM-392``.
 
     O ``numero`` sozinho se repete entre tipos (Sumula 392 x OJ 392) e entre
-    tribunais, e falta em parte dos precedentes regionais. Sem ``tipo`` ou
-    ``numero``, a chave usa ``id`` ou ``idTema`` (precedentes BANJUR).
+    tribunais, e falta em parte dos precedentes regionais. Registro sem ``id``
+    e com ``idTema`` (precedentes BANJUR) usa ``{tribunal}-idTema{idTema}``;
+    esse ramo vem antes do de ``tipo``/``numero``, que nos registros BANJUR
+    observados chegam nulos. Nos demais, sem ``tipo`` ou ``numero``, a chave
+    cai para ``{tribunal}-id{id}``.
     """
     tribunal = doc.get("tribunal") or "?"
     tipo = doc.get("tipo")
