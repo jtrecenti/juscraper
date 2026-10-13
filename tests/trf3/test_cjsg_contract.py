@@ -11,6 +11,7 @@ import datetime as dt
 import pandas as pd
 import pytest
 import responses
+from responses.matchers import query_param_matcher
 from responses.registries import OrderedRegistry
 
 import juscraper as jus
@@ -225,6 +226,24 @@ def test_cjsg_sessao_expirada_levanta(mocker):
 
     with pytest.raises(RuntimeError, match="sessão expirada"):
         jus.scraper("trf3").cjsg("medicamento", paginas=1)
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_sessao_expirada_na_pagina_2_levanta(mocker):
+    """The session can expire between pages: the ``np=2`` GET redirects to ``Home/SessaoExpirada``."""
+    mocker.patch("time.sleep")
+    add_search(_semestre("medicamento"), "results_normal_page_01.html")
+    responses.add(
+        responses.GET, PAGE_URL, status=302,
+        headers={"Location": "/jurisprudencia/Home/SessaoExpirada"},
+        match=[query_param_matcher({"np": "2"})],
+    )
+    responses.add(responses.GET, BASE_URL + "Home/SessaoExpirada", body=b"<html></html>", content_type=HTML)
+
+    with pytest.raises(RuntimeError, match="sessão expirada"):
+        jus.scraper("trf3").cjsg("medicamento", paginas=range(1, 3), **SEMESTRE)
+
+    assert len(responses.calls) == 5
 
 
 @responses.activate(registry=OrderedRegistry)
