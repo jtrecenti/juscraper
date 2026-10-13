@@ -101,12 +101,23 @@ def test_check_lista_aceita_todos_os_samples_de_lista(nome):
     _check_lista(_sample(nome), PAGE_URL)
 
 
+AVISO_DE_ZERO = "Nenhum Resultado Encontrado"
+
+# O aviso só dentro de <script>: o usuário não o vê, então a página não é a
+# lista de uma busca sem resultados.
+AVISO_SO_EM_SCRIPT = (
+    f'<html><head><script>var aviso = "{AVISO_DE_ZERO}";</script></head>'
+    "<body><h1>Pesquisa de jurisprudência</h1></body></html>"
+)
+
+
 @pytest.mark.parametrize(
     "html",
     [
         pytest.param(_sample("index_acordaos.html"), id="formulario"),
         pytest.param("<html><body><h1>Sistema em manutencao</h1></body></html>", id="manutencao"),
         pytest.param("", id="corpo_vazio"),
+        pytest.param(AVISO_SO_EM_SCRIPT, id="aviso_so_em_script"),
     ],
 )
 def test_check_lista_rejeita_pagina_que_nao_e_a_lista(html):
@@ -115,6 +126,20 @@ def test_check_lista_rejeita_pagina_que_nao_e_a_lista(html):
         _check_lista(html, PAGE_URL + "?np=3")
 
     assert PAGE_URL + "?np=3" in str(exc_info.value)
+
+
+@pytest.mark.parametrize("aviso", [AVISO_DE_ZERO.upper(), AVISO_DE_ZERO.lower()])
+def test_check_lista_aceita_aviso_em_outra_caixa(aviso):
+    """The zero-hits notice is matched regardless of letter case.
+
+    Starts from the real zero-hits page and changes only the case of the notice.
+    """
+    original = _sample("no_results.html")
+    assert AVISO_DE_ZERO in original
+    html = original.replace(AVISO_DE_ZERO, aviso)
+    assert AVISO_DE_ZERO not in html
+
+    _check_lista(html, PAGE_URL)
 
 
 class _Resposta:
