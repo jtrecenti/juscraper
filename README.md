@@ -50,6 +50,8 @@ dados.head()
 
 Status observado no cenário informado, sem garantia de disponibilidade atual. Sem evidência ou após 30 dias, o estado passa a não verificado na próxima geração. A data limite permanece visível entre atualizações. O último relato de falha continua abaixo.
 
+Tabelas geradas em 2026-10-13.
+
 [Critérios e atualização](https://github.com/jtrecenti/juscraper/blob/main/CONTRIBUTING.md#status-dos-raspadores)
 
 ### Tribunais

@@ -1,0 +1,21 @@
+name: Vencimento do status documental
+
+# Separado do workflow de PR: depende da data corrente e não deve reprovar mudanças alheias ao registro.
+on:
+  schedule:
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  vencimento:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - run: uv python install 3.11
+      - run: uv sync --python 3.11
+      - name: Listar observações vencidas depois da geração das tabelas
+        run: uv run scripts/gerar_status.py --vencimento

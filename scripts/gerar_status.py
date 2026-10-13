@@ -2,6 +2,7 @@
 
 import argparse
 import html
+import re
 import sys
 import tomllib
 from datetime import date, timedelta
@@ -13,6 +14,7 @@ from pydantic import BaseModel, ConfigDict, Field, HttpUrl, ValidationError, mod
 RAIZ = Path(__file__).resolve().parents[1]
 INICIO = "<!-- status:inicio -->"
 FIM = "<!-- status:fim -->"
+DOCUMENTOS = ("README.md", "docs/index.qmd")
 ESTADOS = {
     "funcionando": "Funcionando",
     "degradado": "Degradado",
@@ -24,6 +26,7 @@ TEXTOS = {
     "aviso": "Status observado no cenário informado, sem garantia de disponibilidade atual. "
     "Sem evidência ou após {dias} dias, o estado passa a não verificado na próxima geração. "
     "A data limite permanece visível entre atualizações. O último relato de falha continua abaixo.",
+    "gerado": "Tabelas geradas em {data}.",
     "politica": "[Critérios e atualização](https://github.com/jtrecenti/juscraper/blob/main/"
     "CONTRIBUTING.md#status-dos-raspadores)",
     "tribunal": "Tribunais",
@@ -98,9 +101,30 @@ class Registro(Modelo):
         return self
 
 
+# Derivado do texto do bloco para que a leitura da data acompanhe qualquer mudança na frase.
+REFERENCIA = re.compile(re.escape(TEXTOS["gerado"]).replace(r"\{data\}", r"(\d{4}-\d{2}-\d{2})"))
+
+
 def escapar(texto: str) -> str:
     """Protege células contra HTML, pipes e quebras de linha editoriais."""
     return html.escape(texto, quote=False).replace("|", "&#124;").replace("\n", " ").replace("\r", " ")
+
+
+def prazo(observacao: Observacao, registro: Registro) -> date | None:
+    """Último dia de validade; tentativa inconclusiva não tem prazo porque nada atestou."""
+    if observacao.estado == "nao_verificado":
+        return None
+    return observacao.verificado_em + timedelta(days=registro.validade_dias)
+
+
+def vencidas(registro: Registro, hoje: date) -> set[str]:
+    """Observações cujo prazo terminou antes da data de referência."""
+    return {
+        f"{fonte.sigla}.{endpoint}"
+        for fonte in registro.fontes
+        for endpoint, observacao in fonte.observacoes.items()
+        if (limite := prazo(observacao, registro)) and hoje > limite
+    }
 
 
 def renderizar(registro: Registro, hoje: date) -> str:
@@ -108,8 +132,10 @@ def renderizar(registro: Registro, hoje: date) -> str:
     textos = TEXTOS
     linhas = [
         INICIO, f"## {textos['titulo']}", "",
-        textos["aviso"].format(dias=registro.validade_dias), "", textos["politica"], "",
+        textos["aviso"].format(dias=registro.validade_dias), "",
+        textos["gerado"].format(data=hoje.isoformat()), "", textos["politica"], "",
     ]
+    fora_do_prazo = vencidas(registro, hoje)
     detalhes = []
     for tipo in ("tribunal", "agregador"):
         linhas.extend([f"### {textos[tipo]}", "", f"| {textos['cabecalho']} |", "|---|---|---|---|---|"])
@@ -122,13 +148,16 @@ def renderizar(registro: Registro, hoje: date) -> str:
                 verificado = validade = "-"
                 if observacao:
                     if observacao.verificado_em > hoje:
-                        raise ValueError(f"Verificação futura: {fonte.sigla}.{endpoint}")
-                    limite = observacao.verificado_em + timedelta(days=registro.validade_dias)
+                        raise ValueError(
+                            f"Verificação de {fonte.sigla}.{endpoint} posterior à data de referência "
+                            f"{hoje.isoformat()}; regenerar as tabelas."
+                        )
                     verificado = observacao.verificado_em.isoformat()
                     ultimo = ESTADOS[observacao.estado]
-                    if observacao.estado != "nao_verificado":
+                    if limite := prazo(observacao, registro):
                         validade = limite.isoformat()
-                        estado = ultimo if hoje <= limite else f"{estado} ({textos['ultimo']}: {ultimo})"
+                        vencida = f"{fonte.sigla}.{endpoint}" in fora_do_prazo
+                        estado = f"{estado} ({textos['ultimo']}: {ultimo})" if vencida else ultimo
                     detalhes.extend([
                         f"#### {escapar(fonte.nome)}: `{endpoint}`", "",
                         escapar(observacao.motivo), "",
@@ -160,22 +189,49 @@ def substituir_bloco(texto: str, bloco: str) -> str:
     return antes + bloco + depois
 
 
+def data_gravada(documentos: dict[Path, str]) -> date:
+    """Data em que os blocos versionados foram gerados, igual nos dois documentos."""
+    datas = {data for texto in documentos.values() for data in REFERENCIA.findall(texto)}
+    if len(datas) != 1 or any(len(REFERENCIA.findall(texto)) != 1 for texto in documentos.values()):
+        raise ValueError("Tabelas sem data de referência única; regenerar com scripts/gerar_status.py.")
+    return date.fromisoformat(datas.pop())
+
+
 def main() -> int:
     """Atualiza os documentos ou falha se estiverem divergentes, sem rede."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--check", action="store_true", help="verifica sem escrever")
+    modo = parser.add_mutually_exclusive_group()
+    modo.add_argument("--check", action="store_true", help="verifica a sincronia sem escrever nem ler o relógio")
+    modo.add_argument(
+        "--vencimento", action="store_true",
+        help="falha se alguma observação venceu depois da geração das tabelas",
+    )
     parser.add_argument("--raiz", type=Path, default=RAIZ, help="raiz do repositório")
-    parser.add_argument("--data", type=date.fromisoformat, default=date.today(), help="data ISO de referência")
+    parser.add_argument(
+        "--data", type=date.fromisoformat,
+        help="data ISO de referência; por padrão, a gravada nas tabelas com --check e a corrente nos demais modos",
+    )
     argumentos = parser.parse_args()
     try:
         with (argumentos.raiz / "status.toml").open("rb") as arquivo:
             registro = Registro.model_validate(tomllib.load(arquivo))
+        documentos = {
+            destino: destino.read_text(encoding="utf-8")
+            for destino in (argumentos.raiz / caminho for caminho in DOCUMENTOS)
+        }
+        if argumentos.vencimento:
+            # Só interessa o que venceu depois da geração: o que já aparece como vencido não pede nova geração.
+            ja_exibidas = vencidas(registro, data_gravada(documentos))
+            pendentes = vencidas(registro, argumentos.data or date.today()) - ja_exibidas
+            for nome in sorted(pendentes):
+                print(f"Vencida: {nome}")
+            return int(bool(pendentes))
+        # A sincronia reproduz a geração na data gravada; com a data corrente, o resultado mudaria no vencimento.
+        hoje = argumentos.data or (data_gravada(documentos) if argumentos.check else date.today())
         alteracoes = []
         # Valida os dois documentos antes de escrever, evitando atualização parcial por erro de marcador.
-        for caminho in ("README.md", "docs/index.qmd"):
-            destino = argumentos.raiz / caminho
-            atual = destino.read_text(encoding="utf-8")
-            novo = substituir_bloco(atual, renderizar(registro, argumentos.data))
+        for destino, atual in documentos.items():
+            novo = substituir_bloco(atual, renderizar(registro, hoje))
             if atual != novo:
                 alteracoes.append((destino, novo))
         for destino, novo in alteracoes:

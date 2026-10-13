@@ -67,7 +67,7 @@ def test_validade_preserva_ultimo_estado_e_evidencia(dados, estado):
 
 def test_data_futura_nao_vira_funcionando(dados):
     registro = MODULO["Registro"].model_validate(dados)
-    with pytest.raises(ValueError, match="futura"):
+    with pytest.raises(ValueError, match="posterior à data de referência 2026-06-06"):
         MODULO["renderizar"](registro, date(2026, 6, 6))
 
 
@@ -148,6 +148,77 @@ def test_cli_detecta_drift_sem_escrever_e_regenera_preservando_prosa(tmp_path):
 def test_tabelas_versionadas_estao_sincronizadas():
     resultado = executar_cli(RAIZ, "--check")
     assert resultado.returncode == 0, resultado.stdout + resultado.stderr
+
+
+# Datas de 2020 mantêm a observação vencida no relógio real: um gerador que consultasse
+# a data corrente em --check mostraria outro rótulo e os testes abaixo falhariam.
+REGISTRO_ANTIGO = """
+validade_dias = 30
+
+[[fontes]]
+sigla = "tjap"
+nome = "TJAP"
+tipo = "tribunal"
+endpoints = ["cjsg", "cjpg"]
+
+[fontes.observacoes.cjsg]
+estado = "funcionando"
+verificado_em = 2020-01-01
+versao = "0.1.0"
+motivo = "Coleta conferida"
+cenario = "HTTP direto"
+evidencias = ["https://github.com/jtrecenti/juscraper/issues/279"]
+
+[fontes.observacoes.cjpg]
+estado = "nao_verificado"
+verificado_em = 2020-01-01
+versao = "0.1.0"
+motivo = "Tentativa inconclusiva"
+cenario = "HTTP direto"
+evidencias = ["https://github.com/jtrecenti/juscraper/issues/279"]
+"""
+
+
+@pytest.fixture
+def raiz_antiga(tmp_path):
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "status.toml").write_text(REGISTRO_ANTIGO, encoding="utf-8")
+    for caminho in ("README.md", "docs/index.qmd"):
+        (tmp_path / caminho).write_text("<!-- status:inicio -->\n<!-- status:fim -->\n", encoding="utf-8")
+    assert executar_cli(tmp_path, "--data", "2020-01-01").returncode == 0
+    return tmp_path
+
+
+def test_check_reproduz_a_data_gravada_sem_ler_o_relogio(raiz_antiga):
+    readme = raiz_antiga / "README.md"
+    gerado = readme.read_text(encoding="utf-8")
+    assert "Tabelas geradas em 2020-01-01." in gerado
+    assert "| `cjsg` | Funcionando | 2020-01-01 | 2020-01-31 |" in gerado
+    resultado = executar_cli(raiz_antiga, "--check")
+    assert resultado.returncode == 0, resultado.stdout + resultado.stderr
+    readme.write_text(gerado.replace("| Funcionando |", "| Degradado |"), encoding="utf-8")
+    resultado = executar_cli(raiz_antiga, "--check")
+    assert resultado.returncode == 1
+    assert resultado.stdout.splitlines() == ["Divergente: README.md"]
+    readme.write_text(gerado.replace("geradas em 2020-01-01", "geradas em 2020-01-02"), encoding="utf-8")
+    resultado = executar_cli(raiz_antiga, "--check")
+    assert resultado.returncode == 1
+    assert "data de referência única" in resultado.stderr
+
+
+def test_vencimento_aponta_so_o_que_venceu_depois_da_geracao(raiz_antiga):
+    readme = raiz_antiga / "README.md"
+    gerado = readme.read_text(encoding="utf-8")
+    assert executar_cli(raiz_antiga, "--vencimento", "--data", "2020-01-31").returncode == 0
+    vencido = executar_cli(raiz_antiga, "--vencimento", "--data", "2020-02-01")
+    assert vencido.returncode == 1
+    assert vencido.stdout.splitlines() == ["Vencida: tjap.cjsg"]
+    assert executar_cli(raiz_antiga, "--vencimento").returncode == 1
+    assert readme.read_text(encoding="utf-8") == gerado
+    assert executar_cli(raiz_antiga, "--data", "2020-02-01").returncode == 0
+    regenerado = readme.read_text(encoding="utf-8")
+    assert "| `cjsg` | Não verificado (último: Funcionando) | 2020-01-01 | 2020-01-31 |" in regenerado
+    assert executar_cli(raiz_antiga, "--vencimento").returncode == 0
 
 
 def test_xfail_tjap_so_absorve_bloqueio_conhecido(pytester):
