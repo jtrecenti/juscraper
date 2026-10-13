@@ -13,7 +13,9 @@ Covers two separate systems:
 * ``cjsg`` searches the case-law portal at ``web.trf3.jus.br/jurisprudencia``,
   an ASP.NET application unrelated to PJe, also behind Akamai. It does not use
   the PJe session: each search opens its own ``requests.Session`` with its own
-  headers, and only the retry machinery of ``HTTPScraper`` is shared. The code
+  headers. What it takes from the scraper is the retry machinery of
+  ``HTTPScraper``, the ``sleep_time`` given to the constructor and the HTTP
+  profile ``perfis_http["cjsg"]`` (timeout and number of attempts). The code
   lives in :mod:`.cjsg_download`, :mod:`.cjsg_parse` and :mod:`.cjsg_schemas`.
 """
 from __future__ import annotations
