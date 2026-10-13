@@ -7,6 +7,7 @@ e ``Accept: application/pdf``. O PDF de exemplo foi capturado por
 """
 from __future__ import annotations
 
+import errno
 import inspect
 from pathlib import Path
 
@@ -226,6 +227,20 @@ def test_download_pecas_confere_que_o_arquivo_fica_no_diretorio_do_processo(tmp_
     assert _arquivos(tmp_path) == []
     baixar.assert_not_called()
     assert "sai do diretório do processo" in caplog.text
+
+
+@responses.activate
+def test_download_pecas_erro_de_gravacao_sobe(tmp_path, mocker) -> None:
+    """Erro ao gravar o PDF não é falha de uma peça: sobe, porque disco cheio ou sem permissão vale para o lote."""
+    valido = _doc_real()
+    registrar_processo(BASE_URL_1G, "cpopg", "paginado", substituir={"documentos": _documentos_com(valido)})
+    _registrar_pdf(BASE_URL_1G, "cpopg", "paginado", valido["id"], body=_pdf(), content_type="application/pdf")
+    mocker.patch.object(Path, "write_bytes", side_effect=OSError(errno.ENOSPC, "No space left on device"))
+
+    with pytest.raises(OSError) as exc:
+        jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO, download_pecas=True, diretorio=str(tmp_path))
+
+    assert exc.value.errno == errno.ENOSPC
 
 
 @responses.activate

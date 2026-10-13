@@ -248,7 +248,7 @@ def baixar_processo(
     Erro de rede e erro em ``/dados`` continuam derrubando o processo.
 
     Raises:
-        ValueError: ``idProcesso`` ausente ou fora do alfabeto de
+        ValueError: ``idProcesso`` ausente ou recusado por
             :func:`token_valido`; nenhuma requisição de detalhe é feita.
     """
     busca = buscar_processo(request_fn, base_url, numero_processo, tribunal)
@@ -294,7 +294,7 @@ def baixar_documento(
 
     Raises:
         BotChallengeBlockedError: 403 ``Access Denied`` do Akamai.
-        ValueError: Token fora do alfabeto de :func:`token_valido` (nenhuma
+        ValueError: Token recusado por :func:`token_valido` (nenhuma
             requisição é feita) ou resposta sem ``Content-Type`` de PDF.
     """
     for nome, token in (("id_documento", id_documento), ("id_processo", id_processo)):
