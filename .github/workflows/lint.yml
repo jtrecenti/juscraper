@@ -1,0 +1,28 @@
+name: Lint
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+      - name: Instalar dependências de desenvolvimento
+        run: uv sync --extra dev --python 3.12
+      - name: Conferir Ruff e dispensas temporárias
+        env:
+          LINT_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          uv run ruff check --config ruff.toml src tests
+          uv run python scripts/check_lint_policy.py --base-ref "$LINT_BASE"
+      - name: Testar a política de lint
+        run: uv run pytest tests/lint_policy -q
