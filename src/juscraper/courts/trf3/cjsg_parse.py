@@ -36,6 +36,11 @@ _TITULO_BASE = {
     "base monocráticas": "monocraticas",
 }
 
+#: Seletor de um documento na lista resumida. O download usa o mesmo seletor
+#: para reconhecer uma página como lista, de modo que "página válida" e "página
+#: que o parser sabe ler" não se separem.
+SELETOR_DOCUMENTO = "li.acordao-retorno"
+
 COLUNAS_PRINCIPAIS = [
     "processo", "classe", "orgao_julgador", "relator", "relator_acordao",
     "data_julgamento", "data_publicacao", "meio_publicacao", "ementa",
@@ -147,7 +152,7 @@ def cjsg_parse_manager(resultados_brutos: list[str]) -> pd.DataFrame:
     for html in resultados_brutos:
         soup = BeautifulSoup(html, "html.parser")
         base = _base_da_pagina(soup)
-        registros.extend(_parse_item(item, base) for item in soup.select("li.acordao-retorno"))
+        registros.extend(_parse_item(item, base) for item in soup.select(SELETOR_DOCUMENTO))
 
     df = pd.DataFrame(registros)
     if df.empty:

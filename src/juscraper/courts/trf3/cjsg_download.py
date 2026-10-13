@@ -28,11 +28,13 @@ import time
 from collections.abc import Callable, Iterable
 
 import requests
+from bs4 import BeautifulSoup
 from tqdm import tqdm
 
 from ...core.exceptions import BotChallengeBlockedError
 from ...core.http import RequestFn
 from ...utils.pagination import extract_count_with_cascade
+from .cjsg_parse import SELETOR_DOCUMENTO
 
 logger = logging.getLogger("juscraper.trf3.cjsg")
 
@@ -219,9 +221,31 @@ def _check_sessao(resp: requests.Response) -> None:
 _TOTAL_SELECTORS = ("section.secao-total .qtd-total",)
 _TOTAL_PATTERNS = (re.compile(r"^\s*(\d[\d.]*)\s*$"),)
 # Contador do primeiro item da lista, "1/591)": fallback se o resumo mudar.
-_CONTAGEM_SELECTORS = ("li.acordao-retorno .contagem",)
+_CONTAGEM_SELECTORS = (f"{SELETOR_DOCUMENTO} .contagem",)
 _CONTAGEM_PATTERNS = (re.compile(r"^\s*\d+\s*/\s*(\d[\d.]*)\)\s*$"),)
 _ZERO_MARKERS = ("Nenhum Resultado Encontrado",)
+
+
+def _check_lista(html: str, url: str) -> None:
+    """Levanta ``RuntimeError`` se a página não for a lista de resultados.
+
+    O portal responde 200 também quando devolve outra coisa no lugar da lista
+    (o formulário de busca, uma página de manutenção). Sem esta checagem essa
+    resposta chegaria ao parser, que não acha documento nenhum e devolve o
+    mesmo DataFrame vazio de uma busca sem resultados. A lista é reconhecida
+    por ter ao menos um documento ou o aviso de nenhum resultado.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    if soup.select_one(SELETOR_DOCUMENTO) is not None:
+        return
+    texto = soup.get_text(" ", strip=True).lower()
+    if any(marcador.lower() in texto for marcador in _ZERO_MARKERS):
+        return
+    raise RuntimeError(
+        f"TRF3 cjsg: a resposta de {url} não é a lista de resultados: não traz "
+        "documentos nem o aviso de nenhum resultado. O portal pode estar em "
+        "manutenção ou ter mudado de layout."
+    )
 
 
 def cjsg_n_results(html: str) -> int | None:
@@ -251,12 +275,17 @@ def _paginas_pedidas(paginas: Iterable[int] | None, n_paginas: int | None) -> li
 
     Com ``paginas=None`` baixa todas; exige o total. Páginas além do total são
     descartadas sem requisição: o portal não tem o que devolver para elas.
+
+    ``n_paginas=None`` só chega aqui para uma primeira página que já passou por
+    :func:`_check_lista` e traz documentos, mas cujo resumo e contador não
+    foram lidos. Nesse caso o pedido explícito é mantido sem corte, e cada
+    página baixada passa pela mesma checagem.
     """
     if paginas is None:
         if n_paginas is None:
             raise ValueError(
-                "TRF3 cjsg: não foi possível ler o total de resultados da primeira "
-                "página; passe 'paginas' explicitamente."
+                "TRF3 cjsg: a primeira página traz documentos, mas o total de "
+                "resultados não pôde ser lido; passe 'paginas' explicitamente."
             )
         return list(range(1, max(n_paginas, 1) + 1))
     pedidas = list(paginas)
@@ -301,8 +330,12 @@ def cjsg_download_manager(
 
     Raises:
         BotChallengeBlockedError: 403 ``Access Denied`` da Akamai.
-        RuntimeError: O portal redirecionou para a página de sessão expirada.
-        ValueError: ``paginas=None`` e o total de resultados não pôde ser lido.
+        RuntimeError: O portal redirecionou para a página de sessão expirada,
+            ou respondeu 200 com uma página que não é a lista de resultados
+            (formulário de busca, manutenção); vale para a primeira página e
+            para as seguintes.
+        ValueError: ``paginas=None`` e a primeira página traz documentos, mas
+            o total de resultados não pôde ser lido.
     """
     indice = BASES[base][0]
     index_url = INDEX_URL.format(indice=indice)
@@ -319,6 +352,9 @@ def cjsg_download_manager(
     resp.encoding = "utf-8"
     _check_sessao(resp)
     primeira = resp.text
+    # Antes de ler o total: uma página que não é a lista também não tem total,
+    # e o erro dela é mais específico que o de total ilegível.
+    _check_lista(primeira, resp.url)
 
     total = cjsg_n_results(primeira)
     n_paginas = None if total is None else math.ceil(total / tamanho_pagina)
@@ -334,5 +370,7 @@ def cjsg_download_manager(
         page = request_fn("GET", PAGE_URL, params={"np": pagina}, **comum)
         page.encoding = "utf-8"
         _check_sessao(page)
-        resultados.append(page.text)
+        html = page.text
+        _check_lista(html, page.url)
+        resultados.append(html)
     return resultados

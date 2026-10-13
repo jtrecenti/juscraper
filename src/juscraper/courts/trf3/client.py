@@ -114,10 +114,15 @@ class TRF3Scraper(TRFConsultaScraper):
                 ``tamanho_pagina`` fora do domínio, data inválida).
             ValueError: Datas de julgamento e de publicação juntas; filtro que a
                 base de monocráticas não tem; nenhum critério; com
-                ``paginas=None``, total de resultados ilegível.
+                ``paginas=None``, primeira página com documentos e total de
+                resultados ilegível.
             BotChallengeBlockedError: A Akamai bloqueou o IP (HTTP 403
                 ``Access Denied``).
-            RuntimeError: O portal devolveu a página de sessão expirada.
+            RuntimeError: O portal devolveu a página de sessão expirada, ou
+                respondeu 200 com uma página que não é a lista de resultados
+                (formulário de busca, manutenção), na primeira página ou nas
+                seguintes. Busca sem resultados não é erro: devolve DataFrame
+                vazio.
 
         Returns:
             pd.DataFrame: Uma linha por documento, com ``processo``,

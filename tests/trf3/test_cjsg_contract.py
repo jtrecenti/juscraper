@@ -15,9 +15,16 @@ from responses.registries import OrderedRegistry
 
 import juscraper as jus
 from juscraper.core.exceptions import BotChallengeBlockedError, RetryExhaustedError
-from juscraper.courts.trf3.cjsg_download import BASE_URL, CJSG_HEADERS, INDEX_URL, SEARCH_URL, build_cjsg_payload
+from juscraper.courts.trf3.cjsg_download import (
+    BASE_URL,
+    CJSG_HEADERS,
+    INDEX_URL,
+    PAGE_URL,
+    SEARCH_URL,
+    build_cjsg_payload,
+)
 from tests._helpers import assert_no_mojibake
-from tests.trf3._cjsg_mock import HTML, add_page, add_search, sample
+from tests.trf3._cjsg_mock import FIRST_PAGE_URL, HTML, add_page, add_search, sample
 
 CJSG_MIN_COLUMNS = {
     "processo", "classe", "orgao_julgador", "relator", "relator_acordao",
@@ -92,20 +99,53 @@ def test_cjsg_single_page_paginas_none(mocker):
     assert len(responses.calls) == 3
 
 
+@pytest.mark.parametrize("paginas", [None, 1, range(1, 3)])
 @responses.activate(registry=OrderedRegistry)
-def test_cjsg_no_results(mocker):
-    """Zero hits returns an empty DataFrame without requesting other pages."""
+def test_cjsg_no_results(mocker, paginas):
+    """Zero hits returns an empty DataFrame without requesting other pages.
+
+    The "Nenhum Resultado Encontrado" page is a list page: it must not be
+    taken for an unrecognized response, with or without explicit ``paginas``.
+    """
     mocker.patch("time.sleep")
     add_search(
         _semestre("juscraper_probe_zero_hits_xyzqwe"),
         "no_results.html",
     )
 
-    df = jus.scraper("trf3").cjsg("juscraper_probe_zero_hits_xyzqwe", **SEMESTRE)
+    df = jus.scraper("trf3").cjsg("juscraper_probe_zero_hits_xyzqwe", paginas=paginas, **SEMESTRE)
 
     assert isinstance(df, pd.DataFrame)
     assert df.empty
     assert len(responses.calls) == 3
+
+
+@pytest.mark.parametrize("paginas", [1, None])
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_formulario_no_lugar_da_lista_levanta(mocker, paginas):
+    """A 200 with the search form instead of the list is an error, not zero hits."""
+    mocker.patch("time.sleep")
+    add_search(_semestre("medicamento"), "index_acordaos.html")
+
+    with pytest.raises(RuntimeError, match="não é a lista de resultados") as exc_info:
+        jus.scraper("trf3").cjsg("medicamento", paginas=paginas, **SEMESTRE)
+
+    assert FIRST_PAGE_URL in str(exc_info.value)
+    assert len(responses.calls) == 3
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_pagina_2_nao_reconhecida_levanta(mocker):
+    """Page 1 is a valid list; page 2 comes back as the form and must not be dropped."""
+    mocker.patch("time.sleep")
+    add_search(_semestre("medicamento"), "results_normal_page_01.html")
+    add_page(2, "index_acordaos.html")
+
+    with pytest.raises(RuntimeError, match="não é a lista de resultados") as exc_info:
+        jus.scraper("trf3").cjsg("medicamento", paginas=range(1, 3), **SEMESTRE)
+
+    assert PAGE_URL + "?np=2" in str(exc_info.value)
+    assert len(responses.calls) == 4
 
 
 @pytest.mark.parametrize(
