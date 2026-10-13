@@ -184,6 +184,20 @@ def test_rejeita_configuracao_extra_no_arquivo_de_dispensas(repositorio):
     assert "Política de lint inválida" in resultado.stderr
 
 
+@pytest.mark.parametrize(("original", "alterado"), [
+    ("[lint.extend-per-file-ignores]", 'extend-exclude = ["src"]\n[lint.extend-per-file-ignores]'),
+    ('extend = "pyproject.toml"', 'extend = "outro.toml"'),
+])
+def test_rejeita_topo_alterado_no_arquivo_de_dispensas(repositorio, original, alterado):
+    arquivo = repositorio / "ruff.toml"
+    texto = arquivo.read_text(encoding="utf-8")
+    assert original in texto
+    arquivo.write_text(texto.replace(original, alterado), encoding="utf-8")
+    resultado = executar_gate(repositorio)
+    assert resultado.returncode == 1
+    assert "Política de lint inválida" in resultado.stderr
+
+
 @pytest.fixture
 def primeira_adocao(repositorio):
     (repositorio / "ruff.toml").unlink()
