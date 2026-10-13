@@ -14,11 +14,11 @@ from juscraper.courts.trf3.cjsg_download import (
     PAGE_URL,
     _check_lista,
     _paginas_pedidas,
-    build_cjsg_payload,
     build_cjsg_session,
     cjsg_download_manager,
     cjsg_n_results,
 )
+from juscraper.courts.trf3.cjsg_schemas import InputCJSGTRF3
 from tests._helpers import load_sample
 
 
@@ -169,18 +169,16 @@ def _lista_sem_total() -> str:
     return html
 
 
-def _baixar(pagina: str, paginas):
+def _baixar(pagina: str, paginas, **filtros):
+    """Run the manager with every response answered by ``pagina``."""
     chamadas: list[tuple[str, str]] = []
 
-    def request_fn(method, url, **kwargs):
+    def request_fn(method, url, **_kwargs):
         chamadas.append((method, url))
         return _Resposta(pagina, url)
 
     brutos = cjsg_download_manager(
-        build_cjsg_payload("medicamento"),
-        base="acordaos",
-        paginas=paginas,
-        tamanho_pagina=10,
+        InputCJSGTRF3(pesquisa="medicamento", paginas=paginas, **filtros),
         request_fn=request_fn,
         session=build_cjsg_session(),
         sleep_time=0,
@@ -201,6 +199,21 @@ def test_manager_lista_sem_total_legivel_mantem_o_pedido():
 
     assert brutos == [pagina] * 3
     assert len(chamadas) == 2 + 2
+
+
+def test_manager_paginas_inteiro_baixa_da_primeira_ate_ela():
+    """A model built outside the client pipeline may carry ``paginas`` as an int.
+
+    The public contract reads it as pages 1 to n, so 2 downloads pages 1 and 2:
+    the tab GET, the POST and one page GET.
+    """
+    pagina = _sample("results_normal_page_01.html")
+
+    brutos, chamadas = _baixar(pagina, 2)
+
+    assert brutos == [pagina] * 2
+    assert chamadas[-1] == ("GET", PAGE_URL)
+    assert len(chamadas) == 2 + 1
 
 
 def test_manager_lista_sem_total_legivel_e_paginas_none_levanta():
@@ -226,23 +239,7 @@ def test_manager_arredonda_paginas_para_cima(tamanho_pagina, n_paginas):
     Requests: the tab GET, the POST (whose redirect is page 1) and one GET per
     page from 2 on.
     """
-    primeira = _sample("results_normal_page_01.html")
-    chamadas: list[tuple[str, str]] = []
-
-    def request_fn(method, url, **kwargs):
-        chamadas.append((method, url))
-        return _Resposta(primeira, url)
-
-    brutos = cjsg_download_manager(
-        build_cjsg_payload("medicamento", tamanho_pagina=tamanho_pagina),
-        base="acordaos",
-        paginas=None,
-        tamanho_pagina=tamanho_pagina,
-        request_fn=request_fn,
-        session=build_cjsg_session(),
-        sleep_time=0,
-        progress=lambda pedidas, **_: pedidas,
-    )
+    brutos, chamadas = _baixar(_sample("results_normal_page_01.html"), None, tamanho_pagina=tamanho_pagina)
 
     assert len(brutos) == n_paginas
     assert len(chamadas) == 2 + (n_paginas - 1)

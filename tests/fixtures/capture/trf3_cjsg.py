@@ -38,7 +38,7 @@ import time
 from pathlib import Path
 
 import juscraper as jus
-from juscraper.courts.trf3.cjsg_download import INDEX_URL, build_cjsg_session
+from juscraper.courts.trf3.cjsg_download import INDEX_URL, PERFIL_CJSG, build_cjsg_session
 
 from ._util import dump, samples_dir_for
 
@@ -63,7 +63,7 @@ def main() -> None:
     scraper = jus.scraper("trf3", sleep_time=1.0)
 
     index = build_cjsg_session().get(
-        INDEX_URL.format(indice=0), timeout=scraper.perfis_http["cjsg"].timeout,
+        INDEX_URL.format(indice=0), timeout=scraper.perfis_http[PERFIL_CJSG].timeout,
     )
     index.raise_for_status()
     dump(dest / "index_acordaos.html", index.content)

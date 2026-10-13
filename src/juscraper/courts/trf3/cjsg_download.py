@@ -34,7 +34,9 @@ from tqdm import tqdm
 from ...core.exceptions import BotChallengeBlockedError
 from ...core.http import RequestFn
 from ...utils.pagination import extract_count_with_cascade
+from ...utils.params import normalize_paginas
 from .cjsg_parse import SELETOR_DOCUMENTO
+from .cjsg_schemas import InputCJSGTRF3
 
 logger = logging.getLogger("juscraper.trf3.cjsg")
 
@@ -44,6 +46,10 @@ SEARCH_URL = BASE_URL + "Home/ResultadoTotais"
 PAGE_URL = BASE_URL + "Home/ListaResumida/2"
 SESSAO_EXPIRADA_PATH = "Home/SessaoExpirada"
 TAMANHOS_PAGINA = (10, 30, 50)
+
+#: Nome do perfil HTTP da busca. O manager o envia em toda requisição e o
+#: client declara a política com a mesma chave em ``TRF3Scraper.perfis_http``.
+PERFIL_CJSG = "cjsg"
 
 #: Aba do portal (``home/index/{n}``) e caixas de origem de cada base. As
 #: monocráticas do TRF3 e as das Turmas Recursais saem da mesma aba e se
@@ -114,21 +120,7 @@ def _orgao_indexado(orgao: str | None) -> str:
     return _PRIMEIRA_SECAO_RE.sub("1A", orgao or "")
 
 
-def build_cjsg_payload(
-    pesquisa: str = "",
-    *,
-    base: str = "acordaos",
-    tamanho_pagina: int = 10,
-    numero_processo: str = "",
-    relator: str = "",
-    classe: str = "",
-    orgao_julgador: str = "",
-    ementa: str = "",
-    indexacao: str = "",
-    data_inicial: str = "",
-    data_final: str = "",
-    data_tipo: str = DATA_TIPO["julgamento"],
-) -> dict[str, str]:
+def build_cjsg_payload(inp: InputCJSGTRF3) -> dict[str, str]:
     """Monta o corpo form-urlencoded do ``POST Home/ResultadoTotais``.
 
     Usa os campos e os moldes do formulário de pesquisa avançada, mas não
@@ -150,46 +142,51 @@ def build_cjsg_payload(
     Também não aplica as checagens do formulário (critério obrigatório,
     datas); as que importam ficam em ``validar_combinacoes``.
 
+    O formulário tem um só par de datas (``data_inicial`` e ``data_final``) e
+    o seletor ``data_tipo``. Com data de publicação em ``inp``, o par leva as
+    datas de publicação e ``data_tipo`` vale ``"0"``; nos demais casos leva as
+    de julgamento e vale ``"1"``, que na aba de monocráticas é a data da
+    decisão. ``validar_combinacoes`` recusa os dois tipos juntos antes de a
+    busca chegar aqui.
+
     Args:
-        pesquisa: Texto da pesquisa livre.
-        base: Chave de :data:`BASES`; decide as caixas de origem das
-            monocráticas. A aba em si é escolhida pelo ``GET`` anterior.
-        tamanho_pagina: 10, 30 ou 50 documentos por página.
-        numero_processo: Número do processo, com ou sem máscara.
-        relator: Nome do relator como o portal indexa (ex.: ``"NERY JUNIOR"``).
-        classe: Classe como no dropdown (ex.: ``"AI - AGRAVO DE INSTRUMENTO"``).
-        orgao_julgador: Órgão julgador como o portal indexa. "1a. seção" vira
-            "1A", como no formulário. Vai em ``hdnOrgao`` e ``hdnOrgaoJef``.
-        ementa: Texto pesquisado só na ementa.
-        indexacao: Texto pesquisado na indexação ("Objeto do Processo" nas
-            Turmas Recursais).
-        data_inicial: ``DD/MM/AAAA``.
-        data_final: ``DD/MM/AAAA``.
-        data_tipo: ``"0"`` publicação, ``"1"`` julgamento (ou decisão).
+        inp: Filtros da busca, como saem de ``apply_input_pipeline_search``.
+            As datas têm que estar em ``DD/MM/AAAA``
+            (``InputCJSGTRF3.BACKEND_DATE_FORMAT``): o pipeline do client as
+            converte, e um modelo montado à mão (script de captura, testes)
+            precisa trazê-las já nesse formato, porque esta função as copia
+            sem converter. ``relator``, ``classe`` e ``orgao_julgador`` são o
+            texto que o portal indexa, e não o ID do dropdown. ``base`` só
+            decide as caixas de origem das monocráticas, porque a aba é
+            escolhida pelo ``GET`` anterior. ``paginas`` não entra no corpo.
 
     Returns:
         Dicionário pronto para ``data=`` do ``requests``.
     """
+    por_publicacao = bool(inp.data_publicacao_inicio or inp.data_publicacao_fim)
+    data_inicial = inp.data_publicacao_inicio if por_publicacao else inp.data_julgamento_inicio
+    data_final = inp.data_publicacao_fim if por_publicacao else inp.data_julgamento_fim
+    orgao = _texto_campo(_orgao_indexado(inp.orgao_julgador), "({}).org.")
     payload = {
-        "txtPesquisaLivre": pesquisa or "",
+        "txtPesquisaLivre": inp.pesquisa,
         "chkAcordaos": "on",
         "chkMostrarLista": "on",
-        "opcaoQtdePagina": str(tamanho_pagina),
-        "numero": numero_processo or "",
+        "opcaoQtdePagina": str(inp.tamanho_pagina),
+        "numero": inp.numero_processo or "",
         "magistrado": "0",
         "data_inicial": data_inicial or "",
         "data_final": data_final or "",
-        "data_tipo": data_tipo,
+        "data_tipo": DATA_TIPO["publicacao" if por_publicacao else "julgamento"],
         "classe": "0",
         "orgao": "0",
-        "ementa": ementa or "",
-        "indexacao": indexacao or "",
-        "hdnMagistrado": _texto_campo(relator, "(({})).rel."),
-        "hdnClasse": _texto_campo(classe, "({}).dclas."),
-        "hdnOrgao": _texto_campo(_orgao_indexado(orgao_julgador), "({}).org."),
-        "hdnOrgaoJef": _texto_campo(_orgao_indexado(orgao_julgador), "({}).org."),
+        "ementa": inp.ementa or "",
+        "indexacao": inp.indexacao or "",
+        "hdnMagistrado": _texto_campo(inp.relator, "(({})).rel."),
+        "hdnClasse": _texto_campo(inp.classe, "({}).dclas."),
+        "hdnOrgao": orgao,
+        "hdnOrgaoJef": orgao,
     }
-    payload.update(BASES[base][1])
+    payload.update(BASES[inp.base][1])
     return payload
 
 
@@ -321,29 +318,28 @@ def _paginas_pedidas(paginas: Iterable[int] | None, n_paginas: int | None) -> li
 
 
 def cjsg_download_manager(
-    payload: dict[str, str],
+    inp: InputCJSGTRF3,
     *,
-    base: str,
-    paginas: Iterable[int] | None,
-    tamanho_pagina: int,
     request_fn: RequestFn,
     session: requests.Session,
     sleep_time: float = 1.0,
-    perfil: str | None = None,
     progress: Callable[..., Iterable[int]] = tqdm,
 ) -> list[str]:
     """Executa uma busca e devolve o HTML das páginas pedidas da lista resumida.
 
+    O modelo é a fonte única da busca: dele saem o corpo do POST
+    (:func:`build_cjsg_payload`), a aba aberta no ``GET`` inicial, as páginas
+    pedidas e o tamanho de página que converte o total de documentos em total
+    de páginas. Assim o tamanho enviado ao portal e o usado na conta não têm
+    como divergir.
+
     Args:
-        payload: Corpo do POST, de :func:`build_cjsg_payload`.
-        base: Chave de :data:`BASES`; escolhe a aba aberta no ``GET`` inicial.
-        paginas: Páginas 1-based, ou ``None`` para todas.
-        tamanho_pagina: Documentos por página, igual ao do ``payload``; usado
-            para converter o total de documentos em total de páginas.
-        request_fn: ``HTTPScraper._request_with_retry`` do client.
+        inp: Filtros da busca, como saem de ``apply_input_pipeline_search``.
+            ``paginas`` é 1-based, e ``None`` baixa todas.
+        request_fn: ``HTTPScraper._request_with_retry`` do client. Recebe
+            ``perfil=PERFIL_CJSG`` em toda requisição.
         session: Sessão isolada da busca (:func:`build_cjsg_session`).
         sleep_time: Pausa, em segundos, entre páginas.
-        perfil: Perfil HTTP do client repassado a ``request_fn``.
         progress: Iterador com barra de progresso (``tqdm``).
 
     Returns:
@@ -362,9 +358,9 @@ def cjsg_download_manager(
         ValueError: ``paginas=None`` e a primeira página traz documentos, mas
             o total de resultados não pôde ser lido.
     """
-    indice = BASES[base][0]
-    index_url = INDEX_URL.format(indice=indice)
-    comum = {"session": session, "perfil": perfil, "on_response": _check_bot_challenge}
+    payload = build_cjsg_payload(inp)
+    index_url = INDEX_URL.format(indice=BASES[inp.base][0])
+    comum = {"session": session, "perfil": PERFIL_CJSG, "on_response": _check_bot_challenge}
 
     request_fn("GET", index_url, **comum)
     resp = request_fn(
@@ -382,8 +378,10 @@ def cjsg_download_manager(
     _check_lista(primeira, resp.url)
 
     total = cjsg_n_results(primeira)
-    n_paginas = None if total is None else math.ceil(total / tamanho_pagina)
-    pedidas = _paginas_pedidas(paginas, n_paginas)
+    n_paginas = None if total is None else math.ceil(total / inp.tamanho_pagina)
+    # O pipeline do client já entrega ``paginas`` como lista, range ou None; a
+    # normalização só muda o inteiro de um modelo montado fora dele.
+    pedidas = _paginas_pedidas(normalize_paginas(inp.paginas), n_paginas)
 
     resultados: list[str] = []
     for pagina in progress(pedidas, desc="Baixando CJSG TRF3", disable=len(pedidas) <= 1):

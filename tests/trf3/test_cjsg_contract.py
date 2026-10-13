@@ -24,6 +24,7 @@ from juscraper.courts.trf3.cjsg_download import (
     SEARCH_URL,
     build_cjsg_payload,
 )
+from juscraper.courts.trf3.cjsg_schemas import InputCJSGTRF3
 from tests._helpers import assert_no_mojibake
 from tests.trf3._cjsg_mock import FIRST_PAGE_URL, HTML, add_page, add_search, sample
 
@@ -37,7 +38,15 @@ SEMESTRE = {"data_julgamento_inicio": "2026-01-01", "data_julgamento_fim": "2026
 
 def _semestre(pesquisa: str, base: str = "acordaos") -> dict[str, str]:
     """POST body for ``SEMESTRE``: julgamento between 01/01/2026 and 30/06/2026."""
-    return build_cjsg_payload(pesquisa, base=base, data_inicial="01/01/2026", data_final="30/06/2026")
+    filtros = InputCJSGTRF3(
+        pesquisa=pesquisa, base=base, data_julgamento_inicio="01/01/2026", data_julgamento_fim="30/06/2026",
+    )
+    return build_cjsg_payload(filtros)
+
+
+def _numero(numero_processo: str) -> dict[str, str]:
+    """POST body of a search by process number alone, without free text."""
+    return build_cjsg_payload(InputCJSGTRF3(pesquisa="", numero_processo=numero_processo))
 
 
 @responses.activate(registry=OrderedRegistry)
@@ -90,7 +99,7 @@ def test_cjsg_relator_para_acordao_e_publicacao(mocker):
 def test_cjsg_single_page_paginas_none(mocker):
     """``paginas=None`` reads the total (2 documents) and stops after the POST."""
     mocker.patch("time.sleep")
-    add_search(build_cjsg_payload(numero_processo="5001743-27.2026.4.03.0000"), "single_page.html")
+    add_search(_numero("5001743-27.2026.4.03.0000"), "single_page.html")
 
     df = jus.scraper("trf3").cjsg(numero_processo="5001743-27.2026.4.03.0000")
 
@@ -226,7 +235,7 @@ def test_cjsg_pagina_sem_a_primeira_descarta_a_resposta_do_post(mocker):
 def test_cjsg_paginas_alem_do_total_nao_sao_requisitadas(mocker):
     """The single-page search has 1 page; pages 2 and 3 are skipped without a request."""
     mocker.patch("time.sleep")
-    add_search(build_cjsg_payload(numero_processo="5001743-27.2026.4.03.0000"), "single_page.html")
+    add_search(_numero("5001743-27.2026.4.03.0000"), "single_page.html")
 
     df = jus.scraper("trf3").cjsg(numero_processo="5001743-27.2026.4.03.0000", paginas=range(1, 4))
 

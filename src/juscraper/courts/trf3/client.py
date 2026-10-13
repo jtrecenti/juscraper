@@ -28,7 +28,7 @@ import pandas as pd
 from ...core.http import RequestPolicy
 from ...utils.params import apply_input_pipeline_search
 from .._trf.base import TRFConsultaScraper
-from .cjsg_download import DATA_TIPO, build_cjsg_payload, build_cjsg_session, cjsg_download_manager
+from .cjsg_download import PERFIL_CJSG, build_cjsg_session, cjsg_download_manager
 from .cjsg_parse import cjsg_parse_manager
 from .cjsg_schemas import InputCJSGTRF3, validar_combinacoes
 
@@ -51,7 +51,7 @@ class TRF3Scraper(TRFConsultaScraper):
     #: fica pendurada atrás da Akamai sem responder; o timeout curto com nova
     #: tentativa recupera esses casos em segundos.
     perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
-        "cjsg": RequestPolicy(
+        PERFIL_CJSG: RequestPolicy(
             timeout=(10, 60),
             max_retries=4,
             retry_on_timeout=True,
@@ -192,30 +192,11 @@ class TRF3Scraper(TRFConsultaScraper):
             nullable_pesquisa=True,
         )
         validar_combinacoes(inp)
-        por_publicacao = bool(inp.data_publicacao_inicio or inp.data_publicacao_fim)
-        payload = build_cjsg_payload(
-            inp.pesquisa,
-            base=inp.base,
-            tamanho_pagina=inp.tamanho_pagina,
-            numero_processo=inp.numero_processo or "",
-            relator=inp.relator or "",
-            classe=inp.classe or "",
-            orgao_julgador=inp.orgao_julgador or "",
-            ementa=inp.ementa or "",
-            indexacao=inp.indexacao or "",
-            data_inicial=(inp.data_publicacao_inicio if por_publicacao else inp.data_julgamento_inicio) or "",
-            data_final=(inp.data_publicacao_fim if por_publicacao else inp.data_julgamento_fim) or "",
-            data_tipo=DATA_TIPO["publicacao" if por_publicacao else "julgamento"],
-        )
         return cjsg_download_manager(
-            payload,
-            base=inp.base,
-            paginas=inp.paginas,
-            tamanho_pagina=inp.tamanho_pagina,
+            inp,
             request_fn=self._request_with_retry,
             session=build_cjsg_session(),
             sleep_time=self.sleep_time,
-            perfil="cjsg",
         )
 
     def cjsg_parse(self, resultados_brutos: list[str]) -> pd.DataFrame:
