@@ -178,7 +178,7 @@ def test_cjsg_alias_data_inicio_vira_data_de_julgamento(mocker):
         "no_results.html",
     )
 
-    with pytest.warns(DeprecationWarning) as avisos:
+    with pytest.warns(DeprecationWarning, match=r"'data_(inicio|fim)' está deprecado") as avisos:
         jus.scraper("trf3").cjsg("medicamento", paginas=1, data_inicio="2026-01-01", data_fim="2026-06-30")
 
     mensagens = [str(w.message) for w in avisos]
@@ -194,7 +194,7 @@ def test_cjsg_alias_data_julgamento_de_ate(mocker):
         "no_results.html",
     )
 
-    with pytest.warns(DeprecationWarning) as avisos:
+    with pytest.warns(DeprecationWarning, match=r"'data_julgamento_(de|ate)' está deprecado") as avisos:
         jus.scraper("trf3").cjsg(
             "medicamento", paginas=1, data_julgamento_de="2026-01-01", data_julgamento_ate="2026-06-30",
         )
@@ -212,7 +212,7 @@ def test_cjsg_alias_data_publicacao_de_ate(mocker):
         "no_results.html",
     )
 
-    with pytest.warns(DeprecationWarning) as avisos:
+    with pytest.warns(DeprecationWarning, match=r"'data_publicacao_(de|ate)' está deprecado") as avisos:
         jus.scraper("trf3").cjsg(
             "medicamento", paginas=1, data_publicacao_de="2026-01-01", data_publicacao_ate="2026-06-30",
         )
@@ -231,7 +231,8 @@ def test_cjsg_download_alias_query(mocker):
     with pytest.warns(DeprecationWarning, match="query.*deprecado"):
         brutos = jus.scraper("trf3").cjsg_download(query="medicamento", paginas=1)
 
-    assert isinstance(brutos, list) and len(brutos) == 1
+    assert isinstance(brutos, list)
+    assert len(brutos) == 1
 
 
 @pytest.mark.parametrize(

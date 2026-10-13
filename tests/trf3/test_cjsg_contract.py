@@ -63,7 +63,8 @@ def test_cjsg_typical_com_paginacao(mocker):
     assert len(df) == 20
     assert df["processo"].is_unique
     assert (df["base"] == "acordaos").all()
-    assert df["ementa"].notna().all() and df["inteiro_teor"].notna().all()
+    assert df["ementa"].notna().all()
+    assert df["inteiro_teor"].notna().all()
     assert all(isinstance(d, dt.date) for d in df["data_julgamento"])
     assert df["processo"].str.fullmatch(r"\d{7}-\d{2}\.\d{4}\.4\.03\.\d{4}").all()
     assert_no_mojibake(" ".join(df["ementa"]), contexto="ementas TRF3 cjsg")
