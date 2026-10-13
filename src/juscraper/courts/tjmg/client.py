@@ -265,14 +265,14 @@ class TJMGScraper(HTTPScraper):
             (``segredo_justica=True``) ou falha ao baixar a pagina de partes
             (``segredo_justica=False``).
 
-        Warns:
-            UserWarning: Quando alguma consulta falha: timeout, erro de
-                conexao ou status retryable (403, 429, 5xx) que persistem
-                apos as retentativas, ou outro erro HTTP, que nao e repetido.
-                A mensagem lista os numeros afetados. Falha na
-                pagina de resultado gera a linha so com ``id_cnj``, igual a
-                um numero nao encontrado; falha na de partes deixa
-                ``partes=None``.
+        Avisos:
+            ``UserWarning``: Quando alguma consulta falha: timeout, erro de
+            conexao ou status retryable (403, 429, 5xx) que persistem
+            apos as retentativas, ou outro erro HTTP, que nao e repetido.
+            A mensagem lista os numeros afetados. Falha na
+            pagina de resultado gera a linha so com ``id_cnj``, igual a
+            um numero nao encontrado; falha na de partes deixa
+            ``partes=None``.
 
         Exemplo:
             >>> import juscraper as jus

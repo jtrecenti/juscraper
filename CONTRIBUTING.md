@@ -391,6 +391,9 @@ Raises:
     ValidationError: Para os demais erros de validação do schema.
     <ExcecaoEspecifica>: <Condição validada antes do pydantic.>
 
+Avisos:
+    ``<CategoriaDoAviso>``: <Condição em que o método emite o aviso.>
+
 Returns:
     pd.DataFrame: <Colunas principais e significado do resultado.>
 
@@ -401,6 +404,8 @@ See also:
     :class:`<InputDoEndpoint>`: fonte dos filtros aceitos.
 """
 ```
+
+Avisos que o método emite com `warnings.warn` vão em `Avisos:`, em texto livre e só quando houver o que documentar. Não usar `Warns:`, a seção do estilo Google para isso: o quartodoc, até a 0.11.1, não a renderiza, o `quartodoc build` termina em `NotImplementedError: Unsupported type: ...DocstringSectionWarns` e o site deixa de ser publicado. `Avisos:` sai na referência como cabeçalho seguido do texto da seção, como `Aliases deprecados:`. Para conferir antes do PR: `uv sync --extra dev --extra docs` e `cd docs && uv run quartodoc build`. O build reescreve `docs/objects.json`, que é versionado; descartar essa alteração antes do commit.
 
 ### Métodos de download
 
