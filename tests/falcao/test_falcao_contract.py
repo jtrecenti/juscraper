@@ -11,6 +11,8 @@ Validam, sem tocar a rede (``responses``):
 - que bloqueios definitivos do backend (WAF, 429 de horas) nao sao retentados.
 """
 import json
+import tempfile
+import warnings
 from pathlib import Path
 from typing import cast
 
@@ -60,6 +62,19 @@ def falcao():
     return jus.scraper("falcao", verbose=0, sleep_time=0)
 
 
+@pytest.fixture
+def temporarios(tmp_path, monkeypatch):
+    """Aponta o diretório temporário do sistema para uma pasta do teste.
+
+    ``listar_decisoes`` preserva ali as páginas de uma coleta que falhou; com
+    a pasta isolada, o teste enxerga o que sobrou e o que foi limpo.
+    """
+    pasta = tmp_path / "temporarios"
+    pasta.mkdir()
+    monkeypatch.setattr(tempfile, "tempdir", str(pasta))
+    return pasta
+
+
 @responses.activate
 def test_listar_decisoes_schema_colunas_canonicas(falcao):
     _register("acordaos")
@@ -99,6 +114,125 @@ def test_listar_decisoes_resultado_vazio(falcao):
     df = falcao.listar_decisoes("termosemresultado", paginas=1)
     assert isinstance(df, pd.DataFrame)
     assert df.empty
+
+
+@responses.activate
+@pytest.mark.parametrize("falha", ["cota", "conexao", "interrupcao"])
+def test_listar_decisoes_preserva_paginas_apos_falha(temporarios, falha):
+    falcao = jus.scraper("falcao", verbose=0, sleep_time=0)
+    _register("acordaos", total=20, pagina=1)
+    tipo_erro: type[BaseException]
+    if falha == "cota":
+        responses.add(responses.GET, SEARCH_URL, status=429,
+                      headers={"x-rate-limit-retry-after-seconds": "20880"})
+        tipo_erro = requests.HTTPError
+    else:
+        tipo_erro = requests.ConnectionError if falha == "conexao" else KeyboardInterrupt
+
+        def interromper(_requisicao):
+            raise tipo_erro()
+
+        responses.add_callback(responses.GET, SEARCH_URL, callback=interromper)
+    with pytest.raises(tipo_erro) as captura:
+        falcao.listar_decisoes("dano moral", paginas=2)
+    arquivos = list(temporarios.rglob("*.json"))
+    assert len(arquivos) == 1
+    assert arquivos[0].name == "acordaos_0001.json"
+    assert str(arquivos[0].parent.parent) in captura.value.__notes__[0]
+    recuperado = falcao.listar_decisoes_parse(arquivos[0].parent.parent)
+    assert len(recuperado) == len(_sample("acordaos")["documentos"])
+
+
+@responses.activate
+def test_listar_decisoes_limpa_temporarios_apos_sucesso(tmp_path, temporarios):
+    falcao = jus.scraper("falcao", verbose=0, sleep_time=0, download_path=str(tmp_path / "downloads"))
+    _register("acordaos")
+    assert not falcao.listar_decisoes("dano moral", paginas=1).empty
+    assert not list(temporarios.iterdir())
+
+
+@responses.activate
+def test_listar_decisoes_preserva_paginas_se_parser_falha(temporarios, monkeypatch):
+    falcao = jus.scraper("falcao", verbose=0, sleep_time=0)
+    _register("acordaos")
+
+    def falhar(_diretorio):
+        raise ValueError("Falha de parsing")
+
+    monkeypatch.setattr(falcao, "listar_decisoes_parse", falhar)
+    with pytest.raises(ValueError, match="Falha de parsing") as captura:
+        falcao.listar_decisoes("dano moral", paginas=1)
+    arquivo, = temporarios.rglob("*.json")
+    assert json.loads(arquivo.read_text())["documentos"] == _sample("acordaos")["documentos"]
+    assert str(arquivo.parent.parent) in captura.value.__notes__[0]
+
+
+@responses.activate
+@pytest.mark.parametrize("total,tipo_erro", [("inválido", ValueError), (10000, UserWarning)])
+def test_primeira_resposta_preservada_se_planejamento_falha(temporarios, total, tipo_erro):
+    falcao = jus.scraper("falcao", verbose=0, sleep_time=0)
+    _register("acordaos", total=total)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", UserWarning)
+        with pytest.raises(tipo_erro) as captura:
+            falcao.listar_decisoes("dano moral")
+    arquivo, = temporarios.rglob("*.json")
+    assert len(responses.calls) == 1
+    assert str(arquivo.parent.parent) in captura.value.__notes__[0]
+    assert len(falcao.listar_decisoes_parse(arquivo.parent.parent)) == len(_sample("acordaos")["documentos"])
+
+
+@responses.activate
+def test_pagina_alem_do_total_real_nao_entra_no_resultado(falcao):
+    _register("acordaos", total=5, pagina=2)
+    assert falcao.listar_decisoes("dano moral", paginas=[2]).empty
+
+
+@responses.activate
+def test_download_guarda_primeira_resposta_se_planejamento_falha(falcao, tmp_path):
+    _register("acordaos", total=10000)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", UserWarning)
+        with pytest.raises(UserWarning):
+            falcao.listar_decisoes_download("dano moral", diretorio=str(tmp_path))
+    arquivo, = tmp_path.rglob("*.json")
+    assert arquivo.name == "acordaos_0001.json"
+    assert json.loads(arquivo.read_text())["documentos"] == _sample("acordaos")["documentos"]
+
+
+@responses.activate
+def test_download_nao_guarda_pagina_alem_do_total_real(falcao, tmp_path):
+    _register("acordaos", total=5, pagina=2)
+    pasta = falcao.listar_decisoes_download("dano moral", paginas=[2], diretorio=str(tmp_path))
+    assert not list(Path(pasta).iterdir())
+
+
+@responses.activate
+def test_listar_decisoes_falha_sem_paginas_nao_deixa_pasta_vazia(tmp_path, temporarios):
+    falcao = jus.scraper("falcao", verbose=0, sleep_time=0, download_path=str(tmp_path / "downloads"))
+    responses.add(responses.GET, SEARCH_URL, status=429,
+                  headers={"x-rate-limit-retry-after-seconds": "20880"})
+    with pytest.raises(requests.HTTPError):
+        falcao.listar_decisoes("dano moral", paginas=1)
+    assert not list(temporarios.iterdir())
+
+
+@responses.activate
+def test_coleta_falhada_nao_entra_no_parse_do_download_path(tmp_path, temporarios):
+    downloads = tmp_path / "downloads"
+    falcao = jus.scraper("falcao", verbose=0, sleep_time=0, download_path=str(downloads))
+    _register("acordaos")
+    falcao.listar_decisoes_download("dano moral", paginas=1)
+    guardadas = len(falcao.listar_decisoes_parse(downloads))
+    responses.reset()
+    _register("acordaos", total=20, pagina=1)
+    responses.add(responses.GET, SEARCH_URL, status=429,
+                  headers={"x-rate-limit-retry-after-seconds": "20880"})
+    with pytest.raises(requests.HTTPError):
+        falcao.listar_decisoes("dano moral", paginas=2)
+    # A página 1 da coleta falhada foi preservada, mas fora de download_path.
+    assert list(temporarios.rglob("*.json"))
+    assert len(falcao.listar_decisoes_parse(downloads)) == guardadas
 
 
 @responses.activate
@@ -335,7 +469,7 @@ def test_429_de_horas_nao_e_retentado(falcao):
         responses.GET, SEARCH_URL, status=429, json={"userMessage": "Too Many Requests"},
         headers={"x-rate-limit-retry-after-seconds": "20880"},
     )
-    with pytest.raises(requests.HTTPError, match="429"):
+    with pytest.raises(requests.HTTPError, match=r"requisições \(HTTP 429\)\. Liberação em 5h48min"):
         falcao.listar_decisoes("dano moral", paginas=1)
     assert len(responses.calls) == 1
 
