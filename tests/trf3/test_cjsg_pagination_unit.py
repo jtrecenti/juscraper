@@ -180,9 +180,13 @@ def test_manager_lista_sem_total_legivel_e_paginas_none_levanta():
 
 
 def test_manager_sem_total_e_sem_lista_levanta_mesmo_com_paginas_explicitas():
-    """The opening tab has no total either, but it is not a list: no page is kept."""
+    """The opening tab has no total either, but it is not a list: page 1 is not kept.
+
+    Only page 1 is requested, so the error can only come from the check on the
+    POST response, not from the check on the following pages.
+    """
     with pytest.raises(RuntimeError, match="não é a lista de resultados"):
-        _baixar(_sample("index_acordaos.html"), range(1, 4))
+        _baixar(_sample("index_acordaos.html"), [1])
 
 
 @pytest.mark.parametrize(("tamanho_pagina", "n_paginas"), [(10, 60), (30, 20), (50, 12)])
