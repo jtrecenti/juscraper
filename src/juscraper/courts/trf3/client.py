@@ -1,13 +1,20 @@
 """Scraper for the Tribunal Regional Federal da 3ª Região (TRF3).
 
-Wraps the PJe public-consultation system at ``pje1g.trf3.jus.br/pje/``. The
-TRF3 deployment sits behind an Akamai bot manager (``ak_bmsc`` cookie) which
-silently drops connections that don't carry a realistic browser header set;
-the ``BROWSER_HEADERS`` applied by
-:meth:`juscraper.courts._trf.base.TRFConsultaScraper._configure_session` are
-tuned to pass that challenge. The form layout matches TRF1 (autocomplete
-``classeJudicial`` + ``dataAutuacaoDecoration``), so only :data:`BASE_URL`
-diverges.
+Covers two separate systems:
+
+* ``cpopg`` wraps the PJe public-consultation system at
+  ``pje1g.trf3.jus.br/pje/``. The TRF3 deployment sits behind an Akamai bot
+  manager (``ak_bmsc`` cookie) which silently drops connections that don't
+  carry a realistic browser header set; the ``BROWSER_HEADERS`` applied by
+  :meth:`juscraper.courts._trf.base.TRFConsultaScraper._configure_session` are
+  tuned to pass that challenge. The form layout matches TRF1 (autocomplete
+  ``classeJudicial`` + ``dataAutuacaoDecoration``), so only :data:`BASE_URL`
+  diverges.
+* ``cjsg`` searches the case-law portal at ``web.trf3.jus.br/jurisprudencia``,
+  an ASP.NET application unrelated to PJe, also behind Akamai. It does not use
+  the PJe session: each search opens its own ``requests.Session`` with its own
+  headers, and only the retry machinery of ``HTTPScraper`` is shared. The code
+  lives in :mod:`.cjsg_download`, :mod:`.cjsg_parse` and :mod:`.cjsg_schemas`.
 """
 from __future__ import annotations
 
@@ -25,8 +32,16 @@ from .cjsg_schemas import InputCJSGTRF3, validar_combinacoes
 
 
 class TRF3Scraper(TRFConsultaScraper):
-    """TRF3 PJe consulta pública (1º grau)."""
+    """Raspador do TRF3: consulta pública do PJe e busca de jurisprudência.
 
+    ``cpopg`` consulta processos de 1º grau no PJe (``pje1g.trf3.jus.br``),
+    pela base :class:`TRFConsultaScraper`. ``cjsg`` pesquisa jurisprudência em
+    ``web.trf3.jus.br/jurisprudencia``, um sistema separado, com sessão e
+    perfil HTTP próprios (``perfis_http["cjsg"]``).
+    """
+
+    #: Endereço do PJe, usado pelo ``cpopg``. O do ``cjsg`` fica em
+    #: ``cjsg_download.BASE_URL``.
     BASE_URL = "https://pje1g.trf3.jus.br/pje/"
     TRIBUNAL_NAME = "TRF3"
 
