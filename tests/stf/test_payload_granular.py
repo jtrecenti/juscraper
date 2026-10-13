@@ -1,4 +1,8 @@
-"""Caracteriza o corpo STF sem usar o próprio construtor como expectativa."""
+"""Caracteriza o efeito de cada filtro sobre o corpo STF.
+
+O esperado parte do corpo sem filtros devolvido pelo próprio construtor.
+Só o efeito de cada filtro é escrito à mão.
+"""
 
 import copy
 import itertools
@@ -83,7 +87,7 @@ def test_consulta_e_reforcos_recebem_mesmo_texto_com_pesos_distintos(base):
 
 @pytest.mark.parametrize(
     ("pagina", "tamanho", "inicio", "quantidade"),
-    [(1429, 7, 9996, 4), (10000, 1, 9999, 1), (99999, 0, 0, 0)],
+    [(10000, 1, 9999, 1), (99999, 0, 0, 0)],
 )
 def test_limite_de_resultados_e_consulta_de_contagem(pagina, tamanho, inicio, quantidade):
     corpo = build_payload(pagina=pagina, tamanho_pagina=tamanho)

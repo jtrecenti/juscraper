@@ -61,15 +61,15 @@ def traduzir_operadores(pesquisa: str) -> str:
     return "".join(trechos)
 
 
-def _adicionar_filtro_data(consulta: dict, campo: str, inicio: str | None, fim: str | None) -> None:
-    if not (inicio or fim):
+def _adicionar_filtro_data(consulta_bool: dict, campo: str, data_inicio: str | None, data_fim: str | None) -> None:
+    if not (data_inicio or data_fim):
         return
     faixa: dict[str, str] = {"format": "ddMMyyyy"}
-    if inicio:
-        faixa["from"] = inicio
-    if fim:
-        faixa["lte"] = fim
-    consulta["filter"].append({"range": {campo: faixa}})
+    if data_inicio:
+        faixa["from"] = data_inicio
+    if data_fim:
+        faixa["lte"] = data_fim
+    consulta_bool["filter"].append({"range": {campo: faixa}})
 
 
 def _aplicar_filtro_classe(corpo: dict, classe: str | list[str]) -> None:
