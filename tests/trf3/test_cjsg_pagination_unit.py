@@ -142,6 +142,11 @@ def test_check_lista_aceita_aviso_em_outra_caixa(aviso):
     _check_lista(html, PAGE_URL)
 
 
+def test_check_lista_aceita_aviso_de_zero_com_total_zero():
+    """A search with zero hits brings the notice: a known total of 0 does not reject it."""
+    _check_lista(_sample("no_results.html"), PAGE_URL, total_da_busca=0)
+
+
 class _Resposta:
     """Minimal stand-in for ``requests.Response`` as the manager reads it."""
 

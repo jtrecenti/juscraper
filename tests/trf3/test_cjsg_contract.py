@@ -149,6 +149,27 @@ def test_cjsg_pagina_2_nao_reconhecida_levanta(mocker):
     assert len(responses.calls) == 4
 
 
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_pagina_2_com_aviso_de_zero_e_total_positivo_levanta(mocker):
+    """Page 1 reports 591 hits; page 2 answers 200 with the zero-hits notice.
+
+    Page 2 is within the total, so it must bring documents: the notice there is
+    an error, not an empty page to be skipped.
+    """
+    mocker.patch("time.sleep")
+    add_search(_semestre("medicamento"), "results_normal_page_01.html")
+    add_page(2, "no_results.html")
+
+    with pytest.raises(RuntimeError, match="deveria trazer documentos") as exc_info:
+        jus.scraper("trf3").cjsg("medicamento", paginas=range(1, 3), **SEMESTRE)
+
+    mensagem = str(exc_info.value)
+    assert PAGE_URL + "?np=2" in mensagem
+    assert "591 resultados" in mensagem
+    assert "manutenção" not in mensagem
+    assert len(responses.calls) == 4
+
+
 @pytest.mark.parametrize(
     ("base", "sample_name", "orgao_preenchido", "tem_url"),
     [

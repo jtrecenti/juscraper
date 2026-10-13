@@ -226,21 +226,44 @@ _CONTAGEM_PATTERNS = (re.compile(r"^\s*\d+\s*/\s*(\d[\d.]*)\)\s*$"),)
 _ZERO_MARKERS = ("Nenhum Resultado Encontrado",)
 
 
-def _check_lista(html: str, url: str) -> None:
-    """Levanta ``RuntimeError`` se a página não for a lista de resultados.
+def _check_lista(html: str, url: str, *, total_da_busca: int | None = None) -> None:
+    """Levanta ``RuntimeError`` se a página não for a lista de resultados esperada.
 
     O portal responde 200 também quando devolve outra coisa no lugar da lista
     (o formulário de busca, uma página de manutenção). Sem esta checagem essa
     resposta chegaria ao parser, que não acha documento nenhum e devolve o
     mesmo DataFrame vazio de uma busca sem resultados. A lista é reconhecida
     por ter ao menos um documento ou o aviso de nenhum resultado.
+
+    O aviso só vale como lista quando combina com a busca. Com
+    ``total_da_busca`` maior que zero, a página foi pedida dentro do total e
+    tem que trazer documento: o aviso de nenhum resultado, nesse caso, também
+    levanta. Sem o total (``None``, o caso da primeira página e o de um total
+    ilegível) ou com total zero, o aviso é aceito.
+
+    Args:
+        html: Corpo da resposta.
+        url: Endereço da resposta, citado na mensagem de erro.
+        total_da_busca: Total de documentos lido na primeira página, para as
+            páginas seguintes; ``None`` quando não se sabe.
+
+    Raises:
+        RuntimeError: A página não traz documentos nem o aviso de nenhum
+            resultado, ou traz o aviso e a busca tem ``total_da_busca``
+            resultados.
     """
     soup = BeautifulSoup(html, "html.parser")
     if soup.select_one(SELETOR_DOCUMENTO) is not None:
         return
     texto = soup.get_text(" ", strip=True).lower()
     if any(marcador.lower() in texto for marcador in _ZERO_MARKERS):
-        return
+        if not total_da_busca:
+            return
+        raise RuntimeError(
+            f"TRF3 cjsg: a resposta de {url} traz o aviso de nenhum resultado, "
+            f"mas deveria trazer documentos, porque a busca tem {total_da_busca} "
+            "resultados."
+        )
     raise RuntimeError(
         f"TRF3 cjsg: a resposta de {url} não é a lista de resultados: não traz "
         "documentos nem o aviso de nenhum resultado. O portal pode estar em "
@@ -333,7 +356,9 @@ def cjsg_download_manager(
         RuntimeError: O portal redirecionou para a página de sessão expirada,
             ou respondeu 200 com uma página que não é a lista de resultados
             (formulário de busca, manutenção); vale para a primeira página e
-            para as seguintes.
+            para as seguintes. Da página 2 em diante, também quando a página
+            traz o aviso de nenhum resultado e o total lido na primeira é
+            maior que zero.
         ValueError: ``paginas=None`` e a primeira página traz documentos, mas
             o total de resultados não pôde ser lido.
     """
@@ -371,6 +396,10 @@ def cjsg_download_manager(
         page.encoding = "utf-8"
         _check_sessao(page)
         html = page.text
-        _check_lista(html, page.url)
+        # Com o total lido, toda página que chega aqui está dentro dele
+        # (``_paginas_pedidas`` cortou as demais) e tem que trazer documento.
+        # Com o total ilegível, a página pode estar além do fim da busca, e o
+        # aviso de nenhum resultado continua aceito.
+        _check_lista(html, page.url, total_da_busca=total)
         resultados.append(html)
     return resultados

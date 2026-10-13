@@ -136,7 +136,9 @@ class TRF3Scraper(TRFConsultaScraper):
             RuntimeError: O portal devolveu a página de sessão expirada, ou
                 respondeu 200 com uma página que não é a lista de resultados
                 (formulário de busca, manutenção), na primeira página ou nas
-                seguintes. Busca sem resultados não é erro: devolve DataFrame
+                seguintes; ou, da página 2 em diante, com o aviso de nenhum
+                resultado quando a primeira página informou total maior que
+                zero. Busca sem resultados não é erro: devolve DataFrame
                 vazio.
 
         Returns:
