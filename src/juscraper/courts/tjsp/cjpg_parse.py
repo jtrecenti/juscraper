@@ -155,24 +155,53 @@ def cjpg_parse_single(path):
     return pd.DataFrame(processos)
 
 
+def _parse_diretorio(diretorio: Path) -> list[pd.DataFrame]:
+    """Processa cada HTML do diretório e descarta, com log, os que falham."""
+    arquivos = [f for f in diretorio.rglob("*.ht*") if f.is_file()]
+    resultados = []
+    primeira_falha: tuple[Path, Exception] | None = None
+    for arquivo in tqdm(arquivos, desc="Processando documentos"):
+        try:
+            resultados.append(cjpg_parse_single(arquivo))
+        except (ValueError, OSError) as e:
+            logger.error('Error processing %s: %s', arquivo, e)
+            primeira_falha = primeira_falha or (arquivo, e)
+    # Com falha parcial, o chamador recebe o que deu certo e o log diz o que
+    # faltou. Com falha total, devolver vazio confundiria "o layout mudou e
+    # nada foi lido" com "a busca não trouxe resultados", então o erro sobe.
+    if primeira_falha is not None and not resultados:
+        arquivo, erro = primeira_falha
+        raise ValueError(
+            f"Nenhum dos {len(arquivos)} arquivo(s) em {diretorio} pôde ser "
+            f"processado. Primeiro erro, em {arquivo.name}: {erro}"
+        ) from erro
+    return resultados
+
+
 def cjpg_parse_manager(path):
+    """Processa os arquivos baixados por ``cjpg_download``.
+
+    ``path`` pode ser um arquivo HTML ou um diretório, percorrido de forma
+    recursiva. Em diretório, o arquivo que falha é registrado no log e fica de
+    fora do resultado.
+
+    Returns:
+        pd.DataFrame: Uma linha por processo. Vazio quando o diretório não tem
+        arquivo HTML ou quando nenhuma página traz resultados.
+
+    Raises:
+        FileNotFoundError: Quando ``path`` não existe.
+        ValueError: Quando o HTML de um arquivo passado diretamente não pôde
+            ser interpretado, ou quando todos os arquivos de um diretório
+            falharam.
     """
-    Parses the downloaded files from the cjpg_download function.
-    Returns a DataFrame with the information of the processes.
-    """
-    if Path(path).is_file():
-        result = [cjpg_parse_single(path)]
+    caminho = Path(path)
+    if caminho.is_file():
+        resultados = [cjpg_parse_single(caminho)]
+    elif caminho.is_dir():
+        resultados = _parse_diretorio(caminho)
     else:
-        result = []
-        arquivos = [f for f in Path(path).rglob("*.ht*") if f.is_file()]
-        for file in tqdm(arquivos, desc="Processando documentos"):
-            if file.is_file():
-                try:
-                    single_result = cjpg_parse_single(file)
-                except (ValueError, OSError) as e:
-                    logger.error('Error processing %s: %s', file, e)
-                    single_result = None
-                    continue
-                if single_result is not None:
-                    result.append(single_result)
-    return pd.concat(result, ignore_index=True)
+        raise FileNotFoundError(f"Caminho não encontrado: {caminho}")
+    if not resultados:
+        return pd.DataFrame()
+    return pd.concat(resultados, ignore_index=True)
