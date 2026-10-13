@@ -196,7 +196,8 @@ class Checkpoint:
             raise ValueError("Partição de checkpoint inválida.")
         self._validar_cobertura_particao(window, *window.children)
 
-    def _validar_cobertura_particao(self, janela: Window, esquerda: Window, direita: Window) -> None:
+    @staticmethod
+    def _validar_cobertura_particao(janela: Window, esquerda: Window, direita: Window) -> None:
         """Exige cobertura contígua, exceto para o filho residual sem data."""
         if not esquerda.lower or not esquerda.upper:
             raise ValueError("Partição sem limites.")

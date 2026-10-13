@@ -78,7 +78,10 @@ def test_recusa_limite_da_janela_nao_coberto(checkpoint, particao, campo, valor)
         checkpoint._validate_partition(particao)
 
 
-def test_residual_direito_dispensa_contiguidade_e_cobertura(checkpoint, particao):
+def test_residual_direito_hoje_nao_confere_limites_da_janela(checkpoint, particao):
+    # A coleta nunca grava este estado: só a janela raiz, que não tem limites, é particionada
+    # com residual, porque as demais já nascem com as duas datas e são divididas ao meio.
+    # O caso fixa o comportamento atual do validador durante a refatoração, não um contrato.
     particao.children[1] = Window(missing=True)
     particao.lower = "2025-12-31"
     checkpoint._validate_partition(particao)
@@ -95,4 +98,11 @@ def test_falha_de_contiguidade_precede_falha_de_cobertura(checkpoint, particao):
     particao.lower = "2025-12-31"
     particao.children[1].lower = "2026-01-04"
     with pytest.raises(ValueError, match=r"^Partição com lacuna ou sobreposição\.$"):
+        checkpoint._validate_partition(particao)
+
+
+def test_falta_de_contagem_precede_numero_de_filhos(checkpoint, particao):
+    particao.total_before = None
+    particao.children = [particao.children[0]] * 3
+    with pytest.raises(ValueError, match=r"^Partição sem contagem ou com tentativa concluída\.$"):
         checkpoint._validate_partition(particao)
