@@ -87,9 +87,10 @@ class FalcaoScraper(HTTPScraper):
     ) -> pd.DataFrame:
         """Consulta a Jurisprudencia Nacional da Justica do Trabalho.
 
-        Baixa as páginas e limpa os arquivos após devolver o resultado parseado.
-        Se a coleta ou o parsing falhar, preserva as páginas recebidas em
-        ``download_path`` e informa o caminho em uma nota da exceção. Recupere
+        Baixa as páginas para um diretório temporário do sistema, fora de
+        ``download_path``, e o remove após devolver o resultado parseado.
+        Se a coleta ou o parsing falhar, preserva as páginas recebidas nesse
+        diretório e informa o caminho em uma nota da exceção. Recupere
         esse resultado parcial com :meth:`listar_decisoes_parse`; não há retomada
         automática. Para guardar também coletas completas, use
         :meth:`listar_decisoes_download`.
@@ -176,8 +177,9 @@ class FalcaoScraper(HTTPScraper):
                 "FalcaoScraper.listar_decisoes() got unexpected keyword argument(s): 'diretorio'. "
                 "Para gravar o JSON bruto num diretorio, use listar_decisoes_download()."
             )
-        Path(self.download_path).mkdir(parents=True, exist_ok=True)
-        temporario = Path(tempfile.mkdtemp(prefix="falcao_", dir=self.download_path))
+        # Fora de download_path: listar_decisoes_parse lê a pasta recursivamente, e
+        # uma sobra preservada ali entraria no parse dos downloads guardados.
+        temporario = Path(tempfile.mkdtemp(prefix="falcao_"))
         try:
             diretorio = self._baixar(pesquisa, paginas, temporario, kwargs, "FalcaoScraper.listar_decisoes()")
             resultado = self.listar_decisoes_parse(diretorio)
