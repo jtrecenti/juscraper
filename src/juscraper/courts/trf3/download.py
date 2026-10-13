@@ -32,7 +32,6 @@ from __future__ import annotations
 import logging
 import re
 import time
-from collections.abc import Callable
 from typing import Any, TypeGuard
 
 import requests
@@ -42,6 +41,9 @@ from ...core.http import RequestFn
 from .._trf.download import BROWSER_HEADERS, _check_bot_challenge
 
 logger = logging.getLogger("juscraper.trf3")
+
+#: Sigla usada nas mensagens de erro e de log. O módulo serve só ao TRF3.
+TRIBUNAL = "TRF3"
 
 BASE_URL_1G = "https://pje1g-consultapublica.trf3.jus.br"
 BASE_URL_2G = "https://pje2g-consultapublica.trf3.jus.br"
@@ -125,8 +127,8 @@ def documento_download_url(base_url: str, id_documento: str) -> str:
     return f"{base_url}{DOCUMENTOS_PATH}/{id_documento}/download"
 
 
-def _guarda_bot(tribunal: str) -> Callable[[requests.Response], None]:
-    return lambda resp: _check_bot_challenge(resp, tribunal)
+def _guarda_bot(resp: requests.Response) -> None:
+    _check_bot_challenge(resp, TRIBUNAL)
 
 
 def _get_json(
@@ -135,7 +137,6 @@ def _get_json(
     *,
     base_url: str,
     rota: str,
-    tribunal: str,
     params: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Faz um ``GET`` na API e devolve o envelope JSON.
@@ -151,27 +152,21 @@ def _get_json(
         headers=build_pagina_origem_headers(base_url, rota),
         perfil="api",
         expect_json=True,
-        on_response=_guarda_bot(tribunal),
+        on_response=_guarda_bot,
     )
     data: dict[str, Any] = resp.json()
     if data.get("status") != "ok":
-        raise ValueError(f"{tribunal}: resposta da API com status {data.get('status')!r} em {url}: {data}")
+        raise ValueError(f"{TRIBUNAL}: resposta da API com status {data.get('status')!r} em {url}: {data}")
     return data
 
 
-def buscar_processo(
-    request_fn: RequestFn,
-    base_url: str,
-    numero_processo: str,
-    tribunal: str = "TRF3",
-) -> dict[str, Any]:
+def buscar_processo(request_fn: RequestFn, base_url: str, numero_processo: str) -> dict[str, Any]:
     """Busca o processo pelo número e devolve o envelope da busca."""
     return _get_json(
         request_fn,
         busca_url(base_url),
         base_url=base_url,
         rota="/",
-        tribunal=tribunal,
         params=build_busca_params(numero_processo),
     )
 
@@ -182,7 +177,6 @@ def baixar_recurso_paginado(
     id_processo: str,
     recurso: str,
     *,
-    tribunal: str = "TRF3",
     sleep_time: float = 0.0,
 ) -> list[dict[str, Any]]:
     """Baixa todas as páginas de um recurso paginado do processo.
@@ -193,19 +187,17 @@ def baixar_recurso_paginado(
     """
     url = recurso_url(base_url, id_processo, recurso)
     rota = f"/processo/{id_processo}"
-    primeira = _get_json(request_fn, url, base_url=base_url, rota=rota, tribunal=tribunal, params={"page": 0})
+    primeira = _get_json(request_fn, url, base_url=base_url, rota=rota, params={"page": 0})
     paginas = [primeira]
     ultima = int((primeira.get("pageInfo") or {}).get("last") or 1)
     for page in range(1, ultima):
         if sleep_time:
             time.sleep(sleep_time)
-        paginas.append(
-            _get_json(request_fn, url, base_url=base_url, rota=rota, tribunal=tribunal, params={"page": page})
-        )
+        paginas.append(_get_json(request_fn, url, base_url=base_url, rota=rota, params={"page": page}))
     return paginas
 
 
-def _escolher_processo(busca: dict[str, Any], numero_processo: str, tribunal: str) -> dict[str, Any] | None:
+def _escolher_processo(busca: dict[str, Any], numero_processo: str) -> dict[str, Any] | None:
     """Escolhe, entre os resultados da busca, o processo com o número pedido.
 
     A busca por número devolve no máximo um processo nos casos observados; a
@@ -220,7 +212,7 @@ def _escolher_processo(busca: dict[str, Any], numero_processo: str, tribunal: st
     if len(iguais) > 1:
         logger.warning(
             "%s: a busca de %s devolveu %d processos com esse número; só o primeiro é consultado",
-            tribunal,
+            TRIBUNAL,
             numero_processo,
             len(iguais),
         )
@@ -232,7 +224,6 @@ def baixar_processo(
     base_url: str,
     numero_processo: str,
     *,
-    tribunal: str = "TRF3",
     sleep_time: float = 0.0,
 ) -> dict[str, Any] | None:
     """Baixa os envelopes brutos de um processo, ou ``None`` se a busca não o achar.
@@ -251,28 +242,25 @@ def baixar_processo(
         ValueError: ``idProcesso`` ausente ou recusado por
             :func:`token_valido`; nenhuma requisição de detalhe é feita.
     """
-    busca = buscar_processo(request_fn, base_url, numero_processo, tribunal)
-    item = _escolher_processo(busca, numero_processo, tribunal)
+    busca = buscar_processo(request_fn, base_url, numero_processo)
+    item = _escolher_processo(busca, numero_processo)
     if item is None:
         return None
     id_processo = item.get("idProcesso")
     if not token_valido(id_processo):
-        raise ValueError(f"{tribunal}: idProcesso inválido na busca de {numero_processo}: {id_processo!r}")
+        raise ValueError(f"{TRIBUNAL}: idProcesso inválido na busca de {numero_processo}: {id_processo!r}")
     bruto: dict[str, Any] = {"busca": item}
     bruto["dados"] = _get_json(
         request_fn,
         recurso_url(base_url, id_processo, "dados"),
         base_url=base_url,
         rota=f"/processo/{id_processo}",
-        tribunal=tribunal,
     )
     for recurso in RECURSOS_PAGINADOS:
         try:
-            bruto[recurso] = baixar_recurso_paginado(
-                request_fn, base_url, id_processo, recurso, tribunal=tribunal, sleep_time=sleep_time
-            )
+            bruto[recurso] = baixar_recurso_paginado(request_fn, base_url, id_processo, recurso, sleep_time=sleep_time)
         except (RetryExhaustedError, requests.HTTPError) as exc:
-            logger.warning("%s: %s de %s falhou: %s", tribunal, recurso, numero_processo, exc)
+            logger.warning("%s: %s de %s falhou: %s", TRIBUNAL, recurso, numero_processo, exc)
             bruto[recurso] = None
     return bruto
 
@@ -282,8 +270,6 @@ def baixar_documento(
     base_url: str,
     id_documento: str,
     id_processo: str,
-    *,
-    tribunal: str = "TRF3",
 ) -> bytes:
     """Baixa o PDF de um documento do processo.
 
@@ -299,15 +285,15 @@ def baixar_documento(
     """
     for nome, token in (("id_documento", id_documento), ("id_processo", id_processo)):
         if not token_valido(token):
-            raise ValueError(f"{tribunal}: {nome} inválido: {token!r}")
+            raise ValueError(f"{TRIBUNAL}: {nome} inválido: {token!r}")
     url = documento_download_url(base_url, id_documento)
     headers = {
         **build_pagina_origem_headers(base_url, f"/processo/{id_processo}"),
         "Content-Type": "application/json",
         "Accept": "application/pdf",
     }
-    resp = request_fn("GET", url, headers=headers, perfil="documento", on_response=_guarda_bot(tribunal))
+    resp = request_fn("GET", url, headers=headers, perfil="documento", on_response=_guarda_bot)
     content_type = resp.headers.get("Content-Type", "")
     if "application/pdf" not in content_type:
-        raise ValueError(f"{tribunal}: documento {id_documento} veio como {content_type!r}, não PDF")
+        raise ValueError(f"{TRIBUNAL}: documento {id_documento} veio como {content_type!r}, não PDF")
     return resp.content

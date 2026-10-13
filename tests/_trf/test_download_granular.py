@@ -85,7 +85,8 @@ def test_extract_docs_pagination_detects_its_own_slider() -> None:
     detail = _detail("detail_paginated.html")
     movs_info = extract_movs_pagination(detail)
     docs_info = extract_docs_pagination(detail)
-    assert movs_info is not None and docs_info is not None
+    assert movs_info is not None
+    assert docs_info is not None
     assert docs_info.max_pages > 1
     assert movs_info.form_id != docs_info.form_id
     assert movs_info.slider_input_name != docs_info.slider_input_name

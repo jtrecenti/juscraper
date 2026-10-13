@@ -64,7 +64,7 @@ def test_paginacao_espera_sleep_time_entre_paginas(mocker) -> None:
 
     pedidas: list[int] = []
 
-    def request_fn(method, url, *, params=None, **kwargs):
+    def request_fn(_method, _url, *, params=None, **_kwargs):
         pedidas.append(params["page"])
         return _Resp(next(respostas))
 

@@ -257,11 +257,16 @@ def test_cpopg_download_e_parse_separados() -> None:
         scraper.cpopg_parse(brutos, [CNJ_PAGINADO])
 
 
+@responses.activate
 def test_cpopg_aceita_politica_por_perfil() -> None:
-    """``politica=`` ajusta os perfis ``api`` e ``documento`` campo a campo."""
-    scraper = jus.scraper("trf3", politica={"api": {"timeout": 5}})
-    assert scraper._perfis_http["api"].timeout == 5  # pylint: disable=protected-access
-    assert scraper._perfis_http["api"].retry_on_timeout is True  # pylint: disable=protected-access
+    """``politica=`` ajusta o perfil ``api`` campo a campo: o timeout muda e o retry de timeout continua."""
+    responses.add(responses.GET, busca_url(BASE_URL_1G), body=requests.ReadTimeout("sem resposta"))
+    registrar_processo(BASE_URL_1G, "cpopg", "paginado")
+
+    df = jus.scraper("trf3", sleep_time=0, politica={"api": {"timeout": 5}}).cpopg(CNJ_PAGINADO)
+
+    assert df.iloc[0]["processo"] == "5003536-21.2025.4.03.6342"
+    assert {chamada.request.req_kwargs["timeout"] for chamada in responses.calls} == {5}
 
 
 @responses.activate
@@ -419,7 +424,7 @@ def test_cpopg_parse_recusa_html_do_portal_antigo() -> None:
     html = "<html><body>Detalhe do processo</body></html>"
     with pytest.raises(TypeError, match="envelopes JSON da API"):
         scraper.cpopg_parse([html, None], [CNJ_PAGINADO, CNJ_SEM_RESULTADO])
-    with pytest.warns(DeprecationWarning), pytest.raises(TypeError, match="não o HTML do portal antigo"):
+    with pytest.warns(DeprecationWarning, match="htmls"), pytest.raises(TypeError, match="não o HTML do portal antigo"):
         scraper.cpopg_parse(htmls=[html], id_cnj_list=[CNJ_PAGINADO])
     with pytest.raises(TypeError, match="envelopes JSON da API"):
         scraper.cposg_parse([html], [CNJ_PAGINADO])

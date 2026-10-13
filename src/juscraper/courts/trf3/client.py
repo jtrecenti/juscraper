@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any, ClassVar
 
 import pandas as pd
+import requests
 from pydantic import ValidationError
 from tqdm import tqdm
 
@@ -73,7 +74,8 @@ class TRF3Scraper(HTTPScraper):
         download_path: str | None = None,
         sleep_time: float = 1.0,
         **kwargs: Any,
-    ):
+    ) -> None:
+        """Cria o raspador; ``kwargs`` seguem para :class:`HTTPScraper` (``politica=``, por exemplo)."""
         super().__init__(
             self.TRIBUNAL_NAME,
             verbose=verbose,
@@ -82,7 +84,7 @@ class TRF3Scraper(HTTPScraper):
             **kwargs,
         )
 
-    def _configure_session(self, session) -> None:
+    def _configure_session(self, session: requests.Session) -> None:
         """Usa os cabeçalhos de uma chamada XHR do Chrome no lugar do User-Agent do juscraper."""
         session.headers.update(API_HEADERS)
 
@@ -120,7 +122,6 @@ class TRF3Scraper(HTTPScraper):
                         self._request_with_retry,
                         base_url,
                         format_cnj(cnj),
-                        tribunal=self.TRIBUNAL_NAME,
                         sleep_time=self.sleep_time,
                     )
                 )
@@ -163,16 +164,22 @@ class TRF3Scraper(HTTPScraper):
             rows.append({"id_cnj": cnj, **record})
         return pd.DataFrame(rows)
 
+    def _alvo(self, endpoint: str) -> tuple[type[CnjInputBase], str]:
+        """Schema de entrada e raiz da aplicação que atendem ``cpopg`` ou ``cposg``."""
+        if endpoint == "cposg":
+            return self.INPUT_CPOSG, self.BASE_URL_2G
+        return self.INPUT_CPOPG, self.BASE_URL
+
     def _consulta(
         self,
         endpoint: str,
-        schema: type[CnjInputBase],
-        base_url: str,
         id_cnj: str | list[str],
+        *,
         download_pecas: bool,
         diretorio: str | None,
         **kwargs: Any,
     ) -> pd.DataFrame:
+        schema, base_url = self._alvo(endpoint)
         cnjs = self._coerce_id_cnj(
             schema, endpoint, id_cnj, download_pecas=download_pecas, diretorio=diretorio, **kwargs
         )
@@ -233,9 +240,7 @@ class TRF3Scraper(HTTPScraper):
                     logger.warning("Peça do %s pulada: %r sai do diretório do processo", cnj, id_documento)
                     continue
                 try:
-                    content = baixar_documento(
-                        self._request_with_retry, base_url, id_documento, id_processo, tribunal=self.TRIBUNAL_NAME
-                    )
+                    content = baixar_documento(self._request_with_retry, base_url, id_documento, id_processo)
                 except BotChallengeBlockedError:
                     raise
                 except Exception as exc:  # noqa: BLE001 (resiliência por peça)
@@ -276,6 +281,8 @@ class TRF3Scraper(HTTPScraper):
                 dicionário de envelopes JSON ou ``None`` por CNJ. Entradas
                 ``None`` viram linha só com ``id_cnj``.
             id_cnj_list: CNJs na mesma ordem de ``brutos``.
+            **kwargs: Só o alias deprecado ``htmls``, descrito abaixo. Qualquer
+                outro nome levanta ``TypeError``.
 
         Aliases deprecados:
             * ``htmls`` -> ``brutos`` (DeprecationWarning). O nome vem da
@@ -306,6 +313,7 @@ class TRF3Scraper(HTTPScraper):
     def cpopg(
         self,
         id_cnj: str | list[str],
+        *,
         download_pecas: bool = False,
         diretorio: str | None = None,
         **kwargs: Any,
@@ -315,9 +323,11 @@ class TRF3Scraper(HTTPScraper):
         Args:
             id_cnj: CNJ único ou lista, com ou sem máscara.
             download_pecas: Se ``True``, baixa o PDF de cada documento listado
-                no processo. Default ``False``.
+                no processo. Só por nome. Default ``False``.
             diretorio: Onde gravar as peças, em ``<diretorio>/<cnj>/<id>.pdf``.
                 Quando omitido, usa ``download_path`` do construtor.
+            **kwargs: Nenhum outro argumento é aceito; nome desconhecido
+                levanta ``TypeError``.
 
         Returns:
             DataFrame com uma linha por CNJ e as colunas ``id_cnj``,
@@ -338,10 +348,10 @@ class TRF3Scraper(HTTPScraper):
             BotChallengeBlockedError: O Akamai bloqueou o IP (HTTP 403
                 ``Access Denied``). Aguarde alguns minutos ou troque de IP.
 
-        See also:
+        See Also:
             :class:`InputCpopgTRF3`: schema dos argumentos aceitos.
         """
-        return self._consulta("cpopg", self.INPUT_CPOPG, self.BASE_URL, id_cnj, download_pecas, diretorio, **kwargs)
+        return self._consulta("cpopg", id_cnj, download_pecas=download_pecas, diretorio=diretorio, **kwargs)
 
     def cposg_download(self, id_cnj: str | list[str], **kwargs: Any) -> list[dict[str, Any] | None]:
         """Baixa os envelopes JSON de 2º grau de cada CNJ, sem parsear.
@@ -361,6 +371,7 @@ class TRF3Scraper(HTTPScraper):
     def cposg(
         self,
         id_cnj: str | list[str],
+        *,
         download_pecas: bool = False,
         diretorio: str | None = None,
         **kwargs: Any,
@@ -377,9 +388,11 @@ class TRF3Scraper(HTTPScraper):
         Args:
             id_cnj: CNJ único ou lista, com ou sem máscara.
             download_pecas: Se ``True``, baixa o PDF de cada documento listado
-                no processo. Default ``False``.
+                no processo. Só por nome. Default ``False``.
             diretorio: Onde gravar as peças, em ``<diretorio>/<cnj>/<id>.pdf``.
                 Quando omitido, usa ``download_path`` do construtor.
+            **kwargs: Nenhum outro argumento é aceito; nome desconhecido
+                levanta ``TypeError``.
 
         Returns:
             DataFrame com as mesmas colunas de :meth:`cpopg`. No 2º grau,
@@ -393,7 +406,7 @@ class TRF3Scraper(HTTPScraper):
             BotChallengeBlockedError: O Akamai bloqueou o IP (HTTP 403
                 ``Access Denied``). Aguarde alguns minutos ou troque de IP.
 
-        See also:
+        See Also:
             :class:`InputCposgTRF3`: schema dos argumentos aceitos.
         """
-        return self._consulta("cposg", self.INPUT_CPOSG, self.BASE_URL_2G, id_cnj, download_pecas, diretorio, **kwargs)
+        return self._consulta("cposg", id_cnj, download_pecas=download_pecas, diretorio=diretorio, **kwargs)

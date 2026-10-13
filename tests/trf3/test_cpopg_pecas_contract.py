@@ -64,11 +64,22 @@ def _pdf() -> bytes:
 
 
 def test_cpopg_download_pecas_default_false() -> None:
-    """A assinatura pública mantém ``download_pecas=False`` e ``diretorio=None``."""
+    """``download_pecas=False`` e ``diretorio=None`` por default, aceitos só por nome."""
     for metodo in ("cpopg", "cposg"):
         sig = inspect.signature(getattr(jus.scraper("trf3"), metodo))
         assert sig.parameters["download_pecas"].default is False
         assert sig.parameters["diretorio"].default is None
+        assert sig.parameters["download_pecas"].kind is inspect.Parameter.KEYWORD_ONLY
+        assert sig.parameters["diretorio"].kind is inspect.Parameter.KEYWORD_ONLY
+
+
+def test_cpopg_recusa_download_pecas_posicional() -> None:
+    """``cpopg(cnj, True)`` levanta ``TypeError`` antes de qualquer requisição."""
+    scraper = jus.scraper("trf3", sleep_time=0)
+    argumentos = (CNJ_PAGINADO, True)
+    for metodo in ("cpopg", "cposg"):
+        with pytest.raises(TypeError, match="positional argument"):
+            getattr(scraper, metodo)(*argumentos)
 
 
 @responses.activate
@@ -237,7 +248,7 @@ def test_download_pecas_erro_de_gravacao_sobe(tmp_path, mocker) -> None:
     _registrar_pdf(BASE_URL_1G, "cpopg", "paginado", valido["id"], body=_pdf(), content_type="application/pdf")
     mocker.patch.object(Path, "write_bytes", side_effect=OSError(errno.ENOSPC, "No space left on device"))
 
-    with pytest.raises(OSError) as exc:
+    with pytest.raises(OSError, match="No space left on device") as exc:
         jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO, download_pecas=True, diretorio=str(tmp_path))
 
     assert exc.value.errno == errno.ENOSPC

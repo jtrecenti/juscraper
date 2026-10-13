@@ -32,7 +32,7 @@ _CAMPOS_PARTE = {
 _DOC_DESCRICAO_RE = re.compile(r"^(\d{2}/\d{2}/\d{4}\s+\d{2}:\d{2}:\d{2})\s+-\s+(.+)$", re.DOTALL)
 
 
-def _texto(valor: Any) -> str | None:
+def _texto(valor: object) -> str | None:
     """Tira espaços das pontas de cada linha e troca string vazia por ``None``.
 
     A API usa ``""`` para campo ausente. Processos com mais de um assunto
@@ -44,7 +44,7 @@ def _texto(valor: Any) -> str | None:
     return texto or None
 
 
-def _data_br(valor: Any) -> str | None:
+def _data_br(valor: object) -> str | None:
     """Converte ``2025-09-24T15:10:17.231`` em ``24/09/2025``.
 
     O portal JSF exibia só a data da distribuição, em ``DD/MM/AAAA``; manter o
