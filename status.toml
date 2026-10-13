@@ -20,7 +20,7 @@ cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('comunica_cnj').listar_
 sigla = "datajud"
 nome = "Datajud"
 tipo = "agregador"
-endpoints = ["listar_processos"]
+endpoints = ["listar_processos", "contar_processos"]
 
 [fontes.observacoes.listar_processos]
 estado = "funcionando"

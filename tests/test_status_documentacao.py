@@ -2,6 +2,7 @@
 
 import copy
 import inspect
+import re
 import runpy
 import subprocess
 import sys
@@ -18,6 +19,9 @@ from juscraper import _SCRAPERS
 RAIZ = Path(__file__).resolve().parents[1]
 GERADOR = RAIZ / "scripts/gerar_status.py"
 MODULO = runpy.run_path(str(GERADOR))
+# Métodos públicos que o registro deixa de fora por desenho: etapas internas dos endpoints,
+# configuração, autenticação, descoberta de filtros e detalhe de um documento já listado.
+AUXILIARES = re.compile(r"set_.+|auth(_.+)?|.+_(download|parse)|listar_(assuntos|classes|orgaos|varas)|cjsg_ementa")
 
 
 @pytest.fixture
@@ -43,10 +47,13 @@ def test_inventario_cobre_factory_e_metodos_reais():
     for fonte in registro.fontes:
         modulo, nome = _SCRAPERS[fonte.sigla].split(":")
         classe = getattr(import_module(modulo), nome)
-        for endpoint in fonte.endpoints:
-            metodo = getattr(classe, endpoint)
-            assert callable(metodo)
-            assert "raise NotImplementedError" not in inspect.getsource(metodo)
+        # Igualdade nos dois sentidos: endpoint listado sem método real e método de coleta fora do registro.
+        coleta = {
+            metodo for metodo, funcao in inspect.getmembers(classe, inspect.isroutine)
+            if not metodo.startswith("_") and not AUXILIARES.fullmatch(metodo)
+            and "raise NotImplementedError" not in inspect.getsource(funcao)
+        }
+        assert coleta == set(fonte.endpoints), fonte.sigla
 
 
 @pytest.mark.parametrize("estado", ["funcionando", "degradado", "indisponivel"])

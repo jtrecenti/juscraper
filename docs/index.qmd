@@ -107,6 +107,7 @@ Tabelas geradas em 2026-10-13.
 |---|---|---|---|---|
 | Comunica CNJ | `listar_comunicacoes` | Funcionando | 2026-10-03 | 2026-11-02 |
 | Datajud | `listar_processos` | Funcionando | 2026-10-03 | 2026-11-02 |
+| Datajud | `contar_processos` | Não verificado | - | - |
 | Falcão | `listar_decisoes` | Indisponível | 2026-10-03 | 2026-11-02 |
 | JusBR | `cpopg` | Não verificado | - | - |
 | JusBR | `download_documents` | Não verificado | - | - |
