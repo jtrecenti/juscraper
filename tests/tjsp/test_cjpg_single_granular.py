@@ -2,8 +2,11 @@
 
 ``cjpg/results_optional_fields.html`` é montado à mão, e não captura do
 tribunal: reúne num arquivo só os casos de borda que uma página real não
-traz juntos. O bloco da decisão repete a forma da página real, com o resumo
-visível antes do ``div`` oculto que guarda o inteiro teor.
+traz juntos. No primeiro resultado, o bloco da decisão repete o aninhamento
+da página real: uma ``tr.fonte`` sem rótulo, com o resumo visível antes do
+``div`` oculto que guarda o inteiro teor. O ``name`` do link tem vários hifens
+e o texto da decisão tem tag colada em pontuação e quebra de linha, como na
+captura.
 """
 import pandas as pd
 import pytest
@@ -26,7 +29,7 @@ def test_campos_opcionais_ordem_e_normalizacao(tmp_path):
             "classe": "Classe: complemento",
             "data_disponibilizacao": "01/02/2024",
             "tipode_ato": "Sentença",
-            "decisao": "Decisão completa final.",
+            "decisao": "Decisão completa .\nSegunda linha.",
         },
         {"cd_processo": None, "id_processo": None, "decisao": ""},
         {},
@@ -46,7 +49,7 @@ def test_rotulo_sem_separador_continua_rejeitado(tmp_path):
 
     O ``ValueError`` nasce do desempacotamento de ``split(':', 1)`` e derruba a
     página inteira. Em modo diretório, ``cjpg_parse_manager`` captura o erro e
-    segue sem os resultados desse arquivo.
+    descarta os resultados desse arquivo.
     """
     caminho = tmp_path / "invalido.html"
     caminho.write_text(
