@@ -125,16 +125,6 @@ def test_zero_marker_case_insensitive():
     ) == 0
 
 
-def test_use_element_html_keeps_attributes():
-    html = '<a class="page-link" href="/x?page=99">»</a>'
-    assert extract_count_with_cascade(
-        html,
-        css_selectors=("a.page-link",),
-        regex_patterns=(re.compile(r"page=(\d+)"),),
-        use_element_html=True,
-    ) == 99
-
-
 def test_first_uses_first_numeric_group_across_optional_groups():
     html = "<div class='counter'>pages: 27</div>"
 

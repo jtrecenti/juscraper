@@ -47,13 +47,11 @@ def _collect_candidates(
     soup: BeautifulSoup,
     html: str,
     css_selectors: Sequence[str],
-    *,
-    use_element_html: bool,
 ) -> list[str]:
     candidates: list[str] = []
     for selector in css_selectors:
         for element in soup.select(selector):
-            content = str(element) if use_element_html else element.get_text(" ", strip=True)
+            content = element.get_text(" ", strip=True)
             if content:
                 candidates.append(content)
     return candidates or [html]
@@ -90,7 +88,6 @@ def extract_count_with_cascade(
     regex_patterns: Sequence[re.Pattern[str]] = (),
     zero_markers: Sequence[str] = (),
     fallback_max_int: bool = False,
-    use_element_html: bool = False,
 ) -> int | None:
     r"""Extrai uma contagem (resultados ou paginas) usando cascata.
 
@@ -102,8 +99,8 @@ def extract_count_with_cascade(
     Args:
         html: HTML bruto da primeira pagina de resultados.
         css_selectors: Seletores CSS tentados em ordem. Para cada um,
-            ``soup.select(selector)`` produz elementos cujo conteudo
-            (texto ou HTML, conforme ``use_element_html``) vira candidato.
+            ``soup.select(selector)`` produz elementos cujo texto vira
+            candidato.
             Use ``()`` quando nao houver seletor estruturado confiavel —
             a cascata cai direto em ``regex_patterns`` sobre o HTML bruto.
             Se ``css_selectors`` e nao vazio mas nenhum seletor casa em
@@ -125,10 +122,6 @@ def extract_count_with_cascade(
             (1 pagina ou 0 resultados) do lado deles; ``True`` deve ser
             opt-in explicito para evitar extrair numeros irrelevantes da
             pagina (ano, codigo, etc.).
-        use_element_html: Quando ``True``, cada candidato e o HTML completo
-            do elemento (``str(el)``) em vez de apenas o texto. Necessario
-            quando o numero alvo esta em atributo (ex.: ``href="?page=N"``
-            em paginadores estilo Bootstrap).
 
     Returns:
         ``int`` extraido ou ``None`` se nada casar e ``fallback_max_int``
@@ -138,12 +131,7 @@ def extract_count_with_cascade(
     if _has_zero_marker(soup, zero_markers):
         return 0
 
-    candidates = _collect_candidates(
-        soup,
-        html,
-        css_selectors,
-        use_element_html=use_element_html,
-    )
+    candidates = _collect_candidates(soup, html, css_selectors)
     value = _extract_first(candidates, regex_patterns)
     if value is not None:
         return value
