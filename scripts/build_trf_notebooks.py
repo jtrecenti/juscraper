@@ -152,7 +152,7 @@ for caminho in df_pecas.iloc[0]["pecas"]:
 ## Splitting download from parse
 
 `cpopg_download` returns, per CNJ, a dict with the raw JSON envelopes of each
-API route (or `None` when the process was not found); `cpopg_parse` turns that
+API route (or `None` when the process was not found or the lookup failed); `cpopg_parse` turns that
 list into the DataFrame. Useful to cache the raw responses before processing.
 """
         ),
