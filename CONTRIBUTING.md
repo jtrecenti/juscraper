@@ -89,9 +89,9 @@ As seções a seguir são notas internas para quem contribui com novos raspadore
 
 ### CI da suíte offline
 
-O workflow `Testes` (`.github/workflows/tests.yml`) roda `uv run pytest` em todo PR e em pushes para `main`, com uma perna por versão de Python da matriz declarada no próprio arquivo. A integração fica de fora pelo `-m 'not integration'` de `addopts`, então nenhuma perna acessa tribunal. O job `Testes obrigatórios` reúne o resultado dessas pernas e é o nome a exigir na proteção da `main`. Versões de Python em que a suíte ainda não passa rodam no job `pytest-experimental`, que não barra o merge e registra no próprio arquivo o motivo de cada uma.
+O workflow `Testes` (`.github/workflows/tests.yml`) roda `uv run pytest` em todo PR e em pushes para `main`, com uma perna por versão de Python da matriz declarada no próprio arquivo. A integração fica de fora pelo `-m 'not integration'` de `addopts`, então nenhuma perna acessa tribunal. O job `Testes obrigatórios` reúne o resultado dessas pernas e é o nome a exigir na proteção da `main`. Versões de Python em que a suíte ainda não passa rodam no job `pytest-experimental`, que não barra o merge e registra no próprio arquivo o motivo de cada uma. Quando a suíte falha nele, o check continua verde e a falha aparece como aviso no resumo da execução.
 
-O workflow resolve as dependências a cada execução, sem lock versionado. Como `filterwarnings = ["error"]` transforma aviso em falha, uma versão nova de dependência pode deixar o workflow vermelho sem mudança no repositório.
+O workflow resolve as dependências a cada execução, sem lock versionado, e usa a versão mais recente do `uv` e da imagem do runner. Como `filterwarnings = ["error"]` transforma aviso em falha, uma versão nova de qualquer um deles pode deixar o workflow vermelho sem mudança no repositório.
 
 A perna marcada com `cobertura` na matriz mede a cobertura e publica o total e a tabela por arquivo no resumo da execução. Não há limiar: o número serve de referência para decidir um piso depois (#101).
 

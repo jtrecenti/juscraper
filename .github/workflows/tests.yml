@@ -48,8 +48,9 @@ jobs:
       - name: Publicar a cobertura no resumo da execução
         if: ${{ matrix.cobertura }}
         run: |
+          total="$(uv run coverage report --format=total)"
           {
-            echo "## Cobertura da suíte offline: $(uv run coverage report --format=total)%"
+            echo "## Cobertura da suíte offline: ${total}%"
             echo
             echo "<details><summary>Por arquivo</summary>"
             echo
@@ -58,9 +59,9 @@ jobs:
             echo "</details>"
           } >> "$GITHUB_STEP_SUMMARY"
 
-  # Versões que ainda não barram. Ficam num job à parte, fora do `needs` do
-  # job obrigatório, para que a instalação demorada não atrase o resultado dos
-  # PRs.
+  # Versões em que a suíte ainda não passa. Ficam num job à parte, fora do
+  # `needs` do job obrigatório, para que a instalação demorada não atrase o
+  # resultado dos PRs.
   #
   # 3.15: o teto `pandas<3.0.0` (issue #25) resolve para o pandas 2.3.3, que
   # não tem wheel para 3.15. A instalação compila o pandas da fonte (4 min 37 s
@@ -71,6 +72,8 @@ jobs:
     name: pytest (py${{ matrix.python }}, não bloqueante)
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # Cobre o que não é a falha conhecida da suíte (instalação, por exemplo):
+    # o job aparece falho no PR, mas a execução não fica vermelha por ele.
     continue-on-error: true
     strategy:
       fail-fast: false
@@ -84,13 +87,16 @@ jobs:
           cache-dependency-glob: pyproject.toml
       - name: Instalar dependências de desenvolvimento
         run: uv sync --extra dev
+      # A falha da suíte não reprova o job: um check que falha sempre, por
+      # causa conhecida, deixaria todo PR com um X vermelho. O resultado vira
+      # o aviso do passo seguinte, que aparece no resumo da execução. Com o
+      # job aprovado, o setup-uv também salva o cache do pandas já compilado.
       - name: Rodar a suíte offline
+        id: suite
+        continue-on-error: true
         run: uv run pytest
-      # Com `continue-on-error` a execução fecha verde, mas este job continua
-      # aparecendo como falho na lista de checks do PR. O aviso diz, no resumo
-      # da execução, que essa falha não barra o merge.
-      - name: Avisar que a versão experimental falhou
-        if: failure()
+      - name: Avisar que a suíte falhou nesta versão
+        if: steps.suite.outcome == 'failure'
         env:
           VERSAO: ${{ matrix.python }}
         run: echo "::warning title=Python $VERSAO::A suíte offline falhou em Python $VERSAO. Este job não barra o merge."
