@@ -69,22 +69,39 @@ def test_janela_exige_ultima_tentativa_concluida_e_contagem_igual(checkpoint, co
         checkpoint._validate(janela)
 
 
+@pytest.mark.parametrize(
+    ("campo", "valor", "mensagem"),
+    [
+        ("number", 2, "contagens ou páginas inconsistentes"),
+        ("count", 0, "Página de checkpoint incompleta"),
+    ],
+    ids=["numero", "contagem"],
+)
+def test_tentativa_concluida_confere_numero_e_contagem_de_cada_pagina(checkpoint, campo, valor, mensagem):
+    # Com páginas explícitas a conferência de páginas faltantes não roda, então só o descritor da página denuncia.
+    checkpoint.manifest.identity["pages"] = [1]
+    coleta = tentativa(checkpoint, ("a",))
+    setattr(coleta.pages[0], campo, valor)
+    with pytest.raises(ValueError, match=mensagem):
+        checkpoint._validate(Window(attempts=[coleta]))
+
+
 @pytest.mark.parametrize("paginas", [None, [1]])
-def test_contagem_de_identidades_completa_so_para_todas_as_paginas(checkpoint, paginas):
+def test_contagem_de_identidades_completa_so_para_todas_as_paginas(checkpoint, paginas, monkeypatch):
     checkpoint.manifest.identity["pages"] = paginas
     coleta = tentativa(checkpoint, ("a",))
     coleta.total_before = coleta.total_after = 2
     if paginas is None:
-        # O descritor promete duas páginas válidas, mas a memória contém só um documento.
+        # Acima do teto da fonte a segunda página é vazia e coerente com o descritor, mas falta um documento.
+        monkeypatch.setattr("juscraper.courts.stf.download.MAX_REGISTROS", 1)
         coleta.pages.append(checkpoint.page([], 2))
-        coleta.pages[-1].count = 1
         with pytest.raises(ValueError, match="páginas faltantes"):
             checkpoint._validate(Window(attempts=[coleta]))
     else:
         checkpoint._validate(Window(attempts=[coleta]))
 
 
-@pytest.mark.parametrize("problema", [None, "incompleto", "contagem", "descendente"])
+@pytest.mark.parametrize("problema", [None, "incompleto", "contagem", "descendente", "lacuna"])
 def test_valida_particao_concluida_e_descendentes(checkpoint, problema):
     esquerda = Window(
         lower="2020-01-01", upper="2020-01-01", completed_at="fim",
@@ -97,6 +114,7 @@ def test_valida_particao_concluida_e_descendentes(checkpoint, problema):
     janela = Window(total_before=2, total_after=2, completed_at="fim", children=[esquerda, direita])
     mensagens = {
         "incompleto": "filhos incompletos", "contagem": "Partição com contagens", "descendente": "invertido",
+        "lacuna": "lacuna ou sobreposição",
     }
     if problema == "incompleto":
         direita.completed_at = None
@@ -104,6 +122,8 @@ def test_valida_particao_concluida_e_descendentes(checkpoint, problema):
         janela.total_before = janela.total_after = 3
     elif problema == "descendente":
         direita.upper = "2020-01-01"
+    elif problema == "lacuna":
+        direita.lower = direita.upper = "2020-01-03"
     if problema:
         with pytest.raises(ValueError, match=mensagens[problema]):
             checkpoint._validate(janela)
