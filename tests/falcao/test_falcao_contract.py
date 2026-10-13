@@ -189,6 +189,25 @@ def test_pagina_alem_do_total_real_nao_entra_no_resultado(falcao):
 
 
 @responses.activate
+def test_download_guarda_primeira_resposta_se_planejamento_falha(falcao, tmp_path):
+    _register("acordaos", total=10000)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", UserWarning)
+        with pytest.raises(UserWarning):
+            falcao.listar_decisoes_download("dano moral", diretorio=str(tmp_path))
+    arquivo, = tmp_path.rglob("*.json")
+    assert arquivo.name == "acordaos_0001.json"
+    assert json.loads(arquivo.read_text())["documentos"] == _sample("acordaos")["documentos"]
+
+
+@responses.activate
+def test_download_nao_guarda_pagina_alem_do_total_real(falcao, tmp_path):
+    _register("acordaos", total=5, pagina=2)
+    pasta = falcao.listar_decisoes_download("dano moral", paginas=[2], diretorio=str(tmp_path))
+    assert not list(Path(pasta).iterdir())
+
+
+@responses.activate
 def test_listar_decisoes_falha_sem_paginas_nao_deixa_pasta_vazia(tmp_path, temporarios):
     falcao = jus.scraper("falcao", verbose=0, sleep_time=0, download_path=str(tmp_path / "downloads"))
     responses.add(responses.GET, SEARCH_URL, status=429,
