@@ -102,7 +102,9 @@ class Registro(Modelo):
 
 
 # Derivado do texto do bloco para que a leitura da data acompanhe qualquer mudança na frase.
-REFERENCIA = re.compile(re.escape(TEXTOS["gerado"]).replace(r"\{data\}", r"(\d{4}-\d{2}-\d{2})"))
+REFERENCIA = re.compile(
+    "^" + re.escape(TEXTOS["gerado"]).replace(r"\{data\}", r"(\d{4}-\d{2}-\d{2})") + "$", re.MULTILINE
+)
 
 
 def escapar(texto: str) -> str:
@@ -191,8 +193,10 @@ def substituir_bloco(texto: str, bloco: str) -> str:
 
 def data_gravada(documentos: dict[Path, str]) -> date:
     """Data em que os blocos versionados foram gerados, igual nos dois documentos."""
-    datas = {data for texto in documentos.values() for data in REFERENCIA.findall(texto)}
-    if len(datas) != 1 or any(len(REFERENCIA.findall(texto)) != 1 for texto in documentos.values()):
+    # Só a linha inteira dentro do bloco conta: a prosa do documento pode citar a mesma frase.
+    blocos = (texto.partition(INICIO)[2].partition(FIM)[0] for texto in documentos.values())
+    datas = {data for bloco in blocos for data in REFERENCIA.findall(bloco)}
+    if len(datas) != 1:
         raise ValueError("Tabelas sem data de referência única; regenerar com scripts/gerar_status.py.")
     return date.fromisoformat(datas.pop())
 

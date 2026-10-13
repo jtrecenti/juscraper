@@ -1,11 +1,13 @@
 """Contratos offline do registro editorial e das duas tabelas geradas."""
 
+import ast
 import copy
 import inspect
 import re
 import runpy
 import subprocess
 import sys
+import textwrap
 import tomllib
 from datetime import date
 from importlib import import_module
@@ -19,9 +21,10 @@ from juscraper import _SCRAPERS
 RAIZ = Path(__file__).resolve().parents[1]
 GERADOR = RAIZ / "scripts/gerar_status.py"
 MODULO = runpy.run_path(str(GERADOR))
-# Métodos públicos que o registro deixa de fora por desenho: etapas internas dos endpoints,
-# configuração, autenticação, descoberta de filtros e detalhe de um documento já listado.
-AUXILIARES = re.compile(r"set_.+|auth(_.+)?|.+_(download|parse)|listar_(assuntos|classes|orgaos|varas)|cjsg_ementa")
+# Métodos públicos que o registro deixa de fora por desenho: configuração, autenticação,
+# descoberta de filtros e detalhe de um documento já listado.
+AUXILIARES = re.compile(r"set_.+|auth(_.+)?|listar_(assuntos|classes|orgaos|varas)|cjsg_ementa")
+ETAPA = re.compile(r"(.+)_(download|parse)")
 
 
 @pytest.fixture
@@ -45,6 +48,16 @@ def registro_versionado():
         return MODULO["Registro"].model_validate(tomllib.load(arquivo))
 
 
+def e_stub(funcao):
+    """Stub é o método cujo corpo, fora a docstring, só levanta NotImplementedError."""
+    definicao = ast.parse(textwrap.dedent(inspect.getsource(funcao))).body[0]
+    assert isinstance(definicao, (ast.FunctionDef, ast.AsyncFunctionDef))
+    corpo = definicao.body
+    if isinstance(corpo[0], ast.Expr) and isinstance(corpo[0].value, ast.Constant):
+        corpo = corpo[1:]
+    return len(corpo) == 1 and isinstance(corpo[0], ast.Raise) and "NotImplementedError" in ast.unparse(corpo[0])
+
+
 def test_inventario_cobre_factory_e_metodos_reais():
     registro = registro_versionado()
     assert {fonte.sigla for fonte in registro.fontes} == set(_SCRAPERS)
@@ -52,10 +65,15 @@ def test_inventario_cobre_factory_e_metodos_reais():
         modulo, nome = _SCRAPERS[fonte.sigla].split(":")
         classe = getattr(import_module(modulo), nome)
         # Igualdade nos dois sentidos: endpoint listado sem método real e método de coleta fora do registro.
-        coleta = {
+        reais = {
             metodo for metodo, funcao in inspect.getmembers(classe, inspect.isroutine)
-            if not metodo.startswith("_") and not AUXILIARES.fullmatch(metodo)
-            and "raise NotImplementedError" not in inspect.getsource(funcao)
+            if not metodo.startswith("_") and not e_stub(funcao)
+        }
+        # Etapa de download ou parsing só é auxiliar quando o endpoint que ela compõe existe na mesma classe.
+        coleta = {
+            metodo for metodo in reais
+            if not AUXILIARES.fullmatch(metodo)
+            and not ((etapa := ETAPA.fullmatch(metodo)) and etapa[1] in reais)
         }
         assert coleta == set(fonte.endpoints), fonte.sigla
 
@@ -84,7 +102,9 @@ def test_validade_preserva_ultimo_estado_e_evidencia(dados, estado):
     assert dados["fontes"][0]["observacoes"]["cjsg"]["estado"] == estado
 
 
-def test_data_futura_nao_vira_funcionando(dados):
+@pytest.mark.parametrize("estado", ["indisponivel", "nao_verificado"])
+def test_data_futura_nao_vira_funcionando(dados, estado):
+    dados["fontes"][0]["observacoes"]["cjsg"]["estado"] = estado
     registro = MODULO["Registro"].model_validate(dados)
     with pytest.raises(ValueError, match="posterior à data de referência 2026-06-06"):
         MODULO["renderizar"](registro, date(2026, 6, 6))
@@ -141,34 +161,6 @@ def executar_cli(raiz, *opcoes):
     )
 
 
-def test_cli_detecta_drift_sem_escrever_e_regenera_preservando_prosa(tmp_path):
-    (tmp_path / "docs").mkdir()
-    (tmp_path / "status.toml").write_bytes((RAIZ / "status.toml").read_bytes())
-    antigo = "Introdução autoral\n<!-- status:inicio -->\nobsoleto\n<!-- status:fim -->\nAutenticação\n"
-    caminhos = [tmp_path / "README.md", tmp_path / "docs/index.qmd"]
-    for caminho in caminhos:
-        caminho.write_text(antigo, encoding="utf-8")
-    assert executar_cli(tmp_path, "--check").returncode == 1
-    assert all(caminho.read_text(encoding="utf-8") == antigo for caminho in caminhos)
-    assert executar_cli(tmp_path).returncode == 0
-    assert executar_cli(tmp_path, "--check").returncode == 0
-    for caminho in caminhos:
-        texto = caminho.read_text(encoding="utf-8")
-        assert texto.startswith("Introdução autoral\n")
-        assert texto.endswith("\nAutenticação\n")
-    assert caminhos[0].read_bytes() == caminhos[1].read_bytes()
-    assert "Implementações e status" in caminhos[1].read_text(encoding="utf-8")
-    caminhos[1].write_text("sem marcadores", encoding="utf-8")
-    caminhos[0].write_text(antigo, encoding="utf-8")
-    assert executar_cli(tmp_path).returncode == 1
-    assert caminhos[0].read_text(encoding="utf-8") == antigo
-
-
-def test_tabelas_versionadas_estao_sincronizadas():
-    resultado = executar_cli(RAIZ, "--check")
-    assert resultado.returncode == 0, resultado.stdout + resultado.stderr
-
-
 # Datas de 2020 mantêm a observação vencida no relógio real: um gerador que consultasse
 # a data corrente em --check mostraria outro rótulo e os testes abaixo falhariam.
 REGISTRO_ANTIGO = """
@@ -198,6 +190,36 @@ evidencias = ["https://github.com/jtrecenti/juscraper/issues/279"]
 """
 
 
+def test_cli_detecta_drift_sem_escrever_e_regenera_preservando_prosa(tmp_path):
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "status.toml").write_text(REGISTRO_ANTIGO, encoding="utf-8")
+    antigo = "Introdução autoral\n<!-- status:inicio -->\nobsoleto\n<!-- status:fim -->\nAutenticação\n"
+    caminhos = [tmp_path / "README.md", tmp_path / "docs/index.qmd"]
+    for caminho in caminhos:
+        caminho.write_text(antigo, encoding="utf-8")
+    sem_data = executar_cli(tmp_path, "--check")
+    assert sem_data.returncode == 1
+    assert "data de referência única" in sem_data.stderr
+    assert all(caminho.read_text(encoding="utf-8") == antigo for caminho in caminhos)
+    assert executar_cli(tmp_path, "--data", "2020-01-01").returncode == 0
+    assert executar_cli(tmp_path, "--check").returncode == 0
+    for caminho in caminhos:
+        texto = caminho.read_text(encoding="utf-8")
+        assert texto.startswith("Introdução autoral\n")
+        assert texto.endswith("\nAutenticação\n")
+    assert caminhos[0].read_bytes() == caminhos[1].read_bytes()
+    assert "Implementações e status" in caminhos[1].read_text(encoding="utf-8")
+    caminhos[1].write_text("sem marcadores", encoding="utf-8")
+    caminhos[0].write_text(antigo, encoding="utf-8")
+    assert executar_cli(tmp_path, "--data", "2020-01-01").returncode == 1
+    assert caminhos[0].read_text(encoding="utf-8") == antigo
+
+
+def test_tabelas_versionadas_estao_sincronizadas():
+    resultado = executar_cli(RAIZ, "--check")
+    assert resultado.returncode == 0, resultado.stdout + resultado.stderr
+
+
 @pytest.fixture
 def raiz_antiga(tmp_path):
     (tmp_path / "docs").mkdir()
@@ -215,6 +237,11 @@ def test_check_reproduz_a_data_gravada_sem_ler_o_relogio(raiz_antiga):
     assert "| `cjsg` | Funcionando | 2020-01-01 | 2020-01-31 |" in gerado
     resultado = executar_cli(raiz_antiga, "--check")
     assert resultado.returncode == 0, resultado.stdout + resultado.stderr
+    # --data explícita vence a data gravada: um dia depois do prazo o rótulo renderizado já é outro.
+    assert executar_cli(raiz_antiga, "--check", "--data", "2020-02-01").returncode == 1
+    # A mesma frase fora do bloco gerado é prosa do documento e não disputa a data de referência.
+    readme.write_text(gerado + "\nTabelas geradas em 2019-12-31.\n", encoding="utf-8")
+    assert executar_cli(raiz_antiga, "--check").returncode == 0
     readme.write_text(gerado.replace("| Funcionando |", "| Degradado |"), encoding="utf-8")
     resultado = executar_cli(raiz_antiga, "--check")
     assert resultado.returncode == 1
