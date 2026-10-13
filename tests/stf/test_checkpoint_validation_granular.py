@@ -32,8 +32,8 @@ def tentativa(checkpoint, identificadores=("a", "b"), concluida=True):
         ({"missing": True, "lower": "2020-01-01"}, "Residual"),
         ({"missing": True, "upper": "2020-01-01"}, "Residual"),
         ({"missing": True, "children": [Window()]}, "Residual"),
-        ({"completed_at": "fim"}, "contagens diferentes"),
-        ({"completed_at": "fim", "total_before": 1, "total_after": 2}, "contagens diferentes"),
+        ({"completed_at": "fim"}, "Janela concluída com contagens diferentes"),
+        ({"completed_at": "fim", "total_before": 1, "total_after": 2}, "Janela concluída com contagens diferentes"),
         ({"completed_at": "fim", "total_before": 0, "total_after": 0}, "sem tentativa"),
     ],
 )
@@ -58,11 +58,20 @@ def test_identidades_podem_reaparecer_em_tentativas_distintas(checkpoint):
     checkpoint._validate(Window(attempts=[tentativa(checkpoint, concluida=False), tentativa(checkpoint)]))
 
 
+def test_valida_tentativa_em_qualquer_posicao(checkpoint):
+    do_meio = tentativa(checkpoint, concluida=False)
+    do_meio.pages[1].number = 1
+    janela = Window(attempts=[tentativa(checkpoint, concluida=False), do_meio, tentativa(checkpoint)])
+    with pytest.raises(ValueError, match="Páginas duplicadas"):
+        checkpoint._validate(janela)
+
+
 @pytest.mark.parametrize("concluida", [False, True])
 def test_janela_exige_ultima_tentativa_concluida_e_contagem_igual(checkpoint, concluida):
+    # Só a primeira tentativa tem o total da janela: a comparação precisa olhar a última.
     janela = Window(
         completed_at="fim", total_before=3, total_after=3,
-        attempts=[tentativa(checkpoint), tentativa(checkpoint, concluida=concluida)],
+        attempts=[tentativa(checkpoint, ("a", "b", "c")), tentativa(checkpoint, concluida=concluida)],
     )
     mensagem = "Janela e tentativa" if concluida else "sem tentativa concluída"
     with pytest.raises(ValueError, match=mensagem):
@@ -70,18 +79,19 @@ def test_janela_exige_ultima_tentativa_concluida_e_contagem_igual(checkpoint, co
 
 
 @pytest.mark.parametrize(
-    ("campo", "valor", "mensagem"),
+    ("problema", "mensagem"),
     [
-        ("number", 2, "contagens ou páginas inconsistentes"),
-        ("count", 0, "Página de checkpoint incompleta"),
+        ("numero", "contagens ou páginas inconsistentes"),
+        ("contagem", "Página de checkpoint incompleta"),
     ],
     ids=["numero", "contagem"],
 )
-def test_tentativa_concluida_confere_numero_e_contagem_de_cada_pagina(checkpoint, campo, valor, mensagem):
-    # Com páginas explícitas a conferência de páginas faltantes não roda, então só o descritor da página denuncia.
-    checkpoint.manifest.identity["pages"] = [1]
+def test_tentativa_concluida_confere_numero_e_contagem_de_cada_pagina(checkpoint, problema, mensagem):
     coleta = tentativa(checkpoint, ("a",))
-    setattr(coleta.pages[0], campo, valor)
+    if problema == "numero":
+        coleta.pages[0].number = 2
+    else:
+        coleta.pages[0] = checkpoint.page([], 1)
     with pytest.raises(ValueError, match=mensagem):
         checkpoint._validate(Window(attempts=[coleta]))
 
@@ -128,4 +138,35 @@ def test_valida_particao_concluida_e_descendentes(checkpoint, problema):
         with pytest.raises(ValueError, match=mensagens[problema]):
             checkpoint._validate(janela)
     else:
+        checkpoint._validate(janela)
+
+
+@pytest.mark.parametrize(
+    "par", ["tentativas_antes_das_filhas", "filhas_antes_da_conclusao", "tentativa_antes_das_faltantes"],
+)
+def test_violacoes_simultaneas_seguem_a_ordem_das_conferencias(checkpoint, par):
+    # Cada janela viola mais de uma invariante, e vale a mensagem da conferência que roda primeiro.
+    esquerda = Window(
+        lower="2020-01-01", upper="2020-01-01", completed_at="fim",
+        total_before=1, total_after=1, attempts=[tentativa(checkpoint, ("a",))],
+    )
+    invertida = Window(
+        lower="2020-01-02", upper="2020-01-01", completed_at="fim",
+        total_before=1, total_after=1, attempts=[tentativa(checkpoint, ("b",))],
+    )
+    mensagens = {
+        "tentativas_antes_das_filhas": "Páginas duplicadas", "filhas_antes_da_conclusao": "invertido",
+        "tentativa_antes_das_faltantes": "contagens ou páginas inconsistentes",
+    }
+    if par == "tentativas_antes_das_filhas":
+        duplicada = tentativa(checkpoint, concluida=False)
+        duplicada.pages[1].number = 1
+        janela = Window(total_before=2, children=[esquerda, invertida], attempts=[duplicada])
+    elif par == "filhas_antes_da_conclusao":
+        janela = Window(total_before=3, total_after=3, completed_at="fim", children=[esquerda, invertida])
+    else:
+        incoerente = tentativa(checkpoint, ("a",))
+        incoerente.total_before = 2
+        janela = Window(attempts=[incoerente])
+    with pytest.raises(ValueError, match=mensagens[par]):
         checkpoint._validate(janela)
