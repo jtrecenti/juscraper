@@ -2,6 +2,7 @@
 
 [![PyPI version](https://badge.fury.io/py/juscraper.svg)](https://badge.fury.io/py/juscraper)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Testes](https://github.com/jtrecenti/juscraper/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/jtrecenti/juscraper/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Documentation](https://img.shields.io/badge/docs-available-brightgreen.svg)](https://jtrecenti.github.io/juscraper/)
 

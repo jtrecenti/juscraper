@@ -87,6 +87,14 @@ As seções a seguir são notas internas para quem contribui com novos raspadore
 
 `uv run pytest` exclui integração por padrão. Para executar todas as camadas, inclusive rede, usar `uv run pytest -m ""`.
 
+### CI da suíte offline
+
+O workflow `Testes` (`.github/workflows/tests.yml`) roda `uv run pytest` em todo PR e em pushes para `main`, com uma perna por versão de Python da matriz declarada no próprio arquivo. A integração fica de fora pelo `-m 'not integration'` de `addopts`, então nenhuma perna acessa tribunal. O job `Testes obrigatórios` reúne o resultado de todas as pernas e é o nome a exigir na proteção da `main`.
+
+O workflow resolve as dependências a cada execução, sem lock versionado. Como `filterwarnings = ["error"]` transforma aviso em falha, uma versão nova de dependência pode deixar o workflow vermelho sem mudança no repositório.
+
+A perna marcada com `cobertura` na matriz mede a cobertura e publica o total e a tabela por arquivo no resumo da execução. Não há limiar: o número serve de referência para decidir um piso depois (#101).
+
 ### Pirâmide de testes
 
 | Camada | Sufixo do arquivo | Marker | Quando construir |
