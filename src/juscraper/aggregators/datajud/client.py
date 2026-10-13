@@ -127,15 +127,20 @@ def _next_search_after(
 
 
 def _numero_positivo(valor: Any) -> bool:
-    # ``isfinite`` barra ``inf``, que passaria em ``> 0`` e faria o ``requests``
-    # levantar ``OverflowError`` só na hora da requisição.
     if isinstance(valor, bool) or not isinstance(valor, (int, float)):
         return False
-    return math.isfinite(valor) and valor > 0
+    # ``isfinite`` barra ``inf``, que passaria em ``> 0`` e faria o ``requests``
+    # levantar ``OverflowError`` só na hora da requisição. O próprio
+    # ``isfinite`` levanta ``OverflowError`` para inteiro que não cabe em
+    # ``float``, e esse valor é recusado do mesmo jeito.
+    try:
+        return math.isfinite(valor) and valor > 0
+    except OverflowError:
+        return False
 
 
 def _timeout_valido(timeout: Any) -> bool:
-    """Número positivo ou par ``(conexão, leitura)`` de positivos, como o ``requests`` aceita.
+    """Número positivo e finito, ou par ``(conexão, leitura)`` deles, como o ``requests`` aceita.
 
     ``None`` fica de fora: no ``requests`` ele desliga o limite, e uma consulta
     pesada ao DataJud ficaria esperando indefinidamente.
@@ -225,7 +230,7 @@ class DatajudScraper(HTTPScraper):
                 :meth:`listar_processos` e :meth:`contar_processos`. Só o
                 campo ``timeout`` é aceito (default 60 s), como em
                 ``politica={"busca": {"timeout": 180}}``. O valor é um
-                número positivo de segundos ou o par ``(conexão, leitura)``;
+                número positivo e finito de segundos ou o par ``(conexão, leitura)``;
                 ``None``, que esperaria indefinidamente, é recusado.
                 Consultas grandes podem passar de 60 s já na primeira página.
 
@@ -280,7 +285,7 @@ class DatajudScraper(HTTPScraper):
             if "timeout" in ajuste and not _timeout_valido(ajuste["timeout"]):
                 raise ValueError(
                     f"timeout inválido em politica={{{nome!r}: ...}}: {ajuste['timeout']!r}. "
-                    "Use um número positivo de segundos ou o par (conexão, leitura)."
+                    "Use um número positivo e finito de segundos ou o par (conexão, leitura)."
                 )
         cls._merge_politica(politica)
 

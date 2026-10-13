@@ -92,7 +92,15 @@ def test_politica_com_campo_sem_efeito_no_datajud_levanta(ajuste):
 @pytest.mark.parametrize(
     "timeout",
     # ``inf`` é positivo, mas o ``requests`` levanta ``OverflowError`` ao usá-lo.
-    ["abc", -1, 0, True, None, [5], [5, -1], (5, "x"), float("inf"), float("nan"), (5, float("inf"))],
+    # ``10**400`` não cabe em ``float``: sem tratamento, a própria validação
+    # levantaria ``OverflowError`` em vez de ``ValueError``.
+    [
+        "abc", -1, 0, True, None, [5], [5, -1], (5, "x"),
+        float("inf"), float("nan"), (5, float("inf")),
+        pytest.param(10**400, id="10**400"),
+        pytest.param(-10**400, id="-10**400"),
+        pytest.param((5, 10**400), id="par-com-10**400"),
+    ],
 )
 def test_politica_com_timeout_invalido_levanta(timeout):
     with pytest.raises(ValueError, match="timeout inválido"):
@@ -114,6 +122,14 @@ def test_politica_recusada_nao_cria_diretorio_temporario(mocker, politica):
     with pytest.raises(ValueError):
         jus.scraper("datajud", politica=politica)
     mkdtemp.assert_not_called()
+
+
+@pytest.mark.parametrize("ajuste", ["abc", 5, None, [("timeout", 90)]])
+def test_politica_com_ajuste_que_nao_e_dict_levanta(ajuste):
+    # Sem pular o ajuste que não é dict, a checagem de campos itera o valor:
+    # ``"abc"`` viraria "recebido ['a', 'b', 'c']" e ``5`` viraria ``TypeError``.
+    with pytest.raises(ValueError, match="deve ser um dict de campos"):
+        jus.scraper("datajud", politica={"busca": ajuste})
 
 
 @pytest.mark.parametrize(
