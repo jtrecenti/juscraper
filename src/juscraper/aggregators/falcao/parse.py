@@ -72,7 +72,7 @@ def _chave_precedente(doc: dict[str, Any]) -> str | None:
     e com ``idTema`` (precedentes BANJUR) usa ``{tribunal}-idTema{idTema}``;
     esse ramo vem antes do de ``tipo``/``numero``, que nos registros BANJUR
     observados chegam nulos. Nos demais, sem ``tipo`` ou ``numero``, a chave
-    cai para ``{tribunal}-id{id}``.
+    cai para ``{tribunal}-id{id}``, ou ``None`` quando também falta ``id``.
     """
     tribunal = doc.get("tribunal") or "?"
     tipo = doc.get("tipo")
