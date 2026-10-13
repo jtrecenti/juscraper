@@ -89,7 +89,11 @@ def test_politica_com_campo_sem_efeito_no_datajud_levanta(ajuste):
         jus.scraper("datajud", politica={"busca": ajuste})
 
 
-@pytest.mark.parametrize("timeout", ["abc", -1, 0, True, None, [5], [5, -1], (5, "x")])
+@pytest.mark.parametrize(
+    "timeout",
+    # ``inf`` é positivo, mas o ``requests`` levanta ``OverflowError`` ao usá-lo.
+    ["abc", -1, 0, True, None, [5], [5, -1], (5, "x"), float("inf"), float("nan"), (5, float("inf"))],
+)
 def test_politica_com_timeout_invalido_levanta(timeout):
     with pytest.raises(ValueError, match="timeout inválido"):
         jus.scraper("datajud", politica={"busca": {"timeout": timeout}})
@@ -112,9 +116,15 @@ def test_politica_recusada_nao_cria_diretorio_temporario(mocker, politica):
     mkdtemp.assert_not_called()
 
 
-def test_politica_com_perfil_desconhecido_levanta():
+@pytest.mark.parametrize(
+    "ajuste",
+    # Com campo recusado ou ``timeout`` inválido, o erro ainda é o do perfil:
+    # a mensagem de campo citaria um perfil que o DataJud não declara.
+    [{"timeout": 90}, {"max_retries": 5}, {"timeout": -1}],
+)
+def test_politica_com_perfil_desconhecido_levanta(ajuste):
     with pytest.raises(ValueError, match="Perfil HTTP desconhecido"):
-        jus.scraper("datajud", politica={"listagem": {"timeout": 90}})
+        jus.scraper("datajud", politica={"listagem": ajuste})
 
 
 # ---------------------------------------------------------------------------

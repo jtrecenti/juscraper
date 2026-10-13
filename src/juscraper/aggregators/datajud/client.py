@@ -2,6 +2,7 @@
 Orchestrates the flow for DATAJUD (user entry point) - API BASED
 """
 import logging
+import math
 import tempfile
 import time
 import warnings
@@ -126,7 +127,11 @@ def _next_search_after(
 
 
 def _numero_positivo(valor: Any) -> bool:
-    return isinstance(valor, (int, float)) and not isinstance(valor, bool) and valor > 0
+    # ``isfinite`` barra ``inf``, que passaria em ``> 0`` e faria o ``requests``
+    # levantar ``OverflowError`` só na hora da requisição.
+    if isinstance(valor, bool) or not isinstance(valor, (int, float)):
+        return False
+    return math.isfinite(valor) and valor > 0
 
 
 def _timeout_valido(timeout: Any) -> bool:
@@ -259,9 +264,11 @@ class DatajudScraper(HTTPScraper):
         Perfil desconhecido e ajuste que não é dict ficam com a mensagem do
         core, via ``_merge_politica``, chamado aqui só depois da checagem de
         campos para que ``max_retries`` e afins recebam a explicação do DataJud.
+        O perfil desconhecido é pulado mesmo com campo recusado: a mensagem
+        de campo citaria um perfil que o raspador não declara.
         """
         for nome, ajuste in (politica or {}).items():
-            if not isinstance(ajuste, Mapping):
+            if nome not in cls.perfis_http or not isinstance(ajuste, Mapping):
                 continue
             nao_suportados = set(ajuste) - cls.CAMPOS_POLITICA_SUPORTADOS
             if nao_suportados:
