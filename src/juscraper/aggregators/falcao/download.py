@@ -118,8 +118,8 @@ def verificar_resposta(resp: requests.Response) -> None:
         if espera > _ESPERA_MAXIMA_RETRY:
             horas, resto = divmod(espera, 3600)
             raise requests.HTTPError(
-                "O Falcao bloqueou este IP por excesso de requisicoes (HTTP 429). "
-                f"Liberacao em {horas}h{resto // 60:02d}min "
+                "O Falcao bloqueou este IP por excesso de requisições (HTTP 429). "
+                f"Liberação em {horas}h{resto // 60:02d}min "
                 f"(x-rate-limit-retry-after-seconds={espera}). Aguarde a liberação "
                 "antes de tentar outra busca; aumentar sleep_time não remove o bloqueio ativo.",
                 response=resp,

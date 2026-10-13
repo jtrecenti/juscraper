@@ -469,7 +469,7 @@ def test_429_de_horas_nao_e_retentado(falcao):
         responses.GET, SEARCH_URL, status=429, json={"userMessage": "Too Many Requests"},
         headers={"x-rate-limit-retry-after-seconds": "20880"},
     )
-    with pytest.raises(requests.HTTPError, match="429"):
+    with pytest.raises(requests.HTTPError, match=r"requisições \(HTTP 429\)\. Liberação em 5h48min"):
         falcao.listar_decisoes("dano moral", paginas=1)
     assert len(responses.calls) == 1
 
