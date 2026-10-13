@@ -193,10 +193,13 @@ class TRF3Scraper(HTTPScraper):
     ) -> list[list[str]]:
         """Grava o PDF de cada documento em ``<base_dir>/<cnj>/<id do documento>.pdf``.
 
-        Falha numa peça vira aviso no log e as demais seguem; bloqueio do
-        Akamai interrompe, porque vale para a sessão inteira. O ``id`` de
-        cada documento vem do servidor e vira nome de arquivo: documento sem
-        ``id`` ou com ``id`` fora do alfabeto de :func:`token_valido` é pulado
+        Falha ao baixar uma peça vira aviso no log e as demais seguem.
+        Bloqueio do Akamai interrompe, porque vale para a sessão inteira, e
+        erro ao gravar no disco sobe, porque vale para o lote inteiro. Lista
+        de documentos fora do formato esperado vira aviso e o processo fica
+        sem peças, sem derrubar o lote. O ``id`` de cada documento vem do
+        servidor e vira nome de arquivo: documento sem ``id`` ou com ``id``
+        que :func:`token_valido` recusa (alfabeto ou comprimento) é pulado
         com aviso antes de qualquer requisição, e o caminho final ainda é
         conferido contra o diretório do processo.
         """
@@ -205,10 +208,18 @@ class TRF3Scraper(HTTPScraper):
             if bruto is None:
                 results.append([])
                 continue
-            # ``baixar_processo`` já recusou ``idProcesso`` inválido, e
-            # ``baixar_documento`` confere de novo antes de montar a URL.
-            id_processo = bruto["busca"]["idProcesso"]
-            documentos = [doc for pagina in bruto.get("documentos") or [] for doc in pagina.get("result") or []]
+            # ``_parse`` já transformou o processo com envelope malformado em
+            # linha só com ``id_cnj``; sem este ``try`` o mesmo envelope
+            # levantaria aqui e a chamada perderia o DataFrame do lote inteiro.
+            try:
+                # ``baixar_processo`` já recusou ``idProcesso`` inválido, e
+                # ``baixar_documento`` confere de novo antes de montar a URL.
+                id_processo = bruto["busca"]["idProcesso"]
+                documentos = [doc for pagina in bruto.get("documentos") or [] for doc in pagina.get("result") or []]
+            except Exception as exc:  # noqa: BLE001 (resiliência por item)
+                logger.warning("Peças do %s puladas: documentos fora do formato esperado: %s", cnj, exc)
+                results.append([])
+                continue
             proc_dir = Path(base_dir) / cnj
             proc_dir.mkdir(parents=True, exist_ok=True)
             paths: list[str] = []
@@ -242,11 +253,12 @@ class TRF3Scraper(HTTPScraper):
     def cpopg_download(self, id_cnj: str | list[str], **kwargs: Any) -> list[dict[str, Any] | None]:
         """Baixa os envelopes JSON de 1º grau de cada CNJ, sem parsear.
 
-        Aceita os mesmos argumentos de :meth:`cpopg`, menos o download das
-        peças. Devolve uma lista alinhada à entrada: um dicionário por
-        processo (chaves ``busca``, ``dados`` e uma por recurso paginado) ou
-        ``None`` para o CNJ que a consulta pública não devolveu ou cuja
-        consulta falhou.
+        Aceita os mesmos argumentos de :meth:`cpopg`. ``download_pecas`` e
+        ``diretorio`` passam pela validação e são ignorados, porque este
+        método não baixa peças. Devolve uma lista alinhada à entrada: um
+        dicionário por processo (chaves ``busca``, ``dados`` e uma por recurso
+        paginado) ou ``None`` para o CNJ que a consulta pública não devolveu
+        ou cuja consulta falhou.
         """
         cnjs = self._coerce_id_cnj(self.INPUT_CPOPG, "cpopg_download", id_cnj, **kwargs)
         return self._download(cnjs, self.BASE_URL, "cpopg")
@@ -335,7 +347,9 @@ class TRF3Scraper(HTTPScraper):
         """Baixa os envelopes JSON de 2º grau de cada CNJ, sem parsear.
 
         Mesmo retorno de :meth:`cpopg_download`, consultando a aplicação de
-        2º grau. Os argumentos são os de :meth:`cposg`.
+        2º grau. Os argumentos são os de :meth:`cposg`; ``download_pecas`` e
+        ``diretorio`` passam pela validação e são ignorados, porque este
+        método não baixa peças.
         """
         cnjs = self._coerce_id_cnj(self.INPUT_CPOSG, "cposg_download", id_cnj, **kwargs)
         return self._download(cnjs, self.BASE_URL_2G, "cposg")
@@ -355,7 +369,10 @@ class TRF3Scraper(HTTPScraper):
 
         O CNJ do recurso costuma ser o mesmo do processo de origem; a consulta
         de 2º grau devolve o recurso (apelação, agravo, remessa) que tramita
-        no tribunal com esse número.
+        no tribunal com esse número. Se a busca devolver mais de um processo
+        com o número pedido, só o primeiro é consultado, e o logger
+        ``juscraper.trf3`` avisa quantos a busca devolveu; nas consultas
+        observadas a busca devolveu no máximo um.
 
         Args:
             id_cnj: CNJ único ou lista, com ou sem máscara.

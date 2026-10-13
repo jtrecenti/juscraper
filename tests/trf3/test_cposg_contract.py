@@ -10,7 +10,7 @@ import pytest
 import responses
 
 import juscraper as jus
-from juscraper.courts.trf3.download import BASE_URL_1G, BASE_URL_2G
+from juscraper.courts.trf3.download import BASE_URL_1G, BASE_URL_2G, busca_url
 from juscraper.courts.trf3.schemas import OutputCposgTRF3
 from tests.trf3._api import carregar, registrar_busca, registrar_processo
 
@@ -89,3 +89,21 @@ def test_cposg_rejeita_kwarg_desconhecido() -> None:
     scraper = jus.scraper("trf3", sleep_time=0)
     with pytest.raises(TypeError, match=r"cposg got unexpected keyword"):
         scraper.cposg(CNJ_APELACAO, grau=2)
+
+
+@responses.activate
+def test_cposg_dois_processos_com_o_mesmo_numero_consulta_o_primeiro_e_avisa(caplog) -> None:
+    """Busca com dois processos do número pedido: o primeiro é consultado e o descarte do outro vira aviso."""
+    busca = carregar("cposg", "normal_busca.json")
+    primeiro = busca["result"][0]
+    busca["result"] = [primeiro, {**primeiro, "idProcesso": "tokenDoSegundoProcesso"}]
+    # Registrada antes da busca do cenário, é a que o ``responses`` devolve.
+    responses.add(responses.GET, busca_url(BASE_URL_2G), json=busca)
+    registrar_processo(BASE_URL_2G, "cposg", "normal")
+
+    with caplog.at_level("WARNING", logger="juscraper.trf3"):
+        df = jus.scraper("trf3", sleep_time=0).cposg(CNJ_APELACAO)
+
+    assert df.iloc[0]["classe"] == "APELAÇÃO CÍVEL (198)"
+    assert not any("tokenDoSegundoProcesso" in c.request.url for c in responses.calls)
+    assert "devolveu 2 processos com esse número" in caplog.text

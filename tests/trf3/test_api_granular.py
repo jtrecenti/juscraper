@@ -95,3 +95,10 @@ def test_token_valido_aceita_os_tokens_dos_samples() -> None:
 @pytest.mark.parametrize("valor", ["", "../x", "/x", "a.b", "a/b", "a b", "abc\n", "a=", None, 123])
 def test_token_valido_recusa_o_que_nao_e_base64_de_url(valor: object) -> None:
     assert not token_valido(valor)
+
+
+def test_token_valido_limita_o_comprimento() -> None:
+    """O teto vem do nome de arquivo: ``<token>.pdf`` não pode passar de 255 bytes."""
+    assert token_valido("A" * 200)
+    assert not token_valido("A" * 201)
+    assert len(f"{'A' * 200}.pdf".encode()) <= 255

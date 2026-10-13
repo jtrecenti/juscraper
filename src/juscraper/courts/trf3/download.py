@@ -52,8 +52,11 @@ DOCUMENTOS_PATH = "/v1/documentos"
 # observado nos samples: base64 para URL, sem ``=``. Os dois tokens vêm do
 # servidor e entram em URL; o do documento vira também nome de arquivo. Aceitar
 # ``/`` ou ``.`` deixaria uma resposta com ``../`` ou caminho absoluto gravar
-# fora do diretório do processo ou desviar a requisição para outra rota.
-_TOKEN_RE = re.compile(r"[A-Za-z0-9_-]+")
+# fora do diretório do processo ou desviar a requisição para outra rota. O
+# teto de comprimento existe pelo nome de arquivo: os tokens observados têm de
+# 64 a 68 caracteres, e ``<token>.pdf`` acima de 255 bytes é recusado pelo
+# sistema de arquivos na hora de gravar, depois de a peça já ter sido baixada.
+_TOKEN_RE = re.compile(r"[A-Za-z0-9_-]{1,200}")
 
 
 def token_valido(valor: object) -> TypeGuard[str]:
@@ -202,18 +205,26 @@ def baixar_recurso_paginado(
     return paginas
 
 
-def _escolher_processo(busca: dict[str, Any], numero_processo: str) -> dict[str, Any] | None:
+def _escolher_processo(busca: dict[str, Any], numero_processo: str, tribunal: str) -> dict[str, Any] | None:
     """Escolhe, entre os resultados da busca, o processo com o número pedido.
 
     A busca por número devolve no máximo um processo nos casos observados; a
     conferência pelo número evita aceitar um resultado de outro processo se a
-    API passar a fazer busca aproximada.
+    API passar a fazer busca aproximada. Se mais de um resultado tiver o
+    número pedido, fica o primeiro e os demais são descartados com aviso no
+    log: a saída tem uma linha por CNJ, e o aviso é o que permite notar que a
+    consulta pública tinha mais de um processo para aquele número.
     """
     resultados: list[dict[str, Any]] = busca.get("result") or []
-    for item in resultados:
-        if item.get("numeroProcesso") == numero_processo:
-            return item
-    return None
+    iguais = [item for item in resultados if item.get("numeroProcesso") == numero_processo]
+    if len(iguais) > 1:
+        logger.warning(
+            "%s: a busca de %s devolveu %d processos com esse número; só o primeiro é consultado",
+            tribunal,
+            numero_processo,
+            len(iguais),
+        )
+    return iguais[0] if iguais else None
 
 
 def baixar_processo(
@@ -241,7 +252,7 @@ def baixar_processo(
             :func:`token_valido`; nenhuma requisição de detalhe é feita.
     """
     busca = buscar_processo(request_fn, base_url, numero_processo, tribunal)
-    item = _escolher_processo(busca, numero_processo)
+    item = _escolher_processo(busca, numero_processo, tribunal)
     if item is None:
         return None
     id_processo = item.get("idProcesso")

@@ -279,6 +279,23 @@ def test_cpopg_ignora_resultado_de_outro_numero() -> None:
     assert len(responses.calls) == 1
 
 
+@responses.activate
+def test_cpopg_procura_o_numero_pedido_em_todos_os_resultados() -> None:
+    """O processo pedido é achado mesmo quando a busca traz antes um resultado de outro número."""
+    busca = carregar("cpopg", "paginado_busca.json")
+    pedido = busca["result"][0]
+    outro = {**pedido, "numeroProcesso": "5021122-65.2018.4.03.6100", "idProcesso": "tokenDeOutroProcesso"}
+    busca["result"] = [outro, pedido]
+    # Registrada antes da busca do cenário, é a que o ``responses`` devolve.
+    responses.add(responses.GET, busca_url(BASE_URL_1G), json=busca)
+    registrar_processo(BASE_URL_1G, "cpopg", "paginado")
+
+    df = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO)
+
+    assert df.iloc[0]["processo"] == "5003536-21.2025.4.03.6342"
+    assert not any("tokenDeOutroProcesso" in c.request.url for c in responses.calls)
+
+
 @pytest.mark.parametrize("id_processo", ["../../v1/outra", "/abs", "a.b", "", None])
 @responses.activate
 def test_cpopg_id_processo_invalido_vira_erro_do_processo(caplog, id_processo) -> None:
@@ -413,5 +430,7 @@ def test_cpopg_parse_argumentos_ausentes_ou_desconhecidos() -> None:
     scraper = jus.scraper("trf3", sleep_time=0)
     with pytest.raises(TypeError, match="exige brutos e id_cnj_list"):
         scraper.cpopg_parse(id_cnj_list=[CNJ_PAGINADO])
+    with pytest.raises(TypeError, match="exige brutos e id_cnj_list"):
+        scraper.cpopg_parse([None])
     with pytest.raises(TypeError, match="unexpected keyword"):
         scraper.cpopg_parse([None], [CNJ_PAGINADO], formato="html")

@@ -159,13 +159,14 @@ def _arquivos(raiz: Path) -> list[Path]:
     return sorted(p for p in raiz.rglob("*") if p.is_file())
 
 
-@pytest.mark.parametrize("id_malicioso", ["../../fora", "/tmp/absoluto", "..", "a/b", "abc.pdf", ""])
+@pytest.mark.parametrize("id_malicioso", ["../../fora", "/tmp/absoluto", "..", "a/b", "abc.pdf", "", "A" * 201])
 @responses.activate
 def test_download_pecas_pula_id_de_documento_fora_do_alfabeto(tmp_path, caplog, mocker, id_malicioso) -> None:
-    """Id com ``/``, ``..`` ou caminho absoluto é pulado antes de montar URL e caminho.
+    """Id com ``/``, ``..``, caminho absoluto ou longo demais é pulado antes de montar URL e caminho.
 
     O id vem do JSON do servidor; sem a validação, ``../../fora`` gravaria fora
-    de ``<diretorio>/<cnj>`` e ``/tmp/absoluto`` gravaria na raiz indicada.
+    de ``<diretorio>/<cnj>``, ``/tmp/absoluto`` gravaria na raiz indicada e um
+    id acima do teto de comprimento seria baixado para falhar na gravação.
     A peça válida do mesmo processo continua sendo baixada.
     """
     from juscraper.courts.trf3 import client
@@ -225,6 +226,36 @@ def test_download_pecas_confere_que_o_arquivo_fica_no_diretorio_do_processo(tmp_
     assert _arquivos(tmp_path) == []
     baixar.assert_not_called()
     assert "sai do diretório do processo" in caplog.text
+
+
+@responses.activate
+def test_download_pecas_documentos_fora_do_formato_nao_derruba_a_chamada(tmp_path, caplog) -> None:
+    """``result`` de ``/documentos`` que não é lista deixa o processo sem peças e a chamada devolve o DataFrame."""
+    (envelope,) = _documentos_com()
+    envelope["result"] = 5
+    registrar_processo(BASE_URL_1G, "cpopg", "paginado", substituir={"documentos": [envelope]})
+
+    with caplog.at_level("WARNING", logger="juscraper.trf3"):
+        df = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO, download_pecas=True, diretorio=str(tmp_path))
+
+    assert df.iloc[0]["id_cnj"] == CNJ_PAGINADO
+    assert df.iloc[0]["pecas"] == []
+    assert _arquivos(tmp_path) == []
+    assert "documentos fora do formato esperado" in caplog.text
+
+
+@responses.activate
+def test_download_pecas_pula_item_que_nao_e_documento(tmp_path) -> None:
+    """Item de ``/documentos`` que não é dicionário é pulado; a peça válida do mesmo processo é gravada."""
+    valido = _doc_real()
+    (envelope,) = _documentos_com(valido)
+    envelope["result"] = ["texto", None, 3, valido]
+    registrar_processo(BASE_URL_1G, "cpopg", "paginado", substituir={"documentos": [envelope]})
+    _registrar_pdf(BASE_URL_1G, "cpopg", "paginado", valido["id"], body=_pdf(), content_type="application/pdf")
+
+    df = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO, download_pecas=True, diretorio=str(tmp_path))
+
+    assert df.iloc[0]["pecas"] == [str(tmp_path / CNJ_PAGINADO / f"{valido['id']}.pdf")]
 
 
 def test_baixar_documento_recusa_token_invalido_sem_requisitar() -> None:
