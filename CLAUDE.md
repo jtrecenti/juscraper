@@ -5,7 +5,7 @@ juscraper é uma biblioteca Python para coletar dados de tribunais e agregadores
 ## Desenvolvimento
 
 - Usar `uv`. Para preparar o ambiente de desenvolvimento: `uv sync --extra dev` (inclui instalação editável). Testes devem importar o pacote instalado, sem alterar `sys.path`.
-- Versões suportadas e configuração de lint ficam em `pyproject.toml`; os hooks ficam em `.pre-commit-config.yaml`.
+- Versões suportadas e regras de lint ficam em `pyproject.toml`; as dispensas temporárias por arquivo ficam em `ruff.toml`; os hooks ficam em `.pre-commit-config.yaml`.
 - Antes de concluir uma alteração, executar os testes afetados e `uv run pre-commit run --files <arquivos alterados>`. Para mudanças de API/schema, incluir `tests/schemas/`.
 - Ao investigar complexidade de parser, consultar `CONTRIBUTING.md` > **Complexidade de código (lizard + complexipy)**. As duas métricas são complementares e rodam sob demanda.
 
