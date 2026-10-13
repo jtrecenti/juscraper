@@ -7,10 +7,16 @@ Run from repo root::
 Writes to ``tests/trf3/samples/cjsg/``. Separate from ``trf3.py`` (cpopg),
 because the jurisprudence portal is a different system from the PJe.
 
-Every scenario goes through :func:`cjsg_download_manager` with the payload
-built by :func:`build_cjsg_payload`, the same path as ``TRF3Scraper.cjsg``, so
-drift between the scraper and the portal breaks this script first. Each saved
-file is one page of the "lista resumida" exactly as the portal served it.
+Every result page comes from ``TRF3Scraper.cjsg_download``, the public method
+behind ``cjsg``, so drift between the scraper and the portal breaks this
+script first. Each saved file is one page of the "lista resumida" as the
+scraper decoded it, written back as UTF-8.
+
+The opening tab is the exception: ``cjsg_download`` reads it only to open the
+session and does not return its body. The script fetches it with a session of
+its own, built by the scraper's :func:`build_cjsg_session` and sent to the
+scraper's :data:`INDEX_URL` with the timeout of the scraper's HTTP profile.
+That request has no retry: if it times out, run the script again.
 
 Scenarios:
 
@@ -27,47 +33,41 @@ Scenarios:
 """
 from __future__ import annotations
 
+import logging
 import time
+from pathlib import Path
 
 import juscraper as jus
-from juscraper.courts.trf3.cjsg_download import INDEX_URL, build_cjsg_payload, build_cjsg_session, cjsg_download_manager
+from juscraper.courts.trf3.cjsg_download import INDEX_URL, build_cjsg_session
 
 from ._util import dump, samples_dir_for
 
-SEMESTRE = {"data_inicial": "01/01/2026", "data_final": "30/06/2026"}
+logger = logging.getLogger(__name__)
+
+SEMESTRE = {"data_julgamento_inicio": "01/01/2026", "data_julgamento_fim": "30/06/2026"}
 
 
-def _capture(
-    scraper, dest, filenames: dict[int, str], *, base: str = "acordaos", pesquisa: str = "", **filtros,
-) -> None:
-    payload = build_cjsg_payload(pesquisa, base=base, **filtros)
+def _capture(scraper, dest: Path, filenames: dict[int, str], **busca) -> None:
     paginas = sorted(filenames)
-    htmls = cjsg_download_manager(
-        payload,
-        base=base,
-        paginas=paginas,
-        tamanho_pagina=10,
-        request_fn=scraper._request_with_retry,  # pylint: disable=protected-access
-        session=build_cjsg_session(),
-        sleep_time=1.0,
-        perfil="cjsg",
-    )
+    htmls = scraper.cjsg_download(paginas=paginas, **busca)
     for pagina, html in zip(paginas, htmls, strict=True):
         dump(dest / filenames[pagina], html.encode("utf-8"))
-        print(f"[trf3 cjsg] wrote {filenames[pagina]}")
+        logger.info("[trf3 cjsg] wrote %s", filenames[pagina])
     time.sleep(1.0)
 
 
 def main() -> None:
     """Capture cjsg HTML samples for TRF3."""
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     dest = samples_dir_for("trf3", "cjsg")
-    scraper = jus.scraper("trf3")
+    scraper = jus.scraper("trf3", sleep_time=1.0)
 
-    index = scraper._request_with_retry(  # pylint: disable=protected-access
-        "GET", INDEX_URL.format(indice=0), session=build_cjsg_session(), perfil="cjsg"
+    index = build_cjsg_session().get(
+        INDEX_URL.format(indice=0), timeout=scraper.perfis_http["cjsg"].timeout,
     )
+    index.raise_for_status()
     dump(dest / "index_acordaos.html", index.content)
-    print("[trf3 cjsg] wrote index_acordaos.html")
+    logger.info("[trf3 cjsg] wrote index_acordaos.html")
 
     _capture(
         scraper, dest,
@@ -80,7 +80,7 @@ def main() -> None:
         _capture(scraper, dest, {1: f"{base}_page_01.html"}, base=base, pesquisa="medicamento", **SEMESTRE)
     _capture(
         scraper, dest, {1: "acordaos_2012.html"},
-        pesquisa="medicamento", data_inicial="01/01/2012", data_final="31/12/2012",
+        pesquisa="medicamento", data_julgamento_inicio="01/01/2012", data_julgamento_fim="31/12/2012",
     )
 
 
