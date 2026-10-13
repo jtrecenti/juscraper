@@ -12,7 +12,7 @@ from tests._helpers import load_sample
 
 
 def test_parse_preserva_valores_colunas_ordem_e_entrada():
-    paginas = json.loads(load_sample("tjes", "cjsg/mixed_pages.json"))
+    paginas = json.loads(load_sample("tjes", "cjsg/parser_edge_cases.json"))
     original = copy.deepcopy(paginas)
 
     resultado = cjsg_parse(paginas)
