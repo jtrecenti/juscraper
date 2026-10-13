@@ -38,6 +38,18 @@ def _primeira_pagina_com(substituto: str, vezes: int = -1) -> str:
     return _primeira_pagina().replace(_LINK_ULTIMA, substituto, vezes)
 
 
+def _paginador_renomeado(html: str) -> str:
+    """Tira os links do alcance de ``ul.pagination``, como numa troca de tema."""
+    assert html.count('class="pagination') == 2
+    return html.replace('class="pagination', 'class="pager')
+
+
+def _rotulo_com_espaco(link: str) -> str:
+    """Põe espaço e quebra de linha em volta do ``»``, como um template reindentado."""
+    assert link.count("&raquo;") == 1
+    return link.replace("&raquo;", "\n  &raquo; \n")
+
+
 @pytest.mark.parametrize(
     ("sample_name", "expected"),
     [
@@ -57,7 +69,7 @@ def test_get_total_pages_samples(sample_name: str, expected: int):
 @pytest.mark.parametrize(
     "variante",
     [
-        pytest.param(lambda html: html.replace('class="pagination', 'class="pager'), id="ul-pagination-renomeado"),
+        pytest.param(_paginador_renomeado, id="ul-pagination-renomeado"),
         pytest.param(
             # Tema padrão do Kaminari: o » vem como "Last »" dentro de span.last.
             lambda html: html.replace(
@@ -71,7 +83,7 @@ def test_get_total_pages_samples(sample_name: str, expected: int):
         pytest.param(lambda html: html.replace(_LINK_ULTIMA, "", 1), id="um-paginador-sem-link-ultima"),
         pytest.param(lambda html: html.replace('class="pb-3"', 'class="mb-3"'), id="div-da-contagem-renomeado"),
         pytest.param(
-            lambda html: html.replace(_LINK_ULTIMA, _LINK_ULTIMA.replace("&raquo;", "\n  &raquo; \n")),
+            lambda html: html.replace(_LINK_ULTIMA, _rotulo_com_espaco(_LINK_ULTIMA)),
             id="espaco-em-volta-do-link",
         ),
         pytest.param(lambda html: html.replace(_LINK_ULTIMA, _LINK_ULTIMA + _LINK_ULTIMA), id="dois-links-iguais"),
@@ -92,6 +104,19 @@ def test_get_total_pages_markup_alterado_continua_lendo_a_contagem(variante):
             lambda: _primeira_pagina_com(_LINK_ULTIMA + _link_ultima("7")),
             r"aponta \[7\]",
             id="dois-links-discordantes-no-mesmo-paginador",
+        ),
+        pytest.param(
+            # Com espaço em volta, o rótulo ainda é »: só o 7 prova que o link foi lido,
+            # porque o 5515 do caso análogo de markup alterado sai da contagem.
+            lambda: _primeira_pagina_com(_rotulo_com_espaco(_link_ultima("7"))),
+            r"aponta \[7\]",
+            id="link-discordante-com-espaco-em-volta",
+        ),
+        pytest.param(
+            # Fora de ``ul.pagination`` o » continua na conferência.
+            lambda: _paginador_renomeado(_primeira_pagina_com(_link_ultima("7"))),
+            r"aponta \[7\]",
+            id="link-discordante-com-paginador-renomeado",
         ),
         pytest.param(
             # » com page=1 e › apontando para a página 2: markup inconsistente.
@@ -117,7 +142,7 @@ def test_get_total_pages_markup_alterado_continua_lendo_a_contagem(variante):
             id="sem-contagem",
         ),
         pytest.param(
-            lambda: _primeira_pagina().replace(_CONTAGEM, "").replace('class="pagination', 'class="pager'),
+            lambda: _paginador_renomeado(_primeira_pagina().replace(_CONTAGEM, "")),
             "não traz a contagem",
             id="sem-contagem-e-paginador-renomeado",
         ),
@@ -155,24 +180,51 @@ def test_get_total_pages_contagem_em_ementa_nao_vira_contagem_no_fallback():
         _get_total_pages(html)
 
 
-def test_get_total_pages_pagina_unica_com_total_na_ementa_continua_um():
-    """O rótulo "Exibindo 5" vence; o "de um total de 40" da ementa fica fora do seletor."""
-    html = _com_texto_na_ementa(_sample("single_page.html"), "de um total de 40 jurisprudência(s)")
+def test_get_total_pages_pagina_unica_com_contagem_inteira_na_ementa_continua_um():
+    """A ementa traz uma contagem que a regex de várias páginas aceita; só o seletor a deixa de fora.
+
+    O contêiner da página também tem a classe ``pb-3`` e vem antes do rótulo.
+    Um seletor que o casasse leria os 40 da ementa e daria 2 páginas.
+    """
+    html = _com_texto_na_ementa(_sample("single_page.html"), "Exibindo 1 - 25 de um total de 40 jurisprudência(s)")
     assert _get_total_pages(html) == 1
 
 
+# Parecido com o marcador, mas sem a caixa nem os dois-pontos dele.
+_EMENTA_PARECIDA = "as diligências restaram sem resultados para a localização de bens"
+# O marcador literal, abrindo o nó de texto da ementa e no meio dele.
+_EMENTA_ABRE_COM_MARCADOR = "Sem resultados para: bens penhoráveis, conforme certidão"
+_EMENTA_MARCADOR_NO_MEIO = "Certidão negativa. Sem resultados para: bens penhoráveis"
+
+
 @pytest.mark.parametrize("sem_link", [False, True], ids=["com-link-ultima", "sem-link-ultima"])
-def test_get_total_pages_sem_resultados_na_ementa_nao_zera_a_contagem(sem_link: bool):
-    """O texto "sem resultados para" no meio de uma ementa não é o marcador de busca vazia."""
-    html = _com_texto_na_ementa(_primeira_pagina(), "as diligências restaram sem resultados para a localização de bens")
+@pytest.mark.parametrize(
+    "texto",
+    [
+        pytest.param(_EMENTA_PARECIDA, id="texto-parecido"),
+        pytest.param(_EMENTA_MARCADOR_NO_MEIO, id="marcador-no-meio"),
+        # A ementa abre com o marcador, e a página tem contagem: a contagem vence.
+        pytest.param(_EMENTA_ABRE_COM_MARCADOR, id="marcador-abre-a-ementa"),
+    ],
+)
+def test_get_total_pages_sem_resultados_na_ementa_nao_zera_a_contagem(texto: str, sem_link: bool):
+    """Com a contagem na página, o marcador de busca vazia numa ementa não é consultado."""
+    html = _com_texto_na_ementa(_primeira_pagina(), texto)
     if sem_link:
         html = html.replace(_LINK_ULTIMA, "")
     assert _get_total_pages(html) == 5515
 
 
-def test_get_total_pages_sem_resultados_na_ementa_sem_contagem_nem_link_levanta():
-    """Sem contagem nem », o marcador no meio de uma ementa não pode virar busca vazia (1 página)."""
+@pytest.mark.parametrize(
+    "texto",
+    [
+        pytest.param(_EMENTA_PARECIDA, id="texto-parecido"),
+        pytest.param(_EMENTA_MARCADOR_NO_MEIO, id="marcador-no-meio"),
+    ],
+)
+def test_get_total_pages_sem_resultados_na_ementa_sem_contagem_nem_link_levanta(texto: str):
+    """Sem contagem nem », só o marcador que abre um nó de texto vale como busca vazia (1 página)."""
     html = _sem_rotulo(_primeira_pagina()).replace(_LINK_ULTIMA, "")
-    html = _com_texto_na_ementa(html, "as diligências restaram sem resultados para a localização de bens")
+    html = _com_texto_na_ementa(html, texto)
     with pytest.raises(ValueError, match="não traz a contagem"):
         _get_total_pages(html)
