@@ -154,3 +154,36 @@ def test_cpopg_with_download_pecas_continues_after_peca_error(tmp_path, caplog) 
     saved = df.iloc[0]["pecas"]
     assert [Path(p).stem for p in saved] == ids[1:]
     assert f"Erro ao baixar peça {ids[0]}" in caplog.text
+
+
+@responses.activate
+def test_cpopg_with_download_pecas_uses_download_path_when_diretorio_omitted(tmp_path) -> None:
+    """Sem ``diretorio``, as peças vão para o ``download_path`` do construtor."""
+    from juscraper.courts._trf.download import extract_documento_urls
+
+    detail = load_sample_bytes("trf1", "cpopg/detail_normal.html")
+    responses.add(
+        responses.GET,
+        LIST_URL,
+        body=load_sample("trf1", "cpopg/form_initial.html"),
+        content_type="text/html; charset=utf-8",
+    )
+    responses.add(
+        responses.POST,
+        LIST_URL,
+        body=load_sample("trf1", "cpopg/search_one_result.html"),
+        content_type="text/xml; charset=utf-8",
+    )
+    responses.add(responses.GET, DETAIL_URL, body=detail, content_type="text/html")
+    doc_body = load_sample_bytes("trf1", "cpopg_pecas/documento_html.html")
+    n_pecas = len(extract_documento_urls(detail.decode("latin-1")))
+    for _ in range(n_pecas):
+        responses.add(responses.GET, DOC_URL, body=doc_body, content_type="text/html")
+
+    df = jus.scraper("trf1", sleep_time=0, download_path=str(tmp_path)).cpopg(
+        "10004080820254013602", download_pecas=True
+    )
+
+    saved = df.iloc[0]["pecas"]
+    assert len(saved) == n_pecas > 0
+    assert all(Path(p).is_file() and Path(p).is_relative_to(tmp_path) for p in saved)

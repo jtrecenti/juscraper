@@ -82,9 +82,10 @@ class TRFConsultaScraper(HTTPScraper):
     def _configure_session(self, session) -> None:
         """Send a browser-realistic header set (overrides the juscraper UA).
 
-        The PJe deployments sit behind an Akamai bot manager that stalls on
-        stripped requests; the Chrome-flavoured headers prime the session
-        predictably.
+        The set was tuned against the Akamai bot manager of TRF3's former JSF
+        portal, which stalled on stripped requests. TRF1 and TRF5 are more
+        lenient, and the Chrome-flavoured headers keep the session priming
+        predictable across the family.
         Mirrors how TJCE customizes its session in the eSAJ family.
         """
         session.headers.update(BROWSER_HEADERS)

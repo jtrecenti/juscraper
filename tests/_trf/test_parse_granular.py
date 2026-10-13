@@ -15,15 +15,23 @@ def _detail(tribunal: str, nome: str) -> str:
     return load_sample_bytes(tribunal, f"cpopg/{nome}").decode("latin-1")
 
 
-def test_documentos_com_prefixo_id_separam_id_data_e_descricao() -> None:
-    """Linha ``ID: 578698643 - 2026-04-29 ... - Despacho`` preenche ``id`` e ``data``."""
+def test_documentos_com_prefixo_id_separam_o_id_e_cortam_a_data_no_primeiro_hifen() -> None:
+    """Linha ``ID: 578698643 - 2026-04-29 12:37:07.255 - Despacho (Despacho)``.
+
+    O ``id`` sai certo. A data não: o separador entre os campos é ``-``, o
+    mesmo caractere da data ISO, então ``data`` fica só com o ano e o resto da
+    data vai para o início de ``descricao``. É limitação conhecida da
+    expressão de ``_trf/parse.py`` para esse ramo, que o TRF1 e o TRF5 não
+    exercitam hoje. O teste fixa a saída atual para que a correção da
+    expressão apareça como mudança deliberada deste teste.
+    """
     documentos = parse_detail(_detail("_trf", "detail_normal.html"))["documentos"]
 
-    assert documentos
-    primeiro = documentos[0]
-    assert primeiro["id"] == "578698643"
-    assert primeiro["data"] is not None and primeiro["data"].startswith("2026")
-    assert "Despacho (Despacho)" in primeiro["descricao"]
+    assert documentos[0] == {
+        "id": "578698643",
+        "data": "2026",
+        "descricao": "04-29 12:37:07.255 - Despacho (Despacho)",
+    }
     assert all(doc["id"] and doc["id"].isdigit() for doc in documentos)
 
 

@@ -62,13 +62,12 @@ def _check_bot_challenge(resp: requests.Response, tribunal: str = "TRF") -> None
     raise BotChallengeBlockedError(tribunal, resp.url, reference=ref)
 
 
-# Browser-realistic header set. The PJe deployments sit behind an Akamai bot
-# manager (``ak_bmsc`` cookie) that closes the connection on stripped
-# requests; the Sec-Fetch-* headers and Accept-Encoding: br are what trip the
-# challenge into returning the page instead of stalling. Tuned on TRF3's former
-# JSF portal; TRF1/TRF5 are more lenient but sending the same headers keeps the
-# session-priming predictable. The TRF3 JSON API client derives its XHR headers
-# from this set.
+# Browser-realistic header set. TRF3's former JSF portal sat behind an Akamai
+# bot manager (``ak_bmsc`` cookie) that closed the connection on stripped
+# requests; the Sec-Fetch-* headers and Accept-Encoding: br are what tripped
+# the challenge into returning the page instead of stalling. TRF1/TRF5 are more
+# lenient but sending the same headers keeps the session-priming predictable.
+# The TRF3 JSON API client derives its XHR headers from this set.
 BROWSER_HEADERS: dict[str, str] = {
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "

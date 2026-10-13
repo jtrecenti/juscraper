@@ -131,7 +131,11 @@ def _parse_documentos(soup: BeautifulSoup) -> list[dict[str, str | None]]:
 
     PJe formats each row as ``ID: <id> - <yyyy-MM-dd HH:MM:SS.fff> - <descricao>``.
     Rows that don't match keep their full text in ``descricao`` so we don't
-    drop data when the format drifts.
+    drop data when the format drifts. Known limitation of the ``ID:`` branch:
+    the field separator is the same hyphen the ISO date uses, so ``data``
+    keeps only the year and the rest of the date lands at the start of
+    ``descricao``. The TRF1 and TRF5 samples list documents without the
+    ``ID:`` prefix and do not reach this branch.
     """
     table = soup.find(
         "table", id=lambda i: bool(i and i.endswith(":processoDocumentoGridTab"))
