@@ -1,0 +1,206 @@
+name: Integração
+
+on:
+  schedule:
+    # Quarta-feira, 03:17 em Brasília. Minuto quebrado porque o início de hora
+    # é o pico de atraso do agendador do GitHub.
+    - cron: "17 6 * * 3"
+  workflow_dispatch:
+    inputs:
+      tribunal:
+        description: "Diretório de tests/ a rodar (ex.: tjsp). Vazio roda tudo."
+        type: string
+        default: ""
+      atualizar_issue:
+        description: "Reescrever a issue de acompanhamento. Só vale com tribunal vazio."
+        type: boolean
+        default: false
+  # Autoteste: roda um tribunal só quando o próprio workflow ou o script do
+  # relatório mudam, e nunca toca a issue. `schedule` e `workflow_dispatch` só
+  # existem depois do merge, então este é o único jeito de exercitar uma
+  # mudança no workflow antes dela entrar na main.
+  pull_request:
+    paths:
+      - .github/workflows/integration.yml
+      - scripts/integration_report.py
+
+permissions:
+  contents: read
+
+env:
+  # O autoteste usa o TJMG porque ele exercita a instalação mais pesada: o
+  # extra `tjmg` traz o solver de captcha e o torch.
+  TRIBUNAL: ${{ github.event_name == 'pull_request' && 'tjmg' || inputs.tribunal }}
+  # A issue só é reescrita com o retrato inteiro. Uma execução de um tribunal
+  # só faria todas as outras falhas "saírem da lista".
+  ATUALIZAR_ISSUE: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.atualizar_issue && inputs.tribunal == '') }}
+
+jobs:
+  calendario:
+    name: Calendário
+    runs-on: ubuntu-latest
+    outputs:
+      rodar: ${{ steps.decidir.outputs.rodar }}
+      data: ${{ steps.decidir.outputs.data }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Decidir se a execução agendada cai no recesso forense
+        id: decidir
+        run: |
+          data="$(TZ=America/Sao_Paulo date +%F)"
+          echo "data=$data" >> "$GITHUB_OUTPUT"
+          python3 scripts/integration_report.py calendario --data "$data" --evento "$GITHUB_EVENT_NAME" | tee -a "$GITHUB_OUTPUT"
+
+  testes:
+    name: Tribunais ao vivo
+    needs: calendario
+    if: needs.calendario.outputs.rodar == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      # Notebooks que só rodam com credencial de gov.br.
+      NOTEBOOKS_COM_CREDENCIAL: "jusbr pdpj"
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Resolver o alvo
+        id: alvo
+        run: |
+          if [ -z "$TRIBUNAL" ]; then
+            testes="tests"
+            notebooks="docs/notebooks"
+          else
+            # O valor vem de quem dispara o workflow e vira caminho: só passa
+            # nome simples de diretório.
+            if ! [[ "$TRIBUNAL" =~ ^[a-z0-9_]+$ ]] || [ ! -d "tests/$TRIBUNAL" ]; then
+              echo "::error::tribunal inválido ou sem diretório em tests/: $TRIBUNAL"
+              exit 1
+            fi
+            testes="tests/$TRIBUNAL"
+            notebooks="docs/notebooks/$TRIBUNAL.ipynb"
+            if [ ! -f "$notebooks" ] || [[ " $NOTEBOOKS_COM_CREDENCIAL " == *" $TRIBUNAL "* ]]; then
+              notebooks=""
+            fi
+          fi
+          ignorar=""
+          for nome in $NOTEBOOKS_COM_CREDENCIAL; do
+            ignorar="$ignorar --ignore=docs/notebooks/$nome.ipynb"
+          done
+          {
+            echo "testes=$testes"
+            echo "notebooks=$notebooks"
+            echo "ignorar=$ignorar"
+          } >> "$GITHUB_OUTPUT"
+      - uses: astral-sh/setup-uv@v10.3.0
+        with:
+          python-version: "3.13"
+          cache-dependency-glob: pyproject.toml
+      - name: Instalar dependências, extras dos raspadores e o Chromium
+        run: |
+          uv sync --extra dev --extra docs --extra tjmg --extra waf
+          uv run playwright install --with-deps chromium
+      # Nos dois passos abaixo, o código de saída 1 do pytest (teste falhou)
+      # não derruba o job: tribunal fora do ar é assunto da issue. De 2 em
+      # diante quem quebrou foi a suíte ou o workflow, e aí o job cai. O 5
+      # (nada coletado) pega alvo errado.
+      - name: Rodar os testes de integração
+        timeout-minutes: 90
+        env:
+          ALVO: ${{ steps.alvo.outputs.testes }}
+        run: |
+          codigo=0
+          uv run pytest "$ALVO" -m "integration and not anti_bot" --junitxml=junit-integracao.xml || codigo=$?
+          echo "pytest saiu com código $codigo"
+          if [ "$codigo" -gt 1 ]; then exit "$codigo"; fi
+      - name: Rodar os notebooks
+        if: ${{ !cancelled() && steps.alvo.outputs.notebooks != '' }}
+        timeout-minutes: 60
+        env:
+          ALVO: ${{ steps.alvo.outputs.notebooks }}
+          IGNORAR: ${{ steps.alvo.outputs.ignorar }}
+        run: |
+          codigo=0
+          # shellcheck disable=SC2086  # IGNORAR é uma lista de opções montada acima
+          uv run pytest --nbmake "$ALVO" $IGNORAR --nbmake-timeout=300 -n auto --junitxml=junit-notebooks.xml || codigo=$?
+          echo "pytest saiu com código $codigo"
+          if [ "$codigo" -gt 1 ]; then exit "$codigo"; fi
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: junit
+          path: junit-*.xml
+          if-no-files-found: ignore
+
+  relatorio:
+    name: Relatório
+    needs: [calendario, testes]
+    if: ${{ !cancelled() && needs.calendario.outputs.rodar == 'true' }}
+    runs-on: ubuntu-latest
+    # Único job com escrita em issues. Ele não instala dependência nem executa
+    # código dos testes: só roda o script, que usa a biblioteca padrão. O token
+    # vai apenas para os dois passos que chamam o `gh`.
+    permissions:
+      contents: read
+      issues: write
+    env:
+      LABEL: tribunal-quebrado
+      TITULO: "Integração semanal: falhas por tribunal"
+      EXECUCAO: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      DATA: ${{ needs.calendario.outputs.data }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v8
+        # Sem artefato, o job de testes caiu antes de gravar qualquer JUnit. O
+        # script registra isso como suíte que não terminou.
+        continue-on-error: true
+        with:
+          name: junit
+      - name: Localizar a issue de acompanhamento
+        id: issue
+        if: env.ATUALIZAR_ISSUE == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          numero="$(gh issue list --label "$LABEL" --state open --limit 100 --json number,title \
+            --jq 'map(select(.title == env.TITULO)) | .[0].number // empty')"
+          echo "numero=$numero" >> "$GITHUB_OUTPUT"
+          if [ -n "$numero" ]; then
+            gh issue view "$numero" --json body --jq .body > anterior.md
+          fi
+      - name: Montar o relatório
+        run: |
+          suites=(--suite "integração=junit-integracao.xml")
+          # Em execução de um tribunal sem notebook, a suíte de notebooks nem
+          # chega a rodar e não entra no relatório.
+          if [ -z "$TRIBUNAL" ] || [ -f junit-notebooks.xml ]; then
+            suites+=(--suite "notebooks=junit-notebooks.xml")
+          fi
+          python3 scripts/integration_report.py relatorio "${suites[@]}" \
+            --anterior anterior.md --corpo corpo.md --comentario comentario.md \
+            --execucao "$EXECUCAO" --data "$DATA"
+          cat corpo.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Atualizar a issue
+        if: env.ATUALIZAR_ISSUE == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          NUMERO: ${{ steps.issue.outputs.numero }}
+        run: |
+          if [ -z "$NUMERO" ]; then
+            gh label create "$LABEL" --force --color D93F0B \
+              --description "Falha de integração ao vivo contra um tribunal"
+            gh issue create --title "$TITULO" --label "$LABEL" --body-file corpo.md
+          else
+            # Editar o corpo não notifica ninguém; comentar notifica. O
+            # comentário só existe quando a lista de falhas mudou.
+            gh issue edit "$NUMERO" --body-file corpo.md
+            if [ -s comentario.md ]; then
+              gh issue comment "$NUMERO" --body-file comentario.md
+            fi
+          fi
