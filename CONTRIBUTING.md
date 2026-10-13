@@ -155,6 +155,8 @@ A versão do Ruff é fixa no extra `[dev]`, no pre-commit e em `tool.ruff.requir
 
 Uma dispensa vale para todas as ocorrências daquela regra naquele arquivo. Portanto, uma função nova em arquivo dispensado também pode violar a regra dispensada. O gate não limita a contagem de ocorrências nem confere apenas as linhas do diff. Arquivos novos entram sem dispensas, e regras não dispensadas continuam exigidas nos arquivos antigos.
 
+O controle confere apenas a lista de `ruff.toml`. Um comentário `# noqa` na linha silencia a regra sem passar por ele, e uma mudança em `ignore`, `per-file-ignores` ou `extend-exclude` no `pyproject.toml` altera a régua inteira. Os dois casos dependem de revisão do diff. A política para `# noqa` está em discussão na [#401](https://github.com/jtrecenti/juscraper/issues/401).
+
 Os testes têm uma política permanente própria: aceitam `assert`, dispensam anotações de tipo e não exigem docstrings. Uma docstring existente continua sujeita às regras de formato selecionadas. A tabela correspondente em `pyproject.toml` é a fonte dessa política.
 
 ### Comandos locais e pre-commit
@@ -168,7 +170,7 @@ uv run pytest tests/lint_policy -q
 uv run pre-commit install
 ```
 
-O hook Ruff mantém o autofix seguro nos arquivos Python alterados. O hook `lint-policy` roda em todo commit, inclusive quando só a configuração muda, e confere todo o código de `src/` e `tests/`. O script usa `origin/main` como referência local e compara com o ancestral comum de `HEAD` e dessa referência. Para outra base, executar `uv run python scripts/check_lint_policy.py --base-ref <referência>`. O script nunca faz fetch; uma referência ausente faz o gate falhar com orientação para atualizá-la.
+O hook Ruff mantém o autofix seguro nos arquivos Python alterados. O hook `lint-policy` roda em todo commit, inclusive quando só a configuração muda, e confere todo o código de `src/` e `tests/`. O script usa `origin/main` como referência local e compara com o ancestral comum de `HEAD` e dessa referência. Para outra base, executar `uv run python scripts/check_lint_policy.py --base-ref <referência>`. O script nunca faz fetch; uma referência ausente faz o gate falhar com orientação para atualizá-la. O script usa `tomllib`, então o pre-commit precisa rodar em Python 3.11 ou mais recente; `uv run pre-commit` usa o ambiente do projeto e atende a isso.
 
 ### Retirada de dispensas
 
