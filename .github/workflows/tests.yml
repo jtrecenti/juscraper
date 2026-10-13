@@ -86,8 +86,9 @@ jobs:
         run: uv sync --extra dev
       - name: Rodar a suíte offline
         run: uv run pytest
-      # `continue-on-error` mostra este job como aprovado na lista de checks
-      # mesmo quando ele falha. O aviso mantém a falha visível no resumo.
+      # Com `continue-on-error` a execução fecha verde, mas este job continua
+      # aparecendo como falho na lista de checks do PR. O aviso diz, no resumo
+      # da execução, que essa falha não barra o merge.
       - name: Avisar que a versão experimental falhou
         if: failure()
         env:
