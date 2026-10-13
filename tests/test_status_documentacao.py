@@ -40,9 +40,13 @@ def dados():
     }
 
 
-def test_inventario_cobre_factory_e_metodos_reais():
+def registro_versionado():
     with (RAIZ / "status.toml").open("rb") as arquivo:
-        registro = MODULO["Registro"].model_validate(tomllib.load(arquivo))
+        return MODULO["Registro"].model_validate(tomllib.load(arquivo))
+
+
+def test_inventario_cobre_factory_e_metodos_reais():
+    registro = registro_versionado()
     assert {fonte.sigla for fonte in registro.fontes} == set(_SCRAPERS)
     for fonte in registro.fontes:
         modulo, nome = _SCRAPERS[fonte.sigla].split(":")
@@ -54,6 +58,14 @@ def test_inventario_cobre_factory_e_metodos_reais():
             and "raise NotImplementedError" not in inspect.getsource(funcao)
         }
         assert coleta == set(fonte.endpoints), fonte.sigla
+
+
+def test_excecoes_citadas_no_registro_existem():
+    for fonte in registro_versionado().fontes:
+        for observacao in fonte.observacoes.values():
+            if observacao.excecao:
+                modulo, _, nome = observacao.excecao.rpartition(".")
+                assert issubclass(getattr(import_module(modulo), nome), BaseException), observacao.excecao
 
 
 @pytest.mark.parametrize("estado", ["funcionando", "degradado", "indisponivel"])
