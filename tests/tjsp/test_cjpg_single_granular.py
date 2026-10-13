@@ -1,4 +1,10 @@
-"""Caracterização dos campos opcionais da página de resultados CJPG."""
+"""Caracterização dos campos opcionais da página de resultados CJPG.
+
+``cjpg/results_optional_fields.html`` é montado à mão, e não captura do
+tribunal: reúne num arquivo só os casos de borda que uma página real não
+traz juntos. O bloco da decisão repete a forma da página real, com o resumo
+visível antes do ``div`` oculto que guarda o inteiro teor.
+"""
 import pandas as pd
 import pytest
 
@@ -36,6 +42,12 @@ def test_ausencia_de_resultados(tmp_path, html):
 
 
 def test_rotulo_sem_separador_continua_rejeitado(tmp_path):
+    """Fixa o comportamento atual, que não é validação deliberada.
+
+    O ``ValueError`` nasce do desempacotamento de ``split(':', 1)`` e derruba a
+    página inteira. Em modo diretório, ``cjpg_parse_manager`` captura o erro e
+    segue sem os resultados desse arquivo.
+    """
     caminho = tmp_path / "invalido.html"
     caminho.write_text(
         '<div id="divDadosResultado"><tr class="fundocinza1"><table>'
