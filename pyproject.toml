@@ -32,6 +32,9 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
     "Topic :: Internet :: WWW/HTTP :: Browsers",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Text Processing :: Markup :: HTML",
@@ -42,10 +45,19 @@ dependencies = [
     "browser-cookie3>=0.20.1",
     "comm>=0.2.2",
     "nest-asyncio>=1.6.0",
-    # Teto <3.0.0 mantido por causa do conflito de resolvedor no Google Colab
-    # (cudf-cu12 exige pandas<2.2.4dev0,>=2.0) — ver issue #25. Nao remover sem
-    # validar contra a imagem atual do Colab.
-    "pandas>=2.0.0,<3.0.0",
+    # pandas 2 ou 3, sem marcador por versão do Python. O piso 2.0.0 deixa o pip
+    # do Google Colab manter o pandas 2.2 pré-instalado, que o cudf exige (issue
+    # #25): o pip só atualiza dependência que não satisfaz o requisito, e o
+    # problema da issue vinha do piso antigo, >=2.2.3. No Python 3.15 o pandas 2
+    # não tem wheel, e compilado do fonte contra NumPy >= 2.5 derruba o
+    # interpretador em pd.to_datetime. O resolvedor escolhe o pandas mais novo,
+    # e a 3.0.6 é a primeira com wheel cp315: da 3.0.0 à 3.0.5 só há código-fonte,
+    # e até a 3.0.3 o build no 3.15 cai do mesmo jeito. Exigir pandas>=3.0.6 no
+    # 3.15 por marcador impediria de resolver todo projeto com requires-python
+    # aberto e pandas<3 fixado, porque o uv resolve também para o 3.15. Em toda
+    # versão, texto ausente sai como None nos métodos públicos, por
+    # BaseScraper.__init_subclass__ (core/base.py).
+    "pandas>=2.0.0,<4.0.0",
     "pyjwt>=2.10.1",
     "pydantic>=2.0.0",
     "python-dotenv>=1.1.0",
@@ -353,6 +365,9 @@ omit = [
 ]
 
 [tool.coverage.report]
+# Piso da cobertura total, um ponto abaixo dos 95% medidos quando o workflow
+# Testes chegou (#101). A perna de cobertura do CI reprova abaixo dele.
+fail_under = 94
 exclude_lines = [
     "pragma: no cover",
     "def __repr__",

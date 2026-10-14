@@ -204,10 +204,9 @@ class TJMGScraper(HTTPScraper):
     def _download_cposg(self, id_cnj: str | list[str], kwargs: dict[str, Any]) -> list[dict]:
         """Corpo comum de :meth:`cposg_download` e :meth:`cposg`.
 
-        Os dois metodos publicos chamam este, e nao um ao outro, para que a
-        pilha ate o ``warnings.warn`` tenha a mesma profundidade nos dois
-        caminhos: ``_cposg_download`` (1) -> este metodo (2) -> metodo
-        publico (3) -> codigo do usuario (4).
+        O aviso de falhas sai por :func:`juscraper.core.avisos.avisar`, que o
+        atribui ao codigo de quem chamou o metodo publico, qualquer que seja
+        o caminho ate ele.
         """
         numeros = self._coerce_id_cnj(id_cnj, **kwargs)
         return _cposg_download(
@@ -215,7 +214,6 @@ class TJMGScraper(HTTPScraper):
             request_fn=self._request_with_retry,
             extract_partes_ids=extract_partes_ids,
             sleep_time=self.sleep_time,
-            stacklevel=4,
         )
 
     def cposg_download(self, id_cnj: str | list[str], **kwargs: Any) -> list[dict]:

@@ -18,7 +18,6 @@ import math
 import shutil
 import tempfile
 import time
-import warnings
 from datetime import datetime
 from pathlib import Path
 
@@ -27,6 +26,7 @@ import requests
 from pydantic import ValidationError
 from tqdm.auto import tqdm
 
+from ...core.avisos import avisar
 from ...core.http import HTTPScraper
 from ...utils.params import (
     coerce_brazilian_date,
@@ -288,12 +288,11 @@ class FalcaoScraper(HTTPScraper):
                 inp.tamanho_pagina,
             )
         if inp.paginas is None and total >= _MAX_RESULTADOS:
-            warnings.warn(
+            avisar(
                 f"A busca atingiu o teto de {_MAX_RESULTADOS} resultados do Falcao; o "
                 "backend nao informa o total real e o resultado pode estar incompleto. "
                 "Divida a busca em janelas de data_juntada_inicio/data_juntada_fim.",
                 UserWarning,
-                stacklevel=3,
             )
 
         paginas_iter = list(self._resolver_paginas(paginas, total_paginas))
