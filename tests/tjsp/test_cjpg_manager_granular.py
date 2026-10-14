@@ -46,9 +46,9 @@ def test_arquivo_unico_com_erro_propaga_o_erro_do_parser(tmp_path):
 
 
 def test_diretorio_descarta_arquivo_com_erro_e_registra_no_log(tmp_path, caplog):
-    """Percorre subdiretórios, junta o que deu certo e renumera o índice."""
+    """Percorre subdiretórios, aceita ``.htm``, junta o que deu certo e renumera o índice."""
     _gravar(tmp_path / "pagina_1.html", _COM_RESULTADO.format(classe="A"))
-    _gravar(tmp_path / "lote" / "pagina_2.html", _COM_RESULTADO.format(classe="B"))
+    _gravar(tmp_path / "lote" / "pagina_2.htm", _COM_RESULTADO.format(classe="B"))
     _gravar(tmp_path / "lote" / "ruim.html", _COM_ERRO)
 
     with caplog.at_level(logging.ERROR, logger="juscraper.cjpg_parse"):
@@ -60,7 +60,9 @@ def test_diretorio_descarta_arquivo_com_erro_e_registra_no_log(tmp_path, caplog)
 
 
 def test_diretorio_sem_html_devolve_dataframe_vazio(tmp_path):
+    """Subdiretório com nome de HTML não é arquivo e não conta como falha."""
     _gravar(tmp_path / "notas.txt", "nada a processar")
+    (tmp_path / "lote.html").mkdir()
 
     pd.testing.assert_frame_equal(cjpg_parse_manager(tmp_path), pd.DataFrame())
 
@@ -72,12 +74,28 @@ def test_diretorio_so_com_paginas_sem_resultado_devolve_vazio(tmp_path):
     assert cjpg_parse_manager(tmp_path).empty
 
 
+def test_diretorio_so_com_pagina_vazia_e_arquivo_com_erro_devolve_vazio(tmp_path):
+    """Uma página lida sem resultados basta para a falha não ser total."""
+    _gravar(tmp_path / "pagina_1.html", _SEM_RESULTADO)
+    _gravar(tmp_path / "ruim.html", _COM_ERRO)
+
+    assert cjpg_parse_manager(tmp_path).empty
+
+
 def test_diretorio_em_que_todos_os_arquivos_falham_levanta_erro(tmp_path):
-    """Falha total não pode sair como DataFrame vazio, igual a busca sem resultado."""
+    """Falha total não pode sair como DataFrame vazio, igual a busca sem resultado.
+
+    A ordem do ``rglob`` depende do sistema de arquivos, então a mensagem pode
+    citar qualquer um dos dois arquivos; o teste exige o nome e o erro dele.
+    """
     _gravar(tmp_path / "ruim_1.html", _COM_ERRO)
     _gravar(tmp_path / "ruim_2.html", _COM_ERRO)
 
-    with pytest.raises(ValueError, match=r"Nenhum dos 2 arquivo\(s\)") as excecao:
+    with pytest.raises(
+        ValueError,
+        match=r"Nenhum dos 2 arquivo\(s\) em .+ pôde ser processado\. "
+        r"Primeiro erro, em ruim_[12]\.html: not enough values to unpack",
+    ) as excecao:
         cjpg_parse_manager(tmp_path)
 
     assert isinstance(excecao.value.__cause__, ValueError)
@@ -85,5 +103,5 @@ def test_diretorio_em_que_todos_os_arquivos_falham_levanta_erro(tmp_path):
 
 
 def test_caminho_inexistente_levanta_file_not_found(tmp_path):
-    with pytest.raises(FileNotFoundError, match="nao_existe"):
+    with pytest.raises(FileNotFoundError, match=r"Caminho não encontrado ou inacessível: .*nao_existe"):
         cjpg_parse_manager(tmp_path / "nao_existe")

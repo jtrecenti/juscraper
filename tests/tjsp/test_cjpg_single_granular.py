@@ -35,13 +35,16 @@ def _resumir(df):
     JSON depois de recapturar as páginas, gravar ``{nome: _resumir(...)}`` das
     duas capturas com ``ensure_ascii=False`` e ``indent=2``.
     """
-    linhas = df.to_dict(orient="records")
+    # Campo ausente vira ``None``: ``NaN`` não é igual a si mesmo depois da
+    # ida e volta pelo JSON, e a comparação nunca passaria.
+    linhas = df.astype(object).where(df.notna(), None).to_dict(orient="records")
     for linha in linhas:
-        texto = linha["decisao"]
-        linha["decisao"] = {
-            "sha256": hashlib.sha256(texto.encode("utf-8")).hexdigest(),
-            "tamanho": len(texto),
-        }
+        texto = linha.get("decisao")
+        if texto is not None:
+            linha["decisao"] = {
+                "sha256": hashlib.sha256(texto.encode("utf-8")).hexdigest(),
+                "tamanho": len(texto),
+            }
     return {"colunas": list(df.columns), "linhas": linhas}
 
 
@@ -54,9 +57,13 @@ def test_capturas_reais_tem_saida_fixada(captura):
     CRLF dentro das decisões e a tradução de fim de linha faz parte do que se
     quer fixar.
     """
-    referencia = json.loads((_SAMPLES / "results_normal_expected.json").read_text(encoding="utf-8"))
+    esperado = json.loads((_SAMPLES / "results_normal_expected.json").read_text(encoding="utf-8"))[captura]
+    obtido = _resumir(cjpg_parse_single(_SAMPLES / captura))
 
-    assert _resumir(cjpg_parse_single(_SAMPLES / captura)) == referencia[captura]
+    assert obtido["colunas"] == esperado["colunas"]
+    assert len(obtido["linhas"]) == len(esperado["linhas"])
+    for posicao, (linha, referencia) in enumerate(zip(obtido["linhas"], esperado["linhas"], strict=True)):
+        assert linha == referencia, f"linha {posicao}, processo {referencia['id_processo']}"
 
 
 def test_campos_opcionais_ordem_e_normalizacao(tmp_path):

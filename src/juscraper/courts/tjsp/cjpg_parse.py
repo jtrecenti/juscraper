@@ -190,10 +190,12 @@ def cjpg_parse_manager(path):
         arquivo HTML ou quando nenhuma página traz resultados.
 
     Raises:
-        FileNotFoundError: Quando ``path`` não existe.
+        FileNotFoundError: Quando ``path`` não existe ou não é arquivo nem
+            diretório acessível.
         ValueError: Quando o HTML de um arquivo passado diretamente não pôde
             ser interpretado, ou quando todos os arquivos de um diretório
             falharam.
+        OSError: Quando um arquivo passado diretamente não pôde ser lido.
     """
     caminho = Path(path)
     if caminho.is_file():
@@ -201,7 +203,7 @@ def cjpg_parse_manager(path):
     elif caminho.is_dir():
         resultados = _parse_diretorio(caminho)
     else:
-        raise FileNotFoundError(f"Caminho não encontrado: {caminho}")
+        raise FileNotFoundError(f"Caminho não encontrado ou inacessível: {caminho}")
     if not resultados:
         return pd.DataFrame()
     return pd.concat(resultados, ignore_index=True)
