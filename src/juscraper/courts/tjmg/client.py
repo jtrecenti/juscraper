@@ -274,7 +274,7 @@ class TJMGScraper(HTTPScraper):
                 um numero nao encontrado; falha na de partes deixa
                 ``partes=None``.
 
-        Exemplo:
+        Examples: Exemplo
             >>> import juscraper as jus
             >>> tjmg = jus.scraper("tjmg")
             >>> df = tjmg.cposg("5000344-57.2025.8.13.0461")
