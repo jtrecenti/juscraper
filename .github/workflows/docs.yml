@@ -42,7 +42,7 @@ jobs:
 
     - name: 📦 Install juscraper and dependencies
       run: |
-        uv sync --python ${{ env.PYTHON_VERSION }} --all-extras
+        uv sync --frozen --python ${{ env.PYTHON_VERSION }} --all-extras
         uv pip install -e .
 
     - name: 🔌 Activate venv

@@ -34,11 +34,9 @@ jobs:
       - uses: astral-sh/setup-uv@v10.3.0
         with:
           python-version: ${{ matrix.python }}
-          # O uv.lock não é versionado, então a chave do cache acompanha o
-          # pyproject.toml.
-          cache-dependency-glob: pyproject.toml
+          cache-dependency-glob: uv.lock
       - name: Instalar dependências de desenvolvimento
-        run: uv sync --extra dev
+        run: uv sync --frozen --extra dev
       - name: Rodar a suíte offline
         if: ${{ !matrix.cobertura }}
         run: uv run pytest

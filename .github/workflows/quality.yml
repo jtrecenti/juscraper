@@ -12,12 +12,12 @@ jobs:
   complexidade:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@v10.3.0
       - name: Instalar dependências de desenvolvimento
-        run: uv sync --extra dev --python 3.12
+        run: uv sync --frozen --extra dev --python 3.12
       - name: Conferir complexidade
         env:
           # Num PR, a base é a ponta atual da branch de destino. O
@@ -29,3 +29,21 @@ jobs:
           uv run python scripts/check_complexity.py --base-ref "$COMPLEXITY_BASE"
       - name: Testar o gate de complexidade
         run: uv run pytest tests/complexity_gate -q
+
+  semgrep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v10.3.0
+      - name: Procurar achados novos de segurança
+        env:
+          # Mesma base do gate de complexidade.
+          SEMGREP_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before }}
+        # --baseline-commit analisa só os arquivos que mudaram desde a base e só
+        # reporta achado que não existia nela: os achados de JWT e de log já
+        # triados na #101 ficam aceitos, e um novo reprova.
+        run: |
+          base="$(git merge-base HEAD "$SEMGREP_BASE")"
+          uvx --python 3.12 semgrep==1.180.0 scan --config p/python --config p/security-audit --metrics=off --error --baseline-commit "$base" src
