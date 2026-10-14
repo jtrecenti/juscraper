@@ -580,14 +580,16 @@ def test_ctrl_c_com_worker_preso_nao_segura_a_saida_do_interpretador():
     # depois de esperar as threads que não são daemon. O Ctrl-C só sai quando
     # o worker falso já está preso: com prazo fixo, um worker que demorasse a
     # partir receberia o sinal antes de existir, e o teste passaria sem medir
-    # nada. Até o Python 3.12, o ``join`` interrompido marca a thread como
-    # encerrada e o interpretador não a espera; o teste só distingue worker
-    # daemon de não daemon a partir do 3.13.
+    # nada. No Python 3.11, depois do Ctrl-C o interpretador sai sem esperar o
+    # worker, com ou sem daemon, e o tempo não denuncia um worker não daemon.
+    # Por isso o worker falso também informa se a própria thread é daemon, o
+    # que vale em toda versão.
     codigo = (
         "import atexit, os, signal, sys, threading, time\n"
         "from juscraper.aggregators._pdpj_sso import login\n"
         "worker_preso = threading.Event()\n"
         "def credencial_presa(*_a):\n"
+        "    print(f'worker_daemon={threading.current_thread().daemon}', file=sys.stderr)\n"
         "    worker_preso.set()\n"
         "    time.sleep(20)\n"
         "login._obter_credencial = credencial_presa\n"
@@ -604,6 +606,7 @@ def test_ctrl_c_com_worker_preso_nao_segura_a_saida_do_interpretador():
     )
 
     assert "KeyboardInterrupt" in completado.stderr
+    assert "worker_daemon=True" in completado.stderr, completado.stderr
     saida = re.search(r"saida_em=([\d.]+)", completado.stderr)
     assert saida is not None, completado.stderr
     assert float(saida.group(1)) < 5
