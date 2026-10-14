@@ -577,16 +577,26 @@ def test_ctrl_c_com_worker_preso_nao_segura_a_saida_do_interpretador():
     # interpretador. Medido do pai, o intervalo incluiria a partida do Python e
     # o import do juscraper, que sob carga passam do limite sozinhos. O
     # ``atexit`` serve de marca de saída porque o interpretador só o executa
-    # depois de esperar as threads que não são daemon.
+    # depois de esperar as threads que não são daemon. O Ctrl-C só sai quando
+    # o worker falso já está preso: com prazo fixo, um worker que demorasse a
+    # partir receberia o sinal antes de existir, e o teste passaria sem medir
+    # nada. Até o Python 3.12, o ``join`` interrompido marca a thread como
+    # encerrada e o interpretador não a espera; o teste só distingue worker
+    # daemon de não daemon a partir do 3.13.
     codigo = (
         "import atexit, os, signal, sys, threading, time\n"
         "from juscraper.aggregators._pdpj_sso import login\n"
-        "login._obter_credencial = lambda *_a: time.sleep(20)\n"
+        "worker_preso = threading.Event()\n"
+        "def credencial_presa(*_a):\n"
+        "    worker_preso.set()\n"
+        "    time.sleep(20)\n"
+        "login._obter_credencial = credencial_presa\n"
         "def ctrl_c():\n"
+        "    worker_preso.wait()\n"
         "    inicio = time.monotonic()\n"
         "    atexit.register(lambda: print(f'saida_em={time.monotonic() - inicio:.3f}', file=sys.stderr))\n"
         "    os.kill(os.getpid(), signal.SIGINT)\n"
-        "threading.Timer(0.3, ctrl_c).start()\n"
+        "threading.Thread(target=ctrl_c, daemon=True).start()\n"
         "login.obter_credencial_govbr(timeout=5)\n"
     )
     completado = subprocess.run(
