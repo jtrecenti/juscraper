@@ -30,6 +30,14 @@ evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c
 motivo = "Retornou 1 registro; colunas exigidas e preenchimento mínimo conferidos no cenário informado. A consulta por CNJ funcionou; a tentativa anterior sem CNJ recebeu HTTP 504 e retornou vazio. O estado se limita à consulta por CNJ."
 cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('datajud').listar_processos(tribunal='TJSP', paginas=1, tamanho_pagina=10); depois jus.scraper('datajud').listar_processos(tribunal='TJSP', paginas=1, tamanho_pagina=10, numero_processo='1000413-22.2017.8.26.0415'). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
 
+[fontes.observacoes.contar_processos]
+estado = "funcionando"
+verificado_em = 2026-10-14
+versao = "0.4.0; código ea68b715d35bc45b07612911c1348a13d6e1fb3b"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/6892e5f2417ecc945648c99b05d0bd8bb79d976c/docs/status/2026-10-14.json#L23"]
+motivo = "Retornou 1 linha para o TJSP, com contagem 1 e relação exata (eq); colunas exigidas, preenchimento mínimo e total positivo conferidos no cenário informado. A resposta levou cerca de 40 segundos. O estado se limita à contagem por CNJ."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('datajud').contar_processos(tribunal='TJSP', numero_processo='1000413-22.2017.8.26.0415'). Somente a contagem pelo CNJ informado, sem validar filtros por classe, assunto, ano, data ou movimentação"
+
 [[fontes]]
 sigla = "falcao"
 nome = "Falcão"
@@ -37,13 +45,12 @@ tipo = "agregador"
 endpoints = ["listar_decisoes"]
 
 [fontes.observacoes.listar_decisoes]
-estado = "indisponivel"
-verificado_em = 2026-10-03
-versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
-evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L246"]
-motivo = "HTTP 429 na primeira chamada, com bloqueio do IP informado pelo servidor por 27.300 segundos. Nenhuma repetição durante o bloqueio. Limitação deste ambiente, sem inferência de indisponibilidade para outros IPs."
+estado = "funcionando"
+verificado_em = 2026-10-14
+versao = "0.4.0; código ea68b715d35bc45b07612911c1348a13d6e1fb3b"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/6892e5f2417ecc945648c99b05d0bd8bb79d976c/docs/status/2026-10-14.json#L77"]
+motivo = "Retornou 5 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado. A chamada única recebeu HTTP 200; o HTTP 429 de 03/10 não se repetiu. A ementa veio preenchida em 3 dos 5 registros."
 cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('falcao').listar_decisoes(pesquisa='dano moral', paginas=1, tamanho_pagina=5). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
-excecao = "requests.exceptions.HTTPError"
 
 [[fontes]]
 sigla = "jusbr"
@@ -207,12 +214,12 @@ tipo = "tribunal"
 endpoints = ["cjsg"]
 
 [fontes.observacoes.cjsg]
-estado = "nao_verificado"
-verificado_em = 2026-10-03
-versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
-evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L1112"]
-motivo = "Duas buscas, por direito e dano moral, devolveram DataFrame vazio. As respostas HTTP 200 contêm o formulário de pesquisa, sem resultados identificados. A causa não foi confirmada."
-cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjgo').cjsg(pesquisa='direito', paginas=1); depois jus.scraper('tjgo').cjsg(pesquisa='dano moral', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
+estado = "indisponivel"
+verificado_em = 2026-10-14
+versao = "0.4.0; código ea68b715d35bc45b07612911c1348a13d6e1fb3b"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/6892e5f2417ecc945648c99b05d0bd8bb79d976c/docs/status/2026-10-14.json#L193"]
+motivo = "A busca devolveu DataFrame vazio, e a resposta HTTP 200 contém o formulário de pesquisa sem resultados. O formulário carrega um widget Cloudflare Turnstile que preenche o campo g-recaptcha-response antes da busca, e a página menciona validação desse token no servidor; o raspador envia o campo vazio. A exigência do token é a causa provável do retorno vazio, também observado nas duas buscas de 03/10. Não foi testada busca com token válido."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjgo').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
 
 [[fontes]]
 sigla = "tjmg"
@@ -407,12 +414,12 @@ tipo = "tribunal"
 endpoints = ["cjsg"]
 
 [fontes.observacoes.cjsg]
-estado = "indisponivel"
-verificado_em = 2026-10-03
-versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
-evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L2544"]
-motivo = "As duas buscas devolveram DataFrame vazio. Na repetição, o corpo da resposta contém erro Solr 503: no servers hosting shard: shard2. O retorno vazio não confirma ausência de julgados."
-cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjrs').cjsg(pesquisa='direito', paginas=1); depois jus.scraper('tjrs').cjsg(pesquisa='direito civil', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
+estado = "funcionando"
+verificado_em = 2026-10-14
+versao = "0.4.0; código ea68b715d35bc45b07612911c1348a13d6e1fb3b"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/6892e5f2417ecc945648c99b05d0bd8bb79d976c/docs/status/2026-10-14.json#L400"]
+motivo = "Retornou 10 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado. O erro Solr que esvaziou as buscas de 03/10 não se repetiu."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjrs').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
 
 [[fontes]]
 sigla = "tjsc"
@@ -511,12 +518,13 @@ tipo = "tribunal"
 endpoints = ["cpopg"]
 
 [fontes.observacoes.cpopg]
-estado = "nao_verificado"
-verificado_em = 2026-10-03
-versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
-evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L3398"]
-motivo = "As duas consultas do CNJ de referência retornaram somente id_cnj, sem processo, classe ou movimentações. Não foi possível distinguir ausência de acesso ao processo de incompatibilidade do fluxo de consulta."
+estado = "indisponivel"
+verificado_em = 2026-10-14
+versao = "0.4.0; código ea68b715d35bc45b07612911c1348a13d6e1fb3b"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/6892e5f2417ecc945648c99b05d0bd8bb79d976c/docs/status/2026-10-14.json#L683"]
+motivo = "As duas consultas receberam HTTP 403 do bot manager Akamai e levantaram BotChallengeBlockedError antes do formulário. Bloqueio deste ambiente, sem inferência de indisponibilidade para outros IPs. Em 03/10 o mesmo CNJ recebeu HTTP 200 e retornou só id_cnj; esta reamostra não chegou ao formulário e não esclarece aquele resultado."
 cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('trf3').cpopg(id_cnj='50059460920254036324'), executada duas vezes. Somente os parâmetros informados, sem validar outros processos ou filtros"
+excecao = "juscraper.core.exceptions.BotChallengeBlockedError"
 
 [[fontes]]
 sigla = "trf5"
@@ -525,12 +533,12 @@ tipo = "tribunal"
 endpoints = ["cpopg"]
 
 [fontes.observacoes.cpopg]
-estado = "nao_verificado"
-verificado_em = 2026-10-03
-versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
-evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L3504"]
-motivo = "As duas consultas do CNJ de referência retornaram somente id_cnj, sem processo, classe ou movimentações. Não foi possível distinguir ausência de acesso ao processo de incompatibilidade do fluxo de consulta."
-cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('trf5').cpopg(id_cnj='00584573120254058000'), executada duas vezes. Somente os parâmetros informados, sem validar outros processos ou filtros"
+estado = "indisponivel"
+verificado_em = 2026-10-14
+versao = "0.4.0; código ea68b715d35bc45b07612911c1348a13d6e1fb3b"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/6892e5f2417ecc945648c99b05d0bd8bb79d976c/docs/status/2026-10-14.json#L759"]
+motivo = "A consulta retornou somente id_cnj, sem processo, classe ou movimentações. O formulário da consulta pública passou a usar o componente classeJudicial e o bloco dataAutuacaoDecoration; o raspador procura o campo classeProcessualProcessoHidden, registra a falha como aviso e devolve a linha sem dados. A coleta falha por incompatibilidade do raspador com o formulário atual."
+cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('trf5').cpopg(id_cnj='00584573120254058000'). Somente os parâmetros informados, sem validar outros processos ou filtros"
 
 [[fontes]]
 sigla = "trf6"

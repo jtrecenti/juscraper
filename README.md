@@ -50,7 +50,7 @@ dados.head()
 
 Status observado no cenário informado, sem garantia de disponibilidade atual. Sem evidência ou após 30 dias, o estado passa a não verificado na próxima geração. A data limite permanece visível entre atualizações. O último relato de falha continua abaixo.
 
-Tabelas geradas em 2026-10-13.
+Tabelas geradas em 2026-10-14.
 
 [Critérios e atualização](https://github.com/jtrecenti/juscraper/blob/main/CONTRIBUTING.md#status-dos-raspadores)
 
@@ -69,7 +69,7 @@ Tabelas geradas em 2026-10-13.
 | TJDFT | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
 | TJES | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
 | TJES | `cjpg` | Degradado | 2026-10-03 | 2026-11-02 |
-| TJGO | `cjsg` | Não verificado | 2026-10-03 | - |
+| TJGO | `cjsg` | Indisponível | 2026-10-14 | 2026-11-13 |
 | TJMG | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
 | TJMG | `cposg` | Funcionando | 2026-10-03 | 2026-11-02 |
 | TJMS | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
@@ -84,7 +84,7 @@ Tabelas geradas em 2026-10-13.
 | TJRN | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
 | TJRO | `cjsg` | Indisponível | 2026-10-03 | 2026-11-02 |
 | TJRR | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
-| TJRS | `cjsg` | Indisponível | 2026-10-03 | 2026-11-02 |
+| TJRS | `cjsg` | Funcionando | 2026-10-14 | 2026-11-13 |
 | TJSC | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
 | TJSP | `cpopg` | Funcionando | 2026-10-03 | 2026-11-02 |
 | TJSP | `cposg` | Indisponível | 2026-10-03 | 2026-11-02 |
@@ -93,8 +93,8 @@ Tabelas geradas em 2026-10-13.
 | TJTO | `cjsg` | Indisponível | 2026-10-03 | 2026-11-02 |
 | TJTO | `cjpg` | Indisponível | 2026-10-03 | 2026-11-02 |
 | TRF1 | `cpopg` | Funcionando | 2026-10-03 | 2026-11-02 |
-| TRF3 | `cpopg` | Não verificado | 2026-10-03 | - |
-| TRF5 | `cpopg` | Não verificado | 2026-10-03 | - |
+| TRF3 | `cpopg` | Indisponível | 2026-10-14 | 2026-11-13 |
+| TRF5 | `cpopg` | Indisponível | 2026-10-14 | 2026-11-13 |
 | TRF6 | `cpopg` | Indisponível | 2026-10-03 | 2026-11-02 |
 
 ### Agregadores
@@ -103,8 +103,8 @@ Tabelas geradas em 2026-10-13.
 |---|---|---|---|---|
 | Comunica CNJ | `listar_comunicacoes` | Funcionando | 2026-10-03 | 2026-11-02 |
 | Datajud | `listar_processos` | Funcionando | 2026-10-03 | 2026-11-02 |
-| Datajud | `contar_processos` | Não verificado | - | - |
-| Falcão | `listar_decisoes` | Indisponível | 2026-10-03 | 2026-11-02 |
+| Datajud | `contar_processos` | Funcionando | 2026-10-14 | 2026-11-13 |
+| Falcão | `listar_decisoes` | Funcionando | 2026-10-14 | 2026-11-13 |
 | JusBR | `cpopg` | Não verificado | - | - |
 | JusBR | `download_documents` | Não verificado | - | - |
 | PDPJ | `existe` | Não verificado | - | - |
@@ -210,11 +210,11 @@ Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjes').cjpg(pe
 
 #### TJGO: `cjsg`
 
-Duas buscas, por direito e dano moral, devolveram DataFrame vazio. As respostas HTTP 200 contêm o formulário de pesquisa, sem resultados identificados. A causa não foi confirmada.
+A busca devolveu DataFrame vazio, e a resposta HTTP 200 contém o formulário de pesquisa sem resultados. O formulário carrega um widget Cloudflare Turnstile que preenche o campo g-recaptcha-response antes da busca, e a página menciona validação desse token no servidor; o raspador envia o campo vazio. A exigência do token é a causa provável do retorno vazio, também observado nas duas buscas de 03/10. Não foi testada busca com token válido.
 
-Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjgo').cjsg(pesquisa='direito', paginas=1); depois jus.scraper('tjgo').cjsg(pesquisa='dano moral', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjgo').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código ea68b715d35bc45b07612911c1348a13d6e1fb3b.
 
-[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L1112)
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/6892e5f2417ecc945648c99b05d0bd8bb79d976c/docs/status/2026-10-14.json#L193)
 
 #### TJMG: `cjsg`
 
@@ -334,11 +334,11 @@ Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjrr').cjsg(pe
 
 #### TJRS: `cjsg`
 
-As duas buscas devolveram DataFrame vazio. Na repetição, o corpo da resposta contém erro Solr 503: no servers hosting shard: shard2. O retorno vazio não confirma ausência de julgados.
+Retornou 10 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado. O erro Solr que esvaziou as buscas de 03/10 não se repetiu.
 
-Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjrs').cjsg(pesquisa='direito', paginas=1); depois jus.scraper('tjrs').cjsg(pesquisa='direito civil', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjrs').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código ea68b715d35bc45b07612911c1348a13d6e1fb3b.
 
-[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L2544)
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/6892e5f2417ecc945648c99b05d0bd8bb79d976c/docs/status/2026-10-14.json#L400)
 
 #### TJSC: `cjsg`
 
@@ -410,19 +410,21 @@ Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('trf1').cpopg(i
 
 #### TRF3: `cpopg`
 
-As duas consultas do CNJ de referência retornaram somente id_cnj, sem processo, classe ou movimentações. Não foi possível distinguir ausência de acesso ao processo de incompatibilidade do fluxo de consulta.
+As duas consultas receberam HTTP 403 do bot manager Akamai e levantaram BotChallengeBlockedError antes do formulário. Bloqueio deste ambiente, sem inferência de indisponibilidade para outros IPs. Em 03/10 o mesmo CNJ recebeu HTTP 200 e retornou só id_cnj; esta reamostra não chegou ao formulário e não esclarece aquele resultado.
 
-Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('trf3').cpopg(id_cnj='50059460920254036324'), executada duas vezes. Somente os parâmetros informados, sem validar outros processos ou filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('trf3').cpopg(id_cnj='50059460920254036324'), executada duas vezes. Somente os parâmetros informados, sem validar outros processos ou filtros. Versão ou commit testado: 0.4.0; código ea68b715d35bc45b07612911c1348a13d6e1fb3b.
 
-[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L3398)
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/6892e5f2417ecc945648c99b05d0bd8bb79d976c/docs/status/2026-10-14.json#L683)
+
+Exceção relacionada: juscraper.core.exceptions.BotChallengeBlockedError.
 
 #### TRF5: `cpopg`
 
-As duas consultas do CNJ de referência retornaram somente id_cnj, sem processo, classe ou movimentações. Não foi possível distinguir ausência de acesso ao processo de incompatibilidade do fluxo de consulta.
+A consulta retornou somente id_cnj, sem processo, classe ou movimentações. O formulário da consulta pública passou a usar o componente classeJudicial e o bloco dataAutuacaoDecoration; o raspador procura o campo classeProcessualProcessoHidden, registra a falha como aviso e devolve a linha sem dados. A coleta falha por incompatibilidade do raspador com o formulário atual.
 
-Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('trf5').cpopg(id_cnj='00584573120254058000'), executada duas vezes. Somente os parâmetros informados, sem validar outros processos ou filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('trf5').cpopg(id_cnj='00584573120254058000'). Somente os parâmetros informados, sem validar outros processos ou filtros. Versão ou commit testado: 0.4.0; código ea68b715d35bc45b07612911c1348a13d6e1fb3b.
 
-[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L3504)
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/6892e5f2417ecc945648c99b05d0bd8bb79d976c/docs/status/2026-10-14.json#L759)
 
 #### TRF6: `cpopg`
 
@@ -450,15 +452,21 @@ Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('datajud').list
 
 [Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L142)
 
+#### Datajud: `contar_processos`
+
+Retornou 1 linha para o TJSP, com contagem 1 e relação exata (eq); colunas exigidas, preenchimento mínimo e total positivo conferidos no cenário informado. A resposta levou cerca de 40 segundos. O estado se limita à contagem por CNJ.
+
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('datajud').contar_processos(tribunal='TJSP', numero_processo='1000413-22.2017.8.26.0415'). Somente a contagem pelo CNJ informado, sem validar filtros por classe, assunto, ano, data ou movimentação. Versão ou commit testado: 0.4.0; código ea68b715d35bc45b07612911c1348a13d6e1fb3b.
+
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/6892e5f2417ecc945648c99b05d0bd8bb79d976c/docs/status/2026-10-14.json#L23)
+
 #### Falcão: `listar_decisoes`
 
-HTTP 429 na primeira chamada, com bloqueio do IP informado pelo servidor por 27.300 segundos. Nenhuma repetição durante o bloqueio. Limitação deste ambiente, sem inferência de indisponibilidade para outros IPs.
+Retornou 5 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado. A chamada única recebeu HTTP 200; o HTTP 429 de 03/10 não se repetiu. A ementa veio preenchida em 3 dos 5 registros.
 
-Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('falcao').listar_decisoes(pesquisa='dano moral', paginas=1, tamanho_pagina=5). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('falcao').listar_decisoes(pesquisa='dano moral', paginas=1, tamanho_pagina=5). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código ea68b715d35bc45b07612911c1348a13d6e1fb3b.
 
-[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L246)
-
-Exceção relacionada: requests.exceptions.HTTPError.
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/6892e5f2417ecc945648c99b05d0bd8bb79d976c/docs/status/2026-10-14.json#L77)
 
 <!-- status:fim -->
 
