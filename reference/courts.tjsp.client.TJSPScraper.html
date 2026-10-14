@@ -263,7 +263,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjsp.client.TJSPScraper.cjpg">cjpg</h3>
 <div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>courts.tjsp.client.TJSPScraper.cjpg(pesquisa<span class="op">=</span><span class="st">''</span>, paginas<span class="op">=</span><span class="va">None</span>, <span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Pesquisa jurisprudencia de primeiro grau do TJSP (CJPG).</p>
-<p>Delega para :meth:<code>cjpg_download</code> + :meth:<code>cjpg_parse</code> e remove o diretorio temporario antes de retornar. Diferente do CJSG, aqui <code>pesquisa</code> aceita string vazia — o usuario pode buscar so por filtros (ex.: todas as decisoes de uma vara especifica num intervalo de datas).</p>
+<p>Delega para <code>cjpg_download</code> + <code>cjpg_parse</code> e remove o diretorio temporario antes de retornar. Diferente do CJSG, aqui <code>pesquisa</code> aceita string vazia — o usuario pode buscar so por filtros (ex.: todas as decisoes de uma vara especifica num intervalo de datas).</p>
 <section id="parameters" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
 <table class="caption-top table">
@@ -291,7 +291,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>**kwargs</td>
 <td><code>Any</code></td>
-<td>Filtros aceitos por :class:<code>InputCJPGTJSP</code> (todos opcionais; <code>None</code> = sem filtro): * <code>classe</code> (int | str | list[int | str]): ID(s) internos de classe processual. Backend: <code>classeTreeSelection.values</code> (CSV). * <code>assunto</code> (int | str | list[int | str]): ID(s) internos de assunto. Backend: <code>assuntoTreeSelection.values</code> (CSV). * <code>vara</code> (int | str | list[int | str]): ID(s) internos de vara, no formato em arvore do TJSP (ex.: <code>"1-1-1"</code>). Backend: <code>varasTreeSelection.values</code> (CSV). * <code>id_processo</code> (str): Numero CNJ formatado para filtrar uma instancia especifica. Normalizado via :func:<code>clean_cnj</code> antes do envio. * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str, <code>DD/MM/AAAA</code>): Intervalo de julgamento. * <code>auto_chunk</code> (bool): Default <code>True</code>. Quando o intervalo <code>data_julgamento_*</code> excede 366 dias, divide internamente em janelas, baixa cada uma e concatena com dedup por <code>id_processo</code>. Veja a secao “Auto-chunking” abaixo. * <code>count_only</code> (bool): Default <code>False</code>. Se <code>True</code>, faz so o GET inicial, extrai o total de resultados via <code>cjpg_n_results</code> e retorna <code>int</code> em vez de <code>pd.DataFrame</code>. Util pra estimar wall-clock antes de coleta longa (issue #92). Com <code>auto_chunk=True</code> + janela &gt; 366 dias, itera janelas disjuntas e soma — soma bruta (sem dedup por <code>id_processo</code>). <code>paginas</code> e ignorado (emite <code>UserWarning</code>).</td>
+<td>Filtros aceitos por <code>InputCJPGTJSP</code> (todos opcionais; <code>None</code> = sem filtro): * <code>classe</code> (int | str | list[int | str]): ID(s) internos de classe processual. Backend: <code>classeTreeSelection.values</code> (CSV). * <code>assunto</code> (int | str | list[int | str]): ID(s) internos de assunto. Backend: <code>assuntoTreeSelection.values</code> (CSV). * <code>vara</code> (int | str | list[int | str]): ID(s) internos de vara, no formato em arvore do TJSP (ex.: <code>"1-1-1"</code>). Backend: <code>varasTreeSelection.values</code> (CSV). * <code>id_processo</code> (str): Numero CNJ formatado para filtrar uma instancia especifica. Normalizado via <code>clean_cnj</code> antes do envio. * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str, <code>DD/MM/AAAA</code>): Intervalo de julgamento. * <code>auto_chunk</code> (bool): Default <code>True</code>. Quando o intervalo <code>data_julgamento_*</code> excede 366 dias, divide internamente em janelas, baixa cada uma e concatena com dedup por <code>id_processo</code>. Veja a secao “Auto-chunking” abaixo. * <code>count_only</code> (bool): Default <code>False</code>. Se <code>True</code>, faz so o GET inicial, extrai o total de resultados via <code>cjpg_n_results</code> e retorna <code>int</code> em vez de <code>pd.DataFrame</code>. Util pra estimar wall-clock antes de coleta longa (issue #92). Com <code>auto_chunk=True</code> + janela &gt; 366 dias, itera janelas disjuntas e soma — soma bruta (sem dedup por <code>id_processo</code>). <code>paginas</code> e ignorado (emite <code>UserWarning</code>).</td>
 <td><code>{}</code></td>
 </tr>
 </tbody>
@@ -318,7 +318,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><code>TypeError</code></td>
-<td>Quando um kwarg desconhecido e passado (via :func:<code>raise_on_extra_kwargs</code>).</td>
+<td>Quando um kwarg desconhecido e passado (via <code>raise_on_extra_kwargs</code>).</td>
 </tr>
 <tr class="even">
 <td></td>
@@ -404,7 +404,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="see-also" class="level4 doc-section doc-section-see-also">
 <h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See also</h4>
 <p><code>InputCJPGTJSP</code> — schema pydantic e a fonte da verdade dos filtros aceitos.</p>
-<p>Auto-chunking (issue #130): Se <code>auto_chunk=True</code> (default herdado de :class:<code>~juscraper.schemas.AutoChunkMixin</code>) e o intervalo <code>data_julgamento_*</code> exceder 366 dias, a busca e dividida em janelas internas, baixadas e concatenadas com dedup por <code>id_processo</code>. Falhas por janela viram :class:<code>UserWarning</code> (parcial + warning). <code>auto_chunk=True</code> + <code>paginas != None</code> em janela &gt; 366 dias e :class:<code>ValueError</code>.</p>
+<p>Auto-chunking (issue #130): Se <code>auto_chunk=True</code> (default herdado de <code>AutoChunkMixin</code>) e o intervalo <code>data_julgamento_*</code> exceder 366 dias, a busca e dividida em janelas internas, baixadas e concatenadas com dedup por <code>id_processo</code>. Falhas por janela viram <code>UserWarning</code> (parcial + warning). <code>auto_chunk=True</code> + <code>paginas != None</code> em janela &gt; 366 dias e <code>ValueError</code>.</p>
 </section>
 </section>
 <section id="juscraper.courts.tjsp.client.TJSPScraper.cjpg_download" class="level3">
@@ -415,7 +415,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Baixa as paginas HTML brutas do CJPG TJSP (sem parsear).</p>
-<p>Delega a normalizacao de <code>pesquisa</code> ao pipeline (via <code>consume_pesquisa_aliases=True</code> + <code>nullable_pesquisa=True</code> — CJPG admite busca aberta com <code>pesquisa=""</code>). Roda :func:<code>validate_pesquisa_length</code> sobre o valor ja resolvido (apos consumir <code>query</code>/<code>termo</code>) para que <code>QueryTooLongError</code> propague mesmo quando o alias trouxe a string longa. Aceita os mesmos filtros de :meth:<code>cjpg</code>; veja la a lista completa.</p>
+<p>Delega a normalizacao de <code>pesquisa</code> ao pipeline (via <code>consume_pesquisa_aliases=True</code> + <code>nullable_pesquisa=True</code> — CJPG admite busca aberta com <code>pesquisa=""</code>). Roda <code>validate_pesquisa_length</code> sobre o valor ja resolvido (apos consumir <code>query</code>/<code>termo</code>) para que <code>QueryTooLongError</code> propague mesmo quando o alias trouxe a string longa. Aceita os mesmos filtros de <code>cjpg</code>; veja la a lista completa.</p>
 <section id="parameters-1" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
 <table class="caption-top table">
@@ -443,7 +443,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>**kwargs</td>
 <td><code>Any</code></td>
-<td>Mesmos filtros aceitos por :meth:<code>cjpg</code> (validados por :class:<code>InputCJPGTJSP</code>).</td>
+<td>Mesmos filtros aceitos por <code>cjpg</code> (validados por <code>InputCJPGTJSP</code>).</td>
 <td><code>{}</code></td>
 </tr>
 </tbody>
@@ -512,8 +512,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjsp.client.TJSPScraper.cjsg">cjsg</h3>
 <div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>courts.tjsp.client.TJSPScraper.cjsg(pesquisa<span class="op">=</span><span class="st">''</span>, paginas<span class="op">=</span><span class="va">None</span>, <span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Pesquisa jurisprudencia de segundo grau do TJSP (CJSG).</p>
-<p>Override raso de :meth:<code>EsajSearchScraper.cjsg</code> so para ancorar a docstring TJSP-especifica: o schema validador e :class:<code>InputCJSGTJSP</code>, que difere do schema default da familia (sem <code>numero_recurso</code>/<code>data_publicacao_*</code>/<code>origem</code>; com <code>baixar_sg</code>). A logica de execucao continua na base.</p>
-<p>Diferente da familia eSAJ pura, <code>pesquisa</code> aceita string vazia — o usuario pode buscar so por filtros (ex.: <code>classe</code>, <code>assunto</code>, <code>data_julgamento_*</code>) sem termo textual. Mesmo comportamento de :meth:<code>cjpg</code> (issue #229).</p>
+<p>Override raso de <code>EsajSearchScraper.cjsg</code> so para ancorar a docstring TJSP-especifica: o schema validador e <code>InputCJSGTJSP</code>, que difere do schema default da familia (sem <code>numero_recurso</code>/<code>data_publicacao_*</code>/<code>origem</code>; com <code>baixar_sg</code>). A logica de execucao continua na base.</p>
+<p>Diferente da familia eSAJ pura, <code>pesquisa</code> aceita string vazia — o usuario pode buscar so por filtros (ex.: <code>classe</code>, <code>assunto</code>, <code>data_julgamento_*</code>) sem termo textual. Mesmo comportamento de <code>cjpg</code> (issue #229).</p>
 <section id="parameters-2" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-2">Parameters</h4>
 <table class="caption-top table">
@@ -541,7 +541,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>**kwargs</td>
 <td><code>Any</code></td>
-<td>Filtros aceitos por :class:<code>InputCJSGTJSP</code> (todos opcionais; <code>None</code> = sem filtro): * <code>ementa</code> (str): Termo buscado especificamente na ementa. * <code>classe</code> (str): ID interno da classe processual. * <code>assunto</code> (str): ID interno do assunto. * <code>comarca</code> (str): ID interno da comarca. * <code>orgao_julgador</code> (str): ID interno do orgao julgador. * <code>baixar_sg</code> (bool): <code>True</code> (default) busca em segundo grau; <code>False</code> busca em colegio recursal. * <code>tipo_decisao</code> (Literal[“acordao”, “monocratica”]): Default <code>"acordao"</code>. * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str, <code>DD/MM/AAAA</code>): Intervalo de julgamento. * <code>auto_chunk</code> (bool): Default <code>True</code>. Quando o intervalo <code>data_julgamento_*</code> excede 366 dias, divide internamente em janelas, baixa cada uma e concatena com dedup por <code>cd_acordao</code>. * <code>count_only</code> (bool): Default <code>False</code>. Se <code>True</code>, faz so a chamada inicial e retorna <code>int</code> com o total de resultados em vez de <code>pd.DataFrame</code>. Util pra estimar wall-clock antes de coleta longa (issue #92). Soma bruta cross-janela em <code>auto_chunk=True</code>.</td>
+<td>Filtros aceitos por <code>InputCJSGTJSP</code> (todos opcionais; <code>None</code> = sem filtro): * <code>ementa</code> (str): Termo buscado especificamente na ementa. * <code>classe</code> (str): ID interno da classe processual. * <code>assunto</code> (str): ID interno do assunto. * <code>comarca</code> (str): ID interno da comarca. * <code>orgao_julgador</code> (str): ID interno do orgao julgador. * <code>baixar_sg</code> (bool): <code>True</code> (default) busca em segundo grau; <code>False</code> busca em colegio recursal. * <code>tipo_decisao</code> (Literal[“acordao”, “monocratica”]): Default <code>"acordao"</code>. * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str, <code>DD/MM/AAAA</code>): Intervalo de julgamento. * <code>auto_chunk</code> (bool): Default <code>True</code>. Quando o intervalo <code>data_julgamento_*</code> excede 366 dias, divide internamente em janelas, baixa cada uma e concatena com dedup por <code>cd_acordao</code>. * <code>count_only</code> (bool): Default <code>False</code>. Se <code>True</code>, faz so a chamada inicial e retorna <code>int</code> com o total de resultados em vez de <code>pd.DataFrame</code>. Util pra estimar wall-clock antes de coleta longa (issue #92). Soma bruta cross-janela em <code>auto_chunk=True</code>.</td>
 <td><code>{}</code></td>
 </tr>
 </tbody>
@@ -648,7 +648,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Baixa as paginas HTML brutas do CJSG TJSP (sem parsear).</p>
-<p>Roda :func:<code>validate_pesquisa_length</code> antes do pydantic para que <code>QueryTooLongError</code> propague limpo (em vez de virar <code>ValidationError</code>). Aceita os mesmos filtros de :meth:<code>cjsg</code>; veja la a lista completa.</p>
+<p>Roda <code>validate_pesquisa_length</code> antes do pydantic para que <code>QueryTooLongError</code> propague limpo (em vez de virar <code>ValidationError</code>). Aceita os mesmos filtros de <code>cjsg</code>; veja la a lista completa.</p>
 <section id="parameters-3" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-3">Parameters</h4>
 <table class="caption-top table">
@@ -676,13 +676,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>diretorio</td>
 <td><code>str</code> | None</td>
-<td>Sobrescreve :attr:<code>download_path</code> para esta unica chamada. Default <code>None</code>.</td>
+<td>Sobrescreve <code>download_path</code> para esta unica chamada. Default <code>None</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>**kwargs</td>
 <td><code>Any</code></td>
-<td>Mesmos filtros aceitos por :meth:<code>cjsg</code> (validados por :class:<code>InputCJSGTJSP</code>).</td>
+<td>Mesmos filtros aceitos por <code>cjsg</code> (validados por <code>InputCJSGTJSP</code>).</td>
 <td><code>{}</code></td>
 </tr>
 </tbody>
@@ -845,7 +845,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><code>ValueError</code></td>
-<td>Quando <code>path</code> e um diretorio e nenhum arquivo dele pode ser lido, ou quando <code>path</code> e um arquivo com extensao diferente de <code>.html</code>/<code>.json</code>. Ver :func:<code>cpopg_parse_manager</code>.</td>
+<td>Quando <code>path</code> e um diretorio e nenhum arquivo dele pode ser lido, ou quando <code>path</code> e um arquivo com extensao diferente de <code>.html</code>/<code>.json</code>. Ver <code>cpopg_parse_manager</code>.</td>
 </tr>
 </tbody>
 </table>
@@ -870,7 +870,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjsp.client.TJSPScraper.listar_varas">listar_varas</h3>
 <div class="sourceCode" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>courts.tjsp.client.TJSPScraper.listar_varas(grau<span class="op">=</span><span class="st">'1'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Lista as varas de primeiro grau disponiveis para filtrar (cjpg).</p>
-<p>Baixa a arvore de varas do eSAJ para descobrir os IDs aceitos pelo filtro <code>vara</code> de :meth:<code>cjpg</code>. A arvore agrupa as varas por comarca/foro, entao <code>id_pai</code>/<code>caminho</code> carregam essa hierarquia.</p>
+<p>Baixa a arvore de varas do eSAJ para descobrir os IDs aceitos pelo filtro <code>vara</code> de <code>cjpg</code>. A arvore agrupa as varas por comarca/foro, entao <code>id_pai</code>/<code>caminho</code> carregam essa hierarquia.</p>
 <section id="parameters-5" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-5">Parameters</h4>
 <table class="caption-top table">

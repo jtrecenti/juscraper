@@ -180,7 +180,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Raspador do TRF3: consulta pública do PJe e busca de jurisprudência.</p>
-<p><code>cpopg</code> consulta processos de 1º grau no PJe (<code>pje1g.trf3.jus.br</code>), pela base :class:<code>TRFConsultaScraper</code>. <code>cjsg</code> pesquisa jurisprudência em <code>web.trf3.jus.br/jurisprudencia</code>, um sistema separado, com sessão e perfil HTTP próprios (<code>perfis_http["cjsg"]</code>).</p>
+<p><code>cpopg</code> consulta processos de 1º grau no PJe (<code>pje1g.trf3.jus.br</code>), pela base <code>TRFConsultaScraper</code>. <code>cjsg</code> pesquisa jurisprudência em <code>web.trf3.jus.br/jurisprudencia</code>, um sistema separado, com sessão e perfil HTTP próprios (<code>perfis_http["cjsg"]</code>).</p>
 <section id="methods" class="level2">
 <h2 class="anchored" data-anchor-id="methods">Methods</h2>
 <table class="caption-top table">
@@ -201,7 +201,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td><a href="#juscraper.courts.trf3.client.TRF3Scraper.cjsg_parse">cjsg_parse</a></td>
-<td>Converte as páginas de :meth:<code>cjsg_download</code> em DataFrame.</td>
+<td>Converte as páginas de <code>cjsg_download</code> em DataFrame.</td>
 </tr>
 </tbody>
 </table>
@@ -237,7 +237,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>**kwargs</td>
 <td><code>Any</code></td>
-<td>Filtros aceitos por :class:<code>InputCJSGTRF3</code>: * <code>base</code> (str): <code>"acordaos"</code> (default; acórdãos do TRF3), <code>"turmas_recursais"</code> (acórdãos das Turmas Recursais dos JEFs), <code>"monocraticas"</code> (decisões monocráticas do TRF3) ou <code>"monocraticas_turmas_recursais"</code> (decisões monocráticas das Turmas Recursais). * <code>numero_processo</code> (str): Número do processo, com ou sem máscara. * <code>relator</code> (str): Nome do relator ou do relator para o acórdão, como o portal indexa (ex.: <code>"NERY JUNIOR"</code>, a forma do dropdown do formulário). O portal casa nomes parciais. * <code>classe</code> (str): Classe como no dropdown, com sigla (ex.: <code>"AI - AGRAVO DE INSTRUMENTO"</code>). * <code>orgao_julgador</code> (str): Órgão julgador, pelo rótulo do dropdown do formulário (<code>"3ª Turma"</code>, <code>"11ª Turma Recursal da Seção Judiciária de São Paulo"</code>) ou pelo nome indexado da opção (<code>"TERCEIRA TURMA"</code>, <code>"11ª TURMA RECURSAL DE SÃO PAULO"</code>), sem diferença de caixa e de espaços. O valor da coluna <code>orgao_julgador</code> do resultado também serve: “1a. seção” vira “1A”, como no formulário, então <code>"QUINTA TURMA - 1A. SEÇÃO"</code> casa com a opção <code>QUINTA TURMA - 1a. SEÇÃO</code>. A busca manda o par que o navegador mandaria, rótulo e nome indexado da opção, lido do formulário da aba, e traz os documentos gravados com qualquer dos dois (medido com “medicamento”: <code>"QUINTA TURMA"</code> traz 576 documentos, contra 443 do rótulo sozinho e 133 do nome indexado sozinho). Rótulo de mais de uma opção, como <code>"5ª Turma"</code> nos acórdãos, levanta <code>ValueError</code>; texto que não casa com nenhuma opção vai como está e só encontra o que o portal grava com essa grafia. Não existe nas bases de monocráticas. * <code>ementa</code> (str): Texto pesquisado só na ementa. Não existe nas bases de monocráticas. * <code>indexacao</code> (str): Texto pesquisado na indexação (“Objeto do Processo” nas Turmas Recursais). Não existe nas bases de monocráticas. * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str): Data de julgamento; nas monocráticas, data da decisão. * <code>data_publicacao_inicio</code> / <code>data_publicacao_fim</code> (str): Data de publicação. Não combina com <code>data_julgamento_*</code>. * <code>tamanho_pagina</code> (int): 10 (default), 30 ou 50 documentos por página.</td>
+<td>Filtros aceitos por <code>InputCJSGTRF3</code>: * <code>base</code> (str): <code>"acordaos"</code> (default; acórdãos do TRF3), <code>"turmas_recursais"</code> (acórdãos das Turmas Recursais dos JEFs), <code>"monocraticas"</code> (decisões monocráticas do TRF3) ou <code>"monocraticas_turmas_recursais"</code> (decisões monocráticas das Turmas Recursais). * <code>numero_processo</code> (str): Número do processo, com ou sem máscara. * <code>relator</code> (str): Nome do relator ou do relator para o acórdão, como o portal indexa (ex.: <code>"NERY JUNIOR"</code>, a forma do dropdown do formulário). O portal casa nomes parciais. * <code>classe</code> (str): Classe como no dropdown, com sigla (ex.: <code>"AI - AGRAVO DE INSTRUMENTO"</code>). * <code>orgao_julgador</code> (str): Órgão julgador, pelo rótulo do dropdown do formulário (<code>"3ª Turma"</code>, <code>"11ª Turma Recursal da Seção Judiciária de São Paulo"</code>) ou pelo nome indexado da opção (<code>"TERCEIRA TURMA"</code>, <code>"11ª TURMA RECURSAL DE SÃO PAULO"</code>), sem diferença de caixa e de espaços. O valor da coluna <code>orgao_julgador</code> do resultado também serve: “1a. seção” vira “1A”, como no formulário, então <code>"QUINTA TURMA - 1A. SEÇÃO"</code> casa com a opção <code>QUINTA TURMA - 1a. SEÇÃO</code>. A busca manda o par que o navegador mandaria, rótulo e nome indexado da opção, lido do formulário da aba, e traz os documentos gravados com qualquer dos dois (medido com “medicamento”: <code>"QUINTA TURMA"</code> traz 576 documentos, contra 443 do rótulo sozinho e 133 do nome indexado sozinho). Rótulo de mais de uma opção, como <code>"5ª Turma"</code> nos acórdãos, levanta <code>ValueError</code>; texto que não casa com nenhuma opção vai como está e só encontra o que o portal grava com essa grafia. Não existe nas bases de monocráticas. * <code>ementa</code> (str): Texto pesquisado só na ementa. Não existe nas bases de monocráticas. * <code>indexacao</code> (str): Texto pesquisado na indexação (“Objeto do Processo” nas Turmas Recursais). Não existe nas bases de monocráticas. * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str): Data de julgamento; nas monocráticas, data da decisão. * <code>data_publicacao_inicio</code> / <code>data_publicacao_fim</code> (str): Data de publicação. Não combina com <code>data_julgamento_*</code>. * <code>tamanho_pagina</code> (int): 10 (default), 30 ou 50 documentos por página.</td>
 <td><code>{}</code></td>
 </tr>
 </tbody>
@@ -374,7 +374,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Baixa as páginas da lista resumida da busca de jurisprudência do TRF3.</p>
-<p>Aceita os mesmos filtros de :meth:<code>cjsg</code>; veja lá a lista completa.</p>
+<p>Aceita os mesmos filtros de <code>cjsg</code>; veja lá a lista completa.</p>
 <section id="returns-1" class="level4 doc-section doc-section-returns">
 <h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
 <table class="caption-top table">
@@ -398,7 +398,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="juscraper.courts.trf3.client.TRF3Scraper.cjsg_parse" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.trf3.client.TRF3Scraper.cjsg_parse">cjsg_parse</h3>
 <div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>courts.trf3.client.TRF3Scraper.cjsg_parse(resultados_brutos)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Converte as páginas de :meth:<code>cjsg_download</code> em DataFrame.</p>
+<p>Converte as páginas de <code>cjsg_download</code> em DataFrame.</p>
 <section id="returns-2" class="level4 doc-section doc-section-returns">
 <h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-2">Returns</h4>
 <table class="caption-top table">
@@ -413,7 +413,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><code>pd</code>.<code>DataFrame</code></td>
-<td>pd.DataFrame: Uma linha por documento; colunas descritas em :meth:<code>cjsg</code>.</td>
+<td>pd.DataFrame: Uma linha por documento; colunas descritas em <code>cjsg</code>.</td>
 </tr>
 </tbody>
 </table>

@@ -216,7 +216,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td><a href="#juscraper.courts.tjmg.client.TJMGScraper.cposg_parse">cposg_parse</a></td>
-<td>Converte a saida de :meth:<code>cposg_download</code> em DataFrame.</td>
+<td>Converte a saida de <code>cposg_download</code> em DataFrame.</td>
 </tr>
 </tbody>
 </table>
@@ -276,7 +276,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td>**kwargs</td>
 <td></td>
-<td>Filtros aceitos pelo schema :class:<code>InputCJSGTJMG</code>. Listados abaixo (todos opcionais; <code>None</code> = sem filtro): * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str): <code>DD/MM/AAAA</code>. Backend: <code>dataJulgamentoInicial</code> / <code>dataJulgamentoFinal</code>. * <code>data_publicacao_inicio</code> / <code>data_publicacao_fim</code> (str): <code>DD/MM/AAAA</code>. Backend: <code>dataPublicacaoInicial</code> / <code>dataPublicacaoFinal</code>.</td>
+<td>Filtros aceitos pelo schema <code>InputCJSGTJMG</code>. Listados abaixo (todos opcionais; <code>None</code> = sem filtro): * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str): <code>DD/MM/AAAA</code>. Backend: <code>dataJulgamentoInicial</code> / <code>dataJulgamentoFinal</code>. * <code>data_publicacao_inicio</code> / <code>data_publicacao_fim</code> (str): <code>DD/MM/AAAA</code>. Backend: <code>dataPublicacaoInicial</code> / <code>dataPublicacaoFinal</code>.</td>
 <td><code>{}</code></td>
 </tr>
 </tbody>
@@ -346,7 +346,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Run a TJMG acórdão search and return the raw HTML of each page.</p>
-<p>Aceita os mesmos filtros de :meth:<code>cjsg</code>; veja la a lista completa.</p>
+<p>Aceita os mesmos filtros de <code>cjsg</code>; veja la a lista completa.</p>
 <section id="parameters-1" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
 <p>pesquisa : str Free-text search term. paginas : int, list, range or None Pages to download (1-based). <code>None</code> downloads every page (capped at 400 results, the TJMG limit). pesquisar_por : str Field to search in: <code>"ementa"</code> or <code>"acordao"</code> (inteiro teor). order_by : int Sort order: <code>2</code> data julgamento, <code>1</code> data publicação, <code>0</code> precisão. tamanho_pagina : int Results per page (10, 20 or 50). Aceita <code>linhas_por_pagina</code> como alias deprecado. data_julgamento_inicio, data_julgamento_fim : str Julgamento date range (<code>dd/mm/yyyy</code> or <code>yyyy-mm-dd</code>). data_publicacao_inicio, data_publicacao_fim : str Publicação date range (<code>dd/mm/yyyy</code> or <code>yyyy-mm-dd</code>).</p>
@@ -382,7 +382,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>id_cnj</td>
 <td><code>str</code> | <code>list</code>[<code>str</code>]</td>
-<td>CNJ (20 digitos) ou numero TJMG (17 digitos, ex.: <code>"1.0000.26.408376-7/001"</code> — a coluna <code>processo_interno</code> do :meth:<code>cjsg</code>). Mascara opcional. Com CNJ, vem todos os recursos vinculados; com numero TJMG, so aquele recurso.</td>
+<td>CNJ (20 digitos) ou numero TJMG (17 digitos, ex.: <code>"1.0000.26.408376-7/001"</code> — a coluna <code>processo_interno</code> do <code>cjsg</code>). Mascara opcional. Com CNJ, vem todos os recursos vinculados; com numero TJMG, so aquele recurso.</td>
 <td><em>required</em></td>
 </tr>
 </tbody>
@@ -501,12 +501,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjmg.client.TJMGScraper.cposg_download">cposg_download</h3>
 <div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>courts.tjmg.client.TJMGScraper.cposg_download(id_cnj, <span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Baixa o HTML de resultado e de partes/advogados de cada processo.</p>
-<p>Retorna uma lista alinhada com <code>id_cnj</code>. Veja :meth:<code>cposg</code> para os formatos de numero aceitos e o <code>UserWarning</code> emitido quando alguma consulta falha; aqui a falha aparece como <code>None</code> no HTML correspondente.</p>
+<p>Retorna uma lista alinhada com <code>id_cnj</code>. Veja <code>cposg</code> para os formatos de numero aceitos e o <code>UserWarning</code> emitido quando alguma consulta falha; aqui a falha aparece como <code>None</code> no HTML correspondente.</p>
 </section>
 <section id="juscraper.courts.tjmg.client.TJMGScraper.cposg_parse" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjmg.client.TJMGScraper.cposg_parse">cposg_parse</h3>
 <div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>courts.tjmg.client.TJMGScraper.cposg_parse(raw)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Converte a saida de :meth:<code>cposg_download</code> em DataFrame.</p>
+<p>Converte a saida de <code>cposg_download</code> em DataFrame.</p>
 
 
 </section>
