@@ -1,6 +1,6 @@
-"""Gate da referência do quartodoc: papéis Sphinx em ``See also`` e o filtro interlinks.
+"""Gate da referência do quartodoc: papéis Sphinx em ``See Also`` e o filtro interlinks.
 
-O quartodoc reescreve cada papel Sphinx de uma seção ``See also``, como
+O quartodoc reescreve cada papel Sphinx de uma seção ``See Also``, como
 ``:class:`InputCJSGTJMG```, em link Markdown com o alvo entre crases:
 ``[](:class:`InputCJSGTJMG`)``. Quem resolve esse alvo é o filtro Lua
 ``interlinks``, declarado em ``docs/_quarto.yml``. Sem o filtro, o Pandoc gera
@@ -70,7 +70,7 @@ def _docstrings(caminho: Path) -> Iterator[tuple[str, str]]:
 
 
 def _varrer_see_also(docstring: str) -> tuple[list[str], list[str]]:
-    """Separa as seções ``See also:`` que o griffe reconhece das que ele ignora.
+    """Separa as seções ``See Also:`` que o griffe reconhece das que ele ignora.
 
     O griffe só abre a seção quando o título ocupa a linha sozinho, tem linha
     em branco acima (ou abre a docstring) e não tem linha em branco logo
@@ -126,7 +126,7 @@ def test_quarto_declara_filtro_interlinks_depois_do_quarto():
     filtros = config.get("filters") or []
     assert "interlinks" in filtros, (
         "docs/_quarto.yml precisa declarar o filtro `interlinks`; sem ele, os papéis "
-        "Sphinx de See also e as anotações de tipo viram <a> com href inválido."
+        "Sphinx de See Also e as anotações de tipo viram <a> com href inválido."
     )
     # Antes do `quarto`, o filtro troca os tipos por código antes de o Quarto
     # decidir as larguras das tabelas, e as tabelas de parâmetros passam a usar
@@ -151,7 +151,7 @@ def test_extensao_interlinks_presente():
 
 def test_see_also_no_formato_que_o_griffe_reconhece():
     assert not SEE_ALSO_FORA_DO_FORMATO, (
-        "Título `See also:` precisa ocupar a linha sozinho, ter linha em branco acima "
+        "Título `See Also:` precisa ocupar a linha sozinho, ter linha em branco acima "
         "e o conteúdo recuado logo abaixo, sem linha em branco no meio. Fora disso o "
         "griffe lê o bloco como texto e os papéis Sphinx saem crus:\n" + "\n".join(SEE_ALSO_FORA_DO_FORMATO)
     )

@@ -122,7 +122,7 @@ format:
 
 # quartodoc writes cross-references as Markdown links whose target is wrapped
 # in backticks: type annotations (because of `render_interlinks: true`) and
-# every Sphinx role in a `See also` section, such as :class:`InputCJSGTJMG`
+# every Sphinx role in a `See Also` section, such as :class:`InputCJSGTJMG`
 # (the latter regardless of `render_interlinks`). Only this filter resolves
 # them: a full path to an object listed in objects.json, with role :class: or
 # :func:, becomes a link; anything else, including short names and every
