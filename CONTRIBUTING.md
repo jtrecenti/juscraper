@@ -91,9 +91,9 @@ As seções a seguir são notas internas para quem contribui com novos raspadore
 
 O workflow `Testes` (`.github/workflows/tests.yml`) roda `uv run pytest` em todo PR e em pushes para `main`, com uma perna por versão de Python da matriz declarada no próprio arquivo. A integração fica de fora pelo `-m 'not integration'` de `addopts`, então nenhuma perna acessa tribunal. O job `Testes obrigatórios` reúne o resultado dessas pernas e é o nome a exigir na proteção da `main`.
 
-O workflow resolve as dependências a cada execução, sem lock versionado, e usa a versão mais recente do `uv` e da imagem do runner. Como `filterwarnings = ["error"]` transforma aviso em falha, uma versão nova de qualquer um deles pode deixar o workflow vermelho sem mudança no repositório.
+As dependências do CI vêm do `uv.lock` versionado. Os workflows que instalam o projeto usam `uv sync --frozen`, e os que rodam `uv run` definem `UV_FROZEN=1` para o workflow inteiro, porque sem isso um `uv run` refaz a resolução quando o `pyproject.toml` muda sem o lock e instala fora dele. O `Lint` reprova com `uv lock --check` quando o lock não acompanha o `pyproject.toml`. Depois de mudar uma dependência, rodar `uv lock` e commitar o `uv.lock` junto. O `publish.yml` só faz `uv build`. A versão do `uv` vem do `setup-uv` de cada workflow, e a imagem do runner é sempre a mais recente; como `filterwarnings = ["error"]` transforma aviso em falha, uma imagem nova ainda pode deixar o workflow vermelho sem mudança no repositório.
 
-A perna marcada com `cobertura` na matriz mede a cobertura e publica o total e a tabela por arquivo no resumo da execução. Não há limiar: o número serve de referência para decidir um piso depois (#101).
+A perna marcada com `cobertura` na matriz mede a cobertura, publica o total e a tabela por arquivo no resumo da execução e reprova abaixo do `fail_under` de `[tool.coverage.report]`, no `pyproject.toml`: 94%, um ponto abaixo dos 95% medidos quando o workflow chegou (#101). O resumo é publicado também quando o piso reprova. Para conferir localmente, rodar a suíte inteira com `uv run pytest --cov`; num subconjunto, a cobertura total fica baixa e o piso reprova, então ali vale `--cov-fail-under=0`.
 
 ### Pirâmide de testes
 
@@ -211,7 +211,7 @@ As correções automáticas desse comando exigem revisão antes de salvar; sem `
 
 ### CI e primeira adoção
 
-O workflow `Lint` roda em todo PR e em pushes para `main`, sem coletar dados externos. Ele executa Ruff, o controle de dispensas e os testes do próprio gate. Usa o SHA da base do PR ou o SHA anterior ao push, com histórico Git completo. O job precisa ser selecionado nas regras de proteção da branch para que uma falha impeça o merge; adicionar o workflow não altera essas regras do GitHub.
+O workflow `Lint` roda em todo PR e em pushes para `main`, sem coletar dados externos. Ele confere o `uv.lock` e executa Ruff, o controle de dispensas e os testes do próprio gate, comparando o PR com a ponta da branch de destino e o push com o SHA anterior, com histórico Git completo. O job `pre-commit` do mesmo workflow roda todos os hooks em todos os arquivos (`pre-commit run --all-files`), o que leva mypy, pylint, flake8, isort e bandit ao PR; `lint-policy` e `complexity` ficam de fora dele porque têm passo próprio, com a base de cada evento. Os hooks rodam nas versões fixadas no `.pre-commit-config.yaml`, em ambientes próprios, e não nas do `uv.lock`; as dependências adicionais deles também têm versão fixa. O `check-added-large-files` só olha arquivo acrescentado no commit, então não confere nada nesse job. O job precisa ser selecionado nas regras de proteção da branch para que uma falha impeça o merge; adicionar o workflow não altera essas regras do GitHub.
 
 Na primeira adoção, a base ainda não contém `ruff.toml`. O script extrai os arquivos Python de `src/` e `tests/` daquela revisão em diretório temporário e mede esse código com a régua nova. Só os pares encontrados nesse código antigo podem receber dispensa. Nos PRs seguintes, a comparação usa diretamente a lista já versionada na base. Essa verificação impede incluir problemas criados no próprio PR como se fossem pendências antigas.
 
@@ -307,6 +307,16 @@ O que o gate não distingue ou não mede:
 - **Código fora de função não é medido** pelas duas ferramentas: o nível do módulo, o corpo de classe e um `lambda` no nível do módulo. O Complexipy 6.0.1 também não mede métodos de classe aninhada dentro de outra classe.
 
 As versões do Lizard e do Complexipy são fixas no extra `[dev]` e no hook do pre-commit, e `tests/complexity_gate` reprova se as duas divergirem. Refs #101, #307.
+
+### Semgrep
+
+O job `semgrep` do workflow `Qualidade` roda as regras `p/python` e `p/security-audit` com `--baseline-commit`, contra a mesma base do gate de complexidade. Ele analisa só os arquivos que mudaram desde a base e reprova o achado que não encontra nela. Os 8 achados que já estão em `src/` ficam aceitos: 2 `jwt-none-alg`, 2 `unverified-jwt-decode` e 4 `logger-credential-disclosure`. A triagem de junho, na #101, contou 6 desses tipos; os 2 de log a mais estão em `_pdpj_sso/mixin.py`, código de 30/09, e registram a exceção e o caminho do cache, e não o token.
+
+O Semgrep reconhece um achado da base pelo trecho de código, e não pelo que ele faz. Por isso mover para outro arquivo uma função que já tinha achado, ou só quebrar em várias linhas o trecho de um achado antigo, aparece como achado novo e reprova. No sentido contrário, uma mudança que passa a levar um segredo para dentro de uma linha de log antiga, sem alterar a linha, não aparece. A versão do Semgrep é fixa no workflow, e `--metrics=off` não manda métricas de uso. Para rodar localmente:
+
+```bash
+uvx --python 3.12 semgrep==1.180.0 scan --config p/python --config p/security-audit --metrics=off --error --baseline-commit "$(git merge-base HEAD origin/main)" src
+```
 
 ## Adding a new tribunal
 

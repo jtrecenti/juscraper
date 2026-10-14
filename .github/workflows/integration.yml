@@ -28,6 +28,9 @@ permissions:
   contents: read
 
 env:
+  # Todo comando uv do workflow usa o uv.lock como está; sem isto, um uv run
+  # refaz a resolução quando o pyproject.toml muda sem o lock e instala fora dele.
+  UV_FROZEN: "1"
   # O autoteste usa o TJMG porque ele exercita a instalação mais pesada: o
   # extra `tjmg` traz o solver de captcha e o torch.
   TRIBUNAL: ${{ github.event_name == 'pull_request' && 'tjmg' || inputs.tribunal }}
@@ -103,10 +106,10 @@ jobs:
       - uses: astral-sh/setup-uv@v10.3.0
         with:
           python-version: "3.13"
-          cache-dependency-glob: pyproject.toml
+          cache-dependency-glob: uv.lock
       - name: Instalar dependências, extras dos raspadores e o Chromium
         run: |
-          uv sync --extra dev --extra docs --extra tjmg --extra waf
+          uv sync --frozen --extra dev --extra docs --extra tjmg --extra waf
           uv run playwright install --with-deps chromium
       # Nos dois passos abaixo, o código de saída 1 do pytest (teste falhou)
       # não derruba o job: tribunal fora do ar é assunto da issue. De 2 em

@@ -365,6 +365,9 @@ omit = [
 ]
 
 [tool.coverage.report]
+# Piso da cobertura total, um ponto abaixo dos 95% medidos quando o workflow
+# Testes chegou (#101). A perna de cobertura do CI reprova abaixo dele.
+fail_under = 94
 exclude_lines = [
     "pragma: no cover",
     "def __repr__",
