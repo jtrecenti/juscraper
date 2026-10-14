@@ -64,10 +64,14 @@ jobs:
   # resultado dos PRs.
   #
   # 3.15: o teto `pandas<3.0.0` (issue #25) resolve para o pandas 2.3.3, que
-  # não tem wheel para 3.15. A instalação compila o pandas da fonte (4 min 37 s
-  # medidos em 13/10/2026) e a suíte cai com falha de segmentação em
-  # `pandas/_libs/pandas_datetime`, chamado por `pd.to_datetime`. A versão
-  # volta para a matriz principal quando a suíte passar nela.
+  # não tem wheel para 3.15, então a instalação compila o pandas da fonte,
+  # contra o NumPy 2.5. Compilado assim, o pandas 2.3.3 cai com falha de
+  # segmentação em `pd.to_datetime`, em qualquer versão de Python: o
+  # `np_datetime.c` dele inclui os cabeçalhos do NumPy antes de definir
+  # `PY_ARRAY_UNIQUE_SYMBOL`, e a partir do NumPy 2.5 isso dá ao arquivo uma
+  # cópia da versão de runtime que fica em zero. O pandas corrigiu a ordem só
+  # na linha 3.0 (pandas-dev/pandas#65591, no 3.0.6). A versão volta para a
+  # matriz principal quando a suíte passar nela.
   pytest-experimental:
     name: pytest (py${{ matrix.python }}, não bloqueante)
     runs-on: ubuntu-latest
