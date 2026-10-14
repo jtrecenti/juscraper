@@ -8,16 +8,25 @@ on:
 permissions:
   contents: read
 
+env:
+  # Todo comando uv do workflow usa o uv.lock como está; sem isto, um uv run
+  # refaz a resolução quando o pyproject.toml muda sem o lock e instala fora dele.
+  UV_FROZEN: "1"
+
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@v10.3.0
+      # Com --frozen, o uv sync instala o lock como está; sem esta conferência,
+      # um pyproject.toml alterado sem o uv.lock passaria despercebido.
+      - name: Conferir o uv.lock
+        run: uv lock --check
       - name: Instalar dependências de desenvolvimento
-        run: uv sync --extra dev --python 3.12
+        run: uv sync --frozen --extra dev --python 3.12
       - name: Conferir Ruff e dispensas temporárias
         env:
           # Num PR, a base é a ponta atual da branch de destino. O
@@ -30,3 +39,21 @@ jobs:
           uv run python scripts/check_lint_policy.py --base-ref "$LINT_BASE"
       - name: Testar a política de lint
         run: uv run pytest tests/lint_policy -q
+
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
+      - name: Instalar dependências de desenvolvimento
+        run: uv sync --frozen --extra dev --python 3.12
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+      - name: Rodar os hooks em todos os arquivos
+        env:
+          # A política de lint e a complexidade têm passo próprio, com a base de
+          # cada evento; aqui elas comparariam com origin/main.
+          SKIP: lint-policy,complexity
+        run: uv run pre-commit run --all-files --show-diff-on-failure

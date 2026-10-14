@@ -10,7 +10,7 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
     Args:
         resultados_brutos: List of raw JSON responses from the TJPB API.
     """
-    registros = []
+    registros: list[dict] = []
     for response in resultados_brutos:
         hits = response.get("hits", [])
         registros.extend(

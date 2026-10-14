@@ -172,7 +172,7 @@ class TRF3Scraper(TRFConsultaScraper):
             ... )
 
         See Also:
-            ``InputCJSGTRF3``: fonte dos filtros aceitos.
+            :class:`InputCJSGTRF3`: fonte dos filtros aceitos.
         """
         return self.cjsg_parse(self.cjsg_download(pesquisa=pesquisa, paginas=paginas, **kwargs))
 

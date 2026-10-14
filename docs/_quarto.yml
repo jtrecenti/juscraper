@@ -125,9 +125,9 @@ format:
 # every Sphinx role in a `See Also` section, such as :class:`InputCJSGTJMG`
 # (the latter regardless of `render_interlinks`). Only this filter resolves
 # them: a full path to an object listed in objects.json, with role :class: or
-# :func:, becomes a link; anything else, including short names and every
-# :meth: role (the filter does not map `meth` to the inventory's `function`
-# role), becomes inline code. Without it, Pandoc emits
+# :func:, becomes a link; anything else, including short names, becomes
+# inline code. It does not map :meth: to the inventory's `function` role;
+# sphinx_roles.lua, below, rewrites those targets first. Without it, Pandoc emits
 # <a href=":class:`...`"></a>, an empty anchor with a broken URL. Vendored
 # unchanged, with its MIT license, from machow/quartodoc, tag v0.11.1,
 # _extensions/interlinks; tests/test_docs_interlinks.py checks it is wired
@@ -140,8 +140,20 @@ format:
 # would turn unresolved types into code, and the widths quartodoc derives from
 # the raw Markdown would apply: in TJSPScraper's `Raises` table, `Type` takes
 # 60% of the width and squeezes `Description`.
+#
+# quartodoc leaves Sphinx roles outside `See Also` untouched, so a role in a
+# parameter description or in free text would reach the page verbatim, as
+# ":meth:" followed by the name in code. sphinx_roles.lua, this project's own
+# filter, turns those roles into the same links quartodoc writes in `See
+# Also`, and rewrites every :meth: target, its own and quartodoc's, so that
+# a short method name links to that method when the page's class defines
+# and documents it. It must run
+# before `interlinks`, which resolves them, and after
+# `quarto`, for the same table-width reason. tests/test_docs_papeis_sphinx.py
+# checks the order and rejects role forms the filter does not match.
 filters:
   - quarto
+  - sphinx_roles.lua
   - interlinks
 
 quartodoc:
