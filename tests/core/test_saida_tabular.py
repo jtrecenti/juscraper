@@ -12,6 +12,7 @@ que deixa estes testes exercitarem o caso do pandas 3 em qualquer ambiente.
 from __future__ import annotations
 
 import datetime
+import importlib.util
 import inspect
 import pickle
 import threading
@@ -89,6 +90,12 @@ def inferencia_do_pandas_3():
         pd.get_option("future.infer_string")
     except pd.errors.OptionError:
         pytest.skip("pandas sem a opção future.infer_string")
+    # No pandas 2.1 e 2.2, a opção só cria colunas de texto com o pyarrow
+    # instalado; sem ele, o DataFrame de teste levanta ImportError. O pandas 2.3
+    # cai no armazenamento em Python. O Colab traz o pandas 2.2.
+    versao = tuple(int(parte) for parte in pd.__version__.split(".")[:2])
+    if versao < (2, 3) and importlib.util.find_spec("pyarrow") is None:
+        pytest.skip("future.infer_string exige pyarrow no pandas < 2.3")
     with pd.option_context("future.infer_string", True):  # noqa: FBT003 - a API do pandas recebe o valor posicional
         yield
 

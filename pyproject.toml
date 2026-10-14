@@ -42,15 +42,16 @@ dependencies = [
     "browser-cookie3>=0.20.1",
     "comm>=0.2.2",
     "nest-asyncio>=1.6.0",
-    # Teto <3.0.0 mantido por causa do conflito de resolvedor no Google Colab
-    # (cudf-cu12 exige pandas<2.2.4dev0,>=2.0) — ver issue #25. Nao remover sem
-    # validar contra a imagem atual do Colab.
-    # O pandas 2 nao publica wheel para Python 3.15, e compilado do fonte ele
-    # derruba o interpretador em pd.to_datetime; a partir do 3.15 o pandas e o 3.
-    # Em toda versao, texto ausente sai como None nos metodos publicos, por
-    # BaseScraper.__init_subclass__ (src/juscraper/core/base.py).
-    "pandas>=2.0.0,<3.0.0; python_version < '3.15'",
-    "pandas>=3.0.0,<4.0.0; python_version >= '3.15'",
+    # Até o Python 3.14 vale pandas 2 ou 3. O piso 2.0.0 deixa o pip do Google
+    # Colab manter o pandas 2.2 pré-instalado, que o cudf-cu12 exige (issue #25):
+    # o pip só atualiza dependência que não satisfaz o requisito, e o problema
+    # da issue vinha do piso antigo, >=2.2.3. O pandas 2 não publica wheel para
+    # o 3.15, e compilado do fonte contra NumPy >= 2.5 derruba o interpretador
+    # em pd.to_datetime; o mesmo vale para o pandas 3 até a 3.0.3, e a 3.0.6 é a
+    # primeira com wheel cp315. Em toda versão, texto ausente sai como None nos
+    # métodos públicos, por BaseScraper.__init_subclass__ (core/base.py).
+    "pandas>=2.0.0,<4.0.0; python_version < '3.15'",
+    "pandas>=3.0.6,<4.0.0; python_version >= '3.15'",
     "pyjwt>=2.10.1",
     "pydantic>=2.0.0",
     "python-dotenv>=1.1.0",
