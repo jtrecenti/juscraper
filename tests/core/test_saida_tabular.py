@@ -205,8 +205,8 @@ def test_metodo_herdado_de_mixin_tambem_e_normalizado():
 
 def test_coluna_object_com_nan_sai_com_none_tambem_no_pandas_2():
     # Chave ausente num registro gera ``NaN`` em coluna ``object`` mesmo no
-    # pandas 2; sem a normalização, a mesma chamada daria ``NaN`` em 3.14 e
-    # ``None`` em 3.15.
+    # pandas 2; sem a normalização, a coluna sairia com ``NaN``, como ``object``
+    # no pandas 2 e como ``str`` no pandas 3.
     class Registros(BaseScraper):
         def tabela(self) -> pd.DataFrame:
             return pd.DataFrame([{"texto": "a"}, {"outro": "b"}])

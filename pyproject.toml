@@ -32,6 +32,9 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
     "Topic :: Internet :: WWW/HTTP :: Browsers",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Text Processing :: Markup :: HTML",
@@ -47,11 +50,13 @@ dependencies = [
     # #25): o pip só atualiza dependência que não satisfaz o requisito, e o
     # problema da issue vinha do piso antigo, >=2.2.3. No Python 3.15 o pandas 2
     # não tem wheel, e compilado do fonte contra NumPy >= 2.5 derruba o
-    # interpretador em pd.to_datetime; o resolvedor escolhe a 3.0.6, a primeira
-    # com wheel cp315. Exigir pandas 3 no 3.15 por marcador impediria de resolver
-    # todo projeto com requires-python aberto e pandas<3 fixado, porque o uv
-    # resolve também para o 3.15. Em toda versão, texto ausente sai como None
-    # nos métodos públicos, por BaseScraper.__init_subclass__ (core/base.py).
+    # interpretador em pd.to_datetime. O resolvedor escolhe o pandas mais novo,
+    # e a 3.0.6 é a primeira com wheel cp315: da 3.0.0 à 3.0.5 só há código-fonte,
+    # e até a 3.0.3 o build no 3.15 cai do mesmo jeito. Exigir pandas>=3.0.6 no
+    # 3.15 por marcador impediria de resolver todo projeto com requires-python
+    # aberto e pandas<3 fixado, porque o uv resolve também para o 3.15. Em toda
+    # versão, texto ausente sai como None nos métodos públicos, por
+    # BaseScraper.__init_subclass__ (core/base.py).
     "pandas>=2.0.0,<4.0.0",
     "pyjwt>=2.10.1",
     "pydantic>=2.0.0",
