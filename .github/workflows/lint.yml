@@ -20,10 +20,10 @@ jobs:
         run: uv sync --extra dev --python 3.12
       - name: Conferir Ruff e dispensas temporárias
         env:
-          # Num PR, a base é a ponta atual da branch de destino: o
-          # pull_request.base.sha do evento fica no commit em que o PR foi aberto,
-          # e a comparação atribuiria ao PR as dispensas que a main ganhou depois.
-          # Em push para a main, before é a ponta anterior.
+          # Num PR, a base é a ponta atual da branch de destino. O
+          # pull_request.base.sha do evento só muda quando o PR é aberto ou troca
+          # de destino, e a comparação atribuiria ao PR as dispensas que o destino
+          # ganhou depois. Em push para a main, before é a ponta anterior.
           LINT_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before }}
         run: |
           uv run ruff check --config ruff.toml src tests

@@ -173,6 +173,10 @@ def test_workflow_compara_o_pr_com_a_ponta_da_branch_de_destino():
     assert bases == [
         "${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before }}",
     ]
+    # A variável só protege se toda chamada do gate a usar como base.
+    chamadas = [linha.strip() for linha in linhas if "check_lint_policy.py" in linha]
+    assert chamadas
+    assert all(chamada.endswith('check_lint_policy.py --base-ref "$LINT_BASE"') for chamada in chamadas)
 
 
 def test_referencia_explicita_funciona_sem_origin_main(repositorio):
