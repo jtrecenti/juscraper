@@ -199,7 +199,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td><a href="#juscraper.aggregators.falcao.client.FalcaoScraper.listar_decisoes_parse">listar_decisoes_parse</a></td>
-<td>Le os arquivos JSON baixados por <code>listar_decisoes_download</code>.</td>
+<td>Le os arquivos JSON baixados por <a href="../reference/aggregators.falcao.client.FalcaoScraper.html#juscraper.aggregators.falcao.client.FalcaoScraper.listar_decisoes_download"><code>listar_decisoes_download</code></a>.</td>
 </tr>
 </tbody>
 </table>
@@ -211,7 +211,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Consulta a Jurisprudencia Nacional da Justica do Trabalho.</p>
-<p>Baixa as páginas para um diretório próprio no temporário do sistema (<code>tempfile.gettempdir()</code>), sem usar <code>download_path</code>, e o remove após devolver o resultado parseado. Se a coleta ou o parsing falhar, preserva as páginas recebidas nesse diretório e informa o caminho em uma nota da exceção. Recupere esse resultado parcial com <code>listar_decisoes_parse</code>; não há retomada automática. Para guardar também coletas completas, use <code>listar_decisoes_download</code>.</p>
+<p>Baixa as páginas para um diretório próprio no temporário do sistema (<code>tempfile.gettempdir()</code>), sem usar <code>download_path</code>, e o remove após devolver o resultado parseado. Se a coleta ou o parsing falhar, preserva as páginas recebidas nesse diretório e informa o caminho em uma nota da exceção. Recupere esse resultado parcial com <a href="../reference/aggregators.falcao.client.FalcaoScraper.html#juscraper.aggregators.falcao.client.FalcaoScraper.listar_decisoes_parse"><code>listar_decisoes_parse</code></a>; não há retomada automática. Para guardar também coletas completas, use <a href="../reference/aggregators.falcao.client.FalcaoScraper.html#juscraper.aggregators.falcao.client.FalcaoScraper.listar_decisoes_download"><code>listar_decisoes_download</code></a>.</p>
 <section id="parameters" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
 <table class="caption-top table">
@@ -309,7 +309,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><code>TypeError</code></td>
-<td>Quando um kwarg desconhecido e passado (inclusive <code>diretorio</code>, que so <code>listar_decisoes_download</code> aceita).</td>
+<td>Quando um kwarg desconhecido e passado (inclusive <code>diretorio</code>, que so <a href="../reference/aggregators.falcao.client.FalcaoScraper.html#juscraper.aggregators.falcao.client.FalcaoScraper.listar_decisoes_download"><code>listar_decisoes_download</code></a> aceita).</td>
 </tr>
 <tr class="even">
 <td></td>
@@ -360,7 +360,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Baixa as paginas cruas (JSON) da busca para um diretorio.</p>
-<p>Mesma validacao e filtros de <code>listar_decisoes</code> (veja la a lista completa de <code>**kwargs</code>). Cada chamada cria um subdiretorio proprio <code>falcao_{colecao}_&lt;sufixo aleatorio&gt;</code>, entao buscas diferentes no mesmo <code>diretorio</code> nunca se misturam. Cada pagina vira um arquivo <code>{colecao}_{pagina:04d}.json</code>.</p>
+<p>Mesma validacao e filtros de <a href="../reference/aggregators.falcao.client.FalcaoScraper.html#juscraper.aggregators.falcao.client.FalcaoScraper.listar_decisoes"><code>listar_decisoes</code></a> (veja la a lista completa de <code>**kwargs</code>). Cada chamada cria um subdiretorio proprio <code>falcao_{colecao}_&lt;sufixo aleatorio&gt;</code>, entao buscas diferentes no mesmo <code>diretorio</code> nunca se misturam. Cada pagina vira um arquivo <code>{colecao}_{pagina:04d}.json</code>.</p>
 <section id="parameters-1" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
 <table class="caption-top table">
@@ -415,14 +415,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="see-also-1" class="level4 doc-section doc-section-see-also">
 <h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-1">See also</h4>
-<p><code>listar_decisoes</code> – lista completa de filtros aceitos.</p>
+<p><a href="../reference/aggregators.falcao.client.FalcaoScraper.html#juscraper.aggregators.falcao.client.FalcaoScraper.listar_decisoes"><code>listar_decisoes</code></a> – lista completa de filtros aceitos.</p>
 </section>
 </section>
 <section id="juscraper.aggregators.falcao.client.FalcaoScraper.listar_decisoes_parse" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.aggregators.falcao.client.FalcaoScraper.listar_decisoes_parse">listar_decisoes_parse</h3>
 <div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>aggregators.falcao.client.FalcaoScraper.listar_decisoes_parse(diretorio)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Le os arquivos JSON baixados por <code>listar_decisoes_download</code>.</p>
-<p>Percorre <code>diretorio</code> recursivamente, entao aceita tanto o caminho devolvido por <code>listar_decisoes_download</code> quanto a pasta-mae que junta varias buscas. A colecao de cada arquivo e inferida do prefixo do nome (<code>{colecao}_{pagina}.json</code>).</p>
+<p>Le os arquivos JSON baixados por <a href="../reference/aggregators.falcao.client.FalcaoScraper.html#juscraper.aggregators.falcao.client.FalcaoScraper.listar_decisoes_download"><code>listar_decisoes_download</code></a>.</p>
+<p>Percorre <code>diretorio</code> recursivamente, entao aceita tanto o caminho devolvido por <a href="../reference/aggregators.falcao.client.FalcaoScraper.html#juscraper.aggregators.falcao.client.FalcaoScraper.listar_decisoes_download"><code>listar_decisoes_download</code></a> quanto a pasta-mae que junta varias buscas. A colecao de cada arquivo e inferida do prefixo do nome (<code>{colecao}_{pagina}.json</code>).</p>
 <section id="parameters-2" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-2">Parameters</h4>
 <table class="caption-top table">
@@ -458,7 +458,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><code>pd</code>.<code>DataFrame</code></td>
-<td>pd.DataFrame: Resultados concatenados (veja <code>listar_decisoes</code> para as</td>
+<td>pd.DataFrame: Resultados concatenados (veja <a href="../reference/aggregators.falcao.client.FalcaoScraper.html#juscraper.aggregators.falcao.client.FalcaoScraper.listar_decisoes"><code>listar_decisoes</code></a> para as</td>
 </tr>
 <tr class="even">
 <td></td>
