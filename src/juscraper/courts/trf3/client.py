@@ -163,7 +163,7 @@ class TRF3Scraper(TRFConsultaScraper):
             vem preenchido. Na medição, com "medicamento", foram nulas todas
             as ementas de 2013 e 2014 e parte das de 2011.
 
-        Exemplo:
+        Examples: Exemplo
             >>> import juscraper as jus
             >>> trf3 = jus.scraper("trf3")
             >>> df = trf3.cjsg(
