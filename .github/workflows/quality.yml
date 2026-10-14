@@ -8,6 +8,11 @@ on:
 permissions:
   contents: read
 
+env:
+  # Todo comando uv do workflow usa o uv.lock como está; sem isto, um uv run
+  # refaz a resolução quando o pyproject.toml muda sem o lock e instala fora dele.
+  UV_FROZEN: "1"
+
 jobs:
   complexidade:
     runs-on: ubuntu-latest

@@ -8,6 +8,11 @@ on:
 permissions:
   contents: read
 
+env:
+  # Todo comando uv do workflow usa o uv.lock como está; sem isto, um uv run
+  # refaz a resolução quando o pyproject.toml muda sem o lock e instala fora dele.
+  UV_FROZEN: "1"
+
 # Em PR, um push novo cancela a execução anterior do mesmo PR. Em push para a
 # main o grupo é o próprio commit, então nenhuma execução é cancelada.
 concurrency:
@@ -43,16 +48,19 @@ jobs:
       - name: Rodar a suíte offline com cobertura
         if: ${{ matrix.cobertura }}
         run: uv run pytest --cov --cov-report=
+      # Publica também quando o piso reprova o passo anterior, que é quando a
+      # tabela por arquivo mais serve; --fail-under=0 impede que o próprio
+      # relatório saia com erro antes de escrever.
       - name: Publicar a cobertura no resumo da execução
-        if: ${{ matrix.cobertura }}
+        if: ${{ matrix.cobertura && !cancelled() }}
         run: |
-          total="$(uv run coverage report --format=total)"
+          total="$(uv run coverage report --format=total --fail-under=0)"
           {
             echo "## Cobertura da suíte offline: ${total}%"
             echo
             echo "<details><summary>Por arquivo</summary>"
             echo
-            uv run coverage report --format=markdown
+            uv run coverage report --format=markdown --fail-under=0
             echo
             echo "</details>"
           } >> "$GITHUB_STEP_SUMMARY"
