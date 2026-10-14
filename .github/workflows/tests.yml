@@ -1,0 +1,75 @@
+name: Testes
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# Em PR, um push novo cancela a execução anterior do mesmo PR. Em push para a
+# main o grupo é o próprio commit, então nenhuma execução é cancelada.
+concurrency:
+  group: testes-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  pytest:
+    name: pytest (py${{ matrix.python }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13", "3.14", "3.15"]
+        # `cobertura` fica fora da lista acima de propósito: se a chave já
+        # existisse na matriz, este include criaria uma perna a mais em vez de
+        # anotar a de 3.13.
+        include:
+          - python: "3.13"
+            cobertura: true
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
+        with:
+          python-version: ${{ matrix.python }}
+          # O uv.lock não é versionado, então a chave do cache acompanha o
+          # pyproject.toml.
+          cache-dependency-glob: pyproject.toml
+      - name: Instalar dependências de desenvolvimento
+        run: uv sync --extra dev
+      - name: Rodar a suíte offline
+        if: ${{ !matrix.cobertura }}
+        run: uv run pytest
+      - name: Rodar a suíte offline com cobertura
+        if: ${{ matrix.cobertura }}
+        run: uv run pytest --cov --cov-report=
+      - name: Publicar a cobertura no resumo da execução
+        if: ${{ matrix.cobertura }}
+        run: |
+          total="$(uv run coverage report --format=total)"
+          {
+            echo "## Cobertura da suíte offline: ${total}%"
+            echo
+            echo "<details><summary>Por arquivo</summary>"
+            echo
+            uv run coverage report --format=markdown
+            echo
+            echo "</details>"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # Check obrigatório é casado pelo nome do job. Este job dá um nome só para o
+  # resultado de todas as pernas bloqueantes, que não muda quando a matriz muda.
+  obrigatorios:
+    name: Testes obrigatórios
+    if: always()
+    needs: pytest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Conferir o resultado de todas as pernas
+        env:
+          RESULTADO: ${{ needs.pytest.result }}
+        run: |
+          echo "pytest: $RESULTADO"
+          test "$RESULTADO" = "success"
