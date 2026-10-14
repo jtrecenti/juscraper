@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-faf98ddab0c3cf5e728a320f2ec4f090.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-7fa8570edba78f5132defc88939c9d43.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -201,7 +201,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td><a href="#juscraper.courts.tjpe.client.TJPEScraper.cpopg">cpopg</a></td>
-<td>Stub: first instance case consultation not implemented for TJPE.</td>
+<td>Consulta processos de 1º grau na consulta pública do PJe do TJPE.</td>
 </tr>
 <tr class="odd">
 <td><a href="#juscraper.courts.tjpe.client.TJPEScraper.cposg">cposg</a></td>
@@ -402,8 +402,110 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="juscraper.courts.tjpe.client.TJPEScraper.cpopg" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjpe.client.TJPEScraper.cpopg">cpopg</h3>
-<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>courts.tjpe.client.TJPEScraper.cpopg(id_cnj)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Stub: first instance case consultation not implemented for TJPE.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>courts.tjpe.client.TJPEScraper.cpopg(</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    id_cnj,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    download_pecas<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    diretorio<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Consulta processos de 1º grau na consulta pública do PJe do TJPE.</p>
+<p>Delega a :class:<code>TJPEConsultaPublicaScraper</code>, que reaproveita o fluxo dos TRFs (:meth:<code>juscraper.courts._trf.base.TRFConsultaScraper.cpopg</code>). Processo sob segredo de justiça não aparece na consulta pública e sai como linha só com <code>id_cnj</code>, igual a processo inexistente.</p>
+<p>O site fica atrás de um AWS WAF que desafia de forma intermitente. Quando o desafio aparece, o cookie <code>aws-waf-token</code> é obtido com o Playwright (extra <code>juscraper[waf]</code>, seguido de <code>playwright install chromium</code>); sem desafio, nada disso é preciso.</p>
+<section id="parameters-1" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>id_cnj</td>
+<td><a href="`str`">str</a> | <a href="`list`">list</a>[<a href="`str`">str</a>]</td>
+<td>CNJ único ou lista, com ou sem máscara.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>download_pecas</td>
+<td><a href="`bool`">bool</a></td>
+<td>Se <code>True</code>, baixa também as peças públicas (HTML do visualizador do PJe). Default <code>False</code>.</td>
+<td><code>False</code></td>
+</tr>
+<tr class="odd">
+<td>diretorio</td>
+<td><a href="`str`">str</a> | None</td>
+<td>Onde gravar as peças, em <code>&lt;diretorio&gt;/&lt;cnj&gt;/&lt;id&gt;.html</code>. Default <code>None</code> (diretório temporário).</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-2" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-2">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>pd.DataFrame: Uma linha por CNJ. Colunas: <code>id_cnj</code>, <code>processo</code>, <code>classe</code>, <code>assunto</code>, <code>data_distribuicao</code>, <code>orgao_julgador</code>, <code>jurisdicao</code>, <code>endereco_orgao</code>, <code>polo_ativo</code>, <code>polo_passivo</code>, <code>movimentacoes</code>, <code>documentos</code>; com <code>download_pecas=True</code>, também <code>pecas</code>.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-1" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-1">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`TypeError`">TypeError</a></td>
+<td>Kwarg desconhecido.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`ImportError`">ImportError</a></td>
+<td>O WAF desafiou e o Playwright não está instalado, inclusive durante o download das peças.</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><a href="`WafChallengeError`">WafChallengeError</a></td>
+<td>O WAF desafiou de novo logo após a renovação do cookie, ou o cookie não pôde ser obtido (Chromium do Playwright ausente, cookie não emitido no prazo). Interrompe o lote.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="exemplo-1" class="level4 doc-section doc-section-exemplo">
+<h4 class="doc-section doc-section-exemplo anchored" data-anchor-id="exemplo-1">Exemplo</h4>
+<blockquote class="blockquote">
+<blockquote class="blockquote">
+<blockquote class="blockquote">
+<p>import juscraper as jus tjpe = jus.scraper(“tjpe”) df = tjpe.cpopg(“0000000-00.0000.8.17.0000”)</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</section>
+<section id="see-also-1" class="level4 doc-section doc-section-see-also">
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-1">See also</h4>
+<p><a href=":class:`InputCpopgTRF`"></a> — schema pydantic e a fonte da verdade dos parâmetros aceitos.</p>
+</section>
 </section>
 <section id="juscraper.courts.tjpe.client.TJPEScraper.cposg" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjpe.client.TJPEScraper.cposg">cposg</h3>

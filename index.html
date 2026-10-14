@@ -73,7 +73,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-faf98ddab0c3cf5e728a320f2ec4f090.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-7fa8570edba78f5132defc88939c9d43.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -388,6 +388,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">PDPJ</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./notebooks/falcao.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Falcao (JT)</span></a>
+  </div>
+</li>
       </ul>
   </li>
       </ul>
@@ -524,7 +530,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>TJMG</td>
-<td>cjsg</td>
+<td>cjsg, cposg</td>
 </tr>
 <tr class="odd">
 <td>TJSP</td>
@@ -540,7 +546,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>TJPE</td>
-<td>cjsg</td>
+<td>cjsg, cpopg</td>
 </tr>
 <tr class="odd">
 <td>TJES</td>
@@ -615,6 +621,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="agregadores-disponíveis" class="level3">
 <h3 class="anchored" data-anchor-id="agregadores-disponíveis">Agregadores Disponíveis</h3>
 <table class="caption-top table">
+<colgroup>
+<col style="width: 23%">
+<col style="width: 76%">
+</colgroup>
 <thead>
 <tr class="header">
 <th>Nome</th>
@@ -630,8 +640,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Jusbr</td>
 <td>cpopg, download_documents</td>
 </tr>
+<tr class="odd">
+<td>Falcao</td>
+<td>listar_decisoes (national labor jurisprudence: TST + TRTs)</td>
+</tr>
+<tr class="even">
+<td>PDPJ</td>
+<td>existe, cpopg, documentos, movimentos, partes, pesquisa, contar, download_documents</td>
+</tr>
 </tbody>
 </table>
+<section id="jusbr-and-pdpj-authentication" class="level4">
+<h4 class="anchored" data-anchor-id="jusbr-and-pdpj-authentication">JusBR and PDPJ authentication</h4>
+<p>JusBR and PDPJ share the same JWT from the PJe SSO. With the <code>govbr</code> extra (<code>pip install 'juscraper[govbr]'</code>), <code>auth_govbr()</code> opens the locally installed Google Chrome, Chromium or Microsoft Edge, with a temporary profile, on the PDPJ services portal; the user logs in through gov.br, the token is captured and the window closes on its own. If no browser is found, pass its executable to <code>auth_govbr(navegador=...)</code>. The token is cached in <code>~/.config/juscraper/pdpj_token.json</code> (or under <code>$XDG_CONFIG_HOME/juscraper/</code>), readable only by its owner, and later JusBR and PDPJ instances load it without a new login. When the portal issues a refresh token, the access token is renewed automatically before it expires. The login needs a windowed browser, so it does not run on Google Colab or CI; there, pass the token to <code>auth(token)</code> or set the <code>PDPJ_JWT</code> environment variable (JusBR also accepts <code>JUSBR_JWT</code>).</p>
+</section>
 </section>
 <section id="notebooks-de-exemplo" class="level3">
 <h3 class="anchored" data-anchor-id="notebooks-de-exemplo">Notebooks de Exemplo</h3>
@@ -679,6 +701,7 @@ Notebook runtime and Google Colab
 <li><a href="./notebooks/trf6.html">Exemplo TRF6</a></li>
 <li><a href="./notebooks/datajud.html">Exemplo Datajud</a></li>
 <li><a href="./notebooks/jusbr.html">Exemplo Jusbr</a></li>
+<li><a href="./notebooks/falcao.html">Exemplo Falcao</a></li>
 </ul>
 </section>
 </section>

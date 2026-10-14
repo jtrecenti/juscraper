@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-faf98ddab0c3cf5e728a320f2ec4f090.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-7fa8570edba78f5132defc88939c9d43.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -162,6 +162,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#juscraper.courts.tjmg.client.TJMGScraper.cjsg_parse" id="toc-juscraper.courts.tjmg.client.TJMGScraper.cjsg_parse" class="nav-link" data-scroll-target="#juscraper.courts.tjmg.client.TJMGScraper.cjsg_parse">cjsg_parse</a></li>
   <li><a href="#juscraper.courts.tjmg.client.TJMGScraper.cpopg" id="toc-juscraper.courts.tjmg.client.TJMGScraper.cpopg" class="nav-link" data-scroll-target="#juscraper.courts.tjmg.client.TJMGScraper.cpopg">cpopg</a></li>
   <li><a href="#juscraper.courts.tjmg.client.TJMGScraper.cposg" id="toc-juscraper.courts.tjmg.client.TJMGScraper.cposg" class="nav-link" data-scroll-target="#juscraper.courts.tjmg.client.TJMGScraper.cposg">cposg</a></li>
+  <li><a href="#juscraper.courts.tjmg.client.TJMGScraper.cposg_download" id="toc-juscraper.courts.tjmg.client.TJMGScraper.cposg_download" class="nav-link" data-scroll-target="#juscraper.courts.tjmg.client.TJMGScraper.cposg_download">cposg_download</a></li>
+  <li><a href="#juscraper.courts.tjmg.client.TJMGScraper.cposg_parse" id="toc-juscraper.courts.tjmg.client.TJMGScraper.cposg_parse" class="nav-link" data-scroll-target="#juscraper.courts.tjmg.client.TJMGScraper.cposg_parse">cposg_parse</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -206,7 +208,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td><a href="#juscraper.courts.tjmg.client.TJMGScraper.cposg">cposg</a></td>
-<td>Stub: second degree case search not implemented for TJMG.</td>
+<td>Consulta processos de 2o grau do TJMG, com partes e advogados.</td>
+</tr>
+<tr class="even">
+<td><a href="#juscraper.courts.tjmg.client.TJMGScraper.cposg_download">cposg_download</a></td>
+<td>Baixa o HTML de resultado e de partes/advogados de cada processo.</td>
+</tr>
+<tr class="odd">
+<td><a href="#juscraper.courts.tjmg.client.TJMGScraper.cposg_parse">cposg_parse</a></td>
+<td>Converte a saida de :meth:<code>cposg_download</code> em DataFrame.</td>
 </tr>
 </tbody>
 </table>
@@ -291,7 +301,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`ValidationError`">ValidationError</a></td>
+<td><a href="`pydantic.ValidationError`">ValidationError</a></td>
 <td>Quando um filtro tem formato invalido.</td>
 </tr>
 </tbody>
@@ -354,8 +364,152 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="juscraper.courts.tjmg.client.TJMGScraper.cposg" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjmg.client.TJMGScraper.cposg">cposg</h3>
-<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>courts.tjmg.client.TJMGScraper.cposg(id_cnj)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Stub: second degree case search not implemented for TJMG.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>courts.tjmg.client.TJMGScraper.cposg(id_cnj, <span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Consulta processos de 2o grau do TJMG, com partes e advogados.</p>
+<p>Usa a consulta processual publica de 2a instancia (<code>www4.tjmg.jus.br/juridico/sf</code>), que nao tem captcha. Um CNJ pode ter varios recursos (apelacao, embargos, agravo…); cada recurso vira uma linha.</p>
+<section id="parameters-2" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-2">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>id_cnj</td>
+<td><a href="`str`">str</a> | <a href="`list`">list</a>[<a href="`str`">str</a>]</td>
+<td>CNJ (20 digitos) ou numero TJMG (17 digitos, ex.: <code>"1.0000.26.408376-7/001"</code> — a coluna <code>processo_interno</code> do :meth:<code>cjsg</code>). Mascara opcional. Com CNJ, vem todos os recursos vinculados; com numero TJMG, so aquele recurso.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-1" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-1">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`TypeError`">TypeError</a></td>
+<td>Quando um kwarg desconhecido e passado.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>Quando um numero nao tem 17 nem 20 digitos.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-1" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>pd.DataFrame: Uma linha por recurso, com <code>id_cnj</code>, <code>processo</code>,</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>processo_interno</code>, <code>segredo_justica</code>, <code>situacao</code>,</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>secretaria</code>, <code>classe</code>, <code>assunto</code>, <code>orgao_julgador</code>,</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>data_cadastramento</code>, <code>data_distribuicao</code> e <code>partes</code>.</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>partes</code> e uma lista de dicts <code>{"tipo", "nome", "baixa",        | |        | [pd](`pandas`).[DataFrame](`pandas.DataFrame`) | "advogados"}</code>, com <code>advogados</code> = lista de <code>{"oab", "nome"}</code></td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>(<code>oab</code> como publicada, ou <code>None</code> quando ausente).</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>Numeros nao encontrados geram uma linha so com <code>id_cnj</code>.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>partes</code> fica <code>None</code> em dois casos, separados pela coluna</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>segredo_justica</code>: recurso em segredo de justica</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>(<code>segredo_justica=True</code>) ou falha ao baixar a pagina de partes</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>(<code>segredo_justica=False</code>).</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="avisos" class="level4 doc-section doc-section-avisos">
+<h4 class="doc-section doc-section-avisos anchored" data-anchor-id="avisos">Avisos</h4>
+<p><code>UserWarning</code>: Quando alguma consulta falha: timeout, erro de conexao ou status retryable (403, 429, 5xx) que persistem apos as retentativas, ou outro erro HTTP, que nao e repetido. A mensagem lista os numeros afetados. Falha na pagina de resultado gera a linha so com <code>id_cnj</code>, igual a um numero nao encontrado; falha na de partes deixa <code>partes=None</code>.</p>
+</section>
+<section id="exemplo" class="level4 doc-section doc-section-exemplo">
+<h4 class="doc-section doc-section-exemplo anchored" data-anchor-id="exemplo">Exemplo</h4>
+<blockquote class="blockquote">
+<blockquote class="blockquote">
+<blockquote class="blockquote">
+<p>import juscraper as jus tjmg = jus.scraper(“tjmg”) df = tjmg.cposg(“5000344-57.2025.8.13.0461”) advs = df.explode(“partes”).dropna(subset=[“partes”])</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</section>
+<section id="see-also-1" class="level4 doc-section doc-section-see-also">
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-1">See also</h4>
+<p><a href=":class:`InputCPOSGTJMG`"></a> / <a href=":class:`OutputCPOSGTJMG`"></a>.</p>
+</section>
+</section>
+<section id="juscraper.courts.tjmg.client.TJMGScraper.cposg_download" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.tjmg.client.TJMGScraper.cposg_download">cposg_download</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>courts.tjmg.client.TJMGScraper.cposg_download(id_cnj, <span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Baixa o HTML de resultado e de partes/advogados de cada processo.</p>
+<p>Retorna uma lista alinhada com <code>id_cnj</code>. Veja :meth:<code>cposg</code> para os formatos de numero aceitos e o <code>UserWarning</code> emitido quando alguma consulta falha; aqui a falha aparece como <code>None</code> no HTML correspondente.</p>
+</section>
+<section id="juscraper.courts.tjmg.client.TJMGScraper.cposg_parse" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.tjmg.client.TJMGScraper.cposg_parse">cposg_parse</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>courts.tjmg.client.TJMGScraper.cposg_parse(raw)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Converte a saida de :meth:<code>cposg_download</code> em DataFrame.</p>
 
 
 </section>

@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-faf98ddab0c3cf5e728a320f2ec4f090.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-7fa8570edba78f5132defc88939c9d43.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -198,6 +198,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
+<p>For lifecycle stages and the warning-to-removal process, see the project’s <a href="https://github.com/jtrecenti/juscraper/blob/main/CLAUDE.md#política-de-deprecação">deprecation policy</a>.</p>
 <section id="standard-parameter-names" class="level2">
 <h2 class="anchored" data-anchor-id="standard-parameter-names">Standard Parameter Names</h2>
 <p>All scrapers in juscraper follow a unified API convention for parameter names.</p>
@@ -251,7 +252,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><strong>Deprecated aliases:</strong> <code>data_julgamento_de</code> / <code>data_julgamento_ate</code>, <code>data_publicacao_de</code> / <code>data_publicacao_ate</code> — accepted with <code>DeprecationWarning</code>.</p>
 <section id="accepted-input-formats" class="level4">
 <h4 class="anchored" data-anchor-id="accepted-input-formats">Accepted input formats</h4>
-<p>For endpoints with a wired pydantic schema (eSAJ family, 1C-a tribunals, TJDFT, TJES — see <code>Schemas pydantic</code> in <code>CONTRIBUTING.md</code> for the current list), the four canonical date fields accept any of:</p>
+<p>Endpoints using the shared date-coercion pipeline accept the following formats for supported date filters. See <code>CONTRIBUTING.md</code> &gt; <strong>Schemas pydantic</strong> &gt; <strong>Pipeline canônico (wiring)</strong> for the implementation:</p>
 <ul>
 <li><code>"DD/MM/AAAA"</code> — Brazilian short form (e.g.&nbsp;<code>"01/03/2024"</code>)</li>
 <li><code>"DD-MM-AAAA"</code> — Brazilian with dashes (e.g.&nbsp;<code>"01-03-2024"</code>)</li>

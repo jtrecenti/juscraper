@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-faf98ddab0c3cf5e728a320f2ec4f090.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-7fa8570edba78f5132defc88939c9d43.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -179,7 +179,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    download_path<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    sleep_time<span class="op">=</span><span class="fl">0.5</span>,</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    token<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    politica<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Raspador para o JusBR (consulta unificada da PDPJ-CNJ).</p>
 <p>Este scraper interage com a API da Plataforma Digital do Poder Judiciario (PDPJ).</p>
 <section id="methods" class="level2">
@@ -198,11 +199,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td><a href="#juscraper.aggregators.jusbr.client.JusbrScraper.auth_firefox">auth_firefox</a></td>
-<td>Authentication via Firefox.</td>
+<td>Obtém o token pela sessão do SSO da PDPJ aberta no Firefox.</td>
 </tr>
 <tr class="odd">
 <td><a href="#juscraper.aggregators.jusbr.client.JusbrScraper.cpopg">cpopg</a></td>
-<td>Consulta processos pelo numero CNJ (ou lista de numeros CNJ) via API nacional.</td>
+<td>Consulta processos pelo número CNJ (ou lista de números CNJ) via API nacional.</td>
 </tr>
 <tr class="even">
 <td><a href="#juscraper.aggregators.jusbr.client.JusbrScraper.download_documents">download_documents</a></td>
@@ -214,6 +215,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="juscraper.aggregators.jusbr.client.JusbrScraper.auth">auth</h3>
 <div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>aggregators.jusbr.client.JusbrScraper.auth(token, <span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Define o token JWT para autenticacao e o decodifica para verificacao.</p>
+<p>Um token recusado não muda o estado: o token anterior, se havia, continua em <code>token</code> e no header.</p>
 <section id="raises" class="level4 doc-section doc-section-raises">
 <h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
 <table class="caption-top table">
@@ -233,7 +235,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td></td>
 <td><a href="`ValueError`">ValueError</a></td>
-<td>Quando o token e invalido ou esta expirado.</td>
+<td>Quando o token e invalido ou esta expirado (ver :func:<code>juscraper.core.auth.validar_jwt</code>).</td>
 </tr>
 </tbody>
 </table>
@@ -242,14 +244,65 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="juscraper.aggregators.jusbr.client.JusbrScraper.auth_firefox" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.aggregators.jusbr.client.JusbrScraper.auth_firefox">auth_firefox</h3>
 <div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>aggregators.jusbr.client.JusbrScraper.auth_firefox()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Authentication via Firefox.</p>
+<p>Obtém o token pela sessão do SSO da PDPJ aberta no Firefox.</p>
+<p>Lê os cookies de <code>sso.cloud.pje.jus.br</code> do perfil do Firefox, pede um código de autorização ao SSO e o troca por um token, que passa por :meth:<code>auth</code>. As duas requisições usam o <code>timeout</code> do perfil <code>"listagem"</code>.</p>
+<section id="returns" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`bool`">bool</a></td>
+<td><code>True</code> quando o token foi aceito.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-1" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-1">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`RuntimeError`">RuntimeError</a></td>
+<td>Quando a resposta do SSO não traz o cabeçalho <code>Location</code>, o <code>code</code> no fragmento ou o <code>access_token</code>; em geral, sessão do Firefox ausente ou vencida.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>Quando o token devolvido é inválido ou está expirado.</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><a href="`requests`">requests</a>.<a href="`requests.RequestException`">RequestException</a></td>
+<td>Falha de rede ao falar com o SSO.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="juscraper.aggregators.jusbr.client.JusbrScraper.cpopg" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.aggregators.jusbr.client.JusbrScraper.cpopg">cpopg</h3>
 <div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>aggregators.jusbr.client.JusbrScraper.cpopg(id_cnj, <span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Consulta processos pelo numero CNJ (ou lista de numeros CNJ) via API nacional.</p>
-<section id="raises-1" class="level4 doc-section doc-section-raises">
-<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-1">Raises</h4>
+<p>Consulta processos pelo número CNJ (ou lista de números CNJ) via API nacional.</p>
+<p>Uma consulta que falha não interrompe o lote: a linha sai com <code>status_consulta</code> igual a <code>STATUS_CONSULTA_FALHA</code> (de <code>juscraper.core.failures</code>) e o motivo na coluna <code>motivo_falha</code> (<code>http_&lt;status&gt;</code>, <code>retry_esgotado_&lt;status&gt;</code>, <code>timeout</code>, <code>conexao</code> ou <code>json_invalido</code>). O CNJ que a listagem responde com 404 sai “Nao encontrado na lista inicial”, com <code>motivo_falha</code> <code>None</code>; o 404 nos detalhes é falha (<code>http_404</code>).</p>
+<p>O 403 na listagem sai <code>http_403</code>, e o motivo não diz a causa. Em campo, ele apareceu junto de processo ausente do data lake da PDPJ, mas também pode ser negativa real de acesso. Este raspador não consulta a PDPJ para separar os dois casos; quem precisa separar cruza o resultado com :class:<code>~juscraper.aggregators.pdpj.client.PdpjScraper</code>, que marca o processo ausente com <code>nao_encontrado</code>.</p>
+<section id="raises-2" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-2">Raises</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -269,8 +322,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><a href="`RuntimeError`">RuntimeError</a></td>
 <td>Quando <code>auth(token)</code> nao foi chamado antes.</td>
 </tr>
+<tr class="odd">
+<td></td>
+<td><a href="`requests`">requests</a>.<a href="`requests.HTTPError`">HTTPError</a></td>
+<td>Quando a API responde 401 (token ausente, expirado ou inválido). As linhas já obtidas se perdem, e as falhas anteriores vão numa nota do próprio erro (<code>__notes__</code>).</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`juscraper.aggregators._pdpj_sso.renovacao.ErroSsoPdpj`">ErroSsoPdpj</a></td>
+<td>Quando o SSO do PJe recusa ou não consegue renovar o token no meio do lote. Propaga como o 401, com as falhas anteriores numa nota do erro.</td>
+</tr>
 </tbody>
 </table>
+</section>
+<section id="avisos" class="level4 doc-section doc-section-avisos">
+<h4 class="doc-section doc-section-avisos anchored" data-anchor-id="avisos">Avisos</h4>
+<p><code>UserWarning</code>: Quando pelo menos uma consulta falhou; um aviso por chamada, com a contagem e alguns exemplos.</p>
 </section>
 </section>
 <section id="juscraper.aggregators.jusbr.client.JusbrScraper.download_documents" class="level3">
@@ -282,6 +349,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Baixa e limpa os documentos dos processos de um DataFrame.</p>
 <p>O limite é aplicado ao <code>numeroProcesso</code> em todo o DataFrame, inclusive quando o mesmo processo aparece em mais de uma linha.</p>
+<p>Um download que falha não interrompe o lote: o conteúdo sai <code>None</code> e a coluna <code>motivo_falha</code> traz o motivo, o do texto quando o texto falha, senão o do binário. O <code>UserWarning</code> agregado cita as duas falhas.</p>
+<p>A peça sem <code>arquivo</code> no metadado não tem conteúdo no data lake, e a API responde 404 ao pedido de texto dela. Ela sai com os metadados, <code>texto</code> e respostas brutas <code>None</code> e <code>motivo_falha</code> <code>None</code>, sem requisição e fora do aviso: o metadado já diz por que não há texto.</p>
 <section id="parameters" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
 <table class="caption-top table">
@@ -315,8 +384,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="raises-2" class="level4 doc-section doc-section-raises">
-<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-2">Raises</h4>
+<section id="raises-3" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-3">Raises</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -341,11 +410,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><a href="`RuntimeError`">RuntimeError</a></td>
 <td>Quando <code>auth(token)</code> não foi chamado antes.</td>
 </tr>
+<tr class="even">
+<td></td>
+<td><a href="`requests`">requests</a>.<a href="`requests.HTTPError`">HTTPError</a></td>
+<td>Quando a API responde 401 (token ausente, expirado ou inválido). As linhas já baixadas se perdem, e as falhas anteriores vão numa nota do próprio erro (<code>__notes__</code>).</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><a href="`juscraper.aggregators._pdpj_sso.renovacao.ErroSsoPdpj`">ErroSsoPdpj</a></td>
+<td>Quando o SSO do PJe recusa ou não consegue renovar o token no meio do lote. Propaga como o 401, com as falhas anteriores numa nota do erro.</td>
+</tr>
 </tbody>
 </table>
 </section>
-<section id="returns" class="level4 doc-section doc-section-returns">
-<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
+<section id="avisos-1" class="level4 doc-section doc-section-avisos">
+<h4 class="doc-section doc-section-avisos anchored" data-anchor-id="avisos-1">Avisos</h4>
+<p><code>UserWarning</code>: Quando pelo menos um download falhou; um aviso por chamada, emitido quando a coleta termina.</p>
+</section>
+<section id="returns-1" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -358,18 +441,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
-<td>pd.DataFrame: Uma linha por documento, com metadados, texto limpo e</td>
+<td>pd.DataFrame: Uma linha por documento, com metadados, texto limpo,</td>
 </tr>
 <tr class="even">
 <td></td>
 <td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
-<td>respostas brutas disponíveis.</td>
+<td>respostas brutas disponíveis e <code>motivo_falha</code>.</td>
 </tr>
 </tbody>
 </table>
 </section>
 <section id="see-also" class="level4 doc-section doc-section-see-also">
-<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See also</h4>
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See Also</h4>
 <p><a href=":class:`InputDownloadDocumentsJusBR`"></a> — schema pydantic e fonte da verdade dos parâmetros aceitos.</p>
 
 

@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-faf98ddab0c3cf5e728a320f2ec4f090.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-7fa8570edba78f5132defc88939c9d43.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -184,9 +184,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    download_path<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    sleep_time<span class="op">=</span><span class="fl">0.5</span>,</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    token<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    politica<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Raspador para a API DATALAKE - Processos do PDPJ.</p>
 <p>A API consome JWT do SSO PJe (mesmo provedor do JusBR), entao o uso tipico e: obter o token via portal do PDPJ logado, chamar :meth:<code>auth</code> e usar os endpoints de consulta/download.</p>
+<p>Os metodos por processo (:meth:<code>cpopg</code>, :meth:<code>documentos</code>, :meth:<code>movimentos</code>, :meth:<code>partes</code> e :meth:<code>existe</code> com lista) e :meth:<code>download_documents</code> devolvem uma linha de falha quando a requisicao de um item falha, com o motivo na coluna <code>motivo_falha</code> (vocabulario em :mod:<code>juscraper.core.failures</code>) e um <code>UserWarning</code> agregado ao fim.</p>
+<p>Nos metodos por processo, o processo ausente do data lake sai com o motivo <code>nao_encontrado</code>. A API diz isso de duas formas: 404 no endpoint do processo, ou 500 no endpoint com 404 na :meth:<code>pesquisa</code> por <code>numeroProcesso</code>. No primeiro 500 de um processo, o raspador faz essa pesquisa, numa tentativa so: com 404, para de retentar; com qualquer outra resposta, segue as tentativas do perfil. Assim o processo ausente custa duas requisicoes, e nao as seis tentativas do perfil. O 401 e a falha do SSO ao renovar o token (<code>ErroSsoPdpj</code>) interrompem a coleta. Metodos sem linha por item (:meth:<code>existe</code> com <code>str</code>, :meth:<code>contar</code> e :meth:<code>pesquisa</code>) levantam o erro.</p>
+<p>As requisicoes usam os perfis <code>"listagem"</code> e <code>"documento"</code> de :class:<code>~juscraper.core.http.RequestPolicy</code>, ajustaveis no construtor com <code>politica=</code>.</p>
 <section id="methods" class="level2">
 <h2 class="anchored" data-anchor-id="methods">Methods</h2>
 <table class="caption-top table">
@@ -239,7 +243,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="juscraper.aggregators.pdpj.client.PdpjScraper.auth">auth</h3>
 <div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>aggregators.pdpj.client.PdpjScraper.auth(token)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Define o JWT usado em todas as chamadas autenticadas.</p>
-<p>Decodifica sem verificar assinatura (algoritmo gerado pelo PDPJ) para validar o formato e capturar tokens expirados antes de tentar usar.</p>
+<p>O token passa por :func:<code>juscraper.core.auth.validar_jwt</code>, que recusa token malformado ou vencido antes do primeiro uso. O conteudo do JWT nao e logado.</p>
 <section id="raises" class="level4 doc-section doc-section-raises">
 <h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
 <table class="caption-top table">
@@ -254,7 +258,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><a href="`ValueError`">ValueError</a></td>
-<td>Quando o token e malformado ou ja expirou.</td>
+<td>Quando o token e malformado ou ja expirou. O token e o header anteriores ficam como estavam.</td>
 </tr>
 </tbody>
 </table>
@@ -265,6 +269,30 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>aggregators.pdpj.client.PdpjScraper.contar(<span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Total de processos que casam com os filtros (<code>/processos:contar</code>).</p>
 <p>Aceita o mesmo subconjunto de filtros de :meth:<code>pesquisa</code> exceto os relacionados a paginacao/ordenacao. Retorna <code>int</code>.</p>
+<section id="raises-1" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-1">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`requests`">requests</a>.<a href="`requests.ConnectionError`">ConnectionError</a></td>
+<td>Quando a requisicao falha.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`InvalidJSONResponseError`">InvalidJSONResponseError</a></td>
+<td>Quando a resposta nao traz um inteiro.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="juscraper.aggregators.pdpj.client.PdpjScraper.cpopg" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.aggregators.pdpj.client.PdpjScraper.cpopg">cpopg</h3>
@@ -325,13 +353,71 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
-<td>(dict com a resposta completa).</td>
+<td>(dict com a resposta completa) e <code>motivo_falha</code>. A API que</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>responde lista vazia gera uma linha com</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>status_consulta="Nao encontrado"</code>; a consulta que falha gera</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>uma linha com <code>status_consulta</code> igual a</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>data:<code>juscraper.core.failures.STATUS_CONSULTA_FALHA</code> e o motivo.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>O processo ausente do data lake (ver a classe) sai nessa linha,</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>com o motivo <code>nao_encontrado</code>.</td>
 </tr>
 </tbody>
 </table>
 </section>
+<section id="raises-2" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-2">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`requests`">requests</a>.<a href="`requests.HTTPError`">HTTPError</a></td>
+<td>No 401 (token ausente, expirado ou invalido), com as falhas anteriores numa nota do erro.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`juscraper.aggregators._pdpj_sso.renovacao.ErroSsoPdpj`">ErroSsoPdpj</a></td>
+<td>Quando o SSO do PJe recusa ou não consegue renovar o token no meio do lote. Propaga como o 401, com as falhas anteriores numa nota do erro.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="avisos" class="level4 doc-section doc-section-avisos">
+<h4 class="doc-section doc-section-avisos anchored" data-anchor-id="avisos">Avisos</h4>
+<p><code>UserWarning</code>: Quando pelo menos uma consulta falhou.</p>
+</section>
 <section id="see-also" class="level4 doc-section doc-section-see-also">
-<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See also</h4>
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See Also</h4>
 <p><a href=":class:`InputCnjPdpj`"></a> – schema pydantic.</p>
 </section>
 </section>
@@ -339,17 +425,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="juscraper.aggregators.pdpj.client.PdpjScraper.documentos">documentos</h3>
 <div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>aggregators.pdpj.client.PdpjScraper.documentos(id_cnj)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Lista documentos do(s) processo(s) (sem baixar conteudo).</p>
+<p>O processo cuja consulta falha sai numa linha so, com <code>processo</code> e <code>motivo_falha</code> preenchidos e as demais colunas vazias. O processo ausente do data lake sai assim, com <code>nao_encontrado</code>, e nao como lista sem documentos. O 401 interrompe; ver :meth:<code>cpopg</code>.</p>
 </section>
 <section id="juscraper.aggregators.pdpj.client.PdpjScraper.download_documents" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.aggregators.pdpj.client.PdpjScraper.download_documents">download_documents</h3>
 <div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>aggregators.pdpj.client.PdpjScraper.download_documents(</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    base_df,</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    max_docs_per_process<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    with_text<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    with_binary<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>,</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    with_text<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    with_binary<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Baixa textos e/ou binarios dos documentos listados.</p>
 <p><code>base_df</code> pode vir de :meth:<code>documentos</code> (uma linha por documento, ja com <code>id_documento</code> e <code>numero_processo</code>) ou de :meth:<code>cpopg</code> (uma linha por processo com <code>detalhes</code> – nesse caso a lista de documentos e extraida de <code>detalhes['documentos']</code>).</p>
+<p>Um documento cujo download falha não interrompe a coleta: a linha sai com <code>texto</code>/<code>_raw_texto</code> e/ou <code>binario</code> iguais a <code>None</code> e o método segue para o próximo documento. Conta como falha qualquer erro HTTP diferente de 401 (inclusive o 403, que a API pode devolver para um documento isolado, como um sigiloso, e que por isso não é retentado), o retry de 429/5xx/timeout esgotado e o erro de conexão. A coluna <code>motivo_falha</code> guarda o motivo, no vocabulário de :mod:<code>juscraper.core.failures</code>; com texto e binário, guarda o do texto quando o texto falhou, senão o do binário, e o <code>None</code> de cada coluna diz qual conteúdo faltou. Ao fim, um único <code>UserWarning</code> informa quantos downloads falharam e cita alguns, com processo, documento, conteúdo e motivo. O 401 propaga, porque token inválido atinge o lote inteiro.</p>
+<p>O documento sem arquivo (<code>arquivo_id</code> vazio, na base que traz a coluna) não tem conteúdo no data lake, e a API responde 404 ao pedido de texto dele. Ele sai com os conteúdos <code>None</code> e <code>motivo_falha</code> <code>None</code>, sem requisição e fora do aviso, e ocupa vaga do limite, como qualquer linha devolvida.</p>
 <section id="parameters-1" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
 <table class="caption-top table">
@@ -371,7 +461,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td>max_docs_per_process</td>
 <td><a href="`int`">int</a> | None</td>
-<td>Limite de documentos baixados por processo. <code>None</code> = sem limite.</td>
+<td>Limite de linhas devolvidas por processo, na ordem de <code>base_df</code>. Linhas sem <code>id_documento</code> sao puladas sem ocupar vaga do limite; um documento cujo download falhou ocupa vaga, como no JusBR, porque sua linha sai no resultado (com conteúdo <code>None</code>) e a requisição já foi feita. <code>None</code> = sem limite; <code>0</code> devolve DataFrame vazio sem fazer requisicao.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
@@ -408,13 +498,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td></td>
 <td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
-<td><code>texto</code> e <code>binario</code> (quando solicitados).</td>
+<td><code>texto</code> e <code>binario</code> (quando solicitados), <code>None</code> nos</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>documentos cujo download falhou, e <code>motivo_falha</code>.</td>
 </tr>
 </tbody>
 </table>
 </section>
-<section id="raises-1" class="level4 doc-section doc-section-raises">
-<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-1">Raises</h4>
+<section id="raises-3" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-3">Raises</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -426,11 +521,34 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
+<td><a href="`pydantic.ValidationError`">ValidationError</a></td>
+<td>Quando <code>base_df</code> nao e um DataFrame ou <code>max_docs_per_process</code> e negativo.</td>
+</tr>
+<tr class="even">
+<td></td>
 <td><a href="`ValueError`">ValueError</a></td>
-<td>Quando <code>with_text</code> e <code>with_binary</code> sao ambos <code>False</code>.</td>
+<td>Quando <code>with_text</code> e <code>with_binary</code> sao ambos <code>False</code>, ou quando <code>base_df</code> nao tem coluna <code>id_documento</code> nem <code>detalhes</code>.</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><a href="`requests`">requests</a>.<a href="`requests.HTTPError`">HTTPError</a></td>
+<td>Quando a API responde 401 (token ausente, expirado ou inválido). O erro atinge o lote inteiro, então propaga e as linhas já baixadas se perdem; as falhas anteriores ao 401 vão numa nota do próprio erro (<code>__notes__</code>), não no <code>UserWarning</code>.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`juscraper.aggregators._pdpj_sso.renovacao.ErroSsoPdpj`">ErroSsoPdpj</a></td>
+<td>Quando o SSO do PJe recusa ou não consegue renovar o token no meio do lote. Propaga como o 401, com as falhas anteriores numa nota do erro.</td>
 </tr>
 </tbody>
 </table>
+</section>
+<section id="avisos-1" class="level4 doc-section doc-section-avisos">
+<h4 class="doc-section doc-section-avisos anchored" data-anchor-id="avisos-1">Avisos</h4>
+<p><code>UserWarning</code>: Quando pelo menos um download de documento falhou. Um aviso por chamada, com a contagem e alguns exemplos, emitido só quando a coleta termina.</p>
+</section>
+<section id="see-also-1" class="level4 doc-section doc-section-see-also">
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-1">See Also</h4>
+<p><a href=":class:`InputDownloadDocumentsPdpj`"></a>: schema pydantic e fonte da verdade dos parametros aceitos.</p>
 </section>
 </section>
 <section id="juscraper.aggregators.pdpj.client.PdpjScraper.existe" class="level3">
@@ -477,13 +595,57 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td></td>
 <td><a href="`bool`">bool</a> | <a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
-<td>colunas <code>processo</code> e <code>existe</code> quando e <code>list</code>.</td>
+<td>colunas <code>processo</code>, <code>existe</code> e <code>motivo_falha</code> quando e</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><a href="`bool`">bool</a> | <a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>list</code>. Na lista, o processo cuja consulta falhou sai com</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`bool`">bool</a> | <a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>existe=None</code> e o motivo, <code>nao_encontrado</code> no processo ausente</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><a href="`bool`">bool</a> | <a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>(ver a classe).</td>
 </tr>
 </tbody>
 </table>
 </section>
-<section id="see-also-1" class="level4 doc-section doc-section-see-also">
-<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-1">See also</h4>
+<section id="raises-4" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-4">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`requests`">requests</a>.<a href="`requests.HTTPError`">HTTPError</a></td>
+<td>No 401, e com <code>str</code> em qualquer erro HTTP.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`juscraper.aggregators._pdpj_sso.renovacao.ErroSsoPdpj`">ErroSsoPdpj</a></td>
+<td>Quando o SSO do PJe recusa ou não consegue renovar o token; na lista, com as falhas anteriores numa nota do erro.</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><a href="`InvalidJSONResponseError`">InvalidJSONResponseError</a></td>
+<td>Com <code>str</code>, quando a consulta falha; a resposta sem <code>true</code>/<code>false</code> levanta o ultimo.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="see-also-2" class="level4 doc-section doc-section-see-also">
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-2">See Also</h4>
 <p><a href=":class:`InputCnjPdpj`"></a> – schema pydantic.</p>
 </section>
 </section>
@@ -491,11 +653,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="juscraper.aggregators.pdpj.client.PdpjScraper.movimentos">movimentos</h3>
 <div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>aggregators.pdpj.client.PdpjScraper.movimentos(id_cnj)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Lista movimentos do(s) processo(s).</p>
+<p>Falha por processo como em :meth:<code>documentos</code>.</p>
 </section>
 <section id="juscraper.aggregators.pdpj.client.PdpjScraper.partes" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.aggregators.pdpj.client.PdpjScraper.partes">partes</h3>
 <div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>aggregators.pdpj.client.PdpjScraper.partes(id_cnj)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Lista partes do(s) processo(s).</p>
+<p>Falha por processo como em :meth:<code>documentos</code>.</p>
 </section>
 <section id="juscraper.aggregators.pdpj.client.PdpjScraper.pesquisa" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.aggregators.pdpj.client.PdpjScraper.pesquisa">pesquisa</h3>
@@ -522,7 +686,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td>**kwargs</td>
 <td><a href="`typing.Any`">Any</a></td>
-<td>Filtros aceitos pelo schema :class:<code>InputPesquisaPdpj</code> (todos opcionais; <code>None</code> = sem filtro): * <code>numero_processo</code> (str) * <code>numero_processo_sintetico</code> (str) * <code>id</code> (str): id interno do processo no Data Lake * <code>cpf_cnpj_parte</code> (str): com formatacao * <code>nome_parte</code> (str) * <code>polo_parte</code> (str): “ATIVO” ou “PASSIVO” * <code>situacao_parte</code> (str) * <code>nome_representante</code> / <code>oab_representante</code> (str) * <code>id_classe</code> (str): codigos separados por virgula * <code>id_assunto_judicial</code> (str): ids separados por virgula * <code>id_orgao_julgador</code> (str | list[str]) * <code>instancia</code> (str): “PRIMEIRO_GRAU”/“SEGUNDO_GRAU”/etc. * <code>segmento_justica</code> (str): “JUSTICA_FEDERAL”/“JUSTICA_ESTADUAL”/etc. * <code>tribunal</code> (str): siglas separadas por virgula (max 5) * <code>data_atualizacao_inicio</code> / <code>_fim</code> (str): ISO datetime * <code>data_primeiro_ajuizamento_inicio</code> / <code>_fim</code> (str): ISO datetime * <code>campo_ordenacao</code> (str): campo de ordenacao decrescente * <code>itens_por_pagina</code> (int): default 100, max 100</td>
+<td>Filtros aceitos pelo schema :class:<code>InputPesquisaPdpj</code> (todos opcionais; <code>None</code> = sem filtro): * <code>numero_processo</code> (str) * <code>numero_processo_sintetico</code> (str) * <code>id</code> (str): id interno do processo no Data Lake * <code>cpf_cnpj_parte</code> (str): com formatacao * <code>nome_parte</code> (str) * <code>polo_parte</code> (str): “ATIVO” ou “PASSIVO” * <code>situacao_parte</code> (str) * <code>nome_representante</code> / <code>oab_representante</code> (str) * <code>id_classe</code> (str): codigos separados por virgula * <code>id_assunto_judicial</code> (str): ids separados por virgula * <code>id_orgao_julgador</code> (str | list[str]) * <code>instancia</code> (str): “PRIMEIRO_GRAU”/“SEGUNDO_GRAU”/etc. * <code>segmento_justica</code> (str): “JUSTICA_FEDERAL”/“JUSTICA_ESTADUAL”/etc. * <code>tribunal</code> (str): siglas separadas por virgula (max 5) * <code>data_atualizacao_inicio</code> / <code>_fim</code> (str): ISO datetime * <code>data_primeiro_ajuizamento_inicio</code> / <code>_fim</code> (str): ISO datetime * <code>campo_ordenacao</code> (str): campo de ordenacao decrescente * <code>itens_por_pagina</code> (int): default 100. Vai a API como <code>maxElementsSize</code>, mas a API ignora o valor: a especificacao publica do data lake traz <code>maxElementsSize</code> so na resposta, como o maximo por consulta, e nao declara parametro de tamanho de pagina. Em campo, o pedido de 5 devolveu 100 itens. A pagina nao se corta no cliente, porque o cursor <code>searchAfter</code> da pagina seguinte vem da ultima linha que a API mandou; para limitar o total, use <code>paginas</code>.</td>
 <td><code>{}</code></td>
 </tr>
 </tbody>
@@ -542,13 +706,47 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
-<td>DataFrame com uma linha por processo retornado.</td>
+<td>DataFrame com uma linha por processo retornado. A API responde 404</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>(“Não foram encontrados registros”) a pagina seguinte a ultima com</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>dados e a busca sem resultado; o 404 encerra a coleta, e a busca</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td>sem resultado devolve DataFrame vazio.</td>
 </tr>
 </tbody>
 </table>
 </section>
-<section id="see-also-2" class="level4 doc-section doc-section-see-also">
-<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-2">See also</h4>
+<section id="raises-5" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-5">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>(<a href="`requests`">requests</a>.<a href="`requests.ConnectionError`">ConnectionError</a>, <a href="`InvalidJSONResponseError`">InvalidJSONResponseError</a>)</td>
+<td>Quando a requisicao de qualquer pagina falha, com status diferente de 404. Pagina nao vira linha de falha, e devolver as paginas anteriores truncaria o resultado sem aviso.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="see-also-3" class="level4 doc-section doc-section-see-also">
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-3">See Also</h4>
 <p><a href=":class:`InputPesquisaPdpj`"></a> – schema pydantic e a fonte da verdade dos filtros aceitos.</p>
 
 
