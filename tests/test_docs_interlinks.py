@@ -9,8 +9,10 @@ página só a pontuação em volta ("/ ."). Os mesmos links aparecem nas anotaç
 de tipo por causa de ``render_interlinks: true``.
 
 Os testes daqui reprovam o site sem o filtro ou com o filtro antes do
-``quarto`` em ``filters``, e o papel que a conversão do quartodoc não alcança,
-que sai na página como texto cru ``:class:`` seguido do nome.
+``quarto`` em ``filters``, e o título ``See Also:`` fora do formato que o
+griffe reconhece. O papel que a conversão do quartodoc não alcança, como o de
+nome com dígito, fica com ``docs/sphinx_roles.lua`` e com o gate de
+``tests/test_docs_papeis_sphinx.py``.
 """
 
 import ast
@@ -19,22 +21,12 @@ import re
 from collections.abc import Iterator
 from pathlib import Path
 
-import pytest
 import yaml
 
 RAIZ = Path(__file__).resolve().parents[1]
 DOCS = RAIZ / "docs"
 FONTE = RAIZ / "src" / "juscraper"
 
-# Cópia da expressão de ``quartodoc.renderers.base.convert_rst_link_to_md``
-# (quartodoc 0.11.1). Fica copiada porque o quartodoc só entra com o extra
-# ``docs`` e este gate precisa rodar no ambiente ``dev``;
-# ``test_regex_igual_a_do_quartodoc`` reprova a cópia quando a original muda.
-# O nome aceita só letras, ponto, sublinhado e ``~``: um dígito, como em
-# ``InputCJSGTRF5``, deixa o papel inteiro fora da conversão.
-_PAPEL_CONVERTIDO = re.compile(r"((:external(\+[a-zA-Z\._]+))?(:[a-zA-Z\._]+)?:[a-zA-Z\._]+:`~?[a-zA-Z\._]+`)")
-_LINK_GERADO = re.compile(r"\[\]\([^)]*\)")
-_PAPEL_RESTANTE = re.compile(r":[a-zA-Z_+.]+:`")
 # O griffe compara o tipo da seção sem distinguir maiúsculas, e o quartodoc
 # converte os papéis quando o título, em minúsculas, é "see also".
 _TITULO_SEE_ALSO = re.compile(r"see also:\s*", re.IGNORECASE)
@@ -44,10 +36,6 @@ _LINHA_SEE_ALSO = re.compile(r"\s*see also\s*:", re.IGNORECASE)
 # cópia em docs/_extensions/interlinks/, trazer o arquivo da tag nova sem
 # editar e trocar o hash e a tag no comentário de docs/_quarto.yml.
 _SHA256_INTERLINKS_LUA = "491cc9bf90b3d0bb6eca50ba1b32dcfa87d900d44723fdd8a17af88d3108dbe6"
-
-
-def _converter_como_quartodoc(texto: str) -> str:
-    return _PAPEL_CONVERTIDO.sub(r"[](\1)", texto)
 
 
 def _docstrings(caminho: Path) -> Iterator[tuple[str, str]]:
@@ -74,8 +62,8 @@ def _varrer_see_also(docstring: str) -> tuple[list[str], list[str]]:
 
     O griffe só abre a seção quando o título ocupa a linha sozinho, tem linha
     em branco acima (ou abre a docstring) e não tem linha em branco logo
-    abaixo. Fora disso, o bloco vira texto comum, o quartodoc não converte os
-    papéis e eles saem crus na página. Devolve o corpo de cada seção
+    abaixo. Fora disso, o bloco vira texto comum e a seção some da
+    referência, com o título colado ao texto. Devolve o corpo de cada seção
     reconhecida, que vai até a primeira linha não vazia sem recuo, e as
     linhas de título fora do formato.
     """
@@ -99,15 +87,15 @@ def _varrer_see_also(docstring: str) -> tuple[list[str], list[str]]:
     return corpos, fora_do_formato
 
 
-def _varrer_fonte() -> tuple[list, list[str]]:
+def _varrer_fonte() -> tuple[list[str], list[str]]:
     casos = []
     fora_do_formato = []
     for caminho in sorted(FONTE.rglob("*.py")):
         relativo = caminho.relative_to(RAIZ).as_posix()
         for qualname, docstring in _docstrings(caminho):
             corpos, titulos_ruins = _varrer_see_also(docstring)
-            for n, corpo in enumerate(corpos):
-                casos.append(pytest.param(corpo, id=f"{relativo}::{qualname}#{n}"))
+            for n, _corpo in enumerate(corpos):
+                casos.append(f"{relativo}::{qualname}#{n}")
             fora_do_formato += [f"{relativo}::{qualname}: {titulo!r}" for titulo in titulos_ruins]
     return casos, fora_do_formato
 
@@ -116,8 +104,8 @@ CASOS_SEE_ALSO, SEE_ALSO_FORA_DO_FORMATO = _varrer_fonte()
 
 
 def test_ha_secoes_see_also_para_conferir():
-    # Protege o teste parametrizado abaixo de passar vazio se a varredura
-    # deixar de reconhecer o título da seção.
+    # Protege o teste de formato de passar vazio se a varredura deixar de
+    # reconhecer o título da seção.
     assert len(CASOS_SEE_ALSO) >= 20
 
 
@@ -153,32 +141,5 @@ def test_see_also_no_formato_que_o_griffe_reconhece():
     assert not SEE_ALSO_FORA_DO_FORMATO, (
         "Título `See Also:` precisa ocupar a linha sozinho, ter linha em branco acima "
         "e o conteúdo recuado logo abaixo, sem linha em branco no meio. Fora disso o "
-        "griffe lê o bloco como texto e os papéis Sphinx saem crus:\n" + "\n".join(SEE_ALSO_FORA_DO_FORMATO)
+        "griffe lê o bloco como texto e a seção não aparece na referência:\n" + "\n".join(SEE_ALSO_FORA_DO_FORMATO)
     )
-
-
-@pytest.mark.parametrize("corpo", CASOS_SEE_ALSO)
-def test_papeis_em_see_also_sao_convertidos_pelo_quartodoc(corpo):
-    sem_links = _LINK_GERADO.sub("", _converter_como_quartodoc(corpo))
-    assert not _PAPEL_RESTANTE.search(sem_links), (
-        "Papel Sphinx que o quartodoc não converte em link sai cru na referência. "
-        "O nome aceita só letras, ponto, sublinhado e `~`; sem dígito. Use "
-        "``Nome`` (literal) para um nome com dígito. Trecho:\n" + corpo
-    )
-
-
-@pytest.mark.parametrize(
-    "texto",
-    [
-        ":class:`InputCJSGTJMG`",
-        ":class:`~juscraper.courts.tjsp.schemas.InputCJSGTJSP`",
-        ":meth:`listar_processos` — texto depois do papel",
-        ":py:func:`juscraper.scraper`",
-        ":external+python:py:class:`str`",
-        ":class:`InputCJSGTRF5`",
-        "``InputCJSGTRF5``",
-    ],
-)
-def test_regex_igual_a_do_quartodoc(texto):
-    base = pytest.importorskip("quartodoc.renderers.base")
-    assert _converter_como_quartodoc(texto) == base.convert_rst_link_to_md(texto)

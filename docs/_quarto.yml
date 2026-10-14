@@ -140,8 +140,17 @@ format:
 # would turn unresolved types into code, and the widths quartodoc derives from
 # the raw Markdown would apply: in TJSPScraper's `Raises` table, `Type` takes
 # 60% of the width and squeezes `Description`.
+#
+# quartodoc leaves Sphinx roles outside `See Also` untouched, so a role in a
+# parameter description or in free text would reach the page verbatim, as
+# ":meth:" followed by the name in code. sphinx_roles.lua, this project's own
+# filter, turns those roles into the same links quartodoc writes in `See
+# Also`, so it must run before `interlinks`, which resolves them, and after
+# `quarto`, for the same table-width reason. tests/test_docs_papeis_sphinx.py
+# checks the order and rejects role forms the filter does not match.
 filters:
   - quarto
+  - sphinx_roles.lua
   - interlinks
 
 quartodoc:
