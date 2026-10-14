@@ -155,6 +155,26 @@ def test_comparacao_usa_ancestral_comum_quando_main_avanca(repositorio):
     assert resultado.returncode == 0, resultado.stderr
 
 
+def test_base_congelada_do_pr_acusa_dispensa_que_a_main_ganhou_depois(repositorio):
+    abertura_do_pr = git(repositorio, "rev-parse", "HEAD")
+    (repositorio / "src/outro.py").write_text(CODIGO_ANTIGO, encoding="utf-8")
+    gravar_excecoes(repositorio, {"src/antigo.py": ["ANN201"], "src/outro.py": ["ANN201"]})
+    registrar_base(repositorio)
+    congelada = executar_gate(repositorio, "--base-ref", abertura_do_pr)
+    assert congelada.returncode == 1
+    assert "Nova dispensa proibida: src/outro.py: ANN201" in congelada.stderr
+    ponta = executar_gate(repositorio)
+    assert ponta.returncode == 0, ponta.stderr
+
+
+def test_workflow_compara_o_pr_com_a_ponta_da_branch_de_destino():
+    linhas = (RAIZ / ".github/workflows/lint.yml").read_text(encoding="utf-8").splitlines()
+    bases = [linha.split(":", 1)[1].strip() for linha in linhas if linha.strip().startswith("LINT_BASE:")]
+    assert bases == [
+        "${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before }}",
+    ]
+
+
 def test_referencia_explicita_funciona_sem_origin_main(repositorio):
     origem = git(repositorio, "rev-parse", "HEAD")
     git(repositorio, "update-ref", "-d", "refs/remotes/origin/main")

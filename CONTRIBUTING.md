@@ -170,7 +170,7 @@ uv run pytest tests/lint_policy -q
 uv run pre-commit install
 ```
 
-O hook Ruff mantém o autofix seguro nos arquivos Python alterados. O hook `lint-policy` roda em todo commit, inclusive quando só a configuração muda, e confere todo o código de `src/` e `tests/`. O script usa `origin/main` como referência local e compara com o ancestral comum de `HEAD` e dessa referência. Para outra base, executar `uv run python scripts/check_lint_policy.py --base-ref <referência>`. O script nunca faz fetch; uma referência ausente faz o gate falhar com orientação para atualizá-la. O script usa `tomllib`, então o pre-commit precisa rodar em Python 3.11 ou mais recente; `uv run pre-commit` usa o ambiente do projeto e atende a isso.
+O hook Ruff mantém o autofix seguro nos arquivos Python alterados. O hook `lint-policy` roda em todo commit, inclusive quando só a configuração muda, e confere todo o código de `src/` e `tests/`. O script usa `origin/main` como referência local e compara com o ancestral comum de `HEAD` e dessa referência. Para outra base, executar `uv run python scripts/check_lint_policy.py --base-ref <referência>`. No CI, o PR é comparado com a ponta atual da branch de destino (`origin/<branch>`), e não com o `pull_request.base.sha` do evento, que fica no commit em que o PR foi aberto e atribuiria ao PR as dispensas que a `main` ganhou depois. O script nunca faz fetch; uma referência ausente faz o gate falhar com orientação para atualizá-la. O script usa `tomllib`, então o pre-commit precisa rodar em Python 3.11 ou mais recente; `uv run pre-commit` usa o ambiente do projeto e atende a isso.
 
 ### Retirada de dispensas
 
