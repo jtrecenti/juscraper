@@ -84,7 +84,7 @@ _BULLET_LINE_RE = re.compile(r"^\s*\*\s+")
 # (linha que termina em ":" sem indent, ou "Aliases deprecados ..." que
 # o Google docstring formata sem dois pontos no nome canonico).
 _SECTION_END_RE = re.compile(
-    r"^(Aliases\s+deprecados|Raises|Returns|Exemplo|See\s+also|Yields|Note)",
+    r"^(Aliases\s+deprecados|Raises|Returns|Examples|See\s+also|Yields|Note)",
     re.IGNORECASE,
 )
 
@@ -94,7 +94,7 @@ def _docstring_bullets(method) -> set[str]:
 
     Restringe a varredura a regiao que comeca em ``**kwargs:`` e termina
     na proxima secao top-level (Aliases deprecados, Raises, Returns,
-    Exemplo, See also). Em cada bullet, captura apenas os nomes que
+    Examples, See also). Em cada bullet, captura apenas os nomes que
     aparecem **antes** do primeiro ``(`` (tipo pydantic) ou ``:``
     (descricao) — assim defaults inline citados em backticks na
     descricao (ex.: True, acordao) nao sao confundidos com nomes de

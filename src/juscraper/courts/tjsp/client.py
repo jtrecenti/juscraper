@@ -231,7 +231,7 @@ class TJSPScraper(EsajSearchScraper):
             ``orgao_julgador``); ``int`` com o total de resultados quando
             ``count_only=True``.
 
-        Exemplo:
+        Examples: Exemplo
             >>> import juscraper as jus
             >>> tjsp = jus.scraper("tjsp")
             >>> df = tjsp.cjsg("dano moral", paginas=range(1, 3),
@@ -414,7 +414,7 @@ class TJSPScraper(EsajSearchScraper):
             ``foro``, ``vara``, ``data_disponibilizacao``, ``decisao``);
             ``int`` com o total de resultados quando ``count_only=True``.
 
-        Exemplo:
+        Examples: Exemplo
             >>> import juscraper as jus
             >>> tjsp = jus.scraper("tjsp")
             >>> # Busca textual + filtro de vara:

@@ -163,7 +163,7 @@ class FalcaoScraper(HTTPScraper):
             BaseException: Falhas de coleta, parsing ou interrupção manual
                 são propagadas com nota sobre as páginas preservadas, se houver.
 
-        Exemplo:
+        Examples: Exemplo
             >>> import juscraper as jus
             >>> falcao = jus.scraper("falcao")
             >>> df = falcao.listar_decisoes("dano moral", paginas=range(1, 3),

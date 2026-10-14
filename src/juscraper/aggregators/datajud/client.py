@@ -327,7 +327,7 @@ class DatajudScraper(HTTPScraper):
             ValueError: Quando nem ``tribunal`` nem ``numero_processo``
                 são informados, ou quando a sigla não tem alias mapeado.
 
-        Exemplo:
+        Examples: Exemplo
             >>> import juscraper as jus
             >>> dj = jus.scraper("datajud")
             >>> dj.contar_processos(tribunal="TJSP", ano_ajuizamento=2023, classe="436")
@@ -552,7 +552,7 @@ class DatajudScraper(HTTPScraper):
             do parser e passthrough do ``_source`` Elasticsearch — colunas
             seguem nomenclatura camelCase do CNJ.
 
-        Exemplo:
+        Examples: Exemplo
             >>> import juscraper as jus
             >>> dj = jus.scraper("datajud")
             >>> # Caminho amigavel: range de data + categoria de movimentacao

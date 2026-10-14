@@ -3,7 +3,7 @@
 extend = "pyproject.toml"
 
 [lint.extend-per-file-ignores]
-"src/juscraper/__init__.py" = ["ANN201", "D205", "D212", "D415", "D416"]
+"src/juscraper/__init__.py" = ["ANN201", "D205", "D212", "D415"]
 "src/juscraper/aggregators/__init__.py" = ["D205", "D212", "D415"]
 "src/juscraper/aggregators/comunica_cnj/client.py" = ["ANN003", "ANN204", "D107", "D405"]
 "src/juscraper/aggregators/comunica_cnj/download.py" = ["PLR0913"]

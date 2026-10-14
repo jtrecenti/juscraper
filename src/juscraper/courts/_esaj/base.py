@@ -431,7 +431,7 @@ class EsajSearchScraper(HTTPScraper):
             ``cd_foro``); ``int`` com o total de resultados quando
             ``count_only=True``.
 
-        Exemplo:
+        Examples: Exemplo
             >>> import juscraper as jus
             >>> tjac = jus.scraper("tjac")
             >>> df = tjac.cjsg("dano moral", paginas=range(1, 3),
@@ -678,7 +678,7 @@ class EsajSearchScraper(HTTPScraper):
             ``id_pai``, ``nivel``, ``selecionavel``, ``caminho``). So as
             linhas com ``selecionavel=True`` valem como filtro.
 
-        Exemplo:
+        Examples: Exemplo
             >>> import juscraper as jus
             >>> tjsp = jus.scraper("tjsp")
             >>> classes = tjsp.listar_classes()

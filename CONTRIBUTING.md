@@ -361,6 +361,8 @@ Cada `Input*` declara um `BACKEND_DATE_FORMAT: ClassVar[str]` (default `"%d/%m/%
 
 Métodos públicos que recebem filtros em `**kwargs` precisam documentá-los, pois `inspect.signature` não mostra os campos aceitos pelo schema. Escrever docstrings em português, no estilo Google (`Args:`, `Returns:`, `Raises:`), seguindo o método `EsajSearchScraper.cjsg` em `src/juscraper/courts/_esaj/base.py`. Para override com schema próprio, usar `TJSPScraper.cjsg` como referência.
 
+O nome das seções que o estilo Google reconhece fica em inglês, porque é por ele que o griffe, parser usado pelo quartodoc, identifica a seção. Na seção de exemplos, escrever `Examples: Exemplo`: `Examples` faz o griffe ler as linhas `>>>` como código, e `Exemplo`, depois dos dois-pontos, é o título que a referência publica. Escrita só como `Exemplo:`, a seção vira texto livre, o Pandoc lê cada `>>>` como três citações aninhadas e o código sai colado num parágrafo, com aspas tipográficas. `tests/test_docstring_examples.py` reprova linha `>>>` fora dessa seção.
+
 ### Filtros e aliases
 
 - Listar em `**kwargs` os filtros do schema correspondente, com os mesmos nomes e tipos; citar o schema em `See also:`. Mudanças de campos e docstring devem entrar juntas.
@@ -397,8 +399,8 @@ Avisos:
 Returns:
     pd.DataFrame: <Colunas principais e significado do resultado.>
 
-Exemplo:
-    <Chamada pública válida, usando nomes canônicos.>
+Examples: Exemplo
+    >>> <Chamada pública válida, usando nomes canônicos.>
 
 See also:
     :class:`<InputDoEndpoint>`: fonte dos filtros aceitos.
