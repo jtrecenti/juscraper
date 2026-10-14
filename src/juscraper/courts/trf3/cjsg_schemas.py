@@ -77,12 +77,30 @@ class InputCJSGTRF3(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     tamanho_pagina: Literal[10, 30, 50] = 10
 
 
+def _informado(valor: object) -> bool:
+    """Diz se o filtro foi informado: texto só com espaços conta como ausente.
+
+    ``build_cjsg_payload`` apara relator, classe e órgão antes de montar os
+    campos ocultos, então ``"   "`` nesses filtros chega ao portal como campo
+    vazio; nos demais filtros de texto, espaços também não descrevem filtro
+    nenhum. Contar esse texto como critério deixaria passar uma busca sem
+    critério, que o portal recusa com erro do servidor em vez da mensagem de
+    :func:`validar_combinacoes`.
+    """
+    if isinstance(valor, str):
+        return bool(valor.strip())
+    return bool(valor)
+
+
 def validar_combinacoes(inp: InputCJSGTRF3) -> None:
     """Rejeita combinações que o formulário do portal não consegue expressar.
 
     Roda depois do pydantic (o modelo já resolveu aliases e coagiu as datas) e
     antes de qualquer requisição. Levanta :class:`ValueError` simples, e não
     ``ValidationError``, porque o problema é a combinação de campos válidos.
+
+    Filtro de texto só com espaços conta como não informado (:func:`_informado`),
+    tanto na recusa das monocráticas quanto na exigência de critério.
 
     Raises:
         ValueError: Datas de julgamento e de publicação juntas; filtro que a
@@ -96,13 +114,13 @@ def validar_combinacoes(inp: InputCJSGTRF3) -> None:
             "data_julgamento_* ou data_publicacao_*, não os dois."
         )
     if inp.base.startswith("monocraticas"):
-        recusados = [nome for nome in FILTROS_SEM_MONOCRATICAS if getattr(inp, nome)]
+        recusados = [nome for nome in FILTROS_SEM_MONOCRATICAS if _informado(getattr(inp, nome))]
         if recusados:
             raise ValueError(
                 f"TRF3 cjsg: a base {inp.base!r} não aceita o(s) filtro(s) "
                 f"{', '.join(recusados)}; o formulário de monocráticas não tem esses campos."
             )
-    if not (inp.pesquisa or "").strip() and not any(getattr(inp, nome) for nome in _CRITERIOS):
+    if not _informado(inp.pesquisa) and not any(_informado(getattr(inp, nome)) for nome in _CRITERIOS):
         raise ValueError(
             "TRF3 cjsg: informe pesquisa ou ao menos um filtro "
             "(numero_processo, relator, classe, orgao_julgador, ementa, indexacao ou datas)."

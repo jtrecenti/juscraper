@@ -22,6 +22,7 @@ from pydantic import ValidationError
 from responses.registries import OrderedRegistry
 
 import juscraper as jus
+from juscraper.courts.trf3.cjsg_schemas import InputCJSGTRF3, validar_combinacoes
 from tests._helpers import assert_unknown_kwarg_raises
 from tests.trf3._cjsg_mock import add_page, add_search
 
@@ -145,6 +146,33 @@ def test_cjsg_monocraticas_recusam_filtros_sem_campo(filtro, base):
 def test_cjsg_sem_criterio_levanta():
     with pytest.raises(ValueError, match="informe pesquisa"):
         jus.scraper("trf3").cjsg("   ")
+
+
+@pytest.mark.parametrize(
+    ("filtro", "valor"),
+    [
+        ("orgao_julgador", "   "),
+        ("relator", "  "),
+        ("classe", " \t "),
+        ("numero_processo", "   "),
+        ("ementa", "   "),
+        ("indexacao", "   "),
+    ],
+)
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_filtro_so_com_espacos_nao_conta_como_criterio(filtro, valor):
+    """Whitespace is not a criterion: without it the portal gets a search with none."""
+    with pytest.raises(ValueError, match="informe pesquisa"):
+        jus.scraper("trf3").cjsg(paginas=1, **{filtro: valor})
+
+    assert len(responses.calls) == 0
+
+
+@pytest.mark.parametrize("filtro", ["orgao_julgador", "ementa", "indexacao"])
+@pytest.mark.parametrize("base", ["monocraticas", "monocraticas_turmas_recursais"])
+def test_cjsg_monocraticas_nao_recusam_filtro_so_com_espacos(filtro, base):
+    """A whitespace-only filter counts as absent, so the monocráticas do not refuse it."""
+    validar_combinacoes(InputCJSGTRF3(pesquisa="medicamento", base=base, **{filtro: "   "}))
 
 
 def test_cjsg_base_invalida_levanta_validation_error():
