@@ -1,6 +1,7 @@
--- Hands Sphinx roles outside `See Also` to the interlinks filter.
+-- Hands Sphinx roles quartodoc leaves untouched to the interlinks filter.
 --
--- quartodoc only rewrites Sphinx roles inside a `See Also` section. Anywhere
+-- quartodoc only rewrites Sphinx roles inside a `See Also` section, and only
+-- when the name has no digit (its regex skips InputCJSGTRF3). Anywhere
 -- else (summary, parameter and exception descriptions, notes, free-text
 -- blocks), Markdown reads :meth:`cjsg` as the plain text ":meth:" glued to the
 -- inline code `cjsg`, and the page shows the role verbatim. In Pandoc's AST
@@ -14,7 +15,7 @@
 -- treats both sections alike: a full path listed in objects.json becomes a
 -- link, anything else becomes inline code, with the `~` prefix shortened to
 -- the last dotted component. Unlike quartodoc's regex, this match accepts
--- digits in the name, as in InputCJSGTRF3.
+-- digits in the name, so it also catches the `See Also` roles quartodoc skips.
 --
 -- Must run after `quarto` and before `interlinks` in docs/_quarto.yml: after
 -- `quarto`, so the links it creates do not reach Quarto's table step (see the
