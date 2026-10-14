@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ["3.11", "3.12", "3.13", "3.14"]
+        python: ["3.11", "3.12", "3.13", "3.14", "3.15"]
         # `cobertura` fica fora da lista acima de propósito: se a chave já
         # existisse na matriz, este include criaria uma perna a mais em vez de
         # anotar a de 3.13.
@@ -58,52 +58,6 @@ jobs:
             echo
             echo "</details>"
           } >> "$GITHUB_STEP_SUMMARY"
-
-  # Versões em que a suíte ainda não passa. Ficam num job à parte, fora do
-  # `needs` do job obrigatório, para que a instalação demorada não atrase o
-  # resultado dos PRs.
-  #
-  # 3.15: o teto `pandas<3.0.0` (issue #25) resolve para o pandas 2.3.3, que
-  # não tem wheel para 3.15, então a instalação compila o pandas da fonte,
-  # contra o NumPy 2.5. Compilado assim, o pandas 2.3.3 cai com falha de
-  # segmentação em `pd.to_datetime`, em qualquer versão de Python: o
-  # `np_datetime.c` dele inclui os cabeçalhos do NumPy antes de definir
-  # `PY_ARRAY_UNIQUE_SYMBOL`, e a partir do NumPy 2.5 isso dá ao arquivo uma
-  # cópia da versão de runtime que fica em zero. O pandas corrigiu a ordem só
-  # na linha 3.0 (pandas-dev/pandas#65591, no 3.0.6). A versão volta para a
-  # matriz principal quando a suíte passar nela.
-  pytest-experimental:
-    name: pytest (py${{ matrix.python }}, não bloqueante)
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    # Cobre o que não é a falha conhecida da suíte (instalação, por exemplo):
-    # o job aparece falho no PR, mas a execução não fica vermelha por ele.
-    continue-on-error: true
-    strategy:
-      fail-fast: false
-      matrix:
-        python: ["3.15"]
-    steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.3.0
-        with:
-          python-version: ${{ matrix.python }}
-          cache-dependency-glob: pyproject.toml
-      - name: Instalar dependências de desenvolvimento
-        run: uv sync --extra dev
-      # A falha da suíte não reprova o job: um check que falha sempre, por
-      # causa conhecida, deixaria todo PR com um X vermelho. O resultado vira
-      # o aviso do passo seguinte, que aparece no resumo da execução. Com o
-      # job aprovado, o setup-uv também salva o cache do pandas já compilado.
-      - name: Rodar a suíte offline
-        id: suite
-        continue-on-error: true
-        run: uv run pytest
-      - name: Avisar que a suíte falhou nesta versão
-        if: steps.suite.outcome == 'failure'
-        env:
-          VERSAO: ${{ matrix.python }}
-        run: echo "::warning title=Python $VERSAO::A suíte offline falhou em Python $VERSAO. Este job não barra o merge."
 
   # Check obrigatório é casado pelo nome do job. Este job dá um nome só para o
   # resultado de todas as pernas bloqueantes, que não muda quando a matriz muda.
