@@ -56,8 +56,8 @@ local function split_role(text)
     return prefix, role
 end
 
--- Full path of the object the page documents, read from its level-1 header;
--- nil on pages quartodoc did not write, such as index.qmd.
+-- Full path of the object the page documents, read from the level-1 header
+-- that opens it; nil on pages quartodoc did not write, such as index.qmd.
 local page_object = nil
 
 -- Rewrites a :meth: target as interlinks can resolve it; other roles pass.
@@ -114,13 +114,12 @@ local function Link(link)
 end
 
 function Pandoc(doc)
-    for _, block in ipairs(doc.blocks) do
-        if block.t == "Header" and block.level == 1 then
-            if block.identifier:match("^juscraper%.") then
-                page_object = block.identifier
-            end
-            break
-        end
+    -- quartodoc opens every page it writes with that header; any other first
+    -- block means a hand-written page, where short names stay unqualified
+    local first = doc.blocks[1]
+    if first ~= nil and first.t == "Header" and first.level == 1
+        and first.identifier:match("^juscraper%.") then
+        page_object = first.identifier
     end
     return doc:walk({ Inlines = Inlines, Link = Link })
 end

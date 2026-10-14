@@ -146,7 +146,8 @@ format:
 # ":meth:" followed by the name in code. sphinx_roles.lua, this project's own
 # filter, turns those roles into the same links quartodoc writes in `See
 # Also`, and rewrites every :meth: target, its own and quartodoc's, so that
-# a short method name links to the method of the page's class. It must run
+# a short method name links to that method when the page's class defines
+# and documents it. It must run
 # before `interlinks`, which resolves them, and after
 # `quarto`, for the same table-width reason. tests/test_docs_papeis_sphinx.py
 # checks the order and rejects role forms the filter does not match.

@@ -22,6 +22,7 @@ desses casos.
 """
 
 import ast
+import importlib
 import inspect
 import json
 import re
@@ -87,11 +88,12 @@ def _pares(texto: str):
         yield token.group(0), trecho.group(2)
 
 
-# Cabeçalho de nível 1 que o quartodoc escreve em cada página, com o caminho
-# completo do objeto como identificador.
-_CABECALHO_DA_PAGINA = re.compile(r"\A# .*\{ #(juscraper\.[^ }]+) \}")
-# Link vazio que o quartodoc escreve em See Also: ``[](:meth:`cjsg`)``.
-_LINK_DO_QUARTODOC = re.compile(r"\[\]\((:[A-Za-z0-9_+.:]*:)`([^`]*)`\)")
+# Cabeçalho de nível 1 que abre cada página do quartodoc, com o caminho
+# completo do objeto como identificador, em qualquer posição do atributo.
+_CABECALHO_DA_PAGINA = re.compile(r"\A# [^\n]*\{[^}\n]*#(juscraper\.[^\s}]+)[^}\n]*\}")
+# Link Markdown cujo alvo é um papel entre crases. O quartodoc escreve em See
+# Also o link vazio, ``[](:meth:`cjsg`)``, o único que o filtro reescreve.
+_LINK_COM_PAPEL = re.compile(r"\[([^\]]*)\]\((:[A-Za-z0-9_+.:]*:)`([^`]*)`\)")
 
 
 def _alvo_de_metodo(papel: str, nome: str, pagina: str | None) -> tuple[str, str]:
@@ -111,9 +113,11 @@ def _alvos_pelo_espelho(texto: str) -> list[str]:
     pagina = cabecalho.group(1) if cabecalho else None
     alvos: list[tuple[int, str]] = []
     trechos_de_link = []
-    for link in _LINK_DO_QUARTODOC.finditer(texto):
+    for link in _LINK_COM_PAPEL.finditer(texto):
         trechos_de_link.append(link.span())
-        papel, nome = _alvo_de_metodo(link.group(1), link.group(2), pagina)
+        papel, nome = link.group(2), link.group(3)
+        if not link.group(1):
+            papel, nome = _alvo_de_metodo(papel, nome, pagina)
         alvos.append((link.start(), f"{papel}%60{nome}%60"))
     for trecho in _TRECHO_DE_CODIGO.finditer(texto):
         # o código dentro do alvo de um link não é ``Code`` para o Pandoc
@@ -213,6 +217,44 @@ def _varrer_fonte() -> tuple[int, list[str]]:
 
 TOTAL_PAPEIS, PAPEIS_CRUS = _varrer_fonte()
 
+_METH_CURTO = re.compile(r":(?:py:)?meth:`~?([^`.]+)`")
+
+
+def _classes_publicadas() -> list[type]:
+    """Classes que ``docs/_quarto.yml`` manda o quartodoc documentar."""
+    config = yaml.safe_load((DOCS / "_quarto.yml").read_text(encoding="utf-8"))["quartodoc"]
+    classes = []
+    for secao in config["sections"]:
+        for alvo in secao["contents"]:
+            modulo, _, nome = f"juscraper.{alvo}".rpartition(".")
+            objeto = getattr(importlib.import_module(modulo), nome)
+            if isinstance(objeto, type):
+                classes.append(objeto)
+    return classes
+
+
+def _meth_curto_sem_metodo() -> tuple[int, list[str]]:
+    """Confere cada ``:meth:`` curto das docstrings que a página da classe mostra.
+
+    O filtro qualifica o nome curto pela classe da página, e o ``interlinks`` só
+    acha o método se ele for membro público da própria classe, que o quartodoc
+    documenta; herdado ou privado sai como código, sem aviso no build. A página
+    mostra a docstring da classe e a dos métodos públicos dela, não a do
+    ``__init__``.
+    """
+    total = 0
+    sem_metodo = []
+    for classe in _classes_publicadas():
+        membros = {nome: valor for nome, valor in vars(classe).items() if not nome.startswith("_")}
+        docstrings = [("", classe.__doc__)]
+        docstrings += [(f".{nome}", getattr(valor, "__doc__", None)) for nome, valor in membros.items()]
+        for sufixo, docstring in docstrings:
+            for citado in _METH_CURTO.findall(docstring or ""):
+                total += 1
+                if citado not in membros:
+                    sem_metodo.append(f"{classe.__module__}.{classe.__qualname__}{sufixo}: :meth:`{citado}`")
+    return total, sem_metodo
+
 
 def test_quarto_declara_filtro_de_papeis_entre_quarto_e_interlinks():
     config = yaml.safe_load((DOCS / "_quarto.yml").read_text(encoding="utf-8"))
@@ -242,6 +284,16 @@ def test_papeis_das_docstrings_no_formato_que_o_filtro_converte():
         "antes, e o alvo não pode ter título explícito (`:meth:`texto <alvo>``) nem "
         "dois-pontos. Use um desses papéis ou escreva o nome como literal, ``nome``:\n"
         + "\n".join(PAPEIS_CRUS)
+    )
+
+
+def test_meth_curto_cita_metodo_publico_da_propria_classe():
+    total, sem_metodo = _meth_curto_sem_metodo()
+    assert total >= 50  # protege o gate de passar vazio
+    assert not sem_metodo, (
+        "`:meth:` com nome curto vira link para o método da classe da página só "
+        "quando o método é público e definido na própria classe; senão sai como "
+        "código. Use o caminho completo de onde o método é documentado:\n" + "\n".join(sem_metodo)
     )
 
 
@@ -292,6 +344,24 @@ AMOSTRAS = [
         id="links-do-see-also",
     ),
     pytest.param("# Título { #outro }\n\nver :meth:`cjsg`.", [":function:%60cjsg%60"], id="pagina-fora-do-pacote"),
+    pytest.param(
+        "intro\n\n" + _PAGINA + "ver :meth:`cjsg`.", [":function:%60cjsg%60"], id="cabecalho-depois-de-texto"
+    ),
+    pytest.param(
+        "# x {#juscraper.a.B .classe}\n\nver :meth:`cjsg`.",
+        [":function:%60~juscraper.a.B.cjsg%60"],
+        id="atributo-sem-espaco-e-com-classe",
+    ),
+    pytest.param(
+        _PAGINA + "[texto](:meth:`cposg`) e [](:meth:`cjsg`).",
+        [":meth:%60cposg%60", f":function:%60~{_METODO}.cjsg%60"],
+        id="link-com-texto-fica",
+    ),
+    pytest.param(
+        _PAGINA + "# Outro { #juscraper.a.B }\n\nver :meth:`cjsg`.",
+        [f":function:%60~{_METODO}.cjsg%60"],
+        id="vale-o-primeiro-cabecalho",
+    ),
 ]
 
 
