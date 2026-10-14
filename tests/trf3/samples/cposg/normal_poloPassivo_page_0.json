@@ -1,0 +1,23 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "participante": "ANS AGENCIA NACIONAL DE SAUDE SUPLEMENTAR - CNPJ: 03.5XX.XXX/XXXX-XX (APELADO)",
+   "nome": "ANS AGENCIA NACIONAL DE SAUDE SUPLEMENTAR",
+   "tipo": "APELADO",
+   "procuradoria": "Procuradoria-Regional Federal da 3ª Região",
+   "procuradoriaDomicilio": false,
+   "situacao": "Ativo",
+   "principal": true,
+   "segredoJustica": false
+  }
+ ],
+ "pageInfo": {
+  "current": 1,
+  "last": 1,
+  "size": 10,
+  "count": 1
+ }
+}

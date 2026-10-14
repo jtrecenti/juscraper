@@ -1,0 +1,12 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [],
+ "pageInfo": {
+  "current": 1,
+  "last": 0,
+  "size": 10,
+  "count": 0
+ }
+}

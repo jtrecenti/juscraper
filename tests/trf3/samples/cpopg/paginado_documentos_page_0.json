@@ -1,0 +1,31 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "id": "hmxdqaWu6UPHk6gxAinWbpuJrt6e2tEoo1-d-4hT9UVTGzySP2VF3bUqwe7aUtxUpOiE",
+   "descricao": "22/09/2026 13:33:36 - SENTENÇA (SENTENÇA)",
+   "mostrarComprovante": true,
+   "binario": false
+  },
+  {
+   "id": "vW2zn5XDuZQZtDJerN73RNxzsZq2mBrKFgexv6WyaSLioq_BZ4vx8lq58_aearf6IaX5",
+   "descricao": "02/07/2026 18:10:35 - ATO ORDINATÓRIO (ATO ORDINATÓRIO)",
+   "mostrarComprovante": true,
+   "binario": false
+  },
+  {
+   "id": "HfBBKF-loNDELs5JBFy7kZQ4AUw04zEQcyOb8dqdU2TaVNoY-mDhUVu-JRpT7tbcjQHr",
+   "descricao": "12/11/2025 14:03:59 - DECISÃO (DECISÃO)",
+   "mostrarComprovante": true,
+   "binario": false
+  }
+ ],
+ "pageInfo": {
+  "current": 1,
+  "last": 1,
+  "size": 15,
+  "count": 3
+ }
+}

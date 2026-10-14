@@ -1,0 +1,113 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "movimento": "Juntada de laudo pericial",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "26/09/2025 03:23:50",
+   "idDocumento": "NgbqfIRFgxWxfNrKpyCxSJYulYj_zjtI07uo4pQrLh3uq2BOrZVTfRz1p6-Kb5kWGmCR"
+  },
+  {
+   "movimento": "Juntada de laudo pericial",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "26/09/2025 03:23:49",
+   "idDocumento": "des_U2lNB1YA46RQNlfcXANnJDJNrxE7NeFMKGFcGbAwFmAZrzgVNG3OhPYNVVjDbXYU"
+  },
+  {
+   "movimento": "Juntada de laudo pericial",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "26/09/2025 03:23:47",
+   "idDocumento": "NG9zZzU7bTMTCi2SVJYZCgjaJK6BxowaO8FhSqPE344SXoZEpWl-ne80-7clT9ft2Geu"
+  },
+  {
+   "movimento": "Juntada de laudo pericial",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "26/09/2025 03:23:45",
+   "idDocumento": "NygjMWw9SDANOKQMuM95fc4Zpsb0_H0lSdPKCqFJs71LzKUxC9XzKaaKDy3bFvQu1053"
+  },
+  {
+   "movimento": "Recebidos os autos",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "25/09/2025 17:35:35",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Remetidos os Autos (para processamento) da Distribuição para Secretaria processante",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "25/09/2025 17:35:35",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Confirmada a citação eletrônica",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "25/09/2025 17:35:34",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de certidão",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "25/09/2025 17:35:19",
+   "idDocumento": "MzkRHcO6vA1e7Dp_p3nvK-ENX85trOyNvscDONgQeoftMO7bhTQAmPIEwFQWiMTNvxFN"
+  },
+  {
+   "movimento": "Recebido pelo Distribuidor",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "24/09/2025 15:10:18",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Distribuído por sorteio",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "24/09/2025 15:10:17",
+   "idDocumento": null
+  }
+ ],
+ "pageInfo": {
+  "current": 5,
+  "last": 5,
+  "size": 15,
+  "count": 70
+ }
+}

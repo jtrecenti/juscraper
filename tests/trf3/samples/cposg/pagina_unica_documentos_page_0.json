@@ -1,0 +1,19 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "id": "EoOjkJ_TFnufA1G9g8BmOdRPC72JbZAZg5OncGK9jepKVTBb6zjBxmBmirueGzcrvSQn",
+   "descricao": "16/09/2026 15:21:26 - DECISÃO MONOCRÁTICA TERMINATIVA COM RESOLUÇÃO DE MÉRITO (DECISÃO MONOCRÁTICA TERMINATIVA COM RESOLUÇÃO DE MÉRITO)",
+   "mostrarComprovante": false,
+   "binario": false
+  }
+ ],
+ "pageInfo": {
+  "current": 1,
+  "last": 1,
+  "size": 15,
+  "count": 1
+ }
+}

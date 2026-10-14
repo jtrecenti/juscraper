@@ -1,11 +1,11 @@
-"""HTML parser for TRF PJe ``ConsultaPublica`` detail pages (TRF1/TRF3/TRF5).
+"""HTML parser for TRF PJe ``ConsultaPublica`` detail pages (TRF1/TRF5, TJPE).
 
 PJe renders the detail page as XHTML with stable ID suffixes
 (``processoEvento``, ``processoPartesPoloAtivoResumidoList``, etc.) and
 labeled ``<div class="propertyView">`` panels. This parser walks the
 labels by visible text and the tables by ID suffix, so deployment-specific
-``j_idNNN`` prefixes don't matter. The same parser serves all three PJe
-ConsultaPública deployments — the only known markup difference (number of
+``j_idNNN`` prefixes don't matter. The same parser serves all the PJe
+ConsultaPública JSF deployments; the only known markup difference (number of
 ``<td>`` cells in the polo tables) is absorbed defensively (see
 :func:`_parse_polo`).
 """
@@ -63,7 +63,7 @@ def _parse_property_views(soup: BeautifulSoup) -> dict[str, str | None]:
 def _parse_polo(soup: BeautifulSoup, suffix: str) -> list[dict[str, str | None]]:
     """Parse a polo (ativo/passivo) participants table into a list of dicts.
 
-    TRF1/TRF3 render 3 ``<td>`` cells per row (an empty leading cell, then
+    TRF1 renders 3 ``<td>`` cells per row (an empty leading cell, then
     participant text and status); TRF5 renders 2 (participant text, then
     status). Reading the *last two* non-empty cells handles both shapes and
     stays forward-compatible if a leading cell is added or dropped.
@@ -131,7 +131,11 @@ def _parse_documentos(soup: BeautifulSoup) -> list[dict[str, str | None]]:
 
     PJe formats each row as ``ID: <id> - <yyyy-MM-dd HH:MM:SS.fff> - <descricao>``.
     Rows that don't match keep their full text in ``descricao`` so we don't
-    drop data when the format drifts.
+    drop data when the format drifts. Known limitation of the ``ID:`` branch:
+    the field separator is the same hyphen the ISO date uses, so ``data``
+    keeps only the year and the rest of the date lands at the start of
+    ``descricao``. The TRF1 and TRF5 samples list documents without the
+    ``ID:`` prefix and do not reach this branch.
     """
     table = soup.find(
         "table", id=lambda i: bool(i and i.endswith(":processoDocumentoGridTab"))

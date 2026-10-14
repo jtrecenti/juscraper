@@ -80,11 +80,13 @@ EXPECTED_COURT_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
         "juscraper.courts.tjto.schemas",
         "InputCjsgEmentaTJTO",
     ),
-    # PJe consulta pública (TRF1, TRF3, TRF5) — schema compartilhado da
-    # família ``_trf`` (assinatura pública idêntica nos três).
+    # PJe consulta pública JSF (TRF1, TRF5): schema compartilhado da
+    # família ``_trf`` (assinatura pública idêntica nos dois).
     ("trf1", "cpopg"): ("juscraper.courts._trf.schemas", "InputCpopgTRF"),
-    ("trf3", "cpopg"): ("juscraper.courts._trf.schemas", "InputCpopgTRF"),
     ("trf5", "cpopg"): ("juscraper.courts._trf.schemas", "InputCpopgTRF"),
+    # TRF3: consulta pública do PJe pela API JSON, fora da família ``_trf``.
+    ("trf3", "cpopg"): ("juscraper.courts.trf3.schemas", "InputCpopgTRF3"),
+    ("trf3", "cposg"): ("juscraper.courts.trf3.schemas", "InputCposgTRF3"),
     # TJPE 1º grau roda o mesmo PJe ConsultaPública dos TRFs.
     ("tjpe", "cpopg"): ("juscraper.courts._trf.schemas", "InputCpopgTRF"),
     # eproc consulta pública (TRF6) — captcha-gated.

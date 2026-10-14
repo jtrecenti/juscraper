@@ -1,0 +1,133 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "movimento": "Concedida a Medida Liminar",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "31/08/2026 17:30:26 - Decisão (Decisão)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "31/08/2026 17:30:26",
+   "idDocumento": "W4SwgNBh9r_5uBzOjLMoNCrNwA5xQd1xDXhWUXmMVfvNRDD6YTD0J2gzHJfUFt1T2sEG"
+  },
+  {
+   "movimento": "Conclusos para decisão",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "31/08/2026 15:58:16",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de Petição de petição intercorrente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "31/08/2026 11:49:06",
+   "idDocumento": "UkTrTZNLFXCBY4HXRCXSto9iVkzMwTZKHdmryt_cQewrVOug3wWbQr2rbzaTnrqTCFba"
+  },
+  {
+   "movimento": "Publicado Intimação em 31/08/2026.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "31/08/2026 00:49:51",
+   "idDocumento": "1kHqGzMqgJyuAQ9_EZFTnefbLilEOvqhsNU5GyVVUsVK0rON0MuOpBQ8yqEoWevJmFs9"
+  },
+  {
+   "movimento": "Disponibilizado no DJ Eletrônico em 28/08/2026",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "29/08/2026 00:49:58",
+   "idDocumento": "3R_6QzZrN5YzB-dMDUiPSBvsI-VCrOFUlQTFBb59iVSXuYBg--VBuXwPhmgqLv8HuxeV"
+  },
+  {
+   "movimento": "Expedição de Outros documentos.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "27/08/2026 13:33:39",
+   "idDocumento": "ZJksob4a8mmU80_x5Fs9cn4suJJ51-pNbSZkoXH2emrEJItcJo8DSEmYLBwzXft0nQJM"
+  },
+  {
+   "movimento": "Proferido despacho de mero expediente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "26/08/2026 13:45:54",
+   "idDocumento": "rASDglmjlzC0F7BAA6rFLdnEBBmNbQwIRGcSJLjYTD4FcCtiFQ_hYS9ilEx0yk3UuDnb"
+  },
+  {
+   "movimento": "Conclusos para despacho",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "26/08/2026 13:30:11",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Recebidos os autos",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "20/08/2026 10:00:55",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Remetidos os Autos (para processamento) da Distribuição para Secretaria processante",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "20/08/2026 10:00:55",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Recebido pelo Distribuidor",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "19/08/2026 18:22:09",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Distribuído por sorteio",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "19/08/2026 18:22:09",
+   "idDocumento": null
+  }
+ ],
+ "pageInfo": {
+  "current": 2,
+  "last": 2,
+  "size": 15,
+  "count": 27
+ }
+}

@@ -1,0 +1,19 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "id": "ACVgo5E8lPjYiXaUumsDAi8cjSkyibyfed7-EwtTT4CwRvRqeMFV3v67t1OI02KoWlTI",
+   "descricao": "31/08/2026 17:30:26 - DECISÃO (DECISÃO)",
+   "mostrarComprovante": true,
+   "binario": false
+  }
+ ],
+ "pageInfo": {
+  "current": 1,
+  "last": 1,
+  "size": 15,
+  "count": 1
+ }
+}

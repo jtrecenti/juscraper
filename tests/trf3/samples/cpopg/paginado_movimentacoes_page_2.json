@@ -1,0 +1,163 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "movimento": "Conclusos para despacho",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "24/03/2026 14:56:34",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Expedição de Outros documentos.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "24/03/2026 09:19:12",
+   "idDocumento": "Pl_1FTPwhTus-tAu0B4faI2xRp0StcYJw8LMz2gn1OiO1AwWXMkgf-NWULaQnHY0aJa8"
+  },
+  {
+   "movimento": "Proferido despacho de mero expediente",
+   "movimentoExcluido": true,
+   "textoMovimentoExcluido": "Movimento excluído em '24/03/2026 18:43' por 'VINICIUS VAGNER DE OLIVEIRA'",
+   "documento": null,
+   "documentoExcluido": true,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "23/03/2026 17:41:59",
+   "idDocumento": "zvwuAi5Lh_ljs6l5cR-Sh9gNGFXF1GOI9DALRhiB01gS4h8T7OQMixRPAt6ZcJx2LyF7"
+  },
+  {
+   "movimento": "Conclusos para despacho",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "23/03/2026 16:04:46",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Decorrido prazo de INSTITUTO NACIONAL DO SEGURO SOCIAL - INSS em 19/02/2026 23:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "20/02/2026 00:51:36",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Decorrido prazo de CINTIA REGIANE CORREA DOS SANTOS em 11/02/2026 23:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "12/02/2026 01:15:58",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de Petição de ciência",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "14/01/2026 18:22:13",
+   "idDocumento": "98oZpQGPieVam2PMJYA7CZXPwc559yf5lFOMwkrcKTtQ6UlDHifLOPdsllt0BJJvjRpG"
+  },
+  {
+   "movimento": "Expedição de Outros documentos.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "14/01/2026 09:57:07",
+   "idDocumento": "DKLoyXWzmk3NZEZM96tPkDInQ61yiigVSD24Zx-AA0wDtSXkqSKKWbhuxqNICtycpEKK"
+  },
+  {
+   "movimento": "Expedida/certificada a intimação eletrônica",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "14/01/2026 09:57:06",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Proferido despacho de mero expediente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "13/01/2026 20:06:56",
+   "idDocumento": "CM8qckjUeulD9fPLZ6jh0PUZl800bvU3frTUAlIYsubf__Y9KaB3SqXgcjU48F4ajNxR"
+  },
+  {
+   "movimento": "Conclusos para despacho",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "13/01/2026 18:19:18",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Perícia agendada",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "13/01/2026 17:42:34",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Decorrido prazo de INSTITUTO NACIONAL DO SEGURO SOCIAL - INSS em 16/12/2025 23:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "17/12/2025 00:57:25",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Decorrido prazo de CINTIA REGIANE CORREA DOS SANTOS em 11/12/2025 23:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "12/12/2025 00:48:41",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Decorrido prazo de INSTITUTO NACIONAL DO SEGURO SOCIAL - INSS em 11/12/2025 23:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "12/12/2025 00:44:35",
+   "idDocumento": null
+  }
+ ],
+ "pageInfo": {
+  "current": 3,
+  "last": 5,
+  "size": 15,
+  "count": 70
+ }
+}

@@ -1,0 +1,163 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "movimento": "Juntada de Petição de petição intercorrente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "17/09/2026 11:08:04",
+   "idDocumento": "iYkkMg664Y_NipwwdIVo8WnLWfEnSI0I1TmZg6sR5dLFYzuRBQ7O2CFNArPcji5YrI58"
+  },
+  {
+   "movimento": "Decorrido prazo de UNIMED NACIONAL - COOPERATIVA CENTRAL em 01/09/2026 23:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "02/09/2026 00:43:35",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Publicado Intimação em 10/08/2026.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "10/08/2026 01:06:14",
+   "idDocumento": "0dD1Y0rzBPLszPHDZunR1N6y9iA1mfmpM50ysYcS1eP_YuwWmInzP0u4ooIy-b-ZjRKn"
+  },
+  {
+   "movimento": "Disponibilizado no DJ Eletrônico em 07/08/2026",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "08/08/2026 01:06:55",
+   "idDocumento": "amwQB9Z3-7jRWdAY4YXhsIEHfPgmOulnuU-8epcjLqN_LhInEPflmBhsanmfz1gIx6gC"
+  },
+  {
+   "movimento": "Expedição de Outros documentos.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "06/08/2026 14:16:25",
+   "idDocumento": "7eFb6Jp8-k0061nGa4U0RIc8IMjDmsKjP9VJQ2Wl8kwUXIwbCDmX9rbRv-M5w8jCQ1zf"
+  },
+  {
+   "movimento": "Expedida/certificada a intimação eletrônica",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "06/08/2026 14:16:24",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Evoluída a classe de PROCEDIMENTO COMUM CÍVEL (7) para CUMPRIMENTO DE SENTENÇA (156)",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "06/08/2026 14:14:49",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Determinada a expedição do alvará de levantamento",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "06/08/2026 12:01:16",
+   "idDocumento": "UJzeHUpApGKeQoBtDyf33gSfjh9fkvykLCG2aGLXPoisH63GJMrayB09thi4AM-a2Wst"
+  },
+  {
+   "movimento": "Conclusos para despacho",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "29/04/2026 16:41:40",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Decorrido prazo de UNIMED NACIONAL - COOPERATIVA CENTRAL em 27/02/2026 23:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "28/02/2026 00:50:11",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de Petição de petição intercorrente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "19/02/2026 11:37:53",
+   "idDocumento": "ZvuqPb-tvsAXrPI5fbvpvppFd83hYuJ8RCgbih3XtCbUZKrOErLLuTIcv_YZYl56Z0-u"
+  },
+  {
+   "movimento": "Publicado Intimação em 02/02/2026.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "23/01/2026 14:31:25 - Ato Ordinatório (Ato Ordinatório)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "02/02/2026 00:55:18",
+   "idDocumento": "_13AOa7pyKUKt52A0fQUAcmsnRJzAOuMqiGpGujrEcimyULS8XrvvYdp0hZ_3200-8EO"
+  },
+  {
+   "movimento": "Disponibilizado no DJ Eletrônico em 26/01/2026",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "23/01/2026 14:31:25 - Ato Ordinatório (Ato Ordinatório)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "27/01/2026 00:57:12",
+   "idDocumento": "XdUVfBYH0AaCnAOJoIBiS29yansjg2E5RBDyjt6-MLPWwsqqcOHECB9fM2cJuv_p7X6U"
+  },
+  {
+   "movimento": "Expedição de Outros documentos.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "23/01/2026 14:31:25 - Ato Ordinatório (Ato Ordinatório)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "23/01/2026 14:31:26",
+   "idDocumento": "D0DMRoTZb5t4Zs6PEJAjbCHpkpYHe7iW5tzhG97lpnRvsysxpHmJLhT7lSEisUsmY2VQ"
+  },
+  {
+   "movimento": "Expedida/certificada a intimação eletrônica",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "23/01/2026 14:31:25",
+   "idDocumento": null
+  }
+ ],
+ "pageInfo": {
+  "current": 1,
+  "last": 8,
+  "size": 15,
+  "count": 117
+ }
+}

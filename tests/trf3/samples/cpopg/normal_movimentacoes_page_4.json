@@ -1,0 +1,163 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "movimento": "Embargos de Declaração Acolhidos",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "30/07/2020 17:29:14 - Sentença (Sentença)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "30/07/2020 17:29:14",
+   "idDocumento": "63pMoJJahZibeJj21NttOZDFBb_FrJVcXLcFlzkoUxti39WwobMVO6BnuoWOA_Ianu0"
+  },
+  {
+   "movimento": "Embargos de Declaração Não-acolhidos",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "30/07/2020 17:29:14 - Sentença (Sentença)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "30/07/2020 17:29:14",
+   "idDocumento": "pszfB754VvtZlTNch2NXH_p2EA7MxMd2dptQCeLwIgCd8A0t5yaOgeuEAfiJomB6rd8"
+  },
+  {
+   "movimento": "Conclusos para julgamento",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "27/07/2020 19:11:38",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Decorrido prazo de CENTRAL NACIONAL UNIMED - COOPERATIVA CENTRAL em 23/07/2020 23:59:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "24/07/2020 00:29:45",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de Petição de impugnação",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "22/07/2020 19:54:33",
+   "idDocumento": "w0EzuFTQ1DLWqRcgRuMteZb1RD8JnBzySpebPzz5xVIf3VNwPEhCT7lM8bcv4Kr1O_8"
+  },
+  {
+   "movimento": "Juntada de Petição de petição intercorrente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "17/07/2020 23:03:46",
+   "idDocumento": "v1jgjD4fMEwonSmmQBpYSwZbkqRYlxc8pjA9TbgdDaEYjwBD_eAYwACMZpjum4FU8cM"
+  },
+  {
+   "movimento": "Publicado Ato Ordinatório em 16/07/2020.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "13/07/2020 20:10:46 - Ato Ordinatório (Ato Ordinatório)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "16/07/2020 01:17:02",
+   "idDocumento": "8A_bGRTkyOKKpRb0PAqrsiGyif7gVmtfe-r3SU627REn0JwJEXsPUHcjF7msafyOQQk"
+  },
+  {
+   "movimento": "Disponibilizado no DJ Eletrônico em 16/07/2020",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "13/07/2020 20:10:46 - Ato Ordinatório (Ato Ordinatório)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "16/07/2020 01:17:01",
+   "idDocumento": "TaNDYFV1jtOpJh7B9NDCjfTBcu7x4XJ1QD-lqV-9ZkMQreQO3lBNlWMdymehGLuqrpU"
+  },
+  {
+   "movimento": "Expedição de Outros documentos.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "13/07/2020 20:10:46 - Ato Ordinatório (Ato Ordinatório)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "13/07/2020 20:10:49",
+   "idDocumento": "xQh-qMhT13fPzbzXbaTUlz2cLaArd8Ydz3HbT_fgxOGmLwfmpSdLFn6t0OYfUNjg3vk"
+  },
+  {
+   "movimento": "Expedição de Outros documentos.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "13/07/2020 20:10:46 - Ato Ordinatório (Ato Ordinatório)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "13/07/2020 20:10:49",
+   "idDocumento": "KLHWSOjI2OOMwdLEP5CI--_ubuSCPOmL_7FdHT7dEZUbguGn5Xuy4dFWh0ayaDTFHTI"
+  },
+  {
+   "movimento": "Expedição de Comunicação via sistema.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "13/07/2020 20:10:46 - Ato Ordinatório (Ato Ordinatório)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "13/07/2020 20:10:47",
+   "idDocumento": "hxUEHGXFh8MJjOd2a5MHMlZDmE1rCdmKjSxy-_C_Q7mo2BtnnxFADtgr-eh_2sAu3cc"
+  },
+  {
+   "movimento": "Juntada de ato ordinatório",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "13/07/2020 20:10:29 - Ato Ordinatório (Ato Ordinatório)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "13/07/2020 20:10:29",
+   "idDocumento": "GEmhimXV7EBxGng_5eukMIZQxYw88RBpx6ksnJhbHS74VE6ZKr-MEDnilzmUmLaFHps"
+  },
+  {
+   "movimento": "Decorrido prazo de CENTRAL NACIONAL UNIMED - COOPERATIVA CENTRAL em 10/07/2020 23:59:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "11/07/2020 00:13:40",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de Petição de embargos de declaração",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "26/06/2020 15:31:30",
+   "idDocumento": "0Ynrm24IV8NMEhMerBuTYaMSDZutq0EsA0H052mQraVU0YpXyg2bHibsQioznhH3hbM"
+  },
+  {
+   "movimento": "Juntada de Petição de embargos de declaração",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "24/06/2020 17:53:01",
+   "idDocumento": "DKGuahxmJ6-FXntG-c-2S_z2s7bZ2dL72hqYAofVakkSqziHTc4-WvaP-f9cKlvLoUk"
+  }
+ ],
+ "pageInfo": {
+  "current": 5,
+  "last": 8,
+  "size": 15,
+  "count": 117
+ }
+}

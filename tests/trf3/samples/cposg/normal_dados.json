@@ -1,0 +1,17 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": {
+  "numeroProcesso": "5021122-65.2018.4.03.6100",
+  "dataDistribuicao": "2020-12-01T09:19:41.109",
+  "classeJudicial": "APELAÇÃO CÍVEL (198)",
+  "assunto": "DIREITO DA SAÚDE (12480) - Pública (12481) - Sistema Único de Saúde (SUS) (12511) - Ressarcimento do SUS (12516)",
+  "jurisdicao": "Tribunal Regional Federal da 3ª Região",
+  "orgaoJulgador": "Gab. 13 - DES. FED. MONICA NOBRE",
+  "orgaoJulgadorColegiado": "4ª Turma",
+  "endereco": "Avenida Paulista, 1842, Avenida Paulista 1842, Bela Vista, SãO PAULO - SP - CEP: 01310-936",
+  "enderecoOrgaoJulgadorColegiado": "Avenida Paulista 1842, SãO PAULO - SP - CEP: 01310-936",
+  "numeroProcessoReferencia": "5021122-65.2018.4.03.6100"
+ }
+}

@@ -1,7 +1,7 @@
 """Contratos offline do ``cpopg`` do TJPE (PJe ConsultaPública + AWS WAF).
 
 O fluxo de busca, detalhe e parse é o da família ``_trf``, já coberto pelos
-contratos do TRF1/TRF3/TRF5; aqui ficam o que o TJPE tem de próprio: o host,
+contratos do TRF1/TRF5; aqui ficam o que o TJPE tem de próprio: o host,
 o formulário capturado do TJPE e o cookie do AWS WAF obtido só quando o
 desafio aparece. As respostas de busca e de detalhe reaproveitam os samples
 do TRF1, porque o HTML do PJe é o mesmo e nenhum dado de processo do TJPE

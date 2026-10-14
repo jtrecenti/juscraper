@@ -1,0 +1,133 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "movimento": "Proferido despacho de mero expediente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "27/08/2018 15:01:35",
+   "idDocumento": "Nh7XbPd0p1ROLicSxtlhSFjEnEWd21KZ6qynEUS3-aDzZc7R9pklUj4muEm-bEpVMTU"
+  },
+  {
+   "movimento": "Proferido despacho de mero expediente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "27/08/2018 15:01:33",
+   "idDocumento": "-T04CmKSkubnjERquZNh-UMt3tkOgi3kV_tUF_UpC4YMWIZFYjKqa2mCasgcB42Sp3c"
+  },
+  {
+   "movimento": "Proferido despacho de mero expediente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "27/08/2018 15:01:28",
+   "idDocumento": "z_mwLuWlPZvlfUTOKEfmtUPJ-jf7MUgRl-kEXWHHbXJ9LMrlst8wGAOt0zpLs2Pgg48"
+  },
+  {
+   "movimento": "Proferido despacho de mero expediente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "27/08/2018 15:01:26",
+   "idDocumento": "YoNr0f9pKPPWsk4WRtFrsp31ZLkFumDlRp5AIkeVj5qa2uzibo8fvOMtLFMFsvdEHtw"
+  },
+  {
+   "movimento": "Proferido despacho de mero expediente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "27/08/2018 15:01:24",
+   "idDocumento": "tto4JTTy7Ht6NzWFyKqJeC0IMMm5TrfO6jYk2H01HyzXWqU9SArcj38f3ahUVYqkTXk"
+  },
+  {
+   "movimento": "Juntada de certidão",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "24/08/2018 17:34:06",
+   "idDocumento": "EHNQ41BJ551kdawDm7Kj_RhXvWfFzOyUG0CqeGI0G20hhqQG2lAAvajct3tlp3EKj8E"
+  },
+  {
+   "movimento": "Conclusos para despacho",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "24/08/2018 16:52:14",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de certidão",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "23/08/2018 12:28:00",
+   "idDocumento": "wJvtVayyyLXxWfTbN-7LDJq78px_T0Aop9pdHEUw6782mBXgZRrrhXR-QwJ4oq_2Djw"
+  },
+  {
+   "movimento": "Remetidos os Autos (para processamento) para Secretaria processante",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "23/08/2018 11:38:53",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Expedição de Certidão.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "23/08/2018 11:38:53",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Remetidos os Autos (para análise de prevenção) para Seção de Distribuição",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "23/08/2018 09:37:40",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Distribuído por sorteio",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "23/08/2018 09:37:37",
+   "idDocumento": null
+  }
+ ],
+ "pageInfo": {
+  "current": 8,
+  "last": 8,
+  "size": 15,
+  "count": 117
+ }
+}
