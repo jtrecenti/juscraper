@@ -24,6 +24,7 @@ import json
 import re
 import shutil
 import subprocess
+import tempfile
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -96,13 +97,19 @@ def _alvos_pelo_espelho(texto: str) -> list[str]:
 
 def _alvos_pelo_filtro(texto: str) -> list[str]:
     """Alvos de link que o filtro Lua cria, rodando-o no Pandoc do Quarto."""
-    saida = subprocess.run(
-        ["quarto", "pandoc", "-f", "markdown", "-t", "json", "--lua-filter", str(FILTRO)],
-        input=texto,
-        capture_output=True,
-        text=True,
-        check=True,
-    ).stdout
+    # A saída vai para arquivo porque o ``quarto pandoc`` do Quarto 1.6, versão
+    # que o CI da documentação usa, escreve no stderr quando o stdout não é um
+    # terminal; o 1.10 escreve no stdout. Com ``-o``, as duas gravam no arquivo.
+    with tempfile.TemporaryDirectory() as pasta:
+        destino = Path(pasta) / "saida.json"
+        subprocess.run(
+            ["quarto", "pandoc", "-f", "markdown", "-t", "json", "--lua-filter", str(FILTRO), "-o", str(destino)],
+            input=texto,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        saida = destino.read_text(encoding="utf-8")
     alvos: list[str] = []
 
     def percorrer(no):
