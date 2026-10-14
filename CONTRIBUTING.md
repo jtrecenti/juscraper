@@ -156,7 +156,9 @@ Notas:
 
 ### Integração semanal no CI
 
-O workflow `Integração` (`.github/workflows/integration.yml`) roda uma vez por semana os testes marcados `integration`, sem os `anti_bot`, e em seguida os notebooks de `docs/notebooks/`, exceto os que exigem credencial do gov.br. O horário, os extras instalados e a lista de notebooks excluídos estão no próprio arquivo. A execução agendada não acontece no recesso forense, de 20/12 a 20/01.
+O workflow `Integração` (`.github/workflows/integration.yml`) roda uma vez por semana os testes marcados `integration`, sem os `anti_bot`, e em seguida os notebooks de `docs/notebooks/`, exceto os que exigem credencial do gov.br. O horário, os extras instalados e a lista de notebooks excluídos estão no próprio arquivo. A execução agendada não acontece no recesso forense, de 20/12 a 20/01. Os testes marcados `release` também ficam de fora, porque são a bateria cara reservada para antes de versão maior.
+
+Parte dos tribunais recusa conexões do runner do GitHub: a conexão não se completa, o portal devolve uma página de desafio no lugar do JSON ou responde HTTP 403. Esses tribunais estão na variável `FORA_DO_CI` do workflow, e a execução completa ignora os testes e os notebooks deles, porque no CI eles só mostrariam o bloqueio. Eles rodam localmente ou num disparo manual com `tribunal`, que ignora a lista. A lista vem de uma medição comparada entre o runner e um IP residencial no Brasil; como os IPs dos runners mudam a cada execução, ela é revista quando um tribunal passa a responder ao runner ou deixa de responder.
 
 Teste que falha não derruba o workflow: tribunal fora do ar é esperado e não deve gerar alerta de execução quebrada. O workflow fica vermelho quando algo além de um teste quebra: o pytest sai com código 2 ou maior (erro de coleta, interrupção, nada coletado), um passo estoura o tempo, a instalação falha, o `tribunal` do disparo manual não existe ou uma chamada ao `gh` falha. Quando o job dos testes não termina bem, a issue não é tocada, porque o retrato daquela execução está incompleto.
 
