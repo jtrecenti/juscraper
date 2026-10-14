@@ -341,13 +341,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="exemplo" class="level4 doc-section doc-section-exemplo">
 <h4 class="doc-section doc-section-exemplo anchored" data-anchor-id="exemplo">Exemplo</h4>
-<blockquote class="blockquote">
-<blockquote class="blockquote">
-<blockquote class="blockquote">
-<p>import juscraper as jus falcao = jus.scraper(“falcao”) df = falcao.listar_decisoes(“dano moral”, paginas=range(1, 3), … tribunais=[“TST”, “TRT3”])</p>
-</blockquote>
-</blockquote>
-</blockquote>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="im">import</span> juscraper <span class="im">as</span> jus</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> falcao <span class="op">=</span> jus.scraper(<span class="st">"falcao"</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> df <span class="op">=</span> falcao.listar_decisoes(<span class="st">"dano moral"</span>, paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">3</span>),</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>...                  tribunais<span class="op">=</span>[<span class="st">"TST"</span>, <span class="st">"TRT3"</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="see-also" class="level4 doc-section doc-section-see-also">
 <h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See also</h4>
@@ -356,12 +353,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="juscraper.aggregators.falcao.client.FalcaoScraper.listar_decisoes_download" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.aggregators.falcao.client.FalcaoScraper.listar_decisoes_download">listar_decisoes_download</h3>
-<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>aggregators.falcao.client.FalcaoScraper.listar_decisoes_download(</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    diretorio<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>aggregators.falcao.client.FalcaoScraper.listar_decisoes_download(</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    diretorio<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Baixa as paginas cruas (JSON) da busca para um diretorio.</p>
 <p>Mesma validacao e filtros de :meth:<code>listar_decisoes</code> (veja la a lista completa de <code>**kwargs</code>). Cada chamada cria um subdiretorio proprio <code>falcao_{colecao}_&lt;sufixo aleatorio&gt;</code>, entao buscas diferentes no mesmo <code>diretorio</code> nunca se misturam. Cada pagina vira um arquivo <code>{colecao}_{pagina:04d}.json</code>.</p>
 <section id="parameters-1" class="level4 doc-section doc-section-parameters">
@@ -423,7 +420,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="juscraper.aggregators.falcao.client.FalcaoScraper.listar_decisoes_parse" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.aggregators.falcao.client.FalcaoScraper.listar_decisoes_parse">listar_decisoes_parse</h3>
-<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>aggregators.falcao.client.FalcaoScraper.listar_decisoes_parse(diretorio)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>aggregators.falcao.client.FalcaoScraper.listar_decisoes_parse(diretorio)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Le os arquivos JSON baixados por :meth:<code>listar_decisoes_download</code>.</p>
 <p>Percorre <code>diretorio</code> recursivamente, entao aceita tanto o caminho devolvido por :meth:<code>listar_decisoes_download</code> quanto a pasta-mae que junta varias buscas. A colecao de cada arquivo e inferida do prefixo do nome (<code>{colecao}_{pagina}.json</code>).</p>
 <section id="parameters-2" class="level4 doc-section doc-section-parameters">

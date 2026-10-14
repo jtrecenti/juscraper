@@ -313,21 +313,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="exemplo" class="level4 doc-section doc-section-exemplo">
 <h4 class="doc-section doc-section-exemplo anchored" data-anchor-id="exemplo">Exemplo</h4>
-<blockquote class="blockquote">
-<blockquote class="blockquote">
-<blockquote class="blockquote">
-<p>import juscraper as jus dj = jus.scraper(“datajud”) dj.contar_processos(tribunal=“TJSP”, ano_ajuizamento=2023, classe=“436”) tribunal alias count relation error 0 TJSP api_publica_tjsp 12345 eq None</p>
-</blockquote>
-</blockquote>
-</blockquote>
-<blockquote class="blockquote">
-<blockquote class="blockquote">
-<blockquote class="blockquote">
-<h1 id="range-de-data-ajuizamento-categoria-de-movimentacao">Range de data ajuizamento + categoria de movimentacao</h1>
-<p>dj.contar_processos( … tribunal=“TRF1”, … data_ajuizamento_inicio=“2024-01-01”, … data_ajuizamento_fim=“2024-03-31”, … tipos_movimentacao=[“decisao”], … )</p>
-</blockquote>
-</blockquote>
-</blockquote>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="im">import</span> juscraper <span class="im">as</span> jus</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> dj <span class="op">=</span> jus.scraper(<span class="st">"datajud"</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> dj.contar_processos(tribunal<span class="op">=</span><span class="st">"TJSP"</span>, ano_ajuizamento<span class="op">=</span><span class="dv">2023</span>, classe<span class="op">=</span><span class="st">"436"</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  tribunal             alias  count relation error</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="dv">0</span>     TJSP  api_publica_tjsp  <span class="dv">12345</span>       eq   <span class="va">None</span></span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="co"># Range de data ajuizamento + categoria de movimentacao</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> dj.contar_processos(</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>...     tribunal<span class="op">=</span><span class="st">"TRF1"</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>...     data_ajuizamento_inicio<span class="op">=</span><span class="st">"2024-01-01"</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>...     data_ajuizamento_fim<span class="op">=</span><span class="st">"2024-03-31"</span>,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>...     tipos_movimentacao<span class="op">=</span>[<span class="st">"decisao"</span>],</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>... )</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="see-also" class="level4 doc-section doc-section-see-also">
 <h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See also</h4>
@@ -336,10 +333,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="juscraper.aggregators.datajud.client.DatajudScraper.listar_processos" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.aggregators.datajud.client.DatajudScraper.listar_processos">listar_processos</h3>
-<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>aggregators.datajud.client.DatajudScraper.listar_processos(</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>aggregators.datajud.client.DatajudScraper.listar_processos(</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Lista processos do DataJud via API publica do CNJ.</p>
 <p>Filtros sao validados pelo schema :class:<code>InputListarProcessosDataJud</code> (<code>extra="forbid"</code>); kwargs desconhecidos viram <code>TypeError</code> com a mensagem <code>DatajudScraper.listar_processos() got unexpected keyword argument(s): '&lt;nome&gt;'</code> em vez de serem silenciosamente ignorados.</p>
 <section id="parameters-1" class="level4 doc-section doc-section-parameters">
@@ -433,13 +430,28 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="exemplo-1" class="level4 doc-section doc-section-exemplo">
 <h4 class="doc-section doc-section-exemplo anchored" data-anchor-id="exemplo-1">Exemplo</h4>
-<blockquote class="blockquote">
-<blockquote class="blockquote">
-<blockquote class="blockquote">
-<p>import juscraper as jus dj = jus.scraper(“datajud”) # Caminho amigavel: range de data + categoria de movimentacao df = dj.listar_processos( … tribunal=“TRF1”, … data_ajuizamento_inicio=“2024-01-01”, … data_ajuizamento_fim=“2024-03-31”, … tipos_movimentacao=[“decisao”, “sentenca”], … paginas=range(1, 3), … ) # Caminho query-override: paridade com requisicao direta df = dj.listar_processos( … tribunal=“TRF1”, … query={ … “bool”: { … “must_not”: [{“exists”: {“field”: “orgaoJulgador.nome”}}], … “should”: [{“match”: {“classe.nome”: “tutela”}}], … “minimum_should_match”: 1, … } … }, … paginas=1, … )</p>
-</blockquote>
-</blockquote>
-</blockquote>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="im">import</span> juscraper <span class="im">as</span> jus</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> dj <span class="op">=</span> jus.scraper(<span class="st">"datajud"</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="co"># Caminho amigavel: range de data + categoria de movimentacao</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> df <span class="op">=</span> dj.listar_processos(</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>...     tribunal<span class="op">=</span><span class="st">"TRF1"</span>,</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>...     data_ajuizamento_inicio<span class="op">=</span><span class="st">"2024-01-01"</span>,</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>...     data_ajuizamento_fim<span class="op">=</span><span class="st">"2024-03-31"</span>,</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>...     tipos_movimentacao<span class="op">=</span>[<span class="st">"decisao"</span>, <span class="st">"sentenca"</span>],</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>...     paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">3</span>),</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>... )</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="co"># Caminho query-override: paridade com requisicao direta</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> df <span class="op">=</span> dj.listar_processos(</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>...     tribunal<span class="op">=</span><span class="st">"TRF1"</span>,</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>...     query<span class="op">=</span>{</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>...         <span class="st">"bool"</span>: {</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>...             <span class="st">"must_not"</span>: [{<span class="st">"exists"</span>: {<span class="st">"field"</span>: <span class="st">"orgaoJulgador.nome"</span>}}],</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>...             <span class="st">"should"</span>: [{<span class="st">"match"</span>: {<span class="st">"classe.nome"</span>: <span class="st">"tutela"</span>}}],</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>...             <span class="st">"minimum_should_match"</span>: <span class="dv">1</span>,</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>...         }</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>...     },</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>...     paginas<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>... )</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="see-also-1" class="level4 doc-section doc-section-see-also">
 <h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-1">See also</h4>
