@@ -250,9 +250,9 @@ def advogados_do_polo(processos, polo):
 | (a) `extrair_total_resultados` | 16 | 2 | sequência plana, legível apesar do CCN; só o lizard pega |
 | (b) `advogados_do_polo` | 7 | 21 | aninhada, só o cognitivo pega |
 
-Números medidos com lizard 1.24.0 e complexipy 8.0.1. Em (a), o lizard soma +1 por `or` e +1 pelo `if`, enquanto o complexipy conta a sequência de `or` uma vez só. Em (b), cada estrutura paga +1 mais a profundidade em que está: o `if` mais interno custa 6 sozinho, embora a função tenha só seis pontos de decisão.
+Números medidos com as versões fixadas no extra `[dev]`, lizard 1.23.0 e complexipy 6.0.1. Em (a), o lizard soma +1 por `or` e +1 pelo `if`, enquanto o complexipy conta a sequência de `or` uma vez só. Em (b), cada estrutura paga +1 mais a profundidade em que está: o `if` mais interno custa 6 sozinho, embora a função tenha só seis pontos de decisão.
 
-### Diagnóstico sob demanda (não roda em pre-commit nem CI)
+### Diagnóstico sob demanda
 
 ```bash
 uv run lizard src               # ciclomático (CCN) + NLOC + tokens + nº de params, por função
@@ -261,14 +261,21 @@ uv run complexipy -i -s desc src  # cognitivo por função, ordenado do maior pa
 
 São as ferramentas a rodar antes de mexer num parser, para ver onde a dívida está concentrada — cada uma por uma lente.
 
-### Gate planejado (ainda não ativo)
+### Gate de complexidade
 
 ```bash
-uv run complexipy --snapshot-create src   # baseline; o CI compara e falha só em regressão (grandfather)
-uv run lizard -C 15 -w src                 # ciclomático: warning (e exit≠0) acima de CCN 15
+uv run python scripts/check_complexity.py                   # contra origin/main
+uv run python scripts/check_complexity.py --base-ref <ref>  # contra outra base
 ```
 
-Ligar um gate hoje deixaria o CI vermelho (várias funções acima do limiar). O gate entra no CI (job `quality`, #101) **depois** que as piores funções forem refatoradas — liderado pelo `complexipy --snapshot` (ratchet que congela o estado atual e só barra pioras), com o `lizard` como segunda lente. Refs #307, #101.
+O gate roda no pre-commit, nos commits que tocam `src/`, e no workflow `Qualidade`, em todo PR e em push para a `main`. Ele aplica duas regras, com teto 15:
+
+- **Ciclomática absoluta.** `lizard -C 15 -w src`: nenhuma função de `src/` passa de CCN 15. Não há lista de exceções nem `#lizard forgives`.
+- **Cognitiva por catraca.** `complexipy src -mx 15 --diff <base> --ratchet --no-ignore`: falha a função nova acima de 15 e a que passa de 15 ao mudar; a que já estava acima de 15 pode ficar igual ou melhorar, mas não piorar. `--no-ignore` desconsidera `# noqa: complexipy`. A dívida anterior ao gate continua aceita; a lista dela está no fechamento da #307.
+
+A base é o ancestral comum de `HEAD` e da referência, como no gate de lint: num ramo atrás da `main`, comparar com a ponta dela atribuiria ao ramo, como piora, as melhorias que a `main` ganhou depois. No CI, o PR é comparado com `origin/<branch de destino>`, e o push para a `main`, com a ponta anterior.
+
+As versões do Lizard e do Complexipy são fixas no extra `[dev]` e no hook do pre-commit, e `tests/complexity_gate` reprova se as duas divergirem. Refs #101, #307.
 
 ## Adding a new tribunal
 

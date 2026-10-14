@@ -71,8 +71,8 @@ dev = [
     "pre-commit>=3.0.0",
     "nbmake>=1.5.0",
     "pytest-xdist>=3.0.0",
-    "lizard>=1.17.0",
-    "complexipy>=5.0.0",
+    "lizard==1.23.0",
+    "complexipy==6.0.1",
 ]
 waf = [
     # Obtem o cookie aws-waf-token dos portais atras do desafio JavaScript do AWS WAF (STF, TJPE).
