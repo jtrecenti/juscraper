@@ -6,7 +6,10 @@ bloco de texto livre), o Markdown lê ``:meth:`cjsg``` como o texto ``:meth:``
 colado ao código ``cjsg``, e a página mostra o papel cru. Quem resolve isso é
 ``docs/sphinx_roles.lua``, declarado em ``docs/_quarto.yml`` entre ``quarto`` e
 ``interlinks``: ele troca o par por um link igual ao que o quartodoc escreve em
-``See Also``, e o ``interlinks`` o resolve.
+``See Also``, e o ``interlinks`` o resolve. Nos dois tipos de link, o
+``:meth:`` passa a ``:function:``, o papel com que o inventário registra
+métodos, e o nome curto é qualificado pela classe da página, como no Sphinx,
+para virar link para o método.
 
 O filtro só reconhece o papel quando o nome dele está na tabela ``ROLES`` do
 Lua e quando nada de letra ASCII, dígito ou sublinhado vem colado antes; fora
@@ -84,14 +87,45 @@ def _pares(texto: str):
         yield token.group(0), trecho.group(2)
 
 
+# Cabeçalho de nível 1 que o quartodoc escreve em cada página, com o caminho
+# completo do objeto como identificador.
+_CABECALHO_DA_PAGINA = re.compile(r"\A# .*\{ #(juscraper\.[^ }]+) \}")
+# Link vazio que o quartodoc escreve em See Also: ``[](:meth:`cjsg`)``.
+_LINK_DO_QUARTODOC = re.compile(r"\[\]\((:[A-Za-z0-9_+.:]*:)`([^`]*)`\)")
+
+
+def _alvo_de_metodo(papel: str, nome: str, pagina: str | None) -> tuple[str, str]:
+    """Espelho de ``method_target``: reescreve ``:meth:``; outros papéis passam."""
+    if not papel.endswith(":meth:"):
+        return papel, nome
+    papel = papel.removesuffix("meth:") + "function:"
+    curto = nome.removeprefix("~")
+    if pagina is not None and "." not in curto:
+        nome = f"~{pagina}.{curto}"
+    return papel, nome
+
+
 def _alvos_pelo_espelho(texto: str) -> list[str]:
-    """Alvos de link que o filtro criaria, segundo o espelho em Python."""
-    alvos = []
-    for token, codigo in _pares(texto):
-        separado = _separar_papel(token)
+    """Alvos de link que o filtro deixaria no documento, segundo o espelho em Python."""
+    cabecalho = _CABECALHO_DA_PAGINA.match(texto)
+    pagina = cabecalho.group(1) if cabecalho else None
+    alvos: list[tuple[int, str]] = []
+    trechos_de_link = []
+    for link in _LINK_DO_QUARTODOC.finditer(texto):
+        trechos_de_link.append(link.span())
+        papel, nome = _alvo_de_metodo(link.group(1), link.group(2), pagina)
+        alvos.append((link.start(), f"{papel}%60{nome}%60"))
+    for trecho in _TRECHO_DE_CODIGO.finditer(texto):
+        # o código dentro do alvo de um link não é ``Code`` para o Pandoc
+        if any(inicio <= trecho.start() < fim for inicio, fim in trechos_de_link):
+            continue
+        token = _TOKEN_ANTES.search(texto, 0, trecho.start())
+        assert token is not None  # o padrão aceita a cadeia vazia
+        separado = _separar_papel(token.group(0))
         if separado is not None:
-            alvos.append(f"{separado[1]}%60{codigo}%60")
-    return alvos
+            papel, nome = _alvo_de_metodo(separado[1], trecho.group(2), pagina)
+            alvos.append((trecho.start(), f"{papel}%60{nome}%60"))
+    return [alvo for _, alvo in sorted(alvos)]
 
 
 def _alvos_pelo_filtro(texto: str) -> list[str]:
@@ -234,15 +268,30 @@ def test_defeito_classifica_cada_forma(token, codigo, errado):
     assert (_defeito(token, codigo) is not None) is errado
 
 
+_PAGINA = "# courts.tjmg.client.TJMGScraper { #juscraper.courts.tjmg.client.TJMGScraper }\n\n"
+_METODO = "juscraper.courts.tjmg.client.TJMGScraper"
+
 AMOSTRAS = [
-    pytest.param("x :meth:`cjsg` e", [":meth:%60cjsg%60"], id="meth"),
+    pytest.param("x :meth:`cjsg` e", [":function:%60cjsg%60"], id="meth-sem-pagina"),
     pytest.param("(ver :class:`~a.B`).", [":class:%60~a.B%60"], id="parentese-e-til"),
     pytest.param("schema :py:class:`InputCJSGTRF3`.", [":py:class:%60InputCJSGTRF3%60"], id="dominio-e-digito"),
     pytest.param("| a | b |\n|---|---|\n| x | ver :func:`f` |\n", [":func:%60f%60"], id="celula-de-tabela"),
     pytest.param("Default:`x` e `z` solto.", [], id="palavra-com-dois-pontos"),
     pytest.param("schema:class:`X` colado.", [], id="papel-colado-a-palavra"),
     pytest.param("veja :ref:`secao`.", [], id="papel-fora-da-tabela"),
-    pytest.param("é:meth:`cjsg`", [":meth:%60cjsg%60"], id="letra-acentuada-colada"),
+    pytest.param("é:meth:`cjsg`", [":function:%60cjsg%60"], id="letra-acentuada-colada"),
+    pytest.param(_PAGINA + "ver :meth:`cjsg`.", [f":function:%60~{_METODO}.cjsg%60"], id="meth-curto-na-pagina"),
+    pytest.param(
+        _PAGINA + "ver :py:meth:`~cpopg`.", [f":py:function:%60~{_METODO}.cpopg%60"], id="meth-dominio-e-til"
+    ),
+    pytest.param(_PAGINA + "ver :meth:`Base.cjsg`.", [":function:%60Base.cjsg%60"], id="meth-com-ponto"),
+    pytest.param(_PAGINA + "ver :class:`X`.", [":class:%60X%60"], id="class-na-pagina"),
+    pytest.param(
+        _PAGINA + "[](:meth:`cposg`) e [](:class:`Y`).",
+        [f":function:%60~{_METODO}.cposg%60", ":class:%60Y%60"],
+        id="links-do-see-also",
+    ),
+    pytest.param("# Título { #outro }\n\nver :meth:`cjsg`.", [":function:%60cjsg%60"], id="pagina-fora-do-pacote"),
 ]
 
 
