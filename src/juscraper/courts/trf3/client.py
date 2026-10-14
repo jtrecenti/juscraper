@@ -94,19 +94,24 @@ class TRF3Scraper(TRFConsultaScraper):
                   parciais.
                 * ``classe`` (str): Classe como no dropdown, com sigla (ex.:
                   ``"AI - AGRAVO DE INSTRUMENTO"``).
-                * ``orgao_julgador`` (str): Órgão julgador como o portal indexa.
-                  Nos acórdãos recentes do TRF3, ``"3ª Turma"``; nos antigos,
-                  ``"TERCEIRA TURMA"``. Nas Turmas Recursais, o nome curto
-                  (``"11ª TURMA RECURSAL DE SÃO PAULO"``). O valor da coluna
-                  ``orgao_julgador`` do resultado nem sempre serve como
-                  filtro: nas Turmas Recursais a coluna traz
-                  ``"11ª Turma Recursal da Seção Judiciária de São Paulo"``,
-                  que não encontra nada, enquanto
-                  ``"11ª TURMA RECURSAL DE SÃO PAULO"`` encontra. "1a. seção"
-                  vira "1A", como no formulário do portal, então
-                  ``"QUINTA TURMA - 1A. SEÇÃO"`` busca
-                  ``"QUINTA TURMA - 1A"``. Não existe nas bases de
-                  monocráticas.
+                * ``orgao_julgador`` (str): Órgão julgador, pelo rótulo do
+                  dropdown do formulário (``"3ª Turma"``,
+                  ``"11ª Turma Recursal da Seção Judiciária de São Paulo"``)
+                  ou pelo nome indexado da opção (``"TERCEIRA TURMA"``,
+                  ``"11ª TURMA RECURSAL DE SÃO PAULO"``), sem diferença de
+                  caixa e de espaços. O valor da coluna ``orgao_julgador``
+                  do resultado também serve: "1a. seção" vira "1A", como no
+                  formulário, então ``"QUINTA TURMA - 1A. SEÇÃO"`` casa com
+                  a opção ``QUINTA TURMA - 1a. SEÇÃO``. A busca manda o par
+                  que o navegador mandaria, rótulo e nome indexado da opção,
+                  lido do formulário da aba, e traz os documentos gravados
+                  com qualquer dos dois (medido com "medicamento":
+                  ``"QUINTA TURMA"`` traz 576 documentos, contra 443 do
+                  rótulo sozinho e 133 do nome indexado sozinho). Rótulo de
+                  mais de uma opção, como ``"5ª Turma"`` nos acórdãos, levanta
+                  ``ValueError``; texto que não casa com nenhuma opção vai
+                  como está e só encontra o que o portal grava com essa
+                  grafia. Não existe nas bases de monocráticas.
                 * ``ementa`` (str): Texto pesquisado só na ementa. Não existe
                   nas bases de monocráticas.
                 * ``indexacao`` (str): Texto pesquisado na indexação ("Objeto
@@ -130,9 +135,11 @@ class TRF3Scraper(TRFConsultaScraper):
             ValidationError: Para os demais erros do schema (base ou
                 ``tamanho_pagina`` fora do domínio, data inválida).
             ValueError: Datas de julgamento e de publicação juntas; filtro que a
-                base de monocráticas não tem; nenhum critério; com
-                ``paginas=None``, primeira página com documentos e total de
-                resultados ilegível.
+                base de monocráticas não tem; nenhum critério;
+                ``orgao_julgador`` que corresponde a mais de uma opção do
+                formulário (a mensagem lista os nomes indexados que
+                desfazem a ambiguidade); com ``paginas=None``, primeira
+                página com documentos e total de resultados ilegível.
             BotChallengeBlockedError: A Akamai bloqueou o IP (HTTP 403
                 ``Access Denied``).
             RuntimeError: O portal devolveu a página de sessão expirada, ou

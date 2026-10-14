@@ -120,6 +120,91 @@ def _orgao_indexado(orgao: str | None) -> str:
     return _PRIMEIRA_SECAO_RE.sub("1A", orgao or "")
 
 
+def _opcoes_orgao(html: str) -> list[tuple[str, str]]:
+    """Lê as opções do dropdown ``select#orgao`` da aba: (rótulo, nome indexado).
+
+    O rótulo é o texto exibido (``"5ª Turma"``) e o nome indexado é o
+    atributo ``data-val-jef`` (``"QUINTA TURMA"``). A opção "Selecione...",
+    de valor ``0``, fica de fora. Cada aba tem o seu dropdown: o das Turmas
+    Recursais lista outros órgãos.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    opcoes: list[tuple[str, str]] = []
+    for opcao in soup.select("select#orgao option"):
+        if str(opcao.get("value") or "").strip() in {"", "0"}:
+            continue
+        rotulo = opcao.get_text(" ", strip=True)
+        # Todas as opções medidas têm ``data-val-jef``. Numa que não tenha, o
+        # JavaScript do formulário quebraria ao montar ``hdnOrgaoJef``; o
+        # rótulo nos dois campos é o que a busca mandava antes desta leitura.
+        opcoes.append((rotulo, str(opcao.get("data-val-jef") or rotulo).strip()))
+    return opcoes
+
+
+def _chave_orgao(texto: str) -> str:
+    """Forma de comparação do órgão: troca de "1a. seção", espaços e caixa.
+
+    A troca vem antes, para que o valor da coluna nos acórdãos antigos
+    (``"QUINTA TURMA - 1A. SEÇÃO"``) e o ``data-val-jef`` da opção
+    (``"QUINTA TURMA - 1a. SEÇÃO"``) cheguem à mesma chave.
+    """
+    return " ".join(_orgao_indexado(texto).split()).casefold()
+
+
+def _campos_orgao(orgao: str | None, opcoes: list[tuple[str, str]]) -> dict[str, str]:
+    """Monta ``hdnOrgao`` e ``hdnOrgaoJef`` como o navegador, a partir da opção escolhida.
+
+    O navegador grava em ``hdnOrgao`` o rótulo da opção e em ``hdnOrgaoJef``
+    o nome indexado, e o servidor junta os dois com OU. Medido em 14/10/2026,
+    com "medicamento" nos acórdãos: o par ``5ª Turma``/``QUINTA TURMA`` traz
+    576 documentos; o rótulo nos dois campos traz 443, e o nome indexado nos
+    dois, 133. ``hdnOrgaoJef`` sozinho é ignorado, e o servidor não aceita
+    mais de um nome indexado no campo, por isso o texto tem que escolher uma
+    opção só.
+
+    O texto casa com o rótulo ou com o nome indexado de uma opção, sem
+    diferença de caixa e de espaços (:func:`_chave_orgao`).
+
+    Args:
+        orgao: ``orgao_julgador`` do modelo.
+        opcoes: Opções do dropdown da aba (:func:`_opcoes_orgao`).
+
+    Returns:
+        Os dois campos da opção que casou, nos moldes do formulário. Vazio
+        sem órgão, ou quando o texto não casa com nenhuma opção: nesse caso
+        fica o que :func:`build_cjsg_payload` montou, o mesmo texto nos dois
+        campos.
+
+    Raises:
+        ValueError: O texto casa com mais de uma opção, como o rótulo
+            ``"5ª Turma"``, que no portal nomeia ``QUINTA TURMA`` e
+            ``QUINTA TURMA - 1a. SEÇÃO``.
+    """
+    if not (orgao or "").strip():
+        return {}
+    chave = _chave_orgao(orgao or "")
+    casadas = [op for op in opcoes if chave in {_chave_orgao(op[0]), _chave_orgao(op[1])}]
+    if not casadas:
+        logger.info(
+            "TRF3 cjsg: o órgão %r não corresponde a nenhuma opção do formulário; "
+            "o texto vai como está nos dois campos do órgão.",
+            orgao,
+        )
+        return {}
+    if len(casadas) > 1:
+        nomes = ", ".join(repr(nome) for _, nome in casadas)
+        raise ValueError(
+            f"TRF3 cjsg: o órgão {orgao!r} é ambíguo no portal: corresponde a "
+            f"{len(casadas)} opções do formulário. Passe o nome indexado da "
+            f"opção desejada: {nomes}."
+        )
+    rotulo, nome = casadas[0]
+    return {
+        "hdnOrgao": _texto_campo(_orgao_indexado(rotulo), "({}).org."),
+        "hdnOrgaoJef": _texto_campo(_orgao_indexado(nome), "({}).org."),
+    }
+
+
 def build_cjsg_payload(inp: InputCJSGTRF3) -> dict[str, str]:
     """Monta o corpo form-urlencoded do ``POST Home/ResultadoTotais``.
 
@@ -130,17 +215,15 @@ def build_cjsg_payload(inp: InputCJSGTRF3) -> dict[str, str]:
     ``hdnOrgaoJef``. ``chkMostrarLista=on`` pede a lista resumida, que já traz
     ementa e inteiro teor de cada documento.
 
-    No órgão julgador, o navegador grava em ``hdnOrgao`` o rótulo da opção do
-    dropdown (``"5ª Turma"``) e em ``hdnOrgaoJef`` o nome indexado, tirado do
-    atributo ``data-val-jef`` da opção (``"QUINTA TURMA"``); o servidor junta
-    os dois com OU (medido: 440 resultados só com ``hdnOrgao``, 33 só com o
-    nome indexado, 473 com os dois). Esta função recebe um texto só e o
-    coloca nos dois campos, depois da mesma troca de "1a. seção" por "1A" que
-    o JavaScript faz. O que ela não faz é traduzir o rótulo do dropdown para
-    o nome indexado, porque essa tabela é dado do portal e não regra: quem
-    filtra pelo rótulo encontra só o que o índice grava com esse rótulo.
-    Também não aplica as checagens do formulário (critério obrigatório,
-    datas); as que importam ficam em ``validar_combinacoes``.
+    No órgão julgador, esta função põe o texto de ``inp`` nos dois campos,
+    ``hdnOrgao`` e ``hdnOrgaoJef``, depois da mesma troca de "1a. seção" por
+    "1A" que o JavaScript faz. O navegador manda nesses campos o rótulo e o
+    nome indexado da opção escolhida, e essa tabela é dado do portal, que
+    só chega com o formulário da aba: :func:`cjsg_download_manager` lê o
+    dropdown da aba e troca os dois campos pelos da opção que casa com o
+    texto (:func:`_campos_orgao`). Esta função também não aplica as
+    checagens do formulário (critério obrigatório, datas); as que importam
+    ficam em ``validar_combinacoes``.
 
     O formulário tem um só par de datas (``data_inicial`` e ``data_final``) e
     o seletor ``data_tipo``. Com data de publicação em ``inp``, o par leva as
@@ -331,7 +414,9 @@ def cjsg_download_manager(
     (:func:`build_cjsg_payload`), a aba aberta no ``GET`` inicial, as páginas
     pedidas e o tamanho de página que converte o total de documentos em total
     de páginas. Assim o tamanho enviado ao portal e o usado na conta não têm
-    como divergir.
+    como divergir. Com ``orgao_julgador``, o formulário devolvido pelo ``GET``
+    da aba dá o par de rótulo e nome indexado que o navegador mandaria
+    (:func:`_campos_orgao`), sem requisição a mais.
 
     Args:
         inp: Filtros da busca, como saem de ``apply_input_pipeline_search``.
@@ -355,14 +440,18 @@ def cjsg_download_manager(
             para as seguintes. Da página 2 em diante, também quando a página
             traz o aviso de nenhum resultado e o total lido na primeira é
             maior que zero.
-        ValueError: ``paginas=None`` e a primeira página traz documentos, mas
-            o total de resultados não pôde ser lido.
+        ValueError: ``orgao_julgador`` corresponde a mais de uma opção do
+            dropdown da aba; ou ``paginas=None`` e a primeira página traz
+            documentos, mas o total de resultados não pôde ser lido.
     """
     payload = build_cjsg_payload(inp)
     index_url = INDEX_URL.format(indice=BASES[inp.base][0])
     comum = {"session": session, "perfil": PERFIL_CJSG, "on_response": _check_bot_challenge}
 
-    request_fn("GET", index_url, **comum)
+    aba = request_fn("GET", index_url, **comum)
+    if inp.orgao_julgador:
+        aba.encoding = "utf-8"
+        payload.update(_campos_orgao(inp.orgao_julgador, _opcoes_orgao(aba.text)))
     resp = request_fn(
         "POST",
         SEARCH_URL,

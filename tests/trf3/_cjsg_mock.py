@@ -23,13 +23,19 @@ def sample(nome: str) -> bytes:
     return load_sample_bytes("trf3", f"cjsg/{nome}")
 
 
+#: Formulário servido no GET de abertura de cada base. O da aba de
+#: monocráticas não foi capturado: ela não tem dropdown de órgão, e o corpo
+#: só seria lido para o filtro de órgão, que o schema recusa nessa aba.
+ABAS = {"turmas_recursais": "index_turmas_recursais.html"}
+
+
 def add_search(payload: dict[str, str], first_page: str, *, base: str = "acordaos") -> None:
     """Registra o GET de abertura, o POST (exato) e a página 1."""
     indice = BASES[base][0]
     responses.add(
         responses.GET,
         INDEX_URL.format(indice=indice),
-        body=sample("index_acordaos.html"),
+        body=sample(ABAS.get(base, "index_acordaos.html")),
         status=200,
         content_type=HTML,
     )

@@ -5,8 +5,11 @@ expected bodies below are literal dicts, not calls to ``build_cjsg_payload``,
 so a regression in the builder itself also fails here. Field shapes follow
 the portal's own form: the ``hdn*`` fields carry the filter text
 (``((NOME)).rel.``, ``(CLASSE).dclas.``, ``(ORGAO).org.``) and the dropdown IDs
-stay ``"0"``, because the server ignores them. The órgão goes in both
-``hdnOrgao`` and ``hdnOrgaoJef``, which the server ORs together.
+stay ``"0"``, because the server ignores them. The órgão goes as the pair
+the browser sends for the chosen dropdown option: its label in ``hdnOrgao``
+and its indexed name (``data-val-jef``) in ``hdnOrgaoJef``, which the server
+ORs together. The dropdown comes from the tab sample served on the opening
+GET.
 """
 from __future__ import annotations
 
@@ -63,7 +66,7 @@ def test_cjsg_all_filters_land_in_post_body(mocker):
             hdnMagistrado="((NERY JUNIOR)).rel.",
             hdnClasse="(AI - AGRAVO DE INSTRUMENTO).dclas.",
             hdnOrgao="(3ª Turma).org.",
-            hdnOrgaoJef="(3ª Turma).org.",
+            hdnOrgaoJef="(TERCEIRA TURMA).org.",
         ),
         "no_results.html",
     )
@@ -236,24 +239,70 @@ def test_cjsg_download_alias_query(mocker):
 
 
 @pytest.mark.parametrize(
-    ("orgao", "esperado"),
+    ("base", "orgao", "rotulo", "nome_indexado"),
     [
-        ("QUINTA TURMA - 1A. SEÇÃO", "(QUINTA TURMA - 1A).org."),
-        ("QUINTA TURMA - 1a.  seção", "(QUINTA TURMA - 1A).org."),
-        ("TURMA SUPLEMENTAR DA PRIMEIRA SEÇÃO", "(TURMA SUPLEMENTAR DA PRIMEIRA SEÇÃO).org."),
+        ("acordaos", "3ª Turma", "3ª Turma", "TERCEIRA TURMA"),
+        ("acordaos", "TERCEIRA TURMA", "3ª Turma", "TERCEIRA TURMA"),
+        ("acordaos", "  terceira   turma ", "3ª Turma", "TERCEIRA TURMA"),
+        ("acordaos", "QUINTA TURMA", "5ª Turma", "QUINTA TURMA"),
+        ("acordaos", "QUINTA TURMA - 1A. SEÇÃO", "5ª Turma", "QUINTA TURMA - 1A"),
+        ("acordaos", "QUINTA TURMA - 1a.  seção", "5ª Turma", "QUINTA TURMA - 1A"),
+        ("acordaos", "QUINTA TURMA - 1A", "5ª Turma", "QUINTA TURMA - 1A"),
+        ("acordaos", "TURMA SUPLEMENTAR DA PRIMEIRA SEÇÃO", "TURMA SUPLEMENTAR DA PRIMEIRA SEÇÃO",
+         "TURMA SUPLEMENTAR DA PRIMEIRA SEÇÃO"),
+        ("turmas_recursais", "11ª Turma Recursal da Seção Judiciária de São Paulo",
+         "11ª Turma Recursal da Seção Judiciária de São Paulo", "11ª TURMA RECURSAL DE SÃO PAULO"),
+        ("turmas_recursais", "11ª turma recursal de são paulo",
+         "11ª Turma Recursal da Seção Judiciária de São Paulo", "11ª TURMA RECURSAL DE SÃO PAULO"),
     ],
 )
 @responses.activate(registry=OrderedRegistry)
-def test_cjsg_orgao_normaliza_primeira_secao_como_o_formulario(mocker, orgao, esperado):
-    """The form's JS rewrites ``1a. seção`` as ``1A`` and fills ``hdnOrgaoJef`` too.
+def test_cjsg_orgao_manda_o_par_da_opcao_do_dropdown(mocker, base, orgao, rotulo, nome_indexado):
+    """Label or indexed name selects one dropdown option; both fields come from it.
 
-    Measured on the portal: ``QUINTA TURMA - 1A. SEÇÃO`` finds zero documents
-    and ``QUINTA TURMA - 1A`` finds the panel's judgments.
+    Matching ignores case and spacing and applies the form's ``1a. seção`` ->
+    ``1A`` rewrite on both sides, so the column value of old acórdãos
+    (``QUINTA TURMA - 1A. SEÇÃO``) and the indexed form (``QUINTA TURMA - 1A``)
+    select the option whose ``data-val-jef`` is ``QUINTA TURMA - 1a. SEÇÃO``.
+    Measured on the portal with "medicamento": the pair finds 576 documents
+    for ``QUINTA TURMA``, the label alone 443, the indexed name alone 133.
     """
     mocker.patch("time.sleep")
+    add_search(
+        _body(txtPesquisaLivre="medicamento", hdnOrgao=f"({rotulo}).org.", hdnOrgaoJef=f"({nome_indexado}).org."),
+        "no_results.html",
+        base=base,
+    )
+
+    jus.scraper("trf3").cjsg("medicamento", paginas=1, base=base, orgao_julgador=orgao)
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_orgao_rotulo_ambiguo_levanta_sem_buscar(mocker):
+    """``5ª Turma`` labels two options; the error lists the indexed names to pick from."""
+    mocker.patch("time.sleep")
+    add_search(_body(txtPesquisaLivre="medicamento"), "no_results.html")
+
+    with pytest.raises(ValueError, match="ambíguo") as exc_info:
+        jus.scraper("trf3").cjsg("medicamento", paginas=1, orgao_julgador="5ª Turma")
+
+    mensagem = str(exc_info.value)
+    assert "'QUINTA TURMA'" in mensagem
+    assert "'QUINTA TURMA - 1a. SEÇÃO'" in mensagem
+    assert len(responses.calls) == 1
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_orgao_sem_opcao_vai_como_esta_e_avisa(mocker, caplog):
+    """Text that matches no option keeps going in both fields, with an info log."""
+    mocker.patch("time.sleep")
+    esperado = "(TURMA QUE NAO EXISTE).org."
     add_search(_body(txtPesquisaLivre="medicamento", hdnOrgao=esperado, hdnOrgaoJef=esperado), "no_results.html")
 
-    jus.scraper("trf3").cjsg("medicamento", paginas=1, orgao_julgador=orgao)
+    with caplog.at_level("INFO", logger="juscraper.trf3.cjsg"):
+        jus.scraper("trf3").cjsg("medicamento", paginas=1, orgao_julgador="TURMA QUE NAO EXISTE")
+
+    assert "não corresponde a nenhuma opção do formulário" in caplog.text
 
 
 @pytest.mark.parametrize(

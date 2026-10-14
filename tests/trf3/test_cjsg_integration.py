@@ -46,7 +46,13 @@ def test_cjsg_filtro_relator_restringe() -> None:
 
 
 def test_cjsg_filtro_orgao_primeira_secao() -> None:
-    """The column value ``QUINTA TURMA - 1A. SEÇÃO`` finds documents once normalized to ``1A``."""
+    """The column value ``QUINTA TURMA - 1A. SEÇÃO`` selects the dropdown option.
+
+    The search sends that option's pair, label ``5ª Turma`` and indexed name
+    ``QUINTA TURMA - 1A``, so it also brings the recent documents labelled
+    ``5ª Turma``, which the indexed name alone never finds.
+    """
     df = jus.scraper("trf3", sleep_time=1.0).cjsg("medicamento", orgao_julgador="QUINTA TURMA - 1A. SEÇÃO", paginas=1)
     assert len(df) > 0
-    assert (df["orgao_julgador"] == "QUINTA TURMA - 1A. SEÇÃO").all()
+    assert df["orgao_julgador"].isin({"5ª Turma", "QUINTA TURMA - 1A. SEÇÃO"}).all()
+    assert (df["orgao_julgador"] == "5ª Turma").any()
