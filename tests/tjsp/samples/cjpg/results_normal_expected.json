@@ -1,0 +1,334 @@
+{
+  "results_normal_page_01.html": {
+    "colunas": [
+      "cd_processo",
+      "id_processo",
+      "classe",
+      "assunto",
+      "magistrado",
+      "comarca",
+      "foro",
+      "vara",
+      "data_disponibilizacao",
+      "decisao"
+    ],
+    "linhas": [
+      {
+        "cd_processo": "3I0006RUY0000",
+        "id_processo": "1005225-23.2025.8.26.0126",
+        "classe": "Procedimento Comum Cível",
+        "assunto": "Rescisão do contrato e devolução do dinheiro",
+        "magistrado": "GILBERTO ALABY SOUBIHE FILHO",
+        "comarca": "Caraguatatuba",
+        "foro": "Foro de Caraguatatuba",
+        "vara": "2ª Vara Cível",
+        "data_disponibilizacao": "21/04/2026",
+        "decisao": {
+          "sha256": "8536240bf6cd207150b064b845bd988d045cbd52e3ba18bde3cfcba9d77aed2d",
+          "tamanho": 10742
+        }
+      },
+      {
+        "cd_processo": "01001TKCT0000",
+        "id_processo": "1033041-98.2024.8.26.0001",
+        "classe": "Procedimento Comum Cível",
+        "assunto": "Enriquecimento sem Causa",
+        "magistrado": "Juliana Crespo Dias",
+        "comarca": "SÃO PAULO",
+        "foro": "Foro Regional I - Santana",
+        "vara": "5ª Vara Cível",
+        "data_disponibilizacao": "21/04/2026",
+        "decisao": {
+          "sha256": "9e0a1e98e6df4983f41d9a20c335f110d55b4fd74972d7eb67afd29b3d6f0741",
+          "tamanho": 5601
+        }
+      },
+      {
+        "cd_processo": "5H0007BUQ0000",
+        "id_processo": "1001624-24.2024.8.26.0197",
+        "classe": "Procedimento Comum Cível",
+        "assunto": "DIREITO PROCESSUAL CIVIL E DO TRABALHO",
+        "magistrado": "Adler Batista Oliveira Nobre",
+        "comarca": "Francisco Morato",
+        "foro": "Foro de Francisco Morato",
+        "vara": "2ª Vara",
+        "data_disponibilizacao": "21/04/2026",
+        "decisao": {
+          "sha256": "6679812939068237f32b4bac85771e784691e4088292f55cd69da35b0f9dc89f",
+          "tamanho": 1350
+        }
+      },
+      {
+        "cd_processo": "1W001C6LR0000",
+        "id_processo": "1006457-21.2023.8.26.0068",
+        "classe": "Procedimento Comum Cível",
+        "assunto": "Cessão de Direitos",
+        "magistrado": "DANIELA NUDELIMAN GUIGUET LEAL",
+        "comarca": "Barueri",
+        "foro": "Foro de Barueri",
+        "vara": "2ª Vara Cível",
+        "data_disponibilizacao": "21/04/2026",
+        "decisao": {
+          "sha256": "3e296d00cb05fbd802b9118bf8974644120eb2f20e85cc7117cea6e704be4233",
+          "tamanho": 10922
+        }
+      },
+      {
+        "cd_processo": "1W001A64W0000",
+        "id_processo": "1000195-26.2021.8.26.0068",
+        "classe": "Procedimento Comum Cível",
+        "assunto": "Tratamento médico-hospitalar",
+        "magistrado": "DANIELA NUDELIMAN GUIGUET LEAL",
+        "comarca": "Barueri",
+        "foro": "Foro de Barueri",
+        "vara": "2ª Vara Cível",
+        "data_disponibilizacao": "21/04/2026",
+        "decisao": {
+          "sha256": "cd82a5a86377cf641baff48f572f32c97767fe90c6fc982281cc46e3e6757cee",
+          "tamanho": 10551
+        }
+      },
+      {
+        "cd_processo": "EA00038VR0000",
+        "id_processo": "1003292-20.2022.8.26.0514",
+        "classe": "Procedimento Comum Cível",
+        "assunto": "Indenização por Dano Material",
+        "magistrado": "André Menezes Del Mastro",
+        "comarca": "Itupeva",
+        "foro": "Foro de Itupeva",
+        "vara": "Vara Única",
+        "data_disponibilizacao": "21/04/2026",
+        "decisao": {
+          "sha256": "75938e1bc07518b2531d82a283adc5f721af69857dd625eac4eec7b1af86f416",
+          "tamanho": 5171
+        }
+      },
+      {
+        "cd_processo": "EA0003DJE0000",
+        "id_processo": "1001708-78.2023.8.26.0514",
+        "classe": "Procedimento Comum Cível",
+        "assunto": "Indenização por Dano Moral",
+        "magistrado": "André Menezes Del Mastro",
+        "comarca": "Itupeva",
+        "foro": "Foro de Itupeva",
+        "vara": "Vara Única",
+        "data_disponibilizacao": "20/04/2026",
+        "decisao": {
+          "sha256": "89abb6590e0ecf392fed7027b2834fe6b85e9b26d3926d22c395baae42152cf2",
+          "tamanho": 8419
+        }
+      },
+      {
+        "cd_processo": "05001J9320000",
+        "id_processo": "1014149-95.2025.8.26.0005",
+        "classe": "Procedimento Comum Cível",
+        "assunto": "Inclusão Indevida em Cadastro de Inadimplentes",
+        "magistrado": "Luciana Antoni Pagano",
+        "comarca": "SÃO PAULO",
+        "foro": "Foro Regional V - São Miguel Paulista",
+        "vara": "4ª Vara Cível",
+        "data_disponibilizacao": "20/04/2026",
+        "decisao": {
+          "sha256": "22302120e75132e6588b74f157a2ff04a07015e7a26658ffb8232a6c3a54d6f8",
+          "tamanho": 10593
+        }
+      },
+      {
+        "cd_processo": "EA0003I9M0000",
+        "id_processo": "1001152-42.2024.8.26.0514",
+        "classe": "Despejo",
+        "assunto": "Locação de Imóvel",
+        "magistrado": "André Menezes Del Mastro",
+        "comarca": "Itupeva",
+        "foro": "Foro de Itupeva",
+        "vara": "Vara Única",
+        "data_disponibilizacao": "20/04/2026",
+        "decisao": {
+          "sha256": "e2ca1e4e52b17c3b204f843da32c4128c0566e46111e7627aebb7df84a400c27",
+          "tamanho": 10877
+        }
+      },
+      {
+        "cd_processo": "1R00028VJ0000",
+        "id_processo": "1001833-07.2024.8.26.0063",
+        "classe": "Procedimento Comum Cível",
+        "assunto": "Vícios de Construção",
+        "magistrado": "ANNA SYLVIA RODRIGUES E SILVA",
+        "comarca": "Barra Bonita",
+        "foro": "Foro de Barra Bonita",
+        "vara": "2ª Vara",
+        "data_disponibilizacao": "20/04/2026",
+        "decisao": {
+          "sha256": "0b0fcdbafd0b278547a832fc0e1e18341f635038ae4b836a45224c9183b60df4",
+          "tamanho": 11895
+        }
+      }
+    ]
+  },
+  "results_normal_page_02.html": {
+    "colunas": [
+      "cd_processo",
+      "id_processo",
+      "classe",
+      "assunto",
+      "magistrado",
+      "comarca",
+      "foro",
+      "vara",
+      "data_disponibilizacao",
+      "decisao"
+    ],
+    "linhas": [
+      {
+        "cd_processo": "GQ000YH4U0000",
+        "id_processo": "1046870-89.2024.8.26.0602",
+        "classe": "Procedimento Comum Cível",
+        "assunto": "Indenização por Dano Moral",
+        "magistrado": "Sabrina Martinho Soares",
+        "comarca": "Sorocaba",
+        "foro": "Foro de Sorocaba",
+        "vara": "1ª Vara Cível",
+        "data_disponibilizacao": "20/04/2026",
+        "decisao": {
+          "sha256": "abf6d6d2a3be19eabc57379d73c296fa607a554a64c3ef2bfd60763965308d28",
+          "tamanho": 11359
+        }
+      },
+      {
+        "cd_processo": "G80004Z050000",
+        "id_processo": "1003205-77.2024.8.26.0584",
+        "classe": "Procedimento Comum Cível",
+        "assunto": "Defeito, nulidade ou anulação",
+        "magistrado": "DALTON LACERDA VIDAL VITAL FILHO",
+        "comarca": "São Pedro",
+        "foro": "Foro de São Pedro",
+        "vara": "1ª Vara",
+        "data_disponibilizacao": "20/04/2026",
+        "decisao": {
+          "sha256": "542cd0b283d93fe86ec5e6fa24152f17a7ed35154b97e4d7e8c8df8b2b76c9ea",
+          "tamanho": 12436
+        }
+      },
+      {
+        "cd_processo": "9K000TG2I0000",
+        "id_processo": "1012006-86.2025.8.26.0344",
+        "classe": "Procedimento Comum Cível",
+        "assunto": "Indenização por Dano Moral",
+        "magistrado": "Paula Jacqueline Bredariol de Oliveira",
+        "comarca": "Marília",
+        "foro": "Foro de Marília",
+        "vara": "1ª Vara Cível",
+        "data_disponibilizacao": "20/04/2026",
+        "decisao": {
+          "sha256": "2519942baab1b61a28e9d7c911b8889046631b63cf71ded87a5b97f5b442186e",
+          "tamanho": 5380
+        }
+      },
+      {
+        "cd_processo": "GX000A1OG0000",
+        "id_processo": "1012757-88.2024.8.26.0609",
+        "classe": "Procedimento Comum Cível",
+        "assunto": "Rescisão do contrato e devolução do dinheiro",
+        "magistrado": "DALTON LACERDA VIDAL VITAL FILHO",
+        "comarca": "São Pedro",
+        "foro": "Foro de São Pedro",
+        "vara": "1ª Vara",
+        "data_disponibilizacao": "20/04/2026",
+        "decisao": {
+          "sha256": "eea160c9fd9a534eea08fc65b9f59f7d652b8cda28ea9cbac3a68ec1fc9ff414",
+          "tamanho": 26328
+        }
+      },
+      {
+        "cd_processo": "36000ZLBH0000",
+        "id_processo": "1043564-92.2022.8.26.0114",
+        "classe": "Procedimento Comum Cível",
+        "assunto": "Indenização por Dano Moral",
+        "magistrado": "DANIELLA APARECIDA SORIANO UCCELLI",
+        "comarca": "Campinas",
+        "foro": "Foro Regional de Vila Mimosa",
+        "vara": "2ª Vara Cível",
+        "data_disponibilizacao": "20/04/2026",
+        "decisao": {
+          "sha256": "ce877b9323b8647de7904050691a6d376611eab9385e91e8af00f024d792d5a2",
+          "tamanho": 5958
+        }
+      },
+      {
+        "cd_processo": "360013EGI0000",
+        "id_processo": "1048306-29.2023.8.26.0114",
+        "classe": "Procedimento Comum Cível",
+        "assunto": "Contratos Bancários",
+        "magistrado": "DANIELLA APARECIDA SORIANO UCCELLI",
+        "comarca": "Campinas",
+        "foro": "Foro Regional de Vila Mimosa",
+        "vara": "2ª Vara Cível",
+        "data_disponibilizacao": "20/04/2026",
+        "decisao": {
+          "sha256": "f33d6bd363c583806516e364f0afff102936cb53037df087201308fd6bc6cab3",
+          "tamanho": 9424
+        }
+      },
+      {
+        "cd_processo": "360018NNG0000",
+        "id_processo": "1043269-50.2025.8.26.0114",
+        "classe": "Procedimento Comum Cível",
+        "assunto": "Protesto Indevido de Títulos",
+        "magistrado": "Mauro Iuji Fukumoto",
+        "comarca": "Campinas",
+        "foro": "Foro de Campinas",
+        "vara": "1ª Vara da Fazenda Pública",
+        "data_disponibilizacao": "20/04/2026",
+        "decisao": {
+          "sha256": "566fd97ad2db8ca27315c73f3388cf105cc3c3b64d0aa411f3cf42dab1eef082",
+          "tamanho": 4458
+        }
+      },
+      {
+        "cd_processo": "B9000JJ890000",
+        "id_processo": "1005112-42.2024.8.26.0405",
+        "classe": "Procedimento Comum Cível",
+        "assunto": "Indenização por Dano Moral",
+        "magistrado": "Natália Assis Mascarenhas",
+        "comarca": "Osasco",
+        "foro": "Foro de Osasco",
+        "vara": "2ª Vara da Fazenda Pública",
+        "data_disponibilizacao": "20/04/2026",
+        "decisao": {
+          "sha256": "2fc85463b55a67f4d18df0310b722ed456b636575541ee2df8ef4210b1e50f18",
+          "tamanho": 16628
+        }
+      },
+      {
+        "cd_processo": "7Q000BRPF0000",
+        "id_processo": "1011669-72.2023.8.26.0278",
+        "classe": "Procedimento Comum Cível",
+        "assunto": "Indenização por Dano Moral",
+        "magistrado": "KLEBER LELES DE SOUZA",
+        "comarca": "Itaquaquecetuba",
+        "foro": "Foro de Itaquaquecetuba",
+        "vara": "1ª Vara Cível",
+        "data_disponibilizacao": "20/04/2026",
+        "decisao": {
+          "sha256": "192cf0860fa503c0788d958d8e115e309c161a2a8cbaf6c974b1f92241b02d6f",
+          "tamanho": 14192
+        }
+      },
+      {
+        "cd_processo": "B900058AV0000",
+        "id_processo": "1013628-32.2016.8.26.0405",
+        "classe": "Procedimento Comum Cível",
+        "assunto": "Responsabilidade Civil",
+        "magistrado": "Natália Assis Mascarenhas",
+        "comarca": "Osasco",
+        "foro": "Foro de Osasco",
+        "vara": "2ª Vara da Fazenda Pública",
+        "data_disponibilizacao": "20/04/2026",
+        "decisao": {
+          "sha256": "f5a125d81341cdb03e0fb168953ceee023d6f3a556b0b4be2a9c5537b1e69901",
+          "tamanho": 16335
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+name: Qualidade
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  complexidade:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+      - name: Instalar dependências de desenvolvimento
+        run: uv sync --extra dev --python 3.12
+      - name: Conferir complexidade
+        env:
+          # Num PR, a base é a ponta atual da branch de destino. O
+          # pull_request.base.sha do evento só muda quando o PR é aberto ou troca
+          # de destino, e a catraca compararia o PR com um destino antigo.
+          # Em push para a main, before é a ponta anterior.
+          COMPLEXITY_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before }}
+        run: |
+          uv run python scripts/check_complexity.py --base-ref "$COMPLEXITY_BASE"
+      - name: Testar o gate de complexidade
+        run: uv run pytest tests/complexity_gate -q

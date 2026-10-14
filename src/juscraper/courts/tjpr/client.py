@@ -1,6 +1,4 @@
-"""
-Scraper for the Court of Justice of Paraná (TJPR).
-"""
+"""Scraper for the Court of Justice of Paraná (TJPR)."""
 
 import pandas as pd
 import requests
@@ -38,8 +36,8 @@ class TJPRScraper(HTTPScraper):
         data_publicacao_fim: str | None = None,
         **kwargs,
     ) -> list:
-        """
-        Downloads raw results from the TJPR jurisprudence search (multiple pages).
+        """Downloads raw results from the TJPR jurisprudence search (multiple pages).
+
         Returns a list of HTMLs (one per page).
 
         Args:
@@ -48,6 +46,12 @@ class TJPRScraper(HTTPScraper):
                 int: paginas=3 downloads pages 1-3.
                 range: range(1, 4) downloads pages 1-3.
                 None: downloads all available pages.
+
+        Raises:
+            ValueError: Com ``paginas=None``, quando a primeira página não
+                permite fixar o total de páginas; os casos estão em
+                :func:`juscraper.courts.tjpr.download.extract_total_pages`. O
+                scraper levanta depois da primeira página, em vez de estimar.
         """
         inp = apply_input_pipeline_search(
             InputCJSGTJPR,
@@ -74,8 +78,8 @@ class TJPRScraper(HTTPScraper):
         return brutos
 
     def cjsg_parse(self, resultados_brutos: list, criterio: str | None = None) -> pd.DataFrame:
-        """
-        Extracts relevant data from the HTMLs returned by TJPR.
+        """Extracts relevant data from the HTMLs returned by TJPR.
+
         Returns a DataFrame with the decisions.
         """
         return cjsg_parse(
@@ -94,9 +98,13 @@ class TJPRScraper(HTTPScraper):
         data_publicacao_fim: str | None = None,
         **kwargs,
     ) -> pd.DataFrame:
-        """
-        Searches for TJPR jurisprudence in a simplified way (download + parse).
+        """Searches for TJPR jurisprudence in a simplified way (download + parse).
+
         Returns a ready-to-analyze DataFrame.
+
+        Raises:
+            ValueError: Com ``paginas=None``, quando a primeira página não
+                permite fixar o total de páginas; ver :meth:`cjsg_download`.
 
         See also:
             :class:`juscraper.courts.tjpr.schemas.InputCJSGTJPR` — schema

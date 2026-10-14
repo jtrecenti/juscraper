@@ -11,13 +11,14 @@ estrategia como helper generico para os tribunais nao-eSAJ.
 """
 from __future__ import annotations
 
+import math
 import re
-from collections.abc import Sequence
-from typing import Literal
+from collections.abc import Iterable, Sequence
 
 from bs4 import BeautifulSoup
 
 _FALLBACK_NUMERO_RE = re.compile(r"\d[\d.]*")
+_NUMERO_PAGINA_RE = re.compile(r"[0-9]+")
 
 
 def _coerce_int(raw: str) -> int | None:
@@ -46,13 +47,11 @@ def _collect_candidates(
     soup: BeautifulSoup,
     html: str,
     css_selectors: Sequence[str],
-    *,
-    use_element_html: bool,
 ) -> list[str]:
     candidates: list[str] = []
     for selector in css_selectors:
         for element in soup.select(selector):
-            content = str(element) if use_element_html else element.get_text(" ", strip=True)
+            content = element.get_text(" ", strip=True)
             if content:
                 candidates.append(content)
     return candidates or [html]
@@ -73,20 +72,6 @@ def _extract_first(
     return None
 
 
-def _extract_max(
-    candidates: Sequence[str],
-    regex_patterns: Sequence[re.Pattern[str]],
-) -> int | None:
-    values: list[int] = []
-    for candidate in candidates:
-        for pattern in regex_patterns:
-            for match in pattern.finditer(candidate):
-                value = _extract_from_match(match)
-                if value is not None:
-                    values.append(value)
-    return max(values) if values else None
-
-
 def _extract_fallback_max(candidate: str) -> int | None:
     values = [
         value
@@ -103,8 +88,6 @@ def extract_count_with_cascade(
     regex_patterns: Sequence[re.Pattern[str]] = (),
     zero_markers: Sequence[str] = (),
     fallback_max_int: bool = False,
-    use_element_html: bool = False,
-    aggregate: Literal["first", "max"] = "first",
 ) -> int | None:
     r"""Extrai uma contagem (resultados ou paginas) usando cascata.
 
@@ -116,18 +99,16 @@ def extract_count_with_cascade(
     Args:
         html: HTML bruto da primeira pagina de resultados.
         css_selectors: Seletores CSS tentados em ordem. Para cada um,
-            ``soup.select(selector)`` produz elementos cujo conteudo
-            (texto ou HTML, conforme ``use_element_html``) vira candidato.
+            ``soup.select(selector)`` produz elementos cujo texto vira
+            candidato.
             Use ``()`` quando nao houver seletor estruturado confiavel —
             a cascata cai direto em ``regex_patterns`` sobre o HTML bruto.
             Se ``css_selectors`` e nao vazio mas nenhum seletor casa em
             nenhum elemento, a cascata tambem cai no HTML bruto.
         regex_patterns: Regex tentadas em ordem para cada texto candidato.
             Se a regex tem grupos, retorna o primeiro grupo numerico
-            valido; caso contrario tenta ``group(0)``. Com
-            ``aggregate="max"`` a regra e a mesma — em cada match, o
-            primeiro grupo numerico valido (varrendo a tupla quando ha
-            varios grupos) entra no acumulador para depois ser comparado.
+            valido; caso contrario tenta ``group(0)``. Vence o primeiro
+            match valido na ordem da cascata (candidato, depois regex).
         zero_markers: Substrings (case-insensitive) que, quando presentes
             em **qualquer lugar** do texto da pagina, fazem o util retornar
             ``0`` imediatamente — sem rodar a cascata de seletores. Use
@@ -141,15 +122,6 @@ def extract_count_with_cascade(
             (1 pagina ou 0 resultados) do lado deles; ``True`` deve ser
             opt-in explicito para evitar extrair numeros irrelevantes da
             pagina (ano, codigo, etc.).
-        use_element_html: Quando ``True``, cada candidato e o HTML completo
-            do elemento (``str(el)``) em vez de apenas o texto. Necessario
-            quando o numero alvo esta em atributo (ex.: ``href="?page=N"``
-            em paginadores estilo Bootstrap).
-        aggregate: ``"first"`` (default) retorna o primeiro match valido na
-            ordem de cascata. ``"max"`` percorre TODOS os matches em todos
-            os candidatos via ``pattern.finditer`` e retorna o maior — util
-            para paginadores que listam varios numeros de pagina (1, 2, …,
-            N) e o "total" e ``max(N)``.
 
     Returns:
         ``int`` extraido ou ``None`` se nada casar e ``fallback_max_int``
@@ -159,19 +131,65 @@ def extract_count_with_cascade(
     if _has_zero_marker(soup, zero_markers):
         return 0
 
-    candidates = _collect_candidates(
-        soup,
-        html,
-        css_selectors,
-        use_element_html=use_element_html,
-    )
-    value = (
-        _extract_max(candidates, regex_patterns)
-        if aggregate == "max"
-        else _extract_first(candidates, regex_patterns)
-    )
+    candidates = _collect_candidates(soup, html, css_selectors)
+    value = _extract_first(candidates, regex_patterns)
     if value is not None:
         return value
     if fallback_max_int:
         return _extract_fallback_max(candidates[0])
     return None
+
+
+def parse_page_number(valor: str, *, tribunal: str, origem: str) -> int:
+    """Converte o número de página lido de um link; exige dígitos ASCII e valor >= 1.
+
+    Só ``[0-9]``: ``str.isdigit`` aceita ``²``, que ``int()`` recusa com uma
+    mensagem que não diz de onde veio, e ``str.isdecimal`` aceita dígitos de
+    largura total, que nenhum portal gera. ``0`` passaria no teste de dígito
+    e viraria total 0, e o download pararia na primeira página sem erro.
+
+    Raises:
+        ValueError: Quando ``valor`` não é inteiro >= 1 em dígitos ASCII.
+    """
+    if not _NUMERO_PAGINA_RE.fullmatch(valor) or int(valor) < 1:
+        raise ValueError(f"{tribunal}: {origem} sem número de página válido (inteiro >= 1): {valor!r}")
+    return int(valor)
+
+
+def resolve_total_pages(
+    n_resultados: int | None,
+    *,
+    resultados_por_pagina: int,
+    totais_links: Iterable[int] = (),
+    tribunal: str,
+) -> int:
+    """Calcula o total de páginas pela contagem de resultados e confere com os links.
+
+    A contagem publicada na página (``N registros encontrados``) é a fonte do
+    total, e não o link de última página: o link some ou muda de contêiner
+    quando o tribunal troca o tema do paginador, e o maior número visível sem
+    ele é o fim da janela de páginas, não o total. ``totais_links`` traz o
+    que os links de última página apontam (1 para link desativado); cada
+    valor precisa bater com a conta, e qualquer divergência (link com
+    ``page=1`` numa busca de várias páginas, "Última" desativada com "Próxima"
+    ativa, tamanho de página errado no payload) levanta em vez de escolher um
+    lado. Zero resultados dá 1 página: o caller já tem a primeira.
+
+    Raises:
+        ValueError: Quando ``n_resultados`` é ``None`` (a página não traz a
+            contagem, por exemplo página de erro ou markup novo) ou quando
+            algum link aponta para total diferente do calculado.
+    """
+    if n_resultados is None:
+        raise ValueError(
+            f"{tribunal}: a primeira página não traz a contagem de resultados; "
+            "o total de páginas não pode ser determinado sem estimar."
+        )
+    total = max(1, math.ceil(n_resultados / resultados_por_pagina))
+    divergentes = sorted(set(totais_links) - {total})
+    if divergentes:
+        raise ValueError(
+            f"{tribunal}: o link de última página aponta {divergentes}, mas {n_resultados} resultados "
+            f"em páginas de {resultados_por_pagina} dão {total} página(s)."
+        )
+    return total

@@ -107,7 +107,7 @@ class PdpjSsoMixin:
                 prazo acaba sem token.
             ValueError: Quando o token capturado e invalido ou ja expirou.
 
-        Exemplo:
+        Examples: Exemplo
             >>> import juscraper as jus
             >>> jusbr = jus.scraper("jusbr")
             >>> jusbr.auth_govbr()

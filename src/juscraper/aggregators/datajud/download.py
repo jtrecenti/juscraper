@@ -2,12 +2,12 @@
 Functions for downloading specific data from the Datajud API.
 """
 import logging
-import warnings
 from collections.abc import Callable
 from typing import Any
 
 import requests
 
+from ...core.avisos import avisar
 from ...utils.cnj import clean_cnj
 from ...utils.logging_cfg import redact_headers
 
@@ -336,11 +336,10 @@ def _retry_with_reduced_size(
     if new_size >= original_size:
         _log_http_error(api_url, original_exc)
         return None
-    warnings.warn(
+    avisar(
         f"DataJud: 504/timeout em ``size={original_size}`` no alias "
         f"{alias!r}. Refazendo com ``size={new_size}`` (1 retry).",
         UserWarning,
-        stacklevel=4,
     )
     logger.warning(
         "DataJud: 504/timeout em size=%d (alias %s); refazendo com size=%d.",
