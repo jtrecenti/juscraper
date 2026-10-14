@@ -47,8 +47,9 @@ dependencies = [
     # o pip só atualiza dependência que não satisfaz o requisito, e o problema
     # da issue vinha do piso antigo, >=2.2.3. O pandas 2 não publica wheel para
     # o 3.15, e compilado do fonte contra NumPy >= 2.5 derruba o interpretador
-    # em pd.to_datetime; o mesmo vale para o pandas 3 até a 3.0.3, e a 3.0.6 é a
-    # primeira com wheel cp315. Em toda versão, texto ausente sai como None nos
+    # em pd.to_datetime; o mesmo vale para o pandas 3 até a 3.0.3. A 3.0.4 foi
+    # retirada do PyPI e a 3.0.5 não tem wheel cp315, então exige compilador; a
+    # 3.0.6 é a primeira com wheel cp315. Em toda versão, texto ausente sai como None nos
     # métodos públicos, por BaseScraper.__init_subclass__ (core/base.py).
     "pandas>=2.0.0,<4.0.0; python_version < '3.15'",
     "pandas>=3.0.6,<4.0.0; python_version >= '3.15'",
