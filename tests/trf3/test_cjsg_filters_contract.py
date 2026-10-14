@@ -13,6 +13,8 @@ GET.
 """
 from __future__ import annotations
 
+import logging
+
 import pandas as pd
 import pytest
 import responses
@@ -302,7 +304,37 @@ def test_cjsg_orgao_sem_opcao_vai_como_esta_e_avisa(mocker, caplog):
     with caplog.at_level("INFO", logger="juscraper.trf3.cjsg"):
         jus.scraper("trf3").cjsg("medicamento", paginas=1, orgao_julgador="TURMA QUE NAO EXISTE")
 
-    assert "não corresponde a nenhuma opção do formulário" in caplog.text
+    avisos = [r for r in caplog.records if "não corresponde a nenhuma opção do formulário" in r.getMessage()]
+    assert [r.levelname for r in avisos] == ["INFO"]
+    assert not [r for r in caplog.records if r.levelno >= logging.WARNING]
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_orgao_aba_sem_dropdown_avisa_em_warning(mocker, caplog):
+    """A tab without ``select#orgao`` (changed layout) is not text that matches nothing.
+
+    The text still goes in both fields and the search runs, but without the
+    form's label/indexed-name pair it finds fewer documents than the site, and
+    the ambiguous ``5ª Turma`` no longer raises. That warrants a WARNING, not
+    the INFO of the no-match case.
+    """
+    mocker.patch("time.sleep")
+    esperado = "(5ª Turma).org."
+    add_search(
+        _body(txtPesquisaLivre="medicamento", hdnOrgao=esperado, hdnOrgaoJef=esperado),
+        "no_results.html",
+        aba="no_results.html",
+    )
+
+    with caplog.at_level("INFO", logger="juscraper.trf3.cjsg"):
+        jus.scraper("trf3").cjsg("medicamento", paginas=1, orgao_julgador="5ª Turma")
+
+    avisos = [r for r in caplog.records if r.levelno >= logging.WARNING]
+    assert len(avisos) == 1
+    assert avisos[0].levelname == "WARNING"
+    assert "não trouxe o dropdown de órgão" in avisos[0].getMessage()
+    assert "pode trazer menos resultados que o site" in avisos[0].getMessage()
+    assert "não corresponde a nenhuma opção" not in caplog.text
 
 
 @pytest.mark.parametrize(

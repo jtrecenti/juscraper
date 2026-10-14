@@ -171,9 +171,9 @@ def _campos_orgao(orgao: str | None, opcoes: list[tuple[str, str]]) -> dict[str,
 
     Returns:
         Os dois campos da opção que casou, nos moldes do formulário. Vazio
-        sem órgão, ou quando o texto não casa com nenhuma opção: nesse caso
-        fica o que :func:`build_cjsg_payload` montou, o mesmo texto nos dois
-        campos.
+        sem órgão, sem opções lidas da aba, ou quando o texto não casa com
+        nenhuma opção: nesse caso fica o que :func:`build_cjsg_payload`
+        montou, o mesmo texto nos dois campos.
 
     Raises:
         ValueError: O texto casa com mais de uma opção, como o rótulo
@@ -181,6 +181,22 @@ def _campos_orgao(orgao: str | None, opcoes: list[tuple[str, str]]) -> dict[str,
             ``QUINTA TURMA - 1a. SEÇÃO``.
     """
     if not (orgao or "").strip():
+        return {}
+    if not opcoes:
+        # Aba sem ``select#orgao`` é layout mudado, e não texto do usuário
+        # que não casa: o mesmo texto nos dois campos ainda busca, mas perde
+        # o par que o navegador manda e traz menos documentos (com
+        # "medicamento", 443 para ``5ª Turma`` contra 576 do site), e um
+        # rótulo ambíguo deixa de levantar erro. Por isso WARNING, e não o
+        # INFO do texto sem correspondência. Levantar erro aqui derrubaria
+        # toda busca com órgão por uma mudança de layout que ainda deixa o
+        # filtro funcionar em parte.
+        logger.warning(
+            "TRF3 cjsg: o formulário da aba não trouxe o dropdown de órgão; "
+            "o filtro %r vai sem a tradução do formulário e pode trazer menos "
+            "resultados que o site.",
+            orgao,
+        )
         return {}
     chave = _chave_orgao(orgao or "")
     casadas = [op for op in opcoes if chave in {_chave_orgao(op[0]), _chave_orgao(op[1])}]

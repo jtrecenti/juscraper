@@ -29,13 +29,20 @@ def sample(nome: str) -> bytes:
 ABAS = {"turmas_recursais": "index_turmas_recursais.html"}
 
 
-def add_search(payload: dict[str, str], first_page: str, *, base: str = "acordaos") -> None:
-    """Registra o GET de abertura, o POST (exato) e a página 1."""
+def add_search(
+    payload: dict[str, str], first_page: str, *, base: str = "acordaos", aba: str | None = None
+) -> None:
+    """Registra o GET de abertura, o POST (exato) e a página 1.
+
+    ``aba`` troca o formulário servido no GET de abertura, para simular uma
+    aba que perdeu o dropdown de órgão; sem ele vale o de :data:`ABAS`.
+    """
     indice = BASES[base][0]
+    formulario = ABAS.get(base, "index_acordaos.html") if aba is None else aba
     responses.add(
         responses.GET,
         INDEX_URL.format(indice=indice),
-        body=sample(ABAS.get(base, "index_acordaos.html")),
+        body=sample(formulario),
         status=200,
         content_type=HTML,
     )
