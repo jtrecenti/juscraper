@@ -226,13 +226,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>pesquisa</td>
-<td><a href="`str`">str</a></td>
+<td><code>str</code></td>
 <td>Termo de busca livre (parametro <code>texto</code>). Obrigatorio.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>paginas</td>
-<td><a href="`int`">int</a> | <a href="`list`">list</a> | <a href="`range`">range</a> | None</td>
+<td><code>int</code> | <code>list</code> | <code>range</code> | None</td>
 <td>Paginas 1-based; <code>None</code> baixa todas as disponiveis, ate o teto de 10000 resultados do backend (acima dele, emite <code>UserWarning</code>). Default <code>None</code>. Páginas selecionadas além do teto são ignoradas sem requisição.</td>
 <td><code>None</code></td>
 </tr>
@@ -259,37 +259,37 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>pd.DataFrame: Uma linha por documento. Colunas canonicas</td>
 </tr>
 <tr class="even">
 <td>garantidas</td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td><code>processo</code>, <code>colecao</code>, <code>tribunal</code>, <code>relator</code>,</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td><code>classe</code>, <code>classe_sigla</code> e, quando a colecao os expoe,</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td><code>ementa</code> (texto sem HTML), <code>data_julgamento</code> e</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td><code>data_juntada</code>. Os demais campos brutos da colecao sao</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>preservados, exceto os <code>highlight*</code> (ver</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>class:<code>OutputListarDecisoesFalcao</code>).</td>
 </tr>
 </tbody>
@@ -308,32 +308,32 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`TypeError`">TypeError</a></td>
+<td><code>TypeError</code></td>
 <td>Quando um kwarg desconhecido e passado (inclusive <code>diretorio</code>, que so :meth:<code>listar_decisoes_download</code> aceita).</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`pydantic.ValidationError`">ValidationError</a></td>
+<td><code>ValidationError</code></td>
 <td>Quando <code>pesquisa</code> falta ou um filtro tem valor invalido (<code>colecao</code>/<code>tamanho_pagina</code>/<code>ordenacao</code> fora do dominio).</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`ValueError`">ValueError</a></td>
+<td><code>ValueError</code></td>
 <td>Quando uma data e invalida, o intervalo esta invertido ou o backend recusa a busca (403 com mensagem).</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`BotChallengeBlockedError`">BotChallengeBlockedError</a></td>
+<td><code>BotChallengeBlockedError</code></td>
 <td>Quando o WAF (CloudFront) bloqueia a requisicao.</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`requests`">requests</a>.<a href="`requests.HTTPError`">HTTPError</a></td>
+<td><code>requests</code>.<code>HTTPError</code></td>
 <td>Quando o backend bloqueia o IP por excesso de requisicoes (429 com espera de horas).</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`BaseException`">BaseException</a></td>
+<td><code>BaseException</code></td>
 <td>Falhas de coleta, parsing ou interrupção manual são propagadas com nota sobre as páginas preservadas, se houver.</td>
 </tr>
 </tbody>
@@ -348,7 +348,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="see-also" class="level4 doc-section doc-section-see-also">
 <h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See also</h4>
-<p><a href=":class:`InputListarDecisoesFalcao`"></a> – schema pydantic e a fonte da verdade dos filtros aceitos.</p>
+<p><code>InputListarDecisoesFalcao</code> – schema pydantic e a fonte da verdade dos filtros aceitos.</p>
 </section>
 </section>
 <section id="juscraper.aggregators.falcao.client.FalcaoScraper.listar_decisoes_download" class="level3">
@@ -375,19 +375,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>pesquisa</td>
-<td><a href="`str`">str</a></td>
+<td><code>str</code></td>
 <td>Termo de busca. Obrigatorio.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>paginas</td>
-<td><a href="`int`">int</a> | <a href="`list`">list</a> | <a href="`range`">range</a> | None</td>
+<td><code>int</code> | <code>list</code> | <code>range</code> | None</td>
 <td>Paginas 1-based; <code>None</code> = todas. Default <code>None</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>diretorio</td>
-<td><a href="`str`">str</a> | None</td>
+<td><code>str</code> | None</td>
 <td>Sobrescreve <code>download_path</code> para esta chamada. Default <code>None</code> (usa o <code>download_path</code> do scraper, que sem configuracao e um diretorio temporario criado no primeiro uso). Cria a pasta e seus pais quando não existem.</td>
 <td><code>None</code></td>
 </tr>
@@ -407,7 +407,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>str</td>
-<td><a href="`str`">str</a></td>
+<td><code>str</code></td>
 <td>Caminho do subdiretorio com os arquivos JSON baixados.</td>
 </tr>
 </tbody>
@@ -415,7 +415,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="see-also-1" class="level4 doc-section doc-section-see-also">
 <h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-1">See also</h4>
-<p><a href=":meth:`listar_decisoes`"></a> – lista completa de filtros aceitos.</p>
+<p><code>listar_decisoes</code> – lista completa de filtros aceitos.</p>
 </section>
 </section>
 <section id="juscraper.aggregators.falcao.client.FalcaoScraper.listar_decisoes_parse" class="level3">
@@ -437,7 +437,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>diretorio</td>
-<td><a href="`str`">str</a> | <a href="`pathlib.Path`">Path</a></td>
+<td><code>str</code> | <code>Path</code></td>
 <td>Pasta com os arquivos JSON.</td>
 <td><em>required</em></td>
 </tr>
@@ -457,12 +457,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>pd.DataFrame: Resultados concatenados (veja :meth:<code>listar_decisoes</code> para as</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>colunas canonicas).</td>
 </tr>
 </tbody>

@@ -224,19 +224,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>pesquisa</td>
-<td><a href="`str`">str</a> | None</td>
+<td><code>str</code> | None</td>
 <td>Texto da pesquisa livre, com os operadores do portal (operador padrão <code>e</code>). Pode ficar vazio quando outro critério for informado.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>paginas</td>
-<td><a href="`int`">int</a> | <a href="`list`">list</a> | <a href="`range`">range</a> | None</td>
+<td><code>int</code> | <code>list</code> | <code>range</code> | None</td>
 <td>Páginas 1-based; <code>None</code> baixa todas. Páginas além do total são ignoradas sem requisição.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>**kwargs</td>
-<td><a href="`typing.Any`">Any</a></td>
+<td><code>Any</code></td>
 <td>Filtros aceitos por :class:<code>InputCJSGTRF3</code>: * <code>base</code> (str): <code>"acordaos"</code> (default; acórdãos do TRF3), <code>"turmas_recursais"</code> (acórdãos das Turmas Recursais dos JEFs), <code>"monocraticas"</code> (decisões monocráticas do TRF3) ou <code>"monocraticas_turmas_recursais"</code> (decisões monocráticas das Turmas Recursais). * <code>numero_processo</code> (str): Número do processo, com ou sem máscara. * <code>relator</code> (str): Nome do relator ou do relator para o acórdão, como o portal indexa (ex.: <code>"NERY JUNIOR"</code>, a forma do dropdown do formulário). O portal casa nomes parciais. * <code>classe</code> (str): Classe como no dropdown, com sigla (ex.: <code>"AI - AGRAVO DE INSTRUMENTO"</code>). * <code>orgao_julgador</code> (str): Órgão julgador, pelo rótulo do dropdown do formulário (<code>"3ª Turma"</code>, <code>"11ª Turma Recursal da Seção Judiciária de São Paulo"</code>) ou pelo nome indexado da opção (<code>"TERCEIRA TURMA"</code>, <code>"11ª TURMA RECURSAL DE SÃO PAULO"</code>), sem diferença de caixa e de espaços. O valor da coluna <code>orgao_julgador</code> do resultado também serve: “1a. seção” vira “1A”, como no formulário, então <code>"QUINTA TURMA - 1A. SEÇÃO"</code> casa com a opção <code>QUINTA TURMA - 1a. SEÇÃO</code>. A busca manda o par que o navegador mandaria, rótulo e nome indexado da opção, lido do formulário da aba, e traz os documentos gravados com qualquer dos dois (medido com “medicamento”: <code>"QUINTA TURMA"</code> traz 576 documentos, contra 443 do rótulo sozinho e 133 do nome indexado sozinho). Rótulo de mais de uma opção, como <code>"5ª Turma"</code> nos acórdãos, levanta <code>ValueError</code>; texto que não casa com nenhuma opção vai como está e só encontra o que o portal grava com essa grafia. Não existe nas bases de monocráticas. * <code>ementa</code> (str): Texto pesquisado só na ementa. Não existe nas bases de monocráticas. * <code>indexacao</code> (str): Texto pesquisado na indexação (“Objeto do Processo” nas Turmas Recursais). Não existe nas bases de monocráticas. * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str): Data de julgamento; nas monocráticas, data da decisão. * <code>data_publicacao_inicio</code> / <code>data_publicacao_fim</code> (str): Data de publicação. Não combina com <code>data_julgamento_*</code>. * <code>tamanho_pagina</code> (int): 10 (default), 30 ou 50 documentos por página.</td>
 <td><code>{}</code></td>
 </tr>
@@ -257,27 +257,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`TypeError`">TypeError</a></td>
+<td><code>TypeError</code></td>
 <td>Quando todos os erros são kwargs desconhecidos.</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`ValidationError`">ValidationError</a></td>
+<td><code>ValidationError</code></td>
 <td>Para os demais erros do schema (base ou <code>tamanho_pagina</code> fora do domínio, data inválida).</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`ValueError`">ValueError</a></td>
+<td><code>ValueError</code></td>
 <td>Datas de julgamento e de publicação juntas; filtro que a base de monocráticas não tem; nenhum critério; <code>orgao_julgador</code> que corresponde a mais de uma opção do formulário (a mensagem lista os nomes indexados que desfazem a ambiguidade); com <code>paginas=None</code>, primeira página com documentos e total de resultados ilegível.</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`BotChallengeBlockedError`">BotChallengeBlockedError</a></td>
+<td><code>BotChallengeBlockedError</code></td>
 <td>A Akamai bloqueou o IP (HTTP 403 <code>Access Denied</code>).</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`RuntimeError`">RuntimeError</a></td>
+<td><code>RuntimeError</code></td>
 <td>O portal devolveu a página de sessão expirada, ou respondeu 200 com uma página que não é a lista de resultados (formulário de busca, manutenção), na primeira página ou nas seguintes; ou, da página 2 em diante, com o aviso de nenhum resultado quando a primeira página informou total maior que zero. Busca sem resultados não é erro: devolve DataFrame vazio.</td>
 </tr>
 </tbody>
@@ -296,57 +296,57 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>pd.DataFrame: Uma linha por documento, com <code>processo</code>,</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td><code>classe</code>, <code>orgao_julgador</code>, <code>relator</code>, <code>relator_acordao</code>,</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td><code>data_julgamento</code>, <code>data_publicacao</code>, <code>meio_publicacao</code></td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>(<code>DJEN</code>, <code>Intimação via sistema</code>, <code>e-DJF3 Judicial 1</code>…),</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td><code>ementa</code> (nas monocráticas, o texto da decisão), <code>base</code>,</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td><code>url_inteiro_teor</code> (íntegra do acórdão no site do TRF3; vazio</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>nas monocráticas) e <code>inteiro_teor</code> (texto completo). Em parte</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>dos acórdãos antigos das Turmas Recursais, <code>ementa</code> vem nula</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>porque o portal manda o bloco da ementa vazio; <code>inteiro_teor</code></td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>vem preenchido. Na medição, com “medicamento”, foram nulas todas</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>as ementas de 2013 e 2014 e parte das de 2011.</td>
 </tr>
 </tbody>
@@ -354,26 +354,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="exemplo" class="level4 doc-section doc-section-exemplo">
 <h4 class="doc-section doc-section-exemplo anchored" data-anchor-id="exemplo">Exemplo</h4>
-<blockquote class="blockquote">
-<blockquote class="blockquote">
-<blockquote class="blockquote">
-<p>import juscraper as jus trf3 = jus.scraper(“trf3”) df = trf3.cjsg( … “medicamento”, base=“turmas_recursais”, paginas=range(1, 3), … data_julgamento_inicio=“2026-01-01”, data_julgamento_fim=“2026-06-30”, … )</p>
-</blockquote>
-</blockquote>
-</blockquote>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="im">import</span> juscraper <span class="im">as</span> jus</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> trf3 <span class="op">=</span> jus.scraper(<span class="st">"trf3"</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> df <span class="op">=</span> trf3.cjsg(</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>...     <span class="st">"medicamento"</span>, base<span class="op">=</span><span class="st">"turmas_recursais"</span>, paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">3</span>),</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>...     data_julgamento_inicio<span class="op">=</span><span class="st">"2026-01-01"</span>, data_julgamento_fim<span class="op">=</span><span class="st">"2026-06-30"</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>... )</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="see-also" class="level4 doc-section doc-section-see-also">
 <h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See Also</h4>
-<p>:class:<code>InputCJSGTRF3</code>: fonte dos filtros aceitos.</p>
+<p><code>InputCJSGTRF3</code>: fonte dos filtros aceitos.</p>
 </section>
 </section>
 <section id="juscraper.courts.trf3.client.TRF3Scraper.cjsg_download" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.trf3.client.TRF3Scraper.cjsg_download">cjsg_download</h3>
-<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>courts.trf3.client.TRF3Scraper.cjsg_download(</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>courts.trf3.client.TRF3Scraper.cjsg_download(</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Baixa as páginas da lista resumida da busca de jurisprudência do TRF3.</p>
 <p>Aceita os mesmos filtros de :meth:<code>cjsg</code>; veja lá a lista completa.</p>
 <section id="returns-1" class="level4 doc-section doc-section-returns">
@@ -389,7 +388,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`list`">list</a>[<a href="`str`">str</a>]</td>
+<td><code>list</code>[<code>str</code>]</td>
 <td>list[str]: HTML de cada página baixada, na ordem pedida.</td>
 </tr>
 </tbody>
@@ -398,7 +397,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="juscraper.courts.trf3.client.TRF3Scraper.cjsg_parse" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.trf3.client.TRF3Scraper.cjsg_parse">cjsg_parse</h3>
-<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>courts.trf3.client.TRF3Scraper.cjsg_parse(resultados_brutos)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>courts.trf3.client.TRF3Scraper.cjsg_parse(resultados_brutos)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Converte as páginas de :meth:<code>cjsg_download</code> em DataFrame.</p>
 <section id="returns-2" class="level4 doc-section doc-section-returns">
 <h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-2">Returns</h4>
@@ -413,7 +412,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>pd.DataFrame: Uma linha por documento; colunas descritas em :meth:<code>cjsg</code>.</td>
 </tr>
 </tbody>

@@ -257,7 +257,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`ValueError`">ValueError</a></td>
+<td><code>ValueError</code></td>
 <td>Quando o token e malformado ou ja expirou. O token e o header anteriores ficam como estavam.</td>
 </tr>
 </tbody>
@@ -282,12 +282,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`requests`">requests</a>.<a href="`requests.ConnectionError`">ConnectionError</a></td>
+<td><code>requests</code>.<code>ConnectionError</code></td>
 <td>Quando a requisicao falha.</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`InvalidJSONResponseError`">InvalidJSONResponseError</a></td>
+<td><code>InvalidJSONResponseError</code></td>
 <td>Quando a resposta nao traz um inteiro.</td>
 </tr>
 </tbody>
@@ -312,7 +312,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>id_cnj</td>
-<td><a href="`str`">str</a> | <a href="`list`">list</a>[<a href="`str`">str</a>]</td>
+<td><code>str</code> | <code>list</code>[<code>str</code>]</td>
 <td>Numero CNJ ou lista de numeros.</td>
 <td><em>required</em></td>
 </tr>
@@ -332,57 +332,57 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>DataFrame com uma linha por tramitacao do processo. Colunas</td>
 </tr>
 <tr class="even">
 <td>principais</td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td><code>processo</code> (CNJ pesquisado, dignos de digito),</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td><code>numero_processo</code> (formatado pela API), <code>sigla_tribunal</code>,</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td><code>segmento_justica</code>, <code>data_atualizacao</code>, <code>detalhes</code></td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>(dict com a resposta completa) e <code>motivo_falha</code>. A API que</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>responde lista vazia gera uma linha com</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td><code>status_consulta="Nao encontrado"</code>; a consulta que falha gera</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>uma linha com <code>status_consulta</code> igual a</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>data:<code>juscraper.core.failures.STATUS_CONSULTA_FALHA</code> e o motivo.</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>O processo ausente do data lake (ver a classe) sai nessa linha,</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>com o motivo <code>nao_encontrado</code>.</td>
 </tr>
 </tbody>
@@ -401,12 +401,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`requests`">requests</a>.<a href="`requests.HTTPError`">HTTPError</a></td>
+<td><code>requests</code>.<code>HTTPError</code></td>
 <td>No 401 (token ausente, expirado ou invalido), com as falhas anteriores numa nota do erro.</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`juscraper.aggregators._pdpj_sso.renovacao.ErroSsoPdpj`">ErroSsoPdpj</a></td>
+<td><code>ErroSsoPdpj</code></td>
 <td>Quando o SSO do PJe recusa ou não consegue renovar o token no meio do lote. Propaga como o 401, com as falhas anteriores numa nota do erro.</td>
 </tr>
 </tbody>
@@ -418,7 +418,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="see-also" class="level4 doc-section doc-section-see-also">
 <h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See Also</h4>
-<p><a href=":class:`InputCnjPdpj`"></a> – schema pydantic.</p>
+<p><code>InputCnjPdpj</code> – schema pydantic.</p>
 </section>
 </section>
 <section id="juscraper.aggregators.pdpj.client.PdpjScraper.documentos" class="level3">
@@ -454,25 +454,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>base_df</td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>DataFrame fonte das chamadas.</td>
 <td><em>required</em></td>
 </tr>
 <tr class="even">
 <td>max_docs_per_process</td>
-<td><a href="`int`">int</a> | None</td>
+<td><code>int</code> | None</td>
 <td>Limite de linhas devolvidas por processo, na ordem de <code>base_df</code>. Linhas sem <code>id_documento</code> sao puladas sem ocupar vaga do limite; um documento cujo download falhou ocupa vaga, como no JusBR, porque sua linha sai no resultado (com conteúdo <code>None</code>) e a requisição já foi feita. <code>None</code> = sem limite; <code>0</code> devolve DataFrame vazio sem fazer requisicao.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>with_text</td>
-<td><a href="`bool`">bool</a></td>
+<td><code>bool</code></td>
 <td>Se <code>True</code> (default), baixa o texto via <code>/documentos/{id}/texto</code>.</td>
 <td><code>True</code></td>
 </tr>
 <tr class="even">
 <td>with_binary</td>
-<td><a href="`bool`">bool</a></td>
+<td><code>bool</code></td>
 <td>Se <code>True</code>, baixa o binario via <code>/documentos/{id}/binario</code>. Default <code>False</code> para nao consumir banda quando o usuario so quer texto.</td>
 <td><code>False</code></td>
 </tr>
@@ -492,17 +492,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>DataFrame com uma linha por documento. Inclui colunas</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td><code>texto</code> e <code>binario</code> (quando solicitados), <code>None</code> nos</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>documentos cujo download falhou, e <code>motivo_falha</code>.</td>
 </tr>
 </tbody>
@@ -521,22 +521,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`pydantic.ValidationError`">ValidationError</a></td>
+<td><code>ValidationError</code></td>
 <td>Quando <code>base_df</code> nao e um DataFrame ou <code>max_docs_per_process</code> e negativo.</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`ValueError`">ValueError</a></td>
+<td><code>ValueError</code></td>
 <td>Quando <code>with_text</code> e <code>with_binary</code> sao ambos <code>False</code>, ou quando <code>base_df</code> nao tem coluna <code>id_documento</code> nem <code>detalhes</code>.</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`requests`">requests</a>.<a href="`requests.HTTPError`">HTTPError</a></td>
+<td><code>requests</code>.<code>HTTPError</code></td>
 <td>Quando a API responde 401 (token ausente, expirado ou inválido). O erro atinge o lote inteiro, então propaga e as linhas já baixadas se perdem; as falhas anteriores ao 401 vão numa nota do próprio erro (<code>__notes__</code>), não no <code>UserWarning</code>.</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`juscraper.aggregators._pdpj_sso.renovacao.ErroSsoPdpj`">ErroSsoPdpj</a></td>
+<td><code>ErroSsoPdpj</code></td>
 <td>Quando o SSO do PJe recusa ou não consegue renovar o token no meio do lote. Propaga como o 401, com as falhas anteriores numa nota do erro.</td>
 </tr>
 </tbody>
@@ -548,7 +548,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="see-also-1" class="level4 doc-section doc-section-see-also">
 <h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-1">See Also</h4>
-<p><a href=":class:`InputDownloadDocumentsPdpj`"></a>: schema pydantic e fonte da verdade dos parametros aceitos.</p>
+<p><code>InputDownloadDocumentsPdpj</code>: schema pydantic e fonte da verdade dos parametros aceitos.</p>
 </section>
 </section>
 <section id="juscraper.aggregators.pdpj.client.PdpjScraper.existe" class="level3">
@@ -569,7 +569,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>id_cnj</td>
-<td><a href="`str`">str</a> | <a href="`list`">list</a>[<a href="`str`">str</a>]</td>
+<td><code>str</code> | <code>list</code>[<code>str</code>]</td>
 <td>Numero CNJ unico (<code>str</code>) ou lista de numeros.</td>
 <td><em>required</em></td>
 </tr>
@@ -589,27 +589,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`bool`">bool</a> | <a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>bool</code> | <code>pd</code>.<code>DataFrame</code></td>
 <td><code>bool</code> quando <code>id_cnj</code> e <code>str</code>; <code>pd.DataFrame</code> com</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`bool`">bool</a> | <a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>bool</code> | <code>pd</code>.<code>DataFrame</code></td>
 <td>colunas <code>processo</code>, <code>existe</code> e <code>motivo_falha</code> quando e</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`bool`">bool</a> | <a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>bool</code> | <code>pd</code>.<code>DataFrame</code></td>
 <td><code>list</code>. Na lista, o processo cuja consulta falhou sai com</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`bool`">bool</a> | <a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>bool</code> | <code>pd</code>.<code>DataFrame</code></td>
 <td><code>existe=None</code> e o motivo, <code>nao_encontrado</code> no processo ausente</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`bool`">bool</a> | <a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>bool</code> | <code>pd</code>.<code>DataFrame</code></td>
 <td>(ver a classe).</td>
 </tr>
 </tbody>
@@ -628,17 +628,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`requests`">requests</a>.<a href="`requests.HTTPError`">HTTPError</a></td>
+<td><code>requests</code>.<code>HTTPError</code></td>
 <td>No 401, e com <code>str</code> em qualquer erro HTTP.</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`juscraper.aggregators._pdpj_sso.renovacao.ErroSsoPdpj`">ErroSsoPdpj</a></td>
+<td><code>ErroSsoPdpj</code></td>
 <td>Quando o SSO do PJe recusa ou não consegue renovar o token; na lista, com as falhas anteriores numa nota do erro.</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`InvalidJSONResponseError`">InvalidJSONResponseError</a></td>
+<td><code>InvalidJSONResponseError</code></td>
 <td>Com <code>str</code>, quando a consulta falha; a resposta sem <code>true</code>/<code>false</code> levanta o ultimo.</td>
 </tr>
 </tbody>
@@ -646,7 +646,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="see-also-2" class="level4 doc-section doc-section-see-also">
 <h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-2">See Also</h4>
-<p><a href=":class:`InputCnjPdpj`"></a> – schema pydantic.</p>
+<p><code>InputCnjPdpj</code> – schema pydantic.</p>
 </section>
 </section>
 <section id="juscraper.aggregators.pdpj.client.PdpjScraper.movimentos" class="level3">
@@ -679,13 +679,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>paginas</td>
-<td><a href="`int`">int</a> | <a href="`list`">list</a>[<a href="`int`">int</a>] | <a href="`range`">range</a> | None</td>
+<td><code>int</code> | <code>list</code>[<code>int</code>] | <code>range</code> | None</td>
 <td>Intervalo 1-based. Aceita <code>int</code> (<code>3</code> -&gt; primeiras 3 paginas), <code>list</code>, <code>range</code> ou <code>None</code> (todas).</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>**kwargs</td>
-<td><a href="`typing.Any`">Any</a></td>
+<td><code>Any</code></td>
 <td>Filtros aceitos pelo schema :class:<code>InputPesquisaPdpj</code> (todos opcionais; <code>None</code> = sem filtro): * <code>numero_processo</code> (str) * <code>numero_processo_sintetico</code> (str) * <code>id</code> (str): id interno do processo no Data Lake * <code>cpf_cnpj_parte</code> (str): com formatacao * <code>nome_parte</code> (str) * <code>polo_parte</code> (str): “ATIVO” ou “PASSIVO” * <code>situacao_parte</code> (str) * <code>nome_representante</code> / <code>oab_representante</code> (str) * <code>id_classe</code> (str): codigos separados por virgula * <code>id_assunto_judicial</code> (str): ids separados por virgula * <code>id_orgao_julgador</code> (str | list[str]) * <code>instancia</code> (str): “PRIMEIRO_GRAU”/“SEGUNDO_GRAU”/etc. * <code>segmento_justica</code> (str): “JUSTICA_FEDERAL”/“JUSTICA_ESTADUAL”/etc. * <code>tribunal</code> (str): siglas separadas por virgula (max 5) * <code>data_atualizacao_inicio</code> / <code>_fim</code> (str): ISO datetime * <code>data_primeiro_ajuizamento_inicio</code> / <code>_fim</code> (str): ISO datetime * <code>campo_ordenacao</code> (str): campo de ordenacao decrescente * <code>itens_por_pagina</code> (int): default 100. Vai a API como <code>maxElementsSize</code>, mas a API ignora o valor: a especificacao publica do data lake traz <code>maxElementsSize</code> so na resposta, como o maximo por consulta, e nao declara parametro de tamanho de pagina. Em campo, o pedido de 5 devolveu 100 itens. A pagina nao se corta no cliente, porque o cursor <code>searchAfter</code> da pagina seguinte vem da ultima linha que a API mandou; para limitar o total, use <code>paginas</code>.</td>
 <td><code>{}</code></td>
 </tr>
@@ -705,22 +705,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>DataFrame com uma linha por processo retornado. A API responde 404</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>(“Não foram encontrados registros”) a pagina seguinte a ultima com</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>dados e a busca sem resultado; o 404 encerra a coleta, e a busca</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>sem resultado devolve DataFrame vazio.</td>
 </tr>
 </tbody>
@@ -739,7 +739,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td>(<a href="`requests`">requests</a>.<a href="`requests.ConnectionError`">ConnectionError</a>, <a href="`InvalidJSONResponseError`">InvalidJSONResponseError</a>)</td>
+<td>(<code>requests</code>.<code>ConnectionError</code>, <code>InvalidJSONResponseError</code>)</td>
 <td>Quando a requisicao de qualquer pagina falha, com status diferente de 404. Pagina nao vira linha de falha, e devolver as paginas anteriores truncaria o resultado sem aviso.</td>
 </tr>
 </tbody>
@@ -747,7 +747,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="see-also-3" class="level4 doc-section doc-section-see-also">
 <h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-3">See Also</h4>
-<p><a href=":class:`InputPesquisaPdpj`"></a> – schema pydantic e a fonte da verdade dos filtros aceitos.</p>
+<p><code>InputPesquisaPdpj</code> – schema pydantic e a fonte da verdade dos filtros aceitos.</p>
 
 
 </section>

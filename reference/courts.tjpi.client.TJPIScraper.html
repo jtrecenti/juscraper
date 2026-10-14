@@ -241,37 +241,37 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>pesquisa</td>
-<td><a href="`str`">str</a></td>
+<td><code>str</code></td>
 <td>Termo de busca livre.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>paginas</td>
-<td><a href="`int`">int</a> | <a href="`list`">list</a> | <a href="`range`">range</a> | None</td>
+<td><code>int</code> | <code>list</code> | <code>range</code> | None</td>
 <td>Páginas 1-based; <code>None</code> baixa todas. Default <code>None</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>tipo</td>
-<td><a href="`str`">str</a></td>
+<td><code>str</code></td>
 <td>Tipo de decisão. Opções: <code>"Acordao"</code>, <code>"Decisao Terminativa"</code>, <code>"Sumula"</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>relator</td>
-<td><a href="`str`">str</a></td>
+<td><code>str</code></td>
 <td>Nome do relator (deve bater com o valor do dropdown).</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>classe</td>
-<td><a href="`str`">str</a></td>
+<td><code>str</code></td>
 <td>Classe processual (deve bater com o valor do dropdown).</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>orgao</td>
-<td><a href="`str`">str</a></td>
+<td><code>str</code></td>
 <td>Órgão julgador (deve bater com o valor do dropdown).</td>
 <td><code>None</code></td>
 </tr>
@@ -298,17 +298,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`TypeError`">TypeError</a></td>
+<td><code>TypeError</code></td>
 <td>Quando um kwarg desconhecido é passado (inclusive <code>data_publicacao_*</code>, que o backend não expõe).</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`ValidationError`">ValidationError</a></td>
+<td><code>ValidationError</code></td>
 <td>Quando um filtro tem formato inválido.</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`ValueError`">ValueError</a></td>
+<td><code>ValueError</code></td>
 <td>Com <code>paginas=None</code>, quando a primeira página não permite fixar o total de páginas; os casos estão em :func:<code>juscraper.utils.pagination.resolve_total_pages</code>. O scraper levanta em vez de estimar.</td>
 </tr>
 </tbody>
@@ -327,7 +327,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>pd.DataFrame: DataFrame com as decisões.</td>
 </tr>
 </tbody>
@@ -335,7 +335,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="see-also" class="level4 doc-section doc-section-see-also">
 <h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See also</h4>
-<p><a href=":class:`InputCJSGTJPI`"></a> — schema pydantic é a fonte da verdade dos filtros aceitos.</p>
+<p><code>InputCJSGTJPI</code> — schema pydantic é a fonte da verdade dos filtros aceitos.</p>
 </section>
 </section>
 <section id="juscraper.courts.tjpi.client.TJPIScraper.cjsg_download" class="level3">

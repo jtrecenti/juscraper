@@ -237,43 +237,43 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>pesquisa</td>
-<td><a href="`str`">str</a></td>
+<td><code>str</code></td>
 <td>Termo de busca livre.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>paginas</td>
-<td><a href="`int`">int</a> | <a href="`list`">list</a> | <a href="`range`">range</a> | None</td>
+<td><code>int</code> | <code>list</code> | <code>range</code> | None</td>
 <td>Paginas 1-based; <code>None</code> baixa todas. Default <code>None</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>id_instancia</td>
-<td><a href="`int`">int</a> | <a href="`str`">str</a></td>
+<td><code>int</code> | <code>str</code></td>
 <td><code>0</code> todas / <code>1</code> 1o grau / <code>2</code> recursal / <code>3</code> tribunal.</td>
 <td><code>0</code></td>
 </tr>
 <tr class="even">
 <td>id_area</td>
-<td><a href="`int`">int</a> | <a href="`str`">str</a></td>
+<td><code>int</code> | <code>str</code></td>
 <td><code>0</code> todas / <code>1</code> civel / <code>2</code> criminal.</td>
 <td><code>0</code></td>
 </tr>
 <tr class="odd">
 <td>id_serventia_subtipo</td>
-<td><a href="`int`">int</a> | <a href="`str`">str</a></td>
+<td><code>int</code> | <code>str</code></td>
 <td>ID do subtipo de serventia (dropdown do site). <code>0</code> = todas.</td>
 <td><code>0</code></td>
 </tr>
 <tr class="even">
 <td>numero_processo</td>
-<td><a href="`str`">str</a></td>
+<td><code>str</code></td>
 <td>Filtrar por numero CNJ especifico.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>tamanho_pagina</td>
-<td><a href="`int`">int</a></td>
+<td><code>int</code></td>
 <td>Itens por pagina (default 10).</td>
 <td><code>10</code></td>
 </tr>
@@ -300,12 +300,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`TypeError`">TypeError</a></td>
+<td><code>TypeError</code></td>
 <td>Quando um kwarg desconhecido e passado, <strong>incluindo</strong> <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> — o backend Projudi nao expoe filtro de data de julgamento; use <code>data_publicacao_*</code> (canonico para o TJGO).</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`ValidationError`">ValidationError</a></td>
+<td><code>ValidationError</code></td>
 <td>Quando um filtro tem formato invalido.</td>
 </tr>
 </tbody>
@@ -324,12 +324,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>pd.DataFrame: DataFrame com as decisoes (coluna <code>texto</code> carrega</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>o conteudo do documento; <code>ementa</code> nao e preenchido).</td>
 </tr>
 </tbody>
@@ -337,7 +337,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="see-also" class="level4 doc-section doc-section-see-also">
 <h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See also</h4>
-<p><a href=":class:`InputCJSGTJGO`"></a> — schema pydantic e a fonte da verdade dos filtros aceitos.</p>
+<p><code>InputCJSGTJGO</code> — schema pydantic e a fonte da verdade dos filtros aceitos.</p>
 </section>
 </section>
 <section id="juscraper.courts.tjgo.client.TJGOScraper.cjsg_download" class="level3">

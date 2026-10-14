@@ -229,12 +229,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`TypeError`">TypeError</a></td>
+<td><code>TypeError</code></td>
 <td>Quando um kwarg desconhecido e passado (schema :class:<code>InputAuthJusBR</code>, <code>extra="forbid"</code>).</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`ValueError`">ValueError</a></td>
+<td><code>ValueError</code></td>
 <td>Quando o token e invalido ou esta expirado (ver :func:<code>juscraper.core.auth.validar_jwt</code>).</td>
 </tr>
 </tbody>
@@ -259,7 +259,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`bool`">bool</a></td>
+<td><code>bool</code></td>
 <td><code>True</code> quando o token foi aceito.</td>
 </tr>
 </tbody>
@@ -278,17 +278,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`RuntimeError`">RuntimeError</a></td>
+<td><code>RuntimeError</code></td>
 <td>Quando a resposta do SSO não traz o cabeçalho <code>Location</code>, o <code>code</code> no fragmento ou o <code>access_token</code>; em geral, sessão do Firefox ausente ou vencida.</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`ValueError`">ValueError</a></td>
+<td><code>ValueError</code></td>
 <td>Quando o token devolvido é inválido ou está expirado.</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`requests`">requests</a>.<a href="`requests.RequestException`">RequestException</a></td>
+<td><code>requests</code>.<code>RequestException</code></td>
 <td>Falha de rede ao falar com o SSO.</td>
 </tr>
 </tbody>
@@ -314,22 +314,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`TypeError`">TypeError</a></td>
+<td><code>TypeError</code></td>
 <td>Quando um kwarg desconhecido e passado (schema :class:<code>InputCPOPGJusBR</code>, <code>extra="forbid"</code>).</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`RuntimeError`">RuntimeError</a></td>
+<td><code>RuntimeError</code></td>
 <td>Quando <code>auth(token)</code> nao foi chamado antes.</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`requests`">requests</a>.<a href="`requests.HTTPError`">HTTPError</a></td>
+<td><code>requests</code>.<code>HTTPError</code></td>
 <td>Quando a API responde 401 (token ausente, expirado ou inválido). As linhas já obtidas se perdem, e as falhas anteriores vão numa nota do próprio erro (<code>__notes__</code>).</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`juscraper.aggregators._pdpj_sso.renovacao.ErroSsoPdpj`">ErroSsoPdpj</a></td>
+<td><code>ErroSsoPdpj</code></td>
 <td>Quando o SSO do PJe recusa ou não consegue renovar o token no meio do lote. Propaga como o 401, com as falhas anteriores numa nota do erro.</td>
 </tr>
 </tbody>
@@ -365,19 +365,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>base_df</td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>Processos com as colunas <code>numeroProcesso</code> e <code>detalhes</code>, como retornados por :meth:<code>cpopg</code>.</td>
 <td><em>required</em></td>
 </tr>
 <tr class="even">
 <td>max_docs_per_process</td>
-<td><a href="`int`">int</a> | None</td>
+<td><code>int</code> | None</td>
 <td>Limite de documentos por processo. <code>None</code> baixa todos; <code>0</code> não faz downloads. Default <code>None</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>**kwargs</td>
-<td><a href="`typing.Any`">Any</a></td>
+<td><code>Any</code></td>
 <td>Nenhum parâmetro adicional é aceito.</td>
 <td><code>{}</code></td>
 </tr>
@@ -397,27 +397,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`TypeError`">TypeError</a></td>
+<td><code>TypeError</code></td>
 <td>Quando um kwarg desconhecido e passado (schema :class:<code>InputDownloadDocumentsJusBR</code>, <code>extra="forbid"</code>).</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`pydantic.ValidationError`">ValidationError</a></td>
+<td><code>ValidationError</code></td>
 <td>Quando <code>base_df</code> não é um DataFrame ou <code>max_docs_per_process</code> é negativo.</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`RuntimeError`">RuntimeError</a></td>
+<td><code>RuntimeError</code></td>
 <td>Quando <code>auth(token)</code> não foi chamado antes.</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`requests`">requests</a>.<a href="`requests.HTTPError`">HTTPError</a></td>
+<td><code>requests</code>.<code>HTTPError</code></td>
 <td>Quando a API responde 401 (token ausente, expirado ou inválido). As linhas já baixadas se perdem, e as falhas anteriores vão numa nota do próprio erro (<code>__notes__</code>).</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`juscraper.aggregators._pdpj_sso.renovacao.ErroSsoPdpj`">ErroSsoPdpj</a></td>
+<td><code>ErroSsoPdpj</code></td>
 <td>Quando o SSO do PJe recusa ou não consegue renovar o token no meio do lote. Propaga como o 401, com as falhas anteriores numa nota do erro.</td>
 </tr>
 </tbody>
@@ -440,12 +440,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>pd.DataFrame: Uma linha por documento, com metadados, texto limpo,</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>respostas brutas disponíveis e <code>motivo_falha</code>.</td>
 </tr>
 </tbody>
@@ -453,7 +453,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="see-also" class="level4 doc-section doc-section-see-also">
 <h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See Also</h4>
-<p><a href=":class:`InputDownloadDocumentsJusBR`"></a> — schema pydantic e fonte da verdade dos parâmetros aceitos.</p>
+<p><code>InputDownloadDocumentsJusBR</code> — schema pydantic e fonte da verdade dos parâmetros aceitos.</p>
 
 
 </section>

@@ -251,32 +251,32 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>pd.DataFrame: Uma linha por tribunal consultado, com colunas</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td><code>tribunal</code> (sigla), <code>alias</code> (índice ES), <code>count</code> (int) e</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td><code>relation</code> (<code>"eq"</code> exato ou <code>"gte"</code> truncado pelo cap</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>interno do Elasticsearch). Quando a chamada falha para um</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>tribunal, <code>count</code> é <code>None</code> e a coluna <code>error</code> traz o</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>motivo.</td>
 </tr>
 </tbody>
@@ -295,17 +295,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`TypeError`">TypeError</a></td>
+<td><code>TypeError</code></td>
 <td>Quando um kwarg desconhecido é passado.</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`pydantic.ValidationError`">ValidationError</a></td>
+<td><code>ValidationError</code></td>
 <td>Quando um filtro tem formato inválido (ex.: <code>data_ajuizamento_*</code> fora de ISO 8601), quando <code>ano_ajuizamento</code> coexiste com <code>data_ajuizamento_*</code>, quando <code>query</code> coexiste com filtros amigaveis, ou quando um nome em <code>tipos_movimentacao</code> nao esta mapeado.</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`ValueError`">ValueError</a></td>
+<td><code>ValueError</code></td>
 <td>Quando nem <code>tribunal</code> nem <code>numero_processo</code> são informados, ou quando a sigla não tem alias mapeado.</td>
 </tr>
 </tbody>
@@ -328,7 +328,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="see-also" class="level4 doc-section doc-section-see-also">
 <h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See also</h4>
-<p><a href=":meth:`listar_processos`"></a> — usa o mesmo conjunto de filtros mas baixa os processos.</p>
+<p><code>listar_processos</code> — usa o mesmo conjunto de filtros mas baixa os processos.</p>
 </section>
 </section>
 <section id="juscraper.aggregators.datajud.client.DatajudScraper.listar_processos" class="level3">
@@ -383,17 +383,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`TypeError`">TypeError</a></td>
+<td><code>TypeError</code></td>
 <td>Quando um kwarg desconhecido e passado (traduzido de <code>ValidationError</code> por <code>raise_on_extra_kwargs</code>).</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`pydantic.ValidationError`">ValidationError</a></td>
+<td><code>ValidationError</code></td>
 <td>Quando um filtro tem formato invalido (ex.: <code>ano_ajuizamento</code> nao-int, <code>data_ajuizamento_*</code> fora de ISO 8601), quando <code>ano_ajuizamento</code> coexiste com <code>data_ajuizamento_*</code>, quando <code>query</code> coexiste com filtros amigaveis, ou quando um nome em <code>tipos_movimentacao</code> nao esta mapeado.</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`ValueError`">ValueError</a></td>
+<td><code>ValueError</code></td>
 <td>Quando nem <code>tribunal</code> nem <code>numero_processo</code> sao informados, ou quando a sigla nao tem alias mapeado.</td>
 </tr>
 </tbody>
@@ -412,17 +412,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>pd.DataFrame: Um DataFrame com uma linha por processo. <code>extra</code></td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>do parser e passthrough do <code>_source</code> Elasticsearch — colunas</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>seguem nomenclatura camelCase do CNJ.</td>
 </tr>
 </tbody>
@@ -455,7 +455,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="see-also-1" class="level4 doc-section doc-section-see-also">
 <h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-1">See also</h4>
-<p><a href=":class:`InputListarProcessosDataJud`"></a> — fonte da verdade dos filtros aceitos.</p>
+<p><code>InputListarProcessosDataJud</code> — fonte da verdade dos filtros aceitos.</p>
 
 
 </section>

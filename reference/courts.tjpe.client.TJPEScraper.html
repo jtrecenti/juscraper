@@ -239,55 +239,55 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>pesquisa</td>
-<td><a href="`str`">str</a></td>
+<td><code>str</code></td>
 <td>Termo de busca livre (ementa). Aceita os aliases deprecados <code>query</code> / <code>termo</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>paginas</td>
-<td><a href="`int`">int</a> | <a href="`list`">list</a> | <a href="`range`">range</a> | None</td>
+<td><code>int</code> | <code>list</code> | <code>range</code> | None</td>
 <td>Paginas 1-based; <code>None</code> baixa todas. Default <code>None</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>data_julgamento_inicio</td>
-<td><a href="`str`">str</a></td>
+<td><code>str</code></td>
 <td>Data inicial de julgamento (<code>DD/MM/AAAA</code>, <code>DD-MM-AAAA</code>, <code>AAAA-MM-DD</code>, <code>AAAA/MM/DD</code>, :class:<code>datetime.date</code> ou :class:<code>datetime.datetime</code>).</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>data_julgamento_fim</td>
-<td><a href="`str`">str</a></td>
+<td><code>str</code></td>
 <td>Data final de julgamento (mesmos formatos de <code>data_julgamento_inicio</code>).</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>relator</td>
-<td><a href="`str`">str</a></td>
+<td><code>str</code></td>
 <td>Nome do relator (deve bater exatamente com o valor do dropdown do formulario).</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>classe</td>
-<td><a href="`str`">str</a></td>
+<td><code>str</code></td>
 <td>Codigo CNJ da classe. Aceita o alias deprecado <code>classe_cnj</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>assunto</td>
-<td><a href="`str`">str</a></td>
+<td><code>str</code></td>
 <td>Codigo CNJ do assunto. Aceita o alias deprecado <code>assunto_cnj</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>meio_tramitacao</td>
-<td><a href="`str`">str</a></td>
+<td><code>str</code></td>
 <td>Filtro de meio de tramitacao (ex.: <code>"ELETRONICO"</code>).</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>tipo_decisao</td>
-<td><a href="`str`">str</a></td>
+<td><code>str</code></td>
 <td><code>"acordaos"</code> (default), <code>"monocraticas"</code> ou <code>"todos"</code>. Quando <code>"todos"</code>, o backend marca os dois checkboxes e o fluxo passa pela pagina de escolha (<code>escolhaResultado.xhtml</code>).</td>
 <td><code>'acordaos'</code></td>
 </tr>
@@ -309,17 +309,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`TypeError`">TypeError</a></td>
+<td><code>TypeError</code></td>
 <td>Quando um kwarg desconhecido e passado.</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`ValueError`">ValueError</a></td>
+<td><code>ValueError</code></td>
 <td>Quando um canonico e seu alias deprecado sao passados simultaneamente.</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`ValidationError`">ValidationError</a></td>
+<td><code>ValidationError</code></td>
 <td>Quando um filtro tem formato invalido (ex.: data fora dos formatos aceitos, <code>tipo_decisao</code> fora do enum).</td>
 </tr>
 </tbody>
@@ -338,7 +338,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>pd.DataFrame: Uma linha por decisao. Colunas canonicas: <code>processo</code>, <code>classe</code>, <code>assunto</code>, <code>relator</code>, <code>orgao_julgador</code>, <code>data_julgamento</code>, <code>data_publicacao</code>, <code>ementa</code>, <code>acordao</code>, <code>meio_tramitacao</code>, <code>url_inteiro_teor</code>.</td>
 </tr>
 </tbody>
@@ -353,7 +353,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="see-also" class="level4 doc-section doc-section-see-also">
 <h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See also</h4>
-<p><a href=":class:`InputCJSGTJPE`"></a> — schema pydantic e a fonte da verdade dos filtros aceitos.</p>
+<p><code>InputCJSGTJPE</code> — schema pydantic e a fonte da verdade dos filtros aceitos.</p>
 </section>
 </section>
 <section id="juscraper.courts.tjpe.client.TJPEScraper.cjsg_download" class="level3">
@@ -385,7 +385,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>list</td>
-<td><a href="`list`">list</a></td>
+<td><code>list</code></td>
 <td>Lista de strings HTML brutas, uma por pagina.</td>
 </tr>
 </tbody>
@@ -422,19 +422,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>id_cnj</td>
-<td><a href="`str`">str</a> | <a href="`list`">list</a>[<a href="`str`">str</a>]</td>
+<td><code>str</code> | <code>list</code>[<code>str</code>]</td>
 <td>CNJ único ou lista, com ou sem máscara.</td>
 <td><em>required</em></td>
 </tr>
 <tr class="even">
 <td>download_pecas</td>
-<td><a href="`bool`">bool</a></td>
+<td><code>bool</code></td>
 <td>Se <code>True</code>, baixa também as peças públicas (HTML do visualizador do PJe). Default <code>False</code>.</td>
 <td><code>False</code></td>
 </tr>
 <tr class="odd">
 <td>diretorio</td>
-<td><a href="`str`">str</a> | None</td>
+<td><code>str</code> | None</td>
 <td>Onde gravar as peças, em <code>&lt;diretorio&gt;/&lt;cnj&gt;/&lt;id&gt;.html</code>. Default <code>None</code> (diretório temporário).</td>
 <td><code>None</code></td>
 </tr>
@@ -454,7 +454,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>pd.DataFrame: Uma linha por CNJ. Colunas: <code>id_cnj</code>, <code>processo</code>, <code>classe</code>, <code>assunto</code>, <code>data_distribuicao</code>, <code>orgao_julgador</code>, <code>jurisdicao</code>, <code>endereco_orgao</code>, <code>polo_ativo</code>, <code>polo_passivo</code>, <code>movimentacoes</code>, <code>documentos</code>; com <code>download_pecas=True</code>, também <code>pecas</code>.</td>
 </tr>
 </tbody>
@@ -473,17 +473,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`TypeError`">TypeError</a></td>
+<td><code>TypeError</code></td>
 <td>Kwarg desconhecido.</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`ImportError`">ImportError</a></td>
+<td><code>ImportError</code></td>
 <td>O WAF desafiou e o Playwright não está instalado, inclusive durante o download das peças.</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`WafChallengeError`">WafChallengeError</a></td>
+<td><code>WafChallengeError</code></td>
 <td>O WAF desafiou de novo logo após a renovação do cookie, ou o cookie não pôde ser obtido (Chromium do Playwright ausente, cookie não emitido no prazo). Interrompe o lote.</td>
 </tr>
 </tbody>
@@ -497,7 +497,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="see-also-1" class="level4 doc-section doc-section-see-also">
 <h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-1">See also</h4>
-<p><a href=":class:`InputCpopgTRF`"></a> — schema pydantic e a fonte da verdade dos parâmetros aceitos.</p>
+<p><code>InputCpopgTRF</code> — schema pydantic e a fonte da verdade dos parâmetros aceitos.</p>
 </section>
 </section>
 <section id="juscraper.courts.tjpe.client.TJPEScraper.cposg" class="level3">

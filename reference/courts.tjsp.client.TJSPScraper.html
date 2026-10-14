@@ -278,19 +278,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>pesquisa</td>
-<td><a href="`str`">str</a></td>
+<td><code>str</code></td>
 <td>Termo livre buscado na decisao. Default <code>""</code> (sem termo). Limite de 120 caracteres (raises <code>QueryTooLongError</code>).</td>
 <td><code>''</code></td>
 </tr>
 <tr class="even">
 <td>paginas</td>
-<td><a href="`int`">int</a> | <a href="`list`">list</a> | <a href="`range`">range</a> | None</td>
+<td><code>int</code> | <code>list</code> | <code>range</code> | None</td>
 <td>Paginas 1-based; <code>None</code> baixa todas. Default <code>None</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>**kwargs</td>
-<td><a href="`typing.Any`">Any</a></td>
+<td><code>Any</code></td>
 <td>Filtros aceitos por :class:<code>InputCJPGTJSP</code> (todos opcionais; <code>None</code> = sem filtro): * <code>classe</code> (int | str | list[int | str]): ID(s) internos de classe processual. Backend: <code>classeTreeSelection.values</code> (CSV). * <code>assunto</code> (int | str | list[int | str]): ID(s) internos de assunto. Backend: <code>assuntoTreeSelection.values</code> (CSV). * <code>vara</code> (int | str | list[int | str]): ID(s) internos de vara, no formato em arvore do TJSP (ex.: <code>"1-1-1"</code>). Backend: <code>varasTreeSelection.values</code> (CSV). * <code>id_processo</code> (str): Numero CNJ formatado para filtrar uma instancia especifica. Normalizado via :func:<code>clean_cnj</code> antes do envio. * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str, <code>DD/MM/AAAA</code>): Intervalo de julgamento. * <code>auto_chunk</code> (bool): Default <code>True</code>. Quando o intervalo <code>data_julgamento_*</code> excede 366 dias, divide internamente em janelas, baixa cada uma e concatena com dedup por <code>id_processo</code>. Veja a secao “Auto-chunking” abaixo. * <code>count_only</code> (bool): Default <code>False</code>. Se <code>True</code>, faz so o GET inicial, extrai o total de resultados via <code>cjpg_n_results</code> e retorna <code>int</code> em vez de <code>pd.DataFrame</code>. Util pra estimar wall-clock antes de coleta longa (issue #92). Com <code>auto_chunk=True</code> + janela &gt; 366 dias, itera janelas disjuntas e soma — soma bruta (sem dedup por <code>id_processo</code>). <code>paginas</code> e ignorado (emite <code>UserWarning</code>).</td>
 <td><code>{}</code></td>
 </tr>
@@ -317,22 +317,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`TypeError`">TypeError</a></td>
+<td><code>TypeError</code></td>
 <td>Quando um kwarg desconhecido e passado (via :func:<code>raise_on_extra_kwargs</code>).</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`ValidationError`">ValidationError</a></td>
+<td><code>ValidationError</code></td>
 <td>Quando um filtro tem formato invalido.</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`juscraper.courts.tjsp.exceptions.QueryTooLongError`">QueryTooLongError</a></td>
+<td><code>QueryTooLongError</code></td>
 <td>Quando <code>pesquisa</code> excede 120 chars.</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`ValueError`">ValueError</a></td>
+<td><code>ValueError</code></td>
 <td>Quando <code>classe</code> e <code>classes</code> (ou par equivalente) sao passados simultaneamente.</td>
 </tr>
 </tbody>
@@ -403,7 +403,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="see-also" class="level4 doc-section doc-section-see-also">
 <h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See also</h4>
-<p><a href=":class:`~juscraper.courts.tjsp.schemas.InputCJPGTJSP`"></a> — schema pydantic e a fonte da verdade dos filtros aceitos.</p>
+<p><code>InputCJPGTJSP</code> — schema pydantic e a fonte da verdade dos filtros aceitos.</p>
 <p>Auto-chunking (issue #130): Se <code>auto_chunk=True</code> (default herdado de :class:<code>~juscraper.schemas.AutoChunkMixin</code>) e o intervalo <code>data_julgamento_*</code> exceder 366 dias, a busca e dividida em janelas internas, baixadas e concatenadas com dedup por <code>id_processo</code>. Falhas por janela viram :class:<code>UserWarning</code> (parcial + warning). <code>auto_chunk=True</code> + <code>paginas != None</code> em janela &gt; 366 dias e :class:<code>ValueError</code>.</p>
 </section>
 </section>
@@ -430,19 +430,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>pesquisa</td>
-<td><a href="`str`">str</a></td>
+<td><code>str</code></td>
 <td>Termo livre. Default <code>""</code>. Limite de 120 chars.</td>
 <td><code>''</code></td>
 </tr>
 <tr class="even">
 <td>paginas</td>
-<td><a href="`int`">int</a> | <a href="`list`">list</a> | <a href="`range`">range</a> | None</td>
+<td><code>int</code> | <code>list</code> | <code>range</code> | None</td>
 <td>Paginas 1-based; <code>None</code> baixa todas. Default <code>None</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>**kwargs</td>
-<td><a href="`typing.Any`">Any</a></td>
+<td><code>Any</code></td>
 <td>Mesmos filtros aceitos por :meth:<code>cjpg</code> (validados por :class:<code>InputCJPGTJSP</code>).</td>
 <td><code>{}</code></td>
 </tr>
@@ -462,22 +462,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`TypeError`">TypeError</a></td>
+<td><code>TypeError</code></td>
 <td>Quando um kwarg desconhecido e passado.</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`ValidationError`">ValidationError</a></td>
+<td><code>ValidationError</code></td>
 <td>Quando um filtro tem formato invalido.</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`juscraper.courts.tjsp.exceptions.QueryTooLongError`">QueryTooLongError</a></td>
+<td><code>QueryTooLongError</code></td>
 <td>Quando <code>pesquisa</code> (ou alias resolvido) excede 120 chars.</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`ValueError`">ValueError</a></td>
+<td><code>ValueError</code></td>
 <td>Quando o usuario passa um alias deprecado e o nome canonico simultaneamente (ex.: <code>classe</code> e <code>classes</code>; refs #232).</td>
 </tr>
 </tbody>
@@ -496,7 +496,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>str</td>
-<td><a href="`str`">str</a></td>
+<td><code>str</code></td>
 <td>Caminho do diretorio onde os HTMLs foram salvos.</td>
 </tr>
 </tbody>
@@ -528,19 +528,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>pesquisa</td>
-<td><a href="`str`">str</a></td>
+<td><code>str</code></td>
 <td>Termo livre buscado no acordao/ementa. Default <code>""</code> (sem termo, busca aberta por filtros). Limite de 120 caracteres (raises <code>QueryTooLongError</code>).</td>
 <td><code>''</code></td>
 </tr>
 <tr class="even">
 <td>paginas</td>
-<td><a href="`int`">int</a> | <a href="`list`">list</a> | <a href="`range`">range</a> | None</td>
+<td><code>int</code> | <code>list</code> | <code>range</code> | None</td>
 <td>Paginas 1-based; <code>None</code> baixa todas. Default <code>None</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>**kwargs</td>
-<td><a href="`typing.Any`">Any</a></td>
+<td><code>Any</code></td>
 <td>Filtros aceitos por :class:<code>InputCJSGTJSP</code> (todos opcionais; <code>None</code> = sem filtro): * <code>ementa</code> (str): Termo buscado especificamente na ementa. * <code>classe</code> (str): ID interno da classe processual. * <code>assunto</code> (str): ID interno do assunto. * <code>comarca</code> (str): ID interno da comarca. * <code>orgao_julgador</code> (str): ID interno do orgao julgador. * <code>baixar_sg</code> (bool): <code>True</code> (default) busca em segundo grau; <code>False</code> busca em colegio recursal. * <code>tipo_decisao</code> (Literal[“acordao”, “monocratica”]): Default <code>"acordao"</code>. * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str, <code>DD/MM/AAAA</code>): Intervalo de julgamento. * <code>auto_chunk</code> (bool): Default <code>True</code>. Quando o intervalo <code>data_julgamento_*</code> excede 366 dias, divide internamente em janelas, baixa cada uma e concatena com dedup por <code>cd_acordao</code>. * <code>count_only</code> (bool): Default <code>False</code>. Se <code>True</code>, faz so a chamada inicial e retorna <code>int</code> com o total de resultados em vez de <code>pd.DataFrame</code>. Util pra estimar wall-clock antes de coleta longa (issue #92). Soma bruta cross-janela em <code>auto_chunk=True</code>.</td>
 <td><code>{}</code></td>
 </tr>
@@ -564,17 +564,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`TypeError`">TypeError</a></td>
+<td><code>TypeError</code></td>
 <td>Quando um kwarg desconhecido e passado.</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`ValidationError`">ValidationError</a></td>
+<td><code>ValidationError</code></td>
 <td>Quando um filtro tem formato invalido.</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`juscraper.courts.tjsp.exceptions.QueryTooLongError`">QueryTooLongError</a></td>
+<td><code>QueryTooLongError</code></td>
 <td>Quando <code>pesquisa</code> excede 120 chars.</td>
 </tr>
 </tbody>
@@ -636,7 +636,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="see-also-1" class="level4 doc-section doc-section-see-also">
 <h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-1">See also</h4>
-<p><a href=":class:`~juscraper.courts.tjsp.schemas.InputCJSGTJSP`"></a> — schema pydantic e a fonte da verdade dos filtros aceitos. <a href=":meth:`EsajSearchScraper.cjsg`"></a> — descricao detalhada do auto-chunking (issue #130) para janelas <code>data_julgamento_*</code> &gt; 366 dias.</p>
+<p><code>InputCJSGTJSP</code> — schema pydantic e a fonte da verdade dos filtros aceitos. <code>EsajSearchScraper.cjsg</code> — descricao detalhada do auto-chunking (issue #130) para janelas <code>data_julgamento_*</code> &gt; 366 dias.</p>
 </section>
 </section>
 <section id="juscraper.courts.tjsp.client.TJSPScraper.cjsg_download" class="level3">
@@ -663,25 +663,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>pesquisa</td>
-<td><a href="`str`">str</a></td>
+<td><code>str</code></td>
 <td>Termo livre. Default <code>""</code> (sem termo). Limite de 120 chars.</td>
 <td><code>''</code></td>
 </tr>
 <tr class="even">
 <td>paginas</td>
-<td><a href="`int`">int</a> | <a href="`list`">list</a> | <a href="`range`">range</a> | None</td>
+<td><code>int</code> | <code>list</code> | <code>range</code> | None</td>
 <td>Paginas 1-based; <code>None</code> baixa todas. Default <code>None</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>diretorio</td>
-<td><a href="`str`">str</a> | None</td>
+<td><code>str</code> | None</td>
 <td>Sobrescreve :attr:<code>download_path</code> para esta unica chamada. Default <code>None</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>**kwargs</td>
-<td><a href="`typing.Any`">Any</a></td>
+<td><code>Any</code></td>
 <td>Mesmos filtros aceitos por :meth:<code>cjsg</code> (validados por :class:<code>InputCJSGTJSP</code>).</td>
 <td><code>{}</code></td>
 </tr>
@@ -701,17 +701,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`TypeError`">TypeError</a></td>
+<td><code>TypeError</code></td>
 <td>Quando um kwarg desconhecido e passado.</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`ValidationError`">ValidationError</a></td>
+<td><code>ValidationError</code></td>
 <td>Quando um filtro tem formato invalido.</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`juscraper.courts.tjsp.exceptions.QueryTooLongError`">QueryTooLongError</a></td>
+<td><code>QueryTooLongError</code></td>
 <td>Quando <code>pesquisa</code> excede 120 chars.</td>
 </tr>
 </tbody>
@@ -730,7 +730,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>str</td>
-<td><a href="`str`">str</a></td>
+<td><code>str</code></td>
 <td>Caminho do diretorio onde os HTMLs foram salvos.</td>
 </tr>
 </tbody>
@@ -755,13 +755,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>id_cnj</td>
-<td><a href="`str`">str</a> | <a href="`list`">list</a>[<a href="`str`">str</a>]</td>
+<td><code>str</code> | <code>list</code>[<code>str</code>]</td>
 <td>Numero CNJ ou lista de numeros CNJ.</td>
 <td><em>required</em></td>
 </tr>
 <tr class="even">
 <td>method</td>
-<td><a href="`str`">str</a></td>
+<td><code>str</code></td>
 <td><code>"html"</code> (paginas do eSAJ) ou <code>"api"</code>. Default <code>"html"</code>.</td>
 <td><code>'html'</code></td>
 </tr>
@@ -781,7 +781,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`ValueError`">ValueError</a></td>
+<td><code>ValueError</code></td>
 <td>Quando <code>method</code> nao e suportado, ou quando nenhum arquivo baixado pode ser lido (nenhum arquivo candidato no diretorio de download, ou todos com erro de leitura). Nesse caso o diretorio de download nao e apagado.</td>
 </tr>
 </tbody>
@@ -844,7 +844,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`ValueError`">ValueError</a></td>
+<td><code>ValueError</code></td>
 <td>Quando <code>path</code> e um diretorio e nenhum arquivo dele pode ser lido, ou quando <code>path</code> e um arquivo com extensao diferente de <code>.html</code>/<code>.json</code>. Ver :func:<code>cpopg_parse_manager</code>.</td>
 </tr>
 </tbody>
@@ -885,7 +885,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>grau</td>
-<td><a href="`str`">str</a></td>
+<td><code>str</code></td>
 <td><code>"1"</code> (primeiro grau / cjpg). Unico valor aceito.</td>
 <td><code>'1'</code></td>
 </tr>
@@ -905,7 +905,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`ValueError`">ValueError</a></td>
+<td><code>ValueError</code></td>
 <td>Quando <code>grau</code> nao esta disponivel.</td>
 </tr>
 </tbody>
@@ -924,12 +924,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>pd.DataFrame: Arvore de varas (colunas <code>id</code>, <code>nome</code>,</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td><code>id_pai</code>, <code>nivel</code>, <code>selecionavel</code>, <code>caminho</code>).</td>
 </tr>
 </tbody>

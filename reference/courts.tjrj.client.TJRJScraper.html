@@ -229,13 +229,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>pesquisa</td>
-<td><a href="`str`">str</a></td>
+<td><code>str</code></td>
 <td>Termo de busca livre.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>paginas</td>
-<td><a href="`int`">int</a> | <a href="`list`">list</a> | <a href="`range`">range</a> | None</td>
+<td><code>int</code> | <code>list</code> | <code>range</code> | None</td>
 <td>Paginas 1-based; <code>None</code> baixa todas. Default <code>None</code>.</td>
 <td><code>None</code></td>
 </tr>
@@ -262,12 +262,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`TypeError`">TypeError</a></td>
+<td><code>TypeError</code></td>
 <td>Quando um kwarg desconhecido e passado, <strong>incluindo</strong> <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> / <code>data_publicacao_inicio</code> / <code>data_publicacao_fim</code> — o backend ASPX do TJRJ nao expoe esses filtros; use <code>ano_inicio</code> / <code>ano_fim</code> (granularidade anual apenas).</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`ValidationError`">ValidationError</a></td>
+<td><code>ValidationError</code></td>
 <td>Quando um filtro tem formato invalido.</td>
 </tr>
 </tbody>
@@ -286,22 +286,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td>pd.DataFrame: DataFrame com colunas <code>processo</code>, <code>classe</code>,</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td><code>orgao_julgador</code>, <code>relator</code>, <code>data_julgamento</code>,</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td><code>data_publicacao</code>, <code>ementa</code>, alem de <code>cod_documento</code>,</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><a href="`pandas`">pd</a>.<a href="`pandas.DataFrame`">DataFrame</a></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
 <td><code>numero_antigo</code> e <code>tipo_documento</code>.</td>
 </tr>
 </tbody>
@@ -316,7 +316,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="see-also" class="level4 doc-section doc-section-see-also">
 <h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See also</h4>
-<p><a href=":class:`InputCJSGTJRJ`"></a> — schema pydantic e a fonte da verdade dos filtros aceitos.</p>
+<p><code>InputCJSGTJRJ</code> — schema pydantic e a fonte da verdade dos filtros aceitos.</p>
 </section>
 </section>
 <section id="juscraper.courts.tjrj.client.TJRJScraper.cjsg_download" class="level3">
@@ -338,7 +338,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Aceita os mesmos filtros de :meth:<code>cjsg</code>; veja la a lista completa. Retorna a lista bruta de payloads JSON, sem parser.</p>
 <section id="see-also-1" class="level4 doc-section doc-section-see-also">
 <h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-1">See also</h4>
-<p><a href=":class:`InputCJSGTJRJ`"></a> — schema pydantic e a fonte da verdade dos filtros aceitos. <a href=":meth:`cjsg`"></a> — versao high-level que ja parseia para DataFrame.</p>
+<p><code>InputCJSGTJRJ</code> — schema pydantic e a fonte da verdade dos filtros aceitos. <code>cjsg</code> — versao high-level que ja parseia para DataFrame.</p>
 </section>
 </section>
 <section id="juscraper.courts.tjrj.client.TJRJScraper.cjsg_parse" class="level3">
