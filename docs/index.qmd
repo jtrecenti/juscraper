@@ -80,7 +80,7 @@ O método `.cjsg()` recebe como *input* parâmetros de busca de jurisprudência 
 | TJRO     | cjsg                              |
 | TJRR     | cjsg                              |
 | TJSC     | cjsg                              |
-| TRF3     | cpopg                             |
+| TRF3     | cpopg, cjsg                       |
 | TRF5     | cpopg                             |
 | TRF6     | cpopg                             |
 
