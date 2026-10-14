@@ -1,9 +1,10 @@
 """Texto ausente sai como ``None`` nos métodos públicos, com pandas 2 ou 3.
 
-O pandas 3 passou a inferir colunas de texto com o tipo ``str``, em que o
-valor ausente é ``NaN``. Até o pandas 2, a mesma coluna saía como ``object``,
-com ``None``. ``BaseScraper`` embrulha os métodos públicos das subclasses para
-devolver o contrato do pandas 2 nas duas versões.
+O pandas 3 infere colunas de texto com o tipo ``str``, em que o valor ausente
+é ``NaN``. No pandas 2 a coluna sai ``object``, mas também traz ``NaN`` quando
+a chave falta num registro ou vem de ``concat``/``merge``. ``BaseScraper``
+embrulha os métodos públicos das subclasses e devolve essas colunas como
+``object`` com ``None``, igual em toda versão do Python e do pandas.
 
 ``future.infer_string`` liga no pandas 2.3 a mesma inferência do pandas 3, o
 que deixa estes testes exercitarem o caso do pandas 3 em qualquer ambiente.
@@ -11,6 +12,8 @@ que deixa estes testes exercitarem o caso do pandas 3 em qualquer ambiente.
 from __future__ import annotations
 
 import inspect
+import pickle
+from collections.abc import Callable
 from importlib import import_module
 
 import numpy as np
@@ -51,9 +54,30 @@ class _Raspador(_Mixin, BaseScraper):
     def paginas(self):
         yield pd.DataFrame([{"texto": None}, {"texto": "b"}])
 
+    @staticmethod
+    def tabela_estatica() -> pd.DataFrame:
+        return pd.DataFrame([{"texto": None}, {"texto": "b"}])
+
+    @classmethod
+    def tabela_de_classe(cls) -> pd.DataFrame:
+        return pd.DataFrame([{"texto": None}, {"texto": cls.__name__}])
+
+    def devolve(self, tabela: pd.DataFrame) -> pd.DataFrame:
+        return tabela
+
+
+class _Neto(_Raspador):
+    def tabela(self) -> pd.DataFrame:
+        return super().tabela()
+
 
 @pytest.fixture
 def inferencia_do_pandas_3():
+    # ``future.infer_string`` existe a partir do pandas 2.1; o piso declarado é 2.0.
+    try:
+        pd.get_option("future.infer_string")
+    except pd.errors.OptionError:
+        pytest.skip("pandas sem a opção future.infer_string")
     with pd.option_context("future.infer_string", True):  # noqa: FBT003 - a API do pandas recebe o valor posicional
         yield
 
@@ -83,8 +107,84 @@ def test_dicionario_de_tabelas_e_normalizado_e_o_resto_fica():
 
 
 @pytest.mark.usefixtures("inferencia_do_pandas_3")
+def test_staticmethod_e_classmethod_tambem_sao_normalizados():
+    assert _Raspador.tabela_estatica()["texto"].tolist() == [None, "b"]
+    assert _Raspador().tabela_de_classe()["texto"].tolist() == [None, "_Raspador"]
+
+
+@pytest.mark.usefixtures("inferencia_do_pandas_3")
+def test_tabela_recebida_nao_e_alterada():
+    recebida = pd.DataFrame([{"texto": None}, {"texto": "b"}])
+    tipo_antes = recebida["texto"].dtype
+
+    devolvida = _Raspador().devolve(recebida)
+
+    assert devolvida["texto"].tolist() == [None, "b"]
+    assert recebida["texto"].dtype == tipo_antes
+    assert recebida["texto"].isna().tolist() == [True, False]
+
+
+def test_metodo_nao_e_embrulhado_duas_vezes():
+    # ``_Neto`` herda o embrulho de ``_Raspador`` e redefine ``tabela``.
+    metodos: tuple[Callable[..., object], ...] = (_Raspador.tabela, _Neto.tabela, _Neto.tabela_do_mixin, _Neto.devolve)
+    for metodo in metodos:
+        original = inspect.unwrap(metodo)
+        assert metodo.__wrapped__ is original  # type: ignore[attr-defined]
+
+
+def test_patch_no_mixin_alcanca_a_subclasse(mocker):
+    mocker.patch.object(_Mixin, "tabela_do_mixin", return_value="substituto")
+
+    assert _Raspador().tabela_do_mixin() == "substituto"
+
+
+def test_metodo_embrulhado_continua_serializavel():
+    for metodo in (_Raspador.tabela, _Raspador.tabela_do_mixin):
+        assert pickle.loads(pickle.dumps(metodo)) is metodo
+
+
+@pytest.mark.usefixtures("inferencia_do_pandas_3")
 def test_metodo_herdado_de_mixin_tambem_e_normalizado():
     assert _Raspador().tabela_do_mixin()["texto"].tolist() == [None, "b"]
+
+
+def test_coluna_object_com_nan_sai_com_none_tambem_no_pandas_2():
+    # Chave ausente num registro gera ``NaN`` em coluna ``object`` mesmo no
+    # pandas 2; sem a normalização, a mesma chamada daria ``NaN`` em 3.14 e
+    # ``None`` em 3.15.
+    class Registros(BaseScraper):
+        def tabela(self) -> pd.DataFrame:
+            return pd.DataFrame([{"texto": "a"}, {"outro": "b"}])
+
+    tabela = Registros("teste").tabela()
+
+    assert tabela["texto"].tolist() == ["a", None]
+    assert tabela["outro"].tolist() == [None, "b"]
+
+
+def test_ausentes_de_coluna_object_viram_none_e_o_resto_fica():
+    lista = [1, 2]
+    original = pd.DataFrame({"valores": pd.Series([lista, np.nan, pd.NaT, pd.NA, {"a": 1}], dtype=object)})
+
+    class Mista(BaseScraper):
+        def tabela(self) -> pd.DataFrame:
+            return original
+
+    valores = Mista("teste").tabela()["valores"].tolist()
+
+    assert valores[0] is lista
+    assert valores[1:4] == [None, None, None]
+    assert valores[4] == {"a": 1}
+
+
+def test_coluna_object_ja_com_none_nao_gera_copia():
+    original = pd.DataFrame({"texto": pd.Series([None, "b"], dtype=object)})
+
+    class SemTroca(BaseScraper):
+        def tabela(self) -> pd.DataFrame:
+            return original
+
+    assert SemTroca("teste").tabela() is original
 
 
 def test_tipo_string_explicito_nao_e_tocado():
@@ -141,12 +241,13 @@ def test_embrulho_preserva_assinatura_e_docstring():
 @pytest.mark.parametrize("sigla", sorted(_SCRAPERS))
 def test_todo_metodo_publico_de_raspador_registrado_e_embrulhado(sigla):
     classe = _classe(sigla)
-    sem_embrulho = [
-        nome
-        for nome in dir(classe)
-        if not nome.startswith("_")
-        and inspect.isfunction(inspect.getattr_static(classe, nome))
-        and not getattr(inspect.getattr_static(classe, nome), "_normaliza_saida", False)
-    ]
+    sem_embrulho = []
+    for nome in dir(classe):
+        if nome.startswith("_"):
+            continue
+        atributo = inspect.getattr_static(classe, nome)
+        funcao = atributo.__func__ if isinstance(atributo, (staticmethod, classmethod)) else atributo
+        if inspect.isfunction(funcao) and not getattr(funcao, "_normaliza_saida", False):
+            sem_embrulho.append(nome)
 
     assert sem_embrulho == []

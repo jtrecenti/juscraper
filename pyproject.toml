@@ -47,7 +47,7 @@ dependencies = [
     # validar contra a imagem atual do Colab.
     # O pandas 2 nao publica wheel para Python 3.15, e compilado do fonte ele
     # derruba o interpretador em pd.to_datetime; a partir do 3.15 o pandas e o 3.
-    # O texto ausente continua saindo como None nas duas versoes, por
+    # Em toda versao, texto ausente sai como None nos metodos publicos, por
     # BaseScraper.__init_subclass__ (src/juscraper/core/base.py).
     "pandas>=2.0.0,<3.0.0; python_version < '3.15'",
     "pandas>=3.0.0,<4.0.0; python_version >= '3.15'",

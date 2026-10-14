@@ -35,9 +35,21 @@ def test_categoria_e_repassada():
         avisar("velho", DeprecationWarning)
 
 
+def _emite_aviso_direto(no: ast.AST) -> bool:
+    if isinstance(no, ast.Call):
+        return ast.unparse(no.func) in {"warnings.warn", "warnings.warn_explicit"}
+    if isinstance(no, ast.ImportFrom) and no.module == "warnings":
+        return any(nome.name in {"warn", "warn_explicit", "*"} for nome in no.names)
+    if isinstance(no, ast.Import):
+        # ``import warnings as w`` esconderia ``w.warn`` da checagem acima.
+        return any(nome.name == "warnings" and nome.asname for nome in no.names)
+    return False
+
+
 def test_nenhum_warnings_warn_fora_de_avisos():
     # Gate: aviso emitido direto com ``warnings.warn`` volta a depender de
     # ``stacklevel`` contado à mão, que um decorador ou helper desloca.
+    # ``warnings.filterwarnings`` e ``catch_warnings`` continuam permitidos.
     raiz = pathlib.Path(juscraper.__file__).parent
     permitido = raiz / "core" / "avisos.py"
     diretos = [
@@ -45,10 +57,28 @@ def test_nenhum_warnings_warn_fora_de_avisos():
         for arquivo in sorted(raiz.rglob("*.py"))
         if arquivo != permitido
         for no in ast.walk(ast.parse(arquivo.read_text(encoding="utf-8")))
-        if isinstance(no, ast.Call) and ast.unparse(no.func) in {"warnings.warn", "warn"}
+        if _emite_aviso_direto(no)
     ]
 
     assert diretos == []
+
+
+@pytest.mark.parametrize(
+    "trecho",
+    [
+        "import warnings\nwarnings.warn('x', stacklevel=2)",
+        "import warnings\nwarnings.warn_explicit('x', UserWarning, 'f', 1)",
+        "from warnings import warn\nwarn('x', stacklevel=2)",
+        "import warnings as w\nw.warn('x', stacklevel=2)",
+    ],
+)
+def test_gate_reconhece_as_formas_de_emitir_aviso(trecho):
+    assert any(_emite_aviso_direto(no) for no in ast.walk(ast.parse(trecho)))
+
+
+def test_gate_permite_filtrar_avisos():
+    trecho = "import warnings\nwarnings.filterwarnings('ignore')\nwith warnings.catch_warnings():\n    pass"
+    assert not any(_emite_aviso_direto(no) for no in ast.walk(ast.parse(trecho)))
 
 
 def test_filtro_de_aviso_continua_valendo():
