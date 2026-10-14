@@ -45,7 +45,12 @@ dependencies = [
     # Teto <3.0.0 mantido por causa do conflito de resolvedor no Google Colab
     # (cudf-cu12 exige pandas<2.2.4dev0,>=2.0) — ver issue #25. Nao remover sem
     # validar contra a imagem atual do Colab.
-    "pandas>=2.0.0,<3.0.0",
+    # O pandas 2 nao publica wheel para Python 3.15, e compilado do fonte ele
+    # derruba o interpretador em pd.to_datetime; a partir do 3.15 o pandas e o 3.
+    # O texto ausente continua saindo como None nas duas versoes, por
+    # BaseScraper.__init_subclass__ (src/juscraper/core/base.py).
+    "pandas>=2.0.0,<3.0.0; python_version < '3.15'",
+    "pandas>=3.0.0,<4.0.0; python_version >= '3.15'",
     "pyjwt>=2.10.1",
     "pydantic>=2.0.0",
     "python-dotenv>=1.1.0",

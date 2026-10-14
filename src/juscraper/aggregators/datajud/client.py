@@ -4,7 +4,6 @@ Orchestrates the flow for DATAJUD (user entry point) - API BASED
 import logging
 import math
 import time
-import warnings
 from collections import defaultdict
 from collections.abc import Iterator, Mapping
 from typing import Any, ClassVar, cast
@@ -13,6 +12,7 @@ import pandas as pd
 from pydantic import ValidationError
 from tqdm.auto import tqdm
 
+from ...core.avisos import avisar
 from ...core.http import HTTPScraper, RequestPolicy
 from ...utils.cnj import clean_cnj  # Assuming this utility exists and is relevant
 from ...utils.params import normalize_paginas, pop_deprecated_alias, raise_on_extra_kwargs
@@ -67,11 +67,10 @@ def _resolve_cnj_alias(numero_processo: str) -> tuple[str, str] | None:
     """Resolve um CNJ para ``(alias, numero_limpo)`` ou emite o warning público."""
     numero_limpo = clean_cnj(numero_processo)
     if len(numero_limpo) != 20:
-        warnings.warn(
+        avisar(
             f"CNJ inválido: {numero_processo!r} (após limpeza tem {len(numero_limpo)} "
             "dígitos, deveria ter 20). Processo será ignorado.",
             UserWarning,
-            stacklevel=3,
         )
         return None
     id_justica = numero_limpo[13]
@@ -79,11 +78,10 @@ def _resolve_cnj_alias(numero_processo: str) -> tuple[str, str] | None:
     alias = ID_JUSTICA_TRIBUNAL_TO_ALIAS.get((id_justica, id_tribunal))
     if alias is not None:
         return alias, numero_limpo
-    warnings.warn(
+    avisar(
         f"CNJ {numero_processo!r}: tribunal não mapeado no DataJud "
         f"(id_justica={id_justica}, id_tribunal={id_tribunal}). Processo será ignorado.",
         UserWarning,
-        stacklevel=3,
     )
     return None
 
@@ -699,10 +697,9 @@ class DatajudScraper(HTTPScraper):
                 timeout=self._perfis_http["busca"].timeout,
             )
             if api_response is None:
-                warnings.warn(
+                avisar(
                     _mensagem_falha_parcial(alias, current_page, recebidos, total_info),
                     UserWarning,
-                    stacklevel=3,
                 )
                 logger.error(
                     "Failed to get API response for alias %s, page %d. Stopping.",

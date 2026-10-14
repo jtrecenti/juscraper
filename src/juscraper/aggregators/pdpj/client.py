@@ -455,8 +455,7 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
         except ErroSsoPdpj as erro_sso:
             anotar_falhas_antes_do_sso(erro_sso, falhas, _ITEM_CONSULTA)
             raise
-        # stacklevel 4: warn -> avisar_falhas -> este metodo -> metodo publico -> usuario.
-        avisar_falhas(falhas, origem, _ITEM_CONSULTA, stacklevel=4)
+        avisar_falhas(falhas, origem, _ITEM_CONSULTA)
         return _ordenar_colunas(rows)
 
     def _consultar_processo(

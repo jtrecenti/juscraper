@@ -15,10 +15,9 @@ dela; cada scraper documenta que sinal é esse.
 """
 from __future__ import annotations
 
-import warnings
-
 import requests
 
+from juscraper.core.avisos import avisar
 from juscraper.core.exceptions import InvalidJSONResponseError, RetryExhaustedError
 
 COLUNA_MOTIVO_FALHA = "motivo_falha"
@@ -136,26 +135,23 @@ def resumir_falhas(falhas: list[str], descricao: str) -> str:
     return f"{len(falhas)} {descricao} falharam. Falhas: {'; '.join(exemplos)}."
 
 
-def avisar_falhas(falhas: list[str], metodo: str, descricao: str, *, stacklevel: int = 3) -> None:
+def avisar_falhas(falhas: list[str], metodo: str, descricao: str) -> None:
     """Emite um único ``UserWarning`` ao fim de uma coleta concluída.
 
-    O ``stacklevel`` default aponta para quem chamou o método público quando o
-    método chama este helper diretamente; quem chama de um helper privado do
-    método soma um nível por chamada intermediária.
+    O aviso aponta para o código de quem chamou o método público, por
+    :func:`juscraper.core.avisos.avisar`.
 
     Args:
         falhas: Ver :func:`resumir_falhas`. Lista vazia não emite aviso.
         metodo: Nome qualificado do método público, que abre a mensagem.
         descricao: Ver :func:`resumir_falhas`.
-        stacklevel: Repassado a ``warnings.warn``.
     """
     if not falhas:
         return
-    warnings.warn(
+    avisar(
         f"{metodo}: {resumir_falhas(falhas, descricao)} "
         "As linhas correspondentes saem com o conteúdo None.",
         UserWarning,
-        stacklevel=stacklevel,
     )
 
 

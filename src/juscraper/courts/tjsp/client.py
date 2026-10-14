@@ -3,13 +3,13 @@ from __future__ import annotations
 
 import logging
 import shutil
-import warnings
 from pathlib import Path
 from typing import Any, ClassVar, Literal
 
 import pandas as pd
 from pydantic import BaseModel
 
+from ...core.avisos import avisar
 from ...utils.params import (
     SEARCH_ALIASES,
     apply_input_pipeline_search,
@@ -479,10 +479,9 @@ class TJSPScraper(EsajSearchScraper):
         aviso seria pior que erro explicito.
         """
         if paginas is not None:
-            warnings.warn(
+            avisar(
                 "paginas e ignorado quando count_only=True (probe sempre olha so a pagina 1).",
                 UserWarning,
-                stacklevel=3,
             )
 
         inp = apply_input_pipeline_search(

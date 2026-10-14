@@ -1,12 +1,13 @@
 """Utility functions for normalizing public API parameters across all scrapers."""
 import difflib
-import warnings
 from collections.abc import Callable, Iterator
 from datetime import date, datetime, timedelta
 from typing import Any
 
 import pandas as pd
 from pydantic import BaseModel, ValidationError
+
+from ..core.avisos import avisar
 
 # Deprecated aliases consumed by ``normalize_pesquisa``. Keep in sync with the
 # loop inside that function.
@@ -122,10 +123,9 @@ def normalize_pesquisa(pesquisa: str | None = None, **kwargs) -> str:
         )
 
     if deprecated_value is not None:
-        warnings.warn(
+        avisar(
             f"O parâmetro '{deprecated_name}' está deprecado. Use 'pesquisa' em vez disso.",
             DeprecationWarning,
-            stacklevel=3,
         )
         return str(deprecated_value)
 
@@ -178,10 +178,9 @@ def _materialize_normalized_dates(
             continue
         name, value = source_values[0]
         if name != canonical:
-            warnings.warn(
+            avisar(
                 f"O parâmetro '{name}' está deprecado. Use '{canonical}' em vez disso.",
                 DeprecationWarning,
-                stacklevel=3,
             )
         result[canonical] = value
     return result
@@ -433,21 +432,19 @@ def fill_open_ended_dates(
         # Floor pragmático: 01/01/1990 no formato canônico do backend.
         floor = datetime.strptime(OPEN_ENDED_DATE_FLOOR, "%d/%m/%Y").strftime(formato)
         datas[key_inicio] = floor
-        warnings.warn(
+        avisar(
             f"'{key_inicio}' não foi informada -- assumindo {floor!r}. Para "
             f"restringir a busca, passe '{key_inicio}' explicitamente "
             "(auto_chunk dividirá a janela em chunks de 366 dias).",
             UserWarning,
-            stacklevel=3,
         )
     elif val_fim is None and val_inicio is not None:
         hoje = date.today().strftime(formato)
         datas[key_fim] = hoje
-        warnings.warn(
+        avisar(
             f"'{key_fim}' não foi informada -- assumindo {hoje!r} (data atual). "
             f"Para buscar uma janela diferente, passe '{key_fim}' explicitamente.",
             UserWarning,
-            stacklevel=3,
         )
 
 
@@ -602,11 +599,10 @@ def run_chunked_search(
         frames.append(df)
 
     if failed:
-        warnings.warn(
+        avisar(
             f"auto_chunk: {len(failed)} de {len(windows)} janela(s) falharam: "
             f"{failed}",
             UserWarning,
-            stacklevel=2,
         )
 
     if not frames:
@@ -625,10 +621,9 @@ def warn_unsupported(param_name, tribunal):
         param_name: Name of the parameter.
         tribunal: Tribunal identifier (e.g. ``"TJDFT"``).
     """
-    warnings.warn(
+    avisar(
         f"O parâmetro '{param_name}' não é suportado pelo {tribunal} e será ignorado.",
         UserWarning,
-        stacklevel=2,
     )
 
 
@@ -642,10 +637,9 @@ def pop_deprecated_alias(kwargs: dict, old: str, new: str):
     if old not in kwargs:
         return None
     value = kwargs.pop(old)
-    warnings.warn(
+    avisar(
         f"O parâmetro '{old}' está deprecado. Use '{new}' em vez disso.",
         DeprecationWarning,
-        stacklevel=3,
     )
     return value
 
