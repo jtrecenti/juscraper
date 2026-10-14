@@ -124,10 +124,14 @@ format:
 # in backticks: type annotations (because of `render_interlinks: true`) and
 # every Sphinx role in a `See also` section, such as :class:`InputCJSGTJMG`
 # (the latter regardless of `render_interlinks`). Only this filter resolves
-# them: it links names found in objects.json and turns the rest into inline
-# code. Without it, Pandoc emits <a href=":class:`...`"></a>, an empty anchor
-# with a broken URL. Vendored unchanged from machow/quartodoc, tag v0.11.1,
-# _extensions/interlinks; tests/test_docs_interlinks.py checks it is wired.
+# them: a full path to an object listed in objects.json, with role :class: or
+# :func:, becomes a link; anything else, including short names and every
+# :meth: role (the filter does not map `meth` to the inventory's `function`
+# role), becomes inline code. Without it, Pandoc emits
+# <a href=":class:`...`"></a>, an empty anchor with a broken URL. Vendored
+# unchanged, with its MIT license, from machow/quartodoc, tag v0.11.1,
+# _extensions/interlinks; tests/test_docs_interlinks.py checks it is wired
+# and pins its SHA-256.
 #
 # Order matters: listed after `quarto`, the filter runs after Quarto's table
 # step, which drops the column widths of any table holding a link (the default
