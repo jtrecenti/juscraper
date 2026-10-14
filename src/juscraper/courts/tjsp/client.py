@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import logging
 import shutil
-import tempfile
 import warnings
 from pathlib import Path
 from typing import Any, ClassVar, Literal
@@ -150,10 +149,8 @@ class TJSPScraper(EsajSearchScraper):
         return self._listar_arvore(f"varas_{grau}")
 
     def set_download_path(self, path: str | None = None):
-        """Set download base dir; creates a tempdir when ``path`` is ``None``."""
-        if path is None:
-            path = tempfile.mkdtemp()
-        self.download_path = path
+        """Set download base dir; with ``None``, a tempdir is created on first use."""
+        self._download_path = path
 
     def set_method(self, method: Literal["html", "api"]):
         """Validate and store the access method (``'html'`` or ``'api'``) for cpopg/cposg."""
