@@ -22,9 +22,12 @@ SEARCH_URL = "https://portal.tjpr.jus.br/jurisprudencia/publico/pesquisa.do"
 # 410614 no sample de várias páginas). Nos samples, cada página traz até 10
 # registros da Corte IDH e o TJ completa as 50: 40 + 10 nas páginas 1 e 2, e
 # 43 + 7 num sample anterior, de busca com só 7 registros da Corte IDH.
-# Nenhum sample cobre a página seguinte ao esgotamento da Corte IDH. Se nela
-# o TJ não continuar do registro em que parou, ``ceil(N / 50)`` deixa
-# registros do TJ de fora no fim da busca.
+# Depois que a Corte IDH acaba, o TJ continua do registro em que parou, e por
+# isso ``ceil(N / 50)`` cobre a busca inteira. Sondagem ao vivo de 2026-10,
+# "dano moral" (411844 do TJ + 107 da Corte IDH): página 11 com TJ 401 a 443
+# e Corte IDH 101 a 107, página 12 com TJ 444 a 493, página 8240 com só o
+# último registro e página 8241 vazia. Se o portal mudar essa divisão, o
+# sintoma é a última página calculada vir cheia.
 RESULTS_PER_PAGE = 50
 
 _PAGE_NUMBER_RE = re.compile(r"\['pageNumber'\]\.value='([^']*)'")
