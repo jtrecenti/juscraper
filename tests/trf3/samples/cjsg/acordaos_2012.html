@@ -1,0 +1,1835 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1, maximum-scale=1" />
+    <meta charset="utf-8" />
+    
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap"
+          rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="/jurisprudencia/Content/Images/favicon.ico">
+
+    <link href="/jurisprudencia/Content/Css/bootstrap-icons.css" rel="stylesheet" />
+    <link href="/jurisprudencia/Content/Css/datepicker.min.css" rel="stylesheet" />
+
+
+    <script src="/jurisprudencia/Scripts/jquery-1.8.2.js" type="text/javascript"></script>
+    <script src="/jurisprudencia/Scripts/jquery.unobtrusive-ajax.js" type="text/javascript"></script>
+    
+    <script src="/jurisprudencia/Scripts/jquery-1.9.1.js" ) type="text/javascript"></script>
+    <script src="/jurisprudencia/Scripts/jquery-ui.js" ) type="text/javascript"></script>
+    
+
+    <script>
+        const plNextArrow = "»";
+        const plPrevArrow = "«";
+    </script>
+
+    <script src="/jurisprudencia/Scripts/datepicker-full.min.js" charset="utf-8"></script>
+    <script src="/jurisprudencia/Scripts/init-acessibilidade.js?t=07/10/2026 17:18:13"></script>
+    <script src="/jurisprudencia/Scripts/Toast.js"></script>
+
+    
+    <script>
+        const urlHome = '/jurisprudencia/Home';
+        const urlListaAtual = '/jurisprudencia/Home/ListaResumida';
+        const exprAcordao = /AC[OÓ]RD[AÃ]O/i;
+        const plPaginas = 'Páginas';
+        const plTRF3 = 'TRF 3ª Região';
+        const plAcordao = 'Acórdão';
+        const qtdePorPagina = 10;
+
+    </script>
+    <link href="/jurisprudencia/Content/Css/resultado.css?t=07/10/2026 17:18:13" rel="stylesheet" />
+    <script src="/jurisprudencia/Scripts/resultado.js?t=07/10/2026 17:18:13" charset="utf-8"></script>
+    <script src="/jurisprudencia/Scripts/utilidades-processo.js?t=07/10/2026 17:18:13" charset="utf-8"></script>
+
+
+
+
+    <script language="javascript" type="text/javascript">
+
+        var diretorioVirtual = '/jurisprudencia/';
+
+        function hideToolTip() {
+
+            //var valor = document.getElementById('chkAtivarExplicacao').value;
+
+
+            if (document.getElementById('chkAtivarExplicacao').checked) {
+
+                $(document).tooltip({
+                    show: {
+                        effect: "slideDown",
+                        delay: 250
+                    }
+                });
+            }
+            if (!document.getElementById('chkAtivarExplicacao').checked) {
+
+                $('[title]').attr('title', function (i, title) {
+                    $(this).data('title', title).removeAttr('title');
+                });
+            }
+        }
+
+        function mensagem()
+        {
+            alert("Sucesso.");
+        }
+
+        //function enviarPesquisa() {
+        //    var colecoes = "Acordao";
+        //    var criterios = obterCampos();
+        //    var tipoLista = "Resumida";
+        //    var sinonimos = "Nao";
+
+        //    var data = {
+        //        Pesquisa: {
+        //            'Colecoes': colecoes,
+        //            'Criterios': criterios,
+        //            'TipoLista': tipoLista,
+        //            'Sinonimos': sinonimos
+        //        }
+        //    };
+        //    if (criterios.length != 0) {
+        //        $.ajax({
+        //            type: "POST",
+        //            url: "/home/BuscaAtosNormativos",
+        //            data: JSON.stringify(data),
+        //            //data: "{colecao:'" + colecao + "',criterioPesquisa:'" + criterioPesquisa + "',tipoLista:'" + tipoLista + "',sinonimos:'" + sinominos + "'}",
+        //            contentType: "application/json; charset=utf-8",
+        //            datatype: "json",
+        //            success: function () {},
+        //            error: function () {}
+        //        });
+        //    }
+        //    else
+        //        alert("Não há critério de pesquisa!");
+        //}
+
+
+
+        function obterCriterios() {
+            var colecao = "Acordao";
+            var criterioPesquisa = obterCampos();
+            var quantidade = "Resumida*Não";
+            return (criterioPesquisa == "") ? null : {'Colecao': colecao, 'CriterioPesquisa': criterioPesquisa, 'Quantidade': quantidade};
+        }
+
+        function obterCampos() {
+
+            var pOuD = "";
+
+            if (document.getElementById('data-tipo').value == 3) pOuD = ".dtpb. ";
+            else pOuD = ".dtde. "
+
+            var pesquisa = "";
+
+
+            if (document.getElementById('txtPesqLivre').value != "")
+                pesquisa += "(" + document.getElementById('txtPesqLivre').value + ").pesq. ";
+            if(document.getElementById('numero').value != "")
+                pesquisa += "(" + document.getElementById('numero').value + ").reg. ";
+            if(document.getElementById('magistrado').value != "0")
+                pesquisa += "((" + document.getElementById("magistrado").options[document.getElementById("magistrado").selectedIndex].text + ")).rel. ";
+            if (document.getElementById('data-inicial').value != "" && document.getElementById('data-final').value != "")
+                pesquisa += "(" + document.getElementById('data-inicial').value + "," + document.getElementById('data-final').value + ")" + pOuD;
+            if (document.getElementById('classe').value != "0")
+                pesquisa += "(" + document.getElementById("classe").options[document.getElementById("classe").selectedIndex].text + ").dcla. ";
+            if (document.getElementById('orgao').value != "0")
+                pesquisa += "(" + document.getElementById("orgao").options[document.getElementById("orgao").selectedIndex].text + ").org. ";
+            if (document.getElementById('ementa').value != "")
+                pesquisa += "(" + document.getElementById('ementa').value + ").emen. ";
+
+            return pesquisa;
+
+        }
+
+        function limparCampos() {
+
+            document.getElementById('txtPesqLivre').value = "";
+            document.getElementById('data-inicial').value = "";
+            document.getElementById('data-final').value = "";
+
+            document.getElementById('numero').value = "";
+            document.getElementById('magistrado').value = "0";
+                
+            document.getElementById('classe').value = "0";
+            document.getElementById('orgao').value = "0";
+            document.getElementById('ementa').value = "";
+            document.getElementById('data-tipo').value = "0";
+            $('#tema').val('0')
+
+            //limparRefLeg();
+
+            $("#numclasse").val("");
+            $("#ementa").val("");
+            $("#indexacao").val("");
+            $("#legislacao").val("");
+            $("#hdnMagistrado").val("");
+            $("#hdnClasse").val("");
+            $("#hdnOrgao").val("");
+            $("#hdnLegislacao").val("");
+
+        }
+
+        function limparRefLeg() {
+            document.getElementById('norma').value = "0";
+            $("#legislacao-numero").val("Número");
+            document.getElementById('legislacao-tipo-nome-1').value = "ART";
+            $("#legislacao-tipo-valor-1").val("");
+            document.getElementById('legislacao-tipo-nome-2').value = "PAR";
+            $("#legislacao-tipo-valor-2").val("");
+            document.getElementById('legislacao-tipo-nome-3').value = "INC";
+            $("#legislacao-tipo-valor-3").val("");
+            document.getElementById('legislacao-tipo-nome-4').value = "LET";
+            $("#legislacao-tipo-valor-4").val("");
+        }
+
+        function addCampo(selectId, textId, divId) {
+            var idSelect = document.getElementById(selectId);
+            var valorText = $(textId).val();
+            if (idSelect.options[idSelect.selectedIndex].value != 0) {
+                $(divId).removeClass("ocultar").addClass("mostrar");
+                if (valorText.length < 1) {
+                    $(textId).val(idSelect.options[idSelect.selectedIndex].text);
+                } else {
+                    $(textId).val(valorText+" OU "+idSelect.options[idSelect.selectedIndex].text);
+                }
+                idSelect.options[0].selected = true;
+            }
+        }
+
+        function addConector(conector) {
+            var valorTextPesqLivre = $("#txtPesqLivre").val();
+            //alert(valorTextPesqLivre);
+            //if (conector != "$") {
+            //    $("#txtPesqLivre").val(valorTextPesqLivre + " " + conector + " ");
+            //} else {
+            //    $("#txtPesqLivre").val(valorTextPesqLivre + " " + conector);
+            //}
+            $("#txtPesqLivre").val(valorTextPesqLivre + conector);
+            $("#txtPesqLivre").focus();
+        }
+
+        function concatCampos(textId, divId, identificador, hiddenId) {
+            var valorTextId = $(textId).val();
+            var valorTextPesqLivre = $("#txtPesqLivre").val();
+            var valorHiddenId = $(hiddenId).val();
+            if (valorTextId.length > 0) {
+                if (valorTextPesqLivre.length < 1) {
+                    $("#txtPesqLivre").val("(" + valorTextId+")"+identificador);
+                } else {
+                    $("#txtPesqLivre").val("("+valorTextPesqLivre+")"+" E (" + valorTextId + ")"+identificador);
+                }
+                if (valorHiddenId.length > 0) {
+                    $(hiddenId).val(valorHiddenId + " E (" + valorTextId + ")" + identificador);
+                } else {
+                    $(hiddenId).val("(" + valorTextId + ")" + identificador);
+                }
+                $(textId).val("");
+            } else alert("Informe o critério de pesquisa.");
+            $(divId).removeClass("mostrar").addClass("ocultar");
+        }
+
+        function addRefLeg(selectId) {
+            var criterioR = preencherRefLeg(selectId);
+            var valorTextPesqLivre = $("#txtPesqLivre").val();
+            var valorHdnLegislacao = $("#hdnLegislacao").val();
+            if (criterioR.length > 0) {
+                if (valorTextPesqLivre.length < 1) {
+                    $("#txtPesqLivre").val(criterioR);
+                } else {
+                    $("#txtPesqLivre").val("(" + valorTextPesqLivre + ")" + " E " + criterioR);
+                }
+                if (valorHdnLegislacao.length > 0) {
+                    $("#hdnLegislacao").val(valorHdnLegislacao + " E " + criterioR);
+                } else {
+                    $("#hdnLegislacao").val(criterioR);
+                }
+            }
+                limparRefLeg();
+        }
+
+        function preencherRefLeg(selectId) {
+            var idSelect = document.getElementById(selectId);
+            var idSelect1 = document.getElementById('legislacao-tipo-nome-1');
+            var idSelect2 = document.getElementById('legislacao-tipo-nome-2');
+            var idSelect3 = document.getElementById('legislacao-tipo-nome-3');
+            var idSelect4 = document.getElementById('legislacao-tipo-nome-4');
+
+            if (idSelect.options[idSelect.selectedIndex].value != 0) {
+                var norma = idSelect.options[idSelect.selectedIndex].text;
+                var numero = $("#legislacao-numero").val();
+                var nome1 = idSelect1.options[idSelect1.selectedIndex].value;
+                var valor1 = $("#legislacao-tipo-valor-1").val();
+                var nome2 = idSelect2.options[idSelect2.selectedIndex].value;
+                var valor2 = $("#legislacao-tipo-valor-2").val();
+                var nome3 = idSelect3.options[idSelect3.selectedIndex].value;
+                var valor3 = $("#legislacao-tipo-valor-3").val();
+                var nome4 = idSelect4.options[idSelect4.selectedIndex].value;
+                var valor4 = $("#legislacao-tipo-valor-4").val();
+                var criterio = "("+norma;
+                if (numero.length > 0) {
+                    if (numero != "Número") {
+                        criterio = criterio + "-" + numero;
+                    }
+
+                }
+                if (valor1.length > 0) {
+                    criterio = criterio + " " + nome1 + "-" + valor1;
+                }
+                if (valor2.length > 0) {
+                    criterio = criterio + " " + nome2 + "-" + valor2;
+                }
+                if (valor3.length > 0) {
+                    criterio = criterio + " " + nome3 + "-" + valor3;
+                }
+                if (valor4.length > 0) {
+                    criterio = criterio + " " + nome4 + "-" + valor4;
+                }
+                criterio = criterio + ").ref. "
+            } else {
+                alert("Preencha os campos referentes à Legislação.");
+                criterio = "";
+            }
+            return criterio;
+        }
+
+        function limparNumero() {
+            var num = $("#legislacao-numero").val();
+            if (num = "Número") {
+                $("#legislacao-numero").val("");
+            }
+        }
+
+        function ShowModelDialog(numDocumento) {
+            var recurso = diretorioVirtual + 'Home/VisualizarImpressao/' + numDocumento;
+            //string s = "window.showModalDialog('PreImpressao.aspx?nm=" + e.CommandArgument.ToString().Replace("-", "").Replace(".", "") + "', null, 'dialogHeight:660px; dialogWidth:870px; status:no; resizable:yes; scroll:yes;');";
+            window.showModalDialog(diretorioVirtual + 'Home/VisualizarImpressao/?nd=' + numDocumento, "null", 'dialogHeight:660px; dialogWidth:870px; status:no; resizable:yes; scroll:yes;'); //"PopupWindow", 'width=400px,height=400px,top=150,left=250');
+            return false;
+        }
+
+        function colocarNumero() {
+            var num = $("#legislacao-numero").val();
+            if (num.length < 1) {
+                $("#legislacao-numero").val("Número");
+            }
+        }
+
+        $(function () {
+            $("#data-inicial").datepicker({
+
+                changeMonth: true,
+                changeYear: true,
+                dateFormat: 'dd/mm/yy', dayNames: ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'], dayNamesMin: ['D', 'S', 'T', 'Q', 'Q', 'S', 'S', 'D'], dayNamesShort: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'], monthNames: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'], monthNamesShort: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+            });
+        });
+        $(function () {
+            $("#data-final").datepicker({
+                changeMonth: true,
+                changeYear: true,
+                dateFormat: 'dd/mm/yy', dayNames: ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'], dayNamesMin: ['D', 'S', 'T', 'Q', 'Q', 'S', 'S', 'D'], dayNamesShort: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'], monthNames: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'], monthNamesShort: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+            });
+        });
+
+        function preencherHDDN() {
+            //var vv = $("#carregando").id;
+            ////$("#carregando").removeClass("oculto").addClass("visivel");  CARREGANDO..
+            //alert(vv);
+
+            var magistradoHDNText = $("#hdnMagistrado").val();
+            var classeHDNText = $("#hdnClasse").val();
+            var orgaoHDNText = $("#hdnOrgao").val();
+            //var legislacaoHDNText = $("#hdnLegislacao").val();
+            var idSelectM = document.getElementById('magistrado');
+            var idSelectC = document.getElementById('classe');
+            var idSelectO = document.getElementById('orgao');
+
+            var textoPesqLivreComp = $("#txtPesqLivre").val().trim().length;
+            var numeroComp = $("#numero").val().trim().length;
+            //var data_inicialComp = $("#data_inicial").val().trim().length;
+            //var data_finalComp = $("#data_final").val().trim().length;
+            var numClasseComp = $("#numclasse").val().trim().length;
+            var ementaComp = $("#ementa").val().trim().length;
+            var indexacaoComp = $("#indexacao").val().trim().length;
+            var temaComp = $('#tema').val()?.trim().length || 0;
+            var legislacaoComp = $("#legislacao").val().trim().length;
+
+            
+            if (idSelectM.options[idSelectM.selectedIndex].value != 0) {
+                if (magistradoHDNText.length < 1) {
+                    $("#hdnMagistrado").val("((" + idSelectM.options[idSelectM.selectedIndex].text + ")).rel.");
+                } 
+            }
+
+            if (idSelectC.options[idSelectC.selectedIndex].value != 0) {
+                if (classeHDNText.length < 1) {
+                    $("#hdnClasse").val("(" + idSelectC.options[idSelectC.selectedIndex].text + ").dclas.");
+                }
+            }
+
+            if (idSelectO.options[idSelectO.selectedIndex].value != 0) {
+                if (orgaoHDNText.length < 1) {
+                    $("#hdnOrgao").val("(" + idSelectO.options[idSelectO.selectedIndex].text.replace(/1a\.\s+se[cç][aã]o/gi, '1A') + ").org.");
+                    $('#hdnOrgaoJef').val("(" + $('#orgao :selected').attr('data-val-jef').replace(/1a\.\s+se[cç][aã]o/gi, '1A') + ").org.");
+                } 
+            }
+
+            if ((textoPesqLivreComp < 1) && (numeroComp < 1) && (numClasseComp < 1) && (ementaComp < 1) && (temaComp < 1)
+                && (indexacaoComp < 1) && (legislacaoComp < 1) && (idSelectM.options[idSelectM.selectedIndex].value == 0)
+                && (idSelectC.options[idSelectC.selectedIndex].value == 0) && (idSelectO.options[idSelectO.selectedIndex].value == 0)
+                && (document.getElementById('data-inicial').value == "") && (document.getElementById('data-final').value == "")) {
+                Toast.Show("Critério de pesquisa não informado.");
+                $("#hdnLegislacao").val("N");
+                return false;
+            }
+
+
+            if (!validaCampoData())
+                return false;
+
+            return true;
+        }
+
+        function validaCampoData() {
+
+            if ((document.getElementById('data-inicial').value == "") && (document.getElementById('data-final').value != "")) {
+                Toast.Show("Data inicial em branco");
+                return false;
+            }
+
+            
+
+            if ((document.getElementById('data-inicial').value != "") && (document.getElementById('data-final').value == "")) {
+                Toast.Show("Data final em branco");
+                return false;
+            }
+
+            
+
+            var dataInicial = document.getElementById('data-inicial').value;
+            var dataFinal = document.getElementById('data-final').value;
+
+            if (document.getElementById('data-inicial').value == "" && document.getElementById('data-final').value == "") {
+                return true;
+            }
+
+            var Compara01 = parseInt(dataInicial.split("/")[2].toString() + dataInicial.split("/")[1].toString() + dataInicial.split("/")[0].toString());
+            var Compara02 = parseInt(dataFinal.split("/")[2].toString() + dataFinal.split("/")[1].toString() + dataFinal.split("/")[0].toString());
+
+            
+
+            if (Compara01 > Compara02) {
+                Toast.Show("Data inicial não pode ser maior que a data final");
+                return false;
+            }
+
+            
+
+            return true;
+            
+        }
+
+        function validaFormMonocratica() {
+
+            var magistradoHDNText = $("#hdnMagistrado").val();
+            var classeHDNText = $("#hdnClasse").val();
+            
+            var idSelectM = document.getElementById('magistrado');
+            var idSelectC = document.getElementById('classe');
+            
+                        
+            
+            
+            
+
+            if (idSelectM.options[idSelectM.selectedIndex].value != 0) {
+                if (magistradoHDNText.length < 1) {
+                    $("#hdnMagistrado").val("((" + idSelectM.options[idSelectM.selectedIndex].text + ")).rel.");
+                } else {
+                    $("#hdnMagistrado").val(magistradoHDNText + " | " + "((" + idSelectM.options[idSelectM.selectedIndex].text + ")).rel.");
+                }
+            }
+
+            if (idSelectC.options[idSelectC.selectedIndex].value != 0) {
+                if (classeHDNText.length < 1) {
+                    $("#hdnClasse").val("(" + idSelectC.options[idSelectC.selectedIndex].text + ").dclas.");
+                } else {
+                    $("#hdnClasse").val(classeHDNText + " | " + "(" + idSelectC.options[idSelectC.selectedIndex].text + ").dclas.");
+                }
+            }
+
+            
+
+            let textoPesqLivreComp = $("#txtPesqLivre").val().trim().length;
+            let numeroComp = $("#numero").val().trim().length;
+            let dataInicialComp = document.getElementById('data-inicial').value.trim().length;
+            let dataFinalComp = document.getElementById('data-final').value.trim().length;
+            let magistradoComp = idSelectM.options[idSelectM.selectedIndex].value;
+            let classeComp = idSelectC.options[idSelectC.selectedIndex].value;
+
+            console.log(textoPesqLivreComp, dataFinalComp, dataFinalComp); console.log(magistradoComp, numeroComp, classeComp)
+
+
+            if (textoPesqLivreComp < 1 && dataInicialComp < 1 && dataFinalComp < 1
+                && magistradoComp < 1 && numeroComp < 1 && classeComp < 1) {
+                Toast.Show("Critério de pesquisa não informado.");
+                return false;
+            }
+
+
+            if (dataFinalComp > 1 && !validaCampoData())
+                return false;
+
+
+            return true;
+        }
+
+        function preencherHDDN02() {
+            //var vv = $("#carregando").id;
+            ////$("#carregando").removeClass("oculto").addClass("visivel");  CARREGANDO..
+            //alert(vv);
+            var magistradoHDNText = $("#hdnMagistrado").val();
+            var classeHDNText = $("#hdnClasse").val();
+            var orgaoHDNText = $("#hdnOrgao").val();
+            //var legislacaoHDNText = $("#hdnLegislacao").val();
+            var idSelectM = document.getElementById('magistrado');
+            var idSelectC = document.getElementById('classe');
+            var idSelectO = document.getElementById('orgao');
+
+            var textoPesqLivreComp = $("#txtPesqLivre").val().trim().length;
+            var numeroComp = $("#numero").val().trim().length;
+            //var data_inicialComp = $("#data_inicial").val().trim().length;
+            //var data_finalComp = $("#data_final").val().trim().length;
+            var numClasseComp = $("#numclasse").val().trim().length;
+            var ementaComp = $("#ementa").val().trim().length;
+            var indexacaoComp = $("#indexacao").val().trim().length;
+            var legislacaoComp = $("#legislacao").val().trim().length;
+
+            if (idSelectM.options[idSelectM.selectedIndex].value != 0) {
+                if (magistradoHDNText.length < 1) {
+                    $("#hdnMagistrado").val("((" + idSelectM.options[idSelectM.selectedIndex].text + ")).rel.");
+                } else {
+                    $("#hdnMagistrado").val(magistradoHDNText + " | " + "((" + idSelectM.options[idSelectM.selectedIndex].text + ")).rel.");
+                }
+            }
+
+            if (idSelectC.options[idSelectC.selectedIndex].value != 0) {
+                if (classeHDNText.length < 1) {
+                    $("#hdnClasse").val("(" + idSelectC.options[idSelectC.selectedIndex].text + ").dclas.");
+                } else {
+                    $("#hdnClasse").val(classeHDNText + " | " + "(" + idSelectC.options[idSelectC.selectedIndex].text + ").dclas.");
+                }
+            }
+
+            if (idSelectO.options[idSelectO.selectedIndex].value != 0) {
+                if (orgaoHDNText.length < 1) {
+                    $("#hdnOrgao").val("(" + idSelectO.options[idSelectO.selectedIndex].text.replace(/1a\.\s+se[cç][aã]o/gi, '1A') + ").org.");
+                    $('#hdnOrgaoJef').val("(" + $('#orgao :selected').attr('data-val-jef').replace(/1a\.\s+se[cç][aã]o/gi, '1A') + ").org.");
+                } else {
+                    $("#hdnOrgao").val(orgaoHDNText + " | " + "(" + idSelectO.options[idSelectO.selectedIndex].text + ").org.");
+                }
+            }
+
+            //if ((textoPesqLivreComp < 1) && (numeroComp < 1) && (numClasseComp < 1) && (ementaComp < 1)
+            //    && (indexacaoComp < 1) && (legislacaoComp < 1) && (idSelectM.options[idSelectM.selectedIndex].value == 0)
+            //    && (idSelectC.options[idSelectC.selectedIndex].value == 0) && (idSelectO.options[idSelectO.selectedIndex].value == 0)
+            //    && (document.getElementById('data-inicial').value == "") && (document.getElementById('data-final').value == "")) {
+            //    alert("Critério de pesquisa não informado.");
+            //    $("#hdnLegislacao").val("S");
+            //    return false;
+            //}
+
+            if ((document.getElementById('data-inicial').value == "") && (document.getElementById('data-final').value != "")) {
+                alert("Data inicial em branco");
+                return false;
+            }
+
+            if ((document.getElementById('data-inicial').value != "") && (document.getElementById('data-final').value == "")) {
+                alert("Data final em branco");
+                return false;
+            }
+
+            var dataInicial = document.getElementById('data-inicial').value;
+            var dataFinal = document.getElementById('data-final').value;
+            var Compara01 = parseInt(dataInicial.split("/")[2].toString() + dataInicial.split("/")[1].toString() + dataInicial.split("/")[0].toString());
+            var Compara02 = parseInt(dataFinal.split("/")[2].toString() + dataFinal.split("/")[1].toString() + dataFinal.split("/")[0].toString());
+
+            if (Compara01 > Compara02) {
+                alert("Data inicial não pode ser maior que a data final");
+                return false;
+            }
+
+            return true;
+        }
+
+        function resultadoSemFormatacao(semformatacao,textoarea) {
+            document.getElementById(semformatacao).style.visibility = 'visible';
+            document.getElementById(textoarea).focus();
+            document.getElementById(textoarea).select();
+        }
+
+        function buscaAcordao() {
+            window.open("https://web.trf3.jus.br/acordaos/Acordao/PesquisarDocumento?processo=" + processo, "blanck");
+        }
+
+        function buscaAndamento() {
+            window.open("https://web.trf3.jus.br/consultas/Internet/ConsultaProcessual/ProcessoIndex?numeroProcesso=" + processo, "blanck");
+        }
+
+        function mostrarListaResumida(valor) {
+            if (valor) {
+                $("#hdnMostrarListaResumida").val("S");
+            } else
+            {
+                $("#hdnMostrarListaResumida").val("N");
+            }
+            //alert("Mudou");
+            //var sValor = valor;
+            //if (valor) {
+               
+                //$("#hdnMostrarListaResumida").val("1");
+                //alert($("#hdnMostrarListaResumida").val());
+                //$("chkMostrarLista").val(0);
+                //document.getElementById('chkMostrarLista').value = "0";
+                //document.getElementById('chkMostrarLista').setAttribute('checked', 'checked');
+                //$("chkMostrarLista").attr('checked', 'checked');
+            //} else {
+                
+                //$("#hdnMostrarListaResumida").val("0");
+                //alert($("#hdnMostrarListaResumida").val());
+                //$("chkMostrarLista").val(1);
+                //$("chkMostrarLista").removeAttr('Checked');
+            //}
+            //alert(valor);
+        }
+
+        //function inicializar() {
+
+
+        //    if ($("#hdnMostrarListaResumida").val() == "") {
+        //        if (document.getElementById('chkMostrarLista').checked) {
+        //            $("#hdnMostrarListaResumida").val("S");
+        //            //alert("Checado");
+        //        } else {
+        //            $("#hdnMostrarListaResumida").val("N");
+        //            //alert("Não checado");
+        //        }
+        //    }
+            //alert("iniciou");
+            //var o = document.getElementById("chkMostrarLista");
+            //var sContentAttr = o.getAttribute("checked");
+            //alert(sContentAttr);
+            //if ($("#hdnMostrarListaResumida").val() == "") {
+            //    var o = document.getElementById("chkMostrarLista");
+            //    var sContentAttr = o.getAttribute("checked");
+            //    alert(sContentAttr);
+            //} else {
+            //    alert($("#hdnMostrarListaResumida").val());
+            //}
+
+
+                //var mostralLR = "S";
+                //var testeMostrarLR = Request["chkMostrarLista"];
+                //if (Session["MostrarListaResumida"] == null)
+                //{
+                    //Session["MostrarListaResumida"] = "S";
+                    //mostralLR = "S";
+                //}
+                //else
+                //{
+                    //mostralLR = Session["MostrarListaResumida"].ToString();
+                //}
+
+        //}
+
+        function selecionaNorma(indiceNorma) {
+            var siglaNorma = document.getElementById('sigla[' + indiceNorma + ']').innerHTML;
+            var descricaoNorma = document.getElementById('descricao[' + indiceNorma + ']').innerHTML;
+            var tipoLegislacao = document.getElementById('tipoLeg[' + indiceNorma + ']').innerHTML;
+            var tipoNorma = document.getElementById('tipoNor[' + indiceNorma + ']').innerHTML;
+            var numeroNorma = document.getElementById('numero[' + indiceNorma + ']').innerHTML;
+            var anoNorma = document.getElementById('ano[' + indiceNorma + ']').innerHTML;
+            var legislacao = "";
+
+            if ((siglaNorma != null) && (siglaNorma != "")) { legislacao = siglaNorma.trim(); }
+            if ((descricaoNorma != null) && (descricaoNorma != "")) { legislacao = legislacao + " " + descricaoNorma; }
+            if ((tipoLegislacao != null) && (tipoLegislacao != "")) { legislacao = legislacao + " LEG-" + tipoLegislacao; }
+            if ((tipoNorma != null) && (tipoNorma != "")) { legislacao = legislacao + " " + tipoNorma.trim(); }
+            if ((numeroNorma != null) && (numeroNorma != "")) { legislacao = legislacao + "-" + numeroNorma.trim(); }
+            if ((anoNorma != null) && (anoNorma != "")) { legislacao = legislacao + " ANO-" + anoNorma; }
+
+            var leg = $("#legislacao").val();
+
+            if (leg.length < 1) {
+                $("#legislacao").val(legislacao);
+            } else {
+                $("#legislacao").val(leg + " E " + legislacao);
+            }
+            document.getElementById('helpSiglaJud').style.visibility = 'hidden';
+        }
+
+        function mudarValor(sel) {
+            if (sel.name == 'magistrado') {
+                $("#hdnMagistrado").val("");
+            }
+            if (sel.name == 'classe') {
+                $("#hdnClasse").val("");
+            }
+            if (sel.name == 'orgao') {
+                $("#hdnOrgao").val("");
+            }
+        }
+
+        $(document).ready(function () {
+            //var kjk = document.getElementById('hdnUtxtPesqLivre').value;
+
+            if (document.getElementById('hdnUchkMostrarLista') != null) {
+                if (document.getElementById('hdnUchkMostrarLista').value != '') {
+                    if (document.getElementById('hdnUchkMostrarLista').value == 'on') {
+                        document.getElementById('chkMostrarLista').checked = true;
+                    } else {
+                        document.getElementById('chkMostrarLista').checked = false;
+                    }
+                } }
+            if (document.getElementById('hdnUtxtPesqLivre') != null) {
+                if (document.getElementById('hdnUtxtPesqLivre').value != '') {
+                    $("#txtPesqLivre").val(document.getElementById('hdnUtxtPesqLivre').value);
+                }
+            }
+            if (document.getElementById('hdnUnumero') != null) {
+                if (document.getElementById('hdnUnumero').value != '') {
+                    $("#numero").val(document.getElementById('hdnUnumero').value);
+                }
+            }
+            if (document.getElementById('hdnUmagistrado') != null) {
+                if (document.getElementById('hdnUmagistrado').value != '') {
+                    document.getElementById('magistrado').selectedIndex = document.getElementById('hdnUmagistrado').value;
+                }
+            }
+            if (document.getElementById('hdnUdata-inicial') != null) {
+                if (document.getElementById('hdnUdata-inicial').value != '') {
+                    $("#data-inicial").val(document.getElementById('hdnUdata-inicial').value);
+                }
+            }
+            if (document.getElementById('hdnUdata-final') != null) {
+                if (document.getElementById('hdnUdata-final').value != '') {
+                    $("#data-final").val(document.getElementById('hdnUdata-final').value);
+                }
+            }
+            if (document.getElementById('hdnUdata-tipo') != null) {
+                if (document.getElementById('hdnUdata-tipo').value != '') {
+                    document.getElementById('data-tipo').value = document.getElementById('hdnUdata-tipo').value;
+                }
+            }
+            if (document.getElementById('hdnUclasse') != null) {
+                if (document.getElementById('hdnUclasse').value != '') {
+                    document.getElementById('classe').selectedIndex = document.getElementById('hdnUclasse').value;
+                }
+            }
+            if (document.getElementById('hdnUorgao') != null) {
+                if (document.getElementById('hdnUorgao').value != '') {
+                    document.getElementById('orgao').selectedIndex = document.getElementById('hdnUorgao').value;
+                }
+            }
+            if (document.getElementById('hdnUementa') != null) {
+                if (document.getElementById('hdnUementa').value != '') {
+                    $("#ementa").val(document.getElementById('hdnUementa').value);
+                }
+            }
+            if (document.getElementById('hdnUnumclasse') != null) {
+                if (document.getElementById('hdnUnumclasse').value != '') {
+                    $("#numclasse").val(document.getElementById('hdnUnumclasse').value);
+                }
+            }
+            if (document.getElementById('hdnUindexacao') != null) {
+                if (document.getElementById('hdnUindexacao').value != '') {
+                    $("#indexacao").val(document.getElementById('hdnUindexacao').value);
+                }
+            }
+            if (document.getElementById('hdnUlegislacao') != null) {
+                if (document.getElementById('hdnUlegislacao').value != '') {
+                    $("#legislacao").val(document.getElementById('hdnUlegislacao').value);
+                }
+            }
+            if (document.getElementById('hdnUhdnClasse') != null) {
+                if (document.getElementById('hdnUhdnClasse').value != '') {
+                    $("#hdnClasse").val(document.getElementById('hdnUhdnClasse').value);
+                }
+            }
+            if (document.getElementById('hdnUhdnOrgao') != null) {
+                if (document.getElementById('hdnUhdnOrgao').value != '') {
+                    $("#hdnOrgao").val(document.getElementById('hdnUhdnOrgao').value);
+                }
+            }
+            if (document.getElementById('hdnUhdnLegislacao') != null) {
+                if (document.getElementById('hdnUhdnLegislacao').value != '') {
+                    $("#hdnLegislacao").val(document.getElementById('hdnUhdnLegislacao').value);
+                }
+            }
+        });
+
+        //Incluída por causa das "  "
+        function concatenaExpressao() {
+            var inputE1 = document.getElementById('txtPesqLivre');
+            inputE1.value = inputE1.value + ' " "';
+            texto = new String(inputE1.value);
+            selStart = texto.length - 2;
+            selEnd = texto.length - 1;
+            if (inputE1.setSelectionRange) {
+                inputE1.focus();
+                inputE1.setSelectionRange(selStart, selEnd);
+            } else if (inputE1.createTextRange) {
+                var range = inputE1.createTextRange();
+                range.collapse(true);
+                range.moveEnd('character', selEnd);
+                range.moveStart('character', selStart);
+                range.select();
+            }
+            inputE1.focus();
+        }
+
+        //session end
+        var sessionTimeoutWarning = 300 -1; 
+        var sTimeout = parseInt(sessionTimeoutWarning) * 60 * 1000;
+        setTimeout('SessionEnd()', sTimeout);
+
+        function SessionEnd() {
+            window.location = diretorioVirtual + "Home/SessaoExpirada";
+        }
+
+    </script>
+
+    <title>Busca Jurisprudência</title>
+<script >bazadebezolkohpepadr="1360844508"</script><script type="text/javascript" src="https://web.trf3.jus.br/akam/13/511cd6bd"  defer></script></head>
+<body>
+    
+
+    <div id="inline" data-date="01/05/2020" style="color: black"></div>
+    <a href="#conteudo" style="display: none;" id="a-conteudo"></a>
+
+    
+    
+    
+
+
+
+    
+    
+
+    
+
+<section class="menu">
+    <section class="secao-menu secao-acessibilidade">
+        <div class="container">
+            <section class="acessibilidade">
+                <span>Acessibilidade: </span>
+                <i class="bi bi-eye-fill" id="btn-modo-cor" title="Alternar entre modo claro e modo escuro"
+                   aria-label="Alternar entre modo claro e modo escuro" tabindex="0"></i>
+
+                <i class="bi bi bi-cast" id="btn-transparente" title="Alternar entre painel transparente e painel colorido" aria-label="Alternar entre painel transparente e painel colorido"
+                   tabindex="0"></i>
+
+                <i class="bi bi-zoom-in" id="btn-plus" title="Aumentar zoom" aria-label="Aumentar zoom"
+                   tabindex="0"></i>
+
+                <i class="bi bi-zoom-out" id="btn-minus" title="Diminuir zoom" aria-label="Diminuir zoom"
+                   tabindex="0"></i>
+                <i class="bi bi-aspect-ratio" id="btn-sem-zoom" title="Voltar ao tamanho normal"
+                   aria-label="Voltar ao tamanho normal" tabindex="0"></i>
+                <i class="bi bi-app-indicator" id="go-to-content" title="Ir para conteúdo"
+                   aria-label="Ir para conteúdo" tabindex="0"></i>
+            </section>
+            <section class="info" data-tooltip="Tamanho atual"></section>
+        </div>
+    </section>
+    <section class="secao-menu">
+        <div class="container">
+            <section class="logo">
+                <h1 class="logo-tribunal" title="Ir para o site do TRF3">
+                    <a href="https://www.trf3.jus.br/"
+                       target="_blank"><img src="/jurisprudencia/Content/Images/topo-site-logoTRF3.png" alt="Ir para o site do TRF3"></a>
+                </h1>
+            </section>
+        </div>
+    </section>
+</section>
+
+
+    <main id="conteudo">
+        
+
+
+
+
+
+
+<div class="container">
+    <section class="menu-opcoes opcoes-pesquisa">
+        <nav class="nav-menu">
+            <span class="opcao-menu opcao-pesquisa"><a href="/jurisprudencia/Home/BuscaAcordaos/0">Nova Pesquisa</a></span>
+            <span class="opcao-menu opcao-pesquisa"><a href="/jurisprudencia/Home/BuscaAcordaos/1">Voltar</a></span>
+        </nav>
+        <section class="botoes-pg">
+            <span class="opcao-menu opcao-pesquisa opcao-pg">
+                <a href="/jurisprudencia/Home/ListaResumida/1?np=0" data-tooltip="Primeira página" id="lnk-primeira-pagina"
+                   aria-label="Primeira página"><i class="bi bi-chevron-double-left"></i></a>
+            </span>
+            <span class="opcao-menu opcao-pesquisa opcao-pg">
+                <a href="/jurisprudencia/Home/ListaResumida/2?np=1" data-tooltip="Página anterior"
+                   aria-label="Página anterior"><i class="bi bi-caret-left"></i></a>
+            </span>
+            <span class="opcao-menu opcao-pesquisa opcao-pg">
+                <a href="/jurisprudencia/Home/ListaResumida/2?np=2" data-tooltip="Próxima página"
+                   aria-label="Próxima página"><i class="bi bi-caret-right"></i></a>
+            </span>
+            <span class="opcao-menu opcao-pesquisa opcao-pg">
+                <a href="/jurisprudencia/Home/ListaResumida/2?np=7" data-tooltip="Última página"
+                   aria-label="Última página"><i class="bi bi-chevron-double-right"></i></a>
+            </span>
+        </section>
+    </section>
+
+    
+
+
+
+
+
+<section class="dados-resultados">
+    <section class="secao-total">
+        <span class="qtd-pagina">1</span> ~ <span class="qtd-total">68</span>
+    </section>
+    <section class="secao-paginas">
+            Páginas: 
+                    <a class="muda-pagina atual" href="/jurisprudencia/Home/ListaResumida/2?np=1" data-pagina="1">1</a>
+                    <a class="muda-pagina" href="/jurisprudencia/Home/ListaResumida/2?np=2" data-pagina="2">2</a>
+                    <a class="muda-pagina" href="/jurisprudencia/Home/ListaResumida/2?np=3" data-pagina="3">3</a>
+                    <a class="muda-pagina" href="/jurisprudencia/Home/ListaResumida/2?np=4" data-pagina="4">4</a>
+                    <a class="muda-pagina" href="/jurisprudencia/Home/ListaResumida/2?np=5" data-pagina="5">5</a>
+                    <a class="muda-pagina" href="/jurisprudencia/Home/ListaResumida/2?np=6" data-pagina="6">6</a>
+                    <a class="muda-pagina" href="/jurisprudencia/Home/ListaResumida/2?np=7" data-pagina="7">7</a>
+    </section>
+    <section class="secao-por-pagina">
+        <span class="qtd-pagina">
+            <select class="cmb-qtde-por-pagina">
+                <option value="10" selected>10</option>
+                <option value="30" >30</option>
+                <option value="50" >50</option>
+            </select>
+        </span> resultados por página.
+        Mostrando <span class="qtd-total">10</span> resultado(s).
+        <span class="carregando-mudanca-paginas"></span>
+    </section>
+</section>
+
+    <section class="resultados-pesquisa">
+        <div class="retorno-pesquisa">
+            <h2 class="titulo-retorno">
+                <span class="texto-titulo">Pesquisa de Jurisprudência - Base TRF3</span>
+
+                <button class="abre-filtros" aria-label="Abrir Filtros">
+                    <i class="bi bi-funnel"></i>
+                </button>
+
+                <span class="texto-subtitulo">Critério: (pesquisa livre: medicamento) E ((data: 01/01/2012 a 31/12/2012 - Julgamento))) </span>
+            </h2>
+            <ol class="lista-retorno">
+                        <li class="acordao-retorno">
+                            <a class="link-acordao " href="/jurisprudencia/Home/ListaColecao/9?np=1">
+                                <div class="processo">
+                                    <span class="contagem">
+                                        1/68)
+                                    </span>
+                                    <span class="info">0000164-41.2007.4.03.6000</span>
+                                    <div class="dado info-publicacao" style="display:none">e-DJF3 Judicial 1 Data:19/12/2012 </div>
+                                    <span class="opcoes-processo">
+
+
+
+
+                                        <button class="btn-inteiro-teor" aria-label="Imprimir Inteiro Teor"
+                                                data-link="/jurisprudencia/Home/ImprimirDecisao/?nd=1"
+                                                data-tooltip="Imprimir Inteiro Teor" onclick="event.preventDefault()">
+                                            <i class="bi bi-file-earmark-font"></i>
+                                        </button>
+
+                                                    <button class="btn-integra-acordao" aria-label="Exibir a íntegra do acórdão"
+                                                            data-link="http://www.trf3.jus.br/trf3r/index.php?id=20&amp;op=resultado&amp;processo=00001644120074036000"
+                                                            data-tooltip="Exibir a íntegra do acórdão" onclick="event.preventDefault()">
+                                                        <i class="bi bi-file-earmark"></i>
+                                                    </button>
+                                            <button class="btn-consultar-processo" aria-label="Consultar Processo"
+                                                    data-link="https://web.trf3.jus.br/consultas/Internet/ConsultaProcessual/Processo?NumeroProcesso=00001644120074036000"
+                                                    data-tooltip="Consultar Processo" onclick="event.preventDefault()">
+                                                <i class="bi bi-search"></i>
+                                            </button>
+
+
+
+                                            <button class="btn-area-transferencia" aria-label="Copiar ementa para a área de transferência"
+                                                    data-tooltip="Copiar ementa para a área de transferência" onclick="event.preventDefault()">
+                                                <i class="bi bi-clipboard"></i>
+                                            </button>
+                                            <button class="btn-area-transferencia-inteor" aria-label="Copiar inteiro teor para a área de transferência"
+                                                    data-tooltip="Copiar inteiro teor para a área de transferência" onclick="event.preventDefault()">
+                                                <i class="bi bi-clipboard-plus"></i>
+                                            </button>
+
+                                        <button class="btn-pdf-acordao" aria-label="Exibir o documento em formato PDF para imprimir ou salvar"
+                                                data-link="/jurisprudencia/Home/ImprimirPDF/?nd=1"
+                                                data-tooltip="Exibir o documento em formato PDF para imprimir ou salvar" onclick="event.preventDefault()">
+                                            <i class="bi bi-printer"></i>
+                                        </button>
+                                    </span>
+                                </div>
+                                <div class="informacoes-basicas">
+                                    <span class="info">ApReeNec - APELA&#199;&#195;O/REMESSA NECESS&#193;RIA - 1758015</span>
+                                    <span class="info">TERCEIRA TURMA</span>
+                                    <span class="info">
+                                        DESEMBARGADOR FEDERAL CARLOS MUTA
+                                    </span>
+                                    <span class="info">e-DJF3 Judicial 1 DATA:19/12/2012 </span>
+
+                                        <span class="info">Julgamento: 13/12/2012</span>
+
+
+                                </div>
+                                <div class="ementa">
+                                    <span class="info info-ementa">
+DIREITO PROCESSUAL CIVIL. CONSTITUCIONAL. ADMINISTRATIVO. AGRAVO INOMINADO. FORNECIMENTO GRATUITO DE <em>MEDICAMENTO</em>. LEGITIMIDADE PASSIVA. UNIÃO FEDERAL. SISTEMA ÚNICO DE SAÚDE. LEI 8.080/90. RECURSO DESPROVIDO.
+<br>1. Embora a requerida não tenha suscitado a questão relativa à legitimidade passiva, anteriormente, é possível conhecer do questionamento, em face da natureza da matéria, nos termos do artigo 267, § 3º, do CPC.
+<br>2. É solidária a obrigação dos entes federados, integrantes do Sistema Único de Saúde, pelo fornecimento de tratamentos e medicamentos necessários à garantia da saúde e vida, por isso inviável o reconhecimento da ilegitimidade passiva da União.
+<br>3. Não se trata, pois, de distinguir, internamente, as atribuições de cada um dos entes políticos dentro do SUS, para efeito de limitar o alcance da legitimidade passiva para ações de tal espécie, cabendo a todos e a qualquer um deles a responsabilidade pelo efetivo fornecimento de <em>medicamento</em> à pessoa sem recursos financeiros através da rede pública de saúde, daí porque inexistente a ofensa aos preceitos legais invocados (artigos 8º, 9º, 16, XV, 17, e 18, I, IV e V, Lei 8.080/90) e a incompetência da Justiça Federal, donde a manifesta inviabilidade da reforma preconizada.
+<br>4. Consolidada a jurisprudência, firme no sentido da prevalência da garantia de tutela à saúde do cidadão hipossuficiente sobre eventual custo financeiro imposto ao Poder Público, pois o Sistema Único de Saúde deve prover os meios para o fornecimento de <em>medicamento</em> e tratamento que sejam necessários, segundo prescrição médica, a pacientes sem condições financeiras de custeio pessoal ou familiar, sem o que se afasta o Estado da sua concepção de tutela social, reconhecida e declarada pela Constituição de 1988.
+<br>5. Agravo inominado desprovido.                                                                            </span>
+                                </div>
+
+
+                                    <div class="acordao" style="display: none">
+                                        <span class="info info-acordao">Vistos e relatados estes autos em que são partes as acima indicadas, decide a Egrégia Terceira Turma do Tribunal Regional Federal da 3ª Região, por unanimidade, negar provimento ao agravo inominado, nos termos do relatório e voto que ficam fazendo parte integrante do presente julgado.
+<br></span>
+                                    </div>
+                            </a>
+                        </li>
+                        <li class="acordao-retorno">
+                            <a class="link-acordao " href="/jurisprudencia/Home/ListaColecao/9?np=2">
+                                <div class="processo">
+                                    <span class="contagem">
+                                        2/68)
+                                    </span>
+                                    <span class="info">0007366-89.2009.4.03.6100</span>
+                                    <div class="dado info-publicacao" style="display:none">e-DJF3 Judicial 1 Data:19/12/2012 </div>
+                                    <span class="opcoes-processo">
+
+
+
+
+                                        <button class="btn-inteiro-teor" aria-label="Imprimir Inteiro Teor"
+                                                data-link="/jurisprudencia/Home/ImprimirDecisao/?nd=2"
+                                                data-tooltip="Imprimir Inteiro Teor" onclick="event.preventDefault()">
+                                            <i class="bi bi-file-earmark-font"></i>
+                                        </button>
+
+                                                    <button class="btn-integra-acordao" aria-label="Exibir a íntegra do acórdão"
+                                                            data-link="http://www.trf3.jus.br/trf3r/index.php?id=20&amp;op=resultado&amp;processo=00073668920094036100"
+                                                            data-tooltip="Exibir a íntegra do acórdão" onclick="event.preventDefault()">
+                                                        <i class="bi bi-file-earmark"></i>
+                                                    </button>
+                                            <button class="btn-consultar-processo" aria-label="Consultar Processo"
+                                                    data-link="https://web.trf3.jus.br/consultas/Internet/ConsultaProcessual/Processo?NumeroProcesso=00073668920094036100"
+                                                    data-tooltip="Consultar Processo" onclick="event.preventDefault()">
+                                                <i class="bi bi-search"></i>
+                                            </button>
+
+
+
+                                            <button class="btn-area-transferencia" aria-label="Copiar ementa para a área de transferência"
+                                                    data-tooltip="Copiar ementa para a área de transferência" onclick="event.preventDefault()">
+                                                <i class="bi bi-clipboard"></i>
+                                            </button>
+                                            <button class="btn-area-transferencia-inteor" aria-label="Copiar inteiro teor para a área de transferência"
+                                                    data-tooltip="Copiar inteiro teor para a área de transferência" onclick="event.preventDefault()">
+                                                <i class="bi bi-clipboard-plus"></i>
+                                            </button>
+
+                                        <button class="btn-pdf-acordao" aria-label="Exibir o documento em formato PDF para imprimir ou salvar"
+                                                data-link="/jurisprudencia/Home/ImprimirPDF/?nd=2"
+                                                data-tooltip="Exibir o documento em formato PDF para imprimir ou salvar" onclick="event.preventDefault()">
+                                            <i class="bi bi-printer"></i>
+                                        </button>
+                                    </span>
+                                </div>
+                                <div class="informacoes-basicas">
+                                    <span class="info">Ap - APELA&#199;&#195;O C&#205;VEL - 1708075</span>
+                                    <span class="info">TERCEIRA TURMA</span>
+                                    <span class="info">
+                                        DESEMBARGADOR FEDERAL CARLOS MUTA
+                                    </span>
+                                    <span class="info">e-DJF3 Judicial 1 DATA:19/12/2012 </span>
+
+                                        <span class="info">Julgamento: 13/12/2012</span>
+
+
+                                </div>
+                                <div class="ementa">
+                                    <span class="info info-ementa">
+DIREITO PROCESSUAL CIVIL. CONSTITUCIONAL. TRIBUTÁRIO. AGRAVO INOMINADO. FORNECIMENTO GRATUITO DE MEDICAMENTOS. LEGITIMIDADE PASSIVA. UNIÃO FEDERAL. SISTEMA ÚNICO DE SAÚDE. LEI 8.080/90. PRECEDENTES.
+<br>1. É solidária a obrigação dos entes federados, integrantes do Sistema Único de Saúde, pelo fornecimento de tratamentos e medicamentos necessários à garantia da saúde e vida, por isso inviável o reconhecimento da ilegitimidade passiva da União.
+<br>2. Não se trata, pois, de distinguir, internamente, as atribuições de cada um dos entes políticos dentro do SUS, para efeito de limitar o alcance da legitimidade passiva para ações de tal espécie, cabendo a todos e a qualquer um deles a responsabilidade pelo efetivo fornecimento de <em>medicamento</em> à pessoa sem recursos financeiros através da rede pública de saúde, daí porque inexistente a ofensa aos preceitos legais invocados (artigos 196, 198, I, e 200, da Constituição Federal, e 7º, IX, alínea "a", 15, 16, 17, 18 e 19, da Lei 8.080/90) e a incompetência da Justiça Federal, donde a manifesta inviabilidade da reforma preconizada.
+<br>3. Consolidada a jurisprudência, firme no sentido da prevalência da garantia de tutela à saúde do cidadão hipossuficiente sobre eventual custo financeiro imposto ao Poder Público, pois o Sistema Único de Saúde deve prover os meios para o fornecimento de <em>medicamento</em> e tratamento que sejam necessários, segundo prescrição médica, a pacientes sem condições financeiras de custeio pessoal ou familiar, sem o que se afasta o Estado da sua concepção de tutela social, reconhecida e declarada pela Constituição de 1988.
+<br>4. Agravo inominado desprovido.                                                                            </span>
+                                </div>
+
+
+                                    <div class="acordao" style="display: none">
+                                        <span class="info info-acordao">Vistos e relatados estes autos em que são partes as acima indicadas, decide a Egrégia Terceira Turma do Tribunal Regional Federal da 3ª Região, por unanimidade, negar provimento ao agravo inominado, nos termos do relatório e voto que ficam fazendo parte integrante do presente julgado.
+<br></span>
+                                    </div>
+                            </a>
+                        </li>
+                        <li class="acordao-retorno">
+                            <a class="link-acordao " href="/jurisprudencia/Home/ListaColecao/9?np=3">
+                                <div class="processo">
+                                    <span class="contagem">
+                                        3/68)
+                                    </span>
+                                    <span class="info">0013515-47.2008.4.03.6000</span>
+                                    <div class="dado info-publicacao" style="display:none">e-DJF3 Judicial 1 Data:19/12/2012 </div>
+                                    <span class="opcoes-processo">
+
+
+
+
+                                        <button class="btn-inteiro-teor" aria-label="Imprimir Inteiro Teor"
+                                                data-link="/jurisprudencia/Home/ImprimirDecisao/?nd=3"
+                                                data-tooltip="Imprimir Inteiro Teor" onclick="event.preventDefault()">
+                                            <i class="bi bi-file-earmark-font"></i>
+                                        </button>
+
+                                                    <button class="btn-integra-acordao" aria-label="Exibir a íntegra do acórdão"
+                                                            data-link="http://www.trf3.jus.br/trf3r/index.php?id=20&amp;op=resultado&amp;processo=00135154720084036000"
+                                                            data-tooltip="Exibir a íntegra do acórdão" onclick="event.preventDefault()">
+                                                        <i class="bi bi-file-earmark"></i>
+                                                    </button>
+                                            <button class="btn-consultar-processo" aria-label="Consultar Processo"
+                                                    data-link="https://web.trf3.jus.br/consultas/Internet/ConsultaProcessual/Processo?NumeroProcesso=00135154720084036000"
+                                                    data-tooltip="Consultar Processo" onclick="event.preventDefault()">
+                                                <i class="bi bi-search"></i>
+                                            </button>
+
+
+
+                                            <button class="btn-area-transferencia" aria-label="Copiar ementa para a área de transferência"
+                                                    data-tooltip="Copiar ementa para a área de transferência" onclick="event.preventDefault()">
+                                                <i class="bi bi-clipboard"></i>
+                                            </button>
+                                            <button class="btn-area-transferencia-inteor" aria-label="Copiar inteiro teor para a área de transferência"
+                                                    data-tooltip="Copiar inteiro teor para a área de transferência" onclick="event.preventDefault()">
+                                                <i class="bi bi-clipboard-plus"></i>
+                                            </button>
+
+                                        <button class="btn-pdf-acordao" aria-label="Exibir o documento em formato PDF para imprimir ou salvar"
+                                                data-link="/jurisprudencia/Home/ImprimirPDF/?nd=3"
+                                                data-tooltip="Exibir o documento em formato PDF para imprimir ou salvar" onclick="event.preventDefault()">
+                                            <i class="bi bi-printer"></i>
+                                        </button>
+                                    </span>
+                                </div>
+                                <div class="informacoes-basicas">
+                                    <span class="info">ApReeNec - APELA&#199;&#195;O/REMESSA NECESS&#193;RIA - 1591564</span>
+                                    <span class="info">TERCEIRA TURMA</span>
+                                    <span class="info">
+                                        DESEMBARGADOR FEDERAL CARLOS MUTA
+                                    </span>
+                                    <span class="info">e-DJF3 Judicial 1 DATA:19/12/2012 </span>
+
+                                        <span class="info">Julgamento: 13/12/2012</span>
+
+
+                                </div>
+                                <div class="ementa">
+                                    <span class="info info-ementa">
+DIREITO PROCESSUAL CIVIL. CONSTITUCIONAL. ADMINISTRATIVO. AGRAVO INOMINADO. FORNECIMENTO GRATUITO DE MEDICAMENTOS. LEGITIMIDADE PASSIVA. SISTEMA ÚNICO DE SAÚDE. LEI 8.080/90. SUCUMBÊNCIA. RECURSOS DESPROVIDOS.
+<br>1. A aplicação do artigo 557 do Código de Processo Civil cabe nas hipóteses não apenas de jurisprudência pacífica, mas igualmente quando dominante a interpretação.
+<br>2. É solidária a obrigação dos entes federados, integrantes do Sistema Único de Saúde, pelo fornecimento de tratamentos e medicamentos necessários à garantia da saúde e vida, por isso inviável o reconhecimento da ilegitimidade passiva da União. Não se trata, pois, de distinguir, internamente, as atribuições de cada um dos entes políticos dentro do SUS, para efeito de limitar o alcance da legitimidade passiva para ações de tal espécie, cabendo a todos e a qualquer um deles a responsabilidade pelo efetivo fornecimento de <em>medicamento</em> à pessoa sem recursos financeiros através da rede pública de saúde, daí porque inexistente a ofensa aos preceitos legais invocados (artigos 8º, 9º, 16, XV, 17, e 18, I, IV e V, Lei 8.080/90) e a incompetência da Justiça Federal, donde a manifesta inviabilidade da reforma preconizada.
+<br>3. Consolidada a jurisprudência, firme no sentido da prevalência da garantia de tutela à saúde do cidadão hipossuficiente sobre eventual custo financeiro imposto ao Poder Público, pois o Sistema Único de Saúde deve prover os meios para o fornecimento de <em>medicamento</em> e tratamento que sejam necessários, segundo prescrição médica, a pacientes sem condições financeiras de custeio pessoal ou familiar, sem o que se afasta o Estado da sua concepção de tutela social, reconhecida e declarada pela Constituição de 1988.
+<br>4. A LC 132/2009 modificou o artigo 4º da LC 80/1994 (Lei que organiza a Defensoria Pública da União), passando a dispor, em seu inciso XXI que, dentre outras funções institucionais, a DPU deve executar e receber as verbas sucumbenciais decorrentes de sua atuação, inclusive quando devidas pro quaisquer entes públicos, destinando-as a fundos geridos pela Defensoria Pública e destinados, exclusivamente, ao aparelhamento da Defensoria Pública e à capacitação profissional de seus membros e servidores.
+<br>5. Não cabe redução da verba honorária, vez que é firme a orientação acerca da necessidade de que o valor arbitrado permita a justa e adequada remuneração dos vencedores, sem contribuir para o seu enriquecimento sem causa, ou para a imposição de ônus excessivo a quem decaiu da respectiva pretensão, cumprindo, assim, o montante da condenação com a finalidade própria do instituto da sucumbência, calcado no princípio da causalidade e da responsabilidade processual.
+<br>6. Agravos inominados desprovidos.                                                                            </span>
+                                </div>
+
+
+                                    <div class="acordao" style="display: none">
+                                        <span class="info info-acordao">Vistos e relatados estes autos em que são partes as acima indicadas, decide a Egrégia Terceira Turma do Tribunal Regional Federal da 3ª Região, por unanimidade, negar provimento aos agravos inominados, nos termos do relatório e voto que ficam fazendo parte integrante do presente julgado.
+<br></span>
+                                    </div>
+                            </a>
+                        </li>
+                        <li class="acordao-retorno">
+                            <a class="link-acordao " href="/jurisprudencia/Home/ListaColecao/9?np=4">
+                                <div class="processo">
+                                    <span class="contagem">
+                                        4/68)
+                                    </span>
+                                    <span class="info">0034556-23.2011.4.03.0000</span>
+                                    <div class="dado info-publicacao" style="display:none">e-DJF3 Judicial 1 Data:19/12/2012 </div>
+                                    <span class="opcoes-processo">
+
+
+
+
+                                        <button class="btn-inteiro-teor" aria-label="Imprimir Inteiro Teor"
+                                                data-link="/jurisprudencia/Home/ImprimirDecisao/?nd=4"
+                                                data-tooltip="Imprimir Inteiro Teor" onclick="event.preventDefault()">
+                                            <i class="bi bi-file-earmark-font"></i>
+                                        </button>
+
+                                                    <button class="btn-integra-acordao" aria-label="Exibir a íntegra do acórdão"
+                                                            data-link="http://www.trf3.jus.br/trf3r/index.php?id=20&amp;op=resultado&amp;processo=00345562320114030000"
+                                                            data-tooltip="Exibir a íntegra do acórdão" onclick="event.preventDefault()">
+                                                        <i class="bi bi-file-earmark"></i>
+                                                    </button>
+                                            <button class="btn-consultar-processo" aria-label="Consultar Processo"
+                                                    data-link="https://web.trf3.jus.br/consultas/Internet/ConsultaProcessual/Processo?NumeroProcesso=00345562320114030000"
+                                                    data-tooltip="Consultar Processo" onclick="event.preventDefault()">
+                                                <i class="bi bi-search"></i>
+                                            </button>
+
+
+
+                                            <button class="btn-area-transferencia" aria-label="Copiar ementa para a área de transferência"
+                                                    data-tooltip="Copiar ementa para a área de transferência" onclick="event.preventDefault()">
+                                                <i class="bi bi-clipboard"></i>
+                                            </button>
+                                            <button class="btn-area-transferencia-inteor" aria-label="Copiar inteiro teor para a área de transferência"
+                                                    data-tooltip="Copiar inteiro teor para a área de transferência" onclick="event.preventDefault()">
+                                                <i class="bi bi-clipboard-plus"></i>
+                                            </button>
+
+                                        <button class="btn-pdf-acordao" aria-label="Exibir o documento em formato PDF para imprimir ou salvar"
+                                                data-link="/jurisprudencia/Home/ImprimirPDF/?nd=4"
+                                                data-tooltip="Exibir o documento em formato PDF para imprimir ou salvar" onclick="event.preventDefault()">
+                                            <i class="bi bi-printer"></i>
+                                        </button>
+                                    </span>
+                                </div>
+                                <div class="informacoes-basicas">
+                                    <span class="info">AI - AGRAVO DE INSTRUMENTO - 458520</span>
+                                    <span class="info">SEXTA TURMA</span>
+                                    <span class="info">
+                                        DESEMBARGADORA FEDERAL CONSUELO YOSHIDA
+                                    </span>
+                                    <span class="info">e-DJF3 Judicial 1 DATA:19/12/2012 </span>
+
+                                        <span class="info">Julgamento: 13/12/2012</span>
+
+
+                                </div>
+                                <div class="ementa">
+                                    <span class="info info-ementa">
+AGRAVO LEGAL. AGRAVO DE INSTRUMENTO. SISTEMA ÚNICO DE SAÚDE. FORNECIMENTO DO <em>MEDICAMENTO</em>.
+<br>1. A recusa no fornecimento do <em>medicamento</em> pretendido pelo agravado implica desrespeito às normas que garantem o direito à saúde e à vida.
+<br>2. É possível a concessão de tutela antecipada contra a Fazenda Pública, sempre que presentes os pressupostos previstos no art. 273, do Código de Processo Civil, ainda mais nos casos em que estão sendo discutidos direitos fundamentais como a dignidade da pessoa humana e a inviolabilidade do direito à vida, como ocorre no caso em apreço.
+<br>3. Viável a imposição de multa diária à Administração Pública, mas que somente deverá ser aplicada na hipótese em que restar comprovado o retardamento injustificado no cumprimento da decisão judicial.
+<br>4. Não há elementos novos capazes de alterar o entendimento externado na decisão monocrática.
+<br>5. Agravo legal improvido.                                                                            </span>
+                                </div>
+
+
+                                    <div class="acordao" style="display: none">
+                                        <span class="info info-acordao">Vistos e relatados estes autos em que são partes as acima indicadas, decide a Egrégia Sexta Turma do Tribunal Regional Federal da 3ª Região, por unanimidade, negar provimento ao agravo legal, nos termos do relatório e voto que ficam fazendo parte integrante do presente julgado.
+<br></span>
+                                    </div>
+                            </a>
+                        </li>
+                        <li class="acordao-retorno">
+                            <a class="link-acordao " href="/jurisprudencia/Home/ListaColecao/9?np=5">
+                                <div class="processo">
+                                    <span class="contagem">
+                                        5/68)
+                                    </span>
+                                    <span class="info">0010139-10.2009.4.03.6100</span>
+                                    <div class="dado info-publicacao" style="display:none">e-DJF3 Judicial 1 Data:13/12/2012 </div>
+                                    <span class="opcoes-processo">
+
+
+
+
+                                        <button class="btn-inteiro-teor" aria-label="Imprimir Inteiro Teor"
+                                                data-link="/jurisprudencia/Home/ImprimirDecisao/?nd=5"
+                                                data-tooltip="Imprimir Inteiro Teor" onclick="event.preventDefault()">
+                                            <i class="bi bi-file-earmark-font"></i>
+                                        </button>
+
+                                                    <button class="btn-integra-acordao" aria-label="Exibir a íntegra do acórdão"
+                                                            data-link="http://www.trf3.jus.br/trf3r/index.php?id=20&amp;op=resultado&amp;processo=00101391020094036100"
+                                                            data-tooltip="Exibir a íntegra do acórdão" onclick="event.preventDefault()">
+                                                        <i class="bi bi-file-earmark"></i>
+                                                    </button>
+                                            <button class="btn-consultar-processo" aria-label="Consultar Processo"
+                                                    data-link="https://web.trf3.jus.br/consultas/Internet/ConsultaProcessual/Processo?NumeroProcesso=00101391020094036100"
+                                                    data-tooltip="Consultar Processo" onclick="event.preventDefault()">
+                                                <i class="bi bi-search"></i>
+                                            </button>
+
+
+
+                                            <button class="btn-area-transferencia" aria-label="Copiar ementa para a área de transferência"
+                                                    data-tooltip="Copiar ementa para a área de transferência" onclick="event.preventDefault()">
+                                                <i class="bi bi-clipboard"></i>
+                                            </button>
+                                            <button class="btn-area-transferencia-inteor" aria-label="Copiar inteiro teor para a área de transferência"
+                                                    data-tooltip="Copiar inteiro teor para a área de transferência" onclick="event.preventDefault()">
+                                                <i class="bi bi-clipboard-plus"></i>
+                                            </button>
+
+                                        <button class="btn-pdf-acordao" aria-label="Exibir o documento em formato PDF para imprimir ou salvar"
+                                                data-link="/jurisprudencia/Home/ImprimirPDF/?nd=5"
+                                                data-tooltip="Exibir o documento em formato PDF para imprimir ou salvar" onclick="event.preventDefault()">
+                                            <i class="bi bi-printer"></i>
+                                        </button>
+                                    </span>
+                                </div>
+                                <div class="informacoes-basicas">
+                                    <span class="info">ApReeNec - APELA&#199;&#195;O/REMESSA NECESS&#193;RIA - 1743020</span>
+                                    <span class="info">SEXTA TURMA</span>
+                                    <span class="info">
+                                        JUIZ CONVOCADO HERBERT DE BRUYN
+                                    </span>
+                                    <span class="info">e-DJF3 Judicial 1 DATA:13/12/2012 </span>
+
+                                        <span class="info">Julgamento: 06/12/2012</span>
+
+
+                                </div>
+                                <div class="ementa">
+                                    <span class="info info-ementa">
+CONSTITUCIONAL - FORNECIMENTO DE <em>MEDICAMENTO</em> - RESPONSABILIDADE SOLIDÁRIA DOS ENTES FEDERATIVOS - <em>MEDICAMENTO</em> INDISPENSÁVEL À SAÚDE DO AUTOR.
+<br>1. O direito à saúde, constitucionalmente assegurado, revela-se como uma das pilastras sobre a qual se sustenta a Federação, o que levou o legislador constituinte a estabelecer um sistema único e integrado por todos os entes federados, cada um dentro de sua esfera de atribuição, para administrá-lo e executá-lo, seja de forma direta ou por intermédio de terceiros.
+<br>2. Impende assinalar a existência de expressa disposição constitucional sobre o dever de participação dos entes federados no financiamento do Sistema Único de Saúde, nos termos do art. 198, parágrafo único. Precedentes do C. STJ e desta E. Corte.
+<br>3. Não deixa dúvidas o inciso III do art. 5º da Lei nº 8.080/90 acerca da abrangência da obrigação do Estado no campo das prestações voltadas à saúde pública. Mostra-se, mesmo, cristalina a interpretação do dispositivo em comento ao elencar, dentre os objetivos do Sistema Único de Saúde SUS, "a assistência às pessoas por intermédio de ações de promoção, proteção e recuperação da saúde, com a realização integrada das ações assistenciais e das atividades preventivas".
+<br>4. De rigor o fornecimento gratuito do <em>medicamento</em> pleiteado.
+<br>5. Mantido o valor arbitrado na sentença, vez que condizentes com os balizamentos traçados pelo artigo 20, § 4º, do CPC.                                                                            </span>
+                                </div>
+
+
+                                    <div class="acordao" style="display: none">
+                                        <span class="info info-acordao">Vistos e relatados estes autos em que são partes as acima indicadas, decide a Egrégia Sexta Turma do Tribunal Regional Federal da 3ª Região, por unanimidade, negar provimento às apelações e à remessa oficial, nos termos do relatório e voto que ficam fazendo parte integrante do presente julgado.
+<br></span>
+                                    </div>
+                            </a>
+                        </li>
+                        <li class="acordao-retorno">
+                            <a class="link-acordao " href="/jurisprudencia/Home/ListaColecao/9?np=6">
+                                <div class="processo">
+                                    <span class="contagem">
+                                        6/68)
+                                    </span>
+                                    <span class="info">0014371-61.2011.4.03.0000</span>
+                                    <div class="dado info-publicacao" style="display:none">e-DJF3 Judicial 1 Data:19/12/2012 </div>
+                                    <span class="opcoes-processo">
+
+
+
+
+                                        <button class="btn-inteiro-teor" aria-label="Imprimir Inteiro Teor"
+                                                data-link="/jurisprudencia/Home/ImprimirDecisao/?nd=6"
+                                                data-tooltip="Imprimir Inteiro Teor" onclick="event.preventDefault()">
+                                            <i class="bi bi-file-earmark-font"></i>
+                                        </button>
+
+                                                    <button class="btn-integra-acordao" aria-label="Exibir a íntegra do acórdão"
+                                                            data-link="http://www.trf3.jus.br/trf3r/index.php?id=20&amp;op=resultado&amp;processo=00143716120114030000"
+                                                            data-tooltip="Exibir a íntegra do acórdão" onclick="event.preventDefault()">
+                                                        <i class="bi bi-file-earmark"></i>
+                                                    </button>
+                                            <button class="btn-consultar-processo" aria-label="Consultar Processo"
+                                                    data-link="https://web.trf3.jus.br/consultas/Internet/ConsultaProcessual/Processo?NumeroProcesso=00143716120114030000"
+                                                    data-tooltip="Consultar Processo" onclick="event.preventDefault()">
+                                                <i class="bi bi-search"></i>
+                                            </button>
+
+
+
+                                            <button class="btn-area-transferencia" aria-label="Copiar ementa para a área de transferência"
+                                                    data-tooltip="Copiar ementa para a área de transferência" onclick="event.preventDefault()">
+                                                <i class="bi bi-clipboard"></i>
+                                            </button>
+                                            <button class="btn-area-transferencia-inteor" aria-label="Copiar inteiro teor para a área de transferência"
+                                                    data-tooltip="Copiar inteiro teor para a área de transferência" onclick="event.preventDefault()">
+                                                <i class="bi bi-clipboard-plus"></i>
+                                            </button>
+
+                                        <button class="btn-pdf-acordao" aria-label="Exibir o documento em formato PDF para imprimir ou salvar"
+                                                data-link="/jurisprudencia/Home/ImprimirPDF/?nd=6"
+                                                data-tooltip="Exibir o documento em formato PDF para imprimir ou salvar" onclick="event.preventDefault()">
+                                            <i class="bi bi-printer"></i>
+                                        </button>
+                                    </span>
+                                </div>
+                                <div class="informacoes-basicas">
+                                    <span class="info">AI - AGRAVO DE INSTRUMENTO - 440167</span>
+                                    <span class="info">TERCEIRA TURMA</span>
+                                    <span class="info">
+                                        DESEMBARGADOR FEDERAL NERY JUNIOR
+                                    </span>
+                                    <span class="info">e-DJF3 Judicial 1 DATA:19/12/2012 </span>
+
+                                        <span class="info">Julgamento: 06/12/2012</span>
+
+
+                                </div>
+                                <div class="ementa">
+                                    <span class="info info-ementa">
+AGRAVO DE INSTRUMENTO - AÇÃO DE CONHECIMENTO - <em>MEDICAMENTO</em> - FORNECIMENTO GRATUITO - GARANTIA CONSTITUCIONAL- RESPONSABILIDADE SOLIDÁRIA DOS ENTES PÚBLICOS - AGRAVO IMPROVIDO.
+<br>1. Afasta-se a preliminar de ilegitimidade passiva da União. O Sistema Único de Saúde é financiado pela União, Estados-membros, Distrito Federal e Municípios, sendo solidária a responsabilidade dos referidos entes no cumprimento dos serviços públicos de saúde prestados à população.
+<br>2. O fornecimento gratuito de medicamentos deve atingir toda a medicação necessária ao tratamento dos necessitados, significando que não só são devidos os remédios padronizados pelo Ministério da Saúde, como todos aqueles que porventura sejam necessários às particularidades de cada paciente. A padronização significa que os medicamentos padronizados serão os habitualmente fornecidos, o que não impede que o SUS forneça outro tipo de <em>medicamento</em>, indispensável ao tratamento.
+<br>3. O direito ao <em>medicamento</em> pleiteado decorre de garantias constitucionais, como os direitos à vida (art. 5.º, caput, CF) e à saúde (arts. 6.º e 196, CF), entre outros, competindo a todos os entes federativos o seu fornecimento.
+<br>4. Restou comprovada a necessidade do <em>medicamento</em> nos autos de origem, tendo a autora, ora agravada, juntado relatórios médicos que atestam a enfermidade e receituário prescrevendo o tratamento, nos exatos termos do pedido, bem como atestando que o tratamento com o <em>medicamento</em> fornecido pelo SUS, qual seja, Insulina NPH já não se demonstra eficaz no tratamento da patologia que a acomete.
+<br>5. Agravo Regimental não conhecido e Agravo de Instrumento improvido.                                                                            </span>
+                                </div>
+
+
+                                    <div class="acordao" style="display: none">
+                                        <span class="info info-acordao">Vistos e relatados estes autos em que são partes as acima indicadas, decide a Egrégia Terceira Turma do Tribunal Regional Federal da 3ª Região, por unanimidade, não conhecer do agravo regimental e negar provimento ao agravo de instrumento, nos termos do relatório e voto que ficam fazendo parte integrante do presente julgado.
+<br></span>
+                                    </div>
+                            </a>
+                        </li>
+                        <li class="acordao-retorno">
+                            <a class="link-acordao " href="/jurisprudencia/Home/ListaColecao/9?np=7">
+                                <div class="processo">
+                                    <span class="contagem">
+                                        7/68)
+                                    </span>
+                                    <span class="info">0004203-12.2011.4.03.6107</span>
+                                    <div class="dado info-publicacao" style="display:none">e-DJF3 Judicial 1 Data:12/12/2012 </div>
+                                    <span class="opcoes-processo">
+
+
+
+
+                                        <button class="btn-inteiro-teor" aria-label="Imprimir Inteiro Teor"
+                                                data-link="/jurisprudencia/Home/ImprimirDecisao/?nd=7"
+                                                data-tooltip="Imprimir Inteiro Teor" onclick="event.preventDefault()">
+                                            <i class="bi bi-file-earmark-font"></i>
+                                        </button>
+
+                                                    <button class="btn-integra-acordao" aria-label="Exibir a íntegra do acórdão"
+                                                            data-link="http://www.trf3.jus.br/trf3r/index.php?id=20&amp;op=resultado&amp;processo=00042031220114036107"
+                                                            data-tooltip="Exibir a íntegra do acórdão" onclick="event.preventDefault()">
+                                                        <i class="bi bi-file-earmark"></i>
+                                                    </button>
+                                            <button class="btn-consultar-processo" aria-label="Consultar Processo"
+                                                    data-link="https://web.trf3.jus.br/consultas/Internet/ConsultaProcessual/Processo?NumeroProcesso=00042031220114036107"
+                                                    data-tooltip="Consultar Processo" onclick="event.preventDefault()">
+                                                <i class="bi bi-search"></i>
+                                            </button>
+
+
+
+                                            <button class="btn-area-transferencia" aria-label="Copiar ementa para a área de transferência"
+                                                    data-tooltip="Copiar ementa para a área de transferência" onclick="event.preventDefault()">
+                                                <i class="bi bi-clipboard"></i>
+                                            </button>
+                                            <button class="btn-area-transferencia-inteor" aria-label="Copiar inteiro teor para a área de transferência"
+                                                    data-tooltip="Copiar inteiro teor para a área de transferência" onclick="event.preventDefault()">
+                                                <i class="bi bi-clipboard-plus"></i>
+                                            </button>
+
+                                        <button class="btn-pdf-acordao" aria-label="Exibir o documento em formato PDF para imprimir ou salvar"
+                                                data-link="/jurisprudencia/Home/ImprimirPDF/?nd=7"
+                                                data-tooltip="Exibir o documento em formato PDF para imprimir ou salvar" onclick="event.preventDefault()">
+                                            <i class="bi bi-printer"></i>
+                                        </button>
+                                    </span>
+                                </div>
+                                <div class="informacoes-basicas">
+                                    <span class="info">Ap. - APELA&#199;&#195;O CRIMINAL - 50225</span>
+                                    <span class="info">QUINTA TURMA - 1A. SEÇÃO</span>
+                                    <span class="info">
+                                        DESEMBARGADOR FEDERAL LUIZ STEFANINI
+                                    </span>
+                                    <span class="info">e-DJF3 Judicial 1 DATA:12/12/2012 </span>
+
+                                        <span class="info">Julgamento: 03/12/2012</span>
+
+
+                                </div>
+                                <div class="ementa">
+                                    <span class="info info-ementa">
+PENAL - CONSTITUCIONAL - PROCESSO CIVIL - CRIME DE INTRODUÇÃO CLANDESTINA NO PAÍS DE MEDICAMENTOS FALSIFICADOS E SEM REGISTRO NA ANVISA - ARTIGO 273, §1º-B, INCISO I, DO CÓDIGO PENAL - COMPETÊNCIA DA JUSTIÇA FEDERAL RECONHECIDA - MATERIALIDADE E AUTORIA COMPROVADAS - DOSIMETRIA DA PENA - PRECEITO SECUNDÁRIO DO ARTIGO 273 DO CÓDIGO PENAL - ALEGAÇÃO DE OFENSA AO PRINCÍPIO CONSTITUCIONAL DA PROPORCIONALIDADE - QUESTÃO PREJUDICIAL - CLÁUSULA DE RESERVA DE PLENÁRIO - SUSPENSÃO DO FEITO ATÉ O JULGAMENTO DA ARGUIÇÃO DE INCONSTITUCIONALIDADE.
+<br>1. Primeiramente, ainda que este relator não desconheça a existência de arguição de inconstitucionalidade pendente de julgamento pelo Órgão Especial desta Corte, relativamente ao "quantum" da pena mínima cominada no preceito secundário do artigo 273, §1º-B, inciso I, do Código Penal, esclareço que no bojo dos recursos interpostos pelas partes há pedidos de nulidade da ação penal e de absolvição do réu, inclusive, pelo órgão ministerial.
+<br>2. Assim, a fim de evitar possível prorrogação indevida da prisão cautelar do acusado, entendo que esta E. Quinta Turma deverá analisar, por ora, tão somente as questões relacionadas à conduta a ele imputada, ou seja, a materialidade, a autoria e o dolo, mesmo porque, caso os meus pares entendam seja o caso de anulação da r. sentença "a quo", ou até mesmo de absolvição, o acusado não será prejudicado pela manutenção da prisão preventiva.
+<br>3. Dessa forma, passo a analisar as preliminares e o mérito dos recursos, esclarecendo que a análise da dosimetria da pena, dependendo da decisão deste Colegiado quanto à conduta imputada ao réu, será realizada após o julgamento pelo Órgão Especial do incidente supra destacado.
+<br>4. Da análise dos autos, verifica-se que os medicamentos apreendidos na posse do acusado foram adquiridos no Paraguai. Verificada a procedência estrangeira dos medicamentos, configura-se a competência da Justiça Federal. Precedente.
+<br>5. O título que legitima a manutenção da custódia cautelar do paciente é a condenação penal da sentença de fls. 286/293. Outrossim, diante da interposição de recurso de apelação por parte da defesa e do Ministério Público Federal, que versam, inclusive, sobre a autoria delitiva, a questão da liberdade provisória será apreciada quando da análise do mérito da presente ação penal.
+<br>6. Materialidade delitiva efetivamente comprovada por meio do Auto de Apresentação e Apreensão de fls. 07/09, em que descritas todas as mercadorias apreendidas, dentre as quais as cartelas de comprimido "Pramil", "Desobesi-M" e "Eroxil 20".
+<br>7. Ainda, o Laudo de Perícia Criminal Federal (Química Forense) de fls. 105/112 dá conta de que os medicamentos não possuem indicação de origem nas embalagens, e que o produto "Pramil" possui como fabricante uma empresa de origem paraguaia.
+<br>8. Relativamente ao <em>medicamento</em> "Desobesi-M", os peritos atestaram tratar-se de produto falsificado (fl. 110). Os demais produtos analisados - "Pramil" e "Eroxil" - não possuem registro junto à ANVISA, sendo proibida a sua importação, comércio e uso em todo o território nacional (fl. 111).
+<br>9. Autoria delitiva demonstrada.
+<br>10. Os policiais militares responsáveis pela prisão em flagrante do acusado confirmaram, harmonicamente, em sede policial e em Juízo, que Evalcy, no momento da abordagem, afirmou que as caixas de som pertenciam a ele, somente desconhecendo seu conteúdo, a despeito de terem divergido quanto à presença do réu quando da abertura de sua mala.
+<br>11. O fato de o réu ter negado em Juízo a propriedade de referidas caixas evidencia a autodefesa por ele exercida, sem o condão, entretanto, de afastar a credibilidade das declarações prestadas pelos policiais, em meio aos demais elementos de prova coligados aos autos.
+<br>12. É de se notar que, estranhamente, o acusado permaneceu em silêncio por ocasião de seu interrogatório policial, não procurando esclarecer a história sustentada no interrogatório prestado em Juízo, tampouco as agressões que teria sofrido no momento da abordagem realizada pelos policiais militares.
+<br>13. Com efeito, não há credibilidade e verossimilhança nas informações prestadas pelo réu, nos termos como decidido.
+<br>14. Outrossim, não que há que se falar em cerceamento de defesa pelo indeferimento das diligências requeridas pelo "Parquet" de primeiro grau, na medida em que o MM. Juízo "a quo" fundamentou o decreto condenatório em outras provas colhidas durante a instrução processual, reputadas suficientes, entendendo ser desnecessária, portanto, a realização das referidas diligências.
+<br>15. Por outro lado, verifico que, de fato, a empresa Planalto Transportes Ltda. forneceu a relação dos passageiros que embarcaram no dia 04/11/2011, às 23h00m, em Cascavel/PR, na linha Santa Maria/RS x Palmas/TO (fl. 253), sendo estes os dados dos quais dispunha, razão pela qual se mostrou desnecessário o envio de novo ofício àquela empresa, como bem decidido pelo MM. Juízo sentenciante à fl. 260.
+<br>16. O "Parquet" federal de primeiro grau, em sede de apelação, insurge-se contra a condenação pela prática do delito descrito no artigo 273, §1º-B, inciso I, do Código Penal, suscitando, ademais, a inconstitucionalidade do preceito secundário constante do referido artigo.
+<br>17. Em decisão proferida na Sessão de Julgamento de 27/08/2012, esta Colenda Quinta Turma, no julgamento da apelação criminal 2009.61.24.000793-5 (0000793-60.2009.4.03.6124), decidiu, por unanimidade, suspender o julgamento do feito e remetê-lo ao Órgão Especial desta Corte Regional, para análise e julgamento da arguição de inconstitucionalidade, em razão de ofensa ao princípio da proporcionalidade, no que diz respeito à pena prevista no artigo 273, do Código Penal, nos termos do artigo 97 da Constituição Federal, dos artigos 480 e seguintes do Código de Processo Civil, da Súmula Vinculante n.º 10 do Supremo Tribunal Federal e do artigo 17, parágrafo único, do Regimento Interno deste Tribunal.
+<br>18. Em observância à cláusula de reserva de Plenário, e tratando-se a arguição de inconstitucionalidade de questão prejudicial ao julgamento da presente apelação criminal, uma vez que a decisão lá proferida deverá ser observada por esta Turma Julgadora, consoante o disposto no artigo 176, do Regimento Interno dessa Corte Regional, entendo deva ser determinada a suspensão do presente julgamento, até que sobrevenha decisão na arguição de inconstitucionalidade suscitada nos autos do processo n.º 2009.61.24.000793-5.
+<br>19. Afastamento das preliminares arguidas.
+<br>20. No mérito, manutenção da condenação do réu, nos exatos termos da r. sentença "a quo", e suspensão do julgamento da presente apelação criminal, no tocante exclusivamente à dosimetria da pena.                                                                            </span>
+                                </div>
+
+
+                                    <div class="acordao" style="display: none">
+                                        <span class="info info-acordao">Vistos e relatados estes autos em que são partes as acima indicadas, decide a Egrégia Quinta Turma do Tribunal Regional Federal da 3ª Região, por maioria, afastar as preliminares arguidas, nos termos do voto do Relator, acompanhado pelo Des. Fed. Andre Nekatschalow, vencido o Juiz Federal Rubens Calixto e, no mérito, por maioria, manter a condenação do réu, nos exatos termos da r. sentença "a quo", e suspender o julgamento do presente feito, no tocante exclusivamente à dosimetria da pena, até que a questão prejudicial seja decidida pelo Órgão Especial dessa Colenda Corte Regional, nos termos do voto do Relator, acompanhado pelo Des. Fed. Andre Nekatschalow, vencido o Juiz Federal Rubens Calixto que dava provimento à apelação para absolver o réu.
+<br></span>
+                                    </div>
+                            </a>
+                        </li>
+                        <li class="acordao-retorno">
+                            <a class="link-acordao " href="/jurisprudencia/Home/ListaColecao/9?np=8">
+                                <div class="processo">
+                                    <span class="contagem">
+                                        8/68)
+                                    </span>
+                                    <span class="info">0017112-74.2011.4.03.0000</span>
+                                    <div class="dado info-publicacao" style="display:none">e-DJF3 Judicial 1 Data:23/11/2012 </div>
+                                    <span class="opcoes-processo">
+
+
+
+
+                                        <button class="btn-inteiro-teor" aria-label="Imprimir Inteiro Teor"
+                                                data-link="/jurisprudencia/Home/ImprimirDecisao/?nd=8"
+                                                data-tooltip="Imprimir Inteiro Teor" onclick="event.preventDefault()">
+                                            <i class="bi bi-file-earmark-font"></i>
+                                        </button>
+
+                                                    <button class="btn-integra-acordao" aria-label="Exibir a íntegra do acórdão"
+                                                            data-link="http://www.trf3.jus.br/trf3r/index.php?id=20&amp;op=resultado&amp;processo=00171127420114030000"
+                                                            data-tooltip="Exibir a íntegra do acórdão" onclick="event.preventDefault()">
+                                                        <i class="bi bi-file-earmark"></i>
+                                                    </button>
+                                            <button class="btn-consultar-processo" aria-label="Consultar Processo"
+                                                    data-link="https://web.trf3.jus.br/consultas/Internet/ConsultaProcessual/Processo?NumeroProcesso=00171127420114030000"
+                                                    data-tooltip="Consultar Processo" onclick="event.preventDefault()">
+                                                <i class="bi bi-search"></i>
+                                            </button>
+
+
+
+                                            <button class="btn-area-transferencia" aria-label="Copiar ementa para a área de transferência"
+                                                    data-tooltip="Copiar ementa para a área de transferência" onclick="event.preventDefault()">
+                                                <i class="bi bi-clipboard"></i>
+                                            </button>
+                                            <button class="btn-area-transferencia-inteor" aria-label="Copiar inteiro teor para a área de transferência"
+                                                    data-tooltip="Copiar inteiro teor para a área de transferência" onclick="event.preventDefault()">
+                                                <i class="bi bi-clipboard-plus"></i>
+                                            </button>
+
+                                        <button class="btn-pdf-acordao" aria-label="Exibir o documento em formato PDF para imprimir ou salvar"
+                                                data-link="/jurisprudencia/Home/ImprimirPDF/?nd=8"
+                                                data-tooltip="Exibir o documento em formato PDF para imprimir ou salvar" onclick="event.preventDefault()">
+                                            <i class="bi bi-printer"></i>
+                                        </button>
+                                    </span>
+                                </div>
+                                <div class="informacoes-basicas">
+                                    <span class="info">AI - AGRAVO DE INSTRUMENTO - 442590</span>
+                                    <span class="info">TERCEIRA TURMA</span>
+                                    <span class="info">
+                                        DESEMBARGADOR FEDERAL NERY JUNIOR
+                                    </span>
+                                    <span class="info">e-DJF3 Judicial 1 DATA:23/11/2012 </span>
+
+                                        <span class="info">Julgamento: 08/11/2012</span>
+
+
+                                </div>
+                                <div class="ementa">
+                                    <span class="info info-ementa">
+AGRAVO DE INSTRUMENTO - AÇÃO DE CONHECIMENTO - <em>MEDICAMENTO</em> - FORNECIMENTO GRATUITO - GARANTIA CONSTITUCIONAL- RESPONSABILIDADE SOLIDÁRIA DOS ENTES PÚBLICOS - COMPROVAÇÃO DA NECESSIDADE - AGRAVO IMPROVIDO
+<br>1. Afasta-se a preliminar de ilegitimidade passiva da União. O Sistema Único de Saúde é financiado pela União, Estados-membros, Distrito Federal e Municípios, sendo solidária a responsabilidade dos referidos entes no cumprimento dos serviços públicos de saúde prestados à população. Precedentes.
+<br>2. O fornecimento gratuito de medicamentos deve atingir toda a medicação necessária ao tratamento dos necessitados, significando que não só são devidos os remédios padronizados pelo Ministério da Saúde, como todos aqueles que porventura sejam necessários às particularidades de cada paciente. A padronização significa que os medicamentos padronizados serão os habitualmente fornecidos, o que não impede que o SUS forneça outro tipo de <em>medicamento</em>, indispensável ao tratamento.
+<br>3. Sob a óptica de princípios constitucionais, como os da dignidade humana, do direito à saúde, da assistência social e da solidariedade, infere-se a lesão grave e de difícil reparação que se mostra, na verdade, na expectativa de vida do paciente, autorizando a antecipação dos efeitos da tutela recursal nos autos de origem, nos termos em que concedida pela decisão ora agravada.
+<br>4. O direito ao <em>medicamento</em> pleiteado decorre de garantias constitucionais, como os direitos à vida (art. 5.º, caput, CF) e à saúde (arts. 6.º e 196, CF), entre outros, competindo a todos os entes federativos o seu fornecimento. Precedente.
+<br>5. Restou comprovada a necessidade do <em>medicamento</em> nos autos de origem, tendo a autora, ora agravada, juntado receituário médico prescrevendo o tratamento, nos exatos termos do pedido (fl. 24).
+<br>6. Agravo Regimental não conhecido e Agravo de Instrumento improvido                                                                            </span>
+                                </div>
+
+
+                                    <div class="acordao" style="display: none">
+                                        <span class="info info-acordao">Vistos e relatados estes autos em que são partes as acima indicadas, decide a Egrégia Terceira Turma do Tribunal Regional Federal da 3ª Região, por unanimidade, não conhecer do agravo regimental e negar provimento ao agravo de instrumento, nos termos do relatório e voto que ficam fazendo parte integrante do presente julgado.
+<br></span>
+                                    </div>
+                            </a>
+                        </li>
+                        <li class="acordao-retorno">
+                            <a class="link-acordao " href="/jurisprudencia/Home/ListaColecao/9?np=9">
+                                <div class="processo">
+                                    <span class="contagem">
+                                        9/68)
+                                    </span>
+                                    <span class="info">0027076-03.2006.4.03.6100</span>
+                                    <div class="dado info-publicacao" style="display:none">e-DJF3 Judicial 1 Data:22/11/2012 </div>
+                                    <span class="opcoes-processo">
+
+
+
+
+                                        <button class="btn-inteiro-teor" aria-label="Imprimir Inteiro Teor"
+                                                data-link="/jurisprudencia/Home/ImprimirDecisao/?nd=9"
+                                                data-tooltip="Imprimir Inteiro Teor" onclick="event.preventDefault()">
+                                            <i class="bi bi-file-earmark-font"></i>
+                                        </button>
+
+                                                    <button class="btn-integra-acordao" aria-label="Exibir a íntegra do acórdão"
+                                                            data-link="http://www.trf3.jus.br/trf3r/index.php?id=20&amp;op=resultado&amp;processo=00270760320064036100"
+                                                            data-tooltip="Exibir a íntegra do acórdão" onclick="event.preventDefault()">
+                                                        <i class="bi bi-file-earmark"></i>
+                                                    </button>
+                                            <button class="btn-consultar-processo" aria-label="Consultar Processo"
+                                                    data-link="https://web.trf3.jus.br/consultas/Internet/ConsultaProcessual/Processo?NumeroProcesso=00270760320064036100"
+                                                    data-tooltip="Consultar Processo" onclick="event.preventDefault()">
+                                                <i class="bi bi-search"></i>
+                                            </button>
+
+
+
+                                            <button class="btn-area-transferencia" aria-label="Copiar ementa para a área de transferência"
+                                                    data-tooltip="Copiar ementa para a área de transferência" onclick="event.preventDefault()">
+                                                <i class="bi bi-clipboard"></i>
+                                            </button>
+                                            <button class="btn-area-transferencia-inteor" aria-label="Copiar inteiro teor para a área de transferência"
+                                                    data-tooltip="Copiar inteiro teor para a área de transferência" onclick="event.preventDefault()">
+                                                <i class="bi bi-clipboard-plus"></i>
+                                            </button>
+
+                                        <button class="btn-pdf-acordao" aria-label="Exibir o documento em formato PDF para imprimir ou salvar"
+                                                data-link="/jurisprudencia/Home/ImprimirPDF/?nd=9"
+                                                data-tooltip="Exibir o documento em formato PDF para imprimir ou salvar" onclick="event.preventDefault()">
+                                            <i class="bi bi-printer"></i>
+                                        </button>
+                                    </span>
+                                </div>
+                                <div class="informacoes-basicas">
+                                    <span class="info">ApReeNec - APELA&#199;&#195;O/REMESSA NECESS&#193;RIA - 308607</span>
+                                    <span class="info">SEXTA TURMA</span>
+                                    <span class="info">
+                                        DESEMBARGADOR FEDERAL MAIRAN MAIA
+                                    </span>
+                                    <span class="info">e-DJF3 Judicial 1 DATA:22/11/2012 </span>
+
+                                        <span class="info">Julgamento: 08/11/2012</span>
+
+
+                                </div>
+                                <div class="ementa">
+                                    <span class="info info-ementa">
+CONSTITUCIONAL E PROCESSUAL CIVIL - MANDADO DE SEGURANÇA - FORNECIMENTO DE <em>MEDICAMENTO</em> - ADEQUAÇÃO DA VIA ELEITA - INTERRUPÇÃO DO TRATAMENTO - IRRELEVÂNCIA - DIREITO À SAÚDE - DEVER DO ESTADO - OBRIGAÇÃO SOLIDÁRIA ENTRE OS ENTES FEDERATIVOS (SUS).
+<br>1. A liquidez e certeza do direito referem-se à possibilidade de sua comprovação de plano, mediante prova pré-constituída. In casu, a impetrante apresentou prova documental suficiente e bastante ao reconhecimento, ao menos em tese, do direito líquido e certo postulado, sendo desnecessária a dilação probatória.
+<br>2. A despeito do caráter eminentemente satisfativo da medida, compete a este Tribunal pronunciar-se sobre o mérito da questão posta em exame, ante sua relevância e para que o interesse do impetrante seja efetivamente assegurado. O direito almejado foi reconhecido pelo Juízo singular pelo tempo em que a impetrante necessitou fazer uso do fármaco, razão pela qual a presente ação trouxe pleno resultado útil. Sendo assim, não se há falar de ausência de interesse de agir.
+<br>3. O direito à saúde, constitucionalmente assegurado, revela-se como uma das pilastras sobre a qual se sustenta a Federação, o que levou o legislador constituinte a estabelecer um sistema único e integrado por todos os entes federados, cada um dentro de sua esfera de atribuição, para administrá-lo e executá-lo, seja de forma direta ou por intermédio de terceiros.
+<br>4. Impende assinalar a existência de expressa disposição constitucional sobre o dever de participação dos entes federados no financiamento do Sistema Único de Saúde, nos termos do art. 198, parágrafo único. Precedentes do C. STJ e desta E. Corte. Legitimidade do Estado de São Paulo e da União Federal.
+<br>5. A UNIFESP, ao firmar convênio de assistência integral à saúde com o Governo de São Paulo, comprometeu-se a prestar, com a intervenção da Sociedade Paulista para o Desenvolvimento da Medicina, serviços médico-hospitalares e ambulatoriais aos cidadãos necessitados, dentre os quais se insere o fornecimento de medicamentos. Legitimidade presente.
+<br>6. Não deixa dúvidas o inciso III do art. 5º da Lei nº 8.080/90 acerca da abrangência da obrigação do Estado no campo das prestações voltadas à saúde pública. Mostra-se, mesmo, cristalina a interpretação do dispositivo em comento ao elencar, dentre os objetivos do Sistema Único de Saúde SUS, "a assistência às pessoas por intermédio de ações de promoção, proteção e recuperação da saúde, com a realização integrada das ações assistenciais e das atividades preventivas".
+<br>7. Remessa oficial e apelações improvidas.                                                                            </span>
+                                </div>
+
+
+                                    <div class="acordao" style="display: none">
+                                        <span class="info info-acordao">Vistos e relatados estes autos em que são partes as acima indicadas, decide a Egrégia Sexta Turma do Tribunal Regional Federal da 3ª Região, por unanimidade, negar provimento à remessa oficial e às apelações, nos termos do relatório e voto que ficam fazendo parte integrante do presente julgado.
+<br></span>
+                                    </div>
+                            </a>
+                        </li>
+                        <li class="acordao-retorno">
+                            <a class="link-acordao " href="/jurisprudencia/Home/ListaColecao/9?np=10">
+                                <div class="processo">
+                                    <span class="contagem">
+                                        10/68)
+                                    </span>
+                                    <span class="info">0018978-29.2006.4.03.6100</span>
+                                    <div class="dado info-publicacao" style="display:none">e-DJF3 Judicial 1 Data:22/11/2012 </div>
+                                    <span class="opcoes-processo">
+
+
+
+
+                                        <button class="btn-inteiro-teor" aria-label="Imprimir Inteiro Teor"
+                                                data-link="/jurisprudencia/Home/ImprimirDecisao/?nd=10"
+                                                data-tooltip="Imprimir Inteiro Teor" onclick="event.preventDefault()">
+                                            <i class="bi bi-file-earmark-font"></i>
+                                        </button>
+
+                                                    <button class="btn-integra-acordao" aria-label="Exibir a íntegra do acórdão"
+                                                            data-link="http://www.trf3.jus.br/trf3r/index.php?id=20&amp;op=resultado&amp;processo=00189782920064036100"
+                                                            data-tooltip="Exibir a íntegra do acórdão" onclick="event.preventDefault()">
+                                                        <i class="bi bi-file-earmark"></i>
+                                                    </button>
+                                            <button class="btn-consultar-processo" aria-label="Consultar Processo"
+                                                    data-link="https://web.trf3.jus.br/consultas/Internet/ConsultaProcessual/Processo?NumeroProcesso=00189782920064036100"
+                                                    data-tooltip="Consultar Processo" onclick="event.preventDefault()">
+                                                <i class="bi bi-search"></i>
+                                            </button>
+
+
+
+                                            <button class="btn-area-transferencia" aria-label="Copiar ementa para a área de transferência"
+                                                    data-tooltip="Copiar ementa para a área de transferência" onclick="event.preventDefault()">
+                                                <i class="bi bi-clipboard"></i>
+                                            </button>
+                                            <button class="btn-area-transferencia-inteor" aria-label="Copiar inteiro teor para a área de transferência"
+                                                    data-tooltip="Copiar inteiro teor para a área de transferência" onclick="event.preventDefault()">
+                                                <i class="bi bi-clipboard-plus"></i>
+                                            </button>
+
+                                        <button class="btn-pdf-acordao" aria-label="Exibir o documento em formato PDF para imprimir ou salvar"
+                                                data-link="/jurisprudencia/Home/ImprimirPDF/?nd=10"
+                                                data-tooltip="Exibir o documento em formato PDF para imprimir ou salvar" onclick="event.preventDefault()">
+                                            <i class="bi bi-printer"></i>
+                                        </button>
+                                    </span>
+                                </div>
+                                <div class="informacoes-basicas">
+                                    <span class="info">ApReeNec - APELA&#199;&#195;O/REMESSA NECESS&#193;RIA - 1375941</span>
+                                    <span class="info">SEXTA TURMA</span>
+                                    <span class="info">
+                                        DESEMBARGADOR FEDERAL MAIRAN MAIA
+                                    </span>
+                                    <span class="info">e-DJF3 Judicial 1 DATA:22/11/2012 </span>
+
+                                        <span class="info">Julgamento: 08/11/2012</span>
+
+
+                                </div>
+                                <div class="ementa">
+                                    <span class="info info-ementa">
+CONSTITUCIONAL E PROCESSUAL CIVIL - AGRAVO RETIDO - NÃO CONHECIMENTO - DIREITO À SAÚDE - DEVER DO ESTADO - OBRIGAÇÃO SOLIDÁRIA ENTRE OS ENTES FEDERATIVOS (SUS) - LEGITIMIDADE PASSIVA AD CAUSAM - CHAMAMENTO AO PROCESSO - INAPLICABILIDADE - ANTECIPAÇÃO DE TUTELA - CABIMENTO - <em>MEDICAMENTO</em> INDISPENSÁVEL À SAÚDE DO AUTOR - FORNECIMENTO GRATUITO.
+<br>1. Prejudicada a apreciação do agravo retido, porquanto a matéria nele ventilada se confunde com a deduzida na apelação. Recurso não conhecido.
+<br>2. O direito à saúde, constitucionalmente assegurado, revela-se como uma das pilastras sobre a qual se sustenta a Federação, o que levou o legislador constituinte a estabelecer um sistema único e integrado por todos os entes federados, cada um dentro de sua esfera de atribuição, para administrá-lo e executá-lo, seja de forma direta ou por intermédio de terceiros.
+<br>3. Impende assinalar a existência de expressa disposição constitucional sobre o dever de participação dos entes federados no financiamento do Sistema Único de Saúde, nos termos do art. 198, parágrafo único. Precedentes do C. STJ e desta E. Corte. Legitimidade passiva da União Federal.
+<br>4. Incabível, nessa fase processual, o chamamento ao processo dos demais entes federativos, sob pena de tornar inócua a tutela constitucional ao direito fundamental à saúde, que reclama, por sua própria natureza, celeridade na prestação jurisdicional.
+<br>5. Uma vez preenchidos os requisitos do art. 273 do CPC, revela-se cabível a concessão de tutela antecipada em face Fazenda Pública, não se aplicando à hipótese as restrições elencadas no art. 1º da Lei nº 9.494/97.
+<br>6. Não deixa dúvidas o inciso III do art. 5º da Lei nº 8.080/90 acerca da abrangência da obrigação do Estado no campo das prestações voltadas à saúde pública. Mostra-se, mesmo, cristalina a interpretação do dispositivo em comento ao elencar, dentre os objetivos do Sistema Único de Saúde SUS, "a assistência às pessoas por intermédio de ações de promoção, proteção e recuperação da saúde, com a realização integrada das ações assistenciais e das atividades preventivas".
+<br>7. De rigor o fornecimento gratuito do <em>medicamento</em> pleiteado.                                                                            </span>
+                                </div>
+
+
+                                    <div class="acordao" style="display: none">
+                                        <span class="info info-acordao">Vistos e relatados estes autos em que são partes as acima indicadas, decide a Egrégia Sexta Turma do Tribunal Regional Federal da 3ª Região, por unanimidade, não conhecer do agravo retido e negar provimento à remessa oficial e à apelação, nos termos do relatório e voto que ficam fazendo parte integrante do presente julgado.
+<br></span>
+                                    </div>
+                            </a>
+                        </li>
+            </ol>
+        </div>
+    </section>
+
+    
+
+
+
+
+
+<section class="dados-resultados">
+    <section class="secao-total">
+        <span class="qtd-pagina">1</span> ~ <span class="qtd-total">68</span>
+    </section>
+    <section class="secao-paginas">
+            Páginas: 
+                    <a class="muda-pagina atual" href="/jurisprudencia/Home/ListaResumida/2?np=1" data-pagina="1">1</a>
+                    <a class="muda-pagina" href="/jurisprudencia/Home/ListaResumida/2?np=2" data-pagina="2">2</a>
+                    <a class="muda-pagina" href="/jurisprudencia/Home/ListaResumida/2?np=3" data-pagina="3">3</a>
+                    <a class="muda-pagina" href="/jurisprudencia/Home/ListaResumida/2?np=4" data-pagina="4">4</a>
+                    <a class="muda-pagina" href="/jurisprudencia/Home/ListaResumida/2?np=5" data-pagina="5">5</a>
+                    <a class="muda-pagina" href="/jurisprudencia/Home/ListaResumida/2?np=6" data-pagina="6">6</a>
+                    <a class="muda-pagina" href="/jurisprudencia/Home/ListaResumida/2?np=7" data-pagina="7">7</a>
+    </section>
+    <section class="secao-por-pagina">
+        <span class="qtd-pagina">
+            <select class="cmb-qtde-por-pagina">
+                <option value="10" selected>10</option>
+                <option value="30" >30</option>
+                <option value="50" >50</option>
+            </select>
+        </span> resultados por página.
+        Mostrando <span class="qtd-total">10</span> resultado(s).
+        <span class="carregando-mudanca-paginas"></span>
+    </section>
+</section>
+
+</div>
+
+    </main>
+
+    
+
+<footer class="rodape-principal">
+    <div class="container">
+        <ul class="lista-servicos">
+            <li class="item-lista-servicos">
+                Sites da 3ª Região:
+                <span class="sites-lista">
+                    <a href="https://www.trf3.jus.br/">TRF3</a> |
+                    <a href="https://www.jfsp.jus.br/">São Paulo</a> |
+                    <a href="https://www.jfms.jus.br/">Mato Grosso do Sul</a>
+                </span>
+            </li>
+            <li class="item-lista-servicos">
+                Tribunais Superiores:
+                <ul class="lista-interna">
+                    <li class="item-interno">
+                        <a href="https://www.cjf.jus.br/">Conselho da Justiça Federal</a>
+                    </li>
+                    <li class="item-interno">
+                        <a href="https://www.stj.jus.br/">Superior Tribunal de Justiça</a>
+                    </li>
+                    <li class="item-interno">
+                        <a href="https://portal.stf.jus.br/">Supremo Tribunal Federal</a>
+                    </li>
+                    <li class="item-interno">
+                        <a href="https://www.cnj.jus.br/">Conselho Nacional de Justiça</a>
+                    </li>
+                </ul>
+            </li>
+            <li class="item-lista-servicos">
+                Outras Jurisprudências:
+                <ul class="lista-interna">
+                    <li class="item-interno">
+                        <a href="https://www2.cjf.jus.br/jurisprudencia/unificada/">Jurisprudência Unificada do CJF</a>
+                    </li>
+                    
+                    <li class="item-interno">
+                        <a href="https://jurisprudencia.cjf.jus.br/tnu/index.xhtml">Jurisprudência Unificada da TNU (até Junho de 2017)</a>
+                    </li>
+                    <li class="item-interno">
+                        <a href="https://eproctnu-jur.cjf.jus.br">Jurisprudência Unificada da TNU (a partir de Julho de 2017)</a>
+                    </li>
+
+                    <li class="item-interno">
+                        <a href="https://www.trf3.jus.br/diretoria-geral/biblioteca/setor-de-apoio-a-jurisprudencia/sumulas-do-trf3">Súmulas do TRF3</a>
+                    </li>
+                </ul>
+            </li>
+            <li class="item-lista-servicos">
+                Contato:
+                <span class="sites-lista">
+                    <a href="mailto:jurisprudencia@trf3.jus.br">jurisprudencia@trf3.jus.br</a>
+                </span>
+            </li>
+        </ul>
+    </div>
+</footer>
+
+
+<script type="text/javascript"  src="/WEDDgh/Q/4/ahLoPBfHacd1/JhEiXXfV0VbfSzc1/Z0xzNEUp/QScpDi/laNjU"></script><link rel="stylesheet" type="text/css"  href="/WEDDgh/Q/4/ahLoPBfHacd1/JhEi/SltoNEUp/CEkXXx/YVHnBX"><script  src="/WEDDgh/Q/4/ahLoPBfHacd1/JhEi/SltoNEUp/OwQUNH/AaSWEo" async defer></script><div id="sec-overlay" style="display:none;"><div id="sec-container"></div></div><noscript><img src="https://web.trf3.jus.br/akam/13/pixel_511cd6bd?a=dD03MGQyZDE0MTEwOGI4Y2Q5M2ZiZmFiZjE2YzA5MGIyZDdkMWY4Y2IwJmpzPW9mZg==" style="visibility: hidden; position: absolute; left: -999px; top: -999px;" /></noscript></body>
+</html>

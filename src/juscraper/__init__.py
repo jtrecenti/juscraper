@@ -54,11 +54,10 @@ def scraper(sigla: str, *args: Any, **kwargs: Any):
     """
     Factory that returns the correct scraper.
 
-    Examples
-    --------
-    >>> import juscraper as jus
-    >>> tjsp = jus.scraper("tjsp")
-    >>> jusbr = jus.scraper("jusbr")
+    Examples: Exemplo
+        >>> import juscraper as jus
+        >>> tjsp = jus.scraper("tjsp")
+        >>> jusbr = jus.scraper("jusbr")
     """
     sigla = sigla.lower()
     if sigla not in _SCRAPERS:

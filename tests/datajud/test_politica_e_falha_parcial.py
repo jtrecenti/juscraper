@@ -113,17 +113,6 @@ def test_politica_com_timeout_valido_e_aceita(timeout, esperado):
     assert scraper._perfis_http["busca"].timeout == esperado  # noqa: SLF001
 
 
-@pytest.mark.parametrize(
-    "politica",
-    [{"busca": {"max_retries": 5}}, {"busca": {"timeout": -1}}, {"listagem": {"timeout": 90}}, {"busca": "abc"}],
-)
-def test_politica_recusada_nao_cria_diretorio_temporario(mocker, politica):
-    mkdtemp = mocker.patch.object(datajud_client.tempfile, "mkdtemp")
-    with pytest.raises(ValueError):
-        jus.scraper("datajud", politica=politica)
-    mkdtemp.assert_not_called()
-
-
 @pytest.mark.parametrize("ajuste", ["abc", 5, None, [("timeout", 90)]])
 def test_politica_com_ajuste_que_nao_e_dict_levanta(ajuste):
     # Sem pular o ajuste que não é dict, a checagem de campos itera o valor:

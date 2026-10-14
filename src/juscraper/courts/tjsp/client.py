@@ -3,14 +3,13 @@ from __future__ import annotations
 
 import logging
 import shutil
-import tempfile
-import warnings
 from pathlib import Path
 from typing import Any, ClassVar, Literal
 
 import pandas as pd
 from pydantic import BaseModel
 
+from ...core.avisos import avisar
 from ...utils.params import (
     SEARCH_ALIASES,
     apply_input_pipeline_search,
@@ -150,10 +149,8 @@ class TJSPScraper(EsajSearchScraper):
         return self._listar_arvore(f"varas_{grau}")
 
     def set_download_path(self, path: str | None = None):
-        """Set download base dir; creates a tempdir when ``path`` is ``None``."""
-        if path is None:
-            path = tempfile.mkdtemp()
-        self.download_path = path
+        """Set download base dir; with ``None``, a tempdir is created on first use."""
+        self._download_path = path
 
     def set_method(self, method: Literal["html", "api"]):
         """Validate and store the access method (``'html'`` or ``'api'``) for cpopg/cposg."""
@@ -234,7 +231,7 @@ class TJSPScraper(EsajSearchScraper):
             ``orgao_julgador``); ``int`` com o total de resultados quando
             ``count_only=True``.
 
-        Exemplo:
+        Examples: Exemplo
             >>> import juscraper as jus
             >>> tjsp = jus.scraper("tjsp")
             >>> df = tjsp.cjsg("dano moral", paginas=range(1, 3),
@@ -417,7 +414,7 @@ class TJSPScraper(EsajSearchScraper):
             ``foro``, ``vara``, ``data_disponibilizacao``, ``decisao``);
             ``int`` com o total de resultados quando ``count_only=True``.
 
-        Exemplo:
+        Examples: Exemplo
             >>> import juscraper as jus
             >>> tjsp = jus.scraper("tjsp")
             >>> # Busca textual + filtro de vara:
@@ -482,10 +479,9 @@ class TJSPScraper(EsajSearchScraper):
         aviso seria pior que erro explicito.
         """
         if paginas is not None:
-            warnings.warn(
+            avisar(
                 "paginas e ignorado quando count_only=True (probe sempre olha so a pagina 1).",
                 UserWarning,
-                stacklevel=3,
             )
 
         inp = apply_input_pipeline_search(

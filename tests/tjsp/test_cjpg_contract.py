@@ -109,6 +109,22 @@ def test_cjpg_novo_formato(tmp_path, mocker):
 
 
 @responses.activate
+def test_cjpg_paginas_alem_do_total_devolve_vazio(tmp_path, mocker):
+    """Página pedida além do total não gera arquivo, e o resultado é vazio.
+
+    ``results_legacy.html`` informa 25 resultados, ou 3 páginas de 10. Só a
+    página 1 é requisitada; nenhuma página entra no diretório baixado.
+    """
+    mocker.patch("time.sleep")
+    _add_pesquisar("direito", "cjpg/results_legacy.html")
+
+    df = jus.scraper("tjsp", download_path=str(tmp_path)).cjpg("direito", paginas=[5])
+
+    assert isinstance(df, pd.DataFrame)
+    assert df.empty
+
+
+@responses.activate
 def test_cjpg_no_results(tmp_path, mocker):
     """Zero-result query returns an empty DataFrame instead of raising."""
     mocker.patch("time.sleep")

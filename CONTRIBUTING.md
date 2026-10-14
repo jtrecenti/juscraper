@@ -178,7 +178,7 @@ uv run pytest tests/lint_policy -q
 uv run pre-commit install
 ```
 
-O hook Ruff mantém o autofix seguro nos arquivos Python alterados. O hook `lint-policy` roda em todo commit, inclusive quando só a configuração muda, e confere todo o código de `src/` e `tests/`. O script usa `origin/main` como referência local e compara com o ancestral comum de `HEAD` e dessa referência. Para outra base, executar `uv run python scripts/check_lint_policy.py --base-ref <referência>`. O script nunca faz fetch; uma referência ausente faz o gate falhar com orientação para atualizá-la. O script usa `tomllib`, então o pre-commit precisa rodar em Python 3.11 ou mais recente; `uv run pre-commit` usa o ambiente do projeto e atende a isso.
+O hook Ruff mantém o autofix seguro nos arquivos Python alterados. O hook `lint-policy` roda em todo commit, inclusive quando só a configuração muda, e confere todo o código de `src/` e `tests/`. O script usa `origin/main` como referência local e compara com o ancestral comum de `HEAD` e dessa referência. Para outra base, executar `uv run python scripts/check_lint_policy.py --base-ref <referência>`. No CI, o PR é comparado com a ponta atual da branch de destino (`origin/<branch>`), e não com o `pull_request.base.sha` do evento, que só muda quando o PR é aberto ou troca de destino e atribuiria ao PR as dispensas que o destino ganhou depois. O script nunca faz fetch; uma referência ausente faz o gate falhar com orientação para atualizá-la. O script usa `tomllib`, então o pre-commit precisa rodar em Python 3.11 ou mais recente; `uv run pre-commit` usa o ambiente do projeto e atende a isso.
 
 ### Retirada de dispensas
 
@@ -258,9 +258,9 @@ def advogados_do_polo(processos, polo):
 | (a) `extrair_total_resultados` | 16 | 2 | sequência plana, legível apesar do CCN; só o lizard pega |
 | (b) `advogados_do_polo` | 7 | 21 | aninhada, só o cognitivo pega |
 
-Números medidos com lizard 1.24.0 e complexipy 8.0.1. Em (a), o lizard soma +1 por `or` e +1 pelo `if`, enquanto o complexipy conta a sequência de `or` uma vez só. Em (b), cada estrutura paga +1 mais a profundidade em que está: o `if` mais interno custa 6 sozinho, embora a função tenha só seis pontos de decisão.
+Números medidos com as versões fixadas no extra `[dev]`, lizard 1.23.0 e complexipy 6.0.1. Em (a), o lizard soma +1 por `or` e +1 pelo `if`, enquanto o complexipy conta a sequência de `or` uma vez só. Em (b), cada estrutura paga +1 mais a profundidade em que está: o `if` mais interno custa 6 sozinho, embora a função tenha só seis pontos de decisão.
 
-### Diagnóstico sob demanda (não roda em pre-commit nem CI)
+### Diagnóstico sob demanda
 
 ```bash
 uv run lizard src               # ciclomático (CCN) + NLOC + tokens + nº de params, por função
@@ -269,14 +269,27 @@ uv run complexipy -i -s desc src  # cognitivo por função, ordenado do maior pa
 
 São as ferramentas a rodar antes de mexer num parser, para ver onde a dívida está concentrada — cada uma por uma lente.
 
-### Gate planejado (ainda não ativo)
+### Gate de complexidade
 
 ```bash
-uv run complexipy --snapshot-create src   # baseline; o CI compara e falha só em regressão (grandfather)
-uv run lizard -C 15 -w src                 # ciclomático: warning (e exit≠0) acima de CCN 15
+uv run python scripts/check_complexity.py                   # contra origin/main
+uv run python scripts/check_complexity.py --base-ref <ref>  # contra outra base
 ```
 
-Ligar um gate hoje deixaria o CI vermelho (várias funções acima do limiar). O gate entra no CI (job `quality`, #101) **depois** que as piores funções forem refatoradas — liderado pelo `complexipy --snapshot` (ratchet que congela o estado atual e só barra pioras), com o `lizard` como segunda lente. Refs #307, #101.
+O gate roda no pre-commit, nos commits que tocam `src/`, e no workflow `Qualidade`, em todo PR e em push para a `main`. Ele aplica duas regras, com teto 15:
+
+- **Ciclomática absoluta.** `lizard -C 15 -w src`: nenhuma função de `src/` passa de CCN 15. Não há lista de exceções: o gate passa ao Lizard uma lista branca vazia, para que um `whitelizard.txt` não valha, e reprova qualquer `#lizard forgive` em `src/`, porque o Lizard não tem opção que desligue essa diretiva.
+- **Cognitiva por catraca.** `complexipy src -mx 15 --diff <base> --ratchet --no-ignore`: falha a função nova acima de 15 e a que passa de 15 ao mudar; a que já estava acima de 15 pode ficar igual ou melhorar, mas não piorar. `--no-ignore` desconsidera `# noqa: complexipy`. A dívida anterior ao gate continua aceita; a lista dela está no fechamento da #307.
+
+A base é o ancestral comum de `HEAD` e da referência, como no gate de lint: num ramo atrás da `main`, comparar com a ponta dela atribuiria ao ramo, como piora, as melhorias que a `main` ganhou depois. No CI, o PR é comparado com `origin/<branch de destino>`, e o push para a `main`, com a ponta anterior. Arquivos de `src/` fora do Git ficam fora da medição, para que um rascunho local não reprove o pre-commit; um arquivo novo entra assim que vai para o índice.
+
+O que o gate não distingue ou não mede:
+
+- **Renomear ou mover função acima de 15 conta como função nova.** O Complexipy identifica a função pelo arquivo e pelo nome, então a renomeação aparece como remoção mais função nova com a mesma nota. A saída é trazê-la para até 15 no mesmo PR.
+- **Funções de mesmo nome no mesmo arquivo se confundem no diff**, como o getter e o setter de uma property. `BaseScraper::download_path` é um caso: a saída de toda falha traz a linha `REGRESSED src/juscraper/core/base.py::BaseScraper::download_path 0 → 6`, que não indica piora. Se o getter de uma property passar de 15, o gate pode reprovar um PR que não a tocou.
+- **Código fora de função não é medido** pelas duas ferramentas: o nível do módulo, o corpo de classe e um `lambda` no nível do módulo. O Complexipy 6.0.1 também não mede métodos de classe aninhada dentro de outra classe.
+
+As versões do Lizard e do Complexipy são fixas no extra `[dev]` e no hook do pre-commit, e `tests/complexity_gate` reprova se as duas divergirem. Refs #101, #307.
 
 ## Adding a new tribunal
 
@@ -369,9 +382,11 @@ Cada `Input*` declara um `BACKEND_DATE_FORMAT: ClassVar[str]` (default `"%d/%m/%
 
 Métodos públicos que recebem filtros em `**kwargs` precisam documentá-los, pois `inspect.signature` não mostra os campos aceitos pelo schema. Escrever docstrings em português, no estilo Google (`Args:`, `Returns:`, `Raises:`), seguindo o método `EsajSearchScraper.cjsg` em `src/juscraper/courts/_esaj/base.py`. Para override com schema próprio, usar `TJSPScraper.cjsg` como referência.
 
+O nome das seções que o estilo Google reconhece fica em inglês, porque é por ele que o griffe, parser usado pelo quartodoc, identifica a seção. Na seção de exemplos, escrever `Examples: Exemplo`: `Examples` faz o griffe ler as linhas `>>>` como código, e `Exemplo`, depois dos dois-pontos, é o título que a referência publica. Escrita só como `Exemplo:`, a seção vira texto livre, o Pandoc lê cada `>>>` como três citações aninhadas e o código sai colado num parágrafo, com aspas tipográficas. `tests/test_docstring_examples.py` reprova linha `>>>` fora dessa seção.
+
 ### Filtros e aliases
 
-- Listar em `**kwargs` os filtros do schema correspondente, com os mesmos nomes e tipos; citar o schema em `See also:`. Mudanças de campos e docstring devem entrar juntas.
+- Listar em `**kwargs` os filtros do schema correspondente, com os mesmos nomes e tipos; citar o schema em `See Also:`, com A maiúsculo, porque é o nome de seção que a regra D405 do Ruff aceita e arquivo novo não tem dispensa dela. Mudanças de campos e docstring devem entrar juntas.
 - Acrescentar a semântica que o modelo não expressa: interpretação do filtro, formato exigido pelo backend e exemplo de uso. Indicar nomes de campos do backend quando isso explicar por que um filtro exige IDs internos.
 - Documentar defaults não óbvios e o significado de `None` para cada filtro; não presumir que todo campo seja opcional.
 - Listar aliases deprecados em seção própria, conforme os que o endpoint realmente consome em `normalize_pesquisa`, `normalize_datas` e `pop_deprecated_alias`. As constantes em `src/juscraper/utils/params.py` são a fonte dos aliases compartilhados; conferir também a normalização específica do scraper. Informar o `DeprecationWarning` sem remover o campo canônico da documentação.
@@ -399,16 +414,23 @@ Raises:
     ValidationError: Para os demais erros de validação do schema.
     <ExcecaoEspecifica>: <Condição validada antes do pydantic.>
 
+Avisos:
+    ``<CategoriaDoAviso>``: <Condição em que o método emite o aviso.>
+
 Returns:
     pd.DataFrame: <Colunas principais e significado do resultado.>
 
-Exemplo:
-    <Chamada pública válida, usando nomes canônicos.>
+Examples: Exemplo
+    >>> <Chamada pública válida, usando nomes canônicos.>
 
-See also:
+See Also:
     :class:`<InputDoEndpoint>`: fonte dos filtros aceitos.
 """
 ```
+
+Avisos que o método emite com `warnings.warn` vão em `Avisos:`, em texto livre e só quando houver o que documentar. Não usar `Warns:`, a seção do estilo Google para isso: o quartodoc, até a 0.11.1, não a renderiza, o `quartodoc build` termina em `NotImplementedError: Unsupported type: ...DocstringSectionWarns` e o site deixa de ser publicado. `Avisos:` sai na referência como cabeçalho seguido do texto da seção, como `Aliases deprecados:`. Para conferir antes do PR: `uv sync --extra dev --extra docs` e `cd docs && uv run quartodoc build`. O build reescreve `docs/objects.json`, que é versionado; descartar essa alteração antes do commit.
+
+Em `See Also:`, o quartodoc transforma cada papel Sphinx, como `` :class:`InputCJSGTJMG` ``, em link Markdown, e quem resolve esse link é o filtro `interlinks`, guardado em `docs/_extensions/interlinks/` e declarado em `docs/_quarto.yml` depois de `quarto`. Com o nome curto, que é a convenção, o papel sai na referência como código, sem link. O nome no papel aceita só letras, ponto, sublinhado e `~`: com dígito, como em `InputCJSGTRF5`, o quartodoc não converte o papel, e ele aparece cru na página; nesse caso, escrever o nome como literal, ` ``InputCJSGTRF5`` `. O título `See Also:` ocupa a linha sozinho, com linha em branco acima e o conteúdo recuado logo abaixo; fora disso o griffe lê o bloco como texto e os papéis também saem crus. `tests/test_docs_interlinks.py` reprova esses casos e o site sem o filtro; o CI ainda não roda a suíte de testes, então rodar `uv run pytest tests/test_docs_interlinks.py` antes do PR.
 
 ### Métodos de download
 
