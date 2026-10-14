@@ -580,7 +580,9 @@ def test_ctrl_c_com_worker_preso_nao_segura_a_saida_do_interpretador():
     # depois de esperar as threads que não são daemon. O Ctrl-C só sai quando
     # o worker falso já está preso: com prazo fixo, um worker que demorasse a
     # partir receberia o sinal antes de existir, e o teste passaria sem medir
-    # nada. No Python 3.11, depois do Ctrl-C o interpretador sai sem esperar o
+    # nada. Até o Python 3.12, o Ctrl-C que interrompe o ``join`` faz o
+    # ``threading`` liberar o lock do worker vivo e dá-lo por encerrado
+    # (tratamento do bpo-45274). O interpretador então sai sem esperar o
     # worker, com ou sem daemon, e o tempo não denuncia um worker não daemon.
     # Por isso o worker falso também informa se a própria thread é daemon, o
     # que vale em toda versão.
