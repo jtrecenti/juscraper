@@ -409,6 +409,8 @@ See Also:
 
 Avisos que o método emite com `warnings.warn` vão em `Avisos:`, em texto livre e só quando houver o que documentar. Não usar `Warns:`, a seção do estilo Google para isso: o quartodoc, até a 0.11.1, não a renderiza, o `quartodoc build` termina em `NotImplementedError: Unsupported type: ...DocstringSectionWarns` e o site deixa de ser publicado. `Avisos:` sai na referência como cabeçalho seguido do texto da seção, como `Aliases deprecados:`. Para conferir antes do PR: `uv sync --extra dev --extra docs` e `cd docs && uv run quartodoc build`. O build reescreve `docs/objects.json`, que é versionado; descartar essa alteração antes do commit.
 
+Em `See also:`, o quartodoc transforma cada papel Sphinx, como `` :class:`InputCJSGTJMG` ``, em link Markdown, e quem resolve esse link é o filtro `interlinks`, guardado em `docs/_extensions/interlinks/` e declarado em `docs/_quarto.yml` depois de `quarto`. Com o nome curto, que é a convenção, o papel sai na referência como código, sem link. O nome no papel aceita só letras, ponto, sublinhado e `~`: com dígito, como em `InputCJSGTRF5`, o quartodoc não converte o papel, e ele aparece cru na página; nesse caso, escrever o nome como literal, ` ``InputCJSGTRF5`` `. `tests/test_docs_interlinks.py` reprova esse papel e o site sem o filtro.
+
 ### Métodos de download
 
 Exemplos e a lista de filtros ficam no método principal, como `cjsg` ou `cjpg`. O par `*_download` descreve somente suas diferenças, como `diretorio` e o retorno do caminho, e referencia a lista de filtros com `:meth:` apontando para o método principal. Isso evita manter uma segunda lista que pode divergir do schema.
