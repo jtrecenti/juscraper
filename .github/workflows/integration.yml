@@ -31,9 +31,9 @@ env:
   # O autoteste usa o TJMG porque ele exercita a instalação mais pesada: o
   # extra `tjmg` traz o solver de captcha e o torch.
   TRIBUNAL: ${{ github.event_name == 'pull_request' && 'tjmg' || inputs.tribunal }}
-  # A issue só é reescrita com o retrato inteiro. Uma execução de um tribunal
-  # só faria todas as outras falhas "saírem da lista".
-  ATUALIZAR_ISSUE: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.atualizar_issue && inputs.tribunal == '') }}
+  # A issue só é reescrita com o retrato inteiro e com o código da main. Uma
+  # execução de um tribunal só faria todas as outras falhas "saírem da lista".
+  ATUALIZAR_ISSUE: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.atualizar_issue && inputs.tribunal == '' && github.ref == 'refs/heads/main') }}
 
 jobs:
   calendario:
@@ -49,6 +49,10 @@ jobs:
       - name: Decidir se a execução agendada cai no recesso forense
         id: decidir
         run: |
+          # Sem pipefail, uma falha do script some atrás do tee: `rodar` não
+          # seria gravado, os outros jobs seriam pulados e a execução sairia
+          # verde sem ter rodado nada.
+          set -o pipefail
           data="$(TZ=America/Sao_Paulo date +%F)"
           echo "data=$data" >> "$GITHUB_OUTPUT"
           python3 scripts/integration_report.py calendario --data "$data" --evento "$GITHUB_EVENT_NAME" | tee -a "$GITHUB_OUTPUT"
@@ -76,7 +80,9 @@ jobs:
             # O valor vem de quem dispara o workflow e vira caminho: só passa
             # nome simples de diretório.
             if ! [[ "$TRIBUNAL" =~ ^[a-z0-9_]+$ ]] || [ ! -d "tests/$TRIBUNAL" ]; then
-              echo "::error::tribunal inválido ou sem diretório em tests/: $TRIBUNAL"
+              # Sem ecoar o valor: uma quebra de linha nele viraria comando
+              # de workflow na linha seguinte.
+              echo "::error::tribunal inválido ou sem diretório em tests/; use o nome de um diretório de tests/"
               exit 1
             fi
             testes="tests/$TRIBUNAL"
@@ -141,11 +147,22 @@ jobs:
     runs-on: ubuntu-latest
     # Único job com escrita em issues. Ele não instala dependência nem executa
     # código dos testes: só roda o script, que usa a biblioteca padrão. O token
-    # vai apenas para os dois passos que chamam o `gh`.
+    # só aparece como variável de ambiente nos dois passos que chamam o `gh`.
     permissions:
       contents: read
       issues: write
+    # Uma execução agendada e um disparo manual simultâneos poderiam, os dois,
+    # não achar a issue e criar duas.
+    concurrency:
+      group: integracao-issue
+      cancel-in-progress: false
     env:
+      # Com o job de testes reprovado (pytest com código 2 ou mais, tempo
+      # esgotado, instalação quebrada), o retrato está incompleto: reescrever a
+      # issue faria as falhas da semana anterior "saírem da lista" e voltarem
+      # na seguinte, com duas notificações falsas. Nesse caso a issue fica como
+      # está e o próprio workflow vermelho é o aviso.
+      TESTES_OK: ${{ needs.testes.result == 'success' }}
       LABEL: tribunal-quebrado
       TITULO: "Integração semanal: falhas por tribunal"
       EXECUCAO: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -162,7 +179,7 @@ jobs:
           name: junit
       - name: Localizar a issue de acompanhamento
         id: issue
-        if: env.ATUALIZAR_ISSUE == 'true'
+        if: env.ATUALIZAR_ISSUE == 'true' && env.TESTES_OK == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -186,7 +203,7 @@ jobs:
             --execucao "$EXECUCAO" --data "$DATA"
           cat corpo.md >> "$GITHUB_STEP_SUMMARY"
       - name: Atualizar a issue
-        if: env.ATUALIZAR_ISSUE == 'true'
+        if: env.ATUALIZAR_ISSUE == 'true' && env.TESTES_OK == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -198,9 +215,15 @@ jobs:
             gh issue create --title "$TITULO" --label "$LABEL" --body-file corpo.md
           else
             # Editar o corpo não notifica ninguém; comentar notifica. O
-            # comentário só existe quando a lista de falhas mudou.
-            gh issue edit "$NUMERO" --body-file corpo.md
+            # comentário só existe quando a lista de falhas mudou. Ele vem
+            # antes da edição: se o comentário falhasse depois de o corpo já
+            # ter a lista nova, uma nova tentativa não veria mudança e a
+            # notificação se perderia.
             if [ -s comentario.md ]; then
               gh issue comment "$NUMERO" --body-file comentario.md
             fi
+            gh issue edit "$NUMERO" --body-file corpo.md
           fi
+      - name: Avisar que a issue não foi atualizada
+        if: env.ATUALIZAR_ISSUE == 'true' && env.TESTES_OK != 'true'
+        run: echo "::warning::O job de testes não terminou bem, então a issue de acompanhamento ficou como estava."

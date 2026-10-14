@@ -84,7 +84,10 @@ def test_corpo_conta_cada_caso_uma_vez_e_grava_as_falhas(tmp_path):
     junit = gravar_junit(tmp_path / "integracao.xml", [
         ("tests.tjsp.test_cjsg_integration", "test_busca", falha("AssertionError: coluna ausente\nsegunda linha")),
         ("tests.tjrs.test_cjsg", "test_busca", '<error message="ReadTimeout">traceback</error>'),
-        ("tests.tjto.test_cjsg", "test_teardown", falha("falhou no teste") + '<error message="e no teardown"/>'),
+        # O pytest grava teste que falha e depois quebra no teardown como dois
+        # <testcase> com o mesmo id.
+        ("tests.tjto.test_cjsg", "test_teardown", falha("falhou no teste")),
+        ("tests.tjto.test_cjsg", "test_teardown", '<error message="failed on teardown with RuntimeError"/>'),
         ("tests.trf3.test_cpopg_integration", "test_bloqueio", '<skipped type="pytest.xfail" message="anti-bot"/>'),
         ("tests.tjdft.test_cjsg", "test_pulado", '<skipped type="pytest.skip" message="sem token"/>'),
         ("tests.tjac.test_cjsg", "test_ok", ""),
@@ -157,12 +160,21 @@ def test_tudo_verde_depois_de_falha_comenta_so_a_saida(tmp_path):
     assert f"- `{FALHA_TJSP}`" in comentario
 
 
-def test_corpo_anterior_sem_marcador_trata_toda_falha_como_nova(tmp_path):
+@pytest.mark.parametrize(
+    "anterior",
+    [
+        "corpo reescrito à mão, sem a lista",
+        '<!-- falhas-integracao: ["a", -->',
+        '<!-- falhas-integracao: {"a": 1} -->',
+    ],
+)
+def test_corpo_anterior_sem_lista_valida_trata_toda_falha_como_nova(tmp_path, anterior):
     junit = gravar_junit(tmp_path / "integracao.xml", [("tests.tjsp.test_cjsg_integration", "test_busca", falha())])
 
-    _, comentario = relatorio(tmp_path, {"integração": junit}, anterior="corpo reescrito à mão, sem a lista")
+    _, comentario = relatorio(tmp_path, {"integração": junit}, anterior=anterior)
 
     assert f"- `{FALHA_TJSP}`" in comentario
+    assert "Saíram da lista de falhas" not in comentario
 
 
 def test_suite_sem_junit_entra_como_nao_terminada(tmp_path):
@@ -202,7 +214,7 @@ def test_tabela_e_cortada_mas_a_lista_gravada_fica_inteira(tmp_path):
     assert len(linhas_de_falha) == 100
     assert "Outras 30 falhas estão no registro da execução." in corpo
     assert len(falhas_gravadas(corpo)) == total
-    assert all(len(linha) < 250 for linha in linhas_de_falha)
+    assert f"| `tests.tjsp.test_cjsg::test_000` | `{'x' * 160}` |" in linhas_de_falha
 
 
 @pytest.mark.parametrize(
@@ -243,3 +255,49 @@ def test_texto_do_tribunal_fica_em_trecho_de_codigo(tmp_path):
     corpo, _ = relatorio(tmp_path, {"integração": junit})
 
     assert f"| `{FALHA_TJSP}` | `erro @alguem <img src=x> 'crase' [link](http://example.invalid) #12` |" in corpo
+
+
+# Forma da mensagem gravada pelo nbmake 1.5.5 no JUnit do pytest 9.1: o
+# traceback da célula, com cores ANSI cujo ESC o pytest troca por `#x1B`.
+MENSAGEM_NBMAKE = (
+    "---------------------------------------------------------------------------\n"
+    "raise ValueError('portal fora')\n"
+    "#x1B[31m---------------------------------------------------------------------------#x1B[39m\n"
+    "#x1B[31mValueError#x1B[39m                                Traceback (most recent call last)\n"
+    "#x1B[36mCell#x1B[39m#x1B[36m #x1B[39m#x1B[32mIn[1]#x1B[39m#x1B[32m, line 1#x1B[39m\n"
+    "#x1B[32m----> #x1B[39m#x1B[32m1#x1B[39m #x1B[38;5;28;01mraise#x1B[39;00m "
+    "ValueError(#x1B[33m'portal fora'#x1B[39m)\n"
+    "\n"
+    "#x1B[31mValueError#x1B[39m: portal fora"
+)
+
+
+@pytest.mark.parametrize(
+    ("mensagem", "esperado"),
+    [
+        (MENSAGEM_NBMAKE, "ValueError: portal fora"),
+        ("-" * 75 + "\n\nRuntimeError: kernel morreu", "RuntimeError: kernel morreu"),
+        (
+            "A cell timed out while it was being executed, after 300 seconds.\n"
+            "The message was: Cell execution timed out.",
+            "A cell timed out while it was being executed, after 300 seconds.",
+        ),
+    ],
+)
+def test_mensagem_do_notebook_mostra_a_excecao(tmp_path, mensagem, esperado):
+    junit = gravar_junit(tmp_path / "notebooks.xml", [("docs.notebooks.tjsp.ipynb", "tjsp.ipynb", falha(mensagem))])
+
+    corpo, _ = relatorio(tmp_path, {"notebooks": junit})
+
+    assert f"| `docs.notebooks.tjsp.ipynb::tjsp.ipynb` | `{esperado}` |" in corpo
+
+
+def test_barra_vertical_so_tem_escape_na_tabela(tmp_path):
+    antes = gravar_junit(tmp_path / "antes.xml", [("tests.tjsp.test_cjsg", "test_x", "")])
+    corpo_anterior, _ = relatorio(tmp_path, {"integração": antes})
+    depois = gravar_junit(tmp_path / "depois.xml", [("tests.tjsp.test_cjsg", "test_x[a|b]", falha())])
+
+    corpo, comentario = relatorio(tmp_path, {"integração": depois}, anterior=corpo_anterior)
+
+    assert "| `tests.tjsp.test_cjsg::test_x[a\\|b]` |" in corpo
+    assert "- `tests.tjsp.test_cjsg::test_x[a|b]`" in comentario

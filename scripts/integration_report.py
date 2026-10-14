@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import re
 import sys
 import xml.etree.ElementTree as ET
 from datetime import date
@@ -17,6 +18,10 @@ FECHA_MARCADOR = " -->"
 # ar todos os testes falham de uma vez, e a tabela inteira passaria do limite.
 LIMITE_DE_LINHAS = 100
 LIMITE_DA_MENSAGEM = 160
+# Códigos de cor ANSI. O nbmake os grava na mensagem, e o pytest troca o ESC,
+# que não é válido em XML, pelo texto `#x1B`.
+COR_ANSI = re.compile(r"#x1B\[[0-9;]*m")
+LINHA_DE_EXCECAO = re.compile(r"^[A-Za-z_][\w.]*: \S")
 
 
 def em_recesso(dia: date) -> bool:
@@ -29,12 +34,26 @@ def deve_rodar(dia: date, evento: str) -> bool:
     return not (evento == "schedule" and em_recesso(dia))
 
 
-def ler_suite(caminho: Path) -> dict | None:
-    """Conta os casos de um JUnit do pytest; devolve ``None`` se o arquivo não existe.
+def resumir_mensagem(mensagem: str) -> str:
+    """Escolhe a linha da mensagem de falha que diz o que aconteceu.
 
-    Arquivo ausente significa que o pytest não chegou ao fim (tempo esgotado ou
-    erro antes da coleta), porque o JUnit só é gravado no encerramento.
+    No pytest a primeira linha já é a exceção. No nbmake a mensagem é o
+    traceback da célula, que começa por uma linha de hífens e termina na linha
+    ``Tipo: mensagem``; nesse caso vale a última linha nesse formato.
     """
+    linhas = [linha.strip() for linha in COR_ANSI.sub("", mensagem).splitlines()]
+    uteis = [linha for linha in linhas if any(caractere.isalnum() for caractere in linha)]
+    if not uteis:
+        return ""
+    if any("Traceback (most recent call last)" in linha for linha in uteis):
+        excecoes = [linha for linha in uteis if LINHA_DE_EXCECAO.match(linha)]
+        if excecoes:
+            return excecoes[-1]
+    return uteis[0]
+
+
+def ler_suite(caminho: Path) -> dict | None:
+    """Conta os casos de um JUnit do pytest; devolve ``None`` se o arquivo não existe."""
     if not caminho.is_file():
         return None
     resumo: dict = {"passaram": 0, "pulados": 0, "falhas": {}}
@@ -42,16 +61,15 @@ def ler_suite(caminho: Path) -> dict | None:
     # entidade. Por isso o parser da biblioteca padrão basta, e este script
     # roda no job que tem permissão de escrita em issues sem instalar nada.
     for caso in ET.parse(caminho).getroot().iter("testcase"):  # noqa: S314
-        # Um caso pode trazer <failure> e <error> juntos (falha no teste e no
-        # teardown). Conta uma vez, com a primeira mensagem.
         problema = caso.find("failure")
         if problema is None:
             problema = caso.find("error")
         if problema is not None:
             identificador = f"{caso.get('classname', '')}::{caso.get('name', '')}"
             mensagem = problema.get("message") or (problema.text or "")
-            linhas = mensagem.strip().splitlines()
-            resumo["falhas"][identificador] = linhas[0] if linhas else ""
+            # Teste que falha e depois quebra no teardown sai em dois
+            # <testcase> com o mesmo id. Fica a primeira mensagem, a do teste.
+            resumo["falhas"].setdefault(identificador, resumir_mensagem(mensagem))
         elif caso.find("skipped") is not None:
             # xfail e o bloqueio anti-bot convertido pelo conftest chegam aqui.
             resumo["pulados"] += 1
@@ -72,11 +90,16 @@ def ler_falhas_anteriores(caminho: Path | None) -> set[str] | None:
     # dele; uma mensagem de erro que imite o marcador fica antes e é ignorada.
     inicio = texto.rfind(ABRE_MARCADOR)
     fim = texto.find(FECHA_MARCADOR, inicio)
+    # Corpo sem marcador, ou com a lista quebrada, foi editado à mão. Tratar
+    # como lista vazia faz toda falha atual contar como nova, e o erro fica do
+    # lado de avisar.
     if inicio < 0 or fim < 0:
-        # Corpo sem marcador foi editado à mão. Tratar como lista vazia faz
-        # toda falha atual contar como nova, e o erro fica do lado de avisar.
         return set()
-    return set(json.loads(texto[inicio + len(ABRE_MARCADOR):fim]))
+    try:
+        lista = json.loads(texto[inicio + len(ABRE_MARCADOR):fim])
+    except json.JSONDecodeError:
+        return set()
+    return {item for item in lista if isinstance(item, str)} if isinstance(lista, list) else set()
 
 
 def gravar_falhas(identificadores: set[str] | dict[str, str]) -> str:
@@ -91,14 +114,17 @@ def gravar_falhas(identificadores: set[str] | dict[str, str]) -> str:
     return f"{ABRE_MARCADOR}{lista}{FECHA_MARCADOR}"
 
 
-def codigo(texto: str) -> str:
-    """Põe um texto livre num trecho de código, dentro de uma célula de tabela.
+def codigo(texto: str, *, em_tabela: bool) -> str:
+    """Põe um texto livre num trecho de código.
 
     Id de teste e mensagem de erro trazem texto do tribunal. Dentro do trecho
     de código o GitHub não interpreta HTML, link nem menção, então um `@nome`
-    na mensagem não notifica ninguém.
+    na mensagem não notifica ninguém. A barra vertical só precisa de escape
+    dentro de tabela; numa lista o escape apareceria como barra invertida.
     """
-    limpo = " ".join(texto.split()).replace("`", "'").replace("|", "\\|")
+    limpo = " ".join(texto.split()).replace("`", "'")
+    if em_tabela:
+        limpo = limpo.replace("|", "\\|")
     return f"`{limpo}`" if limpo else ""
 
 
@@ -123,7 +149,7 @@ def montar_corpo(suites: dict[str, dict | None], falhas: dict[str, str], dia: da
         ordenadas = sorted(falhas)
         for identificador in ordenadas[:LIMITE_DE_LINHAS]:
             mensagem = " ".join(falhas[identificador].split())[:LIMITE_DA_MENSAGEM]
-            linhas.append(f"| {codigo(identificador)} | {codigo(mensagem)} |")
+            linhas.append(f"| {codigo(identificador, em_tabela=True)} | {codigo(mensagem, em_tabela=True)} |")
         if len(ordenadas) > LIMITE_DE_LINHAS:
             linhas += ["", f"Outras {len(ordenadas) - LIMITE_DE_LINHAS} falhas estão no registro da execução."]
     else:
@@ -143,7 +169,7 @@ def montar_comentario(atuais: set[str], anteriores: set[str] | None, dia: date, 
     ):
         if grupo:
             linhas += ["", f"{titulo}:", ""]
-            linhas += [f"- {codigo(identificador)}" for identificador in sorted(grupo)]
+            linhas += [f"- {codigo(identificador, em_tabela=False)}" for identificador in sorted(grupo)]
     return "\n".join(linhas) + "\n"
 
 
