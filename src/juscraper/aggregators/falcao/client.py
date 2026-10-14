@@ -218,8 +218,8 @@ class FalcaoScraper(HTTPScraper):
                 todas. Default ``None``.
             diretorio (str | None): Sobrescreve ``download_path`` para esta
                 chamada. Default ``None`` (usa o ``download_path`` do scraper,
-                que sem configuracao e um diretorio temporario criado na
-                instanciacao). Cria a pasta e seus pais quando não existem.
+                que sem configuracao e um diretorio temporario criado no
+                primeiro uso). Cria a pasta e seus pais quando não existem.
 
         Returns:
             str: Caminho do subdiretorio com os arquivos JSON baixados.

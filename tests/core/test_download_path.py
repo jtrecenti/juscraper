@@ -7,6 +7,8 @@ resultado, mesmo quando o raspador nunca gravava nele.
 from __future__ import annotations
 
 import tempfile
+import threading
+import time
 from pathlib import Path
 
 import pytest
@@ -123,3 +125,31 @@ def test_subclasse_direta_de_basescraper_tambem_cria_sob_demanda(raiz_temporaria
     assert _criados(raiz_temporaria) == []
     assert Path(raspador.download_path).parent == raiz_temporaria
     assert Path(raspador.download_path).is_dir()
+
+
+def test_threads_na_primeira_leitura_veem_o_mesmo_diretorio(raiz_temporaria, monkeypatch):
+    # ``mkdtemp`` lento alarga a janela entre testar ``None`` e gravar o
+    # caminho; sem trava, cada thread criaria o próprio diretório.
+    original = tempfile.mkdtemp
+
+    def mkdtemp_lento(*args, **kwargs):
+        time.sleep(0.05)
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(tempfile, "mkdtemp", mkdtemp_lento)
+    raspador = jus.scraper("tjpi")
+    largada = threading.Barrier(4)
+    vistos: list[str] = []
+
+    def ler():
+        largada.wait()
+        vistos.append(raspador.download_path)
+
+    threads = [threading.Thread(target=ler) for _ in range(4)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+    assert len(set(vistos)) == 1
+    assert len(_criados(raiz_temporaria)) == 1

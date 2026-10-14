@@ -3,11 +3,18 @@ Base scraper class for court data extraction.
 """
 import logging
 import tempfile
+import threading
 from abc import ABC
 from pathlib import Path
 from typing import ClassVar
 
 logger = logging.getLogger("juscraper.core.base")
+
+# Serializa a criação sob demanda de ``download_path``: sem ela, threads que
+# leem o atributo pela primeira vez ao mesmo tempo criariam um diretório
+# cada, e só o último ficaria gravado. Fica no módulo, e não na instância,
+# porque um ``Lock`` como atributo impediria ``pickle`` e ``copy`` do raspador.
+_TRAVA_DIRETORIO_TEMPORARIO = threading.Lock()
 
 
 class BaseScraper(ABC):
@@ -35,12 +42,16 @@ class BaseScraper(ABC):
         vazio para trás a cada instância.
         """
         if self._download_path is None:
-            self._download_path = tempfile.mkdtemp(prefix=self.PREFIXO_DIRETORIO_TEMPORARIO)
-            if self.verbose:
-                logger.info(
-                    "Caminho de download definido como '%s'.",
-                    self._download_path
-                )
+            with _TRAVA_DIRETORIO_TEMPORARIO:
+                # Segunda checagem: outra thread pode ter criado o diretório
+                # enquanto esta esperava a trava.
+                if self._download_path is None:
+                    self._download_path = tempfile.mkdtemp(prefix=self.PREFIXO_DIRETORIO_TEMPORARIO)
+                    if self.verbose:
+                        logger.info(
+                            "Caminho de download definido como '%s'.",
+                            self._download_path
+                        )
         return self._download_path
 
     @download_path.setter
