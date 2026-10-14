@@ -36,6 +36,14 @@ env:
   TRIBUNAL: ${{ github.event_name == 'pull_request' && 'tjmg' || inputs.tribunal }}
   # A issue só é reescrita com o retrato inteiro e com o código da main. Uma
   # execução de um tribunal só faria todas as outras falhas "saírem da lista".
+  # Tribunais e agregadores que dão problema só no runner do GitHub e por isso
+  # ficam fora da execução completa: medidos em 14/10/2026, falharam no runner
+  # (conexão sem resposta, leitura sem resposta nos testes que paginam, página
+  # de desafio no lugar do JSON ou HTTP 403) e passaram, ou falharam por outro
+  # motivo, a partir de IP residencial no Brasil. No CI eles mostrariam toda
+  # semana o problema do runner, e não a quebra que a issue existe para pegar.
+  # Rodam localmente, ou num disparo manual com `tribunal`, que ignora a lista.
+  FORA_DO_CI: "falcao tjac tjam tjes tjms tjpb tjpi tjrj tjrn tjro tjrs"
   ATUALIZAR_ISSUE: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.atualizar_issue && inputs.tribunal == '' && github.ref == 'refs/heads/main') }}
 
 jobs:
@@ -94,14 +102,22 @@ jobs:
               notebooks=""
             fi
           fi
-          ignorar=""
+          ignorar_testes=""
+          ignorar_notebooks=""
           for nome in $NOTEBOOKS_COM_CREDENCIAL; do
-            ignorar="$ignorar --ignore=docs/notebooks/$nome.ipynb"
+            ignorar_notebooks="$ignorar_notebooks --ignore=docs/notebooks/$nome.ipynb"
           done
+          if [ -z "$TRIBUNAL" ]; then
+            for nome in $FORA_DO_CI; do
+              ignorar_testes="$ignorar_testes --ignore=tests/$nome"
+              ignorar_notebooks="$ignorar_notebooks --ignore=docs/notebooks/$nome.ipynb"
+            done
+          fi
           {
             echo "testes=$testes"
             echo "notebooks=$notebooks"
-            echo "ignorar=$ignorar"
+            echo "ignorar_testes=$ignorar_testes"
+            echo "ignorar_notebooks=$ignorar_notebooks"
           } >> "$GITHUB_OUTPUT"
       - uses: astral-sh/setup-uv@v10.3.0
         with:
@@ -119,9 +135,14 @@ jobs:
         timeout-minutes: 90
         env:
           ALVO: ${{ steps.alvo.outputs.testes }}
+          IGNORAR: ${{ steps.alvo.outputs.ignorar_testes }}
         run: |
           codigo=0
-          uv run pytest "$ALVO" -m "integration and not anti_bot" --junitxml=junit-integracao.xml || codigo=$?
+          # `release` é a bateria cara, para antes de versão maior (ver
+          # tests/test_release_date_filter.py).
+          # shellcheck disable=SC2086  # IGNORAR é uma lista de opções montada acima
+          uv run pytest "$ALVO" $IGNORAR -m "integration and not anti_bot and not release" \
+            --junitxml=junit-integracao.xml || codigo=$?
           echo "pytest saiu com código $codigo"
           if [ "$codigo" -gt 1 ]; then exit "$codigo"; fi
       - name: Rodar os notebooks
@@ -129,7 +150,7 @@ jobs:
         timeout-minutes: 60
         env:
           ALVO: ${{ steps.alvo.outputs.notebooks }}
-          IGNORAR: ${{ steps.alvo.outputs.ignorar }}
+          IGNORAR: ${{ steps.alvo.outputs.ignorar_notebooks }}
         run: |
           codigo=0
           # shellcheck disable=SC2086  # IGNORAR é uma lista de opções montada acima
@@ -201,7 +222,13 @@ jobs:
           if [ -z "$TRIBUNAL" ] || [ -f junit-notebooks.xml ]; then
             suites+=(--suite "notebooks=junit-notebooks.xml")
           fi
-          python3 scripts/integration_report.py relatorio "${suites[@]}" \
+          # A issue diz quem ficou fora da execução completa, para que a falta
+          # de falhas de um tribunal da lista não se leia como tribunal em dia.
+          fora=()
+          if [ -z "$TRIBUNAL" ]; then
+            fora=(--fora "$FORA_DO_CI")
+          fi
+          python3 scripts/integration_report.py relatorio "${suites[@]}" "${fora[@]}" \
             --anterior anterior.md --corpo corpo.md --comentario comentario.md \
             --execucao "$EXECUCAO" --data "$DATA"
           cat corpo.md >> "$GITHUB_STEP_SUMMARY"

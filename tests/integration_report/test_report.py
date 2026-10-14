@@ -301,3 +301,20 @@ def test_barra_vertical_so_tem_escape_na_tabela(tmp_path):
 
     assert "| `tests.tjsp.test_cjsg::test_x[a\\|b]` |" in corpo
     assert "- `tests.tjsp.test_cjsg::test_x[a|b]`" in comentario
+
+
+def test_corpo_lista_quem_ficou_fora_da_execucao(tmp_path):
+    junit = gravar_junit(tmp_path / "integracao.xml", [("tests.tjsp.test_cjsg", "test_ok", "")])
+    argumentos = [
+        "relatorio", "--suite", f"integração={junit}", "--execucao", EXECUCAO, "--data", "2026-10-14",
+        "--corpo", str(tmp_path / "corpo.md"), "--comentario", str(tmp_path / "comentario.md"),
+    ]
+
+    resultado = executar(*argumentos, "--fora", "tjrs tjam")
+    sem_lista = executar(*argumentos[:-4], "--corpo", str(tmp_path / "sem.md"), "--comentario", str(tmp_path / "c2.md"))
+
+    assert resultado.returncode == 0, resultado.stderr
+    assert sem_lista.returncode == 0, sem_lista.stderr
+    corpo = (tmp_path / "corpo.md").read_text(encoding="utf-8")
+    assert "Fora desta execução, porque dão problema só no runner do GitHub: `tjam`, `tjrs`." in corpo
+    assert "Fora desta execução" not in (tmp_path / "sem.md").read_text(encoding="utf-8")
