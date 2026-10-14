@@ -18,13 +18,13 @@ from __future__ import annotations
 import functools
 import logging
 import shutil
-import warnings
 from collections.abc import Callable
 from typing import Any, ClassVar, Literal
 
 import pandas as pd
 from pydantic import BaseModel, ValidationError
 
+from ...core.avisos import avisar
 from ...core.http import HTTPScraper
 from ...utils.params import (
     DATE_ALIAS_TO_CANONICAL,
@@ -493,10 +493,9 @@ class EsajSearchScraper(HTTPScraper):
         aviso seria pior que erro explicito.
         """
         if paginas is not None:
-            warnings.warn(
+            avisar(
                 "paginas e ignorado quando count_only=True (probe sempre olha so a pagina 1).",
                 UserWarning,
-                stacklevel=3,
             )
 
         # Validacao do schema com max_dias=None — vamos iterar janelas

@@ -7,6 +7,7 @@ import json
 import pandas as pd
 import pytest
 
+from juscraper.core.base import _texto_ausente_como_none
 from juscraper.courts.tjes.parse import cjsg_parse
 from tests._helpers import load_sample
 
@@ -15,7 +16,10 @@ def test_parse_preserva_valores_colunas_ordem_e_entrada():
     paginas = json.loads(load_sample("tjes", "cjsg/parser_edge_cases.json"))
     original = copy.deepcopy(paginas)
 
-    resultado = cjsg_parse(paginas)
+    # O parser devolve o que o pandas da vez produzir; o metodo publico passa a
+    # saida por ``_texto_ausente_como_none``, que mantem texto ausente como
+    # None tambem no pandas 3. O teste confere o valor que o usuario recebe.
+    resultado = _texto_ausente_como_none(cjsg_parse(paginas))
 
     primeira_linha = {
         "processo": "0000001-00.2026.8.08.0000",

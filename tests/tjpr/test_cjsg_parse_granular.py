@@ -9,6 +9,7 @@ import pandas as pd
 import pytest
 import requests
 
+from juscraper.core.base import _texto_ausente_como_none
 from juscraper.courts.tjpr.parse import cjsg_parse
 from tests._helpers import load_sample
 
@@ -21,10 +22,15 @@ TRUNCATED_WITHOUT_VALUE = "Resumo com id sem valor. Leia mais..."
 def test_cjsg_parse_preserves_row_variants_and_exact_dtypes(mocker):
     request_fn = mocker.Mock()
 
-    result = cjsg_parse(
-        [load_sample("tjpr", "cjsg/parser_edge_cases.html")],
-        criterio=None,
-        request_fn=request_fn,
+    # O parser devolve o que o pandas da vez produzir; o metodo publico passa a
+    # saida por ``_texto_ausente_como_none``, que mantem texto ausente como
+    # None tambem no pandas 3. O teste confere o valor que o usuario recebe.
+    result = _texto_ausente_como_none(
+        cjsg_parse(
+            [load_sample("tjpr", "cjsg/parser_edge_cases.html")],
+            criterio=None,
+            request_fn=request_fn,
+        )
     )
 
     assert result.columns.tolist() == EXPECTED_COLUMNS
