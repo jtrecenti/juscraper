@@ -128,13 +128,20 @@ def codigo(texto: str, *, em_tabela: bool) -> str:
     return f"`{limpo}`" if limpo else ""
 
 
-def montar_corpo(suites: dict[str, dict | None], falhas: dict[str, str], dia: date, execucao: str) -> str:
+def montar_corpo(
+    suites: dict[str, dict | None], falhas: dict[str, str], dia: date, execucao: str, fora: list[str],
+) -> str:
     """Monta o corpo da issue, com a lista de falhas gravada num comentário HTML."""
     linhas = [
         AVISO_DE_GERACAO,
         "",
         f"Última execução: {dia.strftime('%d/%m/%Y')} ([registro]({execucao})).",
         "",
+    ]
+    if fora:
+        nomes = ", ".join(f"`{nome}`" for nome in sorted(fora))
+        linhas += [f"Fora desta execução, porque dão problema só no runner do GitHub: {nomes}.", ""]
+    linhas += [
         "| Suíte | Passaram | Falharam | Pulados |",
         "| --- | ---: | ---: | ---: |",
     ]
@@ -197,6 +204,7 @@ def main() -> int:
     relatorio.add_argument("--comentario", type=Path, required=True)
     relatorio.add_argument("--execucao", required=True)
     relatorio.add_argument("--data", type=date.fromisoformat, required=True)
+    relatorio.add_argument("--fora", default="", help="nomes separados por espaço que ficaram fora da execução")
 
     argumentos = analisador.parse_args()
     if argumentos.subcomando == "calendario":
@@ -214,7 +222,7 @@ def main() -> int:
         else:
             falhas.update(resumo["falhas"])
     argumentos.corpo.write_text(
-        montar_corpo(suites, falhas, argumentos.data, argumentos.execucao), encoding="utf-8",
+        montar_corpo(suites, falhas, argumentos.data, argumentos.execucao, argumentos.fora.split()), encoding="utf-8",
     )
     anteriores = ler_falhas_anteriores(argumentos.anterior)
     argumentos.comentario.write_text(

@@ -33,6 +33,14 @@ env:
   TRIBUNAL: ${{ github.event_name == 'pull_request' && 'tjmg' || inputs.tribunal }}
   # A issue só é reescrita com o retrato inteiro e com o código da main. Uma
   # execução de um tribunal só faria todas as outras falhas "saírem da lista".
+  # Tribunais e agregadores que dão problema só no runner do GitHub e por isso
+  # ficam fora da execução completa: medidos em 14/10/2026, falharam no runner
+  # (conexão sem resposta, leitura sem resposta nos testes que paginam, página
+  # de desafio no lugar do JSON ou HTTP 403) e passaram, ou falharam por outro
+  # motivo, a partir de IP residencial no Brasil. No CI eles mostrariam toda
+  # semana o problema do runner, e não a quebra que a issue existe para pegar.
+  # Rodam localmente, ou num disparo manual com `tribunal`, que ignora a lista.
+  FORA_DO_CI: "falcao tjac tjam tjes tjms tjpb tjpi tjrj tjrn tjro tjrs"
   ATUALIZAR_ISSUE: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.atualizar_issue && inputs.tribunal == '' && github.ref == 'refs/heads/main') }}
 
 jobs:
@@ -66,14 +74,6 @@ jobs:
     env:
       # Notebooks que só rodam com credencial de gov.br.
       NOTEBOOKS_COM_CREDENCIAL: "jusbr pdpj"
-      # Tribunais e agregadores que recusam o runner do GitHub e por isso
-      # ficam fora da execução completa: medidos em 14/10/2026, falharam no
-      # runner (conexão sem resposta, página de desafio no lugar do JSON ou
-      # HTTP 403) e passaram, ou falharam por outro motivo, a partir de IP
-      # residencial no Brasil. No CI eles só mostrariam o bloqueio, e nunca a
-      # quebra que a issue existe para pegar. Rodam localmente, ou num disparo
-      # manual com `tribunal`, que ignora esta lista.
-      FORA_DO_CI: "falcao tjac tjam tjes tjms tjpb tjpi tjrj tjrn tjro tjrs"
     steps:
       - uses: actions/checkout@v7
         with:
@@ -219,7 +219,13 @@ jobs:
           if [ -z "$TRIBUNAL" ] || [ -f junit-notebooks.xml ]; then
             suites+=(--suite "notebooks=junit-notebooks.xml")
           fi
-          python3 scripts/integration_report.py relatorio "${suites[@]}" \
+          # A issue diz quem ficou fora da execução completa, para que a falta
+          # de falhas de um tribunal da lista não se leia como tribunal em dia.
+          fora=()
+          if [ -z "$TRIBUNAL" ]; then
+            fora=(--fora "$FORA_DO_CI")
+          fi
+          python3 scripts/integration_report.py relatorio "${suites[@]}" "${fora[@]}" \
             --anterior anterior.md --corpo corpo.md --comentario comentario.md \
             --execucao "$EXECUCAO" --data "$DATA"
           cat corpo.md >> "$GITHUB_STEP_SUMMARY"
