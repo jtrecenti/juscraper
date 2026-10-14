@@ -1,6 +1,7 @@
 """Login gov.br com um Playwright falso (sem navegador nem rede)."""
 import asyncio
 import os
+import re
 import signal
 import subprocess
 import sys
@@ -239,6 +240,28 @@ def test_volta_ao_portal_sem_token_recarrega_a_consulta_uma_vez(mocker):
     assert browser.context.page.gotos == [PORTAL_CONSULTA, PORTAL_CONSULTA]
 
 
+def test_portal_sem_token_nao_repete_reload_ate_o_prazo(mocker, monkeypatch):
+    monkeypatch.setattr(login, "ESPERA_ANTES_DO_RELOAD", 2.0)
+    _, navegador = _instalar_playwright_falso(
+        mocker,
+        [PORTAL_CONSULTA, _SSO, PORTAL_CONSULTA],
+        {},
+    )
+    pagina = navegador.context.page
+    # O relógio acompanha os passos de 500 ms, sem depender de quantas vezes é consultado.
+    monkeypatch.setattr(login, "time", types.SimpleNamespace(monotonic=lambda: pagina.passo * 0.5))
+    navegar = mocker.spy(login, "_navegar")
+
+    with pytest.raises(RuntimeError, match="nao terminou em 12s"):
+        obter_credencial_govbr(timeout=12)
+
+    assert pagina.passo == 24
+    # Uma abertura inicial e um único reload, mesmo após várias janelas de espera.
+    assert navegar.call_count == 2
+    assert pagina.gotos == [PORTAL_CONSULTA, PORTAL_CONSULTA]
+    assert navegador.processo.encerrado
+
+
 def test_sem_token_ate_o_prazo_levanta_e_fecha_o_navegador(mocker):
     _, browser = _instalar_playwright_falso(mocker, [PORTAL_CONSULTA], {})
     mocker.patch("juscraper.aggregators._pdpj_sso.login.time.monotonic", side_effect=[0.0, 0.0, 0.0, 0.0, 500.0])
@@ -397,6 +420,24 @@ def test_com_bearer_espera_a_resposta_de_token_para_ter_o_refresh(mocker, monkey
     assert obter_credencial_govbr(timeout=5) == CredencialPdpj(_DO_PORTAL, "renovacao")
 
 
+def test_so_access_token_retorna_apos_espera_pelo_refresh_antes_do_prazo(mocker, monkeypatch):
+    monkeypatch.setattr(login, "ESPERA_PELO_REFRESH", 2.25)
+    _, navegador = _instalar_playwright_falso(
+        mocker,
+        [PORTAL_CONSULTA, _SSO, PORTAL_CONSULTA],
+        {2: [_requisicao(_API, _DO_PORTAL)]},
+    )
+    pagina = navegador.context.page
+    monkeypatch.setattr(login, "time", types.SimpleNamespace(monotonic=lambda: pagina.passo * 0.5))
+
+    assert obter_credencial_govbr(timeout=12) == CredencialPdpj(_DO_PORTAL, None)
+
+    # O token chega em 1 s; a primeira volta após os 2,25 s de espera ocorre em 3,5 s.
+    assert pagina.passo * 0.5 == 3.5
+    assert pagina.gotos == [PORTAL_CONSULTA]
+    assert navegador.processo.encerrado
+
+
 def test_reload_lento_nao_interrompe_a_espera(mocker):
     _, browser = _instalar_playwright_falso(
         mocker,
@@ -532,20 +573,43 @@ def test_abrir_navegador_cancelado_encerra_o_processo(mocker, tmp_path):
 @pytest.mark.skipif(sys.platform == "win32", reason="SIGINT enviado ao proprio processo")
 def test_ctrl_c_com_worker_preso_nao_segura_a_saida_do_interpretador():
     """O worker e daemon: o processo sai logo depois do Ctrl-C, sem esperar o ``goto`` preso."""
+    # O cronômetro fica no filho e cobre só do Ctrl-C até a saída do
+    # interpretador. Medido do pai, o intervalo incluiria a partida do Python e
+    # o import do juscraper, que sob carga passam do limite sozinhos. O
+    # ``atexit`` serve de marca de saída porque o interpretador só o executa
+    # depois de esperar as threads que não são daemon. O Ctrl-C só sai quando
+    # o worker falso já está preso: com prazo fixo, um worker que demorasse a
+    # partir receberia o sinal antes de existir, e o teste passaria sem medir
+    # nada. No Python 3.11, depois do Ctrl-C o interpretador sai sem esperar o
+    # worker, com ou sem daemon, e o tempo não denuncia um worker não daemon.
+    # Por isso o worker falso também informa se a própria thread é daemon, o
+    # que vale em toda versão.
     codigo = (
-        "import os, signal, threading, time\n"
+        "import atexit, os, signal, sys, threading, time\n"
         "from juscraper.aggregators._pdpj_sso import login\n"
-        "login._obter_credencial = lambda *_a: time.sleep(20)\n"
-        "threading.Timer(0.3, os.kill, args=(os.getpid(), signal.SIGINT)).start()\n"
+        "worker_preso = threading.Event()\n"
+        "def credencial_presa(*_a):\n"
+        "    print(f'worker_daemon={threading.current_thread().daemon}', file=sys.stderr)\n"
+        "    worker_preso.set()\n"
+        "    time.sleep(20)\n"
+        "login._obter_credencial = credencial_presa\n"
+        "def ctrl_c():\n"
+        "    worker_preso.wait()\n"
+        "    inicio = time.monotonic()\n"
+        "    atexit.register(lambda: print(f'saida_em={time.monotonic() - inicio:.3f}', file=sys.stderr))\n"
+        "    os.kill(os.getpid(), signal.SIGINT)\n"
+        "threading.Thread(target=ctrl_c, daemon=True).start()\n"
         "login.obter_credencial_govbr(timeout=5)\n"
     )
-    inicio = time.monotonic()
     completado = subprocess.run(
-        [sys.executable, "-c", codigo], capture_output=True, text=True, timeout=30, check=False,
+        [sys.executable, "-c", codigo], capture_output=True, text=True, timeout=120, check=False,
     )
 
     assert "KeyboardInterrupt" in completado.stderr
-    assert time.monotonic() - inicio < 10
+    assert "worker_daemon=True" in completado.stderr, completado.stderr
+    saida = re.search(r"saida_em=([\d.]+)", completado.stderr)
+    assert saida is not None, completado.stderr
+    assert float(saida.group(1)) < 5
 
 
 def test_erro_de_rede_na_abertura_sobe_na_hora(mocker):
