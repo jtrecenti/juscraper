@@ -1,7 +1,8 @@
 """Caracterização da seleção de botões na página de escolha do TJPE.
 
-Os casos partem da página capturada (``cjsg/step_02_escolha.html``) e os de
-borda alteram a linha de acórdãos dela. HTML escrito à mão aparece só em
+Os casos partem da página capturada (``cjsg/step_02_escolha.html``). Os de
+borda trocam trechos da linha de acórdãos dela por fragmentos escritos no
+teste; a página inteira só é escrita à mão em
 ``test_escolha_estrutura_incompleta``, que repete as guardas de estrutura sem
 nenhuma marcação ao redor.
 """
@@ -134,7 +135,15 @@ def test_escolha_primeira_linha_valida_vence():
 @pytest.mark.parametrize(
     ("trocas", "esperado"),
     [
-        pytest.param([(TEXTO, f"<span>{TEXTO}</span>")], ID_ACORDAOS, id="texto_dentro_de_span"),
+        pytest.param(
+            [(TEXTO, "953 <span>documentos</span> encontrados")], ID_ACORDAOS, id="texto_partido_por_tag"
+        ),
+        pytest.param(
+            [(ROTULO, "<label>\nAc&oacute;rd&atilde;os&nbsp;</label>")], ID_ACORDAOS, id="rotulo_com_nbsp"
+        ),
+        pytest.param(
+            [(CELULA_DO_LINK, '<td class="text-right"><span><a')], ID_ACORDAOS, id="link_dentro_de_span_na_celula"
+        ),
         pytest.param(
             [(ROTULO, "<label>\nAc&oacute;rd&atilde;os \n</label>")],
             ID_ACORDAOS,
