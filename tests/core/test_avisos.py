@@ -36,8 +36,10 @@ def test_categoria_e_repassada():
 
 
 def _emite_aviso_direto(no: ast.AST) -> bool:
-    if isinstance(no, ast.Call):
-        return ast.unparse(no.func) in {"warnings.warn", "warnings.warn_explicit"}
+    # Pega a referência, e não só a chamada: ``w = warnings.warn`` e
+    # ``partial(warnings.warn, ...)`` também emitem sem passar por ``avisar``.
+    if isinstance(no, ast.Attribute):
+        return ast.unparse(no) in {"warnings.warn", "warnings.warn_explicit"}
     if isinstance(no, ast.ImportFrom) and no.module == "warnings":
         return any(nome.name in {"warn", "warn_explicit", "*"} for nome in no.names)
     if isinstance(no, ast.Import):
@@ -70,6 +72,8 @@ def test_nenhum_warnings_warn_fora_de_avisos():
         "import warnings\nwarnings.warn_explicit('x', UserWarning, 'f', 1)",
         "from warnings import warn\nwarn('x', stacklevel=2)",
         "import warnings as w\nw.warn('x', stacklevel=2)",
+        "import warnings\naviso = warnings.warn\naviso('x')",
+        "import functools, warnings\nfunctools.partial(warnings.warn, stacklevel=2)('x')",
     ],
 )
 def test_gate_reconhece_as_formas_de_emitir_aviso(trecho):

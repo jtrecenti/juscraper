@@ -1,6 +1,7 @@
 """
 Base scraper class for court data extraction.
 """
+import datetime
 import functools
 import inspect
 import logging
@@ -28,7 +29,12 @@ def _coluna_com_ausente_a_trocar(coluna: pd.Series) -> bool:
         return tipo.na_value is not pd.NA
     if tipo == object:
         ausentes = coluna.isna()
-        return bool(ausentes.any()) and any(valor is not None for valor in coluna[ausentes])
+        if not ausentes.any() or all(valor is None for valor in coluna[ausentes]):
+            return False
+        # Coluna de datas em ``object`` (o ``.dt.date`` que os parsers usam) é
+        # data, não texto: o ``NaT`` dela fica, como nas colunas ``datetime64``.
+        presentes = coluna[~ausentes]
+        return presentes.empty or not all(isinstance(valor, (datetime.date, datetime.time)) for valor in presentes)
     return False
 
 
@@ -40,9 +46,11 @@ def _texto_ausente_como_none(tabela: pd.DataFrame) -> pd.DataFrame:
     o pandas 2 também produz quando a chave falta num registro ou vem de
     ``concat``/``merge``, troca esses valores por ``None``. Assim a mesma
     chamada devolve o mesmo marcador em toda versão do Python e do pandas.
-    Fica de fora o ``"string"`` explícito, que usa ``pd.NA`` desde o pandas 1 e
-    é pedido de propósito, e as colunas numéricas e de data, em que ``NaN`` e
-    ``NaT`` são o ausente do próprio tipo. Sem nada a trocar, a tabela volta a
+    Ficam de fora o ``"string"`` explícito, que usa ``pd.NA`` desde o pandas 1
+    e é pedido de propósito, as colunas numéricas e ``datetime64``, e as
+    colunas ``object`` de datas (``date``, ``datetime``, ``time``), em que
+    ``NaN`` e ``NaT`` são o ausente do próprio tipo. Coluna ``object`` só com
+    ausentes não tem tipo a preservar e vira ``None``. Sem nada a trocar, a tabela volta a
     mesma, sem cópia. A troca é por posição, para valer também com nomes de
     coluna repetidos.
     """
@@ -86,6 +94,10 @@ def _com_saida_normalizada(metodo: Callable[_P, _R]) -> Callable[_P, _R]:
     return embrulhado
 
 
+def _e_classe_do_juscraper(classe: type) -> bool:
+    return issubclass(classe, BaseScraper) or classe.__module__.split(".")[0] == "juscraper"
+
+
 def _embrulhar_atributo(atributo: object) -> object | None:
     """Devolve o atributo embrulhado, ou ``None`` se não for método a embrulhar."""
     if isinstance(atributo, (staticmethod, classmethod)):
@@ -118,12 +130,20 @@ class BaseScraper(ABC):
         continua alcançando as subclasses pelo MRO, e o ``pickle`` do método,
         que procura a função pelo ``__qualname__``, encontra o mesmo objeto.
         O marcador ``_normaliza_saida`` impede embrulhar duas vezes.
+
+        Só entram métodos de raspadores (subclasses de ``BaseScraper``, inclusive
+        as do usuário) e de classes do pacote ``juscraper``. Uma classe de fora
+        misturada ao raspador, como um mixin do usuário ou ``threading.Thread``,
+        não é alterada, porque o embrulho gravado nela valeria para o processo
+        inteiro.
         """
         super().__init_subclass__(**kwargs)
         for nome in dir(cls):
             if nome.startswith("_"):
                 continue
             dono = next(classe for classe in cls.__mro__ if nome in vars(classe))
+            if not _e_classe_do_juscraper(dono):
+                continue
             embrulhado = _embrulhar_atributo(vars(dono)[nome])
             if embrulhado is not None:
                 setattr(dono, nome, embrulhado)

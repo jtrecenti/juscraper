@@ -11,8 +11,10 @@ que deixa estes testes exercitarem o caso do pandas 3 em qualquer ambiente.
 """
 from __future__ import annotations
 
+import datetime
 import inspect
 import pickle
+import threading
 from collections.abc import Callable
 from importlib import import_module
 
@@ -21,7 +23,9 @@ import pandas as pd
 import pytest
 
 from juscraper import _SCRAPERS
+from juscraper.aggregators.pdpj.client import PdpjScraper
 from juscraper.core.base import BaseScraper
+from juscraper.core.parse_utils import coerce_date_columns
 
 
 def _classe(sigla: str) -> type:
@@ -31,6 +35,10 @@ def _classe(sigla: str) -> type:
 
 
 class _Mixin:
+    # Faz as vezes de um mixin interno, como o do login PDPJ: só classes do
+    # pacote ``juscraper`` e raspadores recebem o embrulho.
+    __module__ = "juscraper._mixin_de_teste"
+
     def tabela_do_mixin(self) -> pd.DataFrame:
         return pd.DataFrame([{"texto": None}, {"texto": "b"}])
 
@@ -64,6 +72,9 @@ class _Raspador(_Mixin, BaseScraper):
 
     def devolve(self, tabela: pd.DataFrame) -> pd.DataFrame:
         return tabela
+
+    def _interno(self) -> pd.DataFrame:
+        return pd.DataFrame([{"texto": "a"}, {"outro": "b"}])
 
 
 class _Neto(_Raspador):
@@ -139,8 +150,45 @@ def test_patch_no_mixin_alcanca_a_subclasse(mocker):
 
 
 def test_metodo_embrulhado_continua_serializavel():
-    for metodo in (_Raspador.tabela, _Raspador.tabela_do_mixin):
+    # ``auth_govbr`` vem do mixin interno do login PDPJ.
+    for metodo in (_Raspador.tabela, PdpjScraper.auth_govbr):
         assert pickle.loads(pickle.dumps(metodo)) is metodo
+
+
+def test_metodo_privado_nao_e_embrulhado():
+    # A garantia vale na fronteira pública; o parse interno devolve o que o
+    # pandas produzir.
+    assert not hasattr(_Raspador._interno, "__wrapped__")  # noqa: SLF001
+    assert _Raspador()._interno()["texto"].isna().tolist() == [False, True]  # noqa: SLF001
+
+
+def test_classe_de_fora_misturada_ao_raspador_nao_e_alterada():
+    class Relatorio:
+        def tabela(self) -> pd.DataFrame:
+            return pd.DataFrame([{"a": "a"}, {"b": "b"}])
+
+    class Planilha(Relatorio):
+        pass
+
+    class RaspadorComRelatorio(Relatorio, BaseScraper):
+        pass
+
+    class RaspadorThread(BaseScraper, threading.Thread):
+        pass
+
+    assert not hasattr(Relatorio.tabela, "__wrapped__")
+    assert pd.isna(Planilha().tabela()["a"].tolist()[1])
+    assert not hasattr(threading.Thread.start, "__wrapped__")
+    assert issubclass(RaspadorComRelatorio, BaseScraper)
+    assert issubclass(RaspadorThread, threading.Thread)
+
+
+def test_metodo_publico_de_subclasse_do_usuario_e_normalizado():
+    class MeuRaspador(BaseScraper):
+        def minha_analise(self) -> pd.DataFrame:
+            return pd.DataFrame([{"texto": "a"}, {"outro": "b"}])
+
+    assert MeuRaspador("teste").minha_analise()["texto"].tolist() == ["a", None]
 
 
 @pytest.mark.usefixtures("inferencia_do_pandas_3")
@@ -175,6 +223,37 @@ def test_ausentes_de_coluna_object_viram_none_e_o_resto_fica():
     assert valores[0] is lista
     assert valores[1:4] == [None, None, None]
     assert valores[4] == {"a": 1}
+
+
+@pytest.mark.parametrize(
+    "valores",
+    [
+        [datetime.date(2024, 3, 10), pd.NaT, np.nan],
+        [datetime.datetime(2024, 3, 10, 12, 0, tzinfo=datetime.UTC), pd.NaT],
+        [datetime.time(12, 0), pd.NaT],
+    ],
+)
+def test_coluna_object_de_datas_mantem_nat(valores):
+    # ``pd.to_datetime(...).dt.date``, que os parsers usam, dá coluna ``object``
+    # de ``date`` com ``NaT`` no ausente; ``.year`` sobre ``None`` quebraria.
+    original = pd.DataFrame({"data": pd.Series(valores, dtype=object)})
+
+    class Datas(BaseScraper):
+        def tabela(self) -> pd.DataFrame:
+            return original
+
+    assert Datas("teste").tabela() is original
+
+
+def test_coluna_de_datas_do_parser_continua_com_nat():
+    class Datas(BaseScraper):
+        def tabela(self) -> pd.DataFrame:
+            return coerce_date_columns(pd.DataFrame({"data": ["2024-03-10", None]}), ["data"])
+
+    valores = Datas("teste").tabela()["data"].tolist()
+
+    assert valores[0] == datetime.date(2024, 3, 10)
+    assert valores[1] is pd.NaT
 
 
 def test_coluna_object_ja_com_none_nao_gera_copia():
