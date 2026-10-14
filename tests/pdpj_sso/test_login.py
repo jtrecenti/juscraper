@@ -477,7 +477,8 @@ def test_ctrl_c_chega_ao_chamador_sem_esperar_o_worker(mocker):
         raise RuntimeError("Login no gov.br cancelado.")
 
     mocker.patch.object(login, "_obter_credencial", side_effect=worker)
-    # SIGINT real, como o do Ctrl-C: ``interrupt_main`` nao acorda o ``result()`` bloqueado.
+    # SIGINT real, como o do Ctrl-C: ``interrupt_main`` so marca o sinal, sem interromper a espera,
+    # e o ``worker.join()`` bloqueado seguiria ate o worker terminar.
     threading.Timer(0.2, os.kill, args=(os.getpid(), signal.SIGINT)).start()
     inicio = time.monotonic()
 
