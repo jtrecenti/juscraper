@@ -1,0 +1,21 @@
+name: Status documental
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  status:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - run: uv python install 3.11
+      - run: uv sync --python 3.11 --extra dev
+      - name: Verificar registro e tabelas sem coletar dados externos
+        run: uv run pytest tests/test_status_documentacao.py tests/tjap

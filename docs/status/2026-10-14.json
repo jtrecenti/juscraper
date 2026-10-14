@@ -1,0 +1,851 @@
+{
+  "data": "2026-10-14",
+  "codigo_testado": "ea68b715d35bc45b07612911c1348a13d6e1fb3b",
+  "versao_juscraper": "0.4.0",
+  "ambiente": {
+    "sistema": "Linux",
+    "python": "3.11.14",
+    "rede": "Wi-Fi local; NetworkManager sem VPN ativa e sem interface de túnel ativa na inspeção local",
+    "extras": {
+      "txtcaptcha": "0.1.0"
+    }
+  },
+  "metodo": "Reamostra dos endpoints que a rodada de 03/10/2026 registrou como indisponíveis ou inconclusivos, mais o contar_processos do Datajud, que entrou no inventário depois dela. Consultas pela API pública do pacote, importado do código testado. Uma página por busca ou um CNJ por consulta processual, todas em sequência, com pausa de 3 a 5 segundos entre consultas. Intervalo e retry internos de cada raspador preservados. Limite de 120 segundos por chamada, 180 segundos para TRF6, e 60 requisições HTTP por ensaio. Três consultas foram repetidas uma vez: TJMT e TJRO, para inspecionar a resposta recebida, e TRF3, cerca de três minutos depois do primeiro HTTP 403. A chamada do Falcão foi única. Nenhuma chamada de JusBR ou PDPJ e nenhum token pessoal usado.",
+  "validacao": "DataFrame não vazio, presença das colunas listadas em cada tentativa e pelo menos um valor preenchido nos campos indicados. A contagem do Datajud exige total positivo. Essa checagem não prova completude, paginação adicional nem funcionamento de filtros não exercitados. Estados classificados após leitura dos resultados e das respostas de falha, inspecionadas localmente; timeout ou resposta vazia isolados não bastam para indisponibilidade.",
+  "evidencia": "Inclui parâmetros, horários UTC, formato dos retornos, contagens de preenchimento, status HTTP e hashes SHA-256 das respostas. Corpos de respostas, textos judiciais, nomes de partes, credenciais, IPs, nomes de redes locais e o código de referência das páginas de bloqueio não são republicados.",
+  "resumo": {
+    "funcionando": 3,
+    "indisponivel": 10
+  },
+  "endpoints_publicos_consultados": 13,
+  "resultados": [
+    {
+      "fonte": "datajud",
+      "endpoint": "contar_processos",
+      "estado": "funcionando",
+      "motivo": "Retornou 1 linha para o TJSP, com contagem 1 e relação exata (eq); colunas exigidas, preenchimento mínimo e total positivo conferidos no cenário informado. A resposta levou cerca de 40 segundos. O estado se limita à contagem por CNJ.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('datajud').contar_processos(tribunal='TJSP', numero_processo='1000413-22.2017.8.26.0415'). Somente a contagem pelo CNJ informado, sem validar filtros por classe, assunto, ano, data ou movimentação",
+      "tentativas": [
+        {
+          "fonte": "datajud",
+          "endpoint": "contar_processos",
+          "parametros": {
+            "tribunal": "TJSP",
+            "numero_processo": "1000413-22.2017.8.26.0415"
+          },
+          "colunas_exigidas": [
+            "tribunal",
+            "count",
+            "relation"
+          ],
+          "preenchimento_exigido": [
+            "count"
+          ],
+          "inicio_utc": "2026-10-14T12:32:08.393480+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "POST",
+              "origem": "https://api-publica.datajud.cnj.jus.br",
+              "caminho": "/api_publica_tjsp/_search",
+              "status": 200,
+              "bytes": 191,
+              "sha256": "e54948c0fd3ef2e35eace909376aedba7118e484644a40b4d4f8f1452b9aca76"
+            }
+          ],
+          "retorno": {
+            "linhas": 1,
+            "colunas": [
+              "tribunal",
+              "alias",
+              "count",
+              "relation",
+              "error"
+            ],
+            "preenchidos": {
+              "count": 1
+            },
+            "total": 1
+          },
+          "checagem": "aprovada",
+          "duracao_segundos": 39.84,
+          "fim_utc": "2026-10-14T12:32:48.230427+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "falcao",
+      "endpoint": "listar_decisoes",
+      "estado": "funcionando",
+      "motivo": "Retornou 5 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado. A chamada única recebeu HTTP 200; o HTTP 429 de 03/10 não se repetiu. A ementa veio preenchida em 3 dos 5 registros.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('falcao').listar_decisoes(pesquisa='dano moral', paginas=1, tamanho_pagina=5). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "falcao",
+          "endpoint": "listar_decisoes",
+          "parametros": {
+            "pesquisa": "dano moral",
+            "paginas": 1,
+            "tamanho_pagina": 5
+          },
+          "colunas_exigidas": [
+            "processo",
+            "colecao",
+            "tribunal",
+            "classe_sigla",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "inicio_utc": "2026-10-14T12:28:06.891587+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://jurisprudencia.jt.jus.br",
+              "caminho": "/jurisprudencia-nacional-backend/api/no-auth/pesquisa",
+              "status": 200,
+              "bytes": 647629,
+              "sha256": "60108d0251aeec717f782b90f94fc6a0dbb3831547220f5320f05c771a7a62bc"
+            }
+          ],
+          "retorno": {
+            "linhas": 5,
+            "colunas": [
+              "siglaClasseProcesso",
+              "classeProcesso",
+              "relator",
+              "tribunal",
+              "idGabinete",
+              "gabinete",
+              "idTurma",
+              "turma",
+              "textoAcordao",
+              "ementa",
+              "possuiEmenta",
+              "idDocumentoAcordao",
+              "referenciaLegislativa",
+              "prioridades",
+              "score",
+              "processo",
+              "colecao",
+              "data_julgamento",
+              "data_juntada",
+              "classe",
+              "classe_sigla"
+            ],
+            "preenchidos": {
+              "processo": 5,
+              "ementa": 3
+            }
+          },
+          "checagem": "aprovada",
+          "duracao_segundos": 9.98,
+          "fim_utc": "2026-10-14T12:28:16.867314+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjap",
+      "endpoint": "cjsg",
+      "estado": "indisponivel",
+      "motivo": "A busca foi bloqueada pela verificação de segurança e levantou TJAPSecurityCheckError. A resposta HTTP 200 tem o mesmo SHA-256 da rodada de 03/10. O bloqueio continua presente no cenário testado.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjap').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjap",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "inicio_utc": "2026-10-14T12:28:23.807249+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "POST",
+              "origem": "https://tucujuris.tjap.jus.br",
+              "caminho": "/api/publico/consultar-jurisprudencia",
+              "status": 200,
+              "bytes": 344,
+              "sha256": "39029a4abf2969873d030734a0ddf15b1dbc4b53be9d9cb4ec68847b64382e66"
+            }
+          ],
+          "checagem": "nao_aprovada",
+          "erro_tipo": "juscraper.courts.tjap.exceptions.TJAPSecurityCheckError",
+          "erro": "TJAP (Tucujuris) bloqueou a consulta de jurisprudência: 'A verificação de segurança falhou'. O tribunal passou a exigir um CAPTCHA Cloudflare Turnstile na busca, validado server-side. O raspador (HTTP puro, sem browser) não consegue produzir esse token, então a coleta de cjsg do TJAP não funciona pela API pública. Ver issue #279.",
+          "duracao_segundos": 10.92,
+          "fim_utc": "2026-10-14T12:28:34.726166+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjgo",
+      "endpoint": "cjsg",
+      "estado": "indisponivel",
+      "motivo": "A busca devolveu DataFrame vazio, e a resposta HTTP 200 contém o formulário de pesquisa sem resultados. O formulário carrega um widget Cloudflare Turnstile que preenche o campo g-recaptcha-response antes da busca, e a página menciona validação desse token no servidor; o raspador envia o campo vazio. A exigência do token é a causa provável do retorno vazio, também observado nas duas buscas de 03/10. Não foi testada busca com token válido.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjgo').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjgo",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "texto"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "texto"
+          ],
+          "inicio_utc": "2026-10-14T12:31:43.394001+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://projudi.tjgo.jus.br",
+              "caminho": "/ConsultaJurisprudencia",
+              "status": 200,
+              "bytes": 39367,
+              "sha256": "83609399fdc01d56f9e642034927f6070a7ad0f3d05a756c7624d727fff7f792"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://projudi.tjgo.jus.br",
+              "caminho": "/ConsultaJurisprudencia",
+              "status": 200,
+              "bytes": 39429,
+              "sha256": "05b5b6b38f3e16b9646763e4d4622fcb0ff6dd96dfb76480f279da94df48caae"
+            }
+          ],
+          "retorno": {
+            "linhas": 0,
+            "colunas": [],
+            "preenchidos": {}
+          },
+          "checagem": "nao_aprovada",
+          "erro_tipo": "builtins.AssertionError",
+          "erro": "Resposta vazia; insuficiente para confirmar funcionamento",
+          "duracao_segundos": 4.2,
+          "fim_utc": "2026-10-14T12:31:47.595864+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjmt",
+      "endpoint": "cjsg",
+      "estado": "indisponivel",
+      "motivo": "As duas tentativas receberam HTML na URL de configuração esperada como JSON e terminaram em JSONDecodeError, antes da busca. O HTML agora tem 60.193 bytes e é a página inicial do aplicativo de jurisprudência, no lugar da página de 2.785 bytes recebida em 03/10. O endereço não entrega mais a configuração que o raspador usa para obter a URL da API e o token.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjmt').cjsg(pesquisa='direito', paginas=1); depois jus.scraper('tjmt').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjmt",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "inicio_utc": "2026-10-14T12:28:40.310422+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://jurisprudencia.tjmt.jus.br",
+              "caminho": "/assets/config/config.json",
+              "status": 200,
+              "bytes": 60193,
+              "sha256": "e06898df80a7a9abe87e6b8b4e34824634276ba9d2064f0bbaadcaa182001886"
+            }
+          ],
+          "checagem": "nao_aprovada",
+          "erro_tipo": "requests.exceptions.JSONDecodeError",
+          "erro": "Expecting value: line 1 column 1 (char 0)",
+          "duracao_segundos": 5.32,
+          "fim_utc": "2026-10-14T12:28:45.631416+00:00"
+        },
+        {
+          "fonte": "tjmt",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "identificador": "tjmt.cjsg.segunda",
+          "inicio_utc": "2026-10-14T12:31:16.803206+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://jurisprudencia.tjmt.jus.br",
+              "caminho": "/assets/config/config.json",
+              "status": 200,
+              "bytes": 60193,
+              "sha256": "e06898df80a7a9abe87e6b8b4e34824634276ba9d2064f0bbaadcaa182001886"
+            }
+          ],
+          "checagem": "nao_aprovada",
+          "erro_tipo": "requests.exceptions.JSONDecodeError",
+          "erro": "Expecting value: line 1 column 1 (char 0)",
+          "duracao_segundos": 2.7,
+          "fim_utc": "2026-10-14T12:31:19.506027+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjro",
+      "endpoint": "cjsg",
+      "estado": "indisponivel",
+      "motivo": "As duas tentativas terminaram em JSONDecodeError. A resposta HTTP 200 inspecionada contém a página que declara bloqueio por suspeita de robotização, com o mesmo tamanho da rodada de 03/10.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjro').cjsg(pesquisa='direito', paginas=1); depois jus.scraper('tjro').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjro",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "inicio_utc": "2026-10-14T12:28:49.914609+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "POST",
+              "origem": "https://juris-back.tjro.jus.br",
+              "caminho": "/search/varios_parametros/",
+              "status": 200,
+              "bytes": 3065,
+              "sha256": "b53b246dbf77227221b4d84925f56c6b46c474890f70a0c7d2bc0b516588cd36"
+            }
+          ],
+          "checagem": "nao_aprovada",
+          "erro_tipo": "requests.exceptions.JSONDecodeError",
+          "erro": "Expecting value: line 1 column 1 (char 0)",
+          "duracao_segundos": 8.61,
+          "fim_utc": "2026-10-14T12:28:58.521411+00:00"
+        },
+        {
+          "fonte": "tjro",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "identificador": "tjro.cjsg.segunda",
+          "inicio_utc": "2026-10-14T12:31:23.385611+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "POST",
+              "origem": "https://juris-back.tjro.jus.br",
+              "caminho": "/search/varios_parametros/",
+              "status": 200,
+              "bytes": 3065,
+              "sha256": "341b374ecca4f1704bcb8adad88b918bc7aac7ea7d8f6538070b16d1a86aa239"
+            }
+          ],
+          "checagem": "nao_aprovada",
+          "erro_tipo": "requests.exceptions.JSONDecodeError",
+          "erro": "Expecting value: line 1 column 1 (char 0)",
+          "duracao_segundos": 2.48,
+          "fim_utc": "2026-10-14T12:31:25.869977+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjrs",
+      "endpoint": "cjsg",
+      "estado": "funcionando",
+      "motivo": "Retornou 10 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado. O erro Solr que esvaziou as buscas de 03/10 não se repetiu.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjrs').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjrs",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "inicio_utc": "2026-10-14T12:29:19.444356+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "POST",
+              "origem": "https://www.tjrs.jus.br",
+              "caminho": "/buscas/jurisprudencia/ajax.php",
+              "status": 200,
+              "bytes": 10055417,
+              "sha256": "8348eb4a6c743b73517e39426e11834cb8952433a0de23ec4d78b0d47afd4866"
+            }
+          ],
+          "retorno": {
+            "linhas": 10,
+            "colunas": [
+              "processo",
+              "relator",
+              "orgao_julgador",
+              "data_julgamento",
+              "data_publicacao",
+              "classe",
+              "assunto",
+              "tribunal",
+              "tipo_processo",
+              "url",
+              "ementa",
+              "documento_text",
+              "documento_tiff",
+              "ementa_text",
+              "mes_ano_publicacao",
+              "origem",
+              "secao",
+              "ano_julgamento",
+              "nome_relator",
+              "ind_segredo_justica",
+              "ementa_referencia",
+              "cod_ementa",
+              "cod_classe_cnj",
+              "cod_org_julg",
+              "cod_redator",
+              "cod_tipo_documento",
+              "cod_tribunal",
+              "cod_assunto_cnj",
+              "cod_relator",
+              "cod_recurso",
+              "tipo_documento",
+              "dthr_criacao",
+              "_version_"
+            ],
+            "preenchidos": {
+              "processo": 10,
+              "ementa": 10
+            }
+          },
+          "checagem": "aprovada",
+          "duracao_segundos": 10.2,
+          "fim_utc": "2026-10-14T12:29:29.647021+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjsp",
+      "endpoint": "cposg",
+      "estado": "indisponivel",
+      "motivo": "A consulta HTML do CNJ retornou DataFrame vazio. O portal entregou a página de detalhe do processo, que agora carrega as movimentações por Ajax; o parser exige o marcador tabelaTodasMovimentacoes, ausente da página, e a descartou. A coleta falha por incompatibilidade do parser com a página atual.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjsp').cposg(id_cnj='1000149-71.2024.8.26.0346', method='html'). Somente os parâmetros informados, sem validar outros processos ou filtros",
+      "tentativas": [
+        {
+          "fonte": "tjsp",
+          "endpoint": "cposg",
+          "parametros": {
+            "id_cnj": "1000149-71.2024.8.26.0346",
+            "method": "html"
+          },
+          "colunas_exigidas": [
+            "processo",
+            "classe"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "classe"
+          ],
+          "inicio_utc": "2026-10-14T12:29:33.653211+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/open.do",
+              "status": 302,
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/sajcas/login",
+              "status": 200,
+              "bytes": 49023,
+              "sha256": "1646ab1735b55d6ba4d321af3a63423ec09ff2f0fc8f6bdf82dda072ae9e24bf"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/search.do",
+              "status": 200,
+              "bytes": 50014,
+              "sha256": "8cd0f7939c20e1e613876e9d43165e617fa5f10f7236a5d5950cb89498328e0e"
+            }
+          ],
+          "retorno": {
+            "linhas": 0,
+            "colunas": [
+              "id_original",
+              "processo",
+              "status",
+              "classe",
+              "assunto",
+              "secao",
+              "orgao_julgador",
+              "area",
+              "relator",
+              "valor_da_acao",
+              "origem",
+              "volume_apenso",
+              "movimentacoes",
+              "partes",
+              "historico",
+              "decisoes",
+              "composicao",
+              "primeira_inst"
+            ],
+            "preenchidos": {
+              "processo": 0,
+              "classe": 0
+            }
+          },
+          "checagem": "nao_aprovada",
+          "erro_tipo": "builtins.AssertionError",
+          "erro": "Resposta vazia; insuficiente para confirmar funcionamento",
+          "duracao_segundos": 6.06,
+          "fim_utc": "2026-10-14T12:29:39.715650+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjto",
+      "endpoint": "cjsg",
+      "estado": "indisponivel",
+      "motivo": "A busca foi recusada com HTTP 403 nas três tentativas internas do cliente e terminou em RetryExhaustedError. A resposta de 118 bytes tem o mesmo SHA-256 de 03/10. A causa do bloqueio não foi determinada.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjto').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjto",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "inicio_utc": "2026-10-14T12:29:43.860014+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "POST",
+              "origem": "https://jurisprudencia.tjto.jus.br",
+              "caminho": "/consulta.php",
+              "status": 403,
+              "bytes": 118,
+              "sha256": "58bf2215b395dcac74c009aa98701854e43cbe54a1cd3a95fee6a647ca9910d4"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://jurisprudencia.tjto.jus.br",
+              "caminho": "/consulta.php",
+              "status": 403,
+              "bytes": 118,
+              "sha256": "58bf2215b395dcac74c009aa98701854e43cbe54a1cd3a95fee6a647ca9910d4"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://jurisprudencia.tjto.jus.br",
+              "caminho": "/consulta.php",
+              "status": 403,
+              "bytes": 118,
+              "sha256": "58bf2215b395dcac74c009aa98701854e43cbe54a1cd3a95fee6a647ca9910d4"
+            }
+          ],
+          "checagem": "nao_aprovada",
+          "erro_tipo": "juscraper.core.exceptions.RetryExhaustedError",
+          "erro": "HTTP request failed after 3 attempts (last status: 403)",
+          "duracao_segundos": 10.33,
+          "fim_utc": "2026-10-14T12:29:54.189037+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjto",
+      "endpoint": "cjpg",
+      "estado": "indisponivel",
+      "motivo": "A busca foi recusada com HTTP 403 nas três tentativas internas do cliente e terminou em RetryExhaustedError. A resposta de 118 bytes tem o mesmo SHA-256 de 03/10. A causa do bloqueio não foi determinada.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjto').cjpg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjto",
+          "endpoint": "cjpg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "inicio_utc": "2026-10-14T12:30:00.540803+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "POST",
+              "origem": "https://jurisprudencia.tjto.jus.br",
+              "caminho": "/consulta.php",
+              "status": 403,
+              "bytes": 118,
+              "sha256": "58bf2215b395dcac74c009aa98701854e43cbe54a1cd3a95fee6a647ca9910d4"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://jurisprudencia.tjto.jus.br",
+              "caminho": "/consulta.php",
+              "status": 403,
+              "bytes": 118,
+              "sha256": "58bf2215b395dcac74c009aa98701854e43cbe54a1cd3a95fee6a647ca9910d4"
+            },
+            {
+              "metodo": "POST",
+              "origem": "https://jurisprudencia.tjto.jus.br",
+              "caminho": "/consulta.php",
+              "status": 403,
+              "bytes": 118,
+              "sha256": "58bf2215b395dcac74c009aa98701854e43cbe54a1cd3a95fee6a647ca9910d4"
+            }
+          ],
+          "checagem": "nao_aprovada",
+          "erro_tipo": "juscraper.core.exceptions.RetryExhaustedError",
+          "erro": "HTTP request failed after 3 attempts (last status: 403)",
+          "duracao_segundos": 9.83,
+          "fim_utc": "2026-10-14T12:30:10.371636+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "trf3",
+      "endpoint": "cpopg",
+      "estado": "indisponivel",
+      "motivo": "As duas consultas receberam HTTP 403 do bot manager Akamai e levantaram BotChallengeBlockedError antes do formulário. Bloqueio deste ambiente, sem inferência de indisponibilidade para outros IPs. Em 03/10 o mesmo CNJ recebeu HTTP 200 e retornou só id_cnj; esta reamostra não chegou ao formulário e não esclarece aquele resultado.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('trf3').cpopg(id_cnj='50059460920254036324'); depois jus.scraper('trf3').cpopg(id_cnj='50059460920254036324'). Somente os parâmetros informados, sem validar outros processos ou filtros",
+      "tentativas": [
+        {
+          "fonte": "trf3",
+          "endpoint": "cpopg",
+          "parametros": {
+            "id_cnj": "50059460920254036324"
+          },
+          "colunas_exigidas": [
+            "processo",
+            "classe",
+            "movimentacoes"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "classe"
+          ],
+          "inicio_utc": "2026-10-14T12:31:51.768074+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://pje1g.trf3.jus.br",
+              "caminho": "/pje/ConsultaPublica/listView.seam",
+              "status": 403,
+              "bytes": 416,
+              "sha256": "8149ab5d613923b4fffab3a0edbf8fa01b88fc713b7652d7a48c4869ba3e3a2a"
+            }
+          ],
+          "checagem": "nao_aprovada",
+          "erro_tipo": "juscraper.core.exceptions.BotChallengeBlockedError",
+          "erro": "TRF3 bloqueou a requisição (HTTP 403) em https://pje1g.trf3.jus.br/pje/ConsultaPublica/listView.seam. Provavelmente foi o bot manager (Akamai) limitando o seu IP — aguarde alguns minutos antes de tentar de novo ou troque de IP (VPN, hotspot). Reference: [omitida]",
+          "duracao_segundos": 3.08,
+          "fim_utc": "2026-10-14T12:31:54.843369+00:00"
+        },
+        {
+          "fonte": "trf3",
+          "endpoint": "cpopg",
+          "parametros": {
+            "id_cnj": "50059460920254036324"
+          },
+          "colunas_exigidas": [
+            "processo",
+            "classe",
+            "movimentacoes"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "classe"
+          ],
+          "identificador": "trf3.cpopg.segunda",
+          "inicio_utc": "2026-10-14T12:34:38.081523+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://pje1g.trf3.jus.br",
+              "caminho": "/pje/ConsultaPublica/listView.seam",
+              "status": 403,
+              "bytes": 416,
+              "sha256": "16958c380226a4434f1208897a70f8de0e0f8d7c66858ecb3db8d601f64fc725"
+            }
+          ],
+          "checagem": "nao_aprovada",
+          "erro_tipo": "juscraper.core.exceptions.BotChallengeBlockedError",
+          "erro": "TRF3 bloqueou a requisição (HTTP 403) em https://pje1g.trf3.jus.br/pje/ConsultaPublica/listView.seam. Provavelmente foi o bot manager (Akamai) limitando o seu IP — aguarde alguns minutos antes de tentar de novo ou troque de IP (VPN, hotspot). Reference: [omitida]",
+          "duracao_segundos": 1.49,
+          "fim_utc": "2026-10-14T12:34:39.575908+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "trf5",
+      "endpoint": "cpopg",
+      "estado": "indisponivel",
+      "motivo": "A consulta retornou somente id_cnj, sem processo, classe ou movimentações. O formulário da consulta pública passou a usar o componente classeJudicial e o bloco dataAutuacaoDecoration; o raspador procura o campo classeProcessualProcessoHidden, registra a falha como aviso e devolve a linha sem dados. A coleta falha por incompatibilidade do raspador com o formulário atual.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('trf5').cpopg(id_cnj='00584573120254058000'). Somente os parâmetros informados, sem validar outros processos ou filtros",
+      "tentativas": [
+        {
+          "fonte": "trf5",
+          "endpoint": "cpopg",
+          "parametros": {
+            "id_cnj": "00584573120254058000"
+          },
+          "colunas_exigidas": [
+            "processo",
+            "classe",
+            "movimentacoes"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "classe"
+          ],
+          "inicio_utc": "2026-10-14T12:31:58.936098+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://pje1g.trf5.jus.br",
+              "caminho": "/pjeconsulta/ConsultaPublica/listView.seam",
+              "status": 200,
+              "bytes": 52941,
+              "sha256": "9a7dedff16f9bc97bed3de5f5ff7a8e402c4aeecaff60b7f43a062574f7b869a"
+            }
+          ],
+          "retorno": {
+            "linhas": 1,
+            "colunas": [
+              "id_cnj"
+            ],
+            "preenchidos": {}
+          },
+          "checagem": "nao_aprovada",
+          "erro_tipo": "builtins.AssertionError",
+          "erro": "Colunas ausentes: classe, movimentacoes, processo",
+          "duracao_segundos": 5.58,
+          "fim_utc": "2026-10-14T12:32:04.512940+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "trf6",
+      "endpoint": "cpopg",
+      "estado": "indisponivel",
+      "motivo": "A tentativa falhou ao localizar o CAPTCHA esperado. A resposta HTTP 200 exige JavaScript antes de exibir o conteúdo; o fluxo HTTP do cliente não chegou à consulta.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('trf6').cpopg(id_cnj='10052295520234063801'). Somente os parâmetros informados, sem validar outros processos ou filtros",
+      "tentativas": [
+        {
+          "fonte": "trf6",
+          "endpoint": "cpopg",
+          "parametros": {
+            "id_cnj": "10052295520234063801"
+          },
+          "colunas_exigidas": [
+            "processo",
+            "classe",
+            "movimentacoes"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "classe"
+          ],
+          "limite_segundos": 180,
+          "inicio_utc": "2026-10-14T12:31:00.929857+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://eproc1g.trf6.jus.br",
+              "caminho": "/eproc/externo_controlador.php",
+              "status": 200,
+              "bytes": 7433,
+              "sha256": "4c49beb2179771aa6f724aec73b4e2f59b06f512d239b7638edd74b73bb697f1"
+            }
+          ],
+          "checagem": "nao_aprovada",
+          "erro_tipo": "builtins.RuntimeError",
+          "erro": "TRF6: could not locate captcha image in form HTML",
+          "duracao_segundos": 0.98,
+          "fim_utc": "2026-10-14T12:31:01.905311+00:00"
+        }
+      ]
+    }
+  ]
+}
