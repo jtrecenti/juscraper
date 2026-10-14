@@ -93,7 +93,7 @@ Tabelas geradas em 2026-10-14.
 | TJTO | `cjsg` | Indisponível | 2026-10-03 | 2026-11-02 |
 | TJTO | `cjpg` | Indisponível | 2026-10-03 | 2026-11-02 |
 | TRF1 | `cpopg` | Funcionando | 2026-10-03 | 2026-11-02 |
-| TRF3 | `cpopg` | Indisponível | 2026-10-14 | 2026-11-13 |
+| TRF3 | `cpopg` | Não verificado | 2026-10-14 | - |
 | TRF5 | `cpopg` | Indisponível | 2026-10-14 | 2026-11-13 |
 | TRF6 | `cpopg` | Indisponível | 2026-10-03 | 2026-11-02 |
 
@@ -410,11 +410,11 @@ Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('trf1').cpopg(i
 
 #### TRF3: `cpopg`
 
-As duas consultas receberam HTTP 403 do bot manager Akamai e levantaram BotChallengeBlockedError antes do formulário. Bloqueio deste ambiente, sem inferência de indisponibilidade para outros IPs. Em 03/10 o mesmo CNJ recebeu HTTP 200 e retornou só id_cnj; esta reamostra não chegou ao formulário e não esclarece aquele resultado.
+As duas consultas, às 12:31 e 12:34 UTC, receberam HTTP 403 do bot manager Akamai e levantaram BotChallengeBlockedError antes do formulário. O mesmo IP vinha fazendo dezenas de requisições ao TRF3 desde 11:28 UTC, e às 11:30 UTC o cpopg do portal JSF trouxe um processo completo, com HTTP 200 e sem bloqueio. O 403 indica bloqueio por uso intenso do IP, não indisponibilidade do endpoint. Em 03/10 o mesmo CNJ recebeu HTTP 200 e retornou só id_cnj; esta reamostra não chegou ao formulário e não esclarece aquele resultado.
 
 Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('trf3').cpopg(id_cnj='50059460920254036324'), executada duas vezes. Somente os parâmetros informados, sem validar outros processos ou filtros. Versão ou commit testado: 0.4.0; código ea68b715d35bc45b07612911c1348a13d6e1fb3b.
 
-[Evidência 1](https://github.com/jtrecenti/juscraper/blob/6892e5f2417ecc945648c99b05d0bd8bb79d976c/docs/status/2026-10-14.json#L683)
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/6892e5f2417ecc945648c99b05d0bd8bb79d976c/docs/status/2026-10-14.json#L683) · [Evidência 2](https://github.com/jtrecenti/juscraper/pull/398#issuecomment-6167865676)
 
 Exceção relacionada: juscraper.core.exceptions.BotChallengeBlockedError.
 
