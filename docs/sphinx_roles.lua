@@ -17,6 +17,15 @@
 -- the last dotted component. Unlike quartodoc's regex, this match accepts
 -- digits in the name, so it also catches the `See Also` roles quartodoc skips.
 --
+-- :meth: gets one more step, for both kinds of link (the ones built here and
+-- the ones quartodoc writes in `See Also`). objects.json lists methods under
+-- the role `function`, which interlinks never derives from `meth`, so the role
+-- is rewritten. A short name, as in :meth:`cjsg`, means a method of the class
+-- the page documents, as in Sphinx; it is qualified with the identifier of the
+-- page's level-1 header, which quartodoc sets to the object's full path, and
+-- prefixed with `~` so the link text stays the short name. A name interlinks
+-- cannot find still becomes inline code.
+--
 -- Must run after `quarto` and before `interlinks` in docs/_quarto.yml: after
 -- `quarto`, so the links it creates do not reach Quarto's table step (see the
 -- comment there); before `interlinks`, which resolves them.
@@ -47,7 +56,29 @@ local function split_role(text)
     return prefix, role
 end
 
-function Inlines(inlines)
+-- Full path of the object the page documents, read from the level-1 header
+-- that opens it; nil on pages quartodoc did not write, such as index.qmd.
+local page_object = nil
+
+-- Rewrites a :meth: target as interlinks can resolve it; other roles pass.
+local function method_target(role, name)
+    if not role:match(":meth:$") then
+        return role, name
+    end
+    role = role:gsub("meth:$", "function:")
+    local bare = name:gsub("^~", "")
+    if page_object ~= nil and not bare:find(".", 1, true) then
+        name = "~" .. page_object .. "." .. bare
+    end
+    return role, name
+end
+
+local function role_link(role, name)
+    role, name = method_target(role, name)
+    return pandoc.Link({}, role .. "%60" .. name .. "%60")
+end
+
+local function Inlines(inlines)
     local out = pandoc.Inlines({})
     local i = 1
     while i <= #inlines do
@@ -61,7 +92,7 @@ function Inlines(inlines)
             if prefix ~= "" then
                 out:insert(pandoc.Str(prefix))
             end
-            out:insert(pandoc.Link({}, role .. "%60" .. nxt.text .. "%60"))
+            out:insert(role_link(role, nxt.text))
             i = i + 2
         else
             out:insert(el)
@@ -69,4 +100,26 @@ function Inlines(inlines)
         end
     end
     return out
+end
+
+-- The empty-text links quartodoc writes in `See Also`.
+local function Link(link)
+    local role, name = link.target:match("^(:[%w_%+%.:]*:)%%60(.-)%%60$")
+    if role == nil or #link.content > 0 or not role:match(":meth:$") then
+        return nil
+    end
+    role, name = method_target(role, name)
+    link.target = role .. "%60" .. name .. "%60"
+    return link
+end
+
+function Pandoc(doc)
+    -- quartodoc opens every page it writes with that header; any other first
+    -- block means a hand-written page, where short names stay unqualified
+    local first = doc.blocks[1]
+    if first ~= nil and first.t == "Header" and first.level == 1
+        and first.identifier:match("^juscraper%.") then
+        page_object = first.identifier
+    end
+    return doc:walk({ Inlines = Inlines, Link = Link })
 end
