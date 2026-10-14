@@ -51,6 +51,7 @@ dados.head()
 
 | Tribunal | Funcionalidades Disponíveis       |
 |----------|-----------------------------------|
+| STF      | listar_decisoes, contar_decisoes  |
 | TJSP     | cpopg, cposg, cjsg, cjpg          |
 | TJES     | cjsg, cjpg                        |
 | TJTO     | cjsg, cjpg                        |
