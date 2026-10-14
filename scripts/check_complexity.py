@@ -5,11 +5,15 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 TETO = 15
 ALVO = "src"
 CORES_ANSI = re.compile(r"\x1b\[[0-9;]*m")
+# O Lizard aceita dispensa no fonte (#lizard forgives, forgive global) e não
+# tem opção que a desligue; o gate reprova a diretiva antes de medir.
+DISPENSA_LIZARD = re.compile(r"#\s*lizard\s*forgive", re.IGNORECASE)
 
 
 def executar_git(raiz: Path, *argumentos: str) -> str:
@@ -29,21 +33,45 @@ def executavel_complexipy() -> str:
     return encontrado
 
 
-def conferir_ciclomatica(raiz: Path) -> list[str]:
+def nao_rastreados(raiz: Path) -> list[str]:
+    """Arquivos Python de src/ fora do Git, relativos a src/: rascunho local não entra na medição."""
+    saida = executar_git(raiz, "ls-files", "--others", "--", ALVO)
+    return [Path(caminho).relative_to(ALVO).as_posix() for caminho in saida.splitlines() if caminho.endswith(".py")]
+
+
+def conferir_dispensas(raiz: Path) -> list[str]:
+    """Reprova dispensa do Lizard em arquivo rastreado de src/."""
+    erros = []
+    for caminho in executar_git(raiz, "ls-files", "--", ALVO).splitlines():
+        if not caminho.endswith(".py"):
+            continue
+        for numero, linha in enumerate((raiz / caminho).read_text(encoding="utf-8").splitlines(), start=1):
+            if DISPENSA_LIZARD.search(linha):
+                erros.append(f"{caminho}:{numero}: dispensa do Lizard proibida")
+    return erros
+
+
+def conferir_ciclomatica(raiz: Path, excluidos: list[str]) -> list[str]:
     """Nenhuma função de src/ passa do teto, sem lista de exceções."""
-    resultado = subprocess.run(
-        [sys.executable, "-m", "lizard", "-C", str(TETO), "-w", ALVO],
-        cwd=raiz, check=False, capture_output=True, text=True,
-    )
+    # Sem -W, o Lizard lê whitelizard.txt da raiz; a lista vazia desliga essa exceção.
+    with tempfile.NamedTemporaryFile("w", suffix=".txt") as lista_vazia:
+        exclusoes = [argumento for caminho in excluidos for argumento in ("-x", f"{ALVO}/{caminho}")]
+        resultado = subprocess.run(
+            [sys.executable, "-m", "lizard", "-C", str(TETO), "-W", lista_vazia.name, *exclusoes, "-w", ALVO],
+            cwd=raiz, check=False, capture_output=True, text=True,
+        )
     if resultado.returncode == 0:
         return []
     avisos = [linha for linha in resultado.stdout.splitlines() if "warning:" in linha]
     return avisos or [resultado.stdout.strip() or resultado.stderr.strip()]
 
 
-def conferir_cognitiva(raiz: Path, base: str) -> list[str]:
+def conferir_cognitiva(raiz: Path, base: str, excluidos: list[str]) -> list[str]:
     """Função nova acima do teto falha; a que já está acima não pode piorar."""
-    comando = [executavel_complexipy(), ALVO, "-mx", str(TETO), "--diff", base, "--ratchet", "--no-ignore"]
+    exclusoes = [argumento for caminho in excluidos for argumento in ("-e", caminho)]
+    comando = [
+        executavel_complexipy(), ALVO, "-mx", str(TETO), "--diff", base, "--ratchet", "--no-ignore", *exclusoes,
+    ]
     resultado = subprocess.run([*comando, "--quiet"], cwd=raiz, check=False, capture_output=True, text=True)
     if resultado.returncode == 0:
         return []
@@ -60,7 +88,8 @@ def conferir(raiz: Path, referencia: str) -> list[str]:
     # Num ramo atrás da main, comparar com a ponta dela atribuiria ao ramo, como
     # piora, as melhorias que a main ganhou depois de o ramo sair.
     base = executar_git(raiz, "merge-base", "HEAD", referencia)
-    return conferir_ciclomatica(raiz) + conferir_cognitiva(raiz, base)
+    excluidos = nao_rastreados(raiz)
+    return conferir_dispensas(raiz) + conferir_ciclomatica(raiz, excluidos) + conferir_cognitiva(raiz, base, excluidos)
 
 
 def main() -> int:

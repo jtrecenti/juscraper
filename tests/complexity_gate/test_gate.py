@@ -1,5 +1,6 @@
 """Exercita o gate de complexidade com Git, Lizard e Complexipy reais em repositórios temporários."""
 
+import os
 import re
 import shutil
 import subprocess
@@ -45,11 +46,20 @@ def registrar_base(raiz):
     git(raiz, "update-ref", "refs/remotes/origin/main", "HEAD")
 
 
-def executar_gate(raiz, *argumentos):
+def executar_gate(raiz, *argumentos, python=sys.executable, ambiente=None):
     return subprocess.run(
-        [sys.executable, str(raiz / "scripts/check_complexity.py"), *argumentos],
-        cwd=raiz, check=False, capture_output=True, text=True,
+        [python, str(raiz / "scripts/check_complexity.py"), *argumentos],
+        cwd=raiz, check=False, capture_output=True, text=True, env=ambiente,
     )
+
+
+def lizard_falso(diretorio, codigo_de_saida):
+    """Módulo ``lizard`` que sai com o código dado sem imprimir aviso, à frente do real no PYTHONPATH."""
+    diretorio.mkdir()
+    (diretorio / "lizard.py").write_text(
+        f'import sys\nsys.stderr.write("falha simulada\\n")\nsys.exit({codigo_de_saida})\n', encoding="utf-8",
+    )
+    return {**os.environ, "PYTHONPATH": str(diretorio)}
 
 
 @pytest.fixture
@@ -136,6 +146,63 @@ def test_ramo_atras_da_main_nao_herda_melhoria_dela(repositorio):
     assert resultado.returncode == 0, resultado.stderr
 
 
+def test_dispensa_do_lizard_por_comentario_falha(repositorio):
+    perdoada = em_cadeia("plana", 16).replace("(valores):", "(valores):  # lizard forgives")
+    gravar(repositorio, aninhada("legada", 6), perdoada)
+    resultado = executar_gate(repositorio)
+    assert resultado.returncode == 1
+    assert "src/modulo.py:" in resultado.stderr
+    assert "dispensa do Lizard proibida" in resultado.stderr
+
+
+def test_dispensa_global_do_lizard_no_corpo_falha(repositorio):
+    gravar(repositorio, aninhada("legada", 6), "# lizard forgive global\n" + aninhada("simples", 2))
+    resultado = executar_gate(repositorio)
+    assert resultado.returncode == 1
+    assert "dispensa do Lizard proibida" in resultado.stderr
+
+
+def test_lista_branca_do_lizard_nao_vale(repositorio):
+    gravar(repositorio, aninhada("legada", 6), em_cadeia("plana", 16))
+    (repositorio / "whitelizard.txt").write_text("plana\n", encoding="utf-8")
+    resultado = executar_gate(repositorio)
+    assert resultado.returncode == 1
+    assert re.search(r"plana has \d+ NLOC, 16 CCN", resultado.stderr)
+
+
+def test_arquivo_nao_rastreado_fica_fora(repositorio):
+    (repositorio / "src/rascunho.py").write_text(aninhada("rascunho", 6) + "\n\n" + em_cadeia("plana", 16))
+    resultado = executar_gate(repositorio)
+    assert resultado.returncode == 0, resultado.stderr
+
+
+def test_arquivo_novo_no_indice_entra(repositorio):
+    (repositorio / "src/rascunho.py").write_text(aninhada("rascunho", 6), encoding="utf-8")
+    git(repositorio, "add", "src/rascunho.py")
+    resultado = executar_gate(repositorio)
+    assert resultado.returncode == 1
+    assert re.search(r"NEW\s+src/rascunho\.py::rascunho\s+21", resultado.stderr)
+
+
+def test_complexipy_ausente_falha(repositorio, tmp_path_factory):
+    # Um python acessado por outro caminho não acha o complexipy vizinho, e o PATH
+    # restrito não o oferece; o Lizard falso deixa a falha vir só da ausência.
+    binario = tmp_path_factory.mktemp("bin")
+    (binario / "python").symlink_to(sys.executable)
+    ambiente = lizard_falso(tmp_path_factory.mktemp("falso") / "pacote", 0)
+    ambiente["PATH"] = os.pathsep.join([str(binario), "/usr/bin", "/bin"])
+    resultado = executar_gate(repositorio, python=str(binario / "python"), ambiente=ambiente)
+    assert resultado.returncode == 1
+    assert "Gate de complexidade sem ferramenta" in resultado.stderr
+
+
+def test_lizard_quebrado_sem_aviso_falha(repositorio, tmp_path_factory):
+    ambiente = lizard_falso(tmp_path_factory.mktemp("falso") / "pacote", 2)
+    resultado = executar_gate(repositorio, ambiente=ambiente)
+    assert resultado.returncode == 1
+    assert "falha simulada" in resultado.stderr
+
+
 def test_base_inexistente_falha(repositorio):
     resultado = executar_gate(repositorio, "--base-ref", "referencia-inexistente")
     assert resultado.returncode == 1
@@ -154,6 +221,17 @@ def test_workflow_compara_o_pr_com_a_ponta_da_branch_de_destino():
     chamadas = [linha.strip() for linha in linhas if "check_complexity.py" in linha]
     assert chamadas
     assert all(chamada.endswith('check_complexity.py --base-ref "$COMPLEXITY_BASE"') for chamada in chamadas)
+    assert any(linha.strip() == "run: uv run pytest tests/complexity_gate -q" for linha in linhas)
+
+
+def test_hook_do_pre_commit_roda_o_gate_em_src():
+    texto = (RAIZ / ".pre-commit-config.yaml").read_text(encoding="utf-8")
+    blocos = re.findall(r"- id: complexity\n((?:\s{8}\S.*\n)+)", texto)
+    assert len(blocos) == 1
+    campos = dict(linha.strip().split(": ", 1) for linha in blocos[0].splitlines())
+    assert campos["entry"] == "python scripts/check_complexity.py"
+    assert campos["files"] == r"^src/.*\.py$"
+    assert campos["pass_filenames"] == "false"
 
 
 def test_versoes_das_ferramentas_iguais_no_extra_dev_e_no_pre_commit():
