@@ -6,11 +6,24 @@ from juscraper.courts.stf._checkpoint import Attempt, Checkpoint, Window
 
 
 @pytest.fixture
-def checkpoint():
-    return Checkpoint(None, False, {"base": "acordaos", "pages": None, "page_size": 1})
+def checkpoint(tmp_path):
+    aberto = Checkpoint(
+        tmp_path / "checkpoint", resume=False, identity={"base": "acordaos", "pages": None, "page_size": 1},
+    )
+    yield aberto
+    aberto.close()
 
 
-def tentativa(checkpoint, identificadores=("a", "b"), concluida=True):
+def validar_na_retomada(checkpoint, janela):
+    # A validação só roda quando a coleta retoma um diretório; o erro chega embrulhado, e o `match` busca dentro dele.
+    checkpoint.manifest.root = janela
+    checkpoint.save()
+    checkpoint.close()
+    retomado = Checkpoint(checkpoint.directory, resume=True, identity=checkpoint.manifest.identity)
+    retomado.close()
+
+
+def tentativa(checkpoint, identificadores=("a", "b"), *, concluida=True):
     return Attempt(
         started_at="início",
         total_before=len(identificadores),
@@ -39,7 +52,7 @@ def tentativa(checkpoint, identificadores=("a", "b"), concluida=True):
 )
 def test_rejeita_janela_invalida(checkpoint, campos, mensagem):
     with pytest.raises(ValueError, match=mensagem):
-        checkpoint._validate(Window(**campos))
+        validar_na_retomada(checkpoint, Window(**campos))
 
 
 @pytest.mark.parametrize("concluida", [False, True])
@@ -51,11 +64,11 @@ def test_rejeita_duplicatas_inclusive_em_tentativa_incompleta(checkpoint, conclu
     else:
         coleta.pages[1].number = 1
     with pytest.raises(ValueError, match="Páginas duplicadas"):
-        checkpoint._validate(Window(attempts=[coleta]))
+        validar_na_retomada(checkpoint, Window(attempts=[coleta]))
 
 
 def test_identidades_podem_reaparecer_em_tentativas_distintas(checkpoint):
-    checkpoint._validate(Window(attempts=[tentativa(checkpoint, concluida=False), tentativa(checkpoint)]))
+    validar_na_retomada(checkpoint, Window(attempts=[tentativa(checkpoint, concluida=False), tentativa(checkpoint)]))
 
 
 def test_valida_tentativa_em_qualquer_posicao(checkpoint):
@@ -63,7 +76,7 @@ def test_valida_tentativa_em_qualquer_posicao(checkpoint):
     do_meio.pages[1].number = 1
     janela = Window(attempts=[tentativa(checkpoint, concluida=False), do_meio, tentativa(checkpoint)])
     with pytest.raises(ValueError, match="Páginas duplicadas"):
-        checkpoint._validate(janela)
+        validar_na_retomada(checkpoint, janela)
 
 
 @pytest.mark.parametrize("concluida", [False, True])
@@ -75,7 +88,7 @@ def test_janela_exige_ultima_tentativa_concluida_e_contagem_igual(checkpoint, co
     )
     mensagem = "Janela e tentativa" if concluida else "sem tentativa concluída"
     with pytest.raises(ValueError, match=mensagem):
-        checkpoint._validate(janela)
+        validar_na_retomada(checkpoint, janela)
 
 
 @pytest.mark.parametrize(
@@ -93,7 +106,7 @@ def test_tentativa_concluida_confere_numero_e_contagem_de_cada_pagina(checkpoint
     else:
         coleta.pages[0] = checkpoint.page([], 1)
     with pytest.raises(ValueError, match=mensagem):
-        checkpoint._validate(Window(attempts=[coleta]))
+        validar_na_retomada(checkpoint, Window(attempts=[coleta]))
 
 
 @pytest.mark.parametrize("paginas", [None, [1]])
@@ -106,9 +119,9 @@ def test_contagem_de_identidades_completa_so_para_todas_as_paginas(checkpoint, p
         monkeypatch.setattr("juscraper.courts.stf.download.MAX_REGISTROS", 1)
         coleta.pages.append(checkpoint.page([], 2))
         with pytest.raises(ValueError, match="páginas faltantes"):
-            checkpoint._validate(Window(attempts=[coleta]))
+            validar_na_retomada(checkpoint, Window(attempts=[coleta]))
     else:
-        checkpoint._validate(Window(attempts=[coleta]))
+        validar_na_retomada(checkpoint, Window(attempts=[coleta]))
 
 
 @pytest.mark.parametrize("problema", [None, "incompleto", "contagem", "descendente", "lacuna"])
@@ -136,9 +149,9 @@ def test_valida_particao_concluida_e_descendentes(checkpoint, problema):
         direita.lower = direita.upper = "2020-01-03"
     if problema:
         with pytest.raises(ValueError, match=mensagens[problema]):
-            checkpoint._validate(janela)
+            validar_na_retomada(checkpoint, janela)
     else:
-        checkpoint._validate(janela)
+        validar_na_retomada(checkpoint, janela)
 
 
 @pytest.mark.parametrize(
@@ -169,4 +182,4 @@ def test_violacoes_simultaneas_seguem_a_ordem_das_conferencias(checkpoint, par):
         incoerente.total_before = 2
         janela = Window(attempts=[incoerente])
     with pytest.raises(ValueError, match=mensagens[par]):
-        checkpoint._validate(janela)
+        validar_na_retomada(checkpoint, janela)
