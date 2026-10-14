@@ -1,6 +1,7 @@
 """Login gov.br com um Playwright falso (sem navegador nem rede)."""
 import asyncio
 import os
+import re
 import signal
 import subprocess
 import sys
@@ -572,20 +573,43 @@ def test_abrir_navegador_cancelado_encerra_o_processo(mocker, tmp_path):
 @pytest.mark.skipif(sys.platform == "win32", reason="SIGINT enviado ao proprio processo")
 def test_ctrl_c_com_worker_preso_nao_segura_a_saida_do_interpretador():
     """O worker e daemon: o processo sai logo depois do Ctrl-C, sem esperar o ``goto`` preso."""
+    # O cronômetro fica no filho e cobre só do Ctrl-C até a saída do
+    # interpretador. Medido do pai, o intervalo incluiria a partida do Python e
+    # o import do juscraper, que sob carga passam do limite sozinhos. O
+    # ``atexit`` serve de marca de saída porque o interpretador só o executa
+    # depois de esperar as threads que não são daemon. O Ctrl-C só sai quando
+    # o worker falso já está preso: com prazo fixo, um worker que demorasse a
+    # partir receberia o sinal antes de existir, e o teste passaria sem medir
+    # nada. No Python 3.11, depois do Ctrl-C o interpretador sai sem esperar o
+    # worker, com ou sem daemon, e o tempo não denuncia um worker não daemon.
+    # Por isso o worker falso também informa se a própria thread é daemon, o
+    # que vale em toda versão.
     codigo = (
-        "import os, signal, threading, time\n"
+        "import atexit, os, signal, sys, threading, time\n"
         "from juscraper.aggregators._pdpj_sso import login\n"
-        "login._obter_credencial = lambda *_a: time.sleep(20)\n"
-        "threading.Timer(0.3, os.kill, args=(os.getpid(), signal.SIGINT)).start()\n"
+        "worker_preso = threading.Event()\n"
+        "def credencial_presa(*_a):\n"
+        "    print(f'worker_daemon={threading.current_thread().daemon}', file=sys.stderr)\n"
+        "    worker_preso.set()\n"
+        "    time.sleep(20)\n"
+        "login._obter_credencial = credencial_presa\n"
+        "def ctrl_c():\n"
+        "    worker_preso.wait()\n"
+        "    inicio = time.monotonic()\n"
+        "    atexit.register(lambda: print(f'saida_em={time.monotonic() - inicio:.3f}', file=sys.stderr))\n"
+        "    os.kill(os.getpid(), signal.SIGINT)\n"
+        "threading.Thread(target=ctrl_c, daemon=True).start()\n"
         "login.obter_credencial_govbr(timeout=5)\n"
     )
-    inicio = time.monotonic()
     completado = subprocess.run(
-        [sys.executable, "-c", codigo], capture_output=True, text=True, timeout=30, check=False,
+        [sys.executable, "-c", codigo], capture_output=True, text=True, timeout=120, check=False,
     )
 
     assert "KeyboardInterrupt" in completado.stderr
-    assert time.monotonic() - inicio < 10
+    assert "worker_daemon=True" in completado.stderr, completado.stderr
+    saida = re.search(r"saida_em=([\d.]+)", completado.stderr)
+    assert saida is not None, completado.stderr
+    assert float(saida.group(1)) < 5
 
 
 def test_erro_de_rede_na_abertura_sobe_na_hora(mocker):
