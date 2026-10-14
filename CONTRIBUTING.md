@@ -365,7 +365,7 @@ O nome das seções que o estilo Google reconhece fica em inglês, porque é por
 
 ### Filtros e aliases
 
-- Listar em `**kwargs` os filtros do schema correspondente, com os mesmos nomes e tipos; citar o schema em `See also:`. Mudanças de campos e docstring devem entrar juntas.
+- Listar em `**kwargs` os filtros do schema correspondente, com os mesmos nomes e tipos; citar o schema em `See Also:`, com A maiúsculo, porque é o nome de seção que a regra D405 do Ruff aceita e arquivo novo não tem dispensa dela. Mudanças de campos e docstring devem entrar juntas.
 - Acrescentar a semântica que o modelo não expressa: interpretação do filtro, formato exigido pelo backend e exemplo de uso. Indicar nomes de campos do backend quando isso explicar por que um filtro exige IDs internos.
 - Documentar defaults não óbvios e o significado de `None` para cada filtro; não presumir que todo campo seja opcional.
 - Listar aliases deprecados em seção própria, conforme os que o endpoint realmente consome em `normalize_pesquisa`, `normalize_datas` e `pop_deprecated_alias`. As constantes em `src/juscraper/utils/params.py` são a fonte dos aliases compartilhados; conferir também a normalização específica do scraper. Informar o `DeprecationWarning` sem remover o campo canônico da documentação.
@@ -402,7 +402,7 @@ Returns:
 Examples: Exemplo
     >>> <Chamada pública válida, usando nomes canônicos.>
 
-See also:
+See Also:
     :class:`<InputDoEndpoint>`: fonte dos filtros aceitos.
 """
 ```
