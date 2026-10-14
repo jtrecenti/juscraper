@@ -140,6 +140,7 @@ Comando padrão (rodar localmente antes de release ou após refactor amplo):
 ```bash
 pytest --nbmake docs/notebooks/ \
   --ignore=docs/notebooks/jusbr.ipynb \
+  --ignore=docs/notebooks/pdpj.ipynb \
   --ignore=docs/notebooks/tjmg.ipynb \
   --nbmake-timeout=300 \
   -n auto
@@ -147,11 +148,27 @@ pytest --nbmake docs/notebooks/ \
 
 Notas:
 
-- **Não rodar em `pre-commit` nem em CI por PR.** São 25 notebooks contra rede real (~10-30 min com `pytest-xdist`); flakiness de tribunal vai bloquear merge sem motivo. O lugar certo, se um dia entrar no CI, é o workflow nightly proposto em #101 com `continue-on-error`.
+- **Não rodar em `pre-commit` nem em CI por PR.** São dezenas de notebooks contra rede real (~10-30 min com `pytest-xdist`); flakiness de tribunal vai bloquear merge sem motivo. No CI eles rodam no workflow `Integração`, que não barra merge (ver **Integração semanal no CI**).
 - Falhas de conexão no Google Colab ou em outro ambiente de nuvem devem ser reproduzidas localmente antes de motivar mudanças em timeout, retry ou no scraper. Um `ConnectTimeout` sem resposta HTTP pode indicar bloqueio de IP compartilhado ou problema de rota; isoladamente, não demonstra regressão do `juscraper` nem bloqueio intencional pelo tribunal.
-- `jusbr.ipynb` é excluído porque depende de token gov.br (`JUSBR_ACCESS_TOKEN`); `tjmg.ipynb` depende do extra `[tjmg]` instalado (`txtcaptcha`). Ambos rodam sob demanda quando as condições estão presentes.
+- `jusbr.ipynb` e `pdpj.ipynb` são excluídos porque dependem de credencial do gov.br (`JUSBR_ACCESS_TOKEN` e `PDPJ_TOKEN`); `tjmg.ipynb` depende do extra `[tjmg]` instalado (`txtcaptcha`). Os três rodam sob demanda quando as condições estão presentes. O workflow `Integração` instala o extra `[tjmg]` e roda o `tjmg.ipynb`.
 - Falha 5xx em um único notebook normalmente é instabilidade do tribunal — re-rodar o notebook isolado antes de reportar regressão (`pytest --nbmake docs/notebooks/<tribunal>.ipynb`).
 - Quando o resultado real divergir do output cacheado (ex.: coluna nova, ementa em formato diferente), o notebook deve ser **commitado com outputs limpos** (`jupyter nbconvert --clear-output --inplace docs/notebooks/<tribunal>.ipynb`) para que `git diff` futuro fique focado em código.
+
+### Integração semanal no CI
+
+O workflow `Integração` (`.github/workflows/integration.yml`) roda uma vez por semana os testes marcados `integration`, sem os `anti_bot`, e em seguida os notebooks de `docs/notebooks/`, exceto os que exigem credencial do gov.br. O horário, os extras instalados e a lista de notebooks excluídos estão no próprio arquivo. A execução agendada não acontece no recesso forense, de 20/12 a 20/01.
+
+Teste que falha não derruba o workflow: tribunal fora do ar é esperado e não deve gerar alerta de execução quebrada. O workflow fica vermelho quando algo além de um teste quebra: o pytest sai com código 2 ou maior (erro de coleta, interrupção, nada coletado), um passo estoura o tempo, a instalação falha, o `tribunal` do disparo manual não existe ou uma chamada ao `gh` falha. Quando o job dos testes não termina bem, a issue não é tocada, porque o retrato daquela execução está incompleto.
+
+O resultado vai para uma única issue, com a label `tribunal-quebrado`, cujo corpo o workflow reescreve a cada execução agendada. Editar o corpo não notifica ninguém. O workflow comenta na issue, e portanto notifica, só quando a lista de testes que falham muda de uma execução para a outra. Essa lista fica gravada num comentário HTML no fim do corpo, e é contra ela que a execução seguinte compara; por isso o corpo não deve ser editado à mão. A montagem do corpo e a comparação ficam em `scripts/integration_report.py`, coberto por `tests/integration_report/`.
+
+Em PR a integração não roda sozinha. Para conferir um tribunal na branch de um PR:
+
+```bash
+gh workflow run integration.yml --ref <branch> -f tribunal=tjsp
+```
+
+O valor de `tribunal` é o nome do diretório em `tests/`. Uma execução de um tribunal só nunca reescreve a issue; o resultado fica no resumo da execução. Um disparo manual sem `tribunal` só reescreve a issue com `-f atualizar_issue=true` e a partir da `main`. A única execução automática em PR é o autoteste: quando o PR altera o workflow ou o script do relatório, o workflow roda para um tribunal só e imprime no resumo o corpo que escreveria, sem tocar a issue.
 
 ## Política de lint e adoção gradual
 
