@@ -6,6 +6,8 @@ borda alteram a linha de acórdãos dela. HTML escrito à mão aparece só em
 nenhuma marcação ao redor.
 """
 
+import re
+
 import pytest
 
 from juscraper.courts.tjpe.download import extract_escolha_button_id
@@ -60,7 +62,9 @@ def _pagina() -> str:
 
 def _linha_acordaos() -> str:
     pagina = _pagina()
-    assert "<tr>" in pagina and "</tr>" in pagina, "a captura deixou de ter linha delimitada por <tr> sem atributo"
+    sem_linha = "a captura deixou de ter linha delimitada por <tr> sem atributo"
+    assert "<tr>" in pagina, sem_linha
+    assert "</tr>" in pagina, sem_linha
     inicio = pagina.index("<tr>")
     linha = pagina[inicio:pagina.index("</tr>", inicio) + len("</tr>")]
     assert ROTULO in linha, f"a primeira linha da captura não traz o rótulo no formato esperado: {ROTULO!r}"
@@ -98,9 +102,9 @@ def test_escolha_tipo_padrao():
     ["acórdãos", "Acórdãos ", "Acórdão", "Acordaos", "Decisões", "Monocráticas", "Sentenças"],
 )
 def test_escolha_exige_rotulo_exato(tipo):
-    with pytest.raises(ValueError) as erro:
+    mensagem = f"Could not find escolha button for '{tipo}'"
+    with pytest.raises(ValueError, match=f"^{re.escape(mensagem)}$"):
         extract_escolha_button_id(_pagina(), tipo)
-    assert str(erro.value) == f"Could not find escolha button for '{tipo}'"
 
 
 @pytest.mark.parametrize("trocas", PARAMETROS_INVALIDAS)
