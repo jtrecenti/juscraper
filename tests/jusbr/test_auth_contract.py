@@ -12,6 +12,8 @@ documentado.
 """
 import io
 import json
+import sys
+from types import SimpleNamespace
 
 import jwt
 import pytest
@@ -150,7 +152,18 @@ def _resposta(status: int = 200, headers: dict | None = None, corpo=None, texto:
 
 
 @pytest.fixture
-def preparar_sso(mocker):
+def cookies_firefox(mocker):
+    """Simula a dependência opcional sem ler cookies ou exigir sua instalação."""
+    modulo = SimpleNamespace(
+        BrowserCookieError=type("BrowserCookieError", (Exception,), {}),
+        firefox=mocker.Mock(return_value={}),
+    )
+    mocker.patch.dict(sys.modules, {"browser_cookie3": modulo})
+    return modulo
+
+
+@pytest.fixture
+def preparar_sso(mocker, cookies_firefox):  # noqa: ARG001 - fixture instala a dependência simulada
     """Cria o scraper e depois simula a sessão avulsa que ``auth_firefox`` abre.
 
     A ordem importa: o patch de ``requests.Session`` alcançaria também a
@@ -158,7 +171,6 @@ def preparar_sso(mocker):
     """
     def preparar(**kwargs):
         scraper = jus.scraper("jusbr", **kwargs)
-        mocker.patch("juscraper.aggregators.jusbr.client.browser_cookie3.firefox", return_value={})
         sessao = mocker.MagicMock()
         mocker.patch("juscraper.aggregators.jusbr.client.requests.Session", return_value=sessao)
         return scraper, sessao
@@ -171,8 +183,11 @@ def test_auth_firefox_troca_o_code_pelo_token_e_passa_pelo_auth(preparar_sso):
     sessao_sso.get.return_value = _resposta(302, {"Location": _LOCATION_COM_CODE})
     sessao_sso.post.return_value = _resposta(corpo={"access_token": token})
 
-    assert scraper.auth_firefox() is True
+    with pytest.warns(DeprecationWarning, match=r"auth_firefox.*auth_govbr.*juscraper\[govbr\]") as avisos:
+        assert scraper.auth_firefox() is True
 
+    assert len(avisos) == 1
+    assert avisos[0].filename == __file__
     assert scraper.token == token
     assert scraper.session.headers["authorization"] == f"Bearer {token}"
     assert sessao_sso.post.call_args.kwargs["data"]["code"] == "codigo-sso"
@@ -185,7 +200,8 @@ def test_auth_firefox_usa_timeout_da_politica(preparar_sso):
     sessao_sso.get.return_value = _resposta(302, {"Location": _LOCATION_COM_CODE})
     sessao_sso.post.return_value = _resposta(corpo={"access_token": _token({"sub": "t"})})
 
-    scraper.auth_firefox()
+    with pytest.warns(DeprecationWarning, match="auth_govbr"):
+        scraper.auth_firefox()
 
     assert sessao_sso.get.call_args.kwargs["timeout"] == 4
 
@@ -193,15 +209,21 @@ def test_auth_firefox_usa_timeout_da_politica(preparar_sso):
 def test_auth_firefox_sem_location_levanta_runtime_error(preparar_sso):
     scraper, sessao_sso = preparar_sso()
     sessao_sso.get.return_value = _resposta(200)
-    with pytest.raises(RuntimeError, match="Location"):
+    with pytest.warns(DeprecationWarning, match="auth_govbr"), pytest.raises(RuntimeError, match="Location") as erro:
         scraper.auth_firefox()
+    assert "Faça login em https://portaldeservicos.pdpj.jus.br pelo Firefox" in str(erro.value)
+    assert "auth_govbr()" in str(erro.value)
+    sessao_sso.post.assert_not_called()
 
 
 def test_auth_firefox_sem_code_levanta_runtime_error(preparar_sso):
     scraper, sessao_sso = preparar_sso()
     sessao_sso.get.return_value = _resposta(302, {"Location": "https://x.test/home#error=login_required"})
-    with pytest.raises(RuntimeError, match="code"):
+    with pytest.warns(DeprecationWarning, match="auth_govbr"), pytest.raises(RuntimeError, match="code") as erro:
         scraper.auth_firefox()
+    assert "Faça login em https://portaldeservicos.pdpj.jus.br pelo Firefox" in str(erro.value)
+    assert "auth_govbr()" in str(erro.value)
+    sessao_sso.post.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -218,7 +240,7 @@ def test_auth_firefox_sem_access_token_levanta_runtime_error(preparar_sso, respo
     sessao_sso.get.return_value = _resposta(302, {"Location": _LOCATION_COM_CODE})
     sessao_sso.post.return_value = resposta
 
-    with pytest.raises(RuntimeError, match="access_token"):
+    with pytest.warns(DeprecationWarning, match="auth_govbr"), pytest.raises(RuntimeError, match="access_token"):
         scraper.auth_firefox()
     assert scraper.token is None
 
@@ -228,6 +250,46 @@ def test_auth_firefox_token_vencido_levanta_value_error(preparar_sso):
     sessao_sso.get.return_value = _resposta(302, {"Location": _LOCATION_COM_CODE})
     sessao_sso.post.return_value = _resposta(corpo={"access_token": _token({"sub": "t", "exp": 0})})
 
-    with pytest.raises(ValueError, match="expirado"):
+    with pytest.warns(DeprecationWarning, match="auth_govbr"), pytest.raises(ValueError, match="expirado"):
         scraper.auth_firefox()
     assert scraper.token is None
+
+
+def test_auth_firefox_sem_extra_orienta_instalacao(mocker):
+    scraper = jus.scraper("jusbr")
+    mocker.patch.dict(sys.modules, {"browser_cookie3": None})
+    sessao = mocker.patch("juscraper.aggregators.jusbr.client.requests.Session")
+
+    with (
+        pytest.warns(DeprecationWarning, match="auth_govbr"),
+        pytest.raises(ImportError, match="extra firefox") as erro,
+    ):
+        scraper.auth_firefox()
+
+    assert "pip install 'juscraper[firefox]'" in str(erro.value)
+    assert "auth_govbr()" in str(erro.value)
+    assert scraper.token is None
+    sessao.assert_not_called()
+
+
+def test_auth_firefox_sem_perfil_orienta_login_e_preserva_token(mocker, cookies_firefox):
+    token = _token({"sub": "t", "exp": 9999999999})
+    scraper = jus.scraper("jusbr", token=token)
+    causa = cookies_firefox.BrowserCookieError("Could not find Firefox profile directory")
+    cookies_firefox.firefox.side_effect = causa
+    sessao = mocker.patch("juscraper.aggregators.jusbr.client.requests.Session")
+
+    with (
+        pytest.warns(DeprecationWarning, match="auth_govbr"),
+        pytest.raises(RuntimeError, match="cookies do Firefox") as erro,
+    ):
+        scraper.auth_firefox()
+
+    assert "Instale e abra o Firefox" in str(erro.value)
+    assert "Faça login em https://portaldeservicos.pdpj.jus.br pelo Firefox" in str(erro.value)
+    assert "auth_govbr()" in str(erro.value)
+    assert erro.value.__cause__ is causa
+    assert scraper.token == token
+    assert scraper.session.headers["authorization"] == f"Bearer {token}"
+    cookies_firefox.firefox.assert_called_once_with(domain_name="sso.cloud.pje.jus.br")
+    sessao.assert_not_called()

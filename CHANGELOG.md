@@ -7,6 +7,10 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Deprecated
+
+- `JusbrScraper.auth_firefox()` emite `DeprecationWarning` e será removido em uma versão futura. Use `auth_govbr()` com `juscraper[govbr]`. Até a remoção, o método exige o extra `juscraper[firefox]`: `browser-cookie3` deixa de ser dependência obrigatória. Falhas na leitura de cookies levantam `RuntimeError` com orientação para instalar e abrir o Firefox; respostas do SSO sem sessão válida orientam o login no portal da PDPJ ou a migração para `auth_govbr()`. O método continua sem renovação automática do token. Refs #365.
+
 ### Added
 
 - TJMG `cposg`: consulta processual de 2º grau sem captcha, com partes e advogados (nome e OAB). Aceita CNJ ou o número TJMG (`processo_interno` do `cjsg`) e devolve uma linha por recurso, com classe, assunto, câmara, situação, datas e a coluna `partes` (lista de `{tipo, nome, baixa, advogados}`). Recursos em segredo de justiça vêm com `segredo_justica=True` e sem partes.
