@@ -7,6 +7,8 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-21
+
 ### Added
 
 - TJMG `cposg`: consulta processual de 2º grau sem captcha, com partes e advogados (nome e OAB). Aceita CNJ ou o número TJMG (`processo_interno` do `cjsg`) e devolve uma linha por recurso, com classe, assunto, câmara, situação, datas e a coluna `partes` (lista de `{tipo, nome, baixa, advogados}`). Recursos em segredo de justiça vêm com `segredo_justica=True` e sem partes.
