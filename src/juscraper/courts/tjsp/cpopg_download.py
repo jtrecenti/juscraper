@@ -15,6 +15,10 @@ from ...utils.cnj import clean_cnj, format_cnj, split_cnj
 logger = logging.getLogger('juscraper.cpopg_download')
 
 
+class _InvalidProcessCodeError(ValueError):
+    """Erro de validação de identificador recebido do CPOPG."""
+
+
 def cpopg_download_html(
     id_cnj_list,
     session,
@@ -101,10 +105,26 @@ def cpopg_download_html_single(
                     "fornecido para extrair links do HTML."
                 )
             links = get_links_callback(r)
-            _salvar_resultados_html(r, links, id_clean, path, session, u_base)
-            break
         except (OSError, UnicodeDecodeError, ValueError,
                 AttributeError, requests.RequestException) as e:
+            logger.error(
+                "Erro ao conectar ao site (processo %s)."
+                "Tentando novamente em %.1f segundos. (%s)",
+                id_cnj,
+                sleep_time,
+                e
+            )
+            time.sleep(sleep_time)
+            continue
+
+        codigos_processo = _extrair_codigos_processo(links)
+        try:
+            _salvar_resultados_html(
+                r, links, id_clean, path, session, u_base, codigos_processo,
+            )
+            break
+        except (OSError, UnicodeDecodeError, ValueError, AttributeError,
+                requests.RequestException) as e:
             logger.error(
                 "Erro ao conectar ao site (processo %s)."
                 "Tentando novamente em %.1f segundos. (%s)",
@@ -116,15 +136,26 @@ def cpopg_download_html_single(
     return path
 
 
-def _salvar_resultados_html(resposta, links, id_limpo, caminho, sessao, url_base):
-    """Valida os códigos e salva a busca ou os documentos individuais."""
+def _extrair_codigos_processo(links):
+    """Extrai e valida códigos para uso nos nomes dos arquivos."""
     codigos_processo = []
     for link in links:
         parametros = parse_qs(urlparse(link).query)
         codigos = parametros.get('processo.codigo', [])
         if not codigos:
             raise RuntimeError(f"Link sem 'processo.codigo': {link}")
-        codigos_processo.append(codigos[0])
+        try:
+            codigo_seguro = safe_path_component(codigos[0], field="processo.codigo")
+        except ValueError as exc:
+            raise _InvalidProcessCodeError(str(exc)) from exc
+        codigos_processo.append(codigo_seguro)
+    return codigos_processo
+
+
+def _salvar_resultados_html(
+    resposta, links, id_limpo, caminho, sessao, url_base, codigos_processo,
+):
+    """Salva a busca ou os documentos individuais."""
     if len(links) == 0:
         logger.error("Nenhum link encontrado para o processo %s.", id_limpo)
         raise RuntimeError(f"Nenhum link encontrado para o processo {id_limpo}.")
