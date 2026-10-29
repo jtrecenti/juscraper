@@ -7,6 +7,10 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- TJSP: `cjpg_download`, `cpopg_download` e `cposg_download` aceitam o parâmetro opcional `diretorio` para definir o diretório de download por chamada.
+
 ## [0.5.0] - 2026-10-21
 
 ### Added
