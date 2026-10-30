@@ -105,26 +105,18 @@ def cpopg_download_html_single(
                     "fornecido para extrair links do HTML."
                 )
             links = get_links_callback(r)
-        except (OSError, UnicodeDecodeError, ValueError,
-                AttributeError, requests.RequestException) as e:
-            logger.error(
-                "Erro ao conectar ao site (processo %s)."
-                "Tentando novamente em %.1f segundos. (%s)",
-                id_cnj,
-                sleep_time,
-                e
-            )
-            time.sleep(sleep_time)
-            continue
-
-        codigos_processo = _extrair_codigos_processo(links)
-        try:
+            codigos_processo = _extrair_codigos_processo(links)
             _salvar_resultados_html(
                 r, links, id_clean, path, session, u_base, codigos_processo,
             )
             break
-        except (OSError, UnicodeDecodeError, ValueError, AttributeError,
-                requests.RequestException) as e:
+        except _InvalidProcessCodeError:
+            # O código inválido veio da resposta do tribunal e não muda com
+            # nova tentativa; sai antes do except genérico, que capturaria o
+            # ValueError e repetiria a busca quatro vezes à toa.
+            raise
+        except (OSError, UnicodeDecodeError, ValueError,
+                AttributeError, requests.RequestException) as e:
             logger.error(
                 "Erro ao conectar ao site (processo %s)."
                 "Tentando novamente em %.1f segundos. (%s)",

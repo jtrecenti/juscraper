@@ -162,7 +162,7 @@ def test_cpopg_html_lote_continua_apos_codigo_malicioso(tmp_path, mocker):
     assert extrair.call_count == 3
 
 
-def test_cpopg_html_repite_value_error_durante_gravacao(tmp_path, mocker):
+def test_cpopg_html_repete_value_error_durante_gravacao(tmp_path, mocker):
     """ValueError de gravação mantém o retry anterior à sanitização."""
     pausa = mocker.patch("juscraper.courts.tjsp.cpopg_download.time.sleep")
     sessao = Mock()
