@@ -2,6 +2,8 @@
 Downloads of processes from the TJSP Consulta de Processos Originarios do Primeiro Grau (CPOPG).
 """
 import logging
+import os
+import tempfile
 import time
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
@@ -80,7 +82,7 @@ def cpopg_download_html_single(
     if not Path(path).is_dir():
         Path(path).mkdir(parents=True)
     for file in Path(path).iterdir():
-        if file.name.endswith('.html'):
+        if file.name.endswith('.html') and file.is_file() and file.stat().st_size > 0:
             logger.info("O processo %s ja foi baixado.", id_clean)
             return path
     time.sleep(sleep_time)
@@ -96,6 +98,7 @@ def cpopg_download_html_single(
         'dadosConsulta.valorConsulta': '',
         'dadosConsulta.tipoNuProcesso': 'UNIFICADO'
     }
+    ultimo_erro = None
     for _ in range(5):
         try:
             r = session.get(u, params=parms)
@@ -109,6 +112,7 @@ def cpopg_download_html_single(
             _salvar_resultados_html(
                 r, links, id_clean, path, session, u_base, codigos_processo,
             )
+            ultimo_erro = None
             break
         except _InvalidProcessCodeError:
             # O código inválido veio da resposta do tribunal e não muda com
@@ -117,6 +121,7 @@ def cpopg_download_html_single(
             raise
         except (OSError, UnicodeDecodeError, ValueError,
                 AttributeError, requests.RequestException) as e:
+            ultimo_erro = e
             logger.error(
                 "Erro ao conectar ao site (processo %s)."
                 "Tentando novamente em %.1f segundos. (%s)",
@@ -125,6 +130,8 @@ def cpopg_download_html_single(
                 e
             )
             time.sleep(sleep_time)
+    if ultimo_erro is not None:
+        raise ultimo_erro
     return path
 
 
@@ -154,8 +161,7 @@ def _salvar_resultados_html(
     if len(links) == 1:
         nome_arquivo = f"{caminho}/{id_limpo}_{codigos_processo[0]}.html"
         logger.info("Salvando em %s", nome_arquivo)
-        with Path(nome_arquivo).open('w', encoding='utf-8') as arquivo:
-            arquivo.write(resposta.text)
+        _gravar_html_atomico(nome_arquivo, resposta.text)
     else:
         for indice, link in enumerate(links):
             resposta_documento = sessao.get(f"{url_base}{link}")
@@ -167,8 +173,32 @@ def _salvar_resultados_html(
                 )
             nome_arquivo = f"{caminho}/{id_limpo}_{codigos_processo[indice]}.html"
             logger.info("Salvando em %s", nome_arquivo)
-            with Path(nome_arquivo).open('w', encoding='utf-8') as arquivo:
-                arquivo.write(resposta_documento.text)
+            _gravar_html_atomico(nome_arquivo, resposta_documento.text)
+
+
+def _gravar_html_atomico(nome_arquivo, conteudo):
+    """Grava HTML em temporário e substitui o arquivo final ao concluir."""
+    if not conteudo:
+        raise ValueError("Conteúdo HTML vazio não pode ser salvo.")
+    caminho = Path(nome_arquivo)
+    fd, nome_temporario = tempfile.mkstemp(
+        dir=caminho.parent,
+        prefix=f".{caminho.name}.",
+        suffix='.tmp',
+    )
+    temporario = Path(nome_temporario)
+    try:
+        arquivo = os.fdopen(fd, 'w', encoding='utf-8')
+    except Exception:
+        os.close(fd)
+        temporario.unlink(missing_ok=True)
+        raise
+    try:
+        with arquivo:
+            arquivo.write(conteudo)
+        temporario.replace(caminho)
+    finally:
+        temporario.unlink(missing_ok=True)
 
 
 def cpopg_download_api(
