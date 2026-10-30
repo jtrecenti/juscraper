@@ -529,6 +529,7 @@ class TJSPScraper(EsajSearchScraper):
         self,
         pesquisa: str = "",
         paginas: int | list | range | None = None,
+        diretorio: str | None = None,
         **kwargs: Any,
     ) -> str:
         """Baixa as paginas HTML brutas do CJPG TJSP (sem parsear).
@@ -546,6 +547,8 @@ class TJSPScraper(EsajSearchScraper):
                 chars.
             paginas (int | list | range | None): Paginas 1-based;
                 ``None`` baixa todas. Default ``None``.
+            diretorio (str | None): Sobrescreve :attr:`download_path`
+                para esta unica chamada. Default ``None``.
             **kwargs: Mesmos filtros aceitos por :meth:`cjpg` (validados
                 por :class:`InputCJPGTJSP`).
 
@@ -587,7 +590,7 @@ class TJSPScraper(EsajSearchScraper):
             pesquisa=inp.pesquisa,
             session=self.session,
             u_base=self.u_base,
-            download_path=self.download_path,
+            download_path=diretorio or self.download_path,
             sleep_time=self.sleep_time,
             classe=inp.classe,
             assunto=inp.assunto,
@@ -635,8 +638,16 @@ class TJSPScraper(EsajSearchScraper):
         self,
         id_cnj: str | list[str],
         method: Literal["html", "api"] = "html",
+        diretorio: str | None = None,
     ):
-        """Download raw CPOPG files for one or many CNJs via ``'html'`` or ``'api'``."""
+        """Baixa arquivos brutos do CPOPG via ``'html'`` ou ``'api'``.
+
+        Args:
+            id_cnj: Numero CNJ ou lista de numeros CNJ.
+            method: Transporte usado no download. Default ``"html"``.
+            diretorio: Sobrescreve :attr:`download_path` para esta chamada.
+                Default ``None``.
+        """
         self.set_method(method)
         if isinstance(id_cnj, str):
             id_cnj = [id_cnj]
@@ -647,7 +658,7 @@ class TJSPScraper(EsajSearchScraper):
                 id_cnj_list=id_cnj,
                 session=self.session,
                 u_base=self.u_base,
-                download_path=self.download_path,
+                download_path=diretorio or self.download_path,
                 sleep_time=self.sleep_time,
                 get_links_callback=get_links_callback,
             )
@@ -656,7 +667,7 @@ class TJSPScraper(EsajSearchScraper):
                 id_cnj_list=id_cnj,
                 session=self.session,
                 api_base=self.api_base,
-                download_path=self.download_path,
+                download_path=diretorio or self.download_path,
             )
         else:
             raise ValueError(f"Método '{method}' não é suportado.")
@@ -685,8 +696,20 @@ class TJSPScraper(EsajSearchScraper):
             logger.warning("[TJSP] Aviso: diretório %s não existe e não pôde ser removido.", path)
         return result
 
-    def cposg_download(self, id_cnj: str | list, method: Literal["html", "api"] = "html"):
-        """Download raw CPOSG files for one or many CNJs via ``'html'`` or ``'api'``."""
+    def cposg_download(
+        self,
+        id_cnj: str | list,
+        method: Literal["html", "api"] = "html",
+        diretorio: str | None = None,
+    ):
+        """Baixa arquivos brutos do CPOSG via HTML ou API.
+
+        Args:
+            id_cnj: Numero CNJ ou lista de numeros CNJ.
+            method: Transporte usado no download. Default ``"html"``.
+            diretorio: Sobrescreve :attr:`download_path` para esta chamada.
+                Default ``None``.
+        """
         self.set_method(method)
         if isinstance(id_cnj, str):
             id_cnj = [id_cnj]
@@ -695,7 +718,7 @@ class TJSPScraper(EsajSearchScraper):
                 id_cnj_list=id_cnj,
                 session=self.session,
                 u_base=self.u_base,
-                download_path=self.download_path,
+                download_path=diretorio or self.download_path,
                 sleep_time=self.sleep_time,
             )
         elif self.method == "api":
@@ -703,7 +726,7 @@ class TJSPScraper(EsajSearchScraper):
                 id_cnj_list=id_cnj,
                 session=self.session,
                 api_base=self.api_base,
-                download_path=self.download_path,
+                download_path=diretorio or self.download_path,
                 sleep_time=self.sleep_time,
             )
         else:
