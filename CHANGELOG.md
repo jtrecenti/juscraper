@@ -14,6 +14,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Fixed
 
 - TJSP `cpopg` HTML valida `processo.codigo` antes da gravação, prevenindo path traversal e retries desnecessários para identificadores inválidos. Refs #402.
+- TJSP CPOPG HTML propaga o erro após cinco tentativas, grava os arquivos de forma atômica e rejeita respostas HTML vazias e arquivos vazios como cache válido. Refs #453.
 
 ## [0.5.0] - 2026-10-21
 
