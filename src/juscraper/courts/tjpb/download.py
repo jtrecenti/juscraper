@@ -1,40 +1,29 @@
 """Downloads raw results from the TJPB jurisprudence search (Laravel API)."""
 import math
-import re
 import time
+from urllib.parse import unquote
 
+import requests
 from tqdm import tqdm
 
 from juscraper.core.http import RequestFn
 
 BASE_URL = "https://pje-jurisprudencia.tjpb.jus.br"
+CLASSES_URL = f"{BASE_URL}/api/pje/classes/list"
 SEARCH_URL = f"{BASE_URL}/api/jurisprudencia/pesquisar"
 RESULTS_PER_PAGE = 10
 
 
-TOKEN_RE = re.compile(r'<meta name="_token" content="([^"]+)"')
-
-
-def fetch_csrf_token(request_fn: RequestFn) -> str:
-    """Fetch the ``_token`` CSRF value from the TJPB homepage meta tag.
-
-    The Laravel backend embeds the token in ``<meta name="_token" ...>``.
-    The token is then sent inside the JSON body of every search request
-    (key ``_token``); no ``X-CSRF-TOKEN`` header is used.
-
-    The GET is dispatched through ``request_fn`` so o cookie de sessao
-    aterriza na ``requests.Session`` compartilhada pelo ``HTTPScraper``,
-    e os POSTs subsequentes herdam o mesmo cookie automaticamente.
-    """
-    resp = request_fn("GET", BASE_URL, timeout=30)
-    match = TOKEN_RE.search(resp.text)
-    if not match:
-        raise RuntimeError("Could not find CSRF token on TJPB page.")
-    return match.group(1)
+def fetch_csrf_token(request_fn: RequestFn, session: requests.Session) -> str:
+    """Fetch the CSRF cookie used by the TJPB search API."""
+    request_fn("GET", CLASSES_URL, timeout=30)
+    token = session.cookies.get("XSRF-TOKEN")
+    if not token:
+        raise RuntimeError("Could not find XSRF-TOKEN cookie on TJPB API session.")
+    return unquote(token)
 
 
 def build_cjsg_payload(
-    token: str,
     pesquisa: str,
     page: int = 1,
     *,
@@ -54,7 +43,6 @@ def build_cjsg_payload(
     rename it without confirming the live API still accepts it.
     """
     return {
-        "_token": token,
         "jurisprudencia": {
             "ementa": pesquisa,
             "teor": teor,
@@ -76,6 +64,7 @@ def cjsg_download_manager(
     paginas=None,
     *,
     request_fn: RequestFn,
+    session: requests.Session,
     **kwargs,
 ) -> list:
     """Download raw results from the TJPB jurisprudence search.
@@ -89,14 +78,24 @@ def cjsg_download_manager(
             uso normal e ``TJPBScraper._request_with_retry`` (via
             ``core.http.HTTPScraper``), centralizando backoff exponencial
             para 429/5xx.
+        session: Shared HTTP session that receives the CSRF cookie.
         **kwargs: Additional filter parameters.
     """
-    token = fetch_csrf_token(request_fn)
-    headers = {"X-Requested-With": "XMLHttpRequest"}
+    xsrf_token = fetch_csrf_token(request_fn, session)
+    headers = {
+        "X-Requested-With": "XMLHttpRequest",
+        "X-XSRF-TOKEN": xsrf_token,
+    }
 
     def _get_page(pagina_1based):
-        payload = build_cjsg_payload(token, pesquisa, page=pagina_1based, **kwargs)
-        resp = request_fn("POST", SEARCH_URL, json=payload, headers=headers, timeout=30)
+        payload = build_cjsg_payload(pesquisa, page=pagina_1based, **kwargs)
+        resp = request_fn(
+            "POST",
+            SEARCH_URL,
+            json=payload,
+            headers=headers,
+            timeout=30,
+        )
         data: dict = resp.json()
         time.sleep(1)
         return data

@@ -5,15 +5,15 @@ Run from repo root::
     python -m tests.fixtures.capture.tjpb
 
 Saves raw JSON responses (Laravel + Elasticsearch) under
-``tests/tjpb/samples/cjsg/`` plus the home page that carries the
-``_token`` CSRF meta tag. Heavy ``inteiro_teor`` blobs on each hit are
+``tests/tjpb/samples/cjsg/``. Heavy ``inteiro_teor`` blobs on each hit are
 truncated — the parser only needs ementa/numero_processo/dt_ementa.
 """
 import json
+from urllib.parse import unquote
 
 import requests
 
-from juscraper.courts.tjpb.download import BASE_URL, SEARCH_URL, build_cjsg_payload, fetch_csrf_token
+from juscraper.courts.tjpb.download import CLASSES_URL, SEARCH_URL, build_cjsg_payload
 
 from ._util import dump, samples_dir_for
 
@@ -35,13 +35,16 @@ def _minify(raw: bytes) -> bytes:
     return json.dumps(data, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
 
 
-def _capture(session: requests.Session, dest, token: str, pesquisa: str,
+def _capture(session: requests.Session, dest, xsrf_token: str, pesquisa: str,
              page: int, filename: str) -> None:
-    payload = build_cjsg_payload(token=token, pesquisa=pesquisa, page=page)
+    payload = build_cjsg_payload(pesquisa=pesquisa, page=page)
     response = session.post(
         SEARCH_URL,
         json=payload,
-        headers={"X-Requested-With": "XMLHttpRequest"},
+        headers={
+            "X-Requested-With": "XMLHttpRequest",
+            "X-XSRF-TOKEN": xsrf_token,
+        },
         timeout=60,
     )
     response.raise_for_status()
@@ -57,18 +60,18 @@ def main() -> None:
         "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
     })
 
-    home_resp = session.get(BASE_URL, timeout=30)
-    home_resp.raise_for_status()
-    dump(dest / "home.html", home_resp.content)
-    print(f"[tjpb] wrote home.html (bytes={len(home_resp.content)})")
+    classes_resp = session.get(CLASSES_URL, timeout=30)
+    classes_resp.raise_for_status()
+    xsrf_cookie = session.cookies.get("XSRF-TOKEN")
+    if not xsrf_cookie:
+        raise RuntimeError("TJPB did not provide the XSRF-TOKEN cookie.")
+    xsrf_token = unquote(xsrf_cookie)
 
-    token = fetch_csrf_token(session.request)
-
-    _capture(session, dest, token, "dano moral", 1, "results_normal_page_01.json")
-    _capture(session, dest, token, "dano moral", 2, "results_normal_page_02.json")
-    _capture(session, dest, token, "usucapiao extraordinario imovel rural",
+    _capture(session, dest, xsrf_token, "dano moral", 1, "results_normal_page_01.json")
+    _capture(session, dest, xsrf_token, "dano moral", 2, "results_normal_page_02.json")
+    _capture(session, dest, xsrf_token, "usucapiao extraordinario imovel rural",
              1, "single_page.json")
-    _capture(session, dest, token, "juscraper_probe_zero_hits_xyzqwe",
+    _capture(session, dest, xsrf_token, "juscraper_probe_zero_hits_xyzqwe",
              1, "no_results.json")
 
 
