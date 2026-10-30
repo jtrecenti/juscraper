@@ -504,5 +504,36 @@ class TestCJPGDateRangeValidation:
         assert scraper.session.get.called
 
 
+def test_cjpg_download_usa_diretorio_sem_alterar_download_path(tmp_path, mocker):
+    """``diretorio`` deve valer somente para a chamada atual."""
+    scraper = juscraper.scraper("tjsp", download_path=str(tmp_path / "padrao"))
+    alternativo = tmp_path / "alternativo"
+    download = mocker.patch(
+        "juscraper.courts.tjsp.client.cjpg_download_mod",
+        return_value=str(alternativo),
+    )
+
+    resultado = scraper.cjpg_download(paginas=1, diretorio=str(alternativo))
+
+    assert resultado == str(alternativo)
+    assert scraper.download_path == str(tmp_path / "padrao")
+    assert download.call_args.kwargs["download_path"] == str(alternativo)
+
+
+def test_cjpg_download_sem_diretorio_usa_download_path(tmp_path, mocker):
+    """Sem ``diretorio``, o caminho configurado no scraper continua valendo."""
+    caminho = tmp_path / "padrao"
+    scraper = juscraper.scraper("tjsp", download_path=str(caminho))
+    download = mocker.patch(
+        "juscraper.courts.tjsp.client.cjpg_download_mod",
+        return_value=str(caminho),
+    )
+
+    scraper.cjpg_download(paginas=1)
+
+    assert scraper.download_path == str(caminho)
+    assert download.call_args.kwargs["download_path"] == str(caminho)
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
