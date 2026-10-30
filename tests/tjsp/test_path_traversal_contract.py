@@ -10,13 +10,19 @@ Os corpos de resposta sao construidos inline (entrada adversarial), nao como
 samples versionados, porque nao representam markup/JSON real do TJSP.
 """
 import json
+from unittest.mock import Mock
 
 import pytest
 import responses
 
 import juscraper as jus
 from juscraper.courts.tjsp.acordao_download import download_acordao
-from juscraper.courts.tjsp.cpopg_download import cpopg_download_api, cpopg_download_api_single
+from juscraper.courts.tjsp.cpopg_download import (
+    cpopg_download_api,
+    cpopg_download_api_single,
+    cpopg_download_html,
+    cpopg_download_html_single,
+)
 from juscraper.courts.tjsp.cposg_download import _cposg_download_html_single
 
 ESAJ = "https://esaj.tjsp.jus.br"
@@ -67,6 +73,121 @@ def test_cpopg_api_caller_captura_e_continua(tmp_path, mocker):
     cpopg_download_api([CNJ], scraper.session, scraper.api_base, str(tmp_path))
 
     assert not list(tmp_path.rglob("*_basicos.json"))
+
+
+# ---------- cpopg (HTML) -----------------------------------------------
+
+@pytest.mark.parametrize("codigo_invalido", ["..%2F..%2Fevil", "..", "a%2Fb", "a%5Cb"])
+def test_cpopg_html_rejeita_codigo_malicioso_no_link_unico(
+    tmp_path, mocker, codigo_invalido,
+):
+    """``processo.codigo`` inválido deve falhar antes de gravar o HTML."""
+    mocker.patch("juscraper.courts.tjsp.cpopg_download.time.sleep")
+    sessao = Mock()
+    sessao.get.return_value = Mock(text="<html>Busca</html>", status_code=200)
+    extrair = Mock(return_value=[f"/cpopg/show.do?processo.codigo={codigo_invalido}"])
+
+    with pytest.raises(ValueError, match=r"processo.codigo"):
+        cpopg_download_html_single(
+            CNJ,
+            sessao,
+            ESAJ + "/",
+            str(tmp_path),
+            0,
+            extrair,
+        )
+
+    assert sessao.get.call_count == 1
+    assert not list(tmp_path.rglob("*.html"))
+
+
+def test_cpopg_html_rejeita_codigo_malicioso_antes_de_baixar_documentos(
+    tmp_path, mocker,
+):
+    """Todos os códigos devem ser validados antes de qualquer GET de documento."""
+    mocker.patch("juscraper.courts.tjsp.cpopg_download.time.sleep")
+    sessao = Mock()
+    sessao.get.return_value = Mock(text="<html>Busca</html>", status_code=200)
+    links = [
+        "/cpopg/show.do?processo.codigo=PROCESSO_VALIDO",
+        "/cpopg/show.do?processo.codigo=..%2F..%2Fevil",
+    ]
+    extrair = Mock(return_value=links)
+
+    with pytest.raises(ValueError, match=r"processo.codigo"):
+        cpopg_download_html_single(
+            CNJ,
+            sessao,
+            ESAJ + "/",
+            str(tmp_path),
+            0,
+            extrair,
+        )
+
+    assert sessao.get.call_count == 1
+    assert not list(tmp_path.rglob("*.html"))
+
+
+def test_cpopg_html_lote_continua_apos_codigo_malicioso(tmp_path, mocker):
+    """Um processo inválido não interrompe o lote nem causa cinco retries."""
+    mocker.patch("juscraper.courts.tjsp.cpopg_download.time.sleep")
+    sessao = Mock()
+    sessao.get.return_value = Mock(text="<html>Busca</html>", status_code=200)
+    extrair = Mock(side_effect=[
+        ["/cpopg/show.do?processo.codigo=PROCESSO_PRIMEIRO"],
+        ["/cpopg/show.do?processo.codigo=..%2F..%2Fevil"],
+        ["/cpopg/show.do?processo.codigo=PROCESSO_TERCEIRO"],
+    ])
+    cnjs = [
+        CNJ,
+        "1000000-00.2024.8.26.0001",
+        "1000000-00.2024.8.26.0002",
+    ]
+
+    cpopg_download_html(
+        cnjs,
+        sessao,
+        ESAJ + "/",
+        str(tmp_path),
+        0,
+        extrair,
+    )
+
+    primeiro = tmp_path / "cpopg" / CNJ_DIGITS
+    terceiro = tmp_path / "cpopg" / "10000000020248260002"
+    assert (primeiro / f"{CNJ_DIGITS}_PROCESSO_PRIMEIRO.html").exists()
+    assert (terceiro / "10000000020248260002_PROCESSO_TERCEIRO.html").exists()
+    assert not (tmp_path / "evil.html").exists()
+    assert sessao.get.call_count == 3
+    assert extrair.call_count == 3
+
+
+def test_cpopg_html_repete_value_error_durante_gravacao(tmp_path, mocker):
+    """ValueError de gravação mantém o retry anterior à sanitização."""
+    pausa = mocker.patch("juscraper.courts.tjsp.cpopg_download.time.sleep")
+    sessao = Mock()
+    sessao.get.return_value = Mock(text="<html>Busca</html>", status_code=200)
+    extrair = Mock(return_value=[
+        "/cpopg/show.do?processo.codigo=PROCESSO_VALIDO",
+    ])
+    salvar = mocker.patch(
+        "juscraper.courts.tjsp.cpopg_download._salvar_resultados_html",
+        side_effect=[ValueError("erro de gravação"), None],
+    )
+
+    cpopg_download_html_single(
+        CNJ,
+        sessao,
+        ESAJ + "/",
+        str(tmp_path),
+        0,
+        extrair,
+    )
+
+    assert sessao.get.call_count == 2
+    assert extrair.call_count == 2
+    assert salvar.call_count == 2
+    assert pausa.call_count == 2
 
 
 # ---------- cposg (HTML) ------------------------------------------------
