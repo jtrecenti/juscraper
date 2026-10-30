@@ -77,7 +77,7 @@ def test_cpopg_api_caller_captura_e_continua(tmp_path, mocker):
 
 # ---------- cpopg (HTML) -----------------------------------------------
 
-@pytest.mark.parametrize("codigo_invalido", ["..%2F..%2Fevil"])
+@pytest.mark.parametrize("codigo_invalido", ["..%2F..%2Fevil", "..", "a%2Fb", "a%5Cb"])
 def test_cpopg_html_rejeita_codigo_malicioso_no_link_unico(
     tmp_path, mocker, codigo_invalido,
 ):
