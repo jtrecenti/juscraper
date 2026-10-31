@@ -39,11 +39,12 @@ dados_cjpg.head(3)
 
 O pacote foi pensado para atender a requisitos básicos de consulta de dados de processos judiciais em alguns tribunais.
 
-Os tribunais implementados vão apresentar os seguintes métodos:
+Os tribunais implementados apresentam um ou mais dos métodos abaixo; a tabela da seção Implementações diz quais cada um tem:
 
 - `.cpopg()`: consulta de processos originários do primeiro grau
 - `.cposg()`: consulta de processos originários do segundo grau
-- `.cjsg()`: consulta de jurisprudência
+- `.cjsg()`: consulta de jurisprudência de segundo grau
+- `.cjpg()`: consulta de julgados de primeiro grau
 
 Os métodos `.cpopg()` e `.cposg()` recebem como *input* um número de processo no padrão CNJ (NNNNNNN-DD.AAAA.J.TT.OOOO), com ou sem separadores, e retorna um `dict` com tabelas dos elementos do processo (dados básicos, partes, movimentações, entre outros específicos por tribunal).
 
@@ -51,50 +52,58 @@ O método `.cjsg()` recebe como *input* parâmetros de busca de jurisprudência 
 
 ## Implementações
 
+<!-- tabela-cobertura:inicio (gerada por scripts/tabela_cobertura.py; não editar à mão) -->
+
 ### Tribunais Disponíveis
 
-| Tribunal | Funcionalidades Disponíveis       |
-|----------|-----------------------------------|
-| STF      | listar_decisoes, contar_decisoes  |
-| TJAC     | cjsg                              |
-| TJAL     | cjsg                              |
-| TJAM     | cjsg                              |
-| TJAP     | cjsg ⚠️                           |
-| TJCE     | cjsg                              |
-| TJBA     | cjsg                              |
-| TJGO     | cjsg                              |
-| TJMG     | cjsg, cposg                       |
-| TJSP     | cpopg, cposg, cjsg, cjpg, acordao |
-| TJRS     | cjsg                              |
-| TJPR     | cjsg                              |
-| TJPE     | cjsg, cpopg                       |
-| TJES     | cjsg, cjpg                        |
-| TJMS     | cjsg                              |
-| TJDFT    | cjsg                              |
-| TJPA     | cjsg                              |
-| TJMT     | cjsg                              |
-| TJTO     | cjsg, cjpg                        |
-| TJPB     | cjsg                              |
-| TJPI     | cjsg                              |
-| TJRJ     | cjsg                              |
-| TJRN     | cjsg                              |
-| TJRO     | cjsg                              |
-| TJRR     | cjsg                              |
-| TJSC     | cjsg                              |
-| TRF3     | cpopg, cjsg                       |
-| TRF5     | cpopg                             |
-| TRF6     | cpopg                             |
-
-> ⚠️ **TJAP — `cjsg` unavailable:** since ~2026 the TJAP jurisprudence search (Tucujuris platform) requires a [Cloudflare Turnstile](https://www.cloudflare.com/products/turnstile/) CAPTCHA, validated server-side. Because the scraper issues plain HTTP requests (no browser), it cannot produce the token and the backend replies `"A verificação de segurança falhou"`. In that case `cjsg` raises `TJAPSecurityCheckError` with an explanation instead of silently returning empty. There is no workaround through the public API. See [issue #279](https://github.com/jtrecenti/juscraper/issues/279).
+| Tribunal | Funcionalidades Disponíveis |
+|----------|-----------------------------|
+| STF      | contar_decisoes, listar_decisoes |
+| TJAC     | cjsg |
+| TJAL     | cjsg |
+| TJAM     | cjsg |
+| TJAP     | cjsg ⚠️ |
+| TJBA     | cjsg |
+| TJCE     | cjsg |
+| TJDFT    | cjsg |
+| TJES     | cjsg, cjpg |
+| TJGO     | cjsg |
+| TJMG     | cposg, cjsg |
+| TJMS     | cjsg |
+| TJMT     | cjsg |
+| TJPA     | cjsg |
+| TJPB     | cjsg |
+| TJPE     | cpopg, cjsg |
+| TJPI     | cjsg |
+| TJPR     | cjsg |
+| TJRJ     | cjsg |
+| TJRN     | cjsg |
+| TJRO     | cjsg |
+| TJRR     | cjsg |
+| TJRS     | cjsg |
+| TJSC     | cjsg |
+| TJSP     | cpopg, cposg, cjsg, cjpg |
+| TJTO     | cjsg, cjpg, cjsg_ementa |
+| TRF1     | cpopg |
+| TRF3     | cpopg, cjsg |
+| TRF5     | cpopg |
+| TRF6     | cpopg |
 
 ### Agregadores Disponíveis
 
-| Nome      | Funcionalidades                   |
-|-----------|-----------------------------------|
-| Datajud   | listar_processos                  |
-| Jusbr     | cpopg, download_documents         |
-| Falcao    | listar_decisoes (national labor jurisprudence: TST + TRTs) |
-| PDPJ      | existe, cpopg, documentos, movimentos, partes, pesquisa, contar, download_documents |
+| Nome        | Funcionalidades Disponíveis |
+|-------------|-----------------------------|
+| ComunicaCNJ | listar_comunicacoes |
+| Datajud     | contar_processos, listar_processos |
+| Falcao      | listar_decisoes |
+| JusBR       | cpopg, download_documents |
+| PDPJ        | cpopg, contar, documentos, download_documents, existe, movimentos, partes, pesquisa |
+
+<!-- tabela-cobertura:fim -->
+
+> ⚠️ **TJAP — `cjsg` unavailable:** since ~2026 the TJAP jurisprudence search (Tucujuris platform) requires a [Cloudflare Turnstile](https://www.cloudflare.com/products/turnstile/) CAPTCHA, validated server-side. Because the scraper issues plain HTTP requests (no browser), it cannot produce the token and the backend replies `"A verificação de segurança falhou"`. In that case `cjsg` raises `TJAPSecurityCheckError` with an explanation instead of silently returning empty. There is no workaround through the public API. See [issue #279](https://github.com/jtrecenti/juscraper/issues/279).
+
+Falcao covers national labor jurisprudence (TST and TRTs).
 
 #### JusBR and PDPJ authentication
 
