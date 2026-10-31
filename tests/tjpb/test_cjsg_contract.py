@@ -1,33 +1,42 @@
 """Offline contract tests for TJPB cjsg.
 
-The TJPB Laravel/PJe search requires a GET on the homepage to extract
-the ``_token`` CSRF meta value, which is then sent inside the JSON body
-of every search POST. Each contract test mocks the GET (returning a
-captured home.html with a stable meta tag) and the POST(s).
+The TJPB Laravel/PJe search requires a GET on the classes API to establish
+the session and receive the ``XSRF-TOKEN`` cookie, which is then sent in
+the header of every search POST. Each contract test mocks the GET and POST(s).
 """
 import pandas as pd
+import pytest
 import responses
 from responses.matchers import json_params_matcher
 
 import juscraper as jus
-from juscraper.courts.tjpb.download import BASE_URL, SEARCH_URL, TOKEN_RE, build_cjsg_payload
-from tests._helpers import load_sample, load_sample_bytes
+from juscraper.courts.tjpb.download import CLASSES_URL, SEARCH_URL, build_cjsg_payload
+from tests._helpers import load_sample
 
 CJSG_FIELDS = {"processo", "ementa", "data_julgamento"}
 
-_HOME_HTML_BYTES = load_sample_bytes("tjpb", "cjsg/home.html")
-_TOKEN_MATCH = TOKEN_RE.search(_HOME_HTML_BYTES.decode("utf-8"))
-assert _TOKEN_MATCH is not None, "captured TJPB home.html lacks <meta name='_token' ...>"
-_TOKEN = _TOKEN_MATCH.group(1)
+_XSRF_COOKIE = "contrato%2Fcsrf"
+_LARAVEL_COOKIE = "contrato-session"
+_CLASSES_RESPONSE = [{
+    "id_classe_judicial": 53,
+    "classe": "AGRAVO DE INSTRUMENTO (202)",
+}]
 
 
-def _add_get_home() -> None:
+def _add_get_classes(*, with_cookie: bool = True) -> None:
+    headers = (
+        [
+            ("Set-Cookie", f"XSRF-TOKEN={_XSRF_COOKIE}; Path=/"),
+            ("Set-Cookie", f"laravel_session={_LARAVEL_COOKIE}; Path=/"),
+        ]
+        if with_cookie else []
+    )
     responses.add(
         responses.GET,
-        BASE_URL,
-        body=_HOME_HTML_BYTES,
+        CLASSES_URL,
+        json=_CLASSES_RESPONSE,
         status=200,
-        content_type="text/html; charset=UTF-8",
+        headers=headers,
     )
 
 
@@ -39,16 +48,16 @@ def _add_post(pesquisa: str, page: int, sample_path: str) -> None:
         status=200,
         content_type="application/json",
         match=[json_params_matcher(
-            build_cjsg_payload(token=_TOKEN, pesquisa=pesquisa, page=page),
+            build_cjsg_payload(pesquisa=pesquisa, page=page),
         )],
     )
 
 
 @responses.activate
 def test_cjsg_typical_com_paginacao(mocker):
-    """GET home (token) + two POSTs (page 1 and 2)."""
+    """GET classes (CSRF cookie) + two POSTs (page 1 and 2)."""
     mocker.patch("time.sleep")
-    _add_get_home()
+    _add_get_classes()
     _add_post("dano moral", page=1, sample_path="cjsg/results_normal_page_01.json")
     _add_post("dano moral", page=2, sample_path="cjsg/results_normal_page_02.json")
 
@@ -57,13 +66,19 @@ def test_cjsg_typical_com_paginacao(mocker):
     assert isinstance(df, pd.DataFrame)
     assert set(df.columns) >= CJSG_FIELDS
     assert len(df) > 0
+    assert responses.calls[0].request.url == CLASSES_URL
+    post_calls = [call for call in responses.calls if call.request.method == "POST"]
+    assert len(post_calls) == 2
+    assert all(call.request.headers["X-XSRF-TOKEN"] == "contrato/csrf" for call in post_calls)
+    assert all("XSRF-TOKEN=contrato%2Fcsrf" in call.request.headers["Cookie"] for call in post_calls)
+    assert all(f"laravel_session={_LARAVEL_COOKIE}" in call.request.headers["Cookie"] for call in post_calls)
 
 
 @responses.activate
 def test_cjsg_single_page(mocker):
-    """Single-page query: GET home + one POST."""
+    """Single-page query: GET classes + one POST."""
     mocker.patch("time.sleep")
-    _add_get_home()
+    _add_get_classes()
     _add_post("usucapiao extraordinario imovel rural",
               page=1, sample_path="cjsg/single_page.json")
 
@@ -80,7 +95,7 @@ def test_cjsg_single_page(mocker):
 def test_cjsg_no_results(mocker):
     """Zero-hit query returns an empty DataFrame (not an error)."""
     mocker.patch("time.sleep")
-    _add_get_home()
+    _add_get_classes()
     _add_post("juscraper_probe_zero_hits_xyzqwe",
               page=1, sample_path="cjsg/no_results.json")
 
@@ -91,16 +106,30 @@ def test_cjsg_no_results(mocker):
 
 
 @responses.activate
-def test_cjsg_token_propagates_into_body(mocker):
-    """The CSRF token from the home page must reach the JSON body's ``_token`` key."""
+def test_cjsg_xsrf_token_is_sent_in_header_and_not_body(mocker):
+    """The CSRF cookie reaches the header, not the JSON body."""
     mocker.patch("time.sleep")
-    _add_get_home()
+    _add_get_classes()
     _add_post("dano moral", page=1, sample_path="cjsg/results_normal_page_01.json")
 
     jus.scraper("tjpb").cjsg("dano moral", paginas=1)
 
     post_calls = [c for c in responses.calls if c.request.method == "POST"]
     assert len(post_calls) == 1
+    assert post_calls[0].request.headers["X-XSRF-TOKEN"] == "contrato/csrf"
+    assert "XSRF-TOKEN=contrato%2Fcsrf" in post_calls[0].request.headers["Cookie"]
     body = post_calls[0].request.body
-    assert isinstance(body, (bytes, bytearray))
-    assert _TOKEN.encode() in body
+    body = body.decode("utf-8") if isinstance(body, bytes) else body
+    assert "_token" not in body
+
+
+@responses.activate
+def test_cjsg_falha_sem_cookie_xsrf(mocker):
+    """Missing CSRF cookie produces an informative error before the POST."""
+    mocker.patch("time.sleep")
+    _add_get_classes(with_cookie=False)
+
+    with pytest.raises(RuntimeError, match="XSRF-TOKEN"):
+        jus.scraper("tjpb").cjsg("dano moral", paginas=1)
+
+    assert [call.request.method for call in responses.calls] == ["GET"]

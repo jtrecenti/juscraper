@@ -199,6 +199,7 @@ class TJPBScraper(HTTPScraper):
             pesquisa=inp.pesquisa,
             paginas=inp.paginas,
             request_fn=self._request_with_retry,
+            session=self.session,
             nr_processo=inp.numero_processo or "",
             id_classe=inp.id_classe or "",
             id_orgao_julgador=inp.id_orgao_julgador or "",
