@@ -1,0 +1,118 @@
+"""Auto-chunk do cjsg eSAJ contra a regra real de janela do servidor.
+
+O eSAJ aceita ``dtJulgamentoFim`` estritamente anterior a
+``dtJulgamentoInicio`` + 1 ano de calendário. Probe ao vivo no TJAC
+(2026-10, assunto 10069, órgão 0-3):
+
+* ``01/01/2013``–``31/12/2013``: 200, 12 acórdãos;
+* ``01/03/2015``–``29/02/2016``: 200 (365 dias de diferença, com 29/02);
+* ``01/01/2013``–``01/01/2014``: 404 em ``trocaDePagina.do?pagina=1``
+  (365 dias de diferença, sem 29/02).
+
+O limite em dias fixos (366) gerava janelas que o servidor sempre recusa:
+cada janela cheia virava ``UserWarning`` e só a última, mais curta,
+chegava ao DataFrame. O servidor falso abaixo aplica a mesma regra e
+responde cada janela aceita com a captura real ``single_page.html``,
+renumerando ``cdAcordao`` por janela para que a deduplicação não esconda
+janela perdida.
+"""
+
+import re
+import warnings
+from datetime import date
+from urllib.parse import parse_qs
+
+import pytest
+import responses
+
+import juscraper as jus
+from tests._helpers import load_sample_bytes
+
+ESAJ_PUROS = ["tjac", "tjal", "tjam", "tjce", "tjms"]
+_CD_ACORDAO = re.compile(rb'cdAcordao="(\d+)"')
+
+
+def _data(texto: str) -> date:
+    dia, mes, ano = (int(parte) for parte in texto.split("/"))
+    return date(ano, mes, dia)
+
+
+def _mais_um_ano(data: date) -> date:
+    try:
+        return data.replace(year=data.year + 1)
+    except ValueError:  # 29/02 em ano não bissexto
+        return data.replace(year=data.year + 1, day=28)
+
+
+def _registrar_servidor_esaj(base_url: str, tribunal: str) -> list[tuple[str, str]]:
+    """Registra POST + GET da 1a página com a regra de janela do eSAJ.
+
+    Devolve a lista, preenchida a cada POST, das janelas pedidas.
+    """
+    amostra = load_sample_bytes(tribunal, "cjsg/single_page.html")
+    janelas: list[tuple[str, str]] = []
+
+    def _post(request):
+        corpo = parse_qs(request.body if isinstance(request.body, str) else request.body.decode())
+        janelas.append((corpo["dados.dtJulgamentoInicio"][0], corpo["dados.dtJulgamentoFim"][0]))
+        return 200, {}, b"<html></html>"
+
+    def _primeira_pagina(_request):
+        inicio, fim = (_data(d) for d in janelas[-1])
+        if fim >= _mais_um_ano(inicio):
+            return 404, {}, b""
+        prefixo = str(len(janelas)).encode()
+        corpo = _CD_ACORDAO.sub(lambda m: b'cdAcordao="' + prefixo + b"0" + m.group(1) + b'"', amostra)
+        return 200, {"Content-Type": "text/html; charset=latin-1"}, corpo
+
+    responses.add_callback(responses.POST, f"{base_url}cjsg/resultadoCompleta.do", callback=_post)
+    responses.add_callback(responses.GET, f"{base_url}cjsg/trocaDePagina.do", callback=_primeira_pagina)
+    return janelas
+
+
+def _acordaos_por_janela(tribunal: str) -> int:
+    amostra = load_sample_bytes(tribunal, "cjsg/single_page.html")
+    return len(set(_CD_ACORDAO.findall(amostra)))
+
+
+@pytest.mark.parametrize("tribunal", ESAJ_PUROS)
+@pytest.mark.parametrize(
+    "caso",
+    [
+        ("01/01/2010", "31/12/2016", 7),  # Santos et al. (2022): 7 anos, com 2012 e 2016 bissextos
+        ("01/01/2013", "31/12/2014", 2),
+        ("01/01/2013", "01/01/2014", 2),  # 365 dias sem 29/02: o servidor recusa numa janela só
+    ],
+)
+@responses.activate
+def test_cjsg_auto_chunk_concatena_todas_as_janelas(tribunal, caso, tmp_path, mocker):
+    """Toda janela gerada pelo auto-chunk é aceita pelo servidor e entra no resultado."""
+    inicio, fim, n_janelas = caso
+    mocker.patch("time.sleep")
+    scraper = jus.scraper(tribunal, download_path=str(tmp_path))
+    janelas = _registrar_servidor_esaj(scraper.BASE_URL, tribunal)
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", UserWarning)
+        df = scraper.cjsg("", data_julgamento_inicio=inicio, data_julgamento_fim=fim)
+
+    assert len(janelas) == n_janelas
+    assert janelas[0][0] == inicio
+    assert janelas[-1][1] == fim
+    assert len(df) == n_janelas * _acordaos_por_janela(tribunal)
+    assert df["cd_acordao"].str[0].nunique() == n_janelas
+
+
+@pytest.mark.parametrize("tribunal", ESAJ_PUROS)
+@responses.activate
+def test_cjsg_count_only_soma_todas_as_janelas(tribunal, tmp_path, mocker):
+    """A contagem multi-janela usa as mesmas janelas aceitas pelo servidor."""
+    mocker.patch("time.sleep")
+    scraper = jus.scraper(tribunal, download_path=str(tmp_path))
+    janelas = _registrar_servidor_esaj(scraper.BASE_URL, tribunal)
+    um_ano = scraper.cjsg("", data_julgamento_inicio="01/01/2013", data_julgamento_fim="31/12/2013", count_only=True)
+
+    total = scraper.cjsg("", data_julgamento_inicio="01/01/2010", data_julgamento_fim="31/12/2016", count_only=True)
+
+    assert len(janelas) == 1 + 7
+    assert total == 7 * um_ano

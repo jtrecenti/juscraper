@@ -48,6 +48,14 @@ from .schemas import InputCJSGEsajPuro
 
 logger = logging.getLogger("juscraper._esaj.base")
 
+# Janela do auto-chunk em anos de calendário. O eSAJ aceita
+# ``fim < inicio + 1 ano`` e responde 404 em ``trocaDePagina.do`` fora
+# disso (probe TJAC 2026-10: 01/01/2013-01/01/2014 falha; 01/03/2015-
+# 29/02/2016 passa). Em dias fixos o limite varia entre 364 e 365 conforme o
+# intervalo contenha 29/02, e 366 gerava janelas sempre recusadas. O gate de
+# ``auto_chunk=False`` continua em 366 dias (``validate_intervalo_datas``).
+ESAJ_JANELA_ANOS = 1
+
 
 def _normalize_auto_chunk_dates(
     input_cls: type[BaseModel],
@@ -108,7 +116,7 @@ def run_auto_chunk(
     1. Pop ``auto_chunk`` (default ``True``) — se ``False``, retorna ``None``.
     2. Normaliza datas e emite uma vez o ``DeprecationWarning`` de cada
        alias; os caminhos seguintes recebem apenas nomes canonicos.
-    3. Se a janela cabe em ``max_dias=366``, retorna ``None`` (caller cai no
+    3. Se a janela cabe em :data:`ESAJ_JANELA_ANOS`, retorna ``None`` (caller cai no
        caminho noop).
     4. Normaliza ``query/termo`` e preserva o valor retornado antes do
        :func:`pop_normalize_aliases` consumir o alias. Passa o termo
@@ -156,7 +164,7 @@ def run_auto_chunk(
 
     dj_i = sniff["data_julgamento_inicio"]
     dj_f = sniff["data_julgamento_fim"]
-    windows = list(iter_date_windows(dj_i, dj_f, max_dias=366))
+    windows = list(iter_date_windows(dj_i, dj_f, max_anos=ESAJ_JANELA_ANOS))
     if len(windows) <= 1:
         _propagate_auto_chunk_noop_dates(kwargs, sniff)
         return None
@@ -202,7 +210,7 @@ def run_auto_chunk(
         data_inicio=dj_i,
         data_fim=dj_f,
         dedup_key=dedup_key,
-        max_dias=366,
+        max_anos=ESAJ_JANELA_ANOS,
         paginas=paginas,
         rotulo="data_julgamento",
         origem="O eSAJ",
@@ -559,7 +567,7 @@ class EsajSearchScraper(HTTPScraper):
         if not auto_chunk or di is None or df_ is None:
             return _probe(di, df_)
 
-        return sum(_probe(win_i, win_f) for win_i, win_f in iter_date_windows(di, df_, max_dias=366))
+        return sum(_probe(win_i, win_f) for win_i, win_f in iter_date_windows(di, df_, max_anos=ESAJ_JANELA_ANOS))
 
     def cjsg_download(
         self,

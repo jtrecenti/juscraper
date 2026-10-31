@@ -448,23 +448,36 @@ def fill_open_ended_dates(
         )
 
 
+def _limite_exclusivo_janela(inicio: datetime, max_dias: int, max_anos: int | None) -> datetime:
+    """Primeiro dia que uma janela iniciada em ``inicio`` já não pode alcançar."""
+    if max_anos is None:
+        return inicio + timedelta(days=max_dias + 1)
+    # 29/02 vira 28/02, o mais conservador entre 28/02 e 01/03 quando o ano de chegada não é bissexto.
+    dia = 28 if (inicio.month, inicio.day) == (2, 29) else inicio.day
+    return inicio.replace(year=inicio.year + max_anos, day=dia)
+
+
 def iter_date_windows(
     data_inicio: str | None,
     data_fim: str | None,
     *,
     max_dias: int = 366,
+    max_anos: int | None = None,
     formato: str = "%d/%m/%Y",
 ) -> Iterator[tuple[str | None, str | None]]:
     """Split a date range into non-overlapping windows of at most ``max_dias`` days.
 
-    Used by :func:`run_chunked_search` to honour platform-specific window
-    caps (eSAJ: 1 year). Each emitted pair carries the same string format as
-    the input. The next window starts the day after the previous one ends.
+    Used by :func:`run_chunked_search` to honour platform-specific window caps. Each emitted pair
+    carries the same string format as the input. The next window starts the day after the previous one ends.
+
+    ``max_anos`` replaces ``max_dias`` with a calendar rule: each window ends the day before the same date
+    ``max_anos`` years later. eSAJ accepts ``fim < inicio + 1 ano``, 364 or 365 days depending on 29/02,
+    so any fixed day count either drifts or produces windows the server rejects.
 
     Edge cases:
         * Either side ``None`` → emits the original pair once (open-ended
           search, the server decides).
-        * Interval ≤ ``max_dias`` → emits the original pair once (noop).
+        * Interval within the limit → emits the original pair once (noop).
 
     Raises:
         ValueError: If a date is malformed or ``data_inicio > data_fim``.
@@ -493,15 +506,14 @@ def iter_date_windows(
             f"data_inicio ({data_inicio}) é posterior a data_fim ({data_fim})."
         )
 
-    if (dt_fim - dt_inicio).days <= max_dias:
+    if dt_fim < _limite_exclusivo_janela(dt_inicio, max_dias, max_anos):
         yield (data_inicio, data_fim)
         return
 
     cursor = dt_inicio
-    step = timedelta(days=max_dias)
     one_day = timedelta(days=1)
     while cursor <= dt_fim:
-        win_end = min(cursor + step, dt_fim)
+        win_end = min(_limite_exclusivo_janela(cursor, max_dias, max_anos) - one_day, dt_fim)
         yield (cursor.strftime(formato), win_end.strftime(formato))
         cursor = win_end + one_day
 
@@ -513,6 +525,7 @@ def run_chunked_search(
     data_fim: str | None,
     dedup_key: str,
     max_dias: int = 366,
+    max_anos: int | None = None,
     paginas=None,
     rotulo: str = "data_julgamento",
     origem: str = "O servidor",
@@ -544,6 +557,7 @@ def run_chunked_search(
             windows fail, the returned (empty) DataFrame still carries this
             column so callers indexing ``df[dedup_key]`` don't ``KeyError``.
         max_dias: Window cap, in days.
+        max_anos: Calendar-year window cap; overrides ``max_dias`` (see :func:`iter_date_windows`).
         paginas: The caller's ``paginas`` value. Forbidden in the multi-window
             path; allowed (passthrough is the caller's responsibility) in the
             single-window path.
@@ -573,7 +587,7 @@ def run_chunked_search(
         formato=formato,
     )
 
-    windows = list(iter_date_windows(data_inicio, data_fim, max_dias=max_dias, formato=formato))
+    windows = list(iter_date_windows(data_inicio, data_fim, max_dias=max_dias, max_anos=max_anos, formato=formato))
 
     if len(windows) <= 1:
         win_i, win_f = windows[0] if windows else (data_inicio, data_fim)
@@ -584,7 +598,7 @@ def run_chunked_search(
     if paginas is not None:
         raise ValueError(
             "auto_chunk=True não pode ser combinado com 'paginas' quando o "
-            f"intervalo excede o limite do tribunal (>{max_dias} dias). "
+            f"intervalo excede o limite do tribunal ({f'{max_anos} ano(s)' if max_anos else f'>{max_dias} dias'}). "
             "Reduza a janela ou passe auto_chunk=False."
         )
 

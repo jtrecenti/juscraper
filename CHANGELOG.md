@@ -13,6 +13,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- eSAJ (TJAC, TJAL, TJAM, TJCE, TJMS e TJSP): o auto-chunk de `cjsg` e `cjpg` com `data_julgamento_*` acima de um ano devolvia só a última janela. As janelas tinham 366 dias de diferença, e o eSAJ recusa com HTTP 404 qualquer janela cujo fim alcance a mesma data do ano seguinte; cada janela recusada virava `UserWarning` e ficava fora do DataFrame. No TJAC, o Pleno com assunto 10069 de 2010 a 2016 voltava com 1 acórdão. As janelas passam a seguir o ano de calendário (`01/01/2013`–`31/12/2013`, `01/01/2014`–`31/12/2014`), e `count_only` usa as mesmas janelas. Um intervalo de exatamente um ano com o aniversário incluído (como `01/01/2013`–`01/01/2014`) agora é dividido em duas janelas, e por isso rejeita `paginas`.
 - TJSP `cpopg` HTML valida `processo.codigo` antes da gravação, prevenindo path traversal e retries desnecessários para identificadores inválidos. Refs #402.
 
 ## [0.5.0] - 2026-10-21

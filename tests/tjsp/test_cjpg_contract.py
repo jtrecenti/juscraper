@@ -195,13 +195,13 @@ def test_cjpg_count_only_sums_across_chunks(tmp_path, mocker):
     `iter_date_windows` ou nao somar). 39764 + 25 = 39789.
     """
     mocker.patch("time.sleep")
-    # Janela total: 02/01/2020 a 02/01/2022 = ~2 anos = 2 janelas de 366d.
-    # Janela 1: 02/01/2020 -> 02/01/2021. Janela 2: 03/01/2021 -> 02/01/2022.
+    # Janela total: 02/01/2020 a 01/01/2022 = 2 anos de calendario = 2 janelas.
+    # Janela 1: 02/01/2020 -> 01/01/2021. Janela 2: 02/01/2021 -> 01/01/2022.
     expected_w1 = {
         k: v for k, v in make_tjsp_cjpg_params("dano moral").items() if v is not None
     }
     expected_w1["dadosConsulta.dtInicio"] = "02/01/2020"
-    expected_w1["dadosConsulta.dtFim"] = "02/01/2021"
+    expected_w1["dadosConsulta.dtFim"] = "01/01/2021"
     responses.add(
         responses.GET,
         f"{BASE}/pesquisar.do",
@@ -212,8 +212,8 @@ def test_cjpg_count_only_sums_across_chunks(tmp_path, mocker):
     )
 
     expected_w2 = dict(expected_w1)
-    expected_w2["dadosConsulta.dtInicio"] = "03/01/2021"
-    expected_w2["dadosConsulta.dtFim"] = "02/01/2022"
+    expected_w2["dadosConsulta.dtInicio"] = "02/01/2021"
+    expected_w2["dadosConsulta.dtFim"] = "01/01/2022"
     responses.add(
         responses.GET,
         f"{BASE}/pesquisar.do",
@@ -226,7 +226,7 @@ def test_cjpg_count_only_sums_across_chunks(tmp_path, mocker):
     n = jus.scraper("tjsp", download_path=str(tmp_path)).cjpg(
         "dano moral",
         data_julgamento_inicio="02/01/2020",
-        data_julgamento_fim="02/01/2022",
+        data_julgamento_fim="01/01/2022",
         count_only=True,
     )
 

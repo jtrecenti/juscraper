@@ -173,9 +173,16 @@ tjsp.cjsg("dano moral", paginas=1, data_julgamento_inicio=dt.date(2024, 3, 1))
 Several eSAJ endpoints (`cjpg`/`cjsg` in TJSP, plus `cjsg` in TJAC, TJAL,
 TJAM, TJCE, TJMS) cap each request at a one-year `data_julgamento_*`
 window. When the user asks for a longer interval, the scraper
-**automatically** splits the request into year-long windows, fetches each
-one, and concatenates the results — deduplicating by `cd_acordao` (cjsg)
-or `id_processo` (cjpg).
+**automatically** splits the request into calendar-year windows, fetches
+each one, and concatenates the results — deduplicating by `cd_acordao`
+(cjsg) or `id_processo` (cjpg).
+
+Each window ends the day before the same date one year later
+(`01/01/2013`–`31/12/2013`, then `01/01/2014`–`31/12/2014`). The eSAJ
+backend only accepts `data_julgamento_fim` strictly before
+`data_julgamento_inicio` plus one calendar year and answers HTTP 404
+otherwise, so a fixed day count would either drift or produce windows the
+server rejects.
 
 ```python
 import juscraper as jus
@@ -275,7 +282,7 @@ The `juscraper.utils.params` module provides normalization functions used intern
 - `normalize_datas(**kwargs)` — handles deprecated and generic date aliases
 - `coerce_brazilian_date(value, backend_format)` — coerces any of the four supported string formats (or `date` / `datetime`) into the backend's expected format
 - `apply_input_pipeline_search(schema_cls, method_name, *, ...)` — runs the canonical input pipeline (alias resolution → date coercion → interval validation → pydantic schema) for `cjsg`/`cjpg` endpoints
-- `iter_date_windows(data_inicio, data_fim, *, max_dias=366)` — splits a date range into non-overlapping windows for auto-chunking
+- `iter_date_windows(data_inicio, data_fim, *, max_dias=366, max_anos=None)` — splits a date range into non-overlapping windows for auto-chunking; `max_anos` switches to calendar-year windows
 - `run_chunked_search(fetch_window, *, data_inicio, data_fim, dedup_key, ...)` — drives a search across windows, concatenates and deduplicates
 - `warn_unsupported(param_name, tribunal)` — warns about unsupported parameters
 

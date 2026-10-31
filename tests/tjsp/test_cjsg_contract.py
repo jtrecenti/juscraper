@@ -308,10 +308,10 @@ def test_cjsg_count_only_sums_across_chunks(tmp_path, mocker):
     """
     mocker.patch("time.sleep")
 
-    # Janela 1: 02/01/2020 -> 02/01/2021 (HTML retorna 2_571_077)
-    # Janela 2: 03/01/2021 -> 02/01/2022 (HTML retorna 78)
+    # Janela 1: 02/01/2020 -> 01/01/2021 (HTML retorna 2_571_077)
+    # Janela 2: 02/01/2021 -> 01/01/2022 (HTML retorna 78)
     body_w1 = make_tjsp_cjsg_body(
-        "dano moral", data_inicio="02/01/2020", data_fim="02/01/2021",
+        "dano moral", data_inicio="02/01/2020", data_fim="01/01/2021",
     )
     responses.add(
         responses.POST,
@@ -331,7 +331,7 @@ def test_cjsg_count_only_sums_across_chunks(tmp_path, mocker):
     )
 
     body_w2 = make_tjsp_cjsg_body(
-        "dano moral", data_inicio="03/01/2021", data_fim="02/01/2022",
+        "dano moral", data_inicio="02/01/2021", data_fim="01/01/2022",
     )
     responses.add(
         responses.POST,
@@ -353,7 +353,7 @@ def test_cjsg_count_only_sums_across_chunks(tmp_path, mocker):
     n = jus.scraper("tjsp", download_path=str(tmp_path)).cjsg(
         "dano moral",
         data_julgamento_inicio="02/01/2020",
-        data_julgamento_fim="02/01/2022",
+        data_julgamento_fim="01/01/2022",
         count_only=True,
     )
 

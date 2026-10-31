@@ -18,7 +18,7 @@ from ...utils.params import (
     pop_deprecated_alias,
     validate_intervalo_datas,
 )
-from .._esaj.base import EsajSearchScraper
+from .._esaj.base import ESAJ_JANELA_ANOS, EsajSearchScraper
 from .cjpg_download import cjpg_download as cjpg_download_mod
 from .cjpg_download import fetch_cjpg_first_page
 from .cjpg_parse import cjpg_n_results, cjpg_parse_manager
@@ -523,7 +523,7 @@ class TJSPScraper(EsajSearchScraper):
         if not auto_chunk or di is None or df_ is None:
             return _probe(di, df_)
 
-        return sum(_probe(win_i, win_f) for win_i, win_f in iter_date_windows(di, df_, max_dias=366))
+        return sum(_probe(win_i, win_f) for win_i, win_f in iter_date_windows(di, df_, max_anos=ESAJ_JANELA_ANOS))
 
     def cjpg_download(
         self,
