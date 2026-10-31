@@ -404,7 +404,7 @@ class EsajSearchScraper(HTTPScraper):
                 * ``data_publicacao_inicio`` / ``data_publicacao_fim``
                   (str, ``DD/MM/AAAA``): Intervalo de publicacao.
                 * ``auto_chunk`` (bool): Default ``True``. Quando o
-                  intervalo ``data_julgamento_*`` excede 366 dias,
+                  intervalo ``data_julgamento_*`` excede 1 ano,
                   divide internamente em janelas, baixa cada uma e
                   concatena com dedup por ``cd_acordao``. Veja a secao
                   "Auto-chunking" abaixo.
@@ -413,7 +413,7 @@ class EsajSearchScraper(HTTPScraper):
                   de resultados via ``cjsg_n_results`` e retorna ``int``
                   em vez de ``pd.DataFrame``. Util pra estimar wall-clock
                   antes de uma coleta longa (issue #92). Com
-                  ``auto_chunk=True`` + janela > 366 dias, itera janelas
+                  ``auto_chunk=True`` + janela > 1 ano, itera janelas
                   disjuntas e soma — **soma bruta** (sem dedup por
                   ``cd_acordao``), pode divergir ligeiramente de
                   ``len(cjsg(...))`` quando ha acordaos republicados.
@@ -455,11 +455,11 @@ class EsajSearchScraper(HTTPScraper):
         Auto-chunking (issue #130):
             Se ``auto_chunk=True`` (default herdado de
             :class:`~juscraper.schemas.AutoChunkMixin`) e o intervalo
-            ``data_julgamento_*`` exceder 366 dias, a busca e dividida em
+            ``data_julgamento_*`` exceder 1 ano, a busca e dividida em
             janelas internas, baixadas e concatenadas com dedup por
             ``cd_acordao``. Falhas por janela viram :class:`UserWarning`
             (parcial + warning). ``auto_chunk=True`` + ``paginas != None``
-            em janela > 366 dias e :class:`ValueError`. Para o
+            em janela > 1 ano e :class:`ValueError`. Para o
             comportamento estrito antigo (``ValueError`` em janelas
             longas), passe ``auto_chunk=False``.
         """
@@ -484,7 +484,7 @@ class EsajSearchScraper(HTTPScraper):
         via :func:`cjsg_n_results` e retorna a soma. ``paginas`` e
         ignorado (count_only sempre olha a pagina 1).
 
-        Multi-janela: se o intervalo ``data_julgamento_*`` excede 366 dias
+        Multi-janela: se o intervalo ``data_julgamento_*`` excede 1 ano
         e ``auto_chunk=True`` (default), itera janelas disjuntas
         (:func:`iter_date_windows`) e soma. ``auto_chunk=False`` + janela
         > 366 dias levanta :class:`ValueError` (mesmo comportamento do

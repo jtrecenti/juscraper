@@ -299,6 +299,6 @@ def test_cjpg_so_data_fim_dispara_auto_chunk_de_1990(tmp_path, mocker):
     with pytest.warns(UserWarning, match=r"01/01/1990"):
         df = scraper.cjpg("dano moral", data_julgamento_fim="31/12/1991")
 
-    # 01/01/1990 → 31/12/1991 = ~728 dias = 2 chunks de 366 dias.
+    # 01/01/1990 → 31/12/1991 = 2 anos de calendario = 2 janelas.
     assert download.call_count == 2
     assert len(df) == 2

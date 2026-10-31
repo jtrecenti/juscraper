@@ -435,7 +435,7 @@ def fill_open_ended_dates(
         avisar(
             f"'{key_inicio}' não foi informada -- assumindo {floor!r}. Para "
             f"restringir a busca, passe '{key_inicio}' explicitamente "
-            "(auto_chunk dividirá a janela em chunks de 366 dias).",
+            "(auto_chunk dividirá a busca em janelas de 1 ano).",
             UserWarning,
         )
     elif val_fim is None and val_inicio is not None:
@@ -599,7 +599,7 @@ def run_chunked_search(
         raise ValueError(
             "auto_chunk=True não pode ser combinado com 'paginas' quando o "
             f"intervalo excede o limite do tribunal ({f'{max_anos} ano(s)' if max_anos else f'>{max_dias} dias'}). "
-            "Reduza a janela ou passe auto_chunk=False."
+            "Reduza a janela."
         )
 
     frames = []

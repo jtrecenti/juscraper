@@ -105,7 +105,7 @@ class AutoChunkMixin(BaseModel):
     """Flag opcional ``auto_chunk`` para endpoints com teto de janela (issue #130).
 
     Default ``True``: quando o intervalo ``data_julgamento_*`` excede o teto
-    do tribunal (eSAJ: 366 dias), o scraper divide internamente em janelas,
+    do tribunal (eSAJ: 1 ano), o scraper divide internamente em janelas,
     baixa cada uma, concatena e deduplica. ``auto_chunk=False`` mantem o
     comportamento estrito (``ValueError`` em janelas longas) — util para
     validar input antes de submeter um job pesado.
@@ -137,7 +137,7 @@ class CountOnlyMixin(BaseModel):
     - **Nao** salva HTML em disco, **nao** parseia conteudo.
 
     Multi-janela: se ``auto_chunk=True`` e o intervalo ``data_julgamento_*``
-    excede o teto do tribunal (eSAJ: 366 dias), o metodo itera as janelas
+    excede o teto do tribunal (eSAJ: 1 ano), o metodo itera as janelas
     disjuntas (:func:`juscraper.utils.params.iter_date_windows`) e **soma
     as contagens**. Soma bruta — sem dedup por ``cd_acordao``/``id_processo``.
     Util para estimativa de wall-clock; pode divergir de ``len(cjsg(...))``

@@ -203,7 +203,7 @@ class TJSPScraper(EsajSearchScraper):
                 * ``data_julgamento_inicio`` / ``data_julgamento_fim``
                   (str, ``DD/MM/AAAA``): Intervalo de julgamento.
                 * ``auto_chunk`` (bool): Default ``True``. Quando o
-                  intervalo ``data_julgamento_*`` excede 366 dias,
+                  intervalo ``data_julgamento_*`` excede 1 ano,
                   divide internamente em janelas, baixa cada uma e
                   concatena com dedup por ``cd_acordao``.
                 * ``count_only`` (bool): Default ``False``. Se ``True``,
@@ -245,7 +245,7 @@ class TJSPScraper(EsajSearchScraper):
             schema pydantic e a fonte da verdade dos filtros aceitos.
             :meth:`EsajSearchScraper.cjsg` — descricao detalhada do
             auto-chunking (issue #130) para janelas
-            ``data_julgamento_*`` > 366 dias.
+            ``data_julgamento_*`` > 1 ano.
         """
         return super().cjsg(pesquisa=pesquisa, paginas=paginas, **kwargs)
 
@@ -375,7 +375,7 @@ class TJSPScraper(EsajSearchScraper):
                 * ``data_julgamento_inicio`` / ``data_julgamento_fim``
                   (str, ``DD/MM/AAAA``): Intervalo de julgamento.
                 * ``auto_chunk`` (bool): Default ``True``. Quando o
-                  intervalo ``data_julgamento_*`` excede 366 dias,
+                  intervalo ``data_julgamento_*`` excede 1 ano,
                   divide internamente em janelas, baixa cada uma e
                   concatena com dedup por ``id_processo``. Veja a secao
                   "Auto-chunking" abaixo.
@@ -384,7 +384,7 @@ class TJSPScraper(EsajSearchScraper):
                   ``cjpg_n_results`` e retorna ``int`` em vez de
                   ``pd.DataFrame``. Util pra estimar wall-clock antes de
                   coleta longa (issue #92). Com ``auto_chunk=True`` +
-                  janela > 366 dias, itera janelas disjuntas e soma —
+                  janela > 1 ano, itera janelas disjuntas e soma —
                   soma bruta (sem dedup por ``id_processo``). ``paginas``
                   e ignorado (emite ``UserWarning``).
 
@@ -434,11 +434,11 @@ class TJSPScraper(EsajSearchScraper):
         Auto-chunking (issue #130):
             Se ``auto_chunk=True`` (default herdado de
             :class:`~juscraper.schemas.AutoChunkMixin`) e o intervalo
-            ``data_julgamento_*`` exceder 366 dias, a busca e dividida em
+            ``data_julgamento_*`` exceder 1 ano, a busca e dividida em
             janelas internas, baixadas e concatenadas com dedup por
             ``id_processo``. Falhas por janela viram :class:`UserWarning`
             (parcial + warning). ``auto_chunk=True`` + ``paginas != None``
-            em janela > 366 dias e :class:`ValueError`.
+            em janela > 1 ano e :class:`ValueError`.
         """
         # Orquestracao (probe count_only -> auto-chunk -> download -> parse
         # -> cleanup) compartilhada com ``cjsg`` via ``_run_search`` (#205).
@@ -466,7 +466,7 @@ class TJSPScraper(EsajSearchScraper):
         Faz o GET inicial por janela, extrai ``n_results`` via
         :func:`cjpg_n_results` e retorna a soma. ``paginas`` e ignorado.
 
-        Multi-janela: se o intervalo ``data_julgamento_*`` excede 366 dias
+        Multi-janela: se o intervalo ``data_julgamento_*`` excede 1 ano
         e ``auto_chunk=True``, itera janelas disjuntas via
         :func:`iter_date_windows`. ``auto_chunk=False`` + janela > 366d
         levanta :class:`ValueError` (consistencia com caminho normal).
