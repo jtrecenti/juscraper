@@ -26,6 +26,7 @@ import pytest
 import responses
 
 import juscraper as jus
+from juscraper.core.exceptions import ColetaParcialError
 from tests._helpers import load_sample_bytes
 
 ESAJ_PUROS = ["tjac", "tjal", "tjam", "tjce", "tjms"]
@@ -44,10 +45,12 @@ def _mais_um_ano(data: date) -> date:
         return data.replace(year=data.year + 1, day=28)
 
 
-def _registrar_servidor_esaj(base_url: str, tribunal: str) -> list[tuple[str, str]]:
+def _registrar_servidor_esaj(base_url: str, tribunal: str, fora_do_ar: str | None = None) -> list[tuple[str, str]]:
     """Registra POST + GET da 1a página com a regra de janela do eSAJ.
 
-    Devolve a lista, preenchida a cada POST, das janelas pedidas.
+    ``fora_do_ar`` é o início de uma janela que responde 404 mesmo dentro da
+    regra, para simular falha do servidor no meio da coleta. Devolve a lista,
+    preenchida a cada POST, das janelas pedidas.
     """
     amostra = load_sample_bytes(tribunal, "cjsg/single_page.html")
     janelas: list[tuple[str, str]] = []
@@ -59,7 +62,7 @@ def _registrar_servidor_esaj(base_url: str, tribunal: str) -> list[tuple[str, st
 
     def _primeira_pagina(_request):
         inicio, fim = (_data(d) for d in janelas[-1])
-        if fim >= _mais_um_ano(inicio):
+        if fim >= _mais_um_ano(inicio) or janelas[-1][0] == fora_do_ar:
             return 404, {}, b""
         prefixo = str(len(janelas)).encode()
         corpo = _CD_ACORDAO.sub(lambda m: b'cdAcordao="' + prefixo + b"0" + m.group(1) + b'"', amostra)
@@ -116,3 +119,41 @@ def test_cjsg_count_only_soma_todas_as_janelas(tribunal, tmp_path, mocker):
 
     assert len(janelas) == 1 + 7
     assert total == 7 * um_ano
+
+
+@pytest.mark.parametrize("tribunal", ESAJ_PUROS)
+@responses.activate
+def test_cjsg_auto_chunk_janela_que_falha_levanta_com_o_parcial(tribunal, tmp_path, mocker):
+    """Janela que falha não some calada: o erro nomeia a janela e carrega as que passaram."""
+    mocker.patch("time.sleep")
+    scraper = jus.scraper(tribunal, download_path=str(tmp_path))
+    _registrar_servidor_esaj(scraper.BASE_URL, tribunal, fora_do_ar="01/01/2013")
+
+    with pytest.raises(ColetaParcialError, match="1 de 7 janela") as exc_info:
+        scraper.cjsg("", data_julgamento_inicio="01/01/2010", data_julgamento_fim="31/12/2016")
+
+    erro = exc_info.value
+    assert [(i, f) for i, f, _ in erro.falhas] == [("01/01/2013", "31/12/2013")]
+    assert len(erro.resultado) == 6 * _acordaos_por_janela(tribunal)
+
+
+@pytest.mark.parametrize("tribunal", ESAJ_PUROS)
+@pytest.mark.parametrize(
+    "filtros",
+    [
+        {"data_julgamento_inicio": "01/01/2013", "data_julgamento_fim": "01/01/2014", "auto_chunk": False},
+        {"data_publicacao_inicio": "01/01/2013", "data_publicacao_fim": "01/01/2014"},
+    ],
+    ids=["julgamento_sem_auto_chunk", "publicacao"],
+)
+@pytest.mark.parametrize("count_only", [False, True])
+@responses.activate
+def test_cjsg_intervalo_no_aniversario_trava_antes_da_requisicao(tribunal, filtros, count_only, tmp_path):
+    """Sem auto-chunk, o intervalo que o servidor recusaria vira ValueError sem nenhuma requisição."""
+    scraper = jus.scraper(tribunal, download_path=str(tmp_path))
+    janelas = _registrar_servidor_esaj(scraper.BASE_URL, tribunal)
+
+    with pytest.raises(ValueError, match="no máximo 1 ano"):
+        scraper.cjsg("", count_only=count_only, **filtros)
+
+    assert janelas == []

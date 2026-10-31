@@ -32,7 +32,7 @@ def _patch_pipeline(mocker, parse_side_effect=None, parse_return=None):
 
 def test_auto_chunk_false_long_window_raises(tmp_path):
     scraper = jus.scraper("tjsp", download_path=str(tmp_path))
-    with pytest.raises(ValueError, match="no máximo 366"):
+    with pytest.raises(ValueError, match="no máximo 1 ano"):
         scraper.cjpg(
             "dano moral",
             data_julgamento_inicio="01/01/2022",

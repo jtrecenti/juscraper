@@ -5,6 +5,7 @@ import warnings
 import pandas as pd
 import pytest
 
+from juscraper.core.exceptions import ColetaParcialError
 from juscraper.utils.params import (
     iter_date_windows,
     normalize_datas,
@@ -239,6 +240,22 @@ class TestValidateIntervaloDatas:
     def test_over_one_year_raises(self):
         with pytest.raises(ValueError, match="no máximo 366 dias"):
             validate_intervalo_datas("01/01/2020", "31/12/2021")
+
+    @pytest.mark.parametrize(
+        ("inicio", "fim"),
+        [("01/01/2013", "31/12/2013"), ("01/03/2015", "29/02/2016"), ("29/02/2016", "27/02/2017")],
+    )
+    def test_max_anos_aceita_fim_antes_do_aniversario(self, inicio, fim):
+        assert validate_intervalo_datas(inicio, fim, max_anos=1) is None
+
+    @pytest.mark.parametrize(
+        ("inicio", "fim"),
+        # 365 dias sem 29/02 (o eSAJ responde 404) e 366 dias: os dois alcançam o aniversário.
+        [("01/01/2013", "01/01/2014"), ("01/01/2013", "02/01/2014"), ("29/02/2016", "28/02/2017")],
+    )
+    def test_max_anos_rejeita_fim_no_aniversario(self, inicio, fim):
+        with pytest.raises(ValueError, match="no máximo 1 ano"):
+            validate_intervalo_datas(inicio, fim, max_anos=1)
 
     def test_rotulo_in_message(self):
         with pytest.raises(ValueError, match="data_julgamento_inicio"):
@@ -531,42 +548,41 @@ class TestRunChunkedSearch:
         assert len(df) == 4
         assert (df["cd_acordao"] == "shared").sum() == 1
 
-    def test_multi_window_partial_failure_warns(self):
+    def test_multi_window_partial_failure_raises_with_partial(self):
         def fetch(i, f):
-            if i == "03/01/2023":
+            if i == "01/01/2023":
                 raise RuntimeError("boom")
             return pd.DataFrame({"cd_acordao": [f"a-{i}"]})
 
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            df = run_chunked_search(
+        with pytest.raises(ColetaParcialError, match="1 de 3 janela") as exc_info:
+            run_chunked_search(
                 fetch,
                 data_inicio="01/01/2022",
                 data_fim="31/12/2024",
                 dedup_key="cd_acordao",
+                max_anos=1,
             )
-        assert len(df) == 2  # 2 sucessos, 1 falha
-        assert len(w) == 1
-        assert issubclass(w[0].category, UserWarning)
-        assert "1 de 3" in str(w[0].message) or "1 de" in str(w[0].message)
+        erro = exc_info.value
+        # As janelas que passaram chegam no erro, e a que falhou fica nomeada.
+        assert list(erro.resultado["cd_acordao"]) == ["a-01/01/2022", "a-01/01/2024"]
+        assert [(i, f) for i, f, _ in erro.falhas] == [("01/01/2023", "31/12/2023")]
+        assert isinstance(erro.__cause__, RuntimeError)
 
-    def test_all_windows_fail_returns_empty(self):
+    def test_all_windows_fail_raises_with_empty_partial(self):
         def fetch(i, f):
             raise RuntimeError("always fails")
 
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            df = run_chunked_search(
+        with pytest.raises(ColetaParcialError, match="3 de 3 janela") as exc_info:
+            run_chunked_search(
                 fetch,
                 data_inicio="01/01/2022",
                 data_fim="31/12/2024",
                 dedup_key="cd_acordao",
             )
-        assert df.empty
-        # DataFrame vazio ainda carrega a coluna de dedup, evitando KeyError
-        # em codigo a jusante que faca df["cd_acordao"].
-        assert "cd_acordao" in df.columns
-        assert len(w) == 1
+        # O parcial vazio ainda carrega a coluna de dedup, evitando KeyError
+        # em codigo a jusante que faca resultado["cd_acordao"].
+        assert exc_info.value.resultado.empty
+        assert "cd_acordao" in exc_info.value.resultado.columns
 
     def test_multi_window_with_paginas_raises(self):
         def fetch(i, f):

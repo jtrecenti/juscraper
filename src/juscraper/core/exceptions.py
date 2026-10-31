@@ -10,6 +10,11 @@ em ``CLAUDE.md``.
 """
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import pandas as pd
+
 
 class RetryExhaustedError(Exception):
     """Levantada quando ``_request_with_retry`` esgota o número de tentativas."""
@@ -92,6 +97,28 @@ class WafChallengeError(BotChallengeBlockedError):
         else:
             mensagem = f"O WAF do {tribunal} desafiou em {url}, e o cookie aws-waf-token nao foi obtido: {motivo}"
         self.args = (mensagem,)
+
+
+class ColetaParcialError(RuntimeError):
+    """Levantada quando parte de uma coleta dividida falha depois dos retries.
+
+    O auto-chunk do eSAJ divide a busca em janelas de data. Devolver só as
+    janelas que passaram faria o resultado parcial se passar por completo (no
+    TJAC, 1 acórdão em vez de 46, com um ``UserWarning`` que notebook não
+    mostra). Por isso a falha sobe, e o trabalho já feito vem no próprio erro:
+
+    * ``resultado``: DataFrame das janelas que passaram, deduplicado;
+    * ``falhas``: lista de ``(inicio, fim, excecao)`` das janelas que falharam.
+
+    O ``__cause__`` é a exceção da primeira janela que falhou.
+    """
+
+    def __init__(
+        self, mensagem: str, *, resultado: pd.DataFrame, falhas: list[tuple[str | None, str | None, Exception]]
+    ):
+        super().__init__(mensagem)
+        self.resultado = resultado
+        self.falhas = falhas
 
 
 class InvalidJSONResponseError(HTTPSemanticError):

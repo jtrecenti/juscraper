@@ -286,7 +286,7 @@ def test_cjsg_count_only_auto_chunk_false_raises_on_long_window(tmp_path):
     ``ValueError`` canonico.
     """
     scraper = jus.scraper("tjsp", download_path=str(tmp_path))
-    with pytest.raises(ValueError, match="366"):
+    with pytest.raises(ValueError, match="no máximo 1 ano"):
         scraper.cjsg(
             "dano moral",
             data_julgamento_inicio="01/01/2020",

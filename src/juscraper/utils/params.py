@@ -8,6 +8,7 @@ import pandas as pd
 from pydantic import BaseModel, ValidationError
 
 from ..core.avisos import avisar
+from ..core.exceptions import ColetaParcialError
 
 # Deprecated aliases consumed by ``normalize_pesquisa``. Keep in sync with the
 # loop inside that function.
@@ -314,6 +315,7 @@ def validate_intervalo_datas(
     data_fim,
     *,
     max_dias: int | None = 366,
+    max_anos: int | None = None,
     formato="%d/%m/%Y",
     rotulo="data",
     origem="O eSAJ",
@@ -339,6 +341,7 @@ def validate_intervalo_datas(
             has no documented limit (audited under #128) and por
             :func:`run_chunked_search` para validar formato/ordem sem aplicar
             cap (#130).
+        max_anos: Calendar-year cap (``fim < inicio + max_anos anos``); overrides ``max_dias``.
         formato: ``strptime`` format of the input strings.
         rotulo: Human-readable label for the parameter pair in error messages
             (e.g. ``"data_julgamento"``).
@@ -375,7 +378,13 @@ def validate_intervalo_datas(
             f"'{rotulo}_fim' ({data_fim})."
         )
 
-    if max_dias is None:
+    if max_anos is not None and dt_fim >= _limite_exclusivo_janela(dt_inicio, 0, max_anos):
+        raise ValueError(
+            f"{origem} aceita no máximo {max_anos} ano(s) entre '{rotulo}_inicio' e '{rotulo}_fim', com o fim "
+            f"antes do aniversário do início (recebido: de {data_inicio} a {data_fim}). Divida a consulta em "
+            "janelas menores ou mantenha auto_chunk=True (default) para dividir automaticamente."
+        )
+    if max_dias is None or max_anos is not None:
         return
 
     dias = (dt_fim - dt_inicio).days
@@ -540,12 +549,10 @@ def run_chunked_search(
     Multi-window case:
         * Rejects ``paginas != None`` (semantic ambiguity — see issue #130).
         * Calls ``fetch_window(win_inicio, win_fim)`` for each window.
-        * Catches :class:`Exception` per window (not :class:`BaseException`
-          — keep KeyboardInterrupt/SystemExit propagating). Failed windows
-          are aggregated and surfaced via :class:`UserWarning`.
-        * Concatenates surviving frames and deduplicates on ``dedup_key``
-          when the column exists in the result (defensive: parsers may
-          omit the key in edge cases like ``tipo_decisao='monocratica'``).
+        * Catches :class:`Exception` per window (KeyboardInterrupt/SystemExit propagate) and keeps going.
+        * Concatenates the frames and deduplicates on ``dedup_key`` when the column exists
+          (parsers may omit it, e.g. ``tipo_decisao='monocratica'``).
+        * If any window failed, raises :class:`ColetaParcialError` carrying that partial result.
 
     Args:
         fetch_window: Callable accepting ``(data_inicio, data_fim)`` strings
@@ -553,9 +560,7 @@ def run_chunked_search(
         data_inicio, data_fim: Search interval in ``DD/MM/YYYY`` (or whatever
             ``formato`` is configured to). Either may be ``None`` — search is
             then forwarded to the server with no chunking.
-        dedup_key: Column used to deduplicate concatenated results. When all
-            windows fail, the returned (empty) DataFrame still carries this
-            column so callers indexing ``df[dedup_key]`` don't ``KeyError``.
+        dedup_key: Column used to deduplicate concatenated results.
         max_dias: Window cap, in days.
         max_anos: Calendar-year window cap; overrides ``max_dias`` (see :func:`iter_date_windows`).
         paginas: The caller's ``paginas`` value. Forbidden in the multi-window
@@ -569,14 +574,12 @@ def run_chunked_search(
         formato: Date format used by ``iter_date_windows``.
 
     Returns:
-        pandas DataFrame. **All-windows-failed case**: returns an empty DF
-        carrying **only** the ``dedup_key`` column (the parser's other columns
-        are not synthesized). Code downstream that indexes ``df["<col>"]`` for
-        a non-dedup column should test ``df.empty`` first.
+        pandas DataFrame with every window, deduplicated.
 
     Raises:
         ValueError: For invalid date input or ``paginas != None`` in the
             multi-window path.
+        ColetaParcialError: When a window fails; ``.resultado`` holds the windows that succeeded.
     """
     validate_intervalo_datas(
         data_inicio,
@@ -602,29 +605,27 @@ def run_chunked_search(
             "Reduza a janela."
         )
 
+    # Todas as janelas rodam antes de levantar: o erro carrega o que já foi
+    # baixado, e a lista de falhas diz quais janelas repetir.
     frames = []
-    failed: list[tuple[str | None, str | None, str]] = []
+    falhas: list[tuple[str | None, str | None, Exception]] = []
     for win_i, win_f in windows:
         try:
-            df = fetch_window(win_i, win_f)
-        except Exception as exc:  # noqa: BLE001 — surface per-window failure
-            failed.append((win_i, win_f, repr(exc)))
-            continue
-        frames.append(df)
+            frames.append(fetch_window(win_i, win_f))
+        except Exception as exc:  # noqa: BLE001 — vai para ColetaParcialError
+            falhas.append((win_i, win_f, exc))
 
-    if failed:
-        avisar(
-            f"auto_chunk: {len(failed)} de {len(windows)} janela(s) falharam: "
-            f"{failed}",
-            UserWarning,
-        )
-
-    if not frames:
-        return pd.DataFrame(columns=[dedup_key])
-
-    df = pd.concat(frames, ignore_index=True)
+    df = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame(columns=[dedup_key])
     if dedup_key in df.columns:
         df = df.drop_duplicates(subset=[dedup_key], keep="first").reset_index(drop=True)
+    if falhas:
+        resumo = "; ".join(f"{i} a {f}: {exc!r}" for i, f, exc in falhas)
+        raise ColetaParcialError(
+            f"auto_chunk: {len(falhas)} de {len(windows)} janela(s) falharam ({resumo}). As {len(frames)} "
+            "janela(s) que passaram estão no atributo .resultado do erro; .falhas lista as que falharam.",
+            resultado=df,
+            falhas=falhas,
+        ) from falhas[0][2]
     return df
 
 
@@ -761,6 +762,7 @@ def apply_input_pipeline_search(
     data_publicacao_inicio=None,
     data_publicacao_fim=None,
     max_dias: int | None = None,
+    max_anos: int | None = None,
     origem_mensagem: str | None = None,
     consume_pesquisa_aliases: bool = False,
     nullable_pesquisa: bool = False,
@@ -797,8 +799,7 @@ def apply_input_pipeline_search(
        ``DD-MM-AAAA``, ``AAAA-MM-DD``, ``AAAA/MM/DD``, :class:`datetime.date`
        and :class:`datetime.datetime`.
     7. :func:`validate_intervalo_datas` for julgamento *and* publicação. Format
-       and ``inicio <= fim`` are always validated; the window cap is applied
-       only when ``max_dias`` is set.
+       and ``inicio <= fim`` are always validated; the cap only with ``max_dias``/``max_anos``.
     8. ``schema_cls(pesquisa, paginas, **datas, **canonical_filters, **kwargs)``
        — pydantic validation with ``extra="forbid"``.
     9. :func:`raise_on_extra_kwargs` translates ``extra_forbidden`` errors into
@@ -811,11 +812,8 @@ def apply_input_pipeline_search(
       rejects them as ``extra_forbidden``.
     - Running tribunal-specific validators that should fire before pydantic
       (e.g. ``validate_pesquisa_length`` in TJSP).
-    - Passing ``max_dias`` and ``origem_mensagem`` when the backend has a
-      documented window limit (e.g. eSAJ: ``max_dias=366,
-      origem_mensagem="O eSAJ"``). The defaults disable the window check,
-      since most non-eSAJ backends accept arbitrarily wide ranges (audited
-      under #128).
+    - Passing the window cap and ``origem_mensagem`` when the backend has a documented limit
+      (eSAJ: ``max_anos=1, origem_mensagem="O eSAJ"``). The defaults disable it (audited under #128).
 
     The parameter is named ``origem_mensagem`` (not ``origem``) on purpose:
     several tribunal scrapers use ``origem`` as a backend filter (e.g. TJPA's
@@ -852,11 +850,9 @@ def apply_input_pipeline_search(
             :class:`datetime.datetime`, or ``None``. Non-``None`` values are
             merged into ``kwargs`` before normalization; a key present both
             here and in ``kwargs`` raises :class:`ValueError` (collision).
-        max_dias: Window cap for date intervals, in days. ``None`` (default)
-            disables the cap — used by tribunals whose backend has no
-            documented limit (refs #128). The eSAJ family passes
-            ``max_dias=366`` explicitly. Format and ordering of the dates are
-            validated regardless of this value.
+        max_dias: Window cap for date intervals, in days. ``None`` (default) disables the cap —
+            used by tribunals whose backend has no documented limit (refs #128).
+        max_anos: Calendar-year cap, forwarded to :func:`validate_intervalo_datas` (eSAJ: ``1``).
         origem_mensagem: Subject of the over-limit error message (only emitted
             when ``max_dias`` is set). Examples: ``"O eSAJ"``, ``"O TJRS"``.
             ``None`` (default) falls back to ``"O backend"`` so non-eSAJ
@@ -942,6 +938,7 @@ def apply_input_pipeline_search(
         datas["data_julgamento_fim"],
         rotulo="data_julgamento",
         max_dias=max_dias,
+        max_anos=max_anos,
         origem=origem_resolvida,
         formato=date_format,
     )
@@ -950,6 +947,7 @@ def apply_input_pipeline_search(
         datas["data_publicacao_fim"],
         rotulo="data_publicacao",
         max_dias=max_dias,
+        max_anos=max_anos,
         origem=origem_resolvida,
         formato=date_format,
     )

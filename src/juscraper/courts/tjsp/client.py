@@ -436,8 +436,9 @@ class TJSPScraper(EsajSearchScraper):
             :class:`~juscraper.schemas.AutoChunkMixin`) e o intervalo
             ``data_julgamento_*`` exceder 1 ano, a busca e dividida em
             janelas internas, baixadas e concatenadas com dedup por
-            ``id_processo``. Falhas por janela viram :class:`UserWarning`
-            (parcial + warning). ``auto_chunk=True`` + ``paginas != None``
+            ``id_processo``. Janela que falha levanta
+            :class:`~juscraper.core.exceptions.ColetaParcialError`, com as
+            janelas que passaram em ``.resultado``. ``auto_chunk=True`` + ``paginas != None``
             em janela > 1 ano e :class:`ValueError`.
         """
         # Orquestracao (probe count_only -> auto-chunk -> download -> parse
@@ -468,15 +469,14 @@ class TJSPScraper(EsajSearchScraper):
 
         Multi-janela: se o intervalo ``data_julgamento_*`` excede 1 ano
         e ``auto_chunk=True``, itera janelas disjuntas via
-        :func:`iter_date_windows`. ``auto_chunk=False`` + janela > 366d
+        :func:`iter_date_windows`. ``auto_chunk=False`` + janela > 1 ano
         levanta :class:`ValueError` (consistencia com caminho normal).
 
-        **Fail-fast no auto-chunk**: diferente do caminho normal
-        (:func:`run_auto_chunk`), que tolera falha por janela como
-        :class:`UserWarning` e devolve resultado parcial deduplicado, este
-        probe usa ``sum()`` — qualquer :class:`ValueError` em uma janela
-        aborta toda a iteracao. Decisao deliberada: estimativa parcial sem
-        aviso seria pior que erro explicito.
+        **Fail-fast no auto-chunk**: o caminho normal (:func:`run_auto_chunk`)
+        tenta todas as janelas e levanta
+        :class:`~juscraper.core.exceptions.ColetaParcialError` com o parcial;
+        este probe usa ``sum()``, e a primeira janela que falha aborta a
+        iteracao. Contagem parcial nao tem uso, entao nao vale carrega-la.
         """
         if paginas is not None:
             avisar(
@@ -503,7 +503,7 @@ class TJSPScraper(EsajSearchScraper):
 
         if not auto_chunk:
             validate_intervalo_datas(
-                di, df_, max_dias=366, rotulo="data_julgamento", origem="O eSAJ",
+                di, df_, max_anos=ESAJ_JANELA_ANOS, rotulo="data_julgamento", origem="O eSAJ",
             )
 
         def _probe(win_i: str | None, win_f: str | None) -> int:
@@ -577,7 +577,7 @@ class TJSPScraper(EsajSearchScraper):
             kwargs=kwargs,
             consume_pesquisa_aliases=True,
             nullable_pesquisa=True,
-            max_dias=366,
+            max_anos=ESAJ_JANELA_ANOS,
             origem_mensagem="O eSAJ",
         )
         # Roda apos o pipeline para validar o valor ja resolvido (caso o

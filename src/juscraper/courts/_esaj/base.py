@@ -52,8 +52,9 @@ logger = logging.getLogger("juscraper._esaj.base")
 # ``fim < inicio + 1 ano`` e responde 404 em ``trocaDePagina.do`` fora
 # disso (probe TJAC 2026-10: 01/01/2013-01/01/2014 falha; 01/03/2015-
 # 29/02/2016 passa). Em dias fixos o limite varia entre 364 e 365 conforme o
-# intervalo contenha 29/02, e 366 gerava janelas sempre recusadas. O gate de
-# ``auto_chunk=False`` continua em 366 dias (``validate_intervalo_datas``).
+# intervalo contenha 29/02, e 366 gerava janelas sempre recusadas. A mesma
+# regra trava ``auto_chunk=False`` e ``data_publicacao_*`` (probe TJAC 2026-10:
+# publicacao 01/01/2013-01/01/2014 tambem da 404).
 ESAJ_JANELA_ANOS = 1
 
 
@@ -457,8 +458,9 @@ class EsajSearchScraper(HTTPScraper):
             :class:`~juscraper.schemas.AutoChunkMixin`) e o intervalo
             ``data_julgamento_*`` exceder 1 ano, a busca e dividida em
             janelas internas, baixadas e concatenadas com dedup por
-            ``cd_acordao``. Falhas por janela viram :class:`UserWarning`
-            (parcial + warning). ``auto_chunk=True`` + ``paginas != None``
+            ``cd_acordao``. Janela que falha levanta
+            :class:`~juscraper.core.exceptions.ColetaParcialError`, com as
+            janelas que passaram em ``.resultado``. ``auto_chunk=True`` + ``paginas != None``
             em janela > 1 ano e :class:`ValueError`. Para o
             comportamento estrito antigo (``ValueError`` em janelas
             longas), passe ``auto_chunk=False``.
@@ -487,18 +489,17 @@ class EsajSearchScraper(HTTPScraper):
         Multi-janela: se o intervalo ``data_julgamento_*`` excede 1 ano
         e ``auto_chunk=True`` (default), itera janelas disjuntas
         (:func:`iter_date_windows`) e soma. ``auto_chunk=False`` + janela
-        > 366 dias levanta :class:`ValueError` (mesmo comportamento do
-        caminho normal). Intervalo ``data_publicacao_*`` > 366 dias tambem
+        > 1 ano levanta :class:`ValueError` (mesmo comportamento do
+        caminho normal). Intervalo ``data_publicacao_*`` > 1 ano tambem
         levanta :class:`ValueError` em qualquer ``auto_chunk`` — auto-chunk
         so pivota em ``data_julgamento``, entao publicacao precisa ser
         validada explicitamente para consistencia com o caminho normal.
 
-        **Fail-fast no auto-chunk**: diferente do caminho normal
-        (:func:`run_auto_chunk`), que tolera falha por janela como
-        :class:`UserWarning` e devolve resultado parcial deduplicado, este
-        probe usa ``sum()`` — qualquer :class:`ValueError` em uma janela
-        aborta toda a iteracao. Decisao deliberada: estimativa parcial sem
-        aviso seria pior que erro explicito.
+        **Fail-fast no auto-chunk**: o caminho normal (:func:`run_auto_chunk`)
+        tenta todas as janelas e levanta
+        :class:`~juscraper.core.exceptions.ColetaParcialError` com o parcial;
+        este probe usa ``sum()``, e a primeira janela que falha aborta a
+        iteracao. Contagem parcial nao tem uso, entao nao vale carrega-la.
         """
         if paginas is not None:
             avisar(
@@ -535,17 +536,17 @@ class EsajSearchScraper(HTTPScraper):
         dp_i = getattr(input_model, "data_publicacao_inicio", None)
         dp_f = getattr(input_model, "data_publicacao_fim", None)
 
-        # auto_chunk=False + janela > 366d: replicar o ValueError do caminho
+        # auto_chunk=False + janela > 1 ano: replicar o ValueError do caminho
         # normal para consistencia. validate_intervalo_datas tolera None.
         # ``data_julgamento`` so quando auto_chunk=False (auto_chunk=True
         # divide em janelas). ``data_publicacao`` sempre, porque auto-chunk
         # nao pivota em publicacao — caminho normal valida nos dois fluxos.
         if not auto_chunk:
             validate_intervalo_datas(
-                di, df_, max_dias=366, rotulo="data_julgamento", origem="O eSAJ",
+                di, df_, max_anos=ESAJ_JANELA_ANOS, rotulo="data_julgamento", origem="O eSAJ",
             )
         validate_intervalo_datas(
-            dp_i, dp_f, max_dias=366, rotulo="data_publicacao", origem="O eSAJ",
+            dp_i, dp_f, max_anos=ESAJ_JANELA_ANOS, rotulo="data_publicacao", origem="O eSAJ",
         )
 
         def _probe(win_i: str | None, win_f: str | None) -> int:
@@ -607,7 +608,7 @@ class EsajSearchScraper(HTTPScraper):
             pesquisa=pesquisa,
             paginas=paginas,
             kwargs=kwargs,
-            max_dias=366,
+            max_anos=ESAJ_JANELA_ANOS,
             origem_mensagem="O eSAJ",
         )
 

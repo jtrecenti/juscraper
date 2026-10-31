@@ -146,10 +146,10 @@ class CountOnlyMixin(BaseModel):
 
     **Fail-fast no auto-chunk** (divergencia deliberada do caminho normal):
     o caminho normal (:func:`juscraper.courts._esaj.base.run_auto_chunk`)
-    tolera falha por janela como :class:`UserWarning` e devolve parcial
-    deduplicado. ``count_only`` usa ``sum()`` — qualquer ``ValueError`` em
-    uma janela aborta toda a iteracao e propaga limpo. Estimativa parcial
-    silenciosa seria mais perigosa que erro explicito.
+    tenta todas as janelas e levanta ``ColetaParcialError`` com o parcial.
+    ``count_only`` usa ``sum()`` — a primeira janela que falha aborta a
+    iteracao e propaga limpo. Contagem parcial nao tem uso, entao nao vale
+    carrega-la.
 
     Tribunais que ainda nao implementam ``count_only`` **nao devem herdar**
     deste mixin — ``extra='forbid'`` da classe concreta rejeita o flag com
