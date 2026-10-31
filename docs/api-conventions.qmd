@@ -318,7 +318,9 @@ movements in the second-degree consultation instead, as the R package
   takes the first document whose type is an acórdão and whose movement date
   is on or after `data_julgamento`. The movement comes on the judgment day
   or a few days later, and the next acórdão of the same process comes after
-  it.
+  it. When two incidents have an acórdão on the same day, the date cannot
+  tell them apart: the method returns the one from the incident listed first
+  by the search, and a `logging` warning names the other.
 - **What is returned.** The PDF as the court publishes it, at
   `<diretorio>/acordaos/<cnj>_<cdProcesso>_<cdDocumento>.pdf`. Text
   extraction is left to the caller. Long PDFs (100 pages and more in
@@ -343,6 +345,10 @@ movements in the second-degree consultation instead, as the R package
   them, the method returns the next acórdão of the process instead; a
   `logging` warning then says how many protected documents were skipped
   before the returned one.
+- **Pace.** `sleep_time` is the minimum interval between two requests to
+  the court, also inside a single row: one TJSP acórdão takes the search,
+  one page per incident, the movement pages and the folder of each
+  candidate document.
 
 TJAL, TJAM, TJCE and TJMS do not have these methods yet.
 

@@ -137,8 +137,9 @@ class _DocumentoRestritoError(Exception):
 class Movimentacao:
     """Movimentação com documento vinculado.
 
-    ``ordem`` é a posição na listagem, que o eSAJ ordena da mais nova para a
-    mais antiga; desempata movimentações do mesmo dia.
+    ``ordem`` é a posição na listagem do processo ``cd_processo``, que o eSAJ
+    ordena da mais nova para a mais antiga; desempata movimentações do mesmo
+    dia dentro dele. Entre processos (incidentes) ela não se compara.
     """
 
     cd_processo: str
@@ -302,6 +303,13 @@ def _como_cnj(valor: object) -> str:
     return format_cnj(str(valor))
 
 
+# O que a checagem de empate entre incidentes engole: ela roda depois do PDF gravado.
+_FALHAS_DA_CHECAGEM_DE_EMPATE: tuple[type[BaseException], ...] = (
+    AcordaoIndisponivelError,
+    *EXCECOES_DE_FALHA_POR_LINHA,
+)
+
+
 class EsajAcordaoScraper(EsajSearchScraper):
     """Base eSAJ que baixa o PDF do acórdão a partir de linhas do cjsg; ver o docstring do módulo.
 
@@ -318,10 +326,22 @@ class EsajAcordaoScraper(EsajSearchScraper):
     CPOSG_PATH: ClassVar[str]
     MOVIMENTACOES_AJAX: ClassVar[bool] = False
     TIPOS_DOCUMENTO_ACORDAO: ClassVar[frozenset[str]] = frozenset({"Acórdão"})
+    _ultimo_pedido_cposg: float | None = None
 
     def _get_cposg(self, url: str, **kwargs: Any) -> requests.Response:
+        # ``sleep_time`` separa pedidos, não linhas: um acórdão do TJSP pede busca,
+        # show, páginas de movimentação e pasta de cada candidata. A espera conta
+        # do fim do pedido anterior e só completa o que falta: o processamento
+        # entre um pedido e outro abate dela, o tempo de resposta não.
+        if self._ultimo_pedido_cposg is not None and self.sleep_time:
+            espera = self.sleep_time - (time.monotonic() - self._ultimo_pedido_cposg)
+            if espera > 0:
+                time.sleep(espera)
         headers = _CHROME_HEADERS if self.CJSG_CHROME_UA else _ESAJ_HEADERS
-        return self._request_with_retry("GET", url, headers=headers, timeout=60, **kwargs)
+        try:
+            return self._request_with_retry("GET", url, headers=headers, timeout=60, **kwargs)
+        finally:
+            self._ultimo_pedido_cposg = time.monotonic()
 
     def baixar_acordao(self, processo: str, data_julgamento: str | date, diretorio: str | None = None) -> str:
         """Baixa o PDF do acórdão de uma linha do cjsg pela movimentação do processo.
@@ -334,7 +354,9 @@ class EsajAcordaoScraper(EsajSearchScraper):
             data_julgamento (str | date): ``DD/MM/AAAA`` ou ``date``, como na
                 coluna ``data_julgamento`` do cjsg. Escolhe o acórdão quando o
                 processo tem mais de um: vale o primeiro documento de acórdão
-                com data de movimentação igual ou posterior a ela.
+                com data de movimentação igual ou posterior a ela. No empate de
+                data entre incidentes, vale o que a busca lista primeiro, e um
+                aviso no log cita o acórdão do outro.
             diretorio (str | None): Pasta de destino. Default
                 :attr:`download_path`. O PDF vai para
                 ``<diretorio>/acordaos/<cnj>_<cdProcesso>_<cdDocumento>.pdf``.
@@ -363,32 +385,38 @@ class EsajAcordaoScraper(EsajSearchScraper):
         cnj = _como_cnj(processo)
         paginas = self._abrir_processo(cnj)
         movimentacoes = [m for cd, html in paginas for m in self._carregar_movimentacoes(cnj, cd, html, data)]
+        # Incidente na ordem da busca entre data e ``ordem``: ``ordem`` só se
+        # compara dentro do mesmo processo, e o empate de data entre incidentes
+        # precisa de regra fixa.
+        incidente = {cd: i for i, (cd, _) in enumerate(paginas)}
         candidatas = sorted(
             (m for m in movimentacoes if m.data >= data),
-            key=lambda m: (m.data, -m.ordem),
+            key=lambda m: (m.data, incidente[m.cd_processo], -m.ordem),
         )
         restritos = 0
-        for mov in candidatas:
-            url_pasta = self._url_da_pasta(cnj, mov)
-            if url_pasta is None:
+        for posicao, mov in enumerate(candidatas):
+            parametros = self._parametros_do_acordao(cnj, mov)
+            if parametros is None:
                 restritos += 1
                 continue
-            parametros = parse_parametros_pasta(self._get_cposg(url_pasta).text)
-            if parametros is None:
-                raise RespostaInesperadaError(
-                    cnj, f"a pasta digital do documento {mov.cd_documento} não traz 'parametros'."
-                )
-            tipo = tipo_documento(parametros)
-            if tipo not in self.TIPOS_DOCUMENTO_ACORDAO:
-                logger.debug("%s: documento %s é %r, não acórdão.", cnj, mov.cd_documento, tipo)
+            if not parametros:
                 continue
             if restritos:
                 logger.warning(
                     "%s: %d documento(s) com senha pulado(s) antes do documento %s; o acórdão devolvido "
                     "pode não ser o da data %s, se o da data estava entre eles.",
-                    cnj, restritos, mov.cd_documento, f"{data:%d/%m/%Y}",
+                    cnj,
+                    restritos,
+                    mov.cd_documento,
+                    f"{data:%d/%m/%Y}",
                 )
-            return self._gravar_pdf(cnj, mov, parametros, diretorio)
+            caminho = self._gravar_pdf(cnj, mov, parametros, diretorio)
+            # Depois de gravar: os pedidos do aviso não podem custar o acórdão já escolhido.
+            try:
+                self._avisar_empate_entre_incidentes(cnj, mov, candidatas[posicao + 1 :])
+            except _FALHAS_DA_CHECAGEM_DE_EMPATE as erro:
+                logger.debug("%s: checagem de empate entre incidentes falhou: %s", cnj, erro)
+            return caminho
         mensagem = (
             f"nenhum documento de acórdão acessível nas movimentações a partir de "
             f"{data:%d/%m/%Y} ({len(candidatas)} documento(s) olhado(s))."
@@ -422,9 +450,7 @@ class EsajAcordaoScraper(EsajSearchScraper):
         caminhos: list[str | None] = []
         motivos: list[str | None] = []
         falhas: list[str] = []
-        for i, linha in enumerate(cjsg.itertuples(index=False)):
-            if i and self.sleep_time:
-                time.sleep(self.sleep_time)
+        for linha in cjsg.itertuples(index=False):
             try:
                 caminho, motivo = self.baixar_acordao(linha.processo, linha.data_julgamento, diretorio), None
             except (AcordaoIndisponivelError, EntradaInvalidaError) as erro:
@@ -503,6 +529,58 @@ class EsajAcordaoScraper(EsajSearchScraper):
                     "a paginação não avançaria.",
                 )
             vistos.add(cursor)
+
+    def _parametros_do_acordao(self, cnj: str, mov: Movimentacao) -> str | None:
+        """``parametros`` da pasta quando o documento é acórdão; ``""`` se é outro tipo, ``None`` se pede senha."""
+        url_pasta = self._url_da_pasta(cnj, mov)
+        if url_pasta is None:
+            return None
+        parametros = parse_parametros_pasta(self._get_cposg(url_pasta).text)
+        if parametros is None:
+            raise RespostaInesperadaError(
+                cnj, f"a pasta digital do documento {mov.cd_documento} não traz 'parametros'."
+            )
+        tipo = tipo_documento(parametros)
+        if tipo not in self.TIPOS_DOCUMENTO_ACORDAO:
+            logger.debug("%s: documento %s é %r, não acórdão.", cnj, mov.cd_documento, tipo)
+            return ""
+        return parametros
+
+    def _avisar_empate_entre_incidentes(self, cnj: str, escolhido: Movimentacao, seguintes: list[Movimentacao]) -> None:
+        """Avisa quando outro incidente tem acórdão no mesmo dia do escolhido.
+
+        A ``data_julgamento`` não distingue os dois; o escolhido é o do
+        incidente que a busca lista primeiro. Só olha as movimentações do mesmo
+        dia em outro processo, então o caso comum não faz pedido a mais.
+        """
+        for mov in seguintes:
+            if mov.data != escolhido.data:
+                return
+            if mov.cd_processo == escolhido.cd_processo:
+                continue
+            parametros = self._parametros_do_acordao(cnj, mov)
+            if parametros is None:
+                logger.warning(
+                    "%s: o incidente %s tem documento com senha em %s (documento %s), que pode ser outro "
+                    "acórdão do dia; devolvido o do incidente %s (documento %s), listado antes na busca.",
+                    cnj,
+                    mov.cd_processo,
+                    f"{mov.data:%d/%m/%Y}",
+                    mov.cd_documento,
+                    escolhido.cd_processo,
+                    escolhido.cd_documento,
+                )
+            elif parametros:
+                logger.warning(
+                    "%s: o incidente %s também tem acórdão em %s (documento %s); devolvido o do incidente %s "
+                    "(documento %s), listado antes na busca.",
+                    cnj,
+                    mov.cd_processo,
+                    f"{mov.data:%d/%m/%Y}",
+                    mov.cd_documento,
+                    escolhido.cd_processo,
+                    escolhido.cd_documento,
+                )
 
     def _url_da_pasta(self, cnj: str, mov: Movimentacao) -> str | None:
         """URL da pasta digital do documento, ou ``None`` quando ele não abre sem senha."""
