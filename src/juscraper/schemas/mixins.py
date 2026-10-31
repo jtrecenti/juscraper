@@ -147,7 +147,7 @@ class CountOnlyMixin(BaseModel):
     **Fail-fast no auto-chunk** (divergencia deliberada do caminho normal):
     o caminho normal (:func:`juscraper.courts._esaj.base.run_auto_chunk`)
     tenta todas as janelas e levanta ``ColetaParcialError`` com o parcial.
-    ``count_only`` usa ``sum()`` — a primeira janela que falha aborta a
+    ``count_only`` usa ``sum()``, e a primeira janela que falha aborta a
     iteracao e propaga limpo. Contagem parcial nao tem uso, entao nao vale
     carrega-la.
 

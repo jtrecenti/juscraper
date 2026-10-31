@@ -162,6 +162,13 @@ def run_auto_chunk(
     # Pre-fill aqui garante 1 warning total.
     if has_data_publicacao:
         fill_open_ended_dates(sniff, formato=date_format, rotulo="data_publicacao")
+        # Publicacao nao e dividida: validar aqui, antes das janelas, para o
+        # ValueError sair limpo em vez de repetir em cada janela e virar
+        # ColetaParcialError "N de N janelas falharam".
+        validate_intervalo_datas(
+            sniff["data_publicacao_inicio"], sniff["data_publicacao_fim"], max_anos=ESAJ_JANELA_ANOS,
+            formato=date_format, rotulo="data_publicacao", origem="O eSAJ",
+        )
 
     dj_i = sniff["data_julgamento_inicio"]
     dj_f = sniff["data_julgamento_fim"]

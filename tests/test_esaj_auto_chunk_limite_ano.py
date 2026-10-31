@@ -30,7 +30,10 @@ from juscraper.core.exceptions import ColetaParcialError
 from tests._helpers import load_sample_bytes
 
 ESAJ_PUROS = ["tjac", "tjal", "tjam", "tjce", "tjms"]
+# TJSP usa o mesmo fluxo de POST + trocaDePagina no cjsg, sem ``data_publicacao``.
+ESAJ_CJSG = [*ESAJ_PUROS, "tjsp"]
 _CD_ACORDAO = re.compile(rb'cdAcordao="(\d+)"')
+_CNJ_CJPG = re.compile(rb'(fonteNegrito">\s*[\d.-]+)')
 
 
 def _data(texto: str) -> date:
@@ -78,7 +81,7 @@ def _acordaos_por_janela(tribunal: str) -> int:
     return len(set(_CD_ACORDAO.findall(amostra)))
 
 
-@pytest.mark.parametrize("tribunal", ESAJ_PUROS)
+@pytest.mark.parametrize("tribunal", ESAJ_CJSG)
 @pytest.mark.parametrize(
     "caso",
     [
@@ -97,7 +100,7 @@ def test_cjsg_auto_chunk_concatena_todas_as_janelas(tribunal, caso, tmp_path, mo
 
     with warnings.catch_warnings():
         warnings.simplefilter("error", UserWarning)
-        df = scraper.cjsg("", data_julgamento_inicio=inicio, data_julgamento_fim=fim)
+        df = scraper.cjsg("dano moral", data_julgamento_inicio=inicio, data_julgamento_fim=fim)
 
     assert len(janelas) == n_janelas
     assert janelas[0][0] == inicio
@@ -106,22 +109,26 @@ def test_cjsg_auto_chunk_concatena_todas_as_janelas(tribunal, caso, tmp_path, mo
     assert df["cd_acordao"].str[0].nunique() == n_janelas
 
 
-@pytest.mark.parametrize("tribunal", ESAJ_PUROS)
+@pytest.mark.parametrize("tribunal", ESAJ_CJSG)
 @responses.activate
 def test_cjsg_count_only_soma_todas_as_janelas(tribunal, tmp_path, mocker):
     """A contagem multi-janela usa as mesmas janelas aceitas pelo servidor."""
     mocker.patch("time.sleep")
     scraper = jus.scraper(tribunal, download_path=str(tmp_path))
     janelas = _registrar_servidor_esaj(scraper.BASE_URL, tribunal)
-    um_ano = scraper.cjsg("", data_julgamento_inicio="01/01/2013", data_julgamento_fim="31/12/2013", count_only=True)
+    um_ano = scraper.cjsg(
+        "dano moral", data_julgamento_inicio="01/01/2013", data_julgamento_fim="31/12/2013", count_only=True
+    )
 
-    total = scraper.cjsg("", data_julgamento_inicio="01/01/2010", data_julgamento_fim="31/12/2016", count_only=True)
+    total = scraper.cjsg(
+        "dano moral", data_julgamento_inicio="01/01/2010", data_julgamento_fim="31/12/2016", count_only=True
+    )
 
     assert len(janelas) == 1 + 7
     assert total == 7 * um_ano
 
 
-@pytest.mark.parametrize("tribunal", ESAJ_PUROS)
+@pytest.mark.parametrize("tribunal", ESAJ_CJSG)
 @responses.activate
 def test_cjsg_auto_chunk_janela_que_falha_levanta_com_o_parcial(tribunal, tmp_path, mocker):
     """Janela que falha não some calada: o erro nomeia a janela e carrega as que passaram."""
@@ -130,7 +137,7 @@ def test_cjsg_auto_chunk_janela_que_falha_levanta_com_o_parcial(tribunal, tmp_pa
     _registrar_servidor_esaj(scraper.BASE_URL, tribunal, fora_do_ar="01/01/2013")
 
     with pytest.raises(ColetaParcialError, match="1 de 7 janela") as exc_info:
-        scraper.cjsg("", data_julgamento_inicio="01/01/2010", data_julgamento_fim="31/12/2016")
+        scraper.cjsg("dano moral", data_julgamento_inicio="01/01/2010", data_julgamento_fim="31/12/2016")
 
     erro = exc_info.value
     assert [(i, f) for i, f, _ in erro.falhas] == [("01/01/2013", "31/12/2013")]
@@ -157,3 +164,67 @@ def test_cjsg_intervalo_no_aniversario_trava_antes_da_requisicao(tribunal, filtr
         scraper.cjsg("", count_only=count_only, **filtros)
 
     assert janelas == []
+
+
+@pytest.mark.parametrize("tribunal", ESAJ_PUROS)
+@responses.activate
+def test_cjsg_publicacao_longa_com_julgamento_longo_trava_antes_das_janelas(tribunal, tmp_path):
+    """Publicação não é dividida: o ValueError sai antes do auto-chunk, sem virar falha de janela."""
+    scraper = jus.scraper(tribunal, download_path=str(tmp_path))
+    janelas = _registrar_servidor_esaj(scraper.BASE_URL, tribunal)
+
+    with pytest.raises(ValueError, match="no máximo 1 ano") as exc_info:
+        scraper.cjsg(
+            "dano moral",
+            data_julgamento_inicio="01/01/2010",
+            data_julgamento_fim="31/12/2016",
+            data_publicacao_inicio="01/01/2013",
+            data_publicacao_fim="01/01/2014",
+        )
+
+    assert not isinstance(exc_info.value, ColetaParcialError)
+    assert janelas == []
+
+
+def _registrar_servidor_cjpg(fora_do_ar: str | None = None) -> list[tuple[str, str]]:
+    """GET ``cjpg/pesquisar.do`` do TJSP com a mesma regra de janela do eSAJ.
+
+    A captura ``results_normal_page_01.html`` tem 10 decisões, e o total é
+    trocado para 10 para caber numa página. O sufixo ``-j<n>`` no número do
+    processo torna ``id_processo`` único por janela.
+    """
+    amostra = load_sample_bytes("tjsp", "cjpg/results_normal_page_01.html").replace(b"de 3565472", b"de 10")
+    janelas: list[tuple[str, str]] = []
+
+    def _pesquisar(request):
+        janelas.append((request.params["dadosConsulta.dtInicio"], request.params["dadosConsulta.dtFim"]))
+        inicio, fim = (_data(d) for d in janelas[-1])
+        if fim >= _mais_um_ano(inicio) or janelas[-1][0] == fora_do_ar:
+            return 404, {}, b""
+        sufixo = f"-j{len(janelas)}".encode()
+        return 200, {"Content-Type": "text/html; charset=utf-8"}, _CNJ_CJPG.sub(lambda m: m.group(1) + sufixo, amostra)
+
+    responses.add_callback(responses.GET, "https://esaj.tjsp.jus.br/cjpg/pesquisar.do", callback=_pesquisar)
+    return janelas
+
+
+@pytest.mark.parametrize(("fora_do_ar", "n_ok"), [(None, 7), ("01/01/2013", 6)], ids=["todas", "uma_fora"])
+@responses.activate
+def test_cjpg_tjsp_auto_chunk_janelas_de_calendario(fora_do_ar, n_ok, tmp_path, mocker):
+    """O cjpg do TJSP usa as mesmas janelas e o mesmo erro com parcial que o cjsg."""
+    mocker.patch("time.sleep")
+    janelas = _registrar_servidor_cjpg(fora_do_ar)
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", UserWarning)
+        if fora_do_ar is None:
+            df = scraper.cjpg("dano moral", data_julgamento_inicio="01/01/2010", data_julgamento_fim="31/12/2016")
+        else:
+            with pytest.raises(ColetaParcialError, match="1 de 7 janela") as exc_info:
+                scraper.cjpg("dano moral", data_julgamento_inicio="01/01/2010", data_julgamento_fim="31/12/2016")
+            df = exc_info.value.resultado
+
+    assert janelas == [(f"01/01/{ano}", f"31/12/{ano}") for ano in range(2010, 2017)]
+    assert len(df) == n_ok * 10
+    assert df["id_processo"].nunique() == n_ok * 10

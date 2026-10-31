@@ -257,6 +257,14 @@ class TestValidateIntervaloDatas:
         with pytest.raises(ValueError, match="no máximo 1 ano"):
             validate_intervalo_datas(inicio, fim, max_anos=1)
 
+    def test_max_anos_dica_de_auto_chunk_so_em_julgamento(self):
+        # O auto-chunk só divide julgamento: sugeri-lo em publicação não ajudaria.
+        with pytest.raises(ValueError, match="auto_chunk=True"):
+            validate_intervalo_datas("01/01/2013", "01/01/2014", max_anos=1, rotulo="data_julgamento")
+        with pytest.raises(ValueError) as exc_info:
+            validate_intervalo_datas("01/01/2013", "01/01/2014", max_anos=1, rotulo="data_publicacao")
+        assert "auto_chunk" not in str(exc_info.value)
+
     def test_rotulo_in_message(self):
         with pytest.raises(ValueError, match="data_julgamento_inicio"):
             validate_intervalo_datas(
@@ -486,6 +494,11 @@ class TestIterDateWindows:
         for (_, prev_fim), (nxt_ini, _) in itertools.pairwise(datas):
             assert nxt_ini - prev_fim == timedelta(days=1)
 
+    @pytest.mark.parametrize("limite", [{"max_anos": 0}, {"max_anos": -1}, {"max_dias": -1}])
+    def test_limite_invalido_levanta_em_vez_de_laco_infinito(self, limite):
+        with pytest.raises(ValueError, match="max_anos deve ser >= 1"):
+            next(iter_date_windows("01/01/2013", "31/12/2014", **limite))
+
     def test_invalid_format_raises(self):
         with pytest.raises(ValueError, match="data_inicio inválida"):
             list(iter_date_windows("2024-01-01", "31/12/2024"))
@@ -567,6 +580,16 @@ class TestRunChunkedSearch:
         assert list(erro.resultado["cd_acordao"]) == ["a-01/01/2022", "a-01/01/2024"]
         assert [(i, f) for i, f, _ in erro.falhas] == [("01/01/2023", "31/12/2023")]
         assert isinstance(erro.__cause__, RuntimeError)
+
+    def test_coleta_parcial_sobrevive_a_pickle_e_copy(self):
+        import copy
+        import pickle
+        falhas: list[tuple[str | None, str | None, Exception]] = [("01/01/2013", "31/12/2013", RuntimeError("boom"))]
+        erro = ColetaParcialError("x", resultado=pd.DataFrame({"cd_acordao": ["a"]}), falhas=falhas)
+        for clone in (pickle.loads(pickle.dumps(erro)), copy.copy(erro)):
+            assert str(clone) == "x"
+            assert list(clone.resultado["cd_acordao"]) == ["a"]
+            assert [(i, f, repr(exc)) for i, f, exc in clone.falhas] == [(i, f, repr(exc)) for i, f, exc in falhas]
 
     def test_all_windows_fail_raises_with_empty_partial(self):
         def fetch(i, f):

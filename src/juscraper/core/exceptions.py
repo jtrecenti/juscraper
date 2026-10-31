@@ -10,6 +10,7 @@ em ``CLAUDE.md``.
 """
 from __future__ import annotations
 
+import functools
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -119,6 +120,15 @@ class ColetaParcialError(RuntimeError):
         super().__init__(mensagem)
         self.resultado = resultado
         self.falhas = falhas
+
+    def __reduce__(self) -> tuple[functools.partial[ColetaParcialError], tuple[object, ...]]:
+        """Reconstrói o erro com ``resultado`` e ``falhas`` em pickle e ``copy``.
+
+        ``args`` só guarda a mensagem: sem isto, pickle e ``copy`` chamariam
+        ``__init__(mensagem)`` e quebrariam nos dois keyword-only, o que
+        perderia o erro numa coleta rodada em ``ProcessPoolExecutor``.
+        """
+        return (functools.partial(type(self), resultado=self.resultado, falhas=self.falhas), self.args)
 
 
 class InvalidJSONResponseError(HTTPSemanticError):
