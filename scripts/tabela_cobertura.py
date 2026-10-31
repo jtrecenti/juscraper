@@ -4,6 +4,7 @@ Uso, na raiz do repositório::
 
     uv run python scripts/tabela_cobertura.py           # reescreve os arquivos
     uv run python scripts/tabela_cobertura.py --check   # só confere; sai com 1 se divergir
+    uv run python scripts/tabela_cobertura.py --json    # imprime a cobertura em JSON, para outros repositórios
 
 A fonte dos raspadores é ``juscraper._SCRAPERS``, o mesmo registro que
 ``jus.scraper()`` consulta. Cada classe é inspecionada depois de resolvida a
@@ -13,7 +14,8 @@ tirada a docstring, é só ``raise NotImplementedError(...)``: os tribunais o
 mantêm para a assinatura uniforme, mas ele não faz consulta nenhuma.
 
 As tabelas ficam entre os marcadores ``INICIO`` e ``FIM`` de cada arquivo em
-``ARQUIVOS``. O texto em volta, como a nota sobre o CAPTCHA do TJAP, continua
+``ARQUIVOS``, com títulos na língua do arquivo: o README é em português e
+``docs/`` é em inglês. O texto em volta, como a nota sobre o CAPTCHA do TJAP, continua
 editado à mão. ``tests/test_tabela_cobertura.py`` roda o modo ``--check``.
 """
 
@@ -23,6 +25,7 @@ import argparse
 import ast
 import importlib
 import inspect
+import json
 import sys
 import textwrap
 from pathlib import Path
@@ -30,7 +33,14 @@ from pathlib import Path
 import juscraper
 
 RAIZ = Path(__file__).resolve().parents[1]
-ARQUIVOS = (RAIZ / "README.md", RAIZ / "docs" / "index.qmd")
+# Títulos de cada arquivo: seção de tribunais, seção de agregadores, coluna de
+# tribunal, coluna de agregador e coluna de métodos.
+ARQUIVOS: dict[Path, tuple[str, str, str, str, str]] = {
+    RAIZ / "README.md": (
+        "Tribunais Disponíveis", "Agregadores Disponíveis", "Tribunal", "Nome", "Funcionalidades Disponíveis",
+    ),
+    RAIZ / "docs" / "index.qmd": ("Available courts", "Available aggregators", "Court", "Name", "Available methods"),
+}
 INICIO = "<!-- tabela-cobertura:inicio (gerada por scripts/tabela_cobertura.py; não editar à mão) -->"
 FIM = "<!-- tabela-cobertura:fim -->"
 
@@ -149,9 +159,9 @@ def _celula(sigla: str, metodos: list[str]) -> str:
     return ", ".join(f"{metodo} {MARCAS[sigla, metodo]}" if (sigla, metodo) in MARCAS else metodo for metodo in metodos)
 
 
-def bloco() -> str:
+def bloco(grupos: dict[str, dict[str, list[str]]], titulos: tuple[str, str, str, str, str]) -> str:
     """Monta o bloco Markdown com as duas tabelas, entre os marcadores."""
-    grupos = cobertura()
+    secao_tribunais, secao_agregadores, coluna_tribunal, coluna_agregador, coluna_metodos = titulos
     tribunais = [
         (sigla.upper(), _celula(sigla, metodos))
         for sigla, metodos in sorted(grupos["tribunais"].items(), key=lambda item: _chave_tribunal(item[0]))
@@ -163,13 +173,13 @@ def bloco() -> str:
     linhas = [
         INICIO,
         "",
-        "### Tribunais Disponíveis",
+        f"### {secao_tribunais}",
         "",
-        *_tabela(("Tribunal", "Funcionalidades Disponíveis"), tribunais),
+        *_tabela((coluna_tribunal, coluna_metodos), tribunais),
         "",
-        "### Agregadores Disponíveis",
+        f"### {secao_agregadores}",
         "",
-        *_tabela(("Nome", "Funcionalidades Disponíveis"), agregadores),
+        *_tabela((coluna_agregador, coluna_metodos), agregadores),
         "",
         FIM,
     ]
@@ -188,13 +198,18 @@ def substituir(texto: str, novo_bloco: str, caminho: Path) -> str:
 def main(argumentos: list[str] | None = None) -> int:
     """Reescreve as tabelas, ou só confere com ``--check``."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--check", action="store_true", help="não grava; sai com 1 se algum arquivo divergir")
+    modo = parser.add_mutually_exclusive_group()
+    modo.add_argument("--check", action="store_true", help="não grava; sai com 1 se algum arquivo divergir")
+    modo.add_argument("--json", action="store_true", help="só imprime a cobertura em JSON")
     opcoes = parser.parse_args(argumentos)
-    novo_bloco = bloco()
+    grupos = cobertura()
+    if opcoes.json:
+        sys.stdout.write(json.dumps(grupos, ensure_ascii=False, indent=2) + "\n")
+        return 0
     divergentes = []
-    for caminho in ARQUIVOS:
+    for caminho, titulos in ARQUIVOS.items():
         texto = caminho.read_text(encoding="utf-8")
-        atualizado = substituir(texto, novo_bloco, caminho)
+        atualizado = substituir(texto, bloco(grupos, titulos), caminho)
         if atualizado == texto:
             continue
         divergentes.append(caminho.relative_to(RAIZ))

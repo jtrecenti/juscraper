@@ -2,31 +2,31 @@
 title: "juscraper"
 ---
 
-Raspador de tribunais e outros sistemas relacionados ao poder judiciário brasileiro.
+Scraper for Brazilian courts and other systems of the Brazilian judiciary.
 
-## Instalação
+## Installation
 
-### Via PyPI (Recomendado)
+### From PyPI (recommended)
 
 ```bash
 pip install juscraper
 ```
 
-### Com uv
+### With uv
 
 ```bash
 uv add juscraper
 ```
 
-### Versão de Desenvolvimento
+### Development version
 
-Para instalar a versão mais recente do repositório:
+To install the latest version from the repository:
 
 ```bash
 pip install git+https://github.com/jtrecenti/juscraper.git
 ```
 
-## Como usar
+## Usage
 
 ```python
 import juscraper as jus
@@ -37,62 +37,62 @@ dados_cjpg = tjsp.cjpg('league of legends', paginas=range(1, 4))
 dados_cjpg.head(3)
 ```
 
-O pacote foi pensado para atender a requisitos básicos de consulta de dados de processos judiciais em alguns tribunais.
+The package covers the basic needs of querying case data in a set of courts.
 
-Os tribunais implementados apresentam um ou mais dos métodos abaixo; a tabela da seção Implementações diz quais cada um tem:
+Each court implements one or more of the methods below; the tables in the Implementations section show which:
 
-- `.cpopg()`: consulta de processos originários do primeiro grau
-- `.cposg()`: consulta de processos originários do segundo grau
-- `.cjsg()`: consulta de jurisprudência de segundo grau
-- `.cjpg()`: consulta de julgados de primeiro grau
+- `.cpopg()`: first-instance case lookup
+- `.cposg()`: second-instance case lookup
+- `.cjsg()`: second-instance case law search
+- `.cjpg()`: first-instance decision search
 
-Os métodos `.cpopg()` e `.cposg()` recebem como *input* um número de processo no padrão CNJ (NNNNNNN-DD.AAAA.J.TT.OOOO), com ou sem separadores, e retorna um `dict` com tabelas dos elementos do processo (dados básicos, partes, movimentações, entre outros específicos por tribunal).
+`.cpopg()` and `.cposg()` take a case number in the CNJ format (NNNNNNN-DD.AAAA.J.TT.OOOO), with or without separators, and return a `dict` of tables with the case elements (basic data, parties, docket entries and other court-specific tables).
 
-O método `.cjsg()` recebe como *input* parâmetros de busca de jurisprudência (que variam por tribunal) e retorna uma tabela com os resultados da consulta. Boa parte dos tribunais apresentam limites de paginação ao realizar buscas muito gerais (i.e. que retornam muitos resultados). Nesses casos, o método dará um aviso ao usuário com o número total de resultados, confirmando se deseja mesmo baixar todos os resultados.
+`.cjsg()` takes case law search parameters (which vary by court) and returns a table with the results. Many courts limit pagination on broad searches (searches that return many results). In those cases the method warns the user with the total number of results and asks for confirmation before downloading all of them.
 
-## Implementações
+## Implementations
 
 <!-- tabela-cobertura:inicio (gerada por scripts/tabela_cobertura.py; não editar à mão) -->
 
-### Tribunais Disponíveis
+### Available courts
 
-| Tribunal | Funcionalidades Disponíveis |
-|----------|-----------------------------|
-| STF      | contar_decisoes, listar_decisoes |
-| TJAC     | cjsg |
-| TJAL     | cjsg |
-| TJAM     | cjsg |
-| TJAP     | cjsg ⚠️ |
-| TJBA     | cjsg |
-| TJCE     | cjsg |
-| TJDFT    | cjsg |
-| TJES     | cjsg, cjpg |
-| TJGO     | cjsg |
-| TJMG     | cposg, cjsg |
-| TJMS     | cjsg |
-| TJMT     | cjsg |
-| TJPA     | cjsg |
-| TJPB     | cjsg |
-| TJPE     | cpopg, cjsg |
-| TJPI     | cjsg |
-| TJPR     | cjsg |
-| TJRJ     | cjsg |
-| TJRN     | cjsg |
-| TJRO     | cjsg |
-| TJRR     | cjsg |
-| TJRS     | cjsg |
-| TJSC     | cjsg |
-| TJSP     | cpopg, cposg, cjsg, cjpg |
-| TJTO     | cjsg, cjpg, cjsg_ementa |
-| TRF1     | cpopg |
-| TRF3     | cpopg, cjsg |
-| TRF5     | cpopg |
-| TRF6     | cpopg |
+| Court | Available methods |
+|-------|-------------------|
+| STF   | contar_decisoes, listar_decisoes |
+| TJAC  | cjsg |
+| TJAL  | cjsg |
+| TJAM  | cjsg |
+| TJAP  | cjsg ⚠️ |
+| TJBA  | cjsg |
+| TJCE  | cjsg |
+| TJDFT | cjsg |
+| TJES  | cjsg, cjpg |
+| TJGO  | cjsg |
+| TJMG  | cposg, cjsg |
+| TJMS  | cjsg |
+| TJMT  | cjsg |
+| TJPA  | cjsg |
+| TJPB  | cjsg |
+| TJPE  | cpopg, cjsg |
+| TJPI  | cjsg |
+| TJPR  | cjsg |
+| TJRJ  | cjsg |
+| TJRN  | cjsg |
+| TJRO  | cjsg |
+| TJRR  | cjsg |
+| TJRS  | cjsg |
+| TJSC  | cjsg |
+| TJSP  | cpopg, cposg, cjsg, cjpg |
+| TJTO  | cjsg, cjpg, cjsg_ementa |
+| TRF1  | cpopg |
+| TRF3  | cpopg, cjsg |
+| TRF5  | cpopg |
+| TRF6  | cpopg |
 
-### Agregadores Disponíveis
+### Available aggregators
 
-| Nome        | Funcionalidades Disponíveis |
-|-------------|-----------------------------|
+| Name        | Available methods |
+|-------------|-------------------|
 | ComunicaCNJ | listar_comunicacoes |
 | Datajud     | contar_processos, listar_processos |
 | Falcao      | listar_decisoes |
@@ -109,7 +109,7 @@ Falcao covers national labor jurisprudence (TST and TRTs).
 
 JusBR and PDPJ share the same JWT from the PJe SSO. With the `govbr` extra (`pip install 'juscraper[govbr]'`), `auth_govbr()` opens the locally installed Google Chrome, Chromium or Microsoft Edge, with a temporary profile, on the PDPJ services portal; the user logs in through gov.br, the token is captured and the window closes on its own. If no browser is found, pass its executable to `auth_govbr(navegador=...)`. The token is cached in `~/.config/juscraper/pdpj_token.json` (or under `$XDG_CONFIG_HOME/juscraper/`), readable only by its owner, and later JusBR and PDPJ instances load it without a new login. When the portal issues a refresh token, the access token is renewed automatically before it expires. The login needs a windowed browser, so it does not run on Google Colab or CI; there, pass the token to `auth(token)` or set the `PDPJ_JWT` environment variable (JusBR also accepts `JUSBR_JWT`).
 
-### Notebooks de Exemplo
+### Example notebooks
 
 ::: {.callout-warning}
 ## Notebook runtime and Google Colab
@@ -117,55 +117,55 @@ JusBR and PDPJ share the same JWT from the PJe SSO. With the `govbr` extra (`pip
 These notebooks send live requests to external services and are not guaranteed to work on Google Colab. Courts may block or throttle shared cloud and datacenter IP addresses even when the same request works from a local connection. Some examples also require CAPTCHA handling, access tokens, or optional dependencies. Local Jupyter execution is the project's reference environment; a connection failure on Colab does not, by itself, indicate a `juscraper` regression.
 :::
 
-- [Exemplo TJAC](notebooks/tjac.ipynb)
-- [Exemplo TJAL](notebooks/tjal.ipynb)
-- [Exemplo TJAM](notebooks/tjam.ipynb)
-- [Exemplo TJAP](notebooks/tjap.ipynb)
-- [Exemplo TJCE](notebooks/tjce.ipynb)
-- [Exemplo TJBA](notebooks/tjba.ipynb)
-- [Exemplo TJSP](notebooks/tjsp.ipynb)
-- [Exemplo TJRS](notebooks/tjrs.ipynb)
-- [Exemplo TJPR](notebooks/tjpr.ipynb)
-- [Exemplo TJPA](notebooks/tjpa.ipynb)
-- [Exemplo TJPE](notebooks/tjpe.ipynb)
-- [Exemplo TJES](notebooks/tjes.ipynb)
-- [Exemplo TJMS](notebooks/tjms.ipynb)
-- [Exemplo TJDFT](notebooks/tjdft.ipynb)
-- [Exemplo TJGO](notebooks/tjgo.ipynb)
-- [Exemplo TJMG](notebooks/tjmg.ipynb)
-- [Exemplo TJMT](notebooks/tjmt.ipynb)
-- [Exemplo TJTO](notebooks/tjto.ipynb)
-- [Exemplo TJPB](notebooks/tjpb.ipynb)
-- [Exemplo TJPI](notebooks/tjpi.ipynb)
-- [Exemplo TJRJ](notebooks/tjrj.ipynb)
-- [Exemplo TJRN](notebooks/tjrn.ipynb)
-- [Exemplo TJRO](notebooks/tjro.ipynb)
-- [Exemplo TJRR](notebooks/tjrr.ipynb)
-- [Exemplo TJSC](notebooks/tjsc.ipynb)
-- [Exemplo TRF3](notebooks/trf3.ipynb)
-- [Exemplo TRF5](notebooks/trf5.ipynb)
-- [Exemplo TRF6](notebooks/trf6.ipynb)
-- [Exemplo Datajud](notebooks/datajud.ipynb)
-- [Exemplo Jusbr](notebooks/jusbr.ipynb)
-- [Exemplo Falcao](notebooks/falcao.ipynb)
+- [TJAC example](notebooks/tjac.ipynb)
+- [TJAL example](notebooks/tjal.ipynb)
+- [TJAM example](notebooks/tjam.ipynb)
+- [TJAP example](notebooks/tjap.ipynb)
+- [TJCE example](notebooks/tjce.ipynb)
+- [TJBA example](notebooks/tjba.ipynb)
+- [TJSP example](notebooks/tjsp.ipynb)
+- [TJRS example](notebooks/tjrs.ipynb)
+- [TJPR example](notebooks/tjpr.ipynb)
+- [TJPA example](notebooks/tjpa.ipynb)
+- [TJPE example](notebooks/tjpe.ipynb)
+- [TJES example](notebooks/tjes.ipynb)
+- [TJMS example](notebooks/tjms.ipynb)
+- [TJDFT example](notebooks/tjdft.ipynb)
+- [TJGO example](notebooks/tjgo.ipynb)
+- [TJMG example](notebooks/tjmg.ipynb)
+- [TJMT example](notebooks/tjmt.ipynb)
+- [TJTO example](notebooks/tjto.ipynb)
+- [TJPB example](notebooks/tjpb.ipynb)
+- [TJPI example](notebooks/tjpi.ipynb)
+- [TJRJ example](notebooks/tjrj.ipynb)
+- [TJRN example](notebooks/tjrn.ipynb)
+- [TJRO example](notebooks/tjro.ipynb)
+- [TJRR example](notebooks/tjrr.ipynb)
+- [TJSC example](notebooks/tjsc.ipynb)
+- [TRF3 example](notebooks/trf3.ipynb)
+- [TRF5 example](notebooks/trf5.ipynb)
+- [TRF6 example](notebooks/trf6.ipynb)
+- [Datajud example](notebooks/datajud.ipynb)
+- [Jusbr example](notebooks/jusbr.ipynb)
+- [Falcao example](notebooks/falcao.ipynb)
 
-## Informações adicionais
+## Additional information
 
-### Diferenciais do `juscraper`:
+### What sets `juscraper` apart
 
-- Controle sobre arquivos brutos: o pacote fornece uma interface para baixar e armazenar arquivos brutos (HTML e JSON, por exemplo) dos processos. Por padrão, no entanto, esses arquivos brutos são descartados assim que os dados são processados, com exceção dos arquivos que apresentaram algum problema na leitura.
+- Control over raw files: the package provides an interface to download and store the raw files (HTML and JSON, for example) of each case. By default, raw files are discarded once the data is parsed, except for files that failed to parse.
 
-### Restrições:
+### Limitations
 
-Por ser um pacote bastante complexo e também nichado, adotamos algumas restrições sobre o escopo do pacote para que seja simples de usar.
+Because the package is complex and niche, its scope is restricted to keep it simple to use.
 
-- O pacote não utiliza paralelização, ou seja, se o usuário tiver interesse em realizar requisições em paralelo, deverá desenvolver as adaptações necessárias.
-- O pacote não possui absolutamente todas as funcionalidades que os tribunais permitem. Se o usuário tiver interesse em consultar processos em mais tribunais, deverá desenvolver os raspadores.
+- The package does not parallelize requests; users who want parallel requests must build that themselves.
+- The package does not cover every feature the courts offer. Users who need other courts must write the scrapers.
 
-## Contribuição
+## Contributing
 
-Interessado em contribuir? Verifique as diretrizes de contribuição no arquivo [CONTRIBUTING.md](https://github.com/jtrecenti/juscraper/blob/main/CONTRIBUTING.md). Por favor, note que este projeto é lançado com um Código de Conduta. Ao contribuir para este projeto, você concorda em obedecer às suas termos.
+Interested in contributing? See the guidelines in [CONTRIBUTING.md](https://github.com/jtrecenti/juscraper/blob/main/CONTRIBUTING.md). This project is released with a Code of Conduct; by contributing, you agree to abide by its terms.
 
-## Licença
+## License
 
-`juscraper` foi criado por Julio Trecenti. Está licenciado sob os termos da licença MIT.
+`juscraper` was created by Julio Trecenti. It is licensed under the terms of the MIT license.

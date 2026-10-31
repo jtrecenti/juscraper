@@ -6,6 +6,7 @@ script ser rodado de novo.
 """
 
 import importlib.util
+import json
 from pathlib import Path
 
 import pytest
@@ -68,8 +69,9 @@ def test_check_reprova_tabela_desatualizada(tmp_path, monkeypatch):
     arquivo.write_text(
         f"antes\n{tabela_cobertura.INICIO}\n| velho |\n{tabela_cobertura.FIM}\ndepois\n", encoding="utf-8"
     )
+    titulos_readme = tabela_cobertura.ARQUIVOS[tabela_cobertura.RAIZ / "README.md"]
     monkeypatch.setattr(tabela_cobertura, "RAIZ", tmp_path)
-    monkeypatch.setattr(tabela_cobertura, "ARQUIVOS", (arquivo,))
+    monkeypatch.setattr(tabela_cobertura, "ARQUIVOS", {arquivo: titulos_readme})
 
     assert tabela_cobertura.main(["--check"]) == 1
     assert "| velho |" in arquivo.read_text(encoding="utf-8")
@@ -85,3 +87,10 @@ def test_check_reprova_tabela_desatualizada(tmp_path, monkeypatch):
 def test_marcadores_ausentes(tmp_path):
     with pytest.raises(SystemExit, match="marcadores"):
         tabela_cobertura.substituir("sem marcadores", "bloco", tmp_path / "x.md")
+
+
+def test_json(capsys):
+    assert tabela_cobertura.main(["--json"]) == 0
+    saida = json.loads(capsys.readouterr().out)
+    assert saida == tabela_cobertura.cobertura()
+    assert saida["tribunais"]["trf3"] == ["cpopg", "cjsg"]
