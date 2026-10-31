@@ -1,5 +1,4 @@
 """Tests for the parameter normalization utilities."""
-
 import itertools
 import warnings
 
@@ -20,8 +19,8 @@ from juscraper.utils.params import (
 
 # --- normalize_paginas ---
 
-
 class TestNormalizePaginas:
+
     def test_none(self):
         assert normalize_paginas(None) is None
 
@@ -44,8 +43,8 @@ class TestNormalizePaginas:
 
 # --- normalize_pesquisa ---
 
-
 class TestNormalizePesquisa:
+
     def test_standard(self):
         assert normalize_pesquisa("teste") == "teste"
 
@@ -82,10 +81,11 @@ class TestNormalizePesquisa:
             normalize_pesquisa()
 
 
+
 # --- normalize_datas ---
 
-
 class TestNormalizeDatas:
+
     def test_standard_canonical(self):
         result = normalize_datas(
             data_julgamento_inicio="01/01/2023",
@@ -161,9 +161,9 @@ class TestNormalizeDatas:
                     data_julgamento_de="02/01/2023",
                     data_inicio="01/01/2023",
                 )
-        assert not any(issubclass(w.category, DeprecationWarning) for w in captured), (
-            "colisão alias+alias não deve emitir DeprecationWarning antes do raise"
-        )
+        assert not any(
+            issubclass(w.category, DeprecationWarning) for w in captured
+        ), "colisão alias+alias não deve emitir DeprecationWarning antes do raise"
         msg = str(excinfo.value)
         assert "'data_julgamento_de'" in msg
         assert "'data_inicio'" in msg
@@ -214,8 +214,8 @@ class TestNormalizeDatas:
 
 # --- validate_intervalo_datas ---
 
-
 class TestValidateIntervaloDatas:
+
     def test_both_none_skips(self):
         # No exception; returns None
         assert validate_intervalo_datas(None, None) is None
@@ -262,9 +262,13 @@ class TestValidateIntervaloDatas:
 
     def test_custom_max_dias(self):
         # 31 days allowed, 32 not.
-        assert validate_intervalo_datas("01/01/2023", "01/02/2023", max_dias=31) is None
+        assert validate_intervalo_datas(
+            "01/01/2023", "01/02/2023", max_dias=31
+        ) is None
         with pytest.raises(ValueError, match="no máximo 31 dias"):
-            validate_intervalo_datas("01/01/2023", "02/02/2023", max_dias=31)
+            validate_intervalo_datas(
+                "01/01/2023", "02/02/2023", max_dias=31
+            )
 
     def test_default_origem_esaj(self):
         with pytest.raises(ValueError, match="O eSAJ aceita no máximo"):
@@ -272,13 +276,15 @@ class TestValidateIntervaloDatas:
 
     def test_custom_origem(self):
         with pytest.raises(ValueError, match="O TJRS aceita no máximo"):
-            validate_intervalo_datas("01/01/2020", "31/12/2021", origem="O TJRS")
+            validate_intervalo_datas(
+                "01/01/2020", "31/12/2021", origem="O TJRS"
+            )
 
 
 # --- warn_unsupported ---
 
-
 class TestWarnUnsupported:
+
     def test_emits_warning(self):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
@@ -291,8 +297,8 @@ class TestWarnUnsupported:
 
 # --- pop_deprecated_alias ---
 
-
 class TestPopDeprecatedAlias:
+
     def test_absent_returns_none(self):
         kwargs = {"outro": "x"}
         assert pop_deprecated_alias(kwargs, "magistrado", "relator") is None
@@ -313,8 +319,8 @@ class TestPopDeprecatedAlias:
 
 # --- resolve_deprecated_alias ---
 
-
 class TestResolveDeprecatedAlias:
+
     def test_alias_absent_returns_current(self):
         kwargs: dict = {}
         result = resolve_deprecated_alias(kwargs, "magistrado", "relator", "Beltrana")
@@ -347,7 +353,9 @@ class TestResolveDeprecatedAlias:
         kwargs = {"nr_processo": "0000000-00.2024.8.15.0001"}
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("always")
-            result = resolve_deprecated_alias(kwargs, "nr_processo", "numero_processo", "", sentinel="")
+            result = resolve_deprecated_alias(
+                kwargs, "nr_processo", "numero_processo", "", sentinel=""
+            )
         assert result == "0000000-00.2024.8.15.0001"
 
     def test_custom_sentinel_collision(self):
@@ -355,21 +363,25 @@ class TestResolveDeprecatedAlias:
         with warnings.catch_warnings():
             warnings.simplefilter("always")
             with pytest.raises(ValueError, match=r"numero_processo.*nr_processo"):
-                resolve_deprecated_alias(kwargs, "nr_processo", "numero_processo", "B", sentinel="")
+                resolve_deprecated_alias(
+                    kwargs, "nr_processo", "numero_processo", "B", sentinel=""
+                )
 
     def test_custom_sentinel_empty_current_not_collision(self):
         """``current_value=""`` com sentinel=="" nao colide — trata como nao setado."""
         kwargs = {"nr_processo": "X"}
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("always")
-            result = resolve_deprecated_alias(kwargs, "nr_processo", "numero_processo", "", sentinel="")
+            result = resolve_deprecated_alias(
+                kwargs, "nr_processo", "numero_processo", "", sentinel=""
+            )
         assert result == "X"
 
 
 # --- iter_date_windows ---
 
-
 class TestIterDateWindows:
+
     def test_none_inicio_passthrough(self):
         assert list(iter_date_windows(None, "31/12/2024")) == [(None, "31/12/2024")]
 
@@ -381,10 +393,14 @@ class TestIterDateWindows:
 
     def test_short_window_noop(self):
         # Janela cabe em 366 dias — emite o par original.
-        assert list(iter_date_windows("01/01/2024", "31/12/2024")) == [("01/01/2024", "31/12/2024")]
+        assert list(iter_date_windows("01/01/2024", "31/12/2024")) == [
+            ("01/01/2024", "31/12/2024")
+        ]
 
     def test_same_day(self):
-        assert list(iter_date_windows("15/06/2024", "15/06/2024")) == [("15/06/2024", "15/06/2024")]
+        assert list(iter_date_windows("15/06/2024", "15/06/2024")) == [
+            ("15/06/2024", "15/06/2024")
+        ]
 
     def test_three_year_split(self):
         windows = list(iter_date_windows("01/01/2022", "31/12/2024"))
@@ -396,7 +412,6 @@ class TestIterDateWindows:
         assert windows[-1][1] == "31/12/2024"
         # Janelas não-sobrepostas (cada início > fim anterior).
         from datetime import datetime
-
         for prev, nxt in itertools.pairwise(windows):
             assert prev[1] is not None and nxt[0] is not None
             prev_fim = datetime.strptime(prev[1], "%d/%m/%Y")
@@ -426,7 +441,9 @@ class TestIterDateWindows:
 
     def test_max_anos_noop_dentro_de_um_ano(self):
         # 365 dias com 29/02: ainda dentro de 1 ano de calendário.
-        assert list(iter_date_windows("01/03/2015", "29/02/2016", max_anos=1)) == [("01/03/2015", "29/02/2016")]
+        assert list(iter_date_windows("01/03/2015", "29/02/2016", max_anos=1)) == [
+            ("01/03/2015", "29/02/2016")
+        ]
 
     def test_max_anos_divide_no_aniversario(self):
         # 365 dias sem 29/02: o fim alcança o aniversário e precisa dividir.
@@ -443,7 +460,6 @@ class TestIterDateWindows:
     @pytest.mark.parametrize("inicio", ["01/01/2010", "29/02/2012", "01/03/2015", "15/07/2019"])
     def test_max_anos_toda_janela_fica_antes_do_aniversario(self, inicio):
         from datetime import datetime, timedelta
-
         fmt = "%d/%m/%Y"
         windows = list(iter_date_windows(inicio, "31/12/2026", max_anos=1))
         datas = [(datetime.strptime(str(i), fmt), datetime.strptime(str(f), fmt)) for i, f in windows]
@@ -464,8 +480,8 @@ class TestIterDateWindows:
 
 # --- run_chunked_search ---
 
-
 class TestRunChunkedSearch:
+
     def test_single_window_passthrough(self):
         # Janela curta: chama fetch_window uma única vez e retorna seu DataFrame
         # sem dedup nem warning.
