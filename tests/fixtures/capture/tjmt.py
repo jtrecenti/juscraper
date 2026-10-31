@@ -4,23 +4,30 @@ Run from repo root::
 
     python -m tests.fixtures.capture.tjmt
 """
+from typing import cast
+
 import requests
 
-from juscraper.courts.tjmt.download import CONFIG_URL, _build_params
+from juscraper.courts.tjmt.download import (
+    _build_params,
+    _get_api_config,
+    _normalize_text_filter,
+    _normalize_tipo_processo,
+    _to_exclusive_end_date,
+    _to_tjmt_date,
+)
 
 from ._util import dump, samples_dir_for
 
 
-def _capture_config(session: requests.Session, dest) -> dict:
-    response = session.get(CONFIG_URL, timeout=30)
-    response.raise_for_status()
-    dump(dest / "config.json", response.content)
-    print("[tjmt] wrote config.json")
-    cfg = response.json()
-    return {
-        "api_url": cfg["api_url"],
-        "token": cfg["api_hellsgate_token"],
-    }
+def _capture_config(session: requests.Session) -> dict:
+    def request_fn(method: str, url: str, **kwargs):
+        kwargs.pop("expect_json", None)
+        response = session.request(method, url, **kwargs)
+        response.raise_for_status()
+        return response
+
+    return cast("dict[str, str]", _get_api_config(request_fn))
 
 
 def _capture(
@@ -33,8 +40,8 @@ def _capture(
     *,
     tipo_consulta: str = "Acordao",
     quantidade: int = 10,
-    data_julgamento_inicio: str | None = None,
-    data_julgamento_fim: str | None = None,
+    data_publicacao_inicio: str | None = None,
+    data_publicacao_fim: str | None = None,
     relator: str | None = None,
     orgao_julgador: str | None = None,
     tipo_processo: str | None = None,
@@ -42,18 +49,17 @@ def _capture(
 ) -> None:
     params = _build_params(
         pesquisa=pesquisa,
-        pagina=pagina,
+        pagina=pagina - 1,
         quantidade=quantidade,
         tipo_consulta=tipo_consulta,
-        data_julgamento_inicio=data_julgamento_inicio,
-        data_julgamento_fim=data_julgamento_fim,
-        relator=relator,
-        orgao_julgador=orgao_julgador,
-        classe=None,
-        tipo_processo=tipo_processo,
+        data_publicacao_inicio=_to_tjmt_date(data_publicacao_inicio),
+        data_publicacao_fim=_to_exclusive_end_date(data_publicacao_fim),
+        relator=_normalize_text_filter(relator, "relator"),
+        orgao_julgador=_normalize_text_filter(orgao_julgador, "orgao_julgador"),
+        tipo_processo=_normalize_tipo_processo(tipo_processo),
         thesaurus=thesaurus,
     )
-    response = session.get(f"{api_url}/api/Consulta", params=params, timeout=60)
+    response = session.get(f"{api_url}/consulta", params=params, timeout=60)
     response.raise_for_status()
     dump(dest / filename, response.content)
     print(f"[tjmt] wrote {filename}")
@@ -64,32 +70,41 @@ def main() -> None:
     dest = samples_dir_for("tjmt", "cjsg")
     session = requests.Session()
     session.headers.update({"User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)"})
-    cfg = _capture_config(session, dest)
+    cfg = _capture_config(session)
     session.headers.update({
         "Token": cfg["token"],
         "Accept": "application/json, text/plain, */*",
         "Referer": "https://jurisprudencia.tjmt.jus.br/",
     })
 
-    _capture(session, dest, cfg["api_url"], "dano moral", 1, "results_normal_page_01.json")
-    _capture(session, dest, cfg["api_url"], "dano moral", 2, "results_normal_page_02.json")
-    _capture(session, dest, cfg["api_url"], "mandado de seguranca", 1, "single_page.json")
-    _capture(session, dest, cfg["api_url"], "juscraper_probe_zero_hits_xyzqwe", 1, "no_results.json")
     _capture(
         session,
         dest,
         cfg["api_url"],
         "dano moral",
         1,
-        "filters_all.json",
+        "results_normal_page_01.json",
         tipo_consulta="Acordao",
-        quantidade=5,
-        data_julgamento_inicio="01/01/2024",
-        data_julgamento_fim="31/03/2024",
-        relator="306",
-        orgao_julgador="30",
-        tipo_processo="942",
-        thesaurus=True,
+        quantidade=1,
+    )
+    _capture(
+        session,
+        dest,
+        cfg["api_url"],
+        "dano moral",
+        1,
+        "single_page.json",
+        tipo_consulta="DecisaoMonocratica",
+        quantidade=1,
+    )
+    _capture(
+        session,
+        dest,
+        cfg["api_url"],
+        "juscraper_probe_zero_hits_xyzqwe",
+        1,
+        "no_results.json",
+        quantidade=1,
     )
 
 

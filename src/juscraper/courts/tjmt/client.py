@@ -1,32 +1,31 @@
 """
-Scraper for the Tribunal de Justica do Estado de Mato Grosso (TJMT).
+Scraper do Tribunal de Justiça do Estado de Mato Grosso (TJMT).
 """
 
 import pandas as pd
 
 from juscraper.core.http import HTTPScraper
-from juscraper.core.parse_utils import coerce_date_columns
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
-from .download import cjsg_download
-from .parse import cjsg_parse
+from .download import PRODUCTION_API_URL, cjsg_download
+from .parse import CJSG_COLUMNS, cjsg_parse, coerce_tjmt_date_columns
 from .schemas import InputCJSGTJMT
 
 
 class TJMTScraper(HTTPScraper):
-    """Scraper for the Tribunal de Justica do Estado de Mato Grosso (TJMT)."""
+    """Scraper do Tribunal de Justiça do Estado de Mato Grosso (TJMT)."""
 
-    BASE_URL = "https://hellsgate-preview.tjmt.jus.br/jurisprudencia"
+    BASE_URL = PRODUCTION_API_URL
 
     def __init__(self):
         super().__init__("TJMT")
 
     def cpopg(self, id_cnj: str | list[str]):
-        """Stub: first instance case consultation not implemented for TJMT."""
+        """Consulta de processos de primeiro grau ainda não implementada no TJMT."""
         raise NotImplementedError("Consulta de processos de 1 grau nao implementada para TJMT.")
 
     def cposg(self, id_cnj: str | list[str]):
-        """Stub: second instance case consultation not implemented for TJMT."""
+        """Consulta de processos de segundo grau ainda não implementada no TJMT."""
         raise NotImplementedError("Consulta de processos de 2 grau nao implementada para TJMT.")
 
     def cjsg_download(
@@ -42,30 +41,34 @@ class TJMTScraper(HTTPScraper):
         tamanho_pagina: int = 10,
         data_julgamento_inicio: str | None = None,
         data_julgamento_fim: str | None = None,
+        data_publicacao_inicio: str | None = None,
+        data_publicacao_fim: str | None = None,
         **kwargs,
     ) -> list:
-        """Download raw JSON results from the TJMT jurisprudence API.
+        """Baixa resultados JSON brutos da API de jurisprudência do TJMT.
 
-        Args:
-            pesquisa: Search term. ``query`` and ``termo`` are accepted as deprecated aliases.
-            paginas: Pages to download (1-based).
-                int: paginas=3 downloads pages 1-3.
-                range: range(1, 4) downloads pages 1-3.
-                None: downloads all available pages.
-            tipo_consulta: ``"Acordao"`` or ``"DecisaoMonocratica"``.
-            relator: Filter by judge name.
-            orgao_julgador: Filter by court chamber.
-            classe: Filter by case class.
-            tipo_processo: ``"Civel"`` or ``"Criminal"``.
-            thesaurus: Whether to use synonym search.
-            tamanho_pagina: Items per page (default 10). Aceita
+        Argumentos:
+            pesquisa: Termo de pesquisa. Aceita ``query`` e ``termo`` como aliases deprecados.
+            paginas: Páginas a baixar, baseadas em 1.
+                inteiro: ``paginas=3`` baixa as páginas 1 a 3.
+                ``range``: ``range(1, 4)`` baixa as páginas 1 a 3.
+                ``None``: baixa todas as páginas disponíveis.
+            tipo_consulta: ``"Acordao"`` ou ``"DecisaoMonocratica"``.
+            relator: Filtro pelo nome do relator.
+            orgao_julgador: Filtro pela câmara julgadora.
+            classe: Filtro pela classe processual.
+            tipo_processo: ``"Civel"`` ou ``"Criminal"``.
+            thesaurus: Define se a pesquisa deve usar sinônimos.
+            tamanho_pagina: Itens por página (padrão 10). Aceita
                 ``quantidade_por_pagina`` como alias deprecado.
-            data_julgamento_inicio: Start date for filtering (``yyyy-mm-dd``).
-            data_julgamento_fim: End date for filtering (``yyyy-mm-dd``).
+            data_julgamento_inicio: Data inicial do filtro (``yyyy-mm-dd``).
+            data_julgamento_fim: Data final do filtro (``yyyy-mm-dd``).
+            data_publicacao_inicio: Data inicial de publicação.
+            data_publicacao_fim: Data final inclusiva de publicação.
 
-        The backend exposes only a single date range (``filtro.periodoDataDe``
-        / ``filtro.periodoDataAte``) applied to the judgment date; passing
-        ``data_publicacao_*`` raises ``TypeError``.
+        O backend atual aplica ``periodoDataDe/Ate`` à data de publicação.
+        Filtros por data de julgamento continuam indisponíveis e geram
+        ``NotImplementedError``.
         """
         tamanho_pagina = resolve_deprecated_alias(
             kwargs, "quantidade_por_pagina", "tamanho_pagina", tamanho_pagina, sentinel=10
@@ -79,6 +82,8 @@ class TJMTScraper(HTTPScraper):
             consume_pesquisa_aliases=True,
             data_julgamento_inicio=data_julgamento_inicio,
             data_julgamento_fim=data_julgamento_fim,
+            data_publicacao_inicio=data_publicacao_inicio,
+            data_publicacao_fim=data_publicacao_fim,
             tipo_consulta=tipo_consulta,
             relator=relator,
             orgao_julgador=orgao_julgador,
@@ -93,6 +98,8 @@ class TJMTScraper(HTTPScraper):
             tipo_consulta=inp.tipo_consulta,
             data_julgamento_inicio=inp.data_julgamento_inicio,
             data_julgamento_fim=inp.data_julgamento_fim,
+            data_publicacao_inicio=inp.data_publicacao_inicio,
+            data_publicacao_fim=inp.data_publicacao_fim,
             relator=inp.relator,
             orgao_julgador=inp.orgao_julgador,
             classe=inp.classe,
@@ -104,14 +111,14 @@ class TJMTScraper(HTTPScraper):
         )
 
     def cjsg_parse(self, resultados_brutos: list, tipo_consulta: str = "Acordao") -> list[dict]:
-        """Parse raw JSON results into structured records.
+        """Analisa resultados JSON brutos e produz registros estruturados.
 
-        Args:
-            resultados_brutos: List of raw JSON dicts (one per page).
-            tipo_consulta: ``"Acordao"`` or ``"DecisaoMonocratica"``.
+        Argumentos:
+            resultados_brutos: Lista de dicionários JSON brutos, um por página.
+            tipo_consulta: ``"Acordao"`` ou ``"DecisaoMonocratica"``.
 
-        Returns:
-            List of flat dicts.
+        Retorno:
+            Lista de dicionários planos.
         """
         return cjsg_parse(resultados_brutos, tipo_consulta=tipo_consulta)
 
@@ -128,11 +135,13 @@ class TJMTScraper(HTTPScraper):
         tamanho_pagina: int = 10,
         data_julgamento_inicio: str | None = None,
         data_julgamento_fim: str | None = None,
+        data_publicacao_inicio: str | None = None,
+        data_publicacao_fim: str | None = None,
         **kwargs,
     ) -> pd.DataFrame:
-        """Search TJMT jurisprudence (download + parse).
+        """Pesquisa jurisprudência do TJMT, baixando e analisando os resultados.
 
-        Returns a ready-to-analyze DataFrame.
+        Retorna um DataFrame pronto para análise.
 
         Aliases deprecados:
             * ``quantidade_por_pagina`` -> ``tamanho_pagina``
@@ -149,9 +158,11 @@ class TJMTScraper(HTTPScraper):
             tamanho_pagina=tamanho_pagina,
             data_julgamento_inicio=data_julgamento_inicio,
             data_julgamento_fim=data_julgamento_fim,
+            data_publicacao_inicio=data_publicacao_inicio,
+            data_publicacao_fim=data_publicacao_fim,
             **kwargs,
         )
         dados = self.cjsg_parse(brutos, tipo_consulta=tipo_consulta)
-        df = pd.DataFrame(dados)
-        coerce_date_columns(df, ["data_julgamento", "data_publicacao"])
+        df = pd.DataFrame(dados, columns=CJSG_COLUMNS)
+        coerce_tjmt_date_columns(df)
         return df
