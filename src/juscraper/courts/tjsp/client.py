@@ -17,6 +17,7 @@ from ...utils.params import (
     pop_deprecated_alias,
     validate_intervalo_datas,
 )
+from .._esaj.acordao import EsajAcordaoScraper
 from .._esaj.base import ESAJ_JANELA_ANOS, EsajSearchScraper, somar_contagens_por_janela
 from .cjpg_download import cjpg_download as cjpg_download_mod
 from .cjpg_download import fetch_cjpg_first_page
@@ -91,11 +92,13 @@ def _resolve_cjsg_pesquisa(pesquisa: str | None, kwargs: dict) -> str:
     return resolvida
 
 
-class TJSPScraper(EsajSearchScraper):
+class TJSPScraper(EsajAcordaoScraper):
     """Main scraper for TJSP — eSAJ web + api.tjsp.jus.br."""
 
     BASE_URL = "https://esaj.tjsp.jus.br/"
     TRIBUNAL_NAME = "TJSP"
+    CPOSG_PATH = "cposg/"
+    MOVIMENTACOES_AJAX = True
     INPUT_CJSG = InputCJSGTJSP
     INPUT_CJPG = InputCJPGTJSP
     CJSG_CHROME_UA = True

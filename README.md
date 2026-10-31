@@ -55,7 +55,7 @@ dados.head()
 | Tribunal | Funcionalidades Disponíveis |
 |----------|-----------------------------|
 | STF      | contar_decisoes, listar_decisoes |
-| TJAC     | cjsg |
+| TJAC     | cjsg, baixar_acordao, baixar_acordaos |
 | TJAL     | cjsg |
 | TJAM     | cjsg |
 | TJAP     | cjsg ⚠️ |
@@ -78,7 +78,7 @@ dados.head()
 | TJRR     | cjsg |
 | TJRS     | cjsg |
 | TJSC     | cjsg |
-| TJSP     | cpopg, cposg, cjsg, cjpg |
+| TJSP     | cpopg, cposg, cjsg, cjpg, baixar_acordao, baixar_acordaos |
 | TJTO     | cjsg, cjpg, cjsg_ementa |
 | TRF1     | cpopg |
 | TRF3     | cpopg, cjsg |

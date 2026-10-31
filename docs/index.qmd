@@ -59,7 +59,7 @@ Most courts implement some of the methods below; the tables in the Implementatio
 | Court | Available methods |
 |-------|-------------------|
 | STF   | contar_decisoes, listar_decisoes |
-| TJAC  | cjsg |
+| TJAC  | cjsg, baixar_acordao, baixar_acordaos |
 | TJAL  | cjsg |
 | TJAM  | cjsg |
 | TJAP  | cjsg ⚠️ |
@@ -82,7 +82,7 @@ Most courts implement some of the methods below; the tables in the Implementatio
 | TJRR  | cjsg |
 | TJRS  | cjsg |
 | TJSC  | cjsg |
-| TJSP  | cpopg, cposg, cjsg, cjpg |
+| TJSP  | cpopg, cposg, cjsg, cjpg, baixar_acordao, baixar_acordaos |
 | TJTO  | cjsg, cjpg, cjsg_ementa |
 | TRF1  | cpopg |
 | TRF3  | cpopg, cjsg |

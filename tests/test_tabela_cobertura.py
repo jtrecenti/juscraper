@@ -55,8 +55,8 @@ def test_e_stub(nome, esperado):
 
 def test_heranca_e_stubs_na_cobertura():
     grupos = tabela_cobertura.cobertura()
-    # TJAC herda o cjsg da base eSAJ e não tem consulta processual.
-    assert grupos["tribunais"]["tjac"] == ["cjsg"]
+    # TJAC herda o cjsg da base eSAJ e o download de acórdão da base de movimentação; não tem consulta processual.
+    assert grupos["tribunais"]["tjac"] == ["cjsg", "baixar_acordao", "baixar_acordaos"]
     # TJMG implementa cposg; o cpopg dele é stub.
     assert grupos["tribunais"]["tjmg"] == ["cposg", "cjsg"]
     # TRF1 recebe o cpopg da base ``_trf``.

@@ -14,7 +14,12 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- TJAC e TJSP: `baixar_acordao(processo, data_julgamento)` baixa o PDF do inteiro teor do acórdão de uma linha do `cjsg`, sem login e sem captcha, e devolve o caminho do arquivo; `baixar_acordaos(df)` faz o mesmo para cada linha de um DataFrame do `cjsg` e acrescenta as colunas `caminho_acordao` e `motivo_falha`, com um único `UserWarning` ao fim quando alguma linha falha. A rota é a da movimentação do processo na consulta de 2º grau, a mesma de `tjsp_baixar_acordaos_cposg` no pacote R `tjsp`, de José de Jesus Filho (jjesusfilho). Quando o processo tem mais de um acórdão (apelação e embargos, por exemplo), vale o primeiro documento de acórdão com data de movimentação igual ou posterior a `data_julgamento`. O PDF sai como o tribunal o publica; a extração de texto fica com quem usa a biblioteca. Processo fora da consulta pública (número inexistente ou em segredo de justiça, que o eSAJ não distingue) levanta `ProcessoNaoEncontradoError`; processo sem acórdão acessível na data, `AcordaoNaoEncontradoError`; resposta que não começa por `%PDF`, `RespostaNaoPdfError`, sem gravar arquivo; página fora do formato conhecido, `RespostaInesperadaError`. Todos herdam de `AcordaoIndisponivelError`, em `juscraper.courts._esaj.acordao`. Refs #463, #464.
 - TJSP: `cjpg_download`, `cpopg_download` e `cposg_download` aceitam o parâmetro opcional `diretorio` para definir o diretório de download por chamada.
+
+### Removed
+
+- TJSP: o módulo interno `juscraper.courts.tjsp.acordao_download` (`download_acordao`), que nenhum método público usava. Ele baixava pelo `cjsg/getArquivo.do`, que exige login no eSAJ; `baixar_acordao` o substitui sem login.
 
 ### Fixed
 
