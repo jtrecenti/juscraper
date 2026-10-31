@@ -29,6 +29,7 @@ import requests
 from ._util import (
     TJSP_CHROME_HEADERS,
     build_session,
+    capture_acordao_samples,
     capture_cjsg_samples,
     dump,
     make_tjsp_cjpg_params,
@@ -292,6 +293,41 @@ def capture_cposg_api(cnj: str) -> None:
     print(f"[tjsp] cposg api search/numproc/{id_clean} → saved")
 
 
+# ---------- acordao (movimentacao) --------------------------------------
+
+# Apelação julgada em 21/09/2026 com dois embargos (incidentes 50000 e 50001,
+# cada um com cdProcesso próprio no modal). O cjsg dá 28/10/2026 para o
+# acórdão dos embargos 50000, registrado em 30/10; 22/09/2026 passa pelas
+# certidões antes de chegar a ele.
+ACORDAO_CASOS = [
+    ("modal_incidentes", "1502870-48.2020.8.26.0161", "21/09/2026"),
+    ("modal_incidentes", "1502870-48.2020.8.26.0161", "22/09/2026"),
+    ("modal_incidentes", "1502870-48.2020.8.26.0161", "28/10/2026"),
+]
+
+
+def capture_acordao() -> None:
+    """Capture the acórdão route, plus the page for a document not yet listed.
+
+    ``verificarAcessoMovimentacao.do`` só libera documento que a sessão já
+    listou; sem as movimentações carregadas ele devolve uma página HTML.
+    """
+    capture_acordao_samples("tjsp", ACORDAO_CASOS)
+    cnj = "1502870-48.2020.8.26.0161"
+    session = build_session(headers=TJSP_CHROME_HEADERS)
+    session.get(f"{ESAJ_BASE}cposg/search.do", params={
+        "conversationId": "", "paginaConsulta": "1", "localPesquisa.cdLocal": "-1",
+        "cbPesquisa": "NUMPROC", "tipoNuProcesso": "UNIFICADO",
+        "numeroDigitoAnoUnificado": cnj[:15], "foroNumeroUnificado": cnj[-4:],
+        "dePesquisaNuUnificado": cnj, "dePesquisa": "", "uuidCaptcha": "", "pbEnviar": "Pesquisar",
+    }, timeout=60)
+    r = session.get(f"{ESAJ_BASE}cposg/verificarAcessoMovimentacao.do", params={
+        "cdDocumento": "16", "origemRecurso": "M", "cdProcesso": "RI009HVDD0000", "conversationId": "",
+    }, timeout=60)
+    dump(samples_dir_for("tjsp", "acordao") / "verificar_acesso_nao_listado.html", r.content)
+    print("[tjsp] acordao: verificarAcesso sem movimentações carregadas → saved")
+
+
 # ---------- orchestrator -------------------------------------------------
 
 def main() -> None:
@@ -301,7 +337,7 @@ def main() -> None:
         "--skip",
         nargs="*",
         default=[],
-        choices=["cjsg", "cjpg", "cpopg_html", "cpopg_api", "cposg_html", "cposg_api"],
+        choices=["cjsg", "cjpg", "cpopg_html", "cpopg_api", "cposg_html", "cposg_api", "acordao"],
         help="Flows to skip",
     )
     args = parser.parse_args()
@@ -313,6 +349,7 @@ def main() -> None:
         ("cpopg_api", lambda: capture_cpopg_api(args.cnj)),
         ("cposg_html", lambda: capture_cposg_html(args.cnj)),
         ("cposg_api", lambda: capture_cposg_api(args.cnj)),
+        ("acordao", capture_acordao),
     ]
     for name, fn in flows:
         if name in args.skip:

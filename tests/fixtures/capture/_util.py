@@ -14,8 +14,12 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from pathlib import Path
+from urllib.parse import parse_qs, urlparse
 
 import requests
+
+import juscraper as jus
+from juscraper.courts._esaj.acordao import AcordaoIndisponivelError
 
 ESAJ_HEADERS = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -331,3 +335,59 @@ def capture_cjsg_samples(
     print(f"[{tribunal}] no_results ({no_results_query!r}) → saved")
 
     print(f"[{tribunal}] ALL samples written to {dest}")
+
+
+def capture_acordao_samples(
+    tribunal: str,
+    casos: Iterable[tuple[str, str, str]],
+) -> None:
+    """Capture the movimentação route of ``baixar_acordao`` for each case.
+
+    Runs the real ``jus.scraper(tribunal).baixar_acordao`` with a response
+    hook that dumps every page to ``tests/<tribunal>/samples/acordao/<cenario>/``
+    under a deterministic name, so the contract tests can register the same
+    URLs offline. ``casos`` is ``(cenario, cnj, data_julgamento)``. The PDF
+    itself is not saved: the tests only need a body starting with ``%PDF``.
+    Expected failures (``AcordaoIndisponivelError``) are printed, since some
+    cases exist to capture the error pages.
+    """
+    for cenario, cnj, data_julgamento in casos:
+        dest = samples_dir_for(tribunal, f"acordao/{cenario}")
+        paginas: dict[str, int] = {}
+        ultimo_documento: list[str] = []
+
+        def _gravar(
+            resposta: requests.Response,
+            *_args: object,
+            _dest: Path = dest,
+            _paginas: dict[str, int] = paginas,
+            _ultimo: list[str] = ultimo_documento,
+            **_kwargs: object,
+        ) -> None:
+            url = urlparse(resposta.request.url or "")
+            query = {k: v[0] for k, v in parse_qs(url.query).items()}
+            rota = url.path.rsplit("/", 1)[-1]
+            if rota == "search.do":
+                nome = "search.html"
+            elif rota == "show.do":
+                nome = f"show_{query['processo.codigo']}.html"
+            elif rota == "carregarMovimentacoesAjax.do":
+                cd = query["cdProcesso"]
+                indice = _paginas[cd] = _paginas.get(cd, -1) + 1
+                nome = f"movimentacoes_{cd}_{indice}.html"
+            elif rota == "verificarAcessoMovimentacao.do":
+                _ultimo[:] = [query["cdDocumento"]]
+                nome = f"verificar_acesso_{query['cdProcesso']}_{query['cdDocumento']}.html"
+            elif rota == "abrirDocumentoEdt.do":
+                nome = f"pasta_{query['cdProcesso']}_{_ultimo[0]}.html"
+            else:
+                return
+            dump(_dest / nome, resposta.content)
+
+        scraper = jus.scraper(tribunal)
+        scraper.session.hooks["response"].append(_gravar)
+        try:
+            caminho = scraper.baixar_acordao(cnj, data_julgamento)
+            print(f"[{tribunal}] acordao/{cenario}: {cnj} {data_julgamento} -> {caminho}")
+        except AcordaoIndisponivelError as erro:
+            print(f"[{tribunal}] acordao/{cenario}: {cnj} {data_julgamento} -> {type(erro).__name__}: {erro}")

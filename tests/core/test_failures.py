@@ -68,6 +68,7 @@ def test_vocabulario_publicado():
     assert COLUNA_MOTIVO_FALHA == "motivo_falha"
     assert set(MOTIVOS_FALHA) == {
         "http_<status>", "retry_esgotado_<status>", "timeout", "conexao", "json_invalido", "nao_encontrado",
+        "sem_acordao", "nao_pdf", "resposta_inesperada", "entrada_invalida",
     }
 
 

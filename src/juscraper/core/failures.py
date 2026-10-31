@@ -31,6 +31,21 @@ dizer "não encontrado": uma lista de documentos vazia se confundiria com
 processo sem peças. Entra no aviso agregado como os demais motivos.
 """
 
+MOTIVO_SEM_ACORDAO = "sem_acordao"
+"""Processo encontrado, mas sem documento de acórdão acessível na data pedida.
+
+Usado pelo download do inteiro teor pela movimentação do eSAJ.
+"""
+
+MOTIVO_NAO_PDF = "nao_pdf"
+"""O servidor respondeu ao pedido de PDF com outra coisa; nada foi gravado."""
+
+MOTIVO_RESPOSTA_INESPERADA = "resposta_inesperada"
+"""Página HTML fora do formato conhecido, no lugar da que o fluxo espera."""
+
+MOTIVO_ENTRADA_INVALIDA = "entrada_invalida"
+"""A linha de entrada não traz um valor utilizável (número CNJ, data); nada foi pedido à fonte."""
+
 MOTIVOS_FALHA: tuple[str, ...] = (
     "http_<status>",
     "retry_esgotado_<status>",
@@ -38,6 +53,10 @@ MOTIVOS_FALHA: tuple[str, ...] = (
     "conexao",
     "json_invalido",
     MOTIVO_NAO_ENCONTRADO,
+    MOTIVO_SEM_ACORDAO,
+    MOTIVO_NAO_PDF,
+    MOTIVO_RESPOSTA_INESPERADA,
+    MOTIVO_ENTRADA_INVALIDA,
 )
 """Valores possíveis de :data:`COLUNA_MOTIVO_FALHA`; ``<status>`` é o código HTTP."""
 
