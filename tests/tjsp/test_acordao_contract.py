@@ -9,13 +9,17 @@ documento 16), os embargos 50000 (``RI009HVDD12KW``, acórdão registrado em
 ``carregarMovimentacoesAjax.do``, paginado por cursor.
 """
 
+import copy
+import itertools
 import logging
 import re
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 import pytest
+import requests
 import responses
+from bs4 import BeautifulSoup
 
 import juscraper as jus
 from juscraper.courts._esaj.acordao import RespostaInesperadaError
@@ -179,12 +183,18 @@ def test_pagina_vazia_que_anuncia_outra_para_a_paginacao(tmp_path, mocker):
 def test_empate_de_data_entre_incidentes_fica_com_o_primeiro_da_busca_e_avisa(tmp_path, mocker, caplog):
     # A monocrática responde com as páginas reais dos embargos: os dois
     # incidentes ficam com acórdão em 30/10, o empate que a data não resolve.
+    # A última linha real (07/10, sem documento) repetida no topo desloca o
+    # acórdão da monocrática para ``ordem`` 1: comparar ``ordem`` entre
+    # incidentes escolheria a monocrática, e a regra escolhe os embargos.
     mocker.patch("time.sleep")
     pasta = Path(__file__).parent / "samples" / "acordao" / "modal_incidentes"
     html = "text/html;charset=UTF-8"
+    pagina = BeautifulSoup((pasta / f"movimentacoes_{EMBARGOS}_0.html").read_text(encoding="utf-8"), "html.parser")
+    linhas = pagina.select("tr.movimentacaoProcesso")
+    linhas[0].insert_before(copy.copy(linhas[-1]))
     responses.add(
         responses.GET, f"{BASE}cposg/carregarMovimentacoesAjax.do", content_type=html,
-        body=(pasta / f"movimentacoes_{EMBARGOS}_0.html").read_bytes(),
+        body=str(pagina),
         match=[responses.matchers.query_param_matcher({"cdProcesso": MONOCRATICA})],
     )
     responses.add(
@@ -206,13 +216,63 @@ def test_empate_de_data_entre_incidentes_fica_com_o_primeiro_da_busca_e_avisa(tm
 
 
 @responses.activate
+def test_falha_de_rede_na_checagem_do_empate_nao_custa_o_acordao_escolhido(tmp_path, mocker):
+    mocker.patch("time.sleep")
+    pasta = Path(__file__).parent / "samples" / "acordao" / "modal_incidentes"
+    responses.add(
+        responses.GET, f"{BASE}cposg/carregarMovimentacoesAjax.do", content_type="text/html;charset=UTF-8",
+        body=(pasta / f"movimentacoes_{EMBARGOS}_0.html").read_bytes(),
+        match=[responses.matchers.query_param_matcher({"cdProcesso": MONOCRATICA})],
+    )
+    responses.add(
+        responses.GET, f"{BASE}cposg/verificarAcessoMovimentacao.do", body=requests.ConnectionError("sem rede"),
+        match=[responses.matchers.query_param_matcher({"cdProcesso": MONOCRATICA}, strict_match=False)],
+    )
+    registrar_rota_acordao("tjsp", "modal_incidentes", BASE, "cposg/")
+    tjsp = jus.scraper("tjsp", download_path=str(tmp_path))
+
+    caminho = tjsp.baixar_acordao(CNJ, "28/10/2026")
+
+    assert caminho.endswith(f"_{EMBARGOS}_12.pdf")
+    assert Path(caminho).exists()
+
+
+@responses.activate
+def test_documento_com_senha_no_mesmo_dia_em_outro_incidente_avisa(tmp_path, mocker, caplog):
+    mocker.patch("time.sleep")
+    pasta = Path(__file__).parent / "samples" / "acordao" / "modal_incidentes"
+    responses.add(
+        responses.GET, f"{BASE}cposg/carregarMovimentacoesAjax.do", content_type="text/html;charset=UTF-8",
+        body=(pasta / f"movimentacoes_{EMBARGOS}_0.html").read_bytes(),
+        match=[responses.matchers.query_param_matcher({"cdProcesso": MONOCRATICA})],
+    )
+    responses.add(
+        responses.GET, f"{BASE}cposg/verificarAcessoMovimentacao.do", status=403,
+        body=load_sample("tjac", "acordao/dois_acordaos/verificar_acesso_P0000213J0000_10.html"),
+        match=[responses.matchers.query_param_matcher({"cdProcesso": MONOCRATICA}, strict_match=False)],
+    )
+    registrar_rota_acordao("tjsp", "modal_incidentes", BASE, "cposg/")
+    tjsp = jus.scraper("tjsp", download_path=str(tmp_path))
+
+    with caplog.at_level(logging.WARNING, logger="juscraper.courts._esaj.acordao"):
+        caminho = tjsp.baixar_acordao(CNJ, "28/10/2026")
+
+    assert caminho.endswith(f"_{EMBARGOS}_12.pdf")
+    assert f"o incidente {MONOCRATICA} tem documento com senha em 30/10/2026" in caplog.text
+
+
+@responses.activate
 def test_sleep_time_separa_cada_pedido_da_linha(tmp_path, mocker):
     dormir = mocker.patch("time.sleep")
-    mocker.patch("juscraper.courts._esaj.acordao.time.monotonic", return_value=100.0)
+    # Relógio que anda 0,1 s a cada leitura: entre o carimbo de um pedido e a
+    # conferência do seguinte passam 0,1 s, e a espera só completa os 0,4 s restantes.
+    relogio = itertools.count(100.0, 0.1)
+    mocker.patch("juscraper.courts._esaj.acordao.time.monotonic", side_effect=lambda: next(relogio))
     registrar_rota_acordao("tjsp", "modal_incidentes", BASE, "cposg/")
     tjsp = jus.scraper("tjsp", download_path=str(tmp_path), sleep_time=0.5)
 
     tjsp.baixar_acordao(CNJ, "28/10/2026")
 
-    # Relógio parado: cada pedido depois do primeiro espera o ``sleep_time`` inteiro.
-    assert [c.args for c in dormir.call_args_list] == [(0.5,)] * (len(responses.calls) - 1)
+    esperas = [c.args[0] for c in dormir.call_args_list]
+    assert len(esperas) == len(responses.calls) - 1
+    assert esperas == pytest.approx([0.4] * len(esperas))

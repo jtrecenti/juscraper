@@ -303,6 +303,13 @@ def _como_cnj(valor: object) -> str:
     return format_cnj(str(valor))
 
 
+# O que a checagem de empate entre incidentes engole: ela roda depois do PDF gravado.
+_FALHAS_DA_CHECAGEM_DE_EMPATE: tuple[type[BaseException], ...] = (
+    AcordaoIndisponivelError,
+    *EXCECOES_DE_FALHA_POR_LINHA,
+)
+
+
 class EsajAcordaoScraper(EsajSearchScraper):
     """Base eSAJ que baixa o PDF do acórdão a partir de linhas do cjsg; ver o docstring do módulo.
 
@@ -323,8 +330,9 @@ class EsajAcordaoScraper(EsajSearchScraper):
 
     def _get_cposg(self, url: str, **kwargs: Any) -> requests.Response:
         # ``sleep_time`` separa pedidos, não linhas: um acórdão do TJSP pede busca,
-        # show, páginas de movimentação e pasta de cada candidata. O tempo da
-        # própria resposta conta na espera, que só completa o que falta.
+        # show, páginas de movimentação e pasta de cada candidata. A espera conta
+        # do fim do pedido anterior e só completa o que falta: o processamento
+        # entre um pedido e outro abate dela, o tempo de resposta não.
         if self._ultimo_pedido_cposg is not None and self.sleep_time:
             espera = self.sleep_time - (time.monotonic() - self._ultimo_pedido_cposg)
             if espera > 0:
@@ -402,8 +410,13 @@ class EsajAcordaoScraper(EsajSearchScraper):
                     mov.cd_documento,
                     f"{data:%d/%m/%Y}",
                 )
-            self._avisar_empate_entre_incidentes(cnj, mov, candidatas[posicao + 1 :])
-            return self._gravar_pdf(cnj, mov, parametros, diretorio)
+            caminho = self._gravar_pdf(cnj, mov, parametros, diretorio)
+            # Depois de gravar: os pedidos do aviso não podem custar o acórdão já escolhido.
+            try:
+                self._avisar_empate_entre_incidentes(cnj, mov, candidatas[posicao + 1 :])
+            except _FALHAS_DA_CHECAGEM_DE_EMPATE as erro:
+                logger.debug("%s: checagem de empate entre incidentes falhou: %s", cnj, erro)
+            return caminho
         mensagem = (
             f"nenhum documento de acórdão acessível nas movimentações a partir de "
             f"{data:%d/%m/%Y} ({len(candidatas)} documento(s) olhado(s))."
@@ -545,12 +558,19 @@ class EsajAcordaoScraper(EsajSearchScraper):
                 return
             if mov.cd_processo == escolhido.cd_processo:
                 continue
-            try:
-                outro_acordao = bool(self._parametros_do_acordao(cnj, mov))
-            except RespostaInesperadaError as erro:  # o aviso não derruba o download já escolhido
-                logger.debug("%s", erro)
-                continue
-            if outro_acordao:
+            parametros = self._parametros_do_acordao(cnj, mov)
+            if parametros is None:
+                logger.warning(
+                    "%s: o incidente %s tem documento com senha em %s (documento %s), que pode ser outro "
+                    "acórdão do dia; devolvido o do incidente %s (documento %s), listado antes na busca.",
+                    cnj,
+                    mov.cd_processo,
+                    f"{mov.data:%d/%m/%Y}",
+                    mov.cd_documento,
+                    escolhido.cd_processo,
+                    escolhido.cd_documento,
+                )
+            elif parametros:
                 logger.warning(
                     "%s: o incidente %s também tem acórdão em %s (documento %s); devolvido o do incidente %s "
                     "(documento %s), listado antes na busca.",
