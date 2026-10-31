@@ -171,6 +171,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </ul></li>
   <li><a href="#auto-chunking-esaj-family" id="toc-auto-chunking-esaj-family" class="nav-link" data-scroll-target="#auto-chunking-esaj-family">Auto-chunking (eSAJ family)</a></li>
   <li><a href="#pre-scraping-count-count_only" id="toc-pre-scraping-count-count_only" class="nav-link" data-scroll-target="#pre-scraping-count-count_only">Pre-scraping count (<code>count_only</code>)</a></li>
+  <li><a href="#full-text-of-acórdãos-esaj" id="toc-full-text-of-acórdãos-esaj" class="nav-link" data-scroll-target="#full-text-of-acórdãos-esaj">Full text of acórdãos (eSAJ)</a></li>
   <li><a href="#normalization-utilities" id="toc-normalization-utilities" class="nav-link" data-scroll-target="#normalization-utilities">Normalization Utilities</a></li>
   <li><a href="#rate-limiting-and-retry-behaviour" id="toc-rate-limiting-and-retry-behaviour" class="nav-link" data-scroll-target="#rate-limiting-and-retry-behaviour">Rate limiting and retry behaviour</a></li>
   </ul>
@@ -523,6 +524,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Tribunals not yet wired reject <code>count_only</code> via <code>extra="forbid"</code> (<code>TypeError</code>).</li>
 </ul>
 <p>The underlying helpers <code>cjsg_n_results(html)</code> and <code>cjpg_n_results(html)</code> are exposed from <code>juscraper.courts._esaj.parse</code> and <code>juscraper.courts.tjsp.cjpg_parse</code> for callers that already hold the raw HTML.</p>
+</section>
+<section id="full-text-of-acórdãos-esaj" class="level2">
+<h2 class="anchored" data-anchor-id="full-text-of-acórdãos-esaj">Full text of acórdãos (eSAJ)</h2>
+<p><code>cjsg</code> returns the ementa and <code>cd_acordao</code>, not the full decision. In TJAC and TJSP, <code>baixar_acordao(processo, data_julgamento)</code> downloads the PDF of the acórdão and returns its path; <code>baixar_acordaos(df)</code> does the same for each row of a <code>cjsg</code> DataFrame and adds <code>caminho_acordao</code> and <code>motivo_falha</code>:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>tjsp <span class="op">=</span> jus.scraper(<span class="st">"tjsp"</span>)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjsp.cjsg(<span class="st">"dano moral"</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjsp.baixar_acordaos(df)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>df[[<span class="st">"processo"</span>, <span class="st">"data_julgamento"</span>, <span class="st">"caminho_acordao"</span>, <span class="st">"motivo_falha"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The direct route of the <code>cjsg</code> (<code>cjsg/getArquivo.do</code>) asks for a login in TJSP and for a reCAPTCHA in TJAC. These methods follow the process movements in the second-degree consultation instead, as the R package <a href="https://github.com/jjesusfilho/tjsp"><code>tjsp</code></a> by José de Jesus Filho does in <code>tjsp_baixar_acordaos_cposg</code>: no login and no captcha.</p>
+<ul>
+<li><strong>Which acórdão.</strong> A process may have more than one (the appeal and its embargos de declaração, often with their own <code>cdProcesso</code>). The method takes the first document whose type is an acórdão and whose movement date is on or after <code>data_julgamento</code>. The movement comes on the judgment day or a few days later, and the next acórdão of the same process comes after it.</li>
+<li><strong>What is returned.</strong> The PDF as the court publishes it, at <code>&lt;diretorio&gt;/acordaos/&lt;cnj&gt;_&lt;cdProcesso&gt;_&lt;cdDocumento&gt;.pdf</code>. Text extraction is left to the caller. Long PDFs (100 pages and more in criminal chambers of TJSP) are a single acórdão with long votes, not a wider range of the case file.</li>
+<li><strong>Errors.</strong> <code>ProcessoNaoEncontradoError</code> when the public consultation does not show the process: eSAJ answers the same way for a number that does not exist and for a process under judicial secrecy. <code>AcordaoNaoEncontradoError</code> when no acórdão is accessible from that date; the message counts the documents that asked for the process password. <code>RespostaNaoPdfError</code> when the PDF endpoint answers with something else (nothing is written). <code>RespostaInesperadaError</code> when a page is not in the known format. <code>EntradaInvalidaError</code>, a <code>ValueError</code>, when <code>processo</code> does not have 20 digits or <code>data_julgamento</code> is empty (<code>None</code>, <code>NaN</code>, <code>NaT</code>), in an unknown format or impossible (31/02); no request is made. In <code>baixar_acordaos</code> these become the <code>motivo_falha</code> values <code>nao_encontrado</code>, <code>sem_acordao</code>, <code>nao_pdf</code>, <code>resposta_inesperada</code> and <code>entrada_invalida</code>. All exceptions are imported from <code>juscraper.courts._esaj.acordao</code>.</li>
+<li><strong>Password-protected documents.</strong> Documents that ask for the process password are skipped. If the acórdão of the requested date is one of them, the method returns the next acórdão of the process instead; a <code>logging</code> warning then says how many protected documents were skipped before the returned one.</li>
+</ul>
+<p>TJAL, TJAM, TJCE and TJMS do not have these methods yet.</p>
 </section>
 <section id="normalization-utilities" class="level2">
 <h2 class="anchored" data-anchor-id="normalization-utilities">Normalization Utilities</h2>
