@@ -331,9 +331,18 @@ movements in the second-degree consultation instead, as the R package
   the message counts the documents that asked for the process password.
   `RespostaNaoPdfError` when the PDF endpoint answers with something else
   (nothing is written). `RespostaInesperadaError` when a page is not in
-  the known format. In `baixar_acordaos` these become the `motivo_falha`
-  values `nao_encontrado`, `sem_acordao`, `nao_pdf` and
-  `resposta_inesperada`.
+  the known format. `EntradaInvalidaError`, a `ValueError`, when
+  `processo` does not have 20 digits or `data_julgamento` is empty (`None`,
+  `NaN`, `NaT`), in an unknown format or impossible (31/02); no request is
+  made. In `baixar_acordaos` these become the `motivo_falha` values
+  `nao_encontrado`, `sem_acordao`, `nao_pdf`, `resposta_inesperada` and
+  `entrada_invalida`. All exceptions are imported from
+  `juscraper.courts._esaj.acordao`.
+- **Password-protected documents.** Documents that ask for the process
+  password are skipped. If the acórdão of the requested date is one of
+  them, the method returns the next acórdão of the process instead; a
+  `logging` warning then says how many protected documents were skipped
+  before the returned one.
 
 TJAL, TJAM, TJCE and TJMS do not have these methods yet.
 

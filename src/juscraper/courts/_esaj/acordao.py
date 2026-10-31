@@ -31,6 +31,7 @@ acórdão seguinte do mesmo processo (embargos) vem depois deste.
 from __future__ import annotations
 
 import logging
+import math
 import re
 import time
 from dataclasses import dataclass
@@ -46,6 +47,7 @@ from bs4 import BeautifulSoup, Tag
 from ...core.failures import (
     COLUNA_MOTIVO_FALHA,
     EXCECOES_DE_FALHA_POR_LINHA,
+    MOTIVO_ENTRADA_INVALIDA,
     MOTIVO_NAO_ENCONTRADO,
     MOTIVO_NAO_PDF,
     MOTIVO_RESPOSTA_INESPERADA,
@@ -113,6 +115,18 @@ class RespostaInesperadaError(AcordaoIndisponivelError):
     """
 
     motivo = MOTIVO_RESPOSTA_INESPERADA
+
+
+class EntradaInvalidaError(ValueError):
+    """``processo`` ou ``data_julgamento`` da linha não servem para a consulta.
+
+    Herda de ``ValueError`` porque é erro de argumento em :meth:`EsajAcordaoScraper.baixar_acordao`;
+    :meth:`EsajAcordaoScraper.baixar_acordaos` o converte em linha de falha. Só a
+    validação deste módulo o levanta, então ``ValueError`` de outra origem não vira
+    motivo de linha.
+    """
+
+    motivo: ClassVar[str] = MOTIVO_ENTRADA_INVALIDA
 
 
 class _DocumentoRestritoError(Exception):
@@ -258,12 +272,34 @@ def _data_br(texto: str) -> date:
     return date(int(ano), int(mes), int(dia))
 
 
-def _como_data(valor: str | date) -> date:
+def _ausente(valor: object) -> bool:
+    """``None``, ``NaN``, ``NaT`` ou ``pd.NA``: a célula vazia do DataFrame do cjsg.
+
+    ``NaT`` vem antes de qualquer teste de tipo porque é instância de
+    ``datetime`` e quebraria no ``strftime`` de :func:`coerce_brazilian_date`.
+    """
+    return valor is None or valor is pd.NaT or valor is pd.NA or (isinstance(valor, float) and math.isnan(valor))
+
+
+def _como_data(valor: object) -> date:
     """``data_julgamento`` do usuário nos formatos de :func:`coerce_brazilian_date`."""
+    erro = EntradaInvalidaError(f"data_julgamento inválida: {valor!r}. Use DD/MM/AAAA ou date.")
+    if _ausente(valor):
+        raise erro
     convertida = coerce_brazilian_date(valor, "%d/%m/%Y")
     if not isinstance(convertida, str) or not re.fullmatch(r"\d{2}/\d{2}/\d{4}", convertida):
-        raise ValueError(f"data_julgamento inválida: {valor!r}. Use DD/MM/AAAA ou date.")
-    return _data_br(convertida)
+        raise erro
+    try:
+        return _data_br(convertida)
+    except ValueError as causa:  # data impossível, como 31/02
+        raise erro from causa
+
+
+def _como_cnj(valor: object) -> str:
+    """Número CNJ formatado; ``str`` ou ``int``, com ou sem máscara."""
+    if _ausente(valor) or len(clean_cnj(str(valor))) != 20:
+        raise EntradaInvalidaError(f"processo inválido: {valor!r}. Use o número CNJ de 20 dígitos.")
+    return format_cnj(str(valor))
 
 
 class EsajAcordaoScraper(EsajSearchScraper):
@@ -304,6 +340,9 @@ class EsajAcordaoScraper(EsajSearchScraper):
                 ``<diretorio>/acordaos/<cnj>_<cdProcesso>_<cdDocumento>.pdf``.
 
         Raises:
+            EntradaInvalidaError: ``processo`` sem 20 dígitos, ou
+                ``data_julgamento`` vazia (``None``, ``NaN``, ``NaT``), fora dos
+                formatos aceitos ou impossível (31/02). Herda de ``ValueError``.
             ProcessoNaoEncontradoError: Número inexistente ou processo em
                 segredo de justiça (o eSAJ não distingue os dois).
             AcordaoNaoEncontradoError: Nenhum documento de acórdão acessível a
@@ -321,9 +360,9 @@ class EsajAcordaoScraper(EsajSearchScraper):
             >>> caminho = tjsp.baixar_acordao("1001667-32.2025.8.26.0356", "13/10/2026")
         """
         data = _como_data(data_julgamento)
-        cnj = format_cnj(str(processo))
+        cnj = _como_cnj(processo)
         paginas = self._abrir_processo(cnj)
-        movimentacoes = [m for cd, html in paginas for m in self._carregar_movimentacoes(cd, html, data)]
+        movimentacoes = [m for cd, html in paginas for m in self._carregar_movimentacoes(cnj, cd, html, data)]
         candidatas = sorted(
             (m for m in movimentacoes if m.data >= data),
             key=lambda m: (m.data, -m.ordem),
@@ -343,6 +382,12 @@ class EsajAcordaoScraper(EsajSearchScraper):
             if tipo not in self.TIPOS_DOCUMENTO_ACORDAO:
                 logger.debug("%s: documento %s é %r, não acórdão.", cnj, mov.cd_documento, tipo)
                 continue
+            if restritos:
+                logger.warning(
+                    "%s: %d documento(s) com senha pulado(s) antes do documento %s; o acórdão devolvido "
+                    "pode não ser o da data %s, se o da data estava entre eles.",
+                    cnj, restritos, mov.cd_documento, f"{data:%d/%m/%Y}",
+                )
             return self._gravar_pdf(cnj, mov, parametros, diretorio)
         mensagem = (
             f"nenhum documento de acórdão acessível nas movimentações a partir de "
@@ -365,8 +410,9 @@ class EsajAcordaoScraper(EsajSearchScraper):
 
         Returns:
             pd.DataFrame: As linhas de entrada com ``caminho_acordao`` (``None``
-            quando falhou) e ``motivo_falha``. O motivo é ``nao_encontrado``,
-            ``sem_acordao``, ``nao_pdf``, ``resposta_inesperada`` ou um motivo de rede de
+            quando falhou) e ``motivo_falha``. O motivo é ``entrada_invalida``,
+            ``nao_encontrado``, ``sem_acordao``, ``nao_pdf``,
+            ``resposta_inesperada`` ou um motivo de rede de
             :data:`~juscraper.core.failures.MOTIVOS_FALHA`; as falhas saem
             também num único ``UserWarning`` ao fim.
         """
@@ -381,9 +427,9 @@ class EsajAcordaoScraper(EsajSearchScraper):
                 time.sleep(self.sleep_time)
             try:
                 caminho, motivo = self.baixar_acordao(linha.processo, linha.data_julgamento, diretorio), None
-            except AcordaoIndisponivelError as erro:
+            except (AcordaoIndisponivelError, EntradaInvalidaError) as erro:
                 caminho, motivo = None, erro.motivo
-                logger.info("%s", erro)
+                logger.info("%s: %s", linha.processo, erro)
             except EXCECOES_DE_FALHA_POR_LINHA as erro:
                 caminho, motivo = None, motivo_falha(erro)
                 logger.info("%s: %s", linha.processo, erro)
@@ -424,16 +470,21 @@ class EsajAcordaoScraper(EsajSearchScraper):
             for cd in codigos
         ]
 
-    def _carregar_movimentacoes(self, cd_processo: str, html_processo: str, desde: date) -> list[Movimentacao]:
+    def _carregar_movimentacoes(
+        self, cnj: str, cd_processo: str, html_processo: str, desde: date
+    ) -> list[Movimentacao]:
         """Movimentações com documento; no TJSP, pagina até passar de ``desde``.
 
         A listagem vem da mais nova para a mais antiga: quando uma página
-        termina antes de ``desde``, as seguintes não têm candidato.
+        termina antes de ``desde``, as seguintes não têm candidato. Página sem
+        linhas que anuncia outra, ou cursor repetido, levantam
+        :class:`RespostaInesperadaError`: seguir o cursor não avançaria.
         """
         if not self.MOVIMENTACOES_AJAX:
             return parse_movimentacoes(html_processo, cd_processo)
         movimentacoes: list[Movimentacao] = []
         cursor: str | None = None
+        vistos: set[str] = set()
         linhas = 0
         while True:
             params = {"cdProcesso": cd_processo, **({"cursor": cursor} if cursor else {})}
@@ -444,6 +495,14 @@ class EsajAcordaoScraper(EsajSearchScraper):
             cursor = parse_cursor(html)
             if cursor is None or (datas and min(datas) < desde):
                 return movimentacoes
+            if not datas or cursor in vistos:
+                problema = "veio sem movimentações e com" if not datas else "repetiu o"
+                raise RespostaInesperadaError(
+                    cnj,
+                    f"carregarMovimentacoesAjax.do do cdProcesso {cd_processo} {problema} cursor {cursor!r}; "
+                    "a paginação não avançaria.",
+                )
+            vistos.add(cursor)
 
     def _url_da_pasta(self, cnj: str, mov: Movimentacao) -> str | None:
         """URL da pasta digital do documento, ou ``None`` quando ele não abre sem senha."""

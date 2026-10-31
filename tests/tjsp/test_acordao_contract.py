@@ -9,6 +9,7 @@ documento 16), os embargos 50000 (``RI009HVDD12KW``, acórdão registrado em
 ``carregarMovimentacoesAjax.do``, paginado por cursor.
 """
 
+import re
 from urllib.parse import parse_qs, urlparse
 
 import pytest
@@ -101,3 +102,70 @@ def test_verificar_acesso_sem_url_para_em_vez_de_pular_para_outro_acordao(tmp_pa
 
     assert erro.value.motivo == "resposta_inesperada"
     assert not list(tmp_path.rglob("*.pdf"))
+
+
+_MOVIMENTACOES = "acordao/modal_incidentes/movimentacoes_RI009HVDD0000_{}.html"
+_LIMITE_DE_PAGINAS = 10
+
+
+def _registrar_paginacao(segunda_pagina: str) -> list[str]:
+    """Processo único (a apelação), com a página 1 real e ``segunda_pagina`` no cursor dela.
+
+    Devolve a lista em que cada pedido de movimentações deixa o cursor. Passado
+    :data:`_LIMITE_DE_PAGINAS`, o mock levanta ``AssertionError``: sem a parada,
+    o laço não terminaria.
+    """
+    primeira = load_sample("tjsp", _MOVIMENTACOES.format(0))
+    link_mais = re.search(r'linkMaisRecolherMovimentacoes"[^>]*data-cursor="([^"]+)"', primeira)
+    assert link_mais is not None
+    cursor_inicial = link_mais.group(1)
+    pedidos: list[str] = []
+
+    def _responder(request):
+        cursor = parse_qs(urlparse(request.url).query).get("cursor", [""])[0]
+        pedidos.append(cursor)
+        if len(pedidos) > _LIMITE_DE_PAGINAS:
+            raise AssertionError("a paginação de movimentações não parou")
+        corpo = primeira if not cursor else segunda_pagina.replace("CURSOR_INICIAL", cursor_inicial)
+        return 200, {"Content-Type": "text/html;charset=UTF-8"}, corpo
+
+    responses.add(
+        responses.GET,
+        f"{BASE}cposg/search.do",
+        body=load_sample("tjsp", f"acordao/modal_incidentes/show_{APELACAO}.html"),
+        content_type="text/html;charset=UTF-8",
+    )
+    responses.add_callback(responses.GET, f"{BASE}cposg/carregarMovimentacoesAjax.do", callback=_responder)
+    return pedidos
+
+
+@responses.activate
+def test_cursor_repetido_para_a_paginacao(tmp_path, mocker):
+    mocker.patch("time.sleep")
+    segunda = re.sub(
+        r'data-cursor="[^"]+"', 'data-cursor="CURSOR_INICIAL"', load_sample("tjsp", _MOVIMENTACOES.format(1))
+    )
+    pedidos = _registrar_paginacao(segunda)
+    tjsp = jus.scraper("tjsp", download_path=str(tmp_path))
+
+    with pytest.raises(RespostaInesperadaError, match=f"cdProcesso {APELACAO} repetiu o cursor") as erro:
+        tjsp.baixar_acordao(CNJ, "01/01/2000")
+
+    assert pedidos[1] in str(erro.value)
+    assert len(pedidos) == 2
+
+
+@responses.activate
+def test_pagina_vazia_que_anuncia_outra_para_a_paginacao(tmp_path, mocker):
+    mocker.patch("time.sleep")
+    vazia = (
+        '<table><tr id="metaPaginaMovimentacoes" style="display:none" '
+        'data-tem-mais-paginas="true" data-cursor="CURSOR_SEGUINTE"></tr></table>'
+    )
+    pedidos = _registrar_paginacao(vazia)
+    tjsp = jus.scraper("tjsp", download_path=str(tmp_path))
+
+    with pytest.raises(RespostaInesperadaError, match="veio sem movimentações e com cursor 'CURSOR_SEGUINTE'"):
+        tjsp.baixar_acordao(CNJ, "01/01/2000")
+
+    assert len(pedidos) == 2

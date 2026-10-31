@@ -43,6 +43,9 @@ MOTIVO_NAO_PDF = "nao_pdf"
 MOTIVO_RESPOSTA_INESPERADA = "resposta_inesperada"
 """Página HTML fora do formato conhecido, no lugar da que o fluxo espera."""
 
+MOTIVO_ENTRADA_INVALIDA = "entrada_invalida"
+"""A linha de entrada não traz um valor utilizável (número CNJ, data); nada foi pedido à fonte."""
+
 MOTIVOS_FALHA: tuple[str, ...] = (
     "http_<status>",
     "retry_esgotado_<status>",
@@ -53,6 +56,7 @@ MOTIVOS_FALHA: tuple[str, ...] = (
     MOTIVO_SEM_ACORDAO,
     MOTIVO_NAO_PDF,
     MOTIVO_RESPOSTA_INESPERADA,
+    MOTIVO_ENTRADA_INVALIDA,
 )
 """Valores possíveis de :data:`COLUNA_MOTIVO_FALHA`; ``<status>`` é o código HTTP."""
 

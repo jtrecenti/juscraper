@@ -7,6 +7,7 @@ embargos (julgados em 27/10/2026, movimentação de 28/10, documento 33, tipo
 "Embargos de Declaração"). As certidões entre os dois pedem senha.
 """
 
+import logging
 from datetime import date, datetime, timezone
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
@@ -19,6 +20,7 @@ import responses
 import juscraper as jus
 from juscraper.courts._esaj.acordao import (
     AcordaoNaoEncontradoError,
+    EntradaInvalidaError,
     ProcessoNaoEncontradoError,
     RespostaInesperadaError,
     RespostaNaoPdfError,
@@ -63,10 +65,11 @@ def test_baixa_acordao_da_apelacao_pela_data_de_julgamento(tjac, tmp_path):
 
 
 @responses.activate
-def test_pula_documentos_com_senha_e_aceita_acordao_de_embargos(tjac):
+def test_pula_documentos_com_senha_e_aceita_acordao_de_embargos(tjac, caplog):
     registrar_rota_acordao("tjac", "dois_acordaos", BASE, "cposg5/")
 
-    caminho = tjac.baixar_acordao(CNJ, "22/04/2026")
+    with caplog.at_level(logging.WARNING, logger="juscraper._esaj.acordao"):
+        caminho = tjac.baixar_acordao(CNJ, "22/04/2026")
 
     assert caminho.endswith(f"_{CD_PROCESSO}_33.pdf")
     verificados = [
@@ -74,6 +77,21 @@ def test_pula_documentos_com_senha_e_aceita_acordao_de_embargos(tjac):
     ]
     # Do mais antigo ao mais novo a partir da data; cada 403 de senha uma vez só, sem retry.
     assert verificados == ["10", "11", "12", "13", "14", "16", "17", "19", "20", "21", "22", "23", "27", "33"]
+    # O acórdão da data pode ser um dos documentos com senha: quem chama fica sabendo.
+    avisos = [r for r in caplog.records if r.levelno == logging.WARNING]
+    assert len(avisos) == 1
+    assert "documento(s) com senha pulado(s) antes do documento 33" in avisos[0].getMessage()
+    assert "pode não ser o da data 22/04/2026" in avisos[0].getMessage()
+
+
+@responses.activate
+def test_sem_documento_com_senha_antes_nao_avisa(tjac, caplog):
+    registrar_rota_acordao("tjac", "dois_acordaos", BASE, "cposg5/")
+
+    with caplog.at_level(logging.WARNING, logger="juscraper._esaj.acordao"):
+        tjac.baixar_acordao(CNJ, "13/04/2026")
+
+    assert not [r for r in caplog.records if r.levelno == logging.WARNING]
 
 
 @responses.activate
@@ -156,10 +174,40 @@ def test_baixar_acordaos_exige_colunas_do_cjsg(tjac):
         tjac.baixar_acordaos(pd.DataFrame({"processo": [CNJ]}))
 
 
-@pytest.mark.parametrize("data", ["2026-13-01", "ontem", 20260413])
+@pytest.mark.parametrize("data", ["2026-13-01", "ontem", 20260413, "31/02/2026", pd.NaT, float("nan"), None, ""])
 def test_data_de_julgamento_invalida(tjac, data):
-    with pytest.raises((ValueError, TypeError), match="data_julgamento"):
+    with pytest.raises(EntradaInvalidaError, match="data_julgamento inválida") as erro:
         tjac.baixar_acordao(CNJ, data)
+
+    assert erro.value.motivo == "entrada_invalida"
+    assert issubclass(EntradaInvalidaError, ValueError)
+
+
+@pytest.mark.parametrize("processo", [float("nan"), None, 700021982018801000, "0700021-98.2018.8.01"])
+def test_processo_invalido(tjac, processo):
+    with pytest.raises(EntradaInvalidaError, match="processo inválido"):
+        tjac.baixar_acordao(processo, "13/04/2026")
+
+
+@responses.activate
+def test_baixar_acordaos_registra_entrada_invalida_e_segue(tjac):
+    registrar_rota_acordao("tjac", "dois_acordaos", BASE, "cposg5/")
+    # O cjsg só grava o campo quando a página o traz: a célula vazia chega como NaN, None ou NaT.
+    cjsg = pd.DataFrame(
+        {
+            "processo": [float("nan"), CNJ, CNJ, CNJ],
+            "data_julgamento": ["13/04/2026", None, pd.NaT, "13/04/2026"],
+        }
+    )
+
+    with pytest.warns(UserWarning, match=r"3 download\(s\) de acórdão falharam.*nan: entrada_invalida"):
+        saida = tjac.baixar_acordaos(cjsg)
+
+    assert saida["motivo_falha"].tolist() == ["entrada_invalida"] * 3 + [None]
+    assert saida["caminho_acordao"].isna().tolist() == [True, True, True, False]
+    assert saida["caminho_acordao"].iloc[-1].endswith(f"_{CD_PROCESSO}_8.pdf")
+    # A linha válida foi a única a consultar o tribunal.
+    assert len(_chamadas("search.do")) == 1
 
 
 @pytest.mark.parametrize("data", [date(2026, 4, 13), datetime(2026, 4, 13, 10, 30, tzinfo=timezone.utc), "2026-04-13"])
@@ -184,6 +232,24 @@ def test_pagina_fora_do_formato_levanta_resposta_inesperada(tjac, rota, corpo, m
 
     with pytest.raises(RespostaInesperadaError, match=mensagem):
         tjac.baixar_acordao(CNJ, "13/04/2026")
+
+
+@responses.activate
+def test_url_da_pasta_em_outro_host_nao_e_seguida(tjac, tmp_path):
+    responses.add(
+        responses.GET,
+        f"{BASE}cposg5/verificarAcessoMovimentacao.do",
+        body="https://outro.host/pastadigital/abrirDocumentoEdt.do?cdDocumento=8",
+        content_type="text/html;charset=UTF-8",
+        match=[responses.matchers.query_param_matcher({"cdDocumento": "8"}, strict_match=False)],
+    )
+    registrar_rota_acordao("tjac", "dois_acordaos", BASE, "cposg5/")
+
+    with pytest.raises(RespostaInesperadaError, match="documento 8 não devolveu a URL"):
+        tjac.baixar_acordao(CNJ, "13/04/2026")
+
+    assert not [c for c in responses.calls if urlparse(c.request.url).hostname == "outro.host"]
+    assert not list(tmp_path.rglob("*.pdf"))
 
 
 @responses.activate
