@@ -228,3 +228,19 @@ def test_cjpg_tjsp_auto_chunk_janelas_de_calendario(fora_do_ar, n_ok, tmp_path, 
     assert janelas == [(f"01/01/{ano}", f"31/12/{ano}") for ano in range(2010, 2017)]
     assert len(df) == n_ok * 10
     assert df["id_processo"].nunique() == n_ok * 10
+
+
+@pytest.mark.parametrize("tribunal", ESAJ_PUROS)
+@responses.activate
+def test_cjsg_count_only_diz_qual_janela_falhou(tribunal, tmp_path, mocker):
+    """count_only para na primeira falha, e o erro diz que datas repetir."""
+    mocker.patch("time.sleep")
+    scraper = jus.scraper(tribunal, download_path=str(tmp_path))
+    _registrar_servidor_esaj(scraper.BASE_URL, tribunal, fora_do_ar="01/01/2013")
+
+    with pytest.raises(Exception) as exc_info:  # noqa: PT011 - o tipo é o do HTTP; o que importa é a nota
+        scraper.cjsg(
+            "dano moral", data_julgamento_inicio="01/01/2010", data_julgamento_fim="31/12/2016", count_only=True
+        )
+
+    assert "count_only: falhou a janela de 01/01/2013 a 31/12/2013." in exc_info.value.__notes__

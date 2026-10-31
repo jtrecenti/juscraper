@@ -27,6 +27,14 @@ class RetryExhaustedError(Exception):
             f"HTTP request failed after {attempts} attempts (last status: {status_code})"
         )
 
+    def __reduce__(self) -> tuple[type[RetryExhaustedError], tuple[int | None, int]]:
+        """Reconstrói o erro pelos argumentos do ``__init__``, não pela mensagem.
+
+        Sem isto, pickle chamaria ``__init__(mensagem)``. Isso quebraria o
+        pickle de :class:`ColetaParcialError` quando uma janela esgota os retries.
+        """
+        return (type(self), (self.status_code, self.attempts))
+
 
 class HTTPSemanticError(Exception):
     """Base para respostas HTTP-200 semanticamente erradas (página de erro disfarçada)."""

@@ -199,10 +199,11 @@ df = tjsp.cjsg(
 ```
 
 The behaviour is controlled by `auto_chunk: bool = True` (default on).
-With `auto_chunk=False`, any `data_julgamento_*` or `data_publicacao_*`
-interval the server would reject (end on or after the same date one year
-later) raises `ValueError` before any request — useful for input
-validation paths that want to fail before submitting a long job:
+With `auto_chunk=False`, a `data_julgamento_*` interval the server would
+reject (end on or after the same date one year later) raises `ValueError`
+before any request. This helps input validation paths that want to fail
+before submitting a long job. `data_publicacao_*` is never split, so the
+same check applies to it in either mode:
 
 ```python
 tjsp.cjsg(

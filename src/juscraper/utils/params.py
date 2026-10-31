@@ -380,7 +380,7 @@ def validate_intervalo_datas(
         )
 
     if max_anos is not None and dt_fim >= _limite_exclusivo_janela(dt_inicio, 0, max_anos):
-        dica = " ou mantenha auto_chunk=True (default)" if rotulo == "data_julgamento" else ""  # só julgamento divide
+        dica = " ou use cjsg()/cjpg() com auto_chunk=True (default)" if rotulo == "data_julgamento" else ""
         raise ValueError(
             f"{origem} aceita no máximo {max_anos} ano(s) entre '{rotulo}_inicio' e '{rotulo}_fim', com o fim "
             f"antes do aniversário do início (recebido: de {data_inicio} a {data_fim}). Divida a consulta em "

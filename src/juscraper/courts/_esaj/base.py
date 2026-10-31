@@ -98,6 +98,22 @@ def _skip_pesquisa_validation(pesquisa: str | None) -> None:
     """Default de ``validate_pesquisa`` em :func:`run_auto_chunk`: aceita qualquer termo."""
 
 
+def somar_contagens_por_janela(probe: Callable[[str | None, str | None], int], di: str, df_: str) -> int:
+    """Soma ``probe`` nas janelas do eSAJ e diz, no erro, qual janela falhou.
+
+    ``count_only`` para na primeira falha (contagem parcial nao tem uso), mas
+    sem a nota o usuario receberia um 404 cru sem saber que datas repetir.
+    """
+    total = 0
+    for win_i, win_f in iter_date_windows(di, df_, max_anos=ESAJ_JANELA_ANOS):
+        try:
+            total += probe(win_i, win_f)
+        except Exception as exc:
+            exc.add_note(f"count_only: falhou a janela de {win_i} a {win_f}.")
+            raise
+    return total
+
+
 def run_auto_chunk(
     *,
     method: Callable[..., Any],
@@ -124,7 +140,7 @@ def run_auto_chunk(
        resolvido a ``validate_pesquisa`` (default: aceita qualquer termo)
        antes de qualquer janela: um erro levantado dentro de uma janela seria engolido por
        :func:`run_chunked_search` como falha de janela, e o usuario
-       receberia resultado vazio com ``UserWarning`` em vez do erro.
+       receberia ``ColetaParcialError`` "N de N janelas" em vez do erro.
     5. Pop aliases + canonicals de data, monta ``extras`` (dates
        nao-julgamento sniffadas), valida o schema upfront para converter
        ``extra_forbidden`` em ``TypeError`` cedo.
@@ -575,7 +591,7 @@ class EsajSearchScraper(HTTPScraper):
         if not auto_chunk or di is None or df_ is None:
             return _probe(di, df_)
 
-        return sum(_probe(win_i, win_f) for win_i, win_f in iter_date_windows(di, df_, max_anos=ESAJ_JANELA_ANOS))
+        return somar_contagens_por_janela(_probe, di, df_)
 
     def cjsg_download(
         self,

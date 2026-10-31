@@ -259,7 +259,8 @@ class TestValidateIntervaloDatas:
 
     def test_max_anos_dica_de_auto_chunk_so_em_julgamento(self):
         # O auto-chunk só divide julgamento: sugeri-lo em publicação não ajudaria.
-        with pytest.raises(ValueError, match="auto_chunk=True"):
+        # A dica aponta para cjsg()/cjpg(), que é onde há auto-chunk; *_download não divide.
+        with pytest.raises(ValueError, match=r"use cjsg\(\)/cjpg\(\) com auto_chunk=True"):
             validate_intervalo_datas("01/01/2013", "01/01/2014", max_anos=1, rotulo="data_julgamento")
         with pytest.raises(ValueError) as exc_info:
             validate_intervalo_datas("01/01/2013", "01/01/2014", max_anos=1, rotulo="data_publicacao")
@@ -590,6 +591,19 @@ class TestRunChunkedSearch:
             assert str(clone) == "x"
             assert list(clone.resultado["cd_acordao"]) == ["a"]
             assert [(i, f, repr(exc)) for i, f, exc in clone.falhas] == [(i, f, repr(exc)) for i, f, exc in falhas]
+
+    def test_coleta_parcial_com_retry_esgotado_sobrevive_a_pickle(self):
+        # RetryExhaustedError é a falha mais comum de janela (5xx até o fim dos retries).
+        import pickle
+
+        from juscraper.core.exceptions import RetryExhaustedError
+        falhas: list[tuple[str | None, str | None, Exception]] = [
+            ("01/01/2013", "31/12/2013", RetryExhaustedError(503, 5)),
+        ]
+        clone = pickle.loads(pickle.dumps(ColetaParcialError("x", resultado=pd.DataFrame(), falhas=falhas)))
+        exc = clone.falhas[0][2]
+        assert isinstance(exc, RetryExhaustedError)
+        assert (exc.status_code, exc.attempts, str(exc)) == (503, 5, str(falhas[0][2]))
 
     def test_all_windows_fail_raises_with_empty_partial(self):
         def fetch(i, f):

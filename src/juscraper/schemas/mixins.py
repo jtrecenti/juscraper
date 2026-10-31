@@ -19,6 +19,7 @@ Atual:
   concretos).
 - :class:`OutputDataPublicacaoMixin` — coluna de Output (>= 9 parsers).
 """
+
 from __future__ import annotations
 
 from datetime import date
@@ -147,9 +148,9 @@ class CountOnlyMixin(BaseModel):
     **Fail-fast no auto-chunk** (divergencia deliberada do caminho normal):
     o caminho normal (:func:`juscraper.courts._esaj.base.run_auto_chunk`)
     tenta todas as janelas e levanta ``ColetaParcialError`` com o parcial.
-    ``count_only`` usa ``sum()``, e a primeira janela que falha aborta a
-    iteracao e propaga limpo. Contagem parcial nao tem uso, entao nao vale
-    carrega-la.
+    ``count_only`` para na primeira janela que falha e propaga o erro com
+    uma nota que diz qual janela foi. Contagem parcial nao tem uso, entao
+    nao vale carrega-la.
 
     Tribunais que ainda nao implementam ``count_only`` **nao devem herdar**
     deste mixin — ``extra='forbid'`` da classe concreta rejeita o flag com
