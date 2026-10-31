@@ -34,7 +34,7 @@ import logging
 import re
 import time
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date
 from pathlib import Path
 from typing import Any, ClassVar
 from urllib.parse import unquote_plus
@@ -260,10 +260,6 @@ def _data_br(texto: str) -> date:
 
 def _como_data(valor: str | date) -> date:
     """``data_julgamento`` do usuário nos formatos de :func:`coerce_brazilian_date`."""
-    if isinstance(valor, datetime):
-        return valor.date()
-    if isinstance(valor, date):
-        return valor
     convertida = coerce_brazilian_date(valor, "%d/%m/%Y")
     if not isinstance(convertida, str) or not re.fullmatch(r"\d{2}/\d{2}/\d{4}", convertida):
         raise ValueError(f"data_julgamento inválida: {valor!r}. Use DD/MM/AAAA ou date.")
@@ -289,8 +285,7 @@ class EsajAcordaoScraper(EsajSearchScraper):
 
     def _get_cposg(self, url: str, **kwargs: Any) -> requests.Response:
         headers = _CHROME_HEADERS if self.CJSG_CHROME_UA else _ESAJ_HEADERS
-        resposta: requests.Response = self._request_with_retry("GET", url, headers=headers, timeout=60, **kwargs)
-        return resposta
+        return self._request_with_retry("GET", url, headers=headers, timeout=60, **kwargs)
 
     def baixar_acordao(self, processo: str, data_julgamento: str | date, diretorio: str | None = None) -> str:
         """Baixa o PDF do acórdão de uma linha do cjsg pela movimentação do processo.

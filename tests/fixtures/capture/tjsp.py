@@ -315,11 +315,10 @@ def capture_acordao() -> None:
     capture_acordao_samples("tjsp", ACORDAO_CASOS)
     cnj = "1502870-48.2020.8.26.0161"
     session = build_session(headers=TJSP_CHROME_HEADERS)
-    num, resto = cnj.split("-")
     session.get(f"{ESAJ_BASE}cposg/search.do", params={
         "conversationId": "", "paginaConsulta": "1", "localPesquisa.cdLocal": "-1",
         "cbPesquisa": "NUMPROC", "tipoNuProcesso": "UNIFICADO",
-        "numeroDigitoAnoUnificado": f"{num}-{resto[:7]}", "foroNumeroUnificado": cnj[-4:],
+        "numeroDigitoAnoUnificado": cnj[:15], "foroNumeroUnificado": cnj[-4:],
         "dePesquisaNuUnificado": cnj, "dePesquisa": "", "uuidCaptcha": "", "pbEnviar": "Pesquisar",
     }, timeout=60)
     r = session.get(f"{ESAJ_BASE}cposg/verificarAcessoMovimentacao.do", params={
