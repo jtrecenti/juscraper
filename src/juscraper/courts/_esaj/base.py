@@ -48,6 +48,15 @@ from .schemas import InputCJSGEsajPuro
 
 logger = logging.getLogger("juscraper._esaj.base")
 
+# Janela do auto-chunk em anos de calendário. O eSAJ aceita
+# ``fim < inicio + 1 ano`` e responde 404 em ``trocaDePagina.do`` fora
+# disso (probe TJAC 2026-10: 01/01/2013-01/01/2014 falha; 01/03/2015-
+# 29/02/2016 passa). Em dias fixos o limite varia entre 364 e 365 conforme o
+# intervalo contenha 29/02, e 366 gerava janelas sempre recusadas. A mesma
+# regra trava ``auto_chunk=False`` e ``data_publicacao_*`` (probe TJAC 2026-10:
+# publicacao 01/01/2013-01/01/2014 tambem da 404).
+ESAJ_JANELA_ANOS = 1
+
 
 def _normalize_auto_chunk_dates(
     input_cls: type[BaseModel],
@@ -89,6 +98,22 @@ def _skip_pesquisa_validation(pesquisa: str | None) -> None:
     """Default de ``validate_pesquisa`` em :func:`run_auto_chunk`: aceita qualquer termo."""
 
 
+def somar_contagens_por_janela(probe: Callable[[str | None, str | None], int], di: str, df_: str) -> int:
+    """Soma ``probe`` nas janelas do eSAJ e diz, no erro, qual janela falhou.
+
+    ``count_only`` para na primeira falha (contagem parcial nao tem uso), mas
+    sem a nota o usuario receberia um 404 cru sem saber que datas repetir.
+    """
+    total = 0
+    for win_i, win_f in iter_date_windows(di, df_, max_anos=ESAJ_JANELA_ANOS):
+        try:
+            total += probe(win_i, win_f)
+        except Exception as exc:
+            exc.add_note(f"count_only: falhou a janela de {win_i} a {win_f}.")
+            raise
+    return total
+
+
 def run_auto_chunk(
     *,
     method: Callable[..., Any],
@@ -108,14 +133,14 @@ def run_auto_chunk(
     1. Pop ``auto_chunk`` (default ``True``) — se ``False``, retorna ``None``.
     2. Normaliza datas e emite uma vez o ``DeprecationWarning`` de cada
        alias; os caminhos seguintes recebem apenas nomes canonicos.
-    3. Se a janela cabe em ``max_dias=366``, retorna ``None`` (caller cai no
+    3. Se a janela cabe em :data:`ESAJ_JANELA_ANOS`, retorna ``None`` (caller cai no
        caminho noop).
     4. Normaliza ``query/termo`` e preserva o valor retornado antes do
        :func:`pop_normalize_aliases` consumir o alias. Passa o termo
        resolvido a ``validate_pesquisa`` (default: aceita qualquer termo)
        antes de qualquer janela: um erro levantado dentro de uma janela seria engolido por
        :func:`run_chunked_search` como falha de janela, e o usuario
-       receberia resultado vazio com ``UserWarning`` em vez do erro.
+       receberia ``ColetaParcialError`` "N de N janelas" em vez do erro.
     5. Pop aliases + canonicals de data, monta ``extras`` (dates
        nao-julgamento sniffadas), valida o schema upfront para converter
        ``extra_forbidden`` em ``TypeError`` cedo.
@@ -153,10 +178,17 @@ def run_auto_chunk(
     # Pre-fill aqui garante 1 warning total.
     if has_data_publicacao:
         fill_open_ended_dates(sniff, formato=date_format, rotulo="data_publicacao")
+        # Publicacao nao e dividida: validar aqui, antes das janelas, para o
+        # ValueError sair limpo em vez de repetir em cada janela e virar
+        # ColetaParcialError "N de N janelas falharam".
+        validate_intervalo_datas(
+            sniff["data_publicacao_inicio"], sniff["data_publicacao_fim"], max_anos=ESAJ_JANELA_ANOS,
+            formato=date_format, rotulo="data_publicacao", origem="O eSAJ",
+        )
 
     dj_i = sniff["data_julgamento_inicio"]
     dj_f = sniff["data_julgamento_fim"]
-    windows = list(iter_date_windows(dj_i, dj_f, max_dias=366))
+    windows = list(iter_date_windows(dj_i, dj_f, max_anos=ESAJ_JANELA_ANOS))
     if len(windows) <= 1:
         _propagate_auto_chunk_noop_dates(kwargs, sniff)
         return None
@@ -202,7 +234,7 @@ def run_auto_chunk(
         data_inicio=dj_i,
         data_fim=dj_f,
         dedup_key=dedup_key,
-        max_dias=366,
+        max_anos=ESAJ_JANELA_ANOS,
         paginas=paginas,
         rotulo="data_julgamento",
         origem="O eSAJ",
@@ -396,7 +428,7 @@ class EsajSearchScraper(HTTPScraper):
                 * ``data_publicacao_inicio`` / ``data_publicacao_fim``
                   (str, ``DD/MM/AAAA``): Intervalo de publicacao.
                 * ``auto_chunk`` (bool): Default ``True``. Quando o
-                  intervalo ``data_julgamento_*`` excede 366 dias,
+                  intervalo ``data_julgamento_*`` excede 1 ano,
                   divide internamente em janelas, baixa cada uma e
                   concatena com dedup por ``cd_acordao``. Veja a secao
                   "Auto-chunking" abaixo.
@@ -405,7 +437,7 @@ class EsajSearchScraper(HTTPScraper):
                   de resultados via ``cjsg_n_results`` e retorna ``int``
                   em vez de ``pd.DataFrame``. Util pra estimar wall-clock
                   antes de uma coleta longa (issue #92). Com
-                  ``auto_chunk=True`` + janela > 366 dias, itera janelas
+                  ``auto_chunk=True`` + janela > 1 ano, itera janelas
                   disjuntas e soma — **soma bruta** (sem dedup por
                   ``cd_acordao``), pode divergir ligeiramente de
                   ``len(cjsg(...))`` quando ha acordaos republicados.
@@ -447,11 +479,12 @@ class EsajSearchScraper(HTTPScraper):
         Auto-chunking (issue #130):
             Se ``auto_chunk=True`` (default herdado de
             :class:`~juscraper.schemas.AutoChunkMixin`) e o intervalo
-            ``data_julgamento_*`` exceder 366 dias, a busca e dividida em
+            ``data_julgamento_*`` exceder 1 ano, a busca e dividida em
             janelas internas, baixadas e concatenadas com dedup por
-            ``cd_acordao``. Falhas por janela viram :class:`UserWarning`
-            (parcial + warning). ``auto_chunk=True`` + ``paginas != None``
-            em janela > 366 dias e :class:`ValueError`. Para o
+            ``cd_acordao``. Janela que falha levanta
+            :class:`~juscraper.core.exceptions.ColetaParcialError`, com as
+            janelas que passaram em ``.resultado``. ``auto_chunk=True`` + ``paginas != None``
+            em janela > 1 ano e :class:`ValueError`. Para o
             comportamento estrito antigo (``ValueError`` em janelas
             longas), passe ``auto_chunk=False``.
         """
@@ -476,21 +509,20 @@ class EsajSearchScraper(HTTPScraper):
         via :func:`cjsg_n_results` e retorna a soma. ``paginas`` e
         ignorado (count_only sempre olha a pagina 1).
 
-        Multi-janela: se o intervalo ``data_julgamento_*`` excede 366 dias
+        Multi-janela: se o intervalo ``data_julgamento_*`` excede 1 ano
         e ``auto_chunk=True`` (default), itera janelas disjuntas
         (:func:`iter_date_windows`) e soma. ``auto_chunk=False`` + janela
-        > 366 dias levanta :class:`ValueError` (mesmo comportamento do
-        caminho normal). Intervalo ``data_publicacao_*`` > 366 dias tambem
+        > 1 ano levanta :class:`ValueError` (mesmo comportamento do
+        caminho normal). Intervalo ``data_publicacao_*`` > 1 ano tambem
         levanta :class:`ValueError` em qualquer ``auto_chunk`` — auto-chunk
         so pivota em ``data_julgamento``, entao publicacao precisa ser
         validada explicitamente para consistencia com o caminho normal.
 
-        **Fail-fast no auto-chunk**: diferente do caminho normal
-        (:func:`run_auto_chunk`), que tolera falha por janela como
-        :class:`UserWarning` e devolve resultado parcial deduplicado, este
-        probe usa ``sum()`` — qualquer :class:`ValueError` em uma janela
-        aborta toda a iteracao. Decisao deliberada: estimativa parcial sem
-        aviso seria pior que erro explicito.
+        **Fail-fast no auto-chunk**: o caminho normal (:func:`run_auto_chunk`)
+        tenta todas as janelas e levanta
+        :class:`~juscraper.core.exceptions.ColetaParcialError` com o parcial;
+        este probe usa ``sum()``, e a primeira janela que falha aborta a
+        iteracao. Contagem parcial nao tem uso, entao nao vale carrega-la.
         """
         if paginas is not None:
             avisar(
@@ -527,17 +559,17 @@ class EsajSearchScraper(HTTPScraper):
         dp_i = getattr(input_model, "data_publicacao_inicio", None)
         dp_f = getattr(input_model, "data_publicacao_fim", None)
 
-        # auto_chunk=False + janela > 366d: replicar o ValueError do caminho
+        # auto_chunk=False + janela > 1 ano: replicar o ValueError do caminho
         # normal para consistencia. validate_intervalo_datas tolera None.
         # ``data_julgamento`` so quando auto_chunk=False (auto_chunk=True
         # divide em janelas). ``data_publicacao`` sempre, porque auto-chunk
         # nao pivota em publicacao — caminho normal valida nos dois fluxos.
         if not auto_chunk:
             validate_intervalo_datas(
-                di, df_, max_dias=366, rotulo="data_julgamento", origem="O eSAJ",
+                di, df_, max_anos=ESAJ_JANELA_ANOS, rotulo="data_julgamento", origem="O eSAJ",
             )
         validate_intervalo_datas(
-            dp_i, dp_f, max_dias=366, rotulo="data_publicacao", origem="O eSAJ",
+            dp_i, dp_f, max_anos=ESAJ_JANELA_ANOS, rotulo="data_publicacao", origem="O eSAJ",
         )
 
         def _probe(win_i: str | None, win_f: str | None) -> int:
@@ -559,7 +591,7 @@ class EsajSearchScraper(HTTPScraper):
         if not auto_chunk or di is None or df_ is None:
             return _probe(di, df_)
 
-        return sum(_probe(win_i, win_f) for win_i, win_f in iter_date_windows(di, df_, max_dias=366))
+        return somar_contagens_por_janela(_probe, di, df_)
 
     def cjsg_download(
         self,
@@ -599,7 +631,7 @@ class EsajSearchScraper(HTTPScraper):
             pesquisa=pesquisa,
             paginas=paginas,
             kwargs=kwargs,
-            max_dias=366,
+            max_anos=ESAJ_JANELA_ANOS,
             origem_mensagem="O eSAJ",
         )
 

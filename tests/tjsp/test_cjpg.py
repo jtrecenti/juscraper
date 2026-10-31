@@ -455,7 +455,7 @@ class TestCJPGDateRangeValidation:
 
     def test_range_over_one_year_raises_before_request(self):
         scraper = self._patched_scraper()
-        with pytest.raises(ValueError, match="no máximo 366 dias"):
+        with pytest.raises(ValueError, match="no máximo 1 ano"):
             scraper.cjpg_download(
                 pesquisa="direito",
                 data_julgamento_inicio="01/01/2020",

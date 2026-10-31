@@ -48,7 +48,7 @@ def test_auto_chunk_default_long_window_chunks(tmp_path, mocker):
 def test_auto_chunk_false_long_window_raises(tmp_path):
     """`auto_chunk=False` mantem o gate antigo no caminho compartilhado."""
     scraper = jus.scraper("tjac", download_path=str(tmp_path))
-    with pytest.raises(ValueError, match="no máximo 366"):
+    with pytest.raises(ValueError, match="no máximo 1 ano"):
         scraper.cjsg(
             "dano moral",
             data_julgamento_inicio="01/01/2022",

@@ -13,12 +13,11 @@ from ...core.avisos import avisar
 from ...utils.params import (
     SEARCH_ALIASES,
     apply_input_pipeline_search,
-    iter_date_windows,
     normalize_pesquisa,
     pop_deprecated_alias,
     validate_intervalo_datas,
 )
-from .._esaj.base import EsajSearchScraper
+from .._esaj.base import ESAJ_JANELA_ANOS, EsajSearchScraper, somar_contagens_por_janela
 from .cjpg_download import cjpg_download as cjpg_download_mod
 from .cjpg_download import fetch_cjpg_first_page
 from .cjpg_parse import cjpg_n_results, cjpg_parse_manager
@@ -203,7 +202,7 @@ class TJSPScraper(EsajSearchScraper):
                 * ``data_julgamento_inicio`` / ``data_julgamento_fim``
                   (str, ``DD/MM/AAAA``): Intervalo de julgamento.
                 * ``auto_chunk`` (bool): Default ``True``. Quando o
-                  intervalo ``data_julgamento_*`` excede 366 dias,
+                  intervalo ``data_julgamento_*`` excede 1 ano,
                   divide internamente em janelas, baixa cada uma e
                   concatena com dedup por ``cd_acordao``.
                 * ``count_only`` (bool): Default ``False``. Se ``True``,
@@ -245,7 +244,7 @@ class TJSPScraper(EsajSearchScraper):
             schema pydantic e a fonte da verdade dos filtros aceitos.
             :meth:`EsajSearchScraper.cjsg` — descricao detalhada do
             auto-chunking (issue #130) para janelas
-            ``data_julgamento_*`` > 366 dias.
+            ``data_julgamento_*`` > 1 ano.
         """
         return super().cjsg(pesquisa=pesquisa, paginas=paginas, **kwargs)
 
@@ -375,7 +374,7 @@ class TJSPScraper(EsajSearchScraper):
                 * ``data_julgamento_inicio`` / ``data_julgamento_fim``
                   (str, ``DD/MM/AAAA``): Intervalo de julgamento.
                 * ``auto_chunk`` (bool): Default ``True``. Quando o
-                  intervalo ``data_julgamento_*`` excede 366 dias,
+                  intervalo ``data_julgamento_*`` excede 1 ano,
                   divide internamente em janelas, baixa cada uma e
                   concatena com dedup por ``id_processo``. Veja a secao
                   "Auto-chunking" abaixo.
@@ -384,7 +383,7 @@ class TJSPScraper(EsajSearchScraper):
                   ``cjpg_n_results`` e retorna ``int`` em vez de
                   ``pd.DataFrame``. Util pra estimar wall-clock antes de
                   coleta longa (issue #92). Com ``auto_chunk=True`` +
-                  janela > 366 dias, itera janelas disjuntas e soma —
+                  janela > 1 ano, itera janelas disjuntas e soma —
                   soma bruta (sem dedup por ``id_processo``). ``paginas``
                   e ignorado (emite ``UserWarning``).
 
@@ -434,11 +433,12 @@ class TJSPScraper(EsajSearchScraper):
         Auto-chunking (issue #130):
             Se ``auto_chunk=True`` (default herdado de
             :class:`~juscraper.schemas.AutoChunkMixin`) e o intervalo
-            ``data_julgamento_*`` exceder 366 dias, a busca e dividida em
+            ``data_julgamento_*`` exceder 1 ano, a busca e dividida em
             janelas internas, baixadas e concatenadas com dedup por
-            ``id_processo``. Falhas por janela viram :class:`UserWarning`
-            (parcial + warning). ``auto_chunk=True`` + ``paginas != None``
-            em janela > 366 dias e :class:`ValueError`.
+            ``id_processo``. Janela que falha levanta
+            :class:`~juscraper.core.exceptions.ColetaParcialError`, com as
+            janelas que passaram em ``.resultado``. ``auto_chunk=True`` + ``paginas != None``
+            em janela > 1 ano e :class:`ValueError`.
         """
         # Orquestracao (probe count_only -> auto-chunk -> download -> parse
         # -> cleanup) compartilhada com ``cjsg`` via ``_run_search`` (#205).
@@ -466,17 +466,16 @@ class TJSPScraper(EsajSearchScraper):
         Faz o GET inicial por janela, extrai ``n_results`` via
         :func:`cjpg_n_results` e retorna a soma. ``paginas`` e ignorado.
 
-        Multi-janela: se o intervalo ``data_julgamento_*`` excede 366 dias
+        Multi-janela: se o intervalo ``data_julgamento_*`` excede 1 ano
         e ``auto_chunk=True``, itera janelas disjuntas via
-        :func:`iter_date_windows`. ``auto_chunk=False`` + janela > 366d
+        :func:`iter_date_windows`. ``auto_chunk=False`` + janela > 1 ano
         levanta :class:`ValueError` (consistencia com caminho normal).
 
-        **Fail-fast no auto-chunk**: diferente do caminho normal
-        (:func:`run_auto_chunk`), que tolera falha por janela como
-        :class:`UserWarning` e devolve resultado parcial deduplicado, este
-        probe usa ``sum()`` — qualquer :class:`ValueError` em uma janela
-        aborta toda a iteracao. Decisao deliberada: estimativa parcial sem
-        aviso seria pior que erro explicito.
+        **Fail-fast no auto-chunk**: o caminho normal (:func:`run_auto_chunk`)
+        tenta todas as janelas e levanta
+        :class:`~juscraper.core.exceptions.ColetaParcialError` com o parcial;
+        este probe usa ``sum()``, e a primeira janela que falha aborta a
+        iteracao. Contagem parcial nao tem uso, entao nao vale carrega-la.
         """
         if paginas is not None:
             avisar(
@@ -503,7 +502,7 @@ class TJSPScraper(EsajSearchScraper):
 
         if not auto_chunk:
             validate_intervalo_datas(
-                di, df_, max_dias=366, rotulo="data_julgamento", origem="O eSAJ",
+                di, df_, max_anos=ESAJ_JANELA_ANOS, rotulo="data_julgamento", origem="O eSAJ",
             )
 
         def _probe(win_i: str | None, win_f: str | None) -> int:
@@ -523,7 +522,7 @@ class TJSPScraper(EsajSearchScraper):
         if not auto_chunk or di is None or df_ is None:
             return _probe(di, df_)
 
-        return sum(_probe(win_i, win_f) for win_i, win_f in iter_date_windows(di, df_, max_dias=366))
+        return somar_contagens_por_janela(_probe, di, df_)
 
     def cjpg_download(
         self,
@@ -577,7 +576,7 @@ class TJSPScraper(EsajSearchScraper):
             kwargs=kwargs,
             consume_pesquisa_aliases=True,
             nullable_pesquisa=True,
-            max_dias=366,
+            max_anos=ESAJ_JANELA_ANOS,
             origem_mensagem="O eSAJ",
         )
         # Roda apos o pipeline para validar o valor ja resolvido (caso o

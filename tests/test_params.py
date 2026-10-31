@@ -5,6 +5,7 @@ import warnings
 import pandas as pd
 import pytest
 
+from juscraper.core.exceptions import ColetaParcialError
 from juscraper.utils.params import (
     iter_date_windows,
     normalize_datas,
@@ -240,6 +241,31 @@ class TestValidateIntervaloDatas:
         with pytest.raises(ValueError, match="no máximo 366 dias"):
             validate_intervalo_datas("01/01/2020", "31/12/2021")
 
+    @pytest.mark.parametrize(
+        ("inicio", "fim"),
+        [("01/01/2013", "31/12/2013"), ("01/03/2015", "29/02/2016"), ("29/02/2016", "27/02/2017")],
+    )
+    def test_max_anos_aceita_fim_antes_do_aniversario(self, inicio, fim):
+        assert validate_intervalo_datas(inicio, fim, max_anos=1) is None
+
+    @pytest.mark.parametrize(
+        ("inicio", "fim"),
+        # 365 dias sem 29/02 (o eSAJ responde 404) e 366 dias: os dois alcançam o aniversário.
+        [("01/01/2013", "01/01/2014"), ("01/01/2013", "02/01/2014"), ("29/02/2016", "28/02/2017")],
+    )
+    def test_max_anos_rejeita_fim_no_aniversario(self, inicio, fim):
+        with pytest.raises(ValueError, match="no máximo 1 ano"):
+            validate_intervalo_datas(inicio, fim, max_anos=1)
+
+    def test_max_anos_dica_de_auto_chunk_so_em_julgamento(self):
+        # O auto-chunk só divide julgamento: sugeri-lo em publicação não ajudaria.
+        # A dica aponta para cjsg()/cjpg(), que é onde há auto-chunk; *_download não divide.
+        with pytest.raises(ValueError, match=r"use cjsg\(\)/cjpg\(\) com auto_chunk=True"):
+            validate_intervalo_datas("01/01/2013", "01/01/2014", max_anos=1, rotulo="data_julgamento")
+        with pytest.raises(ValueError) as exc_info:
+            validate_intervalo_datas("01/01/2013", "01/01/2014", max_anos=1, rotulo="data_publicacao")
+        assert "auto_chunk" not in str(exc_info.value)
+
     def test_rotulo_in_message(self):
         with pytest.raises(ValueError, match="data_julgamento_inicio"):
             validate_intervalo_datas(
@@ -435,6 +461,45 @@ class TestIterDateWindows:
         assert windows[0][0] == "01/01/2024"
         assert windows[-1][1] == "02/01/2025"
 
+    def test_max_anos_um_ano_por_janela(self):
+        windows = list(iter_date_windows("01/01/2010", "31/12/2016", max_anos=1))
+        assert windows == [(f"01/01/{ano}", f"31/12/{ano}") for ano in range(2010, 2017)]
+
+    def test_max_anos_noop_dentro_de_um_ano(self):
+        # 365 dias com 29/02: ainda dentro de 1 ano de calendário.
+        assert list(iter_date_windows("01/03/2015", "29/02/2016", max_anos=1)) == [
+            ("01/03/2015", "29/02/2016")
+        ]
+
+    def test_max_anos_divide_no_aniversario(self):
+        # 365 dias sem 29/02: o fim alcança o aniversário e precisa dividir.
+        assert list(iter_date_windows("01/01/2013", "01/01/2014", max_anos=1)) == [
+            ("01/01/2013", "31/12/2013"),
+            ("01/01/2014", "01/01/2014"),
+        ]
+
+    def test_max_anos_inicio_em_29_de_fevereiro(self):
+        windows = list(iter_date_windows("29/02/2016", "31/12/2018", max_anos=1))
+        assert windows[0] == ("29/02/2016", "27/02/2017")
+        assert windows[1][0] == "28/02/2017"
+
+    @pytest.mark.parametrize("inicio", ["01/01/2010", "29/02/2012", "01/03/2015", "15/07/2019"])
+    def test_max_anos_toda_janela_fica_antes_do_aniversario(self, inicio):
+        from datetime import datetime, timedelta
+        fmt = "%d/%m/%Y"
+        windows = list(iter_date_windows(inicio, "31/12/2026", max_anos=1))
+        datas = [(datetime.strptime(str(i), fmt), datetime.strptime(str(f), fmt)) for i, f in windows]
+        for dt_i, dt_f in datas:
+            # 29/02 conta como 28/02 no ano seguinte, o aniversário mais cedo possível.
+            assert dt_f < dt_i.replace(year=dt_i.year + 1, day=28 if (dt_i.month, dt_i.day) == (2, 29) else dt_i.day)
+        for (_, prev_fim), (nxt_ini, _) in itertools.pairwise(datas):
+            assert nxt_ini - prev_fim == timedelta(days=1)
+
+    @pytest.mark.parametrize("limite", [{"max_anos": 0}, {"max_anos": -1}, {"max_dias": -1}])
+    def test_limite_invalido_levanta_em_vez_de_laco_infinito(self, limite):
+        with pytest.raises(ValueError, match="max_anos deve ser >= 1"):
+            next(iter_date_windows("01/01/2013", "31/12/2014", **limite))
+
     def test_invalid_format_raises(self):
         with pytest.raises(ValueError, match="data_inicio inválida"):
             list(iter_date_windows("2024-01-01", "31/12/2024"))
@@ -497,42 +562,64 @@ class TestRunChunkedSearch:
         assert len(df) == 4
         assert (df["cd_acordao"] == "shared").sum() == 1
 
-    def test_multi_window_partial_failure_warns(self):
+    def test_multi_window_partial_failure_raises_with_partial(self):
         def fetch(i, f):
-            if i == "03/01/2023":
+            if i == "01/01/2023":
                 raise RuntimeError("boom")
             return pd.DataFrame({"cd_acordao": [f"a-{i}"]})
 
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            df = run_chunked_search(
+        with pytest.raises(ColetaParcialError, match="1 de 3 janela") as exc_info:
+            run_chunked_search(
                 fetch,
                 data_inicio="01/01/2022",
                 data_fim="31/12/2024",
                 dedup_key="cd_acordao",
+                max_anos=1,
             )
-        assert len(df) == 2  # 2 sucessos, 1 falha
-        assert len(w) == 1
-        assert issubclass(w[0].category, UserWarning)
-        assert "1 de 3" in str(w[0].message) or "1 de" in str(w[0].message)
+        erro = exc_info.value
+        # As janelas que passaram chegam no erro, e a que falhou fica nomeada.
+        assert list(erro.resultado["cd_acordao"]) == ["a-01/01/2022", "a-01/01/2024"]
+        assert [(i, f) for i, f, _ in erro.falhas] == [("01/01/2023", "31/12/2023")]
+        assert isinstance(erro.__cause__, RuntimeError)
 
-    def test_all_windows_fail_returns_empty(self):
+    def test_coleta_parcial_sobrevive_a_pickle_e_copy(self):
+        import copy
+        import pickle
+        falhas: list[tuple[str | None, str | None, Exception]] = [("01/01/2013", "31/12/2013", RuntimeError("boom"))]
+        erro = ColetaParcialError("x", resultado=pd.DataFrame({"cd_acordao": ["a"]}), falhas=falhas)
+        for clone in (pickle.loads(pickle.dumps(erro)), copy.copy(erro)):
+            assert str(clone) == "x"
+            assert list(clone.resultado["cd_acordao"]) == ["a"]
+            assert [(i, f, repr(exc)) for i, f, exc in clone.falhas] == [(i, f, repr(exc)) for i, f, exc in falhas]
+
+    def test_coleta_parcial_com_retry_esgotado_sobrevive_a_pickle(self):
+        # RetryExhaustedError é a falha mais comum de janela (5xx até o fim dos retries).
+        import pickle
+
+        from juscraper.core.exceptions import RetryExhaustedError
+        falhas: list[tuple[str | None, str | None, Exception]] = [
+            ("01/01/2013", "31/12/2013", RetryExhaustedError(503, 5)),
+        ]
+        clone = pickle.loads(pickle.dumps(ColetaParcialError("x", resultado=pd.DataFrame(), falhas=falhas)))
+        exc = clone.falhas[0][2]
+        assert isinstance(exc, RetryExhaustedError)
+        assert (exc.status_code, exc.attempts, str(exc)) == (503, 5, str(falhas[0][2]))
+
+    def test_all_windows_fail_raises_with_empty_partial(self):
         def fetch(i, f):
             raise RuntimeError("always fails")
 
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            df = run_chunked_search(
+        with pytest.raises(ColetaParcialError, match="3 de 3 janela") as exc_info:
+            run_chunked_search(
                 fetch,
                 data_inicio="01/01/2022",
                 data_fim="31/12/2024",
                 dedup_key="cd_acordao",
             )
-        assert df.empty
-        # DataFrame vazio ainda carrega a coluna de dedup, evitando KeyError
-        # em codigo a jusante que faca df["cd_acordao"].
-        assert "cd_acordao" in df.columns
-        assert len(w) == 1
+        # O parcial vazio ainda carrega a coluna de dedup, evitando KeyError
+        # em codigo a jusante que faca resultado["cd_acordao"].
+        assert exc_info.value.resultado.empty
+        assert "cd_acordao" in exc_info.value.resultado.columns
 
     def test_multi_window_with_paginas_raises(self):
         def fetch(i, f):

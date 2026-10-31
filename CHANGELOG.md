@@ -7,12 +7,18 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- eSAJ (`cjsg` de TJAC, TJAL, TJAM, TJCE, TJMS e TJSP; `cjpg` do TJSP): no auto-chunk, uma janela que falha depois dos retries agora levanta `juscraper.core.exceptions.ColetaParcialError`, depois de tentar as demais. Antes, a falha virava `UserWarning`, e o DataFrame voltava parcial como se estivesse completo. O erro carrega o trabalho já feito: `.resultado` tem o DataFrame deduplicado das janelas que passaram, e `.falhas` traz a lista de `(inicio, fim, excecao)` das que falharam. Para manter o parcial, capture o erro e use `erro.resultado`.
+- eSAJ (`cjsg` de TJAC, TJAL, TJAM, TJCE, TJMS e TJSP; `cjpg` do TJSP): com `auto_chunk=False`, e em `data_publicacao_*` em qualquer modo, o limite de intervalo passa de 366 dias para um ano de calendário: o fim deve ser anterior à mesma data do ano seguinte. Intervalos como `01/01/2013`–`01/01/2014`, que o servidor recusava com HTTP 404, agora levantam `ValueError` antes da requisição. A mensagem passa de "no máximo 366 dias" para "no máximo 1 ano(s)". `data_publicacao_*` longo junto com `data_julgamento_*` longo agora levanta esse `ValueError` antes do auto-chunk, em vez de falhar em cada janela.
+
 ### Added
 
 - TJSP: `cjpg_download`, `cpopg_download` e `cposg_download` aceitam o parâmetro opcional `diretorio` para definir o diretório de download por chamada.
 
 ### Fixed
 
+- eSAJ (TJAC, TJAL, TJAM, TJCE, TJMS e TJSP): o auto-chunk de `cjsg` e `cjpg` com `data_julgamento_*` acima de um ano devolvia só a última janela. As janelas tinham 366 dias de diferença, e o eSAJ recusa com HTTP 404 qualquer janela cujo fim alcance a mesma data do ano seguinte; cada janela recusada virava `UserWarning` e ficava fora do DataFrame. No TJAC, o Pleno com assunto 10069 de 2010 a 2016 voltava com 1 acórdão. As janelas passam a seguir o ano de calendário (`01/01/2013`–`31/12/2013`, `01/01/2014`–`31/12/2014`), e `count_only` usa as mesmas janelas. Um intervalo de exatamente um ano com o aniversário incluído (como `01/01/2013`–`01/01/2014`) agora é dividido em duas janelas, e por isso rejeita `paginas`.
 - TJSP `cpopg` HTML valida `processo.codigo` antes da gravação, prevenindo path traversal e retries desnecessários para identificadores inválidos. Refs #402.
 - README e documentação: as tabelas de tribunais e agregadores com os métodos de cada um passam a ser geradas do código. A do README omitia TJAC, TJAL, TJAM, TJGO, TJMG, TJMS, TJRJ, os TRFs e o ComunicaCNJ, e a da documentação listava um método `acordao` do TJSP que não existe.
 

@@ -19,6 +19,7 @@ Atual:
   concretos).
 - :class:`OutputDataPublicacaoMixin` — coluna de Output (>= 9 parsers).
 """
+
 from __future__ import annotations
 
 from datetime import date
@@ -105,7 +106,7 @@ class AutoChunkMixin(BaseModel):
     """Flag opcional ``auto_chunk`` para endpoints com teto de janela (issue #130).
 
     Default ``True``: quando o intervalo ``data_julgamento_*`` excede o teto
-    do tribunal (eSAJ: 366 dias), o scraper divide internamente em janelas,
+    do tribunal (eSAJ: 1 ano), o scraper divide internamente em janelas,
     baixa cada uma, concatena e deduplica. ``auto_chunk=False`` mantem o
     comportamento estrito (``ValueError`` em janelas longas) — util para
     validar input antes de submeter um job pesado.
@@ -137,7 +138,7 @@ class CountOnlyMixin(BaseModel):
     - **Nao** salva HTML em disco, **nao** parseia conteudo.
 
     Multi-janela: se ``auto_chunk=True`` e o intervalo ``data_julgamento_*``
-    excede o teto do tribunal (eSAJ: 366 dias), o metodo itera as janelas
+    excede o teto do tribunal (eSAJ: 1 ano), o metodo itera as janelas
     disjuntas (:func:`juscraper.utils.params.iter_date_windows`) e **soma
     as contagens**. Soma bruta — sem dedup por ``cd_acordao``/``id_processo``.
     Util para estimativa de wall-clock; pode divergir de ``len(cjsg(...))``
@@ -146,10 +147,10 @@ class CountOnlyMixin(BaseModel):
 
     **Fail-fast no auto-chunk** (divergencia deliberada do caminho normal):
     o caminho normal (:func:`juscraper.courts._esaj.base.run_auto_chunk`)
-    tolera falha por janela como :class:`UserWarning` e devolve parcial
-    deduplicado. ``count_only`` usa ``sum()`` — qualquer ``ValueError`` em
-    uma janela aborta toda a iteracao e propaga limpo. Estimativa parcial
-    silenciosa seria mais perigosa que erro explicito.
+    tenta todas as janelas e levanta ``ColetaParcialError`` com o parcial.
+    ``count_only`` para na primeira janela que falha e propaga o erro com
+    uma nota que diz qual janela foi. Contagem parcial nao tem uso, entao
+    nao vale carrega-la.
 
     Tribunais que ainda nao implementam ``count_only`` **nao devem herdar**
     deste mixin — ``extra='forbid'`` da classe concreta rejeita o flag com
