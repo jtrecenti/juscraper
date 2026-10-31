@@ -72,13 +72,6 @@ NOMES_AGREGADORES = {
 }
 
 
-def classe_do_raspador(sigla: str) -> type:
-    """Importa a classe registrada para ``sigla`` em ``REGISTRO``."""
-    modulo, nome = REGISTRO[sigla].split(":")
-    classe: type = getattr(importlib.import_module(modulo), nome)
-    return classe
-
-
 def e_stub(metodo: object) -> bool:
     """Diz se o corpo do método, sem a docstring, é só ``raise NotImplementedError``.
 
@@ -95,9 +88,9 @@ def e_stub(metodo: object) -> bool:
     if not isinstance(definicao, (ast.FunctionDef, ast.AsyncFunctionDef)):
         return False
     corpo = definicao.body
-    if corpo and isinstance(corpo[0], ast.Expr) and isinstance(corpo[0].value, ast.Constant):
+    if isinstance(corpo[0], ast.Expr) and isinstance(corpo[0].value, ast.Constant):
         corpo = corpo[1:]
-    if len(corpo) != 1 or not isinstance(corpo[0], ast.Raise) or corpo[0].exc is None:
+    if len(corpo) != 1 or not isinstance(corpo[0], ast.Raise):
         return False
     excecao = corpo[0].exc
     if isinstance(excecao, ast.Call):
@@ -111,10 +104,8 @@ def endpoints(classe: type) -> list[str]:
     for nome in dir(classe):
         if nome.startswith("_") or not nome.islower() or nome in AUXILIARES or nome.endswith(SUFIXOS_DE_ETAPA):
             continue
-        estatico = inspect.getattr_static(classe, nome)
-        if isinstance(estatico, property) or not callable(getattr(classe, nome)):
-            continue
-        if not e_stub(getattr(classe, nome)):
+        metodo = getattr(classe, nome)
+        if not isinstance(inspect.getattr_static(classe, nome), property) and callable(metodo) and not e_stub(metodo):
             nomes.append(nome)
     return sorted(
         nomes,
@@ -128,8 +119,9 @@ def endpoints(classe: type) -> list[str]:
 def cobertura() -> dict[str, dict[str, list[str]]]:
     """Agrupa ``{sigla: endpoints}`` em ``tribunais`` e ``agregadores``, pelo pacote da classe."""
     grupos: dict[str, dict[str, list[str]]] = {"tribunais": {}, "agregadores": {}}
-    for sigla in REGISTRO:
-        classe = classe_do_raspador(sigla)
+    for sigla, caminho in REGISTRO.items():
+        modulo, nome = caminho.split(":")
+        classe: type = getattr(importlib.import_module(modulo), nome)
         grupo = "agregadores" if classe.__module__.startswith("juscraper.aggregators.") else "tribunais"
         grupos[grupo][sigla] = endpoints(classe)
     return grupos
