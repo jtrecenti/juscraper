@@ -73,7 +73,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-7fa8570edba78f5132defc88939c9d43.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-a7da40549b8a11491f17ac5e413bf75e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -408,26 +408,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Nesta página</h2>
    
   <ul>
-  <li><a href="#instalação" id="toc-instalação" class="nav-link active" data-scroll-target="#instalação">Instalação</a>
+  <li><a href="#installation" id="toc-installation" class="nav-link active" data-scroll-target="#installation">Installation</a>
   <ul class="collapse">
-  <li><a href="#via-pypi-recomendado" id="toc-via-pypi-recomendado" class="nav-link" data-scroll-target="#via-pypi-recomendado">Via PyPI (Recomendado)</a></li>
-  <li><a href="#com-uv" id="toc-com-uv" class="nav-link" data-scroll-target="#com-uv">Com uv</a></li>
-  <li><a href="#versão-de-desenvolvimento" id="toc-versão-de-desenvolvimento" class="nav-link" data-scroll-target="#versão-de-desenvolvimento">Versão de Desenvolvimento</a></li>
+  <li><a href="#from-pypi-recommended" id="toc-from-pypi-recommended" class="nav-link" data-scroll-target="#from-pypi-recommended">From PyPI (recommended)</a></li>
+  <li><a href="#with-uv" id="toc-with-uv" class="nav-link" data-scroll-target="#with-uv">With uv</a></li>
+  <li><a href="#development-version" id="toc-development-version" class="nav-link" data-scroll-target="#development-version">Development version</a></li>
   </ul></li>
-  <li><a href="#como-usar" id="toc-como-usar" class="nav-link" data-scroll-target="#como-usar">Como usar</a></li>
-  <li><a href="#implementações" id="toc-implementações" class="nav-link" data-scroll-target="#implementações">Implementações</a>
+  <li><a href="#usage" id="toc-usage" class="nav-link" data-scroll-target="#usage">Usage</a></li>
+  <li><a href="#implementations" id="toc-implementations" class="nav-link" data-scroll-target="#implementations">Implementations</a>
   <ul class="collapse">
-  <li><a href="#tribunais-disponíveis" id="toc-tribunais-disponíveis" class="nav-link" data-scroll-target="#tribunais-disponíveis">Tribunais Disponíveis</a></li>
-  <li><a href="#agregadores-disponíveis" id="toc-agregadores-disponíveis" class="nav-link" data-scroll-target="#agregadores-disponíveis">Agregadores Disponíveis</a></li>
-  <li><a href="#notebooks-de-exemplo" id="toc-notebooks-de-exemplo" class="nav-link" data-scroll-target="#notebooks-de-exemplo">Notebooks de Exemplo</a></li>
+  <li><a href="#available-courts" id="toc-available-courts" class="nav-link" data-scroll-target="#available-courts">Available courts</a></li>
+  <li><a href="#available-aggregators" id="toc-available-aggregators" class="nav-link" data-scroll-target="#available-aggregators">Available aggregators</a></li>
+  <li><a href="#example-notebooks" id="toc-example-notebooks" class="nav-link" data-scroll-target="#example-notebooks">Example notebooks</a></li>
   </ul></li>
-  <li><a href="#informações-adicionais" id="toc-informações-adicionais" class="nav-link" data-scroll-target="#informações-adicionais">Informações adicionais</a>
+  <li><a href="#additional-information" id="toc-additional-information" class="nav-link" data-scroll-target="#additional-information">Additional information</a>
   <ul class="collapse">
-  <li><a href="#diferenciais-do-juscraper" id="toc-diferenciais-do-juscraper" class="nav-link" data-scroll-target="#diferenciais-do-juscraper">Diferenciais do <code>juscraper</code>:</a></li>
-  <li><a href="#restrições" id="toc-restrições" class="nav-link" data-scroll-target="#restrições">Restrições:</a></li>
+  <li><a href="#what-sets-juscraper-apart" id="toc-what-sets-juscraper-apart" class="nav-link" data-scroll-target="#what-sets-juscraper-apart">What sets <code>juscraper</code> apart</a></li>
+  <li><a href="#limitations" id="toc-limitations" class="nav-link" data-scroll-target="#limitations">Limitations</a></li>
   </ul></li>
-  <li><a href="#contribuição" id="toc-contribuição" class="nav-link" data-scroll-target="#contribuição">Contribuição</a></li>
-  <li><a href="#licença" id="toc-licença" class="nav-link" data-scroll-target="#licença">Licença</a></li>
+  <li><a href="#contributing" id="toc-contributing" class="nav-link" data-scroll-target="#contributing">Contributing</a></li>
+  <li><a href="#license" id="toc-license" class="nav-link" data-scroll-target="#license">License</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.com/jtrecenti/juscraper/edit/main/docs/index.qmd" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></nav>
     </div>
@@ -453,56 +453,58 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>Raspador de tribunais e outros sistemas relacionados ao poder judiciário brasileiro.</p>
-<section id="instalação" class="level2">
-<h2 class="anchored" data-anchor-id="instalação">Instalação</h2>
-<section id="via-pypi-recomendado" class="level3">
-<h3 class="anchored" data-anchor-id="via-pypi-recomendado">Via PyPI (Recomendado)</h3>
+<p>Scraper for Brazilian courts and other systems of the Brazilian judiciary.</p>
+<section id="installation" class="level2">
+<h2 class="anchored" data-anchor-id="installation">Installation</h2>
+<section id="from-pypi-recommended" class="level3">
+<h3 class="anchored" data-anchor-id="from-pypi-recommended">From PyPI (recommended)</h3>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install juscraper</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
-<section id="com-uv" class="level3">
-<h3 class="anchored" data-anchor-id="com-uv">Com uv</h3>
+<section id="with-uv" class="level3">
+<h3 class="anchored" data-anchor-id="with-uv">With uv</h3>
 <div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> add juscraper</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
-<section id="versão-de-desenvolvimento" class="level3">
-<h3 class="anchored" data-anchor-id="versão-de-desenvolvimento">Versão de Desenvolvimento</h3>
-<p>Para instalar a versão mais recente do repositório:</p>
+<section id="development-version" class="level3">
+<h3 class="anchored" data-anchor-id="development-version">Development version</h3>
+<p>To install the latest version from the repository:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install git+https://github.com/jtrecenti/juscraper.git</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 </section>
-<section id="como-usar" class="level2">
-<h2 class="anchored" data-anchor-id="como-usar">Como usar</h2>
+<section id="usage" class="level2">
+<h2 class="anchored" data-anchor-id="usage">Usage</h2>
 <div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>tjsp <span class="op">=</span> jus.scraper(<span class="st">'tjsp'</span>)</span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>dados_cjpg <span class="op">=</span> tjsp.cjpg(<span class="st">'league of legends'</span>, paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">4</span>))</span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>dados_cjpg.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>O pacote foi pensado para atender a requisitos básicos de consulta de dados de processos judiciais em alguns tribunais.</p>
-<p>Os tribunais implementados vão apresentar os seguintes métodos:</p>
+<p>The package covers the basic needs of querying case data in a set of courts.</p>
+<p>Most courts implement some of the methods below; the tables in the Implementations section show which ones each court and aggregator has (the STF, for example, has <code>listar_decisoes</code> and <code>contar_decisoes</code> instead):</p>
 <ul>
-<li><code>.cpopg()</code>: consulta de processos originários do primeiro grau</li>
-<li><code>.cposg()</code>: consulta de processos originários do segundo grau</li>
-<li><code>.cjsg()</code>: consulta de jurisprudência</li>
+<li><code>.cpopg()</code>: first-instance case lookup</li>
+<li><code>.cposg()</code>: second-instance case lookup</li>
+<li><code>.cjsg()</code>: second-instance case law search</li>
+<li><code>.cjpg()</code>: first-instance decision search</li>
 </ul>
-<p>Os métodos <code>.cpopg()</code> e <code>.cposg()</code> recebem como <em>input</em> um número de processo no padrão CNJ (NNNNNNN-DD.AAAA.J.TT.OOOO), com ou sem separadores, e retorna um <code>dict</code> com tabelas dos elementos do processo (dados básicos, partes, movimentações, entre outros específicos por tribunal).</p>
-<p>O método <code>.cjsg()</code> recebe como <em>input</em> parâmetros de busca de jurisprudência (que variam por tribunal) e retorna uma tabela com os resultados da consulta. Boa parte dos tribunais apresentam limites de paginação ao realizar buscas muito gerais (i.e.&nbsp;que retornam muitos resultados). Nesses casos, o método dará um aviso ao usuário com o número total de resultados, confirmando se deseja mesmo baixar todos os resultados.</p>
+<p><code>.cpopg()</code> and <code>.cposg()</code> take a case number in the CNJ format (NNNNNNN-DD.AAAA.J.TT.OOOO), with or without separators, and return a <code>dict</code> of tables with the case elements (basic data, parties, docket entries and other court-specific tables).</p>
+<p><code>.cjsg()</code> takes case law search parameters (which vary by court) and returns a table with the results. Many courts limit pagination on broad searches (searches that return many results). In those cases the method warns the user with the total number of results and asks for confirmation before downloading all of them.</p>
 </section>
-<section id="implementações" class="level2">
-<h2 class="anchored" data-anchor-id="implementações">Implementações</h2>
-<section id="tribunais-disponíveis" class="level3">
-<h3 class="anchored" data-anchor-id="tribunais-disponíveis">Tribunais Disponíveis</h3>
+<section id="implementations" class="level2">
+<h2 class="anchored" data-anchor-id="implementations">Implementations</h2>
+<!-- tabela-cobertura:inicio | scripts/tabela_cobertura.py -->
+<section id="available-courts" class="level3">
+<h3 class="anchored" data-anchor-id="available-courts">Available courts</h3>
 <table class="caption-top table">
 <thead>
 <tr class="header">
-<th>Tribunal</th>
-<th>Funcionalidades Disponíveis</th>
+<th>Court</th>
+<th>Available methods</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td>STF</td>
-<td>listar_decisoes, contar_decisoes</td>
+<td>contar_decisoes, listar_decisoes</td>
 </tr>
 <tr class="even">
 <td>TJAC</td>
@@ -521,43 +523,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>cjsg ⚠️</td>
 </tr>
 <tr class="even">
-<td>TJCE</td>
-<td>cjsg</td>
-</tr>
-<tr class="odd">
 <td>TJBA</td>
 <td>cjsg</td>
 </tr>
-<tr class="even">
-<td>TJGO</td>
-<td>cjsg</td>
-</tr>
 <tr class="odd">
-<td>TJMG</td>
-<td>cjsg, cposg</td>
-</tr>
-<tr class="even">
-<td>TJSP</td>
-<td>cpopg, cposg, cjsg, cjpg, acordao</td>
-</tr>
-<tr class="odd">
-<td>TJRS</td>
-<td>cjsg</td>
-</tr>
-<tr class="even">
-<td>TJPR</td>
-<td>cjsg</td>
-</tr>
-<tr class="odd">
-<td>TJPE</td>
-<td>cjsg, cpopg</td>
-</tr>
-<tr class="even">
-<td>TJES</td>
-<td>cjsg, cjpg</td>
-</tr>
-<tr class="odd">
-<td>TJMS</td>
+<td>TJCE</td>
 <td>cjsg</td>
 </tr>
 <tr class="even">
@@ -565,39 +535,63 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>cjsg</td>
 </tr>
 <tr class="odd">
-<td>TJPA</td>
-<td>cjsg</td>
-</tr>
-<tr class="even">
-<td>TJMT</td>
-<td>cjsg</td>
-</tr>
-<tr class="odd">
-<td>TJTO</td>
+<td>TJES</td>
 <td>cjsg, cjpg</td>
 </tr>
 <tr class="even">
+<td>TJGO</td>
+<td>cjsg</td>
+</tr>
+<tr class="odd">
+<td>TJMG</td>
+<td>cposg, cjsg</td>
+</tr>
+<tr class="even">
+<td>TJMS</td>
+<td>cjsg</td>
+</tr>
+<tr class="odd">
+<td>TJMT</td>
+<td>cjsg</td>
+</tr>
+<tr class="even">
+<td>TJPA</td>
+<td>cjsg</td>
+</tr>
+<tr class="odd">
 <td>TJPB</td>
 <td>cjsg</td>
+</tr>
+<tr class="even">
+<td>TJPE</td>
+<td>cpopg, cjsg</td>
 </tr>
 <tr class="odd">
 <td>TJPI</td>
 <td>cjsg</td>
 </tr>
 <tr class="even">
+<td>TJPR</td>
+<td>cjsg</td>
+</tr>
+<tr class="odd">
 <td>TJRJ</td>
 <td>cjsg</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>TJRN</td>
 <td>cjsg</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>TJRO</td>
 <td>cjsg</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>TJRR</td>
+<td>cjsg</td>
+</tr>
+<tr class="odd">
+<td>TJRS</td>
 <td>cjsg</td>
 </tr>
 <tr class="even">
@@ -605,62 +599,80 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>cjsg</td>
 </tr>
 <tr class="odd">
+<td>TJSP</td>
+<td>cpopg, cposg, cjsg, cjpg</td>
+</tr>
+<tr class="even">
+<td>TJTO</td>
+<td>cjsg, cjpg, cjsg_ementa</td>
+</tr>
+<tr class="odd">
+<td>TRF1</td>
+<td>cpopg</td>
+</tr>
+<tr class="even">
 <td>TRF3</td>
 <td>cpopg, cjsg</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>TRF5</td>
 <td>cpopg</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>TRF6</td>
 <td>cpopg</td>
 </tr>
 </tbody>
 </table>
-<blockquote class="blockquote">
-<p>⚠️ <strong>TJAP — <code>cjsg</code> unavailable:</strong> since ~2026 the TJAP jurisprudence search (Tucujuris platform) requires a <a href="https://www.cloudflare.com/products/turnstile/">Cloudflare Turnstile</a> CAPTCHA, validated server-side. Because the scraper issues plain HTTP requests (no browser), it cannot produce the token and the backend replies <code>"A verificação de segurança falhou"</code>. In that case <code>cjsg</code> raises <code>TJAPSecurityCheckError</code> with an explanation instead of silently returning empty. There is no workaround through the public API. See <a href="https://github.com/jtrecenti/juscraper/issues/279">issue #279</a>.</p>
-</blockquote>
 </section>
-<section id="agregadores-disponíveis" class="level3">
-<h3 class="anchored" data-anchor-id="agregadores-disponíveis">Agregadores Disponíveis</h3>
+<section id="available-aggregators" class="level3">
+<h3 class="anchored" data-anchor-id="available-aggregators">Available aggregators</h3>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 23%">
-<col style="width: 76%">
+<col style="width: 40%">
+<col style="width: 59%">
 </colgroup>
 <thead>
 <tr class="header">
-<th>Nome</th>
-<th>Funcionalidades</th>
+<th>Name</th>
+<th>Available methods</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>Datajud</td>
-<td>listar_processos</td>
+<td>ComunicaCNJ</td>
+<td>listar_comunicacoes</td>
 </tr>
 <tr class="even">
-<td>Jusbr</td>
-<td>cpopg, download_documents</td>
+<td>Datajud</td>
+<td>contar_processos, listar_processos</td>
 </tr>
 <tr class="odd">
 <td>Falcao</td>
-<td>listar_decisoes (national labor jurisprudence: TST + TRTs)</td>
+<td>listar_decisoes</td>
 </tr>
 <tr class="even">
+<td>JusBR</td>
+<td>cpopg, download_documents</td>
+</tr>
+<tr class="odd">
 <td>PDPJ</td>
-<td>existe, cpopg, documentos, movimentos, partes, pesquisa, contar, download_documents</td>
+<td>cpopg, contar, documentos, download_documents, existe, movimentos, partes, pesquisa</td>
 </tr>
 </tbody>
 </table>
+<!-- tabela-cobertura:fim -->
+<blockquote class="blockquote">
+<p>⚠️ <strong>TJAP — <code>cjsg</code> unavailable:</strong> since ~2026 the TJAP jurisprudence search (Tucujuris platform) requires a <a href="https://www.cloudflare.com/products/turnstile/">Cloudflare Turnstile</a> CAPTCHA, validated server-side. Because the scraper issues plain HTTP requests (no browser), it cannot produce the token and the backend replies <code>"A verificação de segurança falhou"</code>. In that case <code>cjsg</code> raises <code>TJAPSecurityCheckError</code> with an explanation instead of silently returning empty. There is no workaround through the public API. See <a href="https://github.com/jtrecenti/juscraper/issues/279">issue #279</a>.</p>
+</blockquote>
+<p>Falcao covers national labor jurisprudence (TST and TRTs).</p>
 <section id="jusbr-and-pdpj-authentication" class="level4">
 <h4 class="anchored" data-anchor-id="jusbr-and-pdpj-authentication">JusBR and PDPJ authentication</h4>
 <p>JusBR and PDPJ share the same JWT from the PJe SSO. With the <code>govbr</code> extra (<code>pip install 'juscraper[govbr]'</code>), <code>auth_govbr()</code> opens the locally installed Google Chrome, Chromium or Microsoft Edge, with a temporary profile, on the PDPJ services portal; the user logs in through gov.br, the token is captured and the window closes on its own. If no browser is found, pass its executable to <code>auth_govbr(navegador=...)</code>. The token is cached in <code>~/.config/juscraper/pdpj_token.json</code> (or under <code>$XDG_CONFIG_HOME/juscraper/</code>), readable only by its owner, and later JusBR and PDPJ instances load it without a new login. When the portal issues a refresh token, the access token is renewed automatically before it expires. The login needs a windowed browser, so it does not run on Google Colab or CI; there, pass the token to <code>auth(token)</code> or set the <code>PDPJ_JWT</code> environment variable (JusBR also accepts <code>JUSBR_JWT</code>).</p>
 </section>
 </section>
-<section id="notebooks-de-exemplo" class="level3">
-<h3 class="anchored" data-anchor-id="notebooks-de-exemplo">Notebooks de Exemplo</h3>
+<section id="example-notebooks" class="level3">
+<h3 class="anchored" data-anchor-id="example-notebooks">Example notebooks</h3>
 <div class="callout callout-style-default callout-warning callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -675,64 +687,65 @@ Notebook runtime and Google Colab
 </div>
 </div>
 <ul>
-<li><a href="./notebooks/tjac.html">Exemplo TJAC</a></li>
-<li><a href="./notebooks/tjal.html">Exemplo TJAL</a></li>
-<li><a href="./notebooks/tjam.html">Exemplo TJAM</a></li>
-<li><a href="./notebooks/tjap.html">Exemplo TJAP</a></li>
-<li><a href="./notebooks/tjce.html">Exemplo TJCE</a></li>
-<li><a href="./notebooks/tjba.html">Exemplo TJBA</a></li>
-<li><a href="./notebooks/tjsp.html">Exemplo TJSP</a></li>
-<li><a href="./notebooks/tjrs.html">Exemplo TJRS</a></li>
-<li><a href="./notebooks/tjpr.html">Exemplo TJPR</a></li>
-<li><a href="./notebooks/tjpa.html">Exemplo TJPA</a></li>
-<li><a href="./notebooks/tjpe.html">Exemplo TJPE</a></li>
-<li><a href="./notebooks/tjes.html">Exemplo TJES</a></li>
-<li><a href="./notebooks/tjms.html">Exemplo TJMS</a></li>
-<li><a href="./notebooks/tjdft.html">Exemplo TJDFT</a></li>
-<li><a href="./notebooks/tjgo.html">Exemplo TJGO</a></li>
-<li><a href="./notebooks/tjmg.html">Exemplo TJMG</a></li>
-<li><a href="./notebooks/tjmt.html">Exemplo TJMT</a></li>
-<li><a href="./notebooks/tjto.html">Exemplo TJTO</a></li>
-<li><a href="./notebooks/tjpb.html">Exemplo TJPB</a></li>
-<li><a href="./notebooks/tjpi.html">Exemplo TJPI</a></li>
-<li><a href="./notebooks/tjrj.html">Exemplo TJRJ</a></li>
-<li><a href="./notebooks/tjrn.html">Exemplo TJRN</a></li>
-<li><a href="./notebooks/tjro.html">Exemplo TJRO</a></li>
-<li><a href="./notebooks/tjrr.html">Exemplo TJRR</a></li>
-<li><a href="./notebooks/tjsc.html">Exemplo TJSC</a></li>
-<li><a href="./notebooks/trf3.html">Exemplo TRF3</a></li>
-<li><a href="./notebooks/trf5.html">Exemplo TRF5</a></li>
-<li><a href="./notebooks/trf6.html">Exemplo TRF6</a></li>
-<li><a href="./notebooks/datajud.html">Exemplo Datajud</a></li>
-<li><a href="./notebooks/jusbr.html">Exemplo Jusbr</a></li>
-<li><a href="./notebooks/falcao.html">Exemplo Falcao</a></li>
+<li><a href="./notebooks/tjac.html">TJAC example</a></li>
+<li><a href="./notebooks/tjal.html">TJAL example</a></li>
+<li><a href="./notebooks/tjam.html">TJAM example</a></li>
+<li><a href="./notebooks/tjap.html">TJAP example</a></li>
+<li><a href="./notebooks/tjba.html">TJBA example</a></li>
+<li><a href="./notebooks/tjce.html">TJCE example</a></li>
+<li><a href="./notebooks/tjdft.html">TJDFT example</a></li>
+<li><a href="./notebooks/tjes.html">TJES example</a></li>
+<li><a href="./notebooks/tjgo.html">TJGO example</a></li>
+<li><a href="./notebooks/tjmg.html">TJMG example</a></li>
+<li><a href="./notebooks/tjms.html">TJMS example</a></li>
+<li><a href="./notebooks/tjmt.html">TJMT example</a></li>
+<li><a href="./notebooks/tjpa.html">TJPA example</a></li>
+<li><a href="./notebooks/tjpb.html">TJPB example</a></li>
+<li><a href="./notebooks/tjpe.html">TJPE example</a></li>
+<li><a href="./notebooks/tjpi.html">TJPI example</a></li>
+<li><a href="./notebooks/tjpr.html">TJPR example</a></li>
+<li><a href="./notebooks/tjrj.html">TJRJ example</a></li>
+<li><a href="./notebooks/tjrn.html">TJRN example</a></li>
+<li><a href="./notebooks/tjro.html">TJRO example</a></li>
+<li><a href="./notebooks/tjrr.html">TJRR example</a></li>
+<li><a href="./notebooks/tjrs.html">TJRS example</a></li>
+<li><a href="./notebooks/tjsc.html">TJSC example</a></li>
+<li><a href="./notebooks/tjsp.html">TJSP example</a></li>
+<li><a href="./notebooks/tjto.html">TJTO example</a></li>
+<li><a href="./notebooks/trf3.html">TRF3 example</a></li>
+<li><a href="./notebooks/trf5.html">TRF5 example</a></li>
+<li><a href="./notebooks/trf6.html">TRF6 example</a></li>
+<li><a href="./notebooks/datajud.html">Datajud example</a></li>
+<li><a href="./notebooks/falcao.html">Falcao example</a></li>
+<li><a href="./notebooks/jusbr.html">JusBR example</a></li>
+<li><a href="./notebooks/pdpj.html">PDPJ example</a></li>
 </ul>
 </section>
 </section>
-<section id="informações-adicionais" class="level2">
-<h2 class="anchored" data-anchor-id="informações-adicionais">Informações adicionais</h2>
-<section id="diferenciais-do-juscraper" class="level3">
-<h3 class="anchored" data-anchor-id="diferenciais-do-juscraper">Diferenciais do <code>juscraper</code>:</h3>
+<section id="additional-information" class="level2">
+<h2 class="anchored" data-anchor-id="additional-information">Additional information</h2>
+<section id="what-sets-juscraper-apart" class="level3">
+<h3 class="anchored" data-anchor-id="what-sets-juscraper-apart">What sets <code>juscraper</code> apart</h3>
 <ul>
-<li>Controle sobre arquivos brutos: o pacote fornece uma interface para baixar e armazenar arquivos brutos (HTML e JSON, por exemplo) dos processos. Por padrão, no entanto, esses arquivos brutos são descartados assim que os dados são processados, com exceção dos arquivos que apresentaram algum problema na leitura.</li>
+<li>Control over raw files: the package provides an interface to download and store the raw files (HTML and JSON, for example) of each case. By default, raw files are discarded once the data is parsed, except for files that failed to parse.</li>
 </ul>
 </section>
-<section id="restrições" class="level3">
-<h3 class="anchored" data-anchor-id="restrições">Restrições:</h3>
-<p>Por ser um pacote bastante complexo e também nichado, adotamos algumas restrições sobre o escopo do pacote para que seja simples de usar.</p>
+<section id="limitations" class="level3">
+<h3 class="anchored" data-anchor-id="limitations">Limitations</h3>
+<p>Because the package is complex and niche, its scope is restricted to keep it simple to use.</p>
 <ul>
-<li>O pacote não utiliza paralelização, ou seja, se o usuário tiver interesse em realizar requisições em paralelo, deverá desenvolver as adaptações necessárias.</li>
-<li>O pacote não possui absolutamente todas as funcionalidades que os tribunais permitem. Se o usuário tiver interesse em consultar processos em mais tribunais, deverá desenvolver os raspadores.</li>
+<li>The package does not parallelize requests; users who want parallel requests must build that themselves.</li>
+<li>The package does not cover every feature the courts offer. Users who need other courts must write the scrapers.</li>
 </ul>
 </section>
 </section>
-<section id="contribuição" class="level2">
-<h2 class="anchored" data-anchor-id="contribuição">Contribuição</h2>
-<p>Interessado em contribuir? Verifique as diretrizes de contribuição no arquivo <a href="https://github.com/jtrecenti/juscraper/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a>. Por favor, note que este projeto é lançado com um Código de Conduta. Ao contribuir para este projeto, você concorda em obedecer às suas termos.</p>
+<section id="contributing" class="level2">
+<h2 class="anchored" data-anchor-id="contributing">Contributing</h2>
+<p>Interested in contributing? See the guidelines in <a href="https://github.com/jtrecenti/juscraper/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a>. This project is released with a Code of Conduct; by contributing, you agree to abide by its terms.</p>
 </section>
-<section id="licença" class="level2">
-<h2 class="anchored" data-anchor-id="licença">Licença</h2>
-<p><code>juscraper</code> foi criado por Julio Trecenti. Está licenciado sob os termos da licença MIT.</p>
+<section id="license" class="level2">
+<h2 class="anchored" data-anchor-id="license">License</h2>
+<p><code>juscraper</code> was created by Julio Trecenti. It is licensed under the terms of the MIT license.</p>
 
 
 </section>
