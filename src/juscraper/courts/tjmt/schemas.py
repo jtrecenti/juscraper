@@ -1,6 +1,6 @@
-"""Pydantic schemas for TJMT scraper endpoints.
+"""Schemas Pydantic dos endpoints do scraper do TJMT.
 
-Wired em :mod:`juscraper.courts.tjmt.client` desde o lote L2 do #165 —
+Integrado em :mod:`juscraper.courts.tjmt.client` desde o lote L2 do #165 —
 :meth:`TJMTScraper.cjsg_download` valida kwargs via :class:`InputCJSGTJMT`
 com ``extra="forbid"`` herdado de :class:`SearchBase`.
 """
@@ -10,23 +10,28 @@ from typing import ClassVar
 
 from pydantic import Field
 
-from ...schemas import DataJulgamentoMixin, OutputCJSGBase, OutputDataPublicacaoMixin, OutputRelatoriaMixin, SearchBase
+from ...schemas import (
+    DataJulgamentoMixin,
+    DataPublicacaoMixin,
+    OutputCJSGBase,
+    OutputDataPublicacaoMixin,
+    OutputRelatoriaMixin,
+    SearchBase,
+)
 
 
-class InputCJSGTJMT(SearchBase, DataJulgamentoMixin):
-    """Accepted input for TJMT ``cjsg`` / ``cjsg_download``.
+class InputCJSGTJMT(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
+    """Entradas aceitas por ``cjsg`` e ``cjsg_download`` do TJMT.
 
-    Endpoint REST JSON (hellsgate-preview). ``pesquisa`` aceita os aliases
+    Endpoint REST JSON de produção. ``pesquisa`` aceita os aliases
     deprecados ``query`` / ``termo`` via
     :func:`juscraper.utils.params.normalize_pesquisa`, que roda *antes*
     deste modelo. Datas aceitam os aliases ``data_inicio``/``data_fim``
     via :func:`juscraper.utils.params.normalize_datas`.
 
-    Apenas filtro de ``data_julgamento_*`` — o backend Hellsgate expoe um
-    unico intervalo (``filtro.periodoDataDe``/``filtro.periodoDataAte``)
-    aplicado a data de julgamento. Nao ha filtro de data de publicacao;
-    ``data_publicacao_*`` levanta ``TypeError`` em vez de ser silenciosamente
-    descartado.
+    ``data_julgamento_*`` permanece na interface por compatibilidade, mas o
+    backend atual filtra por publicação; o downloader rejeita esse filtro
+    explicitamente. ``data_publicacao_*`` é o intervalo suportado nesta etapa.
 
     ``BACKEND_DATE_FORMAT="%Y-%m-%d"`` (ISO) — o Hellsgate aceita datas em
     ``YYYY-MM-DD``, entao :func:`apply_input_pipeline_search` coage as

@@ -1,4 +1,4 @@
-"""Filter-propagation contract for TJMT cjsg."""
+"""Contrato de propagação de filtros do cjsg do TJMT."""
 import pandas as pd
 import pytest
 import responses
@@ -17,14 +17,14 @@ def test_cjsg_all_supported_filters_land_in_query_params(mocker):
     _add_page(
         "dano moral",
         1,
-        "cjsg/filters_all.json",
+        "cjsg/no_results.json",
         tamanho_pagina=5,
         tipo_consulta="Acordao",
-        data_julgamento_inicio="2024-01-01",
-        data_julgamento_fim="2024-03-31",
-        relator="306",
-        orgao_julgador="30",
-        tipo_processo="942",
+        data_publicacao_inicio="2024-01-01",
+        data_publicacao_fim="2024-04-01",
+        relator="Relator Teste",
+        orgao_julgador="Camara Teste",
+        tipo_processo="Cível",
         thesaurus=True,
     )
 
@@ -33,11 +33,11 @@ def test_cjsg_all_supported_filters_land_in_query_params(mocker):
         paginas=1,
         tamanho_pagina=5,
         tipo_consulta="Acordao",
-        data_julgamento_inicio="2024-01-01",
-        data_julgamento_fim="2024-03-31",
-        relator="306",
-        orgao_julgador="30",
-        tipo_processo="942",
+        data_publicacao_inicio="2024-01-01",
+        data_publicacao_fim="2024-03-31",
+        relator="Relator Teste",
+        orgao_julgador="Camara Teste",
+        tipo_processo="Cível",
         thesaurus=True,
     )
 
@@ -80,30 +80,18 @@ def test_cjsg_termo_alias_emits_deprecation_warning(mocker):
 
 
 @responses.activate(registry=OrderedRegistry)
-def test_cjsg_data_inicio_alias_maps_to_data_julgamento(mocker):
-    """Generic ``data_inicio``/``data_fim`` aliases map to
-    ``data_julgamento_inicio``/``data_julgamento_fim`` via ``normalize_datas``
-    and reach the request as the canonical ``filtro.periodoData*`` query params.
-    """
-    mocker.patch("time.sleep")
-    _add_config()
-    _add_page(
-        "dano moral",
-        1,
-        "cjsg/no_results.json",
-        data_julgamento_inicio="2024-01-01",
-        data_julgamento_fim="2024-03-31",
-    )
-
-    with pytest.warns(DeprecationWarning) as warning_list:
-        df = jus.scraper("tjmt").cjsg(
+def test_cjsg_data_inicio_alias_preserves_unsupported_judgment_filter():
+    """Aliases de data genéricos continuam apontando para data de julgamento."""
+    with pytest.warns(DeprecationWarning) as warning_list, pytest.raises(
+        NotImplementedError, match="data_julgamento"
+    ):
+        jus.scraper("tjmt").cjsg(
             "dano moral",
             paginas=1,
             data_inicio="2024-01-01",
             data_fim="2024-03-31",
         )
 
-    assert isinstance(df, pd.DataFrame)
     messages = [str(w.message) for w in warning_list]
     assert any("data_inicio" in m and "deprecado" in m for m in messages)
     assert any("data_fim" in m and "deprecado" in m for m in messages)
@@ -120,16 +108,27 @@ def test_cjsg_unknown_kwarg_raises():
     )
 
 
-def test_cjsg_data_publicacao_raises_typeerror():
-    """TJMT backend nao expoe filtro de data de publicacao — passar
-    ``data_publicacao_*`` deve levantar ``TypeError`` em vez de silently drop
-    (refs #165, #173, #186)."""
-    assert_unknown_kwarg_raises(
-        jus.scraper("tjmt").cjsg,
-        "data_publicacao_inicio",
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_data_publicacao_eh_suportada(mocker):
+    """Datas de publicação chegam ao endpoint novo com limite final exclusivo."""
+    mocker.patch("time.sleep")
+    _add_config()
+    _add_page(
+        "dano moral",
+        1,
+        "cjsg/no_results.json",
+        data_publicacao_inicio="2024-01-01",
+        data_publicacao_fim="2024-04-01",
+    )
+
+    dataframe = jus.scraper("tjmt").cjsg(
         "dano moral",
         paginas=1,
+        data_publicacao_inicio="2024-01-01",
+        data_publicacao_fim="2024-03-31",
     )
+
+    assert isinstance(dataframe, pd.DataFrame)
 
 
 @responses.activate(registry=OrderedRegistry)
@@ -156,31 +155,12 @@ def test_cjsg_tamanho_pagina_collision_raises():
 
 
 @responses.activate(registry=OrderedRegistry)
-def test_cjsg_data_julgamento_aceita_formato_brasileiro(mocker):
-    """Datas em ``DD/MM/YYYY`` chegam coercidas em ISO ao Hellsgate.
-
-    Cobre o caminho end-to-end de ``apply_input_pipeline_search`` lendo
-    ``BACKEND_DATE_FORMAT='%Y-%m-%d'`` declarado em :class:`InputCJSGTJMT`
-    e convertendo via ``coerce_brazilian_date``. Se o schema esquecer de
-    declarar o ``BACKEND_DATE_FORMAT`` (cai no default ``%d/%m/%Y``), o
-    backend recebe ``filtro.periodoDataDe=01/01/2024`` em vez de
-    ``2024-01-01`` e o matcher dispara ``ConnectionError`` (refs #182,
-    #173, #167)."""
-    mocker.patch("time.sleep")
-    _add_config()
-    _add_page(
-        "dano moral",
-        1,
-        "cjsg/no_results.json",
-        data_julgamento_inicio="2024-01-01",
-        data_julgamento_fim="2024-03-31",
-    )
-
-    df = jus.scraper("tjmt").cjsg(
-        "dano moral",
-        paginas=1,
-        data_julgamento_inicio="01/01/2024",
-        data_julgamento_fim="31/03/2024",
-    )
-
-    assert isinstance(df, pd.DataFrame)
+def test_cjsg_data_julgamento_continua_indisponivel():
+    """A API nova não oferece filtro por data de julgamento."""
+    with pytest.raises(NotImplementedError, match="data_julgamento"):
+        jus.scraper("tjmt").cjsg(
+            "dano moral",
+            paginas=1,
+            data_julgamento_inicio="01/01/2024",
+            data_julgamento_fim="31/03/2024",
+        )
