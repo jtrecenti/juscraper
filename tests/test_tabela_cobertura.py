@@ -92,5 +92,9 @@ def test_marcadores_ausentes(tmp_path):
 def test_json(capsys):
     assert tabela_cobertura.main(["--json"]) == 0
     saida = json.loads(capsys.readouterr().out)
-    assert saida == tabela_cobertura.cobertura()
-    assert saida["tribunais"]["trf3"] == ["cpopg", "cjsg"]
+    assert saida == tabela_cobertura.em_exibicao(tabela_cobertura.cobertura())
+    # Na ordem e com os nomes das tabelas: STF primeiro, TRFs no fim, agregadores com o nome exibido.
+    assert saida["tribunais"][0] == {"sigla": "stf", "nome": "STF", "metodos": ["contar_decisoes", "listar_decisoes"]}
+    assert saida["tribunais"][-1]["sigla"] == "trf6"
+    assert {"sigla": "trf3", "nome": "TRF3", "metodos": ["cpopg", "cjsg"]} in saida["tribunais"]
+    assert {"sigla": "comunica_cnj", "nome": "ComunicaCNJ", "metodos": ["listar_comunicacoes"]} in saida["agregadores"]

@@ -39,7 +39,7 @@ dados_cjpg.head(3)
 
 The package covers the basic needs of querying case data in a set of courts.
 
-Each court implements one or more of the methods below; the tables in the Implementations section show which:
+Most courts implement some of the methods below; the tables in the Implementations section show which ones each court and aggregator has (the STF, for example, has `listar_decisoes` and `contar_decisoes` instead):
 
 - `.cpopg()`: first-instance case lookup
 - `.cposg()`: second-instance case lookup
@@ -52,7 +52,7 @@ Each court implements one or more of the methods below; the tables in the Implem
 
 ## Implementations
 
-<!-- tabela-cobertura:inicio (gerada por scripts/tabela_cobertura.py; não editar à mão) -->
+<!-- tabela-cobertura:inicio | scripts/tabela_cobertura.py -->
 
 ### Available courts
 
@@ -121,33 +121,34 @@ These notebooks send live requests to external services and are not guaranteed t
 - [TJAL example](notebooks/tjal.ipynb)
 - [TJAM example](notebooks/tjam.ipynb)
 - [TJAP example](notebooks/tjap.ipynb)
-- [TJCE example](notebooks/tjce.ipynb)
 - [TJBA example](notebooks/tjba.ipynb)
-- [TJSP example](notebooks/tjsp.ipynb)
-- [TJRS example](notebooks/tjrs.ipynb)
-- [TJPR example](notebooks/tjpr.ipynb)
-- [TJPA example](notebooks/tjpa.ipynb)
-- [TJPE example](notebooks/tjpe.ipynb)
-- [TJES example](notebooks/tjes.ipynb)
-- [TJMS example](notebooks/tjms.ipynb)
+- [TJCE example](notebooks/tjce.ipynb)
 - [TJDFT example](notebooks/tjdft.ipynb)
+- [TJES example](notebooks/tjes.ipynb)
 - [TJGO example](notebooks/tjgo.ipynb)
 - [TJMG example](notebooks/tjmg.ipynb)
+- [TJMS example](notebooks/tjms.ipynb)
 - [TJMT example](notebooks/tjmt.ipynb)
-- [TJTO example](notebooks/tjto.ipynb)
+- [TJPA example](notebooks/tjpa.ipynb)
 - [TJPB example](notebooks/tjpb.ipynb)
+- [TJPE example](notebooks/tjpe.ipynb)
 - [TJPI example](notebooks/tjpi.ipynb)
+- [TJPR example](notebooks/tjpr.ipynb)
 - [TJRJ example](notebooks/tjrj.ipynb)
 - [TJRN example](notebooks/tjrn.ipynb)
 - [TJRO example](notebooks/tjro.ipynb)
 - [TJRR example](notebooks/tjrr.ipynb)
+- [TJRS example](notebooks/tjrs.ipynb)
 - [TJSC example](notebooks/tjsc.ipynb)
+- [TJSP example](notebooks/tjsp.ipynb)
+- [TJTO example](notebooks/tjto.ipynb)
 - [TRF3 example](notebooks/trf3.ipynb)
 - [TRF5 example](notebooks/trf5.ipynb)
 - [TRF6 example](notebooks/trf6.ipynb)
 - [Datajud example](notebooks/datajud.ipynb)
-- [Jusbr example](notebooks/jusbr.ipynb)
 - [Falcao example](notebooks/falcao.ipynb)
+- [JusBR example](notebooks/jusbr.ipynb)
+- [PDPJ example](notebooks/pdpj.ipynb)
 
 ## Additional information
 

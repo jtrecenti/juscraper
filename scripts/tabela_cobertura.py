@@ -41,7 +41,8 @@ ARQUIVOS: dict[Path, tuple[str, str, str, str, str]] = {
     ),
     RAIZ / "docs" / "index.qmd": ("Available courts", "Available aggregators", "Court", "Name", "Available methods"),
 }
-INICIO = "<!-- tabela-cobertura:inicio (gerada por scripts/tabela_cobertura.py; não editar à mão) -->"
+# Sem prosa no marcador: ele fica igual no README, em português, e em ``docs/``, em inglês.
+INICIO = "<!-- tabela-cobertura:inicio | scripts/tabela_cobertura.py -->"
 FIM = "<!-- tabela-cobertura:fim -->"
 
 # Os quatro endpoints dos tribunais saem nesta ordem; os demais, em ordem alfabética depois deles.
@@ -155,6 +156,33 @@ def _tabela(cabecalho: tuple[str, str], linhas: list[tuple[str, str]]) -> list[s
     return saida
 
 
+def em_exibicao(grupos: dict[str, dict[str, list[str]]]) -> dict[str, list[dict[str, object]]]:
+    """Ordena cada grupo como nas tabelas e acrescenta o nome exibido.
+
+    É a forma do ``--json``: quem consome a cobertura em outro repositório
+    recebe a ordem e os nomes prontos, sem repetir ``_chave_tribunal`` nem
+    ``NOMES_AGREGADORES``.
+    """
+    tribunais = sorted(grupos["tribunais"].items(), key=lambda item: _chave_tribunal(item[0]))
+    agregadores = sorted(grupos["agregadores"].items())
+    return {
+        "tribunais": [{"sigla": sigla, "nome": sigla.upper(), "metodos": metodos} for sigla, metodos in tribunais],
+        "agregadores": [
+            {"sigla": sigla, "nome": NOMES_AGREGADORES.get(sigla, sigla), "metodos": metodos}
+            for sigla, metodos in agregadores
+        ],
+    }
+
+
+def _linhas(raspadores: list[dict[str, object]]) -> list[tuple[str, str]]:
+    linhas = []
+    for raspador in raspadores:
+        metodos = raspador["metodos"]
+        assert isinstance(metodos, list)
+        linhas.append((str(raspador["nome"]), _celula(str(raspador["sigla"]), metodos)))
+    return linhas
+
+
 def _celula(sigla: str, metodos: list[str]) -> str:
     return ", ".join(f"{metodo} {MARCAS[sigla, metodo]}" if (sigla, metodo) in MARCAS else metodo for metodo in metodos)
 
@@ -162,14 +190,9 @@ def _celula(sigla: str, metodos: list[str]) -> str:
 def bloco(grupos: dict[str, dict[str, list[str]]], titulos: tuple[str, str, str, str, str]) -> str:
     """Monta o bloco Markdown com as duas tabelas, entre os marcadores."""
     secao_tribunais, secao_agregadores, coluna_tribunal, coluna_agregador, coluna_metodos = titulos
-    tribunais = [
-        (sigla.upper(), _celula(sigla, metodos))
-        for sigla, metodos in sorted(grupos["tribunais"].items(), key=lambda item: _chave_tribunal(item[0]))
-    ]
-    agregadores = [
-        (NOMES_AGREGADORES.get(sigla, sigla), _celula(sigla, metodos))
-        for sigla, metodos in sorted(grupos["agregadores"].items())
-    ]
+    exibidos = em_exibicao(grupos)
+    tribunais = _linhas(exibidos["tribunais"])
+    agregadores = _linhas(exibidos["agregadores"])
     linhas = [
         INICIO,
         "",
@@ -204,7 +227,7 @@ def main(argumentos: list[str] | None = None) -> int:
     opcoes = parser.parse_args(argumentos)
     grupos = cobertura()
     if opcoes.json:
-        sys.stdout.write(json.dumps(grupos, ensure_ascii=False, indent=2) + "\n")
+        sys.stdout.write(json.dumps(em_exibicao(grupos), ensure_ascii=False, indent=2) + "\n")
         return 0
     divergentes = []
     for caminho, titulos in ARQUIVOS.items():

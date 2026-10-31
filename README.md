@@ -48,7 +48,7 @@ dados.head()
 
 ## 📊 Implementações
 
-<!-- tabela-cobertura:inicio (gerada por scripts/tabela_cobertura.py; não editar à mão) -->
+<!-- tabela-cobertura:inicio | scripts/tabela_cobertura.py -->
 
 ### Tribunais Disponíveis
 
@@ -158,7 +158,7 @@ O token fica em `~/.config/juscraper/pdpj_token.json` (ou em `$XDG_CONFIG_HOME/j
 
 O pacote foi pensado para atender a requisitos básicos de consulta de dados de processos judiciais em alguns tribunais.
 
-Os tribunais implementados apresentam um ou mais dos métodos abaixo; a tabela da seção Implementações diz quais cada um tem:
+A maior parte dos tribunais implementa alguns dos métodos abaixo; as tabelas da seção Implementações dizem quais cada tribunal e agregador tem (o STF, por exemplo, tem `listar_decisoes` e `contar_decisoes` no lugar deles):
 
 - `.cpopg()`: consulta de processos originários do primeiro grau
 - `.cposg()`: consulta de processos originários do segundo grau
