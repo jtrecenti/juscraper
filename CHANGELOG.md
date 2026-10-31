@@ -14,6 +14,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Fixed
 
 - TJSP `cpopg` HTML valida `processo.codigo` antes da gravação, prevenindo path traversal e retries desnecessários para identificadores inválidos. Refs #402.
+- README e documentação: as tabelas de tribunais e agregadores com os métodos de cada um passam a ser geradas do código. A do README omitia TJAC, TJAL, TJAM, TJGO, TJMG, TJMS, TJRJ, os TRFs e o ComunicaCNJ, e a da documentação listava um método `acordao` do TJSP que não existe.
 
 ## [0.5.0] - 2026-10-21
 

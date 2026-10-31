@@ -48,40 +48,56 @@ dados.head()
 
 ## 📊 Implementações
 
+<!-- tabela-cobertura:inicio | scripts/tabela_cobertura.py -->
+
 ### Tribunais Disponíveis
 
-| Tribunal | Funcionalidades Disponíveis       |
-|----------|-----------------------------------|
-| STF      | listar_decisoes, contar_decisoes  |
-| TJSP     | cpopg, cposg, cjsg, cjpg          |
-| TJES     | cjsg, cjpg                        |
-| TJTO     | cjsg, cjpg                        |
-| TJAP     | cjsg ⚠️                           |
-| TJBA     | cjsg                              |
-| TJCE     | cjsg                              |
-| TJDFT    | cjsg                              |
-| TJMT     | cjsg                              |
-| TJPA     | cjsg                              |
-| TJPB     | cjsg                              |
-| TJPE     | cjsg, cpopg                       |
-| TJPI     | cjsg                              |
-| TJPR     | cjsg                              |
-| TJRN     | cjsg                              |
-| TJRO     | cjsg                              |
-| TJRR     | cjsg                              |
-| TJRS     | cjsg                              |
-| TJSC     | cjsg                              |
-
-> ⚠️ **TJAP — `cjsg` indisponível:** desde ~2026 a busca de jurisprudência do TJAP (plataforma Tucujuris) passou a exigir um CAPTCHA [Cloudflare Turnstile](https://www.cloudflare.com/products/turnstile/), validado no servidor. Como o raspador faz requisições HTTP puras (sem navegador), não há como gerar o token e o backend responde `"A verificação de segurança falhou"`. Nesse caso `cjsg` levanta `TJAPSecurityCheckError` com a explicação, em vez de retornar vazio silenciosamente. Não há solução pela API pública. Ver [issue #279](https://github.com/jtrecenti/juscraper/issues/279).
+| Tribunal | Funcionalidades Disponíveis |
+|----------|-----------------------------|
+| STF      | contar_decisoes, listar_decisoes |
+| TJAC     | cjsg |
+| TJAL     | cjsg |
+| TJAM     | cjsg |
+| TJAP     | cjsg ⚠️ |
+| TJBA     | cjsg |
+| TJCE     | cjsg |
+| TJDFT    | cjsg |
+| TJES     | cjsg, cjpg |
+| TJGO     | cjsg |
+| TJMG     | cposg, cjsg |
+| TJMS     | cjsg |
+| TJMT     | cjsg |
+| TJPA     | cjsg |
+| TJPB     | cjsg |
+| TJPE     | cpopg, cjsg |
+| TJPI     | cjsg |
+| TJPR     | cjsg |
+| TJRJ     | cjsg |
+| TJRN     | cjsg |
+| TJRO     | cjsg |
+| TJRR     | cjsg |
+| TJRS     | cjsg |
+| TJSC     | cjsg |
+| TJSP     | cpopg, cposg, cjsg, cjpg |
+| TJTO     | cjsg, cjpg, cjsg_ementa |
+| TRF1     | cpopg |
+| TRF3     | cpopg, cjsg |
+| TRF5     | cpopg |
+| TRF6     | cpopg |
 
 ### Agregadores Disponíveis
 
-| Nome      | Funcionalidades                   |
-|-----------|-----------------------------------|
-| Datajud   | listar_processos                  |
-| Falcao    | listar_decisoes                   |
-| Jusbr     | cpopg, download_documents         |
-| PDPJ      | existe, cpopg, documentos, movimentos, partes, pesquisa, contar, download_documents |
+| Nome        | Funcionalidades Disponíveis |
+|-------------|-----------------------------|
+| ComunicaCNJ | listar_comunicacoes |
+| Datajud     | contar_processos, listar_processos |
+| Falcao      | listar_decisoes |
+| JusBR       | cpopg, download_documents |
+| PDPJ        | cpopg, contar, documentos, download_documents, existe, movimentos, partes, pesquisa |
+
+<!-- tabela-cobertura:fim -->
+
+> ⚠️ **TJAP — `cjsg` indisponível:** desde ~2026 a busca de jurisprudência do TJAP (plataforma Tucujuris) passou a exigir um CAPTCHA [Cloudflare Turnstile](https://www.cloudflare.com/products/turnstile/), validado no servidor. Como o raspador faz requisições HTTP puras (sem navegador), não há como gerar o token e o backend responde `"A verificação de segurança falhou"`. Nesse caso `cjsg` levanta `TJAPSecurityCheckError` com a explicação, em vez de retornar vazio silenciosamente. Não há solução pela API pública. Ver [issue #279](https://github.com/jtrecenti/juscraper/issues/279).
 
 #### Autenticação no JusBR e no PDPJ
 
@@ -105,37 +121,49 @@ O token fica em `~/.config/juscraper/pdpj_token.json` (ou em `$XDG_CONFIG_HOME/j
 > [!WARNING]
 > **Ambiente de execução:** estes notebooks fazem requisições reais a serviços externos e não têm compatibilidade garantida com o Google Colab. Tribunais podem bloquear ou limitar IPs compartilhados de provedores de nuvem e datacenters, mesmo quando a mesma consulta funciona em uma conexão local. Alguns exemplos também dependem de CAPTCHA, tokens de acesso ou dependências opcionais. A execução local no Jupyter é o ambiente de referência do projeto; uma falha de conexão no Colab não indica, por si só, uma regressão do `juscraper`.
 
-- [Exemplo TJSP](docs/notebooks/tjsp.ipynb)
-- [Exemplo TJRS](docs/notebooks/tjrs.ipynb)
-- [Exemplo TJPR](docs/notebooks/tjpr.ipynb)
-- [Exemplo TJDFT](docs/notebooks/tjdft.ipynb)
+- [Exemplo TJAC](docs/notebooks/tjac.ipynb)
+- [Exemplo TJAL](docs/notebooks/tjal.ipynb)
+- [Exemplo TJAM](docs/notebooks/tjam.ipynb)
 - [Exemplo TJAP](docs/notebooks/tjap.ipynb)
 - [Exemplo TJBA](docs/notebooks/tjba.ipynb)
 - [Exemplo TJCE](docs/notebooks/tjce.ipynb)
+- [Exemplo TJDFT](docs/notebooks/tjdft.ipynb)
 - [Exemplo TJES](docs/notebooks/tjes.ipynb)
+- [Exemplo TJGO](docs/notebooks/tjgo.ipynb)
+- [Exemplo TJMG](docs/notebooks/tjmg.ipynb)
+- [Exemplo TJMS](docs/notebooks/tjms.ipynb)
 - [Exemplo TJMT](docs/notebooks/tjmt.ipynb)
 - [Exemplo TJPA](docs/notebooks/tjpa.ipynb)
 - [Exemplo TJPB](docs/notebooks/tjpb.ipynb)
 - [Exemplo TJPE](docs/notebooks/tjpe.ipynb)
 - [Exemplo TJPI](docs/notebooks/tjpi.ipynb)
+- [Exemplo TJPR](docs/notebooks/tjpr.ipynb)
+- [Exemplo TJRJ](docs/notebooks/tjrj.ipynb)
 - [Exemplo TJRN](docs/notebooks/tjrn.ipynb)
 - [Exemplo TJRO](docs/notebooks/tjro.ipynb)
 - [Exemplo TJRR](docs/notebooks/tjrr.ipynb)
+- [Exemplo TJRS](docs/notebooks/tjrs.ipynb)
 - [Exemplo TJSC](docs/notebooks/tjsc.ipynb)
+- [Exemplo TJSP](docs/notebooks/tjsp.ipynb)
 - [Exemplo TJTO](docs/notebooks/tjto.ipynb)
+- [Exemplo TRF3](docs/notebooks/trf3.ipynb)
+- [Exemplo TRF5](docs/notebooks/trf5.ipynb)
+- [Exemplo TRF6](docs/notebooks/trf6.ipynb)
 - [Exemplo Datajud](docs/notebooks/datajud.ipynb)
-- [Exemplo Jusbr](docs/notebooks/jusbr.ipynb)
+- [Exemplo Falcao](docs/notebooks/falcao.ipynb)
+- [Exemplo JusBR](docs/notebooks/jusbr.ipynb)
 - [Exemplo PDPJ](docs/notebooks/pdpj.ipynb)
 
 ## Detalhes
 
 O pacote foi pensado para atender a requisitos básicos de consulta de dados de processos judiciais em alguns tribunais.
 
-Os tribunais implementados vão apresentar os seguintes métodos:
+A maior parte dos tribunais implementa alguns dos métodos abaixo; as tabelas da seção Implementações dizem quais cada tribunal e agregador tem (o STF, por exemplo, tem `listar_decisoes` e `contar_decisoes` no lugar deles):
 
 - `.cpopg()`: consulta de processos originários do primeiro grau
 - `.cposg()`: consulta de processos originários do segundo grau
-- `.cjsg()`: consulta de jurisprudência
+- `.cjsg()`: consulta de jurisprudência de segundo grau
+- `.cjpg()`: consulta de julgados de primeiro grau
 
 Os métodos `.cpopg()` e `.cposg()` recebem como *input* um número de processo no padrão CNJ (NNNNNNN-DD.AAAA.J.TT.OOOO), com ou sem separadores, e retorna um `dict` com tabelas dos elementos do processo (dados básicos, partes, movimentações, entre outros específicos por tribunal).
 
