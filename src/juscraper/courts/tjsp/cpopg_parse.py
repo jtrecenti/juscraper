@@ -263,7 +263,8 @@ def _movement_rows(soup: BeautifulSoup, path: str) -> list[Tag]:
         avisar(
             f"{path}: a página do processo não traz as movimentações, que o eSAJ "
             "carrega à parte; a tabela 'movimentacoes' sai vazia para ele. "
-            "Baixe o processo de novo com cpopg_download."
+            "Apague o arquivo e baixe o processo de novo com cpopg_download, "
+            "que pula processo com HTML já salvo."
         )
         return []
     container = soup.find('div', id='containerMovimentacoes')

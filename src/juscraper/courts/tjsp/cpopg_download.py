@@ -199,6 +199,12 @@ def _incluir_movimentacoes(html, sessao, url_base, codigo_processo):
         return html
     primeira = _pagina_movimentacoes(sessao, url_base, codigo_processo, cursor=None)
     bloco = BeautifulSoup(primeira, 'html.parser')
+    if bloco.find('tbody', id='tabelaPrimeiraPaginaMovimentacoes') is None:
+        # Sem a tabela, o arquivo gravado leria como processo sem
+        # movimentações; ValueError faz o retry refazer a busca.
+        raise ValueError(
+            f"Movimentações do processo {codigo_processo}: a primeira página veio fora do formato conhecido."
+        )
     outras_paginas = bloco.find('tbody', id='tabelaOutrasPaginasMovimentacoes')
     paginacao = bloco.find('div', id='divLinkMovimentacoesPaginado')
     entrada_cursor = bloco.find('input', id='cursorMovimentacoesPaginado')

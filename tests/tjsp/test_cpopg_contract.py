@@ -310,6 +310,38 @@ def test_cpopg_html_para_quando_o_cursor_se_repete(tmp_path, mocker):
     assert not list((tmp_path / "cpopg").rglob("*.html"))
 
 
+
+@responses.activate
+def test_cpopg_html_para_quando_a_pagina_seguinte_vem_sem_linhas(tmp_path, mocker):
+    """Página seguinte sem movimentações não avança a paginação: o processo fica de fora com erro no log."""
+    mocker.patch("time.sleep")
+    _registrar_busca_incidente()
+    _registrar_pagina_movimentacoes(1)
+    _registrar_pagina_movimentacoes(2, CURSOR_PAGINA_2, body="")
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+    erro = mocker.patch("juscraper.courts.tjsp.cpopg_download.logger.error")
+
+    scraper.cpopg_download(CNJ_INCIDENTE, method="html")
+
+    assert "página sem linhas" in str(erro.call_args.args[-1])
+    assert not list((tmp_path / "cpopg").rglob("*.html"))
+
+
+@responses.activate
+def test_cpopg_html_refaz_a_busca_quando_a_primeira_pagina_vem_fora_do_formato(tmp_path, mocker):
+    """Primeira página sem a tabela (sessão expirada, por exemplo) é tratada como recusa, não como lista vazia."""
+    mocker.patch("time.sleep")
+    _registrar_busca_incidente()
+    _registrar_pagina_movimentacoes(1, body="<html><body>Sessão expirada</body></html>")
+    _registrar_pagina_movimentacoes(1)
+    _registrar_pagina_movimentacoes(2, CURSOR_PAGINA_2)
+    _registrar_pagina_movimentacoes(3, CURSOR_PAGINA_3)
+
+    result = jus.scraper("tjsp", download_path=str(tmp_path)).cpopg(CNJ_INCIDENTE, method="html")
+
+    assert len(_chamadas("search.do")) == 2
+    assert len(result["movimentacoes"]) == 14
+
 # ---------- method='api': busca sem processo ------------------------------
 
 @responses.activate
