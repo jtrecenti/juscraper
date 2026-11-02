@@ -2,11 +2,13 @@
 Downloads of processes from the TJSP Consulta de Processos Originarios do Primeiro Grau (CPOPG).
 """
 import logging
+import re
 import time
 from pathlib import Path
 from urllib.parse import parse_qs, urljoin, urlparse
 
 import requests
+from bs4 import BeautifulSoup
 from tqdm import tqdm
 
 from ...utils import safe_path_component
@@ -27,6 +29,59 @@ _AVISO_CONSULTAS_SIMULTANEAS = "multiplas consultas simult"
 def _consulta_bloqueada(texto):
     """Indica se a busca voltou com o aviso de consultas simultâneas."""
     return _AVISO_CONSULTAS_SIMULTANEAS in texto.lower()
+
+
+# O e-SAJ deixou de mandar as movimentações no show.do: a página vem com o
+# contêiner vazio e o navegador as busca em carregarMovimentacoesAjax.do, cinco
+# por vez, seguindo um cursor opaco. Refs #428.
+_CONTAINER_MOVIMENTACOES = re.compile(r'<div id="containerMovimentacoes">\s*</div>')
+_LIMITE_PAGINAS_MOVIMENTACOES = 2000
+
+
+def _proximo_cursor(pagina, primeira):
+    """Cursor da próxima página; a primeira o traz num input, as demais numa linha oculta."""
+    if primeira:
+        campo = pagina.find('input', id='cursorMovimentacoesPaginado')
+        return campo.get('value') if campo else None
+    linha = pagina.find('tr', id='trCursorMovimentacoes')
+    return linha.get('data-cursor') if linha else None
+
+
+def _buscar_movimentacoes(sessao, url_base, codigo):
+    """Busca todas as páginas de movimentações de um processo e devolve as linhas em HTML."""
+    url = urljoin(url_base, 'cpopg/carregarMovimentacoesAjax.do')
+    linhas: list[str] = []
+    cursor: str | None = None
+    for numero in range(_LIMITE_PAGINAS_MOVIMENTACOES):
+        parametros = {'processo.codigo': codigo}
+        if cursor:
+            parametros['cursor'] = cursor
+        resposta = sessao.get(url, params=parametros)
+        if resposta.status_code != 200:
+            raise requests.HTTPError(
+                f"Falha ao buscar movimentações do código {codigo}. "
+                f"Status code {resposta.status_code}."
+            )
+        pagina = BeautifulSoup(resposta.text, 'html.parser')
+        linhas.extend(str(linha) for linha in pagina.select('tr.containerMovimentacao'))
+        cursor = _proximo_cursor(pagina, primeira=numero == 0)
+        if not cursor:
+            return linhas
+    raise RuntimeError(f"Movimentações do código {codigo} passaram de {_LIMITE_PAGINAS_MOVIMENTACOES} páginas.")
+
+
+def _completar_movimentacoes(html, sessao, url_base, codigo):
+    """Põe as movimentações no HTML do processo, na tabela que o parser já lê."""
+    if not _CONTAINER_MOVIMENTACOES.search(html):
+        # Layout antigo, com a tabela completa no próprio show.do.
+        return html
+    linhas = ''.join(_buscar_movimentacoes(sessao, url_base, codigo))
+    tabela = (
+        '<div id="containerMovimentacoes"><table>'
+        f'<tbody id="tabelaTodasMovimentacoes">{linhas}</tbody>'
+        '</table></div>'
+    )
+    return _CONTAINER_MOVIMENTACOES.sub(lambda _: tabela, html, count=1)
 
 
 def cpopg_download_html(
@@ -184,8 +239,9 @@ def _salvar_resultados_html(
     if len(links) == 1:
         nome_arquivo = f"{caminho}/{id_limpo}_{codigos_processo[0]}.html"
         logger.info("Salvando em %s", nome_arquivo)
+        html = _completar_movimentacoes(resposta.text, sessao, url_base, codigos_processo[0])
         with Path(nome_arquivo).open('w', encoding='utf-8') as arquivo:
-            arquivo.write(resposta.text)
+            arquivo.write(html)
     else:
         for indice, link in enumerate(links):
             # A base termina em barra e o href começa com barra; concatenar
@@ -199,8 +255,11 @@ def _salvar_resultados_html(
                 )
             nome_arquivo = f"{caminho}/{id_limpo}_{codigos_processo[indice]}.html"
             logger.info("Salvando em %s", nome_arquivo)
+            html = _completar_movimentacoes(
+                resposta_documento.text, sessao, url_base, codigos_processo[indice],
+            )
             with Path(nome_arquivo).open('w', encoding='utf-8') as arquivo:
-                arquivo.write(resposta_documento.text)
+                arquivo.write(html)
 
 
 def cpopg_download_api(
