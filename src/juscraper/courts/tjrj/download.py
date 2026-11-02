@@ -131,9 +131,10 @@ def build_cjsg_payload(
         f"{_FIELD_PREFIX}cmbOrgaoJulgador": "",
         f"{_FIELD_PREFIX}cmbTipNumeracao": "1",
         f"{_FIELD_PREFIX}txtNumeracao": "",
-        # chkEmentario fica de fora: marcado, o servidor troca para a busca no
-        # ementario e desmarca acordao e monocratica. No form da 2a instancia
-        # o efeito se anula no mesmo POST; depois do postback de origem, nao.
+        # chkEmentario fica de fora. Marcado junto com os outros, o servidor
+        # ignorava chkAcordao/chkDecMon desmarcados (tipo_acordao=False e
+        # tipo_monocratica=False sem efeito); depois do postback de origem,
+        # trocava a busca para o ementario e desmarcava acordao e monocratica.
         f"{_FIELD_PREFIX}chkIntTeor": "on",
         "g-recaptcha-response": "",
     }

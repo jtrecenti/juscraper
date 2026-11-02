@@ -7,6 +7,7 @@ The TJRJ ASPX backend exposes only year-level granularity (``cmbAnoInicio``
 silent ``warn_unsupported`` behaviour now receives a :class:`TypeError`.
 """
 import json
+from urllib.parse import parse_qs
 
 import pandas as pd
 import pytest
@@ -87,6 +88,10 @@ def test_cjsg_all_filters_land_in_form_body(mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
+    # Com chkEmentario marcado, o servidor ignorava o chkAcordao desmarcado.
+    busca = parse_qs(responses.calls[1].request.body)
+    assert "ctl00$ContentPlaceHolder1$chkAcordao" not in busca
+    assert "ctl00$ContentPlaceHolder1$chkEmentario" not in busca
 
 
 @responses.activate

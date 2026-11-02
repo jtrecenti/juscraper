@@ -246,28 +246,30 @@ def test_cjsg_mesma_instancia_le_a_busca_corrente(mocker):
     O servidor numera as buscas da sessao ASP.NET (``PageSeq`` 0, 1, ...) no
     redirect do form e guarda os parametros de cada uma. Pedir sempre
     ``pageSeq=0`` devolvia, sem erro, o resultado da primeira busca para todas
-    as seguintes.
+    as seguintes. A segunda busca tem duas paginas para fixar que a pagina 2
+    tambem vai com o ``PageSeq`` da busca corrente.
     """
     mocker.patch("time.sleep")
     _add_form_get()
-    _add_form_post("dano moral", page_seq=0, ano_inicio="2024", ano_fim="2024")
-    _add_xhr(0, "xhr_page_01.json", page_seq=0)
-    _add_form_get()
     _add_form_post(
-        "usucapiao extraordinario predio rural familia", page_seq=1,
+        "usucapiao extraordinario predio rural familia", page_seq=0,
         ano_inicio="2024", ano_fim="2024",
     )
-    _add_xhr(0, "xhr_single_page.json", page_seq=1)
+    _add_xhr(0, "xhr_single_page.json", page_seq=0)
+    _add_form_get()
+    _add_form_post("dano moral", page_seq=1, ano_inicio="2024", ano_fim="2024")
+    _add_xhr(0, "xhr_page_01.json", page_seq=1)
+    _add_xhr(1, "xhr_page_02.json", page_seq=1)
 
     tjrj = jus.scraper("tjrj")
-    primeira = tjrj.cjsg_download("dano moral", ano_inicio=2024, ano_fim=2024, paginas=1)
-    segunda = tjrj.cjsg_download(
+    primeira = tjrj.cjsg_download(
         "usucapiao extraordinario predio rural familia",
         ano_inicio=2024, ano_fim=2024, paginas=1,
     )
+    segunda = tjrj.cjsg_download("dano moral", ano_inicio=2024, ano_fim=2024, paginas=range(1, 3))
 
-    assert primeira[0]["TotalDocs"] == _xhr_payload("xhr_page_01.json")["d"]["TotalDocs"]
-    assert segunda[0]["TotalDocs"] == _xhr_payload("xhr_single_page.json")["d"]["TotalDocs"]
+    assert primeira == [_xhr_payload("xhr_single_page.json")["d"]]
+    assert segunda == [_xhr_payload("xhr_page_01.json")["d"], _xhr_payload("xhr_page_02.json")["d"]]
 
 
 def test_cjsg_form_sem_redirect_levanta_erro(mocker):
