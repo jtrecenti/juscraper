@@ -628,7 +628,10 @@ class TJSPScraper(EsajAcordaoScraper):
         Returns:
             dict[str, pd.DataFrame]: Tabelas ``basicos``, ``partes``,
             ``movimentacoes`` e ``peticoes_diversas`` no metodo ``"html"``;
-            no metodo ``"api"``, uma tabela por tipo de JSON baixado.
+            no metodo ``"api"``, uma tabela por tipo de JSON baixado. No
+            ``"html"``, ``basicos`` traz a ``situacao`` do cabecalho
+            ("Extinto", "Suspenso" etc.) e ``movimentacoes`` traz a lista
+            completa, que o download busca pagina a pagina.
         """
         self.set_method(method)
         self.cpopg_download(id_cnj, method)

@@ -2,11 +2,13 @@
 Downloads of processes from the TJSP Consulta de Processos Originarios do Primeiro Grau (CPOPG).
 """
 import logging
+import re
 import time
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 import requests
+from bs4 import BeautifulSoup
 from tqdm import tqdm
 
 from ...utils import safe_path_component
@@ -17,6 +19,20 @@ logger = logging.getLogger('juscraper.cpopg_download')
 
 class _InvalidProcessCodeError(ValueError):
     """Erro de validação de identificador recebido do CPOPG."""
+
+
+class _MovimentacoesIndisponiveisError(ValueError):
+    """O eSAJ recusou a lista de movimentações; a busca é refeita pelo retry."""
+
+
+# A página do processo traz o bloco de movimentações vazio e um botão "Exibir
+# movimentações"; o JavaScript do eSAJ busca a lista em
+# carregarMovimentacoesAjax.do, cinco linhas por página, e segue o cursor de
+# cada página até a última. O fragmento só sai com a sessão que abriu o
+# processo: sem ela, o eSAJ devolve a div mensagemErroMovimentacoes.
+_ROTA_MOVIMENTACOES = "cpopg/carregarMovimentacoesAjax.do"
+_CONTAINER_VAZIO = re.compile(r'<div id="containerMovimentacoes">\s*</div>')
+_BOTAO_EXIBIR = re.compile(r'<div id="containerExibirMovimentacoes".*?</div>', re.DOTALL)
 
 
 def cpopg_download_html(
@@ -152,10 +168,11 @@ def _salvar_resultados_html(
         logger.error("Nenhum link encontrado para o processo %s.", id_limpo)
         raise RuntimeError(f"Nenhum link encontrado para o processo {id_limpo}.")
     if len(links) == 1:
+        html = _incluir_movimentacoes(resposta.text, sessao, url_base, codigos_processo[0])
         nome_arquivo = f"{caminho}/{id_limpo}_{codigos_processo[0]}.html"
         logger.info("Salvando em %s", nome_arquivo)
         with Path(nome_arquivo).open('w', encoding='utf-8') as arquivo:
-            arquivo.write(resposta.text)
+            arquivo.write(html)
     else:
         for indice, link in enumerate(links):
             resposta_documento = sessao.get(f"{url_base}{link}")
@@ -165,10 +182,77 @@ def _salvar_resultados_html(
                     f"Processo: {id_limpo}; Código: {codigos_processo[indice]},"  # noqa: E702
                     f"Status code {resposta_documento.status_code}."
                 )
+            html = _incluir_movimentacoes(
+                resposta_documento.text, sessao, url_base, codigos_processo[indice],
+            )
             nome_arquivo = f"{caminho}/{id_limpo}_{codigos_processo[indice]}.html"
             logger.info("Salvando em %s", nome_arquivo)
             with Path(nome_arquivo).open('w', encoding='utf-8') as arquivo:
-                arquivo.write(resposta_documento.text)
+                arquivo.write(html)
+
+
+def _incluir_movimentacoes(html, sessao, url_base, codigo_processo):
+    """Grava no HTML do processo a lista completa de movimentações.
+
+    O arquivo fica como a página no navegador depois de "Exibir movimentações"
+    e de "Mais" até a última página, e o parser lê só o arquivo. Página sem o
+    bloco vazio (formato antigo, com ``tabelaTodasMovimentacoes``) sai como
+    veio.
+    """
+    if not _CONTAINER_VAZIO.search(html):
+        return html
+    primeira = _pagina_movimentacoes(sessao, url_base, codigo_processo, cursor=None)
+    bloco = BeautifulSoup(primeira, 'html.parser')
+    outras_paginas = bloco.find('tbody', id='tabelaOutrasPaginasMovimentacoes')
+    paginacao = bloco.find('div', id='divLinkMovimentacoesPaginado')
+    entrada_cursor = bloco.find('input', id='cursorMovimentacoesPaginado')
+    cursor = entrada_cursor.get('value') if entrada_cursor else None
+    vistos = set()
+    while cursor:
+        if outras_paginas is None or cursor in vistos:
+            raise RuntimeError(
+                f"Movimentações do processo {codigo_processo}: a paginação não avançaria "
+                f"(cursor {cursor!r})."
+            )
+        vistos.add(cursor)
+        pagina = BeautifulSoup(
+            f"<table><tbody>{_pagina_movimentacoes(sessao, url_base, codigo_processo, cursor)}</tbody></table>",
+            'html.parser',
+        )
+        linha_cursor = pagina.find('tr', id='trCursorMovimentacoes')
+        linhas = pagina.find_all('tr', class_='containerMovimentacao')
+        if not linhas:
+            raise RuntimeError(
+                f"Movimentações do processo {codigo_processo}: página sem linhas no cursor {cursor!r}."
+            )
+        for linha in linhas:
+            outras_paginas.append(linha)
+        cursor = linha_cursor.get('data-cursor') if linha_cursor else None
+    if outras_paginas is not None:
+        del outras_paginas['style']
+    if paginacao is not None:
+        paginacao.decompose()
+    html = _BOTAO_EXIBIR.sub('', html, count=1)
+    return _CONTAINER_VAZIO.sub(
+        lambda _: f'<div id="containerMovimentacoes">{bloco}</div>', html, count=1,
+    )
+
+
+def _pagina_movimentacoes(sessao, url_base, codigo_processo, cursor):
+    """Uma página do carregarMovimentacoesAjax.do; ``cursor=None`` pede a primeira."""
+    parametros = {'processo.codigo': codigo_processo}
+    if cursor:
+        parametros['cursor'] = cursor
+    resposta = sessao.get(f"{url_base}{_ROTA_MOVIMENTACOES}", params=parametros)
+    if resposta.status_code != 200:
+        raise requests.HTTPError(
+            f"Movimentações do processo {codigo_processo}: status code {resposta.status_code}."
+        )
+    if 'mensagemErroMovimentacoes' in resposta.text:
+        raise _MovimentacoesIndisponiveisError(
+            f"O eSAJ recusou as movimentações do processo {codigo_processo}."
+        )
+    return resposta.text
 
 
 def cpopg_download_api(
