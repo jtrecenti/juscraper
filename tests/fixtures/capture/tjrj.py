@@ -136,17 +136,11 @@ def main() -> None:
         page_files={0: "xhr_no_results.json"},
     )
 
-    capture_turma_recursal(dest)
-
-    print(f"[tjrj] ALL samples written to {dest}")
-
-
-def capture_turma_recursal(dest) -> None:
-    """Turma Recursal (``origem="4"``): the form needs the ``cmbOrigem`` postback."""
-    session = requests.Session()
-    session.headers.update({"User-Agent": USER_AGENT})
+    # Turma Recursal (origem="4"): the form needs the cmbOrigem postback.
+    turma_recursal_session = requests.Session()
+    turma_recursal_session.headers.update({"User-Agent": USER_AGENT})
     _capture_query(
-        session,
+        turma_recursal_session,
         dest,
         "cancelamento de voo",
         ano="2025",
@@ -155,6 +149,8 @@ def capture_turma_recursal(dest) -> None:
         origem="4",
         postback_file="postback_origem_turma_recursal.html",
     )
+
+    print(f"[tjrj] ALL samples written to {dest}")
 
 
 if __name__ == "__main__":

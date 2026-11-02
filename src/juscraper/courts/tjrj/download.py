@@ -144,11 +144,6 @@ def build_cjsg_payload(
     return data
 
 
-def _selected_origem(html: str) -> str | None:
-    match = _ORIGEM_SELECTED_RE.search(html)
-    return match.group("value") if match else None
-
-
 def _init_session(
     request_fn: RequestFn,
     pesquisa: str,
@@ -187,7 +182,8 @@ def _init_session(
         magistrado_codigo=magistrado_codigo,
         orgao_codigo=orgao_codigo,
     )
-    if origem != _selected_origem(html):
+    selecionada = _ORIGEM_SELECTED_RE.search(html)
+    if selecionada is None or selecionada.group("value") != origem:
         # Trocar a origem no mesmo POST da busca dispara o evento de troca de
         # cmbOrigem no servidor, que recarrega os combos de ano no padrao (ano
         # corrente) depois de ler os anos enviados: o filtro de ano se perdia
