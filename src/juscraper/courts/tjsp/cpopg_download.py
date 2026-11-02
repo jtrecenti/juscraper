@@ -52,6 +52,7 @@ def _buscar_movimentacoes(sessao, url_base, codigo):
     url = urljoin(url_base, 'cpopg/carregarMovimentacoesAjax.do')
     linhas: list[str] = []
     cursor: str | None = None
+    pagina_anterior: list[str] = []
     for numero in range(_LIMITE_PAGINAS_MOVIMENTACOES):
         parametros = {'processo.codigo': codigo}
         if cursor:
@@ -64,10 +65,15 @@ def _buscar_movimentacoes(sessao, url_base, codigo):
             )
         pagina = BeautifulSoup(resposta.text, 'html.parser')
         novas = pagina.select('tr.containerMovimentacao')
+        # Depois da última página, o e-SAJ pode repetir essa mesma página com
+        # um cursor novo a cada chamada, ou devolver o mesmo cursor com páginas
+        # vazias.
+        textos = [linha.get_text(' ', strip=True) for linha in novas]
+        if textos and textos == pagina_anterior:
+            return linhas
+        pagina_anterior = textos
         linhas.extend(str(linha) for linha in novas)
         anterior, cursor = cursor, _proximo_cursor(pagina, primeira=numero == 0)
-        # Há processos em que o e-SAJ segue devolvendo o mesmo cursor com
-        # páginas vazias depois da última movimentação.
         if not cursor or not novas or cursor == anterior:
             return linhas
     raise RuntimeError(f"Movimentações do código {codigo} passaram de {_LIMITE_PAGINAS_MOVIMENTACOES} páginas.")

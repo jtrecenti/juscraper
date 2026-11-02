@@ -84,3 +84,16 @@ def test_cursor_repetido_com_pagina_vazia_encerra_a_busca():
     sessao.get.side_effect = [primeira, vazia, vazia]
     _completar_movimentacoes(SHOW_SOB_DEMANDA, sessao, BASE, CODIGO)
     assert sessao.get.call_count == 2
+
+
+def test_ultima_pagina_repetida_com_cursor_novo_encerra_a_busca(tmp_path):
+    primeira, meio, ultima = _paginas()
+    # A última página volta igual, só com outro cursor.
+    repetida = Mock(text=ultima.text + '<tr id="trCursorMovimentacoes" data-cursor="outro-1"></tr>', status_code=200)
+    de_novo = Mock(text=ultima.text + '<tr id="trCursorMovimentacoes" data-cursor="outro-2"></tr>', status_code=200)
+    sessao = Mock()
+    sessao.get.side_effect = [primeira, meio, repetida, de_novo, de_novo]
+    arquivo = tmp_path / "processo.html"
+    arquivo.write_text(_completar_movimentacoes(SHOW_SOB_DEMANDA, sessao, BASE, CODIGO), encoding="utf-8")
+    assert sessao.get.call_count == 4
+    assert len(cpopg_parse_single_html(str(arquivo))["movimentacoes"]) == 15
