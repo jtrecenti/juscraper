@@ -4,7 +4,7 @@ Downloads of processes from the TJSP Consulta de Processos Originarios do Primei
 import logging
 import time
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, urljoin, urlparse
 
 import requests
 from tqdm import tqdm
@@ -17,6 +17,16 @@ logger = logging.getLogger('juscraper.cpopg_download')
 
 class _InvalidProcessCodeError(ValueError):
     """Erro de validação de identificador recebido do CPOPG."""
+
+
+# Aviso que o e-SAJ devolve, no lugar do resultado, quando recebe buscas em
+# sequência rápida na mesma sessão. O bloqueio passa em alguns segundos.
+_AVISO_CONSULTAS_SIMULTANEAS = "multiplas consultas simult"
+
+
+def _consulta_bloqueada(texto):
+    """Indica se a busca voltou com o aviso de consultas simultâneas."""
+    return _AVISO_CONSULTAS_SIMULTANEAS in texto.lower()
 
 
 def cpopg_download_html(
@@ -96,9 +106,23 @@ def cpopg_download_html_single(
         'dadosConsulta.valorConsulta': '',
         'dadosConsulta.tipoNuProcesso': 'UNIFICADO'
     }
-    for _ in range(5):
+    bloqueada = False
+    for tentativa in range(5):
         try:
             r = session.get(u, params=parms)
+            bloqueada = _consulta_bloqueada(r.text)
+            if bloqueada:
+                # Sem esta checagem, a página de aviso (que não tem links)
+                # faria o processo parecer inexistente.
+                espera = max(sleep_time, 1) * 2 ** tentativa
+                logger.warning(
+                    "e-SAJ bloqueou a busca do processo %s por consultas "
+                    "simultâneas. Tentando novamente em %.1f segundos.",
+                    id_cnj,
+                    espera,
+                )
+                time.sleep(espera)
+                continue
             if get_links_callback is None:
                 raise RuntimeError(
                     "get_links_callback precisa ser"
@@ -125,6 +149,12 @@ def cpopg_download_html_single(
                 e
             )
             time.sleep(sleep_time)
+    else:
+        if bloqueada:
+            raise RuntimeError(
+                f"e-SAJ manteve o bloqueio por consultas simultâneas para o "
+                f"processo {id_clean}; aumente o sleep_time."
+            )
     return path
 
 
@@ -158,7 +188,9 @@ def _salvar_resultados_html(
             arquivo.write(resposta.text)
     else:
         for indice, link in enumerate(links):
-            resposta_documento = sessao.get(f"{url_base}{link}")
+            # A base termina em barra e o href começa com barra; concatenar
+            # gera "//cpopg/show.do", que o e-SAJ responde com 404.
+            resposta_documento = sessao.get(urljoin(url_base, link))
             if resposta_documento.status_code != 200:
                 raise requests.HTTPError(
                     f"A consulta ao site falhou."

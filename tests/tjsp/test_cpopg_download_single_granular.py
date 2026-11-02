@@ -5,6 +5,7 @@ import pytest
 import requests
 
 from juscraper.courts.tjsp.cpopg_download import cpopg_download_html_single
+from tests._helpers import load_sample
 
 CNJ = "1000000-00.2024.8.26.0001"
 CNJ_LIMPO = "10000000020248260001"
@@ -13,10 +14,10 @@ LINKS = [
     "/cpopg/show.do?localPesquisa.cdLocal=346&processo.codigo=PRIMEIRO&processo.foro=346",
     "/cpopg/show.do?localPesquisa.cdLocal=346&processo.codigo=SEGUNDO&processo.foro=346",
 ]
-# A barra dupla é o comportamento atual: a base termina em barra e o href começa com barra.
+# A base termina em barra e o href começa com barra; a URL final tem barra simples.
 URLS_DOCUMENTOS = [
-    "https://esaj.tjsp.jus.br//cpopg/show.do?localPesquisa.cdLocal=346&processo.codigo=PRIMEIRO&processo.foro=346",
-    "https://esaj.tjsp.jus.br//cpopg/show.do?localPesquisa.cdLocal=346&processo.codigo=SEGUNDO&processo.foro=346",
+    "https://esaj.tjsp.jus.br/cpopg/show.do?localPesquisa.cdLocal=346&processo.codigo=PRIMEIRO&processo.foro=346",
+    "https://esaj.tjsp.jus.br/cpopg/show.do?localPesquisa.cdLocal=346&processo.codigo=SEGUNDO&processo.foro=346",
 ]
 
 
@@ -95,6 +96,28 @@ def test_callback_ausente_falha_depois_da_requisicao(tmp_path, contexto):
         cpopg_download_html_single(CNJ, sessao, BASE, str(tmp_path), 0.2)
     assert sessao.get.call_count == 1
     pausa.assert_called_once_with(0.2)
+
+
+def test_bloqueio_por_consultas_simultaneas_espera_e_repete_busca(tmp_path, contexto):
+    sessao, resposta, extrair, pausa, diretorio = contexto
+    bloqueio = Mock(text=load_sample("tjsp", "cpopg/search_consultas_simultaneas.html"), status_code=200)
+    sessao.get.side_effect = [bloqueio, bloqueio, resposta]
+    cpopg_download_html_single(CNJ, sessao, BASE, str(tmp_path), 0.2, extrair)
+    # Recuo progressivo com piso de 1 segundo; o callback só vê a busca boa.
+    assert pausa.call_args_list == [call(0.2), call(1), call(2)]
+    extrair.assert_called_once_with(resposta)
+    assert (diretorio / f"{CNJ_LIMPO}_PRIMEIRO.html").read_text(encoding="utf-8") == resposta.text
+
+
+def test_bloqueio_persistente_levanta_erro(tmp_path, contexto):
+    sessao, _, extrair, pausa, diretorio = contexto
+    sessao.get.return_value = Mock(text="Foram identificadas multiplas consultas simultâneas.", status_code=200)
+    with pytest.raises(RuntimeError, match="consultas simultâneas"):
+        cpopg_download_html_single(CNJ, sessao, BASE, str(tmp_path), 0.2, extrair)
+    assert sessao.get.call_count == 5
+    assert pausa.call_args_list == [call(0.2), call(1), call(2), call(4), call(8), call(16)]
+    extrair.assert_not_called()
+    assert list(diretorio.iterdir()) == []
 
 
 @pytest.mark.parametrize("erro", [
