@@ -17,6 +17,8 @@ import juscraper as jus
 from juscraper.courts.tjrj.download import FORM_URL, RESULT_URL, build_cjsg_payload, extract_viewstate_fields
 from tests._helpers import assert_unknown_kwarg_raises, load_sample, urlencoded_body_subset_matcher
 
+RESULTS_PAGE_URL = "https://www3.tjrj.jus.br/EJURIS/ProcessarConsJurisES.aspx"
+
 
 def _form_html() -> str:
     return load_sample("tjrj", "cjsg/post_initial.html")
@@ -41,11 +43,14 @@ def _add_form_get() -> None:
                   content_type="text/html; charset=utf-8")
 
 
-def _add_form_post(pesquisa: str, **overrides) -> None:
+def _add_form_post(pesquisa: str, page_seq: int = 0, **overrides) -> None:
+    """Form POST answered like the backend: 302 to the results page with ``PageSeq``."""
     responses.add(
-        responses.POST, FORM_URL, body=b"", status=200,
+        responses.POST, FORM_URL, status=302,
+        headers={"Location": f"/EJURIS/ProcessarConsJurisES.aspx?PageSeq={page_seq}&Version=1.2.2.3"},
         match=[urlencoded_body_subset_matcher(_expected_body_subset(pesquisa, **overrides))],
     )
+    responses.add(responses.GET, RESULTS_PAGE_URL, body=b"", status=200)
 
 
 def _add_xhr_zero() -> None:
