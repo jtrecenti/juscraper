@@ -237,6 +237,11 @@ def _extract_movements(soup: BeautifulSoup, path: str) -> list[dict]:
             continue
         description_cell = cells[2]
         main_description = description_cell.find(string=True, recursive=False) or ''
+        if not main_description.strip():
+            # Movimentação com documento: a descrição fica dentro do link
+            # (a.linkMovVincProc), e o texto direto da célula é só espaço.
+            link = description_cell.find('a')
+            main_description = link.get_text(' ', strip=True) if link else ''
         italic_span = description_cell.find('span', style='font-style: italic;')
         movements.append({
             'file_path': path,

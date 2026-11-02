@@ -63,3 +63,24 @@ def test_falha_no_ajax_levanta_http_error():
     sessao.get.return_value = Mock(text="", status_code=500)
     with pytest.raises(requests.HTTPError, match="movimentações"):
         _completar_movimentacoes(SHOW_SOB_DEMANDA, sessao, BASE, CODIGO)
+
+
+def test_movimentacao_com_documento_le_a_descricao_do_link(tmp_path):
+    sessao = Mock()
+    sessao.get.side_effect = _paginas()
+    arquivo = tmp_path / "processo.html"
+    arquivo.write_text(_completar_movimentacoes(SHOW_SOB_DEMANDA, sessao, BASE, CODIGO), encoding="utf-8")
+    movimentacoes = cpopg_parse_single_html(str(arquivo))["movimentacoes"]
+    assert (movimentacoes["movimento"].str.len() > 0).all()
+    # Na página do meio, o ato ordinatório tem o documento vinculado em a.linkMovVincProc.
+    assert movimentacoes["movimento"].str.startswith("Ato Ordinatório").any()
+
+
+def test_cursor_repetido_com_pagina_vazia_encerra_a_busca():
+    primeira = _paginas()[0]
+    cursor = BeautifulSoup(primeira.text, "html.parser").find("input", id="cursorMovimentacoesPaginado")["value"]
+    vazia = Mock(text=f'<tr id="trCursorMovimentacoes" data-cursor="{cursor}"></tr>', status_code=200)
+    sessao = Mock()
+    sessao.get.side_effect = [primeira, vazia, vazia]
+    _completar_movimentacoes(SHOW_SOB_DEMANDA, sessao, BASE, CODIGO)
+    assert sessao.get.call_count == 2

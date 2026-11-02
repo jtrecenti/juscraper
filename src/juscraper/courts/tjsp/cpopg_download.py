@@ -63,9 +63,12 @@ def _buscar_movimentacoes(sessao, url_base, codigo):
                 f"Status code {resposta.status_code}."
             )
         pagina = BeautifulSoup(resposta.text, 'html.parser')
-        linhas.extend(str(linha) for linha in pagina.select('tr.containerMovimentacao'))
-        cursor = _proximo_cursor(pagina, primeira=numero == 0)
-        if not cursor:
+        novas = pagina.select('tr.containerMovimentacao')
+        linhas.extend(str(linha) for linha in novas)
+        anterior, cursor = cursor, _proximo_cursor(pagina, primeira=numero == 0)
+        # Há processos em que o e-SAJ segue devolvendo o mesmo cursor com
+        # páginas vazias depois da última movimentação.
+        if not cursor or not novas or cursor == anterior:
             return linhas
     raise RuntimeError(f"Movimentações do código {codigo} passaram de {_LIMITE_PAGINAS_MOVIMENTACOES} páginas.")
 
