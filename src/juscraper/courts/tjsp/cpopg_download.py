@@ -21,10 +21,6 @@ class _InvalidProcessCodeError(ValueError):
     """Erro de validação de identificador recebido do CPOPG."""
 
 
-class _MovimentacoesIndisponiveisError(ValueError):
-    """O eSAJ recusou a lista de movimentações; a busca é refeita pelo retry."""
-
-
 # A página do processo traz o bloco de movimentações vazio e um botão "Exibir
 # movimentações"; o JavaScript do eSAJ busca a lista em
 # carregarMovimentacoesAjax.do, cinco linhas por página, e segue o cursor de
@@ -249,7 +245,9 @@ def _pagina_movimentacoes(sessao, url_base, codigo_processo, cursor):
             f"Movimentações do processo {codigo_processo}: status code {resposta.status_code}."
         )
     if 'mensagemErroMovimentacoes' in resposta.text:
-        raise _MovimentacoesIndisponiveisError(
+        # ValueError: o retry de cpopg_download_html_single refaz a busca,
+        # que reabre o processo na sessão.
+        raise ValueError(
             f"O eSAJ recusou as movimentações do processo {codigo_processo}."
         )
     return resposta.text
