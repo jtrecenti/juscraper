@@ -611,13 +611,25 @@ class TJSPScraper(EsajAcordaoScraper):
     # --- cpopg ----------------------------------------------------------
     # Kept as-is — unique to TJSP, not eSAJ-search-shaped.
 
-    def cpopg(self, id_cnj: str | list[str], method: Literal["html", "api"] = "html"):
+    def cpopg(
+        self,
+        id_cnj: str | list[str],
+        method: Literal["html", "api"] = "html",
+        *,
+        baixar_movimentacoes: bool = True,
+    ):
         """Baixa processos de primeiro grau pelo CNJ e devolve as tabelas extraidas.
 
         Args:
             id_cnj (str | list[str]): Numero CNJ ou lista de numeros CNJ.
             method (str): ``"html"`` (paginas do eSAJ) ou ``"api"``. Default
                 ``"html"``.
+            baixar_movimentacoes (bool): Com ``False``, nao baixa as
+                movimentacoes, e a tabela delas sai vazia (no ``"html"``, a
+                pagina no formato antigo ja traz a lista e sai completa). No
+                ``"html"``, cada processo custa uma requisicao a mais por cinco
+                movimentacoes, mais uma; desligar poupa essas requisicoes.
+                Default ``True``.
 
         Raises:
             ValueError: Quando ``method`` nao e suportado, ou quando nenhum
@@ -628,10 +640,13 @@ class TJSPScraper(EsajAcordaoScraper):
         Returns:
             dict[str, pd.DataFrame]: Tabelas ``basicos``, ``partes``,
             ``movimentacoes`` e ``peticoes_diversas`` no metodo ``"html"``;
-            no metodo ``"api"``, uma tabela por tipo de JSON baixado.
+            no metodo ``"api"``, uma tabela por tipo de JSON baixado. No
+            ``"html"``, ``basicos`` traz a ``situacao`` do cabecalho
+            ("Extinto", "Suspenso" etc.) e ``movimentacoes`` traz a lista
+            completa, que o download busca pagina a pagina.
         """
         self.set_method(method)
-        self.cpopg_download(id_cnj, method)
+        self.cpopg_download(id_cnj, method, baixar_movimentacoes=baixar_movimentacoes)
         result = self.cpopg_parse(self.download_path)
         shutil.rmtree(self.download_path)
         return result
@@ -641,6 +656,8 @@ class TJSPScraper(EsajAcordaoScraper):
         id_cnj: str | list[str],
         method: Literal["html", "api"] = "html",
         diretorio: str | None = None,
+        *,
+        baixar_movimentacoes: bool = True,
     ):
         """Baixa arquivos brutos do CPOPG via ``'html'`` ou ``'api'``.
 
@@ -649,6 +666,10 @@ class TJSPScraper(EsajAcordaoScraper):
             method: Transporte usado no download. Default ``"html"``.
             diretorio: Sobrescreve :attr:`download_path` para esta chamada.
                 Default ``None``.
+            baixar_movimentacoes: Com ``False``, nao baixa as movimentacoes.
+                Ver :meth:`cpopg`. No ``"html"``, um download com ``True`` no
+                mesmo diretorio baixa de novo o processo salvo sem elas.
+                Default ``True``.
         """
         self.set_method(method)
         if isinstance(id_cnj, str):
@@ -663,6 +684,7 @@ class TJSPScraper(EsajAcordaoScraper):
                 download_path=diretorio or self.download_path,
                 sleep_time=self.sleep_time,
                 get_links_callback=get_links_callback,
+                baixar_movimentacoes=baixar_movimentacoes,
             )
         elif self.method == "api":
             cpopg_download_api(
@@ -670,6 +692,7 @@ class TJSPScraper(EsajAcordaoScraper):
                 session=self.session,
                 api_base=self.api_base,
                 download_path=diretorio or self.download_path,
+                baixar_movimentacoes=baixar_movimentacoes,
             )
         else:
             raise ValueError(f"Método '{method}' não é suportado.")

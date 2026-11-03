@@ -21,6 +21,9 @@ class _InvalidProcessCodeError(ValueError):
     """Erro de validação de identificador recebido do CPOPG."""
 
 
+_TENTATIVAS = 5
+
+
 # Aviso que o e-SAJ devolve, no lugar do resultado, quando recebe buscas em
 # sequência rápida na mesma sessão. O bloqueio passa em alguns segundos.
 _AVISO_CONSULTAS_SIMULTANEAS = "multiplas consultas simult"
@@ -32,9 +35,12 @@ def _consulta_bloqueada(texto):
 
 
 # O e-SAJ deixou de mandar as movimentações no show.do: a página vem com o
-# contêiner vazio e o navegador as busca em carregarMovimentacoesAjax.do, cinco
-# por vez, seguindo um cursor opaco. Refs #428.
+# contêiner vazio e o botão "Exibir movimentações", e o navegador as busca em
+# carregarMovimentacoesAjax.do, cinco por vez, seguindo um cursor opaco. O
+# fragmento só sai com a sessão que abriu o processo: sem ela, o e-SAJ devolve
+# a div mensagemErroMovimentacoes. Refs #428.
 _CONTAINER_MOVIMENTACOES = re.compile(r'<div id="containerMovimentacoes">\s*</div>')
+_BOTAO_EXIBIR = re.compile(r'<div id="containerExibirMovimentacoes".*?</div>', re.DOTALL)
 _LIMITE_PAGINAS_MOVIMENTACOES = 2000
 
 
@@ -47,6 +53,30 @@ def _proximo_cursor(pagina, primeira):
     return linha.get('data-cursor') if linha else None
 
 
+def _pagina_movimentacoes(sessao, url, codigo, cursor, primeira):
+    """Uma página do carregarMovimentacoesAjax.do, já lida."""
+    parametros = {'processo.codigo': codigo}
+    if cursor:
+        parametros['cursor'] = cursor
+    resposta = sessao.get(url, params=parametros)
+    if resposta.status_code != 200:
+        raise requests.HTTPError(
+            f"Falha ao buscar movimentações do código {codigo}. "
+            f"Status code {resposta.status_code}."
+        )
+    # Os dois ValueError fazem o retry de cpopg_download_html_single refazer a
+    # busca, que reabre o processo na sessão. Sem a checagem da primeira página
+    # (sessão expirada, por exemplo), o processo seria gravado sem movimentações.
+    if 'mensagemErroMovimentacoes' in resposta.text:
+        raise ValueError(f"O e-SAJ recusou as movimentações do código {codigo}.")
+    pagina = BeautifulSoup(resposta.text, 'html.parser')
+    if primeira and pagina.find('tbody', id='tabelaPrimeiraPaginaMovimentacoes') is None:
+        raise ValueError(
+            f"Movimentações do código {codigo}: a primeira página veio fora do formato conhecido."
+        )
+    return pagina
+
+
 def _buscar_movimentacoes(sessao, url_base, codigo):
     """Busca todas as páginas de movimentações de um processo e devolve as linhas em HTML."""
     url = urljoin(url_base, 'cpopg/carregarMovimentacoesAjax.do')
@@ -54,16 +84,7 @@ def _buscar_movimentacoes(sessao, url_base, codigo):
     cursor: str | None = None
     pagina_anterior: list[str] = []
     for numero in range(_LIMITE_PAGINAS_MOVIMENTACOES):
-        parametros = {'processo.codigo': codigo}
-        if cursor:
-            parametros['cursor'] = cursor
-        resposta = sessao.get(url, params=parametros)
-        if resposta.status_code != 200:
-            raise requests.HTTPError(
-                f"Falha ao buscar movimentações do código {codigo}. "
-                f"Status code {resposta.status_code}."
-            )
-        pagina = BeautifulSoup(resposta.text, 'html.parser')
+        pagina = _pagina_movimentacoes(sessao, url, codigo, cursor, primeira=numero == 0)
         novas = pagina.select('tr.containerMovimentacao')
         # Depois da última página, o e-SAJ pode repetir essa mesma página com
         # um cursor novo a cada chamada, ou devolver o mesmo cursor com páginas
@@ -79,11 +100,18 @@ def _buscar_movimentacoes(sessao, url_base, codigo):
     raise RuntimeError(f"Movimentações do código {codigo} passaram de {_LIMITE_PAGINAS_MOVIMENTACOES} páginas.")
 
 
-def _completar_movimentacoes(html, sessao, url_base, codigo):
-    """Põe as movimentações no HTML do processo, na tabela que o parser já lê."""
+def _completar_movimentacoes(html, sessao, url_base, codigo, *, baixar_movimentacoes=True):
+    """Põe as movimentações no HTML do processo, na tabela que o parser já lê.
+
+    Com ``baixar_movimentacoes=False`` sai só sem o botão: o parser avisa
+    quando acha o botão, e quem desligou o download não precisa do aviso. O
+    contêiner continua vazio, e ``_sem_movimentacoes`` o reconhece.
+    """
     if not _CONTAINER_MOVIMENTACOES.search(html):
         # Layout antigo, com a tabela completa no próprio show.do.
         return html
+    if not baixar_movimentacoes:
+        return _BOTAO_EXIBIR.sub('', html, count=1)
     linhas = ''.join(_buscar_movimentacoes(sessao, url_base, codigo))
     tabela = (
         '<div id="containerMovimentacoes"><table>'
@@ -99,7 +127,9 @@ def cpopg_download_html(
     u_base,
     download_path,
     sleep_time=0.5,
-    get_links_callback=None
+    get_links_callback=None,
+    *,
+    baixar_movimentacoes=True,
 ):
     """
     Downloads processes in HTML from the TJSP Consulta de Processos Originários do Primeiro Grau (CPOPG).
@@ -109,6 +139,7 @@ def cpopg_download_html(
     download_path: base directory to save
     sleep_time: interval between attempts
     get_links_callback: function to extract links from HTML
+    baixar_movimentacoes: with False, skips the movements requests
     """
     n_items = len(id_cnj_list)
     for idp in tqdm(id_cnj_list, total=n_items, desc="Baixando processos"):
@@ -119,7 +150,8 @@ def cpopg_download_html(
                 u_base,
                 download_path,
                 sleep_time,
-                get_links_callback
+                get_links_callback,
+                baixar_movimentacoes=baixar_movimentacoes,
             )
         except (OSError, UnicodeDecodeError, ValueError,
                 AttributeError, RuntimeError, requests.RequestException) as e:
@@ -137,7 +169,9 @@ def cpopg_download_html_single(
     u_base,
     download_path,
     sleep_time=0.5,
-    get_links_callback=None
+    get_links_callback=None,
+    *,
+    baixar_movimentacoes=True,
 ):
     """
     Downloads a process in HTML from the TJSP Consulta de Processos Originarios do Primeiro Grau (CPOPG).
@@ -147,16 +181,16 @@ def cpopg_download_html_single(
     download_path: base directory to save
     sleep_time: interval between attempts
     get_links_callback: function to extract links from HTML
+    baixar_movimentacoes: with False, skips the movements requests
     """
     id_clean = clean_cnj(id_cnj)
     path = f"{download_path}/cpopg/{id_clean}"
     logger.info("Salvando em %s", path)
     if not Path(path).is_dir():
         Path(path).mkdir(parents=True)
-    for file in Path(path).iterdir():
-        if file.name.endswith('.html'):
-            logger.info("O processo %s ja foi baixado.", id_clean)
-            return path
+    if _ja_baixado(path, baixar_movimentacoes):
+        logger.info("O processo %s ja foi baixado.", id_clean)
+        return path
     time.sleep(sleep_time)
     id_format = format_cnj(id_clean)
     p = split_cnj(id_clean)
@@ -171,7 +205,8 @@ def cpopg_download_html_single(
         'dadosConsulta.tipoNuProcesso': 'UNIFICADO'
     }
     bloqueada = False
-    for tentativa in range(5):
+    ultimo_erro = None
+    for tentativa in range(_TENTATIVAS):
         try:
             r = session.get(u, params=parms)
             bloqueada = _consulta_bloqueada(r.text)
@@ -196,6 +231,7 @@ def cpopg_download_html_single(
             codigos_processo = _extrair_codigos_processo(links)
             _salvar_resultados_html(
                 r, links, id_clean, path, session, u_base, codigos_processo,
+                baixar_movimentacoes=baixar_movimentacoes,
             )
             break
         except _InvalidProcessCodeError:
@@ -205,6 +241,7 @@ def cpopg_download_html_single(
             raise
         except (OSError, UnicodeDecodeError, ValueError,
                 AttributeError, requests.RequestException) as e:
+            ultimo_erro = e
             logger.error(
                 "Erro ao conectar ao site (processo %s)."
                 "Tentando novamente em %.1f segundos. (%s)",
@@ -219,7 +256,21 @@ def cpopg_download_html_single(
                 f"e-SAJ manteve o bloqueio por consultas simultâneas para o "
                 f"processo {id_clean}; aumente o sleep_time."
             )
+        raise RuntimeError(
+            f"Processo {id_clean}: {_TENTATIVAS} tentativas sem sucesso; último erro: {ultimo_erro}"
+        ) from ultimo_erro
     return path
+
+
+def _ja_baixado(path, baixar_movimentacoes):
+    """Indica se a pasta do processo já tem o download completo."""
+    # Os documentos de um processo são gravados juntos no fim
+    # (_salvar_resultados_html), então um .html na pasta indica o processo
+    # inteiro. O de 0 byte vem de versão que gravava antes de ler a resposta.
+    salvos = [
+        file for file in Path(path).iterdir() if file.name.endswith('.html') and file.stat().st_size > 0
+    ]
+    return bool(salvos) and not (baixar_movimentacoes and any(map(_sem_movimentacoes, salvos)))
 
 
 def _extrair_codigos_processo(links):
@@ -240,17 +291,25 @@ def _extrair_codigos_processo(links):
 
 def _salvar_resultados_html(
     resposta, links, id_limpo, caminho, sessao, url_base, codigos_processo,
+    *,
+    baixar_movimentacoes=True,
 ):
-    """Salva a busca ou os documentos individuais."""
+    """Salva a busca ou os documentos individuais.
+
+    Os documentos ficam em memória até o último ser baixado e só então são
+    gravados, cada um por arquivo temporário renomeado: uma falha no meio não
+    deixa na pasta parte dos documentos, nem um ``.html`` vazio, e o teste de
+    "já baixado" em :func:`cpopg_download_html_single` continua valendo.
+    """
     if len(links) == 0:
         logger.error("Nenhum link encontrado para o processo %s.", id_limpo)
         raise RuntimeError(f"Nenhum link encontrado para o processo {id_limpo}.")
+    documentos = {}
     if len(links) == 1:
-        nome_arquivo = f"{caminho}/{id_limpo}_{codigos_processo[0]}.html"
-        logger.info("Salvando em %s", nome_arquivo)
-        html = _completar_movimentacoes(resposta.text, sessao, url_base, codigos_processo[0])
-        with Path(nome_arquivo).open('w', encoding='utf-8') as arquivo:
-            arquivo.write(html)
+        documentos[codigos_processo[0]] = _completar_movimentacoes(
+            resposta.text, sessao, url_base, codigos_processo[0],
+            baixar_movimentacoes=baixar_movimentacoes,
+        )
     else:
         for indice, link in enumerate(links):
             # A base termina em barra e o href começa com barra; concatenar
@@ -262,20 +321,43 @@ def _salvar_resultados_html(
                     f"Processo: {id_limpo}; Código: {codigos_processo[indice]},"  # noqa: E702
                     f"Status code {resposta_documento.status_code}."
                 )
-            nome_arquivo = f"{caminho}/{id_limpo}_{codigos_processo[indice]}.html"
-            logger.info("Salvando em %s", nome_arquivo)
-            html = _completar_movimentacoes(
+            # As movimentações de cada documento saem logo depois do show.do
+            # dele, enquanto a sessão está nesse processo.
+            documentos[codigos_processo[indice]] = _completar_movimentacoes(
                 resposta_documento.text, sessao, url_base, codigos_processo[indice],
+                baixar_movimentacoes=baixar_movimentacoes,
             )
-            with Path(nome_arquivo).open('w', encoding='utf-8') as arquivo:
-                arquivo.write(html)
+    # .tmp, e não .html.tmp: o glob do parse ('*.[hj][st]*') pegaria o segundo.
+    destinos = {Path(caminho) / f"{id_limpo}_{codigo}.html": html for codigo, html in documentos.items()}
+    temporarios = []
+    try:
+        # Todos os .tmp primeiro: um erro de disco no segundo documento não
+        # pode deixar o primeiro já renomeado para .html.
+        for destino, html in destinos.items():
+            temporario = destino.with_suffix('.tmp')
+            temporarios.append(temporario)
+            temporario.write_text(html, encoding='utf-8')
+    except OSError:
+        for temporario in temporarios:
+            temporario.unlink(missing_ok=True)
+        raise
+    for destino in destinos:
+        logger.info("Salvando em %s", destino)
+        destino.with_suffix('.tmp').replace(destino)
+
+
+def _sem_movimentacoes(arquivo):
+    """HTML salvo sem as movimentações, com ou sem o botão (baixar_movimentacoes=False o tira)."""
+    return _CONTAINER_MOVIMENTACOES.search(arquivo.read_text(encoding='utf-8')) is not None
 
 
 def cpopg_download_api(
     id_cnj_list,
     session,
     api_base,
-    download_path
+    download_path,
+    *,
+    baixar_movimentacoes=True,
 ):
     """
     Downloads processes in JSON from the TJSP Consulta de Processos Originarios do Primeiro Grau (CPOPG).
@@ -283,11 +365,14 @@ def cpopg_download_api(
     session: requests.Session authenticated
     api_base: base URL of ESAJ API
     download_path: base directory to save
+    baixar_movimentacoes: with False, skips the movimentacao endpoint
     """
     n_items = len(id_cnj_list)
     for idp in tqdm(id_cnj_list, total=n_items, desc="Baixando processos"):
         try:
-            cpopg_download_api_single(idp, session, api_base, download_path)
+            cpopg_download_api_single(
+                idp, session, api_base, download_path, baixar_movimentacoes=baixar_movimentacoes,
+            )
         except (OSError, UnicodeDecodeError, ValueError,
                 AttributeError, requests.RequestException) as e:
             logger.error(
@@ -302,7 +387,9 @@ def cpopg_download_api_single(
     id_cnj,
     session,
     api_base,
-    download_path
+    download_path,
+    *,
+    baixar_movimentacoes=True,
 ):
     """
     Downloads a process in JSON from the TJSP Consulta de Processos Originarios do Primeiro Grau (CPOPG).
@@ -310,6 +397,7 @@ def cpopg_download_api_single(
     session: requests.Session authenticated
     api_base: base URL of ESAJ API
     download_path: base directory to save
+    baixar_movimentacoes: with False, skips the movimentacao endpoint
     """
     endpoint = 'processo/cpopg/search/numproc/'
     id_clean = clean_cnj(id_cnj)
@@ -344,6 +432,8 @@ def cpopg_download_api_single(
         with (Path(path) / f"{cd_processo_safe}_basicos.json").open('w', encoding='utf-8') as f:
             f.write(r_basicos.text)
         componentes = ['partes', 'movimentacao', 'incidente', 'audiencia']
+        if not baixar_movimentacoes:
+            componentes.remove('movimentacao')
         for comp in componentes:
             endpoint_comp = f"processo/cpopg/{comp}/{cd_processo}"
             r_comp = session.get(f"{api_base}{endpoint_comp}")

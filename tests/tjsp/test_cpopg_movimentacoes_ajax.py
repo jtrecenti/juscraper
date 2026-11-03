@@ -97,3 +97,14 @@ def test_ultima_pagina_repetida_com_cursor_novo_encerra_a_busca(tmp_path):
     arquivo.write_text(_completar_movimentacoes(SHOW_SOB_DEMANDA, sessao, BASE, CODIGO), encoding="utf-8")
     assert sessao.get.call_count == 4
     assert len(cpopg_parse_single_html(str(arquivo))["movimentacoes"]) == 15
+
+
+def test_limite_de_paginas_levanta_erro(monkeypatch):
+    # Cada página traz linhas novas e um cursor novo: só o limite encerra a busca.
+    monkeypatch.setattr("juscraper.courts.tjsp.cpopg_download._LIMITE_PAGINAS_MOVIMENTACOES", 2)
+    primeira, meio, _ = _paginas()
+    sessao = Mock()
+    sessao.get.side_effect = [primeira, meio]
+    with pytest.raises(RuntimeError, match="passaram de 2 páginas"):
+        _completar_movimentacoes(SHOW_SOB_DEMANDA, sessao, BASE, CODIGO)
+    assert sessao.get.call_count == 2

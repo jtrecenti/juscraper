@@ -1,4 +1,5 @@
 """Caracterização offline da busca HTML CPOPG e das tentativas de download."""
+from pathlib import Path
 from unittest.mock import Mock, call
 
 import pytest
@@ -124,10 +125,11 @@ def test_bloqueio_persistente_levanta_erro(tmp_path, contexto):
     requests.ConnectionError("rede"), ValueError("valor"), OSError("disco"), AttributeError("atributo"),
     UnicodeDecodeError("utf-8", b"\xe9", 0, 1, "byte inválido"),
 ])
-def test_cinco_falhas_retornam_diretorio_vazio(tmp_path, contexto, erro):
+def test_cinco_falhas_levantam_erro_com_diretorio_vazio(tmp_path, contexto, erro):
     sessao, _, extrair, pausa, diretorio = contexto
     sessao.get.side_effect = erro
-    assert cpopg_download_html_single(CNJ, sessao, BASE, str(tmp_path), 0.2, extrair) == str(diretorio)
+    with pytest.raises(RuntimeError, match="5 tentativas"):
+        cpopg_download_html_single(CNJ, sessao, BASE, str(tmp_path), 0.2, extrair)
     assert sessao.get.call_count == 5
     assert pausa.call_args_list == [call(0.2)] * 6
     assert list(diretorio.iterdir()) == []
@@ -156,4 +158,57 @@ def test_codigos_validados_antes_de_baixar_documentos(tmp_path, contexto):
     with pytest.raises(RuntimeError, match="Link sem"):
         cpopg_download_html_single(CNJ, sessao, BASE, str(tmp_path), 0, extrair)
     assert sessao.get.call_count == 1
+    assert list(diretorio.iterdir()) == []
+
+
+def test_falha_no_segundo_documento_nao_deixa_o_primeiro_gravado(tmp_path, contexto):
+    """Processo com vários documentos é gravado inteiro ou não é gravado (#455)."""
+    sessao, resposta, extrair, _, diretorio = contexto
+    extrair.return_value = LINKS
+    sessao.get.side_effect = [resposta, Mock(text="Decisão", status_code=200), requests.ConnectionError("rede")] * 5
+    with pytest.raises(RuntimeError, match="5 tentativas"):
+        cpopg_download_html_single(CNJ, sessao, BASE, str(tmp_path), 0, extrair)
+    assert list(diretorio.iterdir()) == []
+
+    sessao.get.side_effect = [resposta, Mock(text="Decisão", status_code=200), Mock(text="Petição", status_code=200)]
+    cpopg_download_html_single(CNJ, sessao, BASE, str(tmp_path), 0, extrair)
+    assert sorted(f.name for f in diretorio.iterdir()) == [f"{CNJ_LIMPO}_PRIMEIRO.html", f"{CNJ_LIMPO}_SEGUNDO.html"]
+
+
+def test_leitura_que_falha_nao_deixa_html_vazio(tmp_path, contexto):
+    """Erro ao ler a resposta não deixa ``.html`` de 0 byte que marcaria o processo como baixado (#453)."""
+    sessao, _, extrair, _, diretorio = contexto
+    resposta = Mock(status_code=200)
+    type(resposta).text = property(lambda _self: (_ for _ in ()).throw(ValueError("leitura")))
+    sessao.get.return_value = resposta
+    with pytest.raises(RuntimeError, match="5 tentativas"):
+        cpopg_download_html_single(CNJ, sessao, BASE, str(tmp_path), 0, extrair)
+    assert list(diretorio.iterdir()) == []
+
+
+def test_html_vazio_de_versao_antiga_nao_conta_como_baixado(tmp_path, contexto):
+    """Um ``.html`` de 0 byte deixado por versão anterior não pula o processo."""
+    sessao, resposta, extrair, _, diretorio = contexto
+    diretorio.mkdir(parents=True)
+    (diretorio / f"{CNJ_LIMPO}_PRIMEIRO.html").write_text("", encoding="utf-8")
+    cpopg_download_html_single(CNJ, sessao, BASE, str(tmp_path), 0, extrair)
+    assert (diretorio / f"{CNJ_LIMPO}_PRIMEIRO.html").read_text(encoding="utf-8") == resposta.text
+
+
+def test_erro_ao_gravar_o_segundo_documento_nao_deixa_o_primeiro(tmp_path, contexto, mocker):
+    """Erro de disco na gravação do segundo documento não deixa o primeiro como ``.html``."""
+    sessao, resposta, extrair, _, diretorio = contexto
+    extrair.return_value = LINKS
+    documentos = [Mock(text="Decisão", status_code=200), Mock(text="Petição", status_code=200)]
+    sessao.get.side_effect = [resposta, *documentos] * 5
+    gravar = Path.write_text
+
+    def gravar_falhando_no_segundo(caminho, *args, **kwargs):
+        if "SEGUNDO" in caminho.name:
+            raise OSError(28, "No space left on device")
+        return gravar(caminho, *args, **kwargs)
+
+    mocker.patch.object(Path, "write_text", gravar_falhando_no_segundo)
+    with pytest.raises(RuntimeError, match="5 tentativas"):
+        cpopg_download_html_single(CNJ, sessao, BASE, str(tmp_path), 0, extrair)
     assert list(diretorio.iterdir()) == []
