@@ -110,6 +110,7 @@ class InputCPOPGTJSP(CnjInputBase):
     """
 
     method: Literal["html", "api"] = "html"
+    baixar_movimentacoes: bool = True
 
 
 class OutputCPOPGTJSP(OutputCnjConsultaBase):

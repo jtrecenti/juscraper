@@ -3,8 +3,11 @@ import re
 from pathlib import Path
 
 import pandas as pd
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, NavigableString, Tag
+from bs4.element import PreformattedString
 from tqdm import tqdm
+
+from ...core.avisos import avisar
 
 # Mapping from normalized dt/dd labels to canonical dados keys
 _CANONICAL_KEYS = {
@@ -32,10 +35,12 @@ _BASIC_SELECTORS = (
     ('data_distribuicao', 'div', 'dataHoraDistribuicaoProcesso'),
     ('valor_acao', 'div', 'valorAcaoProcesso'),
 )
-_BASIC_COLUMNS = ('file_path', *(field for field, _, _ in _BASIC_SELECTORS))
+_BASIC_COLUMNS = ('file_path', *(field for field, _, _ in _BASIC_SELECTORS), 'situacao')
 _PARTY_COLUMNS = ('file_path', 'tipo', 'nome', 'advogados')
 _MOVEMENT_COLUMNS = ('file_path', 'data', 'movimento', 'observacao')
 _MISC_PETITION_COLUMNS = ('file_path', 'data', 'tipo')
+# Label written as bare text, without the span the eSAJ uses (legacy samples).
+_BARE_LAWYER_LABEL = re.compile(r'Advogad[oa]:')
 
 
 def _normalize_field_name(label: str) -> str:
@@ -142,7 +147,24 @@ def _extract_basic_data(soup: BeautifulSoup, path: str) -> dict:
         tag = soup.find(tag_name, id=element_id)
         if tag:
             data[field] = tag.get_text(strip=True)
+    data['situacao'] = _extract_status(soup)
     return data
+
+
+def _extract_status(soup: BeautifulSoup) -> str | None:
+    """Return the status tag of the process header ("Extinto", "Suspenso"...).
+
+    The main-process header marks it as ``#labelSituacaoProcesso``; the
+    incident header puts an unnamed ``unj-tag`` in the same ``div`` as the
+    ``unj-larger`` class and number. Other tags of the header, such as
+    "Tramitação prioritária", sit outside both places.
+    """
+    tag = soup.find('span', id='labelSituacaoProcesso')
+    if tag is None:
+        header = soup.find('div', id='containerDadosPrincipaisProcesso')
+        larger_tag = header.find('span', class_='unj-larger') if header else None
+        tag = larger_tag.parent.find('span', class_='unj-tag') if larger_tag else None
+    return tag.get_text(strip=True) if tag else None
 
 
 def _fill_incident_header(soup: BeautifulSoup, data: dict) -> None:
@@ -198,6 +220,30 @@ def _fill_extra_fields(soup: BeautifulSoup, data: dict) -> None:
                 data[canonical] = value
 
 
+def _split_party_cell(cell: Tag) -> tuple[str, list[str]]:
+    """Split a party cell into the party name and its representatives.
+
+    Each representative comes after a ``span.mensagemExibindo`` label, whose
+    text varies with the role and gender ("Advogado:", "Advogada:", "Soc.
+    Advogados:", "Def. Púb:", "Procurador:"); the split follows the span, not
+    the text. A bare "Advogado:"/"Advogada:" text node also splits, for
+    pages without the span. Comments are skipped, as ``get_text`` does.
+    """
+    groups: list[list[str]] = [[]]
+    for node in cell.descendants:
+        # PreformattedString covers comments, CDATA and doctypes.
+        if not isinstance(node, NavigableString) or isinstance(node, PreformattedString):
+            continue
+        parent = node.parent
+        is_label_span = parent is not None and parent.name == 'span' and 'mensagemExibindo' in parent.get('class', [])
+        if is_label_span or _BARE_LAWYER_LABEL.fullmatch(node.strip()):
+            groups.append([])
+        elif node.strip():
+            groups[-1].append(node.strip())
+    party_name, *lawyers = (' '.join(group) for group in groups)
+    return party_name, [lawyer for lawyer in lawyers if lawyer]
+
+
 def _extract_parties(soup: BeautifulSoup, path: str) -> list[dict]:
     """Extract parties and lawyers in source order."""
     table = soup.find('table', id='tablePartesPrincipais')
@@ -210,12 +256,9 @@ def _extract_parties(soup: BeautifulSoup, path: str) -> list[dict]:
             continue
         type_tag = cells[0].find('span', class_='tipoDeParticipacao')
         party_type = type_tag.get_text(strip=True) if type_tag else ''
-        raw_text = cells[1].get_text('||', strip=True)
-        split_text = raw_text.split('Advogado:')
-        party_name = split_text[0].replace('||', ' ').strip()
+        party_name, lawyers = _split_party_cell(cells[1])
         if not party_name:
             continue
-        lawyers = [split_text[1].replace('||', ' ').strip()] if len(split_text) > 1 else []
         parties.append({
             'file_path': path,
             'tipo': party_type,
@@ -225,23 +268,53 @@ def _extract_parties(soup: BeautifulSoup, path: str) -> list[dict]:
     return parties
 
 
-def _extract_movements(soup: BeautifulSoup, path: str) -> list[dict]:
-    """Extract all visible process movements."""
+def _movement_rows(soup: BeautifulSoup, path: str) -> list[Tag]:
+    """Return the movement rows of the page, in the order the eSAJ lists them.
+
+    Older pages carry the whole list in ``#tabelaTodasMovimentacoes``. Current
+    pages leave ``#containerMovimentacoes`` empty until "Exibir movimentações";
+    ``cpopg_download`` fills it with every page of the list. A page that still
+    has the button was saved without the list, and an empty table there would
+    read as a process without movements.
+    """
     table = soup.find('tbody', id='tabelaTodasMovimentacoes')
-    if not table:
+    if table is not None:
+        return list(table.find_all('tr', class_='containerMovimentacao'))
+    if soup.find(id='btnExibirMovimentacoes') is not None:
+        avisar(
+            f"{path}: a página do processo não traz as movimentações, que o eSAJ "
+            "carrega à parte; a tabela 'movimentacoes' sai vazia para ele. "
+            "Baixe o processo de novo com cpopg_download, que substitui o HTML "
+            "salvo sem as movimentações."
+        )
         return []
+    container = soup.find('div', id='containerMovimentacoes')
+    if container is None:
+        return []
+    return list(container.find_all('tr', class_='containerMovimentacao'))
+
+
+def _movement_description(cell: Tag) -> str:
+    """Movement name; rows with a linked document carry it inside the link."""
+    link = cell.find('a', class_='linkMovVincProc')
+    if link is not None:
+        return str(link.get_text(' ', strip=True))
+    return ' '.join(text.strip() for text in cell.find_all(string=True, recursive=False) if text.strip())
+
+
+def _extract_movements(soup: BeautifulSoup, path: str) -> list[dict]:
+    """Extract all process movements."""
     movements = []
-    for row in table.find_all('tr', class_='containerMovimentacao'):
+    for row in _movement_rows(soup, path):
         cells = row.find_all('td')
         if len(cells) < 3:
             continue
         description_cell = cells[2]
-        main_description = description_cell.find(string=True, recursive=False) or ''
         italic_span = description_cell.find('span', style='font-style: italic;')
         movements.append({
             'file_path': path,
             'data': cells[0].get_text(strip=True),
-            'movimento': main_description.strip(),
+            'movimento': _movement_description(description_cell),
             'observacao': italic_span.get_text(strip=True) if italic_span else '',
         })
     return movements
@@ -291,6 +364,14 @@ def cpopg_parse_single_json(path: str):
     lista_arquivos = [str(p) for p in Path(path).parent.glob("*.json")]
     lista_processo = next(f for f in lista_arquivos if f[-6:-5].isnumeric())
     lista_arquivos = [f for f in lista_arquivos if f not in lista_processo]
+    df_processo = pd.read_json(lista_processo, orient='records')
+    if df_processo.empty:
+        # A busca por número devolve [] sem baixar os demais JSONs; sem esta
+        # checagem, o merge abaixo levantava KeyError: 'basicos'.
+        raise ValueError(
+            f"A API do TJSP não devolveu nenhum processo para {Path(lista_processo).stem} "
+            "(resposta []). O processo pode existir mesmo assim: consulte com method='html'."
+        )
 
     # agora, fazemos a leitura de cada arquivo e transformamos em um dataframe
     dfs = {}
@@ -308,7 +389,9 @@ def cpopg_parse_single_json(path: str):
             dfs[tipo] = df
         else:
             dfs[tipo] = pd.concat([dfs[tipo], df], ignore_index=True)
-    df_processo = pd.read_json(lista_processo, orient='records')
+    # Com baixar_movimentacoes=False não há arquivo de movimentação; a chave fica,
+    # porque cpopg_parse_manager junta as tabelas pelas chaves do primeiro processo.
+    dfs.setdefault('movimentacao', pd.DataFrame(columns=['cdProcesso']))
     df_processo = df_processo.merge(dfs['basicos'], how='left', on='cdProcesso')
     dfs['basicos'] = df_processo
     return dfs
