@@ -12,7 +12,7 @@ import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
-from ...core.failures import EXCECOES_DE_FALHA_POR_LINHA, avisar_falhas, motivo_falha
+from ...core.failures import EXCECOES_DE_FALHA_POR_LINHA, MOTIVO_RESPOSTA_INESPERADA, avisar_falhas, motivo_falha
 from ...utils import safe_path_component
 from ...utils.cnj import clean_cnj, format_cnj, split_cnj
 from .._esaj.pasta import DocumentoIndisponivelError, documentos_vinculados, gravar_pdf, pdf_pela_pasta
@@ -57,6 +57,15 @@ def validar_download_pecas(method, baixar_movimentacoes, download_pecas):
         )
 
 
+# Todo erro de requests, e não só os de EXCECOES_DE_FALHA_POR_LINHA: um
+# ChunkedEncodingError que subisse de _PecasPublicas.baixar faria o retry de
+# cpopg_download_html_single refazer o processo inteiro cinco vezes e o
+# perder, quando o que falhou foi um documento.
+_FALHAS_DE_DOCUMENTO: tuple[type[BaseException], ...] = (
+    DocumentoIndisponivelError, requests.RequestException, *EXCECOES_DE_FALHA_POR_LINHA,
+)
+
+
 @dataclass
 class _PecasPublicas:
     """PDFs dos documentos públicos das movimentações, pedidos na sessão que as listou.
@@ -86,17 +95,23 @@ class _PecasPublicas:
                 continue
             try:
                 conteudo = pdf_pela_pasta(get, f"{url_base}{documento.url}", url_base, documento.cd_documento)
-            except DocumentoIndisponivelError as erro:
-                self._falhou(id_limpo, documento.cd_documento, erro.motivo, erro)
-                continue
-            except EXCECOES_DE_FALHA_POR_LINHA as erro:
-                self._falhou(id_limpo, documento.cd_documento, motivo_falha(erro), erro)
+            except _FALHAS_DE_DOCUMENTO as erro:
+                self._falhou(id_limpo, documento.cd_documento, _motivo_do_documento(erro), erro)
                 continue
             gravar_pdf(conteudo, destino)
 
     def _falhou(self, id_limpo, cd_documento, motivo, erro):
         logger.warning("Processo %s, documento %s: %s", id_limpo, cd_documento, erro)
         self.falhas.append(f"{id_limpo}/{cd_documento}: {motivo}")
+
+
+def _motivo_do_documento(erro):
+    """Motivo de falha de um documento; erro de requests fora do vocabulário vira ``resposta_inesperada``."""
+    if isinstance(erro, DocumentoIndisponivelError):
+        return erro.motivo
+    if isinstance(erro, EXCECOES_DE_FALHA_POR_LINHA):
+        return motivo_falha(erro)
+    return MOTIVO_RESPOSTA_INESPERADA
 
 
 def cpopg_download_html(

@@ -10,10 +10,12 @@ digital gravada em ``samples/documentos/``, e por ``getPDF.do`` com os
 """
 
 import json
+import re
 from pathlib import Path
 from urllib.parse import parse_qsl, urlsplit
 
 import pytest
+import requests
 import responses
 from responses.matchers import query_param_matcher
 
@@ -253,3 +255,90 @@ def test_cpopg_download_recusa_download_pecas_sem_links(tmp_path, kwargs, mensag
         scraper.cpopg_download(CNJ_INCIDENTE, download_pecas=True, **kwargs)
 
     assert len(responses.calls) == 0
+
+
+@pytest.mark.parametrize(
+    "erro",
+    [requests.exceptions.ChunkedEncodingError("corpo cortado"), requests.exceptions.TooManyRedirects("laço")],
+)
+@responses.activate
+def test_erro_de_requests_fora_do_vocabulario_vira_aviso_e_nao_refaz_o_processo(tmp_path, mocker, erro):
+    """Um erro de requests num documento não pode subir ao retry, que refaria o processo e o perderia."""
+    mocker.patch("time.sleep")
+    _registrar_processo()
+    _registrar_documento(PUBLICOS[0])
+    responses.add(
+        responses.GET,
+        f"{ESAJ}/cpopg/{ROTA_DOCUMENTO}",
+        body=erro,
+        match=[query_param_matcher({"cdDocumento": PUBLICOS[1]}, strict_match=False)],
+    )
+
+    with pytest.warns(UserWarning, match=f"{PUBLICOS[1]}: resposta_inesperada"):
+        jus.scraper("tjsp", download_path=str(tmp_path)).cpopg_download(CNJ_INCIDENTE, download_pecas=True)
+
+    assert len(_chamadas("search.do")) == 1
+    assert [p.stem for p in tmp_path.rglob("*.pdf")] == [PUBLICOS[0]]
+    assert len(list(tmp_path.rglob("*.html"))) == 1
+
+
+def _show_antigo(codigo, cd_documento):
+    """Página de processo no layout com a lista inteira, com uma movimentação e um documento público."""
+    return (
+        '<html><body><table><tbody id="tabelaTodasMovimentacoes">'
+        '<tr class="containerMovimentacao"><td>01/01/2025</td><td></td><td>'
+        f'<a class="linkMovVincProc" id="linkMovVincProc-{cd_documento}" '
+        f'href="/cpopg/{ROTA_DOCUMENTO}?processo.codigo={codigo}&cdDocumento={cd_documento}">Sentença</a>'
+        "</td></tr></tbody></table></body></html>"
+    )
+
+
+@responses.activate
+def test_varios_incidentes_baixam_os_pdfs_de_cada_um_antes_do_show_seguinte(tmp_path, mocker):
+    """Com a busca em lista, o PDF de cada incidente sai antes de a sessão abrir o incidente seguinte."""
+    mocker.patch("time.sleep")
+    incidentes = {"1W001AAAA0000": PUBLICOS[0], "1W001BBBB0000": PUBLICOS[1]}
+    listagem = "".join(f'<a href="/cpopg/show.do?processo.codigo={codigo}">x</a>' for codigo in incidentes)
+    responses.add(
+        responses.GET,
+        f"{ESAJ}/cpopg/search.do",
+        body=f'<div id="listagemDeProcessos">{listagem}</div>',
+        content_type=_HTML,
+    )
+    for codigo, cd_documento in incidentes.items():
+        responses.add(
+            responses.GET,
+            re.compile(rf"{re.escape(ESAJ)}/+cpopg/show\.do\?processo\.codigo={codigo}$"),
+            body=_show_antigo(codigo, cd_documento),
+            content_type=_HTML,
+        )
+        responses.add(
+            responses.GET,
+            f"{ESAJ}/cpopg/{ROTA_DOCUMENTO}",
+            body=load_sample_bytes("tjsp", f"documentos/pasta_{cd_documento}.html"),
+            content_type=_HTML,
+            match=[query_param_matcher({"cdDocumento": cd_documento}, strict_match=False)],
+        )
+        parametros = parse_parametros_pasta(load_sample("tjsp", f"documentos/pasta_{cd_documento}.html"))
+        responses.add(
+            responses.GET,
+            f"{ESAJ}/pastadigital/getPDF.do",
+            body=PDF_FALSO,
+            match=[query_param_matcher(dict(parse_qsl(parametros, keep_blank_values=True)))],
+        )
+
+    jus.scraper("tjsp", download_path=str(tmp_path)).cpopg_download(CNJ_INCIDENTE, download_pecas=True)
+
+    rotas = [c.request.url.split("?")[0].rsplit("/", 1)[-1] for c in responses.calls]
+    assert rotas == [
+        "search.do",
+        "show.do",
+        ROTA_DOCUMENTO,
+        "getPDF.do",
+        "show.do",
+        ROTA_DOCUMENTO,
+        "getPDF.do",
+    ]
+    assert _documentos_pedidos() == list(PUBLICOS)
+    assert sorted(p.stem for p in tmp_path.rglob("*.pdf")) == sorted(PUBLICOS)
+    assert len(list(tmp_path.rglob("*.html"))) == 2
