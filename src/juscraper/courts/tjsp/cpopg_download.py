@@ -21,6 +21,9 @@ class _InvalidProcessCodeError(ValueError):
     """Erro de validação de identificador recebido do CPOPG."""
 
 
+_TENTATIVAS = 5
+
+
 # A página do processo traz o bloco de movimentações vazio e um botão "Exibir
 # movimentações"; o JavaScript do eSAJ busca a lista em
 # carregarMovimentacoesAjax.do, cinco linhas por página, e segue o cursor de
@@ -98,7 +101,12 @@ def cpopg_download_html_single(
     logger.info("Salvando em %s", path)
     if not Path(path).is_dir():
         Path(path).mkdir(parents=True)
-    salvos = [file for file in Path(path).iterdir() if file.name.endswith('.html')]
+    # Os documentos de um processo são gravados juntos no fim
+    # (_salvar_resultados_html), então um .html na pasta indica o processo
+    # inteiro. O de 0 byte vem de versão que gravava antes de ler a resposta.
+    salvos = [
+        file for file in Path(path).iterdir() if file.name.endswith('.html') and file.stat().st_size > 0
+    ]
     if salvos and not (baixar_movimentacoes and any(map(_sem_movimentacoes, salvos))):
         logger.info("O processo %s ja foi baixado.", id_clean)
         return path
@@ -115,7 +123,8 @@ def cpopg_download_html_single(
         'dadosConsulta.valorConsulta': '',
         'dadosConsulta.tipoNuProcesso': 'UNIFICADO'
     }
-    for _ in range(5):
+    ultimo_erro = None
+    for _ in range(_TENTATIVAS):
         try:
             r = session.get(u, params=parms)
             if get_links_callback is None:
@@ -137,6 +146,7 @@ def cpopg_download_html_single(
             raise
         except (OSError, UnicodeDecodeError, ValueError,
                 AttributeError, requests.RequestException) as e:
+            ultimo_erro = e
             logger.error(
                 "Erro ao conectar ao site (processo %s)."
                 "Tentando novamente em %.1f segundos. (%s)",
@@ -145,6 +155,10 @@ def cpopg_download_html_single(
                 e
             )
             time.sleep(sleep_time)
+    else:
+        raise RuntimeError(
+            f"Processo {id_clean}: {_TENTATIVAS} tentativas sem sucesso; último erro: {ultimo_erro}"
+        ) from ultimo_erro
     return path
 
 
@@ -169,19 +183,22 @@ def _salvar_resultados_html(
     *,
     baixar_movimentacoes=True,
 ):
-    """Salva a busca ou os documentos individuais."""
+    """Salva a busca ou os documentos individuais.
+
+    Os documentos ficam em memória até o último ser baixado e só então são
+    gravados, cada um por arquivo temporário renomeado: uma falha no meio não
+    deixa na pasta parte dos documentos, nem um ``.html`` vazio, e o teste de
+    "já baixado" em :func:`cpopg_download_html_single` continua valendo.
+    """
     if len(links) == 0:
         logger.error("Nenhum link encontrado para o processo %s.", id_limpo)
         raise RuntimeError(f"Nenhum link encontrado para o processo {id_limpo}.")
+    documentos = {}
     if len(links) == 1:
-        html = _incluir_movimentacoes(
+        documentos[codigos_processo[0]] = _incluir_movimentacoes(
             resposta.text, sessao, url_base, codigos_processo[0],
             baixar_movimentacoes=baixar_movimentacoes,
         )
-        nome_arquivo = f"{caminho}/{id_limpo}_{codigos_processo[0]}.html"
-        logger.info("Salvando em %s", nome_arquivo)
-        with Path(nome_arquivo).open('w', encoding='utf-8') as arquivo:
-            arquivo.write(html)
     else:
         for indice, link in enumerate(links):
             resposta_documento = sessao.get(f"{url_base}{link}")
@@ -191,14 +208,29 @@ def _salvar_resultados_html(
                     f"Processo: {id_limpo}; Código: {codigos_processo[indice]},"  # noqa: E702
                     f"Status code {resposta_documento.status_code}."
                 )
-            html = _incluir_movimentacoes(
+            # As movimentações de cada documento saem logo depois do show.do
+            # dele, enquanto a sessão está nesse processo.
+            documentos[codigos_processo[indice]] = _incluir_movimentacoes(
                 resposta_documento.text, sessao, url_base, codigos_processo[indice],
                 baixar_movimentacoes=baixar_movimentacoes,
             )
-            nome_arquivo = f"{caminho}/{id_limpo}_{codigos_processo[indice]}.html"
-            logger.info("Salvando em %s", nome_arquivo)
-            with Path(nome_arquivo).open('w', encoding='utf-8') as arquivo:
-                arquivo.write(html)
+    # .tmp, e não .html.tmp: o glob do parse ('*.[hj][st]*') pegaria o segundo.
+    destinos = {Path(caminho) / f"{id_limpo}_{codigo}.html": html for codigo, html in documentos.items()}
+    temporarios = []
+    try:
+        # Todos os .tmp primeiro: um erro de disco no segundo documento não
+        # pode deixar o primeiro já renomeado para .html.
+        for destino, html in destinos.items():
+            temporario = destino.with_suffix('.tmp')
+            temporarios.append(temporario)
+            temporario.write_text(html, encoding='utf-8')
+    except OSError:
+        for temporario in temporarios:
+            temporario.unlink(missing_ok=True)
+        raise
+    for destino in destinos:
+        logger.info("Salvando em %s", destino)
+        destino.with_suffix('.tmp').replace(destino)
 
 
 def _sem_movimentacoes(arquivo):
