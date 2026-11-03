@@ -625,9 +625,11 @@ class TJSPScraper(EsajAcordaoScraper):
             method (str): ``"html"`` (paginas do eSAJ) ou ``"api"``. Default
                 ``"html"``.
             baixar_movimentacoes (bool): Com ``False``, nao baixa as
-                movimentacoes, e a tabela delas sai vazia. No ``"html"``, cada
-                processo custa uma requisicao a mais por cinco movimentacoes,
-                mais uma; desligar poupa essas requisicoes. Default ``True``.
+                movimentacoes, e a tabela delas sai vazia (no ``"html"``, a
+                pagina no formato antigo ja traz a lista e sai completa). No
+                ``"html"``, cada processo custa uma requisicao a mais por cinco
+                movimentacoes, mais uma; desligar poupa essas requisicoes.
+                Default ``True``.
 
         Raises:
             ValueError: Quando ``method`` nao e suportado, ou quando nenhum
@@ -665,7 +667,9 @@ class TJSPScraper(EsajAcordaoScraper):
             diretorio: Sobrescreve :attr:`download_path` para esta chamada.
                 Default ``None``.
             baixar_movimentacoes: Com ``False``, nao baixa as movimentacoes.
-                Ver :meth:`cpopg`. Default ``True``.
+                Ver :meth:`cpopg`. No ``"html"``, um download com ``True`` no
+                mesmo diretorio baixa de novo o processo salvo sem elas.
+                Default ``True``.
         """
         self.set_method(method)
         if isinstance(id_cnj, str):
