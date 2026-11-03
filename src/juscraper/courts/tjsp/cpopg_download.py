@@ -212,13 +212,23 @@ def _salvar_resultados_html(
                 resposta_documento.text, sessao, url_base, codigos_processo[indice],
                 baixar_movimentacoes=baixar_movimentacoes,
             )
-    for codigo, html in documentos.items():
-        nome_arquivo = Path(caminho) / f"{id_limpo}_{codigo}.html"
-        logger.info("Salvando em %s", nome_arquivo)
-        # .tmp, e não .html.tmp: o glob do parse ('*.[hj][st]*') pegaria o segundo.
-        temporario = nome_arquivo.with_suffix('.tmp')
-        temporario.write_text(html, encoding='utf-8')
-        temporario.replace(nome_arquivo)
+    # .tmp, e não .html.tmp: o glob do parse ('*.[hj][st]*') pegaria o segundo.
+    destinos = {Path(caminho) / f"{id_limpo}_{codigo}.html": html for codigo, html in documentos.items()}
+    temporarios = []
+    try:
+        # Todos os .tmp primeiro: um erro de disco no segundo documento não
+        # pode deixar o primeiro já renomeado para .html.
+        for destino, html in destinos.items():
+            temporario = destino.with_suffix('.tmp')
+            temporarios.append(temporario)
+            temporario.write_text(html, encoding='utf-8')
+    except OSError:
+        for temporario in temporarios:
+            temporario.unlink(missing_ok=True)
+        raise
+    for destino in destinos:
+        logger.info("Salvando em %s", destino)
+        destino.with_suffix('.tmp').replace(destino)
 
 
 def _incluir_movimentacoes(html, sessao, url_base, codigo_processo, *, baixar_movimentacoes=True):

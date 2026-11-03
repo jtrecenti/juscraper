@@ -1,4 +1,5 @@
 """Caracterização offline da busca HTML CPOPG e das tentativas de download."""
+from pathlib import Path
 from unittest.mock import Mock, call
 
 import pytest
@@ -169,3 +170,22 @@ def test_html_vazio_de_versao_antiga_nao_conta_como_baixado(tmp_path, contexto):
     (diretorio / f"{CNJ_LIMPO}_PRIMEIRO.html").write_text("", encoding="utf-8")
     cpopg_download_html_single(CNJ, sessao, BASE, str(tmp_path), 0, extrair)
     assert (diretorio / f"{CNJ_LIMPO}_PRIMEIRO.html").read_text(encoding="utf-8") == resposta.text
+
+
+def test_erro_ao_gravar_o_segundo_documento_nao_deixa_o_primeiro(tmp_path, contexto, mocker):
+    """Erro de disco na gravação do segundo documento não deixa o primeiro como ``.html``."""
+    sessao, resposta, extrair, _, diretorio = contexto
+    extrair.return_value = LINKS
+    documentos = [Mock(text="Decisão", status_code=200), Mock(text="Petição", status_code=200)]
+    sessao.get.side_effect = [resposta, *documentos] * 5
+    gravar = Path.write_text
+
+    def gravar_falhando_no_segundo(caminho, *args, **kwargs):
+        if "SEGUNDO" in caminho.name:
+            raise OSError(28, "No space left on device")
+        return gravar(caminho, *args, **kwargs)
+
+    mocker.patch.object(Path, "write_text", gravar_falhando_no_segundo)
+    with pytest.raises(RuntimeError, match="5 tentativas"):
+        cpopg_download_html_single(CNJ, sessao, BASE, str(tmp_path), 0, extrair)
+    assert list(diretorio.iterdir()) == []
