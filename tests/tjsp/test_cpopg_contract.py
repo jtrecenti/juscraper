@@ -342,6 +342,21 @@ def test_cpopg_html_refaz_a_busca_quando_a_primeira_pagina_vem_fora_do_formato(t
     assert len(_chamadas("search.do")) == 2
     assert len(result["movimentacoes"]) == 14
 
+
+@responses.activate
+def test_cpopg_html_sem_movimentacoes_nao_chama_o_ajax(tmp_path, mocker):
+    """Com ``baixar_movimentacoes=False`` não há requisição de movimentações nem aviso."""
+    mocker.patch("time.sleep")
+    _registrar_busca_incidente()
+
+    result = jus.scraper("tjsp", download_path=str(tmp_path)).cpopg(
+        CNJ_INCIDENTE, method="html", baixar_movimentacoes=False,
+    )
+
+    assert not _chamadas("carregarMovimentacoesAjax.do")
+    assert result["movimentacoes"].empty
+    assert result["basicos"].iloc[0]["situacao"] == "Extinto"
+
 # ---------- method='api': busca sem processo ------------------------------
 
 @responses.activate
@@ -361,3 +376,39 @@ def test_cpopg_api_lista_vazia_levanta_erro_explicito(tmp_path, mocker, capsys):
 
     assert "não devolveu nenhum processo" in capsys.readouterr().out
     assert len(responses.calls) == 1
+
+
+
+@responses.activate
+def test_cpopg_api_sem_movimentacoes_pula_o_endpoint(tmp_path, mocker):
+    """Com ``baixar_movimentacoes=False`` a API não pede ``movimentacao``."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.GET,
+        f"{API}/processo/cpopg/search/numproc/{CNJ_DIGITS}",
+        body=load_sample("tjsp", "cpopg/api_search.json"),
+        status=200,
+        content_type="application/json",
+    )
+    responses.add(
+        responses.POST,
+        f"{API}/processo/cpopg/dadosbasicos/{CD_PROCESSO}",
+        body=load_sample("tjsp", "cpopg/api_dadosbasicos.json"),
+        status=200,
+        content_type="application/json",
+    )
+    for comp in ("partes", "incidente", "audiencia"):
+        responses.add(
+            responses.GET,
+            f"{API}/processo/cpopg/{comp}/{CD_PROCESSO}",
+            body=load_sample("tjsp", f"cpopg/api_{comp}.json"),
+            status=200,
+            content_type="application/json",
+        )
+
+    result = jus.scraper("tjsp", download_path=str(tmp_path)).cpopg(
+        CNJ, method="api", baixar_movimentacoes=False,
+    )
+
+    assert "movimentacao" not in result
+    assert not _chamadas("movimentacao/" + CD_PROCESSO)

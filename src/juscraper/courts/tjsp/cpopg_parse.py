@@ -3,7 +3,8 @@ import re
 from pathlib import Path
 
 import pandas as pd
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup, NavigableString, Tag
+from bs4.element import PreformattedString
 from tqdm import tqdm
 
 from ...core.avisos import avisar
@@ -35,11 +36,11 @@ _BASIC_SELECTORS = (
     ('valor_acao', 'div', 'valorAcaoProcesso'),
 )
 _BASIC_COLUMNS = ('file_path', *(field for field, _, _ in _BASIC_SELECTORS), 'situacao')
-# O eSAJ rotula o representante pelo gênero: "Advogado:" ou "Advogada:".
-_LAWYER_LABEL = re.compile(r'Advogad[oa]:')
 _PARTY_COLUMNS = ('file_path', 'tipo', 'nome', 'advogados')
 _MOVEMENT_COLUMNS = ('file_path', 'data', 'movimento', 'observacao')
 _MISC_PETITION_COLUMNS = ('file_path', 'data', 'tipo')
+# Label written as bare text, without the span the eSAJ uses (legacy samples).
+_BARE_LAWYER_LABEL = re.compile(r'Advogad[oa]:')
 
 
 def _normalize_field_name(label: str) -> str:
@@ -219,6 +220,30 @@ def _fill_extra_fields(soup: BeautifulSoup, data: dict) -> None:
                 data[canonical] = value
 
 
+def _split_party_cell(cell: Tag) -> tuple[str, list[str]]:
+    """Split a party cell into the party name and its representatives.
+
+    Each representative comes after a ``span.mensagemExibindo`` label, whose
+    text varies with the role and gender ("Advogado:", "Advogada:", "Soc.
+    Advogados:", "Def. Púb:", "Procurador:"); the split follows the span, not
+    the text. A bare "Advogado:"/"Advogada:" text node also splits, for
+    pages without the span. Comments are skipped, as ``get_text`` does.
+    """
+    groups: list[list[str]] = [[]]
+    for node in cell.descendants:
+        # PreformattedString covers comments, CDATA and doctypes.
+        if not isinstance(node, NavigableString) or isinstance(node, PreformattedString):
+            continue
+        parent = node.parent
+        is_label_span = parent is not None and parent.name == 'span' and 'mensagemExibindo' in parent.get('class', [])
+        if is_label_span or _BARE_LAWYER_LABEL.fullmatch(node.strip()):
+            groups.append([])
+        elif node.strip():
+            groups[-1].append(node.strip())
+    party_name, *lawyers = (' '.join(group) for group in groups)
+    return party_name, [lawyer for lawyer in lawyers if lawyer]
+
+
 def _extract_parties(soup: BeautifulSoup, path: str) -> list[dict]:
     """Extract parties and lawyers in source order."""
     table = soup.find('table', id='tablePartesPrincipais')
@@ -231,13 +256,9 @@ def _extract_parties(soup: BeautifulSoup, path: str) -> list[dict]:
             continue
         type_tag = cells[0].find('span', class_='tipoDeParticipacao')
         party_type = type_tag.get_text(strip=True) if type_tag else ''
-        raw_text = cells[1].get_text('||', strip=True)
-        party_name, *lawyer_texts = (
-            text.replace('||', ' ').strip() for text in _LAWYER_LABEL.split(raw_text)
-        )
+        party_name, lawyers = _split_party_cell(cells[1])
         if not party_name:
             continue
-        lawyers = [lawyer for lawyer in lawyer_texts if lawyer]
         parties.append({
             'file_path': path,
             'tipo': party_type,

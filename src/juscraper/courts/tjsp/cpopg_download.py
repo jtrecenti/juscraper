@@ -37,7 +37,9 @@ def cpopg_download_html(
     u_base,
     download_path,
     sleep_time=0.5,
-    get_links_callback=None
+    get_links_callback=None,
+    *,
+    baixar_movimentacoes=True,
 ):
     """
     Downloads processes in HTML from the TJSP Consulta de Processos Originários do Primeiro Grau (CPOPG).
@@ -47,6 +49,7 @@ def cpopg_download_html(
     download_path: base directory to save
     sleep_time: interval between attempts
     get_links_callback: function to extract links from HTML
+    baixar_movimentacoes: with False, skips the movements requests
     """
     n_items = len(id_cnj_list)
     for idp in tqdm(id_cnj_list, total=n_items, desc="Baixando processos"):
@@ -57,7 +60,8 @@ def cpopg_download_html(
                 u_base,
                 download_path,
                 sleep_time,
-                get_links_callback
+                get_links_callback,
+                baixar_movimentacoes=baixar_movimentacoes,
             )
         except (OSError, UnicodeDecodeError, ValueError,
                 AttributeError, RuntimeError, requests.RequestException) as e:
@@ -75,7 +79,9 @@ def cpopg_download_html_single(
     u_base,
     download_path,
     sleep_time=0.5,
-    get_links_callback=None
+    get_links_callback=None,
+    *,
+    baixar_movimentacoes=True,
 ):
     """
     Downloads a process in HTML from the TJSP Consulta de Processos Originarios do Primeiro Grau (CPOPG).
@@ -85,6 +91,7 @@ def cpopg_download_html_single(
     download_path: base directory to save
     sleep_time: interval between attempts
     get_links_callback: function to extract links from HTML
+    baixar_movimentacoes: with False, skips the movements requests
     """
     id_clean = clean_cnj(id_cnj)
     path = f"{download_path}/cpopg/{id_clean}"
@@ -120,6 +127,7 @@ def cpopg_download_html_single(
             codigos_processo = _extrair_codigos_processo(links)
             _salvar_resultados_html(
                 r, links, id_clean, path, session, u_base, codigos_processo,
+                baixar_movimentacoes=baixar_movimentacoes,
             )
             break
         except _InvalidProcessCodeError:
@@ -158,13 +166,18 @@ def _extrair_codigos_processo(links):
 
 def _salvar_resultados_html(
     resposta, links, id_limpo, caminho, sessao, url_base, codigos_processo,
+    *,
+    baixar_movimentacoes=True,
 ):
     """Salva a busca ou os documentos individuais."""
     if len(links) == 0:
         logger.error("Nenhum link encontrado para o processo %s.", id_limpo)
         raise RuntimeError(f"Nenhum link encontrado para o processo {id_limpo}.")
     if len(links) == 1:
-        html = _incluir_movimentacoes(resposta.text, sessao, url_base, codigos_processo[0])
+        html = _incluir_movimentacoes(
+            resposta.text, sessao, url_base, codigos_processo[0],
+            baixar_movimentacoes=baixar_movimentacoes,
+        )
         nome_arquivo = f"{caminho}/{id_limpo}_{codigos_processo[0]}.html"
         logger.info("Salvando em %s", nome_arquivo)
         with Path(nome_arquivo).open('w', encoding='utf-8') as arquivo:
@@ -180,6 +193,7 @@ def _salvar_resultados_html(
                 )
             html = _incluir_movimentacoes(
                 resposta_documento.text, sessao, url_base, codigos_processo[indice],
+                baixar_movimentacoes=baixar_movimentacoes,
             )
             nome_arquivo = f"{caminho}/{id_limpo}_{codigos_processo[indice]}.html"
             logger.info("Salvando em %s", nome_arquivo)
@@ -187,16 +201,19 @@ def _salvar_resultados_html(
                 arquivo.write(html)
 
 
-def _incluir_movimentacoes(html, sessao, url_base, codigo_processo):
+def _incluir_movimentacoes(html, sessao, url_base, codigo_processo, *, baixar_movimentacoes=True):
     """Grava no HTML do processo a lista completa de movimentações.
 
     O arquivo fica como a página no navegador depois de "Exibir movimentações"
     e de "Mais" até a última página, e o parser lê só o arquivo. Página sem o
     bloco vazio (formato antigo, com ``tabelaTodasMovimentacoes``) sai como
-    veio.
+    veio. Com ``baixar_movimentacoes=False`` sai só o botão: o parser avisa
+    quando acha o botão, e quem desligou o download não precisa do aviso.
     """
     if not _CONTAINER_VAZIO.search(html):
         return html
+    if not baixar_movimentacoes:
+        return _BOTAO_EXIBIR.sub('', html, count=1)
     primeira = _pagina_movimentacoes(sessao, url_base, codigo_processo, cursor=None)
     bloco = BeautifulSoup(primeira, 'html.parser')
     if bloco.find('tbody', id='tabelaPrimeiraPaginaMovimentacoes') is None:
@@ -205,10 +222,21 @@ def _incluir_movimentacoes(html, sessao, url_base, codigo_processo):
         raise ValueError(
             f"Movimentações do processo {codigo_processo}: a primeira página veio fora do formato conhecido."
         )
-    outras_paginas = bloco.find('tbody', id='tabelaOutrasPaginasMovimentacoes')
-    paginacao = bloco.find('div', id='divLinkMovimentacoesPaginado')
     entrada_cursor = bloco.find('input', id='cursorMovimentacoesPaginado')
-    cursor = entrada_cursor.get('value') if entrada_cursor else None
+    if entrada_cursor is not None:
+        _anexar_paginas_seguintes(bloco, sessao, url_base, codigo_processo, entrada_cursor.get('value'))
+    paginacao = bloco.find('div', id='divLinkMovimentacoesPaginado')
+    if paginacao is not None:
+        paginacao.decompose()
+    html = _BOTAO_EXIBIR.sub('', html, count=1)
+    return _CONTAINER_VAZIO.sub(
+        lambda _: f'<div id="containerMovimentacoes">{bloco}</div>', html, count=1,
+    )
+
+
+def _anexar_paginas_seguintes(bloco, sessao, url_base, codigo_processo, cursor):
+    """Segue o cursor e anexa as linhas de cada página em ``tabelaOutrasPaginasMovimentacoes``."""
+    outras_paginas = bloco.find('tbody', id='tabelaOutrasPaginasMovimentacoes')
     vistos = set()
     while cursor:
         if outras_paginas is None or cursor in vistos:
@@ -221,23 +249,16 @@ def _incluir_movimentacoes(html, sessao, url_base, codigo_processo):
             f"<table><tbody>{_pagina_movimentacoes(sessao, url_base, codigo_processo, cursor)}</tbody></table>",
             'html.parser',
         )
-        linha_cursor = pagina.find('tr', id='trCursorMovimentacoes')
         linhas = pagina.find_all('tr', class_='containerMovimentacao')
         if not linhas:
             raise RuntimeError(
                 f"Movimentações do processo {codigo_processo}: página sem linhas no cursor {cursor!r}."
             )
-        for linha in linhas:
-            outras_paginas.append(linha)
+        outras_paginas.extend(linhas)
+        linha_cursor = pagina.find('tr', id='trCursorMovimentacoes')
         cursor = linha_cursor.get('data-cursor') if linha_cursor else None
     if outras_paginas is not None:
         del outras_paginas['style']
-    if paginacao is not None:
-        paginacao.decompose()
-    html = _BOTAO_EXIBIR.sub('', html, count=1)
-    return _CONTAINER_VAZIO.sub(
-        lambda _: f'<div id="containerMovimentacoes">{bloco}</div>', html, count=1,
-    )
 
 
 def _pagina_movimentacoes(sessao, url_base, codigo_processo, cursor):
@@ -263,7 +284,9 @@ def cpopg_download_api(
     id_cnj_list,
     session,
     api_base,
-    download_path
+    download_path,
+    *,
+    baixar_movimentacoes=True,
 ):
     """
     Downloads processes in JSON from the TJSP Consulta de Processos Originarios do Primeiro Grau (CPOPG).
@@ -271,11 +294,14 @@ def cpopg_download_api(
     session: requests.Session authenticated
     api_base: base URL of ESAJ API
     download_path: base directory to save
+    baixar_movimentacoes: with False, skips the movimentacao endpoint
     """
     n_items = len(id_cnj_list)
     for idp in tqdm(id_cnj_list, total=n_items, desc="Baixando processos"):
         try:
-            cpopg_download_api_single(idp, session, api_base, download_path)
+            cpopg_download_api_single(
+                idp, session, api_base, download_path, baixar_movimentacoes=baixar_movimentacoes,
+            )
         except (OSError, UnicodeDecodeError, ValueError,
                 AttributeError, requests.RequestException) as e:
             logger.error(
@@ -290,7 +316,9 @@ def cpopg_download_api_single(
     id_cnj,
     session,
     api_base,
-    download_path
+    download_path,
+    *,
+    baixar_movimentacoes=True,
 ):
     """
     Downloads a process in JSON from the TJSP Consulta de Processos Originarios do Primeiro Grau (CPOPG).
@@ -298,6 +326,7 @@ def cpopg_download_api_single(
     session: requests.Session authenticated
     api_base: base URL of ESAJ API
     download_path: base directory to save
+    baixar_movimentacoes: with False, skips the movimentacao endpoint
     """
     endpoint = 'processo/cpopg/search/numproc/'
     id_clean = clean_cnj(id_cnj)
@@ -332,6 +361,8 @@ def cpopg_download_api_single(
         with (Path(path) / f"{cd_processo_safe}_basicos.json").open('w', encoding='utf-8') as f:
             f.write(r_basicos.text)
         componentes = ['partes', 'movimentacao', 'incidente', 'audiencia']
+        if not baixar_movimentacoes:
+            componentes.remove('movimentacao')
         for comp in componentes:
             endpoint_comp = f"processo/cpopg/{comp}/{cd_processo}"
             r_comp = session.get(f"{api_base}{endpoint_comp}")

@@ -663,6 +663,27 @@ class TestCPOPGUnit:
         assert movimentacoes['movimento'].ne('').all()
         assert movimentacoes.iloc[1]['movimento'] == 'Certidão de Cartório Expedida'
 
+    @pytest.mark.parametrize('rotulo', ['Soc. Advogados:', 'Def. Púb:', 'Procurador:'])
+    def test_cpopg_parse_separa_representante_por_qualquer_rotulo(self, tmp_path, rotulo):
+        """Qualquer rótulo de representante separa o nome da parte, não só "Advogado:"/"Advogada:".
+
+        O sample traz "Soc. Advogados:" (baixado com ``baixar_movimentacoes=False``);
+        "Def. Púb:" e "Procurador:" aparecem em outros processos e trocam só o texto do rótulo.
+        """
+        html = load_sample('tjsp', 'cpopg/show_sociedade_advogados.html')
+        arquivo = tmp_path / 'processo.html'
+        arquivo.write_text(html.replace('Soc. Advogados:', rotulo), encoding='utf-8')
+
+        result = cpopg_parse_single_html(str(arquivo))
+
+        partes = result['partes']
+        assert partes[['tipo', 'nome']].values.tolist() == [
+            ['Embargte', 'Banco Bradesco S.A.'],
+            ['Embargdo', 'PREFEITURA MUNICIPAL DE TANABI'],
+        ]
+        assert partes['advogados'].tolist() == [['Advogado do Banco'], ['PROCURADORIA DO MUNICÍPIO DE TANABI']]
+        assert result['movimentacoes'].empty
+
     def test_cpopg_parse_json_busca_vazia(self, tmp_path):
         """A API devolve ``[]`` para o número: erro que diz isso, não ``KeyError: 'basicos'``."""
         arquivo = tmp_path / '10001497120248260346.json'
