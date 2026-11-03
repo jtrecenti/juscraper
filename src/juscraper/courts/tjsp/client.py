@@ -19,10 +19,11 @@ from ...utils.params import (
 )
 from .._esaj.acordao import EsajAcordaoScraper
 from .._esaj.base import ESAJ_JANELA_ANOS, EsajSearchScraper, somar_contagens_por_janela
+from .._esaj.sentenca import EsajSentencaScraper
 from .cjpg_download import cjpg_download as cjpg_download_mod
 from .cjpg_download import fetch_cjpg_first_page
 from .cjpg_parse import cjpg_n_results, cjpg_parse_manager
-from .cpopg_download import cpopg_download_api, cpopg_download_html
+from .cpopg_download import cpopg_download_api, cpopg_download_html, validar_download_pecas
 from .cpopg_parse import cpopg_parse_manager, get_cpopg_download_links
 from .cposg_download import cposg_download_api, cposg_download_html
 from .cposg_parse import cposg_parse_manager
@@ -92,7 +93,26 @@ def _resolve_cjsg_pesquisa(pesquisa: str | None, kwargs: dict) -> str:
     return resolvida
 
 
-class TJSPScraper(EsajAcordaoScraper):
+def _mover_documentos(movimentacoes: pd.DataFrame, origem: str, destino: str) -> pd.DataFrame:
+    """Leva os PDFs de ``download_pecas`` da pasta de download, que ``cpopg`` apaga, para ``destino``.
+
+    Mantém o caminho relativo (``cpopg/<cnj>/documentos/<cdDocumento>.pdf``),
+    o mesmo de ``cpopg_download(..., diretorio=destino)``. Um documento ligado
+    a duas movimentações aparece em duas linhas e se move uma vez.
+    """
+    if movimentacoes.empty or "caminho_documento" not in movimentacoes:
+        return movimentacoes
+    novos: dict[str, str] = {}
+    for caminho in movimentacoes["caminho_documento"].dropna().unique():
+        novo = Path(destino) / Path(caminho).relative_to(origem)
+        novo.parent.mkdir(parents=True, exist_ok=True)
+        shutil.move(caminho, novo)
+        novos[caminho] = str(novo)
+    # ``dict.get`` e não ``Series.map``: a linha sem PDF continua ``None``, e não ``NaN``.
+    return movimentacoes.assign(caminho_documento=[novos.get(c) for c in movimentacoes["caminho_documento"]])
+
+
+class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
     """Main scraper for TJSP — eSAJ web + api.tjsp.jus.br."""
 
     BASE_URL = "https://esaj.tjsp.jus.br/"
@@ -617,6 +637,8 @@ class TJSPScraper(EsajAcordaoScraper):
         method: Literal["html", "api"] = "html",
         *,
         baixar_movimentacoes: bool = True,
+        download_pecas: bool = False,
+        diretorio: str | None = None,
     ):
         """Baixa processos de primeiro grau pelo CNJ e devolve as tabelas extraidas.
 
@@ -630,12 +652,26 @@ class TJSPScraper(EsajAcordaoScraper):
                 ``"html"``, cada processo custa uma requisicao a mais por cinco
                 movimentacoes, mais uma; desligar poupa essas requisicoes.
                 Default ``True``.
+            download_pecas (bool): Com ``True``, baixa tambem o PDF de cada
+                documento publico das movimentacoes, sem login: dois pedidos
+                por documento, feitos na sessao que acabou de listar as
+                movimentacoes, porque o eSAJ so libera documento ja listado.
+                Documento com senha do processo fica de fora. So no
+                ``"html"`` e com ``baixar_movimentacoes=True``. Default
+                ``False``.
+            diretorio (str | None): Onde ficam os PDFs de ``download_pecas``,
+                que o exige: ``cpopg`` apaga a pasta de download ao terminar.
+                Os PDFs vao para
+                ``<diretorio>/cpopg/<cnj>/documentos/<cdDocumento>.pdf``. Nao
+                pode ficar dentro de :attr:`download_path`. Default ``None``.
 
         Raises:
-            ValueError: Quando ``method`` nao e suportado, ou quando nenhum
+            ValueError: Quando ``method`` nao e suportado, quando nenhum
                 arquivo baixado pode ser lido (nenhum arquivo candidato no
-                diretorio de download, ou todos com erro de leitura). Nesse
-                caso o diretorio de download nao e apagado.
+                diretorio de download, ou todos com erro de leitura; nesse
+                caso o diretorio de download nao e apagado), ou quando
+                ``download_pecas`` e ``diretorio`` nao combinam com os demais
+                argumentos.
 
         Returns:
             dict[str, pd.DataFrame]: Tabelas ``basicos``, ``partes``,
@@ -643,11 +679,28 @@ class TJSPScraper(EsajAcordaoScraper):
             no metodo ``"api"``, uma tabela por tipo de JSON baixado. No
             ``"html"``, ``basicos`` traz a ``situacao`` do cabecalho
             ("Extinto", "Suspenso" etc.) e ``movimentacoes`` traz a lista
-            completa, que o download busca pagina a pagina.
+            completa, que o download busca pagina a pagina. Na
+            ``movimentacoes`` do ``"html"``, ``cd_documento`` e
+            ``documento_publico`` dizem se a linha tem documento e se ele
+            abre sem senha; ``caminho_documento`` traz o PDF baixado, ou
+            ``None`` sem ``download_pecas``, para documento com senha e para
+            o que falhou (as falhas saem num ``UserWarning``).
         """
+        validar_download_pecas(method, baixar_movimentacoes, download_pecas)
+        if download_pecas != (diretorio is not None):
+            raise ValueError(
+                "download_pecas=True exige diretorio, e diretorio so vale com download_pecas=True: "
+                "cpopg apaga a pasta de download ao terminar."
+            )
+        if diretorio is not None and Path(diretorio).resolve().is_relative_to(Path(self.download_path).resolve()):
+            raise ValueError(f"diretorio {diretorio!r} fica dentro de download_path, que cpopg apaga ao terminar.")
         self.set_method(method)
-        self.cpopg_download(id_cnj, method, baixar_movimentacoes=baixar_movimentacoes)
+        self.cpopg_download(
+            id_cnj, method, baixar_movimentacoes=baixar_movimentacoes, download_pecas=download_pecas,
+        )
         result = self.cpopg_parse(self.download_path)
+        if diretorio is not None:
+            result["movimentacoes"] = _mover_documentos(result["movimentacoes"], self.download_path, diretorio)
         shutil.rmtree(self.download_path)
         return result
 
@@ -658,6 +711,7 @@ class TJSPScraper(EsajAcordaoScraper):
         diretorio: str | None = None,
         *,
         baixar_movimentacoes: bool = True,
+        download_pecas: bool = False,
     ):
         """Baixa arquivos brutos do CPOPG via ``'html'`` ou ``'api'``.
 
@@ -670,7 +724,14 @@ class TJSPScraper(EsajAcordaoScraper):
                 Ver :meth:`cpopg`. No ``"html"``, um download com ``True`` no
                 mesmo diretorio baixa de novo o processo salvo sem elas.
                 Default ``True``.
+            download_pecas: Com ``True``, grava tambem o PDF de cada documento
+                publico das movimentacoes em
+                ``<diretorio>/cpopg/<cnj>/documentos/<cdDocumento>.pdf``. Ver
+                :meth:`cpopg`. Um download com ``True`` no mesmo diretorio
+                baixa de novo o processo salvo com documento publico sem PDF,
+                e pede so os PDFs que faltam. Default ``False``.
         """
+        validar_download_pecas(method, baixar_movimentacoes, download_pecas)
         self.set_method(method)
         if isinstance(id_cnj, str):
             id_cnj = [id_cnj]
@@ -685,6 +746,7 @@ class TJSPScraper(EsajAcordaoScraper):
                 sleep_time=self.sleep_time,
                 get_links_callback=get_links_callback,
                 baixar_movimentacoes=baixar_movimentacoes,
+                download_pecas=download_pecas,
             )
         elif self.method == "api":
             cpopg_download_api(

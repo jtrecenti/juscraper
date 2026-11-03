@@ -18,10 +18,12 @@ from __future__ import annotations
 import functools
 import logging
 import shutil
+import time
 from collections.abc import Callable
 from typing import Any, ClassVar, Literal
 
 import pandas as pd
+import requests
 from pydantic import BaseModel, ValidationError
 
 from ...core.avisos import avisar
@@ -267,6 +269,7 @@ class EsajSearchScraper(HTTPScraper):
     INPUT_CJSG: type[BaseModel] = InputCJSGEsajPuro
     CJSG_CHROME_UA: bool = False
     CJSG_EXTRACT_CONVERSATION_ID: bool = False
+    _ultimo_pedido: float | None = None
 
     # Arvores de selecao do eSAJ (classes/assuntos/orgaos), uma por chave
     # ``<arvore>_<grau>``, relativas a BASE_URL. O sufixo de grau permite o
@@ -297,6 +300,24 @@ class EsajSearchScraper(HTTPScraper):
             sleep_time=sleep_time,
             **kwargs,
         )
+
+    def _get_espacado(self, url: str, **kwargs: Any) -> requests.Response:
+        """GET com retry que guarda ``sleep_time`` desde o pedido anterior.
+
+        Usado pelas rotas de documento (acórdão, sentença), em que um item custa
+        vários pedidos: ``sleep_time`` separa pedidos, não itens. A espera conta
+        do fim do pedido anterior e só completa o que falta: o processamento
+        entre um pedido e outro abate dela, o tempo de resposta não.
+        """
+        if self._ultimo_pedido is not None and self.sleep_time:
+            espera = self.sleep_time - (time.monotonic() - self._ultimo_pedido)
+            if espera > 0:
+                time.sleep(espera)
+        headers = _CHROME_HEADERS if self.CJSG_CHROME_UA else _ESAJ_HEADERS
+        try:
+            return self._request_with_retry("GET", url, headers=headers, timeout=60, **kwargs)
+        finally:
+            self._ultimo_pedido = time.monotonic()
 
     # --- search template ------------------------------------------------
 

@@ -76,13 +76,23 @@ def test_campos_opcionais_ordem_e_normalizacao(tmp_path):
     esperado = pd.DataFrame([
         {
             "cd_processo": "CODIGO",
+            "cd_foro": "126",
+            "nm_alias": None,
+            "cd_documento": "sufixo",
             "id_processo": "1000000-00.2024.8.26.0001",
             "classe": "Classe: complemento",
             "data_disponibilizacao": "01/02/2024",
             "tipode_ato": "Sentença",
             "decisao": "Decisão completa .\nSegunda linha.",
         },
-        {"cd_processo": None, "id_processo": None, "decisao": ""},
+        {
+            "cd_processo": None,
+            "cd_foro": None,
+            "nm_alias": None,
+            "cd_documento": None,
+            "id_processo": None,
+            "decisao": "",
+        },
         {},
     ])
     pd.testing.assert_frame_equal(resultado, esperado)

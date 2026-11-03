@@ -33,12 +33,10 @@ from __future__ import annotations
 import logging
 import math
 import re
-import time
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
-from typing import Any, ClassVar
-from urllib.parse import unquote_plus
+from typing import ClassVar
 
 import pandas as pd
 import requests
@@ -59,7 +57,7 @@ from ...utils import safe_path_component
 from ...utils.cnj import clean_cnj, format_cnj
 from ...utils.params import coerce_brazilian_date
 from .base import EsajSearchScraper
-from .download import _CHROME_HEADERS, _ESAJ_HEADERS
+from .pasta import parse_parametros_pasta, tipo_documento
 
 logger = logging.getLogger("juscraper._esaj.acordao")
 
@@ -67,7 +65,6 @@ COLUNA_CAMINHO_ACORDAO = "caminho_acordao"
 """Coluna que :meth:`EsajAcordaoScraper.baixar_acordaos` acrescenta."""
 
 _SEM_INFORMACOES = "Não existem informações disponíveis"
-_PARAMETROS_RE = re.compile(r'"parametros":"([^"]+)"')
 
 
 class AcordaoIndisponivelError(Exception):
@@ -248,25 +245,6 @@ def parse_cursor(html: str) -> str | None:
     return str(link.get("data-cursor") or "") or None if link is not None else None
 
 
-def parse_parametros_pasta(html: str) -> str | None:
-    """Query string que ``getPDF.do`` espera, tirada da página da pasta digital.
-
-    A pasta lista uma entrada por página do documento, todas com os mesmos
-    ``parametros``; ``getPDF.do`` devolve o documento inteiro com qualquer uma.
-    """
-    encontrado = _PARAMETROS_RE.search(html)
-    return encontrado.group(1) if encontrado else None
-
-
-def tipo_documento(parametros: str) -> str:
-    """``deTipoDocDigital`` dos ``parametros``, que o eSAJ codifica em latin-1."""
-    for par in parametros.split("&"):
-        chave, _, valor = par.partition("=")
-        if chave == "deTipoDocDigital":
-            return unquote_plus(valor, encoding="latin-1")
-    return ""
-
-
 def _data_br(texto: str) -> date:
     """``date`` de ``DD/MM/AAAA``, sem passar por ``datetime`` ingênuo."""
     dia, mes, ano = texto.strip().split("/")
@@ -326,22 +304,6 @@ class EsajAcordaoScraper(EsajSearchScraper):
     CPOSG_PATH: ClassVar[str]
     MOVIMENTACOES_AJAX: ClassVar[bool] = False
     TIPOS_DOCUMENTO_ACORDAO: ClassVar[frozenset[str]] = frozenset({"Acórdão"})
-    _ultimo_pedido_cposg: float | None = None
-
-    def _get_cposg(self, url: str, **kwargs: Any) -> requests.Response:
-        # ``sleep_time`` separa pedidos, não linhas: um acórdão do TJSP pede busca,
-        # show, páginas de movimentação e pasta de cada candidata. A espera conta
-        # do fim do pedido anterior e só completa o que falta: o processamento
-        # entre um pedido e outro abate dela, o tempo de resposta não.
-        if self._ultimo_pedido_cposg is not None and self.sleep_time:
-            espera = self.sleep_time - (time.monotonic() - self._ultimo_pedido_cposg)
-            if espera > 0:
-                time.sleep(espera)
-        headers = _CHROME_HEADERS if self.CJSG_CHROME_UA else _ESAJ_HEADERS
-        try:
-            return self._request_with_retry("GET", url, headers=headers, timeout=60, **kwargs)
-        finally:
-            self._ultimo_pedido_cposg = time.monotonic()
 
     def baixar_acordao(self, processo: str, data_julgamento: str | date, diretorio: str | None = None) -> str:
         """Baixa o PDF do acórdão de uma linha do cjsg pela movimentação do processo.
@@ -469,7 +431,7 @@ class EsajAcordaoScraper(EsajSearchScraper):
     def _abrir_processo(self, cnj: str) -> list[tuple[str, str]]:
         """``(cdProcesso, html da página)`` de cada processo que a busca devolve."""
         digitos = clean_cnj(cnj)
-        resposta = self._get_cposg(
+        resposta = self._get_espacado(
             f"{self.BASE_URL}{self.CPOSG_PATH}search.do",
             params={
                 "conversationId": "",
@@ -492,7 +454,7 @@ class EsajAcordaoScraper(EsajSearchScraper):
                 raise RespostaInesperadaError(cnj, "a busca do cposg não devolveu processo, listagem nem mensagem.")
             return [(cd_processo, resposta.text)]
         return [
-            (cd, self._get_cposg(f"{self.BASE_URL}{self.CPOSG_PATH}show.do", params={"processo.codigo": cd}).text)
+            (cd, self._get_espacado(f"{self.BASE_URL}{self.CPOSG_PATH}show.do", params={"processo.codigo": cd}).text)
             for cd in codigos
         ]
 
@@ -514,7 +476,8 @@ class EsajAcordaoScraper(EsajSearchScraper):
         linhas = 0
         while True:
             params = {"cdProcesso": cd_processo, **({"cursor": cursor} if cursor else {})}
-            html = self._get_cposg(f"{self.BASE_URL}{self.CPOSG_PATH}carregarMovimentacoesAjax.do", params=params).text
+            url = f"{self.BASE_URL}{self.CPOSG_PATH}carregarMovimentacoesAjax.do"
+            html = self._get_espacado(url, params=params).text
             movimentacoes += parse_movimentacoes(html, cd_processo, inicio=linhas)
             datas = parse_datas(html)
             linhas += len(datas)
@@ -535,7 +498,7 @@ class EsajAcordaoScraper(EsajSearchScraper):
         url_pasta = self._url_da_pasta(cnj, mov)
         if url_pasta is None:
             return None
-        parametros = parse_parametros_pasta(self._get_cposg(url_pasta).text)
+        parametros = parse_parametros_pasta(self._get_espacado(url_pasta).text)
         if parametros is None:
             raise RespostaInesperadaError(
                 cnj, f"a pasta digital do documento {mov.cd_documento} não traz 'parametros'."
@@ -592,7 +555,7 @@ class EsajAcordaoScraper(EsajSearchScraper):
                 raise _DocumentoRestritoError
 
         try:
-            resposta = self._get_cposg(
+            resposta = self._get_espacado(
                 f"{self.BASE_URL}{self.CPOSG_PATH}verificarAcessoMovimentacao.do",
                 params={
                     "cdDocumento": mov.cd_documento,
@@ -615,7 +578,7 @@ class EsajAcordaoScraper(EsajSearchScraper):
         return texto
 
     def _gravar_pdf(self, cnj: str, mov: Movimentacao, parametros: str, diretorio: str | None) -> str:
-        resposta = self._get_cposg(f"{self.BASE_URL}pastadigital/getPDF.do?{parametros}")
+        resposta = self._get_espacado(f"{self.BASE_URL}pastadigital/getPDF.do?{parametros}")
         if not resposta.content.startswith(b"%PDF"):
             inicio = resposta.content[:60].decode("utf-8", "replace")
             raise RespostaNaoPdfError(
