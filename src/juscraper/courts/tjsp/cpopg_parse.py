@@ -284,8 +284,8 @@ def _movement_rows(soup: BeautifulSoup, path: str) -> list[Tag]:
         avisar(
             f"{path}: a página do processo não traz as movimentações, que o eSAJ "
             "carrega à parte; a tabela 'movimentacoes' sai vazia para ele. "
-            "Apague o arquivo e baixe o processo de novo com cpopg_download, "
-            "que pula processo com HTML já salvo."
+            "Baixe o processo de novo com cpopg_download, que substitui o HTML "
+            "salvo sem as movimentações."
         )
         return []
     container = soup.find('div', id='containerMovimentacoes')
@@ -389,6 +389,9 @@ def cpopg_parse_single_json(path: str):
             dfs[tipo] = df
         else:
             dfs[tipo] = pd.concat([dfs[tipo], df], ignore_index=True)
+    # Com baixar_movimentacoes=False não há arquivo de movimentação; a chave fica,
+    # porque cpopg_parse_manager junta as tabelas pelas chaves do primeiro processo.
+    dfs.setdefault('movimentacao', pd.DataFrame(columns=['cdProcesso']))
     df_processo = df_processo.merge(dfs['basicos'], how='left', on='cdProcesso')
     dfs['basicos'] = df_processo
     return dfs

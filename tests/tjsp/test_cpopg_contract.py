@@ -357,6 +357,49 @@ def test_cpopg_html_sem_movimentacoes_nao_chama_o_ajax(tmp_path, mocker):
     assert result["movimentacoes"].empty
     assert result["basicos"].iloc[0]["situacao"] == "Extinto"
 
+
+@responses.activate
+@pytest.mark.parametrize("anterior", ["sem_movimentacoes", "versao_antiga"])
+def test_cpopg_download_com_movimentacoes_baixa_de_novo_o_salvo_sem_elas(tmp_path, mocker, anterior):
+    """HTML salvo sem as movimentações não conta como baixado quando o download as pede."""
+    mocker.patch("time.sleep")
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+    if anterior == "sem_movimentacoes":
+        _registrar_busca_incidente()
+        scraper.cpopg_download(CNJ_INCIDENTE, method="html", baixar_movimentacoes=False)
+    else:
+        pasta = tmp_path / "cpopg" / CNJ_INCIDENTE.replace("-", "").replace(".", "")
+        pasta.mkdir(parents=True)
+        (pasta / f"{pasta.name}_{CD_INCIDENTE}.html").write_bytes(
+            load_sample_bytes("tjsp", "cpopg/show_incidente.html"),
+        )
+    _registrar_busca_incidente()
+    _registrar_pagina_movimentacoes(1)
+    _registrar_pagina_movimentacoes(2, CURSOR_PAGINA_2)
+    _registrar_pagina_movimentacoes(3, CURSOR_PAGINA_3)
+
+    scraper.cpopg_download(CNJ_INCIDENTE, method="html")
+
+    assert len(_chamadas("carregarMovimentacoesAjax.do")) == 3
+    assert len(scraper.cpopg_parse(str(tmp_path / "cpopg"))["movimentacoes"]) == 14
+
+
+@responses.activate
+@pytest.mark.parametrize(("primeiro", "segundo"), [(True, True), (True, False), (False, False)])
+def test_cpopg_download_pula_o_processo_ja_salvo(tmp_path, mocker, primeiro, segundo):
+    """Só o arquivo sem movimentações, num download que as pede, é baixado de novo."""
+    mocker.patch("time.sleep")
+    _registrar_busca_incidente()
+    _registrar_pagina_movimentacoes(1)
+    _registrar_pagina_movimentacoes(2, CURSOR_PAGINA_2)
+    _registrar_pagina_movimentacoes(3, CURSOR_PAGINA_3)
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+
+    scraper.cpopg_download(CNJ_INCIDENTE, method="html", baixar_movimentacoes=primeiro)
+    scraper.cpopg_download(CNJ_INCIDENTE, method="html", baixar_movimentacoes=segundo)
+
+    assert len(_chamadas("search.do")) == 1
+
 # ---------- method='api': busca sem processo ------------------------------
 
 @responses.activate
@@ -410,5 +453,5 @@ def test_cpopg_api_sem_movimentacoes_pula_o_endpoint(tmp_path, mocker):
         CNJ, method="api", baixar_movimentacoes=False,
     )
 
-    assert "movimentacao" not in result
+    assert result["movimentacao"].empty
     assert not _chamadas("movimentacao/" + CD_PROCESSO)

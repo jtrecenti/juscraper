@@ -104,10 +104,12 @@ def cpopg_download_html_single(
     # Os documentos de um processo são gravados juntos no fim
     # (_salvar_resultados_html), então um .html na pasta indica o processo
     # inteiro. O de 0 byte vem de versão que gravava antes de ler a resposta.
-    for file in Path(path).iterdir():
-        if file.name.endswith('.html') and file.stat().st_size > 0:
-            logger.info("O processo %s ja foi baixado.", id_clean)
-            return path
+    salvos = [
+        file for file in Path(path).iterdir() if file.name.endswith('.html') and file.stat().st_size > 0
+    ]
+    if salvos and not (baixar_movimentacoes and any(map(_sem_movimentacoes, salvos))):
+        logger.info("O processo %s ja foi baixado.", id_clean)
+        return path
     time.sleep(sleep_time)
     id_format = format_cnj(id_clean)
     p = split_cnj(id_clean)
@@ -231,6 +233,11 @@ def _salvar_resultados_html(
         destino.with_suffix('.tmp').replace(destino)
 
 
+def _sem_movimentacoes(arquivo):
+    """HTML salvo sem as movimentações, com ou sem o botão (baixar_movimentacoes=False o tira)."""
+    return _CONTAINER_VAZIO.search(arquivo.read_text(encoding='utf-8')) is not None
+
+
 def _incluir_movimentacoes(html, sessao, url_base, codigo_processo, *, baixar_movimentacoes=True):
     """Grava no HTML do processo a lista completa de movimentações.
 
@@ -238,7 +245,8 @@ def _incluir_movimentacoes(html, sessao, url_base, codigo_processo, *, baixar_mo
     e de "Mais" até a última página, e o parser lê só o arquivo. Página sem o
     bloco vazio (formato antigo, com ``tabelaTodasMovimentacoes``) sai como
     veio. Com ``baixar_movimentacoes=False`` sai só o botão: o parser avisa
-    quando acha o botão, e quem desligou o download não precisa do aviso.
+    quando acha o botão, e quem desligou o download não precisa do aviso. O
+    container continua vazio, e ``_sem_movimentacoes`` o reconhece.
     """
     if not _CONTAINER_VAZIO.search(html):
         return html
