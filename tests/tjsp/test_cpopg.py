@@ -275,7 +275,15 @@ class TestCPOPGUnit:
             assert len(result['partes']) == 0
             assert len(result['movimentacoes']) == 0
             assert list(result['partes'].columns) == ['file_path', 'tipo', 'nome', 'advogados']
-            assert list(result['movimentacoes'].columns) == ['file_path', 'data', 'movimento', 'observacao']
+            assert list(result['movimentacoes'].columns) == [
+                'file_path',
+                'data',
+                'movimento',
+                'observacao',
+                'cd_documento',
+                'documento_publico',
+                'caminho_documento',
+            ]
             assert list(result['peticoes_diversas'].columns) == ['file_path', 'data', 'tipo']
         finally:
             Path(temp_path).unlink()
@@ -553,7 +561,14 @@ class TestCPOPGUnit:
                     'outros_assuntos': 'ICMS/ Imposto sobre Circulação de Mercadorias',
                 },
                 {'tipo': 'Reqte', 'nome': 'João da Silva', 'advogados': ['Pedro Souza']},
-                {'data': '01/03/2025', 'movimento': 'Juntada de Petição', 'observacao': ''},
+                {
+                    'data': '01/03/2025',
+                    'movimento': 'Juntada de Petição',
+                    'observacao': '',
+                    'cd_documento': None,
+                    'documento_publico': None,
+                    'caminho_documento': None,
+                },
             ),
             (
                 'show_alternative.html',
@@ -587,7 +602,14 @@ class TestCPOPGUnit:
                     'area': 'Cível',
                 },
                 {'tipo': 'Exeqte', 'nome': 'Maria Santos', 'advogados': ['Ana Oliveira']},
-                {'data': '15/03/2025', 'movimento': 'Recebidos os autos', 'observacao': ''},
+                {
+                    'data': '15/03/2025',
+                    'movimento': 'Recebidos os autos',
+                    'observacao': '',
+                    'cd_documento': None,
+                    'documento_publico': None,
+                    'caminho_documento': None,
+                },
             ),
         ],
     )
@@ -608,7 +630,15 @@ class TestCPOPGUnit:
         assert result['basicos'].iloc[0].to_dict() == {'file_path': str(sample_path), **basic_values}
         assert list(result['partes'].columns) == ['file_path', 'tipo', 'nome', 'advogados']
         assert result['partes'].iloc[0].to_dict() == {'file_path': str(sample_path), **party_values}
-        assert list(result['movimentacoes'].columns) == ['file_path', 'data', 'movimento', 'observacao']
+        assert list(result['movimentacoes'].columns) == [
+            'file_path',
+            'data',
+            'movimento',
+            'observacao',
+            'cd_documento',
+            'documento_publico',
+            'caminho_documento',
+        ]
         assert result['movimentacoes'].iloc[0].to_dict() == {'file_path': str(sample_path), **movement_values}
         assert result['peticoes_diversas'].empty
         assert list(result['peticoes_diversas'].columns) == ['file_path', 'data', 'tipo']

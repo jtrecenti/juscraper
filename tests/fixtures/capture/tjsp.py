@@ -20,6 +20,7 @@ and ``main()`` calls them in order. If one flow breaks (e.g., API returns
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import time
 from pathlib import Path
@@ -328,6 +329,81 @@ def capture_acordao() -> None:
     print("[tjsp] acordao: verificarAcesso sem movimentações carregadas → saved")
 
 
+# ---------- documentos públicos (peças do cpopg e sentença do cjpg) -------
+
+# O processo dos samples cpopg/movimentacoes_pagina_{1,2,3}.html: a página 1 traz
+# um documento com senha (190277046) e um público, a 3 outro público.
+DOCUMENTOS_CD_PROCESSO = "1W001DU0E0000"
+DOCUMENTOS_PUBLICOS = ("186579563", "175634201")
+# O primeiro resultado de cjpg/results_normal_page_01.html (atributo ``name``).
+SENTENCA_NAME = "3I0006RUY0000-126--167379827"
+
+
+def _redirecionamento(session: requests.Session, url: str, params: dict) -> str:
+    """``Location`` do 302 que leva à página da pasta digital."""
+    resposta = session.get(url, params=params, allow_redirects=False, timeout=60)
+    if resposta.status_code != 302:
+        raise RuntimeError(f"{url}: esperava 302, veio {resposta.status_code}")
+    return resposta.headers["Location"]
+
+
+def capture_documentos() -> None:
+    """Capture the pasta digital pages behind the public documents.
+
+    Saves under ``tests/tjsp/samples/documentos/``: for each public document
+    of the cpopg samples, the ``Location`` of ``abrirDocumentoVinculadoMovimentacao.do``
+    and the pasta page it leads to; the refusal for a document that the
+    session has not listed; and the same pair for the cjpg sentence. The
+    pasta pages carry the process number and the document tree, no names.
+    The PDF itself is not saved: the tests only need a body starting with
+    ``%PDF``.
+    """
+    dest = samples_dir_for("tjsp", "documentos")
+    redirecionamentos: dict[str, str] = {}
+    abrir = f"{ESAJ_BASE}cpopg/abrirDocumentoVinculadoMovimentacao.do"
+
+    # Sem listar as movimentações: a recusa.
+    session = build_session(headers=TJSP_CHROME_HEADERS)
+    resposta = session.get(
+        abrir, params={"processo.codigo": DOCUMENTOS_CD_PROCESSO, "cdDocumento": DOCUMENTOS_PUBLICOS[0]}, timeout=60,
+    )
+    dump(dest / "acesso_nao_validado.html", resposta.content)
+    time.sleep(1.5)
+
+    session = build_session(headers=TJSP_CHROME_HEADERS)
+    session.get(f"{ESAJ_BASE}cpopg/show.do", params={"processo.codigo": DOCUMENTOS_CD_PROCESSO}, timeout=60)
+    cursor: str | None = None
+    while True:
+        time.sleep(1.5)
+        params = {"processo.codigo": DOCUMENTOS_CD_PROCESSO}
+        if cursor:
+            params["cursor"] = cursor
+        pagina = session.get(f"{ESAJ_BASE}cpopg/carregarMovimentacoesAjax.do", params=params, timeout=60).text
+        achado = re.search(r'id="cursorMovimentacoesPaginado"[^>]*value="([^"]*)"|data-cursor="([^"]*)"', pagina)
+        cursor = next((g for g in achado.groups() if g), None) if achado else None
+        if not cursor:
+            break
+    for cd in DOCUMENTOS_PUBLICOS:
+        time.sleep(1.5)
+        local = _redirecionamento(session, abrir, {"processo.codigo": DOCUMENTOS_CD_PROCESSO, "cdDocumento": cd})
+        redirecionamentos[f"movimentacao_{cd}"] = local
+        time.sleep(1.5)
+        dump(dest / f"pasta_{cd}.html", session.get(local, timeout=60).content)
+
+    session = build_session(headers=TJSP_CHROME_HEADERS)
+    cd_processo, cd_foro, nm_alias, cd_documento = SENTENCA_NAME.split("-")
+    local = _redirecionamento(
+        session,
+        f"{ESAJ_BASE}cjpg/obterArquivo.do",
+        {"cdProcesso": cd_processo, "cdForo": cd_foro, "nmAlias": nm_alias, "cdDocumento": cd_documento},
+    )
+    redirecionamentos[f"sentenca_{cd_documento}"] = local
+    time.sleep(1.5)
+    dump(dest / f"pasta_{cd_documento}.html", session.get(local, timeout=60).content)
+    dump(dest / "redirecionamentos.json", json.dumps(redirecionamentos, indent=1).encode())
+    print(f"[tjsp] documentos: {len(redirecionamentos)} redirecionamentos em {dest}")
+
+
 # ---------- orchestrator -------------------------------------------------
 
 def main() -> None:
@@ -337,7 +413,7 @@ def main() -> None:
         "--skip",
         nargs="*",
         default=[],
-        choices=["cjsg", "cjpg", "cpopg_html", "cpopg_api", "cposg_html", "cposg_api", "acordao"],
+        choices=["cjsg", "cjpg", "cpopg_html", "cpopg_api", "cposg_html", "cposg_api", "acordao", "documentos"],
         help="Flows to skip",
     )
     args = parser.parse_args()
@@ -350,6 +426,7 @@ def main() -> None:
         ("cposg_html", lambda: capture_cposg_html(args.cnj)),
         ("cposg_api", lambda: capture_cposg_api(args.cnj)),
         ("acordao", capture_acordao),
+        ("documentos", capture_documentos),
     ]
     for name, fn in flows:
         if name in args.skip:
