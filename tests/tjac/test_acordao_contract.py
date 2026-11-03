@@ -24,9 +24,8 @@ from juscraper.courts._esaj.acordao import (
     ProcessoNaoEncontradoError,
     RespostaInesperadaError,
     RespostaNaoPdfError,
-    parse_parametros_pasta,
-    tipo_documento,
 )
+from juscraper.courts._esaj.pasta import parse_parametros_pasta, tipo_documento
 from tests._helpers import PDF_FALSO, load_sample, registrar_rota_acordao
 
 BASE = "https://esaj.tjac.jus.br/"
