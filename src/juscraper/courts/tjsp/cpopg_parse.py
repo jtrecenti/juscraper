@@ -300,10 +300,13 @@ def _movement_rows(soup: BeautifulSoup, path: str) -> list[Tag]:
 
 def _movement_description(cell: Tag) -> str:
     """Movement name; rows with a linked document carry it inside the link."""
-    link = cell.find('a', class_='linkMovVincProc')
-    if link is not None:
-        return str(link.get_text(' ', strip=True))
-    return ' '.join(text.strip() for text in cell.find_all(string=True, recursive=False) if text.strip())
+    description = cell.find(string=True, recursive=False) or ''
+    if not description.strip():
+        # Movimentação com documento: a descrição fica dentro do link
+        # (a.linkMovVincProc), e o texto direto da célula é só espaço.
+        link = cell.find('a')
+        description = link.get_text(' ', strip=True) if link else ''
+    return str(description).strip()
 
 
 def _movement_document(row: Tag, path: str) -> dict:

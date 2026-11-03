@@ -203,6 +203,10 @@ CURSOR_PAGINA_3 = (
     "-P67GCMeMTLX-HZTDWpeIXCZboP_NcGh0DigPh9ITLFHb-k4m9J7GtfS3ENX_xjdtriApOPL6TUKA4OYJWVULf64xhjw9AI"
 )
 URL_MOVIMENTACOES = f"{ESAJ}/cpopg/carregarMovimentacoesAjax.do"
+RECUSA_MOVIMENTACOES = (
+    '<div class="mensagemErroMovimentacoes">\n\tNão foi possível realizar a operação '
+    "requisitada, tente novamente mais tarde.\n</div>\n"
+)
 
 
 def _registrar_busca_incidente():
@@ -276,12 +280,25 @@ def test_cpopg_html_carrega_todas_as_paginas_de_movimentacoes(tmp_path, mocker):
 def test_cpopg_html_refaz_a_busca_quando_o_esaj_recusa_as_movimentacoes(tmp_path, mocker):
     """A recusa do eSAJ (div mensagemErroMovimentacoes) refaz a busca, que abre a sessão de novo."""
     mocker.patch("time.sleep")
-    recusa = (
-        '<div class="mensagemErroMovimentacoes">\n\tNão foi possível realizar a operação '
-        "requisitada, tente novamente mais tarde.\n</div>\n"
-    )
     _registrar_busca_incidente()
-    _registrar_pagina_movimentacoes(1, body=recusa)
+    _registrar_pagina_movimentacoes(1, body=RECUSA_MOVIMENTACOES)
+    _registrar_pagina_movimentacoes(1)
+    _registrar_pagina_movimentacoes(2, CURSOR_PAGINA_2)
+    _registrar_pagina_movimentacoes(3, CURSOR_PAGINA_3)
+
+    result = jus.scraper("tjsp", download_path=str(tmp_path)).cpopg(CNJ_INCIDENTE, method="html")
+
+    assert len(_chamadas("search.do")) == 2
+    assert len(result["movimentacoes"]) == 14
+
+
+@responses.activate
+def test_cpopg_html_refaz_a_busca_quando_o_esaj_recusa_uma_pagina_seguinte(tmp_path, mocker):
+    """A recusa no meio da lista não vira fim da lista: a busca é refeita e o processo sai inteiro."""
+    mocker.patch("time.sleep")
+    _registrar_busca_incidente()
+    _registrar_pagina_movimentacoes(1)
+    _registrar_pagina_movimentacoes(2, CURSOR_PAGINA_2, body=RECUSA_MOVIMENTACOES)
     _registrar_pagina_movimentacoes(1)
     _registrar_pagina_movimentacoes(2, CURSOR_PAGINA_2)
     _registrar_pagina_movimentacoes(3, CURSOR_PAGINA_3)
@@ -294,7 +311,7 @@ def test_cpopg_html_refaz_a_busca_quando_o_esaj_recusa_as_movimentacoes(tmp_path
 
 @responses.activate
 def test_cpopg_html_para_quando_o_cursor_se_repete(tmp_path, mocker):
-    """Cursor repetido não avança a paginação: o processo fica de fora com erro no log."""
+    """Cursor repetido encerra a lista: o processo é gravado com as páginas lidas, sem erro."""
     mocker.patch("time.sleep")
     _registrar_busca_incidente()
     _registrar_pagina_movimentacoes(1)
@@ -306,14 +323,13 @@ def test_cpopg_html_para_quando_o_cursor_se_repete(tmp_path, mocker):
     scraper.cpopg_download(CNJ_INCIDENTE, method="html")
 
     assert len(_chamadas("carregarMovimentacoesAjax.do")) == 2
-    assert "a paginação não avançaria" in str(erro.call_args.args[-1])
-    assert not list((tmp_path / "cpopg").rglob("*.html"))
-
+    erro.assert_not_called()
+    assert len(scraper.cpopg_parse(str(tmp_path / "cpopg"))["movimentacoes"]) == 10
 
 
 @responses.activate
 def test_cpopg_html_para_quando_a_pagina_seguinte_vem_sem_linhas(tmp_path, mocker):
-    """Página seguinte sem movimentações não avança a paginação: o processo fica de fora com erro no log."""
+    """Página seguinte sem movimentações encerra a lista: o processo é gravado com a primeira página."""
     mocker.patch("time.sleep")
     _registrar_busca_incidente()
     _registrar_pagina_movimentacoes(1)
@@ -323,8 +339,9 @@ def test_cpopg_html_para_quando_a_pagina_seguinte_vem_sem_linhas(tmp_path, mocke
 
     scraper.cpopg_download(CNJ_INCIDENTE, method="html")
 
-    assert "página sem linhas" in str(erro.call_args.args[-1])
-    assert not list((tmp_path / "cpopg").rglob("*.html"))
+    assert len(_chamadas("carregarMovimentacoesAjax.do")) == 2
+    erro.assert_not_called()
+    assert len(scraper.cpopg_parse(str(tmp_path / "cpopg"))["movimentacoes"]) == 5
 
 
 @responses.activate

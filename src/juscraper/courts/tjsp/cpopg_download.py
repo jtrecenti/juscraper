@@ -37,14 +37,92 @@ def _consulta_bloqueada(texto):
     return _AVISO_CONSULTAS_SIMULTANEAS in texto.lower()
 
 
-# A página do processo traz o bloco de movimentações vazio e um botão "Exibir
-# movimentações"; o JavaScript do eSAJ busca a lista em
-# carregarMovimentacoesAjax.do, cinco linhas por página, e segue o cursor de
-# cada página até a última. O fragmento só sai com a sessão que abriu o
-# processo: sem ela, o eSAJ devolve a div mensagemErroMovimentacoes.
-_ROTA_MOVIMENTACOES = "cpopg/carregarMovimentacoesAjax.do"
-_CONTAINER_VAZIO = re.compile(r'<div id="containerMovimentacoes">\s*</div>')
+# O e-SAJ deixou de mandar as movimentações no show.do: a página vem com o
+# contêiner vazio e o botão "Exibir movimentações", e o navegador as busca em
+# carregarMovimentacoesAjax.do, cinco por vez, seguindo um cursor opaco. O
+# fragmento só sai com a sessão que abriu o processo: sem ela, o e-SAJ devolve
+# a div mensagemErroMovimentacoes. Refs #428.
+_CONTAINER_MOVIMENTACOES = re.compile(r'<div id="containerMovimentacoes">\s*</div>')
 _BOTAO_EXIBIR = re.compile(r'<div id="containerExibirMovimentacoes".*?</div>', re.DOTALL)
+_LIMITE_PAGINAS_MOVIMENTACOES = 2000
+
+
+def _proximo_cursor(pagina, primeira):
+    """Cursor da próxima página; a primeira o traz num input, as demais numa linha oculta."""
+    if primeira:
+        campo = pagina.find('input', id='cursorMovimentacoesPaginado')
+        return campo.get('value') if campo else None
+    linha = pagina.find('tr', id='trCursorMovimentacoes')
+    return linha.get('data-cursor') if linha else None
+
+
+def _pagina_movimentacoes(sessao, url, codigo, cursor, primeira):
+    """Uma página do carregarMovimentacoesAjax.do, já lida."""
+    parametros = {'processo.codigo': codigo}
+    if cursor:
+        parametros['cursor'] = cursor
+    resposta = sessao.get(url, params=parametros)
+    if resposta.status_code != 200:
+        raise requests.HTTPError(
+            f"Falha ao buscar movimentações do código {codigo}. "
+            f"Status code {resposta.status_code}."
+        )
+    # Os dois ValueError fazem o retry de cpopg_download_html_single refazer a
+    # busca, que reabre o processo na sessão. Sem a checagem da primeira página
+    # (sessão expirada, por exemplo), o processo seria gravado sem movimentações.
+    if 'mensagemErroMovimentacoes' in resposta.text:
+        raise ValueError(f"O e-SAJ recusou as movimentações do código {codigo}.")
+    pagina = BeautifulSoup(resposta.text, 'html.parser')
+    if primeira and pagina.find('tbody', id='tabelaPrimeiraPaginaMovimentacoes') is None:
+        raise ValueError(
+            f"Movimentações do código {codigo}: a primeira página veio fora do formato conhecido."
+        )
+    return pagina
+
+
+def _buscar_movimentacoes(sessao, url_base, codigo):
+    """Busca todas as páginas de movimentações de um processo e devolve as linhas em HTML."""
+    url = urljoin(url_base, 'cpopg/carregarMovimentacoesAjax.do')
+    linhas: list[str] = []
+    cursor: str | None = None
+    pagina_anterior: list[str] = []
+    for numero in range(_LIMITE_PAGINAS_MOVIMENTACOES):
+        pagina = _pagina_movimentacoes(sessao, url, codigo, cursor, primeira=numero == 0)
+        novas = pagina.select('tr.containerMovimentacao')
+        # Depois da última página, o e-SAJ pode repetir essa mesma página com
+        # um cursor novo a cada chamada, ou devolver o mesmo cursor com páginas
+        # vazias.
+        textos = [linha.get_text(' ', strip=True) for linha in novas]
+        if textos and textos == pagina_anterior:
+            return linhas
+        pagina_anterior = textos
+        linhas.extend(str(linha) for linha in novas)
+        anterior, cursor = cursor, _proximo_cursor(pagina, primeira=numero == 0)
+        if not cursor or not novas or cursor == anterior:
+            return linhas
+    raise RuntimeError(f"Movimentações do código {codigo} passaram de {_LIMITE_PAGINAS_MOVIMENTACOES} páginas.")
+
+
+def _completar_movimentacoes(html, sessao, url_base, codigo, *, baixar_movimentacoes=True):
+    """Põe as movimentações no HTML do processo, na tabela que o parser já lê.
+
+    Com ``baixar_movimentacoes=False`` sai só sem o botão: o parser avisa
+    quando acha o botão, e quem desligou o download não precisa do aviso. O
+    contêiner continua vazio, e ``_sem_movimentacoes`` o reconhece.
+    """
+    if not _CONTAINER_MOVIMENTACOES.search(html):
+        # Layout antigo, com a tabela completa no próprio show.do.
+        return html
+    if not baixar_movimentacoes:
+        return _BOTAO_EXIBIR.sub('', html, count=1)
+    linhas = ''.join(_buscar_movimentacoes(sessao, url_base, codigo))
+    tabela = (
+        '<div id="containerMovimentacoes"><table>'
+        f'<tbody id="tabelaTodasMovimentacoes">{linhas}</tbody>'
+        '</table></div>'
+    )
+    return _CONTAINER_MOVIMENTACOES.sub(lambda _: tabela, html, count=1)
+
 
 PASTA_DOCUMENTOS = "documentos"
 """Subpasta do processo onde ``download_pecas`` grava os PDFs."""
@@ -365,7 +443,7 @@ def _completar_documento(
 
     Os PDFs saem na sessão que acabou de listar as movimentações: ver :class:`_PecasPublicas`.
     """
-    html = _incluir_movimentacoes(
+    html = _completar_movimentacoes(
         html, sessao, url_base, codigo_processo, baixar_movimentacoes=baixar_movimentacoes,
     )
     if pecas is not None:
@@ -394,87 +472,7 @@ def _falta_documento(arquivo):
 
 def _sem_movimentacoes(arquivo):
     """HTML salvo sem as movimentações, com ou sem o botão (baixar_movimentacoes=False o tira)."""
-    return _CONTAINER_VAZIO.search(arquivo.read_text(encoding='utf-8')) is not None
-
-
-def _incluir_movimentacoes(html, sessao, url_base, codigo_processo, *, baixar_movimentacoes=True):
-    """Grava no HTML do processo a lista completa de movimentações.
-
-    O arquivo fica como a página no navegador depois de "Exibir movimentações"
-    e de "Mais" até a última página, e o parser lê só o arquivo. Página sem o
-    bloco vazio (formato antigo, com ``tabelaTodasMovimentacoes``) sai como
-    veio. Com ``baixar_movimentacoes=False`` sai só o botão: o parser avisa
-    quando acha o botão, e quem desligou o download não precisa do aviso. O
-    container continua vazio, e ``_sem_movimentacoes`` o reconhece.
-    """
-    if not _CONTAINER_VAZIO.search(html):
-        return html
-    if not baixar_movimentacoes:
-        return _BOTAO_EXIBIR.sub('', html, count=1)
-    primeira = _pagina_movimentacoes(sessao, url_base, codigo_processo, cursor=None)
-    bloco = BeautifulSoup(primeira, 'html.parser')
-    if bloco.find('tbody', id='tabelaPrimeiraPaginaMovimentacoes') is None:
-        # Sem a tabela, o arquivo gravado leria como processo sem
-        # movimentações; ValueError faz o retry refazer a busca.
-        raise ValueError(
-            f"Movimentações do processo {codigo_processo}: a primeira página veio fora do formato conhecido."
-        )
-    entrada_cursor = bloco.find('input', id='cursorMovimentacoesPaginado')
-    if entrada_cursor is not None:
-        _anexar_paginas_seguintes(bloco, sessao, url_base, codigo_processo, entrada_cursor.get('value'))
-    paginacao = bloco.find('div', id='divLinkMovimentacoesPaginado')
-    if paginacao is not None:
-        paginacao.decompose()
-    html = _BOTAO_EXIBIR.sub('', html, count=1)
-    return _CONTAINER_VAZIO.sub(
-        lambda _: f'<div id="containerMovimentacoes">{bloco}</div>', html, count=1,
-    )
-
-
-def _anexar_paginas_seguintes(bloco, sessao, url_base, codigo_processo, cursor):
-    """Segue o cursor e anexa as linhas de cada página em ``tabelaOutrasPaginasMovimentacoes``."""
-    outras_paginas = bloco.find('tbody', id='tabelaOutrasPaginasMovimentacoes')
-    vistos = set()
-    while cursor:
-        if outras_paginas is None or cursor in vistos:
-            raise RuntimeError(
-                f"Movimentações do processo {codigo_processo}: a paginação não avançaria "
-                f"(cursor {cursor!r})."
-            )
-        vistos.add(cursor)
-        pagina = BeautifulSoup(
-            f"<table><tbody>{_pagina_movimentacoes(sessao, url_base, codigo_processo, cursor)}</tbody></table>",
-            'html.parser',
-        )
-        linhas = pagina.find_all('tr', class_='containerMovimentacao')
-        if not linhas:
-            raise RuntimeError(
-                f"Movimentações do processo {codigo_processo}: página sem linhas no cursor {cursor!r}."
-            )
-        outras_paginas.extend(linhas)
-        linha_cursor = pagina.find('tr', id='trCursorMovimentacoes')
-        cursor = linha_cursor.get('data-cursor') if linha_cursor else None
-    if outras_paginas is not None:
-        del outras_paginas['style']
-
-
-def _pagina_movimentacoes(sessao, url_base, codigo_processo, cursor):
-    """Uma página do carregarMovimentacoesAjax.do; ``cursor=None`` pede a primeira."""
-    parametros = {'processo.codigo': codigo_processo}
-    if cursor:
-        parametros['cursor'] = cursor
-    resposta = sessao.get(f"{url_base}{_ROTA_MOVIMENTACOES}", params=parametros)
-    if resposta.status_code != 200:
-        raise requests.HTTPError(
-            f"Movimentações do processo {codigo_processo}: status code {resposta.status_code}."
-        )
-    if 'mensagemErroMovimentacoes' in resposta.text:
-        # ValueError: o retry de cpopg_download_html_single refaz a busca,
-        # que reabre o processo na sessão.
-        raise ValueError(
-            f"O eSAJ recusou as movimentações do processo {codigo_processo}."
-        )
-    return resposta.text
+    return _CONTAINER_MOVIMENTACOES.search(arquivo.read_text(encoding='utf-8')) is not None
 
 
 def cpopg_download_api(
