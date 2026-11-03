@@ -267,7 +267,7 @@ def test_sleep_time_separa_cada_pedido_da_linha(tmp_path, mocker):
     # Relógio que anda 0,1 s a cada leitura: entre o carimbo de um pedido e a
     # conferência do seguinte passam 0,1 s, e a espera só completa os 0,4 s restantes.
     relogio = itertools.count(100.0, 0.1)
-    mocker.patch("juscraper.courts._esaj.acordao.time.monotonic", side_effect=lambda: next(relogio))
+    mocker.patch("juscraper.courts._esaj.base.time.monotonic", side_effect=lambda: next(relogio))
     registrar_rota_acordao("tjsp", "modal_incidentes", BASE, "cposg/")
     tjsp = jus.scraper("tjsp", download_path=str(tmp_path), sleep_time=0.5)
 

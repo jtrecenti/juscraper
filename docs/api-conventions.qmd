@@ -352,6 +352,78 @@ movements in the second-degree consultation instead, as the R package
 
 TJAL, TJAM, TJCE and TJMS do not have these methods yet.
 
+## Case documents of the first instance (TJSP)
+
+Two methods download public documents of the first instance as PDF, with
+no login and no captcha. Documents that ask for the process password are
+left out (see jtrecenti/juscraper#481).
+
+**Documents linked to movements.** `cpopg(..., download_pecas=True,
+diretorio=...)` downloads, in the same session that lists the movements,
+the PDF of each public document linked to a movement:
+
+```python
+import juscraper as jus
+
+tjsp = jus.scraper("tjsp")
+resultado = tjsp.cpopg("0000564-95.2025.8.26.0068", download_pecas=True, diretorio="pecas")
+resultado["movimentacoes"][["data", "movimento", "cd_documento", "documento_publico", "caminho_documento"]]
+```
+
+- **Columns.** Every `cpopg` call (with or without `download_pecas`) now
+  fills `cd_documento` and `documento_publico` in `movimentacoes`, read
+  from the movement HTML with no extra request. `caminho_documento` has the
+  PDF path, or `None` without `download_pecas`, for password-protected
+  documents and for documents whose download failed.
+- **Where files go.** `<diretorio>/cpopg/<cnj>/documentos/<cdDocumento>.pdf`.
+  `cpopg` deletes its download folder at the end, so `diretorio` is
+  required with `download_pecas=True`, is only accepted with it, and cannot
+  be inside `download_path`. `cpopg_download(..., download_pecas=True)`
+  writes the PDFs next to the process HTML.
+- **Cost.** Two requests per public document (the folder page and the
+  PDF), after the movement pages of the process: eSAJ only opens a document
+  whose movement page the session has already loaded. The process page is
+  not requested again.
+- **Failures.** A document that fails (eSAJ refuses access, the answer is
+  not a PDF, network error) does not stop the process: the HTML is saved,
+  the PDF is missing, and a single `UserWarning` lists the failures at the
+  end. A later `cpopg_download(..., download_pecas=True)` on the same
+  folder downloads the process again only when a public PDF is missing, and
+  requests only the missing PDFs.
+- `download_pecas=True` requires `method="html"` and
+  `baixar_movimentacoes=True`; otherwise it raises `ValueError` before any
+  request.
+
+**Sentences from `cjpg`.** Each `cjpg` row has the four codes of the
+"Visualizar Inteiro Teor" link: `cd_processo`, `cd_foro`, `nm_alias` (often
+empty) and `cd_documento`. `baixar_sentenca(cd_processo, cd_foro,
+cd_documento, nm_alias)` uses them to download the sentence PDF, and
+`baixar_sentencas(df)` does the same for each row of a `cjpg` DataFrame,
+adding `caminho_sentenca` and `motivo_falha`:
+
+```python
+df = tjsp.cjpg("atraso de voo", paginas=1)
+df = tjsp.baixar_sentencas(df)
+df[["cd_processo", "cd_documento", "caminho_sentenca", "motivo_falha"]]
+```
+
+The PDF goes to `<diretorio>/sentencas/<cd_processo>_<cd_documento>.pdf`.
+Each sentence takes two requests (`cjpg/obterArquivo.do`, which redirects
+to the folder, and the PDF), in any session, spaced by `sleep_time`. A code
+outside the eSAJ format raises `EntradaInvalidaError` before any request;
+in `baixar_sentencas` it becomes `motivo_falha="entrada_invalida"`. The
+other values are `nao_pdf`, `resposta_inesperada` and the network reasons
+of `juscraper.core.failures.MOTIVOS_FALHA`. The `cjpg` text column
+`decisao` already has the sentence text; the PDF keeps the layout and the
+signatures.
+
+The routes are the ones of `tjsp_baixar_doc_movimentacao` and
+`tjsp_baixar_sentenca_cjpg` in the R package
+[`tjsp`](https://github.com/jjesusfilho/tjsp) by José de Jesus Filho. They
+live in `juscraper.courts._esaj.pasta`. The movement route answers without
+login in TJAC, TJAL, TJAM and TJCE as well, and the `cjpg` route in TJMS,
+but those courts do not have `cpopg` or `cjpg` in juscraper yet.
+
 ## Normalization Utilities
 
 The `juscraper.utils.params` module provides normalization functions used internally by all scrapers:

@@ -8,6 +8,8 @@ from bs4.element import PreformattedString
 from tqdm import tqdm
 
 from ...core.avisos import avisar
+from .._esaj.pasta import documento_vinculado
+from .cpopg_download import caminho_do_documento
 
 # Mapping from normalized dt/dd labels to canonical dados keys
 _CANONICAL_KEYS = {
@@ -37,7 +39,9 @@ _BASIC_SELECTORS = (
 )
 _BASIC_COLUMNS = ('file_path', *(field for field, _, _ in _BASIC_SELECTORS), 'situacao')
 _PARTY_COLUMNS = ('file_path', 'tipo', 'nome', 'advogados')
-_MOVEMENT_COLUMNS = ('file_path', 'data', 'movimento', 'observacao')
+_MOVEMENT_COLUMNS = (
+    'file_path', 'data', 'movimento', 'observacao', 'cd_documento', 'documento_publico', 'caminho_documento',
+)
 _MISC_PETITION_COLUMNS = ('file_path', 'data', 'tipo')
 # Label written as bare text, without the span the eSAJ uses (legacy samples).
 _BARE_LAWYER_LABEL = re.compile(r'Advogad[oa]:')
@@ -305,6 +309,24 @@ def _movement_description(cell: Tag) -> str:
     return str(description).strip()
 
 
+def _movement_document(row: Tag, path: str) -> dict:
+    """Document linked to the movement: code, whether it opens without password, and the PDF if downloaded.
+
+    Rows without a document get ``None`` in the three columns. The PDF is the
+    one ``cpopg_download(..., download_pecas=True)`` saves next to the HTML.
+    """
+    link = row.find('a', class_='linkMovVincProc')
+    documento = documento_vinculado(link) if isinstance(link, Tag) else None
+    if documento is None:
+        return dict.fromkeys(('cd_documento', 'documento_publico', 'caminho_documento'))
+    pdf = caminho_do_documento(Path(path).parent, documento.cd_documento)
+    return {
+        'cd_documento': documento.cd_documento,
+        'documento_publico': documento.publico,
+        'caminho_documento': str(pdf) if pdf.is_file() else None,
+    }
+
+
 def _extract_movements(soup: BeautifulSoup, path: str) -> list[dict]:
     """Extract all process movements."""
     movements = []
@@ -319,6 +341,7 @@ def _extract_movements(soup: BeautifulSoup, path: str) -> list[dict]:
             'data': cells[0].get_text(strip=True),
             'movimento': _movement_description(description_cell),
             'observacao': italic_span.get_text(strip=True) if italic_span else '',
+            **_movement_document(row, path),
         })
     return movements
 
