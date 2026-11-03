@@ -123,7 +123,6 @@ def _codigos_inteiro_teor(nome) -> dict:
     novas.
     """
     partes = str(nome).split('-') if nome else []
-    # Fora das quatro partes, só a primeira vale; o que falta vira ``None``.
     codigos = (partes if len(partes) == 4 else partes[:1]) + [None] * 4
     cd_processo, cd_foro, nm_alias, cd_documento = codigos[:4]
     return {

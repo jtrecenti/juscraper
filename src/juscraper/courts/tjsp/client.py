@@ -100,8 +100,6 @@ def _mover_documentos(movimentacoes: pd.DataFrame, origem: str, destino: str) ->
     o mesmo de ``cpopg_download(..., diretorio=destino)``. Um documento ligado
     a duas movimentações aparece em duas linhas e se move uma vez.
     """
-    if movimentacoes.empty or "caminho_documento" not in movimentacoes:
-        return movimentacoes
     novos: dict[str, str] = {}
     for caminho in movimentacoes["caminho_documento"].dropna().unique():
         novo = Path(destino) / Path(caminho).relative_to(origem)
