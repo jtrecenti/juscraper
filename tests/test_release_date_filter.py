@@ -3,8 +3,8 @@
 Strategy
 --------
 For every supported tribunal we run the same three assertions against the
-reference work-week window (10/03/2025 – 14/03/2025, Monday–Friday outside
-holidays and the judicial recess of December/January/July):
+reference window defined in ``tests/helpers.py``, whose module docstring
+explains why each window must end on a day followed by a working day:
 
 1. ``cjsg`` with the date window fixed returns a non-empty DataFrame.
    Pesquisa is empty (``""``) by default; if the tribunal rejects that, we

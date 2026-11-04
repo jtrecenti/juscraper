@@ -1,6 +1,6 @@
-"""Pydantic schemas for TJMT scraper endpoints.
+"""Schemas Pydantic dos endpoints do scraper do TJMT.
 
-Wired em :mod:`juscraper.courts.tjmt.client` desde o lote L2 do #165 —
+Integrado em :mod:`juscraper.courts.tjmt.client` desde o lote L2 do #165 —
 :meth:`TJMTScraper.cjsg_download` valida kwargs via :class:`InputCJSGTJMT`
 com ``extra="forbid"`` herdado de :class:`SearchBase`.
 """
@@ -10,23 +10,29 @@ from typing import ClassVar
 
 from pydantic import Field
 
-from ...schemas import DataJulgamentoMixin, OutputCJSGBase, OutputDataPublicacaoMixin, OutputRelatoriaMixin, SearchBase
+from ...schemas import DataPublicacaoMixin, OutputCJSGBase, OutputDataPublicacaoMixin, OutputRelatoriaMixin, SearchBase
 
 
-class InputCJSGTJMT(SearchBase, DataJulgamentoMixin):
-    """Accepted input for TJMT ``cjsg`` / ``cjsg_download``.
+class InputCJSGTJMT(SearchBase, DataPublicacaoMixin):
+    """Entradas aceitas por ``cjsg`` e ``cjsg_download`` do TJMT.
 
-    Endpoint REST JSON (hellsgate-preview). ``pesquisa`` aceita os aliases
+    Endpoint REST JSON de produção. ``pesquisa`` aceita os aliases
     deprecados ``query`` / ``termo`` via
     :func:`juscraper.utils.params.normalize_pesquisa`, que roda *antes*
-    deste modelo. Datas aceitam os aliases ``data_inicio``/``data_fim``
-    via :func:`juscraper.utils.params.normalize_datas`.
+    deste modelo.
 
-    Apenas filtro de ``data_julgamento_*`` — o backend Hellsgate expoe um
-    unico intervalo (``filtro.periodoDataDe``/``filtro.periodoDataAte``)
-    aplicado a data de julgamento. Nao ha filtro de data de publicacao;
-    ``data_publicacao_*`` levanta ``TypeError`` em vez de ser silenciosamente
-    descartado.
+    A API filtra datas só por publicação (``periodoDataDe``/``periodoDataAte``),
+    e o fim do intervalo é inclusivo. Ela não filtra por data de julgamento nem
+    por classe, então o modelo não declara ``data_julgamento_*`` nem
+    ``classe``: passá-los levanta ``TypeError`` por ``extra="forbid"``, antes de
+    qualquer requisição. Os aliases genéricos ``data_inicio``/``data_fim``
+    apontam para ``data_julgamento_*`` em
+    :func:`juscraper.utils.params.normalize_datas` e por isso também terminam
+    em ``TypeError``, depois do ``DeprecationWarning`` do alias.
+
+    ``relator`` e ``orgao_julgador`` recebem o nome, não o identificador
+    numérico; o downloader tira acentos, junta espaços e passa a maiúsculas,
+    e a API só casa o nome exato.
 
     ``BACKEND_DATE_FORMAT="%Y-%m-%d"`` (ISO) — o Hellsgate aceita datas em
     ``YYYY-MM-DD``, entao :func:`apply_input_pipeline_search` coage as
@@ -39,7 +45,6 @@ class InputCJSGTJMT(SearchBase, DataJulgamentoMixin):
     tipo_consulta: str = "Acordao"
     relator: str | None = None
     orgao_julgador: str | None = None
-    classe: str | None = None
     tipo_processo: str | None = None
     thesaurus: bool = False
     tamanho_pagina: int = Field(default=10, ge=1)
