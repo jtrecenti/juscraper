@@ -363,33 +363,35 @@ def cjsg_download(
 ) -> list:
     """Baixa resultados JSON brutos da API de jurisprudência do TJMT.
 
-    Argumentos:
-    pesquisa: Termo de pesquisa.
-    paginas: Páginas a baixar, baseadas em 1. ``None`` baixa todas.
-    tipo_consulta: ``"Acordao"`` ou ``"DecisaoMonocratica"``.
-    data_publicacao_inicio: Data inicial de publicação.
-    data_publicacao_fim: Data final inclusiva de publicação.
-    relator: Filtro pelo nome do relator.
-    orgao_julgador: Filtro pela câmara julgadora.
-    tipo_processo: ``"Cível"`` ou ``"Criminal"``.
-    thesaurus: Define se a pesquisa deve usar sinônimos.
-    quantidade_por_pagina: Itens por página (padrão 10).
-    request_fn: Callable HTTP que trata retries e ``raise_for_status`` —
-        normalmente ``TJMTScraper._request_with_retry`` (via
-        ``core.http.HTTPScraper``), centralizando o backoff exponencial
-        para 429/5xx.
-    session: ``requests.Session`` compartilhada por ``HTTPScraper``;
-        recebida explicitamente para manter os headers ``Token``,
-        ``Accept`` e ``Referer`` obtidos por ``_get_api_config``. As
-        requisições subsequentes via ``request_fn`` usam essa mesma sessão.
+    Args:
+        pesquisa: Termo de pesquisa.
+        paginas: Páginas a baixar, 1-based. ``None`` baixa todas, até o teto
+            de ``MAX_RESULTS`` resultados.
+        tipo_consulta: ``"Acordao"`` ou ``"DecisaoMonocratica"``.
+        data_publicacao_inicio: Data inicial de publicação.
+        data_publicacao_fim: Data final de publicação, inclusiva.
+        relator: Nome do relator, normalizado sem acento e em maiúsculas.
+        orgao_julgador: Nome do órgão julgador, com a mesma normalização.
+        tipo_processo: ``"Civel"``, ``"Cível"`` ou ``"Criminal"``.
+        thesaurus: Define se a pesquisa deve usar sinônimos.
+        quantidade_por_pagina: Itens por página (padrão 10), no máximo
+            ``MAX_RESULTS``.
+        request_fn: Callable HTTP que trata retries e ``raise_for_status``,
+            normalmente ``TJMTScraper._request_with_retry`` (via
+            ``core.http.HTTPScraper``), centralizando o backoff exponencial
+            para 429/5xx.
+        session: ``requests.Session`` compartilhada por ``HTTPScraper``;
+            recebida explicitamente para manter os headers ``Token``,
+            ``Accept`` e ``Referer`` obtidos por ``_get_api_config``. As
+            requisições subsequentes via ``request_fn`` usam essa mesma sessão.
 
     Avisos:
-    ``UserWarning``: com ``paginas=None``, quando a consulta passa do teto
-    de ``MAX_RESULTS`` resultados que a API devolve; baixa só as páginas
-    que cabem no teto.
+        ``UserWarning``: com ``paginas=None``, quando a consulta passa do teto
+        de ``MAX_RESULTS`` resultados que a API devolve; baixa só as páginas
+        que cabem no teto.
 
-    Retorno:
-    Lista de dicionários JSON brutos, um por página.
+    Returns:
+        Lista de dicionários JSON brutos, um por página.
     """
     paginas_list = _validate_download_inputs(quantidade_por_pagina, paginas, tipo_consulta)
     data_publicacao_inicio = _to_tjmt_date(data_publicacao_inicio)

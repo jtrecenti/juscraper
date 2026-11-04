@@ -86,11 +86,12 @@ def _mapear_resultado(item: dict) -> dict:
 def cjsg_parse(resultados_brutos: list, tipo_consulta: str = "Acordao") -> list[dict]:
     """Extrai registros estruturados das respostas brutas da API do TJMT.
 
-    Argumentos:
+    Args:
         resultados_brutos: Lista de dicionários JSON brutos, um por página.
-        tipo_consulta: ``"Acordao"`` ou ``"DecisaoMonocratica"``.
+        tipo_consulta: ``"Acordao"`` ou ``"DecisaoMonocratica"``. Não altera
+            o resultado: a resposta da API já traz o tipo de cada documento.
 
-    Retorno:
+    Returns:
         Lista de dicionários planos prontos para ``pd.DataFrame``.
     """
     _ = tipo_consulta
