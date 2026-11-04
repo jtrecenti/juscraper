@@ -17,9 +17,9 @@ API_URL = "https://hellsgate.tjmt.jus.br/jurisprudencia"
 TOKEN = "synthetic-token-never-log"
 
 
-def _response(url: str, body: str, status: int = 200) -> requests.Response:
+def _response(url: str, body: str) -> requests.Response:
     response = requests.Response()
-    response.status_code = status
+    response.status_code = 200
     response.url = url
     response.headers["Content-Type"] = "text/html"
     response.__dict__["_content"] = body.encode()
@@ -39,12 +39,8 @@ class _Recorder:
         return _response(url, self.resources[url])
 
 
-def _request_fn(resources: dict[str, str]) -> _Recorder:
-    return _Recorder(resources)
-
-
 def test_discovery_finds_config_in_imported_chunk():
-    request = _request_fn({
+    request = _Recorder({
         PORTAL_URL: '<script src="/assets/main-new-name.js"></script>',
         urljoin(PORTAL_URL, "assets/main-new-name.js"): 'import "./chunk-new-name.js";',
         urljoin(PORTAL_URL, "assets/chunk-new-name.js"):
@@ -61,7 +57,7 @@ def test_discovery_finds_config_in_imported_chunk():
 
 def test_discovery_finds_config_in_minified_from_import():
     chunk_url = urljoin(PORTAL_URL, "assets/chunk-minified.js")
-    request = _request_fn({
+    request = _Recorder({
         PORTAL_URL: '<script src="/assets/main-new-name.js"></script>',
         urljoin(PORTAL_URL, "assets/main-new-name.js"):
             'import{$d as ec}from"./chunk-minified.js";',
@@ -81,7 +77,7 @@ def test_discovery_finds_config_in_minified_from_import():
 )
 def test_discovery_finds_config_in_modulepreload_chunk(preload):
     chunk_url = urljoin(PORTAL_URL, "assets/preloaded-config.js")
-    request = _request_fn({
+    request = _Recorder({
         PORTAL_URL: preload,
         chunk_url: f'const cfg={{api_url:"{API_URL}",api_hellsgate_token:"{TOKEN}"}};',
     })
@@ -142,7 +138,7 @@ def test_extraction_rejects_partial_property_names():
 
 
 def test_discovery_handles_repeated_and_circular_imports():
-    request = _request_fn({
+    request = _Recorder({
         PORTAL_URL: '<script src="/a.js"></script><script src="/a.js"></script>',
         urljoin(PORTAL_URL, "a.js"): 'import "./b.js";',
         urljoin(PORTAL_URL, "b.js"):
@@ -154,7 +150,7 @@ def test_discovery_handles_repeated_and_circular_imports():
 
 
 def test_discovery_rejects_missing_or_malformed_config():
-    request = _request_fn({
+    request = _Recorder({
         PORTAL_URL: '<script src="/main.js"></script>',
         urljoin(PORTAL_URL, "main.js"): 'const cfg={api_url:"not-complete"};',
     })
@@ -166,7 +162,7 @@ def test_discovery_rejects_missing_or_malformed_config():
 
 def test_discovery_rejects_unexpected_api_url_without_leaking_token():
     secret = "synthetic-secret-that-must-not-appear"
-    request = _request_fn({
+    request = _Recorder({
         PORTAL_URL: '<script src="/main.js"></script>',
         urljoin(PORTAL_URL, "main.js"):
             f'const cfg={{api_url:"https://example.test/api",api_hellsgate_token:"{secret}"}};',
@@ -178,7 +174,7 @@ def test_discovery_rejects_unexpected_api_url_without_leaking_token():
 
 
 def test_discovery_rejects_unexpected_api_path():
-    request = _request_fn({
+    request = _Recorder({
         PORTAL_URL: '<script src="/main.js"></script>',
         urljoin(PORTAL_URL, "main.js"):
             f'const cfg={{api_url:"{API_URL}/api",api_hellsgate_token:"{TOKEN}"}};',
@@ -207,7 +203,7 @@ def test_discovery_enforces_resource_limit():
     for index in range(MAX_CONFIG_RESOURCES):
         next_script = f'import "./{index + 1}.js";' if index + 1 < MAX_CONFIG_RESOURCES else ""
         resources[urljoin(PORTAL_URL, f"{index}.js")] = next_script
-    request = _request_fn(resources)
+    request = _Recorder(resources)
 
     with pytest.raises(TJMTConfigError, match="Limite de recursos"):
         _get_api_config(request)

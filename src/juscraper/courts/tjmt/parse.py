@@ -38,8 +38,6 @@ def _strip_html(text: str) -> str:
 
 def _coerce_tjmt_date(value: object) -> date | None:
     """Converte um timestamp do TJMT para data sem normalizar para UTC."""
-    if value is None:
-        return None
     try:
         parsed = pd.to_datetime(value, errors="coerce")
     except (TypeError, ValueError):

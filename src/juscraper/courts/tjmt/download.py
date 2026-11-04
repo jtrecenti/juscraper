@@ -40,9 +40,7 @@ _IMPORT_RE = re.compile(
     r"(?:from\s*|import\s*(?:\(\s*)?)[\"']([^\"']+\.js(?:\?[^\"']*)?)[\"']"
 )
 _CONFIG_PROPERTY_RE = re.compile(
-    r"(?<![\w$])(?:\"(?P<double>api_url|api_hellsgate_token)\"|"
-    r"'(?P<single>api_url|api_hellsgate_token)'|"
-    r"(?P<bare>api_url|api_hellsgate_token))\s*:\s*"
+    r"(?<![\w$])(?P<name_quote>[\"']?)(?P<name>api_url|api_hellsgate_token)(?P=name_quote)\s*:\s*"
     r"(?P<quote>[\"'])(?P<value>.*?)(?P=quote)"
 )
 
@@ -103,11 +101,10 @@ def _extract_top_level_config(body: str) -> dict[str, str]:
             index = _skip_js_comment(body, index)
             continue
         if depth == 0:
-            property_value = _config_property_at(body, index)
-            if property_value is not None:
-                name, value, end = property_value
-                values[name] = value
-                index = end
+            match = _CONFIG_PROPERTY_RE.match(body, index)
+            if match is not None:
+                values[match.group("name")] = match.group("value")
+                index = match.end()
                 continue
         char = body[index]
         if char in "\"'`":
@@ -115,26 +112,10 @@ def _extract_top_level_config(body: str) -> dict[str, str]:
             continue
         if char == "{":
             depth += 1
-            index += 1
-            continue
-        if char == "}":
+        elif char == "}":
             depth -= 1
-            index += 1
-            continue
         index += 1
     return values
-
-
-def _config_property_at(body: str, index: int) -> tuple[str, str, int] | None:
-    """Retorna a propriedade de configuração iniciada no índice informado."""
-    match = _CONFIG_PROPERTY_RE.match(body, index)
-    if match is None:
-        return None
-    for group in ("double", "single", "bare"):
-        name = match.group(group)
-        if name is not None:
-            return name, match.group("value"), match.end()
-    return None
 
 
 def _extract_api_config(script: str) -> dict[str, str] | None:
@@ -142,10 +123,7 @@ def _extract_api_config(script: str) -> dict[str, str] | None:
     for body in _iter_js_object_bodies(script):
         config = _extract_top_level_config(body)
         if "api_url" in config and "api_hellsgate_token" in config:
-            return {
-                "api_url": config["api_url"],
-                "api_hellsgate_token": config["api_hellsgate_token"],
-            }
+            return config
     return None
 
 
@@ -177,10 +155,7 @@ def _get_api_config(request_fn: RequestFn) -> dict:
         config = _extract_api_config(script)
         if config is not None:
             return _validate_api_config(config)
-        for imported in _IMPORT_RE.findall(script):
-            imported_url = urljoin(resource, imported)
-            if imported_url not in visited:
-                resources.append(imported_url)
+        resources.extend(urljoin(resource, imported) for imported in _IMPORT_RE.findall(script))
 
     if len(visited) >= MAX_CONFIG_RESOURCES:
         raise TJMTConfigError("Limite de recursos excedido ao descobrir a configuração do TJMT.")
@@ -200,13 +175,10 @@ def _build_params(
     tipo_processo: str | None,
 ) -> dict:
     """Monta os parâmetros da query para o endpoint de consulta."""
-    tipo_param = {"Acordao": "1", "DecisaoMonocratica": "2"}.get(tipo_consulta)
-    if tipo_param is None:
-        raise ValueError(f"Tipo de consulta não suportado pelo TJMT: {tipo_consulta}.")
     params = {
         "indicePagina": pagina,
         "quantidadePagina": quantidade,
-        "tipoConsulta": tipo_param,
+        "tipoConsulta": {"Acordao": "1", "DecisaoMonocratica": "2"}[tipo_consulta],
         "termoDeBusca": pesquisa,
         "tipoBusca": "1",
         "OrdenarPor": "Relevancia",

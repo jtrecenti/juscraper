@@ -32,8 +32,6 @@ class _RequestRecorder:
         else:
             page = int(kwargs["params"]["indicePagina"])
             body = self.pages[page]
-            if not isinstance(body, str):
-                body = json.dumps(body)
         return _Response(body if isinstance(body, str) else json.dumps(body))
 
 
