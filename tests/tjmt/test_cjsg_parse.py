@@ -49,6 +49,8 @@ def test_parser_mapeia_acordao_e_decisao_para_as_18_colunas():
     assert list(registros[0]) == list(CJSG_COLUMNS)
     assert registros[0]["id"] == 123
     assert registros[0]["classe"] == "APELAÇÃO CÍVEL"
+    assert registros[0]["orgao_julgador"] == "PRIMEIRA CÂMARA"
+    assert registros[0]["tipo_acao"] == "DIREITO CIVIL"
     assert registros[0]["sigla_classe_feito"] == "APEL"
     assert registros[0]["julgamento"] == "UNÂNIME"
     assert registros[0]["ementa"] == "Ementa com destaque."
@@ -133,6 +135,7 @@ def test_cjsg_vazio_preserva_as_18_colunas(mocker):
     "resposta",
     [
         {"success": False, "errorMessage": "falha", "value": {"resultados": []}},
+        {"success": False, "errorMessage": None, "value": {"resultados": []}},
         {"success": True, "errorMessage": "falha", "value": {"resultados": []}},
     ],
 )

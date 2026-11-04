@@ -199,12 +199,48 @@ def test_validation_rejects_unsafe_production_url_variants(url):
 
 
 def test_discovery_enforces_resource_limit():
+    """A descoberta para no 32º de 33 recursos encadeados.
+
+    A configuração está no 33º: sem o limite, seria achada e nada levantaria.
+    """
+    total = MAX_CONFIG_RESOURCES + 1
     resources = {PORTAL_URL: '<script src="/0.js"></script>'}
-    for index in range(MAX_CONFIG_RESOURCES):
-        next_script = f'import "./{index + 1}.js";' if index + 1 < MAX_CONFIG_RESOURCES else ""
-        resources[urljoin(PORTAL_URL, f"{index}.js")] = next_script
+    for index in range(total):
+        if index + 1 < total:
+            script = f'import "./{index + 1}.js";'
+        else:
+            script = f'const cfg={{api_url:"{API_URL}",api_hellsgate_token:"{TOKEN}"}};'
+        resources[urljoin(PORTAL_URL, f"{index}.js")] = script
     request = _Recorder(resources)
 
     with pytest.raises(TJMTConfigError, match="Limite de recursos"):
         _get_api_config(request)
     assert len(request.calls) == MAX_CONFIG_RESOURCES + 1
+    assert urljoin(PORTAL_URL, f"{total - 1}.js") not in request.calls
+
+
+@pytest.mark.parametrize(
+    "fora_do_portal",
+    [
+        "https://cdn.example.test/assets/config.js",
+        "http://jurisprudencia.tjmt.jus.br/assets/config.js",
+        "https://jurisprudencia.tjmt.jus.br.example.test/assets/config.js",
+    ],
+)
+def test_discovery_nao_busca_recurso_fora_do_portal_https(fora_do_portal):
+    """Script de outro host ou em http não é buscado.
+
+    A sessão já pode levar o header ``token`` de uma chamada anterior e o
+    vazaria para lá.
+    """
+    legitimo = urljoin(PORTAL_URL, "assets/legitimo.js")
+    request = _Recorder({
+        PORTAL_URL: f'<script src="{fora_do_portal}"></script><script src="/assets/main.js"></script>',
+        urljoin(PORTAL_URL, "assets/main.js"): f'import "{fora_do_portal}";import "./legitimo.js";',
+        legitimo: f'const cfg={{api_url:"{API_URL}",api_hellsgate_token:"{TOKEN}"}};',
+        fora_do_portal: f'const cfg={{api_url:"{API_URL}",api_hellsgate_token:"forjado"}};',
+    })
+
+    assert _get_api_config(request) == {"api_url": API_URL, "token": TOKEN}
+    assert fora_do_portal not in request.calls
+    assert request.calls == [PORTAL_URL, urljoin(PORTAL_URL, "assets/main.js"), legitimo]

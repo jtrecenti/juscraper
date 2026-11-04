@@ -90,6 +90,7 @@ def test_downloads_acordaos_with_zero_based_pagination_and_headers(mocker):
         "exibirArquivados": "true",
     }
     assert [call[2]["params"]["indicePagina"] for call in api_calls] == [0, 1]
+    assert all(call[2]["expect_json"] is True for call in api_calls)
     assert api_calls[0][2]["params"]["tipoConsulta"] == "1"
     assert api_calls[0][2]["params"]["termoDeBusca"] == "dano moral"
     assert session.headers["token"] == TOKEN
@@ -233,13 +234,15 @@ def test_explicit_pages_are_one_based_and_empty_results_are_valid(mocker):
     "response",
     [
         {"success": False, "errorMessage": "erro", "value": None},
+        # Isolado: envelope válido em tudo, menos em success.
+        {"success": False, "errorMessage": None},
         {"success": True, "errorMessage": "erro", "value": {"resultados": []}},
         {"success": True, "errorMessage": None, "value": {}},
         {"success": True, "errorMessage": None, "value": {"resultados": "não é lista"}},
     ],
 )
 def test_rejects_invalid_api_envelopes(response):
-    request = _RequestRecorder([response])
+    request = _RequestRecorder([{**_page([], acordaos=0), **response}])
 
     with pytest.raises(TJMTResponseError):
         cjsg_download(
