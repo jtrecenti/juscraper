@@ -1,4 +1,5 @@
 """Scraper for the Tribunal de Justica de Santa Catarina (TJSC)."""
+# Teste do gate de CI (PR descartável, não mesclar).
 from typing import Any, Literal
 
 import pandas as pd
