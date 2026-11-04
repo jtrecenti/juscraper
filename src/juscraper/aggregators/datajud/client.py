@@ -6,13 +6,14 @@ import math
 import time
 from collections import defaultdict
 from collections.abc import Iterator, Mapping
-from typing import Any, ClassVar, cast
+from typing import Any, ClassVar, NamedTuple, NoReturn, cast
 
 import pandas as pd
 from pydantic import ValidationError
 from tqdm.auto import tqdm
 
 from ...core.avisos import avisar
+from ...core.exceptions import ColetaParcialError
 from ...core.http import HTTPScraper, RequestPolicy
 from ...utils.cnj import clean_cnj  # Assuming this utility exists and is relevant
 from ...utils.params import normalize_paginas, pop_deprecated_alias, raise_on_extra_kwargs
@@ -31,6 +32,15 @@ logger = logging.getLogger(__name__)
 
 DatajudFilterInput = InputListarProcessosDataJud | InputContarProcessosDataJud
 AliasSelection = tuple[str, str | list[str] | None]
+
+
+class _FimPagina(NamedTuple):
+    """Contexto mínimo para diagnosticar o término de uma página."""
+
+    alias: str
+    pagina: int
+    recebidos: int
+    last_page: int | None
 
 
 def _pop_plural_aliases(kwargs: dict) -> None:
@@ -153,7 +163,10 @@ def _mensagem_falha_parcial(
     recebidos: int,
     total_info: dict[str, Any] | None,
 ) -> str:
-    """Aviso da paginação interrompida, com quanto veio e quanto faltou.
+    """Diagnóstico da paginação interrompida, com quanto veio e quanto faltou.
+
+    Vira a mensagem do ``ColetaParcialError``; os registros recebidos ficam
+    em ``erro.resultado``.
 
     ``total_info`` é o ``hits.total`` da página 1, que a consulta já traz
     (``track_total_hits``); é ``None`` quando a falha foi na própria página 1.
@@ -163,17 +176,189 @@ def _mensagem_falha_parcial(
     inicio = f"DataJud: falha ao consultar alias {alias!r} na página {pagina}."
     if total_info is None:
         return (
-            f"{inicio} Resultados parciais retornados: nenhum registro recebido. "
+            f"{inicio} Resultados parciais em erro.resultado: nenhum registro recebido. "
             "Se a falha foi timeout, reduza o recorte (por exemplo, com "
             "data_ajuizamento_inicio/_fim) ou aumente o timeout com "
             "politica={'busca': {'timeout': ...}}."
         )
-    recebidos_txt = f"{inicio} Resultados parciais retornados: {recebidos} registro(s) recebido(s)"
+    recebidos_txt = f"{inicio} Resultados parciais em erro.resultado: {recebidos} registro(s) recebido(s)"
     total = total_info.get("value")
     if not isinstance(total, int):
         return f"{recebidos_txt}; a consulta não informou o total encontrado."
     total_txt = str(total) if total_info.get("relation", "eq") == "eq" else f"pelo menos {total}"
     return f"{recebidos_txt} de {total_txt} encontrado(s) pela consulta."
+
+
+def _falha_pagina(mensagem: str, causa: Exception) -> NoReturn:
+    """Propaga falha de página com a causa original preservada."""
+    raise ColetaParcialError(
+        mensagem,
+        resultado=pd.DataFrame(),
+        falhas=[(None, None, causa)],
+    ) from causa
+
+
+def _total_primeira_pagina(api_response: dict[str, Any], alias: str, pagina: int) -> dict[str, Any]:
+    """Valida o total informado pela primeira página."""
+    total_info = api_response.get("hits", {}).get("total")
+    if total_info is not None and not isinstance(total_info, dict):
+        causa = ValueError("Campo 'hits.total' da resposta DataJud deve ser um objeto.")
+        mensagem = (
+            f"{_mensagem_falha_parcial(alias, pagina, 0, None)} "
+            "Resposta inválida: campo 'hits.total' deve ser um objeto."
+        )
+        _falha_pagina(mensagem, causa)
+    total_info = total_info or {}
+    logger.info(
+        "Total de processos encontrados para %s: %s (%s)",
+        alias,
+        total_info.get("value", "?"),
+        total_info.get("relation", "eq"),
+    )
+    return total_info
+
+
+def _hits_da_pagina(
+    api_response: dict[str, Any],
+    alias: str,
+    pagina: int,
+    recebidos: int,
+    total_info: dict[str, Any] | None,
+) -> list[dict[str, Any]]:
+    """Valida a estrutura dos resultados antes do uso do cursor."""
+    diagnostico = _mensagem_falha_parcial(alias, pagina, recebidos, total_info)
+    hits_obj = api_response.get("hits")
+    if not isinstance(hits_obj, dict):
+        causa: Exception = TypeError("Campo 'hits' da resposta DataJud deve ser um objeto.")
+        _falha_pagina(f"{diagnostico} Resposta inválida: campo 'hits' deve ser um objeto.", causa)
+    if "hits" not in hits_obj:
+        causa = ValueError("Campo obrigatório 'hits.hits' ausente na resposta DataJud.")
+        _falha_pagina(f"{diagnostico} Resposta inválida: campo 'hits.hits' ausente.", causa)
+    hits = hits_obj["hits"]
+    if not isinstance(hits, list):
+        causa = ValueError("Campo 'hits.hits' da resposta DataJud deve ser uma lista.")
+        _falha_pagina(f"{diagnostico} Resposta inválida: campo 'hits.hits' deve ser uma lista.", causa)
+    if any(not isinstance(hit, dict) for hit in hits):
+        causa = TypeError("Cada elemento de 'hits.hits' da resposta DataJud deve ser um objeto.")
+        _falha_pagina(f"{diagnostico} Resposta inválida: cada hit deve ser um objeto.", causa)
+    return hits
+
+
+def _verificar_termino_prematuro(
+    hits: list[dict[str, Any]],
+    effective_size: int,
+    total_info: dict[str, Any] | None,
+    percorridos: int,
+    contexto: _FimPagina,
+) -> None:
+    """Sinaliza página vazia ou curta antes do total exato.
+
+    Vale com e sem ``paginas``: ``percorridos`` conta todas as páginas
+    percorridas pelo cursor, inclusive as que ``paginas`` descarta, então
+    uma página curta antes do total é falha mesmo quando a última página
+    pedida ainda não chegou.
+    """
+    total_exato = _total_exato(total_info)
+    if total_exato is None or percorridos >= total_exato:
+        return
+    if not hits:
+        causa = RuntimeError("Página vazia antes de alcançar o total exato da consulta.")
+    elif len(hits) < effective_size:
+        causa = RuntimeError("Página curta antes de alcançar o total exato da consulta.")
+    else:
+        return
+    diagnostico = _mensagem_falha_parcial(contexto.alias, contexto.pagina, contexto.recebidos, total_info)
+    _falha_pagina(f"{diagnostico} Paginação encerrada prematuramente: {causa}", causa)
+
+
+def _total_exato(total_info: dict[str, Any] | None) -> int | None:
+    """Total informado pela consulta quando exato (``relation == "eq"``); ``None`` nos outros casos."""
+    if not total_info or total_info.get("relation", "eq") != "eq":
+        return None
+    total = total_info.get("value")
+    return total if isinstance(total, int) and not isinstance(total, bool) else None
+
+
+def _verificar_fim_pagina(
+    hits: list[dict[str, Any]],
+    effective_size: int,
+    total_info: dict[str, Any] | None,
+    percorridos: int,
+    contexto: _FimPagina,
+) -> None:
+    """Verifica cursor pendente e término prematuro após consumir a página."""
+    total_exato = _total_exato(total_info)
+    cursor_ausente = len(hits) >= effective_size and not isinstance(hits[-1].get("sort"), list)
+    pagina_pendente = contexto.last_page is None or contexto.pagina < contexto.last_page
+    total_esgotado = total_exato is not None and percorridos >= total_exato
+    if cursor_ausente and pagina_pendente and not total_esgotado:
+        mensagem = (
+            f"DataJud: cursor search_after ausente no alias {contexto.alias!r} "
+            f"após a página {contexto.pagina}; não foi possível consultar a próxima página."
+        )
+        _falha_pagina(mensagem, RuntimeError(mensagem))
+    _verificar_termino_prematuro(hits, effective_size, total_info, percorridos, contexto)
+
+
+def _verificar_pagina_vazia(
+    hits: list[dict[str, Any]],
+    effective_size: int,
+    total_info: dict[str, Any] | None,
+    percorridos: int,
+    contexto: _FimPagina,
+) -> None:
+    """Detecta página vazia inconsistente antes de entregá-la ao consumidor."""
+    if not hits:
+        _verificar_termino_prematuro(hits, effective_size, total_info, percorridos, contexto)
+
+
+def _parse_pagina(
+    api_response: dict[str, Any],
+    *,
+    mostrar_movs: bool,
+    diagnostico: str,
+) -> pd.DataFrame:
+    """Converte uma página; a falha sobe como coleta parcial."""
+    try:
+        return parse_datajud_api_response(api_response, mostrar_movs)
+    except Exception as exc:
+        raise ColetaParcialError(
+            f"{diagnostico} Erro ao parsear a resposta.",
+            resultado=pd.DataFrame(),
+            falhas=[(None, None, exc)],
+        ) from exc
+
+
+def _verificar_data_frame_vazio(
+    api_response: dict[str, Any],
+    alias: str,
+    pagina: int,
+    recebidos: int,
+    total_info: dict[str, Any] | None,
+) -> None:
+    """Distingue fim vazio legítimo de hits que não geraram dados úteis."""
+    if not api_response["hits"]["hits"]:
+        return
+    causa = ValueError("A página contém hits, mas não produziu dados utilizáveis no DataFrame.")
+    mensagem = (
+        f"{_mensagem_falha_parcial(alias, pagina, recebidos, total_info)} "
+        "A resposta continha hits, mas o parsing não produziu dados utilizáveis."
+    )
+    _falha_pagina(mensagem, causa)
+
+
+def _total_para_diagnostico(
+    api_response: dict[str, Any],
+    pagina: int,
+    total_info: dict[str, Any] | None,
+) -> dict[str, Any] | None:
+    """Guarda o total da primeira página para diagnosticar falhas posteriores."""
+    if pagina != 1:
+        return total_info
+    hits = api_response.get("hits")
+    if isinstance(hits, dict) and isinstance(hits.get("total"), dict):
+        return cast(dict[str, Any], hits["total"])
+    return total_info
 
 
 class DatajudScraper(HTTPScraper):
@@ -544,6 +729,9 @@ class DatajudScraper(HTTPScraper):
                 nao esta mapeado.
             ValueError: Quando nem ``tribunal`` nem ``numero_processo`` sao
                 informados, ou quando a sigla nao tem alias mapeado.
+            ColetaParcialError: Se uma falha HTTP, de parsing ou de paginação
+                impedir a conclusão da coleta. ``erro.resultado`` contém os
+                registros preservados e ``erro.falhas`` contém as causas.
 
         Returns:
             pd.DataFrame: Um DataFrame com uma linha por processo. ``extra``
@@ -597,18 +785,30 @@ class DatajudScraper(HTTPScraper):
             numero_processo=inp.numero_processo,
         )
         movimentos_codigo = _resolve_movimentos_codigo(inp)
-        frames = [
-            self._listar_processos_por_alias(
-                alias=alias,
-                numero_processo=cnjs,
-                inp=inp,
-                movimentos_codigo=movimentos_codigo,
-                paginas=paginas_datajud,
-            )
-            for alias, cnjs in aliases
-        ]
+        frames = []
+        falhas = []
+        diagnosticos = []
+        for alias, cnjs in aliases:
+            try:
+                frame = self._listar_processos_por_alias(
+                    alias=alias,
+                    numero_processo=cnjs,
+                    inp=inp,
+                    movimentos_codigo=movimentos_codigo,
+                    paginas=paginas_datajud,
+                )
+            except ColetaParcialError as exc:
+                frame = exc.resultado
+                falhas.extend(exc.falhas)
+                diagnosticos.append(str(exc))
+            frames.append(frame)
+
         non_empty = [frame for frame in frames if not frame.empty]
-        return pd.concat(non_empty, ignore_index=True) if non_empty else pd.DataFrame()
+        resultado = pd.concat(non_empty, ignore_index=True) if non_empty else pd.DataFrame()
+        if falhas:
+            mensagem = "DataJud: coleta parcial. " + "; ".join(diagnosticos)
+            raise ColetaParcialError(mensagem, resultado=resultado, falhas=falhas) from falhas[0][2]
+        return resultado
 
     def _listar_processos_por_alias(
         self,
@@ -628,6 +828,8 @@ class DatajudScraper(HTTPScraper):
             unit=" página",
             disable=total == 0,
         )
+        total_info = None
+        recebidos = 0
         try:
             for current_page, api_response in self._iter_process_pages(
                 alias=alias,
@@ -636,18 +838,34 @@ class DatajudScraper(HTTPScraper):
                 movimentos_codigo=movimentos_codigo,
                 paginas=paginas,
             ):
+                # Antes do ``continue``: com ``paginas`` que pula a página 1, o
+                # total dela ainda alimenta o diagnóstico de falha posterior.
+                total_info = _total_para_diagnostico(api_response, current_page, total_info)
                 if paginas is not None and current_page not in paginas:
                     continue
-                frame = parse_datajud_api_response(api_response, inp.mostrar_movs)
+                frame = _parse_pagina(
+                    api_response,
+                    mostrar_movs=inp.mostrar_movs,
+                    diagnostico=_mensagem_falha_parcial(
+                        alias, current_page, recebidos, total_info or {},
+                    ),
+                )
                 if frame.empty:
+                    _verificar_data_frame_vazio(
+                        api_response, alias, current_page, recebidos, total_info,
+                    )
                     logger.info(
-                        "No more results for alias %s on page %d (or parsing failed).",
+                        "No more results for alias %s on page %d.",
                         alias,
                         current_page,
                     )
                     break
                 frames.append(frame)
+                recebidos += len(frame)
                 pbar.update(1)
+        except ColetaParcialError as exc:
+            exc.resultado = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+            raise
         finally:
             pbar.close()
 
@@ -667,9 +885,10 @@ class DatajudScraper(HTTPScraper):
         tamanho_pagina = inp.tamanho_pagina
         search_after: list[Any] | None = None
         last_page = None if paginas is None else paginas[-1]
-        # Alimentam o aviso de falha: quanto já veio das páginas pedidas e
+        # Alimentam o diagnóstico do ColetaParcialError: quanto já veio das páginas pedidas e
         # quanto a consulta encontrou (``hits.total`` da página 1).
         recebidos = 0
+        percorridos = 0
         total_info: dict[str, Any] | None = None
         while last_page is None or current_page <= last_page:
             logger.info("Fetching page %d for alias %s...", current_page, alias)
@@ -697,37 +916,28 @@ class DatajudScraper(HTTPScraper):
                 timeout=self._perfis_http["busca"].timeout,
             )
             if api_response is None:
-                avisar(
-                    _mensagem_falha_parcial(alias, current_page, recebidos, total_info),
-                    UserWarning,
-                )
-                logger.error(
-                    "Failed to get API response for alias %s, page %d. Stopping.",
-                    alias,
-                    current_page,
-                )
-                return
+                mensagem = _mensagem_falha_parcial(alias, current_page, recebidos, total_info)
+                _falha_pagina(mensagem, RuntimeError(mensagem))
+            hits = _hits_da_pagina(api_response, alias, current_page, recebidos, total_info)
             if current_page == 1:
-                total_info = api_response.get("hits", {}).get("total", {}) or {}
-                logger.info(
-                    "Total de processos encontrados para %s: %s (%s)",
-                    alias,
-                    total_info.get("value", "?"),
-                    total_info.get("relation", "eq"),
-                )
+                total_info = _total_primeira_pagina(api_response, alias, current_page)
             effective_size = min(
                 tamanho_pagina,
                 query_payload.get("size", tamanho_pagina),
             )
+            percorridos += len(hits)
             next_search_after = _next_search_after(
                 api_response,
                 alias=alias,
                 effective_size=effective_size,
             )
             if paginas is None or current_page in paginas:
-                recebidos += len(api_response.get("hits", {}).get("hits", []) or [])
+                recebidos += len(hits)
+            contexto = _FimPagina(alias, current_page, recebidos, last_page)
+            _verificar_pagina_vazia(hits, effective_size, total_info, percorridos, contexto)
             yield current_page, api_response
             if next_search_after is None:
+                _verificar_fim_pagina(hits, effective_size, total_info, percorridos, contexto)
                 return
             search_after = next_search_after
             tamanho_pagina = effective_size
