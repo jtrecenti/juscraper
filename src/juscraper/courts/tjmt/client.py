@@ -60,6 +60,11 @@ class TJMTScraper(HTTPScraper):
             data_publicacao_inicio: Data inicial de publicação.
             data_publicacao_fim: Data final inclusiva de publicação.
 
+        A API devolve no máximo 10.000 resultados por consulta. Com
+        ``paginas=None``, baixa até esse teto e emite ``UserWarning`` quando o
+        total passa dele; ``tamanho_pagina`` acima de 10.000 ou página pedida
+        além do teto levantam ``ValueError`` antes da rede.
+
         O backend atual aplica ``periodoDataDe/Ate`` à data de publicação.
         ``data_julgamento_*`` e ``classe`` não existem na API e levantam
         ``TypeError``.

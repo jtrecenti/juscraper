@@ -13,6 +13,7 @@ from urllib.parse import urljoin, urlparse
 import requests
 from tqdm import tqdm
 
+from juscraper.core.avisos import avisar
 from juscraper.core.http import RequestFn
 from juscraper.utils.params import coerce_brazilian_date
 
@@ -21,6 +22,12 @@ PORTAL_HOST = "jurisprudencia.tjmt.jus.br"
 PRODUCTION_API_URL = "https://hellsgate.tjmt.jus.br/jurisprudencia"
 MAX_CONFIG_RESOURCES = 32
 DEFAULT_PAGE_SIZE = 10
+# A API devolve no máximo os 10.000 primeiros resultados de uma consulta.
+# Medido em 04/11/2026: quando indicePagina * quantidadePagina +
+# quantidadePagina passa de 10.000, a resposta é HTTP 500 com corpo vazio
+# (com 10 por página, o índice 999 responde e o 1000 falha; com 100, o 99
+# responde e o 100 falha).
+MAX_RESULTS = 10_000
 
 
 class TJMTConfigError(ValueError):
@@ -277,16 +284,21 @@ def _to_end_of_day(value) -> str | None:
     return f"{normalized}T23:59:59"
 
 
-def _validate_download_inputs(quantidade: int, paginas, tipo_consulta: str) -> list[int] | None:
-    """Valida paginação e tipo antes de iniciar requisições HTTP."""
+def _validate_page_size(quantidade: int) -> None:
+    """Valida o tamanho de página contra o domínio aceito pela API."""
     if isinstance(quantidade, bool) or not isinstance(quantidade, int):
         raise TypeError("quantidade_por_pagina deve ser um inteiro positivo.")
     if quantidade < 1:
         raise ValueError("quantidade_por_pagina deve ser maior que zero.")
-    if tipo_consulta not in {"Acordao", "DecisaoMonocratica"}:
-        raise ValueError(f"Tipo de consulta não suportado pelo TJMT: {tipo_consulta}.")
-    if paginas is None:
-        return None
+    if quantidade > MAX_RESULTS:
+        raise ValueError(
+            f"tamanho_pagina deve ser no máximo {MAX_RESULTS}, o teto de resultados "
+            "que a API do TJMT devolve por consulta."
+        )
+
+
+def _as_page_list(paginas) -> list[int]:
+    """Converte ``paginas`` (inteiro ou iterável) em lista de páginas 1-based."""
     if isinstance(paginas, bool):
         raise TypeError("paginas deve conter inteiros positivos.")
     if isinstance(paginas, int):
@@ -302,6 +314,36 @@ def _validate_download_inputs(quantidade: int, paginas, tipo_consulta: str) -> l
     if any(pagina < 1 for pagina in paginas_list):
         raise ValueError("paginas deve conter apenas valores maiores que zero.")
     return paginas_list
+
+
+def _reject_pages_beyond_limit(paginas_list: list[int], quantidade: int) -> None:
+    """Rejeita páginas que a API responderia com HTTP 500 por passarem do teto."""
+    limite = _max_paginas(quantidade)
+    alem_do_limite = sorted(pagina for pagina in paginas_list if pagina > limite)
+    if alem_do_limite:
+        raise ValueError(
+            f"A API do TJMT devolve só os {MAX_RESULTS} primeiros resultados de uma "
+            f"consulta; com tamanho_pagina={quantidade}, a última página alcançável é "
+            f"a {limite}, e foram pedidas {alem_do_limite[:5]}. Restrinja a busca por "
+            "data de publicação ou relator para alcançar os demais."
+        )
+
+
+def _validate_download_inputs(quantidade: int, paginas, tipo_consulta: str) -> list[int] | None:
+    """Valida paginação e tipo antes de iniciar requisições HTTP."""
+    _validate_page_size(quantidade)
+    if tipo_consulta not in {"Acordao", "DecisaoMonocratica"}:
+        raise ValueError(f"Tipo de consulta não suportado pelo TJMT: {tipo_consulta}.")
+    if paginas is None:
+        return None
+    paginas_list = _as_page_list(paginas)
+    _reject_pages_beyond_limit(paginas_list, quantidade)
+    return paginas_list
+
+
+def _max_paginas(quantidade: int) -> int:
+    """Retorna a última página, 1-based, que cabe no teto de resultados da API."""
+    return MAX_RESULTS // quantidade
 
 
 def cjsg_download(
@@ -340,6 +382,11 @@ def cjsg_download(
         recebida explicitamente para manter os headers ``Token``,
         ``Accept`` e ``Referer`` obtidos por ``_get_api_config``. As
         requisições subsequentes via ``request_fn`` usam essa mesma sessão.
+
+    Avisos:
+    ``UserWarning``: com ``paginas=None``, quando a consulta passa do teto
+    de ``MAX_RESULTS`` resultados que a API devolve; baixa só as páginas
+    que cabem no teto.
 
     Retorno:
     Lista de dicionários JSON brutos, um por página.
@@ -390,6 +437,16 @@ def cjsg_download(
         first, total = _fetch_page(0)
         resultados = [first]
         n_pags = math.ceil(total / quantidade_por_pagina) if total else 1
+        limite = _max_paginas(quantidade_por_pagina)
+        if n_pags > limite:
+            n_pags = limite
+            avisar(
+                f"A consulta ao TJMT tem {total} resultados, e a API devolve no máximo "
+                f"{MAX_RESULTS} por consulta; com tamanho_pagina={quantidade_por_pagina}, "
+                f"vêm os {limite * quantidade_por_pagina} primeiros. "
+                "Restrinja a busca por data de publicação (data_publicacao_inicio e "
+                "data_publicacao_fim) ou por relator para alcançar os demais."
+            )
         if n_pags > 1:
             for pagina in tqdm(range(1, n_pags), desc="Baixando páginas TJMT"):
                 page, _ = _fetch_page(pagina)

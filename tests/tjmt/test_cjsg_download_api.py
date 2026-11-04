@@ -7,7 +7,7 @@ import requests
 from pydantic import ValidationError
 
 from juscraper.courts.tjmt.client import TJMTScraper
-from juscraper.courts.tjmt.download import PRODUCTION_API_URL, TJMTResponseError, cjsg_download
+from juscraper.courts.tjmt.download import MAX_RESULTS, PRODUCTION_API_URL, TJMTResponseError, cjsg_download
 
 PORTAL_URL = "https://jurisprudencia.tjmt.jus.br/"
 MAIN_URL = f"{PORTAL_URL}assets/main.js"
@@ -451,3 +451,98 @@ def test_rejects_boolean_count(count):
             request_fn=request,
             session=requests.Session(),
         )
+
+
+def _api_calls(request: _RequestRecorder) -> list[tuple[str, str, dict]]:
+    return [call for call in request.calls if call[1].endswith("/consulta")]
+
+
+def test_paginas_none_para_no_teto_de_resultados_e_avisa(mocker):
+    """Com mais de 10.000 resultados, baixa só as páginas que a API responde e avisa."""
+    mocker.patch("time.sleep")
+    request = _RequestRecorder([_page([], acordaos=176269)] * 100)
+
+    with pytest.warns(UserWarning, match=r"176269 resultados.*10000.*os 10000 primeiros"):
+        pages = cjsg_download(
+            "dano moral",
+            paginas=None,
+            quantidade_por_pagina=100,
+            request_fn=request,
+            session=requests.Session(),
+        )
+
+    indices = [call[2]["params"]["indicePagina"] for call in _api_calls(request)]
+    assert indices == list(range(100))
+    assert len(pages) == 100
+
+
+def test_paginas_none_no_teto_exato_nao_avisa(mocker):
+    """Exatamente 10.000 resultados cabem no teto: baixa tudo, sem aviso."""
+    mocker.patch("time.sleep")
+    request = _RequestRecorder([_page([], acordaos=MAX_RESULTS)] * 100)
+
+    pages = cjsg_download(
+        "dano moral",
+        paginas=None,
+        quantidade_por_pagina=100,
+        request_fn=request,
+        session=requests.Session(),
+    )
+
+    assert len(pages) == 100
+    assert _api_calls(request)[-1][2]["params"]["indicePagina"] == 99
+
+
+def test_tamanho_pagina_acima_do_teto_falha_antes_da_rede():
+    with pytest.raises(ValueError, match="tamanho_pagina deve ser no máximo 10000"):
+        cjsg_download(
+            "dano moral",
+            paginas=1,
+            quantidade_por_pagina=MAX_RESULTS + 1,
+            request_fn=_NoNetwork(),
+            session=requests.Session(),
+        )
+
+
+@pytest.mark.parametrize(
+    ("tamanho", "paginas", "ultima"),
+    [(10, [1001], 1000), (100, range(100, 102), 100), (3000, 4, 3)],
+)
+def test_pagina_alem_do_teto_falha_antes_da_rede(tamanho, paginas, ultima):
+    with pytest.raises(ValueError, match=rf"última página alcançável é a {ultima}\b"):
+        cjsg_download(
+            "dano moral",
+            paginas=paginas,
+            quantidade_por_pagina=tamanho,
+            request_fn=_NoNetwork(),
+            session=requests.Session(),
+        )
+
+
+def test_ultima_pagina_dentro_do_teto_e_baixada(mocker):
+    mocker.patch("time.sleep")
+    request = _RequestRecorder([_page([], acordaos=176269)] * 1000)
+
+    cjsg_download(
+        "dano moral",
+        paginas=[1000],
+        quantidade_por_pagina=10,
+        request_fn=request,
+        session=requests.Session(),
+    )
+
+    assert [call[2]["params"]["indicePagina"] for call in _api_calls(request)] == [999]
+
+
+@pytest.mark.parametrize(
+    "kwargs",
+    [{"tamanho_pagina": MAX_RESULTS + 1}, {"paginas": [1001]}],
+)
+def test_publico_rejeita_paginacao_alem_do_teto_antes_da_rede(kwargs, mocker):
+    scraper = TJMTScraper()
+    request = mocker.patch.object(scraper, "_request_with_retry", side_effect=_NoNetwork())
+
+    with pytest.raises(ValueError, match="10000"):
+        scraper.cjsg("dano moral", **{"paginas": 1, **kwargs})
+
+    request.assert_not_called()
