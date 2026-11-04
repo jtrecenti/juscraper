@@ -252,8 +252,8 @@ def call_datajud_api(
         api_key: Chave da API.
         requisitar: ``HTTPScraper._request_with_retry`` já ligado ao perfil
             ``"busca"``. Dele vêm o ``timeout`` e as novas tentativas em
-            :data:`STATUS_REPETIVEIS` (429, 502 e 503), com espera pelo
-            ``Retry-After`` numérico ou pelo backoff exponencial do perfil.
+            :data:`STATUS_REPETIVEIS`, com espera pelo ``Retry-After``
+            numérico ou pelo backoff exponencial do perfil.
         query_payload: Body Elasticsearch.
         verbose: Se ``True``, registra URL, payload e status no log.
 
