@@ -1,19 +1,29 @@
-"""Shared helpers for juscraper tests.
+"""Helpers compartilhados pelos testes do juscraper.
 
-Reference date strategy
------------------------
-Release tests use a single fixed work week across every tribunal:
+Janela de referência
+--------------------
+Os testes release usam a mesma janela fixa em todos os tribunais: julgamento
+de 10/03/2025 a 13/03/2025 (segunda a quinta, sem feriado, fora do recesso de
+dezembro, janeiro e julho) e publicação de 10/03/2025 a 29/04/2025 (terça),
+porque a publicação costuma vir dias ou semanas depois do julgamento.
 
-    10/03/2025 – 14/03/2025 (Monday–Friday, no holidays, outside the judicial
-    recess of December, January and July).
+Quatro dias bastam para trazer resultado mesmo em tribunal que publica pouco,
+e a janela é estreita o bastante para que um filtro quebrado apareça: qualquer
+data fora dela quer dizer que o backend ignorou o filtro.
 
-A week-long window (rather than a single day) is wide enough to produce at
-least one result even in tribunais that publish sparsely, while still being
-narrow enough that a broken date filter stands out: any date outside this
-window means the backend ignored the filter entirely.
+O fim de cada janela precisa cair num dia seguido de dia útil com publicação.
+O erro de limite mais comum em raspador é incluir o dia seguinte ao fim: somar
+um dia à data final quando a API já inclui a meia-noite do dia informado, ou
+converter o fim do dia de Brasília para UTC. As linhas que vazam assim têm a
+data do dia seguinte, e o teste só as vê se esse dia tiver julgamento ou
+publicação. Um fim na sexta deixa o vazamento cair no sábado, e um fim na
+véspera de feriado deixa cair no feriado; nos dois casos o dia seguinte vem
+vazio, o resultado parece correto e o teste passa com o raspador quebrado. A
+janela antiga terminava numa sexta (14/03) e numa véspera de feriado (30/04,
+antes do 1º de maio), e por isso nenhum tribunal reprovava por esse erro.
 
-``DATA_ALVO_BR`` is the start of the window; ``DATA_ALVO_FIM_BR`` is the end.
-Helpers accept both and the assertion checks that every row falls inside.
+``DATA_ALVO_BR`` abre as duas janelas; ``DATA_ALVO_FIM_BR`` fecha a de
+julgamento e ``DATA_PUB_FIM_BR`` fecha a de publicação.
 """
 from __future__ import annotations
 
@@ -22,19 +32,19 @@ from datetime import date
 import pandas as pd
 
 DATA_ALVO_BR = "10/03/2025"
-DATA_ALVO_FIM_BR = "14/03/2025"
+DATA_ALVO_FIM_BR = "13/03/2025"
 DATA_ALVO_ISO = "2025-03-10"
-DATA_ALVO_FIM_ISO = "2025-03-14"
+DATA_ALVO_FIM_ISO = "2025-03-13"
 
 _ALVO_START = date(2025, 3, 10)
-_ALVO_END = date(2025, 3, 14)
+_ALVO_END = date(2025, 3, 13)
 
 # Publicação usually trails julgamento. When a scraper filters on publicação
 # instead of (or in addition to) julgamento, allow a wider publicação window
 # so that rows judged in the target week have time to be published.
-DATA_PUB_FIM_BR = "30/04/2025"
-DATA_PUB_FIM_ISO = "2025-04-30"
-_PUB_END = date(2025, 4, 30)
+DATA_PUB_FIM_BR = "29/04/2025"
+DATA_PUB_FIM_ISO = "2025-04-29"
+_PUB_END = date(2025, 4, 29)
 
 
 def _find_date_column(df: pd.DataFrame) -> str | None:
@@ -83,9 +93,10 @@ def _parse_row_date(raw: str) -> date | None:
 def assert_date_matches(df: pd.DataFrame) -> str | None:
     """Check that every row falls inside the reference window.
 
-    Julgamento columns are validated against the narrow work-week window
-    (10/03 – 14/03). Publicação columns are validated against a widened
-    window (10/03 – 30/04) because publicação typically trails julgamento
+    Julgamento columns are validated against the narrow window
+    (``DATA_ALVO_BR`` to ``DATA_ALVO_FIM_BR``). Publicação columns are
+    validated against a widened window (``DATA_ALVO_BR`` to
+    ``DATA_PUB_FIM_BR``) because publicação typically trails julgamento
     by days or weeks.
 
     Returns the date column name used for validation, or ``None`` if the
@@ -150,7 +161,7 @@ def run_filtro_data_unica(scraper, **extra_kwargs) -> pd.DataFrame:
     1. Try ``pesquisa=''``; if the scraper rejects it, fall back to ``'direito'``.
     2. Assert at least one result was returned.
     3. If the output has a date column, assert every row falls inside the
-       reference window (10/03/2025 – 14/03/2025).
+       reference window (see :func:`assert_date_matches`).
     """
     df = None
     accepted = False
