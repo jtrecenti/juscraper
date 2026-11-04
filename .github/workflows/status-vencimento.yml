@@ -9,13 +9,16 @@ on:
 permissions:
   contents: read
 
+env:
+  UV_FROZEN: "1"
+
 jobs:
   vencimento:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v3
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
       - run: uv python install 3.11
-      - run: uv sync --python 3.11
+      - run: uv sync --frozen --python 3.11
       - name: Listar observações vencidas depois da geração das tabelas
         run: uv run scripts/gerar_status.py --vencimento
