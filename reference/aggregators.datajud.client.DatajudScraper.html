@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-a7da40549b8a11491f17ac5e413bf75e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-fa0132e5ba1ccbcb15f610bc8f9b53b7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -395,6 +395,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td></td>
 <td><code>ValueError</code></td>
 <td>Quando nem <code>tribunal</code> nem <code>numero_processo</code> sao informados, ou quando a sigla nao tem alias mapeado.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><code>ColetaParcialError</code></td>
+<td>Se uma falha HTTP, de parsing ou de paginação impedir a conclusão da coleta. <code>erro.resultado</code> contém os registros preservados e <code>erro.falhas</code> contém as causas.</td>
 </tr>
 </tbody>
 </table>
