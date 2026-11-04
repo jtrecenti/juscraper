@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-fa0132e5ba1ccbcb15f610bc8f9b53b7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-467e80bd0b75a075ce70b51a2f51db29.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -176,7 +176,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="juscraper.courts.tjmt.client.TJMTScraper" class="level1">
 <h1>courts.tjmt.client.TJMTScraper</h1>
 <div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>courts.tjmt.client.TJMTScraper()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Scraper for the Tribunal de Justica do Estado de Mato Grosso (TJMT).</p>
+<p>Scraper do Tribunal de Justiça do Estado de Mato Grosso (TJMT).</p>
 <section id="methods" class="level2">
 <h2 class="anchored" data-anchor-id="methods">Methods</h2>
 <table class="caption-top table">
@@ -189,23 +189,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td><a href="#juscraper.courts.tjmt.client.TJMTScraper.cjsg">cjsg</a></td>
-<td>Search TJMT jurisprudence (download + parse).</td>
+<td>Pesquisa jurisprudência do TJMT (acórdãos ou decisões monocráticas).</td>
 </tr>
 <tr class="even">
 <td><a href="#juscraper.courts.tjmt.client.TJMTScraper.cjsg_download">cjsg_download</a></td>
-<td>Download raw JSON results from the TJMT jurisprudence API.</td>
+<td>Baixa as respostas JSON brutas da API de jurisprudência do TJMT.</td>
 </tr>
 <tr class="odd">
 <td><a href="#juscraper.courts.tjmt.client.TJMTScraper.cjsg_parse">cjsg_parse</a></td>
-<td>Parse raw JSON results into structured records.</td>
+<td>Converte as respostas de <a href="../reference/courts.tjmt.client.TJMTScraper.html#juscraper.courts.tjmt.client.TJMTScraper.cjsg_download"><code>cjsg_download</code></a> em registros planos.</td>
 </tr>
 <tr class="even">
 <td><a href="#juscraper.courts.tjmt.client.TJMTScraper.cpopg">cpopg</a></td>
-<td>Stub: first instance case consultation not implemented for TJMT.</td>
+<td>Consulta de processos de primeiro grau ainda não implementada no TJMT.</td>
 </tr>
 <tr class="odd">
 <td><a href="#juscraper.courts.tjmt.client.TJMTScraper.cposg">cposg</a></td>
-<td>Stub: second instance case consultation not implemented for TJMT.</td>
+<td>Consulta de processos de segundo grau ainda não implementada no TJMT.</td>
 </tr>
 </tbody>
 </table>
@@ -217,40 +217,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    tipo_consulta<span class="op">=</span><span class="st">'Acordao'</span>,</span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    relator<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    orgao_julgador<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    classe<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    tipo_processo<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    thesaurus<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    tamanho_pagina<span class="op">=</span><span class="dv">10</span>,</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Search TJMT jurisprudence (download + parse).</p>
-<p>Returns a ready-to-analyze DataFrame.</p>
-<section id="aliases-deprecados" class="level4 doc-section doc-section-aliases-deprecados">
-<h4 class="doc-section doc-section-aliases-deprecados anchored" data-anchor-id="aliases-deprecados">Aliases deprecados</h4>
-<ul>
-<li><code>quantidade_por_pagina</code> -&gt; <code>tamanho_pagina</code></li>
-</ul>
-</section>
-</section>
-<section id="juscraper.courts.tjmt.client.TJMTScraper.cjsg_download" class="level3">
-<h3 class="anchored" data-anchor-id="juscraper.courts.tjmt.client.TJMTScraper.cjsg_download">cjsg_download</h3>
-<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>courts.tjmt.client.TJMTScraper.cjsg_download(</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    tipo_consulta<span class="op">=</span><span class="st">'Acordao'</span>,</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    relator<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    orgao_julgador<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    classe<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    tipo_processo<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    thesaurus<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    tamanho_pagina<span class="op">=</span><span class="dv">10</span>,</span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Download raw JSON results from the TJMT jurisprudence API.</p>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    tipo_processo<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    thesaurus<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    tamanho_pagina<span class="op">=</span><span class="dv">10</span>,</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    data_publicacao_inicio<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    data_publicacao_fim<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Pesquisa jurisprudência do TJMT (acórdãos ou decisões monocráticas).</p>
+<p>Delega para <a href="../reference/courts.tjmt.client.TJMTScraper.html#juscraper.courts.tjmt.client.TJMTScraper.cjsg_download"><code>cjsg_download</code></a> e <a href="../reference/courts.tjmt.client.TJMTScraper.html#juscraper.courts.tjmt.client.TJMTScraper.cjsg_parse"><code>cjsg_parse</code></a>. Antes da busca, lê a configuração pública do portal (URL da API e token) nos scripts de <code>jurisprudencia.tjmt.jus.br</code>.</p>
+<p>A API devolve no máximo os 10.000 primeiros resultados de uma consulta; páginas além desse teto respondem HTTP 500.</p>
 <section id="parameters" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
 <table class="caption-top table">
@@ -266,107 +242,115 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>pesquisa</td>
 <td><code>str</code> | None</td>
-<td>Search term. <code>query</code> and <code>termo</code> are accepted as deprecated aliases.</td>
+<td>Termo livre buscado no documento.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>paginas</td>
 <td><code>int</code> | <code>list</code> | <code>range</code> | None</td>
-<td>Pages to download (1-based). int: paginas=3 downloads pages 1-3. range: range(1, 4) downloads pages 1-3. None: downloads all available pages.</td>
+<td>Páginas 1-based; <code>None</code> baixa todas, até o teto de 10.000 resultados. Página pedida além do teto levanta <code>ValueError</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>tipo_consulta</td>
 <td><code>str</code></td>
-<td><code>"Acordao"</code> or <code>"DecisaoMonocratica"</code>.</td>
+<td><code>"Acordao"</code> (default) ou <code>"DecisaoMonocratica"</code>.</td>
 <td><code>'Acordao'</code></td>
 </tr>
 <tr class="even">
 <td>relator</td>
 <td><code>str</code> | None</td>
-<td>Filter by judge name.</td>
+<td>Nome do relator. A API casa só o nome exato; acentos, espaços repetidos e caixa são normalizados (<code>"João da Silva"</code> vai como <code>"JOAO DA SILVA"</code>). A API atual não aceita mais o identificador numérico, que é rejeitado antes da rede. <code>None</code> não filtra.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>orgao_julgador</td>
 <td><code>str</code> | None</td>
-<td>Filter by court chamber.</td>
+<td>Nome do órgão julgador, como aparece na coluna <code>orgao_julgador</code> (ex.: <code>"PRIMEIRA CÂMARA DE DIREITO PRIVADO"</code>), com a mesma normalização de <code>relator</code>. <code>None</code> não filtra.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
-<td>classe</td>
-<td><code>str</code> | None</td>
-<td>Filter by case class.</td>
-<td><code>None</code></td>
-</tr>
-<tr class="odd">
 <td>tipo_processo</td>
 <td><code>str</code> | None</td>
-<td><code>"Civel"</code> or <code>"Criminal"</code>.</td>
+<td><code>"Civel"</code>, <code>"Cível"</code> ou <code>"Criminal"</code>. <code>None</code> não filtra.</td>
 <td><code>None</code></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>thesaurus</td>
 <td><code>bool</code></td>
-<td>Whether to use synonym search.</td>
+<td>Se <code>True</code>, a API amplia a busca com sinônimos. Default <code>False</code>.</td>
 <td><code>False</code></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>tamanho_pagina</td>
 <td><code>int</code></td>
-<td>Items per page (default 10). Aceita <code>quantidade_por_pagina</code> como alias deprecado.</td>
+<td>Documentos por página, de 1 a 10.000. Default 10.</td>
 <td><code>10</code></td>
 </tr>
-<tr class="even">
-<td>data_julgamento_inicio</td>
+<tr class="odd">
+<td>data_publicacao_inicio</td>
 <td><code>str</code> | None</td>
-<td>Start date for filtering (<code>yyyy-mm-dd</code>).</td>
+<td>Início do intervalo de publicação, em <code>DD/MM/AAAA</code> ou <code>AAAA-MM-DD</code>. Com só <code>data_publicacao_fim</code>, assume o piso <code>OPEN_ENDED_DATE_FLOOR</code> e emite <code>UserWarning</code>.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>data_publicacao_fim</td>
+<td><code>str</code> | None</td>
+<td>Fim do intervalo de publicação, inclusivo: o dia informado entra inteiro. Com só <code>data_publicacao_inicio</code>, assume a data de hoje e emite <code>UserWarning</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
-<td>data_julgamento_fim</td>
-<td><code>str</code> | None</td>
-<td>End date for filtering (<code>yyyy-mm-dd</code>).</td>
-<td><code>None</code></td>
+<td>**kwargs</td>
+<td></td>
+<td>Só os aliases deprecados abaixo. Qualquer outro nome, inclusive <code>data_julgamento_inicio</code>/<code>data_julgamento_fim</code> e <code>classe</code>, que a API não filtra, levanta <code>TypeError</code>.</td>
+<td><code>{}</code></td>
 </tr>
 </tbody>
 </table>
-<p>The backend exposes only a single date range (<code>filtro.periodoDataDe</code> / <code>filtro.periodoDataAte</code>) applied to the judgment date; passing <code>data_publicacao_*</code> raises <code>TypeError</code>.</p>
+<p>Aliases deprecados (popados com <code>DeprecationWarning</code> antes do pydantic): * <code>query</code> / <code>termo</code> -&gt; <code>pesquisa</code> * <code>quantidade_por_pagina</code> -&gt; <code>tamanho_pagina</code> * <code>data_publicacao_de</code> / <code>_ate</code> -&gt; <code>data_publicacao_inicio</code> / <code>_fim</code> * <code>data_inicio</code> / <code>data_fim</code> -&gt; <code>data_julgamento_inicio</code> / <code>_fim</code>, que o TJMT não aceita: depois do aviso, levanta <code>TypeError</code>.</p>
 </section>
-</section>
-<section id="juscraper.courts.tjmt.client.TJMTScraper.cjsg_parse" class="level3">
-<h3 class="anchored" data-anchor-id="juscraper.courts.tjmt.client.TJMTScraper.cjsg_parse">cjsg_parse</h3>
-<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>courts.tjmt.client.TJMTScraper.cjsg_parse(</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    resultados_brutos,</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    tipo_consulta<span class="op">=</span><span class="st">'Acordao'</span>,</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Parse raw JSON results into structured records.</p>
-<section id="parameters-1" class="level4 doc-section doc-section-parameters">
-<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
+<section id="raises" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
 <th>Name</th>
 <th>Type</th>
 <th>Description</th>
-<th>Default</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>resultados_brutos</td>
-<td><code>list</code></td>
-<td>List of raw JSON dicts (one per page).</td>
-<td><em>required</em></td>
+<td></td>
+<td><code>TypeError</code></td>
+<td>Kwarg desconhecido ou sem suporte na API (<code>data_julgamento_*</code>, <code>classe</code>).</td>
 </tr>
 <tr class="even">
-<td>tipo_consulta</td>
-<td><code>str</code></td>
-<td><code>"Acordao"</code> or <code>"DecisaoMonocratica"</code>.</td>
-<td><code>'Acordao'</code></td>
+<td></td>
+<td><code>ValidationError</code></td>
+<td>Para os demais erros de validação do schema, como <code>relator</code> ou <code>orgao_julgador</code> passados como número e <code>tamanho_pagina</code> menor que 1.</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><code>ValueError</code></td>
+<td>Data inválida ou início depois do fim; <code>relator</code> ou <code>orgao_julgador</code> só com dígitos; <code>tipo_consulta</code> ou <code>tipo_processo</code> desconhecido; <code>tamanho_pagina</code> acima de 10.000; página além do teto de 10.000 resultados.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><code>TJMTConfigError</code></td>
+<td>A configuração pública do portal não foi encontrada ou aponta para outra API.</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><code>TJMTResponseError</code></td>
+<td>A API respondeu com erro ou num formato inesperado.</td>
 </tr>
 </tbody>
 </table>
+</section>
+<section id="avisos" class="level4 doc-section doc-section-avisos">
+<h4 class="doc-section doc-section-avisos anchored" data-anchor-id="avisos">Avisos</h4>
+<p><code>UserWarning</code>: com <code>paginas=None</code>, quando a consulta tem mais de 10.000 resultados; baixa só os que cabem no teto, e a mensagem traz o total e quantos vieram. Também quando só um dos lados do intervalo de publicação é informado.</p>
 </section>
 <section id="returns" class="level4 doc-section doc-section-returns">
 <h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
@@ -381,8 +365,144 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
+<td>pd.DataFrame: Uma linha por documento, com as colunas de</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
+<td><code>CJSG_COLUMNS</code> em <code>juscraper.courts.tjmt.parse</code></td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
+<td>(<code>processo</code>, <code>ementa</code>, <code>relator</code>, <code>orgao_julgador</code>,</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
+<td><code>data_julgamento</code>, <code>data_publicacao</code> e outras, descritas em</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
+<td>class:<code>OutputCJSGTJMT</code>). Datas vêm como <code>datetime.date</code>. Busca</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
+<td>sem resultados devolve DataFrame vazio com as mesmas colunas.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="exemplo" class="level4 doc-section doc-section-exemplo">
+<h4 class="doc-section doc-section-exemplo anchored" data-anchor-id="exemplo">Exemplo</h4>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="im">import</span> juscraper <span class="im">as</span> jus</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> tjmt <span class="op">=</span> jus.scraper(<span class="st">"tjmt"</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> df <span class="op">=</span> tjmt.cjsg(</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>...     <span class="st">"dano moral"</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>...     paginas<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>...     data_publicacao_inicio<span class="op">=</span><span class="st">"2025-03-10"</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>...     data_publicacao_fim<span class="op">=</span><span class="st">"2025-03-10"</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>... )</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="see-also" class="level4 doc-section doc-section-see-also">
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See Also</h4>
+<p><code>InputCJSGTJMT</code>: fonte dos filtros aceitos.</p>
+</section>
+</section>
+<section id="juscraper.courts.tjmt.client.TJMTScraper.cjsg_download" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.tjmt.client.TJMTScraper.cjsg_download">cjsg_download</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>courts.tjmt.client.TJMTScraper.cjsg_download(</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    tipo_consulta<span class="op">=</span><span class="st">'Acordao'</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    relator<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    orgao_julgador<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    tipo_processo<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    thesaurus<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    tamanho_pagina<span class="op">=</span><span class="dv">10</span>,</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    data_publicacao_inicio<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    data_publicacao_fim<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Baixa as respostas JSON brutas da API de jurisprudência do TJMT.</p>
+<p>Aceita os mesmos parâmetros, filtros, aliases e exceções de <a href="../reference/courts.tjmt.client.TJMTScraper.html#juscraper.courts.tjmt.client.TJMTScraper.cjsg"><code>cjsg</code></a>; veja lá a lista completa. Cada página baixada é uma resposta da API, sem parsear.</p>
+<section id="returns-1" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>list</code></td>
+<td>list[dict]: Resposta JSON de cada página, na ordem pedida.</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="juscraper.courts.tjmt.client.TJMTScraper.cjsg_parse" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.tjmt.client.TJMTScraper.cjsg_parse">cjsg_parse</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>courts.tjmt.client.TJMTScraper.cjsg_parse(</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    resultados_brutos,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    tipo_consulta<span class="op">=</span><span class="st">'Acordao'</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Converte as respostas de <a href="../reference/courts.tjmt.client.TJMTScraper.html#juscraper.courts.tjmt.client.TJMTScraper.cjsg_download"><code>cjsg_download</code></a> em registros planos.</p>
+<section id="parameters-1" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>resultados_brutos</td>
 <td><code>list</code>[<code>dict</code>]</td>
-<td>List of flat dicts.</td>
+<td>Respostas JSON brutas, uma por página.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>tipo_consulta</td>
+<td><code>str</code></td>
+<td><code>"Acordao"</code> ou <code>"DecisaoMonocratica"</code>. Mantido por compatibilidade; a resposta da API já traz o tipo de cada documento.</td>
+<td><code>'Acordao'</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-2" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-2">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>list</code>[<code>dict</code>]</td>
+<td>list[dict]: Um dicionário por documento, com as colunas descritas</td>
+</tr>
+<tr class="even">
+<td>em</td>
+<td><code>list</code>[<code>dict</code>]</td>
+<td>meth:<code>cjsg</code>.</td>
 </tr>
 </tbody>
 </table>
@@ -390,13 +510,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="juscraper.courts.tjmt.client.TJMTScraper.cpopg" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjmt.client.TJMTScraper.cpopg">cpopg</h3>
-<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>courts.tjmt.client.TJMTScraper.cpopg(id_cnj)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Stub: first instance case consultation not implemented for TJMT.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>courts.tjmt.client.TJMTScraper.cpopg(id_cnj)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Consulta de processos de primeiro grau ainda não implementada no TJMT.</p>
 </section>
 <section id="juscraper.courts.tjmt.client.TJMTScraper.cposg" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjmt.client.TJMTScraper.cposg">cposg</h3>
-<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>courts.tjmt.client.TJMTScraper.cposg(id_cnj)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Stub: second instance case consultation not implemented for TJMT.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>courts.tjmt.client.TJMTScraper.cposg(id_cnj)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Consulta de processos de segundo grau ainda não implementada no TJMT.</p>
 
 
 </section>

@@ -74,7 +74,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-fa0132e5ba1ccbcb15f610bc8f9b53b7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-467e80bd0b75a075ce70b51a2f51db29.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -472,7 +472,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <section id="basic-search" class="level2">
 <h2 class="anchored" data-anchor-id="basic-search">Basic search</h2>
-<div id="e95d1ce1" class="cell" data-execution_count="1">
+<div id="e95d1ce1" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-04T22:41:46.866885Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-04T22:41:46.866732Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-04T22:41:50.798011Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-04T22:41:50.797494Z&quot;}" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>tjmt <span class="op">=</span> jus.scraper(<span class="st">'tjmt'</span>)</span>
@@ -481,7 +481,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_cjsg.shape)</span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>dados_cjsg.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando páginas TJMT: 100%|██████████| 1/1 [00:01&lt;00:00,  1.34s/it]</code></pre>
+<pre><code>Baixando páginas TJMT:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas TJMT: 100%|██████████| 1/1 [00:00&lt;00:00,  1.62it/s]Baixando páginas TJMT: 100%|██████████| 1/1 [00:00&lt;00:00,  1.61it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(10, 18)</code></pre>
@@ -501,7 +501,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <th data-quarto-table-cell-role="th">tipo</th>
 <th data-quarto-table-cell-role="th">ementa</th>
 <th data-quarto-table-cell-role="th">observacao</th>
-<th data-quarto-table-cell-role="th">numero_unico</th>
+<th data-quarto-table-cell-role="th">processo</th>
 <th data-quarto-table-cell-role="th">classe</th>
 <th data-quarto-table-cell-role="th">assunto</th>
 <th data-quarto-table-cell-role="th">tipo_acao</th>
@@ -520,65 +520,65 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">0</td>
-<td>358068885</td>
+<td>358130</td>
 <td>Acordao</td>
-<td>EMENTA: DIREITO PROCESSUAL CIVIL E DIREITO DO ...</td>
-<td>(N.U 1045934-10.2025.8.11.0000, CÂMARAS ISOLAD...</td>
-<td>1045934-10.2025.8.11.0000</td>
-<td>EMBARGOS DE DECLARAÇÃO CÍVEL</td>
-<td>Substituição do Produto</td>
-<td>DIREITO DO CONSUMIDOR (1156) \ Responsabilidad...</td>
+<td>APELAÇÕES - AÇÃO DE INDENIZAÇÃO POR DANO MORAL...</td>
+<td>(TJ-MT, Apelação 0000285-62.2013.8.11.0096, Re...</td>
+<td>0000285-62.2013.8.11.0096</td>
+<td>Apelação</td>
+<td>Apelação</td>
+<td>PROCESSO CÍVEL E DO TRABALHO\Recursos\Apelação</td>
 <td>Cível</td>
-<td>RUBENS DE OLIVEIRA SANTOS FILHO</td>
+<td>GUIOMAR TEODORO BORGES</td>
 <td>None</td>
-<td>Quarta Câmara de Direito Privado</td>
-<td>CÂMARAS ISOLADAS CÍVEIS DE DIREITO PRIVADO</td>
-<td>2026-04-01</td>
-<td>2026-04-01</td>
+<td>QUARTA CÂMARA DE DIREITO PRIVADO</td>
+<td>NÃO INFORMADO</td>
+<td>2017-07-19</td>
+<td>2017-07-24</td>
 <td>Segunda</td>
-<td>PJe</td>
+<td>Proteus</td>
 <td>NÃO INFORMADO</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">1</td>
-<td>358103897</td>
+<td>24403</td>
 <td>Acordao</td>
-<td>EMENTA DIREITO PROCESSUAL CIVIL. AGRAVO DE INS...</td>
-<td>(N.U 1007056-79.2026.8.11.0000, CÂMARAS ISOLAD...</td>
-<td>1007056-79.2026.8.11.0000</td>
-<td>AGRAVO DE INSTRUMENTO</td>
-<td>Obrigação de Fazer / Não Fazer</td>
-<td>DIREITO PROCESSUAL CIVIL E DO TRABALHO (8826) ...</td>
+<td>APELAÇÃO CÍVEL - RESCISÃO CONTRATUAL C/C INDEN...</td>
+<td>(TJ-MT, Apelação 0000975-74.2002.8.11.0000, Re...</td>
+<td>0000975-74.2002.8.11.0000</td>
+<td>Apelação</td>
+<td>Apelação</td>
+<td>PROCESSO CÍVEL E DO TRABALHO\Recursos\Apelação</td>
 <td>Cível</td>
-<td>SERLY MARCONDES ALVES</td>
+<td>MUNIR FEGURI</td>
 <td>None</td>
-<td>Quarta Câmara de Direito Privado</td>
-<td>CÂMARAS ISOLADAS CÍVEIS DE DIREITO PRIVADO</td>
-<td>2026-04-01</td>
-<td>2026-04-01</td>
+<td>PRIMEIRA CÂMARA DE DIREITO PRIVADO</td>
+<td>NÃO INFORMADO</td>
+<td>2002-04-22</td>
+<td>2002-05-08</td>
 <td>Segunda</td>
-<td>PJe</td>
+<td>Proteus</td>
 <td>NÃO INFORMADO</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">2</td>
-<td>358020366</td>
+<td>9446</td>
 <td>Acordao</td>
-<td>DIREITO PROCESSUAL CIVIL. EMBARGOS DE DECLARAÇ...</td>
-<td>(N.U 0002028-90.2017.8.11.0024, CÂMARAS ISOLAD...</td>
-<td>0002028-90.2017.8.11.0024</td>
-<td>EMBARGOS DE DECLARAÇÃO CÍVEL</td>
-<td>Prestação de Serviços</td>
-<td>DIREITO CIVIL (899) \ Obrigações (7681) \ Espé...</td>
-<td>Cível</td>
-<td>ANGLIZEY SOLIVAN DE OLIVEIRA</td>
+<td>INDENIZAÇÃO POR DANOS MORAIS - DEMORA NO ATEND...</td>
+<td>(TJ-MT, RECURSO CÍVEL INOMINADO 194/2009,&nbsp;&nbsp;194...</td>
+<td>194/2009</td>
+<td>RECURSO CÍVEL INOMINADO</td>
+<td>RECURSO CÍVEL INOMINADO</td>
 <td>None</td>
-<td>Quarta Câmara de Direito Privado</td>
-<td>CÂMARAS ISOLADAS CÍVEIS DE DIREITO PRIVADO</td>
-<td>2026-04-01</td>
-<td>2026-04-01</td>
-<td>Segunda</td>
-<td>PJe</td>
+<td>Cível</td>
+<td>VALMIR ALAÉRCIO DOS SANTOS</td>
+<td>None</td>
+<td>TERCEIRA TURMA RECURSAL</td>
+<td>NÃO INFORMADO</td>
+<td>2009-06-05</td>
+<td>2009-06-25</td>
+<td>Recursal</td>
+<td>Proteus</td>
 <td>NÃO INFORMADO</td>
 </tr>
 </tbody>
@@ -590,14 +590,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="available-columns" class="level2">
 <h2 class="anchored" data-anchor-id="available-columns">Available columns</h2>
-<div id="b441105c" class="cell" data-execution_count="2">
+<div id="b441105c" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-04T22:41:50.799880Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-04T22:41:50.799659Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-04T22:41:50.803225Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-04T22:41:50.802610Z&quot;}" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>dados_cjsg.columns.tolist()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="2">
 <pre><code>['id',
  'tipo',
  'ementa',
  'observacao',
- 'numero_unico',
+ 'processo',
  'classe',
  'assunto',
  'tipo_acao',
@@ -616,28 +616,29 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="preview-ementa" class="level2">
 <h2 class="anchored" data-anchor-id="preview-ementa">Preview ementa</h2>
-<div id="9b3c4c02" class="cell" data-execution_count="3">
+<div id="9b3c4c02" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-04T22:41:50.804896Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-04T22:41:50.804706Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-04T22:41:50.807511Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-04T22:41:50.806960Z&quot;}" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_cjsg[<span class="st">'ementa'</span>].iloc[<span class="dv">0</span>][:<span class="dv">300</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>EMENTA: DIREITO PROCESSUAL CIVIL E DIREITO DO CONSUMIDOR. EMBARGOS DE DECLARAÇÃO. AGRAVO DE INSTRUMENTO. JULGAMENTO ANTECIPADO PARCIAL DO MÉRITO. ALEGAÇÃO DE ERRO DE FATO, CONTRADIÇÃO E OMISSÃO. INEXISTÊNCIA DE VÍCIOS. ARGUMENTAÇÃO SUBSIDIÁRIA NÃO CONFIGURA RECONHECIMENTO DO PEDIDO. EMBARGOS REJEITA</code></pre>
+<pre><code>APELAÇÕES - AÇÃO DE INDENIZAÇÃO POR DANO MORAL E MATERIAL - INSCRIÇÃO INDEVIDA NA SERASA - DANO MORAL IN RE IPSA - REDUÇÃO - DEVIDA - DANO MATERIAL - AUSÊNCIA DE PROVA EFETIVA - SENTENÇA REFORMADA PARA REDUZIR O DANO MORAL - RECURSO DOS AUTORES DESPROVIDO - RECURSO DO BANCO - PARCIALMENTE PROVIDO
+O </code></pre>
 </div>
 </div>
 </section>
 <section id="using-filters" class="level2">
 <h2 class="anchored" data-anchor-id="using-filters">Using filters</h2>
-<p>You can filter by date range, judge (relator), court chamber (orgao_julgador), and case type (tipo_processo).</p>
-<div id="8471d7ac" class="cell" data-execution_count="4">
+<p>You can filter by publication date range (<code>data_publicacao_inicio</code>/<code>data_publicacao_fim</code>, end date inclusive), judge (<code>relator</code>), court chamber (<code>orgao_julgador</code>), and case type (<code>tipo_processo</code>). The API does not filter by judgment date or by case class: passing <code>data_julgamento_*</code> or <code>classe</code> raises <code>TypeError</code>. <code>relator</code> and <code>orgao_julgador</code> take the exact name, not a numeric id.</p>
+<div id="8471d7ac" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-04T22:41:50.809387Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-04T22:41:50.809232Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-04T22:41:53.700208Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-04T22:41:53.699754Z&quot;}" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>dados_filtrados <span class="op">=</span> tjmt.cjsg(</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'direito'</span>,</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">1</span>,</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">'2025-01-01'</span>,</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">'2025-06-30'</span>,</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    data_publicacao_inicio<span class="op">=</span><span class="st">'2025-01-01'</span>,</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    data_publicacao_fim<span class="op">=</span><span class="st">'2025-06-30'</span>,</span>
 <span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    tipo_processo<span class="op">=</span><span class="st">'Criminal'</span>,</span>
 <span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_filtrados.shape)</span>
 <span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>dados_filtrados.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando páginas TJMT: 100%|██████████| 1/1 [00:00&lt;00:00,  1.18it/s]</code></pre>
+<pre><code>Baixando páginas TJMT:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas TJMT: 100%|██████████| 1/1 [00:01&lt;00:00,  1.06s/it]Baixando páginas TJMT: 100%|██████████| 1/1 [00:01&lt;00:00,  1.06s/it]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(10, 18)</code></pre>
@@ -657,7 +658,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <th data-quarto-table-cell-role="th">tipo</th>
 <th data-quarto-table-cell-role="th">ementa</th>
 <th data-quarto-table-cell-role="th">observacao</th>
-<th data-quarto-table-cell-role="th">numero_unico</th>
+<th data-quarto-table-cell-role="th">processo</th>
 <th data-quarto-table-cell-role="th">classe</th>
 <th data-quarto-table-cell-role="th">assunto</th>
 <th data-quarto-table-cell-role="th">tipo_acao</th>
@@ -676,66 +677,66 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">0</td>
-<td>357998889</td>
+<td>288393382</td>
 <td>Acordao</td>
-<td>PRIMEIRA CÂMARA CRIMINALAPELAÇÃO CRIMINAL (417...</td>
-<td>(N.U 1001710-20.2021.8.11.0002, CÂMARAS ISOLAD...</td>
-<td>1001710-20.2021.8.11.0002</td>
+<td>DIREITO PENAL E PROCESSO PENAL – APELAÇÃO CRIM...</td>
+<td>(TJ-MT, APELAÇÃO CRIMINAL 1002956-28.2020.8.11...</td>
+<td>1002956-28.2020.8.11.0021</td>
 <td>APELAÇÃO CRIMINAL</td>
-<td>Homicídio Qualificado</td>
-<td>DIREITO PENAL (287) \ Crimes contra a vida (33...</td>
+<td>Crimes de Trânsito</td>
+<td>DIREITO PENAL (287) \ Crimes Previstos na Legi...</td>
 <td>Criminal</td>
-<td>ORLANDO DE ALMEIDA PERRI</td>
+<td>RUI RAMOS RIBEIRO</td>
 <td>None</td>
-<td>Primeira Câmara Criminal</td>
+<td>SEGUNDA CÂMARA CRIMINAL</td>
 <td>CÂMARAS ISOLADAS CRIMINAIS</td>
-<td>2026-04-01</td>
-<td>2026-04-01</td>
+<td>2025-05-20</td>
+<td>2025-05-28</td>
 <td>Segunda</td>
 <td>PJe</td>
-<td>NÃO INFORMADO</td>
+<td>Não-Provimento</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">1</td>
-<td>358024367</td>
+<td>267574764</td>
 <td>Acordao</td>
-<td>Ementa: Direito penal e processual penal. Agra...</td>
-<td>(N.U 1043828-75.2025.8.11.0000, CÂMARAS ISOLAD...</td>
-<td>1043828-75.2025.8.11.0000</td>
-<td>AGRAVO DE EXECUÇÃO PENAL</td>
-<td>Pena Privativa de Liberdade</td>
-<td>DIREITO PROCESSUAL PENAL (1209) \ Execução Pen...</td>
+<td>DIREITO PENAL E PROCESSO PENAL. APELAÇÃO CRIMI...</td>
+<td>(TJ-MT, APELAÇÃO CRIMINAL 0003108-04.2017.8.11...</td>
+<td>0003108-04.2017.8.11.0020</td>
+<td>APELAÇÃO CRIMINAL</td>
+<td>Homicídio Simples</td>
+<td>DIREITO PENAL (287) \ Crimes contra a vida (33...</td>
 <td>Criminal</td>
-<td>MARCOS MACHADO</td>
+<td>MARCOS REGENOLD FERNANDES</td>
 <td>None</td>
-<td>Primeira Câmara Criminal</td>
+<td>SEGUNDA CÂMARA CRIMINAL</td>
 <td>CÂMARAS ISOLADAS CRIMINAIS</td>
-<td>2026-04-01</td>
-<td>2026-04-01</td>
+<td>2025-02-04</td>
+<td>2025-02-13</td>
 <td>Segunda</td>
 <td>PJe</td>
-<td>NÃO INFORMADO</td>
+<td>Provimento em Parte</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">2</td>
-<td>358024398</td>
+<td>280381394</td>
 <td>Acordao</td>
-<td>Ementa: Direito penal e processual penal. Apel...</td>
-<td>(N.U 0000017-28.2019.8.11.0086, CÂMARAS ISOLAD...</td>
-<td>0000017-28.2019.8.11.0086</td>
+<td>E M E N T A DIREITO PENAL E PROCESSUAL PENAL. ...</td>
+<td>(TJ-MT, APELAÇÃO CRIMINAL 1022330-50.2021.8.11...</td>
+<td>1022330-50.2021.8.11.0003</td>
 <td>APELAÇÃO CRIMINAL</td>
-<td>Homicídio Qualificado</td>
-<td>DIREITO PENAL (287) \ Crimes contra a vida (33...</td>
+<td>Crimes de Trânsito</td>
+<td>DIREITO PENAL (287) \ Crimes Previstos na Legi...</td>
 <td>Criminal</td>
-<td>MARCOS MACHADO</td>
+<td>WESLEY SANCHEZ LACERDA</td>
 <td>None</td>
-<td>Primeira Câmara Criminal</td>
+<td>PRIMEIRA CÂMARA CRIMINAL</td>
 <td>CÂMARAS ISOLADAS CRIMINAIS</td>
-<td>2026-04-01</td>
-<td>2026-04-01</td>
+<td>2025-04-09</td>
+<td>2025-04-14</td>
 <td>Segunda</td>
 <td>PJe</td>
-<td>NÃO INFORMADO</td>
+<td>Não-Provimento</td>
 </tr>
 </tbody>
 </table>
@@ -747,15 +748,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="querying-different-types" class="level2">
 <h2 class="anchored" data-anchor-id="querying-different-types">Querying different types</h2>
 <p>Besides <code>Acordao</code> (default), you can also query <code>DecisaoMonocratica</code>.</p>
-<div id="6e3964e0" class="cell" data-execution_count="5">
+<div id="6e3964e0" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-04T22:41:53.701983Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-04T22:41:53.701810Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-04T22:41:55.892205Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-04T22:41:55.891836Z&quot;}" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>dados_decisao <span class="op">=</span> tjmt.cjsg(<span class="st">'direito'</span>, paginas<span class="op">=</span><span class="dv">1</span>, tipo_consulta<span class="op">=</span><span class="st">'DecisaoMonocratica'</span>)</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_decisao.shape)</span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>dados_decisao.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando páginas TJMT: 100%|██████████| 1/1 [00:00&lt;00:00,  1.96it/s]</code></pre>
+<pre><code>Baixando páginas TJMT:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas TJMT: 100%|██████████| 1/1 [00:00&lt;00:00,  2.63it/s]Baixando páginas TJMT: 100%|██████████| 1/1 [00:00&lt;00:00,  2.63it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(10, 18)</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code></code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="5">
 <div>
@@ -769,7 +773,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <th data-quarto-table-cell-role="th">tipo</th>
 <th data-quarto-table-cell-role="th">ementa</th>
 <th data-quarto-table-cell-role="th">observacao</th>
-<th data-quarto-table-cell-role="th">numero_unico</th>
+<th data-quarto-table-cell-role="th">processo</th>
 <th data-quarto-table-cell-role="th">classe</th>
 <th data-quarto-table-cell-role="th">assunto</th>
 <th data-quarto-table-cell-role="th">tipo_acao</th>
@@ -788,65 +792,65 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">0</td>
-<td>358297875</td>
+<td>0</td>
 <td>DecisaoMonocratica</td>
-<td>ESTADO DE MATO GROSSOPODER JUDICIÁRIOTRIBUNAL ...</td>
-<td>(N.U 1014565-61.2026.8.11.0000, CÂMARAS ISOLAD...</td>
-<td>1014565-61.2026.8.11.0000</td>
-<td>AGRAVO DE INSTRUMENTO</td>
-<td>Análise de Crédito</td>
-<td>DIREITO DO CONSUMIDOR (1156) \ Responsabilidad...</td>
+<td>EMENTA – DECISÃO MONOCRÁTICA – CONFLITO NEGATI...</td>
+<td>(TJ-MT, Conflito de competência 0011968-82.200...</td>
+<td>0011968-82.2004.8.11.0041</td>
+<td>Conflito de competência</td>
+<td>Conflito de competência</td>
+<td>PROCESSO CÍVEL E DO TRABALHO\Outros Procedimen...</td>
 <td>Cível</td>
-<td>WALTER PEREIRA DE SOUZA</td>
+<td>DIRCEU DOS SANTOS</td>
 <td>None</td>
-<td>Secretaria de Plantão das Turmas Recursais</td>
-<td>CÂMARAS ISOLADAS CÍVEIS DE DIREITO PÚBLICO</td>
-<td>2026-04-03</td>
-<td>NaT</td>
+<td>SEGUNDA TURMA DE CÂMARAS CÍVEIS REUNIDAS DE DI...</td>
+<td>NÃO INFORMADO</td>
+<td>2013-02-18</td>
+<td>2013-02-26</td>
 <td>Segunda</td>
-<td>PJe</td>
+<td>Proteus</td>
 <td>NÃO INFORMADO</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">1</td>
-<td>358298358</td>
+<td>0</td>
 <td>DecisaoMonocratica</td>
-<td>ESTADO DE MATO GROSSOPODER JUDICIÁRIOTRIBUNAL ...</td>
-<td>(N.U 1014565-61.2026.8.11.0000, CÂMARAS ISOLAD...</td>
-<td>1014565-61.2026.8.11.0000</td>
-<td>AGRAVO DE INSTRUMENTO</td>
-<td>Análise de Crédito</td>
-<td>DIREITO DO CONSUMIDOR (1156) \ Responsabilidad...</td>
+<td>Vistos etc.\n\n\nMandado de segurança impetrad...</td>
+<td>(TJ-MT, Mandado de Segurança 0041807-03.2012.8...</td>
+<td>0041807-03.2012.8.11.0000</td>
+<td>Mandado de Segurança</td>
+<td>Mandado de Segurança</td>
+<td>PROCESSO CÍVEL E DO TRABALHO\Processo de Conhe...</td>
 <td>Cível</td>
-<td>WALTER PEREIRA DE SOUZA</td>
+<td>LUIZ CARLOS DA COSTA</td>
 <td>None</td>
-<td>Secretaria de Plantão das Turmas Recursais</td>
-<td>CÂMARAS ISOLADAS CÍVEIS DE DIREITO PÚBLICO</td>
-<td>2026-04-03</td>
-<td>NaT</td>
+<td>TURMA DE CÂMARAS CÍVEIS REUNIDAS DE DIREITO PÚ...</td>
+<td>NÃO INFORMADO</td>
+<td>2012-04-27</td>
+<td>2012-05-07</td>
 <td>Segunda</td>
-<td>PJe</td>
+<td>Proteus</td>
 <td>NÃO INFORMADO</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">2</td>
-<td>357978363</td>
+<td>0</td>
 <td>DecisaoMonocratica</td>
-<td>ESTADO DE MATO GROSSOPODER JUDICIÁRIOTRIBUNAL ...</td>
-<td>(N.U 1038264-89.2025.8.11.0041, CÂMARAS ISOLAD...</td>
-<td>1038264-89.2025.8.11.0041</td>
-<td>APELAÇÃO CÍVEL</td>
-<td>Empréstimo consignado</td>
-<td>DIREITO DO CONSUMIDOR (1156) \ Contratos de Co...</td>
+<td>Vistos etc.\n\n\nMandado de segurança impetrad...</td>
+<td>(TJ-MT, Mandado de Segurança 0037238-56.2012.8...</td>
+<td>0037238-56.2012.8.11.0000</td>
+<td>Mandado de Segurança</td>
+<td>Mandado de Segurança</td>
+<td>PROCESSO CÍVEL E DO TRABALHO\Processo de Conhe...</td>
 <td>Cível</td>
-<td>HELIO NISHIYAMA</td>
+<td>LUIZ CARLOS DA COSTA</td>
 <td>None</td>
-<td>Segunda Câmara de Direito Privado</td>
-<td>CÂMARAS ISOLADAS CÍVEIS DE DIREITO PRIVADO</td>
-<td>2026-04-02</td>
-<td>2026-04-02</td>
+<td>TURMA DE CÂMARAS CÍVEIS REUNIDAS DE DIREITO PÚ...</td>
+<td>NÃO INFORMADO</td>
+<td>2012-04-17</td>
+<td>2012-04-25</td>
 <td>Segunda</td>
-<td>PJe</td>
+<td>Proteus</td>
 <td>NÃO INFORMADO</td>
 </tr>
 </tbody>
@@ -859,22 +863,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="download-and-parse-separately" class="level2">
 <h2 class="anchored" data-anchor-id="download-and-parse-separately">Download and parse separately</h2>
 <p>You can also download the raw data first and parse it later.</p>
-<div id="46926a59" class="cell" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>brutos <span class="op">=</span> tjmt.cjsg_download(<span class="st">'direito'</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Pages downloaded: </span><span class="sc">{</span><span class="bu">len</span>(brutos)<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Keys in response: </span><span class="sc">{</span><span class="bu">list</span>(brutos[<span class="dv">0</span>].keys())<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>dados <span class="op">=</span> tjmt.cjsg_parse(brutos)</span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.DataFrame(dados)</span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Parsed shape: </span><span class="sc">{</span>df<span class="sc">.</span>shape<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>df.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="46926a59" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-04T22:41:55.893570Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-04T22:41:55.893479Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-04T22:41:57.765893Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-04T22:41:57.765428Z&quot;}" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>brutos <span class="op">=</span> tjmt.cjsg_download(<span class="st">'direito'</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Pages downloaded: </span><span class="sc">{</span><span class="bu">len</span>(brutos)<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Keys in response: </span><span class="sc">{</span><span class="bu">list</span>(brutos[<span class="dv">0</span>].keys())<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>dados <span class="op">=</span> tjmt.cjsg_parse(brutos)</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.DataFrame(dados)</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Parsed shape: </span><span class="sc">{</span>df<span class="sc">.</span>shape<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>df.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando páginas TJMT: 100%|██████████| 1/1 [00:00&lt;00:00,  1.26it/s]</code></pre>
+<pre><code>Baixando páginas TJMT:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas TJMT: 100%|██████████| 1/1 [00:00&lt;00:00,  4.06it/s]Baixando páginas TJMT: 100%|██████████| 1/1 [00:00&lt;00:00,  4.05it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Pages downloaded: 1
-Keys in response: ['AcordaoCollection', 'DecisaoMonocraticaCollection', 'ResumoProcessoCollection', 'RecursalEletronicoCollection', 'ThesaurusTermosCollection', 'CountAcordaoDocumento', 'CountDecisaoMonocratica', 'CountResumoProcesso', 'CountRecursalEletronico', 'CountTotal', 'FacetRedatorDesignado', 'FacetCamara', 'FacetTipoProcesso', 'FacetRelator', 'FacetAssunto', 'FacetJulgamento']
+Keys in response: ['value', 'errorMessage', 'success']
 
 Parsed shape: (10, 18)</code></pre>
 </div>
@@ -893,7 +897,7 @@ Parsed shape: (10, 18)</code></pre>
 <th data-quarto-table-cell-role="th">tipo</th>
 <th data-quarto-table-cell-role="th">ementa</th>
 <th data-quarto-table-cell-role="th">observacao</th>
-<th data-quarto-table-cell-role="th">numero_unico</th>
+<th data-quarto-table-cell-role="th">processo</th>
 <th data-quarto-table-cell-role="th">classe</th>
 <th data-quarto-table-cell-role="th">assunto</th>
 <th data-quarto-table-cell-role="th">tipo_acao</th>
@@ -912,65 +916,65 @@ Parsed shape: (10, 18)</code></pre>
 <tbody>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">0</td>
-<td>358287882</td>
+<td>61928</td>
 <td>Acordao</td>
-<td>EMENTA DIREITO CIVIL E PROCESSUAL CIVIL. EMBAR...</td>
-<td>(N.U 1042706-27.2025.8.11.0000, CÂMARAS ISOLAD...</td>
-<td>1042706-27.2025.8.11.0000</td>
-<td>EMBARGOS DE DECLARAÇÃO CÍVEL</td>
-<td>Inventário e Partilha</td>
-<td>DIREITO CIVIL (899) \ Sucessões (7673) \ Inven...</td>
-<td>Cível</td>
-<td>SERLY MARCONDES ALVES</td>
+<td>PROCESSO PENAL - HOMICÍDIO CULPOSO NA DIREÇÃO ...</td>
+<td>(TJ-MT, Apelação 0015989-93.2005.8.11.0000, Re...</td>
+<td>0015989-93.2005.8.11.0000</td>
+<td>Apelação</td>
+<td>Apelação</td>
+<td>PROCESSO CRIMINAL\Recursos\Apelação</td>
+<td>Criminal</td>
+<td>CARLOS ROBERTO CORREIA PINHEIRO</td>
 <td>None</td>
-<td>Quarta Câmara de Direito Privado</td>
-<td>CÂMARAS ISOLADAS CÍVEIS DE DIREITO PRIVADO</td>
-<td>2026-04-01T00:00:00</td>
-<td>2026-04-02T00:00:00</td>
+<td>SEGUNDA CÂMARA CRIMINAL</td>
+<td>NÃO INFORMADO</td>
+<td>2005-09-21T00:00:00-04:00</td>
+<td>2005-09-28T00:00:00-04:00</td>
 <td>Segunda</td>
-<td>PJe</td>
+<td>Proteus</td>
 <td>NÃO INFORMADO</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">1</td>
-<td>358074862</td>
+<td>164804</td>
 <td>Acordao</td>
-<td>TERCEIRA CÂMARA DE DIREITO PRIVADOAPELAÇÃO CÍV...</td>
-<td>(N.U 1017072-57.2020.8.11.0015, CÂMARAS ISOLAD...</td>
-<td>1017072-57.2020.8.11.0015</td>
-<td>APELAÇÃO CÍVEL</td>
-<td>Esbulho / Turbação / Ameaça</td>
-<td>DIREITO CIVIL (899) \ Coisas (10432) \ Posse (...</td>
+<td>APELAÇÃO CÍVEL - DEFEITO NA PRESTAÇÃO DE SERVI...</td>
+<td>(TJ-MT, Apelação 0000343-08.2003.8.11.0002, Re...</td>
+<td>0000343-08.2003.8.11.0002</td>
+<td>Apelação</td>
+<td>Apelação</td>
+<td>PROCESSO CÍVEL E DO TRABALHO\Recursos\Apelação</td>
 <td>Cível</td>
-<td>ANTONIA SIQUEIRA GONCALVES</td>
+<td>ORLANDO DE ALMEIDA PERRI</td>
 <td>None</td>
-<td>Terceira Câmara de Direito Privado</td>
-<td>CÂMARAS ISOLADAS CÍVEIS DE DIREITO PRIVADO</td>
-<td>2026-04-01T00:00:00</td>
-<td>2026-04-01T00:00:00</td>
+<td>PRIMEIRA CÂMARA DE DIREITO PRIVADO</td>
+<td>NÃO INFORMADO</td>
+<td>2011-08-09T00:00:00-04:00</td>
+<td>2011-08-16T00:00:00-04:00</td>
 <td>Segunda</td>
-<td>PJe</td>
+<td>Proteus</td>
 <td>NÃO INFORMADO</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">2</td>
-<td>358289370</td>
+<td>276171</td>
 <td>Acordao</td>
-<td>EMENTA DIREITO PROCESSUAL CIVIL. AGRAVO DE INS...</td>
-<td>(N.U 1004943-55.2026.8.11.0000, CÂMARAS ISOLAD...</td>
-<td>1004943-55.2026.8.11.0000</td>
-<td>AGRAVO DE INSTRUMENTO</td>
-<td>Compra e Venda</td>
-<td>DIREITO CIVIL (899) \ Obrigações (7681) \ Espé...</td>
-<td>Cível</td>
-<td>SERLY MARCONDES ALVES</td>
+<td>RECURSO DE APELAÇÃO CRIMINAL – HOMICÍDIO CULPO...</td>
+<td>(TJ-MT, Apelação 0001492-44.2005.8.11.0010, Re...</td>
+<td>0001492-44.2005.8.11.0010</td>
+<td>Apelação</td>
+<td>Apelação</td>
+<td>PROCESSO CRIMINAL\Recursos\Apelação</td>
+<td>Criminal</td>
+<td>LUIZ FERREIRA DA SILVA</td>
 <td>None</td>
-<td>Quarta Câmara de Direito Privado</td>
-<td>CÂMARAS ISOLADAS CÍVEIS DE DIREITO PRIVADO</td>
-<td>2026-04-01T00:00:00</td>
-<td>2026-04-02T00:00:00</td>
+<td>TERCEIRA CÂMARA CRIMINAL</td>
+<td>NÃO INFORMADO</td>
+<td>2015-04-22T00:00:00-04:00</td>
+<td>2015-04-30T00:00:00-04:00</td>
 <td>Segunda</td>
-<td>PJe</td>
+<td>Proteus</td>
 <td>NÃO INFORMADO</td>
 </tr>
 </tbody>
