@@ -404,13 +404,10 @@ class DatajudScraper(HTTPScraper):
 
     PREFIXO_DIRETORIO_TEMPORARIO = "datajud_api_"
 
-    # Um perfil só, para ``listar_processos`` e ``contar_processos``. Cada busca
-    # passa pelo ``_request_with_retry`` do core, que repete os
-    # ``STATUS_REPETIVEIS`` com espera; o 504 e o timeout chegam ao
-    # ``call_datajud_api``, que refaz a busca uma vez com ``size`` menor. Os
-    # status repetíveis e o retry em timeout ficam fixos, porque mudá-los
-    # desligaria esse fallback; ``__init__`` recusa ajuste deles em vez de
-    # ignorá-lo.
+    # Um perfil só, para ``listar_processos`` e ``contar_processos``. Os status
+    # repetíveis e o retry em timeout ficam fixos, porque mudá-los desligaria o
+    # fallback de ``size`` em 504 e timeout descrito no Note da classe;
+    # ``__init__`` recusa ajuste deles em vez de ignorá-lo.
     perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
         "busca": RequestPolicy(timeout=60, retryable_statuses=STATUS_REPETIVEIS),
     }
