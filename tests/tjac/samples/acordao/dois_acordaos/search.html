@@ -1,0 +1,4162 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html>
+	
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+	
+
+
+
+
+
+
+
+
+    <script language="javascript" type="text/JavaScript"
+            src="https://esaj.tjac.jus.br/sajcas/verificarLogin.js?script=1793418518202"></script>
+
+    <script language="javascript">
+        if (window.sajcas && window.sajcas.usuarioLogadoNoCasServer) {
+            var GATEWAY_TRUE = 'gateway=true', GATEWAY_FALSE = 'gateway=false';
+            var urlRetornoSistema = '';
+            if (urlRetornoSistema === '') {
+                urlRetornoSistema = window.location.href;
+            }
+
+            if (urlRetornoSistema.indexOf(GATEWAY_FALSE) !== -1) {
+                urlRetornoSistema = urlRetornoSistema.replace(GATEWAY_FALSE, GATEWAY_TRUE);
+            } else {
+                urlRetornoSistema.lastIndexOf('?') !== -1 ? urlRetornoSistema += '&' : urlRetornoSistema += '?';
+                urlRetornoSistema += GATEWAY_TRUE;
+            }
+
+            window.location.href = urlRetornoSistema;
+        }
+    </script>
+
+
+	<title>Portal de Serviços e-SAJ</title>
+	<!-- Adicionado aqui para não impactar mobile -->
+	<link rel="stylesheet" href="/cposg5/softheme/src/css/app.css">
+	<link rel="stylesheet" href="/cposg5/softheme/src/fonts/saj/styles.css">
+	<link rel="stylesheet" href="/cposg5/css/formulario.css" type="text/css"/>
+	<link rel="stylesheet" href="/cposg5/css/modal.css" type="text/css"/>
+
+	<link rel="stylesheet" href="/cposg5/webjars/select2/3.5.4/select2.css" type="text/css" >
+	<link rel="stylesheet" href="/cposg5/webjars/select2/3.5.4/select2-bootstrap.css" type="text/css">
+	<link rel="stylesheet" href="/cposg5/css/saj/select2/saj-select2.css">
+
+	
+ 
+<script>
+	window.saj = window.saj || {};
+	window.saj.env = window.saj.env || {};
+	window.saj.env.root = '/cposg5';
+	window.saj.env.css = '/cposg5/css';
+	window.saj.env.js = '/cposg5/js';
+	window.saj.env.imagens = '/cposg5/imagens';
+
+	window.saj.cpo = window.saj.cpo || {};
+	// transfere variavel se cpo esta rodando para totem
+	window.saj.cpo.totem = 'false' == 'true';
+
+	window.saj.cpo.instanciaConsulta = {
+		SG5: 'true' == 'true',
+		SG5TJ: 'false' == 'true',
+		SG5CR: 'true' == 'true',
+		value: 'SG5CR'
+	}; 
+</script>
+
+
+	<script language="javascript" type="text/JavaScript" src="/cposg5/js/jquery/jquery.min.js?n=1620728708"></script>
+	<script language="javascript" type="text/JavaScript" src="/cposg5/js/jquery/jquery.func_toggle.js?n=1815c5cd-4b79-4e1c-8ca8-91709d55f4f4"></script>
+	<script language="javascript" type="text/javascript" src="/cposg5/js/jquery/jquery.blockUI.min.js?n=5a5d29fe-0e52-4815-9ce7-2f43a751c496"></script>
+	<script language="javascript" type="text/javascript" src="/cposg5/js/jquery/jquery.browser.min.js?n=7e384cab-eb69-4612-8003-81596bb01bd6"></script>
+
+	<script language="javascript" type="text/javascript" src="/cposg5/webjars/lodash/4.17.21/lodash.js?n=5b3ec6d0-4e75-4339-83d0-dc70eacc3196"></script>
+	<script language="javascript" type="text/JavaScript" src="/cposg5/js/select2/select2.js?n=70ca78fd-6884-4fff-af92-ae0001382bc8"></script>
+	<script language="javascript" type="text/JavaScript" src="/cposg5/webjars/select2/3.5.4/select2_locale_pt-BR.js?n=1f812924-f0c2-4e55-bb28-4797e6465847"></script>
+	<script language="javascript" type="text/JavaScript" src="/cposg5/js/saj/saj-select2.js?n=7d1b3c1a-ff25-4525-a835-12a7d4ec66e0"></script>
+
+	<script language="javascript" type="text/JavaScript" src="/cposg5/js/saj/saj-web-2.2.41-4.js?n=d4e57df5-955f-4326-85f8-5f4052ecb212"></script>
+	<script language="javascript" type="text/JavaScript" src="/cposg5/js/saj/saj-tooltip.js?n=c600d74a-b1c0-42d6-84d7-ec60698631e3"></script>
+	<script language="javascript" type="text/JavaScript" src="/cposg5/js/saj/saj-popup-modal-1.0.0-1.js?n=3f0fd91f-f1af-4d1c-998d-8d076c08e0de"></script>
+	<script language="javascript" type="text/JavaScript" src="/cposg5/js/saj/saj-browser.js?n=4e47462b-a9ea-4ccb-83c8-8b3e28c6f95a"></script>
+	<script language="javascript" type="text/JavaScript" src="/cposg5/js/saj/saj-mascara-input.js?n=ccf0f40f-72da-4335-8a16-ec887f2b8738"></script>
+	<script language="javascript" type="text/JavaScript" src="/cposg5/js/saj/saj-numeroProcesso.js?n=65567ad0-acbe-4ebb-aac0-193fcb58dac2"></script>
+	<script language="javascript" type="text/JavaScript" src="/cposg5/js/saj-cpo-cbpesquisa.js?n=3374557194"></script>
+	<script language="javascript" type="text/JavaScript" src="/cposg5/js/saj/acessibilidade/acessibilidade.js?n=e5bad224-a388-4a88-9b11-6c5f7685ac75"></script>
+
+
+	<script language="javascript" type="text/JavaScript" src="/cposg5/softheme/src/js/app.js?n=16289891"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js?n=026c8112-a4f4-4cab-8124-7306d2715381" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js?n=1791337263" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+
+	
+
+
+
+
+<script>
+	(function($){
+		$(function(){
+			var intervalo = 115000;
+			$.saj.manterSessao('/cposg5/manterSessao.do', intervalo);
+		});
+				
+	})(jQuery);
+</script>
+
+
+
+
+	
+  	
+ 
+ 
+ 
+ 
+
+<input type="hidden" name="" value="" />
+
+ 
+
+
+
+
+
+
+
+
+<script>
+	window.saj.cpo = window.saj.cpo || {};
+	window.saj.cpo.urlBaseAcessoRecursoProcessoParaUsuario = '/cposg5/autorizarAcessoRecursoProcessoParaUsuario.do?processoPK.cdProcesso=P0000213J0000&processoPK.cdForo=900&processoPK.tpOrigemProcesso=2&processoPK.flOrigem=S&processoPK.aliasDaBase=SG5TJ&numeroProcesso=0700021-98.2018.8.01.0001&cdVara=29';
+	window.saj.cpo.urlBaseAcessoRecursoMidiaAudienciaProcessoParaUsuario= '/cposg5/autorizarAcessoRecursoAudienciaGravada.do?processoPK.cdProcesso=P0000213J0000&processoPK.cdForo=900&processoPK.tpOrigemProcesso=2&processoPK.flOrigem=S&processoPK.aliasDaBase=SG5TJ&numeroProcesso=0700021-98.2018.8.01.0001&cdVara=29';
+	window.saj.cpo.urlBaseAcessoRecursoProcessoComSenha = '/cposg5/autorizarAcessoRecursoProcessoPorSenha.do?processoPK.cdProcesso=P0000213J0000&processoPK.cdForo=900&processoPK.tpOrigemProcesso=2&processoPK.flOrigem=S&processoPK.aliasDaBase=SG5TJ&numeroProcesso=0700021-98.2018.8.01.0001';
+	window.saj.cpo.abrirAutorizarAcessoRecursoProcessoPorSenha = '/cposg5/abrirAutorizarAcessoRecursoProcessoPorSenha.do?processoPK.cdProcesso=P0000213J0000&processoPK.cdForo=900&processoPK.tpOrigemProcesso=2&processoPK.flOrigem=S&processoPK.aliasDaBase=SG5TJ&numeroProcesso=0700021-98.2018.8.01.0001';
+</script>
+
+		<script language="javascript" type="text/JavaScript" src="/cposg5/js/acessoRecurso-2.10.2-0.js?n=1201333206"></script>
+		<script language="javascript" type="text/JavaScript" src="/cposg5/js/acessoProcesso-2.10.2-0.js?n=1088446236"></script>
+	
+
+
+
+
+
+
+<script>
+	(function($){
+		$(function(){
+			var intervalo = 50000;
+			$.saj.manterSessao('/cposg5/manterSessao.do', intervalo);
+		});
+				
+	})(jQuery);
+</script>
+
+
+
+
+
+  
+	<!-- Correção temporária do alinhamento do divisor de seção de formulário do SPW -->
+	<script type="text/javascript">
+		$(function(){$('td[background$="spw/fundo_subtitulo2.gif"]').attr('valign', 'top')});
+	</script>
+</head>
+
+
+  <script language="javascript" type="text/JavaScript">
+	  $.saj.acessoRecurso = {
+		  popupMensagem: {
+			  limitePastaDigital: 'false',
+			  titulo: 'Aviso:',
+			  texto: "Você atingiu o limite diário de acessos à pasta digital em processos que não está vinculado.",
+		  }
+	  };
+	  $.saj.acessoRecurso.tituloPopupRecebimentoIntimacao = 'Aviso de intimação';
+	  $.saj.getUrlParameter = function getUrlParameter(sParam) {
+		var sPageURL = decodeURIComponent(window.location.search.substring(1)), sURLVariables = sPageURL.split('&'), sParameterName, i;
+		for (i = 0; i < sURLVariables.length; i++) {
+			sParameterName = sURLVariables[i].split('=');
+				if (sParameterName[0] === sParam) {
+					return sParameterName[1] === undefined ? true : sParameterName[1];
+				}
+		}
+	  };
+  </script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script type="text/javascript">
+	(function($) {
+		$(function(){
+			var captcha = $.saj.getUrlParameter('uuidCaptcha');
+
+			if (!captcha) {
+				return;
+			}
+
+			var url = $('.processoPrinc').attr('href');
+			$('.processoPrinc').attr('href', url+'&uuidCaptcha='+captcha);
+
+			var $processoPaiApenso = $('.processoPaiApenso');
+            $processoPaiApenso.attr('href', $processoPaiApenso.attr('href') + '&uuidCaptcha=' + captcha);
+
+            var $incidente = $('.incidente');
+            $incidente.attr('href', $incidente.attr('href') + '&uuidCaptcha=' + captcha);
+		})
+	})(jQuery);
+</script>
+
+	
+		<input type="hidden" name="cdProcesso" value="P0000213J0000"/>
+	
+	
+
+
+
+
+<!-- HEADER-->
+<div class="unj-entity-header">
+
+	
+
+
+
+
+<div class="unj-entity-header__actions">
+    <div class="container">
+        <div class="row">
+            <div class="col-3 col-md-4">
+                <a href="javascript:history.back();" class="unj-link-back">
+                    <i class="icon-back"></i>
+                </a>
+            </div>
+            <div class="col-13 col-md-12 unj-ta-r">
+                <!-- Pasta digital -->
+                
+                	
+		       		<a class="linkPasta btn btn-secondary btn-space" id="pbVisualizarAutos" title="Pasta Digital" href="#" name="">
+				        Visualizar autos
+	      			</a>
+                
+                <!-- Peticionar -->
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+	
+
+
+
+
+
+
+<div class="unj-entity-header__summary">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-13">
+                <!--principal -->
+                
+                    <span class="unj-larger-1 " id="numeroProcesso">
+                        0700021-98.2018.8.01.0001
+                    </span>
+                    
+                    
+                        <span class="unj-tag" id="situacaoProcesso">Julgado</span>
+                    
+                    
+                    
+                
+                <!-- incidente -->
+                
+                
+            </div>
+        </div>
+        <div class="row">
+            
+                <div class="col-md-3">
+                    <span class="unj-label">Classe</span>
+                    <div class="lh-1-1 line-clamp__2" id="classeProcesso"> <span title="Apelação Cível">Apelação Cível</span></div>
+                </div>
+            
+            
+                <div class="col-md-4">
+                    <span class="unj-label">
+                        Assunto
+                    </span>
+                    <div class="lh-1-1 line-clamp__2" id="assuntoProcesso"><span title="Indenização por Dano Moral">Indenização por Dano Moral</span></div>
+                </div>
+            
+            
+                <div class="col-md-3">
+                    <span class="unj-label">Seção</span>
+                    <div class="lh-1-1 line-clamp__2" id="secaoProcesso"> <span title="Tribunal de Justiça">Tribunal de Justiça</span></div>
+                </div>
+            
+            
+                <div class="col-md-3">
+                    <span class="unj-label">Órgão Julgador</span>
+                    <div class="lh-1-1 line-clamp__2" id="orgaoJulgadorProcesso"> <span title="Segunda Câmara Cível">Segunda Câmara Cível</span></div>
+                </div>
+            
+            
+                <div class="col-md-2">
+                    <span class="unj-label">Área</span>
+                    <div class="lh-1-1 line-clamp__2" id="areaProcesso"><span title="Cível">Cível</span></div>
+                </div>
+            
+            <!-- Processo principal -->
+            
+        </div>
+    </div>
+</div>
+
+	
+
+
+
+
+
+<div class="unj-entity-header__details">
+    <div class="container">
+        <div class="unj-ta-r">
+            <a href="#maisDetalhes" class="unj-link-collapse" data-toggle="collapse" aria-expanded="false" aria-controls="maisDetalhes">
+                <span class="unj-link-collapse__show">
+                    <i class="unj-link-collapse__icon glyph glyph-chevron-down"></i>
+                    Mais
+                </span>
+                <span class="unj-link-collapse__hide">
+                    <i class="unj-link-collapse__icon glyph glyph-chevron-up"></i>
+                    Recolher
+                </span>
+            </a>
+        </div>
+        <div id="maisDetalhes" class="collapse" aria-expanded="false">
+            <div class="row unj-row--border-top">
+                
+                
+                
+                
+                    <div class="col-lg-3 mb-2">
+                        <span class="unj-label">Relator</span>
+                        <div class="line-clamp__2" id="relatorProcesso"><span title="WALDIRENE CORDEIRO">WALDIRENE CORDEIRO</span></div>
+                    </div>
+                
+                
+                
+                    <div class="col-lg-3 mb-2">
+                        <span class="unj-label">Valor da ação</span>
+                        <div class="line-clamp__2" id="valorAcaoProcesso"><span title="70.000,00">70.000,00</span></div>
+                    </div>
+                
+                
+                    <div class="col-lg-3 mb-2">
+                        <span class="unj-label">Outros números</span>
+                        <div class="text-wrap">
+                            
+                            <div>
+                                    0700021-98.2018.8.01.0001
+                            </div>
+                        </div>
+                    </div>
+                
+                
+                
+                
+                
+                    <div class="col-lg-3 mb-2">
+                        <span class="unj-label">Origem</span>
+                        <div class="line-clamp__2"><span title="Comarca de Rio Branco / Rio Branco / 2ª Vara da Fazenda Publica">Comarca de Rio Branco / Rio Branco / 2ª Vara da Fazenda Publica</span></div>
+                    </div>
+                
+                
+                    <div class="col-lg-3 mb-2">
+                        <span class="unj-label">Volume / Apenso</span>
+                        <div class="line-clamp__2" id="volumeApensoProcesso"><span title="1 / 0">1 / 0</span></div>
+                    </div>
+                
+                
+                
+                
+                
+
+            </div>
+        </div>
+    </div>
+</div>
+
+</div>
+
+
+  <body>
+  <div class="div-conteudo container unj-mb-40">
+  	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+		
+
+
+
+
+    
+
+
+
+<aside class="aside-nav aside-nav--left ">
+    <div class="aside-nav__inner">
+        <header class="aside-nav__main-menu__header"><span
+                class="aside-nav__main-menu__header__text">  Menu e-SAJ</span>
+            <a href="#" class="aside-nav__user__close-button close-offcanvas">
+                <img src="https://esaj.tjac.jus.br/esaj-layout/img/icons/icon-close--light.png" alt="">
+            </a>
+        </header>
+        <nav class="aside-nav__main-menu">
+            <ul class="aside-nav__main-menu__list" id="conteudoMenuEsaj">
+            </ul>
+        </nav>
+        <div id="esaj-beta-switcher-placeholder"></div>
+    </div>
+</aside>
+<aside class="aside-nav aside-nav--right aside-nav__user ">
+    <div class="aside-nav__inner">
+        <div class="aside-nav__user__sign">
+            <div class="aside-nav__user__sign__brand">
+                <img src="https://esaj.tjac.jus.br/esaj-layout/img/aside/brasoes/br-tjac.jpg" alt="">
+            </div>
+            <ul class="aside-nav__user__sign__list">
+                <li><span class="aside-nav__user__sign__place">Tribunal de Justiça do Estado do Acre</span></li>
+            </ul>
+            <a href="#" class="aside-nav__user__close-button close-offcanvas">
+                <img src="https://esaj.tjac.jus.br/esaj-layout/img/icons/icon-close--dark.png" alt="">
+            </a>
+        </div>
+        <hr>
+        <div class="aside-nav__user__info">
+            <h4 class="aside-nav__user__title">Minha conta</h4>
+            <ul class="aside-nav__user__info__list">
+                <li class="aside-nav__user__info__list__item"><span class="aside-nav__user__info__name" id="menuNmUsuarioLogado"></span></li>
+                <li class="aside-nav__user__info__list__item"><span class="aside-nav__user__info__oab" id="menuUsuarioOabs">OAB: </span></li>
+            </ul>
+            <ul class="aside-nav__user__info__list-access">
+                <li class="aside-nav__user__info__list-access__item"><a class="aside-nav__user__info__list-access__item__link" href="https://esaj.tjac.jus.br/esaj/cadastro.do">Meu perfil</a></li>
+                
+                    <li class="aside-nav__user__info__list-access__item"><a class="aside-nav__user__info__list-access__item__link" href="https://esaj.tjac.jus.br/caixapostal/">Caixa Postal</a></li>
+                
+                <li class="aside-nav__user__info__list-access__item"><a class="aside-nav__user__info__list-access__item__link" id="logoutLink" href="#">Sair</a></li>
+            </ul>
+        </div>
+    </div>
+</aside>
+<header>
+    <link rel="shortcut icon" href="https://esaj.tjac.jus.br/esaj-layout/tema/padrao/clientes/AC/imagens/favicon.ico" type="image/x-icon"/>
+    <link href="https://esaj.tjac.jus.br/esaj-layout/app.css" rel="stylesheet" type="text/css"/>
+    <nav class="header__navbar--normal">
+        
+        <a class="header__navbar__menu-hamburger open__aside-nav--left navbar-menu-hamburger__item__link">
+            <span class="menu-hamburger__alert" style="display:none;"></span>
+            <span class="glyph glyph-hamburger"></span>
+        </a>
+
+        <h1 class="header__navbar__title" href=""><a class="linkLogo" href="https://esaj.tjac.jus.br/esaj-layout/redirecionarNovoEsaj.do"><strong>e-SAJ</strong></a> | Consulta de Processos de 2º Grau</h1>
+
+        <ul class="header__navbar__menu header__navbar__menu--right">
+            <li class="header__navbar__menu__item header__navbar__menu__item--initials">
+                <a class="header__navbar__brand__initials" href="https://esaj.tjac.jus.br"> TJAC </a>
+            </li>
+            <li class="header__navbar__menu__item header__navbar__menu__item--user">
+               <span class="header__navbar__name open__aside-nav--right">
+                     <span id="headerNmUsuarioLogado" class="header__navbar__name__text"></span>
+                     <span class="glyph glyph-contact header__navbar__name__icon"></span>
+               </span>
+            </li>
+        </ul>
+    </nav>
+</header>
+<div class="offcanvas-backdrop"></div>
+
+
+<script>
+    var dict = {
+        'certificado.tituloCertificadoDigital': 'Certificado digital',
+        'certificado.msgCarregandoCertificado': 'Carregando certificados...',
+        'certificado.msgNenhumCertificadoEncontrado': 'Nenhum certificado encontrado',
+        'certificado.msgErroCarregarCertificado': 'Erro ao carregar certificados',
+        'certificado.msgCertificadoExpirado': '[Expirado]',
+        'certificado.msgCertificadoNaoValido': '[Ainda não válido]',
+        'certificado.msgCertificadoNaoIcpBrasil': '[Não ICP-Brasil]',
+        'certificado.tituloProblemasAoAssinar': 'Falha de comunicação com o dispositivo de assinatura digital',
+
+        'label.contato': 'Contato',
+        'label.identificarSe': 'Identificar-se ',
+
+        'mensagem.aguarde': 'Por favor, aguarde.',
+        'mensagem.paginaNaoCarregada': 'Não foi possível carregar a página.',
+        'mensagem.marcarLido': 'Marcar como lido',
+        'mensagem.registrosSelecionados': 'Registros selecionados',
+        'mensagem.registroJaSelecionado': 'Este registro já está selecionado',
+
+        'mensagem.data.invalida': 'A data digitada é inválida.',
+        'mensagem.data.anoInvalido': 'O ano informado deve ser maior que',
+        'mensagem.data.mesInvalido': 'O mês não pode ser maior que 12.',
+        'mensagem.data.mes': 'O mês',
+        'mensagem.data.mesMaior29dias': 'não pode ter mais que 29 dias.',
+        'mensagem.data.mesMaior28dias': 'não pode ter mais que 28 dias.',
+        'mensagem.data.mesMaior31dias': 'não pode ter mais que 31 dias.',
+        'mensagem.data.mesMaior30dias': 'não pode ter mais que 30 dias.',
+
+        'mensagem.email.invalido': 'O formato do endereço de e-mail não é válido. Verifique se ele tem o formato "usuario@dominio".',
+        'mensagem.email.caracteresInvalidos': 'O endereço de e-mail possui caracteres inválidos',
+        'mensagem.email.usuarioInvalido': 'O formato do usuário informado no endereço de e-mail não é válido.',
+        'mensagem.email.ipInvalido': 'O endereço IP informado no endereço de e-mail não é válido.',
+        'mensagem.email.dominioInvalido': 'O formato do domínio informado no endereço de e-mail não é válido.',
+        'mensagem.email.dominioIncompleto': 'O domínio informado no endereço de e-mail deve possuir pelo menos duas partes. Por exemplo: "usuario@empresa.com.br".',
+
+        'mensagem.texto.tamanhoInvalido': 'O tamanho do texto digitado é maior do que o tamanho permitido. Tamanho permitido:',
+        'mensagem.texto.caracter': 'O caracter',
+        'mensagem.texto.caracterPosicaoInvalida': 'não está permitido na posição',
+
+        'mensagem.numero.numeroInvalido': 'O valor digitado não é um número válido.',
+        'mensagem.numero.numeroNaoPodeCasasDecimais': 'O número não pode conter casas decimais',
+        'mensagem.numero.numeroCasaDecimaisInvalidas': 'O número de casas decimais é inválido. O número pode conter apenas',
+        'mensagem.numero.casaDecimais': 'casas decimais',
+        'mensagem.numero.numeroInteiroInvalido': 'O número de dígitos inteiros é inválido. O número pode conter apenas',
+        'mensagem.numero.digitosInteiros': 'dígitos inteiros',
+        'mensagem.numero.numeroTamanhoInvalido': 'O número digitado não pode ser maior que',
+        'mensagem.numero.numeroZeroInvalido': 'O número digitado deve ser diferente de zero.'
+    }
+</script>
+
+
+
+<script>
+    var appEsajLayout = appEsajLayout || {};
+    appEsajLayout.urlNovoMenuHtml = 'https://esaj.tjac.jus.br/esaj-layout/menuPortalV2Html.do?servico=190301';
+
+    var appEsajCas = appEsajCas || {};
+    appEsajCas.urlServicoConteudoIdentificacao = 'https://esaj.tjac.jus.br/sajcas/conteudoIdentificacaoJson?script=1793350828593&retorno=' + encodeURIComponent(location.href);
+</script>
+<script src="https://esaj.tjac.jus.br/esaj-layout/js/portalV2-bundle.js?n=806192629"></script>
+<script src="https://esaj.tjac.jus.br/esaj-layout/js/saj-certificado.js?n=47741893"></script>
+<script src="https://esaj.tjac.jus.br/esaj-layout/js/softplan-websigner-2.5.1.js?n=736057767"></script>
+
+<script src="https://esaj.tjac.jus.br/sajcas/seletorVersaoBeta.js?n=25a70215-13f6-40eb-82b2-85620e647f9e&versao=2"></script>
+<script>
+    function exibirLibras() {
+        document.getElementById("gifLibras").style.display = 'block';
+        var cel1 = document.getElementsByClassName('esajCelulaIdentificacao');
+        var cel2 = document.getElementsByClassName('esajCelulaIdentificacaoServico');
+        mudarPosicao(cel1, 'static');
+        mudarPosicao(cel2, 'static');
+    }
+    function ocultarLibras() {
+        document.getElementById("gifLibras").style.display = 'none';
+        var cel1 = document.getElementsByClassName('esajCelulaIdentificacao');
+        var cel2 = document.getElementsByClassName('esajCelulaIdentificacaoServico');
+        mudarPosicao(cel1, 'relative');
+        mudarPosicao(cel2, 'relative');
+    }
+
+    function mudarPosicao(coll, posicao) {
+        if (!coll) {
+            return;
+        }
+        for (var i = 0, len = coll.length; i < len; i++) {
+            coll[i].style["position"] = posicao;
+        }
+    }
+</script>
+
+	
+
+
+
+
+		
+			
+				
+					
+			  	
+				
+			  	
+
+				
+
+			  	
+
+				
+
+			  	
+
+			  	
+			  	
+			  	
+			
+	  	
+			
+				
+				
+			  	
+
+				
+
+			  	
+
+				
+
+			  	
+
+			  	
+	  				
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div style="padding-top: 10px;">
+	
+	
+		
+		
+			<h2 class="subtitle">Apensos / Vinculados</h2>
+		
+	
+</div>
+	<!--  Tabela de (apensos) -->
+	<table style="margin-left:15px; margin-top:1px;" align="center" width="98%" border="0" cellspacing="0" cellpadding="1">
+		
+			
+			
+				<tr>
+					 <td colspan="3" align="left" id="dadosApensosNaoDisponiveis">Não há processos apensos ou vinculados para este processo.</td>
+				</tr>
+			
+		
+	</table>
+	<!-- Tabela de (apensos) -->
+	
+
+			  	
+			  	
+			  	
+			
+	  	
+			
+				
+				
+			  	
+
+				
+
+			  	
+
+				
+
+			  	
+
+			  	
+			  	
+	  				
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div style="padding-top: 10px;">
+	
+	
+		
+		
+			<h2 class="subtitle">Números de 1ª Instância</h2>
+		
+	
+</div>
+
+
+<table  style="margin-left:15px; margin-top:1px;"  align="center" width="98%" border="0" cellspacing="0" cellpadding="1">
+  
+  	
+	  <tr class="label"> 
+	    <td align="left" valign="top" width="200" >Nº de 1ª instância</td>
+		<td align="left" valign="top" width="250" >Foro</td>
+		<td align="left" valign="top" width="200" >Vara</td>
+		<td align="left" valign="top" width="250" >Juiz</td>
+		<td align="left" valign="top" width="*" >Obs.</td>
+	  </tr>
+	  <tr class="fundoEscuro" height="2" >
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+	  </tr>
+  	
+  	
+  
+</table>
+
+
+
+<table style="margin-left:15px; margin-top:1px;"  align="center" width="98%" border="0" cellspacing="0" cellpadding="1"  >
+	
+	  <tr class="fundoClaro"> 
+	    <td align="left" valign="top" width="200">
+			
+				
+					<a href="https://esaj.tjac.jus.br/cpopg/show.do?processo.codigo=01000BAL80000" target="_blank">0700021-98.2018.8.01.0001</a> (Principal)
+				
+				
+			
+	    </td>
+		<td align="left" valign="top" width="250">
+	      Rio Branco
+	    </td>
+		<td align="left" valign="top" width="200">
+	      2ª Vara da Fazenda Publica
+	    </td>
+	    <td align="left" valign="top" width="250">
+	      Zenair Ferreira Bueno
+		</td>
+		<td align="left" valign="top">
+	      -
+		</td>
+	  </tr>
+			
+</table>
+
+			  	
+			  	
+			
+	  	
+			
+				
+				
+	  				
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div style="padding-top: 10px;">
+	
+	
+		
+		
+		
+		
+	
+
+	
+		
+		
+			<h2 class="subtitle">Partes do Processo</h2>
+		
+	
+</div>
+
+<!--  cabecalho da tabela de lista (partes) -->
+
+
+<!--  dados da lista partes principais (partes) -->
+<table id="tablePartesPrincipais" style="margin-left:15px; margin-top:1px;" align="center" border="0" cellPadding="0" cellSpacing="0" width="98%">
+	
+			
+
+
+
+
+
+
+
+	
+		
+	
+	
+	
+	
+
+
+<tr class="fundoClaro poloAtivo">
+    <td valign="top" width="141" style="padding-bottom: 5px" class="label">
+      <span class="mensagemExibindo tipoDeParticipacao">Apelante:&nbsp;</span>
+    </td>
+    <td width="*" align="left" style="padding-bottom: 5px" class="nomeParteEAdvogado">
+	  
+		  
+			  
+			  
+				  José Ribamar Brito
+			  
+		  
+	     
+      
+ 	  
+	  
+   	 	 <br/><span class="mensagemExibindo">Advogado:&nbsp</span>
+		  
+			  
+			  
+				  Cristopher Capper Mariano de Almeida
+			  
+		  
+		  <input type="hidden" value="3604AC">&nbsp;
+   	 	 
+      
+   	 	 <br/><span class="mensagemExibindo">Advogado:&nbsp</span>
+		  
+			  
+			  
+				  Larissa Leal do Vale
+			  
+		  
+		  <input type="hidden" value="4424AC">&nbsp;
+   	 	 
+      
+   	 	 <br/><span class="mensagemExibindo">Advogado:&nbsp</span>
+		  
+			  
+			  
+				  RAPHAEL DE MOURA SOUZA
+			  
+		  
+		  <input type="hidden" value="6367AC">&nbsp;
+   	 	 
+      
+   	 	 <br/><span class="mensagemExibindo">Advogado:&nbsp</span>
+		  
+			  
+			  
+				  Sanderson Silva Mariano de Almeida
+			  
+		  
+		  <input type="hidden" value="5896AC">&nbsp;
+   	 	 
+      
+   	 	 <br/><span class="mensagemExibindo">Advogada:&nbsp</span>
+		  
+			  
+			  
+				  Juliana de Oliveira Moreira
+			  
+		  
+		  <input type="hidden" value="5324AC">&nbsp;
+   	 	 
+      
+      
+  	 </td>
+</tr>
+
+	
+			
+
+
+
+
+
+
+
+	
+	
+		
+	
+	
+	
+
+
+<tr class="fundoClaro poloPassivo">
+    <td valign="top" width="141" style="padding-bottom: 5px" class="label">
+      <span class="mensagemExibindo tipoDeParticipacao">Apelado:&nbsp;</span>
+    </td>
+    <td width="*" align="left" style="padding-bottom: 5px" class="nomeParteEAdvogado">
+	  
+		  
+			  
+			  
+				  Estado do Acre
+			  
+		  
+	     
+      
+ 	  
+	  
+   	 	 <br/><span class="mensagemExibindo">Proc. Estado:&nbsp</span>
+		  
+			  
+			  
+				  Leandro Rodrigues Postigo
+			  
+		  
+		  <input type="hidden" value="2808AC">&nbsp;
+   	 	 
+      
+      
+  	 </td>
+</tr>
+
+	
+</table>	
+
+
+	<!--  dados da lista todas as partes (partes) -->
+	<table id="tableTodasPartes" style="margin-left:15px; margin-top:1px; display: none; " align="center" width="98%" border="0" cellspacing="0" cellpadding="0"  >
+		
+			
+
+
+
+
+
+
+
+	
+		
+	
+	
+	
+	
+
+
+<tr class="fundoClaro poloAtivo">
+    <td valign="top" width="141" style="padding-bottom: 5px" class="label">
+      <span class="mensagemExibindo tipoDeParticipacao">Apelante:&nbsp;</span>
+    </td>
+    <td width="*" align="left" style="padding-bottom: 5px" class="nomeParteEAdvogado">
+	  
+		  
+			  
+			  
+				  José Ribamar Brito
+			  
+		  
+	     
+      
+ 	  
+	  
+   	 	 <br/><span class="mensagemExibindo">Advogado:&nbsp</span>
+		  
+			  
+			  
+				  Cristopher Capper Mariano de Almeida
+			  
+		  
+		  <input type="hidden" value="3604AC">&nbsp;
+   	 	 
+      
+   	 	 <br/><span class="mensagemExibindo">Advogado:&nbsp</span>
+		  
+			  
+			  
+				  Larissa Leal do Vale
+			  
+		  
+		  <input type="hidden" value="4424AC">&nbsp;
+   	 	 
+      
+   	 	 <br/><span class="mensagemExibindo">Advogado:&nbsp</span>
+		  
+			  
+			  
+				  RAPHAEL DE MOURA SOUZA
+			  
+		  
+		  <input type="hidden" value="6367AC">&nbsp;
+   	 	 
+      
+   	 	 <br/><span class="mensagemExibindo">Advogado:&nbsp</span>
+		  
+			  
+			  
+				  Sanderson Silva Mariano de Almeida
+			  
+		  
+		  <input type="hidden" value="5896AC">&nbsp;
+   	 	 
+      
+   	 	 <br/><span class="mensagemExibindo">Advogada:&nbsp</span>
+		  
+			  
+			  
+				  Juliana de Oliveira Moreira
+			  
+		  
+		  <input type="hidden" value="5324AC">&nbsp;
+   	 	 
+      
+      
+  	 </td>
+</tr>
+
+		
+			
+
+
+
+
+
+
+
+	
+		
+	
+	
+	
+	
+
+
+<tr class="fundoClaro poloAtivo">
+    <td valign="top" width="141" style="padding-bottom: 5px" class="label">
+      <span class="mensagemExibindo tipoDeParticipacao">Apelante:&nbsp;</span>
+    </td>
+    <td width="*" align="left" style="padding-bottom: 5px" class="nomeParteEAdvogado">
+	  
+		  
+			  
+			  
+				  Cimec - Comércio, Serviços, Importação e Exportação Ltda
+			  
+		  
+	     
+      
+ 	  
+	  
+   	 	 <br/><span class="mensagemExibindo">Advogado:&nbsp</span>
+		  
+			  
+			  
+				  Cristopher Capper Mariano de Almeida
+			  
+		  
+		  <input type="hidden" value="3604AC">&nbsp;
+   	 	 
+      
+   	 	 <br/><span class="mensagemExibindo">Advogado:&nbsp</span>
+		  
+			  
+			  
+				  Larissa Leal do Vale
+			  
+		  
+		  <input type="hidden" value="4424AC">&nbsp;
+   	 	 
+      
+   	 	 <br/><span class="mensagemExibindo">Advogado:&nbsp</span>
+		  
+			  
+			  
+				  RAPHAEL DE MOURA SOUZA
+			  
+		  
+		  <input type="hidden" value="6367AC">&nbsp;
+   	 	 
+      
+   	 	 <br/><span class="mensagemExibindo">Advogado:&nbsp</span>
+		  
+			  
+			  
+				  Sanderson Silva Mariano de Almeida
+			  
+		  
+		  <input type="hidden" value="5896AC">&nbsp;
+   	 	 
+      
+   	 	 <br/><span class="mensagemExibindo">Advogada:&nbsp</span>
+		  
+			  
+			  
+				  Juliana de Oliveira Moreira
+			  
+		  
+		  <input type="hidden" value="5324AC">&nbsp;
+   	 	 
+      
+      
+  	 </td>
+</tr>
+
+		
+			
+
+
+
+
+
+
+
+	
+	
+		
+	
+	
+	
+
+
+<tr class="fundoClaro poloPassivo">
+    <td valign="top" width="141" style="padding-bottom: 5px" class="label">
+      <span class="mensagemExibindo tipoDeParticipacao">Apelado:&nbsp;</span>
+    </td>
+    <td width="*" align="left" style="padding-bottom: 5px" class="nomeParteEAdvogado">
+	  
+		  
+			  
+			  
+				  Estado do Acre
+			  
+		  
+	     
+      
+ 	  
+	  
+   	 	 <br/><span class="mensagemExibindo">Proc. Estado:&nbsp</span>
+		  
+			  
+			  
+				  Leandro Rodrigues Postigo
+			  
+		  
+		  <input type="hidden" value="2808AC">&nbsp;
+   	 	 
+      
+      
+  	 </td>
+</tr>
+
+		
+	</table>
+	<div id="divLinksTituloBlocoPartes" style="text-align:right">
+        
+
+
+
+
+
+
+
+<input id="mensagemNaoExibidapartes" type="hidden" value=""/>
+<input id="linkNaoExibidopartes" type="hidden" value="Recolher"/>
+
+<span id="mensagensExibindopartes" class="mensagemExibindo">
+
+</span> &nbsp;
+<a id="linkpartes" href="javascript:" class="linkNaoSelecionado unj-link-collapse">
+    <span id="setasDireitapartes" class="setasDireita">
+        <i class="unj-link-collapse__icon glyph glyph-chevron-down"></i>
+    </span>
+    Mais</a>
+
+<script>
+	$(function() {
+		var controlarLink = function() {
+			var $linkNaoExibido = $('input#linkNaoExibidopartes');
+			var conteudoLinkNaoApresentado = $linkNaoExibido.val();
+			var $link = $('a#linkpartes');
+
+			$linkNaoExibido.val($link.html());
+			$link.html(conteudoLinkNaoApresentado);
+		};
+
+		var controlarMensagem = function() {
+			var $mensagemNaoExibida = $('input#mensagemNaoExibidapartes');
+			var $spanMensagem = $('span#mensagensExibindopartes');
+			var mensagemExibida = $spanMensagem.html();
+			var mensagemNaoExibida = $mensagemNaoExibida.val();
+
+			$spanMensagem.html(mensagemNaoExibida);
+			$mensagemNaoExibida.val(mensagemExibida);
+		};
+
+		var controlarMensagemLink = function() {
+			controlarMensagem();
+			controlarLink();
+		};
+
+		var esconderElementosExtrasMostrarDefault = function() {
+			$('#tableTodasPartes').hide();
+			$('#tablePartesPrincipais').show();
+		};
+
+		var mostrarElementosExtrasEsconderDefault = function() {
+			$('#tablePartesPrincipais').hide();
+			$('#tableTodasPartes').show();
+		};
+
+		var initPagina = function() {
+            var setasDireita = '<span id="setasDireitapartes" class="setasDireita"><i class="unj-link-collapse__icon glyph glyph-chevron-up"></i></span>';
+			var $linkEscondido = $('input#linkNaoExibidopartes');
+			$linkEscondido.val(setasDireita+$linkEscondido.val());
+		};
+
+		var bindLink = function() {
+			var $link = $('a#linkpartes');
+			$link.funcToggle('click', mostrarElementosExtrasEsconderDefault, esconderElementosExtrasMostrarDefault);
+			$link.bind('click', controlarMensagemLink);
+		};
+
+		initPagina();
+		bindLink();
+		esconderElementosExtrasMostrarDefault();
+	});
+</script>
+
+    </div>
+
+
+			  	
+			  	
+
+				
+
+			  	
+
+				
+
+			  	
+
+			  	
+			  	
+			  	
+			
+	  	
+			
+				
+				
+			  	
+
+				
+
+			  	
+
+				
+		  			
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div style="padding-top: 10px;">
+	
+	
+		
+		
+		
+		
+	
+
+	
+		
+		
+			<h2 class="subtitle">Movimentações</h2>
+		
+	
+</div>
+
+ 
+	
+
+<table  style="margin-left:15px; margin-top:1px;" align="center" border="0" cellPadding="0" cellSpacing="0" width="98%">
+	
+		
+			<thead>
+				<tr> 
+				  <th width="120" class="label" style="vertical-align: bottom">Data</th>
+				  <th vAlign="middle" width="20" aria-hidden="true">&nbsp;</th>
+				  <th vAlign="middle"  class="label">Movimento</th>
+				</tr>
+				<tr class="fundoEscuro" height="2" aria-hidden="true">
+					<td></td>
+					<td></td>
+					<td></td>
+				</tr>
+			</thead>
+
+			
+			<tbody id="tabelaUltimasMovimentacoes">
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoClaro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        29/10/2026
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+            <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+               href="#?cdDocumento=35"
+               name="M" cdDocumento="35"
+               onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 35)">
+                <img src="/cposg5/imagens/doc2.gif" width="16" height="16" border="0"/>
+            </a>
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+                <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+                   href="#?cdDocumento=35"
+                   name="M"
+                   cdDocumento="35"
+                   onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 35)">
+                    Expedição de Certidão
+                </a>
+            
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;">C E R T I D &Atilde; O (REMESSA AO DJe - AC&Oacute;RD&Atilde;O) CERTIFICA-SE que em 29/10/2026 foi encaminhado o Ac&oacute;rd&atilde;o prolatado nestes autos &agrave; Coordenadoria do Parque Gr&aacute;fico - CPAG, deste Tribunal, para fins de publica&ccedil;&atilde;o/veicula&ccedil;&atilde;o no Di&aacute;rio da Justi&ccedil;a Eletr&ocirc;nico.</span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoEscuro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        28/10/2026
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+            <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+               href="#?cdDocumento=33"
+               name="M" cdDocumento="33"
+               onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 33)">
+                <img src="/cposg5/imagens/doc2.gif" width="16" height="16" border="0"/>
+            </a>
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+                <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+                   href="#?cdDocumento=33"
+                   name="M"
+                   cdDocumento="33"
+                   onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 33)">
+                    Embargos de Declaração Não-acolhidos
+                </a>
+            
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;">Ementa: CIVIL PROCESSUAL CIVIL. EMBARGOS DE DECLARA&Ccedil;&Atilde;O EM APELA&Ccedil;&Atilde;O. RESPONSABILIDADE CIVIL DO ESTADO. PEND&Ecirc;NCIA CADASTRAL EM SISTEMA FAZEND&Aacute;RIO. OMISS&Otilde;ES E CONTRADI&Ccedil;&Otilde;ES. INEXIST&Ecirc;NCIA. PRETENS&Atilde;O DE REEXAME DO CONJUNTO PROBAT&Oacute;RIO E REDISCUSS&Atilde;O DO M&Eacute;RITO. PREQUESTIONAMENTO. EMBARGOS REJEITADOS. I. CASO EM EXAME 1. Embargos de declara&ccedil;&atilde;o contra ac&oacute;rd&atilde;o que desproveu apela&ccedil;&atilde;o c&iacute;vel e manteve o afastamento da responsabilidade civil do Estado, ante alegada restri&ccedil;&atilde;o fiscal indevida que impedia emiss&atilde;o autom&aacute;tica de certid&atilde;o negativa e gerou negativa de cr&eacute;dito, sustentando a exist&ecirc;ncia de omiss&otilde;es e contradi&ccedil;&otilde;es quanto &agrave; pend&ecirc;ncia registrada no sistema fazend&aacute;rio, ao Parecer n. 91/2018/PGE/PF, &agrave; situa&ccedil;&atilde;o da pessoa jur&iacute;dica embargante, &agrave; alegada reitera&ccedil;&atilde;o da restri&ccedil;&atilde;o, aos danos morais, &agrave; perda de uma chance e ao prequestionamento. Requer-se o saneamento dos v&iacute;cios, com efeitos infringentes, ou a integra&ccedil;&atilde;o do julgado para fins de prequestionamento. II. QUEST&Atilde;O EM DISCUSS&Atilde;O 2. H&aacute; seis quest&otilde;es em discuss&atilde;o para aferir: (i) se ha omiss&atilde;o ou contradi&ccedil;&atilde;o no ac&oacute;rd&atilde;o, ao exigir elementos probat&oacute;rios relacionados &agrave; inscri&ccedil;&atilde;o em cadastro restritivo ou &agrave; constitui&ccedil;&atilde;o formal do d&eacute;bito; (ii) se houve contradi&ccedil;&atilde;o entre o reconhecimento de pend&ecirc;ncia cadastral e a conclus&atilde;o pela aus&ecirc;ncia de ato estatal il&iacute;cito; (iii) se houve omiss&atilde;o quanto ao Parecer n. 91/2018/PGE/PF e &agrave; situa&ccedil;&atilde;o da pessoa jur&iacute;dica embargante; (iv) se a alegada reitera&ccedil;&atilde;o da pend&ecirc;ncia, os danos morais e a perda de uma chance foram desconsiderados; (v) se os embargos podem ser utilizados para nova valora&ccedil;&atilde;o das provas e rediscuss&atilde;o do m&eacute;rito; e (vi) se o prequestionamento, por si s&oacute;, autoriza o acolhimento dos aclarat&oacute;rios. III. RAZ&Otilde;ES DE DECIDIR 3. Nos Embargos de Declara&ccedil;&atilde;o, a omiss&atilde;o relevante consiste na aus&ecirc;ncia de enfrentamento de quest&atilde;o capaz de influenciar o resultado do julgamento, enquanto a contradi&ccedil;&atilde;o apta a justificar o recurso deve ser interna ao pronunciamento judicial, n&atilde;o se confundindo com a diverg&ecirc;ncia da parte quanto &agrave; interpreta&ccedil;&atilde;o das provas ou &agrave; conclus&atilde;o adotada. 4. O ac&oacute;rd&atilde;o embargado n&atilde;o condicionou o reconhecimento da responsabilidade estatal &agrave; exist&ecirc;ncia de inscri&ccedil;&atilde;o em SPC ou SERASA ou de Certid&atilde;o de D&iacute;vida Ativa, mas considerou a falta desses elementos na avalia&ccedil;&atilde;o do conjunto probat&oacute;rio e concluiu aus&ecirc;ncia da efetiva inscri&ccedil;&atilde;o indevida ou de restri&ccedil;&atilde;o jur&iacute;dica. 5. A pend&ecirc;ncia ou inconsist&ecirc;ncia cadastral que impede a emiss&atilde;o autom&aacute;tica de certid&atilde;o negativa n&atilde;o se confunde, necessariamente, com inscri&ccedil;&atilde;o em vida ativa, protesto ou negativa&ccedil;&atilde;o, sendo indispens&aacute;vel, para a responsabilidade civil, a demonstra&ccedil;&atilde;o do ato il&iacute;cito, do dano e do nexo causal. 6. O reconhecimento de pend&ecirc;ncia administrativa e sua posterior regulariza&ccedil;&atilde;o s&atilde;o compat&iacute;veis com a conclus&atilde;o de falta de comprova&ccedil;&atilde;o dos pressupostos da responsabilidade civil, e a corre&ccedil;&atilde;o cadastral n&atilde;o demonstra, por si s&oacute;, a natureza il&iacute;cita da pend&ecirc;ncia, a publicidade da restri&ccedil;&atilde;o, o dano indeniz&aacute;vel ou o nexo. 7. Foi examinado pelo julgado o Parecer n. 91/2018/PGE/PF e atribuiu-lhe alcance probat&oacute;rio diverso do pretendido pelos Embargantes, entendendo que a provid&ecirc;ncia de atualiza&ccedil;&atilde;o cadastral n&atilde;o comprovava, isoladamente, inscri&ccedil;&atilde;o irregular nem dano indeniz&aacute;vel. 8. A fundamenta&ccedil;&atilde;o adotada no julgado alcan&ccedil;a a pretens&atilde;o indenizat&oacute;ria da pessoa jur&iacute;dica Embargante, pois concluido, com base no conjunto documental, pela insufici&ecirc;ncia da prova da inscri&ccedil;&atilde;o indevida, do dano e do nexo causal. A alegada aus&ecirc;ncia de v&iacute;nculo com a empresa devedora n&atilde;o demonstra, por si s&oacute;, restri&ccedil;&atilde;o credit&iacute;cia imput&aacute;vel ao Estado. 9. A alegada reitera&ccedil;&atilde;o das pend&ecirc;ncias cadastrais n&atilde;o pode agravar dano que n&atilde;o foi previamente demonstrado, pois a repeti&ccedil;&atilde;o de inconsist&ecirc;ncias administrativas n&atilde;o comprova, automaticamente, ato il&iacute;cito ou dano moral indeniz&aacute;vel. 10. A 'perda de uma chance' exige oportunidade concreta, s&eacute;ria e real, cuja frustra&ccedil;&atilde;o seja causalmente atribu&iacute;vel ao comportamento imputado ao r&eacute;u. A mera comunica&ccedil;&atilde;o de negativa de cr&eacute;dito, sem demonstra&ccedil;&atilde;o de que opera&ccedil;&atilde;o concreta deixou de ser celebrada em raz&atilde;o direta da pend&ecirc;ncia fazend&aacute;ria, n&atilde;o comprova dano material indeniz&aacute;vel. 11. A pretens&atilde;o de atribuir novo significado ao parecer administrativo, &agrave;s certid&otilde;es, &agrave; negativa de cr&eacute;dito e aos demais documentos, exige reexame do conjunto probat&oacute;rio, provid&ecirc;ncia incompat&iacute;vel com a finalidade integrativa dos declarat&oacute;rios. 12. O prequestionamento n&atilde;o transforma os embargos em instrumento destinado &agrave; obten&ccedil;&atilde;o de pronunciamento espec&iacute;fico sobre cada dispositivo legal indicado pela parte. Ausentes os v&iacute;cios do art. 1.022 do CPC, a finalidade de prequestionamento n&atilde;o autoriza o acolhimento do recurso. IV. DISPOSITIVO E TESE 14. Embargos de declara&ccedil;&atilde;o rejeitados. Tese de julgamento: A pend&ecirc;ncia ou inconsist&ecirc;ncia cadastral que impede a emiss&atilde;o autom&aacute;tica de certid&atilde;o negativa n&atilde;o comprova, por si s&oacute;, ato estatal il&iacute;cito, dano indeniz&aacute;vel ou nexo causal, e os embargos de declara&ccedil;&atilde;o n&atilde;o se prestam &agrave; rediscuss&atilde;o do m&eacute;rito ou ao reexame do conjunto probat&oacute;rio quando ausentes os v&iacute;cios do art. 1.022 do CPC. Dispositivos relevantes citados: CPC, arts. 1.022 e 1.025. Jurisprud&ecirc;ncia relevante citada: STF, ACO 2652/SE, Rel. Min. Andr&eacute; Mendon&ccedil;a, Tribunal Pleno, j. 03/07/2023; STJ, AgInt no REsp 2047691/PR, Rel. Min. Gurgel de Faria, Primeira Turma, j. 20/10/2025; STJ, EDcl no AgRg no RHC 182099/BA, Rel. Min. Rogerio Schietti, Sexta Turma, j. 04/08/2026; STJ, AgInt no REsp 2032241/RJ, Rel. Min. Humberto Martins, Terceira Turma, j. 11/03/2024; TJMT, EMBDECCV 1011233-50.2021.8.11.0004, Rel. Des. Maria Aparecida Ferreira Fago, Segunda C&acirc;mara de Direito P&uacute;blico e Coletivo, j. 29/08/2023. Vistos, relatados e discutidos estes autos de Apela&ccedil;&atilde;o C&iacute;vel n. 0700021-98.2018.8.01.0001, ACORDAM as(os) Senhoras(es) Desembargadoras(es) da Segunda C&acirc;mara C&iacute;vel do Tribunal de Justi&ccedil;a do Estado do Acre, &agrave; unanimidade, rejeitar os declarat&oacute;rios, nos termos do voto da relatora. R</span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoClaro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        19/10/2026
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+            
+                Em Julgamento Virtual
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;"></span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoEscuro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        13/10/2026
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+            
+                Adiado
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;">Pr&oacute;xima pauta: 19/10/2026 00:01</span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoClaro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        13/10/2026
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+            
+                Adiado
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;">Adiado por falta de qu&oacute;rum de vota&ccedil;&atilde;o ou Adiado por empate na vota&ccedil;&atilde;o.</span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+			</tbody>
+			
+			
+			<tbody style="display: none;" id="tabelaTodasMovimentacoes">
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoClaro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        29/10/2026
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+            <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+               href="#?cdDocumento=35"
+               name="M" cdDocumento="35"
+               onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 35)">
+                <img src="/cposg5/imagens/doc2.gif" width="16" height="16" border="0"/>
+            </a>
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+                <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+                   href="#?cdDocumento=35"
+                   name="M"
+                   cdDocumento="35"
+                   onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 35)">
+                    Expedição de Certidão
+                </a>
+            
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;">C E R T I D &Atilde; O (REMESSA AO DJe - AC&Oacute;RD&Atilde;O) CERTIFICA-SE que em 29/10/2026 foi encaminhado o Ac&oacute;rd&atilde;o prolatado nestes autos &agrave; Coordenadoria do Parque Gr&aacute;fico - CPAG, deste Tribunal, para fins de publica&ccedil;&atilde;o/veicula&ccedil;&atilde;o no Di&aacute;rio da Justi&ccedil;a Eletr&ocirc;nico.</span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoEscuro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        28/10/2026
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+            <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+               href="#?cdDocumento=33"
+               name="M" cdDocumento="33"
+               onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 33)">
+                <img src="/cposg5/imagens/doc2.gif" width="16" height="16" border="0"/>
+            </a>
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+                <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+                   href="#?cdDocumento=33"
+                   name="M"
+                   cdDocumento="33"
+                   onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 33)">
+                    Embargos de Declaração Não-acolhidos
+                </a>
+            
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;">Ementa: CIVIL PROCESSUAL CIVIL. EMBARGOS DE DECLARA&Ccedil;&Atilde;O EM APELA&Ccedil;&Atilde;O. RESPONSABILIDADE CIVIL DO ESTADO. PEND&Ecirc;NCIA CADASTRAL EM SISTEMA FAZEND&Aacute;RIO. OMISS&Otilde;ES E CONTRADI&Ccedil;&Otilde;ES. INEXIST&Ecirc;NCIA. PRETENS&Atilde;O DE REEXAME DO CONJUNTO PROBAT&Oacute;RIO E REDISCUSS&Atilde;O DO M&Eacute;RITO. PREQUESTIONAMENTO. EMBARGOS REJEITADOS. I. CASO EM EXAME 1. Embargos de declara&ccedil;&atilde;o contra ac&oacute;rd&atilde;o que desproveu apela&ccedil;&atilde;o c&iacute;vel e manteve o afastamento da responsabilidade civil do Estado, ante alegada restri&ccedil;&atilde;o fiscal indevida que impedia emiss&atilde;o autom&aacute;tica de certid&atilde;o negativa e gerou negativa de cr&eacute;dito, sustentando a exist&ecirc;ncia de omiss&otilde;es e contradi&ccedil;&otilde;es quanto &agrave; pend&ecirc;ncia registrada no sistema fazend&aacute;rio, ao Parecer n. 91/2018/PGE/PF, &agrave; situa&ccedil;&atilde;o da pessoa jur&iacute;dica embargante, &agrave; alegada reitera&ccedil;&atilde;o da restri&ccedil;&atilde;o, aos danos morais, &agrave; perda de uma chance e ao prequestionamento. Requer-se o saneamento dos v&iacute;cios, com efeitos infringentes, ou a integra&ccedil;&atilde;o do julgado para fins de prequestionamento. II. QUEST&Atilde;O EM DISCUSS&Atilde;O 2. H&aacute; seis quest&otilde;es em discuss&atilde;o para aferir: (i) se ha omiss&atilde;o ou contradi&ccedil;&atilde;o no ac&oacute;rd&atilde;o, ao exigir elementos probat&oacute;rios relacionados &agrave; inscri&ccedil;&atilde;o em cadastro restritivo ou &agrave; constitui&ccedil;&atilde;o formal do d&eacute;bito; (ii) se houve contradi&ccedil;&atilde;o entre o reconhecimento de pend&ecirc;ncia cadastral e a conclus&atilde;o pela aus&ecirc;ncia de ato estatal il&iacute;cito; (iii) se houve omiss&atilde;o quanto ao Parecer n. 91/2018/PGE/PF e &agrave; situa&ccedil;&atilde;o da pessoa jur&iacute;dica embargante; (iv) se a alegada reitera&ccedil;&atilde;o da pend&ecirc;ncia, os danos morais e a perda de uma chance foram desconsiderados; (v) se os embargos podem ser utilizados para nova valora&ccedil;&atilde;o das provas e rediscuss&atilde;o do m&eacute;rito; e (vi) se o prequestionamento, por si s&oacute;, autoriza o acolhimento dos aclarat&oacute;rios. III. RAZ&Otilde;ES DE DECIDIR 3. Nos Embargos de Declara&ccedil;&atilde;o, a omiss&atilde;o relevante consiste na aus&ecirc;ncia de enfrentamento de quest&atilde;o capaz de influenciar o resultado do julgamento, enquanto a contradi&ccedil;&atilde;o apta a justificar o recurso deve ser interna ao pronunciamento judicial, n&atilde;o se confundindo com a diverg&ecirc;ncia da parte quanto &agrave; interpreta&ccedil;&atilde;o das provas ou &agrave; conclus&atilde;o adotada. 4. O ac&oacute;rd&atilde;o embargado n&atilde;o condicionou o reconhecimento da responsabilidade estatal &agrave; exist&ecirc;ncia de inscri&ccedil;&atilde;o em SPC ou SERASA ou de Certid&atilde;o de D&iacute;vida Ativa, mas considerou a falta desses elementos na avalia&ccedil;&atilde;o do conjunto probat&oacute;rio e concluiu aus&ecirc;ncia da efetiva inscri&ccedil;&atilde;o indevida ou de restri&ccedil;&atilde;o jur&iacute;dica. 5. A pend&ecirc;ncia ou inconsist&ecirc;ncia cadastral que impede a emiss&atilde;o autom&aacute;tica de certid&atilde;o negativa n&atilde;o se confunde, necessariamente, com inscri&ccedil;&atilde;o em vida ativa, protesto ou negativa&ccedil;&atilde;o, sendo indispens&aacute;vel, para a responsabilidade civil, a demonstra&ccedil;&atilde;o do ato il&iacute;cito, do dano e do nexo causal. 6. O reconhecimento de pend&ecirc;ncia administrativa e sua posterior regulariza&ccedil;&atilde;o s&atilde;o compat&iacute;veis com a conclus&atilde;o de falta de comprova&ccedil;&atilde;o dos pressupostos da responsabilidade civil, e a corre&ccedil;&atilde;o cadastral n&atilde;o demonstra, por si s&oacute;, a natureza il&iacute;cita da pend&ecirc;ncia, a publicidade da restri&ccedil;&atilde;o, o dano indeniz&aacute;vel ou o nexo. 7. Foi examinado pelo julgado o Parecer n. 91/2018/PGE/PF e atribuiu-lhe alcance probat&oacute;rio diverso do pretendido pelos Embargantes, entendendo que a provid&ecirc;ncia de atualiza&ccedil;&atilde;o cadastral n&atilde;o comprovava, isoladamente, inscri&ccedil;&atilde;o irregular nem dano indeniz&aacute;vel. 8. A fundamenta&ccedil;&atilde;o adotada no julgado alcan&ccedil;a a pretens&atilde;o indenizat&oacute;ria da pessoa jur&iacute;dica Embargante, pois concluido, com base no conjunto documental, pela insufici&ecirc;ncia da prova da inscri&ccedil;&atilde;o indevida, do dano e do nexo causal. A alegada aus&ecirc;ncia de v&iacute;nculo com a empresa devedora n&atilde;o demonstra, por si s&oacute;, restri&ccedil;&atilde;o credit&iacute;cia imput&aacute;vel ao Estado. 9. A alegada reitera&ccedil;&atilde;o das pend&ecirc;ncias cadastrais n&atilde;o pode agravar dano que n&atilde;o foi previamente demonstrado, pois a repeti&ccedil;&atilde;o de inconsist&ecirc;ncias administrativas n&atilde;o comprova, automaticamente, ato il&iacute;cito ou dano moral indeniz&aacute;vel. 10. A 'perda de uma chance' exige oportunidade concreta, s&eacute;ria e real, cuja frustra&ccedil;&atilde;o seja causalmente atribu&iacute;vel ao comportamento imputado ao r&eacute;u. A mera comunica&ccedil;&atilde;o de negativa de cr&eacute;dito, sem demonstra&ccedil;&atilde;o de que opera&ccedil;&atilde;o concreta deixou de ser celebrada em raz&atilde;o direta da pend&ecirc;ncia fazend&aacute;ria, n&atilde;o comprova dano material indeniz&aacute;vel. 11. A pretens&atilde;o de atribuir novo significado ao parecer administrativo, &agrave;s certid&otilde;es, &agrave; negativa de cr&eacute;dito e aos demais documentos, exige reexame do conjunto probat&oacute;rio, provid&ecirc;ncia incompat&iacute;vel com a finalidade integrativa dos declarat&oacute;rios. 12. O prequestionamento n&atilde;o transforma os embargos em instrumento destinado &agrave; obten&ccedil;&atilde;o de pronunciamento espec&iacute;fico sobre cada dispositivo legal indicado pela parte. Ausentes os v&iacute;cios do art. 1.022 do CPC, a finalidade de prequestionamento n&atilde;o autoriza o acolhimento do recurso. IV. DISPOSITIVO E TESE 14. Embargos de declara&ccedil;&atilde;o rejeitados. Tese de julgamento: A pend&ecirc;ncia ou inconsist&ecirc;ncia cadastral que impede a emiss&atilde;o autom&aacute;tica de certid&atilde;o negativa n&atilde;o comprova, por si s&oacute;, ato estatal il&iacute;cito, dano indeniz&aacute;vel ou nexo causal, e os embargos de declara&ccedil;&atilde;o n&atilde;o se prestam &agrave; rediscuss&atilde;o do m&eacute;rito ou ao reexame do conjunto probat&oacute;rio quando ausentes os v&iacute;cios do art. 1.022 do CPC. Dispositivos relevantes citados: CPC, arts. 1.022 e 1.025. Jurisprud&ecirc;ncia relevante citada: STF, ACO 2652/SE, Rel. Min. Andr&eacute; Mendon&ccedil;a, Tribunal Pleno, j. 03/07/2023; STJ, AgInt no REsp 2047691/PR, Rel. Min. Gurgel de Faria, Primeira Turma, j. 20/10/2025; STJ, EDcl no AgRg no RHC 182099/BA, Rel. Min. Rogerio Schietti, Sexta Turma, j. 04/08/2026; STJ, AgInt no REsp 2032241/RJ, Rel. Min. Humberto Martins, Terceira Turma, j. 11/03/2024; TJMT, EMBDECCV 1011233-50.2021.8.11.0004, Rel. Des. Maria Aparecida Ferreira Fago, Segunda C&acirc;mara de Direito P&uacute;blico e Coletivo, j. 29/08/2023. Vistos, relatados e discutidos estes autos de Apela&ccedil;&atilde;o C&iacute;vel n. 0700021-98.2018.8.01.0001, ACORDAM as(os) Senhoras(es) Desembargadoras(es) da Segunda C&acirc;mara C&iacute;vel do Tribunal de Justi&ccedil;a do Estado do Acre, &agrave; unanimidade, rejeitar os declarat&oacute;rios, nos termos do voto da relatora. R</span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoClaro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        19/10/2026
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+            
+                Em Julgamento Virtual
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;"></span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoEscuro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        13/10/2026
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+            
+                Adiado
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;">Pr&oacute;xima pauta: 19/10/2026 00:01</span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoClaro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        13/10/2026
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+            
+                Adiado
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;">Adiado por falta de qu&oacute;rum de vota&ccedil;&atilde;o ou Adiado por empate na vota&ccedil;&atilde;o.</span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoEscuro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        05/10/2026
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+            
+                Em Julgamento Virtual
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;"></span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoClaro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        05/10/2026
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+            
+                Conclusos para Julgamento
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;"></span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoEscuro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        24/09/2026
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+            <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+               href="#?cdDocumento=27"
+               name="M" cdDocumento="27"
+               onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 27)">
+                <img src="/cposg5/imagens/doc2.gif" width="16" height="16" border="0"/>
+            </a>
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+                <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+                   href="#?cdDocumento=27"
+                   name="M"
+                   cdDocumento="27"
+                   onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 27)">
+                    Expedição de Certidão
+                </a>
+            
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;">Certifico e dou f&eacute; que, de ordem, foi inclu&iacute;do o presente feito na Pauta de Julgamentos da Sess&atilde;o Ordin&aacute;ria Virtual em ambiente Eletr&ocirc;nico (ass&iacute;ncrona) da Segunda C&acirc;mara C&iacute;vel, que ser&aacute; realizada no per&iacute;odo 05/10/2026 &agrave;s 00h01min at&eacute; o 13/10/2026 &agrave;s 23h59min. Certifico, outrossim, que a referida Pauta de Julgamentos foi devidamente disponibilizada eletronicamente no portal do Tribunal de Justi&ccedil;a do Estado do Acre, no Di&aacute;rio da Justi&ccedil;a Eletr&ocirc;nico n&ordm; 8.104, de 24/09/2026, quinta-feira, pp. 05-12.</span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoClaro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        23/09/2026
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+            
+                Para Julgamento
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;">Pauta Eletr&ocirc;nica: In&iacute;cio: 05/10/2026 - T&eacute;rmino: 12/10/2026</span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoEscuro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        02/06/2026
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+            
+                Remetidos os Autos (por outros motivos) para Relator
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;"></span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoClaro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        01/06/2026
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+            
+                Juntada de Outros documentos
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;">N&ordm; Protocolo: PWTJ.26.08006088-4
+Tipo da Peti&ccedil;&atilde;o: Raz&otilde;es/Contrarraz&otilde;es
+Data: 01/06/2026 13:21
+</span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoEscuro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        22/05/2026
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+            <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+               href="#?cdDocumento=23"
+               name="M" cdDocumento="23"
+               onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 23)">
+                <img src="/cposg5/imagens/doc2.gif" width="16" height="16" border="0"/>
+            </a>
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+                <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+                   href="#?cdDocumento=23"
+                   name="M"
+                   cdDocumento="23"
+                   onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 23)">
+                    Expedição de Certidão
+                </a>
+            
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;">Certid&atilde;o - Intima&ccedil;&atilde;o - Portal Eletr&ocirc;nico - Secretaria - SG5</span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoClaro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        12/05/2026
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+            <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+               href="#?cdDocumento=22"
+               name="M" cdDocumento="22"
+               onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 22)">
+                <img src="/cposg5/imagens/doc2.gif" width="16" height="16" border="0"/>
+            </a>
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+                <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+                   href="#?cdDocumento=22"
+                   name="M"
+                   cdDocumento="22"
+                   onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 22)">
+                    Expedição de Certidão
+                </a>
+            
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;">Certid&atilde;o - Remessa - Portal Eletr&ocirc;nico - Secretaria - SG5</span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoEscuro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        12/05/2026
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+            <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+               href="#?cdDocumento=21"
+               name="M" cdDocumento="21"
+               onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 21)">
+                <img src="/cposg5/imagens/doc2.gif" width="16" height="16" border="0"/>
+            </a>
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+                <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+                   href="#?cdDocumento=21"
+                   name="M"
+                   cdDocumento="21"
+                   onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 21)">
+                    Ato ordinatório
+                </a>
+            
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;">Abro vista destes autos &agrave; Procuradoria Geral do Estado do Acre, para que apresente CONTRARRAZ&Otilde;ES. Por oportuno, informo que os autos poder&atilde;o ser acessados, na integra, por meio da senha ylaik8.</span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoClaro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        08/05/2026
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+            <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+               href="#?cdDocumento=20"
+               name="M" cdDocumento="20"
+               onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 20)">
+                <img src="/cposg5/imagens/doc2.gif" width="16" height="16" border="0"/>
+            </a>
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+                <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+                   href="#?cdDocumento=20"
+                   name="M"
+                   cdDocumento="20"
+                   onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 20)">
+                    Expedição de Certidão
+                </a>
+            
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;">Di&aacute;rio da Justi&ccedil;a Eletr&ocirc;nico Nacional - DJEN, desta data, considerando-se como data da publica&ccedil;&atilde;o, o primeiro dia &uacute;til seguinte ao da disponibiliza&ccedil;&atilde;o da informa&ccedil;&atilde;o. A contagem do prazo ter&aacute; in&iacute;cio no primeiro dia &uacute;til que seguir ao da publica&ccedil;&atilde;o. Link da publica&ccedil;&atilde;o:https://comunica.pje.jus.br.</span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoEscuro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        07/05/2026
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+            <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+               href="#?cdDocumento=19"
+               name="M" cdDocumento="19"
+               onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 19)">
+                <img src="/cposg5/imagens/doc2.gif" width="16" height="16" border="0"/>
+            </a>
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+                <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+                   href="#?cdDocumento=19"
+                   name="M"
+                   cdDocumento="19"
+                   onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 19)">
+                    Mero expediente
+                </a>
+            
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;">Diante da oposi&ccedil;&atilde;o de Embargos de Declara&ccedil;&atilde;o, &agrave; parte Embargada para manifesta&ccedil;&atilde;o, no prazo legal. Ap&oacute;s, cls. Cumpra-se.</span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoClaro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        05/05/2026
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+            
+                Remetidos os Autos (por outros motivos) para Relator
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;"></span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoEscuro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        05/05/2026
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+            <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+               href="#?cdDocumento=17"
+               name="M" cdDocumento="17"
+               onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 17)">
+                <img src="/cposg5/imagens/doc2.gif" width="16" height="16" border="0"/>
+            </a>
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+                <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+                   href="#?cdDocumento=17"
+                   name="M"
+                   cdDocumento="17"
+                   onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 17)">
+                    Expedição de Outros documentos
+                </a>
+            
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;">Nesta data, &agrave; vista da oposi&ccedil;&atilde;o de Embargos de Declara&ccedil;&atilde;o, procedemos a conclus&atilde;o destes autos ao Gabinete do(a) eminente Des(&ordf;). Waldirene Cordeiro, Relator(a).</span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoClaro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        05/05/2026
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+            <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+               href="#?cdDocumento=16"
+               name="M" cdDocumento="16"
+               onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 16)">
+                <img src="/cposg5/imagens/doc2.gif" width="16" height="16" border="0"/>
+            </a>
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+                <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+                   href="#?cdDocumento=16"
+                   name="M"
+                   cdDocumento="16"
+                   onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 16)">
+                    Expedição de Certidão
+                </a>
+            
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;">Certid&atilde;o - Intima&ccedil;&atilde;o - Portal Eletr&ocirc;nico - Secretaria - SG5</span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoEscuro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        04/05/2026
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+            
+                Juntada de Outros documentos
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;">N&ordm; Protocolo: PWTJ.26.10007500-8
+Tipo da Peti&ccedil;&atilde;o: Embargos de Declara&ccedil;&atilde;o
+Data: 04/05/2026 18:25
+</span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoClaro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        23/04/2026
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+            <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+               href="#?cdDocumento=14"
+               name="M" cdDocumento="14"
+               onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 14)">
+                <img src="/cposg5/imagens/doc2.gif" width="16" height="16" border="0"/>
+            </a>
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+                <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+                   href="#?cdDocumento=14"
+                   name="M"
+                   cdDocumento="14"
+                   onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 14)">
+                    Expedição de Certidão
+                </a>
+            
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;">Certid&atilde;o - Remessa - Portal Eletr&ocirc;nico - Secretaria - SG5</span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoEscuro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        23/04/2026
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+            <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+               href="#?cdDocumento=13"
+               name="M" cdDocumento="13"
+               onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 13)">
+                <img src="/cposg5/imagens/doc2.gif" width="16" height="16" border="0"/>
+            </a>
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+                <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+                   href="#?cdDocumento=13"
+                   name="M"
+                   cdDocumento="13"
+                   onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 13)">
+                    Ato ordinatório
+                </a>
+            
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;">Nesta data, fa&ccedil;o vista &agrave; Procuradoria Geral do Estado do Acre para ci&ecirc;ncia do ac&oacute;rd&atilde;o lavrado nos autos em ep&iacute;grafe, cujos autos poder&atilde;o ser acessados por meio da senha:</span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoClaro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        23/04/2026
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+            <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+               href="#?cdDocumento=12"
+               name="M" cdDocumento="12"
+               onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 12)">
+                <img src="/cposg5/imagens/doc2.gif" width="16" height="16" border="0"/>
+            </a>
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+                <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+                   href="#?cdDocumento=12"
+                   name="M"
+                   cdDocumento="12"
+                   onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 12)">
+                    Expedição de Certidão
+                </a>
+            
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;">CERTID&Atilde;O - DIA DO TRABALHO - 1 DE MAIO DE 2026</span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoEscuro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        23/04/2026
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+            <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+               href="#?cdDocumento=11"
+               name="M" cdDocumento="11"
+               onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 11)">
+                <img src="/cposg5/imagens/doc2.gif" width="16" height="16" border="0"/>
+            </a>
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+                <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+                   href="#?cdDocumento=11"
+                   name="M"
+                   cdDocumento="11"
+                   onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 11)">
+                    Expedição de Certidão
+                </a>
+            
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;">AC&Oacute;RD&Atilde;O PUBLICADO/VEICULADO (DJe N&ordm; 8.001 DE 23/04/2026) Certifico que o Ac&oacute;rd&atilde;o proferido nestes autos foi disponibilizado no Di&aacute;rio da Justi&ccedil;a Eletr&ocirc;nico n&ordm; 8.001, pp. 21/54, de 23 de abril de 2026, considerando-se publicado no 1&ordm; dia &uacute;til subsequente ao da divulga&ccedil;&atilde;o (art. 3&ordm;, da Resolu&ccedil;&atilde;o n&ordm; 14/2009, do Conselho de Administra&ccedil;&atilde;o-TJAC). Rio Branco, 23 de abril de 2026.</span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoClaro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        22/04/2026
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+            <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+               href="#?cdDocumento=10"
+               name="M" cdDocumento="10"
+               onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 10)">
+                <img src="/cposg5/imagens/doc2.gif" width="16" height="16" border="0"/>
+            </a>
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+                <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+                   href="#?cdDocumento=10"
+                   name="M"
+                   cdDocumento="10"
+                   onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 10)">
+                    Expedição de Certidão
+                </a>
+            
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;">C E R T I D &Atilde; O (REMESSA AO DJe - AC&Oacute;RD&Atilde;O) CERTIFICA-SE que em 22/04/2026 foi encaminhado o Ac&oacute;rd&atilde;o prolatado nestes autos &agrave; Coordenadoria do Parque Gr&aacute;fico - CPAG, deste Tribunal, para fins de publica&ccedil;&atilde;o/veicula&ccedil;&atilde;o no Di&aacute;rio da Justi&ccedil;a Eletr&ocirc;nico.</span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoEscuro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        21/04/2026
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+            <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+               href="#?cdDocumento=8"
+               name="M" cdDocumento="8"
+               onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 8)">
+                <img src="/cposg5/imagens/doc2.gif" width="16" height="16" border="0"/>
+            </a>
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+                <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+                   href="#?cdDocumento=8"
+                   name="M"
+                   cdDocumento="8"
+                   onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 8)">
+                    Conhecido o recurso de parte e não-provido
+                </a>
+            
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;">Ementa: TRIBUT&Aacute;RIO. ADMINISTRATIVO. APELA&Ccedil;&Atilde;O C&Iacute;VEL. RESPONSABILIDADE CIVIL DO ESTADO. INSCRI&Ccedil;&Atilde;O INDEVIDA EM D&Iacute;VIDA ATIVA. NECESSIDADE DE PROVA DO FATO CONSTITUTIVO. AUS&Ecirc;NCIA DE PROVA DA INSCRI&Ccedil;&Atilde;O INDEVIDA. DANO MORAL N&Atilde;O CONFIGURADO. IMPROCED&Ecirc;NCIA DO PEDIDO. APELO CONHECIDO E DESPROVIDO. I. CASO EM EXAME 1. Apela&ccedil;&atilde;o interposta contra senten&ccedil;a, proferida em , que julgou improcedente a pretens&atilde;o autoral, &agrave; falta de comprova&ccedil;&atilde;o do fato constitutivo do direito dos Autores, destacando a aus&ecirc;ncia de comprova&ccedil;&atilde;o da efetiva inscri&ccedil;&atilde;o indevida. II. QUEST&Otilde;ES EM DISCUSS&Atilde;O2. A quest&atilde;o em discuss&atilde;o consiste em definir se h&aacute; comprova&ccedil;&atilde;o da inscri&ccedil;&atilde;o indevida na D&iacute;vida Ativa do Estado, apta a ensejar responsabilidade civil objetiva do ente p&uacute;blico e o dever moral de indenizar. III. RAZ&Otilde;ES DE DECIDIR3. O direito &agrave; indeniza&ccedil;&atilde;o por inscri&ccedil;&atilde;o indevida em d&iacute;vida ativa depende da demonstra&ccedil;&atilde;o do ato il&iacute;cito, consistente no lan&ccedil;amento indevido do nome do contribuinte no cadastro de inadimplentes da Fazenda P&uacute;blica. 4. Os documentos denominados 'certid&atilde;o negativa negada', comprovam a necessidade de comparecimento presencial para emiss&atilde;o da certid&atilde;o, n&atilde;o configurando, por si s&oacute;, prova de inscri&ccedil;&atilde;o indevida em d&iacute;vida ativa. 5. As certid&otilde;es negativas emitidas posteriormente, atestam a regularidade fiscal dos Autores na data de sua expedi&ccedil;&atilde;o e gozam de presun&ccedil;&atilde;o de veracidade, n&atilde;o tendo sido produzida prova em sentido contr&aacute;rio. 6. O parecer administrativo da Procuradoria Geral do Estado reconheceu a necessidade de atualiza&ccedil;&atilde;o cadastral, mas n&atilde;o confirmou inscri&ccedil;&atilde;o irregular em d&iacute;vida ativa, tampouco decorre desse ato dano indeniz&aacute;vel. 7. Indemonstrado que a negativa de concess&atilde;o de cr&eacute;dito pela institui&ccedil;&atilde;o financeira buscada pelos Autores &eacute; decorrente de inscri&ccedil;&atilde;o indevida promovida pelo Estado. 8. Ausente prova cabal da inscri&ccedil;&atilde;o indevida e do nexo causal entre eventual conduta estatal e o alegado dano moral, n&atilde;o h&aacute; como reconhecer a responsabilidade civil objetiva da Administra&ccedil;&atilde;o P&uacute;blica. IV. DISPOSITIVO E TESE9. Apelo conhecido e desprovido.Tese de julgamento: '1. A responsabilidade civil do Estado por inscri&ccedil;&atilde;o indevida em d&iacute;vida ativa exige a comprova&ccedil;&atilde;o do ato il&iacute;cito, consistente na efetiva inscri&ccedil;&atilde;o indevida do nome do interessado no cadastro de inadimplentes da Fazenda P&uacute;blica. 2. A certid&atilde;o negativa negada, por si s&oacute;, n&atilde;o constitui prova da inscri&ccedil;&atilde;o indevida em d&iacute;vida ativa. 3. A aus&ecirc;ncia de comprova&ccedil;&atilde;o do nexo causal entre a conduta estatal e o alegado dano afasta o dever de indenizar'. Dispositivos relevantes citados: ;CF art. 37, &sect;6&ordm;; CPC, art. 373, I. Jurisprud&ecirc;ncia relevante citada: STJ AgInt no AREsp: 1585341 SP Vistos, relatados e discutidos estes autos de Apela&ccedil;&atilde;o C&iacute;vel n. 0700021-98.2018.8.01.0001, ACORDAM as(os) Senhoras(es) Desembargadoras(es) da Segunda C&acirc;mara C&iacute;vel do Tribunal de Justi&ccedil;a do Estado do Acre, a unanimidade, negar provimento ao apelo, nos termos do voto do relatora.</span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoClaro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        06/04/2026
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+            
+                Conclusos para Julgamento
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;"></span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoEscuro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        24/03/2026
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+            <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+               href="#?cdDocumento=6"
+               name="M" cdDocumento="6"
+               onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 6)">
+                <img src="/cposg5/imagens/doc2.gif" width="16" height="16" border="0"/>
+            </a>
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+                <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+                   href="#?cdDocumento=6"
+                   name="M"
+                   cdDocumento="6"
+                   onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 6)">
+                    Expedição de Certidão
+                </a>
+            
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;">Certifico e dou f&eacute; que, de ordem, foi inclu&iacute;do o presente feito na Pauta de Julgamentos da Sess&atilde;o Ordin&aacute;ria Virtual em ambiente Eletr&ocirc;nico (ass&iacute;ncrona) da Segunda C&acirc;mara C&iacute;vel, que ser&aacute; realizada no per&iacute;odo 06/04/2026 &agrave;s 00h01min at&eacute; o 13/04/2026 &agrave;s 23h59min. Certifico, outrossim, que a referida Pauta de Julgamentos foi devidamente disponibilizada eletronicamente no portal do Tribunal de Justi&ccedil;a do Estado do Acre, no Di&aacute;rio da Justi&ccedil;a Eletr&ocirc;nico n&ordm; 7.982, de 24/03/2026, ter&ccedil;a-feira, pp. 07-11.</span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoClaro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        23/03/2026
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+            
+                Para Julgamento
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;">Pauta Eletr&ocirc;nica: In&iacute;cio: 06/04/2026 - T&eacute;rmino: 13/04/2026</span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoEscuro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        04/12/2025
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+            
+                Remetidos os Autos (cumpridos) da Distribuição para Relator
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;">Enc. ao Relator</span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoClaro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        04/12/2025
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+            <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+               href="#?cdDocumento=3"
+               name="M" cdDocumento="3"
+               onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 3)">
+                <img src="/cposg5/imagens/doc2.gif" width="16" height="16" border="0"/>
+            </a>
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+                <a class="linkMovVincProc" title="Visualizar documento em inteiro teor"
+                   href="#?cdDocumento=3"
+                   name="M"
+                   cdDocumento="3"
+                   onclick="javascript:jQuery.saj.validarAberturaIntimacaoNaoRecebida(event, this, 'P0000213J0000', 3)">
+                    Expedição de Outros documentos
+                </a>
+            
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;">TERMO DE DISTRIBUI&Ccedil;&Atilde;O Nesta data, estes autos foram registrados, conferidas as folhas e a seguir distribu&iacute;dos por processamento eletr&ocirc;nico na forma das normas regimentais do Tribunal e do demonstrativo abaixo discriminado: Segunda C&acirc;mara C&iacute;vel Processo: 0700021-98.2018.8.01.0001 Classe: Apela&ccedil;&atilde;o C&iacute;vel Foro: Rio Branco Volume: 1 Distribui&ccedil;&atilde;o: Sorteio em 03/12/2025 Relatora: Des&ordf;. Waldirene Cordeiro</span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+					
+
+
+
+
+
+
+
+
+
+
+<input type="hidden" name="" value="" />
+
+
+    
+    
+        
+    
+
+
+<tr class="fundoEscuro movimentacaoProcesso" style="">
+    <td width="120" style="vertical-align: top" class="dataMovimentacaoProcesso">
+        03/12/2025
+    </td>
+    <td width="20" valign="top" aria-hidden="true">
+        
+    </td>
+    <td style="vertical-align: top; padding-bottom: 5px" class="descricaoMovimentacaoProcesso">
+        
+
+        
+            
+            
+                Distribuído por Sorteio
+            
+        
+
+        
+
+        <br/>
+        <span style="font-style: italic;">&Oacute;rg&atilde;o Julgador: 29 - Segunda C&acirc;mara C&iacute;vel
+Relator: 2132 - Waldirene Cordeiro</span>
+
+        
+    </td>
+</tr>
+
+
+
+				
+			</tbody>
+
+		
+		
+	
+</table>
+
+
+	<div id="divLinksTituloBlocoMovimentacoes" style="text-align:right">
+		
+
+
+
+
+
+
+
+<input id="mensagemNaoExibidamovimentacoes" type="hidden" value=""/>
+<input id="linkNaoExibidomovimentacoes" type="hidden" value="Recolher"/>
+
+<span id="mensagensExibindomovimentacoes" class="mensagemExibindo">
+
+</span> &nbsp;
+<a id="linkmovimentacoes" href="javascript:" class="linkNaoSelecionado unj-link-collapse">
+    <span id="setasDireitamovimentacoes" class="setasDireita">
+        <i class="unj-link-collapse__icon glyph glyph-chevron-down"></i>
+    </span>
+    Mais</a>
+
+<script>
+	$(function() {
+		var controlarLink = function() {
+			var $linkNaoExibido = $('input#linkNaoExibidomovimentacoes');
+			var conteudoLinkNaoApresentado = $linkNaoExibido.val();
+			var $link = $('a#linkmovimentacoes');
+
+			$linkNaoExibido.val($link.html());
+			$link.html(conteudoLinkNaoApresentado);
+		};
+
+		var controlarMensagem = function() {
+			var $mensagemNaoExibida = $('input#mensagemNaoExibidamovimentacoes');
+			var $spanMensagem = $('span#mensagensExibindomovimentacoes');
+			var mensagemExibida = $spanMensagem.html();
+			var mensagemNaoExibida = $mensagemNaoExibida.val();
+
+			$spanMensagem.html(mensagemNaoExibida);
+			$mensagemNaoExibida.val(mensagemExibida);
+		};
+
+		var controlarMensagemLink = function() {
+			controlarMensagem();
+			controlarLink();
+		};
+
+		var esconderElementosExtrasMostrarDefault = function() {
+			$('#tabelaTodasMovimentacoes').hide();
+			$('#tabelaUltimasMovimentacoes').show();
+		};
+
+		var mostrarElementosExtrasEsconderDefault = function() {
+			$('#tabelaUltimasMovimentacoes').hide();
+			$('#tabelaTodasMovimentacoes').show();
+		};
+
+		var initPagina = function() {
+            var setasDireita = '<span id="setasDireitamovimentacoes" class="setasDireita"><i class="unj-link-collapse__icon glyph glyph-chevron-up"></i></span>';
+			var $linkEscondido = $('input#linkNaoExibidomovimentacoes');
+			$linkEscondido.val(setasDireita+$linkEscondido.val());
+		};
+
+		var bindLink = function() {
+			var $link = $('a#linkmovimentacoes');
+			$link.funcToggle('click', mostrarElementosExtrasEsconderDefault, esconderElementosExtrasMostrarDefault);
+			$link.bind('click', controlarMensagemLink);
+		};
+
+		initPagina();
+		bindLink();
+		esconderElementosExtrasMostrarDefault();
+	});
+</script>
+
+	</div>
+
+			  	
+
+			  	
+
+			  	
+			  	
+			  	
+			
+	  	
+			
+				
+				
+			  	
+
+				
+		  			
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div style="padding-top: 10px;">
+	
+	
+		
+		
+			<h2 class="subtitle">Incidentes, ações incidentais, recursos e execuções de sentenças</h2>
+		
+	
+</div>
+<table style="margin-left:15px; margin-top:1px;" align="center" width="98%" border="0" cellspacing="0" cellpadding="1"  >
+	
+		
+		
+			<tr>
+			  <td colspan="3" align="left" id="processoSemIncidentes">
+			 	
+			 		
+			 		
+			 			Não há incidentes, ações incidentais, recursos ou execuções de sentenças vinculados a este processo.
+			 		
+			 	
+			  </td> 
+		    </tr>
+		
+	
+</table>
+<!--  incidentes -->
+
+
+			  	
+
+			  	
+
+				
+
+			  	
+
+			  	
+			  	
+			  	
+			
+	  	
+			
+				
+				
+			  	
+
+				
+
+			  	
+		  			
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div style="padding-top: 10px;">
+	
+	
+		
+		
+			<h2 class="subtitle">Petições diversas</h2>
+		
+	
+</div>
+<!--  Tabela de petições diversas -->
+<table style="margin-left:15px; margin-top:1px;" align="center" width="98%" border="0" cellspacing="0" cellpadding="1"  >
+	
+		
+			<thead>
+			    <tr class="label" > 
+			      <th width="140"  style="text-align:left">Data</th>
+			      <th width="*" >Tipo</th>
+			    </tr>
+			    <tr class="fundoEscuro" height="2" aria-hidden="true">
+					<td></td>
+					<td></td>
+				</tr>
+			</thead>
+			<tbody>
+				
+					<tr class="fundoClaro"> 
+						<td width="140"  style="text-align:left">
+							04/05/2026
+						</td>
+						<td width="*">
+							Embargos de Declaração<br/>
+							
+						</td>
+					</tr>
+				
+					<tr class="fundoEscuro"> 
+						<td width="140"  style="text-align:left">
+							01/06/2026
+						</td>
+						<td width="*">
+							Razões/Contrarrazões<br/>
+							
+						</td>
+					</tr>
+				
+			</tbody>
+		
+		
+	
+</table>
+<!--  Tabela de petições diversas -->
+
+			  	
+
+				
+
+			  	
+
+			  	
+			  	
+			  	
+			
+	  	
+			
+				
+				
+			  	
+	  				
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+
+
+
+
+
+
+
+<div style="padding-top: 10px;">
+	
+	
+		
+		
+			<h2 class="subtitle">Composição do Julgamento</h2>
+		
+	
+</div>
+	
+	<table style="margin-left:15px; margin-top:1px;" align="center" width="98%" border="0" cellspacing="0" cellpadding="1"  >
+		<tr class="label"> 
+		  <td width="140">Participação</td>
+		  <td >Magistrado</td>
+		</tr>
+		<tr class="fundoEscuro" height="2">
+			<td></td>
+			<td></td>
+		</tr>
+	</table>
+	
+	
+	
+	<table style="margin-left:15px; margin-top:1px;" align="center" width="98%" border="0" cellspacing="0" cellpadding="1"  >
+		
+		  <tr class="fundoClaro itemComposicaoJulgamento"> 
+		    <td valign="top" width="140" class="label" style="padding-bottom: 5px">
+		      Relator
+			</td>
+			<td valign="top" style="padding-bottom: 5px">
+		      Waldirene Cordeiro&nbsp;
+		    </td>
+		  </tr>
+		
+		  <tr class="fundoEscuro itemComposicaoJulgamento"> 
+		    <td valign="top" width="140" class="label" style="padding-bottom: 5px">
+		      2º 
+			</td>
+			<td valign="top" style="padding-bottom: 5px">
+		      Júnior Alberto&nbsp;
+		    </td>
+		  </tr>
+		
+		  <tr class="fundoClaro itemComposicaoJulgamento"> 
+		    <td valign="top" width="140" class="label" style="padding-bottom: 5px">
+		      3º 
+			</td>
+			<td valign="top" style="padding-bottom: 5px">
+		      Luís Camolez&nbsp;
+		    </td>
+		  </tr>
+		
+	</table>
+	
+
+
+			  	
+
+				
+
+			  	
+
+				
+
+			  	
+
+			  	
+			  	
+			  	
+			
+	  	
+			
+				
+				
+			  	
+
+				
+
+			  	
+
+				
+
+			  	
+	  				
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div style="padding-top: 10px;">
+	
+	
+		
+		
+			<h2 class="subtitle">Julgamentos</h2>
+		
+	
+</div>
+<table style="margin-left:15px; margin-top:1px;" align="center" width="98%" border="0" cellspacing="0" cellpadding="1">
+  
+  	
+	  <tr class="label"> 
+	    <td align="left" valign="top" width="150" >Data</td>
+		<td align="left" valign="top" width="220" >Situação do julgamento</td>
+		<td align="left" valign="top" width="*" >Decisão</td>
+	  </tr>
+	  <tr class="fundoEscuro" height="2">
+		<td></td>
+		<td></td>
+		<td></td>
+	  </tr>
+  	
+  	
+  
+</table>
+
+
+<table style="margin-left:15px; margin-top:1px;" align="center" width="98%" border="0" cellspacing="0" cellpadding="1"  >
+		
+		  <tr class="fundoClaro"> 
+		    <td valign="top" align="left" valign="top" width="150">
+		      27/10/2026
+			</td>
+			<td align="left" valign="top" width="220"">
+		      Julgado
+		    </td>
+			<td align="left" valign="top" width="*">
+		      Decide a Segunda Câmara Cível do Tribunal de Justiça do Estado do Acre, à unanimidade, rejeitar os declaratórios,  nos termos do voto da relatora. Virtual.
+		    </td>
+		  </tr>
+		
+		  <tr class="fundoEscuro"> 
+		    <td valign="top" align="left" valign="top" width="150">
+		      21/04/2026
+			</td>
+			<td align="left" valign="top" width="220"">
+		      Julgado
+		    </td>
+			<td align="left" valign="top" width="*">
+		      Ementa: TRIBUTÁRIO. ADMINISTRATIVO. APELAÇÃO CÍVEL. RESPONSABILIDADE CIVIL DO ESTADO. INSCRIÇÃO INDEVIDA EM DÍVIDA ATIVA. NECESSIDADE DE PROVA DO FATO CONSTITUTIVO. AUSÊNCIA DE PROVA DA INSCRIÇÃO INDEVIDA. DANO MORAL NÃO CONFIGURADO. IMPROCEDÊNCIA DO PEDIDO. APELO CONHECIDO E DESPROVIDO. I. CASO EM EXAME 1. Apelação interposta contra sentença, proferida em , que julgou improcedente a pretensão autoral, à falta de comprovação do fato constitutivo do direito dos Autores, destacando a ausência de comprovação da efetiva inscrição indevida. II. QUESTÕES EM DISCUSSÃO2. A questão em discussão consiste em definir se há comprovação da inscrição indevida na Dívida Ativa do Estado, apta a ensejar responsabilidade civil objetiva do ente público e o dever moral de indenizar. III. RAZÕES DE DECIDIR3. O direito à indenização por inscrição indevida em dívida ativa depende da demonstração do ato ilícito, consistente no lançamento indevido do nome do contribuinte no cadastro de inadimplentes da Fazenda Pública. 4. Os documentos denominados &#039;certidão negativa negada&#039;, comprovam a necessidade de comparecimento presencial para emissão da certidão, não configurando, por si só, prova de inscrição indevida em dívida ativa. 5. As certidões negativas emitidas posteriormente, atestam a regularidade fiscal dos Autores na data de sua expedição e gozam de presunção de veracidade, não tendo sido produzida prova em sentido contrário. 6. O parecer administrativo da Procuradoria Geral do Estado reconheceu a necessidade de atualização cadastral, mas não confirmou inscrição irregular em dívida ativa, tampouco decorre desse ato dano indenizável. 7. Indemonstrado que a negativa de concessão de crédito pela instituição financeira buscada pelos Autores é decorrente de inscrição indevida promovida pelo Estado. 8. Ausente prova cabal da inscrição indevida e do nexo causal entre eventual conduta estatal e o alegado dano moral, não há como reconhecer a responsabilidade civil objetiva da Administração Pública. IV. DISPOSITIVO E TESE9. Apelo conhecido e desprovido.Tese de julgamento: &#039;1. A responsabilidade civil do Estado por inscrição indevida em dívida ativa exige a comprovação do ato ilícito, consistente na efetiva inscrição indevida do nome do interessado no cadastro de inadimplentes da Fazenda Pública. 2. A certidão negativa negada, por si só, não constitui prova da inscrição indevida em dívida ativa. 3. A ausência de comprovação do nexo causal entre a conduta estatal e o alegado dano afasta o dever de indenizar&#039;. Dispositivos relevantes citados: ;CF art. 37, §6º; CPC, art. 373, I. Jurisprudência relevante citada: STJ AgInt no AREsp: 1585341 SP Vistos, relatados e discutidos estes autos de Apelação Cível n. 0700021-98.2018.8.01.0001, ACORDAM as(os) Senhoras(es) Desembargadoras(es) da Segunda Câmara Cível do Tribunal de Justiça do Estado do Acre, a unanimidade, negar provimento ao apelo, nos termos do voto do relatora.
+		    </td>
+		  </tr>
+		
+</table>
+
+			  	
+
+			  	
+			  	
+			  	
+			
+	  	
+	  	<br/>
+	  	<br/>
+
+
+	
+		
+	
+	  
+
+
+
+
+
+
+
+
+      <div style="display:none;">
+          
+
+
+
+
+
+
+
+
+	
+		
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+		
+
+
+
+</td>
+</tr>
+</table>
+<table width="100%" border="0" cellpadding="0" cellspacing="0" class="esajTabelaRodape" summary=" " role="presentation">
+    <tr>
+        <td class="esajCelulaRodapeCentro">
+            Desenvolvido pela Softplan em parceria com o Tribunal de Justiça do Acre
+            
+        </td>
+    </tr>
+</table>
+<link href="https://esaj.tjac.jus.br/esaj-layout/tema/padrao/css/saj-popup-modal.css" rel="stylesheet" type="text/css">
+<link href="https://esaj.tjac.jus.br/esaj-layout/tema/padrao/css/popup-beta.css" rel="stylesheet" type="text/css">
+
+
+<script>
+    var appEsajLayout = appEsajLayout || {};
+    appEsajLayout.tituloCertificadoDigital = 'Certificado digital';
+    appEsajLayout.cliente = 'AC';
+    appEsajLayout.emailParaContato = '';
+    appEsajLayout.utilizarBotaoContato = 'false';
+    appEsajLayout.contexto = 'https://esaj.tjac.jus.br/esaj-layout';
+    appEsajLayout.webSignerParametro = '';
+
+    if(window.jQuery) {
+        jQuery.saj = jQuery.saj || {};
+        jQuery.saj.certificado = jQuery.saj.certificado || {};
+        jQuery.saj.certificado.cliente = 'AC';
+        jQuery.saj.certificado.urlConteudoAjudaWebSigner = appEsajLayout.contexto + '/ajudaWebSigner.do';
+        jQuery.saj.certificado.licenca = 'AqYAKi5zYWphZG0udGpzcC5qdXMuYnIsKi5zZWEuc2MuZ292LmJyLCouc29mdHBsYW4uY29tLmJyLCoudGphYy5qdXMuYnIsKi50amFsLmp1cy5iciwqLnRqYW0uanVzLmJyLCoudGpjZS5qdXMuYnIsKi50am1zLmp1cy5iciwqLnRqcHIuanVzLmJyLCoudGpzYy5qdXMuYnIsKi50anNwLmp1cy5ickMAaXA0OjEwLjAuMC4wLzgsaXA0OjEyNy4wLjAuMC84LGlwNDoxNzIuMTYuMC4wLzEyLGlwNDoxOTIuMTY4LjAuMC8xNggAU3RhbmRhcmQAAAABcfpZUu/QD3s2bqedB8v9T7MiMQxcHNu0pUzGzO+7Ta++o+BbAVgPau7lzj6IUFI7RPFkPSnm0ZbCFAVBnKrqinyvE8MwEvmQhFcjlhGK+FfVV5mhVkkxSC3khDEUR8gsAPVvFncyyW2vTU2ODkyGdU0S/g62wHFtSwfGP6OFqlWpZTqbxbEGd1vfe9yHHulTYI7RcsGxaTMD6XgtPlStbOn9DxSYhN3S+4oTtIq7pUR6ETavPqYlXh5hwkxIpTe3Sf4awQucSigQ95sS9g7QpcGyVUVscm0J/rah9YwPCnHShzsttWA9aCmKrNdgFSTTo8TUOmESEP93TH6Z3dss+A==';
+        jQuery.saj.certificado.webSignerParametro = '';
+        jQuery.saj.certificado.cofreDigital = jQuery.saj.certificado.cofreDigital || {};
+        jQuery.saj.certificado.cofreDigital.habilitado = 'false' === 'true';
+        jQuery.saj.certificado.cofreDigital.enderecoBase = 'https://esaj.tjac.jus.br/esaj-layout';
+    }
+
+</script>
+<script src="https://esaj.tjac.jus.br/esaj-layout/js/app-bundle.js?n=2978165087"></script>
+<script src="https://esaj.tjac.jus.br/esaj-layout/seletorVersaoBeta.js?n=32db3647-04d8-4058-8c7b-79513d6c2143&versao=1"></script>
+<script language="javascript" type="text/JavaScript" src="https://esaj.tjac.jus.br/esaj-layout/js/softplan-websigner-2.5.1.js?n=736057767"></script>
+<script language="javascript" type="text/JavaScript" src=""></script>
+
+<script language="javascript" type="text/JavaScript" src="https://esaj.tjac.jus.br/esaj-layout/js/saj-certificado.js?n=47741893"></script>
+
+
+
+<div id="webSignerNaoInstalado" style="display: none;">
+    <p>Para utilização do certificado digital no Portal e-SAJ é necessário a instalação do plug-in Web Signer. Por favor, realize a instalação antes de continuar.</p>
+    <div class="footer_certificado">
+        <button id="redirecionarParaPaginaInstalacao" class="actionPrincipal spwBotaoDefault">Instalar</button>
+        <button class="fecharModalInstalacao spwBotao">Cancelar</button>
+        <button class="spwBotao" onclick="window.open('https://esaj.tjac.jus.br/WebHelp//#id_instalacao_lacuna.htm','_blank')">Ajuda</button>
+    </div>
+</div>
+
+<div id="webSignerNaoSuportado" style="display: none;">
+    <p>O navegador utilizado não é compatível com a tecnologia (Web Signer) necessária para utilização do certificado digital. Por favor, utilize um dos navegadores homologados. Em caso de dúvidas, efetue a validação de requisitos <a href="https://esaj.tjac.jus.br/petpg/abrirVerificacaoRequisitosPet.do" target="_blank">aqui</a>.</p>
+    <div class="footer_certificado">
+        <button class="fecharModalInstalacao spwBotaoDefault actionPrincipal">OK</button>
+    </div>
+</div>
+
+
+	
+
+
+
+	
+	
+
+
+      </div>
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+		
+
+
+
+<footer>
+    <nav class="navbar__footer">
+        <div class="navbar__footer__container">
+
+            <ul class="navbar__footer__list-brand">
+                <li class="navbar__footer__list-brand__item">
+                    <a href="https://www.softplan.com.br/solucoes/saj-tribunais/" class="navbar__footer__list-brand__item__link link_softplan_tribunais">
+                        <img src="https://esaj.tjac.jus.br/esaj-layout/img/brand/icon-saj.png" alt="SAJ">
+                    </a>
+                </li>
+                <li class="navbar__footer__list-brand__item">
+                    <a href="https://www.softplan.com.br/" class="navbar__footer__list-brand__item__link link_softplan">
+                        <img src="https://esaj.tjac.jus.br/esaj-layout/img/brand/icon-softplan.png" alt="Softplan">
+                    </a>
+                </li>
+            </ul>
+
+            <ul class="navbar__footer__list-actions">
+            </ul>
+        </div>
+    </nav>
+</footer>
+
+	
+
+
+
+
+
+	
+
+	</div>
+	</body>
+
+</html>
+
+

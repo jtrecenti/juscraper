@@ -1,7 +1,7 @@
 """Contratos de seguranca: path traversal via identificadores upstream (refs #269).
 
-Os tres downloaders do TJSP interpolavam um identificador vindo da resposta do
-tribunal (``cdProcesso``, ``processo.codigo``, ``cdAcordao``) direto no caminho
+Os downloaders do TJSP interpolavam um identificador vindo da resposta do
+tribunal (``cdProcesso``, ``processo.codigo``, ``cdDocumento``) direto no caminho
 de escrita. Estes testes alimentam um identificador malicioso (``../../evil``) e
 afirmam que o downloader levanta ``ValueError`` antes de gravar fora do diretorio
 de download — em vez de permitir escrita arbitraria de arquivo.
@@ -16,7 +16,6 @@ import pytest
 import responses
 
 import juscraper as jus
-from juscraper.courts.tjsp.acordao_download import download_acordao
 from juscraper.courts.tjsp.cpopg_download import (
     cpopg_download_api,
     cpopg_download_api_single,
@@ -272,26 +271,45 @@ def test_cposg_html_simples_rejeita_codigo_malicioso(tmp_path, mocker):
     assert not list(tmp_path.rglob("*.html"))
 
 
-# ---------- acordao -----------------------------------------------------
+# ---------- acordao (movimentacao) ------------------------------------
+
+_MODAL_ACORDAO_MALICIOSO = (
+    '<html><body><div id="modalIncidentes">'
+    f'<input id="processoSelecionado" value="{EVIL}"/>'
+    "</div></body></html>"
+)
+
+_MOVIMENTACAO_MALICIOSA = (
+    '<table><tbody><tr class="fundoClaro movimentacaoProcesso">'
+    '<td class="dataMovimentacaoProcesso">30/10/2026</td><td></td>'
+    '<td class="descricaoMovimentacaoProcesso">'
+    f'<a class="linkMovVincProc" href="#?cdDocumento=1" cdDocumento="{EVIL}">Julgado virtualmente</a>'
+    "</td></tr></tbody></table>"
+)
+
 
 @responses.activate
-def test_acordao_rejeita_cd_acordao_malicioso(tmp_path):
-    """cdAcordao com '..' levanta ValueError (codigo morto, mas o defeito e real)."""
+def test_acordao_rejeita_cd_processo_malicioso_antes_do_show(tmp_path):
+    """cdProcesso do modal com '..' levanta ValueError antes de abrir o processo."""
     scraper = jus.scraper("tjsp", download_path=str(tmp_path))
-    responses.add(responses.GET, f"{ESAJ}/cjsg/getArquivo.do", body=b"%PDF-fake", status=200)
+    responses.add(responses.GET, f"{ESAJ}/cposg/search.do", body=_MODAL_ACORDAO_MALICIOSO, status=200)
 
-    with pytest.raises(ValueError, match="cdAcordao"):
-        download_acordao(EVIL, scraper.session, ESAJ, str(tmp_path))
+    with pytest.raises(ValueError, match=r"processo.codigo"):
+        scraper.baixar_acordao(CNJ, "01/10/2026")
 
+    assert len(responses.calls) == 1
     assert not list(tmp_path.rglob("*.pdf"))
 
 
 @responses.activate
-def test_acordao_happy_path(tmp_path):
-    """cdAcordao numerico legitimo grava em cjsg/<id>.pdf normalmente."""
+def test_acordao_rejeita_cd_documento_malicioso(tmp_path):
+    """cdDocumento com '..' levanta ValueError antes de verificar o acesso."""
     scraper = jus.scraper("tjsp", download_path=str(tmp_path))
-    responses.add(responses.GET, f"{ESAJ}/cjsg/getArquivo.do", body=b"%PDF-fake", status=200)
+    responses.add(responses.GET, f"{ESAJ}/cposg/search.do", body=_SIMPLES_MALICIOSO.replace(EVIL, "RI0001"), status=200)
+    responses.add(responses.GET, f"{ESAJ}/cposg/carregarMovimentacoesAjax.do", body=_MOVIMENTACAO_MALICIOSA, status=200)
 
-    download_acordao("12345", scraper.session, ESAJ, str(tmp_path))
+    with pytest.raises(ValueError, match="cdDocumento"):
+        scraper.baixar_acordao(CNJ, "01/10/2026")
 
-    assert (tmp_path / "cjsg" / "12345.pdf").exists()
+    assert not any("verificarAcesso" in c.request.url for c in responses.calls)
+    assert not list(tmp_path.rglob("*.pdf"))

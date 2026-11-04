@@ -114,13 +114,31 @@ def cjpg_n_pags(page_source) -> int:
     return (n_results + _CJPG_PAGE_SIZE - 1) // _CJPG_PAGE_SIZE
 
 
+def _codigos_inteiro_teor(nome) -> dict:
+    """Os códigos do ``name`` do link de inteiro teor, ``cdProcesso-cdForo-nmAlias-cdDocumento``.
+
+    São as colunas que :meth:`~juscraper.courts._esaj.sentenca.EsajSentencaScraper.baixar_sentencas`
+    lê. O ``nm_alias`` vazio, o comum no TJSP, vira ``None``. Um ``name`` com
+    outro número de partes só preenche ``cd_processo``, como antes das colunas
+    novas.
+    """
+    partes = str(nome).split('-') if nome else []
+    codigos = (partes if len(partes) == 4 else partes[:1]) + [None] * 4
+    cd_processo, cd_foro, nm_alias, cd_documento = codigos[:4]
+    return {
+        'cd_processo': cd_processo,
+        'cd_foro': cd_foro,
+        'nm_alias': nm_alias or None,
+        'cd_documento': cd_documento,
+    }
+
+
 def _extrair_dados_processo(tabela_dados):
     """Extrai identificadores, detalhes e decisão de uma tabela CJPG."""
     dados_processo: dict = {}
     link_inteiro_teor = tabela_dados.find('a', {'style': 'vertical-align: top'})
     if link_inteiro_teor:
-        nome = link_inteiro_teor.get('name')
-        dados_processo['cd_processo'] = str(nome).split('-')[0] if nome else None
+        dados_processo.update(_codigos_inteiro_teor(link_inteiro_teor.get('name')))
         span_negrito = link_inteiro_teor.find('span', class_='fonteNegrito')
         dados_processo['id_processo'] = span_negrito.text.strip() if span_negrito is not None else None
 

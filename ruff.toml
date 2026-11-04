@@ -91,7 +91,6 @@ extend = "pyproject.toml"
 "src/juscraper/courts/tjsc/download.py" = ["ANN001", "ANN003", "PLR0913"]
 "src/juscraper/courts/tjsc/parse.py" = ["ANN001"]
 "src/juscraper/courts/tjsp/__init__.py" = ["D104"]
-"src/juscraper/courts/tjsp/acordao_download.py" = ["ANN001", "ANN201", "D200", "D212"]
 "src/juscraper/courts/tjsp/auth.py" = ["D100"]
 "src/juscraper/courts/tjsp/cjpg_download.py" = ["DTZ005", "PLR0913"]
 "src/juscraper/courts/tjsp/cjpg_parse.py" = ["ANN001", "ANN201", "ANN202", "D200", "D212", "TRY400"]

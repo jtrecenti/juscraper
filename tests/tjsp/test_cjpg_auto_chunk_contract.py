@@ -32,7 +32,7 @@ def _patch_pipeline(mocker, parse_side_effect=None, parse_return=None):
 
 def test_auto_chunk_false_long_window_raises(tmp_path):
     scraper = jus.scraper("tjsp", download_path=str(tmp_path))
-    with pytest.raises(ValueError, match="no máximo 366"):
+    with pytest.raises(ValueError, match="no máximo 1 ano"):
         scraper.cjpg(
             "dano moral",
             data_julgamento_inicio="01/01/2022",
@@ -299,6 +299,6 @@ def test_cjpg_so_data_fim_dispara_auto_chunk_de_1990(tmp_path, mocker):
     with pytest.warns(UserWarning, match=r"01/01/1990"):
         df = scraper.cjpg("dano moral", data_julgamento_fim="31/12/1991")
 
-    # 01/01/1990 → 31/12/1991 = ~728 dias = 2 chunks de 366 dias.
+    # 01/01/1990 → 31/12/1991 = 2 anos de calendario = 2 janelas.
     assert download.call_count == 2
     assert len(df) == 2
