@@ -37,21 +37,23 @@ DATA_PUB_FIM_ISO = "2025-04-30"
 _PUB_END = date(2025, 4, 30)
 
 
-def _find_date_column(df: pd.DataFrame) -> str | None:
+_JULGAMENTO_NEEDLES = ("data_julgamento", "dt_julgamento", "julgamento")
+_PUBLICACAO_NEEDLES = ("data_publicacao", "dt_publicacao", "publicacao")
+
+
+def _find_date_column(df: pd.DataFrame, *, publicacao_primeiro: bool = False) -> str | None:
     """Return the first column that looks like a judgment or publication date.
 
     Tribunals disagree on column naming; scan by substring to stay robust.
-    Priority: judgment date > publication date > generic "data".
+    Priority: judgment date > publication date > generic "data". With
+    ``publicacao_primeiro``, publication comes first: when only the
+    publication filter was applied, the judgment date is not bounded by the
+    window and may fall anywhere before it.
     """
-    needles = (
-        "data_julgamento",
-        "dt_julgamento",
-        "julgamento",
-        "data_publicacao",
-        "dt_publicacao",
-        "publicacao",
-        "data",
-    )
+    if publicacao_primeiro:
+        needles = (*_PUBLICACAO_NEEDLES, *_JULGAMENTO_NEEDLES, "data")
+    else:
+        needles = (*_JULGAMENTO_NEEDLES, *_PUBLICACAO_NEEDLES, "data")
     for needle in needles:
         for col in df.columns:
             if needle in col.lower():
@@ -80,18 +82,20 @@ def _parse_row_date(raw: str) -> date | None:
     return None
 
 
-def assert_date_matches(df: pd.DataFrame) -> str | None:
+def assert_date_matches(df: pd.DataFrame, *, publicacao_primeiro: bool = False) -> str | None:
     """Check that every row falls inside the reference window.
 
     Julgamento columns are validated against the narrow work-week window
     (10/03 – 14/03). Publicação columns are validated against a widened
     window (10/03 – 30/04) because publicação typically trails julgamento
-    by days or weeks.
+    by days or weeks. ``publicacao_primeiro`` validates the publicação
+    column even when the output also has a julgamento one: pass it when only
+    the publicação filter was applied.
 
     Returns the date column name used for validation, or ``None`` if the
     scraper does not expose one (caller accepts count-only validation).
     """
-    col = _find_date_column(df)
+    col = _find_date_column(df, publicacao_primeiro=publicacao_primeiro)
     if col is None:
         return None
     is_pub = "publicacao" in col.lower() or "public" in col.lower()
@@ -154,6 +158,7 @@ def run_filtro_data_unica(scraper, **extra_kwargs) -> pd.DataFrame:
     """
     df = None
     accepted = False
+    filtro_usado: dict[str, str] | None = None
     last_type_error: TypeError | None = None
     for date_filters in _DATE_FILTER_SETS:
         kwargs = {**date_filters, **extra_kwargs, "paginas": 1}
@@ -163,6 +168,7 @@ def run_filtro_data_unica(scraper, **extra_kwargs) -> pd.DataFrame:
             last_type_error = exc
             continue
         accepted = True
+        filtro_usado = date_filters
         if df is not None and len(df) > 0:
             break
 
@@ -176,7 +182,7 @@ def run_filtro_data_unica(scraper, **extra_kwargs) -> pd.DataFrame:
         "sendo ignorado ou a semana escolhida pode estar fora do intervalo "
         "disponível."
     )
-    assert_date_matches(df)
+    assert_date_matches(df, publicacao_primeiro=filtro_usado is _PUBLICACAO_DATES)
     return df
 
 
