@@ -10,28 +10,29 @@ from typing import ClassVar
 
 from pydantic import Field
 
-from ...schemas import (
-    DataJulgamentoMixin,
-    DataPublicacaoMixin,
-    OutputCJSGBase,
-    OutputDataPublicacaoMixin,
-    OutputRelatoriaMixin,
-    SearchBase,
-)
+from ...schemas import DataPublicacaoMixin, OutputCJSGBase, OutputDataPublicacaoMixin, OutputRelatoriaMixin, SearchBase
 
 
-class InputCJSGTJMT(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
+class InputCJSGTJMT(SearchBase, DataPublicacaoMixin):
     """Entradas aceitas por ``cjsg`` e ``cjsg_download`` do TJMT.
 
     Endpoint REST JSON de produção. ``pesquisa`` aceita os aliases
     deprecados ``query`` / ``termo`` via
     :func:`juscraper.utils.params.normalize_pesquisa`, que roda *antes*
-    deste modelo. Datas aceitam os aliases ``data_inicio``/``data_fim``
-    via :func:`juscraper.utils.params.normalize_datas`.
+    deste modelo.
 
-    ``data_julgamento_*`` permanece na interface por compatibilidade, mas o
-    backend atual filtra por publicação; o downloader rejeita esse filtro
-    explicitamente. ``data_publicacao_*`` é o intervalo suportado nesta etapa.
+    A API filtra datas só por publicação (``periodoDataDe``/``periodoDataAte``),
+    e o fim do intervalo é inclusivo. Ela não filtra por data de julgamento nem
+    por classe, então o modelo não declara ``data_julgamento_*`` nem
+    ``classe``: passá-los levanta ``TypeError`` por ``extra="forbid"``, antes de
+    qualquer requisição. Os aliases genéricos ``data_inicio``/``data_fim``
+    apontam para ``data_julgamento_*`` em
+    :func:`juscraper.utils.params.normalize_datas` e por isso também terminam
+    em ``TypeError``, depois do ``DeprecationWarning`` do alias.
+
+    ``relator`` e ``orgao_julgador`` recebem o nome, não o identificador
+    numérico; o downloader tira acentos, junta espaços e passa a maiúsculas,
+    e a API só casa o nome exato.
 
     ``BACKEND_DATE_FORMAT="%Y-%m-%d"`` (ISO) — o Hellsgate aceita datas em
     ``YYYY-MM-DD``, entao :func:`apply_input_pipeline_search` coage as
@@ -44,7 +45,6 @@ class InputCJSGTJMT(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     tipo_consulta: str = "Acordao"
     relator: str | None = None
     orgao_julgador: str | None = None
-    classe: str | None = None
     tipo_processo: str | None = None
     thesaurus: bool = False
     tamanho_pagina: int = Field(default=10, ge=1)

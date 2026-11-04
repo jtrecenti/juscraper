@@ -217,26 +217,6 @@ def _validate_response(data: object, tipo_consulta: str) -> tuple[dict, int]:
     return data, count
 
 
-def _reject_unsupported_filters(
-    data_julgamento_inicio: str | None,
-    data_julgamento_fim: str | None,
-    classe: str | None,
-) -> None:
-    """Rejeita filtros ainda não implementados pela API nova."""
-    filters = {
-        "data_julgamento_inicio": data_julgamento_inicio,
-        "data_julgamento_fim": data_julgamento_fim,
-        "classe": classe,
-    }
-    provided = [name for name, value in filters.items() if value not in (None, "")]
-    if provided:
-        raise NotImplementedError(
-            "Filtros do TJMT ainda não implementados nesta etapa: "
-            + ", ".join(provided)
-            + "."
-        )
-
-
 def _normalize_text_filter(value: str | int | None, name: str) -> str | None:
     """Normaliza nome textual de relator ou órgão julgador."""
     if value is None or value == "":
@@ -328,13 +308,10 @@ def cjsg_download(
     pesquisa: str,
     paginas=None,
     tipo_consulta: str = "Acordao",
-    data_julgamento_inicio: str | None = None,
-    data_julgamento_fim: str | None = None,
     data_publicacao_inicio: str | None = None,
     data_publicacao_fim: str | None = None,
     relator: str | None = None,
     orgao_julgador: str | None = None,
-    classe: str | None = None,
     tipo_processo: str | None = None,
     thesaurus: bool = False,
     quantidade_por_pagina: int = DEFAULT_PAGE_SIZE,
@@ -348,13 +325,10 @@ def cjsg_download(
     pesquisa: Termo de pesquisa.
     paginas: Páginas a baixar, baseadas em 1. ``None`` baixa todas.
     tipo_consulta: ``"Acordao"`` ou ``"DecisaoMonocratica"``.
-    data_julgamento_inicio: Data inicial (``yyyy-mm-dd`` ou ``dd/mm/yyyy``).
-    data_julgamento_fim: Data final (``yyyy-mm-dd`` ou ``dd/mm/yyyy``).
     data_publicacao_inicio: Data inicial de publicação.
     data_publicacao_fim: Data final inclusiva de publicação.
     relator: Filtro pelo nome do relator.
     orgao_julgador: Filtro pela câmara julgadora.
-    classe: Filtro pela classe processual.
     tipo_processo: ``"Cível"`` ou ``"Criminal"``.
     thesaurus: Define se a pesquisa deve usar sinônimos.
     quantidade_por_pagina: Itens por página (padrão 10).
@@ -371,11 +345,6 @@ def cjsg_download(
     Lista de dicionários JSON brutos, um por página.
     """
     paginas_list = _validate_download_inputs(quantidade_por_pagina, paginas, tipo_consulta)
-    _reject_unsupported_filters(
-        data_julgamento_inicio,
-        data_julgamento_fim,
-        classe,
-    )
     data_publicacao_inicio = _to_tjmt_date(data_publicacao_inicio)
     data_publicacao_fim = _to_end_of_day(data_publicacao_fim)
     relator = _normalize_text_filter(relator, "relator")

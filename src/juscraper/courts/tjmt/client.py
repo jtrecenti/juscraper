@@ -35,12 +35,9 @@ class TJMTScraper(HTTPScraper):
         tipo_consulta: str = "Acordao",
         relator: str | None = None,
         orgao_julgador: str | None = None,
-        classe: str | None = None,
         tipo_processo: str | None = None,
         thesaurus: bool = False,
         tamanho_pagina: int = 10,
-        data_julgamento_inicio: str | None = None,
-        data_julgamento_fim: str | None = None,
         data_publicacao_inicio: str | None = None,
         data_publicacao_fim: str | None = None,
         **kwargs,
@@ -56,19 +53,16 @@ class TJMTScraper(HTTPScraper):
             tipo_consulta: ``"Acordao"`` ou ``"DecisaoMonocratica"``.
             relator: Filtro pelo nome do relator.
             orgao_julgador: Filtro pela câmara julgadora.
-            classe: Filtro pela classe processual.
             tipo_processo: ``"Civel"`` ou ``"Criminal"``.
             thesaurus: Define se a pesquisa deve usar sinônimos.
             tamanho_pagina: Itens por página (padrão 10). Aceita
                 ``quantidade_por_pagina`` como alias deprecado.
-            data_julgamento_inicio: Data inicial do filtro (``yyyy-mm-dd``).
-            data_julgamento_fim: Data final do filtro (``yyyy-mm-dd``).
             data_publicacao_inicio: Data inicial de publicação.
             data_publicacao_fim: Data final inclusiva de publicação.
 
         O backend atual aplica ``periodoDataDe/Ate`` à data de publicação.
-        Filtros por data de julgamento continuam indisponíveis e geram
-        ``NotImplementedError``.
+        ``data_julgamento_*`` e ``classe`` não existem na API e levantam
+        ``TypeError``.
         """
         tamanho_pagina = resolve_deprecated_alias(
             kwargs, "quantidade_por_pagina", "tamanho_pagina", tamanho_pagina, sentinel=10
@@ -80,14 +74,11 @@ class TJMTScraper(HTTPScraper):
             paginas=paginas,
             kwargs=kwargs,
             consume_pesquisa_aliases=True,
-            data_julgamento_inicio=data_julgamento_inicio,
-            data_julgamento_fim=data_julgamento_fim,
             data_publicacao_inicio=data_publicacao_inicio,
             data_publicacao_fim=data_publicacao_fim,
             tipo_consulta=tipo_consulta,
             relator=relator,
             orgao_julgador=orgao_julgador,
-            classe=classe,
             tipo_processo=tipo_processo,
             thesaurus=thesaurus,
             tamanho_pagina=tamanho_pagina,
@@ -96,13 +87,10 @@ class TJMTScraper(HTTPScraper):
             pesquisa=inp.pesquisa,
             paginas=inp.paginas,
             tipo_consulta=inp.tipo_consulta,
-            data_julgamento_inicio=inp.data_julgamento_inicio,
-            data_julgamento_fim=inp.data_julgamento_fim,
             data_publicacao_inicio=inp.data_publicacao_inicio,
             data_publicacao_fim=inp.data_publicacao_fim,
             relator=inp.relator,
             orgao_julgador=inp.orgao_julgador,
-            classe=inp.classe,
             tipo_processo=inp.tipo_processo,
             thesaurus=inp.thesaurus,
             quantidade_por_pagina=inp.tamanho_pagina,
@@ -129,12 +117,9 @@ class TJMTScraper(HTTPScraper):
         tipo_consulta: str = "Acordao",
         relator: str | None = None,
         orgao_julgador: str | None = None,
-        classe: str | None = None,
         tipo_processo: str | None = None,
         thesaurus: bool = False,
         tamanho_pagina: int = 10,
-        data_julgamento_inicio: str | None = None,
-        data_julgamento_fim: str | None = None,
         data_publicacao_inicio: str | None = None,
         data_publicacao_fim: str | None = None,
         **kwargs,
@@ -152,12 +137,9 @@ class TJMTScraper(HTTPScraper):
             tipo_consulta=tipo_consulta,
             relator=relator,
             orgao_julgador=orgao_julgador,
-            classe=classe,
             tipo_processo=tipo_processo,
             thesaurus=thesaurus,
             tamanho_pagina=tamanho_pagina,
-            data_julgamento_inicio=data_julgamento_inicio,
-            data_julgamento_fim=data_julgamento_fim,
             data_publicacao_inicio=data_publicacao_inicio,
             data_publicacao_fim=data_publicacao_fim,
             **kwargs,

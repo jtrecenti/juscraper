@@ -265,25 +265,6 @@ class _NoNetwork:
         raise AssertionError("não deveria haver requisição de rede")
 
 
-@pytest.mark.parametrize(
-    "filter_name",
-    [
-        "data_julgamento_inicio",
-        "data_julgamento_fim",
-        "classe",
-    ],
-)
-def test_rejects_unimplemented_filters_before_network(filter_name):
-    with pytest.raises(NotImplementedError, match=filter_name):
-        cast(Any, cjsg_download)(
-            "dano moral",
-            paginas=range(1, 2),
-            request_fn=_NoNetwork(),
-            session=requests.Session(),
-            **{filter_name: "valor"},
-        )
-
-
 def test_builds_normalized_filters_and_inclusive_publication_interval(mocker):
     mocker.patch("time.sleep")
     request = _RequestRecorder([_page([], acordaos=0)])
@@ -449,11 +430,8 @@ def test_accepts_empty_filter_values():
     pages = cjsg_download(
         "dano moral",
         paginas=range(1, 2),
-        data_julgamento_inicio="",
-        data_julgamento_fim="",
         relator="",
         orgao_julgador="",
-        classe="",
         tipo_processo="",
         request_fn=request,
         session=requests.Session(),
