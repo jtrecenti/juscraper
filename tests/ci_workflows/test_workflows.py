@@ -8,7 +8,7 @@ RAIZ = Path(__file__).resolve().parents[2]
 WORKFLOWS = sorted((RAIZ / ".github/workflows").glob("*.yml"))
 # Workflows cujo resultado barra o PR; o de integração tolera falha de
 # tribunal de propósito e fica fora da regra de não silenciar.
-BLOQUEANTES = ("lint.yml", "quality.yml", "tests.yml")
+BLOQUEANTES = ("changelog.yml", "lint.yml", "quality.yml", "tests.yml")
 BASE_DO_EVENTO = (
     "${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before }}"
 )
@@ -106,3 +106,15 @@ def test_dependencias_adicionais_dos_hooks_tem_versao_fixa():
     assert listas
     soltas = [item.strip() for lista in listas for item in lista.split(",") if "==" not in item]
     assert soltas == []
+
+
+def test_changelog_reprova_codigo_sem_entrada_e_aceita_a_etiqueta():
+    changelog = linhas("changelog.yml")
+    assert "types: [opened, synchronize, reopened, labeled, unlabeled]" in changelog
+    assert "DISPENSADO: ${{ contains(github.event.pull_request.labels.*.name, 'sem-changelog') }}" in changelog
+    assert 'arquivos="$(git diff --name-only HEAD^1 HEAD)"' in changelog
+    assert "if ! grep -q '^src/juscraper/' <<< \"$arquivos\"; then" in changelog
+    assert "elif grep -qx 'CHANGELOG.md' <<< \"$arquivos\"; then" in changelog
+    assert "exit 1" in changelog
+    # O escape documentado é o mesmo que o workflow lê.
+    assert "etiqueta `sem-changelog`" in (RAIZ / "CLAUDE.md").read_text(encoding="utf-8")

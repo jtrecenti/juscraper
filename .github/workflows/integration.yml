@@ -15,14 +15,25 @@ on:
         description: "Reescrever a issue de acompanhamento. Só vale com tribunal vazio."
         type: boolean
         default: false
-  # Autoteste: roda um tribunal só quando o próprio workflow ou o script do
-  # relatório mudam, e nunca toca a issue. `schedule` e `workflow_dispatch` só
-  # existem depois do merge, então este é o único jeito de exercitar uma
-  # mudança no workflow antes dela entrar na main.
+  # Em PR, roda os tribunais cujo diretório o PR tocou (ver `alvo-pr` em
+  # scripts/integration_report.py) e nunca toca a issue. Um PR que muda só o
+  # workflow ou o script roda o autoteste com um tribunal: `schedule` e
+  # `workflow_dispatch` só existem depois do merge, então este é o único jeito
+  # de exercitar uma mudança no workflow antes dela entrar na main.
   pull_request:
     paths:
       - .github/workflows/integration.yml
       - scripts/integration_report.py
+      - src/juscraper/courts/**
+      - src/juscraper/aggregators/**
+      - tests/**
+      - docs/notebooks/**
+
+# Em PR, um push novo cancela a execução anterior do mesmo PR. Fora de PR o
+# grupo é a própria execução, então nada é cancelado.
+concurrency:
+  group: integracao-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -31,31 +42,36 @@ env:
   # Todo comando uv do workflow usa o uv.lock como está; sem isto, um uv run
   # refaz a resolução quando o pyproject.toml muda sem o lock e instala fora dele.
   UV_FROZEN: "1"
-  # O autoteste usa o TJMG porque ele exercita a instalação mais pesada: o
-  # extra `tjmg` traz o solver de captcha e o torch.
-  TRIBUNAL: ${{ github.event_name == 'pull_request' && 'tjmg' || inputs.tribunal }}
   # A issue só é reescrita com o retrato inteiro e com o código da main. Uma
   # execução de um tribunal só faria todas as outras falhas "saírem da lista".
   # Tribunais e agregadores que dão problema só no runner do GitHub e por isso
-  # ficam fora da execução completa: medidos em 14/10/2026, falharam no runner
+  # ficam fora da execução completa e da execução de PR: medidos em 14/10/2026, falharam no runner
   # (conexão sem resposta, leitura sem resposta nos testes que paginam, página
   # de desafio no lugar do JSON ou HTTP 403) e passaram, ou falharam por outro
   # motivo, a partir de IP residencial no Brasil. No CI eles mostrariam toda
   # semana o problema do runner, e não a quebra que a issue existe para pegar.
   # Rodam localmente, ou num disparo manual com `tribunal`, que ignora a lista.
+  # Um PR que toca um deles recebe um aviso em vez de execução.
   FORA_DO_CI: "falcao tjac tjam tjes tjms tjpb tjpi tjrj tjrn tjro tjrs"
   ATUALIZAR_ISSUE: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.atualizar_issue && inputs.tribunal == '' && github.ref == 'refs/heads/main') }}
 
 jobs:
   calendario:
-    name: Calendário
+    name: Calendário e alvo
     runs-on: ubuntu-latest
     outputs:
-      rodar: ${{ steps.decidir.outputs.rodar }}
+      # PR que não toca tribunal nenhum, ou só os de FORA_DO_CI, não roda.
+      rodar: ${{ steps.decidir.outputs.rodar == 'true' && (github.event_name != 'pull_request' || steps.pr.outputs.tribunais != '') }}
       data: ${{ steps.decidir.outputs.data }}
+      # Lista de tribunais separados por espaço; vazia na execução completa.
+      alvo: ${{ github.event_name == 'pull_request' && steps.pr.outputs.tribunais || inputs.tribunal }}
+      fora: ${{ github.event_name == 'pull_request' && steps.pr.outputs.fora || '' }}
     steps:
       - uses: actions/checkout@v7
         with:
+          # Em PR o checkout é o commit de merge com a base; o primeiro pai é a
+          # ponta da base, e o diff contra ele é exatamente o que o PR muda.
+          fetch-depth: 2
           persist-credentials: false
       - name: Decidir se a execução agendada cai no recesso forense
         id: decidir
@@ -67,6 +83,17 @@ jobs:
           data="$(TZ=America/Sao_Paulo date +%F)"
           echo "data=$data" >> "$GITHUB_OUTPUT"
           python3 scripts/integration_report.py calendario --data "$data" --evento "$GITHUB_EVENT_NAME" | tee -a "$GITHUB_OUTPUT"
+      - name: Listar os tribunais que o PR toca
+        id: pr
+        if: github.event_name == 'pull_request'
+        run: |
+          git diff --name-only HEAD^1 HEAD > arquivos.txt
+          saida="$(python3 scripts/integration_report.py alvo-pr --arquivos arquivos.txt --fora "$FORA_DO_CI")"
+          echo "$saida" | tee -a "$GITHUB_OUTPUT"
+          fora="$(sed -n 's/^fora=//p' <<< "$saida")"
+          if [ -n "$fora" ]; then
+            echo "::warning title=Fora do CI::O PR toca $fora, que não roda no runner do GitHub; rodar localmente: uv run pytest tests/<tribunal> -m 'integration and not anti_bot' e uv run pytest --nbmake docs/notebooks/<tribunal>.ipynb"
+          fi
 
   testes:
     name: Tribunais ao vivo
@@ -77,6 +104,7 @@ jobs:
     env:
       # Notebooks que só rodam com credencial de gov.br.
       NOTEBOOKS_COM_CREDENCIAL: "jusbr pdpj"
+      TRIBUNAL: ${{ needs.calendario.outputs.alvo }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -84,23 +112,30 @@ jobs:
       - name: Resolver o alvo
         id: alvo
         run: |
+          release=""
           if [ -z "$TRIBUNAL" ]; then
             testes="tests"
             notebooks="docs/notebooks"
           else
-            # O valor vem de quem dispara o workflow e vira caminho: só passa
-            # nome simples de diretório.
-            if ! [[ "$TRIBUNAL" =~ ^[a-z0-9_]+$ ]] || [ ! -d "tests/$TRIBUNAL" ]; then
-              # Sem ecoar o valor: uma quebra de linha nele viraria comando
-              # de workflow na linha seguinte.
-              echo "::error::tribunal inválido ou sem diretório em tests/; use o nome de um diretório de tests/"
-              exit 1
-            fi
-            testes="tests/$TRIBUNAL"
-            notebooks="docs/notebooks/$TRIBUNAL.ipynb"
-            if [ ! -f "$notebooks" ] || [[ " $NOTEBOOKS_COM_CREDENCIAL " == *" $TRIBUNAL "* ]]; then
-              notebooks=""
-            fi
+            testes=""
+            notebooks=""
+            # Execução dirigida (PR ou disparo com `tribunal`): um ou mais
+            # nomes separados por espaço. O valor vem de quem dispara o
+            # workflow ou dos caminhos do PR e vira caminho: só passa nome
+            # simples de diretório.
+            for nome in $TRIBUNAL; do
+              if ! [[ "$nome" =~ ^[a-z0-9_]+$ ]] || [ ! -d "tests/$nome" ]; then
+                # Sem ecoar o valor: uma quebra de linha nele viraria comando
+                # de workflow na linha seguinte.
+                echo "::error::tribunal inválido ou sem diretório em tests/; use o nome de um diretório de tests/"
+                exit 1
+              fi
+              testes="$testes tests/$nome"
+              if [ -f "docs/notebooks/$nome.ipynb" ] && [[ " $NOTEBOOKS_COM_CREDENCIAL " != *" $nome "* ]]; then
+                notebooks="$notebooks docs/notebooks/$nome.ipynb"
+              fi
+              release="${release:+$release or }$nome"
+            done
           fi
           ignorar_testes=""
           ignorar_notebooks=""
@@ -118,6 +153,7 @@ jobs:
             echo "notebooks=$notebooks"
             echo "ignorar_testes=$ignorar_testes"
             echo "ignorar_notebooks=$ignorar_notebooks"
+            echo "release=$release"
           } >> "$GITHUB_OUTPUT"
       - uses: astral-sh/setup-uv@v10.3.0
         with:
@@ -127,10 +163,13 @@ jobs:
         run: |
           uv sync --frozen --extra dev --extra docs --extra tjmg --extra waf
           uv run playwright install --with-deps chromium
-      # Nos dois passos abaixo, o código de saída 1 do pytest (teste falhou)
-      # não derruba o job: tribunal fora do ar é assunto da issue. De 2 em
-      # diante quem quebrou foi a suíte ou o workflow, e aí o job cai. O 5
-      # (nada coletado) pega alvo errado.
+      # Nos passos abaixo, na execução completa, o código de saída 1 do pytest
+      # (teste falhou) não derruba o job: tribunal fora do ar é assunto da
+      # issue. Na execução dirigida derruba, porque quem abre o PR de um
+      # tribunal precisa ver que ele falha agora. De 2 em diante quem quebrou
+      # foi a suíte ou o workflow, e o job cai sempre. O 5 (nada coletado) pega
+      # alvo errado na execução completa; na dirigida é tribunal sem teste de
+      # integração, como o Datajud.
       - name: Rodar os testes de integração
         timeout-minutes: 90
         env:
@@ -139,12 +178,14 @@ jobs:
         run: |
           codigo=0
           # `release` é a bateria cara, para antes de versão maior (ver
-          # tests/test_release_date_filter.py).
-          # shellcheck disable=SC2086  # IGNORAR é uma lista de opções montada acima
-          uv run pytest "$ALVO" $IGNORAR -m "integration and not anti_bot and not release" \
+          # tests/test_release_date_filter.py); na execução dirigida ela tem
+          # passo próprio, só com os tribunais do alvo.
+          # shellcheck disable=SC2086  # ALVO e IGNORAR são listas montadas acima
+          uv run pytest $ALVO $IGNORAR -m "integration and not anti_bot and not release" \
             --junitxml=junit-integracao.xml || codigo=$?
           echo "pytest saiu com código $codigo"
-          if [ "$codigo" -gt 1 ]; then exit "$codigo"; fi
+          if [ -n "$TRIBUNAL" ] && [ "$codigo" -eq 5 ]; then exit 0; fi
+          if [ -n "$TRIBUNAL" ] || [ "$codigo" -gt 1 ]; then exit "$codigo"; fi
       - name: Rodar os notebooks
         if: ${{ !cancelled() && steps.alvo.outputs.notebooks != '' }}
         timeout-minutes: 60
@@ -153,10 +194,23 @@ jobs:
           IGNORAR: ${{ steps.alvo.outputs.ignorar_notebooks }}
         run: |
           codigo=0
-          # shellcheck disable=SC2086  # IGNORAR é uma lista de opções montada acima
-          uv run pytest --nbmake "$ALVO" $IGNORAR --nbmake-timeout=300 -n auto --junitxml=junit-notebooks.xml || codigo=$?
+          # shellcheck disable=SC2086  # ALVO e IGNORAR são listas montadas acima
+          uv run pytest --nbmake $ALVO $IGNORAR --nbmake-timeout=300 -n auto --junitxml=junit-notebooks.xml || codigo=$?
           echo "pytest saiu com código $codigo"
-          if [ "$codigo" -gt 1 ]; then exit "$codigo"; fi
+          if [ -n "$TRIBUNAL" ] || [ "$codigo" -gt 1 ]; then exit "$codigo"; fi
+      - name: Rodar o teste release dos tribunais do alvo
+        if: ${{ !cancelled() && steps.alvo.outputs.release != '' }}
+        timeout-minutes: 30
+        env:
+          SELECAO: ${{ steps.alvo.outputs.release }}
+        run: |
+          codigo=0
+          uv run pytest tests/test_release_date_filter.py -m "release and not anti_bot" -k "$SELECAO" \
+            --junitxml=junit-release.xml || codigo=$?
+          echo "pytest saiu com código $codigo"
+          # 5: nenhum tribunal do alvo está na bateria release (agregadores, TRFs).
+          if [ "$codigo" -eq 5 ]; then exit 0; fi
+          exit "$codigo"
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
@@ -187,6 +241,8 @@ jobs:
       # na seguinte, com duas notificações falsas. Nesse caso a issue fica como
       # está e o próprio workflow vermelho é o aviso.
       TESTES_OK: ${{ needs.testes.result == 'success' }}
+      TRIBUNAL: ${{ needs.calendario.outputs.alvo }}
+      FORA_DO_PR: ${{ needs.calendario.outputs.fora }}
       LABEL: tribunal-quebrado
       TITULO: "Integração semanal: falhas por tribunal"
       EXECUCAO: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -222,11 +278,17 @@ jobs:
           if [ -z "$TRIBUNAL" ] || [ -f junit-notebooks.xml ]; then
             suites+=(--suite "notebooks=junit-notebooks.xml")
           fi
+          if [ -f junit-release.xml ]; then
+            suites+=(--suite "release=junit-release.xml")
+          fi
           # A issue diz quem ficou fora da execução completa, para que a falta
           # de falhas de um tribunal da lista não se leia como tribunal em dia.
+          # No PR, o resumo diz quais tribunais tocados ficaram fora.
           fora=()
           if [ -z "$TRIBUNAL" ]; then
             fora=(--fora "$FORA_DO_CI")
+          elif [ -n "$FORA_DO_PR" ]; then
+            fora=(--fora "$FORA_DO_PR")
           fi
           python3 scripts/integration_report.py relatorio "${suites[@]}" "${fora[@]}" \
             --anterior anterior.md --corpo corpo.md --comentario comentario.md \
