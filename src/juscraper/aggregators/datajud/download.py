@@ -255,7 +255,9 @@ def call_datajud_api(
             :data:`STATUS_REPETIVEIS`, com espera pelo ``Retry-After``
             numérico ou pelo backoff exponencial do perfil.
         query_payload: Body Elasticsearch.
-        verbose: Se ``True``, registra URL, payload e status no log.
+        verbose: Se ``True``, registra URL, payload e status no log. O corpo
+            de toda resposta com status de erro vai ao log em ``WARNING``,
+            com ou sem ``verbose``.
 
     Returns:
         O JSON da resposta.
@@ -288,10 +290,19 @@ def call_datajud_api(
         logger.debug("Headers: %s", redact_headers(headers))
         logger.debug("Payload: %s", query_payload)
 
-    def _do_post() -> dict[str, Any]:
-        response = requisitar("POST", api_url, json=query_payload, headers=headers)
+    def _registrar(response: requests.Response) -> None:
+        # Roda em toda resposta, inclusive nas que o retry repete ou converte em
+        # exceção: o corpo de erro do Elasticsearch (``parsing_exception``,
+        # ``es_rejected_execution_exception``) só aparece aqui.
         if verbose:
             logger.debug("Response Status Code: %s", response.status_code)
+        if not response.ok:
+            logger.warning(
+                "DataJud: HTTP %s em %s: %s", response.status_code, api_url, response.text[:1000],
+            )
+
+    def _do_post() -> dict[str, Any]:
+        response = requisitar("POST", api_url, json=query_payload, headers=headers, on_response=_registrar)
         data: dict[str, Any] = response.json()
         return data
 

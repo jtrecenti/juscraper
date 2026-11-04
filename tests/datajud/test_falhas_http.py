@@ -156,6 +156,26 @@ def test_fallback_de_504_tambem_repete_429():
 
 
 @responses.activate
+def test_corpo_de_cada_resposta_de_erro_vai_ao_log(esperas, caplog):
+    """O corpo do Elasticsearch diz o motivo (fila cheia, query malformada); sem ele, só sobra o status."""
+    responses.add(responses.POST, URL_TJAC, json=CORPO_429, status=429)
+    responses.add(responses.POST, URL_TJAC, json={"error": {"root_cause": [{"type": "parsing_exception"}]}}, status=400)
+
+    with caplog.at_level(logging.WARNING, logger="juscraper.aggregators.datajud.download"), pytest.raises(
+        requests.HTTPError
+    ):
+        _buscar()
+
+    registros = [r.getMessage() for r in caplog.records if r.name == "juscraper.aggregators.datajud.download"]
+    assert len(registros) == 2
+    assert "HTTP 429" in registros[0]
+    assert "es_rejected_execution_exception" in registros[0]
+    assert "HTTP 400" in registros[1]
+    assert "parsing_exception" in registros[1]
+    assert esperas == [2.0]
+
+
+@responses.activate
 @pytest.mark.usefixtures("esperas")
 def test_erro_de_conexao_sobe():
     responses.add(responses.POST, URL_TJAC, body=requests.ConnectionError("recusada"))
@@ -243,7 +263,7 @@ def test_status_nao_repetivel_chega_ao_erro_parcial_com_a_resposta():
     assert isinstance(causa, requests.HTTPError)
     assert causa.response.status_code == 401
     assert erro.__cause__ is causa
-    assert "Causa: HTTP 401." in str(erro)
+    assert str(erro).endswith("Causa: HTTP 401.")
 
 
 @responses.activate
@@ -255,7 +275,8 @@ def test_timeout_chega_ao_erro_parcial_como_causa():
         _scraper().listar_processos(tribunal="TJAC", tamanho_pagina=100)
 
     assert isinstance(exc_info.value.__cause__, requests.ReadTimeout)
-    assert "Causa: timeout." in str(exc_info.value)
+    assert "Causa: timeout. Reduza o recorte" in str(exc_info.value)
+    assert "aumente o timeout com politica=" in str(exc_info.value)
 
 
 @responses.activate
