@@ -584,7 +584,7 @@ def test_falha_na_primeira_pagina_lanca_erro_parcial_com_diagnostico(monkeypatch
         jus.scraper("datajud", verbose=0).listar_processos(tribunal="TJSP")
 
     mensagem = str(exc_info.value)
-    assert "página 1. Resultados parciais retornados: nenhum registro recebido" in mensagem
+    assert "página 1. Resultados parciais em erro.resultado: nenhum registro recebido" in mensagem
     assert "data_ajuizamento_inicio" in mensagem
     assert "politica={'busca': {'timeout'" in mensagem
     assert exc_info.value.resultado.empty
@@ -602,7 +602,7 @@ def test_falha_no_meio_lanca_erro_parcial_preservando_contagem(monkeypatch):
         )
 
     mensagem = str(exc_info.value)
-    assert "página 3. Resultados parciais retornados: 20 registro(s) recebido(s) de 25" in mensagem
+    assert "página 3. Resultados parciais em erro.resultado: 20 registro(s) recebido(s) de 25" in mensagem
     assert len(exc_info.value.resultado) == 20
     assert len(exc_info.value.falhas) == 1
     assert isinstance(exc_info.value.falhas[0][2], Exception)

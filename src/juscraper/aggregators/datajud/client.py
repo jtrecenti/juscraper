@@ -163,7 +163,10 @@ def _mensagem_falha_parcial(
     recebidos: int,
     total_info: dict[str, Any] | None,
 ) -> str:
-    """Aviso da paginação interrompida, com quanto veio e quanto faltou.
+    """Diagnóstico da paginação interrompida, com quanto veio e quanto faltou.
+
+    Vira a mensagem do ``ColetaParcialError``; os registros recebidos ficam
+    em ``erro.resultado``.
 
     ``total_info`` é o ``hits.total`` da página 1, que a consulta já traz
     (``track_total_hits``); é ``None`` quando a falha foi na própria página 1.
@@ -173,12 +176,12 @@ def _mensagem_falha_parcial(
     inicio = f"DataJud: falha ao consultar alias {alias!r} na página {pagina}."
     if total_info is None:
         return (
-            f"{inicio} Resultados parciais retornados: nenhum registro recebido. "
+            f"{inicio} Resultados parciais em erro.resultado: nenhum registro recebido. "
             "Se a falha foi timeout, reduza o recorte (por exemplo, com "
             "data_ajuizamento_inicio/_fim) ou aumente o timeout com "
             "politica={'busca': {'timeout': ...}}."
         )
-    recebidos_txt = f"{inicio} Resultados parciais retornados: {recebidos} registro(s) recebido(s)"
+    recebidos_txt = f"{inicio} Resultados parciais em erro.resultado: {recebidos} registro(s) recebido(s)"
     total = total_info.get("value")
     if not isinstance(total, int):
         return f"{recebidos_txt}; a consulta não informou o total encontrado."
@@ -882,7 +885,7 @@ class DatajudScraper(HTTPScraper):
         tamanho_pagina = inp.tamanho_pagina
         search_after: list[Any] | None = None
         last_page = None if paginas is None else paginas[-1]
-        # Alimentam o aviso de falha: quanto já veio das páginas pedidas e
+        # Alimentam o diagnóstico do ColetaParcialError: quanto já veio das páginas pedidas e
         # quanto a consulta encontrou (``hits.total`` da página 1).
         recebidos = 0
         percorridos = 0

@@ -232,6 +232,8 @@ except ColetaParcialError as erro:
     print(erro.falhas)
 ```
 
+DataJud's `listar_processos` follows the same rule. When a page fails (HTTP error, malformed response, or a page that ends before the exact `hits.total`), the remaining aliases are still queried and `ColetaParcialError` is raised at the end. `.resultado` holds the records received up to the failure, and each item in `.falhas` is `(None, None, exception)`; the alias, the page, and the total found by the query are in the error message.
+
 Combining `auto_chunk=True` with `paginas` is rejected when
 the interval is long enough to actually trigger chunking: the multi-window
 semantics for `paginas` are ambiguous (each window? aggregated budget?)

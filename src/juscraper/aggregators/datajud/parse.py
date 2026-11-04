@@ -30,6 +30,7 @@ def parse_datajud_api_response(
 
     Raises:
         TypeError: Quando ``hits.hits`` não for uma lista.
+        AttributeError: Quando um elemento de ``hits.hits`` não for um objeto.
         ValueError: Quando um hit não contiver ``_source``.
     """
     if api_response_json is None:
