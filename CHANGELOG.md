@@ -7,12 +7,23 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- **BREAKING:** TJMT `cjsg` e `cjsg_download`: a interface acompanha a API nova do portal de jurisprudência, sem ciclo de deprecação. O portal trocou a API e a antiga deixou de responder JSON (#434), então não há como manter o comportamento anterior; as mudanças abaixo são as que a API nova impõe.
+  - `data_publicacao_inicio`/`data_publicacao_fim` passa a ser o único filtro de data. O fim é inclusivo: `data_publicacao_fim="2025-03-10"` traz o que foi publicado em 10/03 inteiro e nada de 11/03.
+  - `data_julgamento_inicio`/`data_julgamento_fim` e `classe`, que a API não filtra, levantam `TypeError` antes de qualquer requisição. Os aliases `data_inicio`/`data_fim`, que apontam para a data de julgamento, emitem o `DeprecationWarning` do alias e levantam o mesmo `TypeError`.
+  - `relator` e `orgao_julgador` recebem o nome, não mais o identificador numérico, que levanta erro antes da rede. O nome é normalizado sem acento, com espaços simples e em maiúsculas (`"João da Silva"` vai como `"JOAO DA SILVA"`), e a API só casa o nome exato.
+  - `tipo_processo` aceita `"Civel"`, `"Cível"` ou `"Criminal"`.
+  - A API devolve no máximo os 10.000 primeiros resultados de uma consulta. Com `paginas=None`, o download para nesse teto e emite `UserWarning` com o total da consulta e quantos vieram, sugerindo restringir por data de publicação ou relator; `tamanho_pagina` acima de 10.000 e página explícita além do teto levantam `ValueError` antes da rede.
+  - Colunas: `classe` traz o nome da classe processual (`nomeClasse`, como `"APELAÇÃO CÍVEL"`). `sigla_classe_feito` deixa de trazer a sigla, que a API nova não expõe, e passa a trazer o nome da esfera processual (`nomeClasseEsferaProcessual`, como `"CÂMARAS ISOLADAS CÍVEIS DE DIREITO PRIVADO"`, ou `"NÃO INFORMADO"` em acórdãos antigos). `id` passa a ser o `idDocumento` da API.
+
 ### Added
 
 - TJSP: `cjpg_download`, `cpopg_download` e `cposg_download` aceitam o parâmetro opcional `diretorio` para definir o diretório de download por chamada.
 
 ### Fixed
 
+- TJMT `cjsg`: volta a funcionar na API atual do portal de jurisprudência. Toda busca falhava com `JSONDecodeError`, porque a API antiga deixou de responder JSON (#434). A URL da API e o token passam a ser lidos, a cada chamada, da configuração pública que o portal publica nos próprios scripts, e respostas de erro da API levantam `TJMTResponseError` em vez de virar busca vazia. A migração para a API nova é do PR #457, de vihumelo.
 - TJSP `cpopg` HTML valida `processo.codigo` antes da gravação, prevenindo path traversal e retries desnecessários para identificadores inválidos. Refs #402.
 
 ## [0.5.0] - 2026-10-21
