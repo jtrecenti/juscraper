@@ -7,6 +7,7 @@ import warnings
 from typing import Any
 
 import pytest
+import requests
 import responses
 
 import juscraper as jus
@@ -30,8 +31,16 @@ def _pagina(pagina: int, *, tamanho: int = 10, total: int = 25, relation: str = 
 
 
 def _instalar_paginas(monkeypatch, paginas: list[dict[str, Any] | None]) -> None:
+    """Faz ``call_datajud_api`` devolver as páginas em ordem; ``None`` é falha de conexão."""
     respostas = iter(paginas)
-    monkeypatch.setattr(datajud_client, "call_datajud_api", lambda **_: next(respostas))
+
+    def falso(**_: Any) -> dict[str, Any]:
+        resposta = next(respostas)
+        if resposta is None:
+            raise requests.ConnectionError("falha simulada")
+        return resposta
+
+    monkeypatch.setattr(datajud_client, "call_datajud_api", falso)
     monkeypatch.setattr(datajud_client.time, "sleep", lambda _: None)
 
 
@@ -480,7 +489,7 @@ def test_erro_parcial_informa_alias_pagina_total_e_causa():
 @pytest.mark.parametrize("politica, esperado", [(None, 60), ({"busca": {"timeout": 180}}, 180)])
 def test_timeout_do_perfil_chega_ao_listar_processos(mocker, politica, esperado):
     scraper = jus.scraper("datajud", verbose=0, politica=politica)
-    espiao = mocker.spy(scraper.session, "post")
+    espiao = mocker.spy(scraper.session, "request")
     responses.add(responses.POST, URL_TJSP, json=RESPOSTA_VAZIA)
 
     scraper.listar_processos(tribunal="TJSP")
@@ -492,7 +501,7 @@ def test_timeout_do_perfil_chega_ao_listar_processos(mocker, politica, esperado)
 @pytest.mark.parametrize("politica, esperado", [(None, 60), ({"busca": {"timeout": 180}}, 180)])
 def test_timeout_do_perfil_chega_ao_contar_processos(mocker, politica, esperado):
     scraper = jus.scraper("datajud", verbose=0, sleep_time=0.0, politica=politica)
-    espiao = mocker.spy(scraper.session, "post")
+    espiao = mocker.spy(scraper.session, "request")
     responses.add(responses.POST, URL_TJSP, json=RESPOSTA_VAZIA)
 
     scraper.contar_processos(tribunal="TJSP")
@@ -503,7 +512,7 @@ def test_timeout_do_perfil_chega_ao_contar_processos(mocker, politica, esperado)
 @responses.activate
 def test_timeout_do_perfil_vale_tambem_no_retry_com_size_reduzido(mocker):
     scraper = jus.scraper("datajud", verbose=0, politica={"busca": {"timeout": 180}})
-    espiao = mocker.spy(scraper.session, "post")
+    espiao = mocker.spy(scraper.session, "request")
     responses.add(responses.POST, URL_TJSP, status=504)
     responses.add(responses.POST, URL_TJSP, json=RESPOSTA_VAZIA)
 
@@ -516,17 +525,29 @@ def test_timeout_do_perfil_vale_tambem_no_retry_com_size_reduzido(mocker):
 @pytest.mark.parametrize(
     "ajuste",
     [
-        {"timeout": 90, "max_retries": 5},
-        # Inválidos para a ``RequestPolicy`` (TypeError e ValueError do core):
-        # o DataJud recusa antes, com a mesma explicação dos demais campos.
+        {"timeout": 90, "retry_on_timeout": True},
+        {"retry_on_connection_error": True},
+        # Inválido para a ``RequestPolicy`` (TypeError do core): o DataJud
+        # recusa antes, com a mesma explicação dos demais campos.
         {"retryable_statuses": 500},
-        {"max_retries": 0},
         {"campo_inexistente": 1},
     ],
 )
 def test_politica_com_campo_sem_efeito_no_datajud_levanta(ajuste):
-    with pytest.raises(ValueError, match=r"só aceita \['timeout'\]"):
+    with pytest.raises(ValueError, match=r"só aceita \['base_backoff', 'max_retries', 'timeout'\]"):
         jus.scraper("datajud", politica={"busca": ajuste})
+
+
+def test_politica_aceita_tentativas_e_backoff():
+    scraper = jus.scraper("datajud", politica={"busca": {"max_retries": 5, "base_backoff": 3.0}})
+    perfil = scraper._perfis_http["busca"]  # noqa: SLF001
+    assert (perfil.max_retries, perfil.base_backoff, perfil.timeout) == (5, 3.0, 60)
+    assert perfil.retryable_statuses == {429, 502, 503}
+
+
+def test_politica_com_max_retries_invalido_levanta_o_erro_do_core():
+    with pytest.raises(ValueError, match="max_retries deve ser >= 1"):
+        jus.scraper("datajud", politica={"busca": {"max_retries": 0}})
 
 
 @pytest.mark.parametrize(

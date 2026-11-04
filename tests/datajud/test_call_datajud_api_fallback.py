@@ -10,10 +10,11 @@ caller (``_listar_processos_por_alias``) leia o size efetivo na heuristica
 de "ultima pagina".
 
 Estes testes mockam a chamada HTTP para validar o contrato do retry sem
-depender da rede.
+depender da rede. Quando o fallback não resolve, a exceção original sobe.
 """
 from __future__ import annotations
 
+import functools
 import warnings
 
 import pytest
@@ -27,6 +28,12 @@ BASE = DatajudScraper.BASE_API_URL
 ALIAS = "api_publica_tjsp"
 URL = f"{BASE}/{ALIAS}/_search"
 SUCCESS_BODY = {"hits": {"total": {"value": 1, "relation": "eq"}, "hits": []}}
+
+
+def _requisitar():
+    """``_request_with_retry`` do scraper ligado ao perfil ``"busca"``, como no client."""
+    scraper = DatajudScraper(verbose=0)
+    return functools.partial(scraper._request_with_retry, perfil="busca")  # noqa: SLF001
 
 
 def _payload(size: int) -> dict:
@@ -53,7 +60,7 @@ def test_fallback_em_504_refaz_com_size_reduzido():
             base_url=BASE,
             alias=ALIAS,
             api_key="dummy",
-            session=requests.Session(),
+            requisitar=_requisitar(),
             query_payload=payload,
         )
 
@@ -76,7 +83,7 @@ def test_fallback_em_timeout_refaz_com_size_reduzido():
             base_url=BASE,
             alias=ALIAS,
             api_key="dummy",
-            session=requests.Session(),
+            requisitar=_requisitar(),
             query_payload=payload,
         )
 
@@ -85,43 +92,44 @@ def test_fallback_em_timeout_refaz_com_size_reduzido():
 
 
 @responses.activate
-def test_fallback_so_uma_vez_se_falhar_de_novo_retorna_none():
-    """Se o retry tambem cair em 504, segue o fluxo normal: ``None``."""
+def test_fallback_so_uma_vez_se_falhar_de_novo_levanta_o_504():
+    """Se o retry tambem cair em 504, o ``HTTPError`` dele sobe."""
     responses.add(responses.POST, URL, status=504)
     responses.add(responses.POST, URL, status=504)
 
     payload = _payload(size=5000)
-    with pytest.warns(UserWarning, match="504/timeout"):
-        result = call_datajud_api(
+    with pytest.warns(UserWarning, match="504/timeout"), pytest.raises(requests.HTTPError) as exc_info:
+        call_datajud_api(
             base_url=BASE,
             alias=ALIAS,
             api_key="dummy",
-            session=requests.Session(),
+            requisitar=_requisitar(),
             query_payload=payload,
         )
 
-    assert result is None
+    assert exc_info.value.response.status_code == 504
     assert len(responses.calls) == 2  # 1a tentativa + 1 retry, nao mais
 
 
 @responses.activate
 def test_sem_fallback_quando_size_ja_no_minimo():
     """Se ``size <= FALLBACK_MIN_SIZE``, nao faz retry — reduzir mais nao
-    ajuda. Cai direto no fluxo normal de erro (``None``, sem ``UserWarning``)."""
+    ajuda. O 504 sobe direto, sem ``UserWarning``."""
     responses.add(responses.POST, URL, status=504)
 
     payload = _payload(size=FALLBACK_MIN_SIZE)
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")
-        result = call_datajud_api(
-            base_url=BASE,
-            alias=ALIAS,
-            api_key="dummy",
-            session=requests.Session(),
-            query_payload=payload,
-        )
+        with pytest.raises(requests.HTTPError) as exc_info:
+            call_datajud_api(
+                base_url=BASE,
+                alias=ALIAS,
+                api_key="dummy",
+                requisitar=_requisitar(),
+                query_payload=payload,
+            )
 
-    assert result is None
+    assert exc_info.value.response.status_code == 504
     assert len(responses.calls) == 1  # Sem retry
     assert payload["size"] == FALLBACK_MIN_SIZE  # Nao mutado
     assert not [w for w in caught if "504/timeout" in str(w.message)]
@@ -130,21 +138,23 @@ def test_sem_fallback_quando_size_ja_no_minimo():
 @responses.activate
 def test_sem_fallback_em_outros_5xx():
     """``HTTP 500`` (erro genuino do servidor, nao gateway timeout) nao
-    aciona fallback — reduzir o ``size`` nao corrige bug do servidor."""
+    aciona fallback nem nova tentativa — reduzir o ``size`` nao corrige bug
+    do servidor."""
     responses.add(responses.POST, URL, status=500)
 
     payload = _payload(size=5000)
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")
-        result = call_datajud_api(
-            base_url=BASE,
-            alias=ALIAS,
-            api_key="dummy",
-            session=requests.Session(),
-            query_payload=payload,
-        )
+        with pytest.raises(requests.HTTPError) as exc_info:
+            call_datajud_api(
+                base_url=BASE,
+                alias=ALIAS,
+                api_key="dummy",
+                requisitar=_requisitar(),
+                query_payload=payload,
+            )
 
-    assert result is None
+    assert exc_info.value.response.status_code == 500
     assert len(responses.calls) == 1
     assert payload["size"] == 5000  # Nao mutado
     assert not [w for w in caught if "504/timeout" in str(w.message)]
