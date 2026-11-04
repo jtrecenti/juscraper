@@ -6,8 +6,6 @@ from typing import Any
 
 import pandas as pd
 
-from ...core.avisos import avisar
-
 logger = logging.getLogger(__name__)
 
 
@@ -16,58 +14,55 @@ def parse_datajud_api_response(
     mostrar_movs: bool = True
 ) -> pd.DataFrame:
     """
-    Parses the JSON response from the Datajud API into a pandas DataFrame.
+    Converte a resposta JSON do DataJud em um DataFrame.
+
+    Respostas malformadas geram exceção de parsing, em vez de serem tratadas
+    como buscas sem resultados.
 
     Args:
-        api_response_json (dict[str, Any] | None): The parsed JSON response from the API
-                                                       (output of call_datajud_api).
-        mostrar_movs (bool): If True, includes 'movimentacoes' in the DataFrame.
-                             Otherwise, they are excluded.
+        api_response_json (dict[str, Any] | None): Resposta JSON da API,
+            obtida por ``call_datajud_api``.
+        mostrar_movs (bool): Inclui movimentações no DataFrame quando verdadeiro.
 
     Returns:
-        pd.DataFrame: A DataFrame containing the process data. Returns an empty
-                      DataFrame if parsing fails or no data is found.
+        pd.DataFrame: Processos encontrados. Retorna um DataFrame vazio quando
+            a resposta é ``None`` ou ``hits.hits`` é uma lista vazia.
+
+    Raises:
+        TypeError: Quando ``hits.hits`` não for uma lista.
+        ValueError: Quando um hit não contiver ``_source``.
     """
     if api_response_json is None:
         logger.warning("Received None for API response, cannot parse.")
         return pd.DataFrame()
 
-    try:
-        hits = api_response_json.get("hits", {}).get("hits", [])
-        if not hits:
-            logger.info("No 'hits' found in API response.")
-            return pd.DataFrame()
-
-        processos = []
-        for hit in hits:
-            # _source contains the actual document data
-            processo_data = hit.get("_source")
-            if processo_data is None:
-                logger.warning(f"Hit found without '_source' field: {hit.get('_id', 'N/A')}")
-                continue
-
-            # Handle 'movimentacoes' based on mostrar_movs flag
-            if not mostrar_movs:
-                # Create a new dict excluding movimentacoes to avoid modifying original
-                processo_data_filtered = {
-                    key: value for key, value in processo_data.items()
-                    if key not in ["movimentacoes", "movimentos"]  # Check for both common keys
-                }
-                processos.append(processo_data_filtered)
-            else:
-                processos.append(processo_data)  # Include all fields
-
-        if not processos:
-            logger.info("No process data extracted from hits.")
-            return pd.DataFrame()
-
-        return pd.DataFrame(processos)
-
-    except Exception as e:
-        avisar(
-            f"DataJud: erro ao parsear resposta JSON: {e}. DataFrame vazio retornado.",
-            UserWarning,
-        )
-        logger.error("Error parsing Datajud API JSON response: %s", e)
-        logger.debug("Problematic JSON (or part of it): %s", str(api_response_json)[:500])
+    hits = api_response_json.get("hits", {}).get("hits")
+    if not isinstance(hits, list):
+        raise TypeError("Campo 'hits.hits' da resposta DataJud deve ser uma lista.")
+    if not hits:
+        logger.info("No 'hits' found in API response.")
         return pd.DataFrame()
+
+    processos = []
+    for hit in hits:
+        # _source contains the actual document data
+        processo_data = hit.get("_source")
+        if processo_data is None:
+            raise ValueError(f"Hit sem campo '_source': {hit.get('_id', 'N/A')}")
+
+        # Handle 'movimentacoes' based on mostrar_movs flag
+        if not mostrar_movs:
+            # Create a new dict excluding movimentacoes to avoid modifying original
+            processo_data_filtered = {
+                key: value for key, value in processo_data.items()
+                if key not in ["movimentacoes", "movimentos"]  # Check for both common keys
+            }
+            processos.append(processo_data_filtered)
+        else:
+            processos.append(processo_data)  # Include all fields
+
+    if not processos:
+        logger.info("No process data extracted from hits.")
+        return pd.DataFrame()
+
+    return pd.DataFrame(processos)
