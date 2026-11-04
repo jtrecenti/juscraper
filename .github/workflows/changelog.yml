@@ -31,7 +31,9 @@ jobs:
         env:
           DISPENSADO: ${{ contains(github.event.pull_request.labels.*.name, 'sem-changelog') }}
         run: |
-          arquivos="$(git diff --name-only HEAD^1 HEAD)"
+          # Sem --no-renames, mover um arquivo para fora de src/juscraper/
+          # aparece só no caminho novo, e a remoção passaria sem entrada.
+          arquivos="$(git diff --no-renames --name-only HEAD^1 HEAD)"
           if ! grep -q '^src/juscraper/' <<< "$arquivos"; then
             echo "O PR não muda src/juscraper/."
           elif grep -qx 'CHANGELOG.md' <<< "$arquivos"; then
