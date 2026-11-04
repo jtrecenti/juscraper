@@ -14,13 +14,11 @@ seção ``Warns`` e não há seção Google para aliases.
 
 import ast
 import unicodedata
-from pathlib import Path
 
 import griffe
 import pytest
 
-RAIZ_PACOTE = Path(__file__).resolve().parents[1] / "src" / "juscraper"
-_NOS_COM_DOCSTRING = (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
+from tests.test_docstring_examples import _NOS_COM_DOCSTRING, RAIZ_PACOTE, _linhas_sem_margem, _recuo
 
 # Nome em português, sem acento e em minúsculas, -> cabeçalho que o griffe reconhece.
 SECOES_TRADUZIDAS = {
@@ -45,10 +43,6 @@ def _normalizar(nome: str) -> str:
     return sem_acento.strip().lower()
 
 
-def _recuo(linha: str) -> int:
-    return len(linha) - len(linha.lstrip())
-
-
 def problemas_da_docstring(texto: str) -> list[tuple[int, str]]:
     """Lista ``(deslocamento, motivo)`` para cada cabeçalho traduzido.
 
@@ -58,20 +52,17 @@ def problemas_da_docstring(texto: str) -> list[tuple[int, str]]:
     meio de um parágrafo e o resumo ``Levanta :class:`Erro` quando...`` não
     contam.
     """
-    linhas = texto.expandtabs().splitlines()
-    # Tira a margem comum para o recuo da primeira linha, colada às aspas,
-    # ser comparável ao das outras.
-    margem = min((_recuo(linha) for linha in linhas[1:] if linha.strip()), default=0)
-    linhas = [linha.strip() if i == 0 else linha[margem:] for i, linha in enumerate(linhas)]
+    linhas = _linhas_sem_margem(texto)
     problemas = []
     for i, linha in enumerate(linhas):
         nome, dois_pontos, resto = linha.strip().partition(":")
-        if not dois_pontos or nome != nome.rstrip() or _normalizar(nome) not in SECOES_TRADUZIDAS:
+        correta = SECOES_TRADUZIDAS.get(_normalizar(nome))
+        if not dois_pontos or nome != nome.rstrip() or correta is None:
             continue
         seguinte = next((proxima for proxima in linhas[i + 1 :] if proxima.strip()), "")
         if resto.strip() and _recuo(seguinte) <= _recuo(linha):
             continue
-        problemas.append((i, f"seção {nome.strip()!r}: usar {SECOES_TRADUZIDAS[_normalizar(nome)]!r}"))
+        problemas.append((i, f"seção {nome!r}: usar {correta!r}"))
     return problemas
 
 
