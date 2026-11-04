@@ -147,7 +147,8 @@ class OutputListarDecisoesFalcao(OutputCJSGBase):
             ``precedentes``, que nao tem processo, recebe uma chave legivel
             ``{tribunal}-{tipo}-{numero}`` (``TST-SUM-392``; OJ do TST leva o
             orgao, ``TST-OJ-SBDI2-130``). Sem ``tipo`` ou ``numero``, a chave
-            e ``{tribunal}-id{id}``.
+            é ``{tribunal}-id{id}``. Registros BANJUR sem ``id`` usam
+            ``{tribunal}-idTema{idTema}``.
         colecao: Colecao de origem do documento (uma de :data:`COLECOES`).
         tribunal: Sigla do tribunal de origem (``TST``, ``TRT1``..``TRT24``).
         relator: Magistrado do documento. ``relator``/``nomeRelator`` e, quando
@@ -162,8 +163,9 @@ class OutputListarDecisoesFalcao(OutputCJSGBase):
 
     ``extra="allow"`` propaga os demais campos brutos da colecao
     (``textoAcordao``, ``score``, ``nomeRelator``, ...). Os campos
-    ``highlight*`` do backend nao entram: repetem o inteiro teor com o termo
-    buscado marcado.
+    ``highlight*`` do backend não entram: incluem marcações do termo buscado
+    e variantes anonimizadas. O JSON de ``listar_decisoes_download`` preserva
+    esses campos; o DataFrame mantém os campos brutos de inteiro teor.
     """
 
     colecao: str

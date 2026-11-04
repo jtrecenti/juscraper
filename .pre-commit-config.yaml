@@ -25,8 +25,25 @@ repos:
     rev: v0.15.12
     hooks:
       - id: ruff
-        args: [--fix]
+        args: [--fix, --config, ruff.toml]
         files: ^(src|tests)/.*\.py$
+
+  - repo: local
+    hooks:
+      - id: lint-policy
+        name: Conferir política de lint e dispensas temporárias
+        entry: python scripts/check_lint_policy.py
+        language: python
+        additional_dependencies: [ruff==0.15.12]
+        pass_filenames: false
+        always_run: true
+      - id: complexity
+        name: Conferir complexidade (Lizard e Complexipy)
+        entry: python scripts/check_complexity.py
+        language: python
+        additional_dependencies: [lizard==1.23.0, complexipy==6.0.1]
+        pass_filenames: false
+        files: ^src/.*\.py$
 
   - repo: https://github.com/pycqa/isort
     rev: 5.12.0
@@ -45,7 +62,7 @@ repos:
     rev: 7.4.1
     hooks:
       - id: flake8
-        additional_dependencies: [flake8-docstrings]
+        additional_dependencies: [flake8-docstrings==1.7.0]
         args:
           - '--max-line-length=120'
           - '--extend-ignore=E203,W503,D100,D104,D107,D200,D205,D209,D400,D401,D403,E231'
@@ -55,7 +72,7 @@ repos:
     rev: v1.5.1
     hooks:
       - id: mypy
-        additional_dependencies: [types-requests]
+        additional_dependencies: [types-requests==2.33.0.20261006, types-PyYAML==6.0.12.20260906]
         args: [--ignore-missing-imports]
 
   - repo: https://github.com/PyCQA/bandit

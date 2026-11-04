@@ -154,7 +154,7 @@ class TJRJScraper(HTTPScraper):
             ``data_publicacao``, ``ementa``, alem de ``cod_documento``,
             ``numero_antigo`` e ``tipo_documento``.
 
-        Exemplo:
+        Examples: Exemplo
             >>> import juscraper as jus
             >>> tjrj = jus.scraper("tjrj")
             >>> df = tjrj.cjsg("dano moral", ano_inicio=2024, ano_fim=2024,

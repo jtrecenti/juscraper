@@ -20,7 +20,18 @@
    "referenciaLegislativa": [
     "art_186_ccb",
     "art_794_clt",
-    "trt3"
+    "trt3",
+    "eca",
+    "art_319_cpc",
+    "art_67_clt",
+    "art_5_cf",
+    "art_227_cf",
+    "art_927_ccb",
+    "trt9",
+    "art_944_ccb",
+    "art_2_clt",
+    "ri_trt9",
+    "prgf_1_art_840_clt"
    ],
    "prioridades": null,
    "dataJulgamento": "08/07/2020",
@@ -47,18 +58,107 @@
    "referenciaLegislativa": [
     "trt3",
     "prgf_2_art_791_clt",
-    "art_477_clt"
+    "art_477_clt",
+    "iv_prgf_1_art_895_clt",
+    "trt9"
    ],
    "prioridades": null,
    "dataJulgamento": "04/08/2020",
    "dataJuntada": "07/08/2020",
    "score": 161.79614
+  },
+  {
+   "numeroProcesso": "0025151-21.2015.5.90.0000",
+   "siglaClasseProcesso": "CSJT-PCA",
+   "classeProcesso": "Procedimento de Controle Administrativo",
+   "relator": "FRANCISCO JOSE PINHEIRO CRUZ",
+   "tribunal": "CSJT",
+   "idGabinete": null,
+   "gabinete": null,
+   "idTurma": 405,
+   "turma": "Conselho Superior da Justiça do Trabalho",
+   "textoAcordao": "<html>\n  <head>\n    <style>\n      <!--\n        p.headingaa {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:0.0;\n          Alignment:left;\n        }\n        p.headingaa {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:0.0;\n          Alignment:left;\n        }\n        p.headingaa {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:0.0;\n          Alignment:left;\n        }\n        p.Normal {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:0.0;\n          Alignment:left;\n      …[truncado]",
+   "ementa": "<html>\n  <head>\n    <style>\n      <!--\n        p.TranscriaaoaChar {\n          italic:;\n          bold:normal;\n          underline:;\n          size:3;\n        }\n        p.CorpoaChar {\n          italic:;\n          bold:normal;\n          underline:;\n          size:3;\n        }\n        p.ListaParagraph {\n          LeftIndent:35.4;\n          RightIndent:0.0;\n          FirstLineIndent:127.6;\n          Alignment:justify;\n        }\n        p.Corpo {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.55;\n          Alignment:justify;\n        }\n        p.Tema {\n          L…[truncado]",
+   "possuiEmenta": "S",
+   "idDocumentoAcordao": "e70315f87fe4b814d1066dd2ae86b328",
+   "highlightTextoAcordaoAnonimizado": "A C Ó R D Ã O       \n\n        ( Conselho Superior da Justiça do Trabalho )        \n\n       CSFJC / clgl /          \n\n       PROCEDIMENTO DE CONTROLE ADMINISTRATIVO .  TRT da 17ª REGIÃO .  SERVIDOR .  INFRAÇÃO DE        \n\n       TRÂNSITO NA CONDUÇÃO DE VEÍCULO OFICIAL .  VIOLAÇÃO DAS RESOLUÇÕES CNJ Nº 83 / 2009 E CSJT Nº        \n\n       68 / 2010 .        \n\n       I  –  Merece conhecimento o presente Procedimento de Controle Administrativo ,  na forma dos        \n\n       art .  12 ,  IV e 61 do Regimento Interno deste Conselho ;  II  –  Rejeita - se as preliminares        \n\n       arguidas e a …[truncado]",
+   "highlightEmenta": "<html>\n  <head>\n    <style>\n      <!--\n        p.TranscriaaoaChar {\n          italic:;\n          bold:normal;\n          underline:;\n          size:3;\n        }\n        p.CorpoaChar {\n          italic:;\n          bold:normal;\n          underline:;\n          size:3;\n        }\n        p.ListaParagraph {\n          LeftIndent:35.4;\n          RightIndent:0.0;\n          FirstLineIndent:127.6;\n          Alignment:justify;\n        }\n        p.Corpo {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.55;\n          Alignment:justify;\n        }\n        p.Tema {\n          L…[truncado]",
+   "highlightTextoAcordao": "<html>\n  <head>\n    <style>\n      <!--\n        p.headingaa {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:0.0;\n          Alignment:left;\n        }\n        p.headingaa {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:0.0;\n          Alignment:left;\n        }\n        p.headingaa {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:0.0;\n          Alignment:left;\n        }\n        p.Normal {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:0.0;\n          Alignment:left;\n      …[truncado]",
+   "referenciaLegislativa": [
+    "art_24_resolucao_csjt_68_10",
+    "resolucao_cnj_83_09",
+    "cnj",
+    "art_14_resolucao_cnj_83_09",
+    "art_24_resolucao_cnj_83_09",
+    "resolucao_csjt_68_10",
+    "trt17",
+    "trt9"
+   ],
+   "prioridades": null,
+   "dataJulgamento": "24/03/2017",
+   "dataJuntada": "30/03/2017",
+   "score": 161.42017
+  },
+  {
+   "numeroProcesso": "0010231-13.2019.5.03.0099",
+   "siglaClasseProcesso": "ROT",
+   "classeProcesso": "Recurso Ordinário Trabalhista",
+   "relator": "Luiz Otávio Linhares Renault",
+   "tribunal": "TRT3",
+   "idGabinete": 72,
+   "gabinete": "Gabinete de Desembargador n. 22",
+   "idTurma": 14,
+   "turma": "01ª Turma",
+   "textoAcordao": "<table width=\"100%\" cellspacing=\"2\" cellpadding=\"2\"\nborder=\"0\" style=\"border-color: white; border-style: none;\ndisplay: block\">\n\n<tr>\n\n<td><img src=\"data:image/jpg;base64,/9j/4AAQSkZJRgABAgAAZABkAAD/7AARRHVja3kAAQAEAAAAZAAA/+4ADkFkb2JlAGTA\n\nAAAAAf/bAIQAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB\n\nAQICAgICAgICAgICAwMDAwMDAwMDAwEBAQEBAQECAQECAgIBAgIDAwMDAwMDAwMDAwMD\n\nAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD/8AAEQgAXwBaAwERAAIR\n\nAQMRAf/EAIUAAAEFAQEBAQAAAAAAAAAAAAkABgcICgUDBAEBAQEBAQAAAAAAAAAAAAAA\n\nAAABAgMQAAICAwEAAAYCAAMGBgMAAAQFAwYBAgcIABESExQJFRYhIjViIzNkNlZBUTI0\n\nJRc3VxgRA…[truncado]",
+   "ementa": "<p style=\"padding-left: 200px; font-size: 12pt; float: none; margin-bottom: 6pt; line-height: 113%; font-family: 'Arial'; position: static; text-align: justify; text-indent: 0px;\" data-estilo-editor=\"Ementa\"><strong>&nbsp;</strong></p>\n<p style=\"padding-left: 200px; font-size: 12pt; float: none; margin-bottom: 6pt; line-height: 113%; font-family: 'Arial'; position: static; text-align: justify; text-indent: 0px;\" data-estilo-editor=\"Ementa\"><strong>EMENTA:</strong> <strong>ASS&Eacute;DIO MORAL. INDENIZA&Ccedil;&Atilde;O POR DANOS MORAIS.</strong> A repara&ccedil;&atilde;o do dano moral, previst…[truncado]",
+   "possuiEmenta": "S",
+   "idDocumentoAcordao": "47405261",
+   "highlightTextoAcordaoAnonimizado": "PROCESSO nº   0010231-13.2019.5.03.0099   ( ROT )        \n\n       RECORRENTE :  ____ ____ ____        \n\n       RECORRIDA :     AEC CENTRO DE CONTATOS S . A .         \n\n       RELATOR :          ____ ____ LINHARES RENAULT       \n\n       EMENTA :  ASSÉDIO <MARK>MORAL</MARK> .  INDENIZAÇÃO POR <MARK>DANOS</MARK> MORAIS .  A reparação do <MARK>dano</MARK> <MARK>moral</MARK> ,  prevista no art .  5º ,  X ,  da CRF ,  dispõe que  \" são invioláveis a intimidade ,  a vida privada ,  a honra e a imagem das pessoas ,  assegurado o direito à indenização pelo <MARK>dano</MARK> material ou <MARK>moral</MAR…[truncado]",
+   "highlightEmenta": "<p style=\"padding-left: 200px; font-size: 12pt; float: none; margin-bottom: 6pt; line-height: 113%; font-family: 'Arial'; position: static; text-align: justify; text-indent: 0px;\" data-estilo-editor=\"Ementa\"><strong>&nbsp;</strong></p>\n<p style=\"padding-left: 200px; font-size: 12pt; float: none; margin-bottom: 6pt; line-height: 113%; font-family: 'Arial'; position: static; text-align: justify; text-indent: 0px;\" data-estilo-editor=\"Ementa\"><strong>EMENTA:</strong> <strong>ASS&Eacute;DIO <MARK>MORAL</MARK>. INDENIZA&Ccedil;&Atilde;O POR <MARK>DANOS</MARK> MORAIS.</strong> A repara&ccedil;&atild…[truncado]",
+   "highlightTextoAcordao": "<table width=\"100%\" cellspacing=\"2\" cellpadding=\"2\"\nborder=\"0\" style=\"border-color: white; border-style: none;\ndisplay: block\">\n\n<tr>\n\n<td><img src=\"data:image/jpg;base64,/9j/4AAQSkZJRgABAgAAZABkAAD/7AARRHVja3kAAQAEAAAAZAAA/+4ADkFkb2JlAGTA\n\nAAAAAf/bAIQAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB\n\nAQICAgICAgICAgICAwMDAwMDAwMDAwEBAQEBAQECAQECAgIBAgIDAwMDAwMDAwMDAwMD\n\nAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD/8AAEQgAXwBaAwERAAIR\n\nAQMRAf/EAIUAAAEFAQEBAQAAAAAAAAAAAAkABgcICgUDBAEBAQEBAQAAAAAAAAAAAAAA\n\nAAABAgMQAAICAwEAAAYCAAMGBgMAAAQFAwYBAgcIABESExQJFRYhIjViIzNkNlZBUTI0\n\nJRc3VxgRA…[truncado]",
+   "referenciaLegislativa": [
+    "trt3",
+    "art_927_ccb",
+    "art_186_ccb"
+   ],
+   "prioridades": null,
+   "dataJulgamento": "03/02/2020",
+   "dataJuntada": "06/02/2020",
+   "score": 161.34154
+  },
+  {
+   "numeroProcesso": "0010135-02.2020.5.03.0151",
+   "siglaClasseProcesso": "RORSum",
+   "classeProcesso": "Recurso Ordinário - Rito Sumaríssimo",
+   "relator": "PAULO MAURICIO RIBEIRO PIRES",
+   "tribunal": "TRT3",
+   "idGabinete": 110,
+   "gabinete": "Gabinete de Desembargador n. 37",
+   "idTurma": 17,
+   "turma": "05ª Turma",
+   "textoAcordao": "<table width=\"100%\" cellspacing=\"2\" cellpadding=\"2\"\nborder=\"0\" style=\"border-color: white; border-style: none;\ndisplay: block\">\n\n<tr>\n\n<td><img src=\"data:image/jpg;base64,/9j/4AAQSkZJRgABAgAAZABkAAD/7AARRHVja3kAAQAEAAAAZAAA/+4ADkFkb2JlAGTA\n\nAAAAAf/bAIQAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB\n\nAQICAgICAgICAgICAwMDAwMDAwMDAwEBAQEBAQECAQECAgIBAgIDAwMDAwMDAwMDAwMD\n\nAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD/8AAEQgAXwBaAwERAAIR\n\nAQMRAf/EAIUAAAEFAQEBAQAAAAAAAAAAAAkABgcICgUDBAEBAQEBAQAAAAAAAAAAAAAA\n\nAAABAgMQAAICAwEAAAYCAAMGBgMAAAQFAwYBAgcIABESExQJFRYhIjViIzNkNlZBUTI0\n\nJRc3VxgRA…[truncado]",
+   "ementa": "",
+   "possuiEmenta": "N",
+   "idDocumentoAcordao": "54711345",
+   "highlightTextoAcordaoAnonimizado": "PROCESSO nº  0010135-02.2020.5.03.0151   ( RORSum )        \n\n       RECORRENTE :  ____ ____ ____        \n\n       RECORRIDO :  ____ ____ DE ____       \n\n       RELATOR :  ____ ____ ____ PIRES       \n\n       RELATÓRIO       \n\n       FUNDAMENTAÇÃO       \n\n       MÉRITO       \n\n       Recurso da parte       \n\n       Item de recurso       \n\n       ACÓRDÃO       \n\n       Fundamentos pelos quais ,        \n\n       O Tribunal Regional do Trabalho da Terceira Região ,  em sessão ordinária da sua Quinta Turma ,  hoje realizada ,  sob a presidência do Exmo .  Desembargador ____ ____ ____ ____ ,  presente …[truncado]",
+   "highlightEmenta": "",
+   "highlightTextoAcordao": "<table width=\"100%\" cellspacing=\"2\" cellpadding=\"2\"\nborder=\"0\" style=\"border-color: white; border-style: none;\ndisplay: block\">\n\n<tr>\n\n<td><img src=\"data:image/jpg;base64,/9j/4AAQSkZJRgABAgAAZABkAAD/7AARRHVja3kAAQAEAAAAZAAA/+4ADkFkb2JlAGTA\n\nAAAAAf/bAIQAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB\n\nAQICAgICAgICAgICAwMDAwMDAwMDAwEBAQEBAQECAQECAgIBAgIDAwMDAwMDAwMDAwMD\n\nAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD/8AAEQgAXwBaAwERAAIR\n\nAQMRAf/EAIUAAAEFAQEBAQAAAAAAAAAAAAkABgcICgUDBAEBAQEBAQAAAAAAAAAAAAAA\n\nAAABAgMQAAICAwEAAAYCAAMGBgMAAAQFAwYBAgcIABESExQJFRYhIjViIzNkNlZBUTI0\n\nJRc3VxgRA…[truncado]",
+   "referenciaLegislativa": [
+    "iv_prgf_1_art_895_clt",
+    "trt3",
+    "art_927_ccb",
+    "art_186_ccb"
+   ],
+   "prioridades": null,
+   "dataJulgamento": "25/08/2020",
+   "dataJuntada": "29/08/2020",
+   "score": 160.85818
   }
  ],
  "temasTopFive": [
   {
    "highlightTitulo": "<MARK>DANO</MARK> <MARK>MORAL</MARK> E MATERIAL. RELAÇÃO DE TRABALHO. COMPETÊNCIA DA JUSTIÇA DO TRABALHO.",
-   "score": 389.2812,
+   "score": 370.52295,
    "origemDocumentos": "TST",
    "tribunal": "TST",
    "descricaoTribunal": "Tribunal Superior do Trabalho",
@@ -95,10 +195,353 @@
      "relator": "Guilherme Augusto Caputo Bastos",
      "orgaoJudicante": "Subseção I Especializada em Dissídios Individuais",
      "tipoDecisao": "Decisão unânime"
+    },
+    {
+     "numero": "E-RR - 809749-87.2001.5.03.5555",
+     "dataPublicacao": null,
+     "relator": "Lelio Bentes Corrêa",
+     "orgaoJudicante": "Subseção I Especializada em Dissídios Individuais",
+     "tipoDecisao": "Decisão unânime"
+    },
+    {
+     "numero": "E-ED-RR - 241600-54.2001.5.05.0022",
+     "dataPublicacao": null,
+     "relator": "Renato de Lacerda Paiva",
+     "orgaoJudicante": "Subseção I Especializada em Dissídios Individuais",
+     "tipoDecisao": "Decisão unânime"
+    },
+    {
+     "numero": "E-RR - 60600-84.2000.5.12.0015",
+     "dataPublicacao": null,
+     "relator": "Maria Cristina Irigoyen Peduzzi",
+     "orgaoJudicante": "Subseção I Especializada em Dissídios Individuais",
+     "tipoDecisao": "Decisão unânime"
+    },
+    {
+     "numero": "E-RR - 7274300-32.2003.5.03.0900",
+     "dataPublicacao": null,
+     "relator": "João Batista Brito Pereira",
+     "orgaoJudicante": "Subseção I Especializada em Dissídios Individuais",
+     "tipoDecisao": "Decisão unânime"
+    },
+    {
+     "numero": "E-ED-RR - 104800-24.2001.5.03.0103",
+     "dataPublicacao": null,
+     "relator": "João Batista Brito Pereira",
+     "orgaoJudicante": "Subseção I Especializada em Dissídios Individuais",
+     "tipoDecisao": "Decisão unânime"
+    },
+    {
+     "numero": "E-RR - 4582100-26.2002.5.03.0900",
+     "dataPublicacao": null,
+     "relator": "João Batista Brito Pereira",
+     "orgaoJudicante": "Subseção I Especializada em Dissídios Individuais",
+     "tipoDecisao": "Decisão unânime"
+    },
+    {
+     "numero": "E-ED-RR - 9955100-27.2006.5.09.0015",
+     "dataPublicacao": null,
+     "relator": "João Batista Brito Pereira",
+     "orgaoJudicante": "Subseção I Especializada em Dissídios Individuais",
+     "tipoDecisao": "Decisão unânime"
+    },
+    {
+     "numero": "E-RR - 343114-44.1997.5.17.5555",
+     "dataPublicacao": null,
+     "relator": "Carlos Alberto Reis de Paula",
+     "orgaoJudicante": "Subseção I Especializada em Dissídios Individuais",
+     "tipoDecisao": "Decisão por maioria"
+    },
+    {
+     "numero": "E-RR - 50200-91.2003.5.12.0019",
+     "dataPublicacao": null,
+     "relator": "José Luciano de Castilho Pereira",
+     "orgaoJudicante": "Subseção I Especializada em Dissídios Individuais",
+     "tipoDecisao": "Decisão unânime"
+    },
+    {
+     "numero": "E-RR - 699490-10.2000.5.12.5555",
+     "dataPublicacao": null,
+     "relator": "José Luciano de Castilho Pereira",
+     "orgaoJudicante": "Subseção I Especializada em Dissídios Individuais",
+     "tipoDecisao": "Decisão unânime"
+    },
+    {
+     "numero": "E-RR - 1665400-34.2002.5.03.0900",
+     "dataPublicacao": null,
+     "relator": "João Oreste Dalazen",
+     "orgaoJudicante": "Subseção I Especializada em Dissídios Individuais",
+     "tipoDecisao": "Decisão por maioria"
+    },
+    {
+     "numero": "E-RR - 169800-48.2005.5.03.0129",
+     "dataPublicacao": null,
+     "relator": "Rosa Maria Weber",
+     "orgaoJudicante": "Subseção I Especializada em Dissídios Individuais",
+     "tipoDecisao": "Decisão unânime"
+    },
+    {
+     "numero": "E-ED-RR - 246900-58.2000.5.05.0013",
+     "dataPublicacao": null,
+     "relator": "Luiz Philippe Vieira de Mello Filho",
+     "orgaoJudicante": "Subseção I Especializada em Dissídios Individuais",
+     "tipoDecisao": "Decisão unânime"
+    },
+    {
+     "numero": "E-RR - 215900-81.1998.5.15.0029",
+     "dataPublicacao": null,
+     "relator": "Aloysio Corrêa da Veiga",
+     "orgaoJudicante": "Subseção I Especializada em Dissídios Individuais",
+     "tipoDecisao": "Decisão unânime"
+    },
+    {
+     "numero": "E-RR - 900-35.2006.5.18.0102",
+     "dataPublicacao": null,
+     "relator": "Aloysio Corrêa da Veiga",
+     "orgaoJudicante": "Subseção I Especializada em Dissídios Individuais",
+     "tipoDecisao": "Decisão unânime"
     }
    ],
    "tituloDecisao": "SÚMULA Nº 392, DO TST",
    "conteudoDecisao": "<b><MARK>DANO</MARK> <MARK>MORAL</MARK> E MATERIAL. RELAÇÃO DE TRABALHO. COMPETÊNCIA DA JUSTIÇA DO TRABALHO.</b><br/>Nos termos do art. 114, inc. VI, da Constituição da República, a Justiça do Trabalho é competente para processar e julgar ações de indenização por <MARK>dano</MARK> <MARK>moral</MARK> e material, decorrentes da relação de trabalho, inclusive as oriundas de acidente de trabalho e doenças a ele equiparadas, ainda que propostas pelos dependentes ou sucessores do trabalhador falecido.<br/><br/><strong>Observação: </strong>(redação alterada em sessão do Tribunal Pleno realizada em 27…[truncado]"
+  },
+  {
+   "highlightQuestao": "<MARK>Dano</MARK> <MARK>moral</MARK>. Atraso no pagamento de salário e/ou verbas rescisórias E inadimplemento de salário e/ou verbas rescisórias (oriundo da Vice-Presidência)",
+   "score": 292.87714,
+   "origemDocumentos": "BANJUR",
+   "tribunal": "TRT9",
+   "descricaoTribunal": "Tribunal Regional do Trabalho da 9ª Região",
+   "situacao": {
+    "valor": "MERITO",
+    "descricao": "Acórdão Publicado (Mérito)",
+    "temaJulgado": true
+   },
+   "pendenteDecisao": false,
+   "dataPublicacao": "21/01/2016",
+   "idTema": "43-IUJ_7_TRT9",
+   "classeProcessual": "IUJ",
+   "numeroTema": "7",
+   "suspensaoGeral": "Rito: art. 101-B RI/TRT9",
+   "link": "https://www.trt9.jus.br/portal/arquivos/4826343",
+   "orgaoJulgador": "TRT-9",
+   "nomeRelator": "MARLENE TERESINHA FUVERKI SUGUIMATSU",
+   "nomeRedator": "MARLENE TERESINHA FUVERKI SUGUIMATSU",
+   "sumula": true,
+   "teseJuridicaPrevalecente": false,
+   "orientacaoJurisprudencial": false,
+   "baseJuridicaAntiga": false,
+   "numeroSumula": "33",
+   "numeroTeseJuridicaPrevalecente": null,
+   "numeroOrientacaoJurisprudencial": null,
+   "vistaRegimental": null,
+   "tipo": null,
+   "orgaoJudicante": null,
+   "referenciaLegislativa": [
+    "CF, art. 5º, incisos V e X, art. 7º, inciso X",
+    "CLT, art. 465."
+   ],
+   "orientacaoJurisprudencialRA_SE": null,
+   "dataJulgamentoEmbargos": null,
+   "dataInstauracaoIac": null,
+   "questao": "Dano moral. Atraso no pagamento de salário e/ou verbas rescisórias E inadimplemento de salário e/ou verbas rescisórias (oriundo da Vice-Presidência)",
+   "assuntos": [
+    {
+     "codigo": 1855,
+     "descricao": "Indenização por Dano Moral"
+    }
+   ],
+   "processosParadigma": [
+    {
+     "classe": null,
+     "link": "https://pje.trt9.jus.br/segundograu/Processo/ConsultaDocumento/listView.seam?nd=15111113451879400000001618675",
+     "numero": "0000454-81.2015.5.09.0000"
+    }
+   ],
+   "dataAdmissao": "24/04/2015",
+   "dataJulgamento": "30/11/2015",
+   "dataTransitoJulgado": "24/02/2016",
+   "tituloDecisao": "SÚMULA 33, DO TRT DA 9ª REGIÃO",
+   "conteudoDecisao": "<b>Aprovada a Súmula nº 33 deste Regional - ATRASO REITERADO OU NÃO PAGAMENTO DE SALÁRIOS OU DE VERBAS RESCISÓRIAS. <MARK>DANO</MARK> <MARK>MORAL</MARK>. INDENIZAÇÃO.</b><br/> I - O atraso reiterado ou o não pagamento de salários caracteriza, por si, <MARK>dano</MARK> <MARK>moral</MARK>, por se tratar de <MARK>dano</MARK> in re ipsa;\r<br/>II - O atraso ou o não pagamento das verbas rescisórias devidas não caracteriza, por si, <MARK>dano</MARK> <MARK>moral</MARK>, sendo necessária a prova de circunstâncias objetivas ensejadoras do <MARK>dano</MARK>."
+  },
+  {
+   "highlightQuestao": "<MARK>Dano</MARK> <MARK>moral</MARK> - revista visual de pertences - Caracterização de <MARK>dano</MARK> <MARK>moral</MARK> pela mera revista visual de pertences dos empregados  (oriundo da Vice-Presidência)",
+   "score": 277.48254,
+   "origemDocumentos": "BANJUR",
+   "tribunal": "TRT9",
+   "descricaoTribunal": "Tribunal Regional do Trabalho da 9ª Região",
+   "situacao": {
+    "valor": "MERITO",
+    "descricao": "Acórdão Publicado (Mérito)",
+    "temaJulgado": true
+   },
+   "pendenteDecisao": false,
+   "dataPublicacao": "11/10/2017",
+   "idTema": "88-IUJ_52_TRT9",
+   "classeProcessual": "IUJ",
+   "numeroTema": "52",
+   "suspensaoGeral": "Ofício Circular GVP 014/2016. Rito: art. 101-B RI/TRT9  e Ato 32/2016",
+   "link": "https://pje.trt9.jus.br/segundograu/Processo/ConsultaDocumento/listView.seam?nd=17090111102053200000005657422",
+   "orgaoJulgador": "TRT-9",
+   "nomeRelator": "SERGIO GUIMARAES SAMPAIO",
+   "nomeRedator": "SERGIO GUIMARAES SAMPAIO",
+   "sumula": true,
+   "teseJuridicaPrevalecente": false,
+   "orientacaoJurisprudencial": false,
+   "baseJuridicaAntiga": false,
+   "numeroSumula": "66",
+   "numeroTeseJuridicaPrevalecente": null,
+   "numeroOrientacaoJurisprudencial": null,
+   "vistaRegimental": null,
+   "tipo": null,
+   "orgaoJudicante": null,
+   "referenciaLegislativa": [
+    "CF art. 5º, incisos X e LVII",
+    "CC: art. nº 422, nº 186 e nº 927."
+   ],
+   "orientacaoJurisprudencialRA_SE": null,
+   "dataJulgamentoEmbargos": null,
+   "dataInstauracaoIac": null,
+   "questao": "Dano moral - revista visual de pertences - Caracterização de dano moral pela mera revista visual de pertences dos empregados  (oriundo da Vice-Presidência)",
+   "assuntos": [
+    {
+     "codigo": 55444,
+     "descricao": "Dano Moral / Material"
+    }
+   ],
+   "processosParadigma": [
+    {
+     "classe": null,
+     "link": "https://pje.trt9.jus.br/segundograu/Processo/ConsultaDocumento/listView.seam?nd=17090111102053200000005657422",
+     "numero": "0000115-54.2017.5.09.0000"
+    }
+   ],
+   "dataAdmissao": "07/10/2016",
+   "dataJulgamento": "25/09/2017",
+   "dataTransitoJulgado": "17/10/2017",
+   "tituloDecisao": "SÚMULA 66, DO TRT DA 9ª REGIÃO",
+   "conteudoDecisao": "<b>Aprovada a SÚMULA nº 66 deste Tribunal - <MARK>DANO</MARK> <MARK>MORAL</MARK>. REVISTA VISUAL EM BOLSAS E SACOLAS. NÃO CONFIGURAÇÃO.</b><br/> A revista visual do conteúdo de bolsas, mochilas e sacolas dos empregados, de modo impessoal e reservado, não caracteriza, por si, ofensa à honra ou à intimidade do empregado, capaz de gerar <MARK>dano</MARK> <MARK>moral</MARK> passível de indenização.<br/>Precedentes: RO-23665-2014-012-09-00-6; RO-22626-2014-003-09-00-0; RO-0000295-81.2015.5.09.0892; RO-38603-2015-029-09-00-1; RO-24796-2014-002-09-00-3"
+  },
+  {
+   "highlightQuestao": "<MARK>Danos</MARK> morais pelo não recolhimento dos depósitos fundiários.",
+   "highlightTese": "A ausência ou o atraso do recolhimento das parcelas de FGTS durante o contrato de trabalho, por si só, não configura <MARK>dano</MARK> <MARK>moral</MARK> indenizável, sendo necessária a comprovação de lesão concreta aos direitos de personalidade do trabalhador.",
+   "highlightTextoAcordaoDecisao": null,
+   "highlightTextoAcordaoMerito": null,
+   "highlightTextoDecisaoAdmissao": "...\r\n\r\nAdmissibilidade\r\n\r\nO presente Incidente de Assunção de Competência (IAC) é trazido à apreciação deste Tribunal Pleno com a finalidade precípua de uniformizar o entendimento jurisprudencial no âmbito do Tribunal Regional do Trabalho da 19ª Região acerca da controvertida questão da configuração do <MARK>dano</MARK> <MARK>moral</MARK> em face do não recolhimento de depósitos fundiários. A admissibilidade do IAC encontra amparo no artigo 947 do Código de Processo Civil (CPC), aplicável subsidiariamente ao processo do trabalho por força do artigo 769 da Consolidação das Leis do Trabalho (CLT…[truncado]",
+   "highlightTextoDecisaoSuspensao": null,
+   "highlightTextoEmentaAdmissao": "I.\r\n\r\nEmenta\r\n\r\nDIREITO PROCESSUAL DO TRABALHO. INCIDENTE DE ASSUNÇÃO DE COMPETÊNCIA. <MARK>DANO</MARK> <MARK>MORAL</MARK>. NÃO RECOLHIMENTO DE DEPÓSITOS FUNDIÁRIOS. NECESSIDADE DE COMPROVAÇÃO DE LESÃO CONCRETA. TESE VINCULANTE. ACOLHIMENTO DO INCIDENTE.\r\n\r\nI. CASO EM EXAME\r\n\r\n1. Trata-se de Incidente de Assunção de Competência (IAC) suscitado em Recurso Ordinário Trabalhista, no qual se discute se a ausência de recolhimento ou o atraso na quitação dos depósitos do Fundo de Garantia do Tempo de Serviço (FGTS) configura, por si só, <MARK>dano</MARK> <MARK>moral</MARK> indenizável (<MARK>dano</M…[truncado]",
+   "highlightTextoEmentaMerito": "I.\r\n\r\nEmenta\r\n\r\nDIREITO PROCESSUAL DO TRABALHO. INCIDENTE DE ASSUNÇÃO DE COMPETÊNCIA. <MARK>DANO</MARK> <MARK>MORAL</MARK>. NÃO RECOLHIMENTO DE DEPÓSITOS FUNDIÁRIOS. NECESSIDADE DE COMPROVAÇÃO DE LESÃO CONCRETA. TESE VINCULANTE. ACOLHIMENTO DO INCIDENTE.\r\n\r\nI. CASO EM EXAME\r\n\r\n1. Trata-se de Incidente de Assunção de Competência (IAC) suscitado em Recurso Ordinário Trabalhista, no qual se discute se a ausência de recolhimento ou o atraso na quitação dos depósitos do Fundo de Garantia do Tempo de Serviço (FGTS) configura, por si só, <MARK>dano</MARK> <MARK>moral</MARK> indenizável (<MARK>dano</M…[truncado]",
+   "score": 276.00763,
+   "origemDocumentos": "BNP",
+   "tribunal": "TRT19",
+   "descricaoTribunal": "Tribunal Regional do Trabalho da 19ª Região",
+   "situacao": {
+    "valor": "TRANSITADO_EM_JULGADO",
+    "descricao": "Transitado em Julgado",
+    "temaJulgado": true
+   },
+   "pendenteDecisao": false,
+   "dataPublicacao": "11/11/2025",
+   "id": "IAC-4-13215-TRT19",
+   "numero": "4",
+   "categoria": "IAC",
+   "tituloCategoria": "Incidente de Assunção de Competência",
+   "orgao": "13215",
+   "descricaoOrgao": "Tribunal Regional do Trabalho da 19ª Região",
+   "relator": "ROBERTO RICARDO GUIMARÃES GOUVEIA",
+   "assuntos": null,
+   "numeroTemaSobrestado": "0",
+   "referenciaLegislativa": "Lei 8.036/1990; Art. 186 do CPC",
+   "textoAcordaoMerito": "Considerando o limite de caracteres do campo, o inteiro teor do acórdão pode ser acessado pelo link https://pje.trt19.jus.br/consultaprocessual/detalhe-processo/0000787-05.2025.5.19.0000/2#2df779e",
+   "textoDecisaoAdmissao": "...\r\n\r\nAdmissibilidade\r\n\r\nO presente Incidente de Assunção de Competência (IAC) é trazido à apreciação deste Tribunal Pleno com a finalidade precípua de uniformizar o entendimento jurisprudencial no âmbito do Tribunal Regional do Trabalho da 19ª Região acerca da controvertida questão da configuração do dano moral em face do não recolhimento de depósitos fundiários. A admissibilidade do IAC encontra amparo no artigo 947 do Código de Processo Civil (CPC), aplicável subsidiariamente ao processo do trabalho por força do artigo 769 da Consolidação das Leis do Trabalho (CLT), e nos artigos 133 a 136…[truncado]",
+   "textoDecisaoSuspensao": null,
+   "textoEmentaAdmissao": "I.\r\n\r\nEmenta\r\n\r\nDIREITO PROCESSUAL DO TRABALHO. INCIDENTE DE ASSUNÇÃO DE COMPETÊNCIA. DANO MORAL. NÃO RECOLHIMENTO DE DEPÓSITOS FUNDIÁRIOS. NECESSIDADE DE COMPROVAÇÃO DE LESÃO CONCRETA. TESE VINCULANTE. ACOLHIMENTO DO INCIDENTE.\r\n\r\nI. CASO EM EXAME\r\n\r\n1. Trata-se de Incidente de Assunção de Competência (IAC) suscitado em Recurso Ordinário Trabalhista, no qual se discute se a ausência de recolhimento ou o atraso na quitação dos depósitos do Fundo de Garantia do Tempo de Serviço (FGTS) configura, por si só, dano moral indenizável (dano in re ipsa). A sentença de origem denegou o pedido de danos …[truncado]",
+   "textoEmentaMerito": "I.\r\n\r\nEmenta\r\n\r\nDIREITO PROCESSUAL DO TRABALHO. INCIDENTE DE ASSUNÇÃO DE COMPETÊNCIA. DANO MORAL. NÃO RECOLHIMENTO DE DEPÓSITOS FUNDIÁRIOS. NECESSIDADE DE COMPROVAÇÃO DE LESÃO CONCRETA. TESE VINCULANTE. ACOLHIMENTO DO INCIDENTE.\r\n\r\nI. CASO EM EXAME\r\n\r\n1. Trata-se de Incidente de Assunção de Competência (IAC) suscitado em Recurso Ordinário Trabalhista, no qual se discute se a ausência de recolhimento ou o atraso na quitação dos depósitos do Fundo de Garantia do Tempo de Serviço (FGTS) configura, por si só, dano moral indenizável (dano in re ipsa). A sentença de origem denegou o pedido de danos …[truncado]",
+   "dataAdmissao": "05/11/2025",
+   "dataJulgamento": "05/11/2025",
+   "dataTransitoJulgado": "25/11/2025",
+   "dataSituacao": "25/11/2025",
+   "limiteSuspensao": {
+    "parametro": "NAO_SUSPENDER",
+    "detalheAbrangenciaEspecifica": null,
+    "linkDecisao": null,
+    "dataSuspensao": null,
+    "dataFimSuspensao": null
+   },
+   "processosIncidente": null,
+   "questao": "Danos morais pelo não recolhimento dos depósitos fundiários.",
+   "processosParadigma": [
+    {
+     "classe": "12087",
+     "link": "https://pje.trt19.jus.br/consultaprocessual/detalhe-processo/0000787-05.2025.5.19.0000/2#26c1dfe",
+     "numero": "00007870520255190000"
+    },
+    {
+     "classe": "1031",
+     "link": "https://pje.trt19.jus.br/consultaprocessual/detalhe-processo/0000580-60.2024.5.19.0058/2#2338bf1",
+     "numero": "00005806020245190058"
+    }
+   ],
+   "tese": "A ausência ou o atraso do recolhimento das parcelas de FGTS durante o contrato de trabalho, por si só, não configura dano moral indenizável, sendo necessária a comprovação de lesão concreta aos direitos de personalidade do trabalhador."
+  },
+  {
+   "highlightQuestao": "Caracterização ou não de <MARK>dano</MARK> <MARK>moral</MARK> pelo mero Transporte de valores em condições irregulares. (oriundo da Vice-Presidência)",
+   "score": 269.78165,
+   "origemDocumentos": "BANJUR",
+   "tribunal": "TRT9",
+   "descricaoTribunal": "Tribunal Regional do Trabalho da 9ª Região",
+   "situacao": {
+    "valor": "MERITO",
+    "descricao": "Acórdão Publicado (Mérito)",
+    "temaJulgado": true
+   },
+   "pendenteDecisao": false,
+   "dataPublicacao": "13/02/2019",
+   "idTema": "64-IUJ_28_TRT9",
+   "classeProcessual": "IUJ",
+   "numeroTema": "28",
+   "suspensaoGeral": "Ofício Circular GVP 003/2016. Rito: art. 101 RI/TRT9  e Ato 32/2016",
+   "link": "https://pje.trt9.jus.br/consultaprocessual/pages/consultas/DetalhaProcesso.seam?p_num_pje=24069&p_grau_pje=2&popup=0&dt_autuacao=&cid=401326",
+   "orgaoJulgador": "TRT-9",
+   "nomeRelator": "SERGIO MURILO RODRIGUES LEMOS",
+   "nomeRedator": "SERGIO MURILO RODRIGUES LEMOS",
+   "sumula": true,
+   "teseJuridicaPrevalecente": false,
+   "orientacaoJurisprudencial": false,
+   "baseJuridicaAntiga": false,
+   "numeroSumula": "88",
+   "numeroTeseJuridicaPrevalecente": null,
+   "numeroOrientacaoJurisprudencial": null,
+   "vistaRegimental": null,
+   "tipo": null,
+   "orgaoJudicante": null,
+   "referenciaLegislativa": [
+    "CF: art. 5º, V e X",
+    "CC: art. 186, art. 187",
+    "CPC: art. 333",
+    "Lei nº 7.102/1983"
+   ],
+   "orientacaoJurisprudencialRA_SE": null,
+   "dataJulgamentoEmbargos": null,
+   "dataInstauracaoIac": null,
+   "questao": "Caracterização ou não de dano moral pelo mero Transporte de valores em condições irregulares. (oriundo da Vice-Presidência)",
+   "assuntos": [
+    {
+     "codigo": 1855,
+     "descricao": "Indenização por Dano Moral"
+    }
+   ],
+   "processosParadigma": [
+    {
+     "classe": null,
+     "link": "https://pje.trt9.jus.br/consultaprocessual/pages/consultas/DetalhaProcesso.seam?p_num_pje=24069&p_grau_pje=2&popup=0&dt_autuacao=&cid=401326",
+     "numero": "0001142-43.2015.5.09.0000"
+    }
+   ],
+   "dataAdmissao": "17/07/2015",
+   "dataJulgamento": "28/01/2019",
+   "dataTransitoJulgado": "21/02/2019",
+   "tituloDecisao": "SÚMULA 88, DO TRT DA 9ª REGIÃO",
+   "conteudoDecisao": "<b>Aprovada a Súmula nº 88 do TRT9 - <MARK>DANO</MARK> <MARK>MORAL</MARK>. TRANSPORTE DE VALORES EM SITUAÇÃO IRREGULAR. <MARK>DANO</MARK> POTENCIAL. OBJETO ECONÔMICO DO EMPREGADOR DIVERSO DE VIGILÂNCIA OSTENSIVA, TRANSPORTE DE NUMERÁRIO E INSTITUIÇÃO FINANCEIRA. INDENIZAÇÃO DEVIDA.</b><br/> O mero transporte de valores efetuado por empregado de empresa com objeto econômico diverso de vigilância ostensiva, transporte de valores e instituição financeira, caracteriza <MARK>dano</MARK> <MARK>moral</MARK> in re ipsa. Indenização devida. Editada nos termos da Resolução Administrativa 33/2017. Preced…[truncado]"
   }
  ],
  "quantidadeTotal": 10000

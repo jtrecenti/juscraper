@@ -3,27 +3,27 @@ from __future__ import annotations
 
 import logging
 import shutil
-import tempfile
-import warnings
 from pathlib import Path
 from typing import Any, ClassVar, Literal
 
 import pandas as pd
 from pydantic import BaseModel
 
+from ...core.avisos import avisar
 from ...utils.params import (
     SEARCH_ALIASES,
     apply_input_pipeline_search,
-    iter_date_windows,
     normalize_pesquisa,
     pop_deprecated_alias,
     validate_intervalo_datas,
 )
-from .._esaj.base import EsajSearchScraper
+from .._esaj.acordao import EsajAcordaoScraper
+from .._esaj.base import ESAJ_JANELA_ANOS, EsajSearchScraper, somar_contagens_por_janela
+from .._esaj.sentenca import EsajSentencaScraper
 from .cjpg_download import cjpg_download as cjpg_download_mod
 from .cjpg_download import fetch_cjpg_first_page
 from .cjpg_parse import cjpg_n_results, cjpg_parse_manager
-from .cpopg_download import cpopg_download_api, cpopg_download_html
+from .cpopg_download import cpopg_download_api, cpopg_download_html, validar_download_pecas
 from .cpopg_parse import cpopg_parse_manager, get_cpopg_download_links
 from .cposg_download import cposg_download_api, cposg_download_html
 from .cposg_parse import cposg_parse_manager
@@ -93,11 +93,30 @@ def _resolve_cjsg_pesquisa(pesquisa: str | None, kwargs: dict) -> str:
     return resolvida
 
 
-class TJSPScraper(EsajSearchScraper):
+def _mover_documentos(movimentacoes: pd.DataFrame, origem: str, destino: str) -> pd.DataFrame:
+    """Leva os PDFs de ``download_pecas`` da pasta de download, que ``cpopg`` apaga, para ``destino``.
+
+    Mantém o caminho relativo (``cpopg/<cnj>/documentos/<cdDocumento>.pdf``),
+    o mesmo de ``cpopg_download(..., diretorio=destino)``. Um documento ligado
+    a duas movimentações aparece em duas linhas e se move uma vez.
+    """
+    novos: dict[str, str] = {}
+    for caminho in movimentacoes["caminho_documento"].dropna().unique():
+        novo = Path(destino) / Path(caminho).relative_to(origem)
+        novo.parent.mkdir(parents=True, exist_ok=True)
+        shutil.move(caminho, novo)
+        novos[caminho] = str(novo)
+    # ``dict.get`` e não ``Series.map``: a linha sem PDF continua ``None``, e não ``NaN``.
+    return movimentacoes.assign(caminho_documento=[novos.get(c) for c in movimentacoes["caminho_documento"]])
+
+
+class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
     """Main scraper for TJSP — eSAJ web + api.tjsp.jus.br."""
 
     BASE_URL = "https://esaj.tjsp.jus.br/"
     TRIBUNAL_NAME = "TJSP"
+    CPOSG_PATH = "cposg/"
+    MOVIMENTACOES_AJAX = True
     INPUT_CJSG = InputCJSGTJSP
     INPUT_CJPG = InputCJPGTJSP
     CJSG_CHROME_UA = True
@@ -150,10 +169,8 @@ class TJSPScraper(EsajSearchScraper):
         return self._listar_arvore(f"varas_{grau}")
 
     def set_download_path(self, path: str | None = None):
-        """Set download base dir; creates a tempdir when ``path`` is ``None``."""
-        if path is None:
-            path = tempfile.mkdtemp()
-        self.download_path = path
+        """Set download base dir; with ``None``, a tempdir is created on first use."""
+        self._download_path = path
 
     def set_method(self, method: Literal["html", "api"]):
         """Validate and store the access method (``'html'`` or ``'api'``) for cpopg/cposg."""
@@ -206,7 +223,7 @@ class TJSPScraper(EsajSearchScraper):
                 * ``data_julgamento_inicio`` / ``data_julgamento_fim``
                   (str, ``DD/MM/AAAA``): Intervalo de julgamento.
                 * ``auto_chunk`` (bool): Default ``True``. Quando o
-                  intervalo ``data_julgamento_*`` excede 366 dias,
+                  intervalo ``data_julgamento_*`` excede 1 ano,
                   divide internamente em janelas, baixa cada uma e
                   concatena com dedup por ``cd_acordao``.
                 * ``count_only`` (bool): Default ``False``. Se ``True``,
@@ -234,7 +251,7 @@ class TJSPScraper(EsajSearchScraper):
             ``orgao_julgador``); ``int`` com o total de resultados quando
             ``count_only=True``.
 
-        Exemplo:
+        Examples: Exemplo
             >>> import juscraper as jus
             >>> tjsp = jus.scraper("tjsp")
             >>> df = tjsp.cjsg("dano moral", paginas=range(1, 3),
@@ -248,7 +265,7 @@ class TJSPScraper(EsajSearchScraper):
             schema pydantic e a fonte da verdade dos filtros aceitos.
             :meth:`EsajSearchScraper.cjsg` — descricao detalhada do
             auto-chunking (issue #130) para janelas
-            ``data_julgamento_*`` > 366 dias.
+            ``data_julgamento_*`` > 1 ano.
         """
         return super().cjsg(pesquisa=pesquisa, paginas=paginas, **kwargs)
 
@@ -378,7 +395,7 @@ class TJSPScraper(EsajSearchScraper):
                 * ``data_julgamento_inicio`` / ``data_julgamento_fim``
                   (str, ``DD/MM/AAAA``): Intervalo de julgamento.
                 * ``auto_chunk`` (bool): Default ``True``. Quando o
-                  intervalo ``data_julgamento_*`` excede 366 dias,
+                  intervalo ``data_julgamento_*`` excede 1 ano,
                   divide internamente em janelas, baixa cada uma e
                   concatena com dedup por ``id_processo``. Veja a secao
                   "Auto-chunking" abaixo.
@@ -387,7 +404,7 @@ class TJSPScraper(EsajSearchScraper):
                   ``cjpg_n_results`` e retorna ``int`` em vez de
                   ``pd.DataFrame``. Util pra estimar wall-clock antes de
                   coleta longa (issue #92). Com ``auto_chunk=True`` +
-                  janela > 366 dias, itera janelas disjuntas e soma —
+                  janela > 1 ano, itera janelas disjuntas e soma —
                   soma bruta (sem dedup por ``id_processo``). ``paginas``
                   e ignorado (emite ``UserWarning``).
 
@@ -417,7 +434,7 @@ class TJSPScraper(EsajSearchScraper):
             ``foro``, ``vara``, ``data_disponibilizacao``, ``decisao``);
             ``int`` com o total de resultados quando ``count_only=True``.
 
-        Exemplo:
+        Examples: Exemplo
             >>> import juscraper as jus
             >>> tjsp = jus.scraper("tjsp")
             >>> # Busca textual + filtro de vara:
@@ -437,11 +454,12 @@ class TJSPScraper(EsajSearchScraper):
         Auto-chunking (issue #130):
             Se ``auto_chunk=True`` (default herdado de
             :class:`~juscraper.schemas.AutoChunkMixin`) e o intervalo
-            ``data_julgamento_*`` exceder 366 dias, a busca e dividida em
+            ``data_julgamento_*`` exceder 1 ano, a busca e dividida em
             janelas internas, baixadas e concatenadas com dedup por
-            ``id_processo``. Falhas por janela viram :class:`UserWarning`
-            (parcial + warning). ``auto_chunk=True`` + ``paginas != None``
-            em janela > 366 dias e :class:`ValueError`.
+            ``id_processo``. Janela que falha levanta
+            :class:`~juscraper.core.exceptions.ColetaParcialError`, com as
+            janelas que passaram em ``.resultado``. ``auto_chunk=True`` + ``paginas != None``
+            em janela > 1 ano e :class:`ValueError`.
         """
         # Orquestracao (probe count_only -> auto-chunk -> download -> parse
         # -> cleanup) compartilhada com ``cjsg`` via ``_run_search`` (#205).
@@ -469,23 +487,21 @@ class TJSPScraper(EsajSearchScraper):
         Faz o GET inicial por janela, extrai ``n_results`` via
         :func:`cjpg_n_results` e retorna a soma. ``paginas`` e ignorado.
 
-        Multi-janela: se o intervalo ``data_julgamento_*`` excede 366 dias
+        Multi-janela: se o intervalo ``data_julgamento_*`` excede 1 ano
         e ``auto_chunk=True``, itera janelas disjuntas via
-        :func:`iter_date_windows`. ``auto_chunk=False`` + janela > 366d
+        :func:`iter_date_windows`. ``auto_chunk=False`` + janela > 1 ano
         levanta :class:`ValueError` (consistencia com caminho normal).
 
-        **Fail-fast no auto-chunk**: diferente do caminho normal
-        (:func:`run_auto_chunk`), que tolera falha por janela como
-        :class:`UserWarning` e devolve resultado parcial deduplicado, este
-        probe usa ``sum()`` — qualquer :class:`ValueError` em uma janela
-        aborta toda a iteracao. Decisao deliberada: estimativa parcial sem
-        aviso seria pior que erro explicito.
+        **Fail-fast no auto-chunk**: o caminho normal (:func:`run_auto_chunk`)
+        tenta todas as janelas e levanta
+        :class:`~juscraper.core.exceptions.ColetaParcialError` com o parcial;
+        este probe usa ``sum()``, e a primeira janela que falha aborta a
+        iteracao. Contagem parcial nao tem uso, entao nao vale carrega-la.
         """
         if paginas is not None:
-            warnings.warn(
+            avisar(
                 "paginas e ignorado quando count_only=True (probe sempre olha so a pagina 1).",
                 UserWarning,
-                stacklevel=3,
             )
 
         inp = apply_input_pipeline_search(
@@ -507,7 +523,7 @@ class TJSPScraper(EsajSearchScraper):
 
         if not auto_chunk:
             validate_intervalo_datas(
-                di, df_, max_dias=366, rotulo="data_julgamento", origem="O eSAJ",
+                di, df_, max_anos=ESAJ_JANELA_ANOS, rotulo="data_julgamento", origem="O eSAJ",
             )
 
         def _probe(win_i: str | None, win_f: str | None) -> int:
@@ -527,12 +543,13 @@ class TJSPScraper(EsajSearchScraper):
         if not auto_chunk or di is None or df_ is None:
             return _probe(di, df_)
 
-        return sum(_probe(win_i, win_f) for win_i, win_f in iter_date_windows(di, df_, max_dias=366))
+        return somar_contagens_por_janela(_probe, di, df_)
 
     def cjpg_download(
         self,
         pesquisa: str = "",
         paginas: int | list | range | None = None,
+        diretorio: str | None = None,
         **kwargs: Any,
     ) -> str:
         """Baixa as paginas HTML brutas do CJPG TJSP (sem parsear).
@@ -550,6 +567,8 @@ class TJSPScraper(EsajSearchScraper):
                 chars.
             paginas (int | list | range | None): Paginas 1-based;
                 ``None`` baixa todas. Default ``None``.
+            diretorio (str | None): Sobrescreve :attr:`download_path`
+                para esta unica chamada. Default ``None``.
             **kwargs: Mesmos filtros aceitos por :meth:`cjpg` (validados
                 por :class:`InputCJPGTJSP`).
 
@@ -578,7 +597,7 @@ class TJSPScraper(EsajSearchScraper):
             kwargs=kwargs,
             consume_pesquisa_aliases=True,
             nullable_pesquisa=True,
-            max_dias=366,
+            max_anos=ESAJ_JANELA_ANOS,
             origem_mensagem="O eSAJ",
         )
         # Roda apos o pipeline para validar o valor ja resolvido (caso o
@@ -591,7 +610,7 @@ class TJSPScraper(EsajSearchScraper):
             pesquisa=inp.pesquisa,
             session=self.session,
             u_base=self.u_base,
-            download_path=self.download_path,
+            download_path=diretorio or self.download_path,
             sleep_time=self.sleep_time,
             classe=inp.classe,
             assunto=inp.assunto,
@@ -610,28 +629,76 @@ class TJSPScraper(EsajSearchScraper):
     # --- cpopg ----------------------------------------------------------
     # Kept as-is — unique to TJSP, not eSAJ-search-shaped.
 
-    def cpopg(self, id_cnj: str | list[str], method: Literal["html", "api"] = "html"):
+    def cpopg(
+        self,
+        id_cnj: str | list[str],
+        method: Literal["html", "api"] = "html",
+        *,
+        baixar_movimentacoes: bool = True,
+        download_pecas: bool = False,
+        diretorio: str | None = None,
+    ):
         """Baixa processos de primeiro grau pelo CNJ e devolve as tabelas extraidas.
 
         Args:
             id_cnj (str | list[str]): Numero CNJ ou lista de numeros CNJ.
             method (str): ``"html"`` (paginas do eSAJ) ou ``"api"``. Default
                 ``"html"``.
+            baixar_movimentacoes (bool): Com ``False``, nao baixa as
+                movimentacoes, e a tabela delas sai vazia (no ``"html"``, a
+                pagina no formato antigo ja traz a lista e sai completa). No
+                ``"html"``, cada processo custa uma requisicao a mais por cinco
+                movimentacoes, mais uma; desligar poupa essas requisicoes.
+                Default ``True``.
+            download_pecas (bool): Com ``True``, baixa tambem o PDF de cada
+                documento publico das movimentacoes, sem login: dois pedidos
+                por documento, feitos na sessao que acabou de listar as
+                movimentacoes, porque o eSAJ so libera documento ja listado.
+                Documento com senha do processo fica de fora. So no
+                ``"html"`` e com ``baixar_movimentacoes=True``. Default
+                ``False``.
+            diretorio (str | None): Onde ficam os PDFs de ``download_pecas``,
+                que o exige: ``cpopg`` apaga a pasta de download ao terminar.
+                Os PDFs vao para
+                ``<diretorio>/cpopg/<cnj>/documentos/<cdDocumento>.pdf``. Nao
+                pode ficar dentro de :attr:`download_path`. Default ``None``.
 
         Raises:
-            ValueError: Quando ``method`` nao e suportado, ou quando nenhum
+            ValueError: Quando ``method`` nao e suportado, quando nenhum
                 arquivo baixado pode ser lido (nenhum arquivo candidato no
-                diretorio de download, ou todos com erro de leitura). Nesse
-                caso o diretorio de download nao e apagado.
+                diretorio de download, ou todos com erro de leitura; nesse
+                caso o diretorio de download nao e apagado), ou quando
+                ``download_pecas`` e ``diretorio`` nao combinam com os demais
+                argumentos.
 
         Returns:
             dict[str, pd.DataFrame]: Tabelas ``basicos``, ``partes``,
             ``movimentacoes`` e ``peticoes_diversas`` no metodo ``"html"``;
-            no metodo ``"api"``, uma tabela por tipo de JSON baixado.
+            no metodo ``"api"``, uma tabela por tipo de JSON baixado. No
+            ``"html"``, ``basicos`` traz a ``situacao`` do cabecalho
+            ("Extinto", "Suspenso" etc.) e ``movimentacoes`` traz a lista
+            completa, que o download busca pagina a pagina. Na
+            ``movimentacoes`` do ``"html"``, ``cd_documento`` e
+            ``documento_publico`` dizem se a linha tem documento e se ele
+            abre sem senha; ``caminho_documento`` traz o PDF baixado, ou
+            ``None`` sem ``download_pecas``, para documento com senha e para
+            o que falhou (as falhas saem num ``UserWarning``).
         """
+        validar_download_pecas(method, baixar_movimentacoes, download_pecas)
+        if download_pecas != (diretorio is not None):
+            raise ValueError(
+                "download_pecas=True exige diretorio, e diretorio so vale com download_pecas=True: "
+                "cpopg apaga a pasta de download ao terminar."
+            )
+        if diretorio is not None and Path(diretorio).resolve().is_relative_to(Path(self.download_path).resolve()):
+            raise ValueError(f"diretorio {diretorio!r} fica dentro de download_path, que cpopg apaga ao terminar.")
         self.set_method(method)
-        self.cpopg_download(id_cnj, method)
+        self.cpopg_download(
+            id_cnj, method, baixar_movimentacoes=baixar_movimentacoes, download_pecas=download_pecas,
+        )
         result = self.cpopg_parse(self.download_path)
+        if diretorio is not None:
+            result["movimentacoes"] = _mover_documentos(result["movimentacoes"], self.download_path, diretorio)
         shutil.rmtree(self.download_path)
         return result
 
@@ -639,8 +706,30 @@ class TJSPScraper(EsajSearchScraper):
         self,
         id_cnj: str | list[str],
         method: Literal["html", "api"] = "html",
+        diretorio: str | None = None,
+        *,
+        baixar_movimentacoes: bool = True,
+        download_pecas: bool = False,
     ):
-        """Download raw CPOPG files for one or many CNJs via ``'html'`` or ``'api'``."""
+        """Baixa arquivos brutos do CPOPG via ``'html'`` ou ``'api'``.
+
+        Args:
+            id_cnj: Numero CNJ ou lista de numeros CNJ.
+            method: Transporte usado no download. Default ``"html"``.
+            diretorio: Sobrescreve :attr:`download_path` para esta chamada.
+                Default ``None``.
+            baixar_movimentacoes: Com ``False``, nao baixa as movimentacoes.
+                Ver :meth:`cpopg`. No ``"html"``, um download com ``True`` no
+                mesmo diretorio baixa de novo o processo salvo sem elas.
+                Default ``True``.
+            download_pecas: Com ``True``, grava tambem o PDF de cada documento
+                publico das movimentacoes em
+                ``<diretorio>/cpopg/<cnj>/documentos/<cdDocumento>.pdf``. Ver
+                :meth:`cpopg`. Um download com ``True`` no mesmo diretorio
+                baixa de novo o processo salvo com documento publico sem PDF,
+                e pede so os PDFs que faltam. Default ``False``.
+        """
+        validar_download_pecas(method, baixar_movimentacoes, download_pecas)
         self.set_method(method)
         if isinstance(id_cnj, str):
             id_cnj = [id_cnj]
@@ -651,16 +740,19 @@ class TJSPScraper(EsajSearchScraper):
                 id_cnj_list=id_cnj,
                 session=self.session,
                 u_base=self.u_base,
-                download_path=self.download_path,
+                download_path=diretorio or self.download_path,
                 sleep_time=self.sleep_time,
                 get_links_callback=get_links_callback,
+                baixar_movimentacoes=baixar_movimentacoes,
+                download_pecas=download_pecas,
             )
         elif self.method == "api":
             cpopg_download_api(
                 id_cnj_list=id_cnj,
                 session=self.session,
                 api_base=self.api_base,
-                download_path=self.download_path,
+                download_path=diretorio or self.download_path,
+                baixar_movimentacoes=baixar_movimentacoes,
             )
         else:
             raise ValueError(f"Método '{method}' não é suportado.")
@@ -689,8 +781,20 @@ class TJSPScraper(EsajSearchScraper):
             logger.warning("[TJSP] Aviso: diretório %s não existe e não pôde ser removido.", path)
         return result
 
-    def cposg_download(self, id_cnj: str | list, method: Literal["html", "api"] = "html"):
-        """Download raw CPOSG files for one or many CNJs via ``'html'`` or ``'api'``."""
+    def cposg_download(
+        self,
+        id_cnj: str | list,
+        method: Literal["html", "api"] = "html",
+        diretorio: str | None = None,
+    ):
+        """Baixa arquivos brutos do CPOSG via HTML ou API.
+
+        Args:
+            id_cnj: Numero CNJ ou lista de numeros CNJ.
+            method: Transporte usado no download. Default ``"html"``.
+            diretorio: Sobrescreve :attr:`download_path` para esta chamada.
+                Default ``None``.
+        """
         self.set_method(method)
         if isinstance(id_cnj, str):
             id_cnj = [id_cnj]
@@ -699,7 +803,7 @@ class TJSPScraper(EsajSearchScraper):
                 id_cnj_list=id_cnj,
                 session=self.session,
                 u_base=self.u_base,
-                download_path=self.download_path,
+                download_path=diretorio or self.download_path,
                 sleep_time=self.sleep_time,
             )
         elif self.method == "api":
@@ -707,7 +811,7 @@ class TJSPScraper(EsajSearchScraper):
                 id_cnj_list=id_cnj,
                 session=self.session,
                 api_base=self.api_base,
-                download_path=self.download_path,
+                download_path=diretorio or self.download_path,
                 sleep_time=self.sleep_time,
             )
         else:

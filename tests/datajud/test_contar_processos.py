@@ -21,7 +21,7 @@ def captured_payloads(monkeypatch):
     """Intercepta ``call_datajud_api`` e devolve uma resposta sintética."""
     payloads = []
 
-    def fake_call(*, base_url, alias, api_key, session, query_payload, verbose=False):
+    def fake_call(*, base_url, alias, api_key, session, query_payload, verbose=False, timeout=60):
         payloads.append({"alias": alias, "payload": query_payload})
         return {"hits": {"total": {"value": 12345, "relation": "eq"}, "hits": []}}
 
@@ -97,7 +97,7 @@ class TestReturnShape:
         carrega ``count=None`` e ``error`` populado — análise por
         tribunal continua mesmo com falha em um."""
 
-        def fake_call(*, base_url, alias, api_key, session, query_payload, verbose=False):
+        def fake_call(*, base_url, alias, api_key, session, query_payload, verbose=False, timeout=60):
             return None
 
         monkeypatch.setattr(datajud_client, "call_datajud_api", fake_call)
@@ -112,7 +112,7 @@ class TestReturnShape:
         assert row["relation"] is None
 
     def test_relation_gte_quando_truncado(self, monkeypatch):
-        def fake_call(*, base_url, alias, api_key, session, query_payload, verbose=False):
+        def fake_call(*, base_url, alias, api_key, session, query_payload, verbose=False, timeout=60):
             return {"hits": {"total": {"value": 10000, "relation": "gte"}}}
 
         monkeypatch.setattr(datajud_client, "call_datajud_api", fake_call)
@@ -255,7 +255,7 @@ class TestMultiplosTribunais:
     def test_lista_de_cnjs_de_tribunais_diferentes(self, monkeypatch):
         chamadas = []
 
-        def fake_call(*, base_url, alias, api_key, session, query_payload, verbose=False):
+        def fake_call(*, base_url, alias, api_key, session, query_payload, verbose=False, timeout=60):
             chamadas.append(alias)
             return {
                 "hits": {"total": {"value": len(alias), "relation": "eq"}, "hits": []}

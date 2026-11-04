@@ -386,9 +386,9 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
                 token no meio do lote. Propaga como o 401, com as falhas
                 anteriores numa nota do erro.
 
-        Warns:
-            UserWarning: Quando pelo menos uma consulta falhou; um aviso por
-                chamada, com a contagem e alguns exemplos.
+        Avisos:
+            ``UserWarning``: Quando pelo menos uma consulta falhou; um aviso por
+            chamada, com a contagem e alguns exemplos.
         """
         try:
             inp = self.INPUT_CPOPG(id_cnj=id_cnj, **kwargs)
@@ -687,9 +687,9 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
                 token no meio do lote. Propaga como o 401, com as falhas
                 anteriores numa nota do erro.
 
-        Warns:
-            UserWarning: Quando pelo menos um download falhou; um aviso por
-                chamada, emitido quando a coleta termina.
+        Avisos:
+            ``UserWarning``: Quando pelo menos um download falhou; um aviso por
+            chamada, emitido quando a coleta termina.
 
         Returns:
             pd.DataFrame: Uma linha por documento, com metadados, texto limpo,

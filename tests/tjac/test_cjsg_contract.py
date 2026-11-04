@@ -118,7 +118,7 @@ def test_cjsg_count_only_rejects_long_data_publicacao_window(tmp_path):
     > 366d silenciosamente para o backend.
     """
     scraper = jus.scraper("tjac", download_path=str(tmp_path))
-    with pytest.raises(ValueError, match="366"):
+    with pytest.raises(ValueError, match="no máximo 1 ano"):
         scraper.cjsg(
             "dano moral",
             data_publicacao_inicio="01/01/2020",

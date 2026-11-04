@@ -2,6 +2,7 @@
 
 [![PyPI version](https://badge.fury.io/py/juscraper.svg)](https://badge.fury.io/py/juscraper)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Testes](https://github.com/jtrecenti/juscraper/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/jtrecenti/juscraper/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Documentation](https://img.shields.io/badge/docs-available-brightgreen.svg)](https://jtrecenti.github.io/juscraper/)
 
@@ -45,12 +46,65 @@ print(f"Encontrados {len(dados)} resultados")
 dados.head()
 ```
 
+## 📊 Implementações
+
+<!-- tabela-cobertura:inicio | scripts/tabela_cobertura.py -->
+
+### Tribunais Disponíveis
+
+| Tribunal | Funcionalidades Disponíveis |
+|----------|-----------------------------|
+| STF      | contar_decisoes, listar_decisoes |
+| TJAC     | cjsg, baixar_acordao, baixar_acordaos |
+| TJAL     | cjsg |
+| TJAM     | cjsg |
+| TJAP     | cjsg ⚠️ |
+| TJBA     | cjsg |
+| TJCE     | cjsg |
+| TJDFT    | cjsg |
+| TJES     | cjsg, cjpg |
+| TJGO     | cjsg |
+| TJMG     | cposg, cjsg |
+| TJMS     | cjsg |
+| TJMT     | cjsg |
+| TJPA     | cjsg |
+| TJPB     | cjsg |
+| TJPE     | cpopg, cjsg |
+| TJPI     | cjsg |
+| TJPR     | cjsg |
+| TJRJ     | cjsg |
+| TJRN     | cjsg |
+| TJRO     | cjsg |
+| TJRR     | cjsg |
+| TJRS     | cjsg |
+| TJSC     | cjsg |
+| TJSP     | cpopg, cposg, cjsg, cjpg, baixar_acordao, baixar_acordaos, baixar_sentenca, baixar_sentencas |
+| TJTO     | cjsg, cjpg, cjsg_ementa |
+| TRF1     | cpopg |
+| TRF3     | cpopg, cjsg |
+| TRF5     | cpopg |
+| TRF6     | cpopg |
+
+### Agregadores Disponíveis
+
+| Nome        | Funcionalidades Disponíveis |
+|-------------|-----------------------------|
+| ComunicaCNJ | listar_comunicacoes |
+| Datajud     | contar_processos, listar_processos |
+| Falcao      | listar_decisoes |
+| JusBR       | cpopg, download_documents |
+| PDPJ        | cpopg, contar, documentos, download_documents, existe, movimentos, partes, pesquisa |
+
+<!-- tabela-cobertura:fim -->
+
+> ⚠️ **TJAP — `cjsg` indisponível:** desde ~2026 a busca de jurisprudência do TJAP (plataforma Tucujuris) passou a exigir um CAPTCHA [Cloudflare Turnstile](https://www.cloudflare.com/products/turnstile/), validado no servidor. Como o raspador faz requisições HTTP puras (sem navegador), não há como gerar o token e o backend responde `"A verificação de segurança falhou"`. Nesse caso `cjsg` levanta `TJAPSecurityCheckError` com a explicação, em vez de retornar vazio silenciosamente. Não há solução pela API pública. Ver [issue #279](https://github.com/jtrecenti/juscraper/issues/279).
+
 <!-- status:inicio -->
 ## Implementações e status
 
 Status observado no cenário informado, sem garantia de disponibilidade atual. Sem evidência ou após 30 dias, o estado passa a não verificado na próxima geração. A data limite permanece visível entre atualizações. O último relato de falha continua abaixo.
 
-Tabelas geradas em 2026-10-14.
+Tabelas geradas em 2026-11-04.
 
 [Critérios e atualização](https://github.com/jtrecenti/juscraper/blob/main/CONTRIBUTING.md#status-dos-raspadores)
 
@@ -58,51 +112,58 @@ Tabelas geradas em 2026-10-14.
 
 | Fonte | Endpoint | Estado | Verificação | Válido até |
 |---|---|---|---|---|
-| STF | `listar_decisoes` | Funcionando | 2026-10-03 | 2026-11-02 |
-| STF | `contar_decisoes` | Funcionando | 2026-10-03 | 2026-11-02 |
-| TJAC | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
-| TJAL | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
-| TJAM | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
-| TJAP | `cjsg` | Indisponível | 2026-10-03 | 2026-11-02 |
-| TJBA | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
-| TJCE | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
-| TJDFT | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
-| TJES | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
-| TJES | `cjpg` | Degradado | 2026-10-03 | 2026-11-02 |
+| STF | `listar_decisoes` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
+| STF | `contar_decisoes` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
+| TJAC | `cjsg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
+| TJAC | `baixar_acordao` | Não verificado | - | - |
+| TJAC | `baixar_acordaos` | Não verificado | - | - |
+| TJAL | `cjsg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
+| TJAM | `cjsg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
+| TJAP | `cjsg` | Não verificado (último: Indisponível) | 2026-10-03 | 2026-11-02 |
+| TJBA | `cjsg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
+| TJCE | `cjsg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
+| TJDFT | `cjsg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
+| TJES | `cjsg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
+| TJES | `cjpg` | Não verificado (último: Degradado) | 2026-10-03 | 2026-11-02 |
 | TJGO | `cjsg` | Indisponível | 2026-10-14 | 2026-11-13 |
-| TJMG | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
-| TJMG | `cposg` | Funcionando | 2026-10-03 | 2026-11-02 |
-| TJMS | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
-| TJMT | `cjsg` | Indisponível | 2026-10-03 | 2026-11-02 |
-| TJPA | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
-| TJPB | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
-| TJPE | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
-| TJPE | `cpopg` | Funcionando | 2026-10-03 | 2026-11-02 |
-| TJPI | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
-| TJPR | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
-| TJRJ | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
-| TJRN | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
-| TJRO | `cjsg` | Indisponível | 2026-10-03 | 2026-11-02 |
-| TJRR | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
+| TJMG | `cjsg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
+| TJMG | `cposg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
+| TJMS | `cjsg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
+| TJMT | `cjsg` | Não verificado (último: Indisponível) | 2026-10-03 | 2026-11-02 |
+| TJPA | `cjsg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
+| TJPB | `cjsg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
+| TJPE | `cjsg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
+| TJPE | `cpopg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
+| TJPI | `cjsg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
+| TJPR | `cjsg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
+| TJRJ | `cjsg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
+| TJRN | `cjsg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
+| TJRO | `cjsg` | Não verificado (último: Indisponível) | 2026-10-03 | 2026-11-02 |
+| TJRR | `cjsg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
 | TJRS | `cjsg` | Funcionando | 2026-10-14 | 2026-11-13 |
-| TJSC | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
-| TJSP | `cpopg` | Funcionando | 2026-10-03 | 2026-11-02 |
-| TJSP | `cposg` | Indisponível | 2026-10-03 | 2026-11-02 |
-| TJSP | `cjsg` | Funcionando | 2026-10-03 | 2026-11-02 |
-| TJSP | `cjpg` | Funcionando | 2026-10-03 | 2026-11-02 |
-| TJTO | `cjsg` | Indisponível | 2026-10-03 | 2026-11-02 |
-| TJTO | `cjpg` | Indisponível | 2026-10-03 | 2026-11-02 |
-| TRF1 | `cpopg` | Funcionando | 2026-10-03 | 2026-11-02 |
+| TJSC | `cjsg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
+| TJSP | `cpopg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
+| TJSP | `cposg` | Não verificado (último: Indisponível) | 2026-10-03 | 2026-11-02 |
+| TJSP | `cjsg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
+| TJSP | `cjpg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
+| TJSP | `baixar_acordao` | Não verificado | - | - |
+| TJSP | `baixar_acordaos` | Não verificado | - | - |
+| TJSP | `baixar_sentenca` | Não verificado | - | - |
+| TJSP | `baixar_sentencas` | Não verificado | - | - |
+| TJTO | `cjsg` | Não verificado (último: Indisponível) | 2026-10-03 | 2026-11-02 |
+| TJTO | `cjpg` | Não verificado (último: Indisponível) | 2026-10-03 | 2026-11-02 |
+| TRF1 | `cpopg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
 | TRF3 | `cpopg` | Não verificado | 2026-10-14 | - |
+| TRF3 | `cjsg` | Não verificado | - | - |
 | TRF5 | `cpopg` | Indisponível | 2026-10-14 | 2026-11-13 |
-| TRF6 | `cpopg` | Indisponível | 2026-10-03 | 2026-11-02 |
+| TRF6 | `cpopg` | Não verificado (último: Indisponível) | 2026-10-03 | 2026-11-02 |
 
 ### Agregadores
 
 | Fonte | Endpoint | Estado | Verificação | Válido até |
 |---|---|---|---|---|
-| Comunica CNJ | `listar_comunicacoes` | Funcionando | 2026-10-03 | 2026-11-02 |
-| Datajud | `listar_processos` | Funcionando | 2026-10-03 | 2026-11-02 |
+| Comunica CNJ | `listar_comunicacoes` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
+| Datajud | `listar_processos` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
 | Datajud | `contar_processos` | Funcionando | 2026-10-14 | 2026-11-13 |
 | Falcão | `listar_decisoes` | Funcionando | 2026-10-14 | 2026-11-13 |
 | JusBR | `cpopg` | Não verificado | - | - |
@@ -492,37 +553,49 @@ O token fica em `~/.config/juscraper/pdpj_token.json` (ou em `$XDG_CONFIG_HOME/j
 > [!WARNING]
 > **Ambiente de execução:** estes notebooks fazem requisições reais a serviços externos e não têm compatibilidade garantida com o Google Colab. Tribunais podem bloquear ou limitar IPs compartilhados de provedores de nuvem e datacenters, mesmo quando a mesma consulta funciona em uma conexão local. Alguns exemplos também dependem de CAPTCHA, tokens de acesso ou dependências opcionais. A execução local no Jupyter é o ambiente de referência do projeto; uma falha de conexão no Colab não indica, por si só, uma regressão do `juscraper`.
 
-- [Exemplo TJSP](docs/notebooks/tjsp.ipynb)
-- [Exemplo TJRS](docs/notebooks/tjrs.ipynb)
-- [Exemplo TJPR](docs/notebooks/tjpr.ipynb)
-- [Exemplo TJDFT](docs/notebooks/tjdft.ipynb)
+- [Exemplo TJAC](docs/notebooks/tjac.ipynb)
+- [Exemplo TJAL](docs/notebooks/tjal.ipynb)
+- [Exemplo TJAM](docs/notebooks/tjam.ipynb)
 - [Exemplo TJAP](docs/notebooks/tjap.ipynb)
 - [Exemplo TJBA](docs/notebooks/tjba.ipynb)
 - [Exemplo TJCE](docs/notebooks/tjce.ipynb)
+- [Exemplo TJDFT](docs/notebooks/tjdft.ipynb)
 - [Exemplo TJES](docs/notebooks/tjes.ipynb)
+- [Exemplo TJGO](docs/notebooks/tjgo.ipynb)
+- [Exemplo TJMG](docs/notebooks/tjmg.ipynb)
+- [Exemplo TJMS](docs/notebooks/tjms.ipynb)
 - [Exemplo TJMT](docs/notebooks/tjmt.ipynb)
 - [Exemplo TJPA](docs/notebooks/tjpa.ipynb)
 - [Exemplo TJPB](docs/notebooks/tjpb.ipynb)
 - [Exemplo TJPE](docs/notebooks/tjpe.ipynb)
 - [Exemplo TJPI](docs/notebooks/tjpi.ipynb)
+- [Exemplo TJPR](docs/notebooks/tjpr.ipynb)
+- [Exemplo TJRJ](docs/notebooks/tjrj.ipynb)
 - [Exemplo TJRN](docs/notebooks/tjrn.ipynb)
 - [Exemplo TJRO](docs/notebooks/tjro.ipynb)
 - [Exemplo TJRR](docs/notebooks/tjrr.ipynb)
+- [Exemplo TJRS](docs/notebooks/tjrs.ipynb)
 - [Exemplo TJSC](docs/notebooks/tjsc.ipynb)
+- [Exemplo TJSP](docs/notebooks/tjsp.ipynb)
 - [Exemplo TJTO](docs/notebooks/tjto.ipynb)
+- [Exemplo TRF3](docs/notebooks/trf3.ipynb)
+- [Exemplo TRF5](docs/notebooks/trf5.ipynb)
+- [Exemplo TRF6](docs/notebooks/trf6.ipynb)
 - [Exemplo Datajud](docs/notebooks/datajud.ipynb)
-- [Exemplo Jusbr](docs/notebooks/jusbr.ipynb)
+- [Exemplo Falcao](docs/notebooks/falcao.ipynb)
+- [Exemplo JusBR](docs/notebooks/jusbr.ipynb)
 - [Exemplo PDPJ](docs/notebooks/pdpj.ipynb)
 
 ## Detalhes
 
 O pacote foi pensado para atender a requisitos básicos de consulta de dados de processos judiciais em alguns tribunais.
 
-Os tribunais implementados vão apresentar os seguintes métodos:
+A maior parte dos tribunais implementa alguns dos métodos abaixo; as tabelas da seção Implementações dizem quais cada tribunal e agregador tem (o STF, por exemplo, tem `listar_decisoes` e `contar_decisoes` no lugar deles):
 
 - `.cpopg()`: consulta de processos originários do primeiro grau
 - `.cposg()`: consulta de processos originários do segundo grau
-- `.cjsg()`: consulta de jurisprudência
+- `.cjsg()`: consulta de jurisprudência de segundo grau
+- `.cjpg()`: consulta de julgados de primeiro grau
 
 Os métodos `.cpopg()` e `.cposg()` recebem como *input* um número de processo no padrão CNJ (NNNNNNN-DD.AAAA.J.TT.OOOO), com ou sem separadores, e retorna um `dict` com tabelas dos elementos do processo (dados básicos, partes, movimentações, entre outros específicos por tribunal).
 

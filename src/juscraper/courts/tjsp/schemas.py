@@ -97,6 +97,9 @@ class OutputCJPGTJSP(BaseModel):
 
     id_processo: str
     cd_processo: str | None = None
+    cd_foro: str | None = None
+    nm_alias: str | None = None
+    cd_documento: str | None = None
 
     model_config = ConfigDict(extra="allow")
 
@@ -110,6 +113,8 @@ class InputCPOPGTJSP(CnjInputBase):
     """
 
     method: Literal["html", "api"] = "html"
+    baixar_movimentacoes: bool = True
+    download_pecas: bool = False
 
 
 class OutputCPOPGTJSP(OutputCnjConsultaBase):

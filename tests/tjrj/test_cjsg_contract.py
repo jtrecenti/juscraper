@@ -29,6 +29,9 @@ CJSG_FIELDS = {
 }
 
 
+RESULTS_PAGE_URL = "https://www3.tjrj.jus.br/EJURIS/ProcessarConsJurisES.aspx"
+
+
 def _form_html() -> str:
     return load_sample("tjrj", "cjsg/post_initial.html")
 
@@ -56,18 +59,21 @@ def _add_form_get() -> None:
                   content_type="text/html; charset=utf-8")
 
 
-def _add_form_post(pesquisa: str, **overrides) -> None:
+def _add_form_post(pesquisa: str, page_seq: int = 0, **overrides) -> None:
+    """Form POST answered like the backend: 302 to the results page with ``PageSeq``."""
     responses.add(
-        responses.POST, FORM_URL, body=b"", status=200,
+        responses.POST, FORM_URL, status=302,
+        headers={"Location": f"/EJURIS/ProcessarConsJurisES.aspx?PageSeq={page_seq}&Version=1.2.2.3"},
         match=[urlencoded_body_subset_matcher(_expected_body_subset(pesquisa, **overrides))],
     )
+    responses.add(responses.GET, RESULTS_PAGE_URL, body=b"", status=200)
 
 
-def _add_xhr(num_pagina_0: int, sample_filename: str) -> None:
+def _add_xhr(num_pagina_0: int, sample_filename: str, page_seq: int = 0) -> None:
     responses.add(
         responses.POST, RESULT_URL,
         json=_xhr_payload(sample_filename), status=200,
-        match=[json_params_matcher({"numPagina": num_pagina_0, "pageSeq": "0"})],
+        match=[json_params_matcher({"numPagina": num_pagina_0, "pageSeq": str(page_seq)})],
     )
 
 
@@ -231,3 +237,97 @@ def test_cjsg_ano_parcial_completa_o_omitido_com_ano_corrente(mocker):
         body = body.decode("utf-8")
     assert "ctl00%24ContentPlaceHolder1%24cmbAnoInicio=2020" in body
     assert "ctl00%24ContentPlaceHolder1%24cmbAnoFim=2026" in body
+
+
+@responses.activate
+def test_cjsg_mesma_instancia_le_a_busca_corrente(mocker):
+    """Buscas seguidas na mesma instancia leem cada uma o proprio resultado.
+
+    O servidor numera as buscas da sessao ASP.NET (``PageSeq`` 0, 1, ...) no
+    redirect do form e guarda os parametros de cada uma. Pedir sempre
+    ``pageSeq=0`` devolvia, sem erro, o resultado da primeira busca para todas
+    as seguintes. A segunda busca tem duas paginas para fixar que a pagina 2
+    tambem vai com o ``PageSeq`` da busca corrente.
+    """
+    mocker.patch("time.sleep")
+    _add_form_get()
+    _add_form_post(
+        "usucapiao extraordinario predio rural familia", page_seq=0,
+        ano_inicio="2024", ano_fim="2024",
+    )
+    _add_xhr(0, "xhr_single_page.json", page_seq=0)
+    _add_form_get()
+    _add_form_post("dano moral", page_seq=1, ano_inicio="2024", ano_fim="2024")
+    _add_xhr(0, "xhr_page_01.json", page_seq=1)
+    _add_xhr(1, "xhr_page_02.json", page_seq=1)
+
+    tjrj = jus.scraper("tjrj")
+    primeira = tjrj.cjsg_download(
+        "usucapiao extraordinario predio rural familia",
+        ano_inicio=2024, ano_fim=2024, paginas=1,
+    )
+    segunda = tjrj.cjsg_download("dano moral", ano_inicio=2024, ano_fim=2024, paginas=range(1, 3))
+
+    assert primeira == [_xhr_payload("xhr_single_page.json")["d"]]
+    assert segunda == [_xhr_payload("xhr_page_01.json")["d"], _xhr_payload("xhr_page_02.json")["d"]]
+
+
+def test_cjsg_form_sem_redirect_levanta_erro(mocker):
+    """Sem ``PageSeq`` no redirect a busca nao existe no servidor: erro, nao resultado alheio."""
+    mocker.patch("time.sleep")
+    with responses.RequestsMock() as rsps:
+        rsps.add(responses.GET, FORM_URL, body=_form_html(), status=200,
+                 content_type="text/html; charset=utf-8")
+        rsps.add(responses.POST, FORM_URL, body=_form_html(), status=200)
+        with pytest.raises(RuntimeError, match="nao redirecionou"):
+            jus.scraper("tjrj").cjsg_download("dano moral", ano_inicio=2024, ano_fim=2024, paginas=1)
+
+
+@responses.activate
+def test_cjsg_turma_recursal_respeita_o_ano(mocker):
+    """``origem`` fora do padrao do form passa pelo postback de ``cmbOrigem`` antes da busca.
+
+    Trocar a origem no mesmo POST da busca fazia o servidor recarregar os
+    combos de ano no ano corrente, e a Turma Recursal (``origem="4"``)
+    devolvia o mesmo total para qualquer ano. A busca tem de ir com o estado
+    devolvido pelo postback e sem ``chkEmentario``, que nesse form desmarca
+    acordao e monocratica.
+    """
+    mocker.patch("time.sleep")
+    postback_html = load_sample("tjrj", "cjsg/postback_origem_turma_recursal.html")
+    postback_hidden = extract_viewstate_fields(postback_html)
+    _add_form_get()
+    responses.add(
+        responses.POST, FORM_URL, body=postback_html, status=200,
+        content_type="text/html; charset=utf-8",
+        match=[urlencoded_body_subset_matcher({
+            "__EVENTTARGET": "ctl00$ContentPlaceHolder1$cmbOrigem",
+            "ctl00$ContentPlaceHolder1$cmbOrigem": "4",
+        })],
+    )
+    responses.add(
+        responses.POST, FORM_URL, status=302,
+        headers={"Location": "/EJURIS/ProcessarConsJurisES.aspx?PageSeq=0&Version=1.2.2.3"},
+        match=[urlencoded_body_subset_matcher({
+            "__EVENTTARGET": "ctl00$ContentPlaceHolder1$btnPesquisar",
+            "__VIEWSTATE": postback_hidden["__VIEWSTATE"],
+            "__EVENTVALIDATION": postback_hidden["__EVENTVALIDATION"],
+            "ctl00$ContentPlaceHolder1$txtTextoPesq": "cancelamento de voo",
+            "ctl00$ContentPlaceHolder1$cmbOrigem": "4",
+            "ctl00$ContentPlaceHolder1$cmbAnoInicio": "2025",
+            "ctl00$ContentPlaceHolder1$cmbAnoFim": "2025",
+            "ctl00$ContentPlaceHolder1$chkAcordao": "on",
+            "ctl00$ContentPlaceHolder1$chkDecMon": "on",
+        })],
+    )
+    responses.add(responses.GET, RESULTS_PAGE_URL, body=b"", status=200)
+    _add_xhr(0, "xhr_turma_recursal.json")
+
+    df = jus.scraper("tjrj").cjsg(
+        "cancelamento de voo", origem="4", ano_inicio=2025, ano_fim=2025, paginas=1,
+    )
+
+    busca = responses.calls[2].request.body
+    assert "chkEmentario" not in (busca.decode() if isinstance(busca, bytes) else busca)
+    assert len(df) == 10
+    assert {d.year for d in df["data_julgamento"]} == {2025}

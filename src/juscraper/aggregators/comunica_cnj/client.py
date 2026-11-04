@@ -103,7 +103,7 @@ class ComunicaCNJScraper(HTTPScraper):
             ValueError: Quando o intervalo de datas e invalido (fim antes
                 de inicio, formato divergente do backend).
 
-        Exemplo:
+        Examples: Exemplo
             >>> import juscraper as jus
             >>> s = jus.scraper("comunica_cnj")
             >>> df = s.listar_comunicacoes(

@@ -8,10 +8,9 @@ Dois enforcamentos em schemas concretos Input/Output (mapeados em
    declarado. Input e Output tem palettes separadas (p.ex. ``id_cnj``
    e ``str | list[str]`` no Input, ``str`` no Output).
 
-2. **Nomes deprecados sao proibidos** em schemas novos — a tabela de
-   "Nomes canonicos de coluna" do ``CLAUDE.md`` listou quais sinonimos
-   foram unificados. Declarar um nome deprecado num schema novo volta
-   a divergencia e quebra o teste.
+2. **Nomes deprecados são proibidos** em schemas novos. A constante
+   ``DEPRECATED_SYNONYMS`` mapeia as substituições; declarar um desses
+   nomes em schema novo reintroduz a divergência e quebra o teste.
 
 :data:`TYPE_GRACE_PERIOD` e :data:`SYNONYM_GRACE_PERIOD` documentam
 excecoes conhecidas que ainda aparecem por razao explicita — p.ex.
@@ -190,12 +189,9 @@ def test_canonical_field_types_are_consistent(module_path, class_name):
 
 @pytest.mark.parametrize("module_path,class_name", SCHEMA_CASES)
 def test_no_deprecated_synonyms_in_schemas(module_path, class_name):
-    """Nenhum schema concreto declara um sinonimo deprecado.
+    """Rejeita nomes de DEPRECATED_SYNONYMS fora das exceções justificadas.
 
-    Scraper novo que tentar declarar ``classes`` (plural) onde o conceito
-    e igual a ``classe`` (singular) vai bater aqui; idem para
-    ``magistrado``, ``nr_processo``, ``classe_cnj`` etc. Ver a tabela
-    "Nomes canonicos de coluna" do CLAUDE.md.
+    Ver CONTRIBUTING.md > Schemas pydantic > Nomes e tipos canônicos.
     """
     schema_cls = _resolve(module_path, class_name)
     proibidos: list[str] = []
@@ -209,7 +205,8 @@ def test_no_deprecated_synonyms_in_schemas(module_path, class_name):
         items = "\n * ".join(proibidos)
         pytest.fail(
             f"{class_name} declara sinonimo deprecado:\n * {items}\n"
-            "CLAUDE.md > 'Nomes canonicos de coluna' documenta o motivo."
+            "CONTRIBUTING.md > Schemas pydantic > Nomes e tipos canônicos "
+            "documenta a convenção."
         )
 
 

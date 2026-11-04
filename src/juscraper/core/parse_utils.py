@@ -76,7 +76,7 @@ def coerce_date_columns(
     Returns:
         O próprio ``df``.
 
-    Example:
+    Examples: Exemplo
         >>> # Default: inferência do pandas (ISO e similares).
         >>> coerce_date_columns(df, ["data_julgamento"])
         >>> # Formato ambíguo DD/MM/AAAA — usar ``date_format`` explícito.

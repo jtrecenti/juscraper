@@ -107,3 +107,79 @@ def test_cposg_api_returns_empty_dataframe(tmp_path, mocker):
 
     assert isinstance(df, pd.DataFrame)
     assert df.empty  # see docstring — follow-up issue pending
+
+
+@responses.activate
+def test_cposg_download_html_usa_diretorio_sem_alterar_download_path(tmp_path, mocker):
+    """O destino alternativo do HTML não deve alterar o destino configurado."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.GET,
+        f"{ESAJ}/cposg/open.do",
+        body=load_sample_bytes("tjsp", "cposg/open.html"),
+        status=200,
+        content_type="text/html; charset=utf-8",
+        match=[query_param_matcher({"gateway": "true"})],
+    )
+    search_params = {
+        "conversationId": "",
+        "paginaConsulta": "1",
+        "localPesquisa.cdLocal": "-1",
+        "cbPesquisa": "NUMPROC",
+        "tipoNuProcesso": "UNIFICADO",
+        "numeroDigitoAnoUnificado": "1000149-71.2024",
+        "foroNumeroUnificado": "0346",
+        "dePesquisaNuUnificado": CNJ,
+        "dePesquisa": "",
+        "uuidCaptcha": "",
+        "pbEnviar": "Pesquisar",
+    }
+    responses.add(
+        responses.GET,
+        f"{ESAJ}/cposg/search.do",
+        body=load_sample_bytes("tjsp", "cposg/search_listagem.html"),
+        status=200,
+        content_type="text/html; charset=utf-8",
+        match=[query_param_matcher(search_params)],
+    )
+    caminho = tmp_path / "padrao"
+    alternativo = tmp_path / "alternativo"
+    scraper = jus.scraper("tjsp", download_path=str(caminho))
+
+    scraper.cposg_download(CNJ, method="html", diretorio=str(alternativo))
+
+    assert (alternativo / "cposg").is_dir()
+    assert not (caminho / "cposg").exists()
+    assert scraper.download_path == str(caminho)
+
+
+@responses.activate
+def test_cposg_download_api_usa_download_path_sem_diretorio(tmp_path, mocker):
+    """Sem destino alternativo, o CPOSG API usa ``self.download_path``."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.GET,
+        f"{API}/processo/cposg/search/numproc/{CNJ_DIGITS}",
+        body=load_sample("tjsp", "cposg/api_search.json"),
+        status=200,
+        content_type="application/json",
+    )
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+
+    scraper.cposg_download(CNJ, method="api")
+
+    assert (tmp_path / "cposg").is_dir()
+    assert scraper.download_path == str(tmp_path)
+
+
+def test_cposg_download_api_usa_diretorio_sem_alterar_download_path(tmp_path, mocker):
+    """O destino alternativo do API deve ser encaminhado ao downloader."""
+    caminho = tmp_path / "padrao"
+    alternativo = tmp_path / "alternativo"
+    scraper = jus.scraper("tjsp", download_path=str(caminho))
+    download = mocker.patch("juscraper.courts.tjsp.client.cposg_download_api")
+
+    scraper.cposg_download(CNJ, method="api", diretorio=str(alternativo))
+
+    assert download.call_args.kwargs["download_path"] == str(alternativo)
+    assert scraper.download_path == str(caminho)

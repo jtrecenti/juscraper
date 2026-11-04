@@ -15,6 +15,10 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 import pytest
+import responses
+from responses import matchers
+
+from juscraper.courts._esaj.acordao import parse_cursor
 
 _SAMPLES_ROOT = Path(__file__).parent
 
@@ -184,3 +188,57 @@ def query_param_subset_matcher(expected: dict[str, str]):
             return False, f"query params mismatch: {missing}"
         return True, ""
     return matcher
+
+
+PDF_FALSO = b"%PDF-1.4\n% corpo curto: os testes so conferem o prefixo e a gravacao\n"
+"""Corpo do ``getPDF.do`` nos contratos do acórdão; o parser não lê o PDF."""
+
+
+def registrar_rota_acordao(tribunal: str, cenario: str, base_url: str, cposg: str) -> None:
+    """Registra no ``responses`` as páginas gravadas por ``capture_acordao_samples``.
+
+    Cada arquivo de ``tests/<tribunal>/samples/acordao/<cenario>/`` vira a
+    resposta da URL que o gerou, com os parâmetros conferidos. Página ``n`` de
+    movimentações casa com o cursor gravado na página ``n - 1``. A resposta
+    do ``verificarAcessoMovimentacao.do`` com a janela de senha sai com o 403
+    que o eSAJ manda. ``getPDF.do`` devolve :data:`PDF_FALSO`.
+    """
+    pasta = _SAMPLES_ROOT / tribunal / "samples" / "acordao" / cenario
+    raiz = f"{base_url}{cposg}"
+    # O cposg e a pasta digital declaram UTF-8; sem o charset, o requests leria latin-1.
+    html = "text/html;charset=UTF-8"
+    for arquivo in sorted(pasta.iterdir()):
+        nome, corpo = arquivo.stem, arquivo.read_bytes()
+        if nome == "search":
+            responses.add(responses.GET, f"{raiz}search.do", body=corpo, content_type=html)
+        elif nome.startswith("show_"):
+            responses.add(
+                responses.GET, f"{raiz}show.do", body=corpo, content_type=html,
+                match=[matchers.query_param_matcher({"processo.codigo": nome.removeprefix("show_")})],
+            )
+        elif nome.startswith("movimentacoes_"):
+            cd, indice = nome.removeprefix("movimentacoes_").rsplit("_", 1)
+            params = {"cdProcesso": cd}
+            if indice != "0":
+                anterior = (pasta / f"movimentacoes_{cd}_{int(indice) - 1}.html").read_text(encoding="utf-8")
+                params["cursor"] = parse_cursor(anterior) or ""
+            responses.add(
+                responses.GET, f"{raiz}carregarMovimentacoesAjax.do", body=corpo, content_type=html,
+                match=[matchers.query_param_matcher(params)],
+            )
+        elif nome.startswith("verificar_acesso_"):
+            cd, documento = nome.removeprefix("verificar_acesso_").rsplit("_", 1)
+            responses.add(
+                responses.GET, f"{raiz}verificarAcessoMovimentacao.do", body=corpo, content_type=html,
+                status=403 if b"senhaProcesso" in corpo else 200,
+                match=[matchers.query_param_matcher({
+                    "cdDocumento": documento, "origemRecurso": "M", "cdProcesso": cd, "conversationId": "",
+                })],
+            )
+            texto = corpo.decode("utf-8").strip()
+            if texto.startswith("http"):
+                responses.add(
+                    responses.GET, texto, body=(pasta / f"pasta_{cd}_{documento}.html").read_bytes(),
+                    content_type=html,
+                )
+    responses.add(responses.GET, f"{base_url}pastadigital/getPDF.do", body=PDF_FALSO)

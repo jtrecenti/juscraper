@@ -455,8 +455,7 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
         except ErroSsoPdpj as erro_sso:
             anotar_falhas_antes_do_sso(erro_sso, falhas, _ITEM_CONSULTA)
             raise
-        # stacklevel 4: warn -> avisar_falhas -> este metodo -> metodo publico -> usuario.
-        avisar_falhas(falhas, origem, _ITEM_CONSULTA, stacklevel=4)
+        avisar_falhas(falhas, origem, _ITEM_CONSULTA)
         return _ordenar_colunas(rows)
 
     def _consultar_processo(
@@ -549,8 +548,8 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
                 token no meio do lote. Propaga como o 401, com as falhas
                 anteriores numa nota do erro.
 
-        Warns:
-            UserWarning: Quando pelo menos uma consulta falhou.
+        Avisos:
+            ``UserWarning``: Quando pelo menos uma consulta falhou.
 
         See Also:
             :class:`InputCnjPdpj` -- schema pydantic.
@@ -831,10 +830,10 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
                 token no meio do lote. Propaga como o 401, com as falhas
                 anteriores numa nota do erro.
 
-        Warns:
-            UserWarning: Quando pelo menos um download de documento falhou.
-                Um aviso por chamada, com a contagem e alguns exemplos,
-                emitido só quando a coleta termina.
+        Avisos:
+            ``UserWarning``: Quando pelo menos um download de documento falhou.
+            Um aviso por chamada, com a contagem e alguns exemplos,
+            emitido só quando a coleta termina.
 
         See Also:
             :class:`InputDownloadDocumentsPdpj`: schema pydantic e fonte

@@ -163,7 +163,7 @@ class STFScraper(HTTPScraper):
             (acordaos), ``decisao_texto`` (monocraticas), ``inteiro_teor_url`` e o
             restante do ``_source`` da API.
 
-        Exemplo:
+        Examples: Exemplo
             >>> import juscraper as jus
             >>> stf = jus.scraper("stf")
             >>> df = stf.listar_decisoes("pejotização", classe="Rcl", paginas=1,

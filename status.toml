@@ -90,7 +90,7 @@ cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('stf').contar_decisoes(
 sigla = "tjac"
 nome = "TJAC"
 tipo = "tribunal"
-endpoints = ["cjsg"]
+endpoints = ["cjsg", "baixar_acordao", "baixar_acordaos"]
 
 [fontes.observacoes.cjsg]
 estado = "funcionando"
@@ -439,7 +439,7 @@ cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjsc').cjsg(pesquisa='
 sigla = "tjsp"
 nome = "TJSP"
 tipo = "tribunal"
-endpoints = ["cpopg", "cposg", "cjsg", "cjpg"]
+endpoints = ["cpopg", "cposg", "cjsg", "cjpg", "baixar_acordao", "baixar_acordaos", "baixar_sentenca", "baixar_sentencas"]
 
 [fontes.observacoes.cpopg]
 estado = "funcionando"
@@ -515,7 +515,7 @@ cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('trf1').cpopg(id_cnj='1
 sigla = "trf3"
 nome = "TRF3"
 tipo = "tribunal"
-endpoints = ["cpopg"]
+endpoints = ["cpopg", "cjsg"]
 
 [fontes.observacoes.cpopg]
 estado = "nao_verificado"

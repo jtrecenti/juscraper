@@ -1,5 +1,6 @@
 """Granular tests (offline) para helpers do agregador Falcao."""
 import json
+from typing import cast
 
 import pytest
 import requests
@@ -12,7 +13,7 @@ from tests._helpers import load_sample
 
 
 def _sample(colecao: str) -> dict:
-    return json.loads(load_sample("falcao", f"pesquisa/{colecao}_normal.json"))
+    return cast(dict, json.loads(load_sample("falcao", f"pesquisa/{colecao}_normal.json")))
 
 
 def _documento(colecao: str, **campos) -> dict:
@@ -110,6 +111,8 @@ def test_parse_documentos_renomeia_processo_e_datas():
         # Sem numero (caso observado em precedentes do TRT9): cai para o id.
         ({"tribunal": "TRT9", "tipo": "SUMULA", "numero": None, "id": 915}, "TRT9-id915"),
         ({"tribunal": "TRT9", "numero": "12", "id": 916}, "TRT9-id916"),
+        ({"tribunal": "TRT9", "idTema": "43-IUJ_7_TRT9", "tipo": None},
+         "TRT9-idTema43-IUJ_7_TRT9"),
     ],
 )
 def test_processo_de_precedente_e_chave_composta(campos, esperado):
