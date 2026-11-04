@@ -15,6 +15,7 @@ sobrescrito pelas subclasses continuam com ``NotImplementedError``.
 
 import ast
 from pathlib import Path
+from typing import TypeGuard
 
 import pytest
 
@@ -28,8 +29,8 @@ EXCECOES = {
 }
 
 
-def _levanta_not_implemented(no: ast.AST) -> bool:
-    if not isinstance(no, ast.Raise) or no.exc is None:
+def _levanta_not_implemented(no: ast.AST) -> TypeGuard[ast.Raise]:
+    if not isinstance(no, ast.Raise):
         return False
     alvo = no.exc.func if isinstance(no.exc, ast.Call) else no.exc
     return isinstance(alvo, ast.Name) and alvo.id == "NotImplementedError"
@@ -37,7 +38,7 @@ def _levanta_not_implemented(no: ast.AST) -> bool:
 
 def _e_stub(funcao: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
     corpo = funcao.body
-    if corpo and isinstance(corpo[0], ast.Expr) and isinstance(corpo[0].value, ast.Constant):
+    if isinstance(corpo[0], ast.Expr) and isinstance(corpo[0].value, ast.Constant):
         corpo = corpo[1:]
     return len(corpo) == 1 and _levanta_not_implemented(corpo[0])
 
@@ -51,16 +52,14 @@ def raises_fora_de_stub(codigo: str) -> list[tuple[int, str]]:
     """
     achados: list[tuple[int, str]] = []
 
-    def visitar(no: ast.AST, nomes: tuple[str, ...], funcao: ast.AST | None) -> None:
+    def visitar(no: ast.AST, nomes: tuple[str, ...], funcao: ast.FunctionDef | ast.AsyncFunctionDef | None) -> None:
         for filho in ast.iter_child_nodes(no):
             if isinstance(filho, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 visitar(filho, (*nomes, filho.name), filho)
             elif isinstance(filho, ast.ClassDef):
                 visitar(filho, (*nomes, filho.name), funcao)
             else:
-                if _levanta_not_implemented(filho) and not (
-                    isinstance(funcao, (ast.FunctionDef, ast.AsyncFunctionDef)) and _e_stub(funcao)
-                ):
+                if _levanta_not_implemented(filho) and not (funcao is not None and _e_stub(funcao)):
                     achados.append((filho.lineno, ".".join(nomes) or "<módulo>"))
                 visitar(filho, nomes, funcao)
 
@@ -68,19 +67,19 @@ def raises_fora_de_stub(codigo: str) -> list[tuple[int, str]]:
     return achados
 
 
-def _achados_do_pacote() -> dict[tuple[str, str], list[int]]:
-    achados: dict[tuple[str, str], list[int]] = {}
+def _achados_do_pacote() -> dict[tuple[str, str], int]:
+    achados: dict[tuple[str, str], int] = {}
     for arquivo in sorted(RAIZ_PACOTE.rglob("*.py")):
         caminho = arquivo.relative_to(RAIZ_PACOTE).as_posix()
         for linha, funcao in raises_fora_de_stub(arquivo.read_text(encoding="utf-8")):
-            achados.setdefault((caminho, funcao), []).append(linha)
+            achados.setdefault((caminho, funcao), linha)
     return achados
 
 
 def test_not_implemented_so_em_stub_no_pacote():
     violacoes = [
-        f"src/juscraper/{caminho}:{linhas[0]} em {funcao}"
-        for (caminho, funcao), linhas in _achados_do_pacote().items()
+        f"src/juscraper/{caminho}:{linha} em {funcao}"
+        for (caminho, funcao), linha in _achados_do_pacote().items()
         if (caminho, funcao) not in EXCECOES
     ]
     assert violacoes == [], (
