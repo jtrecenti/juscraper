@@ -1,4 +1,4 @@
-"""Filter-propagation contract for TJMT cjsg."""
+"""Contrato de propagação de filtros do cjsg do TJMT."""
 import pandas as pd
 import pytest
 import responses
@@ -17,14 +17,14 @@ def test_cjsg_all_supported_filters_land_in_query_params(mocker):
     _add_page(
         "dano moral",
         1,
-        "cjsg/filters_all.json",
+        "cjsg/no_results.json",
         tamanho_pagina=5,
         tipo_consulta="Acordao",
-        data_julgamento_inicio="2024-01-01",
-        data_julgamento_fim="2024-03-31",
-        relator="306",
-        orgao_julgador="30",
-        tipo_processo="942",
+        data_publicacao_inicio="2024-01-01",
+        data_publicacao_fim="2024-03-31T23:59:59",
+        relator="Relator Teste",
+        orgao_julgador="Camara Teste",
+        tipo_processo="Cível",
         thesaurus=True,
     )
 
@@ -33,24 +33,36 @@ def test_cjsg_all_supported_filters_land_in_query_params(mocker):
         paginas=1,
         tamanho_pagina=5,
         tipo_consulta="Acordao",
-        data_julgamento_inicio="2024-01-01",
-        data_julgamento_fim="2024-03-31",
-        relator="306",
-        orgao_julgador="30",
-        tipo_processo="942",
+        data_publicacao_inicio="2024-01-01",
+        data_publicacao_fim="2024-03-31",
+        relator="Relator Teste",
+        orgao_julgador="Camara Teste",
+        tipo_processo="Cível",
         thesaurus=True,
     )
 
     assert isinstance(df, pd.DataFrame)
 
 
+@pytest.mark.parametrize("metodo", ["cjsg", "cjsg_download"])
+@pytest.mark.parametrize(
+    "filtro",
+    [
+        {"classe": "Apelacao"},
+        {"data_julgamento_inicio": "01/01/2024"},
+        {"data_julgamento_fim": "31/03/2024"},
+        {"data_julgamento_inicio": "01/01/2024", "data_julgamento_fim": "31/03/2024"},
+    ],
+)
 @responses.activate(registry=OrderedRegistry)
-def test_cjsg_classe_filter_documents_current_not_implemented_behavior(mocker):
-    """The public ``classe`` parameter is accepted but currently unsupported by the API helper."""
-    mocker.patch("time.sleep")
-    _add_config()
-    with pytest.raises(NotImplementedError, match="classe"):
-        jus.scraper("tjmt").cjsg("dano moral", paginas=1, classe="Apelacao")
+def test_cjsg_filtros_sem_suporte_na_api_levantam_typeerror_sem_rede(metodo, filtro):
+    """A API não filtra por classe nem por data de julgamento: o schema os
+    rejeita com ``TypeError`` antes de qualquer requisição."""
+    nome = next(iter(filtro))
+    with pytest.raises(TypeError, match=nome):
+        getattr(jus.scraper("tjmt"), metodo)("dano moral", paginas=1, **filtro)
+
+    assert len(responses.calls) == 0
 
 
 @responses.activate(registry=OrderedRegistry)
@@ -80,33 +92,24 @@ def test_cjsg_termo_alias_emits_deprecation_warning(mocker):
 
 
 @responses.activate(registry=OrderedRegistry)
-def test_cjsg_data_inicio_alias_maps_to_data_julgamento(mocker):
-    """Generic ``data_inicio``/``data_fim`` aliases map to
-    ``data_julgamento_inicio``/``data_julgamento_fim`` via ``normalize_datas``
-    and reach the request as the canonical ``filtro.periodoData*`` query params.
-    """
-    mocker.patch("time.sleep")
-    _add_config()
-    _add_page(
-        "dano moral",
-        1,
-        "cjsg/no_results.json",
-        data_julgamento_inicio="2024-01-01",
-        data_julgamento_fim="2024-03-31",
-    )
-
-    with pytest.warns(DeprecationWarning) as warning_list:
-        df = jus.scraper("tjmt").cjsg(
+def test_cjsg_data_inicio_alias_aponta_para_julgamento_e_levanta_typeerror():
+    """Os aliases genéricos de data apontam para data de julgamento: o usuário
+    vê o ``DeprecationWarning`` do alias e depois o ``TypeError`` do schema,
+    sem requisição."""
+    with pytest.warns(DeprecationWarning) as warning_list, pytest.raises(
+        TypeError, match="data_julgamento"
+    ):
+        jus.scraper("tjmt").cjsg(
             "dano moral",
             paginas=1,
             data_inicio="2024-01-01",
             data_fim="2024-03-31",
         )
 
-    assert isinstance(df, pd.DataFrame)
     messages = [str(w.message) for w in warning_list]
     assert any("data_inicio" in m and "deprecado" in m for m in messages)
     assert any("data_fim" in m and "deprecado" in m for m in messages)
+    assert len(responses.calls) == 0
 
 
 def test_cjsg_unknown_kwarg_raises():
@@ -120,16 +123,27 @@ def test_cjsg_unknown_kwarg_raises():
     )
 
 
-def test_cjsg_data_publicacao_raises_typeerror():
-    """TJMT backend nao expoe filtro de data de publicacao — passar
-    ``data_publicacao_*`` deve levantar ``TypeError`` em vez de silently drop
-    (refs #165, #173, #186)."""
-    assert_unknown_kwarg_raises(
-        jus.scraper("tjmt").cjsg,
-        "data_publicacao_inicio",
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_data_publicacao_eh_suportada(mocker):
+    """O fim do intervalo de publicação chega como o último segundo do dia pedido."""
+    mocker.patch("time.sleep")
+    _add_config()
+    _add_page(
+        "dano moral",
+        1,
+        "cjsg/no_results.json",
+        data_publicacao_inicio="2024-01-01",
+        data_publicacao_fim="2024-03-31T23:59:59",
+    )
+
+    dataframe = jus.scraper("tjmt").cjsg(
         "dano moral",
         paginas=1,
+        data_publicacao_inicio="2024-01-01",
+        data_publicacao_fim="2024-03-31",
     )
+
+    assert isinstance(dataframe, pd.DataFrame)
 
 
 @responses.activate(registry=OrderedRegistry)
@@ -153,34 +167,3 @@ def test_cjsg_tamanho_pagina_collision_raises():
         jus.scraper("tjmt").cjsg(
             "dano moral", paginas=1, tamanho_pagina=5, quantidade_por_pagina=10
         )
-
-
-@responses.activate(registry=OrderedRegistry)
-def test_cjsg_data_julgamento_aceita_formato_brasileiro(mocker):
-    """Datas em ``DD/MM/YYYY`` chegam coercidas em ISO ao Hellsgate.
-
-    Cobre o caminho end-to-end de ``apply_input_pipeline_search`` lendo
-    ``BACKEND_DATE_FORMAT='%Y-%m-%d'`` declarado em :class:`InputCJSGTJMT`
-    e convertendo via ``coerce_brazilian_date``. Se o schema esquecer de
-    declarar o ``BACKEND_DATE_FORMAT`` (cai no default ``%d/%m/%Y``), o
-    backend recebe ``filtro.periodoDataDe=01/01/2024`` em vez de
-    ``2024-01-01`` e o matcher dispara ``ConnectionError`` (refs #182,
-    #173, #167)."""
-    mocker.patch("time.sleep")
-    _add_config()
-    _add_page(
-        "dano moral",
-        1,
-        "cjsg/no_results.json",
-        data_julgamento_inicio="2024-01-01",
-        data_julgamento_fim="2024-03-31",
-    )
-
-    df = jus.scraper("tjmt").cjsg(
-        "dano moral",
-        paginas=1,
-        data_julgamento_inicio="01/01/2024",
-        data_julgamento_fim="31/03/2024",
-    )
-
-    assert isinstance(df, pd.DataFrame)
