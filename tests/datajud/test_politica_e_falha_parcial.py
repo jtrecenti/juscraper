@@ -545,9 +545,20 @@ def test_politica_aceita_tentativas_e_backoff():
     assert perfil.retryable_statuses == {429, 502, 503}
 
 
-def test_politica_com_max_retries_invalido_levanta_o_erro_do_core():
-    with pytest.raises(ValueError, match="max_retries deve ser >= 1"):
-        jus.scraper("datajud", politica={"busca": {"max_retries": 0}})
+@pytest.mark.parametrize(
+    "ajuste",
+    # Valores que a ``RequestPolicy`` aceitaria e que só estourariam no primeiro
+    # 429, no meio da coleta, com ``TypeError`` em vez de ``ColetaParcialError``.
+    [
+        {"max_retries": 0}, {"max_retries": 2.5}, {"max_retries": True}, {"max_retries": "3"},
+        {"base_backoff": "2"}, {"base_backoff": -1}, {"base_backoff": 0}, {"base_backoff": True},
+        {"base_backoff": float("inf")},
+    ],
+)
+def test_politica_com_tentativas_ou_backoff_invalido_levanta(ajuste):
+    campo = next(iter(ajuste))
+    with pytest.raises(ValueError, match=f"{campo} inválido"):
+        jus.scraper("datajud", politica={"busca": ajuste})
 
 
 @pytest.mark.parametrize(
@@ -606,8 +617,9 @@ def test_falha_na_primeira_pagina_lanca_erro_parcial_com_diagnostico(monkeypatch
 
     mensagem = str(exc_info.value)
     assert "página 1. Resultados parciais em erro.resultado: nenhum registro recebido" in mensagem
-    assert "data_ajuizamento_inicio" in mensagem
-    assert "politica={'busca': {'timeout'" in mensagem
+    # A dica de recorte e timeout fica para a falha por timeout
+    # (``test_falhas_http.py``); aqui a causa é erro de conexão.
+    assert mensagem.endswith("Causa: ConnectionError: falha simulada.")
     assert exc_info.value.resultado.empty
     assert len(exc_info.value.falhas) == 1
     assert isinstance(exc_info.value.falhas[0][2], Exception)

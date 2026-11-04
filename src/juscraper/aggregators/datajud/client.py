@@ -6,7 +6,7 @@ import logging
 import math
 import time
 from collections import defaultdict
-from collections.abc import Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from typing import Any, ClassVar, NamedTuple, NoReturn, cast
 
 import pandas as pd
@@ -153,6 +153,10 @@ def _numero_positivo(valor: Any) -> bool:
         return False
 
 
+def _max_retries_valido(valor: Any) -> bool:
+    return isinstance(valor, int) and not isinstance(valor, bool) and valor >= 1
+
+
 def _timeout_valido(timeout: Any) -> bool:
     """Número positivo e finito, ou par ``(conexão, leitura)`` deles, como o ``requests`` aceita.
 
@@ -183,10 +187,7 @@ def _mensagem_falha_parcial(
     inicio = f"DataJud: falha ao consultar alias {alias!r} na página {pagina}."
     if total_info is None:
         return (
-            f"{inicio} Resultados parciais em erro.resultado: nenhum registro recebido. "
-            "Se a falha foi timeout, reduza o recorte (por exemplo, com "
-            "data_ajuizamento_inicio/_fim) ou aumente o timeout com "
-            "politica={'busca': {'timeout': ...}}."
+            f"{inicio} Resultados parciais em erro.resultado: nenhum registro recebido."
         )
     recebidos_txt = f"{inicio} Resultados parciais em erro.resultado: {recebidos} registro(s) recebido(s)"
     total = total_info.get("value")
@@ -210,6 +211,18 @@ def _descrever_causa(exc: Exception) -> str:
     if isinstance(exc, requests.Timeout):
         return "timeout"
     return f"{type(exc).__name__}: {exc}"
+
+
+DICA_TIMEOUT = (
+    " Reduza o recorte (por exemplo, com data_ajuizamento_inicio/_fim) ou aumente "
+    "o timeout com politica={'busca': {'timeout': ...}}."
+)
+
+
+def _sufixo_causa(exc: Exception) -> str:
+    """Fecha a mensagem da falha de transporte com a causa e, no timeout, o que ajustar."""
+    dica = DICA_TIMEOUT if isinstance(exc, requests.Timeout) else ""
+    return f" Causa: {_descrever_causa(exc)}.{dica}"
 
 
 def _falha_pagina(mensagem: str, causa: Exception) -> NoReturn:
@@ -405,15 +418,23 @@ class DatajudScraper(HTTPScraper):
     PREFIXO_DIRETORIO_TEMPORARIO = "datajud_api_"
 
     # Um perfil só, para ``listar_processos`` e ``contar_processos``. Os status
-    # repetíveis e o retry em timeout ficam fixos, porque mudá-los desligaria o
-    # fallback de ``size`` em 504 e timeout descrito no Note da classe;
-    # ``__init__`` recusa ajuste deles em vez de ignorá-lo.
+    # repetíveis e o retry em timeout ficam fixos: com o 504 entre os status, o
+    # fallback de ``size`` descrito no Note da classe não agiria, e o retry em
+    # timeout o adiaria. ``__init__`` recusa ajuste deles em vez de ignorá-lo e
+    # valida os campos aceitos, cada um com a regra e a dica de
+    # ``VALIDADORES_POLITICA``.
     perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
         "busca": RequestPolicy(timeout=60, retryable_statuses=STATUS_REPETIVEIS),
     }
-    CAMPOS_POLITICA_SUPORTADOS: ClassVar[frozenset[str]] = frozenset(
-        {"timeout", "max_retries", "base_backoff"}
-    )
+    VALIDADORES_POLITICA: ClassVar[Mapping[str, tuple[Callable[[Any], bool], str]]] = {
+        "timeout": (
+            _timeout_valido,
+            "Use um número positivo e finito de segundos ou o par (conexão, leitura).",
+        ),
+        "max_retries": (_max_retries_valido, "Use um inteiro >= 1, contando a primeira tentativa."),
+        "base_backoff": (_numero_positivo, "Use um número positivo e finito de segundos."),
+    }
+    CAMPOS_POLITICA_SUPORTADOS: ClassVar[frozenset[str]] = frozenset(VALIDADORES_POLITICA)
 
     def __init__(
         self,
@@ -485,13 +506,14 @@ class DatajudScraper(HTTPScraper):
                 raise ValueError(
                     f"DatajudScraper só aceita {sorted(cls.CAMPOS_POLITICA_SUPORTADOS)} "
                     f"em politica={{{nome!r}: ...}}; recebido {sorted(nao_suportados)}. "
-                    "Os demais ficam fixos para não desligar o fallback de size em 504 e timeout."
+                    "Os demais ficam fixos: com o 504 entre os status repetíveis, o fallback "
+                    "de size não agiria, e o retry em timeout o adiaria."
                 )
-            if "timeout" in ajuste and not _timeout_valido(ajuste["timeout"]):
-                raise ValueError(
-                    f"timeout inválido em politica={{{nome!r}: ...}}: {ajuste['timeout']!r}. "
-                    "Use um número positivo e finito de segundos ou o par (conexão, leitura)."
-                )
+            for campo, (valido, dica) in cls.VALIDADORES_POLITICA.items():
+                if campo in ajuste and not valido(ajuste[campo]):
+                    raise ValueError(
+                        f"{campo} inválido em politica={{{nome!r}: ...}}: {ajuste[campo]!r}. {dica}"
+                    )
 
     def contar_processos(self, **kwargs) -> pd.DataFrame:
         """Conta processos no DataJud sem baixar nenhum documento.
@@ -765,7 +787,8 @@ class DatajudScraper(HTTPScraper):
                 falha HTTP, a causa é a exceção original: ``requests.HTTPError``
                 (status em ``.response.status_code``), ``RetryExhaustedError``
                 (429, 502 ou 503 em todas as tentativas, status em
-                ``.status_code``), ``requests.Timeout`` ou erro de conexão.
+                ``.status_code``), ``requests.Timeout``, erro de conexão ou
+                ``requests.JSONDecodeError`` (resposta 200 que não é JSON).
 
         Returns:
             pd.DataFrame: Um DataFrame com uma linha por processo. ``extra``
@@ -944,7 +967,7 @@ class DatajudScraper(HTTPScraper):
                 api_response = self._buscar(alias, query_payload)
             except FALHAS_DE_TRANSPORTE as exc:
                 mensagem = _mensagem_falha_parcial(alias, current_page, recebidos, total_info)
-                _falha_pagina(f"{mensagem} Causa: {_descrever_causa(exc)}.", exc)
+                _falha_pagina(mensagem + _sufixo_causa(exc), exc)
             hits = _hits_da_pagina(api_response, alias, current_page, recebidos, total_info)
             if current_page == 1:
                 total_info = _total_primeira_pagina(api_response, alias, current_page)
