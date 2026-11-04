@@ -7,7 +7,7 @@ import time
 import unicodedata
 from collections import deque
 from collections.abc import Iterator
-from datetime import date, timedelta
+from datetime import date
 from urllib.parse import urljoin, urlparse
 
 import requests
@@ -282,12 +282,19 @@ def _to_tjmt_date(value) -> str | None:
         raise ValueError(f"Data inválida para o TJMT: {value!r}.") from exc
 
 
-def _to_exclusive_end_date(value) -> str | None:
-    """Converte a data final inclusiva para o limite exclusivo da API."""
+def _to_end_of_day(value) -> str | None:
+    """Converte a data final inclusiva no último segundo desse dia.
+
+    A API compara ``periodoDataAte`` com o instante informado, inclusive, e lê
+    uma data sem hora como meia-noite. Enviar só o dia perderia o que foi
+    publicado nele depois da meia-noite; somar um dia traria o que foi
+    publicado à meia-noite do dia seguinte. ``T23:59:59`` cobre o dia pedido
+    inteiro e nada além dele.
+    """
     normalized = _to_tjmt_date(value)
     if not normalized:
         return normalized
-    return (date.fromisoformat(normalized) + timedelta(days=1)).isoformat()
+    return f"{normalized}T23:59:59"
 
 
 def _validate_download_inputs(quantidade: int, paginas, tipo_consulta: str) -> list[int] | None:
@@ -370,7 +377,7 @@ def cjsg_download(
         classe,
     )
     data_publicacao_inicio = _to_tjmt_date(data_publicacao_inicio)
-    data_publicacao_fim = _to_exclusive_end_date(data_publicacao_fim)
+    data_publicacao_fim = _to_end_of_day(data_publicacao_fim)
     relator = _normalize_text_filter(relator, "relator")
     orgao_julgador = _normalize_text_filter(orgao_julgador, "orgao_julgador")
     tipo_processo = _normalize_tipo_processo(tipo_processo)

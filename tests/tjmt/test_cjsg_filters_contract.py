@@ -21,7 +21,7 @@ def test_cjsg_all_supported_filters_land_in_query_params(mocker):
         tamanho_pagina=5,
         tipo_consulta="Acordao",
         data_publicacao_inicio="2024-01-01",
-        data_publicacao_fim="2024-04-01",
+        data_publicacao_fim="2024-03-31T23:59:59",
         relator="Relator Teste",
         orgao_julgador="Camara Teste",
         tipo_processo="Cível",
@@ -110,7 +110,7 @@ def test_cjsg_unknown_kwarg_raises():
 
 @responses.activate(registry=OrderedRegistry)
 def test_cjsg_data_publicacao_eh_suportada(mocker):
-    """Datas de publicação chegam ao endpoint novo com limite final exclusivo."""
+    """O fim do intervalo de publicação chega como o último segundo do dia pedido."""
     mocker.patch("time.sleep")
     _add_config()
     _add_page(
@@ -118,7 +118,7 @@ def test_cjsg_data_publicacao_eh_suportada(mocker):
         1,
         "cjsg/no_results.json",
         data_publicacao_inicio="2024-01-01",
-        data_publicacao_fim="2024-04-01",
+        data_publicacao_fim="2024-03-31T23:59:59",
     )
 
     dataframe = jus.scraper("tjmt").cjsg(

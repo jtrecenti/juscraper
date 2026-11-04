@@ -13,7 +13,7 @@ from juscraper.courts.tjmt.download import (
     _get_api_config,
     _normalize_text_filter,
     _normalize_tipo_processo,
-    _to_exclusive_end_date,
+    _to_end_of_day,
     _to_tjmt_date,
 )
 
@@ -53,7 +53,7 @@ def _capture(
         quantidade=quantidade,
         tipo_consulta=tipo_consulta,
         data_publicacao_inicio=_to_tjmt_date(data_publicacao_inicio),
-        data_publicacao_fim=_to_exclusive_end_date(data_publicacao_fim),
+        data_publicacao_fim=_to_end_of_day(data_publicacao_fim),
         relator=_normalize_text_filter(relator, "relator"),
         orgao_julgador=_normalize_text_filter(orgao_julgador, "orgao_julgador"),
         tipo_processo=_normalize_tipo_processo(tipo_processo),

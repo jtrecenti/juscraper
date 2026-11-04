@@ -312,7 +312,7 @@ def test_builds_normalized_filters_and_inclusive_publication_interval(mocker):
         "thesaurus": "false",
         "exibirArquivados": "true",
         "periodoDataDe": "2024-07-19",
-        "periodoDataAte": "2024-07-20",
+        "periodoDataAte": "2024-07-19T23:59:59",
         "fqRelator": "JOAO D'AVILA-SILVA",
         "fqOrgaoJulgador": "CAMARA CIVEL",
         "tipoProcesso": "2",
@@ -341,7 +341,7 @@ def test_public_download_propagates_publication_date_and_filters(mocker):
     assert params["fqOrgaoJulgador"] == "PRIMEIRA CAMARA"
     assert params["tipoProcesso"] == "1"
     assert params["periodoDataDe"] == "2024-07-19"
-    assert params["periodoDataAte"] == "2024-07-20"
+    assert params["periodoDataAte"] == "2024-07-19T23:59:59"
 
 
 def test_public_integer_pages_downloads_from_first_page_through_requested_page(mocker):
@@ -374,11 +374,11 @@ def test_public_rejects_numeric_filter_ids_before_network(filter_name, mocker):
     ("start", "end", "expected"),
     [
         ("2024-07-19", None, {"periodoDataDe": "2024-07-19"}),
-        (None, "2024-07-19", {"periodoDataAte": "2024-07-20"}),
+        (None, "2024-07-19", {"periodoDataAte": "2024-07-19T23:59:59"}),
         (
             "19/07/2024",
             "20/07/2024",
-            {"periodoDataDe": "2024-07-19", "periodoDataAte": "2024-07-21"},
+            {"periodoDataDe": "2024-07-19", "periodoDataAte": "2024-07-20T23:59:59"},
         ),
     ],
 )
