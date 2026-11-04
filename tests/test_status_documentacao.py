@@ -110,7 +110,7 @@ def test_data_futura_nao_vira_funcionando(dados, estado):
         MODULO["renderizar"](registro, date(2026, 6, 6))
 
 
-@pytest.mark.parametrize("campo,valor", [
+@pytest.mark.parametrize(("campo", "valor"), [
     ("estado", "ok"), ("estado", ""), ("versao", " "),
     ("evidencias", []), ("evidencias", ["javascript:alert(1)"]), ("verificado_em", "ontem"),
     ("motivo", ""), ("cenario", " "),
@@ -147,10 +147,13 @@ def test_rejeita_inventario_inconsistente(dados, erro):
         MODULO["Registro"].model_validate(dados)
 
 
-@pytest.mark.parametrize("texto", ["sem marcadores", "<!-- status:fim --><!-- status:inicio -->",
-                                   "<!-- status:inicio --><!-- status:inicio --><!-- status:fim -->"])
-def test_rejeita_marcadores_ambiguos(texto):
-    with pytest.raises(ValueError):
+@pytest.mark.parametrize(("texto", "mensagem"), [
+    ("sem marcadores", "único par"),
+    ("<!-- status:fim --><!-- status:inicio -->", "fora de ordem"),
+    ("<!-- status:inicio --><!-- status:inicio --><!-- status:fim -->", "único par"),
+])
+def test_rejeita_marcadores_ambiguos(texto, mensagem):
+    with pytest.raises(ValueError, match=mensagem):
         MODULO["substituir_bloco"](texto, "novo")
 
 
