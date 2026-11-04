@@ -246,17 +246,11 @@ def _verificar_termino_prematuro(
     effective_size: int,
     total_info: dict[str, Any] | None,
     percorridos: int,
-    diagnostico: str,
+    contexto: _FimPagina,
 ) -> None:
-    """Sinaliza página vazia ou curta antes do total exato."""
-    total_exato = total_info.get("value") if total_info else None
-    if (
-        not isinstance(total_exato, int)
-        or isinstance(total_exato, bool)
-        or total_info is None
-        or total_info.get("relation", "eq") != "eq"
-        or percorridos >= total_exato
-    ):
+    """Sinaliza página vazia ou curta antes do total exato, quando não há última página pedida."""
+    total_exato = _total_exato(total_info)
+    if contexto.last_page is not None or total_exato is None or percorridos >= total_exato:
         return
     if not hits:
         causa = RuntimeError("Página vazia antes de alcançar o total exato da consulta.")
@@ -264,33 +258,16 @@ def _verificar_termino_prematuro(
         causa = RuntimeError("Página curta antes de alcançar o total exato da consulta.")
     else:
         return
+    diagnostico = _mensagem_falha_parcial(contexto.alias, contexto.pagina, contexto.recebidos, total_info)
     _falha_pagina(f"{diagnostico} Paginação encerrada prematuramente: {causa}", causa)
 
 
-def _total_esgotado(total_info: dict[str, Any] | None, percorridos: int) -> bool:
-    """Indica se a coleta alcançou o total exato informado."""
-    total_exato = total_info.get("value") if total_info else None
-    return (
-        total_info is not None
-        and total_info.get("relation", "eq") == "eq"
-        and isinstance(total_exato, int)
-        and not isinstance(total_exato, bool)
-        and percorridos >= total_exato
-    )
-
-
-def _verificar_cursor_ausente(
-    hits: list[dict[str, Any]],
-    effective_size: int,
-    *,
-    pagina_pendente: bool,
-    total_esgotado: bool,
-    mensagem: str,
-) -> None:
-    """Sinaliza falta do cursor quando ainda há página a consultar."""
-    cursor_ausente = len(hits) >= effective_size and not isinstance(hits[-1].get("sort"), list)
-    if cursor_ausente and pagina_pendente and not total_esgotado:
-        _falha_pagina(mensagem, RuntimeError(mensagem))
+def _total_exato(total_info: dict[str, Any] | None) -> int | None:
+    """Total informado pela consulta quando exato (``relation == "eq"``); ``None`` nos outros casos."""
+    if not total_info or total_info.get("relation", "eq") != "eq":
+        return None
+    total = total_info.get("value")
+    return total if isinstance(total, int) and not isinstance(total, bool) else None
 
 
 def _verificar_fim_pagina(
@@ -301,26 +278,17 @@ def _verificar_fim_pagina(
     contexto: _FimPagina,
 ) -> None:
     """Verifica cursor pendente e término prematuro após consumir a página."""
-    _verificar_cursor_ausente(
-        hits,
-        effective_size,
-        pagina_pendente=contexto.last_page is None or contexto.pagina < contexto.last_page,
-        total_esgotado=_total_esgotado(total_info, percorridos),
-        mensagem=(
+    total_exato = _total_exato(total_info)
+    cursor_ausente = len(hits) >= effective_size and not isinstance(hits[-1].get("sort"), list)
+    pagina_pendente = contexto.last_page is None or contexto.pagina < contexto.last_page
+    total_esgotado = total_exato is not None and percorridos >= total_exato
+    if cursor_ausente and pagina_pendente and not total_esgotado:
+        mensagem = (
             f"DataJud: cursor search_after ausente no alias {contexto.alias!r} "
             f"após a página {contexto.pagina}; não foi possível consultar a próxima página."
-        ),
-    )
-    if contexto.last_page is None:
-        _verificar_termino_prematuro(
-            hits,
-            effective_size,
-            total_info,
-            percorridos,
-            _mensagem_falha_parcial(
-                contexto.alias, contexto.pagina, contexto.recebidos, total_info,
-            ),
         )
+        _falha_pagina(mensagem, RuntimeError(mensagem))
+    _verificar_termino_prematuro(hits, effective_size, total_info, percorridos, contexto)
 
 
 def _verificar_pagina_vazia(
@@ -331,32 +299,23 @@ def _verificar_pagina_vazia(
     contexto: _FimPagina,
 ) -> None:
     """Detecta página vazia inconsistente antes de entregá-la ao consumidor."""
-    if contexto.last_page is not None or hits:
-        return
-    _verificar_termino_prematuro(
-        hits,
-        effective_size,
-        total_info,
-        percorridos,
-        _mensagem_falha_parcial(contexto.alias, contexto.pagina, contexto.recebidos, total_info),
-    )
+    if not hits:
+        _verificar_termino_prematuro(hits, effective_size, total_info, percorridos, contexto)
 
 
 def _parse_pagina(
     api_response: dict[str, Any],
     *,
     mostrar_movs: bool,
-    frames: list[pd.DataFrame],
     diagnostico: str,
 ) -> pd.DataFrame:
-    """Converte uma página e preserva os resultados anteriores se falhar."""
+    """Converte uma página; a falha sobe como coleta parcial."""
     try:
         return parse_datajud_api_response(api_response, mostrar_movs)
     except Exception as exc:
-        parcial = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
         raise ColetaParcialError(
             f"{diagnostico} Erro ao parsear a resposta.",
-            resultado=parcial,
+            resultado=pd.DataFrame(),
             falhas=[(None, None, exc)],
         ) from exc
 
@@ -376,11 +335,7 @@ def _verificar_data_frame_vazio(
         f"{_mensagem_falha_parcial(alias, pagina, recebidos, total_info)} "
         "A resposta continha hits, mas o parsing não produziu dados utilizáveis."
     )
-    raise ColetaParcialError(
-        mensagem,
-        resultado=pd.DataFrame(),
-        falhas=[(None, None, causa)],
-    ) from causa
+    _falha_pagina(mensagem, causa)
 
 
 def _total_para_diagnostico(
@@ -834,13 +789,10 @@ class DatajudScraper(HTTPScraper):
                     paginas=paginas_datajud,
                 )
             except ColetaParcialError as exc:
-                if not exc.resultado.empty:
-                    frames.append(exc.resultado)
+                frame = exc.resultado
                 falhas.extend(exc.falhas)
                 diagnosticos.append(str(exc))
-            else:
-                if not frame.empty:
-                    frames.append(frame)
+            frames.append(frame)
 
         non_empty = [frame for frame in frames if not frame.empty]
         resultado = pd.concat(non_empty, ignore_index=True) if non_empty else pd.DataFrame()
@@ -883,7 +835,6 @@ class DatajudScraper(HTTPScraper):
                 frame = _parse_pagina(
                     api_response,
                     mostrar_movs=inp.mostrar_movs,
-                    frames=frames,
                     diagnostico=_mensagem_falha_parcial(
                         alias, current_page, recebidos, total_info or {},
                     ),
@@ -955,12 +906,7 @@ class DatajudScraper(HTTPScraper):
             )
             if api_response is None:
                 mensagem = _mensagem_falha_parcial(alias, current_page, recebidos, total_info)
-                falha = RuntimeError(mensagem)
-                raise ColetaParcialError(
-                    mensagem,
-                    resultado=pd.DataFrame(),
-                    falhas=[(None, None, falha)],
-                ) from falha
+                _falha_pagina(mensagem, RuntimeError(mensagem))
             hits = _hits_da_pagina(api_response, alias, current_page, recebidos, total_info)
             if current_page == 1:
                 total_info = _total_primeira_pagina(api_response, alias, current_page)
@@ -976,16 +922,11 @@ class DatajudScraper(HTTPScraper):
             )
             if paginas is None or current_page in paginas:
                 recebidos += len(hits)
-            _verificar_pagina_vazia(
-                hits, effective_size, total_info, percorridos,
-                _FimPagina(alias, current_page, recebidos, last_page),
-            )
+            contexto = _FimPagina(alias, current_page, recebidos, last_page)
+            _verificar_pagina_vazia(hits, effective_size, total_info, percorridos, contexto)
             yield current_page, api_response
             if next_search_after is None:
-                _verificar_fim_pagina(
-                    hits, effective_size, total_info, percorridos,
-                    _FimPagina(alias, current_page, recebidos, last_page),
-                )
+                _verificar_fim_pagina(hits, effective_size, total_info, percorridos, contexto)
                 return
             search_after = next_search_after
             tamanho_pagina = effective_size

@@ -61,8 +61,4 @@ def parse_datajud_api_response(
         else:
             processos.append(processo_data)  # Include all fields
 
-    if not processos:
-        logger.info("No process data extracted from hits.")
-        return pd.DataFrame()
-
     return pd.DataFrame(processos)
