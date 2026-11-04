@@ -1,4 +1,5 @@
 """Scraper for the Tribunal de Justiça do Rio Grande do Sul (TJRS)."""
+# Teste do gate de CI (PR descartável, não mesclar).
 from typing import ClassVar
 
 import pandas as pd
