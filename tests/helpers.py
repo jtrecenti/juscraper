@@ -20,7 +20,16 @@ publicação. Um fim na sexta deixa o vazamento cair no sábado, e um fim na
 véspera de feriado deixa cair no feriado; nos dois casos o dia seguinte vem
 vazio, o resultado parece correto e o teste passa com o raspador quebrado. A
 janela antiga terminava numa sexta (14/03) e numa véspera de feriado (30/04,
-antes do 1º de maio), e por isso nenhum tribunal reprovava por esse erro.
+antes do 1º de maio), e por isso o teste não pegava esse erro em nenhum
+tribunal.
+
+O fim certo é condição necessária, não suficiente. A asserção olha só a
+primeira página, e as linhas vazadas só chegam a ela quando o backend ordena
+por data decrescente ou quando o dia vazado pesa na janela. Na de julgamento,
+de quatro dias, o dia seguinte vira cerca de um quinto dos resultados. Na de
+publicação, de sete semanas, vira cerca de um trigésimo; num backend que
+ordena por relevância, a primeira página pode vir sem nenhuma linha vazada e o
+teste passa com o raspador quebrado.
 
 ``DATA_ALVO_BR`` abre as duas janelas; ``DATA_ALVO_FIM_BR`` fecha a de
 julgamento e ``DATA_PUB_FIM_BR`` fecha a de publicação.
