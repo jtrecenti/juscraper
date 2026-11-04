@@ -118,3 +118,16 @@ def test_changelog_reprova_codigo_sem_entrada_e_aceita_a_etiqueta():
     assert "exit 1" in changelog
     # O escape documentado é o mesmo que o workflow lê.
     assert "etiqueta `sem-changelog`" in (RAIZ / "CLAUDE.md").read_text(encoding="utf-8")
+
+
+def test_so_a_execucao_que_reescreve_a_issue_divide_a_trava_do_relatorio():
+    # Num grupo de concorrência, um job pendente cancela o pendente anterior:
+    # com o grupo fixo, PRs de tribunais diferentes cancelariam o relatório um
+    # do outro.
+    integracao = linhas("integration.yml")
+    grupos = [linha for linha in integracao if linha.startswith("group:")]
+    assert (
+        "group: ${{ needs.calendario.outputs.atualizar_issue == 'true' && 'integracao-issue' "
+        "|| format('integracao-relatorio-{0}', github.run_id) }}"
+    ) in grupos
+    assert "atualizar_issue: ${{ env.ATUALIZAR_ISSUE }}" in integracao

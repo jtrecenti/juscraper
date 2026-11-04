@@ -64,8 +64,10 @@ jobs:
       rodar: ${{ steps.decidir.outputs.rodar == 'true' && (github.event_name != 'pull_request' || steps.pr.outputs.tribunais != '') }}
       data: ${{ steps.decidir.outputs.data }}
       # Lista de tribunais separados por espaço; vazia na execução completa.
-      alvo: ${{ github.event_name == 'pull_request' && steps.pr.outputs.tribunais || inputs.tribunal }}
-      fora: ${{ github.event_name == 'pull_request' && steps.pr.outputs.fora || '' }}
+      alvo: ${{ steps.pr.outputs.tribunais || inputs.tribunal }}
+      fora: ${{ steps.pr.outputs.fora }}
+      # A trava do relatório precisa disto, e `env` não vale em `concurrency`.
+      atualizar_issue: ${{ env.ATUALIZAR_ISSUE }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -230,9 +232,11 @@ jobs:
       contents: read
       issues: write
     # Uma execução agendada e um disparo manual simultâneos poderiam, os dois,
-    # não achar a issue e criar duas.
+    # não achar a issue e criar duas. A trava vale só para quem reescreve a
+    # issue: num grupo, um job pendente cancela o pendente anterior, e com PRs
+    # de tribunais diferentes rodando juntos um relatório cancelaria o outro.
     concurrency:
-      group: integracao-issue
+      group: ${{ needs.calendario.outputs.atualizar_issue == 'true' && 'integracao-issue' || format('integracao-relatorio-{0}', github.run_id) }}
       cancel-in-progress: false
     env:
       # Com o job de testes reprovado (pytest com código 2 ou mais, tempo
@@ -287,7 +291,7 @@ jobs:
           fora=()
           if [ -z "$TRIBUNAL" ]; then
             fora=(--fora "$FORA_DO_CI")
-          elif [ -n "$FORA_DO_PR" ]; then
+          else
             fora=(--fora "$FORA_DO_PR")
           fi
           python3 scripts/integration_report.py relatorio "${suites[@]}" "${fora[@]}" \

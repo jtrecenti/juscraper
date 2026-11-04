@@ -1,6 +1,5 @@
 """Exercita o subcomando ``alvo-pr`` de scripts/integration_report.py, sem rede."""
 
-import re
 import subprocess
 import sys
 from pathlib import Path
@@ -135,5 +134,5 @@ def test_familias_reais_apontam_seus_tribunais(tmp_path):
 def test_workflow_passa_a_lista_fora_do_ci_ao_alvo_do_pr():
     texto = WORKFLOW.read_text(encoding="utf-8")
 
-    assert re.search(r'alvo-pr --arquivos arquivos\.txt --fora "\$FORA_DO_CI"', texto)
+    assert 'alvo-pr --arquivos arquivos.txt --fora "$FORA_DO_CI"' in texto
     assert "git diff --name-only HEAD^1 HEAD > arquivos.txt" in texto
