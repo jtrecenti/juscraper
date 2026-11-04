@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       tribunal:
-        description: "Diretório de tests/ a rodar (ex.: tjsp). Vazio roda tudo."
+        description: "Diretórios de tests/ a rodar, separados por espaço (ex.: tjsp tjmg). Vazio roda tudo."
         type: string
         default: ""
       atualizar_issue:
@@ -89,13 +89,15 @@ jobs:
         id: pr
         if: github.event_name == 'pull_request'
         run: |
-          git diff --name-only HEAD^1 HEAD > arquivos.txt
+          # Sem --no-renames, um arquivo movido aparece só no caminho novo, e o
+          # tribunal de onde ele saiu não roda.
+          git diff --no-renames --name-only HEAD^1 HEAD > arquivos.txt
           saida="$(python3 scripts/integration_report.py alvo-pr --arquivos arquivos.txt --fora "$FORA_DO_CI")"
           echo "$saida" | tee -a "$GITHUB_OUTPUT"
           fora="$(sed -n 's/^fora=//p' <<< "$saida")"
-          if [ -n "$fora" ]; then
-            echo "::warning title=Fora do CI::O PR toca $fora, que não roda no runner do GitHub; rodar localmente: uv run pytest tests/<tribunal> -m 'integration and not anti_bot' e uv run pytest --nbmake docs/notebooks/<tribunal>.ipynb"
-          fi
+          for nome in $fora; do
+            echo "::warning title=Fora do CI::O PR toca $nome, que não roda no runner do GitHub; rodar localmente: uv run pytest tests/$nome -m 'integration and not anti_bot' e uv run pytest --nbmake docs/notebooks/$nome.ipynb"
+          done
 
   testes:
     name: Tribunais ao vivo
@@ -138,6 +140,12 @@ jobs:
               fi
               release="${release:+$release or }$nome"
             done
+            # Valor só com espaços não entra no laço, e o pytest sem caminho
+            # rodaria a suíte inteira, sem a lista FORA_DO_CI.
+            if [ -z "$testes" ]; then
+              echo "::error::tribunal vazio; use o nome de um diretório de tests/"
+              exit 1
+            fi
           fi
           ignorar_testes=""
           ignorar_notebooks=""

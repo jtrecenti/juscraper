@@ -135,4 +135,4 @@ def test_workflow_passa_a_lista_fora_do_ci_ao_alvo_do_pr():
     texto = WORKFLOW.read_text(encoding="utf-8")
 
     assert 'alvo-pr --arquivos arquivos.txt --fora "$FORA_DO_CI"' in texto
-    assert "git diff --name-only HEAD^1 HEAD > arquivos.txt" in texto
+    assert "git diff --no-renames --name-only HEAD^1 HEAD > arquivos.txt" in texto
