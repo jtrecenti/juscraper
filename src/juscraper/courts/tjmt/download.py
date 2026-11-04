@@ -287,9 +287,9 @@ def _to_end_of_day(value) -> str | None:
 def _validate_page_size(quantidade: int) -> None:
     """Valida o tamanho de página contra o domínio aceito pela API."""
     if isinstance(quantidade, bool) or not isinstance(quantidade, int):
-        raise TypeError("quantidade_por_pagina deve ser um inteiro positivo.")
+        raise TypeError("tamanho_pagina deve ser um inteiro positivo.")
     if quantidade < 1:
-        raise ValueError("quantidade_por_pagina deve ser maior que zero.")
+        raise ValueError("tamanho_pagina deve ser maior que zero.")
     if quantidade > MAX_RESULTS:
         raise ValueError(
             f"tamanho_pagina deve ser no máximo {MAX_RESULTS}, o teto de resultados "

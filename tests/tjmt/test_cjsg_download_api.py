@@ -172,8 +172,10 @@ def test_exact_multiple_of_page_size_does_not_fetch_extra_page(mocker):
 @pytest.mark.parametrize(
     ("kwargs", "exception", "message"),
     [
-        ({"quantidade_por_pagina": 0}, ValueError, "quantidade_por_pagina"),
-        ({"quantidade_por_pagina": -1}, ValueError, "quantidade_por_pagina"),
+        ({"quantidade_por_pagina": 0}, ValueError, "tamanho_pagina deve ser maior que zero"),
+        ({"quantidade_por_pagina": -1}, ValueError, "tamanho_pagina deve ser maior que zero"),
+        ({"quantidade_por_pagina": 1.5}, TypeError, "tamanho_pagina deve ser um inteiro"),
+        ({"quantidade_por_pagina": True}, TypeError, "tamanho_pagina deve ser um inteiro"),
         ({"paginas": 0}, ValueError, "paginas"),
         ({"paginas": -1}, ValueError, "paginas"),
         ({"paginas": [0]}, ValueError, "paginas"),
