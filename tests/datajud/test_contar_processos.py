@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import pandas as pd
 import pytest
+import requests
 
 import juscraper as jus
 from juscraper.aggregators.datajud import client as datajud_client
@@ -21,7 +22,7 @@ def captured_payloads(monkeypatch):
     """Intercepta ``call_datajud_api`` e devolve uma resposta sintética."""
     payloads = []
 
-    def fake_call(*, base_url, alias, api_key, session, query_payload, verbose=False, timeout=60):
+    def fake_call(*, base_url, alias, api_key, requisitar, query_payload, verbose=False):
         payloads.append({"alias": alias, "payload": query_payload})
         return {"hits": {"total": {"value": 12345, "relation": "eq"}, "hits": []}}
 
@@ -93,12 +94,14 @@ class TestReturnShape:
         assert row["error"] is None
 
     def test_falha_de_rede_vira_erro_na_linha(self, monkeypatch):
-        """Quando ``call_datajud_api`` devolve None (falha), a linha
-        carrega ``count=None`` e ``error`` populado — análise por
+        """Quando ``call_datajud_api`` levanta, a linha carrega
+        ``count=None`` e ``error`` com o status HTTP — análise por
         tribunal continua mesmo com falha em um."""
 
-        def fake_call(*, base_url, alias, api_key, session, query_payload, verbose=False, timeout=60):
-            return None
+        def fake_call(*, base_url, alias, api_key, requisitar, query_payload, verbose=False):
+            resposta = requests.Response()
+            resposta.status_code = 401
+            raise requests.HTTPError("401 Client Error", response=resposta)
 
         monkeypatch.setattr(datajud_client, "call_datajud_api", fake_call)
 
@@ -108,11 +111,11 @@ class TestReturnShape:
         assert len(df) == 1
         row = df.iloc[0]
         assert row["count"] is None
-        assert row["error"] is not None
+        assert row["error"] == "HTTP 401"
         assert row["relation"] is None
 
     def test_relation_gte_quando_truncado(self, monkeypatch):
-        def fake_call(*, base_url, alias, api_key, session, query_payload, verbose=False, timeout=60):
+        def fake_call(*, base_url, alias, api_key, requisitar, query_payload, verbose=False):
             return {"hits": {"total": {"value": 10000, "relation": "gte"}}}
 
         monkeypatch.setattr(datajud_client, "call_datajud_api", fake_call)
@@ -255,7 +258,7 @@ class TestMultiplosTribunais:
     def test_lista_de_cnjs_de_tribunais_diferentes(self, monkeypatch):
         chamadas = []
 
-        def fake_call(*, base_url, alias, api_key, session, query_payload, verbose=False, timeout=60):
+        def fake_call(*, base_url, alias, api_key, requisitar, query_payload, verbose=False):
             chamadas.append(alias)
             return {
                 "hits": {"total": {"value": len(alias), "relation": "eq"}, "hits": []}

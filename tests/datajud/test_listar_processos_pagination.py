@@ -8,6 +8,7 @@ from typing import Any
 
 import pandas as pd
 import pytest
+import requests
 from pydantic import ValidationError
 
 import juscraper as jus
@@ -42,7 +43,10 @@ def _install_pages(monkeypatch, pages: Iterable[dict[str, Any] | None]):
 
     def fake_call(**kwargs):
         calls.append(kwargs)
-        return next(responses)
+        resposta = next(responses)
+        if resposta is None:
+            raise requests.ConnectionError("falha simulada")
+        return resposta
 
     monkeypatch.setattr(datajud_client, "call_datajud_api", fake_call)
     monkeypatch.setattr(datajud_client.time, "sleep", lambda _: None)

@@ -2,12 +2,12 @@
 Functions for downloading specific data from the Datajud API.
 """
 import logging
-from collections.abc import Callable
 from typing import Any
 
 import requests
 
 from ...core.avisos import avisar
+from ...core.http import RequestFn
 from ...utils.cnj import clean_cnj
 from ...utils.logging_cfg import redact_headers
 
@@ -23,6 +23,13 @@ logger = logging.getLogger(__name__)
 FALLBACK_DIVISOR = 4
 FALLBACK_MIN_SIZE = 100
 FALLBACK_RETRY_STATUS = {504}
+
+# Status que o perfil ``"busca"`` do ``DatajudScraper`` repete com espera, antes
+# de qualquer fallback: o servidor pediu para tentar de novo mais tarde. O 429
+# vem com ``es_rejected_execution_exception`` quando a fila de busca do cluster
+# enche, sinal de sobrecarga e não da consulta. O 500 fica de fora, porque costuma ser erro da
+# consulta, e o 504 tem o fallback de ``size`` acima.
+STATUS_REPETIVEIS = frozenset({429, 502, 503})
 
 
 def build_listar_processos_payload(
@@ -233,40 +240,42 @@ def call_datajud_api(
     base_url: str,
     alias: str,
     api_key: str,
-    session: requests.Session,
+    requisitar: RequestFn,
     query_payload: dict[str, Any],
     verbose: bool = False,
-    timeout: float | tuple[float, float] | None = 60,
-) -> dict[str, Any] | None:
-    """
-    Calls the Datajud API for a given alias with a specific query.
+) -> dict[str, Any]:
+    """Faz a busca ``_search`` de um alias do DataJud e devolve o JSON da resposta.
 
     Args:
-        base_url (str): The base URL of Datajud API (e.g. https://api-publica.datajud.cnj.jus.br).
-        alias (str): The API alias for the specific tribunal/service (e.g. api_publica_tjsp).
-        api_key (str): The API key for authorization.
-        session (requests.Session): The requests session to use.
-        query_payload (dict[str, Any]): The Elasticsearch query payload.
-        verbose (bool): If True, logs more details about the request.
-        timeout (float | tuple[float, float] | None): Timeout do ``requests`` em
-            segundos. O ``DatajudScraper`` passa o do perfil HTTP ``"busca"``.
+        base_url: URL base da API (por exemplo, https://api-publica.datajud.cnj.jus.br).
+        alias: Alias do índice do tribunal (por exemplo, api_publica_tjsp).
+        api_key: Chave da API.
+        requisitar: ``HTTPScraper._request_with_retry`` já ligado ao perfil
+            ``"busca"``. Dele vêm o ``timeout`` e as novas tentativas em
+            :data:`STATUS_REPETIVEIS` (429, 502 e 503), com espera pelo
+            ``Retry-After`` numérico ou pelo backoff exponencial do perfil.
+        query_payload: Body Elasticsearch.
+        verbose: Se ``True``, registra URL, payload e status no log.
 
     Returns:
-        dict[str, Any] | None: The JSON response from the API as a dictionary,
-                                   or None if the request fails or returns an error.
+        O JSON da resposta.
+
+    Raises:
+        juscraper.core.exceptions.RetryExhaustedError: Status repetível em
+            todas as tentativas do perfil.
+        requests.HTTPError: Status de erro que não se repete (401, 500, 504
+            depois do fallback), com a resposta em ``.response``.
+        requests.Timeout: Timeout, também depois do fallback.
+        requests.RequestException: Erro de conexão ou corpo que não é JSON.
 
     Note:
-        Em caso de falha, retorna None e loga o erro via logger.error. O caller
-        (`_iter_process_pages` em client.py) levanta `ColetaParcialError` com
-        o alias, a pagina e o total da consulta quando detecta None.
-
-        Em ``HTTP 504``/``Timeout`` (gateway saturado), faz **1 retry**
-        automatico com ``size`` reduzido por ``FALLBACK_DIVISOR`` (default 4),
-        mutando ``query_payload["size"]`` em place — o caller le
-        ``query_payload["size"]`` na heuristica de "ultima pagina"
-        (``len(hits) < query_payload["size"]``) para nao parar antes do tempo
-        quando o fallback rebaixou o size. Emite ``UserWarning`` informando o
-        novo size. Se o retry tambem falhar, segue o fluxo normal (return None).
+        Em ``HTTP 504`` ou ``Timeout`` (gateway saturado), refaz a busca **uma
+        vez** com ``size`` reduzido por ``FALLBACK_DIVISOR``, mutando
+        ``query_payload["size"]`` no lugar: o caller lê ``query_payload["size"]``
+        na heurística de última página (``len(hits) < query_payload["size"]``)
+        para não parar antes do tempo. Emite ``UserWarning`` com o novo size.
+        Se ``size`` já está no mínimo ou a nova busca também falha, a exceção
+        sobe para o caller.
     """
     api_url = f"{base_url}/{alias}/_search"
     headers = {
@@ -279,62 +288,41 @@ def call_datajud_api(
         logger.debug("Headers: %s", redact_headers(headers))
         logger.debug("Payload: %s", query_payload)
 
-    def _do_post() -> dict[str, Any] | None:
-        response = session.post(api_url, json=query_payload, headers=headers, timeout=timeout)
+    def _do_post() -> dict[str, Any]:
+        response = requisitar("POST", api_url, json=query_payload, headers=headers)
         if verbose:
             logger.debug("Response Status Code: %s", response.status_code)
-        response.raise_for_status()
         data: dict[str, Any] = response.json()
         return data
-
-    def _is_overload(exc: BaseException) -> bool:
-        if isinstance(exc, requests.exceptions.Timeout):
-            return True
-        if isinstance(exc, requests.exceptions.HTTPError):
-            status = getattr(getattr(exc, "response", None), "status_code", None)
-            return status in FALLBACK_RETRY_STATUS
-        return False
 
     try:
         return _do_post()
     except (requests.exceptions.HTTPError, requests.exceptions.Timeout) as exc:
-        if _is_overload(exc):
-            return _retry_with_reduced_size(api_url, alias, query_payload, _do_post, exc)
-        _log_http_error(api_url, exc)
-        return None
-    except requests.exceptions.RequestException as exc:
-        logger.error("Request failed for Datajud API (%s): %s", api_url, exc)
-        return None
-    except ValueError as exc:  # Includes JSONDecodeError if response is not valid JSON
-        logger.error("Failed to decode JSON response from Datajud API (%s): %s", api_url, exc)
-        return None
-    except Exception as exc:
-        logger.error("An unexpected error occurred calling Datajud API (%s): %s", api_url, exc)
-        return None
+        if not (_e_sobrecarga(exc) and _reduzir_size(alias, query_payload)):
+            raise
+    return _do_post()
 
 
-def _retry_with_reduced_size(
-    api_url: str,
-    alias: str,
-    query_payload: dict[str, Any],
-    do_post: Callable[[], dict[str, Any] | None],
-    original_exc: BaseException,
-) -> dict[str, Any] | None:
-    """1 retry com ``size`` reduzido por ``FALLBACK_DIVISOR`` apos 504/timeout.
+def _e_sobrecarga(exc: BaseException) -> bool:
+    """Diz se a falha é do gateway saturado (504 ou timeout), que o fallback de ``size`` trata."""
+    if isinstance(exc, requests.exceptions.Timeout):
+        return True
+    status = getattr(getattr(exc, "response", None), "status_code", None)
+    return status in FALLBACK_RETRY_STATUS
 
-    Muta ``query_payload["size"]`` em place para que o caller leia o size
-    efetivo na heuristica de ultima pagina (``len(hits) < query_payload['size']``)
-    em ``client.py:_iter_process_pages``. Retorna ``None`` em qualquer
-    falha do retry, alinhado ao contrato de ``call_datajud_api``.
+
+def _reduzir_size(alias: str, query_payload: dict[str, Any]) -> bool:
+    """Reduz ``query_payload["size"]`` por ``FALLBACK_DIVISOR`` para a nova busca após 504/timeout.
+
+    Muta ``query_payload["size"]`` no lugar para que o caller leia o size
+    efetivo na heurística de última página (``len(hits) < query_payload['size']``)
+    em ``client.py:_iter_process_pages``. Devolve ``False``, sem mexer no
+    payload, quando o ``size`` já está no mínimo e reduzir não ajuda.
     """
     original_size = query_payload.get("size")
     if not isinstance(original_size, int) or original_size <= FALLBACK_MIN_SIZE:
-        _log_http_error(api_url, original_exc)
-        return None
+        return False
     new_size = max(original_size // FALLBACK_DIVISOR, FALLBACK_MIN_SIZE)
-    if new_size >= original_size:
-        _log_http_error(api_url, original_exc)
-        return None
     avisar(
         f"DataJud: 504/timeout em ``size={original_size}`` no alias "
         f"{alias!r}. Refazendo com ``size={new_size}`` (1 retry).",
@@ -345,35 +333,4 @@ def _retry_with_reduced_size(
         original_size, alias, new_size,
     )
     query_payload["size"] = new_size
-    try:
-        return do_post()
-    except (requests.exceptions.HTTPError, requests.exceptions.Timeout) as retry_exc:
-        _log_http_error(api_url, retry_exc)
-        return None
-    except requests.exceptions.RequestException as retry_exc:
-        logger.error("Request failed for Datajud API (%s): %s", api_url, retry_exc)
-        return None
-    except ValueError as retry_exc:
-        logger.error(
-            "Failed to decode JSON response from Datajud API (%s): %s",
-            api_url, retry_exc,
-        )
-        return None
-
-
-def _log_http_error(api_url: str, exc: BaseException) -> None:
-    """Log uniforme para HTTPError/Timeout — comportamento da versao
-    anterior preservado para mensagens de erro identicas."""
-    if isinstance(exc, requests.exceptions.Timeout):
-        logger.error("Timeout calling Datajud API (%s): %s", api_url, exc)
-        return
-    logger.error("HTTP Error calling Datajud API (%s): %s", api_url, exc)
-    response = getattr(exc, "response", None)
-    if response is not None:
-        logger.error("Response status: %s", response.status_code)
-        try:
-            logger.error("Response content: %s", response.text[:1000])
-        except Exception:
-            logger.error("Could not retrieve error response content.")
-    else:
-        logger.error("No response object available in HTTPError.")
+    return True
