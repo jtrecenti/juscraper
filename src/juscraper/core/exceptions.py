@@ -109,7 +109,7 @@ class WafChallengeError(BotChallengeBlockedError):
 
 
 class ColetaParcialError(RuntimeError):
-    """Levantada quando parte de uma coleta falha depois dos retries.
+    """Levantada quando parte de uma coleta falha e o resultado ficaria incompleto.
 
     O auto-chunk do eSAJ divide a busca em janelas de data. Devolver só as
     janelas que passaram faria o resultado parcial se passar por completo (no
@@ -120,9 +120,10 @@ class ColetaParcialError(RuntimeError):
     * ``falhas``: lista de ``(inicio, fim, excecao)`` das janelas que falharam.
 
     O ``listar_processos`` do DataJud usa o mesmo erro quando a paginação de
-    um alias para no meio: ``resultado`` traz os registros de todos os
-    aliases até a falha, e cada item de ``falhas`` vem como
-    ``(None, None, excecao)``; o alias e a página estão na mensagem.
+    um alias para no meio: os demais aliases ainda são consultados,
+    ``resultado`` traz tudo o que veio de todos eles, e cada item de
+    ``falhas`` vem como ``(None, None, excecao)``; o alias e a página estão
+    na mensagem.
 
     O ``__cause__`` é a exceção da primeira falha.
     """
