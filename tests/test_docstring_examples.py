@@ -13,6 +13,7 @@ mesmo acontece com ``>>>`` em texto livre ou no cabeçalho NumPy
 import ast
 from pathlib import Path
 
+import griffe
 import pytest
 
 RAIZ_PACOTE = Path(__file__).resolve().parents[1] / "src" / "juscraper"
@@ -116,8 +117,7 @@ def test_forma_canonica_passa_com_continuacao_saida_e_linha_em_branco():
 
 
 def test_griffe_le_a_forma_canonica_como_secao_de_exemplos_com_titulo_em_portugues():
-    """Amarra a convenção ao parser real; roda onde o extra ``docs`` está instalado."""
-    griffe = pytest.importorskip("griffe")
+    """Amarra a convenção ao parser real que o quartodoc usa."""
     secoes = griffe.Docstring(
         "Resumo.\n\nExamples: Exemplo\n    >>> import juscraper as jus\n", parser="google"
     ).parsed
@@ -133,7 +133,6 @@ def test_griffe_nao_deixa_exemplo_fora_de_secao_de_exemplos_no_pacote():
     O griffe não carrega subpacotes sem ``__init__.py``, como
     ``juscraper.core``; esses ficam cobertos só pelo teste por ``ast``.
     """
-    griffe = pytest.importorskip("griffe")
     pacote = griffe.load("juscraper", search_paths=[str(RAIZ_PACOTE.parent)], docstring_parser="google")
     violacoes = []
     pendentes = [pacote]

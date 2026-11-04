@@ -85,6 +85,9 @@ dev = [
     "pytest-xdist>=3.0.0",
     "lizard==1.23.0",
     "complexipy==6.0.1",
+    # Parser de docstring do quartodoc; aqui para os testes de docstring que
+    # conferem o parser real rodarem no CI, que instala só este extra.
+    "griffe>=2.3.2",
 ]
 waf = [
     # Obtem o cookie aws-waf-token dos portais atras do desafio JavaScript do AWS WAF (STF, TJPE).
