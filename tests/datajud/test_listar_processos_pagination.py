@@ -16,7 +16,7 @@ from juscraper.core.exceptions import ColetaParcialError
 from tests._helpers import load_sample
 
 
-def _page(page: int, *, size: int = 10, include_sort: bool = True) -> dict[str, Any]:
+def _page(page: int, *, size: int = 10, include_sort: bool = True, total: int = 1000) -> dict[str, Any]:
     hits = []
     for item in range(size):
         hit: dict[str, Any] = {
@@ -30,7 +30,7 @@ def _page(page: int, *, size: int = 10, include_sort: bool = True) -> dict[str, 
         hits.append(hit)
     return {
         "hits": {
-            "total": {"value": 1000, "relation": "eq"},
+            "total": {"value": total, "relation": "eq"},
             "hits": hits,
         },
     }
@@ -149,9 +149,9 @@ def test_size_reduzido_fica_sticky_nas_paginas_seguintes(monkeypatch):
         payload = kwargs["query_payload"]
         if len(calls) == 1:
             payload["size"] = 100
-            return _page(1, size=100)
+            return _page(1, size=100, total=101)
         assert payload["size"] == 100
-        return _page(2, size=1)
+        return _page(2, size=1, total=101)
 
     monkeypatch.setattr(datajud_client, "call_datajud_api", fake_call)
     monkeypatch.setattr(datajud_client.time, "sleep", lambda _: None)
@@ -167,7 +167,7 @@ def test_size_reduzido_fica_sticky_nas_paginas_seguintes(monkeypatch):
 
 
 def test_lista_de_cnjs_usa_alias_e_filtro_especificos(monkeypatch):
-    calls = _install_pages(monkeypatch, [_page(1, size=1), _page(1, size=1)])
+    calls = _install_pages(monkeypatch, [_page(1, size=1, total=1), _page(1, size=1, total=1)])
     cnj_tjac = "00033258820148010001"
     cnj_tjsp = "01234567820238260001"
 

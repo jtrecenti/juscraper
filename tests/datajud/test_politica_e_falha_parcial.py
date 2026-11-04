@@ -704,3 +704,94 @@ def test_paginas_descartadas_antes_do_intervalo_nao_contam_como_recebidas(monkey
         f"02-{item:02d}" for item in range(10)
     ]
     assert len(erro.falhas) == 1
+
+
+# Matriz de término da paginação. Cada verificação de fim de coleta roda nos
+# três modos de ``paginas``: sem limite, a partir da página 1 e pulando a
+# página 1. Uma verificação que valha só num modo reprova aqui no modo que
+# ficou de fora, em vez de deixar o resultado parcial passar calado.
+MODOS_PAGINAS = {
+    "sem_paginas": None,
+    "paginas_1_a_3": range(1, 4),
+    "paginas_2_a_3": range(2, 4),
+}
+
+
+def _numeros(pagina: int, tamanho: int) -> list[str]:
+    return [f"{pagina:02d}-{item:02d}" for item in range(tamanho)]
+
+
+def _esperado(modo: range | None, tamanhos: dict[int, int]) -> list[str]:
+    """Processos que a coleta deve entregar: os das páginas pedidas, na ordem."""
+    return [
+        numero
+        for pagina, tamanho in tamanhos.items()
+        if modo is None or pagina in modo
+        for numero in _numeros(pagina, tamanho)
+    ]
+
+
+def _pagina_sem_cursor_no_fim(pagina: int, *, total: int) -> dict[str, Any]:
+    resposta = _pagina(pagina, total=total)
+    del resposta["hits"]["hits"][-1]["sort"]
+    return resposta
+
+
+@pytest.mark.parametrize("modo", MODOS_PAGINAS.values(), ids=MODOS_PAGINAS.keys())
+@pytest.mark.parametrize(
+    ("tamanho_pagina_2", "causa"),
+    [(5, "Página curta"), (0, "Página vazia")],
+    ids=["pagina_curta", "pagina_vazia"],
+)
+def test_termino_antes_do_total_exato_levanta_em_todo_modo_de_paginas(
+    monkeypatch, modo, tamanho_pagina_2, causa,
+):
+    _instalar_paginas(monkeypatch, [_pagina(1, total=25), _pagina(2, tamanho=tamanho_pagina_2, total=25)])
+
+    with pytest.raises(ColetaParcialError) as exc_info:
+        jus.scraper("datajud", verbose=0).listar_processos(
+            tribunal="TJSP", tamanho_pagina=10, paginas=modo,
+        )
+
+    erro = exc_info.value
+    esperado = _esperado(modo, {1: 10, 2: tamanho_pagina_2})
+    obtido = erro.resultado["numeroProcesso"].tolist() if esperado else erro.resultado.to_dict("records")
+    assert obtido == (esperado or [])
+    assert "página 2" in str(erro)
+    assert "de 25 encontrado(s)" in str(erro)
+    assert causa in str(erro.__cause__)
+
+
+@pytest.mark.parametrize("modo", MODOS_PAGINAS.values(), ids=MODOS_PAGINAS.keys())
+@pytest.mark.parametrize(
+    ("paginas_da_api", "tamanhos"),
+    [
+        ([_pagina(1, total=15), _pagina(2, tamanho=5, total=15)], {1: 10, 2: 5}),
+        ([_pagina(1, total=20), _pagina(2, total=20), _pagina(3, tamanho=0, total=20)], {1: 10, 2: 10}),
+        # Última página cheia sem ``sort``: o cursor falta, mas o total exato
+        # já veio inteiro, então a coleta está completa e não pode levantar.
+        ([_pagina(1, total=20), _pagina_sem_cursor_no_fim(2, total=20)], {1: 10, 2: 10}),
+    ],
+    ids=["ultima_curta", "ultima_vazia", "ultima_cheia_sem_cursor"],
+)
+def test_coleta_completa_nao_levanta_em_todo_modo_de_paginas(monkeypatch, modo, paginas_da_api, tamanhos):
+    _instalar_paginas(monkeypatch, paginas_da_api)
+
+    df = jus.scraper("datajud", verbose=0).listar_processos(
+        tribunal="TJSP", tamanho_pagina=10, paginas=modo,
+    )
+
+    assert df["numeroProcesso"].tolist() == _esperado(modo, tamanhos)
+
+
+def test_falha_de_parse_com_paginas_que_pula_a_primeira_informa_o_total(monkeypatch):
+    pagina_2 = _pagina(2, total=25)
+    del pagina_2["hits"]["hits"][0]["_source"]
+    _instalar_paginas(monkeypatch, [_pagina(1, total=25), pagina_2])
+
+    with pytest.raises(ColetaParcialError) as exc_info:
+        jus.scraper("datajud", verbose=0).listar_processos(
+            tribunal="TJSP", tamanho_pagina=10, paginas=range(2, 4),
+        )
+
+    assert "0 registro(s) recebido(s) de 25 encontrado(s)" in str(exc_info.value)

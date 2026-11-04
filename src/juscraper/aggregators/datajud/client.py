@@ -248,9 +248,15 @@ def _verificar_termino_prematuro(
     percorridos: int,
     contexto: _FimPagina,
 ) -> None:
-    """Sinaliza página vazia ou curta antes do total exato, quando não há última página pedida."""
+    """Sinaliza página vazia ou curta antes do total exato.
+
+    Vale com e sem ``paginas``: ``percorridos`` conta todas as páginas
+    percorridas pelo cursor, inclusive as que ``paginas`` descarta, então
+    uma página curta antes do total é falha mesmo quando a última página
+    pedida ainda não chegou.
+    """
     total_exato = _total_exato(total_info)
-    if contexto.last_page is not None or total_exato is None or percorridos >= total_exato:
+    if total_exato is None or percorridos >= total_exato:
         return
     if not hits:
         causa = RuntimeError("Página vazia antes de alcançar o total exato da consulta.")
@@ -829,9 +835,11 @@ class DatajudScraper(HTTPScraper):
                 movimentos_codigo=movimentos_codigo,
                 paginas=paginas,
             ):
+                # Antes do ``continue``: com ``paginas`` que pula a página 1, o
+                # total dela ainda alimenta o diagnóstico de falha posterior.
+                total_info = _total_para_diagnostico(api_response, current_page, total_info)
                 if paginas is not None and current_page not in paginas:
                     continue
-                total_info = _total_para_diagnostico(api_response, current_page, total_info)
                 frame = _parse_pagina(
                     api_response,
                     mostrar_movs=inp.mostrar_movs,
