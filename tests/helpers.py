@@ -249,3 +249,70 @@ def run_paginacao_data_unica(scraper, **extra_kwargs) -> tuple[pd.DataFrame, pd.
 
     assert result is not None
     return result
+
+
+# Teste do fim da janela: a busca cobre só o último dia de cada janela, e o dia
+# seguinte é útil (ver o docstring do módulo). Cada entrada traz o trecho que
+# identifica a coluna de data no DataFrame, os filtros e o dia esperado.
+_FILTROS_FIM_DA_JANELA = (
+    (
+        "julgamento",
+        {"data_julgamento_inicio": DATA_ALVO_FIM_BR, "data_julgamento_fim": DATA_ALVO_FIM_BR},
+        _ALVO_END,
+    ),
+    (
+        "publica",
+        {"data_publicacao_inicio": DATA_PUB_FIM_BR, "data_publicacao_fim": DATA_PUB_FIM_BR},
+        _PUB_END,
+    ),
+)
+
+
+def run_fim_da_janela(scraper, paginas: range = range(1, 4)) -> dict[str, int]:
+    """Confere que a busca de um dia só não traz linha do dia seguinte.
+
+    O teste de janela larga olha só a primeira página, e numa janela de
+    semanas o dia vazado é uma fração pequena dos resultados: num backend que
+    ordena por relevância ele pode não aparecer. Aqui a janela é o último dia
+    de cada uma das duas, sozinho, e o dia seguinte é útil. Quando o raspador
+    inclui o dia seguinte, as linhas dele viram parte grande do resultado, e
+    três páginas bastam para que apareçam.
+
+    Os dois filtros rodam, cada um por conta própria, e cada um confere só a
+    coluna do seu tipo: o de julgamento, a coluna com "julgamento" no nome; o
+    de publicação, a coluna com "publica". Filtro que o schema recusa com
+    ``TypeError`` fica de fora; se os dois forem recusados, o ``TypeError``
+    sobe, como em :func:`run_filtro_data_unica`. Linha sem data legível não
+    conta, porque o teste de janela larga já a acusa.
+
+    Retorna, para cada coluna conferida, quantas linhas vieram. Dicionário
+    vazio quer dizer que nenhum filtro trouxe linha com a coluna do seu tipo.
+    """
+    conferidas: dict[str, int] = {}
+    vazamentos: list[str] = []
+    aceitou = False
+    ultimo_type_error: TypeError | None = None
+    for trecho, filtros, dia in _FILTROS_FIM_DA_JANELA:
+        try:
+            df = _call_cjsg_with_fallback(scraper, {**filtros, "paginas": paginas})
+        except TypeError as exc:  # schema recusa este filtro
+            ultimo_type_error = exc
+            continue
+        aceitou = True
+        coluna = next((str(c) for c in df.columns if trecho in str(c).lower()), None)
+        if coluna is None or len(df) == 0:
+            continue
+        datas = [_parse_row_date(str(v)) for v in df[coluna]]
+        fora = sorted({str(d) for d in datas if d is not None and d != dia})
+        if fora:
+            n_fora = sum(d is not None and d != dia for d in datas)
+            vazamentos.append(
+                f"{coluna!r} pedida só em {dia.strftime('%d/%m/%Y')}: "
+                f"{n_fora} de {len(df)} linhas com outra data ({', '.join(fora[:5])})"
+            )
+        conferidas[coluna] = len(df)
+
+    if not aceitou and ultimo_type_error is not None:
+        raise ultimo_type_error
+    assert not vazamentos, "Busca de um dia só trouxe outras datas: " + "; ".join(vazamentos)
+    return conferidas
