@@ -148,7 +148,7 @@ pytest --nbmake docs/notebooks/ \
 
 Notas:
 
-- **Não rodar em `pre-commit` nem em CI por PR.** São dezenas de notebooks contra rede real (~10-30 min com `pytest-xdist`); flakiness de tribunal vai bloquear merge sem motivo. No CI eles rodam no workflow `Integração`, que não barra merge (ver **Integração semanal no CI**).
+- **Não rodar em `pre-commit`.** São dezenas de notebooks contra rede real (~10-30 min com `pytest-xdist`). No CI, o workflow `Integração` roda todos uma vez por semana e, em PR, só os dos tribunais que o PR toca (ver **Integração semanal no CI**).
 - Falhas de conexão no Google Colab ou em outro ambiente de nuvem devem ser reproduzidas localmente antes de motivar mudanças em timeout, retry ou no scraper. Um `ConnectTimeout` sem resposta HTTP pode indicar bloqueio de IP compartilhado ou problema de rota; isoladamente, não demonstra regressão do `juscraper` nem bloqueio intencional pelo tribunal.
 - `jusbr.ipynb` e `pdpj.ipynb` são excluídos porque dependem de credencial do gov.br (`JUSBR_ACCESS_TOKEN` e `PDPJ_TOKEN`); `tjmg.ipynb` depende do extra `[tjmg]` instalado (`txtcaptcha`). Os três rodam sob demanda quando as condições estão presentes. O workflow `Integração` instala o extra `[tjmg]` e roda o `tjmg.ipynb`.
 - Falha 5xx em um único notebook normalmente é instabilidade do tribunal — re-rodar o notebook isolado antes de reportar regressão (`pytest --nbmake docs/notebooks/<tribunal>.ipynb`).
@@ -160,17 +160,21 @@ O workflow `Integração` (`.github/workflows/integration.yml`) roda uma vez por
 
 Parte dos tribunais dá problema só no runner do GitHub: a conexão não se completa, a leitura não termina nos testes que paginam, o portal devolve uma página de desafio no lugar do JSON ou responde HTTP 403. Esses tribunais estão na variável `FORA_DO_CI` do workflow, e a execução completa ignora os testes e os notebooks deles, porque no CI eles mostrariam toda semana o problema do runner. A issue de acompanhamento lista quem ficou de fora. Eles rodam localmente ou num disparo manual com `tribunal`, que ignora a lista. A lista vem de uma medição comparada entre o runner e um IP residencial no Brasil; como os IPs dos runners mudam a cada execução, ela é revista quando um tribunal passa a responder ao runner ou deixa de responder.
 
-Teste que falha não derruba o workflow: tribunal fora do ar é esperado e não deve gerar alerta de execução quebrada. O workflow fica vermelho quando algo além de um teste quebra: o pytest sai com código 2 ou maior (erro de coleta, interrupção, nada coletado), um passo estoura o tempo, a instalação falha, o `tribunal` do disparo manual não existe ou uma chamada ao `gh` falha. Quando o job dos testes não termina bem, a issue não é tocada, porque o retrato daquela execução está incompleto.
+Na execução completa, teste que falha não derruba o workflow: tribunal fora do ar é esperado e não deve gerar alerta de execução quebrada. O workflow fica vermelho quando algo além de um teste quebra: o pytest sai com código 2 ou maior (erro de coleta, interrupção, nada coletado), um passo estoura o tempo, a instalação falha, o `tribunal` do disparo manual não existe ou uma chamada ao `gh` falha. Quando o job dos testes não termina bem, a issue não é tocada, porque o retrato daquela execução está incompleto.
 
 O resultado vai para uma única issue, com a label `tribunal-quebrado`, cujo corpo o workflow reescreve a cada execução agendada. Editar o corpo não notifica ninguém. O workflow comenta na issue, e portanto notifica, só quando a lista de testes que falham muda de uma execução para a outra. Essa lista fica gravada num comentário HTML no fim do corpo, e é contra ela que a execução seguinte compara; por isso o corpo não deve ser editado à mão. A montagem do corpo e a comparação ficam em `scripts/integration_report.py`, coberto por `tests/integration_report/`.
 
-Em PR a integração não roda sozinha. Para conferir um tribunal na branch de um PR:
+Em PR, o workflow roda os testes de integração, o notebook e o teste `release` de cada tribunal ou agregador cujo diretório o PR tocou: `src/juscraper/courts/<nome>/`, `src/juscraper/aggregators/<nome>/`, `tests/<nome>/` ou `docs/notebooks/<nome>.ipynb`. Mudança no código de uma família (`_esaj`, `_trf`, `_pdpj_sso`) conta para todo tribunal que a importa. Código comum, como `core/` e `utils/`, não aponta tribunal e fica com a execução semanal. A escolha fica em `alvo-pr`, no script do relatório. Tribunal de `FORA_DO_CI` não roda: o PR recebe um aviso com o comando para rodá-lo localmente. Os notebooks que exigem credencial também ficam de fora.
+
+Ao contrário da execução completa, a execução dirigida fica vermelha quando um teste falha, porque quem mexe num tribunal precisa ver que ele falha agora. Uma falha que já existia na `main` também deixa o PR vermelho. A issue semanal não basta para separar as duas, porque a execução completa não roda o teste `release`: para saber se a quebra veio do PR, rodar o mesmo tribunal na `main` com o disparo abaixo e comparar. Um PR que não toca tribunal nenhum e altera o workflow ou o script do relatório roda o autoteste com o TJMG, que exercita a instalação mais pesada.
+
+Para conferir um tribunal fora de PR, na `main` para comparar, ou um tribunal de `FORA_DO_CI` no runner:
 
 ```bash
 gh workflow run integration.yml --ref <branch> -f tribunal=tjsp
 ```
 
-O valor de `tribunal` é o nome do diretório em `tests/`. Uma execução de um tribunal só nunca reescreve a issue; o resultado fica no resumo da execução. Um disparo manual sem `tribunal` só reescreve a issue com `-f atualizar_issue=true` e a partir da `main`. A única execução automática em PR é o autoteste: quando o PR altera o workflow ou o script do relatório, o workflow roda para um tribunal só e imprime no resumo o corpo que escreveria, sem tocar a issue.
+O valor de `tribunal` é o nome do diretório em `tests/`, ou vários separados por espaço. A execução dirigida, em PR ou por disparo, nunca reescreve a issue; o resultado fica no resumo da execução. Um disparo manual sem `tribunal` só reescreve a issue com `-f atualizar_issue=true` e a partir da `main`.
 
 ## Política de lint e adoção gradual
 
@@ -346,7 +350,7 @@ Checklist obrigatória para o PR que adiciona o raspador:
 9. **Sem dependência de rede, relógio ou TLS real**. Adapter TLS custom: testar só montagem (`isinstance`).
 10. **Fluxos multi-step com ordem obrigatória** usam `responses.registries.OrderedRegistry`.
 11. **Captchas, tokens dinâmicos e libs externas** (`txtcaptcha`, `browser_cookie3`) são **mockados** — nunca invocados. Injetar fakes via `mocker.patch.dict(sys.modules, ...)` para lazy imports ausentes das deps.
-12. **Entry no CHANGELOG** em `[Unreleased]/Added`.
+12. **Entry no CHANGELOG** em `[Unreleased]/Added`. O workflow `Changelog` reprova o PR que muda `src/juscraper/` sem tocar o `CHANGELOG.md`. Mudança sem efeito público (refatoração interna, teste, tooling) passa com a etiqueta `sem-changelog`; em PR de fork, quem aplica a etiqueta é um mantenedor.
 13. **Payload builders públicos** em `courts/<xx>/download.py` sempre que o script de captura precisar reusar o dict/body enviado ao backend. Extrair como função de nome público (`build_<endpoint>_payload` — **sem underscore inicial**) + constante da URL base (`BASE_URL`, `RESULTS_PER_PAGE`, etc.). O script em `tests/fixtures/capture/<xx>.py` importa esses helpers em vez de redefinir o payload inline — qualquer mudança no scraper quebra a captura, evitando drift silencioso. Helpers privados (`_`) em módulos de download ficam reservados para lógica interna não reusada pelo capture script.
 14. **Base recomendada: `juscraper.core.http.HTTPScraper`** (em vez de `BaseScraper` direto) para raspadores **novos**. Ela cria `self.session = requests.Session()`, expõe o hook `_configure_session(session)` (mesmo contrato do `EsajSearchScraper`), oferece `_request_with_retry(method, url, *, session=None, max_retries=3)` com backoff exponencial para 429/5xx + respeito a `Retry-After` numérico, e centraliza a validação de `session=` (resolve #185). Tribunais existentes ainda em `BaseScraper` migram pelas Fases 1-4 do refactor #194 — tribunais novos já podem (e devem) herdar de `HTTPScraper`.
 15. **Tabela de cobertura** do `README.md` e de `docs/index.qmd`: rodar `uv run python scripts/tabela_cobertura.py`, que a deriva de `juscraper._SCRAPERS` e dos métodos de cada classe. Vale também quando um endpoint passa de stub a implementado, ou o contrário; `tests/test_tabela_cobertura.py` reprova enquanto a tabela divergir do código.
@@ -356,7 +360,7 @@ Checklist obrigatória para o PR que adiciona o raspador:
 ### Onde ficam os modelos
 
 - `src/juscraper/schemas/cjsg.py`: `SearchBase` para busca textual e `OutputCJSGBase` para o resultado. `SearchBase` herda paginação e não inclui filtros de data, pois nem todo tribunal os suporta.
-- `src/juscraper/schemas/mixins.py`: contratos compartilhados de paginação, datas e relatoria. Compor apenas os mixins aplicáveis ao endpoint; filtros não suportados devem ser rejeitados por `extra="forbid"`.
+- `src/juscraper/schemas/mixins.py`: contratos compartilhados de paginação, datas e relatoria. Compor apenas os mixins aplicáveis ao endpoint; filtros não suportados devem ser rejeitados por `extra="forbid"`, e não por `NotImplementedError` no downloader, que `tests/test_notimplemented_so_em_stub.py` só aceita em stub.
 - `src/juscraper/schemas/consulta.py` — `CnjInputBase` (`id_cnj: str | list[str]`), `OutputCnjConsultaBase` para cpopg/cposg/JusBR.
 - `src/juscraper/courts/_<familia>/schemas.py`: schemas compartilhados pela família, sujeitos à **Regra de generalização** em `CLAUDE.md` > **Arquitetura**.
 - `src/juscraper/courts/<xx>/schemas.py` / `aggregators/<yy>/schemas.py` — um arquivo por tribunal/agregador com Input/Output de todos os endpoints.

@@ -87,7 +87,7 @@ Ao alterar contagens, usar seleção e extração em cascata para os formatos ob
 ## Changelog
 
 - Registrar apenas efeitos para quem usa a API pública: funcionalidades, filtros, correções observáveis, breaking changes e deprecações. Deprecações incluem a tabela de aliases. Correção de docstring que orientava o usuário incorretamente também entra.
-- Refatorações internas, testes, tooling e documentação sem efeito público não precisam de entrada.
+- Refatorações internas, testes, tooling e documentação sem efeito público não precisam de entrada. O workflow `Changelog` (`.github/workflows/changelog.yml`) reprova o PR que muda `src/juscraper/` sem tocar o `CHANGELOG.md`; quando a mudança não tem efeito público, a etiqueta `sem-changelog` dispensa a entrada.
 - Seguir as categorias de Keep a Changelog já usadas no arquivo. Novas entradas ficam em `[Unreleased]`, acima das versões publicadas, que são imutáveis.
 - Consolidar o mesmo efeito em uma entrada com a lista de tribunais afetados, inclusive em PRs com vários commits. Separar apenas quando o efeito divergir entre tribunais.
 
