@@ -6,7 +6,7 @@ import re
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, urljoin, urlparse
 
 import requests
 from bs4 import BeautifulSoup
@@ -25,6 +25,16 @@ class _InvalidProcessCodeError(ValueError):
 
 
 _TENTATIVAS = 5
+
+
+# Aviso que o e-SAJ devolve, no lugar do resultado, quando recebe buscas em
+# sequência rápida na mesma sessão. O bloqueio passa em alguns segundos.
+_AVISO_CONSULTAS_SIMULTANEAS = "multiplas consultas simult"
+
+
+def _consulta_bloqueada(texto):
+    """Indica se a busca voltou com o aviso de consultas simultâneas."""
+    return _AVISO_CONSULTAS_SIMULTANEAS in texto.lower()
 
 
 # A página do processo traz o bloco de movimentações vazio e um botão "Exibir
@@ -189,13 +199,7 @@ def cpopg_download_html_single(
     logger.info("Salvando em %s", path)
     if not Path(path).is_dir():
         Path(path).mkdir(parents=True)
-    # Os documentos de um processo são gravados juntos no fim
-    # (_salvar_resultados_html), então um .html na pasta indica o processo
-    # inteiro. O de 0 byte vem de versão que gravava antes de ler a resposta.
-    salvos = [
-        file for file in Path(path).iterdir() if file.name.endswith('.html') and file.stat().st_size > 0
-    ]
-    if salvos and not _incompleto(salvos, baixar_movimentacoes, pecas is not None):
+    if _ja_baixado(path, baixar_movimentacoes, pecas is not None):
         logger.info("O processo %s ja foi baixado.", id_clean)
         return path
     time.sleep(sleep_time)
@@ -211,10 +215,24 @@ def cpopg_download_html_single(
         'dadosConsulta.valorConsulta': '',
         'dadosConsulta.tipoNuProcesso': 'UNIFICADO'
     }
+    bloqueada = False
     ultimo_erro = None
-    for _ in range(_TENTATIVAS):
+    for tentativa in range(_TENTATIVAS):
         try:
             r = session.get(u, params=parms)
+            bloqueada = _consulta_bloqueada(r.text)
+            if bloqueada:
+                # Sem esta checagem, a página de aviso (que não tem links)
+                # faria o processo parecer inexistente.
+                espera = max(sleep_time, 1) * 2 ** tentativa
+                logger.warning(
+                    "e-SAJ bloqueou a busca do processo %s por consultas "
+                    "simultâneas. Tentando novamente em %.1f segundos.",
+                    id_cnj,
+                    espera,
+                )
+                time.sleep(espera)
+                continue
             if get_links_callback is None:
                 raise RuntimeError(
                     "get_links_callback precisa ser"
@@ -244,10 +262,26 @@ def cpopg_download_html_single(
             )
             time.sleep(sleep_time)
     else:
+        if bloqueada:
+            raise RuntimeError(
+                f"e-SAJ manteve o bloqueio por consultas simultâneas para o "
+                f"processo {id_clean}; aumente o sleep_time."
+            )
         raise RuntimeError(
             f"Processo {id_clean}: {_TENTATIVAS} tentativas sem sucesso; último erro: {ultimo_erro}"
         ) from ultimo_erro
     return path
+
+
+def _ja_baixado(path, baixar_movimentacoes, download_pecas):
+    """Indica se a pasta do processo já tem o download completo; ver :func:`_incompleto`."""
+    # Os documentos de um processo são gravados juntos no fim
+    # (_salvar_resultados_html), então um .html na pasta indica o processo
+    # inteiro. O de 0 byte vem de versão que gravava antes de ler a resposta.
+    salvos = [
+        file for file in Path(path).iterdir() if file.name.endswith('.html') and file.stat().st_size > 0
+    ]
+    return bool(salvos) and not _incompleto(salvos, baixar_movimentacoes, download_pecas)
 
 
 def _extrair_codigos_processo(links):
@@ -290,7 +324,9 @@ def _salvar_resultados_html(
         )
     else:
         for indice, link in enumerate(links):
-            resposta_documento = sessao.get(f"{url_base}{link}")
+            # A base termina em barra e o href começa com barra; concatenar
+            # gera "//cpopg/show.do", que o e-SAJ responde com 404.
+            resposta_documento = sessao.get(urljoin(url_base, link))
             if resposta_documento.status_code != 200:
                 raise requests.HTTPError(
                     f"A consulta ao site falhou."

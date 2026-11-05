@@ -108,6 +108,21 @@ class TestCPOPGUnit:
         assert isinstance(links, list)
         assert len(links) >= 0
 
+    def test_get_cpopg_download_links_lista_ignora_ancoras(self):
+        """Busca real com ação penal + execução da pena e o colapso "Incidentes e recursos" (href="#")."""
+        mock_response = create_mock_response(load_sample('tjsp', 'cpopg/search_lista.html'))
+        links = get_cpopg_download_links(mock_response)
+
+        assert len(links) == 2
+        assert all(link.startswith('/cpopg/show.do?') for link in links)
+        assert 'processo.codigo=8L0002YR00000' in links[0]
+        assert 'processo.codigo=DY00007260000' in links[1]
+
+    def test_get_cpopg_download_links_bloqueio_sem_links(self):
+        """O aviso de consultas simultâneas não tem processos; quem trata é o download."""
+        mock_response = create_mock_response(load_sample('tjsp', 'cpopg/search_consultas_simultaneas.html'))
+        assert get_cpopg_download_links(mock_response) == []
+
     def test_cpopg_parse_single_html(self):
         """Test parsing a single CPOPG HTML file."""
         html = '''
