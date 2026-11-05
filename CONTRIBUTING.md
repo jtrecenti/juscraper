@@ -356,7 +356,7 @@ Checklist obrigatória para o PR que adiciona o raspador:
 ### Onde ficam os modelos
 
 - `src/juscraper/schemas/cjsg.py`: `SearchBase` para busca textual e `OutputCJSGBase` para o resultado. `SearchBase` herda paginação e não inclui filtros de data, pois nem todo tribunal os suporta.
-- `src/juscraper/schemas/mixins.py`: contratos compartilhados de paginação, datas e relatoria. Compor apenas os mixins aplicáveis ao endpoint; filtros não suportados devem ser rejeitados por `extra="forbid"`.
+- `src/juscraper/schemas/mixins.py`: contratos compartilhados de paginação, datas e relatoria. Compor apenas os mixins aplicáveis ao endpoint; filtros não suportados devem ser rejeitados por `extra="forbid"`, e não por `NotImplementedError` no downloader, que `tests/test_notimplemented_so_em_stub.py` só aceita em stub.
 - `src/juscraper/schemas/consulta.py` — `CnjInputBase` (`id_cnj: str | list[str]`), `OutputCnjConsultaBase` para cpopg/cposg/JusBR.
 - `src/juscraper/courts/_<familia>/schemas.py`: schemas compartilhados pela família, sujeitos à **Regra de generalização** em `CLAUDE.md` > **Arquitetura**.
 - `src/juscraper/courts/<xx>/schemas.py` / `aggregators/<yy>/schemas.py` — um arquivo por tribunal/agregador com Input/Output de todos os endpoints.
