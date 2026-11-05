@@ -349,13 +349,14 @@ Checklist obrigatória para o PR que adiciona o raspador:
 12. **Entry no CHANGELOG** em `[Unreleased]/Added`.
 13. **Payload builders públicos** em `courts/<xx>/download.py` sempre que o script de captura precisar reusar o dict/body enviado ao backend. Extrair como função de nome público (`build_<endpoint>_payload` — **sem underscore inicial**) + constante da URL base (`BASE_URL`, `RESULTS_PER_PAGE`, etc.). O script em `tests/fixtures/capture/<xx>.py` importa esses helpers em vez de redefinir o payload inline — qualquer mudança no scraper quebra a captura, evitando drift silencioso. Helpers privados (`_`) em módulos de download ficam reservados para lógica interna não reusada pelo capture script.
 14. **Base recomendada: `juscraper.core.http.HTTPScraper`** (em vez de `BaseScraper` direto) para raspadores **novos**. Ela cria `self.session = requests.Session()`, expõe o hook `_configure_session(session)` (mesmo contrato do `EsajSearchScraper`), oferece `_request_with_retry(method, url, *, session=None, max_retries=3)` com backoff exponencial para 429/5xx + respeito a `Retry-After` numérico, e centraliza a validação de `session=` (resolve #185). Tribunais existentes ainda em `BaseScraper` migram pelas Fases 1-4 do refactor #194 — tribunais novos já podem (e devem) herdar de `HTTPScraper`.
+15. **Tabela de cobertura** do `README.md` e de `docs/index.qmd`: rodar `uv run python scripts/tabela_cobertura.py`, que a deriva de `juscraper._SCRAPERS` e dos métodos de cada classe. Vale também quando um endpoint passa de stub a implementado, ou o contrário; `tests/test_tabela_cobertura.py` reprova enquanto a tabela divergir do código.
 
 ## Schemas pydantic
 
 ### Onde ficam os modelos
 
 - `src/juscraper/schemas/cjsg.py`: `SearchBase` para busca textual e `OutputCJSGBase` para o resultado. `SearchBase` herda paginação e não inclui filtros de data, pois nem todo tribunal os suporta.
-- `src/juscraper/schemas/mixins.py`: contratos compartilhados de paginação, datas e relatoria. Compor apenas os mixins aplicáveis ao endpoint; filtros não suportados devem ser rejeitados por `extra="forbid"`.
+- `src/juscraper/schemas/mixins.py`: contratos compartilhados de paginação, datas e relatoria. Compor apenas os mixins aplicáveis ao endpoint; filtros não suportados devem ser rejeitados por `extra="forbid"`, e não por `NotImplementedError` no downloader, que `tests/test_notimplemented_so_em_stub.py` só aceita em stub.
 - `src/juscraper/schemas/consulta.py` — `CnjInputBase` (`id_cnj: str | list[str]`), `OutputCnjConsultaBase` para cpopg/cposg/JusBR.
 - `src/juscraper/courts/_<familia>/schemas.py`: schemas compartilhados pela família, sujeitos à **Regra de generalização** em `CLAUDE.md` > **Arquitetura**.
 - `src/juscraper/courts/<xx>/schemas.py` / `aggregators/<yy>/schemas.py` — um arquivo por tribunal/agregador com Input/Output de todos os endpoints.
@@ -411,7 +412,7 @@ Cada `Input*` declara um `BACKEND_DATE_FORMAT: ClassVar[str]` (default `"%d/%m/%
 
 Métodos públicos que recebem filtros em `**kwargs` precisam documentá-los, pois `inspect.signature` não mostra os campos aceitos pelo schema. Escrever docstrings em português, no estilo Google (`Args:`, `Returns:`, `Raises:`), seguindo o método `EsajSearchScraper.cjsg` em `src/juscraper/courts/_esaj/base.py`. Para override com schema próprio, usar `TJSPScraper.cjsg` como referência.
 
-O nome das seções que o estilo Google reconhece fica em inglês, porque é por ele que o griffe, parser usado pelo quartodoc, identifica a seção. Na seção de exemplos, escrever `Examples: Exemplo`: `Examples` faz o griffe ler as linhas `>>>` como código, e `Exemplo`, depois dos dois-pontos, é o título que a referência publica. Escrita só como `Exemplo:`, a seção vira texto livre, o Pandoc lê cada `>>>` como três citações aninhadas e o código sai colado num parágrafo, com aspas tipográficas. `tests/test_docstring_examples.py` reprova linha `>>>` fora dessa seção.
+O nome das seções que o estilo Google reconhece fica em inglês, porque é por ele que o griffe, parser usado pelo quartodoc, identifica a seção; `tests/test_docstring_secoes.py` reprova o nome traduzido, como `Argumentos:` ou `Retorno:`. Na seção de exemplos, escrever `Examples: Exemplo`: `Examples` faz o griffe ler as linhas `>>>` como código, e `Exemplo`, depois dos dois-pontos, é o título que a referência publica. Escrita só como `Exemplo:`, a seção vira texto livre, o Pandoc lê cada `>>>` como três citações aninhadas e o código sai colado num parágrafo, com aspas tipográficas. `tests/test_docstring_examples.py` reprova linha `>>>` fora dessa seção.
 
 ### Filtros e aliases
 

@@ -1,19 +1,34 @@
-"""Shared helpers for juscraper tests.
+"""Helpers compartilhados pelos testes do juscraper.
 
-Reference date strategy
------------------------
-Release tests use a single fixed work week across every tribunal:
+Janela de referência
+--------------------
+Os testes release usam a mesma janela fixa em todos os tribunais: julgamento
+de 10/03/2025 a 13/03/2025 (segunda a quinta, sem feriado, fora do recesso de
+dezembro, janeiro e julho) e publicação de 10/03/2025 a 29/04/2025 (terça),
+porque a publicação costuma vir dias ou semanas depois do julgamento.
 
-    10/03/2025 – 14/03/2025 (Monday–Friday, no holidays, outside the judicial
-    recess of December, January and July).
+Quatro dias bastam para trazer resultado mesmo em tribunal que publica pouco,
+e a janela é estreita o bastante para que um filtro quebrado apareça: qualquer
+data fora dela quer dizer que o backend ignorou o filtro.
 
-A week-long window (rather than a single day) is wide enough to produce at
-least one result even in tribunais that publish sparsely, while still being
-narrow enough that a broken date filter stands out: any date outside this
-window means the backend ignored the filter entirely.
+O fim de cada janela precisa cair num dia seguido de dia útil com publicação.
+O erro de limite mais comum em raspador é incluir o dia seguinte ao fim: somar
+um dia à data final quando a API já inclui a meia-noite do dia informado, ou
+converter o fim do dia de Brasília para UTC. As linhas que vazam assim têm a
+data do dia seguinte, e o teste só as vê se esse dia tiver julgamento ou
+publicação. Um fim na sexta deixa o vazamento cair no sábado, e um fim na
+véspera de feriado deixa cair no feriado; nos dois casos o dia seguinte vem
+vazio, o resultado parece correto e o teste passa com o raspador quebrado.
 
-``DATA_ALVO_BR`` is the start of the window; ``DATA_ALVO_FIM_BR`` is the end.
-Helpers accept both and the assertion checks that every row falls inside.
+O fim certo é condição necessária, não suficiente. A asserção olha só a
+primeira página, e as linhas vazadas só chegam a ela quando o backend ordena
+por data decrescente ou quando o dia vazado pesa na janela. Na de julgamento,
+de quatro dias, o dia seguinte vira cerca de um quinto dos resultados. Na de
+publicação, de sete semanas, vira cerca de um trigésimo; num backend que
+ordena por relevância, a primeira página pode vir sem nenhuma linha vazada.
+
+``DATA_ALVO_BR`` abre as duas janelas; ``DATA_ALVO_FIM_BR`` fecha a de
+julgamento e ``DATA_PUB_FIM_BR`` fecha a de publicação.
 """
 from __future__ import annotations
 
@@ -22,36 +37,38 @@ from datetime import date
 import pandas as pd
 
 DATA_ALVO_BR = "10/03/2025"
-DATA_ALVO_FIM_BR = "14/03/2025"
+DATA_ALVO_FIM_BR = "13/03/2025"
 DATA_ALVO_ISO = "2025-03-10"
-DATA_ALVO_FIM_ISO = "2025-03-14"
+DATA_ALVO_FIM_ISO = "2025-03-13"
 
 _ALVO_START = date(2025, 3, 10)
-_ALVO_END = date(2025, 3, 14)
+_ALVO_END = date(2025, 3, 13)
 
 # Publicação usually trails julgamento. When a scraper filters on publicação
 # instead of (or in addition to) julgamento, allow a wider publicação window
 # so that rows judged in the target week have time to be published.
-DATA_PUB_FIM_BR = "30/04/2025"
-DATA_PUB_FIM_ISO = "2025-04-30"
-_PUB_END = date(2025, 4, 30)
+DATA_PUB_FIM_BR = "29/04/2025"
+DATA_PUB_FIM_ISO = "2025-04-29"
+_PUB_END = date(2025, 4, 29)
 
 
-def _find_date_column(df: pd.DataFrame) -> str | None:
+_JULGAMENTO_NEEDLES = ("data_julgamento", "dt_julgamento", "julgamento")
+_PUBLICACAO_NEEDLES = ("data_publicacao", "dt_publicacao", "publicacao")
+
+
+def _find_date_column(df: pd.DataFrame, *, publicacao_primeiro: bool = False) -> str | None:
     """Return the first column that looks like a judgment or publication date.
 
     Tribunals disagree on column naming; scan by substring to stay robust.
-    Priority: judgment date > publication date > generic "data".
+    Priority: judgment date > publication date > generic "data". With
+    ``publicacao_primeiro``, publication comes first: when only the
+    publication filter was applied, the judgment date is not bounded by the
+    window and may fall anywhere before it.
     """
-    needles = (
-        "data_julgamento",
-        "dt_julgamento",
-        "julgamento",
-        "data_publicacao",
-        "dt_publicacao",
-        "publicacao",
-        "data",
-    )
+    if publicacao_primeiro:
+        needles = (*_PUBLICACAO_NEEDLES, *_JULGAMENTO_NEEDLES, "data")
+    else:
+        needles = (*_JULGAMENTO_NEEDLES, *_PUBLICACAO_NEEDLES, "data")
     for needle in needles:
         for col in df.columns:
             if needle in col.lower():
@@ -80,18 +97,21 @@ def _parse_row_date(raw: str) -> date | None:
     return None
 
 
-def assert_date_matches(df: pd.DataFrame) -> str | None:
+def assert_date_matches(df: pd.DataFrame, *, publicacao_primeiro: bool = False) -> str | None:
     """Check that every row falls inside the reference window.
 
-    Julgamento columns are validated against the narrow work-week window
-    (10/03 – 14/03). Publicação columns are validated against a widened
-    window (10/03 – 30/04) because publicação typically trails julgamento
-    by days or weeks.
+    Julgamento columns are validated against the narrow window
+    (``DATA_ALVO_BR`` to ``DATA_ALVO_FIM_BR``). Publicação columns are
+    validated against a widened window (``DATA_ALVO_BR`` to
+    ``DATA_PUB_FIM_BR``) because publicação typically trails julgamento
+    by days or weeks. ``publicacao_primeiro`` validates the publicação
+    column even when the output also has a julgamento one: pass it when only
+    the publicação filter was applied.
 
     Returns the date column name used for validation, or ``None`` if the
     scraper does not expose one (caller accepts count-only validation).
     """
-    col = _find_date_column(df)
+    col = _find_date_column(df, publicacao_primeiro=publicacao_primeiro)
     if col is None:
         return None
     is_pub = "publicacao" in col.lower() or "public" in col.lower()
@@ -150,10 +170,11 @@ def run_filtro_data_unica(scraper, **extra_kwargs) -> pd.DataFrame:
     1. Try ``pesquisa=''``; if the scraper rejects it, fall back to ``'direito'``.
     2. Assert at least one result was returned.
     3. If the output has a date column, assert every row falls inside the
-       reference window (10/03/2025 – 14/03/2025).
+       reference window (see :func:`assert_date_matches`).
     """
     df = None
     accepted = False
+    filtro_usado: dict[str, str] | None = None
     last_type_error: TypeError | None = None
     for date_filters in _DATE_FILTER_SETS:
         kwargs = {**date_filters, **extra_kwargs, "paginas": 1}
@@ -163,6 +184,7 @@ def run_filtro_data_unica(scraper, **extra_kwargs) -> pd.DataFrame:
             last_type_error = exc
             continue
         accepted = True
+        filtro_usado = date_filters
         if df is not None and len(df) > 0:
             break
 
@@ -176,7 +198,7 @@ def run_filtro_data_unica(scraper, **extra_kwargs) -> pd.DataFrame:
         "sendo ignorado ou a semana escolhida pode estar fora do intervalo "
         "disponível."
     )
-    assert_date_matches(df)
+    assert_date_matches(df, publicacao_primeiro=filtro_usado is _PUBLICACAO_DATES)
     return df
 
 
@@ -233,3 +255,70 @@ def run_paginacao_data_unica(scraper, **extra_kwargs) -> tuple[pd.DataFrame, pd.
 
     assert result is not None
     return result
+
+
+# Teste do fim da janela: a busca cobre só o último dia de cada janela, e o dia
+# seguinte é útil (ver o docstring do módulo). Cada entrada traz o trecho que
+# identifica a coluna de data no DataFrame, os filtros e o dia esperado.
+_FILTROS_FIM_DA_JANELA = (
+    (
+        "julgamento",
+        {"data_julgamento_inicio": DATA_ALVO_FIM_BR, "data_julgamento_fim": DATA_ALVO_FIM_BR},
+        _ALVO_END,
+    ),
+    (
+        "publica",
+        {"data_publicacao_inicio": DATA_PUB_FIM_BR, "data_publicacao_fim": DATA_PUB_FIM_BR},
+        _PUB_END,
+    ),
+)
+
+
+def run_fim_da_janela(scraper, paginas: range = range(1, 4)) -> dict[str, int]:
+    """Confere que a busca de um dia só não traz linha do dia seguinte.
+
+    O teste de janela larga olha só a primeira página, e numa janela de
+    semanas o dia vazado é uma fração pequena dos resultados: num backend que
+    ordena por relevância ele pode não aparecer. Aqui a janela é o último dia
+    de cada uma das duas, sozinho, e o dia seguinte é útil. Quando o raspador
+    inclui o dia seguinte, as linhas dele viram parte grande do resultado, e
+    três páginas bastam para que apareçam.
+
+    Os dois filtros rodam, cada um por conta própria, e cada um confere só a
+    coluna do seu tipo: o de julgamento, a coluna com "julgamento" no nome; o
+    de publicação, a coluna com "publica". Filtro que o schema recusa com
+    ``TypeError`` fica de fora; se os dois forem recusados, o ``TypeError``
+    sobe, como em :func:`run_filtro_data_unica`. Linha sem data legível não
+    conta, porque o teste de janela larga já a acusa.
+
+    Retorna, para cada coluna conferida, quantas linhas vieram. Dicionário
+    vazio quer dizer que nenhum filtro trouxe linha com a coluna do seu tipo.
+    """
+    conferidas: dict[str, int] = {}
+    vazamentos: list[str] = []
+    aceitou = False
+    ultimo_type_error: TypeError | None = None
+    for trecho, filtros, dia in _FILTROS_FIM_DA_JANELA:
+        try:
+            df = _call_cjsg_with_fallback(scraper, {**filtros, "paginas": paginas})
+        except TypeError as exc:  # schema recusa este filtro
+            ultimo_type_error = exc
+            continue
+        aceitou = True
+        coluna = next((str(c) for c in df.columns if trecho in str(c).lower()), None)
+        if coluna is None or len(df) == 0:
+            continue
+        datas = [_parse_row_date(str(v)) for v in df[coluna]]
+        fora = sorted({str(d) for d in datas if d is not None and d != dia})
+        if fora:
+            n_fora = sum(d is not None and d != dia for d in datas)
+            vazamentos.append(
+                f"{coluna!r} pedida só em {dia.strftime('%d/%m/%Y')}: "
+                f"{n_fora} de {len(df)} linhas com outra data ({', '.join(fora[:5])})"
+            )
+        conferidas[coluna] = len(df)
+
+    if not aceitou and ultimo_type_error is not None:
+        raise ultimo_type_error
+    assert not vazamentos, "Busca de um dia só trouxe outras datas: " + "; ".join(vazamentos)
+    return conferidas

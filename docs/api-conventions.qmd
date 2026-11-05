@@ -173,9 +173,16 @@ tjsp.cjsg("dano moral", paginas=1, data_julgamento_inicio=dt.date(2024, 3, 1))
 Several eSAJ endpoints (`cjpg`/`cjsg` in TJSP, plus `cjsg` in TJAC, TJAL,
 TJAM, TJCE, TJMS) cap each request at a one-year `data_julgamento_*`
 window. When the user asks for a longer interval, the scraper
-**automatically** splits the request into year-long windows, fetches each
-one, and concatenates the results — deduplicating by `cd_acordao` (cjsg)
-or `id_processo` (cjpg).
+**automatically** splits the request into calendar-year windows, fetches
+each one, and concatenates the results — deduplicating by `cd_acordao`
+(cjsg) or `id_processo` (cjpg).
+
+Each window ends the day before the same date one year later
+(`01/01/2013`–`31/12/2013`, then `01/01/2014`–`31/12/2014`). The eSAJ
+backend only accepts `data_julgamento_fim` strictly before
+`data_julgamento_inicio` plus one calendar year and answers HTTP 404
+otherwise, so a fixed day count would either drift or produce windows the
+server rejects.
 
 ```python
 import juscraper as jus
@@ -192,23 +199,42 @@ df = tjsp.cjsg(
 ```
 
 The behaviour is controlled by `auto_chunk: bool = True` (default on).
-To restore the strict pre-2026 behaviour (a `ValueError` is raised for
-windows longer than 366 days), set `auto_chunk=False` — useful for
-input validation paths that want to fail before submitting a long job:
+With `auto_chunk=False`, a `data_julgamento_*` interval the server would
+reject (end on or after the same date one year later) raises `ValueError`
+before any request. This helps input validation paths that want to fail
+before submitting a long job. `data_publicacao_*` is never split, so the
+same check applies to it in either mode:
 
 ```python
 tjsp.cjsg(
     pesquisa="dano moral",
     data_julgamento_inicio="01/01/2018",
     data_julgamento_fim="31/12/2024",
-    auto_chunk=False,  # raises ValueError ("aceita no máximo 366 dias")
+    auto_chunk=False,  # raises ValueError ("aceita no máximo 1 ano(s)")
 )
 ```
 
-Per-window failures (network errors, captchas, 5xx) are captured and
-surfaced as a single `UserWarning` listing the failed windows; the
-returned DataFrame contains whatever was downloaded successfully (parcial
-+ warning). Combining `auto_chunk=True` with `paginas` is rejected when
+If a window still fails after the HTTP retries (network errors, 4xx,
+5xx), the scraper tries the remaining windows and then raises
+`juscraper.core.exceptions.ColetaParcialError`. A partial result never
+comes back as if it were complete. The error carries the work already done:
+`.resultado` holds the deduplicated DataFrame of the windows that
+succeeded, and `.falhas` lists `(inicio, fim, exception)` for the ones to
+retry:
+
+```python
+from juscraper.core.exceptions import ColetaParcialError
+
+try:
+    df = tjsp.cjsg("dano moral", data_julgamento_inicio="01/01/2018", data_julgamento_fim="31/12/2024")
+except ColetaParcialError as erro:
+    df = erro.resultado
+    print(erro.falhas)
+```
+
+DataJud's `listar_processos` follows the same rule. When a page fails (HTTP error, malformed response, or a page that ends before the exact `hits.total`), the remaining aliases are still queried and `ColetaParcialError` is raised at the end. `.resultado` holds every record received, from all aliases, and each item in `.falhas` is `(None, None, exception)`; the error message names the alias and the page that failed.
+
+Combining `auto_chunk=True` with `paginas` is rejected when
 the interval is long enough to actually trigger chunking: the multi-window
 semantics for `paginas` are ambiguous (each window? aggregated budget?)
 and the design prefers to fail explicitly. For short intervals where
@@ -240,7 +266,7 @@ n = tjsp.cjpg(
 print(f"Estimated wall-clock for full collection: {n * 2 / 3600:.1f}h")
 ```
 
-Interaction with `auto_chunk`: when the interval exceeds 366 days and
+Interaction with `auto_chunk`: when the interval exceeds one year and
 `auto_chunk=True` (default), `count_only` iterates the disjoint windows
 produced by `iter_date_windows` and **sums** the per-window counts. The
 sum is raw — the de-duplication step that the normal path performs by
@@ -254,7 +280,7 @@ Other edge cases:
 
 - `paginas` is ignored when `count_only=True` (the probe always inspects
   page 1). A `UserWarning` is emitted if both are passed.
-- `auto_chunk=False` plus an interval longer than 366 days still raises
+- `auto_chunk=False` plus an interval longer than one year still raises
   `ValueError` — consistent with the strict path.
 - Captcha or layout-change failures on page 1 propagate as `ValueError`
   with the same message as the regular path.
@@ -266,6 +292,140 @@ are exposed from `juscraper.courts._esaj.parse` and
 `juscraper.courts.tjsp.cjpg_parse` for callers that already hold the
 raw HTML.
 
+## Full text of acórdãos (eSAJ)
+
+`cjsg` returns the ementa and `cd_acordao`, not the full decision. In TJAC
+and TJSP, `baixar_acordao(processo, data_julgamento)` downloads the PDF of
+the acórdão and returns its path; `baixar_acordaos(df)` does the same for
+each row of a `cjsg` DataFrame and adds `caminho_acordao` and
+`motivo_falha`:
+
+```python
+import juscraper as jus
+
+tjsp = jus.scraper("tjsp")
+df = tjsp.cjsg("dano moral", paginas=1)
+df = tjsp.baixar_acordaos(df)
+df[["processo", "data_julgamento", "caminho_acordao", "motivo_falha"]]
+```
+
+The direct route of the `cjsg` (`cjsg/getArquivo.do`) asks for a login in
+TJSP and for a reCAPTCHA in TJAC. These methods follow the process
+movements in the second-degree consultation instead, as the R package
+[`tjsp`](https://github.com/jjesusfilho/tjsp) by José de Jesus Filho does in
+`tjsp_baixar_acordaos_cposg`: no login and no captcha.
+
+- **Which acórdão.** A process may have more than one (the appeal and its
+  embargos de declaração, often with their own `cdProcesso`). The method
+  takes the first document whose type is an acórdão and whose movement date
+  is on or after `data_julgamento`. The movement comes on the judgment day
+  or a few days later, and the next acórdão of the same process comes after
+  it. When two incidents have an acórdão on the same day, the date cannot
+  tell them apart: the method returns the one from the incident listed first
+  by the search, and a `logging` warning names the other.
+- **What is returned.** The PDF as the court publishes it, at
+  `<diretorio>/acordaos/<cnj>_<cdProcesso>_<cdDocumento>.pdf`. Text
+  extraction is left to the caller. Long PDFs (100 pages and more in
+  criminal chambers of TJSP) are a single acórdão with long votes, not a
+  wider range of the case file.
+- **Errors.** `ProcessoNaoEncontradoError` when the public consultation
+  does not show the process: eSAJ answers the same way for a number that
+  does not exist and for a process under judicial secrecy.
+  `AcordaoNaoEncontradoError` when no acórdão is accessible from that date;
+  the message counts the documents that asked for the process password.
+  `RespostaNaoPdfError` when the PDF endpoint answers with something else
+  (nothing is written). `RespostaInesperadaError` when a page is not in
+  the known format. `EntradaInvalidaError`, a `ValueError`, when
+  `processo` does not have 20 digits or `data_julgamento` is empty (`None`,
+  `NaN`, `NaT`), in an unknown format or impossible (31/02); no request is
+  made. In `baixar_acordaos` these become the `motivo_falha` values
+  `nao_encontrado`, `sem_acordao`, `nao_pdf`, `resposta_inesperada` and
+  `entrada_invalida`. All exceptions are imported from
+  `juscraper.courts._esaj.acordao`.
+- **Password-protected documents.** Documents that ask for the process
+  password are skipped. If the acórdão of the requested date is one of
+  them, the method returns the next acórdão of the process instead; a
+  `logging` warning then says how many protected documents were skipped
+  before the returned one.
+- **Pace.** `sleep_time` is the minimum interval between two requests to
+  the court, also inside a single row: one TJSP acórdão takes the search,
+  one page per incident, the movement pages and the folder of each
+  candidate document.
+
+TJAL, TJAM, TJCE and TJMS do not have these methods yet.
+
+## Case documents of the first instance (TJSP)
+
+Two methods download public documents of the first instance as PDF, with
+no login and no captcha. Documents that ask for the process password are
+left out (see jtrecenti/juscraper#481).
+
+**Documents linked to movements.** `cpopg(..., download_pecas=True,
+diretorio=...)` downloads, in the same session that lists the movements,
+the PDF of each public document linked to a movement:
+
+```python
+import juscraper as jus
+
+tjsp = jus.scraper("tjsp")
+resultado = tjsp.cpopg("0000564-95.2025.8.26.0068", download_pecas=True, diretorio="pecas")
+resultado["movimentacoes"][["data", "movimento", "cd_documento", "documento_publico", "caminho_documento"]]
+```
+
+- **Columns.** Every `cpopg` call (with or without `download_pecas`) now
+  fills `cd_documento` and `documento_publico` in `movimentacoes`, read
+  from the movement HTML with no extra request. `caminho_documento` has the
+  PDF path, or `None` without `download_pecas`, for password-protected
+  documents and for documents whose download failed.
+- **Where files go.** `<diretorio>/cpopg/<cnj>/documentos/<cdDocumento>.pdf`.
+  `cpopg` deletes its download folder at the end, so `diretorio` is
+  required with `download_pecas=True`, is only accepted with it, and cannot
+  be inside `download_path`. `cpopg_download(..., download_pecas=True)`
+  writes the PDFs next to the process HTML.
+- **Cost.** Two requests per public document (the folder page and the
+  PDF), after the movement pages of the process: eSAJ only opens a document
+  whose movement page the session has already loaded. The process page is
+  not requested again.
+- **Failures.** A document that fails (eSAJ refuses access, the answer is
+  not a PDF, network error) does not stop the process: the HTML is saved,
+  the PDF is missing, and a single `UserWarning` lists the failures at the
+  end. A later `cpopg_download(..., download_pecas=True)` on the same
+  folder downloads the process again only when a public PDF is missing, and
+  requests only the missing PDFs.
+- `download_pecas=True` requires `method="html"` and
+  `baixar_movimentacoes=True`; otherwise it raises `ValueError` before any
+  request.
+
+**Sentences from `cjpg`.** Each `cjpg` row has the four codes of the
+"Visualizar Inteiro Teor" link: `cd_processo`, `cd_foro`, `nm_alias` (often
+empty) and `cd_documento`. `baixar_sentenca(cd_processo, cd_foro,
+cd_documento, nm_alias)` uses them to download the sentence PDF, and
+`baixar_sentencas(df)` does the same for each row of a `cjpg` DataFrame,
+adding `caminho_sentenca` and `motivo_falha`:
+
+```python
+df = tjsp.cjpg("atraso de voo", paginas=1)
+df = tjsp.baixar_sentencas(df)
+df[["cd_processo", "cd_documento", "caminho_sentenca", "motivo_falha"]]
+```
+
+The PDF goes to `<diretorio>/sentencas/<cd_processo>_<cd_documento>.pdf`.
+Each sentence takes two requests (`cjpg/obterArquivo.do`, which redirects
+to the folder, and the PDF), in any session, spaced by `sleep_time`. A code
+outside the eSAJ format raises `EntradaInvalidaError` before any request;
+in `baixar_sentencas` it becomes `motivo_falha="entrada_invalida"`. The
+other values are `nao_pdf`, `resposta_inesperada` and the network reasons
+of `juscraper.core.failures.MOTIVOS_FALHA`. The `cjpg` text column
+`decisao` already has the sentence text; the PDF keeps the layout and the
+signatures.
+
+The routes are the ones of `tjsp_baixar_doc_movimentacao` and
+`tjsp_baixar_sentenca_cjpg` in the R package
+[`tjsp`](https://github.com/jjesusfilho/tjsp) by José de Jesus Filho. They
+live in `juscraper.courts._esaj.pasta`. The movement route answers without
+login in TJAC, TJAL, TJAM and TJCE as well, and the `cjpg` route in TJMS,
+but those courts do not have `cpopg` or `cjpg` in juscraper yet.
+
 ## Normalization Utilities
 
 The `juscraper.utils.params` module provides normalization functions used internally by all scrapers:
@@ -275,7 +435,7 @@ The `juscraper.utils.params` module provides normalization functions used intern
 - `normalize_datas(**kwargs)` — handles deprecated and generic date aliases
 - `coerce_brazilian_date(value, backend_format)` — coerces any of the four supported string formats (or `date` / `datetime`) into the backend's expected format
 - `apply_input_pipeline_search(schema_cls, method_name, *, ...)` — runs the canonical input pipeline (alias resolution → date coercion → interval validation → pydantic schema) for `cjsg`/`cjpg` endpoints
-- `iter_date_windows(data_inicio, data_fim, *, max_dias=366)` — splits a date range into non-overlapping windows for auto-chunking
+- `iter_date_windows(data_inicio, data_fim, *, max_dias=366, max_anos=None)` — splits a date range into non-overlapping windows for auto-chunking; `max_anos` switches to calendar-year windows
 - `run_chunked_search(fetch_window, *, data_inicio, data_fim, dedup_key, ...)` — drives a search across windows, concatenates and deduplicates
 - `warn_unsupported(param_name, tribunal)` — warns about unsupported parameters
 

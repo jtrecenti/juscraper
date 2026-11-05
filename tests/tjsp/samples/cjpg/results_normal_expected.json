@@ -2,6 +2,9 @@
   "results_normal_page_01.html": {
     "colunas": [
       "cd_processo",
+      "cd_foro",
+      "nm_alias",
+      "cd_documento",
       "id_processo",
       "classe",
       "assunto",
@@ -15,6 +18,9 @@
     "linhas": [
       {
         "cd_processo": "3I0006RUY0000",
+        "cd_foro": "126",
+        "nm_alias": null,
+        "cd_documento": "167379827",
         "id_processo": "1005225-23.2025.8.26.0126",
         "classe": "Procedimento Comum Cível",
         "assunto": "Rescisão do contrato e devolução do dinheiro",
@@ -30,6 +36,9 @@
       },
       {
         "cd_processo": "01001TKCT0000",
+        "cd_foro": "1",
+        "nm_alias": null,
+        "cd_documento": "194684092",
         "id_processo": "1033041-98.2024.8.26.0001",
         "classe": "Procedimento Comum Cível",
         "assunto": "Enriquecimento sem Causa",
@@ -45,6 +54,9 @@
       },
       {
         "cd_processo": "5H0007BUQ0000",
+        "cd_foro": "197",
+        "nm_alias": null,
+        "cd_documento": "196360208",
         "id_processo": "1001624-24.2024.8.26.0197",
         "classe": "Procedimento Comum Cível",
         "assunto": "DIREITO PROCESSUAL CIVIL E DO TRABALHO",
@@ -60,6 +72,9 @@
       },
       {
         "cd_processo": "1W001C6LR0000",
+        "cd_foro": "68",
+        "nm_alias": null,
+        "cd_documento": "196135161",
         "id_processo": "1006457-21.2023.8.26.0068",
         "classe": "Procedimento Comum Cível",
         "assunto": "Cessão de Direitos",
@@ -75,6 +90,9 @@
       },
       {
         "cd_processo": "1W001A64W0000",
+        "cd_foro": "68",
+        "nm_alias": null,
+        "cd_documento": "196062184",
         "id_processo": "1000195-26.2021.8.26.0068",
         "classe": "Procedimento Comum Cível",
         "assunto": "Tratamento médico-hospitalar",
@@ -90,6 +108,9 @@
       },
       {
         "cd_processo": "EA00038VR0000",
+        "cd_foro": "514",
+        "nm_alias": null,
+        "cd_documento": "118410141",
         "id_processo": "1003292-20.2022.8.26.0514",
         "classe": "Procedimento Comum Cível",
         "assunto": "Indenização por Dano Material",
@@ -105,6 +126,9 @@
       },
       {
         "cd_processo": "EA0003DJE0000",
+        "cd_foro": "514",
+        "nm_alias": null,
+        "cd_documento": "118409878",
         "id_processo": "1001708-78.2023.8.26.0514",
         "classe": "Procedimento Comum Cível",
         "assunto": "Indenização por Dano Moral",
@@ -120,6 +144,9 @@
       },
       {
         "cd_processo": "05001J9320000",
+        "cd_foro": "5",
+        "nm_alias": null,
+        "cd_documento": "192525066",
         "id_processo": "1014149-95.2025.8.26.0005",
         "classe": "Procedimento Comum Cível",
         "assunto": "Inclusão Indevida em Cadastro de Inadimplentes",
@@ -135,6 +162,9 @@
       },
       {
         "cd_processo": "EA0003I9M0000",
+        "cd_foro": "514",
+        "nm_alias": null,
+        "cd_documento": "118409640",
         "id_processo": "1001152-42.2024.8.26.0514",
         "classe": "Despejo",
         "assunto": "Locação de Imóvel",
@@ -150,6 +180,9 @@
       },
       {
         "cd_processo": "1R00028VJ0000",
+        "cd_foro": "63",
+        "nm_alias": null,
+        "cd_documento": "145316083",
         "id_processo": "1001833-07.2024.8.26.0063",
         "classe": "Procedimento Comum Cível",
         "assunto": "Vícios de Construção",
@@ -168,6 +201,9 @@
   "results_normal_page_02.html": {
     "colunas": [
       "cd_processo",
+      "cd_foro",
+      "nm_alias",
+      "cd_documento",
       "id_processo",
       "classe",
       "assunto",
@@ -181,6 +217,9 @@
     "linhas": [
       {
         "cd_processo": "GQ000YH4U0000",
+        "cd_foro": "602",
+        "nm_alias": null,
+        "cd_documento": "133714544",
         "id_processo": "1046870-89.2024.8.26.0602",
         "classe": "Procedimento Comum Cível",
         "assunto": "Indenização por Dano Moral",
@@ -196,6 +235,9 @@
       },
       {
         "cd_processo": "G80004Z050000",
+        "cd_foro": "584",
+        "nm_alias": null,
+        "cd_documento": "149524622",
         "id_processo": "1003205-77.2024.8.26.0584",
         "classe": "Procedimento Comum Cível",
         "assunto": "Defeito, nulidade ou anulação",
@@ -211,6 +253,9 @@
       },
       {
         "cd_processo": "9K000TG2I0000",
+        "cd_foro": "344",
+        "nm_alias": null,
+        "cd_documento": "106876765",
         "id_processo": "1012006-86.2025.8.26.0344",
         "classe": "Procedimento Comum Cível",
         "assunto": "Indenização por Dano Moral",
@@ -226,6 +271,9 @@
       },
       {
         "cd_processo": "GX000A1OG0000",
+        "cd_foro": "584",
+        "nm_alias": null,
+        "cd_documento": "149515280",
         "id_processo": "1012757-88.2024.8.26.0609",
         "classe": "Procedimento Comum Cível",
         "assunto": "Rescisão do contrato e devolução do dinheiro",
@@ -241,6 +289,9 @@
       },
       {
         "cd_processo": "36000ZLBH0000",
+        "cd_foro": "84",
+        "nm_alias": null,
+        "cd_documento": "151246236",
         "id_processo": "1043564-92.2022.8.26.0114",
         "classe": "Procedimento Comum Cível",
         "assunto": "Indenização por Dano Moral",
@@ -256,6 +307,9 @@
       },
       {
         "cd_processo": "360013EGI0000",
+        "cd_foro": "84",
+        "nm_alias": null,
+        "cd_documento": "151235427",
         "id_processo": "1048306-29.2023.8.26.0114",
         "classe": "Procedimento Comum Cível",
         "assunto": "Contratos Bancários",
@@ -271,6 +325,9 @@
       },
       {
         "cd_processo": "360018NNG0000",
+        "cd_foro": "114",
+        "nm_alias": null,
+        "cd_documento": "151258181",
         "id_processo": "1043269-50.2025.8.26.0114",
         "classe": "Procedimento Comum Cível",
         "assunto": "Protesto Indevido de Títulos",
@@ -286,6 +343,9 @@
       },
       {
         "cd_processo": "B9000JJ890000",
+        "cd_foro": "405",
+        "nm_alias": null,
+        "cd_documento": "128441105",
         "id_processo": "1005112-42.2024.8.26.0405",
         "classe": "Procedimento Comum Cível",
         "assunto": "Indenização por Dano Moral",
@@ -301,6 +361,9 @@
       },
       {
         "cd_processo": "7Q000BRPF0000",
+        "cd_foro": "278",
+        "nm_alias": null,
+        "cd_documento": "55635988",
         "id_processo": "1011669-72.2023.8.26.0278",
         "classe": "Procedimento Comum Cível",
         "assunto": "Indenização por Dano Moral",
@@ -316,6 +379,9 @@
       },
       {
         "cd_processo": "B900058AV0000",
+        "cd_foro": "405",
+        "nm_alias": null,
+        "cd_documento": "128154162",
         "id_processo": "1013628-32.2016.8.26.0405",
         "classe": "Procedimento Comum Cível",
         "assunto": "Responsabilidade Civil",

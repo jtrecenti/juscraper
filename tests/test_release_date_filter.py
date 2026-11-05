@@ -3,8 +3,8 @@
 Strategy
 --------
 For every supported tribunal we run the same three assertions against the
-reference work-week window (10/03/2025 – 14/03/2025, Monday–Friday outside
-holidays and the judicial recess of December/January/July):
+reference window defined in ``tests/helpers.py``, whose module docstring
+explains why each window must end on a day followed by a working day:
 
 1. ``cjsg`` with the date window fixed returns a non-empty DataFrame.
    Pesquisa is empty (``""``) by default; if the tribunal rejects that, we
@@ -13,6 +13,8 @@ holidays and the judicial recess of December/January/July):
    window. Tribunals without a date column only get the count check.
 3. Pagination with ``paginas=range(1, 3)`` returns at least as many rows
    as ``paginas=1`` (strictly more if at least two pages exist).
+4. A search restricted to the last day of each window, alone, returns no row
+   from the following day across three pages (see ``run_fim_da_janela``).
 
 These tests are expensive (one network round-trip per tribunal, sometimes
 several). They are marked ``release`` so CI pipelines can skip them with
@@ -37,7 +39,7 @@ from __future__ import annotations
 
 import pandas as pd
 import pytest
-from helpers import run_filtro_data_unica, run_paginacao_data_unica
+from helpers import run_filtro_data_unica, run_fim_da_janela, run_paginacao_data_unica
 
 import juscraper as jus
 
@@ -104,3 +106,10 @@ class TestReleaseFiltroDataUnica:
         # target date, so we use ">=" and leave the multi-page case to the
         # non-date-filtered pagination tests already in per-tribunal files.
         assert len(df2) >= len(df1)
+
+    @pytest.mark.parametrize("tribunal", _params(KNOWN_FILTRO_FAILURES))
+    def test_fim_da_janela_sem_dia_seguinte(self, tribunal):
+        """Busca de um dia só não traz linha do dia seguinte."""
+        conferidas = run_fim_da_janela(jus.scraper(tribunal))
+        if not conferidas:
+            pytest.skip("nenhuma linha com data de julgamento ou de publicação no dia pedido")
