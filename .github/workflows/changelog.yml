@@ -1,0 +1,46 @@
+name: Changelog
+
+# PR que muda o código publicado em src/juscraper/ precisa de entrada no
+# CHANGELOG.md. Refatoração interna, teste e tooling sem efeito público, que o
+# CLAUDE.md dispensa de entrada, passam com a etiqueta `sem-changelog`. Os
+# eventos `labeled` e `unlabeled` refazem a conferência quando a etiqueta
+# entra ou sai, sem novo push.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: changelog-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  changelog:
+    name: Entrada no CHANGELOG
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # O checkout é o commit de merge com a base; o primeiro pai é a ponta
+          # da base, e o diff contra ele é exatamente o que o PR muda.
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Conferir a entrada no CHANGELOG
+        env:
+          DISPENSADO: ${{ contains(github.event.pull_request.labels.*.name, 'sem-changelog') }}
+        run: |
+          # Sem --no-renames, mover um arquivo para fora de src/juscraper/
+          # aparece só no caminho novo, e a remoção passaria sem entrada.
+          arquivos="$(git diff --no-renames --name-only HEAD^1 HEAD)"
+          if ! grep -q '^src/juscraper/' <<< "$arquivos"; then
+            echo "O PR não muda src/juscraper/."
+          elif grep -qx 'CHANGELOG.md' <<< "$arquivos"; then
+            echo "O PR muda src/juscraper/ e o CHANGELOG.md."
+          elif [ "$DISPENSADO" = true ]; then
+            echo "::notice title=Changelog dispensado::O PR muda src/juscraper/ sem entrada no CHANGELOG.md, com a etiqueta sem-changelog."
+          else
+            echo "::error title=Falta entrada no CHANGELOG::O PR muda src/juscraper/ sem tocar o CHANGELOG.md. Registrar o efeito público em [Unreleased] ou, se a mudança não tem efeito para quem usa a biblioteca (refatoração interna, teste, tooling), aplicar a etiqueta sem-changelog."
+            exit 1
+          fi
