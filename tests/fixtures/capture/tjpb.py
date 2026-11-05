@@ -9,11 +9,10 @@ Saves raw JSON responses (Laravel + Elasticsearch) under
 truncated — the parser only needs ementa/numero_processo/dt_ementa.
 """
 import json
-from urllib.parse import unquote
 
 import requests
 
-from juscraper.courts.tjpb.download import CLASSES_URL, SEARCH_URL, build_cjsg_payload
+from juscraper.courts.tjpb.download import SEARCH_URL, build_cjsg_payload, fetch_csrf_token
 
 from ._util import dump, samples_dir_for
 
@@ -60,12 +59,7 @@ def main() -> None:
         "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
     })
 
-    classes_resp = session.get(CLASSES_URL, timeout=30)
-    classes_resp.raise_for_status()
-    xsrf_cookie = session.cookies.get("XSRF-TOKEN")
-    if not xsrf_cookie:
-        raise RuntimeError("TJPB did not provide the XSRF-TOKEN cookie.")
-    xsrf_token = unquote(xsrf_cookie)
+    xsrf_token = fetch_csrf_token(session.request)
 
     _capture(session, dest, xsrf_token, "dano moral", 1, "results_normal_page_01.json")
     _capture(session, dest, xsrf_token, "dano moral", 2, "results_normal_page_02.json")

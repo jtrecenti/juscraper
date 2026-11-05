@@ -11,6 +11,10 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 - TJSP: `cjpg_download`, `cpopg_download` e `cposg_download` aceitam o parâmetro opcional `diretorio` para definir o diretório de download por chamada.
 
+### Changed
+
+- TJPB `cjsg`: inicializa a sessão pela API de classes e envia o cookie `XSRF-TOKEN` no header `X-XSRF-TOKEN`, em vez de enviar `_token` no corpo da pesquisa. Em `build_cjsg_payload`, substitua `build_cjsg_payload(token, pesquisa, page=1)` por `build_cjsg_payload(pesquisa, page=1)`; chamadas posicionais antigas podem montar um payload incorreto sem erro. Refs #439.
+
 ### Fixed
 
 - TJSP `cpopg` HTML valida `processo.codigo` antes da gravação, prevenindo path traversal e retries desnecessários para identificadores inválidos. Refs #402.

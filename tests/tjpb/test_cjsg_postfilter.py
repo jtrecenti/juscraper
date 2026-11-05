@@ -13,15 +13,9 @@ import pytest
 import responses
 
 import juscraper as jus
-from juscraper.courts.tjpb.download import CLASSES_URL, SEARCH_URL
+from juscraper.courts.tjpb.download import SEARCH_URL
 from tests._helpers import assert_unknown_kwarg_raises, load_sample
-
-_XSRF_COOKIE = "contrato%2Fcsrf"
-_LARAVEL_COOKIE = "contrato-session"
-_CLASSES_RESPONSE = [{
-    "id_classe_judicial": 53,
-    "classe": "AGRAVO DE INSTRUMENTO (202)",
-}]
+from tests.tjpb._helpers import add_get_classes
 
 # Sample has 10 hits with dt_ementa spanning 2022-2025:
 #   2022 → 1 row (20/10/2022)
@@ -32,16 +26,7 @@ _RESULTS_BODY = load_sample("tjpb", "cjsg/results_normal_page_01.json")
 
 
 def _stub_endpoints() -> None:
-    responses.add(
-        responses.GET,
-        CLASSES_URL,
-        json=_CLASSES_RESPONSE,
-        status=200,
-        headers=[
-            ("Set-Cookie", f"XSRF-TOKEN={_XSRF_COOKIE}; Path=/"),
-            ("Set-Cookie", f"laravel_session={_LARAVEL_COOKIE}; Path=/"),
-        ],
-    )
+    add_get_classes()
     responses.add(
         responses.POST,
         SEARCH_URL,
