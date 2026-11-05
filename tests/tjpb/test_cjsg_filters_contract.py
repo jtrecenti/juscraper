@@ -13,23 +13,9 @@ import responses
 from responses.matchers import json_params_matcher
 
 import juscraper as jus
-from juscraper.courts.tjpb.download import BASE_URL, SEARCH_URL, TOKEN_RE, build_cjsg_payload
-from tests._helpers import assert_unknown_kwarg_raises, load_sample, load_sample_bytes
-
-_HOME_HTML_BYTES = load_sample_bytes("tjpb", "cjsg/home.html")
-_TOKEN_MATCH = TOKEN_RE.search(_HOME_HTML_BYTES.decode("utf-8"))
-assert _TOKEN_MATCH is not None, "captured TJPB home.html lacks <meta name='_token' ...>"
-_TOKEN = _TOKEN_MATCH.group(1)
-
-
-def _add_get_home() -> None:
-    responses.add(
-        responses.GET,
-        BASE_URL,
-        body=_HOME_HTML_BYTES,
-        status=200,
-        content_type="text/html; charset=UTF-8",
-    )
+from juscraper.courts.tjpb.download import SEARCH_URL, build_cjsg_payload
+from tests._helpers import assert_unknown_kwarg_raises, load_sample
+from tests.tjpb._helpers import add_get_classes
 
 
 def _add_post_no_results(expected_payload: dict) -> None:
@@ -47,9 +33,8 @@ def _add_post_no_results(expected_payload: dict) -> None:
 def test_cjsg_all_filters_land_in_body(mocker):
     """Every TJPB public filter must reach the JSON body."""
     mocker.patch("time.sleep")
-    _add_get_home()
+    add_get_classes()
     _add_post_no_results(build_cjsg_payload(
-        token=_TOKEN,
         pesquisa="dano moral",
         page=1,
         nr_processo="0000000-00.0000.0.00.0000",
@@ -82,8 +67,8 @@ def test_cjsg_all_filters_land_in_body(mocker):
 def test_cjsg_query_alias_emits_deprecation_warning(mocker):
     """The deprecated ``query`` alias is normalized to ``pesquisa``."""
     mocker.patch("time.sleep")
-    _add_get_home()
-    _add_post_no_results(build_cjsg_payload(token=_TOKEN, pesquisa="dano moral", page=1))
+    add_get_classes()
+    _add_post_no_results(build_cjsg_payload(pesquisa="dano moral", page=1))
 
     with pytest.warns(DeprecationWarning, match="query.*deprecado"):
         df = jus.scraper("tjpb").cjsg(pesquisa=None, query="dano moral", paginas=1)
@@ -95,8 +80,8 @@ def test_cjsg_query_alias_emits_deprecation_warning(mocker):
 def test_cjsg_termo_alias_emits_deprecation_warning(mocker):
     """The deprecated ``termo`` alias is also normalized."""
     mocker.patch("time.sleep")
-    _add_get_home()
-    _add_post_no_results(build_cjsg_payload(token=_TOKEN, pesquisa="dano moral", page=1))
+    add_get_classes()
+    _add_post_no_results(build_cjsg_payload(pesquisa="dano moral", page=1))
 
     with pytest.warns(DeprecationWarning, match="termo.*deprecado"):
         df = jus.scraper("tjpb").cjsg(pesquisa=None, termo="dano moral", paginas=1)
@@ -108,9 +93,9 @@ def test_cjsg_termo_alias_emits_deprecation_warning(mocker):
 def test_cjsg_nr_processo_alias_emits_deprecation_warning(mocker):
     """The deprecated ``nr_processo`` alias maps to ``numero_processo``."""
     mocker.patch("time.sleep")
-    _add_get_home()
+    add_get_classes()
     _add_post_no_results(build_cjsg_payload(
-        token=_TOKEN, pesquisa="dano moral", page=1,
+        pesquisa="dano moral", page=1,
         nr_processo="0000000-00.0000.0.00.0000",
     ))
 
@@ -128,9 +113,9 @@ def test_cjsg_id_classe_judicial_alias_emits_deprecation_warning(mocker):
     """The deprecated ``id_classe_judicial`` alias maps to ``id_classe`` and
     the backend body keeps the ``id_classe_judicial`` field (refs #129)."""
     mocker.patch("time.sleep")
-    _add_get_home()
+    add_get_classes()
     _add_post_no_results(build_cjsg_payload(
-        token=_TOKEN, pesquisa="dano moral", page=1, id_classe="C123",
+        pesquisa="dano moral", page=1, id_classe="C123",
     ))
 
     with pytest.warns(DeprecationWarning, match="id_classe_judicial.*id_classe"):
@@ -146,9 +131,9 @@ def test_cjsg_id_classe_judicial_alias_emits_deprecation_warning(mocker):
 def test_cjsg_data_inicio_alias_maps_to_data_julgamento(mocker):
     """``data_inicio``/``data_fim`` map to ``data_julgamento_*`` via ``normalize_datas``."""
     mocker.patch("time.sleep")
-    _add_get_home()
+    add_get_classes()
     _add_post_no_results(build_cjsg_payload(
-        token=_TOKEN, pesquisa="dano moral", page=1,
+        pesquisa="dano moral", page=1,
         dt_inicio="2024-01-01", dt_fim="2024-03-31",
     ))
 
