@@ -13,28 +13,9 @@ import responses
 from responses.matchers import json_params_matcher
 
 import juscraper as jus
-from juscraper.courts.tjpb.download import CLASSES_URL, SEARCH_URL, build_cjsg_payload
+from juscraper.courts.tjpb.download import SEARCH_URL, build_cjsg_payload
 from tests._helpers import assert_unknown_kwarg_raises, load_sample
-
-_XSRF_COOKIE = "contrato%2Fcsrf"
-_LARAVEL_COOKIE = "contrato-session"
-_CLASSES_RESPONSE = [{
-    "id_classe_judicial": 53,
-    "classe": "AGRAVO DE INSTRUMENTO (202)",
-}]
-
-
-def _add_get_classes() -> None:
-    responses.add(
-        responses.GET,
-        CLASSES_URL,
-        json=_CLASSES_RESPONSE,
-        status=200,
-        headers=[
-            ("Set-Cookie", f"XSRF-TOKEN={_XSRF_COOKIE}; Path=/"),
-            ("Set-Cookie", f"laravel_session={_LARAVEL_COOKIE}; Path=/"),
-        ],
-    )
+from tests.tjpb._helpers import add_get_classes
 
 
 def _add_post_no_results(expected_payload: dict) -> None:
@@ -52,7 +33,7 @@ def _add_post_no_results(expected_payload: dict) -> None:
 def test_cjsg_all_filters_land_in_body(mocker):
     """Every TJPB public filter must reach the JSON body."""
     mocker.patch("time.sleep")
-    _add_get_classes()
+    add_get_classes()
     _add_post_no_results(build_cjsg_payload(
         pesquisa="dano moral",
         page=1,
@@ -86,7 +67,7 @@ def test_cjsg_all_filters_land_in_body(mocker):
 def test_cjsg_query_alias_emits_deprecation_warning(mocker):
     """The deprecated ``query`` alias is normalized to ``pesquisa``."""
     mocker.patch("time.sleep")
-    _add_get_classes()
+    add_get_classes()
     _add_post_no_results(build_cjsg_payload(pesquisa="dano moral", page=1))
 
     with pytest.warns(DeprecationWarning, match="query.*deprecado"):
@@ -99,7 +80,7 @@ def test_cjsg_query_alias_emits_deprecation_warning(mocker):
 def test_cjsg_termo_alias_emits_deprecation_warning(mocker):
     """The deprecated ``termo`` alias is also normalized."""
     mocker.patch("time.sleep")
-    _add_get_classes()
+    add_get_classes()
     _add_post_no_results(build_cjsg_payload(pesquisa="dano moral", page=1))
 
     with pytest.warns(DeprecationWarning, match="termo.*deprecado"):
@@ -112,7 +93,7 @@ def test_cjsg_termo_alias_emits_deprecation_warning(mocker):
 def test_cjsg_nr_processo_alias_emits_deprecation_warning(mocker):
     """The deprecated ``nr_processo`` alias maps to ``numero_processo``."""
     mocker.patch("time.sleep")
-    _add_get_classes()
+    add_get_classes()
     _add_post_no_results(build_cjsg_payload(
         pesquisa="dano moral", page=1,
         nr_processo="0000000-00.0000.0.00.0000",
@@ -132,7 +113,7 @@ def test_cjsg_id_classe_judicial_alias_emits_deprecation_warning(mocker):
     """The deprecated ``id_classe_judicial`` alias maps to ``id_classe`` and
     the backend body keeps the ``id_classe_judicial`` field (refs #129)."""
     mocker.patch("time.sleep")
-    _add_get_classes()
+    add_get_classes()
     _add_post_no_results(build_cjsg_payload(
         pesquisa="dano moral", page=1, id_classe="C123",
     ))
@@ -150,7 +131,7 @@ def test_cjsg_id_classe_judicial_alias_emits_deprecation_warning(mocker):
 def test_cjsg_data_inicio_alias_maps_to_data_julgamento(mocker):
     """``data_inicio``/``data_fim`` map to ``data_julgamento_*`` via ``normalize_datas``."""
     mocker.patch("time.sleep")
-    _add_get_classes()
+    add_get_classes()
     _add_post_no_results(build_cjsg_payload(
         pesquisa="dano moral", page=1,
         dt_inicio="2024-01-01", dt_fim="2024-03-31",

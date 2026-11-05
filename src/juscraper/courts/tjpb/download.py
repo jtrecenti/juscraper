@@ -3,7 +3,6 @@ import math
 import time
 from urllib.parse import unquote
 
-import requests
 from tqdm import tqdm
 
 from juscraper.core.http import RequestFn
@@ -14,12 +13,13 @@ SEARCH_URL = f"{BASE_URL}/api/jurisprudencia/pesquisar"
 RESULTS_PER_PAGE = 10
 
 
-def fetch_csrf_token(request_fn: RequestFn, session: requests.Session) -> str:
+def fetch_csrf_token(request_fn: RequestFn) -> str:
     """Fetch the CSRF cookie used by the TJPB search API."""
-    request_fn("GET", CLASSES_URL, timeout=30)
-    token = session.cookies.get("XSRF-TOKEN")
+    response = request_fn("GET", CLASSES_URL, timeout=30)
+    response.raise_for_status()
+    token = response.cookies.get("XSRF-TOKEN")
     if not token:
-        raise RuntimeError("Could not find XSRF-TOKEN cookie on TJPB API session.")
+        raise RuntimeError("Could not find XSRF-TOKEN cookie in TJPB API response.")
     return unquote(token)
 
 
@@ -64,7 +64,6 @@ def cjsg_download_manager(
     paginas=None,
     *,
     request_fn: RequestFn,
-    session: requests.Session,
     **kwargs,
 ) -> list:
     """Download raw results from the TJPB jurisprudence search.
@@ -78,10 +77,9 @@ def cjsg_download_manager(
             uso normal e ``TJPBScraper._request_with_retry`` (via
             ``core.http.HTTPScraper``), centralizando backoff exponencial
             para 429/5xx.
-        session: Shared HTTP session that receives the CSRF cookie.
         **kwargs: Additional filter parameters.
     """
-    xsrf_token = fetch_csrf_token(request_fn, session)
+    xsrf_token = fetch_csrf_token(request_fn)
     headers = {
         "X-Requested-With": "XMLHttpRequest",
         "X-XSRF-TOKEN": xsrf_token,

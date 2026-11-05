@@ -12,33 +12,9 @@ from responses.matchers import json_params_matcher
 import juscraper as jus
 from juscraper.courts.tjpb.download import CLASSES_URL, SEARCH_URL, build_cjsg_payload
 from tests._helpers import load_sample
+from tests.tjpb._helpers import LARAVEL_COOKIE, add_get_classes
 
 CJSG_FIELDS = {"processo", "ementa", "data_julgamento"}
-
-_XSRF_COOKIE = "contrato%2Fcsrf"
-_LARAVEL_COOKIE = "contrato-session"
-_CLASSES_RESPONSE = [{
-    "id_classe_judicial": 53,
-    "classe": "AGRAVO DE INSTRUMENTO (202)",
-}]
-
-
-def _add_get_classes(*, with_cookie: bool = True) -> None:
-    headers = (
-        [
-            ("Set-Cookie", f"XSRF-TOKEN={_XSRF_COOKIE}; Path=/"),
-            ("Set-Cookie", f"laravel_session={_LARAVEL_COOKIE}; Path=/"),
-        ]
-        if with_cookie else []
-    )
-    responses.add(
-        responses.GET,
-        CLASSES_URL,
-        json=_CLASSES_RESPONSE,
-        status=200,
-        headers=headers,
-    )
-
 
 def _add_post(pesquisa: str, page: int, sample_path: str) -> None:
     responses.add(
@@ -57,7 +33,7 @@ def _add_post(pesquisa: str, page: int, sample_path: str) -> None:
 def test_cjsg_typical_com_paginacao(mocker):
     """GET classes (CSRF cookie) + two POSTs (page 1 and 2)."""
     mocker.patch("time.sleep")
-    _add_get_classes()
+    add_get_classes()
     _add_post("dano moral", page=1, sample_path="cjsg/results_normal_page_01.json")
     _add_post("dano moral", page=2, sample_path="cjsg/results_normal_page_02.json")
 
@@ -71,14 +47,14 @@ def test_cjsg_typical_com_paginacao(mocker):
     assert len(post_calls) == 2
     assert all(call.request.headers["X-XSRF-TOKEN"] == "contrato/csrf" for call in post_calls)
     assert all("XSRF-TOKEN=contrato%2Fcsrf" in call.request.headers["Cookie"] for call in post_calls)
-    assert all(f"laravel_session={_LARAVEL_COOKIE}" in call.request.headers["Cookie"] for call in post_calls)
+    assert all(f"laravel_session={LARAVEL_COOKIE}" in call.request.headers["Cookie"] for call in post_calls)
 
 
 @responses.activate
 def test_cjsg_single_page(mocker):
     """Single-page query: GET classes + one POST."""
     mocker.patch("time.sleep")
-    _add_get_classes()
+    add_get_classes()
     _add_post("usucapiao extraordinario imovel rural",
               page=1, sample_path="cjsg/single_page.json")
 
@@ -95,7 +71,7 @@ def test_cjsg_single_page(mocker):
 def test_cjsg_no_results(mocker):
     """Zero-hit query returns an empty DataFrame (not an error)."""
     mocker.patch("time.sleep")
-    _add_get_classes()
+    add_get_classes()
     _add_post("juscraper_probe_zero_hits_xyzqwe",
               page=1, sample_path="cjsg/no_results.json")
 
@@ -109,7 +85,7 @@ def test_cjsg_no_results(mocker):
 def test_cjsg_xsrf_token_is_sent_in_header_and_not_body(mocker):
     """The CSRF cookie reaches the header, not the JSON body."""
     mocker.patch("time.sleep")
-    _add_get_classes()
+    add_get_classes()
     _add_post("dano moral", page=1, sample_path="cjsg/results_normal_page_01.json")
 
     jus.scraper("tjpb").cjsg("dano moral", paginas=1)
@@ -127,7 +103,7 @@ def test_cjsg_xsrf_token_is_sent_in_header_and_not_body(mocker):
 def test_cjsg_falha_sem_cookie_xsrf(mocker):
     """Missing CSRF cookie produces an informative error before the POST."""
     mocker.patch("time.sleep")
-    _add_get_classes(with_cookie=False)
+    add_get_classes(with_cookie=False)
 
     with pytest.raises(RuntimeError, match="XSRF-TOKEN"):
         jus.scraper("tjpb").cjsg("dano moral", paginas=1)

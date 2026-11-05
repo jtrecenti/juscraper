@@ -9,6 +9,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- TJPB `cjsg`: inicializa a sessão pela API de classes e envia o cookie `XSRF-TOKEN` no header `X-XSRF-TOKEN`, em vez de enviar `_token` no corpo da pesquisa. Em `build_cjsg_payload`, substitua `build_cjsg_payload(token, pesquisa, page=1)` por `build_cjsg_payload(pesquisa, page=1)`; chamadas posicionais antigas podem montar um payload incorreto sem erro. Refs #439.
 - TJMT: `TJMTScraper` reutiliza, na mesma instância, a URL da API e o token descobertos na primeira chamada a `cjsg`/`cjsg_download`, evitando consultar novamente a página e os scripts públicos do portal. Se a API responder HTTP 401 ou 403, redescobre a configuração uma única vez e repete a consulta com o token atualizado, sob a política de retry comum; se a recusa persistir, propaga `requests.HTTPError` ou `RetryExhaustedError`. Pedido na #492; a mudança é do PR #519, de vihumelo.
 - **BREAKING:** TJMT `cjsg` e `cjsg_download`: a interface acompanha a API nova do portal de jurisprudência, sem ciclo de deprecação. O portal trocou a API e a antiga deixou de responder JSON (#434), então não há como manter o comportamento anterior; as mudanças abaixo são as que a API nova impõe.
   - `data_publicacao_inicio`/`data_publicacao_fim` passa a ser o único filtro de data. O fim é inclusivo: `data_publicacao_fim="2025-03-10"` traz o que foi publicado em 10/03 inteiro e nada de 11/03.
