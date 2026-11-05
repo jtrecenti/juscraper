@@ -7,6 +7,8 @@ backend Elasticsearch payload keeps the original field names
 (``ds_nome``, ``ds_classe_judicial``) — that is an internal detail of
 the JURIS API and not exposed in the public signature.
 """
+import json
+
 import pandas as pd
 import pytest
 import responses
@@ -21,8 +23,10 @@ from tests._helpers import assert_unknown_kwarg_raises, load_sample
 def test_cjsg_all_filters_land_in_json_body(mocker):
     """Every public filter must reach the POST JSON payload via ``build_cjsg_payload``.
 
-    Public filters are passed in canonical form (``relator``, ``classe``);
-    the matcher asserts the backend body keeps ``ds_nome`` / ``ds_classe_judicial``.
+    Public filters are passed in canonical form (``relator``, ``classe``).
+    The matcher only checks that the request matches ``build_cjsg_payload``;
+    the backend field names (``tipo.raw``, ``ds_nome``, ``ds_classe_judicial``)
+    are pinned by the literal ``fields`` dict asserted against the sent body.
 
     Note: ``TJROScraper.cjsg`` exposes only ``data_julgamento_inicio``/``fim``;
     ``data_publicacao_*`` is not in the public signature, so the publication
@@ -38,7 +42,7 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
         match=[json_params_matcher(build_cjsg_payload(
             "dano moral",
             offset=0,
-            tipo=["ACORDAO"],
+            tipo=["ACÓRDÃO"],
             nr_processo="00000000000000000000",
             relator="FULANO DE TAL",
             orgao_julgador=42,
@@ -54,7 +58,7 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
     df = jus.scraper("tjro").cjsg(
         "dano moral",
         paginas=1,
-        tipo=["ACORDAO"],
+        tipo=["ACÓRDÃO"],
         numero_processo="00000000000000000000",
         relator="FULANO DE TAL",
         orgao_julgador=42,
@@ -67,6 +71,20 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
+    campos = json.loads(responses.calls[0].request.body)["fields"]
+    assert campos == {
+        "tipo.raw": ["ACÓRDÃO"],
+        "query": "dano moral",
+        "nr_processo": "00000000000000000000",
+        "ds_nome": "FULANO DE TAL",
+        "id_orgao_julgador": "42",
+        "id_orgao_julgador_colegiado": "7",
+        "ds_classe_judicial": "Apelacao",
+        "dtjulgamento_inicio": "2024-01-01",
+        "dtjulgamento_fim": "2024-03-31",
+        "grau_jurisdicao": [2],
+        "termoExato": True,
+    }
 
 
 @responses.activate

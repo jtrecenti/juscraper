@@ -4,6 +4,8 @@ TJRO paginates via ``from`` offset: ``paginas=1`` sends ``from=0``,
 ``paginas=2`` sends ``from=10``. The contract confirms both the DataFrame
 schema and the offset-based wire payload, page-by-page.
 """
+import json
+
 import pandas as pd
 import responses
 from responses.matchers import json_params_matcher
@@ -46,7 +48,7 @@ def test_cjsg_typical_com_paginacao(mocker):
 
 @responses.activate
 def test_cjsg_single_page(mocker):
-    """Single page scenario — asserts ``from=0``."""
+    """Single page: the request goes out with ``from=0`` and the default filter in ``tipo.raw``."""
     mocker.patch("time.sleep")
     _add_page("mandado de seguranca", 1, "cjsg/single_page.json")
 
@@ -55,6 +57,12 @@ def test_cjsg_single_page(mocker):
     assert isinstance(df, pd.DataFrame)
     assert set(df.columns) >= CJSG_MIN_COLUMNS
     assert len(df) > 0
+
+    # O matcher deriva o esperado de ``build_cjsg_payload``; a chave do filtro
+    # se confere no corpo enviado, para não depender do próprio builder.
+    campos = json.loads(responses.calls[0].request.body)["fields"]
+    assert campos["tipo.raw"] == ["EMENTA"]
+    assert "tipo" not in campos
 
 
 @responses.activate
