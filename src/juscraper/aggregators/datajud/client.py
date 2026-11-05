@@ -1,23 +1,30 @@
 """
 Orchestrates the flow for DATAJUD (user entry point) - API BASED
 """
+import functools
 import logging
 import math
 import time
 from collections import defaultdict
-from collections.abc import Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from typing import Any, ClassVar, NamedTuple, NoReturn, cast
 
 import pandas as pd
+import requests
 from pydantic import ValidationError
 from tqdm.auto import tqdm
 
 from ...core.avisos import avisar
-from ...core.exceptions import ColetaParcialError
+from ...core.exceptions import ColetaParcialError, RetryExhaustedError
 from ...core.http import HTTPScraper, RequestPolicy
 from ...utils.cnj import clean_cnj  # Assuming this utility exists and is relevant
 from ...utils.params import normalize_paginas, pop_deprecated_alias, raise_on_extra_kwargs
-from .download import build_contar_processos_payload, build_listar_processos_payload, call_datajud_api
+from .download import (
+    STATUS_REPETIVEIS,
+    build_contar_processos_payload,
+    build_listar_processos_payload,
+    call_datajud_api,
+)
 
 # Import mappings for tribunal and justice aliases.
 from .mappings import ID_JUSTICA_TRIBUNAL_TO_ALIAS, TIPOS_MOVIMENTACAO, TRIBUNAL_TO_ALIAS
@@ -146,6 +153,10 @@ def _numero_positivo(valor: Any) -> bool:
         return False
 
 
+def _max_retries_valido(valor: Any) -> bool:
+    return isinstance(valor, int) and not isinstance(valor, bool) and valor >= 1
+
+
 def _timeout_valido(timeout: Any) -> bool:
     """Número positivo e finito, ou par ``(conexão, leitura)`` deles, como o ``requests`` aceita.
 
@@ -176,10 +187,7 @@ def _mensagem_falha_parcial(
     inicio = f"DataJud: falha ao consultar alias {alias!r} na página {pagina}."
     if total_info is None:
         return (
-            f"{inicio} Resultados parciais em erro.resultado: nenhum registro recebido. "
-            "Se a falha foi timeout, reduza o recorte (por exemplo, com "
-            "data_ajuizamento_inicio/_fim) ou aumente o timeout com "
-            "politica={'busca': {'timeout': ...}}."
+            f"{inicio} Resultados parciais em erro.resultado: nenhum registro recebido."
         )
     recebidos_txt = f"{inicio} Resultados parciais em erro.resultado: {recebidos} registro(s) recebido(s)"
     total = total_info.get("value")
@@ -187,6 +195,34 @@ def _mensagem_falha_parcial(
         return f"{recebidos_txt}; a consulta não informou o total encontrado."
     total_txt = str(total) if total_info.get("relation", "eq") == "eq" else f"pelo menos {total}"
     return f"{recebidos_txt} de {total_txt} encontrado(s) pela consulta."
+
+
+FALHAS_DE_TRANSPORTE: tuple[type[Exception], ...] = (requests.RequestException, RetryExhaustedError)
+"""Exceções de :func:`call_datajud_api` que viram falha da consulta, e não erro de programação."""
+
+
+def _descrever_causa(exc: Exception) -> str:
+    """Resume a falha de transporte para a mensagem do erro, com o status HTTP quando houver."""
+    if isinstance(exc, RetryExhaustedError):
+        return f"HTTP {exc.status_code} em todas as {exc.attempts} tentativas"
+    status = getattr(getattr(exc, "response", None), "status_code", None)
+    if isinstance(exc, requests.HTTPError) and status is not None:
+        return f"HTTP {status}"
+    if isinstance(exc, requests.Timeout):
+        return "timeout"
+    return f"{type(exc).__name__}: {exc}"
+
+
+DICA_TIMEOUT = (
+    " Reduza o recorte (por exemplo, com data_ajuizamento_inicio/_fim) ou aumente "
+    "o timeout com politica={'busca': {'timeout': ...}}."
+)
+
+
+def _sufixo_causa(exc: Exception) -> str:
+    """Fecha a mensagem da falha de transporte com a causa e, no timeout, o que ajustar."""
+    dica = DICA_TIMEOUT if isinstance(exc, requests.Timeout) else ""
+    return f" Causa: {_descrever_causa(exc)}.{dica}"
 
 
 def _falha_pagina(mensagem: str, causa: Exception) -> NoReturn:
@@ -365,14 +401,10 @@ class DatajudScraper(HTTPScraper):
     """Scraper for CNJ's Datajud API.
 
     Note:
-        Diferente de outros agregadores migrados em #204, o DataJud nao usa
-        ``self._request_with_retry`` no caminho quente: a funcao
-        :func:`download.call_datajud_api` aplica um retry especializado
-        (504/Timeout -> refaz **1 vez** com ``size`` reduzido por
-        ``FALLBACK_DIVISOR``), incompativel com o backoff exponencial do
-        ``HTTPScraper``. A heranca aqui garante session/headers
-        compartilhados e o cumprimento de #185, mas o transporte segue via
-        :func:`call_datajud_api`.
+        Cada busca passa pelo ``self._request_with_retry`` com o perfil
+        ``"busca"``, que repete 429, 502 e 503 com espera. Por cima dele,
+        :func:`download.call_datajud_api` trata 504 e timeout refazendo a
+        busca **uma vez** com ``size`` reduzido por ``FALLBACK_DIVISOR``.
     """
 
     # Chave pública oficial da API Pública do Datajud (CNJ): documentada e
@@ -385,15 +417,24 @@ class DatajudScraper(HTTPScraper):
 
     PREFIXO_DIRETORIO_TEMPORARIO = "datajud_api_"
 
-    # Um perfil só, para ``listar_processos`` e ``contar_processos``. O
-    # transporte é o ``call_datajud_api``, com retry próprio (reduz o ``size``
-    # uma vez após 504/timeout), e não o ``_request_with_retry`` do core: por
-    # isso só o ``timeout`` do perfil tem efeito, e ``__init__`` recusa ajuste
-    # dos demais campos em vez de ignorá-lo.
+    # Um perfil só, para ``listar_processos`` e ``contar_processos``. Os status
+    # repetíveis e o retry em timeout ficam fixos: com o 504 entre os status, o
+    # fallback de ``size`` descrito no Note da classe não agiria, e o retry em
+    # timeout o adiaria. ``__init__`` recusa ajuste deles em vez de ignorá-lo e
+    # valida os campos aceitos, cada um com a regra e a dica de
+    # ``VALIDADORES_POLITICA``.
     perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
-        "busca": RequestPolicy(timeout=60),
+        "busca": RequestPolicy(timeout=60, retryable_statuses=STATUS_REPETIVEIS),
     }
-    CAMPOS_POLITICA_SUPORTADOS: ClassVar[frozenset[str]] = frozenset({"timeout"})
+    VALIDADORES_POLITICA: ClassVar[Mapping[str, tuple[Callable[[Any], bool], str]]] = {
+        "timeout": (
+            _timeout_valido,
+            "Use um número positivo e finito de segundos ou o par (conexão, leitura).",
+        ),
+        "max_retries": (_max_retries_valido, "Use um inteiro >= 1, contando a primeira tentativa."),
+        "base_backoff": (_numero_positivo, "Use um número positivo e finito de segundos."),
+    }
+    CAMPOS_POLITICA_SUPORTADOS: ClassVar[frozenset[str]] = frozenset(VALIDADORES_POLITICA)
 
     def __init__(
         self,
@@ -412,16 +453,21 @@ class DatajudScraper(HTTPScraper):
                 só se ``download_path`` for lido; o DataJud não grava nele.
             sleep_time: Pausa, em segundos, entre páginas.
             politica: Ajuste do perfil HTTP ``"busca"``, usado por
-                :meth:`listar_processos` e :meth:`contar_processos`. Só o
-                campo ``timeout`` é aceito (default 60 s), como em
-                ``politica={"busca": {"timeout": 180}}``. O valor é um
-                número positivo e finito de segundos ou o par ``(conexão, leitura)``;
-                ``None``, que esperaria indefinidamente, é recusado.
-                Consultas grandes podem passar de 60 s já na primeira página.
+                :meth:`listar_processos` e :meth:`contar_processos`, como em
+                ``politica={"busca": {"timeout": 180, "max_retries": 5}}``.
+                Aceita três campos. ``timeout`` (default 60 s) é um número
+                positivo e finito de segundos ou o par ``(conexão, leitura)``;
+                ``None``, que esperaria indefinidamente, é recusado. Consultas
+                grandes podem passar de 60 s já na primeira página.
+                ``max_retries`` (default 3, contando a primeira) e
+                ``base_backoff`` (default 2, espera de ``base_backoff **
+                tentativa`` segundos, ou o ``Retry-After`` numérico) regem as
+                novas tentativas em HTTP 429, 502 e 503, como o 429 que o
+                DataJud devolve quando a fila de busca enche.
 
         Raises:
             ValueError: Quando ``politica`` cita perfil desconhecido, campo
-                diferente de ``timeout`` ou ``timeout`` inválido.
+                fora dos três aceitos ou valor inválido.
         """
         # Valida antes do core: campo sem efeito no DataJud não chega a ser
         # validado (com outra mensagem, ou outro tipo de erro) pela
@@ -446,7 +492,7 @@ class DatajudScraper(HTTPScraper):
     def _validar_politica(cls, politica: Mapping[str, Any] | None) -> None:
         """Recusa em ``politica=`` o que o transporte do DataJud não usa ou não aceita.
 
-        Roda antes do ``HTTPScraper.__init__`` para que ``max_retries`` e afins
+        Roda antes do ``HTTPScraper.__init__`` para que ``retryable_statuses`` e afins
         recebam a explicação do DataJud. Perfil desconhecido e ajuste que não
         é dict são pulados e ficam com a mensagem do core, que os valida em
         seguida. O perfil desconhecido é pulado mesmo com campo recusado: a
@@ -460,13 +506,14 @@ class DatajudScraper(HTTPScraper):
                 raise ValueError(
                     f"DatajudScraper só aceita {sorted(cls.CAMPOS_POLITICA_SUPORTADOS)} "
                     f"em politica={{{nome!r}: ...}}; recebido {sorted(nao_suportados)}. "
-                    "O DataJud tem retry próprio, que não usa os demais campos."
+                    "Os demais ficam fixos: com o 504 entre os status repetíveis, o fallback "
+                    "de size não agiria, e o retry em timeout o adiaria."
                 )
-            if "timeout" in ajuste and not _timeout_valido(ajuste["timeout"]):
-                raise ValueError(
-                    f"timeout inválido em politica={{{nome!r}: ...}}: {ajuste['timeout']!r}. "
-                    "Use um número positivo e finito de segundos ou o par (conexão, leitura)."
-                )
+            for campo, (valido, dica) in cls.VALIDADORES_POLITICA.items():
+                if campo in ajuste and not valido(ajuste[campo]):
+                    raise ValueError(
+                        f"{campo} inválido em politica={{{nome!r}: ...}}: {ajuste[campo]!r}. {dica}"
+                    )
 
     def contar_processos(self, **kwargs) -> pd.DataFrame:
         """Conta processos no DataJud sem baixar nenhum documento.
@@ -498,7 +545,7 @@ class DatajudScraper(HTTPScraper):
             ``relation`` (``"eq"`` exato ou ``"gte"`` truncado pelo cap
             interno do Elasticsearch). Quando a chamada falha para um
             tribunal, ``count`` é ``None`` e a coluna ``error`` traz o
-            motivo.
+            motivo, com o status HTTP quando houver (``"HTTP 401"``).
 
         Raises:
             TypeError: Quando um kwarg desconhecido é passado.
@@ -559,23 +606,17 @@ class DatajudScraper(HTTPScraper):
                 orgao_julgador=inp.orgao_julgador,
                 query=inp.query,
             )
-            api_response = call_datajud_api(
-                base_url=self.BASE_API_URL,
-                alias=alias,
-                api_key=self.api_key,
-                session=self.session,
-                query_payload=payload,
-                verbose=self.verbose > 1,
-                timeout=self._perfis_http["busca"].timeout,
-            )
             tribunal_sigla = ALIAS_TO_TRIBUNAL.get(alias, "")
-            if api_response is None:
+            try:
+                api_response = self._buscar(alias, payload)
+            except FALHAS_DE_TRANSPORTE as exc:
+                logger.warning("DataJud: contagem do alias %s falhou: %s", alias, exc)
                 rows.append({
                     "tribunal": tribunal_sigla,
                     "alias": alias,
                     "count": None,
                     "relation": None,
-                    "error": "API call failed (see logs)",
+                    "error": _descrever_causa(exc),
                 })
                 continue
             total = api_response.get("hits", {}).get("total", {}) or {}
@@ -588,6 +629,17 @@ class DatajudScraper(HTTPScraper):
             })
             time.sleep(self.sleep_time)
         return pd.DataFrame(rows)
+
+    def _buscar(self, alias: str, query_payload: dict[str, Any]) -> dict[str, Any]:
+        """Busca no alias pelo perfil ``"busca"``; falhas sobem como em :func:`call_datajud_api`."""
+        return call_datajud_api(
+            base_url=self.BASE_API_URL,
+            alias=alias,
+            api_key=self.api_key,
+            requisitar=functools.partial(self._request_with_retry, perfil="busca"),
+            query_payload=query_payload,
+            verbose=self.verbose > 1,
+        )
 
     def _resolve_aliases(
         self,
@@ -731,7 +783,12 @@ class DatajudScraper(HTTPScraper):
                 informados, ou quando a sigla nao tem alias mapeado.
             ColetaParcialError: Se uma falha HTTP, de parsing ou de paginação
                 impedir a conclusão da coleta. ``erro.resultado`` contém os
-                registros preservados e ``erro.falhas`` contém as causas.
+                registros preservados e ``erro.falhas`` contém as causas. Na
+                falha HTTP, a causa é a exceção original: ``requests.HTTPError``
+                (status em ``.response.status_code``), ``RetryExhaustedError``
+                (429, 502 ou 503 em todas as tentativas, status em
+                ``.status_code``), ``requests.Timeout``, erro de conexão ou
+                ``requests.JSONDecodeError`` (resposta 200 que não é JSON).
 
         Returns:
             pd.DataFrame: Um DataFrame com uma linha por processo. ``extra``
@@ -906,18 +963,11 @@ class DatajudScraper(HTTPScraper):
                 tamanho_pagina=tamanho_pagina,
                 search_after=search_after,
             )
-            api_response = call_datajud_api(
-                base_url=self.BASE_API_URL,
-                alias=alias,
-                api_key=self.api_key,
-                session=self.session,
-                query_payload=query_payload,
-                verbose=self.verbose > 1,
-                timeout=self._perfis_http["busca"].timeout,
-            )
-            if api_response is None:
+            try:
+                api_response = self._buscar(alias, query_payload)
+            except FALHAS_DE_TRANSPORTE as exc:
                 mensagem = _mensagem_falha_parcial(alias, current_page, recebidos, total_info)
-                _falha_pagina(mensagem, RuntimeError(mensagem))
+                _falha_pagina(mensagem + _sufixo_causa(exc), exc)
             hits = _hits_da_pagina(api_response, alias, current_page, recebidos, total_info)
             if current_page == 1:
                 total_info = _total_primeira_pagina(api_response, alias, current_page)
