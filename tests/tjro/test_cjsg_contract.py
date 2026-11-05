@@ -46,7 +46,7 @@ def test_cjsg_typical_com_paginacao(mocker):
 
 @responses.activate
 def test_cjsg_single_page(mocker):
-    """Single page scenario — asserts ``from=0``."""
+    """Single-page search uses the raw document type field in its payload."""
     mocker.patch("time.sleep")
     _add_page("mandado de seguranca", 1, "cjsg/single_page.json")
 
@@ -55,6 +55,10 @@ def test_cjsg_single_page(mocker):
     assert isinstance(df, pd.DataFrame)
     assert set(df.columns) >= CJSG_MIN_COLUMNS
     assert len(df) > 0
+
+    fields = build_cjsg_payload("mandado de seguranca")["fields"]
+    assert fields.get("tipo.raw") == ["EMENTA"]
+    assert "tipo" not in fields
 
 
 @responses.activate

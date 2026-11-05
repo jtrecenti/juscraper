@@ -34,7 +34,7 @@ def build_cjsg_payload(
     if tipo is None:
         tipo = ["EMENTA"]
 
-    fields: dict = {"tipo": tipo, "query": pesquisa}
+    fields: dict = {"tipo.raw": tipo, "query": pesquisa}
     if nr_processo:
         fields["nr_processo"] = nr_processo
     if relator:
