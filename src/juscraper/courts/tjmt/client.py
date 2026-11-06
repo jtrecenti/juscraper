@@ -7,7 +7,7 @@ import pandas as pd
 from juscraper.core.http import HTTPScraper
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
-from .download import PRODUCTION_API_URL, cjsg_download
+from .download import PRODUCTION_API_URL, _get_api_config, cjsg_download
 from .parse import CJSG_COLUMNS, cjsg_parse, coerce_tjmt_date_columns
 from .schemas import InputCJSGTJMT
 
@@ -19,6 +19,20 @@ class TJMTScraper(HTTPScraper):
 
     def __init__(self):
         super().__init__("TJMT")
+        self._api_config: dict[str, str] | None = None
+
+    def _get_cached_api_config(self, *, force_refresh: bool = False) -> dict[str, str]:
+        """Descobre a configuração do portal uma vez por instância."""
+        if force_refresh or self._api_config is None:
+            token = self.session.headers.get("token")
+            self.session.headers.pop("token", None)
+            try:
+                api_config = _get_api_config(self._request_with_retry)
+            finally:
+                if token is not None:
+                    self.session.headers["token"] = token
+            self._api_config = api_config
+        return self._api_config
 
     def cpopg(self, id_cnj: str | list[str]):
         """Consulta de processos de primeiro grau ainda não implementada no TJMT."""
@@ -83,6 +97,7 @@ class TJMTScraper(HTTPScraper):
             quantidade_por_pagina=inp.tamanho_pagina,
             request_fn=self._request_with_retry,
             session=self.session,
+            api_config_provider=self._get_cached_api_config,
         )
 
     def cjsg_parse(self, resultados_brutos: list, tipo_consulta: str = "Acordao") -> list[dict]:
