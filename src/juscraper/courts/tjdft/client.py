@@ -6,6 +6,7 @@ import pandas as pd
 
 from juscraper.core.http import HTTPScraper
 from juscraper.core.parse_utils import coerce_date_columns
+from juscraper.utils.method_context import preserve_public_method_error_name
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
 from .download import cjsg_download
@@ -91,6 +92,7 @@ class TJDFTScraper(HTTPScraper):
         parsed: list = cjsg_parse(resultados_brutos)
         return parsed
 
+    @preserve_public_method_error_name
     def cjsg(
         self,
         pesquisa: str | None = None,

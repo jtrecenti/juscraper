@@ -26,6 +26,7 @@ from typing import Any, ClassVar
 import pandas as pd
 
 from ...core.http import RequestPolicy
+from ...utils.method_context import preserve_public_method_error_name
 from ...utils.params import apply_input_pipeline_search
 from .._trf.base import TRFConsultaScraper
 from .cjsg_download import PERFIL_CJSG, build_cjsg_session, cjsg_download_manager
@@ -59,6 +60,7 @@ class TRF3Scraper(TRFConsultaScraper):
         ),
     }
 
+    @preserve_public_method_error_name
     def cjsg(
         self,
         pesquisa: str | None = None,
