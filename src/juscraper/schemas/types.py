@@ -7,6 +7,8 @@ pydantic v2).
 
 Tipos disponiveis:
 
+- :data:`TamanhoPagina` — inteiro positivo que rejeita ``bool`` antes da
+  coercao do pydantic, mantendo a coercao de strings numericas.
 - :data:`IdFiltro` — IDs internos do tribunal que aceitam ``int``, ``str`` ou
   ``list[int | str]``. Coage para ``str | None``, montando CSV quando lista.
   Use em campos cujo backend interpreta CSV (``classeTreeSelection.values``,
@@ -48,6 +50,13 @@ def _coerce_id_filtro(value):
     )
 
 
+def _reject_bool_tamanho_pagina(value):
+    """Rejeita ``bool`` sem impedir a coercao de strings numericas para int."""
+    if isinstance(value, bool):
+        raise ValueError("tamanho_pagina deve ser um inteiro, não bool.")
+    return value
+
+
 def _coerce_id_filtro_unico(value):
     """Igual a :func:`_coerce_id_filtro` mas rejeita ``list``/``tuple``.
 
@@ -67,3 +76,4 @@ IdFiltro = Annotated[
     int | str | list[int | str] | None, BeforeValidator(_coerce_id_filtro)
 ]
 IdFiltroUnico = Annotated[int | str | None, BeforeValidator(_coerce_id_filtro_unico)]
+TamanhoPagina = Annotated[int, BeforeValidator(_reject_bool_tamanho_pagina)]

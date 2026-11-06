@@ -2,6 +2,7 @@
 import pandas as pd
 import pytest
 import responses
+from pydantic import ValidationError
 from responses.registries import OrderedRegistry
 
 import juscraper as jus
@@ -167,3 +168,18 @@ def test_cjsg_tamanho_pagina_collision_raises():
         jus.scraper("tjmt").cjsg(
             "dano moral", paginas=1, tamanho_pagina=5, quantidade_por_pagina=10
         )
+
+
+def test_cjsg_tamanho_pagina_true_raises_validation_error_before_request(mocker):
+    """Boolean page sizes are rejected during input validation, before network access."""
+    scraper = jus.scraper("tjmt")
+    request = mocker.patch.object(
+        scraper,
+        "_request_with_retry",
+        side_effect=AssertionError("request attempted before input validation"),
+    )
+
+    with pytest.raises(ValidationError):
+        scraper.cjsg("dano moral", paginas=1, tamanho_pagina=True)
+
+    request.assert_not_called()
