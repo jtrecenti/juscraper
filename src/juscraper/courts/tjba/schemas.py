@@ -10,7 +10,14 @@ from typing import ClassVar
 
 from pydantic import Field
 
-from ...schemas import DataPublicacaoMixin, OutputCJSGBase, OutputDataPublicacaoMixin, OutputRelatoriaMixin, SearchBase
+from ...schemas import (
+    DataPublicacaoMixin,
+    OutputCJSGBase,
+    OutputDataPublicacaoMixin,
+    OutputRelatoriaMixin,
+    SearchBase,
+    TamanhoPagina,
+)
 
 
 class InputCJSGTJBA(SearchBase, DataPublicacaoMixin):
@@ -40,7 +47,7 @@ class InputCJSGTJBA(SearchBase, DataPublicacaoMixin):
     tipo_decisoes_monocraticas: bool = True
     # TODO (#212): apertar com Literal[...] após captura do GraphQL.
     ordenado_por: str = "dataPublicacao"
-    tamanho_pagina: int = Field(default=10, ge=1)
+    tamanho_pagina: TamanhoPagina = Field(default=10, ge=1)
 
 
 class OutputCJSGTJBA(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):
