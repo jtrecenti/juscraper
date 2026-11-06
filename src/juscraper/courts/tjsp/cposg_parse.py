@@ -1,6 +1,7 @@
 """
 Parses downloaded files from the TJSP Consulta de Processos Originarios do Primeiro Grau (CPOSG).
 """
+import json
 import logging
 import re
 from pathlib import Path
@@ -49,19 +50,22 @@ _DETAIL_TABLE_STYLE = 'margin-left:15px; margin-top:1px;'
 
 
 def cposg_parse(path: str):
-    """Parse all CPOSG HTML files under ``path``."""
+    """Interpreta arquivos HTML ou JSON do CPOSG em ``path``."""
     return cposg_parse_manager(path)
 
 
 def cposg_parse_manager(path: str):
-    """
-    Standalone parse manager for CPOSG HTML files. Returns a DataFrame with parsed data.
-    """
-    arquivos = list(Path(path).rglob('*.html'))
+    """Interpreta arquivos HTML ou JSON do CPOSG sob ``path`` em um DataFrame."""
+    raiz = Path(path)
+    arquivos = [*raiz.rglob('*.html'), *raiz.rglob('*.json')]
     dados = []
     for arq in tqdm(arquivos, total=len(arquivos), desc="Processando arquivos"):
         try:
-            linhas = cposg_parse_single_html(arq)
+            linhas = (
+                cposg_parse_single_json(arq)
+                if arq.suffix == '.json'
+                else cposg_parse_single_html(arq)
+            )
             dados.extend(linhas)
         except (OSError, UnicodeDecodeError, ValueError, AttributeError) as e:
             logger.error("Erro ao processar %s: %s", arq, e)
@@ -69,8 +73,27 @@ def cposg_parse_manager(path: str):
 
 
 def cposg_parse_single_json(path: str):
-    """Stub to avoid import error."""
-    raise NotImplementedError("cposg_parse_single_json not implemented yet.")
+    """Interpreta registros JSON retornados pela API de busca do CPOSG do TJSP."""
+    with Path(path).open('r', encoding='utf-8') as file:
+        registros = json.load(file)
+
+    if not isinstance(registros, list):
+        raise TypeError("A resposta JSON do CPOSG deve ser uma lista de processos.")
+
+    campos = {
+        'id_original': 'numeProcesso',
+        'processo': 'numeProcesso',
+        'classe': 'classe',
+        'assunto': 'assunto',
+    }
+    return [
+        {
+            coluna: registro[campos[coluna]] if coluna in campos and campos[coluna] in registro else None
+            for coluna in _OUTPUT_COLUMNS
+        }
+        for registro in registros
+        if isinstance(registro, dict)
+    ]
 
 
 def _extract_header(soup: BeautifulSoup) -> dict:

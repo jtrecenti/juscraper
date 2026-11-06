@@ -5,12 +5,8 @@ HTML flow: GET ``cposg/open.do`` → GET ``cposg/search.do`` → Caso 3
 in Caso 3 — the search response itself contains the process details and
 the scraper saves it under the ``cdProcesso`` value.
 
-API flow: a single GET ``processo/cposg/search/numproc/{id}``. The parse
-manager only globs ``**/*.html`` today (``cposg_parse_single_json`` is a
-stub — see the follow-up issue), so ``method='api'`` ends up returning
-an empty DataFrame. This contract captures that behaviour explicitly so a
-future fix trips the assertion instead of the test silently passing with
-a different payload.
+API flow: a single GET ``processo/cposg/search/numproc/{id}``; parsed values
+are asserted against the real response sample.
 """
 import pandas as pd
 import responses
@@ -85,15 +81,8 @@ def test_cposg_html_simple_response(tmp_path, mocker):
 # ---------- method='api' ------------------------------------------------
 
 @responses.activate
-def test_cposg_api_returns_empty_dataframe(tmp_path, mocker):
-    """API flow fetches search/numproc then returns an empty DataFrame.
-
-    Contract documents the current behaviour: ``cposg_download_api`` saves
-    JSON but ``cposg_parse_manager`` only globs ``**/*.html`` (no JSON
-    branch), so no rows are parsed. When the stub
-    ``cposg_parse_single_json`` is implemented and ``cposg_parse_manager``
-    is widened to consume JSON, rewrite this test to assert the real schema.
-    """
+def test_cposg_api_parses_real_sample(tmp_path, mocker):
+    """A API retorna os dados observados no sample real da resposta."""
     mocker.patch("time.sleep")
     responses.add(
         responses.GET,
@@ -106,7 +95,12 @@ def test_cposg_api_returns_empty_dataframe(tmp_path, mocker):
     df = jus.scraper("tjsp", download_path=str(tmp_path)).cposg(CNJ, method="api")
 
     assert isinstance(df, pd.DataFrame)
-    assert df.empty  # see docstring — follow-up issue pending
+    assert len(df) == 1
+    row = df.iloc[0]
+    assert row["id_original"] == "1000149-71.2024.8.26.0346"
+    assert row["processo"] == "1000149-71.2024.8.26.0346"
+    assert row["classe"] == "Apelação Cível"
+    assert row["assunto"] == "DIREITO DO CONSUMIDOR - Contratos de Consumo - Bancários"
 
 
 @responses.activate
