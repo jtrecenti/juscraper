@@ -9,6 +9,7 @@ from pydantic import ValidationError
 
 from juscraper.core.http import HTTPScraper
 from juscraper.utils.cnj import clean_cnj
+from juscraper.utils.method_context import preserve_public_method_error_name
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
 from .cposg_download import cposg_download as _cposg_download
@@ -118,6 +119,7 @@ class TJMGScraper(HTTPScraper):
         """Transform raw TJMG HTML pages into a DataFrame."""
         return _cjsg_parse(raw_pages)
 
+    @preserve_public_method_error_name
     def cjsg(
         self,
         pesquisa: str | None = None,

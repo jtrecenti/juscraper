@@ -28,6 +28,7 @@ from pydantic import BaseModel, ValidationError
 
 from ...core.avisos import avisar
 from ...core.http import HTTPScraper
+from ...utils.method_context import preserve_public_method_error_name
 from ...utils.params import (
     DATE_ALIAS_TO_CANONICAL,
     DATE_CANONICAL,
@@ -404,6 +405,7 @@ class EsajSearchScraper(HTTPScraper):
 
     # --- cjsg -----------------------------------------------------------
 
+    @preserve_public_method_error_name
     def cjsg(
         self,
         pesquisa: str,
