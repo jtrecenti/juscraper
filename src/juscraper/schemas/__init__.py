@@ -10,7 +10,7 @@ from .mixins import (
     OutputRelatoriaMixin,
     PaginasMixin,
 )
-from .types import IdFiltro, IdFiltroUnico
+from .types import IdFiltro, IdFiltroUnico, TamanhoPagina
 
 __all__ = [
     "AutoChunkMixin",
@@ -26,4 +26,5 @@ __all__ = [
     "OutputRelatoriaMixin",
     "PaginasMixin",
     "SearchBase",
+    "TamanhoPagina",
 ]
