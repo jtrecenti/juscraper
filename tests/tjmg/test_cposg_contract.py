@@ -245,6 +245,93 @@ def test_cposg_mantem_advogado_com_oab_fora_do_padrao(scraper):
     assert df.iloc[0]["partes"][0]["advogados"] == [{"oab": "12.345-A/MG", "nome": "LUIS FERNANDO BATISTA"}]
 
 
+@pytest.mark.parametrize(
+    ("sample", "esperado"),
+    [
+        pytest.param(
+            "partes_single",
+            [
+                {
+                    "tipo": "Apelante",
+                    "nome": "LEANDRO SERGIO DIAS",
+                    "baixa": None,
+                    "advogados": [{"oab": "165085N/MG", "nome": "LUIS FERNANDO BATISTA"}],
+                },
+                {"tipo": "Apelado", "nome": "MINISTÉRIO PÚBLICO - MPMG", "baixa": None, "advogados": []},
+                {"tipo": "Vítima", "nome": "M.F.S.", "baixa": None, "advogados": []},
+            ],
+            id="single",
+        ),
+        pytest.param(
+            "partes_multi_1",
+            [
+                {
+                    "tipo": "Apelante",
+                    "nome": "RAFAELA LUCIA MARCELINO",
+                    "baixa": None,
+                    "advogados": [
+                        {"oab": "159502N/MG", "nome": "VICTOR SANTANA LINS CERQUEIRA"},
+                        {"oab": "164867N/MG", "nome": "GABRIEL SANTOS DURAES"},
+                        {"oab": "182853N/MG", "nome": "WELLINGTON VICENTE DE BARROS"},
+                    ],
+                },
+                {
+                    "tipo": "Apelado",
+                    "nome": "VALE S/A",
+                    "baixa": None,
+                    "advogados": [{"oab": "74175N/MG", "nome": "DANILO FERNANDEZ MIRANDA"}],
+                },
+            ],
+            id="multi-1",
+        ),
+        pytest.param(
+            "partes_multi_2",
+            [
+                {
+                    "tipo": "Embargante",
+                    "nome": "RAFAELA LUCIA MARCELINO",
+                    "baixa": None,
+                    "advogados": [{"oab": "164867N/MG", "nome": "GABRIEL SANTOS DURAES"}],
+                },
+                {
+                    "tipo": "Embargado",
+                    "nome": "VALE S/A",
+                    "baixa": None,
+                    "advogados": [{"oab": "74175N/MG", "nome": "DANILO FERNANDEZ MIRANDA"}],
+                },
+            ],
+            id="multi-2",
+        ),
+        pytest.param(
+            "partes_baixado",
+            [
+                {
+                    "tipo": "Apelante",
+                    "nome": "DEFENSORIA PÚBLICA ESTADO MINAS GERAIS",
+                    "baixa": "04/05/2012 - REMETIDOS à COMARCA DE ORIGEM",
+                    "advogados": [{"oab": "606D/MG", "nome": "MARCUS TARCÍSIO SILVA DE CASTRO"}],
+                },
+                {
+                    "tipo": "Apelado",
+                    "nome": "MUNICIPIO DE MURIAE",
+                    "baixa": "04/05/2012 - REMETIDOS à COMARCA DE ORIGEM",
+                    "advogados": [
+                        {"oab": "63583N/MG", "nome": "GRACE QUELE DA SILVA TOLEDO LINARES"},
+                        {"oab": "79267N/MG", "nome": "FILIPE DE ALMEIDA CASTRO"},
+                    ],
+                },
+            ],
+            id="baixado",
+        ),
+    ],
+)
+def test_parse_partes_preserva_campos_dos_samples_reais(sample, esperado):
+    """Os quatro layouts capturados preservam tipo, nome, baixa e advogados."""
+    html = load_sample_bytes("tjmg", f"cposg/{sample}.html").decode("iso-8859-1")
+
+    assert parse_partes(html) == esperado
+
+
 @pytest.mark.parametrize("metodo", ["cposg", "cposg_download"])
 @responses.activate
 def test_cposg_aviso_de_falha_aponta_para_quem_chamou(scraper, mocker, metodo):

@@ -15,6 +15,7 @@ import re
 
 import pandas as pd
 from bs4 import BeautifulSoup
+from bs4.element import Tag
 
 from juscraper.core.parse_utils import clean_html, coerce_date_columns
 
@@ -82,48 +83,49 @@ def parse_resultado(html: str) -> list[dict]:
     return rows
 
 
+def _parse_advogados(content_td: Tag) -> list[dict]:
+    advogados = []
+    for tr in content_td.find_all("tr"):
+        tds = tr.find_all("td", recursive=False)
+        # Usa a estrutura, nao o rotulo "Advogado(s):", para aceitar variacoes
+        # de rotulo; uma tabela alheia de duas celulas sem <b>/subtabela pode
+        # entrar como advogado, mas nenhum sample capturado tem esse caso.
+        # A OAB nao e validada para preservar inscricoes fora do padrao.
+        if len(tds) != 2 or tds[0].find("b") or tds[1].find("table"):
+            continue
+        oab = tds[0].get_text(strip=True) or None
+        nome = re.sub(r"^-\s*", "", tds[1].get_text(" ", strip=True).replace("\xa0", " ")).strip()
+        if oab is not None or nome:
+            advogados.append({"oab": oab, "nome": nome})
+    return advogados
+
+
+def _parse_parte(label_td: Tag, content_td: Tag) -> dict:
+    tipo = label_td.get_text(" ", strip=True).replace("\xa0", " ").strip().rstrip(":").strip()
+    tipo = re.sub(r"\s*\(.*?\)", "", tipo).strip()
+    advogados = _parse_advogados(content_td)
+    for table in content_td.find_all("table"):
+        table.extract()
+
+    baixa = None
+    baixa_b = content_td.find("b", string=re.compile(r"Baixa"))
+    if baixa_b is not None:
+        baixa = (baixa_b.next_sibling or "").strip() or None
+        baixa_b.extract()
+    nome = content_td.get_text(" ", strip=True)
+    if baixa:
+        nome = nome.replace(baixa, "").strip()
+    return {"tipo": tipo, "nome": nome, "baixa": baixa, "advogados": advogados}
+
+
 def parse_partes(html: str) -> list[dict]:
     """Extrai partes e advogados da pagina ``proc_partes_advogados2.jsp``."""
     soup = BeautifulSoup(html, "html.parser")
     partes = []
     for label_td in soup.find_all("td", attrs={"width": "10%", "valign": "top"}):
         content_td = label_td.find_next_sibling("td")
-        if content_td is None:
-            continue
-        tipo = label_td.get_text(" ", strip=True).replace("\xa0", " ").strip().rstrip(":").strip()
-        tipo = re.sub(r"\s*\(.*?\)", "", tipo).strip()
-
-        advogados = []
-        for tr in content_td.find_all("tr"):
-            tds = tr.find_all("td", recursive=False)
-            # Conta como advogado toda linha-folha de duas celulas dentro da
-            # celula da parte: sem rotulo em <b> e sem tabela aninhada. A linha
-            # que traz o rotulo "Advogado(s):" e a tabela interna fica de fora
-            # por esse criterio. O filtro e de estrutura, e nao do formato da
-            # OAB, para nao descartar advogado com inscricao fora do padrao.
-            # Tambem nao se ancora no rotulo "Advogado(s):", para nao perder
-            # quem venha sob outro rotulo; o custo e que uma tabela de duas
-            # colunas de outra natureza nessa celula entraria como advogado.
-            # Nenhuma pagina capturada tem nenhum dos dois casos.
-            if len(tds) != 2 or tds[0].find("b") or tds[1].find("table"):
-                continue
-            oab = tds[0].get_text(strip=True) or None
-            nome_adv = re.sub(r"^-\s*", "", tds[1].get_text(" ", strip=True).replace("\xa0", " ")).strip()
-            if oab is None and not nome_adv:
-                continue
-            advogados.append({"oab": oab, "nome": nome_adv})
-        for t in content_td.find_all("table"):
-            t.extract()
-
-        baixa = None
-        baixa_b = content_td.find("b", string=re.compile(r"Baixa"))
-        if baixa_b is not None:
-            baixa = (baixa_b.next_sibling or "").strip() or None
-            baixa_b.extract()
-        nome = content_td.get_text(" ", strip=True)
-        if baixa:
-            nome = nome.replace(baixa, "").strip()
-        partes.append({"tipo": tipo, "nome": nome, "baixa": baixa, "advogados": advogados})
+        if content_td is not None:
+            partes.append(_parse_parte(label_td, content_td))
     return partes
 
 
