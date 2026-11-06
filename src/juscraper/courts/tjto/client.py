@@ -6,6 +6,7 @@ from typing import Any, Literal
 import pandas as pd
 
 from juscraper.core.http import HTTPScraper
+from juscraper.utils.method_context import preserve_public_method_error_name
 from juscraper.utils.params import apply_input_pipeline_search
 
 from .download import TYPE_MINUTA_MAP, _fetch_ementa, cjsg_download_manager
@@ -113,6 +114,7 @@ class TJTOScraper(HTTPScraper):
         """
         return cjsg_parse_manager(resultados_brutos)
 
+    @preserve_public_method_error_name
     def cjsg(
         self,
         pesquisa: str | None = None,
@@ -224,6 +226,7 @@ class TJTOScraper(HTTPScraper):
         """
         return cjsg_parse_manager(resultados_brutos)
 
+    @preserve_public_method_error_name
     def cjpg(
         self,
         pesquisa: str | None = None,

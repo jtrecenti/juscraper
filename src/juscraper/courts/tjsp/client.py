@@ -10,6 +10,7 @@ import pandas as pd
 from pydantic import BaseModel
 
 from ...core.avisos import avisar
+from ...utils.method_context import preserve_public_method_error_name
 from ...utils.params import (
     SEARCH_ALIASES,
     apply_input_pipeline_search,
@@ -182,6 +183,7 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
 
     # --- cjsg -----------------------------------------------------------
 
+    @preserve_public_method_error_name
     def cjsg(
         self,
         pesquisa: str = "",
@@ -357,6 +359,7 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
     # (``cjpg_download.py`` + ``cjpg_parse.py``) sao unicos do TJSP e
     # entram em ``_run_search`` como hooks resolvidos por nome.
 
+    @preserve_public_method_error_name
     def cjpg(
         self,
         pesquisa: str = "",

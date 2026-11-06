@@ -8,6 +8,7 @@ import pandas as pd
 import requests
 
 from juscraper.core.http import HTTPScraper
+from juscraper.utils.method_context import preserve_public_method_error_name
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
 from .download import cjsg_download as _cjsg_download
@@ -111,6 +112,7 @@ class TJGOScraper(HTTPScraper):
         """Transform raw TJGO HTML pages into a DataFrame."""
         return _cjsg_parse(raw_pages)
 
+    @preserve_public_method_error_name
     def cjsg(
         self,
         pesquisa: str | None = None,

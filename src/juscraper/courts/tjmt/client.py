@@ -5,6 +5,7 @@ Scraper do Tribunal de Justiça do Estado de Mato Grosso (TJMT).
 import pandas as pd
 
 from juscraper.core.http import HTTPScraper
+from juscraper.utils.method_context import preserve_public_method_error_name
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
 from .download import PRODUCTION_API_URL, cjsg_download
@@ -101,6 +102,7 @@ class TJMTScraper(HTTPScraper):
         """
         return cjsg_parse(resultados_brutos, tipo_consulta=tipo_consulta)
 
+    @preserve_public_method_error_name
     def cjsg(
         self,
         pesquisa: str | None = None,

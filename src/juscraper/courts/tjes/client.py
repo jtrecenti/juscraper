@@ -3,6 +3,7 @@
 import pandas as pd
 
 from juscraper.core.http import HTTPScraper
+from juscraper.utils.method_context import preserve_public_method_error_name
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
 from .download import CJPG_CORE, CJSG_CORES, DEFAULT_CORE, DEFAULT_PER_PAGE, cjsg_download
@@ -150,6 +151,7 @@ class TJESScraper(HTTPScraper):
         """
         return cjsg_parse(resultados_brutos)
 
+    @preserve_public_method_error_name
     def cjsg(
         self,
         pesquisa: str | None = None,
@@ -287,6 +289,7 @@ class TJESScraper(HTTPScraper):
         """
         return cjsg_parse(resultados_brutos)
 
+    @preserve_public_method_error_name
     def cjpg(
         self,
         pesquisa: str | None = None,

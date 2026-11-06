@@ -5,6 +5,7 @@ Scraper for the Tribunal de Justica do Estado da Bahia (TJBA).
 import pandas as pd
 
 from juscraper.core.http import HTTPScraper
+from juscraper.utils.method_context import preserve_public_method_error_name
 from juscraper.utils.params import apply_input_pipeline_search, pop_deprecated_alias, resolve_deprecated_alias
 
 from .download import cjsg_download
@@ -154,6 +155,7 @@ class TJBAScraper(HTTPScraper):
         """
         return cjsg_parse(resultados_brutos)
 
+    @preserve_public_method_error_name
     def cjsg(
         self,
         pesquisa: str | None = None,
