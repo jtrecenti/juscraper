@@ -2,6 +2,7 @@
 import json
 
 import pandas as pd
+import pytest
 import responses
 from responses.matchers import query_param_matcher
 from responses.registries import OrderedRegistry
@@ -134,6 +135,57 @@ def test_cjsg_single_page(mocker):
     assert isinstance(df, pd.DataFrame)
     assert set(df.columns) >= CJSG_MIN_COLUMNS
     assert len(df) > 0
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_valores_descritivos_nao_sao_sigla_de_classe(mocker):
+    """Valores descritivos da API não preenchem a sigla pública da classe."""
+    mocker.patch("time.sleep")
+    _add_config()
+    _add_page("classe sem sigla", 1, "cjsg/class_sigla_unavailable.json")
+
+    df = jus.scraper("tjmt").cjsg("classe sem sigla", paginas=1)
+
+    assert "sigla_classe_feito" in df.columns
+    assert df["sigla_classe_feito"].isna().all()
+
+
+@pytest.mark.parametrize(
+    ("sample_path", "sigla_observada", "tipo_consulta"),
+    [
+        ("cjsg/results_normal_page_01.json", "APEL", "Acordao"),
+        ("cjsg/single_page.json", "AI", "DecisaoMonocratica"),
+    ],
+    ids=["apel", "ai"],
+)
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_siglas_observadas_nao_sao_confirmadas_pela_api(
+    mocker,
+    sample_path,
+    sigla_observada,
+    tipo_consulta,
+):
+    """Siglas presentes nos samples da API não são expostas como confirmadas."""
+    mocker.patch("time.sleep")
+    body = json.loads(load_sample("tjmt", sample_path))
+    assert body["value"]["resultados"][0]["nomeClasseEsferaProcessual"] == sigla_observada
+
+    _add_config()
+    _add_page(
+        "classe com possível sigla",
+        1,
+        sample_path,
+        tipo_consulta=tipo_consulta,
+    )
+
+    df = jus.scraper("tjmt").cjsg(
+        "classe com possível sigla",
+        paginas=1,
+        tipo_consulta=tipo_consulta,
+    )
+
+    assert "sigla_classe_feito" in df.columns
+    assert df["sigla_classe_feito"].isna().all()
 
 
 @responses.activate(registry=OrderedRegistry)

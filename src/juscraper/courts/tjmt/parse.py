@@ -74,7 +74,7 @@ def _mapear_resultado(item: dict) -> dict:
         "relator": item.get("nomeRelator"),
         "redator_designado": item.get("nomeRedatorDesignado"),
         "orgao_julgador": item.get("nomeCamara"),
-        "sigla_classe_feito": item.get("nomeClasseEsferaProcessual"),
+        "sigla_classe_feito": None,
         "data_julgamento": item.get("dataJulgamento"),
         "data_publicacao": item.get("dataPublicacao"),
         "instancia": item.get("instancia"),
