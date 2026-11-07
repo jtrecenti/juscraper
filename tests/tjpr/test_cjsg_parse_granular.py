@@ -83,6 +83,19 @@ def test_cjsg_parse_keeps_truncated_ementa_without_request_fn():
     assert result.loc[4, "ementa"] == TRUNCATED_WITHOUT_VALUE
 
 
+def test_cjsg_parse_ignores_corte_idh_row_and_keeps_judicial_results():
+    result = cjsg_parse(
+        [load_sample("tjpr", "cjsg/results_normal_page_02.html")],
+        criterio=None,
+    )
+
+    assert result["processo"].eq("0037484-81.2017.8.16.0018").any()
+    assert not result["ementa"].str.contains("Mota Abarullo", case=False).any(), (
+        "a linha da Corte IDH 'Caso: Mota Abarullo e Outros Vs. Venezuela' "
+        "foi incluída como resultado judicial"
+    )
+
+
 def test_cjsg_parse_fetches_full_ementa_with_injected_request(mocker):
     request_fn = mocker.Mock(
         return_value=SimpleNamespace(text="<div>Ementa completa</div><p>Segunda linha</p>")
