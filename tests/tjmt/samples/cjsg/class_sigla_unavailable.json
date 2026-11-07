@@ -1,0 +1,17 @@
+{
+  "success": true,
+  "errorMessage": null,
+  "value": {
+    "resultados": [
+      {
+        "nomeClasseEsferaProcessual": "NÃO INFORMADO"
+      },
+      {
+        "nomeClasseEsferaProcessual": "CÂMARAS ISOLADAS CÍVEIS DE DIREITO PRIVADO"
+      }
+    ],
+    "countAcordaoDocumento": 536549,
+    "countDecisaoMonocratica": 271923,
+    "countTotal": 808472
+  }
+}
