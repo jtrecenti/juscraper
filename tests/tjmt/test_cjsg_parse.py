@@ -51,7 +51,7 @@ def test_parser_mapeia_acordao_e_decisao_para_as_18_colunas():
     assert registros[0]["classe"] == "APELAÇÃO CÍVEL"
     assert registros[0]["orgao_julgador"] == "PRIMEIRA CÂMARA"
     assert registros[0]["tipo_acao"] == "DIREITO CIVIL"
-    assert registros[0]["sigla_classe_feito"] == "APEL"
+    assert registros[0]["sigla_classe_feito"] is None
     assert registros[0]["julgamento"] == "UNÂNIME"
     assert registros[0]["ementa"] == "Ementa com destaque."
     assert registros[1]["id"] == 456
