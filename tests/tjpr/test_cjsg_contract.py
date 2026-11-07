@@ -92,7 +92,7 @@ def test_cjsg_typical_com_paginacao(mocker):
 
 @responses.activate
 def test_cjsg_single_page(mocker):
-    """Busca real de página única ("quilombola", 6 resultados)."""
+    """Busca real de página única ("quilombola", 5 resultados judiciais)."""
     mocker.patch("time.sleep")
     add_home()
     _add_search_page("quilombola", 1, "cjsg/single_page.html")
@@ -102,7 +102,7 @@ def test_cjsg_single_page(mocker):
 
     assert isinstance(df, pd.DataFrame)
     assert set(df.columns) >= CJSG_MIN_COLUMNS
-    assert len(df) == 6
+    assert len(df) == 5
     assert df["processo"].notna().all(), "processo nulo em alguma linha"
     # Linhas com processo vazio existem legitimamente no TJPR (sigilo,
     # rows de cabeçalho, etc.); só falha se a maioria estiver vazia
@@ -126,7 +126,7 @@ def test_cjsg_paginas_none_pagina_unica_baixa_so_a_primeira(mocker):
 
     df = jus.scraper("tjpr").cjsg("quilombola", paginas=None)
 
-    assert len(df) == 6
+    assert len(df) == 5
     busca = [call for call in responses.calls if "exibirTextoCompleto" not in call.request.url]
     assert [call.request.method for call in busca] == ["GET", "POST"]
 

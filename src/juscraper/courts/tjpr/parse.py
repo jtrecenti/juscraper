@@ -77,6 +77,10 @@ def _parse_row(
     criterio: str | None,
     request_fn: RequestFn | None,
 ) -> dict[str, str] | None:
+    # O portal mistura precedentes da Corte IDH na tabela de jurisprudência.
+    if row.find("input", {"name": "idsSelecionadosCidh"}):
+        return None
+
     cols = row.find_all("td")
     if len(cols) < 2:
         return None

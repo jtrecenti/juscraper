@@ -9,6 +9,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- TJPR `cjsg`: resultados da Corte IDH deixam de aparecer junto com os resultados judiciais.
 - **BREAKING:** TJMT `cjsg` e `cjsg_download`: a interface acompanha a API nova do portal de jurisprudência, sem ciclo de deprecação. O portal trocou a API e a antiga deixou de responder JSON (#434), então não há como manter o comportamento anterior; as mudanças abaixo são as que a API nova impõe.
   - `data_publicacao_inicio`/`data_publicacao_fim` passa a ser o único filtro de data. O fim é inclusivo: `data_publicacao_fim="2025-03-10"` traz o que foi publicado em 10/03 inteiro e nada de 11/03.
   - `data_julgamento_inicio`/`data_julgamento_fim` e `classe`, que a API não filtra, levantam `TypeError` antes de qualquer requisição. Os aliases `data_inicio`/`data_fim`, que apontam para a data de julgamento, emitem o `DeprecationWarning` do alias e levantam o mesmo `TypeError`.
