@@ -14,7 +14,7 @@ from tqdm import tqdm
 from ...core.avisos import avisar
 from ...utils import safe_path_component
 from ...utils.cnj import clean_cnj, format_cnj, split_cnj
-from .._esaj.acordao import _SEM_INFORMACOES, RespostaInesperadaError, paginas_movimentacoes, parse_cd_processo
+from .._esaj.acordao import RespostaInesperadaError, busca_sem_informacoes, paginas_movimentacoes, parse_cd_processo
 
 logger = logging.getLogger('juscraper.cposg_download')
 
@@ -135,13 +135,12 @@ def _sem_informacoes(soup, id_cnj):
     A página de processo não traz ``#mensagemRetorno``. Sem esta checagem, a
     mensagem seria gravada como processo e lida como lista vazia.
     """
+    if busca_sem_informacoes(soup):
+        return True
     mensagem = soup.find(id='mensagemRetorno')
     if mensagem is None:
         return False
-    texto = mensagem.get_text(' ', strip=True)
-    if _SEM_INFORMACOES in texto:
-        return True
-    raise RuntimeError(f"Processo {id_cnj}: o eSAJ respondeu à busca com \"{texto}\".")
+    raise RuntimeError(f"Processo {id_cnj}: o eSAJ respondeu à busca com \"{mensagem.get_text(' ', strip=True)}\".")
 
 
 def _incluir_movimentacoes(html, session, u_base, id_cnj):
