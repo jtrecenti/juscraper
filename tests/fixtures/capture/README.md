@@ -86,6 +86,19 @@ Excecoes: TJMT tambem salva `cjsg/config.json` porque o scraper consulta
 `config.json` antes da API; TJES tambem salva samples em `cjpg/` porque expoe
 `cjpg` alem de `cjsg`.
 
+## TJMG cposg
+
+`tests/fixtures/capture/tjmg_cposg.py` roda o `cposg_download` real do TJMG
+(sem captcha) e grava, por hook de resposta, os bytes crus de
+`proc_resultado2.jsp` (`cposg/resultado_<cenario>.html`) e de
+`proc_partes_advogados2.jsp` (`cposg/partes_*.html`) dos processos listados em
+`CASOS`. `--dest <dir>` grava fora de `tests/` para comparar com os samples
+versionados. Os samples atuais têm quebras de linha LF e o backend responde
+CRLF; além disso, data/hora da consulta e versão do sistema mudam a cada
+captura. Os processos também evoluem (baixa, novos recursos, anonimização de
+nomes), o que pode exigir ajustar os valores esperados em
+`tests/tjmg/test_cposg_contract.py`.
+
 ## Agregadores
 
 ### JusBR (PDPJ-CNJ)

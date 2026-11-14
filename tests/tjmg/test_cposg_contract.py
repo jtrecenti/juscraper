@@ -7,7 +7,12 @@ Samples capturados de ``www4.tjmg.jus.br/juridico/sf`` em 26/09/2026:
 * ``resultado_segredo`` — todos os recursos em segredo de justica.
 * ``resultado_baixado`` — processo fisico antigo (2010), sem "NUMERO TJMG".
 * ``resultado_not_found`` — "Nenhum processo encontrado".
-* ``partes_*`` — pagina "Todas as Partes/Advogados" de cada recurso.
+* ``partes_*`` — pagina "Todas as Partes/Advogados" de cada recurso
+  (``partes_baixado`` e o recurso ``/002``).
+
+Recaptura: ``python -m tests.fixtures.capture.tjmg_cposg``. Os processos
+evoluem no tribunal (baixa, novos recursos, anonimizacao de nomes), entao
+uma recaptura pode exigir ajustar os valores esperados abaixo.
 """
 from __future__ import annotations
 
