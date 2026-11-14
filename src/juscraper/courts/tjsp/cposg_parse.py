@@ -59,12 +59,11 @@ def cposg_parse(path: str):
 def cposg_parse_manager(path: str):
     """Interpreta arquivos HTML ou JSON do CPOSG sob ``path`` em um DataFrame."""
     raiz = Path(path)
-    # O JSON da API fica em cposg/<id>/<id>.json; o cpopg grava o mesmo nome
-    # em cpopg/<id>/, que fica fora.
-    arquivos = [
-        *raiz.rglob('*.html'),
-        *(arq for arq in raiz.rglob('*.json') if arq.stem == arq.parent.name and arq.parent.parent.name == 'cposg'),
-    ]
+    # O download grava em <path>/cposg/; o cpopg, no mesmo download_path, em
+    # <path>/cpopg/, com os mesmos nomes de arquivo. Só a pasta do cposg entra.
+    if (raiz / 'cposg').is_dir():
+        raiz = raiz / 'cposg'
+    arquivos = [*raiz.rglob('*.html'), *raiz.rglob('*.json')]
     dados = []
     for arq in tqdm(arquivos, total=len(arquivos), desc="Processando arquivos"):
         try:

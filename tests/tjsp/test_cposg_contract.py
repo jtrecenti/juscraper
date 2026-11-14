@@ -141,6 +141,25 @@ def test_cposg_html_movimentacoes_fora_do_formato_falha_alto(tmp_path, mocker, c
     assert "a primeira página veio fora do formato conhecido" in caplog.text
 
 
+@responses.activate
+def test_cposg_html_pagina_seguinte_fora_do_formato_nao_corta_a_lista(tmp_path, mocker, caplog):
+    """Página 2 sem a linha de metadados (sessão perdida) não encerra a lista em silêncio."""
+    mocker.patch("time.sleep")
+    _registrar_busca()
+    primeira = load_sample("tjsp", "cposg/movimentacoes_pagina_1.html")
+    url = f"{ESAJ}/cposg/carregarMovimentacoesAjax.do"
+    responses.add(responses.GET, url, body=primeira, match=[query_param_matcher({"cdProcesso": CD_PROCESSO})])
+    responses.add(
+        responses.GET, url, body=load_sample_bytes("tjsp", "cposg/open.html"),
+        match=[query_param_matcher({"cdProcesso": CD_PROCESSO, "cursor": parse_cursor(primeira) or ""})],
+    )
+
+    with pytest.raises(RuntimeError, match="Nenhum processo foi baixado"):
+        jus.scraper("tjsp", download_path=str(tmp_path)).cposg(CNJ, method="html")
+
+    assert "a página 2 veio fora do formato conhecido" in caplog.text
+
+
 # ---------- method='api' ------------------------------------------------
 
 @responses.activate

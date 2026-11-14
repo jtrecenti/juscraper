@@ -10,7 +10,7 @@ import pytest
 
 import juscraper
 from juscraper.courts.tjsp.cposg_parse import cposg_parse_manager, cposg_parse_single_html, cposg_parse_single_json
-from tests._helpers import load_sample
+from tests._helpers import load_sample, load_sample_bytes
 
 _SAMPLES = Path(__file__).parent / 'samples' / 'cposg'
 
@@ -359,16 +359,22 @@ class TestCPOSGUnit:
 
         assert result['processo'].tolist() == ['1000149-71.2024.8.26.0346']
 
-    def test_cposg_parse_manager_ignora_json_de_outro_endpoint(self, tmp_path):
-        """No mesmo ``download_path``, o cpopg grava ``cpopg/<id>/<id>.json``: o cposg não o lê."""
-        sample = load_sample('tjsp', 'cposg/api_search.json')
-        for caminho in ('cpopg/10001497120248260346/10001497120248260346.json', 'cposg/outro.json'):
-            (tmp_path / caminho).parent.mkdir(parents=True, exist_ok=True)
-            (tmp_path / caminho).write_text(sample, encoding='utf-8')
+    def test_cposg_parse_manager_ignora_arquivos_do_cpopg(self, tmp_path):
+        """No mesmo ``download_path``, o cpopg grava ``cpopg/<id>/``: o cposg só lê ``cposg/``."""
+        id_processo = '10001497120248260346'
+        cposg = tmp_path / 'cposg' / id_processo
+        cposg.mkdir(parents=True)
+        (cposg / f'{id_processo}.json').write_text(load_sample('tjsp', 'cposg/api_search.json'), encoding='utf-8')
+        cpopg = tmp_path / 'cpopg' / id_processo
+        cpopg.mkdir(parents=True)
+        (cpopg / f'{id_processo}.json').write_text(load_sample('tjsp', 'cposg/api_search.json'), encoding='utf-8')
+        (cpopg / f'{id_processo}_cd_processo_X.html').write_bytes(
+            load_sample_bytes('tjsp', 'cposg/results_complete.html')
+        )
 
         result = cposg_parse_manager(str(tmp_path))
 
-        assert result.empty
+        assert result['processo'].tolist() == ['1000149-71.2024.8.26.0346']
 
     def test_empty_relator_row_does_not_block_nonempty_fallback(self, tmp_path):
         """Preserve the relator fallback past an empty composition row, as the previous parser did."""

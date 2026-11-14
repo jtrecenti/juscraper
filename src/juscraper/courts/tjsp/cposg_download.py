@@ -21,8 +21,9 @@ logger = logging.getLogger('juscraper.cposg_download')
 # "Exibir movimentações"; o JavaScript do eSAJ busca a lista em
 # carregarMovimentacoesAjax.do, cinco linhas por página, com a sessão que
 # abriu o processo.
-_CONTAINER_VAZIO = re.compile(r'<div id="containerMovimentacoesAjax">\s*</div>')
+_CONTAINER_VAZIO = re.compile(r'<div id="containerMovimentacoesAjax"[^>]*>\s*</div>')
 _LINK_EXIBIR = re.compile(r'<div id="divExibirMovimentacoes".*?</div>', re.DOTALL)
+_CD_PROCESSO_MOVIMENTACOES = re.compile(r"cdProcessoMovimentacoes = '([^']+)'")
 
 
 def cposg_download_html(id_cnj_list, session, u_base, download_path, sleep_time=0.5):
@@ -86,7 +87,7 @@ def _cposg_download_html_single(id_cnj, session, u_base, download_path):
             codigo = codigos[0]
             safe_codigo = safe_path_component(codigo, field="processo.codigo")
             show_url = f"{u_base}cposg/show.do?processo.codigo={codigo}"
-            html = _incluir_movimentacoes(session.get(show_url).text, session, u_base, id_format, codigo)
+            html = _incluir_movimentacoes(session.get(show_url).text, session, u_base, id_format)
             file_name = Path(path) / f"{id_clean}_cd_processo_{safe_codigo}.html"
             with file_name.open('w', encoding='utf-8') as f:
                 f.write(html)
@@ -96,7 +97,7 @@ def _cposg_download_html_single(id_cnj, session, u_base, download_path):
         for codigo in codigos:
             safe_codigo = safe_path_component(codigo, field="processo.codigo")
             show_url = f"{u_base}cposg/show.do?processo.codigo={codigo}"
-            html = _incluir_movimentacoes(session.get(show_url).text, session, u_base, id_format, codigo)
+            html = _incluir_movimentacoes(session.get(show_url).text, session, u_base, id_format)
             file_name = Path(path) / f"{id_clean}_cd_processo_{safe_codigo}.html"
             with file_name.open('w', encoding='utf-8') as f:
                 f.write(html)
@@ -109,35 +110,47 @@ def _cposg_download_html_single(id_cnj, session, u_base, download_path):
             value = input_cd.get('value')
             codigo_simples = str(value) if value is not None else None
         codigo_part = safe_path_component(codigo_simples, field="cdProcesso") if codigo_simples else "simples"
-        html = _incluir_movimentacoes(r.text, session, u_base, id_format, codigo_simples)
+        html = _incluir_movimentacoes(r.text, session, u_base, id_format)
         file_name = Path(path) / f"{id_clean}_cd_processo_{codigo_part}.html"
         with file_name.open('w', encoding='utf-8') as f:
             f.write(html)
     return path
 
 
-def _incluir_movimentacoes(html, session, u_base, id_cnj, cd_processo):
+def _incluir_movimentacoes(html, session, u_base, id_cnj):
     """Grava no HTML do processo a lista completa de movimentações.
 
     O arquivo fica como a página no navegador depois de "Exibir movimentações"
     e de "Mais" até a última página, e o parser lê só o arquivo. Página sem o
     container vazio (formato antigo, com ``tabelaTodasMovimentacoes``, ou
-    resposta sem processo) sai como veio.
+    resposta sem processo) sai como veio. Página fora do formato levanta
+    ``ValueError``: gravada, ela leria como processo sem movimentações, ou
+    com a lista cortada.
     """
     if not _CONTAINER_VAZIO.search(html):
         return html
-    if not cd_processo:
-        raise ValueError(f"Processo {id_cnj}: a página não traz o cdProcesso para buscar as movimentações.")
-    paginas = paginas_movimentacoes(session.get, f"{u_base}cposg/carregarMovimentacoesAjax.do", id_cnj, cd_processo)
+    cd_processo = _CD_PROCESSO_MOVIMENTACOES.search(html)
+    if cd_processo is None:
+        raise ValueError(f"Processo {id_cnj}: a página não traz o cdProcesso das movimentações.")
+
+    def get(url: str, params: dict) -> requests.Response:
+        resposta: requests.Response = session.get(url, params=params, timeout=60)
+        resposta.raise_for_status()
+        return resposta
+
+    paginas = paginas_movimentacoes(
+        get, f"{u_base}cposg/carregarMovimentacoesAjax.do", id_cnj, cd_processo.group(1),
+    )
     bloco = BeautifulSoup(next(paginas), 'html.parser')
     tabela = bloco.find('tbody', id='tabelaMovimentacoesAjax')
     if tabela is None:
-        # Sem a tabela, o arquivo gravado leria como processo sem movimentações.
-        raise ValueError(
-            f"Movimentações do processo {id_cnj}: a primeira página veio fora do formato conhecido."
-        )
-    for pagina in paginas:
+        raise ValueError(f"Movimentações do processo {id_cnj}: a primeira página veio fora do formato conhecido.")
+    for numero, pagina in enumerate(paginas, start=2):
         linhas = BeautifulSoup(f"<table><tbody>{pagina}</tbody></table>", 'html.parser')
+        # Página seguinte sem a linha de metadados (erro, sessão perdida)
+        # encerraria a paginação em silêncio, com a lista cortada.
+        if linhas.find('tr', id='metaPaginaMovimentacoes') is None:
+            raise ValueError(f"Movimentações do processo {id_cnj}: a página {numero} veio fora do formato conhecido.")
         tabela.extend(linhas.find_all('tr', class_='movimentacaoProcesso'))
     links_paginacao = bloco.find('div', id='divLinksMovimentacoesPaginadas')
     if links_paginacao is not None:
