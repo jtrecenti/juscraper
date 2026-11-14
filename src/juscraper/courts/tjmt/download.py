@@ -350,16 +350,14 @@ def _max_paginas(quantidade: int) -> int:
     return MAX_RESULTS // quantidade
 
 
-def _resolve_api_config(
+def _initial_api_config(
     request_fn: RequestFn,
     api_config_provider: Callable[..., dict[str, str]] | None,
-    *,
-    force_refresh: bool = False,
 ) -> dict[str, str]:
-    """Usa a configuração fornecida pelo scraper ou descobre a configuração atual."""
-    if api_config_provider is not None:
-        return api_config_provider(force_refresh=force_refresh)
-    return _get_api_config(request_fn)
+    """Usa a configuração em cache do scraper ou descobre a atual."""
+    if api_config_provider is None:
+        return _get_api_config(request_fn)
+    return api_config_provider()
 
 
 def _apply_api_config(session: requests.Session, config: dict[str, str]) -> None:
@@ -374,7 +372,7 @@ def _apply_api_config(session: requests.Session, config: dict[str, str]) -> None
 def _raise_if_config_rejected(response: requests.Response) -> None:
     """Interrompe o retry HTTP comum para tratar auth expirada localmente."""
     if response.status_code in {401, 403}:
-        raise _TJMTConfigRejected(response.status_code)
+        raise _TJMTConfigRejected
 
 
 def _request_api_page(
@@ -383,26 +381,28 @@ def _request_api_page(
     params: dict,
     session: requests.Session,
     api_config_provider: Callable[..., dict[str, str]] | None,
-) -> tuple[requests.Response, str]:
-    """Consulta uma página e renova uma vez a configuração rejeitada do TJMT."""
+) -> requests.Response:
+    """Consulta uma página e, após 401/403, renova a configuração uma vez.
+
+    A consulta repetida usa a política de retry comum; um novo 401/403
+    propaga como ``HTTPError`` ou ``RetryExhaustedError``. ``api_url`` não
+    muda na renovação, porque ``_validate_api_config`` só aceita
+    ``PRODUCTION_API_URL``.
+    """
     request_kwargs = {"params": params, "timeout": 60, "expect_json": True}
     if api_config_provider is None:
-        response = request_fn("GET", f"{api_url}/consulta", **request_kwargs)
-        return response, api_url
+        return request_fn("GET", f"{api_url}/consulta", **request_kwargs)
 
     try:
-        response = request_fn(
+        return request_fn(
             "GET",
             f"{api_url}/consulta",
             on_response=_raise_if_config_rejected,
             **request_kwargs,
         )
     except _TJMTConfigRejected:
-        config = _resolve_api_config(request_fn, api_config_provider, force_refresh=True)
-        api_url = config["api_url"]
-        _apply_api_config(session, config)
-        response = request_fn("GET", f"{api_url}/consulta", **request_kwargs)
-    return response, api_url
+        _apply_api_config(session, api_config_provider(force_refresh=True))
+        return request_fn("GET", f"{api_url}/consulta", **request_kwargs)
 
 
 def cjsg_download(
@@ -461,12 +461,11 @@ def cjsg_download(
     relator = _normalize_text_filter(relator, "relator")
     orgao_julgador = _normalize_text_filter(orgao_julgador, "orgao_julgador")
     tipo_processo = _normalize_tipo_processo(tipo_processo)
-    cfg = _resolve_api_config(request_fn, api_config_provider)
+    cfg = _initial_api_config(request_fn, api_config_provider)
     api_url = cfg["api_url"]
     _apply_api_config(session, cfg)
 
     def _fetch_page(pagina: int) -> tuple[dict, int]:
-        nonlocal api_url
         params = _build_params(
             pesquisa=pesquisa,
             pagina=pagina,
@@ -479,9 +478,7 @@ def cjsg_download(
             orgao_julgador=orgao_julgador,
             tipo_processo=tipo_processo,
         )
-        resp, api_url = _request_api_page(
-            request_fn, api_url, params, session, api_config_provider
-        )
+        resp = _request_api_page(request_fn, api_url, params, session, api_config_provider)
         try:
             data = resp.json()
         except ValueError as exc:

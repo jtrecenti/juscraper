@@ -2,6 +2,8 @@
 Scraper do Tribunal de Justiça do Estado de Mato Grosso (TJMT).
 """
 
+from functools import partial
+
 import pandas as pd
 
 from juscraper.core.http import HTTPScraper
@@ -22,16 +24,14 @@ class TJMTScraper(HTTPScraper):
         self._api_config: dict[str, str] | None = None
 
     def _get_cached_api_config(self, *, force_refresh: bool = False) -> dict[str, str]:
-        """Descobre a configuração do portal uma vez por instância."""
+        """Descobre a configuração do portal uma vez por instância.
+
+        A descoberta não envia o token em cache: ``headers={"token": None}``
+        o retira só dessas requisições, sem mexer na sessão.
+        """
         if force_refresh or self._api_config is None:
-            token = self.session.headers.get("token")
-            self.session.headers.pop("token", None)
-            try:
-                api_config = _get_api_config(self._request_with_retry)
-            finally:
-                if token is not None:
-                    self.session.headers["token"] = token
-            self._api_config = api_config
+            sem_token = {"token": None}  # nosec B105  # remove o header, não é senha
+            self._api_config = _get_api_config(partial(self._request_with_retry, headers=sem_token))
         return self._api_config
 
     def cpopg(self, id_cnj: str | list[str]):
@@ -132,9 +132,12 @@ class TJMTScraper(HTTPScraper):
     ) -> pd.DataFrame:
         """Pesquisa jurisprudência do TJMT (acórdãos ou decisões monocráticas).
 
-        Delega para :meth:`cjsg_download` e :meth:`cjsg_parse`. Antes da busca,
-        lê a configuração pública do portal (URL da API e token) nos scripts
-        de ``jurisprudencia.tjmt.jus.br``.
+        Delega para :meth:`cjsg_download` e :meth:`cjsg_parse`. Na primeira
+        busca de cada instância, lê a configuração pública do portal (URL da
+        API e token) nos scripts de ``jurisprudencia.tjmt.jus.br`` e a
+        reutiliza nas buscas seguintes. Se a API recusar o token (HTTP 401 ou
+        403), lê a configuração de novo e repete a consulta; se a recusa
+        persistir, propaga ``requests.HTTPError`` ou ``RetryExhaustedError``.
 
         A API devolve no máximo os 10.000 primeiros resultados de uma
         consulta; páginas além desse teto respondem HTTP 500.

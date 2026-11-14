@@ -65,31 +65,27 @@ class _ConfigRefreshRecorder:
         self.discovery_count = 0
         self.discovery_tokens = []
         self.api_tokens = []
-        self.api_statuses_seen = []
 
-    def __call__(self, _method, url, **_kwargs):
-        if url == "https://jurisprudencia.tjmt.jus.br/":
+    def _sent_token(self, kwargs):
+        # Como o requests: header por requisição vence o da sessão; ``None`` o remove.
+        headers = kwargs.get("headers") or {}
+        return headers["token"] if "token" in headers else self.session.headers.get("token")
+
+    def __call__(self, _method, url, **kwargs):
+        status = 200
+        if url == PORTAL_URL:
             self.discovery_count += 1
-            self.discovery_tokens.append(self.session.headers.get("token"))
             body = '<script src="/assets/main.js"></script>'
-            status = 200
-        elif url.endswith("/assets/main.js"):
-            self.discovery_tokens.append(self.session.headers.get("token"))
+        elif url == MAIN_URL:
             body = 'import"./config.js";'
-            status = 200
-        elif url.endswith("/assets/config.js"):
-            self.discovery_tokens.append(self.session.headers.get("token"))
-            token = next(self.tokens)
-            body = (
-                f'const cfg={{api_url:"{PRODUCTION_API_URL}",'
-                f'api_hellsgate_token:"{token}"}};'
-            )
-            status = 200
+        elif url == CHUNK_URL:
+            body = f'const cfg={{api_url:"{PRODUCTION_API_URL}",api_hellsgate_token:"{next(self.tokens)}"}};'
         else:
             status = next(self.api_statuses)
-            self.api_tokens.append(self.session.headers.get("token"))
-            self.api_statuses_seen.append(status)
+            self.api_tokens.append(self._sent_token(kwargs))
             body = json.dumps(_page([], acordaos=0))
+        if url in (PORTAL_URL, MAIN_URL, CHUNK_URL):
+            self.discovery_tokens.append(self._sent_token(kwargs))
 
         response = _Response(body)
         response.status_code = status
@@ -382,7 +378,7 @@ def test_public_download_propagates_publication_date_and_filters(mocker):
 def test_reuses_api_config_across_downloads_on_same_scraper(mocker):
     mocker.patch("time.sleep")
     scraper = TJMTScraper()
-    request = _ConfigRefreshRecorder(scraper.session, ["cached-token", "cached-token"], [200, 200])
+    request = _ConfigRefreshRecorder(scraper.session, ["cached-token"], [200, 200])
     mocker.patch.object(scraper.session, "request", side_effect=request)
 
     scraper.cjsg_download("primeira busca", paginas=1)
@@ -390,7 +386,6 @@ def test_reuses_api_config_across_downloads_on_same_scraper(mocker):
 
     assert request.discovery_count == 1
     assert request.api_tokens == ["cached-token", "cached-token"]
-    assert request.api_statuses_seen == [200, 200]
 
 
 @pytest.mark.parametrize("status", [401, 403])
@@ -409,41 +404,19 @@ def test_unauthorized_api_response_refreshes_config_and_replays_once(status, moc
     assert pages[0]["success"] is True
     assert request.discovery_count == 2
     assert request.api_tokens == ["stale-token", "renewed-token"]
-    assert request.api_statuses_seen == [status, 200]
-
-
-@pytest.mark.parametrize("status", [401, 403])
-def test_refresh_discovery_does_not_send_stale_token(status, mocker):
-    mocker.patch("time.sleep")
-    scraper = TJMTScraper()
-    request = _ConfigRefreshRecorder(
-        scraper.session,
-        ["stale-token", "renewed-token"],
-        [status, 200],
-    )
-    mocker.patch.object(scraper.session, "request", side_effect=request)
-
-    scraper.cjsg_download("dano moral", paginas=1)
-
-    assert request.discovery_count == 2
     assert "stale-token" not in request.discovery_tokens
-    assert request.api_tokens == ["stale-token", "renewed-token"]
 
 
-def test_failed_config_refresh_restores_cached_session_token(mocker):
+def test_failed_config_refresh_keeps_cached_session_token(mocker):
     mocker.patch("time.sleep")
     scraper = TJMTScraper()
     request = _ConfigRefreshRecorder(scraper.session, ["stale-token"], [200, 401])
     mocker.patch.object(scraper.session, "request", side_effect=request)
     scraper.cjsg_download("primeira busca", paginas=1)
 
-    def fail_discovery(_request_fn):
-        assert scraper.session.headers.get("token") is None
-        raise TJMTConfigError("configuração de teste indisponível")
-
     mocker.patch(
         "juscraper.courts.tjmt.client._get_api_config",
-        side_effect=fail_discovery,
+        side_effect=TJMTConfigError("configuração de teste indisponível"),
     )
 
     with pytest.raises(TJMTConfigError, match="indisponível"):
@@ -452,14 +425,17 @@ def test_failed_config_refresh_restores_cached_session_token(mocker):
     assert scraper.session.headers["token"] == "stale-token"
 
 
-@pytest.mark.parametrize("renewed_status", [401, 403])
-def test_repeated_unauthorized_response_propagates_without_refresh_loop(renewed_status, mocker):
+@pytest.mark.parametrize(
+    ("api_statuses", "expected_exc"),
+    [
+        ([401, 401], requests.HTTPError),
+        # 403 segue retentável na consulta repetida, pela política comum.
+        ([401, 403, 403, 403], RetryExhaustedError),
+    ],
+)
+def test_repeated_unauthorized_response_propagates_without_refresh_loop(api_statuses, expected_exc, mocker):
     mocker.patch("time.sleep")
     scraper = TJMTScraper()
-    api_statuses = [401, 401] if renewed_status == 401 else [401, 403, 403, 403]
-    api_tokens = ["stale-token", "renewed-token"]
-    if renewed_status == 403:
-        api_tokens.extend(["renewed-token", "renewed-token"])
     request = _ConfigRefreshRecorder(
         scraper.session,
         ["stale-token", "renewed-token"],
@@ -467,18 +443,11 @@ def test_repeated_unauthorized_response_propagates_without_refresh_loop(renewed_
     )
     mocker.patch.object(scraper.session, "request", side_effect=request)
 
-    with pytest.raises((requests.HTTPError, RetryExhaustedError)) as exc_info:
+    with pytest.raises(expected_exc):
         scraper.cjsg_download("dano moral", paginas=1)
 
-    status = (
-        exc_info.value.response.status_code
-        if isinstance(exc_info.value, requests.HTTPError)
-        else exc_info.value.status_code
-    )
-    assert status == renewed_status
     assert request.discovery_count == 2
-    assert request.api_tokens == api_tokens
-    assert request.api_statuses_seen == api_statuses
+    assert request.api_tokens == ["stale-token"] + ["renewed-token"] * (len(api_statuses) - 1)
 
 
 def test_public_integer_pages_downloads_from_first_page_through_requested_page(mocker):
