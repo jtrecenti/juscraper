@@ -171,14 +171,23 @@ def _fill_incident_header(soup: BeautifulSoup, data: dict) -> None:
     if not larger_tag:
         return
 
-    text = larger_tag.get_text(strip=True)
+    cnj, classe = _split_incident_header(larger_tag.get_text(strip=True))
+    if cnj:
+        data['id_processo'] = cnj
+    if data['classe'] is None and classe:
+        data['classe'] = classe
+
+
+def _split_incident_header(text: str) -> tuple[str | None, str | None]:
+    """Separa o cabeçalho de incidente do eSAJ, "Classe (CNJ)", em ``(cnj, classe)``.
+
+    Usado pelos parsers do cpopg e do cposg; a parte ausente vem ``None``. A
+    classe é o texto antes do CNJ, então um número sozinho não gera classe.
+    """
     match = _CNJ_PATTERN.search(text)
-    if match:
-        data['id_processo'] = match.group(0)
-    if data['classe'] is None:
-        classe_text = re.sub(r'\s*\(.*$', '', text).replace('\xa0', ' ').strip()
-        if classe_text:
-            data['classe'] = classe_text
+    head = text[:match.start()] if match else text
+    classe = re.sub(r'\s*\(.*$', '', head).replace('\xa0', ' ').strip()
+    return (match.group(0) if match else None), (classe or None)
 
 
 def _extract_labeled_value(label_span) -> tuple[str, str] | None:
