@@ -1,4 +1,4 @@
-"""Offline contract tests for TJSP cposg (``method='html'`` and ``'api'``).
+"""Offline contract tests for TJSP cposg (``method='html'``).
 
 HTML flow: GET ``cposg/open.do`` → GET ``cposg/search.do`` → Caso 3
 (resposta simples) or Caso 1/2 (listagem/modal). The CNJ used here lands
@@ -6,9 +6,6 @@ in Caso 3 — the search response itself contains the process details and
 the scraper saves it under the ``cdProcesso`` value. The page leaves the
 movements to ``carregarMovimentacoesAjax.do`` (five rows per page, next page
 by ``cursor``), which the scraper follows and writes into the saved HTML.
-
-API flow: a single GET ``processo/cposg/search/numproc/{id}``; parsed values
-are asserted against the real response sample.
 """
 import pandas as pd
 import pytest
@@ -20,10 +17,8 @@ from juscraper.courts._esaj.acordao import parse_cursor
 from tests._helpers import load_sample, load_sample_bytes
 
 ESAJ = "https://esaj.tjsp.jus.br"
-API = "https://api.tjsp.jus.br"
 
 CNJ = "1000149-71.2024.8.26.0346"
-CNJ_DIGITS = "10001497120248260346"
 
 CPOSG_BASICOS_MIN = {"id_original", "classe", "status"}
 
@@ -160,51 +155,6 @@ def test_cposg_html_pagina_seguinte_fora_do_formato_nao_corta_a_lista(tmp_path, 
     assert "a página 2 veio fora do formato conhecido" in caplog.text
 
 
-# ---------- method='api' ------------------------------------------------
-
-@responses.activate
-def test_cposg_api_parses_real_sample(tmp_path, mocker):
-    """A API retorna os dados observados no sample real da resposta."""
-    mocker.patch("time.sleep")
-    responses.add(
-        responses.GET,
-        f"{API}/processo/cposg/search/numproc/{CNJ_DIGITS}",
-        body=load_sample("tjsp", "cposg/api_search.json"),
-        status=200,
-        content_type="application/json",
-    )
-
-    df = jus.scraper("tjsp", download_path=str(tmp_path)).cposg(CNJ, method="api")
-
-    assert isinstance(df, pd.DataFrame)
-    assert list(df.columns) == CPOSG_COLUNAS_ORDENADAS
-    assert len(df) == 1
-    row = df.iloc[0]
-    assert row["id_original"] == "1000149-71.2024.8.26.0346"
-    assert row["processo"] == "1000149-71.2024.8.26.0346"
-    assert row["classe"] == "Apelação Cível"
-    assert row["assunto"] == "DIREITO DO CONSUMIDOR - Contratos de Consumo - Bancários"
-
-
-@responses.activate
-def test_cposg_api_lista_vazia_registra_erro_explicito(tmp_path, mocker, caplog):
-    """A API devolve ``[]`` para o número (observado ao vivo em 14/11/2026): o log diz isso."""
-    mocker.patch("time.sleep")
-    responses.add(
-        responses.GET,
-        f"{API}/processo/cposg/search/numproc/{CNJ_DIGITS}",
-        body="[]",
-        status=200,
-        content_type="application/json",
-    )
-
-    df = jus.scraper("tjsp", download_path=str(tmp_path)).cposg(CNJ, method="api")
-
-    assert df.empty
-    assert list(df.columns) == CPOSG_COLUNAS_ORDENADAS
-    assert "não devolveu nenhum processo" in caplog.text
-
-
 @responses.activate
 def test_cposg_download_html_usa_diretorio_sem_alterar_download_path(tmp_path, mocker):
     """O destino alternativo do HTML não deve alterar o destino configurado."""
@@ -219,36 +169,4 @@ def test_cposg_download_html_usa_diretorio_sem_alterar_download_path(tmp_path, m
 
     assert (alternativo / "cposg").is_dir()
     assert not (caminho / "cposg").exists()
-    assert scraper.download_path == str(caminho)
-
-
-@responses.activate
-def test_cposg_download_api_usa_download_path_sem_diretorio(tmp_path, mocker):
-    """Sem destino alternativo, o CPOSG API usa ``self.download_path``."""
-    mocker.patch("time.sleep")
-    responses.add(
-        responses.GET,
-        f"{API}/processo/cposg/search/numproc/{CNJ_DIGITS}",
-        body=load_sample("tjsp", "cposg/api_search.json"),
-        status=200,
-        content_type="application/json",
-    )
-    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
-
-    scraper.cposg_download(CNJ, method="api")
-
-    assert (tmp_path / "cposg").is_dir()
-    assert scraper.download_path == str(tmp_path)
-
-
-def test_cposg_download_api_usa_diretorio_sem_alterar_download_path(tmp_path, mocker):
-    """O destino alternativo do API deve ser encaminhado ao downloader."""
-    caminho = tmp_path / "padrao"
-    alternativo = tmp_path / "alternativo"
-    scraper = jus.scraper("tjsp", download_path=str(caminho))
-    download = mocker.patch("juscraper.courts.tjsp.client.cposg_download_api")
-
-    scraper.cposg_download(CNJ, method="api", diretorio=str(alternativo))
-
-    assert download.call_args.kwargs["download_path"] == str(alternativo)
     assert scraper.download_path == str(caminho)
