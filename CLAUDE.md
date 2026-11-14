@@ -47,6 +47,7 @@ uv run pytest -m integration           # acessa serviços externos
 
 - Ao usar skills para criar ou alterar raspadores, seguir a política de testes deste repositório.
 - Mudança em parser HTML/JSON exige sample e teste para o formato afetado. Contratos verificam colunas do DataFrame e propagação de filtros no payload; samples vêm de respostas reais, não de campos inventados.
+- Testes ao vivo rodam localmente, de IP residencial: os tribunais bloqueiam com frequência os IPs do runner do GitHub, e uma falha da `Integração` no runner não prova quebra do raspador. Ao mexer num tribunal, rodar a integração dele antes do PR; os comandos estão em `CONTRIBUTING.md` > **Integração local**.
 - Marcar testes que acessam rede com `integration`. Ferramentas, estrutura de samples, helpers e tratamento de anti-bot estão em `CONTRIBUTING.md` > **Tests**; consultar antes de escrever contratos ou executar integração.
 - Antes de refatorar um tribunal, seus contratos devem passar. Wiring de schema entra na refatoração estrutural ou em PR dedicado posterior, separado do PR de contratos. Se a issue de contratos deixar wiring em aberto, abrir follow-up.
 
