@@ -2,7 +2,9 @@
 
 A obtencao vive em :mod:`juscraper.core.waf`, compartilhada com o TJPE; aqui
 fica so a pagina que o STF protege e a alternativa sem Playwright (passar um
-cookie ja obtido). O cookie vale por cerca de quatro dias.
+cookie ja obtido). O cookie vale por cerca de quatro dias. Desde novembro de
+2026 o portal responde sem desafio e nao emite o cookie; o cliente so recorre a
+este modulo quando :func:`juscraper.core.waf.eh_desafio_waf` detecta o desafio.
 """
 from __future__ import annotations
 

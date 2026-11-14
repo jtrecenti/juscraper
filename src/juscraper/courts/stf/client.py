@@ -196,6 +196,7 @@ class STFScraper(HTTPScraper):
             TypeError: Quando um kwarg desconhecido e passado.
             ValidationError: Quando um filtro tem formato invalido.
             RuntimeError: Quando a busca retorna uma resposta parcial por timeout ou shards falhos.
+            ImportError: Quando o WAF desafia e o Playwright nao esta instalado.
 
         Returns:
             pd.DataFrame: Colunas ``faceta``, ``valor`` e ``n``. A primeira linha e
