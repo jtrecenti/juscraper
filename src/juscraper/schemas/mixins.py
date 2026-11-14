@@ -26,6 +26,8 @@ from datetime import date
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
+from .types import InteiroSemBool
+
 
 class PaginasMixin(BaseModel):
     """Contrato unico de ``paginas`` (refs #118).
@@ -46,7 +48,8 @@ class PaginasMixin(BaseModel):
 
     # ``range`` precisa preceder ``list``: o pydantic tenta as variantes da
     # union em ordem e percorreria todo o range ao testa-lo como ``list[int]``.
-    paginas: int | range | list[int] | None = None
+    # ``InteiroSemBool``: sem ele o pydantic coage ``True`` para a pagina 1.
+    paginas: InteiroSemBool | range | list[InteiroSemBool] | None = None
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 

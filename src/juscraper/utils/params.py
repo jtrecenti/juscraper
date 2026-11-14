@@ -2,6 +2,7 @@
 import difflib
 from collections.abc import Callable, Iterator
 from datetime import date, datetime, timedelta
+from numbers import Integral
 from typing import Any
 
 import pandas as pd
@@ -69,27 +70,21 @@ def pop_normalize_aliases(kwargs: dict, *, include_canonical: bool = False) -> N
 
 
 def normalize_paginas(paginas) -> list | range | None:
-    """Normalize the ``paginas`` parameter to a consistent type.
+    """Normaliza ``paginas`` para ``None``, ``list`` ou ``range``.
 
-    Args:
-        paginas: ``None`` (all pages), ``int`` (shorthand for ``range(1, n+1)``),
-                 ``list`` or ``range`` (passthrough).
-
-    Returns:
-        ``None``, ``list``, or ``range``.
+    ``None`` (todas as páginas), ``list`` e ``range`` passam direto; um inteiro
+    ``n``, inclusive do numpy, vira ``range(1, n + 1)``.
 
     Raises:
-        TypeError: If *paginas* is not one of the accepted types.
+        TypeError: se *paginas* não é de um dos tipos aceitos, inclusive ``bool``.
     """
     if paginas is None:
         return None
-    if isinstance(paginas, int):
-        return range(1, paginas + 1)
     if isinstance(paginas, (list, range)):
         return paginas
-    raise TypeError(
-        f"paginas deve ser int, list, range ou None, não {type(paginas).__name__}"
-    )
+    if isinstance(paginas, bool) or not isinstance(paginas, Integral):  # ``True`` viraria a página 1
+        raise TypeError(f"paginas deve ser int (bool não vale), list, range ou None, não {type(paginas).__name__}")
+    return range(1, int(paginas) + 1)
 
 
 def normalize_pesquisa(pesquisa: str | None = None, **kwargs) -> str:

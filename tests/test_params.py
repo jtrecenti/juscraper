@@ -2,6 +2,7 @@
 import itertools
 import warnings
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -40,6 +41,18 @@ class TestNormalizePaginas:
     def test_invalid_type(self):
         with pytest.raises(TypeError, match="paginas deve ser"):
             normalize_paginas("abc")
+
+    @pytest.mark.parametrize("valor", [True, False, np.True_])
+    def test_bool_recusado(self, valor):
+        # ``bool`` herda de ``int``: sem a checagem, ``True`` virava a página 1.
+        with pytest.raises(TypeError, match="não bool"):
+            normalize_paginas(valor)
+
+    def test_inteiro_numpy_aceito(self):
+        # Mesmo contrato de ``tamanho_pagina`` (``TamanhoPagina``), que aceita ``np.int64``.
+        result = normalize_paginas(np.int64(3))
+        assert result == range(1, 4)
+        assert all(type(p) is int for p in result)
 
 
 # --- normalize_pesquisa ---

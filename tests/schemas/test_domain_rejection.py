@@ -128,7 +128,7 @@ class TestNumericFieldRejection:
 
 
 # (Schema, campo, kwargs obrigatórios, valor válido) — todo campo de tamanho de
-# página tipado como ``TamanhoPagina``. O valor válido respeita o domínio
+# página tipado como ``TamanhoPagina`` ou ``InteiroSemBool`` (Falcão). O valor válido respeita o domínio
 # próprio do endpoint (DataJud: 10 a 10000; Falcão: 5 ou 10).
 _TAMANHO_PAGINA_CASES = [
     (InputCJSGTJBA, "tamanho_pagina", {"pesquisa": "x"}, 2),
