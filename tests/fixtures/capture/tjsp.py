@@ -62,6 +62,7 @@ def capture_cjsg() -> None:
         headers=TJSP_CHROME_HEADERS,
         body_builder=make_tjsp_cjsg_body,
     )
+    capture_cjsg_monocratica()
     # Ementa curta com a palavra "resultados" na 1a página (observado em
     # 14/11/2026 com "direito" e baixar_sg=False): a contagem não pode tomar
     # a célula da ementa pela paginação.
@@ -75,6 +76,21 @@ def capture_cjsg() -> None:
         return
     dump(samples_dir_for("tjsp", "cjsg") / "ementa_com_resultados.html", resps[0].content)
     print("[tjsp] cjsg ementa_com_resultados ('direito', baixar_sg=False) → saved")
+
+
+def capture_cjsg_monocratica() -> None:
+    """Capture the 1st cjsg page of a monocratic-decision search.
+
+    A página de decisões monocráticas traz o total no input
+    ``totalResultadoAbaRetornoFiltro-D``, e não no ``-A`` dos acórdãos.
+    """
+    _, resps = fetch_cjsg_pages(
+        build_session(headers=TJSP_CHROME_HEADERS), ESAJ_BASE,
+        "usucapiao extraordinario predio rural familia",
+        tipo_decisao="monocratica", body_builder=make_tjsp_cjsg_body,
+    )
+    dump(samples_dir_for("tjsp", "cjsg") / "monocratica_single_page.html", resps[0].content)
+    print("[tjsp] cjsg monocratica_single_page → saved")
 
 
 # ---------- cjpg ---------------------------------------------------------

@@ -133,6 +133,16 @@ def _extract_pagination_count(text: str) -> int | None:
     return None
 
 
+def _total_declarado(soup: BeautifulSoup) -> int | None:
+    # A página de ``trocaDePagina.do`` traz um único input, o da aba pedida
+    # em ``tipoDeDecisao``: ``-A`` (acórdãos) ou ``-D`` (monocráticas).
+    inputs = soup.select("input[id^=totalResultadoAbaRetornoFiltro-]")
+    if len(inputs) != 1:
+        return None
+    valor = str(inputs[0].get("value") or "").strip()
+    return int(valor) if re.fullmatch(r"[0-9]+", valor) else None
+
+
 def cjsg_n_results(html_source: str) -> int:
     """Extract the total number of results from a cjsg first-page HTML.
 
@@ -145,7 +155,12 @@ def cjsg_n_results(html_source: str) -> int:
     :func:`juscraper.courts._esaj.download.download_cjsg_pages` to size the
     pagination loop.
 
-    Uses a cascade of selectors and regex to survive layout changes. See the
+    Reads first the hidden ``input#totalResultadoAbaRetornoFiltro-*`` that
+    eSAJ puts on the results page; its value does not depend on the text of
+    the page, so an ementa citing "resultados" cannot change the count.
+
+    When that input is missing, empty or non-numeric, falls back to a
+    cascade of selectors and regex to survive layout changes. See the
     "Extração de número de páginas/resultados em raspadores HTML" section of
     CLAUDE.md for the rationale.
 
@@ -165,6 +180,9 @@ def cjsg_n_results(html_source: str) -> int:
     soup = BeautifulSoup(html_source, "html.parser")
 
     _raise_page_error(soup)
+    total = _total_declarado(soup)
+    if total is not None:
+        return total
     # As ementas ficam nas linhas de resultado e podem citar "resultados" ou
     # "sem resultados" ("BONIFICAÇÃO POR RESULTADOS"); os marcadores de
     # contagem ficam fora delas.
