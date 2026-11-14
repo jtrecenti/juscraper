@@ -9,6 +9,7 @@ import pandas as pd
 from pydantic import BaseModel, ValidationError
 
 from ..core.avisos import avisar
+from ..core.base import rotulo_do_metodo_chamado
 from ..core.exceptions import ColetaParcialError
 from ..core.failures import resumir_falhas
 
@@ -743,7 +744,7 @@ def _validate_pipeline_schema(
     try:
         return schema_cls(**values)
     except ValidationError as exc:
-        raise_on_extra_kwargs(exc, method_name, schema_cls=schema_cls)
+        raise_on_extra_kwargs(exc, rotulo_do_metodo_chamado(method_name), schema_cls=schema_cls)
         raise
 
 
@@ -807,8 +808,7 @@ def apply_input_pipeline_search(
     - Popping tribunal-specific deprecated aliases (``nr_processo``,
       ``magistrado``) **before** invoking this helper, otherwise pydantic
       rejects them as ``extra_forbidden``.
-    - Running tribunal-specific validators that should fire before pydantic
-      (e.g. ``validate_pesquisa_length`` in TJSP).
+    - Running tribunal-specific validators before pydantic (e.g. ``validate_pesquisa_length`` in TJSP).
     - Passing the window cap and ``origem_mensagem`` when the backend has a documented limit
       (eSAJ: ``max_anos=1, origem_mensagem="O eSAJ"``). The defaults disable it (audited under #128).
 
