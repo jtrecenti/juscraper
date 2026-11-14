@@ -11,9 +11,10 @@ import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
+from ...core.avisos import avisar
 from ...utils import safe_path_component
 from ...utils.cnj import clean_cnj, format_cnj, split_cnj
-from .._esaj.acordao import RespostaInesperadaError, paginas_movimentacoes
+from .._esaj.acordao import _SEM_INFORMACOES, RespostaInesperadaError, paginas_movimentacoes, parse_cd_processo
 
 logger = logging.getLogger('juscraper.cposg_download')
 
@@ -30,10 +31,14 @@ def cposg_download_html(id_cnj_list, session, u_base, download_path, sleep_time=
     """
     Downloads the HTML of one or more processes from the CPOSG.
     Returns a list of paths if list, or a single path if string.
+
+    Processo que a consulta de 2º grau não mostra ("Não existem informações
+    disponíveis") não gera arquivo e sai num ``UserWarning`` ao fim.
     """
     if isinstance(id_cnj_list, str):
         id_cnj_list = [id_cnj_list]
     paths = []
+    nao_encontrados = []
     for id_cnj in tqdm(id_cnj_list, desc="Baixando processos"):
         try:
             path = _cposg_download_html_single(id_cnj, session, u_base, download_path)
@@ -41,8 +46,17 @@ def cposg_download_html(id_cnj_list, session, u_base, download_path, sleep_time=
                 RuntimeError, RespostaInesperadaError, requests.RequestException) as e:
             logger.error("Erro ao baixar o processo %s: %s", id_cnj, e)
             continue
-        paths.append(path)
+        if path is None:
+            nao_encontrados.append(id_cnj)
+        else:
+            paths.append(path)
         time.sleep(sleep_time)
+    if nao_encontrados:
+        avisar(
+            f"cposg: a consulta de 2º grau não mostra {len(nao_encontrados)} processo(s), que fica(m) "
+            f"fora do resultado: {', '.join(nao_encontrados)}. O número pode não existir no 2º grau, "
+            "ou o processo está em segredo de justiça, que o eSAJ não mostra na consulta pública."
+        )
     if not paths:
         raise RuntimeError("Nenhum processo foi baixado com sucesso.")
     return paths if len(paths) > 1 else paths[0]
@@ -72,6 +86,9 @@ def _cposg_download_html_single(id_cnj, session, u_base, download_path):
     }
     r = session.get(u, params=params)
     soup = BeautifulSoup(r.text, 'html.parser')
+    mensagem = soup.find(id='mensagemRetorno')
+    if mensagem is not None and _SEM_INFORMACOES in mensagem.get_text():
+        return None
     # id_clean vem de clean_cnj (so digitos), seguro como componente de path.
     path = f"{download_path}/cposg/{id_clean}"
     if not Path(path).is_dir():
@@ -104,12 +121,7 @@ def _cposg_download_html_single(id_cnj, session, u_base, download_path):
     # Caso 3: resposta simples — o id vem do input[name=cdProcesso] (nao de
     # processo.codigo como nos casos 1/2), dai field="cdProcesso".
     else:
-        codigo_simples: str | None = None
-        input_cd = soup.find('input', {'name': 'cdProcesso'})
-        if input_cd:
-            value = input_cd.get('value')
-            codigo_simples = str(value) if value is not None else None
-        codigo_part = safe_path_component(codigo_simples, field="cdProcesso") if codigo_simples else "simples"
+        codigo_part = parse_cd_processo(r.text) or "simples"
         html = _incluir_movimentacoes(r.text, session, u_base, id_format)
         file_name = Path(path) / f"{id_clean}_cd_processo_{codigo_part}.html"
         with file_name.open('w', encoding='utf-8') as f:

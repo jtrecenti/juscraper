@@ -75,13 +75,19 @@ def cposg_parse_manager(path: str):
 def _extract_header(soup: BeautifulSoup) -> dict:
     """Extract process identifiers and status tags."""
     result = {}
-    id_link = soup.select_one("a[href*='processo.codigo']")
-    if id_link:
-        result['id_original'] = id_link.get_text(strip=True)
-
-    processo_tag = soup.select_one('span.unj-larger')
-    if processo_tag:
-        result['processo'] = processo_tag.get_text(strip=True)
+    # No cabeçalho atual, o número fica em span#numeroProcesso. Fora dele, o
+    # primeiro link para processo.codigo pode ser de um incidente ("Embargos
+    # de Declaração - 50000") ou do processo de 1ª instância.
+    numero = soup.find('span', id='numeroProcesso')
+    if numero:
+        result['id_original'] = result['processo'] = numero.get_text(strip=True)
+    else:
+        id_link = soup.select_one("a[href*='processo.codigo']")
+        if id_link:
+            result['id_original'] = id_link.get_text(strip=True)
+        processo_tag = soup.select_one('span.unj-larger')
+        if processo_tag:
+            result['processo'] = processo_tag.get_text(strip=True)
 
     status_tags = soup.select('span.unj-tag')
     if status_tags:
