@@ -4,7 +4,8 @@ Run from repo root::
 
     python -m tests.fixtures.capture.stf
 
-Precisa do extra ``stf`` (Playwright) para obter o cookie ``aws-waf-token``.
+Desde novembro de 2026 o portal responde sem o desafio do AWS WAF; o extra
+``waf`` (Playwright) so e usado se o desafio voltar.
 Os samples sao saneados para caber no repositorio: ``decisao_texto``,
 ``ementa_texto`` e ``partes_lista_texto`` truncados em 300 caracteres e o bloco
 ``highlight`` de cada hit removido.
