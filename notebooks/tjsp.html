@@ -74,7 +74,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-a92d8eec9eda37e5377e1dd6cf3ce6ef.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-fa0132e5ba1ccbcb15f610bc8f9b53b7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -747,8 +747,10 @@ Processando documentos: 100%|██████████| 2/2 [00:00&lt;00:00
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> tjsp.cposg([<span class="st">'00221752420038260344'</span>, <span class="st">'10001497120248260346'</span>, <span class="st">'00039417120248260048'</span>])</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>res</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando processos: 100%|██████████| 3/3 [00:02&lt;00:00,  1.39it/s]
-Processando arquivos: 100%|██████████| 4/4 [00:00&lt;00:00, 22.22it/s]</code></pre>
+<pre><code>Baixando processos: 100%|██████████| 3/3 [00:03&lt;00:00,  1.25s/it]
+/var/folders/rv/jfmtd5hx5kv11464k5s9yjg80000gn/T/ipykernel_37002/1905175911.py:1: UserWarning: cposg: a consulta de 2º grau não mostra 1 processo(s), que fica(m) fora do resultado: 00039417120248260048. O número pode não existir no 2º grau, ou o processo está em segredo de justiça, que o eSAJ não mostra na consulta pública.
+  res = tjsp.cposg(['00221752420038260344', '10001497120248260346', '00039417120248260048'])
+Processando arquivos: 100%|██████████| 3/3 [00:00&lt;00:00, 16.22it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-display">
 <div>
@@ -759,6 +761,7 @@ Processando arquivos: 100%|██████████| 4/4 [00:00&lt;00:00, 
 <tr class="header">
 <th data-quarto-table-cell-role="th"></th>
 <th data-quarto-table-cell-role="th">id_original</th>
+<th data-quarto-table-cell-role="th">processo</th>
 <th data-quarto-table-cell-role="th">status</th>
 <th data-quarto-table-cell-role="th">classe</th>
 <th data-quarto-table-cell-role="th">assunto</th>
@@ -766,43 +769,22 @@ Processando arquivos: 100%|██████████| 4/4 [00:00&lt;00:00, 
 <th data-quarto-table-cell-role="th">orgao_julgador</th>
 <th data-quarto-table-cell-role="th">area</th>
 <th data-quarto-table-cell-role="th">relator</th>
+<th data-quarto-table-cell-role="th">valor_da_acao</th>
 <th data-quarto-table-cell-role="th">origem</th>
+<th data-quarto-table-cell-role="th">volume_apenso</th>
 <th data-quarto-table-cell-role="th">movimentacoes</th>
 <th data-quarto-table-cell-role="th">partes</th>
 <th data-quarto-table-cell-role="th">historico</th>
 <th data-quarto-table-cell-role="th">decisoes</th>
 <th data-quarto-table-cell-role="th">composicao</th>
 <th data-quarto-table-cell-role="th">primeira_inst</th>
-<th data-quarto-table-cell-role="th">processo</th>
-<th data-quarto-table-cell-role="th">valor_da_acao</th>
-<th data-quarto-table-cell-role="th">volume_apenso</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">0</td>
-<td>Embargos de Declaração Criminal\n\t\t\n\t\t\t ...</td>
-<td>Encerrado</td>
-<td>Recurso em Sentido Estrito</td>
-<td>DIREITO PENAL - Crime Tentado</td>
-<td>Direito Criminal</td>
-<td>16ª Câmara de Direito Criminal</td>
-<td>Criminal</td>
-<td>BORGES PEREIRA</td>
-<td>Comarca de Marília / Foro de Marília / 3ª. Var...</td>
-<td>[{'data': '25/03/2015', 'movimento': 'Decisão ...</td>
-<td>[{'id_parte': 1, 'nome': 'Jose Roberto dos Rei...</td>
-<td>[]</td>
-<td>[{'data': '20/03/2012', 'situacao': 'Julgado',...</td>
-<td>[{'participacao': 'Relator', 'magistrado': 'Bo...</td>
-<td>[{'id_1a_inst': '344.01.2003.022175-3', 'foro'...</td>
-<td>None</td>
-<td>None</td>
-<td>None</td>
-</tr>
-<tr class="even">
-<td data-quarto-table-cell-role="th">1</td>
-<td>Embargos de Declaração Criminal\n\t\t\n\t\t\t ...</td>
+<td>0022175-24.2003.8.26.0344</td>
+<td>0022175-24.2003.8.26.0344</td>
 <td>Encerrado</td>
 <td>Apelação Criminal</td>
 <td>DIREITO PENAL-Crimes contra a vida-Homicídio S...</td>
@@ -810,37 +792,57 @@ Processando arquivos: 100%|██████████| 4/4 [00:00&lt;00:00, 
 <td>6ª Câmara de Direito Criminal</td>
 <td>Criminal</td>
 <td>MACHADO DE ANDRADE</td>
+<td>None</td>
 <td>Comarca de Marília / Foro de Marília / 1ª Vara...</td>
+<td>None</td>
 <td>[{'data': '25/07/2022', 'movimento': 'Informaç...</td>
-<td>[{'id_parte': 1, 'nome': 'Rubens Neres Santana...</td>
+<td>[{'id_parte': 1, 'nome': 'Domingos Antonio Nav...</td>
 <td>[]</td>
 <td>[{'data': '01/08/2019', 'situacao': 'Julgado',...</td>
 <td>[{'participacao': 'Relator', 'magistrado': 'Ma...</td>
 <td>[{'id_1a_inst': '344.01.2003.022175-3', 'foro'...</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>0022175-24.2003.8.26.0344</td>
+<td>0022175-24.2003.8.26.0344</td>
+<td>Encerrado</td>
+<td>Recurso em Sentido Estrito</td>
+<td>DIREITO PENAL - Crime Tentado</td>
+<td>Direito Criminal</td>
+<td>16ª Câmara de Direito Criminal</td>
+<td>Criminal</td>
+<td>BORGES PEREIRA</td>
 <td>None</td>
+<td>Comarca de Marília / Foro de Marília / 3ª. Var...</td>
 <td>None</td>
-<td>None</td>
+<td>[{'data': '25/03/2015', 'movimento': 'Decisão ...</td>
+<td>[{'id_parte': 1, 'nome': 'Domingos Antonio Nav...</td>
+<td>[]</td>
+<td>[{'data': '20/03/2012', 'situacao': 'Julgado',...</td>
+<td>[{'participacao': 'Relator', 'magistrado': 'Bo...</td>
+<td>[{'id_1a_inst': '344.01.2003.022175-3', 'foro'...</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">2</td>
+<td>1000149-71.2024.8.26.0346</td>
 <td>1000149-71.2024.8.26.0346</td>
 <td>Encerrado</td>
 <td>Apelação Cível</td>
 <td>DIREITO DO CONSUMIDOR - Contratos de Consumo -...</td>
 <td>Direito Privado 2</td>
-<td>Núcleo de Justiça 4.0 em Segundo Grau – Turma ...</td>
+<td>Núcleo 4.0-T. IV (DP2)</td>
 <td>Cível</td>
 <td>PAULO SERGIO MANGERONA</td>
+<td>72.896,87</td>
 <td>Comarca de Martinópolis / Foro de Martinópolis...</td>
+<td>None</td>
 <td>[{'data': '25/06/2025', 'movimento': 'Expedido...</td>
-<td>[{'id_parte': 1, 'nome': 'Fabio Cabral Silva d...</td>
+<td>[{'id_parte': 1, 'nome': 'Banco Bradesco S/A',...</td>
 <td>[]</td>
 <td>[{'data': '24/05/2025', 'situacao': 'Julgado',...</td>
 <td>[{'participacao': 'Relator', 'magistrado': 'Pa...</td>
 <td>[{'id_1a_inst': '1000149-71.2024.8.26.0346(Pri...</td>
-<td>None</td>
-<td>72.896,87</td>
-<td>None</td>
 </tr>
 </tbody>
 </table>
@@ -851,7 +853,7 @@ Processando arquivos: 100%|██████████| 4/4 [00:00&lt;00:00, 
 <div id="cell-12" class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>pd.DataFrame(res[<span class="st">'movimentacoes'</span>].iloc[<span class="dv">2</span>]).head()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="7">
+<div class="cell-output cell-output-display">
 <div>
 
 
@@ -887,7 +889,7 @@ Processando arquivos: 100%|██████████| 4/4 [00:00&lt;00:00, 
 <td data-quarto-table-cell-role="th">3</td>
 <td>29/05/2025</td>
 <td>Publicado em</td>
-<td>Disponibilizado em 28/05/2025\n\nTipo de publi...</td>
+<td>Disponibilizado em 28/05/2025\nTipo de publica...</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">4</td>
