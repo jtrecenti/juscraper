@@ -11,6 +11,8 @@ from bs4 import BeautifulSoup
 from bs4.element import Comment, Script, Stylesheet, Tag, TemplateString
 from tqdm import tqdm
 
+from ...core.avisos import avisar
+
 logger = logging.getLogger('juscraper.cposg_parse')
 
 _FIELD_MAPPING = (
@@ -57,7 +59,12 @@ def cposg_parse(path: str):
 def cposg_parse_manager(path: str):
     """Interpreta arquivos HTML ou JSON do CPOSG sob ``path`` em um DataFrame."""
     raiz = Path(path)
-    arquivos = [*raiz.rglob('*.html'), *raiz.rglob('*.json')]
+    # O JSON da API fica em cposg/<id>/<id>.json; o cpopg grava o mesmo nome
+    # em cpopg/<id>/, que fica fora.
+    arquivos = [
+        *raiz.rglob('*.html'),
+        *(arq for arq in raiz.rglob('*.json') if arq.stem == arq.parent.name and arq.parent.parent.name == 'cposg'),
+    ]
     dados = []
     for arq in tqdm(arquivos, total=len(arquivos), desc="Processando arquivos"):
         try:
@@ -165,12 +172,8 @@ def _extract_movement_text(desc_cell) -> str:
     return str(temp_cell.get_text(separator=' ', strip=True)).split('\n')[0].strip()
 
 
-def _extract_movements(soup: BeautifulSoup) -> list[dict]:
+def _extract_movements(movs_table: Tag) -> list[dict]:
     """Extract the movement table in displayed order."""
-    movs_table = soup.find(id='tabelaTodasMovimentacoes')
-    if not movs_table:
-        return []
-
     movements = []
     for row in movs_table.find_all('tr', class_='movimentacaoProcesso'):
         cells = row.find_all('td')
@@ -349,12 +352,21 @@ def cposg_parse_single_html(html_path):
 
     if soup.select('.linkProcesso'):
         return []
-    if not soup.find(id='tabelaTodasMovimentacoes'):
-        return []
+    # Formato antigo: tabelaTodasMovimentacoes. Atual: o eSAJ carrega as
+    # movimentações à parte, e cposg_download as grava em tabelaMovimentacoesAjax.
+    movs_table = soup.find(id='tabelaTodasMovimentacoes') or soup.find(id='tabelaMovimentacoesAjax')
+    if movs_table is None:
+        if soup.find(id='containerMovimentacoesAjax') is None:
+            return []
+        avisar(
+            f"{html_path}: a página do processo não traz as movimentações, que o eSAJ "
+            "carrega à parte; a coluna 'movimentacoes' sai vazia para ele. Baixe o "
+            "processo de novo com cposg_download, que grava as movimentações no HTML."
+        )
 
     result = _extract_header(soup)
     result.update(_extract_labeled_fields(soup))
-    result['movimentacoes'] = _extract_movements(soup)
+    result['movimentacoes'] = _extract_movements(movs_table) if movs_table is not None else []
     result['partes'] = _extract_parties(soup)
     result['historico'] = _extract_history(soup)
 

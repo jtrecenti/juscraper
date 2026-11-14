@@ -27,6 +27,8 @@ from pathlib import Path
 
 import requests
 
+from juscraper.courts._esaj.acordao import paginas_movimentacoes
+
 from ._util import (
     TJSP_CHROME_HEADERS,
     build_session,
@@ -268,6 +270,18 @@ def capture_cposg_html(cnj: str) -> None:
     if not codigos:
         print(f"[tjsp] cposg html: no process code found in search response for {cnj}")
         return
+
+    # A página do processo deixa as movimentações para o carregarMovimentacoesAjax.do,
+    # que só responde à sessão que abriu o processo (aqui, a da busca).
+    cd_movimentacoes = re.search(r"cdProcessoMovimentacoes = '([A-Za-z0-9]+)'", r_search.text)
+    if cd_movimentacoes:
+        paginas = paginas_movimentacoes(
+            lambda url, **kw: session.get(url, timeout=60, **kw),
+            f"{ESAJ_BASE}cposg/carregarMovimentacoesAjax.do", cnj, cd_movimentacoes.group(1),
+        )
+        for numero, pagina in enumerate(paginas, start=1):
+            dump(dest / f"movimentacoes_pagina_{numero}.html", pagina.encode("utf-8"))
+            print(f"[tjsp] cposg html movimentações página {numero} → saved")
 
     cd = codigos[0]
     r_show = session.get(

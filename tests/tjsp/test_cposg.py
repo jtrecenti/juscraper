@@ -197,8 +197,13 @@ class TestCPOSGUnit:
         ]
 
     def test_cposg_parse_real_sample_contract(self):
-        """Characterize the collection sizes and representative rows from the recorded page."""
-        result = cposg_parse_single_html(_SAMPLES / 'search_listagem.html')
+        """Página como o eSAJ a serve, sem as movimentações: os demais campos saem, com aviso.
+
+        As movimentações vêm do ``carregarMovimentacoesAjax.do``; o contrato
+        ``test_cposg_html_simple_response`` cobre o arquivo que o download grava.
+        """
+        with pytest.warns(UserWarning, match="não traz as movimentações"):
+            result = cposg_parse_single_html(_SAMPLES / 'search_listagem.html')
 
         assert len(result) == 1
         row = result[0]
@@ -207,15 +212,7 @@ class TestCPOSGUnit:
         assert row['assunto'] == 'DIREITO DO CONSUMIDOR - Contratos de Consumo - Bancários'
         assert row['processo'] is None
         assert row['volume_apenso'] is None
-        assert len(row['movimentacoes']) == 24
-        assert row['movimentacoes'][:2] == [
-            {
-                'data': '25/06/2025',
-                'movimento': 'Expedido Certidão de Baixa de Recurso',
-                'descricao': 'Certidão de Baixa de Recurso - [Digital]',
-            },
-            {'data': '25/06/2025', 'movimento': 'Baixa Definitiva', 'descricao': ''},
-        ]
+        assert row['movimentacoes'] == []
         assert len(row['partes']) == 13
         assert row['partes'][:2] == [
             {
@@ -353,16 +350,25 @@ class TestCPOSGUnit:
 
     def test_cposg_parse_manager_json_fora_do_formato_nao_derruba_os_demais(self, tmp_path):
         """Um JSON que não é lista é registrado e pulado, como os HTML com erro."""
-        (tmp_path / 'erro').mkdir()
-        (tmp_path / 'erro' / '1.json').write_text('{"mensagem": "erro"}', encoding='utf-8')
-        (tmp_path / 'ok').mkdir()
-        (tmp_path / 'ok' / '2.json').write_text(
-            load_sample('tjsp', 'cposg/api_search.json'), encoding='utf-8'
-        )
+        arquivos = (('1', '{"mensagem": "erro"}'), ('2', load_sample('tjsp', 'cposg/api_search.json')))
+        for id_processo, conteudo in arquivos:
+            (tmp_path / 'cposg' / id_processo).mkdir(parents=True)
+            (tmp_path / 'cposg' / id_processo / f'{id_processo}.json').write_text(conteudo, encoding='utf-8')
 
         result = cposg_parse_manager(str(tmp_path))
 
         assert result['processo'].tolist() == ['1000149-71.2024.8.26.0346']
+
+    def test_cposg_parse_manager_ignora_json_de_outro_endpoint(self, tmp_path):
+        """No mesmo ``download_path``, o cpopg grava ``cpopg/<id>/<id>.json``: o cposg não o lê."""
+        sample = load_sample('tjsp', 'cposg/api_search.json')
+        for caminho in ('cpopg/10001497120248260346/10001497120248260346.json', 'cposg/outro.json'):
+            (tmp_path / caminho).parent.mkdir(parents=True, exist_ok=True)
+            (tmp_path / caminho).write_text(sample, encoding='utf-8')
+
+        result = cposg_parse_manager(str(tmp_path))
+
+        assert result.empty
 
     def test_empty_relator_row_does_not_block_nonempty_fallback(self, tmp_path):
         """Preserve the relator fallback past an empty composition row, as the previous parser did."""

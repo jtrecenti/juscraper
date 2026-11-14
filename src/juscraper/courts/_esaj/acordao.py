@@ -33,6 +33,7 @@ from __future__ import annotations
 import logging
 import math
 import re
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
@@ -243,6 +244,35 @@ def parse_cursor(html: str) -> str | None:
         return str(meta.get("data-cursor") or "") or None
     link = soup.select_one("#linkMaisRecolherMovimentacoes")
     return str(link.get("data-cursor") or "") or None if link is not None else None
+
+
+def paginas_movimentacoes(
+    get: Callable[..., requests.Response], url: str, cnj: str, cd_processo: str
+) -> Iterator[str]:
+    """Cada página do ``carregarMovimentacoesAjax.do`` do TJSP, da mais nova à mais antiga.
+
+    Segue o cursor até a última página. Quem só precisa do começo da lista
+    para de iterar. Página sem linhas que anuncia outra, ou cursor repetido,
+    levantam :class:`RespostaInesperadaError`: seguir o cursor não avançaria.
+    """
+    cursor: str | None = None
+    vistos: set[str] = set()
+    while True:
+        params = {"cdProcesso": cd_processo, **({"cursor": cursor} if cursor else {})}
+        html = get(url, params=params).text
+        yield html
+        cursor = parse_cursor(html)
+        if cursor is None:
+            return
+        sem_linhas = not _linhas_movimentacao(html)
+        if sem_linhas or cursor in vistos:
+            problema = "veio sem movimentações e com" if sem_linhas else "repetiu o"
+            raise RespostaInesperadaError(
+                cnj,
+                f"carregarMovimentacoesAjax.do do cdProcesso {cd_processo} {problema} cursor {cursor!r}; "
+                "a paginação não avançaria.",
+            )
+        vistos.add(cursor)
 
 
 def _data_br(texto: str) -> date:
@@ -471,27 +501,15 @@ class EsajAcordaoScraper(EsajSearchScraper):
         if not self.MOVIMENTACOES_AJAX:
             return parse_movimentacoes(html_processo, cd_processo)
         movimentacoes: list[Movimentacao] = []
-        cursor: str | None = None
-        vistos: set[str] = set()
         linhas = 0
-        while True:
-            params = {"cdProcesso": cd_processo, **({"cursor": cursor} if cursor else {})}
-            url = f"{self.BASE_URL}{self.CPOSG_PATH}carregarMovimentacoesAjax.do"
-            html = self._get_espacado(url, params=params).text
+        url = f"{self.BASE_URL}{self.CPOSG_PATH}carregarMovimentacoesAjax.do"
+        for html in paginas_movimentacoes(self._get_espacado, url, cnj, cd_processo):
             movimentacoes += parse_movimentacoes(html, cd_processo, inicio=linhas)
             datas = parse_datas(html)
             linhas += len(datas)
-            cursor = parse_cursor(html)
-            if cursor is None or (datas and min(datas) < desde):
-                return movimentacoes
-            if not datas or cursor in vistos:
-                problema = "veio sem movimentações e com" if not datas else "repetiu o"
-                raise RespostaInesperadaError(
-                    cnj,
-                    f"carregarMovimentacoesAjax.do do cdProcesso {cd_processo} {problema} cursor {cursor!r}; "
-                    "a paginação não avançaria.",
-                )
-            vistos.add(cursor)
+            if datas and min(datas) < desde:
+                break
+        return movimentacoes
 
     def _parametros_do_acordao(self, cnj: str, mov: Movimentacao) -> str | None:
         """``parametros`` da pasta quando o documento é acórdão; ``""`` se é outro tipo, ``None`` se pede senha."""
