@@ -27,7 +27,8 @@ SEARCH_URL = "https://portal.tjpr.jus.br/jurisprudencia/publico/pesquisa.do"
 # "dano moral" (411844 do TJ + 107 da Corte IDH): página 11 com TJ 401 a 443
 # e Corte IDH 101 a 107, página 12 com TJ 444 a 493, página 8240 com só o
 # último registro e página 8241 vazia. Se o portal mudar essa divisão, o
-# sintoma é a última página calculada vir cheia.
+# sintoma é a última página calculada vir cheia. O parser descarta as linhas
+# da Corte IDH (``parse._parse_row``), então a página rende menos de 50.
 RESULTS_PER_PAGE = 50
 
 _PAGE_NUMBER_RE = re.compile(r"\['pageNumber'\]\.value='([^']*)'")

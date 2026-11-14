@@ -89,6 +89,8 @@ def test_cjsg_parse_ignores_corte_idh_row_and_keeps_judicial_results():
         criterio=None,
     )
 
+    # A página traz 50 linhas: 40 do TJPR e 10 da Corte IDH.
+    assert len(result) == 40
     assert result["processo"].eq("0037484-81.2017.8.16.0018").any()
     assert not result["ementa"].str.contains("Mota Abarullo", case=False).any(), (
         "a linha da Corte IDH 'Caso: Mota Abarullo e Outros Vs. Venezuela' "

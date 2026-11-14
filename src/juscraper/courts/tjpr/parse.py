@@ -77,7 +77,8 @@ def _parse_row(
     criterio: str | None,
     request_fn: RequestFn | None,
 ) -> dict[str, str] | None:
-    # O portal mistura precedentes da Corte IDH na tabela de jurisprudência.
+    # O portal mistura precedentes da Corte IDH na tabela de jurisprudência
+    # (ver a divisão das 50 linhas em ``download.py``).
     if row.find("input", {"name": "idsSelecionadosCidh"}):
         return None
 

@@ -102,6 +102,11 @@ class TJPRScraper(HTTPScraper):
 
         Returns a ready-to-analyze DataFrame.
 
+        Os precedentes da Corte Interamericana de Direitos Humanos que o portal
+        mistura à tabela ficam de fora. Por isso uma página rende menos de 50
+        linhas e o total fica abaixo da contagem "registro(s) encontrado(s)"
+        do portal, que soma as duas fontes.
+
         Raises:
             ValueError: Com ``paginas=None``, quando a primeira página não
                 permite fixar o total de páginas; ver :meth:`cjsg_download`.
