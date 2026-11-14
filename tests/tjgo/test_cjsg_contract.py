@@ -3,10 +3,12 @@
 The Projudi search endpoint requires a GET on the form URL first to prime
 session cookies; subsequent POSTs return ``iso-8859-1`` HTML. The contract
 mocks both calls and asserts the form body sent on each page, including
-the ``cf-turnstile-response=""`` literal (Cloudflare widget the backend
-ignores).
+the ``cf-turnstile-response=""`` literal. Since 12/11/2026 (Projudi 3.194.1)
+the backend validates the Cloudflare Turnstile token and answers every search
+without it with the empty form, so an empty search emits ``UserWarning``.
 """
 import pandas as pd
+import pytest
 import responses
 from responses.matchers import urlencoded_params_matcher
 
@@ -71,13 +73,18 @@ def test_cjsg_single_page(mocker):
 
 @responses.activate
 def test_cjsg_no_results(mocker):
-    """Zero-hit query returns an empty DataFrame (not an error)."""
+    """Zero-hit query returns an empty DataFrame and warns about Turnstile.
+
+    The portal answers a blocked search (no Turnstile token) with the same
+    HTML as a genuine zero-hit search, so every empty search warns.
+    """
     mocker.patch("time.sleep")
     _add_get_prime()
     _add_post("juscraper_probe_zero_hits_xyzqwe", page=1,
               sample_path="cjsg/no_results.html")
 
-    df = jus.scraper("tjgo").cjsg("juscraper_probe_zero_hits_xyzqwe", paginas=1)
+    with pytest.warns(UserWarning, match="Turnstile"):
+        df = jus.scraper("tjgo").cjsg("juscraper_probe_zero_hits_xyzqwe", paginas=1)
 
     assert isinstance(df, pd.DataFrame)
     assert df.empty
@@ -85,7 +92,7 @@ def test_cjsg_no_results(mocker):
 
 @responses.activate
 def test_cjsg_payload_carries_empty_turnstile_token(mocker):
-    """The body must carry ``cf-turnstile-response`` empty (backend ignores it)."""
+    """The body carries ``cf-turnstile-response`` empty (the scraper has no token)."""
     mocker.patch("time.sleep")
     _add_get_prime()
     _add_post("dano moral", page=1, sample_path="cjsg/results_normal_page_01.html")

@@ -4,8 +4,17 @@ import pytest
 
 import juscraper as jus
 
+# Desde 12/11/2026 (Projudi 3.194.1) o portal valida no servidor o token
+# Cloudflare Turnstile, que o raspador não envia: toda busca volta vazia, com
+# ``UserWarning``. Estrito para avisar quando o portal voltar a responder.
+TURNSTILE = pytest.mark.xfail(
+    reason="TJGO exige o token Cloudflare Turnstile desde 12/11/2026 (Projudi 3.194.1)",
+    strict=True,
+)
+
 
 @pytest.mark.integration
+@TURNSTILE
 def test_cjsg_busca_simples():
     tjgo = jus.scraper("tjgo")
     df = tjgo.cjsg(pesquisa="dano moral", paginas=1)
@@ -16,6 +25,7 @@ def test_cjsg_busca_simples():
 
 
 @pytest.mark.integration
+@TURNSTILE
 def test_cjsg_paginacao():
     tjgo = jus.scraper("tjgo")
     df1 = tjgo.cjsg(pesquisa="dano moral", paginas=1)
@@ -27,6 +37,7 @@ def test_cjsg_paginacao():
 
 
 @pytest.mark.integration
+@TURNSTILE
 def test_cjsg_download_parse_separados():
     tjgo = jus.scraper("tjgo")
     raw = tjgo.cjsg_download(pesquisa="dano moral", paginas=1)
