@@ -4,7 +4,6 @@ import pandas as pd
 import requests
 
 from juscraper.core.http import HTTPScraper
-from juscraper.utils.method_context import preserve_public_method_error_name
 from juscraper.utils.params import SEARCH_ALIASES, apply_input_pipeline_search, normalize_pesquisa
 
 from .download import BASE_URL, cjsg_download
@@ -128,7 +127,6 @@ class TJPRScraper(HTTPScraper):
             incluir_corte_idh=incluir_corte_idh,
         )
 
-    @preserve_public_method_error_name
     def cjsg(
         self,
         pesquisa: str | None = None,

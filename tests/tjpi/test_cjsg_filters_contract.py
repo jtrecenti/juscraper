@@ -133,12 +133,13 @@ def test_cjsg_data_inicio_alias_maps_to_data_min(mocker):
 
 def test_cjsg_unknown_kwarg_raises():
     """Kwargs not declared in :class:`InputCJSGTJPI` raise ``TypeError`` with
-    the field and the public method name (refs #84, #93, #263)."""
-    with pytest.raises(
-        TypeError,
-        match=r"TJPIScraper\.cjsg\(\) got unexpected keyword argument\(s\): 'kwarg_inventado'",
-    ):
-        jus.scraper("tjpi").cjsg("dano moral", paginas=1, kwarg_inventado="x")
+    the field name (refs #84, #93)."""
+    assert_unknown_kwarg_raises(
+        jus.scraper("tjpi").cjsg,
+        "kwarg_inventado",
+        "dano moral",
+        paginas=1,
+    )
 
 
 def test_cjsg_data_publicacao_kwarg_raises():
@@ -155,13 +156,13 @@ def test_cjsg_data_publicacao_kwarg_raises():
 
 def test_cjsg_download_unknown_kwarg_raises():
     """``cjsg_download`` rejects unknown kwargs at the lower-level entry point
-    too — guards against silent drop when the caller skips :meth:`cjsg`, and
-    names the directly called method (refs #183, #263)."""
-    with pytest.raises(
-        TypeError,
-        match=r"TJPIScraper\.cjsg_download\(\) got unexpected keyword argument\(s\): 'kwarg_inventado'",
-    ):
-        jus.scraper("tjpi").cjsg_download("dano moral", paginas=1, kwarg_inventado="x")
+    too — guards against silent drop when the caller skips :meth:`cjsg` (refs #183)."""
+    assert_unknown_kwarg_raises(
+        jus.scraper("tjpi").cjsg_download,
+        "kwarg_inventado",
+        "dano moral",
+        paginas=1,
+    )
 
 
 @responses.activate

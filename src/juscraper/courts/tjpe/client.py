@@ -6,7 +6,6 @@ Scraper for the Tribunal de Justica de Pernambuco (TJPE).
 import pandas as pd
 
 from juscraper.core.http import HTTPScraper
-from juscraper.utils.method_context import preserve_public_method_error_name
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
 from .._trf.schemas import InputCpopgTRF
@@ -147,7 +146,6 @@ class TJPEScraper(HTTPScraper):
         """Parseia as paginas brutas de :meth:`cjsg_download` em DataFrame."""
         return cjsg_parse(raw_pages)
 
-    @preserve_public_method_error_name
     def cjsg(
         self,
         pesquisa: str | None = None,

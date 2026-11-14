@@ -9,9 +9,9 @@ import pandas as pd
 from pydantic import BaseModel, ValidationError
 
 from ..core.avisos import avisar
+from ..core.base import rotulo_do_metodo_chamado
 from ..core.exceptions import ColetaParcialError
 from ..core.failures import resumir_falhas
-from .method_context import current_public_method_error_name
 
 # Deprecated aliases consumed by ``normalize_pesquisa``. Keep in sync with the
 # loop inside that function.
@@ -744,7 +744,7 @@ def _validate_pipeline_schema(
     try:
         return schema_cls(**values)
     except ValidationError as exc:
-        raise_on_extra_kwargs(exc, current_public_method_error_name() or method_name, schema_cls=schema_cls)
+        raise_on_extra_kwargs(exc, rotulo_do_metodo_chamado(method_name), schema_cls=schema_cls)
         raise
 
 

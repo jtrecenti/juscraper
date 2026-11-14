@@ -5,7 +5,6 @@ from typing import Any
 import pandas as pd
 
 from juscraper.core.http import HTTPScraper
-from juscraper.utils.method_context import preserve_public_method_error_name
 from juscraper.utils.params import apply_input_pipeline_search, to_iso_date
 
 from .download import cjsg_download_manager
@@ -45,7 +44,6 @@ class TJPIScraper(HTTPScraper):
         """Stub: second instance case consultation not implemented for TJPI."""
         raise NotImplementedError("Consulta de processos de 2o grau nao implementada para TJPI.")
 
-    @preserve_public_method_error_name
     def cjsg(
         self,
         pesquisa: str | None = None,

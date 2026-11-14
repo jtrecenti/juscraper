@@ -136,17 +136,15 @@ def test_cjsg_data_inicio_alias_maps_to_data_julgamento(mocker):
 
 def test_cjsg_unknown_kwarg_raises():
     """Kwargs not declared in :class:`InputCJSGTJPA` raise ``TypeError`` with
-    the field and the public method name (refs #84, #93, #183, #263).
-
-    Nao migra para ``assert_unknown_kwarg_raises``: o helper asserta apenas
-    o sufixo canonico, mas aqui o ponto e travar o nome publico do wrapper
-    (``TJPAScraper.cjsg()``), embora o pipeline rode em ``cjsg_download``.
-    """
-    with pytest.raises(
-        TypeError,
-        match=r"TJPAScraper\.cjsg\(\) got unexpected keyword argument\(s\): 'kwarg_inventado'",
-    ):
-        jus.scraper("tjpa").cjsg("dano moral", paginas=1, kwarg_inventado="x")
+    the field and the public method name, although the pipeline runs in
+    ``cjsg_download`` (refs #84, #93, #183, #263)."""
+    assert_unknown_kwarg_raises(
+        jus.scraper("tjpa").cjsg,
+        "kwarg_inventado",
+        "dano moral",
+        paginas=1,
+        rotulo="TJPAScraper.cjsg()",
+    )
 
 
 def test_cjsg_download_unknown_kwarg_raises():
