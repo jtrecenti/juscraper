@@ -16,10 +16,6 @@ import juscraper as jus
 from juscraper.courts.tjgo.download import SEARCH_URL, build_cjsg_payload
 from tests._helpers import assert_unknown_kwarg_raises, load_sample_bytes
 
-# Os contratos de filtro respondem com ``no_results.html``; o aviso de busca
-# vazia (Turnstile) e coberto em ``test_cjsg_contract.py``.
-pytestmark = pytest.mark.filterwarnings("ignore:TJGO. a busca voltou sem resultados:UserWarning")
-
 
 def _add_get_prime() -> None:
     responses.add(responses.GET, SEARCH_URL, body=b"", status=200)
@@ -29,7 +25,7 @@ def _add_post(expected_body: dict) -> None:
     responses.add(
         responses.POST,
         SEARCH_URL,
-        body=load_sample_bytes("tjgo", "cjsg/no_results.html"),
+        body=load_sample_bytes("tjgo", "cjsg/single_page.html"),
         status=200,
         content_type="text/html; charset=iso-8859-1",
         match=[urlencoded_params_matcher(expected_body, allow_blank=True)],

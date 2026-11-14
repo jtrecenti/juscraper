@@ -10,6 +10,8 @@ from juscraper.core.avisos import avisar
 from juscraper.core.http import RequestFn
 from juscraper.utils.pagination import extract_count_with_cascade
 
+from .parse import _split_blocks
+
 logger = logging.getLogger("juscraper.tjgo")
 
 SEARCH_URL = "https://projudi.tjgo.jus.br/ConsultaJurisprudencia"
@@ -41,11 +43,11 @@ def build_cjsg_payload(
     data_publicacao_fim: str = "",
     qtde_itens_pagina: int = RESULTS_PER_PAGE,
 ) -> dict:
-    """Build the form-encoded body for the TJGO Projudi search endpoint.
+    """Monta o corpo do formulario da busca do Projudi (TJGO).
 
-    ``page`` is 1-based; the backend uses a 0-based ``PosicaoPaginaAtual``
-    offset, which this helper computes. ``cf-turnstile-response`` and
-    ``g-recaptcha-response`` go empty: desde o Projudi 3.194.1 (12/11/2026) o
+    ``page`` e 1-based; o backend usa o deslocamento 0-based
+    ``PosicaoPaginaAtual``, calculado aqui. ``cf-turnstile-response`` e
+    ``g-recaptcha-response`` vao vazios: desde o Projudi 3.194.1 (12/11/2026) o
     servidor valida o token Cloudflare Turnstile em ``g-recaptcha-response`` e,
     sem ele, devolve o formulario sem resultados e sem erro (ver
     :data:`AVISO_TURNSTILE`).
@@ -149,7 +151,7 @@ def cjsg_download(
         qtde_itens_pagina=qtde_itens_pagina,
     )
     total = _extract_total(first)
-    if not total:
+    if not total and not _split_blocks(first):
         # Com o token valido, uma busca sem resultados devolve o mesmo HTML da
         # busca bloqueada; por isso o aviso sai em toda busca vazia.
         avisar(AVISO_TURNSTILE)

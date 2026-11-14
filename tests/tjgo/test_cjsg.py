@@ -8,6 +8,7 @@ import juscraper as jus
 # Cloudflare Turnstile, que o raspador não envia: toda busca volta vazia, com
 # ``UserWarning``. Estrito para avisar quando o portal voltar a responder.
 TURNSTILE = pytest.mark.xfail(
+    raises=UserWarning,
     reason="TJGO exige o token Cloudflare Turnstile desde 12/11/2026 (Projudi 3.194.1)",
     strict=True,
 )

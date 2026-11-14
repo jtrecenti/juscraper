@@ -91,6 +91,32 @@ def test_cjsg_no_results(mocker):
 
 
 @responses.activate
+def test_cjsg_bloqueado_pelo_turnstile_avisa(mocker):
+    """Real answer to "dano moral" without the token (Projudi 3.194.1)."""
+    mocker.patch("time.sleep")
+    _add_get_prime()
+    _add_post("dano moral", page=1, sample_path="cjsg/blocked_turnstile.html")
+
+    with pytest.warns(UserWarning, match="Turnstile"):
+        df = jus.scraper("tjgo").cjsg("dano moral", paginas=1)
+
+    assert df.empty
+
+
+@responses.activate
+def test_cjsg_com_resultados_sem_contagem_nao_avisa(mocker):
+    """Results on page 1 with an unreadable count are not a Turnstile block."""
+    mocker.patch("time.sleep")
+    mocker.patch("juscraper.courts.tjgo.download._extract_total", return_value=0)
+    _add_get_prime()
+    _add_post("dano moral", page=1, sample_path="cjsg/results_normal_page_01.html")
+
+    df = jus.scraper("tjgo").cjsg("dano moral", paginas=1)  # filterwarnings=error
+
+    assert not df.empty
+
+
+@responses.activate
 def test_cjsg_payload_carries_empty_turnstile_token(mocker):
     """The body carries ``cf-turnstile-response`` empty (the scraper has no token)."""
     mocker.patch("time.sleep")
