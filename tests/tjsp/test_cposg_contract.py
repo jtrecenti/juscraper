@@ -216,6 +216,23 @@ def test_cposg_so_processo_sem_informacoes_avisa_e_volta_vazio(tmp_path, mocker)
 
 
 @responses.activate
+def test_cposg_so_processo_sem_informacoes_nao_le_o_cpopg(tmp_path, mocker):
+    """Com o ``cpopg/`` no mesmo ``download_path``, o número sem informações não traz processo de 1º grau."""
+    mocker.patch("time.sleep")
+    _registrar_busca()
+    _registrar_busca_sem_informacoes()
+    cpopg = tmp_path / "cpopg" / "10001497120248260346"
+    cpopg.mkdir(parents=True)
+    (cpopg / "10001497120248260346.html").write_bytes(load_sample_bytes("tjsp", "cposg/show_com_incidentes.html"))
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+
+    with pytest.warns(UserWarning, match=CNJ_SEM_INFORMACOES):
+        scraper.cposg_download(CNJ_SEM_INFORMACOES)
+
+    assert scraper.cposg_parse(str(tmp_path)).empty
+
+
+@responses.activate
 def test_cposg_outra_mensagem_do_esaj_nao_vira_processo(tmp_path, mocker, caplog):
     """Mensagem de erro do eSAJ na busca não é gravada como processo: o download falha e diz qual foi."""
     mocker.patch("time.sleep")

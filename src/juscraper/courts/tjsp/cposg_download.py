@@ -38,6 +38,9 @@ def cposg_download_html(id_cnj_list, session, u_base, download_path, sleep_time=
     """
     if isinstance(id_cnj_list, str):
         id_cnj_list = [id_cnj_list]
+    # A pasta existe mesmo sem processo encontrado: sem ela, cposg_parse_manager
+    # leria o download_path inteiro, inclusive os arquivos do cpopg.
+    Path(download_path, 'cposg').mkdir(parents=True, exist_ok=True)
     paths = []
     nao_encontrados = []
     for id_cnj in tqdm(id_cnj_list, desc="Baixando processos"):
