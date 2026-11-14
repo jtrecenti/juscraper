@@ -6,6 +6,7 @@ import math
 import re
 import time
 
+from juscraper.core.avisos import avisar
 from juscraper.core.http import RequestFn
 from juscraper.utils.pagination import extract_count_with_cascade
 
@@ -13,6 +14,13 @@ logger = logging.getLogger("juscraper.tjgo")
 
 SEARCH_URL = "https://projudi.tjgo.jus.br/ConsultaJurisprudencia"
 RESULTS_PER_PAGE = 10
+
+AVISO_TURNSTILE = (
+    "TJGO: a busca voltou sem resultados. Desde 12/11/2026 (Projudi 3.194.1) o "
+    "portal exige o token Cloudflare Turnstile, que o juscraper não envia, e sem "
+    "ele toda busca volta vazia, sem mensagem de erro. Se a busca deveria trazer "
+    "resultados, o cjsg do TJGO está bloqueado por esse token."
+)
 
 _PAGINATION_CSS_SELECTORS: tuple[str, ...] = ("legend.formLocalizarLegenda",)
 _PAGINATION_REGEXES: tuple[re.Pattern[str], ...] = (
@@ -33,12 +41,14 @@ def build_cjsg_payload(
     data_publicacao_fim: str = "",
     qtde_itens_pagina: int = RESULTS_PER_PAGE,
 ) -> dict:
-    """Build the form-encoded body for the TJGO Projudi search endpoint.
+    """Monta o corpo do formulario da busca do Projudi (TJGO).
 
-    ``page`` is 1-based; the backend uses a 0-based ``PosicaoPaginaAtual``
-    offset, which this helper computes. ``cf-turnstile-response`` is sent
-    empty: the widget exists on the page but the backend does not validate
-    the token.
+    ``page`` e 1-based; o backend usa o deslocamento 0-based
+    ``PosicaoPaginaAtual``, calculado aqui. ``cf-turnstile-response`` e
+    ``g-recaptcha-response`` vao vazios: desde o Projudi 3.194.1 (12/11/2026) o
+    servidor valida o token Cloudflare Turnstile em ``g-recaptcha-response`` e,
+    sem ele, devolve o formulario sem resultados e sem erro (ver
+    :data:`AVISO_TURNSTILE`).
     """
     return {
         "PaginaAtual": "2",
@@ -139,6 +149,10 @@ def cjsg_download(
         qtde_itens_pagina=qtde_itens_pagina,
     )
     total = _extract_total(first)
+    if not total and '<div class="search-result">' not in first:
+        # Com o token valido, uma busca sem resultados devolve o mesmo HTML da
+        # busca bloqueada; por isso o aviso sai em toda busca vazia.
+        avisar(AVISO_TURNSTILE)
     n_pags = max(1, math.ceil(total / qtde_itens_pagina)) if total else 1
 
     if paginas is None:

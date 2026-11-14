@@ -25,7 +25,7 @@ def _add_post(expected_body: dict) -> None:
     responses.add(
         responses.POST,
         SEARCH_URL,
-        body=load_sample_bytes("tjgo", "cjsg/no_results.html"),
+        body=load_sample_bytes("tjgo", "cjsg/single_page.html"),
         status=200,
         content_type="text/html; charset=iso-8859-1",
         match=[urlencoded_params_matcher(expected_body, allow_blank=True)],
