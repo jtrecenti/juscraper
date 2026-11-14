@@ -137,6 +137,25 @@ def test_cjsg_single_page(mocker):
 
 
 @responses.activate(registry=OrderedRegistry)
+def test_cjsg_esfera_processual_nao_vira_sigla_de_classe(mocker):
+    """A API não expõe sigla de classe; ``nomeClasseEsferaProcessual`` não a substitui."""
+    mocker.patch("time.sleep")
+    sample_path = "cjsg/class_sigla_unavailable.json"
+    resultados = json.loads(load_sample("tjmt", sample_path))["value"]["resultados"]
+    assert all(r["nomeClasseEsferaProcessual"] for r in resultados)
+
+    _add_config()
+    _add_page("habeas corpus", 1, sample_path, tamanho_pagina=3, tipo_consulta="DecisaoMonocratica")
+
+    df = jus.scraper("tjmt").cjsg(
+        "habeas corpus", paginas=1, tamanho_pagina=3, tipo_consulta="DecisaoMonocratica"
+    )
+
+    assert len(df) == len(resultados)
+    assert df["sigla_classe_feito"].isna().all()
+
+
+@responses.activate(registry=OrderedRegistry)
 def test_cjsg_no_results(mocker):
     """Zero-result query returns an empty DataFrame instead of raising."""
     mocker.patch("time.sleep")
