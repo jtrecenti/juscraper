@@ -92,6 +92,19 @@ class TestCJSGNResults:
         html = load_sample("tjsp", "cjsg/single_result.html")
         assert cjsg_n_results(html) == 1
 
+    def test_ementa_com_resultados_nao_vira_paginacao(self):
+        """Ementa curta com "resultados" na 1a página ("direito", baixar_sg=False, 14/11/2026)."""
+        html = load_sample("tjsp", "cjsg/ementa_com_resultados.html")
+        assert cjsg_n_results(html) == 1178964
+
+    def test_ementa_que_diz_sem_resultados_nao_zera_a_contagem(self):
+        """Os marcadores de busca vazia valem fora das linhas de resultado, não na ementa."""
+        html = load_sample("tjsp", "cjsg/ementa_com_resultados.html").replace(
+            "BONIFICAÇÃO POR RESULTADOS", "PESQUISAS SEM RESULTADOS", 1
+        )
+        assert "PESQUISAS SEM RESULTADOS" in html
+        assert cjsg_n_results(html) == 1178964
+
     def test_single_page_uses_canonical_selector(self):
         """Sample com totalResultado declarado — usa o numero do sample."""
         html = load_sample("tjsp", "cjsg/single_page.html")
