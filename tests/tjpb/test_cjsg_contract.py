@@ -4,6 +4,8 @@ The TJPB Laravel/PJe search requires a GET on the classes API to establish
 the session and receive the ``XSRF-TOKEN`` cookie, which is then sent in
 the header of every search POST. Each contract test mocks the GET and POST(s).
 """
+from typing import Any
+
 import pandas as pd
 import pytest
 import responses
@@ -109,3 +111,10 @@ def test_cjsg_falha_sem_cookie_xsrf(mocker):
         jus.scraper("tjpb").cjsg("dano moral", paginas=1)
 
     assert [call.request.method for call in responses.calls] == ["GET"]
+
+
+def test_build_cjsg_payload_rejeita_chamada_posicional_antiga():
+    """A assinatura antiga ``(token, pesquisa)`` falha alto em vez de montar payload errado."""
+    chamada_antiga: Any = build_cjsg_payload
+    with pytest.raises(TypeError):
+        chamada_antiga("TOKEN", "dano moral")

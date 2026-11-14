@@ -14,7 +14,14 @@ RESULTS_PER_PAGE = 10
 
 
 def fetch_csrf_token(request_fn: RequestFn) -> str:
-    """Fetch the CSRF cookie used by the TJPB search API."""
+    """Obtém o cookie ``XSRF-TOKEN`` exigido pela API de pesquisa do TJPB.
+
+    O GET vai à API de classes, que responde sem o desafio do Cloudflare
+    que hoje bloqueia a home. Ele passa por ``request_fn`` para que os
+    cookies ``XSRF-TOKEN`` e ``laravel_session`` fiquem na sessão
+    compartilhada pelo ``HTTPScraper``; os POSTs seguintes herdam esses
+    cookies e enviam o token decodificado no header ``X-XSRF-TOKEN``.
+    """
     response = request_fn("GET", CLASSES_URL, timeout=30)
     response.raise_for_status()
     token = response.cookies.get("XSRF-TOKEN")
@@ -25,8 +32,8 @@ def fetch_csrf_token(request_fn: RequestFn) -> str:
 
 def build_cjsg_payload(
     pesquisa: str,
-    page: int = 1,
     *,
+    page: int = 1,
     teor: str = "",
     nr_processo: str = "",
     id_classe: str = "",
