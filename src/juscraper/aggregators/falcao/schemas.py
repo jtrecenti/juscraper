@@ -21,7 +21,7 @@ from typing import ClassVar
 
 from pydantic import ConfigDict, field_validator
 
-from ...schemas import OutputCJSGBase, SearchBase
+from ...schemas import OutputCJSGBase, SearchBase, TamanhoPagina
 
 COLECOES: tuple[str, ...] = (
     "acordaos",
@@ -88,7 +88,7 @@ class InputListarDecisoesFalcao(SearchBase):
     BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
 
     colecao: str = "acordaos"
-    tamanho_pagina: int = 10
+    tamanho_pagina: TamanhoPagina = 10
     tribunais: str | list[str] | None = None
     relator: str | list[str] | None = None
     orgao_julgador: str | list[str] | None = None

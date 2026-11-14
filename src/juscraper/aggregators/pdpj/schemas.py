@@ -11,6 +11,8 @@ from __future__ import annotations
 import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...schemas import TamanhoPagina
+
 
 class InputAuthPdpj(BaseModel):
     """Input aceito por :meth:`PdpjScraper.auth`.
@@ -99,7 +101,7 @@ class InputPesquisaPdpj(BaseModel):
     data_primeiro_ajuizamento_fim: str | None = None
     campo_ordenacao: str | None = None
     paginas: int | list[int] | range | None = None
-    itens_por_pagina: int = 100
+    itens_por_pagina: TamanhoPagina = 100
 
     model_config = ConfigDict(
         extra="forbid",

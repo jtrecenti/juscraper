@@ -2,6 +2,7 @@
 import json
 from typing import Any, cast
 
+import numpy as np
 import pytest
 import requests
 from pydantic import ValidationError
@@ -669,5 +670,17 @@ def test_publico_rejeita_paginacao_alem_do_teto_antes_da_rede(kwargs, mocker):
 
     with pytest.raises(ValueError, match="10000"):
         scraper.cjsg("dano moral", **{"paginas": 1, **kwargs})
+
+    request.assert_not_called()
+
+
+@pytest.mark.parametrize("valor", [True, np.True_], ids=["bool", "numpy_bool"])
+def test_publico_rejeita_tamanho_pagina_booleano_antes_da_rede(valor, mocker):
+    """``bool`` herda de ``int``, mas não é tamanho de página (refs #503)."""
+    scraper = TJMTScraper()
+    request = mocker.patch.object(scraper, "_request_with_retry", side_effect=_NoNetwork())
+
+    with pytest.raises(ValidationError, match="não bool"):
+        scraper.cjsg("dano moral", paginas=1, tamanho_pagina=valor)
 
     request.assert_not_called()
