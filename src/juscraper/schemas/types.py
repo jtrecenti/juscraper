@@ -7,8 +7,9 @@ pydantic v2).
 
 Tipos disponiveis:
 
-- :data:`TamanhoPagina` — inteiro positivo que rejeita ``bool`` antes da
-  coercao do pydantic, mantendo a coercao de strings numericas.
+- :data:`TamanhoPagina` — inteiro positivo que rejeita ``bool`` (inclusive
+  ``numpy.bool_``) antes da coercao do pydantic, mantendo a coercao de strings
+  numericas. Limites proprios do endpoint entram como ``Field(...)`` no campo.
 - :data:`IdFiltro` — IDs internos do tribunal que aceitam ``int``, ``str`` ou
   ``list[int | str]``. Coage para ``str | None``, montando CSV quando lista.
   Use em campos cujo backend interpreta CSV (``classeTreeSelection.values``,
@@ -21,6 +22,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
+import numpy as np
 from pydantic import BeforeValidator, Field
 
 
@@ -50,9 +52,13 @@ def _coerce_id_filtro(value):
     )
 
 
-def _reject_bool(value):
-    """Rejeita ``bool`` sem impedir a coercao de strings numericas para int."""
-    if isinstance(value, bool):
+def _reject_bool(value: object) -> object:
+    """Rejeita ``bool`` sem impedir a coercao de strings numericas para int.
+
+    ``numpy.bool_`` nao herda de ``bool``, mas o pydantic o coage para ``int``
+    do mesmo jeito; por isso entra na checagem.
+    """
+    if isinstance(value, (bool, np.bool_)):
         raise ValueError("esperado um inteiro, não bool.")
     return value
 
