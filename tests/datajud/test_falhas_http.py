@@ -280,6 +280,21 @@ def test_timeout_chega_ao_erro_parcial_como_causa():
 
 
 @responses.activate
+@pytest.mark.usefixtures("esperas")
+def test_timeout_de_conexao_nao_leva_a_dica_de_timeout():
+    # ``ConnectTimeout`` herda de ``Timeout`` e de ``ConnectionError``: é falha
+    # de conexão, e reduzir o recorte ou aumentar o timeout de leitura não ajuda.
+    responses.add(responses.POST, URL_TJAC, body=requests.ConnectTimeout("sem rota"))
+    responses.add(responses.POST, URL_TJAC, body=requests.ConnectTimeout("sem rota"))
+
+    with pytest.raises(ColetaParcialError) as exc_info:
+        _scraper().listar_processos(tribunal="TJAC", tamanho_pagina=100)
+
+    assert isinstance(exc_info.value.__cause__, requests.ConnectTimeout)
+    assert str(exc_info.value).endswith("Causa: ConnectTimeout: sem rota.")
+
+
+@responses.activate
 def test_contar_processos_repete_429_passageiro(esperas):
     responses.add(responses.POST, URL_TJAC, json=CORPO_429, status=429)
     responses.add(responses.POST, URL_TJAC, json=_pagina(1, tamanho=0), status=200)

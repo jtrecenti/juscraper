@@ -186,9 +186,7 @@ def _mensagem_falha_parcial(
     """
     inicio = f"DataJud: falha ao consultar alias {alias!r} na página {pagina}."
     if total_info is None:
-        return (
-            f"{inicio} Resultados parciais em erro.resultado: nenhum registro recebido."
-        )
+        return f"{inicio} Resultados parciais em erro.resultado: nenhum registro recebido."
     recebidos_txt = f"{inicio} Resultados parciais em erro.resultado: {recebidos} registro(s) recebido(s)"
     total = total_info.get("value")
     if not isinstance(total, int):
@@ -201,6 +199,11 @@ FALHAS_DE_TRANSPORTE: tuple[type[Exception], ...] = (requests.RequestException, 
 """Exceções de :func:`call_datajud_api` que viram falha da consulta, e não erro de programação."""
 
 
+def _e_timeout_de_leitura(exc: Exception) -> bool:
+    """``Timeout`` que não é de conexão: ``ConnectTimeout`` também herda de ``ConnectionError``."""
+    return isinstance(exc, requests.Timeout) and not isinstance(exc, requests.ConnectionError)
+
+
 def _descrever_causa(exc: Exception) -> str:
     """Resume a falha de transporte para a mensagem do erro, com o status HTTP quando houver."""
     if isinstance(exc, RetryExhaustedError):
@@ -208,7 +211,7 @@ def _descrever_causa(exc: Exception) -> str:
     status = getattr(getattr(exc, "response", None), "status_code", None)
     if isinstance(exc, requests.HTTPError) and status is not None:
         return f"HTTP {status}"
-    if isinstance(exc, requests.Timeout):
+    if _e_timeout_de_leitura(exc):
         return "timeout"
     return f"{type(exc).__name__}: {exc}"
 
@@ -221,7 +224,7 @@ DICA_TIMEOUT = (
 
 def _sufixo_causa(exc: Exception) -> str:
     """Fecha a mensagem da falha de transporte com a causa e, no timeout, o que ajustar."""
-    dica = DICA_TIMEOUT if isinstance(exc, requests.Timeout) else ""
+    dica = DICA_TIMEOUT if _e_timeout_de_leitura(exc) else ""
     return f" Causa: {_descrever_causa(exc)}.{dica}"
 
 
