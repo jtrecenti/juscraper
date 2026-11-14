@@ -32,9 +32,23 @@ _TENTATIVAS = 5
 _AVISO_CONSULTAS_SIMULTANEAS = "multiplas consultas simult"
 
 
-def _consulta_bloqueada(texto):
-    """Indica se a busca voltou com o aviso de consultas simultâneas."""
-    return _AVISO_CONSULTAS_SIMULTANEAS in texto.lower()
+class _ConsultaBloqueadaError(RuntimeError):
+    """A busca voltou com o aviso de consultas simultâneas do e-SAJ."""
+
+
+def _verificar_bloqueio(texto):
+    """Levanta :class:`_ConsultaBloqueadaError` se a busca voltou com o aviso de consultas simultâneas."""
+    # Sem esta checagem, a página de aviso (que não tem links) faria o
+    # processo parecer inexistente.
+    if _AVISO_CONSULTAS_SIMULTANEAS in texto.lower():
+        raise _ConsultaBloqueadaError(
+            "e-SAJ bloqueou a busca por consultas simultâneas; aumente o sleep_time."
+        )
+
+
+def listagem_de_processos(soup):
+    """Contêiner da busca que lista processos; ``None`` quando a busca já é a página do processo."""
+    return soup.find('div', {'id': 'listagemDeProcessos'})
 
 
 # A página do processo traz o bloco de movimentações vazio e um botão "Exibir
@@ -213,24 +227,11 @@ def cpopg_download_html_single(
         'dadosConsulta.valorConsulta': '',
         'dadosConsulta.tipoNuProcesso': 'UNIFICADO'
     }
-    bloqueada = False
-    ultimo_erro = None
+    ultimo_erro: Exception | None = None
     for tentativa in range(_TENTATIVAS):
         try:
             r = session.get(u, params=parms)
-            bloqueada = _consulta_bloqueada(r.text)
-            if bloqueada:
-                # Sem esta checagem, a página de aviso (que não tem links)
-                # faria o processo parecer inexistente.
-                espera = max(sleep_time, 1) * 2 ** tentativa
-                logger.warning(
-                    "e-SAJ bloqueou a busca do processo %s por consultas "
-                    "simultâneas. Tentando novamente em %.1f segundos.",
-                    id_cnj,
-                    espera,
-                )
-                time.sleep(espera)
-                continue
+            _verificar_bloqueio(r.text)
             if get_links_callback is None:
                 raise RuntimeError(
                     "get_links_callback precisa ser"
@@ -248,6 +249,9 @@ def cpopg_download_html_single(
             # nova tentativa; sai antes do except genérico, que capturaria o
             # ValueError e repetiria a busca quatro vezes à toa.
             raise
+        except _ConsultaBloqueadaError as e:
+            ultimo_erro = e
+            _esperar_desbloqueio(tentativa, sleep_time, id_clean)
         except (OSError, UnicodeDecodeError, ValueError,
                 AttributeError, requests.RequestException) as e:
             ultimo_erro = e
@@ -260,15 +264,24 @@ def cpopg_download_html_single(
             )
             time.sleep(sleep_time)
     else:
-        if bloqueada:
-            raise RuntimeError(
-                f"e-SAJ manteve o bloqueio por consultas simultâneas para o "
-                f"processo {id_clean}; aumente o sleep_time."
-            )
         raise RuntimeError(
             f"Processo {id_clean}: {_TENTATIVAS} tentativas sem sucesso; último erro: {ultimo_erro}"
         ) from ultimo_erro
     return path
+
+
+def _esperar_desbloqueio(tentativa, sleep_time, id_clean):
+    """Recuo exponencial (piso de 1 s) antes de repetir a busca bloqueada; nenhum depois da última."""
+    if tentativa == _TENTATIVAS - 1:
+        return
+    espera = max(sleep_time, 1) * 2 ** tentativa
+    logger.warning(
+        "e-SAJ bloqueou a busca do processo %s por consultas simultâneas. "
+        "Tentando novamente em %.1f segundos.",
+        id_clean,
+        espera,
+    )
+    time.sleep(espera)
 
 
 def _ja_baixado(path, baixar_movimentacoes, download_pecas):
@@ -315,15 +328,16 @@ def _salvar_resultados_html(
         logger.error("Nenhum link encontrado para o processo %s.", id_limpo)
         raise RuntimeError(f"Nenhum link encontrado para o processo {id_limpo}.")
     documentos = {}
-    if len(links) == 1:
+    # Uma lista com um único processo (e o colapso "Incidentes e recursos")
+    # não é a página dele: o show.do ainda precisa ser pedido.
+    if len(links) == 1 and listagem_de_processos(BeautifulSoup(resposta.text, 'html.parser')) is None:
         documentos[codigos_processo[0]] = _completar_documento(
             resposta.text, sessao, url_base, codigos_processo[0], caminho, id_limpo,
             baixar_movimentacoes=baixar_movimentacoes, pecas=pecas,
         )
     else:
         for indice, link in enumerate(links):
-            # A base termina em barra e o href começa com barra; concatenar
-            # gera "//cpopg/show.do", que o e-SAJ responde com 404.
+            # urljoin junta base e href com barra simples; "//cpopg/show.do" dá 404.
             resposta_documento = sessao.get(urljoin(url_base, link))
             if resposta_documento.status_code != 200:
                 raise requests.HTTPError(

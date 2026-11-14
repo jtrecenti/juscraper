@@ -116,9 +116,29 @@ def test_bloqueio_persistente_levanta_erro(tmp_path, contexto):
     with pytest.raises(RuntimeError, match="consultas simultâneas"):
         cpopg_download_html_single(CNJ, sessao, BASE, str(tmp_path), 0.2, extrair)
     assert sessao.get.call_count == 5
-    assert pausa.call_args_list == [call(0.2), call(1), call(2), call(4), call(8), call(16)]
+    # Sem espera depois da última tentativa: nada viria depois dela.
+    assert pausa.call_args_list == [call(0.2), call(1), call(2), call(4), call(8)]
     extrair.assert_not_called()
     assert list(diretorio.iterdir()) == []
+
+
+def test_excecao_depois_de_bloqueio_prevalece_no_erro_final(tmp_path, contexto):
+    sessao, _, extrair, _, _ = contexto
+    bloqueio = Mock(text="Foram identificadas multiplas consultas simultâneas.", status_code=200)
+    sessao.get.side_effect = [bloqueio] * 4 + [requests.ConnectionError("rede")]
+    with pytest.raises(RuntimeError, match="último erro: rede") as erro:
+        cpopg_download_html_single(CNJ, sessao, BASE, str(tmp_path), 0.2, extrair)
+    assert isinstance(erro.value.__cause__, requests.ConnectionError)
+
+
+def test_lista_com_um_processo_baixa_o_show_do(tmp_path, contexto):
+    """Listagem com um processo e o colapso de incidentes: a busca não é a página do processo."""
+    sessao, resposta, extrair, _, diretorio = contexto
+    resposta.text = '<div id="listagemDeProcessos"><a href="#">Incidentes e recursos</a></div>'
+    sessao.get.side_effect = [resposta, Mock(text="Processo", status_code=200)]
+    cpopg_download_html_single(CNJ, sessao, BASE, str(tmp_path), 0, extrair)
+    assert sessao.get.call_args_list[1:] == [call(URLS_DOCUMENTOS[0])]
+    assert (diretorio / f"{CNJ_LIMPO}_PRIMEIRO.html").read_text(encoding="utf-8") == "Processo"
 
 
 @pytest.mark.parametrize("erro", [

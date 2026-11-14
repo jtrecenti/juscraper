@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 from ...core.avisos import avisar
 from .._esaj.pasta import documento_vinculado
-from .cpopg_download import caminho_do_documento
+from .cpopg_download import caminho_do_documento, listagem_de_processos
 
 # Mapping from normalized dt/dd labels to canonical dados keys
 _CANONICAL_KEYS = {
@@ -384,7 +384,7 @@ def get_cpopg_download_links(request):
     """Return the download links for the listed processes."""
     text = request.text
     bsoup = BeautifulSoup(text, 'html.parser')
-    lista = bsoup.find('div', {'id': 'listagemDeProcessos'})
+    lista = listagem_de_processos(bsoup)
     links: list = []
     if lista is None:
         id_tag = bsoup.find('form', {'id': 'popupSenha'})
