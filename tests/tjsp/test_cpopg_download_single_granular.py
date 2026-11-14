@@ -6,6 +6,7 @@ import pytest
 import requests
 
 from juscraper.courts.tjsp.cpopg_download import cpopg_download_html_single
+from tests._helpers import load_sample
 
 CNJ = "1000000-00.2024.8.26.0001"
 CNJ_LIMPO = "10000000020248260001"
@@ -14,10 +15,10 @@ LINKS = [
     "/cpopg/show.do?localPesquisa.cdLocal=346&processo.codigo=PRIMEIRO&processo.foro=346",
     "/cpopg/show.do?localPesquisa.cdLocal=346&processo.codigo=SEGUNDO&processo.foro=346",
 ]
-# A barra dupla é o comportamento atual: a base termina em barra e o href começa com barra.
+# A base termina em barra e o href começa com barra; a URL final tem barra simples.
 URLS_DOCUMENTOS = [
-    "https://esaj.tjsp.jus.br//cpopg/show.do?localPesquisa.cdLocal=346&processo.codigo=PRIMEIRO&processo.foro=346",
-    "https://esaj.tjsp.jus.br//cpopg/show.do?localPesquisa.cdLocal=346&processo.codigo=SEGUNDO&processo.foro=346",
+    "https://esaj.tjsp.jus.br/cpopg/show.do?localPesquisa.cdLocal=346&processo.codigo=PRIMEIRO&processo.foro=346",
+    "https://esaj.tjsp.jus.br/cpopg/show.do?localPesquisa.cdLocal=346&processo.codigo=SEGUNDO&processo.foro=346",
 ]
 
 
@@ -96,6 +97,48 @@ def test_callback_ausente_falha_depois_da_requisicao(tmp_path, contexto):
         cpopg_download_html_single(CNJ, sessao, BASE, str(tmp_path), 0.2)
     assert sessao.get.call_count == 1
     pausa.assert_called_once_with(0.2)
+
+
+def test_bloqueio_por_consultas_simultaneas_espera_e_repete_busca(tmp_path, contexto):
+    sessao, resposta, extrair, pausa, diretorio = contexto
+    bloqueio = Mock(text=load_sample("tjsp", "cpopg/search_consultas_simultaneas.html"), status_code=200)
+    sessao.get.side_effect = [bloqueio, bloqueio, resposta]
+    cpopg_download_html_single(CNJ, sessao, BASE, str(tmp_path), 0.2, extrair)
+    # Recuo progressivo com piso de 1 segundo; o callback só vê a busca boa.
+    assert pausa.call_args_list == [call(0.2), call(1), call(2)]
+    extrair.assert_called_once_with(resposta)
+    assert (diretorio / f"{CNJ_LIMPO}_PRIMEIRO.html").read_text(encoding="utf-8") == resposta.text
+
+
+def test_bloqueio_persistente_levanta_erro(tmp_path, contexto):
+    sessao, _, extrair, pausa, diretorio = contexto
+    sessao.get.return_value = Mock(text="Foram identificadas multiplas consultas simultâneas.", status_code=200)
+    with pytest.raises(RuntimeError, match="consultas simultâneas"):
+        cpopg_download_html_single(CNJ, sessao, BASE, str(tmp_path), 0.2, extrair)
+    assert sessao.get.call_count == 5
+    # Sem espera depois da última tentativa: nada viria depois dela.
+    assert pausa.call_args_list == [call(0.2), call(1), call(2), call(4), call(8)]
+    extrair.assert_not_called()
+    assert list(diretorio.iterdir()) == []
+
+
+def test_excecao_depois_de_bloqueio_prevalece_no_erro_final(tmp_path, contexto):
+    sessao, _, extrair, _, _ = contexto
+    bloqueio = Mock(text="Foram identificadas multiplas consultas simultâneas.", status_code=200)
+    sessao.get.side_effect = [bloqueio] * 4 + [requests.ConnectionError("rede")]
+    with pytest.raises(RuntimeError, match="último erro: rede") as erro:
+        cpopg_download_html_single(CNJ, sessao, BASE, str(tmp_path), 0.2, extrair)
+    assert isinstance(erro.value.__cause__, requests.ConnectionError)
+
+
+def test_lista_com_um_processo_baixa_o_show_do(tmp_path, contexto):
+    """Listagem com um processo e o colapso de incidentes: a busca não é a página do processo."""
+    sessao, resposta, extrair, _, diretorio = contexto
+    resposta.text = '<div id="listagemDeProcessos"><a href="#">Incidentes e recursos</a></div>'
+    sessao.get.side_effect = [resposta, Mock(text="Processo", status_code=200)]
+    cpopg_download_html_single(CNJ, sessao, BASE, str(tmp_path), 0, extrair)
+    assert sessao.get.call_args_list[1:] == [call(URLS_DOCUMENTOS[0])]
+    assert (diretorio / f"{CNJ_LIMPO}_PRIMEIRO.html").read_text(encoding="utf-8") == "Processo"
 
 
 @pytest.mark.parametrize("erro", [

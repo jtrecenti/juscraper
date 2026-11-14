@@ -6,7 +6,7 @@ import re
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, urljoin, urlparse
 
 import requests
 from bs4 import BeautifulSoup
@@ -25,6 +25,30 @@ class _InvalidProcessCodeError(ValueError):
 
 
 _TENTATIVAS = 5
+
+
+# Aviso que o e-SAJ devolve, no lugar do resultado, quando recebe buscas em
+# sequência rápida na mesma sessão. O bloqueio passa em alguns segundos.
+_AVISO_CONSULTAS_SIMULTANEAS = "multiplas consultas simult"
+
+
+class _ConsultaBloqueadaError(RuntimeError):
+    """A busca voltou com o aviso de consultas simultâneas do e-SAJ."""
+
+
+def _verificar_bloqueio(texto):
+    """Levanta :class:`_ConsultaBloqueadaError` se a busca voltou com o aviso de consultas simultâneas."""
+    # Sem esta checagem, a página de aviso (que não tem links) faria o
+    # processo parecer inexistente.
+    if _AVISO_CONSULTAS_SIMULTANEAS in texto.lower():
+        raise _ConsultaBloqueadaError(
+            "e-SAJ bloqueou a busca por consultas simultâneas; aumente o sleep_time."
+        )
+
+
+def listagem_de_processos(soup):
+    """Contêiner da busca que lista processos; ``None`` quando a busca já é a página do processo."""
+    return soup.find('div', {'id': 'listagemDeProcessos'})
 
 
 # A página do processo traz o bloco de movimentações vazio e um botão "Exibir
@@ -187,13 +211,7 @@ def cpopg_download_html_single(
     logger.info("Salvando em %s", path)
     if not Path(path).is_dir():
         Path(path).mkdir(parents=True)
-    # Os documentos de um processo são gravados juntos no fim
-    # (_salvar_resultados_html), então um .html na pasta indica o processo
-    # inteiro. O de 0 byte vem de versão que gravava antes de ler a resposta.
-    salvos = [
-        file for file in Path(path).iterdir() if file.name.endswith('.html') and file.stat().st_size > 0
-    ]
-    if salvos and not _incompleto(salvos, baixar_movimentacoes, pecas is not None):
+    if _ja_baixado(path, baixar_movimentacoes, pecas is not None):
         logger.info("O processo %s ja foi baixado.", id_clean)
         return path
     time.sleep(sleep_time)
@@ -209,10 +227,11 @@ def cpopg_download_html_single(
         'dadosConsulta.valorConsulta': '',
         'dadosConsulta.tipoNuProcesso': 'UNIFICADO'
     }
-    ultimo_erro = None
-    for _ in range(_TENTATIVAS):
+    ultimo_erro: Exception | None = None
+    for tentativa in range(_TENTATIVAS):
         try:
             r = session.get(u, params=parms)
+            _verificar_bloqueio(r.text)
             if get_links_callback is None:
                 raise RuntimeError(
                     "get_links_callback precisa ser"
@@ -230,6 +249,9 @@ def cpopg_download_html_single(
             # nova tentativa; sai antes do except genérico, que capturaria o
             # ValueError e repetiria a busca quatro vezes à toa.
             raise
+        except _ConsultaBloqueadaError as e:
+            ultimo_erro = e
+            _esperar_desbloqueio(tentativa, sleep_time, id_clean)
         except (OSError, UnicodeDecodeError, ValueError,
                 AttributeError, requests.RequestException) as e:
             ultimo_erro = e
@@ -246,6 +268,31 @@ def cpopg_download_html_single(
             f"Processo {id_clean}: {_TENTATIVAS} tentativas sem sucesso; último erro: {ultimo_erro}"
         ) from ultimo_erro
     return path
+
+
+def _esperar_desbloqueio(tentativa, sleep_time, id_clean):
+    """Recuo exponencial (piso de 1 s) antes de repetir a busca bloqueada; nenhum depois da última."""
+    if tentativa == _TENTATIVAS - 1:
+        return
+    espera = max(sleep_time, 1) * 2 ** tentativa
+    logger.warning(
+        "e-SAJ bloqueou a busca do processo %s por consultas simultâneas. "
+        "Tentando novamente em %.1f segundos.",
+        id_clean,
+        espera,
+    )
+    time.sleep(espera)
+
+
+def _ja_baixado(path, baixar_movimentacoes, download_pecas):
+    """Indica se a pasta do processo já tem o download completo; ver :func:`_incompleto`."""
+    # Os documentos de um processo são gravados juntos no fim
+    # (_salvar_resultados_html), então um .html na pasta indica o processo
+    # inteiro. O de 0 byte vem de versão que gravava antes de ler a resposta.
+    salvos = [
+        file for file in Path(path).iterdir() if file.name.endswith('.html') and file.stat().st_size > 0
+    ]
+    return bool(salvos) and not _incompleto(salvos, baixar_movimentacoes, download_pecas)
 
 
 def _extrair_codigos_processo(links):
@@ -281,14 +328,17 @@ def _salvar_resultados_html(
         logger.error("Nenhum link encontrado para o processo %s.", id_limpo)
         raise RuntimeError(f"Nenhum link encontrado para o processo {id_limpo}.")
     documentos = {}
-    if len(links) == 1:
+    # Uma lista com um único processo (e o colapso "Incidentes e recursos")
+    # não é a página dele: o show.do ainda precisa ser pedido.
+    if len(links) == 1 and listagem_de_processos(BeautifulSoup(resposta.text, 'html.parser')) is None:
         documentos[codigos_processo[0]] = _completar_documento(
             resposta.text, sessao, url_base, codigos_processo[0], caminho, id_limpo,
             baixar_movimentacoes=baixar_movimentacoes, pecas=pecas,
         )
     else:
         for indice, link in enumerate(links):
-            resposta_documento = sessao.get(f"{url_base}{link}")
+            # urljoin junta base e href com barra simples; "//cpopg/show.do" dá 404.
+            resposta_documento = sessao.get(urljoin(url_base, link))
             if resposta_documento.status_code != 200:
                 raise requests.HTTPError(
                     f"A consulta ao site falhou."
