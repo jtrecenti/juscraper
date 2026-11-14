@@ -177,7 +177,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h1>courts.tjgo.client.TJGOScraper</h1>
 <div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>courts.tjgo.client.TJGOScraper(sleep_time<span class="op">=</span><span class="fl">1.0</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Scraper for the Court of Justice of Goiás.</p>
-<p>The TJGO jurisprudence search (Projudi) renders a Cloudflare Turnstile widget, but the backend does not validate the token — the flow works with pure HTTP requests.</p>
+<p>A busca de jurisprudencia do TJGO (Projudi) tem um widget Cloudflare Turnstile. Desde 12/11/2026 (Projudi 3.194.1) o servidor valida o token, que o raspador nao envia: toda busca volta vazia, e <code>cjsg</code>/<code>cjsg_download</code> emitem <code>UserWarning</code> explicando o bloqueio.</p>
 <section id="methods" class="level2">
 <h2 class="anchored" data-anchor-id="methods">Methods</h2>
 <table class="caption-top table">
