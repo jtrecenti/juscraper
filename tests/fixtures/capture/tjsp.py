@@ -71,6 +71,10 @@ def capture_cjsg() -> None:
         build_session(headers=TJSP_CHROME_HEADERS), ESAJ_BASE, "direito",
         body_builder=lambda pesquisa, **kw: make_tjsp_cjsg_body(pesquisa, baixar_sg=False, **kw),
     )
+    if "BONIFICAÇÃO POR RESULTADOS" not in resps[0].text:
+        # Sem a ementa, o sample deixaria de exercitar a regressão.
+        print("[tjsp] cjsg ementa_com_resultados: a 1a página mudou; sample mantido")
+        return
     dump(samples_dir_for("tjsp", "cjsg") / "ementa_com_resultados.html", resps[0].content)
     print("[tjsp] cjsg ementa_com_resultados ('direito', baixar_sg=False) → saved")
 
