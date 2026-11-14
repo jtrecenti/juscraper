@@ -1,6 +1,8 @@
 """
 Functions for parsing specific to TJPR
 """
+from collections.abc import Callable
+
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
@@ -10,7 +12,7 @@ from juscraper.core.exceptions import RetryExhaustedError
 from juscraper.core.http import RequestFn
 from juscraper.core.parse_utils import coerce_date_columns
 
-from .download import get_ementa_completa
+from .download import get_ementa_completa, get_ementa_completa_cidh
 
 
 def _extract_processo(dados_td: Tag) -> str:
@@ -51,8 +53,7 @@ def _extract_ementa(
     id_registro: str,
     criterio: str | None,
     request_fn: RequestFn | None,
-    *,
-    corte_idh: bool = False,
+    buscar_completa: Callable[[RequestFn, str, str], str] = get_ementa_completa,
 ) -> str:
     ementa = str(ementa_el.get_text("\n", strip=True))
     if "leia mais" not in ementa.lower():
@@ -61,7 +62,7 @@ def _extract_ementa(
         return ementa
 
     try:
-        return get_ementa_completa(request_fn, id_registro, criterio, corte_idh=corte_idh)
+        return buscar_completa(request_fn, id_registro, criterio)
     except (requests.RequestException, RetryExhaustedError) as error:
         # A falha de uma ementa completa não invalida os demais resultados da página.
         return f"{ementa}\n[Erro ao buscar ementa completa: {error}]"
@@ -73,19 +74,17 @@ def _input_value(td: Tag, name: str) -> str:
 
 
 def _parse_row_corte_idh(
+    id_caso: str,
     dados_td: Tag,
     ementa_td: Tag,
     criterio: str | None,
     request_fn: RequestFn | None,
 ) -> dict[str, str | None]:
-    """Linha de precedente da Corte IDH: só nome do caso, data e ementa.
+    """Linha da Corte IDH: sem processo, órgão nem relator, que o portal não tem.
 
-    O portal não traz processo, órgão julgador nem relator para esses casos;
-    as colunas ficam ``None``. As chaves seguem a ordem da linha do TJ, para
-    que a ordem das colunas não dependa da fonte da primeira linha. A ementa sai do ``div#ementa<id>``, sem a nota
-    "A expressão foi encontrada..." nem a autoria da ementa.
+    Chaves na ordem da linha do TJ. A ementa sai do ``div#ementa<id>``, sem a
+    nota "A expressão foi encontrada..." nem a autoria da ementa.
     """
-    id_caso = _input_value(dados_td, "idsSelecionadosCidh")
     caso_a = dados_td.find("a", class_="cidh-text")
     caso = caso_a.get_text(strip=True).removeprefix("Caso:").strip() if caso_a else ""
     ementa_el = ementa_td.find("div", id=f"ementa{id_caso}") or ementa_td
@@ -94,7 +93,7 @@ def _parse_row_corte_idh(
         "orgao_julgador": None,
         "relator": None,
         "data_julgamento": _extract_labeled_value(dados_td, "Data Julgamento:"),
-        "ementa": _extract_ementa(ementa_el, id_caso, criterio, request_fn, corte_idh=True),
+        "ementa": _extract_ementa(ementa_el, id_caso, criterio, request_fn, get_ementa_completa_cidh),
         "fonte": "Corte IDH",
         "caso": caso,
     }
@@ -109,7 +108,7 @@ def _parse_row(
 ) -> dict[str, str | None] | None:
     # O portal mistura precedentes da Corte IDH na tabela de jurisprudência
     # (ver a divisão das 50 linhas em ``download.py``).
-    corte_idh = row.find("input", {"name": "idsSelecionadosCidh"}) is not None
+    corte_idh = row.find("input", {"name": "idsSelecionadosCidh"})
     if corte_idh and not incluir_corte_idh:
         return None
 
@@ -119,7 +118,8 @@ def _parse_row(
 
     dados_td, ementa_td = cols[:2]
     if corte_idh:
-        return _parse_row_corte_idh(dados_td, ementa_td, criterio, request_fn)
+        id_caso = str(corte_idh.get("value", ""))
+        return _parse_row_corte_idh(id_caso, dados_td, ementa_td, criterio, request_fn)
 
     resultado: dict[str, str | None] = {
         "processo": _extract_processo(dados_td),
@@ -151,9 +151,7 @@ def cjsg_parse(
     with "Leia mais...". Without it the ementa stays truncated — useful for
     offline parsing of pre-downloaded pages.
 
-    Por padrão, as linhas da Corte IDH ficam de fora. Com
-    ``incluir_corte_idh=True`` elas entram, e o DataFrame ganha as colunas
-    ``fonte`` ("TJPR" ou "Corte IDH") e ``caso`` (nome do caso da Corte IDH).
+    ``incluir_corte_idh``: ver :meth:`TJPRScraper.cjsg`.
     """
     resultados = []
     for html in htmls:

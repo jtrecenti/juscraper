@@ -17,9 +17,9 @@ from bs4 import BeautifulSoup
 from responses.matchers import urlencoded_params_matcher
 
 import juscraper as jus
-from juscraper.courts.tjpr.download import VISUALIZAR_URL, build_cjsg_form_body, get_ementa_completa
+from juscraper.courts.tjpr.download import VISUALIZAR_URL, get_ementa_completa_cidh
 from tests._helpers import load_sample, query_param_subset_matcher
-from tests.tjpr._helpers import SEARCH_URL, add_home
+from tests.tjpr._helpers import add_ementa_completa, add_home, add_search_page
 
 COLUNAS_TJ = ["processo", "orgao_julgador", "relator", "data_julgamento", "ementa"]
 COLUNAS_COM_CORTE_IDH = [*COLUNAS_TJ, "fonte", "caso"]
@@ -31,29 +31,8 @@ IDS_CORTE_IDH_TRUNCADOS = {
 }
 
 
-def _add_search_page(pesquisa: str, pagina: int, sample_path: str) -> None:
-    responses.add(
-        responses.POST,
-        SEARCH_URL,
-        body=load_sample("tjpr", sample_path),
-        status=200,
-        content_type="text/html; charset=UTF-8",
-        match=[
-            query_param_subset_matcher({"actionType": "pesquisar"}),
-            urlencoded_params_matcher(build_cjsg_form_body(pesquisa, page=pagina), allow_blank=True),
-        ],
-    )
-
-
 def _add_ementas_completas() -> None:
-    responses.add(
-        responses.GET,
-        SEARCH_URL,
-        body=load_sample("tjpr", "cjsg/ementa_completa.html"),
-        status=200,
-        content_type="text/html; charset=UTF-8",
-        match=[query_param_subset_matcher({"actionType": "exibirTextoCompleto"})],
-    )
+    add_ementa_completa()
     # Resposta real do caso 120 (Comunidades Quilombolas de Alcântara),
     # reaproveitada para todos os ids.
     responses.add(
@@ -78,8 +57,8 @@ def _ids_corte_idh_buscados() -> list[str]:
 def test_cjsg_incluir_corte_idh_mantem_as_linhas_marcadas(mocker):
     mocker.patch("time.sleep")
     add_home()
-    _add_search_page("dano moral", 1, "cjsg/results_normal_page_01.html")
-    _add_search_page("dano moral", 2, "cjsg/results_normal_page_02.html")
+    add_search_page("dano moral", 1, "cjsg/results_normal_page_01.html")
+    add_search_page("dano moral", 2, "cjsg/results_normal_page_02.html")
     _add_ementas_completas()
 
     df = jus.scraper("tjpr").cjsg("dano moral", paginas=range(1, 3), incluir_corte_idh=True)
@@ -112,7 +91,7 @@ def test_cjsg_incluir_corte_idh_mantem_as_linhas_marcadas(mocker):
 def test_cjsg_sem_incluir_corte_idh_mantem_o_contrato_anterior(mocker):
     mocker.patch("time.sleep")
     add_home()
-    _add_search_page("quilombola", 1, "cjsg/single_page.html")
+    add_search_page("quilombola", 1, "cjsg/single_page.html")
     _add_ementas_completas()
 
     df = jus.scraper("tjpr").cjsg("quilombola", paginas=1)
@@ -153,10 +132,10 @@ def test_cjsg_parse_ordem_das_colunas_nao_depende_da_primeira_linha():
     assert df["fonte"].tolist() == ["Corte IDH"] + ["TJPR"] * 5
 
 
-def test_get_ementa_completa_corte_idh_codifica_o_criterio(mocker):
+def test_get_ementa_completa_cidh_codifica_o_criterio(mocker):
     request_fn = mocker.Mock(return_value=SimpleNamespace(text="Texto <span class='high'>a</span>b."))
 
-    texto = get_ementa_completa(request_fn, "120", "dano & moral", corte_idh=True)
+    texto = get_ementa_completa_cidh(request_fn, "120", "dano & moral")
 
     assert texto == "Texto ab."
     assert request_fn.call_args.args == ("GET", VISUALIZAR_URL)

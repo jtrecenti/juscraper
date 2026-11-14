@@ -26,12 +26,8 @@ class InputCJSGTJPR(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     e datas — os demais filtros do portal sao parametros internos do
     fluxo JSP (session, jsessionid, etc.), nao parte da API publica.
 
-    ``incluir_corte_idh`` vale so para ``cjsg``: nao muda a requisicao (o
-    portal sempre devolve os precedentes da Corte IDH, e o parser os descarta
-    por padrao), e ``cjsg_download`` o recusa com ``TypeError``. ``cjsg`` o
-    valida antes da rede e o repassa ao parser; ``StrictBool`` registra esse
-    contrato, porque a coercao do pydantic (``"false"`` -> ``False``)
-    divergiria da verdade do Python que o parser usa.
+    ``incluir_corte_idh`` so vale para ``cjsg``: nao entra na requisicao, e
+    ``cjsg_download`` o recusa (ver ``client._validar_incluir_corte_idh``).
     """
 
     incluir_corte_idh: StrictBool = False
@@ -43,9 +39,8 @@ class OutputCJSGTJPR(OutputCJSGBase, OutputRelatoriaMixin):
     Reflete ``tjpr.parse.cjsg_parse`` — parser HTML do portal do TJPR.
     ``data_publicacao`` nao e extraida (apenas ``data_julgamento``).
 
-    ``fonte`` ("TJPR" ou "Corte IDH") e ``caso`` (nome do caso da Corte IDH)
-    so aparecem com ``incluir_corte_idh=True``. Nas linhas da Corte IDH,
-    ``processo``, ``orgao_julgador`` e ``relator`` ficam vazios.
+    ``fonte`` e ``caso`` so aparecem com ``incluir_corte_idh=True``; ver
+    :meth:`TJPRScraper.cjsg`.
     """
 
     # Opcional so por causa das linhas da Corte IDH, que nao tem processo.

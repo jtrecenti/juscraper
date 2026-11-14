@@ -31,8 +31,7 @@ VISUALIZAR_URL = "https://portal.tjpr.jus.br/jurisprudencia/publico/visualizarDe
 # e Corte IDH 101 a 107, página 12 com TJ 444 a 493, página 8240 com só o
 # último registro e página 8241 vazia. Se o portal mudar essa divisão, o
 # sintoma é a última página calculada vir cheia. Por padrão o parser descarta
-# as linhas da Corte IDH (``parse._parse_row``), e a página rende menos de 50;
-# com ``incluir_corte_idh=True`` elas voltam, marcadas na coluna ``fonte``.
+# as linhas da Corte IDH (``parse._parse_row``), então a página rende menos de 50.
 RESULTS_PER_PAGE = 50
 
 _PAGE_NUMBER_RE = re.compile(r"\['pageNumber'\]\.value='([^']*)'")
@@ -62,47 +61,43 @@ def populate_session(request_fn: RequestFn, home_url: str) -> None:
     request_fn("GET", home_url)
 
 
-def get_ementa_completa(
-    request_fn: RequestFn,
-    id_processo: str,
-    criterio: str,
-    *,
-    corte_idh: bool = False,
-) -> str:
-    """Fetch the full minute (``actionType=exibirTextoCompleto``) for one decision.
+# Cabeçalhos do XHR do portal (``x-prototype-version``, ``x-requested-with``).
+# ``JSESSIONID`` vai no cookie jar preenchido por :func:`populate_session`.
+_XHR_HEADERS = {
+    'accept': 'text/javascript, text/html, application/xml, text/xml, */*',
+    'accept-language': 'pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
+    'cache-control': 'no-cache',
+    'pragma': 'no-cache',
+    'referer': f"{SEARCH_URL}?actionType=pesquisar",
+    'x-prototype-version': '1.5.1.1',
+    'x-requested-with': 'XMLHttpRequest',
+}
 
-    Headers replicate the portal's XHR (``x-prototype-version``,
-    ``x-requested-with``). ``JSESSIONID`` rides on the session cookie jar
-    populated by :func:`populate_session`.
 
-    Com ``corte_idh=True``, ``id_processo`` é o id do caso da Corte IDH e o
-    texto vem de ``actionType=exibirTextoCompletoCidh`` em
-    :data:`VISUALIZAR_URL`, como no portal.
-    """
-    if corte_idh:
-        url, action_type = VISUALIZAR_URL, "exibirTextoCompletoCidh"
-    else:
-        url, action_type = SEARCH_URL, "exibirTextoCompleto"
+def _get_texto_completo(
+    request_fn: RequestFn, url: str, action_type: str, id_registro: str, criterio: str
+) -> BeautifulSoup:
     # ``params`` codifica o termo: "&" ou "#" num f-string cortariam o ``criterio``.
-    params = {"actionType": action_type, "idProcesso": id_processo, "criterio": criterio}
-    headers = {
-        'accept': 'text/javascript, text/html, application/xml, text/xml, */*',
-        'accept-language': 'pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
-        'cache-control': 'no-cache',
-        'pragma': 'no-cache',
-        'referer': f"{SEARCH_URL}?actionType=pesquisar",
-        'x-prototype-version': '1.5.1.1',
-        'x-requested-with': 'XMLHttpRequest',
-    }
-    resp = request_fn("GET", url, params=params, headers=headers)
-    soup = BeautifulSoup(resp.text, 'html.parser')
-    if corte_idh:
-        # A resposta é texto puro com o termo buscado em ``<span class='high'>``,
-        # às vezes no meio da palavra ("<span>quilombola</span>s"). Um separador
-        # partiria a palavra em duas linhas.
-        return str(soup.get_text()).strip()
-    text: str = soup.get_text("\n", strip=True)
-    return text
+    params = {"actionType": action_type, "idProcesso": id_registro, "criterio": criterio}
+    resp = request_fn("GET", url, params=params, headers=_XHR_HEADERS)
+    return BeautifulSoup(resp.text, 'html.parser')
+
+
+def get_ementa_completa(request_fn: RequestFn, id_processo: str, criterio: str) -> str:
+    """Fetch the full minute (``actionType=exibirTextoCompleto``) for one decision."""
+    soup = _get_texto_completo(request_fn, SEARCH_URL, "exibirTextoCompleto", id_processo, criterio)
+    return str(soup.get_text("\n", strip=True))
+
+
+def get_ementa_completa_cidh(request_fn: RequestFn, id_caso: str, criterio: str) -> str:
+    """Busca a ementa completa de um caso da Corte IDH (``exibirTextoCompletoCidh``).
+
+    A resposta é texto puro com o termo buscado em ``<span class='high'>``, às
+    vezes no meio da palavra ("<span>quilombola</span>s"); por isso o texto sai
+    sem separador entre os nós.
+    """
+    soup = _get_texto_completo(request_fn, VISUALIZAR_URL, "exibirTextoCompletoCidh", id_caso, criterio)
+    return str(soup.get_text()).strip()
 
 
 def build_cjsg_form_body(

@@ -11,12 +11,13 @@ from .parse import cjsg_parse
 from .schemas import InputCJSGTJPR
 
 
-def _validar_incluir_corte_idh(valor: object) -> bool:
-    # ``cjsg`` e ``cjsg_parse`` usam o valor como verdade do Python: ``"false"``
-    # ligaria a opção. Mesmo contrato do ``StrictBool`` em ``InputCJSGTJPR``.
+def _validar_incluir_corte_idh(valor: object) -> None:
+    # A opção só vale no parse, e o parser usa a verdade do Python: ``"false"``
+    # a ligaria. Daí a checagem aqui, com o contrato do ``StrictBool`` de
+    # ``InputCJSGTJPR``, e a recusa em ``cjsg_download``, cujo schema a
+    # aceitaria e a ignoraria.
     if not isinstance(valor, bool):
         raise TypeError(f"incluir_corte_idh deve ser bool, recebeu {type(valor).__name__}.")
-    return valor
 
 
 class TJPRScraper(HTTPScraper):
@@ -116,11 +117,12 @@ class TJPRScraper(HTTPScraper):
         Raises:
             TypeError: Quando ``incluir_corte_idh`` não é ``bool``.
         """
+        _validar_incluir_corte_idh(incluir_corte_idh)
         return cjsg_parse(
             resultados_brutos,
             criterio,
             request_fn=self._request_with_retry,
-            incluir_corte_idh=_validar_incluir_corte_idh(incluir_corte_idh),
+            incluir_corte_idh=incluir_corte_idh,
         )
 
     def cjsg(

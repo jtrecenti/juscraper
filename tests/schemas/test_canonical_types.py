@@ -89,7 +89,8 @@ DEPRECATED_SYNONYMS: dict[str, str] = {
 
 # Excecoes de tipo keyed por (nome_da_classe, nome_do_campo). Documentam
 # divergencias conhecidas com o PR pendente. Remover a entrada quando
-# o PR de correcao entrar.
+# o PR de correcao entrar. Entradas permanentes, impostas pela fonte, dizem
+# isso no comentario.
 TYPE_GRACE_PERIOD: dict[tuple[str, str], str] = {
     # TJPI e TJGO entregam data_publicacao sempre como string crua (nao
     # convertem para datetime.date). O canonico do mixin e
