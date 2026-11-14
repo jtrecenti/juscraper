@@ -6,7 +6,7 @@ import re
 import time
 import unicodedata
 from collections import deque
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from datetime import date
 from urllib.parse import urljoin, urlparse
 
@@ -36,6 +36,10 @@ class TJMTConfigError(ValueError):
 
 class TJMTResponseError(ValueError):
     """Indica que a API de jurisprudência retornou uma resposta inválida."""
+
+
+class _TJMTConfigRejected(Exception):
+    """Sinaliza 401/403 da API para renovação local da configuração do TJMT."""
 
 
 _SCRIPT_SRC_RE = re.compile(r"<script[^>]+src=[\"']([^\"']+)", re.IGNORECASE)
@@ -346,6 +350,61 @@ def _max_paginas(quantidade: int) -> int:
     return MAX_RESULTS // quantidade
 
 
+def _initial_api_config(
+    request_fn: RequestFn,
+    api_config_provider: Callable[..., dict[str, str]] | None,
+) -> dict[str, str]:
+    """Usa a configuração em cache do scraper ou descobre a atual."""
+    if api_config_provider is None:
+        return _get_api_config(request_fn)
+    return api_config_provider()
+
+
+def _apply_api_config(session: requests.Session, config: dict[str, str]) -> None:
+    """Aplica os headers da configuração pública atual da API TJMT."""
+    session.headers.update({
+        "token": config["token"],
+        "Accept": "application/json, text/plain, */*",
+        "Referer": "https://jurisprudencia.tjmt.jus.br/",
+    })
+
+
+def _raise_if_config_rejected(response: requests.Response) -> None:
+    """Interrompe o retry HTTP comum para tratar auth expirada localmente."""
+    if response.status_code in {401, 403}:
+        raise _TJMTConfigRejected
+
+
+def _request_api_page(
+    request_fn: RequestFn,
+    api_url: str,
+    params: dict,
+    session: requests.Session,
+    api_config_provider: Callable[..., dict[str, str]] | None,
+) -> requests.Response:
+    """Consulta uma página e, após 401/403, renova a configuração uma vez.
+
+    A consulta repetida usa a política de retry comum; um novo 401/403
+    propaga como ``HTTPError`` ou ``RetryExhaustedError``. ``api_url`` não
+    muda na renovação, porque ``_validate_api_config`` só aceita
+    ``PRODUCTION_API_URL``.
+    """
+    request_kwargs = {"params": params, "timeout": 60, "expect_json": True}
+    if api_config_provider is None:
+        return request_fn("GET", f"{api_url}/consulta", **request_kwargs)
+
+    try:
+        return request_fn(
+            "GET",
+            f"{api_url}/consulta",
+            on_response=_raise_if_config_rejected,
+            **request_kwargs,
+        )
+    except _TJMTConfigRejected:
+        _apply_api_config(session, api_config_provider(force_refresh=True))
+        return request_fn("GET", f"{api_url}/consulta", **request_kwargs)
+
+
 def cjsg_download(
     pesquisa: str,
     paginas=None,
@@ -360,6 +419,7 @@ def cjsg_download(
     *,
     request_fn: RequestFn,
     session: requests.Session,
+    api_config_provider: Callable[..., dict[str, str]] | None = None,
 ) -> list:
     """Baixa resultados JSON brutos da API de jurisprudência do TJMT.
 
@@ -384,6 +444,8 @@ def cjsg_download(
             recebida explicitamente para manter os headers ``Token``,
             ``Accept`` e ``Referer`` obtidos por ``_get_api_config``. As
             requisições subsequentes via ``request_fn`` usam essa mesma sessão.
+        api_config_provider: Provedor interno opcional de configuração em
+            cache. Quando omitido, a função descobre a configuração como antes.
 
     Avisos:
         ``UserWarning``: com ``paginas=None``, quando a consulta passa do teto
@@ -399,15 +461,9 @@ def cjsg_download(
     relator = _normalize_text_filter(relator, "relator")
     orgao_julgador = _normalize_text_filter(orgao_julgador, "orgao_julgador")
     tipo_processo = _normalize_tipo_processo(tipo_processo)
-    cfg = _get_api_config(request_fn)
+    cfg = _initial_api_config(request_fn, api_config_provider)
     api_url = cfg["api_url"]
-    token = cfg["token"]
-
-    session.headers.update({
-        "token": token,
-        "Accept": "application/json, text/plain, */*",
-        "Referer": "https://jurisprudencia.tjmt.jus.br/",
-    })
+    _apply_api_config(session, cfg)
 
     def _fetch_page(pagina: int) -> tuple[dict, int]:
         params = _build_params(
@@ -422,13 +478,7 @@ def cjsg_download(
             orgao_julgador=orgao_julgador,
             tipo_processo=tipo_processo,
         )
-        resp = request_fn(
-            "GET",
-            f"{api_url}/consulta",
-            params=params,
-            timeout=60,
-            expect_json=True,
-        )
+        resp = _request_api_page(request_fn, api_url, params, session, api_config_provider)
         try:
             data = resp.json()
         except ValueError as exc:

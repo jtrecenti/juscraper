@@ -6,8 +6,15 @@ import pytest
 import requests
 from pydantic import ValidationError
 
+from juscraper.core.exceptions import RetryExhaustedError
 from juscraper.courts.tjmt.client import TJMTScraper
-from juscraper.courts.tjmt.download import MAX_RESULTS, PRODUCTION_API_URL, TJMTResponseError, cjsg_download
+from juscraper.courts.tjmt.download import (
+    MAX_RESULTS,
+    PRODUCTION_API_URL,
+    TJMTConfigError,
+    TJMTResponseError,
+    cjsg_download,
+)
 
 PORTAL_URL = "https://jurisprudencia.tjmt.jus.br/"
 MAIN_URL = f"{PORTAL_URL}assets/main.js"
@@ -46,6 +53,44 @@ class _Response(requests.Response):
 
     def json(self):
         return json.loads(self._body)
+
+
+class _ConfigRefreshRecorder:
+    """Simula respostas HTTP pela sessão, mantendo o retry real do scraper."""
+
+    def __init__(self, session, tokens, api_statuses):
+        self.session = session
+        self.tokens = iter(tokens)
+        self.api_statuses = iter(api_statuses)
+        self.discovery_count = 0
+        self.discovery_tokens = []
+        self.api_tokens = []
+
+    def _sent_token(self, kwargs):
+        # Como o requests: header por requisição vence o da sessão; ``None`` o remove.
+        headers = kwargs.get("headers") or {}
+        return headers["token"] if "token" in headers else self.session.headers.get("token")
+
+    def __call__(self, _method, url, **kwargs):
+        status = 200
+        if url == PORTAL_URL:
+            self.discovery_count += 1
+            body = '<script src="/assets/main.js"></script>'
+        elif url == MAIN_URL:
+            body = 'import"./config.js";'
+        elif url == CHUNK_URL:
+            body = f'const cfg={{api_url:"{PRODUCTION_API_URL}",api_hellsgate_token:"{next(self.tokens)}"}};'
+        else:
+            status = next(self.api_statuses)
+            self.api_tokens.append(self._sent_token(kwargs))
+            body = json.dumps(_page([], acordaos=0))
+        if url in (PORTAL_URL, MAIN_URL, CHUNK_URL):
+            self.discovery_tokens.append(self._sent_token(kwargs))
+
+        response = _Response(body)
+        response.status_code = status
+        response.url = url
+        return response
 
 
 def _page(resultados, *, acordaos=0, decisoes=0, success=True, error_message=None):
@@ -328,6 +373,81 @@ def test_public_download_propagates_publication_date_and_filters(mocker):
     assert params["tipoProcesso"] == "1"
     assert params["periodoDataDe"] == "2024-07-19"
     assert params["periodoDataAte"] == "2024-07-19T23:59:59"
+
+
+def test_reuses_api_config_across_downloads_on_same_scraper(mocker):
+    mocker.patch("time.sleep")
+    scraper = TJMTScraper()
+    request = _ConfigRefreshRecorder(scraper.session, ["cached-token"], [200, 200])
+    mocker.patch.object(scraper.session, "request", side_effect=request)
+
+    scraper.cjsg_download("primeira busca", paginas=1)
+    scraper.cjsg_download("segunda busca", paginas=1)
+
+    assert request.discovery_count == 1
+    assert request.api_tokens == ["cached-token", "cached-token"]
+
+
+@pytest.mark.parametrize("status", [401, 403])
+def test_unauthorized_api_response_refreshes_config_and_replays_once(status, mocker):
+    mocker.patch("time.sleep")
+    scraper = TJMTScraper()
+    request = _ConfigRefreshRecorder(
+        scraper.session,
+        ["stale-token", "renewed-token"],
+        [status, 200],
+    )
+    mocker.patch.object(scraper.session, "request", side_effect=request)
+
+    pages = scraper.cjsg_download("dano moral", paginas=1)
+
+    assert pages[0]["success"] is True
+    assert request.discovery_count == 2
+    assert request.api_tokens == ["stale-token", "renewed-token"]
+    assert "stale-token" not in request.discovery_tokens
+
+
+def test_failed_config_refresh_keeps_cached_session_token(mocker):
+    mocker.patch("time.sleep")
+    scraper = TJMTScraper()
+    request = _ConfigRefreshRecorder(scraper.session, ["stale-token"], [200, 401])
+    mocker.patch.object(scraper.session, "request", side_effect=request)
+    scraper.cjsg_download("primeira busca", paginas=1)
+
+    mocker.patch(
+        "juscraper.courts.tjmt.client._get_api_config",
+        side_effect=TJMTConfigError("configuração de teste indisponível"),
+    )
+
+    with pytest.raises(TJMTConfigError, match="indisponível"):
+        scraper.cjsg_download("segunda busca", paginas=1)
+
+    assert scraper.session.headers["token"] == "stale-token"
+
+
+@pytest.mark.parametrize(
+    ("api_statuses", "expected_exc"),
+    [
+        ([401, 401], requests.HTTPError),
+        # 403 segue retentável na consulta repetida, pela política comum.
+        ([401, 403, 403, 403], RetryExhaustedError),
+    ],
+)
+def test_repeated_unauthorized_response_propagates_without_refresh_loop(api_statuses, expected_exc, mocker):
+    mocker.patch("time.sleep")
+    scraper = TJMTScraper()
+    request = _ConfigRefreshRecorder(
+        scraper.session,
+        ["stale-token", "renewed-token"],
+        api_statuses,
+    )
+    mocker.patch.object(scraper.session, "request", side_effect=request)
+
+    with pytest.raises(expected_exc):
+        scraper.cjsg_download("dano moral", paginas=1)
+
+    assert request.discovery_count == 2
+    assert request.api_tokens == ["stale-token"] + ["renewed-token"] * (len(api_statuses) - 1)
 
 
 def test_public_integer_pages_downloads_from_first_page_through_requested_page(mocker):

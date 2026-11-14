@@ -2,12 +2,14 @@
 Scraper do Tribunal de Justiça do Estado de Mato Grosso (TJMT).
 """
 
+from functools import partial
+
 import pandas as pd
 
 from juscraper.core.http import HTTPScraper
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
-from .download import PRODUCTION_API_URL, cjsg_download
+from .download import PRODUCTION_API_URL, _get_api_config, cjsg_download
 from .parse import CJSG_COLUMNS, cjsg_parse, coerce_tjmt_date_columns
 from .schemas import InputCJSGTJMT
 
@@ -19,6 +21,18 @@ class TJMTScraper(HTTPScraper):
 
     def __init__(self):
         super().__init__("TJMT")
+        self._api_config: dict[str, str] | None = None
+
+    def _get_cached_api_config(self, *, force_refresh: bool = False) -> dict[str, str]:
+        """Descobre a configuração do portal uma vez por instância.
+
+        A descoberta não envia o token em cache: ``headers={"token": None}``
+        o retira só dessas requisições, sem mexer na sessão.
+        """
+        if force_refresh or self._api_config is None:
+            sem_token = {"token": None}  # nosec B105  # remove o header, não é senha
+            self._api_config = _get_api_config(partial(self._request_with_retry, headers=sem_token))
+        return self._api_config
 
     def cpopg(self, id_cnj: str | list[str]):
         """Consulta de processos de primeiro grau ainda não implementada no TJMT."""
@@ -83,6 +97,7 @@ class TJMTScraper(HTTPScraper):
             quantidade_por_pagina=inp.tamanho_pagina,
             request_fn=self._request_with_retry,
             session=self.session,
+            api_config_provider=self._get_cached_api_config,
         )
 
     def cjsg_parse(self, resultados_brutos: list, tipo_consulta: str = "Acordao") -> list[dict]:
@@ -117,9 +132,12 @@ class TJMTScraper(HTTPScraper):
     ) -> pd.DataFrame:
         """Pesquisa jurisprudência do TJMT (acórdãos ou decisões monocráticas).
 
-        Delega para :meth:`cjsg_download` e :meth:`cjsg_parse`. Antes da busca,
-        lê a configuração pública do portal (URL da API e token) nos scripts
-        de ``jurisprudencia.tjmt.jus.br``.
+        Delega para :meth:`cjsg_download` e :meth:`cjsg_parse`. Na primeira
+        busca de cada instância, lê a configuração pública do portal (URL da
+        API e token) nos scripts de ``jurisprudencia.tjmt.jus.br`` e a
+        reutiliza nas buscas seguintes. Se a API recusar o token (HTTP 401 ou
+        403), lê a configuração de novo e repete a consulta; se a recusa
+        persistir, propaga ``requests.HTTPError`` ou ``RetryExhaustedError``.
 
         A API devolve no máximo os 10.000 primeiros resultados de uma
         consulta; páginas além desse teto respondem HTTP 500.
