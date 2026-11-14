@@ -12,7 +12,7 @@ from __future__ import annotations
 import responses
 from responses.matchers import urlencoded_params_matcher
 
-from juscraper.courts.tjpr.download import BASE_URL, SEARCH_URL, build_cjsg_form_body
+from juscraper.courts.tjpr.download import BASE_URL, SEARCH_URL, VISUALIZAR_URL, build_cjsg_form_body
 from tests._helpers import load_sample, query_param_subset_matcher
 
 __all__ = ["SEARCH_URL", "add_ementa_completa", "add_home", "add_search_page"]
@@ -46,14 +46,16 @@ def add_search_page(pesquisa: str, pagina: int, sample_path: str) -> None:
 
 
 def add_ementa_completa() -> None:
-    """Single response shared by every ``actionType=exibirTextoCompleto`` GET.
+    """Resposta única para todo GET ``visualizarDecisao.do?actionType=exibirTextoCompleto``.
 
-    As of 2026-04 the upstream endpoint returns a generic Struts error page
-    regardless of ``idProcesso``/``criterio``; we capture one and reuse it.
+    Resposta real do id 2100000037600201 (primeira linha truncada de
+    ``results_normal_page_01.html``, busca "dano moral"), reaproveitada para
+    todos os ids. Traz o destaque no meio da palavra:
+    ``<span class='high'>DANO</span>S MORAIS``.
     """
     responses.add(
         responses.GET,
-        SEARCH_URL,
+        VISUALIZAR_URL,
         body=load_sample("tjpr", "cjsg/ementa_completa.html"),
         status=200,
         content_type="text/html; charset=UTF-8",

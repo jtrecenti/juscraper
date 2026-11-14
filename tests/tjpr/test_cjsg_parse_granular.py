@@ -9,7 +9,7 @@ import pytest
 import requests
 
 from juscraper.core.base import _texto_ausente_como_none
-from juscraper.courts.tjpr.download import SEARCH_URL
+from juscraper.courts.tjpr.download import VISUALIZAR_URL
 from juscraper.courts.tjpr.parse import cjsg_parse
 from tests._helpers import load_sample
 
@@ -19,9 +19,7 @@ TRUNCATED_WITHOUT_INPUT = "Resumo sem id documental. Leia mais..."
 TRUNCATED_WITHOUT_VALUE = "Resumo com id sem valor. Leia mais..."
 
 
-def test_cjsg_parse_preserves_row_variants_and_exact_dtypes(mocker):
-    request_fn = mocker.Mock()
-
+def test_cjsg_parse_preserves_row_variants_and_exact_dtypes():
     # O parser devolve o que o pandas da vez produzir; o metodo publico passa a
     # saida por ``_texto_ausente_como_none``, que mantem texto ausente como
     # None tambem no pandas 3. O teste confere o valor que o usuario recebe.
@@ -29,7 +27,6 @@ def test_cjsg_parse_preserves_row_variants_and_exact_dtypes(mocker):
         cjsg_parse(
             [load_sample("tjpr", "cjsg/parser_edge_cases.html")],
             criterio=None,
-            request_fn=request_fn,
         )
     )
 
@@ -67,20 +64,6 @@ def test_cjsg_parse_preserves_row_variants_and_exact_dtypes(mocker):
         "data_julgamento": date(2024, 8, 7),
         "ementa": TRUNCATED_WITHOUT_VALUE,
     }
-    request_fn.assert_not_called()
-
-
-def test_cjsg_parse_keeps_truncated_ementa_without_request_fn():
-    # Com critério e sem request_fn, o parse offline não tenta buscar a ementa completa.
-    result = cjsg_parse(
-        [load_sample("tjpr", "cjsg/parser_edge_cases.html")],
-        criterio="dano moral",
-    )
-
-    assert result.shape == (5, 5)
-    assert result.loc[1, "ementa"] == TRUNCATED_WITH_ID
-    assert result.loc[3, "ementa"] == TRUNCATED_WITHOUT_INPUT
-    assert result.loc[4, "ementa"] == TRUNCATED_WITHOUT_VALUE
 
 
 def test_cjsg_parse_ignores_corte_idh_row_and_keeps_judicial_results():
@@ -98,10 +81,52 @@ def test_cjsg_parse_ignores_corte_idh_row_and_keeps_judicial_results():
     )
 
 
-def test_cjsg_parse_fetches_full_ementa_with_injected_request(mocker):
+@pytest.mark.parametrize(("criterio", "criterio_enviado"), [("dano moral", "dano moral"), (None, ""), ("", "")])
+def test_cjsg_parse_fetches_full_ementa_with_injected_request(mocker, criterio, criterio_enviado):
+    # Texto puro, com quebra de linha própria e o destaque no meio da palavra.
     request_fn = mocker.Mock(
-        return_value=SimpleNamespace(text="<div>Ementa completa</div><p>Segunda linha</p>")
+        return_value=SimpleNamespace(text="Ementa <span class='high'>DANO</span>S MORAIS\nSegunda linha\n")
     )
+
+    result = cjsg_parse(
+        [load_sample("tjpr", "cjsg/parser_edge_cases.html")],
+        criterio=criterio,
+        request_fn=request_fn,
+    )
+
+    assert result.loc[0, "ementa"] == "Ementa curta sem expansão."
+    assert result.loc[1, "ementa"] == "Ementa DANOS MORAIS\nSegunda linha"
+    # Linhas com "Leia mais..." sem id documental utilizável ficam truncadas, sem requisição.
+    assert result.loc[3, "ementa"] == TRUNCATED_WITHOUT_INPUT
+    assert result.loc[4, "ementa"] == TRUNCATED_WITHOUT_VALUE
+    request_fn.assert_called_once()
+    method, url = request_fn.call_args.args
+    assert method == "GET"
+    assert url == VISUALIZAR_URL
+    assert request_fn.call_args.kwargs["params"] == {
+        "actionType": "exibirTextoCompleto",
+        "idProcesso": "div-id",
+        "criterio": criterio_enviado,
+    }
+
+
+@pytest.mark.parametrize(
+    "corpo",
+    [
+        pytest.param(load_sample("tjpr", "cjsg/pagina_intranet.html"), id="pagina-do-portal"),
+        pytest.param("", id="vazia"),
+        pytest.param("<div>javax.servlet.ServletException</div>", id="fragmento-html"),
+    ],
+)
+def test_cjsg_parse_recusa_resposta_que_nao_e_a_ementa(mocker, corpo):
+    """A página do portal (menu da intranet) ou a resposta vazia não viram ementa.
+
+    ``pagina_intranet.html`` é o que ``pesquisa.do?actionType=exibirTextoCompleto``
+    devolvia no lugar da ementa; ``visualizarDecisao.do`` responde vazio a id
+    desconhecido. O texto da ementa só traz o ``<span>`` do destaque; outra
+    marcação também é recusada. A linha fica truncada e ganha o aviso de erro.
+    """
+    request_fn = mocker.Mock(return_value=SimpleNamespace(text=corpo))
 
     result = cjsg_parse(
         [load_sample("tjpr", "cjsg/parser_edge_cases.html")],
@@ -109,20 +134,10 @@ def test_cjsg_parse_fetches_full_ementa_with_injected_request(mocker):
         request_fn=request_fn,
     )
 
-    assert result.loc[0, "ementa"] == "Ementa curta sem expansão."
-    assert result.loc[1, "ementa"] == "Ementa completa\nSegunda linha"
-    # Linhas com "Leia mais..." sem id documental utilizável ficam truncadas, sem requisição.
-    assert result.loc[3, "ementa"] == TRUNCATED_WITHOUT_INPUT
-    assert result.loc[4, "ementa"] == TRUNCATED_WITHOUT_VALUE
-    request_fn.assert_called_once()
-    method, url = request_fn.call_args.args
-    assert method == "GET"
-    assert url == SEARCH_URL
-    assert request_fn.call_args.kwargs["params"] == {
-        "actionType": "exibirTextoCompleto",
-        "idProcesso": "div-id",
-        "criterio": "dano moral",
-    }
+    assert result.loc[1, "ementa"].startswith(f"{TRUNCATED_WITH_ID}\n[Erro ao buscar ementa completa: ")
+    assert "não trouxe o texto da ementa" in result.loc[1, "ementa"]
+    assert "Intranet" not in result.loc[1, "ementa"]
+    assert "ServletException" not in result.loc[1, "ementa"]
 
 
 def test_cjsg_parse_keeps_truncated_ementa_after_row_request_error(mocker):

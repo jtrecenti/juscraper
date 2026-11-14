@@ -9,8 +9,8 @@ TJPR's flow:
    per page (``pageNumber``, 1-based, ``pageSize=50``: the portal always
    returns 50 rows, and a smaller ``pageSize`` only inflates the "Última" link).
 3. For each row whose ementa is truncated with "Leia mais...", an
-   extra ``GET ?actionType=exibirTextoCompleto&idProcesso=...`` is
-   issued by ``cjsg_parse``.
+   extra ``GET visualizarDecisao.do?actionType=exibirTextoCompleto&idProcesso=...``
+   is issued by ``cjsg_parse``.
 
 The contract registers a single response for each kind of request;
 ``responses`` reuses registered responses across calls by default, so
@@ -24,7 +24,7 @@ import responses
 from responses.matchers import urlencoded_params_matcher
 
 import juscraper as jus
-from juscraper.courts.tjpr.download import build_cjsg_form_body
+from juscraper.courts.tjpr.download import VISUALIZAR_URL, build_cjsg_form_body
 from tests._helpers import load_sample, query_param_subset_matcher
 from tests.tjpr._helpers import SEARCH_URL, add_ementa_completa, add_home, add_search_page
 
@@ -52,6 +52,14 @@ def test_cjsg_typical_com_paginacao(mocker):
     assert df["processo"].nunique() > 1, (
         "todos os processos iguais — paginação suspeita"
     )
+    # A ementa completa vem de ``visualizarDecisao.do``; ``pesquisa.do``
+    # devolvia a página do portal, com o menu da intranet no lugar da ementa.
+    assert not df["ementa"].str.contains("Intranet|Leia mais|Erro ao buscar").any()
+    # A nota do portal sobre onde o termo apareceu não faz parte da ementa.
+    assert not df["ementa"].str.contains("A expressão foi encontrada").any()
+    # O destaque ``<span class='high'>DANO</span>S`` não parte a palavra.
+    assert df["ementa"].str.contains("INDENIZAÇÃO POR DANOS MORAIS. SERVIÇOS BANCÁRIOS").any()
+    assert not df["ementa"].str.contains("DANO\nS", regex=False).any()
 
 
 @responses.activate
@@ -139,7 +147,7 @@ def test_cjsg_no_results(mocker):
 def test_cjsg_ementa_completa_5xx_persistente(mocker):
     """Falha persistente no fetch da ementa-completa nao derruba o DataFrame.
 
-    Quando o GET ``actionType=exibirTextoCompleto`` devolve 5xx em todas as
+    Quando o GET ``visualizarDecisao.do?actionType=exibirTextoCompleto`` devolve 5xx em todas as
     tentativas, ``HTTPScraper._request_with_retry`` levanta
     ``RetryExhaustedError``. O ``try/except`` row-level em ``cjsg_parse``
     deve capturar essa excecao (alem de ``requests.RequestException``) para
@@ -155,7 +163,7 @@ def test_cjsg_ementa_completa_5xx_persistente(mocker):
     add_search_page("quilombola", 1, "cjsg/single_page.html")
     responses.add(
         responses.GET,
-        SEARCH_URL,
+        VISUALIZAR_URL,
         body="<html>upstream error</html>",
         status=503,
         content_type="text/html; charset=UTF-8",

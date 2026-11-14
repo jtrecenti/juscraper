@@ -17,7 +17,8 @@ from bs4 import BeautifulSoup
 from responses.matchers import urlencoded_params_matcher
 
 import juscraper as jus
-from juscraper.courts.tjpr.download import VISUALIZAR_URL, get_ementa_completa_cidh
+from juscraper.courts.tjpr.download import VISUALIZAR_URL, get_ementa_completa
+from juscraper.courts.tjpr.parse import cjsg_parse
 from tests._helpers import load_sample, query_param_subset_matcher
 from tests.tjpr._helpers import add_ementa_completa, add_home, add_search_page
 
@@ -45,12 +46,18 @@ def _add_ementas_completas() -> None:
     )
 
 
+def _buscas_completas() -> list[tuple[str, str, str]]:
+    """``(actionType, idProcesso, criterio)`` de cada GET a ``visualizarDecisao.do``."""
+    buscas = []
+    for call in responses.calls:
+        if call.request.url.startswith(VISUALIZAR_URL):
+            q = parse_qs(urlsplit(call.request.url).query, keep_blank_values=True)
+            buscas.append((q["actionType"][0], q["idProcesso"][0], q["criterio"][0]))
+    return buscas
+
+
 def _ids_corte_idh_buscados() -> list[str]:
-    return [
-        parse_qs(urlsplit(call.request.url).query)["idProcesso"][0]
-        for call in responses.calls
-        if "exibirTextoCompletoCidh" in call.request.url
-    ]
+    return [id_ for acao, id_, _ in _buscas_completas() if acao == "exibirTextoCompletoCidh"]
 
 
 @responses.activate
@@ -102,10 +109,8 @@ def test_cjsg_sem_incluir_corte_idh_mantem_o_contrato_anterior(mocker):
 
 
 def test_cjsg_parse_incluir_corte_idh_extrai_os_campos_da_linha():
-    """Sem ``criterio``, a ementa fica truncada como nas linhas do TJ."""
-    df = jus.scraper("tjpr").cjsg_parse(
-        [load_sample("tjpr", "cjsg/single_page.html")], incluir_corte_idh=True
-    )
+    """Sem ``request_fn``, a ementa fica truncada como nas linhas do TJ."""
+    df = cjsg_parse([load_sample("tjpr", "cjsg/single_page.html")], incluir_corte_idh=True)
 
     assert df.columns.tolist() == COLUNAS_COM_CORTE_IDH
     assert df["fonte"].tolist() == ["TJPR"] * 4 + ["Corte IDH"] + ["TJPR"]
@@ -114,8 +119,46 @@ def test_cjsg_parse_incluir_corte_idh_extrai_os_campos_da_linha():
     assert linha["data_julgamento"] == date(2024, 11, 20)
     assert linha[["processo", "orgao_julgador", "relator"]].isna().all()
     assert linha["ementa"].startswith("O caso Comunidades Quilombolas de Alcântara vs. Brasil trata")
-    assert linha["ementa"].endswith("Leia mais..")
+    # Truncada como a do TJ: termina nas reticências do portal, sem o link.
+    assert linha["ementa"].endswith("Embora o Brasil...")
+    assert "Leia mais" not in linha["ementa"]
     assert "Ementa disponibilizada" not in linha["ementa"]
+
+
+@responses.activate
+def test_cjsg_sem_termo_completa_as_ementas_do_tj_e_da_corte_idh(mocker):
+    """Busca sem termo (``pesquisa=""``) também completa as ementas truncadas.
+
+    Sample real da busca vazia: 3 linhas do TJ e 9 da Corte IDH em "Leia
+    mais..". O portal manda ``criterio`` vazio, e o texto vem inteiro.
+    """
+    mocker.patch("time.sleep")
+    add_home()
+    add_search_page("", 1, "cjsg/results_sem_termo.html")
+    _add_ementas_completas()
+
+    df = jus.scraper("tjpr").cjsg("", paginas=1, incluir_corte_idh=True)
+
+    assert len(df) == 50
+    assert not df["ementa"].str.contains("Leia mais|Erro ao buscar").any()
+    assert sorted(_buscas_completas()) == sorted(
+        [("exibirTextoCompleto", i, "") for i in ("2100000040060902", "2100000039933592", "2100000039781812")]
+        + [("exibirTextoCompletoCidh", i, "") for i in ("122", "121", "106", "117", "120", "119", "118", "116", "115")]
+    )
+
+
+@responses.activate
+def test_cjsg_parse_sem_criterio_completa_a_ementa_da_corte_idh(mocker):
+    """``cjsg_parse`` do scraper busca a ementa completa mesmo sem ``criterio``."""
+    mocker.patch("time.sleep")
+    _add_ementas_completas()
+
+    df = jus.scraper("tjpr").cjsg_parse(
+        [load_sample("tjpr", "cjsg/single_page.html")], incluir_corte_idh=True
+    )
+
+    assert _ids_corte_idh_buscados() == ["120"]
+    assert df.iloc[4]["ementa"].endswith("num contexto de discriminação estrutural.")
 
 
 def test_cjsg_parse_ordem_das_colunas_nao_depende_da_primeira_linha():
@@ -126,16 +169,16 @@ def test_cjsg_parse_ordem_das_colunas_nao_depende_da_primeira_linha():
     linha_corte_idh = tabela.select_one("tr.cidh").extract()
     tabela.find_all("tr")[0].insert_after(linha_corte_idh)
 
-    df = jus.scraper("tjpr").cjsg_parse([str(soup)], incluir_corte_idh=True)
+    df = cjsg_parse([str(soup)], incluir_corte_idh=True)
 
     assert df.columns.tolist() == COLUNAS_COM_CORTE_IDH
     assert df["fonte"].tolist() == ["Corte IDH"] + ["TJPR"] * 5
 
 
-def test_get_ementa_completa_cidh_codifica_o_criterio(mocker):
+def test_get_ementa_completa_codifica_o_criterio(mocker):
     request_fn = mocker.Mock(return_value=SimpleNamespace(text="Texto <span class='high'>a</span>b."))
 
-    texto = get_ementa_completa_cidh(request_fn, "120", "dano & moral")
+    texto = get_ementa_completa(request_fn, "exibirTextoCompletoCidh", "120", "dano & moral")
 
     assert texto == "Texto ab."
     assert request_fn.call_args.args == ("GET", VISUALIZAR_URL)

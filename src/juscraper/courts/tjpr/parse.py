@@ -1,8 +1,6 @@
 """
 Functions for parsing specific to TJPR
 """
-from collections.abc import Callable
-
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
@@ -12,7 +10,7 @@ from juscraper.core.exceptions import RetryExhaustedError
 from juscraper.core.http import RequestFn
 from juscraper.core.parse_utils import coerce_date_columns
 
-from .download import get_ementa_completa, get_ementa_completa_cidh
+from .download import TJPREmentaIndisponivelError, get_ementa_completa
 
 
 def _extract_processo(dados_td: Tag) -> str:
@@ -49,21 +47,32 @@ def _extract_labeled_value(
 
 
 def _extract_ementa(
-    ementa_el: Tag,
+    ementa_td: Tag,
     id_registro: str,
     criterio: str | None,
     request_fn: RequestFn | None,
-    buscar_completa: Callable[[RequestFn, str, str], str] = get_ementa_completa,
+    action_type: str = "exibirTextoCompleto",
 ) -> str:
-    ementa = str(ementa_el.get_text("\n", strip=True))
-    if "leia mais" not in ementa.lower():
-        return ementa
-    if not id_registro or not criterio or request_fn is None:
+    """Ementa da linha, completa quando o portal a trunca em "Leia mais..".
+
+    O texto sai do ``div#ementa<id>``, sem o link "Leia mais..", sem a nota "A
+    expressão foi encontrada..." do TJ e sem a autoria das ementas da Corte
+    IDH, e sem separador entre os nós: o destaque do termo buscado pode cair no
+    meio da palavra ("<span>DANO</span>S MORAIS"). Sem ``request_fn`` a ementa
+    fica truncada; o ``criterio`` vazio não impede a busca da completa.
+    """
+    truncada = "leia mais" in ementa_td.get_text().lower()
+    ementa_el = ementa_td.find("div", id=f"ementa{id_registro}") or ementa_td
+    # Na Corte IDH o link fica dentro do ``div#ementa<id>``; no TJ, fora.
+    for link in ementa_el.find_all("a"):
+        link.decompose()
+    ementa = str(ementa_el.get_text()).strip()
+    if not truncada or not id_registro or request_fn is None:
         return ementa
 
     try:
-        return buscar_completa(request_fn, id_registro, criterio)
-    except (requests.RequestException, RetryExhaustedError) as error:
+        return get_ementa_completa(request_fn, action_type, id_registro, criterio or "")
+    except (requests.RequestException, RetryExhaustedError, TJPREmentaIndisponivelError) as error:
         # A falha de uma ementa completa não invalida os demais resultados da página.
         return f"{ementa}\n[Erro ao buscar ementa completa: {error}]"
 
@@ -82,18 +91,16 @@ def _parse_row_corte_idh(
 ) -> dict[str, str | None]:
     """Linha da Corte IDH: sem processo, órgão nem relator, que o portal não tem.
 
-    Chaves na ordem da linha do TJ. A ementa sai do ``div#ementa<id>``, sem a
-    nota "A expressão foi encontrada..." nem a autoria da ementa.
+    Chaves na ordem da linha do TJ.
     """
     caso_a = dados_td.find("a", class_="cidh-text")
     caso = caso_a.get_text(strip=True).removeprefix("Caso:").strip() if caso_a else ""
-    ementa_el = ementa_td.find("div", id=f"ementa{id_caso}") or ementa_td
     return {
         "processo": None,
         "orgao_julgador": None,
         "relator": None,
         "data_julgamento": _extract_labeled_value(dados_td, "Data Julgamento:"),
-        "ementa": _extract_ementa(ementa_el, id_caso, criterio, request_fn, get_ementa_completa_cidh),
+        "ementa": _extract_ementa(ementa_td, id_caso, criterio, request_fn, "exibirTextoCompletoCidh"),
         "fonte": "Corte IDH",
         "caso": caso,
     }
@@ -147,9 +154,9 @@ def cjsg_parse(
     Extracts relevant data from the HTMLs returned by TJPR.
     Returns a DataFrame with the decisions.
 
-    ``request_fn`` is used to fetch the full minute when a row is truncated
-    with "Leia mais...". Without it the ementa stays truncated — useful for
-    offline parsing of pre-downloaded pages.
+    ``request_fn`` busca a ementa completa das linhas truncadas em "Leia
+    mais..", com ou sem ``criterio``. Sem ele a ementa fica truncada, o que
+    serve ao parse offline de páginas já baixadas.
 
     ``incluir_corte_idh``: ver :meth:`TJPRScraper.cjsg`.
     """

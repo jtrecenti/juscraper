@@ -109,8 +109,10 @@ class TJPRScraper(HTTPScraper):
 
         Args:
             resultados_brutos (list): HTMLs devolvidos por :meth:`cjsg_download`.
-            criterio (str | None): Termo da busca, usado para buscar a ementa
-                completa das linhas truncadas em "Leia mais..".
+            criterio (str | None): Termo da busca, repassado ao portal ao
+                buscar a ementa completa das linhas truncadas em "Leia mais..".
+                Só muda o destaque do termo, que o texto descarta: sem ele as
+                ementas também vêm completas.
             incluir_corte_idh (bool): Mantém os precedentes da Corte IDH que o
                 portal mistura à tabela, como em :meth:`cjsg`. Default ``False``.
 
