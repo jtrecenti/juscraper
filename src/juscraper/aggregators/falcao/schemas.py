@@ -17,11 +17,12 @@ Particularidades do backend refletidas aqui:
 """
 from __future__ import annotations
 
-from typing import ClassVar
+from typing import Annotated, ClassVar
 
-from pydantic import ConfigDict, field_validator
+from pydantic import BeforeValidator, ConfigDict, field_validator
 
-from ...schemas import OutputCJSGBase, SearchBase, TamanhoPagina
+from ...schemas import OutputCJSGBase, SearchBase
+from ...schemas.types import _reject_bool
 
 COLECOES: tuple[str, ...] = (
     "acordaos",
@@ -88,7 +89,9 @@ class InputListarDecisoesFalcao(SearchBase):
     BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
 
     colecao: str = "acordaos"
-    tamanho_pagina: TamanhoPagina = 10
+    # Sem o ``ge=1`` de ``TamanhoPagina``: ``0`` cairia no "≥ 1" generico antes
+    # de ``_validar_tamanho``, que lista os valores aceitos.
+    tamanho_pagina: Annotated[int, BeforeValidator(_reject_bool)] = 10
     tribunais: str | list[str] | None = None
     relator: str | list[str] | None = None
     orgao_julgador: str | list[str] | None = None

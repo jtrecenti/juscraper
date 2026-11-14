@@ -2,6 +2,7 @@
 import difflib
 from collections.abc import Callable, Iterator
 from datetime import date, datetime, timedelta
+from numbers import Integral
 from typing import Any
 
 import pandas as pd
@@ -72,8 +73,8 @@ def normalize_paginas(paginas) -> list | range | None:
     """Normalize the ``paginas`` parameter to a consistent type.
 
     Args:
-        paginas: ``None`` (all pages), ``int`` (shorthand for ``range(1, n+1)``),
-                 ``list`` or ``range`` (passthrough).
+        paginas: ``None`` (all pages), ``int`` (shorthand for ``range(1, n+1)``;
+                 numpy integers too, ``bool`` is rejected), ``list`` or ``range`` (passthrough).
 
     Returns:
         ``None``, ``list``, or ``range``.
@@ -83,13 +84,11 @@ def normalize_paginas(paginas) -> list | range | None:
     """
     if paginas is None:
         return None
-    if isinstance(paginas, int):
-        return range(1, paginas + 1)
-    if isinstance(paginas, (list, range)):
-        return paginas
-    raise TypeError(
-        f"paginas deve ser int, list, range ou None, não {type(paginas).__name__}"
-    )
+    if isinstance(paginas, bool) or not isinstance(paginas, (Integral, list, range)):  # ``True`` viraria a página 1
+        raise TypeError(f"paginas deve ser int, list, range ou None, não {type(paginas).__name__}")
+    if isinstance(paginas, Integral):
+        return range(1, int(paginas) + 1)
+    return paginas
 
 
 def normalize_pesquisa(pesquisa: str | None = None, **kwargs) -> str:

@@ -26,6 +26,8 @@ from datetime import date
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
+from .types import _reject_bool
+
 
 class PaginasMixin(BaseModel):
     """Contrato unico de ``paginas`` (refs #118).
@@ -49,6 +51,16 @@ class PaginasMixin(BaseModel):
     paginas: int | range | list[int] | None = None
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    @field_validator("paginas", mode="before")
+    @classmethod
+    def _reject_bool_paginas(cls, paginas: object) -> object:
+        # Sem isso o pydantic coage ``True`` para a pagina 1 (tambem em listas).
+        if isinstance(paginas, list):
+            for pagina in paginas:
+                _reject_bool(pagina)
+            return paginas
+        return _reject_bool(paginas)
 
     @field_validator("paginas")
     @classmethod
