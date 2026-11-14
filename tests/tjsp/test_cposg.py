@@ -196,6 +196,20 @@ class TestCPOSGUnit:
             },
         ]
 
+    def test_cposg_parse_cabecalho_com_incidentes(self):
+        """Com incidentes na página, ``id_original`` e ``processo`` vêm do cabeçalho, não do link do incidente.
+
+        Sample real do 0022175-24.2003.8.26.0344, com os nomes das partes e dos
+        advogados trocados por fictícios.
+        """
+        result = cposg_parse_single_html(_SAMPLES / 'show_com_incidentes.html')
+
+        assert len(result) == 1
+        row = result[0]
+        assert row['id_original'] == '0022175-24.2003.8.26.0344'
+        assert row['processo'] == '0022175-24.2003.8.26.0344'
+        assert row['classe'] == 'Apelação Criminal'
+
     def test_cposg_parse_real_sample_contract(self):
         """Página como o eSAJ a serve, sem as movimentações: os demais campos saem, com aviso.
 
@@ -210,7 +224,7 @@ class TestCPOSGUnit:
         assert row['id_original'] == '1000149-71.2024.8.26.0346'
         assert row['classe'] == 'Apelação Cível'
         assert row['assunto'] == 'DIREITO DO CONSUMIDOR - Contratos de Consumo - Bancários'
-        assert row['processo'] is None
+        assert row['processo'] == '1000149-71.2024.8.26.0346'
         assert row['volume_apenso'] is None
         assert row['movimentacoes'] == []
         assert len(row['partes']) == 13

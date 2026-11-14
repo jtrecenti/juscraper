@@ -163,8 +163,7 @@ def parse_codigos_processo(html: str, processo: str) -> list[str] | None:
             :func:`~juscraper.utils.safe_path_component`).
     """
     soup = BeautifulSoup(html, "html.parser")
-    mensagem = soup.select_one("#mensagemRetorno")
-    if mensagem is not None and _SEM_INFORMACOES in mensagem.get_text():
+    if busca_sem_informacoes(soup):
         raise ProcessoNaoEncontradoError(
             processo,
             "a consulta de 2º grau não o encontra. O número pode não existir no "
@@ -177,6 +176,12 @@ def parse_codigos_processo(html: str, processo: str) -> list[str] | None:
         safe_path_component(entrada["value"], field="processo.codigo")
         for entrada in soup.select("input#processoSelecionado")
     ]
+
+
+def busca_sem_informacoes(soup: BeautifulSoup) -> bool:
+    """``True`` quando a busca do eSAJ responde "Não existem informações disponíveis"."""
+    mensagem = soup.select_one("#mensagemRetorno")
+    return mensagem is not None and _SEM_INFORMACOES in mensagem.get_text()
 
 
 def parse_cd_processo(html: str) -> str | None:
