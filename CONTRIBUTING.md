@@ -155,6 +155,31 @@ Notas:
 - Falha 5xx em um único notebook normalmente é instabilidade do tribunal — re-rodar o notebook isolado antes de reportar regressão (`pytest --nbmake docs/notebooks/<tribunal>.ipynb`).
 - Quando o resultado real divergir do output cacheado (ex.: coluna nova, ementa em formato diferente), o notebook deve ser **commitado com outputs limpos** (`jupyter nbconvert --clear-output --inplace docs/notebooks/<tribunal>.ipynb`) para que `git diff` futuro fique focado em código.
 
+### Integração local
+
+Os testes marcados `integration` e os notebooks rodam localmente, de IP residencial no Brasil, que é o ambiente de referência. Os tribunais bloqueiam com frequência os IPs dos runners do GitHub: a conexão não se completa, a leitura não termina, o portal devolve uma página de desafio no lugar do JSON ou responde HTTP 403. No #519, por exemplo, os testes do TJMT deram `ConnectTimeout` no runner e passaram localmente. Uma falha do workflow `Integração` (ver **Integração semanal no CI**) só conta como quebra do raspador depois de reproduzida localmente.
+
+Ao mexer num tribunal ou agregador, rodar antes do PR os testes de integração, o notebook e o teste `release` dele:
+
+```bash
+uv sync --extra dev --extra docs --extra waf     # TJMG: ver a nota do extra [tjmg] em Notebooks
+uv run playwright install chromium               # navegador do extra waf (STF, TJPE)
+uv run pytest tests/<nome> -m integration
+uv run pytest --nbmake docs/notebooks/<nome>.ipynb --nbmake-timeout=300
+uv run pytest tests/test_release_date_filter.py -m release -k <nome>
+```
+
+`<nome>` é o diretório do tribunal em `tests/`. Uma mudança no código de uma família (`_esaj`, `_trf`, `_pdpj_sso`) vale para todo tribunal que a importa. O subcomando `alvo-pr` do script do relatório lista os tribunais que os commits de uma branch tocam, com a mesma regra do workflow (o que ainda não foi commitado fica de fora):
+
+```bash
+git fetch origin
+uv run python scripts/integration_report.py alvo-pr --base-ref origin/main   # na raiz do repositório
+```
+
+Código comum, como `core/` e `utils/`, não aponta tribunal; nesse caso, e antes de versão ou depois de refatoração ampla, rodar a execução completa: `uv run pytest tests -m "integration and not release"` e os notebooks pelo comando de **Notebooks como sanity check**.
+
+De IP residencial os testes `anti_bot` também passam, então `-m integration` os inclui; um bloqueio Akamai ainda vira `xfail` (ver **Marker `anti_bot`**). Uma falha que já existia na `main` aparece também na branch: para saber se a quebra veio da mudança, rodar o mesmo comando na `main` e comparar.
+
 ### Integração semanal no CI
 
 O workflow `Integração` (`.github/workflows/integration.yml`) roda uma vez por semana os testes marcados `integration`, sem os `anti_bot`, e em seguida os notebooks de `docs/notebooks/`, exceto os que exigem credencial do gov.br. O horário, os extras instalados e a lista de notebooks excluídos estão no próprio arquivo. A execução agendada não acontece no recesso forense, de 20/12 a 20/01. Os testes marcados `release` também ficam de fora, porque são a bateria cara reservada para antes de versão maior.
