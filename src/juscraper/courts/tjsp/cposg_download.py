@@ -33,7 +33,8 @@ def cposg_download_html(id_cnj_list, session, u_base, download_path, sleep_time=
     Returns a list of paths if list, or a single path if string.
 
     Processo que a consulta de 2º grau não mostra ("Não existem informações
-    disponíveis") não gera arquivo e sai num ``UserWarning`` ao fim.
+    disponíveis") não gera arquivo e sai num ``UserWarning`` ao fim; se for o
+    único, a função devolve ``[]``.
     """
     if isinstance(id_cnj_list, str):
         id_cnj_list = [id_cnj_list]
@@ -57,9 +58,9 @@ def cposg_download_html(id_cnj_list, session, u_base, download_path, sleep_time=
             f"fora do resultado: {', '.join(nao_encontrados)}. O número pode não existir no 2º grau, "
             "ou o processo está em segredo de justiça, que o eSAJ não mostra na consulta pública."
         )
-    if not paths:
+    if not paths and not nao_encontrados:
         raise RuntimeError("Nenhum processo foi baixado com sucesso.")
-    return paths if len(paths) > 1 else paths[0]
+    return paths if len(paths) != 1 else paths[0]
 
 
 def _cposg_download_html_single(id_cnj, session, u_base, download_path):
@@ -86,8 +87,7 @@ def _cposg_download_html_single(id_cnj, session, u_base, download_path):
     }
     r = session.get(u, params=params)
     soup = BeautifulSoup(r.text, 'html.parser')
-    mensagem = soup.find(id='mensagemRetorno')
-    if mensagem is not None and _SEM_INFORMACOES in mensagem.get_text():
+    if _sem_informacoes(soup, id_format):
         return None
     # id_clean vem de clean_cnj (so digitos), seguro como componente de path.
     path = f"{download_path}/cposg/{id_clean}"
@@ -127,6 +127,21 @@ def _cposg_download_html_single(id_cnj, session, u_base, download_path):
         with file_name.open('w', encoding='utf-8') as f:
             f.write(html)
     return path
+
+
+def _sem_informacoes(soup, id_cnj):
+    """``True`` quando a busca diz que não há o processo; outra mensagem do eSAJ levanta ``RuntimeError``.
+
+    A página de processo não traz ``#mensagemRetorno``. Sem esta checagem, a
+    mensagem seria gravada como processo e lida como lista vazia.
+    """
+    mensagem = soup.find(id='mensagemRetorno')
+    if mensagem is None:
+        return False
+    texto = mensagem.get_text(' ', strip=True)
+    if _SEM_INFORMACOES in texto:
+        return True
+    raise RuntimeError(f"Processo {id_cnj}: o eSAJ respondeu à busca com \"{texto}\".")
 
 
 def _incluir_movimentacoes(html, session, u_base, id_cnj):

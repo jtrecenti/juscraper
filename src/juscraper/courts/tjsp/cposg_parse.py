@@ -79,8 +79,9 @@ def _extract_header(soup: BeautifulSoup) -> dict:
     # primeiro link para processo.codigo pode ser de um incidente ("Embargos
     # de Declaração - 50000") ou do processo de 1ª instância.
     numero = soup.find('span', id='numeroProcesso')
-    if numero:
-        result['id_original'] = result['processo'] = numero.get_text(strip=True)
+    texto_numero = numero.get_text(strip=True) if numero else None
+    if texto_numero:
+        result['id_original'] = result['processo'] = texto_numero
     else:
         id_link = soup.select_one("a[href*='processo.codigo']")
         if id_link:

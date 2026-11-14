@@ -202,15 +202,34 @@ def test_cposg_processo_sem_informacoes_sai_em_aviso(tmp_path, mocker):
 
 
 @responses.activate
-def test_cposg_so_processo_sem_informacoes_avisa_e_falha(tmp_path, mocker):
-    """Sem nenhum processo baixado, o erro de sempre vem depois do aviso que diz por quê."""
+def test_cposg_so_processo_sem_informacoes_avisa_e_volta_vazio(tmp_path, mocker):
+    """Só o número sem informações: DataFrame vazio, como antes, mas com o aviso."""
     mocker.patch("time.sleep")
     _registrar_busca()
     _registrar_busca_sem_informacoes()
-    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
 
-    with pytest.warns(UserWarning, match=CNJ_SEM_INFORMACOES), \
-            pytest.raises(RuntimeError, match="Nenhum processo foi baixado"):
-        scraper.cposg_download(CNJ_SEM_INFORMACOES)
+    with pytest.warns(UserWarning, match=CNJ_SEM_INFORMACOES):
+        df = jus.scraper("tjsp", download_path=str(tmp_path)).cposg(CNJ_SEM_INFORMACOES)
 
-    assert not (tmp_path / "cposg").exists()
+    assert df.empty
+    assert list(df.columns) == CPOSG_COLUNAS_ORDENADAS
+
+
+@responses.activate
+def test_cposg_outra_mensagem_do_esaj_nao_vira_processo(tmp_path, mocker, caplog):
+    """Mensagem de erro do eSAJ na busca não é gravada como processo: o download falha e diz qual foi."""
+    mocker.patch("time.sleep")
+    _registrar_busca()
+    responses.replace(
+        responses.GET,
+        f"{ESAJ}/cposg/search.do",
+        body=load_sample_bytes("tjsp", "cposg/show.html"),
+        status=200,
+        content_type="text/html; charset=utf-8",
+    )
+
+    with pytest.raises(RuntimeError, match="Nenhum processo foi baixado"):
+        jus.scraper("tjsp", download_path=str(tmp_path)).cposg_download(CNJ)
+
+    assert "Não foi possível executar esta operação" in caplog.text
+    assert not list(tmp_path.rglob("*.html"))
