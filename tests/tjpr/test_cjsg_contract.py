@@ -77,14 +77,11 @@ def test_cjsg_typical_com_paginacao(mocker):
 
     assert isinstance(df, pd.DataFrame)
     assert set(df.columns) >= CJSG_MIN_COLUMNS
-    assert len(df) > 0
+    # 50 linhas por página, das quais 10 são da Corte IDH e ficam de fora.
+    assert len(df) == 80
     assert df["processo"].notna().all(), "processo nulo em alguma linha"
-    # Linhas com processo vazio existem legitimamente no TJPR (sigilo,
-    # rows de cabeçalho, etc.); só falha se a maioria estiver vazia
-    # (sinal de parser quebrado).
-    assert (df["processo"].astype(str).str.len() > 0).mean() >= 0.5, (
-        "mais da metade dos processos vazios — parser provavelmente quebrado"
-    )
+    # Nestes samples, só as linhas da Corte IDH vinham sem processo.
+    assert (df["processo"] != "").all(), "processo vazio: linha da Corte IDH no resultado?"
     assert df["processo"].nunique() > 1, (
         "todos os processos iguais — paginação suspeita"
     )
@@ -92,7 +89,7 @@ def test_cjsg_typical_com_paginacao(mocker):
 
 @responses.activate
 def test_cjsg_single_page(mocker):
-    """Busca real de página única ("quilombola", 6 resultados)."""
+    """Busca real de página única ("quilombola", 5 resultados judiciais)."""
     mocker.patch("time.sleep")
     add_home()
     _add_search_page("quilombola", 1, "cjsg/single_page.html")
@@ -102,14 +99,10 @@ def test_cjsg_single_page(mocker):
 
     assert isinstance(df, pd.DataFrame)
     assert set(df.columns) >= CJSG_MIN_COLUMNS
-    assert len(df) == 6
+    assert len(df) == 5
     assert df["processo"].notna().all(), "processo nulo em alguma linha"
-    # Linhas com processo vazio existem legitimamente no TJPR (sigilo,
-    # rows de cabeçalho, etc.); só falha se a maioria estiver vazia
-    # (sinal de parser quebrado).
-    assert (df["processo"].astype(str).str.len() > 0).mean() >= 0.5, (
-        "mais da metade dos processos vazios — parser provavelmente quebrado"
-    )
+    # Nestes samples, só as linhas da Corte IDH vinham sem processo.
+    assert (df["processo"] != "").all(), "processo vazio: linha da Corte IDH no resultado?"
 
 
 @responses.activate
@@ -126,7 +119,7 @@ def test_cjsg_paginas_none_pagina_unica_baixa_so_a_primeira(mocker):
 
     df = jus.scraper("tjpr").cjsg("quilombola", paginas=None)
 
-    assert len(df) == 6
+    assert len(df) == 5
     busca = [call for call in responses.calls if "exibirTextoCompleto" not in call.request.url]
     assert [call.request.method for call in busca] == ["GET", "POST"]
 
