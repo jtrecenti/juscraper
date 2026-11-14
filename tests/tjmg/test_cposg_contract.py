@@ -7,7 +7,13 @@ Samples capturados de ``www4.tjmg.jus.br/juridico/sf`` em 26/09/2026:
 * ``resultado_segredo`` — todos os recursos em segredo de justica.
 * ``resultado_baixado`` — processo fisico antigo (2010), sem "NUMERO TJMG".
 * ``resultado_not_found`` — "Nenhum processo encontrado".
-* ``partes_*`` — pagina "Todas as Partes/Advogados" de cada recurso.
+* ``partes_*`` — pagina "Todas as Partes/Advogados" de cada recurso
+  (``partes_baixado`` e o recurso ``/002``; ``partes_baixado_1``, o agravo
+  ``/001``, capturado em 14/11/2026 pelo script abaixo).
+
+Recaptura: ``python -m tests.fixtures.capture.tjmg_cposg``. Os processos
+evoluem no tribunal (baixa, novos recursos, anonimizacao de nomes), entao
+uma recaptura pode exigir ajustar os valores esperados abaixo.
 """
 from __future__ import annotations
 
@@ -117,13 +123,16 @@ def test_cposg_accepts_numero_tjmg(scraper):
 @responses.activate
 def test_cposg_baixado_without_numero_tjmg_header(scraper):
     _add(RESULTADO_URL, "00370502120108130439", "resultado_baixado")
-    _add(PARTES_URL, "10439100037050001", "partes_baixado")
+    _add(PARTES_URL, "10439100037050001", "partes_baixado_1")
     _add(PARTES_URL, "10439100037050002", "partes_baixado")
 
     df = scraper.cposg("0037050-21.2010.8.13.0439")
 
     assert list(df["processo_interno"]) == ["1.0439.10.003705-0/001", "1.0439.10.003705-0/002"]
     assert list(df["situacao"]) == ["BAIXADO", "BAIXADO"]
+    agravante = df.iloc[0]["partes"][0]
+    assert (agravante["tipo"], agravante["nome"]) == ("Agravante", "MUNICIPIO DE MURIAE")
+    assert agravante["baixa"] == "30/07/2010 - REMETIDOS à COMARCA DE ORIGEM"
     apelado = df.iloc[1]["partes"][1]
     assert apelado["baixa"] == "04/05/2012 - REMETIDOS à COMARCA DE ORIGEM"
     assert apelado["nome"] == "MUNICIPIO DE MURIAE"
