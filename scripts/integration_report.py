@@ -3,6 +3,7 @@
 import argparse
 import json
 import re
+import subprocess
 import sys
 import xml.etree.ElementTree as ET
 from datetime import date
@@ -93,6 +94,20 @@ def alvo_do_pr(arquivos: list[str], raiz: Path, fora: set[str]) -> tuple[list[st
     if not tocados and ARQUIVOS_DO_AUTOTESTE & set(arquivos):
         tocados = {TRIBUNAL_DO_AUTOTESTE}
     return sorted(tocados - fora), sorted(tocados & fora)
+
+
+def arquivos_da_branch(raiz: Path, referencia: str) -> list[str]:
+    """Arquivos que HEAD mudou desde o ancestral comum com ``referencia``.
+
+    Sem ``--no-renames``, um arquivo movido aparece só no caminho novo, e o
+    tribunal de onde ele saiu não roda. Sem ``-z``, o Git põe entre aspas o
+    caminho com acento, e o primeiro componente deixa de casar.
+    """
+    resultado = subprocess.run(
+        ["git", "diff", "--no-renames", "--name-only", "-z", f"{referencia}...HEAD"],
+        cwd=raiz, check=True, capture_output=True, text=True,
+    )
+    return [arquivo for arquivo in resultado.stdout.split("\0") if arquivo]
 
 
 def resumir_mensagem(mensagem: str) -> str:
@@ -259,7 +274,9 @@ def main() -> int:
     calendario.add_argument("--evento", required=True)
 
     alvo = subcomandos.add_parser("alvo-pr", help="imprime tribunais=... e fora=... a partir dos arquivos do PR")
-    alvo.add_argument("--arquivos", type=Path, required=True, help="saída de git diff --name-only")
+    origem = alvo.add_mutually_exclusive_group(required=True)
+    origem.add_argument("--arquivos", type=Path, help="saída de git diff --name-only")
+    origem.add_argument("--base-ref", help="base do PR no Git local; o script roda o git diff a partir dela")
     alvo.add_argument("--fora", default="", help="nomes separados por espaço que ficam fora do CI")
     alvo.add_argument("--raiz", type=Path, default=Path())
 
@@ -278,7 +295,17 @@ def main() -> int:
         sys.stdout.write(f"rodar={rodar}\n")
         return 0
     if argumentos.subcomando == "alvo-pr":
-        arquivos = argumentos.arquivos.read_text(encoding="utf-8").splitlines()
+        if argumentos.arquivos is not None:
+            arquivos = argumentos.arquivos.read_text(encoding="utf-8").splitlines()
+        else:
+            try:
+                arquivos = arquivos_da_branch(argumentos.raiz, argumentos.base_ref)
+            except subprocess.CalledProcessError as erro:
+                sys.stderr.write(
+                    f"Falha ao consultar a base Git: {erro.stderr.strip()}\n"
+                    "Atualize a referência com git fetch ou informe outra --base-ref.\n",
+                )
+                return 1
         rodar_no_pr, fora = alvo_do_pr(arquivos, argumentos.raiz, set(argumentos.fora.split()))
         sys.stdout.write(f"tribunais={' '.join(rodar_no_pr)}\nfora={' '.join(fora)}\n")
         return 0
