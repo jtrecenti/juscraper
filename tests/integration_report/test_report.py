@@ -59,27 +59,6 @@ def falhas_gravadas(corpo):
     return json.loads(achado.group(1))
 
 
-@pytest.mark.parametrize(
-    ("data", "evento", "esperado"),
-    [
-        ("2026-12-19", "schedule", "rodar=true"),
-        ("2026-12-20", "schedule", "rodar=false"),
-        ("2026-12-31", "schedule", "rodar=false"),
-        ("2027-01-01", "schedule", "rodar=false"),
-        ("2027-01-20", "schedule", "rodar=false"),
-        ("2027-01-21", "schedule", "rodar=true"),
-        ("2026-07-01", "schedule", "rodar=true"),
-        ("2026-12-25", "workflow_dispatch", "rodar=true"),
-        ("2027-01-10", "pull_request", "rodar=true"),
-    ],
-)
-def test_calendario_pausa_so_a_execucao_agendada_no_recesso(data, evento, esperado):
-    resultado = executar("calendario", "--data", data, "--evento", evento)
-
-    assert resultado.returncode == 0, resultado.stderr
-    assert resultado.stdout.strip() == esperado
-
-
 def test_corpo_conta_cada_caso_uma_vez_e_grava_as_falhas(tmp_path):
     junit = gravar_junit(tmp_path / "integracao.xml", [
         ("tests.tjsp.test_cjsg_integration", "test_busca", falha("AssertionError: coluna ausente\nsegunda linha")),

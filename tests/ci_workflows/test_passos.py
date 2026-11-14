@@ -159,8 +159,7 @@ def checkout_de_pr(pasta, mudanca):
     """Monta base, ramo e o commit de merge do PR; ``mudanca`` altera a árvore no ramo."""
     pasta.mkdir(parents=True, exist_ok=True)
     git(pasta, "init", "-q", "-b", "main")
-    for caminho in ("src/juscraper/courts/tjmt/client.py", "src/juscraper/utils/x.py", "tests/tjmt/test_a.py",
-                    "tests/tjmt/test_b.py", "CHANGELOG.md", "README.md"):
+    for caminho in ("src/juscraper/utils/x.py", "CHANGELOG.md", "README.md"):
         (pasta / caminho).parent.mkdir(parents=True, exist_ok=True)
         (pasta / caminho).write_text(f"{caminho}\n" * 20, encoding="utf-8")
     git(pasta, "add", "-A")
@@ -223,52 +222,7 @@ def test_changelog(tmp_path, mudanca, dispensado, esperado):
         assert "::error title=Falta entrada no CHANGELOG::" in log
 
 
-@pytest.mark.parametrize(
-    ("mudanca", "esperado"),
-    [
-        (acrescentar("src/juscraper/courts/tjmt/client.py"), "tjmt"),
-        # O teste movido para fora do diretório ainda conta para o tribunal de onde saiu.
-        (mover("tests/tjmt/test_b.py", "tests/core/test_b.py"), "tjmt"),
-        (acrescentar("src/juscraper/utils/x.py"), ""),
-    ],
-    ids=["codigo-do-tribunal", "teste-movido", "codigo-comum"],
-)
-def test_lista_de_tribunais_do_pr(tmp_path, mudanca, esperado):
-    pasta = tmp_path / "repo"
-    (pasta / "scripts").mkdir(parents=True)
-    shutil.copy(RAIZ / "scripts" / "integration_report.py", pasta / "scripts")
-    (pasta / "src/juscraper/aggregators").mkdir(parents=True)
-    checkout_de_pr(pasta, mudanca)
-
-    codigo, saidas, log = rodar(
-        bloco_run("integration.yml", "Listar os tribunais que o PR toca"), pasta, FORA_DO_CI="tjrs",
-    )
-
-    assert codigo == 0, log
-    assert saidas["tribunais"] == esperado
-
-
-def test_tribunal_fora_do_ci_gera_aviso_com_o_comando_local(tmp_path):
-    pasta = tmp_path / "repo"
-    (pasta / "scripts").mkdir(parents=True)
-    shutil.copy(RAIZ / "scripts" / "integration_report.py", pasta / "scripts")
-    (pasta / "src/juscraper/aggregators").mkdir(parents=True)
-    (pasta / "tests/tjrs").mkdir(parents=True)
-    (pasta / "src/juscraper/courts/tjrs").mkdir(parents=True)
-    (pasta / "src/juscraper/courts/tjrs/client.py").write_text("x\n", encoding="utf-8")
-    checkout_de_pr(pasta, acrescentar("src/juscraper/courts/tjrs/client.py"))
-
-    codigo, saidas, log = rodar(
-        bloco_run("integration.yml", "Listar os tribunais que o PR toca"), pasta, FORA_DO_CI="tjrs tjpb",
-    )
-
-    assert codigo == 0, log
-    assert (saidas["tribunais"], saidas["fora"]) == ("", "tjrs")
-    assert "::warning title=Fora do CI::O PR toca tjrs" in log
-    assert "uv run pytest tests/tjrs" in log
-
-
-def test_relatorio_do_pr_traz_a_suite_release_e_quem_ficou_fora(tmp_path):
+def test_relatorio_dirigido_traz_a_suite_release_e_ninguem_de_fora(tmp_path):
     (tmp_path / "scripts").mkdir()
     shutil.copy(RAIZ / "scripts" / "integration_report.py", tmp_path / "scripts")
     junit = '<testsuites><testsuite><testcase classname="tests.tjmt.t" name="x"/></testsuite></testsuites>'
@@ -277,8 +231,8 @@ def test_relatorio_do_pr_traz_a_suite_release_e_quem_ficou_fora(tmp_path):
     resumo = tmp_path / "resumo.md"
 
     codigo, _, log = rodar(
-        bloco_run("integration.yml", "Montar o relatório"), tmp_path, TRIBUNAL="tjmt", FORA_DO_PR="tjrs",
-        FORA_DO_CI="tjrs tjpb", EXECUCAO="https://example.invalid/1", DATA="2026-11-04",
+        bloco_run("integration.yml", "Montar o relatório"), tmp_path, TRIBUNAL="tjmt",
+        FORA_DO_CI="tjrs tjpb", EXECUCAO="https://example.invalid/1",
         GITHUB_STEP_SUMMARY=str(resumo),
     )
 
@@ -287,4 +241,5 @@ def test_relatorio_do_pr_traz_a_suite_release_e_quem_ficou_fora(tmp_path):
     assert "| release | 1 | 0 | 0 |" in corpo
     # Execução dirigida sem notebook não lista a suíte de notebooks.
     assert "| notebooks |" not in corpo
-    assert "Fora desta execução, porque dão problema só no runner do GitHub: `tjrs`." in corpo
+    # A execução dirigida ignora FORA_DO_CI, então não lista ninguém de fora.
+    assert "Fora desta execução" not in corpo

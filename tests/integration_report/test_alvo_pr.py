@@ -8,12 +8,11 @@ import pytest
 
 RAIZ = Path(__file__).resolve().parents[2]
 SCRIPT = RAIZ / "scripts" / "integration_report.py"
-WORKFLOW = RAIZ / ".github" / "workflows" / "integration.yml"
 
 
-def executar_alvo(raiz, *argumentos, fora=""):
+def executar_alvo(raiz, *argumentos):
     return subprocess.run(
-        [sys.executable, str(SCRIPT), "alvo-pr", *argumentos, "--fora", fora, "--raiz", str(raiz)],
+        [sys.executable, str(SCRIPT), "alvo-pr", *argumentos, "--raiz", str(raiz)],
         check=False, capture_output=True, text=True,
     )
 
@@ -21,14 +20,14 @@ def executar_alvo(raiz, *argumentos, fora=""):
 def ler_saida(resultado):
     assert resultado.returncode == 0, resultado.stderr
     saida = dict(linha.split("=", 1) for linha in resultado.stdout.splitlines())
-    return saida["tribunais"].split(), saida["fora"].split()
+    return saida["tribunais"].split()
 
 
-def alvo(raiz, arquivos, fora="", pasta=None):
-    """Roda ``alvo-pr`` e devolve ``(a rodar, fora do CI)`` como listas."""
+def alvo(raiz, arquivos, pasta=None):
+    """Roda ``alvo-pr`` e devolve os tribunais a rodar como lista."""
     lista = (pasta or raiz) / "arquivos.txt"
     lista.write_text("\n".join(arquivos) + "\n", encoding="utf-8")
-    return ler_saida(executar_alvo(raiz, "--arquivos", str(lista), fora=fora))
+    return ler_saida(executar_alvo(raiz, "--arquivos", str(lista)))
 
 
 def git(raiz, *argumentos):
@@ -41,7 +40,7 @@ def registrar(raiz, mensagem):
 
 
 def alvo_da_branch(raiz):
-    """Roda ``alvo-pr --base-ref origin/main`` e devolve ``(a rodar, fora do CI)``."""
+    """Roda ``alvo-pr --base-ref origin/main`` e devolve os tribunais a rodar."""
     return ler_saida(executar_alvo(raiz, "--base-ref", "origin/main"))
 
 
@@ -88,7 +87,7 @@ def arvore(tmp_path):
     ],
 )
 def test_alvo_e_o_tribunal_cujo_diretorio_o_pr_tocou(arvore, arquivos, esperado):
-    assert alvo(arvore, arquivos) == (esperado, [])
+    assert alvo(arvore, arquivos) == esperado
 
 
 @pytest.mark.parametrize(
@@ -99,28 +98,14 @@ def test_alvo_e_o_tribunal_cujo_diretorio_o_pr_tocou(arvore, arquivos, esperado)
         ["tests/core/test_x.py", "tests/utils/test_x.py"],
         ["tests/test_release_date_filter.py", "tests/helpers.py"],
         ["docs/notebooks/README.md", "CHANGELOG.md"],
-        # Diretório novo sem teste não é tribunal que o workflow saiba rodar.
+        # Diretório novo sem teste não é tribunal que se saiba rodar.
         ["src/juscraper/courts/tjzz/client.py"],
+        # O workflow e o script não rodam localmente: não há autoteste.
+        [".github/workflows/integration.yml", "scripts/integration_report.py"],
     ],
 )
 def test_codigo_comum_nao_aponta_tribunal(arvore, arquivos):
-    assert alvo(arvore, arquivos) == ([], [])
-
-
-def test_tribunal_fora_do_ci_vai_para_a_lista_de_fora(arvore):
-    arquivos = ["src/juscraper/courts/_esaj/busca.py", "docs/notebooks/tjmt.ipynb"]
-
-    assert alvo(arvore, arquivos, fora="tjac tjrs") == (["tjmt", "tjsp"], ["tjac"])
-
-
-@pytest.mark.parametrize("arquivo", [".github/workflows/integration.yml", "scripts/integration_report.py"])
-def test_pr_so_do_workflow_roda_o_autoteste(arvore, arquivo):
-    criar(arvore, "tests/tjmg/test_x.py")
-    criar(arvore, "src/juscraper/courts/tjmg/client.py")
-
-    assert alvo(arvore, [arquivo]) == (["tjmg"], [])
-    # Com tribunal tocado, o próprio tribunal já exercita o workflow.
-    assert alvo(arvore, [arquivo, "tests/tjmt/test_x.py"]) == (["tjmt"], [])
+    assert alvo(arvore, arquivos) == []
 
 
 @pytest.fixture
@@ -142,14 +127,14 @@ def test_base_ref_conta_os_dois_lados_de_um_arquivo_movido(repositorio):
     git(repositorio, "mv", "tests/tjac/test_x.py", "tests/tjmt/test_movido.py")
     registrar(repositorio, "Move teste do TJAC para o TJMT")
 
-    assert alvo_da_branch(repositorio) == (["tjac", "tjmt"], [])
+    assert alvo_da_branch(repositorio) == ["tjac", "tjmt"]
 
 
 def test_base_ref_le_caminho_com_acento(repositorio):
     criar(repositorio, "tests/tjsp/samples/decisão.html")
     registrar(repositorio, "Sample com acento no nome")
 
-    assert alvo_da_branch(repositorio) == (["tjsp"], [])
+    assert alvo_da_branch(repositorio) == ["tjsp"]
 
 
 def test_base_ref_ignora_o_que_a_main_ganhou_depois_da_branch(repositorio):
@@ -161,7 +146,7 @@ def test_base_ref_ignora_o_que_a_main_ganhou_depois_da_branch(repositorio):
     git(repositorio, "update-ref", "refs/remotes/origin/main", "HEAD")
     git(repositorio, "switch", "-q", "feature")
 
-    assert alvo_da_branch(repositorio) == (["tjmt"], [])
+    assert alvo_da_branch(repositorio) == ["tjmt"]
 
 
 def test_base_ref_inexistente_falha_com_orientacao(repositorio):
@@ -175,11 +160,11 @@ def test_nome_que_nao_e_diretorio_simples_nao_passa(arvore):
     criar(arvore, "src/juscraper/courts/tj-x/client.py")
     criar(arvore, "tests/tj-x/test_x.py")
 
-    assert alvo(arvore, ["src/juscraper/courts/tj-x/client.py", "tests/tj-x/test_x.py"]) == ([], [])
+    assert alvo(arvore, ["src/juscraper/courts/tj-x/client.py", "tests/tj-x/test_x.py"]) == []
 
 
 def test_todo_notebook_e_todo_tribunal_do_repositorio_tem_alvo(tmp_path):
-    """Notebook ou tribunal novo sem diretório em tests/ passaria em PR sem rodar."""
+    """Notebook ou tribunal novo sem diretório em tests/ ficaria fora do alvo da branch."""
     notebooks = sorted(caminho.stem for caminho in (RAIZ / "docs" / "notebooks").glob("*.ipynb"))
     tribunais = sorted(
         caminho.name
@@ -189,19 +174,12 @@ def test_todo_notebook_e_todo_tribunal_do_repositorio_tem_alvo(tmp_path):
     )
 
     for nome in notebooks + tribunais:
-        assert alvo(RAIZ, [f"docs/notebooks/{nome}.ipynb", f"tests/{nome}/x.py"], pasta=tmp_path) == ([nome], []), nome
+        assert alvo(RAIZ, [f"docs/notebooks/{nome}.ipynb", f"tests/{nome}/x.py"], pasta=tmp_path) == [nome], nome
 
 
 def test_familias_reais_apontam_seus_tribunais(tmp_path):
-    esaj, _ = alvo(RAIZ, ["src/juscraper/courts/_esaj/x.py"], pasta=tmp_path)
-    trf, _ = alvo(RAIZ, ["src/juscraper/courts/_trf/x.py"], pasta=tmp_path)
+    esaj = alvo(RAIZ, ["src/juscraper/courts/_esaj/x.py"], pasta=tmp_path)
+    trf = alvo(RAIZ, ["src/juscraper/courts/_trf/x.py"], pasta=tmp_path)
 
     assert {"tjsp", "tjal", "tjce"} <= set(esaj)
     assert {"trf1", "trf3", "trf5"} <= set(trf)
-
-
-def test_workflow_passa_a_lista_fora_do_ci_ao_alvo_do_pr():
-    texto = WORKFLOW.read_text(encoding="utf-8")
-
-    assert 'alvo-pr --arquivos arquivos.txt --fora "$FORA_DO_CI"' in texto
-    assert "git diff --no-renames --name-only HEAD^1 HEAD > arquivos.txt" in texto

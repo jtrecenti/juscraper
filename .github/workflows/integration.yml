@@ -1,10 +1,11 @@
 name: Integração
 
+# Só por disparo manual. Os tribunais bloqueiam os IPs dos runners do GitHub
+# com frequência (conexão sem resposta, desafio de WAF, HTTP 403), e a
+# execução automática, agendada ou em PR, mostrava o bloqueio e não a quebra
+# do raspador. A conferência de rotina roda localmente, de IP residencial: ver
+# "Integração local" no CONTRIBUTING.md.
 on:
-  schedule:
-    # Quarta-feira, 03:17 em Brasília. Minuto quebrado porque o início de hora
-    # é o pico de atraso do agendador do GitHub.
-    - cron: "17 6 * * 3"
   workflow_dispatch:
     inputs:
       tribunal:
@@ -15,25 +16,6 @@ on:
         description: "Reescrever a issue de acompanhamento. Só vale com tribunal vazio."
         type: boolean
         default: false
-  # Em PR, roda os tribunais cujo diretório o PR tocou (ver `alvo-pr` em
-  # scripts/integration_report.py) e nunca toca a issue. Um PR que muda só o
-  # workflow ou o script roda o autoteste com um tribunal: `schedule` e
-  # `workflow_dispatch` só existem depois do merge, então este é o único jeito
-  # de exercitar uma mudança no workflow antes dela entrar na main.
-  pull_request:
-    paths:
-      - .github/workflows/integration.yml
-      - scripts/integration_report.py
-      - src/juscraper/courts/**
-      - src/juscraper/aggregators/**
-      - tests/**
-      - docs/notebooks/**
-
-# Em PR, um push novo cancela a execução anterior do mesmo PR. Fora de PR o
-# grupo é a própria execução, então nada é cancelado.
-concurrency:
-  group: integracao-${{ github.event.pull_request.number || github.run_id }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -45,70 +27,25 @@ env:
   # A issue só é reescrita com o retrato inteiro e com o código da main. Uma
   # execução de um tribunal só faria todas as outras falhas "saírem da lista".
   # Tribunais e agregadores que dão problema só no runner do GitHub e por isso
-  # ficam fora da execução completa e da execução de PR: medidos em 14/10/2026, falharam no runner
+  # ficam fora da execução completa: medidos em 14/10/2026, falharam no runner
   # (conexão sem resposta, leitura sem resposta nos testes que paginam, página
   # de desafio no lugar do JSON ou HTTP 403) e passaram, ou falharam por outro
   # motivo, a partir de IP residencial no Brasil. No CI eles mostrariam toda
-  # semana o problema do runner, e não a quebra que a issue existe para pegar.
+  # vez o problema do runner, e não a quebra que a issue existe para pegar.
   # Rodam localmente, ou num disparo manual com `tribunal`, que ignora a lista.
-  # Um PR que toca um deles recebe um aviso em vez de execução.
   FORA_DO_CI: "falcao tjac tjam tjes tjms tjpb tjpi tjrj tjrn tjro tjrs"
-  ATUALIZAR_ISSUE: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.atualizar_issue && inputs.tribunal == '' && github.ref == 'refs/heads/main') }}
+  ATUALIZAR_ISSUE: ${{ inputs.atualizar_issue && inputs.tribunal == '' && github.ref == 'refs/heads/main' }}
 
 jobs:
-  calendario:
-    name: Calendário e alvo
-    runs-on: ubuntu-latest
-    outputs:
-      # PR que não toca tribunal nenhum, ou só os de FORA_DO_CI, não roda.
-      rodar: ${{ steps.decidir.outputs.rodar == 'true' && (github.event_name != 'pull_request' || steps.pr.outputs.tribunais != '') }}
-      data: ${{ steps.decidir.outputs.data }}
-      # Lista de tribunais separados por espaço; vazia na execução completa.
-      alvo: ${{ steps.pr.outputs.tribunais || inputs.tribunal }}
-      fora: ${{ steps.pr.outputs.fora }}
-      # A trava do relatório precisa disto, e `env` não vale em `concurrency`.
-      atualizar_issue: ${{ env.ATUALIZAR_ISSUE }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          # Em PR o checkout é o commit de merge com a base; o primeiro pai é a
-          # ponta da base, e o diff contra ele é exatamente o que o PR muda.
-          fetch-depth: 2
-          persist-credentials: false
-      - name: Decidir se a execução agendada cai no recesso forense
-        id: decidir
-        run: |
-          # Sem pipefail, uma falha do script some atrás do tee: `rodar` não
-          # seria gravado, os outros jobs seriam pulados e a execução sairia
-          # verde sem ter rodado nada.
-          set -o pipefail
-          data="$(TZ=America/Sao_Paulo date +%F)"
-          echo "data=$data" >> "$GITHUB_OUTPUT"
-          python3 scripts/integration_report.py calendario --data "$data" --evento "$GITHUB_EVENT_NAME" | tee -a "$GITHUB_OUTPUT"
-      - name: Listar os tribunais que o PR toca
-        id: pr
-        if: github.event_name == 'pull_request'
-        run: |
-          # Sem --no-renames, um arquivo movido aparece só no caminho novo, e o
-          # tribunal de onde ele saiu não roda.
-          git diff --no-renames --name-only HEAD^1 HEAD > arquivos.txt
-          saida="$(python3 scripts/integration_report.py alvo-pr --arquivos arquivos.txt --fora "$FORA_DO_CI")"
-          echo "$saida" | tee -a "$GITHUB_OUTPUT"
-          fora="$(sed -n 's/^fora=//p' <<< "$saida")"
-          for nome in $fora; do
-            echo "::warning title=Fora do CI::O PR toca $nome, que não roda no runner do GitHub; rodar localmente: uv run pytest tests/$nome -m 'integration and not anti_bot' e uv run pytest --nbmake docs/notebooks/$nome.ipynb"
-          done
-
   testes:
     name: Tribunais ao vivo
-    needs: calendario
-    if: needs.calendario.outputs.rodar == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 180
     env:
       # Notebooks que só rodam com credencial de gov.br.
       NOTEBOOKS_COM_CREDENCIAL: "jusbr pdpj"
-      TRIBUNAL: ${{ needs.calendario.outputs.alvo }}
+      # Lista de tribunais separados por espaço; vazia na execução completa.
+      TRIBUNAL: ${{ inputs.tribunal }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -123,10 +60,9 @@ jobs:
           else
             testes=""
             notebooks=""
-            # Execução dirigida (PR ou disparo com `tribunal`): um ou mais
-            # nomes separados por espaço. O valor vem de quem dispara o
-            # workflow ou dos caminhos do PR e vira caminho: só passa nome
-            # simples de diretório.
+            # Execução dirigida (disparo com `tribunal`): um ou mais nomes
+            # separados por espaço. O valor vem de quem dispara o workflow e
+            # vira caminho: só passa nome simples de diretório.
             for nome in $TRIBUNAL; do
               if ! [[ "$nome" =~ ^[a-z0-9_]+$ ]] || [ ! -d "tests/$nome" ]; then
                 # Sem ecoar o valor: uma quebra de linha nele viraria comando
@@ -175,8 +111,8 @@ jobs:
           uv run playwright install --with-deps chromium
       # Nos passos abaixo, na execução completa, o código de saída 1 do pytest
       # (teste falhou) não derruba o job: tribunal fora do ar é assunto da
-      # issue. Na execução dirigida derruba, porque quem abre o PR de um
-      # tribunal precisa ver que ele falha agora. De 2 em diante quem quebrou
+      # issue. Na execução dirigida derruba, porque quem dispara um tribunal
+      # precisa ver que ele falha agora. De 2 em diante quem quebrou
       # foi a suíte ou o workflow, e o job cai sempre. O 5 (nada coletado) pega
       # alvo errado na execução completa; na dirigida é tribunal sem teste de
       # integração, como o Datajud.
@@ -230,8 +166,8 @@ jobs:
 
   relatorio:
     name: Relatório
-    needs: [calendario, testes]
-    if: ${{ !cancelled() && needs.calendario.outputs.rodar == 'true' }}
+    needs: testes
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     # Único job com escrita em issues. Ele não instala dependência nem executa
     # código dos testes: só roda o script, que usa a biblioteca padrão. O token
@@ -239,26 +175,26 @@ jobs:
     permissions:
       contents: read
       issues: write
-    # Uma execução agendada e um disparo manual simultâneos poderiam, os dois,
-    # não achar a issue e criar duas. A trava vale só para quem reescreve a
-    # issue: num grupo, um job pendente cancela o pendente anterior, e com PRs
-    # de tribunais diferentes rodando juntos um relatório cancelaria o outro.
+    # Dois disparos completos simultâneos poderiam, os dois, não achar a issue
+    # e criar duas. A trava vale só para quem reescreve a issue: num grupo, um
+    # job pendente cancela o pendente anterior, e com disparos de tribunais
+    # diferentes rodando juntos um relatório cancelaria o outro. A condição
+    # repete a de ATUALIZAR_ISSUE, porque `env` não vale em `concurrency`.
     concurrency:
-      group: ${{ needs.calendario.outputs.atualizar_issue == 'true' && 'integracao-issue' || format('integracao-relatorio-{0}', github.run_id) }}
+      group: ${{ inputs.atualizar_issue && inputs.tribunal == '' && github.ref == 'refs/heads/main' && 'integracao-issue' || format('integracao-relatorio-{0}', github.run_id) }}
       cancel-in-progress: false
     env:
       # Com o job de testes reprovado (pytest com código 2 ou mais, tempo
       # esgotado, instalação quebrada), o retrato está incompleto: reescrever a
-      # issue faria as falhas da semana anterior "saírem da lista" e voltarem
+      # issue faria as falhas da execução anterior "saírem da lista" e voltarem
       # na seguinte, com duas notificações falsas. Nesse caso a issue fica como
       # está e o próprio workflow vermelho é o aviso.
       TESTES_OK: ${{ needs.testes.result == 'success' }}
-      TRIBUNAL: ${{ needs.calendario.outputs.alvo }}
-      FORA_DO_PR: ${{ needs.calendario.outputs.fora }}
+      TRIBUNAL: ${{ inputs.tribunal }}
       LABEL: tribunal-quebrado
+      # O título é a chave que acha a issue existente; trocá-lo abriria outra.
       TITULO: "Integração semanal: falhas por tribunal"
       EXECUCAO: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-      DATA: ${{ needs.calendario.outputs.data }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -295,16 +231,14 @@ jobs:
           fi
           # A issue diz quem ficou fora da execução completa, para que a falta
           # de falhas de um tribunal da lista não se leia como tribunal em dia.
-          # No PR, o resumo diz quais tribunais tocados ficaram fora.
+          # A execução dirigida ignora a lista e não deixa ninguém de fora.
           fora=()
           if [ -z "$TRIBUNAL" ]; then
             fora=(--fora "$FORA_DO_CI")
-          else
-            fora=(--fora "$FORA_DO_PR")
           fi
           python3 scripts/integration_report.py relatorio "${suites[@]}" "${fora[@]}" \
             --anterior anterior.md --corpo corpo.md --comentario comentario.md \
-            --execucao "$EXECUCAO" --data "$DATA"
+            --execucao "$EXECUCAO" --data "$(TZ=America/Sao_Paulo date +%F)"
           cat corpo.md >> "$GITHUB_STEP_SUMMARY"
       - name: Atualizar a issue
         if: env.ATUALIZAR_ISSUE == 'true' && env.TESTES_OK == 'true'

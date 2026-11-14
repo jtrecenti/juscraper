@@ -4,6 +4,8 @@ import re
 import tomllib
 from pathlib import Path
 
+import yaml
+
 RAIZ = Path(__file__).resolve().parents[2]
 WORKFLOWS = sorted((RAIZ / ".github/workflows").glob("*.yml"))
 # Workflows cujo resultado barra o PR; o de integração tolera falha de
@@ -118,37 +120,22 @@ def test_changelog_reprova_codigo_sem_entrada_e_aceita_a_etiqueta():
 
 def test_so_a_execucao_que_reescreve_a_issue_divide_a_trava_do_relatorio():
     # Num grupo de concorrência, um job pendente cancela o pendente anterior:
-    # com o grupo fixo, PRs de tribunais diferentes cancelariam o relatório um
-    # do outro.
+    # com o grupo fixo, disparos de tribunais diferentes cancelariam o
+    # relatório um do outro.
     integracao = linhas("integration.yml")
+    condicao = "inputs.atualizar_issue && inputs.tribunal == '' && github.ref == 'refs/heads/main'"
     grupos = [linha for linha in integracao if linha.startswith("group:")]
-    assert (
-        "group: ${{ needs.calendario.outputs.atualizar_issue == 'true' && 'integracao-issue' "
-        "|| format('integracao-relatorio-{0}', github.run_id) }}"
-    ) in grupos
-    assert "atualizar_issue: ${{ env.ATUALIZAR_ISSUE }}" in integracao
-
-
-def test_integracao_no_pr_roda_os_tribunais_tocados():
-    integracao = linhas("integration.yml")
-    gatilho = integracao.index("pull_request:")
-    caminhos = integracao[gatilho + 2:gatilho + 8]
-    assert caminhos == [
-        "- .github/workflows/integration.yml",
-        "- scripts/integration_report.py",
-        "- src/juscraper/courts/**",
-        "- src/juscraper/aggregators/**",
-        "- tests/**",
-        "- docs/notebooks/**",
+    assert grupos == [
+        f"group: ${{{{ {condicao} && 'integracao-issue' || format('integracao-relatorio-{{0}}', github.run_id) }}}}",
     ]
-    saidas = {linha.split(":", 1)[0]: linha.split(":", 1)[1].strip() for linha in integracao if ":" in linha}
-    # PR que não toca tribunal não roda; o alvo vem do PR ou do disparo manual.
-    assert saidas["rodar"] == (
-        "${{ steps.decidir.outputs.rodar == 'true' && "
-        "(github.event_name != 'pull_request' || steps.pr.outputs.tribunais != '') }}"
-    )
-    assert saidas["alvo"] == "${{ steps.pr.outputs.tribunais || inputs.tribunal }}"
-    assert integracao.count("TRIBUNAL: ${{ needs.calendario.outputs.alvo }}") == 2
-    # Push novo no PR cancela a execução anterior, que pode levar minutos.
-    assert "group: integracao-${{ github.event.pull_request.number || github.run_id }}" in integracao
-    assert "cancel-in-progress: ${{ github.event_name == 'pull_request' }}" in integracao
+    # A trava e os passos que reescrevem a issue usam a mesma condição.
+    assert f"ATUALIZAR_ISSUE: ${{{{ {condicao} }}}}" in integracao
+
+
+def test_integracao_so_roda_por_disparo_manual():
+    # Decisão de 14/11/2026: os tribunais bloqueiam os IPs dos runners, então
+    # a integração ao vivo não roda sozinha em PR nem por agendamento; a
+    # conferência de rotina é local, de IP residencial.
+    texto = (RAIZ / ".github/workflows/integration.yml").read_text(encoding="utf-8")
+    # O YAML 1.1 lê a chave `on` como o booleano True.
+    assert list(yaml.safe_load(texto)[True]) == ["workflow_dispatch"]

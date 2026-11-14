@@ -32,7 +32,7 @@ def test_tjsp_listar_classes_primeiro_grau_live():
 @pytest.mark.integration
 def test_esaj_puro_listar_classes_live():
     # Qualquer eSAJ-puro serve. O TJAL responde ao runner do GitHub, enquanto o
-    # TJAM recusa a conexão e está fora da integração semanal do CI.
+    # TJAM recusa a conexão e está fora da execução completa do CI.
     df = jus.scraper("tjal").listar_classes()
     assert set(df.columns) == ARVORE_COLUNAS
     assert len(df) > 10
