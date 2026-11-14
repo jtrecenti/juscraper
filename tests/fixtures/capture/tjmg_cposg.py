@@ -25,7 +25,6 @@ from __future__ import annotations
 
 import argparse
 import logging
-import tempfile
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
@@ -55,50 +54,46 @@ CASOS: list[tuple[str, str, dict[str, str]]] = [
 ]
 
 
-def capturar(dest: Path, casos: list[tuple[str, str, dict[str, str]]] = CASOS) -> None:
-    """Baixa cada caso pelo ``cposg_download`` real e grava as respostas em ``dest``.
+def capturar(dest: Path) -> None:
+    """Baixa cada caso de ``CASOS`` pelo ``cposg_download`` real e grava em ``dest``.
 
-    As respostas vao primeiro para um diretorio temporario e so sao copiadas
-    para ``dest`` se todos os samples vierem: uma rodada com falha nao mistura
-    samples novos e antigos. Resposta que nao seja HTTP 200 (o raspador repete
-    e segue com aviso) nao e gravada; recurso fora de ``CASOS`` gera aviso.
-    As quebras de linha sao normalizadas para LF, como nos samples versionados.
+    As respostas ficam em memoria e so sao gravadas se todos os samples
+    vierem: uma rodada com falha nao mistura samples novos e antigos. Resposta
+    que nao seja HTTP 200 (o raspador repete e segue com aviso) nao conta;
+    recurso fora de ``CASOS`` gera aviso. As quebras de linha sao normalizadas
+    para LF, como nos samples versionados.
     """
     scraper = jus.scraper("tjmg")
     estado: dict = {"cenario": "", "partes": {}}
-    gravados: set[str] = set()
+    capturados: dict[str, bytes] = {}
 
-    with tempfile.TemporaryDirectory() as tmp:
-        staging = Path(tmp)
+    def _guardar(resposta: requests.Response, *_args: object, **_kwargs: object) -> None:
+        url = urlparse(resposta.request.url or "")
+        numero = parse_qs(url.query).get("listaProcessos", [""])[0]
+        rota = url.path.rsplit("/", 1)[-1]
+        nome = None
+        if rota == "proc_resultado2.jsp":
+            nome = f"resultado_{estado['cenario']}"
+        elif rota == "proc_partes_advogados2.jsp":
+            nome = estado["partes"].get(numero)
+            if nome is None:
+                logger.warning("[tjmg/cposg/%s] recurso %s fora de CASOS; nao gravado", estado["cenario"], numero)
+        if nome and resposta.status_code == 200:
+            capturados[nome] = resposta.content.replace(b"\r\n", b"\n")
+            logger.info("[tjmg/cposg/%s] %s?listaProcessos=%s -> %s.html", estado["cenario"], rota, numero, nome)
 
-        def _gravar(resposta: requests.Response, *_args: object, **_kwargs: object) -> None:
-            url = urlparse(resposta.request.url or "")
-            numero = parse_qs(url.query).get("listaProcessos", [""])[0]
-            rota = url.path.rsplit("/", 1)[-1]
-            nome = None
-            if rota == "proc_resultado2.jsp":
-                nome = f"resultado_{estado['cenario']}"
-            elif rota == "proc_partes_advogados2.jsp":
-                nome = estado["partes"].get(numero)
-                if nome is None:
-                    logger.warning("[tjmg/cposg/%s] recurso %s fora de CASOS; nao gravado", estado["cenario"], numero)
-            if nome and resposta.status_code == 200:
-                dump(staging / f"{nome}.html", resposta.content.replace(b"\r\n", b"\n"))
-                gravados.add(nome)
-                logger.info("[tjmg/cposg/%s] %s?listaProcessos=%s -> %s.html", estado["cenario"], rota, numero, nome)
+    scraper.session.hooks["response"].append(_guardar)
+    for cenario, numero, partes in CASOS:
+        estado.update(cenario=cenario, partes=partes)
+        scraper.cposg_download(numero)
 
-        scraper.session.hooks["response"].append(_gravar)
-        for cenario, numero, partes in casos:
-            estado.update(cenario=cenario, partes=partes)
-            scraper.cposg_download(numero)
-
-        esperados = {f"resultado_{cenario}" for cenario, _, _ in casos}
-        esperados |= {nome for _, _, partes in casos for nome in partes.values()}
-        faltantes = sorted(esperados - gravados)
-        if faltantes:
-            raise SystemExit(f"TJMG cposg: samples nao gravados (falha na consulta?): {faltantes}")
-        for arquivo in staging.iterdir():
-            dump(dest / arquivo.name, arquivo.read_bytes())
+    esperados = {f"resultado_{cenario}" for cenario, _, _ in CASOS}
+    esperados |= {nome for _, _, partes in CASOS for nome in partes.values()}
+    faltantes = sorted(esperados - capturados.keys())
+    if faltantes:
+        raise SystemExit(f"TJMG cposg: samples nao gravados (falha na consulta?): {faltantes}")
+    for nome, conteudo in capturados.items():
+        dump(dest / f"{nome}.html", conteudo)
 
 
 def main() -> None:
