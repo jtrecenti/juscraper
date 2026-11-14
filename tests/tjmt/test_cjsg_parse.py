@@ -23,7 +23,7 @@ def _resultado(tipo: str, *, nulo: bool = False) -> dict:
         "nomeRelator": None if nulo else "RELATOR TESTE",
         "nomeRedatorDesignado": None,
         "nomeCamara": "PRIMEIRA CÂMARA",
-        "nomeClasseEsferaProcessual": "APEL",
+        "nomeClasseEsferaProcessual": "CÂMARAS ISOLADAS CÍVEIS DE DIREITO PRIVADO",
         "dataJulgamento": "2024-01-02T03:04:05.123",
         "dataPublicacao": None if nulo else "2024-01-03T00:00:00",
         "instancia": "Segunda",

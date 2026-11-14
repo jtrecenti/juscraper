@@ -101,6 +101,16 @@ def main() -> None:
         session,
         dest,
         cfg["api_url"],
+        "habeas corpus",
+        1,
+        "class_sigla_unavailable.json",
+        tipo_consulta="DecisaoMonocratica",
+        quantidade=3,
+    )
+    _capture(
+        session,
+        dest,
+        cfg["api_url"],
         "juscraper_probe_zero_hits_xyzqwe",
         1,
         "no_results.json",
