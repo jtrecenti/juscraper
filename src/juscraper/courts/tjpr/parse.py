@@ -12,6 +12,8 @@ from juscraper.core.parse_utils import coerce_date_columns
 
 from .download import get_ementa_completa
 
+_COLUNAS_TJ = ("processo", "orgao_julgador", "relator", "data_julgamento", "ementa")
+
 
 def _extract_processo(dados_td: Tag) -> str:
     processo_a = dados_td.find("a", class_="decisao negrito")
@@ -47,53 +49,86 @@ def _extract_labeled_value(
 
 
 def _extract_ementa(
+    ementa_el: Tag,
+    id_registro: str,
+    criterio: str | None,
+    request_fn: RequestFn | None,
+    *,
+    corte_idh: bool = False,
+) -> str:
+    ementa = str(ementa_el.get_text("\n", strip=True))
+    if "leia mais" not in ementa.lower():
+        return ementa
+    if not id_registro or not criterio or request_fn is None:
+        return ementa
+
+    try:
+        return get_ementa_completa(request_fn, id_registro, criterio, corte_idh=corte_idh)
+    except (requests.RequestException, RetryExhaustedError) as error:
+        # A falha de uma ementa completa não invalida os demais resultados da página.
+        return f"{ementa}\n[Erro ao buscar ementa completa: {error}]"
+
+
+def _input_value(td: Tag, name: str) -> str:
+    field = td.find("input", {"name": name})
+    return str(field["value"]) if field and "value" in field.attrs else ""
+
+
+def _parse_row_corte_idh(
     dados_td: Tag,
     ementa_td: Tag,
     criterio: str | None,
     request_fn: RequestFn | None,
-) -> str:
-    ementa = str(ementa_td.get_text("\n", strip=True))
-    if "leia mais" not in ementa.lower():
-        return ementa
+) -> dict[str, str]:
+    """Linha de precedente da Corte IDH: só nome do caso, data e ementa.
 
-    process_input = dados_td.find("input", {"name": "idsSelecionados"})
-    id_processo = (
-        str(process_input["value"])
-        if process_input and "value" in process_input.attrs
-        else ""
-    )
-    if not id_processo or not criterio or request_fn is None:
-        return ementa
-
-    try:
-        return get_ementa_completa(request_fn, id_processo, criterio)
-    except (requests.RequestException, RetryExhaustedError) as error:
-        # A falha de uma ementa completa não invalida os demais resultados da página.
-        return f"{ementa}\n[Erro ao buscar ementa completa: {error}]"
+    O portal não traz processo, órgão julgador nem relator para esses casos;
+    as colunas ficam vazias. A ementa sai do ``div#ementa<id>``, sem a nota
+    "A expressão foi encontrada..." nem a autoria da ementa.
+    """
+    id_caso = _input_value(dados_td, "idsSelecionadosCidh")
+    caso_a = dados_td.find("a", class_="cidh-text")
+    caso = caso_a.get_text(strip=True).removeprefix("Caso:").strip() if caso_a else ""
+    ementa_el = ementa_td.find("div", id=f"ementa{id_caso}") or ementa_td
+    return {
+        "fonte": "Corte IDH",
+        "caso": caso,
+        "data_julgamento": _extract_labeled_value(dados_td, "Data Julgamento:"),
+        "ementa": _extract_ementa(ementa_el, id_caso, criterio, request_fn, corte_idh=True),
+    }
 
 
 def _parse_row(
     row: Tag,
     criterio: str | None,
     request_fn: RequestFn | None,
+    *,
+    incluir_corte_idh: bool = False,
 ) -> dict[str, str] | None:
-    # O portal mistura precedentes da Corte IDH na tabela de jurisprudência
-    # (ver a divisão das 50 linhas em ``download.py``).
-    if row.find("input", {"name": "idsSelecionadosCidh"}):
-        return None
-
     cols = row.find_all("td")
     if len(cols) < 2:
         return None
 
     dados_td, ementa_td = cols[:2]
-    return {
+    # O portal mistura precedentes da Corte IDH na tabela de jurisprudência
+    # (ver a divisão das 50 linhas em ``download.py``).
+    if dados_td.find("input", {"name": "idsSelecionadosCidh"}):
+        if not incluir_corte_idh:
+            return None
+        return _parse_row_corte_idh(dados_td, ementa_td, criterio, request_fn)
+
+    resultado = {
         "processo": _extract_processo(dados_td),
         "orgao_julgador": _extract_labeled_value(dados_td, "Órgão Julgador:"),
         "relator": _extract_labeled_value(dados_td, "Relator:", use_text_sibling=True),
         "data_julgamento": _extract_labeled_value(dados_td, "Data Julgamento:", use_text_sibling=True),
-        "ementa": _extract_ementa(dados_td, ementa_td, criterio, request_fn),
+        "ementa": _extract_ementa(
+            ementa_td, _input_value(dados_td, "idsSelecionados"), criterio, request_fn
+        ),
     }
+    if incluir_corte_idh:
+        resultado["fonte"] = "TJPR"
+    return resultado
 
 
 def cjsg_parse(
@@ -101,6 +136,7 @@ def cjsg_parse(
     criterio=None,
     *,
     request_fn: RequestFn | None = None,
+    incluir_corte_idh: bool = False,
 ):
     """
     Extracts relevant data from the HTMLs returned by TJPR.
@@ -109,6 +145,10 @@ def cjsg_parse(
     ``request_fn`` is used to fetch the full minute when a row is truncated
     with "Leia mais...". Without it the ementa stays truncated — useful for
     offline parsing of pre-downloaded pages.
+
+    Por padrão, as linhas da Corte IDH ficam de fora. Com
+    ``incluir_corte_idh=True`` elas entram, e o DataFrame ganha as colunas
+    ``fonte`` ("TJPR" ou "Corte IDH") e ``caso`` (nome do caso da Corte IDH).
     """
     resultados = []
     for html in htmls:
@@ -117,9 +157,13 @@ def cjsg_parse(
         if not tabela:
             continue
         for row in tabela.find_all("tr")[1:]:  # pula o cabeçalho
-            result = _parse_row(row, criterio, request_fn)
+            result = _parse_row(row, criterio, request_fn, incluir_corte_idh=incluir_corte_idh)
             if result is not None:
                 resultados.append(result)
     df = pd.DataFrame(resultados)
+    if incluir_corte_idh:
+        # Ordem fixa: as linhas da Corte IDH podem vir antes das do TJ, e
+        # ``caso`` existe mesmo quando a busca não traz nenhuma delas.
+        df = df.reindex(columns=[*_COLUNAS_TJ, "fonte", "caso"])
     coerce_date_columns(df, ["data_julgamento"], date_format="%d/%m/%Y")
     return df

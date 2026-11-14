@@ -11,6 +11,9 @@ from juscraper.utils.pagination import extract_count_with_cascade, parse_page_nu
 
 BASE_URL = "https://portal.tjpr.jus.br/jurisprudencia/"
 SEARCH_URL = "https://portal.tjpr.jus.br/jurisprudencia/publico/pesquisa.do"
+# O "Leia mais.." das linhas da Corte IDH chama ``insereTextoCompletoCidh`` em
+# ``js/jurisprudencia.js``, que busca o texto neste endpoint.
+VISUALIZAR_URL = "https://portal.tjpr.jus.br/jurisprudencia/publico/visualizarDecisao.do"
 # O portal devolve 50 linhas por página qualquer que seja o ``pageSize``
 # enviado, e usa o ``pageSize`` só para desenhar o rótulo "exibindo de X até
 # Y" e o link "Última Página". Com 10, o link apontava 5 vezes mais páginas
@@ -27,8 +30,9 @@ SEARCH_URL = "https://portal.tjpr.jus.br/jurisprudencia/publico/pesquisa.do"
 # "dano moral" (411844 do TJ + 107 da Corte IDH): página 11 com TJ 401 a 443
 # e Corte IDH 101 a 107, página 12 com TJ 444 a 493, página 8240 com só o
 # último registro e página 8241 vazia. Se o portal mudar essa divisão, o
-# sintoma é a última página calculada vir cheia. O parser descarta as linhas
-# da Corte IDH (``parse._parse_row``), então a página rende menos de 50.
+# sintoma é a última página calculada vir cheia. Por padrão o parser descarta
+# as linhas da Corte IDH (``parse._parse_row``), e a página rende menos de 50;
+# com ``incluir_corte_idh=True`` elas voltam, marcadas na coluna ``fonte``.
 RESULTS_PER_PAGE = 50
 
 _PAGE_NUMBER_RE = re.compile(r"\['pageNumber'\]\.value='([^']*)'")
@@ -62,17 +66,29 @@ def get_ementa_completa(
     request_fn: RequestFn,
     id_processo: str,
     criterio: str,
+    *,
+    corte_idh: bool = False,
 ) -> str:
     """Fetch the full minute (``actionType=exibirTextoCompleto``) for one decision.
 
     Headers replicate the portal's XHR (``x-prototype-version``,
     ``x-requested-with``). ``JSESSIONID`` rides on the session cookie jar
     populated by :func:`populate_session`.
+
+    Com ``corte_idh=True``, ``id_processo`` é o id do caso da Corte IDH e o
+    texto vem de ``actionType=exibirTextoCompletoCidh`` em
+    :data:`VISUALIZAR_URL`, como no portal.
     """
-    url = (
-        f"{SEARCH_URL}?actionType=exibirTextoCompleto"
-        f"&idProcesso={id_processo}&criterio={criterio}"
-    )
+    if corte_idh:
+        url = (
+            f"{VISUALIZAR_URL}?actionType=exibirTextoCompletoCidh"
+            f"&idProcesso={id_processo}&criterio={criterio}"
+        )
+    else:
+        url = (
+            f"{SEARCH_URL}?actionType=exibirTextoCompleto"
+            f"&idProcesso={id_processo}&criterio={criterio}"
+        )
     headers = {
         'accept': 'text/javascript, text/html, application/xml, text/xml, */*',
         'accept-language': 'pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
@@ -83,7 +99,13 @@ def get_ementa_completa(
         'x-requested-with': 'XMLHttpRequest',
     }
     resp = request_fn("GET", url, headers=headers)
-    text: str = BeautifulSoup(resp.text, 'html.parser').get_text("\n", strip=True)
+    soup = BeautifulSoup(resp.text, 'html.parser')
+    if corte_idh:
+        # A resposta é texto puro com o termo buscado em ``<span class='high'>``,
+        # às vezes no meio da palavra ("<span>quilombola</span>s"). Um separador
+        # partiria a palavra em duas linhas.
+        return str(soup.get_text()).strip()
+    text: str = soup.get_text("\n", strip=True)
     return text
 
 

@@ -7,6 +7,8 @@ e wrapper trivial (``download → parse``).
 """
 from __future__ import annotations
 
+from pydantic import StrictBool
+
 from ...schemas import DataJulgamentoMixin, DataPublicacaoMixin, OutputCJSGBase, OutputRelatoriaMixin, SearchBase
 
 
@@ -23,7 +25,15 @@ class InputCJSGTJPR(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     O TJPR nao expoe filtros estruturados alem de ``pesquisa``/``paginas``
     e datas — os demais filtros do portal sao parametros internos do
     fluxo JSP (session, jsessionid, etc.), nao parte da API publica.
+
+    ``incluir_corte_idh`` nao muda a requisicao: o portal sempre devolve os
+    precedentes da Corte IDH, e o parser os descarta por padrao. E
+    ``StrictBool`` porque ``cjsg`` repassa ao parser o valor recebido, e a
+    coercao do pydantic (``"false"`` -> ``False``) divergiria da verdade do
+    Python que o parser usa.
     """
+
+    incluir_corte_idh: StrictBool = False
 
 
 class OutputCJSGTJPR(OutputCJSGBase, OutputRelatoriaMixin):
@@ -31,4 +41,13 @@ class OutputCJSGTJPR(OutputCJSGBase, OutputRelatoriaMixin):
 
     Reflete ``tjpr.parse.cjsg_parse`` — parser HTML do portal do TJPR.
     ``data_publicacao`` nao e extraida (apenas ``data_julgamento``).
+
+    ``fonte`` ("TJPR" ou "Corte IDH") e ``caso`` (nome do caso da Corte IDH)
+    so aparecem com ``incluir_corte_idh=True``. Nas linhas da Corte IDH,
+    ``processo``, ``orgao_julgador`` e ``relator`` ficam vazios.
     """
+
+    # Opcional so por causa das linhas da Corte IDH, que nao tem processo.
+    processo: str | None = None  # type: ignore[assignment]
+    fonte: str | None = None
+    caso: str | None = None

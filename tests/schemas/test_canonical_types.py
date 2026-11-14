@@ -103,6 +103,12 @@ TYPE_GRACE_PERIOD: dict[tuple[str, str], str] = {
         "OutputCJSGTJGO",
         "data_publicacao",
     ): "TJGO parser nao converte data_publicacao para date — unificar em PR de limpeza",
+    # Com ``incluir_corte_idh=True``, as linhas da Corte IDH saem sem
+    # processo: o portal nao tem numero para esses casos. Excecao permanente.
+    (
+        "OutputCJSGTJPR",
+        "processo",
+    ): "TJPR: linhas da Corte IDH (incluir_corte_idh=True) nao tem processo",
 }
 
 
