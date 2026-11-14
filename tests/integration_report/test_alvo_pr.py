@@ -11,17 +11,38 @@ SCRIPT = RAIZ / "scripts" / "integration_report.py"
 WORKFLOW = RAIZ / ".github" / "workflows" / "integration.yml"
 
 
+def executar_alvo(raiz, *argumentos, fora=""):
+    return subprocess.run(
+        [sys.executable, str(SCRIPT), "alvo-pr", *argumentos, "--fora", fora, "--raiz", str(raiz)],
+        check=False, capture_output=True, text=True,
+    )
+
+
+def ler_saida(resultado):
+    assert resultado.returncode == 0, resultado.stderr
+    saida = dict(linha.split("=", 1) for linha in resultado.stdout.splitlines())
+    return saida["tribunais"].split(), saida["fora"].split()
+
+
 def alvo(raiz, arquivos, fora="", pasta=None):
     """Roda ``alvo-pr`` e devolve ``(a rodar, fora do CI)`` como listas."""
     lista = (pasta or raiz) / "arquivos.txt"
     lista.write_text("\n".join(arquivos) + "\n", encoding="utf-8")
-    resultado = subprocess.run(
-        [sys.executable, str(SCRIPT), "alvo-pr", "--arquivos", str(lista), "--fora", fora, "--raiz", str(raiz)],
-        check=False, capture_output=True, text=True,
-    )
-    assert resultado.returncode == 0, resultado.stderr
-    saida = dict(linha.split("=", 1) for linha in resultado.stdout.splitlines())
-    return saida["tribunais"].split(), saida["fora"].split()
+    return ler_saida(executar_alvo(raiz, "--arquivos", str(lista), fora=fora))
+
+
+def git(raiz, *argumentos):
+    subprocess.run(["git", *argumentos], cwd=raiz, check=True, capture_output=True)
+
+
+def registrar(raiz, mensagem):
+    git(raiz, "add", "-A")
+    git(raiz, "commit", "-qm", mensagem)
+
+
+def alvo_da_branch(raiz):
+    """Roda ``alvo-pr --base-ref origin/main`` e devolve ``(a rodar, fora do CI)``."""
+    return ler_saida(executar_alvo(raiz, "--base-ref", "origin/main"))
 
 
 def criar(raiz, caminho, texto=""):
@@ -100,6 +121,54 @@ def test_pr_so_do_workflow_roda_o_autoteste(arvore, arquivo):
     assert alvo(arvore, [arquivo]) == (["tjmg"], [])
     # Com tribunal tocado, o próprio tribunal já exercita o workflow.
     assert alvo(arvore, [arquivo, "tests/tjmt/test_x.py"]) == (["tjmt"], [])
+
+
+@pytest.fixture
+def repositorio(arvore):
+    """A árvore num Git com ``origin/main`` na base e HEAD numa branch própria."""
+    git(arvore, "init", "-q", "-b", "main")
+    for chave, valor in (
+        ("core.hooksPath", "/dev/null"), ("user.name", "Teste"),
+        ("user.email", "teste@example.com"), ("commit.gpgsign", "false"),
+    ):
+        git(arvore, "config", chave, valor)
+    registrar(arvore, "Base")
+    git(arvore, "update-ref", "refs/remotes/origin/main", "HEAD")
+    git(arvore, "switch", "-qc", "feature")
+    return arvore
+
+
+def test_base_ref_conta_os_dois_lados_de_um_arquivo_movido(repositorio):
+    git(repositorio, "mv", "tests/tjac/test_x.py", "tests/tjmt/test_movido.py")
+    registrar(repositorio, "Move teste do TJAC para o TJMT")
+
+    assert alvo_da_branch(repositorio) == (["tjac", "tjmt"], [])
+
+
+def test_base_ref_le_caminho_com_acento(repositorio):
+    criar(repositorio, "tests/tjsp/samples/decisão.html")
+    registrar(repositorio, "Sample com acento no nome")
+
+    assert alvo_da_branch(repositorio) == (["tjsp"], [])
+
+
+def test_base_ref_ignora_o_que_a_main_ganhou_depois_da_branch(repositorio):
+    criar(repositorio, "tests/tjmt/test_novo.py")
+    registrar(repositorio, "Branch toca o TJMT")
+    git(repositorio, "switch", "-q", "main")
+    criar(repositorio, "tests/tjsp/test_novo.py")
+    registrar(repositorio, "Main toca o TJSP")
+    git(repositorio, "update-ref", "refs/remotes/origin/main", "HEAD")
+    git(repositorio, "switch", "-q", "feature")
+
+    assert alvo_da_branch(repositorio) == (["tjmt"], [])
+
+
+def test_base_ref_inexistente_falha_com_orientacao(repositorio):
+    resultado = executar_alvo(repositorio, "--base-ref", "referencia-inexistente")
+
+    assert resultado.returncode == 1
+    assert "git fetch" in resultado.stderr
 
 
 def test_nome_que_nao_e_diretorio_simples_nao_passa(arvore):
