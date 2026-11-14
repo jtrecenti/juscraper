@@ -11,6 +11,9 @@ from juscraper.utils.pagination import extract_count_with_cascade, parse_page_nu
 
 BASE_URL = "https://portal.tjpr.jus.br/jurisprudencia/"
 SEARCH_URL = "https://portal.tjpr.jus.br/jurisprudencia/publico/pesquisa.do"
+# O "Leia mais.." das linhas da Corte IDH chama ``insereTextoCompletoCidh`` em
+# ``js/jurisprudencia.js``, que busca o texto neste endpoint.
+VISUALIZAR_URL = "https://portal.tjpr.jus.br/jurisprudencia/publico/visualizarDecisao.do"
 # O portal devolve 50 linhas por página qualquer que seja o ``pageSize``
 # enviado, e usa o ``pageSize`` só para desenhar o rótulo "exibindo de X até
 # Y" e o link "Última Página". Com 10, o link apontava 5 vezes mais páginas
@@ -27,8 +30,8 @@ SEARCH_URL = "https://portal.tjpr.jus.br/jurisprudencia/publico/pesquisa.do"
 # "dano moral" (411844 do TJ + 107 da Corte IDH): página 11 com TJ 401 a 443
 # e Corte IDH 101 a 107, página 12 com TJ 444 a 493, página 8240 com só o
 # último registro e página 8241 vazia. Se o portal mudar essa divisão, o
-# sintoma é a última página calculada vir cheia. O parser descarta as linhas
-# da Corte IDH (``parse._parse_row``), então a página rende menos de 50.
+# sintoma é a última página calculada vir cheia. Por padrão o parser descarta
+# as linhas da Corte IDH (``parse._parse_row``), então a página rende menos de 50.
 RESULTS_PER_PAGE = 50
 
 _PAGE_NUMBER_RE = re.compile(r"\['pageNumber'\]\.value='([^']*)'")
@@ -58,33 +61,43 @@ def populate_session(request_fn: RequestFn, home_url: str) -> None:
     request_fn("GET", home_url)
 
 
-def get_ementa_completa(
-    request_fn: RequestFn,
-    id_processo: str,
-    criterio: str,
-) -> str:
-    """Fetch the full minute (``actionType=exibirTextoCompleto``) for one decision.
+# Cabeçalhos do XHR do portal (``x-prototype-version``, ``x-requested-with``).
+# ``JSESSIONID`` vai no cookie jar preenchido por :func:`populate_session`.
+_XHR_HEADERS = {
+    'accept': 'text/javascript, text/html, application/xml, text/xml, */*',
+    'accept-language': 'pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
+    'cache-control': 'no-cache',
+    'pragma': 'no-cache',
+    'referer': f"{SEARCH_URL}?actionType=pesquisar",
+    'x-prototype-version': '1.5.1.1',
+    'x-requested-with': 'XMLHttpRequest',
+}
 
-    Headers replicate the portal's XHR (``x-prototype-version``,
-    ``x-requested-with``). ``JSESSIONID`` rides on the session cookie jar
-    populated by :func:`populate_session`.
+
+def _get_texto_completo(
+    request_fn: RequestFn, url: str, action_type: str, id_registro: str, criterio: str
+) -> BeautifulSoup:
+    # ``params`` codifica o termo: "&" ou "#" num f-string cortariam o ``criterio``.
+    params = {"actionType": action_type, "idProcesso": id_registro, "criterio": criterio}
+    resp = request_fn("GET", url, params=params, headers=_XHR_HEADERS)
+    return BeautifulSoup(resp.text, 'html.parser')
+
+
+def get_ementa_completa(request_fn: RequestFn, id_processo: str, criterio: str) -> str:
+    """Fetch the full minute (``actionType=exibirTextoCompleto``) for one decision."""
+    soup = _get_texto_completo(request_fn, SEARCH_URL, "exibirTextoCompleto", id_processo, criterio)
+    return str(soup.get_text("\n", strip=True))
+
+
+def get_ementa_completa_cidh(request_fn: RequestFn, id_caso: str, criterio: str) -> str:
+    """Busca a ementa completa de um caso da Corte IDH (``exibirTextoCompletoCidh``).
+
+    A resposta é texto puro com o termo buscado em ``<span class='high'>``, às
+    vezes no meio da palavra ("<span>quilombola</span>s"); por isso o texto sai
+    sem separador entre os nós.
     """
-    url = (
-        f"{SEARCH_URL}?actionType=exibirTextoCompleto"
-        f"&idProcesso={id_processo}&criterio={criterio}"
-    )
-    headers = {
-        'accept': 'text/javascript, text/html, application/xml, text/xml, */*',
-        'accept-language': 'pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
-        'cache-control': 'no-cache',
-        'pragma': 'no-cache',
-        'referer': f"{SEARCH_URL}?actionType=pesquisar",
-        'x-prototype-version': '1.5.1.1',
-        'x-requested-with': 'XMLHttpRequest',
-    }
-    resp = request_fn("GET", url, headers=headers)
-    text: str = BeautifulSoup(resp.text, 'html.parser').get_text("\n", strip=True)
-    return text
+    soup = _get_texto_completo(request_fn, VISUALIZAR_URL, "exibirTextoCompletoCidh", id_caso, criterio)
+    return str(soup.get_text()).strip()
 
 
 def build_cjsg_form_body(

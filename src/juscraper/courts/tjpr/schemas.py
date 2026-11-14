@@ -7,6 +7,8 @@ e wrapper trivial (``download → parse``).
 """
 from __future__ import annotations
 
+from pydantic import StrictBool
+
 from ...schemas import DataJulgamentoMixin, DataPublicacaoMixin, OutputCJSGBase, OutputRelatoriaMixin, SearchBase
 
 
@@ -23,7 +25,12 @@ class InputCJSGTJPR(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     O TJPR nao expoe filtros estruturados alem de ``pesquisa``/``paginas``
     e datas — os demais filtros do portal sao parametros internos do
     fluxo JSP (session, jsessionid, etc.), nao parte da API publica.
+
+    ``incluir_corte_idh`` so vale para ``cjsg``: nao entra na requisicao, e
+    ``cjsg_download`` o recusa (ver ``client._validar_incluir_corte_idh``).
     """
+
+    incluir_corte_idh: StrictBool = False
 
 
 class OutputCJSGTJPR(OutputCJSGBase, OutputRelatoriaMixin):
@@ -31,4 +38,12 @@ class OutputCJSGTJPR(OutputCJSGBase, OutputRelatoriaMixin):
 
     Reflete ``tjpr.parse.cjsg_parse`` — parser HTML do portal do TJPR.
     ``data_publicacao`` nao e extraida (apenas ``data_julgamento``).
+
+    ``fonte`` e ``caso`` so aparecem com ``incluir_corte_idh=True``; ver
+    :meth:`TJPRScraper.cjsg`.
     """
+
+    # Opcional so por causa das linhas da Corte IDH, que nao tem processo.
+    processo: str | None = None  # type: ignore[assignment]
+    fonte: str | None = None
+    caso: str | None = None

@@ -89,7 +89,8 @@ DEPRECATED_SYNONYMS: dict[str, str] = {
 
 # Excecoes de tipo keyed por (nome_da_classe, nome_do_campo). Documentam
 # divergencias conhecidas com o PR pendente. Remover a entrada quando
-# o PR de correcao entrar.
+# o PR de correcao entrar. Entradas permanentes, impostas pela fonte, dizem
+# isso no comentario.
 TYPE_GRACE_PERIOD: dict[tuple[str, str], str] = {
     # TJPI e TJGO entregam data_publicacao sempre como string crua (nao
     # convertem para datetime.date). O canonico do mixin e
@@ -103,6 +104,12 @@ TYPE_GRACE_PERIOD: dict[tuple[str, str], str] = {
         "OutputCJSGTJGO",
         "data_publicacao",
     ): "TJGO parser nao converte data_publicacao para date — unificar em PR de limpeza",
+    # Com ``incluir_corte_idh=True``, as linhas da Corte IDH saem sem
+    # processo: o portal nao tem numero para esses casos. Excecao permanente.
+    (
+        "OutputCJSGTJPR",
+        "processo",
+    ): "TJPR: linhas da Corte IDH (incluir_corte_idh=True) nao tem processo",
 }
 
 

@@ -3,13 +3,13 @@ from __future__ import annotations
 
 from datetime import date
 from types import SimpleNamespace
-from urllib.parse import parse_qs, urlsplit
 
 import pandas as pd
 import pytest
 import requests
 
 from juscraper.core.base import _texto_ausente_como_none
+from juscraper.courts.tjpr.download import SEARCH_URL
 from juscraper.courts.tjpr.parse import cjsg_parse
 from tests._helpers import load_sample
 
@@ -117,10 +117,11 @@ def test_cjsg_parse_fetches_full_ementa_with_injected_request(mocker):
     request_fn.assert_called_once()
     method, url = request_fn.call_args.args
     assert method == "GET"
-    assert parse_qs(urlsplit(url).query) == {
-        "actionType": ["exibirTextoCompleto"],
-        "idProcesso": ["div-id"],
-        "criterio": ["dano moral"],
+    assert url == SEARCH_URL
+    assert request_fn.call_args.kwargs["params"] == {
+        "actionType": "exibirTextoCompleto",
+        "idProcesso": "div-id",
+        "criterio": "dano moral",
     }
 
 

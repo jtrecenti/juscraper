@@ -26,42 +26,9 @@ from responses.matchers import urlencoded_params_matcher
 import juscraper as jus
 from juscraper.courts.tjpr.download import build_cjsg_form_body
 from tests._helpers import load_sample, query_param_subset_matcher
-from tests.tjpr._helpers import SEARCH_URL, add_home
+from tests.tjpr._helpers import SEARCH_URL, add_ementa_completa, add_home, add_search_page
 
 CJSG_MIN_COLUMNS = {"processo", "orgao_julgador", "relator", "data_julgamento", "ementa"}
-
-
-def _add_search_page(pesquisa: str, pagina: int, sample_path: str):
-    responses.add(
-        responses.POST,
-        SEARCH_URL,
-        body=load_sample("tjpr", sample_path),
-        status=200,
-        content_type="text/html; charset=UTF-8",
-        match=[
-            query_param_subset_matcher({"actionType": "pesquisar"}),
-            urlencoded_params_matcher(
-                build_cjsg_form_body(pesquisa, page=pagina),
-                allow_blank=True,
-            ),
-        ],
-    )
-
-
-def _add_ementa_completa():
-    """Single response shared by every ``actionType=exibirTextoCompleto`` GET.
-
-    As of 2026-04 the upstream endpoint returns a generic Struts error page
-    regardless of ``idProcesso``/``criterio``; we capture one and reuse it.
-    """
-    responses.add(
-        responses.GET,
-        SEARCH_URL,
-        body=load_sample("tjpr", "cjsg/ementa_completa.html"),
-        status=200,
-        content_type="text/html; charset=UTF-8",
-        match=[query_param_subset_matcher({"actionType": "exibirTextoCompleto"})],
-    )
 
 
 @responses.activate
@@ -69,9 +36,9 @@ def test_cjsg_typical_com_paginacao(mocker):
     """Two-page query exercises ``pageNumber=1`` and ``pageNumber=2``."""
     mocker.patch("time.sleep")
     add_home()
-    _add_search_page("dano moral", 1, "cjsg/results_normal_page_01.html")
-    _add_search_page("dano moral", 2, "cjsg/results_normal_page_02.html")
-    _add_ementa_completa()
+    add_search_page("dano moral", 1, "cjsg/results_normal_page_01.html")
+    add_search_page("dano moral", 2, "cjsg/results_normal_page_02.html")
+    add_ementa_completa()
 
     df = jus.scraper("tjpr").cjsg("dano moral", paginas=range(1, 3))
 
@@ -92,8 +59,8 @@ def test_cjsg_single_page(mocker):
     """Busca real de página única ("quilombola", 5 resultados judiciais)."""
     mocker.patch("time.sleep")
     add_home()
-    _add_search_page("quilombola", 1, "cjsg/single_page.html")
-    _add_ementa_completa()
+    add_search_page("quilombola", 1, "cjsg/single_page.html")
+    add_ementa_completa()
 
     df = jus.scraper("tjpr").cjsg("quilombola", paginas=1)
 
@@ -114,8 +81,8 @@ def test_cjsg_paginas_none_pagina_unica_baixa_so_a_primeira(mocker):
     """
     mocker.patch("time.sleep")
     add_home()
-    _add_search_page("quilombola", 1, "cjsg/single_page.html")
-    _add_ementa_completa()
+    add_search_page("quilombola", 1, "cjsg/single_page.html")
+    add_ementa_completa()
 
     df = jus.scraper("tjpr").cjsg("quilombola", paginas=None)
 
@@ -160,7 +127,7 @@ def test_cjsg_no_results(mocker):
     """Zero-hit query returns an empty DataFrame."""
     mocker.patch("time.sleep")
     add_home()
-    _add_search_page("juscraper_probe_zero_hits_xyzqwe", 1, "cjsg/no_results.html")
+    add_search_page("juscraper_probe_zero_hits_xyzqwe", 1, "cjsg/no_results.html")
 
     df = jus.scraper("tjpr").cjsg("juscraper_probe_zero_hits_xyzqwe", paginas=1)
 
@@ -185,7 +152,7 @@ def test_cjsg_ementa_completa_5xx_persistente(mocker):
     """
     mocker.patch("time.sleep")
     add_home()
-    _add_search_page("quilombola", 1, "cjsg/single_page.html")
+    add_search_page("quilombola", 1, "cjsg/single_page.html")
     responses.add(
         responses.GET,
         SEARCH_URL,
