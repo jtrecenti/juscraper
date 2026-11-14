@@ -59,10 +59,13 @@ class TestCJSGTJBA:
         """A busca por número traz só as decisões do processo pedido.
 
         O número sai de uma busca ao vivo, porque um processo fixo pode sair
-        da base: o 0008415-21.2025.8.05.0150, usado antes, não volta mais em
-        nenhuma busca desde 11/2026.
+        da base do TJBA.
         """
-        processo = self.scraper.cjsg("direito", paginas=1)["processo"].iloc[0]
+        semente = self.scraper.cjsg("direito", paginas=1)
+        assert len(semente) > 0, "a busca que fornece o número veio vazia"
+        processo = semente["processo"].iloc[0]
+        assert isinstance(processo, str)
+        assert processo
 
         df = self.scraper.cjsg("", numero_recurso=processo, paginas=1)
 
