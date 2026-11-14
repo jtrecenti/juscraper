@@ -26,7 +26,7 @@ from datetime import date
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
-from .types import _reject_bool
+from .types import InteiroSemBool
 
 
 class PaginasMixin(BaseModel):
@@ -48,20 +48,10 @@ class PaginasMixin(BaseModel):
 
     # ``range`` precisa preceder ``list``: o pydantic tenta as variantes da
     # union em ordem e percorreria todo o range ao testa-lo como ``list[int]``.
-    paginas: int | range | list[int] | None = None
+    # ``InteiroSemBool``: sem ele o pydantic coage ``True`` para a pagina 1.
+    paginas: InteiroSemBool | range | list[InteiroSemBool] | None = None
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
-
-    @field_validator("paginas", mode="before")
-    @classmethod
-    def _reject_bool_paginas(cls, paginas: object) -> object:
-        # Sem isso o pydantic coage ``True`` para a pagina 1 (tambem em listas
-        # e tuplas, que ``list[int]`` aceita).
-        if isinstance(paginas, (list, tuple)):
-            for pagina in paginas:
-                _reject_bool(pagina)
-            return paginas
-        return _reject_bool(paginas)
 
     @field_validator("paginas")
     @classmethod

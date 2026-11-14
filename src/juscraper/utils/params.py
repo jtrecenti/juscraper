@@ -80,11 +80,11 @@ def normalize_paginas(paginas) -> list | range | None:
     """
     if paginas is None:
         return None
-    if isinstance(paginas, bool) or not isinstance(paginas, (Integral, list, range)):  # ``True`` viraria a página 1
+    if isinstance(paginas, (list, range)):
+        return paginas
+    if isinstance(paginas, bool) or not isinstance(paginas, Integral):  # ``True`` viraria a página 1
         raise TypeError(f"paginas deve ser int (bool não vale), list, range ou None, não {type(paginas).__name__}")
-    if isinstance(paginas, Integral):
-        return range(1, int(paginas) + 1)
-    return paginas
+    return range(1, int(paginas) + 1)
 
 
 def normalize_pesquisa(pesquisa: str | None = None, **kwargs) -> str:
