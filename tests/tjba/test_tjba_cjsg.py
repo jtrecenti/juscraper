@@ -56,11 +56,15 @@ class TestCJSGTJBA:
         assert len(df_int) == len(df_range)
 
     def test_numero_recurso(self):
-        """Search by case number returns specific result."""
-        df = self.scraper.cjsg(
-            "",
-            numero_recurso="0008415-21.2025.8.05.0150",
-            paginas=1,
-        )
+        """A busca por número traz só as decisões do processo pedido.
+
+        O número sai de uma busca ao vivo, porque um processo fixo pode sair
+        da base: o 0008415-21.2025.8.05.0150, usado antes, não volta mais em
+        nenhuma busca desde 11/2026.
+        """
+        processo = self.scraper.cjsg("direito", paginas=1)["processo"].iloc[0]
+
+        df = self.scraper.cjsg("", numero_recurso=processo, paginas=1)
+
         assert len(df) >= 1
-        assert "0008415-21.2025.8.05.0150" in df["processo"].values
+        assert (df["processo"] == processo).all()
