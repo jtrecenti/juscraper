@@ -236,7 +236,6 @@ def test_cpopg_html_para_quando_a_pagina_se_repete_com_cursor_novo(tmp_path, moc
     assert not list((tmp_path / "cpopg").rglob("*.html"))
 
 
-
 @responses.activate
 def test_cpopg_html_para_quando_a_pagina_seguinte_vem_sem_linhas(tmp_path, mocker):
     """Página seguinte sem movimentações não avança a paginação: o processo fica de fora com erro no log."""

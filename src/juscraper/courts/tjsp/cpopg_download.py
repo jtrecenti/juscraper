@@ -396,8 +396,9 @@ def _incluir_movimentacoes(html, sessao, url_base, codigo_processo, *, baixar_mo
 def _anexar_paginas_seguintes(bloco, sessao, url_base, codigo_processo, cursor):
     """Segue o cursor e anexa as linhas de cada página em ``tabelaOutrasPaginasMovimentacoes``.
 
-    O eSAJ já devolveu a mesma página com um cursor novo a cada chamada (#474):
-    página igual à anterior para a paginação com erro, como cursor repetido.
+    Cursor repetido, página sem linhas ou página igual à anterior levantam
+    ``RuntimeError``: o eSAJ já devolveu a mesma página com um cursor novo a
+    cada chamada (#474), e seguir o cursor não terminaria.
     """
     outras_paginas = bloco.find('tbody', id='tabelaOutrasPaginasMovimentacoes')
     vistos = set()
