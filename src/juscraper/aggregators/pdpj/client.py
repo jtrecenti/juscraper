@@ -643,7 +643,7 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
                 * ``data_atualizacao_inicio`` / ``_fim`` (str): ISO datetime
                 * ``data_primeiro_ajuizamento_inicio`` / ``_fim`` (str): ISO datetime
                 * ``campo_ordenacao`` (str): campo de ordenacao decrescente
-                * ``itens_por_pagina`` (int): default 100. Vai a API como
+                * ``itens_por_pagina`` (int): default 100, minimo 1. Vai a API como
                   ``maxElementsSize``, mas a API ignora o valor: a
                   especificacao publica do data lake traz
                   ``maxElementsSize`` so na resposta, como o maximo por

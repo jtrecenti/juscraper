@@ -148,9 +148,11 @@ _TAMANHO_PAGINA_CASES = [
 _CASE_IDS = [case[0].__name__ for case in _TAMANHO_PAGINA_CASES]
 
 
-@pytest.mark.parametrize(("schema_cls", "campo", "base", "_valido"), _TAMANHO_PAGINA_CASES, ids=_CASE_IDS)
+@pytest.mark.parametrize(
+    ("schema_cls", "campo", "base"), [case[:3] for case in _TAMANHO_PAGINA_CASES], ids=_CASE_IDS
+)
 @pytest.mark.parametrize("booleano", [True, np.True_], ids=["bool", "numpy_bool"])
-def test_tamanho_pagina_rejeita_booleano(schema_cls, campo, base, _valido, booleano):
+def test_tamanho_pagina_rejeita_booleano(schema_cls, campo, base, booleano):
     """Booleans não são tamanhos de página, apesar de ``bool`` herdar de ``int``."""
     with pytest.raises(ValidationError, match="não bool"):
         schema_cls(**base, **{campo: booleano})
