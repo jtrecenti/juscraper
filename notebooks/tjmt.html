@@ -74,7 +74,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-467e80bd0b75a075ce70b51a2f51db29.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-fa0132e5ba1ccbcb15f610bc8f9b53b7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -472,7 +472,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <section id="basic-search" class="level2">
 <h2 class="anchored" data-anchor-id="basic-search">Basic search</h2>
-<div id="e95d1ce1" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-04T22:41:46.866885Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-04T22:41:46.866732Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-04T22:41:50.798011Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-04T22:41:50.797494Z&quot;}" data-execution_count="1">
+<div id="e95d1ce1" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-14T19:36:19.681187Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-14T19:36:19.680959Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-14T19:36:22.404423Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-14T19:36:22.403832Z&quot;}" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>tjmt <span class="op">=</span> jus.scraper(<span class="st">'tjmt'</span>)</span>
@@ -481,7 +481,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_cjsg.shape)</span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>dados_cjsg.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando páginas TJMT:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas TJMT: 100%|██████████| 1/1 [00:00&lt;00:00,  1.62it/s]Baixando páginas TJMT: 100%|██████████| 1/1 [00:00&lt;00:00,  1.61it/s]</code></pre>
+<pre><code>Baixando páginas TJMT:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas TJMT: 100%|██████████| 1/1 [00:00&lt;00:00,  2.14it/s]Baixando páginas TJMT: 100%|██████████| 1/1 [00:00&lt;00:00,  2.13it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(10, 18)</code></pre>
@@ -532,7 +532,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>GUIOMAR TEODORO BORGES</td>
 <td>None</td>
 <td>QUARTA CÂMARA DE DIREITO PRIVADO</td>
-<td>NÃO INFORMADO</td>
+<td>None</td>
 <td>2017-07-19</td>
 <td>2017-07-24</td>
 <td>Segunda</td>
@@ -553,7 +553,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>MUNIR FEGURI</td>
 <td>None</td>
 <td>PRIMEIRA CÂMARA DE DIREITO PRIVADO</td>
-<td>NÃO INFORMADO</td>
+<td>None</td>
 <td>2002-04-22</td>
 <td>2002-05-08</td>
 <td>Segunda</td>
@@ -574,7 +574,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>VALMIR ALAÉRCIO DOS SANTOS</td>
 <td>None</td>
 <td>TERCEIRA TURMA RECURSAL</td>
-<td>NÃO INFORMADO</td>
+<td>None</td>
 <td>2009-06-05</td>
 <td>2009-06-25</td>
 <td>Recursal</td>
@@ -590,7 +590,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="available-columns" class="level2">
 <h2 class="anchored" data-anchor-id="available-columns">Available columns</h2>
-<div id="b441105c" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-04T22:41:50.799880Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-04T22:41:50.799659Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-04T22:41:50.803225Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-04T22:41:50.802610Z&quot;}" data-execution_count="2">
+<div id="b441105c" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-14T19:36:22.405835Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-14T19:36:22.405704Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-14T19:36:22.408002Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-14T19:36:22.407580Z&quot;}" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>dados_cjsg.columns.tolist()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="2">
 <pre><code>['id',
@@ -616,7 +616,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="preview-ementa" class="level2">
 <h2 class="anchored" data-anchor-id="preview-ementa">Preview ementa</h2>
-<div id="9b3c4c02" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-04T22:41:50.804896Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-04T22:41:50.804706Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-04T22:41:50.807511Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-04T22:41:50.806960Z&quot;}" data-execution_count="3">
+<div id="9b3c4c02" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-14T19:36:22.409184Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-14T19:36:22.409098Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-14T19:36:22.410945Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-14T19:36:22.410534Z&quot;}" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_cjsg[<span class="st">'ementa'</span>].iloc[<span class="dv">0</span>][:<span class="dv">300</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>APELAÇÕES - AÇÃO DE INDENIZAÇÃO POR DANO MORAL E MATERIAL - INSCRIÇÃO INDEVIDA NA SERASA - DANO MORAL IN RE IPSA - REDUÇÃO - DEVIDA - DANO MATERIAL - AUSÊNCIA DE PROVA EFETIVA - SENTENÇA REFORMADA PARA REDUZIR O DANO MORAL - RECURSO DOS AUTORES DESPROVIDO - RECURSO DO BANCO - PARCIALMENTE PROVIDO
@@ -627,7 +627,7 @@ O </code></pre>
 <section id="using-filters" class="level2">
 <h2 class="anchored" data-anchor-id="using-filters">Using filters</h2>
 <p>You can filter by publication date range (<code>data_publicacao_inicio</code>/<code>data_publicacao_fim</code>, end date inclusive), judge (<code>relator</code>), court chamber (<code>orgao_julgador</code>), and case type (<code>tipo_processo</code>). The API does not filter by judgment date or by case class: passing <code>data_julgamento_*</code> or <code>classe</code> raises <code>TypeError</code>. <code>relator</code> and <code>orgao_julgador</code> take the exact name, not a numeric id.</p>
-<div id="8471d7ac" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-04T22:41:50.809387Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-04T22:41:50.809232Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-04T22:41:53.700208Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-04T22:41:53.699754Z&quot;}" data-execution_count="4">
+<div id="8471d7ac" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-14T19:36:22.411925Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-14T19:36:22.411859Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-14T19:36:25.089263Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-14T19:36:25.088692Z&quot;}" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>dados_filtrados <span class="op">=</span> tjmt.cjsg(</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'direito'</span>,</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">1</span>,</span>
@@ -638,7 +638,7 @@ O </code></pre>
 <span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_filtrados.shape)</span>
 <span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>dados_filtrados.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando páginas TJMT:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas TJMT: 100%|██████████| 1/1 [00:01&lt;00:00,  1.06s/it]Baixando páginas TJMT: 100%|██████████| 1/1 [00:01&lt;00:00,  1.06s/it]</code></pre>
+<pre><code>Baixando páginas TJMT:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas TJMT: 100%|██████████| 1/1 [00:00&lt;00:00,  1.01it/s]Baixando páginas TJMT: 100%|██████████| 1/1 [00:00&lt;00:00,  1.01it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(10, 18)</code></pre>
@@ -689,7 +689,7 @@ O </code></pre>
 <td>RUI RAMOS RIBEIRO</td>
 <td>None</td>
 <td>SEGUNDA CÂMARA CRIMINAL</td>
-<td>CÂMARAS ISOLADAS CRIMINAIS</td>
+<td>None</td>
 <td>2025-05-20</td>
 <td>2025-05-28</td>
 <td>Segunda</td>
@@ -710,7 +710,7 @@ O </code></pre>
 <td>MARCOS REGENOLD FERNANDES</td>
 <td>None</td>
 <td>SEGUNDA CÂMARA CRIMINAL</td>
-<td>CÂMARAS ISOLADAS CRIMINAIS</td>
+<td>None</td>
 <td>2025-02-04</td>
 <td>2025-02-13</td>
 <td>Segunda</td>
@@ -731,7 +731,7 @@ O </code></pre>
 <td>WESLEY SANCHEZ LACERDA</td>
 <td>None</td>
 <td>PRIMEIRA CÂMARA CRIMINAL</td>
-<td>CÂMARAS ISOLADAS CRIMINAIS</td>
+<td>None</td>
 <td>2025-04-09</td>
 <td>2025-04-14</td>
 <td>Segunda</td>
@@ -748,12 +748,12 @@ O </code></pre>
 <section id="querying-different-types" class="level2">
 <h2 class="anchored" data-anchor-id="querying-different-types">Querying different types</h2>
 <p>Besides <code>Acordao</code> (default), you can also query <code>DecisaoMonocratica</code>.</p>
-<div id="6e3964e0" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-04T22:41:53.701983Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-04T22:41:53.701810Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-04T22:41:55.892205Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-04T22:41:55.891836Z&quot;}" data-execution_count="5">
+<div id="6e3964e0" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-14T19:36:25.091052Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-14T19:36:25.090932Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-14T19:36:26.957495Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-14T19:36:26.957032Z&quot;}" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>dados_decisao <span class="op">=</span> tjmt.cjsg(<span class="st">'direito'</span>, paginas<span class="op">=</span><span class="dv">1</span>, tipo_consulta<span class="op">=</span><span class="st">'DecisaoMonocratica'</span>)</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_decisao.shape)</span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>dados_decisao.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando páginas TJMT:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas TJMT: 100%|██████████| 1/1 [00:00&lt;00:00,  2.63it/s]Baixando páginas TJMT: 100%|██████████| 1/1 [00:00&lt;00:00,  2.63it/s]</code></pre>
+<pre><code>Baixando páginas TJMT:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas TJMT: 100%|██████████| 1/1 [00:00&lt;00:00,  4.84it/s]Baixando páginas TJMT: 100%|██████████| 1/1 [00:00&lt;00:00,  4.82it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(10, 18)</code></pre>
@@ -804,7 +804,7 @@ O </code></pre>
 <td>DIRCEU DOS SANTOS</td>
 <td>None</td>
 <td>SEGUNDA TURMA DE CÂMARAS CÍVEIS REUNIDAS DE DI...</td>
-<td>NÃO INFORMADO</td>
+<td>None</td>
 <td>2013-02-18</td>
 <td>2013-02-26</td>
 <td>Segunda</td>
@@ -825,7 +825,7 @@ O </code></pre>
 <td>LUIZ CARLOS DA COSTA</td>
 <td>None</td>
 <td>TURMA DE CÂMARAS CÍVEIS REUNIDAS DE DIREITO PÚ...</td>
-<td>NÃO INFORMADO</td>
+<td>None</td>
 <td>2012-04-27</td>
 <td>2012-05-07</td>
 <td>Segunda</td>
@@ -846,7 +846,7 @@ O </code></pre>
 <td>LUIZ CARLOS DA COSTA</td>
 <td>None</td>
 <td>TURMA DE CÂMARAS CÍVEIS REUNIDAS DE DIREITO PÚ...</td>
-<td>NÃO INFORMADO</td>
+<td>None</td>
 <td>2012-04-17</td>
 <td>2012-04-25</td>
 <td>Segunda</td>
@@ -863,7 +863,7 @@ O </code></pre>
 <section id="download-and-parse-separately" class="level2">
 <h2 class="anchored" data-anchor-id="download-and-parse-separately">Download and parse separately</h2>
 <p>You can also download the raw data first and parse it later.</p>
-<div id="46926a59" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-04T22:41:55.893570Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-04T22:41:55.893479Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-04T22:41:57.765893Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-04T22:41:57.765428Z&quot;}" data-execution_count="6">
+<div id="46926a59" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-14T19:36:26.958929Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-14T19:36:26.958837Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-14T19:36:28.873975Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-14T19:36:28.873543Z&quot;}" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>brutos <span class="op">=</span> tjmt.cjsg_download(<span class="st">'direito'</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Pages downloaded: </span><span class="sc">{</span><span class="bu">len</span>(brutos)<span class="sc">}</span><span class="ss">"</span>)</span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Keys in response: </span><span class="sc">{</span><span class="bu">list</span>(brutos[<span class="dv">0</span>].keys())<span class="sc">}</span><span class="ss">"</span>)</span>
@@ -874,7 +874,7 @@ O </code></pre>
 <span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Parsed shape: </span><span class="sc">{</span>df<span class="sc">.</span>shape<span class="sc">}</span><span class="ss">"</span>)</span>
 <span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>df.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando páginas TJMT:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas TJMT: 100%|██████████| 1/1 [00:00&lt;00:00,  4.06it/s]Baixando páginas TJMT: 100%|██████████| 1/1 [00:00&lt;00:00,  4.05it/s]</code></pre>
+<pre><code>Baixando páginas TJMT:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas TJMT: 100%|██████████| 1/1 [00:00&lt;00:00,  4.11it/s]Baixando páginas TJMT: 100%|██████████| 1/1 [00:00&lt;00:00,  4.10it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Pages downloaded: 1
@@ -928,7 +928,7 @@ Parsed shape: (10, 18)</code></pre>
 <td>CARLOS ROBERTO CORREIA PINHEIRO</td>
 <td>None</td>
 <td>SEGUNDA CÂMARA CRIMINAL</td>
-<td>NÃO INFORMADO</td>
+<td>None</td>
 <td>2005-09-21T00:00:00-04:00</td>
 <td>2005-09-28T00:00:00-04:00</td>
 <td>Segunda</td>
@@ -949,7 +949,7 @@ Parsed shape: (10, 18)</code></pre>
 <td>ORLANDO DE ALMEIDA PERRI</td>
 <td>None</td>
 <td>PRIMEIRA CÂMARA DE DIREITO PRIVADO</td>
-<td>NÃO INFORMADO</td>
+<td>None</td>
 <td>2011-08-09T00:00:00-04:00</td>
 <td>2011-08-16T00:00:00-04:00</td>
 <td>Segunda</td>
@@ -970,7 +970,7 @@ Parsed shape: (10, 18)</code></pre>
 <td>LUIZ FERREIRA DA SILVA</td>
 <td>None</td>
 <td>TERCEIRA CÂMARA CRIMINAL</td>
-<td>NÃO INFORMADO</td>
+<td>None</td>
 <td>2015-04-22T00:00:00-04:00</td>
 <td>2015-04-30T00:00:00-04:00</td>
 <td>Segunda</td>
