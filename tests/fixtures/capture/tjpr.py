@@ -7,7 +7,7 @@ Run from repo root::
 Saves raw HTML responses under ``tests/tjpr/samples/cjsg/``. TJPR's flow
 involves a GET home (lands ``JSESSIONID`` in the session cookie jar),
 POST per page, and an extra GET per row that contains "Leia mais..."
-(``actionType=exibirTextoCompleto``).
+(``visualizarDecisao.do?actionType=exibirTextoCompleto``).
 
 The capture installs a response hook on the scraper's ``Session`` that
 classifies each response by URL/scenario. Files produced:
@@ -20,11 +20,18 @@ classifies each response by URL/scenario. Files produced:
   one page ("quilombola", 6 hits as of 2026-09): both paginators render
   "Última Página" disabled (``a.arrowLastOff``, no href).
 - ``no_results.html`` — single POST with zero hits.
-- ``ementa_completa.html`` — single sample for the GET extras. As of
-  2026-04, the upstream endpoint returns a generic Struts error page
-  (``NoSuchMethodException``) regardless of ``idProcesso``/``criterio``,
-  so all responses are byte-identical and we keep just one. The
-  contract test reuses this sample for all "Leia mais..." calls.
+- ``results_sem_termo.html`` — single POST for an empty search
+  (``pesquisa=""``), whose truncated rows are completed too.
+- ``ementa_completa.html`` — the first GET extra of the ``typical``
+  scenario (plain text, with the search term highlighted in
+  ``<span class='high'>``). The contract tests reuse it for all
+  "Leia mais..." calls.
+
+Not captured here: ``ementa_completa_cidh.html`` (Corte IDH case 120,
+``actionType=exibirTextoCompletoCidh``), ``parser_edge_cases.html``
+(hand-written) and ``pagina_intranet.html``, the portal page that
+``pesquisa.do?actionType=exibirTextoCompleto`` returned instead of the
+ementa until 2026-11.
 """
 from __future__ import annotations
 
@@ -45,7 +52,7 @@ def _classify(url: str, kind: str, scenario: str, page_counter: dict[str, int]) 
         return "home.html"
 
     if kind == "GET" and action == "exibirTextoCompleto":
-        return "ementa_completa.html"
+        return "ementa_completa.html" if scenario == "typical" else None
 
     if kind == "POST":
         if scenario == "typical":
@@ -92,6 +99,12 @@ def main() -> None:
     seen_files.clear()
     df = scraper.cjsg("quilombola", paginas=1)
     print(f"[tjpr/single_page] rows: {len(df)}")
+
+    # Empty search: no term, every row's ementa without highlight.
+    state["scenario"] = "results_sem_termo"
+    seen_files.clear()
+    df = scraper.cjsg("", paginas=1)
+    print(f"[tjpr/results_sem_termo] rows: {len(df)}")
 
     # Zero hits.
     state["scenario"] = "no_results"

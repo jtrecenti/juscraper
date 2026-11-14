@@ -6,13 +6,16 @@ import re
 from bs4 import BeautifulSoup
 from tqdm.auto import tqdm
 
+from juscraper.core.exceptions import HTTPSemanticError
 from juscraper.core.http import RequestFn
 from juscraper.utils.pagination import extract_count_with_cascade, parse_page_number, resolve_total_pages
 
 BASE_URL = "https://portal.tjpr.jus.br/jurisprudencia/"
 SEARCH_URL = "https://portal.tjpr.jus.br/jurisprudencia/publico/pesquisa.do"
-# O "Leia mais.." das linhas da Corte IDH chama ``insereTextoCompletoCidh`` em
-# ``js/jurisprudencia.js``, que busca o texto neste endpoint.
+# O "Leia mais.." chama ``insereTextoCompleto`` (linhas do TJ) ou
+# ``insereTextoCompletoCidh`` (linhas da Corte IDH) em ``js/jurisprudencia.js``,
+# e os dois buscam o texto neste endpoint. O ``actionType=exibirTextoCompleto``
+# em ``pesquisa.do`` devolve a página do portal com o menu da intranet.
 VISUALIZAR_URL = "https://portal.tjpr.jus.br/jurisprudencia/publico/visualizarDecisao.do"
 # O portal devolve 50 linhas por página qualquer que seja o ``pageSize``
 # enviado, e usa o ``pageSize`` só para desenhar o rótulo "exibindo de X até
@@ -74,30 +77,35 @@ _XHR_HEADERS = {
 }
 
 
-def _get_texto_completo(
-    request_fn: RequestFn, url: str, action_type: str, id_registro: str, criterio: str
-) -> BeautifulSoup:
+class TJPREmentaIndisponivelError(HTTPSemanticError):
+    """``visualizarDecisao.do`` respondeu 200 sem o texto da ementa completa."""
+
+
+# Marcação de página, que o texto da ementa não traz: só o ``<span>`` do destaque.
+_TAGS_DE_PAGINA = frozenset({"html", "head", "body", "title", "script", "form", "table", "div"})
+
+
+def get_ementa_completa(request_fn: RequestFn, action_type: str, id_registro: str, criterio: str) -> str:
+    """Busca o texto completo de uma ementa truncada em "Leia mais..".
+
+    ``action_type`` é ``"exibirTextoCompleto"`` nas linhas do TJ e
+    ``"exibirTextoCompletoCidh"`` nas da Corte IDH. A resposta é texto puro,
+    com quebras de linha próprias e o termo buscado em ``<span class='high'>``,
+    às vezes no meio da palavra ("<span>DANO</span>S MORAIS"); por isso o texto
+    sai sem separador entre os nós. O ``criterio`` só muda esse destaque.
+
+    Raises:
+        TJPREmentaIndisponivelError: Quando a resposta vem vazia (id que o
+            portal não conhece) ou traz marcação de página, como a do portal.
+    """
     # ``params`` codifica o termo: "&" ou "#" num f-string cortariam o ``criterio``.
     params = {"actionType": action_type, "idProcesso": id_registro, "criterio": criterio}
-    resp = request_fn("GET", url, params=params, headers=_XHR_HEADERS)
-    return BeautifulSoup(resp.text, 'html.parser')
-
-
-def get_ementa_completa(request_fn: RequestFn, id_processo: str, criterio: str) -> str:
-    """Fetch the full minute (``actionType=exibirTextoCompleto``) for one decision."""
-    soup = _get_texto_completo(request_fn, SEARCH_URL, "exibirTextoCompleto", id_processo, criterio)
-    return str(soup.get_text("\n", strip=True))
-
-
-def get_ementa_completa_cidh(request_fn: RequestFn, id_caso: str, criterio: str) -> str:
-    """Busca a ementa completa de um caso da Corte IDH (``exibirTextoCompletoCidh``).
-
-    A resposta é texto puro com o termo buscado em ``<span class='high'>``, às
-    vezes no meio da palavra ("<span>quilombola</span>s"); por isso o texto sai
-    sem separador entre os nós.
-    """
-    soup = _get_texto_completo(request_fn, VISUALIZAR_URL, "exibirTextoCompletoCidh", id_caso, criterio)
-    return str(soup.get_text()).strip()
+    resp = request_fn("GET", VISUALIZAR_URL, params=params, headers=_XHR_HEADERS)
+    soup = BeautifulSoup(resp.text, "html.parser")
+    texto = str(soup.get_text()).strip()
+    if not texto or soup.find(_TAGS_DE_PAGINA) is not None:
+        raise TJPREmentaIndisponivelError(f"TJPR: {action_type} de {id_registro!r} não trouxe o texto da ementa.")
+    return texto
 
 
 def build_cjsg_form_body(
