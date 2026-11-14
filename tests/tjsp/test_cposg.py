@@ -210,6 +210,22 @@ class TestCPOSGUnit:
         assert row['processo'] == '0022175-24.2003.8.26.0344'
         assert row['classe'] == 'Apelação Criminal'
 
+    def test_cposg_parse_pagina_de_incidente(self):
+        """Na página do incidente, o cabeçalho traz "Classe (CNJ)": ``processo`` é o CNJ e ``classe``, o resto.
+
+        Sample real do incidente 50000 do 0022175-24.2003.8.26.0344, que o
+        download abre pelo modal de incidentes, com os nomes das partes e dos
+        advogados trocados por fictícios.
+        """
+        result = cposg_parse_single_html(_SAMPLES / 'show_incidente.html')
+
+        assert len(result) == 1
+        row = result[0]
+        assert row['id_original'] == '0022175-24.2003.8.26.0344'
+        assert row['processo'] == '0022175-24.2003.8.26.0344'
+        assert row['classe'] == 'Embargos de Declaração Criminal'
+        assert row['status'] == 'Encerrado'
+
     def test_cposg_parse_real_sample_contract(self):
         """Página como o eSAJ a serve, sem as movimentações: os demais campos saem, com aviso.
 

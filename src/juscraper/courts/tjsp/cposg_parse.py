@@ -11,6 +11,7 @@ from bs4.element import Comment, Script, Stylesheet, Tag, TemplateString
 from tqdm import tqdm
 
 from ...core.avisos import avisar
+from .cpopg_parse import _CNJ_PATTERN
 
 logger = logging.getLogger('juscraper.cposg_parse')
 
@@ -75,20 +76,28 @@ def cposg_parse_manager(path: str):
 def _extract_header(soup: BeautifulSoup) -> dict:
     """Extract process identifiers and status tags."""
     result = {}
-    # No cabeçalho atual, o número fica em span#numeroProcesso. Fora dele, o
-    # primeiro link para processo.codigo pode ser de um incidente ("Embargos
-    # de Declaração - 50000") ou do processo de 1ª instância.
+    # No cabeçalho atual, o número fica em span#numeroProcesso. Na página de
+    # incidente, span.unj-larger traz "Embargos de Declaração Criminal (CNJ)".
+    # Fora desses dois, o primeiro link para processo.codigo pode ser de um
+    # incidente ("Embargos de Declaração - 50000") ou do processo de 1ª instância.
     numero = soup.find('span', id='numeroProcesso')
     texto_numero = numero.get_text(strip=True) if numero else None
+    processo_tag = soup.select_one('span.unj-larger')
+    texto_larger = processo_tag.get_text(strip=True) if processo_tag else ''
+    cnj_incidente = _CNJ_PATTERN.search(texto_larger)
     if texto_numero:
         result['id_original'] = result['processo'] = texto_numero
+    elif cnj_incidente:
+        result['id_original'] = result['processo'] = cnj_incidente.group(0)
+        classe = texto_larger[:cnj_incidente.start()].replace('\xa0', ' ').strip(' (')
+        if classe:
+            result['classe'] = classe
     else:
         id_link = soup.select_one("a[href*='processo.codigo']")
         if id_link:
             result['id_original'] = id_link.get_text(strip=True)
-        processo_tag = soup.select_one('span.unj-larger')
         if processo_tag:
-            result['processo'] = processo_tag.get_text(strip=True)
+            result['processo'] = texto_larger
 
     status_tags = soup.select('span.unj-tag')
     if status_tags:
