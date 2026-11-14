@@ -26,11 +26,12 @@ class InputCJSGTJPR(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     e datas — os demais filtros do portal sao parametros internos do
     fluxo JSP (session, jsessionid, etc.), nao parte da API publica.
 
-    ``incluir_corte_idh`` nao muda a requisicao: o portal sempre devolve os
-    precedentes da Corte IDH, e o parser os descarta por padrao. E
-    ``StrictBool`` porque ``cjsg`` repassa ao parser o valor recebido, e a
-    coercao do pydantic (``"false"`` -> ``False``) divergiria da verdade do
-    Python que o parser usa.
+    ``incluir_corte_idh`` vale so para ``cjsg``: nao muda a requisicao (o
+    portal sempre devolve os precedentes da Corte IDH, e o parser os descarta
+    por padrao), e ``cjsg_download`` o recusa com ``TypeError``. ``cjsg`` o
+    valida antes da rede e o repassa ao parser; ``StrictBool`` registra esse
+    contrato, porque a coercao do pydantic (``"false"`` -> ``False``)
+    divergiria da verdade do Python que o parser usa.
     """
 
     incluir_corte_idh: StrictBool = False

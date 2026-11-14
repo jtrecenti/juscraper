@@ -12,8 +12,6 @@ from juscraper.core.parse_utils import coerce_date_columns
 
 from .download import get_ementa_completa
 
-_COLUNAS_TJ = ("processo", "orgao_julgador", "relator", "data_julgamento", "ementa")
-
 
 def _extract_processo(dados_td: Tag) -> str:
     processo_a = dados_td.find("a", class_="decisao negrito")
@@ -79,11 +77,12 @@ def _parse_row_corte_idh(
     ementa_td: Tag,
     criterio: str | None,
     request_fn: RequestFn | None,
-) -> dict[str, str]:
+) -> dict[str, str | None]:
     """Linha de precedente da Corte IDH: só nome do caso, data e ementa.
 
     O portal não traz processo, órgão julgador nem relator para esses casos;
-    as colunas ficam vazias. A ementa sai do ``div#ementa<id>``, sem a nota
+    as colunas ficam ``None``. As chaves seguem a ordem da linha do TJ, para
+    que a ordem das colunas não dependa da fonte da primeira linha. A ementa sai do ``div#ementa<id>``, sem a nota
     "A expressão foi encontrada..." nem a autoria da ementa.
     """
     id_caso = _input_value(dados_td, "idsSelecionadosCidh")
@@ -91,10 +90,13 @@ def _parse_row_corte_idh(
     caso = caso_a.get_text(strip=True).removeprefix("Caso:").strip() if caso_a else ""
     ementa_el = ementa_td.find("div", id=f"ementa{id_caso}") or ementa_td
     return {
-        "fonte": "Corte IDH",
-        "caso": caso,
+        "processo": None,
+        "orgao_julgador": None,
+        "relator": None,
         "data_julgamento": _extract_labeled_value(dados_td, "Data Julgamento:"),
         "ementa": _extract_ementa(ementa_el, id_caso, criterio, request_fn, corte_idh=True),
+        "fonte": "Corte IDH",
+        "caso": caso,
     }
 
 
@@ -104,20 +106,22 @@ def _parse_row(
     request_fn: RequestFn | None,
     *,
     incluir_corte_idh: bool = False,
-) -> dict[str, str] | None:
+) -> dict[str, str | None] | None:
+    # O portal mistura precedentes da Corte IDH na tabela de jurisprudência
+    # (ver a divisão das 50 linhas em ``download.py``).
+    corte_idh = row.find("input", {"name": "idsSelecionadosCidh"}) is not None
+    if corte_idh and not incluir_corte_idh:
+        return None
+
     cols = row.find_all("td")
     if len(cols) < 2:
         return None
 
     dados_td, ementa_td = cols[:2]
-    # O portal mistura precedentes da Corte IDH na tabela de jurisprudência
-    # (ver a divisão das 50 linhas em ``download.py``).
-    if dados_td.find("input", {"name": "idsSelecionadosCidh"}):
-        if not incluir_corte_idh:
-            return None
+    if corte_idh:
         return _parse_row_corte_idh(dados_td, ementa_td, criterio, request_fn)
 
-    resultado = {
+    resultado: dict[str, str | None] = {
         "processo": _extract_processo(dados_td),
         "orgao_julgador": _extract_labeled_value(dados_td, "Órgão Julgador:"),
         "relator": _extract_labeled_value(dados_td, "Relator:", use_text_sibling=True),
@@ -128,6 +132,7 @@ def _parse_row(
     }
     if incluir_corte_idh:
         resultado["fonte"] = "TJPR"
+        resultado["caso"] = None
     return resultado
 
 
@@ -161,9 +166,5 @@ def cjsg_parse(
             if result is not None:
                 resultados.append(result)
     df = pd.DataFrame(resultados)
-    if incluir_corte_idh:
-        # Ordem fixa: as linhas da Corte IDH podem vir antes das do TJ, e
-        # ``caso`` existe mesmo quando a busca não traz nenhuma delas.
-        df = df.reindex(columns=[*_COLUNAS_TJ, "fonte", "caso"])
     coerce_date_columns(df, ["data_julgamento"], date_format="%d/%m/%Y")
     return df

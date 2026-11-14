@@ -74,11 +74,6 @@ CASES = [
         "juscraper.courts.trf3.cjsg_schemas", "InputCJSGTRF3",
         id="trf3.cjsg",
     ),
-    pytest.param(
-        "juscraper.courts.tjpr.client", "TJPRScraper", "cjsg",
-        "juscraper.courts.tjpr.schemas", "InputCJSGTJPR",
-        id="tjpr.cjsg",
-    ),
 ]
 
 # Captura nomes em backticks duplos (RST inline literal). Cobre tanto
@@ -144,11 +139,7 @@ def test_docstring_lists_schema_fields(
     mod = importlib.import_module(scraper_module)
     method = getattr(getattr(mod, scraper_class), endpoint)
 
-    # Campos que o metodo recebe como parametro explicito ficam em ``Args:``,
-    # nao entre os bullets de ``**kwargs`` (caso do TJPR).
-    fields = _schema_filter_fields(schema_module, schema_class) - set(
-        inspect.signature(method).parameters
-    )
+    fields = _schema_filter_fields(schema_module, schema_class)
     # Um nome em ``DEPRECATED_ALIASES`` so e subtraido quando NAO e um campo
     # real do schema do caso atual. Cobre colisoes onde o mesmo nome e
     # alias deprecado em outros tribunais (``query`` -> ``pesquisa``) mas

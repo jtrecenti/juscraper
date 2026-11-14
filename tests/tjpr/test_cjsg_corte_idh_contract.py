@@ -8,16 +8,16 @@ requisição de busca: os POSTs abaixo usam o mesmo matcher de corpo do modo
 padrão.
 """
 from datetime import date
+from types import SimpleNamespace
 from urllib.parse import parse_qs, urlsplit
 
-import pandas as pd
 import pytest
 import responses
-from pydantic import ValidationError
+from bs4 import BeautifulSoup
 from responses.matchers import urlencoded_params_matcher
 
 import juscraper as jus
-from juscraper.courts.tjpr.download import VISUALIZAR_URL, build_cjsg_form_body
+from juscraper.courts.tjpr.download import VISUALIZAR_URL, build_cjsg_form_body, get_ementa_completa
 from tests._helpers import load_sample, query_param_subset_matcher
 from tests.tjpr._helpers import SEARCH_URL, add_home
 
@@ -139,19 +139,52 @@ def test_cjsg_parse_incluir_corte_idh_extrai_os_campos_da_linha():
     assert "Ementa disponibilizada" not in linha["ementa"]
 
 
-def test_cjsg_parse_incluir_corte_idh_sem_resultados_tem_as_colunas():
-    df = jus.scraper("tjpr").cjsg_parse(
-        [load_sample("tjpr", "cjsg/no_results.html")], incluir_corte_idh=True
-    )
+def test_cjsg_parse_ordem_das_colunas_nao_depende_da_primeira_linha():
+    """Página que começa por uma linha da Corte IDH mantém a ordem das colunas."""
+    html = load_sample("tjpr", "cjsg/single_page.html")
+    soup = BeautifulSoup(html, "html.parser")
+    tabela = soup.select_one("table.resultTable.jurisprudencia")
+    linha_corte_idh = tabela.select_one("tr.cidh").extract()
+    tabela.find_all("tr")[0].insert_after(linha_corte_idh)
 
-    assert df.empty
+    df = jus.scraper("tjpr").cjsg_parse([str(soup)], incluir_corte_idh=True)
+
     assert df.columns.tolist() == COLUNAS_COM_CORTE_IDH
+    assert df["fonte"].tolist() == ["Corte IDH"] + ["TJPR"] * 5
+
+
+def test_get_ementa_completa_corte_idh_codifica_o_criterio(mocker):
+    request_fn = mocker.Mock(return_value=SimpleNamespace(text="Texto <span class='high'>a</span>b."))
+
+    texto = get_ementa_completa(request_fn, "120", "dano & moral", corte_idh=True)
+
+    assert texto == "Texto ab."
+    assert request_fn.call_args.args == ("GET", VISUALIZAR_URL)
+    assert request_fn.call_args.kwargs["params"] == {
+        "actionType": "exibirTextoCompletoCidh",
+        "idProcesso": "120",
+        "criterio": "dano & moral",
+    }
 
 
 @responses.activate
 @pytest.mark.parametrize("valor", ["sim", "false", 1])
 def test_cjsg_incluir_corte_idh_nao_bool_levanta_antes_da_rede(valor):
-    with pytest.raises(ValidationError, match="incluir_corte_idh"):
+    with pytest.raises(TypeError, match="incluir_corte_idh deve ser bool"):
         jus.scraper("tjpr").cjsg("dano moral", paginas=1, incluir_corte_idh=valor)
+
+    assert len(responses.calls) == 0
+
+
+def test_cjsg_parse_incluir_corte_idh_nao_bool_levanta():
+    with pytest.raises(TypeError, match="incluir_corte_idh deve ser bool"):
+        jus.scraper("tjpr").cjsg_parse([], incluir_corte_idh="false")
+
+
+@responses.activate
+def test_cjsg_download_recusa_incluir_corte_idh():
+    """O download não muda com a opção; aceitá-la e ignorá-la perderia as linhas no parse."""
+    with pytest.raises(TypeError, match="Passe incluir_corte_idh a cjsg_parse"):
+        jus.scraper("tjpr").cjsg_download("dano moral", paginas=1, incluir_corte_idh=True)
 
     assert len(responses.calls) == 0

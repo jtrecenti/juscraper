@@ -80,15 +80,11 @@ def get_ementa_completa(
     :data:`VISUALIZAR_URL`, como no portal.
     """
     if corte_idh:
-        url = (
-            f"{VISUALIZAR_URL}?actionType=exibirTextoCompletoCidh"
-            f"&idProcesso={id_processo}&criterio={criterio}"
-        )
+        url, action_type = VISUALIZAR_URL, "exibirTextoCompletoCidh"
     else:
-        url = (
-            f"{SEARCH_URL}?actionType=exibirTextoCompleto"
-            f"&idProcesso={id_processo}&criterio={criterio}"
-        )
+        url, action_type = SEARCH_URL, "exibirTextoCompleto"
+    # ``params`` codifica o termo: "&" ou "#" num f-string cortariam o ``criterio``.
+    params = {"actionType": action_type, "idProcesso": id_processo, "criterio": criterio}
     headers = {
         'accept': 'text/javascript, text/html, application/xml, text/xml, */*',
         'accept-language': 'pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
@@ -98,7 +94,7 @@ def get_ementa_completa(
         'x-prototype-version': '1.5.1.1',
         'x-requested-with': 'XMLHttpRequest',
     }
-    resp = request_fn("GET", url, headers=headers)
+    resp = request_fn("GET", url, params=params, headers=headers)
     soup = BeautifulSoup(resp.text, 'html.parser')
     if corte_idh:
         # A resposta é texto puro com o termo buscado em ``<span class='high'>``,
