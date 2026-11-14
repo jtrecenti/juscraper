@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from pydantic import BeforeValidator
+from pydantic import BeforeValidator, Field
 
 
 def _coerce_id_filtro(value):
@@ -50,10 +50,10 @@ def _coerce_id_filtro(value):
     )
 
 
-def _reject_bool_tamanho_pagina(value):
+def _reject_bool(value):
     """Rejeita ``bool`` sem impedir a coercao de strings numericas para int."""
     if isinstance(value, bool):
-        raise ValueError("tamanho_pagina deve ser um inteiro, não bool.")
+        raise ValueError("esperado um inteiro, não bool.")
     return value
 
 
@@ -76,4 +76,4 @@ IdFiltro = Annotated[
     int | str | list[int | str] | None, BeforeValidator(_coerce_id_filtro)
 ]
 IdFiltroUnico = Annotated[int | str | None, BeforeValidator(_coerce_id_filtro_unico)]
-TamanhoPagina = Annotated[int, BeforeValidator(_reject_bool_tamanho_pagina)]
+TamanhoPagina = Annotated[int, BeforeValidator(_reject_bool), Field(ge=1)]

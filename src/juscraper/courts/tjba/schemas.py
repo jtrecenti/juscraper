@@ -8,8 +8,6 @@ from __future__ import annotations
 
 from typing import ClassVar
 
-from pydantic import Field
-
 from ...schemas import (
     DataPublicacaoMixin,
     OutputCJSGBase,
@@ -47,7 +45,7 @@ class InputCJSGTJBA(SearchBase, DataPublicacaoMixin):
     tipo_decisoes_monocraticas: bool = True
     # TODO (#212): apertar com Literal[...] após captura do GraphQL.
     ordenado_por: str = "dataPublicacao"
-    tamanho_pagina: TamanhoPagina = Field(default=10, ge=1)
+    tamanho_pagina: TamanhoPagina = 10
 
 
 class OutputCJSGTJBA(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):

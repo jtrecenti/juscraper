@@ -131,23 +131,18 @@ _TAMANHO_PAGINA_INTEGER_SCHEMAS = [
 ]
 
 
+@pytest.mark.parametrize(
+    "schema_cls",
+    _TAMANHO_PAGINA_INTEGER_SCHEMAS,
+    ids=lambda schema_cls: schema_cls.__name__,
+)
 class TestBooleanPageSizeRejection:
     """Booleans não são tamanhos de página, apesar de ``bool`` herdar de ``int``."""
 
-    @pytest.mark.parametrize(
-        "schema_cls",
-        _TAMANHO_PAGINA_INTEGER_SCHEMAS,
-        ids=lambda schema_cls: schema_cls.__name__,
-    )
     def test_tamanho_pagina_rejects_true(self, schema_cls):
         with pytest.raises(ValidationError):
             schema_cls(pesquisa="x", tamanho_pagina=True)
 
-    @pytest.mark.parametrize(
-        "schema_cls",
-        _TAMANHO_PAGINA_INTEGER_SCHEMAS,
-        ids=lambda schema_cls: schema_cls.__name__,
-    )
     def test_tamanho_pagina_accepts_int_and_numeric_string(self, schema_cls):
         assert schema_cls(pesquisa="x", tamanho_pagina=2).tamanho_pagina == 2
         assert schema_cls(pesquisa="x", tamanho_pagina="2").tamanho_pagina == 2

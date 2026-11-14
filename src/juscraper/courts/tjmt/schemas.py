@@ -8,8 +8,6 @@ from __future__ import annotations
 
 from typing import ClassVar
 
-from pydantic import Field
-
 from ...schemas import (
     DataPublicacaoMixin,
     OutputCJSGBase,
@@ -54,7 +52,7 @@ class InputCJSGTJMT(SearchBase, DataPublicacaoMixin):
     orgao_julgador: str | None = None
     tipo_processo: str | None = None
     thesaurus: bool = False
-    tamanho_pagina: TamanhoPagina = Field(default=10, ge=1)
+    tamanho_pagina: TamanhoPagina = 10
 
 
 class OutputCJSGTJMT(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):

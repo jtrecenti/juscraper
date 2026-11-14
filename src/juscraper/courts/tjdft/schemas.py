@@ -8,8 +8,6 @@ from __future__ import annotations
 
 from typing import ClassVar
 
-from pydantic import Field
-
 from ...schemas import DataJulgamentoMixin, DataPublicacaoMixin, OutputCJSGBase, SearchBase, TamanhoPagina
 
 
@@ -28,7 +26,7 @@ class InputCJSGTJDFT(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     sinonimos: bool = True
     espelho: bool = True
     inteiro_teor: bool = False
-    tamanho_pagina: TamanhoPagina = Field(default=10, ge=1)
+    tamanho_pagina: TamanhoPagina = 10
 
 
 class OutputCJSGTJDFT(OutputCJSGBase):
