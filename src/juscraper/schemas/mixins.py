@@ -55,8 +55,9 @@ class PaginasMixin(BaseModel):
     @field_validator("paginas", mode="before")
     @classmethod
     def _reject_bool_paginas(cls, paginas: object) -> object:
-        # Sem isso o pydantic coage ``True`` para a pagina 1 (tambem em listas).
-        if isinstance(paginas, list):
+        # Sem isso o pydantic coage ``True`` para a pagina 1 (tambem em listas
+        # e tuplas, que ``list[int]`` aceita).
+        if isinstance(paginas, (list, tuple)):
             for pagina in paginas:
                 _reject_bool(pagina)
             return paginas

@@ -7,9 +7,12 @@ pydantic v2).
 
 Tipos disponiveis:
 
-- :data:`TamanhoPagina` — inteiro positivo que rejeita ``bool`` (inclusive
+- :data:`InteiroSemBool` — inteiro que rejeita ``bool`` (inclusive
   ``numpy.bool_``) antes da coercao do pydantic, mantendo a coercao de strings
-  numericas. Limites proprios do endpoint entram como ``Field(...)`` no campo.
+  numericas. Base de :data:`TamanhoPagina`; use direto quando o endpoint tem
+  dominio proprio que o ``ge=1`` atropelaria na mensagem (Falcao: 5 ou 10).
+- :data:`TamanhoPagina` — :data:`InteiroSemBool` positivo. Limites proprios do
+  endpoint entram como ``Field(...)`` no campo.
 - :data:`IdFiltro` — IDs internos do tribunal que aceitam ``int``, ``str`` ou
   ``list[int | str]``. Coage para ``str | None``, montando CSV quando lista.
   Use em campos cujo backend interpreta CSV (``classeTreeSelection.values``,
@@ -82,4 +85,5 @@ IdFiltro = Annotated[
     int | str | list[int | str] | None, BeforeValidator(_coerce_id_filtro)
 ]
 IdFiltroUnico = Annotated[int | str | None, BeforeValidator(_coerce_id_filtro_unico)]
-TamanhoPagina = Annotated[int, BeforeValidator(_reject_bool), Field(ge=1)]
+InteiroSemBool = Annotated[int, BeforeValidator(_reject_bool)]
+TamanhoPagina = Annotated[InteiroSemBool, Field(ge=1)]

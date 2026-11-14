@@ -140,7 +140,7 @@ def test_paginas_mixin_validates_large_range_without_scanning():
 
 @pytest.mark.parametrize(
     "paginas",
-    [0, -1, [], [0], [-1], range(3, 0, -1), True, np.True_, [True], [1, np.True_]],
+    [0, -1, [], [0], [-1], range(3, 0, -1), True, np.True_, [True], [1, np.True_], (True,)],
 )
 def test_paginas_mixin_rejects_invalid_selections(paginas):
     with pytest.raises(ValidationError, match="paginas"):
