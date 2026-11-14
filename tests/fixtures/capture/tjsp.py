@@ -1,9 +1,8 @@
 """Capture samples for TJSP across all public endpoints.
 
-TJSP exposes four public methods (``cjsg``, ``cjpg``, ``cpopg``, ``cposg``)
-plus ``method='html'``/``method='api'`` variants for the last two. This
-script exercises each flow against the live eSAJ and API hosts and dumps
-raw responses under ``tests/tjsp/samples/<endpoint>/``.
+TJSP exposes four public methods (``cjsg``, ``cjpg``, ``cpopg``, ``cposg``).
+This script exercises each flow against the live eSAJ host and dumps raw
+responses under ``tests/tjsp/samples/<endpoint>/``.
 
 Run from repo root::
 
@@ -14,7 +13,7 @@ Override the CNJ of test via ``--cnj`` if the default is retired::
     python -m tests.fixtures.capture.tjsp --cnj 1000149-71.2024.8.26.0346
 
 The script is intentionally linear — each endpoint is a separate function,
-and ``main()`` calls them in order. If one flow breaks (e.g., API returns
+and ``main()`` calls them in order. If one flow breaks (e.g., eSAJ returns
 503), the others still produce samples.
 """
 from __future__ import annotations
@@ -42,7 +41,6 @@ from ._util import (
 )
 
 ESAJ_BASE = "https://esaj.tjsp.jus.br/"
-API_BASE = "https://api.tjsp.jus.br/"
 
 # CNJ used by the existing integration tests (tests/tjsp/test_cpopg.py).
 # If it disappears from the TJSP index, pass --cnj to override.
@@ -195,48 +193,6 @@ def capture_cpopg_html(cnj: str) -> None:
     _ = id_clean  # referenced for symmetry with scraper internals
 
 
-# ---------- cpopg api ----------------------------------------------------
-
-def capture_cpopg_api(cnj: str) -> None:
-    """Capture cpopg samples for ``method='api'``.
-
-    GET search/numproc → POST dadosbasicos → 4× GET components (partes,
-    movimentacao, incidente, audiencia). Each JSON is dumped under
-    ``tests/tjsp/samples/cpopg/api_*.json``.
-    """
-    dest = samples_dir_for("tjsp", "cpopg")
-    session = build_session(headers=TJSP_CHROME_HEADERS)
-    id_clean = _clean_cnj(cnj)
-
-    r_search = session.get(
-        f"{API_BASE}processo/cpopg/search/numproc/{id_clean}", timeout=60
-    )
-    r_search.raise_for_status()
-    dump(dest / "api_search.json", r_search.content)
-    print(f"[tjsp] cpopg api search/numproc/{id_clean} → saved")
-
-    processos = r_search.json()
-    if not processos:
-        print("[tjsp] cpopg api: empty search response; skipping subsequent calls")
-        return
-
-    cd = processos[0]["cdProcesso"]
-    r_basicos = session.post(
-        f"{API_BASE}processo/cpopg/dadosbasicos/{cd}",
-        json={"cdProcesso": cd},
-        timeout=60,
-    )
-    r_basicos.raise_for_status()
-    dump(dest / "api_dadosbasicos.json", r_basicos.content)
-    print(f"[tjsp] cpopg api dadosbasicos/{cd} → saved")
-
-    for comp in ("partes", "movimentacao", "incidente", "audiencia"):
-        r_comp = session.get(f"{API_BASE}processo/cpopg/{comp}/{cd}", timeout=60)
-        r_comp.raise_for_status()
-        dump(dest / f"api_{comp}.json", r_comp.content)
-        print(f"[tjsp] cpopg api {comp}/{cd} → saved")
-
-
 # ---------- cposg html ---------------------------------------------------
 
 def capture_cposg_html(cnj: str) -> None:
@@ -306,20 +262,6 @@ def capture_cposg_html(cnj: str) -> None:
     r_show.raise_for_status()
     dump(dest / "show.html", r_show.content)
     print(f"[tjsp] cposg html show for codigo={cd} → saved")
-
-
-# ---------- cposg api ----------------------------------------------------
-
-def capture_cposg_api(cnj: str) -> None:
-    """Capture cposg samples for ``method='api'`` (single GET)."""
-    dest = samples_dir_for("tjsp", "cposg")
-    session = build_session(headers=TJSP_CHROME_HEADERS)
-    id_clean = _clean_cnj(cnj)
-
-    r = session.get(f"{API_BASE}processo/cposg/search/numproc/{id_clean}", timeout=60)
-    r.raise_for_status()
-    dump(dest / "api_search.json", r.content)
-    print(f"[tjsp] cposg api search/numproc/{id_clean} → saved")
 
 
 # ---------- acordao (movimentacao) --------------------------------------
@@ -441,7 +383,7 @@ def main() -> None:
         "--skip",
         nargs="*",
         default=[],
-        choices=["cjsg", "cjpg", "cpopg_html", "cpopg_api", "cposg_html", "cposg_api", "acordao", "documentos"],
+        choices=["cjsg", "cjpg", "cpopg_html", "cposg_html", "acordao", "documentos"],
         help="Flows to skip",
     )
     args = parser.parse_args()
@@ -450,9 +392,7 @@ def main() -> None:
         ("cjsg", lambda: capture_cjsg()),
         ("cjpg", lambda: capture_cjpg()),
         ("cpopg_html", lambda: capture_cpopg_html(args.cnj)),
-        ("cpopg_api", lambda: capture_cpopg_api(args.cnj)),
         ("cposg_html", lambda: capture_cposg_html(args.cnj)),
-        ("cposg_api", lambda: capture_cposg_api(args.cnj)),
         ("acordao", capture_acordao),
         ("documentos", capture_documentos),
     ]

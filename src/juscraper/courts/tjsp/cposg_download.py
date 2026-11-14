@@ -159,27 +159,3 @@ def _incluir_movimentacoes(html, session, u_base, id_cnj):
     return _CONTAINER_VAZIO.sub(
         lambda _: f'<div id="containerMovimentacoesAjax">{bloco}</div>', html, count=1,
     )
-
-
-def cposg_download_api(id_cnj_list, session, api_base, download_path, sleep_time=0.5):
-    """
-    Downloads the JSON of one or more processes from the CPOSG via API.
-    """
-    if isinstance(id_cnj_list, str):
-        id_cnj_list = [id_cnj_list]
-    paths = []
-    endpoint = 'processo/cposg/search/numproc/'
-    for id_cnj in tqdm(id_cnj_list, desc="Baixando processos"):
-        id_clean = clean_cnj(id_cnj)
-        u = f"{api_base}{endpoint}{id_clean}"
-        path = f"{download_path}/cposg/{id_clean}"
-        if not Path(path).is_dir():
-            Path(path).mkdir(parents=True)
-        r = session.get(u)
-        if r.status_code != 200:
-            raise RuntimeError(f"A consulta à API falhou. Status code {r.status_code}.")
-        with Path(f"{path}/{id_clean}.json").open('w', encoding='utf-8') as f:
-            f.write(r.text)
-        paths.append(path)
-        time.sleep(sleep_time)
-    return paths if len(paths) > 1 else paths[0]

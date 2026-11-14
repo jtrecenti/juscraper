@@ -213,7 +213,6 @@ def test_erro_de_rede_em_documento_vira_aviso(tmp_path, mocker):
 @pytest.mark.parametrize(
     ("kwargs", "mensagem"),
     [
-        ({"method": "api", "download_pecas": True, "diretorio": "x"}, "method='html'"),
         ({"baixar_movimentacoes": False, "download_pecas": True, "diretorio": "x"}, "baixar_movimentacoes=True"),
         ({"download_pecas": True}, "exige diretorio"),
         ({"diretorio": "x"}, "exige diretorio"),
@@ -243,7 +242,6 @@ def test_cpopg_recusa_diretorio_dentro_de_download_path(tmp_path):
 @pytest.mark.parametrize(
     ("kwargs", "mensagem"),
     [
-        ({"method": "api"}, "method='html'"),
         ({"baixar_movimentacoes": False}, "baixar_movimentacoes=True"),
     ],
 )
