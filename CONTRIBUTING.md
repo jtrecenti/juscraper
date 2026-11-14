@@ -162,21 +162,18 @@ Os testes marcados `integration` e os notebooks rodam localmente, de IP residenc
 Ao mexer num tribunal ou agregador, rodar antes do PR os testes de integração, o notebook e o teste `release` dele:
 
 ```bash
-uv sync --extra dev --extra docs --extra waf     # TJMG: acrescentar --extra tjmg (Python até 3.14)
+uv sync --extra dev --extra docs --extra waf     # TJMG: ver a nota do extra [tjmg] em Notebooks
 uv run playwright install chromium               # navegador do extra waf (STF, TJPE)
 uv run pytest tests/<nome> -m integration
 uv run pytest --nbmake docs/notebooks/<nome>.ipynb --nbmake-timeout=300
 uv run pytest tests/test_release_date_filter.py -m release -k <nome>
 ```
 
-`<nome>` é o diretório do tribunal em `tests/`. Uma mudança no código de uma família (`_esaj`, `_trf`, `_pdpj_sso`) vale para todo tribunal que a importa. O subcomando `alvo-pr` do script do relatório lista os tribunais que uma branch toca, com a mesma regra do workflow:
+`<nome>` é o diretório do tribunal em `tests/`. Uma mudança no código de uma família (`_esaj`, `_trf`, `_pdpj_sso`) vale para todo tribunal que a importa. O subcomando `alvo-pr` do script do relatório lista os tribunais que os commits de uma branch tocam, com a mesma regra do workflow (o que ainda não foi commitado fica de fora):
 
 ```bash
 git fetch origin
-# Compara a árvore de trabalho com o ponto em que a branch saiu da main, então
-# conta também o que ainda não foi commitado (exceto arquivos novos sem git add).
-git diff --no-renames --name-only "$(git merge-base origin/main HEAD)" > /tmp/arquivos.txt
-uv run python scripts/integration_report.py alvo-pr --arquivos /tmp/arquivos.txt   # na raiz do repositório
+uv run python scripts/integration_report.py alvo-pr --base-ref origin/main   # na raiz do repositório
 ```
 
 Código comum, como `core/` e `utils/`, não aponta tribunal; nesse caso, e antes de versão ou depois de refatoração ampla, rodar a execução completa: `uv run pytest tests -m "integration and not release"` e os notebooks pelo comando de **Notebooks como sanity check**.
