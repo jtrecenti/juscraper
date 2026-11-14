@@ -6,9 +6,10 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
+from bs4 import BeautifulSoup
 
 from juscraper.courts._esaj import parse as esaj_parse
-from juscraper.courts._esaj.parse import _find_pagination_element, _parse_single_page, cjsg_n_results
+from juscraper.courts._esaj.parse import _find_pagination_element, _parse_single_page, _total_declarado, cjsg_n_results
 from juscraper.courts.tjsp.cjsg_parse import _cjsg_parse_single_page, cjsg_n_pags, cjsg_parse_manager
 from tests._helpers import load_sample
 
@@ -216,7 +217,9 @@ class TestCJSGNResultsInputDeclarado:
         monkeypatch.setattr(esaj_parse, "_find_pagination_element", _cascata_proibida)
         monkeypatch.setattr(esaj_parse, "_count_result_rows_or_raise", _cascata_proibida)
 
-        assert cjsg_n_results(load_sample(court, f"cjsg/{sample}")) == expected
+        html = load_sample(court, f"cjsg/{sample}")
+        assert _total_declarado(BeautifulSoup(html, "html.parser")) == expected
+        assert cjsg_n_results(html) == expected
 
     @pytest.mark.parametrize("ementa", ["BONIFICAÇÃO POR RESULTADOS", "PESQUISAS SEM RESULTADOS"])
     def test_ementa_fora_das_linhas_marcadas_nao_altera_a_contagem(self, ementa):

@@ -62,7 +62,6 @@ def capture_cjsg() -> None:
         headers=TJSP_CHROME_HEADERS,
         body_builder=make_tjsp_cjsg_body,
     )
-    capture_cjsg_monocratica()
     # Ementa curta com a palavra "resultados" na 1a página (observado em
     # 14/11/2026 com "direito" e baixar_sg=False): a contagem não pode tomar
     # a célula da ementa pela paginação.
@@ -73,9 +72,10 @@ def capture_cjsg() -> None:
     if "BONIFICAÇÃO POR RESULTADOS" not in resps[0].text:
         # Sem a ementa, o sample deixaria de exercitar a regressão.
         print("[tjsp] cjsg ementa_com_resultados: a 1a página mudou; sample mantido")
-        return
-    dump(samples_dir_for("tjsp", "cjsg") / "ementa_com_resultados.html", resps[0].content)
-    print("[tjsp] cjsg ementa_com_resultados ('direito', baixar_sg=False) → saved")
+    else:
+        dump(samples_dir_for("tjsp", "cjsg") / "ementa_com_resultados.html", resps[0].content)
+        print("[tjsp] cjsg ementa_com_resultados ('direito', baixar_sg=False) → saved")
+    capture_cjsg_monocratica()
 
 
 def capture_cjsg_monocratica() -> None:
@@ -89,6 +89,10 @@ def capture_cjsg_monocratica() -> None:
         "usucapiao extraordinario predio rural familia",
         tipo_decisao="monocratica", body_builder=make_tjsp_cjsg_body,
     )
+    if "totalResultadoAbaRetornoFiltro-D" not in resps[0].text:
+        # Sem o input ``-D``, o sample deixaria de cobrir a aba de monocráticas.
+        print("[tjsp] cjsg monocratica_single_page: sem o input -D; sample mantido")
+        return
     dump(samples_dir_for("tjsp", "cjsg") / "monocratica_single_page.html", resps[0].content)
     print("[tjsp] cjsg monocratica_single_page → saved")
 

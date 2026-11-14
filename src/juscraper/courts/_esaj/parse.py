@@ -1,8 +1,9 @@
 """HTML parsers for eSAJ cjsg results.
 
 Absorbs the 6 near-identical ``cjsg_parse.py`` modules from the courts.
-The TJSP version is the canonical reference for ``cjsg_n_pags`` (see
-CLAUDE.md) because its cascade of selectors/regex tolerates both the
+``cjsg_n_results`` le o total do ``input#totalResultadoAbaRetornoFiltro-*``
+quando ele existe. The TJSP version is the canonical reference for the
+fallback cascade of ``cjsg_n_pags`` (see CLAUDE.md) because its cascade of selectors/regex tolerates both the
 legacy ``bgcolor=#EEEEEE`` layout and the newer ``td Resultados…``
 wording. The parser treats latin-1 as the expected server encoding
 (falls back to utf-8 for test samples that were re-saved).
@@ -155,12 +156,12 @@ def cjsg_n_results(html_source: str) -> int:
     :func:`juscraper.courts._esaj.download.download_cjsg_pages` to size the
     pagination loop.
 
-    Reads first the hidden ``input#totalResultadoAbaRetornoFiltro-*`` that
-    eSAJ puts on the results page; its value does not depend on the text of
-    the page, so an ementa citing "resultados" cannot change the count.
+    Le primeiro o ``input#totalResultadoAbaRetornoFiltro-*`` oculto que o eSAJ
+    poe na pagina de resultados; o valor nao depende do texto da pagina, entao
+    uma ementa que cite "resultados" nao muda a contagem.
 
-    When that input is missing, empty or non-numeric, falls back to a
-    cascade of selectors and regex to survive layout changes. See the
+    Sem esse input, ou com valor vazio ou nao numerico, cai numa cascata de
+    seletores e regex, que tolera mudancas de layout. See the
     "Extração de número de páginas/resultados em raspadores HTML" section of
     CLAUDE.md for the rationale.
 
