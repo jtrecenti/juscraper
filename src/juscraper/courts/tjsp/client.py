@@ -111,7 +111,7 @@ def _mover_documentos(movimentacoes: pd.DataFrame, origem: str, destino: str) ->
 
 
 class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
-    """Main scraper for TJSP — eSAJ web."""
+    """Raspador principal do TJSP, pelas páginas do eSAJ."""
 
     BASE_URL = "https://esaj.tjsp.jus.br/"
     TRIBUNAL_NAME = "TJSP"
@@ -172,7 +172,7 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
         self._download_path = path
 
     def set_method(self, method: str):
-        """Validate and store the access method (only ``'html'``) for cpopg/cposg."""
+        """Valida e guarda o método de acesso do cpopg/cposg; só ``'html'`` é aceito."""
         if method == "api":
             raise ValueError(
                 "method='api' foi removido: a API do TJSP (api.tjsp.jus.br) deixou de devolver "

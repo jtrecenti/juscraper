@@ -84,10 +84,10 @@ def cpopg_parse_manager(path: str):
     Raises
     ------
     ValueError
-        When ``path`` is a directory and no file in it could be parsed, either
-        because it holds no ``.html`` file or because every
-        candidate failed. Returning ``{}`` here would hide a download or read
-        failure behind an empty result.
+        Quando ``path`` é um diretório e nenhum arquivo dele pôde ser lido,
+        porque não há ``.html`` ou porque todos falharam. Devolver ``{}``
+        esconderia uma falha de download ou de leitura atrás de um resultado
+        vazio.
     """
     root = Path(path)
     if root.is_file():

@@ -10,7 +10,7 @@ import pytest
 
 import juscraper
 from juscraper.courts.tjsp.cposg_parse import cposg_parse_manager, cposg_parse_single_html
-from tests._helpers import load_sample, load_sample_bytes
+from tests._helpers import load_sample
 
 _SAMPLES = Path(__file__).parent / 'samples' / 'cposg'
 
@@ -303,16 +303,16 @@ class TestCPOSGUnit:
     def test_cposg_parse_manager_ignora_arquivos_do_cpopg(self, tmp_path):
         """No mesmo ``download_path``, o cpopg grava ``cpopg/<id>/``: o cposg só lê ``cposg/``."""
         id_processo = '10001497120248260346'
-        for pasta in ('cposg', 'cpopg'):
+        html = load_sample('tjsp', 'cposg/results_complete.html')
+        conteudos = {'cposg': html, 'cpopg': html.replace('1234567-89.2025.8.26.0000', '7654321-98.2025.8.26.0000')}
+        for pasta, conteudo in conteudos.items():
             destino = tmp_path / pasta / id_processo
             destino.mkdir(parents=True)
-            (destino / f'{id_processo}_cd_processo_X.html').write_bytes(
-                load_sample_bytes('tjsp', 'cposg/results_complete.html')
-            )
+            (destino / f'{id_processo}_cd_processo_X.html').write_text(conteudo, encoding='utf-8')
 
         result = cposg_parse_manager(str(tmp_path))
 
-        assert len(result) == 1
+        assert result['processo'].tolist() == ['1234567-89.2025.8.26.0000']
 
     def test_empty_relator_row_does_not_block_nonempty_fallback(self, tmp_path):
         """Preserve the relator fallback past an empty composition row, as the previous parser did."""
