@@ -969,7 +969,7 @@ def resolve_deprecated_alias(
     new: str,
     current_value,
     *,
-    sentinel=None,
+    sentinel=None,  # pylint: disable=redefined-builtin
 ):
     """Pop ``old`` alias from ``kwargs`` and merge with ``current_value``.
 
