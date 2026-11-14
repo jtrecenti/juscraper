@@ -9,7 +9,7 @@ import pandas as pd
 import pytest
 
 import juscraper
-from juscraper.courts.tjsp.cposg_parse import cposg_parse_manager, cposg_parse_single_html
+from juscraper.courts.tjsp.cposg_parse import cposg_parse_manager, cposg_parse_single_html, cposg_parse_single_json
 from tests._helpers import load_sample
 
 _SAMPLES = Path(__file__).parent / 'samples' / 'cposg'
@@ -302,6 +302,67 @@ class TestCPOSGUnit:
             'composicao',
             'primeira_inst',
         ]
+
+    def test_cposg_parse_manager_discovers_api_json_sample(self, tmp_path):
+        """O manager encontra JSON no layout de diretórios do download da API."""
+        process_dir = tmp_path / 'cposg' / '10001497120248260346'
+        process_dir.mkdir(parents=True)
+        sample = load_sample('tjsp', 'cposg/api_search.json')
+        (process_dir / '10001497120248260346.json').write_text(sample, encoding='utf-8')
+
+        result = cposg_parse_manager(str(tmp_path))
+
+        assert len(result) == 1
+        row = result.iloc[0]
+        assert row['processo'] == '1000149-71.2024.8.26.0346'
+        assert row['classe'] == 'Apelação Cível'
+        assert row['assunto'] == 'DIREITO DO CONSUMIDOR - Contratos de Consumo - Bancários'
+
+    def test_cposg_parse_single_json_returns_public_columns(self):
+        """O parser JSON mantém todas as colunas públicas e os dados da fixture."""
+        result = cposg_parse_single_json(str(_SAMPLES / 'api_search.json'))
+
+        assert result == [{
+            'id_original': '1000149-71.2024.8.26.0346',
+            'processo': '1000149-71.2024.8.26.0346',
+            'status': None,
+            'classe': 'Apelação Cível',
+            'assunto': 'DIREITO DO CONSUMIDOR - Contratos de Consumo - Bancários',
+            'secao': None,
+            'orgao_julgador': None,
+            'area': None,
+            'relator': None,
+            'valor_da_acao': None,
+            'origem': None,
+            'volume_apenso': None,
+            'movimentacoes': None,
+            'partes': None,
+            'historico': None,
+            'decisoes': None,
+            'composicao': None,
+            'primeira_inst': None,
+        }]
+
+    def test_cposg_parse_single_json_busca_vazia(self, tmp_path):
+        """A API devolve ``[]`` para o número: erro que diz isso, não DataFrame vazio calado."""
+        arquivo = tmp_path / '10001497120248260346.json'
+        arquivo.write_text('[]', encoding='utf-8')
+
+        with pytest.raises(ValueError, match=r'resposta \[\]'):
+            cposg_parse_single_json(str(arquivo))
+
+    def test_cposg_parse_manager_json_fora_do_formato_nao_derruba_os_demais(self, tmp_path):
+        """Um JSON que não é lista é registrado e pulado, como os HTML com erro."""
+        (tmp_path / 'erro').mkdir()
+        (tmp_path / 'erro' / '1.json').write_text('{"mensagem": "erro"}', encoding='utf-8')
+        (tmp_path / 'ok').mkdir()
+        (tmp_path / 'ok' / '2.json').write_text(
+            load_sample('tjsp', 'cposg/api_search.json'), encoding='utf-8'
+        )
+
+        result = cposg_parse_manager(str(tmp_path))
+
+        assert result['processo'].tolist() == ['1000149-71.2024.8.26.0346']
 
     def test_empty_relator_row_does_not_block_nonempty_fallback(self, tmp_path):
         """Preserve the relator fallback past an empty composition row, as the previous parser did."""
