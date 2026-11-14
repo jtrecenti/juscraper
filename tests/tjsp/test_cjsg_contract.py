@@ -85,6 +85,27 @@ def test_cjsg_single_page(tmp_path, mocker):
 
 
 @responses.activate
+def test_cjsg_baixar_sg_false_com_ementa_que_cita_resultados(tmp_path, mocker):
+    """Com ``baixar_sg=False`` (origem ``R``), a 1a página traz ementa curta com "resultados"."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.POST,
+        f"{BASE}/resultadoCompleta.do",
+        body=load_sample_bytes("tjsp", "cjsg/post_initial.html"),
+        status=200,
+        content_type="text/html; charset=latin-1",
+        match=[urlencoded_params_matcher(make_tjsp_cjsg_body("direito", baixar_sg=False), allow_blank=True)],
+    )
+    _add_get(1, "cjsg/ementa_com_resultados.html")
+
+    df = jus.scraper("tjsp", download_path=str(tmp_path)).cjsg("direito", baixar_sg=False, paginas=1)
+
+    assert set(df.columns) >= CJSG_MIN_COLUMNS
+    assert len(df) == 20
+    assert df["ementa"].str.contains("RESULTADOS").any()
+
+
+@responses.activate
 def test_cjsg_no_results(tmp_path, mocker):
     """Zero-result query returns an empty DataFrame instead of raising."""
     mocker.patch("time.sleep")

@@ -80,6 +80,10 @@ def _has_zero_results(soup: BeautifulSoup) -> bool:
 
 def _find_short_results_cell(soup: BeautifulSoup) -> Tag | None:
     for cell in soup.find_all("td"):
+        # A ementa curta que cita "resultados" ("BONIFICAÇÃO POR RESULTADOS")
+        # fica numa linha de resultado; a paginação, fora delas.
+        if cell.find_parent("tr", class_="fundocinza1") is not None:
+            continue
         text = cell.get_text()
         if "resultados" in text.lower() and len(text.strip()) < 400:
             return cell

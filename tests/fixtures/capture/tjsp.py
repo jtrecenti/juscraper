@@ -35,6 +35,7 @@ from ._util import (
     capture_acordao_samples,
     capture_cjsg_samples,
     dump,
+    fetch_cjsg_pages,
     make_tjsp_cjpg_params,
     make_tjsp_cjsg_body,
     samples_dir_for,
@@ -63,6 +64,15 @@ def capture_cjsg() -> None:
         headers=TJSP_CHROME_HEADERS,
         body_builder=make_tjsp_cjsg_body,
     )
+    # Ementa curta com a palavra "resultados" na 1a página (observado em
+    # 14/11/2026 com "direito" e baixar_sg=False): a contagem não pode tomar
+    # a célula da ementa pela paginação.
+    _, resps = fetch_cjsg_pages(
+        build_session(headers=TJSP_CHROME_HEADERS), ESAJ_BASE, "direito",
+        body_builder=lambda pesquisa, **kw: make_tjsp_cjsg_body(pesquisa, baixar_sg=False, **kw),
+    )
+    dump(samples_dir_for("tjsp", "cjsg") / "ementa_com_resultados.html", resps[0].content)
+    print("[tjsp] cjsg ementa_com_resultados ('direito', baixar_sg=False) → saved")
 
 
 # ---------- cjpg ---------------------------------------------------------
