@@ -394,9 +394,14 @@ def _incluir_movimentacoes(html, sessao, url_base, codigo_processo, *, baixar_mo
 
 
 def _anexar_paginas_seguintes(bloco, sessao, url_base, codigo_processo, cursor):
-    """Segue o cursor e anexa as linhas de cada página em ``tabelaOutrasPaginasMovimentacoes``."""
+    """Segue o cursor e anexa as linhas de cada página em ``tabelaOutrasPaginasMovimentacoes``.
+
+    O eSAJ já devolveu a mesma página com um cursor novo a cada chamada (#474):
+    página igual à anterior para a paginação com erro, como cursor repetido.
+    """
     outras_paginas = bloco.find('tbody', id='tabelaOutrasPaginasMovimentacoes')
     vistos = set()
+    anterior = [str(linha) for linha in bloco.find_all('tr', class_='containerMovimentacao')]
     while cursor:
         if outras_paginas is None or cursor in vistos:
             raise RuntimeError(
@@ -413,6 +418,12 @@ def _anexar_paginas_seguintes(bloco, sessao, url_base, codigo_processo, cursor):
             raise RuntimeError(
                 f"Movimentações do processo {codigo_processo}: página sem linhas no cursor {cursor!r}."
             )
+        atual = [str(linha) for linha in linhas]
+        if atual == anterior:
+            raise RuntimeError(
+                f"Movimentações do processo {codigo_processo}: o cursor {cursor!r} repetiu a página anterior."
+            )
+        anterior = atual
         outras_paginas.extend(linhas)
         linha_cursor = pagina.find('tr', id='trCursorMovimentacoes')
         cursor = linha_cursor.get('data-cursor') if linha_cursor else None

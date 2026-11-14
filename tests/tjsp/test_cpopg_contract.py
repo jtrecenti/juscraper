@@ -213,6 +213,29 @@ def test_cpopg_html_para_quando_o_cursor_se_repete(tmp_path, mocker):
     assert not list((tmp_path / "cpopg").rglob("*.html"))
 
 
+@responses.activate
+def test_cpopg_html_para_quando_a_pagina_se_repete_com_cursor_novo(tmp_path, mocker):
+    """Página igual à anterior, com cursor novo, não avança a paginação: o processo fica de fora com erro no log.
+
+    Em 02/11/2026 o eSAJ chegou a devolver a mesma página com um cursor novo a
+    cada chamada (#474); sem a checagem, o download seguiria sem fim.
+    """
+    mocker.patch("time.sleep")
+    _registrar_busca_incidente()
+    _registrar_pagina_movimentacoes(1)
+    _registrar_pagina_movimentacoes(2, CURSOR_PAGINA_2)
+    pagina_2 = load_sample_bytes("tjsp", "cpopg/movimentacoes_pagina_2.html")
+    _registrar_pagina_movimentacoes(2, CURSOR_PAGINA_3, body=pagina_2.replace(CURSOR_PAGINA_3.encode(), b"cursor-novo"))
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+    erro = mocker.patch("juscraper.courts.tjsp.cpopg_download.logger.error")
+
+    scraper.cpopg_download(CNJ_INCIDENTE, method="html")
+
+    assert len(_chamadas("carregarMovimentacoesAjax.do")) == 3
+    assert "repetiu a página anterior" in str(erro.call_args.args[-1])
+    assert not list((tmp_path / "cpopg").rglob("*.html"))
+
+
 
 @responses.activate
 def test_cpopg_html_para_quando_a_pagina_seguinte_vem_sem_linhas(tmp_path, mocker):
