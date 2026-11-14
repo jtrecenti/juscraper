@@ -20,7 +20,7 @@ from responses import matchers
 import juscraper as jus
 from juscraper.courts.tjmg.cposg_parse import parse_partes
 from juscraper.courts.tjmg.schemas import OutputCPOSGTJMG
-from tests._helpers import load_sample_bytes
+from tests._helpers import load_sample, load_sample_bytes
 
 BASE = "https://www4.tjmg.jus.br/juridico/sf"
 RESULTADO_URL = f"{BASE}/proc_resultado2.jsp"
@@ -326,8 +326,8 @@ def test_cposg_mantem_advogado_com_oab_fora_do_padrao(scraper):
     ],
 )
 def test_parse_partes_preserva_campos_dos_samples_reais(sample, esperado):
-    """Os quatro layouts capturados preservam tipo, nome, baixa e advogados."""
-    html = load_sample_bytes("tjmg", f"cposg/{sample}.html").decode("iso-8859-1")
+    """Os samples capturados preservam tipo, nome, baixa e advogados."""
+    html = load_sample("tjmg", f"cposg/{sample}.html", encoding="iso-8859-1")
 
     assert parse_partes(html) == esperado
 
@@ -346,13 +346,27 @@ def test_cposg_aviso_de_falha_aponta_para_quem_chamou(scraper, mocker, metodo):
     assert avisos[0].filename == __file__
 
 
-def test_parse_partes_ignora_linha_de_advogado_vazia():
-    """Linha com as duas celulas vazias nao vira advogado."""
-    html = load_sample_bytes("tjmg", "cposg/partes_single.html").replace(
-        b"<td>165085N/MG</td>",
-        b"<td>&nbsp;</td><td>&nbsp;</td></tr><tr><td>165085N/MG</td>",
-    ).decode("iso-8859-1")
+@pytest.mark.parametrize(
+    ("substituto", "esperado"),
+    [
+        pytest.param(
+            b"<td>&nbsp;</td><td>&nbsp;</td></tr><tr><td>165085N/MG</td>",
+            [{"oab": "165085N/MG", "nome": "LUIS FERNANDO BATISTA"}],
+            id="linha-vazia-ignorada",
+        ),
+        pytest.param(
+            b"<td></td>",
+            [{"oab": None, "nome": "LUIS FERNANDO BATISTA"}],
+            id="sem-oab-mantido",
+        ),
+    ],
+)
+def test_parse_partes_linhas_de_advogado_incompletas(substituto, esperado):
+    """Linha com as duas celulas vazias nao vira advogado; OAB vazia com nome vira."""
+    html = (
+        load_sample_bytes("tjmg", "cposg/partes_single.html")
+        .replace(b"<td>165085N/MG</td>", substituto)
+        .decode("iso-8859-1")
+    )
 
-    advogados = parse_partes(html)[0]["advogados"]
-
-    assert advogados == [{"oab": "165085N/MG", "nome": "LUIS FERNANDO BATISTA"}]
+    assert parse_partes(html)[0]["advogados"] == esperado

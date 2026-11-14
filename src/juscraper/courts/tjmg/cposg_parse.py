@@ -87,9 +87,11 @@ def _parse_advogados(content_td: Tag) -> list[dict]:
     advogados = []
     for tr in content_td.find_all("tr"):
         tds = tr.find_all("td", recursive=False)
-        # Usa a estrutura, nao o rotulo "Advogado(s):", para aceitar variacoes
-        # de rotulo; uma tabela alheia de duas celulas sem <b>/subtabela pode
-        # entrar como advogado, mas nenhum sample capturado tem esse caso.
+        # Linha-folha de duas celulas: o <b> e a subtabela excluem a linha do
+        # rotulo "Advogado(s):", que envolve a tabela interna. Usa a estrutura,
+        # nao o rotulo, para aceitar variacoes de rotulo; uma tabela alheia de
+        # duas celulas sem <b>/subtabela pode entrar como advogado, mas nenhum
+        # sample capturado tem esse caso.
         # A OAB nao e validada para preservar inscricoes fora do padrao.
         if len(tds) != 2 or tds[0].find("b") or tds[1].find("table"):
             continue
