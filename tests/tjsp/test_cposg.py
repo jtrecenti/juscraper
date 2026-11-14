@@ -210,6 +210,24 @@ class TestCPOSGUnit:
         assert row['processo'] == '0022175-24.2003.8.26.0344'
         assert row['classe'] == 'Apelação Criminal'
 
+    def test_cposg_parse_pagina_de_incidente(self):
+        """Na página do incidente, o cabeçalho traz "Classe (CNJ)": ``processo`` é o CNJ e ``classe``, o resto.
+
+        Sample real do incidente 50000 do 0022175-24.2003.8.26.0344
+        (``show.do?processo.codigo=RI004MGQ412KW``), com os nomes das partes e
+        dos advogados trocados por fictícios. É a página que o download grava
+        para cada incidente quando a busca abre o modal de incidentes, como no
+        1502870-48.2020.8.26.0161.
+        """
+        result = cposg_parse_single_html(_SAMPLES / 'show_incidente.html')
+
+        assert len(result) == 1
+        row = result[0]
+        assert row['id_original'] == '0022175-24.2003.8.26.0344'
+        assert row['processo'] == '0022175-24.2003.8.26.0344'
+        assert row['classe'] == 'Embargos de Declaração Criminal'
+        assert row['status'] == 'Encerrado'
+
     def test_cposg_parse_real_sample_contract(self):
         """Página como o eSAJ a serve, sem as movimentações: os demais campos saem, com aviso.
 
@@ -327,6 +345,45 @@ class TestCPOSGUnit:
         result = cposg_parse_manager(str(tmp_path))
 
         assert result['processo'].tolist() == ['1234567-89.2025.8.26.0000']
+
+    @pytest.mark.parametrize(
+        ('cabecalho', 'link', 'esperado'),
+        [
+            pytest.param(
+                'Agravo Interno Cível\n\t\t(1502870-48.2020.8.26.0161)&nbsp;',
+                'Embargos de Declaração - 50000',
+                {
+                    'id_original': '1502870-48.2020.8.26.0161',
+                    'processo': '1502870-48.2020.8.26.0161',
+                    'classe': 'Agravo Interno Cível',
+                },
+                id='incidente-com-quebra-de-linha',
+            ),
+            pytest.param(
+                'Processo sem número',
+                '1502870-48.2020.8.26.0161',
+                {'id_original': '1502870-48.2020.8.26.0161'},
+                id='sem-cnj-no-cabecalho',
+            ),
+        ],
+    )
+    def test_cabecalho_sem_numero_processo(self, tmp_path, cabecalho, link, esperado):
+        """Sem ``span#numeroProcesso``, o CNJ vem de ``span.unj-larger``; sem CNJ ali, do primeiro link."""
+        sample = tmp_path / 'cabecalho.html'
+        sample.write_text(
+            f'''
+            <html><body>
+                <span class="unj-larger">{cabecalho}</span>
+                <a href="/cposg/show.do?processo.codigo=RI0000000000">{link}</a>
+                <tbody id="tabelaTodasMovimentacoes"></tbody>
+            </body></html>
+            ''',
+            encoding='utf-8',
+        )
+
+        row = cposg_parse_single_html(sample)[0]
+
+        assert {campo: row[campo] for campo in esperado} == esperado
 
     def test_empty_relator_row_does_not_block_nonempty_fallback(self, tmp_path):
         """Preserve the relator fallback past an empty composition row, as the previous parser did."""

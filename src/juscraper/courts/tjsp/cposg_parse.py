@@ -11,6 +11,7 @@ from bs4.element import Comment, Script, Stylesheet, Tag, TemplateString
 from tqdm import tqdm
 
 from ...core.avisos import avisar
+from .cpopg_parse import _split_incident_header
 
 logger = logging.getLogger('juscraper.cposg_parse')
 
@@ -75,25 +76,41 @@ def cposg_parse_manager(path: str):
 def _extract_header(soup: BeautifulSoup) -> dict:
     """Extract process identifiers and status tags."""
     result = {}
-    # No cabeçalho atual, o número fica em span#numeroProcesso. Fora dele, o
-    # primeiro link para processo.codigo pode ser de um incidente ("Embargos
-    # de Declaração - 50000") ou do processo de 1ª instância.
+    # No cabeçalho atual, o número fica em span#numeroProcesso.
     numero = soup.find('span', id='numeroProcesso')
     texto_numero = numero.get_text(strip=True) if numero else None
     if texto_numero:
         result['id_original'] = result['processo'] = texto_numero
     else:
-        id_link = soup.select_one("a[href*='processo.codigo']")
-        if id_link:
-            result['id_original'] = id_link.get_text(strip=True)
-        processo_tag = soup.select_one('span.unj-larger')
-        if processo_tag:
-            result['processo'] = processo_tag.get_text(strip=True)
+        result.update(_extract_header_sem_numero(soup))
 
     status_tags = soup.select('span.unj-tag')
     if status_tags:
         result['status'] = ' / '.join(tag.get_text(strip=True) for tag in status_tags)
     return result
+
+
+def _extract_header_sem_numero(soup: BeautifulSoup) -> dict:
+    """Lê o cabeçalho de uma página sem ``span#numeroProcesso``.
+
+    Na página de incidente, span.unj-larger traz "Embargos de Declaração
+    Criminal (CNJ)". Sem CNJ ali, o primeiro link para processo.codigo pode ser
+    de um incidente ("Embargos de Declaração - 50000") ou do processo de 1ª
+    instância.
+    """
+    processo_tag = soup.select_one('span.unj-larger')
+    texto = processo_tag.get_text(strip=True) if processo_tag else ''
+    cnj, classe = _split_incident_header(texto)
+    if cnj:
+        return {'id_original': cnj, 'processo': cnj, 'classe': classe}
+
+    fields = {}
+    id_link = soup.select_one("a[href*='processo.codigo']")
+    if id_link:
+        fields['id_original'] = id_link.get_text(strip=True)
+    if processo_tag:
+        fields['processo'] = texto
+    return fields
 
 
 def _extract_labeled_fields(soup: BeautifulSoup) -> dict:
