@@ -93,9 +93,10 @@ Excecoes: TJMT tambem salva `cjsg/config.json` porque o scraper consulta
 `proc_resultado2.jsp` (`cposg/resultado_<cenario>.html`) e de
 `proc_partes_advogados2.jsp` (`cposg/partes_*.html`) dos processos listados em
 `CASOS`. `--dest <dir>` grava fora de `tests/` para comparar com os samples
-versionados. Os samples atuais têm quebras de linha LF e o backend responde
-CRLF; além disso, data/hora da consulta e versão do sistema mudam a cada
-captura. Os processos também evoluem (baixa, novos recursos, anonimização de
+versionados. O backend responde CRLF, e o script grava LF, como nos samples
+versionados; data/hora da consulta e versão do sistema mudam a cada captura.
+As respostas só são copiadas para o destino se todos os samples vierem, e
+recurso fora de `CASOS` gera aviso. Os processos também evoluem (baixa, novos recursos, anonimização de
 nomes), o que pode exigir ajustar os valores esperados em
 `tests/tjmg/test_cposg_contract.py`.
 
