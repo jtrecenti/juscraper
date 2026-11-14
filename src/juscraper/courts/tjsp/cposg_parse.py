@@ -67,32 +67,42 @@ def cposg_parse_manager(path: str):
                 else cposg_parse_single_html(arq)
             )
             dados.extend(linhas)
-        except (OSError, UnicodeDecodeError, ValueError, AttributeError) as e:
+        except (OSError, UnicodeDecodeError, ValueError, TypeError, AttributeError) as e:
             logger.error("Erro ao processar %s: %s", arq, e)
     return pd.DataFrame(dados, columns=_OUTPUT_COLUMNS)
 
 
 def cposg_parse_single_json(path: str):
-    """Interpreta registros JSON retornados pela API de busca do CPOSG do TJSP."""
+    """Interpreta registros JSON retornados pela API de busca do CPOSG do TJSP.
+
+    A busca por número só traz número, classe e assunto; as demais colunas
+    ficam ``None``.
+
+    Raises:
+        TypeError: Se a resposta não for uma lista de processos.
+        ValueError: Se a resposta for ``[]``, o que a API devolve inclusive
+            para processos que existem.
+    """
     with Path(path).open('r', encoding='utf-8') as file:
         registros = json.load(file)
 
     if not isinstance(registros, list):
         raise TypeError("A resposta JSON do CPOSG deve ser uma lista de processos.")
+    if not registros:
+        raise ValueError(
+            f"A API do TJSP não devolveu nenhum processo para {Path(path).stem} "
+            "(resposta []). O processo pode existir mesmo assim: consulte com method='html'."
+        )
 
-    campos = {
-        'id_original': 'numeProcesso',
-        'processo': 'numeProcesso',
-        'classe': 'classe',
-        'assunto': 'assunto',
-    }
     return [
         {
-            coluna: registro[campos[coluna]] if coluna in campos and campos[coluna] in registro else None
-            for coluna in _OUTPUT_COLUMNS
+            **dict.fromkeys(_OUTPUT_COLUMNS),
+            'id_original': registro.get('numeProcesso'),
+            'processo': registro.get('numeProcesso'),
+            'classe': registro.get('classe'),
+            'assunto': registro.get('assunto'),
         }
         for registro in registros
-        if isinstance(registro, dict)
     ]
 
 

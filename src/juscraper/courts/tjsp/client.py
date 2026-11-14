@@ -770,7 +770,14 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
     # --- cposg ----------------------------------------------------------
 
     def cposg(self, id_cnj: str, method: Literal["html", "api"] = "html"):
-        """Fetch a second-degree process by CNJ and return a DataFrame."""
+        """Fetch a second-degree process by CNJ and return a DataFrame.
+
+        Com ``method="api"``, a busca por número da API só preenche
+        ``id_original``, ``processo``, ``classe`` e ``assunto``; as demais
+        colunas ficam ``None``. Quando a API devolve ``[]`` (o que ocorre
+        inclusive para processos que existem), o erro é registrado no log e o
+        DataFrame volta vazio.
+        """
         self.set_method(method)
         path = self.download_path
         self.cposg_download(id_cnj, method)

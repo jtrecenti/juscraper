@@ -95,12 +95,32 @@ def test_cposg_api_parses_real_sample(tmp_path, mocker):
     df = jus.scraper("tjsp", download_path=str(tmp_path)).cposg(CNJ, method="api")
 
     assert isinstance(df, pd.DataFrame)
+    assert list(df.columns) == CPOSG_COLUNAS_ORDENADAS
     assert len(df) == 1
     row = df.iloc[0]
     assert row["id_original"] == "1000149-71.2024.8.26.0346"
     assert row["processo"] == "1000149-71.2024.8.26.0346"
     assert row["classe"] == "Apelação Cível"
     assert row["assunto"] == "DIREITO DO CONSUMIDOR - Contratos de Consumo - Bancários"
+
+
+@responses.activate
+def test_cposg_api_lista_vazia_registra_erro_explicito(tmp_path, mocker, caplog):
+    """A API devolve ``[]`` para o número (observado ao vivo em 14/11/2026): o log diz isso."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.GET,
+        f"{API}/processo/cposg/search/numproc/{CNJ_DIGITS}",
+        body="[]",
+        status=200,
+        content_type="application/json",
+    )
+
+    df = jus.scraper("tjsp", download_path=str(tmp_path)).cposg(CNJ, method="api")
+
+    assert df.empty
+    assert list(df.columns) == CPOSG_COLUNAS_ORDENADAS
+    assert "não devolveu nenhum processo" in caplog.text
 
 
 @responses.activate

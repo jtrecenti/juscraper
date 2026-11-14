@@ -343,6 +343,27 @@ class TestCPOSGUnit:
             'primeira_inst': None,
         }]
 
+    def test_cposg_parse_single_json_busca_vazia(self, tmp_path):
+        """A API devolve ``[]`` para o número: erro que diz isso, não DataFrame vazio calado."""
+        arquivo = tmp_path / '10001497120248260346.json'
+        arquivo.write_text('[]', encoding='utf-8')
+
+        with pytest.raises(ValueError, match=r'resposta \[\]'):
+            cposg_parse_single_json(str(arquivo))
+
+    def test_cposg_parse_manager_json_fora_do_formato_nao_derruba_os_demais(self, tmp_path):
+        """Um JSON que não é lista é registrado e pulado, como os HTML com erro."""
+        (tmp_path / 'erro').mkdir()
+        (tmp_path / 'erro' / '1.json').write_text('{"mensagem": "erro"}', encoding='utf-8')
+        (tmp_path / 'ok').mkdir()
+        (tmp_path / 'ok' / '2.json').write_text(
+            load_sample('tjsp', 'cposg/api_search.json'), encoding='utf-8'
+        )
+
+        result = cposg_parse_manager(str(tmp_path))
+
+        assert result['processo'].tolist() == ['1000149-71.2024.8.26.0346']
+
     def test_empty_relator_row_does_not_block_nonempty_fallback(self, tmp_path):
         """Preserve the relator fallback past an empty composition row, as the previous parser did."""
         sample = tmp_path / 'empty_relator.html'
