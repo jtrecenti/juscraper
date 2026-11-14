@@ -10,7 +10,7 @@ import pytest
 
 import juscraper
 from juscraper.courts.tjsp.cposg_parse import cposg_parse_manager, cposg_parse_single_html, cposg_parse_single_json
-from tests._helpers import load_sample
+from tests._helpers import load_sample, load_sample_bytes
 
 _SAMPLES = Path(__file__).parent / 'samples' / 'cposg'
 
@@ -197,8 +197,13 @@ class TestCPOSGUnit:
         ]
 
     def test_cposg_parse_real_sample_contract(self):
-        """Characterize the collection sizes and representative rows from the recorded page."""
-        result = cposg_parse_single_html(_SAMPLES / 'search_listagem.html')
+        """Página como o eSAJ a serve, sem as movimentações: os demais campos saem, com aviso.
+
+        As movimentações vêm do ``carregarMovimentacoesAjax.do``; o contrato
+        ``test_cposg_html_simple_response`` cobre o arquivo que o download grava.
+        """
+        with pytest.warns(UserWarning, match="não traz as movimentações"):
+            result = cposg_parse_single_html(_SAMPLES / 'search_listagem.html')
 
         assert len(result) == 1
         row = result[0]
@@ -207,15 +212,7 @@ class TestCPOSGUnit:
         assert row['assunto'] == 'DIREITO DO CONSUMIDOR - Contratos de Consumo - Bancários'
         assert row['processo'] is None
         assert row['volume_apenso'] is None
-        assert len(row['movimentacoes']) == 24
-        assert row['movimentacoes'][:2] == [
-            {
-                'data': '25/06/2025',
-                'movimento': 'Expedido Certidão de Baixa de Recurso',
-                'descricao': 'Certidão de Baixa de Recurso - [Digital]',
-            },
-            {'data': '25/06/2025', 'movimento': 'Baixa Definitiva', 'descricao': ''},
-        ]
+        assert row['movimentacoes'] == []
         assert len(row['partes']) == 13
         assert row['partes'][:2] == [
             {
@@ -353,11 +350,26 @@ class TestCPOSGUnit:
 
     def test_cposg_parse_manager_json_fora_do_formato_nao_derruba_os_demais(self, tmp_path):
         """Um JSON que não é lista é registrado e pulado, como os HTML com erro."""
-        (tmp_path / 'erro').mkdir()
-        (tmp_path / 'erro' / '1.json').write_text('{"mensagem": "erro"}', encoding='utf-8')
-        (tmp_path / 'ok').mkdir()
-        (tmp_path / 'ok' / '2.json').write_text(
-            load_sample('tjsp', 'cposg/api_search.json'), encoding='utf-8'
+        arquivos = (('1', '{"mensagem": "erro"}'), ('2', load_sample('tjsp', 'cposg/api_search.json')))
+        for id_processo, conteudo in arquivos:
+            (tmp_path / 'cposg' / id_processo).mkdir(parents=True)
+            (tmp_path / 'cposg' / id_processo / f'{id_processo}.json').write_text(conteudo, encoding='utf-8')
+
+        result = cposg_parse_manager(str(tmp_path))
+
+        assert result['processo'].tolist() == ['1000149-71.2024.8.26.0346']
+
+    def test_cposg_parse_manager_ignora_arquivos_do_cpopg(self, tmp_path):
+        """No mesmo ``download_path``, o cpopg grava ``cpopg/<id>/``: o cposg só lê ``cposg/``."""
+        id_processo = '10001497120248260346'
+        cposg = tmp_path / 'cposg' / id_processo
+        cposg.mkdir(parents=True)
+        (cposg / f'{id_processo}.json').write_text(load_sample('tjsp', 'cposg/api_search.json'), encoding='utf-8')
+        cpopg = tmp_path / 'cpopg' / id_processo
+        cpopg.mkdir(parents=True)
+        (cpopg / f'{id_processo}.json').write_text(load_sample('tjsp', 'cposg/api_search.json'), encoding='utf-8')
+        (cpopg / f'{id_processo}_cd_processo_X.html').write_bytes(
+            load_sample_bytes('tjsp', 'cposg/results_complete.html')
         )
 
         result = cposg_parse_manager(str(tmp_path))
