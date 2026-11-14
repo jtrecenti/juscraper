@@ -11,6 +11,7 @@ from pydantic import ConfigDict, ValidationError
 from juscraper.schemas.cjsg import SearchBase
 from juscraper.schemas.mixins import DataJulgamentoMixin, DataPublicacaoMixin
 from juscraper.utils.params import apply_input_pipeline_search, raise_on_extra_kwargs, validate_intervalo_datas
+from tests._helpers import assert_unknown_kwarg_raises
 
 
 class _SchemaSimples(SearchBase):
@@ -59,12 +60,15 @@ def test_apply_input_pipeline_int_paginas_normalized_to_range():
 
 
 def test_apply_input_pipeline_unknown_kwarg_raises_typeerror():
-    kwargs = {"kwarg_inventado": "x"}
-    with pytest.raises(TypeError, match=r"Test\.cjsg\(\) got unexpected keyword argument\(s\): 'kwarg_inventado'"):
+    rotulo = "Test.cjsg()"
+
+    def pipeline(**kwargs):
         apply_input_pipeline_search(
-            _SchemaSimples, "Test.cjsg()",
+            _SchemaSimples, rotulo,
             pesquisa="x", paginas=1, kwargs=kwargs,
         )
+
+    assert_unknown_kwarg_raises(pipeline, "kwarg_inventado", rotulo=rotulo)
 
 
 def test_apply_input_pipeline_multiple_unknown_kwargs_listed():
