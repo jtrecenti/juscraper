@@ -51,12 +51,12 @@ TRIBUNAIS = [
     "tjto",
 ]
 
-# Tribunals where the date filter itself is broken. Remove once fixed.
 _TJGO_TURNSTILE = (
     "Projudi 3.194.1 (12/11/2026) valida o token Cloudflare Turnstile, que o raspador "
     "não envia: toda busca volta vazia, com UserWarning"
 )
 
+# Tribunals where the date filter itself is broken. Remove once fixed.
 KNOWN_FILTRO_FAILURES = {
     "tjgo": _TJGO_TURNSTILE,
     "tjap": "Tucujuris UI/backend does not expose date filtering (no date input exists)",

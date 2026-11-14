@@ -61,4 +61,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    capture_turnstile() if sys.argv[1:] == ["turnstile"] else main()
+    if sys.argv[1:] == ["turnstile"]:
+        capture_turnstile()
+    else:
+        main()

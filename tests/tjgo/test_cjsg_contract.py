@@ -72,34 +72,29 @@ def test_cjsg_single_page(mocker):
 
 
 @responses.activate
-def test_cjsg_no_results(mocker):
-    """Zero-hit query returns an empty DataFrame and warns about Turnstile.
+@pytest.mark.parametrize(
+    ("pesquisa", "sample_path"),
+    [
+        ("juscraper_probe_zero_hits_xyzqwe", "cjsg/no_results.html"),
+        # Resposta real a "dano moral" sem o token (Projudi 3.194.1).
+        ("dano moral", "cjsg/blocked_turnstile.html"),
+    ],
+    ids=["sem_resultados", "bloqueada_pelo_turnstile"],
+)
+def test_cjsg_busca_vazia_avisa_do_turnstile(mocker, pesquisa, sample_path):
+    """Empty search returns an empty DataFrame and warns about Turnstile.
 
-    The portal answers a blocked search (no Turnstile token) with the same
-    HTML as a genuine zero-hit search, so every empty search warns.
+    The portal answers a blocked search (no Turnstile token) the same way as
+    a genuine zero-hit search, so every empty search warns.
     """
     mocker.patch("time.sleep")
     _add_get_prime()
-    _add_post("juscraper_probe_zero_hits_xyzqwe", page=1,
-              sample_path="cjsg/no_results.html")
+    _add_post(pesquisa, page=1, sample_path=sample_path)
 
     with pytest.warns(UserWarning, match="Turnstile"):
-        df = jus.scraper("tjgo").cjsg("juscraper_probe_zero_hits_xyzqwe", paginas=1)
+        df = jus.scraper("tjgo").cjsg(pesquisa, paginas=1)
 
     assert isinstance(df, pd.DataFrame)
-    assert df.empty
-
-
-@responses.activate
-def test_cjsg_bloqueado_pelo_turnstile_avisa(mocker):
-    """Real answer to "dano moral" without the token (Projudi 3.194.1)."""
-    mocker.patch("time.sleep")
-    _add_get_prime()
-    _add_post("dano moral", page=1, sample_path="cjsg/blocked_turnstile.html")
-
-    with pytest.warns(UserWarning, match="Turnstile"):
-        df = jus.scraper("tjgo").cjsg("dano moral", paginas=1)
-
     assert df.empty
 
 

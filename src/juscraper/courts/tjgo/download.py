@@ -10,8 +10,6 @@ from juscraper.core.avisos import avisar
 from juscraper.core.http import RequestFn
 from juscraper.utils.pagination import extract_count_with_cascade
 
-from .parse import _split_blocks
-
 logger = logging.getLogger("juscraper.tjgo")
 
 SEARCH_URL = "https://projudi.tjgo.jus.br/ConsultaJurisprudencia"
@@ -151,7 +149,7 @@ def cjsg_download(
         qtde_itens_pagina=qtde_itens_pagina,
     )
     total = _extract_total(first)
-    if not total and not _split_blocks(first):
+    if not total and '<div class="search-result">' not in first:
         # Com o token valido, uma busca sem resultados devolve o mesmo HTML da
         # busca bloqueada; por isso o aviso sai em toda busca vazia.
         avisar(AVISO_TURNSTILE)
