@@ -1,10 +1,9 @@
-"""Live integration tests for STF (need network and the ``stf`` extra)."""
+"""Live integration tests for STF (need network; Playwright only if the WAF challenges)."""
 import pytest
 
 import juscraper as jus
 
 pytestmark = pytest.mark.integration
-pytest.importorskip("playwright")
 
 
 @pytest.fixture(scope="module")

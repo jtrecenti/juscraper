@@ -64,8 +64,10 @@ class TJROScraper(HTTPScraper):
             paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
                 todas. Default ``None``.
             tipo (list | None): Tipos de documento. Default backend
-                ``["EMENTA"]``. Opcoes incluem ``"ACORDAO"``, ``"DECISAO"``,
-                ``"SENTENCA"``, ``"VOTO"``, etc.
+                ``["EMENTA"]``. O backend compara o valor exato, com acento
+                e em maiusculas: ``"EMENTA"``, ``"ACÓRDÃO"``, ``"DECISÃO"``,
+                ``"SENTENÇA"`` e ``"VOTO"``. ``"ACORDAO"`` ou ``"ementa"``
+                devolvem zero resultados.
             numero_processo (str): Numero CNJ. Aceita o alias deprecado
                 ``nr_processo``.
             relator (str): Nome do relator. Aceita o alias deprecado

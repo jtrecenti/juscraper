@@ -8,7 +8,7 @@ RAIZ = Path(__file__).resolve().parents[2]
 WORKFLOWS = sorted((RAIZ / ".github/workflows").glob("*.yml"))
 # Workflows cujo resultado barra o PR; o de integração tolera falha de
 # tribunal de propósito e fica fora da regra de não silenciar.
-BLOQUEANTES = ("lint.yml", "quality.yml", "tests.yml")
+BLOQUEANTES = ("changelog.yml", "lint.yml", "quality.yml", "tests.yml")
 BASE_DO_EVENTO = (
     "${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before }}"
 )
@@ -106,3 +106,49 @@ def test_dependencias_adicionais_dos_hooks_tem_versao_fixa():
     assert listas
     soltas = [item.strip() for lista in listas for item in lista.split(",") if "==" not in item]
     assert soltas == []
+
+
+def test_changelog_reprova_codigo_sem_entrada_e_aceita_a_etiqueta():
+    changelog = linhas("changelog.yml")
+    assert "types: [opened, synchronize, reopened, labeled, unlabeled]" in changelog
+    assert "DISPENSADO: ${{ contains(github.event.pull_request.labels.*.name, 'sem-changelog') }}" in changelog
+    # O escape documentado é o mesmo que o workflow lê.
+    assert "etiqueta `sem-changelog`" in (RAIZ / "CLAUDE.md").read_text(encoding="utf-8")
+
+
+def test_so_a_execucao_que_reescreve_a_issue_divide_a_trava_do_relatorio():
+    # Num grupo de concorrência, um job pendente cancela o pendente anterior:
+    # com o grupo fixo, PRs de tribunais diferentes cancelariam o relatório um
+    # do outro.
+    integracao = linhas("integration.yml")
+    grupos = [linha for linha in integracao if linha.startswith("group:")]
+    assert (
+        "group: ${{ needs.calendario.outputs.atualizar_issue == 'true' && 'integracao-issue' "
+        "|| format('integracao-relatorio-{0}', github.run_id) }}"
+    ) in grupos
+    assert "atualizar_issue: ${{ env.ATUALIZAR_ISSUE }}" in integracao
+
+
+def test_integracao_no_pr_roda_os_tribunais_tocados():
+    integracao = linhas("integration.yml")
+    gatilho = integracao.index("pull_request:")
+    caminhos = integracao[gatilho + 2:gatilho + 8]
+    assert caminhos == [
+        "- .github/workflows/integration.yml",
+        "- scripts/integration_report.py",
+        "- src/juscraper/courts/**",
+        "- src/juscraper/aggregators/**",
+        "- tests/**",
+        "- docs/notebooks/**",
+    ]
+    saidas = {linha.split(":", 1)[0]: linha.split(":", 1)[1].strip() for linha in integracao if ":" in linha}
+    # PR que não toca tribunal não roda; o alvo vem do PR ou do disparo manual.
+    assert saidas["rodar"] == (
+        "${{ steps.decidir.outputs.rodar == 'true' && "
+        "(github.event_name != 'pull_request' || steps.pr.outputs.tribunais != '') }}"
+    )
+    assert saidas["alvo"] == "${{ steps.pr.outputs.tribunais || inputs.tribunal }}"
+    assert integracao.count("TRIBUNAL: ${{ needs.calendario.outputs.alvo }}") == 2
+    # Push novo no PR cancela a execução anterior, que pode levar minutos.
+    assert "group: integracao-${{ github.event.pull_request.number || github.run_id }}" in integracao
+    assert "cancel-in-progress: ${{ github.event_name == 'pull_request' }}" in integracao

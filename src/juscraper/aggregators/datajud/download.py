@@ -257,9 +257,8 @@ def call_datajud_api(
 
     Note:
         Em caso de falha, retorna None e loga o erro via logger.error. O caller
-        (`_iter_process_pages` em client.py) emite um unico
-        `warnings.warn(UserWarning)` agregado por alias quando detecta None,
-        evitando spam de warnings em paginacao longa com API instavel.
+        (`_iter_process_pages` em client.py) levanta `ColetaParcialError` com
+        o alias, a pagina e o total da consulta quando detecta None.
 
         Em ``HTTP 504``/``Timeout`` (gateway saturado), faz **1 retry**
         automatico com ``size`` reduzido por ``FALLBACK_DIVISOR`` (default 4),

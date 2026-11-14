@@ -2,6 +2,7 @@
 Downloads processes from the TJSP Consulta de Processos Originarios do Primeiro Grau (CPOSG).
 """
 import logging
+import re
 import time
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
@@ -10,32 +11,59 @@ import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
+from ...core.avisos import avisar
 from ...utils import safe_path_component
 from ...utils.cnj import clean_cnj, format_cnj, split_cnj
+from .._esaj.acordao import RespostaInesperadaError, busca_sem_informacoes, paginas_movimentacoes, parse_cd_processo
 
 logger = logging.getLogger('juscraper.cposg_download')
+
+# A página do processo traz o container de movimentações vazio e o link
+# "Exibir movimentações"; o JavaScript do eSAJ busca a lista em
+# carregarMovimentacoesAjax.do, cinco linhas por página, com a sessão que
+# abriu o processo.
+_CONTAINER_VAZIO = re.compile(r'<div id="containerMovimentacoesAjax"[^>]*>\s*</div>')
+_LINK_EXIBIR = re.compile(r'<div id="divExibirMovimentacoes".*?</div>', re.DOTALL)
+_CD_PROCESSO_MOVIMENTACOES = re.compile(r"cdProcessoMovimentacoes = '([^']+)'")
 
 
 def cposg_download_html(id_cnj_list, session, u_base, download_path, sleep_time=0.5):
     """
     Downloads the HTML of one or more processes from the CPOSG.
     Returns a list of paths if list, or a single path if string.
+
+    Processo que a consulta de 2º grau não mostra ("Não existem informações
+    disponíveis") não gera arquivo e sai num ``UserWarning`` ao fim; se for o
+    único, a função devolve ``[]``.
     """
     if isinstance(id_cnj_list, str):
         id_cnj_list = [id_cnj_list]
+    # A pasta existe mesmo sem processo encontrado: sem ela, cposg_parse_manager
+    # leria o download_path inteiro, inclusive os arquivos do cpopg.
+    Path(download_path, 'cposg').mkdir(parents=True, exist_ok=True)
     paths = []
+    nao_encontrados = []
     for id_cnj in tqdm(id_cnj_list, desc="Baixando processos"):
         try:
             path = _cposg_download_html_single(id_cnj, session, u_base, download_path)
-        except (OSError, UnicodeDecodeError, ValueError,
-                AttributeError, RuntimeError, requests.RequestException) as e:
+        except (OSError, UnicodeDecodeError, ValueError, AttributeError,
+                RuntimeError, RespostaInesperadaError, requests.RequestException) as e:
             logger.error("Erro ao baixar o processo %s: %s", id_cnj, e)
             continue
-        paths.append(path)
+        if path is None:
+            nao_encontrados.append(id_cnj)
+        else:
+            paths.append(path)
         time.sleep(sleep_time)
-    if not paths:
+    if nao_encontrados:
+        avisar(
+            f"cposg: a consulta de 2º grau não mostra {len(nao_encontrados)} processo(s), que fica(m) "
+            f"fora do resultado: {', '.join(nao_encontrados)}. O número pode não existir no 2º grau, "
+            "ou o processo está em segredo de justiça, que o eSAJ não mostra na consulta pública."
+        )
+    if not paths and not nao_encontrados:
         raise RuntimeError("Nenhum processo foi baixado com sucesso.")
-    return paths if len(paths) > 1 else paths[0]
+    return paths if len(paths) != 1 else paths[0]
 
 
 def _cposg_download_html_single(id_cnj, session, u_base, download_path):
@@ -62,6 +90,8 @@ def _cposg_download_html_single(id_cnj, session, u_base, download_path):
     }
     r = session.get(u, params=params)
     soup = BeautifulSoup(r.text, 'html.parser')
+    if _sem_informacoes(soup, id_format):
+        return None
     # id_clean vem de clean_cnj (so digitos), seguro como componente de path.
     path = f"{download_path}/cposg/{id_clean}"
     if not Path(path).is_dir():
@@ -77,54 +107,84 @@ def _cposg_download_html_single(id_cnj, session, u_base, download_path):
             codigo = codigos[0]
             safe_codigo = safe_path_component(codigo, field="processo.codigo")
             show_url = f"{u_base}cposg/show.do?processo.codigo={codigo}"
-            r_show = session.get(show_url)
+            html = _incluir_movimentacoes(session.get(show_url).text, session, u_base, id_format)
             file_name = Path(path) / f"{id_clean}_cd_processo_{safe_codigo}.html"
             with file_name.open('w', encoding='utf-8') as f:
-                f.write(r_show.text)
+                f.write(html)
     # Caso 2: incidentes/modal
     elif soup.find('div', id='modalIncidentes'):
         codigos = [str(i['value']) for i in soup.select('input#processoSelecionado')]
         for codigo in codigos:
             safe_codigo = safe_path_component(codigo, field="processo.codigo")
             show_url = f"{u_base}cposg/show.do?processo.codigo={codigo}"
-            r_show = session.get(show_url)
+            html = _incluir_movimentacoes(session.get(show_url).text, session, u_base, id_format)
             file_name = Path(path) / f"{id_clean}_cd_processo_{safe_codigo}.html"
             with file_name.open('w', encoding='utf-8') as f:
-                f.write(r_show.text)
+                f.write(html)
     # Caso 3: resposta simples — o id vem do input[name=cdProcesso] (nao de
     # processo.codigo como nos casos 1/2), dai field="cdProcesso".
     else:
-        codigo_simples: str | None = None
-        input_cd = soup.find('input', {'name': 'cdProcesso'})
-        if input_cd:
-            value = input_cd.get('value')
-            codigo_simples = str(value) if value is not None else None
-        codigo_part = safe_path_component(codigo_simples, field="cdProcesso") if codigo_simples else "simples"
+        codigo_part = parse_cd_processo(r.text) or "simples"
+        html = _incluir_movimentacoes(r.text, session, u_base, id_format)
         file_name = Path(path) / f"{id_clean}_cd_processo_{codigo_part}.html"
         with file_name.open('w', encoding='utf-8') as f:
-            f.write(r.text)
+            f.write(html)
     return path
 
 
-def cposg_download_api(id_cnj_list, session, api_base, download_path, sleep_time=0.5):
+def _sem_informacoes(soup, id_cnj):
+    """``True`` quando a busca diz que não há o processo; outra mensagem do eSAJ levanta ``RuntimeError``.
+
+    A página de processo não traz ``#mensagemRetorno``. Sem esta checagem, a
+    mensagem seria gravada como processo e lida como lista vazia.
     """
-    Downloads the JSON of one or more processes from the CPOSG via API.
+    if busca_sem_informacoes(soup):
+        return True
+    mensagem = soup.find(id='mensagemRetorno')
+    if mensagem is None:
+        return False
+    raise RuntimeError(f"Processo {id_cnj}: o eSAJ respondeu à busca com \"{mensagem.get_text(' ', strip=True)}\".")
+
+
+def _incluir_movimentacoes(html, session, u_base, id_cnj):
+    """Grava no HTML do processo a lista completa de movimentações.
+
+    O arquivo fica como a página no navegador depois de "Exibir movimentações"
+    e de "Mais" até a última página, e o parser lê só o arquivo. Página sem o
+    container vazio (formato antigo, com ``tabelaTodasMovimentacoes``, ou
+    resposta sem processo) sai como veio. Página fora do formato levanta
+    ``ValueError``: gravada, ela leria como processo sem movimentações, ou
+    com a lista cortada.
     """
-    if isinstance(id_cnj_list, str):
-        id_cnj_list = [id_cnj_list]
-    paths = []
-    endpoint = 'processo/cposg/search/numproc/'
-    for id_cnj in tqdm(id_cnj_list, desc="Baixando processos"):
-        id_clean = clean_cnj(id_cnj)
-        u = f"{api_base}{endpoint}{id_clean}"
-        path = f"{download_path}/cposg/{id_clean}"
-        if not Path(path).is_dir():
-            Path(path).mkdir(parents=True)
-        r = session.get(u)
-        if r.status_code != 200:
-            raise RuntimeError(f"A consulta à API falhou. Status code {r.status_code}.")
-        with Path(f"{path}/{id_clean}.json").open('w', encoding='utf-8') as f:
-            f.write(r.text)
-        paths.append(path)
-        time.sleep(sleep_time)
-    return paths if len(paths) > 1 else paths[0]
+    if not _CONTAINER_VAZIO.search(html):
+        return html
+    cd_processo = _CD_PROCESSO_MOVIMENTACOES.search(html)
+    if cd_processo is None:
+        raise ValueError(f"Processo {id_cnj}: a página não traz o cdProcesso das movimentações.")
+
+    def get(url: str, params: dict) -> requests.Response:
+        resposta: requests.Response = session.get(url, params=params, timeout=60)
+        resposta.raise_for_status()
+        return resposta
+
+    paginas = paginas_movimentacoes(
+        get, f"{u_base}cposg/carregarMovimentacoesAjax.do", id_cnj, cd_processo.group(1),
+    )
+    bloco = BeautifulSoup(next(paginas), 'html.parser')
+    tabela = bloco.find('tbody', id='tabelaMovimentacoesAjax')
+    if tabela is None:
+        raise ValueError(f"Movimentações do processo {id_cnj}: a primeira página veio fora do formato conhecido.")
+    for numero, pagina in enumerate(paginas, start=2):
+        linhas = BeautifulSoup(f"<table><tbody>{pagina}</tbody></table>", 'html.parser')
+        # Página seguinte sem a linha de metadados (erro, sessão perdida)
+        # encerraria a paginação em silêncio, com a lista cortada.
+        if linhas.find('tr', id='metaPaginaMovimentacoes') is None:
+            raise ValueError(f"Movimentações do processo {id_cnj}: a página {numero} veio fora do formato conhecido.")
+        tabela.extend(linhas.find_all('tr', class_='movimentacaoProcesso'))
+    links_paginacao = bloco.find('div', id='divLinksMovimentacoesPaginadas')
+    if links_paginacao is not None:
+        links_paginacao.decompose()
+    html = _LINK_EXIBIR.sub('', html, count=1)
+    return _CONTAINER_VAZIO.sub(
+        lambda _: f'<div id="containerMovimentacoesAjax">{bloco}</div>', html, count=1,
+    )

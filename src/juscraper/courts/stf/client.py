@@ -58,9 +58,9 @@ class STFScraper(HTTPScraper):
         """Cria o scraper.
 
         Args:
-            waf_token (str | None): Cookie ``aws-waf-token`` ja obtido. Sem ele, o
-                scraper obtem um com o Playwright (extra ``juscraper[waf]``) na
-                primeira busca, e renova sempre que o WAF voltar a desafiar.
+            waf_token (str | None): Cookie ``aws-waf-token`` ja obtido. Sem ele, as
+                buscas vao sem cookie; se o WAF desafiar, o scraper obtem um com o
+                Playwright (extra ``juscraper[waf]``) e o renova a cada novo desafio.
             verbose (int): Nivel de log.
             sleep_time (float): Pausa em segundos entre paginas. Default ``1.0``.
         """
@@ -87,8 +87,8 @@ class STFScraper(HTTPScraper):
         )
 
     def _buscar(self, payload: dict) -> dict:
-        if WAF_COOKIE not in self.session.cookies:
-            self._renovar_token()
+        # O cookie so e obtido quando o WAF desafia: desde novembro de 2026 o portal
+        # responde sem desafio e nao emite mais o aws-waf-token.
         resp = self._post(payload)
         if eh_desafio_waf(resp):
             self._renovar_token()
@@ -155,7 +155,7 @@ class STFScraper(HTTPScraper):
             ValueError: Página além do teto, dia saturado, contagem inexata ou
                 alterada, IDs inválidos ou checkpoint incompatível/corrompido.
             RuntimeError: Quando a busca retorna uma resposta parcial por timeout ou shards falhos.
-            ImportError: Quando nao ha ``waf_token`` e o Playwright nao esta instalado.
+            ImportError: Quando o WAF desafia e o Playwright nao esta instalado.
 
         Returns:
             pd.DataFrame: Uma linha por documento, com ``processo``, ``classe``,
@@ -196,6 +196,7 @@ class STFScraper(HTTPScraper):
             TypeError: Quando um kwarg desconhecido e passado.
             ValidationError: Quando um filtro tem formato invalido.
             RuntimeError: Quando a busca retorna uma resposta parcial por timeout ou shards falhos.
+            ImportError: Quando o WAF desafia e o Playwright nao esta instalado.
 
         Returns:
             pd.DataFrame: Colunas ``faceta``, ``valor`` e ``n``. A primeira linha e

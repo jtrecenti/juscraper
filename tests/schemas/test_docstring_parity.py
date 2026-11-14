@@ -196,6 +196,16 @@ DOWNLOAD_REFERENCE_CASES = [
         "cjsg_download", "cjsg",
         id="trf3.cjsg_download",
     ),
+    pytest.param(
+        "juscraper.courts.tjmt.client", "TJMTScraper",
+        "cjsg_download", "cjsg",
+        id="tjmt.cjsg_download",
+    ),
+    pytest.param(
+        "juscraper.courts.tjpr.client", "TJPRScraper",
+        "cjsg_download", "cjsg",
+        id="tjpr.cjsg_download",
+    ),
 ]
 
 

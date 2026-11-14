@@ -55,12 +55,10 @@ def caminho_do_documento(pasta_processo, cd_documento):
     return Path(pasta_processo) / PASTA_DOCUMENTOS / f"{safe_path_component(cd_documento, field='cdDocumento')}.pdf"
 
 
-def validar_download_pecas(method, baixar_movimentacoes, download_pecas):
+def validar_download_pecas(baixar_movimentacoes, download_pecas):
     """Recusa ``download_pecas`` onde não há links de documento para seguir."""
     if not download_pecas:
         return
-    if method != "html":
-        raise ValueError("download_pecas=True só funciona com method='html': a API não lista os documentos.")
     if not baixar_movimentacoes:
         raise ValueError(
             "download_pecas=True exige baixar_movimentacoes=True: os documentos vêm das movimentações."
@@ -475,100 +473,3 @@ def _pagina_movimentacoes(sessao, url_base, codigo_processo, cursor):
             f"O eSAJ recusou as movimentações do processo {codigo_processo}."
         )
     return resposta.text
-
-
-def cpopg_download_api(
-    id_cnj_list,
-    session,
-    api_base,
-    download_path,
-    *,
-    baixar_movimentacoes=True,
-):
-    """
-    Downloads processes in JSON from the TJSP Consulta de Processos Originarios do Primeiro Grau (CPOPG).
-    id_cnj_list: list of CNJs
-    session: requests.Session authenticated
-    api_base: base URL of ESAJ API
-    download_path: base directory to save
-    baixar_movimentacoes: with False, skips the movimentacao endpoint
-    """
-    n_items = len(id_cnj_list)
-    for idp in tqdm(id_cnj_list, total=n_items, desc="Baixando processos"):
-        try:
-            cpopg_download_api_single(
-                idp, session, api_base, download_path, baixar_movimentacoes=baixar_movimentacoes,
-            )
-        except (OSError, UnicodeDecodeError, ValueError,
-                AttributeError, requests.RequestException) as e:
-            logger.error(
-                "Erro ao baixar o processo %s: %s",
-                idp,
-                e
-            )
-            continue
-
-
-def cpopg_download_api_single(
-    id_cnj,
-    session,
-    api_base,
-    download_path,
-    *,
-    baixar_movimentacoes=True,
-):
-    """
-    Downloads a process in JSON from the TJSP Consulta de Processos Originarios do Primeiro Grau (CPOPG).
-    id_cnj: CNJ of the process
-    session: requests.Session authenticated
-    api_base: base URL of ESAJ API
-    download_path: base directory to save
-    baixar_movimentacoes: with False, skips the movimentacao endpoint
-    """
-    endpoint = 'processo/cpopg/search/numproc/'
-    id_clean = clean_cnj(id_cnj)
-    u = f"{api_base}{endpoint}{id_clean}"
-    # id_clean vem de clean_cnj (so digitos), seguro como componente de path.
-    path = f"{download_path}/cpopg/{id_clean}"
-    if not Path(path).is_dir():
-        Path(path).mkdir(parents=True)
-    r = session.get(u)
-    if r.status_code != 200:
-        raise requests.HTTPError(
-            f"A consulta à API falhou."
-            f"Status code {r.status_code}."
-        )
-    with Path(f"{path}/{id_clean}.json").open('w', encoding='utf-8') as f:
-        f.write(r.text)
-    json_response = r.json()
-    if not json_response:
-        logger.error("Nenhum dado encontrado para o processo %s.", id_clean)
-        return ''
-    for processo in json_response:
-        cd_processo = processo['cdProcesso']
-        cd_processo_safe = safe_path_component(cd_processo, field="cdProcesso")
-        endpoint_basicos = 'processo/cpopg/dadosbasicos/'
-        u_basicos = f"{api_base}{endpoint_basicos}{cd_processo}"
-        r_basicos = session.post(u_basicos, json={'cdProcesso': cd_processo})
-        if r_basicos.status_code != 200:
-            raise requests.HTTPError(
-                f"A consulta à API falhou."
-                f"Status code {r_basicos.status_code}."
-            )
-        with (Path(path) / f"{cd_processo_safe}_basicos.json").open('w', encoding='utf-8') as f:
-            f.write(r_basicos.text)
-        componentes = ['partes', 'movimentacao', 'incidente', 'audiencia']
-        if not baixar_movimentacoes:
-            componentes.remove('movimentacao')
-        for comp in componentes:
-            endpoint_comp = f"processo/cpopg/{comp}/{cd_processo}"
-            r_comp = session.get(f"{api_base}{endpoint_comp}")
-            if r_comp.status_code == 200:
-                with (Path(path) / f"{cd_processo_safe}_{comp}.json").open('w', encoding='utf-8') as f:
-                    f.write(r_comp.text)
-            else:
-                raise requests.HTTPError(
-                    f"Erro ao buscar {comp} para o processo {cd_processo}."
-                    f"Status: {r_comp.status_code}"
-                )
-    return path

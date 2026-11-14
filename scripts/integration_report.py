@@ -1,8 +1,9 @@
-"""Calendário e relatório da integração semanal, usados pelo workflow Integração."""
+"""Calendário, alvo do PR e relatório da integração, usados pelo workflow Integração."""
 
 import argparse
 import json
 import re
+import subprocess
 import sys
 import xml.etree.ElementTree as ET
 from datetime import date
@@ -22,6 +23,16 @@ LIMITE_DA_MENSAGEM = 160
 # que não é válido em XML, pelo texto `#x1B`.
 COR_ANSI = re.compile(r"#x1B\[[0-9;]*m")
 LINHA_DE_EXCECAO = re.compile(r"^[A-Za-z_][\w.]*: \S")
+# Diretórios cujo subdiretório é um tribunal ou agregador. Subdiretório com
+# sublinhado na frente (`_esaj`, `_trf`, `_pdpj_sso`) é código de uma família,
+# importado por vários tribunais.
+FONTES = ("src/juscraper/courts", "src/juscraper/aggregators")
+# O nome do tribunal vira caminho e opção de pytest no workflow.
+NOME_DE_TRIBUNAL = re.compile(r"^[a-z0-9_]+$")
+# Quando o PR muda só o workflow ou este script, o autoteste roda o TJMG, que
+# exercita a instalação mais pesada: o extra `tjmg` traz o solver de captcha.
+ARQUIVOS_DO_AUTOTESTE = frozenset({".github/workflows/integration.yml", "scripts/integration_report.py"})
+TRIBUNAL_DO_AUTOTESTE = "tjmg"
 
 
 def em_recesso(dia: date) -> bool:
@@ -32,6 +43,71 @@ def em_recesso(dia: date) -> bool:
 def deve_rodar(dia: date, evento: str) -> bool:
     """Só a execução agendada respeita o recesso; disparo manual roda sempre."""
     return not (evento == "schedule" and em_recesso(dia))
+
+
+def tribunais_conhecidos(raiz: Path) -> set[str]:
+    """Nomes de tribunal e agregador que têm código em ``src/`` e diretório em ``tests/``."""
+    nomes = {
+        diretorio.name.lstrip("_")
+        for fonte in FONTES
+        for diretorio in (raiz / fonte).iterdir()
+        if diretorio.is_dir()
+    }
+    return {nome for nome in nomes if NOME_DE_TRIBUNAL.match(nome) and (raiz / "tests" / nome).is_dir()}
+
+
+def usuarios_da_familia(raiz: Path, fonte: str, familia: str) -> set[str]:
+    """Tribunais de ``fonte`` cujo código importa o módulo da família (``.._esaj``, ``courts._esaj``)."""
+    importa = re.compile(rf"\.{re.escape(familia)}\b")
+    return {
+        diretorio.name
+        for diretorio in (raiz / fonte).iterdir()
+        if diretorio.is_dir()
+        and not diretorio.name.startswith("_")
+        and any(importa.search(arquivo.read_text(encoding="utf-8")) for arquivo in diretorio.rglob("*.py"))
+    }
+
+
+def alvo_do_pr(arquivos: list[str], raiz: Path, fora: set[str]) -> tuple[list[str], list[str]]:
+    """Devolve ``(a rodar, fora do CI)``: os tribunais cujo diretório o PR tocou.
+
+    Conta o diretório do tribunal em ``src/juscraper/courts/`` ou
+    ``src/juscraper/aggregators/``, em ``tests/`` e o notebook em
+    ``docs/notebooks/``. Mudança no código de uma família conta para todo
+    tribunal que a importa. Código comum (``core/``, ``utils/``) não aponta
+    tribunal: rodar todos seria a execução semanal inteira.
+    """
+    tocados: set[str] = set()
+    for arquivo in arquivos:
+        partes = arquivo.split("/")
+        fonte = "/".join(partes[:3])
+        if fonte in FONTES and len(partes) >= 5:
+            diretorio = partes[3]
+            tocados.add(diretorio.lstrip("_"))
+            if diretorio.startswith("_"):
+                tocados |= usuarios_da_familia(raiz, fonte, diretorio)
+        elif partes[0] == "tests" and len(partes) >= 3:
+            tocados.add(partes[1])
+        elif partes[:2] == ["docs", "notebooks"] and len(partes) == 3 and partes[2].endswith(".ipynb"):
+            tocados.add(partes[2].removesuffix(".ipynb"))
+    tocados &= tribunais_conhecidos(raiz)
+    if not tocados and ARQUIVOS_DO_AUTOTESTE & set(arquivos):
+        tocados = {TRIBUNAL_DO_AUTOTESTE}
+    return sorted(tocados - fora), sorted(tocados & fora)
+
+
+def arquivos_da_branch(raiz: Path, referencia: str) -> list[str]:
+    """Arquivos que HEAD mudou desde o ancestral comum com ``referencia``.
+
+    Sem ``--no-renames``, um arquivo movido aparece só no caminho novo, e o
+    tribunal de onde ele saiu não roda. Sem ``-z``, o Git põe entre aspas o
+    caminho com acento, e o primeiro componente deixa de casar.
+    """
+    resultado = subprocess.run(
+        ["git", "diff", "--no-renames", "--name-only", "-z", f"{referencia}...HEAD"],
+        cwd=raiz, check=True, capture_output=True, text=True,
+    )
+    return [arquivo for arquivo in resultado.stdout.split("\0") if arquivo]
 
 
 def resumir_mensagem(mensagem: str) -> str:
@@ -197,6 +273,13 @@ def main() -> int:
     calendario.add_argument("--data", type=date.fromisoformat, required=True)
     calendario.add_argument("--evento", required=True)
 
+    alvo = subcomandos.add_parser("alvo-pr", help="imprime tribunais=... e fora=... a partir dos arquivos do PR")
+    origem = alvo.add_mutually_exclusive_group(required=True)
+    origem.add_argument("--arquivos", type=Path, help="saída de git diff --name-only")
+    origem.add_argument("--base-ref", help="base do PR no Git local; o script roda o git diff a partir dela")
+    alvo.add_argument("--fora", default="", help="nomes separados por espaço que ficam fora do CI")
+    alvo.add_argument("--raiz", type=Path, default=Path())
+
     relatorio = subcomandos.add_parser("relatorio", help="monta o corpo da issue e o comentário de mudança")
     relatorio.add_argument("--suite", type=par_de_suite, action="append", required=True)
     relatorio.add_argument("--anterior", type=Path)
@@ -210,6 +293,21 @@ def main() -> int:
     if argumentos.subcomando == "calendario":
         rodar = "true" if deve_rodar(argumentos.data, argumentos.evento) else "false"
         sys.stdout.write(f"rodar={rodar}\n")
+        return 0
+    if argumentos.subcomando == "alvo-pr":
+        if argumentos.arquivos is not None:
+            arquivos = argumentos.arquivos.read_text(encoding="utf-8").splitlines()
+        else:
+            try:
+                arquivos = arquivos_da_branch(argumentos.raiz, argumentos.base_ref)
+            except subprocess.CalledProcessError as erro:
+                sys.stderr.write(
+                    f"Falha ao consultar a base Git: {erro.stderr.strip()}\n"
+                    "Atualize a referência com git fetch ou informe outra --base-ref.\n",
+                )
+                return 1
+        rodar_no_pr, fora = alvo_do_pr(arquivos, argumentos.raiz, set(argumentos.fora.split()))
+        sys.stdout.write(f"tribunais={' '.join(rodar_no_pr)}\nfora={' '.join(fora)}\n")
         return 0
 
     suites = {rotulo: ler_suite(caminho) for rotulo, caminho in argumentos.suite}

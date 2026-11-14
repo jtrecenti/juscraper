@@ -430,6 +430,13 @@ def test_filtro_invalido_vira_validationerror(falcao, kwargs):
         falcao.listar_decisoes("dano moral", paginas=1, **kwargs)
 
 
+@pytest.mark.parametrize("tamanho", [0, -5, 20])
+def test_tamanho_pagina_fora_dos_aceitos_lista_os_aceitos(falcao, tamanho):
+    # ``0`` caía no "≥ 1" genérico de ``TamanhoPagina``, sem dizer que só 5 e 10 valem.
+    with pytest.raises(ValidationError, match=r"so aceita \(5, 10\)"):
+        falcao.listar_decisoes("dano moral", paginas=1, tamanho_pagina=tamanho)
+
+
 @responses.activate  # sem endpoint registrado: qualquer request falharia com ConnectionError
 @pytest.mark.parametrize("campo", ["data_juntada_inicio", "data_juntada_fim"])
 @pytest.mark.parametrize("valor", ["abc", "", "31/02/2024"])

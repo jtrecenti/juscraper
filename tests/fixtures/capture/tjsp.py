@@ -1,9 +1,8 @@
 """Capture samples for TJSP across all public endpoints.
 
-TJSP exposes four public methods (``cjsg``, ``cjpg``, ``cpopg``, ``cposg``)
-plus ``method='html'``/``method='api'`` variants for the last two. This
-script exercises each flow against the live eSAJ and API hosts and dumps
-raw responses under ``tests/tjsp/samples/<endpoint>/``.
+TJSP exposes four public methods (``cjsg``, ``cjpg``, ``cpopg``, ``cposg``).
+This script exercises each flow against the live eSAJ host and dumps raw
+responses under ``tests/tjsp/samples/<endpoint>/``.
 
 Run from repo root::
 
@@ -14,7 +13,7 @@ Override the CNJ of test via ``--cnj`` if the default is retired::
     python -m tests.fixtures.capture.tjsp --cnj 1000149-71.2024.8.26.0346
 
 The script is intentionally linear — each endpoint is a separate function,
-and ``main()`` calls them in order. If one flow breaks (e.g., API returns
+and ``main()`` calls them in order. If one flow breaks (e.g., eSAJ returns
 503), the others still produce samples.
 """
 from __future__ import annotations
@@ -27,19 +26,21 @@ from pathlib import Path
 
 import requests
 
+from juscraper.courts._esaj.acordao import paginas_movimentacoes
+
 from ._util import (
     TJSP_CHROME_HEADERS,
     build_session,
     capture_acordao_samples,
     capture_cjsg_samples,
     dump,
+    fetch_cjsg_pages,
     make_tjsp_cjpg_params,
     make_tjsp_cjsg_body,
     samples_dir_for,
 )
 
 ESAJ_BASE = "https://esaj.tjsp.jus.br/"
-API_BASE = "https://api.tjsp.jus.br/"
 
 # CNJ used by the existing integration tests (tests/tjsp/test_cpopg.py).
 # If it disappears from the TJSP index, pass --cnj to override.
@@ -61,6 +62,39 @@ def capture_cjsg() -> None:
         headers=TJSP_CHROME_HEADERS,
         body_builder=make_tjsp_cjsg_body,
     )
+    # Ementa curta com a palavra "resultados" na 1a página (observado em
+    # 14/11/2026 com "direito" e baixar_sg=False): a contagem não pode tomar
+    # a célula da ementa pela paginação.
+    _, resps = fetch_cjsg_pages(
+        build_session(headers=TJSP_CHROME_HEADERS), ESAJ_BASE, "direito",
+        body_builder=lambda pesquisa, **kw: make_tjsp_cjsg_body(pesquisa, baixar_sg=False, **kw),
+    )
+    if "BONIFICAÇÃO POR RESULTADOS" not in resps[0].text:
+        # Sem a ementa, o sample deixaria de exercitar a regressão.
+        print("[tjsp] cjsg ementa_com_resultados: a 1a página mudou; sample mantido")
+    else:
+        dump(samples_dir_for("tjsp", "cjsg") / "ementa_com_resultados.html", resps[0].content)
+        print("[tjsp] cjsg ementa_com_resultados ('direito', baixar_sg=False) → saved")
+    capture_cjsg_monocratica()
+
+
+def capture_cjsg_monocratica() -> None:
+    """Capture the 1st cjsg page of a monocratic-decision search.
+
+    A página de decisões monocráticas traz o total no input
+    ``totalResultadoAbaRetornoFiltro-D``, e não no ``-A`` dos acórdãos.
+    """
+    _, resps = fetch_cjsg_pages(
+        build_session(headers=TJSP_CHROME_HEADERS), ESAJ_BASE,
+        "usucapiao extraordinario predio rural familia",
+        tipo_decisao="monocratica", body_builder=make_tjsp_cjsg_body,
+    )
+    if "totalResultadoAbaRetornoFiltro-D" not in resps[0].text:
+        # Sem o input ``-D``, o sample deixaria de cobrir a aba de monocráticas.
+        print("[tjsp] cjsg monocratica_single_page: sem o input -D; sample mantido")
+        return
+    dump(samples_dir_for("tjsp", "cjsg") / "monocratica_single_page.html", resps[0].content)
+    print("[tjsp] cjsg monocratica_single_page → saved")
 
 
 # ---------- cjpg ---------------------------------------------------------
@@ -179,48 +213,6 @@ def capture_cpopg_html(cnj: str) -> None:
     _ = id_clean  # referenced for symmetry with scraper internals
 
 
-# ---------- cpopg api ----------------------------------------------------
-
-def capture_cpopg_api(cnj: str) -> None:
-    """Capture cpopg samples for ``method='api'``.
-
-    GET search/numproc → POST dadosbasicos → 4× GET components (partes,
-    movimentacao, incidente, audiencia). Each JSON is dumped under
-    ``tests/tjsp/samples/cpopg/api_*.json``.
-    """
-    dest = samples_dir_for("tjsp", "cpopg")
-    session = build_session(headers=TJSP_CHROME_HEADERS)
-    id_clean = _clean_cnj(cnj)
-
-    r_search = session.get(
-        f"{API_BASE}processo/cpopg/search/numproc/{id_clean}", timeout=60
-    )
-    r_search.raise_for_status()
-    dump(dest / "api_search.json", r_search.content)
-    print(f"[tjsp] cpopg api search/numproc/{id_clean} → saved")
-
-    processos = r_search.json()
-    if not processos:
-        print("[tjsp] cpopg api: empty search response; skipping subsequent calls")
-        return
-
-    cd = processos[0]["cdProcesso"]
-    r_basicos = session.post(
-        f"{API_BASE}processo/cpopg/dadosbasicos/{cd}",
-        json={"cdProcesso": cd},
-        timeout=60,
-    )
-    r_basicos.raise_for_status()
-    dump(dest / "api_dadosbasicos.json", r_basicos.content)
-    print(f"[tjsp] cpopg api dadosbasicos/{cd} → saved")
-
-    for comp in ("partes", "movimentacao", "incidente", "audiencia"):
-        r_comp = session.get(f"{API_BASE}processo/cpopg/{comp}/{cd}", timeout=60)
-        r_comp.raise_for_status()
-        dump(dest / f"api_{comp}.json", r_comp.content)
-        print(f"[tjsp] cpopg api {comp}/{cd} → saved")
-
-
 # ---------- cposg html ---------------------------------------------------
 
 def capture_cposg_html(cnj: str) -> None:
@@ -269,6 +261,18 @@ def capture_cposg_html(cnj: str) -> None:
         print(f"[tjsp] cposg html: no process code found in search response for {cnj}")
         return
 
+    # A página do processo deixa as movimentações para o carregarMovimentacoesAjax.do,
+    # que só responde à sessão que abriu o processo (aqui, a da busca).
+    cd_movimentacoes = re.search(r"cdProcessoMovimentacoes = '([A-Za-z0-9]+)'", r_search.text)
+    if cd_movimentacoes:
+        paginas = paginas_movimentacoes(
+            lambda url, **kw: session.get(url, timeout=60, **kw),
+            f"{ESAJ_BASE}cposg/carregarMovimentacoesAjax.do", cnj, cd_movimentacoes.group(1),
+        )
+        for numero, pagina in enumerate(paginas, start=1):
+            dump(dest / f"movimentacoes_pagina_{numero}.html", pagina.encode("utf-8"))
+            print(f"[tjsp] cposg html movimentações página {numero} → saved")
+
     cd = codigos[0]
     r_show = session.get(
         f"{ESAJ_BASE}cposg/show.do",
@@ -278,20 +282,6 @@ def capture_cposg_html(cnj: str) -> None:
     r_show.raise_for_status()
     dump(dest / "show.html", r_show.content)
     print(f"[tjsp] cposg html show for codigo={cd} → saved")
-
-
-# ---------- cposg api ----------------------------------------------------
-
-def capture_cposg_api(cnj: str) -> None:
-    """Capture cposg samples for ``method='api'`` (single GET)."""
-    dest = samples_dir_for("tjsp", "cposg")
-    session = build_session(headers=TJSP_CHROME_HEADERS)
-    id_clean = _clean_cnj(cnj)
-
-    r = session.get(f"{API_BASE}processo/cposg/search/numproc/{id_clean}", timeout=60)
-    r.raise_for_status()
-    dump(dest / "api_search.json", r.content)
-    print(f"[tjsp] cposg api search/numproc/{id_clean} → saved")
 
 
 # ---------- acordao (movimentacao) --------------------------------------
@@ -413,7 +403,7 @@ def main() -> None:
         "--skip",
         nargs="*",
         default=[],
-        choices=["cjsg", "cjpg", "cpopg_html", "cpopg_api", "cposg_html", "cposg_api", "acordao", "documentos"],
+        choices=["cjsg", "cjpg", "cpopg_html", "cposg_html", "acordao", "documentos"],
         help="Flows to skip",
     )
     args = parser.parse_args()
@@ -422,9 +412,7 @@ def main() -> None:
         ("cjsg", lambda: capture_cjsg()),
         ("cjpg", lambda: capture_cjpg()),
         ("cpopg_html", lambda: capture_cpopg_html(args.cnj)),
-        ("cpopg_api", lambda: capture_cpopg_api(args.cnj)),
         ("cposg_html", lambda: capture_cposg_html(args.cnj)),
-        ("cposg_api", lambda: capture_cposg_api(args.cnj)),
         ("acordao", capture_acordao),
         ("documentos", capture_documentos),
     ]

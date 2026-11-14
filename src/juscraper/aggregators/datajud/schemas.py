@@ -13,7 +13,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ...schemas import PaginasMixin
+from ...schemas import PaginasMixin, TamanhoPagina
 from .mappings import TIPOS_MOVIMENTACAO
 
 # Campos do schema que sao filtros amigaveis e constroem partes da query
@@ -134,7 +134,7 @@ class InputListarProcessosDataJud(_DatajudCoercaoMixin, PaginasMixin):
     # margem confortavel sob o timeout. Em caso de ``HTTP 504``/
     # ``Timeout``, ``call_datajud_api`` faz fallback automatico para
     # ``size // 4`` (minimo ``FALLBACK_MIN_SIZE``).
-    tamanho_pagina: int = Field(default=5000, ge=10, le=10000)
+    tamanho_pagina: TamanhoPagina = Field(default=5000, ge=10, le=10000)
 
     model_config = ConfigDict(
         extra="forbid",

@@ -14,9 +14,15 @@ acompanhado de um caso aqui.
 """
 from __future__ import annotations
 
+import numpy as np
 import pytest
 from pydantic import ValidationError
 
+from juscraper.aggregators.comunica_cnj.schemas import InputListarComunicacoesComunicaCNJ
+from juscraper.aggregators.datajud.schemas import InputListarProcessosDataJud
+from juscraper.aggregators.falcao.schemas import InputListarDecisoesFalcao
+from juscraper.aggregators.pdpj.schemas import InputPesquisaPdpj
+from juscraper.courts.stf.schemas import InputListarDecisoesSTF
 from juscraper.courts.tjba.schemas import InputCJSGTJBA
 from juscraper.courts.tjdft.schemas import InputCJSGTJDFT
 from juscraper.courts.tjes.schemas import InputCJPGTJES, InputCJSGTJES
@@ -119,6 +125,43 @@ class TestNumericFieldRejection:
     def test_tjmt_tamanho_pagina_rejects_below_ge(self):
         with pytest.raises(ValidationError):
             InputCJSGTJMT(pesquisa="x", tamanho_pagina=0)
+
+
+# (Schema, campo, kwargs obrigatórios, valor válido) — todo campo de tamanho de
+# página tipado como ``TamanhoPagina`` ou ``InteiroSemBool`` (Falcão). O valor válido respeita o domínio
+# próprio do endpoint (DataJud: 10 a 10000; Falcão: 5 ou 10).
+_TAMANHO_PAGINA_CASES = [
+    (InputCJSGTJBA, "tamanho_pagina", {"pesquisa": "x"}, 2),
+    (InputCJSGTJDFT, "tamanho_pagina", {"pesquisa": "x"}, 2),
+    (InputCJSGTJES, "tamanho_pagina", {"pesquisa": "x"}, 2),
+    (InputCJPGTJES, "tamanho_pagina", {"pesquisa": "x"}, 2),
+    (InputCJSGTJGO, "tamanho_pagina", {"pesquisa": "x"}, 2),
+    (InputCJSGTJMT, "tamanho_pagina", {"pesquisa": "x"}, 2),
+    (InputListarDecisoesSTF, "tamanho_pagina", {"pesquisa": "x"}, 2),
+    (InputListarDecisoesFalcao, "tamanho_pagina", {"pesquisa": "x"}, 5),
+    (InputListarProcessosDataJud, "tamanho_pagina", {}, 20),
+    (InputListarComunicacoesComunicaCNJ, "itens_por_pagina", {"pesquisa": "x"}, 2),
+    (InputPesquisaPdpj, "itens_por_pagina", {}, 2),
+]
+
+
+_CASE_IDS = [case[0].__name__ for case in _TAMANHO_PAGINA_CASES]
+
+
+@pytest.mark.parametrize(
+    ("schema_cls", "campo", "base"), [case[:3] for case in _TAMANHO_PAGINA_CASES], ids=_CASE_IDS
+)
+@pytest.mark.parametrize("booleano", [True, np.True_], ids=["bool", "numpy_bool"])
+def test_tamanho_pagina_rejeita_booleano(schema_cls, campo, base, booleano):
+    """Booleans não são tamanhos de página, apesar de ``bool`` herdar de ``int``."""
+    with pytest.raises(ValidationError, match="não bool"):
+        schema_cls(**base, **{campo: booleano})
+
+
+@pytest.mark.parametrize(("schema_cls", "campo", "base", "valido"), _TAMANHO_PAGINA_CASES, ids=_CASE_IDS)
+def test_tamanho_pagina_aceita_inteiro_e_string_numerica(schema_cls, campo, base, valido):
+    assert getattr(schema_cls(**base, **{campo: valido}), campo) == valido
+    assert getattr(schema_cls(**base, **{campo: str(valido)}), campo) == valido
 
 
 # (Schema, foreign_alias) — cada schema testado contra um alias de

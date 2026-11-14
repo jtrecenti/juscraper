@@ -9,12 +9,7 @@ import pandas as pd
 import pytest
 
 import juscraper
-from juscraper.courts.tjsp.cpopg_parse import (
-    cpopg_parse_manager,
-    cpopg_parse_single_html,
-    cpopg_parse_single_json,
-    get_cpopg_download_links,
-)
+from juscraper.courts.tjsp.cpopg_parse import cpopg_parse_manager, cpopg_parse_single_html, get_cpopg_download_links
 from tests._helpers import load_sample
 
 from .test_utils import create_mock_response
@@ -728,14 +723,6 @@ class TestCPOPGUnit:
         ]
         assert partes['advogados'].tolist() == [['Advogado do Banco'], ['PROCURADORIA DO MUNICÍPIO DE TANABI']]
         assert result['movimentacoes'].empty
-
-    def test_cpopg_parse_json_busca_vazia(self, tmp_path):
-        """A API devolve ``[]`` para o número: erro que diz isso, não ``KeyError: 'basicos'``."""
-        arquivo = tmp_path / '10001497120248260346.json'
-        arquivo.write_text('[]', encoding='utf-8')
-
-        with pytest.raises(ValueError, match=r'resposta \[\]'):
-            cpopg_parse_single_json(str(arquivo))
 
 
 if __name__ == "__main__":

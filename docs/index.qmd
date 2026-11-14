@@ -103,6 +103,8 @@ Most courts implement some of the methods below; the tables in the Implementatio
 
 > ⚠️ **TJAP — `cjsg` unavailable:** since ~2026 the TJAP jurisprudence search (Tucujuris platform) requires a [Cloudflare Turnstile](https://www.cloudflare.com/products/turnstile/) CAPTCHA, validated server-side. Because the scraper issues plain HTTP requests (no browser), it cannot produce the token and the backend replies `"A verificação de segurança falhou"`. In that case `cjsg` raises `TJAPSecurityCheckError` with an explanation instead of silently returning empty. There is no workaround through the public API. See [issue #279](https://github.com/jtrecenti/juscraper/issues/279).
 
+> ⚠️ **TJGO — `cjsg` returns no results:** since 12 November 2026 (Projudi 3.194.1) the TJGO jurisprudence search validates a [Cloudflare Turnstile](https://www.cloudflare.com/products/turnstile/) token server-side, which the scraper does not send. Without it the portal returns an empty search, with no error message, and `cjsg`/`cjsg_download` emit a `UserWarning` explaining the block. The portal answers a search that genuinely has no results the same way, so the warning is emitted on every empty search.
+
 Falcao covers national labor jurisprudence (TST and TRTs).
 
 #### JusBR and PDPJ authentication
