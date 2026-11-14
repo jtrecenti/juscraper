@@ -88,7 +88,9 @@ def excecoes_da_base(raiz: Path, revisao: str) -> set[tuple[str, str]]:
     # pelo próprio PR. Só o código da base, medido com a nova régua, pode autorizá-las.
     arquivo = executar_git(raiz, "archive", "--format=zip", revisao, "src", "tests")
     with tempfile.TemporaryDirectory(prefix="juscraper-lint-") as temporario:
-        destino = Path(temporario)
+        # resolve(): no macOS o temporário fica em /var, link para /private/var, e o
+        # Ruff devolve o caminho resolvido; sem isto o relative_to falha.
+        destino = Path(temporario).resolve()
         with zipfile.ZipFile(io.BytesIO(arquivo)) as pacote:
             for nome in pacote.namelist():
                 partes = PurePosixPath(nome).parts
