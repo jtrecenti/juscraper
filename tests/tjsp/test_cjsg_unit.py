@@ -9,7 +9,7 @@ import pytest
 from bs4 import BeautifulSoup
 
 from juscraper.courts._esaj import parse as esaj_parse
-from juscraper.courts._esaj.parse import _find_pagination_element, _parse_single_page, _total_declarado, cjsg_n_results
+from juscraper.courts._esaj.parse import _parse_single_page, _total_declarado, cjsg_n_results
 from juscraper.courts.tjsp.cjsg_parse import _cjsg_parse_single_page, cjsg_n_pags, cjsg_parse_manager
 from tests._helpers import load_sample
 
@@ -241,16 +241,9 @@ class TestCJSGNResultsInputDeclarado:
         assert cjsg_n_results(html) == 1178964
 
     @pytest.mark.parametrize("valor", ["", "n/d"])
-    def test_input_vazio_ou_nao_numerico_cai_na_cascata(self, monkeypatch, valor):
+    def test_input_vazio_ou_nao_numerico_cai_na_cascata(self, mocker, valor):
         """HTML derivado do sample real: o valor do input é trocado."""
-        chamadas = []
-        original = _find_pagination_element
-
-        def _espiao(soup):
-            chamadas.append(soup)
-            return original(soup)
-
-        monkeypatch.setattr(esaj_parse, "_find_pagination_element", _espiao)
+        espiao = mocker.spy(esaj_parse, "_find_pagination_element")
         html = load_sample("tjsp", "cjsg/results_normal_page_01.html").replace(
             'id="totalResultadoAbaRetornoFiltro-A" type="hidden" value="2571077"',
             f'id="totalResultadoAbaRetornoFiltro-A" type="hidden" value="{valor}"',
@@ -258,7 +251,7 @@ class TestCJSGNResultsInputDeclarado:
         assert f'value="{valor}"' in html
 
         assert cjsg_n_results(html) == 2571077
-        assert len(chamadas) == 1
+        assert espiao.call_count == 1
 
 
 class TestCJSGParseSinglePage:
