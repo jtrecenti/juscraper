@@ -6,8 +6,10 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
+from bs4 import BeautifulSoup
 
-from juscraper.courts._esaj.parse import _parse_single_page, cjsg_n_results
+from juscraper.courts._esaj import parse as esaj_parse
+from juscraper.courts._esaj.parse import _parse_single_page, _total_declarado, cjsg_n_results
 from juscraper.courts.tjsp.cjsg_parse import _cjsg_parse_single_page, cjsg_n_pags, cjsg_parse_manager
 from tests._helpers import load_sample
 
@@ -176,6 +178,80 @@ class TestCJSGNResults:
         assert len(df) == expected_rows
         assert tuple(df.columns) == ESAJ_COLUMNS
         assert df.iloc[0]["processo"] == first_process
+
+
+def _cascata_proibida(*_args, **_kwargs):
+    raise AssertionError("a contagem deveria vir do input totalResultadoAbaRetornoFiltro-*")
+
+
+class TestCJSGNResultsInputDeclarado:
+    """A contagem vem do ``input#totalResultadoAbaRetornoFiltro-*`` da página."""
+
+    @pytest.mark.parametrize(
+        ("court", "sample", "expected"),
+        [
+            ("tjac", "results_normal_page_01.html", 13929),
+            ("tjac", "single_page.html", 3),
+            ("tjac", "no_results.html", 0),
+            ("tjal", "results_normal_page_01.html", 136804),
+            ("tjal", "single_page.html", 7),
+            ("tjal", "no_results.html", 0),
+            ("tjam", "results_normal_page_01.html", 54334),
+            ("tjam", "single_page.html", 1),
+            ("tjam", "no_results.html", 0),
+            ("tjce", "results_normal_page_01.html", 100860),
+            ("tjce", "single_page.html", 16),
+            ("tjce", "no_results.html", 0),
+            ("tjms", "results_normal_page_01.html", 149670),
+            ("tjms", "single_page.html", 2),
+            ("tjms", "no_results.html", 0),
+            ("tjsp", "results_normal_page_01.html", 2571077),
+            ("tjsp", "single_page.html", 78),
+            ("tjsp", "no_results.html", 0),
+            # Aba de decisões monocráticas: o input é o ``-D``.
+            ("tjsp", "monocratica_single_page.html", 1),
+        ],
+    )
+    def test_le_o_input_sem_passar_pela_cascata(self, monkeypatch, court, sample, expected):
+        monkeypatch.setattr(esaj_parse, "_has_zero_results", _cascata_proibida)
+        monkeypatch.setattr(esaj_parse, "_find_pagination_element", _cascata_proibida)
+        monkeypatch.setattr(esaj_parse, "_count_result_rows_or_raise", _cascata_proibida)
+
+        html = load_sample(court, f"cjsg/{sample}")
+        assert _total_declarado(BeautifulSoup(html, "html.parser")) == expected
+        assert cjsg_n_results(html) == expected
+
+    @pytest.mark.parametrize("ementa", ["BONIFICAÇÃO POR RESULTADOS", "PESQUISAS SEM RESULTADOS"])
+    def test_ementa_fora_das_linhas_marcadas_nao_altera_a_contagem(self, ementa):
+        """HTML derivado do sample real ``ementa_com_resultados.html``.
+
+        Sem a classe ``fundocinza1`` nas linhas (como se o eSAJ a renomeasse),
+        a cascata toma a ementa pela paginação: com "RESULTADOS" levanta
+        ``ValueError`` e com "SEM RESULTADOS" conta 0. O input não depende do
+        texto da página.
+        """
+        html = (
+            load_sample("tjsp", "cjsg/ementa_com_resultados.html")
+            .replace("BONIFICAÇÃO POR RESULTADOS", ementa, 1)
+            .replace('class="fundocinza1"', 'class="linhaResultado"')
+        )
+        assert 'class="fundocinza1"' not in html
+        assert ementa in html
+
+        assert cjsg_n_results(html) == 1178964
+
+    @pytest.mark.parametrize("valor", ["", "n/d"])
+    def test_input_vazio_ou_nao_numerico_cai_na_cascata(self, mocker, valor):
+        """HTML derivado do sample real: o valor do input é trocado."""
+        espiao = mocker.spy(esaj_parse, "_find_pagination_element")
+        html = load_sample("tjsp", "cjsg/results_normal_page_01.html").replace(
+            'id="totalResultadoAbaRetornoFiltro-A" type="hidden" value="2571077"',
+            f'id="totalResultadoAbaRetornoFiltro-A" type="hidden" value="{valor}"',
+        )
+        assert f'value="{valor}"' in html
+
+        assert cjsg_n_results(html) == 2571077
+        assert espiao.call_count == 1
 
 
 class TestCJSGParseSinglePage:
