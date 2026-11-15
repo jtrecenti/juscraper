@@ -29,6 +29,8 @@ from pathlib import Path
 
 import requests
 
+from ...core.exceptions import BotChallengeBlockedError
+
 logger = logging.getLogger("juscraper.trf6.download")
 
 BASE_URL = "https://eproc1g.trf6.jus.br/eproc/"
@@ -38,12 +40,11 @@ POST_PATH = (
     "&acao_origem=principal&acao_retorno=processo_consulta_publica"
 )
 
+# Sem ``User-Agent`` de navegador: em 15/11/2026, o bot manager F5 (TSPD) do
+# portal servia um desafio JavaScript no lugar do formulário a todo user agent
+# que começa com ``Mozilla/`` (Chrome, Firefox), e o formulário com o captcha ao
+# user agent padrão do ``requests``. A sessão fica com esse padrão.
 BROWSER_HEADERS: dict[str, str] = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/147.0.0.0 Safari/537.36"
-    ),
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
     "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8",
     "Accept-Encoding": "gzip, deflate, br",
@@ -59,6 +60,30 @@ _CAPTCHA_RE = re.compile(
     re.DOTALL,
 )
 
+# Página de desafio do F5 (TSPD), servida com HTTP 200 no lugar do formulário.
+_MARCADORES_DESAFIO_F5 = (b"/TSPD/", b'window["bobcmn"]')
+
+
+class DesafioF5Error(BotChallengeBlockedError):
+    """O bot manager F5 do TRF6 serviu um desafio JavaScript no lugar do formulário.
+
+    O desafio sai com HTTP 200 e só se resolve executando JavaScript. Vale para
+    a sessão inteira: :class:`~juscraper.courts.trf6.client.TRF6Scraper` encerra
+    o lote, e o CNJ desafiado e os seguintes saem com ``bloqueio_anti_bot``.
+    """
+
+    def __init__(self, url: str) -> None:
+        """Guarda ``url`` e troca a mensagem da classe-mãe pela do desafio do F5."""
+        super().__init__("TRF6", url, bot_manager="F5")
+        # A mensagem da classe-mãe descreve o 403 do Akamai; aqui o sintoma é outro.
+        self.args = (
+            f"O bot manager (F5) do TRF6 serviu um desafio JavaScript em {url} no lugar do "
+            "formulário da consulta pública, sem o captcha. Em 15/11/2026 o desafio saía para "
+            "user agents de navegador; confira se a sessão não recebeu um User-Agent desses, "
+            "ou aguarde alguns minutos antes de tentar de novo.",
+        )
+
+
 # eproc echoes captcha validation errors in a hidden textarea that JS would
 # normally pop as an alert. We sniff this on a 200 response to decide whether
 # to retry with a fresh captcha.
@@ -66,9 +91,15 @@ _CAPTCHA_ERROR_RE = re.compile(r"captcha\)\s*incorreto", re.IGNORECASE)
 
 
 def fetch_form(session: requests.Session, timeout: float = 30.0) -> str:
-    """``GET`` the consulta form. Returns latin-1 text with captcha embedded."""
+    """``GET`` the consulta form. Returns latin-1 text with captcha embedded.
+
+    Raises:
+        DesafioF5Error: O portal serviu o desafio do F5 no lugar do formulário.
+    """
     resp = session.get(BASE_URL + GET_PATH, timeout=timeout)
     resp.raise_for_status()
+    if all(marcador in resp.content for marcador in _MARCADORES_DESAFIO_F5):
+        raise DesafioF5Error(resp.url)
     return resp.content.decode("latin-1")
 
 
