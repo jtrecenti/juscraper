@@ -29,6 +29,14 @@ DOC_URL = (
 )
 
 
+def _ids_pecas() -> list[str]:
+    """Ids das peças do detalhe de amostra, na ordem da página."""
+    from juscraper.courts._trf.download import extract_documento_urls
+
+    detail = load_sample_bytes("trf3", "cpopg/detail_normal.html").decode("latin-1")
+    return [doc_id for _, doc_id in extract_documento_urls(detail)]
+
+
 def test_extract_documento_urls_finds_all_pecas_in_detail() -> None:
     """Detail HTML must yield one ``(ca, id_processo_doc)`` per peça juntada."""
     from juscraper.courts._trf.download import extract_documento_urls
@@ -144,6 +152,7 @@ def test_cpopg_with_download_pecas_writes_files_and_adds_column(tmp_path) -> Non
     assert "pecas" in df.columns, "coluna 'pecas' deve existir quando download_pecas=True"
     saved = df.iloc[0]["pecas"]
     assert len(saved) == 2
+    assert df.iloc[0]["pecas_falhas"] == []
     for p in saved:
         assert Path(p).is_file()
         assert p.endswith(".html")
@@ -214,13 +223,19 @@ def test_cpopg_with_download_pecas_continues_after_peca_error(tmp_path) -> None:
     responses.add(responses.GET, DOC_URL, body=doc_body, content_type="text/html")
 
     scraper = jus.scraper("trf3", sleep_time=0)
-    df = scraper.cpopg(
-        "50059460920254036324", download_pecas=True, diretorio=str(tmp_path)
-    )
-    saved = df.iloc[0]["pecas"]
+    with pytest.warns(UserWarning, match="processo 50059460920254036324, peça .*: http_404.*coluna pecas_falhas"):
+        df = scraper.cpopg(
+            "50059460920254036324", download_pecas=True, diretorio=str(tmp_path)
+        )
+    row = df.iloc[0]
+    saved = row["pecas"]
     # Só a segunda peça foi salva.
     assert len(saved) == 1
     assert Path(saved[0]).is_file()
+    # A peça que falhou fica registrada no processo, com o motivo; o processo não falhou.
+    primeira = _ids_pecas()[0]
+    assert row["pecas_falhas"] == [{"id": primeira, "motivo_falha": "http_404"}]
+    assert row["motivo_falha"] is None
 
 
 @responses.activate
@@ -244,6 +259,8 @@ def test_cpopg_bloqueio_nas_pecas_preserva_o_detalhe(tmp_path) -> None:
     assert row["processo"] == "5005946-09.2025.4.03.6324"
     assert row["motivo_falha"] == "bloqueio_anti_bot"
     assert len(row["pecas"]) == 1 and Path(row["pecas"][0]).is_file()
+    ids = _ids_pecas()
+    assert row["pecas_falhas"] == [{"id": ids[1], "motivo_falha": "bloqueio_anti_bot"}]
     # Nenhuma peça pedida depois do bloqueio.
     assert sum(c.request.url.startswith(DOC_URL) for c in responses.calls) == 2
 
@@ -263,6 +280,10 @@ def test_cpopg_bloqueio_nas_pecas_encerra_o_lote(tmp_path) -> None:
     assert df.iloc[0]["processo"] == "5005946-09.2025.4.03.6324"
     assert list(df["motivo_falha"]) == ["bloqueio_anti_bot", "bloqueio_anti_bot"]
     assert list(df["pecas"]) == [[], []]
+    # As peças do 1º, bloqueada e não pedida, faltam com o motivo; o 2º não teve detalhe.
+    ids = _ids_pecas()
+    assert df.iloc[0]["pecas_falhas"] == [{"id": d, "motivo_falha": "bloqueio_anti_bot"} for d in ids]
+    assert df.iloc[1]["pecas_falhas"] == []
     # Uma busca só: o 2º CNJ não foi pedido depois do bloqueio.
     assert sum(c.request.method == "POST" for c in responses.calls) == 1
 

@@ -22,6 +22,7 @@ from juscraper.core.failures import (
     avisar_falhas,
     e_token_invalido,
     motivo_falha,
+    motivo_falha_ou_inesperada,
     resumir_falhas,
 )
 
@@ -113,6 +114,17 @@ def test_avisar_falhas_com_bloqueio_usa_categoria_propria_mesmo_fora_dos_exemplo
         avisar_falhas(falhas, "Scraper.metodo", "download(s) de documento")
     assert len(avisos) == 1
     assert "bloqueio_anti_bot" not in str(avisos[0].message)
+
+
+def test_avisar_falhas_fecha_com_a_consequencia_pedida():
+    with pytest.warns(UserWarning, match=r"falharam\. Falhas: peça 1: http_404\. Veja a coluna x\.$"):
+        avisar_falhas(["peça 1: http_404"], "Scraper.metodo", "download(s) de peça", "Veja a coluna x.")
+
+
+def test_motivo_falha_ou_inesperada():
+    assert motivo_falha_ou_inesperada(_http_error(404)) == "http_404"
+    assert motivo_falha_ou_inesperada(requests.TooManyRedirects()) == "resposta_inesperada"
+    assert motivo_falha_ou_inesperada(ValueError("layout")) == "resposta_inesperada"
 
 
 def test_avisar_falhas_sem_falha_nao_avisa(recwarn):

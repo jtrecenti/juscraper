@@ -52,9 +52,9 @@ MOTIVO_NAO_PDF = "nao_pdf"
 MOTIVO_RESPOSTA_INESPERADA = "resposta_inesperada"
 """Página HTML fora do formato conhecido, no lugar da que o fluxo espera.
 
-Também é o motivo que o TJSP (documentos públicos do ``cpopg``) e os ``cpopg``
-dos TRFs e do TJPE dão a erro do item sem motivo próprio no vocabulário, para
-que a linha siga no lote em vez de derrubá-lo.
+Também é o motivo de erro do item sem motivo próprio no vocabulário, por
+:func:`motivo_falha_ou_inesperada`, para que a linha siga no lote em vez de
+derrubá-lo.
 """
 
 MOTIVO_ENTRADA_INVALIDA = "entrada_invalida"
@@ -173,6 +173,18 @@ def motivo_falha(exc: BaseException) -> str:
     raise TypeError(f"Exceção sem motivo de falha no vocabulário: {type(exc).__name__}.") from exc
 
 
+def motivo_falha_ou_inesperada(exc: BaseException) -> str:
+    """:func:`motivo_falha` da exceção, ou :data:`MOTIVO_RESPOSTA_INESPERADA` fora do vocabulário.
+
+    Só as :data:`EXCECOES_DE_FALHA_POR_LINHA` têm motivo próprio. Serve a
+    quem converte qualquer erro de um item em linha de falha, inclusive o que
+    não tem motivo no vocabulário.
+    """
+    if isinstance(exc, EXCECOES_DE_FALHA_POR_LINHA):
+        return motivo_falha(exc)
+    return MOTIVO_RESPOSTA_INESPERADA
+
+
 def e_token_invalido(exc: BaseException) -> bool:
     """Diz se ``exc`` é o ``HTTPError`` de :data:`STATUS_TOKEN_INVALIDO`."""
     return (
@@ -195,7 +207,12 @@ def resumir_falhas(falhas: list[str], descricao: str) -> str:
     return f"{len(falhas)} {descricao} falharam. Falhas: {'; '.join(exemplos)}."
 
 
-def avisar_falhas(falhas: list[str], metodo: str, descricao: str) -> None:
+def avisar_falhas(
+    falhas: list[str],
+    metodo: str,
+    descricao: str,
+    consequencia: str = "As linhas correspondentes saem com o conteúdo None.",
+) -> None:
     """Emite um único ``UserWarning`` ao fim de uma coleta concluída.
 
     O aviso aponta para o código de quem chamou o método público, por
@@ -208,13 +225,14 @@ def avisar_falhas(falhas: list[str], metodo: str, descricao: str) -> None:
             Lista vazia não emite aviso.
         metodo: Nome qualificado do método público, que abre a mensagem.
         descricao: Ver :func:`resumir_falhas`.
+        consequencia: Frase que fecha o aviso, dizendo onde a falha aparece no
+            resultado.
     """
     if not falhas:
         return
     bloqueio = any(MOTIVO_BLOQUEIO_ANTI_BOT in falha for falha in falhas)
     avisar(
-        f"{metodo}: {resumir_falhas(falhas, descricao)} "
-        "As linhas correspondentes saem com o conteúdo None.",
+        f"{metodo}: {resumir_falhas(falhas, descricao)} {consequencia}",
         BloqueioAntiBotWarning if bloqueio else UserWarning,
     )
 

@@ -66,7 +66,8 @@ class TJPEScraper(HTTPScraper):
                 ``orgao_julgador``, ``jurisdicao``, ``endereco_orgao``,
                 ``polo_ativo``, ``polo_passivo``, ``movimentacoes``,
                 ``documentos`` e ``motivo_falha``; com ``download_pecas=True``,
-                também ``pecas``. ``motivo_falha`` segue a regra de
+                também ``pecas`` e ``pecas_falhas``. ``motivo_falha`` e
+                ``pecas_falhas`` seguem a regra de
                 :meth:`juscraper.courts._trf.base.TRFConsultaScraper.cpopg`.
                 Quando o WAF desafia de novo logo após a renovação do cookie,
                 ou o cookie não pôde ser obtido (Chromium do Playwright
