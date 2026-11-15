@@ -154,6 +154,7 @@ def test_cpopg_parse_sem_html_mantem_colunas_do_detalhe() -> None:
     """``cpopg_parse`` só com ``None`` sai com as colunas do detalhe vazias."""
     scraper = jus.scraper("trf5", sleep_time=0)
     df = scraper.cpopg_parse([None], ["00000000020994050000"])
+    assert len(df) == 1
     assert list(df.columns) == [*COLUNAS_DETALHE, "id_cnj"]
     assert all(v is None for v in df[list(COLUNAS_DETALHE)].to_numpy().ravel())
 
