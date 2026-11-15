@@ -50,10 +50,7 @@ class InputCJSGTJRS(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     @field_validator("secao", mode="before")
     @classmethod
     def _normalizar_secao(cls, valor: object) -> object:
-        # O download sempre ignorou a caixa e tratou ``""`` como ausência de
-        # filtro; o acento de "cível" e espaços nas pontas também não mudam
-        # a seção. Qualquer outro valor caía fora do mapa e a busca cobria as
-        # duas seções em silêncio; agora o ``Literal`` o recusa.
+        # Caixa, acento ("cível") e espaços não mudam a seção; ``""`` é sem filtro.
         if isinstance(valor, str):
             return unidecode(valor).strip().lower() or None
         return valor
