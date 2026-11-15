@@ -45,8 +45,6 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.3.0
-      - name: Instalar dependências de desenvolvimento
-        run: uv sync --frozen --extra dev --python 3.12
       - uses: actions/cache@v4
         with:
           path: ~/.cache/pre-commit
@@ -57,4 +55,7 @@ jobs:
           # cada evento; aqui elas comparariam com origin/main. A suíte offline
           # roda no workflow Testes, em todas as versões de Python.
           SKIP: lint-policy,complexity,pytest
-        run: uv run pre-commit run --all-files --show-diff-on-failure
+        # Cada hook roda no ambiente próprio que o pre-commit monta, e nenhum
+        # dos que sobram usa o do projeto; por isso o job não instala o extra
+        # dev. A versão do pre-commit é a do uv.lock (tests/ci_workflows).
+        run: uvx --python 3.12 pre-commit==4.7.0 run --all-files --show-diff-on-failure
