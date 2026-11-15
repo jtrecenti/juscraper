@@ -68,7 +68,7 @@ def _normalize_field_name(label: str) -> str:
     return re.sub(r'\s+', '_', text.strip())
 
 
-def cpopg_parse_manager(path: str, metodo: str = "TJSPScraper.cpopg_parse"):
+def cpopg_parse_manager(path: str, metodo: str = "TJSPScraper.cpopg_parse") -> dict[str, pd.DataFrame]:
     """Parse downloaded files from the first-degree procedural query and return a dict of DataFrames.
 
     Parameters
@@ -174,7 +174,7 @@ def _nothing_parsed_error(root: Path, candidatos: int, falhas: list[tuple[Path, 
     )
 
 
-def cpopg_parse_single(path: str):
+def cpopg_parse_single(path: str) -> dict[str, pd.DataFrame]:
     """Parse a downloaded file from the TJSP CPOPG consultation."""
     if not path.endswith('.html'):
         raise ValueError(f"Unknown file extension for path: {path}")
@@ -410,7 +410,7 @@ def _extract_misc_petitions(soup: BeautifulSoup, path: str) -> list[dict]:
     return petitions
 
 
-def cpopg_parse_single_html(path: str):
+def cpopg_parse_single_html(path: str) -> dict[str, pd.DataFrame]:
     """Parse a downloaded HTML file from the TJSP CPOPG consultation."""
     with Path(path).open('r', encoding='utf-8') as file:
         soup = BeautifulSoup(file.read(), 'html.parser')

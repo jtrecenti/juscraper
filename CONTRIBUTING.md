@@ -438,7 +438,7 @@ O nome das seções que o estilo Google reconhece fica em inglês, porque é por
 
 Em `Args:` e `Raises:`, a primeira linha de cada entrada traz o nome inteiro até os dois-pontos; nessas seções e em `Returns:`, as linhas de continuação levam recuo a mais. Em `Raises:`, uma exceção por entrada, repetindo a descrição quando ela for a mesma: numa entrada só, várias exceções separadas por vírgula viram um tipo único e, partidas em duas linhas, se perdem: o griffe guarda só a última ou descarta a seção inteira. Em `Returns:`, cada linha no recuo do item vira um retorno novo, e um único `pd.DataFrame` sai na referência como tabela de várias linhas; mais de um item só cabe em função que devolve `tuple`, um por elemento.
 
-A entrada de `Returns:` traz só a descrição: o tipo vem da anotação de retorno da assinatura. Escrito antes dos dois-pontos, como em `pd.DataFrame: ...` ou `str: ...`, ele sai repetido na tabela. Só quando a assinatura não anota o retorno, escrever o tipo entre parênteses, como em `(dict[str, str]): ...`; numa função anotada, os parênteses sobrepõem a anotação.
+A entrada de `Returns:` traz só a descrição: o tipo vem da anotação de retorno da assinatura. Escrito antes dos dois-pontos, como em `pd.DataFrame: ...` ou `str: ...`, ele sai repetido na tabela. Só quando a assinatura não anota o retorno, escrever o tipo entre parênteses, como em `(dict[str, str]): ...`; numa função anotada, os parênteses sobrepõem a anotação. Sem anotação e sem parênteses, a referência sai sem tipo.
 
 O `quartodoc build` passa em todos esses casos; quem reprova é `tests/test_docstring_griffe.py`.
 

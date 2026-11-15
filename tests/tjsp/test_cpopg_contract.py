@@ -551,3 +551,12 @@ def test_cpopg_entrada_que_nao_e_texto_vira_linha_de_falha(tmp_path):
         {"id_processo": "123", "motivo_falha": "entrada_invalida"},
         {"id_processo": "None", "motivo_falha": "entrada_invalida"},
     ]
+
+
+@pytest.mark.parametrize("metodo", ["cpopg_download", "cposg_download"])
+def test_download_devolve_chave_str_para_entrada_que_nao_e_texto(tmp_path, metodo):
+    """As falhas saem com chave ``str``, a mesma que ``*_parse`` devolve em ``id_processo``."""
+    with pytest.warns(UserWarning, match="entrada_invalida"):
+        falhas = getattr(jus.scraper("tjsp", download_path=str(tmp_path)), metodo)([np.int64(123), None])
+
+    assert falhas == {"123": "entrada_invalida", "None": "entrada_invalida"}

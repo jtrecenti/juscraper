@@ -4,9 +4,9 @@ O quartodoc usa esse parser, e o ``quartodoc build`` passa mesmo quando ele lê
 errado; o defeito só aparece na referência publicada. O teste reprova aviso de
 falha do par ``nome: descrição`` (lista de exceções ou de nomes partida em duas
 linhas), entrada de ``Raises:`` com várias exceções, ``Returns:`` que o griffe
-lê com itens a mais, com o tipo repetido ou com tipo diferente da assinatura, e
-a seção ``Warns:``, que derruba o build. Os casos e as formas certas estão no
-CONTRIBUTING, em "Docstrings de métodos públicos com kwargs".
+lê com itens a mais, sem tipo, com o tipo repetido ou com tipo diferente da
+assinatura, e a seção ``Warns:``, que derruba o build. Os casos e as formas
+certas estão no CONTRIBUTING, em "Docstrings de métodos públicos com kwargs".
 
 Cada módulo é lido com ``griffe.visit``, sem importar o pacote, para que a
 anotação de retorno da assinatura esteja disponível e módulos fora da
@@ -84,6 +84,8 @@ def _motivo_dos_retornos(objeto: griffe.Object, retornos: list[griffe.DocstringR
                 f"Returns começa por '{tipo}:', que a referência mostra como nome ou na descrição;"
                 " tirar o tipo quando a assinatura o anota, ou pô-lo entre parênteses"
             )
+    if any(not retorno.annotation for retorno in retornos):
+        return "Returns sem tipo; anotar o retorno da função ou, sem anotação, pôr o tipo entre parênteses"
     assinatura = objeto.returns if objeto.is_function else None
     if len(retornos) == 1 and assinatura is not None and str(retornos[0].annotation) != str(assinatura):
         return (
@@ -213,6 +215,11 @@ def test_docstrings_do_pacote_sao_lidas_como_pretendido():
         '    Returns:\n'
         '        (pd.DataFrame | int): Uma linha por processo.\n'
         '    """\n',
+        'def f():\n'
+        '    """Resumo.\n\n'
+        '    Returns:\n'
+        '        DataFrame com uma linha por processo.\n'
+        '    """\n',
     ],
     ids=[
         "raises-com-virgula",
@@ -229,6 +236,7 @@ def test_docstrings_do_pacote_sao_lidas_como_pretendido():
         "returns-nome-curto-do-tipo",
         "returns-nome-sem-anotacao",
         "returns-parenteses-com-anotacao",
+        "returns-sem-tipo",
     ],
 )
 def test_forma_lida_errado_e_reprovada(codigo):
