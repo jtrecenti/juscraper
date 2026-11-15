@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-a92d8eec9eda37e5377e1dd6cf3ce6ef.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-fa0132e5ba1ccbcb15f610bc8f9b53b7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -314,7 +314,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>**kwargs</td>
 <td></td>
-<td>Filtros aceitos pelo schema <code>InputCJSGTJPA</code>. Listados abaixo (todos opcionais; <code>None</code> = sem filtro): * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str): <code>YYYY-MM-DD</code>. * <code>data_publicacao_inicio</code> / <code>data_publicacao_fim</code> (str): <code>YYYY-MM-DD</code>.</td>
+<td>Filtros aceitos pelo schema <code>InputCJSGTJPA</code>. Listados abaixo (todos opcionais; <code>None</code> = sem filtro): * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str): <code>YYYY-MM-DD</code>. Enviadas ao portal um dia antes, que compensa o desvio do filtro do TJPA (#508). * <code>data_publicacao_inicio</code> / <code>data_publicacao_fim</code> (str): <code>YYYY-MM-DD</code>.</td>
 <td><code>{}</code></td>
 </tr>
 </tbody>
@@ -387,7 +387,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Baixa resultados crus da busca de jurisprudencia do TJPA (varias paginas).</p>
-<p>Filtros de data (<code>data_julgamento_inicio</code>/<code>_fim</code>, <code>data_publicacao_inicio</code>/<code>_fim</code>) chegam via <code>**kwargs</code> e sao validados pelo schema <code>InputCJSGTJPA</code>. Aliases deprecados (<code>data_inicio</code>/<code>data_fim</code>, <code>query</code>/<code>termo</code>) sao popados antes da validacao.</p>
+<p>Filtros de data (<code>data_julgamento_inicio</code>/<code>_fim</code>, <code>data_publicacao_inicio</code>/<code>_fim</code>) chegam via <code>**kwargs</code> e sao validados pelo schema <code>InputCJSGTJPA</code>; as de julgamento vao ao portal um dia antes (#508). Aliases deprecados (<code>data_inicio</code>/<code>data_fim</code>, <code>query</code>/<code>termo</code>) sao popados antes da validacao.</p>
 <section id="returns-1" class="level4 doc-section doc-section-returns">
 <h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
 <table class="caption-top table">
