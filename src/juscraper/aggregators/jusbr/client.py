@@ -7,13 +7,13 @@ from collections.abc import Callable, Hashable, Iterator, Mapping
 from functools import partial
 from typing import Any, ClassVar
 
-import browser_cookie3
 import numpy as np
 import pandas as pd
 import requests
 from pydantic import ValidationError
 
 from ...core.auth import validar_jwt
+from ...core.avisos import avisar
 from ...core.failures import (
     COLUNA_MOTIVO_FALHA,
     EXCECOES_DE_FALHA_POR_LINHA,
@@ -301,21 +301,44 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
     def auth_firefox(self) -> bool:
         """Obtém o token pela sessão do SSO da PDPJ aberta no Firefox.
 
+        Depreciado: use ``auth_govbr()`` com o extra ``juscraper[govbr]``.
+        Este método será removido em uma versão futura. Até lá, exige o
+        extra ``juscraper[firefox]``, um perfil do Firefox e login ativo no
+        portal de serviços da PDPJ nesse navegador.
+
         Lê os cookies de ``sso.cloud.pje.jus.br`` do perfil do Firefox, pede um
         código de autorização ao SSO e o troca por um token, que passa por
         :meth:`auth`. As duas requisições usam o ``timeout`` do perfil
-        ``"listagem"``.
+        ``"listagem"``. O refresh token não é aproveitado: o token obtido
+        por este método não é renovado automaticamente.
 
         Returns:
             ``True`` quando o token foi aceito.
 
         Raises:
+            ImportError: Quando o extra ``firefox`` não está instalado.
             RuntimeError: Quando a resposta do SSO não traz o cabeçalho
                 ``Location``, o ``code`` no fragmento ou o ``access_token``;
-                em geral, sessão do Firefox ausente ou vencida.
+                ou quando os cookies do Firefox não podem ser lidos.
             ValueError: Quando o token devolvido é inválido ou está expirado.
             requests.RequestException: Falha de rede ao falar com o SSO.
+
+        Avisos:
+            ``DeprecationWarning``: Ao chamar este método; use ``auth_govbr()``.
         """
+        avisar(
+            "JusbrScraper.auth_firefox() está depreciado e será removido em uma versão futura. "
+            "Use auth_govbr() com o extra juscraper[govbr].",
+            DeprecationWarning,
+        )
+        try:
+            import browser_cookie3  # noqa: PLC0415 - dependência opcional do extra firefox
+        except ImportError as exc:
+            raise ImportError(
+                "auth_firefox() exige o extra firefox: instale com pip install 'juscraper[firefox]'. "
+                "Para migrar, instale 'juscraper[govbr]' e use auth_govbr()."
+            ) from exc
+
         u = (
             "https://sso.cloud.pje.jus.br/auth/realms/pje/protocol/"
             "openid-connect/auth?client_id=portalexterno-frontend"
@@ -325,19 +348,29 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
         )
         timeout = self._perfis_http["listagem"].timeout
 
-        cookies = browser_cookie3.firefox(domain_name="sso.cloud.pje.jus.br")
+        orientacao_login = (
+            "Faça login em https://portaldeservicos.pdpj.jus.br pelo Firefox e tente novamente, "
+            "ou use auth_govbr()."
+        )
+        try:
+            cookies = browser_cookie3.firefox(domain_name="sso.cloud.pje.jus.br")
+        except browser_cookie3.BrowserCookieError as exc:
+            raise RuntimeError(
+                "JusBR: não foi possível ler os cookies do Firefox. "
+                "Instale e abra o Firefox para criar um perfil. " + orientacao_login
+            ) from exc
         session = requests.Session()
         session.cookies.update(cookies)
 
         resp = session.get(u, allow_redirects=False, timeout=timeout)
         location_url = resp.headers.get("Location")
         if location_url is None:
-            raise RuntimeError("JusBR: cabeçalho 'Location' ausente na resposta de auth.")
+            raise RuntimeError("JusBR: cabeçalho 'Location' ausente na resposta de auth. " + orientacao_login)
         fragment = urllib.parse.urlparse(location_url).fragment
         params = urllib.parse.parse_qs(fragment)
         codes = params.get("code", [])
         if not codes:
-            raise RuntimeError("JusBR: parâmetro 'code' ausente no fragmento de auth.")
+            raise RuntimeError("JusBR: sessão do Firefox ausente ou vencida, 'code' não recebido. " + orientacao_login)
         code = codes[0]
         # URL do endpoint de token do SSO, não uma senha.
         token_url = "https://sso.cloud.pje.jus.br/auth/realms/pje/protocol/openid-connect/token"  # nosec  # noqa: S105
@@ -357,7 +390,8 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
         token = payload.get("access_token") if isinstance(payload, dict) else None
         if not isinstance(token, str) or not token:
             raise RuntimeError(
-                f"JusBR: 'access_token' ausente na resposta do SSO (HTTP {resp.status_code})."
+                f"JusBR: 'access_token' ausente na resposta do SSO (HTTP {resp.status_code}). "
+                "Tente novamente ou use auth_govbr()."
             )
         return self.auth(token)
 

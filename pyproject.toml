@@ -42,7 +42,6 @@ classifiers = [
 dependencies = [
     "asttokens>=3.0.0",
     "beautifulsoup4>=4.13.4",
-    "browser-cookie3>=0.20.1",
     "comm>=0.2.2",
     "nest-asyncio>=1.6.0",
     # pandas 2 ou 3, sem marcador por versão do Python. O piso 2.0.0 deixa o pip
@@ -67,6 +66,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+firefox = [
+    "browser-cookie3>=0.20.1",
+]
 dev = [
     "pytest>=8.3.5",
     "pytest-cov>=4.0.0",
