@@ -321,7 +321,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><code>pd</code>.<code>DataFrame</code></td>
-<td>pd.DataFrame: DataFrame com os acordaos.</td>
+<td>DataFrame com os acordaos.</td>
 </tr>
 </tbody>
 </table>
@@ -426,7 +426,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><code>pd</code>.<code>DataFrame</code></td>
-<td>pd.DataFrame: Uma linha por recurso, com <code>id_cnj</code>, <code>processo</code>, <code>processo_interno</code>, <code>segredo_justica</code>, <code>situacao</code>, <code>secretaria</code>, <code>classe</code>, <code>assunto</code>, <code>orgao_julgador</code>, <code>data_cadastramento</code>, <code>data_distribuicao</code> e <code>partes</code>. <code>partes</code> e uma lista de dicts <code>{"tipo", "nome", "baixa", "advogados"}</code>, com <code>advogados</code> = lista de <code>{"oab", "nome"}</code> (<code>oab</code> como publicada, ou <code>None</code> quando ausente). Numeros nao encontrados geram uma linha so com <code>id_cnj</code>. <code>partes</code> fica <code>None</code> em dois casos, separados pela coluna <code>segredo_justica</code>: recurso em segredo de justica (<code>segredo_justica=True</code>) ou falha ao baixar a pagina de partes (<code>segredo_justica=False</code>).</td>
+<td>Uma linha por recurso, com <code>id_cnj</code>, <code>processo</code>, <code>processo_interno</code>, <code>segredo_justica</code>, <code>situacao</code>, <code>secretaria</code>, <code>classe</code>, <code>assunto</code>, <code>orgao_julgador</code>, <code>data_cadastramento</code>, <code>data_distribuicao</code> e <code>partes</code>. <code>partes</code> e uma lista de dicts <code>{"tipo", "nome", "baixa", "advogados"}</code>, com <code>advogados</code> = lista de <code>{"oab", "nome"}</code> (<code>oab</code> como publicada, ou <code>None</code> quando ausente). Numeros nao encontrados geram uma linha so com <code>id_cnj</code>. <code>partes</code> fica <code>None</code> em dois casos, separados pela coluna <code>segredo_justica</code>: recurso em segredo de justica (<code>segredo_justica=True</code>) ou falha ao baixar a pagina de partes (<code>segredo_justica=False</code>).</td>
 </tr>
 </tbody>
 </table>

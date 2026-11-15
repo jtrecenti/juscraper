@@ -348,7 +348,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><code>pd</code>.<code>DataFrame</code></td>
-<td>pd.DataFrame: Uma linha por decisao. Colunas canonicas: <code>processo</code>, <code>classe</code>, <code>assunto</code>, <code>relator</code>, <code>orgao_julgador</code>, <code>data_julgamento</code>, <code>data_publicacao</code>, <code>ementa</code>, <code>acordao</code>, <code>meio_tramitacao</code>, <code>url_inteiro_teor</code>.</td>
+<td>Uma linha por decisao. Colunas canonicas: <code>processo</code>, <code>classe</code>, <code>assunto</code>, <code>relator</code>, <code>orgao_julgador</code>, <code>data_julgamento</code>, <code>data_publicacao</code>, <code>ementa</code>, <code>acordao</code>, <code>meio_tramitacao</code>, <code>url_inteiro_teor</code>.</td>
 </tr>
 </tbody>
 </table>
@@ -393,7 +393,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td>list</td>
+<td></td>
 <td><code>list</code></td>
 <td>Lista de strings HTML brutas, uma por pagina.</td>
 </tr>
@@ -464,7 +464,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><code>pd</code>.<code>DataFrame</code></td>
-<td>pd.DataFrame: Uma linha por CNJ. Colunas: <code>id_cnj</code>, <code>processo</code>, <code>classe</code>, <code>assunto</code>, <code>data_distribuicao</code>, <code>orgao_julgador</code>, <code>jurisdicao</code>, <code>endereco_orgao</code>, <code>polo_ativo</code>, <code>polo_passivo</code>, <code>movimentacoes</code>, <code>documentos</code> e <code>motivo_falha</code>; com <code>download_pecas=True</code>, também <code>pecas</code> e <code>pecas_falhas</code>. <code>motivo_falha</code> e <code>pecas_falhas</code> seguem a regra de <code>juscraper.courts._trf.base.TRFConsultaScraper.cpopg</code>. Quando o WAF desafia de novo logo após a renovação do cookie, ou o cookie não pôde ser obtido (Chromium do Playwright ausente, cookie não emitido no prazo), o lote para ali: as linhas anteriores são preservadas, e a bloqueada e as seguintes saem com <code>motivo_falha</code> igual a <code>bloqueio_anti_bot</code>, com um <code>BloqueioAntiBotWarning</code> (subclasse de <code>UserWarning</code>). Com <code>download_pecas=True</code>, as peças de cada processo vêm logo depois do seu detalhe, e os processos anteriores ao bloqueio ficam com as peças.</td>
+<td>Uma linha por CNJ. Colunas: <code>id_cnj</code>, <code>processo</code>, <code>classe</code>, <code>assunto</code>, <code>data_distribuicao</code>, <code>orgao_julgador</code>, <code>jurisdicao</code>, <code>endereco_orgao</code>, <code>polo_ativo</code>, <code>polo_passivo</code>, <code>movimentacoes</code>, <code>documentos</code> e <code>motivo_falha</code>; com <code>download_pecas=True</code>, também <code>pecas</code> e <code>pecas_falhas</code>. <code>motivo_falha</code> e <code>pecas_falhas</code> seguem a regra de <code>juscraper.courts._trf.base.TRFConsultaScraper.cpopg</code>. Quando o WAF desafia de novo logo após a renovação do cookie, ou o cookie não pôde ser obtido (Chromium do Playwright ausente, cookie não emitido no prazo), o lote para ali: as linhas anteriores são preservadas, e a bloqueada e as seguintes saem com <code>motivo_falha</code> igual a <code>bloqueio_anti_bot</code>, com um <code>BloqueioAntiBotWarning</code> (subclasse de <code>UserWarning</code>). Com <code>download_pecas=True</code>, as peças de cada processo vêm logo depois do seu detalhe, e os processos anteriores ao bloqueio ficam com as peças.</td>
 </tr>
 </tbody>
 </table>

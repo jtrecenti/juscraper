@@ -252,7 +252,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><code>pd</code>.<code>DataFrame</code></td>
-<td>pd.DataFrame: Uma linha por tribunal consultado, com colunas <code>tribunal</code> (sigla), <code>alias</code> (índice ES), <code>count</code> (inteiro anulável <code>Int64</code>) e <code>relation</code> (<code>"eq"</code> exato ou <code>"gte"</code> truncado pelo cap interno do Elasticsearch). Quando a chamada falha para um tribunal, <code>count</code> é <code>&lt;NA&gt;</code> e a coluna <code>error</code> traz o motivo no vocabulário de <code>juscraper.core.failures.motivo_falha</code> (<code>"http_500"</code>, <code>"retry_esgotado_429"</code>, <code>"timeout"</code>, <code>"conexao"</code>, <code>"json_invalido"</code>), ou <code>"&lt;Classe&gt;: &lt;mensagem&gt;"</code> fora dele. A resposta 200 sem a contagem em <code>hits.total</code> (uma lista, por exemplo) sai <code>"json_invalido"</code>. A resposta 200 parcial do Elasticsearch (<code>_shards.failed &gt; 0</code> ou <code>timed_out: true</code>), cuja contagem pode sair menor, sai <code>"RuntimeError: Resposta parcial do Elasticsearch: ..."</code>, com os motivos dos shards.</td>
+<td>Uma linha por tribunal consultado, com colunas <code>tribunal</code> (sigla), <code>alias</code> (índice ES), <code>count</code> (inteiro anulável <code>Int64</code>) e <code>relation</code> (<code>"eq"</code> exato ou <code>"gte"</code> truncado pelo cap interno do Elasticsearch). Quando a chamada falha para um tribunal, <code>count</code> é <code>&lt;NA&gt;</code> e a coluna <code>error</code> traz o motivo no vocabulário de <code>juscraper.core.failures.motivo_falha</code> (<code>"http_500"</code>, <code>"retry_esgotado_429"</code>, <code>"timeout"</code>, <code>"conexao"</code>, <code>"json_invalido"</code>), ou <code>"&lt;Classe&gt;: &lt;mensagem&gt;"</code> fora dele. A resposta 200 sem a contagem em <code>hits.total</code> (uma lista, por exemplo) sai <code>"json_invalido"</code>. A resposta 200 parcial do Elasticsearch (<code>_shards.failed &gt; 0</code> ou <code>timed_out: true</code>), cuja contagem pode sair menor, sai <code>"RuntimeError: Resposta parcial do Elasticsearch: ..."</code>, com os motivos dos shards.</td>
 </tr>
 </tbody>
 </table>
@@ -398,7 +398,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><code>pd</code>.<code>DataFrame</code></td>
-<td>pd.DataFrame: Um DataFrame com uma linha por processo. <code>extra</code> do parser e passthrough do <code>_source</code> Elasticsearch — colunas seguem nomenclatura camelCase do CNJ.</td>
+<td>Um DataFrame com uma linha por processo. <code>extra</code> do parser e passthrough do <code>_source</code> Elasticsearch — colunas seguem nomenclatura camelCase do CNJ.</td>
 </tr>
 </tbody>
 </table>

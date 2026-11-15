@@ -457,7 +457,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td><code>cpopg</code></td>
-<td>No</td>
+<td>Yes</td>
 </tr>
 <tr class="odd">
 <td><code>cposg</code></td>
@@ -465,9 +465,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
+<p>On 15 November 2026 the TJPE jurisprudence search answered “Nenhum documento encontrado” (no documents found) to any term, including a search made in a browser: <code>cjsg</code> returns empty and emits a <code>UserWarning</code>. The cells below keep the usual workflow and handle the empty result.</p>
 <section id="basic-search" class="level2">
 <h2 class="anchored" data-anchor-id="basic-search">Basic search</h2>
-<div id="a3cc0795" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-04-04T19:32:10.433745Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-04-04T19:32:10.433745Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-04T19:32:22.555645Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-04T19:32:22.555645Z&quot;}" data-execution_count="1">
+<div id="a3cc0795" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-15T15:57:49.831530Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-15T15:57:49.831359Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-15T15:58:03.417885Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-15T15:58:03.416620Z&quot;}" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>tjpe <span class="op">=</span> jus.scraper(<span class="st">'tjpe'</span>)</span>
@@ -475,14 +476,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjpe.cjsg(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df.shape)</span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>df.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Downloading TJPE Acórdãos:   0%|          | 0/1 [00:00&lt;?, ?it/s]Downloading TJPE Acórdãos: 100%|██████████| 1/1 [00:00&lt;?, ?it/s]</code></pre>
-</div>
 <div class="cell-output cell-output-stdout">
-<pre><code>(5, 11)</code></pre>
+<pre><code>(0, 0)</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
-<pre><code></code></pre>
+<pre><code>/tmp/ipykernel_11591/2598546280.py:5: UserWarning: TJPE cjsg: o portal respondeu 'Nenhum documento encontrado' para a busca 'dano moral', e o resultado sai vazio. Se a busca deveria trazer resultados, confira no portal (https://www.tjpe.jus.br/consultajurisprudenciaweb/xhtml/consulta/consulta.xhtml): com a pesquisa fora do ar, ele responde assim a qualquer termo.
+  df = tjpe.cjsg('dano moral', paginas=1)</code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="1">
 <div>
@@ -492,62 +491,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <thead>
 <tr class="header">
 <th data-quarto-table-cell-role="th"></th>
-<th data-quarto-table-cell-role="th">processo</th>
-<th data-quarto-table-cell-role="th">classe_cnj</th>
-<th data-quarto-table-cell-role="th">assunto_cnj</th>
-<th data-quarto-table-cell-role="th">relator</th>
-<th data-quarto-table-cell-role="th">orgao_julgador</th>
-<th data-quarto-table-cell-role="th">data_julgamento</th>
-<th data-quarto-table-cell-role="th">data_publicacao</th>
-<th data-quarto-table-cell-role="th">ementa</th>
-<th data-quarto-table-cell-role="th">acordao</th>
-<th data-quarto-table-cell-role="th">meio_tramitacao</th>
-<th data-quarto-table-cell-role="th">url_inteiro_teor</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">0</td>
-<td>Apelação Cível 417348-4 0007413-46.2014.8.17.0480</td>
-<td>Apelação Cível</td>
-<td>Seguro</td>
-<td>LUCIANO DE CASTRO CAMPOS</td>
-<td>1ª Câmara Regional de Caruaru - 1ª Turma</td>
-<td>2023-10-31</td>
-<td>2023-11-22</td>
-<td>DIREITO CIVIL. AÇÃO DE COBRANÇA DE SEGURO C/C ...</td>
-<td>1ª Câmara Regional de Caruaru - 1ª Turma Apela...</td>
-<td>FISICO</td>
-<td>https://www.tjpe.jus.br/consultajurisprudencia...</td>
-</tr>
-<tr class="even">
-<td data-quarto-table-cell-role="th">1</td>
-<td>Apelação Cível 541063-3 0009194-74.2012.8.17.0480</td>
-<td>Apelação Cível</td>
-<td>Indenização por Dano Material</td>
-<td>LUCIANO DE CASTRO CAMPOS</td>
-<td>1ª Câmara Regional de Caruaru - 1ª Turma</td>
-<td>2023-11-14</td>
-<td>2023-11-22</td>
-<td>DIREITO DO CONSUMIDOR. APELAÇÃO CÍVEL. AÇÃO DE...</td>
-<td>1ª Câmara Regional de Caruaru - 1ª Turma Apela...</td>
-<td>FISICO</td>
-<td>https://www.tjpe.jus.br/consultajurisprudencia...</td>
-</tr>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">2</td>
-<td>Apelação Cível 549004-6 0000859-52.2012.8.17.1390</td>
-<td>Apelação Cível</td>
-<td>Acidente de Trânsito</td>
-<td>LUCIANO DE CASTRO CAMPOS</td>
-<td>1ª Câmara Regional de Caruaru - 1ª Turma</td>
-<td>2023-10-31</td>
-<td>2023-11-22</td>
-<td>APELAÇÃO CÍVEL. ACIDENTE DE TRÂNSITO. AÇÃO DE ...</td>
-<td>Gabinete do Des. Luciano de Castro Campos PRIM...</td>
-<td>FISICO</td>
-<td>https://www.tjpe.jus.br/consultajurisprudencia...</td>
-</tr>
 </tbody>
 </table>
 
@@ -557,52 +503,43 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="available-columns" class="level2">
 <h2 class="anchored" data-anchor-id="available-columns">Available columns</h2>
-<div id="18bed310" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-04-04T19:32:22.557347Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-04-04T19:32:22.557347Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-04T19:32:22.560513Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-04T19:32:22.560513Z&quot;}" data-execution_count="2">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>df.columns.tolist()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="18bed310" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-15T15:58:03.420187Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-15T15:58:03.419935Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-15T15:58:03.424536Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-15T15:58:03.423412Z&quot;}" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>df.columns.tolist()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="2">
-<pre><code>['processo',
- 'classe_cnj',
- 'assunto_cnj',
- 'relator',
- 'orgao_julgador',
- 'data_julgamento',
- 'data_publicacao',
- 'ementa',
- 'acordao',
- 'meio_tramitacao',
- 'url_inteiro_teor']</code></pre>
+<pre><code>[]</code></pre>
 </div>
 </div>
 </section>
 <section id="preview-ementa" class="level2">
 <h2 class="anchored" data-anchor-id="preview-ementa">Preview ementa</h2>
-<div id="dc0ebd20" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-04-04T19:32:22.561526Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-04-04T19:32:22.561526Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-04T19:32:22.564437Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-04T19:32:22.564437Z&quot;}" data-execution_count="3">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df[<span class="st">'ementa'</span>].iloc[<span class="dv">0</span>][:<span class="dv">300</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="dc0ebd20" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-15T15:58:03.427016Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-15T15:58:03.426733Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-15T15:58:03.431108Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-15T15:58:03.429992Z&quot;}" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> df.empty:</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"No results: the portal answered 'Nenhum documento encontrado'."</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>:</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(df[<span class="st">'ementa'</span>].iloc[<span class="dv">0</span>][:<span class="dv">300</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>DIREITO CIVIL. AÇÃO DE COBRANÇA DE SEGURO C/C INDENIZAÇÃO POR DANO MORAL. INSTITUIÇÃO DE INDENIZAÇÃO SECURITÁRIA EM FAVOR DE CONCUBINA COMO BENEFICIÁRIA. FALHA NO DEVER DE CUIDADO DA SEGURADORA. INDENIZAÇÃO NOS TERMOS DO ART. 792 DO CÓDIGO CIVIL. DANO MORAL NÃO CONFIGURADO. AUSÊNCIA AFRONTA AO DIREI</code></pre>
+<pre><code>No results: the portal answered 'Nenhum documento encontrado'.</code></pre>
 </div>
 </div>
 </section>
 <section id="using-date-filters" class="level2">
 <h2 class="anchored" data-anchor-id="using-date-filters">Using date filters</h2>
-<div id="2689f35b" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-04-04T19:32:22.565442Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-04-04T19:32:22.565442Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-04T19:32:39.990798Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-04T19:32:39.990798Z&quot;}" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Date filters use DD/MM/YYYY format</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>df_filtered <span class="op">=</span> tjpe.cjsg(</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'direito'</span>,</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">'01/01/2024'</span>,</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">'30/06/2024'</span>,</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">1</span>,</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_filtered.shape)</span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>df_filtered[[<span class="st">'processo'</span>, <span class="st">'relator'</span>, <span class="st">'data_julgamento'</span>]].head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Downloading TJPE Acórdãos:   0%|          | 0/1 [00:00&lt;?, ?it/s]Downloading TJPE Acórdãos: 100%|██████████| 1/1 [00:00&lt;?, ?it/s]</code></pre>
-</div>
+<div id="2689f35b" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-15T15:58:03.433481Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-15T15:58:03.433232Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-15T15:58:16.292772Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-15T15:58:16.292247Z&quot;}" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Date filters use DD/MM/YYYY format</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>df_filtered <span class="op">=</span> tjpe.cjsg(</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'direito'</span>,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">'01/01/2024'</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">'30/06/2024'</span>,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_filtered.shape)</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>df_filtered.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>(5, 11)</code></pre>
+<pre><code>(0, 0)</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
-<pre><code></code></pre>
+<pre><code>/tmp/ipykernel_11591/3852840174.py:2: UserWarning: TJPE cjsg: o portal respondeu 'Nenhum documento encontrado' para a busca 'direito', e o resultado sai vazio. Se a busca deveria trazer resultados, confira no portal (https://www.tjpe.jus.br/consultajurisprudenciaweb/xhtml/consulta/consulta.xhtml): com a pesquisa fora do ar, ele responde assim a qualquer termo.
+  df_filtered = tjpe.cjsg(</code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="4">
 <div>
@@ -612,30 +549,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <thead>
 <tr class="header">
 <th data-quarto-table-cell-role="th"></th>
-<th data-quarto-table-cell-role="th">processo</th>
-<th data-quarto-table-cell-role="th">relator</th>
-<th data-quarto-table-cell-role="th">data_julgamento</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">0</td>
-<td>Recurso Inominado Cível 0001936-84.2019.8.17.8234</td>
-<td>ABELARDO TADEU DA SILVA SANTOS</td>
-<td>2024-06-30</td>
-</tr>
-<tr class="even">
-<td data-quarto-table-cell-role="th">1</td>
-<td>Recurso Inominado Cível 0002479-24.2018.8.17.8234</td>
-<td>ABELARDO TADEU DA SILVA SANTOS</td>
-<td>2024-06-30</td>
-</tr>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">2</td>
-<td>Recurso Inominado Cível 0000421-48.2018.8.17.8234</td>
-<td>ABELARDO TADEU DA SILVA SANTOS</td>
-<td>2024-06-30</td>
-</tr>
 </tbody>
 </table>
 
@@ -645,26 +561,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="download-and-parse-separately" class="level2">
 <h2 class="anchored" data-anchor-id="download-and-parse-separately">Download and parse separately</h2>
-<div id="af13a05d" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-04-04T19:32:39.991808Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-04-04T19:32:39.991808Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-04T19:32:51.204762Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-04T19:32:51.204762Z&quot;}" data-execution_count="5">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Download raw HTML pages</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>raw <span class="op">=</span> tjpe.cjsg_download(<span class="st">'direito'</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Downloaded </span><span class="sc">{</span><span class="bu">len</span>(raw)<span class="sc">}</span><span class="ss"> page(s)"</span>)</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Raw HTML size: </span><span class="sc">{</span><span class="bu">len</span>(raw[<span class="dv">0</span>])<span class="sc">}</span><span class="ss"> bytes"</span>)</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Parse into DataFrame</span></span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>df_parsed <span class="op">=</span> tjpe.cjsg_parse(raw)</span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Parsed </span><span class="sc">{</span><span class="bu">len</span>(df_parsed)<span class="sc">}</span><span class="ss"> results"</span>)</span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>df_parsed.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Downloading TJPE Acórdãos:   0%|          | 0/1 [00:00&lt;?, ?it/s]Downloading TJPE Acórdãos: 100%|██████████| 1/1 [00:00&lt;?, ?it/s]</code></pre>
-</div>
+<div id="af13a05d" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-15T15:58:16.294155Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-15T15:58:16.293982Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-15T15:58:29.001985Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-15T15:58:29.001399Z&quot;}" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Download raw HTML pages</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>raw <span class="op">=</span> tjpe.cjsg_download(<span class="st">'direito'</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Downloaded </span><span class="sc">{</span><span class="bu">len</span>(raw)<span class="sc">}</span><span class="ss"> page(s)"</span>)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> raw:</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Raw HTML size: </span><span class="sc">{</span><span class="bu">len</span>(raw[<span class="dv">0</span>])<span class="sc">}</span><span class="ss"> bytes"</span>)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Parse into DataFrame</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>df_parsed <span class="op">=</span> tjpe.cjsg_parse(raw)</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Parsed </span><span class="sc">{</span><span class="bu">len</span>(df_parsed)<span class="sc">}</span><span class="ss"> results"</span>)</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>df_parsed.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Downloaded 1 page(s)
-Raw HTML size: 117705 bytes
-Parsed 5 results</code></pre>
+<pre><code>Downloaded 0 page(s)
+Parsed 0 results</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
-<pre><code></code></pre>
+<pre><code>/tmp/ipykernel_11591/4014895321.py:2: UserWarning: TJPE cjsg: o portal respondeu 'Nenhum documento encontrado' para a busca 'direito', e o resultado sai vazio. Se a busca deveria trazer resultados, confira no portal (https://www.tjpe.jus.br/consultajurisprudenciaweb/xhtml/consulta/consulta.xhtml): com a pesquisa fora do ar, ele responde assim a qualquer termo.
+  raw = tjpe.cjsg_download('direito', paginas=1)</code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="5">
 <div>
@@ -674,62 +588,9 @@ Parsed 5 results</code></pre>
 <thead>
 <tr class="header">
 <th data-quarto-table-cell-role="th"></th>
-<th data-quarto-table-cell-role="th">processo</th>
-<th data-quarto-table-cell-role="th">classe_cnj</th>
-<th data-quarto-table-cell-role="th">assunto_cnj</th>
-<th data-quarto-table-cell-role="th">relator</th>
-<th data-quarto-table-cell-role="th">orgao_julgador</th>
-<th data-quarto-table-cell-role="th">data_julgamento</th>
-<th data-quarto-table-cell-role="th">data_publicacao</th>
-<th data-quarto-table-cell-role="th">ementa</th>
-<th data-quarto-table-cell-role="th">acordao</th>
-<th data-quarto-table-cell-role="th">meio_tramitacao</th>
-<th data-quarto-table-cell-role="th">url_inteiro_teor</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">0</td>
-<td>Apelação Cível 572014-3 0062519-19.2007.8.17.0001</td>
-<td>Apelação Cível</td>
-<td>Inventário e Partilha</td>
-<td>Francisco Eduardo Goncalves Sertorio Canto</td>
-<td>3ª Câmara Cível</td>
-<td>2024-02-29</td>
-<td>2024-03-22</td>
-<td>PROCESSUAL CIVIL. INVENTÁRIO. PRÉVIO ACORDO DE...</td>
-<td>ÓRGÃO JULGADOR: TERCEIRA CÂMARA CÍVEL TIPO: AP...</td>
-<td>FISICO</td>
-<td>https://www.tjpe.jus.br/consultajurisprudencia...</td>
-</tr>
-<tr class="even">
-<td data-quarto-table-cell-role="th">1</td>
-<td>Apelação Cível 574533-1 0002563-02.2015.8.17.1130</td>
-<td>Apelação Cível</td>
-<td>Indenização por Dano Material</td>
-<td>Paulo Romero de Sá Araújo</td>
-<td>2ª Câmara de Direito Público</td>
-<td>2024-02-29</td>
-<td>2024-03-14</td>
-<td>DIREITO CIVIL E PROCESSUAL CIVIL. APELAÇÃO CÍV...</td>
-<td>Apelação Cível n° 0574533-1 Apelante: Silvio R...</td>
-<td>FISICO</td>
-<td>https://www.tjpe.jus.br/consultajurisprudencia...</td>
-</tr>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">2</td>
-<td>Apelação Criminal 559338-0 0001516-20.2018.8.1...</td>
-<td>Apelação Criminal</td>
-<td>Tráfico de Drogas e Condutas Afins</td>
-<td>Cláudio Jean Nogueira Virgínio</td>
-<td>3ª Câmara Criminal</td>
-<td>2023-11-29</td>
-<td>2024-03-01</td>
-<td>PENAL. PROCESSUAL PENAL. TRÁFICO DE ENTORPECEN...</td>
-<td>APELAÇÃO Nº: 0001516-20.2018.8.17.0990 (055933...</td>
-<td>FISICO</td>
-<td>https://www.tjpe.jus.br/consultajurisprudencia...</td>
-</tr>
 </tbody>
 </table>
 

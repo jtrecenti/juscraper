@@ -672,6 +672,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <blockquote class="blockquote">
 <p>⚠️ <strong>TJGO — <code>cjsg</code> returns no results:</strong> since 12 November 2026 (Projudi 3.194.1) the TJGO jurisprudence search validates a <a href="https://www.cloudflare.com/products/turnstile/">Cloudflare Turnstile</a> token server-side, which the scraper does not send. Without it the portal returns an empty search, with no error message, and <code>cjsg</code>/<code>cjsg_download</code> emit a <code>UserWarning</code> explaining the block. The portal answers a search that genuinely has no results the same way, so the warning is emitted on every empty search.</p>
 </blockquote>
+<blockquote class="blockquote">
+<p>⚠️ <strong>TJPE — <code>cjsg</code> returns no results:</strong> on 15 November 2026, the TJPE <a href="https://www.tjpe.jus.br/consultajurisprudenciaweb/xhtml/consulta/consulta.xhtml">Consulta Jurisprudência Web</a> search answered “Nenhum documento encontrado” (no documents found) to any term, including a search made in a browser. The failure is on the portal, not in the scraper: <code>cjsg</code>/<code>cjsg_download</code> return empty and emit a <code>UserWarning</code>. The case lookup (<code>cpopg</code>) is not affected.</p>
+</blockquote>
 <p>Falcao covers national labor jurisprudence (TST and TRTs).</p>
 <section id="jusbr-and-pdpj-authentication" class="level4">
 <h4 class="anchored" data-anchor-id="jusbr-and-pdpj-authentication">JusBR and PDPJ authentication</h4>
