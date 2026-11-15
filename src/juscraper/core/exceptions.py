@@ -58,6 +58,10 @@ class BotChallengeBlockedError(Exception):
     ``bot_manager`` nomeia o bloqueador na mensagem. O default é ``"Akamai"``
     (TRFs); o agregador Falcao passa ``"CloudFront"``, cujo 403 é uma página
     HTML ``The request could not be satisfied`` servida pelo próprio CDN.
+
+    ``mensagem`` substitui o texto padrão, que descreve o 403: as subclasses
+    cujo sintoma é outro (desafio JavaScript com HTTP 200, cookie que não
+    resolve o desafio) passam a própria mensagem.
     """
 
     def __init__(
@@ -67,20 +71,22 @@ class BotChallengeBlockedError(Exception):
         reference: str | None = None,
         *,
         bot_manager: str = "Akamai",
+        mensagem: str | None = None,
     ):
         self.tribunal = tribunal
         self.url = url
         self.reference = reference
         self.bot_manager = bot_manager
-        msg = (
-            f"{tribunal} bloqueou a requisição (HTTP 403) em {url}. "
-            f"Provavelmente foi o bot manager ({bot_manager}) limitando "
-            f"o seu IP — aguarde alguns minutos antes de tentar de novo "
-            f"ou troque de IP (VPN, hotspot)."
-        )
-        if reference:
-            msg += f" Reference: {reference}."
-        super().__init__(msg)
+        if mensagem is None:
+            mensagem = (
+                f"{tribunal} bloqueou a requisição (HTTP 403) em {url}. "
+                f"Provavelmente foi o bot manager ({bot_manager}) limitando "
+                f"o seu IP — aguarde alguns minutos antes de tentar de novo "
+                f"ou troque de IP (VPN, hotspot)."
+            )
+            if reference:
+                mensagem += f" Reference: {reference}."
+        super().__init__(mensagem)
 
 
 class BloqueioAntiBotWarning(UserWarning):
@@ -111,8 +117,6 @@ class WafChallengeError(BotChallengeBlockedError):
     """
 
     def __init__(self, tribunal: str, url: str, motivo: str | None = None):
-        super().__init__(tribunal, url)
-        # A mensagem da classe-mãe descreve o 403 do Akamai; aqui o sintoma é outro.
         if motivo is None:
             mensagem = (
                 f"O WAF do {tribunal} desafiou de novo logo apos a renovacao do cookie "
@@ -120,7 +124,7 @@ class WafChallengeError(BotChallengeBlockedError):
             )
         else:
             mensagem = f"O WAF do {tribunal} desafiou em {url}, e o cookie aws-waf-token nao foi obtido: {motivo}"
-        self.args = (mensagem,)
+        super().__init__(tribunal, url, mensagem=mensagem)
 
 
 class ColetaParcialError(RuntimeError):

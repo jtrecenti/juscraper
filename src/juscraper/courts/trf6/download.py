@@ -74,13 +74,16 @@ class DesafioF5Error(BotChallengeBlockedError):
     """
 
     def __init__(self, url: str) -> None:
-        """Guarda ``url`` e troca a mensagem da classe-mãe pela do desafio do F5."""
-        super().__init__("TRF6", url, bot_manager="F5")
-        # A mensagem da classe-mãe descreve o 403 do Akamai; aqui o sintoma é outro.
-        self.args = (
-            f"O bot manager (F5) do TRF6 serviu um desafio JavaScript em {url} no lugar da "
-            "consulta pública. O desafio sai para user agents de navegador: confira se a sessão "
-            "não recebeu um User-Agent desses, ou aguarde alguns minutos antes de tentar de novo.",
+        """Guarda ``url``, com a mensagem do desafio do F5 no lugar da do 403."""
+        super().__init__(
+            "TRF6",
+            url,
+            bot_manager="F5",
+            mensagem=(
+                f"O bot manager (F5) do TRF6 serviu um desafio JavaScript em {url} no lugar da "
+                "consulta pública. O desafio sai para user agents de navegador: confira se a sessão "
+                "não recebeu um User-Agent desses, ou aguarde alguns minutos antes de tentar de novo."
+            ),
         )
 
 

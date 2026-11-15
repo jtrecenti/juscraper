@@ -19,7 +19,13 @@ CloudFront, AWS WAF, F5) que derrubou a requisição da linha.
 """
 from __future__ import annotations
 
+import logging
+import time
+from collections.abc import Callable
+from typing import Any, Protocol, TypeVar
+
 import requests
+from tqdm import tqdm
 
 from juscraper.core.avisos import avisar
 from juscraper.core.exceptions import (
@@ -247,3 +253,107 @@ def anotar_falhas_anteriores(erro: BaseException, falhas: list[str], descricao: 
     """
     if falhas:
         erro.add_note(f"Antes do 401, {resumir_falhas(falhas, descricao)}")
+
+
+def consultar_processo(
+    buscar: Callable[[str], str | None],
+    cnj: str,
+    *,
+    tribunal: str,
+    logger: logging.Logger,
+) -> tuple[str | None, str | None]:
+    """``(html, motivo)`` da busca de um CNJ, com a falha no motivo em vez de exceção.
+
+    O bloqueio anti-bot sai :data:`MOTIVO_BLOQUEIO_ANTI_BOT`, que encerra o
+    lote em :func:`consultar_ate_bloqueio`; outro erro sai pelo
+    :func:`motivo_falha_ou_inesperada`. ``ImportError`` (extra ausente)
+    propaga. ``html`` ``None`` sem motivo é processo que a fonte não devolveu.
+    """
+    try:
+        return buscar(cnj), None
+    except BotChallengeBlockedError as exc:
+        logger.warning("%s: bloqueio anti-bot em %s; o lote para aqui: %s", tribunal, cnj, exc)
+        return None, MOTIVO_BLOQUEIO_ANTI_BOT
+    except ImportError:
+        raise
+    except Exception as exc:  # noqa: BLE001 — resiliência por item
+        logger.warning("Erro ao consultar %s: %s", cnj, exc)
+        return None, motivo_falha_ou_inesperada(exc)
+
+
+class _ComMotivo(Protocol):
+    @property
+    def motivo(self) -> str | None: ...
+
+
+_Consulta = TypeVar("_Consulta", bound=_ComMotivo)
+
+
+def consultar_ate_bloqueio(
+    cnjs: list[str],
+    consultar: Callable[[str], _Consulta],
+    bloqueada: Callable[[], _Consulta],
+    *,
+    sleep_time: float,
+    desc: str,
+) -> list[_Consulta]:
+    """A consulta de cada CNJ, na ordem da entrada, até um bloqueio anti-bot.
+
+    O bloqueio vale para a sessão inteira: a consulta que sai com
+    :data:`MOTIVO_BLOQUEIO_ANTI_BOT` encerra o lote, e cada CNJ seguinte
+    recebe ``bloqueada()`` sem novo pedido. Entre duas consultas, pausa
+    ``sleep_time`` segundos.
+
+    Args:
+        cnjs: CNJs a consultar.
+        consultar: Consulta de um CNJ. Não levanta para falha do item, que
+            vem no ``motivo`` do resultado: uma exceção, inclusive de
+            bloqueio, propaga e descarta o lote.
+        bloqueada: Resultado dos CNJs que o bloqueio deixou sem consulta.
+        sleep_time: Pausa entre consultas, em segundos.
+        desc: Rótulo da barra de progresso.
+    """
+    consultas: list[_Consulta] = []
+    for i, cnj in enumerate(tqdm(cnjs, desc=desc)):
+        consulta = consultar(cnj)
+        consultas.append(consulta)
+        if consulta.motivo == MOTIVO_BLOQUEIO_ANTI_BOT:
+            consultas.extend(bloqueada() for _ in range(len(cnjs) - i - 1))
+            break
+        if i + 1 < len(cnjs) and sleep_time:
+            time.sleep(sleep_time)
+    return consultas
+
+
+def linhas_de_processos(
+    cnjs: list[str],
+    htmls: list[str | None],
+    motivos: list[str | None],
+    *,
+    parse: Callable[[str], dict[str, Any]],
+    logger: logging.Logger,
+) -> list[dict[str, Any]]:
+    """Uma linha por CNJ, com ``id_cnj`` e :data:`COLUNA_MOTIVO_FALHA`.
+
+    O HTML ``None`` vira linha só com ``id_cnj`` e o motivo do download. O
+    HTML que ``parse`` recusa também, com :data:`MOTIVO_RESPOSTA_INESPERADA`
+    quando o download não trouxe motivo, e o lote segue.
+    """
+    rows: list[dict[str, Any]] = []
+    for cnj, html, motivo_download in zip(cnjs, htmls, motivos, strict=True):
+        record: dict[str, Any] = {}
+        motivo = motivo_download
+        if html is not None:
+            try:
+                record = parse(html)
+            except Exception as exc:  # noqa: BLE001 — resiliência por item
+                logger.warning("Erro ao parsear detalhe de %s: %s", cnj, exc)
+                motivo = motivo or MOTIVO_RESPOSTA_INESPERADA
+        rows.append({**record, "id_cnj": cnj, COLUNA_MOTIVO_FALHA: motivo})
+    return rows
+
+
+def avisar_falhas_de_processos(cnjs: list[str], motivos: list[str | None], metodo: str) -> None:
+    """:func:`avisar_falhas` dos CNJs com motivo, como ``processo <cnj>: <motivo>``."""
+    falhas = [f"processo {c}: {m}" for c, m in zip(cnjs, motivos, strict=True) if m]
+    avisar_falhas(falhas, metodo, "consulta(s) de processo")

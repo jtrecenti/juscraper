@@ -19,14 +19,16 @@ from typing import Any, NamedTuple
 
 import pandas as pd
 from pydantic import BaseModel, ValidationError
-from tqdm import tqdm
 
 from ...core.exceptions import BotChallengeBlockedError
 from ...core.failures import (
     COLUNA_MOTIVO_FALHA,
     MOTIVO_BLOQUEIO_ANTI_BOT,
-    MOTIVO_RESPOSTA_INESPERADA,
     avisar_falhas,
+    avisar_falhas_de_processos,
+    consultar_ate_bloqueio,
+    consultar_processo,
+    linhas_de_processos,
     motivo_falha_ou_inesperada,
 )
 from ...core.http import HTTPScraper
@@ -198,57 +200,24 @@ class TRFConsultaScraper(HTTPScraper):
         demais seguem. ``ImportError`` (extra ``juscraper[waf]`` ausente)
         propaga.
         """
-        consultas: list[_Consulta] = []
-        for i, cnj in enumerate(tqdm(cnjs, desc=f"{self.TRIBUNAL_NAME} cpopg")):
-            consulta = self._consultar(cnj, pecas_dir)
-            consultas.append(consulta)
-            if consulta.motivo == MOTIVO_BLOQUEIO_ANTI_BOT:
-                consultas.extend(_Consulta(None, MOTIVO_BLOQUEIO_ANTI_BOT, [], []) for _ in range(len(cnjs) - i - 1))
-                break
-            if i + 1 < len(cnjs) and self.sleep_time:
-                time.sleep(self.sleep_time)
-        return consultas
+        return consultar_ate_bloqueio(
+            cnjs,
+            lambda cnj: self._consultar(cnj, pecas_dir),
+            lambda: _Consulta(None, MOTIVO_BLOQUEIO_ANTI_BOT, [], []),
+            sleep_time=self.sleep_time,
+            desc=f"{self.TRIBUNAL_NAME} cpopg",
+        )
 
     def _consultar(self, cnj: str, pecas_dir: str | None) -> _Consulta:
         """A consulta de um CNJ (peças só com ``pecas_dir``)."""
-        try:
-            html = self._fetch_one(cnj)
-        except BotChallengeBlockedError as exc:
-            logger.warning("%s: bloqueio anti-bot em %s; o lote para aqui: %s", self.TRIBUNAL_NAME, cnj, exc)
-            return _Consulta(None, MOTIVO_BLOQUEIO_ANTI_BOT, [], [])
-        except ImportError:
-            raise
-        except Exception as exc:  # noqa: BLE001 — resiliência por item
-            logger.warning("Erro ao consultar %s: %s", cnj, exc)
-            return _Consulta(None, motivo_falha_ou_inesperada(exc), [], [])
+        html, motivo = consultar_processo(self._fetch_one, cnj, tribunal=self.TRIBUNAL_NAME, logger=logger)
         if html is None or pecas_dir is None:
-            return _Consulta(html, None, [], [])
+            return _Consulta(html, motivo, [], [])
         return self._pecas_do_processo(cnj, html, pecas_dir)
-
-    def _linhas(
-        self,
-        htmls: list[str | None],
-        cnjs: list[str],
-        motivos: list[str | None],
-    ) -> list[dict[str, Any]]:
-        """Uma linha por CNJ, com ``motivo_falha``; HTML que o parser recusa sai ``resposta_inesperada``."""
-        rows: list[dict[str, Any]] = []
-        for cnj, html, motivo_download in zip(cnjs, htmls, motivos, strict=True):
-            record: dict[str, Any] = {}
-            motivo = motivo_download
-            if html is not None:
-                try:
-                    record = parse_detail(html)
-                except Exception as exc:  # noqa: BLE001 — resiliência por item
-                    logger.warning("Erro ao parsear detalhe de %s: %s", cnj, exc)
-                    motivo = motivo or MOTIVO_RESPOSTA_INESPERADA
-            rows.append({**record, "id_cnj": cnj, COLUNA_MOTIVO_FALHA: motivo})
-        return rows
 
     def _avisar(self, cnjs: list[str], motivos: list[str | None], metodo: str) -> None:
         """Um ``UserWarning`` com os CNJs que falharam, atribuído ao método público ``metodo``."""
-        falhas = [f"processo {c}: {m}" for c, m in zip(cnjs, motivos, strict=True) if m]
-        avisar_falhas(falhas, f"{self.TRIBUNAL_NAME}Scraper.{metodo}", "consulta(s) de processo")
+        avisar_falhas_de_processos(cnjs, motivos, f"{self.TRIBUNAL_NAME}Scraper.{metodo}")
 
     # --- public API ------------------------------------------------------
 
@@ -291,7 +260,7 @@ class TRFConsultaScraper(HTTPScraper):
                 "htmls and id_cnj_list must have the same length "
                 f"({len(htmls)} != {len(id_cnj_list)})"
             )
-        rows = self._linhas(htmls, id_cnj_list, [None] * len(htmls))
+        rows = linhas_de_processos(id_cnj_list, htmls, [None] * len(htmls), parse=parse_detail, logger=logger)
         self._avisar(id_cnj_list, [r.pop(COLUNA_MOTIVO_FALHA) for r in rows], "cpopg_parse")
         return pd.DataFrame(rows)
 
@@ -374,7 +343,9 @@ class TRFConsultaScraper(HTTPScraper):
             pecas_dir = diretorio if diretorio is not None else self.download_path
             Path(pecas_dir).mkdir(parents=True, exist_ok=True)
         consultas = self._baixar(cnjs, pecas_dir)
-        rows = self._linhas([c.html for c in consultas], cnjs, [c.motivo for c in consultas])
+        htmls = [c.html for c in consultas]
+        motivos = [c.motivo for c in consultas]
+        rows = linhas_de_processos(cnjs, htmls, motivos, parse=parse_detail, logger=logger)
         self._avisar(cnjs, [r[COLUNA_MOTIVO_FALHA] for r in rows], "cpopg")
         df = pd.DataFrame(rows)
         if download_pecas:
