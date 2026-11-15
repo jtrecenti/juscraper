@@ -36,6 +36,7 @@ def _http_error(status: int) -> requests.HTTPError:
         (requests.Timeout(), "timeout"),
         (requests.ConnectionError(), "conexao"),
         (InvalidJSONResponseError("https://example.test", 200, 3), "json_invalido"),
+        (requests.JSONDecodeError("Expecting value", "<html>", 0), "json_invalido"),
     ],
 )
 def test_motivo_falha_por_excecao(exc, esperado):
@@ -146,7 +147,15 @@ def test_excecoes_de_falha_por_linha_tem_motivo(exc):
     motivo_falha(exc)
 
 
-@pytest.mark.parametrize("exc", [requests.TooManyRedirects(), requests.exceptions.InvalidURL(), ValueError()])
+@pytest.mark.parametrize(
+    "exc",
+    # ``requests.JSONDecodeError`` tem motivo, mas fica fora da tupla para não
+    # mudar o que JusBR, PDPJ e eSAJ capturam como linha.
+    [
+        requests.TooManyRedirects(), requests.exceptions.InvalidURL(), ValueError(),
+        requests.JSONDecodeError("Expecting value", "", 0),
+    ],
+)
 def test_excecoes_fora_do_vocabulario_nao_viram_linha(exc):
     assert not isinstance(exc, EXCECOES_DE_FALHA_POR_LINHA)
 

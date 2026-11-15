@@ -17,6 +17,10 @@ import juscraper as jus
 from juscraper.aggregators.datajud import client as datajud_client
 from juscraper.core.exceptions import RetryExhaustedError
 
+CNJ_TJSP = "0000001-02.2024.8.26.0100"
+CNJ_TJRS = "0000001-02.2024.8.21.0001"
+CNJ_TJRJ = "0000001-02.2024.8.19.0001"
+
 
 @pytest.fixture(autouse=True)
 def pausas(monkeypatch) -> list[float]:
@@ -104,13 +108,13 @@ class TestReturnShape:
 
     def test_falha_de_rede_vira_erro_na_linha(self, monkeypatch):
         """Quando ``call_datajud_api`` levanta, a linha carrega
-        ``count=None`` e ``error`` com o status HTTP — análise por
+        ``count=<NA>`` e ``error`` com o status HTTP — análise por
         tribunal continua mesmo com falha em um."""
 
         def fake_call(*, base_url, alias, api_key, requisitar, query_payload, verbose=False):
             resposta = requests.Response()
-            resposta.status_code = 401
-            raise requests.HTTPError("401 Client Error", response=resposta)
+            resposta.status_code = 404
+            raise requests.HTTPError("404 Client Error", response=resposta)
 
         monkeypatch.setattr(datajud_client, "call_datajud_api", fake_call)
 
@@ -119,8 +123,8 @@ class TestReturnShape:
 
         assert len(df) == 1
         row = df.iloc[0]
-        assert row["count"] is None
-        assert row["error"] == "http_401"
+        assert row["count"] is pd.NA
+        assert row["error"] == "http_404"
         assert row["relation"] is None
 
     @pytest.mark.parametrize(
@@ -130,6 +134,9 @@ class TestReturnShape:
             (requests.ReadTimeout("lento"), "timeout"),
             (requests.ConnectTimeout("sem rota"), "conexao"),
             (requests.ConnectionError("recusada"), "conexao"),
+            # ``response.json()`` de um 200 que não é JSON; antes saía
+            # ``"JSONDecodeError: Expecting value: ..."``.
+            (requests.JSONDecodeError("Expecting value", "<html>", 0), "json_invalido"),
             # Fora do vocabulário de ``motivo_falha``: classe e mensagem.
             (requests.TooManyRedirects("laço"), "TooManyRedirects: laço"),
         ],
@@ -142,7 +149,64 @@ class TestReturnShape:
 
         row = jus.scraper("datajud").contar_processos(tribunal="TJSP").iloc[0]
 
-        assert (row["count"], row["error"]) == (None, esperado)
+        assert row["count"] is pd.NA
+        assert row["error"] == esperado
+
+    def test_count_fica_inteiro_quando_outra_linha_falha(self, monkeypatch):
+        """Com ``None`` misturado a ``int``, ``count`` virava float (``12345.0``)."""
+        respostas = iter([
+            {"hits": {"total": {"value": 12345, "relation": "eq"}}},
+            requests.ReadTimeout("lento"),
+        ])
+
+        def fake_call(*, base_url, alias, api_key, requisitar, query_payload, verbose=False):
+            resposta = next(respostas)
+            if isinstance(resposta, Exception):
+                raise resposta
+            return resposta
+
+        monkeypatch.setattr(datajud_client, "call_datajud_api", fake_call)
+
+        df = jus.scraper("datajud").contar_processos(numero_processo=[CNJ_TJSP, CNJ_TJRS])
+
+        assert df["count"].dtype == "Int64"
+        assert df["count"].tolist() == [12345, pd.NA]
+        assert df["error"].tolist() == [None, "timeout"]
+
+    def test_sem_tribunal_valido_devolve_as_colunas(self):
+        with pytest.warns(UserWarning, match="CNJ inválido"):
+            df = jus.scraper("datajud").contar_processos(numero_processo=["123"])
+
+        assert df.empty
+        assert list(df.columns) == ["tribunal", "alias", "count", "relation", "error"]
+        assert df["count"].dtype == "Int64"
+
+    def test_401_interrompe_a_contagem_com_as_falhas_anteriores(self, monkeypatch, pausas):
+        """Chave inválida vale para todos os tribunais: propaga, como no JusBR e na PDPJ.
+
+        Antes, cada tribunal virava uma linha ``http_401``, com a pausa entre
+        eles, e um lote grande com a chave errada demorava sem necessidade.
+        """
+        resposta_401 = requests.Response()
+        resposta_401.status_code = 401
+        erros = iter([requests.ReadTimeout("lento"), requests.HTTPError("401", response=resposta_401)])
+        consultados: list[str] = []
+
+        def fake_call(*, base_url, alias, api_key, requisitar, query_payload, verbose=False):
+            consultados.append(alias)
+            raise next(erros)
+
+        monkeypatch.setattr(datajud_client, "call_datajud_api", fake_call)
+
+        with pytest.raises(requests.HTTPError) as info:
+            jus.scraper("datajud").contar_processos(numero_processo=[CNJ_TJSP, CNJ_TJRS, CNJ_TJRJ])
+
+        assert info.value.response.status_code == 401
+        assert consultados == ["api_publica_tjsp", "api_publica_tjrs"]
+        assert info.value.__notes__ == [
+            "Antes do 401, 1 contagem(ns) de tribunal falharam. Falhas: api_publica_tjsp: timeout."
+        ]
+        assert len(pausas) == 1
 
     def test_relation_gte_quando_truncado(self, monkeypatch):
         def fake_call(*, base_url, alias, api_key, requisitar, query_payload, verbose=False):

@@ -452,6 +452,70 @@ def test_request_policy_aceita_escalares_do_numpy():
         RequestPolicy(max_retries=np.True_)
 
 
+@pytest.mark.parametrize(
+    "timeout",
+    # Sem a validação no core, o JusBR e a PDPJ aceitavam todos na construção,
+    # e o erro só vinha do ``requests`` na primeira requisição.
+    [
+        -1, 0, "10", True, float("inf"), float("nan"), [5], (5, -1), (5, "x"), ((1, 2), 3),
+        pytest.param(10**400, id="10**400"),
+    ],
+)
+def test_request_policy_recusa_timeout_invalido(timeout):
+    with pytest.raises(ValueError, match=rf"timeout deve ser .*recebido {re.escape(repr(timeout))}"):
+        RequestPolicy(timeout=timeout)
+    with pytest.raises(ValueError, match="timeout deve ser"):
+        _ProbeComPerfis(politica={"documento": {"timeout": timeout}})
+
+
+@pytest.mark.parametrize(
+    ("timeout", "esperado"),
+    [(None, None), (10, 10), (2.5, 2.5), (np.float64(10), 10), ((5, 30), (5, 30)), ([5, 30], (5, 30)),
+     ((5, None), (5, None))],
+)
+def test_request_policy_aceita_timeout_do_requests(timeout, esperado):
+    assert RequestPolicy(timeout=timeout).timeout == esperado
+
+
+@pytest.mark.parametrize("valor", [0, -1, "300", True, float("inf"), float("nan")])
+def test_request_policy_recusa_max_backoff_invalido(valor):
+    with pytest.raises(ValueError, match=rf"max_backoff deve ser .*recebido {re.escape(repr(valor))}"):
+        RequestPolicy(max_backoff=valor)
+
+
+def test_espera_e_exponencial_ate_o_teto():
+    politica = RequestPolicy(base_backoff=10, max_backoff=50)
+    assert [politica.espera(t) for t in (1, 2, 3)] == [10, 50, 50]
+    # O default de 300 s não muda as esperas de 2 e 4 s dos defaults.
+    assert [DEFAULT_POLICY.espera(t) for t in (1, 2)] == [2.0, 4.0]
+    assert DEFAULT_POLICY.max_backoff == 300
+
+
+@responses.activate
+def test_base_backoff_enorme_espera_o_teto_sem_estourar(probe, mocker):
+    """``1e200 ** 2`` levantava ``OverflowError`` no segundo recuo, no meio da coleta."""
+    sleep_spy = mocker.patch("juscraper.core.http.time.sleep")
+    responses.add(responses.GET, URL, status=503)
+    responses.add(responses.GET, URL, status=503)
+    responses.add(responses.GET, URL, json={"ok": True}, status=200)
+
+    probe._request_with_retry("GET", URL, base_backoff=1e200)
+
+    assert [c.args[0] for c in sleep_spy.call_args_list] == [300.0, 300.0]
+
+
+def test_base_backoff_enorme_no_retry_de_rede_espera_o_teto(mocker):
+    sleep_spy = mocker.patch("juscraper.core.http.time.sleep")
+    probe = _ProbeBackoff(politica={"lento": {"base_backoff": 1e200, "max_backoff": 7}})
+    ok = requests.Response()
+    ok.status_code = 200
+    mocker.patch.object(probe.session, "request", side_effect=[requests.ReadTimeout(), requests.ReadTimeout(), ok])
+
+    probe._request_with_retry("GET", URL, perfil="lento")
+
+    assert [c.args[0] for c in sleep_spy.call_args_list] == [7.0, 7.0]
+
+
 def test_request_unknown_profile_raises(probe_perfis):
     with pytest.raises(ValueError, match=r"Perfil HTTP desconhecido.*'inexistente'"):
         probe_perfis._request_with_retry("GET", URL, perfil="inexistente")
@@ -655,6 +719,19 @@ def test_politica_timeout_list_becomes_tuple():
 def test_politica_non_mapping_adjustment_raises():
     with pytest.raises(ValueError, match=r"deve ser um dict de campos, recebido RequestPolicy"):
         _ProbeComPerfis(politica={"documento": RequestPolicy(timeout=1)})  # type: ignore[dict-item]
+
+
+@responses.activate
+def test_max_backoff_limita_o_retry_de_json_invalido(mocker):
+    sleep_spy = mocker.patch("juscraper.core.http.time.sleep")
+    responses.add(responses.GET, URL, body="", status=200)
+    responses.add(responses.GET, URL, json={"ok": True}, status=200)
+
+    _ProbeBackoff(politica={"lento": {"max_backoff": 1.5}})._request_with_retry(
+        "GET", URL, perfil="lento", expect_json=True
+    )
+
+    sleep_spy.assert_called_once_with(1.5)
 
 
 @responses.activate
