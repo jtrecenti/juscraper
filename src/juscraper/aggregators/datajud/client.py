@@ -189,19 +189,20 @@ def _timeout_com_prazo(timeout: object) -> bool:
     return timeout_valido(timeout, aceita_none=False)
 
 
-def _linha_de_falha(tribunal: str, alias: str, exc: Exception, linhas: list[dict[str, Any]]) -> dict[str, Any]:
-    """Linha de :meth:`DatajudScraper.contar_processos` do tribunal cuja contagem falhou.
-
-    ``error`` usa o vocabulário de ``motivo_falha``, ou ``"<Classe>: <mensagem>"`` fora dele.
+def _relancar_se_token_invalido(exc: Exception, linhas: list[dict[str, Any]]) -> None:
+    """Relança o 401 de :meth:`DatajudScraper.contar_processos`, com as falhas de ``linhas`` numa nota.
 
     Raises:
-        requests.HTTPError: O próprio ``exc``, quando é o 401 da chave inválida,
-            com as falhas de ``linhas`` numa nota.
+        requests.HTTPError: O próprio ``exc``, quando é o 401 da chave inválida.
     """
     if e_token_invalido(exc):
         anteriores = [f"{linha['alias']}: {linha['error']}" for linha in linhas if linha["error"] is not None]
         anotar_falhas_anteriores(exc, anteriores, "contagem(ns) de tribunal")
         raise exc
+
+
+def _linha_de_falha(tribunal: str, alias: str, exc: Exception) -> dict[str, Any]:
+    """Linha do tribunal cuja contagem falhou; ``error`` no vocabulário de ``motivo_falha`` ou ``"<Classe>: <msg>"``."""
     logger.warning("DataJud: contagem do alias %s falhou: %s", alias, exc)
     try:
         motivo = motivo_falha(exc)
@@ -619,7 +620,8 @@ class DatajudScraper(HTTPScraper):
             try:
                 api_response = self._buscar(alias, payload)
             except FALHAS_DE_TRANSPORTE as exc:
-                rows.append(_linha_de_falha(tribunal_sigla, alias, exc, rows))
+                _relancar_se_token_invalido(exc, rows)
+                rows.append(_linha_de_falha(tribunal_sigla, alias, exc))
                 continue
             total = api_response.get("hits", {}).get("total", {}) or {}
             rows.append({
@@ -629,10 +631,8 @@ class DatajudScraper(HTTPScraper):
                 "relation": total.get("relation", "eq"),
                 "error": None,
             })
-        # ``Int64`` mantém a contagem inteira quando outra linha falhou: com
-        # ``None`` misturado a ``int``, o pandas faria a coluna virar float.
-        colunas = ["tribunal", "alias", "count", "relation", "error"]
-        return pd.DataFrame(rows, columns=colunas).astype({"count": "Int64"})
+        # ``Int64``: com ``None`` de uma falha misturado a ``int``, ``count`` viraria float.
+        return pd.DataFrame(rows, columns=["tribunal", "alias", "count", "relation", "error"]).astype({"count": "Int64"})
 
     def _buscar(self, alias: str, query_payload: dict[str, Any]) -> dict[str, Any]:
         """Busca no alias pelo perfil ``"busca"``; falhas sobem como em :func:`call_datajud_api`."""

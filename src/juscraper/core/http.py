@@ -137,10 +137,12 @@ class RequestPolicy:
     def __post_init__(self) -> None:
         """Valida os campos numéricos e congela ``retryable_statuses`` e ``timeout``.
 
-        A validação vale também para os kwargs por chamada, que passam por
-        ``replace``: sem ela, ``max_retries=2.5``, ``base_backoff="2"`` ou
+        A validação vale para os perfis, para o ajuste por ``politica=`` e para
+        os kwargs ``max_retries=`` e ``base_backoff=`` por chamada, que passam
+        por ``replace``: sem ela, ``max_retries=2.5``, ``base_backoff="2"`` ou
         ``timeout=-1`` só estourariam na primeira requisição ou no primeiro
-        status retentável, no meio da coleta.
+        status retentável, no meio da coleta. O ``timeout=`` por chamada vai
+        direto ao ``requests``.
         """
         if not _max_retries_valido(self.max_retries):
             raise ValueError(f"max_retries deve ser um inteiro >= 1, recebido {self.max_retries!r}")

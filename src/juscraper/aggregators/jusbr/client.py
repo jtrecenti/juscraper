@@ -253,7 +253,9 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
             ValueError: Quando ``token`` é inválido ou está expirado, ou quando
                 ``politica`` cita perfil ou campo desconhecido ou traz valor
                 inválido (``max_retries`` que não é inteiro >= 1,
-                ``base_backoff`` que não é número positivo e finito).
+                ``base_backoff`` ou ``max_backoff`` que não é número positivo
+                e finito, ``timeout`` que não é ``None``, número positivo e
+                finito nem o par ``(conexão, leitura)``).
         """
         super().__init__(
             "jusbr", verbose=verbose, download_path=download_path, sleep_time=sleep_time, politica=politica,
