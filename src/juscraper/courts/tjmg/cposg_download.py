@@ -35,13 +35,6 @@ ENCODING = "iso-8859-1"
 TIMEOUT = 30
 TRANSPORT_ATTEMPTS = 3
 
-# ``FALHAS_DE_TRANSPORTE`` viram "sem dados" para o numero, sem abortar o
-# lote. Ela inclui o ``RetryExhaustedError`` (403, 429 e 5xx esgotados, ver
-# ``RETRYABLE_STATUSES``), que nao herda de ``requests.RequestException``;
-# sem ele, um unico recurso com 500 descartaria tudo o que o lote ja tinha
-# baixado. Efeito colateral: um bloqueio de IP via 403/429 tambem nao
-# interrompe o lote, que segue tentando cada numero e so avisa no fim.
-
 
 def _get(request_fn: RequestFn, url: str, numero: str) -> str:
     """GET com retry para timeout/conexao, que o ``request_fn`` nao cobre.
@@ -106,6 +99,9 @@ def cposg_download(
         item: dict = {"id_cnj": numero, "resultado": None, "partes": {}}
         try:
             resultado = fetch_resultado(request_fn, numero)
+        # Falha de transporte vira "sem dados" para o numero, sem abortar o
+        # lote; inclui 403/429/5xx esgotados. Efeito colateral: um bloqueio de
+        # IP via 403/429 nao interrompe o lote, que so avisa no fim.
         except FALHAS_DE_TRANSPORTE as exc:
             logger.warning("TJMG cposg: falha ao consultar %s: %s", numero, exc)
             falhas.append(numero)

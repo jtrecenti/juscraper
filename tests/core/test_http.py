@@ -8,6 +8,7 @@ import re
 from collections.abc import Mapping
 from typing import ClassVar
 
+import numpy as np
 import pytest
 import requests
 import responses
@@ -440,6 +441,15 @@ def test_request_policy_recusa_tentativas_ou_backoff_invalido(campo, valor):
 def test_request_policy_aceita_backoff_inteiro_e_fracionario():
     assert RequestPolicy(max_retries=1, base_backoff=1).base_backoff == 1
     assert RequestPolicy(base_backoff=2.5).base_backoff == 2.5
+
+
+def test_request_policy_aceita_escalares_do_numpy():
+    # Política lida de planilha ou DataFrame traz escalares do numpy, que
+    # funcionavam antes da validação; ``numpy.bool_`` continua recusado.
+    politica = RequestPolicy(max_retries=np.int64(5), base_backoff=np.float64(2.5))
+    assert (politica.max_retries, politica.base_backoff) == (5, 2.5)
+    with pytest.raises(ValueError, match="max_retries deve ser"):
+        RequestPolicy(max_retries=np.True_)
 
 
 def test_request_unknown_profile_raises(probe_perfis):

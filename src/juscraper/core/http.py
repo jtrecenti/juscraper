@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import logging
 import math
+import numbers
 import time
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, fields, replace
@@ -55,22 +56,27 @@ perfis de :class:`RequestPolicy` com ``retryable_statuses`` sem o 403, como
 
 
 def numero_positivo(valor: object) -> bool:
-    """Diz se ``valor`` é ``int`` ou ``float`` positivo e finito; ``bool`` fica de fora."""
-    if isinstance(valor, bool) or not isinstance(valor, (int, float)):
+    """Diz se ``valor`` é número real positivo e finito; ``bool`` fica de fora.
+
+    ``numbers.Real`` aceita também os escalares do numpy, comuns em política
+    lida de uma planilha ou de um DataFrame.
+    """
+    if isinstance(valor, bool) or not isinstance(valor, numbers.Real):
         return False
     # ``isfinite`` barra ``inf``, que passaria em ``> 0`` e faria o ``requests``
-    # levantar ``OverflowError`` só na hora da requisição. O próprio
-    # ``isfinite`` levanta ``OverflowError`` para inteiro que não cabe em
-    # ``float``, e esse valor é recusado do mesmo jeito.
+    # levantar ``OverflowError`` só na hora da requisição. O ``float`` levanta
+    # ``OverflowError`` para inteiro que não cabe nele, e esse valor é recusado
+    # do mesmo jeito.
     try:
-        return math.isfinite(valor) and valor > 0
+        como_float = float(valor)
     except OverflowError:
         return False
+    return math.isfinite(como_float) and como_float > 0
 
 
-def max_retries_valido(valor: object) -> bool:
-    """Diz se ``valor`` é um ``int`` >= 1; ``bool`` fica de fora."""
-    return isinstance(valor, int) and not isinstance(valor, bool) and valor >= 1
+def _max_retries_valido(valor: object) -> bool:
+    """Diz se ``valor`` é inteiro >= 1, inclusive do numpy; ``bool`` fica de fora."""
+    return not isinstance(valor, bool) and isinstance(valor, numbers.Integral) and int(valor) >= 1
 
 
 @dataclass(frozen=True)
@@ -112,7 +118,7 @@ class RequestPolicy:
         ``replace``: sem ela, ``max_retries=2.5`` ou ``base_backoff="2"``
         só estourariam no primeiro status retentável, no meio da coleta.
         """
-        if not max_retries_valido(self.max_retries):
+        if not _max_retries_valido(self.max_retries):
             raise ValueError(f"max_retries deve ser um inteiro >= 1, recebido {self.max_retries!r}")
         if not numero_positivo(self.base_backoff):
             raise ValueError(f"base_backoff deve ser um número positivo e finito, recebido {self.base_backoff!r}")
@@ -355,8 +361,9 @@ class HTTPScraper(BaseScraper):
 
         Raises:
             TypeError: Se ``session`` não for ``None`` nem ``requests.Session``.
-            ValueError: Se ``max_retries`` for menor que 1 ou ``perfil`` não
-                estiver declarado.
+            ValueError: Se ``max_retries`` não for inteiro >= 1, se
+                ``base_backoff`` não for número positivo e finito ou se
+                ``perfil`` não estiver declarado.
             RetryExhaustedError: Quando esgota ``max_retries`` em status retryable.
             requests.Timeout, requests.ConnectionError: Na primeira ocorrência,
                 ou na última tentativa quando a política retenta esse erro.

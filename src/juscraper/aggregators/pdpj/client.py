@@ -373,6 +373,12 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
             politica: Ajustes por campo dos perfis ``"listagem"`` e
                 ``"documento"``, como ``{"documento": {"timeout": 20}}``. O
                 que nao for passado fica como o raspador declara.
+
+        Raises:
+            ValueError: Quando ``politica`` cita perfil ou campo desconhecido
+                ou traz valor inválido (``max_retries`` que não é inteiro >= 1,
+                ``base_backoff`` que não é número positivo e finito), ou
+                quando ``token`` é inválido ou está expirado.
         """
         super().__init__(
             "pdpj",

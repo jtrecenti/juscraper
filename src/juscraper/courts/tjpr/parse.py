@@ -2,15 +2,16 @@
 Functions for parsing specific to TJPR
 """
 import pandas as pd
-import requests
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
-from juscraper.core.exceptions import RetryExhaustedError
+from juscraper.core.failures import FALHAS_DE_TRANSPORTE
 from juscraper.core.http import RequestFn
 from juscraper.core.parse_utils import coerce_date_columns
 
 from .download import TJPREmentaIndisponivelError, get_ementa_completa
+
+_FALHAS_DA_EMENTA: tuple[type[Exception], ...] = (*FALHAS_DE_TRANSPORTE, TJPREmentaIndisponivelError)
 
 
 def _extract_processo(dados_td: Tag) -> str:
@@ -72,7 +73,7 @@ def _extract_ementa(
 
     try:
         return get_ementa_completa(request_fn, action_type, id_registro, criterio or "")
-    except (requests.RequestException, RetryExhaustedError, TJPREmentaIndisponivelError) as error:
+    except _FALHAS_DA_EMENTA as error:
         # A falha de uma ementa completa não invalida os demais resultados da página.
         return f"{ementa}\n[Erro ao buscar ementa completa: {error}]"
 

@@ -16,7 +16,7 @@ from tqdm.auto import tqdm
 from ...core.avisos import avisar
 from ...core.exceptions import ColetaParcialError, RetryExhaustedError
 from ...core.failures import FALHAS_DE_TRANSPORTE, motivo_falha
-from ...core.http import HTTPScraper, RequestPolicy, max_retries_valido, numero_positivo
+from ...core.http import HTTPScraper, RequestPolicy, numero_positivo
 from ...utils.cnj import clean_cnj  # Assuming this utility exists and is relevant
 from ...utils.params import normalize_paginas, pop_deprecated_alias, raise_on_extra_kwargs
 from .download import (
@@ -425,10 +425,9 @@ class DatajudScraper(HTTPScraper):
             _timeout_valido,
             "Use um número positivo e finito de segundos ou o par (conexão, leitura).",
         ),
-        "max_retries": (max_retries_valido, "Use um inteiro >= 1, contando a primeira tentativa."),
-        "base_backoff": (numero_positivo, "Use um número positivo e finito de segundos."),
     }
-    CAMPOS_POLITICA_SUPORTADOS: ClassVar[frozenset[str]] = frozenset(VALIDADORES_POLITICA)
+    # ``max_retries`` e ``base_backoff`` são validados pela ``RequestPolicy``.
+    CAMPOS_POLITICA_SUPORTADOS: ClassVar[frozenset[str]] = frozenset({"timeout", "max_retries", "base_backoff"})
 
     def __init__(
         self,
@@ -542,8 +541,8 @@ class DatajudScraper(HTTPScraper):
             tribunal, ``count`` é ``None`` e a coluna ``error`` traz o
             motivo no vocabulário de ``juscraper.core.failures.motivo_falha``
             (``"http_401"``, ``"retry_esgotado_429"``, ``"timeout"``,
-            ``"conexao"``, ``"json_invalido"``). Falha sem motivo no
-            vocabulário sai como ``"<Classe>: <mensagem>"``.
+            ``"conexao"``). Falha sem motivo no vocabulário, como corpo que
+            não é JSON, sai como ``"<Classe>: <mensagem>"``.
 
         Raises:
             TypeError: Quando um kwarg desconhecido é passado.
