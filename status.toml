@@ -264,13 +264,12 @@ tipo = "tribunal"
 endpoints = ["cjsg"]
 
 [fontes.observacoes.cjsg]
-estado = "indisponivel"
-verificado_em = 2026-10-03
-versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
-evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L1366"]
-motivo = "As duas tentativas receberam HTML na URL de configuração esperada como JSON e terminaram em JSONDecodeError, antes da busca."
-cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjmt').cjsg(pesquisa='direito', paginas=1), executada duas vezes. Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
-excecao = "requests.exceptions.JSONDecodeError"
+estado = "funcionando"
+verificado_em = 2026-11-14
+versao = "0.5.0; código 38bb88fcaa7f6b509b0e836cb317468ba29e7110"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/f93cc9adf23f9f1e1368b1b2dbc1a8ee20e5903c/docs/status/2026-11-14.json#L583"]
+motivo = "Retornou 10 registros, com processo e ementa preenchidos; colunas exigidas e preenchimento mínimo conferidos no cenário informado."
+cenario = "macOS local, Wi-Fi residencial sem VPN ativa; jus.scraper('tjmt').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
 
 [[fontes]]
 sigla = "tjpa"
@@ -391,7 +390,6 @@ versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
 evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L2403"]
 motivo = "As duas tentativas terminaram em JSONDecodeError. A resposta HTTP 200 inspecionada contém uma página que declara bloqueio por suspeita de robotização."
 cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjro').cjsg(pesquisa='direito', paginas=1), executada duas vezes. Somente a primeira página, sem validação de paginação adicional ou de outros filtros"
-excecao = "requests.exceptions.JSONDecodeError"
 
 [[fontes]]
 sigla = "tjrr"
@@ -450,12 +448,12 @@ motivo = "Retornou 1 registro; colunas exigidas e preenchimento mínimo conferid
 cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjsp').cpopg(id_cnj='1000149-71.2024.8.26.0346', method='html'). Somente os parâmetros informados, sem validar outros processos ou filtros"
 
 [fontes.observacoes.cposg]
-estado = "indisponivel"
-verificado_em = 2026-10-03
-versao = "0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4"
-evidencias = ["https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L2823"]
-motivo = "As consultas HTML por dois CNJs retornaram DataFrame vazio. Na segunda, o portal entregou duas páginas de detalhe, mas o parser descartou ambas por ausência do marcador tabelaTodasMovimentacoes."
-cenario = "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjsp').cposg(id_cnj='1000149-71.2024.8.26.0346', method='html'); depois jus.scraper('tjsp').cposg(id_cnj='00221752420038260344', method='html'). Somente os parâmetros informados, sem validar outros processos ou filtros"
+estado = "funcionando"
+verificado_em = 2026-11-14
+versao = "0.5.0; código 38bb88fcaa7f6b509b0e836cb317468ba29e7110"
+evidencias = ["https://github.com/jtrecenti/juscraper/blob/f93cc9adf23f9f1e1368b1b2dbc1a8ee20e5903c/docs/status/2026-11-14.json#L18"]
+motivo = "As consultas HTML pelos dois CNJs retornaram 1 e 2 registros, com processo e classe preenchidos; as movimentações vieram pela rota Ajax carregarMovimentacoes. Colunas exigidas e preenchimento mínimo conferidos no cenário informado."
+cenario = "macOS local, Wi-Fi residencial sem VPN ativa; jus.scraper('tjsp').cposg(id_cnj='1000149-71.2024.8.26.0346', method='html'); depois jus.scraper('tjsp').cposg(id_cnj='00221752420038260344', method='html'). Somente os parâmetros informados, sem validar outros processos ou filtros"
 
 [fontes.observacoes.cjsg]
 estado = "funcionando"

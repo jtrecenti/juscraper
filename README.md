@@ -106,7 +106,7 @@ dados.head()
 
 Status observado no cenário informado, sem garantia de disponibilidade atual. Sem evidência ou após 30 dias, o estado passa a não verificado na próxima geração. A data limite permanece visível entre atualizações. O último relato de falha continua abaixo.
 
-Tabelas geradas em 2026-11-04.
+Tabelas geradas em 2026-11-14.
 
 [Critérios e atualização](https://github.com/jtrecenti/juscraper/blob/main/CONTRIBUTING.md#status-dos-raspadores)
 
@@ -127,11 +127,11 @@ Tabelas geradas em 2026-11-04.
 | TJDFT | `cjsg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
 | TJES | `cjsg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
 | TJES | `cjpg` | Não verificado (último: Degradado) | 2026-10-03 | 2026-11-02 |
-| TJGO | `cjsg` | Indisponível | 2026-10-14 | 2026-11-13 |
+| TJGO | `cjsg` | Não verificado (último: Indisponível) | 2026-10-14 | 2026-11-13 |
 | TJMG | `cjsg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
 | TJMG | `cposg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
 | TJMS | `cjsg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
-| TJMT | `cjsg` | Não verificado (último: Indisponível) | 2026-10-03 | 2026-11-02 |
+| TJMT | `cjsg` | Funcionando | 2026-11-14 | 2026-12-14 |
 | TJPA | `cjsg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
 | TJPB | `cjsg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
 | TJPE | `cjsg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
@@ -142,10 +142,10 @@ Tabelas geradas em 2026-11-04.
 | TJRN | `cjsg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
 | TJRO | `cjsg` | Não verificado (último: Indisponível) | 2026-10-03 | 2026-11-02 |
 | TJRR | `cjsg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
-| TJRS | `cjsg` | Funcionando | 2026-10-14 | 2026-11-13 |
+| TJRS | `cjsg` | Não verificado (último: Funcionando) | 2026-10-14 | 2026-11-13 |
 | TJSC | `cjsg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
 | TJSP | `cpopg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
-| TJSP | `cposg` | Não verificado (último: Indisponível) | 2026-10-03 | 2026-11-02 |
+| TJSP | `cposg` | Funcionando | 2026-11-14 | 2026-12-14 |
 | TJSP | `cjsg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
 | TJSP | `cjpg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
 | TJSP | `baixar_acordao` | Não verificado | - | - |
@@ -157,7 +157,7 @@ Tabelas geradas em 2026-11-04.
 | TRF1 | `cpopg` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
 | TRF3 | `cpopg` | Não verificado | 2026-10-14 | - |
 | TRF3 | `cjsg` | Não verificado | - | - |
-| TRF5 | `cpopg` | Indisponível | 2026-10-14 | 2026-11-13 |
+| TRF5 | `cpopg` | Não verificado (último: Indisponível) | 2026-10-14 | 2026-11-13 |
 | TRF6 | `cpopg` | Não verificado (último: Indisponível) | 2026-10-03 | 2026-11-02 |
 
 ### Agregadores
@@ -166,8 +166,8 @@ Tabelas geradas em 2026-11-04.
 |---|---|---|---|---|
 | Comunica CNJ | `listar_comunicacoes` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
 | Datajud | `listar_processos` | Não verificado (último: Funcionando) | 2026-10-03 | 2026-11-02 |
-| Datajud | `contar_processos` | Funcionando | 2026-10-14 | 2026-11-13 |
-| Falcão | `listar_decisoes` | Funcionando | 2026-10-14 | 2026-11-13 |
+| Datajud | `contar_processos` | Não verificado (último: Funcionando) | 2026-10-14 | 2026-11-13 |
+| Falcão | `listar_decisoes` | Não verificado (último: Funcionando) | 2026-10-14 | 2026-11-13 |
 | JusBR | `cpopg` | Não verificado | - | - |
 | JusBR | `download_documents` | Não verificado | - | - |
 | PDPJ | `existe` | Não verificado | - | - |
@@ -305,13 +305,11 @@ Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjms').cjsg(pe
 
 #### TJMT: `cjsg`
 
-As duas tentativas receberam HTML na URL de configuração esperada como JSON e terminaram em JSONDecodeError, antes da busca.
+Retornou 10 registros, com processo e ementa preenchidos; colunas exigidas e preenchimento mínimo conferidos no cenário informado.
 
-Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjmt').cjsg(pesquisa='direito', paginas=1), executada duas vezes. Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+Ambiente/cenário: macOS local, Wi-Fi residencial sem VPN ativa; jus.scraper('tjmt').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros. Versão ou commit testado: 0.5.0; código 38bb88fcaa7f6b509b0e836cb317468ba29e7110.
 
-[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L1366)
-
-Exceção relacionada: requests.exceptions.JSONDecodeError.
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/f93cc9adf23f9f1e1368b1b2dbc1a8ee20e5903c/docs/status/2026-11-14.json#L583)
 
 #### TJPA: `cjsg`
 
@@ -385,8 +383,6 @@ Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjro').cjsg(pe
 
 [Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L2403)
 
-Exceção relacionada: requests.exceptions.JSONDecodeError.
-
 #### TJRR: `cjsg`
 
 Retornou 20 registros; colunas exigidas e preenchimento mínimo conferidos no cenário informado.
@@ -421,11 +417,11 @@ Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjsp').cpopg(i
 
 #### TJSP: `cposg`
 
-As consultas HTML por dois CNJs retornaram DataFrame vazio. Na segunda, o portal entregou duas páginas de detalhe, mas o parser descartou ambas por ausência do marcador tabelaTodasMovimentacoes.
+As consultas HTML pelos dois CNJs retornaram 1 e 2 registros, com processo e classe preenchidos; as movimentações vieram pela rota Ajax carregarMovimentacoes. Colunas exigidas e preenchimento mínimo conferidos no cenário informado.
 
-Ambiente/cenário: Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjsp').cposg(id_cnj='1000149-71.2024.8.26.0346', method='html'); depois jus.scraper('tjsp').cposg(id_cnj='00221752420038260344', method='html'). Somente os parâmetros informados, sem validar outros processos ou filtros. Versão ou commit testado: 0.4.0; código 91799582d901756b414e7e7eabe774fd3c635ec4.
+Ambiente/cenário: macOS local, Wi-Fi residencial sem VPN ativa; jus.scraper('tjsp').cposg(id_cnj='1000149-71.2024.8.26.0346', method='html'); depois jus.scraper('tjsp').cposg(id_cnj='00221752420038260344', method='html'). Somente os parâmetros informados, sem validar outros processos ou filtros. Versão ou commit testado: 0.5.0; código 38bb88fcaa7f6b509b0e836cb317468ba29e7110.
 
-[Evidência 1](https://github.com/jtrecenti/juscraper/blob/18d506ed586599844a64c81081dcdb73d31112f4/docs/status/2026-10-03.json#L2823)
+[Evidência 1](https://github.com/jtrecenti/juscraper/blob/f93cc9adf23f9f1e1368b1b2dbc1a8ee20e5903c/docs/status/2026-11-14.json#L18)
 
 #### TJSP: `cjsg`
 
