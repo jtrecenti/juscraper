@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="pt-br" >
+<head >
+<link rel="shortcut icon" href="/imagens/icons/favicons/favicon.ico" /><meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no"><input id="url_log_erro_javascript" name="url_log_erro_javascript" type="hidden" value="controlador_ajax.php?acao_ajax=log_erro_javascript&acao_origem=processo_seleciona_publica" />
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
+<meta name="robots" content="noindex"/>
+<title>:: eproc - Consulta Processual - Detalhes do Processo  ::</title>
+<script type="text/javascript" src="/ruxitagentjs_ICA15789MNPRTUVXfhqrux_10349261020121938.js" data-dtconfig="rid=RID_440105569|rpid=-753302184|domain=trf6.jus.br|reportUrl=https://bf01127tuf.bf.dynatrace.com/bf|app=25998ba45776d177|cors=1|srtbv=4|owasp=1|featureHash=ICA15789MNPRTUVXfhqrux|rdnt=1|uxrgce=1|cuc=r6ny3qig|mel=100000|expw=1|dpvc=1|md=mdcc1=a#nav-profile ^rb div.header.bg-gray-grad ^rb div.text-center.font-weight-bold ^rb span|lastModification=1793796776741|postfix=r6ny3qig|tp=500,50,0|srbbv=3|agentUri=/ruxitagentjs_ICA15789MNPRTUVXfhqrux_10349261020121938.js" data-config='{"revision":1793796776741,"beaconUri":"https://bf01127tuf.bf.dynatrace.com/bf","agentUri":"/ruxitagentjs_ICA15789MNPRTUVXfhqrux_10349261020121938.js","environmentId":"r6ny3qig","modules":"ICA15789MNPRTUVXfhqrux"}' data-envconfig='{"tracestateKeyPrefix":"7dd9cdc1-86052078"}' data-appconfig='{"app":"25998ba45776d177","metadataConfig":{"metadata":[{"name":"username","accessors":["q#nav-profile > div.header.bg-gray-grad > div.text-center.font-weight-bold > span","pinnerText"]}]},"disableUserTracking":true}'></script><link rel="stylesheet" href="css/dist/bundle-bs4.a594fe79eaab1023.css">
+<link rel="stylesheet" href="css/dist/bundle-bs4-contrast.cf8d3e284f7b4663.css">
+<link rel="stylesheet" href="css/dist/bundle-global.b2da91f9a97c86b5.css">
+<link rel="stylesheet" href="css/dist/bundle-infra.b1dcf984a74eb49f.css">
+<link rel="stylesheet" href="css/dist/bundle-infra-contrast.e683f7ced054fdb1.css">
+<link href="infra_js/multiple-select/multiple-select.css?9.23.25-3.0.8" rel="stylesheet" type="text/css" media="all" />
+<script>var INFRA_PATH_CSS = "infra_css",
+    INFRA_PATH_IMAGENS = "infra_css\/imagens",
+    INFRA_PATH_JS = "infra_js",
+    INFRA_PATH_SVG = "infra_css\/svg",
+    INFRA_LUPA_TIPO_JANELA = 1,
+    INFRA_BARRA_TIPO_JANELA = 1,
+    INFRA_TIPO_ALERTA = 1,
+    ENV = "prod",
+    LOGAR_ERROS_JS = true;</script>				<!-- src file: web/js/src/shared--><script type="text/javascript" charset="utf-8" src="js/dist/runtime.3a058a1015cc859a.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.jquery-ui.96a07c1ff0b79f1d.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.jquery.e5ac2ef36437060a.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.js-cookie.33bcf16f12c6997d.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.jquery-contextmenu.397eb2f1c1fc6092.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.expose-loader.4bc8640858f04c8a.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/shared.5b46edea5c1f69a7.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/3460.1543a1916adf529c.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/websocket.523181ec47a32987.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.lodash.44dd686bca961aed.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.unorm.55391aaeecff6d5f.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.lodash.debounce.672bc626be69cd98.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.trf4.cf18bc88b3292f46.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.imask.402ac4101cdeefcc.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.hotwired.9205456ee76af0d6.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.core-js.781f52be32242dcd.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.bootstrap-fileinput.d681e3ee21618d95.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.local-storage-fallback.e307a36c0b016118.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.moment.52cf4c0112a64d0b.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.bootstrap-select.7924c35426dd53b7.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.yaireo.de6215c4ed98142a.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.axios.477d70a1b2d6093f.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.tempusdominus-bootstrap-4.107ad63fee6a0512.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.regenerator-runtime.20d3f791d6e76e60.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.popper.js.09c2f255433b33b8.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.lodash.throttle.d55f567dbad6a7e9.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.jstree.a5a858af88e8ebb7.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.cookie.c7718c478b4b8629.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.bs-custom-file-input.c707992f9fc149bf.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.bootstrap.69c1fcfabf05baf7.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.abortcontroller-polyfill.8c864419680b96cc.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/991.3f43d5f5bd25cf8b.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/9364.c3d075a71f8ab666.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/8137.67682088f5c4539f.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/6055.4b67e5e53d39904f.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/main.05d984789d83d49a.js"></script>
+
+				<script type="text/javascript" charset="iso-8859-1" src="infra_js/InfraUtil.js?9.23.25-3.0.8"></script>
+				<script type="text/javascript" charset="iso-8859-1" src="infra_js/InfraCookie.js?9.23.25-3.0.8"></script>
+				<script type="text/javascript" charset="iso-8859-1" src="infra_js/InfraUpload.js?9.23.25-3.0.8"></script>
+				<script type="text/javascript" charset="iso-8859-1" src="infra_js/InfraMenu.js?9.23.25-3.0.8"></script>
+				<script type="text/javascript" charset="iso-8859-1" src="infra_js/InfraBotaoMenu.js?9.23.25-3.0.8"></script>
+				<script type="text/javascript" charset="iso-8859-1" src="infra_js/InfraAcaoMenu.js?9.23.25-3.0.8"></script>
+				<script type="text/javascript" charset="iso-8859-1" src="infra_js/InfraTabelaDinamica.js?9.23.25-3.0.8"></script>
+				<script type="text/javascript" charset="iso-8859-1" src="infra_js/InfraLupas.js?9.23.25-3.0.8"></script>
+				<script type="text/javascript" charset="iso-8859-1" src="infra_js/InfraSelectEditavel.js?9.23.25-3.0.8"></script>
+				<script type="text/javascript" charset="iso-8859-1" src="infra_js/InfraAjax.js?9.23.25-3.0.8"></script>
+				<script type="text/javascript" charset="iso-8859-1" src="infra_js/InfraTooltip.js?9.23.25-3.0.8"></script>
+				<script type="text/javascript" charset="iso-8859-1" src="infra_js/InfraPagina.js?9.23.25-3.0.8"></script>
+				<script type="text/javascript" charset="iso-8859-1" src="infra_js/calendario/v1/InfraCalendario.js?9.23.25-3.0.8"></script>
+				<script type="text/javascript" charset="iso-8859-1" src="infra_js/arvore/InfraArvore.js?9.23.25-3.0.8"></script>
+                <script type="text/javascript" charset="utf-8" src="js/exibir-aviso.js?9.23.25-3.0.8"></script><script type="text/javascript" charset="iso-8859-1" src="infra_js/infra_pagina_renderer/bs4/main.js?9.23.25-3.0.8"></script><script>
+    function abreArvore(link){
+    $('<a href="'+ link +'" target="_blank">Árvore</a>')[0].click();
+    }
+</script>
+<body class="bootstrap-styles instancia-1g" onload="infraProcessarResize(); infraProcessarMouseDown();" class=&quot;bg-light&quot;>
+
+    
+
+    <div id="divInfraAreaGlobal">
+        
+                    <div class="bootstrap-styles navbar-wrapper">
+                
+<nav id="navbar-accessibility" class="accessibility-bar bg-instancia collapse" data-id="69"
+     data-ativo="S">
+    <a href="#divInfraBarraLocalizacao" id="ancora-conteudo" tabindex="0" title="Conteúdo principal da página (Alt+1 e ENTER)" class="item-acessibilidade">Ir para conteúdo</a>
+    <a href="#sidebar-searchbox" id="ancora-menu" tabindex="0" title="(Alt+M)" class="item-acessibilidade">Ir para menu</a>
+
+    
+            <a href="#/" id="btn-aumentar-fonte" tabindex="0" title="Aumentar fonte" class="item-acessibilidade" data-id="70"
+           data-ativo="N" data-numvalor="">
+            <i class="material-icons icon-aligned-sm" aria-hidden="true">text_increase</i>
+        </a>
+        <a href="#/" id="btn-diminuir-fonte" tabindex="0" title="Dimiuir fonte" class="item-acessibilidade" data-id="70"
+           data-ativo="N" data-numvalor="">
+            <i class="material-icons icon-aligned-sm" aria-hidden="true">text_decrease</i>
+        </a>
+        <a href="#/" id="btn-theme-contrast" tabindex="0" title="Alto contraste" data-id="68" data-ativo="N"
+       class="item-acessibilidade">
+        <i class="material-icons icon-aligned-sm" aria-hidden="true">contrast</i>
+    </a>
+    <a href="#/" id="btn-vlibras" tabindex="0" title="Habilitar o tradutor para libras" class="item-acessibilidade">
+        <img src="imagens/icons/maos_libras.png" aria-hidden="true"/> Libras
+    </a>
+    <input type="hidden" id="link-usuario-configuracao-personalizacao" value="controlador_ajax.php?acao_ajax=usuario_configuracao_personalizacao&amp;acao_origem=processo_seleciona_publica"/>
+    <a href="externo_controlador.php?acao=tutorial_acessibilidade&amp;acao_origem=processo_seleciona_publica" id="btn-pagina-acessibilidade" tabindex="0" title="Acessibilidade (Alt+F1)" class="item-acessibilidade">Acessibilidade</a>
+
+    </nav>                <nav id='navbar' class="navbar text-white d-xl-flex bg-instancia ">
+                    <div class="d-flex w-100 justify-content-between" style="font-size: 14px;">
+    <div class="d-flex align-items-center">
+                    <div style="padding: 8px">
+
+                                
+                <button
+                    type="button"
+                    class="btn btn-link"
+                    id="menu-btn"
+                    aria-label="Abrir menu"
+                    aria-expanded="true"
+                    aria-controls="sidebar-wrapper"
+                >
+                    <i title="Abrir menu" aria-hidden="true" class="material-icons navbar-icons">menu</i>
+                </button>
+            </div>
+        
+        <div><a href='https://sjmg.trf6.jus.br/' title='https://sjmg.trf6.jus.br/'>
+						<span class='pr-3 d-none text-white d-sm-block'>Seção Judiciária de Minas Gerais</span>
+						<span class='navbar-span pr-3 d-block d-sm-none'>jfmg</span>
+					</a>
+				</div>
+    </div>
+    <div class="d-none d-flex align-items-center">
+        
+            </div>
+</div>
+                </nav>
+            </div>
+            <!-- Modal -->
+            <div class="bootstrap-styles">
+                <div class="modal fade" id="modal-pesquisar-processo" tabindex="-1" aria-labelledby="pesquisaProcessoModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="pesquisaProcessoModalLabel">Pesquisar processo</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="infraButton" data-dismiss="modal">Cancelar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        
+                    <div id='wrapper' class="abre-automaticamente">
+        
+                                
+            <div class="bootstrap-styles">
+                <nav id="sidebar-wrapper" aria-labelledby="menu-title" aria-expanded="true" class="abre-automaticamente show menu-dark">
+                    <h2 id="menu-title" class="sr-only">Menu lateral</h2>
+                    <div class="menu-searchbox input-group input-group-sm">
+                        <input id="sidebar-searchbox" type="text" class="form-control menu-search-box" style="margin: 5px;" title="Pesquisar no menu (Alt + m)" placeholder="Pesquisar no Menu (Alt + m)">
+                    </div>
+                    <ul id="main-menu" class="sidebar-nav search-list">
+                        
+    <li class=''>
+
+        <a href="externo_controlador.php?acao=tutorial_acessibilidade"
+           class="collapsed"
+           tabindex="0"
+           data-toggle=""
+           data-target="#menu-ul-25"
+           aria-label="Acessibilidade"
+         >
+            <span class="menu-item-text">Acessibilidade</span>
+            <span class="sub-arrow material-icons">arrow_drop_down</span>
+        </a>
+
+            </li>
+
+    <li class=''>
+
+        <a href="externo_controlador.php?acao=principal"
+           class="collapsed"
+           tabindex="0"
+           data-toggle=""
+           data-target="#menu-ul-1"
+           aria-label="Entrar no Sistema"
+         >
+            <span class="menu-item-text">Entrar no Sistema</span>
+            <span class="sub-arrow material-icons">arrow_drop_down</span>
+        </a>
+
+            </li>
+
+    <li class=''>
+
+        <a href="externo_controlador.php?acao=pauta_audiencias"
+           class="collapsed"
+           tabindex="0"
+           data-toggle=""
+           data-target="#menu-ul-3"
+           aria-label="Audiências"
+         >
+            <span class="menu-item-text">Audiências</span>
+            <span class="sub-arrow material-icons">arrow_drop_down</span>
+        </a>
+
+            </li>
+
+    <li class='has-submenu'>
+
+        <a href="#"
+           class="collapsed"
+           tabindex="0"
+           data-toggle="collapse"
+           data-target="#menu-ul-4"
+           aria-label="Cadastre-se AQUI!"
+         >
+            <span class="menu-item-text">Cadastre-se AQUI!</span>
+            <span class="sub-arrow material-icons">arrow_drop_down</span>
+        </a>
+
+                    <ul class="collapse" id="menu-ul-4">
+                
+    <li class=''>
+
+        <a href="externo_controlador.php?acao=selecionar_tipo_advogado_cadastrar"
+           class="collapsed"
+           tabindex="0"
+           data-toggle=""
+           data-target="#menu-ul-5"
+           aria-label="Cadastrar Advogado"
+         >
+            <span class="menu-item-text">Cadastrar Advogado</span>
+            <span class="sub-arrow material-icons">arrow_drop_down</span>
+        </a>
+
+            </li>
+
+    <li class=''>
+
+        <a href="externo_controlador.php?acao=selecionar_tipo_jus_postulandi_cadastrar"
+           class="collapsed"
+           tabindex="0"
+           data-toggle=""
+           data-target="#menu-ul-6"
+           aria-label="Cadastrar Jus Postulandi"
+         >
+            <span class="menu-item-text">Cadastrar Jus Postulandi</span>
+            <span class="sub-arrow material-icons">arrow_drop_down</span>
+        </a>
+
+            </li>
+
+    <li class=''>
+
+        <a href="externo_controlador.php?acao=selecionar_tipo_conciliador_cadastrar"
+           class="collapsed"
+           tabindex="0"
+           data-toggle=""
+           data-target="#menu-ul-7"
+           aria-label="Cadastrar Conciliador"
+         >
+            <span class="menu-item-text">Cadastrar Conciliador</span>
+            <span class="sub-arrow material-icons">arrow_drop_down</span>
+        </a>
+
+            </li>
+
+    <li class=''>
+
+        <a href="externo_controlador.php?acao=selecionar_tipo_representante_legal_pj_cadastrar"
+           class="collapsed"
+           tabindex="0"
+           data-toggle=""
+           data-target="#menu-ul-22"
+           aria-label="Cadastrar Representante Legal de PJ"
+         >
+            <span class="menu-item-text">Cadastrar Representante Legal de PJ</span>
+            <span class="sub-arrow material-icons">arrow_drop_down</span>
+        </a>
+
+            </li>
+            </ul>
+            </li>
+
+    <li class='has-submenu'>
+
+        <a href="#"
+           class="collapsed"
+           tabindex="0"
+           data-toggle="collapse"
+           data-target="#menu-ul-12"
+           aria-label="Consulta Pública"
+         >
+            <span class="menu-item-text">Consulta Pública</span>
+            <span class="sub-arrow material-icons">arrow_drop_down</span>
+        </a>
+
+                    <ul class="collapse" id="menu-ul-12">
+                
+    <li class=''>
+
+        <a href="externo_controlador.php?acao=processo_consulta_publica_chave/consultar"
+           class="collapsed"
+           tabindex="0"
+           data-toggle=""
+           data-target="#menu-ul-15"
+           aria-label="Consulta Documento pela Chave"
+         >
+            <span class="menu-item-text">Consulta Documento pela Chave</span>
+            <span class="sub-arrow material-icons">arrow_drop_down</span>
+        </a>
+
+            </li>
+
+    <li class=''>
+
+        <a href="externo_controlador.php?acao=processo_consulta_publica"
+           class="collapsed"
+           tabindex="0"
+           data-toggle=""
+           data-target="#menu-ul-30"
+           aria-label="Consulta Processo"
+         >
+            <span class="menu-item-text">Consulta Processo</span>
+            <span class="sub-arrow material-icons">arrow_drop_down</span>
+        </a>
+
+            </li>
+            </ul>
+            </li>
+
+    <li class='has-submenu'>
+
+        <a href="#"
+           class="collapsed"
+           tabindex="0"
+           data-toggle="collapse"
+           data-target="#menu-ul-27"
+           aria-label="Consulta Autenticidade"
+         >
+            <span class="menu-item-text">Consulta Autenticidade</span>
+            <span class="sub-arrow material-icons">arrow_drop_down</span>
+        </a>
+
+                    <ul class="collapse" id="menu-ul-27">
+                
+    <li class=''>
+
+        <a href="externo_controlador.php?acao=consulta_autenticidade_certidao_narratoria"
+           class="collapsed"
+           tabindex="0"
+           data-toggle=""
+           data-target="#menu-ul-28"
+           aria-label="Certidão Narratória"
+         >
+            <span class="menu-item-text">Certidão Narratória</span>
+            <span class="sub-arrow material-icons">arrow_drop_down</span>
+        </a>
+
+            </li>
+
+    <li class=''>
+
+        <a href="externo_controlador.php?acao=processo_parte_procurador_procuracao_certidao_validacao/consultar"
+           class="collapsed"
+           tabindex="0"
+           data-toggle=""
+           data-target="#menu-ul-32"
+           aria-label="Certidão de Poderes da Procuração"
+         >
+            <span class="menu-item-text">Certidão de Poderes da Procuração</span>
+            <span class="sub-arrow material-icons">arrow_drop_down</span>
+        </a>
+
+            </li>
+
+    <li class=''>
+
+        <a href="externo_controlador.php?acao=consulta_autenticidade_documentos"
+           class="collapsed"
+           tabindex="0"
+           data-toggle=""
+           data-target="#menu-ul-29"
+           aria-label="Documentos"
+         >
+            <span class="menu-item-text">Documentos</span>
+            <span class="sub-arrow material-icons">arrow_drop_down</span>
+        </a>
+
+            </li>
+            </ul>
+            </li>
+
+    <li class=''>
+
+        <a href="externo_controlador.php?acao=fale"
+           class="collapsed"
+           tabindex="0"
+           data-toggle=""
+           data-target="#menu-ul-16"
+           aria-label="Fale Conosco"
+         >
+            <span class="menu-item-text">Fale Conosco</span>
+            <span class="sub-arrow material-icons">arrow_drop_down</span>
+        </a>
+
+            </li>
+
+    <li class=''>
+
+        <a href="https://eproc-jur.trf6.jus.br/eproc/externo_controlador.php?acao=jurisprudencia@jurisprudencia/pesquisar"
+           class="collapsed"
+           tabindex="0"
+           data-toggle=""
+           data-target="#menu-ul-31"
+           aria-label="Jurisprudência"
+         >
+            <span class="menu-item-text">Jurisprudência</span>
+            <span class="sub-arrow material-icons">arrow_drop_down</span>
+        </a>
+
+            </li>
+
+    <li class=''>
+
+        <a href="https://portal.trf6.jus.br/e-proc/normativos/"
+           class="collapsed"
+           tabindex="0"
+           data-toggle=""
+           data-target="#menu-ul-18"
+           aria-label="Legislação"
+         target="_blank"  >
+            <span class="menu-item-text">Legislação</span>
+            <span class="sub-arrow material-icons">arrow_drop_down</span>
+        </a>
+
+            </li>
+
+    <li class=''>
+
+        <a href="externo_controlador.php?acao=lista_publica_de_peritos_listar"
+           class="collapsed"
+           tabindex="0"
+           data-toggle=""
+           data-target="#menu-ul-24"
+           aria-label="Lista Pública de Peritos"
+         >
+            <span class="menu-item-text">Lista Pública de Peritos</span>
+            <span class="sub-arrow material-icons">arrow_drop_down</span>
+        </a>
+
+            </li>
+
+    <li class=''>
+
+        <a href="externo_controlador.php?acao=processo_distribuicao_listar"
+           class="collapsed"
+           tabindex="0"
+           data-toggle=""
+           data-target="#menu-ul-19"
+           aria-label="Lista de Distribuição"
+         >
+            <span class="menu-item-text">Lista de Distribuição</span>
+            <span class="sub-arrow material-icons">arrow_drop_down</span>
+        </a>
+
+            </li>
+
+    <li class=''>
+
+        <a href="externo_controlador.php?acao=precedente_qualificado_publico/index"
+           class="collapsed"
+           tabindex="0"
+           data-toggle=""
+           data-target="#menu-ul-33"
+           aria-label="Precedentes Qualificados"
+         >
+            <span class="menu-item-text">Precedentes Qualificados</span>
+            <span class="sub-arrow material-icons">arrow_drop_down</span>
+        </a>
+
+            </li>
+
+    <li class=''>
+
+        <a href="externo_controlador.php?acao=consulta_publica/sessao_julgamento/index"
+           class="collapsed"
+           tabindex="0"
+           data-toggle=""
+           data-target="#menu-ul-20"
+           aria-label="Sessões de Julgamento TR"
+         >
+            <span class="menu-item-text">Sessões de Julgamento TR</span>
+            <span class="sub-arrow material-icons">arrow_drop_down</span>
+        </a>
+
+            </li>
+                                            </ul>
+                    <div id="empty-space" style="height: 200px"></div>
+                </nav>
+                <div id="sidebar-wrapper-background"></div>
+            </div>
+                            <div id='page-content-wrapper' role="main" class="bootstrap-styles">
+                <div id='divInfraAreaTela' class='infraAreaTela mt-2'>
+                    <div id='divInfraAreaTelaD' class="container-fluid">
+                                                    <div class='bootstrap-styles' id='divInfraBarraLocalizacao'>
+				<div class='pl-0 pr-0 pt-1 col-md-12 justify-content-between d-flex'>
+					<h1>Consulta Processual - Detalhes do Processo </h1>
+				</div>
+			</div>
+                                                                        <script>
+                            $(document).ready(function () {
+                                $('#menu-btn').on('click', function () {
+                                    var isExpanded = $(this).attr('aria-expanded') === 'true';
+                                    $(this).attr('aria-expanded', !isExpanded);
+
+                                    $('#sidebar-wrapper').attr('aria-expanded', !isExpanded);
+                                });
+                            });
+                        </script>
+                            <form id="frmProcessoLista" method="post"
+          action="externo_controlador.php?acao=processo_selecionar&acao_origem=processo_consultar&acao_retorno=processo_consultar">
+        <input type="hidden" id="hdnInfraTipoPagina" name="hdnInfraTipoPagina" value="1"/>
+<div id="divInfraBarraComandosSuperior" class="infraBarraComandos">
+<input type="button" name="btnImprimir" value="Imprimir" onclick="infraImprimirDiv('divInfraAreaProcesso');" class="infraButton btn btn-primary" /><button type="button" accesskey="V" name="btnVoltar" id="btnVoltar" value="Voltar" 
+    onclick="location.href='externo_controlador.php?acao=processo_consulta_publica&hash=31552c89c24f8436cb56f4295ed0e7f7';"
+            class="infraButton btn"><span class="infraTeclaAtalho">V</span>oltar</button>
+</div><div id="divInfraAreaDados" class="infraAreaDados" style="height:auto;">
+<div id="divInfraAreaProcesso"><fieldset id="fldAssuntos" class="infraFieldset" style="font-size: 13px"><legend class="infraLegendObrigatorio">Capa do Processo</legend><div class="col-auto d-md-flex mb-0"><dt id="lblNumProcesso" style="font-weight: normal" class="mr-1">Nº do Processo: </dt><dd id="txtNumProcesso" class="infraLabelObrigatorio user-select-all">1005229-55.2023.4.06.3801</dd></div><div class="col-auto d-md-flex mb-0"><dt id="lblAutuacao" style="font-weight: normal" class="mr-1">Data de autuação: </dt><dd id="txtAutuacao" class="infraLabelObrigatorio">12/04/2023 15:07:33</dd></div><div class="col-auto d-md-flex mb-0"><dt id="lblSituacao" style="font-weight: normal" class="mr-1">Situação: </dt><dd id="txtSituacao" class="infraLabelObrigatorio user-select-all">MOVIMENTO</dd></div><div class="col-auto d-md-flex mb-0 mt-2"><dt id="lblOrgaoJulgador" style="font-weight: normal" class="mr-1">Órgão Julgador: </dt><dd class="cursor-pointer mb-0"><span id="txtOrgaoJulgador" class="infraLabelObrigatorio font-weight-bold" onmouseover="return infraTooltipMostrar('<div>Fone: (32)3311-1588</div><div>Email: 03vara.jfa@trf6.jus.br</div>', 'Informações do Órgão', 300);" onmouseout="return infraTooltipOcultar()" tabindex="0">Juízo Titular da 03ª Vara Cível e JEF Adjunto de Juiz de Fora</span></dd></div><div class="col-auto d-md-flex mb-0"><dt id="lblMagistrado" style="font-weight: normal" class="mr-1">Juiz(a): </dt><dd id="txtMagistrado" class="infraLabelObrigatorio">RENATO GRIZOTTI JUNIOR</dd></div><div class="col-auto d-md-flex mb-0"><dt id="lblClasse" style="font-weight: normal" class="mr-1">Classe da ação: </dt><dd id="txtClasse" class="infraLabelObrigatorio">Cumprimento de Sentença contra a Fazenda Pública (Vara Cível)</dd></div><div class="col-auto mt-2 mb-0"><dt id="lblProcRel" class="">Processos relacionados: </dt><table id="tableRelacionado"><tr><tr><td title="Nº do processo relacionado" aria-description="Número do processo relacionado."><span aria-hidden="true" size="1.2em"><a target="_blank" href="controlador.php?acao=processo_consultar_sistema_externo_preparar&txtNumProcessoOriginarioExterno=10042176020234060000&selOrigemExterno=TRF&hash=9d82f350dd8252f91ed04f0fde514613"  >1004217-60.2023.4.06.0000/TRF</a></span></td><td aria-hidden="true" ><span size="1.2em">|</span></td><td aria-description="Tipo de relação" title="Tipo de relação" >Relacionado no 2o. grau</td></tr><tr><tr><td title="Nº do processo relacionado" aria-description="Número do processo relacionado."><span aria-hidden="true" size="1.2em"><a target="_blank" href="controlador.php?acao=processo_consultar_sistema_externo_preparar&txtNumProcessoOriginarioExterno=10052295520234063801&selOrigemExterno=TRF&hash=6ccbc4bef23ad2493e8213fbadf11628"  >1005229-55.2023.4.06.3801/TRF</a></span></td><td aria-hidden="true" ><span size="1.2em">|</span></td><td aria-description="Tipo de relação" title="Tipo de relação" >Relacionado no 2o. grau</td></tr><tr><tr><td aria-label="Número do processo.">1002345-87.2022.4.06.3801</td><td aria-hidden="true"><span size="1.2em"> | </span></td><td aria-description="Tipo de relação" title="Tipo de relação" >Dependente</td></tr></table></div></fieldset><fieldset id="fldAssuntos" class="infraFieldset"><legend class="infraLegendObrigatorio">Assuntos</legend><table width="95%" class="infraTable" summary="Assuntos">
+<tr><th class="infraTh" width="15%">Código</th><th class="infraTh" width="75%">Descrição</th>
+                              <th class="infraTh" width="10%">Principal</th></tr>
+<tr class="infraTrClara"><td>140201</td><td>Pessoa com deficiência, Benefício Assistencial (Art. 203,V CF/88), DIREITO ASSISTENCIAL</td><td align="center">Sim</td></tr>
+</table>
+</fieldset><fieldset id="fldPartes" class="infraFieldset"><legend class="infraLegendObrigatorio">Partes e Representantes</legend><table class="infraTable " summary="Partes e Representantes">
+<tr><th class="infraTh" width="50%">EXEQUENTE</th><th class="infraTh" width="50%">EXECUTADO</th></tr>
+<tr class="infraTrClara"><td>&nbsp;&nbsp;&nbsp; - SANDRA MARCIA TOSTES&nbsp;&nbsp;&nbsp;(017.**********)<br/><br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ALESSANDRA APARECIDA ESTEVAO SOARES&nbsp;&nbsp;&nbsp;MG142599<br/></td><td>&nbsp;&nbsp;&nbsp; - INSTITUTO NACIONAL DO SEGURO SOCIAL&nbsp;&nbsp;&nbsp;(29.9**************)<br/><br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NPREV - ATUAÇÃO PREVIDENCIÁRIA PRIORITÁRIA&nbsp;&nbsp;&nbsp;PREV-PRIO-PRF6<br></td></tr>
+<tr><th class="infraTh" colspan=2>MPF</th></tr><tr class="infraTrClara"><td align="center" colspan=2>&nbsp;&nbsp;&nbsp; MINISTÉRIO PÚBLICO FEDERAL&nbsp;&nbsp;&nbsp;(26.9**************)</td></tr>
+<tr><th class="infraTh" colspan=2>PERITO</th></tr><tr class="infraTrClara"><td align="center" colspan=2>&nbsp;&nbsp;&nbsp; VINICIUS CAIAFFA&nbsp;&nbsp;&nbsp;(795.**********)</td></tr>
+</table>
+</fieldset><fieldset id="fldInformacoesAdicionais" class="infraFieldset"><legend class="infraLegendObrigatorio">Informações Adicionais</legend><div class="row px-3" style="font-size:13px;"><div class="col-12 col-lg-4 mb-2 d-flex">  <strong class="mr-1">Valor da Causa:</strong>  <span>107.181,33</span></div><div class="col-12 col-lg-4 mb-2 d-flex">  <strong class="mr-1">Ação Coletiva de subst. processual:</strong>  <span>Não</span></div><div class="col-12 col-lg-4 mb-2 d-flex">  <strong class="mr-1">Antecipação de Tutela:</strong>  <span>Requerida</span></div><div class="col-12 col-lg-4 mb-2 d-flex">  <strong class="mr-1">Depósito Judicial:</strong>  <span>Não</span></div><div class="col-12 col-lg-4 mb-2 d-flex">  <strong class="mr-1">Grande devedor:</strong>  <span>Não</span></div><div class="col-12 col-lg-4 mb-2 d-flex">  <strong class="mr-1">Idoso:</strong>  <span>Sim</span></div><div class="col-12 col-lg-4 mb-2 d-flex">  <strong class="mr-1">Justiça Gratuita:</strong>  <span>Deferida</span></div><div class="col-12 col-lg-4 mb-2 d-flex">  <strong class="mr-1">Penhora no rosto dos autos:</strong>  <span>Não</span></div><div class="col-12 col-lg-4 mb-2 d-flex">  <strong class="mr-1">Penhora/apreensão de bens:</strong>  <span>Não</span></div><div class="col-12 col-lg-4 mb-2 d-flex">  <strong class="mr-1">Petição Urgente:</strong>  <span>Não</span></div><div class="col-12 col-lg-4 mb-2 d-flex">  <strong class="mr-1">Reconvenção:</strong>  <span>Não</span></div><div class="col-12 col-lg-4 mb-2 d-flex">  <strong class="mr-1">Vista Ministério Público:</strong>  <span>Sim</span></div></div></fieldset><table width="95%" class="infraTable" summary="Assuntos">
+<tr><th class="infraTh">Evento</th><th class="infraTh">Data/Hora</th><th class="infraTh">Descrição</th><th class="infraTh">Usuário</th><th class="infraTh">Documentos</th></tr>
+<tr class="infraTrClara"><td>135</td><td>15/11/2026 00:09:23</td><td>Confirmada a intimação eletrônica - Refer. ao Evento: 127 - Ciência Tácita</td><td>SECJF</td><td>Evento não gerou documento(s)</td></tr>
+<tr class="infraTrEscura"><td>134</td><td>06/11/2026 03:23:00</td><td>Publicado no DJEN - no dia 06/11/2026 - Refer. ao Evento: 126</td><td>secde</td><td>Evento não gerou documento(s)</td></tr>
+<tr class="infraTrClara"><td>133</td><td>05/11/2026 11:01:15</td><td>CIÊNCIA, COM RENÚNCIA AO PRAZO - Refer. ao Evento: 128</td><td>MPF/MG</td><td>Evento não gerou documento(s)</td></tr>
+<tr class="infraTrEscura"><td>132</td><td>05/11/2026 11:00:55</td><td>Confirmada a intimação eletrônica - Refer. ao Evento: 128</td><td>MPF/MG</td><td>Evento não gerou documento(s)</td></tr>
+<tr class="infraTrClara"><td>131</td><td>04/11/2026 17:12:24</td><td>PETIÇÃO - Refer. ao Evento: 126</td><td>MG142599</td><td>Evento não gerou documento(s)</td></tr>
+<tr class="infraTrEscura"><td>130</td><td>04/11/2026 17:12:24</td><td>Confirmada a intimação eletrônica - Refer. ao Evento: 126</td><td>MG142599</td><td>Evento não gerou documento(s)</td></tr>
+<tr class="infraTrClara"><td>129</td><td>04/11/2026 16:35:03</td><td>Ato ordinatório praticado - Documento encaminhado à disponibilização no Diário Eletrônico - no dia 05/11/2026 - Refer. ao Evento: 126</td><td>SECJF</td><td><a class="infraLinkDocumento" href="controlador.php?acao=acessar_documento_publico&doc=381793820247409841955754718946&evento=381793820247409841955754756072&key=48cbe911b1611902d6626a921e51970470668cc10a4df2e7c7891777974f6e34&hash=af15800150fc9c3df151123030cf5521" target="_blank" aria-label="Visualizar documento ATOORD1 do tipo html " data-nome="ATOORD" data-mimetype="html" data-doc="381793820247409841955754718946"><img src="infra_css/imagens/consultar.gif" title="Visualizar Documento" alt="Visualizar" class="infraImgNormal" />ATOORD1</a> </td></tr>
+<tr class="infraTrEscura"><td>128</td><td>04/11/2026 16:06:04</td><td>Expedida/certificada a intimação eletrônica - Requisição de Pagamento Expedida para Conferência<br>Refer.  ao Evento 125<br/>(MPF -  MINISTÉRIO PÚBLICO FEDERAL)<br/> Prazo: 5 dias Status:FECHADO<br/> Data inicial da contagem do prazo: 06/11/2026 00:00:00<br/> Data final: 12/11/2026 23:59:59</td><td>jfmg213603</td><td>Evento não gerou documento(s)</td></tr>
+<tr class="infraTrClara"><td>127</td><td>04/11/2026 16:06:04</td><td>Expedida/certificada a intimação eletrônica - Requisição de Pagamento Expedida para Conferência<br>Refer.  ao Evento 125<br/>(EXECUTADO -  INSTITUTO NACIONAL DO SEGURO SOCIAL)<br/> Prazo: 5 dias Status:ABERTO<br/> Data inicial da contagem do prazo: 17/11/2026 00:00:00<br/> Data final: 24/11/2026 23:59:59</td><td>jfmg213603</td><td>Evento não gerou documento(s)</td></tr>
+<tr class="infraTrEscura"><td>126</td><td>04/11/2026 16:06:03</td><td>Expedida/certificada a intimação eletrônica - Requisição de Pagamento Expedida para Conferência<br>Refer.  ao Evento 125<br/>(EXEQUENTE -  SANDRA MARCIA TOSTES)<br/> Prazo: 5 dias Status:FECHADO<br/> Data inicial da contagem do prazo: 05/11/2026 00:00:00<br/> Data final: 11/11/2026 23:59:59</td><td>jfmg213603</td><td>Evento não gerou documento(s)</td></tr>
+</table>
+</div><br><a style="color:red;" href="externo_controlador.php?acao=processo_seleciona_publica&num_processo=10052295520234063801&eventos=true&num_chave=&num_chave_documento=&hash=8ae10c917d2755b39a5e391e14d7a6dd">Clique aqui para listar todos os eventos</a><div id="divInfraBarraComandosInferior" class="infraBarraComandos">
+<br /><input tabindex="0" type="button" name="btnImprimir" value="Imprimir" onclick="infraImprimirDiv('divInfraAreaProcesso');" class="infraButton btn btn-primary" />&nbsp;
+<button tabindex="0" type="button" accesskey="V" name="btnVoltar" id="btnVoltar" value="Voltar" 
+    onclick="location.href='externo_controlador.php?acao=processo_consulta_publica&hash=31552c89c24f8436cb56f4295ed0e7f7';"
+            class="infraButton btn"><span class="infraTeclaAtalho">V</span>oltar</button>&nbsp;
+</div>
+    </form>
+                <link rel="stylesheet" href="css/dist/bundle-jquery-ui.b84e613d579b13a6.css">
+
+                <!-- src file: web/js/src/main-pos--><script type="text/javascript" charset="utf-8" src="js/dist/npm.lodash.44dd686bca961aed.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.marked.fee8643306ac8f05.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.unorm.55391aaeecff6d5f.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.lodash.debounce.672bc626be69cd98.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.datatables.net-buttons.fa8e16ffcc441847.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.pdfmake.dcbbc86e2e0a0731.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.datatables.net.b8f4118f32644fdc.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.datatables.net-select.c0e340f8e3428ef8.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.datatables.net-select-bs4.390f4362c9acd3bd.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.datatables.net-rowgroup.4f1806aa0fd3d4e5.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.datatables.net-rowgroup-bs4.42b6c6d0dceb57ab.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.datatables.net-responsive.0745837e08112e0a.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.datatables.net-responsive-bs4.0d7fa806c7d913aa.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.datatables.net-buttons-bs4.df8ccc2693b6cc75.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.datatables.net-bs4.6dc58b81449882be.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.plupload.29bcc86105062acc.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.jszip.24761c354ad92ea8.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/npm.focus-within-polyfill.240263f8b5b08522.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/991.3f43d5f5bd25cf8b.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/9364.c3d075a71f8ab666.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/8137.67682088f5c4539f.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/5569.461201f52fc95bf5.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/dist/main-pos.f120a089ec8fe549.js"></script>
+                
+			<link href="infra_css/infra-barra-progresso.css?9.23.25-3.0.8" rel="stylesheet" type="text/css" media="all" /><link href="infra_css/infra-impressao-global.css?9.23.25-3.0.8" rel="stylesheet" type="text/css" media="print" />
+	<link href="infra_css/infra-ajax.css?9.23.25-3.0.8" rel="stylesheet" type="text/css" media="all" />
+				<link href="infra_js/calendario/v1/infra-calendario.css?9.23.25-3.0.8" rel="stylesheet" type="text/css" media="all" />
+				<link href="infra_js/mapa/infra-mapa.css?9.23.25-3.0.8" rel="stylesheet" type="text/css" media="all" />
+		                        <div class="bootstrap-styles">
+                            
+                        </div>
+                    </div>
+                </div>
+                            </div>
+        </div>
+    </div>
+
+                        <div class="bootstrap-styles ">
+                <button id="backTop" type="button" class="btn btn-light shadow-sm" style="display:none;" aria-label="Navegar para início" tabindex="-1">
+                    <i class="material-icons p-0">keyboard_arrow_up</i>
+                </button>
+                <button id="backBottom" type="button" class="btn btn-light shadow-sm" style="display:none;" aria-label="Navegar para fim" tabindex="-1">
+                    <i class="material-icons p-0">keyboard_arrow_down</i>
+                </button>
+            </div>
+            
+    <input type="hidden" id="hdnInfraPrefixoCookie" name="hdnInfraPrefixoCookie" value="TRF6_Eproc_"/>
+
+            <script>
+            $(function() {
+                if(window.ClienteWebsocket) {
+                    delete window.ClienteWebsocket;
+                }
+                var currentScript;
+                currentScript = document.currentScript || document.scripts[document.scripts.length - 1];
+                currentScript.parentNode.removeChild(currentScript);
+            })
+        </script>
+    
+    <div id="infraDivImpressao" class="infraImpressao"></div>
+    
+
+    <div class='bootstrap-styles' aria-live="polite">
+        <div id="toasts-container" class="d-block flex-column-reverse w-100 p-2 align-content-end h-100 w-100 fixed-bottom pe-none" style="pointer-events: none"></div>
+    </div>
+
+    <script src="js/siscom_desktop_icone.js"></script>
+</body>
+
+
+
+</html>
