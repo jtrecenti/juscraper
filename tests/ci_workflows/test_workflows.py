@@ -45,8 +45,27 @@ def test_piso_de_cobertura():
 
 def test_pre_commit_no_ci_pula_so_o_que_roda_em_outro_passo():
     lint = linhas("lint.yml")
-    assert "run: uv run pre-commit run --all-files --show-diff-on-failure" in lint
+    assert 'uv export --extra dev --no-hashes --no-emit-project --quiet -o "$RUNNER_TEMP/restricoes.txt"' in lint
+    assert (
+        'uvx --python 3.12 --constraints "$RUNNER_TEMP/restricoes.txt" '
+        "pre-commit run --all-files --show-diff-on-failure"
+    ) in lint
     assert [linha for linha in lint if linha.startswith("SKIP:")] == ["SKIP: lint-policy,complexity,pytest"]
+
+
+def test_job_pre_commit_pula_os_hooks_que_usam_o_ambiente_do_projeto():
+    # O job roda o pre-commit pelo uvx, sem o extra dev: um hook que roda fora
+    # do ambiente próprio montado pelo pre-commit não acharia o projeto.
+    config = yaml.safe_load((RAIZ / ".pre-commit-config.yaml").read_text(encoding="utf-8"))
+    fora_do_ambiente_proprio = {
+        hook["id"]
+        for repo in config["repos"]
+        for hook in repo.get("hooks", [])
+        if hook.get("language") in {"system", "script", "unsupported", "unsupported_script"}
+    }
+    assert fora_do_ambiente_proprio
+    (skip,) = [linha.split(":", 1)[1].strip() for linha in linhas("lint.yml") if linha.startswith("SKIP:")]
+    assert fora_do_ambiente_proprio <= set(skip.split(","))
 
 
 def test_semgrep_reprova_so_achado_novo():
@@ -98,13 +117,13 @@ def test_workflows_bloqueantes_nao_silenciam_falha():
 def test_perna_de_cobertura_existe_e_roda_o_piso():
     testes = linhas("tests.yml")
     assert "cobertura: true" in testes
-    passo = testes.index("run: uv run pytest --cov --cov-report=")
+    passo = testes.index("run: uv run pytest -n auto --cov --cov-report=")
     assert testes[passo - 1] == "if: ${{ matrix.cobertura }}"
 
 
 def test_pernas_sem_cobertura_rodam_a_suite_offline():
     testes = linhas("tests.yml")
-    passo = testes.index("run: uv run pytest")
+    passo = testes.index("run: uv run pytest -n auto")
     assert testes[passo - 1] == "if: ${{ !matrix.cobertura }}"
 
 
