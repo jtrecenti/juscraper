@@ -12,6 +12,8 @@ CONTROLADOR_URL = "https://eprocwebcon.tjsc.jus.br/consulta1g/externo_controlado
 SEARCH_URL = f"{CONTROLADOR_URL}?acao=jurisprudencia@jurisprudencia/listar_resultados"
 AJAX_URL = f"{CONTROLADOR_URL}?acao=jurisprudencia@jurisprudencia/ajax_paginar_resultado"
 RESULTS_PER_PAGE = 10
+#: Nome do perfil HTTP da busca; a política fica em ``TJSCScraper.perfis_http``.
+PERFIL_CJSG = "cjsg"
 
 
 def build_cjsg_form_body(
@@ -91,7 +93,9 @@ def cjsg_download_manager(
         url = cjsg_url_for_page(pagina_1based)
         # Seguir um redirecionamento transformaria o POST em GET sem o
         # formulário: a busca voltaria sem termo nem filtros, sem erro (#495).
-        resp = request_fn("POST", url, data=data, timeout=60, allow_redirects=False)
+        resp = request_fn(
+            "POST", url, data=data, timeout=60, allow_redirects=False, perfil=PERFIL_CJSG,
+        )
         if 300 <= resp.status_code < 400:
             raise RuntimeError(
                 f"TJSC: busca redirecionada (HTTP {resp.status_code}) para "
