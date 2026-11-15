@@ -1,11 +1,4 @@
-"""Filtro de data e endereço do cjsg do TJSC (#495).
-
-O eproc do TJSC mudou de ``eproc1g.tjsc.jus.br/eproc`` para
-``eprocwebcon.tjsc.jus.br/consulta1g``. O endereço antigo responde 302, e
-seguir o redirecionamento transformava o POST em GET sem formulário: o portal
-devolvia a base inteira, sem termo nem filtros. No host novo, as datas só
-filtram em ``DD/MM/YYYY``.
-"""
+"""TJSC cjsg: datas em DD/MM/YYYY e falha em redirecionamento (#495)."""
 import datetime
 
 import pytest
@@ -59,10 +52,7 @@ def test_cjsg_data_julgamento_chega_em_formato_brasileiro_e_filtra(mocker):
 @pytest.mark.parametrize("pagina", [1, 2])
 @responses.activate
 def test_cjsg_redirecionamento_da_busca_falha_alto(mocker, pagina):
-    """Redirecionamento da busca levanta erro, na primeira página e na AJAX.
-
-    Seguir o redirecionamento devolveria a base sem filtros.
-    """
+    """Redirecionamento da busca levanta erro, na primeira página e na AJAX."""
     mocker.patch("time.sleep")
     responses.add(
         responses.POST,

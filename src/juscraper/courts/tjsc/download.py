@@ -7,9 +7,7 @@ from tqdm import tqdm
 from juscraper.core.http import RequestFn
 from juscraper.utils.pagination import extract_count_with_cascade
 
-# O endereço antigo (eproc1g.tjsc.jus.br/eproc) responde 302 para este host. O
-# redirecionamento converte o POST em GET sem corpo, e o portal devolve a base
-# inteira, sem termo nem filtros (#495).
+# Host novo; o antigo, eproc1g.tjsc.jus.br/eproc, redireciona para cá (#495).
 CONTROLADOR_URL = "https://eprocwebcon.tjsc.jus.br/consulta1g/externo_controlador.php"
 SEARCH_URL = f"{CONTROLADOR_URL}?acao=jurisprudencia@jurisprudencia/listar_resultados"
 AJAX_URL = f"{CONTROLADOR_URL}?acao=jurisprudencia@jurisprudencia/ajax_paginar_resultado"
@@ -96,10 +94,8 @@ def cjsg_download_manager(
         resp = request_fn("POST", url, data=data, timeout=60, allow_redirects=False)
         if 300 <= resp.status_code < 400:
             raise RuntimeError(
-                f"TJSC: a busca de jurisprudência respondeu HTTP {resp.status_code}, "
-                f"redirecionada para "
-                f"{resp.headers.get('Location')!r}. O portal mudou de endereço; "
-                "o raspador precisa ser atualizado."
+                f"TJSC: busca redirecionada (HTTP {resp.status_code}) para "
+                f"{resp.headers.get('Location')!r}; o portal mudou de endereço."
             )
         resp.encoding = resp.apparent_encoding
         return resp.text

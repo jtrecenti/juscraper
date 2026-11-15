@@ -221,12 +221,7 @@ def test_cjsg_download_data_inicio_alias_maps_to_dt_decisao(mocker):
 
 @responses.activate
 def test_cjsg_datas_aceitam_formato_brasileiro(mocker):
-    """Datas de julgamento e publicacao em ``DD/MM/YYYY`` chegam ao form body
-    do eproc no mesmo formato.
-
-    O eproc do TJSC so filtra datas em ``DD/MM/YYYY``; em ISO a busca volta
-    vazia (#495). O teste anterior cobre a entrada em ISO; este, a entrada
-    ja no formato do backend (refs #182, #173, #167)."""
+    """Entrada ja em ``DD/MM/YYYY`` chega igual ao form body (#495)."""
     mocker.patch("time.sleep")
     responses.add(
         responses.POST,
