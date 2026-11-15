@@ -24,9 +24,11 @@ import responses
 from responses import matchers
 
 import juscraper as jus
+from juscraper.courts.tjmg.client import TJMGScraper
 from juscraper.courts.tjmg.cposg_parse import parse_partes
 from juscraper.courts.tjmg.schemas import OutputCPOSGTJMG
 from tests._helpers import load_sample, load_sample_bytes
+from tests.tjmg._helpers import FALHAS_DE_REDE
 
 BASE = "https://www4.tjmg.jus.br/juridico/sf"
 RESULTADO_URL = f"{BASE}/proc_resultado2.jsp"
@@ -62,6 +64,9 @@ def _add(url: str, numero: str, sample: str, status: int = 200) -> None:
 @pytest.fixture
 def scraper():
     return jus.scraper("tjmg", sleep_time=0)
+
+
+TENTATIVAS = TJMGScraper.perfis_http["cposg"].max_retries
 
 
 @responses.activate
@@ -171,10 +176,12 @@ def test_cposg_rejects_invalid_length(scraper):
         scraper.cposg("123")
 
 
+@pytest.mark.parametrize("falha", FALHAS_DE_REDE)
 @responses.activate
-def test_cposg_retries_timeout(scraper, mocker):
-    mocker.patch("juscraper.courts.tjmg.cposg_download.time.sleep")
-    responses.add(responses.GET, RESULTADO_URL, body=requests.Timeout("lento"))
+def test_cposg_retries_falha_de_rede(scraper, mocker, falha):
+    """Timeout e conexao derrubada ganham nova tentativa (#440)."""
+    mocker.patch("time.sleep")
+    responses.add(responses.GET, RESULTADO_URL, body=falha)
     _add(RESULTADO_URL, "00003597920208130205", "resultado_single")
     _add(PARTES_URL, "10000264083767001", "partes_single")
 
@@ -185,8 +192,8 @@ def test_cposg_retries_timeout(scraper, mocker):
 
 @responses.activate
 def test_cposg_warns_when_retries_exhausted(scraper, mocker):
-    mocker.patch("juscraper.courts.tjmg.cposg_download.time.sleep")
-    for _ in range(3):
+    mocker.patch("time.sleep")
+    for _ in range(TENTATIVAS):
         responses.add(responses.GET, RESULTADO_URL, body=requests.Timeout("lento"))
 
     with pytest.warns(UserWarning, match="1 consulta"):
@@ -198,8 +205,8 @@ def test_cposg_warns_when_retries_exhausted(scraper, mocker):
 @responses.activate
 def test_cposg_500_persistente_no_resultado_nao_aborta_lote(scraper, mocker):
     """``RetryExhaustedError`` (5xx esgotado) vira aviso e o lote segue para o proximo numero."""
-    mocker.patch("juscraper.courts.tjmg.cposg_download.time.sleep")
-    for _ in range(3):
+    mocker.patch("time.sleep")
+    for _ in range(TENTATIVAS):
         responses.add(
             responses.GET,
             RESULTADO_URL,
@@ -213,7 +220,7 @@ def test_cposg_500_persistente_no_resultado_nao_aborta_lote(scraper, mocker):
         df = scraper.cposg(["1234567-89.2020.8.13.0024", "0000359-79.2020.8.13.0205"])
 
     falhas = [c for c in responses.calls if "12345678920208130024" in c.request.url]
-    assert len(falhas) == 3
+    assert len(falhas) == TENTATIVAS
     assert list(df["id_cnj"]) == ["12345678920208130024", "00003597920208130205"]
     assert pd.isna(df.iloc[0]["processo"])
     assert df.iloc[1]["processo_interno"] == "1.0000.26.408376-7/001"
@@ -222,9 +229,9 @@ def test_cposg_500_persistente_no_resultado_nao_aborta_lote(scraper, mocker):
 @responses.activate
 def test_cposg_500_persistente_nas_partes_mantem_recurso(scraper, mocker):
     """5xx esgotado na pagina de partes deixa ``partes=None`` sem perder os dados do recurso."""
-    mocker.patch("juscraper.courts.tjmg.cposg_download.time.sleep")
+    mocker.patch("time.sleep")
     _add(RESULTADO_URL, "00003597920208130205", "resultado_single")
-    for _ in range(3):
+    for _ in range(TENTATIVAS):
         responses.add(responses.GET, PARTES_URL, status=500)
 
     with pytest.warns(UserWarning, match="10000264083767001"):
@@ -234,6 +241,34 @@ def test_cposg_500_persistente_nas_partes_mantem_recurso(scraper, mocker):
     assert row["processo_interno"] == "1.0000.26.408376-7/001"
     assert not row["segredo_justica"]
     assert row["partes"] is None
+
+
+@responses.activate
+def test_cposg_500_seguido_de_timeout_divide_as_mesmas_tentativas(scraper, mocker):
+    """O caso observado (500 e depois leitura travada) se resolve dentro do perfil."""
+    mocker.patch("time.sleep")
+    responses.add(responses.GET, RESULTADO_URL, status=500)
+    responses.add(responses.GET, RESULTADO_URL, body=requests.ReadTimeout("lento"))
+    _add(RESULTADO_URL, "00003597920208130205", "resultado_single")
+    _add(PARTES_URL, "10000264083767001", "partes_single")
+
+    df = scraper.cposg("0000359-79.2020.8.13.0205")
+
+    assert df.iloc[0]["processo_interno"] == "1.0000.26.408376-7/001"
+    assert [c.request.req_kwargs["timeout"] for c in responses.calls] == [(10, 30)] * 4
+
+
+@responses.activate
+def test_cposg_politica_ajusta_tentativas(mocker):
+    """``politica={"cposg": ...}`` muda o numero de tentativas do cposg."""
+    mocker.patch("time.sleep")
+    scraper = jus.scraper("tjmg", sleep_time=0, politica={"cposg": {"max_retries": 1}})
+    responses.add(responses.GET, RESULTADO_URL, body=requests.ConnectionError("reset"))
+
+    with pytest.warns(UserWarning, match="1 consulta"):
+        scraper.cposg("0000359-79.2020.8.13.0205")
+
+    assert len(responses.calls) == 1
 
 
 @responses.activate
@@ -345,8 +380,8 @@ def test_parse_partes_preserva_campos_dos_samples_reais(sample, esperado):
 @responses.activate
 def test_cposg_aviso_de_falha_aponta_para_quem_chamou(scraper, mocker, metodo):
     """O ``UserWarning`` sai atribuido ao codigo do usuario, nao ao ``client.py``."""
-    mocker.patch("juscraper.courts.tjmg.cposg_download.time.sleep")
-    for _ in range(3):
+    mocker.patch("time.sleep")
+    for _ in range(TENTATIVAS):
         responses.add(responses.GET, RESULTADO_URL, status=500)
 
     with pytest.warns(UserWarning) as avisos:

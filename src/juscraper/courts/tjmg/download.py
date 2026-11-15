@@ -22,6 +22,9 @@ DWR_VALIDATE_URL = (
     f"{BASE}/dwr/call/plaincall/ValidacaoCaptchaAction.isCaptchaValid.dwr"
 )
 
+PERFIL_CJSG = "cjsg"
+"""Perfil HTTP de todas as requisicoes do ``cjsg`` (formulario, captcha e busca)."""
+
 RESULTS_PER_PAGE = 10
 MAX_RESULTS = 400  # TJMG caps result lists at 400 entries.
 
@@ -40,7 +43,8 @@ def _solve_captcha(
     server-side session, so subsequent search requests succeed. The local
     loop of up to ``max_attempts`` tries is a semantic retry (wrong OCR
     decoding) — distinct from the transport-level retry already centralized
-    in ``request_fn`` for transient 429/5xx.
+    in ``request_fn`` (perfil ``"cjsg"``) for 403/429/500/502/503/504, timeouts and
+    dropped connections.
     """
     try:
         import txtcaptcha
@@ -53,7 +57,7 @@ def _solve_captcha(
     jsid = session.cookies.get("JSESSIONID", "")
     for attempt in range(1, max_attempts + 1):
         img_resp = request_fn(
-            "GET", f"{CAPTCHA_IMG_URL}?{time.time()}", timeout=60
+            "GET", f"{CAPTCHA_IMG_URL}?{time.time()}", perfil=PERFIL_CJSG
         )
         img = img_resp.content
         with tempfile.NamedTemporaryFile(
@@ -82,7 +86,7 @@ def _solve_captcha(
             DWR_VALIDATE_URL,
             data=body,
             headers={"Content-Type": "text/plain"},
-            timeout=60,
+            perfil=PERFIL_CJSG,
         )
         if "'0','0',true" in resp.text:
             return True
@@ -137,7 +141,7 @@ def _build_params(
 
 
 def _fetch_page(request_fn: RequestFn, params: dict) -> str:
-    resp = request_fn("GET", SEARCH_URL, params=params, timeout=120)
+    resp = request_fn("GET", SEARCH_URL, params=params, perfil=PERFIL_CJSG)
     resp.encoding = "iso-8859-1"
     return resp.text
 
@@ -153,7 +157,7 @@ def _validate_session(
     da paginacao (HTTP 401), para que as duas entradas repitam a mesma
     sequencia (formulario, captcha, DWR) e a mesma mensagem de erro.
     """
-    request_fn("GET", FORM_URL, timeout=60)
+    request_fn("GET", FORM_URL, perfil=PERFIL_CJSG)
     if not _solve_captcha(request_fn, session, max_attempts=max_attempts):
         raise RuntimeError(
             f"TJMG captcha validation failed after {max_attempts} attempts."
@@ -217,7 +221,9 @@ def cjsg_download(
     request_fn : RequestFn
         HTTP callable that handles retry + raise_for_status — em uso normal e
         ``TJMGScraper._request_with_retry`` (via ``core.http.HTTPScraper``),
-        centralizando backoff exponencial para 429/5xx.
+        chamado com o perfil :data:`PERFIL_CJSG`, que centraliza o backoff
+        exponencial para 403/429/500/502/503/504, timeout e
+        conexao derrubada.
     session : requests.Session
         Compartilhada com ``request_fn`` (mesma session do
         :class:`HTTPScraper`). Precisamos do handle direto para ler o

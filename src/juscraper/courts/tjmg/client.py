@@ -1,19 +1,22 @@
 """Scraper for the Court of Justice of Minas Gerais (TJMG)."""
 from __future__ import annotations
 
-from typing import Any, Literal
+from collections.abc import Mapping
+from typing import Any, ClassVar, Literal
 
 import pandas as pd
 import requests
 from pydantic import ValidationError
 
-from juscraper.core.http import HTTPScraper
+from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.utils.cnj import clean_cnj
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
+from .cposg_download import PERFIL_CPOSG
 from .cposg_download import cposg_download as _cposg_download
 from .cposg_parse import cposg_parse as _cposg_parse
 from .cposg_parse import extract_partes_ids
+from .download import PERFIL_CJSG
 from .download import cjsg_download as _cjsg_download
 from .parse import cjsg_parse as _cjsg_parse
 from .schemas import InputCJSGTJMG, InputCPOSGTJMG
@@ -27,6 +30,13 @@ class TJMGScraper(HTTPScraper):
     `txtcaptcha <https://github.com/jtrecenti/txtcaptcha>`_. Captcha
     validation is flagged once per session, so pagination reuses the
     same HTTP session after the first successful decoding.
+
+    Os dois portais derrubam conexoes e travam respostas de forma
+    intermitente (#440). Os perfis HTTP ``"cjsg"`` e ``"cposg"`` repetem a
+    requisicao em timeout, conexao derrubada (``ConnectionResetError``,
+    ``ChunkedEncodingError``) e status 403, 429, 500, 502, 503 e 504, e sao
+    ajustaveis com
+    ``politica=`` no construtor.
     """
 
     BASE_URL = "https://www5.tjmg.jus.br/jurisprudencia"
@@ -35,8 +45,37 @@ class TJMGScraper(HTTPScraper):
         "(KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"
     )
 
-    def __init__(self, sleep_time: float = 1.0):
-        super().__init__("TJMG", sleep_time=sleep_time)
+    #: Prazo de conexao curto para o portal fora do ar falhar logo; leitura
+    #: longa porque a busca do cjsg chega a demorar mais de um minuto.
+    perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
+        PERFIL_CJSG: RequestPolicy(
+            timeout=(10, 120),
+            retry_on_timeout=True,
+            retry_on_connection_error=True,
+        ),
+        PERFIL_CPOSG: RequestPolicy(
+            timeout=(10, 30),
+            retry_on_timeout=True,
+            retry_on_connection_error=True,
+        ),
+    }
+
+    def __init__(
+        self,
+        sleep_time: float = 1.0,
+        *,
+        politica: Mapping[str, Mapping[str, Any]] | None = None,
+    ) -> None:
+        """Cria o raspador.
+
+        Args:
+            sleep_time: Pausa, em segundos, entre paginas do ``cjsg`` e entre
+                requisicoes do ``cposg`` (resultado e partes de cada recurso).
+            politica: Ajustes por campo dos perfis HTTP ``"cjsg"`` e
+                ``"cposg"`` (ver :class:`~juscraper.core.http.RequestPolicy`),
+                por exemplo ``{"cjsg": {"timeout": 180, "max_retries": 5}}``.
+        """
+        super().__init__("TJMG", sleep_time=sleep_time, politica=politica)
 
     def _configure_session(self, session: requests.Session) -> None:
         """TJMG's portal applies User-Agent gating — keep the Chrome UA."""
