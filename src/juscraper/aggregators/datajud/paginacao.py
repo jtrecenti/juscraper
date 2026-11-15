@@ -180,22 +180,42 @@ def _verificar_fim_pagina(
     _verificar_termino_prematuro(hits, effective_size, total_info, percorridos, contexto)
 
 
-def _motivos_dos_shards(shards: dict[str, Any]) -> str:
-    """``reason`` distintos de ``_shards.failures``, como ``" (motivo: tipo: texto)"``; vazio sem motivo.
+LIMITE_DO_MOTIVO = 120
+"""Caracteres do texto de cada ``reason`` citados na mensagem; o resto vira ``"…"``."""
 
-    Cita os primeiros, por :func:`~juscraper.core.failures.exemplos_do_aviso`:
-    o ``reason`` costuma trazer o nó ou o shard, e dezenas de shards falhos
-    encheriam a mensagem.
+
+def _motivo_do_shard(falha: object) -> tuple[str, str] | None:
+    """``(chave, texto)`` do ``reason`` de um item de ``_shards.failures``; ``None`` sem motivo.
+
+    A chave é o ``type``, quando há: o texto do mesmo erro muda de shard para
+    shard (nó, endereço, horário), e agrupar por ele repetiria o motivo.
+    """
+    razao = falha.get("reason") if isinstance(falha, dict) else None
+    if isinstance(razao, str):
+        razao = {"reason": razao}
+    if not isinstance(razao, dict):
+        return None
+    tipo, texto = razao.get("type"), razao.get("reason")
+    if isinstance(texto, str) and len(texto) > LIMITE_DO_MOTIVO:
+        texto = texto[:LIMITE_DO_MOTIVO].rstrip() + "…"
+    partes = [str(parte) for parte in (tipo, texto) if parte]
+    return (partes[0], ": ".join(partes)) if partes else None
+
+
+def _motivos_dos_shards(shards: dict[str, Any]) -> str:
+    """Motivos distintos de ``_shards.failures``, como ``" (motivo: tipo: texto)"``; vazio sem motivo.
+
+    Um motivo por ``type``, com o texto encurtado, e só os primeiros, por
+    :func:`~juscraper.core.failures.exemplos_do_aviso`: com o DataJud
+    sobrecarregado, dezenas de shards falham com o mesmo erro.
     """
     falhas = shards.get("failures")
-    motivos: list[str] = []
+    motivos: dict[str, str] = {}
     for falha in falhas if isinstance(falhas, list) else []:
-        razao = falha.get("reason") if isinstance(falha, dict) else None
-        if isinstance(razao, dict):
-            razao = ": ".join(str(razao[campo]) for campo in ("type", "reason") if razao.get(campo))
-        if isinstance(razao, str) and razao and razao not in motivos:
-            motivos.append(razao)
-    return f" (motivo: {'; '.join(exemplos_do_aviso(motivos))})" if motivos else ""
+        motivo = _motivo_do_shard(falha)
+        if motivo:
+            motivos.setdefault(*motivo)
+    return f" (motivo: {'; '.join(exemplos_do_aviso(list(motivos.values())))})" if motivos else ""
 
 
 def _descrever_shards_falhos(shards: object) -> str:

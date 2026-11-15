@@ -315,10 +315,23 @@ class TestContarProcessos:
         assert df["error"].tolist() == [None, None]
 
 
-def test_motivos_dos_shards_param_no_limite(monkeypatch):
+# ``reason`` real do DataJud sobrecarregado (notebook ``datajud.ipynb``, 15/11/2026):
+# 19 de 20 shards do TJSP falharam com textos que só diferem no endereço e no horário.
+REJEITADO = (
+    "rejected execution of TimedRunnable{{original=ActionRunnable#wrap[org.elasticsearch.search."
+    "SearchService$$Lambda/0x00007f3d08719230@{id}], creationTimeNanos={nanos}, startTimeNanos=0, "
+    "finishTimeNanos=-1, failedOrRejected=false}} on TaskExecutionTimeTrackingEsThreadPoolExecutor"
+    "[name = instance-0000000008/search, queue capacity = 1000, task execution EWMA = 3.5s]"
+)
+
+
+def test_motivo_repetido_com_texto_variavel_sai_uma_vez_e_encurtado(monkeypatch):
     pagina = _pagina(1, falhos=5)
     pagina["_shards"]["failures"] = [
-        _falha_de_shard("node_not_connected_exception", f"[node-{n}] Node not connected", n) for n in range(5)
+        _falha_de_shard(
+            "es_rejected_execution_exception", REJEITADO.format(id=f"4c2028e{n}", nanos=18371923530822631 + n), n,
+        )
+        for n in range(5)
     ]
     _instalar_paginas(monkeypatch, [pagina])
 
@@ -326,8 +339,22 @@ def test_motivos_dos_shards_param_no_limite(monkeypatch):
         jus.scraper("datajud", verbose=0).listar_processos(tribunal="TJSP", tamanho_pagina=10)
 
     mensagem = str(exc_info.value)
-    assert "[node-2] Node not connected; e mais 2)" in mensagem
-    assert "node-3" not in mensagem
+    assert mensagem.count("es_rejected_execution_exception") == 1
+    assert "5 de 5 shard(s) falharam (motivo: es_rejected_execution_exception: rejected execution of" in mensagem
+    assert "…); a página e o total" in mensagem
+    assert "creationTimeNanos" not in mensagem
+
+
+def test_motivos_dos_shards_param_no_limite(monkeypatch):
+    pagina = _pagina(1, falhos=5)
+    pagina["_shards"]["failures"] = [_falha_de_shard(f"tipo_{n}", "erro", n) for n in range(5)]
+    _instalar_paginas(monkeypatch, [pagina])
+
+    with pytest.raises(ColetaParcialError) as exc_info:
+        jus.scraper("datajud", verbose=0).listar_processos(tribunal="TJSP", tamanho_pagina=10)
+
+    mensagem = str(exc_info.value)
+    assert "(motivo: tipo_0: erro; tipo_1: erro; tipo_2: erro; e mais 2)" in mensagem
 
 
 def test_resposta_parcial_com_total_invalido_na_pagina_1_cita_as_duas_causas(monkeypatch):
