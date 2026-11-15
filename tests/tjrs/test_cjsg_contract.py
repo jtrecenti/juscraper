@@ -162,7 +162,7 @@ def test_cjsg_timeout_persistente_propaga_apos_as_tentativas(mocker):
 
 @pytest.mark.parametrize(
     ("politica", "timeout_esperado"),
-    [(None, 30), ({"cjsg": {"timeout": 7}}, 7)],
+    [(None, (10, 30)), ({"cjsg": {"timeout": 7}}, 7)],
     ids=["default", "politica"],
 )
 @responses.activate
