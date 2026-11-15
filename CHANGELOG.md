@@ -88,6 +88,14 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Deprecated
 
+- TJGO `cjsg`/`cjsg_download`: `id_instancia=2` e `id_instancia=3` passam a ser aliases deprecados de `151` e `15`, e `id_instancia=1` (1º grau), sem substituto, também é deprecado; os três emitem `DeprecationWarning` (ver `Fixed`). Deprecado a partir da 0.6.0, com remoção prevista na 0.7.0.
+
+  | Valor antigo | Valor canônico |
+  | --- | --- |
+  | `id_instancia=1` | sem substituto: o formulário do Projudi não tem o 1º grau |
+  | `id_instancia=2` | `id_instancia=151` (Turma de Uniformização / Turmas Recursais) |
+  | `id_instancia=3` | `id_instancia=15` (Tribunal) |
+
 - TJAP `cjsg`/`cjsg_download`: `votacao="Unanime"`, sem acento, passa a ser alias deprecado de `"Unânime"` e emite `DeprecationWarning` (ver `Fixed`). Deprecado a partir da 0.6.0, com remoção prevista na 0.7.0.
 
   | Valor antigo | Valor canônico |
@@ -111,6 +119,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - `BotChallengeBlockedError`, as subclasses (`WafChallengeError` e o `DesafioF5Error` do TRF6) e `InvalidJSONResponseError` passam a sobreviver a `pickle` e `copy`, com a mensagem e os atributos. Antes, `pickle.loads` levantava `TypeError`, porque o erro era recriado só com a mensagem; isso perdia o erro numa coleta rodada em `ProcessPoolExecutor`, inclusive dentro de `ColetaParcialError.falhas`.
 - TRF6: o construtor passa a recusar `max_captcha_attempts` menor que 1 (`ValueError`), que fazia todo CNJ sair `captcha_esgotado` sem consulta, e `max_captcha_attempts` ou `max_captcha_esgotado_seguidos` que não sejam inteiros (`TypeError`), como `"3"`, `2.5` ou `3.0`; inteiros do numpy continuam aceitos. Antes, esses valores eram aceitos ou falhavam só no meio do lote.
 - TJRJ `cjsg`/`cjsg_download` com `origem="2"` (Tribunal de Alçada Cível), `"3"` (Alçada Criminal) ou `"5"` (Conselho da Magistratura) passa a trazer resultados sem filtro de ano. Cada origem tem os próprios anos e competências no formulário: os Tribunais de Alçada vão de 1975 a 1998, o de Alçada Criminal só tem a competência criminal, e o Conselho da Magistratura não tem competência. O raspador mandava o ano corrente e a competência `"1"` do formulário inicial, e o portal respondia HTTP 500 até esgotar as tentativas. Agora `ano_inicio`, `ano_fim` e `competencia` em `None` usam a primeira opção do formulário da origem, como o navegador; `competencia` passa a ter default `None`, que na 2ª instância e na Turma Recursal continua sendo `"1"`. Um ano ou uma competência que o formulário da origem não oferece (por exemplo, `origem="2", ano_inicio=2020`) levanta `ValueError` com as opções da origem, antes da busca.
+- TJGO `cjsg`/`cjsg_download`: `id_instancia` passa a aceitar as opções do seletor "Instância" do formulário do Projudi: `0` (todas), `15` (Tribunal) e `151` (Turma de Uniformização / Turmas Recursais). A docstring indicava `1` (1º grau), `2` (recursal) e `3` (tribunal), valores que o formulário nunca ofereceu e que iam ao portal como estavam. `2` e `3` passam a enviar `151` e `15`, com `DeprecationWarning` (ver `Deprecated`); `1` continua indo ao portal como está, com `DeprecationWarning`, porque o formulário atual não tem o 1º grau.
 - TJAP `cjsg`/`cjsg_download`: `votacao="Unanime"`, a grafia que a docstring indicava até a 0.5.0, passa a trazer os acórdãos unânimes. O portal só reconhece `"Unânime"`, com acento, e, em 15/11/2026, devolvia para `"Unanime"` os mesmos acórdãos de `"Maioria"`, sem erro.
 - TRF3 `cjsg` e `cjsg_download`: com o extra `juscraper[tls]` instalado, as requisições ao portal de jurisprudência saem com o TLS do Chrome, como no `cpopg` e no `cposg`. Em 15/11/2026, o Akamai do portal deixava sem resposta até o timeout as requisições do `requests` vindas de IP de datacenter, e o `cjsg` falhava depois das tentativas. Sem o extra, a busca segue com o `requests`, que funciona de IP residencial.
 - TRF3 `cjsg` e `cjsg_download`: o 403 do sensor de bot do Akamai, que não traz "Access Denied" (no formato observado na consulta processual do TRF3), passa a levantar `BotChallengeBlockedError` na primeira requisição, como no `cpopg`. Antes, era retentado como um 403 comum e terminava em `RetryExhaustedError`.

@@ -120,6 +120,8 @@ _LITERAL_207_CASES = [
     (InputCJSGTJPA, "query_type", ["free", "anywords"], ["any", "anyWords"]),
     (InputCJSGTJPA, "query_scope", ["ementa", "inteiroTeor", "inteiroteor"], ["integra", "xyz"]),
     (InputCJSGTJPB, "id_origem", ["8", "2", "8,2"], ["2,8", "1", 8]),
+    # 2 e 3 saem do schema: o client os converte em 151 e 15 com DeprecationWarning.
+    (InputCJSGTJGO, "id_instancia", [0, 15, 151, "0", "151", 1], [2, "3", 16]),
     (InputCJSGTJGO, "id_serventia_subtipo", ["0", "14", "83", 0, 14], ["4", 99, True]),
     (
         InputCJPGTJES,
@@ -371,6 +373,19 @@ def test_tjgo_id_serventia_subtipo_bate_com_o_seletor_do_projudi():
     codigos = {"0"} | set(re.findall(r'"codigo": "(\d+)"', tipos))
     campo = InputCJSGTJGO.model_fields["id_serventia_subtipo"].annotation
     assert set(get_args(campo)) == codigos
+
+
+def test_tjgo_id_instancia_bate_com_o_seletor_do_projudi():
+    """O ``Literal`` traz as opções do seletor "Instância" do formulário atual.
+
+    ``1`` (1º grau) fica fora da comparação: deprecado, segue aceito até a 0.7.0.
+    """
+    html = load_sample("tjgo", "cjsg/blocked_turnstile.html", encoding="latin-1")
+    select = re.search(r'<select id="Id_Instancia".*?</select>', html, re.S)
+    assert select is not None
+    opcoes = set(re.findall(r'<option value="(\d+)"', select.group(0)))
+    aceitos = {str(v) for v in get_args(InputCJSGTJGO.model_fields["id_instancia"].annotation)}
+    assert aceitos - {"1"} == opcoes
 
 
 def test_tjrj_competencia_e_origem_batem_com_os_seletores_do_ejuris():

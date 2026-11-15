@@ -40,7 +40,7 @@ def test_cjsg_all_filters_land_in_form_body(mocker):
     _add_post(build_cjsg_payload(
         pesquisa="dano moral",
         page=1,
-        id_instancia="2",
+        id_instancia="151",
         id_area="1",
         id_serventia_subtipo="42",
         numero_processo="0000000-00.0000.0.00.0000",
@@ -52,7 +52,7 @@ def test_cjsg_all_filters_land_in_form_body(mocker):
     df = jus.scraper("tjgo").cjsg(
         "dano moral",
         paginas=1,
-        id_instancia=2,
+        id_instancia=151,
         id_area=1,
         id_serventia_subtipo=42,
         numero_processo="0000000-00.0000.0.00.0000",
@@ -69,7 +69,7 @@ def test_cjsg_all_filters_land_in_form_body(mocker):
         "PosicaoPaginaAtual": "0",
         "Viewstate": "",
         "Texto": "dano moral",
-        "Id_Instancia": "2",
+        "Id_Instancia": "151",
         "Id_Area": "1",
         "Id_ServentiaSubTipo": "42",
         "Serventia": "",
@@ -221,5 +221,34 @@ def test_cjsg_data_publicacao_canonico_no_extra_warning(mocker):
         data_publicacao_inicio="2024-01-01",
         data_publicacao_fim="2024-03-31",
     )
+
+    assert isinstance(df, pd.DataFrame)
+
+
+@pytest.mark.parametrize(("antigo", "novo"), [(2, "151"), ("3", "15")])
+@responses.activate
+def test_cjsg_id_instancia_antigo_vira_opcao_do_form_com_aviso(mocker, antigo, novo):
+    """``2`` (recursal) e ``3`` (tribunal), da docstring antiga, nao sao opcoes
+    do seletor "Instancia" do Projudi (``0``, ``15``, ``151``): viram a opcao
+    equivalente, com ``DeprecationWarning``."""
+    mocker.patch("time.sleep")
+    _add_get_prime()
+    _add_post(build_cjsg_payload(pesquisa="dano moral", page=1, id_instancia=novo))
+
+    with pytest.warns(DeprecationWarning, match=f"id_instancia={antigo!r}.*id_instancia={novo}"):
+        df = jus.scraper("tjgo").cjsg("dano moral", paginas=1, id_instancia=antigo)
+
+    assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
+def test_cjsg_id_instancia_primeiro_grau_avisa_e_vai_como_esta(mocker):
+    """O seletor do Projudi nao tem o 1o grau: ``1`` avisa e vai ao portal como antes."""
+    mocker.patch("time.sleep")
+    _add_get_prime()
+    _add_post(build_cjsg_payload(pesquisa="dano moral", page=1, id_instancia="1"))
+
+    with pytest.warns(DeprecationWarning, match=r"id_instancia=1 .*\(1o grau\)"):
+        df = jus.scraper("tjgo").cjsg("dano moral", paginas=1, id_instancia=1)
 
     assert isinstance(df, pd.DataFrame)
