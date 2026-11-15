@@ -132,10 +132,11 @@ class STFScraper(HTTPScraper):
                   ``processo_classe_processual_unificada_classe_sigla.keyword``.
                 * ``inteiro_teor`` (bool): Pesquisa tambem no inteiro teor, como a
                   opcao do portal. Default ``False``.
-                * ``data_julgamento_inicio`` / ``data_julgamento_fim`` (str):
-                  ``DD/MM/AAAA``.
-                * ``data_publicacao_inicio`` / ``data_publicacao_fim`` (str):
-                  ``DD/MM/AAAA``.
+                * ``data_julgamento_inicio`` / ``data_julgamento_fim``
+                  (str | date): ``DD/MM/AAAA``, ``DD-MM-AAAA``, ``AAAA-MM-DD``,
+                  ``AAAA/MM/DD``, ``date`` ou ``datetime``.
+                * ``data_publicacao_inicio`` / ``data_publicacao_fim``
+                  (str | date): nos mesmos formatos.
                 * ``tamanho_pagina`` (int): Documentos por pagina, de 1 a 250.
                   Default ``250``.
                 * ``checkpoint_dir`` (str | Path): Diretório opcional de páginas

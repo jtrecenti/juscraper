@@ -3,6 +3,8 @@ Scraper for the Tribunal de Justica de Pernambuco (TJPE).
 """
 
 
+from datetime import date
+
 import pandas as pd
 
 from juscraper.core.http import HTTPScraper
@@ -105,8 +107,8 @@ class TJPEScraper(HTTPScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        data_julgamento_inicio: str | None = None,
-        data_julgamento_fim: str | None = None,
+        data_julgamento_inicio: str | date | None = None,
+        data_julgamento_fim: str | date | None = None,
         relator: str | None = None,
         classe: str | None = None,
         assunto: str | None = None,
@@ -160,8 +162,8 @@ class TJPEScraper(HTTPScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        data_julgamento_inicio: str | None = None,
-        data_julgamento_fim: str | None = None,
+        data_julgamento_inicio: str | date | None = None,
+        data_julgamento_fim: str | date | None = None,
         relator: str | None = None,
         classe: str | None = None,
         assunto: str | None = None,
@@ -182,10 +184,10 @@ class TJPEScraper(HTTPScraper):
                 deprecados ``query`` / ``termo``.
             paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
                 todas. Default ``None``.
-            data_julgamento_inicio (str): Data inicial de julgamento
+            data_julgamento_inicio (str | date): Data inicial de julgamento
                 (``DD/MM/AAAA``, ``DD-MM-AAAA``, ``AAAA-MM-DD``, ``AAAA/MM/DD``,
                 :class:`datetime.date` ou :class:`datetime.datetime`).
-            data_julgamento_fim (str): Data final de julgamento (mesmos
+            data_julgamento_fim (str | date): Data final de julgamento (mesmos
                 formatos de ``data_julgamento_inicio``).
             relator (str): Nome do relator (deve bater exatamente com o valor
                 do dropdown do formulario).

@@ -19,6 +19,7 @@ em :func:`test_cjsg_unknown_kwarg_raises`.
 from __future__ import annotations
 
 import warnings
+from datetime import date, datetime, timezone
 from urllib.parse import parse_qs
 
 import pandas as pd
@@ -87,6 +88,27 @@ def test_cjsg_all_filters_land_in_form_body(mocker):
     )
     assert isinstance(df, pd.DataFrame)
     assert df.empty
+
+
+@pytest.mark.parametrize("metodo", ["cjsg", "cjsg_download"])
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_date_e_datetime_geram_o_mesmo_body_que_a_string(mocker, metodo):
+    """``date`` e ``datetime`` chegam ao formulario como a string ``DD/MM/AAAA`` equivalente."""
+    mocker.patch("time.sleep")
+    expected = {
+        f"{FORM}:j_id59InputDate": "01/01/2024",
+        f"{FORM}:periodoFimInputDate": "31/03/2024",
+    }
+    _add_get_consulta()
+    _add_post_no_results(match=[urlencoded_body_subset_matcher(expected)])
+
+    resultado = getattr(jus.scraper("tjpe"), metodo)(
+        "dano moral",
+        paginas=1,
+        data_julgamento_inicio=date(2024, 1, 1),
+        data_julgamento_fim=datetime(2024, 3, 31, 15, 30, tzinfo=timezone.utc),
+    )
+    assert len(resultado) == 0
 
 
 @responses.activate(registry=OrderedRegistry)
