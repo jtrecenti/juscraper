@@ -11,7 +11,7 @@ import responses
 import juscraper as jus
 from juscraper.core.exceptions import BotChallengeBlockedError, WafChallengeError
 from juscraper.core.waf import USER_AGENT, WAF_COOKIE
-from juscraper.courts.tjto.download import BASE_URL
+from juscraper.courts.tjto.download import BASE_URL, EMENTA_URL
 from tests._helpers import load_sample
 
 
@@ -109,3 +109,19 @@ def test_captcha_levanta_bloqueio_com_explicacao(tjto, obter):
         tjto.cjsg("dano moral", paginas=1)
 
     obter.assert_not_called()
+
+
+@responses.activate
+def test_desafio_no_get_da_ementa_tambem_renova_o_cookie(tjto, obter):
+    uuid = "f4b3440350bb6c8e6bdd708d78c43e85"
+    responses.add(responses.GET, EMENTA_URL, body="", status=202, headers={"x-amzn-waf-action": "challenge"})
+    responses.add(
+        responses.GET, EMENTA_URL, body=load_sample("tjto", f"cjsg/ementa_{uuid}.json"),
+        content_type="application/json",
+    )
+
+    doc = tjto.cjsg_ementa(uuid)
+
+    assert doc
+    obter.assert_called_once()
+    assert responses.calls[1].request.url == responses.calls[0].request.url

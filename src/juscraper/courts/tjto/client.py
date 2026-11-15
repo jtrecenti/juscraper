@@ -204,6 +204,13 @@ class TJTOScraper(HTTPScraper):
             ValueError: Quando um canonico e seu alias deprecado sao passados
                 simultaneamente.
             ValidationError: Quando um filtro tem formato invalido.
+            BotChallengeBlockedError: Quando o AWS WAF do portal pede CAPTCHA,
+                o que acontece depois de varias buscas seguidas do mesmo IP.
+            WafChallengeError: Quando o WAF desafia de novo depois de o cookie
+                ``aws-waf-token`` ser renovado, ou quando o cookie nao pode ser
+                obtido.
+            ImportError: Quando o WAF desafia e o Playwright nao esta
+                instalado (extra ``juscraper[waf]``).
 
         Returns:
             DataFrame com as decisoes.
