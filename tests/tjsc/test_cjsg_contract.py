@@ -82,9 +82,9 @@ def test_cjsg_single_page(mocker):
 def test_cjsg_paginas_none_descobre_via_html(mocker):
     r"""``paginas=None`` exercises ``_get_total_pages`` against the HTML.
 
-    The ``single_page`` sample contains "8 documentos encontrados", which
+    The ``single_page`` sample contains "9 documentos encontrados", which
     the regex ``(\d+)\s*documentos?\s*encontrados?`` resolves to 1 page
-    (8 ≤ ``RESULTS_PER_PAGE``). Only one request must hit the wire.
+    (9 ≤ ``RESULTS_PER_PAGE``). Only one request must hit the wire.
     """
     mocker.patch("time.sleep")
     _add_page("plano saude paciente doenca rara", 1, "cjsg/single_page.html")
