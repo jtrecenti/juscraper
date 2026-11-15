@@ -1,6 +1,4 @@
 """Filter-propagation contract for TJSC cjsg."""
-from urllib.parse import parse_qsl
-
 import pandas as pd
 import pytest
 import responses
@@ -8,7 +6,7 @@ from responses.matchers import urlencoded_params_matcher
 
 import juscraper as jus
 from juscraper.courts.tjsc.download import build_cjsg_form_body, cjsg_url_for_page
-from tests._helpers import assert_unknown_kwarg_raises, load_sample_bytes
+from tests._helpers import assert_unknown_kwarg_raises, corpo_form_enviado, load_sample_bytes
 
 
 @responses.activate
@@ -49,7 +47,7 @@ def test_cjsg_all_filters_land_in_form_body(mocker):
 
     assert isinstance(df, pd.DataFrame)
     # O matcher deriva do builder; os nomes de campo do eproc ficam pinados aqui.
-    assert dict(parse_qsl(responses.calls[0].request.body, keep_blank_values=True)) == {
+    assert corpo_form_enviado(responses.calls[0].request) == {
         "txtPesquisa": "dano moral",
         "rdoCampo": "I",
         "txtProcesso": "00000000000000000000",

@@ -1,4 +1,6 @@
 """Filter propagation, deprecated aliases and payload shape for STF listar_decisoes."""
+import json
+
 import pytest
 import responses
 
@@ -48,6 +50,21 @@ def test_todos_os_filtros_chegam_ao_corpo(stf, mocker):
     )
 
     assert len(responses.calls) == 3
+    # O matcher deriva do builder; os nomes de campo do Elasticsearch ficam pinados aqui.
+    for chamada in responses.calls:
+        corpo = json.loads(chamada.request.body)
+        assert corpo["post_filter"]["bool"]["must"] == [
+            {"term": {"base": "acordaos"}},
+            {"terms": {"processo_classe_processual_unificada_classe_sigla.keyword": ["ARE", "Rcl"]}},
+        ]
+        consulta_bool = corpo["query"]["function_score"]["query"]["bool"]
+        busca = consulta_bool["filter"][0]["query_string"]
+        assert busca["query"] == PESQUISA
+        assert "inteiro_teor_texto.plural" in busca["fields"]
+        assert consulta_bool["filter"][1:] == [
+            {"range": {"julgamento_data": {"format": "ddMMyyyy", "from": "01012024", "lte": "31122024"}}},
+            {"range": {"publicacao_data": {"format": "ddMMyyyy", "from": "01022024", "lte": "30112024"}}},
+        ]
 
 
 @responses.activate
