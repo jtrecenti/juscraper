@@ -177,9 +177,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="juscraper.courts.tjmg.client.TJMGScraper" class="level1">
 <h1>courts.tjmg.client.TJMGScraper</h1>
-<div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>courts.tjmg.client.TJMGScraper(sleep_time<span class="op">=</span><span class="fl">1.0</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>courts.tjmg.client.TJMGScraper(sleep_time<span class="op">=</span><span class="fl">1.0</span>, <span class="op">*</span>, politica<span class="op">=</span><span class="va">None</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Scraper for the Court of Justice of Minas Gerais.</p>
 <p>The TJMG jurisprudence search uses a 5-digit numeric image captcha that is decoded with <code>txtcaptcha &lt;https://github.com/jtrecenti/txtcaptcha&gt;</code>_. Captcha validation is flagged once per session, so pagination reuses the same HTTP session after the first successful decoding.</p>
+<p>Os dois portais derrubam conexoes e travam respostas de forma intermitente (#440). Os perfis HTTP <code>"cjsg"</code> e <code>"cposg"</code> repetem a requisicao em timeout, conexao derrubada (<code>ConnectionResetError</code>, <code>ChunkedEncodingError</code>) e status 403, 429, 500, 502, 503 e 504, e sao ajustaveis com <code>politica=</code> no construtor.</p>
 <section id="methods" class="level2">
 <h2 class="anchored" data-anchor-id="methods">Methods</h2>
 <table class="caption-top table">
