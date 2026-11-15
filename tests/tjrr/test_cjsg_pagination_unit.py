@@ -10,6 +10,7 @@ from juscraper.courts.tjrr.download import (
     _extract_datatable_id,
     _get_total_pages,
     _paginate,
+    _pagination_form,
 )
 from tests._helpers import load_sample
 
@@ -120,7 +121,8 @@ def test_paginate_payload_replicates_browser():
         captured["headers"] = kwargs.get("headers")
         return _FakeResp("<?xml version='1.0'?><partial-response></partial-response>")
 
-    _paginate(fake_request_fn, html, page=2, datatable_id=dtid)
+    form = _pagination_form(html)
+    _paginate(fake_request_fn, form, page=2, datatable_id=dtid)
 
     data = captured["data"]
     headers = captured["headers"]
@@ -134,6 +136,8 @@ def test_paginate_payload_replicates_browser():
     # Flags de feature do datatable.
     assert data[f"{dtid}_skipChildren"] == "true"
     assert data[f"{dtid}_encodeFeature"] == "true"
+    # ViewState da página 1, que o backend aceita em todas as páginas.
+    assert data["javax.faces.ViewState"] == form["javax.faces.ViewState"]
     # Header AJAX que o backend JSF usa para tratar como partial-response.
     assert headers["Faces-Request"] == "partial/ajax"
     assert headers["X-Requested-With"] == "XMLHttpRequest"
@@ -195,7 +199,7 @@ def paginate_calls(mocker) -> list:
     a ``_paginate`` como ``(page, datatable_id)``."""
     calls: list = []
 
-    def fake(request_fn, html, page, datatable_id):
+    def fake(request_fn, form, page, datatable_id):
         calls.append((page, datatable_id))
         return f"<{datatable_id}:{page}>"
 
@@ -205,20 +209,20 @@ def paginate_calls(mocker) -> list:
 
 
 def test_download_page_pages_both_tables_and_joins(paginate_calls):
-    out = _download_page(_no_request, "", 2, [("a", 5), ("a2", 3)], 0.5)
+    out = _download_page(_no_request, {}, 2, [("a", 5), ("a2", 3)], 0.5)
     assert paginate_calls == [(2, "a"), (2, "a2")]
     assert out == "<a:2><a2:2>"
 
 
 def test_download_page_skips_table_past_its_end(paginate_calls):
-    _download_page(_no_request, "", 4, [("a", 5), ("a2", 3)], 0)
+    _download_page(_no_request, {}, 4, [("a", 5), ("a2", 3)], 0)
     assert paginate_calls == [(4, "a")]
 
 
 def test_download_page_past_every_table_requests_acordaos(paginate_calls):
     """Página explícita além do fim das duas tabelas: pede a de acórdãos,
     como antes da #319, e o backend decide o que devolver."""
-    _download_page(_no_request, "", 9, [("a", 5), ("a2", 3)], 0)
+    _download_page(_no_request, {}, 9, [("a", 5), ("a2", 3)], 0)
     assert paginate_calls == [(9, "a")]
 
 
@@ -226,7 +230,7 @@ def test_download_page_without_datatable_raises(paginate_calls):
     """Sem tabela na página 1, pedir a página 2 levanta, em vez de devolver
     vazio em silêncio."""
     with pytest.raises(RuntimeError, match="No results datatable"):
-        _download_page(_no_request, "", 2, [], 0)
+        _download_page(_no_request, {}, 2, [], 0)
     assert paginate_calls == []
 
 
@@ -243,6 +247,7 @@ def test_manager_paginas_none(mocker, paginate_calls, tables, esperado, chamadas
     mocker.patch.object(download, "_get_form_fields", return_value={})
     mocker.patch.object(download, "_search", return_value="<p1>")
     mocker.patch.object(download, "_datatables_with_pages", return_value=tables)
+    mocker.patch.object(download, "_pagination_form", return_value={})
     out = download.cjsg_download_manager("x", None, request_fn=_no_request)
     assert out == esperado
     assert paginate_calls == chamadas
@@ -253,6 +258,45 @@ def test_manager_paginas_1_nao_conta_paginas(mocker, paginate_calls):
     mocker.patch.object(download, "_get_form_fields", return_value={})
     mocker.patch.object(download, "_search", return_value="<p1>")
     contagem = mocker.patch.object(download, "_datatables_with_pages")
+    form = mocker.patch.object(download, "_pagination_form")
     assert download.cjsg_download_manager("x", [1], request_fn=_no_request) == ["<p1>"]
     contagem.assert_not_called()
+    form.assert_not_called()
     assert paginate_calls == []
+
+
+def test_manager_le_o_form_da_pagina_1_uma_vez(mocker):
+    """O HTML da página 1 é parseado uma vez, não a cada requisição de
+    paginação: as quatro requisições (páginas 2 e 3 das duas tabelas)
+    recebem o mesmo form."""
+    html = _sample("step_02_search.html")
+    mocker.patch.object(download, "_get_form_fields", return_value={})
+    mocker.patch.object(download, "_search", return_value=html)
+    mocker.patch("time.sleep")
+    form = mocker.spy(download, "_pagination_form")
+    recebidos: list = []
+
+    def fake(request_fn, form, page, datatable_id):
+        recebidos.append(form)
+        return ""
+
+    mocker.patch.object(download, "_paginate", fake)
+    download.cjsg_download_manager("x", range(1, 4), request_fn=_no_request)
+    assert form.call_count == 1
+    assert len(recebidos) == 4
+    assert all(r is form.spy_return for r in recebidos)
+    assert recebidos[0]["formPesquisa:consultaAtual"] == "dano moral"
+
+
+def test_manager_sem_tabela_levanta_erro_da_tabela(mocker):
+    """Página 1 sem tabela (nem ViewState): o erro diz que falta a tabela de
+    resultados, não o ViewState."""
+    mocker.patch.object(download, "_get_form_fields", return_value={})
+    mocker.patch.object(download, "_search", return_value="<html><body>erro</body></html>")
+    with pytest.raises(RuntimeError, match="No results datatable"):
+        download.cjsg_download_manager("x", [1, 2], request_fn=_no_request)
+
+
+def test_pagination_form_sem_viewstate_levanta():
+    with pytest.raises(RuntimeError, match="ViewState"):
+        _pagination_form("<html><body>sem form</body></html>")
