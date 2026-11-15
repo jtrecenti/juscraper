@@ -118,18 +118,19 @@ def test_changelog_reprova_codigo_sem_entrada_e_aceita_a_etiqueta():
     assert "etiqueta `sem-changelog`" in (RAIZ / "CLAUDE.md").read_text(encoding="utf-8")
 
 
-def test_so_a_execucao_que_reescreve_a_issue_divide_a_trava_do_relatorio():
+def test_so_quem_pede_para_reescrever_a_issue_divide_a_trava_do_relatorio():
     # Num grupo de concorrência, um job pendente cancela o pendente anterior:
     # com o grupo fixo, disparos de tribunais diferentes cancelariam o
     # relatório um do outro.
     integracao = linhas("integration.yml")
-    condicao = "inputs.atualizar_issue && inputs.tribunal == '' && github.ref == 'refs/heads/main'"
     grupos = [linha for linha in integracao if linha.startswith("group:")]
     assert grupos == [
-        f"group: ${{{{ {condicao} && 'integracao-issue' || format('integracao-relatorio-{{0}}', github.run_id) }}}}",
+        "group: ${{ inputs.atualizar_issue && 'integracao-issue' "
+        "|| format('integracao-relatorio-{0}', github.run_id) }}",
     ]
-    # A trava e os passos que reescrevem a issue usam a mesma condição.
-    assert f"ATUALIZAR_ISSUE: ${{{{ {condicao} }}}}" in integracao
+    assert (
+        "ATUALIZAR_ISSUE: ${{ inputs.atualizar_issue && inputs.tribunal == '' && github.ref == 'refs/heads/main' }}"
+    ) in integracao
 
 
 def test_integracao_so_roda_por_disparo_manual():

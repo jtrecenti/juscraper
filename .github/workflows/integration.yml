@@ -176,12 +176,13 @@ jobs:
       contents: read
       issues: write
     # Dois disparos completos simultâneos poderiam, os dois, não achar a issue
-    # e criar duas. A trava vale só para quem reescreve a issue: num grupo, um
-    # job pendente cancela o pendente anterior, e com disparos de tribunais
-    # diferentes rodando juntos um relatório cancelaria o outro. A condição
-    # repete a de ATUALIZAR_ISSUE, porque `env` não vale em `concurrency`.
+    # e criar duas. A trava vale só para quem pede para reescrever a issue: num
+    # grupo, um job pendente cancela o pendente anterior, e com disparos de
+    # tribunais diferentes rodando juntos um relatório cancelaria o outro. Um
+    # pedido que ATUALIZAR_ISSUE recusa (de outra branch ou com `tribunal`)
+    # só espera a trava, sem prejuízo.
     concurrency:
-      group: ${{ inputs.atualizar_issue && inputs.tribunal == '' && github.ref == 'refs/heads/main' && 'integracao-issue' || format('integracao-relatorio-{0}', github.run_id) }}
+      group: ${{ inputs.atualizar_issue && 'integracao-issue' || format('integracao-relatorio-{0}', github.run_id) }}
       cancel-in-progress: false
     env:
       # Com o job de testes reprovado (pytest com código 2 ou mais, tempo
