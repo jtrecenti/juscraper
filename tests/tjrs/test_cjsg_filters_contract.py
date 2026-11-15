@@ -4,6 +4,7 @@ from datetime import date, datetime, timezone
 import pandas as pd
 import pytest
 import responses
+from pydantic import ValidationError
 
 import juscraper as jus
 from juscraper.courts.tjrs.schemas import InputCJSGTJRS
@@ -73,6 +74,29 @@ def test_cjsg_aceita_date_e_datetime_nos_filtros_de_data(mocker):
     df = jus.scraper("tjrs").cjsg("dano moral", paginas=1, **datas)
 
     assert isinstance(df, pd.DataFrame)
+
+
+@pytest.mark.parametrize(("secao", "no_body"), [("CIVEL", "civel"), ("Crime", "crime"), ("", None)])
+@responses.activate
+def test_cjsg_secao_ignora_caixa_e_vazio_nao_filtra(mocker, secao, no_body):
+    """``secao`` ignora a caixa, e ``""`` não filtra, como antes da validação."""
+    mocker.patch("time.sleep")
+    _add_page("dano moral", 1, "cjsg/no_results.json", secao=no_body)
+
+    df = jus.scraper("tjrs").cjsg("dano moral", paginas=1, secao=secao)
+
+    assert isinstance(df, pd.DataFrame)
+
+
+@pytest.mark.parametrize("metodo", ["cjsg", "cjsg_download"])
+@pytest.mark.parametrize("secao", ["cível", "familia"])
+@responses.activate
+def test_cjsg_secao_fora_de_civel_e_crime_levanta(metodo, secao):
+    """Seção desconhecida falha antes da busca, em vez de cobrir as duas em silêncio."""
+    with pytest.raises(ValidationError, match="secao"):
+        getattr(jus.scraper("tjrs"), metodo)("dano moral", paginas=1, secao=secao)
+
+    assert not responses.calls
 
 
 @responses.activate

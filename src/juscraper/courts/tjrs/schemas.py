@@ -8,7 +8,9 @@ ficando coberto transitivamente.
 """
 from __future__ import annotations
 
-from typing import ClassVar
+from typing import ClassVar, Literal
+
+from pydantic import field_validator
 
 from ...schemas import (
     DataJulgamentoMixin,
@@ -42,7 +44,17 @@ class InputCJSGTJRS(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     orgao_julgador: str | None = None
     relator: str | None = None
     tipo_processo: str | None = None
-    secao: str | None = None
+    secao: Literal["civel", "crime"] | None = None
+
+    @field_validator("secao", mode="before")
+    @classmethod
+    def _secao_minuscula(cls, valor: object) -> object:
+        # O download sempre ignorou a caixa e tratou ``""`` como ausência de
+        # filtro. Qualquer outro valor caía fora do mapa e a busca cobria as
+        # duas seções em silêncio; agora o ``Literal`` o recusa.
+        if isinstance(valor, str):
+            return valor.lower() or None
+        return valor
 
 
 class OutputCJSGTJRS(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):
