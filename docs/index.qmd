@@ -105,6 +105,8 @@ Most courts implement some of the methods below; the tables in the Implementatio
 
 > ⚠️ **TJGO — `cjsg` returns no results:** since 12 November 2026 (Projudi 3.194.1) the TJGO jurisprudence search validates a [Cloudflare Turnstile](https://www.cloudflare.com/products/turnstile/) token server-side, which the scraper does not send. Without it the portal returns an empty search, with no error message, and `cjsg`/`cjsg_download` emit a `UserWarning` explaining the block. The portal answers a search that genuinely has no results the same way, so the warning is emitted on every empty search.
 
+> ⚠️ **TJPE — `cjsg` returns no results:** on 15 November 2026, the TJPE [Consulta Jurisprudência Web](https://www.tjpe.jus.br/consultajurisprudenciaweb/xhtml/consulta/consulta.xhtml) search answered "Nenhum documento encontrado" (no documents found) to any term, including a search made in a browser. The failure is on the portal, not in the scraper: `cjsg`/`cjsg_download` return empty and emit a `UserWarning`. The case lookup (`cpopg`) is not affected.
+
 Falcao covers national labor jurisprudence (TST and TRTs).
 
 #### JusBR and PDPJ authentication
