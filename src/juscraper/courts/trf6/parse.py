@@ -207,7 +207,7 @@ def parse_detail(html: str) -> dict[str, Any]:
     record: dict[str, Any] = _parse_capa(soup)
     record["assuntos"] = _parse_assuntos(soup)
     poles = _parse_partes(soup)
-    ativo, passivo = _par_de_polos(soup) or ("AUTOR", "R\xc9U")
+    ativo, passivo = _par_de_polos(soup) or ("AUTOR", "RÉU")
     # Keys not present default to empty lists rather than omission so the
     # DataFrame schema is stable.
     record["polo_ativo"] = poles.get(ativo, [])

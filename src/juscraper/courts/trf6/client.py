@@ -21,11 +21,11 @@ from ...core.avisos import avisar
 from ...core.base import BaseScraper
 from ...core.failures import (
     COLUNA_MOTIVO_FALHA,
-    EXEMPLOS_NO_AVISO,
     MOTIVO_CAPTCHA_ESGOTADO,
     avisar_falhas_de_processos,
     consultar_em_lote,
     consultar_processo,
+    exemplos_do_aviso,
     linhas_de_processos,
 )
 from ...utils.cnj import clean_cnj, format_cnj
@@ -239,9 +239,7 @@ def _avisar_sem_polos(rows: list[dict[str, Any]], metodo: str) -> None:
     """Um ``UserWarning`` com os processos lidos cuja tabela de partes não deu polo ativo nem passivo."""
     processos = [r["id_cnj"] for r in rows if "processo" in r and not (r["polo_ativo"] or r["polo_passivo"])]
     if processos:
-        exemplos = ", ".join(processos[:EXEMPLOS_NO_AVISO])
-        if len(processos) > EXEMPLOS_NO_AVISO:
-            exemplos += f" e mais {len(processos) - EXEMPLOS_NO_AVISO}"
+        exemplos = ", ".join(exemplos_do_aviso(processos))
         avisar(
             f"TRF6Scraper.{metodo}: {len(processos)} processo(s) sem polo ativo nem passivo ({exemplos}). "
             "A tabela de partes não traz a faixa dos polos nem os rótulos AUTOR/RÉU; polo_ativo e "

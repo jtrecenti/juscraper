@@ -219,10 +219,15 @@ def resumir_falhas(falhas: list[str], descricao: str) -> str:
         falhas: Uma entrada por requisição que falhou, já com o item e o motivo.
         descricao: O que falhou, no plural, como ``"download(s) de documento"``.
     """
-    exemplos = falhas[:EXEMPLOS_NO_AVISO]
-    if len(falhas) > len(exemplos):
-        exemplos = [*exemplos, f"e mais {len(falhas) - len(exemplos)}"]
-    return f"{len(falhas)} {descricao} falharam. Falhas: {'; '.join(exemplos)}."
+    return f"{len(falhas)} {descricao} falharam. Falhas: {'; '.join(exemplos_do_aviso(falhas))}."
+
+
+def exemplos_do_aviso(itens: list[str]) -> list[str]:
+    """Os :data:`EXEMPLOS_NO_AVISO` primeiros itens e, havendo mais, ``"e mais <n>"``."""
+    exemplos = itens[:EXEMPLOS_NO_AVISO]
+    if len(itens) > len(exemplos):
+        exemplos = [*exemplos, f"e mais {len(itens) - len(exemplos)}"]
+    return exemplos
 
 
 def avisar_falhas(
