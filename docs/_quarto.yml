@@ -184,7 +184,9 @@ quartodoc:
         - courts.tjce.client.TJCEScraper
         - courts.tjba.client.TJBAScraper
         - courts.tjgo.client.TJGOScraper
-        - courts.tjsp.client.TJSPScraper
+        # cjpg e baixar_sentenca(s) vêm de _esaj/cjpg.py (#487).
+        - name: courts.tjsp.client.TJSPScraper
+          include_inherited: true
         - courts.tjdft.client.TJDFTScraper
         - courts.tjrs.client.TJRSScraper
         - courts.tjpa.client.TJPAScraper
@@ -193,7 +195,8 @@ quartodoc:
         - courts.tjmt.client.TJMTScraper
         - courts.tjes.client.TJESScraper
         - courts.tjmg.client.TJMGScraper
-        - courts.tjms.client.TJMSScraper
+        - name: courts.tjms.client.TJMSScraper
+          include_inherited: true
         - courts.tjto.client.TJTOScraper
         - courts.tjpb.client.TJPBScraper
         - courts.tjpi.client.TJPIScraper

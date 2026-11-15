@@ -509,7 +509,7 @@ def test_cjpg_download_usa_diretorio_sem_alterar_download_path(tmp_path, mocker)
     scraper = juscraper.scraper("tjsp", download_path=str(tmp_path / "padrao"))
     alternativo = tmp_path / "alternativo"
     download = mocker.patch(
-        "juscraper.courts.tjsp.client.cjpg_download_mod",
+        "juscraper.courts._esaj.cjpg.cjpg_download_mod",
         return_value=str(alternativo),
     )
 
@@ -525,7 +525,7 @@ def test_cjpg_download_sem_diretorio_usa_download_path(tmp_path, mocker):
     caminho = tmp_path / "padrao"
     scraper = juscraper.scraper("tjsp", download_path=str(caminho))
     download = mocker.patch(
-        "juscraper.courts.tjsp.client.cjpg_download_mod",
+        "juscraper.courts._esaj.cjpg.cjpg_download_mod",
         return_value=str(caminho),
     )
 

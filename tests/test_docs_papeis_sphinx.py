@@ -227,16 +227,18 @@ TOTAL_PAPEIS, PAPEIS_CRUS = _varrer_fonte()
 _METH_CURTO = re.compile(r":(?:py:)?meth:`~?([^`.]+)`")
 
 
-def _classes_publicadas() -> list[type]:
-    """Classes que ``docs/_quarto.yml`` manda o quartodoc documentar."""
+def _classes_publicadas() -> list[tuple[type, bool]]:
+    """Classes que ``docs/_quarto.yml`` manda o quartodoc documentar, e se a página traz os membros herdados."""
     config = yaml.safe_load((DOCS / "_quarto.yml").read_text(encoding="utf-8"))["quartodoc"]
     classes = []
     for secao in config["sections"]:
         for alvo in secao["contents"]:
-            modulo, _, nome = f"juscraper.{alvo}".rpartition(".")
+            herdados = isinstance(alvo, dict) and bool(alvo.get("include_inherited"))
+            caminho = alvo["name"] if isinstance(alvo, dict) else alvo
+            modulo, _, nome = f"juscraper.{caminho}".rpartition(".")
             objeto = getattr(importlib.import_module(modulo), nome)
             if isinstance(objeto, type):
-                classes.append(objeto)
+                classes.append((objeto, herdados))
     return classes
 
 
@@ -244,15 +246,16 @@ def _meth_curto_sem_metodo() -> tuple[int, list[str]]:
     """Confere cada ``:meth:`` curto das docstrings que a página da classe mostra.
 
     O filtro qualifica o nome curto pela classe da página, e o ``interlinks`` só
-    acha o método se ele for membro público da própria classe, que o quartodoc
-    documenta; herdado ou privado sai como código, sem aviso no build. A página
-    mostra a docstring da classe e a dos métodos públicos dela, não a do
-    ``__init__``.
+    acha o método se ele for membro público que o quartodoc documenta: da
+    própria classe ou, com ``include_inherited``, também herdado. O que fica
+    fora sai como código, sem aviso no build. A página mostra a docstring da
+    classe e a dos métodos públicos que documenta, não a do ``__init__``.
     """
     total = 0
     sem_metodo = []
-    for classe in _classes_publicadas():
-        membros = {nome: valor for nome, valor in vars(classe).items() if not nome.startswith("_")}
+    for classe, herdados in _classes_publicadas():
+        nomes = dir(classe) if herdados else vars(classe)
+        membros = {nome: getattr(classe, nome) for nome in nomes if not nome.startswith("_")}
         docstrings = [("", classe.__doc__)]
         docstrings += [(f".{nome}", getattr(valor, "__doc__", None)) for nome, valor in membros.items()]
         for sufixo, docstring in docstrings:
@@ -299,7 +302,8 @@ def test_meth_curto_cita_metodo_publico_da_propria_classe():
     assert total >= 50  # protege o gate de passar vazio
     assert not sem_metodo, (
         "`:meth:` com nome curto vira link para o método da classe da página só "
-        "quando o método é público e definido na própria classe; senão sai como "
+        "quando o método é público e está na página (definido na classe ou herdado com "
+        "`include_inherited`); senão sai como "
         "código. Use o caminho completo de onde o método é documentado:\n" + "\n".join(sem_metodo)
     )
 

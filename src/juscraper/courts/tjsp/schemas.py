@@ -67,7 +67,7 @@ class OutputCJSGTJSP(OutputCJSGBase):
 
 
 class InputCJPGTJSP(SearchBase, DataJulgamentoMixin, AutoChunkMixin, CountOnlyMixin):
-    """Accepted input for TJSP ``cjpg``. Unknown kwargs raise via ``extra='forbid'``.
+    """Accepted input for ``cjpg`` (TJSP and TJMS). Unknown kwargs raise via ``extra='forbid'``.
 
     Sobrescreve ``pesquisa`` com default vazio porque o TJSP permite buscar
     so por filtros (ex.: ``classe=[417]``) sem termo textual.
@@ -75,7 +75,7 @@ class InputCJPGTJSP(SearchBase, DataJulgamentoMixin, AutoChunkMixin, CountOnlyMi
     ``classe``/``assunto``/``vara`` aceitam ``int``, ``str`` ou
     ``list[int | str]`` via :data:`IdFiltro` (refs #232). Nomes canonicos
     seguem o singular do projeto; os plurais ``classes``/``assuntos``/``varas``
-    sao alias deprecados popados no client (:meth:`TJSPScraper.cjpg_download`)
+    sao alias deprecados popados no client (:meth:`~juscraper.courts._esaj.cjpg.EsajCjpgScraper.cjpg_download`)
     com :class:`DeprecationWarning`.
     """
 
@@ -87,7 +87,7 @@ class InputCJPGTJSP(SearchBase, DataJulgamentoMixin, AutoChunkMixin, CountOnlyMi
 
 
 class OutputCJPGTJSP(BaseModel):
-    """Colunas observaveis em uma linha do DataFrame de :meth:`TJSPScraper.cjpg`.
+    """Colunas observaveis numa linha do DataFrame do ``cjpg`` do TJSP e do TJMS.
 
     Reflete ``tjsp.cjpg_parse``. Diferente do ``cjsg``, ``cjpg`` nao
     entrega ementa nem ``processo`` formatado em CNJ — so o par de IDs
