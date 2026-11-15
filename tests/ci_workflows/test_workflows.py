@@ -43,10 +43,10 @@ def test_piso_de_cobertura():
     assert projeto["tool"]["coverage"]["report"]["fail_under"] == 94
 
 
-def test_pre_commit_roda_todos_os_hooks_no_ci():
+def test_pre_commit_no_ci_pula_so_o_que_roda_em_outro_passo():
     lint = linhas("lint.yml")
     assert "run: uv run pre-commit run --all-files --show-diff-on-failure" in lint
-    assert [linha for linha in lint if linha.startswith("SKIP:")] == ["SKIP: lint-policy,complexity"]
+    assert [linha for linha in lint if linha.startswith("SKIP:")] == ["SKIP: lint-policy,complexity,pytest"]
 
 
 def test_semgrep_reprova_so_achado_novo():
@@ -100,6 +100,12 @@ def test_perna_de_cobertura_existe_e_roda_o_piso():
     assert "cobertura: true" in testes
     passo = testes.index("run: uv run pytest --cov --cov-report=")
     assert testes[passo - 1] == "if: ${{ matrix.cobertura }}"
+
+
+def test_pernas_sem_cobertura_rodam_a_suite_offline():
+    testes = linhas("tests.yml")
+    passo = testes.index("run: uv run pytest")
+    assert testes[passo - 1] == "if: ${{ !matrix.cobertura }}"
 
 
 def test_dependencias_adicionais_dos_hooks_tem_versao_fixa():
