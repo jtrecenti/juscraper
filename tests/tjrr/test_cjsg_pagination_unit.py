@@ -3,7 +3,14 @@ from __future__ import annotations
 
 import pytest
 
-from juscraper.courts.tjrr.download import _extract_datatable_id, _get_total_pages, _paginate
+from juscraper.courts.tjrr import download
+from juscraper.courts.tjrr.download import (
+    _datatables_with_pages,
+    _download_page,
+    _extract_datatable_id,
+    _get_total_pages,
+    _paginate,
+)
 from tests._helpers import load_sample
 
 
@@ -13,12 +20,12 @@ def _sample(name: str) -> str:
 
 def test_get_total_pages_results_normal():
     html = _sample("step_02_search.html")
-    assert _get_total_pages(html) == 1250
+    assert _get_total_pages(html) == 1383
 
 
 def test_get_total_pages_single_page_sample():
     html = _sample("single_page.html")
-    assert _get_total_pages(html) == 59
+    assert _get_total_pages(html) == 65
 
 
 def test_get_total_pages_no_results_sample():
@@ -113,7 +120,7 @@ def test_paginate_payload_replicates_browser():
         captured["headers"] = kwargs.get("headers")
         return _FakeResp("<?xml version='1.0'?><partial-response></partial-response>")
 
-    _paginate(fake_request_fn, html, page=2)
+    _paginate(fake_request_fn, html, page=2, datatable_id=dtid)
 
     data = captured["data"]
     headers = captured["headers"]
@@ -130,3 +137,122 @@ def test_paginate_payload_replicates_browser():
     # Header AJAX que o backend JSF usa para tratar como partial-response.
     assert headers["Faces-Request"] == "partial/ajax"
     assert headers["X-Requested-With"] == "XMLHttpRequest"
+
+
+_MONOCRATICAS = "dataTablePesquisa2"
+
+
+@pytest.mark.parametrize(
+    ("sample", "n_acordaos", "n_monocraticas"),
+    [("step_02_search.html", 1383, 330), ("no_results.html", 1, 1)],
+)
+def test_datatables_with_pages_reads_each_paginator(sample, n_acordaos, n_monocraticas):
+    """Cada tabela de resultados tem paginador próprio (#319)."""
+    html = _sample(sample)
+    assert _datatables_with_pages(html) == [
+        (_extract_datatable_id(html), n_acordaos),
+        (_extract_datatable_id(html, _MONOCRATICAS), n_monocraticas),
+    ]
+
+
+def test_datatables_with_pages_without_second_table():
+    html = (
+        '<div id="formPesquisa:j_idt1:dataTablePesquisa">'
+        '<span class="ui-paginator-current">(1 of 7)</span></div>'
+    )
+    assert _datatables_with_pages(html) == [("formPesquisa:j_idt1:dataTablePesquisa", 7)]
+
+
+def test_datatables_with_pages_finds_second_table_in_other_container():
+    """O id da tabela de monocráticas é procurado por conta própria: se o
+    número JSF dela divergir do da de acórdãos, ela não some em silêncio."""
+    html = (
+        '<div id="formPesquisa:j_idt1:dataTablePesquisa">'
+        '<span class="ui-paginator-current">(1 of 7)</span></div>'
+        '<div id="formPesquisa:j_idt9:dataTablePesquisa2">'
+        '<span class="ui-paginator-current">(1 of 4)</span></div>'
+    )
+    assert _datatables_with_pages(html) == [
+        ("formPesquisa:j_idt1:dataTablePesquisa", 7),
+        ("formPesquisa:j_idt9:dataTablePesquisa2", 4),
+    ]
+
+
+def test_datatables_with_pages_without_datatable():
+    """Página sem tabela de resultados não levanta: a página 1 continua
+    utilizável, como antes da #319."""
+    assert _datatables_with_pages("<html><body>nada</body></html>") == []
+
+
+def _no_request(*args, **kwargs):
+    """``request_fn`` que não deve ser chamado: ``_paginate`` está mockado."""
+    raise AssertionError("request_fn não deveria ser chamado")
+
+
+@pytest.fixture
+def paginate_calls(mocker) -> list:
+    """Troca ``_paginate`` e ``time.sleep`` por dublês; devolve as chamadas
+    a ``_paginate`` como ``(page, datatable_id)``."""
+    calls: list = []
+
+    def fake(request_fn, html, page, datatable_id):
+        calls.append((page, datatable_id))
+        return f"<{datatable_id}:{page}>"
+
+    mocker.patch.object(download, "_paginate", fake)
+    mocker.patch("time.sleep")
+    return calls
+
+
+def test_download_page_pages_both_tables_and_joins(paginate_calls):
+    out = _download_page(_no_request, "", 2, [("a", 5), ("a2", 3)], 0.5)
+    assert paginate_calls == [(2, "a"), (2, "a2")]
+    assert out == "<a:2><a2:2>"
+
+
+def test_download_page_skips_table_past_its_end(paginate_calls):
+    _download_page(_no_request, "", 4, [("a", 5), ("a2", 3)], 0)
+    assert paginate_calls == [(4, "a")]
+
+
+def test_download_page_past_every_table_requests_acordaos(paginate_calls):
+    """Página explícita além do fim das duas tabelas: pede a de acórdãos,
+    como antes da #319, e o backend decide o que devolver."""
+    _download_page(_no_request, "", 9, [("a", 5), ("a2", 3)], 0)
+    assert paginate_calls == [(9, "a")]
+
+
+def test_download_page_without_datatable_raises(paginate_calls):
+    """Sem tabela na página 1, pedir a página 2 levanta, em vez de devolver
+    vazio em silêncio."""
+    with pytest.raises(RuntimeError, match="No results datatable"):
+        _download_page(_no_request, "", 2, [], 0)
+    assert paginate_calls == []
+
+
+@pytest.mark.parametrize(
+    ("tables", "esperado", "chamadas"),
+    [
+        # Vai até o fim da tabela mais longa, mesmo quando é a de monocráticas.
+        ([("a", 1), ("a2", 3)], ["<p1>", "<a2:2>", "<a2:3>"], [(2, "a2"), (3, "a2")]),
+        # Paginador que lê 0 não apaga a página 1.
+        ([("a", 0), ("a2", 0)], ["<p1>"], []),
+    ],
+)
+def test_manager_paginas_none(mocker, paginate_calls, tables, esperado, chamadas):
+    mocker.patch.object(download, "_get_form_fields", return_value={})
+    mocker.patch.object(download, "_search", return_value="<p1>")
+    mocker.patch.object(download, "_datatables_with_pages", return_value=tables)
+    out = download.cjsg_download_manager("x", None, request_fn=_no_request)
+    assert out == esperado
+    assert paginate_calls == chamadas
+
+
+def test_manager_paginas_1_nao_conta_paginas(mocker, paginate_calls):
+    """Com ``paginas=1``, nenhuma contagem nem paginação é feita."""
+    mocker.patch.object(download, "_get_form_fields", return_value={})
+    mocker.patch.object(download, "_search", return_value="<p1>")
+    contagem = mocker.patch.object(download, "_datatables_with_pages")
+    assert download.cjsg_download_manager("x", [1], request_fn=_no_request) == ["<p1>"]
+    contagem.assert_not_called()
+    assert paginate_calls == []

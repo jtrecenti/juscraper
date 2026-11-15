@@ -28,8 +28,9 @@ import responses
 from responses.registries import OrderedRegistry
 
 import juscraper as jus
+from juscraper.courts.tjrr.download import _extract_cdata
 from tests._helpers import load_sample, urlencoded_body_subset_matcher
-from tests.tjrr._helpers import INDEX_URL, add_get_initial, get_datatable_id
+from tests.tjrr._helpers import INDEX_URL, add_get_initial, add_page_2_ajax
 
 CJSG_MIN_COLUMNS = {
     "processo", "classe", "relator", "orgao_julgador",
@@ -61,32 +62,6 @@ def _add_post_initial(sample_path: str):
     )
 
 
-def _add_post_ajax(sample_path: str, first_offset: str):
-    """Pagination POST (``javax.faces.partial.ajax=true``) returning XML.
-
-    Pins the issue #287 layer-2 fix: the body must carry the full
-    results-form context (``consultaAtual``, the search term), the
-    PrimeFaces ``page`` behavior event and the absolute ``_first`` offset.
-    The minimal payload that omitted them was silently ignored by the
-    backend (always returned page 1). The datatable id is derived from the
-    sample (never hardcoded), since the JSF number drifts between deploys.
-    """
-    dtid = get_datatable_id()
-    responses.add(
-        responses.POST,
-        INDEX_URL,
-        body=load_sample("tjrr", sample_path),
-        status=200,
-        content_type="application/xml; charset=UTF-8",
-        match=[urlencoded_body_subset_matcher({
-            "javax.faces.partial.ajax": "true",
-            "javax.faces.behavior.event": "page",
-            "formPesquisa:consultaAtual": "dano moral",
-            f"{dtid}_first": first_offset,
-        })],
-    )
-
-
 @responses.activate(registry=OrderedRegistry)
 def test_cjsg_typical_com_paginacao(mocker):
     """Page 2 brings *new* processos, not a re-fetch of page 1 (issue #287).
@@ -97,12 +72,13 @@ def test_cjsg_typical_com_paginacao(mocker):
     would pass even if page 2 merely repeated page 1 (the layer-2 bug).
     """
     mocker.patch("time.sleep")
-    # df_p1: GET + POST inicial. df_p2: GET + POST inicial + POST AJAX.
+    # df_p1: GET + POST inicial. df_p2: GET + POST inicial + POST AJAX de
+    # cada tabela.
     add_get_initial()
     _add_post_initial("cjsg/step_02_search.html")
     add_get_initial()
     _add_post_initial("cjsg/step_02_search.html")
-    _add_post_ajax("cjsg/step_03_pagina_02.xml", "10")
+    add_page_2_ajax()
 
     df_p1 = jus.scraper("tjrr").cjsg("dano moral", paginas=1)
     df_p2 = jus.scraper("tjrr").cjsg("dano moral", paginas=range(1, 3))
@@ -116,6 +92,14 @@ def test_cjsg_typical_com_paginacao(mocker):
     assert len(df_p2) > len(df_p1), "página 2 não acrescentou linhas"
     novos = set(df_p2["processo"]) - set(df_p1["processo"])
     assert novos, "página 2 não trouxe processos novos (paginação presa)"
+    # A página 2 também pagina a tabela de monocráticas (#319): antes, só a
+    # de acórdãos avançava, e a página 2 trazia 10 linhas em vez de 20.
+    monocraticas_p2 = jus.scraper("tjrr").cjsg_parse(
+        [_extract_cdata(load_sample("tjrr", "cjsg/step_04_pagina_02_monocraticas.xml"))]
+    )
+    assert len(monocraticas_p2) == 10
+    assert set(monocraticas_p2["processo"]) <= set(df_p2["processo"])
+    assert len(df_p2) == 40, "esperado 10 acórdãos + 10 monocráticas por página"
 
 
 @responses.activate(registry=OrderedRegistry)

@@ -41,6 +41,16 @@ class TestCJSGTJRR:
         novos = set(df_p2["processo"]) - set(df_p1["processo"])
         assert novos, "página 2 não trouxe processos novos (paginação presa)"
 
+    def test_paginacao_traz_decisoes_monocraticas(self):
+        """A página 2 traz as duas tabelas, acórdãos e monocráticas (#319).
+
+        Antes, só a tabela de acórdãos era paginada, e a página 2 trazia 10
+        linhas. "dano moral" tem centenas de páginas nas duas tabelas.
+        """
+        brutos = self.scraper.cjsg_download("dano moral", paginas=[2])
+        assert "dataTablePesquisa2" in brutos[0]
+        assert len(self.scraper.cjsg_parse(brutos)) == 20
+
     def test_download_e_parse(self):
         """Download + parse produces same result as cjsg."""
         brutos = self.scraper.cjsg_download("direito", paginas=1)
