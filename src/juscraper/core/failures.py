@@ -80,8 +80,8 @@ MOTIVO_CAPTCHA_ESGOTADO = "captcha_esgotado"
 """O portal recusou o captcha resolvido em todas as tentativas (:class:`CaptchaEsgotadoError`).
 
 Depois de várias consultas seguidas assim, o resolvedor está errando
-sistematicamente: o TRF6 encerra o lote, e as linhas seguintes saem com este
-motivo sem nova consulta.
+sistematicamente: o scraper pode encerrar o lote, e as linhas seguintes saem
+com este motivo sem nova consulta.
 """
 
 MOTIVOS_FALHA: tuple[str, ...] = (

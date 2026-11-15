@@ -17,9 +17,11 @@ import requests
 from pydantic import ValidationError
 from tqdm import tqdm
 
+from ...core.avisos import avisar
 from ...core.base import BaseScraper
 from ...core.failures import (
     COLUNA_MOTIVO_FALHA,
+    EXEMPLOS_NO_AVISO,
     MOTIVO_CAPTCHA_ESGOTADO,
     avisar_falhas_de_processos,
     consultar_em_lote,
@@ -128,7 +130,11 @@ class TRF6Scraper(BaseScraper):
             return False
         if any(c.motivo != MOTIVO_CAPTCHA_ESGOTADO for c in consultas[-limite:]):
             return False
-        logger.warning("TRF6: captcha recusado em %d CNJs seguidos; o lote para aqui.", limite)
+        logger.warning(
+            "TRF6: captcha recusado em %d CNJs seguidos; os CNJs restantes, se houver, saem captcha_esgotado "
+            "sem consulta.",
+            limite,
+        )
         return True
 
     def _consultar(self, cnj: str) -> _Consulta:
@@ -184,6 +190,7 @@ class TRF6Scraper(BaseScraper):
             )
         rows = linhas_de_processos(id_cnj_list, htmls, [None] * len(htmls), parse=parse_detail, logger=logger)
         self._avisar(id_cnj_list, [r.pop(COLUNA_MOTIVO_FALHA) for r in rows], "cpopg_parse")
+        _avisar_sem_polos(rows, "cpopg_parse")
         return pd.DataFrame(rows)
 
     def cpopg(
@@ -224,4 +231,19 @@ class TRF6Scraper(BaseScraper):
         motivos = [c.motivo for c in consultas]
         rows = linhas_de_processos(cnjs, htmls, motivos, parse=parse_detail, logger=logger)
         self._avisar(cnjs, [r[COLUNA_MOTIVO_FALHA] for r in rows], "cpopg")
+        _avisar_sem_polos(rows, "cpopg")
         return pd.DataFrame(rows)
+
+
+def _avisar_sem_polos(rows: list[dict[str, Any]], metodo: str) -> None:
+    """Um ``UserWarning`` com os processos lidos cuja tabela de partes não deu polo ativo nem passivo."""
+    processos = [r["id_cnj"] for r in rows if "processo" in r and not (r["polo_ativo"] or r["polo_passivo"])]
+    if processos:
+        exemplos = ", ".join(processos[:EXEMPLOS_NO_AVISO])
+        if len(processos) > EXEMPLOS_NO_AVISO:
+            exemplos += f" e mais {len(processos) - EXEMPLOS_NO_AVISO}"
+        avisar(
+            f"TRF6Scraper.{metodo}: {len(processos)} processo(s) sem polo ativo nem passivo ({exemplos}). "
+            "A tabela de partes não traz a faixa dos polos nem os rótulos AUTOR/RÉU; polo_ativo e "
+            "polo_passivo saem vazios."
+        )

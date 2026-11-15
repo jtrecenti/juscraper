@@ -15,8 +15,6 @@ from typing import Any
 
 from bs4 import BeautifulSoup, XMLParsedAsHTMLWarning
 
-from ...core.avisos import avisar
-
 # eproc serves XHTML with an ``<?xml?>`` prolog; BS4's HTML parser handles
 # it but emits a warning every parse. Filter once at module load.
 warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
@@ -135,21 +133,26 @@ def _parse_partes(
     return poles
 
 
-def _par_de_polos(soup: BeautifulSoup) -> tuple[str, str] | None:
-    """Labels of the polo ativo and polo passivo in the parties table.
+_POLOS_DE_TERCEIROS = frozenset({"MPF", "PERITO"})
 
-    The first header band carries two ``<th>`` side by side: the polo ativo
-    on the left and the polo passivo on the right, labelled after the class
-    (``AUTOR``/``RÉU`` in the procedimento comum, ``EXEQUENTE``/``EXECUTADO``
-    in the cumprimento de sentença). The other bands (``MPF``, ``PERITO``)
-    carry one ``<th>`` spanning both columns. ``None`` when no band has two.
+
+def _par_de_polos(soup: BeautifulSoup) -> tuple[str, str] | None:
+    """Rótulos do polo ativo e do polo passivo na tabela de partes.
+
+    A faixa dos polos tem dois ``<th>`` lado a lado: o ativo à esquerda e o
+    passivo à direita, com o rótulo da classe (``AUTOR``/``RÉU`` no
+    procedimento comum, ``EXEQUENTE``/``EXECUTADO`` no cumprimento de
+    sentença). ``MPF`` e ``PERITO`` vêm em faixas de um ``<th>`` que ocupa as
+    duas colunas, e uma faixa dupla com eles não é a dos polos. ``None``
+    quando não há a faixa.
     """
     tbl = soup.find("table", summary="Partes e Representantes")
     for tr in tbl.find_all("tr") if tbl else []:
         ths = tr.find_all("th")
         if len(ths) == 2 and not tr.find_all("td"):
             ativo, passivo = (_norm_ws(th.get_text(separator=" ")) or "" for th in ths)
-            return ativo, passivo
+            if not {ativo, passivo} & _POLOS_DE_TERCEIROS:
+                return ativo, passivo
     return None
 
 
@@ -195,29 +198,20 @@ def parse_detail(html: str) -> dict[str, Any]:
     ``polo_passivo``, ``mpf``, ``perito`` (each a list), ``movimentacoes``
     (list). Any pole the table doesn't have comes back as an empty list.
 
-    ``polo_ativo`` and ``polo_passivo`` come from the position in the
-    two-column band of the parties table, whatever its labels. A table with
-    parties but without that band emits a ``UserWarning``, since both
-    poles come back empty.
+    ``polo_ativo`` e ``polo_passivo`` vêm da posição na faixa de duas
+    colunas da tabela de partes, qualquer que seja o rótulo (ver
+    :func:`_par_de_polos`). Sem essa faixa, valem os rótulos ``AUTOR`` e
+    ``RÉU``.
     """
     soup = BeautifulSoup(html, "html.parser")
     record: dict[str, Any] = _parse_capa(soup)
     record["assuntos"] = _parse_assuntos(soup)
     poles = _parse_partes(soup)
-    par = _par_de_polos(soup)
+    ativo, passivo = _par_de_polos(soup) or ("AUTOR", "R\xc9U")
     # Keys not present default to empty lists rather than omission so the
     # DataFrame schema is stable.
-    if par is None:
-        record["polo_ativo"] = record["polo_passivo"] = []
-        outros = sorted(set(poles) - {"MPF", "PERITO"})
-        if outros:
-            avisar(
-                f"TRF6: o processo {record['processo']} não traz o par polo ativo/polo passivo na tabela "
-                f"de partes (rótulos: {', '.join(outros)}); polo_ativo e polo_passivo saem vazios."
-            )
-    else:
-        record["polo_ativo"] = poles[par[0]]
-        record["polo_passivo"] = poles[par[1]]
+    record["polo_ativo"] = poles.get(ativo, [])
+    record["polo_passivo"] = poles.get(passivo, [])
     record["mpf"] = poles.get("MPF", [])
     record["perito"] = poles.get("PERITO", [])
     record["movimentacoes"] = _parse_eventos(soup)
