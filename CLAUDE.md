@@ -35,6 +35,7 @@ uv run pre-commit run --all-files            # todos os hooks, como no CI
 
 - **Regra de generalização:** mover para `_<familia>/` ou criar mixin/base só com **2+ ocorrências concretas**. Duplicar com 1 caso é mais barato que abstrair errado.
 - Nas famílias de raspadores, acomodar diferenças por hooks/atributos. Se a particularidade não couber, manter scraper próprio; não acrescentar `if tribunal == "X"` ao código compartilhado.
+- **Retry de rede** (`retry_on_timeout`/`retry_on_connection_error`): desligado no padrão do core; ligar por perfil em `perfis_http`, só no raspador cujo portal derruba conexões ou trava respostas, com contrato que simule a falha (ex.: `FALHAS_DE_REDE` em `tests/tjmg/_helpers.py`). O motivo está na docstring de `RequestPolicy`.
 - Antes de adicionar um raspador, ler `CONTRIBUTING.md` > **Adding a new tribunal**. Para eSAJ, ler também **Adding an eSAJ tribunal**; a base é `src/juscraper/courts/_esaj/base.py`.
 
 ## Testes
