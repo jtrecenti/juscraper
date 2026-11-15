@@ -100,6 +100,11 @@ def test_cjsg_typical_com_paginacao(mocker):
     assert len(monocraticas_p2) == 10
     assert set(monocraticas_p2["processo"]) <= set(df_p2["processo"])
     assert len(df_p2) == 40, "esperado 10 acórdãos + 10 monocráticas por página"
+    # A origem de cada linha, também nas páginas 2+, em que o download junta
+    # só as linhas das duas tabelas.
+    assert df_p2["tipo_decisao"].tolist() == (
+        ["acordao"] * 10 + ["monocratica"] * 10
+    ) * 2
 
 
 @responses.activate(registry=OrderedRegistry)

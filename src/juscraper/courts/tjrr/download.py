@@ -265,9 +265,25 @@ def _extract_datatable_id(html: str, nome: str = _ACORDAOS) -> str:
     )
 
 
+def _pagination_form(html: str) -> dict:
+    """Lê da página 1 o form de resultados que cada POST de paginação ecoa.
+
+    Devolve os campos de ``formPesquisa`` com o ``javax.faces.ViewState``.
+    O ViewState do TJRR é reaproveitável (veja :func:`_paginate`), então o
+    HTML da página 1 é parseado uma vez só para todas as requisições.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    vs_input = soup.find("input", {"name": "javax.faces.ViewState"})
+    if not vs_input:
+        raise RuntimeError("Could not find ViewState for pagination.")
+    form = _collect_form_defaults(soup, form_id="formPesquisa")
+    form["javax.faces.ViewState"] = vs_input["value"]
+    return form
+
+
 def _paginate(
     request_fn: RequestFn,
-    html: str,
+    form: dict,
     page: int,
     datatable_id: str,
 ) -> str:
@@ -284,26 +300,21 @@ def _paginate(
     browser sends.
 
     ``_first`` is an absolute offset and the TJRR ViewState is reusable, so
-    each page is fetched independently from the page-1 ``html`` — no need to
-    thread the ViewState returned by each partial-response.
+    each page is fetched independently from the page-1 ``form`` (see
+    :func:`_pagination_form`) — no need to thread the ViewState returned by
+    each partial-response.
 
     A página de resultados mostra duas tabelas, cada uma com paginador
     próprio: ``dataTablePesquisa`` (acórdãos) e ``dataTablePesquisa2``
     (decisões monocráticas). ``datatable_id`` escolhe qual paginar; a
     segunda aceita o mesmo payload, conferido ao vivo (#319).
     """
-    soup = BeautifulSoup(html, "html.parser")
-    vs_input = soup.find("input", {"name": "javax.faces.ViewState"})
-    if not vs_input:
-        raise RuntimeError("Could not find ViewState for pagination.")
-
-    viewstate = vs_input["value"]
     rows = RESULTS_PER_PAGE
     first = (page - 1) * rows
 
     # Echo the whole results form, then overlay the AJAX pagination params.
-    data = _collect_form_defaults(soup, form_id="formPesquisa")
-    data.update({
+    data = {
+        **form,
         "javax.faces.partial.ajax": "true",
         "javax.faces.source": datatable_id,
         "javax.faces.partial.execute": datatable_id,
@@ -316,8 +327,7 @@ def _paginate(
         f"{datatable_id}_skipChildren": "true",
         f"{datatable_id}_encodeFeature": "true",
         "formPesquisa": "formPesquisa",
-        "javax.faces.ViewState": viewstate,
-    })
+    }
 
     headers = {
         "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
@@ -358,7 +368,7 @@ def _datatables_with_pages(html: str) -> list[tuple[str, int]]:
 
 def _download_page(
     request_fn: RequestFn,
-    html: str,
+    form: dict,
     page: int,
     tables: list[tuple[str, int]],
     sleep_time: float,
@@ -377,7 +387,7 @@ def _download_page(
     partes = []
     for dtid in alvos:
         time.sleep(sleep_time)
-        partes.append(_paginate(request_fn, html, page, dtid))
+        partes.append(_paginate(request_fn, form, page, dtid))
     return "".join(partes)
 
 
@@ -421,6 +431,9 @@ def cjsg_download_manager(
         paginas_iter = list(paginas)
         # Contagem só quando há página além da 1 a pedir.
         tables = _datatables_with_pages(first_html) if set(paginas_iter) - {1} else []
+    # Form da página 1 lido uma vez, para todas as requisições de paginação.
+    # Sem tabela, ``_download_page`` levanta antes de qualquer requisição.
+    form = _pagination_form(first_html) if tables and set(paginas_iter) - {1} else {}
 
     resultados = []
     for pagina_1based in tqdm(paginas_iter, desc="Baixando CJSG TJRR"):
@@ -428,6 +441,6 @@ def cjsg_download_manager(
             resultados.append(first_html)
         else:
             resultados.append(
-                _download_page(request_fn, first_html, pagina_1based, tables, sleep_time)
+                _download_page(request_fn, form, pagina_1based, tables, sleep_time)
             )
     return resultados

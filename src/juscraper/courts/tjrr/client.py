@@ -96,7 +96,8 @@ class TJRRScraper(HTTPScraper):
 
         Returns:
             DataFrame com as decisoes: acordaos e decisoes monocraticas
-                juntos, sem coluna que distinga a origem.
+                juntos. A coluna ``tipo_decisao`` diz a origem de cada linha
+                (``"acordao"`` ou ``"monocratica"``).
 
         See also:
             :class:`InputCJSGTJRR` — schema pydantic e a fonte da verdade dos
