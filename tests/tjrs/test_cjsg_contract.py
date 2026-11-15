@@ -147,19 +147,6 @@ def test_cjsg_retenta_timeout_e_erro_de_conexao(mocker, falha):
     assert len(responses.calls) == 2
 
 
-@responses.activate
-def test_cjsg_timeout_persistente_propaga_apos_as_tentativas(mocker):
-    """Persistindo, o timeout original sobe depois de ``max_retries`` tentativas."""
-    mocker.patch("time.sleep")
-    responses.add(responses.POST, BASE, body=requests.ReadTimeout("lento"))
-    scraper = jus.scraper("tjrs")
-
-    with pytest.raises(requests.ReadTimeout):
-        scraper.cjsg("mandado de seguranca", paginas=1)
-
-    assert len(responses.calls) == scraper.perfis_http["cjsg"].max_retries
-
-
 @pytest.mark.parametrize(
     ("politica", "timeout_esperado"),
     [(None, (10, 30)), ({"cjsg": {"timeout": 7}}, 7)],

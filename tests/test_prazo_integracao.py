@@ -14,45 +14,33 @@ import pytest
 
 
 @pytest.mark.integration
-def test_ao_vivo(request):
-    marca = request.node.get_closest_marker("timeout")
-    print("prazo", marca.args if marca else None)
+def test_ao_vivo():
+    pass
 
 
 @pytest.mark.integration
 @pytest.mark.timeout(5)
-def test_prazo_proprio(request):
-    print("prazo", request.node.get_closest_marker("timeout").args)
+def test_prazo_proprio():
+    pass
 
 
-def test_offline(request):
-    print("prazo", request.node.get_closest_marker("timeout"))
-"""
-
-_INI = """
-[pytest]
-markers =
-    integration: hits live external services
+def test_offline():
+    pass
 """
 
 
 @pytest.mark.parametrize(
     ("argumentos", "esperado"),
-    [
-        ((), ["prazo (600,)", "prazo (5,)", "prazo None"]),
-        (("--timeout=7",), ["prazo None", "prazo (5,)", "prazo None"]),
-    ],
+    [((), [(600,), (5,), None]), (("--timeout=7",), [None, (5,), None])],
     ids=["default", "timeout_na_linha_de_comando"],
 )
 def test_prazo_so_nos_testes_de_integracao(pytester, argumentos, esperado):
     """Só ``integration`` sem prazo próprio ganha o prazo; ``--timeout`` o substitui."""
     pytester.makeconftest(_CONFTEST)
     pytester.makepyfile(_TEST_MODULE)
-    pytester.makeini(_INI)
 
     # ``-p no:asyncio``: ver ``tests/test_anti_bot_marker.py``.
-    resultado = pytester.runpytest("-p", "no:asyncio", "-s", *argumentos)
+    items, _ = pytester.inline_genitems("-p", "no:asyncio", *argumentos)
 
-    resultado.assert_outcomes(passed=3)
-    impressos = [linha[linha.index("prazo "):] for linha in resultado.outlines if "prazo " in linha]
-    assert impressos == esperado
+    marcas = [item.get_closest_marker("timeout") for item in items]
+    assert [marca.args if marca else None for marca in marcas] == esperado

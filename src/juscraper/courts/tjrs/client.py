@@ -36,11 +36,8 @@ class TJRSScraper(HTTPScraper):
         "sort": "date:D:L:d1"
     }
 
-    #: Perfil HTTP da busca de jurisprudência. Uma coleta sem ``paginas`` faz
-    #: milhares de requisições em sequência; sem nova tentativa em timeout e
-    #: erro de conexão, uma falha transitória no meio dela perderia tudo. O
-    #: prazo de conexão curto, como no TRF3, faz o portal fora do ar falhar
-    #: logo, mesmo com as novas tentativas; o de leitura segue em 30 s.
+    #: Perfil HTTP da busca de jurisprudência: nova tentativa em timeout e erro
+    #: de conexão, e prazo de conexão curto para o portal fora do ar falhar logo.
     perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
         PERFIL_CJSG: RequestPolicy(
             timeout=(10, 30),

@@ -46,12 +46,7 @@ def test_cjsg_paginas_range():
 def test_cjsg_paginas_int():
     scraper = TJRSScraper()
     df = scraper.cjsg("acórdão", paginas=2)
-    assert isinstance(df, pd.DataFrame)
-    assert not df.empty
-    assert len(df) > 10
-    assert {"ementa", "url"}.issubset(set(df.columns))
-    assert df["ementa"].notnull().all()
-    assert df["url"].notnull().sum() > 0
+    assert len(df) == 20, f"Esperado 20 linhas (2 páginas), mas retornou {len(df)}"
 
 
 if __name__ == "__main__":

@@ -36,15 +36,10 @@ for _variavel in subprocess.run(
 def pytest_collection_modifyitems(config, items):
     """Dá a cada teste ``integration`` sem prazo próprio o prazo ``PRAZO_INTEGRACAO`` (pytest-timeout).
 
-    Uma conexão lenta, ou uma coleta sem limite de páginas, prendia a
-    integração por horas (#441). Com o prazo, só o teste que estoura reprova e
-    a suíte segue. O teste ao vivo mais lento da execução semanal leva cerca
-    de 90 s. Os testes offline e os notebooks do ``--nbmake``, que já têm
-    prazo por célula em ``--nbmake-timeout``, ficam de fora.
-
-    ``--timeout=N`` na linha de comando vale para todos os testes no lugar
-    deste prazo (``--timeout=0`` desliga); ``@pytest.mark.timeout(N)`` ajusta
-    um teste.
+    Uma conexão lenta prendia a integração por horas (#441); com o prazo, só o
+    teste que estoura reprova. Offline e notebooks do ``--nbmake`` ficam de
+    fora. ``--timeout=N`` na linha de comando vale no lugar deste prazo
+    (``0`` desliga); ``@pytest.mark.timeout(N)`` ajusta um teste.
     """
     if config.getoption("timeout") is not None:
         return
